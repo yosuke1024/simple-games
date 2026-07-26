@@ -1,0 +1,78 @@
+import type { Messages } from './en';
+
+export const id: Messages = {
+  appName: 'Number Match',
+  tagline: 'Bisa offline. Tanpa akun. Tanpa pembelian.',
+
+  resume: 'Lanjutkan',
+  newGame: 'Permainan Baru',
+  dailyChallenge: 'Tantangan Harian',
+  dailyDoneBadge: 'Selesai hari ini',
+  streakLine: 'Runtunan {n} hari',
+  howToPlay: 'Cara Bermain',
+  statistics: 'Statistik',
+  settings: 'Pengaturan',
+
+  modeClassic: 'Klasik',
+  modeDaily: 'Harian',
+  undo: 'Urungkan',
+  hint: 'Petunjuk',
+  addNumbers: 'Tambah',
+  timeLabel: 'Waktu',
+  movesLabel: 'Langkah',
+  boardLabel: 'Papan permainan',
+  cellLabel: '{value}, baris {row}, kolom {col}',
+  clearedCellLabel: 'Sel kosong',
+  hintNoneToast: 'Tidak ada pasangan — coba "Tambah".',
+  menu: 'Menu',
+
+  clearTitle: 'Papan bersih!',
+  clearBody: 'Semua angka berhasil dihapus.',
+  gameOverTitle: 'Tidak ada langkah lagi',
+  gameOverBody: 'Papan sudah mencapai batas.',
+  tryAgain: 'Ulangi papan yang sama',
+  backHome: 'Beranda',
+
+  confirmNewGameTitle: 'Mulai permainan baru?',
+  confirmNewGameBody: 'Permainan yang sedang berjalan akan hilang.',
+  cancel: 'Batal',
+  confirm: 'Mulai',
+
+  step1Title: 'Sama, atau berjumlah 10',
+  step1Body: 'Pasangkan dua angka yang sama, atau yang jumlahnya 10.',
+  step2Title: 'Pilih dua yang terhubung',
+  step2Body:
+    'Mendatar, menurun, diagonal — atau dari ujung baris ke awal baris berikutnya. Sel kosong di antaranya bukan penghalang.',
+  step3Title: 'Hapus semua untuk menang',
+  step3Body:
+    'Jika buntu, tekan "Tambah" untuk menambahkan angka tersisa. Urungkan dan petunjuk selalu gratis.',
+  startPlaying: 'Mulai Bermain',
+  next: 'Lanjut',
+  back: 'Kembali',
+  close: 'Tutup',
+
+  language: 'Bahasa',
+  languageSystem: 'Ikuti perangkat',
+  theme: 'Tema',
+  themeSystem: 'Sistem',
+  themeLight: 'Terang',
+  themeDark: 'Gelap',
+  sound: 'Suara',
+  vibration: 'Getaran',
+  reducedMotion: 'Kurangi animasi',
+  privacyPolicy: 'Kebijakan Privasi',
+  resetData: 'Hapus Data Lokal',
+  resetConfirmTitle: 'Hapus semua data lokal?',
+  resetConfirmBody:
+    'Permainan, statistik, dan pengaturan di perangkat ini akan dihapus. Tidak bisa dibatalkan.',
+  delete: 'Hapus',
+  version: 'Versi',
+
+  played: 'Permainan dimainkan',
+  cleared: 'Berhasil dibersihkan',
+  gameOverCount: 'Game over',
+  totalTime: 'Total waktu bermain',
+  bestTime: 'Selesai tercepat',
+  streak: 'Runtunan saat ini',
+  bestStreak: 'Runtunan terbaik',
+};

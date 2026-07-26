@@ -1,0 +1,78 @@
+import type { Messages } from './en';
+
+export const hi: Messages = {
+  appName: 'Number Match',
+  tagline: 'ऑफ़लाइन खेलें। कोई खाता नहीं। कोई खरीदारी नहीं।',
+
+  resume: 'जारी रखें',
+  newGame: 'नया गेम',
+  dailyChallenge: 'डेली चैलेंज',
+  dailyDoneBadge: 'आज पूरा हुआ',
+  streakLine: '{n} दिन की स्ट्रीक',
+  howToPlay: 'कैसे खेलें',
+  statistics: 'आंकड़े',
+  settings: 'सेटिंग्स',
+
+  modeClassic: 'क्लासिक',
+  modeDaily: 'डेली',
+  undo: 'अनडू',
+  hint: 'संकेत',
+  addNumbers: 'जोड़ें',
+  timeLabel: 'समय',
+  movesLabel: 'चालें',
+  boardLabel: 'गेम बोर्ड',
+  cellLabel: 'पंक्ति {row}, स्तंभ {col}, {value}',
+  clearedCellLabel: 'खाली खाना',
+  hintNoneToast: 'कोई जोड़ी नहीं मिली — "जोड़ें" आज़माएँ।',
+  menu: 'मेनू',
+
+  clearTitle: 'बोर्ड साफ़!',
+  clearBody: 'आपने सभी संख्याएँ हटा दीं।',
+  gameOverTitle: 'कोई चाल नहीं बची',
+  gameOverBody: 'बोर्ड अपनी सीमा तक पहुँच गया।',
+  tryAgain: 'वही बोर्ड फिर से',
+  backHome: 'होम',
+
+  confirmNewGameTitle: 'नया गेम शुरू करें?',
+  confirmNewGameBody: 'मौजूदा गेम खो जाएगा।',
+  cancel: 'रद्द करें',
+  confirm: 'शुरू करें',
+
+  step1Title: 'समान, या योग 10',
+  step1Body: 'दो समान संख्याएँ, या जिनका योग 10 हो, उन्हें हटाएँ।',
+  step2Title: 'जुड़ी हुई दो चुनें',
+  step2Body:
+    'आड़ी, खड़ी, तिरछी — या पंक्ति के अंत से अगली पंक्ति की शुरुआत तक। बीच के खाली खाने बाधा नहीं बनते।',
+  step3Title: 'सब हटाएँ और जीतें',
+  step3Body:
+    'अटक जाएँ तो "जोड़ें" से बची संख्याएँ जुड़ जाती हैं। अनडू और संकेत हमेशा मुफ़्त हैं।',
+  startPlaying: 'खेलना शुरू करें',
+  next: 'आगे',
+  back: 'पीछे',
+  close: 'बंद करें',
+
+  language: 'भाषा',
+  languageSystem: 'डिवाइस सेटिंग',
+  theme: 'थीम',
+  themeSystem: 'सिस्टम',
+  themeLight: 'लाइट',
+  themeDark: 'डार्क',
+  sound: 'ध्वनि',
+  vibration: 'कंपन',
+  reducedMotion: 'कम एनिमेशन',
+  privacyPolicy: 'गोपनीयता नीति',
+  resetData: 'लोकल डेटा हटाएँ',
+  resetConfirmTitle: 'सभी लोकल डेटा हटाएँ?',
+  resetConfirmBody:
+    'इस डिवाइस से गेम, आंकड़े और सेटिंग्स हट जाएँगी। इसे वापस नहीं किया जा सकता।',
+  delete: 'हटाएँ',
+  version: 'संस्करण',
+
+  played: 'खेले गए गेम',
+  cleared: 'जीते गए गेम',
+  gameOverCount: 'गेम ओवर',
+  totalTime: 'कुल खेल समय',
+  bestTime: 'सबसे तेज़ जीत',
+  streak: 'मौजूदा स्ट्रीक',
+  bestStreak: 'सबसे लंबी स्ट्रीक',
+};
