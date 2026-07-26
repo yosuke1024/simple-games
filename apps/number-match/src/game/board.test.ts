@@ -31,4 +31,17 @@ describe('generateInitialBoard', () => {
       expect(hasAnyMove(generateInitialBoard(seed))).toBe(true);
     }
   });
+
+  it('regenerates deterministically when the first draw has no valid pair', () => {
+    // Tiny boards frequently draw pair-less values, exercising the retry
+    // loop; the result must still be deterministic per seed and playable.
+    for (let i = 0; i < 50; i++) {
+      const seed = `tiny-${i}`;
+      const a = generateInitialBoard(seed, 2);
+      const b = generateInitialBoard(seed, 2);
+      expect(a).toEqual(b);
+      expect(a.length).toBe(2);
+      expect(hasAnyMove(a)).toBe(true);
+    }
+  });
 });

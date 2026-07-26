@@ -491,14 +491,13 @@ button:disabled {
   background: var(--ink);
   color: var(--paper);
   padding: 10px 18px;
-  border-radius: 999px;
+  border-radius: 18px;
   font-size: 14px;
   box-shadow: var(--shadow);
   z-index: 15;
-  white-space: nowrap;
+  width: max-content;
   max-width: calc(100vw - 32px);
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-align: center;
 }
 
 .game-screen {
@@ -652,7 +651,7 @@ button:disabled {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 8px 10px;
-  min-height: 44px;
+  min-height: var(--tap-size);
 }
 
 .segmented {
@@ -667,7 +666,7 @@ button:disabled {
   padding: 10px 12px;
   font-size: 14px;
   color: var(--ink-soft);
-  min-height: 44px;
+  min-height: var(--tap-size);
 }
 
 .segment-active {

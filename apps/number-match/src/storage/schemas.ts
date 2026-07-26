@@ -3,7 +3,7 @@
  * versions can migrate. Validators never throw: corrupt data yields null and
  * callers fall back to safe defaults (spec §15.1).
  */
-import type { GameMode } from '../game';
+import { MAX_CELLS, type GameMode } from '../game';
 
 export const STORAGE_KEYS = {
   game: 'nm.saveGame',
@@ -202,8 +202,9 @@ export const gameSchema: SchemaDef<PersistedGame | null> = {
     const mode = raw.mode === 'classic' || raw.mode === 'daily' ? raw.mode : null;
     const seed = asString(raw.seed);
     const dailyDate = raw.dailyDate === null ? null : asDateString(raw.dailyDate);
-    const values = asString(raw.values, 1000);
-    const mask = asString(raw.mask, 1000);
+    // A stored board can never legally exceed the maximum board size.
+    const values = asString(raw.values, MAX_CELLS);
+    const mask = asString(raw.mask, MAX_CELLS);
     const moveCount = asInt(raw.moveCount, 0, 1e6);
     const addCount = asInt(raw.addCount, 0, 1e6);
     const hintCount = asInt(raw.hintCount, 0, 1e6);

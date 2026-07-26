@@ -22,9 +22,7 @@ export const ja: Messages = {
   movesLabel: '手数',
   boardLabel: 'ゲーム盤',
   cellLabel: '{row}行 {col}列、{value}',
-  clearedCellLabel: '空きマス',
   hintNoneToast: '消せるペアがありません。「追加」を試してください。',
-  menu: 'メニュー',
 
   clearTitle: 'クリア！',
   clearBody: 'すべての数字を消しました。',
@@ -65,6 +63,13 @@ export const ja: Messages = {
   resetConfirmBody: 'この端末のゲーム・統計・設定が削除されます。元に戻せません。',
   delete: '削除',
   version: 'バージョン',
+
+  privacy1: 'アカウント登録は不要です。氏名・メールアドレス・連絡先・位置情報を収集しません。',
+  privacy2:
+    'ゲームの進行・統計・設定はこの端末内にのみ保存されます。運営サーバーはなく、クラウド同期もありません。',
+  privacy3:
+    'オンライン時は Google AdMob による広告が表示されることがあり、Google がそのプライバシーポリシーに従って端末の広告識別子を処理する場合があります。オフライン時は広告は表示されず、広告リクエストも行われません。',
+  privacy4: 'アプリの削除、または「ローカルデータを削除」で、データは端末から削除されます。',
 
   played: 'プレイ回数',
   cleared: 'クリア回数',

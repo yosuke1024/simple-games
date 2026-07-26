@@ -38,6 +38,7 @@ export function GameScreen() {
   const boardRef = useRef<HTMLDivElement | null>(null);
   const previousLength = useRef<number>(session?.board.length ?? 0);
   const previousStatus = useRef(session?.status ?? 'playing');
+  const toastIdRef = useRef(0);
 
   const board = session?.board ?? EMPTY_BOARD;
 
@@ -53,7 +54,12 @@ export function GameScreen() {
     const length = board.length;
     const el = boardRef.current;
     if (length > previousLength.current && el && typeof el.scrollTo === 'function') {
-      const behavior: ScrollBehavior = settings.reducedMotion ? 'auto' : 'smooth';
+      // Honor both the in-app setting and the OS-level reduce-motion preference.
+      const osReduced =
+        typeof window !== 'undefined' &&
+        !!window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const behavior: ScrollBehavior = settings.reducedMotion || osReduced ? 'auto' : 'smooth';
       el.scrollTo({ top: el.scrollHeight, behavior });
     }
     previousLength.current = length;
@@ -74,8 +80,13 @@ export function GameScreen() {
   }, [session?.status]);
 
   const showToast = useCallback((message: string) => {
+    const id = ++toastIdRef.current;
     setToast(message);
-    window.setTimeout(() => setToast(null), TOAST_MS);
+    window.setTimeout(() => {
+      // Only the latest toast's timer may clear it (repeat taps re-show the
+      // same message; each gets its full duration).
+      if (toastIdRef.current === id) setToast(null);
+    }, TOAST_MS);
   }, []);
 
   const onCellTap = useCallback(
@@ -149,9 +160,7 @@ export function GameScreen() {
           <span className="game-mode">
             {session.mode === 'daily' ? t('modeDaily') : t('modeClassic')}
           </span>
-          <span className="game-time" aria-label={t('timeLabel')}>
-            {formatDuration(session.elapsedSeconds)}
-          </span>
+          <span className="game-time">{formatDuration(session.elapsedSeconds)}</span>
         </div>
         <button
           type="button"

@@ -31,9 +31,11 @@ export function applyGameEnd(stats: Stats, session: GameSession): Stats {
   if (session.mode === 'daily' && session.dailyDate) {
     const daily = next.daily;
     const last = daily.lastCompletedDate;
-    if (last !== session.dailyDate) {
-      const continues = last !== null && dayDifference(last, session.dailyDate) === 1;
-      daily.streak = continues ? daily.streak + 1 : 1;
+    const diff = last === null ? null : dayDifference(last, session.dailyDate);
+    // Ignore re-clears of the same date and clears of older dates (e.g. a
+    // stale saved daily finished after a newer one): never move backwards.
+    if (diff === null || diff > 0) {
+      daily.streak = diff === 1 ? daily.streak + 1 : 1;
       daily.bestStreak = Math.max(daily.bestStreak, daily.streak);
       daily.lastCompletedDate = session.dailyDate;
     }

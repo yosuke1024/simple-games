@@ -76,22 +76,39 @@ describe('undo', () => {
     expect(undo(s3)).toBeNull();
   });
 
-  it('reverts Add Numbers', () => {
+  it('reverts Add Numbers, restoring addCount but not moveCount', () => {
     const s0 = sessionWith(makeBoard('12'));
     const s1 = performAddNumbers(s0)!;
     expect(s1.board.length).toBe(4);
+    expect(s1.addCount).toBe(1);
     const s2 = undo(s1)!;
     expect(s2.board).toEqual(s0.board);
+    expect(s2.addCount).toBe(0);
+    expect(s2.moveCount).toBe(s0.moveCount);
   });
 
-  it('recovers from game over via undo', () => {
-    // 3-cell board: matching 1+9 leaves '2' alone → add still possible, so craft
-    // a direct game-over: after match, single live '2' with default max is playing,
-    // so instead verify undo restores a playing status from a terminal state.
+  it('recovers from a cleared state via undo', () => {
     const s0 = sessionWith(makeBoard('19'));
     const s1 = matchPair(s0, 0, 1)!;
     expect(s1.status).toBe('cleared');
     expect(undo(s1)!.status).toBe('playing');
+  });
+
+  it('recovers from a game-over state via undo', () => {
+    // Synthetic terminal state with a tagged history entry, as produced by a
+    // match that dead-ends the board.
+    const before = makeBoard('1912');
+    const after = makeBoard('..12');
+    const s1: GameSession = {
+      ...sessionWith(after),
+      status: 'gameOver',
+      history: [{ board: before, action: 'match' }],
+      moveCount: 1,
+    };
+    const s2 = undo(s1)!;
+    expect(s2.board).toEqual(before);
+    expect(s2.status).toBe('playing');
+    expect(s2.moveCount).toBe(0);
   });
 });
 

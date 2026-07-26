@@ -42,6 +42,18 @@ export const DEFAULT_REMOTE_CONFIG: RemoteConfigValues = {
 /** Minimum interval between real fetches (production). */
 export const RC_MIN_FETCH_INTERVAL_MS = 12 * 60 * 60 * 1000;
 
+/**
+ * Sanity ranges for numeric keys. Values outside these ranges (e.g. from a
+ * corrupt cache) are ignored so a bad record can never neutralize the
+ * interstitial frequency caps.
+ */
+const NUMERIC_RANGES: Record<string, readonly [number, number]> = {
+  interstitial_min_play_minutes: [0, 1440],
+  interstitial_min_completed_games: [0, 1000],
+  interstitial_min_interval_minutes: [0, 10080],
+  interstitial_daily_limit: [0, 100],
+};
+
 let snapshot: RemoteConfigValues = { ...DEFAULT_REMOTE_CONFIG };
 
 function mergeValues(values: Record<string, boolean | number>): RemoteConfigValues {
@@ -49,10 +61,12 @@ function mergeValues(values: Record<string, boolean | number>): RemoteConfigValu
   for (const key of Object.keys(DEFAULT_REMOTE_CONFIG) as (keyof RemoteConfigValues)[]) {
     const value = values[key];
     const defaultValue = DEFAULT_REMOTE_CONFIG[key];
-    if (typeof value === typeof defaultValue) {
-      // Types line up (boolean/boolean or number/number); accept the override.
-      (merged as Record<string, boolean | number>)[key] = value as boolean | number;
+    if (typeof value !== typeof defaultValue) continue;
+    if (typeof value === 'number') {
+      const range = NUMERIC_RANGES[key];
+      if (!Number.isFinite(value) || (range && (value < range[0] || value > range[1]))) continue;
     }
+    (merged as Record<string, boolean | number>)[key] = value as boolean | number;
   }
   return merged;
 }

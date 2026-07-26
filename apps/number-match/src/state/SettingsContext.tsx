@@ -8,6 +8,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -52,6 +53,8 @@ export function SettingsProvider({
   children: ReactNode;
 }) {
   const [settings, setSettings] = useState<Settings>(initialSettings);
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
   const locale = resolveLocale(settings.language);
 
   // Side effects: services + document attributes.
@@ -72,17 +75,14 @@ export function SettingsProvider({
     return () => media.removeEventListener('change', onChange);
   }, [settings, locale]);
 
-  const updateSettings = useCallback(
-    (partial: Partial<Omit<Settings, 'schemaVersion'>>) => {
-      setSettings((current) => {
-        const next = { ...current, ...partial };
-        void saveRecord(settingsSchema, next);
-        track('settings_changed', { keys: Object.keys(partial).join(',') });
-        return next;
-      });
-    },
-    [],
-  );
+  // Side effects stay outside the setState updater (StrictMode calls
+  // updaters twice in dev, which would double-save and double-track).
+  const updateSettings = useCallback((partial: Partial<Omit<Settings, 'schemaVersion'>>) => {
+    const next = { ...settingsRef.current, ...partial };
+    setSettings(next);
+    void saveRecord(settingsSchema, next);
+    track('settings_changed', { keys: Object.keys(partial).join(',') });
+  }, []);
 
   /** Used by "Reset Local Data" to swap in pristine defaults without tracking. */
   const replaceSettings = useCallback((next: Settings) => {

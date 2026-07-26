@@ -26,11 +26,21 @@ describe('loadRecord', () => {
     expect(settings).toEqual(settingsSchema.defaultValue());
   });
 
-  it('returns defaults for an unknown schemaVersion', async () => {
-    const kv = createMemoryKV({
-      [STORAGE_KEYS.settings]: JSON.stringify({ schemaVersion: 99, language: 'en' }),
-    });
-    expect(await loadRecord(settingsSchema, kv)).toEqual(settingsSchema.defaultValue());
+  it('returns defaults for an unknown schemaVersion (every schema)', async () => {
+    const schemas: import('./schemas').SchemaDef<unknown>[] = [
+      settingsSchema,
+      statsSchema,
+      flagsSchema,
+      adStateSchema,
+      rcCacheSchema,
+    ];
+    for (const schema of schemas) {
+      const kv = createMemoryKV({ [schema.key]: JSON.stringify({ schemaVersion: 99 }) });
+      expect(await loadRecord(schema, kv)).toEqual(schema.defaultValue());
+    }
+    // The saved game falls back to null → no resume, never a crash.
+    const kv = createMemoryKV({ [STORAGE_KEYS.game]: JSON.stringify({ schemaVersion: 99 }) });
+    expect(await loadRecord(gameSchema, kv)).toBeNull();
   });
 
   it('returns defaults for structurally invalid data', async () => {
@@ -110,6 +120,24 @@ describe('saved game persistence', () => {
     const raw = JSON.parse((await kv.get(STORAGE_KEYS.game))!) as Record<string, unknown>;
     raw.mode = 'daily';
     raw.dailyDate = null;
+    await kv.set(STORAGE_KEYS.game, JSON.stringify(raw));
+    expect(await loadSavedGame(kv)).toBeNull();
+  });
+
+  it('does not resume a game that is no longer playable (terminal board)', async () => {
+    const kv = createMemoryKV();
+    const session = createSession('classic', 'persist-seed');
+    // All cells cleared → status would be 'cleared', not 'playing'.
+    await saveGame({ ...session, board: session.board.map((c) => ({ ...c, cleared: true })) }, kv);
+    expect(await loadSavedGame(kv)).toBeNull();
+  });
+
+  it('rejects boards larger than the maximum board size', async () => {
+    const kv = createMemoryKV();
+    await saveGame(createSession('classic', 'persist-seed'), kv);
+    const raw = JSON.parse((await kv.get(STORAGE_KEYS.game))!) as Record<string, unknown>;
+    raw.values = '1'.repeat(271);
+    raw.mask = '0'.repeat(271);
     await kv.set(STORAGE_KEYS.game, JSON.stringify(raw));
     expect(await loadSavedGame(kv)).toBeNull();
   });

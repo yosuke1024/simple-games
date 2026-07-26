@@ -29,7 +29,7 @@ import {
   type GameSession,
 } from '../game';
 import { track } from '../services/analytics';
-import { addPlaySecond, registerCompletedGame } from '../services/ads/adState';
+import { addPlaySecond, registerCompletedGame, resetAdState } from '../services/ads/adState';
 import { maybeShowInterstitial, prepareInterstitialIfNeeded } from '../services/ads/adsController';
 import { clearSavedGame, saveGame } from '../storage/gamePersistence';
 import { clearAllLocalData, saveRecord } from '../storage/repo';
@@ -86,6 +86,8 @@ export function AppProvider({
 
   const sessionRef = useRef(session);
   sessionRef.current = session;
+  const flagsRef = useRef(flags);
+  flagsRef.current = flags;
 
   const navigate = useCallback((next: Screen) => setScreen(next), []);
 
@@ -153,10 +155,11 @@ export function AppProvider({
     beginSession(createSession('daily', dailySeed(today), today));
   }, [beginSession]);
 
+  // No interstitial here: a restart can be triggered mid-game, which is not
+  // one of the allowed natural-break points (docs/ADS_POLICY.md).
   const restartCurrent = useCallback(() => {
     const current = sessionRef.current;
     if (!current) return;
-    void maybeShowInterstitial('newGame');
     beginSession(createSession(current.mode, current.seed, current.dailyDate));
   }, [beginSession]);
 
@@ -204,7 +207,9 @@ export function AppProvider({
     const pair = findHint(current.board);
     track('hint_used', { found: pair !== null });
     if (!pair) return null;
-    setSession(countHintUse(current));
+    const next = countHintUse(current);
+    setSession(next);
+    void saveGame(next);
     return pair;
   }, []);
 
@@ -215,17 +220,18 @@ export function AppProvider({
   }, []);
 
   const completeTutorial = useCallback(() => {
-    setFlags((current) => {
-      if (current.tutorialCompleted) return current;
-      const next = { ...current, tutorialCompleted: true };
-      void saveRecord(flagsSchema, next);
-      track('tutorial_completed');
-      return next;
-    });
+    // Side effects stay outside the setState updater (StrictMode calls
+    // updaters twice in dev).
+    if (flagsRef.current.tutorialCompleted) return;
+    const next = { ...flagsRef.current, tutorialCompleted: true };
+    setFlags(next);
+    void saveRecord(flagsSchema, next);
+    track('tutorial_completed');
   }, []);
 
   const resetAllData = useCallback(async () => {
     await clearAllLocalData();
+    resetAdState();
     setSession(null);
     setStats(statsSchema.defaultValue());
     setFlags(flagsSchema.defaultValue());
@@ -255,23 +261,21 @@ export function AppProvider({
       if (document.visibilityState === 'hidden') saveNow();
     };
     document.addEventListener('visibilitychange', onVisibility);
-    let remove: (() => void) | null = null;
-    if (Capacitor.isNativePlatform()) {
-      void CapacitorApp.addListener('pause', saveNow).then((handle) => {
-        remove = () => void handle.remove();
-      });
-    }
+    // Keep the listener-handle promise so cleanup works even when it runs
+    // before the plugin call resolves (no leaked listeners).
+    const pauseHandle = Capacitor.isNativePlatform()
+      ? CapacitorApp.addListener('pause', saveNow)
+      : null;
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);
-      remove?.();
+      void pauseHandle?.then((handle) => handle.remove()).catch(() => undefined);
     };
   }, []);
 
   // Android hardware back button: leave sub-screens, minimize from home.
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
-    let remove: (() => void) | null = null;
-    void CapacitorApp.addListener('backButton', () => {
+    const backHandle = CapacitorApp.addListener('backButton', () => {
       const current = sessionRef.current;
       if (screen === 'home') {
         void CapacitorApp.minimizeApp().catch(() => CapacitorApp.exitApp());
@@ -279,10 +283,10 @@ export function AppProvider({
         if (current && current.status === 'playing') void saveGame(current);
         setScreen('home');
       }
-    }).then((handle) => {
-      remove = () => void handle.remove();
     });
-    return () => remove?.();
+    return () => {
+      void backHandle.then((handle) => handle.remove()).catch(() => undefined);
+    };
   }, [screen]);
 
   const today = localDateString(new Date());

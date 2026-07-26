@@ -37,7 +37,12 @@ cd apps/number-match/android && ./gradlew assembleDebug
 
 ## 広告
 
-開発ビルドは Google 公式テスト広告 ID のみを使用する。本番 ID は
-`VITE_ADMOB_APP_ID` / `VITE_ADMOB_BANNER_ID` / `VITE_ADMOB_INTERSTITIAL_ID`
-を production build 時に環境変数で注入する(未設定なら広告は無効、ゲームは通常動作)。
-方針は [docs/ADS_POLICY.md](../../docs/ADS_POLICY.md)。
+開発ビルドは Google 公式テスト広告 ID のみを使用する。本番 ID の注入は 2 箇所:
+
+- **広告ユニット ID**(Web 側): `VITE_ADMOB_BANNER_ID` / `VITE_ADMOB_INTERSTITIAL_ID`
+  を `vite build` 時に環境変数で注入(未設定なら広告は無効、ゲームは通常動作)。
+- **AdMob アプリケーション ID**(ネイティブ側): `ADMOB_APP_ID` 環境変数を
+  Gradle ビルド時に注入(`android/app/build.gradle` の manifestPlaceholder。
+  未設定ならテスト用 app ID にフォールバック)。
+
+本番 ID はコミットしない。方針は [docs/ADS_POLICY.md](../../docs/ADS_POLICY.md)。

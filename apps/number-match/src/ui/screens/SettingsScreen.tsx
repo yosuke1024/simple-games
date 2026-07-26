@@ -9,15 +9,10 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Toggle } from '../components/Toggle';
 
 /**
- * Bundled privacy summary so the Privacy Policy entry works fully offline.
- * The full hosted policy URL is added before store release.
+ * The privacy summary is bundled (works fully offline) and localized via the
+ * i18n catalogs. The full hosted policy URL is added before store release.
  */
-const PRIVACY_SUMMARY = [
-  'No account. No sign-up. We do not collect your name, email, contacts, or location.',
-  'Your game progress, statistics, and settings are stored only on this device. We operate no servers and there is no cloud sync.',
-  'While online, ads served by Google AdMob may appear; Google may process device ad identifiers as described in its own privacy policy. Offline, no ads are shown and no ad requests are made.',
-  'Deleting the app, or using "Reset Local Data", removes your data.',
-];
+const PRIVACY_KEYS = ['privacy1', 'privacy2', 'privacy3', 'privacy4'] as const;
 
 export function SettingsScreen() {
   const { goHome, navigate, resetAllData } = useApp();
@@ -143,9 +138,9 @@ export function SettingsScreen() {
             onClick={(event) => event.stopPropagation()}
           >
             <h2 className="dialog-title">{t('privacyPolicy')}</h2>
-            {PRIVACY_SUMMARY.map((paragraph, index) => (
-              <p key={index} className="dialog-body">
-                {paragraph}
+            {PRIVACY_KEYS.map((key) => (
+              <p key={key} className="dialog-body">
+                {t(key)}
               </p>
             ))}
             <p className="dialog-body privacy-attribution">{SERIES_ATTRIBUTION}</p>
@@ -154,6 +149,7 @@ export function SettingsScreen() {
                 type="button"
                 className="btn btn-primary"
                 onClick={() => setShowPrivacy(false)}
+                autoFocus
               >
                 {t('close')}
               </button>

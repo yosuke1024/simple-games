@@ -22,9 +22,7 @@ export const id: Messages = {
   movesLabel: 'Langkah',
   boardLabel: 'Papan permainan',
   cellLabel: '{value}, baris {row}, kolom {col}',
-  clearedCellLabel: 'Sel kosong',
   hintNoneToast: 'Tidak ada pasangan — coba "Tambah".',
-  menu: 'Menu',
 
   clearTitle: 'Papan bersih!',
   clearBody: 'Semua angka berhasil dihapus.',
@@ -67,6 +65,14 @@ export const id: Messages = {
     'Permainan, statistik, dan pengaturan di perangkat ini akan dihapus. Tidak bisa dibatalkan.',
   delete: 'Hapus',
   version: 'Versi',
+
+  privacy1:
+    'Tanpa akun, tanpa pendaftaran. Kami tidak mengumpulkan nama, email, kontak, atau lokasi Anda.',
+  privacy2:
+    'Progres permainan, statistik, dan pengaturan hanya disimpan di perangkat ini. Kami tidak mengoperasikan server dan tidak ada sinkronisasi cloud.',
+  privacy3:
+    'Saat online, iklan dari Google AdMob dapat muncul; Google dapat memproses ID iklan perangkat sesuai kebijakan privasinya sendiri. Saat offline, tidak ada iklan dan tidak ada permintaan iklan yang dikirim.',
+  privacy4: 'Menghapus aplikasi, atau memakai "Hapus Data Lokal", akan menghapus data Anda.',
 
   played: 'Permainan dimainkan',
   cleared: 'Berhasil dibersihkan',

@@ -37,16 +37,19 @@ jobs:
       - name: Build web assets
         run: pnpm --filter number-match build
         env:
-          VITE_ADMOB_APP_ID: ${{ secrets.NUMBER_MATCH_ADMOB_APP_ID }}
           VITE_ADMOB_BANNER_ID: ${{ secrets.NUMBER_MATCH_ADMOB_BANNER_ID }}
           VITE_ADMOB_INTERSTITIAL_ID: ${{ secrets.NUMBER_MATCH_ADMOB_INTERSTITIAL_ID }}
 
       - name: Capacitor sync
         run: pnpm --filter number-match exec cap sync android
 
+      # The AdMob APPLICATION_ID is a manifest placeholder resolved by Gradle
+      # (app/build.gradle); without the secret it falls back to the test app ID.
       - name: Gradle build (unsigned release)
         working-directory: apps/number-match/android
         run: ./gradlew assembleRelease
+        env:
+          ADMOB_APP_ID: ${{ secrets.NUMBER_MATCH_ADMOB_APP_ID }}
 
       - uses: actions/upload-artifact@v4
         with:

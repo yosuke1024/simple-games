@@ -26,9 +26,7 @@ export const en = {
   movesLabel: 'Moves',
   boardLabel: 'Game board',
   cellLabel: '{value}, row {row}, column {col}',
-  clearedCellLabel: 'Empty cell',
   hintNoneToast: 'No pairs available — try Add.',
-  menu: 'Menu',
 
   // Result overlays
   clearTitle: 'Board cleared!',
@@ -75,6 +73,15 @@ export const en = {
     'This removes your game, statistics, and settings from this device. It cannot be undone.',
   delete: 'Delete',
   version: 'Version',
+
+  // Privacy summary (works fully offline; hosted policy URL added at release)
+  privacy1:
+    'No account. No sign-up. We do not collect your name, email, contacts, or location.',
+  privacy2:
+    'Your game progress, statistics, and settings are stored only on this device. We operate no servers and there is no cloud sync.',
+  privacy3:
+    'While online, ads served by Google AdMob may appear; Google may process device ad identifiers as described in its own privacy policy. Offline, no ads are shown and no ad requests are made.',
+  privacy4: 'Deleting the app, or using "Reset Local Data", removes your data.',
 
   // Statistics
   played: 'Games played',

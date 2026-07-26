@@ -61,6 +61,15 @@ export function countersForPolicy(today: string = localDateString(new Date())): 
   };
 }
 
+/**
+ * Called by "Reset Local Data": clears the in-memory counters too, so a later
+ * persist() cannot resurrect the wiped record.
+ */
+export function resetAdState(): void {
+  state = adStateSchema.defaultValue();
+  persist();
+}
+
 /** Test hook. */
 export function resetAdStateForTesting(): void {
   state = adStateSchema.defaultValue();

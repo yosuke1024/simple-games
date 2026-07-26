@@ -8,6 +8,12 @@ import { MAX_CELLS, UNDO_HISTORY_LIMIT } from './constants';
 import { addNumbers, applyMatch, getStatus } from './engine';
 import type { Board, GameMode, GameStatus } from './types';
 
+/** Snapshot taken before a mutation, tagged so undo can revert counters. */
+export interface HistoryEntry {
+  readonly board: Board;
+  readonly action: 'match' | 'add';
+}
+
 export interface GameSession {
   readonly mode: GameMode;
   readonly seed: string;
@@ -15,7 +21,7 @@ export interface GameSession {
   readonly dailyDate: string | null;
   readonly board: Board;
   /** Board snapshots before each mutation (match / add numbers). */
-  readonly history: readonly Board[];
+  readonly history: readonly HistoryEntry[];
   readonly status: GameStatus;
   readonly moveCount: number;
   readonly addCount: number;
@@ -57,8 +63,12 @@ export function restoreSession(
   };
 }
 
-function pushHistory(history: readonly Board[], board: Board): readonly Board[] {
-  const next = [...history, board];
+function pushHistory(
+  history: readonly HistoryEntry[],
+  board: Board,
+  action: 'match' | 'add',
+): readonly HistoryEntry[] {
+  const next = [...history, { board, action }];
   if (next.length > UNDO_HISTORY_LIMIT) next.shift();
   return next;
 }
@@ -71,7 +81,7 @@ export function matchPair(session: GameSession, i: number, j: number): GameSessi
   return {
     ...session,
     board,
-    history: pushHistory(session.history, session.board),
+    history: pushHistory(session.history, session.board, 'match'),
     status: getStatus(board),
     moveCount: session.moveCount + 1,
   };
@@ -85,7 +95,7 @@ export function performAddNumbers(session: GameSession): GameSession | null {
   return {
     ...session,
     board,
-    history: pushHistory(session.history, session.board),
+    history: pushHistory(session.history, session.board, 'add'),
     status: getStatus(board),
     addCount: session.addCount + 1,
   };
@@ -101,10 +111,12 @@ export function undo(session: GameSession): GameSession | null {
   if (!previous) return null;
   return {
     ...session,
-    board: previous,
+    board: previous.board,
     history: session.history.slice(0, -1),
-    status: getStatus(previous),
-    moveCount: Math.max(0, session.moveCount - 1),
+    status: getStatus(previous.board),
+    moveCount:
+      previous.action === 'match' ? Math.max(0, session.moveCount - 1) : session.moveCount,
+    addCount: previous.action === 'add' ? Math.max(0, session.addCount - 1) : session.addCount,
   };
 }
 

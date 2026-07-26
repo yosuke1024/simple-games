@@ -45,6 +45,9 @@ function interstitialAdUnitId(): string | null {
 let initialized = false;
 let bannerCreated = false;
 let bannerShowing = false;
+/** Desired banner visibility, remembered across the async SDK init. */
+let bannerWanted = false;
+let bannerBusy = false;
 let interstitialReady = false;
 let preparingInterstitial = false;
 
@@ -63,8 +66,16 @@ export async function initAds(): Promise<void> {
     void AdMob.addListener(BannerAdPluginEvents.SizeChanged, (size) => {
       for (const listener of bannerSizeListeners) listener(size.height);
     });
+    // A failed load destroys the native ad view; forget it so the next
+    // game-screen entry recreates the banner instead of resuming nothing.
+    void AdMob.addListener(BannerAdPluginEvents.FailedToLoad, () => {
+      bannerCreated = false;
+      bannerShowing = false;
+    });
     void requestConsentIfNeeded();
     void prepareInterstitialIfNeeded();
+    // The game screen may have been entered before init finished.
+    if (bannerWanted) void applyBannerState();
   } catch {
     // SDK init failed (offline etc.): game unaffected; retried next launch.
   }
@@ -96,12 +107,21 @@ export function onBannerSize(listener: (height: number) => void): () => void {
 
 /**
  * Shows/hides the anchored adaptive banner. Called on game screen
- * enter/leave. All failures are silent; offline is a normal skip.
+ * enter/leave. The desired state is remembered, so a call made before the
+ * SDK finished initializing is applied as soon as init completes.
+ * All failures are silent; offline is a normal skip.
  */
 export async function setBannerVisible(visible: boolean): Promise<void> {
+  bannerWanted = visible;
   if (!isNativeAdsPlatform() || !initialized) return;
+  await applyBannerState();
+}
+
+async function applyBannerState(): Promise<void> {
+  if (bannerBusy) return;
+  bannerBusy = true;
   try {
-    if (!visible) {
+    if (!bannerWanted) {
       if (bannerShowing) {
         bannerShowing = false;
         await AdMob.hideBanner();
@@ -127,6 +147,8 @@ export async function setBannerVisible(visible: boolean): Promise<void> {
     bannerShowing = true;
   } catch {
     // Banner failure: the reserved slot stays quietly empty.
+  } finally {
+    bannerBusy = false;
   }
 }
 

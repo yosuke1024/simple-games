@@ -35,7 +35,7 @@ export function ResultOverlay({ session, onRetry, onNewGame, onHome }: ResultOve
           </div>
         </dl>
         <div className="result-actions">
-          <button type="button" className="btn btn-primary" onClick={onRetry}>
+          <button type="button" className="btn btn-primary" onClick={onRetry} autoFocus>
             {t('tryAgain')}
           </button>
           <button type="button" className="btn btn-secondary" onClick={onNewGame}>

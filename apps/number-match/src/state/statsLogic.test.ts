@@ -76,6 +76,25 @@ describe('applyGameEnd', () => {
     expect(stats.daily.cleared).toBe(2); // replays still count as cleared games
   });
 
+  it('ignores clearing an older daily after a newer one (never regresses)', () => {
+    const newer = endedSession({
+      mode: 'daily',
+      dailyDate: '2026-07-26',
+      status: 'cleared',
+      elapsedSeconds: 100,
+    });
+    const older = endedSession({
+      mode: 'daily',
+      dailyDate: '2026-07-20',
+      status: 'cleared',
+      elapsedSeconds: 100,
+    });
+    let stats = applyGameEnd(statsSchema.defaultValue(), newer);
+    stats = applyGameEnd(stats, older);
+    expect(stats.daily.lastCompletedDate).toBe('2026-07-26');
+    expect(stats.daily.streak).toBe(1);
+  });
+
   it('resets the streak after a gap', () => {
     const day1 = endedSession({
       mode: 'daily',
