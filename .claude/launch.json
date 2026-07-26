@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "number-match",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "number-match", "dev"],
+      "port": 5173
+    }
+  ]
+}

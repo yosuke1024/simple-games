@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { SERIES_BY_LINE, SERIES_NAME } from '@simple-games/brand';
+import { localDateString } from '../../game';
 import { useApp } from '../../state/AppContext';
 import { useSettings } from '../../state/SettingsContext';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -17,13 +18,25 @@ export function HomeScreen() {
     resumeGame,
   } = useApp();
   const { t } = useSettings();
-  const [confirmNewGame, setConfirmNewGame] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState<'classic' | 'daily' | null>(null);
 
   const onNewGame = () => {
     if (hasResumableGame) {
-      setConfirmNewGame(true);
+      setConfirmTarget('classic');
     } else {
       startClassic();
+    }
+  };
+
+  const onDaily = () => {
+    // Resuming today's daily never discards anything; anything else would
+    // silently drop the game in progress, so confirm first.
+    const resumesToday =
+      session?.mode === 'daily' && session.dailyDate === localDateString(new Date());
+    if (hasResumableGame && !resumesToday) {
+      setConfirmTarget('daily');
+    } else {
+      startDaily();
     }
   };
 
@@ -51,7 +64,7 @@ export function HomeScreen() {
         >
           {t('newGame')}
         </button>
-        <button type="button" className="btn btn-secondary btn-big" onClick={startDaily}>
+        <button type="button" className="btn btn-secondary btn-big" onClick={onDaily}>
           {t('dailyChallenge')}
           {dailyDoneToday ? <span className="btn-note">✓ {t('dailyDoneBadge')}</span> : null}
           {!dailyDoneToday && dailyStreakToday > 0 ? (
@@ -77,15 +90,20 @@ export function HomeScreen() {
       </footer>
 
       <ConfirmDialog
-        open={confirmNewGame}
+        open={confirmTarget !== null}
         title={t('confirmNewGameTitle')}
         body={t('confirmNewGameBody')}
         cancelLabel={t('cancel')}
         confirmLabel={t('confirm')}
-        onCancel={() => setConfirmNewGame(false)}
+        onCancel={() => setConfirmTarget(null)}
         onConfirm={() => {
-          setConfirmNewGame(false);
-          startClassic();
+          const target = confirmTarget;
+          setConfirmTarget(null);
+          if (target === 'daily') {
+            startDaily();
+          } else {
+            startClassic();
+          }
         }}
       />
     </div>

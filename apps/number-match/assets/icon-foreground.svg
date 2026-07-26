@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Adaptive icon foreground: tiles centered inside the ~66% safe zone. -->
+  <rect x="252" y="374" width="246" height="276" rx="56" fill="#f6f4ef"/>
+  <rect x="526" y="374" width="246" height="276" rx="56" fill="#dcece6"/>
+  <text x="375" y="514" font-family="Helvetica, Arial, sans-serif" font-size="190" font-weight="700" fill="#22303c" text-anchor="middle" dominant-baseline="central">4</text>
+  <text x="649" y="514" font-family="Helvetica, Arial, sans-serif" font-size="190" font-weight="700" fill="#22303c" text-anchor="middle" dominant-baseline="central">6</text>
+</svg>

@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Number Match Offline</string>
+    <string name="title_activity_main">Number Match Offline</string>
+    <string name="package_name">com.pixapps.simplegames.numbermatch</string>
+    <string name="custom_url_scheme">com.pixapps.simplegames.numbermatch</string>
+    <!-- Google's official AdMob TEST app ID. Replace with the production app
+         ID only at release time (never commit the production ID). -->
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+</resources>
