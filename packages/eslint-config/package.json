@@ -1,0 +1,20 @@
+{
+  "name": "@simple-games/eslint-config",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Shared ESLint flat configs for Simple Games",
+  "exports": {
+    "./base": "./base.js",
+    "./react": "./react.js"
+  },
+  "dependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.8.0",
+    "typescript-eslint": "^8.65.0"
+  },
+  "peerDependencies": {
+    "eslint": "^10.0.0"
+  }
+}

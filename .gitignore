@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.turbo/
+coverage/
+
+# Logs / OS
+*.log
+.DS_Store
+
+# Android build outputs (native project itself is committed)
+apps/*/android/.gradle/
+apps/*/android/build/
+apps/*/android/app/build/
+apps/*/android/app/release/
+apps/*/android/local.properties
+apps/*/android/.idea/
+apps/*/android/capacitor-cordova-android-plugins/build/
+
+# Signing material must never be committed
+*.keystore
+*.jks
+
+# Environment files (production ad unit IDs etc. are injected, never committed)
+.env
+.env.*
+!.env.example

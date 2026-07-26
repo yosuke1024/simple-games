@@ -1,0 +1,22 @@
+{
+  "name": "simple-games",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Simple Games by PixApps — fully offline, no-account, no-IAP simple games monorepo",
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "build": "turbo run build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6",
+    "turbo": "^2.10.7"
+  }
+}
