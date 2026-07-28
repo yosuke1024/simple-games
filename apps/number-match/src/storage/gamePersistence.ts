@@ -11,12 +11,14 @@ import { gameSchema, STORAGE_KEYS, type PersistedGame } from './schemas';
 export function toPersisted(session: GameSession, savedAt: number): PersistedGame {
   const { values, mask } = encodeBoard(session.board);
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     mode: session.mode,
     seed: session.seed,
     dailyDate: session.dailyDate,
+    level: session.level,
     values,
     mask,
+    score: session.score,
     moveCount: session.moveCount,
     addCount: session.addCount,
     hintCount: session.hintCount,
@@ -35,7 +37,9 @@ export async function loadSavedGame(kv: KVStore = preferencesKV): Promise<GameSe
     mode: persisted.mode,
     seed: persisted.seed,
     dailyDate: persisted.dailyDate,
+    level: persisted.level,
     board,
+    score: persisted.score,
     moveCount: persisted.moveCount,
     addCount: persisted.addCount,
     hintCount: persisted.hintCount,

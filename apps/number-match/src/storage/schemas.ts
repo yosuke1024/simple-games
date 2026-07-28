@@ -3,7 +3,7 @@
  * versions can migrate. Validators never throw: corrupt data yields null and
  * callers fall back to safe defaults (spec §15.1).
  */
-import { MAX_CELLS, type GameMode } from '../game';
+import { INITIAL_SCORE, MAX_CELLS, MAX_LEVEL, type GameMode, type ScoreState } from '../game';
 
 export const STORAGE_KEYS = {
   game: 'nm.saveGame',
@@ -12,6 +12,7 @@ export const STORAGE_KEYS = {
   flags: 'nm.flags',
   adState: 'nm.adState',
   rcCache: 'nm.rcCache',
+  progress: 'nm.progress',
 } as const;
 
 export interface SchemaDef<T> {
@@ -118,8 +119,8 @@ export interface ModeStats {
 }
 
 export interface Stats {
-  schemaVersion: 1;
-  classic: ModeStats;
+  schemaVersion: 2;
+  level: ModeStats;
   daily: ModeStats & {
     lastCompletedDate: string | null;
     streak: number;
@@ -152,26 +153,32 @@ const validateModeStats = (raw: unknown): ModeStats | null => {
 
 export const statsSchema: SchemaDef<Stats> = {
   key: STORAGE_KEYS.stats,
-  version: 1,
+  version: 2,
   defaultValue: () => ({
-    schemaVersion: 1,
-    classic: emptyModeStats(),
+    schemaVersion: 2,
+    level: emptyModeStats(),
     daily: { ...emptyModeStats(), lastCompletedDate: null, streak: 0, bestStreak: 0 },
   }),
   validate: (raw) => {
-    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
-    const classic = validateModeStats(raw.classic);
-    if (!isRecord(raw.daily) || classic === null) return null;
-    const dailyBase = validateModeStats(raw.daily);
+    if (!isRecord(raw)) return null;
+    // v1 → v2 migration: the "classic" bucket became the "level" bucket.
+    let source = raw;
+    if (raw.schemaVersion === 1) {
+      source = { ...raw, schemaVersion: 2, level: raw.classic };
+    }
+    if (source.schemaVersion !== 2) return null;
+    const level = validateModeStats(source.level);
+    if (!isRecord(source.daily) || level === null) return null;
+    const dailyBase = validateModeStats(source.daily);
     const lastCompletedDate =
-      raw.daily.lastCompletedDate === null ? null : asDateString(raw.daily.lastCompletedDate);
-    const streak = asInt(raw.daily.streak, 0, 1e6);
-    const bestStreak = asInt(raw.daily.bestStreak, 0, 1e6);
+      source.daily.lastCompletedDate === null ? null : asDateString(source.daily.lastCompletedDate);
+    const streak = asInt(source.daily.streak, 0, 1e6);
+    const bestStreak = asInt(source.daily.bestStreak, 0, 1e6);
     if (dailyBase === null || streak === null || bestStreak === null) return null;
-    if (lastCompletedDate === null && raw.daily.lastCompletedDate !== null) return null;
+    if (lastCompletedDate === null && source.daily.lastCompletedDate !== null) return null;
     return {
-      schemaVersion: 1,
-      classic,
+      schemaVersion: 2,
+      level,
       daily: { ...dailyBase, lastCompletedDate, streak, bestStreak },
     };
   },
@@ -179,13 +186,38 @@ export const statsSchema: SchemaDef<Stats> = {
 
 // ---------- saved game ----------
 
+const validateScore = (raw: unknown): ScoreState | null => {
+  if (!isRecord(raw)) return null;
+  const total = asInt(raw.total, 0, 1e9);
+  const streakTenths = asInt(raw.streakTenths, 10, 20);
+  const matchPoints = asInt(raw.matchPoints, 0, 1e9);
+  const rowPoints = asInt(raw.rowPoints, 0, 1e9);
+  const clearBonus = asInt(raw.clearBonus, 0, 1e9);
+  const noHintBonus = asInt(raw.noHintBonus, 0, 1e9);
+  if (
+    total === null ||
+    streakTenths === null ||
+    matchPoints === null ||
+    rowPoints === null ||
+    clearBonus === null ||
+    noHintBonus === null
+  ) {
+    return null;
+  }
+  // Integrity: the parts must add up.
+  if (total !== matchPoints + rowPoints + clearBonus + noHintBonus) return null;
+  return { total, streakTenths, matchPoints, rowPoints, clearBonus, noHintBonus };
+};
+
 export interface PersistedGame {
-  schemaVersion: 1;
+  schemaVersion: 2;
   mode: GameMode;
   seed: string;
   dailyDate: string | null;
+  level: number | null;
   values: string;
   mask: string;
+  score: ScoreState;
   moveCount: number;
   addCount: number;
   hintCount: number;
@@ -195,27 +227,38 @@ export interface PersistedGame {
 
 export const gameSchema: SchemaDef<PersistedGame | null> = {
   key: STORAGE_KEYS.game,
-  version: 1,
+  version: 2,
   defaultValue: () => null,
   validate: (raw) => {
-    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
-    const mode = raw.mode === 'classic' || raw.mode === 'daily' ? raw.mode : null;
-    const seed = asString(raw.seed);
-    const dailyDate = raw.dailyDate === null ? null : asDateString(raw.dailyDate);
+    if (!isRecord(raw)) return null;
+    // v1 → v2 migration: daily games carry over with a fresh score; v1
+    // "classic" games have no level context and are dropped (no resume).
+    let source = raw;
+    if (raw.schemaVersion === 1) {
+      if (raw.mode !== 'daily') return null;
+      source = { ...raw, schemaVersion: 2, level: null, score: INITIAL_SCORE };
+    }
+    if (source.schemaVersion !== 2) return null;
+    const mode = source.mode === 'level' || source.mode === 'daily' ? source.mode : null;
+    const seed = asString(source.seed);
+    const dailyDate = source.dailyDate === null ? null : asDateString(source.dailyDate);
+    const level = source.level === null ? null : asInt(source.level, 1, MAX_LEVEL);
     // A stored board can never legally exceed the maximum board size.
-    const values = asString(raw.values, MAX_CELLS);
-    const mask = asString(raw.mask, MAX_CELLS);
-    const moveCount = asInt(raw.moveCount, 0, 1e6);
-    const addCount = asInt(raw.addCount, 0, 1e6);
-    const hintCount = asInt(raw.hintCount, 0, 1e6);
-    const elapsedSeconds = asInt(raw.elapsedSeconds, 0, 1e9);
-    const savedAt = asInt(raw.savedAt, 0, 1e15);
+    const values = asString(source.values, MAX_CELLS);
+    const mask = asString(source.mask, MAX_CELLS);
+    const score = validateScore(source.score);
+    const moveCount = asInt(source.moveCount, 0, 1e6);
+    const addCount = asInt(source.addCount, 0, 1e6);
+    const hintCount = asInt(source.hintCount, 0, 1e6);
+    const elapsedSeconds = asInt(source.elapsedSeconds, 0, 1e9);
+    const savedAt = asInt(source.savedAt, 0, 1e15);
     if (
       mode === null ||
       seed === null ||
       seed.length === 0 ||
       values === null ||
       mask === null ||
+      score === null ||
       moveCount === null ||
       addCount === null ||
       hintCount === null ||
@@ -224,21 +267,114 @@ export const gameSchema: SchemaDef<PersistedGame | null> = {
     ) {
       return null;
     }
-    if (dailyDate === null && raw.dailyDate !== null) return null;
+    if (dailyDate === null && source.dailyDate !== null) return null;
+    if (level === null && source.level !== null) return null;
     if (mode === 'daily' && dailyDate === null) return null;
+    if (mode === 'level' && level === null) return null;
     return {
-      schemaVersion: 1,
+      schemaVersion: 2,
       mode,
       seed,
       dailyDate,
+      level,
       values,
       mask,
+      score,
       moveCount,
       addCount,
       hintCount,
       elapsedSeconds,
       savedAt,
     };
+  },
+};
+
+// ---------- level progress & personal best scores ----------
+
+export interface TopScoreEntry {
+  mode: GameMode;
+  /** Level number ("42") or daily date ("2026-07-27"). */
+  ref: string;
+  score: number;
+  at: number;
+}
+
+export interface Progress {
+  schemaVersion: 1;
+  /** Highest level the player may start (1..999). */
+  highestUnlocked: number;
+  /** Sparse map: level number (string) → best score. */
+  bestScores: Record<string, number>;
+  /** Sparse map: daily date (YYYY-MM-DD) → best score for that day's board. */
+  bestDaily: Record<string, number>;
+  /** Personal top scores, best first, max 10, deduped per level/date. */
+  topScores: TopScoreEntry[];
+}
+
+export const TOP_SCORES_LIMIT = 10;
+
+const validateTopScoreEntry = (raw: unknown): TopScoreEntry | null => {
+  if (!isRecord(raw)) return null;
+  const mode = raw.mode === 'level' || raw.mode === 'daily' ? raw.mode : null;
+  const ref = asString(raw.ref, 12);
+  const score = asInt(raw.score, 0, 1e9);
+  const at = asInt(raw.at, 0, 1e15);
+  if (mode === null || ref === null || ref.length === 0 || score === null || at === null) {
+    return null;
+  }
+  return { mode, ref, score, at };
+};
+
+export const progressSchema: SchemaDef<Progress> = {
+  key: STORAGE_KEYS.progress,
+  version: 1,
+  defaultValue: () => ({
+    schemaVersion: 1,
+    highestUnlocked: 1,
+    bestScores: {},
+    bestDaily: {},
+    topScores: [],
+  }),
+  validate: (raw) => {
+    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
+    const highestUnlocked = asInt(raw.highestUnlocked, 1, MAX_LEVEL);
+    if (highestUnlocked === null || !isRecord(raw.bestScores) || !Array.isArray(raw.topScores)) {
+      return null;
+    }
+    // Malformed entries are dropped rather than rejecting the whole record.
+    const bestScores: Record<string, number> = {};
+    for (const [key, value] of Object.entries(raw.bestScores)) {
+      const levelNumber = /^\d{1,3}$/.test(key) ? Number(key) : NaN;
+      const score = asInt(value, 0, 1e9);
+      if (levelNumber >= 1 && levelNumber <= MAX_LEVEL && score !== null) {
+        // Canonical key (guards against e.g. zero-padded "042").
+        bestScores[String(levelNumber)] = Math.max(bestScores[String(levelNumber)] ?? 0, score);
+      }
+    }
+    // Absent in early records; defaults to empty.
+    const bestDaily: Record<string, number> = {};
+    if (isRecord(raw.bestDaily)) {
+      for (const [key, value] of Object.entries(raw.bestDaily)) {
+        const score = asInt(value, 0, 1e9);
+        if (asDateString(key) !== null && score !== null && Object.keys(bestDaily).length < 2000) {
+          bestDaily[key] = score;
+        }
+      }
+    }
+    // Enforce the documented invariants: dedupe per (mode, ref) keeping the
+    // best, then best-first order, then the cap.
+    const byRef = new Map<string, TopScoreEntry>();
+    for (const rawEntry of raw.topScores) {
+      const entry = validateTopScoreEntry(rawEntry);
+      if (!entry) continue;
+      const key = `${entry.mode}:${entry.ref}`;
+      const existing = byRef.get(key);
+      if (!existing || entry.score > existing.score) byRef.set(key, entry);
+    }
+    const topScores = [...byRef.values()]
+      .sort((a, b) => b.score - a.score || a.at - b.at)
+      .slice(0, TOP_SCORES_LIMIT);
+    return { schemaVersion: 1, highestUnlocked, bestScores, bestDaily, topScores };
   },
 };
 

@@ -1,47 +1,62 @@
 /**
  * GameSession — a pure, immutable snapshot of one game in progress:
- * board + undo history + status + counters. The React layer only dispatches
- * into these functions; all rules live here and in engine.ts.
+ * board + undo history + status + score + counters. The React layer only
+ * dispatches into these functions; all rules live here and in engine.ts.
  */
 import { generateInitialBoard } from './board';
 import { MAX_CELLS, UNDO_HISTORY_LIMIT } from './constants';
-import { addNumbers, applyMatch, getStatus } from './engine';
+import { dailySeed } from './daily';
+import { addNumbers, applyMatchDetailed, getStatus } from './engine';
+import { generateLevelBoard, levelSeed } from './levels';
+import { connectionGap } from './rules';
+import { INITIAL_SCORE, scoreAddNumbers, scoreClear, scoreMatch, type ScoreState } from './score';
 import type { Board, GameMode, GameStatus } from './types';
 
-/** Snapshot taken before a mutation, tagged so undo can revert counters. */
+/**
+ * Snapshot taken before a mutation, tagged so undo can revert counters and
+ * the exact score (which also makes match→undo→match score farming
+ * impossible).
+ */
 export interface HistoryEntry {
   readonly board: Board;
   readonly action: 'match' | 'add';
+  readonly score: ScoreState;
 }
 
 export interface GameSession {
   readonly mode: GameMode;
   readonly seed: string;
-  /** Local YYYY-MM-DD for daily mode, null for classic. */
+  /** Local YYYY-MM-DD for daily mode, null for level mode. */
   readonly dailyDate: string | null;
+  /** 1..999 for level mode, null for daily. */
+  readonly level: number | null;
   readonly board: Board;
   /** Board snapshots before each mutation (match / add numbers). */
   readonly history: readonly HistoryEntry[];
   readonly status: GameStatus;
+  readonly score: ScoreState;
   readonly moveCount: number;
   readonly addCount: number;
   readonly hintCount: number;
   readonly elapsedSeconds: number;
 }
 
-export function createSession(
+function baseSession(
   mode: GameMode,
   seed: string,
-  dailyDate: string | null = null,
+  dailyDate: string | null,
+  level: number | null,
+  board: Board,
 ): GameSession {
-  const board = generateInitialBoard(seed);
   return {
     mode,
     seed,
     dailyDate,
+    level,
     board,
     history: [],
     status: getStatus(board),
+    score: INITIAL_SCORE,
     moveCount: 0,
     addCount: 0,
     hintCount: 0,
@@ -49,11 +64,38 @@ export function createSession(
   };
 }
 
+/** A fresh (or restarted) level game — deterministic per level. */
+export function createLevelSession(level: number): GameSession {
+  return baseSession('level', levelSeed(level), null, level, generateLevelBoard(level));
+}
+
+/** A fresh (or restarted) daily game for a local YYYY-MM-DD date. */
+export function createDailySession(dateString: string): GameSession {
+  const seed = dailySeed(dateString);
+  return baseSession('daily', seed, dateString, null, generateInitialBoard(seed));
+}
+
+/** Recreates the same board for a session's seed (Restart). */
+export function restartSession(session: GameSession): GameSession {
+  return session.mode === 'level' && session.level !== null
+    ? createLevelSession(session.level)
+    : createDailySession(session.dailyDate ?? '');
+}
+
 /** Restores a session from persisted state (undo history is not persisted). */
 export function restoreSession(
   data: Pick<
     GameSession,
-    'mode' | 'seed' | 'dailyDate' | 'board' | 'moveCount' | 'addCount' | 'hintCount' | 'elapsedSeconds'
+    | 'mode'
+    | 'seed'
+    | 'dailyDate'
+    | 'level'
+    | 'board'
+    | 'score'
+    | 'moveCount'
+    | 'addCount'
+    | 'hintCount'
+    | 'elapsedSeconds'
   >,
 ): GameSession {
   return {
@@ -63,31 +105,35 @@ export function restoreSession(
   };
 }
 
-function pushHistory(
-  history: readonly HistoryEntry[],
-  board: Board,
-  action: 'match' | 'add',
-): readonly HistoryEntry[] {
-  const next = [...history, { board, action }];
+function pushHistory(session: GameSession, action: 'match' | 'add'): readonly HistoryEntry[] {
+  const next = [...session.history, { board: session.board, action, score: session.score }];
   if (next.length > UNDO_HISTORY_LIMIT) next.shift();
   return next;
 }
 
-/** Clears a valid pair. Returns null when the pair is invalid. */
+/** Clears a valid pair, scoring it. Returns null when the pair is invalid. */
 export function matchPair(session: GameSession, i: number, j: number): GameSession | null {
   if (session.status !== 'playing') return null;
-  const board = applyMatch(session.board, i, j);
-  if (board === null) return null;
+  const gap = connectionGap(session.board, i, j);
+  const result = applyMatchDetailed(session.board, i, j);
+  if (result === null || gap === null) return null;
+  const status = getStatus(result.board);
+  let score = scoreMatch(session.score, gap, result.rowsRemoved);
+  const hintCount = session.hintCount;
+  if (status === 'cleared') {
+    score = scoreClear(score, session.mode, session.level, session.addCount, hintCount);
+  }
   return {
     ...session,
-    board,
-    history: pushHistory(session.history, session.board, 'match'),
-    status: getStatus(board),
+    board: result.board,
+    history: pushHistory(session, 'match'),
+    status,
+    score,
     moveCount: session.moveCount + 1,
   };
 }
 
-/** Performs Add Numbers. Returns null when not allowed. */
+/** Performs Add Numbers (resets the score streak). Returns null when not allowed. */
 export function performAddNumbers(session: GameSession): GameSession | null {
   if (session.status !== 'playing') return null;
   const board = addNumbers(session.board, MAX_CELLS);
@@ -95,8 +141,9 @@ export function performAddNumbers(session: GameSession): GameSession | null {
   return {
     ...session,
     board,
-    history: pushHistory(session.history, session.board, 'add'),
+    history: pushHistory(session, 'add'),
     status: getStatus(board),
+    score: scoreAddNumbers(session.score),
     addCount: session.addCount + 1,
   };
 }
@@ -105,7 +152,7 @@ export function canUndo(session: GameSession): boolean {
   return session.history.length > 0;
 }
 
-/** Reverts the last mutation. Returns null when there is nothing to undo. */
+/** Reverts the last mutation, including its score. Returns null when empty. */
 export function undo(session: GameSession): GameSession | null {
   const previous = session.history[session.history.length - 1];
   if (!previous) return null;
@@ -114,16 +161,11 @@ export function undo(session: GameSession): GameSession | null {
     board: previous.board,
     history: session.history.slice(0, -1),
     status: getStatus(previous.board),
+    score: previous.score,
     moveCount:
       previous.action === 'match' ? Math.max(0, session.moveCount - 1) : session.moveCount,
     addCount: previous.action === 'add' ? Math.max(0, session.addCount - 1) : session.addCount,
   };
-}
-
-/** Adds play time (driven by the UI clock; pure here for testability). */
-export function tickSeconds(session: GameSession, seconds: number): GameSession {
-  if (session.status !== 'playing' || seconds <= 0) return session;
-  return { ...session, elapsedSeconds: session.elapsedSeconds + seconds };
 }
 
 export function countHintUse(session: GameSession): GameSession {

@@ -10,21 +10,28 @@ export function HomeScreen() {
   const {
     navigate,
     session,
+    progress,
     hasResumableGame,
     dailyDoneToday,
     dailyStreakToday,
-    startClassic,
+    startLevel,
     startDaily,
     resumeGame,
   } = useApp();
   const { t } = useSettings();
-  const [confirmTarget, setConfirmTarget] = useState<'classic' | 'daily' | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<'level' | 'daily' | null>(null);
 
-  const onNewGame = () => {
-    if (hasResumableGame) {
-      setConfirmTarget('classic');
+  const currentLevel = progress.highestUnlocked;
+  const currentLevelBest = progress.bestScores[String(currentLevel)];
+
+  const onPlayLevel = () => {
+    // Resuming the same level never discards anything.
+    const resumesSame =
+      session?.mode === 'level' && session.level === currentLevel && session.status === 'playing';
+    if (hasResumableGame && !resumesSame) {
+      setConfirmTarget('level');
     } else {
-      startClassic();
+      startLevel(currentLevel);
     }
   };
 
@@ -52,17 +59,24 @@ export function HomeScreen() {
           <button type="button" className="btn btn-primary btn-big" onClick={resumeGame}>
             {t('resume')}
             <span className="btn-note">
-              {session.mode === 'daily' ? t('modeDaily') : t('modeClassic')} ·{' '}
-              {formatDuration(session.elapsedSeconds)}
+              {session.mode === 'daily'
+                ? t('modeDaily')
+                : t('modeLevel', { n: session.level ?? 1 })}{' '}
+              · {formatDuration(session.elapsedSeconds)}
             </span>
           </button>
         ) : null}
         <button
           type="button"
           className={`btn btn-big ${hasResumableGame ? 'btn-secondary' : 'btn-primary'}`}
-          onClick={onNewGame}
+          onClick={onPlayLevel}
         >
-          {t('newGame')}
+          {t('modeLevel', { n: currentLevel })}
+          {currentLevelBest !== undefined ? (
+            <span className="btn-note">
+              {t('best')} {currentLevelBest}
+            </span>
+          ) : null}
         </button>
         <button type="button" className="btn btn-secondary btn-big" onClick={onDaily}>
           {t('dailyChallenge')}
@@ -72,6 +86,9 @@ export function HomeScreen() {
           ) : null}
         </button>
         <div className="home-links">
+          <button type="button" className="btn btn-ghost" onClick={() => navigate('levels')}>
+            {t('levelSelect')}
+          </button>
           <button type="button" className="btn btn-ghost" onClick={() => navigate('tutorial')}>
             {t('howToPlay')}
           </button>
@@ -102,7 +119,7 @@ export function HomeScreen() {
           if (target === 'daily') {
             startDaily();
           } else {
-            startClassic();
+            startLevel(currentLevel);
           }
         }}
       />

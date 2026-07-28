@@ -5,7 +5,7 @@ import { dayDifference, type GameSession } from '../game';
 import type { Stats } from '../storage/schemas';
 
 /** Registers a started game (new game or restart, not resume). */
-export function applyGameStart(stats: Stats, mode: 'classic' | 'daily'): Stats {
+export function applyGameStart(stats: Stats, mode: 'level' | 'daily'): Stats {
   const next = structuredClone(stats);
   next[mode].played += 1;
   return next;

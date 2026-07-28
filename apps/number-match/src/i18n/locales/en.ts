@@ -8,7 +8,6 @@ export const en = {
 
   // Home
   resume: 'Resume',
-  newGame: 'New Game',
   dailyChallenge: 'Daily Challenge',
   dailyDoneBadge: 'Completed today',
   streakLine: '{n} day streak',
@@ -16,8 +15,26 @@ export const en = {
   statistics: 'Statistics',
   settings: 'Settings',
 
+  // Levels
+  modeLevel: 'Level {n}',
+  levelSelect: 'Select Level',
+  levelLocked: 'Level {n}, locked',
+  nextLevel: 'Next Level',
+  levelsTitle: 'Levels',
+  reachedLevel: 'Reached level',
+
+  // Score
+  score: 'Score',
+  best: 'Best',
+  newBest: 'New best!',
+  scoreMatches: 'Matches',
+  scoreRows: 'Row bonus',
+  scoreClearBonus: 'Clear bonus',
+  scoreNoHint: 'No-hint bonus',
+  bestScores: 'Best Scores',
+  totalBest: 'Total of level bests',
+
   // Game
-  modeClassic: 'Classic',
   modeDaily: 'Daily',
   undo: 'Undo',
   hint: 'Hint',

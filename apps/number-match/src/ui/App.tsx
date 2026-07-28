@@ -1,6 +1,7 @@
 import { useApp } from '../state/AppContext';
 import { GameScreen } from './screens/GameScreen';
 import { HomeScreen } from './screens/HomeScreen';
+import { LevelSelectScreen } from './screens/LevelSelectScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { StatsScreen } from './screens/StatsScreen';
 import { TutorialScreen } from './screens/TutorialScreen';
@@ -10,6 +11,8 @@ export function App() {
   switch (screen) {
     case 'tutorial':
       return <TutorialScreen />;
+    case 'levels':
+      return <LevelSelectScreen />;
     case 'game':
       return <GameScreen />;
     case 'settings':

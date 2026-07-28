@@ -10,4 +10,4 @@ export type Board = readonly Cell[];
 
 export type GameStatus = 'playing' | 'cleared' | 'gameOver';
 
-export type GameMode = 'classic' | 'daily';
+export type GameMode = 'level' | 'daily';

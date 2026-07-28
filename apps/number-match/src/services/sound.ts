@@ -6,9 +6,35 @@
 
 let ctx: AudioContext | null = null;
 let enabled = true;
+let idleSuspendTimer: number | null = null;
+
+/** Battery: a running AudioContext keeps audio hardware awake. */
+const IDLE_SUSPEND_MS = 30_000;
+
+function suspendContext(): void {
+  try {
+    if (ctx && ctx.state === 'running') void ctx.suspend();
+  } catch {
+    // Ignore.
+  }
+}
+
+function scheduleIdleSuspend(): void {
+  if (typeof window === 'undefined') return;
+  if (idleSuspendTimer !== null) window.clearTimeout(idleSuspendTimer);
+  idleSuspendTimer = window.setTimeout(suspendContext, IDLE_SUSPEND_MS);
+}
+
+// Suspend immediately when the app goes to background.
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') suspendContext();
+  });
+}
 
 export function setSoundEnabled(value: boolean): void {
   enabled = value;
+  if (!value) suspendContext();
 }
 
 function getContext(): AudioContext | null {
@@ -43,6 +69,7 @@ function tone(frequency: number, durationMs: number, delayMs = 0, gainValue = 0.
     gain.connect(audio.destination);
     oscillator.start(start);
     oscillator.stop(stop + 0.02);
+    scheduleIdleSuspend();
   } catch {
     // Sound must never break the game.
   }

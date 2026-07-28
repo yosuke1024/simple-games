@@ -27,7 +27,7 @@ function ExampleTiles({ values, note }: { values: string[]; note?: string }) {
  * Revisited from Home/Settings as "How to Play" with a Close action.
  */
 export function TutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startClassic, goHome } = useApp();
+  const { tutorialCompleted, completeTutorial, startLevel, progress, goHome } = useApp();
   const { t } = useSettings();
   const [step, setStep] = useState(0);
 
@@ -54,7 +54,7 @@ export function TutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startClassic();
+      startLevel(progress.highestUnlocked);
     } else {
       goHome();
     }

@@ -1,35 +1,35 @@
 import { describe, expect, it } from 'vitest';
-import { createSession, type GameSession } from '../game';
+import { createLevelSession, type GameSession } from '../game';
 import { statsSchema } from '../storage/schemas';
 import { applyGameEnd, applyGameStart, effectiveDailyStreak } from './statsLogic';
 
 function endedSession(overrides: Partial<GameSession>): GameSession {
-  return { ...createSession('classic', 'stats-seed'), ...overrides };
+  return { ...createLevelSession(1), ...overrides };
 }
 
 describe('applyGameStart', () => {
   it('increments played per mode without mutating the input', () => {
     const stats = statsSchema.defaultValue();
-    const next = applyGameStart(stats, 'classic');
-    expect(next.classic.played).toBe(1);
-    expect(stats.classic.played).toBe(0);
+    const next = applyGameStart(stats, 'level');
+    expect(next.level.played).toBe(1);
+    expect(stats.level.played).toBe(0);
   });
 });
 
 describe('applyGameEnd', () => {
-  it('records a classic clear with best time', () => {
+  it('records a level clear with best time', () => {
     const stats = statsSchema.defaultValue();
     const s1 = applyGameEnd(
       stats,
       endedSession({ status: 'cleared', elapsedSeconds: 120 }),
     );
-    expect(s1.classic.cleared).toBe(1);
-    expect(s1.classic.bestClearSeconds).toBe(120);
-    expect(s1.classic.totalPlaySeconds).toBe(120);
+    expect(s1.level.cleared).toBe(1);
+    expect(s1.level.bestClearSeconds).toBe(120);
+    expect(s1.level.totalPlaySeconds).toBe(120);
     const s2 = applyGameEnd(s1, endedSession({ status: 'cleared', elapsedSeconds: 90 }));
-    expect(s2.classic.bestClearSeconds).toBe(90);
+    expect(s2.level.bestClearSeconds).toBe(90);
     const s3 = applyGameEnd(s2, endedSession({ status: 'cleared', elapsedSeconds: 200 }));
-    expect(s3.classic.bestClearSeconds).toBe(90);
+    expect(s3.level.bestClearSeconds).toBe(90);
   });
 
   it('records game overs without touching clears', () => {
@@ -37,9 +37,9 @@ describe('applyGameEnd', () => {
       statsSchema.defaultValue(),
       endedSession({ status: 'gameOver', elapsedSeconds: 60 }),
     );
-    expect(stats.classic.gameOver).toBe(1);
-    expect(stats.classic.cleared).toBe(0);
-    expect(stats.classic.totalPlaySeconds).toBe(60);
+    expect(stats.level.gameOver).toBe(1);
+    expect(stats.level.cleared).toBe(0);
+    expect(stats.level.totalPlaySeconds).toBe(60);
   });
 
   it('starts a daily streak at 1 and extends it on consecutive days', () => {

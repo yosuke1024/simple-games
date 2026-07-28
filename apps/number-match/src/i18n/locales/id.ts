@@ -5,7 +5,6 @@ export const id: Messages = {
   tagline: 'Bisa offline. Tanpa akun. Tanpa pembelian.',
 
   resume: 'Lanjutkan',
-  newGame: 'Permainan Baru',
   dailyChallenge: 'Tantangan Harian',
   dailyDoneBadge: 'Selesai hari ini',
   streakLine: 'Runtunan {n} hari',
@@ -13,7 +12,23 @@ export const id: Messages = {
   statistics: 'Statistik',
   settings: 'Pengaturan',
 
-  modeClassic: 'Klasik',
+  modeLevel: 'Level {n}',
+  levelSelect: 'Pilih Level',
+  levelLocked: 'Level {n}, terkunci',
+  nextLevel: 'Level Berikutnya',
+  levelsTitle: 'Level',
+  reachedLevel: 'Level tercapai',
+
+  score: 'Skor',
+  best: 'Terbaik',
+  newBest: 'Rekor baru!',
+  scoreMatches: 'Pencocokan',
+  scoreRows: 'Bonus baris',
+  scoreClearBonus: 'Bonus selesai',
+  scoreNoHint: 'Bonus tanpa petunjuk',
+  bestScores: 'Skor Terbaik',
+  totalBest: 'Total skor terbaik level',
+
   modeDaily: 'Harian',
   undo: 'Urungkan',
   hint: 'Petunjuk',

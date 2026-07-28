@@ -246,6 +246,14 @@ button:disabled {
   overflow: hidden;
 }
 
+.game-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
 .game-topbar {
   display: flex;
   align-items: center;
@@ -268,6 +276,25 @@ button:disabled {
   font-variant-numeric: tabular-nums;
   color: var(--ink-soft);
   font-size: 15px;
+}
+
+.game-score {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .board-scroll {
@@ -323,7 +350,8 @@ button:disabled {
 
 .cell-hint {
   border: 2px solid var(--accent);
-  animation: hint-pulse 1s ease-in-out infinite;
+  /* Finite pulse: quieter, and no endless animation burning battery. */
+  animation: hint-pulse 1s ease-in-out 3;
 }
 
 .cell-invalid {
@@ -700,6 +728,185 @@ button:disabled {
 
 .toggle-track.on .toggle-thumb {
   transform: translateX(20px);
+}
+
+/* ---------- level select ---------- */
+
+.levels-screen {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+.level-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 0 16px 8px;
+}
+
+.level-pager-range {
+  min-width: 110px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.level-grid-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 16px 16px;
+}
+
+.level-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.level-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.level-cell-number {
+  font-weight: 700;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.level-cell-best {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.level-cell-current {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.level-cell-current .level-cell-best {
+  color: var(--accent-ink);
+  opacity: 0.85;
+}
+
+.level-cell-locked {
+  background: var(--surface-recessed);
+}
+
+.level-cell-locked:disabled {
+  opacity: 0.35;
+}
+
+/* ---------- score summary (clear overlay) ---------- */
+
+.score-summary {
+  margin: 4px 0 12px;
+}
+
+.score-total-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.score-total {
+  font-size: 34px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.score-newbest {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.score-best-note {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.score-breakdown {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.score-breakdown div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.score-breakdown dt {
+  color: var(--ink-soft);
+}
+
+.score-breakdown dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* ---------- personal top scores ---------- */
+
+.top-scores {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.top-score-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.top-score-row:last-child {
+  border-bottom: none;
+}
+
+.top-score-rank {
+  width: 20px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.top-score-ref {
+  flex: 1;
+  font-weight: 600;
+}
+
+.top-score-date {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.top-score-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- statistics ---------- */

@@ -5,7 +5,6 @@ export const ja: Messages = {
   tagline: 'オフラインで遊べる。アカウント不要。課金なし。',
 
   resume: '続きから',
-  newGame: '新しいゲーム',
   dailyChallenge: 'デイリーチャレンジ',
   dailyDoneBadge: '今日はクリア済み',
   streakLine: '連続 {n} 日',
@@ -13,7 +12,23 @@ export const ja: Messages = {
   statistics: '統計',
   settings: '設定',
 
-  modeClassic: 'クラシック',
+  modeLevel: 'レベル {n}',
+  levelSelect: 'レベル選択',
+  levelLocked: 'レベル {n}(未解放)',
+  nextLevel: '次のレベルへ',
+  levelsTitle: 'レベル',
+  reachedLevel: '到達レベル',
+
+  score: 'スコア',
+  best: 'ベスト',
+  newBest: '自己ベスト更新!',
+  scoreMatches: 'マッチ',
+  scoreRows: '行ボーナス',
+  scoreClearBonus: 'クリアボーナス',
+  scoreNoHint: 'ノーヒントボーナス',
+  bestScores: 'ベストスコア',
+  totalBest: 'レベルベスト合計',
+
   modeDaily: 'デイリー',
   undo: '戻す',
   hint: 'ヒント',

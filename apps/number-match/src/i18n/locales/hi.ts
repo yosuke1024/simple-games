@@ -5,7 +5,6 @@ export const hi: Messages = {
   tagline: 'ऑफ़लाइन खेलें। कोई खाता नहीं। कोई खरीदारी नहीं।',
 
   resume: 'जारी रखें',
-  newGame: 'नया गेम',
   dailyChallenge: 'डेली चैलेंज',
   dailyDoneBadge: 'आज पूरा हुआ',
   streakLine: '{n} दिन की स्ट्रीक',
@@ -13,7 +12,23 @@ export const hi: Messages = {
   statistics: 'आंकड़े',
   settings: 'सेटिंग्स',
 
-  modeClassic: 'क्लासिक',
+  modeLevel: 'लेवल {n}',
+  levelSelect: 'लेवल चुनें',
+  levelLocked: 'लेवल {n}, लॉक है',
+  nextLevel: 'अगला लेवल',
+  levelsTitle: 'लेवल',
+  reachedLevel: 'पहुँचा लेवल',
+
+  score: 'स्कोर',
+  best: 'सर्वश्रेष्ठ',
+  newBest: 'नया सर्वश्रेष्ठ!',
+  scoreMatches: 'मिलान',
+  scoreRows: 'पंक्ति बोनस',
+  scoreClearBonus: 'क्लियर बोनस',
+  scoreNoHint: 'बिना-संकेत बोनस',
+  bestScores: 'सर्वश्रेष्ठ स्कोर',
+  totalBest: 'सभी लेवल के सर्वश्रेष्ठ का योग',
+
   modeDaily: 'डेली',
   undo: 'अनडू',
   hint: 'संकेत',

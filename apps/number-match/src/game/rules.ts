@@ -19,12 +19,22 @@ const colOf = (i: number): number => i % COLS;
  *  1. reading order (covers same-row horizontal and row-end → next-row-start)
  *  2. vertical (same column)
  *  3. diagonal (equal row and column distance)
+ *
+ * Returns the number of cleared cells jumped over along the SHORTEST valid
+ * path (0 for adjacency), or null when the cells do not connect. The gap
+ * feeds the score's distance bonus (§12), so the minimum keeps adjacent
+ * pairs from earning long-path bonuses.
  */
-export function canConnect(board: Board, i: number, j: number): boolean {
-  if (i === j) return false;
+export function connectionGap(board: Board, i: number, j: number): number | null {
+  if (i === j) return null;
   const a = Math.min(i, j);
   const b = Math.max(i, j);
-  if (a < 0 || b >= board.length) return false;
+  if (a < 0 || b >= board.length) return null;
+
+  let best: number | null = null;
+  const consider = (gap: number) => {
+    if (best === null || gap < best) best = gap;
+  };
 
   // 1. Reading order.
   let clearedBetween = true;
@@ -34,7 +44,7 @@ export function canConnect(board: Board, i: number, j: number): boolean {
       break;
     }
   }
-  if (clearedBetween) return true;
+  if (clearedBetween) consider(b - a - 1);
 
   const ra = rowOf(a);
   const ca = colOf(a);
@@ -50,7 +60,7 @@ export function canConnect(board: Board, i: number, j: number): boolean {
         break;
       }
     }
-    if (clearedBetween) return true;
+    if (clearedBetween) consider(rb - ra - 1);
   }
 
   // 3. Diagonal (either direction).
@@ -65,10 +75,14 @@ export function canConnect(board: Board, i: number, j: number): boolean {
         break;
       }
     }
-    if (clearedBetween) return true;
+    if (clearedBetween) consider(dr - 1);
   }
 
-  return false;
+  return best;
+}
+
+export function canConnect(board: Board, i: number, j: number): boolean {
+  return connectionGap(board, i, j) !== null;
 }
 
 /** Full pair check: both cells live, values match, and positions connect. */

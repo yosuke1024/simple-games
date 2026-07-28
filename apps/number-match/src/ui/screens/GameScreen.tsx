@@ -15,16 +15,56 @@ const INVALID_FLASH_MS = 350;
 const TOAST_MS = 2600;
 const EMPTY_BOARD: Board = [];
 
+/**
+ * Isolated clock display: polls the play-clock ref once a second so the
+ * rest of the game screen never re-renders on ticks (battery). The poll
+ * pauses while the app is hidden or the game is over; `resetKey` re-syncs
+ * instantly when a new game begins.
+ */
+function TimerDisplay({
+  read,
+  active,
+  resetKey,
+  label,
+}: {
+  read: () => number;
+  active: boolean;
+  resetKey: number;
+  label: string;
+}) {
+  const [seconds, setSeconds] = useState(read);
+  useEffect(() => {
+    setSeconds(read());
+  }, [read, resetKey]);
+  useEffect(() => {
+    if (!active) return;
+    const id = window.setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+      setSeconds(read());
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [read, active]);
+  return (
+    <span className="game-time">
+      <span className="visually-hidden">{label} </span>
+      {formatDuration(seconds)}
+    </span>
+  );
+}
+
 export function GameScreen() {
   const {
     session,
+    lastResult,
+    sessionEpoch,
+    readElapsedSeconds,
     applyPair,
     applyUndo,
     applyAdd,
     takeHint,
     goHome,
     restartCurrent,
-    startClassic,
+    startNextLevel,
   } = useApp();
   const { t, settings } = useSettings();
 
@@ -152,15 +192,27 @@ export function GameScreen() {
 
   return (
     <div className="screen game-screen">
+      {/* inert while the result overlay is up: nothing behind the dialog is
+          focusable or exposed to assistive technology. */}
+      <div className="game-content" inert={session.status !== 'playing'}>
       <header className="game-topbar">
         <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
           ←
         </button>
         <div className="game-status">
           <span className="game-mode">
-            {session.mode === 'daily' ? t('modeDaily') : t('modeClassic')}
+            {session.mode === 'daily' ? t('modeDaily') : t('modeLevel', { n: session.level ?? 1 })}
           </span>
-          <span className="game-time">{formatDuration(session.elapsedSeconds)}</span>
+          <TimerDisplay
+            read={readElapsedSeconds}
+            active={session.status === 'playing'}
+            resetKey={sessionEpoch}
+            label={t('timeLabel')}
+          />
+          <span className="game-score">
+            <span className="visually-hidden">{t('score')} </span>
+            {session.score.total}
+          </span>
         </div>
         <button
           type="button"
@@ -215,11 +267,13 @@ export function GameScreen() {
       </div>
 
       <BannerSlot />
+      </div>
 
       <ResultOverlay
         session={session}
+        lastResult={lastResult}
         onRetry={restartCurrent}
-        onNewGame={startClassic}
+        onNextLevel={startNextLevel}
         onHome={goHome}
       />
 

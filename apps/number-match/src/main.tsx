@@ -8,7 +8,7 @@ import { initNetwork } from './services/network';
 import { initRemoteConfig } from './services/remoteConfig';
 import { loadSavedGame } from './storage/gamePersistence';
 import { loadRecord } from './storage/repo';
-import { flagsSchema, settingsSchema, statsSchema } from './storage/schemas';
+import { flagsSchema, progressSchema, settingsSchema, statsSchema } from './storage/schemas';
 import { AppProvider } from './state/AppContext';
 import { SettingsProvider } from './state/SettingsContext';
 import './ui/styles.css';
@@ -25,16 +25,18 @@ async function boot(): Promise<void> {
   let settings = settingsSchema.defaultValue();
   let stats = statsSchema.defaultValue();
   let flags = flagsSchema.defaultValue();
+  let progress = progressSchema.defaultValue();
   let savedGame = null as Awaited<ReturnType<typeof loadSavedGame>>;
 
   try {
     await initNetwork();
     await initRemoteConfig();
     await initAdState();
-    [settings, stats, flags, savedGame] = await Promise.all([
+    [settings, stats, flags, progress, savedGame] = await Promise.all([
       loadRecord(settingsSchema),
       loadRecord(statsSchema),
       loadRecord(flagsSchema),
+      loadRecord(progressSchema),
       loadSavedGame(),
     ]);
   } catch {
@@ -44,7 +46,12 @@ async function boot(): Promise<void> {
   createRoot(container).render(
     <StrictMode>
       <SettingsProvider initialSettings={settings}>
-        <AppProvider initialStats={stats} initialFlags={flags} initialSession={savedGame}>
+        <AppProvider
+          initialStats={stats}
+          initialFlags={flags}
+          initialProgress={progress}
+          initialSession={savedGame}
+        >
           <App />
         </AppProvider>
       </SettingsProvider>

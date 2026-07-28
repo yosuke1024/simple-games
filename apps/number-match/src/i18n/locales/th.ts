@@ -5,7 +5,6 @@ export const th: Messages = {
   tagline: 'เล่นออฟไลน์ได้ ไม่ต้องมีบัญชี ไม่มีการซื้อในแอป',
 
   resume: 'เล่นต่อ',
-  newGame: 'เกมใหม่',
   dailyChallenge: 'ชาเลนจ์รายวัน',
   dailyDoneBadge: 'วันนี้สำเร็จแล้ว',
   streakLine: 'สตรีค {n} วัน',
@@ -13,7 +12,23 @@ export const th: Messages = {
   statistics: 'สถิติ',
   settings: 'การตั้งค่า',
 
-  modeClassic: 'คลาสสิก',
+  modeLevel: 'เลเวล {n}',
+  levelSelect: 'เลือกเลเวล',
+  levelLocked: 'เลเวล {n} (ล็อกอยู่)',
+  nextLevel: 'เลเวลถัดไป',
+  levelsTitle: 'เลเวล',
+  reachedLevel: 'เลเวลที่ไปถึง',
+
+  score: 'คะแนน',
+  best: 'ดีที่สุด',
+  newBest: 'สถิติใหม่!',
+  scoreMatches: 'จับคู่',
+  scoreRows: 'โบนัสแถว',
+  scoreClearBonus: 'โบนัสเคลียร์',
+  scoreNoHint: 'โบนัสไม่ใช้คำใบ้',
+  bestScores: 'คะแนนที่ดีที่สุด',
+  totalBest: 'ผลรวมคะแนนที่ดีที่สุด',
+
   modeDaily: 'รายวัน',
   undo: 'ย้อนกลับ',
   hint: 'คำใบ้',

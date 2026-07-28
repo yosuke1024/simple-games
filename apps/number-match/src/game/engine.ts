@@ -7,32 +7,59 @@ import { hasAnyMove } from './hint';
 import { isValidPair } from './rules';
 import type { Board, Cell, GameStatus } from './types';
 
-/**
- * §4: removes complete rows (COLS cells) that are fully cleared, then trims
- * trailing cleared cells at the end of the board.
- */
-export function collapseBoard(board: Board): Board {
-  const kept: Cell[] = [];
-  const fullRows = Math.floor(board.length / COLS);
-  for (let r = 0; r < fullRows; r++) {
-    const row = board.slice(r * COLS, (r + 1) * COLS);
-    if (!row.every((c) => c.cleared)) kept.push(...row);
-  }
-  kept.push(...board.slice(fullRows * COLS));
-  while (kept.length > 0 && kept[kept.length - 1]!.cleared) kept.pop();
-  return kept;
+interface CollapseResult {
+  readonly board: Board;
+  readonly rowsRemoved: number;
 }
 
 /**
- * §4: clears a valid pair and collapses the board.
- * Returns null when the pair is not valid (callers should pre-validate).
+ * §4: removes complete rows (COLS cells) that are fully cleared, then trims
+ * trailing cleared cells at the end of the board. Counts removed rows
+ * directly (trailing trim must not be mistaken for a row removal).
  */
-export function applyMatch(board: Board, i: number, j: number): Board | null {
+function collapseDetailed(board: Board): CollapseResult {
+  const kept: Cell[] = [];
+  let rowsRemoved = 0;
+  const fullRows = Math.floor(board.length / COLS);
+  for (let r = 0; r < fullRows; r++) {
+    const row = board.slice(r * COLS, (r + 1) * COLS);
+    if (row.every((c) => c.cleared)) {
+      rowsRemoved++;
+    } else {
+      kept.push(...row);
+    }
+  }
+  kept.push(...board.slice(fullRows * COLS));
+  while (kept.length > 0 && kept[kept.length - 1]!.cleared) kept.pop();
+  return { board: kept, rowsRemoved };
+}
+
+export function collapseBoard(board: Board): Board {
+  return collapseDetailed(board).board;
+}
+
+export interface MatchResult {
+  readonly board: Board;
+  /** Complete rows removed by the collapse (feeds the score's row bonus). */
+  readonly rowsRemoved: number;
+}
+
+/**
+ * §4: clears a valid pair and collapses the board, reporting how many
+ * complete rows disappeared. Returns null when the pair is not valid.
+ */
+export function applyMatchDetailed(board: Board, i: number, j: number): MatchResult | null {
   if (!isValidPair(board, i, j)) return null;
   const next = board.map((cell, idx) =>
     idx === i || idx === j ? { value: cell.value, cleared: true } : cell,
   );
-  return collapseBoard(next);
+  const { board: collapsed, rowsRemoved } = collapseDetailed(next);
+  return { board: collapsed, rowsRemoved };
+}
+
+/** §4 convenience wrapper without the row count. */
+export function applyMatch(board: Board, i: number, j: number): Board | null {
+  return applyMatchDetailed(board, i, j)?.board ?? null;
 }
 
 /** §5: whether Add Numbers can currently be performed. */

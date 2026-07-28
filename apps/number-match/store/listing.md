@@ -40,12 +40,18 @@ HOW TO PLAY
 • Clear the whole board to win. Stuck? Add Numbers appends the remaining
   numbers. Undo and hints are always free and unlimited.
 
+999 LEVELS, GENTLY RISING
+• Difficulty grows slowly — no sudden walls, no timers
+• Replay any cleared level to beat your best score
+• Scoring rewards sharp eyes and planning, never speed
+
 MADE FOR LONG FLIGHTS
 • Fully playable offline, from the very first launch
 • No account required
 • No in-app purchases
 • Unlimited Undo and Hints
 • Daily Challenge generated on your device
+• Personal best scores kept on your device
 • Progress saved locally
 • Light and dark themes, 5 languages
 

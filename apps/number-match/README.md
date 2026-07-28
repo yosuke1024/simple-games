@@ -5,7 +5,8 @@
 - Fully playable offline (初回起動から機内モードで動作)
 - No account required / No in-app purchases
 - Unlimited Undo and Hints (広告視聴・課金不要)
-- Progress stays on your device
+- 999 levels(式による決定的生成、緩やかな難易度上昇)とスコア(時間要素なし)
+- Progress stays on your device(レベル別ベスト・自己ベスト Top 10 も端末内のみ)
 
 ゲームルールの正式定義は [docs/NUMBER_MATCH_RULES.md](../../docs/NUMBER_MATCH_RULES.md)。
 
