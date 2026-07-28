@@ -1,9 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <!-- Number Match — Simple Games series icon layout:
-       rounded tile pair + game-specific symbols (digits 4 and 6). -->
-  <rect width="1024" height="1024" rx="224" fill="#3d8b76"/>
-  <rect x="118" y="296" width="374" height="432" rx="88" fill="#f6f4ef"/>
-  <rect x="532" y="296" width="374" height="432" rx="88" fill="#dcece6"/>
-  <text x="305" y="516" font-family="Helvetica, Arial, sans-serif" font-size="300" font-weight="700" fill="#22303c" text-anchor="middle" dominant-baseline="central">4</text>
-  <text x="719" y="516" font-family="Helvetica, Arial, sans-serif" font-size="300" font-weight="700" fill="#22303c" text-anchor="middle" dominant-baseline="central">6</text>
+       rounded tile pair + game-specific symbols (digits 4 and 6).
+       The indigo field is this title's accent; sibling titles reuse the
+       layout with their own accent. -->
+  <rect width="1024" height="1024" rx="224" fill="#3f5b8f"/>
+  <rect x="118" y="296" width="374" height="432" rx="88" fill="#fffdf8"/>
+  <rect x="532" y="296" width="374" height="432" rx="88" fill="#e2e8f3"/>
+  <text x="305" y="516" font-family="Helvetica, Arial, sans-serif" font-size="300" font-weight="700" fill="#232a33" text-anchor="middle" dominant-baseline="central">4</text>
+  <text x="719" y="516" font-family="Helvetica, Arial, sans-serif" font-size="300" font-weight="700" fill="#232a33" text-anchor="middle" dominant-baseline="central">6</text>
 </svg>

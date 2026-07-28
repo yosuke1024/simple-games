@@ -2,7 +2,7 @@
  * Simple Games by PixApps — brand constants.
  *
  * Simple Games is a label (series name) owned by PixApps, not a separate company.
- * Keep this package tiny: names, taglines, and the shared color palette only.
+ * Keep this package tiny: names, taglines, and the shared palette only.
  * Game-specific concepts must not leak into this package.
  */
 
@@ -19,26 +19,57 @@ export const SERIES_SUBLINE_EN = 'No account. No purchases. No internet required
 export const SERIES_TAGLINE_JA = '完全無課金。完全オフライン。すぐ遊べる。';
 
 /**
- * Shared palette: quiet, low-stimulation colors that stay readable during
- * long play sessions. Each game may extend but should start from these.
+ * The series base: a warm, paper-like surface that stays readable for a long
+ * sitting and calm in a dark cabin. Every Simple Games title shares these —
+ * they are what makes two different games look like the same series.
  */
-export const brandColors = {
-  /** Main text on light backgrounds. */
-  ink: '#22303c',
-  /** Light theme background. */
-  paper: '#f6f4ef',
-  /** Dark theme background. */
-  paperDark: '#12181f',
-  /** Main text on dark backgrounds. */
-  inkDark: '#e8e6e1',
-  /** Calm accent used for selection / primary actions. */
-  accent: '#3d8b76',
-  /** Soft accent surface (light theme). */
-  accentSoft: '#dcece6',
-  /** Soft accent surface (dark theme). */
-  accentSoftDark: '#1e3a32',
+export const seriesColors = {
+  /** Page background. */
+  paper: '#f3f0e9',
+  /** Raised surfaces: tiles, cards, rows. */
+  surface: '#fffdf8',
+  /** Recessed surfaces: a cleared cell. */
+  surfaceRecessed: '#e8e4d9',
+  /** Hairlines and borders. */
+  line: '#ddd7ca',
+  /** Primary text. */
+  ink: '#232a33',
+  /** Secondary text. */
+  inkSoft: '#5c6772',
+
+  paperDark: '#14171c',
+  surfaceDark: '#212730',
+  surfaceRecessedDark: '#1a1f26',
+  lineDark: '#333b47',
+  inkDark: '#e9e6df',
+  inkSoftDark: '#8b95a3',
+
   /** Gentle warning (game over, destructive confirm). Never alarm-red. */
-  warn: '#c26d4f',
+  warn: '#c2603f',
+  warnSoft: '#f6e4db',
+  warnDark: '#d9805f',
+  warnSoftDark: '#3a2a22',
 } as const;
 
-export type BrandColors = typeof brandColors;
+/**
+ * One accent per title — the only colour that changes between games. Keeping
+ * the base fixed and swapping just this is what lets a new title read as
+ * "another Simple Game" at a glance. Add the next game's entry here when it
+ * exists; do not invent accents for games that do not.
+ */
+export const titleAccents = {
+  /** Number Match — indigo: quiet in a dark cabin, uncommon among puzzle apps. */
+  numberMatch: {
+    light: '#3f5b8f',
+    /** Text/icons drawn on top of `light`. */
+    onLight: '#ffffff',
+    /** Tinted surface in the light theme. */
+    softLight: '#e2e8f3',
+    dark: '#7d9ccf',
+    onDark: '#12161c',
+    softDark: '#243043',
+  },
+} as const;
+
+export type SeriesColors = typeof seriesColors;
+export type TitleAccent = (typeof titleAccents)[keyof typeof titleAccents];

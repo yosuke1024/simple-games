@@ -9,7 +9,7 @@ const config: CapacitorConfig = {
       // Keep the launch quiet and fast; the app itself boots offline instantly.
       launchShowDuration: 400,
       launchAutoHide: true,
-      backgroundColor: '#f6f4ef',
+      backgroundColor: '#f3f0e9',
       showSpinner: false,
     },
   },
