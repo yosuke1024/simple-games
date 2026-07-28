@@ -63,6 +63,30 @@ describe('collapseBoard', () => {
   it('removes a row made only of holes', () => {
     expect(collapseBoard(makeBoard('123456789', '#########')).length).toBe(COLS);
   });
+
+  it("preserves each number's column when a row above it is removed", () => {
+    // A row is exactly COLS slots, so dropping one shifts everything below by
+    // exactly one row — vertical and diagonal neighbours stay lined up.
+    // Row 0 avoids the digit 7 so the search below can only find the marker.
+    const board = makeBoard('888888888', '.........', '###7');
+    const before = board.findIndex((c) => c !== null && !c.cleared && c.value === 7);
+    expect(before % COLS).toBe(3);
+    const next = collapseBoard(board);
+    const after = next.findIndex((c) => c !== null && !c.cleared && c.value === 7);
+    expect(after % COLS).toBe(3);
+    expect(Math.floor(after / COLS)).toBe(1);
+  });
+
+  it('never compacts columns: a fully cleared column stays as empty cells', () => {
+    // Columns are only a consequence of where a number sits in reading order,
+    // so removing one would renumber every following cell and break the
+    // row-end → next-row-start rule. Cleared cells simply stay transparent.
+    const board = makeBoard('1.3456789', '1.3456789');
+    const next = collapseBoard(board);
+    expect(next.length).toBe(2 * COLS);
+    expect(next[1]).toEqual({ value: 1, cleared: true });
+    expect(next[COLS + 1]).toEqual({ value: 1, cleared: true });
+  });
 });
 
 describe('addNumbers', () => {
