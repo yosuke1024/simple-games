@@ -1,7 +1,7 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
-import { initialCellsForLevel } from '../game';
+import { generateLevelBoard } from '../game';
 import { AppProvider } from '../state/AppContext';
 import { SettingsProvider } from '../state/SettingsContext';
 import {
@@ -14,7 +14,7 @@ import {
 } from '../storage/schemas';
 import { App } from './App';
 
-const LEVEL1_CELLS = initialCellsForLevel(1);
+const LEVEL1_CELLS = generateLevelBoard(1).filter((c) => c !== null && !c.cleared).length;
 
 function renderApp(
   flags: Flags = flagsSchema.defaultValue(),

@@ -49,7 +49,10 @@ describe('generateLevelBoard', () => {
   it('always starts playable with the configured size, at every difficulty band', () => {
     for (const level of [1, 100, 250, 400, 550, 700, 850, 999]) {
       const board = generateLevelBoard(level);
-      expect(board.filter((c) => isLive(c))).toHaveLength(initialCellsForLevel(level));
+      // Whole rows only, so the size lands within a row of the target (§13).
+      const live = board.filter((c) => isLive(c)).length;
+      expect(Math.abs(live - initialCellsForLevel(level))).toBeLessThanOrEqual(9);
+      expect(board.length % 9).toBe(0);
       expect(hasAnyMove(board)).toBe(true);
       for (const cell of board) {
         if (cell === null) continue;

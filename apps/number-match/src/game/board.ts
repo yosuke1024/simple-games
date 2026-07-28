@@ -6,15 +6,19 @@
 import { COLS, INITIAL_CELLS } from './constants';
 import { hasAnyMove } from './hint';
 import { createRng } from './rng';
-import { RECTANGLE, rowLayout, widthAt } from './shapes';
+import { RECTANGLE, rowLayout, startingWidths, type Shape } from './shapes';
 import { isLive, type Board, type BoardCell, type Digit } from './types';
 
 const MAX_GENERATION_ATTEMPTS = 100;
 
 export interface GenerateOptions {
-  /** Row-width cycle; defaults to the classic rectangle. */
-  shape?: readonly number[];
-  /** Roughly how many numbers to place. */
+  /** Outline of the starting board; defaults to the classic rectangle. */
+  shape?: Shape;
+  /**
+   * Target number of numbers. The board is built from whole rows, so the
+   * actual count lands on the nearest complete row rather than exactly here
+   * — a half-filled last row reads as cut off, not as a shape (§13).
+   */
   cellCount?: number;
   /**
    * Chance that a number is drawn to pair with a neighbour (left or above).
@@ -34,21 +38,14 @@ export function generateBoard(seed: string, options: GenerateOptions = {}): Boar
   const bias = options.pairBias ?? 0;
   const rng = createRng(seed);
 
-  // Enough whole rows to hold cellCount numbers.
-  const layouts: boolean[][] = [];
-  let capacity = 0;
-  for (let r = 0; capacity < cellCount; r++) {
-    const width = widthAt(shape, r);
-    layouts.push(rowLayout(width));
-    capacity += width;
-  }
+  // Whole rows only, as close to the target as the shape allows.
+  const layouts = startingWidths(shape, cellCount).map(rowLayout);
 
   const draw = (): BoardCell[] => {
     const cells: BoardCell[] = [];
-    let placed = 0;
     for (const layout of layouts) {
       for (const playable of layout) {
-        if (!playable || placed >= cellCount) {
+        if (!playable) {
           cells.push(null);
           continue;
         }
@@ -65,7 +62,6 @@ export function generateBoard(seed: string, options: GenerateOptions = {}): Boar
           value = (1 + Math.floor(rng() * 9)) as Digit;
         }
         cells.push({ value, cleared: false });
-        placed++;
       }
     }
     return cells;

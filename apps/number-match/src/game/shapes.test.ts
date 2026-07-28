@@ -4,11 +4,11 @@ import {
   RECTANGLE,
   RECTANGLE_ONLY_UP_TO_LEVEL,
   rowLayout,
-  SHAPE_FAMILIES,
+  SHAPES,
   shapeForDaily,
   shapeForLevel,
   shapeForSession,
-  widthAt,
+  startingWidths,
 } from './shapes';
 
 describe('rowLayout', () => {
@@ -28,46 +28,87 @@ describe('rowLayout', () => {
   });
 });
 
-describe('widthAt', () => {
-  it('cycles through the shape', () => {
-    const shape = [5, 9, 3];
-    expect([0, 1, 2, 3, 4, 5].map((i) => widthAt(shape, i))).toEqual([5, 9, 3, 5, 9, 3]);
+describe('startingWidths', () => {
+  const targets = [15, 25, 27, 30, 36, 45, 54, 63];
+
+  it('only ever uses odd widths, so every row can sit centred', () => {
+    for (const shape of SHAPES) {
+      for (const target of targets) {
+        for (const width of startingWidths(shape, target)) {
+          expect(width % 2).toBe(1);
+          expect(width).toBeGreaterThanOrEqual(1);
+          expect(width).toBeLessThanOrEqual(COLS);
+        }
+      }
+    }
   });
 
-  it('clamps to a usable width', () => {
-    expect(widthAt([99], 0)).toBe(COLS);
-    expect(widthAt([0], 0)).toBe(1);
+  it('draws a whole motif rather than a slice of a repeating cycle', () => {
+    // A symmetric shape must read the same upside down at any size.
+    for (const key of ['diamond', 'hourglass']) {
+      const shape = SHAPES.find((s) => s.key === key)!;
+      for (const target of targets) {
+        const widths = startingWidths(shape, target);
+        expect(widths).toEqual([...widths].reverse());
+      }
+    }
+  });
+
+  it('runs monotonically for the one-way shapes', () => {
+    for (const [key, compare] of [
+      ['pyramid', (a: number, b: number) => a <= b],
+      ['funnel', (a: number, b: number) => a >= b],
+    ] as const) {
+      const shape = SHAPES.find((s) => s.key === key)!;
+      const widths = startingWidths(shape, 45);
+      for (let i = 1; i < widths.length; i++) {
+        expect(compare(widths[i - 1]!, widths[i]!)).toBe(true);
+      }
+    }
+  });
+
+  it('lands near the requested number of cells', () => {
+    for (const shape of SHAPES) {
+      for (const target of targets) {
+        const total = startingWidths(shape, target).reduce((sum, w) => sum + w, 0);
+        // Whole rows only, so the total lands within a row of the target.
+        expect(Math.abs(total - target)).toBeLessThanOrEqual(COLS);
+      }
+    }
+  });
+
+  it('falls back to a rectangle when there are too few rows to read a shape', () => {
+    const diamond = SHAPES.find((s) => s.key === 'diamond')!;
+    expect(startingWidths(diamond, 9)).toEqual(startingWidths(RECTANGLE, 9));
   });
 });
 
 describe('shape selection', () => {
   it('keeps the first levels rectangular so the rules land first', () => {
     for (let level = 1; level <= RECTANGLE_ONLY_UP_TO_LEVEL; level++) {
-      expect(shapeForLevel(level)).toEqual(RECTANGLE);
+      expect(shapeForLevel(level)).toBe(RECTANGLE);
     }
   });
 
   it('is deterministic per level and per date', () => {
     for (const level of [4, 17, 250, 999]) {
-      expect(shapeForLevel(level)).toEqual(shapeForLevel(level));
+      expect(shapeForLevel(level)).toBe(shapeForLevel(level));
     }
-    expect(shapeForDaily('2026-07-28')).toEqual(shapeForDaily('2026-07-28'));
+    expect(shapeForDaily('2026-07-28')).toBe(shapeForDaily('2026-07-28'));
   });
 
-  it('only ever returns a known family', () => {
-    for (let level = 1; level <= 200; level++) {
-      expect(SHAPE_FAMILIES).toContainEqual(shapeForLevel(level));
-    }
-  });
-
-  it('actually varies the outline across levels', () => {
+  it('only ever returns a known shape, and varies them across levels', () => {
     const seen = new Set<string>();
-    for (let level = 1; level <= 200; level++) seen.add(shapeForLevel(level).join('-'));
+    for (let level = 1; level <= 200; level++) {
+      const shape = shapeForLevel(level);
+      expect(SHAPES).toContain(shape);
+      seen.add(shape.key);
+    }
     expect(seen.size).toBeGreaterThan(1);
   });
 
   it('routes a session to its level or its date', () => {
-    expect(shapeForSession(42, null)).toEqual(shapeForLevel(42));
-    expect(shapeForSession(null, '2026-07-28')).toEqual(shapeForDaily('2026-07-28'));
+    expect(shapeForSession(42, null)).toBe(shapeForLevel(42));
+    expect(shapeForSession(null, '2026-07-28')).toBe(shapeForDaily('2026-07-28'));
   });
 });

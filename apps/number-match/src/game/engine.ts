@@ -8,7 +8,6 @@
 import { COLS, MAX_CELLS } from './constants';
 import { hasAnyMove } from './hint';
 import { isValidPair } from './rules';
-import { RECTANGLE, rowLayout, widthAt } from './shapes';
 import { isLive, type Board, type BoardCell, type Digit, type GameStatus } from './types';
 
 interface CollapseResult {
@@ -77,40 +76,16 @@ function liveValues(board: Board): Digit[] {
 }
 
 /**
- * §5: lays the given values into freshly shaped rows appended after
- * `startRow`. A row that runs out of values keeps holes for the rest, which
- * is what makes the last row look partially filled.
+ * §5: lays the given values into plain full-width rows. Only the starting
+ * board carries a shape (§13); a refill is a working surface, and appending
+ * part of an outline would draw a figure with no beginning. A row that runs
+ * out of values keeps holes for the rest — the next Add fills those first.
  */
-function shapedRows(values: readonly Digit[], shape: readonly number[], startRow: number): BoardCell[] {
-  const out: BoardCell[] = [];
-  let placed = 0;
-  for (let r = 0; placed < values.length; r++) {
-    const layout = rowLayout(widthAt(shape, startRow + r));
-    for (const playable of layout) {
-      if (playable && placed < values.length) {
-        out.push({ value: values[placed]!, cleared: false });
-        placed++;
-      } else {
-        out.push(null);
-      }
-    }
-  }
-  return out;
-}
-
-/** Slots the appended rows would occupy (rows are always COLS wide). */
-function appendedSlotCount(
-  count: number,
-  shape: readonly number[],
-  startRow: number,
-): number {
-  let placed = 0;
-  let rows = 0;
-  while (placed < count) {
-    placed += widthAt(shape, startRow + rows);
-    rows++;
-  }
-  return rows * COLS;
+function appendedRows(values: readonly Digit[]): BoardCell[] {
+  const rows = Math.ceil(values.length / COLS);
+  return Array.from({ length: rows * COLS }, (_, i) =>
+    i < values.length ? { value: values[i]!, cleared: false } : null,
+  );
 }
 
 /**
@@ -119,9 +94,8 @@ function appendedSlotCount(
  * A row that ran out of numbers keeps holes to its right; the next Add fills
  * those before starting a new row, so repeated Adds do not leave the board
  * riddled with permanent gaps. Rows are centred, so the playable band mirrors
- * the leading holes — that lets the band be recovered from the row itself,
- * which matters because collapsing rows shifts every row's index in the
- * shape cycle.
+ * the leading holes, which is what lets the band be recovered from the row
+ * itself — the starting shape is not carried around with the board.
  */
 function tailCapacity(board: Board): number {
   if (board.length === 0) return 0;
@@ -140,29 +114,21 @@ function tailCapacity(board: Board): number {
 }
 
 /** §5: whether Add Numbers can currently be performed. */
-export function canAddNumbers(
-  board: Board,
-  shape: readonly number[] = RECTANGLE,
-  maxCells: number = MAX_CELLS,
-): boolean {
+export function canAddNumbers(board: Board, maxCells: number = MAX_CELLS): boolean {
   const values = liveValues(board);
   if (values.length === 0) return false;
   const overflow = Math.max(0, values.length - tailCapacity(board));
   const padded = Math.ceil(board.length / COLS) * COLS;
-  return padded + appendedSlotCount(overflow, shape, padded / COLS) <= maxCells;
+  return padded + Math.ceil(overflow / COLS) * COLS <= maxCells;
 }
 
 /**
  * §5: appends the remaining live numbers, in reading order — first into the
- * gap left on the last row, then as new shaped rows. Cleared cells are not
- * copied. Returns null when not allowed.
+ * gap left on the last row, then as new full-width rows. Cleared cells are
+ * not copied. Returns null when not allowed.
  */
-export function addNumbers(
-  board: Board,
-  shape: readonly number[] = RECTANGLE,
-  maxCells: number = MAX_CELLS,
-): Board | null {
-  if (!canAddNumbers(board, shape, maxCells)) return null;
+export function addNumbers(board: Board, maxCells: number = MAX_CELLS): Board | null {
+  if (!canAddNumbers(board, maxCells)) return null;
   const values = liveValues(board);
 
   // Finish the last row before opening a new one, continuing straight after
@@ -186,16 +152,12 @@ export function addNumbers(
   while (filled.length % COLS !== 0) filled.push(null);
   const remaining = values.slice(placed);
   if (remaining.length === 0) return filled;
-  return [...filled, ...shapedRows(remaining, shape, filled.length / COLS)];
+  return [...filled, ...appendedRows(remaining)];
 }
 
 /** §6–§7: current status of a board. */
-export function getStatus(
-  board: Board,
-  shape: readonly number[] = RECTANGLE,
-  maxCells: number = MAX_CELLS,
-): GameStatus {
+export function getStatus(board: Board, maxCells: number = MAX_CELLS): GameStatus {
   if (!board.some((c) => isLive(c))) return 'cleared';
   if (hasAnyMove(board)) return 'playing';
-  return canAddNumbers(board, shape, maxCells) ? 'playing' : 'gameOver';
+  return canAddNumbers(board, maxCells) ? 'playing' : 'gameOver';
 }
