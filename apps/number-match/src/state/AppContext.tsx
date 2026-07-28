@@ -7,8 +7,8 @@
  * so switching modes never costs the player either one.
  *
  * Battery note: the play clock lives in a mutable ref and does NOT set React
- * state — nothing re-renders per second (the timer display is an isolated
- * component polling the ref). Elapsed time is merged into the session
+ * state, so nothing re-renders while a game is running. It is never shown
+ * during play either (docs §15); elapsed time is merged into the session
  * whenever it leaves this module (saves, finalization, navigation).
  */
 import { App as CapacitorApp } from '@capacitor/app';
@@ -75,10 +75,8 @@ export interface AppContextValue {
   dailyStreakToday: number;
   /** Set when the current session cleared; used by the result overlay. */
   lastResult: LastResult | null;
-  /** Changes whenever a new game begins (timer display reset key). */
+  /** Changes whenever a new game begins. */
   sessionEpoch: number;
-  /** Battery-friendly play clock access (no per-second re-renders). */
-  readElapsedSeconds: () => number;
   /** Whether that mode has a game worth resuming. */
   canResume: (mode: GameMode) => boolean;
   startLevel: (level: number) => void;
@@ -139,7 +137,6 @@ export function AppProvider({
 
   /** The live play clock (seconds). Mutated by the interval, never state. */
   const elapsedRef = useRef(0);
-  const readElapsedSeconds = useCallback(() => elapsedRef.current, []);
 
   /** Session with the live clock merged in — used whenever it leaves React. */
   const withElapsed = useCallback((s: GameSession): GameSession => {
@@ -429,7 +426,6 @@ export function AppProvider({
       dailyStreakToday: effectiveDailyStreak(stats, today),
       lastResult,
       sessionEpoch,
-      readElapsedSeconds,
       canResume,
       startLevel,
       startNextLevel,
@@ -455,7 +451,6 @@ export function AppProvider({
       today,
       lastResult,
       sessionEpoch,
-      readElapsedSeconds,
       canResume,
       startLevel,
       startNextLevel,

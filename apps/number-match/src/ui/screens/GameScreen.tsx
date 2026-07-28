@@ -16,7 +16,6 @@ import { BannerSlot } from '../components/BannerSlot';
 import { BoardView } from '../components/BoardView';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ResultOverlay } from '../components/ResultOverlay';
-import { formatDuration } from '../format';
 
 const HINT_COOLDOWN_MS = 2000;
 const INVALID_FLASH_MS = 350;
@@ -28,49 +27,12 @@ const TOAST_MS = 2600;
 const EMPTY_BOARD: Board = [];
 const NO_BLOCKERS: readonly number[] = [];
 
-/**
- * Isolated clock display: polls the play-clock ref once a second so the
- * rest of the game screen never re-renders on ticks (battery). The poll
- * pauses while the app is hidden or the game is over; `resetKey` re-syncs
- * instantly when a new game begins.
- */
-function TimerDisplay({
-  read,
-  active,
-  resetKey,
-  label,
-}: {
-  read: () => number;
-  active: boolean;
-  resetKey: number;
-  label: string;
-}) {
-  const [seconds, setSeconds] = useState(read);
-  useEffect(() => {
-    setSeconds(read());
-  }, [read, resetKey]);
-  useEffect(() => {
-    if (!active) return;
-    const id = window.setInterval(() => {
-      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
-      setSeconds(read());
-    }, 1000);
-    return () => window.clearInterval(id);
-  }, [read, active]);
-  return (
-    <span className="game-time">
-      <span className="visually-hidden">{label} </span>
-      {formatDuration(seconds)}
-    </span>
-  );
-}
-
 export function GameScreen() {
   const {
     session,
+    progress,
     lastResult,
     sessionEpoch,
-    readElapsedSeconds,
     applyPair,
     applyUndo,
     applyAdd,
@@ -89,7 +51,19 @@ export function GameScreen() {
   const [hintCoolingDown, setHintCoolingDown] = useState(false);
   const [confirmRestart, setConfirmRestart] = useState(false);
 
+  // The score to beat on this board — the reference keeps this in view
+  // instead of a clock, which points attention at play rather than pace.
+  const currentBest =
+    session === null
+      ? undefined
+      : session.mode === 'level' && session.level !== null
+        ? progress.bestScores[String(session.level)]
+        : session.dailyDate
+          ? progress.bestDaily[session.dailyDate]
+          : undefined;
+
   const boardRef = useRef<HTMLDivElement | null>(null);
+  const beatenEpoch = useRef(-1);
   const previousLength = useRef<number>(session?.board.length ?? 0);
   const previousStatus = useRef(session?.status ?? 'playing');
   const toastIdRef = useRef(0);
@@ -143,6 +117,15 @@ export function GameScreen() {
       if (toastIdRef.current === id) setToast(null);
     }, TOAST_MS);
   }, []);
+
+  // Beating the board's best is the moment worth marking — once per game.
+  useEffect(() => {
+    if (!session || currentBest === undefined) return;
+    if (beatenEpoch.current !== sessionEpoch && session.score.total > currentBest) {
+      beatenEpoch.current = sessionEpoch;
+      showToast(t('newBest'));
+    }
+  }, [session, currentBest, sessionEpoch, showToast, t]);
 
   const onCellTap = useCallback(
     (index: number) => {
@@ -234,16 +217,15 @@ export function GameScreen() {
           <span className="game-mode">
             {session.mode === 'daily' ? t('modeDaily') : t('modeLevel', { n: session.level ?? 1 })}
           </span>
-          <TimerDisplay
-            read={readElapsedSeconds}
-            active={session.status === 'playing'}
-            resetKey={sessionEpoch}
-            label={t('timeLabel')}
-          />
           <span className="game-score">
             <span className="visually-hidden">{t('score')} </span>
             {session.score.total}
           </span>
+          {currentBest !== undefined ? (
+            <span className="game-best">
+              {t('best')} {currentBest}
+            </span>
+          ) : null}
         </div>
         <button
           type="button"

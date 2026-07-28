@@ -1069,3 +1069,9 @@ button:disabled {
 .daily-badge-done {
   color: var(--ink-soft);
 }
+
+.game-best {
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
