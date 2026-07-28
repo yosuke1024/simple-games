@@ -131,7 +131,8 @@ describe('saved game persistence', () => {
     const kv = createMemoryKV();
     const session = createLevelSession(3);
     // All cells cleared → status would be 'cleared', not 'playing'.
-    await saveGame({ ...session, board: session.board.map((c) => ({ ...c, cleared: true })) }, kv);
+    const emptied = session.board.map((c) => (c === null ? null : { ...c, cleared: true }));
+    await saveGame({ ...session, board: emptied }, kv);
     expect(await loadSavedGame(kv)).toBeNull();
   });
 

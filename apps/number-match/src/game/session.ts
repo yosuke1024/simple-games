@@ -3,13 +3,14 @@
  * board + undo history + status + score + counters. The React layer only
  * dispatches into these functions; all rules live here and in engine.ts.
  */
-import { generateInitialBoard } from './board';
-import { MAX_CELLS, UNDO_HISTORY_LIMIT } from './constants';
+import { generateBoard } from './board';
+import { INITIAL_CELLS, MAX_CELLS, UNDO_HISTORY_LIMIT } from './constants';
 import { dailySeed } from './daily';
 import { addNumbers, applyMatchDetailed, getStatus } from './engine';
 import { generateLevelBoard, levelSeed } from './levels';
 import { connectionGap } from './rules';
 import { INITIAL_SCORE, scoreAddNumbers, scoreClear, scoreMatch, type ScoreState } from './score';
+import { shapeForDaily, shapeForSession } from './shapes';
 import type { Board, GameMode, GameStatus } from './types';
 
 /**
@@ -41,6 +42,13 @@ export interface GameSession {
   readonly elapsedSeconds: number;
 }
 
+/** The row-width cycle this session's board is built on (§13). */
+export function sessionShape(
+  session: Pick<GameSession, 'level' | 'dailyDate'>,
+): readonly number[] {
+  return shapeForSession(session.level, session.dailyDate);
+}
+
 function baseSession(
   mode: GameMode,
   seed: string,
@@ -55,7 +63,7 @@ function baseSession(
     level,
     board,
     history: [],
-    status: getStatus(board),
+    status: getStatus(board, shapeForSession(level, dailyDate)),
     score: INITIAL_SCORE,
     moveCount: 0,
     addCount: 0,
@@ -72,7 +80,11 @@ export function createLevelSession(level: number): GameSession {
 /** A fresh (or restarted) daily game for a local YYYY-MM-DD date. */
 export function createDailySession(dateString: string): GameSession {
   const seed = dailySeed(dateString);
-  return baseSession('daily', seed, dateString, null, generateInitialBoard(seed));
+  const board = generateBoard(seed, {
+    shape: shapeForDaily(dateString),
+    cellCount: INITIAL_CELLS,
+  });
+  return baseSession('daily', seed, dateString, null, board);
 }
 
 /** Recreates the same board for a session's seed (Restart). */
@@ -101,7 +113,7 @@ export function restoreSession(
   return {
     ...data,
     history: [],
-    status: getStatus(data.board),
+    status: getStatus(data.board, shapeForSession(data.level, data.dailyDate)),
   };
 }
 
@@ -117,8 +129,8 @@ export function matchPair(session: GameSession, i: number, j: number): GameSessi
   const gap = connectionGap(session.board, i, j);
   const result = applyMatchDetailed(session.board, i, j);
   if (result === null || gap === null) return null;
-  const status = getStatus(result.board);
-  let score = scoreMatch(session.score, gap, result.rowsRemoved);
+  const status = getStatus(result.board, sessionShape(session));
+  let score = scoreMatch(session.score, gap, result.rowsRemoved, result.rowCellsRemoved);
   const hintCount = session.hintCount;
   if (status === 'cleared') {
     score = scoreClear(score, session.mode, session.level, session.addCount, hintCount);
@@ -136,13 +148,14 @@ export function matchPair(session: GameSession, i: number, j: number): GameSessi
 /** Performs Add Numbers (resets the score streak). Returns null when not allowed. */
 export function performAddNumbers(session: GameSession): GameSession | null {
   if (session.status !== 'playing') return null;
-  const board = addNumbers(session.board, MAX_CELLS);
+  const shape = sessionShape(session);
+  const board = addNumbers(session.board, shape, MAX_CELLS);
   if (board === null) return null;
   return {
     ...session,
     board,
     history: pushHistory(session, 'add'),
-    status: getStatus(board),
+    status: getStatus(board, shape),
     score: scoreAddNumbers(session.score),
     addCount: session.addCount + 1,
   };
@@ -160,7 +173,7 @@ export function undo(session: GameSession): GameSession | null {
     ...session,
     board: previous.board,
     history: session.history.slice(0, -1),
-    status: getStatus(previous.board),
+    status: getStatus(previous.board, sessionShape(session)),
     score: previous.score,
     moveCount:
       previous.action === 'match' ? Math.max(0, session.moveCount - 1) : session.moveCount,

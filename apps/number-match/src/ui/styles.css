@@ -335,6 +335,12 @@ button:disabled {
   opacity: 0.55;
 }
 
+/* A hole in the board's shape — nothing was ever here. */
+.cell-hole {
+  background: transparent;
+  border: none;
+}
+
 .cell-dot {
   width: 5px;
   height: 5px;

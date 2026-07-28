@@ -1,20 +1,27 @@
 /**
  * Test fixture helper: builds a board from row strings.
- * Digits become live cells; '.' becomes a cleared cell (value 1).
- * Every row except the last must be exactly COLS (9) characters.
+ *
+ *   digit → a live cell
+ *   '.'   → a cleared cell
+ *   '#'   → a hole in the shape (absent slot)
+ *
+ * Every row occupies COLS slots; rows shorter than COLS are padded with holes,
+ * which is exactly how a real board's last row looks.
  */
 import { COLS } from './constants';
-import type { Board, Cell, Digit } from './types';
+import type { Board, BoardCell, Digit } from './types';
 
 export function makeBoard(...rows: string[]): Board {
-  const cells: Cell[] = [];
+  const cells: BoardCell[] = [];
   rows.forEach((row, index) => {
-    if (index < rows.length - 1 && row.length !== COLS) {
-      throw new Error(`Fixture row ${index} must have exactly ${COLS} cells, got ${row.length}`);
+    if (row.length > COLS) {
+      throw new Error(`Fixture row ${index} has ${row.length} cells, max ${COLS}`);
     }
     for (const ch of row) {
       if (ch === '.') {
         cells.push({ value: 1, cleared: true });
+      } else if (ch === '#') {
+        cells.push(null);
       } else {
         const value = Number(ch);
         if (!Number.isInteger(value) || value < 1 || value > 9) {
@@ -23,6 +30,12 @@ export function makeBoard(...rows: string[]): Board {
         cells.push({ value: value as Digit, cleared: false });
       }
     }
+    for (let pad = row.length; pad < COLS; pad++) cells.push(null);
   });
   return cells;
+}
+
+/** Live values in reading order — handy for asserting on Add Numbers. */
+export function liveValues(board: Board): number[] {
+  return board.filter((c) => c !== null && !c.cleared).map((c) => c!.value);
 }

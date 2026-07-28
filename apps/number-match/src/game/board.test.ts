@@ -1,25 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import { generateInitialBoard } from './board';
-import { INITIAL_CELLS } from './constants';
+import { generateBoard, generateInitialBoard } from './board';
+import { COLS, INITIAL_CELLS } from './constants';
 import { hasAnyMove } from './hint';
+import { rowLayout, SHAPE_FAMILIES, widthAt } from './shapes';
+import { isLive, type Board } from './types';
+
+const liveCount = (board: Board): number => board.filter((c) => isLive(c)).length;
 
 describe('generateInitialBoard', () => {
   it('is deterministic: the same seed produces the same board', () => {
-    const a = generateInitialBoard('seed-alpha');
-    const b = generateInitialBoard('seed-alpha');
-    expect(a).toEqual(b);
+    expect(generateInitialBoard('seed-alpha')).toEqual(generateInitialBoard('seed-alpha'));
   });
 
   it('produces different boards for different seeds', () => {
-    const a = generateInitialBoard('seed-alpha');
-    const b = generateInitialBoard('seed-beta');
-    expect(a.map((c) => c.value).join('')).not.toBe(b.map((c) => c.value).join(''));
+    const values = (seed: string) =>
+      generateInitialBoard(seed)
+        .map((c) => (c === null ? '#' : c.value))
+        .join('');
+    expect(values('seed-alpha')).not.toBe(values('seed-beta'));
   });
 
-  it('produces the configured number of live cells with values 1-9', () => {
+  it('places the requested number of live cells, all valued 1-9', () => {
     const board = generateInitialBoard('any-seed');
-    expect(board.length).toBe(INITIAL_CELLS);
+    expect(liveCount(board)).toBe(INITIAL_CELLS);
     for (const cell of board) {
+      if (cell === null) continue;
       expect(cell.cleared).toBe(false);
       expect(cell.value).toBeGreaterThanOrEqual(1);
       expect(cell.value).toBeLessThanOrEqual(9);
@@ -37,11 +42,47 @@ describe('generateInitialBoard', () => {
     // loop; the result must still be deterministic per seed and playable.
     for (let i = 0; i < 50; i++) {
       const seed = `tiny-${i}`;
-      const a = generateInitialBoard(seed, 2);
-      const b = generateInitialBoard(seed, 2);
-      expect(a).toEqual(b);
-      expect(a.length).toBe(2);
+      const a = generateBoard(seed, { cellCount: 2 });
+      expect(a).toEqual(generateBoard(seed, { cellCount: 2 }));
+      expect(liveCount(a)).toBe(2);
       expect(hasAnyMove(a)).toBe(true);
+    }
+  });
+});
+
+describe('generateBoard with a shape', () => {
+  it('lays every shape out as whole rows of COLS slots', () => {
+    for (const shape of SHAPE_FAMILIES) {
+      const board = generateBoard(`shaped-${shape.join('-')}`, { shape, cellCount: 30 });
+      expect(board.length % COLS).toBe(0);
+      expect(liveCount(board)).toBe(30);
+    }
+  });
+
+  it('honours each row width, centered, with holes on the outside', () => {
+    const shape = [5, 9, 3];
+    const board = generateBoard('shape-widths', { shape, cellCount: 17 });
+    for (let r = 0; r < 3; r++) {
+      const row = board.slice(r * COLS, (r + 1) * COLS);
+      const layout = rowLayout(widthAt(shape, r));
+      row.forEach((cell, c) => {
+        // Outside the row's width there must be a hole.
+        if (!layout[c]) expect(cell).toBeNull();
+      });
+    }
+  });
+
+  it('leaves the tail of the last row as holes when the numbers run out', () => {
+    const board = generateBoard('short-tail', { cellCount: 10 });
+    expect(board.length).toBe(2 * COLS);
+    expect(liveCount(board)).toBe(10);
+    expect(board.slice(10)).toEqual(Array.from({ length: 8 }, () => null));
+  });
+
+  it('a higher pair bias yields boards that are still playable', () => {
+    for (const bias of [0, 0.3, 0.6]) {
+      const board = generateBoard(`bias-${bias}`, { cellCount: 25, pairBias: bias });
+      expect(hasAnyMove(board)).toBe(true);
     }
   });
 });

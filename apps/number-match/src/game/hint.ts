@@ -4,12 +4,12 @@
  * or null when no pair exists (UI then guides the player to Add Numbers).
  */
 import { isValidPair } from './rules';
-import type { Board } from './types';
+import { isLive, type Board } from './types';
 
 export function findHint(board: Board): readonly [number, number] | null {
   const live: number[] = [];
   for (let i = 0; i < board.length; i++) {
-    if (!board[i]!.cleared) live.push(i);
+    if (isLive(board[i])) live.push(i);
   }
   for (let x = 0; x < live.length; x++) {
     for (let y = x + 1; y < live.length; y++) {

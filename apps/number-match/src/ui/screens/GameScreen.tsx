@@ -5,6 +5,7 @@ import {
   canUndo,
   isMatchingValues,
   MAX_CELLS,
+  sessionShape,
   type Board,
 } from '../../game';
 import { haptics } from '../../services/haptics';
@@ -216,7 +217,9 @@ export function GameScreen() {
   if (!session) return null;
 
   const undoDisabled = session.status !== 'playing' || !canUndo(session);
-  const addDisabled = session.status !== 'playing' || !canAddNumbers(session.board, MAX_CELLS);
+  const addDisabled =
+    session.status !== 'playing' ||
+    !canAddNumbers(session.board, sessionShape(session), MAX_CELLS);
 
   return (
     <div className="screen game-screen">

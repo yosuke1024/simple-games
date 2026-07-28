@@ -14,7 +14,7 @@ import {
   undo,
   type GameSession,
 } from './session';
-import { makeBoard } from './test-helpers';
+import { liveValues, makeBoard } from './test-helpers';
 
 /** Builds a playing level session around a fixture board. */
 function sessionWith(board: ReturnType<typeof makeBoard>): GameSession {
@@ -74,7 +74,7 @@ describe('matchPair', () => {
     const s0 = sessionWith(makeBoard('11.......', '234567892'));
     const s1 = matchPair(s0, 0, 1)!;
     expect(s1.board.length).toBe(9);
-    expect(s1.score.rowPoints).toBe(50);
+    expect(s1.score.rowPoints).toBe(9 * 6);
   });
 
   it('returns null for an invalid pair without changing anything', () => {
@@ -86,10 +86,11 @@ describe('matchPair', () => {
     const s0 = sessionWith(makeBoard('19'));
     const s1 = matchPair(s0, 0, 1)!;
     expect(s1.status).toBe('cleared');
-    // match 10 (+ trailing row trim, no row bonus) + clear 165 (level 1, 0 adds) = 175 → +17 no-hint
+    // match 10 + last row (2 cells) 12 + clear 165 (level 1, 0 adds) = 187 → +18 no-hint
+    expect(s1.score.rowPoints).toBe(2 * 6);
     expect(s1.score.clearBonus).toBe(165);
-    expect(s1.score.noHintBonus).toBe(17);
-    expect(s1.score.total).toBe(10 + 165 + 17);
+    expect(s1.score.noHintBonus).toBe(18);
+    expect(s1.score.total).toBe(10 + 12 + 165 + 18);
   });
 
   it('skips the no-hint bonus when a hint was used', () => {
@@ -127,7 +128,7 @@ describe('undo', () => {
   it('reverts Add Numbers, restoring addCount, streak, but not moveCount', () => {
     const s0 = sessionWith(makeBoard('12'));
     const s1 = performAddNumbers(s0)!;
-    expect(s1.board.length).toBe(4);
+    expect(liveValues(s1.board)).toEqual([1, 2, 1, 2]);
     expect(s1.addCount).toBe(1);
     const s2 = undo(s1)!;
     expect(s2.board).toEqual(s0.board);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { hasAnyMove } from './hint';
+import { isLive } from './types';
 import {
   generateLevelBoard,
   initialCellsForLevel,
@@ -38,21 +39,20 @@ describe('generateLevelBoard', () => {
   });
 
   it('differs between levels', () => {
-    const a = generateLevelBoard(1)
-      .map((c) => c.value)
-      .join('');
-    const b = generateLevelBoard(2)
-      .map((c) => c.value)
-      .join('');
-    expect(a).not.toBe(b);
+    const values = (level: number) =>
+      generateLevelBoard(level)
+        .map((c) => (c === null ? '#' : c.value))
+        .join('');
+    expect(values(1)).not.toBe(values(2));
   });
 
   it('always starts playable with the configured size, at every difficulty band', () => {
     for (const level of [1, 100, 250, 400, 550, 700, 850, 999]) {
       const board = generateLevelBoard(level);
-      expect(board.length).toBe(initialCellsForLevel(level));
+      expect(board.filter((c) => isLive(c))).toHaveLength(initialCellsForLevel(level));
       expect(hasAnyMove(board)).toBe(true);
       for (const cell of board) {
+        if (cell === null) continue;
         expect(cell.cleared).toBe(false);
         expect(cell.value).toBeGreaterThanOrEqual(1);
         expect(cell.value).toBeLessThanOrEqual(9);

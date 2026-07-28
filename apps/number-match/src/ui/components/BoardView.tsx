@@ -24,6 +24,10 @@ export const BoardView = memo(function BoardView({
   return (
     <div className="board" role="group" aria-label={t('boardLabel')}>
       {board.map((cell, index) => {
+        // A hole in the board's shape: empty space, not a playable slot.
+        if (cell === null) {
+          return <div key={index} className="cell cell-hole" aria-hidden="true" />;
+        }
         const row = Math.floor(index / COLS) + 1;
         const col = (index % COLS) + 1;
         if (cell.cleared) {

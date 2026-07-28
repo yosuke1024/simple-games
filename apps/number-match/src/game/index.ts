@@ -7,6 +7,7 @@ export * from './levels';
 export * from './rng';
 export * from './rules';
 export * from './score';
+export * from './shapes';
 export * from './serialize';
 export * from './session';
 export * from './types';

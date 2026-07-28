@@ -3,7 +3,7 @@
  * Pure functions only: no UI, platform, or service imports.
  */
 import { COLS } from './constants';
-import type { Board, Digit } from './types';
+import { isLive, isPassable, type Board, type Digit } from './types';
 
 /** §2: two digits match when equal or summing to 10. */
 export function isMatchingValues(a: Digit, b: Digit): boolean {
@@ -20,10 +20,13 @@ const colOf = (i: number): number => i % COLS;
  *  2. vertical (same column)
  *  3. diagonal (equal row and column distance)
  *
- * Returns the number of cleared cells jumped over along the SHORTEST valid
- * path (0 for adjacency), or null when the cells do not connect. The gap
- * feeds the score's distance bonus (§12), so the minimum keeps adjacent
- * pairs from earning long-path bonuses.
+ * Holes in the board's shape are transparent, exactly like cleared cells.
+ *
+ * Returns the number of CLEARED cells jumped over along the SHORTEST valid
+ * path (0 for adjacency), or null when the cells do not connect. Holes are
+ * not counted — the score's distance bonus (§12) rewards clearing a path,
+ * not the board's outline. The minimum keeps adjacent pairs from earning
+ * long-path bonuses.
  */
 export function connectionGap(board: Board, i: number, j: number): number | null {
   if (i === j) return null;
@@ -38,13 +41,15 @@ export function connectionGap(board: Board, i: number, j: number): number | null
 
   // 1. Reading order.
   let clearedBetween = true;
+  let cleared = 0;
   for (let k = a + 1; k < b; k++) {
-    if (!board[k]!.cleared) {
+    if (!isPassable(board[k])) {
       clearedBetween = false;
       break;
     }
+    if (board[k] !== null) cleared++;
   }
-  if (clearedBetween) consider(b - a - 1);
+  if (clearedBetween) consider(cleared);
 
   const ra = rowOf(a);
   const ca = colOf(a);
@@ -54,13 +59,16 @@ export function connectionGap(board: Board, i: number, j: number): number | null
   // 2. Vertical.
   if (ca === cb) {
     clearedBetween = true;
+    cleared = 0;
     for (let r = ra + 1; r < rb; r++) {
-      if (!board[r * COLS + ca]!.cleared) {
+      const slot = board[r * COLS + ca];
+      if (!isPassable(slot)) {
         clearedBetween = false;
         break;
       }
+      if (slot !== null) cleared++;
     }
-    if (clearedBetween) consider(rb - ra - 1);
+    if (clearedBetween) consider(cleared);
   }
 
   // 3. Diagonal (either direction).
@@ -69,13 +77,15 @@ export function connectionGap(board: Board, i: number, j: number): number | null
   if (dr > 0 && Math.abs(dc) === dr) {
     const step = dc > 0 ? COLS + 1 : COLS - 1;
     clearedBetween = true;
+    cleared = 0;
     for (let k = a + step; k < b; k += step) {
-      if (!board[k]!.cleared) {
+      if (!isPassable(board[k])) {
         clearedBetween = false;
         break;
       }
+      if (board[k] !== null) cleared++;
     }
-    if (clearedBetween) consider(dr - 1);
+    if (clearedBetween) consider(cleared);
   }
 
   return best;
@@ -100,7 +110,7 @@ export function blockingCells(board: Board, i: number, j: number): readonly numb
   if (a < 0 || b >= board.length) return [];
 
   const liveAmong = (indices: readonly number[]): number[] =>
-    indices.filter((k) => !board[k]!.cleared);
+    indices.filter((k) => isLive(board[k]));
 
   // 1. Reading order (always geometrically applicable).
   const reading: number[] = [];
@@ -138,6 +148,6 @@ export function blockingCells(board: Board, i: number, j: number): readonly numb
 export function isValidPair(board: Board, i: number, j: number): boolean {
   const a = board[i];
   const b = board[j];
-  if (!a || !b || a.cleared || b.cleared) return false;
+  if (!isLive(a) || !isLive(b)) return false;
   return isMatchingValues(a.value, b.value) && canConnect(board, i, j);
 }

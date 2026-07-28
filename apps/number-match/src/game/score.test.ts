@@ -37,16 +37,20 @@ describe('scoreMatch', () => {
     invariant(s);
   });
 
-  it('adds 50 per removed row and 50 extra for multi-row removals', () => {
-    expect(scoreMatch(INITIAL_SCORE, 0, 1).rowPoints).toBe(50);
-    expect(scoreMatch(INITIAL_SCORE, 0, 2).rowPoints).toBe(150);
-    invariant(scoreMatch(INITIAL_SCORE, 0, 2));
+  it('scores a removed row by its width, so narrow shaped rows are worth less', () => {
+    expect(scoreMatch(INITIAL_SCORE, 0, 1, 9).rowPoints).toBe(54);
+    expect(scoreMatch(INITIAL_SCORE, 0, 1, 3).rowPoints).toBe(18);
+  });
+
+  it('adds 50 extra for multi-row removals', () => {
+    expect(scoreMatch(INITIAL_SCORE, 0, 2, 18).rowPoints).toBe(18 * 6 + 50);
+    invariant(scoreMatch(INITIAL_SCORE, 0, 2, 18));
   });
 
   it('does not multiply the row bonus by the streak', () => {
     const hot = { ...INITIAL_SCORE, streakTenths: 20 };
-    const s = scoreMatch(hot, 0, 1);
-    expect(s.rowPoints).toBe(50);
+    const s = scoreMatch(hot, 0, 1, 9);
+    expect(s.rowPoints).toBe(54);
     expect(s.matchPoints).toBe(20);
   });
 });

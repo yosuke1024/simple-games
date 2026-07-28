@@ -33,20 +33,28 @@ export const INITIAL_SCORE: ScoreState = {
 
 const MATCH_BASE = 10;
 const GAP_POINTS = 3;
-const ROW_POINTS = 50;
+/** Per playable cell of a removed row: a full 9-wide row is worth 54. */
+const ROW_POINTS_PER_CELL = 6;
 const MULTI_ROW_BONUS = 50;
 const STREAK_STEP = 1;
 const STREAK_MAX_TENTHS = 20;
 
 /**
  * One match: base 10 + 3 per cleared cell jumped over (shortest valid path),
- * multiplied by the current streak; +50 per removed row, +50 extra when two
- * or more rows vanish at once.
+ * multiplied by the current streak; 6 per cell of each removed row (so a
+ * narrow shaped row is worth less than a full one), +50 extra when two or
+ * more rows vanish at once.
  */
-export function scoreMatch(state: ScoreState, gapCells: number, rowsRemoved: number): ScoreState {
+export function scoreMatch(
+  state: ScoreState,
+  gapCells: number,
+  rowsRemoved: number,
+  rowCellsRemoved = 0,
+): ScoreState {
   const base = MATCH_BASE + GAP_POINTS * Math.max(0, gapCells);
   const earned = Math.floor((base * state.streakTenths) / 10);
-  const rowBonus = rowsRemoved * ROW_POINTS + (rowsRemoved >= 2 ? MULTI_ROW_BONUS : 0);
+  const rowBonus =
+    ROW_POINTS_PER_CELL * Math.max(0, rowCellsRemoved) + (rowsRemoved >= 2 ? MULTI_ROW_BONUS : 0);
   return {
     ...state,
     matchPoints: state.matchPoints + earned,
