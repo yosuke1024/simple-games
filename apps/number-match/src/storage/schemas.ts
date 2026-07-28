@@ -13,6 +13,8 @@ export const STORAGE_KEYS = {
   adState: 'nm.adState',
   rcCache: 'nm.rcCache',
   progress: 'nm.progress',
+  /** Daily games suspend independently of level games (docs §14). */
+  dailyGame: 'nm.saveDaily',
 } as const;
 
 export interface SchemaDef<T> {
@@ -225,11 +227,8 @@ export interface PersistedGame {
   savedAt: number;
 }
 
-export const gameSchema: SchemaDef<PersistedGame | null> = {
-  key: STORAGE_KEYS.game,
-  version: 2,
-  defaultValue: () => null,
-  validate: (raw) => {
+const validatePersistedGame = (raw: unknown): PersistedGame | null => {
+  {
     if (!isRecord(raw)) return null;
     // v1 → v2 migration: daily games carry over with a fresh score; v1
     // "classic" games have no level context and are dropped (no resume).
@@ -286,8 +285,21 @@ export const gameSchema: SchemaDef<PersistedGame | null> = {
       elapsedSeconds,
       savedAt,
     };
-  },
+  }
 };
+
+/**
+ * One slot per mode. Both hold the same record shape; the mode field inside
+ * the record is what says which slot it belongs to.
+ */
+function gameSlotSchema(key: string): SchemaDef<PersistedGame | null> {
+  return { key, version: 2, defaultValue: () => null, validate: validatePersistedGame };
+}
+
+/** Suspended level game. */
+export const gameSchema = gameSlotSchema(STORAGE_KEYS.game);
+/** Suspended daily game, kept separately so neither mode evicts the other. */
+export const dailyGameSchema = gameSlotSchema(STORAGE_KEYS.dailyGame);
 
 // ---------- level progress & personal best scores ----------
 

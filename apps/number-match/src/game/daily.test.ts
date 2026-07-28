@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dailySeed, dayDifference, localDateString } from './daily';
+import { addDays, dailySeed, dayDifference, localDateString } from './daily';
 
 describe('localDateString', () => {
   it('formats the local date as YYYY-MM-DD with zero padding', () => {
@@ -12,6 +12,22 @@ describe('dailySeed', () => {
   it('derives a deterministic seed from the date string', () => {
     expect(dailySeed('2026-07-26')).toBe('daily-2026-07-26');
     expect(dailySeed('2026-07-26')).toBe(dailySeed('2026-07-26'));
+  });
+});
+
+describe('addDays', () => {
+  it('steps forward and back across month and year boundaries', () => {
+    expect(addDays('2026-07-28', 1)).toBe('2026-07-29');
+    expect(addDays('2026-07-28', -1)).toBe('2026-07-27');
+    expect(addDays('2026-07-31', 1)).toBe('2026-08-01');
+    expect(addDays('2026-08-01', -1)).toBe('2026-07-31');
+    expect(addDays('2025-12-31', 1)).toBe('2026-01-01');
+    expect(addDays('2026-01-01', -1)).toBe('2025-12-31');
+    expect(addDays('2026-03-01', -1)).toBe('2026-02-28');
+  });
+
+  it('is the inverse of dayDifference', () => {
+    expect(dayDifference('2026-07-28', addDays('2026-07-28', 5))).toBe(5);
   });
 });
 

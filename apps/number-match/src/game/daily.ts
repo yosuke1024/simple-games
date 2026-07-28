@@ -21,6 +21,13 @@ export function dailySeed(dateString: string): string {
  * Used for streak calculation; treats strings as local dates at noon to
  * avoid DST edge cases.
  */
+/** Shifts a local YYYY-MM-DD string by whole days. */
+export function addDays(dateString: string, delta: number): string {
+  const [y, m, d] = dateString.split('-').map(Number);
+  const shifted = new Date((y ?? 1970), (m ?? 1) - 1, (d ?? 1) + delta);
+  return localDateString(shifted);
+}
+
 export function dayDifference(a: string, b: string): number {
   const parse = (s: string): number => {
     const [y, m, d] = s.split('-').map(Number);

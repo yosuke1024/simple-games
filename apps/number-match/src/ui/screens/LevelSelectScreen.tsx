@@ -12,7 +12,7 @@ const LEVELS_PER_PAGE = 100;
  * locked level for orientation; pages beyond stay reachable via the pager.
  */
 export function LevelSelectScreen() {
-  const { goHome, session, hasResumableGame, startLevel, progress } = useApp();
+  const { goHome, sessions, canResume, startLevel, progress } = useApp();
   const { t } = useSettings();
   const highest = progress.highestUnlocked;
   const [page, setPage] = useState(() => Math.floor((highest - 1) / LEVELS_PER_PAGE));
@@ -23,9 +23,10 @@ export function LevelSelectScreen() {
   const end = Math.min(MAX_LEVEL, start + LEVELS_PER_PAGE - 1);
 
   const onPick = (level: number) => {
-    const resumesSame =
-      session?.mode === 'level' && session.level === level && session.status === 'playing';
-    if (hasResumableGame && !resumesSame) {
+    // Only starting a *different* level discards the suspended one; the daily
+    // game lives in its own slot and is never at risk here.
+    const resumesSame = sessions.level?.level === level && sessions.level.status === 'playing';
+    if (canResume('level') && !resumesSame) {
       setConfirmLevel(level);
     } else {
       startLevel(level);

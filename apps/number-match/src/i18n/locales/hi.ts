@@ -29,6 +29,9 @@ export const hi: Messages = {
   bestScores: 'सर्वश्रेष्ठ स्कोर',
   totalBest: 'सभी लेवल के सर्वश्रेष्ठ का योग',
 
+  dailyPast: 'पिछली डेली',
+  dailyToday: 'आज',
+  dailyBacklogHint: 'किसी दिन को पूरा करें, तो उससे पिछला दिन खुल जाता है।',
   modeDaily: 'डेली',
   undo: 'अनडू',
   hint: 'संकेत',

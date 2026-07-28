@@ -29,6 +29,9 @@ export const th: Messages = {
   bestScores: 'คะแนนที่ดีที่สุด',
   totalBest: 'ผลรวมคะแนนที่ดีที่สุด',
 
+  dailyPast: 'ชาเลนจ์ย้อนหลัง',
+  dailyToday: 'วันนี้',
+  dailyBacklogHint: 'เคลียร์วันหนึ่งได้ จะปลดล็อกวันก่อนหน้า',
   modeDaily: 'รายวัน',
   undo: 'ย้อนกลับ',
   hint: 'คำใบ้',

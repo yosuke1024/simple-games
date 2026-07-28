@@ -29,6 +29,9 @@ export const ja: Messages = {
   bestScores: 'ベストスコア',
   totalBest: 'レベルベスト合計',
 
+  dailyPast: '過去のデイリー',
+  dailyToday: '今日',
+  dailyBacklogHint: 'クリアすると、その前の日に挑戦できます。',
   modeDaily: 'デイリー',
   undo: '戻す',
   hint: 'ヒント',

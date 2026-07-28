@@ -1,17 +1,18 @@
-import { useState } from 'react';
 import { SERIES_BY_LINE, SERIES_NAME } from '@simple-games/brand';
 import { localDateString } from '../../game';
 import { useApp } from '../../state/AppContext';
 import { useSettings } from '../../state/SettingsContext';
-import { ConfirmDialog } from '../components/ConfirmDialog';
 import { formatDuration } from '../format';
 
+/**
+ * Each mode has its own entry point and its own suspended game, so nothing
+ * here can cost the player a game in progress — no confirmation needed.
+ */
 export function HomeScreen() {
   const {
     navigate,
-    session,
+    sessions,
     progress,
-    hasResumableGame,
     dailyDoneToday,
     dailyStreakToday,
     startLevel,
@@ -19,33 +20,11 @@ export function HomeScreen() {
     resumeGame,
   } = useApp();
   const { t } = useSettings();
-  const [confirmTarget, setConfirmTarget] = useState<'level' | 'daily' | null>(null);
 
-  const currentLevel = progress.highestUnlocked;
-  const currentLevelBest = progress.bestScores[String(currentLevel)];
-
-  const onPlayLevel = () => {
-    // Resuming the same level never discards anything.
-    const resumesSame =
-      session?.mode === 'level' && session.level === currentLevel && session.status === 'playing';
-    if (hasResumableGame && !resumesSame) {
-      setConfirmTarget('level');
-    } else {
-      startLevel(currentLevel);
-    }
-  };
-
-  const onDaily = () => {
-    // Resuming today's daily never discards anything; anything else would
-    // silently drop the game in progress, so confirm first.
-    const resumesToday =
-      session?.mode === 'daily' && session.dailyDate === localDateString(new Date());
-    if (hasResumableGame && !resumesToday) {
-      setConfirmTarget('daily');
-    } else {
-      startDaily();
-    }
-  };
+  const levelGame = sessions.level?.status === 'playing' ? sessions.level : null;
+  const dailyGame = sessions.daily?.status === 'playing' ? sessions.daily : null;
+  const today = localDateString(new Date());
+  const dailyIsToday = dailyGame?.dailyDate === today;
 
   return (
     <div className="screen home-screen">
@@ -55,39 +34,48 @@ export function HomeScreen() {
       </div>
 
       <div className="home-actions">
-        {hasResumableGame && session ? (
-          <button type="button" className="btn btn-primary btn-big" onClick={resumeGame}>
-            {t('resume')}
-            <span className="btn-note">
-              {session.mode === 'daily'
-                ? t('modeDaily')
-                : t('modeLevel', { n: session.level ?? 1 })}{' '}
-              · {formatDuration(session.elapsedSeconds)}
-            </span>
-          </button>
-        ) : null}
         <button
           type="button"
-          className={`btn btn-big ${hasResumableGame ? 'btn-secondary' : 'btn-primary'}`}
-          onClick={onPlayLevel}
+          className="btn btn-primary btn-big"
+          onClick={() => (levelGame ? resumeGame('level') : startLevel(progress.highestUnlocked))}
         >
-          {t('modeLevel', { n: currentLevel })}
-          {currentLevelBest !== undefined ? (
+          {t('modeLevel', { n: levelGame?.level ?? progress.highestUnlocked })}
+          {levelGame ? (
             <span className="btn-note">
-              {t('best')} {currentLevelBest}
+              {t('resume')} · {formatDuration(levelGame.elapsedSeconds)}
+            </span>
+          ) : progress.bestScores[String(progress.highestUnlocked)] !== undefined ? (
+            <span className="btn-note">
+              {t('best')} {progress.bestScores[String(progress.highestUnlocked)]}
             </span>
           ) : null}
         </button>
-        <button type="button" className="btn btn-secondary btn-big" onClick={onDaily}>
+
+        <button
+          type="button"
+          className="btn btn-secondary btn-big"
+          onClick={() => (dailyGame ? resumeGame('daily') : startDaily())}
+        >
           {t('dailyChallenge')}
-          {dailyDoneToday ? <span className="btn-note">✓ {t('dailyDoneBadge')}</span> : null}
-          {!dailyDoneToday && dailyStreakToday > 0 ? (
+          {dailyGame ? (
+            <span className="btn-note">
+              {t('resume')}
+              {dailyIsToday ? '' : ` · ${dailyGame.dailyDate}`} ·{' '}
+              {formatDuration(dailyGame.elapsedSeconds)}
+            </span>
+          ) : dailyDoneToday ? (
+            <span className="btn-note">✓ {t('dailyDoneBadge')}</span>
+          ) : dailyStreakToday > 0 ? (
             <span className="btn-note">{t('streakLine', { n: dailyStreakToday })}</span>
           ) : null}
         </button>
+
         <div className="home-links">
           <button type="button" className="btn btn-ghost" onClick={() => navigate('levels')}>
             {t('levelSelect')}
+          </button>
+          <button type="button" className="btn btn-ghost" onClick={() => navigate('daily')}>
+            {t('dailyPast')}
           </button>
           <button type="button" className="btn btn-ghost" onClick={() => navigate('tutorial')}>
             {t('howToPlay')}
@@ -105,24 +93,6 @@ export function HomeScreen() {
         <span className="brand-name">{SERIES_NAME}</span>
         <span className="brand-by">{SERIES_BY_LINE}</span>
       </footer>
-
-      <ConfirmDialog
-        open={confirmTarget !== null}
-        title={t('confirmNewGameTitle')}
-        body={t('confirmNewGameBody')}
-        cancelLabel={t('cancel')}
-        confirmLabel={t('confirm')}
-        onCancel={() => setConfirmTarget(null)}
-        onConfirm={() => {
-          const target = confirmTarget;
-          setConfirmTarget(null);
-          if (target === 'daily') {
-            startDaily();
-          } else {
-            startLevel(currentLevel);
-          }
-        }}
-      />
     </div>
   );
 }

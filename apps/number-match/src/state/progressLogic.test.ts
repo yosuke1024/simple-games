@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { createDailySession, createLevelSession, type GameSession } from '../game';
+import { addDays, createDailySession, createLevelSession, type GameSession } from '../game';
 import { progressSchema } from '../storage/schemas';
-import { applyClearToProgress, totalBestScore } from './progressLogic';
+import {
+  applyClearToProgress,
+  availableDailyDates,
+  canPlayDaily,
+  totalBestScore,
+} from './progressLogic';
 
 const NOW = 1_800_000_000_000;
 
@@ -115,5 +120,54 @@ describe('totalBestScore', () => {
     progress = applyClearToProgress(progress, clearedLevel(2, 150), NOW).progress;
     progress = applyClearToProgress(progress, clearedLevel(1, 120), NOW).progress;
     expect(totalBestScore(progress)).toBe(270);
+  });
+});
+
+describe('daily backlog', () => {
+  const TODAY = '2026-07-28';
+  const withCleared = (...dates: string[]) => ({
+    ...progressSchema.defaultValue(),
+    bestDaily: Object.fromEntries(dates.map((d) => [d, 100])),
+  });
+
+  it('always allows today', () => {
+    expect(canPlayDaily(progressSchema.defaultValue(), TODAY, TODAY)).toBe(true);
+  });
+
+  it('locks yesterday until today is cleared', () => {
+    expect(canPlayDaily(progressSchema.defaultValue(), '2026-07-27', TODAY)).toBe(false);
+    expect(canPlayDaily(withCleared(TODAY), '2026-07-27', TODAY)).toBe(true);
+  });
+
+  it('unlocks the backlog one step at a time', () => {
+    const p = withCleared(TODAY, '2026-07-27');
+    expect(canPlayDaily(p, '2026-07-26', TODAY)).toBe(true);
+    expect(canPlayDaily(p, '2026-07-25', TODAY)).toBe(false);
+  });
+
+  it('never allows a future date', () => {
+    expect(canPlayDaily(withCleared(TODAY), '2026-07-29', TODAY)).toBe(false);
+  });
+
+  it('lists the open dates newest first', () => {
+    expect(availableDailyDates(progressSchema.defaultValue(), TODAY)).toEqual([TODAY]);
+    expect(availableDailyDates(withCleared(TODAY), TODAY)).toEqual([TODAY, '2026-07-27']);
+    expect(availableDailyDates(withCleared(TODAY, '2026-07-27'), TODAY)).toEqual([
+      TODAY,
+      '2026-07-27',
+      '2026-07-26',
+    ]);
+  });
+
+  it('stops at the listing limit even on a long streak', () => {
+    const many = Array.from({ length: 60 }, (_, i) => addDays(TODAY, -i));
+    expect(availableDailyDates(withCleared(...many), TODAY, 30)).toHaveLength(30);
+  });
+
+  it('agrees with canPlayDaily for every listed date', () => {
+    const p = withCleared(TODAY, '2026-07-27', '2026-07-26');
+    for (const date of availableDailyDates(p, TODAY)) {
+      expect(canPlayDaily(p, date, TODAY)).toBe(true);
+    }
   });
 });

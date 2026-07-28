@@ -1022,3 +1022,50 @@ button:disabled {
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
 }
+
+/* ---------- daily backlog ---------- */
+
+.daily-screen {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+.daily-hint {
+  margin: 0 16px 12px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  text-align: center;
+}
+
+.daily-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 16px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.daily-row-today .settings-row-label {
+  font-weight: 700;
+}
+
+.daily-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-soft);
+}
+
+.daily-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.daily-badge-done {
+  color: var(--ink-soft);
+}

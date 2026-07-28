@@ -35,6 +35,9 @@ export const en = {
   totalBest: 'Total of level bests',
 
   // Game
+  dailyPast: 'Past Dailies',
+  dailyToday: 'Today',
+  dailyBacklogHint: 'Clear a day to unlock the one before it.',
   modeDaily: 'Daily',
   undo: 'Undo',
   hint: 'Hint',

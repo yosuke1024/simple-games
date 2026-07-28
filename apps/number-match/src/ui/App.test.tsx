@@ -26,7 +26,7 @@ function renderApp(
         initialStats={statsSchema.defaultValue()}
         initialFlags={flags}
         initialProgress={progress}
-        initialSession={null}
+        initialSessions={{ level: null, daily: null }}
       >
         <App />
       </AppProvider>

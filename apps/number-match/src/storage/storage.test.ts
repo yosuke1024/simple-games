@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createLevelSession } from '../game';
-import { clearSavedGame, loadSavedGame, saveGame } from './gamePersistence';
+import { createDailySession, createLevelSession } from '../game';
+import { clearSavedGame, loadSavedGames, saveGame } from './gamePersistence';
 import { createMemoryKV } from './kv';
 import { clearAllLocalData, loadRecord, saveRecord } from './repo';
 import {
@@ -96,7 +96,7 @@ describe('saved game persistence', () => {
     const kv = createMemoryKV();
     const session = createLevelSession(3);
     await saveGame(session, kv);
-    const loaded = await loadSavedGame(kv);
+    const loaded = (await loadSavedGames(kv)).level;
     expect(loaded).not.toBeNull();
     expect(loaded!.seed).toBe('level-3');
     expect(loaded!.level).toBe(3);
@@ -113,7 +113,7 @@ describe('saved game persistence', () => {
     raw.values = '99x99';
     raw.mask = '000';
     await kv.set(STORAGE_KEYS.game, JSON.stringify(raw));
-    expect(await loadSavedGame(kv)).toBeNull();
+    expect((await loadSavedGames(kv)).level).toBeNull();
   });
 
   it('requires dailyDate for daily games', async () => {
@@ -124,7 +124,7 @@ describe('saved game persistence', () => {
     raw.mode = 'daily';
     raw.dailyDate = null;
     await kv.set(STORAGE_KEYS.game, JSON.stringify(raw));
-    expect(await loadSavedGame(kv)).toBeNull();
+    expect((await loadSavedGames(kv)).level).toBeNull();
   });
 
   it('does not resume a game that is no longer playable (terminal board)', async () => {
@@ -133,7 +133,7 @@ describe('saved game persistence', () => {
     // All cells cleared → status would be 'cleared', not 'playing'.
     const emptied = session.board.map((c) => (c === null ? null : { ...c, cleared: true }));
     await saveGame({ ...session, board: emptied }, kv);
-    expect(await loadSavedGame(kv)).toBeNull();
+    expect((await loadSavedGames(kv)).level).toBeNull();
   });
 
   it('rejects boards larger than the maximum board size', async () => {
@@ -143,20 +143,51 @@ describe('saved game persistence', () => {
     raw.values = '1'.repeat(271);
     raw.mask = '0'.repeat(271);
     await kv.set(STORAGE_KEYS.game, JSON.stringify(raw));
-    expect(await loadSavedGame(kv)).toBeNull();
+    expect((await loadSavedGames(kv)).level).toBeNull();
   });
 
   it('clearSavedGame removes the stored game', async () => {
     const kv = createMemoryKV();
     await saveGame(createLevelSession(3), kv);
-    await clearSavedGame(kv);
-    expect(await loadSavedGame(kv)).toBeNull();
+    await clearSavedGame('level', kv);
+    expect((await loadSavedGames(kv)).level).toBeNull();
     expect(await loadRecord(gameSchema, kv)).toBeNull();
   });
 });
 
+describe('two save slots', () => {
+  it('keeps a level game and a daily game at the same time', async () => {
+    const kv = createMemoryKV();
+    await saveGame(createLevelSession(4), kv);
+    await saveGame(createDailySession('2026-07-28'), kv);
+    const games = await loadSavedGames(kv);
+    expect(games.level?.level).toBe(4);
+    expect(games.daily?.dailyDate).toBe('2026-07-28');
+  });
+
+  it('clearing one slot leaves the other intact', async () => {
+    const kv = createMemoryKV();
+    await saveGame(createLevelSession(4), kv);
+    await saveGame(createDailySession('2026-07-28'), kv);
+    await clearSavedGame('daily', kv);
+    const games = await loadSavedGames(kv);
+    expect(games.level?.level).toBe(4);
+    expect(games.daily).toBeNull();
+  });
+
+  it('starting another daily replaces only the daily slot', async () => {
+    const kv = createMemoryKV();
+    await saveGame(createLevelSession(4), kv);
+    await saveGame(createDailySession('2026-07-27'), kv);
+    await saveGame(createDailySession('2026-07-28'), kv);
+    const games = await loadSavedGames(kv);
+    expect(games.level?.level).toBe(4);
+    expect(games.daily?.dailyDate).toBe('2026-07-28');
+  });
+});
+
 describe('schema migrations', () => {
-  it('migrates a v1 daily save to v2 with a fresh score', async () => {
+  it('migrates a v1 daily save to v2, into the daily slot, with a fresh score', async () => {
     const v1 = {
       schemaVersion: 1,
       mode: 'daily',
@@ -171,12 +202,16 @@ describe('schema migrations', () => {
       savedAt: 123,
     };
     const kv = createMemoryKV({ [STORAGE_KEYS.game]: JSON.stringify(v1) });
-    const loaded = await loadSavedGame(kv);
-    expect(loaded).not.toBeNull();
-    expect(loaded!.mode).toBe('daily');
-    expect(loaded!.level).toBeNull();
-    expect(loaded!.score.total).toBe(0);
-    expect(loaded!.elapsedSeconds).toBe(30);
+    const games = await loadSavedGames(kv);
+    expect(games.level).toBeNull();
+    expect(games.daily).not.toBeNull();
+    expect(games.daily!.mode).toBe('daily');
+    expect(games.daily!.level).toBeNull();
+    expect(games.daily!.score.total).toBe(0);
+    expect(games.daily!.elapsedSeconds).toBe(30);
+    // The legacy key is emptied so it cannot shadow a future daily game.
+    expect(await kv.get(STORAGE_KEYS.game)).toBeNull();
+    expect(await kv.get(STORAGE_KEYS.dailyGame)).not.toBeNull();
   });
 
   it('drops a v1 classic save (no level context to resume into)', async () => {
@@ -194,7 +229,7 @@ describe('schema migrations', () => {
       savedAt: 123,
     };
     const kv = createMemoryKV({ [STORAGE_KEYS.game]: JSON.stringify(v1) });
-    expect(await loadSavedGame(kv)).toBeNull();
+    expect((await loadSavedGames(kv)).level).toBeNull();
   });
 
   it('migrates v1 stats: the classic bucket becomes the level bucket', async () => {

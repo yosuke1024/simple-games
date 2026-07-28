@@ -1,4 +1,5 @@
 import { useApp } from '../state/AppContext';
+import { DailyScreen } from './screens/DailyScreen';
 import { GameScreen } from './screens/GameScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { LevelSelectScreen } from './screens/LevelSelectScreen';
@@ -13,6 +14,8 @@ export function App() {
       return <TutorialScreen />;
     case 'levels':
       return <LevelSelectScreen />;
+    case 'daily':
+      return <DailyScreen />;
     case 'game':
       return <GameScreen />;
     case 'settings':

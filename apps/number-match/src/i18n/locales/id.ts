@@ -29,6 +29,9 @@ export const id: Messages = {
   bestScores: 'Skor Terbaik',
   totalBest: 'Total skor terbaik level',
 
+  dailyPast: 'Harian Lampau',
+  dailyToday: 'Hari ini',
+  dailyBacklogHint: 'Selesaikan satu hari untuk membuka hari sebelumnya.',
   modeDaily: 'Harian',
   undo: 'Urungkan',
   hint: 'Petunjuk',

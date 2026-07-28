@@ -3,6 +3,9 @@
  * persistence hooks, and the touchpoints where ads/analytics may fire.
  * Every network-ish side effect is fire-and-forget; gameplay never waits.
  *
+ * Two games are suspended independently — one level, one daily (docs §14) —
+ * so switching modes never costs the player either one.
+ *
  * Battery note: the play clock lives in a mutable ref and does NOT set React
  * state — nothing re-renders per second (the timer display is an isolated
  * component polling the ref). Elapsed time is merged into the session
@@ -31,12 +34,13 @@ import {
   performAddNumbers,
   restartSession,
   undo,
+  type GameMode,
   type GameSession,
 } from '../game';
 import { track } from '../services/analytics';
 import { addPlaySecond, registerCompletedGame, resetAdState } from '../services/ads/adState';
 import { maybeShowInterstitial, prepareInterstitialIfNeeded } from '../services/ads/adsController';
-import { clearSavedGame, saveGame } from '../storage/gamePersistence';
+import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
 import { clearAllLocalData, saveRecord } from '../storage/repo';
 import {
   flagsSchema,
@@ -51,7 +55,7 @@ import { useSettings } from './SettingsContext';
 import { applyClearToProgress } from './progressLogic';
 import { applyGameEnd, applyGameStart, effectiveDailyStreak } from './statsLogic';
 
-export type Screen = 'home' | 'tutorial' | 'levels' | 'game' | 'settings' | 'stats';
+export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'settings' | 'stats';
 
 export interface LastResult {
   isNewBest: boolean;
@@ -61,11 +65,12 @@ export interface LastResult {
 export interface AppContextValue {
   screen: Screen;
   navigate: (screen: Screen) => void;
+  /** The game currently on screen. */
   session: GameSession | null;
+  sessions: SavedGames;
   stats: Stats;
   progress: Progress;
   tutorialCompleted: boolean;
-  hasResumableGame: boolean;
   dailyDoneToday: boolean;
   dailyStreakToday: number;
   /** Set when the current session cleared; used by the result overlay. */
@@ -74,11 +79,13 @@ export interface AppContextValue {
   sessionEpoch: number;
   /** Battery-friendly play clock access (no per-second re-renders). */
   readElapsedSeconds: () => number;
+  /** Whether that mode has a game worth resuming. */
+  canResume: (mode: GameMode) => boolean;
   startLevel: (level: number) => void;
   startNextLevel: () => void;
-  startDaily: () => void;
+  startDaily: (date?: string) => void;
   restartCurrent: () => void;
-  resumeGame: () => void;
+  resumeGame: (mode: GameMode) => void;
   applyPair: (i: number, j: number) => boolean;
   applyUndo: () => boolean;
   applyAdd: () => boolean;
@@ -94,7 +101,7 @@ export interface AppProviderProps {
   initialStats: Stats;
   initialFlags: Flags;
   initialProgress: Progress;
-  initialSession: GameSession | null;
+  initialSessions: SavedGames;
   children: ReactNode;
 }
 
@@ -102,23 +109,25 @@ export function AppProvider({
   initialStats,
   initialFlags,
   initialProgress,
-  initialSession,
+  initialSessions,
   children,
 }: AppProviderProps) {
   const { replaceSettings } = useSettings();
   const [screen, setScreen] = useState<Screen>(
     initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
-  const [session, setSession] = useState<GameSession | null>(initialSession);
+  const [sessions, setSessions] = useState<SavedGames>(initialSessions);
+  const [activeMode, setActiveMode] = useState<GameMode>('level');
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
   const [lastResult, setLastResult] = useState<LastResult | null>(null);
-  /** Increments per begun game — lets the timer display reset immediately. */
   const [sessionEpoch, setSessionEpoch] = useState(0);
 
-  const sessionRef = useRef(session);
-  sessionRef.current = session;
+  const sessionsRef = useRef(sessions);
+  sessionsRef.current = sessions;
+  const activeModeRef = useRef(activeMode);
+  activeModeRef.current = activeMode;
   const flagsRef = useRef(flags);
   flagsRef.current = flags;
   const progressRef = useRef(progress);
@@ -126,8 +135,10 @@ export function AppProvider({
   const statsRef = useRef(stats);
   statsRef.current = stats;
 
+  const session = sessions[activeMode];
+
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(initialSession?.elapsedSeconds ?? 0);
+  const elapsedRef = useRef(0);
   const readElapsedSeconds = useCallback(() => elapsedRef.current, []);
 
   /** Session with the live clock merged in — used whenever it leaves React. */
@@ -149,16 +160,20 @@ export function AppProvider({
     void saveRecord(progressSchema, next);
   }, []);
 
+  const putSession = useCallback((mode: GameMode, next: GameSession | null) => {
+    setSessions((current) => ({ ...current, [mode]: next }));
+  }, []);
+
   /** Handles a session transition, persisting or finalizing as needed. */
   const commitSession = useCallback(
     (next: GameSession) => {
-      setSession(next);
+      putSession(next.mode, next);
       if (next.status === 'playing') {
         void saveGame(next);
         return;
       }
       // Terminal: finalize once, at the natural break.
-      void clearSavedGame();
+      void clearSavedGame(next.mode);
       persistStats(applyGameEnd(statsRef.current, next));
       registerCompletedGame();
       if (next.status === 'cleared') {
@@ -181,91 +196,92 @@ export function AppProvider({
         void maybeShowInterstitial('gameOver');
       }
     },
-    [persistProgress, persistStats],
+    [persistProgress, persistStats, putSession],
   );
+
+  /** Brings a mode's game on screen and hands the clock over to it. */
+  const activate = useCallback((next: GameSession) => {
+    elapsedRef.current = next.elapsedSeconds;
+    setActiveMode(next.mode);
+    setSessionEpoch((epoch) => epoch + 1);
+    setScreen('game');
+  }, []);
 
   const beginSession = useCallback(
     (next: GameSession) => {
       persistStats(applyGameStart(statsRef.current, next.mode));
-      elapsedRef.current = next.elapsedSeconds;
       setLastResult(null);
-      setSessionEpoch((epoch) => epoch + 1);
-      setSession(next);
+      putSession(next.mode, next);
+      activate(next);
       void saveGame(next);
-      setScreen('game');
       track(next.mode === 'daily' ? 'daily_challenge_started' : 'game_started', {
         level: next.level ?? 0,
       });
       void prepareInterstitialIfNeeded();
     },
-    [persistStats],
+    [activate, persistStats, putSession],
   );
+
+  const canResume = useCallback(
+    (mode: GameMode) => sessionsRef.current[mode]?.status === 'playing',
+    [],
+  );
+
+  const resumeGame = useCallback((mode: GameMode) => {
+    const current = sessionsRef.current[mode];
+    if (!current) return;
+    activate(current);
+    track('game_resumed');
+  }, [activate]);
 
   const startLevel = useCallback(
     (level: number) => {
       const target = Math.min(Math.max(1, Math.floor(level)), progressRef.current.highestUnlocked);
-      const current = sessionRef.current;
-      if (
-        current &&
-        current.mode === 'level' &&
-        current.level === target &&
-        current.status === 'playing'
-      ) {
-        setScreen('game');
-        track('game_resumed');
+      const current = sessionsRef.current.level;
+      if (current && current.level === target && current.status === 'playing') {
+        resumeGame('level');
         return;
       }
       void maybeShowInterstitial('newGame');
       beginSession(createLevelSession(target));
     },
-    [beginSession],
+    [beginSession, resumeGame],
   );
 
   /** From the clear overlay — the clear itself was the ad break. */
   const startNextLevel = useCallback(() => {
-    const current = sessionRef.current;
+    const current = sessionsRef.current.level;
     const nextLevel = Math.min(MAX_LEVEL, (current?.level ?? 0) + 1);
     beginSession(createLevelSession(Math.min(nextLevel, progressRef.current.highestUnlocked)));
   }, [beginSession]);
 
-  const startDaily = useCallback(() => {
-    const today = localDateString(new Date());
-    const current = sessionRef.current;
-    if (
-      current &&
-      current.mode === 'daily' &&
-      current.dailyDate === today &&
-      current.status === 'playing'
-    ) {
-      setScreen('game');
-      track('game_resumed');
-      return;
-    }
-    beginSession(createDailySession(today));
-  }, [beginSession]);
+  const startDaily = useCallback(
+    (date?: string) => {
+      const target = date ?? localDateString(new Date());
+      const current = sessionsRef.current.daily;
+      if (current && current.dailyDate === target && current.status === 'playing') {
+        resumeGame('daily');
+        return;
+      }
+      beginSession(createDailySession(target));
+    },
+    [beginSession, resumeGame],
+  );
 
   // No interstitial here: a restart can be triggered mid-game, which is not
   // one of the allowed natural-break points (docs/ADS_POLICY.md).
   const restartCurrent = useCallback(() => {
-    const current = sessionRef.current;
+    const current = sessionsRef.current[activeModeRef.current];
     if (!current) return;
     beginSession(restartSession(current));
   }, [beginSession]);
 
-  const resumeGame = useCallback(() => {
-    const current = sessionRef.current;
-    if (!current) return;
-    // Monotonic within a run: never rewind the clock to a stale snapshot.
-    elapsedRef.current = Math.max(elapsedRef.current, current.elapsedSeconds);
-    setScreen('game');
-    track('game_resumed');
-  }, []);
-
-  const applyPair = useCallback(
-    (i: number, j: number): boolean => {
-      const current = sessionRef.current;
+  /** Applies a pure session transition to whichever game is on screen. */
+  const mutate = useCallback(
+    (apply: (s: GameSession) => GameSession | null): boolean => {
+      const current = sessionsRef.current[activeModeRef.current];
       if (!current) return false;
-      const next = matchPair(withElapsed(current), i, j);
+      const next = apply(withElapsed(current));
       if (!next) return false;
       commitSession(next);
       return true;
@@ -273,49 +289,49 @@ export function AppProvider({
     [commitSession, withElapsed],
   );
 
+  const applyPair = useCallback(
+    (i: number, j: number) => mutate((s) => matchPair(s, i, j)),
+    [mutate],
+  );
+
   const applyUndo = useCallback((): boolean => {
-    const current = sessionRef.current;
     // Terminal games were already finalized (stats/progress/ads); undoing
     // past that point would double-count. The UI disables Undo then too.
-    if (!current || current.status !== 'playing') return false;
-    const next = undo(withElapsed(current));
-    if (!next) return false;
-    track('undo_used');
-    commitSession(next);
-    return true;
-  }, [commitSession, withElapsed]);
+    if (sessionsRef.current[activeModeRef.current]?.status !== 'playing') return false;
+    const undone = mutate((s) => undo(s));
+    if (undone) track('undo_used');
+    return undone;
+  }, [mutate]);
 
   const applyAdd = useCallback((): boolean => {
-    const current = sessionRef.current;
-    if (!current) return false;
-    const next = performAddNumbers(withElapsed(current));
-    if (!next) return false;
-    track('add_numbers_used');
-    commitSession(next);
-    return true;
-  }, [commitSession, withElapsed]);
+    const added = mutate((s) => performAddNumbers(s));
+    if (added) track('add_numbers_used');
+    return added;
+  }, [mutate]);
 
   const takeHint = useCallback((): readonly [number, number] | null => {
-    const current = sessionRef.current;
+    const mode = activeModeRef.current;
+    const current = sessionsRef.current[mode];
     if (!current || current.status !== 'playing') return null;
     const pair = findHint(current.board);
     track('hint_used', { found: pair !== null });
     if (!pair) return null;
     const next = countHintUse(withElapsed(current));
-    setSession(next);
+    putSession(mode, next);
     void saveGame(next);
     return pair;
-  }, [withElapsed]);
+  }, [putSession, withElapsed]);
 
   const goHome = useCallback(() => {
-    const current = sessionRef.current;
+    const mode = activeModeRef.current;
+    const current = sessionsRef.current[mode];
     if (current && current.status === 'playing') {
       const synced = withElapsed(current);
-      setSession(synced);
+      putSession(mode, synced);
       void saveGame(synced);
     }
     setScreen('home');
-  }, [withElapsed]);
+  }, [putSession, withElapsed]);
 
   const completeTutorial = useCallback(() => {
     // Side effects stay outside the setState updater (StrictMode calls
@@ -331,7 +347,8 @@ export function AppProvider({
     await clearAllLocalData();
     resetAdState();
     elapsedRef.current = 0;
-    setSession(null);
+    setSessions({ level: null, daily: null });
+    setActiveMode('level');
     setLastResult(null);
     setStats(statsSchema.defaultValue());
     setFlags(flagsSchema.defaultValue());
@@ -356,7 +373,7 @@ export function AppProvider({
   // Save when the app goes to background / gets hidden (spec §15.1).
   useEffect(() => {
     const saveNow = () => {
-      const current = sessionRef.current;
+      const current = sessionsRef.current[activeModeRef.current];
       if (current && current.status === 'playing') void saveGame(withElapsed(current));
     };
     const onVisibility = () => {
@@ -378,7 +395,8 @@ export function AppProvider({
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const backHandle = CapacitorApp.addListener('backButton', () => {
-      const current = sessionRef.current;
+      const mode = activeModeRef.current;
+      const current = sessionsRef.current[mode];
       if (screen === 'home') {
         void CapacitorApp.minimizeApp().catch(() => CapacitorApp.exitApp());
       } else {
@@ -386,7 +404,7 @@ export function AppProvider({
           // Mirror goHome: keep React state in sync so a later Resume does
           // not rewind the play clock to a stale value.
           const synced = withElapsed(current);
-          setSession(synced);
+          putSession(mode, synced);
           void saveGame(synced);
         }
         setScreen('home');
@@ -395,7 +413,7 @@ export function AppProvider({
     return () => {
       void backHandle.then((handle) => handle.remove()).catch(() => undefined);
     };
-  }, [screen, withElapsed]);
+  }, [screen, putSession, withElapsed]);
 
   const today = localDateString(new Date());
   const value = useMemo<AppContextValue>(
@@ -403,15 +421,16 @@ export function AppProvider({
       screen,
       navigate,
       session,
+      sessions,
       stats,
       progress,
       tutorialCompleted: flags.tutorialCompleted,
-      hasResumableGame: session !== null && session.status === 'playing',
-      dailyDoneToday: stats.daily.lastCompletedDate === today,
+      dailyDoneToday: progress.bestDaily[today] !== undefined,
       dailyStreakToday: effectiveDailyStreak(stats, today),
       lastResult,
       sessionEpoch,
       readElapsedSeconds,
+      canResume,
       startLevel,
       startNextLevel,
       startDaily,
@@ -429,6 +448,7 @@ export function AppProvider({
       screen,
       navigate,
       session,
+      sessions,
       stats,
       progress,
       flags.tutorialCompleted,
@@ -436,6 +456,7 @@ export function AppProvider({
       lastResult,
       sessionEpoch,
       readElapsedSeconds,
+      canResume,
       startLevel,
       startNextLevel,
       startDaily,

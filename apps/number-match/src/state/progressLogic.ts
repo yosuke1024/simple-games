@@ -2,8 +2,36 @@
  * Pure level-progress and personal-best transitions (kept out of React for
  * unit testing). The personal ranking is local-only — no server, no upload.
  */
-import { MAX_LEVEL, type GameSession } from '../game';
+import { addDays, MAX_LEVEL, type GameSession } from '../game';
 import { TOP_SCORES_LIMIT, type Progress, type TopScoreEntry } from '../storage/schemas';
+
+/** How far back the daily backlog is ever listed. */
+export const DAILY_BACKLOG_LIMIT = 30;
+
+/**
+ * Today is always open; an older day opens once the day after it has been
+ * cleared, so the backlog unlocks one step at a time (docs §14).
+ */
+export function canPlayDaily(progress: Progress, date: string, today: string): boolean {
+  if (date === today) return true;
+  if (date > today) return false;
+  return progress.bestDaily[addDays(date, 1)] !== undefined;
+}
+
+/** Dates currently open, newest first. */
+export function availableDailyDates(
+  progress: Progress,
+  today: string,
+  limit: number = DAILY_BACKLOG_LIMIT,
+): string[] {
+  const dates = [today];
+  let cursor = today;
+  while (dates.length < limit && progress.bestDaily[cursor] !== undefined) {
+    cursor = addDays(cursor, -1);
+    dates.push(cursor);
+  }
+  return dates;
+}
 
 export interface ClearOutcome {
   progress: Progress;
