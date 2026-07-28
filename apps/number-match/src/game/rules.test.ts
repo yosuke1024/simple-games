@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canConnect, isMatchingValues, isValidPair } from './rules';
+import { blockingCells, canConnect, isMatchingValues, isValidPair } from './rules';
 import { makeBoard } from './test-helpers';
 
 describe('isMatchingValues', () => {
@@ -107,6 +107,36 @@ describe('canConnect — misc', () => {
     const board = makeBoard('19');
     expect(canConnect(board, 0, 5)).toBe(false);
     expect(canConnect(board, -1, 1)).toBe(false);
+  });
+});
+
+describe('blockingCells', () => {
+  it('is empty when the pair already connects', () => {
+    expect(blockingCells(makeBoard('19'), 0, 1)).toEqual([]);
+    expect(blockingCells(makeBoard('1..9'), 0, 3)).toEqual([]);
+  });
+
+  it('reports the live numbers standing in the way', () => {
+    // 3 5 8 3 — the 5 and 8 block the two 3s (the case that confuses players).
+    expect(blockingCells(makeBoard('3583'), 0, 3)).toEqual([1, 2]);
+  });
+
+  it('prefers the path closest to connecting', () => {
+    // Same column, one live cell in the way vertically, but many in
+    // reading order — the vertical path is the instructive one.
+    const board = makeBoard('755555555', '755555555', '755555555');
+    expect(blockingCells(board, 0, 18)).toEqual([9]);
+  });
+
+  it('reports diagonal blockers', () => {
+    const board = makeBoard('255555555', '535555555', '558555555');
+    expect(blockingCells(board, 0, 20)).toEqual([10]);
+  });
+
+  it('returns nothing for degenerate input', () => {
+    const board = makeBoard('19');
+    expect(blockingCells(board, 0, 0)).toEqual([]);
+    expect(blockingCells(board, 0, 99)).toEqual([]);
   });
 });
 

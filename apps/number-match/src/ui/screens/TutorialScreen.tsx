@@ -2,16 +2,37 @@ import { useState } from 'react';
 import { useApp } from '../../state/AppContext';
 import { useSettings } from '../../state/SettingsContext';
 
-/** Static example tiles used inside the 3-step tutorial. */
-function ExampleTiles({ values, note }: { values: string[]; note?: string }) {
+/**
+ * Static example tiles used inside the 3-step tutorial.
+ * `mark` shows ○ / ✕ so the allowed and blocked cases read at a glance,
+ * without any wording to translate.
+ */
+function ExampleTiles({
+  values,
+  note,
+  mark,
+  blockedAt,
+}: {
+  values: string[];
+  note?: string;
+  mark?: 'ok' | 'no';
+  /** Indices drawn as "in the way" (matches the in-game blocked styling). */
+  blockedAt?: number[];
+}) {
   return (
     <div className="tutorial-example" aria-hidden="true">
       <div className="tutorial-tiles">
+        {mark ? (
+          <span className={`tutorial-mark tutorial-mark-${mark}`}>{mark === 'ok' ? '○' : '✕'}</span>
+        ) : null}
         {values.map((value, index) =>
           value === '.' ? (
             <span key={index} className="tutorial-tile tutorial-tile-empty" />
           ) : (
-            <span key={index} className="tutorial-tile">
+            <span
+              key={index}
+              className={`tutorial-tile ${blockedAt?.includes(index) ? 'tutorial-tile-blocked' : ''}`}
+            >
               {value}
             </span>
           ),
@@ -40,7 +61,12 @@ export function TutorialScreen() {
     {
       title: t('step2Title'),
       body: t('step2Body'),
-      example: <ExampleTiles values={['7', '.', '.', '7']} note="7 ─ ─ 7" />,
+      example: (
+        <>
+          <ExampleTiles values={['7', '.', '.', '7']} mark="ok" />
+          <ExampleTiles values={['7', '3', '7']} mark="no" blockedAt={[1]} />
+        </>
+      ),
     },
     {
       title: t('step3Title'),

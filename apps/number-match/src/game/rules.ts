@@ -85,6 +85,55 @@ export function canConnect(board: Board, i: number, j: number): boolean {
   return connectionGap(board, i, j) !== null;
 }
 
+/**
+ * The live cells that stand in the way of connecting i and j, along whichever
+ * path is closest to connecting. Empty when the pair already connects.
+ *
+ * Used only to explain a rejected tap in the UI ("these numbers are in the
+ * way"), so unlike connectionGap it allocates — it runs once per tap, never
+ * inside the O(n²) hint scan.
+ */
+export function blockingCells(board: Board, i: number, j: number): readonly number[] {
+  if (i === j) return [];
+  const a = Math.min(i, j);
+  const b = Math.max(i, j);
+  if (a < 0 || b >= board.length) return [];
+
+  const liveAmong = (indices: readonly number[]): number[] =>
+    indices.filter((k) => !board[k]!.cleared);
+
+  // 1. Reading order (always geometrically applicable).
+  const reading: number[] = [];
+  for (let k = a + 1; k < b; k++) reading.push(k);
+  let best = liveAmong(reading);
+
+  const ra = rowOf(a);
+  const ca = colOf(a);
+  const rb = rowOf(b);
+  const cb = colOf(b);
+
+  // 2. Vertical.
+  if (ca === cb) {
+    const vertical: number[] = [];
+    for (let r = ra + 1; r < rb; r++) vertical.push(r * COLS + ca);
+    const blockers = liveAmong(vertical);
+    if (blockers.length < best.length) best = blockers;
+  }
+
+  // 3. Diagonal.
+  const dr = rb - ra;
+  const dc = cb - ca;
+  if (dr > 0 && Math.abs(dc) === dr) {
+    const step = dc > 0 ? COLS + 1 : COLS - 1;
+    const diagonal: number[] = [];
+    for (let k = a + step; k < b; k += step) diagonal.push(k);
+    const blockers = liveAmong(diagonal);
+    if (blockers.length < best.length) best = blockers;
+  }
+
+  return best;
+}
+
 /** Full pair check: both cells live, values match, and positions connect. */
 export function isValidPair(board: Board, i: number, j: number): boolean {
   const a = board[i];

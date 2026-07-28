@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { canAddNumbers, canUndo, MAX_CELLS, type Board } from '../../game';
+import {
+  blockingCells,
+  canAddNumbers,
+  canUndo,
+  isMatchingValues,
+  MAX_CELLS,
+  type Board,
+} from '../../game';
 import { haptics } from '../../services/haptics';
 import { sounds } from '../../services/sound';
 import { useApp } from '../../state/AppContext';
@@ -12,8 +19,13 @@ import { formatDuration } from '../format';
 
 const HINT_COOLDOWN_MS = 2000;
 const INVALID_FLASH_MS = 350;
+/** Long enough to read "these numbers are in the way", short enough to stay quiet. */
+const BLOCKED_FLASH_MS = 1100;
+/** Beyond this, marking blockers is noise rather than an explanation. */
+const MAX_BLOCKERS_SHOWN = 3;
 const TOAST_MS = 2600;
 const EMPTY_BOARD: Board = [];
+const NO_BLOCKERS: readonly number[] = [];
 
 /**
  * Isolated clock display: polls the play-clock ref once a second so the
@@ -71,6 +83,7 @@ export function GameScreen() {
   const [selected, setSelected] = useState<number | null>(null);
   const [hintPair, setHintPair] = useState<readonly [number, number] | null>(null);
   const [invalidPair, setInvalidPair] = useState<readonly [number, number] | null>(null);
+  const [blockedCells, setBlockedCells] = useState<readonly number[]>(NO_BLOCKERS);
   const [toast, setToast] = useState<string | null>(null);
   const [hintCoolingDown, setHintCoolingDown] = useState(false);
   const [confirmRestart, setConfirmRestart] = useState(false);
@@ -87,6 +100,7 @@ export function GameScreen() {
     setSelected(null);
     setHintPair(null);
     setInvalidPair(null);
+    setBlockedCells(NO_BLOCKERS);
   }, [board]);
 
   // After Add Numbers, keep the player oriented: reveal the appended cells.
@@ -156,6 +170,20 @@ export function GameScreen() {
         window.setTimeout(() => {
           setInvalidPair((current) => (current === pair ? null : current));
         }, INVALID_FLASH_MS);
+
+        // The values matched but the path was blocked — the most common
+        // misunderstanding. Point at the numbers that are in the way instead
+        // of only shaking the two cells (silent, works in every language).
+        const other = session.board[selected];
+        if (other && !other.cleared && isMatchingValues(other.value, cell.value)) {
+          const blockers = blockingCells(session.board, selected, index);
+          if (blockers.length > 0 && blockers.length <= MAX_BLOCKERS_SHOWN) {
+            setBlockedCells(blockers);
+            window.setTimeout(() => {
+              setBlockedCells((current) => (current === blockers ? NO_BLOCKERS : current));
+            }, BLOCKED_FLASH_MS);
+          }
+        }
       }
     },
     [applyPair, selected, session],
@@ -230,6 +258,7 @@ export function GameScreen() {
           selected={selected}
           hintPair={hintPair}
           invalidPair={invalidPair}
+          blockedCells={blockedCells}
           onCellTap={onCellTap}
         />
       </div>

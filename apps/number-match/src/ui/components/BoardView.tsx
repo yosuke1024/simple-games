@@ -7,6 +7,8 @@ export interface BoardViewProps {
   selected: number | null;
   hintPair: readonly [number, number] | null;
   invalidPair: readonly [number, number] | null;
+  /** Live numbers that blocked the last rejected pair ("these are in the way"). */
+  blockedCells: readonly number[];
   onCellTap: (index: number) => void;
 }
 
@@ -15,6 +17,7 @@ export const BoardView = memo(function BoardView({
   selected,
   hintPair,
   invalidPair,
+  blockedCells,
   onCellTap,
 }: BoardViewProps) {
   const { t } = useSettings();
@@ -34,12 +37,14 @@ export const BoardView = memo(function BoardView({
         const isHint = hintPair !== null && (hintPair[0] === index || hintPair[1] === index);
         const isInvalid =
           invalidPair !== null && (invalidPair[0] === index || invalidPair[1] === index);
+        const isBlocking = blockedCells.includes(index);
         const className = [
           'cell',
           'cell-live',
           isSelected ? 'cell-selected' : '',
           isHint ? 'cell-hint' : '',
           isInvalid ? 'cell-invalid' : '',
+          isBlocking ? 'cell-blocking' : '',
         ]
           .filter(Boolean)
           .join(' ');

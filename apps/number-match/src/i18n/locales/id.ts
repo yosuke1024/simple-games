@@ -55,7 +55,7 @@ export const id: Messages = {
   step1Body: 'Pasangkan dua angka yang sama, atau yang jumlahnya 10.',
   step2Title: 'Pilih dua yang terhubung',
   step2Body:
-    'Mendatar, menurun, diagonal — atau dari ujung baris ke awal baris berikutnya. Sel kosong di antaranya bukan penghalang.',
+    'Mendatar, menurun, diagonal — atau dari ujung baris ke awal baris berikutnya. Sel kosong bukan penghalang, tetapi angka yang masih ada di antaranya menutup jalur.',
   step3Title: 'Hapus semua untuk menang',
   step3Body:
     'Jika buntu, tekan "Tambah" untuk menambahkan angka tersisa. Urungkan dan petunjuk selalu gratis.',

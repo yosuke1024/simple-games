@@ -64,7 +64,7 @@ export const en = {
   step1Body: 'Match two numbers that are the same, or that add up to 10.',
   step2Title: 'Pick two that connect',
   step2Body:
-    'Across, down, diagonally — or from the end of one row to the start of the next. Empty cells in between are no obstacle.',
+    'Across, down, diagonally — or from the end of one row to the start of the next. Cleared cells are no obstacle, but a number still on the board blocks the way.',
   step3Title: 'Clear the board to win',
   step3Body:
     'Stuck? Tap Add to append the remaining numbers. Undo and hints are always free.',

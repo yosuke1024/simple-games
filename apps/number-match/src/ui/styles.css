@@ -360,6 +360,13 @@ button:disabled {
   animation: invalid-shake 0.25s ease;
 }
 
+/* "These numbers are in the way." Dashed, so it reads without relying on
+   color alone and stays distinct from the solid selection/hint borders. */
+.cell-blocking {
+  border: 2px dashed var(--warn);
+  color: var(--warn);
+}
+
 @keyframes hint-pulse {
   0%,
   100% {
@@ -606,6 +613,32 @@ button:disabled {
   background: var(--surface-recessed);
   border-style: dashed;
   opacity: 0.6;
+}
+
+.tutorial-tile-blocked {
+  border: 2px dashed var(--warn);
+  color: var(--warn);
+}
+
+.tutorial-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.tutorial-mark-ok {
+  color: var(--accent);
+}
+
+.tutorial-mark-no {
+  color: var(--warn);
+}
+
+.tutorial-example + .tutorial-example {
+  margin-top: 4px;
 }
 
 .tutorial-note {
