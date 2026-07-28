@@ -41,6 +41,12 @@ export function pairBiasForLevel(level: number): number {
   return 0.6 - (0.4 * (l - 1)) / (MAX_LEVEL - 1);
 }
 
+/**
+ * Daily boards use a fixed mid-curve bias so difficulty does not swing from
+ * day to day. Roughly level 500.
+ */
+export const DAILY_PAIR_BIAS = 0.4;
+
 /** Deterministic level board: same level → same board, on every device. */
 export function generateLevelBoard(level: number): Board {
   const l = clampLevel(level);

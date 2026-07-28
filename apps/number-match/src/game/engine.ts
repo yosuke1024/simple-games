@@ -100,17 +100,43 @@ function shapedRows(values: readonly Digit[], shape: readonly number[], startRow
 
 /** Slots the appended rows would occupy (rows are always COLS wide). */
 function appendedSlotCount(
-  values: readonly Digit[],
+  count: number,
   shape: readonly number[],
   startRow: number,
 ): number {
   let placed = 0;
   let rows = 0;
-  while (placed < values.length) {
+  while (placed < count) {
     placed += widthAt(shape, startRow + rows);
     rows++;
   }
   return rows * COLS;
+}
+
+/**
+ * How many numbers still fit on the board's last row.
+ *
+ * A row that ran out of numbers keeps holes to its right; the next Add fills
+ * those before starting a new row, so repeated Adds do not leave the board
+ * riddled with permanent gaps. Rows are centred, so the playable band mirrors
+ * the leading holes — that lets the band be recovered from the row itself,
+ * which matters because collapsing rows shifts every row's index in the
+ * shape cycle.
+ */
+function tailCapacity(board: Board): number {
+  if (board.length === 0) return 0;
+  const start = Math.floor((board.length - 1) / COLS) * COLS;
+  const row = board.slice(start);
+  const lead = row.findIndex((c) => c !== null);
+  if (lead < 0) return 0;
+  let last = -1;
+  for (let i = row.length - 1; i >= 0; i--) {
+    if (row[i] !== null) {
+      last = i;
+      break;
+    }
+  }
+  return Math.max(0, COLS - 1 - lead - last);
 }
 
 /** §5: whether Add Numbers can currently be performed. */
@@ -121,13 +147,15 @@ export function canAddNumbers(
 ): boolean {
   const values = liveValues(board);
   if (values.length === 0) return false;
+  const overflow = Math.max(0, values.length - tailCapacity(board));
   const padded = Math.ceil(board.length / COLS) * COLS;
-  return padded + appendedSlotCount(values, shape, padded / COLS) <= maxCells;
+  return padded + appendedSlotCount(overflow, shape, padded / COLS) <= maxCells;
 }
 
 /**
- * §5: appends the remaining live numbers, in reading order, as new shaped
- * rows. Cleared cells are not copied. Returns null when not allowed.
+ * §5: appends the remaining live numbers, in reading order — first into the
+ * gap left on the last row, then as new shaped rows. Cleared cells are not
+ * copied. Returns null when not allowed.
  */
 export function addNumbers(
   board: Board,
@@ -136,10 +164,29 @@ export function addNumbers(
 ): Board | null {
   if (!canAddNumbers(board, shape, maxCells)) return null;
   const values = liveValues(board);
-  // Pad to a row boundary so the appended rows stay aligned to the grid.
-  const padded: BoardCell[] = [...board];
-  while (padded.length % COLS !== 0) padded.push(null);
-  return [...padded, ...shapedRows(values, shape, padded.length / COLS)];
+
+  // Finish the last row before opening a new one, continuing straight after
+  // its last cell (leading holes belong to the row's shape and stay).
+  const filled: BoardCell[] = [...board];
+  const capacity = Math.min(tailCapacity(board), values.length);
+  const rowStart = Math.floor(Math.max(0, filled.length - 1) / COLS) * COLS;
+  let lastCell = rowStart - 1;
+  for (let i = rowStart; i < filled.length; i++) {
+    if (filled[i] !== null) lastCell = i;
+  }
+  let placed = 0;
+  while (placed < capacity) {
+    const at = lastCell + 1 + placed;
+    while (filled.length <= at) filled.push(null);
+    filled[at] = { value: values[placed]!, cleared: false };
+    placed++;
+  }
+
+  // Pad to a row boundary so any new rows stay aligned to the grid.
+  while (filled.length % COLS !== 0) filled.push(null);
+  const remaining = values.slice(placed);
+  if (remaining.length === 0) return filled;
+  return [...filled, ...shapedRows(remaining, shape, filled.length / COLS)];
 }
 
 /** §6–§7: current status of a board. */

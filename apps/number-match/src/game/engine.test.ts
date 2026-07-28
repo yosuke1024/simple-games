@@ -97,10 +97,30 @@ describe('addNumbers', () => {
     expect(liveValues(next!)).toEqual([1, 2, 1, 2]);
   });
 
-  it('appends as whole rows so the grid stays aligned', () => {
+  it('finishes the last row before opening a new one', () => {
+    // 3 cells used of a 9-wide row; the two appended numbers fit in the gap.
     const next = addNumbers(makeBoard('1.2'))!;
+    expect(next.length).toBe(COLS);
+    expect(liveValues(next)).toEqual([1, 2, 1, 2]);
+  });
+
+  it('keeps the grid aligned when the numbers spill past the last row', () => {
+    const board = makeBoard('123456789', '12345');
+    const next = addNumbers(board)!;
     expect(next.length % COLS).toBe(0);
-    expect(next.length).toBe(2 * COLS);
+    // 14 numbers: 4 finish row 1, the other 10 start fresh rows.
+    expect(liveValues(next)).toHaveLength(28);
+  });
+
+  it('does not fill a shaped row past its own width', () => {
+    // A 3-wide centred row: the holes on either side belong to the shape.
+    const board = makeBoard('123456789', '###12');
+    const next = addNumbers(board, [9, 3])!;
+    const secondRow = next.slice(COLS, 2 * COLS);
+    // Only the one slot left inside the 3-wide band gets filled.
+    expect(secondRow.filter((c) => c !== null)).toHaveLength(3);
+    expect(secondRow[0]).toBeNull();
+    expect(secondRow[COLS - 1]).toBeNull();
   });
 
   it('shapes the appended rows too', () => {
@@ -117,13 +137,19 @@ describe('addNumbers', () => {
   });
 
   it('returns null when the result would exceed the maximum board size', () => {
-    const board = makeBoard('1.2');
-    expect(canAddNumbers(board, RECTANGLE, COLS)).toBe(false);
-    expect(addNumbers(board, RECTANGLE, COLS)).toBeNull();
+    const board = makeBoard('123456789', '12345');
+    expect(canAddNumbers(board, RECTANGLE, 2 * COLS)).toBe(false);
+    expect(addNumbers(board, RECTANGLE, 2 * COLS)).toBeNull();
   });
 
   it('allows reaching exactly the maximum board size', () => {
-    expect(addNumbers(makeBoard('1.2'), RECTANGLE, 2 * COLS)).not.toBeNull();
+    // 14 numbers: 4 finish row 1, 10 need two more rows → 4 rows in total.
+    const board = makeBoard('123456789', '12345');
+    expect(addNumbers(board, RECTANGLE, 4 * COLS)).not.toBeNull();
+  });
+
+  it('needs no new row at all when the tail has room', () => {
+    expect(canAddNumbers(makeBoard('1.2'), RECTANGLE, COLS)).toBe(true);
   });
 
   it('returns null when no live numbers remain', () => {
@@ -147,7 +173,8 @@ describe('getStatus', () => {
   });
 
   it('reports game over when no pair exists and Add Numbers is impossible', () => {
-    // 1 and 2 never match, and appending would need a second row.
-    expect(getStatus(makeBoard('12'), RECTANGLE, COLS)).toBe('gameOver');
+    // A full 3-wide row of 1,2,3: no pair, no room left on the row, and a
+    // second row would exceed the limit.
+    expect(getStatus(makeBoard('###123###'), RECTANGLE, COLS)).toBe('gameOver');
   });
 });
