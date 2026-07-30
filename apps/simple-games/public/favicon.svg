@@ -1,7 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#3f5b8f"/>
-  <rect x="7" y="18" width="24" height="28" rx="6" fill="#fffdf8"/>
-  <rect x="33" y="18" width="24" height="28" rx="6" fill="#e2e8f3"/>
-  <text x="19" y="39" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#232a33" text-anchor="middle" dominant-baseline="middle">4</text>
-  <text x="45" y="39" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#232a33" text-anchor="middle" dominant-baseline="middle">6</text>
+  <!-- The collection mark, matching assets/icon.svg. -->
+  <rect width="64" height="64" rx="14" fill="#232a33"/>
+  <rect x="13" y="13" width="17" height="17" rx="4" fill="#fffdf8"/>
+  <rect x="34" y="13" width="17" height="17" rx="4" fill="#fffdf8"/>
+  <rect x="13" y="34" width="17" height="17" rx="4" fill="#fffdf8"/>
+  <rect x="34" y="34" width="17" height="17" rx="4" fill="#8b95a3"/>
 </svg>

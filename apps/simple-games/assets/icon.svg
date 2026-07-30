@@ -1,11 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <!-- Number Match — Simple Games series icon layout:
-       rounded tile pair + game-specific symbols (digits 4 and 6).
-       The indigo field is this title's accent; sibling titles reuse the
-       layout with their own accent. -->
-  <rect width="1024" height="1024" rx="224" fill="#3f5b8f"/>
-  <rect x="118" y="296" width="374" height="432" rx="88" fill="#fffdf8"/>
-  <rect x="532" y="296" width="374" height="432" rx="88" fill="#e2e8f3"/>
-  <text x="305" y="516" font-family="Helvetica, Arial, sans-serif" font-size="300" font-weight="700" fill="#232a33" text-anchor="middle" dominant-baseline="central">4</text>
-  <text x="719" y="516" font-family="Helvetica, Arial, sans-serif" font-size="300" font-weight="700" fill="#232a33" text-anchor="middle" dominant-baseline="central">6</text>
+  <!-- Simple Games — the collection mark.
+       Four tiles on the series ink: a set of games rather than any one of
+       them. Deliberately unlettered, so adding a title never dates the icon,
+       and legible down to launcher size where a symbol would turn to mush.
+       The one recessed tile keeps the square from reading as a dead grid. -->
+  <rect width="1024" height="1024" rx="224" fill="#232a33"/>
+  <rect x="216" y="216" width="264" height="264" rx="64" fill="#fffdf8"/>
+  <rect x="544" y="216" width="264" height="264" rx="64" fill="#fffdf8"/>
+  <rect x="216" y="544" width="264" height="264" rx="64" fill="#fffdf8"/>
+  <rect x="544" y="544" width="264" height="264" rx="64" fill="#8b95a3"/>
 </svg>
