@@ -18,28 +18,84 @@ by PixApps
 A Simple Game by PixApps
 ```
 
-## メッセージ
+## コンセプト(Honest by design)
 
-英語:
+中心思想:
 
-> Fully free. Fully offline. Simply playable.
+> Honest by design. Simple games, built in the open.
+> You don't have to take our word for it. The source code is public.
 
-補助:
+> 無料ゲームを、誠実に。シンプルなゲームを、オープンに。
+> 私たちの説明を信じる必要はありません。ソースコードを公開しています。
 
-> No account. No purchases. No internet required.
+コンセプト語: シンプル / 完全オフライン / 低消費電力 / 広告は控えめ / 急かさない /
+サブスクなし / 機能課金なし / ログインなし / ソースコード公開
 
-日本語:
+**OSS は誠実さの証明である。** ソースコード公開は開発者向けの訴求ではなく、
+「広告はバナーだけ」「トラッキングなし」「オフラインで全機能」という約束を
+ユーザー自身(または誰か)が検証できる仕組みとして扱う。
+ストア文面では OSS を最後の訴求に置く(下の「訴求の順序」)。
 
-> 完全無課金。完全オフライン。すぐ遊べる。
+## メッセージ候補
 
-ストア表現では広告が存在することを考慮し、必要に応じて以下を優先する。
+ブランドメッセージ(候補):
 
-- No in-app purchases.
-- All features available offline.
-- No account required.
+> Free games, honestly made. Play everything for free with one small banner.
+> Remove it forever for $3.99. No subscriptions, no paywalls—and the source
+> code is public.
 
-**使用禁止表現**(広告が存在するため誤認を招く): "Ad-free", "No ads",
-"Completely free of ads", "No popup ads", "No forced ads"。
+> 無料ゲームを、誠実に。すべてのゲームを、小さなバナー広告だけで無料提供。
+> 広告は一度だけの購入で永久に削除できます。サブスクリプションも機能制限も
+> ありません。ソースコードも公開しています。
+
+シリーズメッセージ:
+
+> One app. Many games. Many languages.
+
+ストア短文(候補):
+
+- "Classic games in one quiet, offline app. No subscriptions or paywalls."
+- "Simple offline games with one small banner. Remove it forever with a single purchase."
+- OSS 行: "Built in public. The source code is available on GitHub."
+
+スクリーンショット短句(この 5 句を基本とする):
+
+- "Many games. One app."
+- "Fully offline."
+- "No subscriptions."
+- "Banner ads only."
+- "Open source."
+
+ストア文面では収録済みのゲーム名を具体的に挙げる(例: "Sudoku, Number Match,
+2048…" — **実際に収録された時点で**)。ゲーム名は検索流入の中核だが、
+不自然なキーワード詰め込みはしない。
+
+## 訴求の順序(ストア文面)
+
+1. 1 つのアプリで複数のクラシックゲーム
+2. 完全オフライン
+3. ログイン不要
+4. サブスクリプションなし
+5. 全ゲーム機能が無料
+6. 広告は小さなバナー 1 つだけ
+7. $3.99 の一度だけの購入で広告を永久に削除
+8. ソースコード公開
+
+OSS は常に最後段。第 1 訴求は「ゲーム集・オフライン」であり、
+OSS を先頭に出さない。
+
+## 表現ルール
+
+- 広告・課金への言及は謝罪調・強制調にしない。静かに事実を述べる
+  (説明文の正文は ADS_POLICY.md)。
+- **使用禁止**(広告が存在するため誤認を招く): "Ad-free", "No ads",
+  "Completely free of ads", "No popup ads", "No forced ads"。
+- **使用禁止**(広告削除の買い切りが存在するため誤認を招く): "No purchases",
+  "No in-app purchases", 「課金なし」の無条件表現。
+  代わりに "No paywalls" / "No subscriptions" /「機能課金なし」
+  「ゲーム機能の課金ロックなし」を使う。
+- **使用禁止**: "Lifetime Access"(無期限なのは広告削除権であって、
+  アプリのサービス存続期間ではない)。
 
 ## ストーリー
 
@@ -85,5 +141,7 @@ A Simple Game by PixApps
 - シリーズ内で完全同一にはせず、同じシリーズと認識できる程度の統一感を持たせる。
 - 小さく表示しても認識可能であること。長い文字を入れない。
 - 既存ゲームのアイコン・色・盤面を模倣しない。
-- ソースは `apps/<game>/assets/*.svg`。色を変えたら Android リソースを再生成する
+- ソースは `apps/simple-games/assets/*.svg`。色を変えたら Android リソースを再生成する
   (`capacitor-assets generate --android`)。
+- 名称・ロゴ・アイコン・ストア掲載用ブランド素材は Apache-2.0 の対象外
+  (ルート README のライセンス節を参照)。

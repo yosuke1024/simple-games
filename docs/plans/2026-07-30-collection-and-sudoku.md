@@ -223,8 +223,9 @@ Remove Ads & Support Simple Games。リンク先は GitHub(オフライン時は
 - **現状**: 5言語(en/ja/hi/th/id)・約100キー。Messages 型で全キーの存在をコンパイル時に
   強制し、空文字・プレースホルダー不一致・制御文字/マークアップ混入はテストで検出。
   言語追加は「locale ファイル 1 つ + index 登録」で完結する。
-- **拡張計画(M-L10N、リリース前必須)**: 必須15言語へ拡張 —
-  追加分は vi / es / pt-BR / tr / ko / zh-Hans / zh-Hant / fr / de。
+- **拡張計画(M-L10N、リリース前必須)**: 指示の必須15言語のうち Arabic を除く
+  **14言語**をリリース前に実装 — 追加分は vi / es / pt-BR / tr / ko / zh-Hans /
+  zh-Hant / fr / de(15言語目の ar は下記条件の充足後)。
   インド系(ta/te/bn/mr)は後続。生成AIによる初期翻訳+人間レビュー
   (課金・削除・復元・プライバシー文言は必須レビュー)。翻訳状態
   (machine_draft / reviewed / native_reviewed)は I18N_POLICY.md の表で管理する。

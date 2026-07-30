@@ -94,6 +94,18 @@ A Simple Games app by PixApps.
 - Sudoku(ナンプレ)は第2弾として実装予定。ルールは `docs/SUDOKU_RULES.md`(新設予定)に従い、
   収録後にこのファイルへブロックを追加する。
 
+## ローカライズ管理
+
+- M-L10N(リリース前の多言語マイルストーン)でこのファイルを言語別に分割する:
+  `store/listing/<locale>.md`。現状はこの単一ファイルのみ。
+- 各言語ファイルで管理する項目: ①アプリ名 ②短い説明 ③詳細説明
+  ④スクリーンショットキャプション ⑤リリースノート ⑥IAP 商品名 ⑦IAP 説明文。
+- スクリーンショットの訴求文は短句に限る:
+  "Many games. One app." / "Fully offline." / "No subscriptions." /
+  "Banner ads only." / "Open source."
+- 不自然なキーワード詰め込みをしない。方針は
+  [docs/I18N_POLICY.md](../../../docs/I18N_POLICY.md)。
+
 ## 使用禁止表現
 
 - 広告が存在するため:

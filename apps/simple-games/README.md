@@ -27,6 +27,18 @@ Number Match は 999 レベル(式による決定的生成、緩やかな難易�
 コレクション化と第2弾の計画は
 [docs/plans/2026-07-30-collection-and-sudoku.md](../../docs/plans/2026-07-30-collection-and-sudoku.md)。
 
+## 言語
+
+現在 5 言語(en / ja / hi / th / id)。カタログは全言語同梱(`src/i18n/`)で、
+リリース前に 15 言語へ拡張予定。方針・対応言語計画は
+[docs/I18N_POLICY.md](../../docs/I18N_POLICY.md)、locale の追加・修正手順は
+[CONTRIBUTING.md](../../CONTRIBUTING.md) の Translations 節を参照。
+
+アプリ内のゲーム説明は Quick Rules(チュートリアル、最大 3 ステップ)のみで、
+詳細ルールはゲーム別 Landing Page へ分離します。チュートリアルの
+「Learn More / 詳しく見る」ボタンがそこを開き、オフライン時は静かに何もしません
+(ゲームは止まりません)。
+
 ## 開発
 
 ```bash
