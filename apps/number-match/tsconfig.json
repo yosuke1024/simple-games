@@ -1,4 +1,0 @@
-{
-  "extends": "@simple-games/typescript-config/react-app.json",
-  "include": ["src"]
-}

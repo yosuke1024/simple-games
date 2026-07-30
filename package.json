@@ -2,7 +2,7 @@
   "name": "simple-games",
   "version": "0.0.0",
   "private": true,
-  "description": "Simple Games by PixApps — fully offline, no-account, no-IAP simple games monorepo",
+  "description": "Simple Games by PixApps — a fully offline, no-account collection of simple games, honest by design",
   "packageManager": "pnpm@10.34.5",
   "engines": {
     "node": ">=20"

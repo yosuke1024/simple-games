@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2732" height="2732" viewBox="0 0 2732 2732">
+  <!-- Dark counterpart: same mark on the dark surface, so a device in dark
+       mode never flashes a light screen before the app paints. -->
+  <rect width="2732" height="2732" fill="#14171c"/>
+  <rect x="1176" y="1176" width="176" height="176" rx="42" fill="#212730" stroke="#333b47" stroke-width="6"/>
+  <rect x="1380" y="1176" width="176" height="176" rx="42" fill="#212730" stroke="#333b47" stroke-width="6"/>
+  <rect x="1176" y="1380" width="176" height="176" rx="42" fill="#212730" stroke="#333b47" stroke-width="6"/>
+  <rect x="1380" y="1380" width="176" height="176" rx="42" fill="#1a1f26" stroke="#333b47" stroke-width="6"/>
+</svg>

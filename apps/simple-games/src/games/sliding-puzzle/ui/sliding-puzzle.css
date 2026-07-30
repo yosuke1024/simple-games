@@ -1,0 +1,212 @@
+/* Sliding Puzzle — all of this game's styling, imported by SlidingPuzzleRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --radius, --font-display, --tap-size, …) so the game
+   reads as part of the same app and follows the theme without knowing about it.
+
+   Class names are prefixed `slide-` so this file can never collide with the
+   shell or with another game. */
+
+/* ---------- board ---------- */
+
+/* The board sits in the space between the top bar and the action bar, centred
+   so a tall phone brings it into thumb reach instead of pinning it up top. */
+.slide-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 4px 12px 10px;
+  min-height: 0;
+}
+
+/* Square at every size. It takes the full width it is allowed, so a 5x5 tile
+   stays a comfortable target on a small phone (§12): on a 360px-wide screen
+   that is a ~62px tile, comfortably past --tap-size. The `min()` against
+   viewport height keeps it square on a short screen too, rather than pushing
+   the action bar off the bottom. */
+.slide-board {
+  position: relative;
+  width: min(94vw, 420px, 52vh);
+  aspect-ratio: 1;
+  background: var(--surface-recessed);
+  border: 2px solid var(--ink-soft);
+  border-radius: var(--radius);
+  /* Tiles are positioned in percentages of this box; nothing may spill out
+     while one is travelling. */
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* A tile is placed by translation rather than by grid position, which is what
+   lets it travel to its new cell instead of blinking there. The gutter lives
+   inside the tile (padding + an inner face) so the translated distance is
+   exactly one cell. */
+.slide-tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% / var(--slide-n));
+  height: calc(100% / var(--slide-n));
+  padding: 3px;
+  transform: translate(calc(var(--slide-col) * 100%), calc(var(--slide-row) * 100%));
+  transition: transform 0.13s ease-out;
+}
+
+/* Reduced Motion: the tile is simply in its new place (§12). Set from the
+   in-app setting and the OS preference alike, via useReducedMotion. */
+.slide-board-still .slide-tile {
+  transition: none;
+}
+
+.slide-tile-face {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: var(--font-display);
+  /* Sized against the board rather than the viewport: a 5x5 tile is a fifth of
+     the same box a 3x3 tile fills a third of. */
+  font-size: clamp(15px, 7vw, 34px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.slide-board[data-size='4'] .slide-tile-face {
+  font-size: clamp(14px, 5.5vw, 28px);
+}
+
+.slide-board[data-size='5'] .slide-tile-face {
+  font-size: clamp(13px, 4.4vw, 23px);
+}
+
+.slide-tile:active .slide-tile-face {
+  background: var(--accent-soft);
+}
+
+/* A tile already sitting where it belongs. Quiet on purpose — it is progress,
+   not an instruction, and a board of loud tiles would be harder to read. */
+.slide-tile-home .slide-tile-face {
+  color: var(--accent);
+  border-color: var(--accent-ring);
+}
+
+/* The gap. Announced rather than hidden: a screen reader needs to know where
+   the hole is to make any sense of the board (§12). It does not travel — only
+   the tiles do. A dashed outline sliding the other way while a tile slides
+   would read as two things moving when only one did. */
+.slide-tile-blank {
+  transition: none;
+}
+
+.slide-tile-blank .slide-tile-face {
+  background: transparent;
+  border: 1px dashed var(--line);
+  opacity: 0.6;
+}
+
+/* ---------- top bar ---------- */
+
+.slide-status {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.slide-mode {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+/* The move count is the puzzle's own measure, so it is shown while playing —
+   unlike the clock, which is not (§4). */
+.slide-move-count {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 15px;
+}
+
+/* ---------- action bar ---------- */
+
+/* One action, and it is free and unlimited: Undo (§8). There is deliberately
+   no hint button — the board is fully visible and a shortest-move oracle would
+   be solving the puzzle for the player. */
+.action-bar.slide-actions {
+  justify-content: center;
+}
+
+/* ---------- level select ---------- */
+
+/* A solved level shows the fewest moves it has been done in, which is the
+   record the player is replaying against. */
+.slide-level-best {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.level-cell-current .slide-level-best {
+  color: var(--accent-ink);
+  opacity: 0.85;
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* The tutorial draws the real board at 3x3, so the picture teaches the shape
+   as well as the rule. */
+.slide-figure {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  width: 174px;
+}
+
+.slide-figure-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.slide-figure-cell-blank {
+  background: transparent;
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.slide-figure-cell-move {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+  color: var(--accent);
+}
+
+/* ---------- daily list ---------- */
+
+.slide-daily-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.slide-daily-badge-done {
+  color: var(--ink-soft);
+}

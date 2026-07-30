@@ -1,0 +1,70 @@
+# Contributing to Simple Games
+
+Thanks for your interest in Simple Games by PixApps — a collection of simple,
+fully offline games in one Android app.
+
+日本語での Issue / Pull Request も歓迎します。
+
+## Running the project
+
+Requirements: Node.js >= 20 and pnpm (see `packageManager` in `package.json`).
+
+```bash
+pnpm install
+pnpm --filter simple-games dev    # run the app in a browser
+pnpm --filter simple-games test   # unit tests
+pnpm lint
+pnpm typecheck
+pnpm build
+```
+
+Android build instructions are in
+[apps/simple-games/README.md](apps/simple-games/README.md).
+
+## Translations
+
+The full policy (in Japanese) is [docs/I18N_POLICY.md](docs/I18N_POLICY.md).
+All translations are bundled with the app; there is no external translation
+service.
+
+To **fix** an existing translation, edit the matching file in
+`apps/simple-games/src/i18n/locales/<code>.ts`.
+
+To **add** a language:
+
+1. Copy `apps/simple-games/src/i18n/locales/en.ts` to a new
+   `apps/simple-games/src/i18n/locales/<code>.ts` and translate the values.
+2. Register it in `apps/simple-games/src/i18n/index.ts`: add the code to the
+   `Locale` type, the catalog to `catalogs`, and the language's name — written
+   in that language itself — to `LANGUAGE_NAMES`.
+
+That is the whole procedure. The `Messages` type makes the build fail until
+every key exists in your locale, and `pnpm --filter simple-games test` verifies
+that every string is non-empty, that placeholder names (`{var}`) match English
+exactly, and that no markup or control characters slipped in.
+
+Guidelines:
+
+- Keep strings short. The UI is deliberately text-minimal (tutorials are at
+  most 3 steps, one sentence each); long translations break layouts.
+- Translate whole sentences — never assume strings will be concatenated.
+  Variables are passed via `{var}` placeholders; keep their names unchanged.
+- Never machine-translate strings about purchases, purchase restore, data
+  deletion, or privacy without human review. Flag them in your PR if unsure.
+
+## Bugs and game suggestions
+
+Please use GitHub issues:
+[https://github.com/yosuke1024/simple-games/issues](https://github.com/yosuke1024/simple-games/issues)
+
+- Bug reports: include device/OS, app or commit version, and steps to reproduce.
+- Game suggestions are welcome. Note that games must work fully offline with
+  puzzles generated on-device — games that need a content server are out of
+  scope.
+
+## License and brand
+
+The source code is licensed under [Apache-2.0](LICENSE). The "Simple Games"
+and "PixApps" names, logos, icons, and store-listing brand assets are **not**
+covered by that license (Apache-2.0 §6). You may build from source, but you
+may not present your build as the official app.

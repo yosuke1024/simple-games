@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Adaptive icon foreground: the four tiles inside the ~66% safe zone, so
+       nothing is clipped by a round, squircle, or squared launcher mask. -->
+  <rect x="326" y="326" width="164" height="164" rx="40" fill="#fffdf8"/>
+  <rect x="534" y="326" width="164" height="164" rx="40" fill="#fffdf8"/>
+  <rect x="326" y="534" width="164" height="164" rx="40" fill="#fffdf8"/>
+  <rect x="534" y="534" width="164" height="164" rx="40" fill="#8b95a3"/>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2732" height="2732" viewBox="0 0 2732 2732">
+  <!-- The collection mark on paper. The splash is up for 400ms; it exists to
+       avoid a white flash, not to be looked at, so it carries the mark and
+       nothing else. -->
+  <rect width="2732" height="2732" fill="#f3f0e9"/>
+  <rect x="1176" y="1176" width="176" height="176" rx="42" fill="#fffdf8" stroke="#ddd7ca" stroke-width="6"/>
+  <rect x="1380" y="1176" width="176" height="176" rx="42" fill="#fffdf8" stroke="#ddd7ca" stroke-width="6"/>
+  <rect x="1176" y="1380" width="176" height="176" rx="42" fill="#fffdf8" stroke="#ddd7ca" stroke-width="6"/>
+  <rect x="1380" y="1380" width="176" height="176" rx="42" fill="#e8e4d9" stroke="#ddd7ca" stroke-width="6"/>
+</svg>

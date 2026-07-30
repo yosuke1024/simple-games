@@ -1,0 +1,249 @@
+/**
+ * The Sudoku game screen (docs/SUDOKU_RULES.md §3, §4, §5, §12).
+ *
+ * No clock and no mistake counter on screen: both are recorded and shown on the
+ * clear screen instead, so nothing here pushes the player to hurry.
+ */
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { haptics } from '@/services/haptics';
+import { sounds } from '@/services/sound';
+import { useSettings } from '@/state/SettingsContext';
+import { BannerSlot } from '@/ui/components/BannerSlot';
+import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
+import { IconBack, IconHint, IconRetry, IconUndo } from '@/ui/components/icons';
+import { isGiven, type Digit, type Hint } from '../../game';
+import { useSudoku } from '../../state/GameContext';
+import { DigitPad } from '../components/DigitPad';
+import { SudokuGrid } from '../components/SudokuGrid';
+import { SudokuResultOverlay } from '../components/SudokuResultOverlay';
+
+/**
+ * Long enough to read a full sentence twice — a hint explains a reason, not a
+ * single word, and plenty of players are reading it in a second language.
+ */
+const TOAST_MS = 5000;
+
+/** One plain sentence per hint shape — no technique names (§5). */
+const HINT_MESSAGE = {
+  onlyDigitForCell: 'sudokuHintOnlyDigit',
+  onlyCellForDigit: 'sudokuHintOnlyCell',
+  digitLockedToLine: 'sudokuHintLockedLine',
+  digitLockedToBox: 'sudokuHintLockedBox',
+  candidatesRuledOut: 'sudokuHintRuledOut',
+} as const;
+
+export function SudokuGameScreen() {
+  const {
+    session,
+    prefs,
+    lastResult,
+    sessionEpoch,
+    place,
+    erase,
+    toggleNote,
+    applyUndo,
+    takeHint,
+    goHome,
+    restartCurrent,
+    startNextLevel,
+  } = useSudoku();
+  const { t } = useSettings();
+
+  const [selected, setSelected] = useState<number | null>(null);
+  const [notesMode, setNotesMode] = useState(false);
+  const [hint, setHint] = useState<Hint | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const [confirmRestart, setConfirmRestart] = useState(false);
+  const toastIdRef = useRef(0);
+
+  // A new game is a clean slate.
+  useEffect(() => {
+    setSelected(null);
+    setHint(null);
+    setNotesMode(false);
+  }, [sessionEpoch]);
+
+  const showToast = useCallback((message: string) => {
+    const id = ++toastIdRef.current;
+    setToast(message);
+    window.setTimeout(() => {
+      if (toastIdRef.current === id) setToast(null);
+    }, TOAST_MS);
+  }, []);
+
+  const onCellTap = useCallback(
+    (index: number) => {
+      setSelected(index);
+      setHint(null);
+      sounds.select();
+      void haptics.tap();
+    },
+    [],
+  );
+
+  const onDigit = useCallback(
+    (digit: Digit) => {
+      if (selected === null || session === null) return;
+      if (isGiven(session.board, selected)) return;
+      setHint(null);
+      if (notesMode) {
+        if (toggleNote(selected, digit)) sounds.select();
+        return;
+      }
+      if (!place(selected, digit)) return;
+      // A wrong digit gets a quieter sound and nothing else: it is counted, not
+      // punished, and the board is never blocked because of one (§4).
+      if (session.solution[selected] !== digit) {
+        sounds.invalid();
+        void haptics.invalid();
+      } else {
+        sounds.match();
+        void haptics.match();
+      }
+    },
+    [notesMode, place, selected, session, toggleNote],
+  );
+
+  const onErase = useCallback(() => {
+    if (selected === null) return;
+    setHint(null);
+    if (erase(selected)) sounds.undo();
+  }, [erase, selected]);
+
+  const onUndo = useCallback(() => {
+    setHint(null);
+    if (applyUndo()) sounds.undo();
+  }, [applyUndo]);
+
+  const onHint = useCallback(() => {
+    const next = takeHint();
+    if (next === null) {
+      showToast(t('sudokuHintNone'));
+      return;
+    }
+    setHint(next);
+    setSelected(next.target ?? next.focus[0] ?? null);
+    sounds.select();
+    showToast(
+      t(HINT_MESSAGE[next.kind], {
+        value: next.digit ?? 0,
+        n: next.focus.length,
+      }),
+    );
+  }, [showToast, t, takeHint]);
+
+  if (!session) return null;
+
+  const solved = session.status === 'solved';
+
+  return (
+    <div className="screen game-screen">
+      <div className="game-content" inert={solved}>
+        <header className="game-topbar">
+          <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
+            <IconBack />
+          </button>
+          <div className="sudoku-status">
+            <span className="sudoku-mode">
+              {session.mode === 'daily'
+                ? t('modeDaily')
+                : t('modeLevel', { n: session.level ?? 1 })}
+            </span>
+            <span>{t(`sudokuTier_${session.difficulty}`)}</span>
+          </div>
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label={t('tryAgain')}
+            onClick={() => setConfirmRestart(true)}
+          >
+            <IconRetry />
+          </button>
+        </header>
+
+        <div className="sudoku-body">
+          <SudokuGrid
+            board={session.board}
+            solution={session.solution}
+            selected={selected}
+            hint={hint}
+            highlightMistakes={prefs.highlightMistakes}
+            onCellTap={onCellTap}
+          />
+          <DigitPad board={session.board} notesMode={notesMode} onDigit={onDigit} />
+        </div>
+
+        {toast ? (
+          <div className="toast" role="status">
+            {toast}
+          </div>
+        ) : null}
+
+        <div className="action-bar">
+          <button
+            type="button"
+            className="action-btn"
+            onClick={onUndo}
+            disabled={session.history.length === 0}
+          >
+            <span className="action-icon" aria-hidden="true">
+              <IconUndo />
+            </span>
+            {t('undo')}
+          </button>
+          <button
+            type="button"
+            className="action-btn"
+            onClick={onErase}
+            disabled={selected === null || isGiven(session.board, selected)}
+          >
+            <span className="action-icon" aria-hidden="true">
+              ⌫
+            </span>
+            {t('sudokuErase')}
+          </button>
+          <button
+            type="button"
+            className="action-btn"
+            aria-pressed={notesMode}
+            onClick={() => setNotesMode((current) => !current)}
+          >
+            <span className="action-icon" aria-hidden="true">
+              ✎
+            </span>
+            {t('sudokuNotes')}
+          </button>
+          <button type="button" className="action-btn" onClick={onHint}>
+            <span className="action-icon" aria-hidden="true">
+              <IconHint />
+            </span>
+            {t('hint')}
+          </button>
+        </div>
+
+        <BannerSlot />
+      </div>
+
+      <SudokuResultOverlay
+        session={session}
+        lastResult={lastResult}
+        onRetry={restartCurrent}
+        onNextLevel={startNextLevel}
+        onHome={goHome}
+      />
+
+      <ConfirmDialog
+        open={confirmRestart}
+        title={t('tryAgain')}
+        body={t('confirmNewGameBody')}
+        cancelLabel={t('cancel')}
+        confirmLabel={t('confirm')}
+        onCancel={() => setConfirmRestart(false)}
+        onConfirm={() => {
+          setConfirmRestart(false);
+          restartCurrent();
+        }}
+      />
+    </div>
+  );
+}
