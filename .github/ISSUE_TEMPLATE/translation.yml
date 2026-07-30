@@ -1,0 +1,59 @@
+name: Translation fix / 翻訳の修正
+description: A string reads wrong, is awkward, or is cut off in your language.
+labels: [i18n]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        日本語で書いていただいて構いません。 / Japanese is welcome.
+
+        Every language except English and Japanese is a **machine-translation
+        draft with no native review**, so reports like this are genuinely
+        useful. A pull request editing
+        `apps/simple-games/src/i18n/locales/<code>.ts` is welcome too
+        ([CONTRIBUTING.md](../blob/main/CONTRIBUTING.md)).
+
+  - type: input
+    id: locale
+    attributes:
+      label: Language
+      placeholder: de / ko / pt-br / zh-hant ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Current text
+      description: Copy what the app shows, and where it appears.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Suggested text
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of string is it?
+      description: >
+        Purchase, restore, data-deletion and privacy wording is held to a higher
+        bar — it is never shipped from machine translation alone.
+      options:
+        - "Ordinary UI text"
+        - "Purchase / restore / price"
+        - "Data deletion or privacy"
+        - "Game rules or tutorial"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: native
+    attributes:
+      label: Native speaker
+      options:
+        - label: I speak this language natively or fluently.

@@ -1,0 +1,79 @@
+name: Bug report / 不具合の報告
+description: Something in the app behaves wrong, crashes, or loses data.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        日本語で書いていただいて構いません。 / Japanese is welcome.
+
+        Losing saved progress, an ad appearing where it should not, or the app
+        failing to work offline are treated as serious — please say so plainly.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you see, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Sudoku
+        2. Start level 12
+        3. Press Undo twice
+        4. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: game
+    attributes:
+      label: Which game
+      options:
+        - Sudoku
+        - Minesweeper
+        - Nonogram
+        - Number Match
+        - Sliding Puzzle
+        - The collection home / settings / About
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device and Android version
+      placeholder: Pixel 7 / Android 15, or "cheap 2019 phone, Android 9"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: App version (or commit)
+      description: Settings → About shows the version.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: offline
+    attributes:
+      label: Were you offline?
+      options:
+        - "Online"
+        - "Offline / airplane mode"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots or a screen recording help a lot.
