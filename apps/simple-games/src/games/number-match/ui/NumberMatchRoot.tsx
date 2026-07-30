@@ -24,6 +24,7 @@ import { HomeScreen } from './screens/HomeScreen';
 import { LevelSelectScreen } from './screens/LevelSelectScreen';
 import { StatsScreen } from './screens/StatsScreen';
 import { TutorialScreen } from './screens/TutorialScreen';
+import './number-match.css';
 
 export function NumberMatchScreens() {
   const { screen } = useApp();
