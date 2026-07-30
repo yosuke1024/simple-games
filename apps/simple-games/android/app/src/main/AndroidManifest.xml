@@ -39,4 +39,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Google Play Billing, for the one-time ad-removal purchase only. -->
+    <uses-permission android:name="com.android.vending.BILLING" />
 </manifest>

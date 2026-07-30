@@ -24,6 +24,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
 import {
   countHintUse,
@@ -175,6 +176,7 @@ export function AppProvider({
       void clearSavedGame(next.mode);
       persistStats(applyGameEnd(statsRef.current, next));
       if (next.status === 'cleared') {
+        recordGameCompleted();
         const outcome = applyClearToProgress(progressRef.current, next, Date.now());
         persistProgress(outcome.progress);
         setLastResult({ isNewBest: outcome.isNewBest, bestScore: outcome.bestScore });

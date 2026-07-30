@@ -54,9 +54,14 @@ function notify(): void {
   for (const listener of listeners) listener();
 }
 
-/** A future billing implementation registers itself here (app boot). */
+/**
+ * A billing implementation registers itself here (app boot). Notifies
+ * subscribers because availability affects what the settings screen renders,
+ * and the billing backend reports it asynchronously.
+ */
 export function setAdRemovalStore(next: AdRemovalStore): void {
   store = next;
+  notify();
 }
 
 /** Loads the cached entitlement at boot. Never blocks the app. */

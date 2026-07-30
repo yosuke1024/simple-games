@@ -24,6 +24,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
 import {
   createDailySession,
@@ -173,6 +174,7 @@ export function SlidingPuzzleProvider({
           next.moveCount,
         ),
       );
+      recordGameCompleted();
       const outcome = applySolveToProgress(progressRef.current, next);
       persistProgress(outcome.progress);
       setLastResult({

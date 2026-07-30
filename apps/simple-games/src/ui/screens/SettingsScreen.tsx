@@ -15,11 +15,11 @@ import { LANGUAGE_NAMES } from '../../i18n';
 import {
   getAdRemovalPrice,
   initAdRemoval,
-  isPurchaseAvailable,
   purchaseAdRemoval,
   restoreAdRemoval,
 } from '../../monetization/adRemoval';
-import { useAdRemovalPurchased } from '../../monetization/useAdRemoval';
+import { useAdRemovalPurchased, usePurchaseAvailable } from '../../monetization/useAdRemoval';
+import { initReview } from '../../services/review';
 import { useSettings } from '../../state/SettingsContext';
 import { clearLocalData } from '../../storage/repo';
 import {
@@ -55,7 +55,7 @@ export interface SettingsScreenProps {
 export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const { settings, updateSettings, replaceSettings, t } = useSettings();
   const purchased = useAdRemovalPurchased();
-  const purchasable = isPurchaseAvailable() && !purchased;
+  const purchasable = usePurchaseAvailable() && !purchased;
   const [price, setPrice] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
@@ -78,6 +78,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     // Reload the in-memory copies of the shared records from their defaults.
     replaceSettings(settingsSchema.defaultValue());
     await initAdRemoval();
+    await initReview();
   };
 
   return (

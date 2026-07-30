@@ -14,6 +14,7 @@ import { asBool, asInt, isRecord } from './validate';
 export const STORAGE_KEYS = {
   settings: 'sg.settings',
   iap: 'sg.iap',
+  review: 'sg.review',
 } as const;
 
 export interface SchemaDef<T> {
@@ -119,5 +120,51 @@ export const iapSchema: SchemaDef<IapState> = {
     if (adRemovalPurchased === null) return null;
     if (purchasedAt === null && raw.purchasedAt !== null) return null;
     return { schemaVersion: 1, adRemovalPurchased, purchasedAt };
+  },
+};
+
+// ---------- store-review prompt ----------
+
+/**
+ * The quiet "Enjoying Simple Games?" flow (docs/REVIEW_PROMPT_POLICY.md):
+ * completed games are counted across the whole collection, the question is
+ * asked at most twice per install, and an answer — either direction —
+ * retires it for good.
+ */
+export interface ReviewState {
+  schemaVersion: 1;
+  /** Completed (won) games across all titles, dailies included. */
+  gamesCompleted: number;
+  /** How many times the question has been shown (hard-capped). */
+  promptsShown: number;
+  /** The completion count that arms the next ask. */
+  nextPromptAt: number;
+  /** The player answered — never ask again. */
+  resolved: boolean;
+}
+
+/** Completions before the first ask: engagement first, question later. */
+export const REVIEW_FIRST_PROMPT_AT = 5;
+
+export const reviewSchema: SchemaDef<ReviewState> = {
+  key: STORAGE_KEYS.review,
+  version: 1,
+  defaultValue: () => ({
+    schemaVersion: 1,
+    gamesCompleted: 0,
+    promptsShown: 0,
+    nextPromptAt: REVIEW_FIRST_PROMPT_AT,
+    resolved: false,
+  }),
+  validate: (raw) => {
+    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
+    const gamesCompleted = asInt(raw.gamesCompleted, 0, 1e9);
+    const promptsShown = asInt(raw.promptsShown, 0, 100);
+    const nextPromptAt = asInt(raw.nextPromptAt, 0, 1e9);
+    const resolved = asBool(raw.resolved);
+    if (gamesCompleted === null || promptsShown === null || nextPromptAt === null || resolved === null) {
+      return null;
+    }
+    return { schemaVersion: 1, gamesCompleted, promptsShown, nextPromptAt, resolved };
   },
 };

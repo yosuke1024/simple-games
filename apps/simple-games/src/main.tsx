@@ -3,8 +3,10 @@ import { createRoot } from 'react-dom/client';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { App } from './app/App';
 import { initAdRemoval, isAdRemovalPurchased } from './monetization/adRemoval';
+import { initPlayBilling } from './monetization/playBilling';
 import { initAds } from './services/ads/banner';
 import { initNetwork } from './services/network';
+import { initReview } from './services/review';
 import { loadRecord } from './storage/repo';
 import { settingsSchema } from './storage/schemas';
 import { SettingsProvider } from './state/SettingsContext';
@@ -28,6 +30,7 @@ async function boot(): Promise<void> {
   try {
     await initNetwork();
     await initAdRemoval();
+    await initReview();
     settings = await loadRecord(settingsSchema);
   } catch {
     // Even unexpected boot failures must not prevent playing: use defaults.
@@ -41,10 +44,11 @@ async function boot(): Promise<void> {
     </StrictMode>,
   );
 
-  // Fire-and-forget: ad SDK init and splash hide never gate the app. With the
-  // ad-removal purchase active the SDK is never initialized at all (battery,
-  // and no ad code runs for paying users).
+  // Fire-and-forget: ad SDK init, billing availability and splash hide never
+  // gate the app. With the ad-removal purchase active the ad SDK is never
+  // initialized at all (battery, and no ad code runs for paying users).
   if (!isAdRemovalPurchased()) void initAds();
+  void initPlayBilling();
   void SplashScreen.hide().catch(() => undefined);
 }
 

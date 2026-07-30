@@ -25,6 +25,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
 import {
   chordCell,
@@ -174,6 +175,7 @@ export function MinesweeperProvider({
       const played = applyPlayTime(statsRef.current, next.difficulty, unbooked);
 
       if (next.status === 'won') {
+        recordGameCompleted();
         const outcome = applyWin(played, next);
         persistStats(outcome.stats);
         setLastResult({

@@ -73,6 +73,15 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 - [ ] 別端末で「購入を復元」が機能する
 - [ ] 購入前の画面で購入を繰り返し促していない
 
+## 5.5 レビュー導線([REVIEW_PROMPT_POLICY.md](REVIEW_PROMPT_POLICY.md))
+
+- [ ] 合計 5 勝するまで質問が出ない/5 勝後、ゲームから戻った時だけ出る
+- [ ] 「楽しい」→ In-App Review カードが表示される(内部テストトラックで確認。
+      Play のクォータにより出ないことがある — その場合ストア掲載ページが開く)
+- [ ] 「いまいち」→ メールドラフトが開き、宛先が brand の `SUPPORT_EMAIL`
+- [ ] Play Console のサポートメールアドレスを `SUPPORT_EMAIL` と一致させる
+- [ ] 回答後は二度と出ない/「あとで」は 20 勝後に一度だけ再表示
+
 ## 6. ストア掲載
 
 - [ ] `apps/simple-games/store/listing.md` の文言を各言語へ反映
