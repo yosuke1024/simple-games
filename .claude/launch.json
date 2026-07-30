@@ -2,16 +2,18 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "number-match",
+      "name": "simple-games",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "number-match", "dev"],
-      "port": 5173
+      "runtimeArgs": ["--filter", "simple-games", "dev"],
+      "port": 5173,
+      "autoPort": true
     },
     {
-      "name": "number-match-alt",
+      "name": "simple-games-alt",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "number-match", "dev", "--", "--port", "5174"],
-      "port": 5174
+      "runtimeArgs": ["--filter", "simple-games", "dev"],
+      "port": 5174,
+      "autoPort": true
     }
   ]
 }

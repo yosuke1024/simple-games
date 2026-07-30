@@ -1,0 +1,59 @@
+# Simple Games — Android build. Runs ONLY on manual dispatch or a
+# simple-games-v* tag; shared-package changes never auto-release the app
+# (docs/ARCHITECTURE.md). Store upload is intentionally a manual human step.
+name: Android release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'simple-games-v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - run: pnpm install --frozen-lockfile
+
+      # Production ad unit IDs come from repository secrets; when they are
+      # not configured, the build ships with ads disabled (never test IDs,
+      # never hardcoded production IDs). See docs/ADS_POLICY.md.
+      # The collection has one AdMob app, so the secrets are not per game.
+      - name: Build web assets
+        run: pnpm --filter simple-games build
+        env:
+          VITE_ADMOB_BANNER_ID: ${{ secrets.ADMOB_BANNER_ID }}
+          VITE_ADMOB_INTERSTITIAL_ID: ${{ secrets.ADMOB_INTERSTITIAL_ID }}
+
+      - name: Capacitor sync
+        run: pnpm --filter simple-games exec cap sync android
+
+      # The AdMob APPLICATION_ID is a manifest placeholder resolved by Gradle
+      # (app/build.gradle); without the secret it falls back to the test app ID.
+      - name: Gradle build (unsigned release)
+        working-directory: apps/simple-games/android
+        run: ./gradlew assembleRelease
+        env:
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: simple-games-release-unsigned
+          path: apps/simple-games/android/app/build/outputs/apk/release/*.apk
+          retention-days: 14

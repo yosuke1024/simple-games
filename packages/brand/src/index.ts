@@ -11,6 +11,20 @@ export const SERIES_BY_LINE = 'by PixApps';
 export const SERIES_ATTRIBUTION = 'A Simple Game by PixApps';
 export const SERIES_CREDIT = 'Simple Games by PixApps';
 
+/**
+ * The public repository — part of the product, not just of development:
+ * "Honest by design" means every brand promise is verifiable here.
+ * The About screen links straight to it.
+ */
+export const SOURCE_REPO_URL = 'https://github.com/yosuke1024/simple-games';
+
+/**
+ * Per-game landing pages (static, on the PixApps site). The app keeps only
+ * Quick Rules; long-form rules, examples and FAQs live at
+ * `${LANDING_BASE_URL}/games/<game-id>/<locale>/` behind a "Learn More" link.
+ */
+export const LANDING_BASE_URL = 'https://pixapps.ai/simple-games';
+
 /** Primary series message (English). */
 export const SERIES_TAGLINE_EN = 'Fully free. Fully offline. Simply playable.';
 /** Supporting series message (English). */

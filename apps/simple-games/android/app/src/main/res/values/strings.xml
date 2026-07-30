@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <!-- Launcher label: kept short so it is not truncated under the icon.
+         The full store title is "Simple Games: Offline Puzzles". -->
+    <string name="app_name">Simple Games</string>
+    <string name="title_activity_main">Simple Games</string>
+    <string name="package_name">com.pixapps.simplegames</string>
+    <string name="custom_url_scheme">com.pixapps.simplegames</string>
+</resources>

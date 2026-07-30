@@ -1,0 +1,127 @@
+import type { Messages } from './en';
+
+export const hi: Messages = {
+  appName: 'Number Match',
+  tagline: 'ऑफ़लाइन खेलें। कोई खाता नहीं। कोई पेवॉल नहीं।',
+
+  resume: 'जारी रखें',
+  dailyChallenge: 'डेली चैलेंज',
+  dailyDoneBadge: 'आज पूरा हुआ',
+  howToPlay: 'कैसे खेलें',
+  statistics: 'आंकड़े',
+  settings: 'सेटिंग्स',
+
+  modeLevel: 'लेवल {n}',
+  levelSelect: 'लेवल चुनें',
+  levelLocked: 'लेवल {n}, लॉक है',
+  nextLevel: 'अगला लेवल',
+  levelsTitle: 'लेवल',
+  reachedLevel: 'पहुँचा लेवल',
+
+  score: 'स्कोर',
+  best: 'सर्वश्रेष्ठ',
+  newBest: 'नया सर्वश्रेष्ठ!',
+  scoreMatches: 'मिलान',
+  scoreRows: 'पंक्ति बोनस',
+  scoreClearBonus: 'क्लियर बोनस',
+  scoreNoHint: 'बिना-संकेत बोनस',
+  bestScores: 'सर्वश्रेष्ठ स्कोर',
+  totalBest: 'सभी लेवल के सर्वश्रेष्ठ का योग',
+
+  dailyPast: 'पिछली डेली',
+  dailyToday: 'आज',
+  dailyBacklogHint: 'किसी दिन को पूरा करें, तो उससे पिछला दिन खुल जाता है।',
+  modeDaily: 'डेली',
+  undo: 'अनडू',
+  hint: 'संकेत',
+  addNumbers: 'जोड़ें',
+  timeLabel: 'समय',
+  movesLabel: 'चालें',
+  boardLabel: 'गेम बोर्ड',
+  cellLabel: 'पंक्ति {row}, स्तंभ {col}, {value}',
+  cellLabelStone: 'पंक्ति {row}, स्तंभ {col}, पत्थर',
+  cellLabelWild: 'पंक्ति {row}, स्तंभ {col}, वाइल्ड',
+  hintNoneToast: 'कोई जोड़ी नहीं मिली — "जोड़ें" आज़माएँ।',
+  wildIntroToast: '✦ किसी भी संख्या के साथ जोड़ी बनाता है।',
+  stoneIntroToast: 'पत्थर हटाए नहीं जा सकते और रास्ता रोकते हैं।',
+
+  clearTitle: 'बोर्ड साफ़!',
+  clearBody: 'आपने सभी संख्याएँ हटा दीं।',
+  gameOverTitle: 'कोई चाल नहीं बची',
+  gameOverBody: 'बोर्ड अपनी सीमा तक पहुँच गया।',
+  tryAgain: 'वही बोर्ड फिर से',
+  backHome: 'होम',
+
+  confirmNewGameTitle: 'नया गेम शुरू करें?',
+  confirmNewGameBody: 'मौजूदा गेम खो जाएगा।',
+  cancel: 'रद्द करें',
+  confirm: 'शुरू करें',
+
+  step1Title: 'समान, या योग 10',
+  step1Body: 'दो समान संख्याएँ, या जिनका योग 10 हो, उन्हें हटाएँ।',
+  step2Title: 'जुड़ी हुई दो चुनें',
+  step2Body:
+    'आड़ी, खड़ी, तिरछी — या पंक्ति के अंत से अगली पंक्ति की शुरुआत तक। खाली खाने बाधा नहीं बनते, लेकिन बीच में बची कोई भी संख्या रास्ता रोक देती है।',
+  step3Title: 'सब हटाएँ और जीतें',
+  step3Body:
+    'अटक जाएँ तो "जोड़ें" से बची संख्याएँ जुड़ जाती हैं। अनडू और संकेत हमेशा मुफ़्त हैं।',
+  startPlaying: 'खेलना शुरू करें',
+  next: 'आगे',
+  back: 'पीछे',
+  close: 'बंद करें',
+
+  language: 'भाषा',
+  languageSystem: 'डिवाइस सेटिंग',
+  theme: 'थीम',
+  themeSystem: 'सिस्टम',
+  themeLight: 'लाइट',
+  themeDark: 'डार्क',
+  sound: 'ध्वनि',
+  vibration: 'कंपन',
+  reducedMotion: 'कम एनिमेशन',
+  privacyPolicy: 'गोपनीयता नीति',
+  resetData: 'लोकल डेटा हटाएँ',
+  resetConfirmTitle: 'सभी लोकल डेटा हटाएँ?',
+  resetConfirmBody:
+    'इस डिवाइस से गेम, आंकड़े और सेटिंग्स हट जाएँगी। इसे वापस नहीं किया जा सकता।',
+  delete: 'हटाएँ',
+  version: 'संस्करण',
+
+  privacy1:
+    'कोई खाता नहीं, कोई साइन-अप नहीं। हम आपका नाम, ईमेल, संपर्क या स्थान एकत्र नहीं करते।',
+  privacy2:
+    'गेम की प्रगति, आंकड़े और सेटिंग्स केवल इसी डिवाइस पर संग्रहीत होती हैं। हमारा कोई सर्वर नहीं है और कोई क्लाउड सिंक नहीं है।',
+  privacy3:
+    'ऑनलाइन होने पर Google AdMob के विज्ञापन दिख सकते हैं; Google अपनी गोपनीयता नीति के अनुसार डिवाइस के विज्ञापन पहचानकर्ता संसाधित कर सकता है। ऑफ़लाइन में कोई विज्ञापन नहीं दिखता और कोई विज्ञापन अनुरोध नहीं भेजा जाता।',
+  privacy4: 'ऐप हटाने या "लोकल डेटा हटाएँ" से आपका डेटा हट जाता है।',
+
+  played: 'खेले गए गेम',
+  cleared: 'जीते गए गेम',
+  gameOverCount: 'गेम ओवर',
+  totalTime: 'कुल खेल समय',
+  bestTime: 'सबसे तेज़ जीत',
+
+  // Collection shell
+  collectionTagline: 'पूरी तरह मुफ़्त। पूरी तरह ऑफ़लाइन। तुरंत खेलें।',
+  gamesHeading: 'गेम',
+  numberMatchBlurb: 'बराबर या जोड़ 10 वाले अंकों के जोड़े हटाएँ।',
+  backToGames: 'सभी गेम',
+  learnMore: 'और जानें',
+
+  // About & open source
+  aboutTitle: 'ऐप के बारे में',
+  viewSource: 'सोर्स कोड देखें',
+  reportBug: 'समस्या रिपोर्ट करें',
+  suggestGame: 'गेम सुझाएँ',
+  viewLicenses: 'लाइसेंस देखें',
+
+  // Ads & support
+  removeAdsTitle: 'विज्ञापन हटाएँ और Simple Games का समर्थन करें',
+  adSupportBody:
+    'Simple Games ऑनलाइन होने पर केवल एक छोटा बैनर विज्ञापन दिखाता है, जो ऐप को बनाए रखने और बेहतर बनाने में मदद करता है। विज्ञापन नहीं चाहिए? एक बार की खरीद से उन्हें हमेशा के लिए हटा सकते हैं।',
+  removeAdsAction: 'विज्ञापन हटाएँ',
+  restorePurchase: 'खरीद पुनर्स्थापित करें',
+  purchaseThanks: 'बैनर विज्ञापन हटा दिए गए हैं। Simple Games का समर्थन करने के लिए धन्यवाद।',
+  privacy5:
+    'बैनर विज्ञापन हटाने के लिए एक वैकल्पिक, एक बार की खरीद उपलब्ध है। भुगतान Google Play संसाधित करता है; PixApps को भुगतान विवरण कभी नहीं मिलते और न ही सहेजे जाते हैं।',
+};

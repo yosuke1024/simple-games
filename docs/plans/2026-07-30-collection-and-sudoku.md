@@ -174,7 +174,7 @@ Remove Ads & Support Simple Games。リンク先は GitHub(オフライン時は
 | # | 内容 | 状態 |
 | --- | --- | --- |
 | M0 | main クリーン化 | ✅ 2026-07-30 |
-| M1 | ゲーム集移行: シェル+レジストリ+NM 再配線、バナー専用化(interstitial/analytics/remoteConfig 削除)、IAP 基盤、OSS 導線、i18n、文書全面整合 | 本セッションで実施 |
+| M1 | ゲーム集移行: シェル+レジストリ+NM 再配線、バナー専用化(interstitial/analytics/remoteConfig 削除)、IAP 基盤、OSS 導線、i18n 基盤強化、文書全面整合 | ✅ 2026-07-30(lint/typecheck/test/build 緑、Web 動作確認済) |
 | M2 | `docs/SUDOKU_RULES.md` 執筆(§3 の正式化) | |
 | M3 | Sudoku コア(types/rng/solver/generator/grader)+ テスト | |
 | M4 | Sudoku プレイ層(engine/hint/levels/daily/session/serialize)+ テスト | |
@@ -182,6 +182,7 @@ Remove Ads & Support Simple Games。リンク先は GitHub(オフライン時は
 | M6 | 2048(盤ロジックは小さい。undo・統計・デイリーは共通パターン踏襲) | |
 | M7 | Sliding Puzzle(画像なし数字タイル・可解性保証シャッフル) | |
 | M8 | Minesweeper(初手安全保証・旗/開閉 UI) | |
+| M-L10N | 必須15言語への拡張(§7)+ ストアローカライズ構造 | リリース前必須 |
 | M9 | リリース仕上げ: アイコン、store listing 最終化、IAP 本番接続、Android ビルド | |
 
 各マイルストーンで lint / typecheck / test / build 緑を維持。ゲーム追加が既存ゲームの
@@ -198,10 +199,68 @@ Remove Ads & Support Simple Games。リンク先は GitHub(オフライン時は
 4. 署名鍵の作成・保管(リポジトリに含めない)。
 5. ストア掲載素材(スクリーンショット等)とプライバシーポリシーのホスティング URL。
 6. (接続時)Capacitor 向け課金プラグインの選定・動作確認は人間のストア環境が必要。
+7. pixapps.ai 上のゲーム別 Landing Page(§8)の作成・ホスティング(別リポジトリ)。
+8. 翻訳のネイティブレビュー体制(特に課金・削除・復元・プライバシー文言。§7)。
 
 ## 6. 残る未決事項
 
 1. Sudoku レベル 1〜999 の難易度カーブ表(M2 で確定)。
-2. Sudoku Hint 説明文の粒度(技法名を出すか。5言語の負荷との兼ね合い。M2 で確定)。
+2. Sudoku Hint 説明文の粒度(技法名を出すか。言語数の負荷との兼ね合い。M2 で確定)。
 3. 2048 以降の各ゲーム仕様書(各実装マイルストーン冒頭で `docs/<GAME>_RULES.md` を書く)。
 4. iOS 展開の時期(現状 Android のみ。IAP 文言はストア中立にしておく)。
+
+## 7. 多言語戦略(2026-07-30 追加指示の反映)
+
+目的: 広告費ではなくオーガニック流入(多言語ストア掲載・対応国拡大・ゲーム名検索)で
+成長する。**One app. Many games. Many languages.** 正式ポリシーは `docs/I18N_POLICY.md`。
+
+- **初回起動時に言語選択画面を出さない**(実装済みの方針を維持)。解決順:
+  ①アプリ内の明示選択 → ②端末の優先言語リスト(Android のアプリ別言語設定はここに
+  現れる。リストを先頭から順に走査)→ ③英語。
+- **地域バリアントの親言語フォールバック**は `i18n/index.ts` の `matchLocale` に実装済み
+  (en-IN→en 等。レガシー `in`→id も)。テストで固定。zh-Hans/zh-Hant のスクリプト解決は
+  中国語対応時に同関数へ追加する。
+- **現状**: 5言語(en/ja/hi/th/id)・約100キー。Messages 型で全キーの存在をコンパイル時に
+  強制し、空文字・プレースホルダー不一致・制御文字/マークアップ混入はテストで検出。
+  言語追加は「locale ファイル 1 つ + index 登録」で完結する。
+- **拡張計画(M-L10N、リリース前必須)**: 必須15言語へ拡張 —
+  追加分は vi / es / pt-BR / tr / ko / zh-Hans / zh-Hant / fr / de。
+  インド系(ta/te/bn/mr)は後続。生成AIによる初期翻訳+人間レビュー
+  (課金・削除・復元・プライバシー文言は必須レビュー)。翻訳状態
+  (machine_draft / reviewed / native_reviewed)は I18N_POLICY.md の表で管理する。
+- **Arabic は初期対象から外す(対案)**: RTL は UI chrome 全体の検証が必要で、
+  「壊れた翻訳・崩れたレイアウトを出さない」を言語数より優先する原則に従う。
+  追加条件: ①RTL レイアウト監査(logical properties 化)②主要画面の RTL レンダリング
+  テスト③ネイティブレビューの確保。盤面は左右反転しない(UI chrome と分離)。
+- **フォント**: 同梱は Nunito の latin サブセットのみ。非ラテン文字は OS フォントに
+  委ねる現行方式を維持(アプリ容量を増やさない)。盤面数字は ASCII 0-9 固定。
+- **文言設計**: 文字列連結禁止・キー側で全文管理({var} 埋め込み)。複数形が必要な
+  キーが現れた時点で ICU 相当の複数形キーを導入(現状は該当なし。ストリーク削除で
+  複数形依存キーは消えた)。文章量最小化は UI 原則(チュートリアル3ステップ等)。
+- **ストアローカライズ**: `store/listing.md` を言語別に管理できる構造へ
+  (`store/listing/<locale>.md`、M-L10N で分割)。App name / short / full description /
+  スクリーンショットキャプション / リリースノート / IAP 名・説明を言語別に持つ。
+  スクリーンショットの訴求文は短句(Many games. One app. / Fully offline. 等)。
+- **コミュニティ翻訳**: `CONTRIBUTING.md` に locale 追加手順・キー説明・検証方法を記載。
+  About への Help Translate 導線は M-L10N で追加。初期品質はコミュニティに依存しない。
+
+## 8. ゲーム説明の二層化と将来の静的 Web 版(2026-07-30 追加指示の反映)
+
+- **二層化**: アプリ内は Quick Rules(最大3ステップ・各1文・図とハイライト中心)のみ。
+  詳細ルール・FAQ・攻略は PixApps サイトのゲーム別 Landing Page へ分離:
+  `https://pixapps.ai/simple-games/games/<game-id>/<locale>/`
+- **実装済み**: チュートリアル(Quick Rules)に「Learn More / 詳しく見る」導線を追加。
+  オフライン時は静かに何もしない(ゲームは止めない)。ベース URL は
+  `@simple-games/brand` の `LANDING_BASE_URL`。
+- Landing Page 本体は別リポジトリの人間作業(§5-7)。直感的なゲーム(2048 等)では
+  初回チュートリアル自体を省略可。Number Match / Nonogram 型は Quick Rules 必須。
+- **静的 Web 版(将来)**: Cloudflare Pages 第一候補・GitHub Pages でも配信可能な
+  純静的構成を維持する。Functions / Workers / D1 / KV / DO / R2 / 独自 API・認証・
+  クラウドセーブ・サーバー側生成は使わない。ロジック・生成・デイリー・保存・統計・
+  言語・テーマはブラウザ内で完結。保存は KVStore 契約(`storage/kv.ts`)の
+  IndexedDB/localStorage 実装を差すだけ。PWA/Service Worker は Web 版実装時に導入し、
+  「Web 版は初回アクセスでダウンロードが必要 = ネイティブの初回起動オフラインとは
+  異なる」ことを文書化する。
+- **担保**: `games/*/game/` の Pure TS は eslint(no-restricted-imports の `../**` 禁止)で
+  機械的に強制済み。React / DOM / Capacitor / 課金 / 広告 / ストレージへの依存ゼロ。
+- 今回は Web 版・PWA・Landing Page を実装しない(モバイル完成を優先)。
