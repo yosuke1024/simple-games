@@ -26,7 +26,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけです。
+アプリは 1 つだけで、現在 2 本のゲームを収録しています。
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Puzzles`(ランチャー表示名: `Simple Games`)
@@ -35,7 +35,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 | ゲーム | パス | 状態 | ルール文書 |
 | --- | --- | --- | --- |
 | Number Match | apps/simple-games/src/games/number-match | 第1弾 / 収録済み | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md) |
-| Sudoku(ナンプレ) | apps/simple-games/src/games/sudoku | 第2弾 / 実装予定 | docs/SUDOKU_RULES.md(予定) |
+| Sudoku(ナンプレ) | apps/simple-games/src/games/sudoku | 第2弾 / 収録済み | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md) |
 
 以降の候補(実装順の提案): 2048 → Sliding Puzzle → Minesweeper。
 後続候補: Nonogram / Solitaire / Kakuro / Futoshiki / Takuzu。
@@ -55,7 +55,7 @@ simple-games/
 │           ├── app/            # シェル: ルート App、ルーティング、ゲームレジストリ
 │           ├── games/
 │           │   ├── number-match/  # game/ state/ storage/ ui/(自己完結)
-│           │   └── sudoku/        # 第2弾(実装予定)
+│           │   └── sudoku/        # 同じ構成(自己完結)
 │           ├── monetization/   # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 │           ├── services/       # 共有: ads(バナーのみ) / network / sound / haptics
 │           ├── state/          # 共有: SettingsContext

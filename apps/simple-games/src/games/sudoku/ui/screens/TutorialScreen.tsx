@@ -69,8 +69,10 @@ export function SudokuTutorialScreen() {
     {
       title: t('sudokuStep3Title'),
       body: t('sudokuStep3Body'),
+      // A box missing one digit: exactly what a hint points at, and a legal
+      // position — a figure that broke the rules would teach the wrong thing.
       example: (
-        <BoxExample values={['.', '.', '5', '.', '.', '.', '.', '5', '.']} highlight={2} />
+        <BoxExample values={['1', '2', '3', '4', '.', '6', '7', '8', '9']} highlight={4} />
       ),
     },
   ];

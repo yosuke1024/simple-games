@@ -47,6 +47,27 @@ describe('first run', () => {
   });
 });
 
+describe('Quick Rules figures', () => {
+  it('draws a real 3x3 box, and never one that breaks the rules', async () => {
+    const user = userEvent.setup();
+    renderSudoku();
+    await screen.findByText('1-9, once each');
+
+    for (const step of [0, 1, 2]) {
+      const box = document.querySelector('.sudoku-tutorial-box');
+      expect(box, `step ${step} has no figure`).not.toBeNull();
+      const cells = [...box!.querySelectorAll('.sudoku-tutorial-cell')];
+      expect(cells.length === 9 || cells.length === 1).toBe(true);
+
+      // A figure that repeated a digit in one box would teach the wrong rule.
+      const digits = cells.map((cell) => cell.textContent!.trim()).filter((text) => /^\d$/.test(text));
+      expect(new Set(digits).size, `step ${step} repeats a digit`).toBe(digits.length);
+
+      if (step < 2) await user.click(screen.getByRole('button', { name: 'Next' }));
+    }
+  });
+});
+
 describe('home', () => {
   it('offers both modes and hands control back to the collection', async () => {
     const user = userEvent.setup();

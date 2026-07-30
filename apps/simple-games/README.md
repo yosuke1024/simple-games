@@ -19,10 +19,22 @@
 | ゲーム | パス | 状態 | ルール文書 |
 | --- | --- | --- | --- |
 | Number Match | `src/games/number-match/` | 第1弾 / 収録済み | [docs/NUMBER_MATCH_RULES.md](../../docs/NUMBER_MATCH_RULES.md) |
-| Sudoku(ナンプレ) | `src/games/sudoku/` | 第2弾 / 実装予定 | `docs/SUDOKU_RULES.md`(新設予定) |
+| Sudoku(ナンプレ) | `src/games/sudoku/` | 第2弾 / 収録済み | [docs/SUDOKU_RULES.md](../../docs/SUDOKU_RULES.md) |
 
 Number Match は 999 レベル(式による決定的生成、緩やかな難易度上昇)とスコア(時間要素なし)、
-デイリーチャレンジを持ちます。ストア掲載文はゲーム単位で [store/listing.md](store/listing.md) に置きます。
+デイリーチャレンジを持ちます。
+
+Sudoku は 9×9 の標準ルールで、999 レベル(level から難易度ティアと seed を決定的に導出)と
+デイリー(毎日 Medium 固定・過去日も挑戦可)、メモ、無制限・無料の Hint / Undo を持ちます。
+ミス上限もゲームオーバーもスコアもなく、プレイ中に時計を出しません。盤面は端末上で
+seed から生成し(問題データの同梱もダウンロードもなし)、常に一意解かつ推測なしで解けます。
+
+ストア掲載文はゲーム単位で [store/listing.md](store/listing.md) に置きます。
+
+各ゲームは共有設定画面へ設定セクションを 1 つだけ差し込めます
+(ゲームレジストリの任意フィールド `SettingsSection`)。ゲーム固有の設定はゲームが所有し
+(Sudoku は「ミスの即時表示」を `sd.prefs` に保存)、シェルは場所だけ貸します。
+契約は [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md)。
 
 コレクション化と第2弾の計画は
 [docs/plans/2026-07-30-collection-and-sudoku.md](../../docs/plans/2026-07-30-collection-and-sudoku.md)。

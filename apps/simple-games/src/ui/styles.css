@@ -350,11 +350,14 @@ button:disabled {
 
 /* ---------- sudoku ---------- */
 
+/* Centred in the space left over: on a tall phone this brings the pad down
+   within thumb reach instead of stranding it under the board. */
 .sudoku-body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  justify-content: center;
+  gap: 14px;
   padding: 4px 12px 10px;
   min-height: 0;
   align-items: center;
@@ -506,6 +509,46 @@ button:disabled {
   gap: 10px;
   font-size: 13px;
   color: var(--ink-soft);
+}
+
+/* Quick Rules figures: one 3x3 box, drawn like the real grid so the picture
+   teaches the shape as well as the rule. */
+.sudoku-tutorial-box {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  width: 168px;
+}
+
+.sudoku-tutorial-box-single {
+  grid-template-columns: 1fr;
+  width: 56px;
+}
+
+.sudoku-tutorial-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.sudoku-tutorial-cell-focus {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+  color: var(--accent);
+}
+
+/* The notes figure is one cell, so its marks need a readable fixed size
+   rather than the viewport-relative one the board uses. */
+.sudoku-tutorial-cell .sudoku-notes {
+  font-size: 11px;
 }
 
 .sudoku-mode {

@@ -5,9 +5,9 @@
 > あわせて Play Console でアプリ内商品(管理された商品)`remove_ads` を
 > 基準価格 USD 3.99 で作成すること(国別価格は自動調整に任せる)。
 
-> 掲載は収録ゲーム 1 本(Number Match)の状態で書いてある。Sudoku(ナンプレ)は
-> 実装予定であり、**実際に収録できた時点で**タイトル・説明・スクリーンショットに追加する
-> (未収録のゲームを "Coming Soon" として掲載しない)。
+> 掲載は収録ゲーム 2 本(Sudoku / Number Match)の状態で書いてある。未収録のゲーム
+> (2048 以降)は名前も含めて掲載文に出さず、**実際に収録できた時点で**説明・
+> スクリーンショットへ追加する(未収録のゲームを "Coming Soon" として掲載しない)。
 
 ## タイトル候補(優先順)
 
@@ -15,7 +15,8 @@
 2. `Simple Games — Offline Puzzles`
 3. `Simple Games: Number Match`
 
-キーワード優先順位: Offline > Puzzle > Number Match > Simple Games > PixApps
+キーワード優先順位: Offline > Sudoku > Puzzle > Number Match > Simple Games > PixApps
+(ゲーム名は検索流入の中核。収録済みの名前だけを、検索需要の大きい順に置く)
 
 ## 訴求の順序(BRAND.md と同一。この順で書く)
 
@@ -49,6 +50,14 @@ While you are online, the app shows one small banner ad. It never covers the
 board and never interrupts play. A single one-time purchase removes ads
 permanently — including in every game added later.
 
+INCLUDED GAME: SUDOKU
+• Fill every row, column and 3x3 box with 1 to 9.
+• 999 levels and a new daily puzzle, all generated on your device — each one
+  has a single solution and can be solved by logic, never by guessing.
+• Pencil in notes while you narrow a cell down.
+• Hints are free and unlimited, and show you which cell is decided and why.
+• No mistake limit and no game over. The clock never runs on screen.
+
 INCLUDED GAME: NUMBER MATCH
 • Match two numbers that are equal or add up to 10.
 • Pairs connect across, down, diagonally, or from the end of one row to the
@@ -56,18 +65,18 @@ INCLUDED GAME: NUMBER MATCH
 • Clear the whole board to win. Stuck? Add Numbers appends the remaining
   numbers. Undo and hints are always free and unlimited.
 
-999 LEVELS, GENTLY RISING
-• Difficulty grows slowly — no sudden walls, no timers
-• Replay any cleared level to beat your best score
-• Scoring rewards sharp eyes and planning, never speed
+999 LEVELS IN EACH GAME, GENTLY RISING
+• Difficulty grows slowly — no sudden walls, no countdowns
+• Replay any cleared level, or an earlier day, to beat your own best
+• Number Match scoring rewards sharp eyes and planning, never speed
 
 MADE FOR LONG FLIGHTS
 • Fully playable offline, from the very first launch
 • No account required
 • No subscriptions, no paywalls — every game feature is free
 • Unlimited Undo and Hints
-• Daily Challenge generated on your device
-• Personal best scores kept on your device
+• Daily puzzles generated on your device
+• Personal bests kept on your device
 • One small banner ad while online; a single purchase removes it forever
 • Light and dark themes, 5 languages
 
@@ -89,10 +98,13 @@ A Simple Games app by PixApps.
 ## 収録ゲームごとの掲載文
 
 - 収録ゲームの説明ブロック(上の `INCLUDED GAME:` 節)はゲーム単位で書き、
-  ゲームを追加するたびにブロックを追加する。
-- Number Match のルールの正式定義は [docs/NUMBER_MATCH_RULES.md](../../../docs/NUMBER_MATCH_RULES.md)。
-- Sudoku(ナンプレ)は第2弾として実装予定。ルールは `docs/SUDOKU_RULES.md`(新設予定)に従い、
-  収録後にこのファイルへブロックを追加する。
+  ゲームを追加するたびにブロックを追加する。並び順は検索需要の大きい順
+  (現在は Sudoku → Number Match)。
+- ルールの正式定義は
+  [docs/NUMBER_MATCH_RULES.md](../../../docs/NUMBER_MATCH_RULES.md) と
+  [docs/SUDOKU_RULES.md](../../../docs/SUDOKU_RULES.md)。掲載文がルール文書と
+  食い違ったらルール文書を正とする。
+- 未収録のゲーム(2048 以降)はブロックも名前も置かない。
 
 ## ローカライズ管理
 

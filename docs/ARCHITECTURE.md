@@ -33,7 +33,7 @@ src/
 ├── app/                    # シェル: ルート App、ルーティング、ゲームレジストリ
 ├── games/
 │   ├── number-match/       # game/ state/ storage/ ui/(自己完結)
-│   └── sudoku/             # 第2弾。同じ構成(実装予定)
+│   └── sudoku/             # 第2弾。同じ構成(自己完結)
 ├── monetization/           # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 ├── services/               # 共有: ads(バナーのみ) / network / sound / haptics
 ├── state/                  # 共有: SettingsContext
@@ -44,7 +44,8 @@ src/
 
 この配置への再編と Sudoku 収録の計画は
 [plans/2026-07-30-collection-and-sudoku.md](plans/2026-07-30-collection-and-sudoku.md) を参照。
-Sudoku のルールは `SUDOKU_RULES.md`(新設予定)を唯一のソースとする。
+各ゲームのルールは [NUMBER_MATCH_RULES.md](NUMBER_MATCH_RULES.md) /
+[SUDOKU_RULES.md](SUDOKU_RULES.md) を唯一のソースとする。
 
 レイヤー規則:
 
@@ -52,7 +53,7 @@ Sudoku のルールは `SUDOKU_RULES.md`(新設予定)を唯一のソースと�
   (テスト容易性と移植性のため)。
 - `games/A/` から `games/B/` への import は禁止。ゲーム同士は互いを知らない。
 - シェルはゲームの内部実装に触らない(ゲームは自身のルートコンポーネントだけを公開する)。
-  ゲームレジストリは `{ id, titleKey, Icon, accent, Root }` 程度の薄い契約のみ。
+  ゲームレジストリ(`app/registry.ts`)は薄い契約のみ(下記)。
 - `services/` の失敗はゲーム進行に影響させない(OFFLINE_POLICY.md 参照)。
 - ゲーム説明は二層化する: アプリ内はチュートリアル = Quick Rules(最大3ステップ)
   のみ。詳細ルール・FAQ・攻略はゲーム別 Landing Page
@@ -61,6 +62,44 @@ Sudoku のルールは `SUDOKU_RULES.md`(新設予定)を唯一のソースと�
   静かに何もしない(ゲームを止めない)。Landing Page 本体は別リポジトリで未構築。
 - Analytics / Remote Config / トラッキングのサービスは**存在しない**
   (初期リリースで削除済み。公開コードに追跡コードが無いことが透明性の証明)。
+
+## ゲームレジストリの契約
+
+`app/registry.ts` のエントリは「タイトルカード + マウント点 + そのゲームが持つキー」
+だけで、プラグイン機構ではない。ゲームの追加は import 1 行と配列要素 1 つで済む。
+
+| フィールド | 内容 |
+| --- | --- |
+| `id` | `'number-match'` / `'sudoku'`。`data-game` 属性にもこの値を使う |
+| `title` | 固有名詞。全言語で同一表記(翻訳しない) |
+| `blurbKey` | コレクションカードの 1 行説明(ローカライズ対象) |
+| `glyph` | シリーズマーク。アクセント色のタイルに 1 文字 |
+| `Root` | ゲームのルートコンポーネント。受け取る props は `onExit` だけ |
+| `storageKeys` | そのゲームが保存する全キー |
+| `SettingsSection?` | 任意。共有設定画面に差し込むゲーム固有の設定 |
+
+- `storageKeys` をレジストリに載せるのは、シェルが各ゲームの保存内部を知らないまま
+  「ローカルデータ削除」を正直に実行できるようにするため。
+- `SettingsSection` は任意。**ゲーム固有の設定はゲームが所有し、シェルは場所だけ貸す。**
+  これがないと、ゲームの設定が増えるたびにシェル側へ
+  `if (gameId === 'sudoku')` のような分岐が入り、シェルがゲーム内部を知ることになる。
+  Sudoku はこの口で「ミスの即時表示」トグル(`sd.prefs`)を出している。
+  設定画面はコレクションホームからのみ到達するため、ゲームが起動中にこの節が
+  描画されることはない(レコードの読み書きが競合しない)。
+- ゲームは同時に 1 つだけマウントし、離れたらアンマウントする(電池)。
+
+## タイトルごとのアクセント色
+
+- アクセントは `packages/brand` の `titleAccents` に 1 タイトル 1 エントリ
+  (Number Match = 藍、Sudoku = くすんだティール)。
+- シェルはゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
+  `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
+  (`--accent` / `--accent-ink` / `--accent-soft` / `--accent-ring` …。
+  ライト / ダークそれぞれに定義がある)。ゲームを離れると属性を消す。
+- **シリーズの下地(`seriesColors`)は変えない。** 別のゲームが「同じシリーズ」に
+  見えているのはこの下地であり、変わるのは 1 タイトル 1 色だけ(BRAND.md)。
+- ゲーム側に色の分岐を書かない。ゲームは `var(--accent)` を使うだけで、
+  自分がどのタイトルとして塗られるかを知らない。
 
 ## 広告と課金
 
@@ -81,9 +120,15 @@ Sudoku のルールは `SUDOKU_RULES.md`(新設予定)を唯一のソースと�
 | `sg.settings` | 共有設定(言語 / テーマ / 音 / 振動 / Reduced Motion) |
 | `sg.iap` | 広告削除購入状態のローカルキャッシュ |
 | `nm.*` | Number Match(saveGame / saveDaily / stats / progress / flags) |
-| `sd.*` | Sudoku(同型。実装時に定義) |
+| `sd.*` | Sudoku(saveGame / saveDaily / stats / progress / flags / prefs) |
+
+Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
+2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/
+`sd.flags`(チュートリアル完了)/ `sd.prefs`(ゲーム固有設定)。
 
 - 共有レコードは `sg.` 接頭辞。ゲーム固有レコードはゲームごとの接頭辞。
+- ゲーム固有設定は共有 `sg.settings` に混ぜず、そのゲームの接頭辞に置く
+  (`sd.prefs`)。シェルの設定レコードがゲーム追加ごとに膨らまない。
 - `sg.adState` / `sg.rcCache` は廃止(インタースティシャル頻度制御と
   Remote Config キャッシュは存在しない)。
 - `kv` / `repo` / `SchemaDef` と schemaVersion 運用は全ゲームで共有する。
