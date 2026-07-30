@@ -586,6 +586,18 @@ button:disabled {
   color: var(--accent);
 }
 
+/* A mode toggle that is on is filled in, not merely remembered: which way
+   flag mode or notes mode currently points should never be a guess. */
+.action-btn[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.action-btn[aria-pressed='true'] .action-icon {
+  color: var(--accent-ink);
+}
+
 /* ---------- banner slot ---------- */
 
 .banner-slot {
