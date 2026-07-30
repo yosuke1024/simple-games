@@ -1,0 +1,50 @@
+name: Game suggestion / 収録ゲームの提案
+description: Suggest a game for the collection.
+labels: [game-suggestion]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        日本語で書いていただいて構いません。 / Japanese is welcome.
+
+        A game can only join the collection if it works **fully offline** with
+        puzzles generated on the device. Anything that needs a content server or
+        an account is out of scope
+        ([CONTRIBUTING.md](../blob/main/CONTRIBUTING.md)).
+        Candidates already under consideration: Solitaire, Kakuro, Futoshiki,
+        Takuzu.
+
+  - type: input
+    id: game
+    attributes:
+      label: Which game
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it fits
+      description: Why would someone want it in *this* collection?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: offline
+    attributes:
+      label: Can every puzzle be generated on the device, with no server?
+      options:
+        - "Yes — generated and solved locally"
+        - "Not sure"
+        - "No — it needs external content"
+    validations:
+      required: true
+
+  - type: textarea
+    id: help
+    attributes:
+      label: What free, unlimited help would suit it?
+      description: >
+        Every game offers free, unlimited help, but the form differs so it never
+        hollows out the game (Minesweeper has no Undo; Sliding Puzzle has no
+        Hint). What would fit here — and what would spoil it?

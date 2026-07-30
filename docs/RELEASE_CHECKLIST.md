@@ -18,7 +18,17 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 
 ## 2. ブランド原則の実地確認(人が見るもの)
 
-コードを grep して**存在しないこと**を確認する:
+grep で確定判定できる分は CI(`Brand principles` ジョブ)が毎 PR で見ている。
+手元では次で同じ判定を回せる:
+
+```bash
+bash .github/scripts/check-principles.sh
+```
+
+- [ ] 原則ガードが緑(通信 API なし / バナー以外の広告なし / トラッキング依存なし /
+      Android 権限は INTERNET・BILLING のみ / 本番広告 ID がソースにない)
+
+ガードが見ていない分は、コードを grep して**存在しないこと**を確認する:
 
 - [ ] `interstitial` / `rewarded` / `appOpen` の広告実装が存在しない
 - [ ] analytics / トラッキング / Remote Config の実装が存在しない

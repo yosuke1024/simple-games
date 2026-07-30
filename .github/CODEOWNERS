@@ -1,0 +1,47 @@
+# Review ownership.
+#
+# Everything is owned by the maintainer; the entries below exist to make the
+# high-risk areas explicit rather than to route work to different people. They
+# are the same areas that AI agents must have independently reviewed before
+# pushing, and the same ones a human reviewer should slow down on:
+# what the app sends over the network, which ad formats exist, whether a
+# purchase gates anything, whether an existing player's saved games survive an
+# update, whether a shipped locale renders, whether the bundle still parses on
+# the supported WebView floor, and what the Android build signs and requests.
+
+*                                           @yosuke1024
+
+# Money and ads — the two places where a mistake breaks the brand promise
+# directly (docs/ADS_POLICY.md, docs/PRODUCT_PRINCIPLES.md).
+/apps/simple-games/src/monetization/        @yosuke1024
+/apps/simple-games/src/services/            @yosuke1024
+
+# Saved data: real players' progress and personal bests already exist on
+# devices. Schema and migration changes are one-way.
+/apps/simple-games/src/storage/             @yosuke1024
+/apps/simple-games/src/games/*/storage/     @yosuke1024
+
+# Board generation and solvers — pinned by the golden compatibility tests.
+/apps/simple-games/src/games/*/game/        @yosuke1024
+
+# Shipped translations (14 locales, key parity enforced by the type system).
+/apps/simple-games/src/i18n/                @yosuke1024
+
+# Native build: signing, permissions, versionCode, WebView floor.
+/apps/simple-games/android/                 @yosuke1024
+/apps/simple-games/capacitor.config.ts      @yosuke1024
+/apps/simple-games/vite.config.ts           @yosuke1024
+
+# Brand constants: public URLs and the support address the app opens.
+/packages/brand/                            @yosuke1024
+
+# CI, release automation, and the principle guard itself.
+/.github/                                   @yosuke1024
+
+# The promises the source code is supposed to prove.
+/docs/PRODUCT_PRINCIPLES.md                 @yosuke1024
+/docs/ADS_POLICY.md                         @yosuke1024
+/docs/OFFLINE_POLICY.md                     @yosuke1024
+/docs/PRIVACY_POLICY.md                     @yosuke1024
+/docs/I18N_POLICY.md                        @yosuke1024
+/docs/REVIEW_PROMPT_POLICY.md               @yosuke1024

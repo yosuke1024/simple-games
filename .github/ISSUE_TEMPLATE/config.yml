@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Privacy question / プライバシーについて
+    url: https://github.com/yosuke1024/simple-games/blob/main/docs/PRIVACY_POLICY.md
+    about: What the app stores (all of it on your device) is written down here.
+  - name: Why the app works this way / 設計の理由
+    url: https://github.com/yosuke1024/simple-games/blob/main/docs/PRODUCT_PRINCIPLES.md
+    about: No accounts, no analytics, no streaks, one banner, one purchase — and why.

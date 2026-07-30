@@ -1,4 +1,5 @@
-# Root CI: install → lint → typecheck → test → build for every workspace.
+# Root CI: install → lint → typecheck → test → build for every workspace,
+# plus the brand-principle guard.
 # With a single app this runs everything; when more games are added, narrow
 # the scope with `turbo --filter` based on changed paths (see docs/ARCHITECTURE.md).
 name: CI
@@ -7,6 +8,9 @@ on:
   push:
     branches: [main]
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   verify:
@@ -26,3 +30,12 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+
+  # Runs without installing anything: it only greps the source. Kept separate so a
+  # broken promise is reported as a broken promise, not as "the build failed".
+  principles:
+    name: Brand principles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash .github/scripts/check-principles.sh
