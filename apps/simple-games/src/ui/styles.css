@@ -1,4 +1,10 @@
-/* Number Match Offline — quiet, readable, predictable.
+/* Simple Games — the shared chrome: screens, buttons, dialogs, settings, and
+   the collection home. Quiet, readable, predictable.
+
+   A game's own board styles live beside that game (games/<id>/ui/<id>.css,
+   imported by its Root). Number Match and Sudoku predate that convention and
+   still keep their board styles here; moving them is a separate change.
+
    Palette comes from packages/brand; system fonts only (offline-first). */
 
 :root {

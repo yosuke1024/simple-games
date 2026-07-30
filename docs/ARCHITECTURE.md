@@ -31,9 +31,12 @@ simple-games/
 ```text
 src/
 ├── app/                    # シェル: ルート App、ルーティング、ゲームレジストリ
-├── games/
-│   ├── number-match/       # game/ state/ storage/ ui/(自己完結)
-│   └── sudoku/             # 第2弾。同じ構成(自己完結)
+├── games/                  # 各ゲームは game/ state/ storage/ ui/ で自己完結
+│   ├── sudoku/
+│   ├── minesweeper/
+│   ├── game-2048/
+│   ├── number-match/
+│   └── sliding-puzzle/
 ├── monetization/           # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 ├── services/               # 共有: ads(バナーのみ) / network / sound / haptics
 ├── state/                  # 共有: SettingsContext
@@ -42,10 +45,12 @@ src/
 └── ui/                     # 共有: コレクションホーム、設定 / About、共通コンポーネント
 ```
 
-この配置への再編と Sudoku 収録の計画は
+この配置への再編と収録ゲームの計画は
 [plans/2026-07-30-collection-and-sudoku.md](plans/2026-07-30-collection-and-sudoku.md) を参照。
-各ゲームのルールは [NUMBER_MATCH_RULES.md](NUMBER_MATCH_RULES.md) /
-[SUDOKU_RULES.md](SUDOKU_RULES.md) を唯一のソースとする。
+各ゲームのルールは [SUDOKU_RULES.md](SUDOKU_RULES.md) /
+[MINESWEEPER_RULES.md](MINESWEEPER_RULES.md) / [GAME_2048_RULES.md](GAME_2048_RULES.md) /
+[NUMBER_MATCH_RULES.md](NUMBER_MATCH_RULES.md) /
+[SLIDING_PUZZLE_RULES.md](SLIDING_PUZZLE_RULES.md) を唯一のソースとする。
 
 レイヤー規則:
 
@@ -70,7 +75,7 @@ src/
 
 | フィールド | 内容 |
 | --- | --- |
-| `id` | `'number-match'` / `'sudoku'`。`data-game` 属性にもこの値を使う |
+| `id` | `'sudoku'` / `'minesweeper'` / `'game-2048'` / `'number-match'` / `'sliding-puzzle'`。`data-game` 属性にもこの値を使う |
 | `title` | 固有名詞。全言語で同一表記(翻訳しない) |
 | `blurbKey` | コレクションカードの 1 行説明(ローカライズ対象) |
 | `glyph` | シリーズマーク。アクセント色のタイルに 1 文字 |
@@ -86,20 +91,45 @@ src/
   Sudoku はこの口で「ミスの即時表示」トグル(`sd.prefs`)を出している。
   設定画面はコレクションホームからのみ到達するため、ゲームが起動中にこの節が
   描画されることはない(レコードの読み書きが競合しない)。
+  現在この口を使っているのは Sudoku だけで、Minesweeper の「旗モード」(`ms.prefs`)は
+  プレイ中に切り替えるものなので盤面側に置いている。
 - ゲームは同時に 1 つだけマウントし、離れたらアンマウントする(電池)。
 
 ## タイトルごとのアクセント色
 
-- アクセントは `packages/brand` の `titleAccents` に 1 タイトル 1 エントリ
-  (Number Match = 藍、Sudoku = くすんだティール)。
-- シェルはゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
+- アクセントは `packages/brand` の `titleAccents` に 1 タイトル 1 エントリ。
+
+| ゲーム | アクセント | ライト | ダーク |
+| --- | --- | --- | --- |
+| Number Match | 藍 | `#3f5b8f` | `#7d9ccf` |
+| Sudoku | くすんだティール | `#2f6f62` | `#6fb3a3` |
+| Minesweeper | スレートブルー | `#4a5a72` | `#93a4bd` |
+| 2048 | 琥珀 | `#a86a17` | `#dda54a` |
+| Sliding Puzzle | 温かみのある陶土色 | `#9c5b3c` | `#d1926f` |
+
+- シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
   (`--accent` / `--accent-ink` / `--accent-soft` / `--accent-ring` …。
   ライト / ダークそれぞれに定義がある)。ゲームを離れると属性を消す。
+- Number Match のアクセントは `:root` の既定値そのもの(コレクションホームと同じ)なので、
+  `data-game='number-match'` の上書きブロックは持たない。残り 4 タイトルが上書きする。
 - **シリーズの下地(`seriesColors`)は変えない。** 別のゲームが「同じシリーズ」に
   見えているのはこの下地であり、変わるのは 1 タイトル 1 色だけ(BRAND.md)。
 - ゲーム側に色の分岐を書かない。ゲームは `var(--accent)` を使うだけで、
   自分がどのタイトルとして塗られるかを知らない。
+
+## CSS の分割
+
+- **ゲームの CSS はそのゲームが持つ。** `games/<id>/ui/<id>.css` を同じフォルダの
+  Root コンポーネントが import する(Vite が束ねるので、追加の設定はいらない)。
+  ゲームを増やしても共有スタイルシートが伸びない。
+- `ui/styles.css` に置くのは共有シェルのみ: デザイントークン(下地・アクセント・
+  `data-game` の上書き)、コレクションホーム、設定 / About、ダイアログ・トースト・
+  チュートリアル・バナースロットなどの共通クロム。
+- 現状の例外: **Number Match と Sudoku の盤面スタイルは今も `ui/styles.css` に残っている**
+  (この規約より前に書かれたため)。新しい 3 タイトルは
+  `game-2048.css` / `minesweeper.css` / `sliding-puzzle.css` を持つ。
+  規約に合わせて切り出すかは未着手。
 
 ## 広告と課金
 
@@ -119,12 +149,19 @@ src/
 | --- | --- |
 | `sg.settings` | 共有設定(言語 / テーマ / 音 / 振動 / Reduced Motion) |
 | `sg.iap` | 広告削除購入状態のローカルキャッシュ |
-| `nm.*` | Number Match(saveGame / saveDaily / stats / progress / flags) |
 | `sd.*` | Sudoku(saveGame / saveDaily / stats / progress / flags / prefs) |
+| `ms.*` | Minesweeper(saveGame / saveDaily / stats / flags / prefs) |
+| `g2048.*` | 2048(saveGame / saveDaily / stats / progress / flags) |
+| `nm.*` | Number Match(saveGame / saveDaily / stats / progress / flags) |
+| `sp.*` | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags) |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/
 `sd.flags`(チュートリアル完了)/ `sd.prefs`(ゲーム固有設定)。
+Minesweeper はレベル進行を持たないため `progress` がなく、代わりに旗モードの
+`ms.prefs` を持つ。2048 もレベルは持たないが、デイリーの日付別ベストスコアを
+`g2048.progress` に置く。どのゲームも中断は「通常モード用」と「デイリー用」の
+2 スロットが独立する。
 
 - 共有レコードは `sg.` 接頭辞。ゲーム固有レコードはゲームごとの接頭辞。
 - ゲーム固有設定は共有 `sg.settings` に混ぜず、そのゲームの接頭辞に置く
@@ -141,10 +178,15 @@ Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断
 - カタログは全言語をアプリに同梱する(`src/i18n/locales/*.ts`。オフライン要件)。
   言語追加は「locale ファイル 1 つ + `i18n/index.ts` への登録」で完結し、
   `Messages` 型が全キーの存在をコンパイル時に強制する(キー欠落でビルドが通らない)。
+- 現在 14 言語・215 キー(en / ja / hi / th / id / vi / ko / zh-hans / zh-hant /
+  es / pt-br / fr / de / tr)。ロケールタグは小文字で持つ。en と ja 以外は
+  機械翻訳ドラフトで、ネイティブレビューは未実施。
 - 解決順: アプリ内の明示選択 → 端末の優先言語リストを順に走査(Android の
   アプリ別言語設定はここに現れる)→ 英語。初回起動時の言語選択画面はない。
 - 地域バリアントは `matchLocale` で親言語へフォールバックする(en-IN → en、
-  レガシー `in` → id)。zh のスクリプト解決は中国語対応時に追加。
+  レガシー `in` → id)。書記体系で割れる言語だけは専用テーブルで先に解決する:
+  zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans、
+  pt / pt-PT → pt-br。ここで親言語へ落とすと繁体字の読者に簡体字を渡してしまう。
 - 空文字・プレースホルダー不一致・制御文字/マークアップ混入はテストで検出する。
   方針と対応言語計画は [I18N_POLICY.md](I18N_POLICY.md)。
 
@@ -186,6 +228,14 @@ Web 版は**現時点では実装しない**が、いつでも出せる構成を
 設定 / ストレージ基盤 / 広告 / i18n はアプリ内のシェルとして共有しており、
 これ以上の共通化(`packages/` への抽出)は実際に重複が確認されてから行う。
 ゲーム固有の概念(盤面・ルール・Hint 等)は共通パッケージへ入れない。
+
+現時点で唯一の実測された重複は `games/*/game/rng.ts` で、**5 ゲームすべてが同じ
+seed 付き乱数を持っている**(`games/A/` から `games/B/` を import できない以上、
+このコピーは規約どおりでもある)。抽出を検討する条件(重複が確認された)は
+満たしているが、`game/` の Pure TS 純度を保ったまま `packages/` へ出せるかが論点で、
+**結論は出ていない**。未決事項として
+[plans/2026-07-30-collection-and-sudoku.md](plans/2026-07-30-collection-and-sudoku.md) §6 に
+記録してある。
 
 ## CI / リリース
 

@@ -26,24 +26,34 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけで、現在 2 本のゲームを収録しています。
+アプリは 1 つだけで、現在 5 本のゲームを収録しています。
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Puzzles`(ランチャー表示名: `Simple Games`)
 - パス: [apps/simple-games](apps/simple-games)
 
-| ゲーム | パス | 状態 | ルール文書 |
-| --- | --- | --- | --- |
-| Number Match | apps/simple-games/src/games/number-match | 第1弾 / 収録済み | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md) |
-| Sudoku(ナンプレ) | apps/simple-games/src/games/sudoku | 第2弾 / 収録済み | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md) |
+並び順はコレクションホームの表示順(`apps/simple-games/src/app/registry.ts`)です。
+フォルダはすべて `apps/simple-games/src/games/` 以下にあります。
 
-以降の候補(実装順の提案): 2048 → Sliding Puzzle → Minesweeper。
-後続候補: Nonogram / Solitaire / Kakuro / Futoshiki / Takuzu。
+| ゲーム | フォルダ | 進行 | 無料・無制限の助け | ルール文書 |
+| --- | --- | --- | --- | --- |
+| Sudoku(ナンプレ) | `sudoku/` | 999 レベル + デイリー | Undo / Hint | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md) |
+| Minesweeper | `minesweeper/` | 難易度 3 種 + デイリー | Hint(Undo なし) | [docs/MINESWEEPER_RULES.md](docs/MINESWEEPER_RULES.md) |
+| 2048 | `game-2048/` | クラシック + デイリー | Undo | [docs/GAME_2048_RULES.md](docs/GAME_2048_RULES.md) |
+| Number Match | `number-match/` | 999 レベル + デイリー | Undo / Hint | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md) |
+| Sliding Puzzle | `sliding-puzzle/` | 999 レベル + デイリー | Undo(Hint なし) | [docs/SLIDING_PUZZLE_RULES.md](docs/SLIDING_PUZZLE_RULES.md) |
+
+助けの内容がゲームごとに違うのは意図したものです。**どのゲームにも無料・無制限の助けを
+用意し、その形はそのゲームの中身を空にしないものを選びます**(Minesweeper は推測なしで
+解ける保証があるため Undo を作らず、Sliding Puzzle は盤面に隠れた情報がないため Hint を
+作りません)。理由は各ルール文書と [docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md)。
+
+後続候補: Nonogram / Solitaire / Kakuro / Futoshiki / Takuzu(**いずれも未着手**)。
 いずれもローカル生成で完結し、コンテンツサーバーを必要としないものを優先します。
 未収録のゲームをストアやアプリ内で "Coming Soon" として見せることはしません。
 
 収録ゲームはワークスペースパッケージではなくフォルダで分割します。共通のゲームフレームワークは意図的に作りません。
-コレクション化と第2弾の計画は [docs/plans/2026-07-30-collection-and-sudoku.md](docs/plans/2026-07-30-collection-and-sudoku.md) を参照してください。
+コレクション化と収録ゲームの計画は [docs/plans/2026-07-30-collection-and-sudoku.md](docs/plans/2026-07-30-collection-and-sudoku.md) を参照してください。
 
 ## リポジトリ構成
 
@@ -53,9 +63,12 @@ simple-games/
 │   └── simple-games/    # 収録ゲームを含む単一アプリ
 │       └── src/
 │           ├── app/            # シェル: ルート App、ルーティング、ゲームレジストリ
-│           ├── games/
-│           │   ├── number-match/  # game/ state/ storage/ ui/(自己完結)
-│           │   └── sudoku/        # 同じ構成(自己完結)
+│           ├── games/          # 各ゲームは game/ state/ storage/ ui/ で自己完結
+│           │   ├── sudoku/
+│           │   ├── minesweeper/
+│           │   ├── game-2048/
+│           │   ├── number-match/
+│           │   └── sliding-puzzle/
 │           ├── monetization/   # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 │           ├── services/       # 共有: ads(バナーのみ) / network / sound / haptics
 │           ├── state/          # 共有: SettingsContext
@@ -96,9 +109,12 @@ Android ビルド手順は [apps/simple-games/README.md](apps/simple-games/READM
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 5 言語(en / ja / hi / th / id)、
-リリース前に 15 言語へ拡張します(オーガニック流入の中核施策)。
+**One app. Many games. Many languages.** 現在は 14 言語・215 キー
+(en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
+中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
+pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。
 カタログは全言語同梱で、言語追加は「locale ファイル 1 つ + 登録」で完結します。
+**en と ja 以外はすべて機械翻訳ドラフトで、ネイティブレビューは未実施です。**
 方針は [docs/I18N_POLICY.md](docs/I18N_POLICY.md)、
 翻訳への参加方法は [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
 
@@ -117,6 +133,8 @@ Android ビルド手順は [apps/simple-games/README.md](apps/simple-games/READM
   使わない([docs/ADS_POLICY.md](docs/ADS_POLICY.md))
 - アプリ内課金は「広告削除の買い切り(USD 3.99 基準)」1 商品のみ。
   ゲーム機能は無料ユーザーと完全に同一
+- 助け(Undo / Hint)は常に無料・無制限。ただし全ゲームで同じ機能を並べず、
+  そのゲームの中身を空にしない形の助けを用意する
 - オフライン時は広告リクエストを行わない(低消費電力・[docs/OFFLINE_POLICY.md](docs/OFFLINE_POLICY.md))
 - 巨大な共通ゲームフレームワークを作らない
 - 一度しか使われていないコードを共通化しない(重複が確認されてから抽出)
