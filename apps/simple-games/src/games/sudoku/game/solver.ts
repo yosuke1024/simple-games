@@ -61,14 +61,14 @@ export function hasConflict(grid: Grid): boolean {
   return false;
 }
 
-export function isComplete(grid: Grid): boolean {
+export function isGridComplete(grid: Grid): boolean {
   for (let i = 0; i < CELLS; i++) if (grid[i] === 0) return false;
   return true;
 }
 
 /** A filled grid with no conflicts — the win condition of §2. */
-export function isSolved(grid: Grid): boolean {
-  return isComplete(grid) && !hasConflict(grid);
+export function isGridSolved(grid: Grid): boolean {
+  return isGridComplete(grid) && !hasConflict(grid);
 }
 
 /** The empty cell with the fewest candidates, or -1 when the grid is full. */

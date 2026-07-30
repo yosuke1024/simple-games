@@ -9,7 +9,7 @@
 import { describe, expect, it } from 'vitest';
 import { clueCount, CLUE_RANGE, generatePuzzle, gridToString } from './generator';
 import { grade, solvableWithin } from './grader';
-import { countSolutions, isSolved, solve } from './solver';
+import { countSolutions, isGridSolved, solve } from './solver';
 import { CELLS, DIFFICULTIES, type Difficulty, type Grid } from './types';
 
 const SEEDS = [
@@ -40,7 +40,7 @@ describe.each(DIFFICULTIES)('generatePuzzle — %s', (difficulty: Difficulty) =>
 
   it('carries the solution its clues lead to', () => {
     for (const puzzle of puzzles) {
-      expect(isSolved(puzzle.solution), puzzle.seed).toBe(true);
+      expect(isGridSolved(puzzle.solution), puzzle.seed).toBe(true);
       expect(gridToString(solve(puzzle.givens)!), puzzle.seed).toBe(gridToString(puzzle.solution));
       puzzle.givens.forEach((value, index) => {
         if (value !== 0) expect(value, `${puzzle.seed} clue ${index}`).toBe(puzzle.solution[index]);

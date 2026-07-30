@@ -7,7 +7,7 @@ import {
   generateSolvedGrid,
   hasConflict,
   hasUniqueSolution,
-  isSolved,
+  isGridSolved,
   solve,
 } from './solver';
 import { CELLS, ROWS, COLS, BOXES } from './types';
@@ -67,7 +67,7 @@ describe('solve', () => {
   it('fills an empty grid into a valid complete board', () => {
     const solved = solve(gridFromString(EMPTY)!);
     expect(solved).not.toBeNull();
-    expect(isSolved(solved!)).toBe(true);
+    expect(isGridSolved(solved!)).toBe(true);
   });
 });
 
@@ -107,7 +107,7 @@ describe('countSolutions', () => {
 describe('generateSolvedGrid', () => {
   it('produces a fully valid board where every unit holds 1-9', () => {
     const grid = generateSolvedGrid('seed-a', createRng('seed-a'));
-    expect(isSolved(grid)).toBe(true);
+    expect(isGridSolved(grid)).toBe(true);
     expect(hasConflict(grid)).toBe(false);
     for (const units of [ROWS, COLS, BOXES]) {
       for (const unit of units) {
