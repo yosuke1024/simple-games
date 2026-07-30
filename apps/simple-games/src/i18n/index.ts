@@ -10,26 +10,82 @@
  * language picker — the app must be playable immediately.
  */
 import type { LanguageSetting } from '../storage/schemas';
+import { de } from './locales/de';
 import { en, type Messages } from './locales/en';
+import { es } from './locales/es';
+import { fr } from './locales/fr';
 import { hi } from './locales/hi';
 import { id } from './locales/id';
 import { ja } from './locales/ja';
+import { ko } from './locales/ko';
+import { ptBR } from './locales/pt-br';
 import { th } from './locales/th';
+import { tr } from './locales/tr';
+import { vi } from './locales/vi';
+import { zhHans } from './locales/zh-hans';
+import { zhHant } from './locales/zh-hant';
 
-export type Locale = 'en' | 'ja' | 'hi' | 'th' | 'id';
+/**
+ * Locale tags are lower-case so a device tag can be compared without
+ * normalising twice; `matchLocale` lower-cases its input to meet them.
+ */
+export type Locale =
+  | 'en'
+  | 'ja'
+  | 'hi'
+  | 'th'
+  | 'id'
+  | 'vi'
+  | 'ko'
+  | 'zh-hans'
+  | 'zh-hant'
+  | 'es'
+  | 'pt-br'
+  | 'fr'
+  | 'de'
+  | 'tr';
+
 export type MessageKey = keyof Messages;
 
-export const catalogs: Record<Locale, Messages> = { en, ja, hi, th, id };
+export const catalogs: Record<Locale, Messages> = {
+  en,
+  ja,
+  hi,
+  th,
+  id,
+  vi,
+  ko,
+  'zh-hans': zhHans,
+  'zh-hant': zhHant,
+  es,
+  'pt-br': ptBR,
+  fr,
+  de,
+  tr,
+};
 
 const SUPPORTED = Object.keys(catalogs) as readonly Locale[];
 
-/** Language names shown in the picker — always in their own language. */
+/**
+ * Language names shown in the picker — always in their own language, never
+ * translated into the current one (docs/I18N_POLICY.md). Someone looking for
+ * their language scans for the word they know, not for its English name.
+ */
 export const LANGUAGE_NAMES: Record<Locale, string> = {
   en: 'English',
   ja: '日本語',
   hi: 'हिन्दी',
   th: 'ไทย',
   id: 'Bahasa Indonesia',
+  vi: 'Tiếng Việt',
+  ko: '한국어',
+  'zh-hans': '简体中文',
+  'zh-hant': '繁體中文',
+  es: 'Español',
+  'pt-br': 'Português do Brasil',
+  fr: 'Français',
+  de: 'Deutsch',
+  tr: 'Türkçe',
 };
 
 /**

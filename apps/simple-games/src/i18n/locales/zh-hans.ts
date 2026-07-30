@@ -1,0 +1,269 @@
+import type { Messages } from './en';
+
+export const zhHans: Messages = {
+  numberMatchName: '数字配对',
+  tagline: '离线可玩。无需账号。没有付费墙。',
+
+  resume: '继续',
+  dailyChallenge: '每日挑战',
+  dailyDoneBadge: '今日已完成',
+  howToPlay: '玩法说明',
+  statistics: '统计',
+  settings: '设置',
+
+  modeLevel: '第 {n} 关',
+  levelSelect: '选择关卡',
+  levelLocked: '第 {n} 关，未解锁',
+  nextLevel: '下一关',
+  levelsTitle: '关卡',
+  reachedLevel: '已达关卡',
+
+  score: '得分',
+  best: '最佳',
+  newBest: '新纪录！',
+  scoreMatches: '配对',
+  scoreRows: '整行奖励',
+  scoreClearBonus: '通关奖励',
+  scoreNoHint: '无提示奖励',
+  bestScores: '最佳成绩',
+  totalBest: '各关最佳总和',
+
+  dailyPast: '往期每日',
+  dailyToday: '今天',
+  dailyBacklogHint: '通关后可解锁前一天。',
+  modeDaily: '每日',
+  undo: '撤销',
+  hint: '提示',
+  addNumbers: '添加',
+  timeLabel: '时间',
+  movesLabel: '步数',
+  boardLabel: '游戏盘面',
+  cellLabel: '第 {row} 行第 {col} 列，{value}',
+  cellLabelStone: '第 {row} 行第 {col} 列，石块',
+  cellLabelWild: '第 {row} 行第 {col} 列，百搭',
+  hintNoneToast: '没有可配对的数字，试试“添加”。',
+  wildIntroToast: '✦ 可以和任意数字配对。',
+  stoneIntroToast: '石块无法消除，还会挡路。',
+
+  clearTitle: '全部消除！',
+  clearBody: '你消除了所有数字。',
+  gameOverTitle: '无法继续',
+  gameOverBody: '盘面已达上限。',
+  tryAgain: '重玩同一局',
+  backHome: '首页',
+
+  confirmNewGameTitle: '开始新游戏？',
+  confirmNewGameBody: '当前进度将会丢失。',
+  cancel: '取消',
+  confirm: '开始',
+
+  step1Title: '相同，或相加得 10',
+  step1Body: '消除两个相同的数字，或相加等于 10 的两个数字。',
+  step2Title: '选择相连的两个',
+  step2Body:
+    '横、竖、斜，或从一行末尾接到下一行开头。已消除的格子不算阻挡，但还留在盘面上的数字会挡路。',
+  step3Title: '消完全部即获胜',
+  step3Body: '卡住了？点“添加”把剩下的数字接到后面。撤销和提示始终免费。',
+  startPlaying: '开始游戏',
+  next: '下一步',
+  back: '上一步',
+  close: '关闭',
+
+  language: '语言',
+  languageSystem: '跟随系统',
+  theme: '主题',
+  themeSystem: '跟随系统',
+  themeLight: '浅色',
+  themeDark: '深色',
+  sound: '音效',
+  vibration: '振动',
+  reducedMotion: '减少动画',
+  privacyPolicy: '隐私政策',
+  resetData: '清除本地数据',
+  resetConfirmTitle: '删除全部本地数据？',
+  resetConfirmBody: '这将从本设备删除你的游戏、统计和设置。此操作无法撤销。',
+  delete: '删除',
+  version: '版本',
+
+  privacy1: '无需账号，无需注册。我们不收集你的姓名、邮箱、通讯录或位置信息。',
+  privacy2: '你的游戏进度、统计和设置仅保存在本设备上。我们不运营任何服务器，也没有云同步。',
+  privacy3:
+    '联网时可能显示由 Google AdMob 投放的广告；Google 可能按其自身的隐私政策处理设备广告标识符。离线时不显示广告，也不发送任何广告请求。',
+  privacy4: '删除应用，或使用“清除本地数据”，即可删除你的数据。',
+
+  played: '游戏局数',
+  cleared: '通关次数',
+  gameOverCount: '失败次数',
+  totalTime: '总游戏时间',
+  bestTime: '最快通关',
+
+  // Collection shell
+  collectionTagline: '完全免费。完全离线。打开就玩。',
+  gamesHeading: '游戏',
+  numberMatchBlurb: '消除相同或相加得 10 的数字。',
+  backToGames: '全部游戏',
+  learnMore: '了解更多',
+
+  // About & open source
+  aboutTitle: '关于',
+  viewSource: '查看源代码',
+  reportBug: '报告问题',
+  suggestGame: '建议新游戏',
+  viewLicenses: '查看许可证',
+
+  // Ads & support
+  removeAdsTitle: '移除广告，支持 Simple Games',
+  adSupportBody:
+    'Simple Games 在你联网时显示一条小小的横幅广告，用于维持和改进这款应用。不想看广告？一次性购买即可永久移除。',
+  removeAdsAction: '移除广告',
+  restorePurchase: '恢复购买',
+  purchaseThanks: '横幅广告已移除。感谢你支持 Simple Games。',
+  privacy5:
+    '可选的一次性购买可移除横幅广告。该购买由 Google Play 处理，我们不会收到或保存任何支付信息。',
+
+  // Sudoku
+  sudokuName: '数独',
+  sudokuBlurb: '在每行、每列、每宫填入 1-9。',
+  sudokuGridLabel: '数独盘面',
+  sudokuPadLabel: '数字键盘',
+  sudokuPadKey: '{value}，还剩 {n}',
+  sudokuPadNoteKey: '笔记 {value}',
+  sudokuCellEmpty: '空，第 {row} 行第 {col} 列',
+  sudokuCellGiven: '{value}，题目数字，第 {row} 行第 {col} 列',
+  sudokuCellEntry: '{value}，第 {row} 行第 {col} 列',
+  sudokuErase: '擦除',
+  sudokuNotes: '笔记',
+  sudokuMistakes: '错误',
+  sudokuTier_easy: '简单',
+  sudokuTier_medium: '中等',
+  sudokuTier_hard: '困难',
+  sudokuSolvedTitle: '完成！',
+  sudokuSolvedBody: '每行、每列、每宫都填满了 1-9。',
+  sudokuNewBestTime: '你的最快纪录。',
+  sudokuLevelsSolved: '完成的关卡',
+  sudokuDailiesSolved: '完成的每日',
+  sudokuAverageTime: '平均用时',
+  sudokuHighlightMistakes: '标出错误',
+  sudokuHighlightMistakesNote: '标出与答案不符的数字。重复的数字始终会标出。',
+  sudokuHintNone: '现在还推不出下一步。',
+  sudokuHintOnlyDigit: '这一格只能填一个数字。',
+  sudokuHintOnlyCell: '在这里，{value} 只能填这一格。',
+  sudokuHintLockedLine: '在这一宫内，{value} 只能填在高亮的那条线上。',
+  sudokuHintLockedBox: '在这条线上，{value} 只能填在高亮的那一宫内。',
+  sudokuHintRuledOut: '这几格可以排除同一区域内其他格的候选数。',
+  sudokuStep1Title: '1-9 各一次',
+  sudokuStep1Body: '每行、每列、每个 3x3 宫内，1 到 9 各出现一次。',
+  sudokuStep2Title: '记下可能的数字',
+  sudokuStep2Body: '点“笔记”，在缩小范围时把候选数写进格子里。',
+  sudokuStep3Title: '卡住了？看提示',
+  sudokuStep3Body: '提示会指出哪一格能确定，以及为什么。提示和撤销始终免费。',
+
+  // ---- Sliding Puzzle ----
+  slideName: '数字华容道',
+  slideBlurb: '把数字滑回正确的顺序。',
+
+  slideBoardLabel: '数字华容道盘面',
+  slideTileLabel: '{value}，第 {row} 行第 {col} 列',
+  slideBlankLabel: '空格，第 {row} 行第 {col} 列',
+  slideSizeLabel: '{n}×{n}',
+
+  slideMoves: '步数',
+  slideBestMoves: '最少步数',
+
+  slideSolvedTitle: '完成！',
+  slideSolvedBody: '所有数字都归位了。',
+  slideNewBestMoves: '你的最少步数纪录。',
+  slideNewBestTime: '你的最快纪录。',
+
+  slideLevelsSolved: '完成的关卡',
+  slideDailiesSolved: '完成的每日',
+  slideDailyBacklogHint: '过去的每一天都可以随时挑战。',
+
+  slideStep1Title: '点空格旁边的方块',
+  slideStep1Body: '点空格旁边的方块，它就会滑进去。',
+  slideStep2Title: '一整排一起动',
+  slideStep2Body: '在同一行或同一列上，中间的方块会一起滑动。',
+  slideStep3Title: '从 1 开始依次排好',
+  slideStep3Body: '按阅读顺序排好数字，空格留在右下角。',
+
+  // ---- 2048 ----
+  g2048Name: '2048',
+  g2048Blurb: '把相同的数字合并翻倍，凑出 2048。',
+
+  g2048ModeClassic: '经典',
+  g2048DailyPlayedBadge: '今日已玩',
+
+  g2048BoardLabel: '2048 盘面',
+  g2048CellLabel: '{value}，第 {row} 行第 {col} 列',
+  g2048CellEmpty: '空格，第 {row} 行第 {col} 列',
+  g2048Restart: '重新开始',
+
+  g2048OverBody: '盘面已满，没有可以合并的数字。',
+  g2048WinTitle: '凑出 2048 了！',
+  g2048WinBody: '游戏没有结束，你可以一直玩下去。',
+  g2048KeepPlaying: '继续玩',
+
+  g2048BestScore: '最高分',
+  g2048BestTile: '最大数字',
+  g2048Wins: '达成 2048 的次数',
+  g2048DaysPlayed: '游玩天数',
+
+  g2048Step1Title: '滑动来移动',
+  g2048Step1Body: '滑动一下，所有数字都会朝那个方向移动。',
+  g2048Step2Title: '相同的数字会合并',
+  g2048Step2Body: '两个相同的数字相撞，会合成它们的两倍。',
+  g2048Step3Title: '凑出 2048',
+  g2048Step3Body: '卡住了？撤销免费又不限次数，随便用。',
+
+  // ---- Minesweeper ----
+  minesName: '扫雷',
+  minesBlurb: '翻开所有没有地雷的格子。',
+
+  // Home
+  minesChooseBoard: '选择盘面',
+  minesDifficulty_easy: '简单',
+  minesDifficulty_medium: '中等',
+  minesDifficulty_hard: '困难',
+  minesBoardNote: '{width}×{height} · {mines} 个雷',
+  minesConfirmSwitchTitle: '替换进行中的盘面？',
+  minesConfirmSwitchBody: '进行中的“{current}”会被新的“{next}”盘面替换。',
+
+  // Board
+  minesBoardLabel: '雷区，{width} 列 {height} 行',
+  minesCellHidden: '未翻开，第 {row} 行第 {col} 列',
+  minesCellFlagged: '已插旗，第 {row} 行第 {col} 列',
+  minesCellEmpty: '空，第 {row} 行第 {col} 列',
+  minesCellNumber: '附近有 {count} 个雷，第 {row} 行第 {col} 列',
+  minesCellMine: '地雷，第 {row} 行第 {col} 列',
+  minesMinesLeft: '剩余地雷',
+  minesTapToStart: '随便点一格。第一次点击一定安全。',
+
+  // Actions
+  minesFlagMode: '插旗模式',
+  minesFlagModeNote: '点击插旗，长按翻开。',
+  minesHintFound: '这一格是安全的，高亮的数字说明了原因。',
+  minesHintNone: '现在还推不出下一步。',
+  minesNewBoard: '新盘面',
+
+  // Result
+  minesWonTitle: '扫雷成功！',
+  minesWonBody: '所有没有地雷的格子都已翻开。',
+  minesLostTitle: '踩到地雷',
+  minesLostBody: '这一局到此结束。同样的盘面随时等你再来。',
+  minesNewBestTime: '你的最快纪录。',
+  minesHintsUsed: '提示',
+
+  // Statistics
+  minesGamesWon: '获胜局数',
+  minesWinRate: '胜率',
+  minesDailySection: '每日',
+  minesDailiesCleared: '通关天数',
+
+  // Quick Rules
+  minesStep1Title: '数字表示雷数',
+  minesStep1Body: '它表示周围八格里有几个雷。',
+  minesStep2Title: '确定的格子插旗',
+  minesStep2Body: '长按格子插旗。开启插旗模式后，轻点就能插旗。',
+  minesStep3Title: '翻开其余格子就赢',
+  minesStep3Body: '第一次点击一定安全，任何盘面都不需要猜。',
+};

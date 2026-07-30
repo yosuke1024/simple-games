@@ -40,13 +40,16 @@ zh-Hans / zh-Hant のスクリプト解決(zh-TW → zh-Hant 等)は中国語対
 
 ## 対応言語の一覧
 
-現状は 5 言語・約 134 キー(Number Match と Sudoku の文言を含む。
-Sudoku の追加分は 5 言語すべてで揃っている ── `Messages` 型の強制により、
-1 言語でも欠ければビルドが通らない)。リリース前マイルストーン **M-L10N** で
-必須 15 言語へ拡張する(生成 AI による初期翻訳 + 人間レビュー)。
+現状は **14 言語・215 キー**(5 ゲームすべての文言を含む)。`Messages` 型の強制に
+より、1 言語でも 1 キーでも欠ければビルドが通らない。
 
 翻訳状態は 3 段階: `machine_draft`(機械翻訳ドラフト)→ `reviewed`(人間レビュー済み)
 → `native_reviewed`(ネイティブレビュー済み)。
+**現状、en と ja 以外はすべて `machine_draft`** であり、リリース前に
+ネイティブレビューを通す必要がある(下記の必須レビュー項目)。
+
+ロケールタグは小文字で持つ(`zh-hans` / `pt-br`)。端末が返すタグは
+`matchLocale` が小文字化してから突き合わせる。
 
 | コード | 名称(自言語表記) | 状態 | 備考 |
 | --- | --- | --- | --- |
@@ -54,17 +57,36 @@ Sudoku の追加分は 5 言語すべてで揃っている ── `Messages` 型
 | ja | 日本語 | native_reviewed | 作者がネイティブ |
 | hi | हिन्दी | machine_draft | ネイティブレビュー待ち |
 | th | ไทย | machine_draft | ネイティブレビュー待ち |
-| id | Bahasa Indonesia | machine_draft | ネイティブレビュー待ち。レガシー `in` から解決 |
-| vi | Tiếng Việt | 未着手 | M-L10N |
-| es | Español | 未着手 | M-L10N |
-| pt-BR | Português (Brasil) | 未着手 | M-L10N |
-| tr | Türkçe | 未着手 | M-L10N |
-| ko | 한국어 | 未着手 | M-L10N |
-| zh-Hans | 简体中文 | 未着手 | M-L10N。スクリプト解決を `matchLocale` へ追加 |
-| zh-Hant | 繁體中文 | 未着手 | M-L10N。同上(zh-TW 等 → zh-Hant) |
-| fr | Français | 未着手 | M-L10N |
-| de | Deutsch | 未着手 | M-L10N。長文言のレイアウト検証に使う |
+| id | Bahasa Indonesia | machine_draft | レガシー `in` から解決 |
+| vi | Tiếng Việt | machine_draft | |
+| ko | 한국어 | machine_draft | |
+| zh-hans | 简体中文 | machine_draft | `zh` / `zh-CN` / `zh-SG` から解決 |
+| zh-hant | 繁體中文 | machine_draft | `zh-TW` / `zh-HK` / `zh-Hant` から解決。行 = 列 / 欄 = 列の用語選択を要確認 |
+| es | Español | machine_draft | 中南米寄りの中立スペイン語 |
+| pt-br | Português do Brasil | machine_draft | `pt` / `pt-PT` もここへ解決 |
+| fr | Français | machine_draft | `undo` と `cancel` がどちらも Annuler。要判断 |
+| de | Deutsch | machine_draft | 長文言のレイアウト検証に使う。375px で崩れないことを確認済み |
+| tr | Türkçe | machine_draft | |
 | ar | العربية | 保留 | RTL 条件を満たすまで追加しない(下記) |
+
+### ネイティブレビューで最初に見る箇所
+
+機械翻訳ドラフトのうち、誤訳が「約束の反故」になるものを先に見る。
+
+1. **課金**: `removeAdsTitle` / `adSupportBody` / `removeAdsAction` /
+   `restorePurchase` / `purchaseThanks` / `privacy5`。
+   「一度だけの購入」「永久に」がぼやけていないか。サブスクと読めないか。
+2. **削除**: `resetData` / `resetConfirmTitle` / `resetConfirmBody` / `delete` /
+   `privacy4`。「元に戻せない」を弱めていないか。
+3. **プライバシー**: `privacy1`〜`privacy5`。
+   なお `privacy5` は英語が "we"、日本語・インドネシア語が "PixApps" と主語が
+   割れている。**どちらに揃えるかはリリース前に決める**(法的な主語の明示が
+   目的なら PixApps に揃える)。
+4. **ゲーム名**: `numberMatchName` は定訳がないため全言語で英語のまま。
+   `minesName` はドイツ語 Minensucher より Minesweeper が通用する可能性がある。
+   `slideName` は簡体字 数字华容道 / 繁体字 數字推盤 と地域差を反映済み。
+5. **固定幅に載る短いラベル**: `undo` / `hint` / `settings` / `resetData` /
+   `restorePurchase`。ドイツ語 `Rückgängig` が最長(実測でオーバーフローなし)。
 
 インド系言語(ta / te / bn / mr)は後続ウェーブとして 15 言語の後に検討する。
 

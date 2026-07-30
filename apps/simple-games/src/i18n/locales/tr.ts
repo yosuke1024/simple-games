@@ -1,0 +1,274 @@
+import type { Messages } from './en';
+
+export const tr: Messages = {
+  numberMatchName: 'Number Match',
+  tagline: 'Çevrimdışı çalışır. Hesap yok. Ödeme duvarı yok.',
+
+  resume: 'Devam et',
+  dailyChallenge: 'Günlük Bulmaca',
+  dailyDoneBadge: 'Bugün tamamlandı',
+  howToPlay: 'Nasıl Oynanır',
+  statistics: 'İstatistik',
+  settings: 'Ayarlar',
+
+  modeLevel: 'Seviye {n}',
+  levelSelect: 'Seviye Seç',
+  levelLocked: 'Seviye {n}, kilitli',
+  nextLevel: 'Sonraki Seviye',
+  levelsTitle: 'Seviyeler',
+  reachedLevel: 'Ulaşılan seviye',
+
+  score: 'Puan',
+  best: 'En iyi',
+  newBest: 'Yeni rekor!',
+  scoreMatches: 'Eşleşmeler',
+  scoreRows: 'Satır bonusu',
+  scoreClearBonus: 'Temizleme bonusu',
+  scoreNoHint: 'İpucusuz bonusu',
+  bestScores: 'En İyi Puanlar',
+  totalBest: 'Seviye rekorları toplamı',
+
+  dailyPast: 'Geçmiş Günler',
+  dailyToday: 'Bugün',
+  dailyBacklogHint: 'Bir günü bitir, bir önceki gün açılsın.',
+  modeDaily: 'Günlük',
+  undo: 'Geri al',
+  hint: 'İpucu',
+  addNumbers: 'Ekle',
+  timeLabel: 'Süre',
+  movesLabel: 'Hamle',
+  boardLabel: 'Oyun tahtası',
+  cellLabel: '{value}, satır {row}, sütun {col}',
+  cellLabelStone: 'Taş, satır {row}, sütun {col}',
+  cellLabelWild: 'Joker, satır {row}, sütun {col}',
+  hintNoneToast: 'Eşleşme kalmadı — Ekle düğmesini dene.',
+  wildIntroToast: '✦ taşı her sayıyla eşleşir.',
+  stoneIntroToast: 'Taşlar eşleşmez ve yolu kapatır.',
+
+  clearTitle: 'Tahta temizlendi!',
+  clearBody: 'Tüm sayıları kaldırdın.',
+  gameOverTitle: 'Hamle kalmadı',
+  gameOverBody: 'Tahta sınırına ulaştı.',
+  tryAgain: 'Aynı tahtayı tekrarla',
+  backHome: 'Ana sayfa',
+
+  confirmNewGameTitle: 'Yeni oyun başlasın mı?',
+  confirmNewGameBody: 'Devam eden oyunun kaybolacak.',
+  cancel: 'Vazgeç',
+  confirm: 'Başlat',
+
+  step1Title: 'Aynı ya da toplamı 10',
+  step1Body: 'Aynı olan ya da toplamı 10 eden iki sayıyı eşleştir.',
+  step2Title: 'Birbirine ulaşan ikili seç',
+  step2Body:
+    'Yatay, dikey, çapraz — ya da bir satırın sonundan diğerinin başına. Boşalan kareler engel değildir, tahtada duran bir sayı yolu kapatır.',
+  step3Title: 'Tahtayı temizle, kazan',
+  step3Body:
+    'Sıkıştın mı? Ekle ile kalan sayılar alta eklenir. Geri alma ve ipuçları her zaman ücretsiz.',
+  startPlaying: 'Oynamaya Başla',
+  next: 'İleri',
+  back: 'Geri',
+  close: 'Kapat',
+
+  language: 'Dil',
+  languageSystem: 'Sistem',
+  theme: 'Tema',
+  themeSystem: 'Sistem',
+  themeLight: 'Açık',
+  themeDark: 'Koyu',
+  sound: 'Ses',
+  vibration: 'Titreşim',
+  reducedMotion: 'Hareketi azalt',
+  privacyPolicy: 'Gizlilik Politikası',
+  resetData: 'Yerel Verileri Sil',
+  resetConfirmTitle: 'Tüm yerel veriler silinsin mi?',
+  resetConfirmBody:
+    'Bu işlem oyununu, istatistiklerini ve ayarlarını bu cihazdan kaldırır. Geri alınamaz.',
+  delete: 'Sil',
+  version: 'Sürüm',
+
+  privacy1:
+    'Hesap yok. Kayıt yok. Adını, e-postanı, kişilerini veya konumunu toplamıyoruz.',
+  privacy2:
+    'Oyun ilerlemen, istatistiklerin ve ayarların yalnızca bu cihazda saklanır. Sunucu işletmiyoruz ve bulut eşitlemesi yok.',
+  privacy3:
+    'Çevrimiçiyken Google AdMob reklamları görünebilir; Google, kendi gizlilik politikasında açıkladığı şekilde cihazın reklam kimliklerini işleyebilir. Çevrimdışıyken reklam gösterilmez ve reklam isteği yapılmaz.',
+  privacy4:
+    'Uygulamayı kaldırmak ya da "Yerel Verileri Sil" seçeneğini kullanmak verilerini siler.',
+
+  played: 'Oynanan oyun',
+  cleared: 'Tamamlanan oyun',
+  gameOverCount: 'Kaybedilen oyun',
+  totalTime: 'Toplam oyun süresi',
+  bestTime: 'En hızlı tamamlama',
+
+  // Collection shell
+  collectionTagline: 'Tamamen ücretsiz. Tamamen çevrimdışı. Hemen oynanır.',
+  gamesHeading: 'Oyunlar',
+  numberMatchBlurb: 'Aynı olan ya da toplamı 10 eden sayıları eşleştir.',
+  backToGames: 'Tüm oyunlar',
+  learnMore: 'Daha Fazla',
+
+  // About & open source
+  aboutTitle: 'Hakkında',
+  viewSource: 'Kaynak Kodu Görüntüle',
+  reportBug: 'Hata Bildir',
+  suggestGame: 'Oyun Öner',
+  viewLicenses: 'Lisansları Görüntüle',
+
+  // Ads & support
+  removeAdsTitle: 'Reklamları Kaldır ve Simple Games\'e Destek Ol',
+  adSupportBody:
+    'Simple Games, çevrimiçiyken gösterilen küçük bir banner reklamla desteklenir. Bu, uygulamayı sürdürmemize ve geliştirmemize yardımcı olur. Reklam istemiyor musun? Tek seferlik bir satın alma reklamları kalıcı olarak kaldırır.',
+  removeAdsAction: 'Reklamları Kaldır',
+  restorePurchase: 'Satın Almayı Geri Yükle',
+  purchaseThanks: 'Banner reklamlar kaldırıldı. Simple Games\'e destek olduğun için teşekkürler.',
+  privacy5:
+    'İsteğe bağlı, tek seferlik bir satın alma banner reklamları kaldırabilir. Satın alma Google Play tarafından işlenir; ödeme bilgilerini asla almayız ve saklamayız.',
+
+  // Sudoku
+  sudokuName: 'Sudoku',
+  sudokuBlurb: 'Her satırı, sütunu ve kutuyu 1-9 ile doldur.',
+  sudokuGridLabel: 'Sudoku ızgarası',
+  sudokuPadLabel: 'Sayı tuşları',
+  sudokuPadKey: '{value}, {n} kaldı',
+  sudokuPadNoteKey: 'Not {value}',
+  sudokuCellEmpty: 'Boş, satır {row}, sütun {col}',
+  sudokuCellGiven: '{value}, verili, satır {row}, sütun {col}',
+  sudokuCellEntry: '{value}, satır {row}, sütun {col}',
+  sudokuErase: 'Sil',
+  sudokuNotes: 'Notlar',
+  sudokuMistakes: 'Hatalar',
+  sudokuTier_easy: 'Kolay',
+  sudokuTier_medium: 'Orta',
+  sudokuTier_hard: 'Zor',
+  sudokuSolvedTitle: 'Çözüldü!',
+  sudokuSolvedBody: 'Her satır, sütun ve kutuda 1-9 var.',
+  sudokuNewBestTime: 'En hızlı zamanın.',
+  sudokuLevelsSolved: 'Çözülen seviyeler',
+  sudokuDailiesSolved: 'Çözülen günlükler',
+  sudokuAverageTime: 'Ortalama süre',
+  sudokuHighlightMistakes: 'Hataları göster',
+  sudokuHighlightMistakesNote: 'Çözüme uymayan rakamı işaretler. Tekrar eden rakamlar her zaman işaretlenir.',
+  sudokuHintNone: 'Şu an çıkarılabilecek bir şey yok.',
+  sudokuHintOnlyDigit: 'Bu kareye yalnızca tek bir rakam uyuyor.',
+  sudokuHintOnlyCell: 'Burada {value} yalnızca bu kareye girebilir.',
+  sudokuHintLockedLine: 'Bu kutuda {value} yalnızca vurgulanan çizgiye uyuyor.',
+  sudokuHintLockedBox: 'Bu çizgide {value} yalnızca vurgulanan kutuya uyuyor.',
+  sudokuHintRuledOut: 'Bu kareler, rakamları aynı birimin geri kalanından eler.',
+  sudokuStep1Title: '1-9, birer kez',
+  sudokuStep1Body: 'Her satır, sütun ve 3x3 kutu 1 ile 9 arasını birer kez içerir.',
+  sudokuStep2Title: 'Olasılıkları not al',
+  sudokuStep2Body: 'Bir kareyi daraltırken adayları yazmak için Notlar düğmesine dokun.',
+  sudokuStep3Title: 'Sıkıştın mı? İpucu al',
+  sudokuStep3Body: 'İpucu hangi karenin belli olduğunu ve nedenini gösterir. İpuçları ve geri alma her zaman ücretsiz.',
+
+  // ---- Sliding Puzzle ----
+  slideName: 'Kaydırmalı Bulmaca',
+  slideBlurb: 'Sayıları kaydırarak yeniden sıraya diz.',
+
+  slideBoardLabel: 'Kaydırmalı bulmaca tahtası',
+  slideTileLabel: '{value}, satır {row}, sütun {col}',
+  slideBlankLabel: 'Boş, satır {row}, sütun {col}',
+  slideSizeLabel: '{n}x{n}',
+
+  slideMoves: 'Hamle',
+  slideBestMoves: 'En az hamle',
+
+  slideSolvedTitle: 'Çözüldü!',
+  slideSolvedBody: 'Tüm sayılar yeniden sırada.',
+  slideNewBestMoves: 'En az hamlen.',
+  slideNewBestTime: 'En hızlı zamanın.',
+
+  slideLevelsSolved: 'Çözülen seviyeler',
+  slideDailiesSolved: 'Çözülen günlükler',
+  slideDailyBacklogHint: 'Geçmiş günlerin hepsi açık kalır.',
+
+  slideStep1Title: 'Boşluğun yanına dokun',
+  slideStep1Body: 'Boş karenin yanındaki taşa dokun, taş boşluğa kayar.',
+  slideStep2Title: 'Sıranın tamamı kayar',
+  slideStep2Body: 'Aynı satır veya sütunda aradaki tüm taşlar birlikte kayar.',
+  slideStep3Title: 'Sayıları sırayla diz',
+  slideStep3Body: 'Sayıları okuma sırasına göre diz, boşluk sağ altta kalsın.',
+
+  // ---- 2048 ----
+  g2048Name: '2048',
+  g2048Blurb: 'Aynı sayıları kaydırıp birleştir, katlaya katlaya 2048 yap.',
+
+  g2048ModeClassic: 'Klasik',
+  g2048DailyPlayedBadge: 'Bugün oynandı',
+
+  g2048BoardLabel: '2048 tahtası',
+  g2048CellLabel: '{value}, satır {row}, sütun {col}',
+  g2048CellEmpty: 'Boş, satır {row}, sütun {col}',
+  g2048Restart: 'Baştan Başla',
+
+  g2048OverBody: 'Tahta doldu ve birleşecek taş kalmadı.',
+  g2048WinTitle: '2048 yaptın!',
+  g2048WinBody: 'Burada bitmiyor — istediğin kadar devam et.',
+  g2048KeepPlaying: 'Devam Et',
+
+  g2048BestScore: 'En iyi puan',
+  g2048BestTile: 'En yüksek taş',
+  g2048Wins: '2048 yapma sayısı',
+  g2048DaysPlayed: 'Oynanan gün',
+
+  g2048Step1Title: 'Kaydırarak oyna',
+  g2048Step1Body: 'Kaydır, tüm taşlar aynı anda o yöne gider.',
+  g2048Step2Title: 'Aynı sayılar birleşir',
+  g2048Step2Body: 'Aynı sayıya sahip iki taş, iki katı olan tek taşa dönüşür.',
+  g2048Step3Title: '2048 yap',
+  g2048Step3Body: 'Sıkıştın mı? Geri alma ücretsiz ve sınırsız, istediğin kadar kullan.',
+
+  // ---- Minesweeper ----
+  minesName: 'Mayın Tarlası',
+  minesBlurb: 'Mayın olmayan her kareyi aç.',
+
+  // Home
+  minesChooseBoard: 'Tahta seç',
+  minesDifficulty_easy: 'Kolay',
+  minesDifficulty_medium: 'Orta',
+  minesDifficulty_hard: 'Zor',
+  minesBoardNote: '{width}×{height} · {mines} mayın',
+  minesConfirmSwitchTitle: 'Devam eden tahta değişsin mi?',
+  minesConfirmSwitchBody: '{current} oyununun yerine yeni bir {next} tahtası gelecek.',
+
+  // Board
+  minesBoardLabel: 'Mayın tarlası, {width} sütun ve {height} satır',
+  minesCellHidden: 'Kapalı, satır {row}, sütun {col}',
+  minesCellFlagged: 'Bayraklı, satır {row}, sütun {col}',
+  minesCellEmpty: 'Boş, satır {row}, sütun {col}',
+  minesCellNumber: 'Çevrede {count} mayın, satır {row}, sütun {col}',
+  minesCellMine: 'Mayın, satır {row}, sütun {col}',
+  minesMinesLeft: 'Kalan mayın',
+  minesTapToStart: 'Herhangi bir kareye dokun. İlk dokunuş her zaman güvenli.',
+
+  // Actions
+  minesFlagMode: 'Bayrak modu',
+  minesFlagModeNote: 'Dokunuş bayrak diker, uzun basış kareyi açar.',
+  minesHintFound: 'Bu kare güvenli — vurgulanan sayılar nedenini gösteriyor.',
+  minesHintNone: 'Şu an çıkarılabilecek bir şey yok.',
+  minesNewBoard: 'Yeni tahta',
+
+  // Result
+  minesWonTitle: 'Temizlendi!',
+  minesWonBody: 'Mayınsız tüm kareler açıldı.',
+  minesLostTitle: 'Mayına bastın',
+  minesLostBody: 'Bu oyun burada bitti. Aynı tahta istediğin zaman hazır.',
+  minesNewBestTime: 'En hızlı zamanın.',
+  minesHintsUsed: 'İpuçları',
+
+  // Statistics
+  minesGamesWon: 'Kazanılan oyun',
+  minesWinRate: 'Kazanma oranı',
+  minesDailySection: 'Günlük',
+  minesDailiesCleared: 'Temizlenen gün',
+
+  // Quick Rules
+  minesStep1Title: 'Sayı mayınları sayar',
+  minesStep1Body: 'Çevresindeki sekiz kareden kaçında mayın olduğunu söyler.',
+  minesStep2Title: 'Emin olduğuna bayrak dik',
+  minesStep2Body: 'Bir kareye uzun bas ve bayrak dik. Bayrak modunda tek dokunuş yeter.',
+  minesStep3Title: 'Kalanı aç ve kazan',
+  minesStep3Body: 'İlk dokunuşun her zaman güvenli, hiçbir tahta tahmin gerektirmez.',
+};

@@ -6,7 +6,8 @@
  * never render as an empty string or with a missing variable.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { catalogs, matchLocale, resolveLocale, translate, type Locale } from './index';
+import { LANGUAGES } from '@/storage/schemas';
+import { catalogs, LANGUAGE_NAMES, matchLocale, resolveLocale, translate, type Locale } from './index';
 import { en } from './locales/en';
 
 afterEach(() => {
@@ -37,10 +38,55 @@ describe('matchLocale', () => {
     expect(matchLocale('in-ID')).toBe('id');
   });
 
-  it('returns null for unsupported languages', () => {
-    expect(matchLocale('fr')).toBeNull();
-    expect(matchLocale('zh-TW')).toBeNull();
+  it('resolves Chinese by script, never by dropping the subtag', () => {
+    // A zh-TW reader cannot read Simplified, so this is the one language where
+    // falling back to the primary subtag would be worse than useless.
+    expect(matchLocale('zh-TW')).toBe('zh-hant');
+    expect(matchLocale('zh-HK')).toBe('zh-hant');
+    expect(matchLocale('zh-Hant')).toBe('zh-hant');
+    expect(matchLocale('zh-Hant-TW')).toBe('zh-hant');
+    expect(matchLocale('zh-CN')).toBe('zh-hans');
+    expect(matchLocale('zh-SG')).toBe('zh-hans');
+    expect(matchLocale('zh-Hans-CN')).toBe('zh-hans');
+    // A bare `zh` takes the more widely read script.
+    expect(matchLocale('zh')).toBe('zh-hans');
+  });
+
+  it('sends European Portuguese to the Brazilian catalog', () => {
+    // Much closer to a pt-PT reader's language than English is.
+    expect(matchLocale('pt')).toBe('pt-br');
+    expect(matchLocale('pt-PT')).toBe('pt-br');
+    expect(matchLocale('pt-BR')).toBe('pt-br');
+  });
+
+  it('falls back from region variants of the newer languages', () => {
+    expect(matchLocale('es-MX')).toBe('es');
+    expect(matchLocale('es-419')).toBe('es');
+    expect(matchLocale('fr-CA')).toBe('fr');
+    expect(matchLocale('de-AT')).toBe('de');
+    expect(matchLocale('ko-KR')).toBe('ko');
+    expect(matchLocale('vi-VN')).toBe('vi');
+    expect(matchLocale('tr-TR')).toBe('tr');
+  });
+
+  it('returns null for languages the app does not ship', () => {
+    expect(matchLocale('ar')).toBeNull();
+    expect(matchLocale('ta')).toBeNull();
+    expect(matchLocale('ru')).toBeNull();
     expect(matchLocale('')).toBeNull();
+  });
+});
+
+describe('language picker', () => {
+  it('offers every shipped locale, named in its own language', () => {
+    for (const locale of Object.keys(catalogs) as Locale[]) {
+      const name = LANGUAGE_NAMES[locale];
+      expect(typeof name, locale).toBe('string');
+      expect(name.trim().length, locale).toBeGreaterThan(0);
+    }
+    // The setting list is the picker; it must not drift from the catalogs.
+    const offered = LANGUAGES.filter((code) => code !== 'system');
+    expect([...offered].sort()).toEqual([...Object.keys(catalogs)].sort());
   });
 });
 
@@ -51,12 +97,14 @@ describe('resolveLocale', () => {
   });
 
   it('walks the preferred-language list until a supported language', () => {
-    stubLanguages(['fr-FR', 'de-DE', 'ja-JP']);
+    // A bilingual device lists both; the first one the app ships wins, which
+    // is why the whole list is walked instead of only its first entry.
+    stubLanguages(['ru-RU', 'ar-EG', 'ja-JP']);
     expect(resolveLocale('system')).toBe('ja');
   });
 
   it('falls back to English when no preferred language is supported', () => {
-    stubLanguages(['fr-FR', 'ko-KR']);
+    stubLanguages(['ru-RU', 'ar-EG']);
     expect(resolveLocale('system')).toBe('en');
   });
 

@@ -30,7 +30,28 @@ export interface SchemaDef<T> {
 
 // ---------- settings ----------
 
-export const LANGUAGES = ['system', 'en', 'ja', 'hi', 'th', 'id'] as const;
+/**
+ * The picker's order: the device default first, then the languages by their
+ * own names. `system` is not a locale — it means "follow the device", which is
+ * what a fresh install uses so nobody is asked to choose before playing.
+ */
+export const LANGUAGES = [
+  'system',
+  'en',
+  'ja',
+  'hi',
+  'th',
+  'id',
+  'vi',
+  'ko',
+  'zh-hans',
+  'zh-hant',
+  'es',
+  'pt-br',
+  'fr',
+  'de',
+  'tr',
+] as const;
 export type LanguageSetting = (typeof LANGUAGES)[number];
 export const THEMES = ['system', 'light', 'dark'] as const;
 export type ThemeSetting = (typeof THEMES)[number];
