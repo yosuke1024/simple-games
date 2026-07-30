@@ -120,6 +120,15 @@ export const ko: Messages = {
   removeAdsAction: '광고 제거',
   restorePurchase: '구매 복원',
   purchaseThanks: '배너 광고가 제거되었습니다. Simple Games를 후원해 주셔서 감사합니다.',
+
+  reviewPromptTitle: 'Simple Games, 즐겁게 하고 계신가요?',
+  reviewYes: '네, 재미있어요',
+  reviewNo: '별로예요',
+  reviewLater: '나중에',
+  reviewFeedbackTitle: '아쉬운 점을 알려주세요',
+  reviewFeedbackBody:
+    '이메일로 의견을 보내주세요. 모든 메시지를 읽고 있습니다. 메일 앱에서 보내기를 누르기 전까지는 아무것도 전송되지 않습니다.',
+  reviewFeedbackAction: '메일 쓰기',
   privacy5:
     '선택 사항인 일회성 구매로 배너 광고를 제거할 수 있습니다. 결제는 Google Play가 처리하며, 저희는 결제 정보를 받지도 저장하지도 않습니다.',
 
@@ -189,34 +198,39 @@ export const ko: Messages = {
   slideStep3Title: '1부터 순서대로',
   slideStep3Body: '읽는 순서대로 숫자를 맞추고 빈칸을 오른쪽 아래에 두세요.',
 
-  // ---- 2048 ----
-  g2048Name: '2048',
-  g2048Blurb: '같은 숫자를 붙여 두 배로 키워 2048을 만드세요.',
+  // ---- Nonogram ----
+  nonoName: '노노그램',
+  nonoBlurb: '숫자를 단서로 칸을 칠하세요.',
 
-  g2048ModeClassic: '클래식',
-  g2048DailyPlayedBadge: '오늘 플레이함',
+  nonoBoardLabel: '노노그램 판, {size}×{size}',
+  nonoCellBlank: '미정, {row}행 {col}열',
+  nonoCellFilled: '칠함, {row}행 {col}열',
+  nonoCellCrossed: '×, {row}행 {col}열',
+  nonoRowClueLabel: '{n}행 단서: {clue}',
+  nonoColClueLabel: '{n}열 단서: {clue}',
+  nonoSizeLabel: '{n}×{n}',
 
-  g2048BoardLabel: '2048 판',
-  g2048CellLabel: '{value}, {row}행 {col}열',
-  g2048CellEmpty: '빈칸, {row}행 {col}열',
-  g2048Restart: '처음부터',
+  nonoXMode: '×모드',
+  nonoXModeNote: '탭하면 ×, 길게 누르면 칠합니다.',
+  nonoHintFound: '강조된 줄에서 한 칸이 확정됩니다.',
+  nonoHintBroken: '강조된 줄이 단서와 맞지 않습니다.',
+  nonoHintNone: '지금은 확실한 수가 없습니다.',
 
-  g2048OverBody: '판이 가득 찼고 합칠 수 있는 타일이 없습니다.',
-  g2048WinTitle: '2048을 만들었어요!',
-  g2048WinBody: '여기서 끝이 아닙니다. 원하는 만큼 계속하세요.',
-  g2048KeepPlaying: '계속하기',
+  nonoSolvedTitle: '완성!',
+  nonoSolvedBody: '모든 단서를 만족했습니다.',
+  nonoHintsUsed: '사용한 힌트',
+  nonoNewBestTime: '자기 최고 기록입니다.',
 
-  g2048BestScore: '최고 점수',
-  g2048BestTile: '최고 타일',
-  g2048Wins: '2048 달성 횟수',
-  g2048DaysPlayed: '플레이한 날',
+  nonoLevelsSolved: '클리어한 레벨',
+  nonoDailiesSolved: '클리어한 데일리',
+  nonoDailyBacklogHint: '지난 날짜는 언제든 도전할 수 있습니다.',
 
-  g2048Step1Title: '밀어서 이동',
-  g2048Step1Body: '한 번 밀면 모든 타일이 그 방향으로 움직입니다.',
-  g2048Step2Title: '같은 숫자는 합쳐져요',
-  g2048Step2Body: '같은 숫자 두 개가 만나면 두 배가 된 하나로 합쳐집니다.',
-  g2048Step3Title: '2048 만들기',
-  g2048Step3Body: '막혔나요? 되돌리기는 무료이고 횟수 제한도 없습니다.',
+  nonoStep1Title: '숫자는 연속으로 칠하는 수',
+  nonoStep1Body: '숫자는 그 줄에서 연속으로 칠하는 칸 수입니다. 여러 개면 사이를 한 칸 이상 띄웁니다.',
+  nonoStep2Title: '칠하지 않는 칸에 ×',
+  nonoStep2Body: '칠하지 않는 칸에 ×를 표시해 경우의 수를 좁힙니다.',
+  nonoStep3Title: '모든 줄을 만족시키기',
+  nonoStep3Body: '모든 행과 열의 숫자를 만족하면 완성. 추측은 필요 없습니다.',
 
   // ---- Minesweeper ----
   minesName: '지뢰 찾기',

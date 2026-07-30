@@ -122,6 +122,15 @@ export const id: Messages = {
   removeAdsAction: 'Hapus Iklan',
   restorePurchase: 'Pulihkan Pembelian',
   purchaseThanks: 'Banner iklan sudah dihapus. Terima kasih telah mendukung Simple Games.',
+
+  reviewPromptTitle: 'Menikmati Simple Games?',
+  reviewYes: 'Ya, saya menikmatinya',
+  reviewNo: 'Kurang',
+  reviewLater: 'Nanti saja',
+  reviewFeedbackTitle: 'Apa yang bisa lebih baik?',
+  reviewFeedbackBody:
+    'Beri tahu kami lewat email — kami membaca setiap pesan. Tidak ada yang terkirim sampai kamu menekan kirim di aplikasi email.',
+  reviewFeedbackAction: 'Tulis email',
   privacy5:
     'Tersedia pembelian sekali bayar (opsional) untuk menghapus banner iklan. Pembayaran diproses oleh Google Play; PixApps tidak pernah menerima atau menyimpan detail pembayaran.',
 
@@ -190,34 +199,39 @@ export const id: Messages = {
   slideStep3Title: 'Urutkan mulai dari 1',
   slideStep3Body: 'Susun angka sesuai urutan baca dengan kotak kosong di pojok kanan bawah.',
 
-  // ---- 2048 ----
-  g2048Name: '2048',
-  g2048Blurb: 'Geser angka yang sama agar menyatu dan berlipat hingga 2048.',
+  // ---- Nonogram ----
+  nonoName: 'Nonogram',
+  nonoBlurb: 'Warnai kotak sesuai petunjuk angka.',
 
-  g2048ModeClassic: 'Klasik',
-  g2048DailyPlayedBadge: 'Sudah main hari ini',
+  nonoBoardLabel: 'Papan nonogram, {size}×{size}',
+  nonoCellBlank: 'Kosong, baris {row}, kolom {col}',
+  nonoCellFilled: 'Terwarnai, baris {row}, kolom {col}',
+  nonoCellCrossed: 'Bertanda ×, baris {row}, kolom {col}',
+  nonoRowClueLabel: 'Baris {n}: {clue}',
+  nonoColClueLabel: 'Kolom {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
 
-  g2048BoardLabel: 'Papan 2048',
-  g2048CellLabel: '{value}, baris {row}, kolom {col}',
-  g2048CellEmpty: 'Kosong, baris {row}, kolom {col}',
-  g2048Restart: 'Mulai Ulang',
+  nonoXMode: 'Mode X',
+  nonoXModeNote: 'Ketuk memberi ×; tekan lama mewarnai.',
+  nonoHintFound: 'Baris yang disorot menentukan satu kotak.',
+  nonoHintBroken: 'Baris yang disorot tidak lagi cocok dengan petunjuknya.',
+  nonoHintNone: 'Belum ada langkah pasti saat ini.',
 
-  g2048OverBody: 'Papan penuh dan tidak ada angka yang bisa digabung.',
-  g2048WinTitle: 'Anda membuat 2048!',
-  g2048WinBody: 'Belum berakhir — teruslah bermain selama Anda mau.',
-  g2048KeepPlaying: 'Lanjut Bermain',
+  nonoSolvedTitle: 'Selesai!',
+  nonoSolvedBody: 'Semua petunjuk terpenuhi.',
+  nonoHintsUsed: 'Petunjuk terpakai',
+  nonoNewBestTime: 'Waktu tercepatmu.',
 
-  g2048BestScore: 'Skor terbaik',
-  g2048BestTile: 'Angka tertinggi',
-  g2048Wins: 'Berhasil mencapai 2048',
-  g2048DaysPlayed: 'Hari dimainkan',
+  nonoLevelsSolved: 'Level selesai',
+  nonoDailiesSolved: 'Harian selesai',
+  nonoDailyBacklogHint: 'Hari-hari sebelumnya tetap terbuka.',
 
-  g2048Step1Title: 'Geser untuk memindah',
-  g2048Step1Body: 'Geser, dan semua angka bergerak ke arah itu sekaligus.',
-  g2048Step2Title: 'Angka sama menyatu',
-  g2048Step2Body: 'Dua angka yang sama bergabung menjadi dua kali lipatnya.',
-  g2048Step3Title: 'Buat 2048',
-  g2048Step3Body: 'Buntu? Undo selalu gratis dan tanpa batas, sesering yang Anda mau.',
+  nonoStep1Title: 'Angka adalah blok',
+  nonoStep1Body: 'Setiap angka adalah blok kotak terwarnai berurutan, dengan minimal satu celah di antaranya.',
+  nonoStep2Title: 'Coret yang tidak mungkin',
+  nonoStep2Body: 'Tandai kotak yang pasti kosong dengan × untuk mempersempit baris.',
+  nonoStep3Title: 'Penuhi setiap baris',
+  nonoStep3Body: 'Saat semua baris dan kolom cocok, papan selesai. Tak pernah perlu menebak.',
 
   // ---- Minesweeper ----
   minesName: 'Minesweeper',

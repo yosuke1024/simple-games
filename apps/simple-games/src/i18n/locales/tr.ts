@@ -123,6 +123,15 @@ export const tr: Messages = {
   removeAdsAction: 'Reklamları Kaldır',
   restorePurchase: 'Satın Almayı Geri Yükle',
   purchaseThanks: 'Banner reklamlar kaldırıldı. Simple Games\'e destek olduğun için teşekkürler.',
+
+  reviewPromptTitle: 'Simple Games hoşuna gidiyor mu?',
+  reviewYes: 'Evet, seviyorum',
+  reviewNo: 'Pek değil',
+  reviewLater: 'Şimdi değil',
+  reviewFeedbackTitle: 'Neyi daha iyi yapabiliriz?',
+  reviewFeedbackBody:
+    'Bize e-postayla anlat — her mesajı okuyoruz. Posta uygulamanda gönder düğmesine basana kadar hiçbir şey gönderilmez.',
+  reviewFeedbackAction: 'E-posta yaz',
   privacy5:
     'İsteğe bağlı, tek seferlik bir satın alma banner reklamları kaldırabilir. Satın alma Google Play tarafından işlenir; ödeme bilgilerini asla almayız ve saklamayız.',
 
@@ -191,34 +200,39 @@ export const tr: Messages = {
   slideStep3Title: 'Sayıları sırayla diz',
   slideStep3Body: 'Sayıları okuma sırasına göre diz, boşluk sağ altta kalsın.',
 
-  // ---- 2048 ----
-  g2048Name: '2048',
-  g2048Blurb: 'Aynı sayıları kaydırıp birleştir, katlaya katlaya 2048 yap.',
+  // ---- Nonogram ----
+  nonoName: 'Nonogram',
+  nonoBlurb: 'Sayıların tarif ettiği kareleri boya.',
 
-  g2048ModeClassic: 'Klasik',
-  g2048DailyPlayedBadge: 'Bugün oynandı',
+  nonoBoardLabel: 'Nonogram tahtası, {size}×{size}',
+  nonoCellBlank: 'Boş, satır {row}, sütun {col}',
+  nonoCellFilled: 'Boyalı, satır {row}, sütun {col}',
+  nonoCellCrossed: 'Çarpılı, satır {row}, sütun {col}',
+  nonoRowClueLabel: 'Satır {n}: {clue}',
+  nonoColClueLabel: 'Sütun {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
 
-  g2048BoardLabel: '2048 tahtası',
-  g2048CellLabel: '{value}, satır {row}, sütun {col}',
-  g2048CellEmpty: 'Boş, satır {row}, sütun {col}',
-  g2048Restart: 'Baştan Başla',
+  nonoXMode: 'X Modu',
+  nonoXModeNote: 'Dokunmak × koyar; basılı tutmak boyar.',
+  nonoHintFound: 'Vurgulanan çizgi bir kareyi belirliyor.',
+  nonoHintBroken: 'Vurgulanan çizgi artık ipucusuna uymuyor.',
+  nonoHintNone: 'Şu an kesin bir hamle bulunamadı.',
 
-  g2048OverBody: 'Tahta doldu ve birleşecek taş kalmadı.',
-  g2048WinTitle: '2048 yaptın!',
-  g2048WinBody: 'Burada bitmiyor — istediğin kadar devam et.',
-  g2048KeepPlaying: 'Devam Et',
+  nonoSolvedTitle: 'Çözüldü!',
+  nonoSolvedBody: 'Tüm ipuçları tutuyor.',
+  nonoHintsUsed: 'Kullanılan ipuçları',
+  nonoNewBestTime: 'En hızlı süren.',
 
-  g2048BestScore: 'En iyi puan',
-  g2048BestTile: 'En yüksek taş',
-  g2048Wins: '2048 yapma sayısı',
-  g2048DaysPlayed: 'Oynanan gün',
+  nonoLevelsSolved: 'Çözülen seviyeler',
+  nonoDailiesSolved: 'Çözülen günlükler',
+  nonoDailyBacklogHint: 'Önceki günler açık kalır.',
 
-  g2048Step1Title: 'Kaydırarak oyna',
-  g2048Step1Body: 'Kaydır, tüm taşlar aynı anda o yöne gider.',
-  g2048Step2Title: 'Aynı sayılar birleşir',
-  g2048Step2Body: 'Aynı sayıya sahip iki taş, iki katı olan tek taşa dönüşür.',
-  g2048Step3Title: '2048 yap',
-  g2048Step3Body: 'Sıkıştın mı? Geri alma ücretsiz ve sınırsız, istediğin kadar kullan.',
+  nonoStep1Title: 'Sayılar bloklardır',
+  nonoStep1Body: 'Her sayı, sırayla boyanan bir blok karedir; bloklar arasında en az bir boşluk olur.',
+  nonoStep2Title: 'Olmayana × koy',
+  nonoStep2Body: 'Boş kalacak kareleri × ile işaretleyip çizgiyi daralt.',
+  nonoStep3Title: 'Her çizgiyi sağla',
+  nonoStep3Body: 'Tüm satırlar ve sütunlar tutunca tahta biter. Tahmin hiç gerekmez.',
 
   // ---- Minesweeper ----
   minesName: 'Mayın Tarlası',

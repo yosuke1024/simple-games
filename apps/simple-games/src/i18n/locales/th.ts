@@ -120,6 +120,15 @@ export const th: Messages = {
   removeAdsAction: 'ลบโฆษณา',
   restorePurchase: 'กู้คืนการซื้อ',
   purchaseThanks: 'ลบแบนเนอร์โฆษณาแล้ว ขอบคุณที่สนับสนุน Simple Games',
+
+  reviewPromptTitle: 'สนุกกับ Simple Games ไหม',
+  reviewYes: 'สนุกดี',
+  reviewNo: 'เฉย ๆ',
+  reviewLater: 'ไว้ก่อน',
+  reviewFeedbackTitle: 'อยากให้ปรับปรุงอะไร',
+  reviewFeedbackBody:
+    'บอกเราทางอีเมลได้เลย เราอ่านทุกข้อความ จะไม่มีการส่งอะไรจนกว่าคุณจะกดส่งในแอปอีเมล',
+  reviewFeedbackAction: 'เขียนอีเมล',
   privacy5:
     'มีการซื้อครั้งเดียวแบบไม่บังคับเพื่อลบแบนเนอร์โฆษณา การชำระเงินดำเนินการโดย Google Play โดย PixApps จะไม่ได้รับหรือเก็บข้อมูลการชำระเงิน',
 
@@ -188,34 +197,39 @@ export const th: Messages = {
   slideStep3Title: 'เรียง 1 ไปตามลำดับ',
   slideStep3Body: 'เรียงตัวเลขตามลำดับการอ่าน โดยให้ช่องว่างอยู่มุมขวาล่าง',
 
-  // ---- 2048 ----
-  g2048Name: '2048',
-  g2048Blurb: 'เลื่อนตัวเลขที่เหมือนกันมารวมกันให้เป็นสองเท่า จนถึง 2048',
+  // ---- Nonogram ----
+  nonoName: 'โนโนแกรม',
+  nonoBlurb: 'ระบายช่องตามตัวเลขใบ้',
 
-  g2048ModeClassic: 'คลาสสิก',
-  g2048DailyPlayedBadge: 'เล่นวันนี้แล้ว',
+  nonoBoardLabel: 'กระดานโนโนแกรม {size}×{size}',
+  nonoCellBlank: 'ว่าง แถว {row} คอลัมน์ {col}',
+  nonoCellFilled: 'ระบายแล้ว แถว {row} คอลัมน์ {col}',
+  nonoCellCrossed: 'กากบาท แถว {row} คอลัมน์ {col}',
+  nonoRowClueLabel: 'แถว {n}: {clue}',
+  nonoColClueLabel: 'คอลัมน์ {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
 
-  g2048BoardLabel: 'กระดาน 2048',
-  g2048CellLabel: '{value} แถว {row} หลัก {col}',
-  g2048CellEmpty: 'ว่าง แถว {row} หลัก {col}',
-  g2048Restart: 'เริ่มใหม่',
+  nonoXMode: 'โหมด ×',
+  nonoXModeNote: 'แตะเพื่อกา × กดค้างเพื่อระบาย',
+  nonoHintFound: 'แถวที่เน้นกำหนดช่องได้หนึ่งช่อง',
+  nonoHintBroken: 'แถวที่เน้นขัดกับตัวเลขใบ้แล้ว',
+  nonoHintNone: 'ตอนนี้ยังไม่พบตาเดินที่แน่นอน',
 
-  g2048OverBody: 'กระดานเต็มแล้ว และไม่มีตัวเลขใดรวมกันได้',
-  g2048WinTitle: 'คุณทำ 2048 ได้แล้ว!',
-  g2048WinBody: 'ยังไม่จบแค่นี้ เล่นต่อได้นานเท่าที่ต้องการ',
-  g2048KeepPlaying: 'เล่นต่อ',
+  nonoSolvedTitle: 'สำเร็จ!',
+  nonoSolvedBody: 'ตัวเลขใบ้ครบทุกแถวแล้ว',
+  nonoHintsUsed: 'คำใบ้ที่ใช้',
+  nonoNewBestTime: 'เร็วที่สุดของคุณ',
 
-  g2048BestScore: 'คะแนนสูงสุด',
-  g2048BestTile: 'ตัวเลขสูงสุด',
-  g2048Wins: 'จำนวนครั้งที่ถึง 2048',
-  g2048DaysPlayed: 'จำนวนวันที่เล่น',
+  nonoLevelsSolved: 'ด่านที่ผ่านแล้ว',
+  nonoDailiesSolved: 'เดลี่ที่ผ่านแล้ว',
+  nonoDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ',
 
-  g2048Step1Title: 'ปัดเพื่อเลื่อน',
-  g2048Step1Body: 'ปัดไปทางไหน ตัวเลขทุกตัวจะเลื่อนไปทางนั้นพร้อมกัน',
-  g2048Step2Title: 'เลขเหมือนกันจะรวมกัน',
-  g2048Step2Body: 'ตัวเลขเดียวกันสองตัวมาชนกันจะกลายเป็นเลขที่เป็นสองเท่า',
-  g2048Step3Title: 'ทำให้ได้ 2048',
-  g2048Step3Body: 'ติดขัด? ย้อนกลับได้ฟรีและไม่จำกัดจำนวนครั้ง',
+  nonoStep1Title: 'ตัวเลขคือช่วงติดกัน',
+  nonoStep1Body: 'ตัวเลขแต่ละตัวคือจำนวนช่องที่ระบายติดกันตามลำดับ โดยเว้นอย่างน้อยหนึ่งช่องระหว่างช่วง',
+  nonoStep2Title: 'กา × ช่องที่ไม่ระบาย',
+  nonoStep2Body: 'ทำเครื่องหมาย × ช่องที่ต้องว่าง เพื่อจำกัดความเป็นไปได้',
+  nonoStep3Title: 'ทำให้ครบทุกแถว',
+  nonoStep3Body: 'เมื่อทุกแถวและคอลัมน์ตรงตามตัวเลข กระดานก็สำเร็จ ไม่ต้องเดาเลย',
 
   // ---- Minesweeper ----
   minesName: 'ไมน์สวีปเปอร์',

@@ -23,7 +23,7 @@
 | --- | --- | --- | --- | --- |
 | Sudoku(ナンプレ) | `src/games/sudoku/` | 999 レベル + デイリー | Undo / Hint | [docs/SUDOKU_RULES.md](../../docs/SUDOKU_RULES.md) |
 | Minesweeper | `src/games/minesweeper/` | 難易度 3 種 + デイリー | Hint(Undo なし) | [docs/MINESWEEPER_RULES.md](../../docs/MINESWEEPER_RULES.md) |
-| 2048 | `src/games/game-2048/` | クラシック + デイリー | Undo | [docs/GAME_2048_RULES.md](../../docs/GAME_2048_RULES.md) |
+| Nonogram | `src/games/nonogram/` | 999 レベル + デイリー | Hint(Undo なし) | [docs/NONOGRAM_RULES.md](../../docs/NONOGRAM_RULES.md) |
 | Number Match | `src/games/number-match/` | 999 レベル + デイリー | Undo / Hint | [docs/NUMBER_MATCH_RULES.md](../../docs/NUMBER_MATCH_RULES.md) |
 | Sliding Puzzle | `src/games/sliding-puzzle/` | 999 レベル + デイリー | Undo(Hint なし) | [docs/SLIDING_PUZZLE_RULES.md](../../docs/SLIDING_PUZZLE_RULES.md) |
 
@@ -38,15 +38,16 @@
   Hard で 200ms の予算に対して実測は桁違いに速く収まっています。
   運で負けないぶん地雷を開くのは常にプレイヤーの判断なので、Undo は作りません
   (同じ盤面への即時・無料の再挑戦を出します)。Hint は無制限。
-- **2048** — 4×4。**Undo が無制限**なのがこのタイトルの要点です(他アプリが広告と課金で
-  売っているのが Undo の回数制限そのものであるため)。2048 に自然な段階はないのでレベルは
-  作らず、クラシックとデイリーだけを持ちます。
+- **Nonogram** — 5×5 / 10×10 の 999 レベルとデイリー。**出題は必ず行・列単位の論理だけで
+  解けます**(ラインソルバーが解ききった盤面だけを採用し、解は常に一意)。ミス判定も
+  ライフもありません。塗りも × もタップで自由に付け外しできるため **Undo は作らず**、
+  Hint(確定するマスと根拠の行・列を示す)は無制限です。
 - **Number Match** — 999 レベル(式による決定的生成、緩やかな難易度上昇)とスコア
   (時間要素なし)、デイリーチャレンジ。Undo / Hint。
 - **Sliding Puzzle** — 3×3 / 4×4 / 5×5 の 999 レベルとデイリー。Undo は無制限ですが、
   **Hint は作りません**(盤面は完全に見えており、隠れている情報がないため)。
 
-レベルを持つのは Sudoku / Number Match / Sliding Puzzle の 3 本だけです。2048 と
+レベルを持つのは Sudoku / Nonogram / Number Match / Sliding Puzzle の 4 本です。
 Minesweeper には段階的な進行が存在せず、999 段階を作れば水増しになるため作りません。
 
 ストア掲載文はゲーム単位で [store/listing.md](store/listing.md) に置きます。
@@ -63,7 +64,7 @@ Minesweeper には段階的な進行が存在せず、999 段階を作れば水�
 
 - **ストレージ**: 共有レコードは `sg.` 接頭辞(`sg.settings` / `sg.iap`)。
   ゲームは自分の接頭辞だけを使います — `sd.` Sudoku / `ms.` Minesweeper /
-  `g2048.` 2048 / `nm.` Number Match / `sp.` Sliding Puzzle。
+  `ng.` Nonogram / `nm.` Number Match / `sp.` Sliding Puzzle。
   一方の破損が他方に波及せず、「ローカルデータ削除」は全部を消します。
 - **CSS**: ゲームのスタイルはそのゲームが持ち、`src/games/<id>/ui/<id>.css` を
   同じフォルダの Root が import します。`src/ui/styles.css` に置くのは共有クロム
@@ -76,7 +77,7 @@ Minesweeper には段階的な進行が存在せず、999 段階を作れば水�
 
 ## 言語
 
-現在 14 言語・215 キー(en / ja / hi / th / id / vi / ko / zh-hans / zh-hant /
+現在 14 言語・214 キー(en / ja / hi / th / id / vi / ko / zh-hans / zh-hant /
 es / pt-br / fr / de / tr)。カタログは全言語同梱(`src/i18n/`)。ロケールタグは小文字で持ち、
 中国語は書記体系で解決します(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG →
 zh-hans)。pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送りです。

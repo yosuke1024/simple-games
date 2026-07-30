@@ -123,6 +123,15 @@ export const fr: Messages = {
   removeAdsAction: 'Retirer les pubs',
   restorePurchase: "Restaurer l'achat",
   purchaseThanks: 'Les bannières publicitaires sont retirées. Merci de soutenir Simple Games.',
+
+  reviewPromptTitle: 'Simple Games vous plaît ?',
+  reviewYes: 'Oui, ça me plaît',
+  reviewNo: 'Pas vraiment',
+  reviewLater: 'Pas maintenant',
+  reviewFeedbackTitle: 'Que pourrait-on améliorer ?',
+  reviewFeedbackBody:
+    "Dites-le-nous par e-mail — nous lisons chaque message. Rien n'est envoyé tant que vous n'appuyez pas sur envoyer dans votre app de messagerie.",
+  reviewFeedbackAction: 'Écrire un e-mail',
   privacy5:
     "Un achat unique facultatif permet de retirer les bannières publicitaires. L'achat est traité par Google Play ; nous ne recevons ni ne conservons aucune donnée de paiement.",
 
@@ -195,34 +204,39 @@ export const fr: Messages = {
   slideStep3Title: 'Rangez à partir de 1',
   slideStep3Body: "Alignez les nombres dans l'ordre de lecture, le vide en bas à droite.",
 
-  // ---- 2048 ----
-  g2048Name: '2048',
-  g2048Blurb: "Réunissez les nombres égaux et doublez-les jusqu'à 2048.",
+  // ---- Nonogram ----
+  nonoName: 'Nonogramme',
+  nonoBlurb: 'Peignez les cases que décrivent les nombres.',
 
-  g2048ModeClassic: 'Classique',
-  g2048DailyPlayedBadge: "Joué aujourd'hui",
+  nonoBoardLabel: 'Grille de nonogramme, {size} par {size}',
+  nonoCellBlank: 'Vide, ligne {row}, colonne {col}',
+  nonoCellFilled: 'Peinte, ligne {row}, colonne {col}',
+  nonoCellCrossed: 'Croix, ligne {row}, colonne {col}',
+  nonoRowClueLabel: 'Ligne {n} : {clue}',
+  nonoColClueLabel: 'Colonne {n} : {clue}',
+  nonoSizeLabel: '{n}×{n}',
 
-  g2048BoardLabel: 'Plateau de 2048',
-  g2048CellLabel: '{value}, ligne {row}, colonne {col}',
-  g2048CellEmpty: 'Vide, ligne {row}, colonne {col}',
-  g2048Restart: 'Recommencer',
+  nonoXMode: 'Mode X',
+  nonoXModeNote: 'Un appui pose une croix ; un appui long peint.',
+  nonoHintFound: 'La ligne surlignée détermine une case.',
+  nonoHintBroken: 'La ligne surlignée ne correspond plus à son indice.',
+  nonoHintNone: 'Aucun coup sûr pour le moment.',
 
-  g2048OverBody: 'Le plateau est plein et rien ne peut fusionner.',
-  g2048WinTitle: 'Vous avez fait 2048 !',
-  g2048WinBody: "Rien ne s'arrête ici — continuez autant que vous voulez.",
-  g2048KeepPlaying: 'Continuer',
+  nonoSolvedTitle: 'Résolu !',
+  nonoSolvedBody: 'Tous les indices sont respectés.',
+  nonoHintsUsed: 'Indices utilisés',
+  nonoNewBestTime: 'Votre meilleur temps.',
 
-  g2048BestScore: 'Meilleur score',
-  g2048BestTile: 'Plus grande tuile',
-  g2048Wins: 'Nombre de 2048 atteints',
-  g2048DaysPlayed: 'Jours joués',
+  nonoLevelsSolved: 'Niveaux résolus',
+  nonoDailiesSolved: 'Défis quotidiens résolus',
+  nonoDailyBacklogHint: 'Les jours précédents restent ouverts.',
 
-  g2048Step1Title: 'Balayez pour bouger',
-  g2048Step1Body: "Balayez et toutes les tuiles glissent d'un coup dans ce sens.",
-  g2048Step2Title: 'Les nombres égaux fusionnent',
-  g2048Step2Body: 'Deux tuiles portant le même nombre donnent leur double.',
-  g2048Step3Title: 'Atteignez 2048',
-  g2048Step3Body: 'Vous bloquez ? Annuler est gratuit et illimité, autant de fois que vous voulez.',
+  nonoStep1Title: 'Les nombres sont des blocs',
+  nonoStep1Body: 'Chaque nombre est un bloc de cases peintes, dans l’ordre, avec au moins un espace entre les blocs.',
+  nonoStep2Title: 'Éliminez avec une croix',
+  nonoStep2Body: 'Marquez d’une croix les cases qui restent vides pour cerner la ligne.',
+  nonoStep3Title: 'Respectez chaque ligne',
+  nonoStep3Body: 'Quand toutes les lignes et colonnes concordent, la grille est finie. Deviner n’est jamais nécessaire.',
 
   // ---- Minesweeper ----
   minesName: 'Démineur',

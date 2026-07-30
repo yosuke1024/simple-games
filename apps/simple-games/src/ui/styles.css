@@ -57,12 +57,12 @@
   --accent-ring-soft: rgba(74, 90, 114, 0.12);
 }
 
-:root[data-game='game-2048'] {
-  --accent: #a86a17;
+:root[data-game='nonogram'] {
+  --accent: #6d5192;
   --accent-ink: #ffffff;
-  --accent-soft: #f6e6cd;
-  --accent-ring: rgba(168, 106, 23, 0.38);
-  --accent-ring-soft: rgba(168, 106, 23, 0.12);
+  --accent-soft: #eae4f2;
+  --accent-ring: rgba(109, 81, 146, 0.38);
+  --accent-ring-soft: rgba(109, 81, 146, 0.12);
 }
 
 :root[data-game='sliding-puzzle'] {
@@ -111,12 +111,12 @@
   --accent-ring-soft: rgba(147, 164, 189, 0.14);
 }
 
-:root[data-theme='dark'][data-game='game-2048'] {
-  --accent: #dda54a;
-  --accent-ink: #1b1408;
-  --accent-soft: #3b2c12;
-  --accent-ring: rgba(221, 165, 74, 0.42);
-  --accent-ring-soft: rgba(221, 165, 74, 0.14);
+:root[data-theme='dark'][data-game='nonogram'] {
+  --accent: #a893cf;
+  --accent-ink: #161020;
+  --accent-soft: #2e2740;
+  --accent-ring: rgba(168, 147, 207, 0.42);
+  --accent-ring-soft: rgba(168, 147, 207, 0.14);
 }
 
 :root[data-theme='dark'][data-game='sliding-puzzle'] {
@@ -647,6 +647,13 @@ button:disabled {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 8px;
+}
+
+/* Three-way choices (the review question) stack; every option reads whole. */
+.dialog-actions-column {
+  flex-direction: column;
+  align-items: stretch;
+  margin-top: 12px;
 }
 
 .result-facts {
