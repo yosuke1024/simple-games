@@ -27,3 +27,6 @@ apps/*/android/capacitor-cordova-android-plugins/build/
 .env
 .env.*
 !.env.example
+
+# Local Claude Code working files
+.claude/scheduled_tasks.lock
