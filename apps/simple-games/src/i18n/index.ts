@@ -34,24 +34,73 @@ export const LANGUAGE_NAMES: Record<Locale, string> = {
 
 /**
  * Legacy / alias primary subtags. 'in' is the historical Android code for
- * Indonesian. When Chinese support lands, script resolution (zh-TW → zh-Hant)
- * is added here — see docs/I18N_POLICY.md for the fallback table.
+ * Indonesian, and devices still report it.
  */
 const PRIMARY_ALIASES: Record<string, string> = {
   in: 'id',
 };
 
 /**
- * Maps one BCP-47 tag to a supported locale, or null. Region variants fall
- * back to their parent (en-IN → en, hi-Latn? no — script tags are ignored
- * until a script-split language is supported).
+ * Languages whose written form splits by script or region, where the primary
+ * subtag alone is not enough to pick a catalog. Chinese is the real case: a
+ * zh-TW reader cannot read Simplified. Everything is lower-cased before
+ * lookup, so the keys are too.
+ *
+ * The default is what a bare `zh` becomes — the more widely read script, and
+ * the same choice Android and the web platform make.
+ */
+const SCRIPT_RESOLUTION: Record<string, { readonly byRegion: Record<string, string>; readonly fallback: string }> = {
+  zh: {
+    byRegion: {
+      tw: 'zh-hant',
+      hk: 'zh-hant',
+      mo: 'zh-hant',
+      cn: 'zh-hans',
+      sg: 'zh-hans',
+      my: 'zh-hans',
+      hant: 'zh-hant',
+      hans: 'zh-hans',
+    },
+    fallback: 'zh-hans',
+  },
+  pt: {
+    // Only Brazilian Portuguese ships; European Portuguese readers get it
+    // rather than English, which is much closer to their language.
+    byRegion: { br: 'pt-br', pt: 'pt-br' },
+    fallback: 'pt-br',
+  },
+};
+
+const isSupported = (candidate: string): boolean =>
+  (SUPPORTED as readonly string[]).includes(candidate);
+
+/**
+ * Maps one BCP-47 tag to a supported locale, or null.
+ *
+ * Region variants fall back to their parent (en-IN → en). Script-split
+ * languages resolve through their own table first, because dropping the
+ * subtag there would hand a Traditional reader Simplified text.
  */
 export function matchLocale(tag: string): Locale | null {
   const lower = tag.toLowerCase();
-  if ((SUPPORTED as readonly string[]).includes(lower)) return lower as Locale;
-  const primary = lower.split('-')[0] ?? lower;
+  if (isSupported(lower)) return lower as Locale;
+
+  const parts = lower.split('-');
+  const primary = parts[0] ?? lower;
+
+  const script = SCRIPT_RESOLUTION[primary];
+  if (script) {
+    // Any subtag may carry the script or the region: zh-Hant, zh-TW, and
+    // zh-Hant-TW all have to land in the same place.
+    for (const part of parts.slice(1)) {
+      const resolved = script.byRegion[part];
+      if (resolved !== undefined && isSupported(resolved)) return resolved as Locale;
+    }
+    return isSupported(script.fallback) ? (script.fallback as Locale) : null;
+  }
+
   const aliased = PRIMARY_ALIASES[primary] ?? primary;
-  return (SUPPORTED as readonly string[]).includes(aliased) ? (aliased as Locale) : null;
+  return isSupported(aliased) ? (aliased as Locale) : null;
 }
 
 /**
