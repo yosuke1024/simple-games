@@ -1,267 +1,207 @@
-# 計画: ゲーム集アプリ化 + 第2弾 Sudoku(ナンプレ)
+# 計画 v2: Simple Games ゲーム集化・収益方針転換・Sudoku 以降のラインナップ
 
-作成日: 2026-07-30。このドキュメントは実装引き継ぎ用の計画書。実装者(人間または AI)は
-着手前に必ず [PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md) / [ARCHITECTURE.md](../ARCHITECTURE.md) /
-[NUMBER_MATCH_RULES.md](../NUMBER_MATCH_RULES.md) を読むこと。
+作成 2026-07-30 / 同日 v2 に全面改訂(ユーザーの「方針変更・設計更新指示」を反映)。
+このドキュメントは実装引き継ぎ用の計画書。着手前に必ず
+[PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md) / [ARCHITECTURE.md](../ARCHITECTURE.md) /
+[BRAND.md](../BRAND.md) / [ADS_POLICY.md](../ADS_POLICY.md) を読むこと。
 
-## 0. 決定事項(このセッションでの合意)
+## 0. 決定事項(確定)
 
-- **Number Match を単体アプリとして出すのをやめ、複数ゲームを収録した 1 つの
-  「ゲーム集アプリ」として出す。** Sudoku はその第2収録タイトル。
-- コンセプトは全タイトル共通で不変:
-  **Simple. Offline. Lightweight. Unobtrusive. Respectful.**
-  (シンプル。オフライン。軽量。邪魔しない。急かさない。)
-- Sudoku の正式ルールは新設する `docs/SUDOKU_RULES.md` を唯一のソースとする
-  (NUMBER_MATCH_RULES.md と同じ位置づけ。実装・Hint・テストはすべてこの文書に従う)。
+### プロダクト形態
 
-### 確定した設計判断(2026-07-30 ユーザー決定)
+- 各ゲームを独立アプリで出す方針を**廃止**。複数のクラシックゲームを収録した単一の
+  「Simple Games」アプリに、継続的にゲームを追加していく。
+- appId: `com.pixapps.simplegames` / appName: `Simple Games: Offline Puzzles` /
+  ランチャー表示名: `Simple Games`
+- CI リリースタグ: `simple-games-v*`(ワークフローは `android-release.yml`)
+- リポジトリは Public(https://github.com/yosuke1024/simple-games)。Apache-2.0。
+  名称・ロゴ・ブランド素材はライセンス対象外を維持。
+
+### ブランド(Honest by design)
+
+中心思想: **Honest by design. Simple games, built in the open.**
+「私たちの説明を信じる必要はありません。ソースコードを公開しています。」
+OSS は技術者向け訴求ではなく、ブランドプロミスを誰でも検証できる仕組みとして扱う。
+ストア第1訴求は「1つのアプリでクラシックゲーム集・完全オフライン」であり、OSS は最後段。
+
+必須原則(PRODUCT_PRINCIPLES.md に明文化):
+No paywalls / No subscriptions / Banner ads only / Optional one-time ad removal /
+All games playable offline / No account required / No streaks or artificial urgency /
+Local-first game data / Low battery consumption / Public source code
+
+### 広告(バナー専用)
+
+- 使用する広告は **Anchored Adaptive Banner のみ**。
+- Interstitial / Rewarded / Rewarded Interstitial / App Open / Native /
+  盤面に重なる広告 / 進行を止める広告 / 視聴による機能解放は**すべて廃止・禁止**。
+- オフライン時は広告を表示せず、広告リクエストも行わない。
+  広告・同意処理のあらゆる失敗でゲームを止めない(従来どおり)。
+- 広告への言及は謝罪調・強制調にしない。初回起動時に課金ダイアログを出さない。
+
+### 広告削除の買い切り課金
+
+- 商品: 「Remove Ads & Support Simple Games / 広告を削除して Simple Games を支援」
+- 基準価格 USD 3.99。各国価格はストアの自動調整。サブスクではない。一度だけ。
+- 購入でアプリ内バナーを永久に削除。**将来追加されるゲームにも適用**。購入復元あり。
+- ゲーム機能は無料ユーザーと完全に同一。課金専用ゲーム・機能は作らない。
+- 「Lifetime Access」という表現は使わない(無期限なのは広告削除権)。
+
+### ゲームラインナップ
+
+収録済み: Number Match。
+初期ラインナップ候補(実装順の提案): **Sudoku → 2048 → Sliding Puzzle → Minesweeper**。
+後続候補: Nonogram(ビルド時生成・検証パイプライン設計後)/ Solitaire(共通 UI と
+保存基盤の安定後)/ Kakuro / Futoshiki / Takuzu。
+すべてローカル生成で完結し、コンテンツサーバーを必要としないものを優先する。
+
+### Sudoku の確定済み設計判断(v1 から継続)
 
 | 項目 | 決定 |
 | --- | --- |
-| appId | `com.pixapps.simplegames` |
-| アプリ名 | `Simple Games: Offline Puzzles` |
-| CI タグ規約 | `simple-games-v*` |
-| デイリーの難易度 | **毎日 Medium 固定**(曜日カーブは採らない) |
-| ミス即時表示のデフォルト | **オン**(設定でオフ可) |
-| Sudoku のレベル数 | 1〜999(Number Match に揃える) |
+| デイリーの難易度 | 毎日 Medium 固定 |
+| ミス即時表示のデフォルト | オン(設定でオフ可) |
+| レベル数 | 1〜999(Number Match に揃える) |
+| プレイ中のタイマー表示 | しない(内部記録のみ。クリア画面と統計でだけ表示) |
+| ミス上限・ゲームオーバー | なし |
 
-これは README / ARCHITECTURE.md の「各ゲームは独立したアプリとして公開」という記述を
-**覆す方針転換**である。Number Match は未リリースなので移行コスト・データ移行は発生しない。
-関連文書の更新はマイルストーン M1 に含む。
+## 1. 対案・解釈(指示に対する実装者の判断 — 異議があれば言うこと)
 
-## 1. 全体アーキテクチャ(コレクション化)
+1. **ストリークの扱い**: 指示は「ストリークを強制しない」+ 必須原則「No streaks or
+   artificial urgency」。Number Match には連続日数カウンタ(表示+ロジック)が既にある。
+   → **ストリーク表示・カウンタは削除**し、デイリーの「達成日カレンダー」だけ残す
+   (記録は誠実、連続日数は煽り、という線引き)。統計スキーマからも streak 系を落とす
+   (未リリースなので互換負債なし)。
+2. **Analytics / Remote Config**: どちらも現状 Firebase 未配線のスタブ。指示 §14 の
+   「初期リリースでは Analytics を使用しない選択肢」を採用し、**両方とも削除**する。
+   バナー専用になった今、Remote Config の主用途(インタースティシャル頻度制御)も
+   消滅している。「公開コードに追跡コードが存在しない」ことが最も強い透明性の証明。
+   将来必要になれば adapter 差し込み点ごと復活させる(この計画書が復活手順の目印)。
+3. **共通パッケージ**: 指示 §11 の概念図にある packages/shared-ui・game-contracts・
+   storage への分割は**今はやらない**(指示自身の「現在の実装に合わせて最小限」に従う)。
+   ゲームはフォルダ分離、共有はアプリ内シェルに留める。重複が3ゲーム分たまってから抽出。
+4. **i18n**: 5言語の単一カタログ(型で全キー強制)を維持。既存キーの一括改名はせず、
+   新ゲームのキーだけ `sudoku*` などの接頭辞を付ける。カタログが肥大したら分割。
+5. **タグライン修正**: 「No purchases / 課金なし」は広告削除 IAP の存在と矛盾するため
+   「No paywalls / 機能課金なし」系の表現に改める(アプリ内・ストア・文書すべて)。
 
-### 1.1 方針
-
-- 単一の Vite + Capacitor アプリ `apps/simple-games` に再編する。
-  ゲームごとの workspace パッケージ分割は**しない**
-  (「巨大な共通ゲームフレームワークを作らない」原則を維持。フォルダ分割で足りる)。
-- `git mv` で `apps/number-match` → `apps/simple-games` に移動し、履歴を保つ。
-- 各ゲームは `src/games/<gameId>/` 配下に自己完結で置く。シェル(コレクションホーム、
-  設定、広告、ストレージ基盤、i18n 基盤)だけを共有する。
-
-### 1.2 ディレクトリ構成(移行後)
+## 2. アーキテクチャ(v2)
 
 ```text
 apps/simple-games/src/
 ├── app/                    # シェル: ルート App、ルーティング、ゲームレジストリ
 ├── games/
-│   ├── number-match/
-│   │   ├── game/           # 既存 src/game/ をそのまま移動(Pure TS、変更しない)
-│   │   ├── state/          # 既存 AppContext(NumberMatchProvider に改名)+ progress/stats ロジック
-│   │   ├── storage/        # NM 固有スキーマ(saveGame/saveDaily/stats/progress/flags)
-│   │   ├── i18n/           # NM 固有文言(5 言語)
-│   │   └── ui/             # NM の screens / BoardView など
-│   └── sudoku/             # 第2弾(構成は number-match と同型)
-├── state/                  # 共有: SettingsContext(言語/テーマ/音/振動/Reduced Motion)
-├── storage/                # 共有: kv.ts / repo.ts / SchemaDef 基盤 / 共有スキーマ
-├── services/               # 共有: ads / analytics / remoteConfig / network / sound / haptics
-├── i18n/                   # 共有: 言語解決 + シェル文言。ゲーム別カタログをマージ
-└── ui/                     # 共有: CollectionHomeScreen / SettingsScreen / 共通コンポーネント
+│   ├── number-match/       # game/ state/ storage/ ui/ で自己完結
+│   └── sudoku/             # 第2弾(M3〜)。以後のゲームも同型
+├── monetization/           # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
+├── services/               # ads(バナーのみ) / network / sound / haptics
+├── state/                  # SettingsContext(共有設定)
+├── storage/                # kv / repo / validate / 共有スキーマ
+├── i18n/                   # 言語解決 + 5言語カタログ
+└── ui/                     # コレクションホーム / 設定 / About / 共通コンポーネント
 ```
 
-レイヤー規則は現行どおり: `games/*/game/` は他レイヤーを import しない。
-`games/A/` から `games/B/` への import は禁止。シェルはゲームの内部実装を知らない。
+- レイヤー規則(不変): `games/*/game/` は Pure TS で他レイヤーを import しない。
+  `games/A/` → `games/B/` の import 禁止。シェルはゲーム内部に踏み込まない。
+- ゲームレジストリは `{ id, titleKey, Icon, accent, Root }` 程度の薄い契約のみ。
+  Plugin System 化しない。
+- ハードウェア戻るボタン: ゲーム内ホーム→コレクションへ、コレクション→アプリ最小化。
+- 電池: ポーリングなし・常時通信なし・画面外ゲームはアンマウント・保存はイベント駆動
+  (可視性変化 / pause / 状態遷移時)+ プレイ時計は ref 加算のみ(再レンダリングなし)。
 
-### 1.3 ゲームレジストリ(薄い契約。フレームワーク化しない)
+### ストレージキー
 
-```ts
-// src/app/registry.ts — 契約はこの型だけに留める
-interface GameModule {
-  id: 'number-match' | 'sudoku';
-  titleKey: MessageKey;          // コレクションホームに出す名前
-  Icon: ComponentType;           // ホームカード用アイコン(SVG)
-  Root: ComponentType;           // ゲームのルート(内部に自前の画面遷移を持つ)
-}
-```
-
-- シェルのルーティングは `{ view: 'collection' } | { view: 'settings' } | { view: 'game', gameId }`
-  程度の判別 union で十分。URL ルーターは導入しない。
-- 各ゲームの `Root` は現行 NM の `App.tsx` 相当(tutorial/home/levels/daily/game/stats を内包)。
-  「コレクションホームに戻る」導線を各ゲームのホーム画面に追加する。
-- 統計(stats)はゲーム別に持つ。シェル横断の統計画面は作らない。
-
-### 1.4 ストレージのキー設計
-
-未リリースのためデータ移行は不要。キーだけ整理する:
-
-- 共有: `sg.settings` / `sg.adState` / `sg.rcCache`(現 `nm.settings` 等から改名)
-- Number Match 固有: `nm.saveGame` / `nm.saveDaily` / `nm.stats` / `nm.progress` / `nm.flags`(現状維持)
-- Sudoku 固有: `sd.saveGame` / `sd.saveDaily` / `sd.stats` / `sd.progress` / `sd.flags`
-
-`kv.ts` / `repo.ts` / `SchemaDef` の仕組みは変更なし。schemaVersion 運用も現行踏襲。
-
-### 1.5 i18n
-
-- 言語解決(`resolveLocale`)・`translate` は共有のまま。
-- カタログは「シェル文言」+「ゲーム別文言」に分割し、キーに `nm.` / `sd.` 接頭辞を
-  付けてビルド時に 1 つの `Messages` にマージする(型はキーの union で保たれる)。
-- 対応言語は現行の 5 言語(en/ja/hi/th/id)を Sudoku でも全て揃える。
-
-### 1.6 広告(Unobtrusive の維持)
-
-- AdMob App ID はコレクションで 1 つ。バナー + インタースティシャルのみ(現行方針)。
-- `interstitialPolicy` / `adState` は**アプリ全体で共有**にする。頻度上限はゲーム横断で
-  効かせる(ゲームを移動しても広告頻度が増えない)。ポリシーの純関数・テストは現行維持。
-
-### 1.7 アプリ ID・名前・配布
-
-- appId: `com.pixapps.simplegames`(決定済み)
-- appName: `Simple Games: Offline Puzzles`(決定済み)
-- appId が変わるため Capacitor の `android/` プロジェクトは再生成する
-  (アイコン・スプラッシュは `@capacitor/assets` で再生成。ブランド資産は流用)。
-- CI: `number-match-android.yml` → `android-release.yml` に改名、タグを `simple-games-v*`
-  に変更(決定済み)。手動実行 / タグ起動のみという原則は維持。
-- `store/listing.md` はコレクションとして書き直す(収録タイトル一覧を含む)。
-
-### 1.8 文書の更新(方針転換の反映)
-
-- README.md: アプリ表を「収録ゲーム」表に変更。「独立したアプリとして公開」の段落を削除。
-- ARCHITECTURE.md: §1.2 の構成へ書き換え。「アプリ別リリース」記述を「単一アプリ、
-  収録ゲームはフォルダ分割」に変更。
-- PRODUCT_PRINCIPLES.md: 「あるゲームのリリースが別ゲームのリリースを強制しない」を
-  「収録ゲームの追加・更新はアプリのリリースとして一体で行う。ただしゲーム追加が
-  既存ゲームの挙動を変えてはならない」に置き換え。他の原則は全て不変。
-
-## 2. Sudoku 仕様の骨子(SUDOKU_RULES.md に正式化する内容)
-
-M2 で `docs/SUDOKU_RULES.md` を書く際の設計方針。番号章立ては NUMBER_MATCH_RULES.md に倣う。
-
-### 2.1 基本ルール
-
-- 9×9、3×3 ボックス。完成盤から一意解を保証してマスを抜いた盤面を提示する。
-- 入力: マス選択 → 数字パッド(1〜9 / 消す)。メモ(鉛筆書き)モードあり。
-- 数字を置いたとき、同じ行・列・ボックスのメモから該当数字を自動で消す。
-- 数字パッドには各数字の残数(9 − 盤上の個数)を表示し、置き切った数字は無効化する。
-
-### 2.2 ミスと支援(Respectful の具体化)
-
-- **タイマーはプレイ中に表示しない**(NM と同じ決定。経過時間は内部でのみ記録し、
-  クリア画面と統計でだけ見せる)。
-- **ミス上限なし・ゲームオーバーなし**(3 ミス失格のような仕様は採らない)。
-  正解と異なる数字を置いたらミスとして数えるだけ。
-- ミスの即時表示(正解と違うマスを赤くする)は設定でオン/オフ。**デフォルトはオン**(決定済み)。
-  行・列・ボックス内の重複(ルール違反)の強調は常時オン。
-- Undo 無制限。Hint 無制限・広告不要(ブランド原則)。
-
-### 2.3 Hint(教える Hint)
-
-- Hint は「次に論理的に確定できるマス」を技法名つきで指す
-  (例:「この行で 5 が入るのはここだけ」)。答えを埋めるだけの Hint にしない。
-- 実装はグレーダー(§3.4)の解法パスを流用する。使用回数は統計に記録。
-
-### 2.4 難易度(技法ティア定義)
-
-推測(仮置き・試行錯誤)なしで解けることを全難易度で保証する。
-
-| 難易度 | 必要技法(最高到達) |
+| キー | 内容 |
 | --- | --- |
-| Easy | Naked Single / Hidden Single |
-| Medium | + Locked Candidates(pointing/claiming)/ Naked Pair / Hidden Pair |
-| Hard | + Naked・Hidden Triple / X-Wing |
+| `sg.settings` | 共有設定(言語/テーマ/音/振動/Reduced Motion) |
+| `sg.iap` | 広告削除購入状態のローカルキャッシュ |
+| `nm.*` | Number Match(saveGame / saveDaily / stats / progress / flags) |
+| `sd.*` | Sudoku(同型。M3 で定義) |
 
-グレード = 論理解法パスで必要になった最高ティア。Expert 以上の技法(chains 等)は
-初期リリースでは扱わない(将来の拡張とする)。
+ゲームごとに保存領域を分離し、一方の破損が他方へ波及しない(validate は従来方式)。
+`adState` / `rcCache` は廃止。「ローカルデータ削除」は sg.* + 全ゲームのキーを消す。
 
-### 2.5 モード
+### 広告実装(バナーのみ)
 
-- **レベルモード**: NM と同じく 1〜999 の進行。level → (難易度ティア, seed) を決定的に
-  導出。序盤はヒント多めの Easy、緩やかに Medium/Hard を混ぜていく
-  (正確なカーブは SUDOKU_RULES.md で表として確定させる)。
-- **デイリー**: 日付 seed で決定的に生成。NM 同様、過去日を遡って挑戦可能。
-  ストリークは NM の `effectiveDailyStreak` と同じ寛容な定義を使う。
-  **難易度は毎日 Medium 固定**(決定済み)。曜日で難易度が変わると「今日は当たり日/外れ日」
-  という圧を生むため採らない。
-- 中断は NM の §14 と同じく **レベル用・デイリー用の 2 スロット独立保持**。
+- `services/ads/banner.ts`: AdMob 初期化(起動後 fire-and-forget)、Anchored Adaptive
+  Banner の表示/非表示、UMP 同意(失敗してもゲーム継続)。オフライン時・購入済み時は
+  リクエストしない。dev はテスト ID、本番は `VITE_ADMOB_BANNER_ID`(未設定なら無効)。
+- `BannerSlot` は従来どおり高さ確保方式(盤面のレイアウトシフトなし)。購入済みなら
+  スロットごと消す。
 
-### 2.6 スコア
+### 広告削除 IAP の基盤(今回はコードの土台まで)
 
-- スコアは**作らない**。クリア画面は「クリア / 経過時間 / ミス数 / Hint 数」のみ。
-  統計は難易度別クリア数・ベスト/平均時間・デイリーカレンダー。
-  (NM の score-to-beat に相当する競争要素は Sudoku では時間だが、プレイ中に見せない
-  ことで「急かさない」を守る。)
+- `monetization/adRemoval.ts`: `AdRemovalStore` 契約
+  (`isAvailable` / `getPrice` / `purchase` / `restore`)+ 実装差し替え点。
+  既定実装は「ストア未接続」(購入 UI は非表示、購入済みキャッシュだけ尊重)。
+- `sg.iap` スキーマ: `{ schemaVersion, adRemovalPurchased, purchasedAt }`。
+  購入・復元成功時に更新。オフラインでも購入済み状態は端末キャッシュで有効。
+- 設定/About 画面: 静かな説明文(指示 §6 の文言)+ Remove Ads 行 + 購入復元。
+  何度も購入を促さない。初回起動ダイアログなし。
+- 本番接続に必要な人間作業は §5 に列挙。プラグイン選定(Capacitor 向け Google Play
+  Billing)は接続時に行い、ID 類はハードコードしない。
 
-### 2.7 チュートリアル
+### アプリ内 OSS 導線(設定/About)
 
-3 ステップ以内(原則): ①行・列・ボックスに 1〜9 ②マスを選んで数字を置く
-③メモと Hint の使い方。初回起動時のみ。ゲームごとに独立。
+View Source Code / Report a Bug / Suggest a Game / View Licenses /
+Remove Ads & Support Simple Games。リンク先は GitHub(オフライン時は開けなくても
+画面自体は正常表示、失敗でアプリを止めない)。
 
-## 3. Sudoku 実装設計(`src/games/sudoku/game/` — Pure TS)
+## 3. Sudoku 設計(v1 から維持。変更点: 広告関連の記述を削除)
 
-NM の `game/` と同じ流儀(イミュータブル、依存なし、全モジュール単体テスト)。
+正式ルールは `docs/SUDOKU_RULES.md`(M2 で新設)を唯一のソースとする。
 
-| モジュール | 内容 |
-| --- | --- |
-| `types.ts` | `Digit`, 81 マスの `Grid`, `Candidates`(ビットマスク), `Puzzle`, `SudokuSession` 等 |
-| `rng.ts` | NM の `rng.ts` と同じ seeded RNG(コピーする。共通化は第3弾で重複確認後) |
-| `solver.ts` | 候補ビットマスク + 単純伝播 + バックトラック。**解数カウント(2 で打ち切り)** |
-| `generator.ts` | 完成盤生成(ランダム化バックトラック)→ 180° 対称に掘る → 一意性維持 → グレーダーで目標ティア確認。目標に届かなければ seed を派生させ再試行(試行上限あり、決定的) |
-| `grader.ts` | §2.4 の技法を人間の解法順(安い技法優先)で適用し、解法パスと最高ティアを返す |
-| `engine.ts` | `place / erase / toggleNote / undo` の状態遷移、ミス判定、メモ自動消去、クリア判定 |
-| `hint.ts` | grader の次手を Hint(対象マス + 技法 + 説明キー)に変換 |
-| `levels.ts` | level → 難易度ティア + seed 導出(カーブは SUDOKU_RULES.md の表に従う) |
-| `daily.ts` | 日付文字列 → seed / 難易度。NM の daily.ts と同じ日付規約 |
-| `session.ts` | レベル/デイリーのセッション生成・進行・再開 |
-| `serialize.ts` | schemaVersion 付き保存形式。NM 同様 round-trip + 互換性フィクスチャをテスト |
+- 9×9。完成盤から一意解保証で掘る。メモ(鉛筆書き)、同数字・行列ボックスの
+  ハイライト、数字パッドに残数表示。
+- ミス: 正解と異なる数字がミス。上限なし。即時表示は設定制(既定オン)。
+  ルール違反(行・列・ボックス内重複)の強調は常時。
+- Hint: グレーダーの次の一手を技法名つきで指す「教える Hint」。無制限・無料。
+- 難易度ティア: Easy = Naked/Hidden Single。Medium = + Locked Candidates,
+  Naked/Hidden Pair。Hard = + Triple, X-Wing。全難易度で推測不要を保証。
+- モード: レベル 1〜999(決定的 seed、カーブは SUDOKU_RULES.md の表で確定)+
+  デイリー(毎日 Medium、過去日遡り可)。中断はレベル/デイリー独立 2 スロット。
+- スコアなし。クリア画面は 時間 / ミス数 / Hint 数。統計は難易度別クリア数・
+  ベスト/平均時間・達成日カレンダー(ストリーク表示なし — §1-1)。
+- 実装モジュール(`games/sudoku/game/`): types / rng / solver(解数カウント2で打切)/
+  generator(180°対称に掘る・目標ティア・試行上限つき決定的リトライ)/ grader /
+  engine / hint / levels / daily / session / serialize。
+  性能予算: Easy·Medium 生成 50ms 未満、Hard 200ms 未満(テストで計測)。
+  逃げ道: 対称性緩和 → 試行調整 → (最後)ビルド時パック。
+- テスト: solver の解数検証 / generator プロパティテスト(一意解・ティア一致・
+  決定性 golden)/ grader 技法別フィクスチャ / serialize round-trip + 互換 golden。
 
-### 3.1 決定性と性能
+## 4. マイルストーン
 
-- level / 日付 → seed → **全ユーザーで同一盤面**。golden テスト(既知 seed → 既知盤面)で
-  将来のリファクタリングによる盤面変化を検出する(NM の compatibility.test.ts と同じ発想)。
-- 生成は端末上で同期実行。性能予算: Easy/Medium 50ms 未満、Hard 200ms 未満(テストで測る)。
-  超える場合の逃げ道は「対称性の緩和 → 試行上限の調整 → (最後の手段)ビルド時生成した
-  パズルパック同梱」の順。パック方式は初期リリースでは採らない。
-
-### 3.2 テスト戦略
-
-- solver: 既知パズル(一意解 / 複数解 / 解なし)での解数カウント検証。
-- generator: プロパティテスト — 任意 seed で「一意解」「目標ティア一致」「対称性」「決定性」。
-- grader: 技法ごとに最小盤面フィクスチャを用意し、その技法が検出されることを個別に検証。
-- engine/serialize: NM と同水準(遷移の不変条件、round-trip、旧バージョン読み込み)。
-- UI: BoardView のインタラクションテスト(NM の BoardView.test.tsx に倣う)。
-
-## 4. Sudoku UI(`src/games/sudoku/ui/`)
-
-- `SudokuBoardView`: CSS Grid の 9×9。3×3 境界線は「図形として一体に見える」現行の
-  盤面アウトラインの流儀に合わせる。選択マスの行・列・ボックス淡色ハイライト、
-  同数字ハイライト、重複の警告表示。セルは button 要素 + aria-label(a11y)。
-- `DigitPad`: 1〜9(残数表示つき)/ 消去 / メモ切替 / Undo / Hint。
-- 画面: `SudokuHomeScreen` / `LevelSelectScreen` / `DailyScreen` / `GameScreen` /
-  `TutorialScreen`。NM の同名画面の構造・スタイルを踏襲(コードは共有しない。
-  見た目の共通言語は styles.css のデザイントークンで揃える)。
-- `ResultOverlay` / `ConfirmDialog` / `Toggle` / `BannerSlot` 等は共有 `src/ui/` へ移して再利用。
-- Reduced Motion 対応は全アニメーションで現行方針を踏襲。
-
-## 5. マイルストーン(各段階で lint / typecheck / test / build 緑を維持)
-
-| # | 内容 | 完了条件 |
+| # | 内容 | 状態 |
 | --- | --- | --- |
-| M0 | 未コミットの作業ツリーを整理・コミット | main がクリーン ✅ 2026-07-30 完了 |
-| M1 | コレクション移行: `apps/simple-games` へ改名、§1 の構造へ再配置、シェル(コレクションホーム + 共有設定)新設、appId/CI/文書/listing 更新 | NM の全テストが新配置で緑。Web + Android 起動確認。**ゲームロジックのコード変更ゼロ** |
-| M2 | `docs/SUDOKU_RULES.md` 執筆(§2 を正式化、§6 の未決を解消) | ルール文書レビュー完了 |
-| M3 | Sudoku コア: types / rng / solver / generator / grader + テスト | 全難易度で生成が性能予算内・一意解・ティア一致 |
-| M4 | Sudoku プレイ層: engine / hint / levels / daily / session / serialize + テスト | golden・round-trip 含め緑 |
-| M5 | Sudoku UI + i18n(5 言語)+ シェル統合 + チュートリアル | 実機相当(エミュレータ)で一通りプレイ可能 |
-| M6 | 仕上げ: 統計、広告接点(ゲーム横断頻度)、アイコン/スプラッシュ、store listing、Android リリースビルド | リリース候補ビルド完成 |
+| M0 | main クリーン化 | ✅ 2026-07-30 |
+| M1 | ゲーム集移行: シェル+レジストリ+NM 再配線、バナー専用化(interstitial/analytics/remoteConfig 削除)、IAP 基盤、OSS 導線、i18n、文書全面整合 | 本セッションで実施 |
+| M2 | `docs/SUDOKU_RULES.md` 執筆(§3 の正式化) | |
+| M3 | Sudoku コア(types/rng/solver/generator/grader)+ テスト | |
+| M4 | Sudoku プレイ層(engine/hint/levels/daily/session/serialize)+ テスト | |
+| M5 | Sudoku UI + i18n + シェル統合 + チュートリアル | |
+| M6 | 2048(盤ロジックは小さい。undo・統計・デイリーは共通パターン踏襲) | |
+| M7 | Sliding Puzzle(画像なし数字タイル・可解性保証シャッフル) | |
+| M8 | Minesweeper(初手安全保証・旗/開閉 UI) | |
+| M9 | リリース仕上げ: アイコン、store listing 最終化、IAP 本番接続、Android ビルド | |
 
-規模感: M1 と M3 が重い(それぞれ NM の 1 モジュール群に相当)。M3 の中では grader が
-最大の工数。M4 以降は NM の型が丸ごと参考になるため比較的軽い。
+各マイルストーンで lint / typecheck / test / build 緑を維持。ゲーム追加が既存ゲームの
+挙動・保存データを変えないこと。
+
+## 5. 人間(ストア側)作業 — コードでは代替不可
+
+1. Google Play Console: 新アプリ `com.pixapps.simplegames` の作成(旧 numbermatch の
+   掲載は作らない)。
+2. AdMob: コレクション用アプリ登録 + **バナー広告ユニットのみ**作成。
+   Secrets `ADMOB_APP_ID` / `ADMOB_BANNER_ID` を GitHub に設定(interstitial 系は不要)。
+3. Play Console: アプリ内商品(管理された商品)`remove_ads` を USD 3.99 で作成。
+   国別価格は自動調整に任せる。
+4. 署名鍵の作成・保管(リポジトリに含めない)。
+5. ストア掲載素材(スクリーンショット等)とプライバシーポリシーのホスティング URL。
+6. (接続時)Capacitor 向け課金プラグインの選定・動作確認は人間のストア環境が必要。
 
 ## 6. 残る未決事項
 
-§0 の表で 5 件すべて決定済み。M2(SUDOKU_RULES.md 執筆)で確定させるのは以下のみ:
-
-1. **レベル進行の難易度カーブ**: level 1〜999 のどこで Easy → Medium → Hard を混ぜるか
-   (§2.5)。表として SUDOKU_RULES.md に固定する。
-2. **Hint の説明文の粒度**: 技法名を出すか、平易な言い換えだけにするか(5 言語分の負荷と
-   分かりやすさのバランス)。
-
-## 7. リスクと対策
-
-- **grader の品質が体感難易度を決める**(最大リスク)。技法単位のフィクスチャテストを
-  先に書き、既知の公開パズル(難易度既知)を数十問コーパスとして照合する。
-- **Hard 生成の速度**: §3.1 の逃げ道を順に適用。性能テストを M3 の完了条件に含める。
-- **hi/th/id の翻訳品質**: 用語(メモ、ボックス等)は既存 NM カタログの語彙に揃え、
-  数字パッドなど文字に依存しない UI を優先する。
-- **appId 変更に伴う android/ 再生成**: 手作業が入るため M1 に Android 起動確認まで含めた。
-  署名鍵・AdMob 本番 ID は従来どおり環境変数注入(リポジトリに含めない)。
+1. Sudoku レベル 1〜999 の難易度カーブ表(M2 で確定)。
+2. Sudoku Hint 説明文の粒度(技法名を出すか。5言語の負荷との兼ね合い。M2 で確定)。
+3. 2048 以降の各ゲーム仕様書(各実装マイルストーン冒頭で `docs/<GAME>_RULES.md` を書く)。
+4. iOS 展開の時期(現状 Android のみ。IAP 文言はストア中立にしておく)。
