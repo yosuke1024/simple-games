@@ -17,9 +17,20 @@
   --accent-ring-soft: rgba(63, 91, 143, 0.12);
   --warn: #c2603f;
   --warn-soft: #f6e4db;
+  /* Stone: heavier than the board it sits on, and colored apart from both the
+     accent (selection) and the warn (something you did wrong). */
+  --stone: #9aa1ab;
+  --stone-line: #7f8792;
+  /* Wild: the accent's warm counterpart, so it reads as a gift, not a warning. */
+  --wild: #f0e2c4;
+  --wild-ink: #8a6a2f;
+  --wild-line: #cbab6d;
   --shadow: 0 4px 18px rgba(35, 42, 51, 0.13);
   --radius: 14px;
   --tap-size: 48px;
+  /* The display voice: rounded numerals for the title, tiles, and scores.
+     Nunito is bundled (latin subset only); everything else stays system-ui. */
+  --font-display: 'Nunito', ui-rounded, system-ui, sans-serif;
 }
 
 :root[data-theme='dark'] {
@@ -36,6 +47,11 @@
   --accent-ring-soft: rgba(125, 156, 207, 0.14);
   --warn: #d9805f;
   --warn-soft: #3a2a22;
+  --stone: #4b535f;
+  --stone-line: #616b79;
+  --wild: #3a3122;
+  --wild-ink: #e8cf9a;
+  --wild-line: #7d6634;
   --shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
 }
 
@@ -124,6 +140,18 @@ button:disabled {
   color: var(--ink-soft);
 }
 
+/* Inline icons (✓ etc.) sit on the text baseline like a character would. */
+.badge-icon {
+  vertical-align: -0.15em;
+}
+
+.settings-row-chevron {
+  display: inline-flex;
+  align-items: center;
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
 .icon-btn:active {
   background: var(--accent-soft);
 }
@@ -192,14 +220,32 @@ button:disabled {
 
 .home-hero {
   text-align: center;
-  padding: 12vh 24px 24px;
+  padding: 8vh 24px 20px;
+}
+
+/* The series mark: one accent-tinted tile. Swapping the glyph and accent is
+   all a future title needs to make this its own. */
+.home-logo {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
 }
 
 .home-title {
+  font-family: var(--font-display);
   font-size: 34px;
   font-weight: 800;
   margin: 0 0 8px;
-  letter-spacing: 0.5px;
+  letter-spacing: -0.3px;
 }
 
 .home-tagline {
@@ -219,19 +265,56 @@ button:disabled {
   flex: 1;
 }
 
+/* Secondary destinations: four quiet chips instead of a pile of text links. */
+.home-chips {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.home-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 66px;
+  padding: 10px 4px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  transition: transform 0.06s ease;
+}
+
+.home-chip:active {
+  transform: scale(0.97);
+}
+
+.home-chip-icon {
+  font-size: 20px;
+  color: var(--accent);
+}
+
 .home-links {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .brand-footer {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
   padding: 16px;
   color: var(--ink-soft);
 }
@@ -285,6 +368,7 @@ button:disabled {
 }
 
 .game-score {
+  font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
   color: var(--accent);
   font-weight: 700;
@@ -310,11 +394,43 @@ button:disabled {
 }
 
 .board {
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+/* One DOM node per board row so a fully-cleared row can close up as a row
+   (grid-template-rows 1fr → 0fr) instead of snapping away. Browsers without
+   fr-transitions simply snap — the same behavior as before. */
+.board-row {
+  display: grid;
+  grid-template-rows: 1fr;
+  margin-bottom: 5px;
+  transition:
+    grid-template-rows 0.3s ease,
+    margin-bottom 0.3s ease,
+    opacity 0.22s ease;
+}
+
+.board-row:last-child {
+  margin-bottom: 0;
+}
+
+.board-row-inner {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   gap: 5px;
-  max-width: 440px;
-  margin: 0 auto;
+  min-height: 0;
+}
+
+.row-collapsing {
+  grid-template-rows: 0fr;
+  margin-bottom: 0;
+  opacity: 0;
+}
+
+/* Clip only while closing: any other time it would cut the hint pulse. */
+.row-collapsing .board-row-inner {
+  overflow: hidden;
 }
 
 .cell {
@@ -323,6 +439,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
   border-radius: 10px;
+  font-family: var(--font-display);
   font-size: clamp(16px, 4.6vw, 24px);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -347,6 +464,33 @@ button:disabled {
   border: none;
 }
 
+/* A stone: an obstacle, not a tile you can act on. Solid and flat, with no
+   press affordance, because nothing happens when it is tapped. It reads as
+   heavier than the board rather than as an error — the mistake is the route
+   chosen through it, not the stone itself. */
+.cell-stone {
+  background: var(--stone);
+  border: 1px solid var(--stone-line);
+  /* An inset edge to sit it into the board instead of on top of it. */
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.16);
+}
+
+/* A wild: pairs with any number. Warm where the accent is cool, so it is
+   legible as "this helps you" next to a selected tile. */
+.cell-wild {
+  background: var(--wild);
+  border-color: var(--wild-line);
+  color: var(--wild-ink);
+}
+
+/* Selection has to win over the wild's own coloring, or a selected wild would
+   look untouched. */
+.cell-wild.cell-selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
 .cell-dot {
   width: 5px;
   height: 5px;
@@ -358,6 +502,15 @@ button:disabled {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-ink);
+}
+
+/* The matched pair's send-off: a quick accent flash and lift, settling into
+   the cleared look the model already holds. Runs once, forwards, so the swap
+   to the real cleared cell afterwards is invisible. */
+.cell-clearing {
+  position: relative;
+  z-index: 1;
+  animation: match-pop 0.26s ease forwards;
 }
 
 .cell-hint {
@@ -377,6 +530,48 @@ button:disabled {
 .cell-blocking {
   border: 2px dashed var(--warn);
   color: var(--warn);
+}
+
+/* The route the rejected pair would have taken, drawn as a trail of dots
+   through the empty slots it crosses. Without it the reading order's row-end →
+   next-row-start wrap is invisible, and a blocker sitting past the row's end
+   looks unrelated to the two tiles that were tapped.
+
+   A trail, not a fill: a reading-order route can span most of the board, and
+   filling those cells reads as noise rather than as one line. */
+.cell-path .cell-dot {
+  width: 9px;
+  height: 9px;
+  background: var(--warn);
+}
+
+/* Cleared cells are dimmed by default; the trail has to stay readable. */
+.cell-cleared.cell-path {
+  opacity: 1;
+}
+
+@keyframes match-pop {
+  0% {
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: var(--accent-ink);
+    transform: scale(1);
+    opacity: 1;
+  }
+  45% {
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: var(--accent-ink);
+    transform: scale(1.16);
+    opacity: 1;
+  }
+  100% {
+    background: var(--surface-recessed);
+    border: 1px solid var(--line);
+    color: transparent;
+    transform: scale(1);
+    opacity: 0.55;
+  }
 }
 
 @keyframes hint-pulse {
@@ -509,6 +704,7 @@ button:disabled {
 
 .result-facts dd {
   margin: 0;
+  font-family: var(--font-display);
   font-size: 22px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -617,6 +813,7 @@ button:disabled {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
+  font-family: var(--font-display);
   font-size: 24px;
   font-weight: 700;
 }
@@ -824,6 +1021,7 @@ button:disabled {
 }
 
 .level-cell-number {
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 17px;
   font-variant-numeric: tabular-nums;
@@ -868,6 +1066,7 @@ button:disabled {
 }
 
 .score-total {
+  font-family: var(--font-display);
   font-size: 34px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;

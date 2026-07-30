@@ -1,7 +1,7 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
-import { generateLevelBoard } from '../game';
+import { generateLevelBoard, isLive } from '../game';
 import { AppProvider } from '../state/AppContext';
 import { SettingsProvider } from '../state/SettingsContext';
 import {
@@ -14,7 +14,7 @@ import {
 } from '../storage/schemas';
 import { App } from './App';
 
-const LEVEL1_CELLS = generateLevelBoard(1).filter((c) => c !== null && !c.cleared).length;
+const LEVEL1_CELLS = generateLevelBoard(1).filter(isLive).length;
 
 function renderApp(
   flags: Flags = flagsSchema.defaultValue(),
@@ -34,7 +34,12 @@ function renderApp(
   );
 }
 
-const done: Flags = { schemaVersion: 1, tutorialCompleted: true };
+const done: Flags = {
+  schemaVersion: 1,
+  tutorialCompleted: true,
+  wildIntroSeen: true,
+  stoneIntroSeen: true,
+};
 
 afterEach(cleanup);
 
@@ -75,7 +80,7 @@ describe('home flow', () => {
     const user = userEvent.setup();
     renderApp(done, { ...progressSchema.defaultValue(), highestUnlocked: 3 });
 
-    await user.click(screen.getByRole('button', { name: 'Select Level' }));
+    await user.click(screen.getByRole('button', { name: 'Levels' }));
     expect(screen.getByRole('button', { name: 'Level 3' })).toBeInTheDocument();
     expect(screen.getByLabelText('Level 4, locked')).toBeInTheDocument();
     // Starting an unlocked level goes straight to the board.

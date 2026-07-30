@@ -3,11 +3,20 @@
  * Pure functions only: no UI, platform, or service imports.
  */
 import { COLS } from './constants';
-import { isLive, isPassable, type Board, type Digit } from './types';
+import { isLive, isPassable, type Board, type Digit, type DigitCell, type WildCell } from './types';
 
 /** §2: two digits match when equal or summing to 10. */
 export function isMatchingValues(a: Digit, b: Digit): boolean {
   return a === b || a + b === 10;
+}
+
+/**
+ * §2 at the cell level: a wild pairs with any live cell — another wild
+ * included — while two numbers still have to be equal or sum to 10.
+ */
+export function isMatchingCells(a: DigitCell | WildCell, b: DigitCell | WildCell): boolean {
+  if (a.kind === 'wild' || b.kind === 'wild') return true;
+  return isMatchingValues(a.value, b.value);
 }
 
 const rowOf = (i: number): number => Math.floor(i / COLS);
@@ -95,27 +104,48 @@ export function canConnect(board: Board, i: number, j: number): boolean {
   return connectionGap(board, i, j) !== null;
 }
 
+export interface BlockedPath {
+  /**
+   * Every slot the chosen path crosses, in reading-order index order, endpoints
+   * excluded. The UI traces this so the reading-order rule's row-end → next-row
+   * -start wrap — which has no line of its own on screen — becomes visible.
+   */
+  readonly path: readonly number[];
+  /** The live numbers on that path: the ones actually in the way. */
+  readonly blockers: readonly number[];
+}
+
+const NO_PATH: BlockedPath = { path: [], blockers: [] };
+
 /**
- * The live cells that stand in the way of connecting i and j, along whichever
- * path is closest to connecting. Empty when the pair already connects.
+ * The path closest to connecting i and j, and the live cells standing on it.
+ * Both are empty when the pair already connects.
  *
- * Used only to explain a rejected tap in the UI ("these numbers are in the
- * way"), so unlike connectionGap it allocates — it runs once per tap, never
- * inside the O(n²) hint scan.
+ * Used only to explain a rejected tap in the UI, so unlike connectionGap it
+ * allocates — it runs once per tap, never inside the O(n²) hint scan.
+ *
+ * Blockers alone are not enough to explain a rejection: on a reading-order
+ * path the obstacle can sit past the row's end, which reads as an unrelated
+ * tile unless the corridor leading to it is drawn too.
  */
-export function blockingCells(board: Board, i: number, j: number): readonly number[] {
-  if (i === j) return [];
+export function blockingPath(board: Board, i: number, j: number): BlockedPath {
+  if (i === j) return NO_PATH;
   const a = Math.min(i, j);
   const b = Math.max(i, j);
-  if (a < 0 || b >= board.length) return [];
+  if (a < 0 || b >= board.length) return NO_PATH;
 
-  const liveAmong = (indices: readonly number[]): number[] =>
-    indices.filter((k) => isLive(board[k]));
+  // Anything not passable is in the way: live numbers, wilds, and stones. A
+  // stone blocks without ever being clearable, so leaving it out would show an
+  // unexplained rejection with no obstacle marked.
+  const withBlockers = (path: readonly number[]): BlockedPath => ({
+    path,
+    blockers: path.filter((k) => !isPassable(board[k])),
+  });
 
   // 1. Reading order (always geometrically applicable).
   const reading: number[] = [];
   for (let k = a + 1; k < b; k++) reading.push(k);
-  let best = liveAmong(reading);
+  let best = withBlockers(reading);
 
   const ra = rowOf(a);
   const ca = colOf(a);
@@ -126,8 +156,8 @@ export function blockingCells(board: Board, i: number, j: number): readonly numb
   if (ca === cb) {
     const vertical: number[] = [];
     for (let r = ra + 1; r < rb; r++) vertical.push(r * COLS + ca);
-    const blockers = liveAmong(vertical);
-    if (blockers.length < best.length) best = blockers;
+    const candidate = withBlockers(vertical);
+    if (candidate.blockers.length < best.blockers.length) best = candidate;
   }
 
   // 3. Diagonal.
@@ -137,11 +167,16 @@ export function blockingCells(board: Board, i: number, j: number): readonly numb
     const step = dc > 0 ? COLS + 1 : COLS - 1;
     const diagonal: number[] = [];
     for (let k = a + step; k < b; k += step) diagonal.push(k);
-    const blockers = liveAmong(diagonal);
-    if (blockers.length < best.length) best = blockers;
+    const candidate = withBlockers(diagonal);
+    if (candidate.blockers.length < best.blockers.length) best = candidate;
   }
 
   return best;
+}
+
+/** The cells in the way, without the corridor around them. */
+export function blockingCells(board: Board, i: number, j: number): readonly number[] {
+  return blockingPath(board, i, j).blockers;
 }
 
 /** Full pair check: both cells live, values match, and positions connect. */
@@ -149,5 +184,5 @@ export function isValidPair(board: Board, i: number, j: number): boolean {
   const a = board[i];
   const b = board[j];
   if (!isLive(a) || !isLive(b)) return false;
-  return isMatchingValues(a.value, b.value) && canConnect(board, i, j);
+  return isMatchingCells(a, b) && canConnect(board, i, j);
 }

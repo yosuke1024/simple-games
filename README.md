@@ -64,3 +64,12 @@ Android ビルド手順は [apps/number-match/README.md](apps/number-match/READM
 - 一度しか使われていないコードを共通化しない(第2弾で重複が確認されてから抽出)
 - 共通パッケージの変更だけで全アプリを自動リリースしない(公開は手動実行またはタグ)
 - 追加の固定インフラ費を発生させない
+
+## ライセンス
+
+Copyright 2026 Yosuke Suzuki
+
+このリポジトリのソースコードは [Apache License 2.0](LICENSE) の下で公開しています。
+
+- 広告ユニット ID・署名鍵などの本番用シークレットはリポジトリに含まれません(ビルド時に環境変数で注入)
+- 「Simple Games」「PixApps」の名称・ブランドはライセンスの対象外です(Apache-2.0 §6)

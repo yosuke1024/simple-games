@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
   clearBonusBase,
-  INITIAL_SCORE,
+  createScore,
   scoreAddNumbers,
   scoreClear,
   scoreMatch,
   type ScoreState,
 } from './score';
+
+/** A budget wide enough that these cases never bump into it. */
+const INITIAL_SCORE = createScore(1000);
 
 const invariant = (s: ScoreState) =>
   expect(s.total).toBe(s.matchPoints + s.rowPoints + s.clearBonus + s.noHintBonus);
@@ -52,6 +55,57 @@ describe('scoreMatch', () => {
     const s = scoreMatch(hot, 0, 1, 9);
     expect(s.rowPoints).toBe(54);
     expect(s.matchPoints).toBe(20);
+  });
+});
+
+describe('scoring budget', () => {
+  it('spends two cells per match and stops at zero', () => {
+    let s = createScore(4);
+    s = scoreMatch(s, 0, 0);
+    expect(s.scorableCells).toBe(2);
+    s = scoreMatch(s, 0, 0);
+    expect(s.scorableCells).toBe(0);
+    s = scoreMatch(s, 0, 0);
+    expect(s.scorableCells).toBe(0);
+  });
+
+  it('pays nothing once the board’s starting cells are paid for', () => {
+    let s = createScore(2);
+    s = scoreMatch(s, 4, 1, 9); // within budget: match + distance + row
+    const paid = s.total;
+    expect(paid).toBeGreaterThan(0);
+    s = scoreMatch(s, 4, 2, 18); // budget spent: a big move now earns zero
+    expect(s.total).toBe(paid);
+    expect(s.matchPoints + s.rowPoints).toBe(paid);
+    invariant(s);
+  });
+
+  it('is not refreshed by Add Numbers', () => {
+    const spent = scoreMatch(createScore(2), 0, 0);
+    expect(scoreAddNumbers(spent).scorableCells).toBe(0);
+  });
+
+  it('still awards the clear and no-hint bonuses after the budget runs out', () => {
+    const spent = scoreMatch(createScore(0), 0, 0);
+    expect(spent.total).toBe(0);
+    const s = scoreClear(spent, 'level', 10, 0, 0);
+    expect(s.clearBonus).toBe(300);
+    expect(s.noHintBonus).toBe(30);
+    invariant(s);
+  });
+
+  it('grinding with Add Numbers can never beat an efficient clear', () => {
+    const CELLS = 24;
+    const playOut = (extraMatches: number) => {
+      let s = createScore(CELLS);
+      for (let i = 0; i < CELLS / 2 + extraMatches; i++) s = scoreMatch(s, 2, 1, 9);
+      // Each Add costs 25% of the clear bonus; grinding needs at least one.
+      const adds = extraMatches === 0 ? 0 : 1;
+      return scoreClear(s, 'level', 50, adds, 0).total;
+    };
+    const efficient = playOut(0);
+    expect(playOut(20)).toBeLessThan(efficient);
+    expect(playOut(200)).toBeLessThan(efficient);
   });
 });
 

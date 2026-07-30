@@ -1,19 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  blockingCells,
+  applyMatchDetailed,
+  blockingPath,
   canAddNumbers,
   canUndo,
-  isMatchingValues,
+  isLive,
+  isMatchingCells,
   MAX_CELLS,
+  type BlockedPath,
   type Board,
 } from '../../game';
 import { haptics } from '../../services/haptics';
 import { sounds } from '../../services/sound';
 import { useApp } from '../../state/AppContext';
 import { useSettings } from '../../state/SettingsContext';
+import { AnimatedNumber } from '../components/AnimatedNumber';
 import { BannerSlot } from '../components/BannerSlot';
-import { BoardView } from '../components/BoardView';
+import { BoardView, type MatchAnim } from '../components/BoardView';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { IconAdd, IconBack, IconHint, IconRetry, IconUndo } from '../components/icons';
 import { ResultOverlay } from '../components/ResultOverlay';
 
 const HINT_COOLDOWN_MS = 2000;
@@ -24,7 +29,6 @@ const BLOCKED_FLASH_MS = 1100;
 const MAX_BLOCKERS_SHOWN = 3;
 const TOAST_MS = 2600;
 const EMPTY_BOARD: Board = [];
-const NO_BLOCKERS: readonly number[] = [];
 
 export function GameScreen() {
   const {
@@ -39,13 +43,16 @@ export function GameScreen() {
     goHome,
     restartCurrent,
     startNextLevel,
+    flags,
+    markIntroSeen,
   } = useApp();
   const { t, settings } = useSettings();
 
   const [selected, setSelected] = useState<number | null>(null);
   const [hintPair, setHintPair] = useState<readonly [number, number] | null>(null);
   const [invalidPair, setInvalidPair] = useState<readonly [number, number] | null>(null);
-  const [blockedCells, setBlockedCells] = useState<readonly number[]>(NO_BLOCKERS);
+  const [blocked, setBlocked] = useState<BlockedPath | null>(null);
+  const [lastMatch, setLastMatch] = useState<MatchAnim | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [hintCoolingDown, setHintCoolingDown] = useState(false);
   const [confirmRestart, setConfirmRestart] = useState(false);
@@ -63,6 +70,7 @@ export function GameScreen() {
 
   const boardRef = useRef<HTMLDivElement | null>(null);
   const beatenEpoch = useRef(-1);
+  const introEpoch = useRef(-1);
   const previousLength = useRef<number>(session?.board.length ?? 0);
   const previousStatus = useRef(session?.status ?? 'playing');
   const toastIdRef = useRef(0);
@@ -74,8 +82,13 @@ export function GameScreen() {
     setSelected(null);
     setHintPair(null);
     setInvalidPair(null);
-    setBlockedCells(NO_BLOCKERS);
+    setBlocked(null);
   }, [board]);
+
+  // A new game is a clean slate: no send-off animation from the previous one.
+  useEffect(() => {
+    setLastMatch(null);
+  }, [sessionEpoch]);
 
   // After Add Numbers, keep the player oriented: reveal the appended cells.
   useEffect(() => {
@@ -117,6 +130,24 @@ export function GameScreen() {
     }, TOAST_MS);
   }, []);
 
+  // The first board holding a wild or a stone explains it, once, as a toast
+  // (§16). A toast rather than a tutorial step: the rule arrives on the board
+  // that needs it, and the tutorial stays at the three steps it promises.
+  // One per game at most — two explanations at once is a lecture.
+  useEffect(() => {
+    if (!session || introEpoch.current === sessionEpoch) return;
+    const has = (kind: 'wild' | 'stone') => session.board.some((c) => c?.kind === kind);
+    const due = !flags.wildIntroSeen && has('wild')
+      ? 'wild'
+      : !flags.stoneIntroSeen && has('stone')
+        ? 'stone'
+        : null;
+    if (due === null) return;
+    introEpoch.current = sessionEpoch;
+    showToast(t(due === 'wild' ? 'wildIntroToast' : 'stoneIntroToast'));
+    markIntroSeen(due === 'wild' ? 'wildIntroSeen' : 'stoneIntroSeen');
+  }, [session, sessionEpoch, flags, markIntroSeen, showToast, t]);
+
   // Beating the board's best is the moment worth marking — once per game.
   useEffect(() => {
     if (!session || currentBest === undefined) return;
@@ -130,7 +161,8 @@ export function GameScreen() {
     (index: number) => {
       if (!session || session.status !== 'playing') return;
       const cell = session.board[index];
-      if (!cell || cell.cleared) return;
+      // Stones and cleared cells are not selectable.
+      if (!isLive(cell)) return;
       if (selected === null) {
         setSelected(index);
         sounds.select();
@@ -141,7 +173,15 @@ export function GameScreen() {
         setSelected(null);
         return;
       }
-      if (applyPair(selected, index)) {
+      // Captured before the model board moves on: the pair's indices and the
+      // rows the collapse is about to remove, so BoardView can act them out.
+      const detail = applyMatchDetailed(session.board, selected, index);
+      if (detail !== null && applyPair(selected, index)) {
+        setLastMatch({
+          pair: [selected, index],
+          prevBoard: session.board,
+          rowsRemoved: detail.rowsRemoved,
+        });
         sounds.match();
         void haptics.match();
       } else {
@@ -155,15 +195,18 @@ export function GameScreen() {
         }, INVALID_FLASH_MS);
 
         // The values matched but the path was blocked — the most common
-        // misunderstanding. Point at the numbers that are in the way instead
-        // of only shaking the two cells (silent, works in every language).
+        // misunderstanding. Trace the route the pair would have taken and mark
+        // what stands on it, instead of only shaking the two cells (silent,
+        // works in every language). The route matters as much as the blockers:
+        // in reading order it wraps past the row's end, so a lone dashed tile
+        // out there reads as unrelated.
         const other = session.board[selected];
-        if (other && !other.cleared && isMatchingValues(other.value, cell.value)) {
-          const blockers = blockingCells(session.board, selected, index);
-          if (blockers.length > 0 && blockers.length <= MAX_BLOCKERS_SHOWN) {
-            setBlockedCells(blockers);
+        if (isLive(other) && isMatchingCells(other, cell)) {
+          const route = blockingPath(session.board, selected, index);
+          if (route.blockers.length > 0 && route.blockers.length <= MAX_BLOCKERS_SHOWN) {
+            setBlocked(route);
             window.setTimeout(() => {
-              setBlockedCells((current) => (current === blockers ? NO_BLOCKERS : current));
+              setBlocked((current) => (current === route ? null : current));
             }, BLOCKED_FLASH_MS);
           }
         }
@@ -173,6 +216,7 @@ export function GameScreen() {
   );
 
   const onUndo = useCallback(() => {
+    setLastMatch(null);
     if (applyUndo()) sounds.undo();
   }, [applyUndo]);
 
@@ -190,6 +234,7 @@ export function GameScreen() {
   }, [hintCoolingDown, showToast, t, takeHint]);
 
   const onAdd = useCallback(() => {
+    setLastMatch(null);
     if (applyAdd()) {
       sounds.addNumbers();
       void haptics.tap();
@@ -210,7 +255,7 @@ export function GameScreen() {
       <div className="game-content" inert={session.status !== 'playing'}>
       <header className="game-topbar">
         <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
-          ←
+          <IconBack />
         </button>
         <div className="game-status">
           <span className="game-mode">
@@ -218,7 +263,7 @@ export function GameScreen() {
           </span>
           <span className="game-score">
             <span className="visually-hidden">{t('score')} </span>
-            {session.score.total}
+            <AnimatedNumber value={session.score.total} />
           </span>
           {currentBest !== undefined ? (
             <span className="game-best">
@@ -232,7 +277,7 @@ export function GameScreen() {
           aria-label={t('tryAgain')}
           onClick={() => setConfirmRestart(true)}
         >
-          ↻
+          <IconRetry />
         </button>
       </header>
 
@@ -242,7 +287,8 @@ export function GameScreen() {
           selected={selected}
           hintPair={hintPair}
           invalidPair={invalidPair}
-          blockedCells={blockedCells}
+          blocked={blocked}
+          lastMatch={lastMatch}
           onCellTap={onCellTap}
         />
       </div>
@@ -256,7 +302,7 @@ export function GameScreen() {
       <div className="action-bar">
         <button type="button" className="action-btn" onClick={onUndo} disabled={undoDisabled}>
           <span className="action-icon" aria-hidden="true">
-            ⤺
+            <IconUndo />
           </span>
           {t('undo')}
         </button>
@@ -267,13 +313,13 @@ export function GameScreen() {
           disabled={session.status !== 'playing' || hintCoolingDown}
         >
           <span className="action-icon" aria-hidden="true">
-            ◎
+            <IconHint />
           </span>
           {t('hint')}
         </button>
         <button type="button" className="action-btn" onClick={onAdd} disabled={addDisabled}>
           <span className="action-icon" aria-hidden="true">
-            ＋
+            <IconAdd />
           </span>
           {t('addNumbers')}
         </button>

@@ -40,7 +40,11 @@ export const th: Messages = {
   movesLabel: 'จำนวนตา',
   boardLabel: 'กระดานเกม',
   cellLabel: 'แถว {row} คอลัมน์ {col} เลข {value}',
+  cellLabelStone: 'แถว {row} คอลัมน์ {col} หิน',
+  cellLabelWild: 'แถว {row} คอลัมน์ {col} ไวลด์',
   hintNoneToast: 'ไม่พบคู่ที่จับได้ ลองกด "เพิ่ม"',
+  wildIntroToast: 'ช่อง ✦ จับคู่กับเลขใดก็ได้',
+  stoneIntroToast: 'หินจับคู่ไม่ได้ และขวางทางอยู่',
 
   clearTitle: 'เคลียร์กระดานแล้ว!',
   clearBody: 'คุณลบตัวเลขทั้งหมดแล้ว',

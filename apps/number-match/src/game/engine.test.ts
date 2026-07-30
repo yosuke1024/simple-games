@@ -2,16 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { COLS } from './constants';
 import { addNumbers, applyMatch, applyMatchDetailed, canAddNumbers, collapseBoard, getStatus } from './engine';
 import { liveValues, makeBoard } from './test-helpers';
-import { isLive } from './types';
+import { isDigit, isLive, isStone } from './types';
 
 describe('applyMatch', () => {
   it('clears a valid pair', () => {
     const board = makeBoard('19555');
     const next = applyMatch(board, 0, 1);
     expect(next).not.toBeNull();
-    expect(next![0]!.cleared).toBe(true);
-    expect(next![1]!.cleared).toBe(true);
-    expect(next![2]!.cleared).toBe(false);
+    expect(isLive(next![0])).toBe(false);
+    expect(isLive(next![1])).toBe(false);
+    expect(isLive(next![2])).toBe(true);
   });
 
   it('returns null for an invalid pair', () => {
@@ -24,7 +24,7 @@ describe('applyMatch', () => {
     expect(result).not.toBeNull();
     expect(result!.rowsRemoved).toBe(1);
     expect(result!.board.length).toBe(COLS);
-    expect(result!.board[0]!.value).toBe(2);
+    expect(liveValues(result!.board)[0]).toBe(2);
   });
 
   it('removes a short shaped row by its own width, not by nine cells', () => {
@@ -41,6 +41,22 @@ describe('applyMatch', () => {
     const board = makeBoard('7###7');
     expect(applyMatch(board, 0, 4)).not.toBeNull();
   });
+
+  it('leaves a cleared wild a wild', () => {
+    // The cell is rebuilt on clearing, so its kind has to survive the copy.
+    // The trailing 5 keeps the row alive, or the collapse would take it away.
+    const next = applyMatch(makeBoard('*35'), 0, 1)!;
+    expect(next[0]).toEqual({ kind: 'wild', cleared: true });
+  });
+
+  it('takes a stone away with its row, and pays for its slot (§4, §12)', () => {
+    // The stone is the only thing left in row 1 once the two 1s are cleared.
+    const result = applyMatchDetailed(makeBoard('11S', '234567892'), 0, 1)!;
+    expect(result.rowsRemoved).toBe(1);
+    // Three occupied slots went with the row: two numbers and the stone.
+    expect(result.rowCellsRemoved).toBe(3);
+    expect(result.board.filter(isStone)).toHaveLength(0);
+  });
 });
 
 describe('collapseBoard', () => {
@@ -48,7 +64,7 @@ describe('collapseBoard', () => {
     const board = makeBoard('.........', '123456789', '.........');
     const next = collapseBoard(board);
     expect(next.length).toBe(COLS);
-    expect(next[0]!.value).toBe(1);
+    expect(liveValues(next)[0]).toBe(1);
   });
 
   it('keeps cleared cells inside rows that still hold a number', () => {
@@ -68,10 +84,10 @@ describe('collapseBoard', () => {
     // exactly one row — vertical and diagonal neighbours stay lined up.
     // Row 0 avoids the digit 7 so the search below can only find the marker.
     const board = makeBoard('888888888', '.........', '###7');
-    const before = board.findIndex((c) => c !== null && !c.cleared && c.value === 7);
+    const before = board.findIndex((c) => isDigit(c) && c.value === 7);
     expect(before % COLS).toBe(3);
     const next = collapseBoard(board);
-    const after = next.findIndex((c) => c !== null && !c.cleared && c.value === 7);
+    const after = next.findIndex((c) => isDigit(c) && c.value === 7);
     expect(after % COLS).toBe(3);
     expect(Math.floor(after / COLS)).toBe(1);
   });
@@ -83,8 +99,8 @@ describe('collapseBoard', () => {
     const board = makeBoard('1.3456789', '1.3456789');
     const next = collapseBoard(board);
     expect(next.length).toBe(2 * COLS);
-    expect(next[1]).toEqual({ value: 1, cleared: true });
-    expect(next[COLS + 1]).toEqual({ value: 1, cleared: true });
+    expect(next[1]).toEqual({ kind: 'digit', value: 1, cleared: true });
+    expect(next[COLS + 1]).toEqual({ kind: 'digit', value: 1, cleared: true });
   });
 });
 
@@ -150,6 +166,26 @@ describe('addNumbers', () => {
   it('returns null when no live numbers remain', () => {
     expect(addNumbers(makeBoard('...'))).toBeNull();
   });
+
+  it('copies neither wilds nor stones (§5)', () => {
+    // A wild is placed once when the board is generated and never refilled, so
+    // spending it is a decision that keeps its weight to the last move.
+    const next = addNumbers(makeBoard('1*2S'))!;
+    expect(liveValues(next)).toEqual([1, 2, 1, 2]);
+    expect(next.filter((c) => c?.kind === 'wild')).toHaveLength(1);
+    expect(next.filter(isStone)).toHaveLength(1);
+  });
+
+  it('refuses when only wilds are left, since there is nothing to copy', () => {
+    expect(addNumbers(makeBoard('**'))).toBeNull();
+  });
+
+  it('fills the tail after a stone rather than over it', () => {
+    const next = addNumbers(makeBoard('1S2'))!;
+    expect(next[1]).toEqual({ kind: 'stone' });
+    // Two numbers appended into the row's remaining slots, past the stone.
+    expect(liveValues(next)).toEqual([1, 2, 1, 2]);
+  });
 });
 
 describe('getStatus', () => {
@@ -157,6 +193,17 @@ describe('getStatus', () => {
     expect(getStatus(makeBoard('...'))).toBe('cleared');
     expect(getStatus([])).toBe('cleared');
     expect(getStatus(makeBoard('###'))).toBe('cleared');
+  });
+
+  it('reports cleared once every number is gone, wild left over or not (§6)', () => {
+    // Add Numbers never copies a wild, so an unspent one has no partner and no
+    // way to be refilled. Counting it would turn a finished board into a loss.
+    expect(getStatus(makeBoard('*'))).toBe('cleared');
+    expect(getStatus(makeBoard('*.*'))).toBe('cleared');
+  });
+
+  it('reports cleared for a board holding nothing but stones', () => {
+    expect(getStatus(makeBoard('S.S'))).toBe('cleared');
   });
 
   it('reports playing when a valid pair exists', () => {

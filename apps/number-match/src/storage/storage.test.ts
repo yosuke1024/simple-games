@@ -78,6 +78,17 @@ describe('loadRecord', () => {
     expect(await loadRecord(flagsSchema, kv)).toEqual(flags);
   });
 
+  it('keeps a flags record written before the intro flags existed', () => {
+    // A flag added later means "not seen yet", not a corrupt record — dropping
+    // it would send a returning player back through the tutorial.
+    expect(flagsSchema.validate({ schemaVersion: 1, tutorialCompleted: true })).toEqual({
+      schemaVersion: 1,
+      tutorialCompleted: true,
+      wildIntroSeen: false,
+      stoneIntroSeen: false,
+    });
+  });
+
   it('drops unknown-typed values from the rc cache instead of failing', async () => {
     const kv = createMemoryKV({
       [STORAGE_KEYS.rcCache]: JSON.stringify({

@@ -18,6 +18,22 @@ describe('board serialization', () => {
     expect(decodeBoard(encodeBoard([]))).toEqual([]);
   });
 
+  it('round-trips stones and wilds, cleared wilds included', () => {
+    const board = makeBoard('1S*4', '*S789');
+    // 's' stone, 'w' wild, '0' hole — each row padded out to nine slots.
+    expect(encodeBoard(board).values).toBe('1sw400000ws7890000');
+    expect(decodeBoard(encodeBoard(board))).toEqual(board);
+    // A wild keeps its kind after being cleared, so that has to survive too.
+    const withClearedWild = [...board, { kind: 'wild' as const, cleared: true }];
+    expect(decodeBoard(encodeBoard(withClearedWild))).toEqual(withClearedWild);
+  });
+
+  it('rejects a stone that claims to be cleared', () => {
+    // Stones are never cleared, so this can only be corruption.
+    expect(decodeBoard({ values: '1s3', mask: '010' })).toBeNull();
+    expect(decodeBoard({ values: '1s3', mask: '000' })).not.toBeNull();
+  });
+
   it('rejects malformed input without throwing', () => {
     expect(decodeBoard(null)).toBeNull();
     expect(decodeBoard(undefined)).toBeNull();

@@ -11,6 +11,10 @@ import { loadRecord } from './storage/repo';
 import { flagsSchema, progressSchema, settingsSchema, statsSchema } from './storage/schemas';
 import { AppProvider } from './state/AppContext';
 import { SettingsProvider } from './state/SettingsContext';
+// Display font (title, tiles, scores): bundled latin subsets only, ~36 KB —
+// body text and non-latin scripts stay on system fonts (offline-first).
+import '@fontsource/nunito/latin-700.css';
+import '@fontsource/nunito/latin-800.css';
 import './ui/styles.css';
 
 /**

@@ -3,6 +3,7 @@ import { MAX_LEVEL } from '../../game';
 import { useApp } from '../../state/AppContext';
 import { useSettings } from '../../state/SettingsContext';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { IconBack, IconChevronLeft, IconChevronRight } from '../components/icons';
 
 const LEVELS_PER_PAGE = 100;
 
@@ -72,7 +73,7 @@ export function LevelSelectScreen() {
     <div className="screen levels-screen">
       <header className="screen-header">
         <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
-          ←
+          <IconBack />
         </button>
         <h1>{t('levelSelect')}</h1>
         <span className="icon-btn-placeholder" />
@@ -87,7 +88,7 @@ export function LevelSelectScreen() {
             disabled={page === 0}
             onClick={() => setPage(page - 1)}
           >
-            ‹
+            <IconChevronLeft />
           </button>
           <span className="level-pager-range">
             {start} – {end}
@@ -99,7 +100,7 @@ export function LevelSelectScreen() {
             disabled={page === pageCount - 1}
             onClick={() => setPage(page + 1)}
           >
-            ›
+            <IconChevronRight />
           </button>
         </div>
       ) : null}

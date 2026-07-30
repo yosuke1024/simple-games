@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { generateLevelBoard } from './levels';
 import { findHint } from './hint';
-import { INITIAL_SCORE } from './score';
+import { createScore, INITIAL_SCORE } from './score';
 import {
   canUndo,
   countHintUse,
   createDailySession,
   createLevelSession,
+  liveCellCount,
   matchPair,
   performAddNumbers,
   restartSession,
@@ -15,6 +16,7 @@ import {
   type GameSession,
 } from './session';
 import { liveValues, makeBoard } from './test-helpers';
+import { isLive } from './types';
 
 /** Builds a playing level session around a fixture board. */
 function sessionWith(board: ReturnType<typeof makeBoard>): GameSession {
@@ -29,7 +31,8 @@ describe('createLevelSession / createDailySession', () => {
     expect(session.level).toBe(7);
     expect(session.seed).toBe('level-7');
     expect(session.status).toBe('playing');
-    expect(session.score).toEqual(INITIAL_SCORE);
+    // A fresh game's scoring budget is the board's starting numbers (§12).
+    expect(session.score).toEqual(createScore(liveCellCount(session.board)));
     expect(canUndo(session)).toBe(false);
   });
 
@@ -46,7 +49,7 @@ describe('createLevelSession / createDailySession', () => {
     const played = matchPair(first, findHint(first.board)![0], findHint(first.board)![1])!;
     const restarted = restartSession(played);
     expect(restarted.board).toEqual(first.board);
-    expect(restarted.score).toEqual(INITIAL_SCORE);
+    expect(restarted.score).toEqual(createScore(liveCellCount(first.board)));
     expect(restarted.moveCount).toBe(0);
   });
 });
@@ -56,7 +59,7 @@ describe('matchPair', () => {
     const s0 = sessionWith(makeBoard('1955'));
     const s1 = matchPair(s0, 0, 1);
     expect(s1).not.toBeNull();
-    expect(s1!.board[0]!.cleared).toBe(true);
+    expect(isLive(s1!.board[0])).toBe(false);
     expect(s1!.moveCount).toBe(1);
     expect(s1!.score.total).toBe(10); // adjacent match, no rows removed
     expect(canUndo(s1!)).toBe(true);
@@ -210,8 +213,8 @@ describe('restoreSession', () => {
 });
 
 describe('full game via hints', () => {
-  it('a level board can be played to a terminal state using hints and add numbers', () => {
-    let session = createLevelSession(1);
+  const playOut = (start: GameSession) => {
+    let session = start;
     let guard = 0;
     while (session.status === 'playing' && guard < 5000) {
       guard++;
@@ -225,6 +228,22 @@ describe('full game via hints', () => {
       }
     }
     expect(guard).toBeLessThan(5000);
+    return session;
+  };
+
+  it('a level board can be played to a terminal state using hints and add numbers', () => {
+    const session = playOut(createLevelSession(1));
+    expect(['cleared', 'gameOver']).toContain(session.status);
+    expect(session.score.total).toBeGreaterThan(0);
+  });
+
+  it('a board carrying stones and wilds also reaches a terminal state', () => {
+    // Level 30 is the first with both. Stones must not be able to strand the
+    // game, and an unspent wild must not keep a finished board from clearing.
+    const start = createLevelSession(30);
+    expect(start.board.some((c) => c?.kind === 'stone')).toBe(true);
+    expect(start.board.some((c) => c?.kind === 'wild')).toBe(true);
+    const session = playOut(start);
     expect(['cleared', 'gameOver']).toContain(session.status);
     expect(session.score.total).toBeGreaterThan(0);
   });

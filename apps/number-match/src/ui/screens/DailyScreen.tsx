@@ -2,6 +2,7 @@ import { localDateString } from '../../game';
 import { useApp } from '../../state/AppContext';
 import { availableDailyDates } from '../../state/progressLogic';
 import { useSettings } from '../../state/SettingsContext';
+import { IconBack, IconCheck, IconChevronRight } from '../components/icons';
 
 /**
  * The daily backlog: today plus however far back the player has unlocked by
@@ -26,7 +27,7 @@ export function DailyScreen() {
     <div className="screen daily-screen">
       <header className="screen-header">
         <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
-          ←
+          <IconBack />
         </button>
         <h1>{t('dailyChallenge')}</h1>
         <span className="icon-btn-placeholder" />
@@ -52,10 +53,12 @@ export function DailyScreen() {
                   <span className="daily-badge">{t('resume')}</span>
                 ) : best !== undefined ? (
                   <span className="daily-badge daily-badge-done">
-                    ✓ {t('best')} {best}
+                    <IconCheck className="badge-icon" /> {t('best')} {best}
                   </span>
                 ) : null}
-                <span aria-hidden="true">›</span>
+                <span className="settings-row-chevron" aria-hidden="true">
+                  <IconChevronRight />
+                </span>
               </span>
             </button>
           );

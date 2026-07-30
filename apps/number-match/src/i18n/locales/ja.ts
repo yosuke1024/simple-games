@@ -40,7 +40,11 @@ export const ja: Messages = {
   movesLabel: '手数',
   boardLabel: 'ゲーム盤',
   cellLabel: '{row}行 {col}列、{value}',
+  cellLabelStone: '{row}行 {col}列、石',
+  cellLabelWild: '{row}行 {col}列、ワイルド',
   hintNoneToast: '消せるペアがありません。「追加」を試してください。',
+  wildIntroToast: '✦ はどの数字とでもペアになります。',
+  stoneIntroToast: '石は消せません。道をふさぎます。',
 
   clearTitle: 'クリア！',
   clearBody: 'すべての数字を消しました。',

@@ -6,6 +6,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "number-match", "dev"],
       "port": 5173
+    },
+    {
+      "name": "number-match-alt",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "number-match", "dev", "--", "--port", "5174"],
+      "port": 5174
     }
   ]
 }

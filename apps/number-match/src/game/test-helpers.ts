@@ -1,7 +1,9 @@
 /**
  * Test fixture helper: builds a board from row strings.
  *
- *   digit → a live cell
+ *   digit → a live number
+ *   '*'   → a live wild (pairs with anything)
+ *   'S'   → a stone (never matchable, opaque to connections)
  *   '.'   → a cleared cell
  *   '#'   → a hole in the shape (absent slot)
  *
@@ -9,7 +11,7 @@
  * which is exactly how a real board's last row looks.
  */
 import { COLS } from './constants';
-import type { Board, BoardCell, Digit } from './types';
+import { isDigit, type Board, type BoardCell, type Digit } from './types';
 
 export function makeBoard(...rows: string[]): Board {
   const cells: BoardCell[] = [];
@@ -19,15 +21,19 @@ export function makeBoard(...rows: string[]): Board {
     }
     for (const ch of row) {
       if (ch === '.') {
-        cells.push({ value: 1, cleared: true });
+        cells.push({ kind: 'digit', value: 1, cleared: true });
       } else if (ch === '#') {
         cells.push(null);
+      } else if (ch === '*') {
+        cells.push({ kind: 'wild', cleared: false });
+      } else if (ch === 'S') {
+        cells.push({ kind: 'stone' });
       } else {
         const value = Number(ch);
         if (!Number.isInteger(value) || value < 1 || value > 9) {
           throw new Error(`Invalid fixture char: ${ch}`);
         }
-        cells.push({ value: value as Digit, cleared: false });
+        cells.push({ kind: 'digit', value: value as Digit, cleared: false });
       }
     }
     for (let pad = row.length; pad < COLS; pad++) cells.push(null);
@@ -35,7 +41,7 @@ export function makeBoard(...rows: string[]): Board {
   return cells;
 }
 
-/** Live values in reading order — handy for asserting on Add Numbers. */
+/** Live numbers in reading order — handy for asserting on Add Numbers. */
 export function liveValues(board: Board): number[] {
-  return board.filter((c) => c !== null && !c.cleared).map((c) => c!.value);
+  return board.filter(isDigit).map((c) => c.value);
 }

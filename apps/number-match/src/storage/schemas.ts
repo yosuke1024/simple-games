@@ -3,7 +3,15 @@
  * versions can migrate. Validators never throw: corrupt data yields null and
  * callers fall back to safe defaults (spec §15.1).
  */
-import { INITIAL_SCORE, MAX_CELLS, MAX_LEVEL, type GameMode, type ScoreState } from '../game';
+import {
+  createScore,
+  initialCellsForLevel,
+  INITIAL_CELLS,
+  MAX_CELLS,
+  MAX_LEVEL,
+  type GameMode,
+  type ScoreState,
+} from '../game';
 
 export const STORAGE_KEYS = {
   game: 'nm.saveGame',
@@ -96,17 +104,33 @@ export const settingsSchema: SchemaDef<Settings> = {
 export interface Flags {
   schemaVersion: 1;
   tutorialCompleted: boolean;
+  /** Whether the player has been told what a wild does (§16). */
+  wildIntroSeen: boolean;
+  /** Whether the player has been told what a stone does (§16). */
+  stoneIntroSeen: boolean;
 }
 
 export const flagsSchema: SchemaDef<Flags> = {
   key: STORAGE_KEYS.flags,
   version: 1,
-  defaultValue: () => ({ schemaVersion: 1, tutorialCompleted: false }),
+  defaultValue: () => ({
+    schemaVersion: 1,
+    tutorialCompleted: false,
+    wildIntroSeen: false,
+    stoneIntroSeen: false,
+  }),
   validate: (raw) => {
     if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
     const tutorialCompleted = asBool(raw.tutorialCompleted);
     if (tutorialCompleted === null) return null;
-    return { schemaVersion: 1, tutorialCompleted };
+    // Flags added later default rather than reject: an existing record simply
+    // has not seen them yet, which is not corruption.
+    return {
+      schemaVersion: 1,
+      tutorialCompleted,
+      wildIntroSeen: asBool(raw.wildIntroSeen) ?? false,
+      stoneIntroSeen: asBool(raw.stoneIntroSeen) ?? false,
+    };
   },
 };
 
@@ -188,7 +212,13 @@ export const statsSchema: SchemaDef<Stats> = {
 
 // ---------- saved game ----------
 
-const validateScore = (raw: unknown): ScoreState | null => {
+/**
+ * `fallbackScorableCells` is the board's starting cell count, used only for
+ * saves written before the scoring budget existed (§12). Granting a full
+ * board's budget is generous for a half-played save but never exceeds what an
+ * honest clear of that board could have earned.
+ */
+const validateScore = (raw: unknown, fallbackScorableCells: number): ScoreState | null => {
   if (!isRecord(raw)) return null;
   const total = asInt(raw.total, 0, 1e9);
   const streakTenths = asInt(raw.streakTenths, 10, 20);
@@ -208,7 +238,20 @@ const validateScore = (raw: unknown): ScoreState | null => {
   }
   // Integrity: the parts must add up.
   if (total !== matchPoints + rowPoints + clearBonus + noHintBonus) return null;
-  return { total, streakTenths, matchPoints, rowPoints, clearBonus, noHintBonus };
+  const scorableCells =
+    raw.scorableCells === undefined
+      ? fallbackScorableCells
+      : asInt(raw.scorableCells, 0, MAX_CELLS);
+  if (scorableCells === null) return null;
+  return {
+    total,
+    streakTenths,
+    matchPoints,
+    rowPoints,
+    clearBonus,
+    noHintBonus,
+    scorableCells,
+  };
 };
 
 export interface PersistedGame {
@@ -235,7 +278,7 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
     let source = raw;
     if (raw.schemaVersion === 1) {
       if (raw.mode !== 'daily') return null;
-      source = { ...raw, schemaVersion: 2, level: null, score: INITIAL_SCORE };
+      source = { ...raw, schemaVersion: 2, level: null, score: createScore(INITIAL_CELLS) };
     }
     if (source.schemaVersion !== 2) return null;
     const mode = source.mode === 'level' || source.mode === 'daily' ? source.mode : null;
@@ -245,7 +288,10 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
     // A stored board can never legally exceed the maximum board size.
     const values = asString(source.values, MAX_CELLS);
     const mask = asString(source.mask, MAX_CELLS);
-    const score = validateScore(source.score);
+    const score = validateScore(
+      source.score,
+      mode === 'level' && level !== null ? initialCellsForLevel(level) : INITIAL_CELLS,
+    );
     const moveCount = asInt(source.moveCount, 0, 1e6);
     const addCount = asInt(source.addCount, 0, 1e6);
     const hintCount = asInt(source.hintCount, 0, 1e6);

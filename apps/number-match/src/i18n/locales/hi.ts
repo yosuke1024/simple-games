@@ -40,7 +40,11 @@ export const hi: Messages = {
   movesLabel: 'चालें',
   boardLabel: 'गेम बोर्ड',
   cellLabel: 'पंक्ति {row}, स्तंभ {col}, {value}',
+  cellLabelStone: 'पंक्ति {row}, स्तंभ {col}, पत्थर',
+  cellLabelWild: 'पंक्ति {row}, स्तंभ {col}, वाइल्ड',
   hintNoneToast: 'कोई जोड़ी नहीं मिली — "जोड़ें" आज़माएँ।',
+  wildIntroToast: '✦ किसी भी संख्या के साथ जोड़ी बनाता है।',
+  stoneIntroToast: 'पत्थर हटाए नहीं जा सकते और रास्ता रोकते हैं।',
 
   clearTitle: 'बोर्ड साफ़!',
   clearBody: 'आपने सभी संख्याएँ हटा दीं।',

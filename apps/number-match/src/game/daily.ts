@@ -2,6 +2,7 @@
  * Daily Challenge seed — implements docs/NUMBER_MATCH_RULES.md §10.
  * Uses the device's local date only; no server time, no network.
  */
+import { createRng } from './rng';
 
 /** Formats a date as local YYYY-MM-DD. */
 export function localDateString(date: Date): string {
@@ -14,6 +15,31 @@ export function localDateString(date: Date): string {
 /** The deterministic seed for a given local date string. */
 export function dailySeed(dateString: string): string {
   return `daily-${dateString}`;
+}
+
+/**
+ * The first daily to carry stones and wilds (§16).
+ *
+ * Earlier days stay undecorated. Past dailies remain replayable and their best
+ * scores are already saved (§14), so changing those boards would leave scores
+ * standing against boards that no longer exist.
+ */
+export const DAILY_DECORATIONS_FROM = '2026-08-01';
+
+export interface DailyDecorations {
+  readonly stoneCount: number;
+  readonly wildCount: number;
+}
+
+/**
+ * How many stones and wilds a daily board holds: 0–2 of each, from the date
+ * alone, so every player sees the same board and no day needs storing.
+ */
+export function dailyDecorations(dateString: string): DailyDecorations {
+  // ISO dates compare correctly as strings.
+  if (dateString < DAILY_DECORATIONS_FROM) return { stoneCount: 0, wildCount: 0 };
+  const rng = createRng(`daily-deco-${dateString}`);
+  return { stoneCount: Math.floor(rng() * 3), wildCount: Math.floor(rng() * 3) };
 }
 
 /**

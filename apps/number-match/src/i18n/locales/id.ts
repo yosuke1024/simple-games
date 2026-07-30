@@ -40,7 +40,11 @@ export const id: Messages = {
   movesLabel: 'Langkah',
   boardLabel: 'Papan permainan',
   cellLabel: '{value}, baris {row}, kolom {col}',
+  cellLabelStone: 'Batu, baris {row}, kolom {col}',
+  cellLabelWild: 'Wild, baris {row}, kolom {col}',
   hintNoneToast: 'Tidak ada pasangan — coba "Tambah".',
+  wildIntroToast: 'Kotak ✦ bisa dipasangkan dengan angka apa pun.',
+  stoneIntroToast: 'Batu tidak bisa dihapus dan menghalangi jalan.',
 
   clearTitle: 'Papan bersih!',
   clearBody: 'Semua angka berhasil dihapus.',

@@ -90,6 +90,10 @@ export interface AppContextValue {
   takeHint: () => readonly [number, number] | null;
   goHome: () => void;
   completeTutorial: () => void;
+  /** Which one-time explanations are still owed to the player (§16). */
+  flags: Flags;
+  /** Records that a one-time explanation has been shown. */
+  markIntroSeen: (flag: 'wildIntroSeen' | 'stoneIntroSeen') => void;
   resetAllData: () => Promise<void>;
 }
 
@@ -340,6 +344,13 @@ export function AppProvider({
     track('tutorial_completed');
   }, []);
 
+  const markIntroSeen = useCallback((flag: 'wildIntroSeen' | 'stoneIntroSeen') => {
+    if (flagsRef.current[flag]) return;
+    const next = { ...flagsRef.current, [flag]: true };
+    setFlags(next);
+    void saveRecord(flagsSchema, next);
+  }, []);
+
   const resetAllData = useCallback(async () => {
     await clearAllLocalData();
     resetAdState();
@@ -438,6 +449,8 @@ export function AppProvider({
       takeHint,
       goHome,
       completeTutorial,
+      flags,
+      markIntroSeen,
       resetAllData,
     }),
     [
@@ -447,7 +460,8 @@ export function AppProvider({
       sessions,
       stats,
       progress,
-      flags.tutorialCompleted,
+      flags,
+      markIntroSeen,
       today,
       lastResult,
       sessionEpoch,

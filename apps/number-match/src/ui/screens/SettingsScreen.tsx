@@ -6,6 +6,7 @@ import { useApp } from '../../state/AppContext';
 import { useSettings } from '../../state/SettingsContext';
 import { LANGUAGES, THEMES, type LanguageSetting, type ThemeSetting } from '../../storage/schemas';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { IconBack, IconChevronRight } from '../components/icons';
 import { Toggle } from '../components/Toggle';
 
 /**
@@ -24,7 +25,7 @@ export function SettingsScreen() {
     <div className="screen settings-screen">
       <header className="screen-header">
         <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
-          ←
+          <IconBack />
         </button>
         <h1>{t('settings')}</h1>
         <span className="icon-btn-placeholder" />
@@ -84,15 +85,21 @@ export function SettingsScreen() {
 
         <button type="button" className="settings-row" onClick={() => navigate('tutorial')}>
           <span className="settings-row-label">{t('howToPlay')}</span>
-          <span aria-hidden="true">›</span>
+          <span className="settings-row-chevron" aria-hidden="true">
+            <IconChevronRight />
+          </span>
         </button>
         <button type="button" className="settings-row" onClick={() => navigate('stats')}>
           <span className="settings-row-label">{t('statistics')}</span>
-          <span aria-hidden="true">›</span>
+          <span className="settings-row-chevron" aria-hidden="true">
+            <IconChevronRight />
+          </span>
         </button>
         <button type="button" className="settings-row" onClick={() => setShowPrivacy(true)}>
           <span className="settings-row-label">{t('privacyPolicy')}</span>
-          <span aria-hidden="true">›</span>
+          <span className="settings-row-chevron" aria-hidden="true">
+            <IconChevronRight />
+          </span>
         </button>
         <button
           type="button"
@@ -100,7 +107,9 @@ export function SettingsScreen() {
           onClick={() => setConfirmReset(true)}
         >
           <span className="settings-row-label">{t('resetData')}</span>
-          <span aria-hidden="true">›</span>
+          <span className="settings-row-chevron" aria-hidden="true">
+            <IconChevronRight />
+          </span>
         </button>
 
         <div className="settings-row settings-row-static">

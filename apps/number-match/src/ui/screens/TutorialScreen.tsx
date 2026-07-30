@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../../state/AppContext';
 import { useSettings } from '../../state/SettingsContext';
+import { IconClose } from '../components/icons';
 
 /**
  * Static example tiles used inside the 3-step tutorial.
@@ -92,7 +93,7 @@ export function TutorialScreen() {
         <h1>{t('howToPlay')}</h1>
         {tutorialCompleted ? (
           <button type="button" className="icon-btn" aria-label={t('close')} onClick={goHome}>
-            ✕
+            <IconClose />
           </button>
         ) : null}
       </header>

@@ -46,7 +46,11 @@ export const en = {
   movesLabel: 'Moves',
   boardLabel: 'Game board',
   cellLabel: '{value}, row {row}, column {col}',
+  cellLabelStone: 'Stone, row {row}, column {col}',
+  cellLabelWild: 'Wild, row {row}, column {col}',
   hintNoneToast: 'No pairs available — try Add.',
+  wildIntroToast: 'The ✦ tile pairs with any number.',
+  stoneIntroToast: 'Stones cannot be matched, and block the way.',
 
   // Result overlays
   clearTitle: 'Board cleared!',

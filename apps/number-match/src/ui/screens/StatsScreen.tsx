@@ -2,6 +2,7 @@ import { useApp } from '../../state/AppContext';
 import { totalBestScore } from '../../state/progressLogic';
 import { useSettings } from '../../state/SettingsContext';
 import type { ModeStats } from '../../storage/schemas';
+import { IconBack } from '../components/icons';
 import { formatDuration } from '../format';
 
 function StatsSection({
@@ -92,7 +93,7 @@ export function StatsScreen() {
     <div className="screen stats-screen">
       <header className="screen-header">
         <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
-          ←
+          <IconBack />
         </button>
         <h1>{t('statistics')}</h1>
         <span className="icon-btn-placeholder" />

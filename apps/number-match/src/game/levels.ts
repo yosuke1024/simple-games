@@ -47,6 +47,31 @@ export function pairBiasForLevel(level: number): number {
  */
 export const DAILY_PAIR_BIAS = 0.4;
 
+// Where stones and wilds start appearing (§16). The wild comes first: it only
+// ever helps, so it introduces the idea of a special tile before the obstacle
+// that punishes bad planning shows up. Both are deliberately low — they are
+// part of what the game is, not a late-game twist. Levels below the first wild
+// stay exactly as they were, which is also what keeps the tutorial honest.
+const FIRST_WILD_LEVEL = 10;
+const SECOND_WILD_LEVEL = 600;
+const FIRST_STONE_LEVEL = 30;
+const LEVELS_PER_EXTRA_STONE = 200;
+const MAX_STONES = 4;
+
+/** Wilds on a level's starting board: 1 from level 10, 2 from level 600. */
+export function wildCountForLevel(level: number): number {
+  const l = clampLevel(level);
+  if (l < FIRST_WILD_LEVEL) return 0;
+  return l >= SECOND_WILD_LEVEL ? 2 : 1;
+}
+
+/** Stones on a level's starting board: 1 from level 30, +1 every 200, max 4. */
+export function stoneCountForLevel(level: number): number {
+  const l = clampLevel(level);
+  if (l < FIRST_STONE_LEVEL) return 0;
+  return Math.min(MAX_STONES, 1 + Math.floor((l - FIRST_STONE_LEVEL) / LEVELS_PER_EXTRA_STONE));
+}
+
 /** Deterministic level board: same level → same board, on every device. */
 export function generateLevelBoard(level: number): Board {
   const l = clampLevel(level);
@@ -54,5 +79,7 @@ export function generateLevelBoard(level: number): Board {
     shape: shapeForLevel(l),
     cellCount: initialCellsForLevel(l),
     pairBias: pairBiasForLevel(l),
+    stoneCount: stoneCountForLevel(l),
+    wildCount: wildCountForLevel(l),
   });
 }

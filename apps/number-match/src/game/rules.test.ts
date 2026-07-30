@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blockingCells, canConnect, isMatchingValues, isValidPair } from './rules';
+import { blockingCells, blockingPath, canConnect, isMatchingValues, isValidPair } from './rules';
 import { makeBoard } from './test-helpers';
 
 describe('isMatchingValues', () => {
@@ -140,6 +140,46 @@ describe('blockingCells', () => {
   });
 });
 
+describe('blockingPath', () => {
+  it('traces the corridor the pair would have taken, blockers included', () => {
+    const board = makeBoard('3583');
+    const { path, blockers } = blockingPath(board, 0, 3);
+    expect(path).toEqual([1, 2]);
+    expect(blockers).toEqual([1, 2]);
+  });
+
+  it('spans the row-end wrap, so a blocker past the row end is explained', () => {
+    // Reading order runs 2行8列 → 2行9列 → 3行1列: the only blocker sits at the
+    // far right, which reads as unrelated unless the corridor is drawn.
+    const board = makeBoard('111111111', '111111185', '811111111');
+    const { path, blockers } = blockingPath(board, 16, 18);
+    expect(path).toEqual([17]);
+    expect(blockers).toEqual([17]);
+    expect(path).toContain(blockers[0]);
+  });
+
+  it('reports empty slots on the route, not just the blockers', () => {
+    // 8 . 5 . 8 — the corridor is three slots wide, only the 5 is in the way.
+    const board = makeBoard('8.5.8');
+    const { path, blockers } = blockingPath(board, 0, 4);
+    expect(path).toEqual([1, 2, 3]);
+    expect(blockers).toEqual([2]);
+  });
+
+  it('follows the vertical path when that is the one closest to connecting', () => {
+    const board = makeBoard('755555555', '755555555', '755555555');
+    const { path, blockers } = blockingPath(board, 0, 18);
+    expect(path).toEqual([9]);
+    expect(blockers).toEqual([9]);
+  });
+
+  it('is empty for a connecting pair and for degenerate input', () => {
+    expect(blockingPath(makeBoard('19'), 0, 1)).toEqual({ path: [], blockers: [] });
+    expect(blockingPath(makeBoard('19'), 0, 0)).toEqual({ path: [], blockers: [] });
+    expect(blockingPath(makeBoard('19'), 0, 99)).toEqual({ path: [], blockers: [] });
+  });
+});
+
 describe('isValidPair', () => {
   it('requires both cells to be live', () => {
     const board = makeBoard('1.9');
@@ -152,5 +192,61 @@ describe('isValidPair', () => {
     const board = makeBoard('129');
     expect(isValidPair(board, 0, 2)).toBe(false);
     expect(isValidPair(board, 0, 1)).toBe(false);
+  });
+});
+
+describe('wilds (§2)', () => {
+  it('pair with any number', () => {
+    // '*' is a wild; 3 and 7 would never match each other.
+    expect(isValidPair(makeBoard('*3'), 0, 1)).toBe(true);
+    expect(isValidPair(makeBoard('3*'), 0, 1)).toBe(true);
+    expect(isValidPair(makeBoard('*7'), 0, 1)).toBe(true);
+  });
+
+  it('pair with each other', () => {
+    expect(isValidPair(makeBoard('**'), 0, 1)).toBe(true);
+  });
+
+  it('still obey the connection rules', () => {
+    // A wild bends the value rule, never the "clear a path first" rule.
+    expect(isValidPair(makeBoard('*53'), 0, 2)).toBe(false);
+    expect(isValidPair(makeBoard('*.3'), 0, 2)).toBe(true);
+  });
+
+  it('are themselves in the way of a pair behind them', () => {
+    expect(canConnect(makeBoard('3*3'), 0, 2)).toBe(false);
+    expect(blockingCells(makeBoard('3*3'), 0, 2)).toEqual([1]);
+  });
+});
+
+describe('stones (§3, §4)', () => {
+  it('block reading order, including across the row-end wrap', () => {
+    // 'S' is a stone: opaque where a cleared cell or a hole is transparent.
+    expect(canConnect(makeBoard('3S3'), 0, 2)).toBe(false);
+    expect(canConnect(makeBoard('3.3'), 0, 2)).toBe(true);
+    expect(canConnect(makeBoard('11111111S', 'S11111111'), 7, 10)).toBe(false);
+  });
+
+  it('block vertically', () => {
+    const board = makeBoard('755555555', 'S55555555', '755555555');
+    expect(canConnect(board, 0, 18)).toBe(false);
+  });
+
+  it('block diagonally', () => {
+    const board = makeBoard('255555555', '5S5555555', '558555555');
+    expect(canConnect(board, 0, 20)).toBe(false);
+  });
+
+  it('are never matchable, not even with another stone', () => {
+    expect(isValidPair(makeBoard('SS'), 0, 1)).toBe(false);
+    expect(isValidPair(makeBoard('S5'), 0, 1)).toBe(false);
+    expect(isValidPair(makeBoard('S*'), 0, 1)).toBe(false);
+  });
+
+  it('are marked as being in the way, so the rejection is explained', () => {
+    // Without this the route would be drawn around an empty-looking slot.
+    const { path, blockers } = blockingPath(makeBoard('3S3'), 0, 2);
+    expect(path).toEqual([1]);
+    expect(blockers).toEqual([1]);
   });
 });

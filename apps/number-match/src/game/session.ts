@@ -5,13 +5,13 @@
  */
 import { generateBoard } from './board';
 import { INITIAL_CELLS, MAX_CELLS, UNDO_HISTORY_LIMIT } from './constants';
-import { dailySeed } from './daily';
+import { dailyDecorations, dailySeed } from './daily';
 import { addNumbers, applyMatchDetailed, getStatus } from './engine';
 import { DAILY_PAIR_BIAS, generateLevelBoard, levelSeed } from './levels';
 import { connectionGap } from './rules';
-import { INITIAL_SCORE, scoreAddNumbers, scoreClear, scoreMatch, type ScoreState } from './score';
+import { createScore, scoreAddNumbers, scoreClear, scoreMatch, type ScoreState } from './score';
 import { shapeForDaily } from './shapes';
-import type { Board, GameMode, GameStatus } from './types';
+import { isLive, type Board, type GameMode, type GameStatus } from './types';
 
 /**
  * Snapshot taken before a mutation, tagged so undo can revert counters and
@@ -42,6 +42,13 @@ export interface GameSession {
   readonly elapsedSeconds: number;
 }
 
+/** The board's starting numbers — the scoring budget for the whole game (§12). */
+export function liveCellCount(board: Board): number {
+  let count = 0;
+  for (const cell of board) if (isLive(cell)) count++;
+  return count;
+}
+
 function baseSession(
   mode: GameMode,
   seed: string,
@@ -57,7 +64,7 @@ function baseSession(
     board,
     history: [],
     status: getStatus(board),
-    score: INITIAL_SCORE,
+    score: createScore(liveCellCount(board)),
     moveCount: 0,
     addCount: 0,
     hintCount: 0,
@@ -79,6 +86,7 @@ export function createDailySession(dateString: string): GameSession {
     // Without a bias the daily would be harsher than level 999; a fixed
     // mid-curve value keeps every day about equally hard.
     pairBias: DAILY_PAIR_BIAS,
+    ...dailyDecorations(dateString),
   });
   return baseSession('daily', seed, dateString, null, board);
 }

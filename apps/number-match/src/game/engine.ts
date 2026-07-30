@@ -8,7 +8,15 @@
 import { COLS, MAX_CELLS } from './constants';
 import { hasAnyMove } from './hint';
 import { isValidPair } from './rules';
-import { isLive, type Board, type BoardCell, type Digit, type GameStatus } from './types';
+import {
+  hasLiveDigits,
+  isDigit,
+  isLive,
+  type Board,
+  type BoardCell,
+  type Digit,
+  type GameStatus,
+} from './types';
 
 interface CollapseResult {
   readonly board: Board;
@@ -18,10 +26,15 @@ interface CollapseResult {
 }
 
 /**
- * §4: removes every row that no longer holds a live number, so the rows below
+ * §4: removes every row that no longer holds a live cell, so the rows below
  * shift up. On a rectangular board this is the classic "a full row of nine
  * cleared cells disappears"; on a shaped board it is the same rule applied to
  * that row's own width.
+ *
+ * Stones are not live, so a row leaves with its stones once the numbers around
+ * them are gone — the only way a stone ever leaves the board (§4). They count
+ * towards `rowCellsRemoved` like any other slot: clearing a row around a stone
+ * is harder, not worth less.
  */
 function collapseDetailed(board: Board): CollapseResult {
   const kept: BoardCell[] = [];
@@ -58,8 +71,9 @@ export interface MatchResult {
  */
 export function applyMatchDetailed(board: Board, i: number, j: number): MatchResult | null {
   if (!isValidPair(board, i, j)) return null;
+  // Spread rather than rebuild: a cleared wild has to stay a wild.
   const next = board.map((cell, idx) =>
-    (idx === i || idx === j) && cell !== null ? { value: cell.value, cleared: true } : cell,
+    (idx === i || idx === j) && isLive(cell) ? { ...cell, cleared: true } : cell,
   );
   return collapseDetailed(next);
 }
@@ -69,9 +83,14 @@ export function applyMatch(board: Board, i: number, j: number): Board | null {
   return applyMatchDetailed(board, i, j)?.board ?? null;
 }
 
+/**
+ * §5: the numbers Add Numbers copies. Wilds are left out on purpose — one is
+ * placed when the board is generated and that is all the player ever gets, so
+ * the choice of when to spend it holds its weight to the last move.
+ */
 function liveValues(board: Board): Digit[] {
   const values: Digit[] = [];
-  for (const cell of board) if (isLive(cell)) values.push(cell.value);
+  for (const cell of board) if (isDigit(cell)) values.push(cell.value);
   return values;
 }
 
@@ -84,7 +103,7 @@ function liveValues(board: Board): Digit[] {
 function appendedRows(values: readonly Digit[]): BoardCell[] {
   const rows = Math.ceil(values.length / COLS);
   return Array.from({ length: rows * COLS }, (_, i) =>
-    i < values.length ? { value: values[i]!, cleared: false } : null,
+    i < values.length ? { kind: 'digit' as const, value: values[i]!, cleared: false } : null,
   );
 }
 
@@ -144,7 +163,7 @@ export function addNumbers(board: Board, maxCells: number = MAX_CELLS): Board | 
   while (placed < capacity) {
     const at = lastCell + 1 + placed;
     while (filled.length <= at) filled.push(null);
-    filled[at] = { value: values[placed]!, cleared: false };
+    filled[at] = { kind: 'digit', value: values[placed]!, cleared: false };
     placed++;
   }
 
@@ -155,9 +174,15 @@ export function addNumbers(board: Board, maxCells: number = MAX_CELLS): Board | 
   return [...filled, ...appendedRows(remaining)];
 }
 
-/** §6–§7: current status of a board. */
+/**
+ * §6–§7: current status of a board.
+ *
+ * Clearing is measured in numbers, not in live cells: a wild left over once
+ * every number is gone has nothing left to pair with and no way to be refilled
+ * (§5), so counting it would turn a finished board into a dead end.
+ */
 export function getStatus(board: Board, maxCells: number = MAX_CELLS): GameStatus {
-  if (!board.some((c) => isLive(c))) return 'cleared';
+  if (!hasLiveDigits(board)) return 'cleared';
   if (hasAnyMove(board)) return 'playing';
   return canAddNumbers(board, maxCells) ? 'playing' : 'gameOver';
 }
