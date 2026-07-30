@@ -1,7 +1,7 @@
 import type { Messages } from './en';
 
 export const th: Messages = {
-  appName: 'Number Match',
+  numberMatchName: 'Number Match',
   tagline: 'เล่นออฟไลน์ได้ ไม่ต้องมีบัญชี ไม่มีการล็อกฟีเจอร์',
 
   resume: 'เล่นต่อ',

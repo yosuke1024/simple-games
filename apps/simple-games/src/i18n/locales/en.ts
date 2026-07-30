@@ -3,7 +3,7 @@
  * All other locales must provide every key (enforced by the Messages type).
  */
 export const en = {
-  appName: 'Number Match',
+  numberMatchName: 'Number Match',
   tagline: 'Works offline. No account. No paywalls.',
 
   // Home

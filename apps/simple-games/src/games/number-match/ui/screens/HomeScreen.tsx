@@ -44,7 +44,7 @@ export function HomeScreen() {
         <div className="home-logo" aria-hidden="true">
           10
         </div>
-        <h1 className="home-title">{t('appName')}</h1>
+        <h1 className="home-title">{t('numberMatchName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>
 

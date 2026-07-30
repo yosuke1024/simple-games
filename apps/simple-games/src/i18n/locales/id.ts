@@ -1,7 +1,7 @@
 import type { Messages } from './en';
 
 export const id: Messages = {
-  appName: 'Number Match',
+  numberMatchName: 'Number Match',
   tagline: 'Bisa offline. Tanpa akun. Tanpa paywall.',
 
   resume: 'Lanjutkan',

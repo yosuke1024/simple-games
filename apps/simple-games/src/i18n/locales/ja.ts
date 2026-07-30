@@ -1,7 +1,7 @@
 import type { Messages } from './en';
 
 export const ja: Messages = {
-  appName: 'Number Match',
+  numberMatchName: 'Number Match',
   tagline: 'オフラインで遊べる。アカウント不要。機能課金なし。',
 
   resume: '続きから',

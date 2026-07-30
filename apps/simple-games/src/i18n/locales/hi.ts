@@ -1,7 +1,7 @@
 import type { Messages } from './en';
 
 export const hi: Messages = {
-  appName: 'Number Match',
+  numberMatchName: 'Number Match',
   tagline: 'ऑफ़लाइन खेलें। कोई खाता नहीं। कोई पेवॉल नहीं।',
 
   resume: 'जारी रखें',
