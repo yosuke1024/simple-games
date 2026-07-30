@@ -13,9 +13,16 @@
 import type { Difficulty, MinesweeperSession } from '../game';
 import type { Stats } from '../storage/schemas';
 
+/**
+ * Deep-copies a plain record. `structuredClone` needs a 2022-era WebView
+ * (Chromium 98) and low-spec devices are a release requirement; these records
+ * are small pure data, so the JSON round-trip covers every engine we reach.
+ */
+const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+
 /** Registers a started game (a new board or a retry, never a resume). */
 export function applyGameStart(stats: Stats, difficulty: Difficulty): Stats {
-  const next = structuredClone(stats);
+  const next = clone(stats);
   next[difficulty].played += 1;
   return next;
 }
@@ -23,7 +30,7 @@ export function applyGameStart(stats: Stats, difficulty: Difficulty): Stats {
 /** Books play seconds that have not been counted yet. */
 export function applyPlayTime(stats: Stats, difficulty: Difficulty, seconds: number): Stats {
   if (seconds <= 0) return stats;
-  const next = structuredClone(stats);
+  const next = clone(stats);
   next[difficulty].totalPlaySeconds += seconds;
   return next;
 }
@@ -44,7 +51,7 @@ export interface WinOutcome {
  * already been counted, so the same seconds cannot land in the total twice.
  */
 export function applyWin(stats: Stats, session: MinesweeperSession): WinOutcome {
-  const next = structuredClone(stats);
+  const next = clone(stats);
   const seconds = session.elapsedSeconds;
   const bucket = next[session.difficulty];
 

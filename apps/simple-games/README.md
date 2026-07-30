@@ -113,6 +113,14 @@ cd apps/simple-games/android && ./gradlew assembleRelease   # リリースビル
 
 要件: JDK 21、Android SDK(`local.properties` または `ANDROID_HOME`)。
 
+**低スペック端末はリリース要件**です(動かないなら配信しない)。サポート下限は
+minSdk 24(Android 7.0)+ **WebView Chromium 88 相当(2021 年初)**。JS は es2018 へ
+トランスパイルするため(`vite.config.ts`)、これより古い WebView でも白画面にはならず、
+下限を決めているのはトランスパイルされない CSS(`aspect-ratio` / flex `gap`)です。
+`structuredClone`(Chromium 98)や `color-mix` など新しめのプラットフォーム API は
+使わない。リリース前に実機またはエミュレータでの確認を必須とする
+([docs/RELEASE_CHECKLIST.md](../../docs/RELEASE_CHECKLIST.md))。
+
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Puzzles`
 - versionName / versionCode: `android/app/build.gradle` で管理(アプリ単位で更新。

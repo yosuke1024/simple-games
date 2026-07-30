@@ -509,6 +509,14 @@ button:disabled {
   position: relative;
 }
 
+/* `inert` needs a 2022-era WebView (Chromium 102). The attribute selector
+   matches regardless, so older engines still get the part that matters on a
+   touch screen: nothing behind a result dialog reacts to a tap. */
+.game-content[inert] {
+  pointer-events: none;
+  user-select: none;
+}
+
 .game-topbar {
   display: flex;
   align-items: center;

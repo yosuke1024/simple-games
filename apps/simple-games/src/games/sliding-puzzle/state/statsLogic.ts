@@ -11,9 +11,16 @@
 import { MAX_LEVEL, type Size, type SlidingPuzzleSession } from '../game';
 import { sizeKey, type Progress, type Stats } from '../storage/schemas';
 
+/**
+ * Deep-copies a plain record. `structuredClone` needs a 2022-era WebView
+ * (Chromium 98) and low-spec devices are a release requirement; these records
+ * are small pure data, so the JSON round-trip covers every engine we reach.
+ */
+const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+
 /** Registers a started game (new game or restart, not resume). */
 export function applyGameStart(stats: Stats, size: Size): Stats {
-  const next = structuredClone(stats);
+  const next = clone(stats);
   next[sizeKey(size)].played += 1;
   return next;
 }
@@ -27,7 +34,7 @@ export function applyGameStart(stats: Stats, size: Size): Stats {
  * totalPlaySeconds twice.
  */
 export function applySolved(stats: Stats, size: Size, seconds: number, moves: number): Stats {
-  const next = structuredClone(stats);
+  const next = clone(stats);
   const bucket = next[sizeKey(size)];
   bucket.solved += 1;
   if (bucket.bestSeconds === null || seconds < bucket.bestSeconds) bucket.bestSeconds = seconds;
@@ -38,7 +45,7 @@ export function applySolved(stats: Stats, size: Size, seconds: number, moves: nu
 /** Books play seconds that have not been counted yet. */
 export function applyPlayTime(stats: Stats, size: Size, seconds: number): Stats {
   if (seconds <= 0) return stats;
-  const next = structuredClone(stats);
+  const next = clone(stats);
   next[sizeKey(size)].totalPlaySeconds += seconds;
   return next;
 }

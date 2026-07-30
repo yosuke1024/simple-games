@@ -50,6 +50,9 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 - [ ] `versionCode` / `versionName` を上げた(`android/app/build.gradle`)
 - [ ] 署名鍵で署名した AAB を作成(鍵はリポジトリに入れない)
 - [ ] 低スペック端末またはエミュレータで、起動 → 各ゲーム 1 局 → 中断 → 再開
+      (**リリース要件**。WebView をサポート下限の Chromium 88 相当に近い状態でも
+      確認する — 例: API 24〜26 のエミュレータイメージを WebView 未更新のまま使う。
+      動かないなら配信しない)
 - [ ] ホームボタン / 戻るボタンでゲームが失われない
 - [ ] ダークモードで全画面を確認
 - [ ] フォント倍率を最大にして主要画面が崩れない
@@ -61,7 +64,12 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 - [ ] テスト広告ではなく本番 ID でビルドされていることを確認
       (`VITE_ADMOB_USE_TEST_ADS` が未設定)
 - [ ] Play Console にアプリ内商品 `remove_ads` を作成(USD 3.99、国別自動価格)
+- [ ] Play Console の「ライセンス テスト」にテスト用 Google アカウントを登録し、
+      **内部テストトラック経由でインストールした**ビルドで購入フローを確認
+      (課金は Play 配布ビルドでしか動かない。サイドロード APK では
+      `isBillingSupported` が false になり購入 UI が出ない — それは正常)
 - [ ] 購入 → バナーが消える → アプリ再起動後も消えたまま
+- [ ] 購入キャンセル → 何も変わらない・エラー表示が出ない
 - [ ] 別端末で「購入を復元」が機能する
 - [ ] 購入前の画面で購入を繰り返し促していない
 
