@@ -1,0 +1,89 @@
+/**
+ * Converts between the in-memory SudokuSession and its persisted form.
+ * Undo history is intentionally not persisted (docs/SUDOKU_RULES.md §11).
+ *
+ * Each mode has its own slot, so suspending a level game and playing the daily
+ * never costs you either one.
+ */
+import type { KVStore } from '../../../storage/kv';
+import { preferencesKV } from '../../../storage/kv';
+import { loadRecord, removeRecord, saveRecord } from '../../../storage/repo';
+import {
+  decodeBoard,
+  decodeSolution,
+  encodeBoard,
+  encodeSolution,
+  restoreSession,
+  type GameMode,
+  type SudokuSession,
+} from '../game';
+import { dailyGameSchema, gameSchema, type PersistedGame } from './schemas';
+
+export interface SavedGames {
+  level: SudokuSession | null;
+  daily: SudokuSession | null;
+}
+
+const schemaFor = (mode: GameMode) => (mode === 'daily' ? dailyGameSchema : gameSchema);
+
+export function toPersisted(session: SudokuSession, savedAt: number): PersistedGame {
+  const board = encodeBoard(session.board);
+  return {
+    schemaVersion: 1,
+    mode: session.mode,
+    seed: session.seed,
+    difficulty: session.difficulty,
+    dailyDate: session.dailyDate,
+    level: session.level,
+    givens: board.givens,
+    entries: board.entries,
+    notes: board.notes,
+    solution: encodeSolution(session.solution),
+    mistakeCount: session.mistakeCount,
+    hintCount: session.hintCount,
+    elapsedSeconds: session.elapsedSeconds,
+    savedAt,
+  };
+}
+
+function toSession(persisted: PersistedGame | null): SudokuSession | null {
+  if (persisted === null) return null;
+  const board = decodeBoard({
+    givens: persisted.givens,
+    entries: persisted.entries,
+    notes: persisted.notes,
+  });
+  const solution = decodeSolution(persisted.solution);
+  if (board === null || solution === null) return null;
+
+  const session = restoreSession({
+    mode: persisted.mode,
+    seed: persisted.seed,
+    difficulty: persisted.difficulty,
+    dailyDate: persisted.dailyDate,
+    level: persisted.level,
+    board,
+    solution,
+    mistakeCount: persisted.mistakeCount,
+    hintCount: persisted.hintCount,
+    elapsedSeconds: persisted.elapsedSeconds,
+  });
+  // Only resume a game that is still in progress.
+  return session.status === 'playing' ? session : null;
+}
+
+export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
+  const [level, daily] = await Promise.all([
+    loadRecord(gameSchema, kv),
+    loadRecord(dailyGameSchema, kv),
+  ]);
+  return { level: toSession(level), daily: toSession(daily) };
+}
+
+export async function saveGame(session: SudokuSession, kv: KVStore = preferencesKV): Promise<void> {
+  await saveRecord(schemaFor(session.mode), toPersisted(session, Date.now()), kv);
+}
+
+export async function clearSavedGame(mode: GameMode, kv: KVStore = preferencesKV): Promise<void> {
+  await removeRecord(schemaFor(mode).key, kv);
+}

@@ -20,6 +20,15 @@ export function App() {
   const openSettings = useCallback(() => setView({ kind: 'settings' }), []);
   const openGame = useCallback((gameId: GameId) => setView({ kind: 'game', gameId }), []);
 
+  // One accent per title (packages/brand titleAccents): the shell stamps which
+  // game is on screen and styles.css swaps just the accent tokens. The series
+  // base never changes, which is what keeps two games looking like one app.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (view.kind === 'game') root.dataset.game = view.gameId;
+    else delete root.dataset.game;
+  }, [view]);
+
   // Hardware back at the shell level. While a game is mounted the game's own
   // handler runs instead (this effect unregisters to keep exactly one owner).
   useEffect(() => {

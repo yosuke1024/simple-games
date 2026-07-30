@@ -83,6 +83,19 @@ export const titleAccents = {
     onDark: '#12161c',
     softDark: '#243043',
   },
+  /**
+   * Sudoku — muted teal. Far enough from the indigo to tell the two games
+   * apart at a glance, and still cool and low-saturation so a full grid of
+   * accent-coloured entries stays restful to read.
+   */
+  sudoku: {
+    light: '#2f6f62',
+    onLight: '#ffffff',
+    softLight: '#dcebe6',
+    dark: '#6fb3a3',
+    onDark: '#101815',
+    softDark: '#1e3b34',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

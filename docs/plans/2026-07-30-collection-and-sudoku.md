@@ -175,10 +175,10 @@ Remove Ads & Support Simple Games。リンク先は GitHub(オフライン時は
 | --- | --- | --- |
 | M0 | main クリーン化 | ✅ 2026-07-30 |
 | M1 | ゲーム集移行: シェル+レジストリ+NM 再配線、バナー専用化(interstitial/analytics/remoteConfig 削除)、IAP 基盤、OSS 導線、i18n 基盤強化、文書全面整合 | ✅ 2026-07-30(lint/typecheck/test/build 緑、Web 動作確認済) |
-| M2 | `docs/SUDOKU_RULES.md` 執筆(§3 の正式化) | |
-| M3 | Sudoku コア(types/rng/solver/generator/grader)+ テスト | |
-| M4 | Sudoku プレイ層(engine/hint/levels/daily/session/serialize)+ テスト | |
-| M5 | Sudoku UI + i18n + シェル統合 + チュートリアル | |
+| M2 | `docs/SUDOKU_RULES.md` 執筆(§3 の正式化) | ✅ 2026-07-30 |
+| M3 | Sudoku コア(types/rng/solver/generator/grader)+ テスト | ✅ 2026-07-30(ティア定義を実測で改訂。SUDOKU_RULES.md §6 参照) |
+| M4 | Sudoku プレイ層(engine/hint/levels/daily/session/serialize)+ テスト | ✅ 2026-07-30(golden 盤面を固定) |
+| M5 | Sudoku UI + i18n + シェル統合 + チュートリアル | ✅ 2026-07-30(Web 動作確認済。テスト 348 件緑) |
 | M6 | 2048(盤ロジックは小さい。undo・統計・デイリーは共通パターン踏襲) | |
 | M7 | Sliding Puzzle(画像なし数字タイル・可解性保証シャッフル) | |
 | M8 | Minesweeper(初手安全保証・旗/開閉 UI) | |
@@ -204,10 +204,12 @@ Remove Ads & Support Simple Games。リンク先は GitHub(オフライン時は
 
 ## 6. 残る未決事項
 
-1. Sudoku レベル 1〜999 の難易度カーブ表(M2 で確定)。
-2. Sudoku Hint 説明文の粒度(技法名を出すか。言語数の負荷との兼ね合い。M2 で確定)。
+1. ~~Sudoku レベル 1〜999 の難易度カーブ表~~ → SUDOKU_RULES.md §9 で確定。
+2. ~~Sudoku Hint 説明文の粒度~~ → 技法名は UI に出さず平易な言い換えのみ(§5 で確定)。
 3. 2048 以降の各ゲーム仕様書(各実装マイルストーン冒頭で `docs/<GAME>_RULES.md` を書く)。
 4. iOS 展開の時期(現状 Android のみ。IAP 文言はストア中立にしておく)。
+5. Sudoku のアイコン/スプラッシュ用モチーフ(現状はホーム画面の `⌗` グリフのみ。
+   コレクションのアイコン刷新と併せて M9 で作る)。
 
 ## 7. 多言語戦略(2026-07-30 追加指示の反映)
 

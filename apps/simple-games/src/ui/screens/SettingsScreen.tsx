@@ -181,6 +181,11 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           )}
         </section>
 
+        {/* Each game's own options, contributed by the game itself. */}
+        {GAMES.map((game) =>
+          game.SettingsSection ? <game.SettingsSection key={game.id} /> : null,
+        )}
+
         {/* The open-source links: the promises above are verifiable in code. */}
         <section className="settings-group" aria-label={t('aboutTitle')}>
           <h2 className="settings-group-title">{t('aboutTitle')}</h2>
