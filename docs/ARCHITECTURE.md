@@ -126,10 +126,11 @@ src/
 - `ui/styles.css` に置くのは共有シェルのみ: デザイントークン(下地・アクセント・
   `data-game` の上書き)、コレクションホーム、設定 / About、ダイアログ・トースト・
   チュートリアル・バナースロットなどの共通クロム。
-- 現状の例外: **Number Match と Sudoku の盤面スタイルは今も `ui/styles.css` に残っている**
-  (この規約より前に書かれたため)。新しい 3 タイトルは
-  `game-2048.css` / `minesweeper.css` / `sliding-puzzle.css` を持つ。
-  規約に合わせて切り出すかは未着手。
+- **5 タイトルすべてが規約に従っている**: `number-match.css` / `sudoku.css` /
+  `game-2048.css` / `minesweeper.css` / `sliding-puzzle.css`。
+- ゲームの CSS は色を書かない。共有のカスタムプロパティ(`--accent` など)だけを使い、
+  どの色になるかはシェルが root に付けた `data-game` が決める。
+  ゲーム側にパレット値が複製されないので、下地を変えるときに触る場所は 1 か所で済む。
 
 ## 広告と課金
 

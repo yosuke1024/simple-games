@@ -26,6 +26,7 @@ import { SudokuHomeScreen } from './screens/HomeScreen';
 import { SudokuLevelSelectScreen } from './screens/LevelSelectScreen';
 import { SudokuStatsScreen } from './screens/StatsScreen';
 import { SudokuTutorialScreen } from './screens/TutorialScreen';
+import './sudoku.css';
 
 export function SudokuScreens() {
   const { screen } = useSudoku();
