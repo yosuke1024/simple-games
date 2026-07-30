@@ -96,6 +96,19 @@ export const titleAccents = {
     onDark: '#101815',
     softDark: '#1e3b34',
   },
+  /**
+   * Sliding Puzzle — warm clay. The board is a solid field of tiles, so the
+   * accent covers more area here than in any other title; a warm, muted tone
+   * carries that much surface without shouting.
+   */
+  slidingPuzzle: {
+    light: '#9c5b3c',
+    onLight: '#ffffff',
+    softLight: '#f2e2d8',
+    dark: '#d1926f',
+    onDark: '#1a120e',
+    softDark: '#3a2820',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

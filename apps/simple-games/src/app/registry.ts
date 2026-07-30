@@ -6,12 +6,14 @@
 import type { ComponentType } from 'react';
 import { NM_STORAGE_KEYS } from '../games/number-match/storage/schemas';
 import { NumberMatchRoot } from '../games/number-match/ui/NumberMatchRoot';
+import { SP_STORAGE_KEYS } from '../games/sliding-puzzle/storage/schemas';
+import { SlidingPuzzleRoot } from '../games/sliding-puzzle/ui/SlidingPuzzleRoot';
 import { SD_STORAGE_KEYS } from '../games/sudoku/storage/schemas';
 import { SudokuRoot } from '../games/sudoku/ui/SudokuRoot';
 import { SudokuSettingsSection } from '../games/sudoku/ui/SudokuSettingsSection';
 import type { MessageKey } from '../i18n';
 
-export type GameId = 'number-match' | 'sudoku';
+export type GameId = 'number-match' | 'sudoku' | 'sliding-puzzle';
 
 export interface GameModule {
   id: GameId;
@@ -51,5 +53,13 @@ export const GAMES: readonly GameModule[] = [
     Root: SudokuRoot,
     storageKeys: Object.values(SD_STORAGE_KEYS),
     SettingsSection: SudokuSettingsSection,
+  },
+  {
+    id: 'sliding-puzzle',
+    title: 'Sliding Puzzle',
+    blurbKey: 'slideBlurb',
+    glyph: '⇄',
+    Root: SlidingPuzzleRoot,
+    storageKeys: Object.values(SP_STORAGE_KEYS),
   },
 ];

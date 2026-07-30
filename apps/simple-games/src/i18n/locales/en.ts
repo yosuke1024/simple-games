@@ -173,6 +173,39 @@ export const en = {
   sudokuStep2Body: 'Tap Notes to pencil in candidates while you narrow a cell down.',
   sudokuStep3Title: 'Stuck? Take a hint',
   sudokuStep3Body: 'A hint shows which cell is decided and why. Hints and undo are always free.',
+
+  // ---- Sliding Puzzle ----
+  slideName: 'Sliding Puzzle',
+  slideBlurb: 'Slide the numbers back into order.',
+
+  // Board and accessibility
+  slideBoardLabel: 'Sliding puzzle board',
+  slideTileLabel: '{value}, row {row}, column {col}',
+  slideBlankLabel: 'Empty, row {row}, column {col}',
+  slideSizeLabel: '{n}x{n}',
+
+  // Play
+  slideMoves: 'Moves',
+  slideBestMoves: 'Fewest moves',
+
+  // Clear screen
+  slideSolvedTitle: 'Solved!',
+  slideSolvedBody: 'Every number is back in order.',
+  slideNewBestMoves: 'Your fewest moves yet.',
+  slideNewBestTime: 'Your fastest yet.',
+
+  // Statistics and daily
+  slideLevelsSolved: 'Levels solved',
+  slideDailiesSolved: 'Dailies solved',
+  slideDailyBacklogHint: 'Every earlier day stays open.',
+
+  // Quick Rules (3 steps, §11)
+  slideStep1Title: 'Tap next to the gap',
+  slideStep1Body: 'Tap a tile beside the empty square and it slides into it.',
+  slideStep2Title: 'A whole row moves',
+  slideStep2Body: 'In the same row or column, every tile in between slides together.',
+  slideStep3Title: 'Put 1 to the end in order',
+  slideStep3Body: 'Line the numbers up in reading order with the gap at the bottom right.',
 } as const;
 
 export type Messages = Record<keyof typeof en, string>;

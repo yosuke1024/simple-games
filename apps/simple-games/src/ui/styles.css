@@ -44,6 +44,14 @@
   --accent-ring-soft: rgba(47, 111, 98, 0.12);
 }
 
+:root[data-game='sliding-puzzle'] {
+  --accent: #9c5b3c;
+  --accent-ink: #ffffff;
+  --accent-soft: #f2e2d8;
+  --accent-ring: rgba(156, 91, 60, 0.38);
+  --accent-ring-soft: rgba(156, 91, 60, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -72,6 +80,14 @@
   --accent-soft: #1e3b34;
   --accent-ring: rgba(111, 179, 163, 0.42);
   --accent-ring-soft: rgba(111, 179, 163, 0.14);
+}
+
+:root[data-theme='dark'][data-game='sliding-puzzle'] {
+  --accent: #d1926f;
+  --accent-ink: #1a120e;
+  --accent-soft: #3a2820;
+  --accent-ring: rgba(209, 146, 111, 0.42);
+  --accent-ring-soft: rgba(209, 146, 111, 0.14);
 }
 
 * {
