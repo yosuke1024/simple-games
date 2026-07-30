@@ -122,6 +122,15 @@ export const hi: Messages = {
   removeAdsAction: 'विज्ञापन हटाएँ',
   restorePurchase: 'खरीद पुनर्स्थापित करें',
   purchaseThanks: 'बैनर विज्ञापन हटा दिए गए हैं। Simple Games का समर्थन करने के लिए धन्यवाद।',
+
+  reviewPromptTitle: 'क्या आपको Simple Games पसंद आ रहा है?',
+  reviewYes: 'हाँ, मज़ा आ रहा है',
+  reviewNo: 'कुछ ख़ास नहीं',
+  reviewLater: 'अभी नहीं',
+  reviewFeedbackTitle: 'क्या बेहतर हो सकता है?',
+  reviewFeedbackBody:
+    'हमें ईमेल से बताएँ — हम हर संदेश पढ़ते हैं। जब तक आप मेल ऐप में भेजें नहीं दबाते, कुछ भी नहीं भेजा जाता।',
+  reviewFeedbackAction: 'ईमेल लिखें',
   privacy5:
     'बैनर विज्ञापन हटाने के लिए एक वैकल्पिक, एक बार की खरीद उपलब्ध है। भुगतान Google Play संसाधित करता है; PixApps को भुगतान विवरण कभी नहीं मिलते और न ही सहेजे जाते हैं।',
 
@@ -190,34 +199,39 @@ export const hi: Messages = {
   slideStep3Title: '1 से क्रम में लगाएँ',
   slideStep3Body: 'संख्याएँ पढ़ने के क्रम में लगाएँ और खाली जगह नीचे दाएँ रखें।',
 
-  // ---- 2048 ----
-  g2048Name: '2048',
-  g2048Blurb: 'एक जैसी संख्याओं को मिलाकर दोगुना करें और 2048 बनाएँ।',
+  // ---- Nonogram ----
+  nonoName: 'नोनोग्राम',
+  nonoBlurb: 'संख्याओं के संकेत से खाने रंगें।',
 
-  g2048ModeClassic: 'क्लासिक',
-  g2048DailyPlayedBadge: 'आज खेला गया',
+  nonoBoardLabel: 'नोनोग्राम बोर्ड, {size}×{size}',
+  nonoCellBlank: 'खाली, पंक्ति {row}, स्तंभ {col}',
+  nonoCellFilled: 'रंगा हुआ, पंक्ति {row}, स्तंभ {col}',
+  nonoCellCrossed: '×, पंक्ति {row}, स्तंभ {col}',
+  nonoRowClueLabel: 'पंक्ति {n}: {clue}',
+  nonoColClueLabel: 'स्तंभ {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
 
-  g2048BoardLabel: '2048 बोर्ड',
-  g2048CellLabel: '{value}, पंक्ति {row}, स्तंभ {col}',
-  g2048CellEmpty: 'खाली, पंक्ति {row}, स्तंभ {col}',
-  g2048Restart: 'फिर से शुरू करें',
+  nonoXMode: '× मोड',
+  nonoXModeNote: 'टैप से × लगता है; देर तक दबाने से रंगता है।',
+  nonoHintFound: 'हाइलाइट पंक्ति से एक खाना तय होता है।',
+  nonoHintBroken: 'हाइलाइट पंक्ति अब संकेत से मेल नहीं खाती।',
+  nonoHintNone: 'अभी कोई निश्चित चाल नहीं मिली।',
 
-  g2048OverBody: 'बोर्ड भर गया है और कोई भी टाइल नहीं जुड़ सकती।',
-  g2048WinTitle: 'आपने 2048 बना लिया!',
-  g2048WinBody: 'खेल यहाँ खत्म नहीं होता — जब तक चाहें खेलते रहें।',
-  g2048KeepPlaying: 'खेलते रहें',
+  nonoSolvedTitle: 'हल हो गया!',
+  nonoSolvedBody: 'सभी संकेत पूरे हुए।',
+  nonoHintsUsed: 'इस्तेमाल हुए संकेत',
+  nonoNewBestTime: 'आपका सबसे तेज़ समय।',
 
-  g2048BestScore: 'सर्वश्रेष्ठ स्कोर',
-  g2048BestTile: 'सबसे बड़ी टाइल',
-  g2048Wins: '2048 तक पहुँचे',
-  g2048DaysPlayed: 'खेले गए दिन',
+  nonoLevelsSolved: 'हल किए गए स्तर',
+  nonoDailiesSolved: 'हल की गई दैनिक पहेलियाँ',
+  nonoDailyBacklogHint: 'पिछले दिन हमेशा खुले रहते हैं।',
 
-  g2048Step1Title: 'स्वाइप करके चलाएँ',
-  g2048Step1Body: 'स्वाइप करें, और सभी टाइलें एक साथ उसी दिशा में सरक जाती हैं।',
-  g2048Step2Title: 'समान संख्याएँ जुड़ती हैं',
-  g2048Step2Body: 'एक जैसी दो टाइलें मिलकर उनका दोगुना बन जाती हैं।',
-  g2048Step3Title: '2048 बनाएँ',
-  g2048Step3Body: 'अटक गए? अनडू हमेशा मुफ़्त और असीमित है, जितनी बार चाहें।',
+  nonoStep1Title: 'संख्याएँ लगातार खाने हैं',
+  nonoStep1Body: 'हर संख्या उस पंक्ति में लगातार रंगे खानों का समूह है; समूहों के बीच कम से कम एक खाली खाना रहता है।',
+  nonoStep2Title: 'जो नहीं रंगना, उस पर ×',
+  nonoStep2Body: 'खाली रहने वाले खानों पर × लगाकर संभावनाएँ घटाएँ।',
+  nonoStep3Title: 'हर पंक्ति पूरी करें',
+  nonoStep3Body: 'सभी पंक्तियाँ और स्तंभ पूरे होते ही पहेली हल। अनुमान की कभी ज़रूरत नहीं।',
 
   // ---- Minesweeper ----
   minesName: 'माइनस्वीपर',

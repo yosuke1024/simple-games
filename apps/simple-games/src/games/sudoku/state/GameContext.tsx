@@ -23,6 +23,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
 import {
   countHintUse,
@@ -185,6 +186,7 @@ export function SudokuProvider({
           next.elapsedSeconds,
         ),
       );
+      recordGameCompleted();
       const outcome = applySolveToProgress(progressRef.current, next);
       persistProgress(outcome.progress);
       setLastResult({

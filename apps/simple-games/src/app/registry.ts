@@ -8,10 +8,10 @@
  * built, so the list stays useful as it grows.
  */
 import type { ComponentType } from 'react';
-import { G2048_STORAGE_KEYS } from '../games/game-2048/storage/schemas';
-import { Game2048Root } from '../games/game-2048/ui/Game2048Root';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/schemas';
 import { MinesweeperRoot } from '../games/minesweeper/ui/MinesweeperRoot';
+import { NG_STORAGE_KEYS } from '../games/nonogram/storage/schemas';
+import { NonogramRoot } from '../games/nonogram/ui/NonogramRoot';
 import { NM_STORAGE_KEYS } from '../games/number-match/storage/schemas';
 import { NumberMatchRoot } from '../games/number-match/ui/NumberMatchRoot';
 import { SP_STORAGE_KEYS } from '../games/sliding-puzzle/storage/schemas';
@@ -21,12 +21,7 @@ import { SudokuRoot } from '../games/sudoku/ui/SudokuRoot';
 import { SudokuSettingsSection } from '../games/sudoku/ui/SudokuSettingsSection';
 import type { MessageKey } from '../i18n';
 
-export type GameId =
-  | 'sudoku'
-  | 'minesweeper'
-  | 'game-2048'
-  | 'number-match'
-  | 'sliding-puzzle';
+export type GameId = 'sudoku' | 'minesweeper' | 'nonogram' | 'number-match' | 'sliding-puzzle';
 
 export interface GameModule {
   id: GameId;
@@ -68,12 +63,12 @@ export const GAMES: readonly GameModule[] = [
     storageKeys: Object.values(MS_STORAGE_KEYS),
   },
   {
-    id: 'game-2048',
-    title: '2048',
-    blurbKey: 'g2048Blurb',
-    glyph: '2048',
-    Root: Game2048Root,
-    storageKeys: Object.values(G2048_STORAGE_KEYS),
+    id: 'nonogram',
+    title: 'Nonogram',
+    blurbKey: 'nonoBlurb',
+    glyph: '▦',
+    Root: NonogramRoot,
+    storageKeys: Object.values(NG_STORAGE_KEYS),
   },
   {
     id: 'number-match',

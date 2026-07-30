@@ -119,6 +119,17 @@ export const ja: Messages = {
   removeAdsAction: '広告を削除',
   restorePurchase: '購入を復元',
   purchaseThanks: 'バナー広告は削除されています。Simple Games を支援いただきありがとうございます。',
+
+  // Store review
+  reviewPromptTitle: 'Simple Games を楽しめていますか?',
+  reviewYes: 'はい、楽しいです',
+  reviewNo: 'いまいち',
+  reviewLater: 'あとで',
+  reviewFeedbackTitle: '気になる点を教えてください',
+  reviewFeedbackBody:
+    'メールでご意見をお聞かせください。すべて目を通しています。メールアプリで送信するまで、何も送信されません。',
+  reviewFeedbackAction: 'メールを書く',
+
   privacy5:
     '任意の買い切り購入でバナー広告を削除できます。決済は Google Play が処理し、PixApps が支払い情報を受け取ること・保存することはありません。',
 
@@ -187,34 +198,39 @@ export const ja: Messages = {
   slideStep3Title: '1から順に並べる',
   slideStep3Body: '1から順に並び、空きが右下に来れば完成です。',
 
-  // ---- 2048 ----
-  g2048Name: '2048',
-  g2048Blurb: '同じ数字を寄せて合わせ、2048を作る。',
+  // ---- Nonogram ----
+  nonoName: 'ノノグラム',
+  nonoBlurb: '数字を手がかりにマスを塗る。',
 
-  g2048ModeClassic: 'クラシック',
-  g2048DailyPlayedBadge: '今日はプレイ済み',
+  nonoBoardLabel: 'ノノグラムの盤面、{size}×{size}',
+  nonoCellBlank: '未定、{row}行 {col}列',
+  nonoCellFilled: '塗り、{row}行 {col}列',
+  nonoCellCrossed: '×、{row}行 {col}列',
+  nonoRowClueLabel: '{n}行目の手がかり: {clue}',
+  nonoColClueLabel: '{n}列目の手がかり: {clue}',
+  nonoSizeLabel: '{n}×{n}',
 
-  g2048BoardLabel: '2048の盤面',
-  g2048CellLabel: '{value}、{row}行{col}列',
-  g2048CellEmpty: '空き、{row}行{col}列',
-  g2048Restart: '最初から',
+  nonoXMode: '×モード',
+  nonoXModeNote: 'タップで×を付け、長押しで塗ります。',
+  nonoHintFound: '強調された行・列で、1マスが確定します。',
+  nonoHintBroken: '強調された行・列が手がかりと合わなくなっています。',
+  nonoHintNone: '今わかる手が見つかりません。',
 
-  g2048OverBody: '盤面が埋まり、合わせられるタイルがありません。',
-  g2048WinTitle: '2048を作りました！',
-  g2048WinBody: 'ここで終わりではありません。好きなだけ続けられます。',
-  g2048KeepPlaying: '続ける',
+  nonoSolvedTitle: '完成！',
+  nonoSolvedBody: 'すべての手がかりを満たしました。',
+  nonoHintsUsed: '使ったヒント',
+  nonoNewBestTime: '自己最速です。',
 
-  g2048BestScore: 'ベストスコア',
-  g2048BestTile: '最高タイル',
-  g2048Wins: '2048達成回数',
-  g2048DaysPlayed: 'プレイした日数',
+  nonoLevelsSolved: 'クリアしたレベル',
+  nonoDailiesSolved: 'クリアしたデイリー',
+  nonoDailyBacklogHint: '過去の日はいつでも挑戦できます。',
 
-  g2048Step1Title: 'スワイプで動かす',
-  g2048Step1Body: 'スワイプすると、すべてのタイルがその方向へ動きます。',
-  g2048Step2Title: '同じ数字は合わさる',
-  g2048Step2Body: '同じ数字がぶつかると、2倍の数字1つになります。',
-  g2048Step3Title: '2048を作る',
-  g2048Step3Body: '詰まっても大丈夫。戻すのはいつでも無料・無制限です。',
+  nonoStep1Title: '数字は連続して塗る数',
+  nonoStep1Body: '数字はその行・列で連続して塗るマスの数。複数あるときは間を1マス以上あけます。',
+  nonoStep2Title: '塗らないマスに×',
+  nonoStep2Body: '塗らないと分かったマスに×を付けて、置き方を絞り込みます。',
+  nonoStep3Title: 'すべての行と列を満たす',
+  nonoStep3Body: 'すべての行と列の数字を満たせば完成。推測は要りません。',
 
   // ---- Minesweeper ----
   minesName: 'マインスイーパ',

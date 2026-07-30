@@ -34,7 +34,7 @@ src/
 ├── games/                  # 各ゲームは game/ state/ storage/ ui/ で自己完結
 │   ├── sudoku/
 │   ├── minesweeper/
-│   ├── game-2048/
+│   ├── nonogram/
 │   ├── number-match/
 │   └── sliding-puzzle/
 ├── monetization/           # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
@@ -48,7 +48,8 @@ src/
 この配置への再編と収録ゲームの計画は
 [plans/2026-07-30-collection-and-sudoku.md](plans/2026-07-30-collection-and-sudoku.md) を参照。
 各ゲームのルールは [SUDOKU_RULES.md](SUDOKU_RULES.md) /
-[MINESWEEPER_RULES.md](MINESWEEPER_RULES.md) / [GAME_2048_RULES.md](GAME_2048_RULES.md) /
+[MINESWEEPER_RULES.md](MINESWEEPER_RULES.md) /
+[NONOGRAM_RULES.md](NONOGRAM_RULES.md) /
 [NUMBER_MATCH_RULES.md](NUMBER_MATCH_RULES.md) /
 [SLIDING_PUZZLE_RULES.md](SLIDING_PUZZLE_RULES.md) を唯一のソースとする。
 
@@ -75,7 +76,7 @@ src/
 
 | フィールド | 内容 |
 | --- | --- |
-| `id` | `'sudoku'` / `'minesweeper'` / `'game-2048'` / `'number-match'` / `'sliding-puzzle'`。`data-game` 属性にもこの値を使う |
+| `id` | `'sudoku'` / `'minesweeper'` / `'nonogram'` / `'number-match'` / `'sliding-puzzle'`。`data-game` 属性にもこの値を使う |
 | `title` | 固有名詞。全言語で同一表記(翻訳しない) |
 | `blurbKey` | コレクションカードの 1 行説明(ローカライズ対象) |
 | `glyph` | シリーズマーク。アクセント色のタイルに 1 文字 |
@@ -104,7 +105,7 @@ src/
 | Number Match | 藍 | `#3f5b8f` | `#7d9ccf` |
 | Sudoku | くすんだティール | `#2f6f62` | `#6fb3a3` |
 | Minesweeper | スレートブルー | `#4a5a72` | `#93a4bd` |
-| 2048 | 琥珀 | `#a86a17` | `#dda54a` |
+| Nonogram | くすんだプラム | `#6d5192` | `#a893cf` |
 | Sliding Puzzle | 温かみのある陶土色 | `#9c5b3c` | `#d1926f` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
@@ -127,7 +128,7 @@ src/
   `data-game` の上書き)、コレクションホーム、設定 / About、ダイアログ・トースト・
   チュートリアル・バナースロットなどの共通クロム。
 - **5 タイトルすべてが規約に従っている**: `number-match.css` / `sudoku.css` /
-  `game-2048.css` / `minesweeper.css` / `sliding-puzzle.css`。
+  `minesweeper.css` / `nonogram.css` / `sliding-puzzle.css`。
 - ゲームの CSS は色を書かない。共有のカスタムプロパティ(`--accent` など)だけを使い、
   どの色になるかはシェルが root に付けた `data-game` が決める。
   ゲーム側にパレット値が複製されないので、下地を変えるときに触る場所は 1 か所で済む。
@@ -152,7 +153,7 @@ src/
 | `sg.iap` | 広告削除購入状態のローカルキャッシュ |
 | `sd.*` | Sudoku(saveGame / saveDaily / stats / progress / flags / prefs) |
 | `ms.*` | Minesweeper(saveGame / saveDaily / stats / flags / prefs) |
-| `g2048.*` | 2048(saveGame / saveDaily / stats / progress / flags) |
+| `ng.*` | Nonogram(saveGame / saveDaily / stats / progress / flags / prefs) |
 | `nm.*` | Number Match(saveGame / saveDaily / stats / progress / flags) |
 | `sp.*` | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags) |
 
@@ -160,9 +161,8 @@ Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/
 `sd.flags`(チュートリアル完了)/ `sd.prefs`(ゲーム固有設定)。
 Minesweeper はレベル進行を持たないため `progress` がなく、代わりに旗モードの
-`ms.prefs` を持つ。2048 もレベルは持たないが、デイリーの日付別ベストスコアを
-`g2048.progress` に置く。どのゲームも中断は「通常モード用」と「デイリー用」の
-2 スロットが独立する。
+`ms.prefs` を持つ。Nonogram は ×モードの `ng.prefs` を持つ。どのゲームも中断は
+「通常モード用」と「デイリー用」の 2 スロットが独立する。
 
 - 共有レコードは `sg.` 接頭辞。ゲーム固有レコードはゲームごとの接頭辞。
 - ゲーム固有設定は共有 `sg.settings` に混ぜず、そのゲームの接頭辞に置く

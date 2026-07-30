@@ -50,6 +50,9 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 - [ ] `versionCode` / `versionName` を上げた(`android/app/build.gradle`)
 - [ ] 署名鍵で署名した AAB を作成(鍵はリポジトリに入れない)
 - [ ] 低スペック端末またはエミュレータで、起動 → 各ゲーム 1 局 → 中断 → 再開
+      (**リリース要件**。WebView をサポート下限の Chromium 88 相当に近い状態でも
+      確認する — 例: API 24〜26 のエミュレータイメージを WebView 未更新のまま使う。
+      動かないなら配信しない)
 - [ ] ホームボタン / 戻るボタンでゲームが失われない
 - [ ] ダークモードで全画面を確認
 - [ ] フォント倍率を最大にして主要画面が崩れない
@@ -61,9 +64,23 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 - [ ] テスト広告ではなく本番 ID でビルドされていることを確認
       (`VITE_ADMOB_USE_TEST_ADS` が未設定)
 - [ ] Play Console にアプリ内商品 `remove_ads` を作成(USD 3.99、国別自動価格)
+- [ ] Play Console の「ライセンス テスト」にテスト用 Google アカウントを登録し、
+      **内部テストトラック経由でインストールした**ビルドで購入フローを確認
+      (課金は Play 配布ビルドでしか動かない。サイドロード APK では
+      `isBillingSupported` が false になり購入 UI が出ない — それは正常)
 - [ ] 購入 → バナーが消える → アプリ再起動後も消えたまま
+- [ ] 購入キャンセル → 何も変わらない・エラー表示が出ない
 - [ ] 別端末で「購入を復元」が機能する
 - [ ] 購入前の画面で購入を繰り返し促していない
+
+## 5.5 レビュー導線([REVIEW_PROMPT_POLICY.md](REVIEW_PROMPT_POLICY.md))
+
+- [ ] 合計 5 勝するまで質問が出ない/5 勝後、ゲームから戻った時だけ出る
+- [ ] 「楽しい」→ In-App Review カードが表示される(内部テストトラックで確認。
+      Play のクォータにより出ないことがある — その場合ストア掲載ページが開く)
+- [ ] 「いまいち」→ メールドラフトが開き、宛先が brand の `SUPPORT_EMAIL`
+- [ ] Play Console のサポートメールアドレスを `SUPPORT_EMAIL` と一致させる
+- [ ] 回答後は二度と出ない/「あとで」は 20 勝後に一度だけ再表示
 
 ## 6. ストア掲載
 

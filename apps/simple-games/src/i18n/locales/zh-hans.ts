@@ -118,6 +118,15 @@ export const zhHans: Messages = {
   removeAdsAction: '移除广告',
   restorePurchase: '恢复购买',
   purchaseThanks: '横幅广告已移除。感谢你支持 Simple Games。',
+
+  reviewPromptTitle: '喜欢 Simple Games 吗?',
+  reviewYes: '喜欢,玩得开心',
+  reviewNo: '不太喜欢',
+  reviewLater: '以后再说',
+  reviewFeedbackTitle: '哪里可以做得更好?',
+  reviewFeedbackBody:
+    '欢迎发邮件告诉我们——每条消息我们都会看。在你于邮件应用中按下发送之前,不会发送任何内容。',
+  reviewFeedbackAction: '写邮件',
   privacy5:
     '可选的一次性购买可移除横幅广告。该购买由 Google Play 处理，我们不会收到或保存任何支付信息。',
 
@@ -186,34 +195,39 @@ export const zhHans: Messages = {
   slideStep3Title: '从 1 开始依次排好',
   slideStep3Body: '按阅读顺序排好数字，空格留在右下角。',
 
-  // ---- 2048 ----
-  g2048Name: '2048',
-  g2048Blurb: '把相同的数字合并翻倍，凑出 2048。',
+  // ---- Nonogram ----
+  nonoName: '数织',
+  nonoBlurb: '按数字提示涂满方格。',
 
-  g2048ModeClassic: '经典',
-  g2048DailyPlayedBadge: '今日已玩',
+  nonoBoardLabel: '数织盘面，{size}×{size}',
+  nonoCellBlank: '未定，第{row}行 第{col}列',
+  nonoCellFilled: '已涂，第{row}行 第{col}列',
+  nonoCellCrossed: '×，第{row}行 第{col}列',
+  nonoRowClueLabel: '第{n}行提示：{clue}',
+  nonoColClueLabel: '第{n}列提示：{clue}',
+  nonoSizeLabel: '{n}×{n}',
 
-  g2048BoardLabel: '2048 盘面',
-  g2048CellLabel: '{value}，第 {row} 行第 {col} 列',
-  g2048CellEmpty: '空格，第 {row} 行第 {col} 列',
-  g2048Restart: '重新开始',
+  nonoXMode: '×模式',
+  nonoXModeNote: '轻点画×，长按涂色。',
+  nonoHintFound: '高亮的行列可确定一格。',
+  nonoHintBroken: '高亮的行列已与提示矛盾。',
+  nonoHintNone: '现在没有可确定的一步。',
 
-  g2048OverBody: '盘面已满，没有可以合并的数字。',
-  g2048WinTitle: '凑出 2048 了！',
-  g2048WinBody: '游戏没有结束，你可以一直玩下去。',
-  g2048KeepPlaying: '继续玩',
+  nonoSolvedTitle: '完成！',
+  nonoSolvedBody: '所有提示都已满足。',
+  nonoHintsUsed: '使用的提示',
+  nonoNewBestTime: '个人最快纪录。',
 
-  g2048BestScore: '最高分',
-  g2048BestTile: '最大数字',
-  g2048Wins: '达成 2048 的次数',
-  g2048DaysPlayed: '游玩天数',
+  nonoLevelsSolved: '已完成的关卡',
+  nonoDailiesSolved: '已完成的每日挑战',
+  nonoDailyBacklogHint: '之前的日期随时可以挑战。',
 
-  g2048Step1Title: '滑动来移动',
-  g2048Step1Body: '滑动一下，所有数字都会朝那个方向移动。',
-  g2048Step2Title: '相同的数字会合并',
-  g2048Step2Body: '两个相同的数字相撞，会合成它们的两倍。',
-  g2048Step3Title: '凑出 2048',
-  g2048Step3Body: '卡住了？撤销免费又不限次数，随便用。',
+  nonoStep1Title: '数字表示连续涂色数',
+  nonoStep1Body: '数字是该行或该列连续涂色的格数，多个数字之间至少空一格。',
+  nonoStep2Title: '排除时画×',
+  nonoStep2Body: '给确定不涂的格子画×，缩小范围。',
+  nonoStep3Title: '满足所有行列',
+  nonoStep3Body: '所有行和列的数字都满足即完成，完全不需要猜。',
 
   // ---- Minesweeper ----
   minesName: '扫雷',

@@ -25,6 +25,20 @@ export const SOURCE_REPO_URL = 'https://github.com/yosuke1024/simple-games';
  */
 export const LANDING_BASE_URL = 'https://pixapps.ai/simple-games';
 
+/**
+ * Where the in-app "not really" feedback path opens a mail draft. Also the
+ * public support address on the store listing, so both roads lead to the
+ * same inbox. Swap for a dedicated support alias if one is ever created.
+ */
+export const SUPPORT_EMAIL = 's.yosuke1024@gmail.com';
+
+/**
+ * The collection's Play Store listing — the fallback review destination when
+ * the native in-app review card cannot be shown.
+ */
+export const PLAY_STORE_URL =
+  'https://play.google.com/store/apps/details?id=com.pixapps.simplegames';
+
 /** Primary series message (English). */
 export const SERIES_TAGLINE_EN = 'Fully free. Fully offline. Simply playable.';
 /** Supporting series message (English). */
@@ -110,17 +124,18 @@ export const titleAccents = {
     softDark: '#262d3a',
   },
   /**
-   * 2048 — amber. The tile scale already runs warm as the numbers climb, so
-   * the chrome joins it rather than fighting it, and amber is far enough from
-   * the clay next door to tell the two apart on the collection list.
+   * Nonogram — muted plum. The board itself is drawn in ink on paper (painted
+   * cells carry no accent), so the accent lives in the chrome, the hints and
+   * the selection — a quiet violet reads as a marker pen beside the ink, and
+   * sits apart from every other title on the collection list.
    */
-  game2048: {
-    light: '#a86a17',
+  nonogram: {
+    light: '#6d5192',
     onLight: '#ffffff',
-    softLight: '#f6e6cd',
-    dark: '#dda54a',
-    onDark: '#1b1408',
-    softDark: '#3b2c12',
+    softLight: '#eae4f2',
+    dark: '#a893cf',
+    onDark: '#161020',
+    softDark: '#2e2740',
   },
   /**
    * Sliding Puzzle — warm clay. The board is a solid field of tiles, so the

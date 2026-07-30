@@ -7,6 +7,8 @@
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { useCallback, useEffect, useState } from 'react';
+import { markReviewPromptShown, shouldPromptReview } from '../services/review';
+import { ReviewPrompt } from '../ui/components/ReviewPrompt';
 import { CollectionHomeScreen } from '../ui/screens/CollectionHomeScreen';
 import { SettingsScreen } from '../ui/screens/SettingsScreen';
 import { GAMES, type GameId } from './registry';
@@ -15,10 +17,23 @@ type View = { kind: 'collection' } | { kind: 'settings' } | { kind: 'game'; game
 
 export function App() {
   const [view, setView] = useState<View>({ kind: 'collection' });
+  const [reviewPromptOpen, setReviewPromptOpen] = useState(false);
 
   const goCollection = useCallback(() => setView({ kind: 'collection' }), []);
   const openSettings = useCallback(() => setView({ kind: 'settings' }), []);
   const openGame = useCallback((gameId: GameId) => setView({ kind: 'game', gameId }), []);
+
+  // The review question's only doorway (docs/REVIEW_PROMPT_POLICY.md):
+  // leaving a game for the collection — a natural pause, never at launch and
+  // never mid-game. The showing is booked immediately so a killed app cannot
+  // turn one ask into several.
+  const exitGame = useCallback(() => {
+    setView({ kind: 'collection' });
+    if (shouldPromptReview()) {
+      markReviewPromptShown();
+      setReviewPromptOpen(true);
+    }
+  }, []);
 
   // One accent per title (packages/brand titleAccents): the shell stamps which
   // game is on screen and styles.css swaps just the accent tokens. The series
@@ -47,10 +62,15 @@ export function App() {
 
   if (view.kind === 'game') {
     const game = GAMES.find((entry) => entry.id === view.gameId);
-    if (game) return <game.Root onExit={goCollection} />;
+    if (game) return <game.Root onExit={exitGame} />;
   }
   if (view.kind === 'settings') {
     return <SettingsScreen onBack={goCollection} />;
   }
-  return <CollectionHomeScreen onOpenGame={openGame} onOpenSettings={openSettings} />;
+  return (
+    <>
+      <CollectionHomeScreen onOpenGame={openGame} onOpenSettings={openSettings} />
+      <ReviewPrompt open={reviewPromptOpen} onClose={() => setReviewPromptOpen(false)} />
+    </>
+  );
 }

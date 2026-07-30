@@ -20,6 +20,9 @@ importers:
       '@capacitor-community/admob':
         specifier: ^8.0.0
         version: 8.0.0
+      '@capacitor-community/in-app-review':
+        specifier: ^8.0.0
+        version: 8.0.0(@capacitor/core@8.4.2)
       '@capacitor/app':
         specifier: ^8.1.1
         version: 8.1.1(@capacitor/core@8.4.2)
@@ -38,6 +41,9 @@ importers:
       '@capacitor/splash-screen':
         specifier: ^8.0.0
         version: 8.0.2(@capacitor/core@8.4.2)
+      '@capgo/native-purchases':
+        specifier: ^8.6.4
+        version: 8.6.4(@capacitor/core@8.4.2)
       '@fontsource/nunito':
         specifier: ^5.3.0
         version: 5.3.0
@@ -237,6 +243,11 @@ packages:
     resolution: {integrity: sha512-+ZIq+UtcNvTMFwjvuhOuGvCjwK2Wu36lTIl9o1/CEjfp2Aj3m4b9zQGx0vXrERYqQmJp/Ven7ee3gGuh2Ym8nA==}
     engines: {node: '>=22.0.0'}
 
+  '@capacitor-community/in-app-review@8.0.0':
+    resolution: {integrity: sha512-AYpEkIjdv27WGS3hnlc7xAQ1BhaBvD2svgQBfHF4P2Olw1N6a7MSCOQC6O4SuxmdBdJ2fM6uFeo1jyNjKLtIPw==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
   '@capacitor/android@8.4.2':
     resolution: {integrity: sha512-bzf8XZ9C+ePgOQ+e+T0fnhHGH4aCNY494vvSQIF5w4AY07RwEmkFqZs1678DDSMH0hLSQpxEwXGFNUVcXO6bBA==}
     peerDependencies:
@@ -282,6 +293,11 @@ packages:
 
   '@capacitor/splash-screen@8.0.2':
     resolution: {integrity: sha512-0C6rYScr13WfAE9nPl4ScOQynmjFv9NT3Th+RZkD4ezYHmER6mcl1/lDYsv7jg3Rj3FOvLrlTlmNkUrr83kZzQ==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@capgo/native-purchases@8.6.4':
+    resolution: {integrity: sha512-7kGNvK7EiPiSbn+LVzc2GzR2Zcx2uxV4N457s84tsIV42ZccJmmsJpIvit6AOCFoUky8mLbcDsMhQvHCDivWhQ==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -2980,6 +2996,10 @@ snapshots:
       '@capacitor/core': 8.4.2
       '@rdlabo/capacitor-docgen': 0.4.1
 
+  '@capacitor-community/in-app-review@8.0.0(@capacitor/core@8.4.2)':
+    dependencies:
+      '@capacitor/core': 8.4.2
+
   '@capacitor/android@8.4.2(@capacitor/core@8.4.2)':
     dependencies:
       '@capacitor/core': 8.4.2
@@ -3074,6 +3094,10 @@ snapshots:
       '@capacitor/core': 8.4.2
 
   '@capacitor/splash-screen@8.0.2(@capacitor/core@8.4.2)':
+    dependencies:
+      '@capacitor/core': 8.4.2
+
+  '@capgo/native-purchases@8.6.4(@capacitor/core@8.4.2)':
     dependencies:
       '@capacitor/core': 8.4.2
 

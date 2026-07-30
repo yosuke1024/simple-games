@@ -118,6 +118,15 @@ export const zhHant: Messages = {
   removeAdsAction: '移除廣告',
   restorePurchase: '恢復購買',
   purchaseThanks: '橫幅廣告已移除。感謝你支持 Simple Games。',
+
+  reviewPromptTitle: '喜歡 Simple Games 嗎?',
+  reviewYes: '喜歡,玩得開心',
+  reviewNo: '不太喜歡',
+  reviewLater: '之後再說',
+  reviewFeedbackTitle: '哪裡可以做得更好?',
+  reviewFeedbackBody:
+    '歡迎寄封信告訴我們——每則訊息我們都會看。在你於郵件 App 按下傳送之前,不會送出任何內容。',
+  reviewFeedbackAction: '寫郵件',
   privacy5:
     '選擇性的一次性購買可以移除橫幅廣告。付款由 Google Play 處理，我們不會收到或保存任何付款資訊。',
 
@@ -186,34 +195,39 @@ export const zhHant: Messages = {
   slideStep3Title: '從 1 依序排好',
   slideStep3Body: '照閱讀順序排好數字，空格留在右下角。',
 
-  // ---- 2048 ----
-  g2048Name: '2048',
-  g2048Blurb: '把相同的數字合併加倍，湊出 2048。',
+  // ---- Nonogram ----
+  nonoName: '數織',
+  nonoBlurb: '按數字提示塗滿方格。',
 
-  g2048ModeClassic: '經典',
-  g2048DailyPlayedBadge: '今日已玩',
+  nonoBoardLabel: '數織盤面，{size}×{size}',
+  nonoCellBlank: '未定，第{row}行 第{col}列',
+  nonoCellFilled: '已塗，第{row}行 第{col}列',
+  nonoCellCrossed: '×，第{row}行 第{col}列',
+  nonoRowClueLabel: '第{n}行提示：{clue}',
+  nonoColClueLabel: '第{n}列提示：{clue}',
+  nonoSizeLabel: '{n}×{n}',
 
-  g2048BoardLabel: '2048 盤面',
-  g2048CellLabel: '{value}，第 {row} 列第 {col} 欄',
-  g2048CellEmpty: '空格，第 {row} 列第 {col} 欄',
-  g2048Restart: '重新開始',
+  nonoXMode: '×模式',
+  nonoXModeNote: '輕點畫×，長按塗色。',
+  nonoHintFound: '高亮的行列可確定一格。',
+  nonoHintBroken: '高亮的行列已與提示矛盾。',
+  nonoHintNone: '現在沒有可確定的一步。',
 
-  g2048OverBody: '盤面已滿，沒有可以合併的數字。',
-  g2048WinTitle: '湊出 2048 了！',
-  g2048WinBody: '遊戲還沒結束，你可以一直玩下去。',
-  g2048KeepPlaying: '繼續玩',
+  nonoSolvedTitle: '完成！',
+  nonoSolvedBody: '所有提示都已滿足。',
+  nonoHintsUsed: '使用的提示',
+  nonoNewBestTime: '個人最快紀錄。',
 
-  g2048BestScore: '最高分',
-  g2048BestTile: '最大數字',
-  g2048Wins: '達成 2048 的次數',
-  g2048DaysPlayed: '遊玩天數',
+  nonoLevelsSolved: '已完成的關卡',
+  nonoDailiesSolved: '已完成的每日挑戰',
+  nonoDailyBacklogHint: '之前的日期隨時可以挑戰。',
 
-  g2048Step1Title: '滑動來移動',
-  g2048Step1Body: '滑一下，所有方塊都會往那個方向移動。',
-  g2048Step2Title: '相同數字會合併',
-  g2048Step2Body: '兩個相同的數字相撞，會合成兩倍的數字。',
-  g2048Step3Title: '湊出 2048',
-  g2048Step3Body: '卡住了？復原免費又沒有次數限制，隨你用。',
+  nonoStep1Title: '數字表示連續塗色數',
+  nonoStep1Body: '數字是該行或該列連續塗色的格數，多個數字之間至少空一格。',
+  nonoStep2Title: '排除時畫×',
+  nonoStep2Body: '給確定不塗的格子畫×，縮小範圍。',
+  nonoStep3Title: '滿足所有行列',
+  nonoStep3Body: '所有行和列的數字都滿足即完成，完全不需要猜。',
 
   // ---- Minesweeper ----
   minesName: '踩地雷',

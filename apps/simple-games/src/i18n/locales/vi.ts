@@ -123,6 +123,15 @@ export const vi: Messages = {
   removeAdsAction: 'Gỡ quảng cáo',
   restorePurchase: 'Khôi phục giao dịch',
   purchaseThanks: 'Banner quảng cáo đã được gỡ. Cảm ơn bạn đã ủng hộ Simple Games.',
+
+  reviewPromptTitle: 'Bạn có thích Simple Games không?',
+  reviewYes: 'Có, tôi thích',
+  reviewNo: 'Không hẳn',
+  reviewLater: 'Để sau',
+  reviewFeedbackTitle: 'Điều gì có thể tốt hơn?',
+  reviewFeedbackBody:
+    'Hãy cho chúng tôi biết qua email — chúng tôi đọc mọi tin nhắn. Sẽ không có gì được gửi cho đến khi bạn nhấn gửi trong ứng dụng thư.',
+  reviewFeedbackAction: 'Viết email',
   privacy5:
     'Một giao dịch mua tùy chọn, chỉ trả một lần, có thể gỡ banner quảng cáo. Giao dịch do Google Play xử lý; chúng tôi không bao giờ nhận hay lưu thông tin thanh toán.',
 
@@ -191,34 +200,39 @@ export const vi: Messages = {
   slideStep3Title: 'Xếp từ 1 đến hết',
   slideStep3Body: 'Xếp các số theo thứ tự đọc, chỗ trống nằm ở góc dưới bên phải.',
 
-  // ---- 2048 ----
-  g2048Name: '2048',
-  g2048Blurb: 'Trượt các số giống nhau lại gần và nhân đôi dần tới 2048.',
+  // ---- Nonogram ----
+  nonoName: 'Nonogram',
+  nonoBlurb: 'Tô các ô theo gợi ý số.',
 
-  g2048ModeClassic: 'Cổ điển',
-  g2048DailyPlayedBadge: 'Đã chơi hôm nay',
+  nonoBoardLabel: 'Bảng nonogram, {size}×{size}',
+  nonoCellBlank: 'Trống, hàng {row}, cột {col}',
+  nonoCellFilled: 'Đã tô, hàng {row}, cột {col}',
+  nonoCellCrossed: 'Đánh ×, hàng {row}, cột {col}',
+  nonoRowClueLabel: 'Hàng {n}: {clue}',
+  nonoColClueLabel: 'Cột {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
 
-  g2048BoardLabel: 'Bảng 2048',
-  g2048CellLabel: '{value}, hàng {row}, cột {col}',
-  g2048CellEmpty: 'Trống, hàng {row}, cột {col}',
-  g2048Restart: 'Chơi lại từ đầu',
+  nonoXMode: 'Chế độ X',
+  nonoXModeNote: 'Chạm để đánh ×; nhấn giữ để tô.',
+  nonoHintFound: 'Dòng được tô sáng xác định một ô.',
+  nonoHintBroken: 'Dòng được tô sáng không còn khớp với gợi ý.',
+  nonoHintNone: 'Hiện chưa có nước đi chắc chắn.',
 
-  g2048OverBody: 'Bảng đã đầy và không còn ô nào gộp được.',
-  g2048WinTitle: 'Bạn đã tạo ra 2048!',
-  g2048WinBody: 'Chưa kết thúc đâu — cứ chơi tiếp bao lâu tùy bạn.',
-  g2048KeepPlaying: 'Chơi tiếp',
+  nonoSolvedTitle: 'Hoàn thành!',
+  nonoSolvedBody: 'Mọi gợi ý đều khớp.',
+  nonoHintsUsed: 'Gợi ý đã dùng',
+  nonoNewBestTime: 'Thời gian nhanh nhất của bạn.',
 
-  g2048BestScore: 'Điểm cao nhất',
-  g2048BestTile: 'Ô lớn nhất',
-  g2048Wins: 'Số lần đạt 2048',
-  g2048DaysPlayed: 'Số ngày đã chơi',
+  nonoLevelsSolved: 'Màn đã giải',
+  nonoDailiesSolved: 'Thử thách ngày đã giải',
+  nonoDailyBacklogHint: 'Những ngày trước luôn mở.',
 
-  g2048Step1Title: 'Vuốt để di chuyển',
-  g2048Step1Body: 'Vuốt một cái, mọi ô cùng trượt về hướng đó.',
-  g2048Step2Title: 'Số giống nhau gộp lại',
-  g2048Step2Body: 'Hai ô cùng số gộp thành một ô gấp đôi.',
-  g2048Step3Title: 'Tạo ra 2048',
-  g2048Step3Body: 'Bí? Hoàn tác miễn phí và không giới hạn, bao nhiêu lần tùy bạn.',
+  nonoStep1Title: 'Số là chuỗi ô liền nhau',
+  nonoStep1Body: 'Mỗi số là một chuỗi ô được tô liền nhau theo thứ tự, giữa các chuỗi cách ít nhất một ô.',
+  nonoStep2Title: 'Đánh × ô không tô',
+  nonoStep2Body: 'Đánh × vào ô chắc chắn để trống để thu hẹp khả năng.',
+  nonoStep3Title: 'Thỏa mọi hàng và cột',
+  nonoStep3Body: 'Khi mọi hàng và cột đều khớp số, bảng hoàn thành. Không bao giờ cần đoán.',
 
   // ---- Minesweeper ----
   minesName: 'Dò mìn',

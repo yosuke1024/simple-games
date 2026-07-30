@@ -123,6 +123,15 @@ export const de: Messages = {
   removeAdsAction: 'Werbung entfernen',
   restorePurchase: 'Kauf wiederherstellen',
   purchaseThanks: 'Bannerwerbung ist entfernt. Danke, dass du Simple Games unterstützt.',
+
+  reviewPromptTitle: 'Gefällt dir Simple Games?',
+  reviewYes: 'Ja, es gefällt mir',
+  reviewNo: 'Nicht so richtig',
+  reviewLater: 'Jetzt nicht',
+  reviewFeedbackTitle: 'Was könnte besser sein?',
+  reviewFeedbackBody:
+    'Schreib uns eine E-Mail — wir lesen jede Nachricht. Es wird nichts gesendet, bis du in deiner Mail-App auf Senden tippst.',
+  reviewFeedbackAction: 'E-Mail schreiben',
   privacy5:
     'Ein optionaler einmaliger Kauf kann die Bannerwerbung entfernen. Der Kauf wird von Google Play abgewickelt; wir erhalten und speichern niemals Zahlungsdaten.',
 
@@ -191,34 +200,39 @@ export const de: Messages = {
   slideStep3Title: 'Von 1 bis zum Ende ordnen',
   slideStep3Body: 'Ordne die Zahlen in Leserichtung, die Lücke bleibt unten rechts.',
 
-  // ---- 2048 ----
-  g2048Name: '2048',
-  g2048Blurb: 'Gleiche Zahlen zusammenschieben und bis 2048 verdoppeln.',
+  // ---- Nonogram ----
+  nonoName: 'Nonogramm',
+  nonoBlurb: 'Male die Felder aus, die die Zahlen beschreiben.',
 
-  g2048ModeClassic: 'Klassisch',
-  g2048DailyPlayedBadge: 'Heute gespielt',
+  nonoBoardLabel: 'Nonogramm-Feld, {size} mal {size}',
+  nonoCellBlank: 'Leer, Zeile {row}, Spalte {col}',
+  nonoCellFilled: 'Ausgemalt, Zeile {row}, Spalte {col}',
+  nonoCellCrossed: 'Mit × markiert, Zeile {row}, Spalte {col}',
+  nonoRowClueLabel: 'Zeile {n}: {clue}',
+  nonoColClueLabel: 'Spalte {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
 
-  g2048BoardLabel: '2048-Feld',
-  g2048CellLabel: '{value}, Zeile {row}, Spalte {col}',
-  g2048CellEmpty: 'Leer, Zeile {row}, Spalte {col}',
-  g2048Restart: 'Neu starten',
+  nonoXMode: 'X-Modus',
+  nonoXModeNote: 'Tippen setzt ein ×, langes Drücken malt aus.',
+  nonoHintFound: 'Die hervorgehobene Linie legt ein Feld fest.',
+  nonoHintBroken: 'Die hervorgehobene Linie passt nicht mehr zu ihrer Zahl.',
+  nonoHintNone: 'Gerade ist kein sicherer Zug zu finden.',
 
-  g2048OverBody: 'Das Feld ist voll und nichts passt mehr zusammen.',
-  g2048WinTitle: '2048 geschafft!',
-  g2048WinBody: 'Hier ist nicht Schluss — spiel weiter, so lange du willst.',
-  g2048KeepPlaying: 'Weiterspielen',
+  nonoSolvedTitle: 'Gelöst!',
+  nonoSolvedBody: 'Alle Zahlen stimmen.',
+  nonoHintsUsed: 'Verwendete Hinweise',
+  nonoNewBestTime: 'Deine schnellste Zeit.',
 
-  g2048BestScore: 'Beste Punktzahl',
-  g2048BestTile: 'Höchstes Feld',
-  g2048Wins: '2048 erreicht',
-  g2048DaysPlayed: 'Gespielte Tage',
+  nonoLevelsSolved: 'Gelöste Level',
+  nonoDailiesSolved: 'Gelöste Tagesrätsel',
+  nonoDailyBacklogHint: 'Jeder frühere Tag bleibt offen.',
 
-  g2048Step1Title: 'Wischen zum Bewegen',
-  g2048Step1Body: 'Wische, und alle Felder rutschen zugleich in diese Richtung.',
-  g2048Step2Title: 'Gleiche Zahlen vereinen',
-  g2048Step2Body: 'Zwei Felder mit derselben Zahl werden zu ihrem Doppelten.',
-  g2048Step3Title: '2048 erreichen',
-  g2048Step3Body: 'Steckst du fest? Rückgängig ist gratis und unbegrenzt, so oft du willst.',
+  nonoStep1Title: 'Zahlen sind Blöcke',
+  nonoStep1Body: 'Jede Zahl steht für einen Block ausgemalter Felder in Reihenfolge, mit mindestens einer Lücke dazwischen.',
+  nonoStep2Title: 'Unmögliches ausschließen',
+  nonoStep2Body: 'Markiere Felder, die leer bleiben, mit einem ×, um die Linie einzugrenzen.',
+  nonoStep3Title: 'Jede Linie erfüllen',
+  nonoStep3Body: 'Stimmen alle Zeilen und Spalten, ist das Bild fertig. Raten ist nie nötig.',
 
   // ---- Minesweeper ----
   minesName: 'Minensucher',

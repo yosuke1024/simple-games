@@ -122,6 +122,15 @@ export const es: Messages = {
   removeAdsAction: 'Quitar anuncios',
   restorePurchase: 'Restaurar compra',
   purchaseThanks: 'Los anuncios de banner están quitados. Gracias por apoyar Simple Games.',
+
+  reviewPromptTitle: '¿Disfrutas de Simple Games?',
+  reviewYes: 'Sí, me gusta',
+  reviewNo: 'No mucho',
+  reviewLater: 'Ahora no',
+  reviewFeedbackTitle: '¿Qué se puede mejorar?',
+  reviewFeedbackBody:
+    'Cuéntanoslo en un correo: leemos todos los mensajes. No se envía nada hasta que pulses enviar en tu app de correo.',
+  reviewFeedbackAction: 'Escribir un correo',
   privacy5:
     'Una compra única opcional puede quitar los anuncios de banner. La compra la procesa Google Play; nunca recibimos ni guardamos datos de pago.',
 
@@ -193,34 +202,39 @@ export const es: Messages = {
   slideStep3Title: 'Ordena desde el 1',
   slideStep3Body: 'Coloca los números en orden de lectura con el hueco abajo a la derecha.',
 
-  // ---- 2048 ----
-  g2048Name: '2048',
-  g2048Blurb: 'Junta números iguales y duplícalos hasta llegar a 2048.',
+  // ---- Nonogram ----
+  nonoName: 'Nonograma',
+  nonoBlurb: 'Pinta las casillas que describen los números.',
 
-  g2048ModeClassic: 'Clásico',
-  g2048DailyPlayedBadge: 'Jugado hoy',
+  nonoBoardLabel: 'Tablero de nonograma, {size} por {size}',
+  nonoCellBlank: 'Vacía, fila {row}, columna {col}',
+  nonoCellFilled: 'Pintada, fila {row}, columna {col}',
+  nonoCellCrossed: 'Con ×, fila {row}, columna {col}',
+  nonoRowClueLabel: 'Fila {n}: {clue}',
+  nonoColClueLabel: 'Columna {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
 
-  g2048BoardLabel: 'Tablero de 2048',
-  g2048CellLabel: '{value}, fila {row}, columna {col}',
-  g2048CellEmpty: 'Vacía, fila {row}, columna {col}',
-  g2048Restart: 'Reiniciar',
+  nonoXMode: 'Modo X',
+  nonoXModeNote: 'Tocar pone una ×; mantener pulsado pinta.',
+  nonoHintFound: 'La línea resaltada decide una casilla.',
+  nonoHintBroken: 'La línea resaltada ya no encaja con su pista.',
+  nonoHintNone: 'Ahora mismo no hay un movimiento seguro.',
 
-  g2048OverBody: 'El tablero está lleno y nada se puede combinar.',
-  g2048WinTitle: '¡Llegaste a 2048!',
-  g2048WinBody: 'Esto no termina aquí: sigue jugando todo lo que quieras.',
-  g2048KeepPlaying: 'Seguir jugando',
+  nonoSolvedTitle: '¡Resuelto!',
+  nonoSolvedBody: 'Todas las pistas se cumplen.',
+  nonoHintsUsed: 'Pistas usadas',
+  nonoNewBestTime: 'Tu mejor tiempo.',
 
-  g2048BestScore: 'Mejor puntaje',
-  g2048BestTile: 'Ficha más alta',
-  g2048Wins: 'Veces que llegaste a 2048',
-  g2048DaysPlayed: 'Días jugados',
+  nonoLevelsSolved: 'Niveles resueltos',
+  nonoDailiesSolved: 'Diarios resueltos',
+  nonoDailyBacklogHint: 'Los días anteriores siguen abiertos.',
 
-  g2048Step1Title: 'Desliza para mover',
-  g2048Step1Body: 'Desliza y todas las fichas se mueven a la vez en esa dirección.',
-  g2048Step2Title: 'Los iguales se unen',
-  g2048Step2Body: 'Dos fichas con el mismo número se combinan en su doble.',
-  g2048Step3Title: 'Llega a 2048',
-  g2048Step3Body: '¿Te atascaste? Deshacer es gratis e ilimitado, todas las veces que quieras.',
+  nonoStep1Title: 'Los números son bloques',
+  nonoStep1Body: 'Cada número es un bloque de casillas pintadas, en orden, con al menos un hueco entre bloques.',
+  nonoStep2Title: 'Descarta con ×',
+  nonoStep2Body: 'Marca con una × las casillas que quedan vacías para acotar la línea.',
+  nonoStep3Title: 'Cumple cada línea',
+  nonoStep3Body: 'Cuando todas las filas y columnas cuadran, el tablero está resuelto. Nunca hace falta adivinar.',
 
   // ---- Minesweeper ----
   minesName: 'Buscaminas',

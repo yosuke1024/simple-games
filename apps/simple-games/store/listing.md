@@ -5,8 +5,8 @@
 > あわせて Play Console でアプリ内商品(管理された商品)`remove_ads` を
 > 基準価格 USD 3.99 で作成すること(国別価格は自動調整に任せる)。
 
-> 掲載は収録ゲーム 5 本(Sudoku / Minesweeper / 2048 / Number Match / Sliding
-> Puzzle)の状態で書いてある。未収録のゲーム(Nonogram / Solitaire ほか)は名前も
+> 掲載は収録ゲーム 5 本(Sudoku / Minesweeper / Nonogram / Number Match /
+> Sliding Puzzle)の状態で書いてある。未収録のゲーム(Solitaire ほか)は名前も
 > 含めて掲載文に出さず、**実際に収録できた時点で**説明・スクリーンショットへ
 > 追加する(未収録のゲームを "Coming Soon" として掲載しない)。
 
@@ -16,8 +16,8 @@
 2. `Simple Games — Offline Puzzles`
 3. `Simple Games: Sudoku & More`
 
-キーワード優先順位: Offline > Sudoku > Minesweeper > Puzzle > 2048 > Number Match >
-Sliding Puzzle > Simple Games > PixApps
+キーワード優先順位: Offline > Sudoku > Minesweeper > Nonogram > Puzzle >
+Number Match > Sliding Puzzle > Simple Games > PixApps
 (ゲーム名は検索流入の中核。収録済みの名前だけを、検索需要の大きい順に置く)
 
 ## 訴求の順序(BRAND.md と同一。この順で書く)
@@ -43,8 +43,8 @@ Sliding Puzzle > Simple Games > PixApps
 I made this app because I wanted simple games to play during long flights.
 
 Simple Games is a quiet collection of classic puzzles in one small app —
-Sudoku, Minesweeper, 2048, Number Match and Sliding Puzzle. It works without
-internet, requires no account, and has no subscriptions.
+Sudoku, Minesweeper, Nonogram, Number Match and Sliding Puzzle. It works
+without internet, requires no account, and has no subscriptions.
 
 Every game feature is free and available offline, including hints, undo,
 daily challenges, and statistics. Your progress stays on your device.
@@ -69,11 +69,13 @@ INCLUDED GAME: MINESWEEPER
 • Hints are free and unlimited, and point at a square that is provably safe.
 • Lost a board? Play the same one again, free, as many times as you like.
 
-INCLUDED GAME: 2048
-• Swipe to slide every tile; equal tiles merge into their sum.
-• Reach 2048 — and keep going if you want to.
-• Undo is free and unlimited.
-• A new daily board every day, the same one for everyone who plays it.
+INCLUDED GAME: NONOGRAM
+• Paint the squares the number clues describe, line by line.
+• Every board can be solved by logic alone — no guessing, ever — and has
+  exactly one solution.
+• No mistake limit and no lives. Cross out squares to think out loud.
+• 999 levels and a daily board, all generated on your device.
+• Hints are free and unlimited, and show a line that decides a square.
 
 INCLUDED GAME: NUMBER MATCH
 • Match two numbers that are equal or add up to 10.
@@ -88,7 +90,7 @@ INCLUDED GAME: SLIDING PUZZLE
 • 999 levels and a daily puzzle. Undo is free and unlimited.
 
 999 LEVELS, GENTLY RISING
-• Sudoku, Number Match and Sliding Puzzle each have 999 levels
+• Sudoku, Nonogram, Number Match and Sliding Puzzle each have 999 levels
 • Difficulty grows slowly — no sudden walls, no countdowns
 • Replay any cleared level, or an earlier day, to beat your own best
 • Number Match scoring rewards sharp eyes and planning, never speed
@@ -122,12 +124,12 @@ A Simple Games app by PixApps.
 
 - 収録ゲームの説明ブロック(上の `INCLUDED GAME:` 節)はゲーム単位で書き、
   ゲームを追加するたびにブロックを追加する。並び順は検索需要の大きい順
-  (現在は Sudoku → Minesweeper → 2048 → Number Match → Sliding Puzzle)。
+  (現在は Sudoku → Minesweeper → Nonogram → Number Match → Sliding Puzzle)。
   この順は `src/app/registry.ts` のゲーム順とも一致させる。
 - ルールの正式定義は各ゲームのルール文書:
   [SUDOKU](../../../docs/SUDOKU_RULES.md) /
   [MINESWEEPER](../../../docs/MINESWEEPER_RULES.md) /
-  [2048](../../../docs/GAME_2048_RULES.md) /
+  [NONOGRAM](../../../docs/NONOGRAM_RULES.md) /
   [NUMBER MATCH](../../../docs/NUMBER_MATCH_RULES.md) /
   [SLIDING PUZZLE](../../../docs/SLIDING_PUZZLE_RULES.md)。
   掲載文がルール文書と食い違ったらルール文書を正とする。

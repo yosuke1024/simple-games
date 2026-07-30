@@ -39,16 +39,16 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 | --- | --- | --- | --- | --- |
 | Sudoku(ナンプレ) | `sudoku/` | 999 レベル + デイリー | Undo / Hint | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md) |
 | Minesweeper | `minesweeper/` | 難易度 3 種 + デイリー | Hint(Undo なし) | [docs/MINESWEEPER_RULES.md](docs/MINESWEEPER_RULES.md) |
-| 2048 | `game-2048/` | クラシック + デイリー | Undo | [docs/GAME_2048_RULES.md](docs/GAME_2048_RULES.md) |
+| Nonogram | `nonogram/` | 999 レベル + デイリー | Hint(Undo なし) | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md) |
 | Number Match | `number-match/` | 999 レベル + デイリー | Undo / Hint | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md) |
 | Sliding Puzzle | `sliding-puzzle/` | 999 レベル + デイリー | Undo(Hint なし) | [docs/SLIDING_PUZZLE_RULES.md](docs/SLIDING_PUZZLE_RULES.md) |
 
 助けの内容がゲームごとに違うのは意図したものです。**どのゲームにも無料・無制限の助けを
 用意し、その形はそのゲームの中身を空にしないものを選びます**(Minesweeper は推測なしで
-解ける保証があるため Undo を作らず、Sliding Puzzle は盤面に隠れた情報がないため Hint を
-作りません)。理由は各ルール文書と [docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md)。
+解ける保証があるため Undo を作らず、Nonogram は印がタップで自由に付け外しできるため
+Undo を作らず、Sliding Puzzle は盤面に隠れた情報がないため Hint を作りません)。理由は各ルール文書と [docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md)。
 
-後続候補: Nonogram / Solitaire / Kakuro / Futoshiki / Takuzu(**いずれも未着手**)。
+後続候補: Solitaire / Kakuro / Futoshiki / Takuzu(**いずれも未着手**)。
 いずれもローカル生成で完結し、コンテンツサーバーを必要としないものを優先します。
 未収録のゲームをストアやアプリ内で "Coming Soon" として見せることはしません。
 
@@ -66,7 +66,7 @@ simple-games/
 │           ├── games/          # 各ゲームは game/ state/ storage/ ui/ で自己完結
 │           │   ├── sudoku/
 │           │   ├── minesweeper/
-│           │   ├── game-2048/
+│           │   ├── nonogram/
 │           │   ├── number-match/
 │           │   └── sliding-puzzle/
 │           ├── monetization/   # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
@@ -109,7 +109,7 @@ Android ビルド手順は [apps/simple-games/README.md](apps/simple-games/READM
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 14 言語・215 キー
+**One app. Many games. Many languages.** 現在は 14 言語・214 キー
 (en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
 中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。

@@ -22,7 +22,13 @@ export default defineConfig({
     port: process.env.PORT ? Number(process.env.PORT) : 5173,
   },
   build: {
-    target: 'es2022',
+    // Low-spec devices are a release requirement, and the WebView is the
+    // constraint: es2018 syntax parses on 2018-era engines, so an old WebView
+    // degrades gracefully instead of white-screening on a SyntaxError. The
+    // fully-supported floor is Chromium 88 (2021) — set by the CSS the build
+    // does not transpile (aspect-ratio, flex gap) — and is verified on-device
+    // per docs/RELEASE_CHECKLIST.md.
+    target: 'es2018',
   },
   test: {
     environment: 'jsdom',

@@ -5,6 +5,13 @@
 import { addDays, MAX_LEVEL, type GameSession } from '../game';
 import { TOP_SCORES_LIMIT, type Progress, type TopScoreEntry } from '../storage/schemas';
 
+/**
+ * Deep-copies a plain record. `structuredClone` needs a 2022-era WebView
+ * (Chromium 98) and low-spec devices are a release requirement; these records
+ * are small pure data, so the JSON round-trip covers every engine we reach.
+ */
+const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+
 /** How far back the daily backlog is ever listed. */
 export const DAILY_BACKLOG_LIMIT = 30;
 
@@ -48,7 +55,7 @@ export function applyClearToProgress(
   now: number,
 ): ClearOutcome {
   const score = session.score.total;
-  const next = structuredClone(progress);
+  const next = clone(progress);
 
   let ref: string;
   let isNewBest: boolean;

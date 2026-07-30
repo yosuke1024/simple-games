@@ -134,6 +134,18 @@ export const en = {
   removeAdsAction: 'Remove Ads',
   restorePurchase: 'Restore Purchase',
   purchaseThanks: 'Banner ads are removed. Thank you for supporting Simple Games.',
+
+  // Store review (one quiet question, asked at most twice —
+  // docs/REVIEW_PROMPT_POLICY.md)
+  reviewPromptTitle: 'Enjoying Simple Games?',
+  reviewYes: 'Yes, I’m enjoying it',
+  reviewNo: 'Not really',
+  reviewLater: 'Not now',
+  reviewFeedbackTitle: 'What could be better?',
+  reviewFeedbackBody:
+    'Tell us in an email — we read every message. Nothing is sent until you press send in your mail app.',
+  reviewFeedbackAction: 'Write an email',
+
   privacy5:
     'An optional one-time purchase can remove banner ads. The purchase is processed by Google Play; we never receive or store payment details.',
 
@@ -207,39 +219,44 @@ export const en = {
   slideStep3Title: 'Put 1 to the end in order',
   slideStep3Body: 'Line the numbers up in reading order with the gap at the bottom right.',
 
-  // ---- 2048 ----
-  g2048Name: '2048',
-  g2048Blurb: 'Slide equal numbers together and double them up to 2048.',
-
-  // Modes
-  g2048ModeClassic: 'Classic',
-  g2048DailyPlayedBadge: 'Played today',
+  // ---- Nonogram ----
+  nonoName: 'Nonogram',
+  nonoBlurb: 'Paint the squares the number clues describe.',
 
   // Board
-  g2048BoardLabel: '2048 board',
-  g2048CellLabel: '{value}, row {row}, column {col}',
-  g2048CellEmpty: 'Empty, row {row}, column {col}',
-  g2048Restart: 'Start Over',
+  nonoBoardLabel: 'Nonogram board, {size} by {size}',
+  nonoCellBlank: 'Blank, row {row}, column {col}',
+  nonoCellFilled: 'Painted, row {row}, column {col}',
+  nonoCellCrossed: 'Crossed, row {row}, column {col}',
+  nonoRowClueLabel: 'Row {n}: {clue}',
+  nonoColClueLabel: 'Column {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
+
+  // Actions
+  nonoXMode: 'X Mode',
+  nonoXModeNote: 'Tap crosses out; long-press paints.',
+  nonoHintFound: 'The highlighted line decides a square.',
+  nonoHintBroken: 'The highlighted line no longer fits its clue.',
+  nonoHintNone: 'No certain move found right now.',
 
   // Result
-  g2048OverBody: 'The board is full and nothing can combine.',
-  g2048WinTitle: 'You made 2048!',
-  g2048WinBody: 'Nothing ends here — keep going as long as you like.',
-  g2048KeepPlaying: 'Keep Playing',
+  nonoSolvedTitle: 'Solved!',
+  nonoSolvedBody: 'Every clue reads true.',
+  nonoHintsUsed: 'Hints used',
+  nonoNewBestTime: 'Your fastest yet.',
 
-  // Statistics
-  g2048BestScore: 'Best score',
-  g2048BestTile: 'Highest tile',
-  g2048Wins: 'Times you reached 2048',
-  g2048DaysPlayed: 'Days played',
+  // Statistics and daily
+  nonoLevelsSolved: 'Levels solved',
+  nonoDailiesSolved: 'Dailies solved',
+  nonoDailyBacklogHint: 'Every earlier day stays open.',
 
-  // Quick Rules (3 steps, §9)
-  g2048Step1Title: 'Swipe to move',
-  g2048Step1Body: 'Swipe, and every tile slides that way at once.',
-  g2048Step2Title: 'Equal numbers join',
-  g2048Step2Body: 'Two tiles with the same number combine into their double.',
-  g2048Step3Title: 'Make 2048',
-  g2048Step3Body: 'Stuck? Undo is free and unlimited, as often as you like.',
+  // Quick Rules (3 steps, Â§11)
+  nonoStep1Title: 'Numbers are runs',
+  nonoStep1Body: 'Each number is a run of painted squares in order, with at least one gap between runs.',
+  nonoStep2Title: 'Cross out what cannot be',
+  nonoStep2Body: 'Mark the squares that stay empty with a cross to narrow the line down.',
+  nonoStep3Title: 'Satisfy every line',
+  nonoStep3Body: 'When every row and column reads true, the board is done. Guessing is never needed.',
 
   // ---- Minesweeper ----
   minesName: 'Minesweeper',
