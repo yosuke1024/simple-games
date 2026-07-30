@@ -189,4 +189,85 @@ export const hi: Messages = {
   slideStep2Body: 'एक ही पंक्ति या स्तंभ में बीच की सारी टाइलें साथ सरकती हैं।',
   slideStep3Title: '1 से क्रम में लगाएँ',
   slideStep3Body: 'संख्याएँ पढ़ने के क्रम में लगाएँ और खाली जगह नीचे दाएँ रखें।',
+
+  // ---- 2048 ----
+  g2048Name: '2048',
+  g2048Blurb: 'एक जैसी संख्याओं को मिलाकर दोगुना करें और 2048 बनाएँ।',
+
+  g2048ModeClassic: 'क्लासिक',
+  g2048DailyPlayedBadge: 'आज खेला गया',
+
+  g2048BoardLabel: '2048 बोर्ड',
+  g2048CellLabel: '{value}, पंक्ति {row}, स्तंभ {col}',
+  g2048CellEmpty: 'खाली, पंक्ति {row}, स्तंभ {col}',
+  g2048Restart: 'फिर से शुरू करें',
+
+  g2048OverBody: 'बोर्ड भर गया है और कोई भी टाइल नहीं जुड़ सकती।',
+  g2048WinTitle: 'आपने 2048 बना लिया!',
+  g2048WinBody: 'खेल यहाँ खत्म नहीं होता — जब तक चाहें खेलते रहें।',
+  g2048KeepPlaying: 'खेलते रहें',
+
+  g2048BestScore: 'सर्वश्रेष्ठ स्कोर',
+  g2048BestTile: 'सबसे बड़ी टाइल',
+  g2048Wins: '2048 तक पहुँचे',
+  g2048DaysPlayed: 'खेले गए दिन',
+
+  g2048Step1Title: 'स्वाइप करके चलाएँ',
+  g2048Step1Body: 'स्वाइप करें, और सभी टाइलें एक साथ उसी दिशा में सरक जाती हैं।',
+  g2048Step2Title: 'समान संख्याएँ जुड़ती हैं',
+  g2048Step2Body: 'एक जैसी दो टाइलें मिलकर उनका दोगुना बन जाती हैं।',
+  g2048Step3Title: '2048 बनाएँ',
+  g2048Step3Body: 'अटक गए? अनडू हमेशा मुफ़्त और असीमित है, जितनी बार चाहें।',
+
+  // ---- Minesweeper ----
+  minesName: 'माइनस्वीपर',
+  minesBlurb: 'बिना बारूदी सुरंग वाले सभी खाने खोलें।',
+
+  // Home
+  minesChooseBoard: 'बोर्ड चुनें',
+  minesDifficulty_easy: 'आसान',
+  minesDifficulty_medium: 'मध्यम',
+  minesDifficulty_hard: 'कठिन',
+  minesBoardNote: '{width}×{height} · {mines} सुरंगें',
+  minesConfirmSwitchTitle: 'चालू बोर्ड बदलें?',
+  minesConfirmSwitchBody: 'आपका {current} खेल नए {next} बोर्ड से बदल जाएगा।',
+
+  // Board
+  minesBoardLabel: 'सुरंग क्षेत्र, {width} स्तंभ और {height} पंक्तियाँ',
+  minesCellHidden: 'बंद, पंक्ति {row}, स्तंभ {col}',
+  minesCellFlagged: 'झंडा, पंक्ति {row}, स्तंभ {col}',
+  minesCellEmpty: 'खाली, पंक्ति {row}, स्तंभ {col}',
+  minesCellNumber: 'पास में {count} सुरंगें, पंक्ति {row}, स्तंभ {col}',
+  minesCellMine: 'सुरंग, पंक्ति {row}, स्तंभ {col}',
+  minesMinesLeft: 'बची सुरंगें',
+  minesTapToStart: 'कोई भी खाना दबाएँ। पहली चाल हमेशा सुरक्षित है।',
+
+  // Actions
+  minesFlagMode: 'झंडा मोड',
+  minesFlagModeNote: 'दबाने पर झंडा लगेगा; देर तक दबाने पर खाना खुलेगा।',
+  minesHintFound: 'यह खाना सुरक्षित है — हाइलाइट किए अंक इसका कारण हैं।',
+  minesHintNone: 'अभी कुछ भी पक्का नहीं किया जा सकता।',
+  minesNewBoard: 'नया बोर्ड',
+
+  // Result
+  minesWonTitle: 'पूरा हुआ!',
+  minesWonBody: 'बिना सुरंग वाले सभी खाने खुल गए।',
+  minesLostTitle: 'सुरंग खुल गई',
+  minesLostBody: 'यह खेल यहीं समाप्त होता है। वही बोर्ड फिर से तैयार है।',
+  minesNewBestTime: 'आपका अब तक का सबसे तेज़ समय।',
+  minesHintsUsed: 'संकेत',
+
+  // Statistics
+  minesGamesWon: 'जीते गए खेल',
+  minesWinRate: 'जीत दर',
+  minesDailySection: 'दैनिक',
+  minesDailiesCleared: 'पूरे किए दिन',
+
+  // Quick Rules
+  minesStep1Title: 'अंक सुरंगें गिनता है',
+  minesStep1Body: 'यह बताता है कि आस-पास के आठ खानों में कितनी सुरंगें हैं।',
+  minesStep2Title: 'जहाँ पक्का हो, झंडा लगाएँ',
+  minesStep2Body: 'खाने को देर तक दबाकर झंडा लगाएँ। झंडा मोड में एक बार दबाना ही काफी है।',
+  minesStep3Title: 'बाकी खोलें और जीतें',
+  minesStep3Body: 'पहली चाल हमेशा सुरक्षित है, और किसी बोर्ड में अनुमान लगाने की ज़रूरत नहीं।',
 };

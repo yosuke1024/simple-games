@@ -206,6 +206,92 @@ export const en = {
   slideStep2Body: 'In the same row or column, every tile in between slides together.',
   slideStep3Title: 'Put 1 to the end in order',
   slideStep3Body: 'Line the numbers up in reading order with the gap at the bottom right.',
+
+  // ---- 2048 ----
+  g2048Name: '2048',
+  g2048Blurb: 'Slide equal numbers together and double them up to 2048.',
+
+  // Modes
+  g2048ModeClassic: 'Classic',
+  g2048DailyPlayedBadge: 'Played today',
+
+  // Board
+  g2048BoardLabel: '2048 board',
+  g2048CellLabel: '{value}, row {row}, column {col}',
+  g2048CellEmpty: 'Empty, row {row}, column {col}',
+  g2048Restart: 'Start Over',
+
+  // Result
+  g2048OverBody: 'The board is full and nothing can combine.',
+  g2048WinTitle: 'You made 2048!',
+  g2048WinBody: 'Nothing ends here — keep going as long as you like.',
+  g2048KeepPlaying: 'Keep Playing',
+
+  // Statistics
+  g2048BestScore: 'Best score',
+  g2048BestTile: 'Highest tile',
+  g2048Wins: 'Times you reached 2048',
+  g2048DaysPlayed: 'Days played',
+
+  // Quick Rules (3 steps, §9)
+  g2048Step1Title: 'Swipe to move',
+  g2048Step1Body: 'Swipe, and every tile slides that way at once.',
+  g2048Step2Title: 'Equal numbers join',
+  g2048Step2Body: 'Two tiles with the same number combine into their double.',
+  g2048Step3Title: 'Make 2048',
+  g2048Step3Body: 'Stuck? Undo is free and unlimited, as often as you like.',
+
+  // ---- Minesweeper ----
+  minesName: 'Minesweeper',
+  minesBlurb: 'Open every square that has no mine.',
+
+  // Home
+  minesChooseBoard: 'Choose a board',
+  minesDifficulty_easy: 'Easy',
+  minesDifficulty_medium: 'Medium',
+  minesDifficulty_hard: 'Hard',
+  minesBoardNote: '{width}×{height} · {mines} mines',
+  minesConfirmSwitchTitle: 'Replace the board in progress?',
+  minesConfirmSwitchBody: 'Your {current} game will be replaced by a new {next} board.',
+
+  // Board
+  minesBoardLabel: 'Minefield, {width} columns by {height} rows',
+  minesCellHidden: 'Unopened, row {row}, column {col}',
+  minesCellFlagged: 'Flagged, row {row}, column {col}',
+  minesCellEmpty: 'Empty, row {row}, column {col}',
+  minesCellNumber: '{count} mines nearby, row {row}, column {col}',
+  minesCellMine: 'Mine, row {row}, column {col}',
+  minesMinesLeft: 'Mines left',
+  minesTapToStart: 'Tap any square. The first tap is always safe.',
+
+  // Actions
+  minesFlagMode: 'Flag mode',
+  minesFlagModeNote: 'A tap plants a flag; a long press opens.',
+  minesHintFound: 'This square is safe — the highlighted numbers show why.',
+  minesHintNone: 'Nothing can be worked out yet.',
+  minesNewBoard: 'New board',
+
+  // Result
+  minesWonTitle: 'Cleared!',
+  minesWonBody: 'Every square without a mine is open.',
+  minesLostTitle: 'Mine opened',
+  minesLostBody: 'This game ends here. The same board is ready whenever you are.',
+  minesNewBestTime: 'Your fastest yet.',
+  minesHintsUsed: 'Hints',
+
+  // Statistics
+  minesGamesWon: 'Games won',
+  minesWinRate: 'Win rate',
+  minesDailySection: 'Daily',
+  minesDailiesCleared: 'Days cleared',
+
+  // Quick Rules
+  minesStep1Title: 'A number counts mines',
+  minesStep1Body: 'It says how many of the eight squares around it hold a mine.',
+  minesStep2Title: 'Flag what you are sure of',
+  minesStep2Body: 'Long-press a square to flag it. Flag mode makes a plain tap do it instead.',
+  minesStep3Title: 'Open the rest to win',
+  minesStep3Body: 'Your first tap is always safe, and no board ever needs a guess.',
 } as const;
 
 export type Messages = Record<keyof typeof en, string>;

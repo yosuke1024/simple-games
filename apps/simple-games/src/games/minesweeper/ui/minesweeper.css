@@ -1,0 +1,221 @@
+/* Minesweeper — everything this game looks like, and nothing else's.
+   Imported from MinesweeperRoot.tsx so it arrives and leaves with the game.
+   Colours come from the shared custom properties in src/ui/styles.css; only
+   the eight number colours are defined here, because only this game has them. */
+
+/* ---------- number colours (§12) ----------
+
+   The digit is the information. Colour only makes a glance quicker, so every
+   number stays legible read as a shape alone — which is also what makes the
+   board work for a colour-blind player and in either theme. Values are picked
+   against --surface (light) and the dark surface, not against each other. */
+
+.mines-board,
+.mines-tutorial-board {
+  --mines-1: #2f5fbf;
+  --mines-2: #2c7a4b;
+  --mines-3: #c2603f;
+  --mines-4: #6a4fa3;
+  --mines-5: #8a5a2b;
+  --mines-6: #1f7a72;
+  --mines-7: #4a4a4a;
+  --mines-8: #6b6b6b;
+}
+
+:root[data-theme='dark'] .mines-board,
+:root[data-theme='dark'] .mines-tutorial-board {
+  --mines-1: #8bb0ea;
+  --mines-2: #74c68f;
+  --mines-3: #e59275;
+  --mines-4: #b3a0e4;
+  --mines-5: #d9ac6d;
+  --mines-6: #6fc9be;
+  --mines-7: #d4d0c8;
+  --mines-8: #a3a3a3;
+}
+
+/* ---------- board ---------- */
+
+.mines-board-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 12px;
+}
+
+/*
+  Cells are sized to fit the widest board on a small phone rather than to a
+  fixed number of pixels: 14 columns across a 360px screen leaves about 22px
+  each, which is the floor. Anything narrower scrolls instead of shrinking
+  further — a cell too small to hit is worse than a board that moves (§1).
+*/
+.mines-board {
+  --mines-gap: 2px;
+  --mines-cell: clamp(
+    22px,
+    calc((100vw - 24px - (var(--mines-cols) - 1) * var(--mines-gap)) / var(--mines-cols)),
+    40px
+  );
+  display: grid;
+  grid-template-columns: repeat(var(--mines-cols), var(--mines-cell));
+  gap: var(--mines-gap);
+  justify-content: center;
+  margin: 0 auto;
+  /* A long press is a flag, not a text selection or a browser gesture (§3). */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mines-cell {
+  width: var(--mines-cell);
+  height: var(--mines-cell);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-family: var(--font-display);
+  font-size: calc(var(--mines-cell) * 0.6);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition:
+    background-color 0.14s ease,
+    border-color 0.14s ease;
+}
+
+.mines-board-still .mines-cell {
+  transition: none;
+}
+
+.mines-cell-shut {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  /* A shut cell reads as raised, so the opened ones read as sunk. */
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.mines-cell-shut:active {
+  background: var(--accent-soft);
+}
+
+.mines-cell-open {
+  background: var(--surface-recessed);
+  border: 1px solid transparent;
+  box-shadow: none;
+  color: var(--ink);
+}
+
+.mines-cell[data-count='1'] {
+  color: var(--mines-1);
+}
+.mines-cell[data-count='2'] {
+  color: var(--mines-2);
+}
+.mines-cell[data-count='3'] {
+  color: var(--mines-3);
+}
+.mines-cell[data-count='4'] {
+  color: var(--mines-4);
+}
+.mines-cell[data-count='5'] {
+  color: var(--mines-5);
+}
+.mines-cell[data-count='6'] {
+  color: var(--mines-6);
+}
+.mines-cell[data-count='7'] {
+  color: var(--mines-7);
+}
+.mines-cell[data-count='8'] {
+  color: var(--mines-8);
+}
+
+.mines-cell-mine {
+  background: var(--surface-recessed);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+}
+
+/* The one that ended the game — named, not scolded (§2). */
+.mines-cell-blast {
+  background: var(--warn-soft);
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.mines-glyph {
+  font-size: calc(var(--mines-cell) * 0.55);
+  line-height: 1;
+}
+
+.mines-cell-shut .mines-glyph {
+  color: var(--accent);
+}
+
+/* Hint: the safe cell, and the numbers that prove it (§7). */
+.mines-cell-hint {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+.mines-cell-reason {
+  background: var(--accent-soft);
+}
+
+.mines-start-hint {
+  margin: 0;
+  max-width: 320px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+/* ---------- top bar ---------- */
+
+/* Mines minus flags. Board information, not a countdown (§6). */
+.mines-counter {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.mines-counter-glyph {
+  color: var(--accent);
+}
+
+/* ---------- home ---------- */
+
+.mines-choose-label {
+  margin: 0 0 -4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.mines-chips {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ---------- tutorial figure ---------- */
+
+.mines-tutorial-board {
+  --mines-cell: 40px;
+  display: grid;
+  grid-template-columns: repeat(3, var(--mines-cell));
+  gap: 3px;
+  justify-content: center;
+}
+
+.mines-tutorial-board .mines-cell {
+  cursor: default;
+}

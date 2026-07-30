@@ -44,6 +44,22 @@
   --accent-ring-soft: rgba(47, 111, 98, 0.12);
 }
 
+:root[data-game='minesweeper'] {
+  --accent: #4a5a72;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3e7ee;
+  --accent-ring: rgba(74, 90, 114, 0.38);
+  --accent-ring-soft: rgba(74, 90, 114, 0.12);
+}
+
+:root[data-game='game-2048'] {
+  --accent: #a86a17;
+  --accent-ink: #ffffff;
+  --accent-soft: #f6e6cd;
+  --accent-ring: rgba(168, 106, 23, 0.38);
+  --accent-ring-soft: rgba(168, 106, 23, 0.12);
+}
+
 :root[data-game='sliding-puzzle'] {
   --accent: #9c5b3c;
   --accent-ink: #ffffff;
@@ -80,6 +96,22 @@
   --accent-soft: #1e3b34;
   --accent-ring: rgba(111, 179, 163, 0.42);
   --accent-ring-soft: rgba(111, 179, 163, 0.14);
+}
+
+:root[data-theme='dark'][data-game='minesweeper'] {
+  --accent: #93a4bd;
+  --accent-ink: #12151b;
+  --accent-soft: #262d3a;
+  --accent-ring: rgba(147, 164, 189, 0.42);
+  --accent-ring-soft: rgba(147, 164, 189, 0.14);
+}
+
+:root[data-theme='dark'][data-game='game-2048'] {
+  --accent: #dda54a;
+  --accent-ink: #1b1408;
+  --accent-soft: #3b2c12;
+  --accent-ring: rgba(221, 165, 74, 0.42);
+  --accent-ring-soft: rgba(221, 165, 74, 0.14);
 }
 
 :root[data-theme='dark'][data-game='sliding-puzzle'] {

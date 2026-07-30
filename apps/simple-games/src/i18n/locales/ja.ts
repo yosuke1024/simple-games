@@ -186,4 +186,85 @@ export const ja: Messages = {
   slideStep2Body: '同じ行・列なら、間にあるタイルがまとめて動きます。',
   slideStep3Title: '1から順に並べる',
   slideStep3Body: '1から順に並び、空きが右下に来れば完成です。',
+
+  // ---- 2048 ----
+  g2048Name: '2048',
+  g2048Blurb: '同じ数字を寄せて合わせ、2048を作る。',
+
+  g2048ModeClassic: 'クラシック',
+  g2048DailyPlayedBadge: '今日はプレイ済み',
+
+  g2048BoardLabel: '2048の盤面',
+  g2048CellLabel: '{value}、{row}行{col}列',
+  g2048CellEmpty: '空き、{row}行{col}列',
+  g2048Restart: '最初から',
+
+  g2048OverBody: '盤面が埋まり、合わせられるタイルがありません。',
+  g2048WinTitle: '2048を作りました！',
+  g2048WinBody: 'ここで終わりではありません。好きなだけ続けられます。',
+  g2048KeepPlaying: '続ける',
+
+  g2048BestScore: 'ベストスコア',
+  g2048BestTile: '最高タイル',
+  g2048Wins: '2048達成回数',
+  g2048DaysPlayed: 'プレイした日数',
+
+  g2048Step1Title: 'スワイプで動かす',
+  g2048Step1Body: 'スワイプすると、すべてのタイルがその方向へ動きます。',
+  g2048Step2Title: '同じ数字は合わさる',
+  g2048Step2Body: '同じ数字がぶつかると、2倍の数字1つになります。',
+  g2048Step3Title: '2048を作る',
+  g2048Step3Body: '詰まっても大丈夫。戻すのはいつでも無料・無制限です。',
+
+  // ---- Minesweeper ----
+  minesName: 'マインスイーパ',
+  minesBlurb: '地雷のないマスをすべて開けよう。',
+
+  // Home
+  minesChooseBoard: '盤面を選ぶ',
+  minesDifficulty_easy: 'かんたん',
+  minesDifficulty_medium: 'ふつう',
+  minesDifficulty_hard: 'むずかしい',
+  minesBoardNote: '{width}×{height}・地雷 {mines}',
+  minesConfirmSwitchTitle: '中断中の盤面を置き換えますか？',
+  minesConfirmSwitchBody: '中断中の「{current}」は、新しい「{next}」の盤面に置き換わります。',
+
+  // Board
+  minesBoardLabel: '地雷原、横 {width} マス、縦 {height} マス',
+  minesCellHidden: '未開、{row}行 {col}列',
+  minesCellFlagged: '旗、{row}行 {col}列',
+  minesCellEmpty: '空、{row}行 {col}列',
+  minesCellNumber: '隣接する地雷 {count}、{row}行 {col}列',
+  minesCellMine: '地雷、{row}行 {col}列',
+  minesMinesLeft: '残りの地雷',
+  minesTapToStart: 'どこでもタップしてください。最初の一手は必ず安全です。',
+
+  // Actions
+  minesFlagMode: '旗モード',
+  minesFlagModeNote: 'タップで旗を立て、長押しで開きます。',
+  minesHintFound: 'このマスは安全です。光っている数字がその理由です。',
+  minesHintNone: '今わかる手が見つかりません。',
+  minesNewBoard: '新しい盤面',
+
+  // Result
+  minesWonTitle: 'クリア！',
+  minesWonBody: '地雷のないマスをすべて開けました。',
+  minesLostTitle: '地雷を開きました',
+  minesLostBody: 'この局はここで終わりです。同じ盤面にいつでも挑戦できます。',
+  minesNewBestTime: '自己最速です。',
+  minesHintsUsed: 'ヒント',
+
+  // Statistics
+  minesGamesWon: '勝利数',
+  minesWinRate: '勝率',
+  minesDailySection: 'デイリー',
+  minesDailiesCleared: '達成日数',
+
+  // Quick Rules
+  minesStep1Title: '数字は地雷の数',
+  minesStep1Body: '隣り合う8マスに地雷がいくつあるかを表します。',
+  minesStep2Title: '確信したマスに旗を',
+  minesStep2Body: '長押しで旗を立てます。旗モードならタップで立てられます。',
+  minesStep3Title: '残りを開けば勝ち',
+  minesStep3Body: '最初の一手は必ず安全で、推測が必要な盤面は出題されません。',
 };

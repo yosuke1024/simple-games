@@ -97,6 +97,32 @@ export const titleAccents = {
     softDark: '#1e3b34',
   },
   /**
+   * Minesweeper — slate blue. The board carries its own colour scale for the
+   * numbers, so the chrome stays close to the series ink and lets those
+   * numbers be the only thing on screen competing for attention.
+   */
+  minesweeper: {
+    light: '#4a5a72',
+    onLight: '#ffffff',
+    softLight: '#e3e7ee',
+    dark: '#93a4bd',
+    onDark: '#12151b',
+    softDark: '#262d3a',
+  },
+  /**
+   * 2048 — amber. The tile scale already runs warm as the numbers climb, so
+   * the chrome joins it rather than fighting it, and amber is far enough from
+   * the clay next door to tell the two apart on the collection list.
+   */
+  game2048: {
+    light: '#a86a17',
+    onLight: '#ffffff',
+    softLight: '#f6e6cd',
+    dark: '#dda54a',
+    onDark: '#1b1408',
+    softDark: '#3b2c12',
+  },
+  /**
    * Sliding Puzzle — warm clay. The board is a solid field of tiles, so the
    * accent covers more area here than in any other title; a warm, muted tone
    * carries that much surface without shouting.

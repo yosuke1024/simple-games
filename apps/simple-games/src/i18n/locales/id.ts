@@ -189,4 +189,85 @@ export const id: Messages = {
   slideStep2Body: 'Dalam baris atau kolom yang sama, semua ubin di antaranya ikut bergeser.',
   slideStep3Title: 'Urutkan mulai dari 1',
   slideStep3Body: 'Susun angka sesuai urutan baca dengan kotak kosong di pojok kanan bawah.',
+
+  // ---- 2048 ----
+  g2048Name: '2048',
+  g2048Blurb: 'Geser angka yang sama agar menyatu dan berlipat hingga 2048.',
+
+  g2048ModeClassic: 'Klasik',
+  g2048DailyPlayedBadge: 'Sudah main hari ini',
+
+  g2048BoardLabel: 'Papan 2048',
+  g2048CellLabel: '{value}, baris {row}, kolom {col}',
+  g2048CellEmpty: 'Kosong, baris {row}, kolom {col}',
+  g2048Restart: 'Mulai Ulang',
+
+  g2048OverBody: 'Papan penuh dan tidak ada angka yang bisa digabung.',
+  g2048WinTitle: 'Anda membuat 2048!',
+  g2048WinBody: 'Belum berakhir — teruslah bermain selama Anda mau.',
+  g2048KeepPlaying: 'Lanjut Bermain',
+
+  g2048BestScore: 'Skor terbaik',
+  g2048BestTile: 'Angka tertinggi',
+  g2048Wins: 'Berhasil mencapai 2048',
+  g2048DaysPlayed: 'Hari dimainkan',
+
+  g2048Step1Title: 'Geser untuk memindah',
+  g2048Step1Body: 'Geser, dan semua angka bergerak ke arah itu sekaligus.',
+  g2048Step2Title: 'Angka sama menyatu',
+  g2048Step2Body: 'Dua angka yang sama bergabung menjadi dua kali lipatnya.',
+  g2048Step3Title: 'Buat 2048',
+  g2048Step3Body: 'Buntu? Undo selalu gratis dan tanpa batas, sesering yang Anda mau.',
+
+  // ---- Minesweeper ----
+  minesName: 'Minesweeper',
+  minesBlurb: 'Buka semua kotak yang tidak berisi ranjau.',
+
+  // Home
+  minesChooseBoard: 'Pilih papan',
+  minesDifficulty_easy: 'Mudah',
+  minesDifficulty_medium: 'Sedang',
+  minesDifficulty_hard: 'Sulit',
+  minesBoardNote: '{width}×{height} · {mines} ranjau',
+  minesConfirmSwitchTitle: 'Ganti papan yang sedang berjalan?',
+  minesConfirmSwitchBody: 'Permainan {current} Anda akan diganti dengan papan {next} yang baru.',
+
+  // Board
+  minesBoardLabel: 'Ladang ranjau, {width} kolom dan {height} baris',
+  minesCellHidden: 'Belum dibuka, baris {row}, kolom {col}',
+  minesCellFlagged: 'Ditandai, baris {row}, kolom {col}',
+  minesCellEmpty: 'Kosong, baris {row}, kolom {col}',
+  minesCellNumber: '{count} ranjau di sekitar, baris {row}, kolom {col}',
+  minesCellMine: 'Ranjau, baris {row}, kolom {col}',
+  minesMinesLeft: 'Sisa ranjau',
+  minesTapToStart: 'Ketuk kotak mana pun. Ketukan pertama selalu aman.',
+
+  // Actions
+  minesFlagMode: 'Mode tanda',
+  minesFlagModeNote: 'Ketuk untuk menandai; tekan lama untuk membuka.',
+  minesHintFound: 'Kotak ini aman — angka yang disorot menjelaskan alasannya.',
+  minesHintNone: 'Belum ada yang bisa dipastikan.',
+  minesNewBoard: 'Papan baru',
+
+  // Result
+  minesWonTitle: 'Selesai!',
+  minesWonBody: 'Semua kotak tanpa ranjau sudah terbuka.',
+  minesLostTitle: 'Ranjau terbuka',
+  minesLostBody: 'Permainan ini berakhir di sini. Papan yang sama siap dicoba lagi.',
+  minesNewBestTime: 'Tercepat sejauh ini.',
+  minesHintsUsed: 'Petunjuk',
+
+  // Statistics
+  minesGamesWon: 'Permainan menang',
+  minesWinRate: 'Tingkat menang',
+  minesDailySection: 'Harian',
+  minesDailiesCleared: 'Hari terselesaikan',
+
+  // Quick Rules
+  minesStep1Title: 'Angka menghitung ranjau',
+  minesStep1Body: 'Angka menyebut berapa ranjau di delapan kotak sekelilingnya.',
+  minesStep2Title: 'Tandai yang sudah pasti',
+  minesStep2Body: 'Tekan lama sebuah kotak untuk menandainya. Dengan mode tanda, cukup diketuk.',
+  minesStep3Title: 'Buka sisanya untuk menang',
+  minesStep3Body: 'Ketukan pertama selalu aman, dan tidak ada papan yang perlu ditebak.',
 };

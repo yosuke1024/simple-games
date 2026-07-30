@@ -187,4 +187,85 @@ export const th: Messages = {
   slideStep2Body: 'ถ้าอยู่แถวหรือหลักเดียวกัน แผ่นที่คั่นอยู่จะเลื่อนไปพร้อมกัน',
   slideStep3Title: 'เรียง 1 ไปตามลำดับ',
   slideStep3Body: 'เรียงตัวเลขตามลำดับการอ่าน โดยให้ช่องว่างอยู่มุมขวาล่าง',
+
+  // ---- 2048 ----
+  g2048Name: '2048',
+  g2048Blurb: 'เลื่อนตัวเลขที่เหมือนกันมารวมกันให้เป็นสองเท่า จนถึง 2048',
+
+  g2048ModeClassic: 'คลาสสิก',
+  g2048DailyPlayedBadge: 'เล่นวันนี้แล้ว',
+
+  g2048BoardLabel: 'กระดาน 2048',
+  g2048CellLabel: '{value} แถว {row} หลัก {col}',
+  g2048CellEmpty: 'ว่าง แถว {row} หลัก {col}',
+  g2048Restart: 'เริ่มใหม่',
+
+  g2048OverBody: 'กระดานเต็มแล้ว และไม่มีตัวเลขใดรวมกันได้',
+  g2048WinTitle: 'คุณทำ 2048 ได้แล้ว!',
+  g2048WinBody: 'ยังไม่จบแค่นี้ เล่นต่อได้นานเท่าที่ต้องการ',
+  g2048KeepPlaying: 'เล่นต่อ',
+
+  g2048BestScore: 'คะแนนสูงสุด',
+  g2048BestTile: 'ตัวเลขสูงสุด',
+  g2048Wins: 'จำนวนครั้งที่ถึง 2048',
+  g2048DaysPlayed: 'จำนวนวันที่เล่น',
+
+  g2048Step1Title: 'ปัดเพื่อเลื่อน',
+  g2048Step1Body: 'ปัดไปทางไหน ตัวเลขทุกตัวจะเลื่อนไปทางนั้นพร้อมกัน',
+  g2048Step2Title: 'เลขเหมือนกันจะรวมกัน',
+  g2048Step2Body: 'ตัวเลขเดียวกันสองตัวมาชนกันจะกลายเป็นเลขที่เป็นสองเท่า',
+  g2048Step3Title: 'ทำให้ได้ 2048',
+  g2048Step3Body: 'ติดขัด? ย้อนกลับได้ฟรีและไม่จำกัดจำนวนครั้ง',
+
+  // ---- Minesweeper ----
+  minesName: 'ไมน์สวีปเปอร์',
+  minesBlurb: 'เปิดทุกช่องที่ไม่มีระเบิด',
+
+  // Home
+  minesChooseBoard: 'เลือกกระดาน',
+  minesDifficulty_easy: 'ง่าย',
+  minesDifficulty_medium: 'ปานกลาง',
+  minesDifficulty_hard: 'ยาก',
+  minesBoardNote: '{width}×{height} · ระเบิด {mines} ลูก',
+  minesConfirmSwitchTitle: 'แทนที่กระดานที่ค้างอยู่ไหม',
+  minesConfirmSwitchBody: 'เกม {current} ที่ค้างอยู่จะถูกแทนที่ด้วยกระดาน {next} ใหม่',
+
+  // Board
+  minesBoardLabel: 'สนามระเบิด {width} คอลัมน์ {height} แถว',
+  minesCellHidden: 'ยังไม่เปิด แถว {row} หลัก {col}',
+  minesCellFlagged: 'ปักธง แถว {row} หลัก {col}',
+  minesCellEmpty: 'ว่าง แถว {row} หลัก {col}',
+  minesCellNumber: 'มีระเบิดข้างเคียง {count} ลูก แถว {row} หลัก {col}',
+  minesCellMine: 'ระเบิด แถว {row} หลัก {col}',
+  minesMinesLeft: 'ระเบิดที่เหลือ',
+  minesTapToStart: 'แตะช่องไหนก็ได้ ตาแรกปลอดภัยเสมอ',
+
+  // Actions
+  minesFlagMode: 'โหมดปักธง',
+  minesFlagModeNote: 'แตะเพื่อปักธง กดค้างเพื่อเปิดช่อง',
+  minesHintFound: 'ช่องนี้ปลอดภัย ตัวเลขที่เน้นไว้คือเหตุผล',
+  minesHintNone: 'ยังหาข้อสรุปไม่ได้ในตอนนี้',
+  minesNewBoard: 'กระดานใหม่',
+
+  // Result
+  minesWonTitle: 'สำเร็จ!',
+  minesWonBody: 'เปิดครบทุกช่องที่ไม่มีระเบิดแล้ว',
+  minesLostTitle: 'เปิดโดนระเบิด',
+  minesLostBody: 'เกมนี้จบลงตรงนี้ กระดานเดิมพร้อมให้ลองใหม่เสมอ',
+  minesNewBestTime: 'เร็วที่สุดของคุณ',
+  minesHintsUsed: 'คำใบ้',
+
+  // Statistics
+  minesGamesWon: 'เกมที่ชนะ',
+  minesWinRate: 'อัตราชนะ',
+  minesDailySection: 'รายวัน',
+  minesDailiesCleared: 'จำนวนวันที่ผ่าน',
+
+  // Quick Rules
+  minesStep1Title: 'ตัวเลขคือจำนวนระเบิด',
+  minesStep1Body: 'บอกว่าในแปดช่องรอบ ๆ มีระเบิดกี่ลูก',
+  minesStep2Title: 'ปักธงช่องที่มั่นใจ',
+  minesStep2Body: 'กดค้างที่ช่องเพื่อปักธง หรือเปิดโหมดปักธงแล้วแตะครั้งเดียว',
+  minesStep3Title: 'เปิดที่เหลือให้ครบก็ชนะ',
+  minesStep3Body: 'ตาแรกปลอดภัยเสมอ และไม่มีกระดานใดที่ต้องเดา',
 };
