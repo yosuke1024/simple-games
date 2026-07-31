@@ -297,19 +297,13 @@ button:disabled {
 
 /* The series mark: one accent-tinted tile. Swapping the glyph and accent is
    all a future title needs to make this its own. */
+/* The mark is an <svg> that carries its own fill and corner radius
+   (CollectionHomeScreen.tsx), so this only has to place and size it. */
 .home-logo {
   width: 52px;
   height: 52px;
   margin: 0 auto 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 15px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 800;
+  display: block;
 }
 
 .home-title {
