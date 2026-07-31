@@ -30,9 +30,24 @@ export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionH
       </header>
 
       <div className="home-hero">
-        <div className="home-logo" aria-hidden="true">
-          ▦
-        </div>
+        {/*
+          The collection mark, drawn to match assets/icon.svg (the launcher
+          icon), public/favicon.svg and the hero on the PixApps page — same
+          geometry, same colours, so the app opens on the icon that was
+          tapped. It carries its own ink rather than the theme accent for the
+          same reason an app icon does not repaint per theme. Keep the four in
+          step if the mark ever changes.
+
+          It replaced a ▦ glyph, which registry.ts also hands to Nonogram: the
+          collection and one of the games were wearing the same face.
+        */}
+        <svg className="home-logo" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <rect width="64" height="64" rx="14" fill="#232a33" />
+          <rect x="13" y="13" width="17" height="17" rx="4" fill="#fffdf8" />
+          <rect x="34" y="13" width="17" height="17" rx="4" fill="#fffdf8" />
+          <rect x="13" y="34" width="17" height="17" rx="4" fill="#fffdf8" />
+          <rect x="34" y="34" width="17" height="17" rx="4" fill="#8b95a3" />
+        </svg>
         <h1 className="home-title">{SERIES_NAME}</h1>
         <p className="home-tagline">{t('collectionTagline')}</p>
       </div>
