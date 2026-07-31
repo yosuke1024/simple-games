@@ -41,7 +41,7 @@ export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionH
           It replaced a ▦ glyph, which registry.ts also hands to Nonogram: the
           collection and one of the games were wearing the same face.
         */}
-        <svg className="home-logo" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <svg className="home-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
           <rect width="64" height="64" rx="14" fill="#232a33" />
           <rect x="13" y="13" width="17" height="17" rx="4" fill="#fffdf8" />
           <rect x="34" y="13" width="17" height="17" rx="4" fill="#fffdf8" />

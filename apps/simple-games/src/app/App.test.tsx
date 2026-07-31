@@ -30,6 +30,17 @@ describe('collection home', () => {
     expect(screen.getByRole('button', { name: /Sudoku/ })).toBeInTheDocument();
   });
 
+  // The collection wears the app's own icon — an <svg class="home-mark"> — and
+  // deliberately not .home-logo, which is the accent tile the five game home
+  // screens draw their glyph in. Restyling .home-logo for the collection once
+  // flattened the tile on all five game screens at the same time, and nothing
+  // caught it: the shared class had no test saying who it belonged to.
+  it('wears the app mark, not the accent tile the game screens share', () => {
+    const { container } = renderShell();
+    expect(container.querySelector('svg.home-mark')).toBeInTheDocument();
+    expect(container.querySelector('.home-logo')).toBeNull();
+  });
+
   it('opens Sudoku and stamps its accent, then clears it on the way back', async () => {
     const user = userEvent.setup();
     renderShell();
