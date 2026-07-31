@@ -4,10 +4,10 @@
  * on the game's landing page behind "Learn More", which quietly does nothing
  * offline (docs/OFFLINE_POLICY.md).
  */
-import { LANDING_BASE_URL } from '@simple-games/brand';
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { IconClose } from '@/ui/components/icons';
+import { gameLandingUrl } from '@/ui/landing';
 import { openExternal } from '@/ui/openExternal';
 import { useSudoku } from '../../state/GameContext';
 
@@ -51,6 +51,7 @@ function NotesExample() {
 export function SudokuTutorialScreen() {
   const { tutorialCompleted, completeTutorial, startLevel, progress, goHome } = useSudoku();
   const { t, locale } = useSettings();
+  const learnMoreUrl = gameLandingUrl('sudoku', locale);
   const [step, setStep] = useState(0);
 
   const steps = [
@@ -129,15 +130,17 @@ export function SudokuTutorialScreen() {
         )}
       </div>
 
-      <div className="home-links">
-        <button
-          type="button"
-          className="btn btn-ghost"
-          onClick={() => openExternal(`${LANDING_BASE_URL}/games/sudoku/${locale}/`)}
-        >
-          {t('learnMore')}
-        </button>
-      </div>
+      {learnMoreUrl ? (
+        <div className="home-links">
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => openExternal(learnMoreUrl)}
+          >
+            {t('learnMore')}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

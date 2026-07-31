@@ -46,6 +46,8 @@ describe('collection home', () => {
     await user.click(screen.getByRole('button', { name: /Number Match/ }));
     // The game loads its own records asynchronously, then shows Quick Rules.
     expect(await screen.findByText('Equal, or adds up to 10')).toBeInTheDocument();
+    // Quick Rules stay short; the long-form rules are one link away (ui/landing.ts).
+    expect(screen.getByRole('button', { name: 'Learn More' })).toBeInTheDocument();
   });
 });
 
@@ -64,13 +66,15 @@ describe('shared settings', () => {
     expect(document.documentElement.dataset.theme).toBe('dark');
   });
 
-  it('carries the quiet support message and the open-source links', async () => {
+  it('carries the open-source links, and no ad claim off-device', async () => {
     const user = userEvent.setup();
     renderShell();
     await user.click(screen.getByRole('button', { name: 'Settings' }));
 
-    expect(screen.getByText(/small banner ad/)).toBeInTheDocument();
-    // Billing is not wired in this build: no purchase button is shown.
+    // jsdom is not a native platform, so this renders the web build: it shows
+    // no banner and sells nothing, so it must not say it does. The per-platform
+    // wording is pinned in ui/screens/SettingsScreen.test.tsx.
+    expect(screen.queryByText(/small banner ad/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Remove Ads$/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'View Source Code' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Report a Bug' })).toBeInTheDocument();

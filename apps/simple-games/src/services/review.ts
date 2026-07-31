@@ -11,6 +11,8 @@
  * - Never at launch, never mid-game — the shell asks only on the way back
  *   from a game to the collection, and only while online (so a "yes" can
  *   actually reach the store instead of doing nothing).
+ * - Native only: on the web build (docs/WEB_VERSION.md) there is no install
+ *   to review, so the question is never asked at all.
  *
  * State lives at module level with fire-and-forget persistence, mirroring
  * the services/ pattern. Failures never affect gameplay.
@@ -52,11 +54,13 @@ export function recordGameCompleted(): void {
 
 /**
  * Whether the shell should ask now (evaluated on game exit). Pure state
- * rules plus the online gate: offline, a "yes" could open nothing — so the
- * question quietly waits for a better moment.
+ * rules plus two gates: offline, a "yes" could open nothing — so the
+ * question quietly waits for a better moment; and on the web the player has
+ * no install to rate, so asking would only be a store advert.
  */
 export function shouldPromptReview(): boolean {
   return (
+    Capacitor.isNativePlatform() &&
     !state.resolved &&
     state.promptsShown < MAX_PROMPTS &&
     state.gamesCompleted >= state.nextPromptAt &&

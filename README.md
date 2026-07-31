@@ -118,13 +118,19 @@ pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満�
 方針は [docs/I18N_POLICY.md](docs/I18N_POLICY.md)、
 翻訳への参加方法は [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
 
-## 説明の二層化と将来の Web 版
+## 説明の二層化と Web 版
 
-アプリ内のゲーム説明は Quick Rules(最大 3 ステップ)のみとし、詳細ルール・FAQ は
+アプリ内のゲーム説明は Quick Rules(最大 3 ステップ)のみとし、詳細ルール・攻略・FAQ は
 ゲーム別 Landing Page(`https://pixapps.ai/simple-games/games/<game-id>/<locale>/`、
-別リポジトリ・未構築)へ分離します。オフラインで外部リンクが開けなくても
-ゲームは止まりません。ゲームロジックは Pure TypeScript のため、将来の静的 Web 版
-(現時点では未実装)を可能な構成を維持します。詳細は
+別リポジトリ)へ分離します。**ページは en / ja のみ**で、他の 12 ロケールは en へ
+フォールバックします(長文のルール解説を機械翻訳で量産しないため。`src/ui/landing.ts`)。
+オフラインで外部リンクが開けなくてもゲームは止まりません。
+
+ゲームロジックが Pure TypeScript なので、同じソースから **ブラウザ版**を配信します
+(公開予定先 `https://pixapps.ai/simple-games/play/`。**まだ公開していません**)。
+Cloudflare Pages の静的アセットのみで動き、サーバー機能は使いません。
+アプリ版との役割の違い(広告・課金・オフラインの範囲・保存)は
+[docs/WEB_VERSION.md](docs/WEB_VERSION.md)、レイヤー構成は
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) を参照してください。
 
 ## 原則(抜粋)

@@ -1,8 +1,8 @@
-import { LANDING_BASE_URL } from '@simple-games/brand';
 import { useState } from 'react';
 import { useApp } from '../../state/GameContext';
 import { useSettings } from '@/state/SettingsContext';
 import { IconClose } from '@/ui/components/icons';
+import { gameLandingUrl } from '@/ui/landing';
 import { openExternal } from '@/ui/openExternal';
 
 /**
@@ -53,6 +53,7 @@ function ExampleTiles({
 export function TutorialScreen() {
   const { tutorialCompleted, completeTutorial, startLevel, progress, goHome } = useApp();
   const { t, locale } = useSettings();
+  const learnMoreUrl = gameLandingUrl('number-match', locale);
   const [step, setStep] = useState(0);
 
   const steps = [
@@ -130,17 +131,20 @@ export function TutorialScreen() {
         )}
       </div>
 
-      {/* Quick Rules live here; the long-form rules live on the game's
-          landing page. Offline the tap quietly does nothing (openExternal). */}
-      <div className="home-links">
-        <button
-          type="button"
-          className="btn btn-ghost"
-          onClick={() => openExternal(`${LANDING_BASE_URL}/games/number-match/${locale}/`)}
-        >
-          {t('learnMore')}
-        </button>
-      </div>
+      {/* Quick Rules live here; the long-form rules live on the game's landing
+          page — offered only once that page exists (ui/landing.ts). Offline the
+          tap quietly does nothing (openExternal). */}
+      {learnMoreUrl ? (
+        <div className="home-links">
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => openExternal(learnMoreUrl)}
+          >
+            {t('learnMore')}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

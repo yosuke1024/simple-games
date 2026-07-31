@@ -4,8 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f3f0e9" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#14171c" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Simple Games: Offline Puzzles</title>
+    <!--
+      One index.html serves both builds. The Android WebView ignores everything
+      below; it is here for the web build at pixapps.ai/simple-games/play/
+      (docs/WEB_VERSION.md). `lang` above is only the pre-hydration value — the
+      app rewrites it once the locale resolves (state/SettingsContext.tsx).
+    -->
+    <meta
+      name="description"
+      content="Five classic puzzles — Sudoku, Minesweeper, Nonogram, Number Match and Sliding Puzzle — playable straight in your browser. No install and no account."
+    />
+    <link rel="canonical" href="https://pixapps.ai/simple-games/play/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PixApps" />
+    <meta property="og:title" content="Simple Games — five classic puzzles in your browser" />
+    <meta
+      property="og:description"
+      content="Sudoku, Minesweeper, Nonogram, Number Match and Sliding Puzzle. No install and no account — open the page and play."
+    />
+    <meta property="og:url" content="https://pixapps.ai/simple-games/play/" />
+    <meta property="og:image" content="https://pixapps.ai/ogp.png" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
     <div id="root"></div>
