@@ -3,6 +3,7 @@
  * One tap opens a game; the gear opens the shared settings. No badges, no
  * events, no urgency — the quiet front door the brand promises.
  */
+import { Capacitor } from '@capacitor/core';
 import { SERIES_BY_LINE, SERIES_NAME } from '@simple-games/brand';
 import { GAMES, type GameId } from '../../app/registry';
 import { useSettings } from '../../state/SettingsContext';
@@ -15,6 +16,16 @@ export interface CollectionHomeScreenProps {
 
 export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionHomeScreenProps) {
   const { t } = useSettings();
+  /**
+   * The tagline promises "fully offline", which is the app's promise and not
+   * the web build's: the browser has to download the assets on a first visit,
+   * and docs/WEB_VERSION.md forbids wording that blurs that difference. So the
+   * line is gated rather than reworded — a web-only tagline would be a new
+   * string in fourteen locales, and the settings screen already answers this
+   * the same way (SettingsScreen.tsx, docs/I18N_POLICY.md). It comes back here
+   * unchanged the day the web build is offline on a first visit.
+   */
+  const taglineIsTrue = Capacitor.isNativePlatform();
   return (
     <div className="screen home-screen">
       <header className="screen-header">
@@ -49,7 +60,7 @@ export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionH
           <rect x="34" y="34" width="17" height="17" rx="4" fill="#8b95a3" />
         </svg>
         <h1 className="home-title">{SERIES_NAME}</h1>
-        <p className="home-tagline">{t('collectionTagline')}</p>
+        {taglineIsTrue ? <p className="home-tagline">{t('collectionTagline')}</p> : null}
       </div>
 
       <nav className="game-list" aria-label={t('gamesHeading')}>
