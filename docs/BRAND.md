@@ -157,7 +157,15 @@ OSS を先頭に出さない。
   アクセント色**が担う(レジストリの `glyph`)。アイコンはその役割を持たない。
 - 小さく表示しても認識可能であること。長い文字を入れない。
 - 既存ゲームのアイコン・色・盤面を模倣しない。
-- ソースは `apps/simple-games/assets/*.svg`。色を変えたら Android リソースを再生成する
-  (`capacitor-assets generate --android`)。
+- ソースは `apps/simple-games/assets/*.svg`。色を変えたら Android リソースを再生成する。
+  生成ツールは依存に持たず、`apps/simple-games` で必要なときだけ呼ぶ:
+
+  ```sh
+  pnpm dlx --allow-build=sharp @capacitor/assets@3.0.5 generate --android
+  ```
+
+  常設の依存にしないのは、このツールが古い `sharp` / `tar` / `minimatch` を引き込み、
+  出荷物に一切入らないのに脆弱性警告だけを増やすため。`--allow-build=sharp` は
+  pnpm 10 が既定で止めるビルドスクリプトを、このツールに限って許可する指定。
 - 名称・ロゴ・アイコン・ストア掲載用ブランド素材は Apache-2.0 の対象外
   (ルート README のライセンス節を参照)。

@@ -3,6 +3,7 @@ packages:
   - "packages/*"
 
 # pnpm 10 blocks dependency build scripts by default; allow only what we need.
+# sharp is not listed: it only ever came in through @capacitor/assets, which is now
+# invoked with pnpm dlx instead of being a dependency (see docs/BRAND.md).
 onlyBuiltDependencies:
   - esbuild
-  - sharp
