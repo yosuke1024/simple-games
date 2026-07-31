@@ -1,11 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { inAppReviewMock, networkMock, openExternalMock } = vi.hoisted(() => ({
+const { capacitorMock, inAppReviewMock, networkMock, openExternalMock } = vi.hoisted(() => ({
+  capacitorMock: { native: true },
   inAppReviewMock: { requestReview: vi.fn() },
   networkMock: { online: true },
   openExternalMock: vi.fn(),
 }));
 
+vi.mock('@capacitor/core', () => ({
+  Capacitor: { isNativePlatform: () => capacitorMock.native },
+}));
 vi.mock('@capacitor-community/in-app-review', () => ({ InAppReview: inAppReviewMock }));
 vi.mock('./network', () => ({ isOnline: () => networkMock.online }));
 vi.mock('../ui/openExternal', () => ({ openExternal: openExternalMock }));
@@ -26,6 +30,7 @@ import {
 beforeEach(() => {
   vi.clearAllMocks();
   networkMock.online = true;
+  capacitorMock.native = true;
 });
 
 afterEach(() => {
@@ -49,6 +54,13 @@ describe('review prompt cadence', () => {
     await initReview(createMemoryKV());
     winTimes(5);
     networkMock.online = false;
+    expect(shouldPromptReview()).toBe(false);
+  });
+
+  it('never asks on the web build (there is no install to rate)', async () => {
+    await initReview(createMemoryKV());
+    winTimes(50);
+    capacitorMock.native = false;
     expect(shouldPromptReview()).toBe(false);
   });
 
@@ -100,7 +112,14 @@ describe('review prompt cadence', () => {
 });
 
 describe('requestStoreReview', () => {
-  it('falls back to the store listing on the web', async () => {
+  it('falls back to the store listing off-device', async () => {
+    capacitorMock.native = false;
+    await requestStoreReview();
+    expect(openExternalMock).toHaveBeenCalledWith(PLAY_STORE_URL);
+  });
+
+  it('falls back to the store listing when the native card fails', async () => {
+    inAppReviewMock.requestReview.mockRejectedValueOnce(new Error('no quota'));
     await requestStoreReview();
     expect(openExternalMock).toHaveBeenCalledWith(PLAY_STORE_URL);
   });
