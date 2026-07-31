@@ -31,7 +31,6 @@
   },
   "devDependencies": {
     "@capacitor/android": "^8.4.2",
-    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.4.2",
     "@simple-games/eslint-config": "workspace:*",
     "@simple-games/typescript-config": "workspace:*",
