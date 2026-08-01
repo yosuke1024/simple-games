@@ -87,9 +87,9 @@ export const ptBR: Messages = {
   delete: 'Apagar',
   version: 'Versão',
 
-  privacy1: 'Sem conta. Sem cadastro. Não coletamos seu nome, e-mail, contatos nem localização.',
+  privacy1: 'Sem conta. Sem cadastro. A PixApps não coleta seu nome, e-mail, contatos nem localização.',
   privacy2:
-    'Seu progresso, suas estatísticas e suas configurações ficam apenas neste dispositivo. Não operamos servidores e não há sincronização na nuvem.',
+    'Seu progresso, suas estatísticas e suas configurações ficam apenas neste dispositivo. A PixApps não opera servidores e não há sincronização na nuvem.',
   privacy3:
     'Quando você está online, podem aparecer anúncios do Google AdMob; o Google pode processar os identificadores de publicidade do dispositivo conforme a própria política de privacidade dele. Offline, nenhum anúncio é exibido e nenhuma requisição de anúncio é feita.',
   privacy4: 'Desinstalar o app, ou usar "Apagar dados locais", remove seus dados.',
@@ -116,7 +116,7 @@ export const ptBR: Messages = {
   // Ads & support
   removeAdsTitle: 'Remover anúncios e apoiar o Simple Games',
   adSupportBody:
-    'O Simple Games se mantém com um pequeno banner de anúncio enquanto você está online. Isso ajuda a manter e melhorar o app. Prefere sem anúncios? Uma única compra os remove permanentemente.',
+    'O Simple Games se mantém com um pequeno banner de anúncio enquanto você está online. Isso me ajuda a manter e melhorar o app. Prefere sem anúncios? Uma única compra os remove permanentemente.',
   removeAdsAction: 'Remover anúncios',
   restorePurchase: 'Restaurar compra',
   purchaseThanks: 'Os banners de anúncio foram removidos. Obrigado por apoiar o Simple Games.',
@@ -127,10 +127,10 @@ export const ptBR: Messages = {
   reviewLater: 'Agora não',
   reviewFeedbackTitle: 'O que pode melhorar?',
   reviewFeedbackBody:
-    'Conte para a gente por e-mail — lemos todas as mensagens. Nada é enviado até você tocar em enviar no app de e-mail.',
+    'Conte para mim por e-mail — leio todas as mensagens. Nada é enviado até você tocar em enviar no app de e-mail.',
   reviewFeedbackAction: 'Escrever e-mail',
   privacy5:
-    'Uma compra única opcional pode remover os banners de anúncio. A compra é processada pelo Google Play; nunca recebemos nem armazenamos dados de pagamento.',
+    'Uma compra única opcional pode remover os banners de anúncio. A compra é processada pelo Google Play; a PixApps nunca recebe nem armazena dados de pagamento.',
 
   // Sudoku
   sudokuName: 'Sudoku',

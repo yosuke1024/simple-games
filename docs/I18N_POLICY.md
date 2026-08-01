@@ -134,9 +134,10 @@ zh-Hans / zh-Hant のスクリプト解決(zh-TW → zh-Hant 等)は中国語対
 2. **削除**: `resetData` / `resetConfirmTitle` / `resetConfirmBody` / `delete` /
    `privacy4`。「元に戻せない」を弱めていないか。
 3. **プライバシー**: `privacy1`〜`privacy5`。
-   なお `privacy5` は英語が "we"、日本語・インドネシア語が "PixApps" と主語が
-   割れている。**どちらに揃えるかはリリース前に決める**(法的な主語の明示が
-   目的なら PixApps に揃える)。
+   **主語は全 14 言語で `PixApps` に揃えた**(2026-08-01 決定)。法的な主体を
+   明示するのが目的であり、一人称(「私」「私たち」)は使わない。
+   同じ理由で `reviewFeedbackBody` は逆に**一人称単数**にしてある
+   (メールを読むのは法人ではなく作者本人であるため)。
 4. **破壊的操作の確認ダイアログ**: `confirmNewGameBody`(進行中のゲームが失われる) /
    `minesConfirmSwitchBody`(進行中の盤面が置き換わる)。
    誤訳がそのままデータ損失になる。`resetConfirmBody` と同じ扱いで、
@@ -151,7 +152,8 @@ zh-Hans / zh-Hant のスクリプト解決(zh-TW → zh-Hant 等)は中国語対
 上の 1〜5 が**リリース前の門の対象**。以下は門ではないが、言語追加時に見る。
 
 6. **ゲーム名**: `numberMatchName` は定訳がないため全言語で英語のまま。
-   `minesName` はドイツ語 Minensucher より Minesweeper が通用する可能性がある。
+   `minesName` はドイツ語のみ Minesweeper のまま(Minensucher は掃海艇を指すため。
+   2026-08-01 決定。逆翻訳の担当が、この記述を見ない状態で同じ指摘に到達した)。
    `slideName` は簡体字 数字华容道 / 繁体字 數字推盤 と地域差を反映済み。
 7. **固定幅に載る短いラベル**: `undo` / `hint` / `settings` / `resetData` /
    `restorePurchase`。ドイツ語 `Rückgängig` が最長(実測でオーバーフローなし)。
@@ -354,8 +356,16 @@ Arabic(および RTL 言語全般)は初期対象から**外す**。理由: RTL 
 
 ## ストアローカライズ
 
-M-L10N で `apps/simple-games/store/listing.md` を言語別ファイル
-`store/listing/<locale>.md` に分割する(現状は単一ファイルのみ)。
+`apps/simple-games/store/listing.md` が持つのは**英語の正文と表現の約束だけ**で、
+言語別の掲載文はこのリポジトリでは管理しない(ストア運用側で管理する)。
+
+理由は単位が違うこと。掲載文は Play Console の**掲載言語スロット**単位で必要になるが、
+その単位はアプリのロケールと一致しない。アプリは言語ごとにカタログ 1 つで、地域
+バリアントを親言語へ解決する(`pt-PT` → `pt-br`、`zh-HK` → `zh-hant`)。一方 Play は
+地域ごとに別スロットを持ち、埋めなかったスロットの利用者にはデフォルト言語の掲載
+ページが出る。つまり対応は **1 対 多**であり、`locales/*.ts` と 1 対 1 に並べると
+かえって取り違える。
+
 各言語で管理する項目:
 
 1. アプリ名
@@ -365,6 +375,16 @@ M-L10N で `apps/simple-games/store/listing.md` を言語別ファイル
 5. リリースノート
 6. IAP 商品名
 7. IAP 説明文
+
+**地域スロット専用の掲載文でも、ゲーム名と IAP 商品名は「その端末が実際に解決する
+カタログ」の表記を据え置く。** 本文の語法だけ地域に寄せてよい。例: pt-PT のページで
+"Puzzle deslizante" と書いても、その端末のアプリは `pt-br.ts` を読むので画面には
+"Quebra-cabeça deslizante" が出る。ストアで見た名前とアプリ内の名前が食い違うのは、
+翻訳の不自然さより重い。
+
+広告・課金の文言も同じ理由で、カタログの `adSupportBody` / `removeAdsTitle` と
+割れないようにする。これらは高リスクキーでもあるため、掲載文だけ先に直して
+カタログを置き去りにしない。
 
 ## スクリーンショット方針
 

@@ -2,7 +2,7 @@ import type { Messages } from './en';
 
 export const vi: Messages = {
   numberMatchName: 'Number Match',
-  tagline: 'Chơi ngoại tuyến. Không tài khoản. Không trả phí.',
+  tagline: 'Chơi được ngoại tuyến. Không tài khoản. Không khóa trả phí.',
 
   resume: 'Chơi tiếp',
   dailyChallenge: 'Thử thách hằng ngày',
@@ -88,9 +88,9 @@ export const vi: Messages = {
   version: 'Phiên bản',
 
   privacy1:
-    'Không tài khoản. Không đăng ký. Chúng tôi không thu thập tên, email, danh bạ hay vị trí của bạn.',
+    'Không tài khoản. Không đăng ký. PixApps không thu thập tên, email, danh bạ hay vị trí của bạn.',
   privacy2:
-    'Tiến trình chơi, thống kê và cài đặt chỉ được lưu trên thiết bị này. Chúng tôi không vận hành máy chủ và không có đồng bộ đám mây.',
+    'Tiến trình chơi, thống kê và cài đặt chỉ được lưu trên thiết bị này. PixApps không vận hành máy chủ và không có đồng bộ đám mây.',
   privacy3:
     'Khi trực tuyến, quảng cáo do Google AdMob phân phối có thể xuất hiện; Google có thể xử lý mã nhận dạng quảng cáo của thiết bị theo chính sách bảo mật riêng của họ. Khi ngoại tuyến, không có quảng cáo nào hiển thị và không có yêu cầu quảng cáo nào được gửi đi.',
   privacy4:
@@ -118,7 +118,7 @@ export const vi: Messages = {
   // Ads & support
   removeAdsTitle: 'Gỡ quảng cáo và ủng hộ Simple Games',
   adSupportBody:
-    'Simple Games được hỗ trợ bằng một banner quảng cáo nhỏ khi bạn trực tuyến. Nó giúp chúng tôi duy trì và cải thiện ứng dụng. Bạn không muốn quảng cáo? Một giao dịch mua duy nhất, trả một lần, sẽ gỡ bỏ chúng vĩnh viễn.',
+    'Simple Games được hỗ trợ bằng một banner quảng cáo nhỏ khi bạn trực tuyến. Nó giúp tôi duy trì và cải thiện ứng dụng. Bạn không muốn quảng cáo? Một giao dịch mua duy nhất, trả một lần, sẽ gỡ bỏ chúng vĩnh viễn.',
   removeAdsAction: 'Gỡ quảng cáo',
   restorePurchase: 'Khôi phục giao dịch',
   purchaseThanks: 'Banner quảng cáo đã được gỡ. Cảm ơn bạn đã ủng hộ Simple Games.',
@@ -129,10 +129,10 @@ export const vi: Messages = {
   reviewLater: 'Để sau',
   reviewFeedbackTitle: 'Điều gì có thể tốt hơn?',
   reviewFeedbackBody:
-    'Hãy cho chúng tôi biết qua email — chúng tôi đọc mọi tin nhắn. Sẽ không có gì được gửi cho đến khi bạn nhấn gửi trong ứng dụng thư.',
+    'Hãy cho tôi biết qua email — tôi đọc mọi tin nhắn. Sẽ không có gì được gửi cho đến khi bạn nhấn gửi trong ứng dụng thư.',
   reviewFeedbackAction: 'Viết email',
   privacy5:
-    'Một giao dịch mua tùy chọn, chỉ trả một lần, có thể gỡ banner quảng cáo. Giao dịch do Google Play xử lý; chúng tôi không bao giờ nhận hay lưu thông tin thanh toán.',
+    'Một giao dịch mua tùy chọn, chỉ trả một lần, có thể gỡ banner quảng cáo. Giao dịch do Google Play xử lý; PixApps không bao giờ nhận hay lưu thông tin thanh toán.',
 
   // Sudoku
   sudokuName: 'Sudoku',

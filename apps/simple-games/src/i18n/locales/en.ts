@@ -99,9 +99,9 @@ export const en = {
 
   // Privacy summary (works fully offline; hosted policy URL added at release)
   privacy1:
-    'No account. No sign-up. We do not collect your name, email, contacts, or location.',
+    'No account. No sign-up. PixApps does not collect your name, email, contacts, or location.',
   privacy2:
-    'Your game progress, statistics, and settings are stored only on this device. We operate no servers and there is no cloud sync.',
+    'Your game progress, statistics, and settings are stored only on this device. PixApps operates no servers and there is no cloud sync.',
   privacy3:
     'While online, ads served by Google AdMob may appear; Google may process device ad identifiers as described in its own privacy policy. Offline, no ads are shown and no ad requests are made.',
   privacy4: 'Deleting the app, or using "Reset Local Data", removes your data.',
@@ -129,7 +129,7 @@ export const en = {
   // Ads & support (quiet, never a popup)
   removeAdsTitle: 'Remove Ads & Support Simple Games',
   adSupportBody:
-    'Simple Games is supported by a small banner ad while you’re online. It helps us maintain and improve the app. Prefer no ads? A single one-time purchase removes them permanently.',
+    'Simple Games is supported by a small banner ad while you’re online. It helps me maintain and improve the app. Prefer no ads? A single one-time purchase removes them permanently.',
   removeAdsAction: 'Remove Ads',
   restorePurchase: 'Restore Purchase',
   purchaseThanks: 'Banner ads are removed. Thank you for supporting Simple Games.',
@@ -142,11 +142,11 @@ export const en = {
   reviewLater: 'Not now',
   reviewFeedbackTitle: 'What could be better?',
   reviewFeedbackBody:
-    'Tell us in an email — we read every message. Nothing is sent until you press send in your mail app.',
+    'Tell me in an email — I read every message. Nothing is sent until you press send in your mail app.',
   reviewFeedbackAction: 'Write an email',
 
   privacy5:
-    'An optional one-time purchase can remove banner ads. The purchase is processed by Google Play; we never receive or store payment details.',
+    'An optional one-time purchase can remove banner ads. The purchase is processed by Google Play; PixApps never receives or stores payment details.',
 
   // Sudoku
   sudokuName: 'Sudoku',
