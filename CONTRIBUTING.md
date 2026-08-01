@@ -49,8 +49,19 @@ Guidelines:
   most 3 steps, one sentence each); long translations break layouts.
 - Translate whole sentences — never assume strings will be concatenated.
   Variables are passed via `{var}` placeholders; keep their names unchanged.
-- Never machine-translate strings about purchases, purchase restore, data
-  deletion, or privacy without human review. Flag them in your PR if unsure.
+- Strings about purchases, purchase restore, data deletion, privacy, the
+  destructive-action confirmations, and the free/offline/no-paywall promises
+  are **high-risk keys**: a mistranslation there costs a player money, data, or
+  a promise the app then cannot keep. They are listed in
+  `apps/simple-games/src/i18n/highRiskKeys.ts` and go through a release gate —
+  someone other than the translator back-translates them, and the author reads
+  the back-translation before the release ships. Say in your PR which of these
+  keys you touched, so the gate can be re-run for them.
+
+  Nobody is asked to supply a native review: this is a one-person project and
+  that gate would never open. Every locale except `en` and `ja` is provenance
+  `machine`, the app says so, and naturalness comes back from readers — so
+  reports about wording are welcome and are not a lesser kind of contribution.
 
 ## Bugs and game suggestions
 

@@ -77,11 +77,13 @@ Minesweeper には段階的な進行が存在せず、999 段階を作れば水�
 
 ## 言語
 
-現在 14 言語・214 キー(en / ja / hi / th / id / vi / ko / zh-hans / zh-hant /
+現在 14 言語・227 キー(en / ja / hi / th / id / vi / ko / zh-hans / zh-hant /
 es / pt-br / fr / de / tr)。カタログは全言語同梱(`src/i18n/`)。ロケールタグは小文字で持ち、
 中国語は書記体系で解決します(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG →
 zh-hans)。pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送りです。
-**en と ja 以外はすべて機械翻訳ドラフトで、ネイティブレビューは未実施です。**
+**en と ja 以外は来歴 `machine`(その言語のネイティブは読んでいない)。**
+約束を背負う高リスクキーは、リリース前に逆翻訳を作者が読む門を通します
+(`i18n:gate`。未通過があると `i18n:gate:check` が落ちます)。
 方針・対応言語計画は
 [docs/I18N_POLICY.md](../../docs/I18N_POLICY.md)、locale の追加・修正手順は
 [CONTRIBUTING.md](../../CONTRIBUTING.md) の Translations 節を参照。

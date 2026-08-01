@@ -133,5 +133,8 @@ bash .github/scripts/check-principles.sh
 4. 署名鍵の作成・保管
 5. スクリーンショット等のストア素材
 6. プライバシーポリシーのホスティング
-7. 翻訳のネイティブレビュー
+7. 高リスクキーの逆翻訳を**作者が読んで承認する**(§3 の門。
+   `i18n:gate approve <locale> <key> --by <who>`)。逆翻訳を作らせるところまでは
+   別セッションや Codex に出せるが、「約束が壊れていないか」の判定は作者が読む
+   ほかない([I18N_POLICY.md](I18N_POLICY.md)「リリース前の門」)
 8. ゲーム別 Landing Page(pixapps.ai)の作成
