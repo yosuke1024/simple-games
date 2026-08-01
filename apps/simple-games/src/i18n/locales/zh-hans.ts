@@ -98,7 +98,6 @@ export const zhHans: Messages = {
   bestTime: '最快通关',
 
   // Collection shell
-  collectionTagline: '完全免费。完全离线。打开就玩。',
   gamesHeading: '游戏',
   numberMatchBlurb: '消除相同或相加得 10 的数字。',
   backToGames: '全部游戏',

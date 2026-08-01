@@ -99,7 +99,6 @@ export const ja: Messages = {
   bestTime: '最短クリア',
 
   // Collection shell
-  collectionTagline: '完全無課金。完全オフライン。すぐ遊べる。',
   gamesHeading: 'ゲーム',
   numberMatchBlurb: '同じ数字か、合計10のペアを消していく。',
   backToGames: 'ゲーム一覧へ',

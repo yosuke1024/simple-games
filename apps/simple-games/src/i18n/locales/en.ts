@@ -114,7 +114,6 @@ export const en = {
   bestTime: 'Fastest clear',
 
   // Collection shell
-  collectionTagline: 'Fully free. Fully offline. Simply playable.',
   gamesHeading: 'Games',
   numberMatchBlurb: 'Pair numbers that match or add up to 10.',
   backToGames: 'All games',

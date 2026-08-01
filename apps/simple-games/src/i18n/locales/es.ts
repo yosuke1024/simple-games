@@ -102,7 +102,6 @@ export const es: Messages = {
   bestTime: 'Más rápido',
 
   // Collection shell
-  collectionTagline: 'Todo gratis. Todo sin conexión. Listo para jugar.',
   gamesHeading: 'Juegos',
   numberMatchBlurb: 'Empareja números iguales o que sumen 10.',
   backToGames: 'Todos los juegos',

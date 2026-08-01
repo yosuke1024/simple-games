@@ -102,7 +102,6 @@ export const id: Messages = {
   bestTime: 'Selesai tercepat',
 
   // Collection shell
-  collectionTagline: 'Sepenuhnya gratis. Sepenuhnya offline. Langsung main.',
   gamesHeading: 'Game',
   numberMatchBlurb: 'Pasangkan angka yang sama atau berjumlah 10.',
   backToGames: 'Semua game',

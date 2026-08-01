@@ -100,7 +100,6 @@ export const ko: Messages = {
   bestTime: '최단 클리어',
 
   // Collection shell
-  collectionTagline: '완전 무료. 완전 오프라인. 바로 플레이.',
   gamesHeading: '게임',
   numberMatchBlurb: '같은 숫자나 합이 10인 숫자를 짝지어 없애세요.',
   backToGames: '전체 게임',

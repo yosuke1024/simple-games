@@ -103,7 +103,6 @@ export const vi: Messages = {
   bestTime: 'Dọn nhanh nhất',
 
   // Collection shell
-  collectionTagline: 'Hoàn toàn miễn phí. Hoàn toàn ngoại tuyến. Chơi được ngay.',
   gamesHeading: 'Trò chơi',
   numberMatchBlurb: 'Ghép các số giống nhau hoặc cộng lại bằng 10.',
   backToGames: 'Tất cả trò chơi',
