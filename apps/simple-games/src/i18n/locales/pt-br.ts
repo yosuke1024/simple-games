@@ -101,7 +101,6 @@ export const ptBR: Messages = {
   bestTime: 'Mais rápido',
 
   // Collection shell
-  collectionTagline: 'Tudo grátis. Tudo offline. Pronto para jogar.',
   gamesHeading: 'Jogos',
   numberMatchBlurb: 'Combine números iguais ou que somem 10.',
   backToGames: 'Todos os jogos',

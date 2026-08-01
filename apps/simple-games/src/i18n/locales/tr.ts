@@ -103,7 +103,6 @@ export const tr: Messages = {
   bestTime: 'En hızlı tamamlama',
 
   // Collection shell
-  collectionTagline: 'Tamamen ücretsiz. Tamamen çevrimdışı. Hemen oynanır.',
   gamesHeading: 'Oyunlar',
   numberMatchBlurb: 'Aynı olan ya da toplamı 10 eden sayıları eşleştir.',
   backToGames: 'Tüm oyunlar',

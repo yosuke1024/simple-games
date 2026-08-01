@@ -84,6 +84,35 @@ else
   ok "AdMob ID はテスト用のみ"
 fi
 
+# 6. 禁止表現 -----------------------------------------------------------------
+# docs/BRAND.md「表現ルール」の使用禁止表現は、ストア文面だけの規則ではなく、
+# ソースに入る文字列にも同じくかかる(i18n カタログ・packages/brand)。
+# docs/I18N_POLICY.md の「機械チェック … 禁止表現」が指しているのはこの検査である。
+#
+# **見ているのは英語と日本語だけ。** 残り 12 言語で同じ主張がされていないことは
+# grep では判定できない(「完全無料」は言語ごとに別の字面になる)。そこは
+# I18N_POLICY.md の高リスクキーの門と別モデル監査の担当で、ここが緑でも
+# 12 言語を見たことにはならない。
+#
+# 「主張」だけを拾い、広告の存在を認めている説明文は拾わない。英語では主張が
+# 文頭に来る(= 大文字)ことを利用して、"No ads" は拾い "…, no ads are shown"
+# (privacy2)と "Prefer no ads?"(adSupportBody = ADS_POLICY.md の説明文の正文)は
+# 拾わない。日本語は「機能課金なし」「課金ロックなし」が BRAND.md の指定する
+# 代替表現なので、「課金なし」の一致から除く。
+banned_any='ad-?free|completely free of ads|no popup ads|no forced ads|no in-app purchases|lifetime access|fully free|completely free'
+banned_claim='No (ads|purchases)\b'
+hits=""
+add() { [ -n "$1" ] && hits="${hits}${1}"$'\n'; return 0; } # $() は末尾改行を落とすので自前で足す
+add "$(grep -rniE "$banned_any" "${src_dirs[@]}" || true)"
+add "$(grep -rnE "$banned_claim" "${src_dirs[@]}" || true)"
+add "$(grep -rnE '完全無課金|完全無料|広告なし' "${src_dirs[@]}" || true)"
+add "$(grep -rnE '課金なし' "${src_dirs[@]}" | grep -vE '機能課金なし|課金ロックなし' || true)"
+if [ -n "$hits" ]; then
+  report "広告・課金について使用禁止の表現があります(docs/BRAND.md「表現ルール」)" "$hits"
+else
+  ok "禁止表現なし(英語・日本語の範囲)"
+fi
+
 if [ "$fail" -ne 0 ]; then
   printf '\n原則ガードが失敗しました。実装を直すか、約束そのものを変えるなら docs/ の該当\n'
   printf 'ポリシーとこのスクリプトを同じ PR で意図的に更新してください。\n'

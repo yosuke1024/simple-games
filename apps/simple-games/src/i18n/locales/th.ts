@@ -100,7 +100,6 @@ export const th: Messages = {
   bestTime: 'เคลียร์เร็วที่สุด',
 
   // Collection shell
-  collectionTagline: 'ฟรีทั้งหมด ออฟไลน์ทั้งหมด เล่นได้ทันที',
   gamesHeading: 'เกม',
   numberMatchBlurb: 'จับคู่ตัวเลขที่เท่ากันหรือบวกกันได้ 10',
   backToGames: 'เกมทั้งหมด',

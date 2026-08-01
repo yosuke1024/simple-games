@@ -103,7 +103,6 @@ export const fr: Messages = {
   bestTime: 'Meilleur temps',
 
   // Collection shell
-  collectionTagline: 'Tout gratuit. Tout hors ligne. Prêt à jouer.',
   gamesHeading: 'Jeux',
   numberMatchBlurb: 'Associez les nombres égaux ou dont la somme fait 10.',
   backToGames: 'Tous les jeux',

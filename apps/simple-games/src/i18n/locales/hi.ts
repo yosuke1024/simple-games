@@ -102,7 +102,6 @@ export const hi: Messages = {
   bestTime: 'सबसे तेज़ जीत',
 
   // Collection shell
-  collectionTagline: 'पूरी तरह मुफ़्त। पूरी तरह ऑफ़लाइन। तुरंत खेलें।',
   gamesHeading: 'गेम',
   numberMatchBlurb: 'बराबर या जोड़ 10 वाले अंकों के जोड़े हटाएँ।',
   backToGames: 'सभी गेम',

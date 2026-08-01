@@ -98,7 +98,6 @@ export const zhHant: Messages = {
   bestTime: '最快過關',
 
   // Collection shell
-  collectionTagline: '完全免費。完全離線。打開就玩。',
   gamesHeading: '遊戲',
   numberMatchBlurb: '消除相同或相加為 10 的數字。',
   backToGames: '所有遊戲',
