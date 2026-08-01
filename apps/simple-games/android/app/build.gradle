@@ -1,5 +1,20 @@
 apply plugin: 'com.android.application'
 
+// Release identity comes from the git tag, not from this file. The release
+// workflow parses `simple-games-v<major>.<minor>.<patch>` and injects
+// SG_VERSION_NAME / SG_VERSION_CODE; a plain local build falls back to the
+// values below, which exist only so `./gradlew assembleDebug` works — they are
+// NOT what gets published (docs/RELEASE_CHECKLIST.md §7).
+def sgVersionName = System.getenv("SG_VERSION_NAME") ?: "0.0.0"
+def sgVersionCode = (System.getenv("SG_VERSION_CODE") ?: "1") as Integer
+
+// Signing material never lives in the repo (.gitignore blocks *.jks/*.keystore).
+// The workflow decodes the upload key from a secret into a temp file and points
+// SG_KEYSTORE_PATH at it. With no key present the release build stays unsigned,
+// which is fine locally and is refused for tag builds by the workflow itself.
+def sgKeystorePath = System.getenv("SG_KEYSTORE_PATH")
+def sgHasKeystore = sgKeystorePath != null && !sgKeystorePath.isEmpty() && file(sgKeystorePath).exists()
+
 android {
     namespace = "com.pixapps.simplegames"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +22,8 @@ android {
         applicationId "com.pixapps.simplegames"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode sgVersionCode
+        versionName sgVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         // AdMob application ID for the manifest meta-data. The release
         // workflow injects the production ID via the ADMOB_APP_ID env var;
@@ -23,8 +38,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (sgHasKeystore) {
+            create("release") {
+                storeFile file(sgKeystorePath)
+                storePassword System.getenv("SG_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("SG_KEY_ALIAS")
+                keyPassword System.getenv("SG_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
+            if (sgHasKeystore) {
+                signingConfig signingConfigs.getByName("release")
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

@@ -67,10 +67,14 @@ bash .github/scripts/check-principles.sh
 
 ## 4. Android
 
-- [ ] `pnpm --filter simple-games build && pnpm --filter simple-games exec cap sync android`
-- [ ] `./gradlew assembleRelease`(JDK 21)が通る
-- [ ] `versionCode` / `versionName` を上げた(`android/app/build.gradle`)
-- [ ] 署名鍵で署名した AAB を作成(鍵はリポジトリに入れない)
+- [ ] `pnpm --filter simple-games build` → `cd apps/simple-games && pnpm exec cap sync android`
+- [ ] `./gradlew bundleRelease assembleRelease`(JDK 21)が通る
+- [ ] アップロード鍵を作成し、GitHub Secrets に登録済み
+      (`ANDROID_KEYSTORE_BASE64` / `ANDROID_KEYSTORE_PASSWORD` / `ANDROID_KEY_ALIAS` /
+      `ANDROID_KEY_PASSWORD`。手順は [apps/simple-games/README.md](../apps/simple-games/README.md))
+- [ ] keystore をリポジトリ外に保管した(**失うとアプリを更新できなくなる**)
+- [ ] 署名済み AAB はタグから作る(`versionCode` / `versionName` はタグが決めるので
+      `build.gradle` を手で上げる必要はない)
 - [ ] 低スペック端末またはエミュレータで、起動 → 各ゲーム 1 局 → 中断 → 再開
       (**リリース要件**。WebView をサポート下限の Chromium 88 相当に近い状態でも
       確認する — 例: API 24〜26 のエミュレータイメージを WebView 未更新のまま使う。
@@ -114,9 +118,16 @@ bash .github/scripts/check-principles.sh
 
 ## 7. 公開
 
-- [ ] タグ `simple-games-v<version>` を打つ(`android-release.yml` が動く)
-- [ ] 内部テストトラックで動作確認
+- [ ] タグ `v<major>.<minor>.<patch>` を打って push する
+      (`android-release.yml` が署名済み AAB + 確認用 APK を出す)
+- [ ] ワークフローが緑(署名 secret が無ければ失敗する)
+- [ ] AAB を Play Console の**内部テスト**トラックにアップロード(手動)
+- [ ] 内部テストトラック経由でインストールして動作確認
+      (課金とレビュー導線はこの経路でしか確認できない)
 - [ ] 段階的公開で開始する
+
+作り直すときは `build.gradle` ではなく**新しいタグ**を打つ。`versionCode` はタグから
+導出され、Play は同じ `versionCode` を二度受け付けない。
 
 ## 8. 公開後
 

@@ -245,8 +245,10 @@ seed 付き乱数を持っている**(`games/A/` から `games/B/` を import �
 
 - `ci.yml`: push / PR で install → lint → typecheck → test → build(全ワークスペース)。
   対象が増えたら turbo の `--filter` で影響範囲のみに絞る。
-- `android-release.yml`: 手動実行(workflow_dispatch)または
-  `simple-games-v*` タグでのみ実行し、未署名のリリース APK をアーティファクトとして出す。
-  ストアへのアップロードは手動。
+- `android-release.yml`: 手動実行(workflow_dispatch)または `v*` タグでのみ実行し、
+  署名済み AAB(Play 用)と署名済み APK(実機確認用)をアーティファクトとして出す。
+  `versionName` / `versionCode` はタグが決める。ストアへのアップロードは手動。
+  タグに製品名を付けないのは、リリース対象がこのアプリ 1 つだけだから
+  (5 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
 - Secrets は `ADMOB_APP_ID` / `ADMOB_BANNER_ID` のみ(インタースティシャル系は無い)。
   本番 ID・署名鍵はリポジトリにコミットしない。

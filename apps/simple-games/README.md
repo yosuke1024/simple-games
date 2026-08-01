@@ -113,12 +113,14 @@ pnpm --filter simple-games build      # dist/ へ production build
 
 ```bash
 pnpm --filter simple-games build
-pnpm --filter simple-games exec cap sync android
+cd apps/simple-games && pnpm exec cap sync android
 cd apps/simple-games/android && ./gradlew assembleDebug     # デバッグビルド
 cd apps/simple-games/android && ./gradlew assembleRelease   # リリースビルド(未署名)
 ```
 
 要件: JDK 21、Android SDK(`local.properties` または `ANDROID_HOME`)。
+`pnpm --filter <pkg> exec cap` は pnpm 10 でワークスペースのバイナリを解決できない
+(`Command "cap" not found`)ため、`cap` はアプリディレクトリから実行する。
 
 **低スペック端末はリリース要件**です(動かないなら配信しない)。サポート下限は
 minSdk 24(Android 7.0)+ **WebView Chromium 88 相当(2021 年初)**。JS は es2018 へ
@@ -130,12 +132,60 @@ minSdk 24(Android 7.0)+ **WebView Chromium 88 相当(2021 年初)**。JS は es2
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Puzzles`
-- versionName / versionCode: `android/app/build.gradle` で管理(アプリ単位で更新。
-  収録ゲームの追加・更新は 1 つのアプリリリースとして出す)
-- 署名用 keystore はコミットしない。リリースは
-  `.github/workflows/android-release.yml`(手動実行 / `simple-games-v*` タグ)を使用。
-  ワークフローは未署名のリリース APK をアーティファクトとして出し、
-  ストアへのアップロードは手動で行う。
+- 収録ゲームの追加・更新は 1 つのアプリリリースとして出す(アプリ単位で更新)
+
+### リリースはタグで作る
+
+`versionName` / `versionCode` は **git タグが決める**。`build.gradle` の値は
+`./gradlew assembleDebug` を動かすためだけの手元用フォールバック(`0.0.0` / `1`)で、
+配信されるものではない。
+
+```bash
+git tag v1.0.0 && git push origin v1.0.0
+```
+
+`v<major>.<minor>.<patch>` を push すると
+[`.github/workflows/android-release.yml`](../../.github/workflows/android-release.yml)
+が走り、次を出力する。
+
+| 生成物 | 用途 |
+|---|---|
+| `app-release.aab` | Play Console にアップロードするもの |
+| `app-release.apk` | 実機・エミュレータでの動作確認用(§4)。sideload では課金が動かないのは正常 |
+
+- `versionCode` は `major * 10000 + minor * 100 + patch`(`1.2.3` → `10203`)。
+  **minor / patch は 100 未満**に保つこと。同じ版を再アップロードすることはできない
+  ので、作り直すときは新しいタグを打つ。
+- 署名 secret が無いままタグを打つとワークフローは**失敗する**。未署名の生成物を
+  「できた」として渡さないため。
+- タグに製品名を付けないのは、この monorepo のリリース対象が 1 つだけだから。
+  5 ゲームは 1 つのアプリとして出すので、ゲームを足してもこのアプリのリリースに
+  なるだけで、2 つ目のタグ空間は生まれない。`v1` のような雑なタグでも起動はするが、
+  版の形が正規形でないためその場で失敗する(誤ったビルドは出ない)。
+- ストアへのアップロードは手動(`docs/RELEASE_CHECKLIST.md` §7)。
+
+### 署名鍵と GitHub Secrets(初回だけの人手作業)
+
+keystore はコミットしない(`.gitignore` が `*.jks` / `*.keystore` を弾く)。
+Play App Signing を使うので、ここで作るのは**アップロード鍵**。
+
+```bash
+keytool -genkeypair -v -keystore upload.jks -alias upload \
+  -keyalg RSA -keysize 2048 -validity 10000
+```
+
+`upload.jks` はリポジトリ外(パスワードマネージャや暗号化バックアップ)に保管する。
+**失うと同じアプリを更新できなくなる。** 続けてリポジトリの Secrets に登録する:
+
+| Secret | 中身 |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | `base64 -i upload.jks \| pbcopy` の出力 |
+| `ANDROID_KEYSTORE_PASSWORD` | keystore のパスワード |
+| `ANDROID_KEY_ALIAS` | 上の例なら `upload` |
+| `ANDROID_KEY_PASSWORD` | 鍵のパスワード |
+| `ADMOB_APP_ID` / `ADMOB_BANNER_ID` | 本番 AdMob ID(未設定なら広告なしでビルドされる) |
+
+ワークフローは鍵を実行中の一時ディレクトリに展開し、ジョブの最後に削除する。
 
 ## 広告(バナーのみ)
 

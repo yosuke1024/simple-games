@@ -1,7 +1,7 @@
 # ブランチ保護の設定案(未適用)
 
 このリポジトリは公開されていて、main に入ったものはそのまま
-`simple-games-v*` タグからストア向けビルドになる
+`v*` タグからストア向けビルドになる
 ([android-release.yml](workflows/android-release.yml))。
 一方でメンテナは 1 人なので、**自分の PR を自分で承認できない**設定
 (Require approvals ≥ 1)を入れると開発が止まる。
@@ -66,8 +66,8 @@ gh api repos/yosuke1024/simple-games/branches/main/protection
 
 ## タグとリリース
 
-`simple-games-v*` タグはストア向けビルドの引き金なので、タグ保護ルールも検討に値する
-(Settings → Tags → New rule → `simple-games-v*`)。ただし AAB のアップロード自体は
+`v*` タグはストア向けビルドの引き金なので、タグ保護ルールも検討に値する
+(Settings → Tags → New rule → `v*`)。ただし AAB のアップロード自体は
 意図的に人の手作業として残してある([RELEASE_CHECKLIST.md](../docs/RELEASE_CHECKLIST.md))。
 
 ## 関連する GitHub 側の設定(コードでは表現できないもの)
