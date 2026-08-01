@@ -1,0 +1,23 @@
+{
+  "$schema": "./gateRecord.schema.md",
+  "$comment": [
+    "Record of the release gate in docs/I18N_POLICY.md, 「リリース前の門」.",
+    "One entry per locale per high-risk key, written ONLY after: (1) someone who",
+    "was not shown the English back-translated the string, and (2) the author read",
+    "that back-translation and confirmed the promise survived.",
+    "",
+    "`source` and `target` are SHA-256 hashes of the exact strings that were",
+    "reviewed. gate.test.ts recomputes them, so editing either the English or the",
+    "translation afterwards turns the approval stale and fails the build. That is",
+    "the point: an approval names a specific pair of strings, not a locale.",
+    "",
+    "`by` records who produced the back-translation. It must not be the session",
+    "that wrote the translation — a model checking its own work reproduces its own",
+    "misreading. Measured on the es guide pass: 0 of 5 real defects found.",
+    "",
+    "EMPTY IS HONEST. The app shipped twelve machine locales before this gate",
+    "existed; none of them has been through it. `pnpm i18n:gate` lists what is",
+    "outstanding. Do not backfill entries to make it quiet."
+  ],
+  "approvals": {}
+}

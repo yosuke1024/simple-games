@@ -49,8 +49,20 @@ bash .github/scripts/check-principles.sh
 - [ ] 全 locale が全キーを持つ(テストで担保)
 - [ ] 主要 5 画面を各言語でレンダリングして崩れがない
       (特にドイツ語の長さ、CJK の折り返し、Devanagari / Thai の行高)
-- [ ] 課金・削除・復元・プライバシーの文言が**ネイティブレビュー済み**
-      ([I18N_POLICY.md](I18N_POLICY.md) の状態表が `reviewed` 以上)
+- [ ] **高リスクキーの門を通している**([I18N_POLICY.md](I18N_POLICY.md)「リリース前の門」)
+
+      ```bash
+      pnpm --filter simple-games i18n:gate status        # 残りを見る
+      pnpm --filter simple-games i18n:gate pending <lang> # 逆翻訳する文字列(英語は出ない)
+      pnpm --filter simple-games i18n:gate:check          # 未承認があれば落ちる
+      ```
+
+      逆翻訳は**訳を書いた実行者以外**にやらせる。承認は
+      `src/i18n/gateRecord.json` に、読んだ英語と訳文のハッシュ付きで記録される。
+      どちらかを後から編集すると失効し、通常の `pnpm test` が落ちる。
+      **「ネイティブレビュー済み」は要求しない** — 一人開発では供給できず、
+      供給できない条件をチェックリストに置くと形骸化するため
+      (自然さは `machine` 来歴の開示と読者からの報告で担保する)。
 - [ ] 端末言語を切り替えてもゲーム進行が失われない
 
 ## 4. Android

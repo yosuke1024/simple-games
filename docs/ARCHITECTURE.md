@@ -65,7 +65,9 @@ src/
   のみ。詳細ルール・FAQ・攻略はゲーム別 Landing Page
   (`LANDING_BASE_URL`(`packages/brand`)+ `/games/<game-id>/<locale>/`)へ分離する。
   チュートリアルの「Learn More / 詳しく見る」がそこへ遷移し、オフライン時は
-  静かに何もしない(ゲームを止めない)。Landing Page 本体は別リポジトリで未構築。
+  静かに何もしない(ゲームを止めない)。Landing Page 本体は別リポジトリで公開済み。
+  書かれている言語は `ui/landing.ts` の `PAGE_LOCALES` のみ(それ以外は英語へ
+  フォールバック)。存在しない言語を足すと 404 へ誘導することになる。
 - Analytics / Remote Config / トラッキングのサービスは**存在しない**
   (初期リリースで削除済み。公開コードに追跡コードが無いことが透明性の証明)。
 

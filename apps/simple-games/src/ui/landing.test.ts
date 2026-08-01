@@ -9,10 +9,13 @@ describe('gameLandingUrl', () => {
     expect(gameLandingUrl('nonogram', 'en')).toBe(
       'https://pixapps.ai/simple-games/games/nonogram/en/',
     );
+    expect(gameLandingUrl('sliding-puzzle', 'es')).toBe(
+      'https://pixapps.ai/simple-games/games/sliding-puzzle/es/',
+    );
   });
 
   it('falls back to English rather than pointing at a page that does not exist', () => {
-    // The app ships fourteen locales; only en and ja have reviewed pages.
+    // The app ships fourteen locales; only some of them have written pages.
     for (const locale of ['th', 'zh-hant', 'pt-br', 'tr']) {
       expect(gameLandingUrl('minesweeper', locale)).toBe(
         'https://pixapps.ai/simple-games/games/minesweeper/en/',

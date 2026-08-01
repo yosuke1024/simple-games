@@ -12,6 +12,8 @@
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
     "test": "vitest run",
     "test:watch": "vitest",
+    "i18n:gate": "node scripts/i18n-gate.mjs",
+    "i18n:gate:check": "I18N_GATE_STRICT=1 vitest run src/i18n/gate.test.ts",
     "cap": "cap"
   },
   "dependencies": {
