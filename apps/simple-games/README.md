@@ -87,9 +87,14 @@ zh-hans)。pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条
 [CONTRIBUTING.md](../../CONTRIBUTING.md) の Translations 節を参照。
 
 アプリ内のゲーム説明は Quick Rules(チュートリアル、最大 3 ステップ)のみで、
-詳細ルールはゲーム別 Landing Page(別リポジトリ・**未構築**)へ分離します。
+詳細ルールはゲーム別 Landing Page(別リポジトリ、公開済み)へ分離します。
 チュートリアルの「Learn More / 詳しく見る」ボタンがそこを開き、オフライン時は
 静かに何もしません(ゲームは止まりません)。
+
+Landing Page が書かれている言語は `src/ui/landing.ts` の `PAGE_LOCALES`
+(現在 en / ja / es)。アプリの 14 ロケールのうちそれ以外は英語ページへ送ります。
+**ページが公開される前にここへ言語を足すと 404 を配ることになる**ので、
+順序は「ページを公開してから `PAGE_LOCALES` を足す」です。
 
 ## 開発
 
