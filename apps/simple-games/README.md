@@ -139,10 +139,10 @@ minSdk 24(Android 7.0)+ **WebView Chromium 88 相当(2021 年初)**。JS は es2
 配信されるものではない。
 
 ```bash
-git tag simple-games-v1.0.0 && git push origin simple-games-v1.0.0
+git tag v1.0.0 && git push origin v1.0.0
 ```
 
-`simple-games-v<major>.<minor>.<patch>` を push すると
+`v<major>.<minor>.<patch>` を push すると
 [`.github/workflows/android-release.yml`](../../.github/workflows/android-release.yml)
 が走り、次を出力する。
 
@@ -156,6 +156,10 @@ git tag simple-games-v1.0.0 && git push origin simple-games-v1.0.0
   ので、作り直すときは新しいタグを打つ。
 - 署名 secret が無いままタグを打つとワークフローは**失敗する**。未署名の生成物を
   「できた」として渡さないため。
+- タグに製品名を付けないのは、この monorepo のリリース対象が 1 つだけだから。
+  5 ゲームは 1 つのアプリとして出すので、ゲームを足してもこのアプリのリリースに
+  なるだけで、2 つ目のタグ空間は生まれない。`v1` のような雑なタグでも起動はするが、
+  版の形が正規形でないためその場で失敗する(誤ったビルドは出ない)。
 - ストアへのアップロードは手動(`docs/RELEASE_CHECKLIST.md` §7)。
 
 ### 署名鍵と GitHub Secrets(初回だけの人手作業)

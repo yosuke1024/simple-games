@@ -13,7 +13,9 @@
   「Simple Games」アプリに、継続的にゲームを追加していく。
 - appId: `com.pixapps.simplegames` / appName: `Simple Games: Offline Puzzles` /
   ランチャー表示名: `Simple Games`
-- CI リリースタグ: `simple-games-v*`(ワークフローは `android-release.yml`)
+- CI リリースタグ: `v*`(ワークフローは `android-release.yml`)
+  ※ 当初は `simple-games-v*` としていたが、上の「独立アプリ方針の廃止」により
+  リリース対象が 1 つに確定したため、接頭辞を落とした(タグ運用開始前に変更)
 - リポジトリは Public(https://github.com/yosuke1024/simple-games)。Apache-2.0。
   名称・ロゴ・ブランド素材はライセンス対象外を維持。
 

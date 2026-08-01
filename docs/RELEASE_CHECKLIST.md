@@ -118,7 +118,7 @@ bash .github/scripts/check-principles.sh
 
 ## 7. 公開
 
-- [ ] タグ `simple-games-v<major>.<minor>.<patch>` を打って push する
+- [ ] タグ `v<major>.<minor>.<patch>` を打って push する
       (`android-release.yml` が署名済み AAB + 確認用 APK を出す)
 - [ ] ワークフローが緑(署名 secret が無ければ失敗する)
 - [ ] AAB を Play Console の**内部テスト**トラックにアップロード(手動)

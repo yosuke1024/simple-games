@@ -1,6 +1,11 @@
-# Simple Games — Android release build. Runs ONLY on a simple-games-v* tag or a
-# manual dispatch; shared-package changes never auto-release the app
+# Simple Games — Android release build. Runs ONLY on a v* tag or a manual
+# dispatch; shared-package changes never auto-release the app
 # (docs/ARCHITECTURE.md).
+#
+# The tag is unprefixed because this monorepo has exactly one releasable
+# artifact and that is a product decision, not a coincidence: the five games
+# ship as one app, so adding a game is a release of this app rather than a new
+# one. `apps/` once held a second app and was deliberately consolidated.
 #
 # The tag is the release: it decides versionName / versionCode, and it is what
 # turns on the "this must be signed" guard. Upload to Play Console stays a
@@ -11,7 +16,7 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - 'simple-games-v*'
+      - 'v*'
 
 permissions:
   contents: read
@@ -22,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # simple-games-v1.2.3 → versionName 1.2.3, versionCode 10203.
+      # v1.2.3 → versionName 1.2.3, versionCode 10203.
       # versionCode must increase forever, so it is derived, not hand-kept:
       # major * 10000 + minor * 100 + patch — which means minor and patch have
       # to stay below 100. Re-uploading a build to Play needs a new versionCode,
@@ -36,12 +41,14 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$REF_TYPE" = "tag" ]; then
-            name="${REF_NAME#simple-games-v}"
+            name="${REF_NAME#v}"
             # Components must be canonical (no leading zeros): 1.01.0 and 1.1.0
             # derive the same versionCode, and Play never lets a versionCode be
             # reused, so the second tag would be permanently unpublishable.
+            # A loose `v*` tag (v1, v2.0-rc1) lands here and is refused, so the
+            # cost of the short pattern is a red run, never a wrong build.
             if [[ ! "$name" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
-              echo "::error::タグは simple-games-vMAJOR.MINOR.PATCH の形にしてください(先頭ゼロなし。受け取った値: ${REF_NAME})"
+              echo "::error::タグは vMAJOR.MINOR.PATCH の形にしてください(先頭ゼロなし。受け取った値: ${REF_NAME})"
               exit 1
             fi
             major="${name%%.*}"
