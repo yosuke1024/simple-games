@@ -1,8 +1,11 @@
-# Privacy Policy — Simple Games by PixApps (Draft)
+# Privacy Policy — Simple Games by PixApps
 
-> **注意(内部メモ)**: これはストア公開用プライバシーポリシーのドラフトである。
-> 公開前に、ホスティング先 URL・連絡先メールアドレスを確定し、
-> 法的レビューと Google Play Data Safety フォームとの整合確認を人間が行うこと。
+> **注意(内部メモ)**: この文面は公開済みで、<https://pixapps.ai/simple-games/privacy>
+> で配信している(Play Console に登録する URL もこれ)。ホスティング先と連絡先は確定した。
+> **未了**: 法的レビュー。Google Play の Data Safety フォームとの整合確認も、
+> 申告内容が固まった時点で人間が行うこと。
+> 文面を変えるときは、この文書と公開ページの両方を同時に直すこと
+> (公開ページは別リポジトリ `pixapps-landing`)。
 
 _Last updated: 2026-07-30_
 
@@ -74,8 +77,12 @@ including children.
 
 ## Contact
 
-<!-- TODO(human): 公開前に連絡先メールアドレスを記載 -->
-PixApps — contact email to be added before store release.
+If you have any questions about this Privacy Policy, contact PixApps at
+suzuki.yosuke@pixapps.ai.
+
+This is the same address as the app's in-app feedback destination
+(`SUPPORT_EMAIL` in `packages/brand`) and the support address on the Play Store
+listing, so every route reaches the same inbox.
 
 ## Changes
 

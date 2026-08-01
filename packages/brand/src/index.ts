@@ -27,10 +27,12 @@ export const LANDING_BASE_URL = 'https://pixapps.ai/simple-games';
 
 /**
  * Where the in-app "not really" feedback path opens a mail draft. Also the
- * public support address on the store listing, so both roads lead to the
- * same inbox. Swap for a dedicated support alias if one is ever created.
+ * public support address on the store listing and in the privacy policy, so
+ * every road leads to the same inbox — which is why this value is not free to
+ * drift: Play Console and `docs/PRIVACY_POLICY.md` carry it too
+ * (`docs/RELEASE_CHECKLIST.md` §5.5).
  */
-export const SUPPORT_EMAIL = 's.yosuke1024@gmail.com';
+export const SUPPORT_EMAIL = 'suzuki.yosuke@pixapps.ai';
 
 /**
  * The collection's Play Store listing — the fallback review destination when
