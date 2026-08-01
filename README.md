@@ -109,12 +109,16 @@ Android ビルド手順は [apps/simple-games/README.md](apps/simple-games/READM
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 14 言語・214 キー
+**One app. Many games. Many languages.** 現在は 14 言語・227 キー
 (en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
 中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。
 カタログは全言語同梱で、言語追加は「locale ファイル 1 つ + 登録」で完結します。
-**en と ja 以外はすべて機械翻訳ドラフトで、ネイティブレビューは未実施です。**
+**en と ja 以外は来歴 `machine` です — AI の助けを借りて書いており、その言語の
+ネイティブは一人も読んでいません。**この製品は一人でつくっているため、14 言語の
+ネイティブレビューは供給できません。代わりに、約束を背負う高リスクキーだけは
+リリース前に逆翻訳を作者が読む門を通し、自然さは来歴の開示と読者からの報告に
+委ねています。
 方針は [docs/I18N_POLICY.md](docs/I18N_POLICY.md)、
 翻訳への参加方法は [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
 
