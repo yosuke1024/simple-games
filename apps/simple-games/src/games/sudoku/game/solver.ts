@@ -87,6 +87,28 @@ function bestCell(grid: Grid, candidates: readonly number[]): number {
   return best;
 }
 
+/**
+ * Every digit the search tries, counted since the last reset.
+ *
+ * This is the unit of work generation is made of: digging a board is a few
+ * dozen uniqueness checks, and each one is a backtracking search whose cost is
+ * the number of placements it explores. A stopwatch measures that work times
+ * whatever else the machine happened to be doing; this counts the work itself,
+ * and a seed always produces the same count on any machine. That is what makes
+ * the §7 budget assertable rather than merely observable — see
+ * `generator.test.ts`.
+ *
+ * Nothing at runtime reads it; it costs one integer increment per placement.
+ */
+let placements = 0;
+
+export const searchWork = {
+  read: (): number => placements,
+  reset: (): void => {
+    placements = 0;
+  },
+};
+
 /** Places a digit and prunes peers. Returns false when a peer runs dry. */
 function place(
   grid: number[],
@@ -94,6 +116,7 @@ function place(
   index: number,
   digit: Digit,
 ): boolean {
+  placements++;
   grid[index] = digit;
   candidates[index] = bitOf(digit);
   const remove = ~bitOf(digit);

@@ -14,7 +14,10 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 - [ ] `git status` がクリーン(生成物の取りこぼしがない)
 - [ ] golden テスト(`compatibility.test.ts`)が通っている
       = 既存プレイヤーの盤面と自己ベストの土台が変わっていない
-- [ ] 生成の性能予算テストが通っている(Sudoku / Minesweeper)
+- [ ] 生成コストのテストが通っている(Sudoku / Minesweeper / Nonogram)
+      = 生成の仕事量(探索した配置数・試行回数)が上限内。これは決定的な指標
+      なので、落ちたら再実行せずに原因を読むこと。**壁時計は判定していない**
+      ([SUDOKU_RULES.md](SUDOKU_RULES.md) §7)
 
 ## 2. ブランド原則の実地確認(人が見るもの)
 
@@ -43,6 +46,11 @@ bash .github/scripts/check-principles.sh
 - [ ] 外部リンク(About のソースコード等)がオフラインでもアプリを止めない
 - [ ] プレイ中に時計が表示されない(各ゲームのルール文書の規定どおり)
 - [ ] 初回起動で言語選択・ログイン・通知許可・課金ダイアログが出ない
+- [ ] **生成の待ちが体感されない** —— 性能予算は端末の予算で、開発機の
+      テストでは測れない(そちらは仕事量を見ている)。最も重い盤面で確認する:
+      Sudoku の level 393 / 388 / 629 / 814 / 923(開発機で既に 100ms 予算を
+      超過。[SUDOKU_RULES.md](SUDOKU_RULES.md) §7)、Minesweeper Hard の初手、
+      Nonogram の level 999。押してから盤面が出るまでに間があってはいけない
 
 ## 3. 多言語
 
