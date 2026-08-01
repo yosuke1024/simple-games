@@ -9,6 +9,7 @@ import { emptyMarks } from './engine';
 import { ATTEMPT_LIMIT, generatePuzzle } from './generator';
 import { fillRateForLevel, levelSeed, MAX_LEVEL, sizeForLevel } from './levels';
 import { solve } from './solver';
+import { type Size } from './types';
 
 /** A spread of levels across every band of §6, ends included. */
 const SAMPLE_LEVELS = [1, 2, 60, 119, 120, 121, 300, 499, 500, 501, 750, 998, MAX_LEVEL];
@@ -52,21 +53,39 @@ describe('no-guess generation (§4, §5)', () => {
   });
 });
 
-describe('performance budget (§5)', () => {
-  it('generates a 5×5 inside its budget', () => {
-    const start = performance.now();
-    generatePuzzle(levelSeed(60), 5, fillRateForLevel(60));
-    const took = performance.now() - start;
-    expect(took, `5×5 took ${took.toFixed(1)}ms`).toBeLessThan(50);
+/**
+ * §5 budgets generation in milliseconds on the device. These two cases used to
+ * assert that budget against `performance.now()` here, which measures the work
+ * times whatever else the machine is doing — under `pnpm test`, six other
+ * vitest forks. Nonogram had the widest margin of the three generators and so
+ * flaked least, but it was the same broken instrument, and the same fix
+ * applies: assert the retries, which are a function of the seed alone and
+ * therefore identical on every machine, and print the milliseconds §5 quotes
+ * rather than asserting them. The device-side promise is checked on a device,
+ * per docs/RELEASE_CHECKLIST.md §2.
+ */
+describe('generation cost (§5)', () => {
+  const measure = (level: number, size: Size) => {
+    const started = performance.now();
+    const puzzle = generatePuzzle(levelSeed(level), size, fillRateForLevel(level));
+    return { level, attempts: puzzle.attempts, ms: performance.now() - started };
+  };
+
+  it('builds a 5×5 in a handful of attempts', () => {
+    const { attempts, ms } = measure(60, 5);
+    console.log(`[nonogram 5×5] level 60 attempts=${attempts} — ms=${ms.toFixed(2)}`);
+    expect(attempts, `5×5 took ${attempts} attempts`).toBeLessThan(10);
   });
 
-  it('generates a 10×10 inside its budget, at the loosest fill', () => {
-    let worst = 0;
-    for (const level of [501, 750, MAX_LEVEL]) {
-      const start = performance.now();
-      generatePuzzle(levelSeed(level), 10, fillRateForLevel(level));
-      worst = Math.max(worst, performance.now() - start);
-    }
-    expect(worst, `10×10 worst ${worst.toFixed(1)}ms`).toBeLessThan(200);
+  it('builds a 10×10 in a handful of attempts, at the loosest fill', () => {
+    const rows = [501, 750, MAX_LEVEL].map((level) => measure(level, 10));
+    const worst = rows.reduce((a, b) => (b.attempts > a.attempts ? b : a));
+    console.log(
+      `[nonogram 10×10] ${rows.map((r) => `L${r.level} attempts=${r.attempts} (${r.ms.toFixed(2)}ms)`).join(' ')}`,
+    );
+    expect(
+      worst.attempts,
+      `10×10 worst ${worst.attempts} attempts at level ${worst.level}`,
+    ).toBeLessThan(ATTEMPT_LIMIT / 4);
   });
 });

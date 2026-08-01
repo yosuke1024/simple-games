@@ -18,8 +18,31 @@ import { PRESETS, type Difficulty } from './types';
 /** Enough boards to catch a rare fallback; small enough to stay in CI. */
 const SAMPLE = 500;
 
-/** Per-board budgets from §5, with headroom for a low-end phone. */
-const BUDGET_MS: Record<Difficulty, number> = { easy: 50, medium: 50, hard: 200 };
+/**
+ * Retries per board, the deterministic form of the §5 budget.
+ *
+ * §5 budgets generation in milliseconds on the device, and this file used to
+ * assert that budget against `performance.now()` over all 500 samples — both
+ * the mean and the worst single board. The worst-of-500 assertion was the most
+ * fragile line in the repo: idle and alone, medium's median board takes 0.26ms
+ * and its worst takes 32.6ms, a 125× spread over work that differs by at most
+ * 6×. That is GC and core scheduling, not generation, and under `pnpm test`
+ * it comfortably clears 50ms. A ceiling safe against it would have to sit
+ * above the budget it was meant to enforce.
+ *
+ * Attempts are what generation actually spends: a board is laid out, solved,
+ * and re-laid from a derived seed until it needs no guess (§5.3), so cost is
+ * the retry count times a constant. The count is a function of the seed and
+ * the first tap, so it is identical on every machine and in every pool
+ * configuration. The milliseconds are still measured and printed — §5 quotes
+ * them, so they should be reproducible — but they are not asserted here. The
+ * device-side promise is checked on a device, per docs/RELEASE_CHECKLIST.md §2.
+ */
+const BUDGET_ATTEMPTS: Record<Difficulty, { readonly mean: number; readonly worst: number }> = {
+  easy: { mean: 2, worst: 10 },
+  medium: { mean: 4, worst: 25 },
+  hard: { mean: 12, worst: 80 },
+};
 
 describe.each(['easy', 'medium', 'hard'] as Difficulty[])(
   'no-guess generation — %s',
@@ -56,22 +79,26 @@ describe.each(['easy', 'medium', 'hard'] as Difficulty[])(
 
     it('generates inside the budget', () => {
       const times = results.map((r) => r.ms).sort((a, b) => a - b);
-      const mean = times.reduce((a, b) => a + b, 0) / times.length;
       const at = (q: number) => times[Math.floor(times.length * q)]!;
       const attempts = results.map((r) => r.field.attempts);
+      const attemptMean = attempts.reduce((a, b) => a + b, 0) / attempts.length;
+      const attemptWorst = Math.max(...attempts);
+      const budget = BUDGET_ATTEMPTS[difficulty];
       // Printed so the figures quoted in docs and reviews are reproducible.
+      // Milliseconds are the observation; attempts are the assertion.
       console.log(
-        `[minesweeper ${difficulty}] n=${SAMPLE} mean=${mean.toFixed(2)}ms ` +
+        `[minesweeper ${difficulty}] n=${SAMPLE} ` +
+          `attempts mean=${attemptMean.toFixed(1)} max=${attemptWorst} ` +
+          `— ms mean=${(times.reduce((a, b) => a + b, 0) / times.length).toFixed(2)} ` +
           `p50=${at(0.5).toFixed(2)} p90=${at(0.9).toFixed(2)} p99=${at(0.99).toFixed(2)} ` +
-          `max=${times[times.length - 1]!.toFixed(2)} ` +
-          `attempts mean=${(attempts.reduce((a, b) => a + b, 0) / attempts.length).toFixed(1)} ` +
-          `max=${Math.max(...attempts)}`,
+          `max=${times[times.length - 1]!.toFixed(2)}`,
       );
-      expect(mean, `${difficulty} mean ${mean.toFixed(2)}ms`).toBeLessThan(BUDGET_MS[difficulty]);
-      expect(
-        times[times.length - 1]!,
-        `${difficulty} worst ${times[times.length - 1]!.toFixed(2)}ms`,
-      ).toBeLessThan(BUDGET_MS[difficulty]);
+      expect(attemptMean, `${difficulty} mean ${attemptMean.toFixed(1)} attempts`).toBeLessThan(
+        budget.mean,
+      );
+      expect(attemptWorst, `${difficulty} worst ${attemptWorst} attempts`).toBeLessThan(
+        budget.worst,
+      );
     });
   },
 );

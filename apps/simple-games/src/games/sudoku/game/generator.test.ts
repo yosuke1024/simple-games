@@ -1,7 +1,7 @@
 /**
  * The invariants a shipped puzzle must hold (docs/SUDOKU_RULES.md §7): one
  * solution, solvable by the tier's technique set alone, inside the tier's clue
- * range, deterministic per seed, and generated inside the time budget.
+ * range, deterministic per seed, and generated inside the work budget.
  *
  * These are properties over many seeds rather than one golden board: the
  * guarantee is about every puzzle a player can reach, not a lucky example.
@@ -9,7 +9,8 @@
 import { describe, expect, it } from 'vitest';
 import { clueCount, CLUE_RANGE, generatePuzzle, gridToString } from './generator';
 import { grade, solvableWithin } from './grader';
-import { countSolutions, isGridSolved, solve } from './solver';
+import { difficultyForLevel, levelSeed, MAX_LEVEL } from './levels';
+import { countSolutions, isGridSolved, searchWork, solve } from './solver';
 import { CELLS, DIFFICULTIES, type Difficulty, type Grid } from './types';
 
 const SEEDS = [
@@ -141,22 +142,102 @@ describe('difficulty separation (§6)', () => {
   });
 });
 
-describe('performance budget (§7)', () => {
+describe('generation cost (§7)', () => {
   /**
-   * Measured on the dev machine, with headroom for a low-end phone. A
-   * regression here means generation is about to be felt as a pause when a
-   * game starts, which is the thing the budget exists to prevent.
+   * §7 budgets generation in milliseconds *on the device*. This file cannot
+   * measure that, and for a long time it pretended otherwise: it timed two
+   * seeds with `performance.now()` and asserted the device budget against the
+   * result. That assertion failed roughly one run in four under `pnpm test`,
+   * because a stopwatch here measures the work times whatever else the machine
+   * is doing — the suite runs its 53 files in parallel and draws about 3.4
+   * cores on a machine with four performance cores.
+   *
+   * Loosening the number would not have fixed it. The spread is not a margin
+   * problem: run these same two hard boards thirty times, idle and alone, and
+   * the worst of the pair ranges from 37ms to 100ms — identical work every
+   * time, because generation allocates a grid per search node and what differs
+   * is where GC lands. Any millisecond ceiling safe against that is far above
+   * the budget it is supposed to enforce, which makes it not a budget.
+   *
+   * So the gate is the work itself. Every digit the search tries is counted
+   * (`searchWork`), a seed always yields the same count on every machine, and
+   * generation cost is that count times a constant — so this catches exactly
+   * the regressions the budget exists to catch (a dig loop that explores more,
+   * a solver that loses its early exit or its fewest-candidates heuristic)
+   * with none of the noise. The milliseconds are still measured and printed,
+   * because the figures §7 quotes should be reproducible; they are just not
+   * asserted. The device-side promise is verified on a device, per
+   * docs/RELEASE_CHECKLIST.md §2.
    */
-  const budgets: Record<Difficulty, number> = { easy: 50, medium: 50, hard: 100 };
 
-  it.each(DIFFICULTIES)('generates a %s puzzle inside its budget', (difficulty: Difficulty) => {
-    // Two boards, worst of the two: one sample is noisy on a shared CI box.
-    const timings = ['budget-a', 'budget-b'].map((seed) => {
-      const started = performance.now();
-      generatePuzzle(`${seed}-${difficulty}`, difficulty);
-      return performance.now() - started;
-    });
-    const worst = Math.max(...timings);
-    expect(worst, `${difficulty} took ${worst.toFixed(1)}ms`).toBeLessThan(budgets[difficulty]);
+  /**
+   * Every 9th level, so the sample crosses every band of §9 — plus the
+   * costliest levels a full 1..999 sweep found in each tier. A sparse sample
+   * measures the typical board and misses the tail by construction, and the
+   * tail is the part a player feels: level 393 costs nine times the median
+   * hard board. Pinning them keeps the expensive end under watch without
+   * paying for all 999 on every run.
+   */
+  const SAMPLE_LEVELS = [
+    ...Array.from({ length: Math.ceil(MAX_LEVEL / 9) }, (_, i) => 1 + i * 9),
+    MAX_LEVEL,
+    16, // costliest easy
+    111, 129, // costliest medium
+    393, 629, 814, 923, // costliest hard
+  ];
+
+  /**
+   * Placements per board: the measured median and worst of this sample, each
+   * rounded up. They are exact, not approximate — the same seeds always cost
+   * the same number, on any machine. They move only when generation
+   * deliberately changes, and such a change already has to answer to
+   * compatibility.test.ts.
+   */
+  const CEILING: Record<Difficulty, { readonly median: number; readonly worst: number }> = {
+    easy: { median: 1000, worst: 1600 },
+    medium: { median: 7500, worst: 80000 },
+    hard: { median: 30000, worst: 240000 },
+  };
+
+  const measured = SAMPLE_LEVELS.map((level) => {
+    const difficulty = difficultyForLevel(level);
+    searchWork.reset();
+    const started = performance.now();
+    generatePuzzle(levelSeed(level), difficulty);
+    return { level, difficulty, work: searchWork.read(), ms: performance.now() - started };
+  });
+
+  it.each(DIFFICULTIES)('keeps %s generation inside its work budget', (difficulty: Difficulty) => {
+    const rows = measured.filter((row) => row.difficulty === difficulty);
+    expect(rows.length, `no ${difficulty} levels in the sample`).toBeGreaterThan(0);
+
+    const work = rows.map((row) => row.work).sort((a, b) => a - b);
+    const median = work[Math.floor(work.length / 2)]!;
+    const worst = rows.reduce((a, b) => (b.work > a.work ? b : a));
+    const ms = rows.map((row) => row.ms).sort((a, b) => a - b);
+    const at = (values: number[], q: number) => values[Math.floor(values.length * q)]!;
+    // Printed, not asserted: the reproducible source of the figures in §7.
+    console.log(
+      `[sudoku ${difficulty}] n=${rows.length} placements p50=${median} max=${worst.work} ` +
+        `(level ${worst.level}) — ms p50=${at(ms, 0.5).toFixed(1)} p90=${at(ms, 0.9).toFixed(1)} ` +
+        `max=${ms[ms.length - 1]!.toFixed(1)}`,
+    );
+
+    expect(median, `${difficulty} median ${median} placements`).toBeLessThan(
+      CEILING[difficulty].median,
+    );
+    expect(
+      worst.work,
+      `${difficulty} worst ${worst.work} placements at level ${worst.level}`,
+    ).toBeLessThan(CEILING[difficulty].worst);
+  });
+
+  it('actually counts the work it claims to count', () => {
+    // Without this, unhooking the counter would make every budget above pass
+    // by measuring nothing — the quiet way a gate stops being a gate.
+    searchWork.reset();
+    expect(searchWork.read()).toBe(0);
+    generatePuzzle(levelSeed(1), 'easy');
+    expect(searchWork.read()).toBeGreaterThan(100);
   });
 });

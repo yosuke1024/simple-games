@@ -156,26 +156,12 @@ describe('the presets themselves (§1)', () => {
   });
 });
 
-describe('performance budget (§5)', () => {
-  /**
-   * Easy and medium under 50ms, hard under 200ms — the numbers §5 gives, on the
-   * device, from the first tap. Measured on the dev machine the worst of three
-   * boards lands around 1ms for easy and medium and around 6ms for hard, so
-   * this has room for a low-end phone and for a noisy CI box.
-   */
-  const budget: Record<Difficulty, number> = { easy: 50, medium: 50, hard: 200 };
-
-  it.each(DIFFICULTIES)('generates a %s board inside its budget', (difficulty: Difficulty) => {
-    const taps = firstTaps(difficulty);
-    const timings = ['budget-a', 'budget-b', 'budget-c'].map((seed, index) => {
-      const started = performance.now();
-      generateField(`${seed}-${difficulty}`, difficulty, taps[index]!);
-      return performance.now() - started;
-    });
-    const worst = Math.max(...timings);
-    expect(
-      worst,
-      `${difficulty} took ${timings.map((t) => t.toFixed(1)).join('/')}ms, budget ${budget[difficulty]}ms`,
-    ).toBeLessThan(budget[difficulty]);
-  });
-});
+/*
+ * The §5 generation budget is asserted in guarantee.test.ts, over 500 boards
+ * per difficulty instead of the three this file used to time. It moved because
+ * the assertion here was a stopwatch: three `performance.now()` samples
+ * compared against a budget §5 states for the device. That measured the work
+ * times whatever else the machine was doing, which under `pnpm test` is six
+ * other vitest forks. The deterministic form — retries per board — belongs
+ * next to the 500-board sample that already collected it.
+ */
