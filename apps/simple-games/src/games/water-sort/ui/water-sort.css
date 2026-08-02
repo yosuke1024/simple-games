@@ -1,0 +1,389 @@
+/* Water Sort — all of this game's styling, imported by WaterSortRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --radius, --font-display, --tap-size, …) so the
+   game reads as part of the same app and follows the theme without knowing
+   about it.
+
+   Class names are prefixed `ws-` so this file can never collide with the
+   shell or with another game.
+
+   The water palette below is game content, not chrome — the same standing as
+   Minesweeper's number scale. Nothing is drawn on top of the fill: a mark
+   floating on the water read as a sticker rather than as liquid (§1). */
+
+:root {
+  --ws-c-0: #c05b5b;
+  --ws-c-1: #b3763a;
+  --ws-c-2: #a8862e;
+  --ws-c-3: #5f9153;
+  --ws-c-4: #3f8d80;
+  --ws-c-5: #4f7ac0;
+  --ws-c-6: #8a5fa8;
+  --ws-c-7: #b05a86;
+  --ws-c-8: #64748b;
+}
+
+/* The dark palette is not the light one lightened: pastels of nine hues all
+   converge on grey once dimmed, and colour is the only channel here (§1).
+   These keep more saturation and spread the lightness out instead. */
+:root[data-theme='dark'] {
+  --ws-c-0: #d4665f;
+  --ws-c-1: #cd8a3c;
+  --ws-c-2: #c6b040;
+  --ws-c-3: #6fb257;
+  --ws-c-4: #3fae9c;
+  --ws-c-5: #5f95e0;
+  --ws-c-6: #a473d1;
+  --ws-c-7: #d96fa8;
+  --ws-c-8: #8d9bb0;
+}
+
+/* ---------- board ---------- */
+
+.ws-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 4px 12px 10px;
+  min-height: 0;
+}
+
+/* The rack. Flex rather than grid, so a half-filled last row centres itself
+   instead of hanging to the left.
+
+   WaterBoard sets --ws-cols / --ws-rows from the tube count, and the tube
+   width follows from them — the glasses grow to fill the screen instead of
+   sitting at one hard-coded size. There is no panel behind them: the series
+   surface is paper, and the tubes stand on it by their own shadow. */
+.ws-rack {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 26px 12px;
+  width: min(94vw, calc(var(--ws-cols) * 96px));
+  touch-action: manipulation;
+}
+
+/* The button is the tap target; the glass inside is the drawing. The lift on
+   selection is a position cue, not just a repaint (§12). */
+.ws-tube {
+  flex: 0 0 auto;
+  width: calc((100% - (var(--ws-cols) - 1) * 10px) / var(--ws-cols));
+  max-width: 86px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.16s ease-out;
+}
+
+.ws-tube-selected {
+  transform: translateY(-10px);
+}
+
+.ws-rack-still .ws-tube {
+  transition: none;
+}
+
+/* The solver's suggestion (§8): source and destination glow together. */
+.ws-tube-hint .ws-tube-glass {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 3px var(--accent-ring),
+    inset 0 -8px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* The glass. Round-bottomed, thin-rimmed, and lit down one side — the shape
+   is what tells the player this holds liquid. The aspect ratio drives the
+   height, so a tube is as tall as its column is wide; max-height keeps a
+   two-row rack on screen. */
+.ws-tube-glass {
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  width: 100%;
+  aspect-ratio: 1 / 3.4;
+  max-height: calc((68vh - 56px) / var(--ws-rows));
+  padding: 4px;
+  background-color: var(--surface-recessed);
+  border: 2px solid var(--ink-soft);
+  border-top-color: var(--line);
+  border-radius: 9px 9px 24px 24px;
+  /* Inner darkness at the floor, and a soft contact shadow so the tube
+     stands on the paper rather than floating over it. */
+  box-shadow:
+    inset 0 -10px 14px rgba(0, 0, 0, 0.07),
+    0 4px 6px rgba(35, 42, 51, 0.12),
+    0 1px 2px rgba(35, 42, 51, 0.1);
+  overflow: hidden;
+}
+
+:root[data-theme='dark'] .ws-tube-glass {
+  box-shadow:
+    inset 0 -10px 14px rgba(0, 0, 0, 0.3),
+    0 4px 8px rgba(0, 0, 0, 0.45);
+}
+
+/* A finished tube settles: quieter border, no more taps expected (§2). */
+.ws-tube-complete .ws-tube-glass {
+  border-color: var(--accent-ring);
+}
+
+/* One light stripe down the left side, so the tube reads as round rather
+   than as a rectangle (§12). */
+.ws-glass-shine {
+  position: absolute;
+  top: 6%;
+  bottom: 10%;
+  left: 13%;
+  width: 7%;
+  border-radius: 999px;
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.42),
+    rgba(255, 255, 255, 0)
+  );
+  pointer-events: none;
+}
+
+:root[data-theme='dark'] .ws-glass-shine {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.18),
+    rgba(255, 255, 255, 0)
+  );
+}
+
+/* A quarter of the glass each, with no gap: a run of one colour has to look
+   like one body of water, not like stacked tiles. The corners are rounded
+   only where the colour actually ends (WaterBoard decides), and the bottom
+   unit follows the glass's round floor. */
+.ws-unit {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 25%;
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.16),
+    rgba(0, 0, 0, 0.07)
+  );
+}
+
+/* Colour is the only thing telling the water apart (§1), so the dark theme
+   keeps the sheen faint — a white wash over an already-muted palette pulls
+   every colour towards the same grey. */
+:root[data-theme='dark'] .ws-unit {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.06),
+    rgba(0, 0, 0, 0.1)
+  );
+}
+
+/* Water lies wall to wall — only its surface is marked, by a lit edge. A
+   rounded corner here would read as a stacked block instead of a liquid. */
+.ws-unit-top {
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.32);
+}
+
+.ws-unit-floor {
+  border-bottom-left-radius: 19px;
+  border-bottom-right-radius: 19px;
+}
+
+/* ---------- the pour (§3, §12) ---------- */
+
+/* The board state changes the instant the tap lands; these replay the
+   gesture on top of it, so the water reads as poured rather than teleported.
+   Everything is transform/opacity only, one shot, and none of it runs when
+   Reduced Motion is on (WaterBoard withholds the classes).
+
+   Two copies of each keyframe, -0 and -1: pouring twice from the same tube
+   has to restart the animation, and a CSS animation only replays when the
+   class list actually changes. */
+
+/* The carry. WaterBoard measures where the source's mouth has to end up and
+   hands the distance and the turn over as --ws-tx / --ws-ty / --ws-rot, so
+   the tube really travels to the destination instead of nodding in place.
+   It turns about its own foot, the way you would tip a bottle. */
+.ws-tip-0,
+.ws-tip-1 {
+  animation: ws-carry 0.72s cubic-bezier(0.33, 0.02, 0.3, 1);
+  transform-origin: bottom center;
+  z-index: 5;
+}
+
+@keyframes ws-carry {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  8% {
+    transform: translate(0, -10px) rotate(0deg);
+  }
+  38% {
+    transform: translate(var(--ws-tx), var(--ws-ty)) rotate(var(--ws-rot));
+  }
+  66% {
+    transform: translate(var(--ws-tx), var(--ws-ty)) rotate(var(--ws-rot));
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+/* There is deliberately no drawn stream between the tubes: a ribbon spanning
+   the gap read as a stray line rather than as water. The tip and the rising
+   level carry the pour on their own. */
+
+/* A new surface that was not poured — the one revealed under water that
+   left — just settles, without the fall. */
+.ws-rack:not(.ws-rack-still) .ws-unit-top {
+  animation: ws-settle 0.18s ease-out;
+}
+
+@keyframes ws-settle {
+  from {
+    transform: translateY(-16%);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Water that just landed rises into place while the tube is held over it, so
+   the level fills rather than blinking on. Matches the settle rule's
+   specificity and comes after it, so arriving water fills rather than merely
+   settling. */
+.ws-rack:not(.ws-rack-still) .ws-unit-arrive-0,
+.ws-rack:not(.ws-rack-still) .ws-unit-arrive-1 {
+  transform-origin: bottom center;
+  animation: ws-fill 0.24s cubic-bezier(0.4, 0, 0.5, 1) 0.28s backwards;
+}
+
+@keyframes ws-fill {
+  0% {
+    transform: scaleY(0);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.ws-color-0 { background-color: var(--ws-c-0); }
+.ws-color-1 { background-color: var(--ws-c-1); }
+.ws-color-2 { background-color: var(--ws-c-2); }
+.ws-color-3 { background-color: var(--ws-c-3); }
+.ws-color-4 { background-color: var(--ws-c-4); }
+.ws-color-5 { background-color: var(--ws-c-5); }
+.ws-color-6 { background-color: var(--ws-c-6); }
+.ws-color-7 { background-color: var(--ws-c-7); }
+.ws-color-8 { background-color: var(--ws-c-8); }
+
+/* ---------- top bar ---------- */
+
+.ws-status {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.ws-mode {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+/* The pour count is the game's own measure, so it is shown while playing —
+   unlike the clock, which is not (§4). */
+.ws-move-count {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 15px;
+}
+
+/* ---------- action bar ---------- */
+
+.action-bar.ws-actions {
+  justify-content: center;
+  gap: 24px;
+}
+
+/* ---------- level select ---------- */
+
+.ws-level-best {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.level-cell-current .ws-level-best {
+  color: var(--accent-ink);
+  opacity: 0.85;
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+.ws-figure {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+/* The tutorial draws the same glass, smaller. Units keep a gap here because
+   a diagram reads better as countable steps than as one body of water. */
+.ws-figure-tube {
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  width: 40px;
+  height: 124px;
+  padding: 4px;
+  gap: 2px;
+  background-color: var(--surface-recessed);
+  border: 2px solid var(--ink-soft);
+  border-top-color: var(--line);
+  border-radius: 8px 8px 18px 18px;
+  box-shadow: inset 0 -6px 8px rgba(0, 0, 0, 0.06);
+}
+
+.ws-figure-tube .ws-unit {
+  height: 24px;
+  border-radius: 5px;
+}
+
+.ws-figure-tube-marked {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring-soft);
+}
+
+/* ---------- daily list ---------- */
+
+.ws-daily-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.ws-daily-badge-done {
+  color: var(--ink-soft);
+}

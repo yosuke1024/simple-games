@@ -5,10 +5,11 @@
 > あわせて Play Console でアプリ内商品(管理された商品)`remove_ads` を
 > 基準価格 USD 3.99 で作成すること(国別価格は自動調整に任せる)。
 
-> 掲載は収録ゲーム 5 本(Sudoku / Minesweeper / Nonogram / Number Match /
-> Sliding Puzzle)の状態で書いてある。未収録のゲーム(Solitaire ほか)は名前も
-> 含めて掲載文に出さず、**実際に収録できた時点で**説明・スクリーンショットへ
-> 追加する(未収録のゲームを "Coming Soon" として掲載しない)。
+> 掲載は収録ゲーム 8 本(Sudoku / Solitaire / Minesweeper / Nonogram /
+> Number Match / Water Sort / Sliding Puzzle / Memory Match)の状態で書いてある。
+> 未収録のゲームは名前も含めて掲載文に出さず、**実際に収録できた時点で**
+> 説明・スクリーンショットへ追加する(未収録のゲームを "Coming Soon" として
+> 掲載しない)。
 
 ## タイトル候補(優先順)
 
@@ -16,8 +17,9 @@
 2. `Simple Games — Offline Puzzles`
 3. `Simple Games: Sudoku & More`
 
-キーワード優先順位: Offline > Sudoku > Minesweeper > Nonogram > Puzzle >
-Number Match > Sliding Puzzle > Simple Games > PixApps
+キーワード優先順位: Offline > Sudoku > Solitaire > Minesweeper > Nonogram >
+Puzzle > Number Match > Water Sort > Sliding Puzzle > Memory Match >
+Simple Games > PixApps
 (ゲーム名は検索流入の中核。収録済みの名前だけを、検索需要の大きい順に置く)
 
 ## 訴求の順序(BRAND.md と同一。この順で書く)
@@ -43,8 +45,9 @@ Number Match > Sliding Puzzle > Simple Games > PixApps
 I made this app because I wanted simple games to play during long flights.
 
 Simple Games is a quiet collection of classic puzzles in one small app —
-Sudoku, Minesweeper, Nonogram, Number Match and Sliding Puzzle. It works
-without internet, requires no account, and has no subscriptions.
+Sudoku, Solitaire, Minesweeper, Nonogram, Number Match, Water Sort, Sliding
+Puzzle and Memory Match. It works without internet, requires no account, and
+has no subscriptions.
 
 Every game feature is free and available offline, including hints, undo,
 daily challenges, and statistics. Your progress stays on your device.
@@ -60,6 +63,13 @@ INCLUDED GAME: SUDOKU
 • Pencil in notes while you narrow a cell down.
 • Hints are free and unlimited, and show you which cell is decided and why.
 • No mistake limit and no game over. The clock never runs on screen.
+
+INCLUDED GAME: SOLITAIRE
+• Classic Klondike. Build all four suits from ace to king.
+• Draw 1 or Draw 3, unlimited passes through the stock, and a daily deal
+  that is the same for everyone.
+• Tap a card, then tap where it goes. Undo and hints are free and unlimited.
+• Retry any deal, free — the cards fall the same way every time.
 
 INCLUDED GAME: MINESWEEPER
 • Open every square that has no mine. Numbers count the mines around them.
@@ -84,13 +94,27 @@ INCLUDED GAME: NUMBER MATCH
 • Clear the whole board to win. Stuck? Add Numbers appends the remaining
   numbers. Undo and hints are always free and unlimited.
 
+INCLUDED GAME: WATER SORT
+• Pour the water until every tube holds a single color.
+• Every board is checked by a solver before you see it — all 999 levels and
+  every daily can be finished.
+• Hints are free and unlimited, and always point at a proven way forward.
+• Two spare tubes on every board, and free unlimited undo.
+
 INCLUDED GAME: SLIDING PUZZLE
 • Slide the numbered tiles back into order, 3x3 up to 5x5.
 • Tap a tile in the blank's row or column to slide several at once.
 • 999 levels and a daily puzzle. Undo is free and unlimited.
 
+INCLUDED GAME: MEMORY MATCH
+• Flip two cards and find every pair.
+• Three board sizes and a daily board. A missed pair stays visible until
+  your next flip — nothing rushes you.
+• Retry the same layout free, with everything you learned still in your head.
+
 999 LEVELS, GENTLY RISING
-• Sudoku, Nonogram, Number Match and Sliding Puzzle each have 999 levels
+• Sudoku, Nonogram, Number Match, Water Sort and Sliding Puzzle each have
+  999 levels
 • Difficulty grows slowly — no sudden walls, no countdowns
 • Replay any cleared level, or an earlier day, to beat your own best
 • Number Match scoring rewards sharp eyes and planning, never speed
@@ -124,14 +148,18 @@ A Simple Games app by PixApps.
 
 - 収録ゲームの説明ブロック(上の `INCLUDED GAME:` 節)はゲーム単位で書き、
   ゲームを追加するたびにブロックを追加する。並び順は検索需要の大きい順
-  (現在は Sudoku → Minesweeper → Nonogram → Number Match → Sliding Puzzle)。
+  (現在は Sudoku → Solitaire → Minesweeper → Nonogram → Number Match →
+  Water Sort → Sliding Puzzle → Memory Match)。
   この順は `src/app/registry.ts` のゲーム順とも一致させる。
 - ルールの正式定義は各ゲームのルール文書:
   [SUDOKU](../../../docs/SUDOKU_RULES.md) /
+  [SOLITAIRE](../../../docs/SOLITAIRE_RULES.md) /
   [MINESWEEPER](../../../docs/MINESWEEPER_RULES.md) /
   [NONOGRAM](../../../docs/NONOGRAM_RULES.md) /
   [NUMBER MATCH](../../../docs/NUMBER_MATCH_RULES.md) /
-  [SLIDING PUZZLE](../../../docs/SLIDING_PUZZLE_RULES.md)。
+  [WATER SORT](../../../docs/WATER_SORT_RULES.md) /
+  [SLIDING PUZZLE](../../../docs/SLIDING_PUZZLE_RULES.md) /
+  [MEMORY MATCH](../../../docs/MEMORY_MATCH_RULES.md)。
   掲載文がルール文書と食い違ったらルール文書を正とする。
 - 未収録のゲームはブロックも名前も置かない。
 

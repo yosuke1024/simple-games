@@ -152,6 +152,47 @@ export const titleAccents = {
     onDark: '#1a120e',
     softDark: '#3a2820',
   },
+  /**
+   * Memory Match — dusty rose. The card faces carry their own fifteen-colour
+   * symbol palette, so the chrome keeps to one warm, muted hue that none of
+   * the symbols use — the accent marks the game, never a card.
+   */
+  memoryMatch: {
+    light: '#9e5468',
+    onLight: '#ffffff',
+    softLight: '#f2e0e7',
+    dark: '#cf8fa4',
+    onDark: '#1a1116',
+    softDark: '#3a2530',
+  },
+  /**
+   * Water Sort — muted aqua. The tubes carry the game's own nine-colour
+   * water palette, so — like Minesweeper — the chrome stays out of the
+   * board's way; a watery blue-green marks the game without joining the
+   * palette it referees.
+   */
+  waterSort: {
+    light: '#33708c',
+    onLight: '#ffffff',
+    softLight: '#dfeaf0',
+    dark: '#7fb4c9',
+    onDark: '#0f171c',
+    softDark: '#21333d',
+  },
+  /**
+   * Solitaire — muted felt green. The one color a card table already owns;
+   * kept far from the card red so selection and hearts never blur, and
+   * desaturated so a full tableau of white cards stays the bright thing on
+   * screen.
+   */
+  solitaire: {
+    light: '#557a48',
+    onLight: '#ffffff',
+    softLight: '#e3ecdf',
+    dark: '#97bd8a',
+    onDark: '#121810',
+    softDark: '#273a22',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

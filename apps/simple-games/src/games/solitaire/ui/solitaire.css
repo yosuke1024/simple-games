@@ -1,0 +1,410 @@
+/* Solitaire — all of this game's styling, imported by SolitaireRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --radius, --font-display, --tap-size, …) so the
+   game reads as part of the same app and follows the theme without knowing
+   about it.
+
+   Class names are prefixed `sol-` so this file can never collide with the
+   shell or with another game.
+
+   The card red below is game content, not chrome — hearts and diamonds are
+   red in any deck; black cards use the series ink. */
+
+/* Card faces stay paper in BOTH themes, unlike every other surface in the
+   app. Red against black is the rule that decides every move (§3), and a
+   dark card face turns the black suits near-white — the one distinction the
+   player cannot afford to lose. The dark theme dims the paper instead of
+   inverting it, and darkens the felt around it. */
+:root {
+  --sol-face: #fffdf8;
+  --sol-ink: #232a33;
+  --sol-red: #b0483f;
+  --sol-face-line: #ddd7ca;
+  /* The felt. A real card table's surface, muted enough that the cards stay
+     the brightest thing on screen. */
+  --sol-felt: #c9d4c0;
+  --sol-felt-light: rgba(255, 255, 255, 0.38);
+  /* Where a held card may legally land (§3). Deliberately outside both the
+     felt green and the card red, so it cannot be mistaken for either. */
+  --sol-target: #c08a2e;
+}
+
+:root[data-theme='dark'] {
+  --sol-face: #e6e2d9;
+  --sol-ink: #1d232b;
+  --sol-red: #a8382f;
+  --sol-face-line: #bfb9ac;
+  --sol-felt: #161d15;
+  --sol-felt-light: rgba(255, 255, 255, 0.045);
+  --sol-target: #e0ad4f;
+}
+
+/* ---------- table ---------- */
+
+/* The table. Klondike deals short piles, so the play area is mostly empty
+   surface for the first dozen moves — on bare paper that reads as an
+   unfinished screen. A real table has felt there, so this one does too: the
+   whole play area, edge to edge, in the title's accent at low strength. */
+.sol-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 8px 12px;
+  min-height: 0;
+  overflow-y: auto;
+  background-color: var(--sol-felt);
+  /* Lit from above, the way a table under a lamp is — it keeps the large
+     empty surface from reading as a flat fill. */
+  background-image: radial-gradient(
+    120% 62% at 50% 0%,
+    var(--sol-felt-light),
+    rgba(0, 0, 0, 0) 72%
+  );
+  box-shadow: inset 0 2px 5px rgba(35, 42, 51, 0.14);
+}
+
+:root[data-theme='dark'] .sol-body {
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.sol-table {
+  width: min(96vw, 420px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Seven equal columns; the top row shares the grid so the stock and the
+   foundations line up with the piles below (§1). */
+.sol-top-row,
+.sol-tableau {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.sol-tableau {
+  align-content: start;
+}
+
+.sol-pile {
+  display: flex;
+  flex-direction: column;
+  min-height: 60px;
+}
+
+/* ---------- cards ---------- */
+
+/* A card. Paper white with a hairline edge and a soft shadow, so a pile of
+   them reads as a stack of objects rather than as a striped rectangle. */
+.sol-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  padding: 0;
+  border: 1px solid var(--sol-face-line);
+  border-radius: 7px;
+  background-color: var(--sol-face);
+  background-image: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0) 55%
+  );
+  color: var(--sol-ink);
+  cursor: pointer;
+  display: block;
+  font-family: var(--font-display);
+  box-shadow:
+    0 1px 2px rgba(20, 24, 30, 0.24),
+    0 0 0 0.5px rgba(20, 24, 30, 0.08);
+}
+
+:root[data-theme='dark'] .sol-card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+
+.sol-card-red {
+  color: var(--sol-red);
+}
+
+.sol-card-black {
+  color: var(--sol-ink);
+}
+
+/* The index: rank over suit in the top-left, the way a real card is printed.
+   This is the only part a covered card shows, so it carries the identity and
+   the overlap below is measured against it (§12). */
+.sol-card-index {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1;
+}
+
+.sol-card-rank {
+  font-size: clamp(12px, 3.7vw, 15px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.sol-card-index .sol-suit {
+  width: clamp(7px, 2.2vw, 9px);
+  height: clamp(7px, 2.2vw, 9px);
+}
+
+/* One large suit in the middle of the card, centred.
+   Traditional pip layouts and court marks both lived here and were both
+   removed: at this size the extra marks read as clutter, not as a real deck
+   (§13). The card says what it is with a rank, a suit, and nothing else. */
+.sol-card-middle {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sol-card-middle .sol-suit {
+  width: 44%;
+  height: 44%;
+}
+
+/* The back: a woven diagonal in the title's accent, bordered like a real
+   card back. One flat dot read as a placeholder. */
+.sol-card-back {
+  background-color: var(--accent-soft);
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      var(--accent-ring-soft) 0,
+      var(--accent-ring-soft) 2px,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 0, 0, 0) 5px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      var(--accent-ring-soft) 0,
+      var(--accent-ring-soft) 2px,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 0, 0, 0) 5px
+    );
+  border: 1px solid var(--line);
+  cursor: default;
+}
+
+/* The inner rule every card back has. */
+.sol-card-back::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid var(--accent-ring);
+  border-radius: 4px;
+}
+
+button.sol-card-back {
+  cursor: pointer;
+}
+
+/* Empty slots: a recess where a card could be, not a floating outline. */
+.sol-slot-empty {
+  background-color: rgba(0, 0, 0, 0.03);
+  background-image: none;
+  border: 1px dashed var(--line);
+  box-shadow: inset 0 1px 3px rgba(35, 42, 51, 0.07);
+}
+
+:root[data-theme='dark'] .sol-slot-empty {
+  background-color: rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.sol-slot-mark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
+  opacity: 0.6;
+  font-size: 18px;
+}
+
+.sol-slot-mark .sol-suit {
+  width: 40%;
+  height: 40%;
+}
+
+.sol-slot-mark.sol-card-red {
+  color: var(--sol-red);
+}
+
+.sol-top-gap {
+  /* The empty seventh column between the waste and the foundations. */
+}
+
+/* ---------- stacking ---------- */
+
+/* A covered face-down card shows a sliver; a covered face-up card keeps its
+   whole corner readable (§12). Negative top margins do the overlap — margin
+   percentages resolve against the column width, and a card is 140% of its
+   width tall (aspect 5/7), so -116% leaves a ~24%-of-width sliver and -102%
+   leaves the ~38% corner strip. */
+.sol-overlap-down {
+  margin-top: -116%;
+}
+
+.sol-overlap-up {
+  margin-top: -102%;
+}
+
+.sol-pile .sol-card-back + .sol-card:not(.sol-overlap-up) {
+  /* First face-up card over a face-down stack: leave the sliver visible. */
+  margin-top: -116%;
+}
+
+/* ---------- selection, destinations, hints (§3, §8, §12) ---------- */
+
+.sol-selected {
+  transform: translateY(-6px);
+  border-color: var(--sol-ink);
+  box-shadow:
+    0 0 0 2px var(--sol-ink),
+    0 6px 10px rgba(20, 24, 30, 0.3);
+  z-index: 2;
+}
+
+/* Where the held card may land. This is the game teaching its own rule —
+   "down by one, colours alternate" is far easier to learn by seeing the two
+   places a card can go than by reading it — so the mark is loud on purpose,
+   and its absence (nothing lights up) is the answer to "why can't I move
+   this?". */
+.sol-destination {
+  border-color: var(--sol-target);
+  box-shadow:
+    0 0 0 3px var(--sol-target),
+    0 0 10px 2px rgba(192, 138, 46, 0.4);
+  z-index: 1;
+}
+
+:root[data-theme='dark'] .sol-destination {
+  box-shadow:
+    0 0 0 3px var(--sol-target),
+    0 0 12px 3px rgba(224, 173, 79, 0.35);
+}
+
+.sol-hinted {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* ---------- top bar ---------- */
+
+.sol-status {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.sol-mode {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.sol-move-count {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 15px;
+}
+
+/* ---------- finish + actions (§7) ---------- */
+
+.sol-finish {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.action-bar.sol-actions {
+  justify-content: center;
+  gap: 24px;
+}
+
+/* ---------- home ---------- */
+
+.sol-draw-toggle {
+  align-self: center;
+}
+
+.sol-draw-note {
+  margin: -4px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+.sol-figure {
+  display: flex;
+  gap: 8px;
+}
+
+.sol-figure-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 46px;
+  height: 64px;
+  border: 1px solid var(--sol-face-line);
+  border-radius: 6px;
+  background: var(--sol-face);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  /* No `color` here on purpose: every figure card carries .sol-card-red or
+     .sol-card-black, and a colour set at this specificity would win by
+     source order and paint the red suits black — which is exactly the rule
+     this figure exists to teach. */
+}
+
+.sol-figure-card .sol-suit {
+  width: 14px;
+  height: 14px;
+}
+
+.sol-figure-card.sol-card-back {
+  background: var(--accent-soft);
+}
+
+.sol-figure-card-marked {
+  border-color: var(--sol-target);
+  box-shadow: 0 0 0 3px rgba(192, 138, 46, 0.3);
+}
+
+/* ---------- daily list ---------- */
+
+.sol-daily-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.sol-daily-badge-done {
+  color: var(--ink-soft);
+}

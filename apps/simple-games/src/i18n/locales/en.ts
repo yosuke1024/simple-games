@@ -309,6 +309,133 @@ export const en = {
   minesStep2Body: 'Long-press a square to flag it. Flag mode makes a plain tap do it instead.',
   minesStep3Title: 'Open the rest to win',
   minesStep3Body: 'Your first tap is always safe, and no board ever needs a guess.',
+
+  // ---- Memory Match ----
+  memoryMatchName: 'Memory Match',
+  memoryMatchBlurb: 'Flip two cards and find every pair.',
+
+  // Home
+  memoryChooseBoard: 'Choose a board',
+  memoryDifficulty_easy: 'Easy',
+  memoryDifficulty_medium: 'Medium',
+  memoryDifficulty_hard: 'Hard',
+  memoryBoardNote: '{cols}×{rows} · {pairs} pairs',
+  memoryConfirmSwitchTitle: 'Replace the game in progress?',
+  memoryConfirmSwitchBody: 'Your {current} game will be replaced by a new {next} board.',
+
+  // Board
+  memoryBoardLabel: 'Memory board, {cols} by {rows}',
+  memoryCardDown: 'Face down, row {row}, column {col}',
+  memoryCardUp: 'Symbol {n}, row {row}, column {col}',
+  memoryCardMatched: 'Matched, symbol {n}, row {row}, column {col}',
+  memoryPairsLabel: 'Pairs',
+
+  // Result
+  memoryClearTitle: 'All pairs found!',
+  memoryClearBody: 'Every card is face up.',
+  memoryNewBestMoves: 'Your fewest moves yet.',
+  memoryNewBestTime: 'Your fastest yet.',
+  memoryBestMoves: 'Fewest moves',
+
+  // Statistics and daily
+  memoryDailiesCleared: 'Days cleared',
+  memoryDailyBacklogHint: 'Every earlier day stays open.',
+
+  // Quick Rules (3 steps, §11)
+  memoryStep1Title: 'Flip two cards',
+  memoryStep1Body: 'Tap one card, then another. A matching pair stays face up.',
+  memoryStep2Title: 'No rush to remember',
+  memoryStep2Body: 'A missed pair stays visible until your next flip. Take your time.',
+  memoryStep3Title: 'Match every pair',
+  memoryStep3Body: 'Clear the whole board. Retrying the same board is always free.',
+
+  // ---- Water Sort ----
+  waterSortName: 'Water Sort',
+  waterSortBlurb: 'Pour the water until every tube is one color.',
+
+  // Board and accessibility
+  waterBoardLabel: 'Water sort tubes',
+  waterTubeLabel: 'Tube {n}, bottom to top: {colors}',
+  waterTubeEmpty: 'empty',
+
+  // Hint
+  waterHintNone: 'No way forward found — undo or retry.',
+  waterHintsUsed: 'Hints',
+
+  // Clear screen
+  waterSolvedTitle: 'Sorted!',
+  waterSolvedBody: 'Every color has its own tube.',
+  waterNewBestMoves: 'Your fewest pours yet.',
+  waterNewBestTime: 'Your fastest yet.',
+  waterBestMoves: 'Fewest pours',
+
+  // Statistics and daily
+  waterLevelsSolved: 'Levels solved',
+  waterDailiesSolved: 'Dailies solved',
+  waterDailyBacklogHint: 'Every earlier day stays open.',
+
+  // Quick Rules (3 steps, §11)
+  waterStep1Title: 'Pour same onto same',
+  waterStep1Body:
+    'Tap a tube, then another. The top color pours when it matches — or into any empty tube.',
+  waterStep2Title: 'Two spare tubes',
+  waterStep2Body: 'The empty tubes are your workspace. Undo is always free.',
+  waterStep3Title: 'One color per tube',
+  waterStep3Body: 'When every tube holds a single color, the board is sorted.',
+
+  // ---- Solitaire ----
+  solitaireName: 'Solitaire',
+  solitaireBlurb: 'Build all four suits from ace to king.',
+
+  // Home
+  solNewDeal: 'New deal',
+  solDrawSetting: 'Draw setting',
+  solDrawOne: 'Draw 1',
+  solDrawThree: 'Draw 3',
+  solDrawNote: 'Applies from the next deal.',
+
+  // Table and accessibility
+  solTableLabel: 'Solitaire table',
+  solStockLabel: 'Stock, {n} cards — tap to draw',
+  solStockEmpty: 'Stock empty — tap to turn the waste over',
+  solCardLabel: '{rank} of {suit}',
+  solCardFaceDown: 'Face down',
+  solSuit_spades: 'spades',
+  solSuit_hearts: 'hearts',
+  solSuit_diamonds: 'diamonds',
+  solSuit_clubs: 'clubs',
+  solFoundationCard: 'Foundation, {card}',
+  solFoundationEmpty: 'Foundation, {suit}, empty',
+  solPileLabel: 'Column {n}',
+  solPileEmpty: 'Column {n}, empty — a king can move here',
+
+  // Play
+  solAutoFinish: 'Finish the game',
+  solHintNone: 'No move found — undo or start over.',
+  solHintsUsed: 'Hints',
+
+  // Result
+  solWonTitle: 'You won!',
+  solWonBody: 'All four suits are complete.',
+  solNewBestMoves: 'Your fewest moves yet.',
+  solNewBestTime: 'Your fastest yet.',
+  solBestMoves: 'Fewest moves',
+
+  // Statistics and daily
+  solDealsPlayed: 'Deals played',
+  solGamesWon: 'Games won',
+  solWinRate: 'Win rate',
+  solDailiesWon: 'Daily deals won',
+  solDailyBacklogHint: 'Every earlier day stays open. Not every deal can be won.',
+
+  // Quick Rules (3 steps, §11)
+  solStep1Title: 'Down by one, colors alternate',
+  solStep1Body: 'Stack cards downward, red on black on red. Tap a card, then tap where it goes.',
+  solStep2Title: 'Free the hidden cards',
+  solStep2Body:
+    'Moves that turn a card face up open the game. The stock can be turned over any number of times.',
+  solStep3Title: 'Aces build to kings',
+  solStep3Body: 'Send each suit to its foundation from ace to king. Complete all four to win.',
 } as const;
 
 export type Messages = Record<keyof typeof en, string>;

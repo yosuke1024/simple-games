@@ -8,11 +8,15 @@
  * (docs/WEB_VERSION.md) it would 404 inside our own site, in front of a
  * first-time visitor.
  *
- * A language appears here only once someone has written all five guides in it,
- * because long-form rules are exactly the kind of text that must not be
+ * A language appears here only once someone has written every published guide
+ * in it, because long-form rules are exactly the kind of text that must not be
  * machine-translated at scale (docs/I18N_POLICY.md). The app ships fourteen
  * locales, so the rest read the English page — which is honest, if not ideal,
  * and better than either a 404 or a machine-translated rulebook.
+ *
+ * Titles with no guide on the landing site yet (Memory Match, Water Sort,
+ * Solitaire) simply do not render a "Learn More" button; building a URL here
+ * would 404 for every locale.
  */
 import { LANDING_BASE_URL } from '@simple-games/brand';
 
