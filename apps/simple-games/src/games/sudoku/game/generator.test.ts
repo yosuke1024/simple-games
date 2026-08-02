@@ -16,8 +16,8 @@ import { CELLS, DIFFICULTIES, type Difficulty, type Grid } from './types';
 const SEEDS = [
   'sudoku-level-1',
   'sudoku-level-42',
-  'sudoku-level-500',
-  'sudoku-level-999',
+  'sudoku-level-77',
+  'sudoku-level-100',
   'sudoku-daily-2026-08-01',
   'sudoku-daily-2026-12-31',
 ];
@@ -62,9 +62,10 @@ describe.each(DIFFICULTIES)('generatePuzzle — %s', (difficulty: Difficulty) =>
     for (const puzzle of puzzles) {
       const result = grade(puzzle.givens);
       expect(result.solvable, puzzle.seed).toBe(true);
-      expect(rank[result.difficulty], `${puzzle.seed} used ${result.difficulty}`).toBeLessThanOrEqual(
-        rank[difficulty],
-      );
+      expect(
+        rank[result.difficulty],
+        `${puzzle.seed} used ${result.difficulty}`,
+      ).toBeLessThanOrEqual(rank[difficulty]);
     }
   });
 
@@ -171,20 +172,14 @@ describe('generation cost (§7)', () => {
    */
 
   /**
-   * Every 9th level, so the sample crosses every band of §9 — plus the
-   * costliest levels a full 1..999 sweep found in each tier. A sparse sample
-   * measures the typical board and misses the tail by construction, and the
-   * tail is the part a player feels: level 393 costs nine times the median
-   * hard board. Pinning them keeps the expensive end under watch without
-   * paying for all 999 on every run.
+   * Every level there is. A sparse sample measures the typical board and misses
+   * the tail by construction, and the tail is what a player feels — the worst
+   * board in a tier costs several times its median. The list used to be spread
+   * over 999 levels, where sweeping all of them on every run was too much and
+   * the sample needed its expensive levels pinned by hand; at 100 the whole
+   * list fits in the same budget the old sample cost, so nothing is left out.
    */
-  const SAMPLE_LEVELS = [
-    ...Array.from({ length: Math.ceil(MAX_LEVEL / 9) }, (_, i) => 1 + i * 9),
-    MAX_LEVEL,
-    16, // costliest easy
-    111, 129, // costliest medium
-    393, 629, 814, 923, // costliest hard
-  ];
+  const SAMPLE_LEVELS = Array.from({ length: MAX_LEVEL }, (_, i) => i + 1);
 
   /**
    * Placements per board: the measured median and worst of this sample, each
@@ -194,9 +189,9 @@ describe('generation cost (§7)', () => {
    * compatibility.test.ts.
    */
   const CEILING: Record<Difficulty, { readonly median: number; readonly worst: number }> = {
-    easy: { median: 1000, worst: 1600 },
-    medium: { median: 7500, worst: 80000 },
-    hard: { median: 30000, worst: 240000 },
+    easy: { median: 800, worst: 1100 },
+    medium: { median: 6500, worst: 20000 },
+    hard: { median: 27000, worst: 200000 },
   };
 
   const measured = SAMPLE_LEVELS.map((level) => {

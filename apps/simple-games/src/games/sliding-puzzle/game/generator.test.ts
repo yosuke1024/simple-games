@@ -17,7 +17,7 @@ import { generatePuzzle, tilesToString } from './generator';
 import { levelSeed, shuffleDepthForLevel, sizeForLevel } from './levels';
 import { SIZES, solvedTiles, type Size, type Tiles } from './types';
 
-const LEVELS = [1, 2, 30, 31, 120, 121, 400, 401, 700, 701, 999];
+const LEVELS = [1, 2, 10, 11, 30, 31, 65, 66, 100];
 const DAILIES = ['2026-08-01', '2026-12-31'];
 
 /** Every level puzzle plus a couple of dailies — what a player can reach. */
@@ -144,34 +144,31 @@ describe('the shuffle walk (§5)', () => {
 
 describe('the level table (§6)', () => {
   it('steps the board up at the documented levels', () => {
-    expect([1, 30, 31, 120].map(sizeForLevel)).toEqual([3, 3, 3, 3]);
-    expect([121, 400, 401, 700].map(sizeForLevel)).toEqual([4, 4, 4, 4]);
-    expect([701, 999].map(sizeForLevel)).toEqual([5, 5]);
+    expect([1, 10, 11, 30].map(sizeForLevel)).toEqual([3, 3, 3, 3]);
+    expect([31, 65].map(sizeForLevel)).toEqual([4, 4]);
+    expect([66, 100].map(sizeForLevel)).toEqual([5, 5]);
   });
 
   it('hits each band’s floor and ceiling, and interpolates in between', () => {
     expect(shuffleDepthForLevel(1)).toBe(20);
-    expect(shuffleDepthForLevel(30)).toBe(60);
+    expect(shuffleDepthForLevel(10)).toBe(45);
+    expect(shuffleDepthForLevel(11)).toBe(45);
+    expect(shuffleDepthForLevel(30)).toBe(90);
     expect(shuffleDepthForLevel(31)).toBe(60);
-    expect(shuffleDepthForLevel(120)).toBe(120);
-    expect(shuffleDepthForLevel(121)).toBe(80);
-    expect(shuffleDepthForLevel(400)).toBe(200);
-    expect(shuffleDepthForLevel(401)).toBe(200);
-    expect(shuffleDepthForLevel(700)).toBe(400);
-    expect(shuffleDepthForLevel(701)).toBe(200);
-    expect(shuffleDepthForLevel(999)).toBe(500);
+    expect(shuffleDepthForLevel(65)).toBe(180);
+    expect(shuffleDepthForLevel(66)).toBe(90);
+    expect(shuffleDepthForLevel(100)).toBe(400);
     // Halfway up the first band is halfway between its ends.
-    expect(shuffleDepthForLevel(15)).toBe(39);
-    expect(shuffleDepthForLevel(16)).toBe(41);
+    expect(shuffleDepthForLevel(5)).toBe(31);
+    expect(shuffleDepthForLevel(6)).toBe(34);
   });
 
   it('never goes backwards inside a band', () => {
     for (const [from, to] of [
-      [1, 30],
-      [31, 120],
-      [121, 400],
-      [401, 700],
-      [701, 999],
+      [1, 10],
+      [11, 30],
+      [31, 65],
+      [66, 100],
     ]) {
       for (let level = from! + 1; level <= to!; level++) {
         expect(
@@ -182,9 +179,9 @@ describe('the level table (§6)', () => {
     }
   });
 
-  it('clamps levels outside 1..999 rather than failing', () => {
+  it('clamps levels outside 1..100 rather than failing', () => {
     expect(sizeForLevel(0)).toBe(sizeForLevel(1));
     expect(shuffleDepthForLevel(-10)).toBe(shuffleDepthForLevel(1));
-    expect(shuffleDepthForLevel(5000)).toBe(shuffleDepthForLevel(999));
+    expect(shuffleDepthForLevel(5000)).toBe(shuffleDepthForLevel(100));
   });
 });

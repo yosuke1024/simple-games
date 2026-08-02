@@ -26,7 +26,7 @@ export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionH
    * (SettingsScreen.tsx, docs/I18N_POLICY.md). It comes back here unchanged the
    * day the web build is offline on a first visit.
    *
-   * This is the same `tagline` the five game home screens show. The collection
+   * This is the same `tagline` the game home screens show. The collection
    * carried its own line until it was found claiming the app cost nothing at
    * all, which docs/BRAND.md forbids while the remove-ads purchase exists.
    * Sharing the key leaves one wording to keep honest rather than two, and

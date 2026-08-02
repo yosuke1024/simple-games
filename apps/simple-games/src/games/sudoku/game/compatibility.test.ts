@@ -50,20 +50,46 @@ describe('golden puzzles', () => {
   });
 
   it('the level tier curve is unchanged at sampled levels', () => {
-    const sampled = [1, 20, 21, 60, 61, 150, 151, 400, 401, 700, 701, 999];
+    const sampled = [1, 10, 11, 25, 26, 45, 46, 70, 71, 85, 86, 100];
     expect(sampled.map(difficultyForLevel)).toEqual([
       'easy',
       'easy',
       'easy',
-      'easy',
-      'medium',
-      'medium',
-      'medium',
-      'medium',
       'medium',
       'hard',
       'medium',
       'medium',
+      'hard',
+      'hard',
+      'hard',
+      'hard',
+      'hard',
     ]);
+  });
+
+  /**
+   * The table of §9 is a promise about counts, not a tendency. Dealing fixed
+   * counts per band is what makes it true; this is the test that would notice
+   * a return to rolling each level independently, which drifted far enough at
+   * this list length to invert the last band.
+   */
+  it('deals each band the mix its table states', () => {
+    const bands: Array<[number, number, number, number, number]> = [
+      [1, 10, 10, 0, 0],
+      [11, 25, 9, 6, 0],
+      [26, 45, 5, 13, 2],
+      [46, 70, 3, 16, 6],
+      [71, 85, 0, 8, 7],
+      [86, 100, 0, 5, 10],
+    ];
+    for (const [from, to, easy, medium, hard] of bands) {
+      const tiers = Array.from({ length: to - from + 1 }, (_, i) => difficultyForLevel(from + i));
+      const count = (want: string) => tiers.filter((tier) => tier === want).length;
+      expect([count('easy'), count('medium'), count('hard')], `band ${from}-${to}`).toEqual([
+        easy,
+        medium,
+        hard,
+      ]);
+    }
   });
 });

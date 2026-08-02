@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
-import { IconBack, IconChevronLeft, IconChevronRight } from '@/ui/components/icons';
+import { IconBack } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
 import { MAX_LEVEL } from '../../game';
 import { useNonogram } from '../../state/GameContext';
-
-const LEVELS_PER_PAGE = 100;
 
 /**
  * Level select: replay any unlocked level (to beat its time) or continue at
@@ -17,12 +15,7 @@ export function NonoLevelSelectScreen() {
   const { goHome, sessions, canResume, startLevel, progress } = useNonogram();
   const { t } = useSettings();
   const highest = progress.highestUnlocked;
-  const [page, setPage] = useState(() => Math.floor((highest - 1) / LEVELS_PER_PAGE));
   const [confirmLevel, setConfirmLevel] = useState<number | null>(null);
-
-  const pageCount = Math.ceil(MAX_LEVEL / LEVELS_PER_PAGE);
-  const start = page * LEVELS_PER_PAGE + 1;
-  const end = Math.min(MAX_LEVEL, start + LEVELS_PER_PAGE - 1);
 
   const onPick = (level: number) => {
     // Only starting a *different* level discards the suspended one; the daily
@@ -36,7 +29,7 @@ export function NonoLevelSelectScreen() {
   };
 
   const cells = [];
-  for (let level = start; level <= end; level++) {
+  for (let level = 1; level <= MAX_LEVEL; level++) {
     const unlocked = level <= highest;
     const best = progress.bestSeconds[String(level)];
     cells.push(
@@ -83,32 +76,6 @@ export function NonoLevelSelectScreen() {
         <h1>{t('levelSelect')}</h1>
         <span className="icon-btn-placeholder" />
       </header>
-
-      {pageCount > 1 ? (
-        <div className="level-pager">
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label={t('back')}
-            disabled={page === 0}
-            onClick={() => setPage(page - 1)}
-          >
-            <IconChevronLeft />
-          </button>
-          <span className="level-pager-range">
-            {start} – {end}
-          </span>
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label={t('next')}
-            disabled={page === pageCount - 1}
-            onClick={() => setPage(page + 1)}
-          >
-            <IconChevronRight />
-          </button>
-        </div>
-      ) : null}
 
       <div className="level-grid-scroll">
         <div className="level-grid">{cells}</div>
