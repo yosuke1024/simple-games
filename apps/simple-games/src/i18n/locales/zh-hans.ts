@@ -79,17 +79,13 @@ export const zhHans: Messages = {
   vibration: '振动',
   reducedMotion: '减少动画',
   privacyPolicy: '隐私政策',
+  termsOfUse: '使用条款',
   resetData: '清除本地数据',
   resetConfirmTitle: '删除全部本地数据？',
   resetConfirmBody: '这将从本设备删除你的游戏、统计和设置。此操作无法撤销。',
   delete: '删除',
   version: '版本',
 
-  privacy1: '无需账号，无需注册。PixApps 不收集你的姓名、邮箱、通讯录或位置信息。',
-  privacy2: '你的游戏进度、统计和设置仅保存在本设备上。PixApps 不运营任何服务器，也没有云同步。',
-  privacy3:
-    '联网时可能显示由 Google AdMob 投放的广告；Google 可能按其自身的隐私政策处理设备广告标识符。离线时不显示广告，也不发送任何广告请求。',
-  privacy4: '删除应用，或使用“清除本地数据”，即可删除你的数据。',
 
   played: '游戏局数',
   cleared: '通关次数',
@@ -126,8 +122,6 @@ export const zhHans: Messages = {
   reviewFeedbackBody:
     '欢迎发邮件告诉我——每条消息我都会看。在你于邮件应用中按下发送之前,不会发送任何内容。',
   reviewFeedbackAction: '写邮件',
-  privacy5:
-    '可选的一次性购买可移除横幅广告。该购买由 Google Play 处理，PixApps 不会收到或保存任何支付信息。',
 
   // Sudoku
   sudokuName: '数独',

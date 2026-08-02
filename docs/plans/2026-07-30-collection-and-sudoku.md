@@ -126,7 +126,8 @@ apps/simple-games/src/
 
 - `services/ads/banner.ts`: AdMob 初期化(起動後 fire-and-forget)、Anchored Adaptive
   Banner の表示/非表示、UMP 同意(失敗してもゲーム継続)。オフライン時・購入済み時は
-  リクエストしない。dev はテスト ID、本番は `VITE_ADMOB_BANNER_ID`(未設定なら無効)。
+  リクエストしない。dev はテスト ID、本番は `VITE_ADMOB_ANDROID_BANNER_ID`
+  (未設定なら無効)。
 - `BannerSlot` は従来どおり高さ確保方式(盤面のレイアウトシフトなし)。購入済みなら
   スロットごと消す。
 
@@ -195,7 +196,8 @@ Remove Ads & Support Simple Games。リンク先は GitHub(オフライン時は
 1. Google Play Console: 新アプリ `com.pixapps.simplegames` の作成(旧 numbermatch の
    掲載は作らない)。
 2. AdMob: コレクション用アプリ登録 + **バナー広告ユニットのみ**作成。
-   Secrets `ADMOB_APP_ID` / `ADMOB_BANNER_ID` を GitHub に設定(interstitial 系は不要)。
+   Secrets `ADMOB_ANDROID_APP_ID` / `ADMOB_ANDROID_BANNER_ID` を GitHub に設定
+   (interstitial 系は不要。AdMob ID は OS ごとに別なので名前にプラットフォームを含む)。
 3. Play Console: アプリ内商品(管理された商品)`remove_ads` を USD 3.99 で作成。
    国別価格は自動調整に任せる。
 4. 署名鍵の作成・保管(リポジトリに含めない)。

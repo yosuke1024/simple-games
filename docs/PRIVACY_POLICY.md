@@ -1,90 +1,55 @@
 # Privacy Policy — Simple Games by PixApps
 
-> **注意(内部メモ)**: この文面は公開済みで、<https://pixapps.ai/simple-games/privacy>
-> で配信している(Play Console に登録する URL もこれ)。ホスティング先と連絡先は確定した。
-> **未了**: 法的レビュー。Google Play の Data Safety フォームとの整合確認も、
-> 申告内容が固まった時点で人間が行うこと。
-> 文面を変えるときは、この文書と公開ページの両方を同時に直すこと
-> (公開ページは別リポジトリ `pixapps-landing`)。
+**この文書は正本ではなくなった(2026-08-02)。正本は公開ページ 1 枚である:**
 
-_Last updated: 2026-07-30_
+- プライバシーポリシー: <https://pixapps.ai/simple-games/privacy>
+- 利用規約: <https://pixapps.ai/simple-games/terms>
 
-## Summary
+ソースは別リポジトリ `pixapps-landing` の `simple-games/privacy.html` /
+`simple-games/terms.html`(日英)。**文面を変えるならそこを変える。**
 
-Simple Games (`Simple Games: Offline Puzzles`) is designed to work fully
-offline.
+## なぜ移したか
 
-- We do not require an account. There is no sign-up or login.
-- We do not collect your name, email address, contacts, or location.
-- Your game progress, settings, and statistics are stored **only on your
-  device**. PixApps operates no servers, and there is no cloud sync.
-- The app contains no analytics or tracking code.
-- There are no subscriptions and no purchases of game features. The only
-  in-app purchase is an optional, one-time ad-removal purchase.
-- Deleting the app (or using "Reset Local Data" in Settings) removes your
-  game data.
-- The source code is public at
-  [github.com/yosuke1024/simple-games](https://github.com/yosuke1024/simple-games),
-  so you can verify these statements.
+同じ事実が 3 箇所にあった — この文書、公開ページ、そしてアプリ内の要約
+(`privacy1`〜`privacy5` を 14 言語ぶん)。Web 版に AdSense を入れた日に 3 箇所すべてを
+手で同期する必要が生じ、さらに「プライバシー文言の機械翻訳は禁止だが、広告の説明を
+省略することもできない」という板挟みのために `docs/I18N_POLICY.md` へ例外条項を
+彫るところまで行った。1 枚を 1 回直すほうが、14 部のコピーを揃え続けるより正しい。
 
-## Data stored on your device
+アプリ内の要約は廃止し、設定画面は上記ページへリンクする(`packages/brand` の
+`PRIVACY_URL` / `TERMS_URL`)。高リスクキーの逆翻訳ゲートは 240 → 168 件に減った。
 
-The app stores the following data locally on your device only: current game
-state, seeds, statistics, daily challenge progress, settings (language, theme,
-sound, vibration, reduced motion), and a cached record of whether the
-ad-removal purchase was made. This data never leaves your device through any
-system we operate.
+## 移したことで弱くなった点(認識した上での選択)
 
-## Advertising (online only)
+- **オフラインでは読めない。** 隣にある GitHub リンクと同じ振る舞いで、タップしても
+  何も起きない。アプリが「完全オフライン」を約束していることとの緊張はここに残る。
+  `docs/OFFLINE_POLICY.md` の「オフラインで利用可能であるべき機能」一覧には
+  もともと入っていないため文書上の違反ではないが、体裁としては後退である。
+  オフラインでも読めるのは、プレイヤーに直接影響する 2 点だけ:
+  削除すると何が消えるか(`resetConfirmBody`)と、バナー 1 枠と任意の買い切りが
+  あること(`adSupportBody`)。どちらも設定画面が別の理由で必要としている文言で、
+  ポリシーの二重管理にはあたらない。
+- **公開ページは日英のみ。** 残り 12 言語の読者には英語で表示される。ただし従来の
+  12 言語版はネイティブが一人も読んでいない機械翻訳であり、`docs/I18N_POLICY.md` が
+  「誤訳が守れない約束を配る」と名指しした領域そのものだった。ゲームガイドと同じ
+  「訳せていない言語は英語へ倒す」既定に揃えたことになる。
+- **`pixapps-landing` は非公開リポジトリである。** 配信されるページ自体は誰でも
+  読めるが、**変更履歴は公開されない**。「公開ソースが約束を証明する」という
+  この製品の建て付け(`docs/PRODUCT_PRINCIPLES.md`)から見ると、ポリシーの改訂履歴が
+  公開監査の対象外になったという意味で弱化である。ここは意図的な選択として
+  記録しておく。
 
-When your device is online, the app may show a small banner ad served by
-Google AdMob. Google may process device identifiers (such as the advertising
-ID) to serve and measure ads, as described in
-[Google's Privacy Policy](https://policies.google.com/privacy) and
-[How Google uses information from sites or apps that use its services](https://policies.google.com/technologies/partner-sites).
-Where required by law, the app shows a consent form before serving
-personalized ads. When your device is offline, no ads are shown and no ad
-requests are made. The game is fully playable without ads.
+## このリポジトリに残る責任
 
-## Purchases
+公開ページへ移したのは**文面**であって、**実装が文面どおりであること**の検証責任は
+ここに残る。以下は引き続きこのリポジトリの担当:
 
-The app offers a single optional in-app purchase that permanently removes
-banner ads. It is a one-time purchase, not a subscription, and it does not
-unlock any game features — all game features are free for everyone.
+- `.github/scripts/check-principles.sh` — 通信 API の不在、広告フォーマット、
+  トラッキング依存、Android 権限、本番広告 ID の不在、禁止表現。
+- `docs/ADS_POLICY.md` / `docs/OFFLINE_POLICY.md` / `docs/PRODUCT_PRINCIPLES.md` —
+  何を約束しているかの定義。公開ページはその要約にすぎない。
+- `docs/RELEASE_CHECKLIST.md` — Play Console の「データセーフティ」欄を公開ページと
+  一致させる確認(未了: 法的レビュー)。
 
-Purchases are processed by Google Play (and by the Apple App Store if the app
-becomes available on iOS). Payment details are handled entirely by the store;
-PixApps operates no servers and never receives or stores your payment data.
-The purchase state is cached on your device and can be restored through the
-store after reinstalling or switching devices.
-
-## Analytics
-
-The app contains no analytics, tracking, or remote configuration code. No
-gameplay events are recorded or transmitted.
-
-## Permissions
-
-The app requests network access only, used exclusively for banner ads, ad
-consent, and store purchase processing and restoration. The app does not
-request location, camera, microphone, contacts, photos, files, phone, SMS,
-calendar, or notification permissions.
-
-## Children
-
-The app does not knowingly collect personal information from anyone,
-including children.
-
-## Contact
-
-If you have any questions about this Privacy Policy, contact PixApps at
-suzuki.yosuke@pixapps.ai.
-
-This is the same address as the app's in-app feedback destination
-(`SUPPORT_EMAIL` in `packages/brand`) and the support address on the Play Store
-listing, so every route reaches the same inbox.
-
-## Changes
-
-We may update this policy when the app changes. The "Last updated" date above
-reflects the latest revision.
+**公開ページと実装が食い違ったら、直すのは実装か、公開ページか、その両方である。**
+この文書を書き足して辻褄を合わせてはいけない — ここはもう文面を持っていない。

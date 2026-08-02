@@ -8,6 +8,7 @@ import { SERIES_BY_LINE, SERIES_NAME } from '@simple-games/brand';
 import { GAMES, type GameId } from '../../app/registry';
 import { useSettings } from '../../state/SettingsContext';
 import { IconChevronRight, IconGear } from '../components/icons';
+import { WebAdSlot } from '../components/WebAdSlot';
 
 export interface CollectionHomeScreenProps {
   onOpenGame: (gameId: GameId) => void;
@@ -90,6 +91,12 @@ export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionH
           </button>
         ))}
       </nav>
+
+      {/* Web build only — the home display unit (docs/ADS_POLICY.md「Web 版」).
+          Renders nothing on the native app, whose only ad surface stays the
+          anchored banner inside each game (BannerSlot). Kept outside the game
+          list and far from anything tappable toward a game. */}
+      <WebAdSlot />
 
       <footer className="brand-footer">
         <span className="brand-name">{SERIES_NAME}</span>

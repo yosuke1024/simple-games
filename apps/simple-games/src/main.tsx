@@ -5,6 +5,7 @@ import { App } from './app/App';
 import { initAdRemoval, isAdRemovalPurchased } from './monetization/adRemoval';
 import { initPlayBilling } from './monetization/playBilling';
 import { initAds } from './services/ads/banner';
+import { webAdsEnabled } from './services/ads/web/config';
 import { initNetwork } from './services/network';
 import { initReview } from './services/review';
 import { loadRecord } from './storage/repo';
@@ -34,6 +35,17 @@ async function boot(): Promise<void> {
     settings = await loadRecord(settingsSchema);
   } catch {
     // Even unexpected boot failures must not prevent playing: use defaults.
+  }
+
+  // Web build only — the whole block folds out of the native bundle
+  // (import.meta.env.MODE is a build-time constant). The data attribute
+  // reserves the Auto-ads anchor's bottom space on every screen BEFORE first
+  // paint (styles.css), so the overlay ad can never cover game controls and
+  // nothing shifts when it appears. The loader itself (services/ads/web/
+  // boot.ts) is fire-and-forget, like the AdMob init below.
+  if (import.meta.env.MODE === 'web' && webAdsEnabled()) {
+    document.documentElement.dataset.sgWebAds = '';
+    void import('./services/ads/web/boot').then((m) => m.initWebAds()).catch(() => undefined);
   }
 
   createRoot(container).render(

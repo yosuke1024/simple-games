@@ -31,6 +31,14 @@ jobs:
       - run: pnpm test
       - run: pnpm build
 
+      # The web-mode build (dist-web/, docs/WEB_VERSION.md) must keep building,
+      # and the two artifacts must stay separated: no AdSense code in the
+      # native bundle, the AdSense integration present in the web bundle
+      # (docs/ADS_POLICY.md「Web 版」). Needs both builds, hence here and not
+      # in the grep-only principles job.
+      - run: pnpm --filter simple-games build:web
+      - run: bash .github/scripts/check-dist-ads-separation.sh
+
   # Runs without installing anything: it only greps the source. Kept separate so a
   # broken promise is reported as a broken promise, not as "the build failed".
   principles:

@@ -186,7 +186,7 @@ keytool -genkeypair -v -keystore upload.jks -alias upload \
 | `ANDROID_KEYSTORE_PASSWORD` | keystore のパスワード |
 | `ANDROID_KEY_ALIAS` | 上の例なら `upload` |
 | `ANDROID_KEY_PASSWORD` | 鍵のパスワード |
-| `ADMOB_APP_ID` / `ADMOB_BANNER_ID` | 本番 AdMob ID(未設定なら広告なしでビルドされる) |
+| `ADMOB_ANDROID_APP_ID` / `ADMOB_ANDROID_BANNER_ID` | 本番 AdMob ID(未設定なら広告なしでビルドされる。AdMob ID は OS ごとに別なので名前にプラットフォームを含む) |
 
 ワークフローは鍵を実行中の一時ディレクトリに展開し、ジョブの最後に削除する。
 
@@ -198,10 +198,10 @@ keytool -genkeypair -v -keystore upload.jks -alias upload \
 
 開発ビルドは Google 公式テスト広告 ID のみを使用する。本番 ID の注入は 2 箇所:
 
-- **バナー広告ユニット ID**(Web 側): `VITE_ADMOB_BANNER_ID` を `vite build` 時に
-  環境変数で注入(未設定なら広告は無効、ゲームは通常動作)。
+- **バナー広告ユニット ID**(Web 側): `VITE_ADMOB_ANDROID_BANNER_ID` を
+  `vite build` 時に環境変数で注入(未設定なら広告は無効、ゲームは通常動作)。
   `VITE_ADMOB_USE_TEST_ADS` でテスト広告を明示的に指定できる。
-- **AdMob アプリケーション ID**(ネイティブ側): `ADMOB_APP_ID` 環境変数を
+- **AdMob アプリケーション ID**(ネイティブ側): `ADMOB_ANDROID_APP_ID` 環境変数を
   Gradle ビルド時に注入(`android/app/build.gradle` の manifestPlaceholder。
   未設定なら Google のテスト用 app ID にフォールバック)。
 

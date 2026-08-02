@@ -80,6 +80,7 @@ export const de: Messages = {
   vibration: 'Vibration',
   reducedMotion: 'Bewegung reduzieren',
   privacyPolicy: 'Datenschutz',
+  termsOfUse: 'Nutzungsbedingungen',
   resetData: 'Lokale Daten löschen',
   resetConfirmTitle: 'Alle lokalen Daten löschen?',
   resetConfirmBody:
@@ -87,14 +88,6 @@ export const de: Messages = {
   delete: 'Löschen',
   version: 'Version',
 
-  privacy1:
-    'Kein Konto. Keine Anmeldung. PixApps erfasst weder Name, E-Mail, Kontakte noch Standort.',
-  privacy2:
-    'Spielstand, Statistik und Einstellungen werden nur auf diesem Gerät gespeichert. PixApps betreibt keine Server, und es gibt keine Cloud-Synchronisierung.',
-  privacy3:
-    'Online können Anzeigen von Google AdMob erscheinen; Google kann dabei Werbe-IDs des Geräts so verarbeiten, wie es die eigene Datenschutzerklärung beschreibt. Offline werden keine Anzeigen gezeigt und keine Anzeigen angefordert.',
-  privacy4:
-    'Beim Löschen der App oder über „Lokale Daten löschen“ werden deine Daten entfernt.',
 
   played: 'Gespielte Spiele',
   cleared: 'Geschaffte Spiele',
@@ -131,8 +124,6 @@ export const de: Messages = {
   reviewFeedbackBody:
     'Schreib mir eine E-Mail — ich lese jede Nachricht. Es wird nichts gesendet, bis du in deiner Mail-App auf Senden tippst.',
   reviewFeedbackAction: 'E-Mail schreiben',
-  privacy5:
-    'Ein optionaler einmaliger Kauf kann die Bannerwerbung entfernen. Der Kauf wird von Google Play abgewickelt; PixApps erhält und speichert niemals Zahlungsdaten.',
 
   // Sudoku
   sudokuName: 'Sudoku',

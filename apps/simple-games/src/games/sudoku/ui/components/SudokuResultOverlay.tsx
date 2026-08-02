@@ -7,6 +7,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { formatDuration } from '@/ui/format';
 import { MAX_LEVEL, type SudokuSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
+import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 
 export interface SudokuResultOverlayProps {
   session: SudokuSession;
@@ -82,6 +83,7 @@ export function SudokuResultOverlay({
           </button>
         </div>
       </div>
+      <ResultAdSlot />
     </div>
   );
 }
