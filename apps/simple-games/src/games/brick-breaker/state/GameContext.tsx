@@ -114,12 +114,19 @@ export function BrickProvider({
 
   const navigate = useCallback((next: Screen) => setScreen(next), []);
 
+  // The refs are advanced here, not only on the next render: a run ends by
+  // booking its last seconds and reporting the outcome in the same tick
+  // (BrickBoard's `settle`), and both reads start from the ref. Waiting for
+  // React to re-render would hand the second write pre-flush stats, and its
+  // save would quietly undo the first one — the minutes just played.
   const persistStats = useCallback((next: Stats) => {
+    statsRef.current = next;
     setStats(next);
     void saveRecord(statsSchema, next);
   }, []);
 
   const persistProgress = useCallback((next: Progress) => {
+    progressRef.current = next;
     setProgress(next);
     void saveRecord(progressSchema, next);
   }, []);
