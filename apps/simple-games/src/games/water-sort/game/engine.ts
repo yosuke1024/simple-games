@@ -31,6 +31,27 @@ export function isSolved(tubes: Tubes): boolean {
 }
 
 /**
+ * How many runs of one color the whole board is broken into — the measure of
+ * how jumbled a deal is (§6).
+ *
+ * It is worth more than it looks: a pour lifts one run and either lands it on
+ * its own color, merging two runs into one, or moves it somewhere it stays a
+ * run of its own. So a pour removes at most one run and never adds one, and a
+ * finished board is exactly one run per color. `segments - colors` is therefore
+ * a floor under the pours any solution needs — the reason the generator ranks
+ * deals by this number rather than by a taste for how a board looks (§5).
+ */
+export function segmentCount(tubes: Tubes): number {
+  let segments = 0;
+  for (const tube of tubes) {
+    for (let i = 0; i < tube.length; i++) {
+      if (i === 0 || tube[i] !== tube[i - 1]) segments++;
+    }
+  }
+  return segments;
+}
+
+/**
  * Whether a pour is legal (§3): different tubes, a non-empty source, room in
  * the destination, and a matching top color unless the destination is empty.
  */

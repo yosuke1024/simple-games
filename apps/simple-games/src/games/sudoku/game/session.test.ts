@@ -302,33 +302,36 @@ describe('hint (§5)', () => {
 });
 
 describe('level difficulty curve (§9)', () => {
-  it('keeps the first twenty levels easy', () => {
-    for (let level = 1; level <= 20; level++) {
+  it('keeps the first ten levels easy', () => {
+    for (let level = 1; level <= 10; level++) {
       expect(difficultyForLevel(level), `level ${level}`).toBe('easy');
     }
   });
 
-  it('never offers hard before level 151', () => {
-    for (let level = 1; level <= 150; level++) {
+  it('never offers hard before level 26', () => {
+    for (let level = 1; level <= 25; level++) {
       expect(difficultyForLevel(level), `level ${level}`).not.toBe('hard');
     }
   });
 
   it('is deterministic and stays inside the tier set', () => {
-    for (const level of [1, 25, 100, 200, 500, 800, 999]) {
+    for (const level of [1, 15, 30, 50, 70, 90, 100]) {
       const first = difficultyForLevel(level);
       expect(difficultyForLevel(level)).toBe(first);
       expect(['easy', 'medium', 'hard']).toContain(first);
     }
   });
 
+  it('leaves easy behind in the last two bands', () => {
+    for (let level = 71; level <= 100; level++) {
+      expect(difficultyForLevel(level), `level ${level}`).not.toBe('easy');
+    }
+  });
+
   it('mixes medium into the last band rather than going all hard', () => {
-    const tiers = Array.from({ length: 299 }, (_, i) => difficultyForLevel(701 + i));
-    const mediums = tiers.filter((t) => t === 'medium').length;
-    const hards = tiers.filter((t) => t === 'hard').length;
-    expect(mediums).toBeGreaterThan(80);
-    expect(hards).toBeGreaterThan(100);
-    expect(tiers.filter((t) => t === 'easy')).toHaveLength(0);
+    const tiers = Array.from({ length: 15 }, (_, i) => difficultyForLevel(86 + i));
+    expect(tiers.filter((t) => t === 'medium').length).toBeGreaterThan(2);
+    expect(tiers.filter((t) => t === 'hard').length).toBeGreaterThan(5);
   });
 });
 
@@ -389,9 +392,7 @@ describe('serialization (§11)', () => {
     // A clue cell that also holds an entry is impossible.
     const clue = board.givens.findIndex((value) => value !== 0);
     const entries = board.entries.map((_, i) => (i === clue ? 5 : 0));
-    expect(
-      decodeBoard({ ...good, entries: entries.map((v) => String(v)).join('') }),
-    ).toBeNull();
+    expect(decodeBoard({ ...good, entries: entries.map((v) => String(v)).join('') })).toBeNull();
     expect(decodeSolution('0'.repeat(81))).toBeNull();
   });
 });

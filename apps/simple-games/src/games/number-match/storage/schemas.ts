@@ -276,8 +276,8 @@ export interface TopScoreEntry {
 }
 
 export interface Progress {
-  schemaVersion: 1;
-  /** Highest level the player may start (1..999). */
+  schemaVersion: 2;
+  /** Highest level the player may start (1..100). */
   highestUnlocked: number;
   /** Sparse map: level number (string) → best score. */
   bestScores: Record<string, number>;
@@ -301,55 +301,96 @@ const validateTopScoreEntry = (raw: unknown): TopScoreEntry | null => {
   return { mode, ref, score, at };
 };
 
+/** Malformed entries are dropped rather than rejecting the whole record. */
+function validateBestScores(raw: unknown): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!isRecord(raw)) return out;
+  for (const [key, value] of Object.entries(raw)) {
+    const levelNumber = /^\d{1,3}$/.test(key) ? Number(key) : NaN;
+    const score = asInt(value, 0, 1e9);
+    if (levelNumber >= 1 && levelNumber <= MAX_LEVEL && score !== null) {
+      // Canonical key (guards against e.g. zero-padded "042").
+      out[String(levelNumber)] = Math.max(out[String(levelNumber)] ?? 0, score);
+    }
+  }
+  return out;
+}
+
+function validateBestDaily(raw: unknown): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!isRecord(raw)) return out;
+  for (const [key, value] of Object.entries(raw)) {
+    const score = asInt(value, 0, 1e9);
+    if (asDateString(key) !== null && score !== null && Object.keys(out).length < 2000) {
+      out[key] = score;
+    }
+  }
+  return out;
+}
+
+/**
+ * Enforces the documented invariants: dedupe per (mode, ref) keeping the best,
+ * then best-first order, then the cap. `keep` narrows which entries survive,
+ * which is how the v2 migration drops the level side of the table.
+ */
+function validateTopScores(
+  raw: unknown,
+  keep: (entry: TopScoreEntry) => boolean = () => true,
+): TopScoreEntry[] {
+  if (!Array.isArray(raw)) return [];
+  const byRef = new Map<string, TopScoreEntry>();
+  for (const rawEntry of raw) {
+    const entry = validateTopScoreEntry(rawEntry);
+    if (!entry || !keep(entry)) continue;
+    const key = `${entry.mode}:${entry.ref}`;
+    const existing = byRef.get(key);
+    if (!existing || entry.score > existing.score) byRef.set(key, entry);
+  }
+  return [...byRef.values()]
+    .sort((a, b) => b.score - a.score || a.at - b.at)
+    .slice(0, TOP_SCORES_LIMIT);
+}
+
 export const progressSchema: SchemaDef<Progress> = {
   key: NM_STORAGE_KEYS.progress,
-  version: 1,
+  version: 2,
   defaultValue: () => ({
-    schemaVersion: 1,
+    schemaVersion: 2,
     highestUnlocked: 1,
     bestScores: {},
     bestDaily: {},
     topScores: [],
   }),
   validate: (raw) => {
-    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
+    if (!isRecord(raw)) return null;
+
+    // v1 → v2: the level list went from 999 levels to 100 (§11), which changed
+    // what every level number means and every board behind it. Level progress
+    // starts over rather than being reinterpreted: a best score carried across
+    // would stand against a board that no longer exists, and a level number
+    // rescaled onto the new list would unlock a board nobody has played. That
+    // is also why the personal top-score table keeps only its daily rows — a
+    // level row there is a score against a vanished board. Dailies are
+    // untouched: their boards never came from the level list.
+    if (raw.schemaVersion === 1) {
+      return {
+        schemaVersion: 2,
+        highestUnlocked: 1,
+        bestScores: {},
+        bestDaily: validateBestDaily(raw.bestDaily),
+        topScores: validateTopScores(raw.topScores, (entry) => entry.mode === 'daily'),
+      };
+    }
+
+    if (raw.schemaVersion !== 2) return null;
     const highestUnlocked = asInt(raw.highestUnlocked, 1, MAX_LEVEL);
-    if (highestUnlocked === null || !isRecord(raw.bestScores) || !Array.isArray(raw.topScores)) {
-      return null;
-    }
-    // Malformed entries are dropped rather than rejecting the whole record.
-    const bestScores: Record<string, number> = {};
-    for (const [key, value] of Object.entries(raw.bestScores)) {
-      const levelNumber = /^\d{1,3}$/.test(key) ? Number(key) : NaN;
-      const score = asInt(value, 0, 1e9);
-      if (levelNumber >= 1 && levelNumber <= MAX_LEVEL && score !== null) {
-        // Canonical key (guards against e.g. zero-padded "042").
-        bestScores[String(levelNumber)] = Math.max(bestScores[String(levelNumber)] ?? 0, score);
-      }
-    }
-    // Absent in early records; defaults to empty.
-    const bestDaily: Record<string, number> = {};
-    if (isRecord(raw.bestDaily)) {
-      for (const [key, value] of Object.entries(raw.bestDaily)) {
-        const score = asInt(value, 0, 1e9);
-        if (asDateString(key) !== null && score !== null && Object.keys(bestDaily).length < 2000) {
-          bestDaily[key] = score;
-        }
-      }
-    }
-    // Enforce the documented invariants: dedupe per (mode, ref) keeping the
-    // best, then best-first order, then the cap.
-    const byRef = new Map<string, TopScoreEntry>();
-    for (const rawEntry of raw.topScores) {
-      const entry = validateTopScoreEntry(rawEntry);
-      if (!entry) continue;
-      const key = `${entry.mode}:${entry.ref}`;
-      const existing = byRef.get(key);
-      if (!existing || entry.score > existing.score) byRef.set(key, entry);
-    }
-    const topScores = [...byRef.values()]
-      .sort((a, b) => b.score - a.score || a.at - b.at)
-      .slice(0, TOP_SCORES_LIMIT);
-    return { schemaVersion: 1, highestUnlocked, bestScores, bestDaily, topScores };
+    if (highestUnlocked === null) return null;
+    return {
+      schemaVersion: 2,
+      highestUnlocked,
+      bestScores: validateBestScores(raw.bestScores),
+      bestDaily: validateBestDaily(raw.bestDaily),
+      topScores: validateTopScores(raw.topScores),
+    };
   },
 };

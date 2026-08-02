@@ -37,13 +37,13 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 
 | ゲーム | フォルダ | 進行 | 無料・無制限の助け | ルール文書 |
 | --- | --- | --- | --- | --- |
-| Sudoku(ナンプレ) | `sudoku/` | 999 レベル + デイリー | Undo / Hint | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md) |
+| Sudoku(ナンプレ) | `sudoku/` | 100 レベル + デイリー | Undo / Hint | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md) |
 | Solitaire(クロンダイク) | `solitaire/` | フリー配札 + デイリー配札 | Undo / Hint(定石の合法手) | [docs/SOLITAIRE_RULES.md](docs/SOLITAIRE_RULES.md) |
 | Minesweeper | `minesweeper/` | 難易度 3 種 + デイリー | Hint(Undo なし) | [docs/MINESWEEPER_RULES.md](docs/MINESWEEPER_RULES.md) |
-| Nonogram | `nonogram/` | 999 レベル + デイリー | Hint(Undo なし) | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md) |
-| Number Match | `number-match/` | 999 レベル + デイリー | Undo / Hint | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md) |
-| Water Sort | `water-sort/` | 999 レベル + デイリー | Undo / Hint(ソルバー証明付き) | [docs/WATER_SORT_RULES.md](docs/WATER_SORT_RULES.md) |
-| Sliding Puzzle | `sliding-puzzle/` | 999 レベル + デイリー | Undo(Hint なし) | [docs/SLIDING_PUZZLE_RULES.md](docs/SLIDING_PUZZLE_RULES.md) |
+| Nonogram | `nonogram/` | 100 レベル + デイリー | Hint(Undo なし) | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md) |
+| Number Match | `number-match/` | 100 レベル + デイリー | Undo / Hint | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md) |
+| Water Sort | `water-sort/` | 100 レベル + デイリー | Undo / Hint(ソルバー証明付き) | [docs/WATER_SORT_RULES.md](docs/WATER_SORT_RULES.md) |
+| Sliding Puzzle | `sliding-puzzle/` | 100 レベル + デイリー | Undo(Hint なし) | [docs/SLIDING_PUZZLE_RULES.md](docs/SLIDING_PUZZLE_RULES.md) |
 | Memory Match(神経衰弱) | `memory-match/` | 難易度 3 種 + デイリー | 同じ盤面への再挑戦(Undo / Hint なし) | [docs/MEMORY_MATCH_RULES.md](docs/MEMORY_MATCH_RULES.md) |
 
 助けの内容がゲームごとに違うのは意図したものです。**どのゲームにも無料・無制限の助けを

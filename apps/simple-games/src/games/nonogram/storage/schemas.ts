@@ -119,8 +119,8 @@ export const statsSchema: SchemaDef<Stats> = {
 // ---------- progress ----------
 
 export interface Progress {
-  schemaVersion: 1;
-  /** Highest level the player may start (1..999). */
+  schemaVersion: 2;
+  /** Highest level the player may start (1..100). */
   highestUnlocked: number;
   /** Sparse map: level number (string) → shortest clear time in seconds. */
   bestSeconds: Record<string, number>;
@@ -155,7 +155,11 @@ function validateDailyMap(raw: unknown): Record<string, number> {
   if (!isRecord(raw)) return out;
   for (const [key, value] of Object.entries(raw)) {
     const amount = asInt(value, 0, 1e9);
-    if (asDateString(key) !== null && amount !== null && Object.keys(out).length < MAX_DAILY_ENTRIES) {
+    if (
+      asDateString(key) !== null &&
+      amount !== null &&
+      Object.keys(out).length < MAX_DAILY_ENTRIES
+    ) {
       out[key] = amount;
     }
   }
@@ -164,19 +168,37 @@ function validateDailyMap(raw: unknown): Record<string, number> {
 
 export const progressSchema: SchemaDef<Progress> = {
   key: NG_STORAGE_KEYS.progress,
-  version: 1,
+  version: 2,
   defaultValue: () => ({
-    schemaVersion: 1,
+    schemaVersion: 2,
     highestUnlocked: 1,
     bestSeconds: {},
     dailySeconds: {},
   }),
   validate: (raw) => {
-    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
+    if (!isRecord(raw)) return null;
+
+    // v1 → v2: the level list went from 999 levels to 100 (§6), which changed
+    // what every level number means and every board behind it. Level progress
+    // starts over rather than being reinterpreted: a best time carried across
+    // would stand against a board that no longer exists, and a level number
+    // rescaled onto the new list would unlock a puzzle nobody has played. The
+    // daily calendar survives untouched — dailies are a fixed size and fill
+    // rate, so their boards and their times are exactly as they were.
+    if (raw.schemaVersion === 1) {
+      return {
+        schemaVersion: 2,
+        highestUnlocked: 1,
+        bestSeconds: {},
+        dailySeconds: validateDailyMap(raw.dailySeconds),
+      };
+    }
+
+    if (raw.schemaVersion !== 2) return null;
     const highestUnlocked = asInt(raw.highestUnlocked, 1, MAX_LEVEL);
     if (highestUnlocked === null) return null;
     return {
-      schemaVersion: 1,
+      schemaVersion: 2,
       highestUnlocked,
       bestSeconds: validateLevelMap(raw.bestSeconds),
       dailySeconds: validateDailyMap(raw.dailySeconds),
