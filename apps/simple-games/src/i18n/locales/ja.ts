@@ -282,4 +282,129 @@ export const ja: Messages = {
   minesStep2Body: '長押しで旗を立てます。旗モードならタップで立てられます。',
   minesStep3Title: '残りを開けば勝ち',
   minesStep3Body: '最初の一手は必ず安全で、推測が必要な盤面は出題されません。',
+
+  // ---- Memory Match ----
+  memoryMatchName: 'Memory Match',
+  memoryMatchBlurb: 'カードをめくって、同じ記号のペアを見つけます。',
+
+  // Home
+  memoryChooseBoard: '盤面を選ぶ',
+  memoryDifficulty_easy: 'かんたん',
+  memoryDifficulty_medium: 'ふつう',
+  memoryDifficulty_hard: 'むずかしい',
+  memoryBoardNote: '{cols}×{rows}・ペア{pairs}組',
+  memoryConfirmSwitchTitle: '進行中のゲームを置き換えますか?',
+  memoryConfirmSwitchBody: '「{current}」のゲームは、新しい「{next}」の盤面に置き換わります。',
+
+  // Board
+  memoryBoardLabel: '神経衰弱の盤面、{cols}×{rows}',
+  memoryCardDown: '裏向き、{row}行{col}列',
+  memoryCardUp: '記号{n}、{row}行{col}列',
+  memoryCardMatched: 'ペア確定、記号{n}、{row}行{col}列',
+  memoryPairsLabel: 'ペア',
+
+  // Result
+  memoryClearTitle: '全ペア発見!',
+  memoryClearBody: 'すべてのカードが表になりました。',
+  memoryNewBestMoves: '自己最少手数です。',
+  memoryNewBestTime: '自己最速です。',
+  memoryBestMoves: '最少手数',
+
+  // Statistics and daily
+  memoryDailiesCleared: '達成日数',
+  memoryDailyBacklogHint: '過去の日付はいつでも遊べます。',
+
+  // Quick Rules (3 steps, §11)
+  memoryStep1Title: 'カードを2枚めくる',
+  memoryStep1Body: '1枚ずつタップします。同じ記号なら表のまま残ります。',
+  memoryStep2Title: '覚えるのを急がない',
+  memoryStep2Body: '外れた2枚は、次にめくるまで見えたままです。ゆっくりどうぞ。',
+  memoryStep3Title: 'すべてのペアを見つける',
+  memoryStep3Body: '全部そろえば完成。同じ盤面への再挑戦はいつでも無料です。',
+
+  // ---- Water Sort ----
+  waterSortName: 'Water Sort',
+  waterSortBlurb: '色水を注ぎ分けて、チューブを1色ずつに。',
+
+  // Board and accessibility
+  waterBoardLabel: 'ウォーターソートのチューブ',
+  waterTubeLabel: 'チューブ{n}、下から: {colors}',
+  waterTubeEmpty: '空',
+
+  // Hint
+  waterHintNone: '進める手が見つかりません。戻るかやり直してください。',
+  waterHintsUsed: 'ヒント',
+
+  // Clear screen
+  waterSolvedTitle: 'そろいました!',
+  waterSolvedBody: 'すべての色が自分のチューブに収まりました。',
+  waterNewBestMoves: '自己最少手数です。',
+  waterNewBestTime: '自己最速です。',
+  waterBestMoves: '最少手数',
+
+  // Statistics and daily
+  waterLevelsSolved: 'クリア済みレベル',
+  waterDailiesSolved: 'デイリー達成',
+  waterDailyBacklogHint: '過去の日付はいつでも遊べます。',
+
+  // Quick Rules (3 steps, §11)
+  waterStep1Title: '同じ色の上へ注ぐ',
+  waterStep1Body: 'チューブを2本続けてタップ。上の色が同じなら注げます。空のチューブへはいつでも。',
+  waterStep2Title: '空きの2本が作業場',
+  waterStep2Body: '空のチューブを使って並べ替えます。Undo はいつでも無料です。',
+  waterStep3Title: '全部を1色ずつに',
+  waterStep3Body: 'すべてのチューブが単色になれば完成です。',
+
+  // ---- Solitaire ----
+  solitaireName: 'Solitaire',
+  solitaireBlurb: 'AからKまで、4つのスートを積み上げます。',
+
+  // Home
+  solNewDeal: '新しい配札',
+  solDrawSetting: 'ドロー設定',
+  solDrawOne: '1枚めくり',
+  solDrawThree: '3枚めくり',
+  solDrawNote: '次の配札から適用されます。',
+
+  // Table and accessibility
+  solTableLabel: 'ソリティアの台札',
+  solStockLabel: '山札、残り{n}枚。タップでめくります',
+  solStockEmpty: '山札が空です。タップで捨て札を戻します',
+  solCardLabel: '{suit}の{rank}',
+  solCardFaceDown: '裏向き',
+  solSuit_spades: 'スペード',
+  solSuit_hearts: 'ハート',
+  solSuit_diamonds: 'ダイヤ',
+  solSuit_clubs: 'クラブ',
+  solFoundationCard: '組札、{card}',
+  solFoundationEmpty: '組札、{suit}、空',
+  solPileLabel: '{n}列目',
+  solPileEmpty: '{n}列目、空。Kを置けます',
+
+  // Play
+  solAutoFinish: '最後まで自動で積む',
+  solHintNone: '指せる手が見つかりません。戻すかやり直してください。',
+  solHintsUsed: 'ヒント',
+
+  // Result
+  solWonTitle: '勝ちました!',
+  solWonBody: '4つのスートがすべて完成しました。',
+  solNewBestMoves: '自己最少手数です。',
+  solNewBestTime: '自己最速です。',
+  solBestMoves: '最少手数',
+
+  // Statistics and daily
+  solDealsPlayed: '配札数',
+  solGamesWon: '勝利数',
+  solWinRate: '勝率',
+  solDailiesWon: 'デイリー勝利',
+  solDailyBacklogHint: '過去の日付はいつでも遊べます。勝てない配札もあります。',
+
+  // Quick Rules (3 steps, §11)
+  solStep1Title: 'ひとつ下・色は交互',
+  solStep1Body: '赤と黒を交互に、数字を下げながら重ねます。タップで選び、タップで置きます。',
+  solStep2Title: '裏の札をめくり出す',
+  solStep2Body: '裏の札がめくれる手でゲームが開けます。山札は何度でも引き直せます。',
+  solStep3Title: 'AからKへ積み上げる',
+  solStep3Body: '各スートをAからKまで組札へ。4つ揃えば勝ちです。',
 };

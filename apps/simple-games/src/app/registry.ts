@@ -8,6 +8,8 @@
  * built, so the list stays useful as it grows.
  */
 import type { ComponentType } from 'react';
+import { MM_STORAGE_KEYS } from '../games/memory-match/storage/schemas';
+import { MemoryMatchRoot } from '../games/memory-match/ui/MemoryMatchRoot';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/schemas';
 import { MinesweeperRoot } from '../games/minesweeper/ui/MinesweeperRoot';
 import { NG_STORAGE_KEYS } from '../games/nonogram/storage/schemas';
@@ -16,12 +18,24 @@ import { NM_STORAGE_KEYS } from '../games/number-match/storage/schemas';
 import { NumberMatchRoot } from '../games/number-match/ui/NumberMatchRoot';
 import { SP_STORAGE_KEYS } from '../games/sliding-puzzle/storage/schemas';
 import { SlidingPuzzleRoot } from '../games/sliding-puzzle/ui/SlidingPuzzleRoot';
+import { SO_STORAGE_KEYS } from '../games/solitaire/storage/schemas';
+import { SolitaireRoot } from '../games/solitaire/ui/SolitaireRoot';
 import { SD_STORAGE_KEYS } from '../games/sudoku/storage/schemas';
 import { SudokuRoot } from '../games/sudoku/ui/SudokuRoot';
 import { SudokuSettingsSection } from '../games/sudoku/ui/SudokuSettingsSection';
+import { WS_STORAGE_KEYS } from '../games/water-sort/storage/schemas';
+import { WaterSortRoot } from '../games/water-sort/ui/WaterSortRoot';
 import type { MessageKey } from '../i18n';
 
-export type GameId = 'sudoku' | 'minesweeper' | 'nonogram' | 'number-match' | 'sliding-puzzle';
+export type GameId =
+  | 'sudoku'
+  | 'minesweeper'
+  | 'nonogram'
+  | 'number-match'
+  | 'sliding-puzzle'
+  | 'memory-match'
+  | 'water-sort'
+  | 'solitaire';
 
 export interface GameModule {
   id: GameId;
@@ -55,6 +69,14 @@ export const GAMES: readonly GameModule[] = [
     SettingsSection: SudokuSettingsSection,
   },
   {
+    id: 'solitaire',
+    title: 'Solitaire',
+    blurbKey: 'solitaireBlurb',
+    glyph: '♠',
+    Root: SolitaireRoot,
+    storageKeys: Object.values(SO_STORAGE_KEYS),
+  },
+  {
     id: 'minesweeper',
     title: 'Minesweeper',
     blurbKey: 'minesBlurb',
@@ -79,11 +101,27 @@ export const GAMES: readonly GameModule[] = [
     storageKeys: Object.values(NM_STORAGE_KEYS),
   },
   {
+    id: 'water-sort',
+    title: 'Water Sort',
+    blurbKey: 'waterSortBlurb',
+    glyph: '≋',
+    Root: WaterSortRoot,
+    storageKeys: Object.values(WS_STORAGE_KEYS),
+  },
+  {
     id: 'sliding-puzzle',
     title: 'Sliding Puzzle',
     blurbKey: 'slideBlurb',
     glyph: '⇄',
     Root: SlidingPuzzleRoot,
     storageKeys: Object.values(SP_STORAGE_KEYS),
+  },
+  {
+    id: 'memory-match',
+    title: 'Memory Match',
+    blurbKey: 'memoryMatchBlurb',
+    glyph: '⧉',
+    Root: MemoryMatchRoot,
+    storageKeys: Object.values(MM_STORAGE_KEYS),
   },
 ];

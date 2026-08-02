@@ -33,10 +33,13 @@ src/
 ├── app/                    # シェル: ルート App、ルーティング、ゲームレジストリ
 ├── games/                  # 各ゲームは game/ state/ storage/ ui/ で自己完結
 │   ├── sudoku/
+│   ├── solitaire/
 │   ├── minesweeper/
 │   ├── nonogram/
 │   ├── number-match/
-│   └── sliding-puzzle/
+│   ├── water-sort/
+│   ├── sliding-puzzle/
+│   └── memory-match/
 ├── monetization/           # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 ├── services/               # 共有: ads(バナーのみ) / network / sound / haptics
 ├── state/                  # 共有: SettingsContext
@@ -48,10 +51,13 @@ src/
 この配置への再編と収録ゲームの計画は
 [plans/2026-07-30-collection-and-sudoku.md](plans/2026-07-30-collection-and-sudoku.md) を参照。
 各ゲームのルールは [SUDOKU_RULES.md](SUDOKU_RULES.md) /
+[SOLITAIRE_RULES.md](SOLITAIRE_RULES.md) /
 [MINESWEEPER_RULES.md](MINESWEEPER_RULES.md) /
 [NONOGRAM_RULES.md](NONOGRAM_RULES.md) /
 [NUMBER_MATCH_RULES.md](NUMBER_MATCH_RULES.md) /
-[SLIDING_PUZZLE_RULES.md](SLIDING_PUZZLE_RULES.md) を唯一のソースとする。
+[WATER_SORT_RULES.md](WATER_SORT_RULES.md) /
+[SLIDING_PUZZLE_RULES.md](SLIDING_PUZZLE_RULES.md) /
+[MEMORY_MATCH_RULES.md](MEMORY_MATCH_RULES.md) を唯一のソースとする。
 
 レイヤー規則:
 
@@ -78,7 +84,7 @@ src/
 
 | フィールド | 内容 |
 | --- | --- |
-| `id` | `'sudoku'` / `'minesweeper'` / `'nonogram'` / `'number-match'` / `'sliding-puzzle'`。`data-game` 属性にもこの値を使う |
+| `id` | `'sudoku'` / `'solitaire'` / `'minesweeper'` / `'nonogram'` / `'number-match'` / `'water-sort'` / `'sliding-puzzle'` / `'memory-match'`。`data-game` 属性にもこの値を使う |
 | `title` | 固有名詞。全言語で同一表記(翻訳しない) |
 | `blurbKey` | コレクションカードの 1 行説明(ローカライズ対象) |
 | `glyph` | シリーズマーク。アクセント色のタイルに 1 文字 |
@@ -106,16 +112,19 @@ src/
 | --- | --- | --- | --- |
 | Number Match | 藍 | `#3f5b8f` | `#7d9ccf` |
 | Sudoku | くすんだティール | `#2f6f62` | `#6fb3a3` |
+| Solitaire | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
 | Minesweeper | スレートブルー | `#4a5a72` | `#93a4bd` |
 | Nonogram | くすんだプラム | `#6d5192` | `#a893cf` |
+| Water Sort | くすんだアクア | `#33708c` | `#7fb4c9` |
 | Sliding Puzzle | 温かみのある陶土色 | `#9c5b3c` | `#d1926f` |
+| Memory Match | くすんだローズ | `#9e5468` | `#cf8fa4` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
   (`--accent` / `--accent-ink` / `--accent-soft` / `--accent-ring` …。
   ライト / ダークそれぞれに定義がある)。ゲームを離れると属性を消す。
 - Number Match のアクセントは `:root` の既定値そのもの(コレクションホームと同じ)なので、
-  `data-game='number-match'` の上書きブロックは持たない。残り 4 タイトルが上書きする。
+  `data-game='number-match'` の上書きブロックは持たない。残り 7 タイトルが上書きする。
 - **シリーズの下地(`seriesColors`)は変えない。** 別のゲームが「同じシリーズ」に
   見えているのはこの下地であり、変わるのは 1 タイトル 1 色だけ(BRAND.md)。
 - ゲーム側に色の分岐を書かない。ゲームは `var(--accent)` を使うだけで、
@@ -129,8 +138,9 @@ src/
 - `ui/styles.css` に置くのは共有シェルのみ: デザイントークン(下地・アクセント・
   `data-game` の上書き)、コレクションホーム、設定 / About、ダイアログ・トースト・
   チュートリアル・バナースロットなどの共通クロム。
-- **5 タイトルすべてが規約に従っている**: `number-match.css` / `sudoku.css` /
-  `minesweeper.css` / `nonogram.css` / `sliding-puzzle.css`。
+- **8 タイトルすべてが規約に従っている**: `number-match.css` / `sudoku.css` /
+  `minesweeper.css` / `nonogram.css` / `sliding-puzzle.css` / `memory-match.css` /
+  `water-sort.css` / `solitaire.css`。
 - ゲームの CSS は色を書かない。共有のカスタムプロパティ(`--accent` など)だけを使い、
   どの色になるかはシェルが root に付けた `data-game` が決める。
   ゲーム側にパレット値が複製されないので、下地を変えるときに触る場所は 1 か所で済む。
@@ -154,16 +164,21 @@ src/
 | `sg.settings` | 共有設定(言語 / テーマ / 音 / 振動 / Reduced Motion) |
 | `sg.iap` | 広告削除購入状態のローカルキャッシュ |
 | `sd.*` | Sudoku(saveGame / saveDaily / stats / progress / flags / prefs) |
+| `so.*` | Solitaire(saveGame / saveDaily / stats / flags / prefs) |
 | `ms.*` | Minesweeper(saveGame / saveDaily / stats / flags / prefs) |
 | `ng.*` | Nonogram(saveGame / saveDaily / stats / progress / flags / prefs) |
 | `nm.*` | Number Match(saveGame / saveDaily / stats / progress / flags) |
+| `ws.*` | Water Sort(saveGame / saveDaily / stats / progress / flags) |
 | `sp.*` | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags) |
+| `mm.*` | Memory Match(saveGame / saveDaily / stats / flags) |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/
 `sd.flags`(チュートリアル完了)/ `sd.prefs`(ゲーム固有設定)。
 Minesweeper はレベル進行を持たないため `progress` がなく、代わりに旗モードの
-`ms.prefs` を持つ。Nonogram は ×モードの `ng.prefs` を持つ。どのゲームも中断は
+`ms.prefs` を持つ。Nonogram は ×モードの `ng.prefs` を持つ。Solitaire は
+Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設定も持たない
+(デイリーの記録は両者とも stats 内)。どのゲームも中断は
 「通常モード用」と「デイリー用」の 2 スロットが独立する。
 
 - 共有レコードは `sg.` 接頭辞。ゲーム固有レコードはゲームごとの接頭辞。
@@ -181,7 +196,7 @@ Minesweeper はレベル進行を持たないため `progress` がなく、代�
 - カタログは全言語をアプリに同梱する(`src/i18n/locales/*.ts`。オフライン要件)。
   言語追加は「locale ファイル 1 つ + `i18n/index.ts` への登録」で完結し、
   `Messages` 型が全キーの存在をコンパイル時に強制する(キー欠落でビルドが通らない)。
-- 現在 14 言語・227 キー(en / ja / hi / th / id / vi / ko / zh-hans / zh-hant /
+- 現在 14 言語・314 キー(en / ja / hi / th / id / vi / ko / zh-hans / zh-hant /
   es / pt-br / fr / de / tr)。ロケールタグは小文字で持つ。en と ja 以外は来歴
   `machine`(AI の助けを借りて書き、その言語のネイティブは読んでいない)。
   高リスクキーはリリース前の門で逆翻訳を作者が読む(`docs/I18N_POLICY.md`)。
@@ -233,7 +248,7 @@ Web 版は**現時点では実装しない**が、いつでも出せる構成を
 これ以上の共通化(`packages/` への抽出)は実際に重複が確認されてから行う。
 ゲーム固有の概念(盤面・ルール・Hint 等)は共通パッケージへ入れない。
 
-現時点で唯一の実測された重複は `games/*/game/rng.ts` で、**5 ゲームすべてが同じ
+現時点で唯一の実測された重複は `games/*/game/rng.ts` で、**8 ゲームすべてが同じ
 seed 付き乱数を持っている**(`games/A/` から `games/B/` を import できない以上、
 このコピーは規約どおりでもある)。抽出を検討する条件(重複が確認された)は
 満たしているが、`game/` の Pure TS 純度を保ったまま `packages/` へ出せるかが論点で、
@@ -249,6 +264,6 @@ seed 付き乱数を持っている**(`games/A/` から `games/B/` を import �
   署名済み AAB(Play 用)と署名済み APK(実機確認用)をアーティファクトとして出す。
   `versionName` / `versionCode` はタグが決める。ストアへのアップロードは手動。
   タグに製品名を付けないのは、リリース対象がこのアプリ 1 つだけだから
-  (5 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
+  (8 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
 - Secrets は `ADMOB_APP_ID` / `ADMOB_BANNER_ID` のみ(インタースティシャル系は無い)。
   本番 ID・署名鍵はリポジトリにコミットしない。

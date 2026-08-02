@@ -26,7 +26,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけで、現在 5 本のゲームを収録しています。
+アプリは 1 つだけで、現在 8 本のゲームを収録しています。
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Puzzles`(ランチャー表示名: `Simple Games`)
@@ -38,15 +38,20 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 | ゲーム | フォルダ | 進行 | 無料・無制限の助け | ルール文書 |
 | --- | --- | --- | --- | --- |
 | Sudoku(ナンプレ) | `sudoku/` | 999 レベル + デイリー | Undo / Hint | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md) |
+| Solitaire(クロンダイク) | `solitaire/` | フリー配札 + デイリー配札 | Undo / Hint(定石の合法手) | [docs/SOLITAIRE_RULES.md](docs/SOLITAIRE_RULES.md) |
 | Minesweeper | `minesweeper/` | 難易度 3 種 + デイリー | Hint(Undo なし) | [docs/MINESWEEPER_RULES.md](docs/MINESWEEPER_RULES.md) |
 | Nonogram | `nonogram/` | 999 レベル + デイリー | Hint(Undo なし) | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md) |
 | Number Match | `number-match/` | 999 レベル + デイリー | Undo / Hint | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md) |
+| Water Sort | `water-sort/` | 999 レベル + デイリー | Undo / Hint(ソルバー証明付き) | [docs/WATER_SORT_RULES.md](docs/WATER_SORT_RULES.md) |
 | Sliding Puzzle | `sliding-puzzle/` | 999 レベル + デイリー | Undo(Hint なし) | [docs/SLIDING_PUZZLE_RULES.md](docs/SLIDING_PUZZLE_RULES.md) |
+| Memory Match(神経衰弱) | `memory-match/` | 難易度 3 種 + デイリー | 同じ盤面への再挑戦(Undo / Hint なし) | [docs/MEMORY_MATCH_RULES.md](docs/MEMORY_MATCH_RULES.md) |
 
 助けの内容がゲームごとに違うのは意図したものです。**どのゲームにも無料・無制限の助けを
 用意し、その形はそのゲームの中身を空にしないものを選びます**(Minesweeper は推測なしで
 解ける保証があるため Undo を作らず、Nonogram は印がタップで自由に付け外しできるため
-Undo を作らず、Sliding Puzzle は盤面に隠れた情報がないため Hint を作りません)。理由は各ルール文書と [docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md)。
+Undo を作らず、Sliding Puzzle は盤面に隠れた情報がないため Hint を作らず、Memory Match は
+記憶そのものが中身のため Undo も Hint も作らず、代わりに同じ盤面への再挑戦を無料にして
+います)。理由は各ルール文書と [docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md)。
 
 後続候補: Solitaire / Kakuro / Futoshiki / Takuzu(**いずれも未着手**)。
 いずれもローカル生成で完結し、コンテンツサーバーを必要としないものを優先します。

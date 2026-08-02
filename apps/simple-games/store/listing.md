@@ -5,10 +5,11 @@
 > あわせて Play Console でアプリ内商品(管理された商品)`remove_ads` を
 > 基準価格 USD 3.99 で作成すること(国別価格は自動調整に任せる)。
 
-> 掲載は収録ゲーム 5 本(Sudoku / Minesweeper / Nonogram / Number Match /
-> Sliding Puzzle)の状態で書いてある。未収録のゲーム(Solitaire ほか)は名前も
-> 含めて掲載文に出さず、**実際に収録できた時点で**説明・スクリーンショットへ
-> 追加する(未収録のゲームを "Coming Soon" として掲載しない)。
+> 掲載は収録ゲーム 8 本(Sudoku / Solitaire / Minesweeper / Nonogram /
+> Number Match / Water Sort / Sliding Puzzle / Memory Match)の状態で書いてある。
+> 未収録のゲームは名前も含めて掲載文に出さず、**実際に収録できた時点で**
+> 説明・スクリーンショットへ追加する(未収録のゲームを "Coming Soon" として
+> 掲載しない)。
 
 ## タイトル候補(優先順)
 
@@ -16,8 +17,9 @@
 2. `Simple Games — Offline Puzzles`
 3. `Simple Games: Sudoku & More`
 
-キーワード優先順位: Offline > Sudoku > Minesweeper > Nonogram > Puzzle >
-Number Match > Sliding Puzzle > Simple Games > PixApps
+キーワード優先順位: Offline > Sudoku > Solitaire > Minesweeper > Nonogram >
+Puzzle > Number Match > Water Sort > Sliding Puzzle > Memory Match >
+Simple Games > PixApps
 (ゲーム名は検索流入の中核。収録済みの名前だけを、検索需要の大きい順に置く)
 
 ## 訴求の順序(BRAND.md と同一。この順で書く)
@@ -52,10 +54,13 @@ All of them run offline. Your progress stays on your device and nowhere else. No
 
 INCLUDED GAMES
 • Sudoku
+• Solitaire
 • Minesweeper
 • Nonogram
 • Number Match
+• Water Sort
 • Sliding Puzzle
+• Memory Match
 
 No game feature is locked behind a payment, and there is no subscription. Hints and undo are free wherever a game has them — no limit on how often you use them, and never an ad to watch first.
 
@@ -81,6 +86,7 @@ Hint / Undo の詳細を 5 本ぶん並べていた。**それをやめた。**
   どちらも PRODUCT_PRINCIPLES.md の必須原則をそのまま文にしたものである
 
 収録ゲームは**名前だけ**を並べる。ゲームを追加したらこのリストに 1 行足す。
+並び順は `src/app/registry.ts` と同じ(検索需要の大きい順)。
 未収録のゲームは名前も置かない。
 
 **トレードオフ**: ゲーム名の本文中の出現回数が減るため、Play の検索流入は理論上
@@ -123,10 +129,13 @@ Hint / Undo の詳細を 5 本ぶん並べていた。**それをやめた。**
 掲載文はルールを説明しないが、書いた事実がルール文書と矛盾してはいけない。
 矛盾したらルール文書を正とする:
 [SUDOKU](../../../docs/SUDOKU_RULES.md) /
+[SOLITAIRE](../../../docs/SOLITAIRE_RULES.md) /
 [MINESWEEPER](../../../docs/MINESWEEPER_RULES.md) /
 [NONOGRAM](../../../docs/NONOGRAM_RULES.md) /
 [NUMBER MATCH](../../../docs/NUMBER_MATCH_RULES.md) /
-[SLIDING PUZZLE](../../../docs/SLIDING_PUZZLE_RULES.md)。
+[WATER SORT](../../../docs/WATER_SORT_RULES.md) /
+[SLIDING PUZZLE](../../../docs/SLIDING_PUZZLE_RULES.md) /
+[MEMORY MATCH](../../../docs/MEMORY_MATCH_RULES.md)。
 
 ## ローカライズ管理
 

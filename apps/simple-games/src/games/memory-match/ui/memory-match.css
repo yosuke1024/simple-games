@@ -1,0 +1,389 @@
+/* Memory Match — all of this game's styling, imported by MemoryMatchRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --radius, --font-display, --tap-size, …) so the
+   game reads as part of the same app and follows the theme without knowing
+   about it.
+
+   Class names are prefixed `mm-` so this file can never collide with the
+   shell or with another game.
+
+   The symbol palette below is game content, not chrome — the same standing
+   as Minesweeper's number scale. Shape stays the identity (§1); these hues
+   only help telling remembered cards apart. */
+
+:root {
+  --mm-sym-red: #b95757;
+  --mm-sym-blue: #4f7ac0;
+  --mm-sym-green: #5f9153;
+  --mm-sym-purple: #8a5fa8;
+  --mm-sym-gold: #a8862e;
+  --mm-sym-pink: #b05a86;
+  --mm-sym-indigo: #5f68b1;
+  --mm-sym-orange: #b3763a;
+  --mm-sym-cyan: #3f93ad;
+  --mm-sym-olive: #6f8a3c;
+  --mm-sym-brown: #96684a;
+  --mm-sym-magenta: #a04f9a;
+  --mm-sym-teal: #3f8d80;
+  --mm-sym-slate: #64748b;
+  --mm-sym-gray: #7d726a;
+}
+
+:root[data-theme='dark'] {
+  --mm-sym-red: #d98f8f;
+  --mm-sym-blue: #8fb0e0;
+  --mm-sym-green: #94bd8a;
+  --mm-sym-purple: #b795d1;
+  --mm-sym-gold: #d1b268;
+  --mm-sym-pink: #d18fb2;
+  --mm-sym-indigo: #9aa2d8;
+  --mm-sym-orange: #d1a273;
+  --mm-sym-cyan: #7fbdd3;
+  --mm-sym-olive: #a4bd77;
+  --mm-sym-brown: #bd9678;
+  --mm-sym-magenta: #cd8fc6;
+  --mm-sym-teal: #7fbdb0;
+  --mm-sym-slate: #9aa8bd;
+  --mm-sym-gray: #b0a599;
+}
+
+/* ---------- board ---------- */
+
+/* The board sits in the space between the top bar and the banner, centred so
+   a tall phone brings it into thumb reach instead of pinning it up top. */
+.mm-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 4px 12px 10px;
+  min-height: 0;
+}
+
+/* How large a card is ever allowed to get. A card is a thing you hold, not a
+   poster: past this the smallest board stops reading as a deal laid out on a
+   table and starts reading as wallpaper. It binds on the small boards and on
+   tablets; the 5×6 board never reaches it. */
+:root {
+  --mm-card-max: 88px;
+}
+
+/* The board is as wide as all four of its limits allow: the screen's width, a
+   tablet's sensible maximum, the height left over, and the card maximum above
+   (§12).
+
+   The height budget is spelled out rather than guessed at as a fraction of
+   the screen: the top bar (64), this element's own padding (14), and the
+   reserved banner (64, ADS_POLICY) are the only things competing for it, and
+   naming them is what keeps the cards as large as they can honestly be.
+   Guessing low costs tap target — at 360×640 a hard-board card comes out
+   ~54×75, where a too-cautious budget had it down at 42 wide.
+
+   The 7/5 in the height term is the card itself: a card is taller than it is
+   wide, so a board of them needs that much more height than a board of
+   squares would. */
+.mm-board {
+  display: grid;
+  grid-template-columns: repeat(var(--mm-cols), 1fr);
+  gap: 7px;
+  width: min(
+    94vw,
+    420px,
+    calc(
+      (100vh - 142px - env(safe-area-inset-bottom, 0px)) * var(--mm-cols) /
+        var(--mm-rows) * 5 / 7
+    ),
+    calc(var(--mm-cols) * var(--mm-card-max) + (var(--mm-cols) - 1) * 7px)
+  );
+  touch-action: manipulation;
+}
+
+/* A card is a fixed cell holding a turnable inner face: cards never move,
+   they turn in place (§12).
+   Its shape is the deck's shape — the same 5:7 Solitaire deals. A square is
+   a tile; this is a card, and the game is about handling cards. */
+.mm-card {
+  position: relative;
+  aspect-ratio: 5 / 7;
+  padding: 0;
+  border: none;
+  background: transparent;
+  perspective: 600px;
+  cursor: pointer;
+}
+
+.mm-card-matched {
+  cursor: default;
+}
+
+.mm-card-inner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.26s ease;
+}
+
+.mm-card-inner-up {
+  transform: rotateY(180deg);
+}
+
+/* Reduced Motion: the card is simply showing its other side (§12). */
+.mm-board-still .mm-card-inner {
+  transition: none;
+}
+
+/* Both sides carry the card's own soft shadow, so a board of them reads as
+   objects lying on the screen rather than as painted cells. */
+.mm-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 0 1px 2px rgba(20, 24, 30, 0.18);
+}
+
+:root[data-theme='dark'] .mm-card-face {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* The face with the symbol — rotated away until the card turns up. */
+.mm-card-front {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  transform: rotateY(180deg);
+}
+
+/* The woven diagonal of the card back. Named because the Quick Rules figure
+   draws the same back (§11) and the two must not drift apart; the accent it
+   resolves to is whichever game is on screen, so it stays this title's own. */
+:root {
+  --mm-weave:
+    repeating-linear-gradient(
+      45deg,
+      var(--accent-ring-soft) 0,
+      var(--accent-ring-soft) 2px,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 0, 0, 0) 5px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      var(--accent-ring-soft) 0,
+      var(--accent-ring-soft) 2px,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 0, 0, 0) 5px
+    );
+}
+
+/* The back, built the way the Solitaire deck's back is: a woven diagonal in
+   the title's accent, bordered, with the inner rule every card back has.
+   These are cards in the same app and should look like they came out of the
+   same box — only the colour is this game's own.
+
+   What used to be here was a single flat dot, which is exactly the placeholder
+   look Solitaire's back was written to get away from (§12). */
+.mm-card-back {
+  background-color: var(--accent-soft);
+  background-image: var(--mm-weave);
+  border: 1px solid var(--line);
+}
+
+.mm-card-back::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid var(--accent-ring);
+  border-radius: 5px;
+}
+
+/* Pressed: the weave stays and the paper darkens under it. */
+.mm-card:active .mm-card-back {
+  background-color: var(--surface-recessed);
+}
+
+/* A found pair: locked, quiet. Progress, not an instruction. */
+.mm-card-matched .mm-card-front {
+  border-color: var(--accent-ring);
+  background: var(--surface);
+  opacity: 0.82;
+}
+
+/* ---------- the moment a pair is found (§3, §12) ---------- */
+
+/* A found card is rebuilt from a button into an image, so its turn cannot be
+   the transition above: a node that did not exist a frame ago has no previous
+   value to move from, and the second card of a pair would arrive face up
+   without ever turning. These are keyframes for that reason, and MemoryBoard
+   hands them only to the pair just found — a resumed game comes back already
+   settled rather than replaying every pair at once.
+
+   Under Reduced Motion the board carries `mm-board-still` and none of this
+   applies: the pair simply arrives found (§12). */
+
+/* The second card turns, at the same speed as every other card on the board.
+   Nothing about a match should make a card behave unlike its neighbours. */
+.mm-board:not(.mm-board-still) .mm-card-turning {
+  animation: mm-turn 0.26s ease;
+}
+
+@keyframes mm-turn {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(180deg);
+  }
+}
+
+/* Then the pair is acknowledged — once, together, after the turn has shown
+   what the card was. The reward is motion, not an addition: nothing appears
+   on the board, nothing is scored, the two cards rise and settle. */
+.mm-board:not(.mm-board-still) .mm-card-found {
+  animation: mm-found 0.32s cubic-bezier(0.32, 0.9, 0.42, 1) 0.22s;
+}
+
+@keyframes mm-found {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* …and the face eases into the quiet found look instead of arriving already
+   dimmed. `backwards` holds the plain face through the turn, so the card is
+   read as itself first and settles second. */
+.mm-board:not(.mm-board-still) .mm-card-found .mm-card-front {
+  animation: mm-found-face 0.32s ease-out 0.22s backwards;
+}
+
+@keyframes mm-found-face {
+  from {
+    opacity: 1;
+    border-color: var(--line);
+  }
+}
+
+/* Sized against the card's width — the narrow side — so the symbol keeps its
+   own square shape on a card that is taller than it is wide. */
+.mm-symbol {
+  width: 62%;
+  aspect-ratio: 1;
+}
+
+.mm-symbol-0 { color: var(--mm-sym-red); }
+.mm-symbol-1 { color: var(--mm-sym-blue); }
+.mm-symbol-2 { color: var(--mm-sym-green); }
+.mm-symbol-3 { color: var(--mm-sym-purple); }
+.mm-symbol-4 { color: var(--mm-sym-gold); }
+.mm-symbol-5 { color: var(--mm-sym-pink); }
+.mm-symbol-6 { color: var(--mm-sym-indigo); }
+.mm-symbol-7 { color: var(--mm-sym-orange); }
+.mm-symbol-8 { color: var(--mm-sym-cyan); }
+.mm-symbol-9 { color: var(--mm-sym-olive); }
+.mm-symbol-10 { color: var(--mm-sym-brown); }
+.mm-symbol-11 { color: var(--mm-sym-magenta); }
+.mm-symbol-12 { color: var(--mm-sym-teal); }
+.mm-symbol-13 { color: var(--mm-sym-slate); }
+.mm-symbol-14 { color: var(--mm-sym-gray); }
+
+/* ---------- top bar ---------- */
+
+.mm-status {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.mm-mode {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+/* The move count is the game's own measure, so it is shown while playing —
+   unlike the clock, which is not (§4). */
+.mm-move-count {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 15px;
+}
+
+/* ---------- home ---------- */
+
+.mm-choose-label {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* The tutorial draws a 3×2 corner of the real board, so the picture teaches
+   the shape as well as the rule. */
+.mm-figure {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 168px;
+}
+
+.mm-figure-card {
+  position: relative;
+  aspect-ratio: 5 / 7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.mm-figure-card .mm-symbol {
+  width: 58%;
+}
+
+/* The same back the board deals, so the figure teaches the real thing. */
+.mm-figure-card-down {
+  background-color: var(--accent-soft);
+  background-image: var(--mm-weave);
+}
+
+.mm-figure-card-down::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid var(--accent-ring);
+  border-radius: 5px;
+}
+
+.mm-figure-card-matched {
+  border-color: var(--accent-ring);
+}
+
+/* ---------- daily list ---------- */
+
+.mm-daily-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.mm-daily-badge-done {
+  color: var(--ink-soft);
+}
