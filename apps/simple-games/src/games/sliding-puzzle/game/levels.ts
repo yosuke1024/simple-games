@@ -1,7 +1,7 @@
 /**
  * Level definitions — implements docs/SLIDING_PUZZLE_RULES.md §6.
  *
- * All 999 levels come from the level number alone: a size, a shuffle depth, and
+ * All 100 levels come from the level number alone: a size, a shuffle depth, and
  * a seed. No content pipeline, no download, and the same level is the same
  * puzzle for every player. Undo stays unlimited and free at every level, and
  * there is no hint to gate (brand promise, §8).
@@ -9,10 +9,17 @@
  * There are only three sizes, so shuffle depth carries the difficulty curve: a
  * deeper shuffle pushes the shortest solution further out. Inside a band the
  * depth rises linearly, so two neighbouring levels never jump.
+ *
+ * Depth only buys difficulty while the board is still settling. Once the walk
+ * has mixed a board thoroughly, more slides land it somewhere just as random,
+ * so the old table's deep end (a 3x3 at 120, a 4x4 at 400) was charging levels
+ * for a difference no player could feel. The depths below stay inside the range
+ * where the number still means something, which is also why the list is 100
+ * long rather than 999: past that, the game has nothing left to vary.
  */
 import type { Size } from './types';
 
-export const MAX_LEVEL = 999;
+export const MAX_LEVEL = 100;
 
 export const clampLevel = (level: number): number =>
   Math.min(MAX_LEVEL, Math.max(1, Math.floor(level)));
@@ -35,11 +42,10 @@ interface Band {
  * on 5x5 at the depth 4x4 ended on would be two jumps at once.
  */
 const BANDS: readonly Band[] = [
-  { from: 1, to: 30, size: 3, depthFrom: 20, depthTo: 60 },
-  { from: 31, to: 120, size: 3, depthFrom: 60, depthTo: 120 },
-  { from: 121, to: 400, size: 4, depthFrom: 80, depthTo: 200 },
-  { from: 401, to: 700, size: 4, depthFrom: 200, depthTo: 400 },
-  { from: 701, to: MAX_LEVEL, size: 5, depthFrom: 200, depthTo: 500 },
+  { from: 1, to: 10, size: 3, depthFrom: 20, depthTo: 45 },
+  { from: 11, to: 30, size: 3, depthFrom: 45, depthTo: 90 },
+  { from: 31, to: 65, size: 4, depthFrom: 60, depthTo: 180 },
+  { from: 66, to: MAX_LEVEL, size: 5, depthFrom: 90, depthTo: 400 },
 ];
 
 function bandFor(level: number): Band {

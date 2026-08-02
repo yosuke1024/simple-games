@@ -147,14 +147,12 @@ describe('playing', () => {
     renderGame(tutorialDone);
     await startLevelOne(user);
 
-    // Golden board: tube 1 holds 3 2 2 3 (top is color 3). Pour it into an
+    // Golden board: tube 1 holds 1 1 1 2 (top is color 2). Pour it into an
     // empty spare — always legal (§3).
-    await user.click(screen.getByRole('button', { name: 'Tube 1, bottom to top: 3 2 2 3' }));
+    await user.click(screen.getByRole('button', { name: 'Tube 1, bottom to top: 1 1 1 2' }));
     await user.click(screen.getByRole('button', { name: 'Tube 4, bottom to top: empty' }));
 
-    expect(
-      screen.getByRole('button', { name: 'Tube 4, bottom to top: 3' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tube 4, bottom to top: 2' })).toBeInTheDocument();
     expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
   });
 
@@ -164,12 +162,12 @@ describe('playing', () => {
     await startLevelOne(user);
 
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Tube 1, bottom to top: 3 2 2 3' }));
+    await user.click(screen.getByRole('button', { name: 'Tube 1, bottom to top: 1 1 1 2' }));
     await user.click(screen.getByRole('button', { name: 'Tube 4, bottom to top: empty' }));
     await user.click(screen.getByRole('button', { name: 'Undo' }));
 
     expect(
-      screen.getByRole('button', { name: 'Tube 1, bottom to top: 3 2 2 3' }),
+      screen.getByRole('button', { name: 'Tube 1, bottom to top: 1 1 1 2' }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();

@@ -459,7 +459,7 @@ button:disabled {
 
 .brand-by {
   font-size: 12px;
-}/* ---------- sudoku ---------- *//* ---------- digit pad ---------- */
+} /* ---------- sudoku ---------- */ /* ---------- digit pad ---------- */
 
 /* ---------- collection home ---------- */
 
@@ -594,7 +594,6 @@ button:disabled {
   font-weight: 700;
   font-size: 15px;
 }
-
 
 .game-score {
   font-family: var(--font-display);
@@ -964,21 +963,6 @@ button:disabled {
   padding-bottom: calc(16px + env(safe-area-inset-bottom));
 }
 
-.level-pager {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 0 16px 8px;
-}
-
-.level-pager-range {
-  min-width: 110px;
-  text-align: center;
-  color: var(--ink-soft);
-  font-variant-numeric: tabular-nums;
-}
-
 .level-grid-scroll {
   flex: 1;
   overflow-y: auto;
@@ -1036,7 +1020,7 @@ button:disabled {
 
 .level-cell-locked:disabled {
   opacity: 0.35;
-}/* ---------- score summary (clear overlay) ---------- *//* ---------- personal top scores ---------- */
+} /* ---------- score summary (clear overlay) ---------- */ /* ---------- personal top scores ---------- */
 
 /* ---------- statistics ---------- */
 

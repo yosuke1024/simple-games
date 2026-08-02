@@ -6,11 +6,18 @@
  * a board differently would leave those scores standing against a board that
  * no longer exists.
  *
- * The strings below were captured from the build before stones and wilds
- * existed. They cover every board this game promises never to change: the
- * levels below the first wild (§16), and the dailies before the decoration
- * cutoff. A failure here means a change to generation leaked into boards that
- * were supposed to be settled — not that these numbers need updating.
+ * These cover every board this game promises never to change: the levels below
+ * the first wild (§16), and the dailies before the decoration cutoff. A failure
+ * here means a change to generation leaked into boards that were supposed to be
+ * settled — not that these numbers need updating.
+ *
+ * The level strings were re-pinned once, when the ladder was rebuilt from 999
+ * levels to 100 (§11). That rebuild moved every knob's schedule, so it changed
+ * boards on purpose and every player's level progress was reset with it; the
+ * dailies were not touched, then or now, because a daily board has never come
+ * from the level list. Levels 1 to 4 came through the rebuild byte-identical
+ * anyway, which is why they read the same as the strings captured before stones
+ * and wilds existed.
  */
 import { describe, expect, it } from 'vitest';
 import { DAILY_DECORATIONS_FROM } from './daily';
@@ -23,11 +30,7 @@ const FROZEN_LEVELS: Record<number, string> = {
   2: '737333737288833337557288973',
   3: '282833337719873322149964728',
   4: '346688225554428228654646283',
-  5: '644365391046663770001767700000392000',
-  6: '000881000008884600042277730994228289',
-  7: '000899000001199800027773680187599666',
-  8: '000699000003297300031188770379993761',
-  9: '886877334004677700009373300552646375',
+  5: '644365391046663770001767700009929100000919000',
 };
 
 const FROZEN_DAILIES: Record<string, string> = {

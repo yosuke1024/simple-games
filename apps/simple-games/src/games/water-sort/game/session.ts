@@ -11,10 +11,10 @@
  * There is no clock on screen (§4); elapsed seconds are carried here for the
  * clear screen and the statistics only.
  */
-import { DAILY_COLORS, dailySeed } from './daily';
+import { DAILY_COLORS, DAILY_MIX, dailySeed } from './daily';
 import { applyPour, isSolved } from './engine';
 import { generatePuzzle } from './generator';
-import { colorsForLevel, levelSeed } from './levels';
+import { colorsForLevel, levelSeed, mixForLevel } from './levels';
 import type { GameMode, GameStatus, Tubes } from './types';
 
 /** Practically unlimited undo; a real game never comes close (§8). */
@@ -72,14 +72,14 @@ function baseSession(
 export function createLevelSession(level: number): WaterSession {
   const colors = colorsForLevel(level);
   const seed = levelSeed(level);
-  const puzzle = generatePuzzle(seed, colors);
+  const puzzle = generatePuzzle(seed, colors, mixForLevel(level));
   return baseSession('level', seed, colors, null, level, puzzle.tubes);
 }
 
 /** A fresh (or restarted) daily game for a local YYYY-MM-DD date. */
 export function createDailySession(dateString: string): WaterSession {
   const seed = dailySeed(dateString);
-  const puzzle = generatePuzzle(seed, DAILY_COLORS);
+  const puzzle = generatePuzzle(seed, DAILY_COLORS, DAILY_MIX);
   return baseSession('daily', seed, DAILY_COLORS, dateString, null, puzzle.tubes);
 }
 
@@ -91,9 +91,7 @@ export function restartSession(session: WaterSession): WaterSession {
 }
 
 /** Restores a session from persisted state (undo history is not persisted). */
-export function restoreSession(
-  data: Omit<WaterSession, 'history' | 'status'>,
-): WaterSession {
+export function restoreSession(data: Omit<WaterSession, 'history' | 'status'>): WaterSession {
   return {
     ...data,
     history: [],

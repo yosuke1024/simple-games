@@ -11,6 +11,11 @@
  *
  * If a change here is intended, regenerate the strings and say so in the
  * commit message, along with what it costs existing players.
+ *
+ * These moved once, before the game had ever shipped, when the level list was
+ * cut to 100 and each band gained its starting-mix knob (§6): the generator now
+ * picks a deal by rank rather than taking the first one it proves, so every
+ * board changed. Nobody had a record standing against the old ones.
  */
 import { describe, expect, it } from 'vitest';
 import { tubesToString } from './generator';
@@ -22,12 +27,12 @@ describe('boards that must never change', () => {
     expect(session.colors).toBe(3);
     // Tubes bottom-to-top, joined by '.'; the two trailing dots are the empty
     // spare tubes (§1).
-    expect(tubesToString(session.tubes)).toBe('2112.2021.0001..');
+    expect(tubesToString(session.tubes)).toBe('0001.2111.2202..');
   });
 
   it('the daily for 2026-08-01 is unchanged', () => {
     const session = createDailySession('2026-08-01');
     expect(session.colors).toBe(6);
-    expect(tubesToString(session.tubes)).toBe('1230.1524.4022.4433.5153.5010..');
+    expect(tubesToString(session.tubes)).toBe('0151.2233.1450.5045.0234.2143..');
   });
 });

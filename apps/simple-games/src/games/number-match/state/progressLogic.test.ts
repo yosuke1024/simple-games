@@ -59,20 +59,23 @@ describe('applyClearToProgress', () => {
     expect(progress.highestUnlocked).toBe(50);
   });
 
-  it('caps unlocking at level 999', () => {
+  it('caps unlocking at the last level', () => {
     const { progress } = applyClearToProgress(
-      { ...progressSchema.defaultValue(), highestUnlocked: 999 },
-      clearedLevel(999, 100),
+      { ...progressSchema.defaultValue(), highestUnlocked: 100 },
+      clearedLevel(100, 100),
       NOW,
     );
-    expect(progress.highestUnlocked).toBe(999);
+    expect(progress.highestUnlocked).toBe(100);
   });
 
   it('keeps only the top 10 entries, best first', () => {
     let progress = progressSchema.defaultValue();
     for (let level = 1; level <= 12; level++) {
-      progress = applyClearToProgress(progress, clearedLevel(level, level * 10), NOW + level)
-        .progress;
+      progress = applyClearToProgress(
+        progress,
+        clearedLevel(level, level * 10),
+        NOW + level,
+      ).progress;
     }
     expect(progress.topScores).toHaveLength(10);
     expect(progress.topScores[0]!.score).toBe(120);
@@ -96,8 +99,11 @@ describe('applyClearToProgress', () => {
     // Fill the top-10 with high level scores so the daily entry gets evicted.
     let progress = progressSchema.defaultValue();
     for (let level = 1; level <= 10; level++) {
-      progress = applyClearToProgress(progress, clearedLevel(level, 1000 + level), NOW + level)
-        .progress;
+      progress = applyClearToProgress(
+        progress,
+        clearedLevel(level, 1000 + level),
+        NOW + level,
+      ).progress;
     }
     const first = applyClearToProgress(progress, clearedDaily('2026-07-27', 200), NOW + 20);
     expect(first.isNewBest).toBe(true);

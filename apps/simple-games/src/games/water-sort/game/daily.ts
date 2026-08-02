@@ -23,6 +23,14 @@ export function dailySeed(dateString: string): string {
 /** Every day is a six-color board (§7) — the middle of the level curve. */
 export const DAILY_COLORS = 6;
 
+/**
+ * And every day starts equally jumbled — the middle of the range the levels
+ * walk through (§6). Taking whichever deal came first instead would let the
+ * calendar hand out an easy Tuesday and a hard Wednesday, which is the same
+ * lucky-day pressure the fixed color count exists to refuse.
+ */
+export const DAILY_MIX = 0.5;
+
 /** Shifts a local YYYY-MM-DD string by whole days. */
 export function addDays(dateString: string, delta: number): string {
   const [y, m, d] = dateString.split('-').map(Number);

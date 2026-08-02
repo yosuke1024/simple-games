@@ -40,10 +40,8 @@ describe('boards that must never change', () => {
   });
 
   it('the level table is unchanged at every band boundary', () => {
-    const sampled = [1, 30, 31, 120, 121, 400, 401, 700, 701, 999];
-    expect(sampled.map(sizeForLevel)).toEqual([3, 3, 3, 3, 4, 4, 4, 4, 5, 5]);
-    expect(sampled.map(shuffleDepthForLevel)).toEqual([
-      20, 60, 60, 120, 80, 200, 200, 400, 200, 500,
-    ]);
+    const sampled = [1, 10, 11, 30, 31, 65, 66, 100];
+    expect(sampled.map(sizeForLevel)).toEqual([3, 3, 3, 3, 4, 4, 5, 5]);
+    expect(sampled.map(shuffleDepthForLevel)).toEqual([20, 45, 45, 90, 60, 180, 90, 400]);
   });
 });
