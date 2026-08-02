@@ -16,6 +16,7 @@ import {
   TERMS_URL,
 } from '@simple-games/brand';
 import packageJson from '../../../package.json';
+import { initRecentGames } from '../../app/recentGames';
 import { GAMES } from '../../app/registry';
 import { LANGUAGE_NAMES } from '../../i18n';
 import {
@@ -91,9 +92,12 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     const keys = [...Object.values(STORAGE_KEYS), ...GAMES.flatMap((game) => game.storageKeys)];
     await clearLocalData(keys);
     // Reload the in-memory copies of the shared records from their defaults.
+    // Skipping one would leave the deleted data on screen until a restart,
+    // which is the delete button lying about what it did.
     replaceSettings(settingsSchema.defaultValue());
     await initAdRemoval();
     await initReview();
+    await initRecentGames();
   };
 
   return (

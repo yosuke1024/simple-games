@@ -94,7 +94,7 @@ export const th: Messages = {
 
   // Collection shell
   gamesHeading: 'เกม',
-  numberMatchBlurb: 'จับคู่ตัวเลขที่เท่ากันหรือบวกกันได้ 10',
+  recentHeading: 'เล่นล่าสุด',
   backToGames: 'เกมทั้งหมด',
   learnMore: 'ดูเพิ่มเติม',
 
@@ -124,7 +124,6 @@ export const th: Messages = {
 
   // Sudoku
   sudokuName: 'ซูโดกุ',
-  sudokuBlurb: 'ใส่ 1-9 ให้ครบทุกแถว ทุกหลัก และทุกบล็อก',
   sudokuGridLabel: 'ตารางซูโดกุ',
   sudokuPadLabel: 'แป้นตัวเลข',
   sudokuPadKey: '{value} เหลือ {n}',
@@ -161,7 +160,6 @@ export const th: Messages = {
 
   // ---- Sliding Puzzle ----
   slideName: 'เกมเลื่อนตัวเลข',
-  slideBlurb: 'เลื่อนตัวเลขกลับให้เรียงตามลำดับ',
 
   slideBoardLabel: 'กระดานเกมเลื่อนตัวเลข',
   slideTileLabel: '{value} แถว {row} หลัก {col}',
@@ -189,7 +187,6 @@ export const th: Messages = {
 
   // ---- Nonogram ----
   nonoName: 'โนโนแกรม',
-  nonoBlurb: 'ระบายช่องตามตัวเลขใบ้',
 
   nonoBoardLabel: 'กระดานโนโนแกรม {size}×{size}',
   nonoCellBlank: 'ว่าง แถว {row} คอลัมน์ {col}',
@@ -224,7 +221,6 @@ export const th: Messages = {
 
   // ---- Minesweeper ----
   minesName: 'ไมน์สวีปเปอร์',
-  minesBlurb: 'เปิดทุกช่องที่ไม่มีระเบิด',
 
   // Home
   minesChooseBoard: 'เลือกกระดาน',
@@ -276,7 +272,6 @@ export const th: Messages = {
 
   // ---- Memory Match ----
   memoryMatchName: 'Memory Match',
-  memoryMatchBlurb: 'เปิดไพ่ทีละสองใบเพื่อหาคู่ให้ครบ',
   memoryChooseBoard: 'เลือกกระดาน',
   memoryDifficulty_easy: 'ง่าย',
   memoryDifficulty_medium: 'ปานกลาง',
@@ -305,7 +300,6 @@ export const th: Messages = {
 
   // ---- Water Sort ----
   waterSortName: 'Water Sort',
-  waterSortBlurb: 'เทน้ำไปมาจนแต่ละหลอดเหลือสีเดียว',
   waterBoardLabel: 'หลอดน้ำ',
   waterTubeLabel: 'หลอด {n} จากล่างขึ้นบน: {colors}',
   waterTubeEmpty: 'ว่าง',
@@ -328,7 +322,6 @@ export const th: Messages = {
 
   // ---- Solitaire ----
   solitaireName: 'Solitaire',
-  solitaireBlurb: 'เรียงครบทั้งสี่ดอกจาก A ถึง K',
   solNewDeal: 'แจกไพ่ใหม่',
   solDrawSetting: 'โหมดจั่วไพ่',
   solDrawOne: 'จั่ว 1 ใบ',
@@ -372,7 +365,6 @@ export const th: Messages = {
   levelsCleared: 'ด่านที่ผ่านแล้ว',
   bestScore: 'คะแนนสูงสุด',
   brickBreakerName: 'Brick Breaker',
-  brickBreakerBlurb: 'ตีลูกให้ได้มุม แล้วทลายกำแพงก่อนที่มันจะถึงเส้น',
   bbBoardLabel: 'กระดาน Brick Breaker',
   bbBricksLeft: 'อิฐ {n}',
   bbClearedTitle: 'ทลายกำแพงแล้ว!',
@@ -386,7 +378,6 @@ export const th: Messages = {
   bbStep3Title: 'กำแพงค่อย ๆ เลื่อนลง',
   bbStep3Body: 'เคลียร์อิฐให้หมดก่อนที่กำแพงจะถึงเส้นประ',
   skyFighterName: 'Sky Fighter',
-  skyFighterBlurb: 'เลื่อนเพื่อเล็ง — เครื่องบินยิงเองไม่หยุด',
   sfBoardLabel: 'ท้องฟ้า Sky Fighter',
   sfWave: 'ระลอก {n} / {m}',
   sfClearedTitle: 'ฟ้าโล่งแล้ว!',

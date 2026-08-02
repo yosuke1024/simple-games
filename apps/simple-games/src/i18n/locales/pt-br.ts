@@ -96,7 +96,7 @@ export const ptBR: Messages = {
 
   // Collection shell
   gamesHeading: 'Jogos',
-  numberMatchBlurb: 'Combine números iguais ou que somem 10.',
+  recentHeading: 'Jogados recentemente',
   backToGames: 'Todos os jogos',
   learnMore: 'Saiba mais',
 
@@ -126,7 +126,6 @@ export const ptBR: Messages = {
 
   // Sudoku
   sudokuName: 'Sudoku',
-  sudokuBlurb: 'Preencha cada linha, coluna e bloco com 1-9.',
   sudokuGridLabel: 'Grade do Sudoku',
   sudokuPadLabel: 'Teclado numérico',
   sudokuPadKey: '{value}, restam {n}',
@@ -165,7 +164,6 @@ export const ptBR: Messages = {
 
   // ---- Sliding Puzzle ----
   slideName: 'Quebra-cabeça deslizante',
-  slideBlurb: 'Deslize os números de volta à ordem.',
 
   slideBoardLabel: 'Tabuleiro do quebra-cabeça deslizante',
   slideTileLabel: '{value}, linha {row}, coluna {col}',
@@ -193,7 +191,6 @@ export const ptBR: Messages = {
 
   // ---- Nonogram ----
   nonoName: 'Nonograma',
-  nonoBlurb: 'Pinte os quadrados que os números descrevem.',
 
   nonoBoardLabel: 'Tabuleiro de nonograma, {size} por {size}',
   nonoCellBlank: 'Vazio, linha {row}, coluna {col}',
@@ -229,7 +226,6 @@ export const ptBR: Messages = {
 
   // ---- Minesweeper ----
   minesName: 'Campo Minado',
-  minesBlurb: 'Abra todas as casas sem mina.',
 
   // Home
   minesChooseBoard: 'Escolha um tabuleiro',
@@ -281,7 +277,6 @@ export const ptBR: Messages = {
 
   // ---- Memory Match ----
   memoryMatchName: 'Memory Match',
-  memoryMatchBlurb: 'Vire duas cartas e encontre todos os pares.',
   memoryChooseBoard: 'Escolha um tabuleiro',
   memoryDifficulty_easy: 'Fácil',
   memoryDifficulty_medium: 'Médio',
@@ -310,7 +305,6 @@ export const ptBR: Messages = {
 
   // ---- Water Sort ----
   waterSortName: 'Water Sort',
-  waterSortBlurb: 'Despeje a água até cada tubo ficar com uma só cor.',
   waterBoardLabel: 'Tubos de água',
   waterTubeLabel: 'Tubo {n}, de baixo para cima: {colors}',
   waterTubeEmpty: 'vazio',
@@ -334,7 +328,6 @@ export const ptBR: Messages = {
 
   // ---- Solitaire ----
   solitaireName: 'Solitaire',
-  solitaireBlurb: 'Complete os quatro naipes do ás ao rei.',
   solNewDeal: 'Nova distribuição',
   solDrawSetting: 'Modo de compra',
   solDrawOne: 'Comprar 1',
@@ -381,7 +374,6 @@ export const ptBR: Messages = {
   levelsCleared: 'Níveis concluídos',
   bestScore: 'Melhor pontuação',
   brickBreakerName: 'Brick Breaker',
-  brickBreakerBlurb: 'Dê ângulo à bola e derrube o muro antes que ele alcance a linha.',
   bbBoardLabel: 'Tabuleiro de Brick Breaker',
   bbBricksLeft: 'Tijolos {n}',
   bbClearedTitle: 'Muro derrubado!',
@@ -396,7 +388,6 @@ export const ptBR: Messages = {
   bbStep3Title: 'O muro desce aos poucos',
   bbStep3Body: 'Limpe todos os tijolos antes que o muro alcance a linha pontilhada.',
   skyFighterName: 'Sky Fighter',
-  skyFighterBlurb: 'Deslize para mirar — seu caça atira sozinho.',
   sfBoardLabel: 'Céu de Sky Fighter',
   sfWave: 'Onda {n} / {m}',
   sfClearedTitle: 'Céu limpo!',

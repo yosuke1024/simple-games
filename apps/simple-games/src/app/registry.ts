@@ -5,7 +5,10 @@
  *
  * The order here is the order on the collection home. Games are listed by how
  * likely someone is to be looking for them by name, not by when they were
- * built, so the list stays useful as it grows.
+ * built, so the list stays useful as it grows. It does not have to carry the
+ * whole burden of that: the home puts the games somebody actually plays in a
+ * shortcut row above the list (app/recentGames.ts), so this order is a stable
+ * place to find a title, not a ranking that has to be kept current.
  */
 import type { ComponentType } from 'react';
 import { BB_STORAGE_KEYS } from '../games/brick-breaker/storage/schemas';
@@ -29,7 +32,6 @@ import { SudokuRoot } from '../games/sudoku/ui/SudokuRoot';
 import { SudokuSettingsSection } from '../games/sudoku/ui/SudokuSettingsSection';
 import { WS_STORAGE_KEYS } from '../games/water-sort/storage/schemas';
 import { WaterSortRoot } from '../games/water-sort/ui/WaterSortRoot';
-import type { MessageKey } from '../i18n';
 
 export type GameId =
   | 'sudoku'
@@ -45,11 +47,17 @@ export type GameId =
 
 export interface GameModule {
   id: GameId;
-  /** Title as a proper noun — identical in every language. */
+  /**
+   * Title as a proper noun — identical in every language. That is what lets
+   * the collection home lay the whole list out as a grid of short cards in all
+   * fourteen locales; a translated sentence could not hold that shape.
+   */
   title: string;
-  /** Localized one-liner under the title on the collection card. */
-  blurbKey: MessageKey;
-  /** The series mark: one glyph on an accent tile identifies the game. */
+  /**
+   * The series mark: one glyph on an accent tile identifies the game. The
+   * accent is the title's own (`.accent-<id>` in ui/styles.css), so on the
+   * home a game can be found by colour as well as by name.
+   */
   glyph: string;
   Root: ComponentType<{ onExit: () => void }>;
   /**
@@ -68,7 +76,6 @@ export const GAMES: readonly GameModule[] = [
   {
     id: 'sudoku',
     title: 'Sudoku',
-    blurbKey: 'sudokuBlurb',
     glyph: '⌗',
     Root: SudokuRoot,
     storageKeys: Object.values(SD_STORAGE_KEYS),
@@ -77,7 +84,6 @@ export const GAMES: readonly GameModule[] = [
   {
     id: 'solitaire',
     title: 'Solitaire',
-    blurbKey: 'solitaireBlurb',
     glyph: '♠',
     Root: SolitaireRoot,
     storageKeys: Object.values(SO_STORAGE_KEYS),
@@ -85,7 +91,6 @@ export const GAMES: readonly GameModule[] = [
   {
     id: 'minesweeper',
     title: 'Minesweeper',
-    blurbKey: 'minesBlurb',
     glyph: '◆',
     Root: MinesweeperRoot,
     storageKeys: Object.values(MS_STORAGE_KEYS),
@@ -93,7 +98,6 @@ export const GAMES: readonly GameModule[] = [
   {
     id: 'brick-breaker',
     title: 'Brick Breaker',
-    blurbKey: 'brickBreakerBlurb',
     glyph: '≡',
     Root: BrickBreakerRoot,
     storageKeys: Object.values(BB_STORAGE_KEYS),
@@ -101,7 +105,6 @@ export const GAMES: readonly GameModule[] = [
   {
     id: 'nonogram',
     title: 'Nonogram',
-    blurbKey: 'nonoBlurb',
     glyph: '▦',
     Root: NonogramRoot,
     storageKeys: Object.values(NG_STORAGE_KEYS),
@@ -109,7 +112,6 @@ export const GAMES: readonly GameModule[] = [
   {
     id: 'number-match',
     title: 'Number Match',
-    blurbKey: 'numberMatchBlurb',
     glyph: '10',
     Root: NumberMatchRoot,
     storageKeys: Object.values(NM_STORAGE_KEYS),
@@ -117,7 +119,6 @@ export const GAMES: readonly GameModule[] = [
   {
     id: 'water-sort',
     title: 'Water Sort',
-    blurbKey: 'waterSortBlurb',
     glyph: '≋',
     Root: WaterSortRoot,
     storageKeys: Object.values(WS_STORAGE_KEYS),
@@ -125,7 +126,6 @@ export const GAMES: readonly GameModule[] = [
   {
     id: 'sliding-puzzle',
     title: 'Sliding Puzzle',
-    blurbKey: 'slideBlurb',
     glyph: '⇄',
     Root: SlidingPuzzleRoot,
     storageKeys: Object.values(SP_STORAGE_KEYS),
@@ -133,7 +133,6 @@ export const GAMES: readonly GameModule[] = [
   {
     id: 'memory-match',
     title: 'Memory Match',
-    blurbKey: 'memoryMatchBlurb',
     glyph: '⧉',
     Root: MemoryMatchRoot,
     storageKeys: Object.values(MM_STORAGE_KEYS),
@@ -141,7 +140,6 @@ export const GAMES: readonly GameModule[] = [
   {
     id: 'sky-fighter',
     title: 'Sky Fighter',
-    blurbKey: 'skyFighterBlurb',
     glyph: '▲',
     Root: SkyFighterRoot,
     storageKeys: Object.values(SF_STORAGE_KEYS),

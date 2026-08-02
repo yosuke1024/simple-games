@@ -94,7 +94,7 @@ export const ja: Messages = {
 
   // Collection shell
   gamesHeading: 'ゲーム',
-  numberMatchBlurb: '同じ数字か、合計10のペアを消していく。',
+  recentHeading: '最近遊んだ',
   backToGames: 'ゲーム一覧へ',
   learnMore: '詳しく見る',
 
@@ -125,7 +125,6 @@ export const ja: Messages = {
 
   // Sudoku
   sudokuName: 'ナンプレ',
-  sudokuBlurb: '各行・各列・各ブロックに1〜9を1つずつ。',
   sudokuGridLabel: 'ナンプレの盤面',
   sudokuPadLabel: '数字パッド',
   sudokuPadKey: '{value}、残り {n}',
@@ -162,7 +161,6 @@ export const ja: Messages = {
 
   // ---- Sliding Puzzle ----
   slideName: 'スライドパズル',
-  slideBlurb: '数字を順番どおりに並べ直す。',
 
   slideBoardLabel: 'スライドパズルの盤面',
   slideTileLabel: '{value}、{row}行 {col}列',
@@ -190,7 +188,6 @@ export const ja: Messages = {
 
   // ---- Nonogram ----
   nonoName: 'ノノグラム',
-  nonoBlurb: '数字を手がかりにマスを塗る。',
 
   nonoBoardLabel: 'ノノグラムの盤面、{size}×{size}',
   nonoCellBlank: '未定、{row}行 {col}列',
@@ -224,7 +221,6 @@ export const ja: Messages = {
 
   // ---- Minesweeper ----
   minesName: 'マインスイーパ',
-  minesBlurb: '地雷のないマスをすべて開けよう。',
 
   // Home
   minesChooseBoard: '盤面を選ぶ',
@@ -276,7 +272,6 @@ export const ja: Messages = {
 
   // ---- Memory Match ----
   memoryMatchName: 'Memory Match',
-  memoryMatchBlurb: 'カードをめくって、同じ記号のペアを見つけます。',
 
   // Home
   memoryChooseBoard: '盤面を選ぶ',
@@ -315,7 +310,6 @@ export const ja: Messages = {
 
   // ---- Water Sort ----
   waterSortName: 'Water Sort',
-  waterSortBlurb: '色水を注ぎ分けて、チューブを1色ずつに。',
 
   // Board and accessibility
   waterBoardLabel: 'ウォーターソートのチューブ',
@@ -348,7 +342,6 @@ export const ja: Messages = {
 
   // ---- Solitaire ----
   solitaireName: 'Solitaire',
-  solitaireBlurb: 'AからKまで、4つのスートを積み上げます。',
 
   // Home
   solNewDeal: '新しい配札',
@@ -406,7 +399,6 @@ export const ja: Messages = {
 
   // ---- Brick Breaker ----
   brickBreakerName: 'Brick Breaker',
-  brickBreakerBlurb: '角度をつけて、壁が線に届く前にすべて崩す。',
   bbBoardLabel: 'ブロック崩しの盤面',
   bbBricksLeft: '残り {n}',
   bbClearedTitle: '全部崩した！',
@@ -422,7 +414,6 @@ export const ja: Messages = {
 
   // ---- Sky Fighter ----
   skyFighterName: 'Sky Fighter',
-  skyFighterBlurb: '動かして狙う。射撃は勝手に続く。',
   sfBoardLabel: 'Sky Fighter の空域',
   sfWave: 'ウェーブ {n} / {m}',
   sfClearedTitle: '空域クリア！',

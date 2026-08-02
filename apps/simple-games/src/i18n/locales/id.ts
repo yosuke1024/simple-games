@@ -96,7 +96,7 @@ export const id: Messages = {
 
   // Collection shell
   gamesHeading: 'Game',
-  numberMatchBlurb: 'Pasangkan angka yang sama atau berjumlah 10.',
+  recentHeading: 'Baru dimainkan',
   backToGames: 'Semua game',
   learnMore: 'Pelajari Lebih Lanjut',
 
@@ -126,7 +126,6 @@ export const id: Messages = {
 
   // Sudoku
   sudokuName: 'Sudoku',
-  sudokuBlurb: 'Isi setiap baris, kolom, dan blok dengan 1-9.',
   sudokuGridLabel: 'Papan Sudoku',
   sudokuPadLabel: 'Papan angka',
   sudokuPadKey: '{value}, sisa {n}',
@@ -165,7 +164,6 @@ export const id: Messages = {
 
   // ---- Sliding Puzzle ----
   slideName: 'Sliding Puzzle',
-  slideBlurb: 'Geser angka kembali ke urutannya.',
 
   slideBoardLabel: 'Papan sliding puzzle',
   slideTileLabel: '{value}, baris {row}, kolom {col}',
@@ -193,7 +191,6 @@ export const id: Messages = {
 
   // ---- Nonogram ----
   nonoName: 'Nonogram',
-  nonoBlurb: 'Warnai kotak sesuai petunjuk angka.',
 
   nonoBoardLabel: 'Papan nonogram, {size}×{size}',
   nonoCellBlank: 'Kosong, baris {row}, kolom {col}',
@@ -228,7 +225,6 @@ export const id: Messages = {
 
   // ---- Minesweeper ----
   minesName: 'Minesweeper',
-  minesBlurb: 'Buka semua kotak yang tidak berisi ranjau.',
 
   // Home
   minesChooseBoard: 'Pilih papan',
@@ -280,7 +276,6 @@ export const id: Messages = {
 
   // ---- Memory Match ----
   memoryMatchName: 'Memory Match',
-  memoryMatchBlurb: 'Balik dua kartu dan temukan semua pasangan.',
   memoryChooseBoard: 'Pilih papan',
   memoryDifficulty_easy: 'Mudah',
   memoryDifficulty_medium: 'Sedang',
@@ -310,7 +305,6 @@ export const id: Messages = {
 
   // ---- Water Sort ----
   waterSortName: 'Water Sort',
-  waterSortBlurb: 'Tuang air sampai setiap tabung berisi satu warna.',
   waterBoardLabel: 'Tabung air',
   waterTubeLabel: 'Tabung {n}, dari bawah ke atas: {colors}',
   waterTubeEmpty: 'kosong',
@@ -334,7 +328,6 @@ export const id: Messages = {
 
   // ---- Solitaire ----
   solitaireName: 'Solitaire',
-  solitaireBlurb: 'Susun keempat jenis kartu dari as sampai raja.',
   solNewDeal: 'Bagi ulang',
   solDrawSetting: 'Mode ambil kartu',
   solDrawOne: 'Ambil 1',
@@ -381,7 +374,6 @@ export const id: Messages = {
   levelsCleared: 'Level selesai',
   bestScore: 'Skor terbaik',
   brickBreakerName: 'Brick Breaker',
-  brickBreakerBlurb: 'Atur sudut bola dan runtuhkan tembok sebelum menyentuh garis.',
   bbBoardLabel: 'Papan Brick Breaker',
   bbBricksLeft: 'Bata {n}',
   bbClearedTitle: 'Tembok runtuh!',
@@ -397,7 +389,6 @@ export const id: Messages = {
   bbStep3Title: 'Tembok merayap turun',
   bbStep3Body: 'Bersihkan semua bata sebelum tembok menyentuh garis putus-putus.',
   skyFighterName: 'Sky Fighter',
-  skyFighterBlurb: 'Geser untuk membidik — pesawatmu menembak sendiri.',
   sfBoardLabel: 'Langit Sky Fighter',
   sfWave: 'Gelombang {n} / {m}',
   sfClearedTitle: 'Langit bersih!',

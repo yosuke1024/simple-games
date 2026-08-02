@@ -96,7 +96,7 @@ export const es: Messages = {
 
   // Collection shell
   gamesHeading: 'Juegos',
-  numberMatchBlurb: 'Empareja números iguales o que sumen 10.',
+  recentHeading: 'Jugados hace poco',
   backToGames: 'Todos los juegos',
   learnMore: 'Más información',
 
@@ -126,7 +126,6 @@ export const es: Messages = {
 
   // Sudoku
   sudokuName: 'Sudoku',
-  sudokuBlurb: 'Completa cada fila, columna y bloque con 1-9.',
   sudokuGridLabel: 'Cuadrícula de Sudoku',
   sudokuPadLabel: 'Teclado numérico',
   sudokuPadKey: '{value}, quedan {n}',
@@ -166,7 +165,6 @@ export const es: Messages = {
 
   // ---- Sliding Puzzle ----
   slideName: 'Puzle deslizante',
-  slideBlurb: 'Desliza los números hasta ordenarlos.',
 
   slideBoardLabel: 'Tablero del puzle deslizante',
   slideTileLabel: '{value}, fila {row}, columna {col}',
@@ -194,7 +192,6 @@ export const es: Messages = {
 
   // ---- Nonogram ----
   nonoName: 'Nonograma',
-  nonoBlurb: 'Pinta las casillas que describen los números.',
 
   nonoBoardLabel: 'Tablero de nonograma, {size} por {size}',
   nonoCellBlank: 'Vacía, fila {row}, columna {col}',
@@ -230,7 +227,6 @@ export const es: Messages = {
 
   // ---- Minesweeper ----
   minesName: 'Buscaminas',
-  minesBlurb: 'Abre todas las casillas sin mina.',
 
   // Home
   minesChooseBoard: 'Elige un tablero',
@@ -283,7 +279,6 @@ export const es: Messages = {
 
   // ---- Memory Match ----
   memoryMatchName: 'Memory Match',
-  memoryMatchBlurb: 'Da la vuelta a dos cartas y encuentra todas las parejas.',
   memoryChooseBoard: 'Elige un tablero',
   memoryDifficulty_easy: 'Fácil',
   memoryDifficulty_medium: 'Medio',
@@ -312,7 +307,6 @@ export const es: Messages = {
 
   // ---- Water Sort ----
   waterSortName: 'Water Sort',
-  waterSortBlurb: 'Vierte el agua hasta que cada tubo tenga un solo color.',
   waterBoardLabel: 'Tubos de agua',
   waterTubeLabel: 'Tubo {n}, de abajo arriba: {colors}',
   waterTubeEmpty: 'vacío',
@@ -336,7 +330,6 @@ export const es: Messages = {
 
   // ---- Solitaire ----
   solitaireName: 'Solitaire',
-  solitaireBlurb: 'Completa los cuatro palos del as al rey.',
   solNewDeal: 'Nuevo reparto',
   solDrawSetting: 'Modo de robo',
   solDrawOne: 'Robar 1',
@@ -382,7 +375,6 @@ export const es: Messages = {
   levelsCleared: 'Niveles superados',
   bestScore: 'Mejor puntuación',
   brickBreakerName: 'Brick Breaker',
-  brickBreakerBlurb: 'Dale ángulo a la bola y derriba el muro antes de que llegue a la línea.',
   bbBoardLabel: 'Tablero de Brick Breaker',
   bbBricksLeft: 'Ladrillos {n}',
   bbClearedTitle: '¡Muro derribado!',
@@ -397,7 +389,6 @@ export const es: Messages = {
   bbStep3Title: 'El muro va bajando',
   bbStep3Body: 'Despeja todos los ladrillos antes de que el muro llegue a la línea de puntos.',
   skyFighterName: 'Sky Fighter',
-  skyFighterBlurb: 'Desliza para apuntar: tu caza nunca deja de disparar.',
   sfBoardLabel: 'Cielo de Sky Fighter',
   sfWave: 'Oleada {n} / {m}',
   sfClearedTitle: '¡Cielo despejado!',

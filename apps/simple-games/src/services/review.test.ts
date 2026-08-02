@@ -16,7 +16,8 @@ vi.mock('../ui/openExternal', () => ({ openExternal: openExternalMock }));
 
 import { PLAY_STORE_URL } from '@simple-games/brand';
 import { createMemoryKV } from '../storage/kv';
-import { STORAGE_KEYS } from '../storage/schemas';
+import { loadRecord } from '../storage/repo';
+import { reviewSchema, STORAGE_KEYS } from '../storage/schemas';
 import {
   initReview,
   markReviewPromptShown,
@@ -99,9 +100,14 @@ describe('review prompt cadence', () => {
     winTimes(50);
     expect(shouldPromptReview()).toBe(false);
 
-    const raw = await kv.get(STORAGE_KEYS.review);
-    expect(raw).not.toBeNull();
-    expect(JSON.parse(raw!)).toMatchObject({ resolved: true, gamesCompleted: 55 });
+    // Read the way the app does. Storage runs a key's operations in the order
+    // they were asked for (storage/repo.ts), so reaching past it into the
+    // store can see a moment when the fire-and-forget saves above have not all
+    // landed yet — which says nothing about whether the counter persisted.
+    expect(await loadRecord(reviewSchema, kv)).toMatchObject({
+      resolved: true,
+      gamesCompleted: 55,
+    });
   });
 
   it('a corrupt record falls back to a fresh counter', async () => {
