@@ -356,24 +356,24 @@ export function MinesweeperProvider({
     return () => window.clearInterval(id);
   }, [playing]);
 
-  // Save when the app goes to background / gets hidden (§10).
+  // Save when the app goes to background / gets hidden (§10). This is the same
+  // sync as leaving the screen, statistics included: the OS can kill a
+  // backgrounded app without sending another event, and the next launch hands
+  // the restored elapsedSeconds back as *already booked*. Saving the board
+  // alone here would drop every play second since the last sync for good.
   useEffect(() => {
-    const saveNow = () => {
-      const current = sessionsRef.current[activeModeRef.current];
-      if (current && current.status === 'playing') void saveGame(withElapsed(current));
-    };
     const onVisibility = () => {
-      if (document.visibilityState === 'hidden') saveNow();
+      if (document.visibilityState === 'hidden') syncActiveGame();
     };
     document.addEventListener('visibilitychange', onVisibility);
     const pauseHandle = Capacitor.isNativePlatform()
-      ? CapacitorApp.addListener('pause', saveNow)
+      ? CapacitorApp.addListener('pause', syncActiveGame)
       : null;
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);
       void pauseHandle?.then((handle) => handle.remove()).catch(() => undefined);
     };
-  }, [withElapsed]);
+  }, [syncActiveGame]);
 
   // Android hardware back: leave sub-screens; from the game's home, hand
   // control back to the collection.
