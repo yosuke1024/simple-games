@@ -4,7 +4,7 @@
  * the web build (docs/WEB_VERSION.md) does neither. A claim that is true in
  * one of them is a false claim in the other, so it is gated, not translated.
  */
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -14,7 +14,14 @@ vi.mock('@capacitor/core', () => ({
   Capacitor: { isNativePlatform: () => capacitorMock.native },
 }));
 
+import {
+  getRecentGames,
+  initRecentGames,
+  recordGameOpened,
+  resetRecentGamesForTesting,
+} from '../../app/recentGames';
 import { SettingsProvider } from '../../state/SettingsContext';
+import { createMemoryKV } from '../../storage/kv';
 import { settingsSchema } from '../../storage/schemas';
 import { SettingsScreen } from './SettingsScreen';
 
@@ -33,6 +40,7 @@ async function openPrivacy(user: ReturnType<typeof userEvent.setup>) {
 
 beforeEach(() => {
   capacitorMock.native = false;
+  resetRecentGamesForTesting();
 });
 
 afterEach(() => {
@@ -84,5 +92,25 @@ describe('privacy summary', () => {
     // description rather than new privacy wording nobody has translated.
     expect(dialog).toHaveTextContent(/Reset Local Data/);
     expect(dialog).toHaveTextContent(/removes your game, statistics, and settings/);
+  });
+});
+
+/**
+ * "Reset Local Data" has to be true the moment it finishes, not after the next
+ * launch: every shared record the shell keeps in memory is reloaded, or the
+ * deleted data is still on screen and the button has lied.
+ */
+describe('reset local data', () => {
+  it('clears the home shortcut row, not just the stored copy', async () => {
+    await initRecentGames(createMemoryKV());
+    recordGameOpened('sudoku');
+    expect(getRecentGames()).toEqual(['sudoku']);
+
+    const user = userEvent.setup();
+    renderSettings();
+    await user.click(screen.getByRole('button', { name: /Reset Local Data/ }));
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() => expect(getRecentGames()).toEqual([]));
   });
 });

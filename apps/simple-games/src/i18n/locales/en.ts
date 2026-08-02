@@ -115,7 +115,7 @@ export const en = {
 
   // Collection shell
   gamesHeading: 'Games',
-  numberMatchBlurb: 'Pair numbers that match or add up to 10.',
+  recentHeading: 'Recently played',
   backToGames: 'All games',
   learnMore: 'Learn More',
 
@@ -150,7 +150,6 @@ export const en = {
 
   // Sudoku
   sudokuName: 'Sudoku',
-  sudokuBlurb: 'Fill every row, column and box with 1-9.',
   sudokuGridLabel: 'Sudoku grid',
   sudokuPadLabel: 'Number pad',
   sudokuPadKey: '{value}, {n} left',
@@ -187,7 +186,6 @@ export const en = {
 
   // ---- Sliding Puzzle ----
   slideName: 'Sliding Puzzle',
-  slideBlurb: 'Slide the numbers back into order.',
 
   // Board and accessibility
   slideBoardLabel: 'Sliding puzzle board',
@@ -220,7 +218,6 @@ export const en = {
 
   // ---- Nonogram ----
   nonoName: 'Nonogram',
-  nonoBlurb: 'Paint the squares the number clues describe.',
 
   // Board
   nonoBoardLabel: 'Nonogram board, {size} by {size}',
@@ -259,7 +256,6 @@ export const en = {
 
   // ---- Minesweeper ----
   minesName: 'Minesweeper',
-  minesBlurb: 'Open every square that has no mine.',
 
   // Home
   minesChooseBoard: 'Choose a board',
@@ -311,7 +307,6 @@ export const en = {
 
   // ---- Memory Match ----
   memoryMatchName: 'Memory Match',
-  memoryMatchBlurb: 'Flip two cards and find every pair.',
 
   // Home
   memoryChooseBoard: 'Choose a board',
@@ -350,7 +345,6 @@ export const en = {
 
   // ---- Water Sort ----
   waterSortName: 'Water Sort',
-  waterSortBlurb: 'Pour the water until every tube is one color.',
 
   // Board and accessibility
   waterBoardLabel: 'Water sort tubes',
@@ -384,7 +378,6 @@ export const en = {
 
   // ---- Solitaire ----
   solitaireName: 'Solitaire',
-  solitaireBlurb: 'Build all four suits from ace to king.',
 
   // Home
   solNewDeal: 'New deal',

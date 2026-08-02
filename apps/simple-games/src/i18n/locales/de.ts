@@ -104,7 +104,7 @@ export const de: Messages = {
 
   // Collection shell
   gamesHeading: 'Spiele',
-  numberMatchBlurb: 'Zahlen paaren, die gleich sind oder zusammen 10 ergeben.',
+  recentHeading: 'Zuletzt gespielt',
   backToGames: 'Alle Spiele',
   learnMore: 'Mehr erfahren',
 
@@ -136,7 +136,6 @@ export const de: Messages = {
 
   // Sudoku
   sudokuName: 'Sudoku',
-  sudokuBlurb: 'Jede Zeile, Spalte und Box mit 1-9 füllen.',
   sudokuGridLabel: 'Sudoku-Gitter',
   sudokuPadLabel: 'Zahlenfeld',
   sudokuPadKey: '{value}, noch {n}',
@@ -173,7 +172,6 @@ export const de: Messages = {
 
   // ---- Sliding Puzzle ----
   slideName: 'Schiebepuzzle',
-  slideBlurb: 'Schiebe die Zahlen in die richtige Reihenfolge.',
 
   slideBoardLabel: 'Schiebepuzzle-Feld',
   slideTileLabel: '{value}, Zeile {row}, Spalte {col}',
@@ -201,7 +199,6 @@ export const de: Messages = {
 
   // ---- Nonogram ----
   nonoName: 'Nonogramm',
-  nonoBlurb: 'Male die Felder aus, die die Zahlen beschreiben.',
 
   nonoBoardLabel: 'Nonogramm-Feld, {size} mal {size}',
   nonoCellBlank: 'Leer, Zeile {row}, Spalte {col}',
@@ -235,7 +232,6 @@ export const de: Messages = {
 
   // ---- Minesweeper ----
   minesName: 'Minesweeper',
-  minesBlurb: 'Öffne jedes Feld ohne Mine.',
 
   // Home
   minesChooseBoard: 'Feld wählen',
@@ -287,7 +283,6 @@ export const de: Messages = {
 
   // ---- Memory Match ----
   memoryMatchName: 'Memory Match',
-  memoryMatchBlurb: 'Decke zwei Karten auf und finde jedes Paar.',
   memoryChooseBoard: 'Brett wählen',
   memoryDifficulty_easy: 'Leicht',
   memoryDifficulty_medium: 'Mittel',
@@ -316,7 +311,6 @@ export const de: Messages = {
 
   // ---- Water Sort ----
   waterSortName: 'Water Sort',
-  waterSortBlurb: 'Gieße das Wasser um, bis jedes Röhrchen nur eine Farbe hält.',
   waterBoardLabel: 'Wasserröhrchen',
   waterTubeLabel: 'Röhrchen {n}, von unten nach oben: {colors}',
   waterTubeEmpty: 'leer',
@@ -340,7 +334,6 @@ export const de: Messages = {
 
   // ---- Solitaire ----
   solitaireName: 'Solitaire',
-  solitaireBlurb: 'Baue alle vier Farben vom Ass bis zum König auf.',
   solNewDeal: 'Neues Blatt',
   solDrawSetting: 'Ziehmodus',
   solDrawOne: '1 ziehen',

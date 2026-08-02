@@ -103,7 +103,7 @@ export const hi: Messages = {
 
   // Collection shell
   gamesHeading: 'गेम',
-  numberMatchBlurb: 'बराबर या जोड़ 10 वाले अंकों के जोड़े हटाएँ।',
+  recentHeading: 'हाल में खेले गए',
   backToGames: 'सभी गेम',
   learnMore: 'और जानें',
 
@@ -135,7 +135,6 @@ export const hi: Messages = {
 
   // Sudoku
   sudokuName: 'सुडोकू',
-  sudokuBlurb: 'हर पंक्ति, स्तंभ और बॉक्स में 1-9 भरें।',
   sudokuGridLabel: 'सुडोकू ग्रिड',
   sudokuPadLabel: 'नंबर पैड',
   sudokuPadKey: '{value}, {n} बाकी',
@@ -172,7 +171,6 @@ export const hi: Messages = {
 
   // ---- Sliding Puzzle ----
   slideName: 'स्लाइडिंग पज़ल',
-  slideBlurb: 'संख्याओं को सरकाकर वापस क्रम में लगाएँ।',
 
   slideBoardLabel: 'स्लाइडिंग पज़ल बोर्ड',
   slideTileLabel: '{value}, पंक्ति {row}, स्तंभ {col}',
@@ -200,7 +198,6 @@ export const hi: Messages = {
 
   // ---- Nonogram ----
   nonoName: 'नोनोग्राम',
-  nonoBlurb: 'संख्याओं के संकेत से खाने रंगें।',
 
   nonoBoardLabel: 'नोनोग्राम बोर्ड, {size}×{size}',
   nonoCellBlank: 'खाली, पंक्ति {row}, स्तंभ {col}',
@@ -234,7 +231,6 @@ export const hi: Messages = {
 
   // ---- Minesweeper ----
   minesName: 'माइनस्वीपर',
-  minesBlurb: 'बिना बारूदी सुरंग वाले सभी खाने खोलें।',
 
   // Home
   minesChooseBoard: 'बोर्ड चुनें',
@@ -286,7 +282,6 @@ export const hi: Messages = {
 
   // ---- Memory Match ----
   memoryMatchName: 'Memory Match',
-  memoryMatchBlurb: 'दो कार्ड पलटें और हर जोड़ी खोजें।',
   memoryChooseBoard: 'बोर्ड चुनें',
   memoryDifficulty_easy: 'आसान',
   memoryDifficulty_medium: 'मध्यम',
@@ -315,7 +310,6 @@ export const hi: Messages = {
 
   // ---- Water Sort ----
   waterSortName: 'Water Sort',
-  waterSortBlurb: 'पानी उड़ेलते जाएँ, जब तक हर नली में एक ही रंग न रह जाए।',
   waterBoardLabel: 'पानी की नलियाँ',
   waterTubeLabel: 'नली {n}, नीचे से ऊपर: {colors}',
   waterTubeEmpty: 'खाली',
@@ -339,7 +333,6 @@ export const hi: Messages = {
 
   // ---- Solitaire ----
   solitaireName: 'Solitaire',
-  solitaireBlurb: 'इक्के से बादशाह तक चारों रंग पूरे करें।',
   solNewDeal: 'नई बाज़ी',
   solDrawSetting: 'पत्ते खींचने का ढंग',
   solDrawOne: '1 खींचें',

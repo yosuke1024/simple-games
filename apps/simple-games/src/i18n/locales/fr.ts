@@ -104,7 +104,7 @@ export const fr: Messages = {
 
   // Collection shell
   gamesHeading: 'Jeux',
-  numberMatchBlurb: 'Associez les nombres égaux ou dont la somme fait 10.',
+  recentHeading: 'Joués récemment',
   backToGames: 'Tous les jeux',
   learnMore: 'En savoir plus',
 
@@ -136,7 +136,6 @@ export const fr: Messages = {
 
   // Sudoku
   sudokuName: 'Sudoku',
-  sudokuBlurb: 'Remplissez chaque ligne, colonne et bloc avec 1-9.',
   sudokuGridLabel: 'Grille de Sudoku',
   sudokuPadLabel: 'Pavé numérique',
   sudokuPadKey: '{value}, {n} restants',
@@ -176,7 +175,6 @@ export const fr: Messages = {
 
   // ---- Sliding Puzzle ----
   slideName: 'Taquin',
-  slideBlurb: 'Glissez les nombres pour les remettre en ordre.',
 
   slideBoardLabel: 'Plateau du taquin',
   slideTileLabel: '{value}, ligne {row}, colonne {col}',
@@ -205,7 +203,6 @@ export const fr: Messages = {
 
   // ---- Nonogram ----
   nonoName: 'Nonogramme',
-  nonoBlurb: 'Peignez les cases que décrivent les nombres.',
 
   nonoBoardLabel: 'Grille de nonogramme, {size} par {size}',
   nonoCellBlank: 'Vide, ligne {row}, colonne {col}',
@@ -239,7 +236,6 @@ export const fr: Messages = {
 
   // ---- Minesweeper ----
   minesName: 'Démineur',
-  minesBlurb: 'Ouvrez toutes les cases sans mine.',
 
   // Home
   minesChooseBoard: 'Choisissez une grille',
@@ -292,7 +288,6 @@ export const fr: Messages = {
 
   // ---- Memory Match ----
   memoryMatchName: 'Memory Match',
-  memoryMatchBlurb: 'Retournez deux cartes et trouvez toutes les paires.',
   memoryChooseBoard: 'Choisissez une grille',
   memoryDifficulty_easy: 'Facile',
   memoryDifficulty_medium: 'Moyen',
@@ -321,7 +316,6 @@ export const fr: Messages = {
 
   // ---- Water Sort ----
   waterSortName: 'Water Sort',
-  waterSortBlurb: "Versez l'eau jusqu'à ce que chaque tube soit d'une seule couleur.",
   waterBoardLabel: "Tubes d'eau",
   waterTubeLabel: 'Tube {n}, de bas en haut : {colors}',
   waterTubeEmpty: 'vide',
@@ -345,7 +339,6 @@ export const fr: Messages = {
 
   // ---- Solitaire ----
   solitaireName: 'Solitaire',
-  solitaireBlurb: "Reconstituez les quatre familles, de l'as au roi.",
   solNewDeal: 'Nouvelle donne',
   solDrawSetting: 'Mode de pioche',
   solDrawOne: 'Piocher 1',
