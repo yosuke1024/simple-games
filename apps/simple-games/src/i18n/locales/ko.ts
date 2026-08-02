@@ -96,7 +96,7 @@ export const ko: Messages = {
 
   // Collection shell
   gamesHeading: '게임',
-  numberMatchBlurb: '같은 숫자나 합이 10인 숫자를 짝지어 없애세요.',
+  recentHeading: '최근 플레이',
   backToGames: '전체 게임',
   learnMore: '자세히 보기',
 
@@ -126,7 +126,6 @@ export const ko: Messages = {
 
   // Sudoku
   sudokuName: '스도쿠',
-  sudokuBlurb: '가로줄, 세로줄, 블록마다 1-9를 채우세요.',
   sudokuGridLabel: '스도쿠 판',
   sudokuPadLabel: '숫자 키패드',
   sudokuPadKey: '{value}, {n}개 남음',
@@ -164,7 +163,6 @@ export const ko: Messages = {
 
   // ---- Sliding Puzzle ----
   slideName: '슬라이드 퍼즐',
-  slideBlurb: '숫자를 밀어 순서대로 되돌리세요.',
 
   slideBoardLabel: '슬라이드 퍼즐 판',
   slideTileLabel: '{value}, {row}행 {col}열',
@@ -192,7 +190,6 @@ export const ko: Messages = {
 
   // ---- Nonogram ----
   nonoName: '노노그램',
-  nonoBlurb: '숫자를 단서로 칸을 칠하세요.',
 
   nonoBoardLabel: '노노그램 판, {size}×{size}',
   nonoCellBlank: '미정, {row}행 {col}열',
@@ -226,7 +223,6 @@ export const ko: Messages = {
 
   // ---- Minesweeper ----
   minesName: '지뢰 찾기',
-  minesBlurb: '지뢰가 없는 칸을 모두 여세요.',
 
   // Home
   minesChooseBoard: '판 선택',
@@ -278,7 +274,6 @@ export const ko: Messages = {
 
   // ---- Memory Match ----
   memoryMatchName: 'Memory Match',
-  memoryMatchBlurb: '카드를 뒤집어 같은 짝을 모두 찾으세요.',
   memoryChooseBoard: '보드 선택',
   memoryDifficulty_easy: '쉬움',
   memoryDifficulty_medium: '보통',
@@ -307,7 +302,6 @@ export const ko: Messages = {
 
   // ---- Water Sort ----
   waterSortName: 'Water Sort',
-  waterSortBlurb: '색깔 물을 옮겨 담아 시험관을 한 가지 색으로 채우세요.',
   waterBoardLabel: '워터 소트 시험관',
   waterTubeLabel: '시험관 {n}, 아래에서 위로: {colors}',
   waterTubeEmpty: '비어 있음',
@@ -331,7 +325,6 @@ export const ko: Messages = {
 
   // ---- Solitaire ----
   solitaireName: 'Solitaire',
-  solitaireBlurb: '에이스부터 킹까지 네 무늬를 완성하세요.',
   solNewDeal: '새 게임',
   solDrawSetting: '뽑기 설정',
   solDrawOne: '1장 뽑기',

@@ -97,7 +97,7 @@ export const tr: Messages = {
 
   // Collection shell
   gamesHeading: 'Oyunlar',
-  numberMatchBlurb: 'Aynı olan ya da toplamı 10 eden sayıları eşleştir.',
+  recentHeading: 'Son oynananlar',
   backToGames: 'Tüm oyunlar',
   learnMore: 'Daha Fazla',
 
@@ -127,7 +127,6 @@ export const tr: Messages = {
 
   // Sudoku
   sudokuName: 'Sudoku',
-  sudokuBlurb: 'Her satırı, sütunu ve kutuyu 1-9 ile doldur.',
   sudokuGridLabel: 'Sudoku ızgarası',
   sudokuPadLabel: 'Sayı tuşları',
   sudokuPadKey: '{value}, {n} kaldı',
@@ -164,7 +163,6 @@ export const tr: Messages = {
 
   // ---- Sliding Puzzle ----
   slideName: 'Kaydırmalı Bulmaca',
-  slideBlurb: 'Sayıları kaydırarak yeniden sıraya diz.',
 
   slideBoardLabel: 'Kaydırmalı bulmaca tahtası',
   slideTileLabel: '{value}, satır {row}, sütun {col}',
@@ -192,7 +190,6 @@ export const tr: Messages = {
 
   // ---- Nonogram ----
   nonoName: 'Nonogram',
-  nonoBlurb: 'Sayıların tarif ettiği kareleri boya.',
 
   nonoBoardLabel: 'Nonogram tahtası, {size}×{size}',
   nonoCellBlank: 'Boş, satır {row}, sütun {col}',
@@ -226,7 +223,6 @@ export const tr: Messages = {
 
   // ---- Minesweeper ----
   minesName: 'Mayın Tarlası',
-  minesBlurb: 'Mayın olmayan her kareyi aç.',
 
   // Home
   minesChooseBoard: 'Tahta seç',
@@ -278,7 +274,6 @@ export const tr: Messages = {
 
   // ---- Memory Match ----
   memoryMatchName: 'Memory Match',
-  memoryMatchBlurb: 'İki kart çevir, tüm eşleri bul.',
   memoryChooseBoard: 'Tahta seç',
   memoryDifficulty_easy: 'Kolay',
   memoryDifficulty_medium: 'Orta',
@@ -307,7 +302,6 @@ export const tr: Messages = {
 
   // ---- Water Sort ----
   waterSortName: 'Water Sort',
-  waterSortBlurb: 'Her tüp tek renk kalana dek suyu aktar.',
   waterBoardLabel: 'Su tüpleri',
   waterTubeLabel: 'Tüp {n}, alttan üste: {colors}',
   waterTubeEmpty: 'boş',
@@ -331,7 +325,6 @@ export const tr: Messages = {
 
   // ---- Solitaire ----
   solitaireName: 'Solitaire',
-  solitaireBlurb: 'Dört türü de astan papaza tamamla.',
   solNewDeal: 'Yeni el',
   solDrawSetting: 'Çekme ayarı',
   solDrawOne: '1 çek',

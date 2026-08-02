@@ -97,7 +97,7 @@ export const vi: Messages = {
 
   // Collection shell
   gamesHeading: 'Trò chơi',
-  numberMatchBlurb: 'Ghép các số giống nhau hoặc cộng lại bằng 10.',
+  recentHeading: 'Chơi gần đây',
   backToGames: 'Tất cả trò chơi',
   learnMore: 'Tìm hiểu thêm',
 
@@ -127,7 +127,6 @@ export const vi: Messages = {
 
   // Sudoku
   sudokuName: 'Sudoku',
-  sudokuBlurb: 'Điền 1-9 vào mỗi hàng, cột và ô vuông.',
   sudokuGridLabel: 'Lưới Sudoku',
   sudokuPadLabel: 'Bàn phím số',
   sudokuPadKey: '{value}, còn {n}',
@@ -164,7 +163,6 @@ export const vi: Messages = {
 
   // ---- Sliding Puzzle ----
   slideName: 'Xếp hình trượt',
-  slideBlurb: 'Trượt các số về đúng thứ tự.',
 
   slideBoardLabel: 'Bảng xếp hình trượt',
   slideTileLabel: '{value}, hàng {row}, cột {col}',
@@ -192,7 +190,6 @@ export const vi: Messages = {
 
   // ---- Nonogram ----
   nonoName: 'Nonogram',
-  nonoBlurb: 'Tô các ô theo gợi ý số.',
 
   nonoBoardLabel: 'Bảng nonogram, {size}×{size}',
   nonoCellBlank: 'Trống, hàng {row}, cột {col}',
@@ -226,7 +223,6 @@ export const vi: Messages = {
 
   // ---- Minesweeper ----
   minesName: 'Dò mìn',
-  minesBlurb: 'Mở mọi ô không có mìn.',
 
   // Home
   minesChooseBoard: 'Chọn bảng',
@@ -278,7 +274,6 @@ export const vi: Messages = {
 
   // ---- Memory Match ----
   memoryMatchName: 'Memory Match',
-  memoryMatchBlurb: 'Lật hai lá bài và tìm đủ mọi cặp.',
   memoryChooseBoard: 'Chọn bàn chơi',
   memoryDifficulty_easy: 'Dễ',
   memoryDifficulty_medium: 'Vừa',
@@ -307,7 +302,6 @@ export const vi: Messages = {
 
   // ---- Water Sort ----
   waterSortName: 'Water Sort',
-  waterSortBlurb: 'Rót nước đến khi mỗi ống chỉ còn một màu.',
   waterBoardLabel: 'Các ống nước',
   waterTubeLabel: 'Ống {n}, từ dưới lên: {colors}',
   waterTubeEmpty: 'trống',
@@ -331,7 +325,6 @@ export const vi: Messages = {
 
   // ---- Solitaire ----
   solitaireName: 'Solitaire',
-  solitaireBlurb: 'Xếp đủ bốn chất từ Át đến Già.',
   solNewDeal: 'Chia bài mới',
   solDrawSetting: 'Chế độ rút bài',
   solDrawOne: 'Rút 1',

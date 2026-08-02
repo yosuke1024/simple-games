@@ -95,7 +95,7 @@ export const zhHans: Messages = {
 
   // Collection shell
   gamesHeading: '游戏',
-  numberMatchBlurb: '消除相同或相加得 10 的数字。',
+  recentHeading: '最近玩过',
   backToGames: '全部游戏',
   learnMore: '了解更多',
 
@@ -125,7 +125,6 @@ export const zhHans: Messages = {
 
   // Sudoku
   sudokuName: '数独',
-  sudokuBlurb: '在每行、每列、每宫填入 1-9。',
   sudokuGridLabel: '数独盘面',
   sudokuPadLabel: '数字键盘',
   sudokuPadKey: '{value}，还剩 {n}',
@@ -162,7 +161,6 @@ export const zhHans: Messages = {
 
   // ---- Sliding Puzzle ----
   slideName: '数字华容道',
-  slideBlurb: '把数字滑回正确的顺序。',
 
   slideBoardLabel: '数字华容道盘面',
   slideTileLabel: '{value}，第 {row} 行第 {col} 列',
@@ -190,7 +188,6 @@ export const zhHans: Messages = {
 
   // ---- Nonogram ----
   nonoName: '数织',
-  nonoBlurb: '按数字提示涂满方格。',
 
   nonoBoardLabel: '数织盘面，{size}×{size}',
   nonoCellBlank: '未定，第{row}行 第{col}列',
@@ -224,7 +221,6 @@ export const zhHans: Messages = {
 
   // ---- Minesweeper ----
   minesName: '扫雷',
-  minesBlurb: '翻开所有没有地雷的格子。',
 
   // Home
   minesChooseBoard: '选择盘面',
@@ -276,7 +272,6 @@ export const zhHans: Messages = {
 
   // ---- Memory Match ----
   memoryMatchName: 'Memory Match',
-  memoryMatchBlurb: '翻开两张牌，找出所有配对。',
   memoryChooseBoard: '选择盘面',
   memoryDifficulty_easy: '简单',
   memoryDifficulty_medium: '中等',
@@ -305,7 +300,6 @@ export const zhHans: Messages = {
 
   // ---- Water Sort ----
   waterSortName: 'Water Sort',
-  waterSortBlurb: '倒来倒去，让每支试管只剩一种颜色。',
   waterBoardLabel: '倒水试管',
   waterTubeLabel: '试管 {n}，从下到上：{colors}',
   waterTubeEmpty: '空',
@@ -328,7 +322,6 @@ export const zhHans: Messages = {
 
   // ---- Solitaire ----
   solitaireName: 'Solitaire',
-  solitaireBlurb: '把四种花色从 A 排到 K。',
   solNewDeal: '新发牌',
   solDrawSetting: '翻牌设置',
   solDrawOne: '翻 1 张',

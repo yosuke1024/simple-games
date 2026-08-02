@@ -8,13 +8,14 @@
  * Validators never throw: corrupt data yields null and callers fall back to
  * safe defaults.
  */
-import { asBool, asInt, isRecord } from './validate';
+import { asBool, asInt, asString, isRecord } from './validate';
 
 /** Shared records are prefixed `sg.`; game records use their own prefix. */
 export const STORAGE_KEYS = {
   settings: 'sg.settings',
   iap: 'sg.iap',
   review: 'sg.review',
+  recent: 'sg.recent',
 } as const;
 
 export interface SchemaDef<T> {
@@ -120,6 +121,51 @@ export const iapSchema: SchemaDef<IapState> = {
     if (adRemovalPurchased === null) return null;
     if (purchasedAt === null && raw.purchasedAt !== null) return null;
     return { schemaVersion: 1, adRemovalPurchased, purchasedAt };
+  },
+};
+
+// ---------- recently played ----------
+
+/**
+ * The shortcut row at the top of the collection home: the games most recently
+ * opened, newest first. It exists so the list below can stay in a fixed,
+ * hand-ordered sequence as the collection grows — the games somebody actually
+ * plays stay one tap away without the order under them ever moving
+ * (docs/ARCHITECTURE.md「コレクションホーム」).
+ *
+ * It is a shortcut and nothing else: no timestamps, no counts, no "continue
+ * where you left off". Losing it costs nobody a saved game, which is why there
+ * is no migration to write and why "Reset Local Data" may simply drop it.
+ *
+ * Ids are validated as strings only — storage does not know which games exist.
+ * `app/recentGames.ts` drops ids the registry no longer carries, so a game that
+ * is removed one day cannot leave an unopenable shortcut behind.
+ */
+export interface RecentGames {
+  schemaVersion: 1;
+  ids: string[];
+}
+
+/**
+ * How many shortcuts the home shows. Two: enough for the pair most people
+ * alternate between, few enough that the full list is still the page.
+ */
+export const RECENT_GAMES_LIMIT = 2;
+
+export const recentGamesSchema: SchemaDef<RecentGames> = {
+  key: STORAGE_KEYS.recent,
+  version: 1,
+  defaultValue: () => ({ schemaVersion: 1, ids: [] }),
+  validate: (raw) => {
+    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
+    if (!Array.isArray(raw.ids)) return null;
+    const ids: string[] = [];
+    for (const value of raw.ids) {
+      const id = asString(value, 40);
+      if (id === null) return null;
+      if (!ids.includes(id)) ids.push(id);
+    }
+    return { schemaVersion: 1, ids: ids.slice(0, RECENT_GAMES_LIMIT) };
   },
 };
 

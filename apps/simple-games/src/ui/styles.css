@@ -40,8 +40,15 @@
 
 /* One accent per title, swapped by the shell as a game mounts (packages/brand
    titleAccents). The series base above never changes — that is what makes two
-   different games read as the same app. */
-:root[data-game='sudoku'] {
+   different games read as the same app.
+
+   The same values are reachable as `.accent-<id>` on any single element, which
+   is what the collection home's tiles use to show every title's colour at once
+   (CollectionHomeScreen.tsx). One set of values serves both, so a title's
+   accent can never mean one thing on the home and another inside the game.
+   Number Match appears in neither form: its accent IS the default above. */
+:root[data-game='sudoku'],
+.accent-sudoku {
   --accent: #2f6f62;
   --accent-ink: #ffffff;
   --accent-soft: #dcebe6;
@@ -49,7 +56,8 @@
   --accent-ring-soft: rgba(47, 111, 98, 0.12);
 }
 
-:root[data-game='minesweeper'] {
+:root[data-game='minesweeper'],
+.accent-minesweeper {
   --accent: #4a5a72;
   --accent-ink: #ffffff;
   --accent-soft: #e3e7ee;
@@ -57,7 +65,8 @@
   --accent-ring-soft: rgba(74, 90, 114, 0.12);
 }
 
-:root[data-game='nonogram'] {
+:root[data-game='nonogram'],
+.accent-nonogram {
   --accent: #6d5192;
   --accent-ink: #ffffff;
   --accent-soft: #eae4f2;
@@ -65,7 +74,8 @@
   --accent-ring-soft: rgba(109, 81, 146, 0.12);
 }
 
-:root[data-game='sliding-puzzle'] {
+:root[data-game='sliding-puzzle'],
+.accent-sliding-puzzle {
   --accent: #9c5b3c;
   --accent-ink: #ffffff;
   --accent-soft: #f2e2d8;
@@ -73,7 +83,8 @@
   --accent-ring-soft: rgba(156, 91, 60, 0.12);
 }
 
-:root[data-game='memory-match'] {
+:root[data-game='memory-match'],
+.accent-memory-match {
   --accent: #9e5468;
   --accent-ink: #ffffff;
   --accent-soft: #f2e0e7;
@@ -81,7 +92,8 @@
   --accent-ring-soft: rgba(158, 84, 104, 0.12);
 }
 
-:root[data-game='water-sort'] {
+:root[data-game='water-sort'],
+.accent-water-sort {
   --accent: #33708c;
   --accent-ink: #ffffff;
   --accent-soft: #dfeaf0;
@@ -89,7 +101,8 @@
   --accent-ring-soft: rgba(51, 112, 140, 0.12);
 }
 
-:root[data-game='solitaire'] {
+:root[data-game='solitaire'],
+.accent-solitaire {
   --accent: #557a48;
   --accent-ink: #ffffff;
   --accent-soft: #e3ecdf;
@@ -119,7 +132,8 @@
   --shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
 }
 
-:root[data-theme='dark'][data-game='sudoku'] {
+:root[data-theme='dark'][data-game='sudoku'],
+[data-theme='dark'] .accent-sudoku {
   --accent: #6fb3a3;
   --accent-ink: #101815;
   --accent-soft: #1e3b34;
@@ -127,7 +141,8 @@
   --accent-ring-soft: rgba(111, 179, 163, 0.14);
 }
 
-:root[data-theme='dark'][data-game='minesweeper'] {
+:root[data-theme='dark'][data-game='minesweeper'],
+[data-theme='dark'] .accent-minesweeper {
   --accent: #93a4bd;
   --accent-ink: #12151b;
   --accent-soft: #262d3a;
@@ -135,7 +150,8 @@
   --accent-ring-soft: rgba(147, 164, 189, 0.14);
 }
 
-:root[data-theme='dark'][data-game='nonogram'] {
+:root[data-theme='dark'][data-game='nonogram'],
+[data-theme='dark'] .accent-nonogram {
   --accent: #a893cf;
   --accent-ink: #161020;
   --accent-soft: #2e2740;
@@ -143,7 +159,8 @@
   --accent-ring-soft: rgba(168, 147, 207, 0.14);
 }
 
-:root[data-theme='dark'][data-game='sliding-puzzle'] {
+:root[data-theme='dark'][data-game='sliding-puzzle'],
+[data-theme='dark'] .accent-sliding-puzzle {
   --accent: #d1926f;
   --accent-ink: #1a120e;
   --accent-soft: #3a2820;
@@ -151,7 +168,8 @@
   --accent-ring-soft: rgba(209, 146, 111, 0.14);
 }
 
-:root[data-theme='dark'][data-game='memory-match'] {
+:root[data-theme='dark'][data-game='memory-match'],
+[data-theme='dark'] .accent-memory-match {
   --accent: #cf8fa4;
   --accent-ink: #1a1116;
   --accent-soft: #3a2530;
@@ -159,7 +177,8 @@
   --accent-ring-soft: rgba(207, 143, 164, 0.14);
 }
 
-:root[data-theme='dark'][data-game='water-sort'] {
+:root[data-theme='dark'][data-game='water-sort'],
+[data-theme='dark'] .accent-water-sort {
   --accent: #7fb4c9;
   --accent-ink: #0f171c;
   --accent-soft: #21333d;
@@ -167,7 +186,8 @@
   --accent-ring-soft: rgba(127, 180, 201, 0.14);
 }
 
-:root[data-theme='dark'][data-game='solitaire'] {
+:root[data-theme='dark'][data-game='solitaire'],
+[data-theme='dark'] .accent-solitaire {
   --accent: #97bd8a;
   --accent-ink: #121810;
   --accent-soft: #273a22;
@@ -380,6 +400,29 @@ button:disabled {
   letter-spacing: -0.3px;
 }
 
+/* The collection's hero is smaller than a game's. A game home screen carries
+   two buttons under its hero; this one carries the whole collection, and the
+   games have to start above the fold. The size is constant either way — it
+   must not change as the shortcut row appears. */
+.collection-screen .home-hero {
+  padding: 2vh 24px 16px;
+}
+
+.collection-screen .home-mark {
+  width: 46px;
+  height: 46px;
+  margin-bottom: 10px;
+}
+
+.collection-screen .home-title {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+
+.collection-screen .home-tagline {
+  font-size: 14px;
+}
+
 .home-tagline {
   margin: 0;
   color: var(--ink-soft);
@@ -563,68 +606,121 @@ button:disabled {
 
 /* ---------- collection home ---------- */
 
-/* One row per game: enough for a long list later, quiet with one entry now.
-   Text wraps rather than truncating (long-language resilience). */
-.game-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 0 24px;
+/* Two sections, both centred on the same column: the shortcut rows, then the
+   full grid. See CollectionHomeScreen.tsx for why the home is shaped this way
+   — the short version is that it has to stay usable at sixteen games. */
+.game-recent,
+.game-grid {
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
-  flex: 1;
+  padding: 0 24px;
 }
 
-.game-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: var(--radius);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  text-align: start;
-  transition: transform 0.06s ease;
-}
-
-.game-card:active {
-  transform: scale(0.985);
-}
-
-.game-card-tile {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 13px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.game-card-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.game-card-title {
-  font-size: 17px;
+.home-section-label {
+  margin: 0 0 8px;
+  font-size: 12px;
   font-weight: 700;
-}
-
-.game-card-blurb {
-  font-size: 13px;
+  letter-spacing: 0.6px;
   color: var(--ink-soft);
 }
 
-.game-card-chevron {
+/* Recently played: full-width rows, because there are at most two of them and
+   a shortcut should be the easiest thing on the screen to hit. */
+.game-recent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.game-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  /* Take the leftover height so the brand footer stays at the bottom on a
+     tall screen, without stretching the cells to fill it. */
+  flex: 1;
+  align-content: start;
+}
+
+/* The heading sits in the grid, so it has to span it. */
+.game-grid .home-section-label {
+  grid-column: 1 / -1;
+}
+
+.game-row,
+.game-cell {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: transform 0.06s ease;
+}
+
+.game-row:active,
+.game-cell:active {
+  transform: scale(0.985);
+}
+
+.game-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  text-align: start;
+}
+
+.game-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 15px 8px 13px;
+  text-align: center;
+  /* Long titles wrap onto a second line; both cells in the row grow together
+     (grid), so a wrapped title never leaves a short cell beside a tall one. */
+  min-width: 0;
+}
+
+/* The title's mark. Colour comes from `.accent-<id>` on this same element
+   (CollectionHomeScreen.tsx), so every title wears its own on this screen. */
+.game-tile {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+
+.game-row .game-tile {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+.game-cell .game-tile {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  font-size: 21px;
+}
+
+.game-row-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.game-cell-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.game-row-chevron {
   margin-inline-start: auto;
   color: var(--ink-soft);
   font-size: 18px;

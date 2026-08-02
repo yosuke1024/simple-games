@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { App } from './app/App';
+import { initRecentGames } from './app/recentGames';
 import { initAdRemoval, isAdRemovalPurchased } from './monetization/adRemoval';
 import { initPlayBilling } from './monetization/playBilling';
 import { initAds } from './services/ads/banner';
@@ -32,6 +33,7 @@ async function boot(): Promise<void> {
     await initNetwork();
     await initAdRemoval();
     await initReview();
+    await initRecentGames();
     settings = await loadRecord(settingsSchema);
   } catch {
     // Even unexpected boot failures must not prevent playing: use defaults.

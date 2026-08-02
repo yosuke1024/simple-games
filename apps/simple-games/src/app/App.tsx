@@ -11,6 +11,7 @@ import { markReviewPromptShown, shouldPromptReview } from '../services/review';
 import { ReviewPrompt } from '../ui/components/ReviewPrompt';
 import { CollectionHomeScreen } from '../ui/screens/CollectionHomeScreen';
 import { SettingsScreen } from '../ui/screens/SettingsScreen';
+import { recordGameOpened } from './recentGames';
 import { GAMES, type GameId } from './registry';
 
 type View = { kind: 'collection' } | { kind: 'settings' } | { kind: 'game'; gameId: GameId };
@@ -21,7 +22,12 @@ export function App() {
 
   const goCollection = useCallback(() => setView({ kind: 'collection' }), []);
   const openSettings = useCallback(() => setView({ kind: 'settings' }), []);
-  const openGame = useCallback((gameId: GameId) => setView({ kind: 'game', gameId }), []);
+  // Opening a game is also what feeds the home's shortcut row: the shell
+  // records what it mounted, so no game has to report anything (recentGames.ts).
+  const openGame = useCallback((gameId: GameId) => {
+    recordGameOpened(gameId);
+    setView({ kind: 'game', gameId });
+  }, []);
 
   // The review question's only doorway (docs/REVIEW_PROMPT_POLICY.md):
   // leaving a game for the collection — a natural pause, never at launch and
