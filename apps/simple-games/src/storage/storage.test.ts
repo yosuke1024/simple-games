@@ -66,12 +66,13 @@ describe('clearLocalData', () => {
 });
 
 /**
- * Saves are fire-and-forget everywhere in the app — a game must stay playable
- * whether or not storage is keeping up — so a write can still be in flight
- * when the player deletes their data. If it lands afterwards it recreates the
- * record, and "Reset Local Data" has told the player something untrue.
+ * Ordering under slow storage. Saves are fire-and-forget everywhere in the app
+ * — a game must stay playable whether or not storage is keeping up — so more
+ * than one operation on a key can be outstanding at once. What the player is
+ * promised is that they finish in the order they were asked for; "Reset Local
+ * Data" is where breaking that becomes visible, in both directions.
  */
-describe('a write already in flight when the data is wiped', () => {
+describe('operations on one key under slow storage', () => {
   /** A store whose writes land only when released: the slow-device case. */
   function createSlowKV() {
     const map = new Map<string, string>();
@@ -91,36 +92,62 @@ describe('a write already in flight when the data is wiped', () => {
     return { kv, release };
   }
 
-  it('does not resurrect the record it was writing', async () => {
-    const { kv, release } = createSlowKV();
-    const write = saveRecord(iapSchema, iapSchema.defaultValue(), kv);
+  const purchased = { schemaVersion: 1 as const, adRemovalPurchased: true, purchasedAt: 1 };
 
-    await clearLocalData([STORAGE_KEYS.iap], kv);
+  it('saves normally when nothing else is happening', async () => {
+    const { kv, release } = createSlowKV();
+    const write = saveRecord(iapSchema, purchased, kv);
     release();
     await write;
+
+    expect(await loadRecord(iapSchema, kv)).toEqual(purchased);
+  });
+
+  it('does not let a save in flight outlive the delete that came after it', async () => {
+    const { kv, release } = createSlowKV();
+    const write = saveRecord(iapSchema, purchased, kv);
+    const wipe = clearLocalData([STORAGE_KEYS.iap], kv);
+    release();
+    await Promise.all([write, wipe]);
 
     expect(await kv.get(STORAGE_KEYS.iap)).toBeNull();
   });
 
-  it('still saves normally when no wipe happened', async () => {
+  /**
+   * The mirror image, and the more expensive one to get wrong: the player
+   * resets, then plays or changes a setting. That save was asked for last, so
+   * it must survive — a straggler from before the reset must not take it down
+   * with it.
+   */
+  it('keeps a save made after the delete, even with a straggler in flight', async () => {
     const { kv, release } = createSlowKV();
-    const value = { ...iapSchema.defaultValue(), adRemovalPurchased: true };
-    const write = saveRecord(iapSchema, value, kv);
-
+    const straggler = saveRecord(iapSchema, iapSchema.defaultValue(), kv);
+    const wipe = clearLocalData([STORAGE_KEYS.iap], kv);
+    const afterwards = saveRecord(iapSchema, purchased, kv);
     release();
-    await write;
+    await Promise.all([straggler, wipe, afterwards]);
 
-    expect(await loadRecord(iapSchema, kv)).toEqual(value);
+    expect(await loadRecord(iapSchema, kv)).toEqual(purchased);
   });
 
-  it('keeps a write that started after the wipe', async () => {
+  it('applies two saves in the order they were asked for', async () => {
     const { kv, release } = createSlowKV();
-    await clearLocalData([STORAGE_KEYS.iap], kv);
-
-    const write = saveRecord(iapSchema, iapSchema.defaultValue(), kv);
+    const first = saveRecord(iapSchema, iapSchema.defaultValue(), kv);
+    const second = saveRecord(iapSchema, purchased, kv);
     release();
-    await write;
+    await Promise.all([first, second]);
 
-    expect(await kv.get(STORAGE_KEYS.iap)).not.toBeNull();
+    expect(await loadRecord(iapSchema, kv)).toEqual(purchased);
+  });
+
+  it('does not let one stalled key hold up another', async () => {
+    const { kv, release } = createSlowKV();
+    const stalled = saveRecord(iapSchema, purchased, kv);
+
+    // Would hang if every key shared one queue.
+    await clearLocalData(['nm.stats'], kv);
+
+    release();
+    await stalled;
   });
 });
