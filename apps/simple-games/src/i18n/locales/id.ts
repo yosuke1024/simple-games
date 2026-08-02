@@ -83,14 +83,14 @@ export const id: Messages = {
   resetData: 'Hapus Data Lokal',
   resetConfirmTitle: 'Hapus semua data lokal?',
   resetConfirmBody:
-    'Permainan, statistik, dan pengaturan di perangkat ini akan dihapus. Tidak bisa dibatalkan.',
+    'Permainan, statistik, dan pengaturan di perangkat ini akan dihapus. Tidak dapat diurungkan.',
   delete: 'Hapus',
   version: 'Versi',
 
   privacy1:
-    'Tanpa akun, tanpa pendaftaran. Kami tidak mengumpulkan nama, email, kontak, atau lokasi Anda.',
+    'Tanpa akun, tanpa pendaftaran. PixApps tidak mengumpulkan nama, email, kontak, atau lokasi Anda.',
   privacy2:
-    'Progres permainan, statistik, dan pengaturan hanya disimpan di perangkat ini. Kami tidak mengoperasikan server dan tidak ada sinkronisasi cloud.',
+    'Progres permainan, statistik, dan pengaturan hanya disimpan di perangkat ini. PixApps tidak mengoperasikan server dan tidak ada sinkronisasi cloud.',
   privacy3:
     'Saat online, iklan dari Google AdMob dapat muncul; Google dapat memproses ID iklan perangkat sesuai kebijakan privasinya sendiri. Saat offline, tidak ada iklan dan tidak ada permintaan iklan yang dikirim.',
   privacy4: 'Menghapus aplikasi, atau memakai "Hapus Data Lokal", akan menghapus data Anda.',
@@ -102,7 +102,6 @@ export const id: Messages = {
   bestTime: 'Selesai tercepat',
 
   // Collection shell
-  collectionTagline: 'Sepenuhnya gratis. Sepenuhnya offline. Langsung main.',
   gamesHeading: 'Game',
   numberMatchBlurb: 'Pasangkan angka yang sama atau berjumlah 10.',
   backToGames: 'Semua game',
@@ -118,7 +117,7 @@ export const id: Messages = {
   // Ads & support
   removeAdsTitle: 'Hapus Iklan & Dukung Simple Games',
   adSupportBody:
-    'Simple Games menampilkan satu banner iklan kecil hanya saat online, untuk membantu pemeliharaan dan pengembangan aplikasi. Tidak ingin iklan? Sekali beli, iklan hilang selamanya.',
+    'Simple Games menampilkan satu banner iklan kecil hanya saat online, untuk membantu saya merawat dan mengembangkan aplikasi. Tidak ingin iklan? Sekali beli, iklan hilang selamanya.',
   removeAdsAction: 'Hapus Iklan',
   restorePurchase: 'Pulihkan Pembelian',
   purchaseThanks: 'Banner iklan sudah dihapus. Terima kasih telah mendukung Simple Games.',
@@ -129,7 +128,7 @@ export const id: Messages = {
   reviewLater: 'Nanti saja',
   reviewFeedbackTitle: 'Apa yang bisa lebih baik?',
   reviewFeedbackBody:
-    'Beri tahu kami lewat email — kami membaca setiap pesan. Tidak ada yang terkirim sampai kamu menekan kirim di aplikasi email.',
+    'Beri tahu saya lewat email — saya membaca setiap pesan. Tidak ada yang terkirim sampai kamu menekan kirim di aplikasi email.',
   reviewFeedbackAction: 'Tulis email',
   privacy5:
     'Tersedia pembelian sekali bayar (opsional) untuk menghapus banner iklan. Pembayaran diproses oleh Google Play; PixApps tidak pernah menerima atau menyimpan detail pembayaran.',

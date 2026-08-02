@@ -46,7 +46,6 @@ export const HIGH_RISK_KEYS: readonly (keyof Messages)[] = [
 
   // 無料・オフライン・paywall 不在の保証
   'tagline',
-  'collectionTagline',
   'step3Body',
   'sudokuStep3Body',
 ];

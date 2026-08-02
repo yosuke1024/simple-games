@@ -85,8 +85,8 @@ export const zhHant: Messages = {
   delete: '刪除',
   version: '版本',
 
-  privacy1: '免帳號，免註冊。我們不會收集你的姓名、電子郵件、通訊錄或位置資訊。',
-  privacy2: '你的遊戲進度、統計和設定只存在這台裝置上。我們沒有伺服器，也沒有雲端同步。',
+  privacy1: '免帳號，免註冊。PixApps 不會收集你的姓名、電子郵件、通訊錄或位置資訊。',
+  privacy2: '你的遊戲進度、統計和設定只存在這台裝置上。PixApps 沒有伺服器，也沒有雲端同步。',
   privacy3:
     '連上網路時可能會顯示 Google AdMob 投放的廣告；Google 可能依其隱私權政策處理裝置廣告識別碼。離線時不會顯示廣告，也不會發出廣告請求。',
   privacy4: '刪除這個應用程式，或使用「清除本機資料」，即可刪除你的資料。',
@@ -98,7 +98,6 @@ export const zhHant: Messages = {
   bestTime: '最快過關',
 
   // Collection shell
-  collectionTagline: '完全免費。完全離線。打開就玩。',
   gamesHeading: '遊戲',
   numberMatchBlurb: '消除相同或相加為 10 的數字。',
   backToGames: '所有遊戲',
@@ -114,7 +113,7 @@ export const zhHant: Messages = {
   // Ads & support
   removeAdsTitle: '移除廣告，支持 Simple Games',
   adSupportBody:
-    'Simple Games 會在你連上網路時顯示一則小小的橫幅廣告，用來維持與改進這個應用程式。不想看廣告嗎？只要一次性購買，就能永久移除。',
+    'Simple Games 會在你連上網路時顯示一則小小的橫幅廣告，用來幫我維持與改進這個應用程式。不想看廣告嗎？只要一次性購買，就能永久移除。',
   removeAdsAction: '移除廣告',
   restorePurchase: '恢復購買',
   purchaseThanks: '橫幅廣告已移除。感謝你支持 Simple Games。',
@@ -125,10 +124,10 @@ export const zhHant: Messages = {
   reviewLater: '之後再說',
   reviewFeedbackTitle: '哪裡可以做得更好?',
   reviewFeedbackBody:
-    '歡迎寄封信告訴我們——每則訊息我們都會看。在你於郵件 App 按下傳送之前,不會送出任何內容。',
+    '歡迎寄封信告訴我——每則訊息我都會看。在你於郵件 App 按下傳送之前,不會送出任何內容。',
   reviewFeedbackAction: '寫郵件',
   privacy5:
-    '選擇性的一次性購買可以移除橫幅廣告。付款由 Google Play 處理，我們不會收到或保存任何付款資訊。',
+    '選擇性的一次性購買可以移除橫幅廣告。付款由 Google Play 處理，PixApps 不會收到或保存任何付款資訊。',
 
   // Sudoku
   sudokuName: '數獨',

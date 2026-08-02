@@ -88,9 +88,9 @@ export const fr: Messages = {
   version: 'Version',
 
   privacy1:
-    'Aucun compte. Aucune inscription. Nous ne collectons ni votre nom, ni votre e-mail, ni vos contacts, ni votre position.',
+    'Aucun compte. Aucune inscription. PixApps ne collecte ni votre nom, ni votre e-mail, ni vos contacts, ni votre position.',
   privacy2:
-    "Votre progression, vos statistiques et vos paramètres sont enregistrés uniquement sur cet appareil. Nous n'avons aucun serveur et il n'y a aucune synchronisation dans le cloud.",
+    "Votre progression, vos statistiques et vos paramètres sont enregistrés uniquement sur cet appareil. PixApps n'a aucun serveur et il n'y a aucune synchronisation dans le cloud.",
   privacy3:
     "En ligne, des annonces diffusées par Google AdMob peuvent apparaître ; Google peut traiter les identifiants publicitaires de l'appareil selon sa propre politique de confidentialité. Hors ligne, aucune annonce n'est affichée et aucune requête publicitaire n'est envoyée.",
   privacy4:
@@ -103,7 +103,6 @@ export const fr: Messages = {
   bestTime: 'Meilleur temps',
 
   // Collection shell
-  collectionTagline: 'Tout gratuit. Tout hors ligne. Prêt à jouer.',
   gamesHeading: 'Jeux',
   numberMatchBlurb: 'Associez les nombres égaux ou dont la somme fait 10.',
   backToGames: 'Tous les jeux',
@@ -119,7 +118,7 @@ export const fr: Messages = {
   // Ads & support
   removeAdsTitle: 'Retirer les pubs et soutenir Simple Games',
   adSupportBody:
-    "Simple Games est financé par une petite bannière publicitaire lorsque vous êtes en ligne. Elle nous aide à entretenir et à améliorer l'application. Vous préférez sans publicité ? Un achat unique les retire définitivement.",
+    "Simple Games est financé par une petite bannière publicitaire lorsque vous êtes en ligne. Elle m'aide à entretenir et à améliorer l'application. Vous préférez sans publicité ? Un achat unique les retire définitivement.",
   removeAdsAction: 'Retirer les pubs',
   restorePurchase: "Restaurer l'achat",
   purchaseThanks: 'Les bannières publicitaires sont retirées. Merci de soutenir Simple Games.',
@@ -130,10 +129,10 @@ export const fr: Messages = {
   reviewLater: 'Pas maintenant',
   reviewFeedbackTitle: 'Que pourrait-on améliorer ?',
   reviewFeedbackBody:
-    "Dites-le-nous par e-mail — nous lisons chaque message. Rien n'est envoyé tant que vous n'appuyez pas sur envoyer dans votre app de messagerie.",
+    "Dites-le-moi par e-mail — je lis chaque message. Rien n'est envoyé tant que vous n'appuyez pas sur envoyer dans votre app de messagerie.",
   reviewFeedbackAction: 'Écrire un e-mail',
   privacy5:
-    "Un achat unique facultatif permet de retirer les bannières publicitaires. L'achat est traité par Google Play ; nous ne recevons ni ne conservons aucune donnée de paiement.",
+    "Un achat unique facultatif permet de retirer les bannières publicitaires. L'achat est traité par Google Play ; PixApps ne reçoit ni ne conserve aucune donnée de paiement.",
 
   // Sudoku
   sudokuName: 'Sudoku',

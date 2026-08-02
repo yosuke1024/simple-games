@@ -2,8 +2,15 @@
  * Simple Games by PixApps — brand constants.
  *
  * Simple Games is a label (series name) owned by PixApps, not a separate company.
- * Keep this package tiny: names, taglines, and the shared palette only.
+ * Keep this package tiny: names, shared URLs, and the palette only.
  * Game-specific concepts must not leak into this package.
+ *
+ * Marketing copy does not belong here. On-screen wording lives in the locale
+ * catalogs, where the `Messages` type forces every shipped language to carry it;
+ * store and screenshot copy lives in docs/BRAND.md. A hard-coded English and
+ * Japanese pair could serve neither: it covers two languages, not the catalog,
+ * and because nothing imports it, it drifts out of step with the wording rules
+ * in docs/BRAND.md without anything failing.
  */
 
 export const SERIES_NAME = 'Simple Games';
@@ -40,13 +47,6 @@ export const SUPPORT_EMAIL = 'suzuki.yosuke@pixapps.ai';
  */
 export const PLAY_STORE_URL =
   'https://play.google.com/store/apps/details?id=com.pixapps.simplegames';
-
-/** Primary series message (English). */
-export const SERIES_TAGLINE_EN = 'Fully free. Fully offline. Simply playable.';
-/** Supporting series message (English). */
-export const SERIES_SUBLINE_EN = 'No account. No purchases. No internet required.';
-/** Primary series message (Japanese). */
-export const SERIES_TAGLINE_JA = '完全無課金。完全オフライン。すぐ遊べる。';
 
 /**
  * The series base: a warm, paper-like surface that stays readable for a long

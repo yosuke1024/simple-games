@@ -17,13 +17,19 @@ export interface CollectionHomeScreenProps {
 export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionHomeScreenProps) {
   const { t } = useSettings();
   /**
-   * The tagline promises "fully offline", which is the app's promise and not
-   * the web build's: the browser has to download the assets on a first visit,
-   * and docs/WEB_VERSION.md forbids wording that blurs that difference. So the
-   * line is gated rather than reworded — a web-only tagline would be a new
-   * string in fourteen locales, and the settings screen already answers this
-   * the same way (SettingsScreen.tsx, docs/I18N_POLICY.md). It comes back here
-   * unchanged the day the web build is offline on a first visit.
+   * The tagline promises offline play, which is the app's promise and not the
+   * web build's: the browser has to download the assets on a first visit, and
+   * docs/WEB_VERSION.md forbids wording that blurs that difference. So the line
+   * is gated rather than reworded — a web-only tagline would be a new string in
+   * fourteen locales, and the settings screen already answers this the same way
+   * (SettingsScreen.tsx, docs/I18N_POLICY.md). It comes back here unchanged the
+   * day the web build is offline on a first visit.
+   *
+   * This is the same `tagline` the five game home screens show. The collection
+   * carried its own line until it was found claiming the app cost nothing at
+   * all, which docs/BRAND.md forbids while the remove-ads purchase exists.
+   * Sharing the key leaves one wording to keep honest rather than two, and
+   * spends no new high-risk strings (docs/I18N_POLICY.md) to say it.
    */
   const taglineIsTrue = Capacitor.isNativePlatform();
   return (
@@ -60,7 +66,7 @@ export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionH
           <rect x="34" y="34" width="17" height="17" rx="4" fill="#8b95a3" />
         </svg>
         <h1 className="home-title">{SERIES_NAME}</h1>
-        {taglineIsTrue ? <p className="home-tagline">{t('collectionTagline')}</p> : null}
+        {taglineIsTrue ? <p className="home-tagline">{t('tagline')}</p> : null}
       </div>
 
       <nav className="game-list" aria-label={t('gamesHeading')}>

@@ -88,9 +88,9 @@ export const de: Messages = {
   version: 'Version',
 
   privacy1:
-    'Kein Konto. Keine Anmeldung. Wir erfassen weder Name, E-Mail, Kontakte noch Standort.',
+    'Kein Konto. Keine Anmeldung. PixApps erfasst weder Name, E-Mail, Kontakte noch Standort.',
   privacy2:
-    'Spielstand, Statistik und Einstellungen werden nur auf diesem Gerät gespeichert. Wir betreiben keine Server, und es gibt keine Cloud-Synchronisierung.',
+    'Spielstand, Statistik und Einstellungen werden nur auf diesem Gerät gespeichert. PixApps betreibt keine Server, und es gibt keine Cloud-Synchronisierung.',
   privacy3:
     'Online können Anzeigen von Google AdMob erscheinen; Google kann dabei Werbe-IDs des Geräts so verarbeiten, wie es die eigene Datenschutzerklärung beschreibt. Offline werden keine Anzeigen gezeigt und keine Anzeigen angefordert.',
   privacy4:
@@ -103,7 +103,6 @@ export const de: Messages = {
   bestTime: 'Bestzeit',
 
   // Collection shell
-  collectionTagline: 'Ganz gratis. Ganz offline. Einfach spielen.',
   gamesHeading: 'Spiele',
   numberMatchBlurb: 'Zahlen paaren, die gleich sind oder zusammen 10 ergeben.',
   backToGames: 'Alle Spiele',
@@ -119,7 +118,7 @@ export const de: Messages = {
   // Ads & support
   removeAdsTitle: 'Werbung entfernen & Simple Games unterstützen',
   adSupportBody:
-    'Simple Games finanziert sich online über ein kleines Banner. Das hilft uns, die App zu pflegen und zu verbessern. Lieber ohne Werbung? Ein einmaliger Kauf entfernt sie dauerhaft.',
+    'Simple Games finanziert sich online über ein kleines Banner. Das hilft mir, die App zu pflegen und zu verbessern. Lieber ohne Werbung? Ein einmaliger Kauf entfernt sie dauerhaft.',
   removeAdsAction: 'Werbung entfernen',
   restorePurchase: 'Kauf wiederherstellen',
   purchaseThanks: 'Bannerwerbung ist entfernt. Danke, dass du Simple Games unterstützt.',
@@ -130,10 +129,10 @@ export const de: Messages = {
   reviewLater: 'Jetzt nicht',
   reviewFeedbackTitle: 'Was könnte besser sein?',
   reviewFeedbackBody:
-    'Schreib uns eine E-Mail — wir lesen jede Nachricht. Es wird nichts gesendet, bis du in deiner Mail-App auf Senden tippst.',
+    'Schreib mir eine E-Mail — ich lese jede Nachricht. Es wird nichts gesendet, bis du in deiner Mail-App auf Senden tippst.',
   reviewFeedbackAction: 'E-Mail schreiben',
   privacy5:
-    'Ein optionaler einmaliger Kauf kann die Bannerwerbung entfernen. Der Kauf wird von Google Play abgewickelt; wir erhalten und speichern niemals Zahlungsdaten.',
+    'Ein optionaler einmaliger Kauf kann die Bannerwerbung entfernen. Der Kauf wird von Google Play abgewickelt; PixApps erhält und speichert niemals Zahlungsdaten.',
 
   // Sudoku
   sudokuName: 'Sudoku',
@@ -235,7 +234,7 @@ export const de: Messages = {
   nonoStep3Body: 'Stimmen alle Zeilen und Spalten, ist das Bild fertig. Raten ist nie nötig.',
 
   // ---- Minesweeper ----
-  minesName: 'Minensucher',
+  minesName: 'Minesweeper',
   minesBlurb: 'Öffne jedes Feld ohne Mine.',
 
   // Home

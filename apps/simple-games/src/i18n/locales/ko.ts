@@ -86,9 +86,9 @@ export const ko: Messages = {
   delete: '삭제',
   version: '버전',
 
-  privacy1: '계정도 가입도 없습니다. 이름, 이메일, 연락처, 위치를 수집하지 않습니다.',
+  privacy1: '계정도 가입도 없습니다. PixApps는 이름, 이메일, 연락처, 위치를 수집하지 않습니다.',
   privacy2:
-    '게임 진행, 통계, 설정은 이 기기에만 저장됩니다. 저희는 서버를 운영하지 않으며 클라우드 동기화도 없습니다.',
+    '게임 진행, 통계, 설정은 이 기기에만 저장됩니다. PixApps는 서버를 운영하지 않으며 클라우드 동기화도 없습니다.',
   privacy3:
     '온라인일 때 Google AdMob이 게재하는 광고가 표시될 수 있으며, Google은 자체 개인정보처리방침에 따라 기기 광고 식별자를 처리할 수 있습니다. 오프라인에서는 광고가 표시되지 않고 광고 요청도 보내지 않습니다.',
   privacy4: '앱을 삭제하거나 ‘로컬 데이터 삭제’를 사용하면 데이터가 지워집니다.',
@@ -100,7 +100,6 @@ export const ko: Messages = {
   bestTime: '최단 클리어',
 
   // Collection shell
-  collectionTagline: '완전 무료. 완전 오프라인. 바로 플레이.',
   gamesHeading: '게임',
   numberMatchBlurb: '같은 숫자나 합이 10인 숫자를 짝지어 없애세요.',
   backToGames: '전체 게임',
@@ -116,7 +115,7 @@ export const ko: Messages = {
   // Ads & support
   removeAdsTitle: '광고 제거하고 Simple Games 후원하기',
   adSupportBody:
-    'Simple Games는 온라인일 때 작은 배너 광고 하나로 운영됩니다. 광고는 앱을 유지하고 개선하는 데 쓰입니다. 광고 없이 쓰고 싶다면, 한 번만 구매하면 영구히 제거됩니다.',
+    'Simple Games는 온라인일 때 작은 배너 광고 하나로 유지됩니다. 광고는 제가 앱을 유지하고 개선하는 데 쓰입니다. 광고 없이 쓰고 싶다면, 한 번만 구매하면 영구히 제거됩니다.',
   removeAdsAction: '광고 제거',
   restorePurchase: '구매 복원',
   purchaseThanks: '배너 광고가 제거되었습니다. Simple Games를 후원해 주셔서 감사합니다.',
@@ -130,7 +129,7 @@ export const ko: Messages = {
     '이메일로 의견을 보내주세요. 모든 메시지를 읽고 있습니다. 메일 앱에서 보내기를 누르기 전까지는 아무것도 전송되지 않습니다.',
   reviewFeedbackAction: '메일 쓰기',
   privacy5:
-    '선택 사항인 일회성 구매로 배너 광고를 제거할 수 있습니다. 결제는 Google Play가 처리하며, 저희는 결제 정보를 받지도 저장하지도 않습니다.',
+    '선택 사항인 일회성 구매로 배너 광고를 제거할 수 있습니다. 결제는 Google Play가 처리하며, PixApps는 결제 정보를 받지도 저장하지도 않습니다.',
 
   // Sudoku
   sudokuName: '스도쿠',
@@ -243,7 +242,7 @@ export const ko: Messages = {
   minesDifficulty_hard: '어려움',
   minesBoardNote: '{width}×{height} · 지뢰 {mines}개',
   minesConfirmSwitchTitle: '진행 중인 판을 바꿀까요?',
-  minesConfirmSwitchBody: '진행 중인 {current} 게임이 새 {next} 판으로 바뀝니다.',
+  minesConfirmSwitchBody: '진행 중인 {current} 게임이 새 {next} 판으로 교체됩니다.',
 
   // Board
   minesBoardLabel: '지뢰밭, 가로 {width}칸 세로 {height}칸',

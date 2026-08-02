@@ -50,7 +50,10 @@
 レベルを持つのは Sudoku / Nonogram / Number Match / Sliding Puzzle の 4 本です。
 Minesweeper には段階的な進行が存在せず、999 段階を作れば水増しになるため作りません。
 
-ストア掲載文はゲーム単位で [store/listing.md](store/listing.md) に置きます。
+ストア掲載文の英語正文は [store/listing.md](store/listing.md) に置きます。収録ゲームは
+名前だけを並べ、ルールの詳細は掲載文に書きません(ゲーム別 Landing Page の役割)。
+言語別の掲載文はこのリポジトリでは管理しません(理由は
+[docs/I18N_POLICY.md](../../docs/I18N_POLICY.md) の「ストアローカライズ」)。
 
 各ゲームは共有設定画面へ設定セクションを 1 つだけ差し込めます
 (ゲームレジストリの任意フィールド `SettingsSection`)。ゲーム固有の設定はゲームが所有し

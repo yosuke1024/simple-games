@@ -88,9 +88,9 @@ export const tr: Messages = {
   version: 'Sürüm',
 
   privacy1:
-    'Hesap yok. Kayıt yok. Adını, e-postanı, kişilerini veya konumunu toplamıyoruz.',
+    'Hesap yok. Kayıt yok. PixApps adını, e-postanı, kişilerini veya konumunu toplamaz.',
   privacy2:
-    'Oyun ilerlemen, istatistiklerin ve ayarların yalnızca bu cihazda saklanır. Sunucu işletmiyoruz ve bulut eşitlemesi yok.',
+    'Oyun ilerlemen, istatistiklerin ve ayarların yalnızca bu cihazda saklanır. PixApps sunucu işletmez ve bulut eşitlemesi yok.',
   privacy3:
     'Çevrimiçiyken Google AdMob reklamları görünebilir; Google, kendi gizlilik politikasında açıkladığı şekilde cihazın reklam kimliklerini işleyebilir. Çevrimdışıyken reklam gösterilmez ve reklam isteği yapılmaz.',
   privacy4:
@@ -103,7 +103,6 @@ export const tr: Messages = {
   bestTime: 'En hızlı tamamlama',
 
   // Collection shell
-  collectionTagline: 'Tamamen ücretsiz. Tamamen çevrimdışı. Hemen oynanır.',
   gamesHeading: 'Oyunlar',
   numberMatchBlurb: 'Aynı olan ya da toplamı 10 eden sayıları eşleştir.',
   backToGames: 'Tüm oyunlar',
@@ -119,7 +118,7 @@ export const tr: Messages = {
   // Ads & support
   removeAdsTitle: 'Reklamları Kaldır ve Simple Games\'e Destek Ol',
   adSupportBody:
-    'Simple Games, çevrimiçiyken gösterilen küçük bir banner reklamla desteklenir. Bu, uygulamayı sürdürmemize ve geliştirmemize yardımcı olur. Reklam istemiyor musun? Tek seferlik bir satın alma reklamları kalıcı olarak kaldırır.',
+    'Simple Games, çevrimiçiyken gösterilen küçük bir banner reklamla desteklenir. Bu, uygulamayı sürdürmeme ve geliştirmeme yardımcı olur. Reklam istemiyor musun? Tek seferlik bir satın alma reklamları kalıcı olarak kaldırır.',
   removeAdsAction: 'Reklamları Kaldır',
   restorePurchase: 'Satın Almayı Geri Yükle',
   purchaseThanks: 'Banner reklamlar kaldırıldı. Simple Games\'e destek olduğun için teşekkürler.',
@@ -130,10 +129,10 @@ export const tr: Messages = {
   reviewLater: 'Şimdi değil',
   reviewFeedbackTitle: 'Neyi daha iyi yapabiliriz?',
   reviewFeedbackBody:
-    'Bize e-postayla anlat — her mesajı okuyoruz. Posta uygulamanda gönder düğmesine basana kadar hiçbir şey gönderilmez.',
+    'Bana e-postayla anlat — her mesajı okuyorum. Posta uygulamanda gönder düğmesine basana kadar hiçbir şey gönderilmez.',
   reviewFeedbackAction: 'E-posta yaz',
   privacy5:
-    'İsteğe bağlı, tek seferlik bir satın alma banner reklamları kaldırabilir. Satın alma Google Play tarafından işlenir; ödeme bilgilerini asla almayız ve saklamayız.',
+    'İsteğe bağlı, tek seferlik bir satın alma banner reklamları kaldırabilir. Satın alma Google Play tarafından işlenir; PixApps ödeme bilgilerini asla almaz ve saklamaz.',
 
   // Sudoku
   sudokuName: 'Sudoku',

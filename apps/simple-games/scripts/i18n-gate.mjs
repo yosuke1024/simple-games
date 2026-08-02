@@ -38,10 +38,23 @@ const digest = (value) => `sha256:${createHash('sha256').update(value, 'utf8').d
 function readCatalog(locale) {
   const text = readFileSync(join(I18N, `locales/${locale}.ts`), 'utf8');
   const out = {};
-  // key: 'single-quoted, possibly multi-line, with \' escapes'
-  const pattern = /^\s{2}(?:\/\/.*\n\s*)?'?([A-Za-z0-9_]+)'?:\s*\n?\s*'((?:[^'\\]|\\.)*)'/gm;
+  // key: 'single-quoted' OR "double-quoted", possibly multi-line, with escapes.
+  //
+  // Both quote styles are required, not tidiness: Prettier switches a string to
+  // double quotes as soon as it contains an apostrophe, which in French is most
+  // of the sentences that matter (`n'a aucun serveur`, `L'achat est traité…`).
+  // Reading only single quotes made `pending fr` print `undefined` for six of
+  // the twenty high-risk keys — silently, and for exactly the promises the gate
+  // exists to protect. `gate.test.ts` never saw this because it imports the
+  // catalogues through TypeScript rather than scraping them.
+  const pattern =
+    /^\s{2}(?:\/\/.*\n\s*)?'?([A-Za-z0-9_]+)'?:\s*\n?\s*(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")/gm;
   for (const match of text.matchAll(pattern)) {
-    out[match[1]] = match[2].replace(/\\'/g, "'").replace(/\\\\/g, '\\');
+    const raw = match[2] ?? match[3];
+    out[match[1]] = raw
+      .replace(/\\'/g, "'")
+      .replace(/\\"/g, '"')
+      .replace(/\\\\/g, '\\');
   }
   return out;
 }

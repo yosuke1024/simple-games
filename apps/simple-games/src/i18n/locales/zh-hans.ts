@@ -85,8 +85,8 @@ export const zhHans: Messages = {
   delete: '删除',
   version: '版本',
 
-  privacy1: '无需账号，无需注册。我们不收集你的姓名、邮箱、通讯录或位置信息。',
-  privacy2: '你的游戏进度、统计和设置仅保存在本设备上。我们不运营任何服务器，也没有云同步。',
+  privacy1: '无需账号，无需注册。PixApps 不收集你的姓名、邮箱、通讯录或位置信息。',
+  privacy2: '你的游戏进度、统计和设置仅保存在本设备上。PixApps 不运营任何服务器，也没有云同步。',
   privacy3:
     '联网时可能显示由 Google AdMob 投放的广告；Google 可能按其自身的隐私政策处理设备广告标识符。离线时不显示广告，也不发送任何广告请求。',
   privacy4: '删除应用，或使用“清除本地数据”，即可删除你的数据。',
@@ -98,7 +98,6 @@ export const zhHans: Messages = {
   bestTime: '最快通关',
 
   // Collection shell
-  collectionTagline: '完全免费。完全离线。打开就玩。',
   gamesHeading: '游戏',
   numberMatchBlurb: '消除相同或相加得 10 的数字。',
   backToGames: '全部游戏',
@@ -114,7 +113,7 @@ export const zhHans: Messages = {
   // Ads & support
   removeAdsTitle: '移除广告，支持 Simple Games',
   adSupportBody:
-    'Simple Games 在你联网时显示一条小小的横幅广告，用于维持和改进这款应用。不想看广告？一次性购买即可永久移除。',
+    'Simple Games 在你联网时显示一条小小的横幅广告，用于帮我维持和改进这款应用。不想看广告？一次性购买即可永久移除。',
   removeAdsAction: '移除广告',
   restorePurchase: '恢复购买',
   purchaseThanks: '横幅广告已移除。感谢你支持 Simple Games。',
@@ -125,10 +124,10 @@ export const zhHans: Messages = {
   reviewLater: '以后再说',
   reviewFeedbackTitle: '哪里可以做得更好?',
   reviewFeedbackBody:
-    '欢迎发邮件告诉我们——每条消息我们都会看。在你于邮件应用中按下发送之前,不会发送任何内容。',
+    '欢迎发邮件告诉我——每条消息我都会看。在你于邮件应用中按下发送之前,不会发送任何内容。',
   reviewFeedbackAction: '写邮件',
   privacy5:
-    '可选的一次性购买可移除横幅广告。该购买由 Google Play 处理，我们不会收到或保存任何支付信息。',
+    '可选的一次性购买可移除横幅广告。该购买由 Google Play 处理，PixApps 不会收到或保存任何支付信息。',
 
   // Sudoku
   sudokuName: '数独',
