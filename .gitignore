@@ -1,8 +1,9 @@
 # Dependencies
 node_modules/
 
-# Build outputs
+# Build outputs (dist-web/ is the web-mode build — docs/WEB_VERSION.md)
 dist/
+dist-web/
 .turbo/
 coverage/
 

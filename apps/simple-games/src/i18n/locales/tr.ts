@@ -80,6 +80,7 @@ export const tr: Messages = {
   vibration: 'Titreşim',
   reducedMotion: 'Hareketi azalt',
   privacyPolicy: 'Gizlilik Politikası',
+  termsOfUse: 'Kullanım Koşulları',
   resetData: 'Yerel Verileri Sil',
   resetConfirmTitle: 'Tüm yerel veriler silinsin mi?',
   resetConfirmBody:
@@ -87,14 +88,6 @@ export const tr: Messages = {
   delete: 'Sil',
   version: 'Sürüm',
 
-  privacy1:
-    'Hesap yok. Kayıt yok. PixApps adını, e-postanı, kişilerini veya konumunu toplamaz.',
-  privacy2:
-    'Oyun ilerlemen, istatistiklerin ve ayarların yalnızca bu cihazda saklanır. PixApps sunucu işletmez ve bulut eşitlemesi yok.',
-  privacy3:
-    'Çevrimiçiyken Google AdMob reklamları görünebilir; Google, kendi gizlilik politikasında açıkladığı şekilde cihazın reklam kimliklerini işleyebilir. Çevrimdışıyken reklam gösterilmez ve reklam isteği yapılmaz.',
-  privacy4:
-    'Uygulamayı kaldırmak ya da "Yerel Verileri Sil" seçeneğini kullanmak verilerini siler.',
 
   played: 'Oynanan oyun',
   cleared: 'Tamamlanan oyun',
@@ -131,8 +124,6 @@ export const tr: Messages = {
   reviewFeedbackBody:
     'Bana e-postayla anlat — her mesajı okuyorum. Posta uygulamanda gönder düğmesine basana kadar hiçbir şey gönderilmez.',
   reviewFeedbackAction: 'E-posta yaz',
-  privacy5:
-    'İsteğe bağlı, tek seferlik bir satın alma banner reklamları kaldırabilir. Satın alma Google Play tarafından işlenir; PixApps ödeme bilgilerini asla almaz ve saklamaz.',
 
   // Sudoku
   sudokuName: 'Sudoku',

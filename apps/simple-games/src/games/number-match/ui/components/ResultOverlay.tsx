@@ -2,6 +2,7 @@ import { MAX_LEVEL, type GameSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 import { useSettings } from '@/state/SettingsContext';
 import { formatDuration } from '@/ui/format';
+import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 
 export interface ResultOverlayProps {
   session: GameSession;
@@ -110,6 +111,7 @@ export function ResultOverlay({
           </button>
         </div>
       </div>
+      <ResultAdSlot />
     </div>
   );
 }

@@ -33,6 +33,27 @@ export const SOURCE_REPO_URL = 'https://github.com/yosuke1024/simple-games';
 export const LANDING_BASE_URL = 'https://pixapps.ai/simple-games';
 
 /**
+ * The privacy policy and terms of use. These pages are the SINGLE SOURCE for
+ * both documents (2026-08-02): the app links to them instead of carrying its
+ * own copy.
+ *
+ * The copy it used to carry was five bundled sentences in fourteen languages,
+ * which meant the same facts lived in three places and had to be kept in step
+ * by hand — and twelve of those languages were machine translations of exactly
+ * the wording docs/I18N_POLICY.md names as "a mistranslation here hands out a
+ * promise we cannot keep". One page, reviewed once, beats fourteen copies
+ * nobody has read.
+ *
+ * The cost is real and deliberate: these need a connection. Offline they do
+ * nothing, like the GitHub links beside them. What a player can still read
+ * offline is the part that affects them directly — what deleting their data
+ * removes, and that one banner and one optional purchase exist — because
+ * those strings are needed by the Settings screen anyway.
+ */
+export const PRIVACY_URL = `${LANDING_BASE_URL}/privacy`;
+export const TERMS_URL = `${LANDING_BASE_URL}/terms`;
+
+/**
  * Where the in-app "not really" feedback path opens a mail draft. Also the
  * public support address on the store listing and in the privacy policy, so
  * every road leads to the same inbox — which is why this value is not free to

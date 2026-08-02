@@ -26,11 +26,13 @@ android {
         versionName sgVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         // AdMob application ID for the manifest meta-data. The release
-        // workflow injects the production ID via the ADMOB_APP_ID env var;
-        // local/dev builds fall back to Google's official TEST app ID.
-        // Never commit the production ID (docs/ADS_POLICY.md).
+        // workflow injects the production ID via the ADMOB_ANDROID_APP_ID env
+        // var (platform-named because AdMob app IDs are per-OS and an iOS
+        // build will carry its own); local/dev builds fall back to Google's
+        // official TEST app ID. Never commit the production ID
+        // (docs/ADS_POLICY.md).
         manifestPlaceholders = [
-            admobAppId: System.getenv("ADMOB_APP_ID") ?: "ca-app-pub-3940256099942544~3347511713"
+            admobAppId: System.getenv("ADMOB_ANDROID_APP_ID") ?: "ca-app-pub-3940256099942544~3347511713"
         ]
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

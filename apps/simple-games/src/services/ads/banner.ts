@@ -22,15 +22,26 @@ import {
 import { Capacitor } from '@capacitor/core';
 import { isOnline } from '../network';
 
-/** Google's official test banner ID (safe to hardcode; never earns revenue). */
-const TEST_BANNER_ID = 'ca-app-pub-3940256099942544/9214589741';
+/**
+ * Google's official ANDROID test banner ID (safe to hardcode; never earns
+ * revenue). AdMob app and unit IDs are per-OS, which is why every ID name
+ * here carries the platform: a future iOS build brings Google's iOS test
+ * unit and its own VITE_ADMOB_IOS_BANNER_ID, selected by platform — it does
+ * not reuse these.
+ */
+const ANDROID_TEST_BANNER_ID = 'ca-app-pub-3940256099942544/9214589741';
 
 const useTestAds: boolean =
   import.meta.env.DEV || import.meta.env.VITE_ADMOB_USE_TEST_ADS === 'true';
 
 function bannerAdUnitId(): string | null {
-  if (useTestAds) return TEST_BANNER_ID;
-  return import.meta.env.VITE_ADMOB_BANNER_ID ?? null;
+  if (useTestAds) return ANDROID_TEST_BANNER_ID;
+  // The release workflow passes '' when ads are not configured, and Vite
+  // embeds that as the empty string rather than undefined — so `?? null` alone
+  // would hand back '' here. The caller's `if (!adId)` already stops that, but
+  // normalizing at the source keeps the next caller from having to know.
+  const injected = import.meta.env.VITE_ADMOB_ANDROID_BANNER_ID?.trim() ?? '';
+  return injected === '' ? null : injected;
 }
 
 let initialized = false;

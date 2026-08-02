@@ -8,6 +8,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { formatDuration } from '@/ui/format';
 import { MAX_LEVEL, type SlidingPuzzleSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
+import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 
 export interface SlidingPuzzleResultOverlayProps {
   session: SlidingPuzzleSession;
@@ -87,6 +88,7 @@ export function SlidingPuzzleResultOverlay({
           </button>
         </div>
       </div>
+      <ResultAdSlot />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { formatDuration } from '@/ui/format';
 import { MAX_LEVEL, type NonogramSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
+import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 
 export interface NonoResultOverlayProps {
   session: NonogramSession;
@@ -79,6 +80,7 @@ export function NonoResultOverlay({
           </button>
         </div>
       </div>
+      <ResultAdSlot />
     </div>
   );
 }

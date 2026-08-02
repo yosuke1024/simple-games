@@ -8,6 +8,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { formatDuration } from '@/ui/format';
 import type { SolitaireSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
+import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 
 export interface SolitaireResultOverlayProps {
   session: SolitaireSession;
@@ -90,6 +91,7 @@ export function SolitaireResultOverlay({
           </button>
         </div>
       </div>
+      <ResultAdSlot />
     </div>
   );
 }

@@ -8,7 +8,13 @@
  * this screen itself must always render (docs/OFFLINE_POLICY.md).
  */
 import { useEffect, useState } from 'react';
-import { SERIES_ATTRIBUTION, SERIES_BY_LINE, SERIES_NAME, SOURCE_REPO_URL } from '@simple-games/brand';
+import {
+  PRIVACY_URL,
+  SERIES_BY_LINE,
+  SERIES_NAME,
+  SOURCE_REPO_URL,
+  TERMS_URL,
+} from '@simple-games/brand';
 import packageJson from '../../../package.json';
 import { GAMES } from '../../app/registry';
 import { LANGUAGE_NAMES } from '../../i18n';
@@ -37,28 +43,23 @@ import { Toggle } from '../components/Toggle';
 import { openExternal } from '../openExternal';
 
 /**
- * The privacy summary is bundled (works fully offline) and localized via the
- * i18n catalogs. The full hosted policy URL is added before store release.
+ * About links. The privacy policy and terms are LINKS, not bundled text
+ * (2026-08-02): the pages at pixapps.ai are the single source for both, so
+ * there is one wording to keep honest instead of one per platform per
+ * language. See PRIVACY_URL in packages/brand for why, and what a player can
+ * still read with no connection.
+ *
+ * Both are the same shape as the source links beside them, including the
+ * offline behaviour: tapping does nothing rather than failing loudly
+ * (docs/OFFLINE_POLICY.md).
  */
-const PRIVACY_KEYS = ['privacy1', 'privacy2', 'privacy3', 'privacy4', 'privacy5'] as const;
-/**
- * What the web build (docs/WEB_VERSION.md) can honestly say. A privacy summary
- * that lists things the build does not do is just as wrong as one that hides
- * things it does, so three sentences are left out rather than reworded:
- * privacy3 (AdMob banners) and privacy5 (the ad-removal purchase) describe
- * things that do not exist here, and privacy4 tells the reader to delete an app
- * they never installed. Deletion still has to be explained, so the reset
- * action's own description stands in for privacy4 below — no new privacy string
- * is invented here, because privacy and deletion wording must not be
- * machine-translated (docs/I18N_POLICY.md).
- */
-const PRIVACY_KEYS_WEB = ['privacy1', 'privacy2'] as const;
-
 const OSS_LINKS = [
   { key: 'viewSource', url: SOURCE_REPO_URL },
   { key: 'reportBug', url: `${SOURCE_REPO_URL}/issues` },
   { key: 'suggestGame', url: `${SOURCE_REPO_URL}/issues` },
   { key: 'viewLicenses', url: `${SOURCE_REPO_URL}/blob/main/LICENSE` },
+  { key: 'privacyPolicy', url: PRIVACY_URL },
+  { key: 'termsOfUse', url: TERMS_URL },
 ] as const;
 
 export interface SettingsScreenProps {
@@ -73,7 +74,6 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const adsExist = isNativeAdsPlatform();
   const [price, setPrice] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [showPrivacy, setShowPrivacy] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -136,7 +136,11 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                 className={`segment ${settings.theme === theme ? 'segment-active' : ''}`}
                 onClick={() => updateSettings({ theme: theme as ThemeSetting })}
               >
-                {theme === 'system' ? t('themeSystem') : theme === 'light' ? t('themeLight') : t('themeDark')}
+                {theme === 'system'
+                  ? t('themeSystem')
+                  : theme === 'light'
+                    ? t('themeLight')
+                    : t('themeDark')}
               </button>
             ))}
           </div>
@@ -222,12 +226,6 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               </span>
             </button>
           ))}
-          <button type="button" className="settings-row" onClick={() => setShowPrivacy(true)}>
-            <span className="settings-row-label">{t('privacyPolicy')}</span>
-            <span className="settings-row-chevron" aria-hidden="true">
-              <IconChevronRight />
-            </span>
-          </button>
         </section>
 
         <button
@@ -265,39 +263,6 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           void resetAllData();
         }}
       />
-
-      {showPrivacy ? (
-        <div className="overlay" onClick={() => setShowPrivacy(false)}>
-          <div
-            className="dialog privacy-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-label={t('privacyPolicy')}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h2 className="dialog-title">{t('privacyPolicy')}</h2>
-            {(adsExist ? PRIVACY_KEYS : PRIVACY_KEYS_WEB).map((key) => (
-              <p key={key} className="dialog-body">
-                {t(key)}
-              </p>
-            ))}
-            {adsExist ? null : (
-              <p className="dialog-body">{`${t('resetData')}: ${t('resetConfirmBody')}`}</p>
-            )}
-            <p className="dialog-body privacy-attribution">{SERIES_ATTRIBUTION}</p>
-            <div className="dialog-actions">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => setShowPrivacy(false)}
-                autoFocus
-              >
-                {t('close')}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

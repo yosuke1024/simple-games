@@ -8,6 +8,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { formatDuration } from '@/ui/format';
 import { MAX_LEVEL, type WaterSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
+import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 
 export interface WaterResultOverlayProps {
   session: WaterSession;
@@ -93,6 +94,7 @@ export function WaterResultOverlay({
           </button>
         </div>
       </div>
+      <ResultAdSlot />
     </div>
   );
 }

@@ -14,6 +14,15 @@ name: Android release
 
 on:
   workflow_dispatch:
+    inputs:
+      # test = Google 公式テスト広告でビルドする(実機で広告表示を確認する用。
+      # secret 不要、収益は発生しない)。タグのリリースビルドでは選べない —
+      # タグ push はこの input を持たず、常に production 経路になる。
+      ads:
+        description: '広告(production: secrets の本番 ID / test: 公式テスト広告)'
+        type: choice
+        options: [production, test]
+        default: production
   push:
     tags:
       - 'v*'
@@ -113,28 +122,46 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Production ad unit IDs come from repository secrets; when they are not
-      # configured, the build ships with ads disabled (never test IDs, never
-      # hardcoded production IDs). See docs/ADS_POLICY.md. The collection has
-      # one AdMob app and exactly one ad format, so there is one banner secret
-      # and no interstitial/rewarded ID to inject — those formats do not exist.
-      #
-      # The two IDs are a pair and are injected together or not at all. Injecting
-      # only the banner ID would bake a production unit into a build whose
-      # manifest still carries Google's test app ID: mismatched identifiers, and
-      # a build that requests ads while this summary reports it does not.
-      - name: Decide whether ads are configured
+      # Ad mode is three-way (docs/ADS_POLICY.md):
+      #   production — unit IDs from repository secrets. The two IDs are a pair
+      #                and are injected together or not at all: only the banner
+      #                ID would bake a production unit into a build whose
+      #                manifest still carries Google's test app ID.
+      #   test       — dispatch-only (`ads: test`): Google's official test ads,
+      #                for checking ad behaviour on a device. No secrets used,
+      #                no revenue. A tag never gets here: tag pushes carry no
+      #                inputs, and the guard below refuses the combination
+      #                outright so a release build can never ship test ads.
+      #   disabled   — secrets not configured: the build ships with ads
+      #                disabled (never test IDs, never hardcoded production
+      #                IDs). The collection has one AdMob app and exactly one
+      #                ad format, so there is one banner secret and no
+      #                interstitial/rewarded ID to inject — those formats do
+      #                not exist.
+      # Secret names carry the platform (ADMOB_ANDROID_*) because AdMob app
+      # and unit IDs are per-OS: a future iOS lane adds ADMOB_IOS_* beside
+      # them instead of overloading these.
+      - name: Decide ad mode
         env:
-          BANNER_ID: ${{ secrets.ADMOB_BANNER_ID }}
-          APP_ID: ${{ secrets.ADMOB_APP_ID }}
+          ADS_INPUT: ${{ inputs.ads || 'production' }}
+          REF_TYPE: ${{ github.ref_type }}
+          BANNER_ID: ${{ secrets.ADMOB_ANDROID_BANNER_ID }}
+          APP_ID: ${{ secrets.ADMOB_ANDROID_APP_ID }}
         run: |
           set -euo pipefail
-          if [ -n "$BANNER_ID" ] && [ -n "$APP_ID" ]; then
-            echo "SG_ADS_CONFIGURED=yes" >> "$GITHUB_ENV"
+          if [ "$ADS_INPUT" = "test" ]; then
+            if [ "$REF_TYPE" = "tag" ]; then
+              echo "::error::タグのリリースビルドをテスト広告で作ることはできません。"
+              exit 1
+            fi
+            echo "SG_ADS_MODE=test" >> "$GITHUB_ENV"
+            echo "- 広告: **テスト広告**(Google 公式テスト ID — 公開不可のビルド)" >> "$GITHUB_STEP_SUMMARY"
+          elif [ -n "$BANNER_ID" ] && [ -n "$APP_ID" ]; then
+            echo "SG_ADS_MODE=production" >> "$GITHUB_ENV"
             echo "- 広告: 本番 AdMob ID でビルド" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "SG_ADS_CONFIGURED=no" >> "$GITHUB_ENV"
-            echo "- 広告: **無効**(ADMOB_APP_ID / ADMOB_BANNER_ID の secret が未設定)" >> "$GITHUB_STEP_SUMMARY"
+            echo "SG_ADS_MODE=disabled" >> "$GITHUB_ENV"
+            echo "- 広告: **無効**(ADMOB_ANDROID_APP_ID / ADMOB_ANDROID_BANNER_ID の secret が未設定)" >> "$GITHUB_STEP_SUMMARY"
             if [ -n "$BANNER_ID$APP_ID" ]; then
               echo "::warning::AdMob の secret が片方だけ設定されています。両方揃うまで広告なしでビルドします。"
             else
@@ -145,7 +172,8 @@ jobs:
       - name: Build web assets
         run: pnpm --filter simple-games build
         env:
-          VITE_ADMOB_BANNER_ID: ${{ env.SG_ADS_CONFIGURED == 'yes' && secrets.ADMOB_BANNER_ID || '' }}
+          VITE_ADMOB_ANDROID_BANNER_ID: ${{ env.SG_ADS_MODE == 'production' && secrets.ADMOB_ANDROID_BANNER_ID || '' }}
+          VITE_ADMOB_USE_TEST_ADS: ${{ env.SG_ADS_MODE == 'test' && 'true' || '' }}
 
       # `pnpm --filter <pkg> exec cap` does not resolve the workspace binary on
       # pnpm 10 ("Command \"cap\" not found"), so run it from the app directory.
@@ -186,7 +214,9 @@ jobs:
         working-directory: apps/simple-games/android
         run: ./gradlew bundleRelease assembleRelease
         env:
-          ADMOB_APP_ID: ${{ env.SG_ADS_CONFIGURED == 'yes' && secrets.ADMOB_APP_ID || '' }}
+          # test / disabled leave this empty → build.gradle falls back to
+          # Google's test application ID (docs/ADS_POLICY.md 広告 ID の管理).
+          ADMOB_ANDROID_APP_ID: ${{ env.SG_ADS_MODE == 'production' && secrets.ADMOB_ANDROID_APP_ID || '' }}
           SG_VERSION_NAME: ${{ steps.version.outputs.name }}
           SG_VERSION_CODE: ${{ steps.version.outputs.code }}
           SG_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}

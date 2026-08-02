@@ -14,6 +14,13 @@
       "runtimeArgs": ["--filter", "simple-games", "dev"],
       "port": 5174,
       "autoPort": true
+    },
+    {
+      "name": "simple-games-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "simple-games", "dev:web"],
+      "port": 5175,
+      "autoPort": true
     }
   ]
 }

@@ -459,6 +459,106 @@ button:disabled {
 
 .brand-by {
   font-size: 12px;
+}
+
+/* Web-build display ad (docs/ADS_POLICY.md「Web 版」— WebAdSlot renders null
+   on the native app). Fixed height from mount so a loading, failing, or
+   offline ad never moves the game list — the .banner-slot rule, applied to
+   the web. Fits both fixed unit sizes (320x100 / 728x90). */
+.web-ad-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  margin-top: 12px;
+}
+
+/* The measuring host: fills the slot's usable width so AdUnit can pick a unit
+   size that actually fits, instead of guessing from the viewport (the result
+   overlay is 48px narrower than the window). */
+.web-ad-host {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* The test-mode creative: local, labelled, and quiet — no ad network is
+   contacted (AdSense has no official test client ID; see AdUnit.tsx). */
+.web-ad-test {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+/* The result overlay's occasional slot sits BELOW the dialog card, apart
+   from the action buttons (docs/ADS_POLICY.md「Web 版」誤タップ防止).
+   `align-self: stretch` is load-bearing: the overlay centres its children, so
+   without it this slot shrinks to its content — width 0 before the ad exists —
+   and AdUnit would measure nothing to fit a unit into. */
+.overlay .web-ad-slot {
+  flex: none;
+  align-self: stretch;
+  margin-top: 14px;
+}
+
+/* Web build with ads: every screen keeps this much clear at the bottom so
+   the Auto-ads anchor — an overlay pinned to the viewport's bottom edge —
+   can never cover game controls. Set before first paint (main.tsx), so it
+   is geometry the layout starts with, not a shift.
+
+   The number is the WORST CASE, because there is no size event to grow from
+   the way the native BannerSlot has: Google picks the anchor unit, and the
+   tallest it uses is 100px (320x100 on phones; desktop's 728x90 is shorter).
+   16px on top of that is the gap ADS_POLICY.md requires between an ad and
+   anything tappable. Reserving the 72px of an earlier draft left a real
+   anchor covering the bottom 18-28px of the controls. */
+:root[data-sg-web-ads] .screen {
+  /* `height: 100%` alone would throw the reservation away the moment content
+     overflows: the padding sits inside a fixed-height box, and scrolled
+     content spills straight past it — measured on a 360x760 home screen, the
+     footer ended 100px UNDER the anchor with the padding set. Growing with
+     the content keeps the padding after the last element, where it works.
+     Scoped to the web-ads build, so the app's layout is untouched. */
+  height: auto;
+  min-height: 100%;
+  padding-bottom: calc(116px + env(safe-area-inset-bottom));
+}
+
+/* Dialogs need the clearance of their own: `.overlay` is fixed to the
+   viewport, so it does NOT inherit the reservation above — measured on a
+   375x450 viewport, the privacy dialog ran 11px under the anchor, and a
+   result overlay (card + occasional ad slot) goes further. Keeps the
+   overlay's own 24px gutter and adds the same worst-case anchor on top. */
+:root[data-sg-web-ads] .overlay {
+  padding-bottom: calc(140px + env(safe-area-inset-bottom));
+}
+
+/* Test-mode stand-in for the anchor: same place, zero network (mounted by
+   services/ads/web/boot.ts), and deliberately the TALLEST unit Google may
+   use (100px) rather than a typical one — a placeholder shorter than the
+   worst case makes a dev session look safe when production is not. */
+.web-anchor-test {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  height: calc(100px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px dashed var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  z-index: 30;
 }/* ---------- sudoku ---------- *//* ---------- digit pad ---------- */
 
 /* ---------- collection home ---------- */
@@ -681,10 +781,31 @@ button:disabled {
   inset: 0;
   background: rgba(20, 23, 28, 0.5);
   display: flex;
+  /* Column so a result overlay can stack its occasional ad slot below the
+     dialog card; with the usual single child the centering is identical. */
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* NOT `justify-content: center`. Centering a flex container's overflow
+     spills equally in both directions, and scrollTop cannot go negative — so
+     the moment the content is taller than the viewport, the dialog's title
+     and its close button become unreachable. The auto margins below centre
+     it exactly like `center` when it fits and collapse to zero when it does
+     not, which is the behaviour `justify-content: safe center` would give on
+     browsers newer than this build's Chromium 88 floor.
+     A dialog can exceed the viewport easily: it is max-height 80vh, and the
+     web-ads reservation adds 164px of padding on top of that. */
+  justify-content: flex-start;
   padding: 24px;
+  overflow-y: auto;
   z-index: 20;
+}
+
+.overlay > :first-child {
+  margin-top: auto;
+}
+
+.overlay > :last-child {
+  margin-bottom: auto;
 }
 
 .dialog {
@@ -752,14 +873,6 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.privacy-dialog .dialog-body {
-  font-size: 14px;
-}
-
-.privacy-attribution {
-  font-weight: 600;
 }
 
 /* ---------- toast ---------- */

@@ -265,5 +265,7 @@ seed 付き乱数を持っている**(`games/A/` から `games/B/` を import �
   `versionName` / `versionCode` はタグが決める。ストアへのアップロードは手動。
   タグに製品名を付けないのは、リリース対象がこのアプリ 1 つだけだから
   (8 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
-- Secrets は `ADMOB_APP_ID` / `ADMOB_BANNER_ID` のみ(インタースティシャル系は無い)。
+- Secrets は `ADMOB_ANDROID_APP_ID` / `ADMOB_ANDROID_BANNER_ID` のみ
+  (インタースティシャル系は無い。プラットフォーム名を含むのは AdMob ID が
+  OS ごとに別なため — iOS 版では `ADMOB_IOS_*` が並ぶ)。
   本番 ID・署名鍵はリポジトリにコミットしない。

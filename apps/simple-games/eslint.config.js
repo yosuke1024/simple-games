@@ -1,7 +1,7 @@
 import react from '@simple-games/eslint-config/react';
 
 export default [
-  { ignores: ['dist/', 'android/', 'node_modules/'] },
+  { ignores: ['dist/', 'dist-web/', 'android/', 'node_modules/'] },
   ...react,
   {
     // Build-time tooling, not shipped code: it runs in Node, not the WebView,
