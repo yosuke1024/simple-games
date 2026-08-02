@@ -80,6 +80,7 @@ export const id: Messages = {
   vibration: 'Getaran',
   reducedMotion: 'Kurangi animasi',
   privacyPolicy: 'Kebijakan Privasi',
+  termsOfUse: 'Ketentuan Penggunaan',
   resetData: 'Hapus Data Lokal',
   resetConfirmTitle: 'Hapus semua data lokal?',
   resetConfirmBody:
@@ -87,13 +88,6 @@ export const id: Messages = {
   delete: 'Hapus',
   version: 'Versi',
 
-  privacy1:
-    'Tanpa akun, tanpa pendaftaran. PixApps tidak mengumpulkan nama, email, kontak, atau lokasi Anda.',
-  privacy2:
-    'Progres permainan, statistik, dan pengaturan hanya disimpan di perangkat ini. PixApps tidak mengoperasikan server dan tidak ada sinkronisasi cloud.',
-  privacy3:
-    'Saat online, iklan dari Google AdMob dapat muncul; Google dapat memproses ID iklan perangkat sesuai kebijakan privasinya sendiri. Saat offline, tidak ada iklan dan tidak ada permintaan iklan yang dikirim.',
-  privacy4: 'Menghapus aplikasi, atau memakai "Hapus Data Lokal", akan menghapus data Anda.',
 
   played: 'Permainan dimainkan',
   cleared: 'Berhasil dibersihkan',
@@ -130,8 +124,6 @@ export const id: Messages = {
   reviewFeedbackBody:
     'Beri tahu saya lewat email — saya membaca setiap pesan. Tidak ada yang terkirim sampai kamu menekan kirim di aplikasi email.',
   reviewFeedbackAction: 'Tulis email',
-  privacy5:
-    'Tersedia pembelian sekali bayar (opsional) untuk menghapus banner iklan. Pembayaran diproses oleh Google Play; PixApps tidak pernah menerima atau menyimpan detail pembayaran.',
 
   // Sudoku
   sudokuName: 'Sudoku',

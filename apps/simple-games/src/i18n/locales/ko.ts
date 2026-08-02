@@ -80,18 +80,13 @@ export const ko: Messages = {
   vibration: '진동',
   reducedMotion: '동작 줄이기',
   privacyPolicy: '개인정보 처리방침',
+  termsOfUse: '이용약관',
   resetData: '로컬 데이터 삭제',
   resetConfirmTitle: '모든 로컬 데이터를 삭제할까요?',
   resetConfirmBody: '이 기기에서 게임, 통계, 설정이 삭제됩니다. 되돌릴 수 없습니다.',
   delete: '삭제',
   version: '버전',
 
-  privacy1: '계정도 가입도 없습니다. PixApps는 이름, 이메일, 연락처, 위치를 수집하지 않습니다.',
-  privacy2:
-    '게임 진행, 통계, 설정은 이 기기에만 저장됩니다. PixApps는 서버를 운영하지 않으며 클라우드 동기화도 없습니다.',
-  privacy3:
-    '온라인일 때 Google AdMob이 게재하는 광고가 표시될 수 있으며, Google은 자체 개인정보처리방침에 따라 기기 광고 식별자를 처리할 수 있습니다. 오프라인에서는 광고가 표시되지 않고 광고 요청도 보내지 않습니다.',
-  privacy4: '앱을 삭제하거나 ‘로컬 데이터 삭제’를 사용하면 데이터가 지워집니다.',
 
   played: '플레이한 게임',
   cleared: '클리어한 게임',
@@ -128,8 +123,6 @@ export const ko: Messages = {
   reviewFeedbackBody:
     '이메일로 의견을 보내주세요. 모든 메시지를 읽고 있습니다. 메일 앱에서 보내기를 누르기 전까지는 아무것도 전송되지 않습니다.',
   reviewFeedbackAction: '메일 쓰기',
-  privacy5:
-    '선택 사항인 일회성 구매로 배너 광고를 제거할 수 있습니다. 결제는 Google Play가 처리하며, PixApps는 결제 정보를 받지도 저장하지도 않습니다.',
 
   // Sudoku
   sudokuName: '스도쿠',

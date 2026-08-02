@@ -6,8 +6,11 @@
   "description": "Simple Games: Offline Puzzles — a collection of simple offline games by PixApps",
   "scripts": {
     "dev": "vite",
+    "dev:web": "vite --mode web",
     "build": "vite build",
+    "build:web": "vite build --mode web",
     "preview": "vite preview",
+    "preview:web": "vite preview --mode web",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
     "test": "vitest run",

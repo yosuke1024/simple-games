@@ -9,6 +9,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { formatDuration } from '@/ui/format';
 import type { MemorySession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
+import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 
 export interface MemoryResultOverlayProps {
   session: MemorySession;
@@ -73,6 +74,7 @@ export function MemoryResultOverlay({
           </button>
         </div>
       </div>
+      <ResultAdSlot />
     </div>
   );
 }

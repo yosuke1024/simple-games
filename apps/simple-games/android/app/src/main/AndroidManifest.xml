@@ -8,8 +8,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <!-- AdMob application ID. The placeholder is filled by Gradle from
-             the ADMOB_APP_ID environment variable at build time; when unset
-             it falls back to Google's official TEST app ID (see
+             the ADMOB_ANDROID_APP_ID environment variable at build time;
+             when unset it falls back to Google's official TEST app ID (see
              app/build.gradle and docs/ADS_POLICY.md). -->
         <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="${admobAppId}" />
 

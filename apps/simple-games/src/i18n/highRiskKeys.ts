@@ -26,19 +26,19 @@ export const HIGH_RISK_KEYS: readonly (keyof Messages)[] = [
   'removeAdsAction',
   'restorePurchase',
   'purchaseThanks',
-  'privacy5',
 
   // 削除 — 「元に戻せない」が弱まっていないこと
   'resetData',
   'resetConfirmTitle',
   'resetConfirmBody',
   'delete',
-  'privacy4',
 
-  // プライバシー
-  'privacy1',
-  'privacy2',
-  'privacy3',
+  // プライバシーの本文はもうここに無い(2026-08-02)。`privacy1`〜`privacy5` と
+  // `privacyWebAds` は 14 言語ぶんのカタログごと廃止し、設定画面は
+  // pixapps.ai の公開ページへリンクするだけになった。訳を 12 言語ぶん抱えて
+  // 門に積む代わりに、1 枚のページを 1 回直す形にしたということ
+  // (packages/brand の PRIVACY_URL に理由、docs/I18N_POLICY.md に経緯)。
+  // これで門の未承認は 240 → 168 件になった。
 
   // 破壊的操作の確認 — 誤訳がそのままデータ損失になる
   'confirmNewGameBody',

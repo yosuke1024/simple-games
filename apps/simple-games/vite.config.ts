@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   resolve: {
     // '@/' is the app root. Games sit three or four folders deep, so shared
@@ -29,10 +29,16 @@ export default defineConfig({
     // does not transpile (aspect-ratio, flex gap) — and is verified on-device
     // per docs/RELEASE_CHECKLIST.md.
     target: 'es2018',
+    // Two builds, two directories — never the same one. `cap sync` copies
+    // dist/ into android/, so the web build (`--mode web`, the only build
+    // that bundles the AdSense integration — docs/ADS_POLICY.md「Web 版」)
+    // writes to dist-web/ where Capacitor cannot pick it up by accident.
+    // CI greps both artifacts (.github/scripts/check-dist-ads-separation.sh).
+    outDir: mode === 'web' ? 'dist-web' : 'dist',
   },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
   },
-});
+}));

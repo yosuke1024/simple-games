@@ -244,7 +244,7 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 - カタログは全言語をアプリに同梱する(`src/i18n/locales/*.ts`。オフライン要件)。
   言語追加は「locale ファイル 1 つ + `i18n/index.ts` への登録」で完結し、
   `Messages` 型が全キーの存在をコンパイル時に強制する(キー欠落でビルドが通らない)。
-- 現在 14 言語・306 キー(en / ja / hi / th / id / vi / ko / zh-hans / zh-hant /
+- 現在 14 言語・302 キー(en / ja / hi / th / id / vi / ko / zh-hans / zh-hant /
   es / pt-br / fr / de / tr)。ロケールタグは小文字で持つ。en と ja 以外は来歴
   `machine`(AI の助けを借りて書き、その言語のネイティブは読んでいない)。
   高リスクキーはリリース前の門で逆翻訳を作者が読む(`docs/I18N_POLICY.md`)。
@@ -313,5 +313,7 @@ seed 付き乱数を持っている**(`games/A/` から `games/B/` を import �
   `versionName` / `versionCode` はタグが決める。ストアへのアップロードは手動。
   タグに製品名を付けないのは、リリース対象がこのアプリ 1 つだけだから
   (8 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
-- Secrets は `ADMOB_APP_ID` / `ADMOB_BANNER_ID` のみ(インタースティシャル系は無い)。
+- Secrets は `ADMOB_ANDROID_APP_ID` / `ADMOB_ANDROID_BANNER_ID` のみ
+  (インタースティシャル系は無い。プラットフォーム名を含むのは AdMob ID が
+  OS ごとに別なため — iOS 版では `ADMOB_IOS_*` が並ぶ)。
   本番 ID・署名鍵はリポジトリにコミットしない。

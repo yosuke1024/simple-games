@@ -84,6 +84,19 @@ else
   ok "AdMob ID はテスト用のみ"
 fi
 
+# Web 版の AdSense(ADS_POLICY.md「Web 版」)には公式のテスト client ID が存在しない
+# ため、client / slot ID は一切ソースに書かない(テスト表示はローカルのプレースホルダ、
+# 本番 ID は VITE_ADSENSE_* で注入)。ゆえに ca-pub- は例外なしの不在検査になる。
+# なお「native ビルドに AdSense コードが不在」の検査はビルド成果物が要るので、
+# ここではなく ci.yml の check-dist-ads-separation.sh が担当する(このスクリプトは
+# grep だけで動く、という分担を崩さないため)。
+hits="$(grep -rn 'ca-pub-' "${src_dirs[@]}" || true)"
+if [ -n "$hits" ]; then
+  report "AdSense の client ID がソースにあります(注入するもので、コミットするものではありません)" "$hits"
+else
+  ok "AdSense ID はソースに不在"
+fi
+
 # 6. 禁止表現 -----------------------------------------------------------------
 # docs/BRAND.md「表現ルール」の使用禁止表現は、ストア文面だけの規則ではなく、
 # ソースに入る文字列にも同じくかかる(i18n カタログ・packages/brand)。

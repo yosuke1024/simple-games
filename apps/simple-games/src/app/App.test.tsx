@@ -31,7 +31,7 @@ describe('collection home', () => {
   });
 
   // The collection wears the app's own icon — an <svg class="home-mark"> — and
-  // deliberately not .home-logo, which is the accent tile the five game home
+  // deliberately not .home-logo, which is the accent tile the game home
   // screens draw their glyph in. Restyling .home-logo for the collection once
   // flattened the tile on all five game screens at the same time, and nothing
   // caught it: the shared class had no test saying who it belonged to.

@@ -23,7 +23,7 @@ function play(tubes: Tubes, moves: readonly { from: number; to: number }[]): Tub
 describe('solve', () => {
   it('returns a replayable solution for a generated board', () => {
     for (const colors of [3, 6, 9]) {
-      const puzzle = generatePuzzle(`solver-replay-${colors}`, colors);
+      const puzzle = generatePuzzle(`solver-replay-${colors}`, colors, 0.5);
       const result = solve(puzzle.tubes);
       expect(result.status).toBe('solved');
       if (result.status === 'solved') {
@@ -50,14 +50,14 @@ describe('solve', () => {
   });
 
   it('reports capped, not unsolvable, when the budget runs out', () => {
-    const puzzle = generatePuzzle('solver-cap', 9);
+    const puzzle = generatePuzzle('solver-cap', 9, 0.5);
     expect(solve(puzzle.tubes, 1).status).toBe('capped');
   });
 });
 
 describe('findWinningPour', () => {
   it('returns a move that keeps the board solvable (§8)', () => {
-    const puzzle = generatePuzzle('solver-hint', 7);
+    const puzzle = generatePuzzle('solver-hint', 7, 0.5);
     const hint = findWinningPour(puzzle.tubes);
     expect(hint).not.toBeNull();
     const after = applyPour(puzzle.tubes, hint!.from, hint!.to);

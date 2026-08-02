@@ -48,9 +48,9 @@ bash .github/scripts/check-principles.sh
 - [ ] 初回起動で言語選択・ログイン・通知許可・課金ダイアログが出ない
 - [ ] **生成の待ちが体感されない** —— 性能予算は端末の予算で、開発機の
       テストでは測れない(そちらは仕事量を見ている)。最も重い盤面で確認する:
-      Sudoku の level 393 / 388 / 629 / 814 / 923(開発機で既に 100ms 予算を
-      超過。[SUDOKU_RULES.md](SUDOKU_RULES.md) §7)、Minesweeper Hard の初手、
-      Nonogram の level 999。押してから盤面が出るまでに間があってはいけない
+      Sudoku の level 53 / 72(開発機で既に 100ms 予算を超過。
+      [SUDOKU_RULES.md](SUDOKU_RULES.md) §7)、Minesweeper Hard の初手、
+      Nonogram の level 100。押してから盤面が出るまでに間があってはいけない
 
 ## 3. 多言語
 
@@ -94,7 +94,8 @@ bash .github/scripts/check-principles.sh
 ## 5. 広告と課金(本番接続)
 
 - [ ] AdMob に本番バナーユニットを作成し、GitHub Secrets に設定
-      (`ADMOB_APP_ID` / `ADMOB_BANNER_ID`。interstitial 用は存在しない)
+      (`ADMOB_ANDROID_APP_ID` / `ADMOB_ANDROID_BANNER_ID`。
+      interstitial 用は存在しない)
 - [ ] テスト広告ではなく本番 ID でビルドされていることを確認
       (`VITE_ADMOB_USE_TEST_ADS` が未設定)
 - [ ] Play Console にアプリ内商品 `remove_ads` を作成(USD 3.99、国別自動価格)
@@ -121,7 +122,10 @@ bash .github/scripts/check-principles.sh
 - [ ] `apps/simple-games/store/listing.md` の文言を各言語へ反映
 - [ ] スクリーンショットを撮影(盤面中心・文字は最小限)
 - [ ] プライバシーポリシーをホスティングし、URL を Play Console に登録
-- [ ] データセーフティ欄を [PRIVACY_POLICY.md](PRIVACY_POLICY.md) と一致させる
+- [ ] データセーフティ欄を公開ページ <https://pixapps.ai/simple-games/privacy> と
+      一致させる(そこが正本。[PRIVACY_POLICY.md](PRIVACY_POLICY.md) はポインタ)
+- [ ] 設定画面の「プライバシーポリシー」「利用規約」が実機で開くことを確認
+      (アプリは文面を同梱せずリンクするだけになった)
 - [ ] 「Coming Soon」表記や未実装ゲームの名前が掲載文に含まれていない
 
 ## 7. 公開

@@ -3,7 +3,7 @@
  * to be looking at, so changing them for one caller silently changes the rest.
  *
  * `.home-logo` is the accent tile every game's home screen draws its glyph in
- * (five screens, one rule). It was once rewritten to suit the collection home,
+ * (many screens, one rule). It was once rewritten to suit the collection home,
  * which needed no tile at all, and all five games lost their tile in the same
  * commit — visible only by opening a game, which the change had not done.
  *
@@ -29,7 +29,7 @@ function ruleBody(selector: string): string {
 }
 
 describe('the home screens share .home-logo', () => {
-  it('keeps the accent tile the five game home screens draw their glyph in', () => {
+  it('keeps the accent tile the game home screens draw their glyph in', () => {
     const tile = ruleBody('.home-logo');
     // Without these the glyph renders as bare text in the page's ink: no tile,
     // no accent, not centred, and at body size instead of 22px.

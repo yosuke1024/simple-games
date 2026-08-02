@@ -67,9 +67,9 @@ describe('createLevelSession (§6)', () => {
 
   it('gives a big level a bigger board and a deeper shuffle', () => {
     expect(createLevelSession(1).size).toBe(3);
-    expect(createLevelSession(200).size).toBe(4);
-    expect(createLevelSession(900).size).toBe(5);
-    expect(shuffleDepthForLevel(900)).toBeGreaterThan(shuffleDepthForLevel(1));
+    expect(createLevelSession(50).size).toBe(4);
+    expect(createLevelSession(90).size).toBe(5);
+    expect(shuffleDepthForLevel(90)).toBeGreaterThan(shuffleDepthForLevel(1));
   });
 });
 

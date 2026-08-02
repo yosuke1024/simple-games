@@ -29,6 +29,7 @@ import { getRecentGames } from '../../app/recentGames';
 import { GAMES, type GameId, type GameModule } from '../../app/registry';
 import { useSettings } from '../../state/SettingsContext';
 import { IconChevronRight, IconGear } from '../components/icons';
+import { WebAdSlot } from '../components/WebAdSlot';
 
 /**
  * The tile carries the title's accent by class, which `ui/styles.css` maps to
@@ -67,7 +68,7 @@ export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionH
    * (SettingsScreen.tsx, docs/I18N_POLICY.md). It comes back here unchanged the
    * day the web build is offline on a first visit.
    *
-   * This is the same `tagline` the five game home screens show. The collection
+   * This is the same `tagline` the game home screens show. The collection
    * carried its own line until it was found claiming the app cost nothing at
    * all, which docs/BRAND.md forbids while the remove-ads purchase exists.
    * Sharing the key leaves one wording to keep honest rather than two, and
@@ -149,6 +150,12 @@ export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionH
           </button>
         ))}
       </nav>
+
+      {/* Web build only — the home display unit (docs/ADS_POLICY.md「Web 版」).
+          Renders nothing on the native app, whose only ad surface stays the
+          anchored banner inside each game (BannerSlot). Kept outside the game
+          list and far from anything tappable toward a game. */}
+      <WebAdSlot />
 
       <footer className="brand-footer">
         <span className="brand-name">{SERIES_NAME}</span>

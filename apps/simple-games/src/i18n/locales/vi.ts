@@ -80,6 +80,7 @@ export const vi: Messages = {
   vibration: 'Rung',
   reducedMotion: 'Giảm chuyển động',
   privacyPolicy: 'Chính sách bảo mật',
+  termsOfUse: 'Điều khoản sử dụng',
   resetData: 'Xóa dữ liệu trên máy',
   resetConfirmTitle: 'Xóa toàn bộ dữ liệu trên máy?',
   resetConfirmBody:
@@ -87,14 +88,6 @@ export const vi: Messages = {
   delete: 'Xóa',
   version: 'Phiên bản',
 
-  privacy1:
-    'Không tài khoản. Không đăng ký. PixApps không thu thập tên, email, danh bạ hay vị trí của bạn.',
-  privacy2:
-    'Tiến trình chơi, thống kê và cài đặt chỉ được lưu trên thiết bị này. PixApps không vận hành máy chủ và không có đồng bộ đám mây.',
-  privacy3:
-    'Khi trực tuyến, quảng cáo do Google AdMob phân phối có thể xuất hiện; Google có thể xử lý mã nhận dạng quảng cáo của thiết bị theo chính sách bảo mật riêng của họ. Khi ngoại tuyến, không có quảng cáo nào hiển thị và không có yêu cầu quảng cáo nào được gửi đi.',
-  privacy4:
-    'Gỡ ứng dụng hoặc dùng "Xóa dữ liệu trên máy" sẽ xóa dữ liệu của bạn.',
 
   played: 'Ván đã chơi',
   cleared: 'Ván đã dọn sạch',
@@ -131,8 +124,6 @@ export const vi: Messages = {
   reviewFeedbackBody:
     'Hãy cho tôi biết qua email — tôi đọc mọi tin nhắn. Sẽ không có gì được gửi cho đến khi bạn nhấn gửi trong ứng dụng thư.',
   reviewFeedbackAction: 'Viết email',
-  privacy5:
-    'Một giao dịch mua tùy chọn, chỉ trả một lần, có thể gỡ banner quảng cáo. Giao dịch do Google Play xử lý; PixApps không bao giờ nhận hay lưu thông tin thanh toán.',
 
   // Sudoku
   sudokuName: 'Sudoku',

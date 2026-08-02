@@ -3,13 +3,7 @@ import { createMemoryKV } from '../../../storage/kv';
 import { clearLocalData, loadRecord, saveRecord } from '../../../storage/repo';
 import { createDailySession, createLevelSession } from '../game';
 import { clearSavedGame, loadSavedGames, saveGame } from './gamePersistence';
-import {
-  flagsSchema,
-  gameSchema,
-  NM_STORAGE_KEYS,
-  progressSchema,
-  statsSchema,
-} from './schemas';
+import { flagsSchema, gameSchema, NM_STORAGE_KEYS, progressSchema, statsSchema } from './schemas';
 
 describe('loadRecord (Number Match records)', () => {
   it('returns defaults for an unknown schemaVersion (every schema)', async () => {
@@ -57,7 +51,6 @@ describe('loadRecord (Number Match records)', () => {
       stoneIntroSeen: false,
     });
   });
-
 });
 
 describe('saved game persistence', () => {
@@ -266,7 +259,7 @@ describe('progress record', () => {
   it('drops malformed best-score and top-score entries instead of failing', async () => {
     const kv = createMemoryKV({
       [NM_STORAGE_KEYS.progress]: JSON.stringify({
-        schemaVersion: 1,
+        schemaVersion: 2,
         highestUnlocked: 5,
         bestScores: { '3': 100, '0': 50, '1000': 50, bogus: 1, '4': 'high' },
         bestDaily: { '2026-07-27': 200, 'not-a-date': 5, '2026-07-26': 'high' },
@@ -287,7 +280,7 @@ describe('progress record', () => {
   it('canonicalizes padded level keys and enforces top-score invariants', async () => {
     const kv = createMemoryKV({
       [NM_STORAGE_KEYS.progress]: JSON.stringify({
-        schemaVersion: 1,
+        schemaVersion: 2,
         highestUnlocked: 5,
         bestScores: { '042': 100, '42': 80 },
         bestDaily: {},
@@ -304,6 +297,53 @@ describe('progress record', () => {
       { mode: 'level', ref: '1', score: 90, at: 3 },
       { mode: 'level', ref: '2', score: 70, at: 1 },
     ]);
+  });
+
+  /**
+   * The v1 → v2 migration (§11). Shrinking the ladder from 999 levels to 100
+   * changed what a level number means, so level progress is dropped rather than
+   * rescaled — but a player's dailies never came from the level list, and
+   * losing them would be destroying history for no reason.
+   */
+  it('resets level progress but keeps the dailies when migrating from v1', async () => {
+    const kv = createMemoryKV({
+      [NM_STORAGE_KEYS.progress]: JSON.stringify({
+        schemaVersion: 1,
+        highestUnlocked: 350,
+        bestScores: { '1': 200, '349': 900 },
+        bestDaily: { '2026-07-27': 240, '2026-07-28': 260 },
+        topScores: [
+          { mode: 'level', ref: '349', score: 900, at: 5 },
+          { mode: 'daily', ref: '2026-07-28', score: 260, at: 6 },
+        ],
+      }),
+    });
+    const progress = await loadRecord(progressSchema, kv);
+    expect(progress.schemaVersion).toBe(2);
+    expect(progress.highestUnlocked).toBe(1);
+    expect(progress.bestScores).toEqual({});
+    expect(progress.bestDaily).toEqual({ '2026-07-27': 240, '2026-07-28': 260 });
+    // The level row would be a score against a board that no longer exists.
+    expect(progress.topScores).toEqual([{ mode: 'daily', ref: '2026-07-28', score: 260, at: 6 }]);
+  });
+
+  /**
+   * The reason the migration is an explicit branch rather than a version bump
+   * alone: a stored `highestUnlocked` of 350 is out of range for the new list,
+   * and letting the range check see it would reject the whole record — taking
+   * the daily history down with it.
+   */
+  it('does not let an out-of-range v1 level cost the player their daily history', async () => {
+    const kv = createMemoryKV({
+      [NM_STORAGE_KEYS.progress]: JSON.stringify({
+        schemaVersion: 1,
+        highestUnlocked: 999,
+        bestScores: {},
+        bestDaily: { '2026-07-27': 240 },
+        topScores: [],
+      }),
+    });
+    expect((await loadRecord(progressSchema, kv)).bestDaily).toEqual({ '2026-07-27': 240 });
   });
 });
 

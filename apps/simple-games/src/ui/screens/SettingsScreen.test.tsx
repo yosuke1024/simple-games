@@ -8,18 +8,24 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { capacitorMock } = vi.hoisted(() => ({ capacitorMock: { native: false } }));
+const { capacitorMock, openExternalMock } = vi.hoisted(() => ({
+  capacitorMock: { native: false },
+  openExternalMock: vi.fn(),
+}));
 
 vi.mock('@capacitor/core', () => ({
   Capacitor: { isNativePlatform: () => capacitorMock.native },
 }));
+vi.mock('../openExternal', () => ({ openExternal: openExternalMock }));
 
+import { PRIVACY_URL, TERMS_URL } from '@simple-games/brand';
 import {
   getRecentGames,
   initRecentGames,
   recordGameOpened,
   resetRecentGamesForTesting,
 } from '../../app/recentGames';
+import { setWebAdsConfigForTesting } from '../../services/ads/web/config';
 import { SettingsProvider } from '../../state/SettingsContext';
 import { createMemoryKV } from '../../storage/kv';
 import { settingsSchema } from '../../storage/schemas';
@@ -33,18 +39,15 @@ function renderSettings() {
   );
 }
 
-async function openPrivacy(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole('button', { name: 'Privacy Policy' }));
-  return screen.getByRole('dialog', { name: 'Privacy Policy' });
-}
-
 beforeEach(() => {
   capacitorMock.native = false;
   resetRecentGamesForTesting();
+  openExternalMock.mockClear();
 });
 
 afterEach(() => {
   cleanup();
+  setWebAdsConfigForTesting(null);
 });
 
 describe('ads and support section', () => {
@@ -62,36 +65,50 @@ describe('ads and support section', () => {
   });
 });
 
-describe('privacy summary', () => {
-  it('names AdMob and the ad-removal purchase on the app build', async () => {
+/**
+ * The privacy policy and terms are links to pixapps.ai, not bundled text
+ * (2026-08-02, packages/brand PRIVACY_URL). These tests exist to keep the
+ * single source single: the day someone re-adds a copy of the policy here,
+ * there are two wordings to keep true again, and one of them will drift.
+ */
+describe('policy links', () => {
+  it('opens the hosted pages rather than showing a copy', async () => {
+    const user = userEvent.setup();
+    renderSettings();
+
+    await user.click(screen.getByRole('button', { name: 'Privacy Policy' }));
+    expect(openExternalMock).toHaveBeenLastCalledWith(PRIVACY_URL);
+
+    await user.click(screen.getByRole('button', { name: 'Terms of Use' }));
+    expect(openExternalMock).toHaveBeenLastCalledWith(TERMS_URL);
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('carries no bundled policy text on either platform', () => {
+    for (const native of [true, false]) {
+      capacitorMock.native = native;
+      const { unmount } = renderSettings();
+      // Sentences the retired privacy1-5 / privacyWebAds keys used to render.
+      expect(screen.queryByText(/No account/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/stored only on this device/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Google AdSense/)).not.toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  /**
+   * The two facts a player can still read with no connection — which is why
+   * they were kept while the summary went. Both are needed by the screen for
+   * their own reasons, so neither is a second copy of the policy.
+   */
+  it('still states offline what deleting does, and that ads and a purchase exist', async () => {
     capacitorMock.native = true;
     const user = userEvent.setup();
     renderSettings();
-    const dialog = await openPrivacy(user);
-    expect(dialog).toHaveTextContent(/AdMob/);
-    expect(dialog).toHaveTextContent(/one-time purchase/);
-  });
-
-  it('claims neither on the web build, and still covers the rest', async () => {
-    const user = userEvent.setup();
-    renderSettings();
-    const dialog = await openPrivacy(user);
-    expect(dialog).not.toHaveTextContent(/AdMob/);
-    expect(dialog).not.toHaveTextContent(/one-time purchase/);
-    // The promises that hold everywhere are still stated.
-    expect(dialog).toHaveTextContent(/No account/);
-    expect(dialog).toHaveTextContent(/stored only on this device/);
-  });
-
-  it('explains deletion without naming an app the browser never installed', async () => {
-    const user = userEvent.setup();
-    renderSettings();
-    const dialog = await openPrivacy(user);
-    expect(dialog).not.toHaveTextContent(/Deleting the app/);
-    // Deletion is still explained, using the reset action's own reviewed
-    // description rather than new privacy wording nobody has translated.
-    expect(dialog).toHaveTextContent(/Reset Local Data/);
-    expect(dialog).toHaveTextContent(/removes your game, statistics, and settings/);
+    expect(screen.getByText(/small banner ad/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Reset Local Data' }));
+    expect(screen.getByText(/removes your game, statistics, and settings/)).toBeInTheDocument();
   });
 });
 

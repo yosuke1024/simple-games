@@ -79,18 +79,13 @@ export const ja: Messages = {
   vibration: '振動',
   reducedMotion: 'アニメーションを減らす',
   privacyPolicy: 'プライバシーポリシー',
+  termsOfUse: '利用規約',
   resetData: 'ローカルデータを削除',
   resetConfirmTitle: 'すべてのローカルデータを削除しますか？',
   resetConfirmBody: 'この端末のゲーム・統計・設定が削除されます。元に戻せません。',
   delete: '削除',
   version: 'バージョン',
 
-  privacy1: 'アカウント登録は不要です。PixApps は氏名・メールアドレス・連絡先・位置情報を収集しません。',
-  privacy2:
-    'ゲームの進行・統計・設定はこの端末内にのみ保存されます。PixApps は運営サーバーを持たず、クラウド同期もありません。',
-  privacy3:
-    'オンライン時は Google AdMob による広告が表示されることがあり、Google がそのプライバシーポリシーに従って端末の広告識別子を処理する場合があります。オフライン時は広告は表示されず、広告リクエストも行われません。',
-  privacy4: 'アプリの削除、または「ローカルデータを削除」で、データは端末から削除されます。',
 
   played: 'プレイ回数',
   cleared: 'クリア回数',
@@ -129,8 +124,6 @@ export const ja: Messages = {
     'メールでご意見をお聞かせください。すべて目を通しています。メールアプリで送信するまで、何も送信されません。',
   reviewFeedbackAction: 'メールを書く',
 
-  privacy5:
-    '任意の買い切り購入でバナー広告を削除できます。決済は Google Play が処理し、PixApps が支払い情報を受け取ること・保存することはありません。',
 
   // Sudoku
   sudokuName: 'ナンプレ',

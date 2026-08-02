@@ -1,18 +1,21 @@
 /**
  * Level definitions — implements docs/WATER_SORT_RULES.md §6.
  *
- * All 999 levels come from the level number alone: a color count and a seed.
- * No content pipeline, no download, and the same level is the same board for
- * every player. Undo and Hint stay unlimited and free at every level (brand
- * promise, §8).
+ * All 100 levels come from the level number alone: a color count, a starting
+ * mix, and a seed. No content pipeline, no download, and the same level is the
+ * same board for every player. Undo and Hint stay unlimited and free at every
+ * level (brand promise, §8).
  *
- * The color count carries the difficulty curve; the two spare tubes are
- * constant (§1), so more colors means less relative room. Inside a band,
- * variety comes from the seed alone — a band's levels are peers, and the
- * next band is the step up.
+ * The color count is the coarse curve; the two spare tubes are constant (§1),
+ * so more colors means less relative room. There are only seven color counts,
+ * though, and a list of 999 levels made that painfully clear: a band ran for
+ * hundreds of levels in which every board was the same job with a different
+ * seed. So the list is 100 long, and each band also runs a second knob — how
+ * jumbled the deal starts (§6, generator.ts) — from its tidy end to its
+ * jumbled one. The endless side of the game is the daily board, unchanged.
  */
 
-export const MAX_LEVEL = 999;
+export const MAX_LEVEL = 100;
 
 export const clampLevel = (level: number): number =>
   Math.min(MAX_LEVEL, Math.max(1, Math.floor(level)));
@@ -22,23 +25,41 @@ export function levelSeed(level: number): string {
 }
 
 interface Band {
+  readonly from: number;
   readonly to: number;
   readonly colors: number;
 }
 
 /** The table of §6, verbatim. */
 const BANDS: readonly Band[] = [
-  { to: 30, colors: 3 },
-  { to: 120, colors: 4 },
-  { to: 300, colors: 5 },
-  { to: 500, colors: 6 },
-  { to: 700, colors: 7 },
-  { to: 850, colors: 8 },
-  { to: MAX_LEVEL, colors: 9 },
+  { from: 1, to: 8, colors: 3 },
+  { from: 9, to: 22, colors: 4 },
+  { from: 23, to: 40, colors: 5 },
+  { from: 41, to: 60, colors: 6 },
+  { from: 61, to: 78, colors: 7 },
+  { from: 79, to: 92, colors: 8 },
+  { from: 93, to: MAX_LEVEL, colors: 9 },
 ];
 
+function bandFor(level: number): Band {
+  for (const band of BANDS) if (level <= band.to) return band;
+  return BANDS[BANDS.length - 1]!;
+}
+
 export function colorsForLevel(level: number): number {
+  return bandFor(clampLevel(level)).colors;
+}
+
+/**
+ * How jumbled a level's deal starts, 0 (the tidiest deal the generator saw) to
+ * 1 (the most jumbled). Linear inside the band: the first level of a band gets
+ * its tidiest board and the last its most jumbled, so a band is a climb of its
+ * own rather than a plateau, and stepping into the next band starts gently
+ * again at one more color.
+ */
+export function mixForLevel(level: number): number {
   const target = clampLevel(level);
-  for (const band of BANDS) if (target <= band.to) return band.colors;
-  return BANDS[BANDS.length - 1]!.colors;
+  const band = bandFor(target);
+  const span = band.to - band.from;
+  return span === 0 ? 0 : (target - band.from) / span;
 }
