@@ -88,7 +88,6 @@ export const id: Messages = {
   delete: 'Hapus',
   version: 'Versi',
 
-
   played: 'Permainan dimainkan',
   cleared: 'Berhasil dibersihkan',
   gameOverCount: 'Game over',
@@ -147,7 +146,8 @@ export const id: Messages = {
   sudokuDailiesSolved: 'Harian selesai',
   sudokuAverageTime: 'Waktu rata-rata',
   sudokuHighlightMistakes: 'Tandai kesalahan',
-  sudokuHighlightMistakesNote: 'Menandai angka yang tidak sesuai jawaban. Angka ganda selalu ditandai.',
+  sudokuHighlightMistakesNote:
+    'Menandai angka yang tidak sesuai jawaban. Angka ganda selalu ditandai.',
   sudokuHintNone: 'Belum ada yang bisa dipastikan.',
   sudokuHintOnlyDigit: 'Hanya satu angka yang cocok di sel ini.',
   sudokuHintOnlyCell: 'Di sini {value} hanya bisa masuk ke sel ini.',
@@ -159,7 +159,8 @@ export const id: Messages = {
   sudokuStep2Title: 'Catat kemungkinannya',
   sudokuStep2Body: 'Tekan Catatan untuk menulis angka yang mungkin sambil menyempitkan pilihan.',
   sudokuStep3Title: 'Bingung? Ambil petunjuk',
-  sudokuStep3Body: 'Petunjuk menunjukkan sel mana yang sudah pasti dan alasannya. Petunjuk dan undo selalu gratis.',
+  sudokuStep3Body:
+    'Petunjuk menunjukkan sel mana yang sudah pasti dan alasannya. Petunjuk dan undo selalu gratis.',
 
   // ---- Sliding Puzzle ----
   slideName: 'Sliding Puzzle',
@@ -215,7 +216,8 @@ export const id: Messages = {
   nonoDailyBacklogHint: 'Hari-hari sebelumnya tetap terbuka.',
 
   nonoStep1Title: 'Angka adalah blok',
-  nonoStep1Body: 'Setiap angka adalah blok kotak terwarnai berurutan, dengan minimal satu celah di antaranya.',
+  nonoStep1Body:
+    'Setiap angka adalah blok kotak terwarnai berurutan, dengan minimal satu celah di antaranya.',
   nonoStep2Title: 'Coret yang tidak mungkin',
   nonoStep2Body: 'Tandai kotak yang pasti kosong dengan × untuk mempersempit baris.',
   nonoStep3Title: 'Penuhi setiap baris',
@@ -296,7 +298,8 @@ export const id: Messages = {
   memoryStep1Title: 'Balik dua kartu',
   memoryStep1Body: 'Ketuk satu kartu, lalu satu lagi. Pasangan yang sama tetap terbuka.',
   memoryStep2Title: 'Tak perlu buru-buru mengingat',
-  memoryStep2Body: 'Pasangan yang salah tetap terlihat sampai kartu berikutnya dibalik. Santai saja.',
+  memoryStep2Body:
+    'Pasangan yang salah tetap terlihat sampai kartu berikutnya dibalik. Santai saja.',
   memoryStep3Title: 'Temukan semua pasangan',
   memoryStep3Body: 'Selesaikan seluruh papan. Mengulang papan yang sama selalu gratis.',
 
@@ -355,11 +358,51 @@ export const id: Messages = {
   solGamesWon: 'Permainan dimenangkan',
   solWinRate: 'Tingkat kemenangan',
   solDailiesWon: 'Harian dimenangkan',
-  solDailyBacklogHint: 'Hari-hari sebelumnya selalu terbuka. Tidak semua pembagian bisa dimenangkan.',
+  solDailyBacklogHint:
+    'Hari-hari sebelumnya selalu terbuka. Tidak semua pembagian bisa dimenangkan.',
   solStep1Title: 'Turun satu, warna berselang',
   solStep1Body: 'Tumpuk menurun, merah-hitam bergantian. Ketuk kartu, lalu ketuk tujuannya.',
   solStep2Title: 'Bebaskan kartu tersembunyi',
-  solStep2Body: 'Langkah yang membuka kartu membuka permainan. Tumpukan bisa dibalik berapa kali pun.',
+  solStep2Body:
+    'Langkah yang membuka kartu membuka permainan. Tumpukan bisa dibalik berapa kali pun.',
   solStep3Title: 'Dari as ke raja',
-  solStep3Body: 'Kirim tiap jenis ke fondasinya dari as sampai raja. Lengkapi keempatnya untuk menang.',
+  solStep3Body:
+    'Kirim tiap jenis ke fondasinya dari as sampai raja. Lengkapi keempatnya untuk menang.',
+
+  // ---- Arcade (Brick Breaker / Sky Fighter) ----
+  livesLeft: 'Nyawa: {n}',
+  levelsCleared: 'Level selesai',
+  bestScore: 'Skor terbaik',
+  brickBreakerName: 'Brick Breaker',
+  bbBoardLabel: 'Papan Brick Breaker',
+  bbBricksLeft: 'Bata {n}',
+  bbClearedTitle: 'Tembok runtuh!',
+  bbClearedBody: 'Semua bata sudah jatuh.',
+  bbFailedTitle: 'Belum kali ini',
+  bbFailedBody: 'Coba lagi gratis — tembok sama, bata sama.',
+  bbStep1Title: 'Bidik dengan pemukul',
+  bbStep1Body:
+    'Bagian tengah pemukul memantulkan bola lurus ke atas; bagian tepi memantulkannya menyerong.',
+  bbStep2Title: 'Bata berongga berisi bola',
+  bbStep2Body:
+    'Pecahkan satu dan bola kedua ikut bermain. Nyawa hanya berkurang saat bola terakhir jatuh.',
+  bbStep3Title: 'Tembok merayap turun',
+  bbStep3Body: 'Bersihkan semua bata sebelum tembok menyentuh garis putus-putus.',
+  skyFighterName: 'Sky Fighter',
+  sfBoardLabel: 'Langit Sky Fighter',
+  sfWave: 'Gelombang {n} / {m}',
+  sfClearedTitle: 'Langit bersih!',
+  sfClearedBody: 'Semua gelombang sudah jatuh.',
+  sfFailedTitle: 'Tertembak jatuh',
+  sfFailedBody: 'Coba lagi gratis — langit sama, gelombang sama.',
+  sfNewBestScore: 'Skor terbaikmu sejauh ini.',
+  sfStep1Title: 'Bergerak untuk membidik',
+  sfStep1Body:
+    'Pesawatmu menembak sendiri. Geser ke kiri dan kanan — ke mana kamu terbang, ke situ bidikanmu.',
+  sfStep2Title: 'Yang besar pecah',
+  sfStep2Body:
+    'Pengebom pecah menjadi pesawat tempur, pesawat tempur menjadi pengintai. Hanya pengebom yang balas menembak.',
+  sfStep3Title: 'Tangkap pesawat kecil',
+  sfStep3Body:
+    'Pengintai yang jatuh kadang menjatuhkan pesawat mungil. Tangkap untuk menambah laras; kena tembak mengurangi satu.',
 };

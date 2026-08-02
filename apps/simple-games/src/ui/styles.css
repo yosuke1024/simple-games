@@ -110,6 +110,24 @@
   --accent-ring-soft: rgba(85, 122, 72, 0.12);
 }
 
+:root[data-game='brick-breaker'],
+.accent-brick-breaker {
+  --accent: #8a6a2b;
+  --accent-ink: #ffffff;
+  --accent-soft: #f0e8d3;
+  --accent-ring: rgba(138, 106, 43, 0.38);
+  --accent-ring-soft: rgba(138, 106, 43, 0.12);
+}
+
+:root[data-game='sky-fighter'],
+.accent-sky-fighter {
+  --accent: #5d5aa8;
+  --accent-ink: #ffffff;
+  --accent-soft: #e7e6f4;
+  --accent-ring: rgba(93, 90, 168, 0.38);
+  --accent-ring-soft: rgba(93, 90, 168, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -193,6 +211,24 @@
   --accent-soft: #273a22;
   --accent-ring: rgba(151, 189, 138, 0.42);
   --accent-ring-soft: rgba(151, 189, 138, 0.14);
+}
+
+:root[data-theme='dark'][data-game='brick-breaker'],
+[data-theme='dark'] .accent-brick-breaker {
+  --accent: #c9a765;
+  --accent-ink: #191308;
+  --accent-soft: #3a3018;
+  --accent-ring: rgba(201, 167, 101, 0.42);
+  --accent-ring-soft: rgba(201, 167, 101, 0.14);
+}
+
+:root[data-theme='dark'][data-game='sky-fighter'],
+[data-theme='dark'] .accent-sky-fighter {
+  --accent: #9d9be0;
+  --accent-ink: #131226;
+  --accent-soft: #2b2a4a;
+  --accent-ring: rgba(157, 155, 224, 0.42);
+  --accent-ring-soft: rgba(157, 155, 224, 0.14);
 }
 
 * {
@@ -1345,4 +1381,68 @@ button:disabled {
 
 .daily-badge-done {
   color: var(--ink-soft);
+}
+
+/* ---- Arcade game chrome (Brick Breaker, Sky Fighter) ----
+   The status row over a real-time board: level, a quiet sub-line, lives as
+   dots. Shared here because two games use it identically — games must not
+   reach into each other's folders for styles. */
+
+.game-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.game-status-level {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+
+.game-status-sub {
+  font-size: 12px;
+  font-weight: 400;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.game-lives {
+  display: inline-flex;
+  gap: 5px;
+}
+
+.game-life-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.game-life-dot-spent {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+.game-board-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 8px 12px;
+}
+
+.level-cell-check {
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
 }

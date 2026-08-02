@@ -86,7 +86,6 @@ export const th: Messages = {
   delete: 'ลบ',
   version: 'เวอร์ชัน',
 
-
   played: 'เกมที่เล่น',
   cleared: 'เคลียร์สำเร็จ',
   gameOverCount: 'เกมโอเวอร์',
@@ -213,7 +212,8 @@ export const th: Messages = {
   nonoDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ',
 
   nonoStep1Title: 'ตัวเลขคือช่วงติดกัน',
-  nonoStep1Body: 'ตัวเลขแต่ละตัวคือจำนวนช่องที่ระบายติดกันตามลำดับ โดยเว้นอย่างน้อยหนึ่งช่องระหว่างช่วง',
+  nonoStep1Body:
+    'ตัวเลขแต่ละตัวคือจำนวนช่องที่ระบายติดกันตามลำดับ โดยเว้นอย่างน้อยหนึ่งช่องระหว่างช่วง',
   nonoStep2Title: 'กา × ช่องที่ไม่ระบาย',
   nonoStep2Body: 'ทำเครื่องหมาย × ช่องที่ต้องว่าง เพื่อจำกัดความเป็นไปได้',
   nonoStep3Title: 'ทำให้ครบทุกแถว',
@@ -359,4 +359,38 @@ export const th: Messages = {
   solStep2Body: 'ตาที่เปิดไพ่คว่ำจะเปิดเกม กองจั่วพลิกกลับมาใช้ได้ไม่จำกัด',
   solStep3Title: 'จาก A ถึง K',
   solStep3Body: 'ส่งแต่ละดอกขึ้นกองรวมจาก A ถึง K ครบสี่ดอกก็ชนะ',
+
+  // ---- Arcade (Brick Breaker / Sky Fighter) ----
+  livesLeft: 'ชีวิต: {n}',
+  levelsCleared: 'ด่านที่ผ่านแล้ว',
+  bestScore: 'คะแนนสูงสุด',
+  brickBreakerName: 'Brick Breaker',
+  bbBoardLabel: 'กระดาน Brick Breaker',
+  bbBricksLeft: 'อิฐ {n}',
+  bbClearedTitle: 'ทลายกำแพงแล้ว!',
+  bbClearedBody: 'อิฐทุกก้อนร่วงหมดแล้ว',
+  bbFailedTitle: 'ครั้งนี้ยังไม่สำเร็จ',
+  bbFailedBody: 'ลองใหม่ได้ฟรี — กำแพงเดิม อิฐเดิม',
+  bbStep1Title: 'เล็งด้วยไม้ตี',
+  bbStep1Body: 'กลางไม้ตีส่งลูกขึ้นตรง ๆ ส่วนขอบไม้จะส่งลูกเฉียงออกไป',
+  bbStep2Title: 'อิฐโปร่งมีลูกบอลอยู่ข้างใน',
+  bbStep2Body: 'ทุบแตกแล้วลูกที่สองจะเข้ามาช่วย ชีวิตจะลดก็ต่อเมื่อเสียลูกสุดท้ายเท่านั้น',
+  bbStep3Title: 'กำแพงค่อย ๆ เลื่อนลง',
+  bbStep3Body: 'เคลียร์อิฐให้หมดก่อนที่กำแพงจะถึงเส้นประ',
+  skyFighterName: 'Sky Fighter',
+  sfBoardLabel: 'ท้องฟ้า Sky Fighter',
+  sfWave: 'ระลอก {n} / {m}',
+  sfClearedTitle: 'ฟ้าโล่งแล้ว!',
+  sfClearedBody: 'จัดการทุกระลอกได้แล้ว',
+  sfFailedTitle: 'ถูกยิงตก',
+  sfFailedBody: 'ลองใหม่ได้ฟรี — ฟ้าเดิม ระลอกเดิม',
+  sfNewBestScore: 'คะแนนสูงสุดของคุณ!',
+  sfStep1Title: 'ขยับคือการเล็ง',
+  sfStep1Body: 'เครื่องบินยิงอัตโนมัติ เลื่อนซ้ายขวา — บินไปทางไหนก็เล็งทางนั้น',
+  sfStep2Title: 'ลำใหญ่จะแตกตัว',
+  sfStep2Body:
+    'เครื่องบินทิ้งระเบิดแตกเป็นเครื่องบินขับไล่ และขับไล่แตกเป็นลำลาดตระเวน มีแค่เครื่องบินทิ้งระเบิดที่ยิงสวน',
+  sfStep3Title: 'รับเครื่องบินลำเล็ก',
+  sfStep3Body:
+    'ลำลาดตระเวนที่ตกบางครั้งจะปล่อยเครื่องบินจิ๋วลงมา รับไว้เพื่อเพิ่มปืนหนึ่งกระบอก โดนยิงจะเสียหนึ่งกระบอก',
 };

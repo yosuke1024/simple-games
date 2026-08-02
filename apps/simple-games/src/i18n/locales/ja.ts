@@ -86,7 +86,6 @@ export const ja: Messages = {
   delete: '削除',
   version: 'バージョン',
 
-
   played: 'プレイ回数',
   cleared: 'クリア回数',
   gameOverCount: 'ゲームオーバー',
@@ -123,7 +122,6 @@ export const ja: Messages = {
   reviewFeedbackBody:
     'メールでご意見をお聞かせください。すべて目を通しています。メールアプリで送信するまで、何も送信されません。',
   reviewFeedbackAction: 'メールを書く',
-
 
   // Sudoku
   sudokuName: 'ナンプレ',
@@ -393,4 +391,41 @@ export const ja: Messages = {
   solStep2Body: '裏の札がめくれる手でゲームが開けます。山札は何度でも引き直せます。',
   solStep3Title: 'AからKへ積み上げる',
   solStep3Body: '各スートをAからKまで組札へ。4つ揃えば勝ちです。',
+
+  // ---- Arcade (shared by Brick Breaker and Sky Fighter) ----
+  livesLeft: 'ライフ: {n}',
+  levelsCleared: 'クリアしたレベル',
+  bestScore: 'ベストスコア',
+
+  // ---- Brick Breaker ----
+  brickBreakerName: 'Brick Breaker',
+  bbBoardLabel: 'ブロック崩しの盤面',
+  bbBricksLeft: '残り {n}',
+  bbClearedTitle: '全部崩した！',
+  bbClearedBody: 'ブロックはすべて落ちました。',
+  bbFailedTitle: '今回は届かず',
+  bbFailedBody: 'リトライは無料。同じ壁、同じ配置です。',
+  bbStep1Title: 'パドルで狙う',
+  bbStep1Body: 'パドルの真ん中で受けると真上へ、端で受けるほど斜めに飛びます。',
+  bbStep2Title: '枠だけのブロックは球入り',
+  bbStep2Body: '壊すと球が1個増えます。ライフが減るのは最後の球を落としたときだけ。',
+  bbStep3Title: '壁は少しずつ下がる',
+  bbStep3Body: '壁が点線に届く前に、すべてのブロックを崩しましょう。',
+
+  // ---- Sky Fighter ----
+  skyFighterName: 'Sky Fighter',
+  sfBoardLabel: 'Sky Fighter の空域',
+  sfWave: 'ウェーブ {n} / {m}',
+  sfClearedTitle: '空域クリア！',
+  sfClearedBody: 'すべての編隊を落としました。',
+  sfFailedTitle: '撃墜された',
+  sfFailedBody: 'リトライは無料。同じ空、同じ編隊です。',
+  sfNewBestScore: '自己ベスト更新！',
+  sfStep1Title: '動かして狙う',
+  sfStep1Body: '射撃は自動です。左右に動かせば、飛んだ場所がそのまま狙いになります。',
+  sfStep2Title: '大きい機体は分裂する',
+  sfStep2Body: '爆撃機は戦闘機に、戦闘機は小型機に分かれます。撃ってくるのは爆撃機だけ。',
+  sfStep3Title: '小さな機体を受け取る',
+  sfStep3Body:
+    '小型機を落とすと、たまに小さな機体が降ってきます。受け取ると砲門+1、被弾で1つ戻ります。',
 };

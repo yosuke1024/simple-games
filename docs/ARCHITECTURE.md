@@ -20,7 +20,7 @@ simple-games/
 - PixApps モノレポへの実行時依存はない。このリポジトリ単独で
   clone / install / test / build できる。
 - 出荷するアプリは 1 つ(appId `com.pixapps.simplegames` / appName
-  `Simple Games: Offline Puzzles`)。収録ゲームはワークスペースパッケージではなく
+  `Simple Games: Offline Games`)。収録ゲームはワークスペースパッケージではなく
   **フォルダで分割**する。共通のゲームフレームワークは意図的に作らない。
 - 収録ゲームの追加・更新はアプリのリリースとして一体で行う。ただしゲームの追加が
   既存ゲームの挙動・保存データを変えてはならない。共通パッケージの変更で
@@ -39,7 +39,9 @@ src/
 │   ├── number-match/
 │   ├── water-sort/
 │   ├── sliding-puzzle/
-│   └── memory-match/
+│   ├── memory-match/
+│   ├── brick-breaker/
+│   └── sky-fighter/
 ├── monetization/           # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 ├── services/               # 共有: ads(バナーのみ) / network / sound / haptics
 ├── state/                  # 共有: SettingsContext
@@ -57,7 +59,9 @@ src/
 [NUMBER_MATCH_RULES.md](NUMBER_MATCH_RULES.md) /
 [WATER_SORT_RULES.md](WATER_SORT_RULES.md) /
 [SLIDING_PUZZLE_RULES.md](SLIDING_PUZZLE_RULES.md) /
-[MEMORY_MATCH_RULES.md](MEMORY_MATCH_RULES.md) を唯一のソースとする。
+[MEMORY_MATCH_RULES.md](MEMORY_MATCH_RULES.md) /
+[BRICK_BREAKER_RULES.md](BRICK_BREAKER_RULES.md) /
+[SKY_FIGHTER_RULES.md](SKY_FIGHTER_RULES.md) を唯一のソースとする。
 
 レイヤー規則:
 
@@ -82,14 +86,14 @@ src/
 `app/registry.ts` のエントリは「タイトルカード + マウント点 + そのゲームが持つキー」
 だけで、プラグイン機構ではない。ゲームの追加は import 1 行と配列要素 1 つで済む。
 
-| フィールド | 内容 |
-| --- | --- |
-| `id` | `'sudoku'` / `'solitaire'` / `'minesweeper'` / `'nonogram'` / `'number-match'` / `'water-sort'` / `'sliding-puzzle'` / `'memory-match'`。`data-game` 属性にもこの値を使う |
-| `title` | 固有名詞。全言語で同一表記(翻訳しない) |
-| `glyph` | シリーズマーク。そのタイトルのアクセント色のタイルに 1 文字 |
-| `Root` | ゲームのルートコンポーネント。受け取る props は `onExit` だけ |
-| `storageKeys` | そのゲームが保存する全キー |
-| `SettingsSection?` | 任意。共有設定画面に差し込むゲーム固有の設定 |
+| フィールド         | 内容                                                                                                                                                                                                            |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | `'sudoku'` / `'solitaire'` / `'minesweeper'` / `'nonogram'` / `'number-match'` / `'water-sort'` / `'sliding-puzzle'` / `'memory-match'` / `'brick-breaker'` / `'sky-fighter'`。`data-game` 属性にもこの値を使う |
+| `title`            | 固有名詞。全言語で同一表記(翻訳しない)                                                                                                                                                                          |
+| `glyph`            | シリーズマーク。そのタイトルのアクセント色のタイルに 1 文字                                                                                                                                                     |
+| `Root`             | ゲームのルートコンポーネント。受け取る props は `onExit` だけ                                                                                                                                                   |
+| `storageKeys`      | そのゲームが保存する全キー                                                                                                                                                                                      |
+| `SettingsSection?` | 任意。共有設定画面に差し込むゲーム固有の設定                                                                                                                                                                    |
 
 - `storageKeys` をレジストリに載せるのは、シェルが各ゲームの保存内部を知らないまま
   「ローカルデータ削除」を正直に実行できるようにするため。
@@ -110,8 +114,8 @@ src/
 
 収録数が増えても使えることを設計条件にする(`ui/screens/CollectionHomeScreen.tsx`)。
 
-- **全ゲームは 2 列グリッド**(`.game-grid`)。1 行 1 ゲームの縦リストは 8 本で
-  ほぼ 1 画面、16 本で 2 画面を超え、末尾のタイトルが常にスクロールの先になる。
+- **全ゲームは 2 列グリッド**(`.game-grid`)。1 行 1 ゲームの縦リストは 10 本で
+  1 画面を超え、16 本なら 2 画面を超えて、末尾のタイトルが常にスクロールの先になる。
   グリッドが成立するのはタイトルが**全言語で同一の固有名詞**だからで、翻訳文を
   並べていたらこの形は 14 言語で保てない。
 - **説明文はホームに置かない。** 「どんなゲームか」はゲーム内の Quick Rules と
@@ -137,16 +141,18 @@ src/
 
 - アクセントは `packages/brand` の `titleAccents` に 1 タイトル 1 エントリ。
 
-| ゲーム | アクセント | ライト | ダーク |
-| --- | --- | --- | --- |
-| Number Match | 藍 | `#3f5b8f` | `#7d9ccf` |
-| Sudoku | くすんだティール | `#2f6f62` | `#6fb3a3` |
-| Solitaire | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
-| Minesweeper | スレートブルー | `#4a5a72` | `#93a4bd` |
-| Nonogram | くすんだプラム | `#6d5192` | `#a893cf` |
-| Water Sort | くすんだアクア | `#33708c` | `#7fb4c9` |
-| Sliding Puzzle | 温かみのある陶土色 | `#9c5b3c` | `#d1926f` |
-| Memory Match | くすんだローズ | `#9e5468` | `#cf8fa4` |
+| ゲーム         | アクセント               | ライト    | ダーク    |
+| -------------- | ------------------------ | --------- | --------- |
+| Number Match   | 藍                       | `#3f5b8f` | `#7d9ccf` |
+| Sudoku         | くすんだティール         | `#2f6f62` | `#6fb3a3` |
+| Solitaire      | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
+| Minesweeper    | スレートブルー           | `#4a5a72` | `#93a4bd` |
+| Nonogram       | くすんだプラム           | `#6d5192` | `#a893cf` |
+| Water Sort     | くすんだアクア           | `#33708c` | `#7fb4c9` |
+| Sliding Puzzle | 温かみのある陶土色       | `#9c5b3c` | `#d1926f` |
+| Memory Match   | くすんだローズ           | `#9e5468` | `#cf8fa4` |
+| Brick Breaker  | 黄土                     | `#8a6a2b` | `#c9a765` |
+| Sky Fighter    | 夕闇の青                 | `#5d5aa8` | `#9d9be0` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
@@ -172,9 +178,12 @@ src/
 - `ui/styles.css` に置くのは共有シェルのみ: デザイントークン(下地・アクセント・
   `data-game` の上書き)、コレクションホーム、設定 / About、ダイアログ・トースト・
   チュートリアル・バナースロットなどの共通クロム。
-- **8 タイトルすべてが規約に従っている**: `number-match.css` / `sudoku.css` /
+- **10 タイトルすべてが規約に従っている**: `number-match.css` / `sudoku.css` /
   `minesweeper.css` / `nonogram.css` / `sliding-puzzle.css` / `memory-match.css` /
-  `water-sort.css` / `solitaire.css`。
+  `water-sort.css` / `solitaire.css` / `brick-breaker.css` / `sky-fighter.css`。
+  アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
+  `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
+  なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。
 - ゲームの CSS は色を書かない。共有のカスタムプロパティ(`--accent` など)だけを使い、
   どの色になるかはシェルが root に付けた `data-game` が決める。
   ゲーム側にパレット値が複製されないので、下地を変えるときに触る場所は 1 か所で済む。
@@ -193,20 +202,22 @@ src/
 
 ## ストレージキーの規約
 
-| キー | 内容 |
-| --- | --- |
-| `sg.settings` | 共有設定(言語 / テーマ / 音 / 振動 / Reduced Motion) |
-| `sg.iap` | 広告削除購入状態のローカルキャッシュ |
-| `sg.review` | ストアレビュー導線の状態(完了数 / 表示回数 / 解決済みフラグ) |
-| `sg.recent` | 「最近遊んだ」のゲーム id(新しい順・最大 2 件) |
-| `sd.*` | Sudoku(saveGame / saveDaily / stats / progress / flags / prefs) |
-| `so.*` | Solitaire(saveGame / saveDaily / stats / flags / prefs) |
-| `ms.*` | Minesweeper(saveGame / saveDaily / stats / flags / prefs) |
-| `ng.*` | Nonogram(saveGame / saveDaily / stats / progress / flags / prefs) |
-| `nm.*` | Number Match(saveGame / saveDaily / stats / progress / flags) |
-| `ws.*` | Water Sort(saveGame / saveDaily / stats / progress / flags) |
-| `sp.*` | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags) |
-| `mm.*` | Memory Match(saveGame / saveDaily / stats / flags) |
+| キー          | 内容                                                              |
+| ------------- | ----------------------------------------------------------------- |
+| `sg.settings` | 共有設定(言語 / テーマ / 音 / 振動 / Reduced Motion)              |
+| `sg.iap`      | 広告削除購入状態のローカルキャッシュ                              |
+| `sg.review`   | ストアレビュー導線の状態(完了数 / 表示回数 / 解決済みフラグ)      |
+| `sg.recent`   | 「最近遊んだ」のゲーム id(新しい順・最大 2 件)                    |
+| `sd.*`        | Sudoku(saveGame / saveDaily / stats / progress / flags / prefs)   |
+| `so.*`        | Solitaire(saveGame / saveDaily / stats / flags / prefs)           |
+| `ms.*`        | Minesweeper(saveGame / saveDaily / stats / flags / prefs)         |
+| `ng.*`        | Nonogram(saveGame / saveDaily / stats / progress / flags / prefs) |
+| `nm.*`        | Number Match(saveGame / saveDaily / stats / progress / flags)     |
+| `ws.*`        | Water Sort(saveGame / saveDaily / stats / progress / flags)       |
+| `sp.*`        | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags)   |
+| `mm.*`        | Memory Match(saveGame / saveDaily / stats / flags)                |
+| `bb.*`        | Brick Breaker(stats / progress / flags。**saveGame なし** — 下記) |
+| `sf.*`        | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)   |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/
@@ -214,8 +225,14 @@ Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断
 Minesweeper はレベル進行を持たないため `progress` がなく、代わりに旗モードの
 `ms.prefs` を持つ。Nonogram は ×モードの `ng.prefs` を持つ。Solitaire は
 Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設定も持たない
-(デイリーの記録は両者とも stats 内)。どのゲームも中断は
-「通常モード用」と「デイリー用」の 2 スロットが独立する。
+(デイリーの記録は両者とも stats 内)。パズル 8 本はいずれも中断が
+「通常モード用」と「デイリー用」の 2 スロットで独立する。
+
+**アーケード 2 本(Brick Breaker / Sky Fighter)は `saveGame` を持たない。**
+リアルタイムの盤面を復元しても「開いた瞬間に球が落ちてくる」ものにしかならず、
+正直な再開にならないため、退出は挑戦の破棄で、リトライは無料・同一盤面とした
+(`BRICK_BREAKER_RULES.md` §10 / `SKY_FIGHTER_RULES.md` §10)。破棄されるのは
+挑戦中の盤面だけで、統計と進行は常に保存される。
 
 - 共有レコードは `sg.` 接頭辞。ゲーム固有レコードはゲームごとの接頭辞。
 - ゲーム固有設定は共有 `sg.settings` に混ぜず、そのゲームの接頭辞に置く
@@ -296,7 +313,7 @@ Web 版は**現時点では実装しない**が、いつでも出せる構成を
 これ以上の共通化(`packages/` への抽出)は実際に重複が確認されてから行う。
 ゲーム固有の概念(盤面・ルール・Hint 等)は共通パッケージへ入れない。
 
-現時点で唯一の実測された重複は `games/*/game/rng.ts` で、**8 ゲームすべてが同じ
+現時点で唯一の実測された重複は `games/*/game/rng.ts` で、**10 ゲームすべてが同じ
 seed 付き乱数を持っている**(`games/A/` から `games/B/` を import できない以上、
 このコピーは規約どおりでもある)。抽出を検討する条件(重複が確認された)は
 満たしているが、`game/` の Pure TS 純度を保ったまま `packages/` へ出せるかが論点で、
@@ -312,7 +329,7 @@ seed 付き乱数を持っている**(`games/A/` から `games/B/` を import �
   署名済み AAB(Play 用)と署名済み APK(実機確認用)をアーティファクトとして出す。
   `versionName` / `versionCode` はタグが決める。ストアへのアップロードは手動。
   タグに製品名を付けないのは、リリース対象がこのアプリ 1 つだけだから
-  (8 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
+  (10 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
 - Secrets は `ADMOB_ANDROID_APP_ID` / `ADMOB_ANDROID_BANNER_ID` のみ
   (インタースティシャル系は無い。プラットフォーム名を含むのは AdMob ID が
   OS ごとに別なため — iOS 版では `ADMOB_IOS_*` が並ぶ)。

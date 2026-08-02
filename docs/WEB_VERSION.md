@@ -12,7 +12,7 @@ Android アプリの約束(バナー広告 1 枠のみ・買い切りで広告�
 | 導入 | インストール・アカウント不要 | ストアから導入、ホーム画面から起動 |
 | 広告 | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効) | Anchored Adaptive Banner 1 枠のみ |
 | 課金 | なし(完全無料) | $3.99 買い切りで広告永久削除 |
-| ゲーム内容 | 8 ゲームすべて。機能差なし | 8 ゲームすべて |
+| ゲーム内容 | 10 ゲームすべて。機能差なし | 10 ゲームすべて |
 
 **Play instantly on the web. Play quietly and offline in the app.**
 
@@ -24,8 +24,10 @@ Android アプリの約束(バナー広告 1 枠のみ・買い切りで広告�
 - **Cloudflare Pages の静的アセット配信のみ**。Pages Functions / Workers / D1 / KV /
   Durable Objects / R2 / 独自 API / 認証 / クラウドセーブ / サーバー側生成 /
   定期実行ジョブを一切使わない。追加の固定インフラ費を発生させない。
-- 成果物はこのリポジトリの `vite build`(`apps/simple-games/dist/`)。`base: './'` の
-  相対パスなので、サブパス配下にそのまま置ける。
+- 成果物はこのリポジトリの `vite build --mode web`(`apps/simple-games/dist-web/`)。
+  `base: './'` の相対パスなので、サブパス配下にそのまま置ける。native 用の `dist/`
+  ではない — AdSense 統合は web ビルドにしか入らず、その分離は
+  `check-dist-ads-separation.sh` が成果物で機械検証している。
 - 配置先は別リポジトリ `pixapps-landing` の `simple-games/play/`
   (`pages_build_output_dir: "."` の「リポジトリ = サイト」構成)。同期は
   landing 側の `npm run sync:simple-games`。**`simple-games/play/` は生成物**であり、

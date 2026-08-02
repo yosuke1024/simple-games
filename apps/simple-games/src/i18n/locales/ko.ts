@@ -87,7 +87,6 @@ export const ko: Messages = {
   delete: '삭제',
   version: '버전',
 
-
   played: '플레이한 게임',
   cleared: '클리어한 게임',
   gameOverCount: '게임 오버',
@@ -215,7 +214,8 @@ export const ko: Messages = {
   nonoDailyBacklogHint: '지난 날짜는 언제든 도전할 수 있습니다.',
 
   nonoStep1Title: '숫자는 연속으로 칠하는 수',
-  nonoStep1Body: '숫자는 그 줄에서 연속으로 칠하는 칸 수입니다. 여러 개면 사이를 한 칸 이상 띄웁니다.',
+  nonoStep1Body:
+    '숫자는 그 줄에서 연속으로 칠하는 칸 수입니다. 여러 개면 사이를 한 칸 이상 띄웁니다.',
   nonoStep2Title: '칠하지 않는 칸에 ×',
   nonoStep2Body: '칠하지 않는 칸에 ×를 표시해 경우의 수를 좁힙니다.',
   nonoStep3Title: '모든 줄을 만족시키기',
@@ -362,4 +362,37 @@ export const ko: Messages = {
   solStep2Body: '카드를 뒤집는 수가 게임을 엽니다. 더미는 몇 번이든 다시 뒤집을 수 있습니다.',
   solStep3Title: '에이스에서 킹까지',
   solStep3Body: '각 무늬를 에이스부터 킹까지 파운데이션에 쌓으세요. 네 개를 완성하면 승리입니다.',
+
+  // ---- Arcade (Brick Breaker / Sky Fighter) ----
+  livesLeft: '라이프: {n}',
+  levelsCleared: '클리어한 레벨',
+  bestScore: '최고 점수',
+  brickBreakerName: 'Brick Breaker',
+  bbBoardLabel: 'Brick Breaker 보드',
+  bbBricksLeft: '벽돌 {n}',
+  bbClearedTitle: '벽 격파!',
+  bbClearedBody: '벽돌이 모두 떨어졌습니다.',
+  bbFailedTitle: '이번엔 아쉽게',
+  bbFailedBody: '재도전은 무료 — 같은 벽, 같은 배치입니다.',
+  bbStep1Title: '패들로 조준',
+  bbStep1Body: '패들 가운데로 받으면 공이 곧게 위로, 가장자리로 받을수록 비스듬히 날아갑니다.',
+  bbStep2Title: '테두리만 있는 벽돌엔 공이',
+  bbStep2Body: '부수면 공이 하나 늘어납니다. 마지막 공을 떨어뜨렸을 때만 라이프가 줄어듭니다.',
+  bbStep3Title: '벽은 조금씩 내려온다',
+  bbStep3Body: '벽이 점선에 닿기 전에 벽돌을 모두 부수세요.',
+  skyFighterName: 'Sky Fighter',
+  sfBoardLabel: 'Sky Fighter 하늘',
+  sfWave: '웨이브 {n} / {m}',
+  sfClearedTitle: '하늘 클리어!',
+  sfClearedBody: '모든 편대를 격추했습니다.',
+  sfFailedTitle: '격추당했다',
+  sfFailedBody: '재도전은 무료 — 같은 하늘, 같은 편대입니다.',
+  sfNewBestScore: '지금까지의 최고 점수!',
+  sfStep1Title: '움직임이 곧 조준',
+  sfStep1Body: '전투기는 자동으로 쏩니다. 좌우로 움직이세요 — 나는 곳이 곧 조준점입니다.',
+  sfStep2Title: '큰 기체는 분열한다',
+  sfStep2Body: '폭격기는 전투기로, 전투기는 정찰기로 갈라집니다. 반격하는 것은 폭격기뿐.',
+  sfStep3Title: '작은 기체를 받기',
+  sfStep3Body:
+    '정찰기를 떨어뜨리면 가끔 작은 기체가 내려옵니다. 받으면 포신 +1, 피격되면 하나 줄어듭니다.',
 };

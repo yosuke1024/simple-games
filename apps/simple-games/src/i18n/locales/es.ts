@@ -88,7 +88,6 @@ export const es: Messages = {
   delete: 'Borrar',
   version: 'Versión',
 
-
   played: 'Partidas jugadas',
   cleared: 'Partidas completadas',
   gameOverCount: 'Derrotas',
@@ -218,11 +217,13 @@ export const es: Messages = {
   nonoDailyBacklogHint: 'Los días anteriores siguen abiertos.',
 
   nonoStep1Title: 'Los números son bloques',
-  nonoStep1Body: 'Cada número es un bloque de casillas pintadas, en orden, con al menos un hueco entre bloques.',
+  nonoStep1Body:
+    'Cada número es un bloque de casillas pintadas, en orden, con al menos un hueco entre bloques.',
   nonoStep2Title: 'Descarta con ×',
   nonoStep2Body: 'Marca con una × las casillas que quedan vacías para acotar la línea.',
   nonoStep3Title: 'Cumple cada línea',
-  nonoStep3Body: 'Cuando todas las filas y columnas cuadran, el tablero está resuelto. Nunca hace falta adivinar.',
+  nonoStep3Body:
+    'Cuando todas las filas y columnas cuadran, el tablero está resuelto. Nunca hace falta adivinar.',
 
   // ---- Minesweeper ----
   minesName: 'Buscaminas',
@@ -359,7 +360,8 @@ export const es: Messages = {
   solGamesWon: 'Partidas ganadas',
   solWinRate: 'Tasa de victorias',
   solDailiesWon: 'Retos diarios ganados',
-  solDailyBacklogHint: 'Los días anteriores siguen abiertos. No todos los repartos se pueden ganar.',
+  solDailyBacklogHint:
+    'Los días anteriores siguen abiertos. No todos los repartos se pueden ganar.',
   solStep1Title: 'Uno menos, colores alternos',
   solStep1Body: 'Apila hacia abajo alternando rojo y negro. Toca una carta y luego su destino.',
   solStep2Title: 'Libera las cartas ocultas',
@@ -367,4 +369,40 @@ export const es: Messages = {
     'Las jugadas que destapan cartas abren el juego. El mazo se puede dar la vuelta cuantas veces quieras.',
   solStep3Title: 'Del as al rey',
   solStep3Body: 'Lleva cada palo a su fundación del as al rey. Completa los cuatro para ganar.',
+
+  // ---- Arcade (Brick Breaker / Sky Fighter) ----
+  livesLeft: 'Vidas: {n}',
+  levelsCleared: 'Niveles superados',
+  bestScore: 'Mejor puntuación',
+  brickBreakerName: 'Brick Breaker',
+  bbBoardLabel: 'Tablero de Brick Breaker',
+  bbBricksLeft: 'Ladrillos {n}',
+  bbClearedTitle: '¡Muro derribado!',
+  bbClearedBody: 'Todos los ladrillos han caído.',
+  bbFailedTitle: 'Esta vez no',
+  bbFailedBody: 'Reintentar es gratis: mismo muro, mismos ladrillos.',
+  bbStep1Title: 'Apunta con la pala',
+  bbStep1Body:
+    'El centro de la pala lanza la bola recta hacia arriba; el borde la lanza en diagonal.',
+  bbStep2Title: 'Los ladrillos huecos guardan una bola',
+  bbStep2Body: 'Rompe uno y se suma una segunda bola. Solo perder la última bola cuesta una vida.',
+  bbStep3Title: 'El muro va bajando',
+  bbStep3Body: 'Despeja todos los ladrillos antes de que el muro llegue a la línea de puntos.',
+  skyFighterName: 'Sky Fighter',
+  sfBoardLabel: 'Cielo de Sky Fighter',
+  sfWave: 'Oleada {n} / {m}',
+  sfClearedTitle: '¡Cielo despejado!',
+  sfClearedBody: 'Todas las oleadas han caído.',
+  sfFailedTitle: 'Derribado',
+  sfFailedBody: 'Reintentar es gratis: mismo cielo, mismas oleadas.',
+  sfNewBestScore: 'Tu mejor puntuación hasta ahora.',
+  sfStep1Title: 'Muévete para apuntar',
+  sfStep1Body:
+    'Tu caza dispara solo. Desliza a izquierda y derecha: hacia donde vueles, allí apuntas.',
+  sfStep2Title: 'Los grandes se dividen',
+  sfStep2Body:
+    'Un bombardero se divide en cazas, y los cazas en exploradores. Solo los bombarderos devuelven el fuego.',
+  sfStep3Title: 'Atrapa la nave pequeña',
+  sfStep3Body:
+    'Un explorador derribado a veces suelta una navecita. Atrápala y ganas un cañón; un impacto te quita uno.',
 };

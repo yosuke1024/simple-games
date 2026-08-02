@@ -88,7 +88,6 @@ export const tr: Messages = {
   delete: 'Sil',
   version: 'Sürüm',
 
-
   played: 'Oynanan oyun',
   cleared: 'Tamamlanan oyun',
   gameOverCount: 'Kaybedilen oyun',
@@ -109,12 +108,12 @@ export const tr: Messages = {
   viewLicenses: 'Lisansları Görüntüle',
 
   // Ads & support
-  removeAdsTitle: 'Reklamları Kaldır ve Simple Games\'e Destek Ol',
+  removeAdsTitle: "Reklamları Kaldır ve Simple Games'e Destek Ol",
   adSupportBody:
     'Simple Games, çevrimiçiyken gösterilen küçük bir banner reklamla desteklenir. Bu, uygulamayı sürdürmeme ve geliştirmeme yardımcı olur. Reklam istemiyor musun? Tek seferlik bir satın alma reklamları kalıcı olarak kaldırır.',
   removeAdsAction: 'Reklamları Kaldır',
   restorePurchase: 'Satın Almayı Geri Yükle',
-  purchaseThanks: 'Banner reklamlar kaldırıldı. Simple Games\'e destek olduğun için teşekkürler.',
+  purchaseThanks: "Banner reklamlar kaldırıldı. Simple Games'e destek olduğun için teşekkürler.",
 
   reviewPromptTitle: 'Simple Games hoşuna gidiyor mu?',
   reviewYes: 'Evet, seviyorum',
@@ -147,7 +146,8 @@ export const tr: Messages = {
   sudokuDailiesSolved: 'Çözülen günlükler',
   sudokuAverageTime: 'Ortalama süre',
   sudokuHighlightMistakes: 'Hataları göster',
-  sudokuHighlightMistakesNote: 'Çözüme uymayan rakamı işaretler. Tekrar eden rakamlar her zaman işaretlenir.',
+  sudokuHighlightMistakesNote:
+    'Çözüme uymayan rakamı işaretler. Tekrar eden rakamlar her zaman işaretlenir.',
   sudokuHintNone: 'Şu an çıkarılabilecek bir şey yok.',
   sudokuHintOnlyDigit: 'Bu kareye yalnızca tek bir rakam uyuyor.',
   sudokuHintOnlyCell: 'Burada {value} yalnızca bu kareye girebilir.',
@@ -159,7 +159,8 @@ export const tr: Messages = {
   sudokuStep2Title: 'Olasılıkları not al',
   sudokuStep2Body: 'Bir kareyi daraltırken adayları yazmak için Notlar düğmesine dokun.',
   sudokuStep3Title: 'Sıkıştın mı? İpucu al',
-  sudokuStep3Body: 'İpucu hangi karenin belli olduğunu ve nedenini gösterir. İpuçları ve geri alma her zaman ücretsiz.',
+  sudokuStep3Body:
+    'İpucu hangi karenin belli olduğunu ve nedenini gösterir. İpuçları ve geri alma her zaman ücretsiz.',
 
   // ---- Sliding Puzzle ----
   slideName: 'Kaydırmalı Bulmaca',
@@ -215,7 +216,8 @@ export const tr: Messages = {
   nonoDailyBacklogHint: 'Önceki günler açık kalır.',
 
   nonoStep1Title: 'Sayılar bloklardır',
-  nonoStep1Body: 'Her sayı, sırayla boyanan bir blok karedir; bloklar arasında en az bir boşluk olur.',
+  nonoStep1Body:
+    'Her sayı, sırayla boyanan bir blok karedir; bloklar arasında en az bir boşluk olur.',
   nonoStep2Title: 'Olmayana × koy',
   nonoStep2Body: 'Boş kalacak kareleri × ile işaretleyip çizgiyi daralt.',
   nonoStep3Title: 'Her çizgiyi sağla',
@@ -357,9 +359,44 @@ export const tr: Messages = {
   solDailiesWon: 'Kazanılan günlükler',
   solDailyBacklogHint: 'Önceki günler her zaman açık. Her el kazanılamayabilir.',
   solStep1Title: 'Bir küçük, renkler dönüşümlü',
-  solStep1Body: 'Kartları kırmızı-siyah dönüşümlü, azalan sırayla diz. Bir karta, sonra gideceği yere dokun.',
+  solStep1Body:
+    'Kartları kırmızı-siyah dönüşümlü, azalan sırayla diz. Bir karta, sonra gideceği yere dokun.',
   solStep2Title: 'Kapalı kartları kurtar',
   solStep2Body: 'Kart açan hamleler oyunu genişletir. Deste istediğin kadar yeniden çevrilebilir.',
   solStep3Title: 'Astan papaza',
   solStep3Body: 'Her türü astan papaza temeline taşı. Dördünü tamamlayan kazanır.',
+
+  // ---- Arcade (Brick Breaker / Sky Fighter) ----
+  livesLeft: 'Can: {n}',
+  levelsCleared: 'Tamamlanan seviye',
+  bestScore: 'En iyi skor',
+  brickBreakerName: 'Brick Breaker',
+  bbBoardLabel: 'Brick Breaker tahtası',
+  bbBricksLeft: 'Tuğla {n}',
+  bbClearedTitle: 'Duvar yıkıldı!',
+  bbClearedBody: 'Bütün tuğlalar düştü.',
+  bbFailedTitle: 'Bu sefer olmadı',
+  bbFailedBody: 'Yeniden denemek ücretsiz — aynı duvar, aynı tuğlalar.',
+  bbStep1Title: 'Raketle nişan al',
+  bbStep1Body: 'Raketin ortası topu dimdik yukarı, kenarı ise yan açıyla gönderir.',
+  bbStep2Title: 'İçi boş tuğlada top var',
+  bbStep2Body: 'Birini kır, ikinci top oyuna katılsın. Can yalnızca son topu kaçırınca gider.',
+  bbStep3Title: 'Duvar yavaşça iner',
+  bbStep3Body: 'Duvar kesikli çizgiye inmeden bütün tuğlaları temizle.',
+  skyFighterName: 'Sky Fighter',
+  sfBoardLabel: 'Sky Fighter gökyüzü',
+  sfWave: 'Dalga {n} / {m}',
+  sfClearedTitle: 'Gök temiz!',
+  sfClearedBody: 'Bütün dalgalar düştü.',
+  sfFailedTitle: 'Düşürüldün',
+  sfFailedBody: 'Yeniden denemek ücretsiz — aynı gök, aynı dalgalar.',
+  sfNewBestScore: 'Şimdiye kadarki en iyi skorun.',
+  sfStep1Title: 'Hareket etmek nişan almaktır',
+  sfStep1Body: 'Uçağın kendiliğinden ateş eder. Sağa sola kaydır — nereye uçarsan orayı vurursun.',
+  sfStep2Title: 'Büyükler parçalanır',
+  sfStep2Body:
+    'Bombardıman uçağı avcılara, avcılar keşif uçaklarına bölünür. Yalnızca bombardıman uçakları karşılık verir.',
+  sfStep3Title: 'Küçük uçağı yakala',
+  sfStep3Body:
+    'Düşen keşif uçağı bazen minik bir uçak bırakır. Yakalarsan bir namlu kazanırsın; isabet alırsan bir namlu gider.',
 };

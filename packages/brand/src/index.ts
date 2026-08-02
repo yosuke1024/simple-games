@@ -214,6 +214,34 @@ export const titleAccents = {
     onDark: '#121810',
     softDark: '#273a22',
   },
+  /**
+   * Brick Breaker — ochre. The bricks themselves are drawn in the accent, so
+   * it has to carry a full wall without shouting; a muted brick-yellow is the
+   * one warm slot the series still had open, a clear step yellower than
+   * Sliding Puzzle's clay.
+   */
+  brickBreaker: {
+    light: '#8a6a2b',
+    onLight: '#ffffff',
+    softLight: '#f0e8d3',
+    dark: '#c9a765',
+    onDark: '#191308',
+    softDark: '#3a3018',
+  },
+  /**
+   * Sky Fighter — dusk blue. The enemy craft are drawn in the accent (the
+   * player flies in ink), so the sky's color is the *other* side's color: a
+   * violet-leaning evening blue, kept between Number Match's navy and
+   * Nonogram's plum without touching either, and away from Water Sort's aqua.
+   */
+  skyFighter: {
+    light: '#5d5aa8',
+    onLight: '#ffffff',
+    softLight: '#e7e6f4',
+    dark: '#9d9be0',
+    onDark: '#131226',
+    softDark: '#2b2a4a',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

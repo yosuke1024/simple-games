@@ -67,8 +67,9 @@ A Simple Game by PixApps
 - "Open source."
 
 ストア文面では収録済みのゲーム名を具体的に挙げる(現在は "Sudoku, Solitaire,
-Minesweeper, Nonogram, Number Match, Water Sort, Sliding Puzzle, Memory Match" の
-8 本)。未収録のゲーム名は、**実際に収録された時点で**初めて足す。
+Minesweeper, Brick Breaker, Nonogram, Number Match, Water Sort, Sliding Puzzle,
+Memory Match, Sky Fighter" の 10 本)。未収録のゲーム名は、**実際に収録された
+時点で**初めて足す。
 ゲーム名は検索流入の中核だが、不自然なキーワード詰め込みはしない。
 
 ## 訴求の順序(ストア文面)

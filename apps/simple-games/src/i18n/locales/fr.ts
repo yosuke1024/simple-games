@@ -88,7 +88,6 @@ export const fr: Messages = {
   delete: 'Effacer',
   version: 'Version',
 
-
   played: 'Parties jouées',
   cleared: 'Parties terminées',
   gameOverCount: 'Défaites',
@@ -219,11 +218,13 @@ export const fr: Messages = {
   nonoDailyBacklogHint: 'Les jours précédents restent ouverts.',
 
   nonoStep1Title: 'Les nombres sont des blocs',
-  nonoStep1Body: 'Chaque nombre est un bloc de cases peintes, dans l’ordre, avec au moins un espace entre les blocs.',
+  nonoStep1Body:
+    'Chaque nombre est un bloc de cases peintes, dans l’ordre, avec au moins un espace entre les blocs.',
   nonoStep2Title: 'Éliminez avec une croix',
   nonoStep2Body: 'Marquez d’une croix les cases qui restent vides pour cerner la ligne.',
   nonoStep3Title: 'Respectez chaque ligne',
-  nonoStep3Body: 'Quand toutes les lignes et colonnes concordent, la grille est finie. Deviner n’est jamais nécessaire.',
+  nonoStep3Body:
+    'Quand toutes les lignes et colonnes concordent, la grille est finie. Deviner n’est jamais nécessaire.',
 
   // ---- Minesweeper ----
   minesName: 'Démineur',
@@ -324,7 +325,7 @@ export const fr: Messages = {
   waterStep1Body:
     "Touchez un tube, puis un autre. La couleur du dessus se verse si elle correspond — ou dans n'importe quel tube vide.",
   waterStep2Title: 'Deux tubes de réserve',
-  waterStep2Body: "Les tubes vides sont votre espace de travail. Annuler est toujours gratuit.",
+  waterStep2Body: 'Les tubes vides sont votre espace de travail. Annuler est toujours gratuit.',
   waterStep3Title: 'Une couleur par tube',
   waterStep3Body: "Quand chaque tube ne contient qu'une couleur, c'est gagné.",
 
@@ -360,12 +361,51 @@ export const fr: Messages = {
   solGamesWon: 'Parties gagnées',
   solWinRate: 'Taux de victoire',
   solDailiesWon: 'Défis quotidiens gagnés',
-  solDailyBacklogHint: 'Les jours précédents restent ouverts. Toutes les donnes ne sont pas gagnables.',
+  solDailyBacklogHint:
+    'Les jours précédents restent ouverts. Toutes les donnes ne sont pas gagnables.',
   solStep1Title: 'Un de moins, couleurs alternées',
-  solStep1Body: 'Empilez en descendant, rouge sur noir sur rouge. Touchez une carte, puis sa destination.',
+  solStep1Body:
+    'Empilez en descendant, rouge sur noir sur rouge. Touchez une carte, puis sa destination.',
   solStep2Title: 'Libérez les cartes cachées',
   solStep2Body:
     'Les coups qui retournent une carte ouvrent le jeu. La pioche se retourne autant de fois que voulu.',
   solStep3Title: "De l'as au roi",
-  solStep3Body: "Montez chaque famille à sa fondation, de l'as au roi. Les quatre complètes, c'est gagné.",
+  solStep3Body:
+    "Montez chaque famille à sa fondation, de l'as au roi. Les quatre complètes, c'est gagné.",
+
+  // ---- Arcade (Brick Breaker / Sky Fighter) ----
+  livesLeft: 'Vies : {n}',
+  levelsCleared: 'Niveaux terminés',
+  bestScore: 'Meilleur score',
+  brickBreakerName: 'Brick Breaker',
+  bbBoardLabel: 'Plateau de Brick Breaker',
+  bbBricksLeft: 'Briques {n}',
+  bbClearedTitle: 'Mur abattu !',
+  bbClearedBody: 'Toutes les briques sont tombées.',
+  bbFailedTitle: 'Pas cette fois',
+  bbFailedBody: 'Réessayer est gratuit — même mur, mêmes briques.',
+  bbStep1Title: 'Vise avec la raquette',
+  bbStep1Body: "Le centre de la raquette renvoie la balle tout droit ; le bord l'envoie en biais.",
+  bbStep2Title: 'Les briques creuses contiennent une balle',
+  bbStep2Body:
+    'Casse-en une et une deuxième balle arrive. Seule la perte de la dernière balle coûte une vie.',
+  bbStep3Title: 'Le mur descend peu à peu',
+  bbStep3Body: 'Casse toutes les briques avant que le mur atteigne la ligne pointillée.',
+  skyFighterName: 'Sky Fighter',
+  sfBoardLabel: 'Ciel de Sky Fighter',
+  sfWave: 'Vague {n} / {m}',
+  sfClearedTitle: 'Ciel dégagé !',
+  sfClearedBody: 'Toutes les vagues sont tombées.',
+  sfFailedTitle: 'Abattu',
+  sfFailedBody: 'Réessayer est gratuit — même ciel, mêmes vagues.',
+  sfNewBestScore: 'Ton meilleur score à ce jour.',
+  sfStep1Title: 'Bouge pour viser',
+  sfStep1Body:
+    'Ton chasseur tire tout seul. Glisse à gauche et à droite : là où tu voles, tu vises.',
+  sfStep2Title: 'Les gros se scindent',
+  sfStep2Body:
+    'Un bombardier se scinde en chasseurs, les chasseurs en éclaireurs. Seuls les bombardiers ripostent.',
+  sfStep3Title: 'Attrape le petit appareil',
+  sfStep3Body:
+    'Un éclaireur abattu lâche parfois un petit appareil. Attrape-le pour un canon de plus ; un impact en coûte un.',
 };
