@@ -61,7 +61,15 @@ export async function saveRecord<T>(
 ): Promise<void> {
   // Serialised at the point of call, so the value written is the value the
   // caller had when it asked — not whatever the state became while it waited.
-  const payload = JSON.stringify(value);
+  // Inside the guard, because callers save with `void saveRecord(...)`: a
+  // throw from here would surface as an unhandled rejection, not as a failed
+  // save, and this function is relied on never to throw.
+  let payload: string;
+  try {
+    payload = JSON.stringify(value);
+  } catch {
+    return;
+  }
   await enqueue(def.key, async () => {
     try {
       await kv.set(def.key, payload);

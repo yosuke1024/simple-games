@@ -151,3 +151,21 @@ describe('operations on one key under slow storage', () => {
     await stalled;
   });
 });
+
+/**
+ * `saveRecord` is documented as never throwing, and every caller relies on it:
+ * saves are made with `void saveRecord(...)`, so a throw would surface as an
+ * unhandled rejection rather than as a save that quietly failed.
+ */
+describe('a value that cannot be serialised', () => {
+  it('fails quietly instead of rejecting', async () => {
+    const kv = createMemoryKV();
+    const circular: { self?: unknown } = {};
+    circular.self = circular;
+
+    await expect(
+      saveRecord(iapSchema, circular as unknown as ReturnType<typeof iapSchema.defaultValue>, kv),
+    ).resolves.toBeUndefined();
+    expect(await kv.get(STORAGE_KEYS.iap)).toBeNull();
+  });
+});
