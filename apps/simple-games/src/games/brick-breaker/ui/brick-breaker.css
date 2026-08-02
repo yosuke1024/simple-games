@@ -1,0 +1,23 @@
+/* Brick Breaker — board chrome only. Screens, buttons, dialogs, the level
+   grid and the arcade status row come from the shared stylesheet
+   (ui/styles.css); the accent arrives via the data-game tokens the shell
+   stamps. The board itself is a canvas (components/BrickBoard.tsx) that
+   reads the same tokens. */
+
+.bb-canvas {
+  width: min(100%, 360px);
+  max-height: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  touch-action: none;
+  cursor: pointer;
+}
+
+/* Quick Rules figures (§11): little SVG scenes in the series tokens. */
+.bb-figure {
+  width: min(70vw, 220px);
+  height: auto;
+  display: block;
+}

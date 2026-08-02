@@ -63,8 +63,7 @@ export const vi: Messages = {
   step2Body:
     'Ngang, dọc, chéo — hoặc từ cuối hàng này sang đầu hàng kế. Ô đã xóa không cản trở, nhưng một con số còn trên bảng sẽ chặn đường.',
   step3Title: 'Dọn sạch bảng để thắng',
-  step3Body:
-    'Bí? Nhấn Thêm để nối các số còn lại vào cuối. Hoàn tác và gợi ý luôn miễn phí.',
+  step3Body: 'Bí? Nhấn Thêm để nối các số còn lại vào cuối. Hoàn tác và gợi ý luôn miễn phí.',
   startPlaying: 'Bắt đầu chơi',
   next: 'Tiếp',
   back: 'Quay lại',
@@ -87,7 +86,6 @@ export const vi: Messages = {
     'Thao tác này xóa ván chơi, thống kê và cài đặt khỏi thiết bị này. Không thể hoàn tác.',
   delete: 'Xóa',
   version: 'Phiên bản',
-
 
   played: 'Ván đã chơi',
   cleared: 'Ván đã dọn sạch',
@@ -218,7 +216,8 @@ export const vi: Messages = {
   nonoDailyBacklogHint: 'Những ngày trước luôn mở.',
 
   nonoStep1Title: 'Số là chuỗi ô liền nhau',
-  nonoStep1Body: 'Mỗi số là một chuỗi ô được tô liền nhau theo thứ tự, giữa các chuỗi cách ít nhất một ô.',
+  nonoStep1Body:
+    'Mỗi số là một chuỗi ô được tô liền nhau theo thứ tự, giữa các chuỗi cách ít nhất một ô.',
   nonoStep2Title: 'Đánh × ô không tô',
   nonoStep2Body: 'Đánh × vào ô chắc chắn để trống để thu hẹp khả năng.',
   nonoStep3Title: 'Thỏa mọi hàng và cột',
@@ -369,4 +368,40 @@ export const vi: Messages = {
   solStep2Body: 'Nước đi lật được lá úp sẽ mở ván bài. Bộ bài lật lại bao nhiêu lần cũng được.',
   solStep3Title: 'Từ Át đến Già',
   solStep3Body: 'Đưa mỗi chất lên nền từ Át đến Già. Đủ bốn chất là thắng.',
+
+  // ---- Arcade (Brick Breaker / Sky Fighter) ----
+  livesLeft: 'Mạng: {n}',
+  levelsCleared: 'Màn đã qua',
+  bestScore: 'Điểm cao nhất',
+  brickBreakerName: 'Brick Breaker',
+  brickBreakerBlurb: 'Đánh bóng theo góc và phá sập bức tường trước khi nó chạm vạch.',
+  bbBoardLabel: 'Bàn chơi Brick Breaker',
+  bbBricksLeft: 'Gạch {n}',
+  bbClearedTitle: 'Sập tường rồi!',
+  bbClearedBody: 'Toàn bộ gạch đã rơi.',
+  bbFailedTitle: 'Lần này chưa được',
+  bbFailedBody: 'Chơi lại miễn phí — vẫn bức tường ấy, vẫn số gạch ấy.',
+  bbStep1Title: 'Nhắm bằng thanh đỡ',
+  bbStep1Body: 'Giữa thanh đỡ đưa bóng bay thẳng lên; mép thanh đỡ đưa bóng bay chéo.',
+  bbStep2Title: 'Gạch rỗng chứa một quả bóng',
+  bbStep2Body: 'Phá một viên là có thêm bóng thứ hai. Chỉ khi mất quả bóng cuối cùng mới mất mạng.',
+  bbStep3Title: 'Bức tường hạ dần xuống',
+  bbStep3Body: 'Phá hết gạch trước khi tường chạm vạch chấm.',
+  skyFighterName: 'Sky Fighter',
+  skyFighterBlurb: 'Trượt để nhắm — máy bay của bạn tự động bắn.',
+  sfBoardLabel: 'Bầu trời Sky Fighter',
+  sfWave: 'Đợt {n} / {m}',
+  sfClearedTitle: 'Trời quang!',
+  sfClearedBody: 'Đã hạ hết mọi đợt.',
+  sfFailedTitle: 'Bị bắn hạ',
+  sfFailedBody: 'Chơi lại miễn phí — vẫn bầu trời ấy, vẫn các đợt ấy.',
+  sfNewBestScore: 'Điểm cao nhất của bạn từ trước tới nay.',
+  sfStep1Title: 'Di chuyển là nhắm bắn',
+  sfStep1Body: 'Máy bay tự bắn. Trượt sang trái phải — bay tới đâu là nhắm tới đó.',
+  sfStep2Title: 'Máy bay lớn tách nhỏ',
+  sfStep2Body:
+    'Máy bay ném bom tách thành tiêm kích, tiêm kích tách thành trinh sát. Chỉ máy bay ném bom bắn trả.',
+  sfStep3Title: 'Đón chiếc máy bay nhỏ',
+  sfStep3Body:
+    'Trinh sát bị hạ đôi khi thả ra một chiếc máy bay tí hon. Đón lấy để thêm một nòng súng; trúng đạn sẽ mất một nòng.',
 };

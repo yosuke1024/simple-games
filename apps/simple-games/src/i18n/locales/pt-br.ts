@@ -88,7 +88,6 @@ export const ptBR: Messages = {
   delete: 'Apagar',
   version: 'Versão',
 
-
   played: 'Partidas jogadas',
   cleared: 'Partidas concluídas',
   gameOverCount: 'Derrotas',
@@ -220,11 +219,13 @@ export const ptBR: Messages = {
   nonoDailyBacklogHint: 'Os dias anteriores continuam abertos.',
 
   nonoStep1Title: 'Números são blocos',
-  nonoStep1Body: 'Cada número é um bloco de quadrados pintados, em ordem, com pelo menos um espaço entre eles.',
+  nonoStep1Body:
+    'Cada número é um bloco de quadrados pintados, em ordem, com pelo menos um espaço entre eles.',
   nonoStep2Title: 'Corte com ×',
   nonoStep2Body: 'Marque com × os quadrados que ficam vazios para fechar a linha.',
   nonoStep3Title: 'Atenda cada linha',
-  nonoStep3Body: 'Quando todas as linhas e colunas conferem, o tabuleiro está pronto. Nunca é preciso adivinhar.',
+  nonoStep3Body:
+    'Quando todas as linhas e colunas conferem, o tabuleiro está pronto. Nunca é preciso adivinhar.',
 
   // ---- Minesweeper ----
   minesName: 'Campo Minado',
@@ -364,12 +365,51 @@ export const ptBR: Messages = {
   solGamesWon: 'Jogos vencidos',
   solWinRate: 'Taxa de vitórias',
   solDailiesWon: 'Diários vencidos',
-  solDailyBacklogHint: 'Os dias anteriores continuam abertos. Nem toda distribuição pode ser vencida.',
+  solDailyBacklogHint:
+    'Os dias anteriores continuam abertos. Nem toda distribuição pode ser vencida.',
   solStep1Title: 'Um a menos, cores alternadas',
-  solStep1Body: 'Empilhe em ordem decrescente alternando vermelho e preto. Toque na carta e depois no destino.',
+  solStep1Body:
+    'Empilhe em ordem decrescente alternando vermelho e preto. Toque na carta e depois no destino.',
   solStep2Title: 'Liberte as cartas escondidas',
   solStep2Body:
     'Jogadas que viram cartas abrem o jogo. O monte pode ser virado quantas vezes quiser.',
   solStep3Title: 'Do ás ao rei',
   solStep3Body: 'Leve cada naipe à sua fundação do ás ao rei. Complete os quatro para vencer.',
+
+  // ---- Arcade (Brick Breaker / Sky Fighter) ----
+  livesLeft: 'Vidas: {n}',
+  levelsCleared: 'Níveis concluídos',
+  bestScore: 'Melhor pontuação',
+  brickBreakerName: 'Brick Breaker',
+  brickBreakerBlurb: 'Dê ângulo à bola e derrube o muro antes que ele alcance a linha.',
+  bbBoardLabel: 'Tabuleiro de Brick Breaker',
+  bbBricksLeft: 'Tijolos {n}',
+  bbClearedTitle: 'Muro derrubado!',
+  bbClearedBody: 'Todos os tijolos caíram.',
+  bbFailedTitle: 'Desta vez não',
+  bbFailedBody: 'Tentar de novo é grátis — mesmo muro, mesmos tijolos.',
+  bbStep1Title: 'Mire com a raquete',
+  bbStep1Body: 'O centro da raquete manda a bola reto para cima; a borda manda em diagonal.',
+  bbStep2Title: 'Tijolos vazados guardam uma bola',
+  bbStep2Body:
+    'Quebre um e uma segunda bola entra em jogo. Só perder a última bola custa uma vida.',
+  bbStep3Title: 'O muro desce aos poucos',
+  bbStep3Body: 'Limpe todos os tijolos antes que o muro alcance a linha pontilhada.',
+  skyFighterName: 'Sky Fighter',
+  skyFighterBlurb: 'Deslize para mirar — seu caça atira sozinho.',
+  sfBoardLabel: 'Céu de Sky Fighter',
+  sfWave: 'Onda {n} / {m}',
+  sfClearedTitle: 'Céu limpo!',
+  sfClearedBody: 'Todas as ondas caíram.',
+  sfFailedTitle: 'Abatido',
+  sfFailedBody: 'Tentar de novo é grátis — mesmo céu, mesmas ondas.',
+  sfNewBestScore: 'Sua melhor pontuação até agora.',
+  sfStep1Title: 'Mover é mirar',
+  sfStep1Body: 'Seu caça atira sozinho. Deslize para os lados — onde você voa é onde você mira.',
+  sfStep2Title: 'Os grandes se dividem',
+  sfStep2Body:
+    'Um bombardeiro se divide em caças, e caças em batedores. Só os bombardeiros revidam.',
+  sfStep3Title: 'Pegue a nave pequena',
+  sfStep3Body:
+    'Um batedor abatido às vezes solta uma navezinha. Pegue-a para ganhar um canhão; um acerto tira um.',
 };

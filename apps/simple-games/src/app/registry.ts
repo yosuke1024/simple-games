@@ -8,6 +8,8 @@
  * built, so the list stays useful as it grows.
  */
 import type { ComponentType } from 'react';
+import { BB_STORAGE_KEYS } from '../games/brick-breaker/storage/schemas';
+import { BrickBreakerRoot } from '../games/brick-breaker/ui/BrickBreakerRoot';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/schemas';
 import { MemoryMatchRoot } from '../games/memory-match/ui/MemoryMatchRoot';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/schemas';
@@ -21,6 +23,8 @@ import { SlidingPuzzleRoot } from '../games/sliding-puzzle/ui/SlidingPuzzleRoot'
 import { SO_STORAGE_KEYS } from '../games/solitaire/storage/schemas';
 import { SolitaireRoot } from '../games/solitaire/ui/SolitaireRoot';
 import { SD_STORAGE_KEYS } from '../games/sudoku/storage/schemas';
+import { SF_STORAGE_KEYS } from '../games/sky-fighter/storage/schemas';
+import { SkyFighterRoot } from '../games/sky-fighter/ui/SkyFighterRoot';
 import { SudokuRoot } from '../games/sudoku/ui/SudokuRoot';
 import { SudokuSettingsSection } from '../games/sudoku/ui/SudokuSettingsSection';
 import { WS_STORAGE_KEYS } from '../games/water-sort/storage/schemas';
@@ -35,7 +39,9 @@ export type GameId =
   | 'sliding-puzzle'
   | 'memory-match'
   | 'water-sort'
-  | 'solitaire';
+  | 'solitaire'
+  | 'brick-breaker'
+  | 'sky-fighter';
 
 export interface GameModule {
   id: GameId;
@@ -85,6 +91,14 @@ export const GAMES: readonly GameModule[] = [
     storageKeys: Object.values(MS_STORAGE_KEYS),
   },
   {
+    id: 'brick-breaker',
+    title: 'Brick Breaker',
+    blurbKey: 'brickBreakerBlurb',
+    glyph: '≡',
+    Root: BrickBreakerRoot,
+    storageKeys: Object.values(BB_STORAGE_KEYS),
+  },
+  {
     id: 'nonogram',
     title: 'Nonogram',
     blurbKey: 'nonoBlurb',
@@ -123,5 +137,13 @@ export const GAMES: readonly GameModule[] = [
     glyph: '⧉',
     Root: MemoryMatchRoot,
     storageKeys: Object.values(MM_STORAGE_KEYS),
+  },
+  {
+    id: 'sky-fighter',
+    title: 'Sky Fighter',
+    blurbKey: 'skyFighterBlurb',
+    glyph: '▲',
+    Root: SkyFighterRoot,
+    storageKeys: Object.values(SF_STORAGE_KEYS),
   },
 ];

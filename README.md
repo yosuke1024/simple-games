@@ -10,7 +10,7 @@
 サブスクなし / 機能課金なし / ログインなし / ソースコード公開
 
 Simple Games は PixApps が提供するクラシックゲーム集のモノレポです。
-複数のゲームを収録した 1 つのアプリ `Simple Games: Offline Puzzles` として配布します。
+複数のゲームを収録した 1 つのアプリ `Simple Games: Offline Games` として配布します。
 すべての収録タイトルは以下を守ります。
 
 - ゲーム機能の課金ロックなし / サブスクリプションなし
@@ -26,10 +26,10 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけで、現在 8 本のゲームを収録しています。
+アプリは 1 つだけで、現在 10 本のゲームを収録しています。
 
 - appId: `com.pixapps.simplegames`
-- appName: `Simple Games: Offline Puzzles`(ランチャー表示名: `Simple Games`)
+- appName: `Simple Games: Offline Games`(ランチャー表示名: `Simple Games`)
 - パス: [apps/simple-games](apps/simple-games)
 
 並び順はコレクションホームの表示順(`apps/simple-games/src/app/registry.ts`)です。

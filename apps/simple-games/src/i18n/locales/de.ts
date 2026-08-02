@@ -88,7 +88,6 @@ export const de: Messages = {
   delete: 'Löschen',
   version: 'Version',
 
-
   played: 'Gespielte Spiele',
   cleared: 'Geschaffte Spiele',
   gameOverCount: 'Verlorene Spiele',
@@ -148,7 +147,8 @@ export const de: Messages = {
   sudokuDailiesSolved: 'Gelöste Tagesrätsel',
   sudokuAverageTime: 'Durchschnittszeit',
   sudokuHighlightMistakes: 'Fehler anzeigen',
-  sudokuHighlightMistakesNote: 'Markiert Ziffern, die nicht zur Lösung passen. Doppelte werden immer markiert.',
+  sudokuHighlightMistakesNote:
+    'Markiert Ziffern, die nicht zur Lösung passen. Doppelte werden immer markiert.',
   sudokuHintNone: 'Hier lässt sich noch nichts folgern.',
   sudokuHintOnlyDigit: 'In dieses Feld passt nur eine Ziffer.',
   sudokuHintOnlyCell: 'Nur hier kann {value} stehen.',
@@ -160,7 +160,8 @@ export const de: Messages = {
   sudokuStep2Title: 'Notiere, was passt',
   sudokuStep2Body: 'Tippe auf Notizen, um Kandidaten einzutragen, während du ein Feld eingrenzt.',
   sudokuStep3Title: 'Fest? Hol dir einen Tipp',
-  sudokuStep3Body: 'Ein Tipp zeigt, welches Feld feststeht und warum. Tipps und Rückgängig sind immer gratis.',
+  sudokuStep3Body:
+    'Ein Tipp zeigt, welches Feld feststeht und warum. Tipps und Rückgängig sind immer gratis.',
 
   // ---- Sliding Puzzle ----
   slideName: 'Schiebepuzzle',
@@ -218,7 +219,8 @@ export const de: Messages = {
   nonoDailyBacklogHint: 'Jeder frühere Tag bleibt offen.',
 
   nonoStep1Title: 'Zahlen sind Blöcke',
-  nonoStep1Body: 'Jede Zahl steht für einen Block ausgemalter Felder in Reihenfolge, mit mindestens einer Lücke dazwischen.',
+  nonoStep1Body:
+    'Jede Zahl steht für einen Block ausgemalter Felder in Reihenfolge, mit mindestens einer Lücke dazwischen.',
   nonoStep2Title: 'Unmögliches ausschließen',
   nonoStep2Body: 'Markiere Felder, die leer bleiben, mit einem ×, um die Linie einzugrenzen.',
   nonoStep3Title: 'Jede Linie erfüllen',
@@ -369,5 +371,45 @@ export const de: Messages = {
   solStep2Body:
     'Züge, die eine Karte aufdecken, öffnen das Spiel. Der Talon lässt sich beliebig oft wenden.',
   solStep3Title: 'Vom Ass zum König',
-  solStep3Body: 'Bringe jede Farbe vom Ass bis zum König auf die Ablage. Alle vier komplett — gewonnen.',
+  solStep3Body:
+    'Bringe jede Farbe vom Ass bis zum König auf die Ablage. Alle vier komplett — gewonnen.',
+
+  // ---- Arcade (Brick Breaker / Sky Fighter) ----
+  livesLeft: 'Leben: {n}',
+  levelsCleared: 'Geschaffte Level',
+  bestScore: 'Bester Punktestand',
+  brickBreakerName: 'Brick Breaker',
+  brickBreakerBlurb:
+    'Lenke den Ball im Winkel und räume die Mauer ab, bevor sie die Linie erreicht.',
+  bbBoardLabel: 'Brick-Breaker-Spielfeld',
+  bbBricksLeft: 'Steine {n}',
+  bbClearedTitle: 'Mauer abgeräumt!',
+  bbClearedBody: 'Alle Steine sind gefallen.',
+  bbFailedTitle: 'Diesmal nicht',
+  bbFailedBody: 'Der neue Versuch ist gratis — gleiche Mauer, gleiche Steine.',
+  bbStep1Title: 'Mit dem Schläger zielen',
+  bbStep1Body:
+    'Die Mitte des Schlägers schickt den Ball gerade nach oben, der Rand schräg zur Seite.',
+  bbStep2Title: 'Hohle Steine enthalten einen Ball',
+  bbStep2Body:
+    'Zerbrich einen und ein zweiter Ball kommt dazu. Nur der Verlust des letzten Balls kostet ein Leben.',
+  bbStep3Title: 'Die Mauer rückt nach unten',
+  bbStep3Body: 'Räume alle Steine ab, bevor die Mauer die gestrichelte Linie erreicht.',
+  skyFighterName: 'Sky Fighter',
+  skyFighterBlurb: 'Wische zum Zielen — dein Jäger feuert von selbst.',
+  sfBoardLabel: 'Sky-Fighter-Luftraum',
+  sfWave: 'Welle {n} / {m}',
+  sfClearedTitle: 'Himmel frei!',
+  sfClearedBody: 'Alle Wellen sind besiegt.',
+  sfFailedTitle: 'Abgeschossen',
+  sfFailedBody: 'Der neue Versuch ist gratis — gleicher Himmel, gleiche Wellen.',
+  sfNewBestScore: 'Dein bisher bester Punktestand.',
+  sfStep1Title: 'Bewegen heißt zielen',
+  sfStep1Body:
+    'Dein Jäger feuert von selbst. Wische nach links und rechts — wo du fliegst, dorthin zielst du.',
+  sfStep2Title: 'Große zerfallen',
+  sfStep2Body: 'Ein Bomber zerfällt in Jäger, Jäger in Späher. Nur Bomber schießen zurück.',
+  sfStep3Title: 'Fang das kleine Flugzeug',
+  sfStep3Body:
+    'Ein abgeschossener Späher lässt manchmal ein kleines Flugzeug fallen. Fang es für ein zusätzliches Rohr; ein Treffer kostet eins.',
 };

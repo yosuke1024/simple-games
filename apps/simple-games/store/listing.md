@@ -1,25 +1,27 @@
-# Simple Games: Offline Puzzles — Google Play 掲載ドラフト
+# Simple Games: Offline Games — Google Play 掲載ドラフト
 
 > 公開前に人間が確認: タイトル文字数制限(30字)と検索性、スクリーンショット、
 > Data Safety フォーム、Privacy Policy のホスティング URL。
 > あわせて Play Console でアプリ内商品(管理された商品)`remove_ads` を
 > 基準価格 USD 3.99 で作成すること(国別価格は自動調整に任せる)。
 
-> 掲載は収録ゲーム 8 本(Sudoku / Solitaire / Minesweeper / Nonogram /
-> Number Match / Water Sort / Sliding Puzzle / Memory Match)の状態で書いてある。
+> 掲載は収録ゲーム 10 本(Sudoku / Solitaire / Minesweeper / Brick Breaker /
+> Nonogram / Number Match / Water Sort / Sliding Puzzle / Memory Match /
+> Sky Fighter)の状態で書いてある。
 > 未収録のゲームは名前も含めて掲載文に出さず、**実際に収録できた時点で**
 > 説明・スクリーンショットへ追加する(未収録のゲームを "Coming Soon" として
 > 掲載しない)。
 
 ## タイトル候補(優先順)
 
-1. `Simple Games: Offline Puzzles`(appName として決定済み。29 字)
-2. `Simple Games — Offline Puzzles`
+1. `Simple Games: Offline Games`(appName として決定済み。27 字。
+   アーケード 2 本の収録で "Puzzles" が正確でなくなったため 2026-08-03 に変更)
+2. `Simple Games — Offline Games`
 3. `Simple Games: Sudoku & More`
 
-キーワード優先順位: Offline > Sudoku > Solitaire > Minesweeper > Nonogram >
-Puzzle > Number Match > Water Sort > Sliding Puzzle > Memory Match >
-Simple Games > PixApps
+キーワード優先順位: Offline > Sudoku > Solitaire > Minesweeper > Brick Breaker >
+Nonogram > Puzzle > Number Match > Water Sort > Sliding Puzzle > Memory Match >
+Sky Fighter > Simple Games > PixApps
 (ゲーム名は検索流入の中核。収録済みの名前だけを、検索需要の大きい順に置く)
 
 ## 訴求の順序(BRAND.md と同一。この順で書く)
@@ -35,7 +37,7 @@ Simple Games > PixApps
 
 ## 短い説明(80字以内)— 候補
 
-1. `No rush, no connection needed. Classic puzzles gathered into one simple app.`(76字)
+1. `No rush, no connection needed. Classic games gathered into one simple app.`(74字)
 2. `Classic games in one quiet, offline app. No subscriptions or paywalls.`(70字)
 3. OSS 行(補助): `Built in public. The source code is available on GitHub.`(56字)
 
@@ -44,7 +46,7 @@ Simple Games > PixApps
 ```text
 I made this app because I wanted games I could play on a long flight, without worrying about a connection.
 
-Simple Games is a simple collection of classic puzzles in one app. More games will be added gradually, as long as they fit this idea.
+Simple Games is a simple collection of classic games in one app. More games will be added gradually, as long as they fit this idea.
 
 Nothing rushes you.
 No login bonuses, no day-streak counters, no limited-time events. No clock runs on screen while you play. Skip a day and you lose nothing.
@@ -56,11 +58,13 @@ INCLUDED GAMES
 • Sudoku
 • Solitaire
 • Minesweeper
+• Brick Breaker
 • Nonogram
 • Number Match
 • Water Sort
 • Sliding Puzzle
 • Memory Match
+• Sky Fighter
 
 No game feature is locked behind a payment, and there is no subscription. Hints and undo are free wherever a game has them — no limit on how often you use them, and never an ad to watch first.
 

@@ -20,7 +20,7 @@ simple-games/
 - PixApps モノレポへの実行時依存はない。このリポジトリ単独で
   clone / install / test / build できる。
 - 出荷するアプリは 1 つ(appId `com.pixapps.simplegames` / appName
-  `Simple Games: Offline Puzzles`)。収録ゲームはワークスペースパッケージではなく
+  `Simple Games: Offline Games`)。収録ゲームはワークスペースパッケージではなく
   **フォルダで分割**する。共通のゲームフレームワークは意図的に作らない。
 - 収録ゲームの追加・更新はアプリのリリースとして一体で行う。ただしゲームの追加が
   既存ゲームの挙動・保存データを変えてはならない。共通パッケージの変更で

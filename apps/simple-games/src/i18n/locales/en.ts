@@ -72,8 +72,7 @@ export const en = {
   step2Body:
     'Across, down, diagonally — or from the end of one row to the start of the next. Cleared cells are no obstacle, but a number still on the board blocks the way.',
   step3Title: 'Clear the board to win',
-  step3Body:
-    'Stuck? Tap Add to append the remaining numbers. Undo and hints are always free.',
+  step3Body: 'Stuck? Tap Add to append the remaining numbers. Undo and hints are always free.',
   startPlaying: 'Start Playing',
   next: 'Next',
   back: 'Back',
@@ -97,7 +96,6 @@ export const en = {
     'This removes your game, statistics, and settings from this device. It cannot be undone.',
   delete: 'Delete',
   version: 'Version',
-
 
   // Statistics
   played: 'Games played',
@@ -138,7 +136,6 @@ export const en = {
     'Tell me in an email — I read every message. Nothing is sent until you press send in your mail app.',
   reviewFeedbackAction: 'Write an email',
 
-
   // Sudoku
   sudokuName: 'Sudoku',
   sudokuBlurb: 'Fill every row, column and box with 1-9.',
@@ -162,7 +159,8 @@ export const en = {
   sudokuDailiesSolved: 'Dailies solved',
   sudokuAverageTime: 'Average clear',
   sudokuHighlightMistakes: 'Show mistakes',
-  sudokuHighlightMistakesNote: 'Marks a digit that does not match the solution. Duplicates are always marked.',
+  sudokuHighlightMistakesNote:
+    'Marks a digit that does not match the solution. Duplicates are always marked.',
   sudokuHintNone: 'Nothing can be worked out yet.',
   sudokuHintOnlyDigit: 'Only one digit fits this cell.',
   sudokuHintOnlyCell: 'This is the only place {value} can go here.',
@@ -242,11 +240,13 @@ export const en = {
 
   // Quick Rules (3 steps, Â§11)
   nonoStep1Title: 'Numbers are runs',
-  nonoStep1Body: 'Each number is a run of painted squares in order, with at least one gap between runs.',
+  nonoStep1Body:
+    'Each number is a run of painted squares in order, with at least one gap between runs.',
   nonoStep2Title: 'Cross out what cannot be',
   nonoStep2Body: 'Mark the squares that stay empty with a cross to narrow the line down.',
   nonoStep3Title: 'Satisfy every line',
-  nonoStep3Body: 'When every row and column reads true, the board is done. Guessing is never needed.',
+  nonoStep3Body:
+    'When every row and column reads true, the board is done. Guessing is never needed.',
 
   // ---- Minesweeper ----
   minesName: 'Minesweeper',
@@ -426,6 +426,46 @@ export const en = {
     'Moves that turn a card face up open the game. The stock can be turned over any number of times.',
   solStep3Title: 'Aces build to kings',
   solStep3Body: 'Send each suit to its foundation from ace to king. Complete all four to win.',
+
+  // ---- Arcade (shared by Brick Breaker and Sky Fighter) ----
+  livesLeft: 'Lives: {n}',
+  levelsCleared: 'Levels cleared',
+  bestScore: 'Best score',
+
+  // ---- Brick Breaker ----
+  brickBreakerName: 'Brick Breaker',
+  brickBreakerBlurb: 'Angle the ball and break the wall before it reaches the line.',
+  bbBoardLabel: 'Brick Breaker board',
+  bbBricksLeft: 'Bricks {n}',
+  bbClearedTitle: 'Wall cleared!',
+  bbClearedBody: 'Every brick is down.',
+  bbFailedTitle: 'Not this time',
+  bbFailedBody: 'Retry is free — same wall, same bricks.',
+  bbStep1Title: 'Aim with the paddle',
+  bbStep1Body: 'The middle of the paddle sends the ball straight up; the edge sends it out steep.',
+  bbStep2Title: 'Hollow bricks hold a ball',
+  bbStep2Body: 'Break one and a second ball joins in. Only losing the last ball costs a life.',
+  bbStep3Title: 'The wall creeps down',
+  bbStep3Body: 'Clear every brick before the wall reaches the dotted line.',
+
+  // ---- Sky Fighter ----
+  skyFighterName: 'Sky Fighter',
+  skyFighterBlurb: 'Slide to aim — your fighter never stops firing.',
+  sfBoardLabel: 'Sky Fighter board',
+  sfWave: 'Wave {n} / {m}',
+  sfClearedTitle: 'Sky clear!',
+  sfClearedBody: 'Every wave is down.',
+  sfFailedTitle: 'Shot down',
+  sfFailedBody: 'Retry is free — same skies, same waves.',
+  sfNewBestScore: 'Your best score yet.',
+  sfStep1Title: 'Move to aim',
+  sfStep1Body:
+    'Your fighter fires on its own. Slide left and right — where you fly is where you aim.',
+  sfStep2Title: 'Big ones break up',
+  sfStep2Body: 'A bomber splits into fighters, and fighters into scouts. Only bombers shoot back.',
+  sfStep3Title: 'Catch the spare craft',
+  sfStep3Body:
+    'A downed scout sometimes drops a tiny craft. Catch it for an extra barrel; a hit costs one.',
 } as const;
 
 export type Messages = Record<keyof typeof en, string>;

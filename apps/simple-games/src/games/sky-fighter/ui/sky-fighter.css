@@ -1,0 +1,33 @@
+/* Sky Fighter — board chrome only. Screens, buttons, dialogs and the level
+   grid come from the shared stylesheet (ui/styles.css); the status-row
+   classes are shared with Brick Breaker's stylesheet, the sibling arcade
+   title. The board itself is a canvas (components/SkyBoard.tsx) that reads
+   the same accent tokens. */
+
+.sf-canvas {
+  width: min(100%, 360px);
+  max-height: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  touch-action: none;
+  cursor: pointer;
+}
+
+/* The run's score, glanceable mid-flight: display voice, steady digits. */
+.sf-score {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  min-width: 2ch;
+  text-align: center;
+}
+
+/* Quick Rules figures (§11): little SVG scenes in the series tokens. */
+.sf-figure {
+  width: min(70vw, 220px);
+  height: auto;
+  display: block;
+}
