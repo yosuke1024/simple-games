@@ -65,6 +65,17 @@ export interface AdUnitProps {
   compact?: boolean;
 }
 
+/**
+ * The placement wrapper owns the reserved height, not this component. AdSense
+ * reports fill state on the `<ins>` via `data-ad-status`; when it says
+ * `unfilled`, hide that wrapper so an unavailable ad does not leave a blank
+ * white rectangle. `filled` removes the flag again for completeness.
+ */
+function setPlacementHidden(host: HTMLDivElement | null, hidden: boolean): void {
+  const placement = host?.closest<HTMLElement>('.web-ad-slot');
+  if (placement) placement.hidden = hidden;
+}
+
 export default function AdUnit({ slot, compact = false }: AdUnitProps) {
   const { testMode, client } = webAdsConfig();
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -90,27 +101,45 @@ export default function AdUnit({ slot, compact = false }: AdUnitProps) {
     // No size means nothing was rendered to fill: requesting an ad for a box
     // that does not exist would be a request the reader never sees.
     if (!live || !client || !size || requestedRef.current || !insRef.current) return;
-    // Offline: the slot stays quietly empty. No listener waits for a
-    // reconnect — the next time the screen is opened online, a fresh mount
-    // tries again (zero requests and zero polling meanwhile).
-    if (!isOnline()) return;
+
+    const unit = insRef.current;
+    const syncFillState = () => {
+      const status = unit.getAttribute('data-ad-status');
+      if (status === 'unfilled') setPlacementHidden(hostRef.current, true);
+      if (status === 'filled') setPlacementHidden(hostRef.current, false);
+    };
+    const observer = new MutationObserver(syncFillState);
+    observer.observe(unit, { attributes: true, attributeFilter: ['data-ad-status'] });
+    syncFillState();
+
+    // Offline: collapse the unused placement and send no request. No listener
+    // waits for a reconnect — the next time the screen is opened online, a
+    // fresh mount tries again (zero requests and zero polling meanwhile).
+    if (!isOnline()) {
+      setPlacementHidden(hostRef.current, true);
+      return () => observer.disconnect();
+    }
+
     requestedRef.current = true;
+    setPlacementHidden(hostRef.current, false);
     ensureAdSenseScript(client);
     try {
       const w = window as AdsWindow;
       (w.adsbygoogle = w.adsbygoogle ?? []).push({});
     } catch {
-      // Silent: the reserved space stays quietly empty.
+      setPlacementHidden(hostRef.current, true);
     }
+
+    return () => observer.disconnect();
   }, [live, client, size]);
 
   // Nothing can ever appear here (no client, no slot): render nothing at all
   // rather than an empty host, so a build with no ad IDs stays literally empty.
   if (!testMode && !live) return null;
 
-  // Otherwise the host is always present so it can be measured; it carries no
-  // size of its own, so an unfilled one costs nothing (the slot around it
-  // already reserves the height).
+  // Otherwise the host is always present so it can be measured. The placement
+  // around it reserves the loading height, then collapses if AdSense marks the
+  // request unfilled.
   return (
     <div className="web-ad-host" ref={hostRef}>
       {size === null ? null : testMode ? (
