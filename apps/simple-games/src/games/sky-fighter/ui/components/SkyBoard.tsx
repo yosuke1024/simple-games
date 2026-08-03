@@ -427,7 +427,10 @@ export function SkyBoard({
 
       if (stateRef.current.status === 'playing') {
         runMsRef.current += dt;
-        accumulator += dt;
+        // Capped, not just accumulated: a sustained low frame rate must not
+        // build a backlog that never gets paid off. Losing the extra time is
+        // the same trade-off MAX_FRAME_DT_MS already makes for one slow frame.
+        accumulator = Math.min(accumulator + dt, STEP_MS * MAX_STEPS_PER_FRAME);
         let steps = 0;
         while (accumulator >= STEP_MS && steps < MAX_STEPS_PER_FRAME) {
           stateRef.current = step(stateRef.current, STEP_MS);
