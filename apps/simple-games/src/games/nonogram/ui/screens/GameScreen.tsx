@@ -16,6 +16,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconHint, IconRetry } from '@/ui/components/icons';
+import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import type { Hint } from '../../game';
 import { useNonogram } from '../../state/GameContext';
 import { NonoBoard } from '../components/NonoBoard';
@@ -43,7 +44,7 @@ export function NonoGameScreen() {
   const [hint, setHint] = useState<Hint | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [confirmRestart, setConfirmRestart] = useState(false);
-  const toastIdRef = useRef(0);
+  const toastTimeout = useTransientTimeout();
 
   // A new board is a clean slate.
   useEffect(() => {
@@ -62,13 +63,14 @@ export function NonoGameScreen() {
     previousStatus.current = status;
   }, [session?.status]);
 
-  const showToast = useCallback((message: string) => {
-    const id = ++toastIdRef.current;
-    setToast(message);
-    window.setTimeout(() => {
-      if (toastIdRef.current === id) setToast(null);
-    }, TOAST_MS);
-  }, []);
+  const showToast = useCallback(
+    (message: string) => {
+      setToast(message);
+      // Re-showing restarts the clock; unmount cancels it (useTransientTimeout).
+      toastTimeout(() => setToast(null), TOAST_MS);
+    },
+    [toastTimeout],
+  );
 
   const onPaint = useCallback(
     (index: number) => {

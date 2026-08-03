@@ -37,6 +37,20 @@ export function setSoundEnabled(value: boolean): void {
   if (!value) suspendContext();
 }
 
+/**
+ * Leaving a game quiets the hardware now, not 30 seconds from now: the shell
+ * calls this on exit (docs/GAME_LIFECYCLE.md). The context itself survives —
+ * it is a process-wide singleton and the next game's first tone resumes it —
+ * but no game may leave audio work running behind the collection home.
+ */
+export function releaseSound(): void {
+  if (idleSuspendTimer !== null && typeof window !== 'undefined') {
+    window.clearTimeout(idleSuspendTimer);
+    idleSuspendTimer = null;
+  }
+  suspendContext();
+}
+
 function getContext(): AudioContext | null {
   try {
     if (!ctx) {

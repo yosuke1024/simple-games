@@ -10,13 +10,14 @@
  * because there is no undo (§7) — the retry on the result card is the answer,
  * and it costs nothing.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { haptics } from '@/services/haptics';
 import { sounds } from '@/services/sound';
 import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconHint, IconRetry } from '@/ui/components/icons';
+import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import { hasStarted, remainingMines, type SafeCell } from '../../game';
 import { useMinesweeper } from '../../state/GameContext';
 import { MinesBoard } from '../components/MinesBoard';
@@ -45,7 +46,7 @@ export function MinesGameScreen() {
   const [hint, setHint] = useState<SafeCell | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [confirmRestart, setConfirmRestart] = useState(false);
-  const toastIdRef = useRef(0);
+  const toastTimeout = useTransientTimeout();
 
   // A new board is a clean slate.
   useEffect(() => {
@@ -53,13 +54,14 @@ export function MinesGameScreen() {
     setToast(null);
   }, [sessionEpoch]);
 
-  const showToast = useCallback((message: string) => {
-    const id = ++toastIdRef.current;
-    setToast(message);
-    window.setTimeout(() => {
-      if (toastIdRef.current === id) setToast(null);
-    }, TOAST_MS);
-  }, []);
+  const showToast = useCallback(
+    (message: string) => {
+      setToast(message);
+      // Re-showing restarts the clock; unmount cancels it (useTransientTimeout).
+      toastTimeout(() => setToast(null), TOAST_MS);
+    },
+    [toastTimeout],
+  );
 
   const onOpen = useCallback(
     (index: number) => {

@@ -8,6 +8,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { useCallback, useEffect, useState } from 'react';
 import { markReviewPromptShown, shouldPromptReview } from '../services/review';
+import { releaseSound } from '../services/sound';
 import { ReviewPrompt } from '../ui/components/ReviewPrompt';
 import { CollectionHomeScreen } from '../ui/screens/CollectionHomeScreen';
 import { SettingsScreen } from '../ui/screens/SettingsScreen';
@@ -57,6 +58,9 @@ export function App() {
   const exitGame = useCallback(() => {
     if (view.kind === 'game') trackWebGameClosed(view.gameId);
     setView({ kind: 'collection' });
+    // The game's audio must not outlive it: suspend the shared context now
+    // instead of waiting out its idle timer (docs/GAME_LIFECYCLE.md).
+    releaseSound();
     if (shouldPromptReview()) {
       markReviewPromptShown();
       setReviewPromptOpen(true);
