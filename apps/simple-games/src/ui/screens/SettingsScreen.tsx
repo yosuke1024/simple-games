@@ -7,7 +7,15 @@
  * External links open the system browser; offline they simply do nothing —
  * this screen itself must always render (docs/OFFLINE_POLICY.md).
  */
-import { useEffect, useState } from 'react';
+import {
+  Component,
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from 'react';
 import {
   PRIVACY_URL,
   SERIES_BY_LINE,
@@ -17,7 +25,7 @@ import {
 } from '@simple-games/brand';
 import packageJson from '../../../package.json';
 import { initRecentGames } from '../../app/recentGames';
-import { GAMES } from '../../app/registry';
+import { GAMES, type GameId } from '../../app/registry';
 import { LANGUAGE_NAMES } from '../../i18n';
 import {
   getAdRemovalPrice,
@@ -62,6 +70,37 @@ const OSS_LINKS = [
   { key: 'privacyPolicy', url: PRIVACY_URL },
   { key: 'termsOfUse', url: TERMS_URL },
 ] as const;
+
+/**
+ * A game's settings section is optional garnish: if its chunk fails to load
+ * (Suspense does not catch a rejected lazy import), the section disappears
+ * and the shared settings — including "Reset Local Data" — must stay usable.
+ * Without this boundary one stale chunk would take the whole screen down.
+ */
+class SectionBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  override state = { failed: false };
+
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true };
+  }
+
+  override render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+// One lazy wrapper per contributed game section, reused across opens of the
+// settings screen — a fresh lazy() every render would re-load and remount.
+const sectionCache = new Map<GameId, ComponentType>();
+function getLazySettingsSection(id: GameId): ComponentType | null {
+  const cached = sectionCache.get(id);
+  if (cached) return cached;
+  const game = GAMES.find((entry) => entry.id === id);
+  if (!game?.loadSettingsSection) return null;
+  const created = lazy(game.loadSettingsSection);
+  sectionCache.set(id, created);
+  return created;
+}
 
 export interface SettingsScreenProps {
   onBack: () => void;
@@ -209,10 +248,19 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           </section>
         ) : null}
 
-        {/* Each game's own options, contributed by the game itself. */}
-        {GAMES.map((game) =>
-          game.SettingsSection ? <game.SettingsSection key={game.id} /> : null,
-        )}
+        {/* Each game's own options, contributed by the game itself. Lazy —
+            the section rides in the game's chunk — behind a null fallback,
+            which matches the sections' own render-null-until-loaded shape. */}
+        {GAMES.map((game) => {
+          const Section = getLazySettingsSection(game.id);
+          return Section ? (
+            <SectionBoundary key={game.id}>
+              <Suspense fallback={null}>
+                <Section />
+              </Suspense>
+            </SectionBoundary>
+          ) : null;
+        })}
 
         {/* The open-source links: the promises above are verifiable in code. */}
         <section className="settings-group" aria-label={t('aboutTitle')}>

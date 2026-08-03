@@ -14,11 +14,9 @@ import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asInt, isRecord } from '../../../storage/validate';
 import { LEVEL_COUNT } from '../game/levels';
 
-export const SF_STORAGE_KEYS = {
-  stats: 'sf.stats',
-  progress: 'sf.progress',
-  flags: 'sf.flags',
-} as const;
+import { SF_STORAGE_KEYS } from './keys';
+
+export { SF_STORAGE_KEYS };
 
 // ---------- one-time flags ----------
 

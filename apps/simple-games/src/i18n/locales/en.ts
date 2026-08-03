@@ -108,6 +108,9 @@ export const en = {
   gamesHeading: 'Games',
   recentHeading: 'Recently played',
   backToGames: 'All games',
+  gameLoading: 'Loading…',
+  gameLoadFailed: 'The game could not be loaded.',
+  gameLoadRetry: 'Try again',
   learnMore: 'Learn More',
 
   // About & open source

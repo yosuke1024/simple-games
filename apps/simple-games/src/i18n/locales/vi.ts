@@ -97,6 +97,9 @@ export const vi: Messages = {
   gamesHeading: 'Trò chơi',
   recentHeading: 'Chơi gần đây',
   backToGames: 'Tất cả trò chơi',
+  gameLoading: 'Đang tải…',
+  gameLoadFailed: 'Không thể tải trò chơi.',
+  gameLoadRetry: 'Thử lại',
   learnMore: 'Tìm hiểu thêm',
 
   // About & open source

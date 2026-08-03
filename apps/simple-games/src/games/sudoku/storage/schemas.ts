@@ -10,14 +10,9 @@ import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asDateString, asInt, asString, isRecord } from '../../../storage/validate';
 import { CELLS, DIFFICULTIES, MAX_LEVEL, type Difficulty, type GameMode } from '../game';
 
-export const SD_STORAGE_KEYS = {
-  game: 'sd.saveGame',
-  dailyGame: 'sd.saveDaily',
-  stats: 'sd.stats',
-  progress: 'sd.progress',
-  flags: 'sd.flags',
-  prefs: 'sd.prefs',
-} as const;
+import { SD_STORAGE_KEYS } from './keys';
+
+export { SD_STORAGE_KEYS };
 
 const asDifficulty = (value: unknown): Difficulty | null =>
   DIFFICULTIES.includes(value as Difficulty) ? (value as Difficulty) : null;

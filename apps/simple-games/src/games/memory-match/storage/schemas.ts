@@ -10,18 +10,14 @@ import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asDateString, asInt, asString, isRecord } from '../../../storage/validate';
 import { cellCount, isDifficulty, LAYOUTS, type Difficulty, type GameMode } from '../game';
 
-export const MM_STORAGE_KEYS = {
-  game: 'mm.saveGame',
-  dailyGame: 'mm.saveDaily',
-  stats: 'mm.stats',
-  flags: 'mm.flags',
-} as const;
+import { MM_STORAGE_KEYS } from './keys';
+
+export { MM_STORAGE_KEYS };
 
 /** The longest board string any difficulty produces — one character per cell. */
 const MAX_BOARD_LENGTH = cellCount(LAYOUTS.hard);
 
-const asDifficulty = (value: unknown): Difficulty | null =>
-  isDifficulty(value) ? value : null;
+const asDifficulty = (value: unknown): Difficulty | null => (isDifficulty(value) ? value : null);
 
 // ---------- one-time flags ----------
 
@@ -100,7 +96,11 @@ function validateDailyMap(raw: unknown): Record<string, number> {
   if (!isRecord(raw)) return out;
   for (const [key, value] of Object.entries(raw)) {
     const amount = asInt(value, 0, 1e9);
-    if (asDateString(key) !== null && amount !== null && Object.keys(out).length < MAX_DAILY_ENTRIES) {
+    if (
+      asDateString(key) !== null &&
+      amount !== null &&
+      Object.keys(out).length < MAX_DAILY_ENTRIES
+    ) {
       out[key] = amount;
     }
   }

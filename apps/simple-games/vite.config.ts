@@ -35,6 +35,37 @@ export default defineConfig(({ mode }) => ({
     // writes to dist-web/ where Capacitor cannot pick it up by accident.
     // CI greps both artifacts (.github/scripts/check-dist-ads-separation.sh).
     outDir: mode === 'web' ? 'dist-web' : 'dist',
+    // The size gate reads this to prove no game chunk is statically reachable
+    // from the home's entry (scripts/bundle-size.mjs, issue #26).
+    manifest: true,
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              // One chunk per game — everything under src/games/<id>/ joins
+              // `game-<id>`, so a game is exactly one lazy load and the size
+              // gate can budget per title. Two exceptions return null: the
+              // zero-import storage/keys.ts leaf (the registry needs it in
+              // the entry, and grouping it here would drag the whole game
+              // chunk into the home's initial graph) and everything else,
+              // which keeps Rolldown's default splitting.
+              name: (id: string) => {
+                const match = id.match(/[\\/]src[\\/]games[\\/]([^\\/]+)[\\/]/);
+                if (!match) return null;
+                if (/[\\/]storage[\\/]keys\.ts$/.test(id)) return null;
+                return `game-${match[1]}`;
+              },
+              // Never pull a captured module's dependencies (react, shared
+              // ui/storage/services) into the game chunk: the entry needs
+              // those, and capturing them would statically chain the entry
+              // to every game chunk — the exact thing the gate forbids.
+              includeDependenciesRecursively: false,
+            },
+          ],
+        },
+      },
+    },
   },
   test: {
     environment: 'jsdom',

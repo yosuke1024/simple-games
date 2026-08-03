@@ -96,6 +96,9 @@ export const zhHant: Messages = {
   gamesHeading: '遊戲',
   recentHeading: '最近玩過',
   backToGames: '所有遊戲',
+  gameLoading: '載入中…',
+  gameLoadFailed: '無法載入遊戲。',
+  gameLoadRetry: '重試',
   learnMore: '了解更多',
 
   // About & open source
