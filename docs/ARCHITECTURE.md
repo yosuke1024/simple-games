@@ -292,22 +292,27 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
   (ビルド成果物・local.properties は除外)。
 - ハードウェア戻るボタン: ゲーム内ホーム→コレクションへ、コレクション→アプリ最小化。
 
-## 将来の静的 Web 版
+## 静的 Web 版
 
-Web 版は**現時点では実装しない**が、いつでも出せる構成を維持する。
+**`https://pixapps.ai/simple-games/play/` で実装・公開済み。** この節はもともと
+「将来の静的 Web 版」という見出しで、実装前に「現時点では実装しない」と書かれていた
+名残である。実装済みの詳細・広告・計測・保存の版差分は
+[WEB_VERSION.md](WEB_VERSION.md) を正本とする。ここには変わらないレイヤー上の
+前提だけを残す。
 
 - `games/*/game/` は Pure TypeScript で、フォルダ外への import を ESLint
   (no-restricted-imports)で機械的に禁止している。React / DOM / Capacitor /
-  課金 / 広告 / ストレージへの依存ゼロ。
+  課金 / 広告 / ストレージへの依存ゼロ。これが Web 版を静的構成のまま出せる根拠であり、
+  Web 版のためにこのレイヤーへ何かを足す必要はない。
 - 保存は `KVStore` 契約(`src/storage/kv.ts`)の背後にあり、Web 版は
-  IndexedDB / localStorage 実装を差すだけでよい。
-- ホスティングは Cloudflare Pages 第一候補・GitHub Pages でも配信可能な
-  **純静的構成**に限る。Functions / Workers / D1 / KV / Durable Objects / R2 /
-  独自 API / 認証 / クラウドセーブ / サーバー側生成は使わない。
+  Capacitor Preferences の web 実装(`localStorage`)を差すだけで動く。
+- ホスティングは Cloudflare Pages(`pixapps-landing` リポジトリへの生成物コミット)。
+  GitHub Pages でも配信できる**純静的構成**を維持する。Functions / Workers / D1 / KV /
+  Durable Objects / R2 / 独自 API / 認証 / クラウドセーブ / サーバー側生成は使わない。
   ロジック・生成・デイリー・保存・言語・テーマはブラウザ内で完結する。
-- PWA / Service Worker は Web 版実装時に導入する。ただし Web 版は初回アクセスに
-  ダウンロードが必要であり、ネイティブ版の「初回起動からオフライン」とは異なる。
-  この差は Web 版のドキュメントに明記する。
+- **未実装(今後)**: 再訪時のオフライン動作(PWA / Service Worker、M3)。導入までは
+  Web 版は初回アクセスにダウンロードが必要で、ネイティブ版の「初回起動から
+  オフライン」とは異なる([WEB_VERSION.md](WEB_VERSION.md)「オフラインの扱い」)。
 
 ## 将来の共通化
 
