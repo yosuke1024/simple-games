@@ -19,7 +19,8 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 - 全ゲーム機能が初回起動からオフラインで利用可能
 - ゲームデータは端末内にのみ保存(クラウド同期なし)
 - ストリークや人工的な緊急性なし
-- Analytics・トラッキングコードなし(公開コードで確認可能)
+- アプリに Analytics・トラッキングコードなし(公開コードで確認可能。Web 版の
+  ページ解析は [docs/WEB_VERSION.md](docs/WEB_VERSION.md)「計測」)
 - API サーバー・アプリ用 DB・コンテンツ配信サーバーなし
 
 詳細は [docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md) を参照してください。
@@ -136,9 +137,9 @@ pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満�
 オフラインで外部リンクが開けなくてもゲームは止まりません。
 
 ゲームロジックが Pure TypeScript なので、同じソースから **ブラウザ版**を配信します
-(公開予定先 `https://pixapps.ai/simple-games/play/`。**まだ公開していません**)。
+(`https://pixapps.ai/simple-games/play/` で公開中)。
 Cloudflare Pages の静的アセットのみで動き、サーバー機能は使いません。
-アプリ版との役割の違い(広告・課金・オフラインの範囲・保存)は
+アプリ版との役割の違い(広告・課金・オフラインの範囲・計測・保存)は
 [docs/WEB_VERSION.md](docs/WEB_VERSION.md)、レイヤー構成は
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) を参照してください。
 
