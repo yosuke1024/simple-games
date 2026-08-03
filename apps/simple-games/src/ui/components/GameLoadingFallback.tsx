@@ -12,9 +12,8 @@
  *    collection.
  */
 import { useEffect, useState } from 'react';
-import { App as CapacitorApp } from '@capacitor/app';
-import { Capacitor } from '@capacitor/core';
 import { useSettings } from '@/state/SettingsContext';
+import { useHardwareBackExit } from '../useHardwareBackExit';
 
 /** Under this, a load is instant to the eye and deserves no indicator. */
 const SHOW_AFTER_MS = 200;
@@ -28,13 +27,7 @@ export function GameLoadingFallback({ onExit }: { onExit: () => void }) {
     return () => window.clearTimeout(id);
   }, []);
 
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
-    const handle = CapacitorApp.addListener('backButton', onExit);
-    return () => {
-      void handle.then((h) => h.remove()).catch(() => undefined);
-    };
-  }, [onExit]);
+  useHardwareBackExit(onExit);
 
   return (
     <div className="screen game-load-screen" aria-live="polite">

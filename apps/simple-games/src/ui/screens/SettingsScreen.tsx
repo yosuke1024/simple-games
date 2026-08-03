@@ -7,7 +7,15 @@
  * External links open the system browser; offline they simply do nothing —
  * this screen itself must always render (docs/OFFLINE_POLICY.md).
  */
-import { lazy, Suspense, useEffect, useState, type ComponentType } from 'react';
+import {
+  Component,
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from 'react';
 import {
   PRIVACY_URL,
   SERIES_BY_LINE,
@@ -62,6 +70,24 @@ const OSS_LINKS = [
   { key: 'privacyPolicy', url: PRIVACY_URL },
   { key: 'termsOfUse', url: TERMS_URL },
 ] as const;
+
+/**
+ * A game's settings section is optional garnish: if its chunk fails to load
+ * (Suspense does not catch a rejected lazy import), the section disappears
+ * and the shared settings — including "Reset Local Data" — must stay usable.
+ * Without this boundary one stale chunk would take the whole screen down.
+ */
+class SectionBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  override state = { failed: false };
+
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true };
+  }
+
+  override render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 // One lazy wrapper per contributed game section, reused across opens of the
 // settings screen — a fresh lazy() every render would re-load and remount.
@@ -228,9 +254,11 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         {GAMES.map((game) => {
           const Section = getLazySettingsSection(game.id);
           return Section ? (
-            <Suspense key={game.id} fallback={null}>
-              <Section />
-            </Suspense>
+            <SectionBoundary key={game.id}>
+              <Suspense fallback={null}>
+                <Section />
+              </Suspense>
+            </SectionBoundary>
           ) : null;
         })}
 

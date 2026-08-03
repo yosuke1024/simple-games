@@ -12,9 +12,13 @@
  */
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { useHardwareBackExit } from '../useHardwareBackExit';
 
 function GameLoadError({ onRetry, onExit }: { onRetry: () => void; onExit: () => void }) {
   const { t } = useSettings();
+  // Same ownerless-back moment as during loading: the shell's listener is off
+  // while the view is a game, and the failed game never registered one.
+  useHardwareBackExit(onExit);
   return (
     <div className="screen game-load-screen">
       <p className="game-load-text">{t('gameLoadFailed')}</p>
