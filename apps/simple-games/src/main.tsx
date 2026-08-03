@@ -50,6 +50,17 @@ async function boot(): Promise<void> {
     void import('./services/ads/web/boot').then((m) => m.initWebAds()).catch(() => undefined);
   }
 
+  // Web build only, and default-off: without a valid build-time measurement
+  // ID the integration chunk is never requested and no analytics request is
+  // made. Network state was resolved above; an offline first attempt is not
+  // retried during this page load (docs/WEB_VERSION.md「計測」).
+  const gaMeasurementId = import.meta.env.VITE_GA_MEASUREMENT_ID?.trim();
+  if (import.meta.env.MODE === 'web' && gaMeasurementId) {
+    void import('./services/analytics/web')
+      .then((m) => m.initWebAnalytics(gaMeasurementId))
+      .catch(() => undefined);
+  }
+
   createRoot(container).render(
     <StrictMode>
       <SettingsProvider initialSettings={settings}>
