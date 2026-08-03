@@ -98,6 +98,9 @@ export const ptBR: Messages = {
   gamesHeading: 'Jogos',
   recentHeading: 'Jogados recentemente',
   backToGames: 'Todos os jogos',
+  gameLoading: 'Carregando…',
+  gameLoadFailed: 'Não foi possível carregar o jogo.',
+  gameLoadRetry: 'Tentar novamente',
   learnMore: 'Saiba mais',
 
   // About & open source

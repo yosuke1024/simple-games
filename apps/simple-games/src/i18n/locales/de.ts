@@ -98,6 +98,9 @@ export const de: Messages = {
   gamesHeading: 'Spiele',
   recentHeading: 'Zuletzt gespielt',
   backToGames: 'Alle Spiele',
+  gameLoading: 'Wird geladen…',
+  gameLoadFailed: 'Das Spiel konnte nicht geladen werden.',
+  gameLoadRetry: 'Erneut versuchen',
   learnMore: 'Mehr erfahren',
 
   // About & open source

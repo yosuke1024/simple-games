@@ -26,7 +26,7 @@
 import { Capacitor } from '@capacitor/core';
 import { SERIES_BY_LINE, SERIES_NAME } from '@simple-games/brand';
 import { getRecentGames } from '../../app/recentGames';
-import { GAMES, type GameId, type GameModule } from '../../app/registry';
+import { GAMES, type GameId, type GameDefinition } from '../../app/registry';
 import { useSettings } from '../../state/SettingsContext';
 import { IconChevronRight, IconGear } from '../components/icons';
 import { WebAdSlot } from '../components/WebAdSlot';
@@ -38,7 +38,7 @@ import { WebAdSlot } from '../components/WebAdSlot';
  * its accent is the series default, which is what the home is already painted
  * with (docs/ARCHITECTURE.md「タイトルごとのアクセント色」).
  */
-function GameTile({ game }: { game: GameModule }) {
+function GameTile({ game }: { game: GameDefinition }) {
   return (
     <span className={`game-tile accent-${game.id}`} aria-hidden="true">
       {game.glyph}
@@ -58,7 +58,7 @@ export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionH
   // anything (and it never reorders under a finger that is mid-tap).
   const recent = getRecentGames()
     .map((id) => GAMES.find((game) => game.id === id))
-    .filter((game): game is GameModule => game !== undefined);
+    .filter((game): game is GameDefinition => game !== undefined);
   /**
    * The tagline promises offline play, which is the app's promise and not the
    * web build's: the browser has to download the assets on a first visit, and

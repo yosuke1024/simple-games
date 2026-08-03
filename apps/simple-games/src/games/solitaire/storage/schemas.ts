@@ -20,13 +20,9 @@ import {
   type SolitaireBoard,
 } from '../game';
 
-export const SO_STORAGE_KEYS = {
-  game: 'so.saveGame',
-  dailyGame: 'so.saveDaily',
-  stats: 'so.stats',
-  flags: 'so.flags',
-  prefs: 'so.prefs',
-} as const;
+import { SO_STORAGE_KEYS } from './keys';
+
+export { SO_STORAGE_KEYS };
 
 // ---------- one-time flags ----------
 
@@ -94,7 +90,11 @@ function validateDailyMap(raw: unknown): Record<string, number> {
   if (!isRecord(raw)) return out;
   for (const [key, value] of Object.entries(raw)) {
     const amount = asInt(value, 0, 1e9);
-    if (asDateString(key) !== null && amount !== null && Object.keys(out).length < MAX_DAILY_ENTRIES) {
+    if (
+      asDateString(key) !== null &&
+      amount !== null &&
+      Object.keys(out).length < MAX_DAILY_ENTRIES
+    ) {
       out[key] = amount;
     }
   }

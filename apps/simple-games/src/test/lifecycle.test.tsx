@@ -17,7 +17,9 @@ afterEach(cleanup);
 
 const noop = () => undefined;
 
-async function mountSettleUnmount(Root: (typeof GAMES)[number]['Root']) {
+type RootComponent = Awaited<ReturnType<(typeof GAMES)[number]['loadRoot']>>['default'];
+
+async function mountSettleUnmount(Root: RootComponent) {
   const view = render(
     <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
       <Root onExit={noop} />
@@ -50,14 +52,18 @@ describe('the harness itself', () => {
 describe('a closed game leaves nothing running', () => {
   for (const game of GAMES) {
     it(`${game.id} releases timers, frames and listeners on unmount`, async () => {
+      // Through the registry's own loader, so every loader is exercised in CI
+      // and a broken lazy chunk fails here, not on a player's device.
+      const Root = (await game.loadRoot()).default;
+
       // Warm-up pass: module singletons (sound service, Capacitor web shims)
       // register process-wide handlers on first use. Those belong to the
       // shell's lifetime and must not be charged to the game under test.
-      await mountSettleUnmount(game.Root);
+      await mountSettleUnmount(Root);
 
       const tracker = trackResources();
       try {
-        await mountSettleUnmount(game.Root);
+        await mountSettleUnmount(Root);
         tracker.assertReleased();
       } finally {
         tracker.restore();

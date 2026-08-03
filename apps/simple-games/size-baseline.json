@@ -1,12 +1,34 @@
 {
   "dist": {
-    "totalGzip": 300315,
-    "entryGzip": 212662,
-    "games": {}
+    "totalGzip": 329112,
+    "entryGzip": 140386,
+    "games": {
+      "brick-breaker": 7477,
+      "memory-match": 9491,
+      "minesweeper": 10780,
+      "nonogram": 10225,
+      "number-match": 13937,
+      "sky-fighter": 8227,
+      "sliding-puzzle": 9157,
+      "solitaire": 12386,
+      "sudoku": 12829,
+      "water-sort": 10528
+    }
   },
   "distWeb": {
-    "totalGzip": 302074,
-    "entryGzip": 213138,
-    "games": {}
+    "totalGzip": 330831,
+    "entryGzip": 140583,
+    "games": {
+      "brick-breaker": 7473,
+      "memory-match": 9499,
+      "minesweeper": 10778,
+      "nonogram": 10222,
+      "number-match": 13944,
+      "sky-fighter": 8219,
+      "sliding-puzzle": 9152,
+      "solitaire": 12406,
+      "sudoku": 12827,
+      "water-sort": 10524
+    }
   }
 }

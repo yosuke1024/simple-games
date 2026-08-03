@@ -98,6 +98,9 @@ export const id: Messages = {
   gamesHeading: 'Game',
   recentHeading: 'Baru dimainkan',
   backToGames: 'Semua game',
+  gameLoading: 'Memuat…',
+  gameLoadFailed: 'Game tidak dapat dimuat.',
+  gameLoadRetry: 'Coba lagi',
   learnMore: 'Pelajari Lebih Lanjut',
 
   // About & open source

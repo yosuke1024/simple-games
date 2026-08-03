@@ -96,6 +96,9 @@ export const hi: Messages = {
   gamesHeading: 'गेम',
   recentHeading: 'हाल में खेले गए',
   backToGames: 'सभी गेम',
+  gameLoading: 'लोड हो रहा है…',
+  gameLoadFailed: 'गेम लोड नहीं हो सका।',
+  gameLoadRetry: 'फिर से कोशिश करें',
   learnMore: 'और जानें',
 
   // About & open source

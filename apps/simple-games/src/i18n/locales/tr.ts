@@ -98,6 +98,9 @@ export const tr: Messages = {
   gamesHeading: 'Oyunlar',
   recentHeading: 'Son oynananlar',
   backToGames: 'Tüm oyunlar',
+  gameLoading: 'Yükleniyor…',
+  gameLoadFailed: 'Oyun yüklenemedi.',
+  gameLoadRetry: 'Tekrar dene',
   learnMore: 'Daha Fazla',
 
   // About & open source

@@ -97,6 +97,9 @@ export const ko: Messages = {
   gamesHeading: '게임',
   recentHeading: '최근 플레이',
   backToGames: '전체 게임',
+  gameLoading: '불러오는 중…',
+  gameLoadFailed: '게임을 불러오지 못했습니다.',
+  gameLoadRetry: '다시 시도',
   learnMore: '자세히 보기',
 
   // About & open source

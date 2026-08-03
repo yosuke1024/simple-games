@@ -18,14 +18,9 @@ import {
   type ScoreState,
 } from '../game';
 
-export const NM_STORAGE_KEYS = {
-  game: 'nm.saveGame',
-  stats: 'nm.stats',
-  flags: 'nm.flags',
-  progress: 'nm.progress',
-  /** Daily games suspend independently of level games (docs §14). */
-  dailyGame: 'nm.saveDaily',
-} as const;
+import { NM_STORAGE_KEYS } from './keys';
+
+export { NM_STORAGE_KEYS };
 
 // ---------- one-time flags ----------
 

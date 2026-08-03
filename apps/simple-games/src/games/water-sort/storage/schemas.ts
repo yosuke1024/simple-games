@@ -8,15 +8,18 @@
  */
 import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asDateString, asInt, asString, isRecord } from '../../../storage/validate';
-import { MAX_COLORS, MAX_LEVEL, MIN_COLORS, tubeCount, TUBE_CAPACITY, type GameMode } from '../game';
+import {
+  MAX_COLORS,
+  MAX_LEVEL,
+  MIN_COLORS,
+  tubeCount,
+  TUBE_CAPACITY,
+  type GameMode,
+} from '../game';
 
-export const WS_STORAGE_KEYS = {
-  game: 'ws.saveGame',
-  dailyGame: 'ws.saveDaily',
-  stats: 'ws.stats',
-  progress: 'ws.progress',
-  flags: 'ws.flags',
-} as const;
+import { WS_STORAGE_KEYS } from './keys';
+
+export { WS_STORAGE_KEYS };
 
 /** The longest board string possible: every unit plus the tube separators. */
 const MAX_TUBES_LENGTH = MAX_COLORS * TUBE_CAPACITY + tubeCount(MAX_COLORS);
@@ -110,7 +113,11 @@ function validateDailyMap(raw: unknown): Record<string, number> {
   if (!isRecord(raw)) return out;
   for (const [key, value] of Object.entries(raw)) {
     const amount = asInt(value, 0, 1e9);
-    if (asDateString(key) !== null && amount !== null && Object.keys(out).length < MAX_DAILY_ENTRIES) {
+    if (
+      asDateString(key) !== null &&
+      amount !== null &&
+      Object.keys(out).length < MAX_DAILY_ENTRIES
+    ) {
       out[key] = amount;
     }
   }
