@@ -70,10 +70,17 @@ export interface AdUnitProps {
  * reports fill state on the `<ins>` via `data-ad-status`; when it says
  * `unfilled`, hide that wrapper so an unavailable ad does not leave a blank
  * white rectangle. `filled` removes the flag again for completeness.
+ *
+ * `.web-ad-slot` has an explicit `display: flex`, which can override the
+ * browser's default rendering for `[hidden]`. Keep the semantic attribute and
+ * set the inline display value as the authoritative visual state.
  */
 function setPlacementHidden(host: HTMLDivElement | null, hidden: boolean): void {
   const placement = host?.closest<HTMLElement>('.web-ad-slot');
-  if (placement) placement.hidden = hidden;
+  if (!placement) return;
+
+  placement.hidden = hidden;
+  placement.style.display = hidden ? 'none' : '';
 }
 
 export default function AdUnit({ slot, compact = false }: AdUnitProps) {
