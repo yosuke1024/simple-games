@@ -12,6 +12,28 @@ export default [
     languageOptions: { globals: { console: 'readonly', process: 'readonly' } },
   },
   {
+    // The shell never reaches into a game past the registry
+    // (docs/ARCHITECTURE.md). This is the editor-speed echo of the real gate,
+    // src/test/importBoundaries.test.ts, which also covers what globs cannot
+    // (game-to-game imports across relative depths).
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/games/**', 'src/app/registry.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/games/**', '@/games/**'],
+              message:
+                'Only app/registry.ts imports from src/games/ — the shell reaches no deeper (docs/ARCHITECTURE.md).',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Each game's logic must stay free of UI / platform / storage
     // dependencies — portable to a future static web build as-is
     // (docs/ARCHITECTURE.md). '../**' bans every import that leaves game/.
@@ -22,7 +44,14 @@ export default [
         {
           patterns: [
             {
-              group: ['react', 'react-dom', '@capacitor/*', '@capacitor-community/*', '@/*', '../**'],
+              group: [
+                'react',
+                'react-dom',
+                '@capacitor/*',
+                '@capacitor-community/*',
+                '@/*',
+                '../**',
+              ],
               message:
                 'games/*/game/ is pure TypeScript: no UI, platform, service, or storage imports.',
             },
