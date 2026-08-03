@@ -1,0 +1,12 @@
+{
+  "dist": {
+    "totalGzip": 300315,
+    "entryGzip": 212662,
+    "games": {}
+  },
+  "distWeb": {
+    "totalGzip": 302074,
+    "entryGzip": 213138,
+    "games": {}
+  }
+}
