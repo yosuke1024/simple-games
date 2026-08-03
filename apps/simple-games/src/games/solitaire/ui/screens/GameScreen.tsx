@@ -17,6 +17,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconCheck, IconHint, IconRetry, IconUndo } from '@/ui/components/icons';
+import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import {
   canAutoFinish,
   canPlaceOnFoundation,
@@ -76,7 +77,8 @@ export function SolitaireGameScreen() {
   // each one (§12). Bumped only where a tap actually changed the board:
   // dealing is not a move, and neither is a tap that did nothing.
   const [moveTick, setMoveTick] = useState(0);
-  const toastIdRef = useRef(0);
+  const toastTimeout = useTransientTimeout();
+  const hintTimeout = useTransientTimeout();
 
   const board = session?.board ?? null;
 
@@ -86,14 +88,14 @@ export function SolitaireGameScreen() {
     setHint(null);
   }, [board]);
 
-  const showToast = useCallback((message: string) => {
-    const id = ++toastIdRef.current;
-    setToast(message);
-    window.setTimeout(() => {
-      // Only the latest toast's timer may clear it.
-      if (toastIdRef.current === id) setToast(null);
-    }, HINT_SHOW_MS);
-  }, []);
+  const showToast = useCallback(
+    (message: string) => {
+      setToast(message);
+      // Re-showing restarts the clock; unmount cancels it (useTransientTimeout).
+      toastTimeout(() => setToast(null), HINT_SHOW_MS);
+    },
+    [toastTimeout],
+  );
 
   const replay = useCallback(() => setMoveTick((n) => n + 1), []);
 
@@ -197,7 +199,16 @@ export function SolitaireGameScreen() {
       if (index !== null) select({ type: 'tableau', pile, index });
       else setSelection(null);
     },
-    [board, foundationToTableau, moveRun, moved, runToFoundation, select, selection, wasteToTableau],
+    [
+      board,
+      foundationToTableau,
+      moveRun,
+      moved,
+      runToFoundation,
+      select,
+      selection,
+      wasteToTableau,
+    ],
   );
 
   // Undo is a move like any other, and the cards go back the way they came.
@@ -225,10 +236,10 @@ export function SolitaireGameScreen() {
               ? { piles: [move.from], foundation: true }
               : { piles: [move.from, move.to] };
     setHint(marks);
-    window.setTimeout(() => {
+    hintTimeout(() => {
       setHint((current) => (current === marks ? null : current));
     }, HINT_SHOW_MS);
-  }, [requestHint, showToast, t]);
+  }, [hintTimeout, requestHint, showToast, t]);
 
   const onFinish = useCallback(() => {
     if (finishGame()) {

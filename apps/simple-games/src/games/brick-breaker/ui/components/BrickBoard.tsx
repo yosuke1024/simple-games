@@ -456,6 +456,11 @@ export function BrickBoard({
       document.removeEventListener('visibilitychange', onVisibility);
       media.removeEventListener('change', repaint);
       observer.disconnect();
+      if (import.meta.env.DEV) {
+        // The seam retains the whole loop closure — drop it with the board.
+        delete (window as unknown as Record<string, unknown>).__bbFrame;
+        delete (window as unknown as Record<string, unknown>).__bbState;
+      }
     };
     // A new level or retry remounts this component (key includes the nonce),
     // so the loop's lifetime is exactly one attempt.

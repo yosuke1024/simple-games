@@ -21,6 +21,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconHint, IconRetry, IconUndo } from '@/ui/components/icons';
+import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import { applyPour, isTubeComplete, type Pour } from '../../game';
 import { useWaterSort } from '../../state/GameContext';
 import { WaterBoard, type PourEffect } from '../components/WaterBoard';
@@ -49,8 +50,9 @@ export function WaterGameScreen() {
   const [toast, setToast] = useState<string | null>(null);
   const [pourFx, setPourFx] = useState<PourEffect | null>(null);
   const [confirmRestart, setConfirmRestart] = useState(false);
-  const toastIdRef = useRef(0);
-  const pourIdRef = useRef(0);
+  const toastTimeout = useTransientTimeout();
+  const pourTimeout = useTransientTimeout();
+  const hintTimeout = useTransientTimeout();
   /** Flipped per pour so a repeat from the same tube replays the gesture. */
   const pourParityRef = useRef<0 | 1>(0);
 
@@ -63,24 +65,23 @@ export function WaterGameScreen() {
   }, [tubes]);
 
   /** Replays a pour as a gesture; purely visual (§12). */
-  const showPour = useCallback((from: number, to: number) => {
-    const id = ++pourIdRef.current;
-    pourParityRef.current = pourParityRef.current === 0 ? 1 : 0;
-    setPourFx({ from, to, dir: to > from ? 'right' : 'left', parity: pourParityRef.current });
-    window.setTimeout(() => {
-      // Only the latest pour's timer may clear it.
-      if (pourIdRef.current === id) setPourFx(null);
-    }, POUR_SHOW_MS);
-  }, []);
+  const showPour = useCallback(
+    (from: number, to: number) => {
+      pourParityRef.current = pourParityRef.current === 0 ? 1 : 0;
+      setPourFx({ from, to, dir: to > from ? 'right' : 'left', parity: pourParityRef.current });
+      // A newer pour restarts the clock; unmount cancels it (useTransientTimeout).
+      pourTimeout(() => setPourFx(null), POUR_SHOW_MS);
+    },
+    [pourTimeout],
+  );
 
-  const showToast = useCallback((message: string) => {
-    const id = ++toastIdRef.current;
-    setToast(message);
-    window.setTimeout(() => {
-      // Only the latest toast's timer may clear it.
-      if (toastIdRef.current === id) setToast(null);
-    }, HINT_SHOW_MS);
-  }, []);
+  const showToast = useCallback(
+    (message: string) => {
+      setToast(message);
+      toastTimeout(() => setToast(null), HINT_SHOW_MS);
+    },
+    [toastTimeout],
+  );
 
   const onTubeTap = useCallback(
     (index: number) => {
@@ -134,14 +135,14 @@ export function WaterGameScreen() {
     const move = requestHint();
     if (move) {
       setHint(move);
-      window.setTimeout(() => {
+      hintTimeout(() => {
         setHint((current) => (current === move ? null : current));
       }, HINT_SHOW_MS);
     } else {
       // Honest for both the proven dead end and the capped search (§8).
       showToast(t('waterHintNone'));
     }
-  }, [requestHint, showToast, t]);
+  }, [hintTimeout, requestHint, showToast, t]);
 
   // The clear chime belongs to the solve, not to a particular pour.
   const solved = session?.status === 'solved';

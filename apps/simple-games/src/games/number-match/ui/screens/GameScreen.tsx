@@ -19,6 +19,7 @@ import { BannerSlot } from '@/ui/components/BannerSlot';
 import { BoardView, type MatchAnim } from '../components/BoardView';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconAdd, IconBack, IconHint, IconRetry, IconUndo } from '@/ui/components/icons';
+import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import { ResultOverlay } from '../components/ResultOverlay';
 
 const HINT_COOLDOWN_MS = 2000;
@@ -73,7 +74,10 @@ export function GameScreen() {
   const introEpoch = useRef(-1);
   const previousLength = useRef<number>(session?.board.length ?? 0);
   const previousStatus = useRef(session?.status ?? 'playing');
-  const toastIdRef = useRef(0);
+  const toastTimeout = useTransientTimeout();
+  const invalidFlashTimeout = useTransientTimeout();
+  const blockedFlashTimeout = useTransientTimeout();
+  const hintCooldownTimeout = useTransientTimeout();
 
   const board = session?.board ?? EMPTY_BOARD;
 
@@ -120,15 +124,15 @@ export function GameScreen() {
     }
   }, [session?.status]);
 
-  const showToast = useCallback((message: string) => {
-    const id = ++toastIdRef.current;
-    setToast(message);
-    window.setTimeout(() => {
-      // Only the latest toast's timer may clear it (repeat taps re-show the
-      // same message; each gets its full duration).
-      if (toastIdRef.current === id) setToast(null);
-    }, TOAST_MS);
-  }, []);
+  const showToast = useCallback(
+    (message: string) => {
+      setToast(message);
+      // Repeat taps re-show the same message and each gets its full duration;
+      // unmount cancels whatever is pending (useTransientTimeout).
+      toastTimeout(() => setToast(null), TOAST_MS);
+    },
+    [toastTimeout],
+  );
 
   // The first board holding a wild or a stone explains it, once, as a toast
   // (§16). A toast rather than a tutorial step: the rule arrives on the board
@@ -137,11 +141,12 @@ export function GameScreen() {
   useEffect(() => {
     if (!session || introEpoch.current === sessionEpoch) return;
     const has = (kind: 'wild' | 'stone') => session.board.some((c) => c?.kind === kind);
-    const due = !flags.wildIntroSeen && has('wild')
-      ? 'wild'
-      : !flags.stoneIntroSeen && has('stone')
-        ? 'stone'
-        : null;
+    const due =
+      !flags.wildIntroSeen && has('wild')
+        ? 'wild'
+        : !flags.stoneIntroSeen && has('stone')
+          ? 'stone'
+          : null;
     if (due === null) return;
     introEpoch.current = sessionEpoch;
     showToast(t(due === 'wild' ? 'wildIntroToast' : 'stoneIntroToast'));
@@ -190,7 +195,7 @@ export function GameScreen() {
         const pair: readonly [number, number] = [selected, index];
         setInvalidPair(pair);
         setSelected(index);
-        window.setTimeout(() => {
+        invalidFlashTimeout(() => {
           setInvalidPair((current) => (current === pair ? null : current));
         }, INVALID_FLASH_MS);
 
@@ -205,14 +210,14 @@ export function GameScreen() {
           const route = blockingPath(session.board, selected, index);
           if (route.blockers.length > 0 && route.blockers.length <= MAX_BLOCKERS_SHOWN) {
             setBlocked(route);
-            window.setTimeout(() => {
+            blockedFlashTimeout(() => {
               setBlocked((current) => (current === route ? null : current));
             }, BLOCKED_FLASH_MS);
           }
         }
       }
     },
-    [applyPair, selected, session],
+    [applyPair, blockedFlashTimeout, invalidFlashTimeout, selected, session],
   );
 
   const onUndo = useCallback(() => {
@@ -223,7 +228,7 @@ export function GameScreen() {
   const onHint = useCallback(() => {
     if (hintCoolingDown) return;
     setHintCoolingDown(true);
-    window.setTimeout(() => setHintCoolingDown(false), HINT_COOLDOWN_MS);
+    hintCooldownTimeout(() => setHintCoolingDown(false), HINT_COOLDOWN_MS);
     const pair = takeHint();
     if (pair) {
       setHintPair(pair);
@@ -231,7 +236,7 @@ export function GameScreen() {
     } else {
       showToast(t('hintNoneToast'));
     }
-  }, [hintCoolingDown, showToast, t, takeHint]);
+  }, [hintCooldownTimeout, hintCoolingDown, showToast, t, takeHint]);
 
   const onAdd = useCallback(() => {
     setLastMatch(null);
@@ -244,88 +249,88 @@ export function GameScreen() {
   if (!session) return null;
 
   const undoDisabled = session.status !== 'playing' || !canUndo(session);
-  const addDisabled =
-    session.status !== 'playing' ||
-    !canAddNumbers(session.board, MAX_CELLS);
+  const addDisabled = session.status !== 'playing' || !canAddNumbers(session.board, MAX_CELLS);
 
   return (
     <div className="screen game-screen">
       {/* inert while the result overlay is up: nothing behind the dialog is
           focusable or exposed to assistive technology. */}
       <div className="game-content" inert={session.status !== 'playing'}>
-      <header className="game-topbar">
-        <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
-          <IconBack />
-        </button>
-        <div className="game-status">
-          <span className="game-mode">
-            {session.mode === 'daily' ? t('modeDaily') : t('modeLevel', { n: session.level ?? 1 })}
-          </span>
-          <span className="game-score">
-            <span className="visually-hidden">{t('score')} </span>
-            <AnimatedNumber value={session.score.total} />
-          </span>
-          {currentBest !== undefined ? (
-            <span className="game-best">
-              {t('best')} {currentBest}
+        <header className="game-topbar">
+          <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
+            <IconBack />
+          </button>
+          <div className="game-status">
+            <span className="game-mode">
+              {session.mode === 'daily'
+                ? t('modeDaily')
+                : t('modeLevel', { n: session.level ?? 1 })}
             </span>
-          ) : null}
+            <span className="game-score">
+              <span className="visually-hidden">{t('score')} </span>
+              <AnimatedNumber value={session.score.total} />
+            </span>
+            {currentBest !== undefined ? (
+              <span className="game-best">
+                {t('best')} {currentBest}
+              </span>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label={t('tryAgain')}
+            onClick={() => setConfirmRestart(true)}
+          >
+            <IconRetry />
+          </button>
+        </header>
+
+        <div className="board-scroll" ref={boardRef}>
+          <BoardView
+            board={session.board}
+            selected={selected}
+            hintPair={hintPair}
+            invalidPair={invalidPair}
+            blocked={blocked}
+            lastMatch={lastMatch}
+            onCellTap={onCellTap}
+          />
         </div>
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={t('tryAgain')}
-          onClick={() => setConfirmRestart(true)}
-        >
-          <IconRetry />
-        </button>
-      </header>
 
-      <div className="board-scroll" ref={boardRef}>
-        <BoardView
-          board={session.board}
-          selected={selected}
-          hintPair={hintPair}
-          invalidPair={invalidPair}
-          blocked={blocked}
-          lastMatch={lastMatch}
-          onCellTap={onCellTap}
-        />
-      </div>
+        {toast ? (
+          <div className="toast" role="status">
+            {toast}
+          </div>
+        ) : null}
 
-      {toast ? (
-        <div className="toast" role="status">
-          {toast}
+        <div className="action-bar">
+          <button type="button" className="action-btn" onClick={onUndo} disabled={undoDisabled}>
+            <span className="action-icon" aria-hidden="true">
+              <IconUndo />
+            </span>
+            {t('undo')}
+          </button>
+          <button
+            type="button"
+            className="action-btn"
+            onClick={onHint}
+            disabled={session.status !== 'playing' || hintCoolingDown}
+          >
+            <span className="action-icon" aria-hidden="true">
+              <IconHint />
+            </span>
+            {t('hint')}
+          </button>
+          <button type="button" className="action-btn" onClick={onAdd} disabled={addDisabled}>
+            <span className="action-icon" aria-hidden="true">
+              <IconAdd />
+            </span>
+            {t('addNumbers')}
+          </button>
         </div>
-      ) : null}
 
-      <div className="action-bar">
-        <button type="button" className="action-btn" onClick={onUndo} disabled={undoDisabled}>
-          <span className="action-icon" aria-hidden="true">
-            <IconUndo />
-          </span>
-          {t('undo')}
-        </button>
-        <button
-          type="button"
-          className="action-btn"
-          onClick={onHint}
-          disabled={session.status !== 'playing' || hintCoolingDown}
-        >
-          <span className="action-icon" aria-hidden="true">
-            <IconHint />
-          </span>
-          {t('hint')}
-        </button>
-        <button type="button" className="action-btn" onClick={onAdd} disabled={addDisabled}>
-          <span className="action-icon" aria-hidden="true">
-            <IconAdd />
-          </span>
-          {t('addNumbers')}
-        </button>
-      </div>
-
-      <BannerSlot />
+        <BannerSlot />
       </div>
 
       <ResultOverlay

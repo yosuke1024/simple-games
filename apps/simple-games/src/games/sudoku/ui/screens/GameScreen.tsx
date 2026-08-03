@@ -4,13 +4,14 @@
  * No clock and no mistake counter on screen: both are recorded and shown on the
  * clear screen instead, so nothing here pushes the player to hurry.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { haptics } from '@/services/haptics';
 import { sounds } from '@/services/sound';
 import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconHint, IconRetry, IconUndo } from '@/ui/components/icons';
+import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import { isGiven, type Digit, type Hint } from '../../game';
 import { useSudoku } from '../../state/GameContext';
 import { DigitPad } from '../components/DigitPad';
@@ -54,7 +55,7 @@ export function SudokuGameScreen() {
   const [hint, setHint] = useState<Hint | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [confirmRestart, setConfirmRestart] = useState(false);
-  const toastIdRef = useRef(0);
+  const toastTimeout = useTransientTimeout();
 
   // A new game is a clean slate.
   useEffect(() => {
@@ -63,23 +64,21 @@ export function SudokuGameScreen() {
     setNotesMode(false);
   }, [sessionEpoch]);
 
-  const showToast = useCallback((message: string) => {
-    const id = ++toastIdRef.current;
-    setToast(message);
-    window.setTimeout(() => {
-      if (toastIdRef.current === id) setToast(null);
-    }, TOAST_MS);
-  }, []);
-
-  const onCellTap = useCallback(
-    (index: number) => {
-      setSelected(index);
-      setHint(null);
-      sounds.select();
-      void haptics.tap();
+  const showToast = useCallback(
+    (message: string) => {
+      setToast(message);
+      // Re-showing restarts the clock; unmount cancels it (useTransientTimeout).
+      toastTimeout(() => setToast(null), TOAST_MS);
     },
-    [],
+    [toastTimeout],
   );
+
+  const onCellTap = useCallback((index: number) => {
+    setSelected(index);
+    setHint(null);
+    sounds.select();
+    void haptics.tap();
+  }, []);
 
   const onDigit = useCallback(
     (digit: Digit) => {
