@@ -78,8 +78,10 @@ src/
   静かに何もしない(ゲームを止めない)。Landing Page 本体は別リポジトリで公開済み。
   書かれている言語は `ui/landing.ts` の `PAGE_LOCALES` のみ(それ以外は英語へ
   フォールバック)。存在しない言語を足すと 404 へ誘導することになる。
-- Analytics / Remote Config / トラッキングのサービスは**存在しない**
+- Analytics / Remote Config / トラッキングのサービスは**アプリに存在しない**
   (初期リリースで削除済み。公開コードに追跡コードが無いことが透明性の証明)。
+  Web 版のページ解析は方針決定のみで未実装([WEB_VERSION.md](WEB_VERSION.md)
+  「計測」)。導入時も `--mode web` 限定で、native 成果物には含めない。
 
 ## ゲームレジストリの契約
 
