@@ -16,6 +16,26 @@ import { GAMES, type GameId } from './registry';
 
 type View = { kind: 'collection' } | { kind: 'settings' } | { kind: 'game'; gameId: GameId };
 
+function trackWebGameOpened(gameId: GameId): void {
+  if (import.meta.env.MODE !== 'web') return;
+  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID?.trim();
+  if (!measurementId) return;
+
+  void import('../services/analytics/web')
+    .then((m) => m.trackGameOpened(gameId, measurementId))
+    .catch(() => undefined);
+}
+
+function trackWebGameClosed(gameId: GameId): void {
+  if (import.meta.env.MODE !== 'web') return;
+  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID?.trim();
+  if (!measurementId) return;
+
+  void import('../services/analytics/web')
+    .then((m) => m.trackGameClosed(gameId, measurementId))
+    .catch(() => undefined);
+}
+
 export function App() {
   const [view, setView] = useState<View>({ kind: 'collection' });
   const [reviewPromptOpen, setReviewPromptOpen] = useState(false);
@@ -26,6 +46,7 @@ export function App() {
   // records what it mounted, so no game has to report anything (recentGames.ts).
   const openGame = useCallback((gameId: GameId) => {
     recordGameOpened(gameId);
+    trackWebGameOpened(gameId);
     setView({ kind: 'game', gameId });
   }, []);
 
@@ -34,12 +55,13 @@ export function App() {
   // never mid-game. The showing is booked immediately so a killed app cannot
   // turn one ask into several.
   const exitGame = useCallback(() => {
+    if (view.kind === 'game') trackWebGameClosed(view.gameId);
     setView({ kind: 'collection' });
     if (shouldPromptReview()) {
       markReviewPromptShown();
       setReviewPromptOpen(true);
     }
-  }, []);
+  }, [view]);
 
   // One accent per title (packages/brand titleAccents): the shell stamps which
   // game is on screen and styles.css swaps just the accent tokens. The series
