@@ -19,5 +19,1038 @@
     "existed; none of them has been through it. `pnpm i18n:gate` lists what is",
     "outstanding. Do not backfill entries to make it quiet."
   ],
-  "approvals": {}
+  "approvals": {
+    "hi": {
+      "removeAdsTitle": {
+        "source": "sha256:875d84c6da3dea9d010eea3cf749da4ddaaa287e68fec56345d9fcf7a4ddbb5f",
+        "target": "sha256:da15fa0a929f5c6fd3ebb1d6669b20355cfe68c805e169514e01fda9e2649a95",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "adSupportBody": {
+        "source": "sha256:0bf4abe465f8a6ac3b6c674c3e760dd94acf3749972e41a38ca37d1506a95557",
+        "target": "sha256:d324bef29ad2ca40b4087bcbe797292239cfb45ff0fc20dc7cf8e7241442bb5c",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "removeAdsAction": {
+        "source": "sha256:ac8b4b580a241f37c61d75d6621e4ca2daf6fffa62146f8f981b24454ec265f8",
+        "target": "sha256:a944d2b8327def109784a294aa81b7362873a0037d3020f673ed70cacc1844b4",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "restorePurchase": {
+        "source": "sha256:d1a951f8d95cc7716fcb29eb85240f84dd1bc878ab547d883bcaa0322c93c30e",
+        "target": "sha256:cd4705a89d8e5787df5e4aee9b82444edd3fdcb598a4d1855b1ec322dfc3db52",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "purchaseThanks": {
+        "source": "sha256:282a7eb3d9013b1474c0bd579f7bf7f2ce07619b6f36d91911594f47b3abd2b5",
+        "target": "sha256:4249864bb525f8468e4887ff31a78bf825cde02883fe1abefa9386eff1051fb1",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetData": {
+        "source": "sha256:ac80770ff077ed33a5ecc26e8fd3018d8118c8e67538242db19090649c8db53c",
+        "target": "sha256:845a2ece32487dd17f447c65b24989044d311fdb3ab8efbf8b2c9d55c8094d66",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmTitle": {
+        "source": "sha256:0b87ac27b9d421db6cb4cbcd1295b1dc5368fef5452f906be1875f3b272f3273",
+        "target": "sha256:f065ad6a8af77b9c82815b4813c16ee5e96614c5c1a1b2dca52e85bb4baf03e9",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmBody": {
+        "source": "sha256:8abeb907ebae330c269e957277e945521f3ea9749a4fd437762e0b12c02fa6cd",
+        "target": "sha256:cb125ee43cf5727d767994308dbfbb43948111e83bff56f7cb77157e98441f24",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "delete": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:6d369f710cb65b73937b7d8b70323319a7c93128c5714071892e1ee1607aba2b",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "confirmNewGameBody": {
+        "source": "sha256:e089a22960b73c118d78449eec85de6110a887ed698302b0888bb35a70b67350",
+        "target": "sha256:74a3a0c778da6dbdecfec5277633e89d1ffc58e99ecb42f58d9611c71dfbb04b",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "minesConfirmSwitchBody": {
+        "source": "sha256:cbca68f6d02bea319e4ec983765446132b7645010f7a77fff23d4956b4ee986b",
+        "target": "sha256:908112be8a4aec6df78882124f21d2fa6100680df12e2f8a99d0604b5b6cba0f",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "tagline": {
+        "source": "sha256:c096d80518ef036e8d6627b511c1876c67285b5769937df9520850d016811b1a",
+        "target": "sha256:b2ea8d03cfc3e4d849254112068addc3df5ee8d437a8d7191b141e655fb0babc",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "step3Body": {
+        "source": "sha256:3a9a99838a5b1c2e4aea595ae573a012a136837a0b7166132f2ffc5f3779370f",
+        "target": "sha256:d3132f6faf90256247d0b7492d670b8992a18937270f5c2fbe331ae9bf24d91d",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "sudokuStep3Body": {
+        "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
+        "target": "sha256:e2f8c957a74c36453944ec3d535101fdb04f4dc2e449165372acee993559aaa9",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      }
+    },
+    "th": {
+      "removeAdsTitle": {
+        "source": "sha256:875d84c6da3dea9d010eea3cf749da4ddaaa287e68fec56345d9fcf7a4ddbb5f",
+        "target": "sha256:fa6d40a2367cb107ddab0fb2af141b7162de6bc9ada6c805e7f44c8d9084b7ff",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "adSupportBody": {
+        "source": "sha256:0bf4abe465f8a6ac3b6c674c3e760dd94acf3749972e41a38ca37d1506a95557",
+        "target": "sha256:7fa2a81a63bd6b1de3404ec61faa6eabb8c70fce459b89e04341220ea5467246",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "removeAdsAction": {
+        "source": "sha256:ac8b4b580a241f37c61d75d6621e4ca2daf6fffa62146f8f981b24454ec265f8",
+        "target": "sha256:2f8030d9a15c3a8b0fee40c0388c8461a85d70780bdf3be626942f6a7f4ac7fc",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "restorePurchase": {
+        "source": "sha256:d1a951f8d95cc7716fcb29eb85240f84dd1bc878ab547d883bcaa0322c93c30e",
+        "target": "sha256:8ab6234913a18eefffe1841570b6a12f6bf53eb1a5617b5c2063a0b83c594044",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "purchaseThanks": {
+        "source": "sha256:282a7eb3d9013b1474c0bd579f7bf7f2ce07619b6f36d91911594f47b3abd2b5",
+        "target": "sha256:d222f09545fb3ccc82ea0888813cbff965df9d9b015300b98d9ce35dedba82fc",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetData": {
+        "source": "sha256:ac80770ff077ed33a5ecc26e8fd3018d8118c8e67538242db19090649c8db53c",
+        "target": "sha256:8131852316018e3d3e8625e6037a8f5609653238cfcfa021fdc00378dba4600f",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmTitle": {
+        "source": "sha256:0b87ac27b9d421db6cb4cbcd1295b1dc5368fef5452f906be1875f3b272f3273",
+        "target": "sha256:2c77de48a09503457b96aedd9b4b62c71c3bd9087892a327ef76ae27c5885467",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmBody": {
+        "source": "sha256:8abeb907ebae330c269e957277e945521f3ea9749a4fd437762e0b12c02fa6cd",
+        "target": "sha256:191c05fcfc06a9bb9927270ad6b9180ced285447fe32c051e827fe9c35c2df7a",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "delete": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:4c6e6f3bb187780f1f73c8898bbf3d29919067d237c35a39ef64e859299cd4af",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "confirmNewGameBody": {
+        "source": "sha256:e089a22960b73c118d78449eec85de6110a887ed698302b0888bb35a70b67350",
+        "target": "sha256:c62f60b198eed6bd264227bb62d680af09f34ef72a1a37f83c50449cae3517af",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "minesConfirmSwitchBody": {
+        "source": "sha256:cbca68f6d02bea319e4ec983765446132b7645010f7a77fff23d4956b4ee986b",
+        "target": "sha256:1a837b3fbb95ca3da934a305114aee6e86ca5d0e8c37e3befcf206803fa3198b",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "tagline": {
+        "source": "sha256:c096d80518ef036e8d6627b511c1876c67285b5769937df9520850d016811b1a",
+        "target": "sha256:069608d6fd3a320673a7a44605ef3a0197f0d9a350364f420d5254ab1852c6e0",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "step3Body": {
+        "source": "sha256:3a9a99838a5b1c2e4aea595ae573a012a136837a0b7166132f2ffc5f3779370f",
+        "target": "sha256:db95c7387ed29e7de13e675e9c1dfbfab29e794de0a6b897001387720b5e0e5b",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "sudokuStep3Body": {
+        "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
+        "target": "sha256:0f7e1031857c265fe78c574cb0d4970954884a3f6c82c4339a80333ae33a0f58",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      }
+    },
+    "id": {
+      "removeAdsTitle": {
+        "source": "sha256:875d84c6da3dea9d010eea3cf749da4ddaaa287e68fec56345d9fcf7a4ddbb5f",
+        "target": "sha256:8690e215db80ae68ea4b79fd376b773fba4ed9a8abfc55dc5a7107787d13226b",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "adSupportBody": {
+        "source": "sha256:0bf4abe465f8a6ac3b6c674c3e760dd94acf3749972e41a38ca37d1506a95557",
+        "target": "sha256:3fdfc1568c5966792f7bf011a04bf59b543a01ff04e3294ab2c82b634c3b8b04",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "removeAdsAction": {
+        "source": "sha256:ac8b4b580a241f37c61d75d6621e4ca2daf6fffa62146f8f981b24454ec265f8",
+        "target": "sha256:58aed3b9f98ebbaab79301ad2c6d8cbf1534396f1effe80bc2f7e9fef55a8b01",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "restorePurchase": {
+        "source": "sha256:d1a951f8d95cc7716fcb29eb85240f84dd1bc878ab547d883bcaa0322c93c30e",
+        "target": "sha256:5d82717fea76c06faebece66860ce634e277a90a9d371dc962b278b8fdf2f58d",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "purchaseThanks": {
+        "source": "sha256:282a7eb3d9013b1474c0bd579f7bf7f2ce07619b6f36d91911594f47b3abd2b5",
+        "target": "sha256:81b47806acbb6a6d6cc44af426b6a9110872427bf4cb8e8f083a4686fb14eb0b",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetData": {
+        "source": "sha256:ac80770ff077ed33a5ecc26e8fd3018d8118c8e67538242db19090649c8db53c",
+        "target": "sha256:2929ecf6a021757578a2cf4de58df629a42c0d74acdd2523e1bb69d0cf0421bc",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmTitle": {
+        "source": "sha256:0b87ac27b9d421db6cb4cbcd1295b1dc5368fef5452f906be1875f3b272f3273",
+        "target": "sha256:e7ed41e1f45c8d202a8ae8747e44cfe1e7bebe4898ab15bc4e50ff33156156bb",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmBody": {
+        "source": "sha256:8abeb907ebae330c269e957277e945521f3ea9749a4fd437762e0b12c02fa6cd",
+        "target": "sha256:d43bcf11fda7635dfd7ad82197e0df3ed2e89b28a0db9547e04ea8778638f782",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "delete": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:10725a56892ea5b3d4f16bb911d065f492ade739a907673fcd2772143170b2c4",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "confirmNewGameBody": {
+        "source": "sha256:e089a22960b73c118d78449eec85de6110a887ed698302b0888bb35a70b67350",
+        "target": "sha256:9f9c1f74577b44cd4706d4de2c2647854abb8de040baadb6457f2201a30345a9",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "minesConfirmSwitchBody": {
+        "source": "sha256:cbca68f6d02bea319e4ec983765446132b7645010f7a77fff23d4956b4ee986b",
+        "target": "sha256:d7273b77889b5e778a2e94f2c021b47d372062b9c994111a956146dd7b06d0fe",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "tagline": {
+        "source": "sha256:c096d80518ef036e8d6627b511c1876c67285b5769937df9520850d016811b1a",
+        "target": "sha256:8ec3dbe2857637ec64e3c9f58526145b83a80cb0360b5c497237234a39738bbd",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "step3Body": {
+        "source": "sha256:3a9a99838a5b1c2e4aea595ae573a012a136837a0b7166132f2ffc5f3779370f",
+        "target": "sha256:67450c80c742c6c0c5a97906d8653347756ddcdea631d2e7495e80d8e87938b8",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "sudokuStep3Body": {
+        "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
+        "target": "sha256:007719e75221c987026a55120874d80f13c7595ee3c4283b90476b3fdc58c6aa",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      }
+    },
+    "vi": {
+      "removeAdsTitle": {
+        "source": "sha256:875d84c6da3dea9d010eea3cf749da4ddaaa287e68fec56345d9fcf7a4ddbb5f",
+        "target": "sha256:20b9cf030596a0be7e8f3ae260fba64d9416b635d9828a2986ce1a50d08f820d",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "adSupportBody": {
+        "source": "sha256:0bf4abe465f8a6ac3b6c674c3e760dd94acf3749972e41a38ca37d1506a95557",
+        "target": "sha256:080f192bb0001794f74040a4511c701ea76c77d1dbd959eef3a2a276d69aa76e",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "removeAdsAction": {
+        "source": "sha256:ac8b4b580a241f37c61d75d6621e4ca2daf6fffa62146f8f981b24454ec265f8",
+        "target": "sha256:f79a2c5e5687aa75ec0df5bdacc8eaad7e654d2ca869db54b14f40d8fd020c6a",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "restorePurchase": {
+        "source": "sha256:d1a951f8d95cc7716fcb29eb85240f84dd1bc878ab547d883bcaa0322c93c30e",
+        "target": "sha256:42705ccfffbb3fa6180248af98d80aaf7be671de243bdd75bd6eee87444caf1e",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "purchaseThanks": {
+        "source": "sha256:282a7eb3d9013b1474c0bd579f7bf7f2ce07619b6f36d91911594f47b3abd2b5",
+        "target": "sha256:87f2d902e1c3cc6123966498dc1923ae51cb4be719c88d4cab06d512e0bb3dbc",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetData": {
+        "source": "sha256:ac80770ff077ed33a5ecc26e8fd3018d8118c8e67538242db19090649c8db53c",
+        "target": "sha256:bb12e2138eec71332ba4e4fec77641e385de45251d089d682a06199d284aeb9a",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmTitle": {
+        "source": "sha256:0b87ac27b9d421db6cb4cbcd1295b1dc5368fef5452f906be1875f3b272f3273",
+        "target": "sha256:ec6296c0bad300d7db1e5094f375a91baf21843ffb7c56d23f82cd3fc5825a5b",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmBody": {
+        "source": "sha256:8abeb907ebae330c269e957277e945521f3ea9749a4fd437762e0b12c02fa6cd",
+        "target": "sha256:6860892ac824703a413c880942cd8787085109dd270ea7988b6a901c4671ee88",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "delete": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:57435a5c84449ce3565abef7db178ea496803089b880d765fd379fa926312437",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "confirmNewGameBody": {
+        "source": "sha256:e089a22960b73c118d78449eec85de6110a887ed698302b0888bb35a70b67350",
+        "target": "sha256:fe2cc9d889981dce2d2de08849dbdd97e05fa34e9da1f21ed6781751e7848c4e",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "minesConfirmSwitchBody": {
+        "source": "sha256:cbca68f6d02bea319e4ec983765446132b7645010f7a77fff23d4956b4ee986b",
+        "target": "sha256:04251e8a584bb4a07014ba86e831a54063cf1fb96a141de2051d7c2968795fc7",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "tagline": {
+        "source": "sha256:c096d80518ef036e8d6627b511c1876c67285b5769937df9520850d016811b1a",
+        "target": "sha256:eef7153240812faf2c94656853e3151aa2d8c6503f338d7fd1fee6943d3bd1d8",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "step3Body": {
+        "source": "sha256:3a9a99838a5b1c2e4aea595ae573a012a136837a0b7166132f2ffc5f3779370f",
+        "target": "sha256:23ec6ae46dd01191760ae8a8e3c38a7d1b6ab9d5c58ff755af33efe77809771f",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "sudokuStep3Body": {
+        "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
+        "target": "sha256:34508dc3ea3d43b940cecc5c2627297158d445528ee61be61d0ad008c35fa0a0",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      }
+    },
+    "ko": {
+      "removeAdsTitle": {
+        "source": "sha256:875d84c6da3dea9d010eea3cf749da4ddaaa287e68fec56345d9fcf7a4ddbb5f",
+        "target": "sha256:ab65e8d53dea3684e0fdf0052b81f9bdf0e6f53036ab1231dea9febbe58e5236",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "adSupportBody": {
+        "source": "sha256:0bf4abe465f8a6ac3b6c674c3e760dd94acf3749972e41a38ca37d1506a95557",
+        "target": "sha256:b05b084aabd24a98933ecc2319f54daf35fe105fc46d411f9e15305cf26f3d80",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "removeAdsAction": {
+        "source": "sha256:ac8b4b580a241f37c61d75d6621e4ca2daf6fffa62146f8f981b24454ec265f8",
+        "target": "sha256:f3be22dec487196e7531ecbd99d36f9100121d851651505535c898045b4875d3",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "restorePurchase": {
+        "source": "sha256:d1a951f8d95cc7716fcb29eb85240f84dd1bc878ab547d883bcaa0322c93c30e",
+        "target": "sha256:d682c7d6531fe5e98f340c69c7af10c8750ddcc6d8c6fc9093c3c5ce8b274152",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "purchaseThanks": {
+        "source": "sha256:282a7eb3d9013b1474c0bd579f7bf7f2ce07619b6f36d91911594f47b3abd2b5",
+        "target": "sha256:11cde5520a3df0da18422ebdd109abd4844605bf72e3b56b1cb58778567a3043",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetData": {
+        "source": "sha256:ac80770ff077ed33a5ecc26e8fd3018d8118c8e67538242db19090649c8db53c",
+        "target": "sha256:fa0645dbf6ca3d7da9a7a2fb159ad4e4c0b603c5bb0016f08421045f5e0e8e2f",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmTitle": {
+        "source": "sha256:0b87ac27b9d421db6cb4cbcd1295b1dc5368fef5452f906be1875f3b272f3273",
+        "target": "sha256:f5415a28f26a8f52f1391cefaadfcd2d736741a3493930412f7dd68da650f691",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmBody": {
+        "source": "sha256:8abeb907ebae330c269e957277e945521f3ea9749a4fd437762e0b12c02fa6cd",
+        "target": "sha256:51917ba7fe664372b2d6b6e09a8011bb553ddb07e6c4d93255bcfdd2298c3b0d",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "delete": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:6139b6c3ed73cd4aa3849fcf25698abce9b6d870ddb9fcb0565ad1372a97c06c",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "confirmNewGameBody": {
+        "source": "sha256:e089a22960b73c118d78449eec85de6110a887ed698302b0888bb35a70b67350",
+        "target": "sha256:66cb9fbc0ec8399ba8ae50eeaf54c745567fb2348891b0819f0fce17aa69f6a4",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "minesConfirmSwitchBody": {
+        "source": "sha256:cbca68f6d02bea319e4ec983765446132b7645010f7a77fff23d4956b4ee986b",
+        "target": "sha256:7cc9473210193eead4c47ce21e8ec0e2377bedb2fb6165bfdd22fa7d3ad03f8f",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "tagline": {
+        "source": "sha256:c096d80518ef036e8d6627b511c1876c67285b5769937df9520850d016811b1a",
+        "target": "sha256:57ec4bf8b91595987922d1ef09cb4003227981b867ba048fa2bc5090efeba33a",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "step3Body": {
+        "source": "sha256:3a9a99838a5b1c2e4aea595ae573a012a136837a0b7166132f2ffc5f3779370f",
+        "target": "sha256:9b75529b9319c1ca1b24698bc5a6e66d4d4e59282617c418051c82a2cfb5c212",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "sudokuStep3Body": {
+        "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
+        "target": "sha256:2e04543439b70c7ed2b19ce8a6be4339c8545072d91b09071876211b31b172a3",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      }
+    },
+    "zh-hans": {
+      "removeAdsTitle": {
+        "source": "sha256:875d84c6da3dea9d010eea3cf749da4ddaaa287e68fec56345d9fcf7a4ddbb5f",
+        "target": "sha256:01bc22cf2af4c80328eeee362244ea91e2a5f37c6a7e2e68bc2dc77755b0920b",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "adSupportBody": {
+        "source": "sha256:0bf4abe465f8a6ac3b6c674c3e760dd94acf3749972e41a38ca37d1506a95557",
+        "target": "sha256:0ba1c049b23cc9cb486ac9a4aba92cd532888ad7d8eac355a32c321ed1a5acf6",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "removeAdsAction": {
+        "source": "sha256:ac8b4b580a241f37c61d75d6621e4ca2daf6fffa62146f8f981b24454ec265f8",
+        "target": "sha256:f71759bc95bd488c39ee49d0b18f9b7c6ce9c89f89f18174f87853400946e17c",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "restorePurchase": {
+        "source": "sha256:d1a951f8d95cc7716fcb29eb85240f84dd1bc878ab547d883bcaa0322c93c30e",
+        "target": "sha256:5da9b45c27766d05867531751f27fa347c0836b4cb77ef94fdf6221d6086d01d",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "purchaseThanks": {
+        "source": "sha256:282a7eb3d9013b1474c0bd579f7bf7f2ce07619b6f36d91911594f47b3abd2b5",
+        "target": "sha256:bb9f38c1b694165065cb0cf5e9769168ca06eb9566bb44023f33c9b53dcaa8fe",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetData": {
+        "source": "sha256:ac80770ff077ed33a5ecc26e8fd3018d8118c8e67538242db19090649c8db53c",
+        "target": "sha256:2561bad93fa8ba0564e0e11a76ab03102157a1c139db8991b3804cd6b4f5008c",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmTitle": {
+        "source": "sha256:0b87ac27b9d421db6cb4cbcd1295b1dc5368fef5452f906be1875f3b272f3273",
+        "target": "sha256:bc409a4735375bcf608da96ca40114e7644e334cf12e9b6d33533af850c3b0b5",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmBody": {
+        "source": "sha256:8abeb907ebae330c269e957277e945521f3ea9749a4fd437762e0b12c02fa6cd",
+        "target": "sha256:7fa064b79740ced2bb0e393b3d850605619ac8667557e9fbba46694dac70a2e8",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "delete": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:2f9daa828907b93ff8a00d41a16828e0c6388bf3a95dadf816c8ee9c3bdac37d",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "confirmNewGameBody": {
+        "source": "sha256:e089a22960b73c118d78449eec85de6110a887ed698302b0888bb35a70b67350",
+        "target": "sha256:653da63faecf541f7039d8fe65fd7790df88be34e319169c3c0042eac97f2b61",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "minesConfirmSwitchBody": {
+        "source": "sha256:cbca68f6d02bea319e4ec983765446132b7645010f7a77fff23d4956b4ee986b",
+        "target": "sha256:b2fb87633cebe87457bf155f606ba53962f30dfcdcdb8678fa016603efc3b7fc",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "tagline": {
+        "source": "sha256:c096d80518ef036e8d6627b511c1876c67285b5769937df9520850d016811b1a",
+        "target": "sha256:4bed9d6f7ff74980e68fc19ed5b74ad1ec80884225a1bcbf29fd0c9f0ae2ebf5",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "step3Body": {
+        "source": "sha256:3a9a99838a5b1c2e4aea595ae573a012a136837a0b7166132f2ffc5f3779370f",
+        "target": "sha256:4e045e48baf23b780acfde871d540b5449874e468e03a23d16d03bda9bd954c6",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "sudokuStep3Body": {
+        "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
+        "target": "sha256:1106c2779c6a00a097f1f6d4777090f708a0b33ba5a842880da5628e3b11cf03",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      }
+    },
+    "zh-hant": {
+      "removeAdsTitle": {
+        "source": "sha256:875d84c6da3dea9d010eea3cf749da4ddaaa287e68fec56345d9fcf7a4ddbb5f",
+        "target": "sha256:dda00d27e714da8befab9fa254202891649b3ab01dd1188bba9bd652b49c0ce6",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "adSupportBody": {
+        "source": "sha256:0bf4abe465f8a6ac3b6c674c3e760dd94acf3749972e41a38ca37d1506a95557",
+        "target": "sha256:6e43f76e3ed7290f2847bc68f6c98c13e638eba8951cf37cbc2b18d34d38f698",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "removeAdsAction": {
+        "source": "sha256:ac8b4b580a241f37c61d75d6621e4ca2daf6fffa62146f8f981b24454ec265f8",
+        "target": "sha256:52d42b6edbe8371770fcffbabf674706096e54c74e756526ec31038ed9043bdc",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "restorePurchase": {
+        "source": "sha256:d1a951f8d95cc7716fcb29eb85240f84dd1bc878ab547d883bcaa0322c93c30e",
+        "target": "sha256:4a2a9374117c07c6728d866691f9e68b714f88c2150093986ad07600e9139412",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "purchaseThanks": {
+        "source": "sha256:282a7eb3d9013b1474c0bd579f7bf7f2ce07619b6f36d91911594f47b3abd2b5",
+        "target": "sha256:8d4ea74bc63d1c1af727d869cc04e84c9961efc123b92b06b9cd5957ce6f3e1c",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetData": {
+        "source": "sha256:ac80770ff077ed33a5ecc26e8fd3018d8118c8e67538242db19090649c8db53c",
+        "target": "sha256:f4d10459c69ba36dc18491e49ef7b744f1cf2804eb8424e28b4272175e64bbeb",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmTitle": {
+        "source": "sha256:0b87ac27b9d421db6cb4cbcd1295b1dc5368fef5452f906be1875f3b272f3273",
+        "target": "sha256:645ec4b3bb1b980c1506a61596416d6315da5ae8fdec57bcf948c68627b5cfa1",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmBody": {
+        "source": "sha256:8abeb907ebae330c269e957277e945521f3ea9749a4fd437762e0b12c02fa6cd",
+        "target": "sha256:8807b511d8fafecec09636e158b2d3732e7a1500fceecdcf1021f54c5ebe1862",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "delete": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:3c8f5b363ab3ab0b8d12844c62e605bb0b847f51d7a21ca2b32bcb6c36ce67d1",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "confirmNewGameBody": {
+        "source": "sha256:e089a22960b73c118d78449eec85de6110a887ed698302b0888bb35a70b67350",
+        "target": "sha256:dec8da83af95694d44079afdfc447ea030950cbfa0602a54f46620e817c08c04",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "minesConfirmSwitchBody": {
+        "source": "sha256:cbca68f6d02bea319e4ec983765446132b7645010f7a77fff23d4956b4ee986b",
+        "target": "sha256:1c346c9d46cf0c7dc6804cb413db0f788651e51e0e4ddabc6f08749d9dda0854",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "tagline": {
+        "source": "sha256:c096d80518ef036e8d6627b511c1876c67285b5769937df9520850d016811b1a",
+        "target": "sha256:293aa06a2e652ab7dd112f030da34e4420a6ee87f0969e9f152e13db25ec3996",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "step3Body": {
+        "source": "sha256:3a9a99838a5b1c2e4aea595ae573a012a136837a0b7166132f2ffc5f3779370f",
+        "target": "sha256:813e07e7dc7e7eb5675d2a7ae0b1f1a9a91ebba9dd9958c56d2a0d91bb969bb1",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "sudokuStep3Body": {
+        "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
+        "target": "sha256:424c5b1c2dbc0acfe63126ef5f5fd75feef9ea517cd554b40a95ebadf922b2f3",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      }
+    },
+    "es": {
+      "removeAdsTitle": {
+        "source": "sha256:875d84c6da3dea9d010eea3cf749da4ddaaa287e68fec56345d9fcf7a4ddbb5f",
+        "target": "sha256:b1c598007136d28f47d0beb84e5a13ab9050ba6614b75e4285e20eee37598750",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "adSupportBody": {
+        "source": "sha256:0bf4abe465f8a6ac3b6c674c3e760dd94acf3749972e41a38ca37d1506a95557",
+        "target": "sha256:6c443e2c0bc5aab0e3730834b7cab0d112c1bfd89ec007f908b241f66a941ed3",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "removeAdsAction": {
+        "source": "sha256:ac8b4b580a241f37c61d75d6621e4ca2daf6fffa62146f8f981b24454ec265f8",
+        "target": "sha256:36c49c06a76538e37c07503e0eb9fc4657b2f172cb6c8a44c868b9abe0aa7ed6",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "restorePurchase": {
+        "source": "sha256:d1a951f8d95cc7716fcb29eb85240f84dd1bc878ab547d883bcaa0322c93c30e",
+        "target": "sha256:69c75dab93d6df122b845d7f18482ed691bde9b314bb74a6855e43ebf0463c23",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "purchaseThanks": {
+        "source": "sha256:282a7eb3d9013b1474c0bd579f7bf7f2ce07619b6f36d91911594f47b3abd2b5",
+        "target": "sha256:66ef9618c9696a21a1a06ea4154f994026719f3a5a514bd5541398ac065d9521",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetData": {
+        "source": "sha256:ac80770ff077ed33a5ecc26e8fd3018d8118c8e67538242db19090649c8db53c",
+        "target": "sha256:ac4130d846db6790b5c625dc2cdc31316655dc5e02e1d3caa23d5c0128cec6f1",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmTitle": {
+        "source": "sha256:0b87ac27b9d421db6cb4cbcd1295b1dc5368fef5452f906be1875f3b272f3273",
+        "target": "sha256:76593a16bb21807f51b98045a1e91f6c534a635fd0762e4c21333b9a0574892c",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmBody": {
+        "source": "sha256:8abeb907ebae330c269e957277e945521f3ea9749a4fd437762e0b12c02fa6cd",
+        "target": "sha256:a0d17c2b5de021cd81d2a3187ebef81c85edb763071f9d3befd35c22cbf2c374",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "delete": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:d50a3d44683561324c2660615dd0594643d68e8f383842a78f94aaebe0a3d666",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "confirmNewGameBody": {
+        "source": "sha256:e089a22960b73c118d78449eec85de6110a887ed698302b0888bb35a70b67350",
+        "target": "sha256:8fd11ec73d33706cfe0f742e23bd7f16898df1c51affdeeb717a47c048417a14",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "minesConfirmSwitchBody": {
+        "source": "sha256:cbca68f6d02bea319e4ec983765446132b7645010f7a77fff23d4956b4ee986b",
+        "target": "sha256:001d3e2dad1e7fb754e6ac460525ff7371dfd023689b840b0e88fe7bb1a22f43",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "tagline": {
+        "source": "sha256:c096d80518ef036e8d6627b511c1876c67285b5769937df9520850d016811b1a",
+        "target": "sha256:1ba78b9d74b4b1076fc7e1a5542313c1583d1316b88282eebac7cefb90fadab0",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "step3Body": {
+        "source": "sha256:3a9a99838a5b1c2e4aea595ae573a012a136837a0b7166132f2ffc5f3779370f",
+        "target": "sha256:cdd425d64bd7f7b9da244a7a7ba377703c30ba4d5c998e14aa578f9e6a837c25",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "sudokuStep3Body": {
+        "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
+        "target": "sha256:adcc5d609e375e235cbf3ba32c07ea5101599d15a6099df3e303525cadb780b9",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      }
+    },
+    "pt-br": {
+      "removeAdsTitle": {
+        "source": "sha256:875d84c6da3dea9d010eea3cf749da4ddaaa287e68fec56345d9fcf7a4ddbb5f",
+        "target": "sha256:3913a4d9b0acdd7a7d458b046ae406418cea610dead82fc214beec4bdf8dcf02",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "adSupportBody": {
+        "source": "sha256:0bf4abe465f8a6ac3b6c674c3e760dd94acf3749972e41a38ca37d1506a95557",
+        "target": "sha256:9d2b303959f6b15e64e27e40c1f0d972015df8dc5b18a14bf61bc4130bb54ddb",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "removeAdsAction": {
+        "source": "sha256:ac8b4b580a241f37c61d75d6621e4ca2daf6fffa62146f8f981b24454ec265f8",
+        "target": "sha256:3522b4797dab492e257749fc44738cd6a584163ffd7b3b77e082bbe453b21ed2",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "restorePurchase": {
+        "source": "sha256:d1a951f8d95cc7716fcb29eb85240f84dd1bc878ab547d883bcaa0322c93c30e",
+        "target": "sha256:69c75dab93d6df122b845d7f18482ed691bde9b314bb74a6855e43ebf0463c23",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "purchaseThanks": {
+        "source": "sha256:282a7eb3d9013b1474c0bd579f7bf7f2ce07619b6f36d91911594f47b3abd2b5",
+        "target": "sha256:9dfab447a019072a8636e3aef4d9b750ccfb2d610e012c8665de389ea93d24af",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetData": {
+        "source": "sha256:ac80770ff077ed33a5ecc26e8fd3018d8118c8e67538242db19090649c8db53c",
+        "target": "sha256:7b790a7ae21137aa8487d14cae8dd67257fc24561cb90ab43bd922b43d4cb828",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmTitle": {
+        "source": "sha256:0b87ac27b9d421db6cb4cbcd1295b1dc5368fef5452f906be1875f3b272f3273",
+        "target": "sha256:6b25daf3a2f339ca38e1340705aa1b6a6eded35d2438e07de018fc89e5160146",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmBody": {
+        "source": "sha256:8abeb907ebae330c269e957277e945521f3ea9749a4fd437762e0b12c02fa6cd",
+        "target": "sha256:e9770e947c9c23199f9c38356ffb6597f28e838d944fa07a58e4cbd463b71a48",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "delete": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:7d2434081ba522652b53b332ce91731594a6a4217998eea2844aaee6c8c5b3e6",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "confirmNewGameBody": {
+        "source": "sha256:e089a22960b73c118d78449eec85de6110a887ed698302b0888bb35a70b67350",
+        "target": "sha256:ea2fcc57f75a7e6b49ac339fbc552012bce6068a079f27dd16f0969fbe68e6e2",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "minesConfirmSwitchBody": {
+        "source": "sha256:cbca68f6d02bea319e4ec983765446132b7645010f7a77fff23d4956b4ee986b",
+        "target": "sha256:ed413a88a38014b0cf3ce8908ede2f2eac0e65eb3605bb10ced07ca1dfc1a93a",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "tagline": {
+        "source": "sha256:c096d80518ef036e8d6627b511c1876c67285b5769937df9520850d016811b1a",
+        "target": "sha256:a3d220a8a1d3a8c264055c9b56e1aacacdbfbf85c21b167cd2119599af36b952",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "step3Body": {
+        "source": "sha256:3a9a99838a5b1c2e4aea595ae573a012a136837a0b7166132f2ffc5f3779370f",
+        "target": "sha256:1f85567e485125317556cb9171f687d236f541499e23082147fa8ede30aaf75d",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "sudokuStep3Body": {
+        "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
+        "target": "sha256:765363781fdb42b308abd8dc6d0eee4db3124267f0bd62b407480762a59a09f6",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      }
+    },
+    "fr": {
+      "removeAdsTitle": {
+        "source": "sha256:875d84c6da3dea9d010eea3cf749da4ddaaa287e68fec56345d9fcf7a4ddbb5f",
+        "target": "sha256:1eadc3b9b732d74b20f07948392ddbb6e50284384d9ad0bf6793d85963fd07fd",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "adSupportBody": {
+        "source": "sha256:0bf4abe465f8a6ac3b6c674c3e760dd94acf3749972e41a38ca37d1506a95557",
+        "target": "sha256:9cff4f69d681afe1c799d7963c096ea64ee7492315e3bcbac355ae1f3ce66fa7",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "removeAdsAction": {
+        "source": "sha256:ac8b4b580a241f37c61d75d6621e4ca2daf6fffa62146f8f981b24454ec265f8",
+        "target": "sha256:a70415845c5b1c49c6a26718734a39615b8fb0a7b0dd82d7cdb9a07955d658ba",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "restorePurchase": {
+        "source": "sha256:d1a951f8d95cc7716fcb29eb85240f84dd1bc878ab547d883bcaa0322c93c30e",
+        "target": "sha256:19328c79236d2c23a158867bfa9c53da834f3a3516d2b7e9ee6c08afbc46cb7b",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "purchaseThanks": {
+        "source": "sha256:282a7eb3d9013b1474c0bd579f7bf7f2ce07619b6f36d91911594f47b3abd2b5",
+        "target": "sha256:e4b8ddd8e056328641c7974147e56bf33314663394b976ca408a4a6cdcdf891a",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetData": {
+        "source": "sha256:ac80770ff077ed33a5ecc26e8fd3018d8118c8e67538242db19090649c8db53c",
+        "target": "sha256:18a4048b54776722a16bdd5a82a891b5e05d0a5d10e51a4cb97dedb5456f4aa5",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmTitle": {
+        "source": "sha256:0b87ac27b9d421db6cb4cbcd1295b1dc5368fef5452f906be1875f3b272f3273",
+        "target": "sha256:d98adb8125f5a98107ea167e414af7cebbbf24907974fdfd5ae0051f2ae52295",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmBody": {
+        "source": "sha256:8abeb907ebae330c269e957277e945521f3ea9749a4fd437762e0b12c02fa6cd",
+        "target": "sha256:33d4cbc1dc8355fa5ade1e806f08467e01d9dc2026ed26ed46fdb7e617909504",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "delete": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:e4750da99f0f76658fcee437906b07386629bd6bd17f5821b94b8327086f399c",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "confirmNewGameBody": {
+        "source": "sha256:e089a22960b73c118d78449eec85de6110a887ed698302b0888bb35a70b67350",
+        "target": "sha256:4a9df1eb8c7f80a1fbad66e5a2cf8799660f28435a0c72b4e1e8de654a1729ec",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "minesConfirmSwitchBody": {
+        "source": "sha256:cbca68f6d02bea319e4ec983765446132b7645010f7a77fff23d4956b4ee986b",
+        "target": "sha256:de130e2ecbfa9145f002232625f8ae006905b90c39c363dd83d8f69f4334f590",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "tagline": {
+        "source": "sha256:c096d80518ef036e8d6627b511c1876c67285b5769937df9520850d016811b1a",
+        "target": "sha256:5c7ec8062bc74c49f8d5744b111db37bccfd402db32ea6631161243938976c55",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "step3Body": {
+        "source": "sha256:3a9a99838a5b1c2e4aea595ae573a012a136837a0b7166132f2ffc5f3779370f",
+        "target": "sha256:71cdae4915fec441a13848de1c200e449a5d35848c9e65fbf95379afb495ca79",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "sudokuStep3Body": {
+        "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
+        "target": "sha256:e34a9f204e3c689327c715d17a23f92db6abf62c7a9fa154e96dcda1acfe07d0",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      }
+    },
+    "de": {
+      "removeAdsTitle": {
+        "source": "sha256:875d84c6da3dea9d010eea3cf749da4ddaaa287e68fec56345d9fcf7a4ddbb5f",
+        "target": "sha256:ed4009921984fa1554f2a0b1bb4f53d6baf39fd55f399fd65573eb3aa7c86158",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "adSupportBody": {
+        "source": "sha256:0bf4abe465f8a6ac3b6c674c3e760dd94acf3749972e41a38ca37d1506a95557",
+        "target": "sha256:3d2d11be5deb8f2d9c66ff4f7b470a1c62b6d255a9bad2e7fedbb2e0f6883a8d",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "removeAdsAction": {
+        "source": "sha256:ac8b4b580a241f37c61d75d6621e4ca2daf6fffa62146f8f981b24454ec265f8",
+        "target": "sha256:7e81efbac5f3bb513e11fa96b40fafcc5b30d780bd8328a21e23c569d5ad5cf4",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "restorePurchase": {
+        "source": "sha256:d1a951f8d95cc7716fcb29eb85240f84dd1bc878ab547d883bcaa0322c93c30e",
+        "target": "sha256:3696d844a41307ef5867f87a372d706b987e18602317da5ecb96e6dca0d40a42",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "purchaseThanks": {
+        "source": "sha256:282a7eb3d9013b1474c0bd579f7bf7f2ce07619b6f36d91911594f47b3abd2b5",
+        "target": "sha256:435eaf0f8b68d9c731f8da4f82b252dea7b436a7ae312b1193049d5671d6848f",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetData": {
+        "source": "sha256:ac80770ff077ed33a5ecc26e8fd3018d8118c8e67538242db19090649c8db53c",
+        "target": "sha256:36ac63422f2fd3ed9878e0ba9fc8959cc4ae2348bb875ac011f9eefdd7e900f6",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmTitle": {
+        "source": "sha256:0b87ac27b9d421db6cb4cbcd1295b1dc5368fef5452f906be1875f3b272f3273",
+        "target": "sha256:3b095594e4734db52e9ad08c44476efb6d83cadc0162065813a5aaabb0d01e8e",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmBody": {
+        "source": "sha256:8abeb907ebae330c269e957277e945521f3ea9749a4fd437762e0b12c02fa6cd",
+        "target": "sha256:05f9dca8be5ea2b5a8f707c113108be64a04fce3501bf704a036ce0ae8873d4b",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "delete": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:6c2d352161df580922a184a99f8f0900612154aaa4c8f7fd03df2fbec0e24f06",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "confirmNewGameBody": {
+        "source": "sha256:e089a22960b73c118d78449eec85de6110a887ed698302b0888bb35a70b67350",
+        "target": "sha256:69dd6b5ce818635e29170ebec121f30572e5ee5664134c953b17943de80ccb83",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "minesConfirmSwitchBody": {
+        "source": "sha256:cbca68f6d02bea319e4ec983765446132b7645010f7a77fff23d4956b4ee986b",
+        "target": "sha256:3db81cbbb069421831afa21f448c3f2ad09cd3fa2392f7bf58618db45e15df06",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "tagline": {
+        "source": "sha256:c096d80518ef036e8d6627b511c1876c67285b5769937df9520850d016811b1a",
+        "target": "sha256:a22c9dfe5ceb7fc5c4c6c2d29aea2ca69ceb7e0218f6c386661a8f6d521eb7c0",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "step3Body": {
+        "source": "sha256:3a9a99838a5b1c2e4aea595ae573a012a136837a0b7166132f2ffc5f3779370f",
+        "target": "sha256:68e2064f0dad400c22beab0c32fd28289cf3bc5e9d2296a67330a9dc204968ff",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "sudokuStep3Body": {
+        "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
+        "target": "sha256:a03bdcf0d00f5d34ee76db256b7787e717373bf1502e40f85f74c22d7cf7f996",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      }
+    },
+    "tr": {
+      "removeAdsTitle": {
+        "source": "sha256:875d84c6da3dea9d010eea3cf749da4ddaaa287e68fec56345d9fcf7a4ddbb5f",
+        "target": "sha256:ac6169620838ee6dc5f30026d5403050d3db5afc1b87e84b48160caac7cf7128",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "adSupportBody": {
+        "source": "sha256:0bf4abe465f8a6ac3b6c674c3e760dd94acf3749972e41a38ca37d1506a95557",
+        "target": "sha256:756b37f71e440a4e247af470198e0dea0f4eb05b04123c4881994833d94dce02",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "removeAdsAction": {
+        "source": "sha256:ac8b4b580a241f37c61d75d6621e4ca2daf6fffa62146f8f981b24454ec265f8",
+        "target": "sha256:1bd3cc830ebbf88827f5aa480739dc3872c257c03e88e7bffde4b3e06c4f8738",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "restorePurchase": {
+        "source": "sha256:d1a951f8d95cc7716fcb29eb85240f84dd1bc878ab547d883bcaa0322c93c30e",
+        "target": "sha256:1f7105a5a3b96b517c6125c1208d142b233960ffdf1e17e05f4ecbe766586cd1",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "purchaseThanks": {
+        "source": "sha256:282a7eb3d9013b1474c0bd579f7bf7f2ce07619b6f36d91911594f47b3abd2b5",
+        "target": "sha256:d004297f226c744a3d6e8d02bebaf8ce55d44f6e6ccf64d2c67686158ff7a565",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetData": {
+        "source": "sha256:ac80770ff077ed33a5ecc26e8fd3018d8118c8e67538242db19090649c8db53c",
+        "target": "sha256:b184974bff0bc1de2d6c1360a8446acac0893daafccfbaf61fb5249137b80a11",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmTitle": {
+        "source": "sha256:0b87ac27b9d421db6cb4cbcd1295b1dc5368fef5452f906be1875f3b272f3273",
+        "target": "sha256:ba106cd32d7f311eb563c253c710f22adea95a73b71e81fec2c753bded5f807e",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "resetConfirmBody": {
+        "source": "sha256:8abeb907ebae330c269e957277e945521f3ea9749a4fd437762e0b12c02fa6cd",
+        "target": "sha256:f7d0204ff66587eb079533a1b1fb1ffe6444dc4ded9d08af678e0d1cd962bddc",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "delete": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:f698e9b40f9f0d1cf85a796e7c3e407b4bd0d4dd5a8a68607997d27f664516b9",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "confirmNewGameBody": {
+        "source": "sha256:e089a22960b73c118d78449eec85de6110a887ed698302b0888bb35a70b67350",
+        "target": "sha256:ea643e7802e43fe699be5475c0106aa87be77995b20e0100aa5e759373206e99",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "minesConfirmSwitchBody": {
+        "source": "sha256:cbca68f6d02bea319e4ec983765446132b7645010f7a77fff23d4956b4ee986b",
+        "target": "sha256:7c370b77b568ce76bb936f11fb0fb4a387e49e08985f8633d2f7042f282e9a89",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "tagline": {
+        "source": "sha256:c096d80518ef036e8d6627b511c1876c67285b5769937df9520850d016811b1a",
+        "target": "sha256:b42ba8d0745e5e8ddc882e9d7ecdb924e194275391a51c4ac4c75ca52c44fd05",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "step3Body": {
+        "source": "sha256:3a9a99838a5b1c2e4aea595ae573a012a136837a0b7166132f2ffc5f3779370f",
+        "target": "sha256:ac0dc50794803322a30df0921112ee57220132a948a0a740bb8cbd88aaa3cb54",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "sudokuStep3Body": {
+        "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
+        "target": "sha256:cc33a9a2439a5717f15284f1f74d11d4ad488590df5739e1bc0da37964d46bc6",
+        "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      }
+    }
+  }
 }
