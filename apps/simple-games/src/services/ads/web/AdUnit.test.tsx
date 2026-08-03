@@ -161,6 +161,7 @@ describe('web ads config', () => {
 
     setWebAdsConfigForTesting({ testMode: false, client: '', slotHome: '', slotResult: '' });
     expect(webAdsEnabled()).toBe(false);
+    expect(webAdsSlotEnabled('')).toBe(false);
   });
 
   it('webAdsSlotEnabled: each display slot needs its own ID beside the client', () => {
