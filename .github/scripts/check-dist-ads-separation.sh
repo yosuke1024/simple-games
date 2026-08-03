@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-# Web 広告コードの「分離」を、ソースではなく**ビルド成果物**で検証する
-# (docs/WEB_VERSION.md「実装上の約束」/ docs/ADS_POLICY.md「Web 版」)。
+# Web 専用コードの「分離」を、ソースではなく**ビルド成果物**で検証する
+# (docs/WEB_VERSION.md「計測」/ docs/ADS_POLICY.md「Web 版」)。
 #
-#   native (apps/simple-games/dist/)    — AdSense の痕跡が**不在**であること。
-#       「アプリの広告はバナー 1 枠のみ」は公開ソースと成果物で証明する約束であり、
-#       WebAdSlot の build-time ゲート(import.meta.env.MODE === 'web')が
-#       実際に効いていることをバンドラの出力で確かめる。
-#   web    (apps/simple-games/dist-web/) — AdSense 統合が**存在**すること。
-#       ゲートの配線が切れると Web 版は「静かに広告なし」になり誰も気付かない。
-#       存在検査はその配線切れの検知器。
+#   native (apps/simple-games/dist/)    — AdSense / GA4 の痕跡が**不在**。
+#       アプリの約束は「バナー 1 枠のみ」「Analytics なし」。build-time
+#       ゲートが実際に効いていることをバンドラの出力で確かめる。
+#   web    (apps/simple-games/dist-web/) — AdSense 統合が**存在**。
+#       GA4 は EXPECT_WEB_ANALYTICS=1 のとき統合と測定 ID が存在し、
+#       それ以外では測定 ID が成果物に存在しないことを確認する。
 #
 # check-principles.sh は grep だけで動く(ビルド不要)という分担なので、
 # ビルドを前提とするこの検査は別スクリプトになっている。ci.yml が
@@ -18,7 +17,7 @@
 #   pnpm build && pnpm --filter simple-games build:web
 #   bash .github/scripts/check-dist-ads-separation.sh          # 両方
 #   bash .github/scripts/check-dist-ads-separation.sh native   # native のみ
-#   bash .github/scripts/check-dist-ads-separation.sh web      # web のみ
+#   EXPECT_WEB_ANALYTICS=1 bash .github/scripts/check-dist-ads-separation.sh web
 set -uo pipefail
 cd "$(dirname "$0")/../.."
 
@@ -27,6 +26,8 @@ native_dist="apps/simple-games/dist"
 web_dist="apps/simple-games/dist-web"
 # 検査語彙: ローダー・タグ・ID 接頭辞。native 側はどれか 1 つでも出たら失敗。
 ads_pattern='adsbygoogle|googlesyndication|ca-pub-'
+analytics_pattern='googletagmanager|simple_games_play|game_open|game_close'
+measurement_id_pattern='G-[A-Z0-9]{6,}'
 
 fail=0
 
@@ -36,6 +37,7 @@ check_native() {
     fail=1
     return
   fi
+
   hits="$(grep -rlE "$ads_pattern" "$native_dist" || true)"
   if [ -n "$hits" ]; then
     printf '\n\033[31mFAIL\033[0m native ビルドに Web 広告(AdSense)のコードが混入しています:\n%s\n' "$hits"
@@ -43,6 +45,15 @@ check_native() {
     fail=1
   else
     printf '\033[32mok\033[0m   native dist に AdSense なし\n'
+  fi
+
+  hits="$(grep -rlE "$analytics_pattern|$measurement_id_pattern" "$native_dist" || true)"
+  if [ -n "$hits" ]; then
+    printf '\n\033[31mFAIL\033[0m native ビルドに Web Analytics(GA4)のコードが混入しています:\n%s\n' "$hits"
+    printf 'アプリの成果物に Analytics は「不在」が約束です(docs/PRODUCT_PRINCIPLES.md)。\n'
+    fail=1
+  else
+    printf '\033[32mok\033[0m   native dist に GA4 なし\n'
   fi
 }
 
@@ -58,6 +69,22 @@ check_web() {
     printf '\n\033[31mFAIL\033[0m web ビルドに AdSense 統合が見つかりません。\n'
     printf 'WebAdSlot の --mode web ゲートか lazy import の配線が切れています(静かに広告なしになるだけなので、ここで検知します)。\n'
     fail=1
+  fi
+
+  if [ "${EXPECT_WEB_ANALYTICS:-0}" = "1" ]; then
+    if grep -rqE "$analytics_pattern" "$web_dist" && grep -rqE "$measurement_id_pattern" "$web_dist"; then
+      printf '\033[32mok\033[0m   web dist に GA4 統合と測定 ID あり\n'
+    else
+      printf '\n\033[31mFAIL\033[0m Analytics 有効ビルドに GA4 統合または測定 IDが見つかりません。\n'
+      printf 'VITE_GA_MEASUREMENT_ID の注入と web-only dynamic import を確認してください。\n'
+      fail=1
+    fi
+  elif grep -rqE "$measurement_id_pattern" "$web_dist"; then
+    printf '\n\033[31mFAIL\033[0m Analytics 無効ビルドに GA4 測定 ID が残っています。\n'
+    printf 'ID 未設定時は計測を既定 OFF にする約束です(docs/WEB_VERSION.md)。\n'
+    fail=1
+  else
+    printf '\033[32mok\033[0m   web dist に GA4 測定 ID なし(既定 OFF)\n'
   fi
 }
 
@@ -77,4 +104,4 @@ esac
 if [ "$fail" -ne 0 ]; then
   exit 1
 fi
-printf 'ビルド成果物の広告分離を確認しました。\n'
+printf 'ビルド成果物の Web 専用コード分離を確認しました。\n'
