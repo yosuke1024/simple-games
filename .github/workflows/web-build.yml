@@ -14,6 +14,9 @@
 #                有効化の前提(サイト審査・プライバシー文言・同意・Auto ads で
 #                アンカーのみ有効化)は人間作業 — ADS_POLICY.md「Web 版」を参照。
 #   disabled   — 広告コードは同梱されるが、ID もテストモードもないため何も出ない。
+#
+# Analytics(docs/WEB_VERSION.md「計測」): GA_MEASUREMENT_ID secret が有効な
+# G-... ID のときだけ Web ビルドへ注入する。未設定・不正値は既定 OFF。
 name: Web build
 
 on:
@@ -76,6 +79,20 @@ jobs:
               ;;
           esac
 
+      - name: Decide analytics mode
+        env:
+          MEASUREMENT_ID: ${{ secrets.GA_MEASUREMENT_ID }}
+        run: |
+          set -euo pipefail
+          if [[ "$MEASUREMENT_ID" =~ ^G-[A-Z0-9]{6,}$ ]]; then
+            echo "SG_WEB_ANALYTICS_MODE=enabled" >> "$GITHUB_ENV"
+            echo "- Analytics: **有効**(GA4 Web Stream)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "SG_WEB_ANALYTICS_MODE=disabled" >> "$GITHUB_ENV"
+            echo "- Analytics: **無効**(GA_MEASUREMENT_ID 未設定または不正)" >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::GA_MEASUREMENT_ID が未設定または G-... 形式ではないため、計測なしでビルドします。"
+          fi
+
       - name: Build web assets (--mode web → dist-web)
         run: pnpm --filter simple-games build:web
         env:
@@ -83,10 +100,14 @@ jobs:
           VITE_ADSENSE_CLIENT: ${{ env.SG_WEB_ADS_MODE == 'production' && secrets.ADSENSE_CLIENT || '' }}
           VITE_ADSENSE_SLOT_HOME: ${{ env.SG_WEB_ADS_MODE == 'production' && secrets.ADSENSE_SLOT_HOME || '' }}
           VITE_ADSENSE_SLOT_RESULT: ${{ env.SG_WEB_ADS_MODE == 'production' && secrets.ADSENSE_SLOT_RESULT || '' }}
+          VITE_GA_MEASUREMENT_ID: ${{ env.SG_WEB_ANALYTICS_MODE == 'enabled' && secrets.GA_MEASUREMENT_ID || '' }}
 
       # モードに関係なく、web バンドルには AdSense 統合が入っているはず
-      # (test / disabled はランタイムで出さないだけ)。配線切れの検知。
-      - name: Verify the web bundle carries the ad integration
+      # (test / disabled はランタイムで出さないだけ)。Analytics は ID が
+      # 注入されたときだけ存在し、未設定時は成果物にも残さない。
+      - name: Verify web-only integrations and native separation
+        env:
+          EXPECT_WEB_ANALYTICS: ${{ env.SG_WEB_ANALYTICS_MODE == 'enabled' && '1' || '0' }}
         run: bash .github/scripts/check-dist-ads-separation.sh web
 
       - uses: actions/upload-artifact@v4
