@@ -67,12 +67,19 @@ describe('AdUnit in production mode', () => {
     expect(placement).not.toBeNull();
     expect(unit).not.toBeNull();
     expect(placement).not.toHaveAttribute('hidden');
+    expect(placement).not.toHaveStyle({ display: 'none' });
 
     unit?.setAttribute('data-ad-status', 'unfilled');
-    await waitFor(() => expect(placement).toHaveAttribute('hidden'));
+    await waitFor(() => {
+      expect(placement).toHaveAttribute('hidden');
+      expect(placement).toHaveStyle({ display: 'none' });
+    });
 
     unit?.setAttribute('data-ad-status', 'filled');
-    await waitFor(() => expect(placement).not.toHaveAttribute('hidden'));
+    await waitFor(() => {
+      expect(placement).not.toHaveAttribute('hidden');
+      expect(placement?.style.display).toBe('');
+    });
   });
 
   it('offline: collapses the placement and sends zero requests', () => {
@@ -86,7 +93,9 @@ describe('AdUnit in production mode', () => {
     // The unit remains in the DOM for a future fresh mount, but the unused
     // reserved placement is not left as a blank rectangle.
     expect(container.querySelector('ins.adsbygoogle')).not.toBeNull();
-    expect(container.querySelector('.web-ad-slot')).toHaveAttribute('hidden');
+    const placement = container.querySelector<HTMLElement>('.web-ad-slot');
+    expect(placement).toHaveAttribute('hidden');
+    expect(placement).toHaveStyle({ display: 'none' });
     // Nothing was requested, and nothing will retry.
     expect(adsScript()).toBeNull();
     expect((window as AdsWindow).adsbygoogle).toBeUndefined();
