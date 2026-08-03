@@ -39,6 +39,11 @@ jobs:
       - run: pnpm --filter simple-games build:web
       - run: bash .github/scripts/check-dist-ads-separation.sh
 
+      # Size gate (issue #26): raw/gzip per chunk against size-baseline.json,
+      # per-game budgets once the lazy split exists, and the initial-graph
+      # check. Needs both dist/ and dist-web/, so it lives here too.
+      - run: pnpm --filter simple-games size:check
+
   # Runs without installing anything: it only greps the source. Kept separate so a
   # broken promise is reported as a broken promise, not as "the build failed".
   principles:
