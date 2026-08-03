@@ -36,6 +36,13 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
       = 生成の仕事量(探索した配置数・試行回数)が上限内。これは決定的な指標
       なので、落ちたら再実行せずに原因を読むこと。**壁時計は判定していない**
       ([SUDOKU_RULES.md](SUDOKU_RULES.md) §7)
+- [ ] サイズ Gate が緑(`pnpm build && pnpm --filter simple-games build:web`
+      のあと `pnpm --filter simple-games size:check`)。`size-baseline.json` を
+      更新した場合は、増加の理由が PR に書かれている(黙って上げない —
+      [ARCHITECTURE.md](ARCHITECTURE.md)「ゲーム単位の lazy チャンク」)
+- [ ] ライフサイクル掃引(`src/test/lifecycle.test.tsx`)が緑
+      = ゲーム終了後にタイマー・RAF・リスナーが残らない
+      ([GAME_LIFECYCLE.md](GAME_LIFECYCLE.md))
 
 ## 2. ブランド原則の実地確認(人が見るもの)
 
@@ -61,6 +68,11 @@ bash .github/scripts/check-principles.sh
 実機で確認する:
 
 - [ ] 機内モードで初回起動 → チュートリアル → 全ゲームが最後まで遊べる
+      (ゲームはゲーム単位のチャンクから開く — 初回起動直後・機内モードのまま
+      **全ゲームを 1 本ずつ開けること**。チャンクは全て同梱で、ネットワークからは
+      何も取得しない)
+- [ ] ゲームのロード中にハードウェア戻るを押すとコレクションへ戻る
+      (アプリが背面化しない)
 - [ ] 機内モードで広告リクエストが発生しない(ログで確認)
 - [ ] 外部リンク(About のソースコード等)がオフラインでもアプリを止めない
 - [ ] プレイ中に時計が表示されない(各ゲームのルール文書の規定どおり)
