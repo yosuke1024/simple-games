@@ -40,11 +40,13 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 | Sudoku(ナンプレ) | `sudoku/` | 100 レベル + デイリー | Undo / Hint | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md) |
 | Solitaire(クロンダイク) | `solitaire/` | フリー配札 + デイリー配札 | Undo / Hint(定石の合法手) | [docs/SOLITAIRE_RULES.md](docs/SOLITAIRE_RULES.md) |
 | Minesweeper | `minesweeper/` | 難易度 3 種 + デイリー | Hint(Undo なし) | [docs/MINESWEEPER_RULES.md](docs/MINESWEEPER_RULES.md) |
+| Brick Breaker | `brick-breaker/` | 100 レベル(デイリーなし) | 同じ盤面への即時リトライ(Undo / Hint なし) | [docs/BRICK_BREAKER_RULES.md](docs/BRICK_BREAKER_RULES.md) |
 | Nonogram | `nonogram/` | 100 レベル + デイリー | Hint(Undo なし) | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md) |
 | Number Match | `number-match/` | 100 レベル + デイリー | Undo / Hint | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md) |
 | Water Sort | `water-sort/` | 100 レベル + デイリー | Undo / Hint(ソルバー証明付き) | [docs/WATER_SORT_RULES.md](docs/WATER_SORT_RULES.md) |
 | Sliding Puzzle | `sliding-puzzle/` | 100 レベル + デイリー | Undo(Hint なし) | [docs/SLIDING_PUZZLE_RULES.md](docs/SLIDING_PUZZLE_RULES.md) |
 | Memory Match(神経衰弱) | `memory-match/` | 難易度 3 種 + デイリー | 同じ盤面への再挑戦(Undo / Hint なし) | [docs/MEMORY_MATCH_RULES.md](docs/MEMORY_MATCH_RULES.md) |
+| Sky Fighter | `sky-fighter/` | 100 レベル(デイリーなし) | 同じレベルへの即時リトライ(Undo / Hint なし) | [docs/SKY_FIGHTER_RULES.md](docs/SKY_FIGHTER_RULES.md) |
 
 助けの内容がゲームごとに違うのは意図したものです。**どのゲームにも無料・無制限の助けを
 用意し、その形はそのゲームの中身を空にしないものを選びます**(Minesweeper は推測なしで
@@ -53,7 +55,7 @@ Undo を作らず、Sliding Puzzle は盤面に隠れた情報がないため Hi
 記憶そのものが中身のため Undo も Hint も作らず、代わりに同じ盤面への再挑戦を無料にして
 います)。理由は各ルール文書と [docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md)。
 
-後続候補: Solitaire / Kakuro / Futoshiki / Takuzu(**いずれも未着手**)。
+後続候補: Kakuro / Futoshiki / Takuzu(**いずれも未着手**)。
 いずれもローカル生成で完結し、コンテンツサーバーを必要としないものを優先します。
 未収録のゲームをストアやアプリ内で "Coming Soon" として見せることはしません。
 
@@ -70,10 +72,15 @@ simple-games/
 │           ├── app/            # シェル: ルート App、ルーティング、ゲームレジストリ
 │           ├── games/          # 各ゲームは game/ state/ storage/ ui/ で自己完結
 │           │   ├── sudoku/
+│           │   ├── solitaire/
 │           │   ├── minesweeper/
+│           │   ├── brick-breaker/
 │           │   ├── nonogram/
 │           │   ├── number-match/
-│           │   └── sliding-puzzle/
+│           │   ├── water-sort/
+│           │   ├── sliding-puzzle/
+│           │   ├── memory-match/
+│           │   └── sky-fighter/
 │           ├── monetization/   # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 │           ├── services/       # 共有: ads(バナーのみ) / network / sound / haptics
 │           ├── state/          # 共有: SettingsContext
