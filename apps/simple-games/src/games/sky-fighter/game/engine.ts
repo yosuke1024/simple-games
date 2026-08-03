@@ -319,6 +319,9 @@ export function step(state: GameState, dtMs: number): GameState {
       return { ...carried, enemies, enemyBullets, power, lives, invulnerableMs, status: 'cleared' };
     }
     waveBreakMs = WAVE_BREAK_MS;
+    // The break is advertised as empty-screen: a bomber's last shot must not
+    // outlive it and cost a life with no visible cause.
+    enemyBullets = [];
   }
 
   return { ...carried, enemies, enemyBullets, power, lives, invulnerableMs, waveBreakMs };

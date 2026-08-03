@@ -251,6 +251,13 @@ describe('sky-fighter engine', () => {
     expect(state.status).toBe('cleared');
   });
 
+  it('a bomber shot in flight does not survive into the quiet break', () => {
+    const base = afterFirstWave();
+    const state = clearWave({ ...base, enemyBullets: [{ x: 40, y: 100 }] });
+    expect(state.waveBreakMs).toBeGreaterThan(0);
+    expect(state.enemyBullets).toHaveLength(0);
+  });
+
   it('a cleared level is final — stepping it again changes nothing', () => {
     let state = afterFirstWave('test', 1);
     for (let w = 0; w < wavesInLevel(1) - 1; w++) {
@@ -481,9 +488,11 @@ describe('sky-fighter engine', () => {
 
   it('an enemy shot travels downward and leaves the board', () => {
     const base = afterFirstWave();
+    // Keep base's enemies (non-empty): emptying them would clear the wave on
+    // this very step and wipe enemyBullets with it (§ the quiet break must not
+    // inherit a live shot, tested separately below).
     let state: GameState = {
       ...base,
-      enemies: [],
       bullets: [],
       enemyBullets: [{ x: 40, y: 100 }],
     };
