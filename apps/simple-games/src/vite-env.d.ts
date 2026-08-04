@@ -24,6 +24,12 @@ interface ImportMetaEnv {
   readonly VITE_ADSENSE_SLOT_RESULT?: string;
   /** 'true' renders the local placeholder test ad (no ad-network contact). */
   readonly VITE_ADSENSE_USE_TEST_ADS?: string;
+  /**
+   * Web build only — the GA4 Web Stream measurement ID for
+   * pixapps.ai/simple-games/play/. Missing or invalid means analytics is off.
+   * Never commit the real ID; inject it when building the web artifact.
+   */
+  readonly VITE_GA_MEASUREMENT_ID?: string;
 }
 
 interface ImportMeta {

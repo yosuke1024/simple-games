@@ -1,13 +1,13 @@
 /**
  * The web build's AdSense unit (docs/ADS_POLICY.md「Web 版」): test mode is a
  * local placeholder with zero network contact, production mounts one <ins>
- * and loads the loader script once, offline sends not a single request, and
- * missing IDs render nothing. (That this module stays OUT of the native
+ * and loads the loader script once, unfilled/offline placements collapse,
+ * and missing IDs render nothing. (That this module stays OUT of the native
  * bundle is verified against the built artifacts by
  * .github/scripts/check-dist-ads-separation.sh, not here — the bundler
  * decides that, not the runtime.)
  */
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { setOnlineForTesting } from '../../network';
 import AdUnit, { pickAdSize } from './AdUnit';
@@ -55,13 +55,48 @@ describe('AdUnit in production mode', () => {
     expect((window as AdsWindow).adsbygoogle).toHaveLength(2);
   });
 
-  it('offline: keeps the space quiet and sends zero requests', () => {
+  it('collapses an unfilled placement and restores it if AdSense reports filled', async () => {
+    setWebAdsConfigForTesting({ testMode: false, client: 'test-client' });
+    const { container } = render(
+      <div className="web-ad-slot">
+        <AdUnit slot="slot-a" />
+      </div>,
+    );
+    const placement = container.querySelector<HTMLElement>('.web-ad-slot');
+    const unit = container.querySelector<HTMLElement>('ins.adsbygoogle');
+    expect(placement).not.toBeNull();
+    expect(unit).not.toBeNull();
+    expect(placement).not.toHaveAttribute('hidden');
+    expect(placement).not.toHaveStyle({ display: 'none' });
+
+    unit?.setAttribute('data-ad-status', 'unfilled');
+    await waitFor(() => {
+      expect(placement).toHaveAttribute('hidden');
+      expect(placement).toHaveStyle({ display: 'none' });
+    });
+
+    unit?.setAttribute('data-ad-status', 'filled');
+    await waitFor(() => {
+      expect(placement).not.toHaveAttribute('hidden');
+      expect(placement?.style.display).toBe('');
+    });
+  });
+
+  it('offline: collapses the placement and sends zero requests', () => {
     setWebAdsConfigForTesting({ testMode: false, client: 'test-client' });
     setOnlineForTesting(false);
-    const { container } = render(<AdUnit slot="slot-a" />);
-    // The reserved space exists (no layout shift when connectivity differs)…
+    const { container } = render(
+      <div className="web-ad-slot">
+        <AdUnit slot="slot-a" />
+      </div>,
+    );
+    // The unit remains in the DOM for a future fresh mount, but the unused
+    // reserved placement is not left as a blank rectangle.
     expect(container.querySelector('ins.adsbygoogle')).not.toBeNull();
-    // …but nothing was requested, and nothing will retry.
+    const placement = container.querySelector<HTMLElement>('.web-ad-slot');
+    expect(placement).toHaveAttribute('hidden');
+    expect(placement).toHaveStyle({ display: 'none' });
+    // Nothing was requested, and nothing will retry.
     expect(adsScript()).toBeNull();
     expect((window as AdsWindow).adsbygoogle).toBeUndefined();
   });
