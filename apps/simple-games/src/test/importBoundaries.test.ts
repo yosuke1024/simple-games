@@ -48,6 +48,35 @@ interface Import {
   dynamic: boolean;
 }
 
+/**
+ * `import.meta.glob<T>('specifier', opts)` — T can itself contain generics
+ * (`Record<Locale, Record<string, string>>>`, as issue #38's i18n tests use),
+ * so a `<[^>]*>` regex stops at the first *inner* `>` and never reaches the
+ * call at all, silently. Balance the angle brackets by hand instead of
+ * trying to bound arbitrary nesting depth in one regex (Codex review, PR #40).
+ */
+function globSpecifiers(text: string): string[] {
+  const marker = 'import.meta.glob';
+  const out: string[] = [];
+  let from = 0;
+  for (let at = text.indexOf(marker, from); at !== -1; at = text.indexOf(marker, from)) {
+    let i = at + marker.length;
+    if (text[i] === '<') {
+      let depth = 1;
+      i++;
+      while (i < text.length && depth > 0) {
+        if (text[i] === '<') depth++;
+        else if (text[i] === '>') depth--;
+        i++;
+      }
+    }
+    const call = /^\s*\(\s*['"]([^'"]+)['"]/.exec(text.slice(i));
+    if (call) out.push(call[1]!);
+    from = at + marker.length;
+  }
+  return out;
+}
+
 /** Static `import ... from`, `export ... from`, bare `import 'x'`, and dynamic `import('x')`. */
 function importsOf(file: string): Import[] {
   const text = readFileSync(file, 'utf8');
@@ -64,11 +93,10 @@ function importsOf(file: string): Import[] {
   const staticPattern = /(?:^|\n)\s*(?:import|export)\s[^;'"]*?from\s+['"]([^'"]+)['"]/g;
   const barePattern = /(?:^|\n)\s*import\s+['"]([^'"]+)['"]/g;
   const dynamicPattern = /import\(\s*['"]([^'"]+)['"]\s*\)/g;
-  const globPattern = /import\.meta\.glob(?:<[^>]*>)?\(\s*['"]([^'"]+)['"]/g;
   for (const match of text.matchAll(staticPattern)) push(match[1]!, false);
   for (const match of text.matchAll(barePattern)) push(match[1]!, false);
   for (const match of text.matchAll(dynamicPattern)) push(match[1]!, true);
-  for (const match of text.matchAll(globPattern)) push(match[1]!, true);
+  for (const specifier of globSpecifiers(text)) push(specifier, true);
   return out;
 }
 
