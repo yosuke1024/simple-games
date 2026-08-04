@@ -291,6 +291,13 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 - `apps/simple-games/android/` は Capacitor が生成したネイティブプロジェクトをコミットする
   (ビルド成果物・local.properties は除外)。
 - ハードウェア戻るボタン: ゲーム内ホーム→コレクションへ、コレクション→アプリ最小化。
+  `AndroidManifest.xml` の `android:enableOnBackInvokedCallback="false"` は削除しない
+  ——targetSdk 36(Android 16)から予測型戻る(predictive back)が既定で有効になり、
+  `@capacitor/app` の `backButton` イベントが一切発火しなくなる実機バグを回避している
+  (キーイベントもジェスチャーも同様に無反応になる。@capacitor/app 8.4.2 で確認、
+  Capacitor 側にも既知の相互作用: ionic-team/capacitor-plugins#2418)。全ゲームの
+  ナビゲーションがこのイベントに依存しているため、外すとハードウェア戻るが
+  アプリ全体で無反応になる。予測型戻るのプレビューアニメーションと引き換えの選択。
 
 ## 静的 Web 版
 
