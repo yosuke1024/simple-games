@@ -83,6 +83,10 @@ src/
   静かに何もしない(ゲームを止めない)。Landing Page 本体は別リポジトリで公開済み。
   書かれている言語は `ui/landing.ts` の `PAGE_LOCALES` のみ(それ以外は英語へ
   フォールバック)。存在しない言語を足すと 404 へ誘導することになる。
+- ゲームのホーム画面は共有の `WebChromeSlot` を置いてよい(`ResultAdSlot` と同じ
+  向き: ゲーム → `ui/components/`)。シェルは「ゲームの内部のどこがホームか」を
+  知らないままでいられる — 知ろうとすると registry がゲーム内部のビューを
+  列挙することになる([WEB_VERSION.md](WEB_VERSION.md)「サイトクローム」)。
 - Analytics / Remote Config / トラッキングのサービスは**アプリに存在しない**
   (初期リリースで削除済み。公開コードに追跡コードが無いことが透明性の証明)。
   Web 版のページ解析は方針決定のみで未実装([WEB_VERSION.md](WEB_VERSION.md)

@@ -1,0 +1,93 @@
+/* ---------- site chrome (web build only) ----------
+
+   The shared PixApps header, loaded from the same origin at runtime
+   (services/chrome/web/boot.ts, docs/WEB_VERSION.md「サイトクローム」). The
+   markup and its own stylesheet belong to the landing repository; everything
+   here is this app overriding that stylesheet's page-level assumptions.
+
+   That stylesheet is written for a fixed header on a document page: it pins
+   the header to the viewport and pays for the space with
+   `body { padding-top: 64px !important }` — in three separate media queries,
+   so every viewport gets it. This app is a full-height flex column, and 64px
+   of body padding would push the bottom of every screen off-screen.
+
+   So the header is put back INTO the flow, where it scrolls away with the
+   page instead of standing over the board. `html body` beats their `body`
+   on specificity (0,0,2 > 0,0,1), which is what lets a normal declaration
+   win against their `!important` one — matching `!important` with
+   `!important` is required, higher specificity decides the rest. The
+   `.has-context-nav` variant is a class (0,1,1) and would outrank a plain
+   `html body`, so it gets its own rule (0,1,2). Nothing in this app matches
+   the selectors that add that class, but the rule costs one line and stops a
+   future landing change from silently reintroducing 112px of padding. */
+html body,
+html body.has-context-nav {
+  padding-top: 0 !important;
+}
+
+/* Hidden unless a screen is showing it. The element lives at body level
+   between screens (services/chrome/web/host.ts moves it), and this is what
+   keeps it invisible there — including in the window between the script
+   landing and the first screen claiming it, which would otherwise flash a
+   fixed header across the board. */
+header[data-global-header] {
+  display: none;
+}
+
+.sg-web-chrome header[data-global-header] {
+  display: block;
+  /* Relative, not static: the nav dropdowns position themselves absolutely
+     against this container, and static would send them to the page corner. */
+  position: relative;
+  /* Their z-index (10000) is meant to clear page content while floating over
+     it. In the flow it only needs to stay under this app's own overlays. */
+  z-index: 1;
+}
+
+/* No language control in the header. Declaring one supported locale stops it
+   building a switcher, but it then falls back to a static label — and that
+   label is the hardcoded string "English only", which appeared on the
+   Japanese home in testing. Even correct, a second language readout would
+   compete with the app's own setting (Settings → 言語), which is the only
+   one that actually changes anything here. */
+.sg-web-chrome .global-header-lang-dropdown {
+  display: none;
+}
+
+/* The header has no dark mode of its own: its palette is a fixed set of light
+   values with no `prefers-color-scheme` block, so on this app's dark theme it
+   arrived as a bright bar above a dark screen. Its colours are custom
+   properties, so re-pointing them at this app's tokens is most of the fix.
+   Keyed off `data-theme` rather than the media query because the theme here
+   is a setting (light / dark / system), not just the OS.
+
+   Declared on :root rather than on the header, because the mobile drawer is
+   appended to <body> — outside the slot — and would otherwise keep the light
+   palette. `:root[data-theme='dark']` (0,2,0) outranks their `:root` (0,1,0),
+   so this wins wherever both are in play. */
+:root[data-theme='dark'] {
+  --global-header-bg: var(--surface);
+  --global-header-border: var(--line);
+  --global-header-text: var(--ink);
+  --global-header-text-sub: var(--ink-soft);
+  --global-header-primary: var(--accent);
+  --global-header-shadow: none;
+}
+
+/* Two surfaces are hardcoded near-white rather than custom properties, so the
+   variables above cannot reach them: on dark the drawer opened as a white
+   wall with the game showing through, and the desktop nav menus dropped a
+   white card over the board. */
+:root[data-theme='dark'] .global-header-drawer,
+:root[data-theme='dark'] .global-header-dropdown-menu {
+  background: var(--surface);
+}
+
+/* Their hover states are dark ink at 3% — invisible against a dark surface,
+   which would leave the rows with no press affordance at all. */
+:root[data-theme='dark'] .global-header-mobile-link:hover,
+:root[data-theme='dark'] .global-header-mobile-link.active,
+:root[data-theme='dark'] .global-header-accordion-trigger:hover,
+:root[data-theme='dark'] .global-header-accordion-link:hover {
+  background: var(--surface-recessed);
+}

@@ -30,6 +30,7 @@ import { GAMES, type GameId, type GameDefinition } from '../../app/registry';
 import { useSettings } from '../../state/SettingsContext';
 import { IconChevronRight, IconGear } from '../components/icons';
 import { WebAdSlot } from '../components/WebAdSlot';
+import { WebChromeSlot } from '../components/WebChromeSlot';
 
 /**
  * The tile carries the title's accent by class, which `ui/styles.css` maps to
@@ -77,6 +78,11 @@ export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionH
   const taglineIsTrue = Capacitor.isNativePlatform();
   return (
     <div className="screen home-screen collection-screen">
+      {/* Web build only — the shared PixApps header (docs/WEB_VERSION.md
+          「サイトクローム」). Renders nothing on the native app, which has no
+          site to return to. */}
+      <WebChromeSlot />
+
       <header className="screen-header">
         <span className="icon-btn-placeholder" />
         <button

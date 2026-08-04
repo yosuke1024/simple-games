@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconCalendar, IconChart, IconCheck } from '@/ui/components/icons';
+import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { DIFFICULTIES, LAYOUTS, localDateString, type Difficulty } from '../../game';
 import { useMemoryMatch } from '../../state/GameContext';
 
@@ -45,6 +46,11 @@ export function MemoryHomeScreen() {
 
   return (
     <div className="screen home-screen">
+      {/* Web build only — the shared PixApps header (docs/WEB_VERSION.md
+          「サイトクローム」). Renders nothing on the native app. This game's
+          board and result screens deliberately have none. */}
+      <WebChromeSlot />
+
       <header className="screen-header">
         <button
           type="button"

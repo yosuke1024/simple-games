@@ -2,10 +2,11 @@
 # Web 専用コードの「分離」を、ソースではなく**ビルド成果物**で検証する
 # (docs/WEB_VERSION.md「計測」/ docs/ADS_POLICY.md「Web 版」)。
 #
-#   native (apps/simple-games/dist/)    — AdSense / GA4 の痕跡が**不在**。
-#       アプリの約束は「バナー 1 枠のみ」「Analytics なし」。build-time
+#   native (apps/simple-games/dist/)    — AdSense / GA4 / サイトクロームの痕跡が
+#       **不在**。アプリの約束は「バナー 1 枠のみ」「Analytics なし」、そして
+#       インストール済みアプリに「サイトへ戻る」ヘッダーは要らない。build-time
 #       ゲートが実際に効いていることをバンドラの出力で確かめる。
-#   web    (apps/simple-games/dist-web/) — AdSense 統合が**存在**。
+#   web    (apps/simple-games/dist-web/) — AdSense 統合とサイトクロームが**存在**。
 #       GA4 は EXPECT_WEB_ANALYTICS=1 のとき統合と測定 ID が存在し、
 #       それ以外では測定 ID が成果物に存在しないことを確認する。
 #
@@ -28,6 +29,7 @@ web_dist="apps/simple-games/dist-web"
 ads_pattern='adsbygoogle|googlesyndication|ca-pub-'
 analytics_pattern='googletagmanager|simple_games_play|game_open|game_close'
 measurement_id_pattern='G-[A-Z0-9]{6,}'
+chrome_pattern='global-header|data-global-header|sg-web-chrome'
 
 fail=0
 
@@ -55,6 +57,15 @@ check_native() {
   else
     printf '\033[32mok\033[0m   native dist に GA4 なし\n'
   fi
+
+  hits="$(grep -rlE "$chrome_pattern" "$native_dist" || true)"
+  if [ -n "$hits" ]; then
+    printf '\n\033[31mFAIL\033[0m native ビルドにサイトクロームのコードが混入しています:\n%s\n' "$hits"
+    printf 'ヘッダーは Web 版だけのものです(docs/WEB_VERSION.md「サイトクローム」)。\n'
+    fail=1
+  else
+    printf '\033[32mok\033[0m   native dist にサイトクロームなし\n'
+  fi
 }
 
 check_web() {
@@ -68,6 +79,14 @@ check_web() {
   else
     printf '\n\033[31mFAIL\033[0m web ビルドに AdSense 統合が見つかりません。\n'
     printf 'WebAdSlot の --mode web ゲートか lazy import の配線が切れています(静かに広告なしになるだけなので、ここで検知します)。\n'
+    fail=1
+  fi
+
+  if grep -rqE "$chrome_pattern" "$web_dist"; then
+    printf '\033[32mok\033[0m   web dist にサイトクロームあり\n'
+  else
+    printf '\n\033[31mFAIL\033[0m web ビルドにサイトクローム統合が見つかりません。\n'
+    printf 'WebChromeSlot の --mode web ゲートか lazy import の配線が切れています(静かにヘッダーなしになるだけなので、ここで検知します)。\n'
     fail=1
   fi
 
