@@ -1,14 +1,14 @@
 /**
  * Quick Rules (docs/MEMORY_MATCH_RULES.md §11): three steps, one sentence
  * each, shown with a figure rather than explained in prose.
- *
- * There is no "Learn More" link yet: this game has no landing page, and a
- * link that 404s is worse than no link (ui/landing.ts). Add the button back
- * the day the guide exists on the landing site.
+ * The long-form rules live on the game's landing page behind "Learn More",
+ * which quietly does nothing offline (docs/OFFLINE_POLICY.md).
  */
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { IconClose } from '@/ui/components/icons';
+import { gameLandingUrl } from '@/ui/landing';
+import { openExternal } from '@/ui/openExternal';
 import { useMemoryMatch } from '../../state/GameContext';
 import { MemorySymbol } from '../components/symbols';
 
@@ -47,7 +47,8 @@ function BoardFigure({ cards }: { cards: FigureCard[] }) {
 
 export function MemoryTutorialScreen() {
   const { tutorialCompleted, completeTutorial, startDifficulty, goHome } = useMemoryMatch();
-  const { t } = useSettings();
+  const { t, locale } = useSettings();
+  const learnMoreUrl = gameLandingUrl('memory-match', locale);
   const [step, setStep] = useState(0);
 
   const steps = [
@@ -155,6 +156,18 @@ export function MemoryTutorialScreen() {
           </button>
         )}
       </div>
+
+      {learnMoreUrl ? (
+        <div className="home-links">
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => openExternal(learnMoreUrl)}
+          >
+            {t('learnMore')}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

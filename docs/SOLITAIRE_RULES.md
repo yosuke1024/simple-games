@@ -123,9 +123,8 @@
 2. 裏の札をめくり出す。山札は何度でも引き直せる。
 3. A から K へ、4 スートを積み上げれば勝ち。
 
-Landing Page(Learn More)は未作成のため**リンクを出さない**。
-`pixapps-landing` にガイドが公開されたら `ui/landing.ts` の運用に従って追加する
-(404 へ誘導しないこと)。
+詳細は Landing Page(`https://pixapps.ai/simple-games/games/solitaire/<locale>/`)へ。
+チュートリアルの「詳しく見る」から開く。オフラインでは何も起きない(ゲームは止めない)。
 
 ## 12. 演出とアクセシビリティ
 
