@@ -98,6 +98,9 @@ export const es: Messages = {
   gamesHeading: 'Juegos',
   recentHeading: 'Jugados hace poco',
   backToGames: 'Todos los juegos',
+  gameLoading: 'Cargando…',
+  gameLoadFailed: 'No se pudo cargar el juego.',
+  gameLoadRetry: 'Reintentar',
   learnMore: 'Más información',
 
   // About & open source

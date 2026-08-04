@@ -96,6 +96,9 @@ export const zhHans: Messages = {
   gamesHeading: '游戏',
   recentHeading: '最近玩过',
   backToGames: '全部游戏',
+  gameLoading: '加载中…',
+  gameLoadFailed: '无法加载游戏。',
+  gameLoadRetry: '重试',
   learnMore: '了解更多',
 
   // About & open source

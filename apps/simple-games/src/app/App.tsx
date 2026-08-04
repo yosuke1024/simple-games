@@ -6,14 +6,17 @@
  */
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { markReviewPromptShown, shouldPromptReview } from '../services/review';
 import { releaseSound } from '../services/sound';
+import { GameErrorBoundary } from '../ui/components/GameErrorBoundary';
+import { GameLoadingFallback } from '../ui/components/GameLoadingFallback';
 import { ReviewPrompt } from '../ui/components/ReviewPrompt';
 import { CollectionHomeScreen } from '../ui/screens/CollectionHomeScreen';
 import { SettingsScreen } from '../ui/screens/SettingsScreen';
+import { getLazyRoot, resetLazyRoot } from './lazyRoots';
 import { recordGameOpened } from './recentGames';
-import { GAMES, type GameId } from './registry';
+import { type GameId } from './registry';
 
 type View = { kind: 'collection' } | { kind: 'settings' } | { kind: 'game'; gameId: GameId };
 
@@ -40,11 +43,16 @@ function trackWebGameClosed(gameId: GameId): void {
 export function App() {
   const [view, setView] = useState<View>({ kind: 'collection' });
   const [reviewPromptOpen, setReviewPromptOpen] = useState(false);
+  // Bumped by the error screen's retry so the game subtree remounts and the
+  // recreated lazy wrapper (lazyRoots.ts) gets a fresh chance to load.
+  const [gameNonce, setGameNonce] = useState(0);
 
   const goCollection = useCallback(() => setView({ kind: 'collection' }), []);
   const openSettings = useCallback(() => setView({ kind: 'settings' }), []);
   // Opening a game is also what feeds the home's shortcut row: the shell
   // records what it mounted, so no game has to report anything (recentGames.ts).
+  // Recorded at the tap, not after the chunk resolves: the row reflects what
+  // the player chose, and a load failure is rare enough not to complicate it.
   const openGame = useCallback((gameId: GameId) => {
     recordGameOpened(gameId);
     trackWebGameOpened(gameId);
@@ -93,8 +101,24 @@ export function App() {
   }, [view.kind]);
 
   if (view.kind === 'game') {
-    const game = GAMES.find((entry) => entry.id === view.gameId);
-    if (game) return <game.Root onExit={exitGame} />;
+    const gameId = view.gameId;
+    const LazyRoot = getLazyRoot(gameId);
+    if (LazyRoot) {
+      return (
+        <GameErrorBoundary
+          key={gameNonce}
+          onExit={exitGame}
+          onRetry={() => {
+            resetLazyRoot(gameId);
+            setGameNonce((n) => n + 1);
+          }}
+        >
+          <Suspense fallback={<GameLoadingFallback onExit={exitGame} />}>
+            <LazyRoot onExit={exitGame} />
+          </Suspense>
+        </GameErrorBoundary>
+      );
+    }
   }
   if (view.kind === 'settings') {
     return <SettingsScreen onBack={goCollection} />;

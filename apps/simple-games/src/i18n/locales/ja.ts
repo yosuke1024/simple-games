@@ -96,6 +96,9 @@ export const ja: Messages = {
   gamesHeading: 'ゲーム',
   recentHeading: '最近遊んだ',
   backToGames: 'ゲーム一覧へ',
+  gameLoading: '読み込み中…',
+  gameLoadFailed: 'ゲームを読み込めませんでした。',
+  gameLoadRetry: 'もう一度試す',
   learnMore: '詳しく見る',
 
   // About & open source

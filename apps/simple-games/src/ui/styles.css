@@ -299,6 +299,20 @@ button:disabled {
   padding: 12px 16px;
 }
 
+/* While a game's chunk loads, and if it fails (GameLoadingFallback /
+   GameErrorBoundary). Centered and quiet; usually never seen at all. */
+.game-load-screen {
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 24px;
+}
+
+.game-load-text {
+  color: var(--ink-soft);
+  margin: 0;
+}
+
 .screen-header h1 {
   font-size: 20px;
   font-weight: 700;

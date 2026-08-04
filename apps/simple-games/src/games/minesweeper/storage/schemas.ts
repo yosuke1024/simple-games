@@ -12,13 +12,9 @@ import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asDateString, asInt, asString, isRecord } from '../../../storage/validate';
 import { DIFFICULTIES, PRESETS, type Difficulty, type GameMode } from '../game';
 
-export const MS_STORAGE_KEYS = {
-  game: 'ms.saveGame',
-  dailyGame: 'ms.saveDaily',
-  stats: 'ms.stats',
-  flags: 'ms.flags',
-  prefs: 'ms.prefs',
-} as const;
+import { MS_STORAGE_KEYS } from './keys';
+
+export { MS_STORAGE_KEYS };
 
 const asDifficulty = (value: unknown): Difficulty | null =>
   DIFFICULTIES.includes(value as Difficulty) ? (value as Difficulty) : null;
@@ -130,7 +126,11 @@ export const statsSchema: SchemaDef<Stats> = {
     if (isRecord(raw.dailyTimes)) {
       for (const [key, value] of Object.entries(raw.dailyTimes)) {
         const seconds = asInt(value, 0, 1e9);
-        if (asDateString(key) !== null && seconds !== null && Object.keys(dailyTimes).length < 2000) {
+        if (
+          asDateString(key) !== null &&
+          seconds !== null &&
+          Object.keys(dailyTimes).length < 2000
+        ) {
           dailyTimes[key] = seconds;
         }
       }

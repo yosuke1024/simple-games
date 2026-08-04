@@ -10,14 +10,9 @@ import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asDateString, asInt, asString, isRecord } from '../../../storage/validate';
 import { cellCount, isSize, MAX_LEVEL, SIZES, type GameMode, type Size } from '../game';
 
-export const NG_STORAGE_KEYS = {
-  game: 'ng.saveGame',
-  dailyGame: 'ng.saveDaily',
-  stats: 'ng.stats',
-  progress: 'ng.progress',
-  flags: 'ng.flags',
-  prefs: 'ng.prefs',
-} as const;
+import { NG_STORAGE_KEYS } from './keys';
+
+export { NG_STORAGE_KEYS };
 
 /** Statistics are kept per board size (§9). */
 export type SizeKey = `size${Size}`;

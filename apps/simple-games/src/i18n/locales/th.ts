@@ -96,6 +96,9 @@ export const th: Messages = {
   gamesHeading: 'เกม',
   recentHeading: 'เล่นล่าสุด',
   backToGames: 'เกมทั้งหมด',
+  gameLoading: 'กำลังโหลด…',
+  gameLoadFailed: 'ไม่สามารถโหลดเกมได้',
+  gameLoadRetry: 'ลองอีกครั้ง',
   learnMore: 'ดูเพิ่มเติม',
 
   // About & open source

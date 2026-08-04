@@ -70,6 +70,11 @@ src/
 - `games/A/` から `games/B/` への import は禁止。ゲーム同士は互いを知らない。
 - シェルはゲームの内部実装に触らない(ゲームは自身のルートコンポーネントだけを公開する)。
   ゲームレジストリ(`app/registry.ts`)は薄い契約のみ(下記)。
+- これらの境界は文書だけの約束ではない: `src/test/importBoundaries.test.ts` が
+  実際の import グラフを走査して機械的に禁止する(ESLint の
+  no-restricted-imports はエディタ即時フィードバック用の写し)。
+- ゲームのライフサイクル(アンマウント時のリソース解放契約)は
+  [GAME_LIFECYCLE.md](GAME_LIFECYCLE.md) を正本とする。
 - `services/` の失敗はゲーム進行に影響させない(OFFLINE_POLICY.md 参照)。
 - ゲーム説明は二層化する: アプリ内はチュートリアル = Quick Rules(最大3ステップ)
   のみ。詳細ルール・FAQ・攻略はゲーム別 Landing Page
@@ -85,20 +90,45 @@ src/
 
 ## ゲームレジストリの契約
 
-`app/registry.ts` のエントリは「タイトルカード + マウント点 + そのゲームが持つキー」
-だけで、プラグイン機構ではない。ゲームの追加は import 1 行と配列要素 1 つで済む。
+`app/registry.ts` のエントリは「タイトルカード + そのゲームが持つキー + ゲーム本体の
+ローダー」だけで、プラグイン機構ではない。ゲームの追加は keys の import 1 行と
+配列要素 1 つで済む。
 
-| フィールド         | 内容                                                                                                                                                                                                            |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`               | `'sudoku'` / `'solitaire'` / `'minesweeper'` / `'nonogram'` / `'number-match'` / `'water-sort'` / `'sliding-puzzle'` / `'memory-match'` / `'brick-breaker'` / `'sky-fighter'`。`data-game` 属性にもこの値を使う |
-| `title`            | 固有名詞。全言語で同一表記(翻訳しない)                                                                                                                                                                          |
-| `glyph`            | シリーズマーク。そのタイトルのアクセント色のタイルに 1 文字                                                                                                                                                     |
-| `Root`             | ゲームのルートコンポーネント。受け取る props は `onExit` だけ                                                                                                                                                   |
-| `storageKeys`      | そのゲームが保存する全キー                                                                                                                                                                                      |
-| `SettingsSection?` | 任意。共有設定画面に差し込むゲーム固有の設定                                                                                                                                                                    |
+| フィールド             | 内容                                                                                                                                                                                                            |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                   | `'sudoku'` / `'solitaire'` / `'minesweeper'` / `'nonogram'` / `'number-match'` / `'water-sort'` / `'sliding-puzzle'` / `'memory-match'` / `'brick-breaker'` / `'sky-fighter'`。`data-game` 属性にもこの値を使う |
+| `title`                | 固有名詞。全言語で同一表記(翻訳しない)                                                                                                                                                                          |
+| `glyph`                | シリーズマーク。そのタイトルのアクセント色のタイルに 1 文字                                                                                                                                                     |
+| `storageKeys`          | そのゲームが保存する全キー。各ゲームの **import ゼロの葉** `storage/keys.ts` から同期 import する                                                                                                               |
+| `loadRoot`             | ゲームのルートコンポーネントを動的 `import()` で返すローダー。Root が受け取る props は `onExit` だけ                                                                                                            |
+| `loadSettingsSection?` | 任意。共有設定画面に差し込むゲーム固有の設定のローダー                                                                                                                                                          |
+
+### ゲーム単位の lazy チャンク(issue #26)
+
+ホームの起動コストを収録数から切り離すため、ゲーム本体は静的 import しない。
+
+- `src/games/<id>/` 配下は Rolldown の `codeSplitting` でチャンク `game-<id>` に
+  まとまる(`vite.config.ts`)。例外は `storage/keys.ts` だけ — レジストリが
+  同期参照する import ゼロの葉で、ここに import を足すとゲーム全体がホームの
+  初期チャンクへ引き戻される(`src/test/importBoundaries.test.ts` が禁止)。
+- 全チャンクはアプリ / Web 配布物に同梱。**ゲームを開くのはディスクからの読み込み
+  であり、ネットワークからのダウンロードは存在しない**(docs/OFFLINE_POLICY.md)。
+- シェル側は `app/lazyRoots.ts`(id ごとに 1 つの `React.lazy`)+ Suspense +
+  `GameErrorBoundary` で開く。ローディング表示は 200ms 遅延(ローカルチャンクの
+  ロードは通常見えない)。ロード中のハードウェアバックは `GameLoadingFallback` が
+  所有し、コレクションへ戻す。失敗画面の確実な出口は「すべてのゲーム」で、
+  リトライはベストエフォート(React も Chromium も失敗したロードをキャッシュする
+  ため、lazy ラッパーを作り直して再マウントする)。
+- エントリからゲームチャンクへ静的に到達したら CI が落ちる
+  (`scripts/bundle-size.mjs` が `.vite/manifest.json` を辿る)。サイズの実測・
+  ゲーム別予算(gzip 500KB)・ベースライン差分も同じスクリプト
+  (`pnpm size:check` / `pnpm size:update`、基準値は `size-baseline.json`)。
 
 - `storageKeys` をレジストリに載せるのは、シェルが各ゲームの保存内部を知らないまま
-  「ローカルデータ削除」を正直に実行できるようにするため。
+  「ローカルデータ削除」を正直に実行できるようにするため。ゲームのチャンクを
+  ロードせずに列挙できるよう、キーは `storage/keys.ts` の葉に置く。released 済み
+  キーの一覧は `src/app/gameKeys.test.ts` がゴールデンとして固定する
+  (**テストを直して通すのは禁止** — それはプレイヤーのデータに対する削除行為)。
 - `SettingsSection` は任意。**ゲーム固有の設定はゲームが所有し、シェルは場所だけ貸す。**
   これがないと、ゲームの設定が増えるたびにシェル側へ
   `if (gameId === 'sudoku')` のような分岐が入り、シェルがゲーム内部を知ることになる。
@@ -280,7 +310,9 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 
 - プレイ中の定期ポーリングなし。バックグラウンド処理なし。常時接続なし。
 - オフライン時は広告取得をリトライしない。
-- 画面外のゲームはアンマウントする(描画しない)。
+- 画面外のゲームはアンマウントする(描画しない)。**アンマウントされたゲームは
+  タイマー・RAF・リスナー・音声を一切残さない** — 契約とテストは
+  [GAME_LIFECYCLE.md](GAME_LIFECYCLE.md)。
 - 保存はイベント駆動(可視性変化 / pause / 状態遷移時)。
 - プレイ時計は ref 加算のみで、再レンダリングを起こさない。
 
@@ -338,7 +370,10 @@ seed 付き乱数を持っている**(`games/A/` から `games/B/` を import �
 ## CI / リリース
 
 - `ci.yml`: push / PR で install → lint → typecheck → test → build(全ワークスペース)。
-  対象が増えたら turbo の `--filter` で影響範囲のみに絞る。
+  対象が増えたら turbo の `--filter` で影響範囲のみに絞る。両ビルドの後に
+  広告分離(`check-dist-ads-separation.sh`)とサイズ Gate
+  (`pnpm --filter simple-games size:check` — ゲーム別予算・エントリ成長・
+  初期グラフへのゲームチャンク混入)を検証する。
 - `android-release.yml`: 手動実行(workflow_dispatch)または `v*` タグでのみ実行し、
   署名済み AAB(Play 用)と署名済み APK(実機確認用)をアーティファクトとして出す。
   `versionName` / `versionCode` はタグが決める。ストアへのアップロードは手動。

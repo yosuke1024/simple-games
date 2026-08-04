@@ -98,6 +98,9 @@ export const fr: Messages = {
   gamesHeading: 'Jeux',
   recentHeading: 'Joués récemment',
   backToGames: 'Tous les jeux',
+  gameLoading: 'Chargement…',
+  gameLoadFailed: 'Impossible de charger le jeu.',
+  gameLoadRetry: 'Réessayer',
   learnMore: 'En savoir plus',
 
   // About & open source

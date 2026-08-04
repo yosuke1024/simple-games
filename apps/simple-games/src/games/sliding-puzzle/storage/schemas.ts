@@ -10,13 +10,9 @@ import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asDateString, asInt, asString, isRecord } from '../../../storage/validate';
 import { cellCount, isSize, MAX_LEVEL, SIZES, type GameMode, type Size } from '../game';
 
-export const SP_STORAGE_KEYS = {
-  game: 'sp.saveGame',
-  dailyGame: 'sp.saveDaily',
-  stats: 'sp.stats',
-  progress: 'sp.progress',
-  flags: 'sp.flags',
-} as const;
+import { SP_STORAGE_KEYS } from './keys';
+
+export { SP_STORAGE_KEYS };
 
 /** Statistics are kept per board size (§9). */
 export type SizeKey = `size${Size}`;

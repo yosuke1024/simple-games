@@ -14,11 +14,9 @@ import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asInt, isRecord } from '../../../storage/validate';
 import { LEVEL_COUNT } from '../game/levels';
 
-export const BB_STORAGE_KEYS = {
-  stats: 'bb.stats',
-  progress: 'bb.progress',
-  flags: 'bb.flags',
-} as const;
+import { BB_STORAGE_KEYS } from './keys';
+
+export { BB_STORAGE_KEYS };
 
 // ---------- one-time flags ----------
 
