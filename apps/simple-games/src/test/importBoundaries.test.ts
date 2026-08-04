@@ -61,6 +61,11 @@ function globSpecifiers(text: string): string[] {
   let from = 0;
   for (let at = text.indexOf(marker, from); at !== -1; at = text.indexOf(marker, from)) {
     let i = at + marker.length;
+    // A call permits whitespace before its type argument list
+    // (`import.meta.glob <T>(...)` is valid TS), so the `<` check has to
+    // look past it or this scanner is blind to that formatting too (Codex
+    // review, PR #40).
+    while (/\s/.test(text[i] ?? '')) i++;
     if (text[i] === '<') {
       let depth = 1;
       i++;
