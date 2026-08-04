@@ -99,4 +99,42 @@ describe('chrome host', () => {
     releaseChrome(host);
     expect(header.parentElement).toBe(document.body);
   });
+
+  it('closes the header’s overlays when it leaves the screen', () => {
+    // The drawer is appended to <body> by global-header.js, so parking the
+    // header neither moves nor hides it. Left open it would cover a board.
+    const header = makeHeader();
+    const host = makeHost();
+    const drawer = document.createElement('div');
+    drawer.className = 'global-header-drawer open';
+    document.body.appendChild(drawer);
+    const dropdown = document.createElement('div');
+    dropdown.className = 'global-header-dropdown open';
+    header.appendChild(dropdown);
+
+    setChromeElement(header);
+    claimChrome(host);
+    releaseChrome(host);
+
+    expect(drawer.classList.contains('open')).toBe(false);
+    expect(drawer.getAttribute('aria-hidden')).toBe('true');
+    expect(dropdown.classList.contains('open')).toBe(false);
+  });
+
+  it('leaves the overlays alone while a screen still shows the header', () => {
+    const header = makeHeader();
+    const first = makeHost();
+    const second = makeHost();
+    const drawer = document.createElement('div');
+    drawer.className = 'global-header-drawer open';
+    document.body.appendChild(drawer);
+
+    setChromeElement(header);
+    claimChrome(first);
+    // Screen change between two chrome-bearing screens: the header never
+    // parks, so an open menu is the user's, not a leak.
+    claimChrome(second);
+
+    expect(drawer.classList.contains('open')).toBe(true);
+  });
 });

@@ -21,6 +21,26 @@ let headerElement: HTMLElement | null = null;
 /** The slot currently claiming it, if a chrome-bearing screen is mounted. */
 let currentHost: HTMLElement | null = null;
 
+/**
+ * The header's overlays are NOT inside the header: `global-header.js`
+ * appends the mobile drawer straight to <body>, so parking the header does
+ * not take the drawer with it and the CSS that hides a parked header cannot
+ * reach it either. Anything left open would sit over a board that is
+ * supposed to show no site chrome, so the header's surfaces are closed when
+ * it leaves a screen. Class names are the landing stylesheet's, which this
+ * app already depends on for the same reason chrome.css does.
+ */
+function closeChromeOverlays(): void {
+  const drawer = document.querySelector('.global-header-drawer');
+  if (drawer) {
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+  }
+  document
+    .querySelectorAll('.global-header-dropdown.open, .global-header-lang-dropdown.open')
+    .forEach((open) => open.classList.remove('open'));
+}
+
 function reconcile(): void {
   if (!headerElement) return;
   // Parked at body level when no screen wants it. It is hidden there by CSS
@@ -50,6 +70,10 @@ export function claimChrome(host: HTMLElement): void {
 export function releaseChrome(host: HTMLElement): void {
   if (currentHost !== host) return;
   currentHost = null;
+  // Only here, not on every park: the first park happens before the header
+  // has ever been on screen, and a change between two chrome-bearing screens
+  // never releases — an open menu there is the user's, not a leak.
+  closeChromeOverlays();
   reconcile();
 }
 
@@ -57,4 +81,9 @@ export function releaseChrome(host: HTMLElement): void {
 export function resetChromeHostForTesting(): void {
   headerElement = null;
   currentHost = null;
+}
+
+/** Test hook: whether the header has been handed over yet, and which one. */
+export function chromeElementForTesting(): HTMLElement | null {
+  return headerElement;
 }

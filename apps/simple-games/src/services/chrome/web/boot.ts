@@ -67,11 +67,19 @@ function injectPageConfig(locale: 'ja' | 'en'): void {
   document.head.appendChild(config);
 }
 
-function injectStyles(): void {
-  if (document.querySelector(`link[href="${HEADER_STYLES_HREF}"]`)) return;
+function injectStyles(onReady: () => void): void {
+  if (document.querySelector(`link[href="${HEADER_STYLES_HREF}"]`)) {
+    onReady();
+    return;
+  }
   const styles = document.createElement('link');
   styles.rel = 'stylesheet';
   styles.href = HEADER_STYLES_HREF;
+  styles.addEventListener('load', onReady);
+  styles.addEventListener('error', () => {
+    // Deliberately does NOT call onReady: without the site's own stylesheet
+    // the header would be raw unstyled markup. See initWebChrome.
+  });
   document.head.appendChild(styles);
 }
 
@@ -82,7 +90,7 @@ function ensurePlaceholder(): void {
   document.body.appendChild(placeholder);
 }
 
-function injectScript(): void {
+function injectScript(onBuilt: (header: HTMLElement) => void): void {
   if (document.querySelector(`script[src="${HEADER_SCRIPT_SRC}"]`)) return;
   const script = document.createElement('script');
   script.src = HEADER_SCRIPT_SRC;
@@ -91,7 +99,7 @@ function injectScript(): void {
   // 'loading'), so by `load` the header element exists.
   script.addEventListener('load', () => {
     const header = document.querySelector<HTMLElement>(HEADER_SELECTOR);
-    if (header) setChromeElement(header);
+    if (header) onBuilt(header);
   });
   script.addEventListener('error', () => {
     // Same as offline: no header, no retry, nothing said to the player.
@@ -100,19 +108,46 @@ function injectScript(): void {
 }
 
 /**
- * Called once per page load, after the first render (main.tsx). The locale
- * is passed in rather than read from the DOM because SettingsContext writes
- * <html lang> from an effect — reading it here would race the first commit.
+ * Called once per page load, after the first render (main.tsx).
+ *
+ * The locale is passed in rather than read from the DOM because
+ * SettingsContext writes <html lang> from an effect — reading it here would
+ * race the first commit. It is also read only once: changing the language in
+ * Settings later does not rebuild the header. That is invisible today
+ * because every label and status in the header is the same string in ja and
+ * en (all fifteen pairs — they are product names and English loanwords), so
+ * a locale change has nothing to redraw. **If the header ever gains a string
+ * that differs between the two, this needs to become a subscription.**
  */
 export function initWebChrome(locale: Locale): void {
   if (!isOnline()) return;
   try {
     injectPageConfig(headerLocale(locale));
-    injectStyles();
     // Order matters: the placeholder has to be in the DOM before the script
     // that looks for it (see HEADER_PLACEHOLDER_ID).
     ensurePlaceholder();
-    injectScript();
+
+    // The header is handed over only once BOTH its script has built it and
+    // its stylesheet has loaded. Local CSS positions the header but does not
+    // style it — the site's own stylesheet does — so publishing on the
+    // script alone would turn a failed CSS request into a wall of unstyled
+    // navigation instead of the promised "no header at all"
+    // (docs/WEB_VERSION.md「サイトクローム」). Both are same-origin and ship
+    // together, so this guards a partial failure, not the normal path.
+    let stylesReady = false;
+    let header: HTMLElement | null = null;
+    const publishWhenReady = () => {
+      if (stylesReady && header) setChromeElement(header);
+    };
+
+    injectStyles(() => {
+      stylesReady = true;
+      publishWhenReady();
+    });
+    injectScript((built) => {
+      header = built;
+      publishWhenReady();
+    });
   } catch {
     // Site chrome never blocks play.
   }

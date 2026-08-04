@@ -10,14 +10,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as network from '../../network';
 import { initWebChrome } from './boot';
+import { chromeElementForTesting, resetChromeHostForTesting } from './host';
 
 beforeEach(() => {
+  resetChromeHostForTesting();
   document.head.replaceChildren();
   document.body.replaceChildren();
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
+  resetChromeHostForTesting();
   document.head.replaceChildren();
   document.body.replaceChildren();
 });
@@ -42,6 +45,40 @@ describe('initWebChrome', () => {
     // Document order stands in for execution order: both are appended to
     // body, and the script cannot run before an element that precedes it.
     expect(placeholder!.compareDocumentPosition(script!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it('does not hand over the header until the site stylesheet has loaded', () => {
+    // A CSS request that fails while the script succeeds would otherwise put
+    // raw unstyled navigation on screen — the local stylesheet positions the
+    // header but does not style it. The promise is "no header at all".
+    vi.spyOn(network, 'isOnline').mockReturnValue(true);
+    initWebChrome('en');
+
+    const header = document.createElement('header');
+    header.setAttribute('data-global-header', 'true');
+    document.body.appendChild(header);
+    document.querySelector('script[src="/global-header.js"]')!.dispatchEvent(new Event('load'));
+
+    // Script done, stylesheet still outstanding: the header stays parked.
+    expect(header.parentElement).toBe(document.body);
+
+    document.querySelector('link[href="/global-header.css"]')!.dispatchEvent(new Event('load'));
+    // Still body, because no screen has claimed it — but now it is publishable.
+    expect(header.parentElement).toBe(document.body);
+    expect(chromeElementForTesting()).toBe(header);
+  });
+
+  it('never hands over the header when the stylesheet fails', () => {
+    vi.spyOn(network, 'isOnline').mockReturnValue(true);
+    initWebChrome('en');
+
+    const header = document.createElement('header');
+    header.setAttribute('data-global-header', 'true');
+    document.body.appendChild(header);
+    document.querySelector('link[href="/global-header.css"]')!.dispatchEvent(new Event('error'));
+    document.querySelector('script[src="/global-header.js"]')!.dispatchEvent(new Event('load'));
+
+    expect(chromeElementForTesting()).toBeNull();
   });
 
   it('declares exactly one locale so the header shows no language switcher', () => {
