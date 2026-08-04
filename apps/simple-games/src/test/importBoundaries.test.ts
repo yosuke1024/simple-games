@@ -49,6 +49,34 @@ interface Import {
 }
 
 /**
+ * Every quoted literal up to (not including) the array's closing `]`, which
+ * must itself be outside any quote — a naive `indexOf(']')` would instead
+ * stop at the first `]` anywhere, including one inside a glob's own
+ * character-class syntax (Codex review, PR #40).
+ */
+function arrayLiterals(text: string): string[] {
+  let quote: string | null = null;
+  let closeIdx = text.length;
+  for (let j = 0; j < text.length; j++) {
+    const ch = text[j];
+    if (quote) {
+      if (ch === '\\') j++;
+      else if (ch === quote) quote = null;
+    } else if (ch === "'" || ch === '"' || ch === '`') {
+      quote = ch;
+    } else if (ch === ']') {
+      closeIdx = j;
+      break;
+    }
+  }
+  const out: string[] = [];
+  for (const literal of text.slice(0, closeIdx).matchAll(/['"`]([^'"`]+)['"`]/g)) {
+    out.push(literal[1]!);
+  }
+  return out;
+}
+
+/**
  * `import.meta.glob<T>('specifier', opts)` — T can itself contain generics
  * (`Record<Locale, Record<string, string>>>`, as issue #38's i18n tests use),
  * so a `<[^>]*>` regex stops at the first *inner* `>` and never reaches the
@@ -85,8 +113,11 @@ function globSpecifiers(text: string): string[] {
     if (afterParen) {
       const rest = text.slice(i + afterParen[0].length);
       if (rest[0] === '[') {
-        const arrayBody = rest.slice(1, rest.indexOf(']'));
-        for (const literal of arrayBody.matchAll(/['"`]([^'"`]+)['"`]/g)) out.push(literal[1]!);
+        // Glob patterns can carry a `[...]` character class of their own
+        // (`'../games/[bs]*/i18n/index.ts'` — real Vite 8 syntax), so the
+        // array's closing `]` has to be found outside any quoted string,
+        // not just the first `]` in the text (Codex review, PR #40).
+        out.push(...arrayLiterals(rest.slice(1)));
       } else {
         const single = /^['"`]([^'"`]+)['"`]/.exec(rest);
         if (single) out.push(single[1]!);
