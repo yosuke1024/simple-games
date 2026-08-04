@@ -21,12 +21,13 @@
  * four import forms rule 4 already names (issue #38's per-game i18n tests use
  * it to aggregate every game's catalog). It is treated as dynamic, like
  * `import()`, and only test infrastructure may use it to reach games/ — see
- * GAME_I18N_GLOB below. `no-restricted-imports` cannot see it either (it only
- * inspects `ImportDeclaration` nodes), so this scanner is the only gate on it.
+ * GAME_I18N_GLOB below. `no-restricted-imports` cannot see it at all (it only
+ * inspects `ImportDeclaration` nodes), so this scanner is its only gate.
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -49,88 +50,30 @@ interface Import {
 }
 
 /**
- * Every quoted literal up to (not including) the array's closing `]`, which
- * must itself be outside any quote — a naive `indexOf(']')` would instead
- * stop at the first `]` anywhere, including one inside a glob's own
- * character-class syntax (Codex review, PR #40).
+ * Every module specifier in one file, read from the TypeScript AST.
+ *
+ * This was regex-based until PR #40, and the regexes were wrong five times
+ * over: nested generics (`glob<Record<Locale, Record<string, string>>>`)
+ * stopped the type-argument matcher at the first inner `>`; whitespace before
+ * the type arguments skipped it entirely; the array form Vite documents
+ * (`glob: string | string[]`) was not read at all; a glob's own `[...]`
+ * character class ended the array scan early; and a comment between the
+ * callee and its parentheses hid the call completely. Each fix was correct
+ * and each left another hole, because the thing being matched is TypeScript
+ * syntax and the thing doing the matching was not a TypeScript parser.
+ *
+ * `ts.createSourceFile` is one call, ships in a devDependency this repo
+ * already has, and settles all five at once by construction — plus escapes
+ * and Unicode in specifiers, which `.text` returns already cooked. A gate is
+ * only worth the confidence it earns; this one now reads the same grammar
+ * the compiler does.
+ *
+ * The one thing no source scanner can see is an aliased callee
+ * (`const g = import.meta.glob; g('../games/…')`). That needs type-level
+ * analysis, and is exotic enough to be worth naming here rather than
+ * pretending the gate is total.
  */
-function arrayLiterals(text: string): string[] {
-  let quote: string | null = null;
-  let closeIdx = text.length;
-  for (let j = 0; j < text.length; j++) {
-    const ch = text[j];
-    if (quote) {
-      if (ch === '\\') j++;
-      else if (ch === quote) quote = null;
-    } else if (ch === "'" || ch === '"' || ch === '`') {
-      quote = ch;
-    } else if (ch === ']') {
-      closeIdx = j;
-      break;
-    }
-  }
-  const out: string[] = [];
-  for (const literal of text.slice(0, closeIdx).matchAll(/['"`]([^'"`]+)['"`]/g)) {
-    out.push(literal[1]!);
-  }
-  return out;
-}
-
-/**
- * `import.meta.glob<T>('specifier', opts)` — T can itself contain generics
- * (`Record<Locale, Record<string, string>>>`, as issue #38's i18n tests use),
- * so a `<[^>]*>` regex stops at the first *inner* `>` and never reaches the
- * call at all, silently. Balance the angle brackets by hand instead of
- * trying to bound arbitrary nesting depth in one regex (Codex review, PR #40).
- */
-function globSpecifiers(text: string): string[] {
-  const marker = 'import.meta.glob';
-  const out: string[] = [];
-  let from = 0;
-  for (let at = text.indexOf(marker, from); at !== -1; at = text.indexOf(marker, from)) {
-    let i = at + marker.length;
-    // A call permits whitespace before its type argument list
-    // (`import.meta.glob <T>(...)` is valid TS), so the `<` check has to
-    // look past it or this scanner is blind to that formatting too (Codex
-    // review, PR #40).
-    while (/\s/.test(text[i] ?? '')) i++;
-    if (text[i] === '<') {
-      let depth = 1;
-      i++;
-      while (i < text.length && depth > 0) {
-        if (text[i] === '<') depth++;
-        else if (text[i] === '>') depth--;
-        i++;
-      }
-    }
-    // Vite's own type (vite/types/importGlob.d.ts) accepts `string | string[]`
-    // — import.meta.glob(['a', 'b']) is as real as the single-string form —
-    // so a scanner that only reads a leading quote misses every array call
-    // (Codex review, PR #40). Backtick strings count too: Vite's transform
-    // reads the argument as an AST string literal, which a plain
-    // `` `../games/*/i18n/index.ts` `` satisfies exactly like a quoted one.
-    const afterParen = /^\s*\(\s*/.exec(text.slice(i));
-    if (afterParen) {
-      const rest = text.slice(i + afterParen[0].length);
-      if (rest[0] === '[') {
-        // Glob patterns can carry a `[...]` character class of their own
-        // (`'../games/[bs]*/i18n/index.ts'` — real Vite 8 syntax), so the
-        // array's closing `]` has to be found outside any quoted string,
-        // not just the first `]` in the text (Codex review, PR #40).
-        out.push(...arrayLiterals(rest.slice(1)));
-      } else {
-        const single = /^['"`]([^'"`]+)['"`]/.exec(rest);
-        if (single) out.push(single[1]!);
-      }
-    }
-    from = at + marker.length;
-  }
-  return out;
-}
-
-/** Static `import ... from`, `export ... from`, bare `import 'x'`, and dynamic `import('x')`. */
 function importsOf(file: string): Import[] {
-  const text = readFileSync(file, 'utf8');
   const dir = dirname(file);
   const out: Import[] = [];
   const push = (specifier: string, dynamic: boolean) => {
@@ -141,13 +84,66 @@ function importsOf(file: string): Import[] {
         : null;
     out.push({ file, specifier, resolved, dynamic });
   };
-  const staticPattern = /(?:^|\n)\s*(?:import|export)\s[^;'"]*?from\s+['"]([^'"]+)['"]/g;
-  const barePattern = /(?:^|\n)\s*import\s+['"]([^'"]+)['"]/g;
-  const dynamicPattern = /import\(\s*['"]([^'"]+)['"]\s*\)/g;
-  for (const match of text.matchAll(staticPattern)) push(match[1]!, false);
-  for (const match of text.matchAll(barePattern)) push(match[1]!, false);
-  for (const match of text.matchAll(dynamicPattern)) push(match[1]!, true);
-  for (const specifier of globSpecifiers(text)) push(specifier, true);
+
+  const source = ts.createSourceFile(
+    file,
+    readFileSync(file, 'utf8'),
+    ts.ScriptTarget.Latest,
+    /* setParentNodes */ false,
+    // .tsx must parse as TSX: it is what decides whether `<T>` is a type
+    // argument list or a JSX element, and reading a component file as plain
+    // TS would throw the parse off from that point on.
+    file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+
+  // Covers '' and `` alike — a plain template literal is as valid a
+  // specifier as a quoted string, and `.text` gives the cooked value.
+  const literalsOf = (node: ts.Node | undefined): string[] => {
+    if (node === undefined) return [];
+    if (ts.isStringLiteralLike(node)) return [node.text];
+    if (ts.isArrayLiteralExpression(node)) {
+      return node.elements.filter(ts.isStringLiteralLike).map((element) => element.text);
+    }
+    return [];
+  };
+
+  const visit = (node: ts.Node): void => {
+    // `import x from 'y'`, bare `import 'y'`, and `export … from 'y'`.
+    if (
+      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+      node.moduleSpecifier !== undefined
+    ) {
+      for (const specifier of literalsOf(node.moduleSpecifier)) push(specifier, false);
+    }
+    // `const x: import('y').T` — an import in type position. Erased at
+    // build time, so it tows no chunk, but the layering rules are about who
+    // may know whom: `import type { T } from 'y'` is caught above, and
+    // leaving its inline twin unseen would be one more hole of exactly the
+    // kind this rewrite exists to close. Static for the same reason.
+    if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) {
+      for (const specifier of literalsOf(node.argument.literal)) push(specifier, false);
+    }
+    if (ts.isCallExpression(node)) {
+      // Dynamic `import('y')`.
+      if (node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+        for (const specifier of literalsOf(node.arguments[0])) push(specifier, true);
+      }
+      // `import.meta.glob('y')` / `glob(['y', 'z'])`, with or without type
+      // arguments. Treated as dynamic, like `import()`: both are "loaded
+      // only when asked for", which is the distinction rule 4 turns on.
+      const callee = node.expression;
+      if (
+        ts.isPropertyAccessExpression(callee) &&
+        callee.name.text === 'glob' &&
+        ts.isMetaProperty(callee.expression)
+      ) {
+        for (const specifier of literalsOf(node.arguments[0])) push(specifier, true);
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+
   return out;
 }
 
