@@ -111,9 +111,8 @@
 2. 揃わなくても急がなくていい — 次にめくるまで見えたまま。
 3. すべてのペアを見つければ完成。
 
-Landing Page(Learn More)は未作成のため**リンクを出さない**。
-`pixapps-landing` にガイドが公開されたら `ui/landing.ts` の運用に従って追加する
-(404 へ誘導しないこと)。
+詳細は Landing Page(`https://pixapps.ai/simple-games/games/memory-match/<locale>/`)へ。
+チュートリアルの「詳しく見る」から開く。オフラインでは何も起きない(ゲームは止めない)。
 
 ## 12. 演出とアクセシビリティ
 

@@ -24,7 +24,21 @@ describe('gameLandingUrl', () => {
   });
 
   it('covers every game in the collection', () => {
-    for (const id of ['sudoku', 'minesweeper', 'nonogram', 'number-match', 'sliding-puzzle']) {
+    // Every id here must have a published guide on the landing site, in every
+    // PAGE_LOCALES language — this list is what stops a "Learn More" button
+    // from being wired up before the page it points at exists.
+    for (const id of [
+      'sudoku',
+      'minesweeper',
+      'nonogram',
+      'number-match',
+      'sliding-puzzle',
+      'solitaire',
+      'brick-breaker',
+      'water-sort',
+      'memory-match',
+      'sky-fighter',
+    ]) {
       expect(gameLandingUrl(id, 'en')).toBe(`https://pixapps.ai/simple-games/games/${id}/en/`);
     }
   });

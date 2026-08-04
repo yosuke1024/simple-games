@@ -141,9 +141,8 @@ seed は `water-level-<n>`。空チューブは全帯域で 2 本(§1)。
 2. 空きの 2 本が作業場。Undo はいつでも無料。
 3. 全部のチューブを単色にすれば完成。
 
-Landing Page(Learn More)は未作成のため**リンクを出さない**。
-`pixapps-landing` にガイドが公開されたら `ui/landing.ts` の運用に従って追加する
-(404 へ誘導しないこと)。
+詳細は Landing Page(`https://pixapps.ai/simple-games/games/water-sort/<locale>/`)へ。
+チュートリアルの「詳しく見る」から開く。オフラインでは何も起きない(ゲームは止めない)。
 
 ## 12. 演出とアクセシビリティ
 

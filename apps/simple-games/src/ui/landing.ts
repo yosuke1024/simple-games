@@ -14,9 +14,10 @@
  * locales, so the rest read the English page — which is honest, if not ideal,
  * and better than either a 404 or a machine-translated rulebook.
  *
- * Titles with no guide on the landing site yet (Memory Match, Water Sort,
- * Solitaire) simply do not render a "Learn More" button; building a URL here
- * would 404 for every locale.
+ * Every title in the collection now has a guide, so this returns a URL for any
+ * game id. A title added in future does not: write its guide on the landing
+ * site first, because a "Learn More" built here before the page exists is a
+ * 404 inside our own site, in front of a first-time visitor.
  */
 import { LANDING_BASE_URL } from '@simple-games/brand';
 
