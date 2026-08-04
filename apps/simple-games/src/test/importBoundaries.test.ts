@@ -78,15 +78,17 @@ function globSpecifiers(text: string): string[] {
     // Vite's own type (vite/types/importGlob.d.ts) accepts `string | string[]`
     // — import.meta.glob(['a', 'b']) is as real as the single-string form —
     // so a scanner that only reads a leading quote misses every array call
-    // (Codex review, PR #40).
+    // (Codex review, PR #40). Backtick strings count too: Vite's transform
+    // reads the argument as an AST string literal, which a plain
+    // `` `../games/*/i18n/index.ts` `` satisfies exactly like a quoted one.
     const afterParen = /^\s*\(\s*/.exec(text.slice(i));
     if (afterParen) {
       const rest = text.slice(i + afterParen[0].length);
       if (rest[0] === '[') {
         const arrayBody = rest.slice(1, rest.indexOf(']'));
-        for (const literal of arrayBody.matchAll(/['"]([^'"]+)['"]/g)) out.push(literal[1]!);
+        for (const literal of arrayBody.matchAll(/['"`]([^'"`]+)['"`]/g)) out.push(literal[1]!);
       } else {
-        const single = /^['"]([^'"]+)['"]/.exec(rest);
+        const single = /^['"`]([^'"`]+)['"`]/.exec(rest);
         if (single) out.push(single[1]!);
       }
     }
