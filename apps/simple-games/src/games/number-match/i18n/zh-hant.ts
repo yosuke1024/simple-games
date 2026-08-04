@@ -1,0 +1,33 @@
+import type { NumberMatchMessages } from './en';
+
+export const zhHant: NumberMatchMessages = {
+  numberMatchName: '數字配對',
+  best: '最佳',
+  newBest: '新紀錄！',
+  scoreMatches: '配對',
+  scoreRows: '整列獎勵',
+  scoreClearBonus: '過關獎勵',
+  scoreNoHint: '無提示獎勵',
+  bestScores: '最佳成績',
+  totalBest: '各關最佳總和',
+  addNumbers: '新增',
+  boardLabel: '遊戲盤面',
+  cellLabel: '第 {row} 列第 {col} 欄，{value}',
+  cellLabelStone: '第 {row} 列第 {col} 欄，石塊',
+  cellLabelWild: '第 {row} 列第 {col} 欄，百搭',
+  hintNoneToast: '沒有可配對的數字，試試「新增」。',
+  wildIntroToast: '✦ 可以和任何數字配對。',
+  stoneIntroToast: '石塊無法消除，還會擋路。',
+  clearTitle: '全部消除！',
+  clearBody: '你消除了所有數字。',
+  gameOverTitle: '無法繼續',
+  gameOverBody: '盤面已達上限。',
+  step1Title: '相同，或相加為 10',
+  step1Body: '消除兩個相同的數字，或相加等於 10 的兩個數字。',
+  step2Title: '選出相連的兩個',
+  step2Body:
+    '橫、直、斜，或從一列的結尾接到下一列的開頭。已消除的格子不算阻擋，但還留在盤面上的數字會擋路。',
+  step3Title: '全部消完就過關',
+  step3Body: '卡住了？點「新增」把剩下的數字接到後面。復原和提示永遠免費。',
+  gameOverCount: '失敗次數',
+};

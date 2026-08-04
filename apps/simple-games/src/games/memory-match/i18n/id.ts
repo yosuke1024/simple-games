@@ -1,0 +1,31 @@
+import type { MemoryMatchMessages } from './en';
+
+export const id: MemoryMatchMessages = {
+  memoryMatchName: 'Memory Match',
+  memoryChooseBoard: 'Pilih papan',
+  memoryDifficulty_easy: 'Mudah',
+  memoryDifficulty_medium: 'Sedang',
+  memoryDifficulty_hard: 'Sulit',
+  memoryBoardNote: '{cols}×{rows} · {pairs} pasangan',
+  memoryConfirmSwitchTitle: 'Ganti permainan yang sedang berjalan?',
+  memoryConfirmSwitchBody: 'Permainan {current} akan diganti dengan papan {next} baru.',
+  memoryBoardLabel: 'Papan memori, {cols} kali {rows}',
+  memoryCardDown: 'Tertutup, baris {row}, kolom {col}',
+  memoryCardUp: 'Simbol {n}, baris {row}, kolom {col}',
+  memoryCardMatched: 'Berpasangan, simbol {n}, baris {row}, kolom {col}',
+  memoryPairsLabel: 'Pasangan',
+  memoryClearTitle: 'Semua pasangan ditemukan!',
+  memoryClearBody: 'Semua kartu sudah terbuka.',
+  memoryNewBestMoves: 'Langkah paling sedikit sejauh ini.',
+  memoryNewBestTime: 'Waktu tercepat sejauh ini.',
+  memoryBestMoves: 'Langkah paling sedikit',
+  memoryDailiesCleared: 'Hari selesai',
+  memoryDailyBacklogHint: 'Hari-hari sebelumnya selalu terbuka.',
+  memoryStep1Title: 'Balik dua kartu',
+  memoryStep1Body: 'Ketuk satu kartu, lalu satu lagi. Pasangan yang sama tetap terbuka.',
+  memoryStep2Title: 'Tak perlu buru-buru mengingat',
+  memoryStep2Body:
+    'Pasangan yang salah tetap terlihat sampai kartu berikutnya dibalik. Santai saja.',
+  memoryStep3Title: 'Temukan semua pasangan',
+  memoryStep3Body: 'Selesaikan seluruh papan. Mengulang papan yang sama selalu gratis.',
+};

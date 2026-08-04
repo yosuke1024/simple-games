@@ -1,0 +1,31 @@
+import type { NonogramMessages } from './en';
+
+export const id: NonogramMessages = {
+  nonoName: 'Nonogram',
+  nonoBoardLabel: 'Papan nonogram, {size}×{size}',
+  nonoCellBlank: 'Kosong, baris {row}, kolom {col}',
+  nonoCellFilled: 'Terwarnai, baris {row}, kolom {col}',
+  nonoCellCrossed: 'Bertanda ×, baris {row}, kolom {col}',
+  nonoRowClueLabel: 'Baris {n}: {clue}',
+  nonoColClueLabel: 'Kolom {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
+  nonoXMode: 'Mode X',
+  nonoXModeNote: 'Ketuk memberi ×; tekan lama mewarnai.',
+  nonoHintFound: 'Baris yang disorot menentukan satu kotak.',
+  nonoHintBroken: 'Baris yang disorot tidak lagi cocok dengan petunjuknya.',
+  nonoHintNone: 'Belum ada langkah pasti saat ini.',
+  nonoSolvedTitle: 'Selesai!',
+  nonoSolvedBody: 'Semua petunjuk terpenuhi.',
+  nonoHintsUsed: 'Petunjuk terpakai',
+  nonoNewBestTime: 'Waktu tercepatmu.',
+  nonoLevelsSolved: 'Level selesai',
+  nonoDailiesSolved: 'Harian selesai',
+  nonoDailyBacklogHint: 'Hari-hari sebelumnya tetap terbuka.',
+  nonoStep1Title: 'Angka adalah blok',
+  nonoStep1Body:
+    'Setiap angka adalah blok kotak terwarnai berurutan, dengan minimal satu celah di antaranya.',
+  nonoStep2Title: 'Coret yang tidak mungkin',
+  nonoStep2Body: 'Tandai kotak yang pasti kosong dengan × untuk mempersempit baris.',
+  nonoStep3Title: 'Penuhi setiap baris',
+  nonoStep3Body: 'Saat semua baris dan kolom cocok, papan selesai. Tak pernah perlu menebak.',
+};

@@ -1,0 +1,34 @@
+import type { NumberMatchMessages } from './en';
+
+export const ptBR: NumberMatchMessages = {
+  numberMatchName: 'Number Match',
+  best: 'Melhor',
+  newBest: 'Novo recorde!',
+  scoreMatches: 'Pares',
+  scoreRows: 'Bônus de linha',
+  scoreClearBonus: 'Bônus por limpar',
+  scoreNoHint: 'Bônus sem dicas',
+  bestScores: 'Recordes',
+  totalBest: 'Total dos recordes por nível',
+  addNumbers: 'Adicionar',
+  boardLabel: 'Tabuleiro do jogo',
+  cellLabel: '{value}, linha {row}, coluna {col}',
+  cellLabelStone: 'Pedra, linha {row}, coluna {col}',
+  cellLabelWild: 'Curinga, linha {row}, coluna {col}',
+  hintNoneToast: 'Sem pares — use Adicionar.',
+  wildIntroToast: 'A peça ✦ combina com qualquer número.',
+  stoneIntroToast: 'As pedras não podem ser combinadas e bloqueiam o caminho.',
+  clearTitle: 'Tabuleiro limpo!',
+  clearBody: 'Você removeu todos os números.',
+  gameOverTitle: 'Sem jogadas',
+  gameOverBody: 'O tabuleiro atingiu o limite.',
+  step1Title: 'Iguais, ou que somem 10',
+  step1Body: 'Combine dois números iguais ou que somem 10.',
+  step2Title: 'Escolha dois que se ligam',
+  step2Body:
+    'Na horizontal, na vertical, na diagonal — ou do fim de uma linha para o início da seguinte. Casas vazias não atrapalham, mas qualquer número ainda no tabuleiro bloqueia o caminho.',
+  step3Title: 'Limpe o tabuleiro para vencer',
+  step3Body:
+    'Travou? Toque em Adicionar para incluir os números restantes. Desfazer e dicas são sempre grátis.',
+  gameOverCount: 'Derrotas',
+};

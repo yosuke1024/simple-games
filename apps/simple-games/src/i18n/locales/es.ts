@@ -1,7 +1,6 @@
 import type { Messages } from './en';
 
 export const es: Messages = {
-  numberMatchName: 'Number Match',
   tagline: 'Funciona sin conexión. Sin cuenta. Sin muros de pago.',
 
   resume: 'Continuar',
@@ -19,14 +18,6 @@ export const es: Messages = {
   reachedLevel: 'Nivel alcanzado',
 
   score: 'Puntos',
-  best: 'Mejor',
-  newBest: '¡Nuevo récord!',
-  scoreMatches: 'Parejas',
-  scoreRows: 'Bono de fila',
-  scoreClearBonus: 'Bono por limpiar',
-  scoreNoHint: 'Bono sin pistas',
-  bestScores: 'Mejores puntajes',
-  totalBest: 'Total de mejores por nivel',
 
   dailyPast: 'Retos anteriores',
   dailyToday: 'Hoy',
@@ -34,21 +25,9 @@ export const es: Messages = {
   modeDaily: 'Diario',
   undo: 'Deshacer',
   hint: 'Pista',
-  addNumbers: 'Agregar',
   timeLabel: 'Tiempo',
   movesLabel: 'Jugadas',
-  boardLabel: 'Tablero de juego',
-  cellLabel: '{value}, fila {row}, columna {col}',
-  cellLabelStone: 'Piedra, fila {row}, columna {col}',
-  cellLabelWild: 'Comodín, fila {row}, columna {col}',
-  hintNoneToast: 'No hay parejas — usa Agregar.',
-  wildIntroToast: 'La ficha ✦ hace pareja con cualquier número.',
-  stoneIntroToast: 'Las piedras no se pueden emparejar y bloquean el paso.',
 
-  clearTitle: '¡Tablero limpio!',
-  clearBody: 'Quitaste todos los números.',
-  gameOverTitle: 'Sin jugadas',
-  gameOverBody: 'El tablero llegó a su límite.',
   tryAgain: 'Repetir el tablero',
   backHome: 'Inicio',
 
@@ -57,14 +36,6 @@ export const es: Messages = {
   cancel: 'Cancelar',
   confirm: 'Empezar',
 
-  step1Title: 'Iguales, o que sumen 10',
-  step1Body: 'Empareja dos números iguales o que sumen 10.',
-  step2Title: 'Elige dos que se conecten',
-  step2Body:
-    'En horizontal, vertical o diagonal, y también del final de una fila al inicio de la siguiente. Las casillas vacías no estorban, pero cualquier número que siga en el tablero bloquea el paso.',
-  step3Title: 'Limpia el tablero para ganar',
-  step3Body:
-    '¿Te atascaste? Toca Agregar para sumar los números restantes. Deshacer y las pistas siempre son gratis.',
   startPlaying: 'Jugar',
   next: 'Siguiente',
   back: 'Atrás',
@@ -90,7 +61,6 @@ export const es: Messages = {
 
   played: 'Partidas jugadas',
   cleared: 'Partidas completadas',
-  gameOverCount: 'Derrotas',
   totalTime: 'Tiempo total de juego',
   bestTime: 'Más rápido',
 
@@ -127,285 +97,7 @@ export const es: Messages = {
     'Cuéntamelo en un correo: leo todos los mensajes. No se envía nada hasta que pulses enviar en tu app de correo.',
   reviewFeedbackAction: 'Escribir un correo',
 
-  // Sudoku
-  sudokuName: 'Sudoku',
-  sudokuGridLabel: 'Cuadrícula de Sudoku',
-  sudokuPadLabel: 'Teclado numérico',
-  sudokuPadKey: '{value}, quedan {n}',
-  sudokuPadNoteKey: 'Nota {value}',
-  sudokuCellEmpty: 'Vacía, fila {row}, columna {col}',
-  sudokuCellGiven: '{value}, inicial, fila {row}, columna {col}',
-  sudokuCellEntry: '{value}, fila {row}, columna {col}',
-  sudokuErase: 'Borrar',
-  sudokuNotes: 'Notas',
-  sudokuMistakes: 'Errores',
-  sudokuTier_easy: 'Fácil',
-  sudokuTier_medium: 'Medio',
-  sudokuTier_hard: 'Difícil',
-  sudokuSolvedTitle: '¡Resuelto!',
-  sudokuSolvedBody: 'Cada fila, columna y bloque contiene 1-9.',
-  sudokuNewBestTime: 'Tu tiempo más rápido.',
-  sudokuLevelsSolved: 'Niveles resueltos',
-  sudokuDailiesSolved: 'Retos resueltos',
-  sudokuAverageTime: 'Tiempo promedio',
-  sudokuHighlightMistakes: 'Mostrar errores',
-  sudokuHighlightMistakesNote:
-    'Marca una cifra que no coincide con la solución. Las repetidas siempre se marcan.',
-  sudokuHintNone: 'Todavía no se puede deducir nada.',
-  sudokuHintOnlyDigit: 'Solo una cifra cabe en esta casilla.',
-  sudokuHintOnlyCell: 'Aquí {value} solo puede ir en esta casilla.',
-  sudokuHintLockedLine: 'En este bloque, {value} solo cabe en la línea resaltada.',
-  sudokuHintLockedBox: 'En esta línea, {value} solo cabe en el bloque resaltado.',
-  sudokuHintRuledOut: 'Estas casillas descartan esas cifras en el resto del grupo.',
-  sudokuStep1Title: '1-9, uno de cada',
-  sudokuStep1Body: 'Cada fila, columna y bloque de 3x3 contiene del 1 al 9 exactamente una vez.',
-  sudokuStep2Title: 'Anota los candidatos',
-  sudokuStep2Body:
-    'Toca Notas para apuntar los candidatos mientras reduces las opciones de una casilla.',
-  sudokuStep3Title: '¿Sin ideas? Pide una pista',
-  sudokuStep3Body:
-    'Una pista muestra qué casilla queda decidida y por qué. Las pistas y deshacer siempre son gratis.',
-
-  // ---- Sliding Puzzle ----
-  slideName: 'Puzle deslizante',
-
-  slideBoardLabel: 'Tablero del puzle deslizante',
-  slideTileLabel: '{value}, fila {row}, columna {col}',
-  slideBlankLabel: 'Vacío, fila {row}, columna {col}',
-  slideSizeLabel: '{n}x{n}',
-
-  slideMoves: 'Movimientos',
-  slideBestMoves: 'Menos movimientos',
-
-  slideSolvedTitle: '¡Resuelto!',
-  slideSolvedBody: 'Todos los números están en orden.',
-  slideNewBestMoves: 'Menos movimientos que nunca.',
-  slideNewBestTime: 'Tu tiempo más rápido.',
-
-  slideLevelsSolved: 'Niveles resueltos',
-  slideDailiesSolved: 'Retos resueltos',
-  slideDailyBacklogHint: 'Los días anteriores siempre están disponibles.',
-
-  slideStep1Title: 'Toca junto al hueco',
-  slideStep1Body: 'Toca una ficha junto al hueco y se desliza hasta él.',
-  slideStep2Title: 'Se mueve toda la fila',
-  slideStep2Body: 'En la misma fila o columna, todas las fichas intermedias se mueven juntas.',
-  slideStep3Title: 'Ordena desde el 1',
-  slideStep3Body: 'Coloca los números en orden de lectura con el hueco abajo a la derecha.',
-
-  // ---- Nonogram ----
-  nonoName: 'Nonograma',
-
-  nonoBoardLabel: 'Tablero de nonograma, {size} por {size}',
-  nonoCellBlank: 'Vacía, fila {row}, columna {col}',
-  nonoCellFilled: 'Pintada, fila {row}, columna {col}',
-  nonoCellCrossed: 'Con ×, fila {row}, columna {col}',
-  nonoRowClueLabel: 'Fila {n}: {clue}',
-  nonoColClueLabel: 'Columna {n}: {clue}',
-  nonoSizeLabel: '{n}×{n}',
-
-  nonoXMode: 'Modo X',
-  nonoXModeNote: 'Tocar pone una ×; mantener pulsado pinta.',
-  nonoHintFound: 'La línea resaltada decide una casilla.',
-  nonoHintBroken: 'La línea resaltada ya no encaja con su pista.',
-  nonoHintNone: 'Ahora mismo no hay un movimiento seguro.',
-
-  nonoSolvedTitle: '¡Resuelto!',
-  nonoSolvedBody: 'Todas las pistas se cumplen.',
-  nonoHintsUsed: 'Pistas usadas',
-  nonoNewBestTime: 'Tu mejor tiempo.',
-
-  nonoLevelsSolved: 'Niveles resueltos',
-  nonoDailiesSolved: 'Diarios resueltos',
-  nonoDailyBacklogHint: 'Los días anteriores siguen abiertos.',
-
-  nonoStep1Title: 'Los números son bloques',
-  nonoStep1Body:
-    'Cada número es un bloque de casillas pintadas, en orden, con al menos un hueco entre bloques.',
-  nonoStep2Title: 'Descarta con ×',
-  nonoStep2Body: 'Marca con una × las casillas que quedan vacías para acotar la línea.',
-  nonoStep3Title: 'Cumple cada línea',
-  nonoStep3Body:
-    'Cuando todas las filas y columnas cuadran, el tablero está resuelto. Nunca hace falta adivinar.',
-
-  // ---- Minesweeper ----
-  minesName: 'Buscaminas',
-
-  // Home
-  minesChooseBoard: 'Elige un tablero',
-  minesDifficulty_easy: 'Fácil',
-  minesDifficulty_medium: 'Medio',
-  minesDifficulty_hard: 'Difícil',
-  minesBoardNote: '{width}×{height} · {mines} minas',
-  minesConfirmSwitchTitle: '¿Reemplazar el tablero en curso?',
-  minesConfirmSwitchBody: 'Tu partida de {current} se reemplazará por un tablero nuevo de {next}.',
-
-  // Board
-  minesBoardLabel: 'Campo minado, {width} columnas por {height} filas',
-  minesCellHidden: 'Sin abrir, fila {row}, columna {col}',
-  minesCellFlagged: 'Bandera, fila {row}, columna {col}',
-  minesCellEmpty: 'Vacía, fila {row}, columna {col}',
-  minesCellNumber: '{count} minas alrededor, fila {row}, columna {col}',
-  minesCellMine: 'Mina, fila {row}, columna {col}',
-  minesMinesLeft: 'Minas restantes',
-  minesTapToStart: 'Toca cualquier casilla. El primer toque siempre es seguro.',
-
-  // Actions
-  minesFlagMode: 'Modo bandera',
-  minesFlagModeNote: 'Un toque pone bandera; mantener presionado abre.',
-  minesHintFound: 'Esta casilla es segura: los números resaltados lo explican.',
-  minesHintNone: 'Todavía no se puede deducir nada.',
-  minesNewBoard: 'Tablero nuevo',
-
-  // Result
-  minesWonTitle: '¡Despejado!',
-  minesWonBody: 'Todas las casillas sin mina están abiertas.',
-  minesLostTitle: 'Abriste una mina',
-  minesLostBody: 'La partida termina aquí. El mismo tablero te espera cuando quieras.',
-  minesNewBestTime: 'Tu tiempo más rápido.',
-  minesHintsUsed: 'Pistas',
-
-  // Statistics
-  minesGamesWon: 'Partidas ganadas',
-  minesWinRate: 'Tasa de victorias',
-  minesDailySection: 'Diario',
-  minesDailiesCleared: 'Días completados',
-
-  // Quick Rules
-  minesStep1Title: 'El número cuenta minas',
-  minesStep1Body: 'Indica cuántas de las ocho casillas de alrededor tienen mina.',
-  minesStep2Title: 'Marca lo que ya sabes',
-  minesStep2Body:
-    'Mantén presionada una casilla para ponerle bandera. Con el modo bandera basta un toque.',
-  minesStep3Title: 'Abre el resto para ganar',
-  minesStep3Body: 'El primer toque siempre es seguro y ningún tablero exige adivinar.',
-
-  // ---- Memory Match ----
-  memoryMatchName: 'Memory Match',
-  memoryChooseBoard: 'Elige un tablero',
-  memoryDifficulty_easy: 'Fácil',
-  memoryDifficulty_medium: 'Medio',
-  memoryDifficulty_hard: 'Difícil',
-  memoryBoardNote: '{cols}×{rows} · {pairs} parejas',
-  memoryConfirmSwitchTitle: '¿Reemplazar la partida en curso?',
-  memoryConfirmSwitchBody: 'Tu partida en {current} se reemplazará por un tablero {next} nuevo.',
-  memoryBoardLabel: 'Tablero de memoria, {cols} por {rows}',
-  memoryCardDown: 'Boca abajo, fila {row}, columna {col}',
-  memoryCardUp: 'Símbolo {n}, fila {row}, columna {col}',
-  memoryCardMatched: 'Emparejada, símbolo {n}, fila {row}, columna {col}',
-  memoryPairsLabel: 'Parejas',
-  memoryClearTitle: '¡Todas las parejas!',
-  memoryClearBody: 'Todas las cartas están boca arriba.',
-  memoryNewBestMoves: 'Tu mínimo de jugadas hasta ahora.',
-  memoryNewBestTime: 'Tu mejor tiempo hasta ahora.',
-  memoryBestMoves: 'Mínimo de jugadas',
-  memoryDailiesCleared: 'Días completados',
-  memoryDailyBacklogHint: 'Los días anteriores siguen abiertos.',
-  memoryStep1Title: 'Da la vuelta a dos cartas',
-  memoryStep1Body: 'Toca una carta y luego otra. Una pareja igual queda boca arriba.',
-  memoryStep2Title: 'Sin prisa por recordar',
-  memoryStep2Body: 'Una pareja fallida sigue visible hasta tu próximo intento. Tómate tu tiempo.',
-  memoryStep3Title: 'Empareja todas las cartas',
-  memoryStep3Body: 'Completa todo el tablero. Repetir el mismo tablero siempre es gratis.',
-
-  // ---- Water Sort ----
-  waterSortName: 'Water Sort',
-  waterBoardLabel: 'Tubos de agua',
-  waterTubeLabel: 'Tubo {n}, de abajo arriba: {colors}',
-  waterTubeEmpty: 'vacío',
-  waterHintNone: 'No se encontró forma de avanzar: deshaz o reintenta.',
-  waterHintsUsed: 'Pistas',
-  waterSolvedTitle: '¡Ordenado!',
-  waterSolvedBody: 'Cada color tiene su propio tubo.',
-  waterNewBestMoves: 'Tu mínimo de vertidos hasta ahora.',
-  waterNewBestTime: 'Tu mejor tiempo hasta ahora.',
-  waterBestMoves: 'Mínimo de vertidos',
-  waterLevelsSolved: 'Niveles resueltos',
-  waterDailiesSolved: 'Retos diarios resueltos',
-  waterDailyBacklogHint: 'Los días anteriores siguen abiertos.',
-  waterStep1Title: 'Vierte igual sobre igual',
-  waterStep1Body:
-    'Toca un tubo y luego otro. El color de arriba se vierte si coincide, o en cualquier tubo vacío.',
-  waterStep2Title: 'Dos tubos de reserva',
-  waterStep2Body: 'Los tubos vacíos son tu espacio de trabajo. Deshacer siempre es gratis.',
-  waterStep3Title: 'Un color por tubo',
-  waterStep3Body: 'Cuando cada tubo tiene un solo color, el tablero está ordenado.',
-
-  // ---- Solitaire ----
-  solitaireName: 'Solitaire',
-  solNewDeal: 'Nuevo reparto',
-  solDrawSetting: 'Modo de robo',
-  solDrawOne: 'Robar 1',
-  solDrawThree: 'Robar 3',
-  solDrawNote: 'Se aplica a partir del próximo reparto.',
-  solTableLabel: 'Mesa de solitario',
-  solStockLabel: 'Mazo, {n} cartas — toca para robar',
-  solStockEmpty: 'Mazo vacío — toca para dar la vuelta al descarte',
-  solCardLabel: '{rank} de {suit}',
-  solCardFaceDown: 'Boca abajo',
-  solSuit_spades: 'picas',
-  solSuit_hearts: 'corazones',
-  solSuit_diamonds: 'diamantes',
-  solSuit_clubs: 'tréboles',
-  solFoundationCard: 'Fundación, {card}',
-  solFoundationEmpty: 'Fundación, {suit}, vacía',
-  solPileLabel: 'Columna {n}',
-  solPileEmpty: 'Columna {n}, vacía — aquí puede ir un rey',
-  solAutoFinish: 'Terminar la partida',
-  solHintNone: 'No se encontró jugada — deshaz o empieza de nuevo.',
-  solHintsUsed: 'Pistas',
-  solWonTitle: '¡Ganaste!',
-  solWonBody: 'Los cuatro palos están completos.',
-  solNewBestMoves: 'Tu mínimo de jugadas hasta ahora.',
-  solNewBestTime: 'Tu mejor tiempo hasta ahora.',
-  solBestMoves: 'Mínimo de jugadas',
-  solDealsPlayed: 'Repartos jugados',
-  solGamesWon: 'Partidas ganadas',
-  solWinRate: 'Tasa de victorias',
-  solDailiesWon: 'Retos diarios ganados',
-  solDailyBacklogHint:
-    'Los días anteriores siguen abiertos. No todos los repartos se pueden ganar.',
-  solStep1Title: 'Uno menos, colores alternos',
-  solStep1Body: 'Apila hacia abajo alternando rojo y negro. Toca una carta y luego su destino.',
-  solStep2Title: 'Libera las cartas ocultas',
-  solStep2Body:
-    'Las jugadas que destapan cartas abren el juego. El mazo se puede dar la vuelta cuantas veces quieras.',
-  solStep3Title: 'Del as al rey',
-  solStep3Body: 'Lleva cada palo a su fundación del as al rey. Completa los cuatro para ganar.',
-
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Vidas: {n}',
   levelsCleared: 'Niveles superados',
-  bestScore: 'Mejor puntuación',
-  brickBreakerName: 'Brick Breaker',
-  bbBoardLabel: 'Tablero de Brick Breaker',
-  bbBricksLeft: 'Ladrillos {n}',
-  bbClearedTitle: '¡Muro derribado!',
-  bbClearedBody: 'Todos los ladrillos han caído.',
-  bbFailedTitle: 'Esta vez no',
-  bbFailedBody: 'Reintentar es gratis: mismo muro, mismos ladrillos.',
-  bbStep1Title: 'Apunta con la pala',
-  bbStep1Body:
-    'El centro de la pala lanza la bola recta hacia arriba; el borde la lanza en diagonal.',
-  bbStep2Title: 'Los ladrillos huecos guardan una bola',
-  bbStep2Body: 'Rompe uno y se suma una segunda bola. Solo perder la última bola cuesta una vida.',
-  bbStep3Title: 'El muro va bajando',
-  bbStep3Body: 'Despeja todos los ladrillos antes de que el muro llegue a la línea de puntos.',
-  skyFighterName: 'Sky Fighter',
-  sfBoardLabel: 'Cielo de Sky Fighter',
-  sfWave: 'Oleada {n} / {m}',
-  sfClearedTitle: '¡Cielo despejado!',
-  sfClearedBody: 'Todas las oleadas han caído.',
-  sfFailedTitle: 'Derribado',
-  sfFailedBody: 'Reintentar es gratis: mismo cielo, mismas oleadas.',
-  sfNewBestScore: 'Tu mejor puntuación hasta ahora.',
-  sfStep1Title: 'Muévete para apuntar',
-  sfStep1Body:
-    'Tu caza dispara solo. Desliza a izquierda y derecha: hacia donde vueles, allí apuntas.',
-  sfStep2Title: 'Los grandes se dividen',
-  sfStep2Body:
-    'Un bombardero se divide en cazas, y los cazas en exploradores. Solo los bombarderos devuelven el fuego.',
-  sfStep3Title: 'Atrapa la nave pequeña',
-  sfStep3Body:
-    'Un explorador derribado a veces suelta una navecita. Atrápala y ganas un cañón; un impacto te quita uno.',
 };

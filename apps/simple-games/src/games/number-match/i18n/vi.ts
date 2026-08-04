@@ -1,0 +1,33 @@
+import type { NumberMatchMessages } from './en';
+
+export const vi: NumberMatchMessages = {
+  numberMatchName: 'Number Match',
+  best: 'Cao nhất',
+  newBest: 'Kỷ lục mới!',
+  scoreMatches: 'Cặp ghép',
+  scoreRows: 'Thưởng hàng',
+  scoreClearBonus: 'Thưởng dọn sạch',
+  scoreNoHint: 'Thưởng không gợi ý',
+  bestScores: 'Điểm cao nhất',
+  totalBest: 'Tổng điểm cao các cấp',
+  addNumbers: 'Thêm',
+  boardLabel: 'Bảng chơi',
+  cellLabel: '{value}, hàng {row}, cột {col}',
+  cellLabelStone: 'Đá, hàng {row}, cột {col}',
+  cellLabelWild: 'Ô đa năng, hàng {row}, cột {col}',
+  hintNoneToast: 'Không còn cặp nào — hãy thử Thêm.',
+  wildIntroToast: 'Ô ✦ ghép được với mọi con số.',
+  stoneIntroToast: 'Đá không ghép được và chặn đường đi.',
+  clearTitle: 'Đã dọn sạch bảng!',
+  clearBody: 'Bạn đã xóa hết mọi con số.',
+  gameOverTitle: 'Hết nước đi',
+  gameOverBody: 'Bảng đã chạm giới hạn.',
+  step1Title: 'Bằng nhau hoặc cộng bằng 10',
+  step1Body: 'Ghép hai số giống nhau hoặc hai số cộng lại bằng 10.',
+  step2Title: 'Chọn hai ô nối được',
+  step2Body:
+    'Ngang, dọc, chéo — hoặc từ cuối hàng này sang đầu hàng kế. Ô đã xóa không cản trở, nhưng một con số còn trên bảng sẽ chặn đường.',
+  step3Title: 'Dọn sạch bảng để thắng',
+  step3Body: 'Bí? Nhấn Thêm để nối các số còn lại vào cuối. Hoàn tác và gợi ý luôn miễn phí.',
+  gameOverCount: 'Ván thua',
+};

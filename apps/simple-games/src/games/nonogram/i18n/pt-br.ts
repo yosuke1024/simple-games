@@ -1,0 +1,32 @@
+import type { NonogramMessages } from './en';
+
+export const ptBR: NonogramMessages = {
+  nonoName: 'Nonograma',
+  nonoBoardLabel: 'Tabuleiro de nonograma, {size} por {size}',
+  nonoCellBlank: 'Vazio, linha {row}, coluna {col}',
+  nonoCellFilled: 'Pintado, linha {row}, coluna {col}',
+  nonoCellCrossed: 'Com ×, linha {row}, coluna {col}',
+  nonoRowClueLabel: 'Linha {n}: {clue}',
+  nonoColClueLabel: 'Coluna {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
+  nonoXMode: 'Modo X',
+  nonoXModeNote: 'Tocar marca um ×; segurar pinta.',
+  nonoHintFound: 'A linha destacada decide um quadrado.',
+  nonoHintBroken: 'A linha destacada não cabe mais na dica.',
+  nonoHintNone: 'Nenhuma jogada certa agora.',
+  nonoSolvedTitle: 'Resolvido!',
+  nonoSolvedBody: 'Todas as dicas conferem.',
+  nonoHintsUsed: 'Dicas usadas',
+  nonoNewBestTime: 'Seu melhor tempo.',
+  nonoLevelsSolved: 'Níveis resolvidos',
+  nonoDailiesSolved: 'Diários resolvidos',
+  nonoDailyBacklogHint: 'Os dias anteriores continuam abertos.',
+  nonoStep1Title: 'Números são blocos',
+  nonoStep1Body:
+    'Cada número é um bloco de quadrados pintados, em ordem, com pelo menos um espaço entre eles.',
+  nonoStep2Title: 'Corte com ×',
+  nonoStep2Body: 'Marque com × os quadrados que ficam vazios para fechar a linha.',
+  nonoStep3Title: 'Atenda cada linha',
+  nonoStep3Body:
+    'Quando todas as linhas e colunas conferem, o tabuleiro está pronto. Nunca é preciso adivinhar.',
+};

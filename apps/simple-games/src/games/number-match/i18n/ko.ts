@@ -1,0 +1,34 @@
+import type { NumberMatchMessages } from './en';
+
+export const ko: NumberMatchMessages = {
+  numberMatchName: '숫자 매치',
+  best: '최고',
+  newBest: '최고 기록!',
+  scoreMatches: '매치',
+  scoreRows: '줄 보너스',
+  scoreClearBonus: '클리어 보너스',
+  scoreNoHint: '노힌트 보너스',
+  bestScores: '최고 점수',
+  totalBest: '레벨 최고 점수 합계',
+  addNumbers: '추가',
+  boardLabel: '게임판',
+  cellLabel: '{row}행 {col}열, {value}',
+  cellLabelStone: '{row}행 {col}열, 돌',
+  cellLabelWild: '{row}행 {col}열, 와일드',
+  hintNoneToast: '맞출 짝이 없습니다. 추가를 눌러 보세요.',
+  wildIntroToast: '✦ 타일은 어떤 숫자와도 짝이 됩니다.',
+  stoneIntroToast: '돌은 없앨 수 없고 길을 막습니다.',
+  clearTitle: '클리어!',
+  clearBody: '숫자를 모두 없앴습니다.',
+  gameOverTitle: '더는 움직일 수 없음',
+  gameOverBody: '판이 한계에 도달했습니다.',
+  step1Title: '같은 수, 또는 합이 10',
+  step1Body: '같은 숫자 두 개, 또는 합이 10이 되는 두 숫자를 없앱니다.',
+  step2Title: '이어지는 두 개를 고르세요',
+  step2Body:
+    '가로, 세로, 대각선, 그리고 한 줄의 끝에서 다음 줄의 처음으로도 이어집니다. 이미 지운 칸은 방해가 되지 않지만, 아직 남아 있는 숫자는 길을 막습니다.',
+  step3Title: '판을 모두 지우면 승리',
+  step3Body:
+    '막혔나요? 추가를 누르면 남은 숫자가 이어 붙습니다. 되돌리기와 힌트는 언제나 무료입니다.',
+  gameOverCount: '게임 오버',
+};

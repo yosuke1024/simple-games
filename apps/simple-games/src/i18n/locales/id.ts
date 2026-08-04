@@ -1,7 +1,6 @@
 import type { Messages } from './en';
 
 export const id: Messages = {
-  numberMatchName: 'Number Match',
   tagline: 'Bisa offline. Tanpa akun. Tanpa paywall.',
 
   resume: 'Lanjutkan',
@@ -19,14 +18,6 @@ export const id: Messages = {
   reachedLevel: 'Level tercapai',
 
   score: 'Skor',
-  best: 'Terbaik',
-  newBest: 'Rekor baru!',
-  scoreMatches: 'Pencocokan',
-  scoreRows: 'Bonus baris',
-  scoreClearBonus: 'Bonus selesai',
-  scoreNoHint: 'Bonus tanpa petunjuk',
-  bestScores: 'Skor Terbaik',
-  totalBest: 'Total skor terbaik level',
 
   dailyPast: 'Harian Lampau',
   dailyToday: 'Hari ini',
@@ -34,21 +25,9 @@ export const id: Messages = {
   modeDaily: 'Harian',
   undo: 'Urungkan',
   hint: 'Petunjuk',
-  addNumbers: 'Tambah',
   timeLabel: 'Waktu',
   movesLabel: 'Langkah',
-  boardLabel: 'Papan permainan',
-  cellLabel: '{value}, baris {row}, kolom {col}',
-  cellLabelStone: 'Batu, baris {row}, kolom {col}',
-  cellLabelWild: 'Wild, baris {row}, kolom {col}',
-  hintNoneToast: 'Tidak ada pasangan — coba "Tambah".',
-  wildIntroToast: 'Kotak ✦ bisa dipasangkan dengan angka apa pun.',
-  stoneIntroToast: 'Batu tidak bisa dihapus dan menghalangi jalan.',
 
-  clearTitle: 'Papan bersih!',
-  clearBody: 'Semua angka berhasil dihapus.',
-  gameOverTitle: 'Tidak ada langkah lagi',
-  gameOverBody: 'Papan sudah mencapai batas.',
   tryAgain: 'Ulangi papan yang sama',
   backHome: 'Beranda',
 
@@ -57,14 +36,6 @@ export const id: Messages = {
   cancel: 'Batal',
   confirm: 'Mulai',
 
-  step1Title: 'Sama, atau berjumlah 10',
-  step1Body: 'Pasangkan dua angka yang sama, atau yang jumlahnya 10.',
-  step2Title: 'Pilih dua yang terhubung',
-  step2Body:
-    'Mendatar, menurun, diagonal — atau dari ujung baris ke awal baris berikutnya. Sel kosong bukan penghalang, tetapi angka yang masih ada di antaranya menutup jalur.',
-  step3Title: 'Hapus semua untuk menang',
-  step3Body:
-    'Jika buntu, tekan "Tambah" untuk menambahkan angka tersisa. Urungkan dan petunjuk selalu gratis.',
   startPlaying: 'Mulai Bermain',
   next: 'Lanjut',
   back: 'Kembali',
@@ -90,7 +61,6 @@ export const id: Messages = {
 
   played: 'Permainan dimainkan',
   cleared: 'Berhasil dibersihkan',
-  gameOverCount: 'Game over',
   totalTime: 'Total waktu bermain',
   bestTime: 'Selesai tercepat',
 
@@ -127,285 +97,7 @@ export const id: Messages = {
     'Beri tahu saya lewat email — saya membaca setiap pesan. Tidak ada yang terkirim sampai kamu menekan kirim di aplikasi email.',
   reviewFeedbackAction: 'Tulis email',
 
-  // Sudoku
-  sudokuName: 'Sudoku',
-  sudokuGridLabel: 'Papan Sudoku',
-  sudokuPadLabel: 'Papan angka',
-  sudokuPadKey: '{value}, sisa {n}',
-  sudokuPadNoteKey: 'Catatan {value}',
-  sudokuCellEmpty: 'Kosong, baris {row}, kolom {col}',
-  sudokuCellGiven: '{value}, angka awal, baris {row}, kolom {col}',
-  sudokuCellEntry: '{value}, baris {row}, kolom {col}',
-  sudokuErase: 'Hapus',
-  sudokuNotes: 'Catatan',
-  sudokuMistakes: 'Kesalahan',
-  sudokuTier_easy: 'Mudah',
-  sudokuTier_medium: 'Sedang',
-  sudokuTier_hard: 'Sulit',
-  sudokuSolvedTitle: 'Selesai!',
-  sudokuSolvedBody: 'Setiap baris, kolom, dan blok berisi 1-9.',
-  sudokuNewBestTime: 'Tercepat sejauh ini.',
-  sudokuLevelsSolved: 'Level selesai',
-  sudokuDailiesSolved: 'Harian selesai',
-  sudokuAverageTime: 'Waktu rata-rata',
-  sudokuHighlightMistakes: 'Tandai kesalahan',
-  sudokuHighlightMistakesNote:
-    'Menandai angka yang tidak sesuai jawaban. Angka ganda selalu ditandai.',
-  sudokuHintNone: 'Belum ada yang bisa dipastikan.',
-  sudokuHintOnlyDigit: 'Hanya satu angka yang cocok di sel ini.',
-  sudokuHintOnlyCell: 'Di sini {value} hanya bisa masuk ke sel ini.',
-  sudokuHintLockedLine: 'Dalam blok ini, {value} hanya cocok pada garis yang disorot.',
-  sudokuHintLockedBox: 'Pada garis ini, {value} hanya cocok di dalam blok yang disorot.',
-  sudokuHintRuledOut: 'Sel-sel ini menyingkirkan angka tersebut dari sel lain dalam satu unit.',
-  sudokuStep1Title: '1-9, masing-masing sekali',
-  sudokuStep1Body: 'Setiap baris, kolom, dan blok 3x3 memuat 1 sampai 9 tepat sekali.',
-  sudokuStep2Title: 'Catat kemungkinannya',
-  sudokuStep2Body: 'Tekan Catatan untuk menulis angka yang mungkin sambil menyempitkan pilihan.',
-  sudokuStep3Title: 'Bingung? Ambil petunjuk',
-  sudokuStep3Body:
-    'Petunjuk menunjukkan sel mana yang sudah pasti dan alasannya. Petunjuk dan undo selalu gratis.',
-
-  // ---- Sliding Puzzle ----
-  slideName: 'Sliding Puzzle',
-
-  slideBoardLabel: 'Papan sliding puzzle',
-  slideTileLabel: '{value}, baris {row}, kolom {col}',
-  slideBlankLabel: 'Kosong, baris {row}, kolom {col}',
-  slideSizeLabel: '{n}x{n}',
-
-  slideMoves: 'Langkah',
-  slideBestMoves: 'Langkah tersedikit',
-
-  slideSolvedTitle: 'Selesai!',
-  slideSolvedBody: 'Semua angka kembali berurutan.',
-  slideNewBestMoves: 'Langkah tersedikit sejauh ini.',
-  slideNewBestTime: 'Tercepat sejauh ini.',
-
-  slideLevelsSolved: 'Level selesai',
-  slideDailiesSolved: 'Harian selesai',
-  slideDailyBacklogHint: 'Setiap hari sebelumnya selalu terbuka.',
-
-  slideStep1Title: 'Ketuk ubin di sebelah kosong',
-  slideStep1Body: 'Ketuk ubin yang bersebelahan dengan kotak kosong, ubin itu meluncur ke sana.',
-  slideStep2Title: 'Beberapa ubin sekaligus',
-  slideStep2Body: 'Dalam baris atau kolom yang sama, semua ubin di antaranya ikut bergeser.',
-  slideStep3Title: 'Urutkan mulai dari 1',
-  slideStep3Body: 'Susun angka sesuai urutan baca dengan kotak kosong di pojok kanan bawah.',
-
-  // ---- Nonogram ----
-  nonoName: 'Nonogram',
-
-  nonoBoardLabel: 'Papan nonogram, {size}×{size}',
-  nonoCellBlank: 'Kosong, baris {row}, kolom {col}',
-  nonoCellFilled: 'Terwarnai, baris {row}, kolom {col}',
-  nonoCellCrossed: 'Bertanda ×, baris {row}, kolom {col}',
-  nonoRowClueLabel: 'Baris {n}: {clue}',
-  nonoColClueLabel: 'Kolom {n}: {clue}',
-  nonoSizeLabel: '{n}×{n}',
-
-  nonoXMode: 'Mode X',
-  nonoXModeNote: 'Ketuk memberi ×; tekan lama mewarnai.',
-  nonoHintFound: 'Baris yang disorot menentukan satu kotak.',
-  nonoHintBroken: 'Baris yang disorot tidak lagi cocok dengan petunjuknya.',
-  nonoHintNone: 'Belum ada langkah pasti saat ini.',
-
-  nonoSolvedTitle: 'Selesai!',
-  nonoSolvedBody: 'Semua petunjuk terpenuhi.',
-  nonoHintsUsed: 'Petunjuk terpakai',
-  nonoNewBestTime: 'Waktu tercepatmu.',
-
-  nonoLevelsSolved: 'Level selesai',
-  nonoDailiesSolved: 'Harian selesai',
-  nonoDailyBacklogHint: 'Hari-hari sebelumnya tetap terbuka.',
-
-  nonoStep1Title: 'Angka adalah blok',
-  nonoStep1Body:
-    'Setiap angka adalah blok kotak terwarnai berurutan, dengan minimal satu celah di antaranya.',
-  nonoStep2Title: 'Coret yang tidak mungkin',
-  nonoStep2Body: 'Tandai kotak yang pasti kosong dengan × untuk mempersempit baris.',
-  nonoStep3Title: 'Penuhi setiap baris',
-  nonoStep3Body: 'Saat semua baris dan kolom cocok, papan selesai. Tak pernah perlu menebak.',
-
-  // ---- Minesweeper ----
-  minesName: 'Minesweeper',
-
-  // Home
-  minesChooseBoard: 'Pilih papan',
-  minesDifficulty_easy: 'Mudah',
-  minesDifficulty_medium: 'Sedang',
-  minesDifficulty_hard: 'Sulit',
-  minesBoardNote: '{width}×{height} · {mines} ranjau',
-  minesConfirmSwitchTitle: 'Ganti papan yang sedang berjalan?',
-  minesConfirmSwitchBody: 'Permainan {current} Anda akan diganti dengan papan {next} yang baru.',
-
-  // Board
-  minesBoardLabel: 'Ladang ranjau, {width} kolom dan {height} baris',
-  minesCellHidden: 'Belum dibuka, baris {row}, kolom {col}',
-  minesCellFlagged: 'Ditandai, baris {row}, kolom {col}',
-  minesCellEmpty: 'Kosong, baris {row}, kolom {col}',
-  minesCellNumber: '{count} ranjau di sekitar, baris {row}, kolom {col}',
-  minesCellMine: 'Ranjau, baris {row}, kolom {col}',
-  minesMinesLeft: 'Sisa ranjau',
-  minesTapToStart: 'Ketuk kotak mana pun. Ketukan pertama selalu aman.',
-
-  // Actions
-  minesFlagMode: 'Mode tanda',
-  minesFlagModeNote: 'Ketuk untuk menandai; tekan lama untuk membuka.',
-  minesHintFound: 'Kotak ini aman — angka yang disorot menjelaskan alasannya.',
-  minesHintNone: 'Belum ada yang bisa dipastikan.',
-  minesNewBoard: 'Papan baru',
-
-  // Result
-  minesWonTitle: 'Selesai!',
-  minesWonBody: 'Semua kotak tanpa ranjau sudah terbuka.',
-  minesLostTitle: 'Ranjau terbuka',
-  minesLostBody: 'Permainan ini berakhir di sini. Papan yang sama siap dicoba lagi.',
-  minesNewBestTime: 'Tercepat sejauh ini.',
-  minesHintsUsed: 'Petunjuk',
-
-  // Statistics
-  minesGamesWon: 'Permainan menang',
-  minesWinRate: 'Tingkat menang',
-  minesDailySection: 'Harian',
-  minesDailiesCleared: 'Hari terselesaikan',
-
-  // Quick Rules
-  minesStep1Title: 'Angka menghitung ranjau',
-  minesStep1Body: 'Angka menyebut berapa ranjau di delapan kotak sekelilingnya.',
-  minesStep2Title: 'Tandai yang sudah pasti',
-  minesStep2Body: 'Tekan lama sebuah kotak untuk menandainya. Dengan mode tanda, cukup diketuk.',
-  minesStep3Title: 'Buka sisanya untuk menang',
-  minesStep3Body: 'Ketukan pertama selalu aman, dan tidak ada papan yang perlu ditebak.',
-
-  // ---- Memory Match ----
-  memoryMatchName: 'Memory Match',
-  memoryChooseBoard: 'Pilih papan',
-  memoryDifficulty_easy: 'Mudah',
-  memoryDifficulty_medium: 'Sedang',
-  memoryDifficulty_hard: 'Sulit',
-  memoryBoardNote: '{cols}×{rows} · {pairs} pasangan',
-  memoryConfirmSwitchTitle: 'Ganti permainan yang sedang berjalan?',
-  memoryConfirmSwitchBody: 'Permainan {current} akan diganti dengan papan {next} baru.',
-  memoryBoardLabel: 'Papan memori, {cols} kali {rows}',
-  memoryCardDown: 'Tertutup, baris {row}, kolom {col}',
-  memoryCardUp: 'Simbol {n}, baris {row}, kolom {col}',
-  memoryCardMatched: 'Berpasangan, simbol {n}, baris {row}, kolom {col}',
-  memoryPairsLabel: 'Pasangan',
-  memoryClearTitle: 'Semua pasangan ditemukan!',
-  memoryClearBody: 'Semua kartu sudah terbuka.',
-  memoryNewBestMoves: 'Langkah paling sedikit sejauh ini.',
-  memoryNewBestTime: 'Waktu tercepat sejauh ini.',
-  memoryBestMoves: 'Langkah paling sedikit',
-  memoryDailiesCleared: 'Hari selesai',
-  memoryDailyBacklogHint: 'Hari-hari sebelumnya selalu terbuka.',
-  memoryStep1Title: 'Balik dua kartu',
-  memoryStep1Body: 'Ketuk satu kartu, lalu satu lagi. Pasangan yang sama tetap terbuka.',
-  memoryStep2Title: 'Tak perlu buru-buru mengingat',
-  memoryStep2Body:
-    'Pasangan yang salah tetap terlihat sampai kartu berikutnya dibalik. Santai saja.',
-  memoryStep3Title: 'Temukan semua pasangan',
-  memoryStep3Body: 'Selesaikan seluruh papan. Mengulang papan yang sama selalu gratis.',
-
-  // ---- Water Sort ----
-  waterSortName: 'Water Sort',
-  waterBoardLabel: 'Tabung air',
-  waterTubeLabel: 'Tabung {n}, dari bawah ke atas: {colors}',
-  waterTubeEmpty: 'kosong',
-  waterHintNone: 'Tidak ditemukan jalan maju — urungkan atau ulangi.',
-  waterHintsUsed: 'Petunjuk',
-  waterSolvedTitle: 'Tersusun!',
-  waterSolvedBody: 'Setiap warna punya tabungnya sendiri.',
-  waterNewBestMoves: 'Langkah paling sedikit sejauh ini.',
-  waterNewBestTime: 'Waktu tercepat sejauh ini.',
-  waterBestMoves: 'Langkah paling sedikit',
-  waterLevelsSolved: 'Level selesai',
-  waterDailiesSolved: 'Harian selesai',
-  waterDailyBacklogHint: 'Hari-hari sebelumnya selalu terbuka.',
-  waterStep1Title: 'Tuang warna ke warna yang sama',
-  waterStep1Body:
-    'Ketuk satu tabung, lalu tabung lain. Warna teratas tertuang jika cocok — atau ke tabung kosong kapan saja.',
-  waterStep2Title: 'Dua tabung cadangan',
-  waterStep2Body: 'Tabung kosong adalah ruang kerjamu. Urungkan selalu gratis.',
-  waterStep3Title: 'Satu warna per tabung',
-  waterStep3Body: 'Saat setiap tabung berisi satu warna saja, papan selesai.',
-
-  // ---- Solitaire ----
-  solitaireName: 'Solitaire',
-  solNewDeal: 'Bagi ulang',
-  solDrawSetting: 'Mode ambil kartu',
-  solDrawOne: 'Ambil 1',
-  solDrawThree: 'Ambil 3',
-  solDrawNote: 'Berlaku mulai pembagian berikutnya.',
-  solTableLabel: 'Meja solitaire',
-  solStockLabel: 'Tumpukan, {n} kartu — ketuk untuk mengambil',
-  solStockEmpty: 'Tumpukan kosong — ketuk untuk membalik kartu buangan',
-  solCardLabel: '{rank} {suit}',
-  solCardFaceDown: 'Tertutup',
-  solSuit_spades: 'sekop',
-  solSuit_hearts: 'hati',
-  solSuit_diamonds: 'wajik',
-  solSuit_clubs: 'keriting',
-  solFoundationCard: 'Fondasi, {card}',
-  solFoundationEmpty: 'Fondasi, {suit}, kosong',
-  solPileLabel: 'Kolom {n}',
-  solPileEmpty: 'Kolom {n}, kosong — raja bisa ditaruh di sini',
-  solAutoFinish: 'Selesaikan permainan',
-  solHintNone: 'Tidak ada langkah ditemukan — urungkan atau mulai ulang.',
-  solHintsUsed: 'Petunjuk',
-  solWonTitle: 'Menang!',
-  solWonBody: 'Keempat jenis kartu lengkap.',
-  solNewBestMoves: 'Langkah paling sedikit sejauh ini.',
-  solNewBestTime: 'Waktu tercepat sejauh ini.',
-  solBestMoves: 'Langkah paling sedikit',
-  solDealsPlayed: 'Permainan dimainkan',
-  solGamesWon: 'Permainan dimenangkan',
-  solWinRate: 'Tingkat kemenangan',
-  solDailiesWon: 'Harian dimenangkan',
-  solDailyBacklogHint:
-    'Hari-hari sebelumnya selalu terbuka. Tidak semua pembagian bisa dimenangkan.',
-  solStep1Title: 'Turun satu, warna berselang',
-  solStep1Body: 'Tumpuk menurun, merah-hitam bergantian. Ketuk kartu, lalu ketuk tujuannya.',
-  solStep2Title: 'Bebaskan kartu tersembunyi',
-  solStep2Body:
-    'Langkah yang membuka kartu membuka permainan. Tumpukan bisa dibalik berapa kali pun.',
-  solStep3Title: 'Dari as ke raja',
-  solStep3Body:
-    'Kirim tiap jenis ke fondasinya dari as sampai raja. Lengkapi keempatnya untuk menang.',
-
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Nyawa: {n}',
   levelsCleared: 'Level selesai',
-  bestScore: 'Skor terbaik',
-  brickBreakerName: 'Brick Breaker',
-  bbBoardLabel: 'Papan Brick Breaker',
-  bbBricksLeft: 'Bata {n}',
-  bbClearedTitle: 'Tembok runtuh!',
-  bbClearedBody: 'Semua bata sudah jatuh.',
-  bbFailedTitle: 'Belum kali ini',
-  bbFailedBody: 'Coba lagi gratis — tembok sama, bata sama.',
-  bbStep1Title: 'Bidik dengan pemukul',
-  bbStep1Body:
-    'Bagian tengah pemukul memantulkan bola lurus ke atas; bagian tepi memantulkannya menyerong.',
-  bbStep2Title: 'Bata berongga berisi bola',
-  bbStep2Body:
-    'Pecahkan satu dan bola kedua ikut bermain. Nyawa hanya berkurang saat bola terakhir jatuh.',
-  bbStep3Title: 'Tembok merayap turun',
-  bbStep3Body: 'Bersihkan semua bata sebelum tembok menyentuh garis putus-putus.',
-  skyFighterName: 'Sky Fighter',
-  sfBoardLabel: 'Langit Sky Fighter',
-  sfWave: 'Gelombang {n} / {m}',
-  sfClearedTitle: 'Langit bersih!',
-  sfClearedBody: 'Semua gelombang sudah jatuh.',
-  sfFailedTitle: 'Tertembak jatuh',
-  sfFailedBody: 'Coba lagi gratis — langit sama, gelombang sama.',
-  sfNewBestScore: 'Skor terbaikmu sejauh ini.',
-  sfStep1Title: 'Bergerak untuk membidik',
-  sfStep1Body:
-    'Pesawatmu menembak sendiri. Geser ke kiri dan kanan — ke mana kamu terbang, ke situ bidikanmu.',
-  sfStep2Title: 'Yang besar pecah',
-  sfStep2Body:
-    'Pengebom pecah menjadi pesawat tempur, pesawat tempur menjadi pengintai. Hanya pengebom yang balas menembak.',
-  sfStep3Title: 'Tangkap pesawat kecil',
-  sfStep3Body:
-    'Pengintai yang jatuh kadang menjatuhkan pesawat mungil. Tangkap untuk menambah laras; kena tembak mengurangi satu.',
 };

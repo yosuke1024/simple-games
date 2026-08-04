@@ -1,0 +1,33 @@
+import type { NumberMatchMessages } from './en';
+
+export const th: NumberMatchMessages = {
+  numberMatchName: 'Number Match',
+  best: 'ดีที่สุด',
+  newBest: 'สถิติใหม่!',
+  scoreMatches: 'จับคู่',
+  scoreRows: 'โบนัสแถว',
+  scoreClearBonus: 'โบนัสเคลียร์',
+  scoreNoHint: 'โบนัสไม่ใช้คำใบ้',
+  bestScores: 'คะแนนที่ดีที่สุด',
+  totalBest: 'ผลรวมคะแนนที่ดีที่สุด',
+  addNumbers: 'เพิ่ม',
+  boardLabel: 'กระดานเกม',
+  cellLabel: 'แถว {row} คอลัมน์ {col} เลข {value}',
+  cellLabelStone: 'แถว {row} คอลัมน์ {col} หิน',
+  cellLabelWild: 'แถว {row} คอลัมน์ {col} ไวลด์',
+  hintNoneToast: 'ไม่พบคู่ที่จับได้ ลองกด "เพิ่ม"',
+  wildIntroToast: 'ช่อง ✦ จับคู่กับเลขใดก็ได้',
+  stoneIntroToast: 'หินจับคู่ไม่ได้ และขวางทางอยู่',
+  clearTitle: 'เคลียร์กระดานแล้ว!',
+  clearBody: 'คุณลบตัวเลขทั้งหมดแล้ว',
+  gameOverTitle: 'ไม่มีตาเดินแล้ว',
+  gameOverBody: 'กระดานเต็มถึงขีดจำกัดแล้ว',
+  step1Title: 'เท่ากัน หรือรวมเป็น 10',
+  step1Body: 'จับคู่ตัวเลขสองตัวที่เท่ากัน หรือบวกกันได้ 10',
+  step2Title: 'เลือกสองตัวที่เชื่อมถึงกัน',
+  step2Body:
+    'แนวนอน แนวตั้ง แนวทแยง หรือจากท้ายแถวไปต้นแถวถัดไป ช่องที่ลบแล้วไม่ขวางกั้น แต่ถ้ายังมีตัวเลขเหลืออยู่ระหว่างทางจะเชื่อมไม่ได้',
+  step3Title: 'ลบให้หมดเพื่อชนะ',
+  step3Body: 'ถ้าติดขัด กด "เพิ่ม" เพื่อเติมตัวเลขที่เหลือ ย้อนกลับและคำใบ้ใช้ฟรีตลอด',
+  gameOverCount: 'เกมโอเวอร์',
+};

@@ -7,6 +7,9 @@
  * The game's stylesheet is imported here rather than added to the shared one,
  * so everything Minesweeper looks like arrives and leaves with Minesweeper.
  */
+// Register this game's 14-locale catalog the moment the chunk loads,
+// before anything below renders (issue #38, src/i18n/registry.ts).
+import '../i18n';
 import { useEffect, useState } from 'react';
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';

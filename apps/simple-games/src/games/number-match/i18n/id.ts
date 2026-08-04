@@ -1,0 +1,34 @@
+import type { NumberMatchMessages } from './en';
+
+export const id: NumberMatchMessages = {
+  numberMatchName: 'Number Match',
+  best: 'Terbaik',
+  newBest: 'Rekor baru!',
+  scoreMatches: 'Pencocokan',
+  scoreRows: 'Bonus baris',
+  scoreClearBonus: 'Bonus selesai',
+  scoreNoHint: 'Bonus tanpa petunjuk',
+  bestScores: 'Skor Terbaik',
+  totalBest: 'Total skor terbaik level',
+  addNumbers: 'Tambah',
+  boardLabel: 'Papan permainan',
+  cellLabel: '{value}, baris {row}, kolom {col}',
+  cellLabelStone: 'Batu, baris {row}, kolom {col}',
+  cellLabelWild: 'Wild, baris {row}, kolom {col}',
+  hintNoneToast: 'Tidak ada pasangan — coba "Tambah".',
+  wildIntroToast: 'Kotak ✦ bisa dipasangkan dengan angka apa pun.',
+  stoneIntroToast: 'Batu tidak bisa dihapus dan menghalangi jalan.',
+  clearTitle: 'Papan bersih!',
+  clearBody: 'Semua angka berhasil dihapus.',
+  gameOverTitle: 'Tidak ada langkah lagi',
+  gameOverBody: 'Papan sudah mencapai batas.',
+  step1Title: 'Sama, atau berjumlah 10',
+  step1Body: 'Pasangkan dua angka yang sama, atau yang jumlahnya 10.',
+  step2Title: 'Pilih dua yang terhubung',
+  step2Body:
+    'Mendatar, menurun, diagonal — atau dari ujung baris ke awal baris berikutnya. Sel kosong bukan penghalang, tetapi angka yang masih ada di antaranya menutup jalur.',
+  step3Title: 'Hapus semua untuk menang',
+  step3Body:
+    'Jika buntu, tekan "Tambah" untuk menambahkan angka tersisa. Urungkan dan petunjuk selalu gratis.',
+  gameOverCount: 'Game over',
+};

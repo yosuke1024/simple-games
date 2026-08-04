@@ -7,9 +7,10 @@
  * the source, and the author must have read that back-translation. The record
  * lives in `gateRecord.json` and `gate.test.ts` enforces it.
  *
- * Typed as `keyof Messages`, so renaming a key in `en.ts` without revisiting
- * this list is a compile error rather than a key that quietly stops being
- * checked.
+ * Typed as `MessageKey`, so renaming a key in any catalog — the shell's or a
+ * game's (issue #38 moved game-owned strings into the game chunks) — without
+ * revisiting this list is a compile error rather than a key that quietly
+ * stops being checked.
  *
  * The list is deliberately short. Every addition is another 12 short strings to
  * read per release, and a gate nobody can complete is the failure mode this
@@ -17,9 +18,9 @@
  * it would cost a player money, data, or a promise — not when it would merely
  * read badly.
  */
-import type { Messages } from './locales/en';
+import type { MessageKey } from './index';
 
-export const HIGH_RISK_KEYS: readonly (keyof Messages)[] = [
+export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   // 課金 — 「一度だけの購入」がサブスクに読めないこと
   'removeAdsTitle',
   'adSupportBody',

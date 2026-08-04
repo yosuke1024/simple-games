@@ -1,0 +1,31 @@
+import type { NonogramMessages } from './en';
+
+export const th: NonogramMessages = {
+  nonoName: 'โนโนแกรม',
+  nonoBoardLabel: 'กระดานโนโนแกรม {size}×{size}',
+  nonoCellBlank: 'ว่าง แถว {row} คอลัมน์ {col}',
+  nonoCellFilled: 'ระบายแล้ว แถว {row} คอลัมน์ {col}',
+  nonoCellCrossed: 'กากบาท แถว {row} คอลัมน์ {col}',
+  nonoRowClueLabel: 'แถว {n}: {clue}',
+  nonoColClueLabel: 'คอลัมน์ {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
+  nonoXMode: 'โหมด ×',
+  nonoXModeNote: 'แตะเพื่อกา × กดค้างเพื่อระบาย',
+  nonoHintFound: 'แถวที่เน้นกำหนดช่องได้หนึ่งช่อง',
+  nonoHintBroken: 'แถวที่เน้นขัดกับตัวเลขใบ้แล้ว',
+  nonoHintNone: 'ตอนนี้ยังไม่พบตาเดินที่แน่นอน',
+  nonoSolvedTitle: 'สำเร็จ!',
+  nonoSolvedBody: 'ตัวเลขใบ้ครบทุกแถวแล้ว',
+  nonoHintsUsed: 'คำใบ้ที่ใช้',
+  nonoNewBestTime: 'เร็วที่สุดของคุณ',
+  nonoLevelsSolved: 'ด่านที่ผ่านแล้ว',
+  nonoDailiesSolved: 'เดลี่ที่ผ่านแล้ว',
+  nonoDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ',
+  nonoStep1Title: 'ตัวเลขคือช่วงติดกัน',
+  nonoStep1Body:
+    'ตัวเลขแต่ละตัวคือจำนวนช่องที่ระบายติดกันตามลำดับ โดยเว้นอย่างน้อยหนึ่งช่องระหว่างช่วง',
+  nonoStep2Title: 'กา × ช่องที่ไม่ระบาย',
+  nonoStep2Body: 'ทำเครื่องหมาย × ช่องที่ต้องว่าง เพื่อจำกัดความเป็นไปได้',
+  nonoStep3Title: 'ทำให้ครบทุกแถว',
+  nonoStep3Body: 'เมื่อทุกแถวและคอลัมน์ตรงตามตัวเลข กระดานก็สำเร็จ ไม่ต้องเดาเลย',
+};

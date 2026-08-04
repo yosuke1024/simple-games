@@ -4,6 +4,9 @@
  * component and the storage keys; unmounting stops all of the game's work
  * (battery: an off-screen game renders nothing).
  */
+// Register this game's 14-locale catalog the moment the chunk loads,
+// before anything below renders (issue #38, src/i18n/registry.ts).
+import '../i18n';
 import { useEffect, useState } from 'react';
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';

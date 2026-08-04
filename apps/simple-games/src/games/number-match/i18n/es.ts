@@ -1,0 +1,34 @@
+import type { NumberMatchMessages } from './en';
+
+export const es: NumberMatchMessages = {
+  numberMatchName: 'Number Match',
+  best: 'Mejor',
+  newBest: '¡Nuevo récord!',
+  scoreMatches: 'Parejas',
+  scoreRows: 'Bono de fila',
+  scoreClearBonus: 'Bono por limpiar',
+  scoreNoHint: 'Bono sin pistas',
+  bestScores: 'Mejores puntajes',
+  totalBest: 'Total de mejores por nivel',
+  addNumbers: 'Agregar',
+  boardLabel: 'Tablero de juego',
+  cellLabel: '{value}, fila {row}, columna {col}',
+  cellLabelStone: 'Piedra, fila {row}, columna {col}',
+  cellLabelWild: 'Comodín, fila {row}, columna {col}',
+  hintNoneToast: 'No hay parejas — usa Agregar.',
+  wildIntroToast: 'La ficha ✦ hace pareja con cualquier número.',
+  stoneIntroToast: 'Las piedras no se pueden emparejar y bloquean el paso.',
+  clearTitle: '¡Tablero limpio!',
+  clearBody: 'Quitaste todos los números.',
+  gameOverTitle: 'Sin jugadas',
+  gameOverBody: 'El tablero llegó a su límite.',
+  step1Title: 'Iguales, o que sumen 10',
+  step1Body: 'Empareja dos números iguales o que sumen 10.',
+  step2Title: 'Elige dos que se conecten',
+  step2Body:
+    'En horizontal, vertical o diagonal, y también del final de una fila al inicio de la siguiente. Las casillas vacías no estorban, pero cualquier número que siga en el tablero bloquea el paso.',
+  step3Title: 'Limpia el tablero para ganar',
+  step3Body:
+    '¿Te atascaste? Toca Agregar para sumar los números restantes. Deshacer y las pistas siempre son gratis.',
+  gameOverCount: 'Derrotas',
+};

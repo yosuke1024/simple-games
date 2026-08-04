@@ -1,0 +1,33 @@
+import type { NumberMatchMessages } from './en';
+
+export const ja: NumberMatchMessages = {
+  numberMatchName: 'Number Match',
+  best: 'ベスト',
+  newBest: '自己ベスト更新!',
+  scoreMatches: 'マッチ',
+  scoreRows: '行ボーナス',
+  scoreClearBonus: 'クリアボーナス',
+  scoreNoHint: 'ノーヒントボーナス',
+  bestScores: 'ベストスコア',
+  totalBest: 'レベルベスト合計',
+  addNumbers: '追加',
+  boardLabel: 'ゲーム盤',
+  cellLabel: '{row}行 {col}列、{value}',
+  cellLabelStone: '{row}行 {col}列、石',
+  cellLabelWild: '{row}行 {col}列、ワイルド',
+  hintNoneToast: '消せるペアがありません。「追加」を試してください。',
+  wildIntroToast: '✦ はどの数字とでもペアになります。',
+  stoneIntroToast: '石は消せません。道をふさぎます。',
+  clearTitle: 'クリア！',
+  clearBody: 'すべての数字を消しました。',
+  gameOverTitle: '手詰まり',
+  gameOverBody: '盤面が上限に達しました。',
+  step1Title: '同じ数字か、合計10',
+  step1Body: '同じ数字、または合計が10になる2つの数字を消せます。',
+  step2Title: 'つながる2つを選ぶ',
+  step2Body:
+    '横・縦・斜め、そして行末から次の行頭へ。間が消えていれば離れていてもつながりますが、数字が1つでも残っていると通れません。',
+  step3Title: '全部消せばクリア',
+  step3Body: '詰まったら「追加」で残りの数字を足せます。ヒントも戻すも、ずっと無料です。',
+  gameOverCount: 'ゲームオーバー',
+};

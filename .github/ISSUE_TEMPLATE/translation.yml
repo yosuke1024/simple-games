@@ -9,8 +9,10 @@ body:
 
         Every language except English and Japanese is a **machine-translation
         draft with no native review**, so reports like this are genuinely
-        useful. A pull request editing
-        `apps/simple-games/src/i18n/locales/<code>.ts` is welcome too
+        useful. A pull request is welcome too — most strings are in
+        `apps/simple-games/src/i18n/locales/<code>.ts`, but strings specific
+        to one game live in that game's own
+        `apps/simple-games/src/games/<game-id>/i18n/<code>.ts`
         ([CONTRIBUTING.md](../blob/main/CONTRIBUTING.md)).
 
   - type: input

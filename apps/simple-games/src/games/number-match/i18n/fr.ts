@@ -1,0 +1,34 @@
+import type { NumberMatchMessages } from './en';
+
+export const fr: NumberMatchMessages = {
+  numberMatchName: 'Number Match',
+  best: 'Record',
+  newBest: 'Nouveau record !',
+  scoreMatches: 'Paires',
+  scoreRows: 'Bonus de ligne',
+  scoreClearBonus: 'Bonus grille vidée',
+  scoreNoHint: 'Bonus sans indice',
+  bestScores: 'Meilleurs scores',
+  totalBest: 'Total des records par niveau',
+  addNumbers: 'Ajouter',
+  boardLabel: 'Grille de jeu',
+  cellLabel: '{value}, ligne {row}, colonne {col}',
+  cellLabelStone: 'Pierre, ligne {row}, colonne {col}',
+  cellLabelWild: 'Joker, ligne {row}, colonne {col}',
+  hintNoneToast: 'Aucune paire — utilisez Ajouter.',
+  wildIntroToast: 'La tuile ✦ va avec tous les nombres.',
+  stoneIntroToast: "Les pierres ne s'apparient pas et bloquent le passage.",
+  clearTitle: 'Grille vidée !',
+  clearBody: 'Vous avez retiré tous les nombres.',
+  gameOverTitle: 'Plus de coups',
+  gameOverBody: 'La grille a atteint sa limite.',
+  step1Title: 'Égaux, ou somme de 10',
+  step1Body: 'Associez deux nombres identiques ou dont la somme fait 10.',
+  step2Title: 'Deux nombres reliés',
+  step2Body:
+    "À l'horizontale, à la verticale, en diagonale — ou de la fin d'une ligne au début de la suivante. Les cases vidées ne gênent pas, mais un nombre encore présent bloque le passage.",
+  step3Title: 'Videz la grille pour gagner',
+  step3Body:
+    'Vous bloquez ? Touchez Ajouter pour ajouter les nombres restants. Annuler et les indices sont toujours gratuits.',
+  gameOverCount: 'Défaites',
+};
