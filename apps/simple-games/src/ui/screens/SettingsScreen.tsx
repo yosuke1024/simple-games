@@ -49,6 +49,7 @@ import {
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { IconBack, IconChevronRight } from '../components/icons';
 import { Toggle } from '../components/Toggle';
+import { WebChromeSlot } from '../components/WebChromeSlot';
 import { openExternal } from '../openExternal';
 
 /**
@@ -141,6 +142,10 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
   return (
     <div className="screen settings-screen">
+      {/* Web build only — the shared PixApps header (docs/WEB_VERSION.md
+          「サイトクローム」). Renders nothing on the native app. */}
+      <WebChromeSlot />
+
       <header className="screen-header">
         <button type="button" className="icon-btn" aria-label={t('back')} onClick={onBack}>
           <IconBack />

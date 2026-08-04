@@ -1,5 +1,6 @@
 import { useSettings } from '@/state/SettingsContext';
 import { IconBack, IconChart, IconGrid } from '@/ui/components/icons';
+import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { useBrickBreaker } from '../../state/GameContext';
 
 /**
@@ -12,6 +13,11 @@ export function BrickHomeScreen() {
 
   return (
     <div className="screen home-screen">
+      {/* Web build only — the shared PixApps header (docs/WEB_VERSION.md
+          「サイトクローム」). Renders nothing on the native app. This game's
+          board and result screens deliberately have none. */}
+      <WebChromeSlot />
+
       <header className="screen-header">
         <button
           type="button"

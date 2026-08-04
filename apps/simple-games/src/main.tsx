@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { App } from './app/App';
 import { initRecentGames } from './app/recentGames';
+import { resolveLocale } from './i18n';
 import { initAdRemoval, isAdRemovalPurchased } from './monetization/adRemoval';
 import { initPlayBilling } from './monetization/playBilling';
 import { initAds } from './services/ads/banner';
@@ -68,6 +69,18 @@ async function boot(): Promise<void> {
       </SettingsProvider>
     </StrictMode>,
   );
+
+  // Web build only — the shared PixApps header, the browser version's way
+  // back to the rest of the site (docs/WEB_VERSION.md「サイトクローム」).
+  // Started after the render above so it can never delay first paint, and
+  // handed the resolved locale directly: SettingsContext writes <html lang>
+  // from an effect, so reading the DOM here would race the first commit.
+  if (import.meta.env.MODE === 'web') {
+    const locale = resolveLocale(settings.language);
+    void import('./services/chrome/web/boot')
+      .then((m) => m.initWebChrome(locale))
+      .catch(() => undefined);
+  }
 
   // Fire-and-forget: ad SDK init, billing availability and splash hide never
   // gate the app. With the ad-removal purchase active the ad SDK is never

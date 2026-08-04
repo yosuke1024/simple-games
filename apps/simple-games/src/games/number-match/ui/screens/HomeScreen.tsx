@@ -2,6 +2,7 @@ import { localDateString } from '../../game';
 import { useApp } from '../../state/GameContext';
 import { useSettings } from '@/state/SettingsContext';
 import { IconBack, IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
+import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { formatDuration } from '@/ui/format';
 
 /**
@@ -28,6 +29,11 @@ export function HomeScreen() {
 
   return (
     <div className="screen home-screen">
+      {/* Web build only — the shared PixApps header (docs/WEB_VERSION.md
+          「サイトクローム」). Renders nothing on the native app. This game's
+          board and result screens deliberately have none. */}
+      <WebChromeSlot />
+
       <header className="screen-header">
         <button
           type="button"
