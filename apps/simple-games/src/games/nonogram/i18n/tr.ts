@@ -1,0 +1,31 @@
+import type { NonogramMessages } from './en';
+
+export const tr: NonogramMessages = {
+  nonoName: 'Nonogram',
+  nonoBoardLabel: 'Nonogram tahtası, {size}×{size}',
+  nonoCellBlank: 'Boş, satır {row}, sütun {col}',
+  nonoCellFilled: 'Boyalı, satır {row}, sütun {col}',
+  nonoCellCrossed: 'Çarpılı, satır {row}, sütun {col}',
+  nonoRowClueLabel: 'Satır {n}: {clue}',
+  nonoColClueLabel: 'Sütun {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
+  nonoXMode: 'X Modu',
+  nonoXModeNote: 'Dokunmak × koyar; basılı tutmak boyar.',
+  nonoHintFound: 'Vurgulanan çizgi bir kareyi belirliyor.',
+  nonoHintBroken: 'Vurgulanan çizgi artık ipucusuna uymuyor.',
+  nonoHintNone: 'Şu an kesin bir hamle bulunamadı.',
+  nonoSolvedTitle: 'Çözüldü!',
+  nonoSolvedBody: 'Tüm ipuçları tutuyor.',
+  nonoHintsUsed: 'Kullanılan ipuçları',
+  nonoNewBestTime: 'En hızlı süren.',
+  nonoLevelsSolved: 'Çözülen seviyeler',
+  nonoDailiesSolved: 'Çözülen günlükler',
+  nonoDailyBacklogHint: 'Önceki günler açık kalır.',
+  nonoStep1Title: 'Sayılar bloklardır',
+  nonoStep1Body:
+    'Her sayı, sırayla boyanan bir blok karedir; bloklar arasında en az bir boşluk olur.',
+  nonoStep2Title: 'Olmayana × koy',
+  nonoStep2Body: 'Boş kalacak kareleri × ile işaretleyip çizgiyi daralt.',
+  nonoStep3Title: 'Her çizgiyi sağla',
+  nonoStep3Body: 'Tüm satırlar ve sütunlar tutunca tahta biter. Tahmin hiç gerekmez.',
+};

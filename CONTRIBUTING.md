@@ -27,21 +27,36 @@ The full policy (in Japanese) is [docs/I18N_POLICY.md](docs/I18N_POLICY.md).
 All translations are bundled with the app; there is no external translation
 service.
 
-To **fix** an existing translation, edit the matching file in
-`apps/simple-games/src/i18n/locales/<code>.ts`.
+Strings live in two kinds of places, split by who uses them: strings shared by
+the shell or by more than one game are in
+`apps/simple-games/src/i18n/locales/<code>.ts`; strings only one game uses are
+in that game's own `apps/simple-games/src/games/<game-id>/i18n/<code>.ts`, so
+they ship in that game's lazy-loaded chunk instead of the app's startup
+bundle. To **fix** an existing translation, search for the string in English
+first (`grep` across both `src/i18n/locales/en.ts` and
+`src/games/*/i18n/en.ts` finds it) and edit the matching key in every other
+locale file next to it.
 
 To **add** a language:
 
 1. Copy `apps/simple-games/src/i18n/locales/en.ts` to a new
    `apps/simple-games/src/i18n/locales/<code>.ts` and translate the values.
-2. Register it in `apps/simple-games/src/i18n/index.ts`: add the code to the
-   `Locale` type, the catalog to `catalogs`, and the language's name — written
-   in that language itself — to `LANGUAGE_NAMES`.
+2. Do the same for every game: copy each
+   `apps/simple-games/src/games/<game-id>/i18n/en.ts` to
+   `apps/simple-games/src/games/<game-id>/i18n/<code>.ts` and translate it.
+3. Register the shell catalog in `apps/simple-games/src/i18n/index.ts`: add
+   the code to the `Locale` type, the catalog to `catalogs`, and the
+   language's name — written in that language itself — to `LANGUAGE_NAMES`.
+4. Register the new locale file in each game's
+   `apps/simple-games/src/games/<game-id>/i18n/index.ts` (one import, one
+   entry in that file's `catalogs`).
 
-That is the whole procedure. The `Messages` type makes the build fail until
-every key exists in your locale, and `pnpm --filter simple-games test` verifies
-that every string is non-empty, that placeholder names (`{var}`) match English
-exactly, and that no markup or control characters slipped in.
+That is the whole procedure. The `MessageKey` type (the shell's keys plus
+every game's) makes the build fail until every key exists in your locale,
+wherever it lives, and `pnpm --filter simple-games test` verifies — across
+both the shell and every game catalog — that every string is non-empty, that
+placeholder names (`{var}`) match English exactly, and that no markup or
+control characters slipped in.
 
 Guidelines:
 

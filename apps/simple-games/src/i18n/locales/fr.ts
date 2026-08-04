@@ -1,7 +1,6 @@
 import type { Messages } from './en';
 
 export const fr: Messages = {
-  numberMatchName: 'Number Match',
   tagline: 'Fonctionne hors ligne. Sans compte. Sans paywall.',
 
   resume: 'Reprendre',
@@ -19,14 +18,6 @@ export const fr: Messages = {
   reachedLevel: 'Niveau atteint',
 
   score: 'Score',
-  best: 'Record',
-  newBest: 'Nouveau record !',
-  scoreMatches: 'Paires',
-  scoreRows: 'Bonus de ligne',
-  scoreClearBonus: 'Bonus grille vidée',
-  scoreNoHint: 'Bonus sans indice',
-  bestScores: 'Meilleurs scores',
-  totalBest: 'Total des records par niveau',
 
   dailyPast: 'Défis passés',
   dailyToday: "Aujourd'hui",
@@ -34,21 +25,9 @@ export const fr: Messages = {
   modeDaily: 'Quotidien',
   undo: 'Annuler',
   hint: 'Indice',
-  addNumbers: 'Ajouter',
   timeLabel: 'Temps',
   movesLabel: 'Coups',
-  boardLabel: 'Grille de jeu',
-  cellLabel: '{value}, ligne {row}, colonne {col}',
-  cellLabelStone: 'Pierre, ligne {row}, colonne {col}',
-  cellLabelWild: 'Joker, ligne {row}, colonne {col}',
-  hintNoneToast: 'Aucune paire — utilisez Ajouter.',
-  wildIntroToast: 'La tuile ✦ va avec tous les nombres.',
-  stoneIntroToast: "Les pierres ne s'apparient pas et bloquent le passage.",
 
-  clearTitle: 'Grille vidée !',
-  clearBody: 'Vous avez retiré tous les nombres.',
-  gameOverTitle: 'Plus de coups',
-  gameOverBody: 'La grille a atteint sa limite.',
   tryAgain: 'Rejouer cette grille',
   backHome: 'Accueil',
 
@@ -57,14 +36,6 @@ export const fr: Messages = {
   cancel: 'Annuler',
   confirm: 'Commencer',
 
-  step1Title: 'Égaux, ou somme de 10',
-  step1Body: 'Associez deux nombres identiques ou dont la somme fait 10.',
-  step2Title: 'Deux nombres reliés',
-  step2Body:
-    "À l'horizontale, à la verticale, en diagonale — ou de la fin d'une ligne au début de la suivante. Les cases vidées ne gênent pas, mais un nombre encore présent bloque le passage.",
-  step3Title: 'Videz la grille pour gagner',
-  step3Body:
-    'Vous bloquez ? Touchez Ajouter pour ajouter les nombres restants. Annuler et les indices sont toujours gratuits.',
   startPlaying: 'Jouer',
   next: 'Suivant',
   back: 'Retour',
@@ -90,7 +61,6 @@ export const fr: Messages = {
 
   played: 'Parties jouées',
   cleared: 'Parties terminées',
-  gameOverCount: 'Défaites',
   totalTime: 'Temps de jeu total',
   bestTime: 'Meilleur temps',
 
@@ -127,288 +97,7 @@ export const fr: Messages = {
     "Dites-le-moi par e-mail — je lis chaque message. Rien n'est envoyé tant que vous n'appuyez pas sur envoyer dans votre app de messagerie.",
   reviewFeedbackAction: 'Écrire un e-mail',
 
-  // Sudoku
-  sudokuName: 'Sudoku',
-  sudokuGridLabel: 'Grille de Sudoku',
-  sudokuPadLabel: 'Pavé numérique',
-  sudokuPadKey: '{value}, {n} restants',
-  sudokuPadNoteKey: 'Note {value}',
-  sudokuCellEmpty: 'Vide, ligne {row}, colonne {col}',
-  sudokuCellGiven: '{value}, initial, ligne {row}, colonne {col}',
-  sudokuCellEntry: '{value}, ligne {row}, colonne {col}',
-  sudokuErase: 'Effacer',
-  sudokuNotes: 'Notes',
-  sudokuMistakes: 'Erreurs',
-  sudokuTier_easy: 'Facile',
-  sudokuTier_medium: 'Moyen',
-  sudokuTier_hard: 'Difficile',
-  sudokuSolvedTitle: 'Résolu !',
-  sudokuSolvedBody: 'Chaque ligne, colonne et bloc contient 1-9.',
-  sudokuNewBestTime: 'Votre meilleur temps.',
-  sudokuLevelsSolved: 'Niveaux résolus',
-  sudokuDailiesSolved: 'Défis résolus',
-  sudokuAverageTime: 'Temps moyen',
-  sudokuHighlightMistakes: 'Afficher les erreurs',
-  sudokuHighlightMistakesNote:
-    'Marque un chiffre qui ne correspond pas à la solution. Les doublons sont toujours marqués.',
-  sudokuHintNone: 'Rien ne peut encore être déduit.',
-  sudokuHintOnlyDigit: 'Un seul chiffre convient à cette case.',
-  sudokuHintOnlyCell: 'Ici, {value} ne peut aller que dans cette case.',
-  sudokuHintLockedLine: 'Dans ce bloc, {value} ne tient que sur la ligne surlignée.',
-  sudokuHintLockedBox: 'Sur cette ligne, {value} ne tient que dans le bloc surligné.',
-  sudokuHintRuledOut: 'Ces cases éliminent ces chiffres ailleurs dans le groupe.',
-  sudokuStep1Title: '1-9, une fois chacun',
-  sudokuStep1Body: 'Chaque ligne, colonne et bloc 3x3 contient 1 à 9 exactement une fois.',
-  sudokuStep2Title: 'Notez les candidats',
-  sudokuStep2Body:
-    "Touchez Notes pour inscrire les candidats pendant que vous réduisez les options d'une case.",
-  sudokuStep3Title: 'Vous bloquez ? Prenez un indice',
-  sudokuStep3Body:
-    "Un indice montre quelle case est décidée et pourquoi. Les indices et l'annulation sont toujours gratuits.",
-
-  // ---- Sliding Puzzle ----
-  slideName: 'Taquin',
-
-  slideBoardLabel: 'Plateau du taquin',
-  slideTileLabel: '{value}, ligne {row}, colonne {col}',
-  slideBlankLabel: 'Vide, ligne {row}, colonne {col}',
-  slideSizeLabel: '{n}x{n}',
-
-  slideMoves: 'Coups',
-  slideBestMoves: 'Moins de coups',
-
-  slideSolvedTitle: 'Résolu !',
-  slideSolvedBody: 'Tous les nombres sont de nouveau en ordre.',
-  slideNewBestMoves: 'Moins de coups que jamais.',
-  slideNewBestTime: 'Votre meilleur temps.',
-
-  slideLevelsSolved: 'Niveaux résolus',
-  slideDailiesSolved: 'Défis résolus',
-  slideDailyBacklogHint: 'Les jours précédents restent toujours accessibles.',
-
-  slideStep1Title: 'Touchez près du vide',
-  slideStep1Body: 'Touchez une tuile voisine de la case vide et elle glisse dedans.',
-  slideStep2Title: 'Toute une ligne bouge',
-  slideStep2Body:
-    'Sur la même ligne ou colonne, toutes les tuiles intermédiaires glissent ensemble.',
-  slideStep3Title: 'Rangez à partir de 1',
-  slideStep3Body: "Alignez les nombres dans l'ordre de lecture, le vide en bas à droite.",
-
-  // ---- Nonogram ----
-  nonoName: 'Nonogramme',
-
-  nonoBoardLabel: 'Grille de nonogramme, {size} par {size}',
-  nonoCellBlank: 'Vide, ligne {row}, colonne {col}',
-  nonoCellFilled: 'Peinte, ligne {row}, colonne {col}',
-  nonoCellCrossed: 'Croix, ligne {row}, colonne {col}',
-  nonoRowClueLabel: 'Ligne {n} : {clue}',
-  nonoColClueLabel: 'Colonne {n} : {clue}',
-  nonoSizeLabel: '{n}×{n}',
-
-  nonoXMode: 'Mode X',
-  nonoXModeNote: 'Un appui pose une croix ; un appui long peint.',
-  nonoHintFound: 'La ligne surlignée détermine une case.',
-  nonoHintBroken: 'La ligne surlignée ne correspond plus à son indice.',
-  nonoHintNone: 'Aucun coup sûr pour le moment.',
-
-  nonoSolvedTitle: 'Résolu !',
-  nonoSolvedBody: 'Tous les indices sont respectés.',
-  nonoHintsUsed: 'Indices utilisés',
-  nonoNewBestTime: 'Votre meilleur temps.',
-
-  nonoLevelsSolved: 'Niveaux résolus',
-  nonoDailiesSolved: 'Défis quotidiens résolus',
-  nonoDailyBacklogHint: 'Les jours précédents restent ouverts.',
-
-  nonoStep1Title: 'Les nombres sont des blocs',
-  nonoStep1Body:
-    'Chaque nombre est un bloc de cases peintes, dans l’ordre, avec au moins un espace entre les blocs.',
-  nonoStep2Title: 'Éliminez avec une croix',
-  nonoStep2Body: 'Marquez d’une croix les cases qui restent vides pour cerner la ligne.',
-  nonoStep3Title: 'Respectez chaque ligne',
-  nonoStep3Body:
-    'Quand toutes les lignes et colonnes concordent, la grille est finie. Deviner n’est jamais nécessaire.',
-
-  // ---- Minesweeper ----
-  minesName: 'Démineur',
-
-  // Home
-  minesChooseBoard: 'Choisissez une grille',
-  minesDifficulty_easy: 'Facile',
-  minesDifficulty_medium: 'Moyen',
-  minesDifficulty_hard: 'Difficile',
-  minesBoardNote: '{width}×{height} · {mines} mines',
-  minesConfirmSwitchTitle: 'Remplacer la grille en cours ?',
-  minesConfirmSwitchBody: 'Votre partie {current} sera remplacée par une nouvelle grille {next}.',
-
-  // Board
-  minesBoardLabel: 'Champ de mines, {width} colonnes sur {height} lignes',
-  minesCellHidden: 'Non ouverte, ligne {row}, colonne {col}',
-  minesCellFlagged: 'Drapeau, ligne {row}, colonne {col}',
-  minesCellEmpty: 'Vide, ligne {row}, colonne {col}',
-  minesCellNumber: '{count} mines autour, ligne {row}, colonne {col}',
-  minesCellMine: 'Mine, ligne {row}, colonne {col}',
-  minesMinesLeft: 'Mines restantes',
-  minesTapToStart: "Touchez n'importe quelle case. Le premier appui est toujours sûr.",
-
-  // Actions
-  minesFlagMode: 'Mode drapeau',
-  minesFlagModeNote: 'Un appui pose un drapeau ; un appui long ouvre.',
-  minesHintFound: "Cette case est sûre — les nombres surlignés l'expliquent.",
-  minesHintNone: 'Rien ne peut encore être déduit.',
-  minesNewBoard: 'Nouvelle grille',
-
-  // Result
-  minesWonTitle: 'Déminé !',
-  minesWonBody: 'Toutes les cases sans mine sont ouvertes.',
-  minesLostTitle: 'Mine ouverte',
-  minesLostBody: "La partie s'arrête ici. La même grille vous attend quand vous voulez.",
-  minesNewBestTime: 'Votre meilleur temps.',
-  minesHintsUsed: 'Indices',
-
-  // Statistics
-  minesGamesWon: 'Parties gagnées',
-  minesWinRate: 'Taux de victoire',
-  minesDailySection: 'Quotidien',
-  minesDailiesCleared: 'Jours terminés',
-
-  // Quick Rules
-  minesStep1Title: 'Le nombre compte les mines',
-  minesStep1Body: 'Il indique combien des huit cases autour contiennent une mine.',
-  minesStep2Title: 'Marquez ce dont vous êtes sûr',
-  minesStep2Body:
-    'Appui long sur une case pour la marquer. En mode drapeau, un simple appui suffit.',
-  minesStep3Title: 'Ouvrez le reste pour gagner',
-  minesStep3Body: "Le premier appui est toujours sûr, et aucune grille n'oblige à deviner.",
-
-  // ---- Memory Match ----
-  memoryMatchName: 'Memory Match',
-  memoryChooseBoard: 'Choisissez une grille',
-  memoryDifficulty_easy: 'Facile',
-  memoryDifficulty_medium: 'Moyen',
-  memoryDifficulty_hard: 'Difficile',
-  memoryBoardNote: '{cols}×{rows} · {pairs} paires',
-  memoryConfirmSwitchTitle: 'Remplacer la partie en cours ?',
-  memoryConfirmSwitchBody: 'Votre partie {current} sera remplacée par une nouvelle grille {next}.',
-  memoryBoardLabel: 'Grille de mémoire, {cols} par {rows}',
-  memoryCardDown: 'Face cachée, ligne {row}, colonne {col}',
-  memoryCardUp: 'Symbole {n}, ligne {row}, colonne {col}',
-  memoryCardMatched: 'Paire trouvée, symbole {n}, ligne {row}, colonne {col}',
-  memoryPairsLabel: 'Paires',
-  memoryClearTitle: 'Toutes les paires trouvées !',
-  memoryClearBody: 'Toutes les cartes sont face visible.',
-  memoryNewBestMoves: 'Votre plus petit nombre de coups.',
-  memoryNewBestTime: 'Votre meilleur temps.',
-  memoryBestMoves: 'Minimum de coups',
-  memoryDailiesCleared: 'Jours réussis',
-  memoryDailyBacklogHint: 'Les jours précédents restent ouverts.',
-  memoryStep1Title: 'Retournez deux cartes',
-  memoryStep1Body: 'Touchez une carte, puis une autre. Une paire identique reste face visible.',
-  memoryStep2Title: 'Rien ne presse',
-  memoryStep2Body: "Une paire manquée reste visible jusqu'au prochain essai. Prenez votre temps.",
-  memoryStep3Title: 'Trouvez toutes les paires',
-  memoryStep3Body: 'Terminez toute la grille. Rejouer la même grille est toujours gratuit.',
-
-  // ---- Water Sort ----
-  waterSortName: 'Water Sort',
-  waterBoardLabel: "Tubes d'eau",
-  waterTubeLabel: 'Tube {n}, de bas en haut : {colors}',
-  waterTubeEmpty: 'vide',
-  waterHintNone: 'Aucune voie trouvée — annulez ou recommencez.',
-  waterHintsUsed: 'Indices',
-  waterSolvedTitle: 'Trié !',
-  waterSolvedBody: 'Chaque couleur a son propre tube.',
-  waterNewBestMoves: 'Votre minimum de versements.',
-  waterNewBestTime: 'Votre meilleur temps.',
-  waterBestMoves: 'Minimum de versements',
-  waterLevelsSolved: 'Niveaux résolus',
-  waterDailiesSolved: 'Défis quotidiens résolus',
-  waterDailyBacklogHint: 'Les jours précédents restent ouverts.',
-  waterStep1Title: 'Versez pareil sur pareil',
-  waterStep1Body:
-    "Touchez un tube, puis un autre. La couleur du dessus se verse si elle correspond — ou dans n'importe quel tube vide.",
-  waterStep2Title: 'Deux tubes de réserve',
-  waterStep2Body: 'Les tubes vides sont votre espace de travail. Annuler est toujours gratuit.',
-  waterStep3Title: 'Une couleur par tube',
-  waterStep3Body: "Quand chaque tube ne contient qu'une couleur, c'est gagné.",
-
-  // ---- Solitaire ----
-  solitaireName: 'Solitaire',
-  solNewDeal: 'Nouvelle donne',
-  solDrawSetting: 'Mode de pioche',
-  solDrawOne: 'Piocher 1',
-  solDrawThree: 'Piocher 3',
-  solDrawNote: 'S’applique à partir de la prochaine donne.',
-  solTableLabel: 'Table de solitaire',
-  solStockLabel: 'Pioche, {n} cartes — touchez pour piocher',
-  solStockEmpty: 'Pioche vide — touchez pour retourner la défausse',
-  solCardLabel: '{rank} de {suit}',
-  solCardFaceDown: 'Face cachée',
-  solSuit_spades: 'pique',
-  solSuit_hearts: 'cœur',
-  solSuit_diamonds: 'carreau',
-  solSuit_clubs: 'trèfle',
-  solFoundationCard: 'Fondation, {card}',
-  solFoundationEmpty: 'Fondation, {suit}, vide',
-  solPileLabel: 'Colonne {n}',
-  solPileEmpty: 'Colonne {n}, vide — un roi peut venir ici',
-  solAutoFinish: 'Terminer la partie',
-  solHintNone: 'Aucun coup trouvé — annulez ou recommencez.',
-  solHintsUsed: 'Indices',
-  solWonTitle: 'Gagné !',
-  solWonBody: 'Les quatre familles sont complètes.',
-  solNewBestMoves: 'Votre plus petit nombre de coups.',
-  solNewBestTime: 'Votre meilleur temps.',
-  solBestMoves: 'Minimum de coups',
-  solDealsPlayed: 'Donnes jouées',
-  solGamesWon: 'Parties gagnées',
-  solWinRate: 'Taux de victoire',
-  solDailiesWon: 'Défis quotidiens gagnés',
-  solDailyBacklogHint:
-    'Les jours précédents restent ouverts. Toutes les donnes ne sont pas gagnables.',
-  solStep1Title: 'Un de moins, couleurs alternées',
-  solStep1Body:
-    'Empilez en descendant, rouge sur noir sur rouge. Touchez une carte, puis sa destination.',
-  solStep2Title: 'Libérez les cartes cachées',
-  solStep2Body:
-    'Les coups qui retournent une carte ouvrent le jeu. La pioche se retourne autant de fois que voulu.',
-  solStep3Title: "De l'as au roi",
-  solStep3Body:
-    "Montez chaque famille à sa fondation, de l'as au roi. Les quatre complètes, c'est gagné.",
-
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Vies : {n}',
   levelsCleared: 'Niveaux terminés',
-  bestScore: 'Meilleur score',
-  brickBreakerName: 'Brick Breaker',
-  bbBoardLabel: 'Plateau de Brick Breaker',
-  bbBricksLeft: 'Briques {n}',
-  bbClearedTitle: 'Mur abattu !',
-  bbClearedBody: 'Toutes les briques sont tombées.',
-  bbFailedTitle: 'Pas cette fois',
-  bbFailedBody: 'Réessayer est gratuit — même mur, mêmes briques.',
-  bbStep1Title: 'Vise avec la raquette',
-  bbStep1Body: "Le centre de la raquette renvoie la balle tout droit ; le bord l'envoie en biais.",
-  bbStep2Title: 'Les briques creuses contiennent une balle',
-  bbStep2Body:
-    'Casse-en une et une deuxième balle arrive. Seule la perte de la dernière balle coûte une vie.',
-  bbStep3Title: 'Le mur descend peu à peu',
-  bbStep3Body: 'Casse toutes les briques avant que le mur atteigne la ligne pointillée.',
-  skyFighterName: 'Sky Fighter',
-  sfBoardLabel: 'Ciel de Sky Fighter',
-  sfWave: 'Vague {n} / {m}',
-  sfClearedTitle: 'Ciel dégagé !',
-  sfClearedBody: 'Toutes les vagues sont tombées.',
-  sfFailedTitle: 'Abattu',
-  sfFailedBody: 'Réessayer est gratuit — même ciel, mêmes vagues.',
-  sfNewBestScore: 'Ton meilleur score à ce jour.',
-  sfStep1Title: 'Bouge pour viser',
-  sfStep1Body:
-    'Ton chasseur tire tout seul. Glisse à gauche et à droite : là où tu voles, tu vises.',
-  sfStep2Title: 'Les gros se scindent',
-  sfStep2Body:
-    'Un bombardier se scinde en chasseurs, les chasseurs en éclaireurs. Seuls les bombardiers ripostent.',
-  sfStep3Title: 'Attrape le petit appareil',
-  sfStep3Body:
-    'Un éclaireur abattu lâche parfois un petit appareil. Attrape-le pour un canon de plus ; un impact en coûte un.',
 };

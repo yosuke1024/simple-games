@@ -1,0 +1,31 @@
+import type { NonogramMessages } from './en';
+
+export const hi: NonogramMessages = {
+  nonoName: 'नोनोग्राम',
+  nonoBoardLabel: 'नोनोग्राम बोर्ड, {size}×{size}',
+  nonoCellBlank: 'खाली, पंक्ति {row}, स्तंभ {col}',
+  nonoCellFilled: 'रंगा हुआ, पंक्ति {row}, स्तंभ {col}',
+  nonoCellCrossed: '×, पंक्ति {row}, स्तंभ {col}',
+  nonoRowClueLabel: 'पंक्ति {n}: {clue}',
+  nonoColClueLabel: 'स्तंभ {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
+  nonoXMode: '× मोड',
+  nonoXModeNote: 'टैप से × लगता है; देर तक दबाने से रंगता है।',
+  nonoHintFound: 'हाइलाइट पंक्ति से एक खाना तय होता है।',
+  nonoHintBroken: 'हाइलाइट पंक्ति अब संकेत से मेल नहीं खाती।',
+  nonoHintNone: 'अभी कोई निश्चित चाल नहीं मिली।',
+  nonoSolvedTitle: 'हल हो गया!',
+  nonoSolvedBody: 'सभी संकेत पूरे हुए।',
+  nonoHintsUsed: 'इस्तेमाल हुए संकेत',
+  nonoNewBestTime: 'आपका सबसे तेज़ समय।',
+  nonoLevelsSolved: 'हल किए गए स्तर',
+  nonoDailiesSolved: 'हल की गई दैनिक पहेलियाँ',
+  nonoDailyBacklogHint: 'पिछले दिन हमेशा खुले रहते हैं।',
+  nonoStep1Title: 'संख्याएँ लगातार खाने हैं',
+  nonoStep1Body:
+    'हर संख्या उस पंक्ति में लगातार रंगे खानों का समूह है; समूहों के बीच कम से कम एक खाली खाना रहता है।',
+  nonoStep2Title: 'जो नहीं रंगना, उस पर ×',
+  nonoStep2Body: 'खाली रहने वाले खानों पर × लगाकर संभावनाएँ घटाएँ।',
+  nonoStep3Title: 'हर पंक्ति पूरी करें',
+  nonoStep3Body: 'सभी पंक्तियाँ और स्तंभ पूरे होते ही पहेली हल। अनुमान की कभी ज़रूरत नहीं।',
+};

@@ -1,0 +1,31 @@
+import type { NonogramMessages } from './en';
+
+export const vi: NonogramMessages = {
+  nonoName: 'Nonogram',
+  nonoBoardLabel: 'Bảng nonogram, {size}×{size}',
+  nonoCellBlank: 'Trống, hàng {row}, cột {col}',
+  nonoCellFilled: 'Đã tô, hàng {row}, cột {col}',
+  nonoCellCrossed: 'Đánh ×, hàng {row}, cột {col}',
+  nonoRowClueLabel: 'Hàng {n}: {clue}',
+  nonoColClueLabel: 'Cột {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
+  nonoXMode: 'Chế độ X',
+  nonoXModeNote: 'Chạm để đánh ×; nhấn giữ để tô.',
+  nonoHintFound: 'Dòng được tô sáng xác định một ô.',
+  nonoHintBroken: 'Dòng được tô sáng không còn khớp với gợi ý.',
+  nonoHintNone: 'Hiện chưa có nước đi chắc chắn.',
+  nonoSolvedTitle: 'Hoàn thành!',
+  nonoSolvedBody: 'Mọi gợi ý đều khớp.',
+  nonoHintsUsed: 'Gợi ý đã dùng',
+  nonoNewBestTime: 'Thời gian nhanh nhất của bạn.',
+  nonoLevelsSolved: 'Màn đã giải',
+  nonoDailiesSolved: 'Thử thách ngày đã giải',
+  nonoDailyBacklogHint: 'Những ngày trước luôn mở.',
+  nonoStep1Title: 'Số là chuỗi ô liền nhau',
+  nonoStep1Body:
+    'Mỗi số là một chuỗi ô được tô liền nhau theo thứ tự, giữa các chuỗi cách ít nhất một ô.',
+  nonoStep2Title: 'Đánh × ô không tô',
+  nonoStep2Body: 'Đánh × vào ô chắc chắn để trống để thu hẹp khả năng.',
+  nonoStep3Title: 'Thỏa mọi hàng và cột',
+  nonoStep3Body: 'Khi mọi hàng và cột đều khớp số, bảng hoàn thành. Không bao giờ cần đoán.',
+};

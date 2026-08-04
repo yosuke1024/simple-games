@@ -1,0 +1,31 @@
+import type { NonogramMessages } from './en';
+
+export const ko: NonogramMessages = {
+  nonoName: '노노그램',
+  nonoBoardLabel: '노노그램 판, {size}×{size}',
+  nonoCellBlank: '미정, {row}행 {col}열',
+  nonoCellFilled: '칠함, {row}행 {col}열',
+  nonoCellCrossed: '×, {row}행 {col}열',
+  nonoRowClueLabel: '{n}행 단서: {clue}',
+  nonoColClueLabel: '{n}열 단서: {clue}',
+  nonoSizeLabel: '{n}×{n}',
+  nonoXMode: '×모드',
+  nonoXModeNote: '탭하면 ×, 길게 누르면 칠합니다.',
+  nonoHintFound: '강조된 줄에서 한 칸이 확정됩니다.',
+  nonoHintBroken: '강조된 줄이 단서와 맞지 않습니다.',
+  nonoHintNone: '지금은 확실한 수가 없습니다.',
+  nonoSolvedTitle: '완성!',
+  nonoSolvedBody: '모든 단서를 만족했습니다.',
+  nonoHintsUsed: '사용한 힌트',
+  nonoNewBestTime: '자기 최고 기록입니다.',
+  nonoLevelsSolved: '클리어한 레벨',
+  nonoDailiesSolved: '클리어한 데일리',
+  nonoDailyBacklogHint: '지난 날짜는 언제든 도전할 수 있습니다.',
+  nonoStep1Title: '숫자는 연속으로 칠하는 수',
+  nonoStep1Body:
+    '숫자는 그 줄에서 연속으로 칠하는 칸 수입니다. 여러 개면 사이를 한 칸 이상 띄웁니다.',
+  nonoStep2Title: '칠하지 않는 칸에 ×',
+  nonoStep2Body: '칠하지 않는 칸에 ×를 표시해 경우의 수를 좁힙니다.',
+  nonoStep3Title: '모든 줄을 만족시키기',
+  nonoStep3Body: '모든 행과 열의 숫자를 만족하면 완성. 추측은 필요 없습니다.',
+};

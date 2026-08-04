@@ -10,6 +10,7 @@
  * language picker — the app must be playable immediately.
  */
 import type { LanguageSetting } from '../storage/schemas';
+import { lookupGameMessage, type GameMessageKey } from './registry';
 import { de } from './locales/de';
 import { en, type Messages } from './locales/en';
 import { es } from './locales/es';
@@ -45,7 +46,13 @@ export type Locale =
   | 'de'
   | 'tr';
 
-export type MessageKey = keyof Messages;
+/**
+ * Every string in the app: the shell's keys plus every game's (issue #38).
+ * The game halves arrive through type augmentation (see registry.ts), so this
+ * union grows with each game while the entry keeps shipping only the shell's
+ * strings — game catalogs live in the game chunks.
+ */
+export type MessageKey = keyof Messages | GameMessageKey;
 
 export const catalogs: Record<Locale, Messages> = {
   en,
@@ -105,7 +112,10 @@ const PRIMARY_ALIASES: Record<string, string> = {
  * The default is what a bare `zh` becomes — the more widely read script, and
  * the same choice Android and the web platform make.
  */
-const SCRIPT_RESOLUTION: Record<string, { readonly byRegion: Record<string, string>; readonly fallback: string }> = {
+const SCRIPT_RESOLUTION: Record<
+  string,
+  { readonly byRegion: Record<string, string>; readonly fallback: string }
+> = {
   zh: {
     byRegion: {
       tw: 'zh-hant',
@@ -183,9 +193,17 @@ export type TranslateVars = Record<string, string | number>;
  * English is the fallback for any key a catalog misses (the Messages type
  * makes that impossible at compile time, but data safety costs nothing);
  * a translation is therefore never an empty string in production.
+ *
+ * A key the shell does not own is looked up in the loaded games' catalogs
+ * (registry.ts). Key sets are disjoint (i18n.test.ts), so order costs
+ * nothing. The final fallback is the key itself: it renders only if code
+ * asks for a game's string before that game's chunk has loaded — a bug, but
+ * one that shows exactly which key to grep for instead of crashing.
  */
 export function translate(locale: Locale, key: MessageKey, vars?: TranslateVars): string {
-  const template = catalogs[locale][key] ?? en[key];
+  const shell = catalogs[locale] as Record<string, string | undefined>;
+  const shellEn = en as Record<string, string | undefined>;
+  const template = shell[key] ?? shellEn[key] ?? lookupGameMessage(locale, key) ?? key;
   if (!vars) return template;
   return template.replace(/\{(\w+)\}/g, (match, name: string) =>
     name in vars ? String(vars[name]) : match,

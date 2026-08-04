@@ -1,0 +1,33 @@
+import type { NumberMatchMessages } from './en';
+
+export const zhHans: NumberMatchMessages = {
+  numberMatchName: '数字配对',
+  best: '最佳',
+  newBest: '新纪录！',
+  scoreMatches: '配对',
+  scoreRows: '整行奖励',
+  scoreClearBonus: '通关奖励',
+  scoreNoHint: '无提示奖励',
+  bestScores: '最佳成绩',
+  totalBest: '各关最佳总和',
+  addNumbers: '添加',
+  boardLabel: '游戏盘面',
+  cellLabel: '第 {row} 行第 {col} 列，{value}',
+  cellLabelStone: '第 {row} 行第 {col} 列，石块',
+  cellLabelWild: '第 {row} 行第 {col} 列，百搭',
+  hintNoneToast: '没有可配对的数字，试试“添加”。',
+  wildIntroToast: '✦ 可以和任意数字配对。',
+  stoneIntroToast: '石块无法消除，还会挡路。',
+  clearTitle: '全部消除！',
+  clearBody: '你消除了所有数字。',
+  gameOverTitle: '无法继续',
+  gameOverBody: '盘面已达上限。',
+  step1Title: '相同，或相加得 10',
+  step1Body: '消除两个相同的数字，或相加等于 10 的两个数字。',
+  step2Title: '选择相连的两个',
+  step2Body:
+    '横、竖、斜，或从一行末尾接到下一行开头。已消除的格子不算阻挡，但还留在盘面上的数字会挡路。',
+  step3Title: '消完全部即获胜',
+  step3Body: '卡住了？点“添加”把剩下的数字接到后面。撤销和提示始终免费。',
+  gameOverCount: '失败次数',
+};

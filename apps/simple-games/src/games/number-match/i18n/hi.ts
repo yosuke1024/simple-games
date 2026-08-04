@@ -1,0 +1,33 @@
+import type { NumberMatchMessages } from './en';
+
+export const hi: NumberMatchMessages = {
+  numberMatchName: 'Number Match',
+  best: 'सर्वश्रेष्ठ',
+  newBest: 'नया सर्वश्रेष्ठ!',
+  scoreMatches: 'मिलान',
+  scoreRows: 'पंक्ति बोनस',
+  scoreClearBonus: 'क्लियर बोनस',
+  scoreNoHint: 'बिना-संकेत बोनस',
+  bestScores: 'सर्वश्रेष्ठ स्कोर',
+  totalBest: 'सभी लेवल के सर्वश्रेष्ठ का योग',
+  addNumbers: 'जोड़ें',
+  boardLabel: 'गेम बोर्ड',
+  cellLabel: 'पंक्ति {row}, स्तंभ {col}, {value}',
+  cellLabelStone: 'पंक्ति {row}, स्तंभ {col}, पत्थर',
+  cellLabelWild: 'पंक्ति {row}, स्तंभ {col}, वाइल्ड',
+  hintNoneToast: 'कोई जोड़ी नहीं मिली — "जोड़ें" आज़माएँ।',
+  wildIntroToast: '✦ किसी भी संख्या के साथ जोड़ी बनाता है।',
+  stoneIntroToast: 'पत्थर हटाए नहीं जा सकते और रास्ता रोकते हैं।',
+  clearTitle: 'बोर्ड साफ़!',
+  clearBody: 'आपने सभी संख्याएँ हटा दीं।',
+  gameOverTitle: 'कोई चाल नहीं बची',
+  gameOverBody: 'बोर्ड अपनी सीमा तक पहुँच गया।',
+  step1Title: 'समान, या योग 10',
+  step1Body: 'दो समान संख्याएँ, या जिनका योग 10 हो, उन्हें हटाएँ।',
+  step2Title: 'जुड़ी हुई दो चुनें',
+  step2Body:
+    'आड़ी, खड़ी, तिरछी — या पंक्ति के अंत से अगली पंक्ति की शुरुआत तक। खाली खाने बाधा नहीं बनते, लेकिन बीच में बची कोई भी संख्या रास्ता रोक देती है।',
+  step3Title: 'सब हटाएँ और जीतें',
+  step3Body: 'अटक जाएँ तो "जोड़ें" से बची संख्याएँ जुड़ जाती हैं। अनडू और संकेत हमेशा मुफ़्त हैं।',
+  gameOverCount: 'गेम ओवर',
+};

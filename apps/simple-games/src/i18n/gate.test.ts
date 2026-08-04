@@ -23,7 +23,7 @@
  */
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { catalogs, type Locale } from './index';
+import { catalogs, type Locale, type MessageKey } from './index';
 import { HIGH_RISK_KEYS } from './highRiskKeys';
 import { LOCALE_PROVENANCE, machineLocales } from './provenance';
 import record from './gateRecord.json';
@@ -37,7 +37,30 @@ interface Approval {
 
 const approvals = record.approvals as Record<string, Record<string, Approval>>;
 
-const digest = (value: string) => `sha256:${createHash('sha256').update(value, 'utf8').digest('hex')}`;
+/**
+ * The gate covers strings wherever they live. Several high-risk keys are
+ * game-owned and moved into the game chunks (issue #38), so the checks below
+ * run against the merged view: shell catalogs plus every game's. Games are
+ * collected by glob, not by name, so a new game's catalog is under the gate
+ * the moment the folder exists.
+ */
+const gameModules = import.meta.glob<{ catalogs: Record<Locale, Record<string, string>> }>(
+  '../games/*/i18n/index.ts',
+  { eager: true },
+);
+const full: Record<Locale, Record<string, string>> = Object.fromEntries(
+  (Object.keys(catalogs) as Locale[]).map((locale) => [
+    locale,
+    Object.assign(
+      {},
+      catalogs[locale],
+      ...Object.values(gameModules).map((m) => m.catalogs[locale]),
+    ) as Record<string, string>,
+  ]),
+) as Record<Locale, Record<string, string>>;
+
+const digest = (value: string) =>
+  `sha256:${createHash('sha256').update(value, 'utf8').digest('hex')}`;
 
 const STRICT = process.env.I18N_GATE_STRICT === '1';
 
@@ -50,7 +73,7 @@ describe('high-risk translation gate', () => {
         continue;
       }
       for (const key of Object.keys(keys)) {
-        if (!HIGH_RISK_KEYS.includes(key as keyof (typeof catalogs)['en'])) {
+        if (!HIGH_RISK_KEYS.includes(key as MessageKey)) {
           problems.push(`approval for "${locale}.${key}", which is not a high-risk key`);
         }
       }
@@ -58,14 +81,27 @@ describe('high-risk translation gate', () => {
     expect(problems, problems.join('\n')).toEqual([]);
   });
 
+  it('every high-risk key still resolves to a string in every catalog', () => {
+    // The staleness check below skips keys it cannot find, which is right for
+    // a renamed key (the existence test above reports it) but would also let
+    // a key silently fall out of the merged view — say, a game catalog that
+    // stopped being globbed. Presence is therefore asserted on its own.
+    const missing: string[] = [];
+    for (const locale of Object.keys(full) as Locale[]) {
+      for (const key of HIGH_RISK_KEYS) {
+        if (typeof full[locale][key] !== 'string') missing.push(`${locale}.${key}`);
+      }
+    }
+    expect(missing, missing.join('\n')).toEqual([]);
+  });
+
   it('has no approval that its strings have outgrown', () => {
     const stale: string[] = [];
     for (const [locale, keys] of Object.entries(approvals)) {
       if (!(locale in LOCALE_PROVENANCE)) continue;
       for (const [key, approval] of Object.entries(keys)) {
-        const typedKey = key as keyof (typeof catalogs)['en'];
-        const source = catalogs.en[typedKey];
-        const target = catalogs[locale as Locale]?.[typedKey];
+        const source = full.en[key];
+        const target = full[locale as Locale][key];
         if (source === undefined || target === undefined) continue;
 
         if (digest(source) !== approval.source) {
@@ -100,7 +136,8 @@ describe('high-risk translation gate', () => {
     const outstanding: string[] = [];
     for (const locale of machineLocales()) {
       const missing = HIGH_RISK_KEYS.filter((key) => !approvals[locale]?.[key as string]);
-      if (missing.length) outstanding.push(`${locale}: ${missing.length}/${HIGH_RISK_KEYS.length} keys unapproved`);
+      if (missing.length)
+        outstanding.push(`${locale}: ${missing.length}/${HIGH_RISK_KEYS.length} keys unapproved`);
     }
 
     if (!STRICT) {

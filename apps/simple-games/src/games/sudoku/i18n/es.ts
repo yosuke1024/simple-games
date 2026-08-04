@@ -1,0 +1,41 @@
+import type { SudokuMessages } from './en';
+
+export const es: SudokuMessages = {
+  sudokuName: 'Sudoku',
+  sudokuGridLabel: 'Cuadrícula de Sudoku',
+  sudokuPadLabel: 'Teclado numérico',
+  sudokuPadKey: '{value}, quedan {n}',
+  sudokuPadNoteKey: 'Nota {value}',
+  sudokuCellEmpty: 'Vacía, fila {row}, columna {col}',
+  sudokuCellGiven: '{value}, inicial, fila {row}, columna {col}',
+  sudokuCellEntry: '{value}, fila {row}, columna {col}',
+  sudokuErase: 'Borrar',
+  sudokuNotes: 'Notas',
+  sudokuMistakes: 'Errores',
+  sudokuTier_easy: 'Fácil',
+  sudokuTier_medium: 'Medio',
+  sudokuTier_hard: 'Difícil',
+  sudokuSolvedTitle: '¡Resuelto!',
+  sudokuSolvedBody: 'Cada fila, columna y bloque contiene 1-9.',
+  sudokuNewBestTime: 'Tu tiempo más rápido.',
+  sudokuLevelsSolved: 'Niveles resueltos',
+  sudokuDailiesSolved: 'Retos resueltos',
+  sudokuAverageTime: 'Tiempo promedio',
+  sudokuHighlightMistakes: 'Mostrar errores',
+  sudokuHighlightMistakesNote:
+    'Marca una cifra que no coincide con la solución. Las repetidas siempre se marcan.',
+  sudokuHintNone: 'Todavía no se puede deducir nada.',
+  sudokuHintOnlyDigit: 'Solo una cifra cabe en esta casilla.',
+  sudokuHintOnlyCell: 'Aquí {value} solo puede ir en esta casilla.',
+  sudokuHintLockedLine: 'En este bloque, {value} solo cabe en la línea resaltada.',
+  sudokuHintLockedBox: 'En esta línea, {value} solo cabe en el bloque resaltado.',
+  sudokuHintRuledOut: 'Estas casillas descartan esas cifras en el resto del grupo.',
+  sudokuStep1Title: '1-9, uno de cada',
+  sudokuStep1Body: 'Cada fila, columna y bloque de 3x3 contiene del 1 al 9 exactamente una vez.',
+  sudokuStep2Title: 'Anota los candidatos',
+  sudokuStep2Body:
+    'Toca Notas para apuntar los candidatos mientras reduces las opciones de una casilla.',
+  sudokuStep3Title: '¿Sin ideas? Pide una pista',
+  sudokuStep3Body:
+    'Una pista muestra qué casilla queda decidida y por qué. Las pistas y deshacer siempre son gratis.',
+};

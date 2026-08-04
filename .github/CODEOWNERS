@@ -25,7 +25,10 @@
 /apps/simple-games/src/games/*/game/        @yosuke1024
 
 # Shipped translations (14 locales, key parity enforced by the type system).
+# Game-owned strings live beside each game's code, not under src/i18n/
+# (issue #38), so both paths need the same scrutiny.
 /apps/simple-games/src/i18n/                @yosuke1024
+/apps/simple-games/src/games/*/i18n/        @yosuke1024
 
 # Native build: signing, permissions, versionCode, WebView floor.
 /apps/simple-games/android/                 @yosuke1024

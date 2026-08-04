@@ -1,0 +1,46 @@
+import type { SolitaireMessages } from './en';
+
+export const fr: SolitaireMessages = {
+  solitaireName: 'Solitaire',
+  solNewDeal: 'Nouvelle donne',
+  solDrawSetting: 'Mode de pioche',
+  solDrawOne: 'Piocher 1',
+  solDrawThree: 'Piocher 3',
+  solDrawNote: 'S’applique à partir de la prochaine donne.',
+  solTableLabel: 'Table de solitaire',
+  solStockLabel: 'Pioche, {n} cartes — touchez pour piocher',
+  solStockEmpty: 'Pioche vide — touchez pour retourner la défausse',
+  solCardLabel: '{rank} de {suit}',
+  solCardFaceDown: 'Face cachée',
+  solSuit_spades: 'pique',
+  solSuit_hearts: 'cœur',
+  solSuit_diamonds: 'carreau',
+  solSuit_clubs: 'trèfle',
+  solFoundationCard: 'Fondation, {card}',
+  solFoundationEmpty: 'Fondation, {suit}, vide',
+  solPileLabel: 'Colonne {n}',
+  solPileEmpty: 'Colonne {n}, vide — un roi peut venir ici',
+  solAutoFinish: 'Terminer la partie',
+  solHintNone: 'Aucun coup trouvé — annulez ou recommencez.',
+  solHintsUsed: 'Indices',
+  solWonTitle: 'Gagné !',
+  solWonBody: 'Les quatre familles sont complètes.',
+  solNewBestMoves: 'Votre plus petit nombre de coups.',
+  solNewBestTime: 'Votre meilleur temps.',
+  solBestMoves: 'Minimum de coups',
+  solDealsPlayed: 'Donnes jouées',
+  solGamesWon: 'Parties gagnées',
+  solWinRate: 'Taux de victoire',
+  solDailiesWon: 'Défis quotidiens gagnés',
+  solDailyBacklogHint:
+    'Les jours précédents restent ouverts. Toutes les donnes ne sont pas gagnables.',
+  solStep1Title: 'Un de moins, couleurs alternées',
+  solStep1Body:
+    'Empilez en descendant, rouge sur noir sur rouge. Touchez une carte, puis sa destination.',
+  solStep2Title: 'Libérez les cartes cachées',
+  solStep2Body:
+    'Les coups qui retournent une carte ouvrent le jeu. La pioche se retourne autant de fois que voulu.',
+  solStep3Title: "De l'as au roi",
+  solStep3Body:
+    "Montez chaque famille à sa fondation, de l'as au roi. Les quatre complètes, c'est gagné.",
+};

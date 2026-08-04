@@ -7,8 +7,15 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LANGUAGES } from '@/storage/schemas';
-import { catalogs, LANGUAGE_NAMES, matchLocale, resolveLocale, translate, type Locale } from './index';
-import { en } from './locales/en';
+import {
+  catalogs,
+  LANGUAGE_NAMES,
+  matchLocale,
+  resolveLocale,
+  translate,
+  type Locale,
+  type MessageKey,
+} from './index';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -115,36 +122,79 @@ describe('resolveLocale', () => {
 });
 
 describe('catalog consistency', () => {
+  /**
+   * Shell catalogs plus every game's (issue #38): the guarantees below apply
+   * to every string wherever it lives. Games are collected by glob, so a new
+   * game's catalog is under these tests the moment its i18n/ folder exists —
+   * and the eager import also registers each catalog, which is what lets the
+   * `translate` tests below exercise game keys through the public API.
+   */
+  const gameModules = import.meta.glob<{ catalogs: Record<Locale, Record<string, string>> }>(
+    '../games/*/i18n/index.ts',
+    { eager: true },
+  );
+  const sets: { name: string; catalogs: Record<Locale, Record<string, string>> }[] = [
+    { name: 'shell', catalogs: catalogs as Record<Locale, Record<string, string>> },
+    ...Object.entries(gameModules).map(([path, module]) => ({
+      name: path.replace('../games/', '').replace('/i18n/index.ts', ''),
+      catalogs: module.catalogs,
+    })),
+  ];
   const locales = Object.keys(catalogs) as Locale[];
-  const keys = Object.keys(en) as (keyof typeof en)[];
   const placeholdersOf = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 
   it('every locale provides every key as a non-empty string', () => {
-    for (const locale of locales) {
-      for (const key of keys) {
-        const value = catalogs[locale][key];
-        expect(typeof value, `${locale}.${key}`).toBe('string');
-        expect(value.trim().length, `${locale}.${key} is empty`).toBeGreaterThan(0);
+    for (const { name, catalogs: set } of sets) {
+      for (const locale of locales) {
+        for (const key of Object.keys(set.en)) {
+          const value = set[locale][key];
+          expect(typeof value, `${name}: ${locale}.${key}`).toBe('string');
+          expect((value ?? '').trim().length, `${name}: ${locale}.${key} is empty`).toBeGreaterThan(
+            0,
+          );
+        }
       }
     }
   });
 
   it('placeholder names match English in every locale', () => {
-    for (const locale of locales) {
-      for (const key of keys) {
-        expect(placeholdersOf(catalogs[locale][key]), `${locale}.${key}`).toEqual(
-          placeholdersOf(en[key]),
-        );
+    for (const { name, catalogs: set } of sets) {
+      for (const locale of locales) {
+        for (const [key, english] of Object.entries(set.en)) {
+          expect(placeholdersOf(set[locale][key] ?? ''), `${name}: ${locale}.${key}`).toEqual(
+            placeholdersOf(english),
+          );
+        }
       }
     }
   });
 
+  it('no key lives in more than one catalog', () => {
+    // Disjoint key sets are what make the shell-then-games lookup order in
+    // `translate` a non-choice. A duplicate would mean one catalog silently
+    // shadowing another in whichever order the chunks happened to load.
+    const owner = new Map<string, string>();
+    const duplicates: string[] = [];
+    for (const { name, catalogs: set } of sets) {
+      for (const key of Object.keys(set.en)) {
+        const existing = owner.get(key);
+        if (existing !== undefined) duplicates.push(`${key} (${existing} and ${name})`);
+        else owner.set(key, name);
+      }
+    }
+    expect(duplicates, duplicates.join('\n')).toEqual([]);
+  });
+
   it('no catalog string contains markup or control characters', () => {
-    for (const locale of locales) {
-      for (const key of keys) {
-        const value = catalogs[locale][key];
-        // eslint-disable-next-line no-control-regex -- the check exists to ban control chars
-        expect(value, `${locale}.${key}`).not.toMatch(/[<>\u0000-\u0008\u000B\u000C\u000E-\u001F]/);
+    for (const { name, catalogs: set } of sets) {
+      for (const locale of locales) {
+        for (const key of Object.keys(set.en)) {
+          const value = set[locale][key] ?? '';
+          expect(value, `${name}: ${locale}.${key}`).not.toMatch(
+            // eslint-disable-next-line no-control-regex -- the check exists to ban control chars
+            /[<>\u0000-\u0008\u000B\u000C\u000E-\u001F]/,
+          );
+        }
       }
     }
   });
@@ -153,5 +203,40 @@ describe('catalog consistency', () => {
     expect(translate('en', 'modeLevel', { n: 42 })).toBe('Level 42');
     expect(translate('ja', 'modeLevel', { n: 42 })).toBe('レベル 42');
     expect(translate('en', 'modeLevel')).toBe('Level {n}');
+  });
+
+  it('resolves dynamically assembled game keys in every locale', () => {
+    // These keys are built at runtime (t(`sudokuTier_${difficulty}`), …), so
+    // no grep proves they are referenced — this test is what keeps them from
+    // being "cleaned up" and silently breaking those screens (issue #38).
+    const assembled: readonly MessageKey[] = [
+      'sudokuTier_easy',
+      'sudokuTier_medium',
+      'sudokuTier_hard',
+      'minesDifficulty_easy',
+      'minesDifficulty_medium',
+      'minesDifficulty_hard',
+      'memoryDifficulty_easy',
+      'memoryDifficulty_medium',
+      'memoryDifficulty_hard',
+      'solSuit_spades',
+      'solSuit_hearts',
+      'solSuit_diamonds',
+      'solSuit_clubs',
+    ];
+    for (const locale of locales) {
+      for (const key of assembled) {
+        const value = translate(locale, key);
+        expect(value, `${locale}.${key}`).not.toBe(key);
+        expect(value.trim().length, `${locale}.${key}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('falls back to the key itself for a key no loaded catalog owns', () => {
+    // The shape of the one bug the split makes possible: shell code asking
+    // for a game string before the game's chunk has loaded. It must degrade
+    // to something greppable, never crash.
+    expect(translate('ja', 'notARealKey' as MessageKey)).toBe('notARealKey');
   });
 });

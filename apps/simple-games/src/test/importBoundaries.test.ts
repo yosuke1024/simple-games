@@ -16,6 +16,13 @@
  * reaches shared code by '../../../storage' and a sibling game would be
  * '../../<other>' — the specifier shapes overlap), so this test resolves
  * every specifier against the filesystem instead.
+ *
+ * `import.meta.glob(...)` is a fifth way to reach into games/, alongside the
+ * four import forms rule 4 already names (issue #38's per-game i18n tests use
+ * it to aggregate every game's catalog). It is treated as dynamic, like
+ * `import()`, and only test infrastructure may use it to reach games/ — see
+ * GAME_I18N_GLOB below. `no-restricted-imports` cannot see it either (it only
+ * inspects `ImportDeclaration` nodes), so this scanner is the only gate on it.
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
@@ -57,9 +64,11 @@ function importsOf(file: string): Import[] {
   const staticPattern = /(?:^|\n)\s*(?:import|export)\s[^;'"]*?from\s+['"]([^'"]+)['"]/g;
   const barePattern = /(?:^|\n)\s*import\s+['"]([^'"]+)['"]/g;
   const dynamicPattern = /import\(\s*['"]([^'"]+)['"]\s*\)/g;
+  const globPattern = /import\.meta\.glob(?:<[^>]*>)?\(\s*['"]([^'"]+)['"]/g;
   for (const match of text.matchAll(staticPattern)) push(match[1]!, false);
   for (const match of text.matchAll(barePattern)) push(match[1]!, false);
   for (const match of text.matchAll(dynamicPattern)) push(match[1]!, true);
+  for (const match of text.matchAll(globPattern)) push(match[1]!, true);
   return out;
 }
 
@@ -67,6 +76,16 @@ const files = listSourceFiles(SRC);
 const allImports = files.flatMap(importsOf);
 const gamesDir = join(SRC, 'games') + sep;
 const registryFile = join(SRC, 'app', 'registry.ts');
+
+/**
+ * The one glob shape issue #38's i18n tests use to aggregate every game's
+ * catalog (`src/i18n/gate.test.ts`, `src/i18n/i18n.test.ts`,
+ * `src/test/setup.ts`). Matched on the *resolved* path, so it is exempt no
+ * matter which of those files' relative depths wrote it.
+ */
+const GAME_I18N_GLOB = join(SRC, 'games', '*', 'i18n', 'index.ts');
+const isTestInfra = (file: string): boolean =>
+  /\.test\.tsx?$/.test(file) || file === join(SRC, 'test', 'setup.ts');
 
 /** The game id a path belongs to, or null. */
 const gameOf = (path: string): string | null =>
@@ -91,10 +110,16 @@ describe('import boundaries (docs/ARCHITECTURE.md)', () => {
     expect(offenders.map((o) => `${rel(o.file)} -> ${o.specifier}`)).toEqual([]);
   });
 
-  it('only the registry and the games themselves reach into src/games/', () => {
+  it('only the registry, the games themselves, and the i18n test aggregator reach into src/games/', () => {
     const offenders = allImports.filter((entry) => {
       if (entry.resolved === null || gameOf(entry.resolved) === null) return false;
-      return gameOf(entry.file) === null && entry.file !== registryFile;
+      if (gameOf(entry.file) !== null || entry.file === registryFile) return false;
+      // issue #38: the i18n tests glob every game's catalog to test it as a
+      // whole. Exempt only this exact resolved target, and only from
+      // recognised test files — a shell file (or any other glob shape)
+      // reaching into games/ still fails below.
+      if (isTestInfra(entry.file) && entry.resolved === GAME_I18N_GLOB) return false;
+      return true;
     });
     expect(offenders.map((o) => `${rel(o.file)} -> ${o.specifier}`)).toEqual([]);
   });

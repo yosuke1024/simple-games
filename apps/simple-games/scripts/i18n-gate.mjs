@@ -19,12 +19,13 @@
  * gate. This is the ergonomics around it.
  */
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const I18N = join(HERE, '../src/i18n');
+const GAMES = join(HERE, '../src/games');
 const RECORD_PATH = join(I18N, 'gateRecord.json');
 
 const digest = (value) => `sha256:${createHash('sha256').update(value, 'utf8').digest('hex')}`;
@@ -34,9 +35,24 @@ const digest = (value) => `sha256:${createHash('sha256').update(value, 'utf8').d
  * run. Read the source and pull out the string literals: these files are plain
  * `key: 'value',` records with no logic in them, which the i18n tests already
  * guarantee.
+ *
+ * A locale is no longer one file (issue #38): the shell's strings live in
+ * src/i18n/locales/<locale>.ts and each game's in
+ * src/games/<id>/i18n/<locale>.ts, so the high-risk keys — several belong to
+ * games — are only visible in the merged view. Key sets are disjoint
+ * (i18n.test.ts), and a collision here is a hard stop rather than a silent
+ * "last file wins".
  */
+function catalogFiles(locale) {
+  const files = [join(I18N, `locales/${locale}.ts`)];
+  for (const game of readdirSync(GAMES).sort()) {
+    const path = join(GAMES, game, 'i18n', `${locale}.ts`);
+    if (existsSync(path)) files.push(path);
+  }
+  return files;
+}
+
 function readCatalog(locale) {
-  const text = readFileSync(join(I18N, `locales/${locale}.ts`), 'utf8');
   const out = {};
   // key: 'single-quoted' OR "double-quoted", possibly multi-line, with escapes.
   //
@@ -49,12 +65,16 @@ function readCatalog(locale) {
   // catalogues through TypeScript rather than scraping them.
   const pattern =
     /^\s{2}(?:\/\/.*\n\s*)?'?([A-Za-z0-9_]+)'?:\s*\n?\s*(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")/gm;
-  for (const match of text.matchAll(pattern)) {
-    const raw = match[2] ?? match[3];
-    out[match[1]] = raw
-      .replace(/\\'/g, "'")
-      .replace(/\\"/g, '"')
-      .replace(/\\\\/g, '\\');
+  for (const file of catalogFiles(locale)) {
+    const text = readFileSync(file, 'utf8');
+    for (const match of text.matchAll(pattern)) {
+      if (match[1] in out) {
+        console.error(`duplicate key "${match[1]}" for ${locale} — second copy in ${file}`);
+        process.exit(2);
+      }
+      const raw = match[2] ?? match[3];
+      out[match[1]] = raw.replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    }
   }
   return out;
 }
@@ -69,7 +89,9 @@ function readList(file, exportName) {
   const block = body.slice(start, body.indexOf('];', start));
   const found = [...block.matchAll(/'([^']+)'/g)].map((m) => m[1]);
   if (found.length === 0) {
-    console.error(`Could not read ${exportName} from ${file}. Refusing to report on an empty list.`);
+    console.error(
+      `Could not read ${exportName} from ${file}. Refusing to report on an empty list.`,
+    );
     process.exit(2);
   }
   return found;
@@ -96,7 +118,14 @@ if (command === 'status') {
     const stale = done.filter((key) => {
       const entry = approvals[locale][key];
       const target = readCatalog(locale)[key];
-      return digest(en[key]) !== entry.source || (target && digest(target) !== entry.target);
+      // A missing target (a game's locale file lost the key, or the file
+      // itself went missing from catalogFiles()) must count as stale, not
+      // "nothing to compare, so nothing wrong" — that was exactly the false
+      // green this script's own header warns about, just via a different
+      // door (a missing file instead of a missed quote style).
+      return (
+        digest(en[key]) !== entry.source || target === undefined || digest(target) !== entry.target
+      );
     });
     outstanding += keys.length - done.length + stale.length;
     const mark = done.length === keys.length && stale.length === 0 ? '✅' : '  ';
@@ -124,6 +153,12 @@ if (command === 'pending') {
   console.log('# Whoever does this must NOT be shown the English original.\n');
   for (const key of keys) {
     if (approvals[locale]?.[key]) continue;
+    if (catalog[key] === undefined) {
+      console.error(
+        `  ! ${locale} has no string for "${key}" — catalogFiles() found no owner for it`,
+      );
+      continue;
+    }
     console.log(`${key}: ${catalog[key]}`);
   }
   process.exit(0);

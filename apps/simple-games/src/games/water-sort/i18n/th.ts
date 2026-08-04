@@ -1,0 +1,24 @@
+import type { WaterSortMessages } from './en';
+
+export const th: WaterSortMessages = {
+  waterSortName: 'Water Sort',
+  waterBoardLabel: 'หลอดน้ำ',
+  waterTubeLabel: 'หลอด {n} จากล่างขึ้นบน: {colors}',
+  waterTubeEmpty: 'ว่าง',
+  waterHintNone: 'ไม่พบทางไปต่อ — ย้อนกลับหรือเริ่มใหม่',
+  waterHintsUsed: 'คำใบ้',
+  waterSolvedTitle: 'จัดเรียบร้อย!',
+  waterSolvedBody: 'ทุกสีมีหลอดของตัวเองแล้ว',
+  waterNewBestMoves: 'จำนวนตาน้อยที่สุดของคุณ',
+  waterNewBestTime: 'เวลาเร็วที่สุดของคุณ',
+  waterBestMoves: 'ตาน้อยที่สุด',
+  waterLevelsSolved: 'ด่านที่ผ่าน',
+  waterDailiesSolved: 'เดลีที่สำเร็จ',
+  waterDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ',
+  waterStep1Title: 'เทสีเดียวกันใส่กัน',
+  waterStep1Body: 'แตะหลอดหนึ่ง แล้วแตะอีกหลอด สีบนสุดตรงกันก็เทได้ หรือเทใส่หลอดว่างเมื่อไรก็ได้',
+  waterStep2Title: 'หลอดว่างสองหลอด',
+  waterStep2Body: 'หลอดว่างคือพื้นที่ทำงานของคุณ ย้อนกลับได้ฟรีเสมอ',
+  waterStep3Title: 'หลอดละหนึ่งสี',
+  waterStep3Body: 'เมื่อทุกหลอดเหลือสีเดียว กระดานก็เสร็จสมบูรณ์',
+};

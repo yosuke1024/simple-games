@@ -1,0 +1,31 @@
+import type { NonogramMessages } from './en';
+
+export const de: NonogramMessages = {
+  nonoName: 'Nonogramm',
+  nonoBoardLabel: 'Nonogramm-Feld, {size} mal {size}',
+  nonoCellBlank: 'Leer, Zeile {row}, Spalte {col}',
+  nonoCellFilled: 'Ausgemalt, Zeile {row}, Spalte {col}',
+  nonoCellCrossed: 'Mit × markiert, Zeile {row}, Spalte {col}',
+  nonoRowClueLabel: 'Zeile {n}: {clue}',
+  nonoColClueLabel: 'Spalte {n}: {clue}',
+  nonoSizeLabel: '{n}×{n}',
+  nonoXMode: 'X-Modus',
+  nonoXModeNote: 'Tippen setzt ein ×, langes Drücken malt aus.',
+  nonoHintFound: 'Die hervorgehobene Linie legt ein Feld fest.',
+  nonoHintBroken: 'Die hervorgehobene Linie passt nicht mehr zu ihrer Zahl.',
+  nonoHintNone: 'Gerade ist kein sicherer Zug zu finden.',
+  nonoSolvedTitle: 'Gelöst!',
+  nonoSolvedBody: 'Alle Zahlen stimmen.',
+  nonoHintsUsed: 'Verwendete Hinweise',
+  nonoNewBestTime: 'Deine schnellste Zeit.',
+  nonoLevelsSolved: 'Gelöste Level',
+  nonoDailiesSolved: 'Gelöste Tagesrätsel',
+  nonoDailyBacklogHint: 'Jeder frühere Tag bleibt offen.',
+  nonoStep1Title: 'Zahlen sind Blöcke',
+  nonoStep1Body:
+    'Jede Zahl steht für einen Block ausgemalter Felder in Reihenfolge, mit mindestens einer Lücke dazwischen.',
+  nonoStep2Title: 'Unmögliches ausschließen',
+  nonoStep2Body: 'Markiere Felder, die leer bleiben, mit einem ×, um die Linie einzugrenzen.',
+  nonoStep3Title: 'Jede Linie erfüllen',
+  nonoStep3Body: 'Stimmen alle Zeilen und Spalten, ist das Bild fertig. Raten ist nie nötig.',
+};

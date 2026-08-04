@@ -1,0 +1,41 @@
+import type { SudokuMessages } from './en';
+
+export const fr: SudokuMessages = {
+  sudokuName: 'Sudoku',
+  sudokuGridLabel: 'Grille de Sudoku',
+  sudokuPadLabel: 'Pavé numérique',
+  sudokuPadKey: '{value}, {n} restants',
+  sudokuPadNoteKey: 'Note {value}',
+  sudokuCellEmpty: 'Vide, ligne {row}, colonne {col}',
+  sudokuCellGiven: '{value}, initial, ligne {row}, colonne {col}',
+  sudokuCellEntry: '{value}, ligne {row}, colonne {col}',
+  sudokuErase: 'Effacer',
+  sudokuNotes: 'Notes',
+  sudokuMistakes: 'Erreurs',
+  sudokuTier_easy: 'Facile',
+  sudokuTier_medium: 'Moyen',
+  sudokuTier_hard: 'Difficile',
+  sudokuSolvedTitle: 'Résolu !',
+  sudokuSolvedBody: 'Chaque ligne, colonne et bloc contient 1-9.',
+  sudokuNewBestTime: 'Votre meilleur temps.',
+  sudokuLevelsSolved: 'Niveaux résolus',
+  sudokuDailiesSolved: 'Défis résolus',
+  sudokuAverageTime: 'Temps moyen',
+  sudokuHighlightMistakes: 'Afficher les erreurs',
+  sudokuHighlightMistakesNote:
+    'Marque un chiffre qui ne correspond pas à la solution. Les doublons sont toujours marqués.',
+  sudokuHintNone: 'Rien ne peut encore être déduit.',
+  sudokuHintOnlyDigit: 'Un seul chiffre convient à cette case.',
+  sudokuHintOnlyCell: 'Ici, {value} ne peut aller que dans cette case.',
+  sudokuHintLockedLine: 'Dans ce bloc, {value} ne tient que sur la ligne surlignée.',
+  sudokuHintLockedBox: 'Sur cette ligne, {value} ne tient que dans le bloc surligné.',
+  sudokuHintRuledOut: 'Ces cases éliminent ces chiffres ailleurs dans le groupe.',
+  sudokuStep1Title: '1-9, une fois chacun',
+  sudokuStep1Body: 'Chaque ligne, colonne et bloc 3x3 contient 1 à 9 exactement une fois.',
+  sudokuStep2Title: 'Notez les candidats',
+  sudokuStep2Body:
+    "Touchez Notes pour inscrire les candidats pendant que vous réduisez les options d'une case.",
+  sudokuStep3Title: 'Vous bloquez ? Prenez un indice',
+  sudokuStep3Body:
+    "Un indice montre quelle case est décidée et pourquoi. Les indices et l'annulation sont toujours gratuits.",
+};

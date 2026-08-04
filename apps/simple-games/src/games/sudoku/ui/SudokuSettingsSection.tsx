@@ -7,6 +7,9 @@
  * collection home, so no game is mounted while this is on screen — reading and
  * writing the record here cannot race a running game.
  */
+// Register this game's 14-locale catalog the moment the chunk loads,
+// before anything below renders (issue #38, src/i18n/registry.ts).
+import '../i18n';
 import { useEffect, useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { Toggle } from '@/ui/components/Toggle';
