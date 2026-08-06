@@ -87,7 +87,10 @@ describe('restart (§2)', () => {
     // Play a little, including something that can be lost.
     const mine = session.board.field.mines.findIndex(Boolean);
     session = flagCell(session, mine)!;
-    const lost = tapCell(session, session.board.field.mines.findIndex((m, i) => m && i !== mine))!;
+    const lost = tapCell(
+      session,
+      session.board.field.mines.findIndex((m, i) => m && i !== mine),
+    )!;
     expect(isLost(lost.board)).toBe(true);
 
     const again = restartSession(lost);

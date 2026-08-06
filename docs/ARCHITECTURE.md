@@ -41,7 +41,9 @@ src/
 │   ├── sliding-puzzle/
 │   ├── memory-match/
 │   ├── brick-breaker/
-│   └── sky-fighter/
+│   ├── sky-fighter/
+│   ├── 2048/
+│   └── block-puzzle/
 ├── monetization/           # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 ├── services/               # 共有: ads(バナーのみ) / network / sound / haptics
 ├── state/                  # 共有: SettingsContext
@@ -61,7 +63,9 @@ src/
 [SLIDING_PUZZLE_RULES.md](SLIDING_PUZZLE_RULES.md) /
 [MEMORY_MATCH_RULES.md](MEMORY_MATCH_RULES.md) /
 [BRICK_BREAKER_RULES.md](BRICK_BREAKER_RULES.md) /
-[SKY_FIGHTER_RULES.md](SKY_FIGHTER_RULES.md) を唯一のソースとする。
+[SKY_FIGHTER_RULES.md](SKY_FIGHTER_RULES.md) /
+[GAME_2048_RULES.md](GAME_2048_RULES.md) /
+[BLOCK_PUZZLE_RULES.md](BLOCK_PUZZLE_RULES.md) を唯一のソースとする。
 
 レイヤー規則:
 
@@ -191,6 +195,8 @@ src/
 | Memory Match   | くすんだローズ           | `#9e5468` | `#cf8fa4` |
 | Brick Breaker  | 黄土                     | `#8a6a2b` | `#c9a765` |
 | Sky Fighter    | 夕闇の青                 | `#5d5aa8` | `#9d9be0` |
+| 2048           | ジェイド                 | `#2b7d59` | `#79c39c` |
+| Block Puzzle   | オーキッド               | `#8b4f80` | `#c795bd` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
@@ -256,6 +262,8 @@ src/
 | `mm.*`        | Memory Match(saveGame / saveDaily / stats / flags)                |
 | `bb.*`        | Brick Breaker(stats / progress / flags。**saveGame なし** — 下記) |
 | `sf.*`        | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)   |
+| `tm.*`        | 2048(saveGame / stats / flags。デイリーもレベル進行もない)        |
+| `bp.*`        | Block Puzzle(saveGame / stats / flags。同上)                      |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/
@@ -263,8 +271,11 @@ Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断
 Minesweeper はレベル進行を持たないため `progress` がなく、代わりに旗モードの
 `ms.prefs` を持つ。Nonogram は ×モードの `ng.prefs` を持つ。Solitaire は
 Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設定も持たない
-(デイリーの記録は両者とも stats 内)。パズル 8 本はいずれも中断が
-「通常モード用」と「デイリー用」の 2 スロットで独立する。
+(デイリーの記録は両者とも stats 内)。デイリーを持つパズルはいずれも中断が
+「通常モード用」と「デイリー用」の 2 スロットで独立する。2048 と Block Puzzle は
+デイリーもレベル進行も持たないエンドレスなので、中断スロットは 1 つだけで
+`progress` もない(自己ベストは stats 内 — `GAME_2048_RULES.md` §9 /
+`BLOCK_PUZZLE_RULES.md` §9)。
 
 **アーケード 2 本(Brick Breaker / Sky Fighter)は `saveGame` を持たない。**
 リアルタイムの盤面を復元しても「開いた瞬間に球が落ちてくる」ものにしかならず、

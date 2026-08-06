@@ -113,7 +113,9 @@ describe('Quick Rules figures', () => {
       expect(cells.length === 9 || cells.length === 1).toBe(true);
 
       // A figure that repeated a digit in one box would teach the wrong rule.
-      const digits = cells.map((cell) => cell.textContent!.trim()).filter((text) => /^\d$/.test(text));
+      const digits = cells
+        .map((cell) => cell.textContent!.trim())
+        .filter((text) => /^\d$/.test(text));
       expect(new Set(digits).size, `step ${step} repeats a digit`).toBe(digits.length);
 
       if (step < 2) await user.click(screen.getByRole('button', { name: 'Next' }));

@@ -124,9 +124,7 @@ export const MemoryBoard = memo(function MemoryBoard({
             type="button"
             className="mm-card"
             aria-label={
-              isUp
-                ? t('memoryCardUp', { n: spoken, row, col })
-                : t('memoryCardDown', { row, col })
+              isUp ? t('memoryCardUp', { n: spoken, row, col }) : t('memoryCardDown', { row, col })
             }
             onClick={() => onFlip(index)}
           >

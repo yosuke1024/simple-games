@@ -88,8 +88,7 @@ export const mineCount = (field: MineField): number => {
   return n;
 };
 
-export const safeCellCount = (field: MineField): number =>
-  field.mines.length - mineCount(field);
+export const safeCellCount = (field: MineField): number => field.mines.length - mineCount(field);
 
 /**
  * Opens `index` and, when it sees no mines, everything connected to it plus

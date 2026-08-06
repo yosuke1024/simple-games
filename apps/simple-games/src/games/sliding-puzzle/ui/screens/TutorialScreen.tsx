@@ -50,22 +50,14 @@ export function SlidingPuzzleTutorialScreen() {
       title: t('slideStep1Title'),
       body: t('slideStep1Body'),
       // The 8 is beside the gap: tapping it slides it one place right.
-      example: (
-        <BoardFigure
-          values={['1', '2', '3', '4', '5', '6', '7', '8', '.']}
-          moving={[7]}
-        />
-      ),
+      example: <BoardFigure values={['1', '2', '3', '4', '5', '6', '7', '8', '.']} moving={[7]} />,
     },
     {
       title: t('slideStep2Title'),
       body: t('slideStep2Body'),
       // The gap is at the row's start, so tapping the 3 brings all three over.
       example: (
-        <BoardFigure
-          values={['1', '2', '3', '4', '5', '6', '.', '7', '8']}
-          moving={[7, 8]}
-        />
+        <BoardFigure values={['1', '2', '3', '4', '5', '6', '.', '7', '8']} moving={[7, 8]} />
       ),
     },
     {

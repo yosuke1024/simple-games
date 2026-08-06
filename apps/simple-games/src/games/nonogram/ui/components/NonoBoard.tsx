@@ -35,8 +35,7 @@ export interface NonoBoardProps {
   onCross: (index: number) => void;
 }
 
-const clueText = (clue: readonly number[]): string =>
-  clue.length === 0 ? '0' : clue.join(' ');
+const clueText = (clue: readonly number[]): string => (clue.length === 0 ? '0' : clue.join(' '));
 
 export const NonoBoard = memo(function NonoBoard({
   session,

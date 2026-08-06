@@ -64,9 +64,7 @@ export function SudokuStatsScreen() {
                 </div>
                 <div className="stats-row">
                   <dt>{t('bestTime')}</dt>
-                  <dd>
-                    {bucket.bestSeconds === null ? '—' : formatDuration(bucket.bestSeconds)}
-                  </dd>
+                  <dd>{bucket.bestSeconds === null ? '—' : formatDuration(bucket.bestSeconds)}</dd>
                 </div>
                 <div className="stats-row">
                   <dt>{t('sudokuAverageTime')}</dt>

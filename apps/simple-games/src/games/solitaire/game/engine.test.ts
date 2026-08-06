@@ -53,7 +53,9 @@ describe('dealBoard', () => {
 
 describe('placement rules (§3)', () => {
   it('stacks descending and color-alternating on the tableau', () => {
-    const b = board({ tableau: [{ down: [], up: [H(7)] }, ...new Array<Pile>(6).fill({ down: [], up: [] })] });
+    const b = board({
+      tableau: [{ down: [], up: [H(7)] }, ...new Array<Pile>(6).fill({ down: [], up: [] })],
+    });
     expect(canPlaceOnTableau(b, S(6), 0)).toBe(true);
     expect(canPlaceOnTableau(b, D(6), 0)).toBe(false); // red on red
     expect(canPlaceOnTableau(b, S(5), 0)).toBe(false); // wrong rank
@@ -176,9 +178,7 @@ describe('auto finish (§7)', () => {
     // Every suit is built to 10; the twelve remaining cards sit face up in
     // legal runs (§3), which is exactly the §7 position.
     const b = board({
-      foundations: SUITS.map((suit) =>
-        Array.from({ length: 10 }, (_, i) => cardOf(suit, i + 1)),
-      ),
+      foundations: SUITS.map((suit) => Array.from({ length: 10 }, (_, i) => cardOf(suit, i + 1))),
       tableau: [
         { down: [], up: [S(13), D(12), S(11)] },
         { down: [], up: [H(13), S(12), H(11)] },

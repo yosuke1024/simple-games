@@ -110,8 +110,7 @@ function provedMines(state: SolveState, cell: number): number {
   return n;
 }
 
-const slice = (buffer: readonly number[], length: number): number[] =>
-  buffer.slice(0, length);
+const slice = (buffer: readonly number[], length: number): number[] => buffer.slice(0, length);
 
 /**
  * Reports each fact a scan finds. Returning false stops the scan — Hint uses

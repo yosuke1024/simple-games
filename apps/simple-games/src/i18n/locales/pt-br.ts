@@ -29,6 +29,7 @@ export const ptBR: Messages = {
   movesLabel: 'Jogadas',
 
   tryAgain: 'Repetir o tabuleiro',
+  newGame: 'Novo jogo',
   backHome: 'Início',
 
   confirmNewGameTitle: 'Começar um novo jogo?',

@@ -84,9 +84,6 @@ export async function saveGame(session: GameSession, kv: KVStore = preferencesKV
   await saveRecord(schemaFor(session.mode), toPersisted(session, Date.now()), kv);
 }
 
-export async function clearSavedGame(
-  mode: GameMode,
-  kv: KVStore = preferencesKV,
-): Promise<void> {
+export async function clearSavedGame(mode: GameMode, kv: KVStore = preferencesKV): Promise<void> {
   await removeRecord(schemaFor(mode).key, kv);
 }

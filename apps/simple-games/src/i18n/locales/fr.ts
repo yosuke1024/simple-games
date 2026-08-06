@@ -29,6 +29,7 @@ export const fr: Messages = {
   movesLabel: 'Coups',
 
   tryAgain: 'Rejouer cette grille',
+  newGame: 'Nouvelle partie',
   backHome: 'Accueil',
 
   confirmNewGameTitle: 'Commencer une nouvelle partie ?',

@@ -63,10 +63,7 @@ export function applyClearToProgress(
 
   if (session.mode === 'level' && session.level !== null) {
     ref = String(session.level);
-    next.highestUnlocked = Math.min(
-      MAX_LEVEL,
-      Math.max(next.highestUnlocked, session.level + 1),
-    );
+    next.highestUnlocked = Math.min(MAX_LEVEL, Math.max(next.highestUnlocked, session.level + 1));
     const previous = next.bestScores[ref];
     isNewBest = previous === undefined || score > previous;
     bestScore = Math.max(previous ?? 0, score);

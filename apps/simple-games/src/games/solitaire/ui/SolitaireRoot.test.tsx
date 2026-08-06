@@ -176,7 +176,9 @@ describe('playing', () => {
     await resumeGoldenGame(user);
 
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
-    await user.click(within(table()).getByRole('button', { name: 'Stock, 24 cards — tap to draw' }));
+    await user.click(
+      within(table()).getByRole('button', { name: 'Stock, 24 cards — tap to draw' }),
+    );
     expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
     expect(
       within(table()).getByRole('button', { name: 'Stock, 23 cards — tap to draw' }),
@@ -204,7 +206,9 @@ describe('playing', () => {
     }
 
     // Drawing turns one card over, and only then is it named.
-    await user.click(within(table()).getByRole('button', { name: 'Stock, 24 cards — tap to draw' }));
+    await user.click(
+      within(table()).getByRole('button', { name: 'Stock, 24 cards — tap to draw' }),
+    );
     expect(table().querySelectorAll('[data-card]')).toHaveLength(8);
   });
 

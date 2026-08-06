@@ -47,7 +47,14 @@ import {
   type SolitaireSession,
 } from '../game';
 import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
-import { flagsSchema, prefsSchema, statsSchema, type Flags, type Prefs, type Stats } from '../storage/schemas';
+import {
+  flagsSchema,
+  prefsSchema,
+  statsSchema,
+  type Flags,
+  type Prefs,
+  type Stats,
+} from '../storage/schemas';
 import { applyGameStart, applyPlayTime, applyWon } from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'daily' | 'game' | 'stats';

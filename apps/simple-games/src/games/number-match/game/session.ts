@@ -178,8 +178,7 @@ export function undo(session: GameSession): GameSession | null {
     history: session.history.slice(0, -1),
     status: getStatus(previous.board),
     score: previous.score,
-    moveCount:
-      previous.action === 'match' ? Math.max(0, session.moveCount - 1) : session.moveCount,
+    moveCount: previous.action === 'match' ? Math.max(0, session.moveCount - 1) : session.moveCount,
     addCount: previous.action === 'add' ? Math.max(0, session.addCount - 1) : session.addCount,
   };
 }

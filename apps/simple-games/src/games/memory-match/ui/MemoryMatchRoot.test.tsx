@@ -50,9 +50,7 @@ const DECK = generateDeck(SEED, 'easy');
 
 const savedEasyGame = {
   ...tutorialDone,
-  [MM_STORAGE_KEYS.game]: JSON.stringify(
-    toPersisted(createDifficultySession('easy', SEED), 1),
-  ),
+  [MM_STORAGE_KEYS.game]: JSON.stringify(toPersisted(createDifficultySession('easy', SEED), 1)),
 };
 
 const positionOf = (index: number) => ({
@@ -74,8 +72,7 @@ const partnerOf = (index: number): number =>
   DECK.findIndex((symbol, i) => symbol === DECK[index] && i !== index);
 
 /** A cell whose symbol differs from the one at `index`. */
-const strangerTo = (index: number): number =>
-  DECK.findIndex((symbol) => symbol !== DECK[index]);
+const strangerTo = (index: number): number => DECK.findIndex((symbol) => symbol !== DECK[index]);
 
 async function resumeEasyGame(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole('button', { name: /Easy/ }));

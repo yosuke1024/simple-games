@@ -140,29 +140,32 @@ describe('solveFrom on real boards', () => {
    * and must never run out of things to prove. A solver that cheated would win
    * this test by opening a mine — so the mine map is what it is measured on.
    */
-  it.each(difficulties)('never calls a mine safe while replaying a %s board', (difficulty: Difficulty) => {
-    const preset = PRESETS[difficulty];
-    const cells = preset.width * preset.height;
-    for (let i = 0; i < 3; i++) {
-      const first = (i * 53) % cells;
-      const { field } = generateField(`sound-${difficulty}-${i}`, difficulty, first);
-      const opened = new Array<boolean>(cells).fill(false);
-      let open = openRegion(field, first, opened);
-      const target = safeCellCount(field);
-      let guard = 0;
-      while (open < target && guard++ <= cells) {
-        const view = viewOf(field, opened);
-        const safe = findSafeCell(view);
-        expect(safe, `${difficulty} ${i} stalled at ${open}/${target}`).not.toBeNull();
-        expect(field.mines[safe!.index], `${difficulty} ${i} called a mine safe`).toBe(false);
-        expect(opened[safe!.index]).toBe(false);
-        // Every reason a hint gives must be something the player can see.
-        for (const reason of safe!.reason) expect(opened[reason]).toBe(true);
-        open += openRegion(field, safe!.index, opened);
+  it.each(difficulties)(
+    'never calls a mine safe while replaying a %s board',
+    (difficulty: Difficulty) => {
+      const preset = PRESETS[difficulty];
+      const cells = preset.width * preset.height;
+      for (let i = 0; i < 3; i++) {
+        const first = (i * 53) % cells;
+        const { field } = generateField(`sound-${difficulty}-${i}`, difficulty, first);
+        const opened = new Array<boolean>(cells).fill(false);
+        let open = openRegion(field, first, opened);
+        const target = safeCellCount(field);
+        let guard = 0;
+        while (open < target && guard++ <= cells) {
+          const view = viewOf(field, opened);
+          const safe = findSafeCell(view);
+          expect(safe, `${difficulty} ${i} stalled at ${open}/${target}`).not.toBeNull();
+          expect(field.mines[safe!.index], `${difficulty} ${i} called a mine safe`).toBe(false);
+          expect(opened[safe!.index]).toBe(false);
+          // Every reason a hint gives must be something the player can see.
+          for (const reason of safe!.reason) expect(opened[reason]).toBe(true);
+          open += openRegion(field, safe!.index, opened);
+        }
+        expect(open, `${difficulty} ${i}`).toBe(target);
       }
-      expect(open, `${difficulty} ${i}`).toBe(target);
-    }
-  });
+    },
+  );
 });
 
 function viewOf(field: MineField, opened: readonly boolean[]): SolverView {

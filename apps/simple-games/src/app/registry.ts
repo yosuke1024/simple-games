@@ -22,6 +22,7 @@
  */
 import type { ComponentType } from 'react';
 import { BB_STORAGE_KEYS } from '../games/brick-breaker/storage/keys';
+import { BP_STORAGE_KEYS } from '../games/block-puzzle/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
 import { NG_STORAGE_KEYS } from '../games/nonogram/storage/keys';
@@ -30,6 +31,7 @@ import { SD_STORAGE_KEYS } from '../games/sudoku/storage/keys';
 import { SF_STORAGE_KEYS } from '../games/sky-fighter/storage/keys';
 import { SO_STORAGE_KEYS } from '../games/solitaire/storage/keys';
 import { SP_STORAGE_KEYS } from '../games/sliding-puzzle/storage/keys';
+import { TM_STORAGE_KEYS } from '../games/2048/storage/keys';
 import { WS_STORAGE_KEYS } from '../games/water-sort/storage/keys';
 
 export type GameId =
@@ -42,7 +44,9 @@ export type GameId =
   | 'water-sort'
   | 'solitaire'
   | 'brick-breaker'
-  | 'sky-fighter';
+  | 'sky-fighter'
+  | '2048'
+  | 'block-puzzle';
 
 export interface GameDefinition {
   id: GameId;
@@ -108,6 +112,24 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/minesweeper/ui/MinesweeperRoot').then((m) => ({
         default: m.MinesweeperRoot,
+      })),
+  },
+  {
+    id: '2048',
+    title: '2048',
+    glyph: '⊞',
+    storageKeys: Object.values(TM_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/2048/ui/Game2048Root').then((m) => ({ default: m.Game2048Root })),
+  },
+  {
+    id: 'block-puzzle',
+    title: 'Block Puzzle',
+    glyph: '▣',
+    storageKeys: Object.values(BP_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/block-puzzle/ui/BlockPuzzleRoot').then((m) => ({
+        default: m.BlockPuzzleRoot,
       })),
   },
   {

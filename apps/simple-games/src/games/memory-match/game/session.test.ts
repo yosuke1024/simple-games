@@ -81,9 +81,7 @@ describe('tapCard', () => {
     expect(shown.moveCount).toBe(1);
 
     // The next flip puts the mismatch away and opens its own card.
-    const third = shown.deck.findIndex(
-      (_, index) => index !== first && index !== second,
-    );
+    const third = shown.deck.findIndex((_, index) => index !== first && index !== second);
     const next = tapCard(shown, third)!;
     expect(next.faceUp).toEqual([third]);
     expect(next.moveCount).toBe(1);

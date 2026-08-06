@@ -32,10 +32,7 @@
      between the cells and the 2.6-cell clue band. */
   --nono-cell: clamp(
     18px,
-    calc(
-      (100vw - 24px - (var(--nono-size) + 1) * var(--nono-gap)) /
-        (var(--nono-size) + 2.6)
-    ),
+    calc((100vw - 24px - (var(--nono-size) + 1) * var(--nono-gap)) / (var(--nono-size) + 2.6)),
     40px
   );
   --nono-band: calc(var(--nono-cell) * 2.6);

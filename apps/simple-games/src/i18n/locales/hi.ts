@@ -29,6 +29,7 @@ export const hi: Messages = {
   movesLabel: 'चालें',
 
   tryAgain: 'वही बोर्ड फिर से',
+  newGame: 'नया गेम',
   backHome: 'होम',
 
   confirmNewGameTitle: 'नया गेम शुरू करें?',

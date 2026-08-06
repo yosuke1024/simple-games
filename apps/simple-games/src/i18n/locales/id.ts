@@ -29,6 +29,7 @@ export const id: Messages = {
   movesLabel: 'Langkah',
 
   tryAgain: 'Ulangi papan yang sama',
+  newGame: 'Permainan Baru',
   backHome: 'Beranda',
 
   confirmNewGameTitle: 'Mulai permainan baru?',

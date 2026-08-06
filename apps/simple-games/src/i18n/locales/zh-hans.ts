@@ -29,6 +29,7 @@ export const zhHans: Messages = {
   movesLabel: '步数',
 
   tryAgain: '重玩同一局',
+  newGame: '新游戏',
   backHome: '首页',
 
   confirmNewGameTitle: '开始新游戏？',

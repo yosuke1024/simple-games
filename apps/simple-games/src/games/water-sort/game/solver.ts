@@ -17,7 +17,14 @@
  *   generation retries on either while the Hint wording stays truthful
  *   ("no way forward found") for both.
  */
-import { applyPour, canonicalKey, isSolved, isTubeComplete, topColor, topRunLength } from './engine';
+import {
+  applyPour,
+  canonicalKey,
+  isSolved,
+  isTubeComplete,
+  topColor,
+  topRunLength,
+} from './engine';
 import { TUBE_CAPACITY, type Pour, type Tubes } from './types';
 
 /**

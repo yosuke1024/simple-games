@@ -3,14 +3,7 @@
  * travels, and what counts as sorted.
  */
 import { describe, expect, it } from 'vitest';
-import {
-  applyPour,
-  canonicalKey,
-  canPour,
-  isSolved,
-  isTubeComplete,
-  topRunLength,
-} from './engine';
+import { applyPour, canonicalKey, canPour, isSolved, isTubeComplete, topRunLength } from './engine';
 import { isValidTubes } from './types';
 
 describe('topRunLength', () => {
@@ -25,12 +18,7 @@ describe('topRunLength', () => {
 
 describe('canPour / applyPour', () => {
   it('pours onto a matching color, as much as fits (§3)', () => {
-    const tubes = [
-      [0, 1, 1],
-      [2, 1],
-      [2, 2, 2],
-      [],
-    ];
+    const tubes = [[0, 1, 1], [2, 1], [2, 2, 2], []];
     expect(canPour(tubes, 0, 1)).toBe(true);
     const result = applyPour(tubes, 0, 1)!;
     expect(result.moved).toBe(2);
@@ -39,21 +27,11 @@ describe('canPour / applyPour', () => {
   });
 
   it('pours a partial run when the destination is short on room (§3)', () => {
-    const tubes = [
-      [0, 1, 1, 1],
-      [2, 2, 2, 1],
-      [],
-      [],
-    ];
+    const tubes = [[0, 1, 1, 1], [2, 2, 2, 1], [], []];
     // Tube 1 has no room at all — the run cannot go there.
     expect(canPour(tubes, 0, 1)).toBe(false);
 
-    const shortRoom = [
-      [0, 1, 1, 1],
-      [2, 2, 1],
-      [],
-      [],
-    ];
+    const shortRoom = [[0, 1, 1, 1], [2, 2, 1], [], []];
     const result = applyPour(shortRoom, 0, 1)!;
     expect(result.moved).toBe(1);
     expect(result.tubes[0]).toEqual([0, 1, 1]);
@@ -61,12 +39,7 @@ describe('canPour / applyPour', () => {
   });
 
   it('pours into an empty tube', () => {
-    const tubes = [
-      [0, 1, 1],
-      [],
-      [0, 0, 0],
-      [2, 2, 2, 2],
-    ];
+    const tubes = [[0, 1, 1], [], [0, 0, 0], [2, 2, 2, 2]];
     const result = applyPour(tubes, 0, 1)!;
     expect(result.moved).toBe(2);
     expect(result.tubes[0]).toEqual([0]);
@@ -74,12 +47,7 @@ describe('canPour / applyPour', () => {
   });
 
   it('rejects mismatched colors, full destinations, empty sources, and self-pours', () => {
-    const tubes = [
-      [0, 1],
-      [2, 2],
-      [0, 0, 0, 0],
-      [],
-    ];
+    const tubes = [[0, 1], [2, 2], [0, 0, 0, 0], []];
     expect(canPour(tubes, 0, 1)).toBe(false); // 1 onto 2
     expect(canPour(tubes, 0, 2)).toBe(false); // full destination
     expect(canPour(tubes, 3, 0)).toBe(false); // empty source
@@ -107,13 +75,7 @@ describe('canonicalKey', () => {
 
 describe('isValidTubes', () => {
   it('accepts a real board and rejects broken ones', () => {
-    const board = [
-      [0, 1, 2, 0],
-      [1, 2, 0, 1],
-      [2, 0, 1, 2],
-      [],
-      [],
-    ];
+    const board = [[0, 1, 2, 0], [1, 2, 0, 1], [2, 0, 1, 2], [], []];
     expect(isValidTubes(board, 3)).toBe(true);
     expect(isValidTubes(board, 4)).toBe(false); // wrong tube count for 4 colors
     expect(isValidTubes([...board.slice(1), [0]], 3)).toBe(false); // counts broken

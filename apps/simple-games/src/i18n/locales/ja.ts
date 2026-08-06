@@ -29,6 +29,7 @@ export const ja: Messages = {
   movesLabel: '手数',
 
   tryAgain: '同じ盤面で再挑戦',
+  newGame: '新しいゲーム',
   backHome: 'ホームへ',
 
   confirmNewGameTitle: '新しいゲームを始めますか？',

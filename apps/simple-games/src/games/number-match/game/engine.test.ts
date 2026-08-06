@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { COLS } from './constants';
-import { addNumbers, applyMatch, applyMatchDetailed, canAddNumbers, collapseBoard, getStatus } from './engine';
+import {
+  addNumbers,
+  applyMatch,
+  applyMatchDetailed,
+  canAddNumbers,
+  collapseBoard,
+  getStatus,
+} from './engine';
 import { liveValues, makeBoard } from './test-helpers';
 import { isDigit, isLive, isStone } from './types';
 

@@ -159,11 +159,7 @@ describe('winning (§2)', () => {
 
   it('is not reached while a safe cell is still shut, however many flags are down', () => {
     // All three mines flagged, one safe cell left: flags decide nothing (§2).
-    const board = boardWith(
-      SPLIT,
-      [...LEFT_REGION, 3, 8, 9, 13, 14],
-      [2, 7, 12],
-    );
+    const board = boardWith(SPLIT, [...LEFT_REGION, 3, 8, 9, 13, 14], [2, 7, 12]);
     expect(isWon(board)).toBe(false);
     expect(statusOf(board)).toBe('playing');
   });

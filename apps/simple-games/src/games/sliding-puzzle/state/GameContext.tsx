@@ -407,9 +407,7 @@ export function SlidingPuzzleProvider({
     ],
   );
 
-  return (
-    <SlidingPuzzleContext.Provider value={value}>{children}</SlidingPuzzleContext.Provider>
-  );
+  return <SlidingPuzzleContext.Provider value={value}>{children}</SlidingPuzzleContext.Provider>;
 }
 
 export function useSlidingPuzzle(): SlidingPuzzleContextValue {

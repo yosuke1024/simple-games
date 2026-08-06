@@ -29,6 +29,7 @@ export const es: Messages = {
   movesLabel: 'Jugadas',
 
   tryAgain: 'Repetir el tablero',
+  newGame: 'Partida nueva',
   backHome: 'Inicio',
 
   confirmNewGameTitle: '¿Empezar una partida nueva?',

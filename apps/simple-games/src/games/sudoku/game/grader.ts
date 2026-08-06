@@ -226,13 +226,7 @@ function findPointing(grid: Grid, candidates: readonly number[]): Step | null {
       const targets = line.filter(
         (c) => boxOf(c) !== b && grid[c] === 0 && hasBit(candidates[c]!, d),
       );
-      const step = eliminationStep(
-        'lockedCandidatesPointing',
-        targets,
-        [d as Digit],
-        seats,
-        box,
-      );
+      const step = eliminationStep('lockedCandidatesPointing', targets, [d as Digit], seats, box);
       if (step) return step;
     }
   }
@@ -257,13 +251,7 @@ function findClaiming(grid: Grid, candidates: readonly number[]): Step | null {
       const targets = BOXES[box]!.filter(
         (c) => !seats.includes(c) && grid[c] === 0 && hasBit(candidates[c]!, d),
       );
-      const step = eliminationStep(
-        'lockedCandidatesClaiming',
-        targets,
-        [d as Digit],
-        seats,
-        line,
-      );
+      const step = eliminationStep('lockedCandidatesClaiming', targets, [d as Digit], seats, line);
       if (step) return step;
     }
   }

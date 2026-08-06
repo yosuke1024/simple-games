@@ -72,7 +72,12 @@ export const BoardView = memo(function BoardView({
     if (lastMatch.rowsRemoved === 0) {
       // No collapse means indices are stable: display the real board and let
       // the two (now cleared) cells play their send-off in place.
-      setAnim({ phase: 'pop', match: lastMatch, afterPair: lastMatch.prevBoard, deadRows: NO_ROWS });
+      setAnim({
+        phase: 'pop',
+        match: lastMatch,
+        afterPair: lastMatch.prevBoard,
+        deadRows: NO_ROWS,
+      });
       const done = window.setTimeout(() => setAnim(null), POP_MS);
       return () => window.clearTimeout(done);
     }

@@ -65,7 +65,7 @@
   justify-content: center;
   align-items: flex-end;
   gap: 26px 12px;
-  width: min(94vw, calc(var(--ws-cols) * 96px));
+  width: min(100%, calc(var(--ws-cols) * 96px));
   touch-action: manipulation;
 }
 
@@ -144,20 +144,12 @@
   left: 13%;
   width: 7%;
   border-radius: 999px;
-  background-image: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.42),
-    rgba(255, 255, 255, 0)
-  );
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0));
   pointer-events: none;
 }
 
 :root[data-theme='dark'] .ws-glass-shine {
-  background-image: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.18),
-    rgba(255, 255, 255, 0)
-  );
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
 }
 
 /* A quarter of the glass each, with no gap: a run of one colour has to look
@@ -170,22 +162,14 @@
   align-items: center;
   justify-content: center;
   height: 25%;
-  background-image: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.16),
-    rgba(0, 0, 0, 0.07)
-  );
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.07));
 }
 
 /* Colour is the only thing telling the water apart (§1), so the dark theme
    keeps the sheen faint — a white wash over an already-muted palette pulls
    every colour towards the same grey. */
 :root[data-theme='dark'] .ws-unit {
-  background-image: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.06),
-    rgba(0, 0, 0, 0.1)
-  );
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.1));
 }
 
 /* Water lies wall to wall — only its surface is marked, by a lit edge. A
@@ -283,15 +267,33 @@
   }
 }
 
-.ws-color-0 { background-color: var(--ws-c-0); }
-.ws-color-1 { background-color: var(--ws-c-1); }
-.ws-color-2 { background-color: var(--ws-c-2); }
-.ws-color-3 { background-color: var(--ws-c-3); }
-.ws-color-4 { background-color: var(--ws-c-4); }
-.ws-color-5 { background-color: var(--ws-c-5); }
-.ws-color-6 { background-color: var(--ws-c-6); }
-.ws-color-7 { background-color: var(--ws-c-7); }
-.ws-color-8 { background-color: var(--ws-c-8); }
+.ws-color-0 {
+  background-color: var(--ws-c-0);
+}
+.ws-color-1 {
+  background-color: var(--ws-c-1);
+}
+.ws-color-2 {
+  background-color: var(--ws-c-2);
+}
+.ws-color-3 {
+  background-color: var(--ws-c-3);
+}
+.ws-color-4 {
+  background-color: var(--ws-c-4);
+}
+.ws-color-5 {
+  background-color: var(--ws-c-5);
+}
+.ws-color-6 {
+  background-color: var(--ws-c-6);
+}
+.ws-color-7 {
+  background-color: var(--ws-c-7);
+}
+.ws-color-8 {
+  background-color: var(--ws-c-8);
+}
 
 /* ---------- top bar ---------- */
 

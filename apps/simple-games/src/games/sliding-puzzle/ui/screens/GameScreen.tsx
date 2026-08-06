@@ -21,15 +21,8 @@ import { SlidingBoard } from '../components/SlidingBoard';
 import { SlidingPuzzleResultOverlay } from '../components/SlidingPuzzleResultOverlay';
 
 export function SlidingPuzzleGameScreen() {
-  const {
-    session,
-    lastResult,
-    tapTile,
-    applyUndo,
-    goHome,
-    restartCurrent,
-    startNextLevel,
-  } = useSlidingPuzzle();
+  const { session, lastResult, tapTile, applyUndo, goHome, restartCurrent, startNextLevel } =
+    useSlidingPuzzle();
   const { t } = useSettings();
   const [confirmRestart, setConfirmRestart] = useState(false);
 

@@ -9,7 +9,13 @@ import { createMemoryKV } from '../../../storage/kv';
 import { loadRecord, saveRecord } from '../../../storage/repo';
 import { createDailySession, createDifficultySession, tapCell } from '../game';
 import { availableDailyDates, canPlayDaily } from '../state/progressLogic';
-import { applyGameStart, applyPlayTime, applyWin, dailiesCleared, winRate } from '../state/statsLogic';
+import {
+  applyGameStart,
+  applyPlayTime,
+  applyWin,
+  dailiesCleared,
+  winRate,
+} from '../state/statsLogic';
 import { clearSavedGame, loadSavedGames, saveGame } from './gamePersistence';
 import { flagsSchema, MS_STORAGE_KEYS, prefsSchema, statsSchema } from './schemas';
 
@@ -147,10 +153,7 @@ describe('saved games (§10)', () => {
     expect((await loadSavedGames(kv)).difficulty).toBeNull();
 
     // A mine count that does not match the preset.
-    await kv.set(
-      MS_STORAGE_KEYS.game,
-      JSON.stringify({ ...raw, mines: '0'.repeat(81) }),
-    );
+    await kv.set(MS_STORAGE_KEYS.game, JSON.stringify({ ...raw, mines: '0'.repeat(81) }));
     expect((await loadSavedGames(kv)).difficulty).toBeNull();
 
     // And the untouched record still loads, so the checks above mean something.

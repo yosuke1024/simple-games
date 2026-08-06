@@ -29,6 +29,7 @@ export const tr: Messages = {
   movesLabel: 'Hamle',
 
   tryAgain: 'Aynı tahtayı tekrarla',
+  newGame: 'Yeni oyun',
   backHome: 'Ana sayfa',
 
   confirmNewGameTitle: 'Yeni oyun başlasın mı?',

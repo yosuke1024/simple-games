@@ -19,7 +19,12 @@ describe('no-guess generation (§4, §5)', () => {
     for (const level of SAMPLE_LEVELS) {
       const puzzle = generatePuzzle(levelSeed(level), sizeForLevel(level), fillRateForLevel(level));
       expect(puzzle.fallback, `level ${level} fell back`).toBe(false);
-      const result = solve(emptyMarks(puzzle.size), puzzle.clues.rows, puzzle.clues.cols, puzzle.size);
+      const result = solve(
+        emptyMarks(puzzle.size),
+        puzzle.clues.rows,
+        puzzle.clues.cols,
+        puzzle.size,
+      );
       expect(result.solved, `level ${level} is not line-solvable`).toBe(true);
       // The unique solution the solver reaches is the generated one.
       result.marks.forEach((mark, i) => {

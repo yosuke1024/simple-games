@@ -29,6 +29,7 @@ export const th: Messages = {
   movesLabel: 'จำนวนตา',
 
   tryAgain: 'ลองกระดานเดิมอีกครั้ง',
+  newGame: 'เกมใหม่',
   backHome: 'หน้าแรก',
 
   confirmNewGameTitle: 'เริ่มเกมใหม่หรือไม่?',

@@ -16,7 +16,15 @@ import { useNonogram } from '../../state/GameContext';
  * the game could actually deal — a figure that broke the rules would teach
  * the wrong thing.
  */
-function LineFigure({ clue, cells, done = false }: { clue: string; cells: string; done?: boolean }) {
+function LineFigure({
+  clue,
+  cells,
+  done = false,
+}: {
+  clue: string;
+  cells: string;
+  done?: boolean;
+}) {
   return (
     <div className="tutorial-example" aria-hidden="true">
       <div className="nono-figure">

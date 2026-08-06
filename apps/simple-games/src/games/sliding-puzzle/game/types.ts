@@ -15,8 +15,7 @@
 export type Size = 3 | 4 | 5;
 export const SIZES: readonly Size[] = [3, 4, 5];
 
-export const isSize = (value: unknown): value is Size =>
-  value === 3 || value === 4 || value === 5;
+export const isSize = (value: unknown): value is Size => value === 3 || value === 4 || value === 5;
 
 /** N² values, row-major. 0 is the blank; 1..N²-1 are the tiles. */
 export type Tiles = readonly number[];

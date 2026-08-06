@@ -89,11 +89,10 @@
   grid-template-columns: repeat(var(--mm-cols), 1fr);
   gap: 7px;
   width: min(
-    94vw,
+    100%,
     420px,
     calc(
-      (100vh - 142px - env(safe-area-inset-bottom, 0px)) * var(--mm-cols) /
-        var(--mm-rows) * 5 / 7
+      (100vh - 142px - env(safe-area-inset-bottom, 0px)) * var(--mm-cols) / var(--mm-rows) * 5 / 7
     ),
     calc(var(--mm-cols) * var(--mm-card-max) + (var(--mm-cols) - 1) * 7px)
   );
@@ -280,21 +279,51 @@
   aspect-ratio: 1;
 }
 
-.mm-symbol-0 { color: var(--mm-sym-red); }
-.mm-symbol-1 { color: var(--mm-sym-blue); }
-.mm-symbol-2 { color: var(--mm-sym-green); }
-.mm-symbol-3 { color: var(--mm-sym-purple); }
-.mm-symbol-4 { color: var(--mm-sym-gold); }
-.mm-symbol-5 { color: var(--mm-sym-pink); }
-.mm-symbol-6 { color: var(--mm-sym-indigo); }
-.mm-symbol-7 { color: var(--mm-sym-orange); }
-.mm-symbol-8 { color: var(--mm-sym-cyan); }
-.mm-symbol-9 { color: var(--mm-sym-olive); }
-.mm-symbol-10 { color: var(--mm-sym-brown); }
-.mm-symbol-11 { color: var(--mm-sym-magenta); }
-.mm-symbol-12 { color: var(--mm-sym-teal); }
-.mm-symbol-13 { color: var(--mm-sym-slate); }
-.mm-symbol-14 { color: var(--mm-sym-gray); }
+.mm-symbol-0 {
+  color: var(--mm-sym-red);
+}
+.mm-symbol-1 {
+  color: var(--mm-sym-blue);
+}
+.mm-symbol-2 {
+  color: var(--mm-sym-green);
+}
+.mm-symbol-3 {
+  color: var(--mm-sym-purple);
+}
+.mm-symbol-4 {
+  color: var(--mm-sym-gold);
+}
+.mm-symbol-5 {
+  color: var(--mm-sym-pink);
+}
+.mm-symbol-6 {
+  color: var(--mm-sym-indigo);
+}
+.mm-symbol-7 {
+  color: var(--mm-sym-orange);
+}
+.mm-symbol-8 {
+  color: var(--mm-sym-cyan);
+}
+.mm-symbol-9 {
+  color: var(--mm-sym-olive);
+}
+.mm-symbol-10 {
+  color: var(--mm-sym-brown);
+}
+.mm-symbol-11 {
+  color: var(--mm-sym-magenta);
+}
+.mm-symbol-12 {
+  color: var(--mm-sym-teal);
+}
+.mm-symbol-13 {
+  color: var(--mm-sym-slate);
+}
+.mm-symbol-14 {
+  color: var(--mm-sym-gray);
+}
 
 /* ---------- top bar ---------- */
 

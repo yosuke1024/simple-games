@@ -14,7 +14,15 @@
  */
 import { DAILY_DIFFICULTY, dailySeed } from './daily';
 import { generateDeck } from './deck';
-import { cellCount, LAYOUTS, type Deck, type Difficulty, type GameMode, type GameStatus, type Layout } from './types';
+import {
+  cellCount,
+  LAYOUTS,
+  type Deck,
+  type Difficulty,
+  type GameMode,
+  type GameStatus,
+  type Layout,
+} from './types';
 
 export interface MemorySession {
   readonly mode: GameMode;
@@ -98,9 +106,7 @@ export function restartSession(session: MemorySession): MemorySession {
  * down (§10): whether the player still remembers the card they had turned is
  * not something a device can save.
  */
-export function restoreSession(
-  data: Omit<MemorySession, 'faceUp' | 'status'>,
-): MemorySession {
+export function restoreSession(data: Omit<MemorySession, 'faceUp' | 'status'>): MemorySession {
   return {
     ...data,
     faceUp: [],

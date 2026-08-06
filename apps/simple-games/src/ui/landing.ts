@@ -14,10 +14,12 @@
  * locales, so the rest read the English page — which is honest, if not ideal,
  * and better than either a 404 or a machine-translated rulebook.
  *
- * Every title in the collection now has a guide, so this returns a URL for any
- * game id. A title added in future does not: write its guide on the landing
- * site first, because a "Learn More" built here before the page exists is a
- * 404 inside our own site, in front of a first-time visitor.
+ * A title earns its link by having a page, not by shipping: the id has to be
+ * in PUBLISHED_GAME_IDS below, which is the list of guides actually deployed
+ * on the landing site. A "Learn More" wired up before the page exists is a 404
+ * inside our own site, in front of a first-time visitor — so a new game ships
+ * without the button, and the button appears in the release that follows its
+ * guide.
  */
 import { LANDING_BASE_URL } from '@simple-games/brand';
 
@@ -31,9 +33,30 @@ const GAME_PAGES_PUBLISHED = true;
  */
 const PAGE_LOCALES = ['en', 'ja', 'es'] as const;
 
+/**
+ * The titles whose guides are live at `${LANDING_BASE_URL}/games/<id>/<locale>/`
+ * in every PAGE_LOCALES language. 2048, Block Puzzle and Snake are shipped but
+ * absent on purpose: their guides are not written yet, and until they are, the
+ * tutorial simply ends without a "Learn More" — which is honest, where a dead
+ * link would not be.
+ */
+const PUBLISHED_GAME_IDS: readonly string[] = [
+  'sudoku',
+  'minesweeper',
+  'nonogram',
+  'number-match',
+  'sliding-puzzle',
+  'solitaire',
+  'brick-breaker',
+  'water-sort',
+  'memory-match',
+  'sky-fighter',
+];
+
 /** The game's landing page, or null while there is nothing to link to. */
 export function gameLandingUrl(gameId: string, locale: string): string | null {
   if (!GAME_PAGES_PUBLISHED) return null;
+  if (!PUBLISHED_GAME_IDS.includes(gameId)) return null;
   const pageLocale = (PAGE_LOCALES as readonly string[]).includes(locale) ? locale : 'en';
   return `${LANDING_BASE_URL}/games/${gameId}/${pageLocale}/`;
 }

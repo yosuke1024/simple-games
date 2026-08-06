@@ -57,11 +57,7 @@ function sample(candidates: readonly number[], count: number, rng: () => number)
 }
 
 /** One random layout for the given attempt seed. */
-function layoutFor(
-  difficulty: Difficulty,
-  firstIndex: number,
-  attemptSeed: string,
-): MineField {
+function layoutFor(difficulty: Difficulty, firstIndex: number, attemptSeed: string): MineField {
   const preset = PRESETS[difficulty];
   const cells = preset.width * preset.height;
   const forbidden = new Set(cellAndNeighbours(preset.width, preset.height, firstIndex));

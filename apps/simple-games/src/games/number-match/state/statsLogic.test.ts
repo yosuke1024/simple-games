@@ -43,7 +43,11 @@ describe('applyGameEnd', () => {
   });
 
   it('records a game over without touching clear counters', () => {
-    const session: GameSession = { ...createLevelSession(1), status: 'gameOver', elapsedSeconds: 30 };
+    const session: GameSession = {
+      ...createLevelSession(1),
+      status: 'gameOver',
+      elapsedSeconds: 30,
+    };
     const stats = applyGameEnd(statsSchema.defaultValue(), session);
     expect(stats.level.gameOver).toBe(1);
     expect(stats.level.cleared).toBe(0);

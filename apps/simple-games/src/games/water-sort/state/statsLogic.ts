@@ -55,10 +55,7 @@ export interface ClearOutcome {
  * record for the board. Replaying an old level or an old daily can improve
  * either one but never moves the frontier backwards.
  */
-export function applySolveToProgress(
-  progress: Progress,
-  session: WaterSession,
-): ClearOutcome {
+export function applySolveToProgress(progress: Progress, session: WaterSession): ClearOutcome {
   const next: Progress = {
     ...progress,
     bestMoves: { ...progress.bestMoves },
