@@ -69,8 +69,8 @@ PRODUCT_PRINCIPLES.md「適用範囲」と WEB_VERSION.md)。
 
 ストア文面では収録済みのゲーム名を具体的に挙げる(現在は "Sudoku, Solitaire,
 Minesweeper, 2048, Block Puzzle, Brick Breaker, Nonogram, Number Match,
-Water Sort, Sliding Puzzle, Memory Match, Sky Fighter" の 12 本)。未収録のゲーム名は、**実際に収録された
-時点で**初めて足す。
+Water Sort, Sliding Puzzle, Memory Match, Sky Fighter, Dino Run" の 13 本)。
+未収録のゲーム名は、**実際に収録された時点で**初めて足す。
 ゲーム名は検索流入の中核だが、不自然なキーワード詰め込みはしない。
 
 ## 訴求の順序(ストア文面)

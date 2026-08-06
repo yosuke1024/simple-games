@@ -1,0 +1,111 @@
+/* Dino Run — board chrome and the two controls. Screens, buttons, dialogs
+   and the status row come from the shared stylesheet (ui/styles.css); the
+   accent arrives via the data-game tokens the shell stamps. The track itself
+   is a canvas (components/DinoBoard.tsx) that reads the same tokens. */
+
+/* The track is a wide strip, so it is laid out with the controls under it
+   rather than filling the column the way a puzzle board does. */
+.dr-body {
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+.dr-canvas {
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  display: block;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  touch-action: none;
+  cursor: pointer;
+}
+
+/* Two thumbs, two jobs. Big enough to hit without looking — the whole game
+   is played on these, and a run is lost in the tenth of a second spent
+   finding a small one (docs/DINO_RUN_RULES.md §3). */
+.dr-controls {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  gap: 12px;
+}
+
+.dr-control {
+  flex: 1;
+  min-height: 72px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 28px;
+  line-height: 1;
+  touch-action: manipulation;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.dr-control:active {
+  background: var(--accent-soft);
+  border-color: var(--accent-ring);
+}
+
+/* The run's score, glanceable mid-jump: display voice, steady digits. */
+.dr-score {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  min-width: 2ch;
+  text-align: center;
+}
+
+/* Every hundred points the score blinks once — a landmark, not a reward.
+   Reduced motion drops the blink; the number itself is the information. */
+.dr-score-mark {
+  animation: dr-mark 600ms steps(4, end) 1;
+}
+
+@keyframes dr-mark {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dr-score-mark {
+    animation: none;
+  }
+}
+
+.dr-best {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+/* "Tap to start" — over the track, gone the moment the run begins. */
+.dr-hint {
+  position: absolute;
+  top: 24%;
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-soft);
+  pointer-events: none;
+}
+
+/* Quick Rules figures (§11): little SVG scenes in the series tokens. */
+.dr-figure {
+  width: min(70vw, 220px);
+  height: auto;
+  display: block;
+}

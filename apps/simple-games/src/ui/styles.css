@@ -146,6 +146,15 @@
   --accent-ring-soft: rgba(139, 79, 128, 0.12);
 }
 
+:root[data-game='dino-run'],
+.accent-dino-run {
+  --accent: #6e7a34;
+  --accent-ink: #ffffff;
+  --accent-soft: #e8ecd6;
+  --accent-ring: rgba(110, 122, 52, 0.38);
+  --accent-ring-soft: rgba(110, 122, 52, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -265,6 +274,15 @@
   --accent-soft: #3a2a38;
   --accent-ring: rgba(199, 149, 189, 0.42);
   --accent-ring-soft: rgba(199, 149, 189, 0.14);
+}
+
+:root[data-theme='dark'][data-game='dino-run'],
+[data-theme='dark'] .accent-dino-run {
+  --accent: #b6c274;
+  --accent-ink: #171a0d;
+  --accent-soft: #343a1c;
+  --accent-ring: rgba(182, 194, 116, 0.42);
+  --accent-ring-soft: rgba(182, 194, 116, 0.14);
 }
 
 * {

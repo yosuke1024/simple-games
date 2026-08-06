@@ -272,6 +272,22 @@ export const titleAccents = {
     onDark: '#1c1019',
     softDark: '#3a2a38',
   },
+  /**
+   * Dino Run — desert scrub. The cacti and birds are drawn in the accent
+   * while the runner and the ground are ink, so the accent is what the player
+   * reads as "in the way"; an olive keeps that legible against both papers
+   * without turning the track into a warning sign. It takes the yellow-green
+   * gap between Solitaire's felt green and Brick Breaker's ochre — the two
+   * neighbours it must not be mistaken for on the collection home.
+   */
+  dinoRun: {
+    light: '#6e7a34',
+    onLight: '#ffffff',
+    softLight: '#e8ecd6',
+    dark: '#b6c274',
+    onDark: '#171a0d',
+    softDark: '#343a1c',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;
