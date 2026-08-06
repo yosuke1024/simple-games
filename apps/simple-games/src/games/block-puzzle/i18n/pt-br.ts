@@ -17,7 +17,7 @@ export const ptBR: BlockPuzzleMessages = {
   blockStep1Title: 'Arraste uma peça',
   blockStep1Body: 'Leve qualquer uma das três peças até o tabuleiro. Elas nunca giram.',
   blockStep2Title: 'Complete uma linha ou coluna',
-  blockStep2Body: 'A linha cheia some, e eliminar várias de uma vez vale mais.',
+  blockStep2Body: 'Uma linha cheia some, e ela se acende enquanto você ainda segura a peça.',
   blockStep3Title: 'Jogue até nada mais caber',
   blockStep3Body: 'Desfazer é grátis e ilimitado, então errar não custa nada.',
 };

@@ -17,7 +17,7 @@ export const ja: BlockPuzzleMessages = {
   blockStep1Title: 'ピースを運ぶ',
   blockStep1Body: '3 つのピースのどれかを盤面へ。回転はしません。',
   blockStep2Title: '行か列を埋める',
-  blockStep2Body: '埋まった列は消えます。まとめて消すほど点が伸びます。',
+  blockStep2Body: '埋まる行・列は運んでいる間に光ります。同時に消すほど点が伸びます。',
   blockStep3Title: '置けなくなるまで',
   blockStep3Body: 'Undo は何度でも無料。置き間違いに代償はありません。',
 };

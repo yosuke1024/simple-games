@@ -17,7 +17,7 @@ export const ko: BlockPuzzleMessages = {
   blockStep1Title: '조각을 끌어다 놓기',
   blockStep1Body: '세 조각 중 하나를 보드로 옮기세요. 조각은 회전하지 않습니다.',
   blockStep2Title: '가로줄이나 세로줄 채우기',
-  blockStep2Body: '가득 찬 줄은 사라지고, 한 번에 여러 줄을 지울수록 점수가 높습니다.',
+  blockStep2Body: '가득 찬 줄은 사라지고, 조각을 들고 있는 동안 그 줄이 밝아집니다.',
   blockStep3Title: '놓을 곳이 없을 때까지',
   blockStep3Body: '되돌리기는 무료이고 무제한이라 잘못 놓아도 손해가 없습니다.',
 };

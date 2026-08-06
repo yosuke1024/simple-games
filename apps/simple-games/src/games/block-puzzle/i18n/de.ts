@@ -17,7 +17,8 @@ export const de: BlockPuzzleMessages = {
   blockStep1Title: 'Ein Teil hineinziehen',
   blockStep1Body: 'Zieh eines der drei Teile aufs Feld. Teile drehen sich nie.',
   blockStep2Title: 'Zeile oder Spalte füllen',
-  blockStep2Body: 'Eine volle Linie verschwindet, und mehrere auf einmal bringen mehr.',
+  blockStep2Body:
+    'Eine volle Linie verschwindet und leuchtet auf, während du den Stein noch hältst.',
   blockStep3Title: 'Spiel, bis nichts mehr passt',
   blockStep3Body: 'Rückgängig ist gratis und unbegrenzt, ein Fehlgriff kostet also nichts.',
 };

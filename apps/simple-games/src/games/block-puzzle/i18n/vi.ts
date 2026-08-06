@@ -17,7 +17,7 @@ export const vi: BlockPuzzleMessages = {
   blockStep1Title: 'Kéo một mảnh vào bảng',
   blockStep1Body: 'Kéo một trong ba mảnh vào bảng. Các mảnh không bao giờ xoay.',
   blockStep2Title: 'Lấp đầy một hàng hoặc cột',
-  blockStep2Body: 'Hàng đầy sẽ biến mất, dọn nhiều hàng cùng lúc được nhiều điểm hơn.',
+  blockStep2Body: 'Hàng đầy sẽ biến mất, và hàng đó sáng lên ngay khi bạn còn đang cầm mảnh ghép.',
   blockStep3Title: 'Chơi đến khi không còn chỗ',
   blockStep3Body: 'Hoàn tác miễn phí và không giới hạn, nên đặt sai không mất gì.',
 };

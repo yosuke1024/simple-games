@@ -107,6 +107,29 @@ export function clearLines(board: Board): ClearResult {
 }
 
 /**
+ * Which cells a placement at (row, col) would clear, for the preview the
+ * board draws while a piece is still in hand (§3). Answered by running the
+ * real placement and the real clear on a copy: a second implementation of
+ * "which lines are full" is a second thing to keep in step with §4, and the
+ * one the player is shown has to be the one that then happens.
+ *
+ * Empty for a placement that clears nothing, and for one that is not legal —
+ * the preview promises a clear only where a release would deliver it.
+ */
+export function clearPreview(
+  board: Board,
+  piece: Piece,
+  row: number,
+  col: number,
+): readonly number[] {
+  if (!canPlace(board, piece, row, col)) return [];
+  const filled = place(board, piece, row, col).board;
+  const cleared = clearLines(filled);
+  if (cleared.lines === 0) return [];
+  return clearedCells(filled, cleared.board, []);
+}
+
+/**
  * One placement's points (§5): a point per square put down, plus
  * `10 × n × (n + 1) / 2` for clearing n lines at once — 10, 30, 60, 100.
  * Quadratic and no further: a bonus that grows faster than this turns one

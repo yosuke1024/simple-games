@@ -32,24 +32,45 @@ export interface BlockBoardProps {
   hand: readonly number[];
   /** Whether releasing now would place the piece — it is drawn either way. */
   handFits: boolean;
+  /** Board indices the lines this placement would take (§4), before it does. */
+  willClear: readonly number[];
   /** Board indices the last clear emptied, for the fade (§12). */
   clearing: readonly number[];
+  /** Where the piece that finished those lines landed — the fade runs out
+   *  from there, so the placement and the clear read as one movement (§12). */
+  clearFrom: { readonly row: number; readonly col: number } | null;
   onCellTap: (row: number, col: number) => void;
+  /** Aiming for a device with a pointer; a finger never fires this (§3). */
+  onCellHover: (row: number, col: number) => void;
+  onLeave: () => void;
   boardRef: (element: HTMLDivElement | null) => void;
 }
+
+/** How much later each ring of cells leaves than the one inside it (§12). */
+const CLEAR_STAGGER_MS = 20;
 
 export const BlockBoard = memo(function BlockBoard({
   board,
   hand,
   handFits,
+  willClear,
   clearing,
+  clearFrom,
   onCellTap,
+  onCellHover,
+  onLeave,
   boardRef,
 }: BlockBoardProps) {
   const { t } = useSettings();
 
   return (
-    <div className="bp-board" ref={boardRef} role="group" aria-label={t('blockBoardLabel')}>
+    <div
+      className="bp-board"
+      ref={boardRef}
+      role="group"
+      aria-label={t('blockBoardLabel')}
+      onPointerLeave={onLeave}
+    >
       {board.map((filled, index) => {
         const row = rowOf(index);
         const col = colOf(index);
@@ -58,12 +79,28 @@ export const BlockBoard = memo(function BlockBoard({
         if (hand.indexOf(index) !== -1) {
           classes.push(handFits ? 'bp-cell-ghost' : 'bp-cell-ghost-blocked');
         }
-        if (clearing.indexOf(index) !== -1) classes.push('bp-cell-clearing');
+        if (willClear.indexOf(index) !== -1) classes.push('bp-cell-will-clear');
+        const leaving = clearing.indexOf(index) !== -1;
+        if (leaving) classes.push('bp-cell-clearing');
+        // Chebyshev distance: the wave leaves as a square ring, which is what
+        // a row and a column clearing together want — a straight-line measure
+        // would make the crossing cell go twice.
+        const delay =
+          leaving && clearFrom
+            ? Math.max(Math.abs(row - clearFrom.row), Math.abs(col - clearFrom.col)) *
+              CLEAR_STAGGER_MS
+            : 0;
         return (
           <button
             key={index}
             type="button"
             className={classes.join(' ')}
+            style={delay > 0 ? { animationDelay: `${delay}ms` } : undefined}
+            onPointerEnter={(event) => {
+              // Touch fires enter on contact; hover aiming is for devices
+              // that can point without pressing.
+              if (event.pointerType !== 'touch') onCellHover(row, col);
+            }}
             // Announced 1-based: "row 0" reads like an error, not a corner.
             aria-label={
               filled

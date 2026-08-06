@@ -20,7 +20,8 @@ export const en = {
   blockStep1Title: 'Drag a piece in',
   blockStep1Body: 'Move any of the three pieces onto the board. They never rotate.',
   blockStep2Title: 'Fill a row or column',
-  blockStep2Body: 'A full line clears, and clearing several at once is worth more.',
+  blockStep2Body:
+    'A full line clears, and the line lights up while you are still holding the piece.',
   blockStep3Title: 'Play until nothing fits',
   blockStep3Body: 'Undo is free and unlimited, so a bad placement costs nothing.',
 } as const;

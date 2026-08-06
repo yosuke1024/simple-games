@@ -18,7 +18,7 @@ export const id: BlockPuzzleMessages = {
   blockStep1Body: 'Pindahkan salah satu dari tiga keping ke papan. Keping tidak pernah berputar.',
   blockStep2Title: 'Penuhi satu baris atau kolom',
   blockStep2Body:
-    'Garis yang penuh akan hilang, dan membersihkan beberapa sekaligus lebih bernilai.',
+    'Baris penuh akan hilang, dan baris itu menyala saat Anda masih memegang kepingnya.',
   blockStep3Title: 'Main sampai tak ada yang muat',
   blockStep3Body: 'Urungkan gratis dan tanpa batas, jadi salah taruh tidak merugikan.',
 };

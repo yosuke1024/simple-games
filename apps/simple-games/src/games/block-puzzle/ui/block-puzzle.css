@@ -94,12 +94,48 @@
   opacity: 0.75;
 }
 
+/* The lines this placement would take, shown while the piece is still in
+   hand (§4). This is the aim of the game one step before it happens: the
+   pleasure here is finishing a line on purpose, and before this the player
+   only found out after letting go.
+
+   It is a lift in brightness on cells that are already filled, plus the same
+   on the empty ones the piece is about to occupy — the whole line reads as
+   "this goes" without anything new appearing on the board. */
+/* The lift is a white veil over whatever the cell already is, rather than a
+   different colour: the accent token is light in the dark theme and mid-toned
+   in the light one, so anything mixed *from* it would brighten in one theme
+   and darken in the other. A veil only ever goes one way. (A computed tint
+   would be the obvious tool, and `color-mix` is Chromium 111 — past the
+   supported floor.) */
+.bp-cell-will-clear {
+  background-color: var(--accent);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.45));
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.bp-cell-filled.bp-cell-will-clear {
+  background-color: var(--accent);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.45));
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* The carried piece where it overlaps a line it would finish: lit like the
+   rest of the line, and still outlined, because it is also the piece. */
+.bp-cell-ghost.bp-cell-will-clear {
+  background-color: var(--accent-ring);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4));
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
 /* A cleared line, on its way out. The board has already settled; this paints
    the cell as it was and fades it, so the line is seen to go rather than
    simply being absent on the next frame (§12). Reduced Motion never applies
    the class at all, so there is nothing here to switch off. */
 .bp-cell-clearing {
-  animation: bp-clear 0.15s ease-out;
+  /* The delay is set per cell by the board, from how far that cell is from
+     the piece that finished the line (§12). */
+  animation: bp-clear 0.15s ease-out both;
 }
 
 @keyframes bp-clear {
@@ -234,4 +270,54 @@
 /* The line in the figure is caught mid-fade — a still of what §12 animates. */
 .bp-figure-cell-clearing {
   opacity: 0.45;
+}
+
+/* Refilled pieces settle into the tray rather than appearing in it (§12). The
+   graphic is remounted per batch (BlockTray keys it on batchIndex), so the
+   keyframe plays exactly once, when three new pieces arrive. */
+.bp-piece-dealt {
+  animation: bp-deal 0.22s ease-out both;
+}
+
+@keyframes bp-deal {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The score takes the accent for a beat when it moves. The number itself is
+   already on screen — this adds no information, only the acknowledgement that
+   something was scored (§12). */
+.bp-score-bump {
+  animation: bp-score-bump 0.26s ease-out;
+}
+
+@keyframes bp-score-bump {
+  0% {
+    color: var(--accent);
+    transform: scale(1);
+  }
+  35% {
+    color: var(--accent);
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Reduced Motion: the dealt pieces are simply there, and the score simply
+   says its new number. Both are set from the in-app setting and the OS
+   preference alike (useReducedMotion drives the class the screen applies;
+   this is the belt for the OS-only case). */
+@media (prefers-reduced-motion: reduce) {
+  .bp-piece-dealt,
+  .bp-score-bump {
+    animation: none;
+  }
 }

@@ -18,7 +18,7 @@ export const fr: BlockPuzzleMessages = {
   blockStep1Body: "Amène l'une des trois pièces sur le plateau. Elles ne tournent jamais.",
   blockStep2Title: 'Remplis une ligne ou une colonne',
   blockStep2Body:
-    "Une ligne pleine s'efface, et en effacer plusieurs d'un coup rapporte davantage.",
+    "Une ligne pleine s'efface, et elle s'illumine pendant que tu tiens encore la pièce.",
   blockStep3Title: 'Joue tant que ça rentre',
   blockStep3Body: 'Annuler est gratuit et illimité : une pièce mal posée ne coûte rien.',
 };

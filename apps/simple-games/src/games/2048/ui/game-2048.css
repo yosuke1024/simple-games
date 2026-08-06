@@ -291,6 +291,31 @@
   font-size: 15px;
 }
 
+/* The score takes the accent for a beat when a merge moves it. The number is
+   already on screen — this adds no information, only the acknowledgement
+   that something was joined (§12). */
+.tm-score-bump {
+  animation: tm-score-bump 0.26s ease-out;
+}
+
+@keyframes tm-score-bump {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.07);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-score-bump {
+    animation: none;
+  }
+}
+
 /* ---------- action bar ---------- */
 
 /* One action, and it is free and unlimited: Undo (§6). There is deliberately

@@ -25,6 +25,13 @@ const PREVIEW_SIZE = 5;
 
 export interface BlockTrayProps {
   tray: Tray;
+  /**
+   * Which batch these three came from. Only used as a key: a new batch
+   * remounts the piece graphics, which is what lets a CSS keyframe play as
+   * they arrive. Refilled pieces settle into the tray instead of appearing
+   * there (§12).
+   */
+  batchIndex: number;
   /** The slot picked by the tap path, or null (§3). */
   selected: number | null;
   /** The slot currently under a finger, drawn as lifted out of the tray. */
@@ -36,6 +43,7 @@ export interface BlockTrayProps {
 
 export const BlockTray = memo(function BlockTray({
   tray,
+  batchIndex,
   selected,
   dragging,
   onSlotPointerDown,
@@ -80,7 +88,7 @@ export const BlockTray = memo(function BlockTray({
             onPointerDown={(event) => onSlotPointerDown(event, slot)}
             onClick={() => onSlotActivate(slot)}
           >
-            <span className="bp-piece" aria-hidden="true">
+            <span key={batchIndex} className="bp-piece bp-piece-dealt" aria-hidden="true">
               {Array.from({ length: PREVIEW_SIZE * PREVIEW_SIZE }, (_, index) => {
                 const row = Math.floor(index / PREVIEW_SIZE);
                 const col = index % PREVIEW_SIZE;

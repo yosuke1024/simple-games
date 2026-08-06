@@ -17,7 +17,7 @@ export const es: BlockPuzzleMessages = {
   blockStep1Title: 'Arrastra una pieza',
   blockStep1Body: 'Lleva cualquiera de las tres piezas al tablero. Nunca giran.',
   blockStep2Title: 'Completa una fila o columna',
-  blockStep2Body: 'Una línea llena desaparece, y despejar varias a la vez vale más.',
+  blockStep2Body: 'Una línea completa se elimina, y se ilumina mientras aún sostienes la pieza.',
   blockStep3Title: 'Juega hasta que no quepa nada',
   blockStep3Body: 'Deshacer es gratis e ilimitado: colocar mal no cuesta nada.',
 };

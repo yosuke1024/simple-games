@@ -17,7 +17,7 @@ export const tr: BlockPuzzleMessages = {
   blockStep1Title: 'Bir parçayı sürükle',
   blockStep1Body: 'Üç parçadan birini tahtaya taşı. Parçalar hiç dönmez.',
   blockStep2Title: 'Bir satır veya sütun doldur',
-  blockStep2Body: 'Dolan sıra temizlenir, aynı anda birden fazlası daha çok puan getirir.',
+  blockStep2Body: 'Dolan satır temizlenir ve parçayı hâlâ tutarken o satır aydınlanır.',
   blockStep3Title: 'Hiçbiri sığmayana kadar oyna',
   blockStep3Body: 'Geri alma ücretsiz ve sınırsız, yanlış koymanın bedeli yok.',
 };

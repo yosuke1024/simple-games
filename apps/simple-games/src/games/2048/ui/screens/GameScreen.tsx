@@ -15,11 +15,17 @@ import { sounds } from '@/services/sound';
 import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
+import { AnimatedNumber } from '@/ui/components/AnimatedNumber';
 import { IconBack, IconRetry, IconUndo } from '@/ui/components/icons';
+import { useReducedMotion } from '@/ui/useReducedMotion';
+import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import { canUndo, type Direction } from '../../game';
 import { useGame2048 } from '../../state/GameContext';
 import { MergeBoard } from '../components/MergeBoard';
 import { MergeResultOverlay } from '../components/MergeResultOverlay';
+
+/** How long the score wears the accent after a merge moves it (§12). */
+const SCORE_BUMP_MS = 260;
 
 /** Arrow keys do what a swipe does — the board has four inputs, not two. */
 const KEY_DIRECTIONS: Record<string, Direction> = {
@@ -43,7 +49,10 @@ export function Game2048GameScreen() {
     startNewGame,
   } = useGame2048();
   const { t } = useSettings();
+  const reducedMotion = useReducedMotion();
+  const bumpTimeout = useTransientTimeout();
   const [confirmNewGame, setConfirmNewGame] = useState(false);
+  const [scoreBump, setScoreBump] = useState(false);
 
   const onSwipe = useCallback(
     (direction: Direction) => {
@@ -55,13 +64,18 @@ export function Game2048GameScreen() {
       if (outcome.merged) {
         sounds.match();
         void haptics.tap();
+        // Only a merge moves the score, so only a merge acknowledges it.
+        if (!reducedMotion) {
+          setScoreBump(true);
+          bumpTimeout(() => setScoreBump(false), SCORE_BUMP_MS);
+        }
       }
       if (outcome.over) {
         sounds.gameOver();
         void haptics.invalid();
       }
     },
-    [slide],
+    [bumpTimeout, reducedMotion, slide],
   );
 
   const onUndo = useCallback(() => {
@@ -96,8 +110,11 @@ export function Game2048GameScreen() {
             <IconBack />
           </button>
           <div className="tm-status">
-            <span className="tm-score">
-              {t('score')} {session.score}
+            {/* The score counts up rather than jumping, and takes the accent
+                for a beat when a merge moves it — the move's own small
+                acknowledgement, with nothing added to the screen to say it. */}
+            <span className={`tm-score ${scoreBump ? 'tm-score-bump' : ''}`}>
+              {t('score')} <AnimatedNumber value={session.score} />
             </span>
             <span>
               {t('mergeBestScore')} {Math.max(stats.bestScore, session.score)}

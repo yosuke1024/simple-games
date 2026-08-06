@@ -31,7 +31,16 @@ import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconRetry, IconUndo } from '@/ui/components/icons';
 import { useReducedMotion } from '@/ui/useReducedMotion';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
-import { BOARD_SIZE, canPlace, pieceById, pieceCellsOnBoard, type Piece } from '../../game';
+import { AnimatedNumber } from '@/ui/components/AnimatedNumber';
+import {
+  BOARD_SIZE,
+  canPlace,
+  clearPreview,
+  pieceById,
+  pieceCellsOnBoard,
+  type Board,
+  type Piece,
+} from '../../game';
 import { useBlockPuzzle } from '../../state/GameContext';
 import { BlockBoard } from '../components/BlockBoard';
 import { BlockResultOverlay } from '../components/BlockResultOverlay';
@@ -58,6 +67,17 @@ const DRAG_THRESHOLD_PX = 8;
 
 /** How long a cleared line stays visible as it fades (§12). */
 const CLEAR_FADE_MS = 150;
+
+/**
+ * How much later each cell of a clearing line goes than the one before it,
+ * measured outward from the piece that finished the line (§12). Small on
+ * purpose: enough that the line reads as leaving from where the piece landed,
+ * not so much that the board is waiting on a wave.
+ */
+const CLEAR_STAGGER_MS = 20;
+
+/** How long the score wears the accent after it moves (§12). */
+const SCORE_BUMP_MS = 260;
 
 const NO_CELLS: readonly number[] = [];
 
@@ -98,7 +118,12 @@ export function BlockGameScreen() {
   const [dragSlot, setDragSlot] = useState<number | null>(null);
   const [hand, setHand] = useState<readonly number[]>(NO_CELLS);
   const [handFits, setHandFits] = useState(false);
+  /** The lines this placement would take — the aim, one step before it (§4). */
+  const [willClear, setWillClear] = useState<readonly number[]>(NO_CELLS);
   const [clearing, setClearing] = useState<readonly number[]>(NO_CELLS);
+  const [clearFrom, setClearFrom] = useState<Landing | null>(null);
+  const [scoreBump, setScoreBump] = useState(false);
+  const bumpTimeout = useTransientTimeout();
 
   const boardElRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -129,6 +154,10 @@ export function BlockGameScreen() {
       setSelected(null);
       sounds.select();
       void haptics.tap();
+      if (!reducedMotion) {
+        setScoreBump(true);
+        bumpTimeout(() => setScoreBump(false), SCORE_BUMP_MS);
+      }
       // A clear and an ending are their own events, not louder placements —
       // each adds its own note rather than replacing the one before it (§12).
       if (outcome.lines > 0) {
@@ -143,11 +172,15 @@ export function BlockGameScreen() {
       // The board has already settled; this is the trace of what was there.
       // Reduced Motion skips it entirely and the line is simply gone (§12).
       if (outcome.cleared.length > 0 && !reducedMotion) {
+        // The line leaves from where the piece landed and runs outward, so
+        // the placement and the clear read as one movement rather than two
+        // events that happened to coincide (§12).
         setClearing(outcome.cleared);
-        fadeTimeout(() => setClearing(NO_CELLS), CLEAR_FADE_MS);
+        setClearFrom({ row, col });
+        fadeTimeout(() => setClearing(NO_CELLS), CLEAR_FADE_MS + CLEAR_STAGGER_MS * BOARD_SIZE);
       }
     },
-    [fadeTimeout, play, reducedMotion],
+    [bumpTimeout, fadeTimeout, play, reducedMotion],
   );
 
   /**
@@ -178,6 +211,29 @@ export function BlockGameScreen() {
     },
     [],
   );
+
+  /**
+   * Puts a piece on the board as held rather than placed: where it is, whether
+   * it fits, and — the point of it — which lines it would take (§3, §4). Both
+   * ways of aiming end here, so the drag and the hover cannot come to show
+   * different things about the same position.
+   */
+  const paintHand = useCallback(
+    (board: Board, piece: Piece, landing: Landing | null, fits: boolean) => {
+      setHandFits(fits);
+      setHand(landing === null ? NO_CELLS : pieceCellsOnBoard(piece, landing.row, landing.col));
+      setWillClear(
+        landing !== null && fits ? clearPreview(board, piece, landing.row, landing.col) : NO_CELLS,
+      );
+    },
+    [],
+  );
+
+  const clearHand = useCallback(() => {
+    setHand(NO_CELLS);
+    setHandFits(false);
+    setWillClear(NO_CELLS);
+  }, []);
 
   const onSlotPointerDown = useCallback((event: PointerEvent<HTMLButtonElement>, slot: number) => {
     const current = sessionRef.current;
@@ -240,20 +296,18 @@ export function BlockGameScreen() {
       const key = landing === null ? '' : `${landing.row},${landing.col},${fits ? 1 : 0}`;
       if (key === drag.handKey) return;
       drag.handKey = key;
-      setHandFits(fits);
-      setHand(landing === null ? NO_CELLS : pieceCellsOnBoard(piece, landing.row, landing.col));
+      paintHand(current.board, piece, landing, fits);
     },
-    [resolveLanding],
+    [paintHand, resolveLanding],
   );
 
   const endDrag = useCallback((): DragState | null => {
     const drag = dragRef.current;
     dragRef.current = null;
     setDragSlot(null);
-    setHand(NO_CELLS);
-    setHandFits(false);
+    clearHand();
     return drag;
-  }, []);
+  }, [clearHand]);
 
   const onBodyPointerUp = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
@@ -321,6 +375,43 @@ export function BlockGameScreen() {
     [commit, selected, wasDrag],
   );
 
+  /**
+   * The tap path's aim, for a device that has a pointer to hover with. A
+   * finger cannot hover, so on a phone this never runs and the drag is the
+   * whole story; on a desktop browser (docs/WEB_VERSION.md) it is what stops
+   * the tap path from being blind where the drag is not.
+   *
+   * It previews the same arithmetic `onCellTap` commits — the piece's first
+   * cell on the cell under the pointer — so what is drawn is what a click
+   * does, not a second guess at it.
+   */
+  const onCellHover = useCallback(
+    (row: number, col: number) => {
+      const current = sessionRef.current;
+      if (dragRef.current || selected === null || !current) return;
+      const piece = pieceById(current.tray[selected]);
+      if (piece === null) return;
+      const anchor = piece.cells[0]!;
+      const landing = { row: row - anchor.row, col: col - anchor.col };
+      paintHand(
+        current.board,
+        piece,
+        landing,
+        canPlace(current.board, piece, landing.row, landing.col),
+      );
+    },
+    [paintHand, selected],
+  );
+
+  const onBoardLeave = useCallback(() => {
+    if (!dragRef.current) clearHand();
+  }, [clearHand]);
+
+  // A piece put back (or used up) takes its preview with it.
+  useEffect(() => {
+    if (selected === null && !dragRef.current) clearHand();
+  }, [clearHand, selected]);
+
   const onUndo = useCallback(() => {
     if (applyUndo()) sounds.undo();
   }, [applyUndo]);
@@ -337,8 +428,11 @@ export function BlockGameScreen() {
             <IconBack />
           </button>
           <div className="game-status">
-            <span className="game-score">
-              {t('score')} {session.score}
+            {/* The score counts up rather than jumping, and the number takes
+                the accent for a beat when it moves — the placement's small
+                acknowledgement. Nothing is added to the screen to say it. */}
+            <span className={`game-score bp-score ${scoreBump ? 'bp-score-bump' : ''}`}>
+              {t('score')} <AnimatedNumber value={session.score} />
             </span>
             {/* The record to beat, stated once and quietly — never a target. */}
             <span className="bp-best">
@@ -367,12 +461,17 @@ export function BlockGameScreen() {
             board={session.board}
             hand={hand}
             handFits={handFits}
+            willClear={willClear}
             clearing={clearing}
+            clearFrom={clearFrom}
             onCellTap={onCellTap}
+            onCellHover={onCellHover}
+            onLeave={onBoardLeave}
             boardRef={setBoardEl}
           />
           <BlockTray
             tray={session.tray}
+            batchIndex={session.batchIndex}
             selected={selected}
             dragging={dragSlot}
             onSlotPointerDown={onSlotPointerDown}

@@ -17,7 +17,7 @@ export const zhHant: BlockPuzzleMessages = {
   blockStep1Title: '把方塊拖進棋盤',
   blockStep1Body: '把三塊中的任一塊拖到棋盤上。方塊不能旋轉。',
   blockStep2Title: '填滿一列或一行',
-  blockStep2Body: '填滿的行列會消除，一次消得越多，分數越高。',
+  blockStep2Body: '整行或整列填滿即消除，握著方塊時該行列就會亮起。',
   blockStep3Title: '玩到放不下為止',
   blockStep3Body: '復原免費且不限次數，放錯也沒有代價。',
 };
