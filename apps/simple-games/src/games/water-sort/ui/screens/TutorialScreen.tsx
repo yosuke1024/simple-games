@@ -45,48 +45,19 @@ export function WaterTutorialScreen() {
       title: t('waterStep1Title'),
       body: t('waterStep1Body'),
       // Blue on blue: the marked tubes show a legal pour.
-      example: (
-        <TubesFigure
-          tubes={[
-            [0, 1, 1],
-            [2, 0, 0],
-            [1, 2, 2],
-            [],
-          ]}
-          marked={[1, 0]}
-        />
-      ),
+      example: <TubesFigure tubes={[[0, 1, 1], [2, 0, 0], [1, 2, 2], []]} marked={[1, 0]} />,
     },
     {
       title: t('waterStep2Title'),
       body: t('waterStep2Body'),
       // The empty tubes are the workspace.
-      example: (
-        <TubesFigure
-          tubes={[
-            [0, 1, 1],
-            [2, 0],
-            [1, 2, 2, 0],
-            [],
-          ]}
-          marked={[3]}
-        />
-      ),
+      example: <TubesFigure tubes={[[0, 1, 1], [2, 0], [1, 2, 2, 0], []]} marked={[3]} />,
     },
     {
       title: t('waterStep3Title'),
       body: t('waterStep3Body'),
       // The sorted end state (§2).
-      example: (
-        <TubesFigure
-          tubes={[
-            [0, 0, 0, 0],
-            [1, 1, 1, 1],
-            [2, 2, 2, 2],
-            [],
-          ]}
-        />
-      ),
+      example: <TubesFigure tubes={[[0, 0, 0, 0], [1, 1, 1, 1], [2, 2, 2, 2], []]} />,
     },
   ];
   const current = steps[step] ?? steps[0]!;

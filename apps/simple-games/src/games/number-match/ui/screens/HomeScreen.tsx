@@ -112,7 +112,6 @@ export function HomeScreen() {
           </button>
         </div>
       </div>
-
     </div>
   );
 }

@@ -27,7 +27,6 @@ vi.mock('@capacitor/preferences', () => ({
   },
 }));
 
-
 function renderGame(initial: Record<string, string> = {}) {
   const onExit = vi.fn();
   const kv = createMemoryKV(initial);

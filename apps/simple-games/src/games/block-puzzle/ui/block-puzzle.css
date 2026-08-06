@@ -41,7 +41,7 @@
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   gap: 2px;
-  width: min(96vw, 420px, calc(100vh - 326px - env(safe-area-inset-bottom, 0px)));
+  width: min(100%, 420px, calc(100vh - 326px - env(safe-area-inset-bottom, 0px)));
   aspect-ratio: 1;
   padding: 4px;
   border-radius: var(--radius);
@@ -157,7 +157,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  width: min(96vw, 420px);
+  width: min(100%, 420px);
   touch-action: none;
 }
 

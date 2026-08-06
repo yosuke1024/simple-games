@@ -91,16 +91,24 @@
   min-height: 0;
 }
 
-/* Square at every size, and as large as the screen honestly allows: on a
+/* Square at every size, and as large as its own column honestly allows: on a
    360px-wide phone that is an ~80px tile, comfortably past --tap-size even
    though nothing here is tapped. The `min()` against viewport height keeps it
    square on a short screen rather than pushing the action bar off the bottom.
+
+   The first term is `100%`, not a share of the viewport. A board measured in
+   `vw` ignores the padding of the column it sits in, so it ate its own margins
+   and hung a few pixels past them — and anything that makes the content box
+   narrower than the viewport (a classic scrollbar, a safe-area inset, the
+   browser build's site chrome) turned that into a board clipped on the right.
+   Every board in the collection was written this way and every one of them
+   had it.
 
    `touch-action: none` because the board is dragged across (§3): without it
    the page scrolls under the finger and the swipe never arrives. */
 .tm-board {
   position: relative;
-  width: min(94vw, 420px, 52vh);
+  width: min(100%, 420px, 52vh);
   aspect-ratio: 1;
   background: var(--surface-recessed);
   border: 2px solid var(--ink-soft);

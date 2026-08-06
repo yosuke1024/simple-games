@@ -93,9 +93,7 @@ export function restartSession(session: SudokuSession): SudokuSession {
 }
 
 /** Restores a session from persisted state (undo history is not persisted). */
-export function restoreSession(
-  data: Omit<SudokuSession, 'history' | 'status'>,
-): SudokuSession {
+export function restoreSession(data: Omit<SudokuSession, 'history' | 'status'>): SudokuSession {
   return {
     ...data,
     history: [],

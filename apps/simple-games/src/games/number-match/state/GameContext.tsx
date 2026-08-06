@@ -209,11 +209,14 @@ export function AppProvider({
     [],
   );
 
-  const resumeGame = useCallback((mode: GameMode) => {
-    const current = sessionsRef.current[mode];
-    if (!current) return;
-    activate(current);
-  }, [activate]);
+  const resumeGame = useCallback(
+    (mode: GameMode) => {
+      const current = sessionsRef.current[mode];
+      if (!current) return;
+      activate(current);
+    },
+    [activate],
+  );
 
   const startLevel = useCallback(
     (level: number) => {

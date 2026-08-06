@@ -36,7 +36,6 @@ vi.mock('@capacitor/preferences', () => ({
   },
 }));
 
-
 function renderMinesweeper(initial: Record<string, string> = {}) {
   const onExit = vi.fn();
   const kv = createMemoryKV(initial);

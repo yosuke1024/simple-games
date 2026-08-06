@@ -27,7 +27,7 @@
 .sudoku-grid {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
-  width: min(94vw, 400px);
+  width: min(100%, 400px);
   aspect-ratio: 1;
   background: var(--surface);
   border: 2px solid var(--ink-soft);
@@ -124,7 +124,7 @@
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   gap: 4px;
-  width: min(94vw, 400px);
+  width: min(100%, 400px);
 }
 
 .digit-key {

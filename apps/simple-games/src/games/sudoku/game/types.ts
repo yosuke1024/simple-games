@@ -40,7 +40,7 @@ export function digitsOf(mask: number): Digit[] {
 
 /** The single digit in a one-bit mask, or null. */
 export function soleDigit(mask: number): Digit | null {
-  return popcount(mask) === 1 ? (31 - Math.clz32(mask) + 1) as Digit : null;
+  return popcount(mask) === 1 ? ((31 - Math.clz32(mask) + 1) as Digit) : null;
 }
 
 export const rowOf = (index: number): number => Math.floor(index / SIZE);

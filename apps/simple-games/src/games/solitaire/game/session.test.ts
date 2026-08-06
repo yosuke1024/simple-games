@@ -23,7 +23,9 @@ import { isValidBoard } from './types';
 const SEED = 'sol-free-test';
 
 /** Some legal run move on this board, or null. */
-function legalRunMove(session: SolitaireSession): { from: number; index: number; to: number } | null {
+function legalRunMove(
+  session: SolitaireSession,
+): { from: number; index: number; to: number } | null {
   for (let from = 0; from < session.board.tableau.length; from++) {
     const up = session.board.tableau[from]!.up;
     for (let index = 0; index < up.length; index++) {

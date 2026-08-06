@@ -22,11 +22,7 @@ describe('clues (§1)', () => {
   });
 
   it('computes every row and column', () => {
-    const solution: Cell[] = [
-      1, 0, 1,
-      1, 1, 0,
-      0, 1, 0,
-    ] as Cell[];
+    const solution: Cell[] = [1, 0, 1, 1, 1, 0, 0, 1, 0] as Cell[];
     // 3 is not a shipping size, but the line math does not care.
     const clues = computeClues(solution, 3);
     expect(clues.rows).toEqual([[1, 1], [2], [1]]);
@@ -55,11 +51,7 @@ describe('marks and the win (§2, §3)', () => {
 
   it('wins by the clues, with crosses playing no part (§2)', () => {
     const solution: Cell[] = [
-      1, 1, 1, 1, 1,
-      1, 0, 0, 0, 1,
-      1, 0, 1, 0, 1,
-      1, 0, 0, 0, 1,
-      1, 1, 1, 1, 1,
+      1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1,
     ] as Cell[];
     const clues = computeClues(solution, 5);
     // Paint exactly the solution; leave every empty cell unknown — no crosses.

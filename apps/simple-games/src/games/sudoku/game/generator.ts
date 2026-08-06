@@ -39,7 +39,10 @@ const MIN_CLUES = 17;
  * `minClues` is where digging stops. Easy stops early on purpose: a beginner's
  * board should look approachable, not just be solvable with singles.
  */
-const DIG_PLAN: Record<Difficulty, { readonly minClues: number; readonly unitSizes: readonly (1 | 2)[] }> = {
+const DIG_PLAN: Record<
+  Difficulty,
+  { readonly minClues: number; readonly unitSizes: readonly (1 | 2)[] }
+> = {
   easy: { minClues: 36, unitSizes: [2] },
   medium: { minClues: MIN_CLUES, unitSizes: [2] },
   hard: { minClues: MIN_CLUES, unitSizes: [2, 1] },

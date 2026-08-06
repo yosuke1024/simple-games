@@ -36,7 +36,13 @@ function MiniBoard({ cells, focus }: { cells: readonly string[]; focus?: number 
               className={classes}
               data-count={/^[1-8]$/.test(token) ? token : undefined}
             >
-              {token === 'F' ? '⚑' : token === '*' ? '✸' : token === '#' || token === '.' ? '' : token}
+              {token === 'F'
+                ? '⚑'
+                : token === '*'
+                  ? '✸'
+                  : token === '#' || token === '.'
+                    ? ''
+                    : token}
             </span>
           );
         })}

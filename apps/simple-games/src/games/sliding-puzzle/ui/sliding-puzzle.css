@@ -28,7 +28,7 @@
    the action bar off the bottom. */
 .slide-board {
   position: relative;
-  width: min(94vw, 420px, 52vh);
+  width: min(100%, 420px, 52vh);
   aspect-ratio: 1;
   background: var(--surface-recessed);
   border: 2px solid var(--ink-soft);

@@ -50,7 +50,7 @@ export function dailyDecorations(dateString: string): DailyDecorations {
 /** Shifts a local YYYY-MM-DD string by whole days. */
 export function addDays(dateString: string, delta: number): string {
   const [y, m, d] = dateString.split('-').map(Number);
-  const shifted = new Date((y ?? 1970), (m ?? 1) - 1, (d ?? 1) + delta);
+  const shifted = new Date(y ?? 1970, (m ?? 1) - 1, (d ?? 1) + delta);
   return localDateString(shifted);
 }
 

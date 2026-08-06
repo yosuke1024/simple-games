@@ -57,9 +57,7 @@ describe('generateBoard with a shape', () => {
     for (const shape of SHAPES) {
       const board = generateBoard(`shaped-${shape.key}`, { shape, cellCount: 36 });
       expect(board.length % COLS).toBe(0);
-      expect(liveCount(board)).toBe(
-        startingWidths(shape, 36).reduce((sum, w) => sum + w, 0),
-      );
+      expect(liveCount(board)).toBe(startingWidths(shape, 36).reduce((sum, w) => sum + w, 0));
     }
   });
 
@@ -123,7 +121,12 @@ describe('generateBoard with stones and wilds', () => {
   });
 
   it('places the requested number of stones and wilds', () => {
-    const board = generateBoard('counts', { cellCount: 45, pairBias: 0.4, stoneCount: 3, wildCount: 2 });
+    const board = generateBoard('counts', {
+      cellCount: 45,
+      pairBias: 0.4,
+      stoneCount: 3,
+      wildCount: 2,
+    });
     expect(board.filter(isStone)).toHaveLength(3);
     expect(board.filter((c) => c?.kind === 'wild')).toHaveLength(2);
   });

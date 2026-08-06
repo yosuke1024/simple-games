@@ -258,10 +258,7 @@ export const SolitaireTable = memo(function SolitaireTable({
         if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
           play(
             el,
-            [
-              { transform: `translate(${dx}px, ${dy}px)` },
-              { transform: 'translate(0px, 0px)' },
-            ],
+            [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0px, 0px)' }],
             MOVE_MS,
           );
         }
@@ -335,10 +332,7 @@ export const SolitaireTable = memo(function SolitaireTable({
         {waste !== null ? (
           faceUpCard(
             waste,
-            [
-              isSelected({ type: 'waste' }) ? 'sol-selected' : '',
-              hint?.waste ? 'sol-hinted' : '',
-            ]
+            [isSelected({ type: 'waste' }) ? 'sol-selected' : '', hint?.waste ? 'sol-hinted' : '']
               .filter(Boolean)
               .join(' '),
             cardLabel(t, waste),
@@ -379,10 +373,15 @@ export const SolitaireTable = memo(function SolitaireTable({
               key={suit}
               type="button"
               className={`sol-card sol-slot sol-slot-empty sol-slot-suit ${highlight}`}
-              aria-label={t('solFoundationEmpty', { suit: t(`solSuit_${(['spades', 'hearts', 'diamonds', 'clubs'] as const)[suit]}`) })}
+              aria-label={t('solFoundationEmpty', {
+                suit: t(`solSuit_${(['spades', 'hearts', 'diamonds', 'clubs'] as const)[suit]}`),
+              })}
               onClick={() => onFoundationTap(suit)}
             >
-              <span className={`sol-slot-mark ${suit === 1 || suit === 2 ? 'sol-card-red' : ''}`} aria-hidden="true">
+              <span
+                className={`sol-slot-mark ${suit === 1 || suit === 2 ? 'sol-card-red' : ''}`}
+                aria-hidden="true"
+              >
                 <SuitIcon suit={suit} />
               </span>
             </button>
@@ -394,7 +393,12 @@ export const SolitaireTable = memo(function SolitaireTable({
         {board.tableau.map((pile, pileIndex) => {
           const isDestination = destinations.includes(pileIndex);
           return (
-            <div key={pileIndex} className="sol-pile" role="group" aria-label={t('solPileLabel', { n: pileIndex + 1 })}>
+            <div
+              key={pileIndex}
+              className="sol-pile"
+              role="group"
+              aria-label={t('solPileLabel', { n: pileIndex + 1 })}
+            >
               {pile.down.length === 0 && pile.up.length === 0 ? (
                 <button
                   type="button"
@@ -416,7 +420,9 @@ export const SolitaireTable = memo(function SolitaireTable({
                     faceUpCard(
                       card,
                       [
-                        isSelected({ type: 'tableau', pile: pileIndex, index: i }) ? 'sol-selected' : '',
+                        isSelected({ type: 'tableau', pile: pileIndex, index: i })
+                          ? 'sol-selected'
+                          : '',
                         i === pile.up.length - 1 && isDestination ? 'sol-destination' : '',
                         hint?.piles?.includes(pileIndex) ? 'sol-hinted' : '',
                       ]

@@ -143,9 +143,7 @@ export const WaterBoard = memo(function WaterBoard({
       {tubes.map((tube, index) => {
         // Colors are announced 1-based: "color 0" reads like an error.
         const contents =
-          tube.length === 0
-            ? t('waterTubeEmpty')
-            : tube.map((color) => color + 1).join(' ');
+          tube.length === 0 ? t('waterTubeEmpty') : tube.map((color) => color + 1).join(' ');
         // The carry only plays on the tube that poured, and only while
         // Reduced Motion is off (§12).
         const tipping = pouring && pour.from === index;

@@ -9,7 +9,17 @@
  * Decoding fails closed: a wrong length or a stray character marks the record
  * corrupt, and the caller falls back to a fresh board rather than a broken one.
  */
-import { CROSSED, EMPTY, FILLED, PAINTED, UNKNOWN, cellCount, type Cell, type Mark, type Size } from './types';
+import {
+  CROSSED,
+  EMPTY,
+  FILLED,
+  PAINTED,
+  UNKNOWN,
+  cellCount,
+  type Cell,
+  type Mark,
+  type Size,
+} from './types';
 
 export function encodeCells(cells: readonly number[]): string {
   return cells.join('');

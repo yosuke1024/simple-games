@@ -104,7 +104,12 @@ export interface PlaceResult {
  * Writes a digit into an empty or already-filled player cell. Returns null for
  * a clue cell or a no-op (the same digit already there).
  */
-export function place(board: Board, index: number, digit: Digit, solution: Grid): PlaceResult | null {
+export function place(
+  board: Board,
+  index: number,
+  digit: Digit,
+  solution: Grid,
+): PlaceResult | null {
   if (isGiven(board, index)) return null;
   if (board.entries[index] === digit) return null;
 

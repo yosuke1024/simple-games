@@ -68,10 +68,7 @@ export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<Saved
   return { level: toSession(level), daily: toSession(daily) };
 }
 
-export async function saveGame(
-  session: WaterSession,
-  kv: KVStore = preferencesKV,
-): Promise<void> {
+export async function saveGame(session: WaterSession, kv: KVStore = preferencesKV): Promise<void> {
   await saveRecord(schemaFor(session.mode), toPersisted(session, Date.now()), kv);
 }
 

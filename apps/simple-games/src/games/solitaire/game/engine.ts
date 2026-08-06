@@ -27,11 +27,7 @@ function normalized(pile: Pile): Pile {
   return { down: pile.down.slice(0, -1), up: pile.down.slice(-1) };
 }
 
-const withTableau = (
-  board: SolitaireBoard,
-  index: number,
-  pile: Pile,
-): SolitaireBoard => ({
+const withTableau = (board: SolitaireBoard, index: number, pile: Pile): SolitaireBoard => ({
   ...board,
   tableau: board.tableau.map((current, i) => (i === index ? normalized(pile) : current)),
 });
@@ -87,7 +83,10 @@ export function moveTableauRun(
 }
 
 /** Sends a tableau pile's top card to its foundation (§3). */
-export function moveTableauToFoundation(board: SolitaireBoard, from: number): SolitaireBoard | null {
+export function moveTableauToFoundation(
+  board: SolitaireBoard,
+  from: number,
+): SolitaireBoard | null {
   const source = board.tableau[from];
   if (!source || source.up.length === 0) return null;
   const card = source.up[source.up.length - 1]!;

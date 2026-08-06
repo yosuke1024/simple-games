@@ -147,10 +147,7 @@ export function MemoryProvider({
       void clearSavedGame(next.mode);
       const unbooked = Math.max(0, next.elapsedSeconds - bookedRef.current);
       bookedRef.current = next.elapsedSeconds;
-      const outcome = applySolved(
-        applyPlayTime(statsRef.current, next.difficulty, unbooked),
-        next,
-      );
+      const outcome = applySolved(applyPlayTime(statsRef.current, next.difficulty, unbooked), next);
       persistStats(outcome.stats);
       recordGameCompleted();
       setLastResult({

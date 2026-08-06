@@ -58,9 +58,7 @@ export function SudokuTutorialScreen() {
     {
       title: t('sudokuStep1Title'),
       body: t('sudokuStep1Body'),
-      example: (
-        <BoxExample values={['1', '2', '3', '4', '5', '6', '7', '8', '.']} highlight={8} />
-      ),
+      example: <BoxExample values={['1', '2', '3', '4', '5', '6', '7', '8', '.']} highlight={8} />,
     },
     {
       title: t('sudokuStep2Title'),
@@ -72,9 +70,7 @@ export function SudokuTutorialScreen() {
       body: t('sudokuStep3Body'),
       // A box missing one digit: exactly what a hint points at, and a legal
       // position — a figure that broke the rules would teach the wrong thing.
-      example: (
-        <BoxExample values={['1', '2', '3', '4', '.', '6', '7', '8', '9']} highlight={4} />
-      ),
+      example: <BoxExample values={['1', '2', '3', '4', '.', '6', '7', '8', '9']} highlight={4} />,
     },
   ];
   const current = steps[step] ?? steps[0]!;

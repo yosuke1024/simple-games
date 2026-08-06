@@ -11,7 +11,12 @@ const RANK_TEXT = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 
 
 export const rankText = (card: Card): string => RANK_TEXT[rankOf(card) - 1]!;
 
-const SUIT_KEYS = ['solSuit_spades', 'solSuit_hearts', 'solSuit_diamonds', 'solSuit_clubs'] as const;
+const SUIT_KEYS = [
+  'solSuit_spades',
+  'solSuit_hearts',
+  'solSuit_diamonds',
+  'solSuit_clubs',
+] as const;
 
 export const suitKey = (card: Card): (typeof SUIT_KEYS)[number] => SUIT_KEYS[suitOf(card)];
 

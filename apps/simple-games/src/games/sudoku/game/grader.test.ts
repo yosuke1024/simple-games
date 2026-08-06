@@ -116,9 +116,9 @@ describe('locked candidates — pointing', () => {
     // The pattern sits in box 0, all of it on row 0.
     expect(step.pattern.every((cell) => boxOf(cell) === 0 && rowOf(cell) === 0)).toBe(true);
     // Every target is on row 0 but outside box 0.
-    expect(
-      step.eliminations.every(({ index }) => rowOf(index) === 0 && boxOf(index) !== 0),
-    ).toBe(true);
+    expect(step.eliminations.every(({ index }) => rowOf(index) === 0 && boxOf(index) !== 0)).toBe(
+      true,
+    );
     expect(step.eliminations.length).toBeGreaterThan(0);
   });
 });
@@ -148,9 +148,9 @@ describe('locked candidates — claiming', () => {
     expect(step.unit).toEqual({ kind: 'row', index: 0 });
     expect(step.pattern.every((cell) => rowOf(cell) === 0 && boxOf(cell) === 2)).toBe(true);
     // Targets are inside box 2 but off row 0.
-    expect(
-      step.eliminations.every(({ index }) => boxOf(index) === 2 && rowOf(index) !== 0),
-    ).toBe(true);
+    expect(step.eliminations.every(({ index }) => boxOf(index) === 2 && rowOf(index) !== 0)).toBe(
+      true,
+    );
   });
 });
 

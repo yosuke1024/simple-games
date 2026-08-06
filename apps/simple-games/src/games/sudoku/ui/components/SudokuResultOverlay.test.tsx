@@ -52,7 +52,13 @@ describe('SudokuResultOverlay', () => {
 
   it('reports time, mistakes and hints — and no score', () => {
     const session = solvedSession(1, 125);
-    renderOverlay(session, { isNewBest: false, bestSeconds: 100, seconds: 125, mistakes: 2, hints: 1 });
+    renderOverlay(session, {
+      isNewBest: false,
+      bestSeconds: 100,
+      seconds: 125,
+      mistakes: 2,
+      hints: 1,
+    });
 
     expect(screen.getByRole('alertdialog', { name: 'Solved!' })).toBeInTheDocument();
     expect(screen.getByText('2:05')).toBeInTheDocument();
@@ -89,7 +95,12 @@ describe('SudokuResultOverlay', () => {
   });
 
   it('has no next level for a daily game', () => {
-    const daily = { ...solvedSession(1, 60), mode: 'daily' as const, level: null, dailyDate: '2026-08-01' };
+    const daily = {
+      ...solvedSession(1, 60),
+      mode: 'daily' as const,
+      level: null,
+      dailyDate: '2026-08-01',
+    };
     renderOverlay(daily, null);
     expect(screen.queryByRole('button', { name: 'Next Level' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Retry same board' })).toBeInTheDocument();

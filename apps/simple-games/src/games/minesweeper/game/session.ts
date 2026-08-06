@@ -13,15 +13,7 @@
  */
 import { emptyField } from './board';
 import { dailySeed, DAILY_DIFFICULTY } from './daily';
-import {
-  chord,
-  createBoard,
-  findHint,
-  reveal,
-  statusOf,
-  toggleFlag,
-  type Board,
-} from './engine';
+import { chord, createBoard, findHint, reveal, statusOf, toggleFlag, type Board } from './engine';
 import { generateField } from './generator';
 import type { SafeCell } from './solver';
 import { PRESETS, type Difficulty, type GameMode, type GameStatus, type Preset } from './types';
@@ -109,9 +101,7 @@ export function restartSession(session: MinesweeperSession): MinesweeperSession 
 }
 
 /** Restores a session from persisted state. */
-export function restoreSession(
-  data: Omit<MinesweeperSession, 'status'>,
-): MinesweeperSession {
+export function restoreSession(data: Omit<MinesweeperSession, 'status'>): MinesweeperSession {
   return { ...data, status: statusOf(data.board) };
 }
 

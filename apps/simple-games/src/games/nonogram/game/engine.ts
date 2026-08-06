@@ -8,15 +8,7 @@
  * the same board in practice — but the clue reading is the honest one: it is
  * exactly what the player was asked to satisfy.
  */
-import {
-  CROSSED,
-  FILLED,
-  PAINTED,
-  UNKNOWN,
-  type Cell,
-  type Clue,
-  type Mark,
-} from './types';
+import { CROSSED, FILLED, PAINTED, UNKNOWN, type Cell, type Clue, type Mark } from './types';
 
 export const rowOf = (index: number, size: number): number => Math.floor(index / size);
 export const colOf = (index: number, size: number): number => index % size;

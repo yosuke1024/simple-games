@@ -9,11 +9,7 @@
  * never suggests shuffling runs between piles when nothing flips (that can
  * cycle forever), and never suggests taking a card back off a foundation.
  */
-import {
-  canPlaceOnFoundation,
-  canPlaceOnTableau,
-  wasteTop,
-} from './engine';
+import { canPlaceOnFoundation, canPlaceOnTableau, wasteTop } from './engine';
 import type { SolitaireBoard } from './types';
 
 export type HintMove =

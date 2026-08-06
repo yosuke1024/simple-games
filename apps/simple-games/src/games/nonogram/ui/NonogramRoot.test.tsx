@@ -196,9 +196,7 @@ describe('hints (§7)', () => {
     await startLevelOne(user);
 
     await user.click(screen.getByRole('button', { name: 'Hint' }));
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'The highlighted line decides a square.',
-    );
+    expect(screen.getByRole('status')).toHaveTextContent('The highlighted line decides a square.');
   });
 });
 

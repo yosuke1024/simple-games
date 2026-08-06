@@ -79,10 +79,7 @@ export function applySolveToProgress(progress: Progress, session: SudokuSession)
     const previous = next.bestTimes[key];
     const isNewBest = previous === undefined || seconds < previous;
     if (isNewBest) next.bestTimes[key] = seconds;
-    next.highestUnlocked = Math.min(
-      MAX_LEVEL,
-      Math.max(next.highestUnlocked, session.level + 1),
-    );
+    next.highestUnlocked = Math.min(MAX_LEVEL, Math.max(next.highestUnlocked, session.level + 1));
     return { progress: next, isNewBest, bestSeconds: next.bestTimes[key] ?? seconds };
   }
 

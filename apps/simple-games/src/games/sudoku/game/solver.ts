@@ -110,12 +110,7 @@ export const searchWork = {
 };
 
 /** Places a digit and prunes peers. Returns false when a peer runs dry. */
-function place(
-  grid: number[],
-  candidates: number[],
-  index: number,
-  digit: Digit,
-): boolean {
+function place(grid: number[], candidates: number[], index: number, digit: Digit): boolean {
   placements++;
   grid[index] = digit;
   candidates[index] = bitOf(digit);
@@ -129,11 +124,7 @@ function place(
   return true;
 }
 
-function search(
-  grid: number[],
-  candidates: number[],
-  order: (mask: number) => Digit[],
-): boolean {
+function search(grid: number[], candidates: number[], order: (mask: number) => Digit[]): boolean {
   const index = bestCell(grid, candidates);
   if (index === -1) return true;
   for (const digit of order(candidates[index]!)) {

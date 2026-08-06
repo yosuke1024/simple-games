@@ -13,10 +13,7 @@ import { addDays } from '../game';
 export const DAILY_BACKLOG_LIMIT = 30;
 
 /** Dates currently open, newest first. Never a day that has not arrived. */
-export function availableDailyDates(
-  today: string,
-  limit: number = DAILY_BACKLOG_LIMIT,
-): string[] {
+export function availableDailyDates(today: string, limit: number = DAILY_BACKLOG_LIMIT): string[] {
   const dates = [today];
   let cursor = today;
   while (dates.length < limit) {

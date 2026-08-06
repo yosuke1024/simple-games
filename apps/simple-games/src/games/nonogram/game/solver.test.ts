@@ -59,11 +59,7 @@ describe('solve (§4)', () => {
   it('finishes a line-solvable board from empty marks', () => {
     // A 5×5 with a solid frame row and column structure that lines decide.
     const solution = [
-      1, 1, 1, 1, 1,
-      1, 0, 0, 0, 1,
-      1, 0, 1, 0, 1,
-      1, 0, 0, 0, 1,
-      1, 1, 1, 1, 1,
+      1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1,
     ] as const;
     const clues = computeClues([...solution] as (0 | 1)[], 5);
     const result = solve(emptyMarks(5), clues.rows, clues.cols, 5);
@@ -75,7 +71,9 @@ describe('solve (§4)', () => {
   });
 
   it('stops with a contradiction when the marks cannot fit the clues', () => {
-    const solution = [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] as (0 | 1)[];
+    const solution = [
+      1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    ] as (0 | 1)[];
     const clues = computeClues(solution, 5);
     const marks = emptyMarks(5);
     marks[0] = X; // The full first row can no longer be painted.
@@ -85,13 +83,9 @@ describe('solve (§4)', () => {
 });
 
 describe('findHint (§7)', () => {
-  const solution = [
-    1, 1, 1, 1, 1,
-    1, 0, 0, 0, 1,
-    1, 0, 1, 0, 1,
-    1, 0, 0, 0, 1,
-    1, 1, 1, 1, 1,
-  ] as (0 | 1)[];
+  const solution = [1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1] as (
+    0 | 1
+  )[];
   const clues = computeClues(solution, 5);
 
   it('offers one decided cell with the line that proves it', () => {
