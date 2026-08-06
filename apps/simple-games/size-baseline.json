@@ -1,34 +1,40 @@
 {
   "dist": {
-    "totalGzip": 353059,
-    "entryGzip": 90726,
+    "totalGzip": 387685,
+    "entryGzip": 90270,
     "games": {
-      "brick-breaker": 12414,
-      "memory-match": 16634,
-      "minesweeper": 20549,
-      "nonogram": 17518,
-      "number-match": 22143,
-      "sky-fighter": 13871,
-      "sliding-puzzle": 14633,
-      "solitaire": 22050,
-      "sudoku": 22033,
-      "water-sort": 16823
+      "2048": 13677,
+      "block-puzzle": 12995,
+      "brick-breaker": 12209,
+      "memory-match": 16396,
+      "minesweeper": 20221,
+      "nonogram": 17221,
+      "number-match": 21787,
+      "sky-fighter": 13610,
+      "sliding-puzzle": 14428,
+      "snake": 11075,
+      "solitaire": 21674,
+      "sudoku": 21655,
+      "water-sort": 16593
     }
   },
   "distWeb": {
-    "totalGzip": 357635,
-    "entryGzip": 91168,
+    "totalGzip": 392022,
+    "entryGzip": 90682,
     "games": {
-      "brick-breaker": 12427,
-      "memory-match": 16629,
-      "minesweeper": 20579,
-      "nonogram": 17544,
-      "number-match": 22165,
-      "sky-fighter": 13882,
-      "sliding-puzzle": 14648,
-      "solitaire": 22074,
-      "sudoku": 22066,
-      "water-sort": 16834
+      "2048": 13687,
+      "block-puzzle": 12987,
+      "brick-breaker": 12196,
+      "memory-match": 16370,
+      "minesweeper": 20206,
+      "nonogram": 17227,
+      "number-match": 21779,
+      "sky-fighter": 13614,
+      "sliding-puzzle": 14429,
+      "snake": 11076,
+      "solitaire": 21672,
+      "sudoku": 21665,
+      "water-sort": 16588
     }
   }
 }

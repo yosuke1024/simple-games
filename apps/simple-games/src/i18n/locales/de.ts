@@ -29,6 +29,7 @@ export const de: Messages = {
   movesLabel: 'Züge',
 
   tryAgain: 'Feld wiederholen',
+  newGame: 'Neues Spiel',
   backHome: 'Start',
 
   confirmNewGameTitle: 'Neues Spiel starten?',

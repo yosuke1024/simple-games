@@ -1,0 +1,322 @@
+/* 2048 — all of this game's styling, imported by Game2048Root. Everything is
+   built from the series tokens in src/ui/styles.css (--surface, --ink, --line,
+   --accent, --radius, --font-display, --tap-size, …) so the game reads as part
+   of the same app and follows the theme without knowing about it.
+
+   Class names are prefixed `tm-` so this file can never collide with the shell
+   or with another game.
+
+   The tile ramp below is game content, not chrome — the same standing as
+   Minesweeper's number scale. It is built from this title's own jade rather
+   than from the original's oranges: copying another game's look is not
+   something this series does (§13, docs/BRAND.md). The ramp runs pale to deep
+   in the light theme and dark to bright in the dark one, so in both a bigger
+   number simply stands further out from the board it sits on. */
+
+:root {
+  --tm-t2: #eaf2ee;
+  --tm-t2-ink: #55665e;
+  --tm-t4: #dbebe2;
+  --tm-t4-ink: #476054;
+  --tm-t8: #bfdfcd;
+  --tm-t8-ink: #2b5c44;
+  --tm-t16: #9dd0b4;
+  --tm-t16-ink: #21503a;
+  --tm-t32: #77bf9b;
+  --tm-t32-ink: #16412e;
+  --tm-t64: #52ac81;
+  --tm-t64-ink: #ffffff;
+  --tm-t128: #2b7d59;
+  --tm-t128-ink: #ffffff;
+  --tm-t256: #246a4c;
+  --tm-t256-ink: #ffffff;
+  --tm-t512: #1d583e;
+  --tm-t512-ink: #ffffff;
+  --tm-t1024: #174631;
+  --tm-t1024-ink: #ffffff;
+  --tm-t2048: #113526;
+  --tm-t2048-ink: #ffffff;
+}
+
+:root[data-theme='dark'] {
+  --tm-t2: #2b332f;
+  --tm-t2-ink: #9fb0a7;
+  --tm-t4: #333f39;
+  --tm-t4-ink: #b3c6bc;
+  --tm-t8: #2f5443;
+  --tm-t8-ink: #cbe4d7;
+  --tm-t16: #2d6650;
+  --tm-t16-ink: #dcefe5;
+  --tm-t32: #2c7d60;
+  --tm-t32-ink: #ffffff;
+  --tm-t64: #339373;
+  --tm-t64-ink: #ffffff;
+  --tm-t128: #43ac86;
+  --tm-t128-ink: #10251c;
+  --tm-t256: #59bf97;
+  --tm-t256-ink: #10251c;
+  --tm-t512: #74cfab;
+  --tm-t512-ink: #10251c;
+  --tm-t1024: #90dcbc;
+  --tm-t1024-ink: #10251c;
+  --tm-t2048: #ade8cd;
+  --tm-t2048-ink: #10251c;
+}
+
+/* ---------- board ---------- */
+
+/* The board sits in the space between the top bar and the action bar, centred
+   so a tall phone brings it into thumb reach instead of pinning it up top. */
+.tm-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 4px 12px 10px;
+  min-height: 0;
+}
+
+/* Square at every size, and as large as the screen honestly allows: on a
+   360px-wide phone that is an ~80px tile, comfortably past --tap-size even
+   though nothing here is tapped. The `min()` against viewport height keeps it
+   square on a short screen rather than pushing the action bar off the bottom.
+
+   `touch-action: none` because the board is dragged across (§3): without it
+   the page scrolls under the finger and the swipe never arrives. */
+.tm-board {
+  position: relative;
+  width: min(94vw, 420px, 52vh);
+  aspect-ratio: 1;
+  background: var(--surface-recessed);
+  border: 2px solid var(--ink-soft);
+  border-radius: var(--radius);
+  /* Tiles are positioned in percentages of this box; nothing may spill out
+     while one is travelling. */
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* Cells and tiles share one geometry so a tile lands exactly on a cell. The
+   gutter lives inside the element (padding + an inner face), which is what
+   makes the translated distance exactly one cell. */
+.tm-cell,
+.tm-tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 25%;
+  height: 25%;
+  padding: 4px;
+  transform: translate(calc(var(--tm-col) * 100%), calc(var(--tm-row) * 100%));
+}
+
+/* The board as it is read aloud: sixteen fixed elements, each carrying its
+   number or "empty" (§12). Visually they are only the empty grid. */
+.tm-cell::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+/* A tile travels to its new cell instead of blinking there. 110ms is quick
+   enough that a fast player is never waiting on it (§12). */
+.tm-tile {
+  transition: transform 0.11s ease-out;
+}
+
+.tm-tile {
+  z-index: 1;
+}
+
+/* The two tiles a merge consumed, on their way to where they were joined.
+   They pass underneath the tile they became, and they leave when the slide
+   does. */
+.tm-tile-ghost {
+  z-index: 0;
+}
+
+.tm-tile-face {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  /* Sized against the board rather than the viewport: a tile is a quarter of
+     the same box at every screen size. */
+  font-size: clamp(18px, 8vw, 40px);
+  line-height: 1;
+}
+
+/* Four digits have to fit a quarter of the board without the tile growing, so
+   the type steps down as the number gets longer (§12). */
+.tm-tile-d3 .tm-tile-face {
+  font-size: clamp(16px, 6.6vw, 33px);
+}
+
+.tm-tile-d4 .tm-tile-face {
+  font-size: clamp(13px, 5.2vw, 26px);
+}
+
+.tm-tile-d5 .tm-tile-face {
+  font-size: clamp(11px, 4.2vw, 21px);
+}
+
+/* Reduced Motion: the tile is simply in its new place, and the pair a merge
+   consumed was never anywhere else to be seen leaving (§12). Set from the
+   in-app setting and the OS preference alike, via useReducedMotion. */
+.tm-board-still .tm-tile {
+  transition: none;
+}
+
+.tm-board-still .tm-tile-ghost {
+  display: none;
+}
+
+/* A new tile and a merged tile both pop, and both wait for the slide to
+   finish first — `backwards` holds them at scale 0 through the delay, so
+   nothing appears on top of tiles that are still moving. The scale is on the
+   face because the tile itself is carrying the translation.
+
+   Guarded by `:not(.tm-board-still)` rather than switched off further down:
+   an `animation: none` of equal specificity would only win by being later in
+   the file, which is one reorder away from Reduced Motion quietly stopping
+   working. */
+.tm-board:not(.tm-board-still) .tm-tile-spawn .tm-tile-face,
+.tm-board:not(.tm-board-still) .tm-tile-merge .tm-tile-face {
+  animation: tm-pop 0.11s ease-out 0.11s backwards;
+}
+
+@keyframes tm-pop {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.tm-tile-v2 .tm-tile-face {
+  background: var(--tm-t2);
+  color: var(--tm-t2-ink);
+}
+.tm-tile-v4 .tm-tile-face {
+  background: var(--tm-t4);
+  color: var(--tm-t4-ink);
+}
+.tm-tile-v8 .tm-tile-face {
+  background: var(--tm-t8);
+  color: var(--tm-t8-ink);
+}
+.tm-tile-v16 .tm-tile-face {
+  background: var(--tm-t16);
+  color: var(--tm-t16-ink);
+}
+.tm-tile-v32 .tm-tile-face {
+  background: var(--tm-t32);
+  color: var(--tm-t32-ink);
+}
+.tm-tile-v64 .tm-tile-face {
+  background: var(--tm-t64);
+  color: var(--tm-t64-ink);
+}
+.tm-tile-v128 .tm-tile-face {
+  background: var(--tm-t128);
+  color: var(--tm-t128-ink);
+}
+.tm-tile-v256 .tm-tile-face {
+  background: var(--tm-t256);
+  color: var(--tm-t256-ink);
+}
+.tm-tile-v512 .tm-tile-face {
+  background: var(--tm-t512);
+  color: var(--tm-t512-ink);
+}
+.tm-tile-v1024 .tm-tile-face {
+  background: var(--tm-t1024);
+  color: var(--tm-t1024-ink);
+}
+
+/* 2048 and anything past it share the deepest step, with a ring: the ramp has
+   to stop somewhere, and past here the number itself is the news (§2). */
+.tm-tile-v2048 .tm-tile-face,
+.tm-tile-vmax .tm-tile-face {
+  background: var(--tm-t2048);
+  color: var(--tm-t2048-ink);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* ---------- top bar ---------- */
+
+.tm-status {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The score is the game's own measure, so it is shown while playing — unlike
+   the clock, which is never shown at all (§7, §12). */
+.tm-score {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 15px;
+}
+
+/* ---------- action bar ---------- */
+
+/* One action, and it is free and unlimited: Undo (§6). There is deliberately
+   no hint button — the board is fully visible, so a suggested move would be
+   the app playing the game. */
+.action-bar.tm-actions {
+  justify-content: center;
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* The tutorial draws the whole 4×4 board, so the picture teaches the shape as
+   well as the rule. */
+.tm-figure {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  width: 184px;
+  padding: 5px;
+  background: var(--surface-recessed);
+  border-radius: 10px;
+}
+
+.tm-figure-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: var(--tm-t8);
+  color: var(--tm-t8-ink);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.tm-figure-cell-empty {
+  background: var(--paper);
+}
+
+/* The tile that arrived on this move — the whole point of that step (§5). */
+.tm-figure-cell-fresh {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}

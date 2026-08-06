@@ -27,7 +27,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけで、現在 10 本のゲームを収録しています。
+アプリは 1 つだけで、現在 13 本のゲームを収録しています。
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Games`(ランチャー表示名: `Simple Games`)
@@ -41,6 +41,9 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 | Sudoku(ナンプレ) | `sudoku/` | 100 レベル + デイリー | Undo / Hint | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md) |
 | Solitaire(クロンダイク) | `solitaire/` | フリー配札 + デイリー配札 | Undo / Hint(定石の合法手) | [docs/SOLITAIRE_RULES.md](docs/SOLITAIRE_RULES.md) |
 | Minesweeper | `minesweeper/` | 難易度 3 種 + デイリー | Hint(Undo なし) | [docs/MINESWEEPER_RULES.md](docs/MINESWEEPER_RULES.md) |
+| 2048 | `2048/` | エンドレス(レベルなし) | Undo(Hint なし) | [docs/GAME_2048_RULES.md](docs/GAME_2048_RULES.md) |
+| Snake | `snake/` | エンドレス(レベルなし) | 即時リトライ(Undo / Hint なし) | [docs/SNAKE_RULES.md](docs/SNAKE_RULES.md) |
+| Block Puzzle | `block-puzzle/` | エンドレス(レベルなし) | Undo(Hint なし) | [docs/BLOCK_PUZZLE_RULES.md](docs/BLOCK_PUZZLE_RULES.md) |
 | Brick Breaker | `brick-breaker/` | 100 レベル(デイリーなし) | 同じ盤面への即時リトライ(Undo / Hint なし) | [docs/BRICK_BREAKER_RULES.md](docs/BRICK_BREAKER_RULES.md) |
 | Nonogram | `nonogram/` | 100 レベル + デイリー | Hint(Undo なし) | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md) |
 | Number Match | `number-match/` | 100 レベル + デイリー | Undo / Hint | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md) |
@@ -54,7 +57,9 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 解ける保証があるため Undo を作らず、Nonogram は印がタップで自由に付け外しできるため
 Undo を作らず、Sliding Puzzle は盤面に隠れた情報がないため Hint を作らず、Memory Match は
 記憶そのものが中身のため Undo も Hint も作らず、代わりに同じ盤面への再挑戦を無料にして
-います)。理由は各ルール文書と [docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md)。
+います。2048 と Block Puzzle は盤面に隠れた情報がないため Hint を作らず、そのぶん Undo を
+無制限にしています)。理由は各ルール文書と
+[docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md)。
 
 後続候補: Kakuro / Futoshiki / Takuzu(**いずれも未着手**)。
 いずれもローカル生成で完結し、コンテンツサーバーを必要としないものを優先します。

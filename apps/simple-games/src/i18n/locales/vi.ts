@@ -29,6 +29,7 @@ export const vi: Messages = {
   movesLabel: 'Nước đi',
 
   tryAgain: 'Chơi lại bảng này',
+  newGame: 'Ván mới',
   backHome: 'Trang chính',
 
   confirmNewGameTitle: 'Bắt đầu ván mới?',

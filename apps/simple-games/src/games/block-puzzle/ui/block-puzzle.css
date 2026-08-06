@@ -1,0 +1,219 @@
+/* Block Puzzle — all of this game's styling, imported by BlockPuzzleRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --radius, --font-display, --tap-size, …) so the
+   game reads as part of the same app and follows the theme without knowing
+   about it.
+
+   Class names are prefixed `bp-` so this file can never collide with the
+   shell or with another game. */
+
+/* ---------- body ---------- */
+
+/* Board above, tray below, both centred in the space between the top bar and
+   the action bar. The tray sits under the board because that is where the
+   hand is: a piece is carried upward onto the board, never down across it. */
+.bp-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 4px 8px 8px;
+  min-height: 0;
+}
+
+/* ---------- board ---------- */
+
+/* The board is square and as wide as the screen honestly allows. Eight cells
+   across is the constraint that matters: at the narrowest phone the series
+   supports (360dp) a cell lands near 42px rather than the 44px floor (§12),
+   which is as close as an eight-wide board can come without running off the
+   screen — and it is not the target that decides the game. A drag starts on a
+   tray piece, and those are comfortably above the floor.
+
+   The height budget is spelled out rather than guessed at as a fraction of
+   the screen: the top bar (64), the tray (96 plus its gap), the action bar
+   (76), this element's padding (12), and the reserved banner (64,
+   ADS_POLICY). Naming them is what keeps the cells as large as they can
+   honestly be. */
+.bp-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  width: min(96vw, 420px, calc(100vh - 326px - env(safe-area-inset-bottom, 0px)));
+  aspect-ratio: 1;
+  padding: 4px;
+  border-radius: var(--radius);
+  background: var(--surface-recessed);
+  /* A drag must not become a page scroll (§12). */
+  touch-action: none;
+}
+
+/* An empty cell is a recess in the tray, not a button that wants pressing:
+   the board is something you read first and act on second. */
+.bp-cell {
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: var(--surface);
+  /* Fills sink in rather than pop, so a placement settles (§12). */
+  transition: background-color 0.11s ease;
+}
+
+/* Filled cells are painted solid — never colour alone (§12): the difference
+   between taken and open is a filled face against an empty recess. */
+.bp-cell-filled {
+  background: var(--accent);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.14);
+}
+
+/* Where a legal drop would land. Part of the operation, not an effect, so it
+   is drawn under Reduced Motion too (§12) — it is how the player aims. */
+.bp-cell-ghost {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent-ring);
+}
+
+/* A cleared line, on its way out. The board has already settled; this paints
+   the cell as it was and fades it, so the line is seen to go rather than
+   simply being absent on the next frame (§12). Reduced Motion never applies
+   the class at all, so there is nothing here to switch off. */
+.bp-cell-clearing {
+  animation: bp-clear 0.15s ease-out;
+}
+
+@keyframes bp-clear {
+  from {
+    background-color: var(--accent);
+    opacity: 1;
+  }
+  to {
+    background-color: var(--accent);
+    opacity: 0;
+  }
+}
+
+/* ---------- tray ---------- */
+
+/* Three slots, always three wide, so a spent piece does not move the two
+   still on offer out from under an aiming finger (§1). */
+.bp-tray {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: min(96vw, 420px);
+  touch-action: none;
+}
+
+/* The primary tap target of this game: comfortably past the 44px floor (§12),
+   because this is where every drag begins. */
+.bp-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 88px;
+  padding: 8px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.bp-slot:active {
+  background: var(--surface-recessed);
+}
+
+/* Picked by the tap path. Outlined as well as tinted, so the selection is
+   readable without colour (§12). */
+.bp-slot-selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent-ring);
+}
+
+/* In hand: the piece has left the tray and is being drawn on the board. */
+.bp-slot-dragging {
+  opacity: 0.35;
+}
+
+/* A spent slot keeps the row's shape and stops being a target. */
+.bp-slot-used {
+  background: transparent;
+  border-style: dashed;
+  cursor: default;
+}
+
+/* Pieces are drawn on the catalogue's largest box (5×5), so a 1×1 and a 3×3
+   are shown to the same scale and the tray says how big a piece really is. */
+.bp-piece {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+  width: 100%;
+  max-width: 72px;
+}
+
+.bp-piece-cell {
+  aspect-ratio: 1;
+  border-radius: 2px;
+}
+
+.bp-piece-cell-filled {
+  background: var(--accent);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.14);
+}
+
+/* ---------- top bar ---------- */
+
+/* The best sits beside the score, quieter than it: it is a fact about past
+   games, not the number this one is chasing (§5). */
+.bp-best {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- action bar ---------- */
+
+/* One button. Undo is the only help this game has (§8), so the bar holds it
+   alone rather than padding the row with something invented to fill it. */
+.bp-actions .action-btn {
+  max-width: 180px;
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* The tutorial draws the whole 8×8 board rather than a corner of it, because
+   two of the three things it teaches — a line clearing, a board with no room
+   left — are only true of the whole board (§11). */
+.bp-figure {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  width: 148px;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--surface-recessed);
+}
+
+.bp-figure-cell {
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: var(--surface);
+}
+
+.bp-figure-cell-filled {
+  background: var(--accent);
+}
+
+/* The same ghost the board draws, so the figure teaches the real thing. */
+.bp-figure-cell-ghost {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent-ring);
+}
+
+/* The line in the figure is caught mid-fade — a still of what §12 animates. */
+.bp-figure-cell-clearing {
+  opacity: 0.45;
+}

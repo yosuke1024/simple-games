@@ -242,6 +242,50 @@ export const titleAccents = {
     onDark: '#131226',
     softDark: '#2b2a4a',
   },
+  /**
+   * 2048 — jade. The board is a full field of tiles drawn in tints of the
+   * accent, so it covers more area than in any other title and has to stay
+   * calm at every value. Green also settles the one question this title
+   * raises: the original 2048 is a warm sand palette, and the series does not
+   * imitate another game's look (docs/BRAND.md). It sits between Solitaire's
+   * felt green and Sudoku's teal, greener and lighter than either.
+   */
+  game2048: {
+    light: '#2b7d59',
+    onLight: '#ffffff',
+    softLight: '#dcece4',
+    dark: '#79c39c',
+    onDark: '#0f1a15',
+    softDark: '#1e3a2d',
+  },
+  /**
+   * Block Puzzle — orchid. Placed blocks are drawn in the accent and stay on
+   * the board for the whole game, so this is the second-largest accent area in
+   * the collection; a muted magenta carries it without shouting. It takes the
+   * one hue gap left between Nonogram's plum and Memory Match's rose.
+   */
+  blockPuzzle: {
+    light: '#8b4f80',
+    onLight: '#ffffff',
+    softLight: '#f0e2ee',
+    dark: '#c795bd',
+    onDark: '#1c1019',
+    softDark: '#3a2a38',
+  },
+  /**
+   * Snake — moss. The snake itself is drawn in the accent on a paper board,
+   * so the colour is the game's one moving thing; a dry olive green reads as
+   * grass without borrowing Solitaire's felt, and fills the olive gap between
+   * Brick Breaker's ochre and that felt green.
+   */
+  snake: {
+    light: '#6d7a34',
+    onLight: '#ffffff',
+    softLight: '#eaeed6',
+    dark: '#b4bd6d',
+    onDark: '#161908',
+    softDark: '#33381a',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

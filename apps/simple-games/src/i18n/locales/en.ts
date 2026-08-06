@@ -35,6 +35,7 @@ export const en = {
   movesLabel: 'Moves',
 
   tryAgain: 'Retry same board',
+  newGame: 'New Game',
   backHome: 'Home',
 
   // Confirmations

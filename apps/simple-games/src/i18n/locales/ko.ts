@@ -29,6 +29,7 @@ export const ko: Messages = {
   movesLabel: '이동 수',
 
   tryAgain: '같은 판 다시 하기',
+  newGame: '새 게임',
   backHome: '홈',
 
   confirmNewGameTitle: '새 게임을 시작할까요?',

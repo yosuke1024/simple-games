@@ -20,6 +20,9 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'sliding-puzzle': ['sp.saveGame', 'sp.saveDaily', 'sp.stats', 'sp.progress', 'sp.flags'],
   'memory-match': ['mm.saveGame', 'mm.saveDaily', 'mm.stats', 'mm.flags'],
   'sky-fighter': ['sf.stats', 'sf.progress', 'sf.flags'],
+  '2048': ['tm.saveGame', 'tm.stats', 'tm.flags'],
+  snake: ['sn.stats', 'sn.flags'],
+  'block-puzzle': ['bp.saveGame', 'bp.stats', 'bp.flags'],
 };
 
 const PREFIXES: Record<string, string> = {
@@ -33,6 +36,9 @@ const PREFIXES: Record<string, string> = {
   'sliding-puzzle': 'sp.',
   'memory-match': 'mm.',
   'sky-fighter': 'sf.',
+  '2048': 'tm.',
+  snake: 'sn.',
+  'block-puzzle': 'bp.',
 };
 
 describe('registry storage keys (released data — do not edit to make green)', () => {
