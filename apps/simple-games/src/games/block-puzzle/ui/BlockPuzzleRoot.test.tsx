@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
@@ -52,6 +52,9 @@ const savedGame = {
   ...tutorialDone,
   [BP_STORAGE_KEYS.game]: JSON.stringify(toPersisted(PINNED, 1)),
 };
+
+/** Lets the async record loads and the fire-and-forget saves land. */
+const settle = () => act(async () => undefined);
 
 const board = () => screen.getByRole('group', { name: 'Block board, 8 by 8' });
 const tray = () => screen.getByRole('group', { name: 'Pieces' });
@@ -290,5 +293,48 @@ describe('home', () => {
     expect(screen.getByText('Lines cleared')).toBeInTheDocument();
     expect(screen.getByText('Total play time')).toBeInTheDocument();
     expect(screen.queryByText(/streak/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('play time (§9)', () => {
+  /** Total play seconds as they survive on disk. */
+  const storedPlaySeconds = (): number => {
+    const raw = deviceStore.get(BP_STORAGE_KEYS.stats);
+    return raw === undefined
+      ? 0
+      : (JSON.parse(raw) as { totalPlaySeconds: number }).totalPlaySeconds;
+  };
+
+  // Replacing a running board is the one exit that nothing else comes back
+  // for: `activate` resets the clock refs to the new game's zero, so seconds
+  // not booked before that are gone. A player who taps New Game after ten
+  // minutes without once leaving the screen kept none of them.
+  it('books the running board’s seconds before a new one replaces it', async () => {
+    // The play clock is a plain interval, so it has to be faked before the
+    // game screen mounts — which rules out userEvent here.
+    vi.useFakeTimers();
+    try {
+      renderGame(savedGame);
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: 'Resume' }));
+      await settle();
+
+      act(() => vi.advanceTimersByTime(7_000));
+      expect(storedPlaySeconds()).toBe(0);
+
+      // New Game, from the top bar, without ever leaving the game screen.
+      fireEvent.click(screen.getByRole('button', { name: 'New Game' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+      await settle();
+      expect(storedPlaySeconds()).toBe(7);
+
+      // And the seven are not booked a second time by the next exit.
+      act(() => vi.advanceTimersByTime(2_000));
+      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+      await settle();
+      expect(storedPlaySeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

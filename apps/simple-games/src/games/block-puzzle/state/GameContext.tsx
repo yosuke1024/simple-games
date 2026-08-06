@@ -128,9 +128,31 @@ export function BlockProvider({
   const navigate = useCallback((next: Screen) => setScreen(next), []);
 
   const persistStats = useCallback((next: Stats) => {
+    // The ref is what the callbacks below read, and two of them can fire in
+    // one tick — the running board's seconds are booked and the next game is
+    // started from the same tap. React has not re-rendered in between, so the
+    // ref is advanced here rather than waiting for the render that assigns
+    // it; otherwise the second write is computed from pre-booking statistics
+    // and quietly undoes the first.
+    statsRef.current = next;
     setStats(next);
     void saveRecord(statsSchema, next);
   }, []);
+
+  /**
+   * Hands the statistics the seconds this run has played but not yet booked
+   * (§9). Only the difference, so calling it twice cannot count the same
+   * second twice — which is what lets every exit from a running board call it
+   * without any of them having to know about the others.
+   */
+  const bookElapsed = useCallback(() => {
+    const current = sessionRef.current;
+    if (!current || current.status !== 'playing') return;
+    const unbooked = Math.max(0, elapsedRef.current - bookedRef.current);
+    if (unbooked === 0) return;
+    bookedRef.current = elapsedRef.current;
+    persistStats(applyPlayTime(statsRef.current, unbooked));
+  }, [persistStats]);
 
   /** Handles a session transition, persisting or finalizing as needed. */
   const commitSession = useCallback(
@@ -164,13 +186,19 @@ export function BlockProvider({
   }, []);
 
   const startNewGame = useCallback(() => {
+    // The board being replaced may have been played for minutes without ever
+    // leaving the screen, and `activate` below resets the clock refs to the
+    // new game's zero. Booking first is what keeps those minutes: nothing
+    // else was ever going to come back for them (§9).
+    bookElapsed();
+
     const next = createSession();
     persistStats(applyGameStart(statsRef.current));
     setLastResult(null);
     setSession(next);
     activate(next);
     void saveGame(next);
-  }, [activate, persistStats]);
+  }, [activate, bookElapsed, persistStats]);
 
   const resumeGame = useCallback(() => {
     const current = sessionRef.current;
@@ -220,13 +248,9 @@ export function BlockProvider({
       const synced = withElapsed(current);
       setSession(synced);
       void saveGame(synced);
-      const unbooked = Math.max(0, synced.elapsedSeconds - bookedRef.current);
-      if (unbooked > 0) {
-        bookedRef.current = synced.elapsedSeconds;
-        persistStats(applyPlayTime(statsRef.current, unbooked));
-      }
     }
-  }, [persistStats, withElapsed]);
+    bookElapsed();
+  }, [bookElapsed, withElapsed]);
 
   const goHome = useCallback(() => {
     syncActiveGame();
