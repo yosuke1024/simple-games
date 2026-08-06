@@ -69,11 +69,29 @@
   box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.14);
 }
 
-/* Where a legal drop would land. Part of the operation, not an effect, so it
-   is drawn under Reduced Motion too (§12) — it is how the player aims. */
+/* The piece in hand, where it would land. Part of the operation, not an
+   effect, so it is drawn under Reduced Motion too (§12) — it is how the
+   player aims, and before it existed there was nothing to aim with (§3).
+
+   It has to read as *the piece*, not as a hint: the fill is the accent at the
+   ring token's opacity (a computed tint is not available at the Chromium 88
+   floor, and --accent-ring is the accent already carried at 38%), and the
+   outline is the accent at full strength. Against an empty recess that is
+   unmistakably a piece hovering; against a filled cell it still reads,
+   because a filled cell is solid accent and this one is outlined. */
 .bp-cell-ghost {
-  background: var(--accent-soft);
-  box-shadow: inset 0 0 0 2px var(--accent-ring);
+  background: var(--accent-ring);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* The same piece where it will not go: still drawn, because "I cannot see
+   where I am aiming" was the complaint, and disappearing is what caused it.
+   Ink rather than accent, and hollow rather than filled — a refusal that is
+   quiet. It is not an error and must not look like one (docs/BRAND.md). */
+.bp-cell-ghost-blocked {
+  background: var(--accent-ring-soft);
+  box-shadow: inset 0 0 0 2px var(--ink-soft);
+  opacity: 0.75;
 }
 
 /* A cleared line, on its way out. The board has already settled; this paints

@@ -146,15 +146,6 @@
   --accent-ring-soft: rgba(139, 79, 128, 0.12);
 }
 
-:root[data-game='snake'],
-.accent-snake {
-  --accent: #6d7a34;
-  --accent-ink: #ffffff;
-  --accent-soft: #eaeed6;
-  --accent-ring: rgba(109, 122, 52, 0.38);
-  --accent-ring-soft: rgba(109, 122, 52, 0.12);
-}
-
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -274,15 +265,6 @@
   --accent-soft: #3a2a38;
   --accent-ring: rgba(199, 149, 189, 0.42);
   --accent-ring-soft: rgba(199, 149, 189, 0.14);
-}
-
-:root[data-theme='dark'][data-game='snake'],
-[data-theme='dark'] .accent-snake {
-  --accent: #b4bd6d;
-  --accent-ink: #161908;
-  --accent-soft: #33381a;
-  --accent-ring: rgba(180, 189, 109, 0.42);
-  --accent-ring-soft: rgba(180, 189, 109, 0.14);
 }
 
 * {

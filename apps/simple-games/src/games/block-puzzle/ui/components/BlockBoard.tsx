@@ -10,11 +10,17 @@
  * A filled cell is painted as a solid square, never merely tinted, so the
  * state survives a screen read and a colour-blind eye alike (§12).
  *
- * Two marks are drawn on the same grid: the drag ghost, which shows where a
- * legal drop would land (§3), and the fade left behind by a clear. The fade
- * sits on cells the board has *already* emptied — the position settles the
- * moment the placement is committed, and the fade is the trace of what was
- * there, not a state the game is still in (§12).
+ * Two marks are drawn on the same grid: the piece in hand, which is where the
+ * carried piece is right now and whether it fits (§3), and the fade left
+ * behind by a clear. The fade sits on cells the board has *already* emptied —
+ * the position settles the moment the placement is committed, and the fade is
+ * the trace of what was there, not a state the game is still in (§12).
+ *
+ * The piece in hand is drawn on the board's own grid rather than floating
+ * under the finger, so what is on screen is exactly what a release would do.
+ * It is drawn whether or not it fits: a preview that only appeared for legal
+ * positions left the player with nothing to aim with at the moment they were
+ * aiming, which is how this screen was wrong before (§3).
  */
 import { memo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
@@ -22,8 +28,10 @@ import { colOf, rowOf, type Board } from '../../game';
 
 export interface BlockBoardProps {
   board: Board;
-  /** Board indices a legal drop would fill, or empty while not dragging (§3). */
-  ghost: readonly number[];
+  /** Board indices the carried piece covers, or empty while not dragging (§3). */
+  hand: readonly number[];
+  /** Whether releasing now would place the piece — it is drawn either way. */
+  handFits: boolean;
   /** Board indices the last clear emptied, for the fade (§12). */
   clearing: readonly number[];
   onCellTap: (row: number, col: number) => void;
@@ -32,7 +40,8 @@ export interface BlockBoardProps {
 
 export const BlockBoard = memo(function BlockBoard({
   board,
-  ghost,
+  hand,
+  handFits,
   clearing,
   onCellTap,
   boardRef,
@@ -46,7 +55,9 @@ export const BlockBoard = memo(function BlockBoard({
         const col = colOf(index);
         const classes = ['bp-cell'];
         if (filled) classes.push('bp-cell-filled');
-        if (ghost.indexOf(index) !== -1) classes.push('bp-cell-ghost');
+        if (hand.indexOf(index) !== -1) {
+          classes.push(handFits ? 'bp-cell-ghost' : 'bp-cell-ghost-blocked');
+        }
         if (clearing.indexOf(index) !== -1) classes.push('bp-cell-clearing');
         return (
           <button

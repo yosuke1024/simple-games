@@ -1,17 +1,23 @@
 /**
  * The Block Puzzle game screen (docs/BLOCK_PUZZLE_RULES.md §3, §7, §12).
  *
- * Two ways in, one move. A drag reads the pointer against the board's own
- * rectangle and lands the piece 1.5 cells above the finger, so the square
- * being chosen is never the square the hand is covering (§3). A tap picks a
- * piece and then a cell, which is how this game is played without a drag at
- * all — by assistive technology, by an external input, by anyone whose hands
- * do not do drags today. Both end in the same pure `placePiece`, so neither
- * can drift into being the one that really works.
+ * Two ways in, one move. A drag carries the piece on the board's own grid,
+ * one row above the fingertip, and the board shows it there for the whole
+ * gesture — fitting or not (§3). A tap picks a piece and then a cell, which
+ * is how this game is played without a drag at all — by assistive technology,
+ * by an external input, by anyone whose hands do not do drags today. Both end
+ * in the same pure `placePiece`, so neither can drift into being the one that
+ * really works.
  *
- * A drop that is not legal does nothing and says nothing (§3): the piece is
- * back in the tray, the board is untouched, and the game has no opinion about
- * it. The mistake was free, so it needs no feedback.
+ * The drag used to show the piece only where it would fit, which meant the
+ * screen went blank exactly while the player was hunting for a place to put
+ * it — "I cannot tell where I am aiming" was the whole of it. What the board
+ * draws now is the piece itself, so aiming is looking rather than predicting.
+ *
+ * A drop that is not legal still does nothing and says nothing (§3): the
+ * piece is back in the tray, the board is untouched, and the game has no
+ * opinion about it. The mistake was free, so it needs no scolding — but it is
+ * visible before it happens, which is a different thing.
  *
  * The score is on screen because it is the game's own measure. The clock is
  * not, at all (§12) — elapsed time exists only in the statistics.
@@ -25,18 +31,24 @@ import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconRetry, IconUndo } from '@/ui/components/icons';
 import { useReducedMotion } from '@/ui/useReducedMotion';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
-import { BOARD_SIZE, canPlace, pieceById, pieceCells, type Piece } from '../../game';
+import { BOARD_SIZE, canPlace, pieceById, pieceCellsOnBoard, type Piece } from '../../game';
 import { useBlockPuzzle } from '../../state/GameContext';
 import { BlockBoard } from '../components/BlockBoard';
 import { BlockResultOverlay } from '../components/BlockResultOverlay';
 import { BlockTray } from '../components/BlockTray';
 
 /**
- * How far above the finger the piece rides, in cells (§3). One and a half is
- * what it takes for a fingertip to sit clear of the shape's bottom row on a
- * phone: a whole cell still leaves the landing row half-covered.
+ * How many empty rows sit between the fingertip's cell and the bottom of the
+ * carried piece (§3). It is a whole number of cells, and it is the same for
+ * every shape: the rule the player learns is "the piece rides one row above
+ * my finger", which holds for a single square and for a five-tall bar alike.
+ *
+ * The first version scaled the offset with the shape's height, so a tall
+ * piece sat much further from the finger than a short one and the mapping had
+ * to be relearned per shape. That, and a preview that vanished wherever the
+ * piece did not fit, is what made this screen impossible to aim.
  */
-const DRAG_LIFT_CELLS = 1.5;
+const DRAG_LIFT_ROWS = 1;
 
 /**
  * How far the pointer must travel before a press counts as a drag rather than
@@ -66,10 +78,12 @@ interface DragState {
   readonly startX: number;
   readonly startY: number;
   moved: boolean;
-  /** The legal landing under the pointer, or null while there is none. */
+  /** Where the carried piece is, fitting or not. Null only before it moves. */
   landing: Landing | null;
-  /** The ghost currently rendered, so an unchanged one costs no render. */
-  ghostKey: string;
+  /** Whether releasing at `landing` would place the piece. */
+  fits: boolean;
+  /** What the board is already drawing, so an unchanged hand costs no render. */
+  handKey: string;
 }
 
 export function BlockGameScreen() {
@@ -82,7 +96,8 @@ export function BlockGameScreen() {
   const [confirmNewGame, setConfirmNewGame] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
   const [dragSlot, setDragSlot] = useState<number | null>(null);
-  const [ghost, setGhost] = useState<readonly number[]>(NO_CELLS);
+  const [hand, setHand] = useState<readonly number[]>(NO_CELLS);
+  const [handFits, setHandFits] = useState(false);
   const [clearing, setClearing] = useState<readonly number[]>(NO_CELLS);
 
   const boardElRef = useRef<HTMLDivElement | null>(null);
@@ -135,7 +150,13 @@ export function BlockGameScreen() {
     [fadeTimeout, play, reducedMotion],
   );
 
-  /** Where the piece under the pointer would land, lifted clear of it (§3). */
+  /**
+   * Where the carried piece sits for a pointer at (clientX, clientY): its
+   * bottom row one row above the fingertip's cell, centred left to right on
+   * it (§3). The result is not clamped and may be off the board — that is
+   * how a piece hangs over an edge while it is being lined up, and
+   * `pieceCellsOnBoard` draws whatever part of it is on the board.
+   */
   const resolveLanding = useCallback(
     (clientX: number, clientY: number, piece: Piece): Landing | null => {
       const element = boardElRef.current;
@@ -146,13 +167,13 @@ export function BlockGameScreen() {
       if (rect.width === 0 || rect.height === 0) return null;
       const cellWidth = rect.width / BOARD_SIZE;
       const cellHeight = rect.height / BOARD_SIZE;
-      // Centre the shape on the pointer, then lift it — so a wide piece is held
-      // in the middle rather than by its top-left corner.
-      const centreRow = (clientY - rect.top) / cellHeight - DRAG_LIFT_CELLS;
-      const centreCol = (clientX - rect.left) / cellWidth;
+      const fingerRow = Math.floor((clientY - rect.top) / cellHeight);
+      const fingerCol = Math.floor((clientX - rect.left) / cellWidth);
       return {
-        row: Math.round(centreRow - piece.height / 2),
-        col: Math.round(centreCol - piece.width / 2),
+        row: fingerRow - DRAG_LIFT_ROWS - (piece.height - 1),
+        // Odd widths centre exactly; even ones lean left, which is the half
+        // cell the finger is already on.
+        col: fingerCol - Math.floor((piece.width - 1) / 2),
       };
     },
     [],
@@ -170,7 +191,8 @@ export function BlockGameScreen() {
       startY: event.clientY,
       moved: false,
       landing: null,
-      ghostKey: '',
+      fits: false,
+      handKey: '',
     };
     // Capture is an improvement (a finger that leaves the tray keeps
     // steering the piece), never a precondition — it throws if the pointer
@@ -209,18 +231,17 @@ export function BlockGameScreen() {
       }
 
       const landing = resolveLanding(event.clientX, event.clientY, piece);
-      const legal =
-        landing !== null && canPlace(current.board, piece, landing.row, landing.col)
-          ? landing
-          : null;
-      drag.landing = legal;
+      const fits = landing !== null && canPlace(current.board, piece, landing.row, landing.col);
+      drag.landing = landing;
+      drag.fits = fits;
 
-      // Only a different landing is worth a render; a pointer moving inside
+      // Only a different position is worth a render; a pointer moving inside
       // one cell would otherwise re-render the whole board per event.
-      const key = legal === null ? '' : `${legal.row},${legal.col}`;
-      if (key === drag.ghostKey) return;
-      drag.ghostKey = key;
-      setGhost(legal === null ? NO_CELLS : pieceCells(piece, legal.row, legal.col));
+      const key = landing === null ? '' : `${landing.row},${landing.col},${fits ? 1 : 0}`;
+      if (key === drag.handKey) return;
+      drag.handKey = key;
+      setHandFits(fits);
+      setHand(landing === null ? NO_CELLS : pieceCellsOnBoard(piece, landing.row, landing.col));
     },
     [resolveLanding],
   );
@@ -229,7 +250,8 @@ export function BlockGameScreen() {
     const drag = dragRef.current;
     dragRef.current = null;
     setDragSlot(null);
-    setGhost(NO_CELLS);
+    setHand(NO_CELLS);
+    setHandFits(false);
     return drag;
   }, []);
 
@@ -241,8 +263,11 @@ export function BlockGameScreen() {
       // Never moved: this was a tap, and the click that follows selects.
       if (!drag.moved) return;
       suppressTapRef.current = true;
-      // Released anywhere illegal: the piece is back in the tray, silently (§3).
-      if (drag.landing !== null) commit(drag.slot, drag.landing.row, drag.landing.col);
+      // Released where it does not fit: the piece is back in the tray,
+      // silently (§3). The board already showed that it would not go.
+      if (drag.fits && drag.landing !== null) {
+        commit(drag.slot, drag.landing.row, drag.landing.col);
+      }
     },
     [commit, endDrag],
   );
@@ -340,7 +365,8 @@ export function BlockGameScreen() {
         >
           <BlockBoard
             board={session.board}
-            ghost={ghost}
+            hand={hand}
+            handFits={handFits}
             clearing={clearing}
             onCellTap={onCellTap}
             boardRef={setBoardEl}

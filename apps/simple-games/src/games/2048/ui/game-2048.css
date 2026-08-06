@@ -7,60 +7,73 @@
    or with another game.
 
    The tile ramp below is game content, not chrome — the same standing as
-   Minesweeper's number scale. It is built from this title's own jade rather
-   than from the original's oranges: copying another game's look is not
-   something this series does (§13, docs/BRAND.md). The ramp runs pale to deep
-   in the light theme and dark to bright in the dark one, so in both a bigger
-   number simply stands further out from the board it sits on. */
+   Minesweeper's number scale and Memory Match's fifteen symbol colours, and
+   the one place this title is allowed past "one accent per title"
+   (docs/BRAND.md). The reason is what the board is for: a player reads a 4×4
+   grid at a glance and has to know which numbers are which *before* reading
+   the digits. The first version of this file ran the whole ramp through tints
+   of the title's jade, and it failed exactly there — 2 and 4 sat so close to
+   an empty cell that the board did not read at all, and 2 and 4 are where the
+   game is played.
+
+   So the ramp walks the hue circle instead of one hue's lightness: stone for
+   the two values that are noise, then jade, teal, blue, indigo, violet, plum,
+   rose, and gold at 2048. Every step changes hue *and* lightness, so the
+   order survives a colour-blind eye and a grayscale screenshot alike.
+
+   It is still not the original's palette: those are saturated oranges on a
+   beige board, and this is the series' muted range on its own paper. Sharing
+   "a warm colour at the top" with a game that invented the genre is not
+   copying its look (§13). */
 
 :root {
-  --tm-t2: #eaf2ee;
-  --tm-t2-ink: #55665e;
-  --tm-t4: #dbebe2;
-  --tm-t4-ink: #476054;
-  --tm-t8: #bfdfcd;
-  --tm-t8-ink: #2b5c44;
-  --tm-t16: #9dd0b4;
-  --tm-t16-ink: #21503a;
-  --tm-t32: #77bf9b;
-  --tm-t32-ink: #16412e;
-  --tm-t64: #52ac81;
+  --tm-t2: #e5dfd1;
+  --tm-t2-ink: #6b6456;
+  --tm-t4: #d5cdb9;
+  --tm-t4-ink: #5c5442;
+  --tm-t8: #a5cdb4;
+  --tm-t8-ink: #234f39;
+  --tm-t16: #6fb695;
+  --tm-t16-ink: #133f2b;
+  --tm-t32: #43a49e;
+  --tm-t32-ink: #ffffff;
+  --tm-t64: #3d89b0;
   --tm-t64-ink: #ffffff;
-  --tm-t128: #2b7d59;
+  --tm-t128: #5b73bd;
   --tm-t128-ink: #ffffff;
-  --tm-t256: #246a4c;
+  --tm-t256: #785fae;
   --tm-t256-ink: #ffffff;
-  --tm-t512: #1d583e;
+  --tm-t512: #9a5296;
   --tm-t512-ink: #ffffff;
-  --tm-t1024: #174631;
+  --tm-t1024: #b0506e;
   --tm-t1024-ink: #ffffff;
-  --tm-t2048: #113526;
+  --tm-t2048: #bd7f33;
   --tm-t2048-ink: #ffffff;
 }
 
 :root[data-theme='dark'] {
-  --tm-t2: #2b332f;
-  --tm-t2-ink: #9fb0a7;
-  --tm-t4: #333f39;
-  --tm-t4-ink: #b3c6bc;
-  --tm-t8: #2f5443;
-  --tm-t8-ink: #cbe4d7;
-  --tm-t16: #2d6650;
-  --tm-t16-ink: #dcefe5;
-  --tm-t32: #2c7d60;
-  --tm-t32-ink: #ffffff;
-  --tm-t64: #339373;
-  --tm-t64-ink: #ffffff;
-  --tm-t128: #43ac86;
-  --tm-t128-ink: #10251c;
-  --tm-t256: #59bf97;
-  --tm-t256-ink: #10251c;
-  --tm-t512: #74cfab;
-  --tm-t512-ink: #10251c;
-  --tm-t1024: #90dcbc;
-  --tm-t1024-ink: #10251c;
-  --tm-t2048: #ade8cd;
-  --tm-t2048-ink: #10251c;
+  --tm-t2: #383b34;
+  --tm-t2-ink: #adb1a2;
+  --tm-t4: #4a4c3f;
+  --tm-t4-ink: #c6c8b6;
+  --tm-t8: #2f6b4c;
+  --tm-t8-ink: #e3f2e9;
+  --tm-t16: #2f8a68;
+  --tm-t16-ink: #eafaf1;
+  --tm-t32: #2f8f8c;
+  --tm-t32-ink: #eafafa;
+  --tm-t64: #35779c;
+  --tm-t64-ink: #eaf4fb;
+  --tm-t128: #4a5fa8;
+  --tm-t128-ink: #eef0fc;
+  --tm-t256: #6a4f9c;
+  --tm-t256-ink: #f3edfc;
+  --tm-t512: #8d4a88;
+  --tm-t512-ink: #fbecf8;
+  --tm-t1024: #a34462;
+  --tm-t1024-ink: #fdecf0;
+  --tm-t2048: #b8802f;
+  --tm-t2048-ink: #1a1305;
 }
 
 /* ---------- board ---------- */
@@ -245,8 +258,11 @@
   color: var(--tm-t1024-ink);
 }
 
-/* 2048 and anything past it share the deepest step, with a ring: the ramp has
-   to stop somewhere, and past here the number itself is the news (§2). */
+/* 2048 and anything past it share the gold at the top of the ramp, ringed in
+   the title's own accent: the ramp has to stop somewhere, and past here the
+   number itself is the news (§2). Gold is where the walk ends because this is
+   the tile the whole game is aimed at — it should be the one thing on the
+   board that is warm. */
 .tm-tile-v2048 .tm-tile-face,
 .tm-tile-vmax .tm-tile-face {
   background: var(--tm-t2048);

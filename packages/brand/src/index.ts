@@ -272,20 +272,6 @@ export const titleAccents = {
     onDark: '#1c1019',
     softDark: '#3a2a38',
   },
-  /**
-   * Snake — moss. The snake itself is drawn in the accent on a paper board,
-   * so the colour is the game's one moving thing; a dry olive green reads as
-   * grass without borrowing Solitaire's felt, and fills the olive gap between
-   * Brick Breaker's ochre and that felt green.
-   */
-  snake: {
-    light: '#6d7a34',
-    onLight: '#ffffff',
-    softLight: '#eaeed6',
-    dark: '#b4bd6d',
-    onDark: '#161908',
-    softDark: '#33381a',
-  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

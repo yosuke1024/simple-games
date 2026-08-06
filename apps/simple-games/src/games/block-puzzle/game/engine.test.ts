@@ -14,6 +14,7 @@ import {
   hasAnyMove,
   place,
   pieceCells,
+  pieceCellsOnBoard,
   scoreFor,
 } from './engine';
 import { PIECES, pieceById } from './pieces';
@@ -62,6 +63,28 @@ describe('placement legality (§3)', () => {
     expect(result.cells).toBe(9);
     expect(result.board.filter(Boolean)).toHaveLength(9);
     for (const index of pieceCells(BLOCK_3X3, 1, 2)) expect(result.board[index]).toBe(true);
+  });
+
+  it('draws the part of a piece that is on the board, wherever it is held', () => {
+    // What the piece in hand is drawn from (§3). A position hanging over an
+    // edge is not an error — it is the player lining the piece up — so the
+    // cells that are on the board still come back.
+    expect(pieceCellsOnBoard(BLOCK_3X3, 1, 2)).toEqual(pieceCells(BLOCK_3X3, 1, 2));
+    expect(pieceCellsOnBoard(BLOCK_3X3, -1, 0)).toEqual([
+      indexAt(0, 0),
+      indexAt(0, 1),
+      indexAt(0, 2),
+      indexAt(1, 0),
+      indexAt(1, 1),
+      indexAt(1, 2),
+    ]);
+    expect(pieceCellsOnBoard(COLUMN_OF_FIVE, BOARD_SIZE - 1, 0)).toEqual([
+      indexAt(BOARD_SIZE - 1, 0),
+    ]);
+    // Wholly off the board: nothing to draw, and nothing to mistake for a
+    // landing either.
+    expect(pieceCellsOnBoard(SINGLE, BOARD_SIZE, 0)).toEqual([]);
+    expect(pieceCellsOnBoard(SINGLE, 0, -1)).toEqual([]);
   });
 });
 

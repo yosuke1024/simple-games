@@ -42,8 +42,11 @@ export function BlockHomeScreen() {
 
       <div className="home-hero">
         {/* The series mark: four squares, one of them still to come. */}
+        {/* The same glyph the collection home puts on this title's tile
+            (app/registry.ts): arriving here should look like the tile that
+            was tapped, not like a second mark for the same game. */}
         <div className="home-logo" aria-hidden="true">
-          ▟
+          ▣
         </div>
         <h1 className="home-title">{t('blockName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>

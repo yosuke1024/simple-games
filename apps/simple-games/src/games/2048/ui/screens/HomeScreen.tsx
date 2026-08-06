@@ -41,8 +41,11 @@ export function Game2048HomeScreen() {
 
       <div className="home-hero">
         {/* The series mark: two tiles pushed together — a merge. */}
+        {/* The same glyph the collection home puts on this title's tile
+            (app/registry.ts): arriving here should look like the tile that
+            was tapped, not like a second mark for the same game. */}
         <div className="home-logo" aria-hidden="true">
-          ⧈
+          ⊞
         </div>
         <h1 className="home-title">{t('mergeName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>

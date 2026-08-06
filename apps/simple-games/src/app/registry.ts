@@ -29,7 +29,6 @@ import { NG_STORAGE_KEYS } from '../games/nonogram/storage/keys';
 import { NM_STORAGE_KEYS } from '../games/number-match/storage/keys';
 import { SD_STORAGE_KEYS } from '../games/sudoku/storage/keys';
 import { SF_STORAGE_KEYS } from '../games/sky-fighter/storage/keys';
-import { SN_STORAGE_KEYS } from '../games/snake/storage/keys';
 import { SO_STORAGE_KEYS } from '../games/solitaire/storage/keys';
 import { SP_STORAGE_KEYS } from '../games/sliding-puzzle/storage/keys';
 import { TM_STORAGE_KEYS } from '../games/2048/storage/keys';
@@ -47,7 +46,6 @@ export type GameId =
   | 'brick-breaker'
   | 'sky-fighter'
   | '2048'
-  | 'snake'
   | 'block-puzzle';
 
 export interface GameDefinition {
@@ -123,13 +121,6 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(TM_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/2048/ui/Game2048Root').then((m) => ({ default: m.Game2048Root })),
-  },
-  {
-    id: 'snake',
-    title: 'Snake',
-    glyph: '∿',
-    storageKeys: Object.values(SN_STORAGE_KEYS),
-    loadRoot: () => import('../games/snake/ui/SnakeRoot').then((m) => ({ default: m.SnakeRoot })),
   },
   {
     id: 'block-puzzle',

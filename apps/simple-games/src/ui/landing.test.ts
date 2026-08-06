@@ -45,7 +45,7 @@ describe('gameLandingUrl', () => {
     // These three ship in the collection but have no guide. Returning null is
     // what keeps the tutorial's last screen from ending in a 404; the button
     // appears in the release after their pages go up.
-    for (const id of ['2048', 'block-puzzle', 'snake']) {
+    for (const id of ['2048', 'block-puzzle']) {
       expect(gameLandingUrl(id, 'en')).toBeNull();
       expect(gameLandingUrl(id, 'ja')).toBeNull();
     }

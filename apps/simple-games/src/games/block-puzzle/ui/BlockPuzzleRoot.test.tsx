@@ -85,14 +85,18 @@ function giveBoardALayout(): void {
 
 /**
  * Where a finger has to be for the piece in `slot` to land with its top-left
- * corner on (row, col): the board's own arithmetic run backwards, including
- * the 1.5-cell lift that keeps the piece clear of the finger (§3).
+ * corner on (row, col): the board's own arithmetic run backwards. The piece
+ * rides with its bottom row one row above the fingertip's cell and centred on
+ * it, the same way for every shape (§3).
  */
 function pointerFor(slot: number, row: number, col: number) {
   const piece = pieceById(PINNED.tray[slot])!;
+  const fingerRow = row + (piece.height - 1) + 1;
+  const fingerCol = col + Math.floor((piece.width - 1) / 2);
+  // The middle of the fingertip's cell, so rounding cannot pick a neighbour.
   return {
-    clientX: CELL_PX * (col + piece.width / 2),
-    clientY: CELL_PX * (row + piece.height / 2 + 1.5),
+    clientX: CELL_PX * (fingerCol + 0.5),
+    clientY: CELL_PX * (fingerRow + 0.5),
   };
 }
 
@@ -169,7 +173,7 @@ describe('playing', () => {
     expect(undo()).toBeDisabled();
   });
 
-  it('shows a ghost while dragging and places the piece on release (§3)', async () => {
+  it('carries the piece on the board while dragging and places it on release (§3)', async () => {
     const user = userEvent.setup();
     renderGame(savedGame);
     await resume(user);
@@ -192,6 +196,39 @@ describe('playing', () => {
     expect(screen.getByText(new RegExp(`Score\\s*${cellsInSlot(0)}`))).toBeInTheDocument();
   });
 
+  it('keeps the piece on screen where it will not fit, and refuses the drop (§3)', async () => {
+    const user = userEvent.setup();
+    renderGame(savedGame);
+    await resume(user);
+    giveBoardALayout();
+
+    // Put the first piece down, then try to lay the second one across it.
+    const first = within(tray()).getByRole('button', { name: /^Piece 1,/ });
+    const landing = pointerFor(0, 2, 2);
+    fireEvent.pointerDown(first, { pointerId: 1, clientX: 40, clientY: 600 });
+    fireEvent.pointerMove(first, { pointerId: 1, ...landing });
+    fireEvent.pointerUp(first, { pointerId: 1, ...landing });
+    const filled = cellsInSlot(0);
+    expect(board().querySelectorAll('.bp-cell-filled')).toHaveLength(filled);
+
+    // Aimed so the second piece's first cell lands on one the first piece
+    // took — an overlap by construction, whatever the two shapes are.
+    const taken = pieceById(PINNED.tray[0])!.cells[0]!;
+    const anchor = pieceById(PINNED.tray[1])!.cells[0]!;
+    const onTop = pointerFor(1, 2 + taken.row - anchor.row, 2 + taken.col - anchor.col);
+    const second = within(tray()).getByRole('button', { name: /^Piece 2,/ });
+    fireEvent.pointerDown(second, { pointerId: 2, clientX: 40, clientY: 600 });
+    fireEvent.pointerMove(second, { pointerId: 2, ...onTop });
+
+    // Still drawn — that is the whole point — but as a piece that will not go
+    // rather than as a landing.
+    expect(board().querySelectorAll('.bp-cell-ghost')).toHaveLength(0);
+    expect(board().querySelectorAll('.bp-cell-ghost-blocked').length).toBeGreaterThan(0);
+
+    fireEvent.pointerUp(second, { pointerId: 2, ...onTop });
+    expect(board().querySelectorAll('.bp-cell-filled')).toHaveLength(filled);
+  });
+
   it('returns a piece dropped off the board to the tray, silently (§3)', async () => {
     const user = userEvent.setup();
     renderGame(savedGame);
@@ -200,9 +237,11 @@ describe('playing', () => {
 
     const piece = within(tray()).getByRole('button', { name: /^Piece 1,/ });
     fireEvent.pointerDown(piece, { pointerId: 1, clientX: 40, clientY: 600 });
-    // Far below the board: no cell there, so no ghost and nothing to commit.
+    // Far below the board: the whole piece is off it, so there is nothing to
+    // draw on the board and nothing to commit.
     fireEvent.pointerMove(piece, { pointerId: 1, clientX: 40, clientY: 900 });
     expect(board().querySelectorAll('.bp-cell-ghost')).toHaveLength(0);
+    expect(board().querySelectorAll('.bp-cell-ghost-blocked')).toHaveLength(0);
 
     fireEvent.pointerUp(piece, { pointerId: 1, clientX: 40, clientY: 900 });
     expect(board().querySelectorAll('.bp-cell-filled')).toHaveLength(0);

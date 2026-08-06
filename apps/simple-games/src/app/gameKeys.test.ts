@@ -21,7 +21,6 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'memory-match': ['mm.saveGame', 'mm.saveDaily', 'mm.stats', 'mm.flags'],
   'sky-fighter': ['sf.stats', 'sf.progress', 'sf.flags'],
   '2048': ['tm.saveGame', 'tm.stats', 'tm.flags'],
-  snake: ['sn.stats', 'sn.flags'],
   'block-puzzle': ['bp.saveGame', 'bp.stats', 'bp.flags'],
 };
 
@@ -37,7 +36,6 @@ const PREFIXES: Record<string, string> = {
   'memory-match': 'mm.',
   'sky-fighter': 'sf.',
   '2048': 'tm.',
-  snake: 'sn.',
   'block-puzzle': 'bp.',
 };
 

@@ -27,7 +27,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけで、現在 13 本のゲームを収録しています。
+アプリは 1 つだけで、現在 12 本のゲームを収録しています。
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Games`(ランチャー表示名: `Simple Games`)
@@ -36,21 +36,20 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 並び順はコレクションホームの表示順(`apps/simple-games/src/app/registry.ts`)です。
 フォルダはすべて `apps/simple-games/src/games/` 以下にあります。
 
-| ゲーム | フォルダ | 進行 | 無料・無制限の助け | ルール文書 |
-| --- | --- | --- | --- | --- |
-| Sudoku(ナンプレ) | `sudoku/` | 100 レベル + デイリー | Undo / Hint | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md) |
-| Solitaire(クロンダイク) | `solitaire/` | フリー配札 + デイリー配札 | Undo / Hint(定石の合法手) | [docs/SOLITAIRE_RULES.md](docs/SOLITAIRE_RULES.md) |
-| Minesweeper | `minesweeper/` | 難易度 3 種 + デイリー | Hint(Undo なし) | [docs/MINESWEEPER_RULES.md](docs/MINESWEEPER_RULES.md) |
-| 2048 | `2048/` | エンドレス(レベルなし) | Undo(Hint なし) | [docs/GAME_2048_RULES.md](docs/GAME_2048_RULES.md) |
-| Snake | `snake/` | エンドレス(レベルなし) | 即時リトライ(Undo / Hint なし) | [docs/SNAKE_RULES.md](docs/SNAKE_RULES.md) |
-| Block Puzzle | `block-puzzle/` | エンドレス(レベルなし) | Undo(Hint なし) | [docs/BLOCK_PUZZLE_RULES.md](docs/BLOCK_PUZZLE_RULES.md) |
-| Brick Breaker | `brick-breaker/` | 100 レベル(デイリーなし) | 同じ盤面への即時リトライ(Undo / Hint なし) | [docs/BRICK_BREAKER_RULES.md](docs/BRICK_BREAKER_RULES.md) |
-| Nonogram | `nonogram/` | 100 レベル + デイリー | Hint(Undo なし) | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md) |
-| Number Match | `number-match/` | 100 レベル + デイリー | Undo / Hint | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md) |
-| Water Sort | `water-sort/` | 100 レベル + デイリー | Undo / Hint(ソルバー証明付き) | [docs/WATER_SORT_RULES.md](docs/WATER_SORT_RULES.md) |
-| Sliding Puzzle | `sliding-puzzle/` | 100 レベル + デイリー | Undo(Hint なし) | [docs/SLIDING_PUZZLE_RULES.md](docs/SLIDING_PUZZLE_RULES.md) |
-| Memory Match(神経衰弱) | `memory-match/` | 難易度 3 種 + デイリー | 同じ盤面への再挑戦(Undo / Hint なし) | [docs/MEMORY_MATCH_RULES.md](docs/MEMORY_MATCH_RULES.md) |
-| Sky Fighter | `sky-fighter/` | 100 レベル(デイリーなし) | 同じレベルへの即時リトライ(Undo / Hint なし) | [docs/SKY_FIGHTER_RULES.md](docs/SKY_FIGHTER_RULES.md) |
+| ゲーム                  | フォルダ          | 進行                      | 無料・無制限の助け                           | ルール文書                                                   |
+| ----------------------- | ----------------- | ------------------------- | -------------------------------------------- | ------------------------------------------------------------ |
+| Sudoku(ナンプレ)        | `sudoku/`         | 100 レベル + デイリー     | Undo / Hint                                  | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md)                 |
+| Solitaire(クロンダイク) | `solitaire/`      | フリー配札 + デイリー配札 | Undo / Hint(定石の合法手)                    | [docs/SOLITAIRE_RULES.md](docs/SOLITAIRE_RULES.md)           |
+| Minesweeper             | `minesweeper/`    | 難易度 3 種 + デイリー    | Hint(Undo なし)                              | [docs/MINESWEEPER_RULES.md](docs/MINESWEEPER_RULES.md)       |
+| 2048                    | `2048/`           | エンドレス(レベルなし)    | Undo(Hint なし)                              | [docs/GAME_2048_RULES.md](docs/GAME_2048_RULES.md)           |
+| Block Puzzle            | `block-puzzle/`   | エンドレス(レベルなし)    | Undo(Hint なし)                              | [docs/BLOCK_PUZZLE_RULES.md](docs/BLOCK_PUZZLE_RULES.md)     |
+| Brick Breaker           | `brick-breaker/`  | 100 レベル(デイリーなし)  | 同じ盤面への即時リトライ(Undo / Hint なし)   | [docs/BRICK_BREAKER_RULES.md](docs/BRICK_BREAKER_RULES.md)   |
+| Nonogram                | `nonogram/`       | 100 レベル + デイリー     | Hint(Undo なし)                              | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md)             |
+| Number Match            | `number-match/`   | 100 レベル + デイリー     | Undo / Hint                                  | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md)     |
+| Water Sort              | `water-sort/`     | 100 レベル + デイリー     | Undo / Hint(ソルバー証明付き)                | [docs/WATER_SORT_RULES.md](docs/WATER_SORT_RULES.md)         |
+| Sliding Puzzle          | `sliding-puzzle/` | 100 レベル + デイリー     | Undo(Hint なし)                              | [docs/SLIDING_PUZZLE_RULES.md](docs/SLIDING_PUZZLE_RULES.md) |
+| Memory Match(神経衰弱)  | `memory-match/`   | 難易度 3 種 + デイリー    | 同じ盤面への再挑戦(Undo / Hint なし)         | [docs/MEMORY_MATCH_RULES.md](docs/MEMORY_MATCH_RULES.md)     |
+| Sky Fighter             | `sky-fighter/`    | 100 レベル(デイリーなし)  | 同じレベルへの即時リトライ(Undo / Hint なし) | [docs/SKY_FIGHTER_RULES.md](docs/SKY_FIGHTER_RULES.md)       |
 
 助けの内容がゲームごとに違うのは意図したものです。**どのゲームにも無料・無制限の助けを
 用意し、その形はそのゲームの中身を空にしないものを選びます**(Minesweeper は推測なしで

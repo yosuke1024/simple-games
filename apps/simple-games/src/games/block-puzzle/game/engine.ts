@@ -16,6 +16,25 @@ export function pieceCells(piece: Piece, row: number, col: number): readonly num
   return piece.cells.map((offset) => indexAt(row + offset.row, col + offset.col));
 }
 
+/**
+ * The same cells, but for a position that may be partly or wholly off the
+ * board: anything outside is dropped instead of being an error (§3).
+ *
+ * This is what the piece in hand is drawn from. It has to be visible while it
+ * is still hanging over an edge or across a filled square — those are exactly
+ * the moments the player is aiming, and a preview that disappeared there
+ * would leave the hand empty at the one time it matters.
+ */
+export function pieceCellsOnBoard(piece: Piece, row: number, col: number): readonly number[] {
+  const cells: number[] = [];
+  for (const offset of piece.cells) {
+    const r = row + offset.row;
+    const c = col + offset.col;
+    if (inBounds(r, c)) cells.push(indexAt(r, c));
+  }
+  return cells;
+}
+
 /** True when every cell of the piece lands on the board, and on empty space (§3). */
 export function canPlace(board: Board, piece: Piece, row: number, col: number): boolean {
   for (const offset of piece.cells) {
