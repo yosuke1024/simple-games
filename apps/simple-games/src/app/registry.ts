@@ -220,6 +220,7 @@ export const GAMES: readonly GameDefinition[] = [
     // draughts piece that was the first choice is a filled circle, and it
     // would have sat beside Reversi's half-filled one.
     title: 'Checkers',
+    category: 'board',
     glyph: '▚',
     storageKeys: Object.values(CK_STORAGE_KEYS),
     loadRoot: () =>
@@ -250,6 +251,7 @@ export const GAMES: readonly GameDefinition[] = [
     // Five dots, where Connect Four has four (U+2058 and U+2059): the two
     // titles are the same idea at different lengths, and the marks say so.
     title: 'Gomoku',
+    category: 'board',
     glyph: '⁙',
     storageKeys: Object.values(GM_STORAGE_KEYS),
     loadRoot: () =>
