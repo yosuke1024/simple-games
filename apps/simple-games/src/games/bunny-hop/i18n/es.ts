@@ -1,0 +1,22 @@
+import type { BunnyHopMessages } from './en';
+
+export const es: BunnyHopMessages = {
+  bunnyName: 'Bunny Hop',
+  bunnyBoardLabel: 'Prado de Bunny Hop',
+  bunnyBestScore: 'Mejor puntuación',
+  bunnyStartRun: 'Empezar a saltar',
+  bunnyRunAgain: 'Saltar otra vez',
+  bunnyJump: 'Saltar',
+  bunnyTapToStart: 'Toca el prado para empezar',
+  bunnyObstaclesPassed: 'Obstáculos superados',
+  bunnyOverTitle: 'Choque',
+  bunnyOverBody: 'Un solo golpe termina la carrera. El siguiente prado es gratis.',
+  bunnyNewBestScore: 'Tu mejor puntuación hasta ahora.',
+  bunnyStep1Title: 'Toca para saltar',
+  bunnyStep1Body: 'El conejo nunca se detiene. Toca el prado o pulsa Saltar para pasar un arbusto.',
+  bunnyStep2Title: 'También hay pájaros',
+  bunnyStep2Body:
+    'A los que vuelan bajo hay que saltarlos como a un arbusto; los altos solo te alcanzan en el salto.',
+  bunnyStep3Title: 'Cada vez más rápido',
+  bunnyStep3Body: 'Un solo golpe termina la carrera, y la siguiente empieza al instante, gratis.',
+};
