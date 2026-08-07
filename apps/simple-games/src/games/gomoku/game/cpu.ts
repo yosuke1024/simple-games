@@ -58,17 +58,29 @@ import {
  * opponents already shipped rather than against a stopwatch on one machine:
  * on the same container, Reversi's hard reply costs ~248ms and Connect Four's
  * ~301ms, where this one costs ~283ms at the budget below (cpu.bench.test.ts
- * re-measures it). Those two ship and fit inside the 450ms pause, so landing
- * between them is the honest way to say this one fits too.
+ * re-measures it). Landing between the two that already ship is the honest
+ * way to say this one costs what a shipped opponent costs.
+ *
+ * Note what the delay is and is not. `CPU_DELAY_MS` arms one timeout and the
+ * search runs *inside* it (state/GameContext.tsx), as it does in Reversi and
+ * Connect Four — so the stone lands at roughly 450ms **plus** the search, not
+ * within the 450ms. The search does not fit in the pause; it follows it. That
+ * is why the calibration is against those two rather than against the delay:
+ * they set what the whole wait already feels like in something that shipped.
+ *
+ * And the number moves with the machine — CI measured 417ms for the same
+ * budget on a slower runner. That is why the gate counts nodes instead
+ * (cpu.bench.test.ts), and why how this feels on a low-end device is a
+ * release check rather than something this comment can settle.
  *
  * It was ~256ms before each node started asking whether a five was available
  * (`collectCandidates`). That question costs, and it is worth what it costs: a
  * search that reads two more plies but cannot see the move that ends the game
  * is not the stronger opponent, it is the one that loses on move nine.
  *
- * The pause exists to make the turn visible; a search that outlived it would
- * turn it into waiting, and "the strongest opponent that fits in the pause"
- * is the trade this title chose over a stronger one that does not (issue #26
+ * The delay exists to make the turn visible; the trade this title chose is
+ * "the strongest opponent that costs about what the shipped ones cost", not a
+ * stronger one that makes the wait longer than any of them (issue #26
  * non-goal).
  */
 export const HARD_NODE_LIMIT = 8_000;

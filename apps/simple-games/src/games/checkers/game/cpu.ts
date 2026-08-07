@@ -58,12 +58,21 @@ import {
  * machine: on the same container, Reversi's hard reply costs ~248ms and
  * Connect Four's ~301ms, where this one costs ~136ms at the budget below
  * (cpu.bench.test.ts re-measures it). So this is the cheapest of the three
- * hard opponents in the collection, which is the honest way to say it fits
- * the 450ms pause — the two that already ship do.
+ * hard opponents in the collection, which is the honest way to say it costs
+ * no more than a shipped one.
  *
- * The pause exists to make the turn visible; a search that outlived it would
- * turn it into waiting, and "the strongest opponent that fits in the pause"
- * is the trade this title chose over a stronger one that does not (issue #26
+ * Note what the delay is and is not. `CPU_DELAY_MS` arms one timeout and the
+ * search runs *inside* it (state/GameContext.tsx), as it does in Reversi and
+ * Connect Four — so the move lands at roughly 450ms **plus** the search, not
+ * within the 450ms. The search does not fit in the pause; it follows it. That
+ * is why the calibration is against those two rather than against the delay:
+ * they set what the whole wait already feels like in something that shipped.
+ * The number also moves with the machine, which is why the gate counts nodes
+ * and why a low-end device is a release check, not a claim made here.
+ *
+ * The delay exists to make the turn visible; the trade this title chose is
+ * "the strongest opponent that costs about what the shipped ones cost", not a
+ * stronger one that makes the wait longer than any of them (issue #26
  * non-goal).
  */
 export const HARD_NODE_LIMIT = 26_000;
