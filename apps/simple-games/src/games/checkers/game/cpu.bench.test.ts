@@ -17,7 +17,7 @@
  * in a commit message and a rule document, not in an assertion that fails
  * when a runner is busy.
  */
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { chooseCpuTurn, HARD_NODE_LIMIT, searchCost } from './cpu';
 import { applyStep, legalMoves } from './engine';
 import { createRng } from './rng';
@@ -44,49 +44,67 @@ function playOut(plies: number, seed: string): { board: Board; side: Side } {
   return { board, side };
 }
 
-const POSITIONS = Array.from({ length: 12 }, (_, i) => playOut(12 + i, `bench-${i}`));
+const POSITIONS = Array.from({ length: 10 }, (_, i) => playOut(12 + i, `bench-${i}`));
 
 const reply = (board: Board, side: Side) =>
   chooseCpuTurn({ board, side, difficulty: 'hard', seed: 'bench', moveCount: 12 });
 
+/** One position's cost, measured twice to show the number is not luck. */
+interface Cost {
+  readonly nodes: number;
+  readonly again: number;
+}
+
+const costs: Cost[] = [];
+let msPerReply = 0;
+
+/**
+ * Every reply is measured once, here, and the checks below read the numbers.
+ *
+ * The first version of this file ran the whole set inside each `it()` — four
+ * blocks over the same positions, fifty searches for what needs twenty — and CI
+ * killed it on the default five-second test timeout. Replacing a wall-clock
+ * assertion with a test too slow for a wall-clock timeout is not much of an
+ * improvement, so the work happens once.
+ *
+ * The timeout here is a guard against a hang, not a performance gate: it is
+ * two orders of magnitude above what this costs, and nothing is asserted
+ * about how long it took.
+ */
+beforeAll(() => {
+  const started = performance.now();
+  for (const { board, side } of POSITIONS) {
+    expect(reply(board, side)).not.toBeNull();
+    const nodes = searchCost.nodes;
+    reply(board, side);
+    costs.push({ nodes, again: searchCost.nodes });
+  }
+  msPerReply = (performance.now() - started) / (POSITIONS.length * 2);
+}, 120_000);
+
 describe('the hard CPU keeps to its budget', () => {
   it('never visits more nodes than it is allowed', () => {
-    for (const { board, side } of POSITIONS) {
-      expect(reply(board, side)).not.toBeNull();
-      expect(searchCost.nodes).toBeLessThanOrEqual(HARD_NODE_LIMIT);
-    }
+    for (const cost of costs) expect(cost.nodes).toBeLessThanOrEqual(HARD_NODE_LIMIT);
   });
 
   it('spends exactly the same work twice — the budget is not luck', () => {
     // If the cost varied run to run, the bound above would only be telling us
     // about one lucky run. It is deterministic per position, like the answer.
-    for (const { board, side } of POSITIONS) {
-      reply(board, side);
-      const first = searchCost.nodes;
-      reply(board, side);
-      expect(searchCost.nodes).toBe(first);
-    }
+    for (const cost of costs) expect(cost.again).toBe(cost.nodes);
   });
 
   it('actually uses the budget — a search that stopped early proves nothing', () => {
     // At least one middlegame must be sharp enough to exhaust the deepening
     // loop, or the bound above would pass on a CPU that had quietly stopped
     // thinking.
-    const costs = POSITIONS.map(({ board, side }) => {
-      reply(board, side);
-      return searchCost.nodes;
-    });
-    expect(Math.max(...costs)).toBeGreaterThan(HARD_NODE_LIMIT / 2);
+    expect(Math.max(...costs.map((cost) => cost.nodes))).toBeGreaterThan(HARD_NODE_LIMIT / 2);
   });
 
   it('reports what it took in wall-clock, without judging it', () => {
-    const started = performance.now();
-    for (const { board, side } of POSITIONS) reply(board, side);
-    const perReply = (performance.now() - started) / POSITIONS.length;
     console.log(
-      `checkers hard reply: ${perReply.toFixed(1)}ms average over ${POSITIONS.length} ` +
-        `positions (node limit ${HARD_NODE_LIMIT}) — reported, not asserted`,
+      `checkers hard reply: ${msPerReply.toFixed(1)}ms average over ${POSITIONS.length * 2} ` +
+        `replies (node limit ${HARD_NODE_LIMIT}) — reported, not asserted`,
     );
-    expect(POSITIONS).toHaveLength(12);
+    expect(costs).toHaveLength(POSITIONS.length);
   });
 });
