@@ -126,6 +126,36 @@ else
   ok "禁止表現なし(英語・日本語の範囲)"
 fi
 
+# 7. 効能の主張 ---------------------------------------------------------------
+# 脳トレドリル 3 本(Quick Math / Schulte Table / Number Recall)の収録にあたって
+# 決めた規則(docs/SCHULTE_TABLE_RULES.md §14-2)。「脳年齢」「IQ が上がる」
+# 「認知症予防」の類は、このジャンルの定番の売り文句でありながら科学的裏付けが
+# 係争的で、Honest by design と両立しない。**このジャンルを収録している以上、
+# 書かない理由を文書に置くだけでは足りない**ので、ここで不在を検査する。
+#
+# 6 と同じ限界を持つ: **英語と日本語しか見ていない。** 残り 12 言語で同じ主張が
+# されていないことは grep では判定できない(I18N_POLICY.md の門と別モデル監査の
+# 担当)。ゲーム名・ジャンル名としての "brain training" 自体を禁じているので、
+# 説明文の中で言い訳的に使うこともできない。
+#
+# 誤検出を避ける工夫: "brain" 単体は拾わず、効能を主張する結合のみを見る。
+#
+# **例外は 1 つだけ、明示的に置く。** この規則を強制しているテスト自身は、禁止語を
+# 書かなければ「無いこと」を検査できない。そこで `[check-principles: allow]` を
+# 書いた行だけを除外する — 除外はソース上に見える形で残り、grep すれば全件出る。
+# ファイル種別(*.test.ts など)でまとめて除外しない: 除外の範囲が黙って広がる。
+efficacy_en='brain (age|training|power|fitness|health)|train(s|ing)? your brain|boosts? (your )?(memory|IQ|brainpower)|improves? (your )?(memory|focus|concentration|cognition|cognitive)|cognitive (decline|improvement|training)|prevents? dementia|mental age|sharpen your mind'
+efficacy_ja='脳年齢|脳トレ|脳を鍛|脳力|記憶力が(上が|向上)|集中力が(上が|向上)|認知症(予防|の予防)|認知機能の(改善|向上)|頭が良くな|IQ が(上が|伸び)'
+allow_marker='\[check-principles: allow\]'
+hits=""
+add "$(grep -rniE "$efficacy_en" "${src_dirs[@]}" | grep -vE "$allow_marker" || true)"
+add "$(grep -rnE "$efficacy_ja" "${src_dirs[@]}" | grep -vE "$allow_marker" || true)"
+if [ -n "$hits" ]; then
+  report "脳への効能を主張する表現があります(docs/SCHULTE_TABLE_RULES.md §14-2)" "$hits"
+else
+  ok "効能の主張なし(英語・日本語の範囲)"
+fi
+
 if [ "$fail" -ne 0 ]; then
   printf '\n原則ガードが失敗しました。実装を直すか、約束そのものを変えるなら docs/ の該当\n'
   printf 'ポリシーとこのスクリプトを同じ PR で意図的に更新してください。\n'

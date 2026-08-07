@@ -1,0 +1,164 @@
+/* Quick Math — all of this game's styling, imported by QuickMathRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --radius, --font-display, --tap-size, …) so the game
+   reads as part of the same app and follows the theme without knowing about it.
+
+   Class names are prefixed `qmath-` so this file can never collide with the
+   shell or with another game.
+
+   No rule here turns anything red. A wrong answer is answered by the box
+   emptying and the question staying put (docs/QUICK_MATH_RULES.md §3, §12) —
+   the action itself is the message, so nothing has to flash. */
+
+/* ---------- the question ---------- */
+
+.qmath-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  min-height: 0;
+}
+
+/* The equation. Big enough to read at arm's length, and laid out as separate
+   elements so a screen reader takes it a term at a time (§12). */
+.qmath-question {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 9vw, 44px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.qmath-op,
+.qmath-equals {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+/* The slot being filled in: a tinted box with a line inside it, sized by the
+   answer's length, keeping its shape whether or not anything has been typed —
+   so the line never shifts under the eye mid-answer (§12).
+ *
+   It is a box rather than a bare underline because the first version was a
+   bare underline, and at this size `6 − 4 = ___` read as `6 − 4 = −`: the
+   empty slot was the same shape and weight as the minus sign three characters
+   to its left. A box cannot be mistaken for a sign. */
+.qmath-blank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.05em;
+  padding: 0 0.18em;
+  border-radius: 6px;
+  background: var(--accent-soft);
+  /* The line sits inside the box, so it reads as "write here" rather than as
+     an operator floating on the baseline. */
+  box-shadow: inset 0 -3px 0 var(--accent);
+  color: var(--accent);
+  text-align: center;
+}
+
+/* Empty: the same box, quieter. Nothing here is red or urgent — an empty slot
+   is the ordinary state of a question, not a mistake. */
+.qmath-blank-empty {
+  box-shadow: inset 0 -3px 0 var(--ink-soft);
+}
+
+/* ---------- keypad ---------- */
+
+/* Ten digits and a backspace, in the layout a phone dial uses. Each key is a
+   full tap target at every screen size (§12). */
+.qmath-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: min(100%, 420px);
+  margin: 0 auto;
+  padding: 8px 12px 12px;
+}
+
+.qmath-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: max(var(--tap-size), 8vh);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color 0.1s ease-out;
+}
+
+.qmath-key:active {
+  background: var(--accent-soft);
+}
+
+.qmath-key:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.qmath-key-back {
+  color: var(--ink-soft);
+}
+
+/* Holds the bottom row's left slot so 0 sits under the 8. */
+.qmath-key-gap {
+  visibility: hidden;
+}
+
+/* ---------- top bar ---------- */
+
+.qmath-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.qmath-mode {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ---------- level list & daily list ---------- */
+
+.qmath-level-best {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.qmath-daily-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- tutorial figure ---------- */
+
+/* The figure is the real QuestionView, so it needs no shape of its own — only
+   a smaller size, since it sits inside a card rather than on the board. */
+.tutorial-example .qmath-question {
+  font-size: 30px;
+}

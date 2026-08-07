@@ -5,10 +5,16 @@
 > あわせて Play Console でアプリ内商品(管理された商品)`remove_ads` を
 > 基準価格 USD 3.99 で作成すること(国別価格は自動調整に任せる)。
 
-> 掲載は収録ゲーム 15 本(Sudoku / Solitaire / Minesweeper / 2048 /
+> 掲載は収録ゲーム 18 本(Sudoku / Solitaire / Minesweeper / 2048 /
 > Block Puzzle / Reversi / Connect Four / Brick Breaker / Nonogram /
-> Number Match / Water Sort / Sliding Puzzle / Memory Match / Sky Fighter /
-> Bunny Hop)の状態で書いてある。
+> Number Match / Quick Math / Schulte Table / Number Recall / Water Sort /
+> Sliding Puzzle / Memory Match / Sky Fighter / Bunny Hop)の状態で書いてある。
+>
+> **脳トレドリル 3 本(Quick Math / Schulte Table / Number Recall)の掲載文では、
+> 効能を一切主張しない。**「脳年齢」「IQ が上がる」「記憶力が向上」「認知症予防」は
+> 書かない — 科学的裏付けが係争的であり、Honest by design と両立しない
+> (docs/SCHULTE_TABLE_RULES.md §14-2)。書けるのは「制限時間なし」「減点なし」
+> 「自己ベストだけを記録」といった、実際にそうである事実だけである。
 > 未収録のゲームは名前も含めて掲載文に出さず、**実際に収録できた時点で**
 > 説明・スクリーンショットへ追加する(未収録のゲームを "Coming Soon" として
 > 掲載しない)。

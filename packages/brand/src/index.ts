@@ -329,6 +329,57 @@ export const titleAccents = {
     onDark: '#1e100e',
     softDark: '#3f2320',
   },
+  /**
+   * Quick Math — mustard. The board is an equation in ink with one accent
+   * blank, so the accent covers almost nothing here and can afford to be the
+   * saturated one: it marks the slot being filled in and nothing else. Yellow
+   * is the pencil-and-workbook colour, and it takes the gap between Brick
+   * Breaker's ochre and Bunny Hop's meadow — the two it must not be mistaken
+   * for on the collection home. It is darker and purer than either, which is
+   * what separates three neighbours fifteen degrees apart.
+   */
+  quickMath: {
+    light: '#776e18',
+    onLight: '#ffffff',
+    softLight: '#eeead0',
+    dark: '#c4ba6b',
+    onDark: '#191807',
+    softDark: '#39351a',
+  },
+  /**
+   * Schulte Table — petrol. The grid is deliberately colourless (a coloured
+   * cell would be doing the searching, docs/SCHULTE_TABLE_RULES.md §1), so the
+   * accent lives on the one number above the board that says what to look for.
+   * It sits between Sudoku's muted teal and Water Sort's aqua and is far more
+   * saturated than both, which is how three titles share a hue family without
+   * sharing a colour — the same trick Minesweeper's slate and Number Match's
+   * indigo already play three degrees apart.
+   */
+  schulteTable: {
+    light: '#18787b',
+    onLight: '#ffffff',
+    softLight: '#dbecec',
+    dark: '#6cbcc1',
+    onDark: '#0d1a1b',
+    softDark: '#1d3739',
+  },
+  /**
+   * Number Recall — emerald. Tiles are told apart by their face rather than by
+   * hue (a colour-coded face-down tile would hand a different game to a player
+   * with a colour vision deficiency), so the accent marks the number wanted
+   * next and the ring around a missed tile. It takes the widest gap the wheel
+   * still had, between Solitaire's felt green and 2048's jade — which, with
+   * these three, is the last of the wide gaps: the next title in this
+   * collection differentiates by lightness and saturation, not by hue.
+   */
+  numberRecall: {
+    light: '#2f7a3e',
+    onLight: '#ffffff',
+    softLight: '#dfeee2',
+    dark: '#76c37f',
+    onDark: '#0f1a11',
+    softDark: '#1f3a25',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

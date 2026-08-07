@@ -1,0 +1,253 @@
+/* Number Recall — all of this game's styling, imported by NumberRecallRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --radius, --font-display, --tap-size, …) so the game
+   reads as part of the same app and follows the theme without knowing about it.
+
+   Class names are prefixed `recall-` so this file can never collide with the
+   shell or with another game.
+
+   Face up, face down and empty are told apart by their *face* — a number, a
+   blank raised tile, a flat recess — and not by hue
+   (docs/NUMBER_RECALL_RULES.md §1, §14). A player who cannot separate two
+   colours can still separate these three. */
+
+/* ---------- board ---------- */
+
+.recall-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 4px 12px 10px;
+  min-height: 0;
+}
+
+/* One line above the board, in one of two states. Both are one line tall, so
+   the board does not jump when the memorise phase ends. */
+.recall-prompt {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+  min-height: 42px;
+}
+
+.recall-prompt-memorise {
+  color: var(--ink-soft);
+  font-size: 15px;
+  text-align: center;
+}
+
+.recall-prompt-label {
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.recall-prompt-value {
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  /* Two digits and one digit must not shift the board below. */
+  min-width: 1.6em;
+  text-align: center;
+}
+
+/* Square at every size, so a 5x5 tile stays a comfortable target on a small
+   phone (§14). The `min()` against viewport height keeps it square on a short
+   screen too. */
+.recall-board {
+  display: grid;
+  gap: 5px;
+  width: min(100%, 420px, 52vh);
+  aspect-ratio: 1;
+  padding: 5px;
+  background: var(--surface-recessed);
+  border: 2px solid var(--ink-soft);
+  border-radius: var(--radius);
+}
+
+.recall-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border-radius: 8px;
+}
+
+/* An empty cell is part of the board, not a thing on it: flat, no border, no
+   shadow. It is never a control — there is nothing there to tap (§3). */
+.recall-cell-empty {
+  background: transparent;
+  border: 1px dashed var(--line);
+  opacity: 0.5;
+}
+
+.recall-tile {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: clamp(15px, 6vw, 30px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background-color 0.14s ease-out,
+    border-color 0.14s ease-out;
+}
+
+/* Reduced Motion needs nothing here: these are plain CSS transitions, and the
+   shell already zeroes every transition-duration from the in-app setting
+   (:root[data-reduced-motion]) and the OS preference alike. */
+
+/* Face down: a raised blank. It is deliberately the *same* surface as a face-up
+   tile with the number taken away — the difference the player reads is "there
+   is no number", which is exactly the question being asked. */
+.recall-tile-down {
+  background: var(--surface);
+  border-color: var(--ink-soft);
+  /* The inner line is what makes a blank tile read as a tile rather than as an
+     empty cell, without spending a colour on it. */
+  box-shadow: inset 0 0 0 3px var(--surface-recessed);
+}
+
+.recall-tile-up {
+  border-color: var(--line);
+}
+
+/* After a miss: the tile that was wanted, ringed. The ring is a shape, and the
+   number inside it is showing as well, so the mark never rests on colour alone
+   (§14). */
+.recall-tile-expected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.recall-tile:active {
+  background: var(--accent-soft);
+}
+
+/* ---------- the reveal after a miss ---------- */
+
+/* In the page flow, not over it. The board above is the answer being shown
+   (§4), so this panel pushes it up rather than covering it — which is what the
+   first version did, hiding the ringed tile behind the dialog announcing it.
+   No scrim, and nothing dismisses it on a timer. */
+.recall-reveal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: min(100%, 420px);
+  margin: 0 auto;
+  padding: 12px 16px 4px;
+  text-align: center;
+}
+
+.recall-reveal-title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.recall-reveal-body {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.recall-reveal-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* ---------- top bar ---------- */
+
+.recall-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.recall-mode {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ---------- level list & daily list ---------- */
+
+.recall-level-best {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.recall-daily-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- tutorial figure ---------- */
+
+.recall-figure {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  width: 160px;
+  aspect-ratio: 1;
+  padding: 5px;
+  background: var(--surface-recessed);
+  border: 2px solid var(--ink-soft);
+  border-radius: 10px;
+}
+
+.recall-figure-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.recall-figure-cell-empty {
+  border: 1px dashed var(--line);
+  opacity: 0.5;
+}
+
+.recall-figure-tile {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.recall-figure-tile-down {
+  border-color: var(--ink-soft);
+  box-shadow: inset 0 0 0 3px var(--surface-recessed);
+}
+
+.recall-figure-tile-mark {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
