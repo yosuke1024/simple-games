@@ -218,6 +218,11 @@ src/
 | Bunny Hop        | 草原の緑                 | `#6e7a34` | `#b6c274` |
 | Reversi          | 菫                       | `#7f4a9c` | `#c48ad6` |
 | Connect Four     | くすんだ赤               | `#a8433d` | `#dd8f89` |
+| Quick Math       | マスタード               | `#776e18` | `#c4ba6b` |
+| Schulte Table    | ペトロール               | `#18787b` | `#6cbcc1` |
+| Number Recall    | 深いエメラルド           | `#1d6b33` | `#92dfa8` |
+| Checkers         | ウォルナット             | `#5a4632` | `#cbb08a` |
+| Gomoku           | 牡丹                     | `#a32d76` | `#e086bb` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える

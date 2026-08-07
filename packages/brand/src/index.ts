@@ -328,46 +328,46 @@ export const titleAccents = {
     dark: '#dd8f89',
     onDark: '#1e100e',
     softDark: '#3f2320',
-    /**
-     * Spider Solitaire — a deeper, truer green than Solitaire's felt. Both are
-     * card tables, so both belong in the green a card table has always been; the
-     * pair reads as two games of one family without blurring, because this one is
-     * greener and colder (dE 22 apart, where the closest pair already shipped is
-     * dE 11). Green also keeps the accent away from the card red: this title
-     * shows more face-down cards than any other, and their backs are drawn in
-     * `--accent-ring-soft` — a warm accent would make a back and a heart answer
-     * to the same glance.
-     */
-    spiderSolitaire: {
-      light: '#31802f',
-      onLight: '#ffffff',
-      softLight: '#dff5de',
-      dark: '#7fcc7d',
-      onDark: '#0c1a0c',
-      softDark: '#183a17',
-    },
-    /**
-     * FreeCell — deep indigo. This was violet until Reversi shipped and took
-     * that gap for the same reason this title wanted it; measured against the
-     * merged palette the two were dE 10.6 apart in light and dE 2.3 in dark,
-     * which is not two colours. Indigo is the slot left: dE 23 from Nonogram's
-     * plum and from Sky Fighter's dusk blue, which it separates from by being
-     * far darker and more saturated rather than by hue.
-     *
-     * It is the darkest accent in the series, and that suits the one solitaire
-     * where nothing is hidden — every card face up from the deal, the whole
-     * problem visible at once. It also sits directly under Solitaire on the
-     * collection home, so it takes a hue far from felt green rather than
-     * becoming a third card-table colour.
-     */
-    freecell: {
-      light: '#25256a',
-      onLight: '#ffffff',
-      softLight: '#e0e0f2',
-      dark: '#6e6ecf',
-      onDark: '#060614',
-      softDark: '#1e1e42',
-    },
+  },
+  /**
+   * Spider Solitaire — a deeper, truer green than Solitaire's felt. Both are
+   * card tables, so both belong in the green a card table has always been; the
+   * pair reads as two games of one family without blurring, because this one is
+   * greener and colder (dE 22 apart, where the closest pair already shipped is
+   * dE 11). Green also keeps the accent away from the card red: this title
+   * shows more face-down cards than any other, and their backs are drawn in
+   * `--accent-ring-soft` — a warm accent would make a back and a heart answer
+   * to the same glance.
+   */
+  spiderSolitaire: {
+    light: '#31802f',
+    onLight: '#ffffff',
+    softLight: '#dff5de',
+    dark: '#7fcc7d',
+    onDark: '#0c1a0c',
+    softDark: '#183a17',
+  },
+  /**
+   * FreeCell — deep indigo. This was violet until Reversi shipped and took
+   * that gap for the same reason this title wanted it; measured against the
+   * merged palette the two were dE 10.6 apart in light and dE 2.3 in dark,
+   * which is not two colours. Indigo is the slot left: dE 23 from Nonogram's
+   * plum and from Sky Fighter's dusk blue, which it separates from by being
+   * far darker and more saturated rather than by hue.
+   *
+   * It is the darkest accent in the series, and that suits the one solitaire
+   * where nothing is hidden — every card face up from the deal, the whole
+   * problem visible at once. It also sits directly under Solitaire on the
+   * collection home, so it takes a hue far from felt green rather than
+   * becoming a third card-table colour.
+   */
+  freecell: {
+    light: '#25256a',
+    onLight: '#ffffff',
+    softLight: '#e0e0f2',
+    dark: '#6e6ecf',
+    onDark: '#060614',
+    softDark: '#1e1e42',
   },
   /**
    * Quick Math — mustard. The board is an equation in ink with one accent
@@ -426,6 +426,52 @@ export const titleAccents = {
     dark: '#92dfa8',
     onDark: '#0b1a10',
     softDark: '#1c3a27',
+  },
+  /**
+   * Checkers — walnut. The accent *is* the player's twelve pieces, so this is
+   * one of the largest accent areas in the collection, and a wooden draughts
+   * set is what the colour should say before anything else; the opponent takes
+   * the game's own slate, which is the pair that survives a colour vision
+   * deficiency (games/checkers/ui/checkers.css).
+   *
+   * Measured against all twenty shipped titles it is ΔE 26.8 from Sliding
+   * Puzzle's clay in light and ΔE 15.8 from Brick Breaker's ochre in dark —
+   * comfortably past the floor, which is the closest pair already shipped
+   * (10.9 light, 7.9 dark). The warm quarter of the wheel holds four titles
+   * within thirty degrees, so what separates this one is not hue but value:
+   * at L27% it is the darkest and least saturated of the five, where Brick
+   * Breaker's ochre and Quick Math's mustard are light and pure
+   * (docs/BRAND.md「アクセントを選ぶ手順」).
+   */
+  checkers: {
+    light: '#5a4632',
+    onLight: '#ffffff',
+    softLight: '#ede6de',
+    dark: '#cbb08a',
+    onDark: '#161310',
+    softDark: '#36302b',
+  },
+  /**
+   * Gomoku — peony. The board is black and white stones on a wood field, all
+   * of it game content, so the accent lives in the chrome alone (Reversi's
+   * arrangement) and can afford to be the saturated one: it never has to sit
+   * behind a stone.
+   *
+   * The magenta band between Reversi's violet, Block Puzzle's orchid and
+   * Memory Match's rose is the widest gap the wheel has left at twenty-one
+   * titles, and this takes it by being deeper and far more saturated than any
+   * of the three: ΔE 22.2 from Block Puzzle in light, 16.2 in dark, against
+   * floors of 10.9 and 7.9. It is a magenta rather than a pink on purpose —
+   * Memory Match already holds the muted rose, and two quiet pinks would be
+   * one colour on the collection home.
+   */
+  gomoku: {
+    light: '#a32d76',
+    onLight: '#ffffff',
+    softLight: '#f3d8e9',
+    dark: '#e086bb',
+    onDark: '#190d15',
+    softDark: '#3c2533',
   },
 } as const;
 

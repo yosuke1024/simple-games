@@ -25,6 +25,7 @@ import { BB_STORAGE_KEYS } from '../games/brick-breaker/storage/keys';
 import { BP_STORAGE_KEYS } from '../games/block-puzzle/storage/keys';
 import { BH_STORAGE_KEYS } from '../games/bunny-hop/storage/keys';
 import { C4_STORAGE_KEYS } from '../games/connect-four/storage/keys';
+import { CK_STORAGE_KEYS } from '../games/checkers/storage/keys';
 import { FC_STORAGE_KEYS } from '../games/freecell/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
@@ -61,6 +62,7 @@ export type GameId =
   | 'bunny-hop'
   | '2048'
   | 'block-puzzle'
+  | 'checkers'
   | 'reversi'
   | 'connect-four';
 
@@ -163,6 +165,18 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/block-puzzle/ui/BlockPuzzleRoot').then((m) => ({
         default: m.BlockPuzzleRoot,
       })),
+  },
+  {
+    id: 'checkers',
+    // The mark is the board itself: two dark squares on the diagonal, which
+    // is the one picture no other title in the collection could be. The
+    // draughts piece that was the first choice is a filled circle, and it
+    // would have sat beside Reversi's half-filled one.
+    title: 'Checkers',
+    glyph: '▚',
+    storageKeys: Object.values(CK_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/checkers/ui/CheckersRoot').then((m) => ({ default: m.CheckersRoot })),
   },
   {
     id: 'reversi',

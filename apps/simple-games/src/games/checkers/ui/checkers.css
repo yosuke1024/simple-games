@@ -1,0 +1,411 @@
+/* Checkers — all of this game's styling, imported by CheckersRoot. Everything
+   is built from the series tokens in src/ui/styles.css (--surface, --ink,
+   --line, --accent, --radius, --font-display, --tap-size, …) so the game reads
+   as part of the same app and follows the theme without knowing about it.
+
+   Class names are prefixed `ck-` so this file can never collide with the shell
+   or with another game.
+
+   The squares and the opponent's pieces below are game content, not chrome —
+   the same standing as 2048's tile ramp and Connect Four's teal, and the one
+   place this title is allowed past "one accent per title" (docs/BRAND.md).
+
+   The dark square is a *mid* tone in both themes on purpose, and it is the
+   only value here that had to be measured. Pieces stand on dark squares and
+   nowhere else, so that one colour has to sit between the two piece colours in
+   lightness — your walnut is dark in the light theme and light in the dark one
+   (it follows the accent, §1), and the opponent's is the opposite each time.
+   A wood-coloured board of the usual sort put the dark squares within a
+   shade of the walnut in the dark theme, where a piece and the square under
+   it would have been one blur. */
+
+:root {
+  --ck-light-square: #eae2d5;
+  --ck-dark-square: #a8937c;
+  --ck-frame: #6f6152;
+  /* The opponent: ivory, cool against the walnut and far from it in
+     lightness. Colour is never the only carrier — the top bar names both
+     sides, kings wear a ring, and the last piece moved keeps a mark (§10). */
+  --ck-cpu: #f3efe6;
+  --ck-cpu-edge: #b9b2a2;
+  --ck-you-edge: rgba(255, 255, 255, 0.34);
+  --ck-dot: rgba(38, 26, 14, 0.42);
+}
+
+:root[data-theme='dark'] {
+  --ck-light-square: #3f382f;
+  --ck-dark-square: #6e6154;
+  --ck-frame: #2b251e;
+  --ck-cpu: #2b3138;
+  --ck-cpu-edge: #616d79;
+  --ck-you-edge: rgba(30, 22, 12, 0.42);
+  --ck-dot: rgba(248, 244, 236, 0.44);
+}
+
+/* ---------- board ---------- */
+
+/* The board sits in the space between the top bar and the action bar, centred
+   so a tall phone brings it into thumb reach instead of pinning it up top. */
+.ck-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 4px 12px 10px;
+  min-height: 0;
+}
+
+/* Square at every size, and as large as its own column honestly allows (the
+   `100%` first term, not `vw` — docs/ARCHITECTURE.md, the board-width lesson
+   every title relearned). The `min()` against viewport height keeps it square
+   on a short screen rather than pushing the action bar off the bottom. */
+.ck-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: min(100%, 420px, 52vh);
+  aspect-ratio: 1;
+  padding: 3px;
+  background: var(--ck-frame);
+  border: 2px solid var(--ck-frame);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* A square is a button, but drawn as board: no gaps and no hairlines, because
+   a checkerboard is read by its own two colours. Only the squares a piece can
+   move to or from are enabled, so `disabled` here means "nothing to do", not
+   "greyed out" (§2). */
+.ck-square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: var(--ck-light-square);
+  color: inherit;
+  font: inherit;
+}
+
+.ck-square-dark {
+  background: var(--ck-dark-square);
+}
+
+/* The shared chrome dims a disabled button to 40% — right for an action that
+   is unavailable, wrong for board surface. Most of these sixty-four squares
+   are disabled at any moment, so without this the board turns patchy and,
+   worse, the pieces standing on those squares fade out with it. */
+.ck-square:disabled {
+  opacity: 1;
+}
+
+/* ---------- pieces ---------- */
+
+.ck-piece {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76%;
+  height: 76%;
+  border-radius: 50%;
+}
+
+.ck-piece-you {
+  background: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--ck-you-edge);
+}
+
+.ck-piece-cpu {
+  background: var(--ck-cpu);
+  box-shadow: inset 0 0 0 2px var(--ck-cpu-edge);
+}
+
+/* A king is told apart by shape, never by colour: an inner ring, the way a
+   real set stacks a second piece on top (§10). */
+.ck-king-ring {
+  width: 46%;
+  height: 46%;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+}
+
+.ck-piece-you .ck-king-ring {
+  color: var(--ck-you-edge);
+  border-color: var(--accent-ink);
+  opacity: 0.75;
+}
+
+.ck-piece-cpu .ck-king-ring {
+  border-color: var(--ck-cpu-edge);
+}
+
+/* The piece that just moved keeps a small mark, so the CPU's reply can be
+   found after looking away (§10). It takes the other side's colour, which is
+   the only choice legible on both. */
+.ck-last-mark {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  width: 16%;
+  height: 16%;
+  margin-left: -8%;
+  border-radius: 50%;
+}
+
+.ck-piece-you .ck-last-mark {
+  background: var(--ck-cpu);
+}
+
+.ck-piece-cpu .ck-last-mark {
+  background: var(--accent);
+}
+
+/* The piece being moved. A ring rather than a colour change: the piece is
+   still the same piece. */
+.ck-square-selected .ck-piece {
+  outline: 3px solid var(--accent-ring);
+  outline-offset: 2px;
+}
+
+/* Where the selected piece may go: a quiet dot — the rule made visible, never
+   advice (§6). The board has no hint button and never will. */
+.ck-target-dot {
+  width: 26%;
+  height: 26%;
+  border-radius: 50%;
+  background: var(--ck-dot);
+}
+
+/* A piece sliding to where it landed. The distance is handed in per move, so
+   a jump of two squares does not take the same time as a step of one. */
+.ck-piece-move {
+  animation: ck-slide var(--ck-move-ms, 180ms) ease-out;
+}
+
+@keyframes ck-slide {
+  from {
+    transform: translate(var(--ck-move-x, 0), var(--ck-move-y, 0));
+  }
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+/* A captured piece is gone from the board the moment the jump lands, so what
+   is animated is its absence: the square it stood on flashes once. Cheaper
+   than keeping a ghost element alive, and it reads as "taken" rather than as
+   a piece that is still somehow there. */
+.ck-square-taken::after {
+  content: '';
+  position: absolute;
+  width: 76%;
+  height: 76%;
+  border-radius: 50%;
+  background: var(--ck-dot);
+  animation: ck-fade 240ms ease-out forwards;
+}
+
+@keyframes ck-fade {
+  from {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+/* The crowning: the new ring arrives rather than appearing. */
+.ck-piece-crowned .ck-king-ring {
+  animation: ck-pop 160ms ease-out;
+}
+
+@keyframes ck-pop {
+  from {
+    transform: scale(0.2);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Reduced Motion: pieces are simply where they landed (§10). Guarded by the
+   board class set from useReducedMotion, so the in-app setting counts too. */
+.ck-board-still .ck-piece-move,
+.ck-board-still .ck-piece-crowned .ck-king-ring,
+.ck-board-still .ck-square-taken::after {
+  animation: none;
+}
+
+.ck-board-still .ck-square-taken::after {
+  content: none;
+}
+
+/* ---------- top bar ---------- */
+
+.ck-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.ck-side {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.ck-side-piece {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+}
+
+.ck-side-you {
+  background: var(--accent);
+  box-shadow: inset 0 0 0 1.5px var(--ck-you-edge);
+}
+
+.ck-side-cpu {
+  background: var(--ck-cpu);
+  box-shadow: inset 0 0 0 1.5px var(--ck-cpu-edge);
+}
+
+/* ---------- turn line ---------- */
+
+/* Reserved height whether it names a turn, explains the capture obligation,
+   or says nothing: the board must not jump when the text changes (§10). */
+.ck-turn-line {
+  margin: 0;
+  min-height: 2.6em;
+  font-size: 14px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* ---------- action bar ---------- */
+
+/* One action, free and unlimited: Undo (§5). There is deliberately no hint
+   button — a suggested move would be the CPU playing both sides (§6). */
+.action-bar.ck-actions {
+  justify-content: center;
+}
+
+/* ---------- home ---------- */
+
+.ck-choose-label {
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* Which side opens the next match. Two equal halves: neither is a default the
+   other departs from, so neither is drawn as one. */
+.ck-side-choice {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.ck-side-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--tap-size);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* The chosen half wears the accent softly: this is a setting the player
+   already made, not the screen's main action (the opponent buttons are). */
+.ck-side-option-on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.ck-order {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* The tutorial draws a 4×4 corner of the board: enough to show one jump
+   without shrinking the pieces to dots (§10). */
+.ck-figure {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  width: 172px;
+  padding: 3px;
+  background: var(--ck-frame);
+  border: 2px solid var(--ck-frame);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ck-figure-square {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ck-light-square);
+}
+
+.ck-figure-square-dark {
+  background: var(--ck-dark-square);
+}
+
+.ck-figure-piece {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76%;
+  height: 76%;
+  border-radius: 50%;
+}
+
+.ck-figure-you {
+  background: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--ck-you-edge);
+}
+
+.ck-figure-cpu {
+  background: var(--ck-cpu);
+  box-shadow: inset 0 0 0 2px var(--ck-cpu-edge);
+}
+
+/* The piece the step is talking about. */
+.ck-figure-fresh {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.ck-figure-dot {
+  width: 26%;
+  height: 26%;
+  border-radius: 50%;
+  background: var(--ck-dot);
+}

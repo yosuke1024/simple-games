@@ -1,0 +1,50 @@
+import type { CheckersMessages } from './en';
+
+export const de: CheckersMessages = {
+  checkersName: 'Checkers',
+  checkersChooseOpponent: 'Wähle deinen Gegner',
+  checkersDifficulty_easy: 'Leicht',
+  checkersDifficulty_normal: 'Normal',
+  checkersDifficulty_hard: 'Schwer',
+  checkersChooseSideLabel: 'Wer zieht zuerst',
+  checkersGoFirst: 'Du zuerst',
+  checkersGoSecond: 'CPU zuerst',
+  checkersRecordNote: '{wins} Siege · {losses} Niederlagen',
+  checkersBoardLabel: 'Checkers-Brett, 8 mal 8',
+  checkersSquareEmpty: 'Reihe {row}, Spalte {col}: leer',
+  checkersSquareYourMan: 'Reihe {row}, Spalte {col}: dein Stein',
+  checkersSquareYourKing: 'Reihe {row}, Spalte {col}: deine Dame',
+  checkersSquareCpuMan: 'Reihe {row}, Spalte {col}: Stein der CPU',
+  checkersSquareCpuKing: 'Reihe {row}, Spalte {col}: Dame der CPU',
+  checkersSquareSelected: 'Reihe {row}, Spalte {col}: dein Stein, ausgewählt',
+  checkersSquareTarget: 'Reihe {row}, Spalte {col}: hierhin ziehen',
+  checkersYou: 'Du',
+  checkersCpu: 'CPU',
+  checkersYourTurn: 'Du bist dran',
+  checkersCpuTurn: 'Die CPU denkt nach…',
+  checkersMustCapture:
+    'Es ist ein Schlag möglich – nur Steine, die springen können, dürfen ziehen.',
+  checkersJumpAgain: 'Springe mit demselben Stein weiter.',
+  checkersKings: 'Damen',
+  checkersWinTitle: 'Du gewinnst!',
+  checkersWinBody: 'Die CPU hat keinen Zug mehr.',
+  checkersLoseTitle: 'Die CPU gewinnt',
+  checkersLoseBody: 'Kein Zug mehr möglich. Die nächste Partie ist kostenlos.',
+  checkersDrawTitle: 'Unentschieden',
+  checkersDrawBody:
+    'Fünfzig Züge ohne Schlag und ohne einen vorrückenden Stein – keine Seite kommt voran.',
+  checkersWins: 'Siege',
+  checkersLosses: 'Niederlagen',
+  checkersDraws: 'Remis',
+  checkersStep1Title: 'Diagonal vorwärts ziehen',
+  checkersStep1Body:
+    'Ein dunkles Feld pro Zug. Springe über einen gegnerischen Stein, um ihn zu schlagen – und wenn du springen kannst, ist das der einzige erlaubte Zug.',
+  checkersStep2Title: 'Weiterspringen',
+  checkersStep2Body: 'Kann derselbe Stein vom Landefeld aus erneut springen, muss er es.',
+  checkersStep3Title: 'Die letzte Reihe erreichen und krönen',
+  checkersStep3Body:
+    'Eine Dame zieht auch rückwärts. Schlage alle gegnerischen Steine – oder nimm ihnen jeden Zug – und du gewinnst.',
+  checkersConfirmSwitchTitle: 'Laufende Partie ersetzen?',
+  checkersConfirmSwitchBody:
+    'Deine Partie auf {current} wird durch eine neue Partie auf {next} ersetzt.',
+};

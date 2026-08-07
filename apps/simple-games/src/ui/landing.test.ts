@@ -49,6 +49,7 @@ describe('gameLandingUrl', () => {
       '2048',
       'block-puzzle',
       'bunny-hop',
+      'checkers',
       'freecell',
       'spider-solitaire',
       'quick-math',

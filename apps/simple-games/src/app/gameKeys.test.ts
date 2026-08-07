@@ -30,6 +30,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'bunny-hop': ['bh.stats', 'bh.flags'],
   '2048': ['tm.saveGame', 'tm.stats', 'tm.flags'],
   'block-puzzle': ['bp.saveGame', 'bp.stats', 'bp.flags'],
+  checkers: ['ck.saveGame', 'ck.stats', 'ck.flags', 'ck.prefs'],
   reversi: ['rv.saveGame', 'rv.stats', 'rv.flags', 'rv.prefs'],
   'connect-four': ['c4.saveGame', 'c4.stats', 'c4.flags', 'c4.prefs'],
 };
@@ -53,6 +54,7 @@ const PREFIXES: Record<string, string> = {
   'bunny-hop': 'bh.',
   '2048': 'tm.',
   'block-puzzle': 'bp.',
+  checkers: 'ck.',
   reversi: 'rv.',
   'connect-four': 'c4.',
 };

@@ -218,6 +218,24 @@
   --accent-ring-soft: rgba(29, 107, 51, 0.12);
 }
 
+:root[data-game='checkers'],
+.accent-checkers {
+  --accent: #5a4632;
+  --accent-ink: #ffffff;
+  --accent-soft: #ede6de;
+  --accent-ring: rgba(90, 70, 50, 0.38);
+  --accent-ring-soft: rgba(90, 70, 50, 0.12);
+}
+
+:root[data-game='gomoku'],
+.accent-gomoku {
+  --accent: #a32d76;
+  --accent-ink: #ffffff;
+  --accent-soft: #f3d8e9;
+  --accent-ring: rgba(163, 45, 118, 0.38);
+  --accent-ring-soft: rgba(163, 45, 118, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -409,6 +427,24 @@
   --accent-soft: #1c3a27;
   --accent-ring: rgba(146, 223, 168, 0.42);
   --accent-ring-soft: rgba(146, 223, 168, 0.14);
+}
+
+:root[data-theme='dark'][data-game='checkers'],
+[data-theme='dark'] .accent-checkers {
+  --accent: #cbb08a;
+  --accent-ink: #161310;
+  --accent-soft: #36302b;
+  --accent-ring: rgba(203, 176, 138, 0.42);
+  --accent-ring-soft: rgba(203, 176, 138, 0.14);
+}
+
+:root[data-theme='dark'][data-game='gomoku'],
+[data-theme='dark'] .accent-gomoku {
+  --accent: #e086bb;
+  --accent-ink: #190d15;
+  --accent-soft: #3c2533;
+  --accent-ring: rgba(224, 134, 187, 0.42);
+  --accent-ring-soft: rgba(224, 134, 187, 0.14);
 }
 
 * {
