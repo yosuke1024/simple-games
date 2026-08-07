@@ -163,9 +163,13 @@ const HEDGE_ART = [
   '.....###.....',
 ];
 
-/** Shifts a shape sideways, which is all a row of bushes is. */
-const shifted = (rects: readonly Rect[], dx: number): Rect[] =>
-  rects.map(([x, y, w, h]) => [x + dx, y, w, h] as Rect);
+/**
+ * Shifts a shape sideways, which is all a row of bushes is. `cells`, not
+ * pixels: everything else in this file is written in cells, and mixing the
+ * two units here once drew clusters narrower than their own hitboxes.
+ */
+const shifted = (rects: readonly Rect[], cells: number): Rect[] =>
+  rects.map(([x, y, w, h]) => [x + cells * PIXEL, y, w, h] as Rect);
 
 const BUSH = drawn(BUSH_ART);
 const HEDGE = drawn(HEDGE_ART);
@@ -186,7 +190,7 @@ const BIRD_ART: readonly (readonly string[])[] = [
     '.....#############.....',
     '....###############....',
     '...###################.',
-    '.....#############.....',
+    '....###############....',
     '.......#######.........',
     '.......................',
     '.......................',
@@ -208,7 +212,7 @@ const BIRD_ART: readonly (readonly string[])[] = [
     '.....#############.....',
     '....###############....',
     '...###################.',
-    '.....#############.....',
+    '....###############....',
     '.......#######.........',
     '......#######..........',
     '......#######..........',
@@ -223,8 +227,20 @@ const BIRD_ART: readonly (readonly string[])[] = [
 
 export const BIRD_FRAMES: readonly (readonly Rect[])[] = BIRD_ART.map((art) => drawn(art));
 
+/**
+ * Where to draw a bird relative to its box (§7). The box is the body — the
+ * part both frames always draw — because the wing is up in one frame and down
+ * in the other, and a box around the whole picture would kill a runner that
+ * visibly cleared the bird by ten pixels. The wing hangs outside the box, and
+ * never hits anything.
+ */
+export const BIRD_DRAW_OFFSET_X = -4 * PIXEL;
+export const BIRD_DRAW_OFFSET_Y = -8 * PIXEL;
+
 export const OBSTACLE_SHAPES = {
   bush: BUSH,
+  // The offsets put the last shape's right edge exactly on the kind's
+  // declared width (game/obstacles.ts): 9 + 13 + 9 cells is 62px, and so on.
   'bush-pair': [...BUSH, ...shifted(BUSH, 22)],
   'bush-trio': [...BUSH, ...shifted(BUSH, 22), ...shifted(BUSH, 44)],
   hedge: HEDGE,

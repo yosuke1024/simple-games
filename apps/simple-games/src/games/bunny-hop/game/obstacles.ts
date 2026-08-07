@@ -28,11 +28,16 @@ export const OBSTACLE_KINDS: Record<ObstacleKindId, ObstacleKind> = {
   'bush-trio': { id: 'bush-trio', width: 106, height: 36, bottom: 0, flying: false },
   hedge: { id: 'hedge', width: 26, height: 50, bottom: 0, flying: false },
   'hedge-pair': { id: 'hedge-pair', width: 86, height: 50, bottom: 0, flying: false },
-  // Low: it flies through the runner, so it has to be hopped like a bush.
-  // It is the reason a bird is not automatically something to ignore.
-  'bird-low': { id: 'bird-low', width: 46, height: 40, bottom: 6, flying: true },
+  // A bird's box is its body, not the picture: the wing is up in one frame
+  // and down in the other, so a box around the whole drawing would kill a
+  // runner that visibly cleared the bird (§7). The wings are drawn outside
+  // it (ui/components/sprites.ts, BIRD_DRAW_OFFSET_*).
+  //
+  // Low: the body flies through the runner, so it has to be hopped like a
+  // bush. It is the reason a bird is not automatically something to ignore.
+  'bird-low': { id: 'bird-low', width: 30, height: 6, bottom: 24, flying: true },
   // High: clear of a runner on the ground (42px), and only a hop reaches it.
-  'bird-high': { id: 'bird-high', width: 46, height: 40, bottom: 58, flying: true },
+  'bird-high': { id: 'bird-high', width: 30, height: 6, bottom: 76, flying: true },
 };
 
 export const obstacleKind = (id: ObstacleKindId): ObstacleKind => OBSTACLE_KINDS[id];

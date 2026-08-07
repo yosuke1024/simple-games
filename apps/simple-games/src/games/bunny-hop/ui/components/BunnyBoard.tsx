@@ -32,6 +32,8 @@ import { createInitialState, isGrounded, jump, obstacleX, step } from '../../gam
 import { obstacleKind } from '../../game/obstacles';
 import type { GameState } from '../../game/types';
 import {
+  BIRD_DRAW_OFFSET_X,
+  BIRD_DRAW_OFFSET_Y,
   BIRD_FRAMES,
   CLOUD,
   GLYPH_GAP,
@@ -166,8 +168,9 @@ function render(
     if (x > BOARD_WIDTH || x + kind.width < 0) continue;
     const y = GROUND_Y - kind.bottom - kind.height;
     if (kind.flying) {
+      // The box is the body; the picture hangs off it by a fixed offset (§7).
       const beat = Math.floor(scroll / WINGBEAT_PX) % BIRD_FRAMES.length;
-      blit(ctx, BIRD_FRAMES[beat]!, x, y);
+      blit(ctx, BIRD_FRAMES[beat]!, x + BIRD_DRAW_OFFSET_X, y + BIRD_DRAW_OFFSET_Y);
     } else {
       blit(ctx, OBSTACLE_SHAPES[obstacle.kindId], x, y);
     }

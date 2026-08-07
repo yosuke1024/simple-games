@@ -36,7 +36,7 @@ export function BunnyHomeScreen() {
             (app/registry.ts): arriving here should look like the tile that
             was tapped, not like a second mark for the same game. */}
         <div className="home-logo" aria-hidden="true">
-          ⌁
+          ⌃
         </div>
         <h1 className="home-title">{t('bunnyName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>

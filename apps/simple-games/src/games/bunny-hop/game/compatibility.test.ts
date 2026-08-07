@@ -46,7 +46,7 @@ describe('tracks that must never change', () => {
   it('the same seed a minute in is unchanged', () => {
     const { state } = runBlind('bunny-golden', 60_000);
     expect(`${state.score}/${state.obstaclesPassed}/${state.speed.toFixed(1)}`).toBe(
-      '672/48/556.0',
+      '672/49/556.0',
     );
   });
 });
