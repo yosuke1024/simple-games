@@ -102,12 +102,19 @@ export type Selection =
   | { readonly type: 'tableau'; readonly pile: number; readonly index: number }
   | { readonly type: 'foundation'; readonly suit: Suit };
 
-/** What the current hint points at, for the outline (§8). */
+/**
+ * What the current hint points at, for the outline (§8): the move itself, not
+ * the piles it happens to touch. A pile mid-game is mostly cards the move
+ * leaves alone, and outlining those would say "look here" about the wrong ones.
+ */
 export interface HintMarks {
   readonly stock?: boolean;
   readonly waste?: boolean;
   readonly foundation?: boolean;
-  readonly piles?: readonly number[];
+  /** The run to move: the cards from `index` up in tableau pile `pile`. */
+  readonly from?: { readonly pile: number; readonly index: number };
+  /** Where it lands: the top card of this pile, or its empty slot. */
+  readonly to?: number;
 }
 
 export interface SolitaireTableProps {
@@ -392,6 +399,8 @@ export const SolitaireTable = memo(function SolitaireTable({
       <div className="sol-tableau">
         {board.tableau.map((pile, pileIndex) => {
           const isDestination = destinations.includes(pileIndex);
+          const hintRunStart = hint?.from?.pile === pileIndex ? hint.from.index : null;
+          const hintLanding = hint?.to === pileIndex;
           return (
             <div
               key={pileIndex}
@@ -402,7 +411,9 @@ export const SolitaireTable = memo(function SolitaireTable({
               {pile.down.length === 0 && pile.up.length === 0 ? (
                 <button
                   type="button"
-                  className={`sol-card sol-slot sol-slot-empty ${isDestination ? 'sol-destination' : ''}`}
+                  className={`sol-card sol-slot sol-slot-empty ${isDestination ? 'sol-destination' : ''} ${
+                    hintLanding ? 'sol-hinted' : ''
+                  }`}
                   aria-label={t('solPileEmpty', { n: pileIndex + 1 })}
                   onClick={() => onTableauTap(pileIndex, null)}
                 />
@@ -416,23 +427,28 @@ export const SolitaireTable = memo(function SolitaireTable({
                       aria-label={t('solCardFaceDown')}
                     />
                   ))}
-                  {pile.up.map((card, i) =>
-                    faceUpCard(
+                  {pile.up.map((card, i) => {
+                    // Hinted cards mirror a selection's reach: the run from its
+                    // start up, plus the one card the run would land on.
+                    const hinted =
+                      (hintRunStart !== null && hintRunStart <= i) ||
+                      (hintLanding && i === pile.up.length - 1);
+                    return faceUpCard(
                       card,
                       [
                         isSelected({ type: 'tableau', pile: pileIndex, index: i })
                           ? 'sol-selected'
                           : '',
                         i === pile.up.length - 1 && isDestination ? 'sol-destination' : '',
-                        hint?.piles?.includes(pileIndex) ? 'sol-hinted' : '',
+                        hinted ? 'sol-hinted' : '',
                       ]
                         .filter(Boolean)
                         .join(' '),
                       cardLabel(t, card),
                       () => onTableauTap(pileIndex, i),
                       pile.down.length > 0 || i > 0 ? (i === 0 ? 'down' : 'up') : null,
-                    ),
-                  )}
+                    );
+                  })}
                 </>
               )}
             </div>

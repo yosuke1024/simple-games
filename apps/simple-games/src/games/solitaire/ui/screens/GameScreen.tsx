@@ -220,26 +220,33 @@ export function SolitaireGameScreen() {
   }, [applyUndo, replay]);
 
   const onHint = useCallback(() => {
+    if (!board) return;
     const move = requestHint();
     if (!move) {
       showToast(t('solHintNone'));
       return;
     }
+    // A run travels from its own start; a card bound for a foundation is the
+    // top one on its pile and travels alone.
+    const topOf = (pile: number) => ({
+      pile,
+      index: Math.max(0, (board.tableau[pile]?.up.length ?? 1) - 1),
+    });
     const marks: HintMarks =
       move.kind === 'draw'
         ? { stock: true }
         : move.kind === 'waste-foundation'
           ? { waste: true, foundation: true }
           : move.kind === 'waste-tableau'
-            ? { waste: true, piles: [move.to] }
+            ? { waste: true, to: move.to }
             : move.kind === 'tableau-foundation'
-              ? { piles: [move.from], foundation: true }
-              : { piles: [move.from, move.to] };
+              ? { from: topOf(move.from), foundation: true }
+              : { from: { pile: move.from, index: move.index }, to: move.to };
     setHint(marks);
     hintTimeout(() => {
       setHint((current) => (current === marks ? null : current));
     }, HINT_SHOW_MS);
-  }, [hintTimeout, requestHint, showToast, t]);
+  }, [board, hintTimeout, requestHint, showToast, t]);
 
   const onFinish = useCallback(() => {
     if (finishGame()) {
