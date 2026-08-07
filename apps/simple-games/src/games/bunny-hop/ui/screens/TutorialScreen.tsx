@@ -13,99 +13,116 @@ import { IconClose } from '@/ui/components/icons';
 import { gameLandingUrl } from '@/ui/landing';
 import { openExternal } from '@/ui/openExternal';
 import { useBunnyHop } from '../../state/GameContext';
+import {
+  BIRD_FRAMES,
+  OBSTACLE_SHAPES,
+  RUNNER_BODY,
+  RUNNER_LEGS,
+  type Rect,
+} from '../components/sprites';
 
-/** Tap, and the runner clears what is standing on the track (§3, §4). */
-function JumpFigure() {
+/**
+ * The figures are drawn from the board's own sprites, at the board's own
+ * scale: what is learned here is exactly what appears on the meadow, and a
+ * redrawn rabbit cannot drift out of step with the one that runs.
+ */
+function Sprite({
+  rects,
+  x,
+  y,
+  fill = 'var(--accent)',
+}: {
+  rects: readonly Rect[];
+  x: number;
+  y: number;
+  fill?: string;
+}) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${FIGURE_SCALE})`} fill={fill}>
+      {rects.map(([rx, ry, rw, rh], index) => (
+        // A shade wider and taller than the cell: the sprites are rows of
+        // rectangles that abut exactly, and at a fractional scale SVG leaves
+        // a hairline of background between them. The overlap is invisible.
+        <rect key={index} x={rx} y={ry} width={rw + 0.3} height={rh + 0.3} />
+      ))}
+    </g>
+  );
+}
+
+/** Board pixels are 40px tall for the rabbit; the figures are 90 units high. */
+const FIGURE_SCALE = 0.62;
+/** Where the ground sits in every figure, and how tall the rabbit stands. */
+const GROUND = 70;
+const RABBIT_TOP = GROUND - 42 * FIGURE_SCALE;
+
+function Rabbit({ x }: { x: number }) {
+  return (
+    <>
+      <Sprite rects={RUNNER_BODY} x={x} y={RABBIT_TOP} fill="var(--ink)" />
+      <Sprite rects={RUNNER_LEGS[0]!} x={x} y={RABBIT_TOP} fill="var(--ink)" />
+    </>
+  );
+}
+
+/** Tap, and the rabbit clears what is standing on the meadow (§3, §4). */
+function HopFigure() {
   return (
     <div className="tutorial-example" aria-hidden="true">
       <svg className="bh-figure" viewBox="0 0 160 90" role="presentation">
-        <path d="M0 74 H160" stroke="var(--ink-soft)" strokeWidth="2" fill="none" />
+        <path d="M0 71 H160" stroke="var(--ink-soft)" strokeWidth="2" fill="none" />
         <path
-          d="M30 66 Q64 14 98 66"
+          d="M28 62 Q68 16 108 62"
           stroke="var(--ink-soft)"
           strokeWidth="2"
           strokeDasharray="4 5"
           fill="none"
         />
-        <g fill="var(--ink)">
-          <rect x="22" y="46" width="14" height="12" />
-          <rect x="14" y="52" width="12" height="10" />
-          <rect x="16" y="62" width="4" height="8" />
-          <rect x="24" y="62" width="4" height="8" />
-        </g>
-        <g fill="var(--accent)">
-          <rect x="100" y="50" width="6" height="24" />
-          <rect x="94" y="58" width="6" height="4" />
-          <rect x="94" y="58" width="4" height="10" />
-          <rect x="106" y="54" width="6" height="4" />
-          <rect x="108" y="54" width="4" height="10" />
-        </g>
+        <Rabbit x={12} />
+        <Sprite rects={OBSTACLE_SHAPES.bush} x={104} y={GROUND - 36 * FIGURE_SCALE} />
       </svg>
     </div>
   );
 }
 
-/** Birds come at two heights: one to jump, one to ignore (§5). */
+/** Birds come at two heights: one to hop, one to ignore (§5). */
 function BirdFigure() {
   return (
     <div className="tutorial-example" aria-hidden="true">
       <svg className="bh-figure" viewBox="0 0 160 90" role="presentation">
-        <path d="M0 74 H160" stroke="var(--ink-soft)" strokeWidth="2" fill="none" />
-        {/* High: above the runner's head, harmless while it stays down. */}
-        <g fill="var(--accent)">
-          <rect x="96" y="18" width="26" height="7" />
-          <rect x="102" y="12" width="12" height="6" />
-          <rect x="118" y="20" width="10" height="3" />
-        </g>
-        {/* Low: in the runner's path, so it is hopped like a bush. */}
-        <g fill="var(--accent)">
-          <rect x="96" y="56" width="26" height="7" />
-          <rect x="102" y="63" width="12" height="6" />
-          <rect x="118" y="58" width="10" height="3" />
-        </g>
+        <path d="M0 71 H160" stroke="var(--ink-soft)" strokeWidth="2" fill="none" />
+        {/* High: over the rabbit's ears, harmless while it stays down. */}
+        <Sprite rects={BIRD_FRAMES[0]!} x={100} y={GROUND - 98 * FIGURE_SCALE} />
+        {/* Low: in the rabbit's path, so it is hopped like a bush. */}
+        <Sprite rects={BIRD_FRAMES[1]!} x={100} y={GROUND - 46 * FIGURE_SCALE} />
         <path
-          d="M28 66 Q62 26 96 60"
+          d="M28 62 Q66 22 104 56"
           stroke="var(--ink-soft)"
           strokeWidth="2"
           strokeDasharray="4 5"
           fill="none"
         />
-        <g fill="var(--ink)">
-          <rect x="22" y="46" width="14" height="12" />
-          <rect x="14" y="52" width="12" height="10" />
-          <rect x="16" y="62" width="4" height="8" />
-          <rect x="24" y="62" width="4" height="8" />
-        </g>
+        <Rabbit x={12} />
       </svg>
     </div>
   );
 }
 
-/** One touch ends the run, and the track only gets faster (§5, §7). */
+/** One touch ends the run, and the meadow only gets faster (§5, §7). */
 function SpeedFigure() {
   return (
     <div className="tutorial-example" aria-hidden="true">
       <svg className="bh-figure" viewBox="0 0 160 90" role="presentation">
-        <path d="M0 74 H160" stroke="var(--ink-soft)" strokeWidth="2" fill="none" />
-        <g fill="var(--ink)">
-          <rect x="26" y="46" width="14" height="12" />
-          <rect x="18" y="52" width="12" height="10" />
-          <rect x="20" y="62" width="4" height="12" />
-          <rect x="28" y="62" width="4" height="12" />
-        </g>
+        <path d="M0 71 H160" stroke="var(--ink-soft)" strokeWidth="2" fill="none" />
         <g fill="var(--ink-soft)">
-          <rect x="4" y="50" width="10" height="3" />
-          <rect x="0" y="58" width="14" height="3" />
-          <rect x="6" y="66" width="8" height="3" />
+          <rect x="2" y="40" width="10" height="3" />
+          <rect x="0" y="48" width="14" height="3" />
+          <rect x="4" y="56" width="8" height="3" />
         </g>
-        <g fill="var(--accent)">
-          <rect x="72" y="52" width="6" height="22" />
-          <rect x="66" y="60" width="6" height="4" />
-          <rect x="104" y="46" width="6" height="28" />
-          <rect x="110" y="54" width="6" height="4" />
-          <rect x="132" y="52" width="6" height="22" />
-          <rect x="126" y="58" width="6" height="4" />
-        </g>
+        <Rabbit x={18} />
+        {/* The gaps close up towards the right: the meadow gets faster (§5). */}
+        <Sprite rects={OBSTACLE_SHAPES.bush} x={74} y={GROUND - 36 * FIGURE_SCALE} />
+        <Sprite rects={OBSTACLE_SHAPES.hedge} x={104} y={GROUND - 50 * FIGURE_SCALE} />
+        <Sprite rects={OBSTACLE_SHAPES.bush} x={140} y={GROUND - 36 * FIGURE_SCALE} />
       </svg>
     </div>
   );
@@ -118,7 +135,7 @@ export function BunnyTutorialScreen() {
   const [step, setStep] = useState(0);
 
   const steps = [
-    { title: t('bunnyStep1Title'), body: t('bunnyStep1Body'), example: <JumpFigure /> },
+    { title: t('bunnyStep1Title'), body: t('bunnyStep1Body'), example: <HopFigure /> },
     { title: t('bunnyStep2Title'), body: t('bunnyStep2Body'), example: <BirdFigure /> },
     { title: t('bunnyStep3Title'), body: t('bunnyStep3Body'), example: <SpeedFigure /> },
   ];

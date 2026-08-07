@@ -129,6 +129,10 @@
 2. 鳥も飛んでくる — 低い鳥は茂みと同じく跳ぶ。高い鳥は跳ばなければ安全。
 3. 速くなっていく — 一度当たれば終わり、次のランはすぐ・無料。
 
+図は**盤面と同じスプライトから描く**(`ui/components/sprites.ts` を Quick Rules が
+そのまま SVG に置く)。ここで覚えた形が、そのままコースに出てくる形である —
+図を別に描くと、うさぎを描き直したときに片方だけ古いままになる。
+
 詳細は Landing Page(`https://pixapps.ai/simple-games/games/bunny-hop/<locale>/`)へ。
 **ページが公開されるまで「詳しく見る」は出さない**(`src/ui/landing.ts` の
 `PUBLISHED_GAME_IDS`)。自分のサイトの 404 を初見の人に見せないため。
