@@ -67,6 +67,12 @@ export const zhHant: Messages = {
   // Collection shell
   gamesHeading: '遊戲',
   recentHeading: '最近玩過',
+  categoryLogic: '邏輯',
+  categoryCards: '紙牌',
+  categoryPuzzle: '益智',
+  categoryBoard: '棋類',
+  categoryArcade: '街機',
+  categoryDrills: '練習',
   backToGames: '所有遊戲',
   gameLoading: '載入中…',
   gameLoadFailed: '無法載入遊戲。',

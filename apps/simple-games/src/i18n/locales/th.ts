@@ -67,6 +67,12 @@ export const th: Messages = {
   // Collection shell
   gamesHeading: 'เกม',
   recentHeading: 'เล่นล่าสุด',
+  categoryLogic: 'ตรรกะ',
+  categoryCards: 'ไพ่',
+  categoryPuzzle: 'ปริศนา',
+  categoryBoard: 'เกมกระดาน',
+  categoryArcade: 'อาร์เคด',
+  categoryDrills: 'ฝึกฝน',
   backToGames: 'เกมทั้งหมด',
   gameLoading: 'กำลังโหลด…',
   gameLoadFailed: 'ไม่สามารถโหลดเกมได้',

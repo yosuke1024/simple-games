@@ -68,6 +68,12 @@ export const tr: Messages = {
   // Collection shell
   gamesHeading: 'Oyunlar',
   recentHeading: 'Son oynananlar',
+  categoryLogic: 'Mantık',
+  categoryCards: 'Kart oyunları',
+  categoryPuzzle: 'Bulmaca',
+  categoryBoard: 'Masa oyunları',
+  categoryArcade: 'Arcade',
+  categoryDrills: 'Alıştırmalar',
   backToGames: 'Tüm oyunlar',
   gameLoading: 'Yükleniyor…',
   gameLoadFailed: 'Oyun yüklenemedi.',

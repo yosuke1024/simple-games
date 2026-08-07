@@ -77,6 +77,14 @@ export const en = {
   // Collection shell
   gamesHeading: 'Games',
   recentHeading: 'Recently played',
+  // Section headings on the collection home, one per GameCategoryId
+  // (app/registry.ts GAME_CATEGORIES)
+  categoryLogic: 'Logic',
+  categoryCards: 'Cards',
+  categoryPuzzle: 'Puzzle',
+  categoryBoard: 'Board Games',
+  categoryArcade: 'Arcade',
+  categoryDrills: 'Drills',
   backToGames: 'All games',
   gameLoading: 'Loading…',
   gameLoadFailed: 'The game could not be loaded.',

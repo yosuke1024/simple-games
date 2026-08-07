@@ -67,6 +67,12 @@ export const zhHans: Messages = {
   // Collection shell
   gamesHeading: '游戏',
   recentHeading: '最近玩过',
+  categoryLogic: '逻辑',
+  categoryCards: '纸牌',
+  categoryPuzzle: '益智',
+  categoryBoard: '棋类',
+  categoryArcade: '街机',
+  categoryDrills: '练习',
   backToGames: '全部游戏',
   gameLoading: '加载中…',
   gameLoadFailed: '无法加载游戏。',

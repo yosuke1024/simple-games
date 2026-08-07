@@ -67,6 +67,12 @@ export const hi: Messages = {
   // Collection shell
   gamesHeading: 'गेम',
   recentHeading: 'हाल में खेले गए',
+  categoryLogic: 'लॉजिक',
+  categoryCards: 'ताश',
+  categoryPuzzle: 'पहेली',
+  categoryBoard: 'बोर्ड गेम',
+  categoryArcade: 'आर्केड',
+  categoryDrills: 'अभ्यास',
   backToGames: 'सभी गेम',
   gameLoading: 'लोड हो रहा है…',
   gameLoadFailed: 'गेम लोड नहीं हो सका।',
