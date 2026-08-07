@@ -55,6 +55,45 @@ const savedGoldenGame = {
   ),
 };
 
+/**
+ * A crafted save whose first-priority hint (§8) is pile 1's run onto pile 2 —
+ * a move that frees a hidden card. A card is `suit * 13 + rank - 1` with suits
+ * in the order spades, hearts, diamonds, clubs (types.ts).
+ *
+ * The point of the fixture is the cards the move does NOT touch: the whole run
+ * 9♥ 8♠ travels, but on the far side only the 10♠ receives it — the J♥ beneath
+ * stays put. Pile 1 is the only pile holding a hidden card, so the hint has no
+ * earlier candidate to prefer.
+ */
+const hintTableau = [
+  { down: [12], up: [21, 7] }, // K♠ hidden under 9♥ 8♠ — the run that moves
+  { down: [], up: [23, 9] }, // J♥ 10♠ — the 9♥ lands on the 10, not the J
+  { down: [], up: [51] },
+  { down: [], up: [38] },
+  { down: [], up: [25] },
+  { down: [], up: [50] },
+  { down: [], up: [37] },
+];
+const hintDealt = new Set(hintTableau.flatMap((pile) => [...pile.down, ...pile.up]));
+const savedHintGame = {
+  ...tutorialDone,
+  [SO_STORAGE_KEYS.game]: JSON.stringify({
+    schemaVersion: 1,
+    mode: 'free',
+    seed: 'sol-free-hint-marks',
+    drawThree: false,
+    dailyDate: null,
+    stock: Array.from({ length: 52 }, (_, card) => card).filter((card) => !hintDealt.has(card)),
+    waste: [],
+    foundations: [[], [], [], []],
+    tableau: hintTableau,
+    moveCount: 0,
+    hintCount: 0,
+    elapsedSeconds: 0,
+    savedAt: 1,
+  }),
+};
+
 const table = () => screen.getByRole('group', { name: 'Solitaire table' });
 
 async function resumeGoldenGame(user: ReturnType<typeof userEvent.setup>) {
@@ -223,6 +262,23 @@ describe('playing', () => {
 
     expect(screen.queryByText(/streak/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/\d+:\d\d/)).not.toBeInTheDocument();
+  });
+
+  it('outlines only the run to move and the card it lands on (§8)', async () => {
+    const user = userEvent.setup();
+    renderGame(savedHintGame);
+    await resumeGoldenGame(user);
+
+    await user.click(screen.getByRole('button', { name: 'Hint' }));
+
+    // The whole run travels, so both its cards are marked — but on the far
+    // side only the card that receives it is, never the pile it sits in.
+    const card = (name: string) => within(table()).getByRole('button', { name });
+    expect(card('9 of hearts')).toHaveClass('sol-hinted');
+    expect(card('8 of spades')).toHaveClass('sol-hinted');
+    expect(card('10 of spades')).toHaveClass('sol-hinted');
+    expect(card('J of hearts')).not.toHaveClass('sol-hinted');
+    expect(table().querySelectorAll('.sol-hinted')).toHaveLength(3);
   });
 });
 
