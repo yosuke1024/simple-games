@@ -12,6 +12,7 @@ import { GAMES } from './registry';
 const RELEASED_KEYS: Record<string, readonly string[]> = {
   sudoku: ['sd.saveGame', 'sd.saveDaily', 'sd.stats', 'sd.progress', 'sd.flags', 'sd.prefs'],
   solitaire: ['so.saveGame', 'so.saveDaily', 'so.stats', 'so.flags', 'so.prefs'],
+  'spider-solitaire': ['ss.saveGame', 'ss.saveDaily', 'ss.stats', 'ss.flags', 'ss.prefs'],
   freecell: ['fc.saveGame', 'fc.saveDaily', 'fc.stats', 'fc.flags'],
   minesweeper: ['ms.saveGame', 'ms.saveDaily', 'ms.stats', 'ms.flags', 'ms.prefs'],
   'brick-breaker': ['bb.stats', 'bb.progress', 'bb.flags'],
@@ -29,6 +30,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
 const PREFIXES: Record<string, string> = {
   sudoku: 'sd.',
   solitaire: 'so.',
+  'spider-solitaire': 'ss.',
   freecell: 'fc.',
   minesweeper: 'ms.',
   'brick-breaker': 'bb.',

@@ -1,0 +1,51 @@
+import type { SpiderMessages } from './en';
+
+export const id: SpiderMessages = {
+  spiderName: 'Spider Solitaire',
+  spiderNewDeal: 'Bagi ulang',
+  spiderTableLabel: 'Meja Spider Solitaire',
+  spiderCardLabel: '{rank} {suit}',
+  spiderSuit_spades: 'sekop',
+  spiderSuit_hearts: 'hati',
+  spiderSuit_diamonds: 'wajik',
+  spiderSuit_clubs: 'keriting',
+  spiderCardFaceDown: 'Tertutup',
+  spiderStockLabel: 'Tumpukan, sisa {n} kali — ketuk untuk membagi satu baris',
+  spiderStockEmpty: 'Tumpukan kosong',
+  spiderStockBlocked: 'Isi semua kolom kosong sebelum membagi.',
+  spiderRunsLabel: 'Rangkaian selesai',
+  spiderRunCard: 'Rangkaian selesai, {suit}',
+  spiderRunEmpty: 'Rangkaian belum lengkap',
+  spiderColumnLabel: 'Kolom {n}',
+  spiderColumnEmpty: 'Kolom {n}, kosong — kartu apa pun bisa ke sini',
+  spiderDifficulty: 'Jenis kartu',
+  spiderOneSuit: '1 jenis',
+  spiderTwoSuits: '2 jenis',
+  spiderFourSuits: '4 jenis',
+  spiderDifficultyNote: 'Berlaku mulai pembagian berikutnya.',
+  spiderHintNone: 'Tidak ada langkah ditemukan — urungkan, atau bagikan satu baris.',
+  spiderHintsUsed: 'Petunjuk',
+  spiderStuckTitle: 'Tidak ada langkah lagi',
+  spiderStuckBody:
+    'Tumpukan habis dan tidak ada yang muat. Urungkan satu langkah, atau bagi ulang.',
+  spiderWonTitle: 'Menang!',
+  spiderWonBody: 'Kedelapan rangkaian lengkap.',
+  spiderNewBestMoves: 'Langkah paling sedikit sejauh ini.',
+  spiderNewBestTime: 'Waktu tercepat sejauh ini.',
+  spiderBestMoves: 'Langkah paling sedikit',
+  spiderDealsPlayed: 'Permainan dimainkan',
+  spiderGamesWon: 'Permainan dimenangkan',
+  spiderWinRate: 'Tingkat kemenangan',
+  spiderDailiesWon: 'Harian dimenangkan',
+  spiderDailyBacklogHint:
+    'Hari-hari sebelumnya selalu terbuka. Tidak semua pembagian bisa dimenangkan.',
+  spiderStep1Title: 'Tumpuk menurun',
+  spiderStep1Body:
+    'Jenis apa pun boleh naik ke kartu satu tingkat lebih tinggi. Ketuk kartu, lalu ketuk tujuannya.',
+  spiderStep2Title: 'Satu jenis bergerak bersama',
+  spiderStep2Body:
+    'Kartu sejenis yang berurutan pindah sekaligus. Susun dari raja sampai as, dan rangkaian itu keluar dari meja.',
+  spiderStep3Title: 'Bagikan saat buntu',
+  spiderStep3Body:
+    'Tumpukan membagi satu kartu ke tiap kolom — tapi hanya kalau tidak ada kolom kosong.',
+};

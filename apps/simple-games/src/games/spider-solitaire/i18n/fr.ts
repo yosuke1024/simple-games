@@ -1,0 +1,51 @@
+import type { SpiderMessages } from './en';
+
+export const fr: SpiderMessages = {
+  spiderName: 'Spider Solitaire',
+  spiderNewDeal: 'Nouvelle donne',
+  spiderTableLabel: 'Table de Spider Solitaire',
+  spiderCardLabel: '{rank} de {suit}',
+  spiderSuit_spades: 'pique',
+  spiderSuit_hearts: 'cœur',
+  spiderSuit_diamonds: 'carreau',
+  spiderSuit_clubs: 'trèfle',
+  spiderCardFaceDown: 'Face cachée',
+  spiderStockLabel: 'Pioche, {n} donnes restantes — touchez pour distribuer une ligne',
+  spiderStockEmpty: 'Pioche vide',
+  spiderStockBlocked: 'Remplissez toutes les colonnes vides avant de distribuer.',
+  spiderRunsLabel: 'Suites complètes',
+  spiderRunCard: 'Suite complète, {suit}',
+  spiderRunEmpty: 'Suite non terminée',
+  spiderColumnLabel: 'Colonne {n}',
+  spiderColumnEmpty: "Colonne {n}, vide — n'importe quelle carte peut venir ici",
+  spiderDifficulty: 'Familles',
+  spiderOneSuit: '1 famille',
+  spiderTwoSuits: '2 familles',
+  spiderFourSuits: '4 familles',
+  spiderDifficultyNote: 'S’applique à partir de la prochaine donne.',
+  spiderHintNone: 'Aucun coup trouvé — annulez, ou distribuez une ligne.',
+  spiderHintsUsed: 'Indices',
+  spiderStuckTitle: 'Plus aucun coup',
+  spiderStuckBody:
+    'La pioche est épuisée et rien ne passe. Annulez un coup, ou prenez une nouvelle donne.',
+  spiderWonTitle: 'Gagné !',
+  spiderWonBody: 'Les huit suites sont complètes.',
+  spiderNewBestMoves: 'Votre plus petit nombre de coups.',
+  spiderNewBestTime: 'Votre meilleur temps.',
+  spiderBestMoves: 'Minimum de coups',
+  spiderDealsPlayed: 'Donnes jouées',
+  spiderGamesWon: 'Parties gagnées',
+  spiderWinRate: 'Taux de victoire',
+  spiderDailiesWon: 'Défis quotidiens gagnés',
+  spiderDailyBacklogHint:
+    'Les jours précédents restent ouverts. Toutes les donnes ne sont pas gagnables.',
+  spiderStep1Title: 'Empilez en descendant',
+  spiderStep1Body:
+    'N’importe quelle famille se pose sur une carte d’un rang au-dessus. Touchez une carte, puis sa destination.',
+  spiderStep2Title: 'Une même famille voyage groupée',
+  spiderStep2Body:
+    'Les cartes d’une même famille qui se suivent se déplacent ensemble. Formez du roi à l’as et la suite quitte la table.',
+  spiderStep3Title: 'Distribuez quand vous bloquez',
+  spiderStep3Body:
+    'La pioche donne une carte à chaque colonne — mais seulement si aucune colonne n’est vide.',
+};
