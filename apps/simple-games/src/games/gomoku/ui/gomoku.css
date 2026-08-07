@@ -1,0 +1,407 @@
+/* Gomoku — all of this game's styling, imported by GomokuRoot. Everything is
+   built from the series tokens in src/ui/styles.css (--surface, --ink, --line,
+   --accent, --radius, --font-display, --tap-size, …) so the game reads as part
+   of the same app and follows the theme without knowing about it.
+
+   Class names are prefixed `gm-` so this file can never collide with the shell
+   or with another game.
+
+   The wood and the stones below are game content, not chrome — the same
+   standing as 2048's tile ramp and Reversi's felt, and the one place this
+   title is allowed past "one accent per title" (docs/BRAND.md). The stones
+   have to stay stone-black and stone-white in both themes: they are the game
+   (§1), and a "black" stone painted in the dark theme's light ink would flip
+   the position on every phone that follows the OS theme. The board is fixed
+   for the same reason — it must sit behind both colours in both themes, so it
+   cannot follow the accent, whose dark variant is light. */
+
+:root {
+  --gm-wood: #d9b884;
+  --gm-line: #9c7d51;
+  --gm-black: #23262c;
+  --gm-black-edge: #4a505b;
+  --gm-white: #f6f3ea;
+  --gm-white-edge: #c9c2ae;
+}
+
+:root[data-theme='dark'] {
+  --gm-wood: #9c7d51;
+  --gm-line: #6d5636;
+  --gm-black: #16191e;
+  --gm-black-edge: #434a55;
+  --gm-white: #e8e4d8;
+  --gm-white-edge: #a9a291;
+}
+
+/* ---------- board ---------- */
+
+/* The board sits in the space between the top bar and the action bar, centred
+   so a tall phone brings it into thumb reach instead of pinning it up top. */
+.gm-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 4px 12px 10px;
+  min-height: 0;
+}
+
+/* Square at every size, and as large as its own column honestly allows (the
+   `100%` first term, not `vw` — docs/ARCHITECTURE.md, the board-width lesson
+   every title relearned). The `min()` against viewport height keeps it square
+   on a short screen rather than pushing the action bar off the bottom.
+
+   The padding is half a cell: stones sit *on* the crossings, so the outermost
+   lines have to stand half a cell in from the wooden edge, the way they do on
+   a real board. */
+.gm-board {
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  grid-template-rows: repeat(15, 1fr);
+  width: min(100%, 420px, 52vh);
+  aspect-ratio: 1;
+  padding: 2px;
+  background: var(--gm-wood);
+  border: 2px solid var(--gm-line);
+  border-radius: var(--radius);
+}
+
+/* A point is a button that draws its own share of the grid: a horizontal rule
+   through its middle and a vertical one, each stopping at the board's edge so
+   the outer lines close the square instead of running off it. */
+.gm-point {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+.gm-point::before,
+.gm-point::after {
+  content: '';
+  position: absolute;
+  background: var(--gm-line);
+}
+
+/* Horizontal: from the middle of this cell out to both neighbours. */
+.gm-point::before {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.gm-point::after {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+/* The four edges stop their line at the crossing rather than at the wood. */
+.gm-point-first-col::before {
+  left: 50%;
+}
+
+.gm-point-last-col::before {
+  right: 50%;
+}
+
+.gm-point-first-row::after {
+  top: 50%;
+}
+
+.gm-point-last-row::after {
+  bottom: 50%;
+}
+
+/* The shared chrome dims a disabled button to 40% — right for an action that
+   is unavailable, wrong for board surface. Most of these points are disabled
+   whenever it is not the player's turn, and without this the whole board
+   would fade. */
+.gm-point:disabled {
+  opacity: 1;
+}
+
+/* The star points, the five a 15×15 board is marked with. Drawn on the cell
+   rather than added as elements: 225 buttons is enough DOM already. */
+.gm-point-star .gm-star {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gm-line);
+}
+
+/* ---------- stones ---------- */
+
+.gm-stone {
+  position: relative;
+  width: 86%;
+  height: 86%;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.gm-stone-black {
+  background: var(--gm-black);
+  box-shadow: inset 0 0 0 1.5px var(--gm-black-edge);
+}
+
+.gm-stone-white {
+  background: var(--gm-white);
+  box-shadow: inset 0 0 0 1.5px var(--gm-white-edge);
+}
+
+/* The placed stone arrives where it was put down. */
+.gm-stone-pop {
+  animation: gm-pop 0.12s ease-out;
+}
+
+@keyframes gm-pop {
+  from {
+    transform: scale(0.4);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* The winning line is ringed and everything else dimmed, so the result does
+   not rest on colour alone (§10). */
+.gm-stone-win {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.gm-stone-dim {
+  opacity: 0.45;
+}
+
+/* Reduced Motion: stones are simply where they were placed (§10). Guarded by
+   the board class set from useReducedMotion, so the in-app setting counts. */
+.gm-board-still .gm-stone-pop {
+  animation: none;
+}
+
+/* The last stone played keeps a small mark, so the CPU's reply can be found
+   after looking away (§10). It takes the *other* stone's colour, which is the
+   only choice legible on both. */
+.gm-last-mark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 26%;
+  height: 26%;
+  margin: -13% 0 0 -13%;
+  border-radius: 50%;
+}
+
+.gm-stone-black .gm-last-mark {
+  background: var(--gm-white);
+}
+
+.gm-stone-white .gm-last-mark {
+  background: var(--gm-black);
+}
+
+/* The point being aimed at: a ghost of the stone about to be placed, plus a
+   ring. Two taps place a stone (§2) because a crossing on this board is about
+   nineteen pixels wide on the narrowest phone the series supports, and one
+   tap would be a machine for placing stones you did not mean to. */
+.gm-ghost {
+  position: relative;
+  width: 86%;
+  height: 86%;
+  border-radius: 50%;
+  z-index: 1;
+  opacity: 0.45;
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.gm-ghost-black {
+  background: var(--gm-black);
+}
+
+.gm-ghost-white {
+  background: var(--gm-white);
+}
+
+/* ---------- top bar ---------- */
+
+.gm-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.gm-side {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.gm-side-stone {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.gm-side-black {
+  background: var(--gm-black);
+  box-shadow: inset 0 0 0 1.5px var(--gm-black-edge);
+}
+
+.gm-side-white {
+  background: var(--gm-white);
+  box-shadow: inset 0 0 0 1.5px var(--gm-white-edge);
+}
+
+/* ---------- turn line ---------- */
+
+/* Reserved height whether it names a turn, asks for the second tap, or says
+   nothing: the board must not jump when the text changes (§10). */
+.gm-turn-line {
+  margin: 0;
+  min-height: 2.6em;
+  font-size: 14px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* ---------- action bar ---------- */
+
+/* One action, free and unlimited: Undo (§5). There is deliberately no hint
+   button — a suggested point would be the CPU playing both sides (§6). */
+.action-bar.gm-actions {
+  justify-content: center;
+}
+
+/* ---------- home ---------- */
+
+.gm-choose-label {
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* Which colour the player takes next match — which is also first or second,
+   because black opens (§1). Two equal halves: neither is a default the other
+   departs from, so neither is drawn as one. */
+.gm-side-choice {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.gm-side-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--tap-size);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.gm-side-option-on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* The tutorial draws a 5×5 corner of the board: enough to show a line of five
+   without shrinking the stones to dots (§10). */
+.gm-figure {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  width: 175px;
+  padding: 2px;
+  background: var(--gm-wood);
+  border: 2px solid var(--gm-line);
+  border-radius: 10px;
+}
+
+.gm-figure-point {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gm-figure-point::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--gm-line);
+}
+
+.gm-figure-point::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--gm-line);
+}
+
+.gm-figure-stone {
+  position: relative;
+  width: 86%;
+  height: 86%;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.gm-figure-black {
+  background: var(--gm-black);
+  box-shadow: inset 0 0 0 1.5px var(--gm-black-edge);
+}
+
+.gm-figure-white {
+  background: var(--gm-white);
+  box-shadow: inset 0 0 0 1.5px var(--gm-white-edge);
+}
+
+/* The stone the step is talking about. */
+.gm-figure-fresh {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.gm-figure-ghost {
+  position: relative;
+  width: 86%;
+  height: 86%;
+  border-radius: 50%;
+  z-index: 1;
+  opacity: 0.45;
+  background: var(--gm-black);
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}

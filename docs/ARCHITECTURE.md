@@ -49,8 +49,10 @@ src/
 │   ├── sky-fighter/
 │   ├── 2048/
 │   ├── block-puzzle/
+│   ├── checkers/
 │   ├── reversi/
 │   ├── connect-four/
+│   ├── gomoku/
 │   └── bunny-hop/
 ├── monetization/           # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 ├── services/               # 共有: ads(バナーのみ) / network / sound / haptics
@@ -250,9 +252,11 @@ src/
   チュートリアル・バナースロットなどの共通クロム。
 - **全タイトルが規約に従っている**: `number-match.css` / `sudoku.css` /
   `minesweeper.css` / `nonogram.css` / `sliding-puzzle.css` / `memory-match.css` /
-  `water-sort.css` / `solitaire.css` / `brick-breaker.css` / `sky-fighter.css` /
-  `game-2048.css` / `block-puzzle.css` / `reversi.css` / `connect-four.css` /
-  `bunny-hop.css`。
+  `water-sort.css` / `solitaire.css` / `spider-solitaire.css` / `freecell.css` /
+  `brick-breaker.css` / `sky-fighter.css` /
+  `game-2048.css` / `block-puzzle.css` / `checkers.css` / `reversi.css` /
+  `connect-four.css` / `gomoku.css` / `quick-math.css` / `schulte-table.css` /
+  `number-recall.css` / `bunny-hop.css`。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。
@@ -299,8 +303,10 @@ src/
 | `sf.*`        | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)   |
 | `tm.*`        | 2048(saveGame / stats / flags。デイリーもレベル進行もない)        |
 | `bp.*`        | Block Puzzle(saveGame / stats / flags。同上)                      |
+| `ck.*`        | Checkers(saveGame / stats / flags / prefs。統計は難易度別)        |
 | `rv.*`        | Reversi(saveGame / stats / flags / prefs。統計は難易度別)         |
 | `c4.*`        | Connect Four(saveGame / stats / flags / prefs。同上)              |
+| `gm.*`        | Gomoku(saveGame / stats / flags / prefs。同上)                    |
 | `ss.*`        | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)    |
 | `fc.*`        | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)    |
 | `bh.*`        | Bunny Hop(stats / flags。**saveGame なし** — 下記)                |

@@ -5,11 +5,11 @@
 > あわせて Play Console でアプリ内商品(管理された商品)`remove_ads` を
 > 基準価格 USD 3.99 で作成すること(国別価格は自動調整に任せる)。
 
-> 掲載は収録ゲーム 20 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
-> Minesweeper / 2048 / Block Puzzle / Reversi / Connect Four / Brick Breaker /
-> Nonogram / Number Match / Quick Math / Schulte Table / Number Recall /
-> Water Sort / Sliding Puzzle / Memory Match / Sky Fighter / Bunny Hop)の
-> 状態で書いてある。
+> 掲載は収録ゲーム 22 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
+> Minesweeper / 2048 / Block Puzzle / Checkers / Reversi / Connect Four /
+> Gomoku / Brick Breaker / Nonogram / Number Match / Quick Math /
+> Schulte Table / Number Recall / Water Sort / Sliding Puzzle / Memory Match /
+> Sky Fighter / Bunny Hop)の状態で書いてある。
 >
 > **ドリル 3 本(Quick Math / Schulte Table / Number Recall)の掲載文では、
 > このジャンルの定番である効能の主張を一切しない。日本語のジャンル名そのものも
@@ -31,12 +31,15 @@
 3. `Simple Games: Sudoku & More`
 
 キーワード優先順位: Offline > Sudoku > Solitaire > Spider Solitaire > FreeCell >
-Minesweeper > 2048 > Block Puzzle > Reversi > Connect Four > Brick Breaker >
-Nonogram > Puzzle >
+Minesweeper > Checkers > 2048 > Block Puzzle > Reversi > Connect Four >
+Gomoku > Brick Breaker > Nonogram > Puzzle >
 Number Match > Quick Math > Schulte Table > Number Recall > Water Sort >
 Sliding Puzzle > Memory Match > Sky Fighter >
 Bunny Hop > Simple Games > PixApps
-(ゲーム名は検索流入の中核。収録済みの名前だけを、検索需要の大きい順に置く)
+(ゲーム名は検索流入の中核。収録済みの名前だけを、検索需要の大きい順に置く。
+**Checkers は英連邦圏では Draughts、Gomoku は英語圏では Five in a Row と
+呼ばれる**ので、掲載文の本文にその一般名も一度ずつ置く — 別名の併記であって
+キーワードの詰め込みではない)
 
 ## 訴求の順序(BRAND.md と同一。この順で書く)
 
@@ -76,8 +79,10 @@ INCLUDED GAMES
 • Minesweeper
 • 2048
 • Block Puzzle
+• Checkers (Draughts)
 • Reversi
 • Connect Four
+• Gomoku (Five in a Row)
 • Brick Breaker
 • Nonogram
 • Number Match

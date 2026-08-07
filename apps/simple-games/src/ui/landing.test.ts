@@ -51,6 +51,7 @@ describe('gameLandingUrl', () => {
       'bunny-hop',
       'checkers',
       'freecell',
+      'gomoku',
       'spider-solitaire',
       'quick-math',
       'schulte-table',

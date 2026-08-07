@@ -26,6 +26,7 @@ import { BP_STORAGE_KEYS } from '../games/block-puzzle/storage/keys';
 import { BH_STORAGE_KEYS } from '../games/bunny-hop/storage/keys';
 import { C4_STORAGE_KEYS } from '../games/connect-four/storage/keys';
 import { CK_STORAGE_KEYS } from '../games/checkers/storage/keys';
+import { GM_STORAGE_KEYS } from '../games/gomoku/storage/keys';
 import { FC_STORAGE_KEYS } from '../games/freecell/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
@@ -64,7 +65,8 @@ export type GameId =
   | 'block-puzzle'
   | 'checkers'
   | 'reversi'
-  | 'connect-four';
+  | 'connect-four'
+  | 'gomoku';
 
 export interface GameDefinition {
   id: GameId;
@@ -195,6 +197,16 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/connect-four/ui/ConnectFourRoot').then((m) => ({
         default: m.ConnectFourRoot,
       })),
+  },
+  {
+    id: 'gomoku',
+    // Five dots, where Connect Four has four (U+2058 and U+2059): the two
+    // titles are the same idea at different lengths, and the marks say so.
+    title: 'Gomoku',
+    glyph: '⁙',
+    storageKeys: Object.values(GM_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/gomoku/ui/GomokuRoot').then((m) => ({ default: m.GomokuRoot })),
   },
   {
     id: 'brick-breaker',

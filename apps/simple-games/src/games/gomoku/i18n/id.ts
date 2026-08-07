@@ -1,0 +1,43 @@
+import type { GomokuMessages } from './en';
+
+export const id: GomokuMessages = {
+  gomokuName: 'Gomoku',
+  gomokuChooseOpponent: 'Pilih lawanmu',
+  gomokuDifficulty_easy: 'Mudah',
+  gomokuDifficulty_normal: 'Normal',
+  gomokuDifficulty_hard: 'Sulit',
+  gomokuRecordNote: 'Menang {wins} · Kalah {losses}',
+  gomokuBoardLabel: 'Papan Gomoku, 15 kali 15',
+  gomokuChooseSideLabel: 'Warna apa yang kamu pakai',
+  gomokuPlayBlack: 'Hitam · duluan',
+  gomokuPlayWhite: 'Putih · belakangan',
+  gomokuPointEmpty: 'Baris {row}, kolom {col}: kosong',
+  gomokuPointMine: 'Baris {row}, kolom {col}: batumu',
+  gomokuPointTheirs: 'Baris {row}, kolom {col}: batu CPU',
+  gomokuPointPending: 'Baris {row}, kolom {col}: ketuk lagi untuk menaruh',
+  gomokuYou: 'Kamu',
+  gomokuCpu: 'CPU',
+  gomokuYourTurn: 'Giliranmu — ketuk sekali untuk membidik, sekali lagi untuk menaruh',
+  gomokuConfirmPrompt: 'Ketuk titik yang sama sekali lagi untuk menaruh batumu.',
+  gomokuCpuTurn: 'CPU sedang berpikir…',
+  gomokuWinTitle: 'Kamu menang!',
+  gomokuWinBody: 'Lima berderet.',
+  gomokuLoseTitle: 'CPU menang',
+  gomokuLoseBody: 'CPU membuat lima berderet. Permainan berikutnya gratis.',
+  gomokuDrawTitle: 'Seri',
+  gomokuDrawBody: 'Papan penuh tanpa ada yang membuat lima.',
+  gomokuWins: 'Menang',
+  gomokuLosses: 'Kalah',
+  gomokuDraws: 'Seri',
+  gomokuStep1Title: 'Ketuk membidik, ketuk lagi menaruh',
+  gomokuStep1Body:
+    'Ketukan pertama menandai titiknya; yang kedua memastikannya. Ketuk di tempat lain untuk memindahkan tanda.',
+  gomokuStep2Title: 'Lima berderet menang',
+  gomokuStep2Body: 'Susun lima batumu mendatar, menurun, atau diagonal. Enam juga dihitung.',
+  gomokuStep3Title: 'Hadang tiga yang terbuka',
+  gomokuStep3Body:
+    'Tiga batu CPU dengan kedua ujung kosong akan jadi empat yang tak bisa dihentikan. Undo gratis.',
+  gomokuConfirmSwitchTitle: 'Ganti permainan yang sedang berjalan?',
+  gomokuConfirmSwitchBody:
+    'Permainan {current} kamu akan diganti dengan permainan {next} yang baru.',
+};

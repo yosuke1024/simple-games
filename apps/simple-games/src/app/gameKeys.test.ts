@@ -33,6 +33,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   checkers: ['ck.saveGame', 'ck.stats', 'ck.flags', 'ck.prefs'],
   reversi: ['rv.saveGame', 'rv.stats', 'rv.flags', 'rv.prefs'],
   'connect-four': ['c4.saveGame', 'c4.stats', 'c4.flags', 'c4.prefs'],
+  gomoku: ['gm.saveGame', 'gm.stats', 'gm.flags', 'gm.prefs'],
 };
 
 const PREFIXES: Record<string, string> = {
@@ -57,6 +58,7 @@ const PREFIXES: Record<string, string> = {
   checkers: 'ck.',
   reversi: 'rv.',
   'connect-four': 'c4.',
+  gomoku: 'gm.',
 };
 
 describe('registry storage keys (released data — do not edit to make green)', () => {

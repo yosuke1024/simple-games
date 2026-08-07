@@ -11,7 +11,7 @@
  * pin that split: the tile keeps the properties the games rely on, and the two
  * classes stay separate.
  */
-import { readFileSync } from 'node:fs';
+import { globSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -48,5 +48,39 @@ describe('the home screens share .home-logo', () => {
     expect(mark).not.toMatch(/background:/);
     expect(mark).not.toMatch(/border-radius:/);
     expect(mark).toMatch(/display:\s*block/);
+  });
+});
+
+/**
+ * ARCHITECTURE.md claims every title keeps its styling in its own folder, and
+ * then lists the files by name. A list written by hand goes stale the moment
+ * a game is added, and it had: five titles were missing from it — the drills
+ * and the two later card games — while the sentence above it still said
+ * "every title". A claim nobody checks is not a claim.
+ *
+ * This holds the list to the filesystem in both directions, which is the only
+ * way the sentence stays true without anybody remembering to make it so.
+ */
+describe('the CSS-per-game list in ARCHITECTURE.md', () => {
+  const doc = readFileSync(resolve('../../docs/ARCHITECTURE.md'), 'utf8');
+  const claim = doc.slice(doc.indexOf('**全タイトルが規約に従っている**'));
+  const listed = new Set(
+    [...claim.slice(0, 600).matchAll(/`([a-z0-9-]+\.css)`/g)].map((m) => m[1]!),
+  );
+  const onDisk = new Set(
+    globSync('src/games/*/ui/*.css').map((path) => path.slice(path.lastIndexOf('/') + 1)),
+  );
+
+  it('names a stylesheet for every game that has one', () => {
+    expect([...onDisk].filter((file) => !listed.has(file)).sort()).toEqual([]);
+  });
+
+  it('names no stylesheet that does not exist', () => {
+    expect([...listed].filter((file) => !onDisk.has(file)).sort()).toEqual([]);
+  });
+
+  it('is not empty — a broken match would pass the two above vacuously', () => {
+    expect(onDisk.size).toBeGreaterThan(15);
+    expect(listed.size).toBe(onDisk.size);
   });
 });
