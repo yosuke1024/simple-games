@@ -57,7 +57,7 @@ import {
   type Prefs,
   type Stats,
 } from '../storage/schemas';
-import { applyGameStart, applyPlayTime, applyWon } from './statsLogic';
+import { applyGameStart, applyPlayTime, applyWon, dailyResultFor } from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'daily' | 'game' | 'stats';
 
@@ -82,6 +82,13 @@ export interface SpiderContextValue {
   /** True when the game on screen has no legal move left (§2). */
   stuck: boolean;
   tutorialCompleted: boolean;
+  /**
+   * True when today's daily has been won *at the difficulty now selected*.
+   * Pressing the button deals today at that difficulty (§7), so the badge has
+   * to mean the same thing the button will do — a one-suit win is not a
+   * four-suit one. The lifetime count on the statistics screen still counts
+   * days, not difficulties (§6).
+   */
   dailyDoneToday: boolean;
   lastResult: LastResult | null;
   canResume: (mode: GameMode) => boolean;
@@ -381,7 +388,7 @@ export function SpiderProvider({
       setSuitCount,
       stuck,
       tutorialCompleted: flags.tutorialCompleted,
-      dailyDoneToday: stats.dailyMoves[today] !== undefined,
+      dailyDoneToday: dailyResultFor(stats, today, prefs.suitCount) !== null,
       lastResult,
       canResume,
       startFree,

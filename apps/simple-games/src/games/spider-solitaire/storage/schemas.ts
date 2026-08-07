@@ -85,32 +85,54 @@ export interface SuitStats {
   bestSeconds: number | null;
 }
 
+/** One day's record at one difficulty. The two bests move independently. */
+export interface DailyResult {
+  moves: number;
+  seconds: number;
+}
+
 export interface Stats {
   schemaVersion: 1;
   /** Keyed by suit count: '1' | '2' | '4'. */
   perSuit: Record<string, SuitStats>;
   totalPlaySeconds: number;
-  /** Sparse map: YYYY-MM-DD → fewest moves for a won daily. */
-  dailyMoves: Record<string, number>;
-  /** Sparse map: YYYY-MM-DD → shortest winning time for that day. */
-  dailySeconds: Record<string, number>;
+  /**
+   * Sparse map: YYYY-MM-DD → suit count ('1' | '2' | '4') → that day's record
+   * at that difficulty.
+   *
+   * Nested by date rather than keyed by `date + suitCount`, because one record
+   * has to answer two different questions and they must not be able to
+   * disagree: what a player is playing against today (their own best at the
+   * difficulty they chose, §7/§9) and how many dailies they have won at all
+   * (§6 — the day count, which is just the number of keys here). A flat map
+   * plus a separate set of won days would be the same fact stored twice.
+   *
+   * A date appears only once it has been won at some difficulty.
+   */
+  dailyResults: Record<string, Record<string, DailyResult>>;
 }
 
 /** A record big enough for years of dailies, small enough to stay bounded. */
 const MAX_DAILY_ENTRIES = 2000;
 
-function validateDailyMap(raw: unknown): Record<string, number> {
-  const out: Record<string, number> = {};
+function validateDailyResults(raw: unknown): Record<string, Record<string, DailyResult>> {
+  const out: Record<string, Record<string, DailyResult>> = {};
   if (!isRecord(raw)) return out;
-  for (const [key, value] of Object.entries(raw)) {
-    const amount = asInt(value, 0, 1e9);
-    if (
-      asDateString(key) !== null &&
-      amount !== null &&
-      Object.keys(out).length < MAX_DAILY_ENTRIES
-    ) {
-      out[key] = amount;
+  for (const [date, bySuit] of Object.entries(raw)) {
+    if (Object.keys(out).length >= MAX_DAILY_ENTRIES) break;
+    if (asDateString(date) === null || !isRecord(bySuit)) continue;
+    const day: Record<string, DailyResult> = {};
+    for (const key of ['1', '2', '4']) {
+      const entry = bySuit[key];
+      if (!isRecord(entry)) continue;
+      const moves = asInt(entry.moves, 0, 1e9);
+      const seconds = asInt(entry.seconds, 0, 1e9);
+      if (moves === null || seconds === null) continue;
+      day[key] = { moves, seconds };
     }
+    // A date with nothing readable under it is not a day that was won, and
+    // leaving it in would inflate the daily count (§6).
+    if (Object.keys(day).length > 0) out[date] = day;
   }
   return out;
 }
@@ -153,8 +175,7 @@ export const statsSchema: SchemaDef<Stats> = {
     schemaVersion: 1,
     perSuit: defaultPerSuit(),
     totalPlaySeconds: 0,
-    dailyMoves: {},
-    dailySeconds: {},
+    dailyResults: {},
   }),
   validate: (raw) => {
     if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
@@ -164,8 +185,7 @@ export const statsSchema: SchemaDef<Stats> = {
       schemaVersion: 1,
       perSuit: validatePerSuit(raw.perSuit),
       totalPlaySeconds,
-      dailyMoves: validateDailyMap(raw.dailyMoves),
-      dailySeconds: validateDailyMap(raw.dailySeconds),
+      dailyResults: validateDailyResults(raw.dailyResults),
     };
   },
 };

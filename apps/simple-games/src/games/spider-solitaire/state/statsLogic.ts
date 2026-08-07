@@ -8,7 +8,7 @@
  * Total play time is shared, because time is time.
  */
 import type { SpiderSession, SuitCount } from '../game';
-import { emptySuitStats, type Stats, type SuitStats } from '../storage/schemas';
+import { emptySuitStats, type DailyResult, type Stats, type SuitStats } from '../storage/schemas';
 
 /**
  * Deep-copies a plain record. `structuredClone` needs a 2022-era WebView
@@ -73,19 +73,30 @@ export function applyWon(stats: Stats, session: SpiderSession): WinOutcome {
   };
 
   if (session.mode === 'daily' && session.dailyDate !== null) {
+    // The day's record is kept per difficulty, like every other statistic
+    // (§7, §9). One deal at four suits and the same deal at one are not the
+    // same achievement, so beating a one-suit run of 100 moves is not what a
+    // four-suit player is playing against.
     const date = session.dailyDate;
-    const previousMoves = next.dailyMoves[date];
-    const previousSeconds = next.dailySeconds[date];
-    const isNewBestMoves = previousMoves === undefined || moves < previousMoves;
-    const isNewBestTime = previousSeconds === undefined || seconds < previousSeconds;
-    if (isNewBestMoves) next.dailyMoves[date] = moves;
-    if (isNewBestTime) next.dailySeconds[date] = seconds;
+    const day = next.dailyResults[date] ?? {};
+    const previous = day[key];
+    const isNewBestMoves = previous === undefined || moves < previous.moves;
+    const isNewBestTime = previous === undefined || seconds < previous.seconds;
+    const best: DailyResult =
+      previous === undefined
+        ? { moves, seconds }
+        : {
+            moves: isNewBestMoves ? moves : previous.moves,
+            seconds: isNewBestTime ? seconds : previous.seconds,
+          };
+    day[key] = best;
+    next.dailyResults[date] = day;
     return {
       stats: next,
       isNewBestMoves,
       isNewBestTime,
-      bestMoves: next.dailyMoves[date] ?? moves,
-      bestSeconds: next.dailySeconds[date] ?? seconds,
+      bestMoves: best.moves,
+      bestSeconds: best.seconds,
     };
   }
 
@@ -98,9 +109,22 @@ export function applyWon(stats: Stats, session: SpiderSession): WinOutcome {
   };
 }
 
-/** How many daily deals have been won. A count, never a run of days (§6). */
+/** That day's record at that difficulty, or null when it has not been won there (§9). */
+export function dailyResultFor(
+  stats: Stats,
+  date: string,
+  suitCount: SuitCount,
+): DailyResult | null {
+  return stats.dailyResults[date]?.[suitKey(suitCount)] ?? null;
+}
+
+/**
+ * How many daily deals have been won. A count, never a run of days (§6). A day
+ * counts once however many difficulties it was won at — the day is the
+ * achievement, the moves and the time are what belong to the difficulty.
+ */
 export function wonDailyCount(stats: Stats): number {
-  return Object.keys(stats.dailyMoves).length;
+  return Object.keys(stats.dailyResults).length;
 }
 
 /** Whole-percent win rate for one difficulty, or null before its first deal (§9). */
