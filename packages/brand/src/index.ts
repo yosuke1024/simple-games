@@ -328,6 +328,46 @@ export const titleAccents = {
     dark: '#dd8f89',
     onDark: '#1e100e',
     softDark: '#3f2320',
+    /**
+     * Spider Solitaire — a deeper, truer green than Solitaire's felt. Both are
+     * card tables, so both belong in the green a card table has always been; the
+     * pair reads as two games of one family without blurring, because this one is
+     * greener and colder (dE 22 apart, where the closest pair already shipped is
+     * dE 11). Green also keeps the accent away from the card red: this title
+     * shows more face-down cards than any other, and their backs are drawn in
+     * `--accent-ring-soft` — a warm accent would make a back and a heart answer
+     * to the same glance.
+     */
+    spiderSolitaire: {
+      light: '#31802f',
+      onLight: '#ffffff',
+      softLight: '#dff5de',
+      dark: '#7fcc7d',
+      onDark: '#0c1a0c',
+      softDark: '#183a17',
+    },
+    /**
+     * FreeCell — deep indigo. This was violet until Reversi shipped and took
+     * that gap for the same reason this title wanted it; measured against the
+     * merged palette the two were dE 10.6 apart in light and dE 2.3 in dark,
+     * which is not two colours. Indigo is the slot left: dE 23 from Nonogram's
+     * plum and from Sky Fighter's dusk blue, which it separates from by being
+     * far darker and more saturated rather than by hue.
+     *
+     * It is the darkest accent in the series, and that suits the one solitaire
+     * where nothing is hidden — every card face up from the deal, the whole
+     * problem visible at once. It also sits directly under Solitaire on the
+     * collection home, so it takes a hue far from felt green rather than
+     * becoming a third card-table colour.
+     */
+    freecell: {
+      light: '#25256a',
+      onLight: '#ffffff',
+      softLight: '#e0e0f2',
+      dark: '#6e6ecf',
+      onDark: '#060614',
+      softDark: '#1e1e42',
+    },
   },
   /**
    * Quick Math — mustard. The board is an equation in ink with one accent
@@ -364,21 +404,28 @@ export const titleAccents = {
     softDark: '#1d3739',
   },
   /**
-   * Number Recall — emerald. Tiles are told apart by their face rather than by
-   * hue (a colour-coded face-down tile would hand a different game to a player
-   * with a colour vision deficiency), so the accent marks the number wanted
-   * next and the ring around a missed tile. It takes the widest gap the wheel
-   * still had, between Solitaire's felt green and 2048's jade — which, with
-   * these three, is the last of the wide gaps: the next title in this
-   * collection differentiates by lightness and saturation, not by hue.
+   * Number Recall — deep emerald. Tiles are told apart by their face rather
+   * than by hue (a colour-coded face-down tile would hand a different game to a
+   * player with a colour vision deficiency), so the accent marks the number
+   * wanted next and the ring around a missed tile.
+   *
+   * It took the gap between Solitaire's felt green and 2048's jade — and then
+   * Spider Solitaire landed in the same gap while this branch was open,
+   * `#31802f` / `#7fcc7d`. Against the first choice (`#2f7a3e` / `#76c37f`)
+   * that measured ΔE 11.0 light and 6.2 dark, and 6.2 would have been the
+   * closest pair in the whole collection (the existing closest is 7.9). So the
+   * green went deeper and more saturated: Spider is now 14.5 / 15.1 away, and
+   * the nearest colour of any title is 2048 at 14.4 light / 12.4 dark. The
+   * wheel is full either way — the next title differentiates by lightness and
+   * saturation, not by hue (docs/BRAND.md「アクセントを選ぶ手順」).
    */
   numberRecall: {
-    light: '#2f7a3e',
+    light: '#1d6b33',
     onLight: '#ffffff',
-    softLight: '#dfeee2',
-    dark: '#76c37f',
-    onDark: '#0f1a11',
-    softDark: '#1f3a25',
+    softLight: '#dcefe2',
+    dark: '#92dfa8',
+    onDark: '#0b1a10',
+    softDark: '#1c3a27',
   },
 } as const;
 

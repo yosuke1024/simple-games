@@ -46,7 +46,7 @@ zh-Hans / zh-Hant のスクリプト解決(zh-TW → zh-Hant 等)は中国語対
 **キーは所有者ごとに置き場所が分かれる**(issue #38、詳細は
 [ARCHITECTURE.md](ARCHITECTURE.md)「i18n」節)。シェルだけ、または複数レイヤーが
 使う 79 キーは `src/i18n/locales/*.ts` に残り、アプリ起動時のエントリに乗る。
-1 本のゲームだけが使う残り 452 キーはそのゲームの `src/games/<id>/i18n/*.ts` に
+1 本のゲームだけが使う残り 528 キーはそのゲームの `src/games/<id>/i18n/*.ts` に
 あり、そのゲームのチャンクに同梱される — 遊ばないゲームの文言はパースされない。
 どちらの置き場所でも 14 言語すべてを型が強制する点は変わらない。
 
@@ -268,7 +268,7 @@ zh-Hans / zh-Hant のスクリプト解決(zh-TW → zh-Hant 等)は中国語対
 |          | UI カタログ                                                                     | ゲーム別ガイド                                           |
 | -------- | ------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | 置き場所 | `apps/simple-games/src/i18n/locales/`(シェル)+ `src/games/<id>/i18n/`(ゲーム別) | 別リポジトリ `tools/game-guides-content.js` の `LOCALES` |
-| 単位     | 短いラベル 531 キー(シェル 79 + ゲーム別 452)                                   | 1 ゲームあたり数千語の長文                               |
+| 単位     | 短いラベル 607 キー(シェル 79 + ゲーム別 528)                                   | 1 ゲームあたり数千語の長文                               |
 | 現在     | 14 言語                                                                         | en / ja / es                                             |
 | 参照元   | `i18n/index.ts`                                                                 | `apps/simple-games/src/ui/landing.ts` の `PAGE_LOCALES`  |
 
@@ -315,16 +315,16 @@ zh-Hans / zh-Hant のスクリプト解決(zh-TW → zh-Hant 等)は中国語対
 
 1. `apps/simple-games/src/i18n/locales/<code>.ts` を 1 ファイル追加する
    (`en.ts` をコピーして翻訳)
-2. 18 本の `apps/simple-games/src/games/<id>/i18n/<code>.ts` も同様に追加する
+2. 全収録タイトルの `apps/simple-games/src/games/<id>/i18n/<code>.ts` も同様に追加する
    (各ゲームの `en.ts` をコピーして翻訳。ゲーム固有カタログの場所は
    [ARCHITECTURE.md](ARCHITECTURE.md)「i18n」節)
 3. `apps/simple-games/src/i18n/index.ts` に登録する
    (`Locale` 型・`catalogs`・`LANGUAGE_NAMES`)
-4. 18 本の `apps/simple-games/src/games/<id>/i18n/index.ts` にも
+4. 全収録タイトルの `apps/simple-games/src/games/<id>/i18n/index.ts` にも
    import を 1 行ずつ追加する(`catalogs` オブジェクトのキー)
 
 **カタログを追加するだけならこれで完結する**。それ以上の作業が必要になったら実装側の退化とみなす。
-手順が 2 種のファイル(シェル 1 + ゲーム 18)にまたがるのは、キーの置き場所を
+手順が 2 種のファイル(シェル 1 + ゲーム 20)にまたがるのは、キーの置き場所を
 「所有者(シェルか、1 本のゲームか)」で分けているため(issue #38)。
 
 ただし**リリースするには別途、高リスクキーの門を通す**(上の「リリース前の門」)。

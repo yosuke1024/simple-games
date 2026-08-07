@@ -173,6 +173,24 @@
   --accent-ring-soft: rgba(110, 122, 52, 0.14);
 }
 
+:root[data-game='spider-solitaire'],
+.accent-spider-solitaire {
+  --accent: #31802f;
+  --accent-ink: #ffffff;
+  --accent-soft: #dff5de;
+  --accent-ring: rgba(49, 128, 47, 0.38);
+  --accent-ring-soft: rgba(49, 128, 47, 0.12);
+}
+
+:root[data-game='freecell'],
+.accent-freecell {
+  --accent: #25256a;
+  --accent-ink: #ffffff;
+  --accent-soft: #e0e0f2;
+  --accent-ring: rgba(37, 37, 106, 0.38);
+  --accent-ring-soft: rgba(37, 37, 106, 0.12);
+}
+
 :root[data-game='quick-math'],
 .accent-quick-math {
   --accent: #776e18;
@@ -193,11 +211,11 @@
 
 :root[data-game='number-recall'],
 .accent-number-recall {
-  --accent: #2f7a3e;
+  --accent: #1d6b33;
   --accent-ink: #ffffff;
-  --accent-soft: #dfeee2;
-  --accent-ring: rgba(47, 122, 62, 0.38);
-  --accent-ring-soft: rgba(47, 122, 62, 0.12);
+  --accent-soft: #dcefe2;
+  --accent-ring: rgba(29, 107, 51, 0.38);
+  --accent-ring-soft: rgba(29, 107, 51, 0.12);
 }
 
 :root[data-theme='dark'] {
@@ -348,6 +366,24 @@
   --accent-ring-soft: rgba(182, 194, 116, 0.14);
 }
 
+:root[data-theme='dark'][data-game='spider-solitaire'],
+[data-theme='dark'] .accent-spider-solitaire {
+  --accent: #7fcc7d;
+  --accent-ink: #0c1a0c;
+  --accent-soft: #183a17;
+  --accent-ring: rgba(127, 204, 125, 0.42);
+  --accent-ring-soft: rgba(127, 204, 125, 0.14);
+}
+
+:root[data-theme='dark'][data-game='freecell'],
+[data-theme='dark'] .accent-freecell {
+  --accent: #6e6ecf;
+  --accent-ink: #060614;
+  --accent-soft: #1e1e42;
+  --accent-ring: rgba(110, 110, 207, 0.42);
+  --accent-ring-soft: rgba(110, 110, 207, 0.14);
+}
+
 :root[data-theme='dark'][data-game='quick-math'],
 [data-theme='dark'] .accent-quick-math {
   --accent: #c4ba6b;
@@ -368,11 +404,11 @@
 
 :root[data-theme='dark'][data-game='number-recall'],
 [data-theme='dark'] .accent-number-recall {
-  --accent: #76c37f;
-  --accent-ink: #0f1a11;
-  --accent-soft: #1f3a25;
-  --accent-ring: rgba(118, 195, 127, 0.42);
-  --accent-ring-soft: rgba(118, 195, 127, 0.14);
+  --accent: #92dfa8;
+  --accent-ink: #0b1a10;
+  --accent-soft: #1c3a27;
+  --accent-ring: rgba(146, 223, 168, 0.42);
+  --accent-ring-soft: rgba(146, 223, 168, 0.14);
 }
 
 * {

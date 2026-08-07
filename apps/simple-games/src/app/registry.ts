@@ -25,6 +25,7 @@ import { BB_STORAGE_KEYS } from '../games/brick-breaker/storage/keys';
 import { BP_STORAGE_KEYS } from '../games/block-puzzle/storage/keys';
 import { BH_STORAGE_KEYS } from '../games/bunny-hop/storage/keys';
 import { C4_STORAGE_KEYS } from '../games/connect-four/storage/keys';
+import { FC_STORAGE_KEYS } from '../games/freecell/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
 import { NG_STORAGE_KEYS } from '../games/nonogram/storage/keys';
@@ -36,6 +37,7 @@ import { SD_STORAGE_KEYS } from '../games/sudoku/storage/keys';
 import { ST_STORAGE_KEYS } from '../games/schulte-table/storage/keys';
 import { SF_STORAGE_KEYS } from '../games/sky-fighter/storage/keys';
 import { SO_STORAGE_KEYS } from '../games/solitaire/storage/keys';
+import { SS_STORAGE_KEYS } from '../games/spider-solitaire/storage/keys';
 import { SP_STORAGE_KEYS } from '../games/sliding-puzzle/storage/keys';
 import { TM_STORAGE_KEYS } from '../games/2048/storage/keys';
 import { WS_STORAGE_KEYS } from '../games/water-sort/storage/keys';
@@ -52,6 +54,8 @@ export type GameId =
   | 'memory-match'
   | 'water-sort'
   | 'solitaire'
+  | 'spider-solitaire'
+  | 'freecell'
   | 'brick-breaker'
   | 'sky-fighter'
   | 'bunny-hop'
@@ -115,6 +119,22 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(SO_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/solitaire/ui/SolitaireRoot').then((m) => ({ default: m.SolitaireRoot })),
+  },
+  {
+    id: 'spider-solitaire',
+    title: 'Spider Solitaire',
+    glyph: '♣',
+    storageKeys: Object.values(SS_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/spider-solitaire/ui/SpiderRoot').then((m) => ({ default: m.SpiderRoot })),
+  },
+  {
+    id: 'freecell',
+    title: 'FreeCell',
+    glyph: '♥',
+    storageKeys: Object.values(FC_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/freecell/ui/FreeCellRoot').then((m) => ({ default: m.FreeCellRoot })),
   },
   {
     id: 'minesweeper',
