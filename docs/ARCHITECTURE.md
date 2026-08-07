@@ -43,7 +43,9 @@ src/
 │   ├── brick-breaker/
 │   ├── sky-fighter/
 │   ├── 2048/
-│   └── block-puzzle/
+│   ├── block-puzzle/
+│   ├── reversi/
+│   └── connect-four/
 ├── monetization/           # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 ├── services/               # 共有: ads(バナーのみ) / network / sound / haptics
 ├── state/                  # 共有: SettingsContext
@@ -65,7 +67,9 @@ src/
 [BRICK_BREAKER_RULES.md](BRICK_BREAKER_RULES.md) /
 [SKY_FIGHTER_RULES.md](SKY_FIGHTER_RULES.md) /
 [GAME_2048_RULES.md](GAME_2048_RULES.md) /
-[BLOCK_PUZZLE_RULES.md](BLOCK_PUZZLE_RULES.md) を唯一のソースとする。
+[BLOCK_PUZZLE_RULES.md](BLOCK_PUZZLE_RULES.md) /
+[REVERSI_RULES.md](REVERSI_RULES.md) /
+[CONNECT_FOUR_RULES.md](CONNECT_FOUR_RULES.md) を唯一のソースとする。
 
 レイヤー規則:
 
@@ -102,14 +106,14 @@ src/
 ローダー」だけで、プラグイン機構ではない。ゲームの追加は keys の import 1 行と
 配列要素 1 つで済む。
 
-| フィールド             | 内容                                                                                                                                                                                                            |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                   | `'sudoku'` / `'solitaire'` / `'minesweeper'` / `'nonogram'` / `'number-match'` / `'water-sort'` / `'sliding-puzzle'` / `'memory-match'` / `'brick-breaker'` / `'sky-fighter'`。`data-game` 属性にもこの値を使う |
-| `title`                | 固有名詞。全言語で同一表記(翻訳しない)                                                                                                                                                                          |
-| `glyph`                | シリーズマーク。そのタイトルのアクセント色のタイルに 1 文字                                                                                                                                                     |
-| `storageKeys`          | そのゲームが保存する全キー。各ゲームの **import ゼロの葉** `storage/keys.ts` から同期 import する                                                                                                               |
-| `loadRoot`             | ゲームのルートコンポーネントを動的 `import()` で返すローダー。Root が受け取る props は `onExit` だけ                                                                                                            |
-| `loadSettingsSection?` | 任意。共有設定画面に差し込むゲーム固有の設定のローダー                                                                                                                                                          |
+| フィールド             | 内容                                                                                                                                                                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                   | `'sudoku'` / `'solitaire'` / `'minesweeper'` / `'nonogram'` / `'number-match'` / `'water-sort'` / `'sliding-puzzle'` / `'memory-match'` / `'brick-breaker'` / `'sky-fighter'` / `'2048'` / `'block-puzzle'` / `'reversi'` / `'connect-four'`。`data-game` 属性にもこの値を使う |
+| `title`                | 固有名詞。全言語で同一表記(翻訳しない)                                                                                                                                                                                                                                         |
+| `glyph`                | シリーズマーク。そのタイトルのアクセント色のタイルに 1 文字                                                                                                                                                                                                                    |
+| `storageKeys`          | そのゲームが保存する全キー。各ゲームの **import ゼロの葉** `storage/keys.ts` から同期 import する                                                                                                                                                                              |
+| `loadRoot`             | ゲームのルートコンポーネントを動的 `import()` で返すローダー。Root が受け取る props は `onExit` だけ                                                                                                                                                                           |
+| `loadSettingsSection?` | 任意。共有設定画面に差し込むゲーム固有の設定のローダー                                                                                                                                                                                                                         |
 
 ### ゲーム単位の lazy チャンク(issue #26)
 
@@ -197,6 +201,8 @@ src/
 | Sky Fighter    | 夕闇の青                 | `#5d5aa8` | `#9d9be0` |
 | 2048           | ジェイド                 | `#2b7d59` | `#79c39c` |
 | Block Puzzle   | オーキッド               | `#8b4f80` | `#c795bd` |
+| Reversi        | モス                     | `#6d7a3a` | `#a9b972` |
+| Connect Four   | くすんだ赤               | `#a8433d` | `#dd8f89` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
@@ -222,15 +228,23 @@ src/
 - `ui/styles.css` に置くのは共有シェルのみ: デザイントークン(下地・アクセント・
   `data-game` の上書き)、コレクションホーム、設定 / About、ダイアログ・トースト・
   チュートリアル・バナースロットなどの共通クロム。
-- **10 タイトルすべてが規約に従っている**: `number-match.css` / `sudoku.css` /
+- **14 タイトルすべてが規約に従っている**: `number-match.css` / `sudoku.css` /
   `minesweeper.css` / `nonogram.css` / `sliding-puzzle.css` / `memory-match.css` /
-  `water-sort.css` / `solitaire.css` / `brick-breaker.css` / `sky-fighter.css`。
+  `water-sort.css` / `solitaire.css` / `brick-breaker.css` / `sky-fighter.css` /
+  `game-2048.css` / `block-puzzle.css` / `reversi.css` / `connect-four.css`。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。
 - ゲームの CSS は色を書かない。共有のカスタムプロパティ(`--accent` など)だけを使い、
   どの色になるかはシェルが root に付けた `data-game` が決める。
   ゲーム側にパレット値が複製されないので、下地を変えるときに触る場所は 1 か所で済む。
+  **例外はゲームの中身そのものが色である場合だけ**で、その色はそのゲームの CSS に
+  書く: Minesweeper の数字、Memory Match の 15 色、Water Sort の 9 色、2048 の
+  タイルランプ、Reversi の盤(フェルトと黒白の石)、Connect Four の対戦相手の
+  ディスク。いずれも「クロムは 1 タイトル 1 色、盤面はそのゲームのもの」という
+  同じ線で、BRAND.md の一行を破っているわけではない。Reversi の石と Connect Four の
+  相手色がテーマで反転しないのは、反転すれば盤面の意味が変わるからである
+  (黒石がダークテーマの明るいインクを着たら、それはもう黒石ではない)。
 
 ## 広告と課金
 
@@ -264,6 +278,8 @@ src/
 | `sf.*`        | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)   |
 | `tm.*`        | 2048(saveGame / stats / flags。デイリーもレベル進行もない)        |
 | `bp.*`        | Block Puzzle(saveGame / stats / flags。同上)                      |
+| `rv.*`        | Reversi(saveGame / stats / flags / prefs。統計は難易度別)         |
+| `c4.*`        | Connect Four(saveGame / stats / flags / prefs。同上)              |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/
@@ -276,6 +292,15 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 デイリーもレベル進行も持たないエンドレスなので、中断スロットは 1 つだけで
 `progress` もない(自己ベストは stats 内 — `GAME_2048_RULES.md` §9 /
 `BLOCK_PUZZLE_RULES.md` §9)。
+
+対人型の 2 本(Reversi / Connect Four)は `progress` を持たず、代わりに
+**どちらが先に打つかの選択**を `rv.prefs` / `c4.prefs` に持つ(Reversi は
+黒か白か、Connect Four は先攻か後攻か。黒が先手なので前者は同じ選択の言い換えで
+ある)。これはプレイ中に切り替えるものではなく**次の対局に適用される設定**なので、
+盤面ではなく prefs に置いた。対局中のセッションは開始時の側を自分で持ち
+(`playerColor` / `first`)、あとから設定を変えても進行中の対局は変わらない
+(`REVERSI_RULES.md` §1 / `CONNECT_FOUR_RULES.md` §1)。**保存レコードにもこの側を
+書く** — 盤面の石数だけでは「同数なら開いた側の番」が誰なのか復元できないため。
 
 **アーケード 2 本(Brick Breaker / Sky Fighter)は `saveGame` を持たない。**
 リアルタイムの盤面を復元しても「開いた瞬間に球が落ちてくる」ものにしかならず、
@@ -313,7 +338,7 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
   乗り、1 本のゲームだけが使うキーはそのゲームの `src/games/<id>/i18n/*.ts` に
   移してゲームのチャンクへ同梱する。ゲームを開かないプレイヤーは、その文言を
   一度もパースしない。
-- 現在 14 言語。シェル 78 キー(エントリに乗る) + ゲーム別 10 カタログ(合計 257
+- 現在 14 言語。シェル 79 キー(エントリに乗る) + ゲーム別 14 カタログ(合計 361
   キー、13〜38 キー/ゲーム、開いたときだけパースされる)。ロケールタグは小文字で
   持つ。en と ja 以外は来歴 `machine`(AI の助けを借りて書き、その言語のネイティブ
   は読んでいない)。高リスクキーはリリース前の門で逆翻訳を作者が読む
@@ -407,7 +432,7 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 これ以上の共通化(`packages/` への抽出)は実際に重複が確認されてから行う。
 ゲーム固有の概念(盤面・ルール・Hint 等)は共通パッケージへ入れない。
 
-現時点で唯一の実測された重複は `games/*/game/rng.ts` で、**10 ゲームすべてが同じ
+現時点で唯一の実測された重複は `games/*/game/rng.ts` で、**14 ゲームすべてが同じ
 seed 付き乱数を持っている**(`games/A/` から `games/B/` を import できない以上、
 このコピーは規約どおりでもある)。抽出を検討する条件(重複が確認された)は
 満たしているが、`game/` の Pure TS 純度を保ったまま `packages/` へ出せるかが論点で、
@@ -426,7 +451,7 @@ seed 付き乱数を持っている**(`games/A/` から `games/B/` を import �
   署名済み AAB(Play 用)と署名済み APK(実機確認用)をアーティファクトとして出す。
   `versionName` / `versionCode` はタグが決める。ストアへのアップロードは手動。
   タグに製品名を付けないのは、リリース対象がこのアプリ 1 つだけだから
-  (10 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
+  (14 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
 - Secrets は `ADMOB_ANDROID_APP_ID` / `ADMOB_ANDROID_BANNER_ID` のみ
   (インタースティシャル系は無い。プラットフォーム名を含むのは AdMob ID が
   OS ごとに別なため — iOS 版では `ADMOB_IOS_*` が並ぶ)。

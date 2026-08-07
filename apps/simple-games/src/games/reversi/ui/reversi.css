@@ -1,0 +1,355 @@
+/* Reversi — all of this game's styling, imported by ReversiRoot. Everything is
+   built from the series tokens in src/ui/styles.css (--surface, --ink, --line,
+   --accent, --radius, --font-display, --tap-size, …) so the game reads as part
+   of the same app and follows the theme without knowing about it.
+
+   Class names are prefixed `rv-` so this file can never collide with the shell
+   or with another game.
+
+   The felt and the discs below are game content, not chrome — the same
+   standing as 2048's tile ramp and Memory Match's symbol colours, and the one
+   place this title is allowed past "one accent per title" (docs/BRAND.md).
+   The discs have to stay disc-black and disc-white in both themes: they are
+   the game (§1), and a "black" disc painted in the dark theme's light ink
+   would flip the position on every phone that follows the OS theme. The felt
+   is fixed for the same reason — the board must sit behind both colours in
+   both themes, so it cannot follow the accent, whose dark variant is light. */
+
+:root {
+  --rv-felt: #648053;
+  --rv-felt-line: #4c6440;
+  --rv-black: #20242b;
+  --rv-black-edge: #434b57;
+  --rv-white: #f4f1e6;
+  --rv-white-edge: #cfc9b8;
+  --rv-dot: rgba(24, 32, 19, 0.34);
+}
+
+:root[data-theme='dark'] {
+  --rv-felt: #42553a;
+  --rv-felt-line: #33422d;
+  --rv-black: #15181d;
+  --rv-black-edge: #3e4650;
+  --rv-white: #e6e2d6;
+  --rv-white-edge: #aaa593;
+  --rv-dot: rgba(238, 243, 231, 0.38);
+}
+
+/* ---------- board ---------- */
+
+/* The board sits in the space between the top bar and the action bar, centred
+   so a tall phone brings it into thumb reach instead of pinning it up top. */
+.rv-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 4px 12px 10px;
+  min-height: 0;
+}
+
+/* Square at every size, and as large as its own column honestly allows (the
+   `100%` first term, not `vw` — docs/ARCHITECTURE.md, the board-width lesson
+   every title relearned). The `min()` against viewport height keeps it square
+   on a short screen rather than pushing the action bar off the bottom. */
+.rv-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  gap: 1px;
+  width: min(100%, 420px, 52vh);
+  aspect-ratio: 1;
+  padding: 3px;
+  background: var(--rv-felt-line);
+  border: 2px solid var(--rv-felt-line);
+  border-radius: var(--radius);
+}
+
+/* A cell is a button, but drawn as felt: the board is one surface and the
+   hairlines are the grid. Cells with a legal move are the only enabled ones,
+   so `disabled` here means "nothing to do", not "greyed out" (§2). */
+.rv-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: var(--rv-felt);
+  color: inherit;
+  font: inherit;
+}
+
+/* The shared chrome dims a disabled button to 40% — right for an action that
+   is unavailable, wrong for board surface. Sixty of these sixty-four cells
+   are disabled at any moment (only legal squares are pressable, §2), so
+   without this the felt turns patchy and, worse, the discs standing on those
+   cells fade out with it. The dot is what marks a legal square; the board
+   itself is never greyed. */
+.rv-cell:disabled {
+  opacity: 1;
+}
+
+.rv-cell:first-child {
+  border-top-left-radius: calc(var(--radius) - 4px);
+}
+
+.rv-cell:nth-child(8) {
+  border-top-right-radius: calc(var(--radius) - 4px);
+}
+
+.rv-cell:nth-child(57) {
+  border-bottom-left-radius: calc(var(--radius) - 4px);
+}
+
+.rv-cell:last-child {
+  border-bottom-right-radius: calc(var(--radius) - 4px);
+}
+
+/* ---------- discs ---------- */
+
+.rv-disc {
+  position: relative;
+  width: 78%;
+  height: 78%;
+  border-radius: 50%;
+}
+
+.rv-disc-black {
+  background: var(--rv-black);
+  box-shadow: inset 0 0 0 2px var(--rv-black-edge);
+}
+
+.rv-disc-white {
+  background: var(--rv-white);
+  box-shadow: inset 0 0 0 2px var(--rv-white-edge);
+}
+
+/* A turned disc arrives by turning: a half-rotation that starts edge-on, so
+   the new colour is what unfolds. The element is new (keyed by the move), so
+   the keyframe plays exactly once per capture (§11). */
+.rv-disc-flip {
+  animation: rv-flip 0.22s ease-out;
+}
+
+@keyframes rv-flip {
+  from {
+    transform: rotateY(90deg);
+  }
+  to {
+    transform: rotateY(0deg);
+  }
+}
+
+/* The placed disc pops in where it was put down. */
+.rv-disc-pop {
+  animation: rv-pop 0.12s ease-out;
+}
+
+@keyframes rv-pop {
+  from {
+    transform: scale(0.4);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Reduced Motion: discs are simply in their new state (§11). Guarded by the
+   board class set from useReducedMotion, so the in-app setting counts too. */
+.rv-board-still .rv-disc-flip,
+.rv-board-still .rv-disc-pop {
+  animation: none;
+}
+
+/* A legal move: a quiet dot — the rule made visible, never advice (§7). */
+.rv-legal-dot {
+  width: 22%;
+  height: 22%;
+  border-radius: 50%;
+  background: var(--rv-dot);
+}
+
+/* The last-placed disc keeps a small mark, so the CPU's reply can be found
+   after looking away (§11). It sits on the disc and takes the *other* disc's
+   colour, which is the only choice that is legible on both — the accent is a
+   single colour and the dark theme's variant is light, so a black disc would
+   wear it and a white one would swallow it. */
+.rv-last-mark {
+  position: absolute;
+  top: 14%;
+  left: 50%;
+  width: 18%;
+  height: 18%;
+  margin-left: -9%;
+  border-radius: 50%;
+}
+
+.rv-disc-black .rv-last-mark {
+  background: var(--rv-white);
+}
+
+.rv-disc-white .rv-last-mark {
+  background: var(--rv-black);
+}
+
+/* ---------- top bar ---------- */
+
+.rv-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.rv-count {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.rv-count-disc {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.rv-count-black {
+  background: var(--rv-black);
+  box-shadow: inset 0 0 0 1.5px var(--rv-black-edge);
+}
+
+.rv-count-white {
+  background: var(--rv-white);
+  box-shadow: inset 0 0 0 1.5px var(--rv-white-edge);
+}
+
+/* ---------- turn line ---------- */
+
+/* Reserved height whether it names a turn, reports a pass, or says nothing:
+   the board must not jump when the text changes (§4). */
+.rv-turn-line {
+  margin: 0;
+  min-height: 1.5em;
+  font-size: 14px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* ---------- action bar ---------- */
+
+/* One action, free and unlimited: Undo (§6). There is deliberately no hint
+   button — a suggested move would be the CPU playing both sides (§7). */
+.action-bar.rv-actions {
+  justify-content: center;
+}
+
+/* ---------- home ---------- */
+
+.rv-choose-label {
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* Which colour the player takes next match — which is also first or second,
+   because black opens (§1). Two equal halves: neither is a default the other
+   departs from, so neither is drawn as one. */
+.rv-side-choice {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.rv-side-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--tap-size);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* The chosen half wears the accent softly: this is a setting the player
+   already made, not the screen's main action (the opponent buttons are). */
+.rv-side-option-on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+/* The disc itself, at label size — the same two colours the board uses. */
+.rv-side-disc {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* The tutorial draws a 4×4 corner of the felt: enough to show one capture
+   without shrinking the discs to dots (§10). */
+.rv-figure {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  width: 172px;
+  padding: 3px;
+  background: var(--rv-felt-line);
+  border: 2px solid var(--rv-felt-line);
+  border-radius: 10px;
+}
+
+.rv-figure-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--rv-felt);
+}
+
+.rv-figure-disc {
+  width: 78%;
+  height: 78%;
+  border-radius: 50%;
+}
+
+.rv-figure-black {
+  background: var(--rv-black);
+  box-shadow: inset 0 0 0 2px var(--rv-black-edge);
+}
+
+.rv-figure-white {
+  background: var(--rv-white);
+  box-shadow: inset 0 0 0 2px var(--rv-white-edge);
+}
+
+/* The disc the step is talking about. */
+.rv-figure-fresh {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.rv-figure-dot {
+  width: 22%;
+  height: 22%;
+  border-radius: 50%;
+  background: var(--rv-dot);
+}

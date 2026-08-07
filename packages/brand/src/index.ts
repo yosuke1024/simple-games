@@ -272,6 +272,40 @@ export const titleAccents = {
     onDark: '#1c1019',
     softDark: '#3a2a38',
   },
+  /**
+   * Reversi — moss. The board is felt and discs (all of it game content), so
+   * the accent lives in the chrome and in the mark on the last disc played.
+   * Yellow-green is a family the series did not have: it reads as a marker
+   * beside Solitaire's blue-leaning felt green rather than as the same
+   * colour, and it stays clear of the reds Connect Four just took.
+   */
+  reversi: {
+    light: '#6d7a3a',
+    onLight: '#ffffff',
+    softLight: '#e8ecd9',
+    dark: '#a9b972',
+    onDark: '#161a0d',
+    softDark: '#2f3620',
+  },
+  /**
+   * Connect Four — muted red. Here the accent *is* the player's disc, so it
+   * has to hold its own against the opponent's fixed teal at arm's length:
+   * red against blue-green is the one high-contrast pair that survives the
+   * common colour-vision deficiencies, and the winning line is ringed as
+   * well as coloured so the ending never rests on hue alone. Red was the
+   * last hue family the series had not used — Sliding Puzzle's clay is
+   * orange and Memory Match's rose is pink, and this sits squarely between
+   * them. It is desaturated well past the warning colour (`warn`), which no
+   * game may be mistaken for.
+   */
+  connectFour: {
+    light: '#a8433d',
+    onLight: '#ffffff',
+    softLight: '#f5e0dd',
+    dark: '#dd8f89',
+    onDark: '#1e100e',
+    softDark: '#3f2320',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

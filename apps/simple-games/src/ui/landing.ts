@@ -35,10 +35,10 @@ const PAGE_LOCALES = ['en', 'ja', 'es'] as const;
 
 /**
  * The titles whose guides are live at `${LANDING_BASE_URL}/games/<id>/<locale>/`
- * in every PAGE_LOCALES language. 2048, Block Puzzle and Snake are shipped but
- * absent on purpose: their guides are not written yet, and until they are, the
- * tutorial simply ends without a "Learn More" — which is honest, where a dead
- * link would not be.
+ * in every PAGE_LOCALES language. 2048, Block Puzzle, Reversi and Connect Four
+ * are shipped but absent on purpose: their guides are not written yet, and
+ * until they are, the tutorial simply ends without a "Learn More" — which is
+ * honest, where a dead link would not be.
  */
 const PUBLISHED_GAME_IDS: readonly string[] = [
   'sudoku',

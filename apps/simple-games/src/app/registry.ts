@@ -23,10 +23,12 @@
 import type { ComponentType } from 'react';
 import { BB_STORAGE_KEYS } from '../games/brick-breaker/storage/keys';
 import { BP_STORAGE_KEYS } from '../games/block-puzzle/storage/keys';
+import { C4_STORAGE_KEYS } from '../games/connect-four/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
 import { NG_STORAGE_KEYS } from '../games/nonogram/storage/keys';
 import { NM_STORAGE_KEYS } from '../games/number-match/storage/keys';
+import { RV_STORAGE_KEYS } from '../games/reversi/storage/keys';
 import { SD_STORAGE_KEYS } from '../games/sudoku/storage/keys';
 import { SF_STORAGE_KEYS } from '../games/sky-fighter/storage/keys';
 import { SO_STORAGE_KEYS } from '../games/solitaire/storage/keys';
@@ -46,7 +48,9 @@ export type GameId =
   | 'brick-breaker'
   | 'sky-fighter'
   | '2048'
-  | 'block-puzzle';
+  | 'block-puzzle'
+  | 'reversi'
+  | 'connect-four';
 
 export interface GameDefinition {
   id: GameId;
@@ -130,6 +134,24 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/block-puzzle/ui/BlockPuzzleRoot').then((m) => ({
         default: m.BlockPuzzleRoot,
+      })),
+  },
+  {
+    id: 'reversi',
+    title: 'Reversi',
+    glyph: '◐',
+    storageKeys: Object.values(RV_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/reversi/ui/ReversiRoot').then((m) => ({ default: m.ReversiRoot })),
+  },
+  {
+    id: 'connect-four',
+    title: 'Connect Four',
+    glyph: '⁘',
+    storageKeys: Object.values(C4_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/connect-four/ui/ConnectFourRoot').then((m) => ({
+        default: m.ConnectFourRoot,
       })),
   },
   {

@@ -146,6 +146,24 @@
   --accent-ring-soft: rgba(139, 79, 128, 0.12);
 }
 
+:root[data-game='reversi'],
+.accent-reversi {
+  --accent: #6d7a3a;
+  --accent-ink: #ffffff;
+  --accent-soft: #e8ecd9;
+  --accent-ring: rgba(109, 122, 58, 0.38);
+  --accent-ring-soft: rgba(109, 122, 58, 0.12);
+}
+
+:root[data-game='connect-four'],
+.accent-connect-four {
+  --accent: #a8433d;
+  --accent-ink: #ffffff;
+  --accent-soft: #f5e0dd;
+  --accent-ring: rgba(168, 67, 61, 0.38);
+  --accent-ring-soft: rgba(168, 67, 61, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -265,6 +283,24 @@
   --accent-soft: #3a2a38;
   --accent-ring: rgba(199, 149, 189, 0.42);
   --accent-ring-soft: rgba(199, 149, 189, 0.14);
+}
+
+:root[data-theme='dark'][data-game='reversi'],
+[data-theme='dark'] .accent-reversi {
+  --accent: #a9b972;
+  --accent-ink: #161a0d;
+  --accent-soft: #2f3620;
+  --accent-ring: rgba(169, 185, 114, 0.42);
+  --accent-ring-soft: rgba(169, 185, 114, 0.14);
+}
+
+:root[data-theme='dark'][data-game='connect-four'],
+[data-theme='dark'] .accent-connect-four {
+  --accent: #dd8f89;
+  --accent-ink: #1e100e;
+  --accent-soft: #3f2320;
+  --accent-ring: rgba(221, 143, 137, 0.42);
+  --accent-ring-soft: rgba(221, 143, 137, 0.14);
 }
 
 * {
