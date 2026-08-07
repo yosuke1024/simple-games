@@ -13,7 +13,6 @@ import {
   canUndo,
   createSession,
   currentMoves,
-  DRAW_QUIET_PLIES,
   matchSeed,
   newSeedToken,
   restoreSession,
@@ -23,6 +22,7 @@ import {
 import {
   CPU,
   CPU_MAN,
+  DRAW_QUIET_PLIES,
   EMPTY,
   PLAYER,
   PLAYER_KING,

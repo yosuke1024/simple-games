@@ -60,6 +60,17 @@ import {
  */
 export const HARD_NODE_LIMIT = 8_000;
 
+/**
+ * What the last reply actually cost, in nodes visited. Exported so the
+ * benchmark can judge the search by its work rather than by a stopwatch:
+ * wall-clock on a shared CI runner measures the runner, and this repository
+ * already decided performance gates watch deterministic work instead
+ * (docs/RELEASE_CHECKLIST.md, the generation-cost tests).
+ *
+ * Written once per reply, so it is only meaningful immediately after one.
+ */
+export const searchCost = { nodes: 0 };
+
 /** Hard's lookahead; normal reads a single move and judges the position. */
 const HARD_MAX_DEPTH = 6;
 
@@ -442,8 +453,11 @@ function search(
   alpha: number,
   beta: number,
 ): number {
+  // Checked before counting, so the budget means exactly what it says: the
+  // counter never reads higher than the limit, and the benchmark can assert
+  // on it without an off-by-one to explain.
+  if (state.nodes >= state.limit) throw OUT_OF_NODES;
   state.nodes += 1;
-  if (state.nodes > state.limit) throw OUT_OF_NODES;
   if (depth === 0) return scoreOf(state, me);
 
   // Busyness order, and no more than that. Sorting the children by what they
@@ -548,6 +562,7 @@ export function chooseCpuMove(input: CpuMoveInput): number | null {
   const rng = createRng(`${seed}:cpu:${moveCount}`);
 
   if (difficulty === 'easy') {
+    searchCost.nodes = 0;
     const near = candidateMoves(board, EASY_NEIGHBOURHOOD);
     if (near.length === 0) return null;
     return shuffled(near, rng)[0]!;
@@ -572,6 +587,7 @@ export function chooseCpuMove(input: CpuMoveInput): number | null {
         best = cell;
       }
     }
+    searchCost.nodes = state.nodes;
     return best;
   }
 
@@ -585,6 +601,7 @@ export function chooseCpuMove(input: CpuMoveInput): number | null {
     if (best === null) break;
     chosen = best;
   }
+  searchCost.nodes = state.nodes;
   return chosen;
 }
 

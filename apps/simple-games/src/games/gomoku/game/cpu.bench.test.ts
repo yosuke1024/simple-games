@@ -1,26 +1,29 @@
 /**
- * Measures what the hard CPU actually costs, so `HARD_NODE_LIMIT` is a number
- * somebody measured rather than guessed (docs/GOMOKU_RULES.md §4).
+ * What the hard CPU costs (docs/GOMOKU_RULES.md §4).
  *
- * The bound is set from the CPUs already in the collection rather than from a
- * stopwatch: measured on the same container, Reversi's hard reply costs
- * ~248ms and Connect Four's ~301ms. Those two ship and fit inside the 450ms
- * pause, so "no slower than they are" is a claim that survives being run on a
- * different machine, where an absolute millisecond threshold would only be
- * measuring the machine.
+ * **This gate watches deterministic work, not the clock.** A wall-clock
+ * threshold in `pnpm test` measures the runner it happened to land on, and a
+ * shared CI machine is exactly where that goes wrong; this repository already
+ * settled the question for the generation-cost tests, which bound the search
+ * effort and say so — 「壁時計は判定していない」
+ * (docs/RELEASE_CHECKLIST.md, docs/SUDOKU_RULES.md §7). This file follows
+ * them: the assertions are on nodes visited, which is the same number on
+ * every machine, and the elapsed time is printed for a reader rather than
+ * judged.
  *
- * Those two numbers are not re-measured here on purpose: a game may not
- * import another game's code (docs/ARCHITECTURE.md), and the boundary matters
- * more than the convenience. They were taken once, by hand, and the threshold
- * below carries a wide margin over the slower of them.
+ * The node budget itself was chosen by measuring against the opponents
+ * already shipped — Reversi ~248ms a reply and Connect Four ~301ms on the
+ * machine this was written on, against ~256ms here. That measurement belongs
+ * in a commit message and a rule document, not in an assertion that fails
+ * when a runner is busy.
  */
 import { describe, expect, it } from 'vitest';
-import { chooseCpuMove, HARD_NODE_LIMIT, candidateMoves } from './cpu';
+import { candidateMoves, chooseCpuMove, HARD_NODE_LIMIT, searchCost } from './cpu';
 import { placeStone } from './engine';
 import { createRng } from './rng';
 import { BLACK, WHITE, emptyBoard, opponentOf, type Board, type Player } from './types';
 
-/** Plays `stones` pseudo-random moves to reach a middlegame worth timing. */
+/** Plays `stones` pseudo-random moves to reach a middlegame worth measuring. */
 function playOut(stones: number, seed: string): { board: Board; player: Player } {
   const rng = createRng(seed);
   let board = placeStone(emptyBoard(), BLACK, 7 * 15 + 7)!;
@@ -34,33 +37,44 @@ function playOut(stones: number, seed: string): { board: Board; player: Player }
   return { board, player };
 }
 
-describe('the hard CPU stays inside its pause', () => {
-  it('answers a middlegame no slower than the opponents already shipped', () => {
-    const positions = Array.from({ length: 10 }, (_, i) => playOut(10 + i * 2, `bench-${i}`));
+const POSITIONS = Array.from({ length: 10 }, (_, i) => playOut(10 + i * 2, `bench-${i}`));
 
-    const started = performance.now();
-    let replies = 0;
-    for (const { board, player } of positions) {
-      const cell = chooseCpuMove({
-        board,
-        player,
-        difficulty: 'hard',
-        seed: 'bench',
-        moveCount: 20,
-      });
-      if (cell !== null) replies += 1;
+const reply = (board: Board, player: Player) =>
+  chooseCpuMove({ board, player, difficulty: 'hard', seed: 'bench', moveCount: 20 });
+
+describe('the hard CPU keeps to its budget', () => {
+  it('never visits more nodes than it is allowed', () => {
+    for (const { board, player } of POSITIONS) {
+      expect(reply(board, player)).not.toBeNull();
+      expect(searchCost.nodes).toBeLessThanOrEqual(HARD_NODE_LIMIT);
     }
-    const perReply = (performance.now() - started) / Math.max(1, replies);
+  });
 
-    // Recorded so a reader can see the shape of the measurement.
+  it('spends exactly the same work twice — the budget is not luck', () => {
+    for (const { board, player } of POSITIONS) {
+      reply(board, player);
+      const first = searchCost.nodes;
+      reply(board, player);
+      expect(searchCost.nodes).toBe(first);
+    }
+  });
+
+  it('actually uses the budget — a search that stopped early proves nothing', () => {
+    const costs = POSITIONS.map(({ board, player }) => {
+      reply(board, player);
+      return searchCost.nodes;
+    });
+    expect(Math.max(...costs)).toBeGreaterThan(HARD_NODE_LIMIT / 2);
+  });
+
+  it('reports what it took in wall-clock, without judging it', () => {
+    const started = performance.now();
+    for (const { board, player } of POSITIONS) reply(board, player);
+    const perReply = (performance.now() - started) / POSITIONS.length;
     console.log(
-      `hard reply: ${perReply.toFixed(1)}ms average over ${replies} positions ` +
-        `(node limit ${HARD_NODE_LIMIT})`,
+      `gomoku hard reply: ${perReply.toFixed(1)}ms average over ${POSITIONS.length} ` +
+        `positions (node limit ${HARD_NODE_LIMIT}) — reported, not asserted`,
     );
-    expect(replies).toBe(positions.length);
-    // Reversi's hard reply measured ~248ms on the machine this was written
-    // on. Staying under 300 leaves room for a slower CI box while still
-    // catching a search that has become several times more expensive.
-    expect(perReply).toBeLessThan(300);
+    expect(POSITIONS).toHaveLength(10);
   });
 });

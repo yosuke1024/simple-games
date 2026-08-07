@@ -12,6 +12,7 @@ import { enumerateTurns, legalMoves } from './engine';
 import {
   CPU,
   CPU_MAN,
+  DRAW_QUIET_PLIES,
   EMPTY,
   PLAYER,
   PLAYER_KING,
@@ -249,5 +250,76 @@ describe('the evaluation', () => {
       '........',
     ]);
     expect(evaluate(withKing, PLAYER)).toBeGreaterThan(evaluate(withMan, PLAYER));
+  });
+});
+
+describe('the draw is part of the game the search reads (§3)', () => {
+  /**
+   * Kings only, and the CPU is a whole piece ahead. Every move on this board
+   * is a quiet king move, so the counter can only go up.
+   */
+  const kingsOnly = boardOf([
+    '........',
+    '..C.....',
+    '........',
+    '....C...',
+    '........',
+    '..P.....',
+    '........',
+    '........',
+  ]);
+
+  it('sees a draw one quiet move away, and prices it as a draw', () => {
+    // At 49, any move the CPU makes here reaches 50 and ends the match level,
+    // throwing away the piece it is up. The search has to be reading that.
+    const atTheEdge = chooseCpuTurn({
+      board: kingsOnly,
+      side: CPU,
+      difficulty: 'hard',
+      seed: 'draw-edge',
+      moveCount: 60,
+      quietPlies: DRAW_QUIET_PLIES - 1,
+    });
+    // It still has to move — a drawn game is not a reason to return nothing.
+    expect(atTheEdge).not.toBeNull();
+    expect(atTheEdge!.steps).toHaveLength(1);
+  });
+
+  it('reads the same position differently depending on the counter', () => {
+    // The only thing separating these two calls is how close the draw is. If
+    // the counter were not reaching the search, they could not disagree, and
+    // this test would be impossible to write.
+    const seen = new Set<string>();
+    for (const quietPlies of [0, DRAW_QUIET_PLIES - 1]) {
+      const turn = chooseCpuTurn({
+        board: kingsOnly,
+        side: CPU,
+        difficulty: 'hard',
+        seed: 'draw-compare',
+        moveCount: 60,
+        quietPlies,
+      })!;
+      seen.add(JSON.stringify(turn.steps));
+    }
+    expect(seen.size).toBe(2);
+  });
+
+  it('defaults to nought when the caller says nothing, so old calls still read', () => {
+    const withDefault = chooseCpuTurn({
+      board: kingsOnly,
+      side: CPU,
+      difficulty: 'hard',
+      seed: 'draw-default',
+      moveCount: 60,
+    })!;
+    const explicit = chooseCpuTurn({
+      board: kingsOnly,
+      side: CPU,
+      difficulty: 'hard',
+      seed: 'draw-default',
+      moveCount: 60,
+      quietPlies: 0,
+    })!;
+    expect(withDefault.steps).toEqual(explicit.steps);
   });
 });

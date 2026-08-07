@@ -45,6 +45,19 @@ export const isDifficulty = (value: unknown): value is Difficulty =>
 
 export type GameStatus = 'playing' | 'won' | 'lost' | 'draw';
 
+/**
+ * Consecutive turns of nothing but a king's quiet move that end the match in
+ * a draw (§3). Neither side is making progress: no capture has changed the
+ * material and no man has moved towards a crowning, so the position can only
+ * repeat. One counter says that, where a table of past positions would have
+ * to be carried in every save.
+ *
+ * It lives here rather than beside the session because the CPU's search needs
+ * it too — a search that did not know the game can end this way would read
+ * past a draw it is one move from causing (§4).
+ */
+export const DRAW_QUIET_PLIES = 50;
+
 export const rowOf = (index: number): number => Math.floor(index / COLS);
 export const colOf = (index: number): number => index % COLS;
 export const cellAt = (row: number, col: number): number => row * COLS + col;

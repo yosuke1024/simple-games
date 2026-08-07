@@ -25,6 +25,7 @@ import { chooseCpuTurn } from './cpu';
 import { applyStep, hasAnyMove, isQuietKingStep, legalMoves, type Move } from './engine';
 import {
   CPU,
+  DRAW_QUIET_PLIES,
   PLAYER,
   initialBoard,
   opponentOf,
@@ -37,15 +38,6 @@ import {
 
 /** Practically unlimited undo; a match is rarely a hundred turns (§5). */
 export const UNDO_HISTORY_LIMIT = 200;
-
-/**
- * Consecutive turns of nothing but a king's quiet move that end the match in
- * a draw (§3). Neither side is making progress: no capture has changed the
- * material and no man has moved towards a crowning, so the position can only
- * repeat. One counter says that, where a table of past positions would have
- * to be carried in every save.
- */
-export const DRAW_QUIET_PLIES = 50;
 
 /** One decision point: the position the player began a turn from. */
 export interface HistoryEntry {
@@ -234,6 +226,7 @@ export function planCpuTurn(session: CheckersSession): readonly Move[] | null {
     seed: session.seed,
     moveCount: session.moveCount,
     continueFrom: session.pendingJumpFrom,
+    quietPlies: session.quietPlies,
   });
   return turn === null ? null : turn.steps;
 }
