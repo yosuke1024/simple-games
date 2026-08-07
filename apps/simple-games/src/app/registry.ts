@@ -13,14 +13,17 @@
  * chunk. All chunks ship inside the app: opening a game offline is a load
  * from disk, never from the network (docs/OFFLINE_POLICY.md).
  *
- * The order here is the order on the collection home. Games are listed by how
- * likely someone is to be looking for them by name, not by when they were
- * built, so the list stays useful as it grows. It does not have to carry the
- * whole burden of that: the home puts the games somebody actually plays in a
- * shortcut row above the list (app/recentGames.ts), so this order is a stable
- * place to find a title, not a ranking that has to be kept current.
+ * The home shows the list grouped by category (GAME_CATEGORIES below): at
+ * twenty games one long grid made every search a scan of the whole screen, so
+ * the grid is cut into sections a reader can skip whole. Each game names its
+ * category here; the order of this array is the order within a section, most
+ * searched-for first. Neither has to carry the burden of "most played": the
+ * home puts the games somebody actually opens in a shortcut row above the
+ * sections (app/recentGames.ts), so a category is a stable place to find a
+ * title, not a ranking that has to be kept current.
  */
 import type { ComponentType } from 'react';
+import type { Messages } from '../i18n/locales/en';
 import { BB_STORAGE_KEYS } from '../games/brick-breaker/storage/keys';
 import { BP_STORAGE_KEYS } from '../games/block-puzzle/storage/keys';
 import { BH_STORAGE_KEYS } from '../games/bunny-hop/storage/keys';
@@ -68,6 +71,39 @@ export type GameId =
   | 'connect-four'
   | 'gomoku';
 
+/**
+ * The genre shelves the collection home is divided into. An id is styling- and
+ * storage-free — it exists only to group the grid — so adding one costs a
+ * heading string in the shell catalog (14 locales) and nothing anywhere else.
+ */
+export type GameCategoryId = 'logic' | 'cards' | 'puzzle' | 'board' | 'arcade' | 'drills';
+
+export interface GameCategory {
+  id: GameCategoryId;
+  /**
+   * The section heading on the collection home. A key into the shell catalog
+   * (typed, so a renamed key fails the build), not a literal: category names
+   * are common nouns, and unlike the game titles they do translate.
+   */
+  headingKey: keyof Messages;
+}
+
+/**
+ * The sections of the collection home, in display order — the categories with
+ * the most searched-for titles first, matching how GAMES itself is ordered.
+ * Every game must name one of these ids as its `category`; a game whose
+ * category is missing here would silently vanish from the home, which is why
+ * CollectionHomeScreen.test.tsx checks the sections cover GAMES exactly.
+ */
+export const GAME_CATEGORIES: readonly GameCategory[] = [
+  { id: 'logic', headingKey: 'categoryLogic' },
+  { id: 'cards', headingKey: 'categoryCards' },
+  { id: 'puzzle', headingKey: 'categoryPuzzle' },
+  { id: 'board', headingKey: 'categoryBoard' },
+  { id: 'arcade', headingKey: 'categoryArcade' },
+  { id: 'drills', headingKey: 'categoryDrills' },
+];
+
 export interface GameDefinition {
   id: GameId;
   /**
@@ -76,6 +112,8 @@ export interface GameDefinition {
    * fourteen locales; a translated sentence could not hold that shape.
    */
   title: string;
+  /** Which home section the game is listed under (GAME_CATEGORIES). */
+  category: GameCategoryId;
   /**
    * The series mark: one glyph on an accent tile identifies the game. The
    * accent is the title's own (`.accent-<id>` in ui/styles.css), so on the
@@ -107,6 +145,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'sudoku',
     title: 'Sudoku',
+    category: 'logic',
     glyph: '⌗',
     storageKeys: Object.values(SD_STORAGE_KEYS),
     loadRoot: () =>
@@ -119,6 +158,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'solitaire',
     title: 'Solitaire',
+    category: 'cards',
     glyph: '♠',
     storageKeys: Object.values(SO_STORAGE_KEYS),
     loadRoot: () =>
@@ -127,6 +167,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'spider-solitaire',
     title: 'Spider Solitaire',
+    category: 'cards',
     glyph: '♣',
     storageKeys: Object.values(SS_STORAGE_KEYS),
     loadRoot: () =>
@@ -135,6 +176,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'freecell',
     title: 'FreeCell',
+    category: 'cards',
     glyph: '♥',
     storageKeys: Object.values(FC_STORAGE_KEYS),
     loadRoot: () =>
@@ -143,6 +185,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'minesweeper',
     title: 'Minesweeper',
+    category: 'logic',
     glyph: '◆',
     storageKeys: Object.values(MS_STORAGE_KEYS),
     loadRoot: () =>
@@ -153,6 +196,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: '2048',
     title: '2048',
+    category: 'puzzle',
     glyph: '⊞',
     storageKeys: Object.values(TM_STORAGE_KEYS),
     loadRoot: () =>
@@ -161,6 +205,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'block-puzzle',
     title: 'Block Puzzle',
+    category: 'puzzle',
     glyph: '▣',
     storageKeys: Object.values(BP_STORAGE_KEYS),
     loadRoot: () =>
@@ -183,6 +228,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'reversi',
     title: 'Reversi',
+    category: 'board',
     glyph: '◐',
     storageKeys: Object.values(RV_STORAGE_KEYS),
     loadRoot: () =>
@@ -191,6 +237,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'connect-four',
     title: 'Connect Four',
+    category: 'board',
     glyph: '⁘',
     storageKeys: Object.values(C4_STORAGE_KEYS),
     loadRoot: () =>
@@ -211,6 +258,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'brick-breaker',
     title: 'Brick Breaker',
+    category: 'arcade',
     glyph: '≡',
     storageKeys: Object.values(BB_STORAGE_KEYS),
     loadRoot: () =>
@@ -221,6 +269,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'nonogram',
     title: 'Nonogram',
+    category: 'logic',
     glyph: '▦',
     storageKeys: Object.values(NG_STORAGE_KEYS),
     loadRoot: () =>
@@ -229,6 +278,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'number-match',
     title: 'Number Match',
+    category: 'puzzle',
     glyph: '10',
     storageKeys: Object.values(NM_STORAGE_KEYS),
     loadRoot: () =>
@@ -236,11 +286,12 @@ export const GAMES: readonly GameDefinition[] = [
         default: m.NumberMatchRoot,
       })),
   },
-  // The three drills sit together, after Number Match: they are the shortest
-  // sittings in the collection and the only titles measured in seconds.
+  // The three drills lead the drills section: they are the shortest sittings
+  // in the collection and the only titles measured in seconds.
   {
     id: 'quick-math',
     title: 'Quick Math',
+    category: 'drills',
     glyph: '÷',
     storageKeys: Object.values(QM_STORAGE_KEYS),
     loadRoot: () =>
@@ -249,6 +300,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'schulte-table',
     title: 'Schulte Table',
+    category: 'drills',
     glyph: '⌖',
     storageKeys: Object.values(ST_STORAGE_KEYS),
     loadRoot: () =>
@@ -259,6 +311,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'number-recall',
     title: 'Number Recall',
+    category: 'drills',
     glyph: '?',
     storageKeys: Object.values(NR_STORAGE_KEYS),
     loadRoot: () =>
@@ -269,6 +322,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'water-sort',
     title: 'Water Sort',
+    category: 'puzzle',
     glyph: '≋',
     storageKeys: Object.values(WS_STORAGE_KEYS),
     loadRoot: () =>
@@ -277,6 +331,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'sliding-puzzle',
     title: 'Sliding Puzzle',
+    category: 'puzzle',
     glyph: '⇄',
     storageKeys: Object.values(SP_STORAGE_KEYS),
     loadRoot: () =>
@@ -287,6 +342,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'memory-match',
     title: 'Memory Match',
+    category: 'drills',
     glyph: '⧉',
     storageKeys: Object.values(MM_STORAGE_KEYS),
     loadRoot: () =>
@@ -297,6 +353,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'sky-fighter',
     title: 'Sky Fighter',
+    category: 'arcade',
     glyph: '▲',
     storageKeys: Object.values(SF_STORAGE_KEYS),
     loadRoot: () =>
@@ -307,6 +364,7 @@ export const GAMES: readonly GameDefinition[] = [
   {
     id: 'bunny-hop',
     title: 'Bunny Hop',
+    category: 'arcade',
     glyph: '⌃',
     storageKeys: Object.values(BH_STORAGE_KEYS),
     loadRoot: () =>

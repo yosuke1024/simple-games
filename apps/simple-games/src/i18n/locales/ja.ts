@@ -67,6 +67,12 @@ export const ja: Messages = {
   // Collection shell
   gamesHeading: 'ゲーム',
   recentHeading: '最近遊んだ',
+  categoryLogic: 'ロジック',
+  categoryCards: 'カード',
+  categoryPuzzle: 'パズル',
+  categoryBoard: 'ボードゲーム',
+  categoryArcade: 'アーケード',
+  categoryDrills: 'ドリル',
   backToGames: 'ゲーム一覧へ',
   gameLoading: '読み込み中…',
   gameLoadFailed: 'ゲームを読み込めませんでした。',

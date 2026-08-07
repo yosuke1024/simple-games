@@ -22,7 +22,8 @@ import {
   recordGameOpened,
   resetRecentGamesForTesting,
 } from '../../app/recentGames';
-import { GAMES } from '../../app/registry';
+import { GAMES, GAME_CATEGORIES } from '../../app/registry';
+import { en } from '../../i18n/locales/en';
 import { SettingsProvider } from '../../state/SettingsContext';
 import { createMemoryKV } from '../../storage/kv';
 import { settingsSchema } from '../../storage/schemas';
@@ -58,15 +59,6 @@ describe('collection tagline', () => {
   });
 });
 
-describe('the game list', () => {
-  it('shows every game on both builds', () => {
-    renderHome();
-    for (const game of GAMES) {
-      expect(screen.getByRole('button', { name: game.title })).toBeInTheDocument();
-    }
-  });
-});
-
 /**
  * Every card reads as its glyph followed by its title, which is exactly what
  * a card is: the series mark plus the name.
@@ -76,6 +68,39 @@ const cardsIn = (region: HTMLElement) =>
     .getAllByRole('button')
     .map((button) => button.textContent);
 const cardFor = (game: (typeof GAMES)[number]) => `${game.glyph}${game.title}`;
+
+/**
+ * The list as the categories lay it out: each section's heading, then that
+ * section's games in registry order. Deriving it from the registry keeps the
+ * expectation honest for any game count — what it pins is the shape.
+ */
+const sectionedList = GAME_CATEGORIES.flatMap((category) => [
+  en[category.headingKey],
+  ...GAMES.filter((game) => game.category === category.id).map(cardFor),
+]);
+
+describe('the game list', () => {
+  it('shows every game exactly once on both builds', () => {
+    renderHome();
+    for (const game of GAMES) {
+      // getBy* would also throw on duplicates, but spell the intent out: a
+      // game must not appear under two categories.
+      expect(screen.getAllByRole('button', { name: game.title })).toHaveLength(1);
+    }
+  });
+
+  it('groups the grid by category, keeping registry order within each section', () => {
+    renderHome();
+    const list = screen.getByRole('navigation', { name: 'Games' });
+    // Headings and cards in document order. A game whose category is missing
+    // from GAME_CATEGORIES would be absent here; one listed under a duplicate
+    // category id would appear twice — either way this comparison fails.
+    const rendered = Array.from(list.querySelectorAll('h2, button')).map(
+      (element) => element.textContent,
+    );
+    expect(rendered).toEqual(sectionedList);
+  });
+});
 
 /**
  * The shortcut row is what lets the list below stay in a fixed order as the
@@ -99,12 +124,16 @@ describe('recently played', () => {
     expect(cardsIn(shortcuts)).toEqual(['≋Water Sort', '⌗Sudoku']);
   });
 
-  it('leaves the full list complete and in registry order', async () => {
+  it('leaves the full list complete and in section order', async () => {
     await initRecentGames(createMemoryKV());
     recordGameOpened('sudoku');
     renderHome();
 
     const all = screen.getByRole('navigation', { name: 'Games' });
-    expect(cardsIn(all)).toEqual(GAMES.map(cardFor));
+    expect(cardsIn(all)).toEqual(
+      GAME_CATEGORIES.flatMap((category) =>
+        GAMES.filter((game) => game.category === category.id).map(cardFor),
+      ),
+    );
   });
 });

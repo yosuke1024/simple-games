@@ -55,6 +55,10 @@
   /* Two digits and one digit must not shift the board below. */
   min-width: 1.6em;
   text-align: center;
+  /* Nor must the digits' line box: at `normal` it is taller than the
+     prompt's min-height, so the board would drop a few pixels the moment
+     the memorise line is swapped for this one. */
+  line-height: 1;
 }
 
 /* Square at every size, so a 5x5 tile stays a comfortable target on a small
@@ -63,6 +67,11 @@
 .recall-board {
   display: grid;
   gap: 5px;
+  /* The game sets only the column count, so rows are implicit; pin them to
+     equal shares. Left `auto`, a row's height would track its tallest line
+     box — a face-up number is taller than a face-down blank — and every cell
+     on the board would change size at the moment a tile flips. */
+  grid-auto-rows: 1fr;
   width: min(100%, 420px, 52vh);
   aspect-ratio: 1;
   padding: 5px;
@@ -211,6 +220,10 @@
 .recall-figure {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  /* Equal rows for the same reason as .recall-board: the figure mixes
+     face-up, face-down and empty cells, and its rows must not shift
+     between tutorial steps. */
+  grid-auto-rows: 1fr;
   gap: 5px;
   width: 160px;
   aspect-ratio: 1;

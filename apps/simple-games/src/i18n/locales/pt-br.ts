@@ -68,6 +68,12 @@ export const ptBR: Messages = {
   // Collection shell
   gamesHeading: 'Jogos',
   recentHeading: 'Jogados recentemente',
+  categoryLogic: 'Lógica',
+  categoryCards: 'Cartas',
+  categoryPuzzle: 'Quebra-cabeça',
+  categoryBoard: 'Jogos de tabuleiro',
+  categoryArcade: 'Arcade',
+  categoryDrills: 'Exercícios',
   backToGames: 'Todos os jogos',
   gameLoading: 'Carregando…',
   gameLoadFailed: 'Não foi possível carregar o jogo.',

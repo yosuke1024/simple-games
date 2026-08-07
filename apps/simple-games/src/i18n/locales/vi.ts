@@ -68,6 +68,12 @@ export const vi: Messages = {
   // Collection shell
   gamesHeading: 'Trò chơi',
   recentHeading: 'Chơi gần đây',
+  categoryLogic: 'Logic',
+  categoryCards: 'Bài',
+  categoryPuzzle: 'Giải đố',
+  categoryBoard: 'Cờ',
+  categoryArcade: 'Arcade',
+  categoryDrills: 'Luyện tập',
   backToGames: 'Tất cả trò chơi',
   gameLoading: 'Đang tải…',
   gameLoadFailed: 'Không thể tải trò chơi.',

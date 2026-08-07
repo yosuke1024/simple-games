@@ -67,6 +67,12 @@ export const ko: Messages = {
   // Collection shell
   gamesHeading: '게임',
   recentHeading: '최근 플레이',
+  categoryLogic: '로직',
+  categoryCards: '카드',
+  categoryPuzzle: '퍼즐',
+  categoryBoard: '보드게임',
+  categoryArcade: '아케이드',
+  categoryDrills: '연습',
   backToGames: '전체 게임',
   gameLoading: '불러오는 중…',
   gameLoadFailed: '게임을 불러오지 못했습니다.',

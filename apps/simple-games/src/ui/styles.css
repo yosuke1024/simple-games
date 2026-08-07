@@ -872,11 +872,11 @@ button:disabled {
 
 /* ---------- collection home ---------- */
 
-/* Two sections, both centred on the same column: the shortcut rows, then the
-   full grid. See CollectionHomeScreen.tsx for why the home is shaped this way
-   — the short version is that it has to stay usable at sixteen games. */
+/* Two blocks, both centred on the same column: the shortcut rows, then the
+   category sections. See CollectionHomeScreen.tsx for why the home is shaped
+   this way — the short version is that it has to stay usable at twenty games. */
 .game-recent,
-.game-grid {
+.game-sections {
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
@@ -900,19 +900,20 @@ button:disabled {
   margin-bottom: 20px;
 }
 
+/* One stack of category sections — heading, then that category's grid. The
+   stack (not the grids) takes the leftover height, so the brand footer stays
+   at the bottom on a tall screen without any section stretching to fill it. */
+.game-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+}
+
 .game-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  /* Take the leftover height so the brand footer stays at the bottom on a
-     tall screen, without stretching the cells to fill it. */
-  flex: 1;
-  align-content: start;
-}
-
-/* The heading sits in the grid, so it has to span it. */
-.game-grid .home-section-label {
-  grid-column: 1 / -1;
 }
 
 .game-row,

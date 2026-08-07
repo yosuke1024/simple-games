@@ -68,6 +68,12 @@ export const de: Messages = {
   // Collection shell
   gamesHeading: 'Spiele',
   recentHeading: 'Zuletzt gespielt',
+  categoryLogic: 'Logik',
+  categoryCards: 'Karten',
+  categoryPuzzle: 'Puzzle',
+  categoryBoard: 'Brettspiele',
+  categoryArcade: 'Arcade',
+  categoryDrills: 'Übungen',
   backToGames: 'Alle Spiele',
   gameLoading: 'Wird geladen…',
   gameLoadFailed: 'Das Spiel konnte nicht geladen werden.',

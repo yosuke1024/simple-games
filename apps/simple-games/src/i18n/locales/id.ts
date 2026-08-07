@@ -68,6 +68,12 @@ export const id: Messages = {
   // Collection shell
   gamesHeading: 'Game',
   recentHeading: 'Baru dimainkan',
+  categoryLogic: 'Logika',
+  categoryCards: 'Kartu',
+  categoryPuzzle: 'Puzzle',
+  categoryBoard: 'Permainan papan',
+  categoryArcade: 'Arkade',
+  categoryDrills: 'Latihan',
   backToGames: 'Semua game',
   gameLoading: 'Memuat…',
   gameLoadFailed: 'Game tidak dapat dimuat.',

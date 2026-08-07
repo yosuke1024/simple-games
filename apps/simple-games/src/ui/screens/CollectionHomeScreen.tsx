@@ -3,20 +3,25 @@
  * tap opens a game; the gear opens the shared settings. No badges, no events,
  * no urgency — the quiet front door the brand promises.
  *
- * The layout answers one question: how does this stay usable at sixteen games?
+ * The layout answers one question: how does this stay usable at twenty games?
  * A one-per-row list with a description under each title was right at one game
- * and would be two and a half screens at sixteen, with the last title always a
- * scroll away. So:
+ * and would be several screens at twenty, with the last title always a scroll
+ * away. So:
  *
- * - The full list is a two-column grid of title cards. Titles are proper nouns,
- *   identical in every language (registry.ts), so they fit a grid cell in all
- *   fourteen locales in a way a sentence never could.
+ * - The full list is a two-column grid of title cards, cut into category
+ *   sections (registry.ts GAME_CATEGORIES). One unbroken grid was fine at
+ *   sixteen games; at twenty, finding a title meant reading it. A category
+ *   heading lets a reader skip whole shelves — someone after Solitaire never
+ *   scans the drills — and gives a new game an obvious place to appear.
+ *   Titles are proper nouns, identical in every language (registry.ts), so
+ *   they fit a grid cell in all fourteen locales in a way a sentence never
+ *   could; the category names are ordinary nouns and come from the catalog.
  * - Each tile wears its own title's accent (packages/brand titleAccents) rather
  *   than one shared colour, so a game can be found by colour and position
  *   instead of by reading every label.
- * - Above it, the games opened most recently (app/recentGames.ts) — so the
+ * - Above it all, the games opened most recently (app/recentGames.ts) — so the
  *   games somebody actually plays stay at zero scroll however long the grid
- *   grows, and the order of the grid itself never has to move to keep up.
+ *   grows, and no category has to double as "favourites" to keep up.
  *
  * What the shortcut row is not: it carries no timestamp, no progress, no
  * "continue where you left off", and it is absent entirely on a fresh install
@@ -26,7 +31,7 @@
 import { Capacitor } from '@capacitor/core';
 import { SERIES_BY_LINE, SERIES_NAME } from '@simple-games/brand';
 import { getRecentGames } from '../../app/recentGames';
-import { GAMES, type GameId, type GameDefinition } from '../../app/registry';
+import { GAMES, GAME_CATEGORIES, type GameId, type GameDefinition } from '../../app/registry';
 import { useSettings } from '../../state/SettingsContext';
 import { IconChevronRight, IconGear } from '../components/icons';
 import { WebAdSlot } from '../components/WebAdSlot';
@@ -140,21 +145,34 @@ export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionH
         </nav>
       ) : null}
 
-      <nav className="game-grid" aria-labelledby="home-games-heading">
-        <h2 className="home-section-label" id="home-games-heading">
-          {t('gamesHeading')}
-        </h2>
-        {GAMES.map((game) => (
-          <button
-            key={game.id}
-            type="button"
-            className="game-cell"
-            onClick={() => onOpenGame(game.id)}
-          >
-            <GameTile game={game} />
-            <span className="game-cell-title">{game.title}</span>
-          </button>
-        ))}
+      {/* One landmark for the whole list, headed sections inside: six category
+          navs would drown the landmark list, while the headings still let a
+          reader (or a screen-reader's heading jump) skip a shelf at a time.
+          Sections come from GAME_CATEGORIES; a game is listed under the one
+          category it names in the registry, in registry order. */}
+      <nav className="game-sections" aria-label={t('gamesHeading')}>
+        {GAME_CATEGORIES.map((category) => {
+          const games = GAMES.filter((game) => game.category === category.id);
+          if (games.length === 0) return null;
+          return (
+            <div key={category.id} className="game-category">
+              <h2 className="home-section-label">{t(category.headingKey)}</h2>
+              <div className="game-grid">
+                {games.map((game) => (
+                  <button
+                    key={game.id}
+                    type="button"
+                    className="game-cell"
+                    onClick={() => onOpenGame(game.id)}
+                  >
+                    <GameTile game={game} />
+                    <span className="game-cell-title">{game.title}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </nav>
 
       {/* Web build only — the home display unit (docs/ADS_POLICY.md「Web 版」).
