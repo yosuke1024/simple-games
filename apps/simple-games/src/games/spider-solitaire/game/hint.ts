@@ -16,8 +16,19 @@
  *    moves are legal, reversible, and endless — a hint that offered them could
  *    walk a player in a circle all afternoon.
  *  - Breaking a same-suit run that is already tidy.
+ *
+ * The first of those has one exception, and it is the reason the tiers go to
+ * four: the move that fills the last empty column while a fresh row waits on
+ * it. That move looks like a sideways slide by every local measure, but it is
+ * the opposite of an endless one — it is what lets the stock deal again.
  */
-import { canDeal, canPlaceOnColumn, columnTop, movableRunStart } from './engine';
+import {
+  canDeal,
+  canPlaceOnColumn,
+  columnTop,
+  dealBlockedByEmptyColumn,
+  movableRunStart,
+} from './engine';
 import { COLUMNS, rankOf, suitOf, type SpiderBoard } from './types';
 
 export type HintMove =
@@ -53,6 +64,16 @@ function joinsSuit(board: SpiderBoard, head: number, to: number): boolean {
 export function findHint(board: SpiderBoard): HintMove | null {
   const candidates: Candidate[] = [];
 
+  // The stock will not deal while a column stands empty (§3). When exactly one
+  // is empty and the deal is waiting on nothing else, the move that fills it is
+  // not a sideways shuffle at all: it uncovers nothing and grows nothing, but
+  // it changes what the board can do next, and it is often the only way
+  // forward. Without this the hint says "no move" on a board that is one move
+  // from a fresh row — and the deal fallback below cannot save it, because the
+  // deal is exactly what is blocked.
+  const emptyColumns = board.tableau.filter((pile) => pile.up.length === 0).length;
+  const dealWaitsOnOneColumn = emptyColumns === 1 && dealBlockedByEmptyColumn(board);
+
   for (let from = 0; from < COLUMNS; from++) {
     const pile = board.tableau[from]!;
     if (pile.up.length === 0) continue;
@@ -75,15 +96,23 @@ export function findHint(board: SpiderBoard): HintMove | null {
         // Not into another empty column, though — that just moves the hole.
         const emptiesSource = index === 0 && pile.down.length === 0;
 
+        // Filling the last empty column only helps if the column stays
+        // filled: a move that empties its own source has moved the hole
+        // rather than closed it, and the deal is still blocked. Splitting a
+        // tidy run to do it stays out of bounds too (§8) — unblocking the
+        // stock is worth a move, not worth undoing tidy work.
+        const unblocksDeal = dealWaitsOnOneColumn && intoEmpty && !emptiesSource && !splitsRun;
+
         let tier: number;
         if (opensUp && sameSuit) tier = 0;
         else if (opensUp) tier = 1;
         else if (sameSuit && !splitsRun) tier = 2;
         else if (emptiesSource && !intoEmpty) tier = 3;
+        else if (unblocksDeal) tier = 4;
         // Everything else is a sideways shuffle: legal, but it uncovers
-        // nothing, grows nothing and clears nothing, so the hint stays quiet
-        // about it. Offering those could walk a player in a circle all
-        // afternoon — every one of them is reversible.
+        // nothing, grows nothing, clears nothing and unblocks nothing, so the
+        // hint stays quiet about it. Offering those could walk a player in a
+        // circle all afternoon — every one of them is reversible.
         else continue;
 
         candidates.push({ from, index, to, tier, length: run.length });

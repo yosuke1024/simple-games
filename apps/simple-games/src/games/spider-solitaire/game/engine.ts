@@ -138,6 +138,15 @@ export function canDeal(board: SpiderBoard): boolean {
   return board.tableau.every((pile) => pile.up.length > 0 || pile.down.length > 0);
 }
 
+/**
+ * True when a fresh row is waiting and the only thing in its way is an empty
+ * column (§3) — the deal gate, stated as a question the hint can ask.
+ */
+export function dealBlockedByEmptyColumn(board: SpiderBoard): boolean {
+  if (canDeal(board)) return false;
+  return board.stock.length > 0 && isValidStockSize(board.stock.length);
+}
+
 /** Deals one card face up to every column (§3). */
 export function dealRow(board: SpiderBoard): SpiderBoard | null {
   if (!canDeal(board)) return null;
