@@ -235,13 +235,17 @@ button.sp-card-back {
 /* ---------- stacking ---------- */
 
 /* Margin percentages resolve against the column width, and a card is 140% of
-   its width tall (aspect 5/7). -100% leaves a 40%-of-width strip, which is
-   what the row index needs at ten columns; -118% leaves the face-down sliver.
-   A Spider column can hold twenty cards after five deals, so every percent
-   here is paid for twenty times over — that is why the strip is exactly as
-   tall as the index and no taller. */
+   its width tall (aspect 5/7). -94% leaves a 46%-of-width strip; -118% leaves
+   the face-down sliver.
+
+   The strip has to clear the index's DESCENDERS, not just its line box. At
+   -100% the strip came to 11.1px on a 320px screen against an 11px rank, and
+   a covered queen lost its tail and read as an O — caught in the browser, not
+   in a test. A Spider column can hold twenty cards after five deals, so every
+   percent here is paid for twenty times over; -94% is the least that clears a
+   Q. */
 .sp-overlap {
-  margin-top: -100%;
+  margin-top: -94%;
 }
 
 .sp-overlap-down {
