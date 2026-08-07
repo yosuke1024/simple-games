@@ -11,7 +11,7 @@
  * pin that split: the tile keeps the properties the games rely on, and the two
  * classes stay separate.
  */
-import { globSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -67,8 +67,15 @@ describe('the CSS-per-game list in ARCHITECTURE.md', () => {
   const listed = new Set(
     [...claim.slice(0, 600).matchAll(/`([a-z0-9-]+\.css)`/g)].map((m) => m[1]!),
   );
+  // readdirSync rather than fs.globSync: the latter needs Node 22, and this
+  // repository says it supports Node 20 (package.json engines).
   const onDisk = new Set(
-    globSync('src/games/*/ui/*.css').map((path) => path.slice(path.lastIndexOf('/') + 1)),
+    readdirSync(resolve('src/games'), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .flatMap((game) => {
+        const ui = resolve('src/games', game.name, 'ui');
+        return readdirSync(ui).filter((file) => file.endsWith('.css'));
+      }),
   );
 
   it('names a stylesheet for every game that has one', () => {
