@@ -146,13 +146,31 @@
   --accent-ring-soft: rgba(139, 79, 128, 0.12);
 }
 
+:root[data-game='reversi'],
+.accent-reversi {
+  --accent: #7f4a9c;
+  --accent-ink: #ffffff;
+  --accent-soft: #ece2f4;
+  --accent-ring: rgba(127, 74, 156, 0.38);
+  --accent-ring-soft: rgba(127, 74, 156, 0.12);
+}
+
+:root[data-game='connect-four'],
+.accent-connect-four {
+  --accent: #a8433d;
+  --accent-ink: #ffffff;
+  --accent-soft: #f5e0dd;
+  --accent-ring: rgba(168, 67, 61, 0.38);
+  --accent-ring-soft: rgba(168, 67, 61, 0.12);
+}
+
 :root[data-game='bunny-hop'],
 .accent-bunny-hop {
   --accent: #6e7a34;
   --accent-ink: #ffffff;
   --accent-soft: #e8ecd6;
   --accent-ring: rgba(110, 122, 52, 0.38);
-  --accent-ring-soft: rgba(110, 122, 52, 0.12);
+  --accent-ring-soft: rgba(110, 122, 52, 0.14);
 }
 
 :root[data-game='spider-solitaire'],
@@ -166,11 +184,11 @@
 
 :root[data-game='freecell'],
 .accent-freecell {
-  --accent: #853795;
+  --accent: #25256a;
   --accent-ink: #ffffff;
-  --accent-soft: #f2e0f5;
-  --accent-ring: rgba(133, 55, 149, 0.38);
-  --accent-ring-soft: rgba(133, 55, 149, 0.12);
+  --accent-soft: #e0e0f2;
+  --accent-ring: rgba(37, 37, 106, 0.38);
+  --accent-ring-soft: rgba(37, 37, 106, 0.12);
 }
 
 :root[data-theme='dark'] {
@@ -294,6 +312,24 @@
   --accent-ring-soft: rgba(199, 149, 189, 0.14);
 }
 
+:root[data-theme='dark'][data-game='reversi'],
+[data-theme='dark'] .accent-reversi {
+  --accent: #c48ad6;
+  --accent-ink: #1b1020;
+  --accent-soft: #33253f;
+  --accent-ring: rgba(196, 138, 214, 0.42);
+  --accent-ring-soft: rgba(196, 138, 214, 0.14);
+}
+
+:root[data-theme='dark'][data-game='connect-four'],
+[data-theme='dark'] .accent-connect-four {
+  --accent: #dd8f89;
+  --accent-ink: #1e100e;
+  --accent-soft: #3f2320;
+  --accent-ring: rgba(221, 143, 137, 0.42);
+  --accent-ring-soft: rgba(221, 143, 137, 0.14);
+}
+
 :root[data-theme='dark'][data-game='bunny-hop'],
 [data-theme='dark'] .accent-bunny-hop {
   --accent: #b6c274;
@@ -314,11 +350,11 @@
 
 :root[data-theme='dark'][data-game='freecell'],
 [data-theme='dark'] .accent-freecell {
-  --accent: #c288d0;
-  --accent-ink: #1a0d1d;
-  --accent-soft: #3a1a41;
-  --accent-ring: rgba(194, 136, 208, 0.42);
-  --accent-ring-soft: rgba(194, 136, 208, 0.14);
+  --accent: #6e6ecf;
+  --accent-ink: #060614;
+  --accent-soft: #1e1e42;
+  --accent-ring: rgba(110, 110, 207, 0.42);
+  --accent-ring-soft: rgba(110, 110, 207, 0.14);
 }
 
 * {

@@ -1,0 +1,315 @@
+/* Connect Four — all of this game's styling, imported by ConnectFourRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --radius, --font-display, --tap-size, …) so the
+   game reads as part of the same app and follows the theme without knowing
+   about it.
+
+   Class names are prefixed `c4-` so this file can never collide with the
+   shell or with another game.
+
+   The second disc colour below is game content, not chrome — the same
+   standing as 2048's tile ramp and Memory Match's symbol colours, and the one
+   place this title is allowed past "one accent per title" (docs/BRAND.md).
+   The player's disc IS the accent; the opponent needs a colour that is
+   unmistakably not it at arm's length and in both themes, so it is fixed here
+   rather than derived. Deep teal against the title's warm red is the pair
+   that survives the common colour-vision deficiencies — and the winning line
+   is ringed as well as coloured (§10), so the ending never rests on hue
+   alone. */
+
+:root {
+  --c4-frame: #3d5a80;
+  --c4-hole: var(--paper);
+  --c4-cpu: #1f6f6b;
+  --c4-cpu-edge: #17514e;
+}
+
+:root[data-theme='dark'] {
+  --c4-frame: #2b4059;
+  --c4-cpu: #3f9b95;
+  --c4-cpu-edge: #2b6f6a;
+}
+
+/* ---------- board ---------- */
+
+/* The board sits in the space between the top bar and the action bar, centred
+   so a tall phone brings it into thumb reach instead of pinning it up top. */
+.c4-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 4px 12px 10px;
+  min-height: 0;
+}
+
+/* 7 by 6, so the frame is wider than it is tall. Width against its own
+   column (`100%`, not `vw` — docs/ARCHITECTURE.md, the board-width lesson
+   every title relearned); the height term keeps the whole frame on a short
+   screen rather than pushing the action bar off the bottom. */
+.c4-board {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  width: min(100%, 420px, 62vh);
+  aspect-ratio: 7 / 6;
+  padding: 6px;
+  background: var(--c4-frame);
+  border-radius: var(--radius);
+}
+
+/* A column is the button, because a drop is a column (§2). It is transparent:
+   the frame behind it is the board, and the slots are the holes in it. */
+.c4-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  border-radius: 6px;
+}
+
+.c4-column:not(:disabled):active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* The shared chrome dims a disabled button to 40% — right for an action that
+   is unavailable, wrong for board surface. Every column is disabled while the
+   CPU takes its turn (§4), so without this the whole board fades out and back
+   twice a move. A full column simply stops accepting drops; it does not grey
+   out the discs already in it. */
+.c4-column:disabled {
+  opacity: 1;
+}
+
+/* A hole in the frame, and the disc that is in it. */
+.c4-slot {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c4-hole);
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+/* ---------- discs ---------- */
+
+.c4-disc {
+  position: relative;
+  width: 84%;
+  height: 84%;
+  border-radius: 50%;
+}
+
+.c4-disc-you {
+  background: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent-ring);
+}
+
+.c4-disc-cpu {
+  background: var(--c4-cpu);
+  box-shadow: inset 0 0 0 2px var(--c4-cpu-edge);
+}
+
+/* The disc falls the distance it actually travelled: both custom properties
+   are set per disc by the board component, so a one-row drop is quick and a
+   six-row drop is not (§10). No bounce at the bottom — it would add time to
+   every move for one frame of character. */
+.c4-disc-fall {
+  animation: c4-fall var(--c4-fall-ms, 220ms) ease-in;
+}
+
+@keyframes c4-fall {
+  from {
+    transform: translateY(calc(var(--c4-fall-rows, 6) * -100%));
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Reduced Motion: the disc is simply where it landed (§10). Guarded by the
+   board class set from useReducedMotion, so the in-app setting counts too. */
+.c4-board-still .c4-disc-fall {
+  animation: none;
+}
+
+/* The winning four, ringed — and everything else stepped back, so the line
+   reads without depending on colour (§10). */
+.c4-disc-win {
+  box-shadow:
+    inset 0 0 0 2px var(--paper),
+    0 0 0 3px var(--ink);
+}
+
+.c4-disc-dim {
+  opacity: 0.45;
+}
+
+/* The last disc dropped keeps a small mark, so the CPU's move can be found
+   after looking away (§10). It rides on the disc and is drawn in the hole's
+   own colour, which contrasts with both disc colours in both themes — the
+   accent could not, since the accent *is* one of the two discs. */
+.c4-last-mark {
+  position: absolute;
+  top: 14%;
+  left: 50%;
+  width: 18%;
+  height: 18%;
+  margin-left: -9%;
+  border-radius: 50%;
+  background: var(--c4-hole);
+}
+
+/* ---------- top bar ---------- */
+
+.c4-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.c4-side {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.c4-side-disc {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.c4-side-you {
+  background: var(--accent);
+}
+
+.c4-side-cpu {
+  background: var(--c4-cpu);
+}
+
+/* ---------- turn line ---------- */
+
+/* Reserved height whether it names a turn or says nothing: the board must
+   not jump when the text changes (§10). */
+.c4-turn-line {
+  margin: 0;
+  min-height: 1.5em;
+  font-size: 14px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* ---------- action bar ---------- */
+
+/* One action, free and unlimited: Undo (§5). There is deliberately no hint
+   button — a suggested column would be the CPU playing both sides (§6). */
+.action-bar.c4-actions {
+  justify-content: center;
+}
+
+/* ---------- home ---------- */
+
+.c4-choose-label {
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* Which side opens the next match (§1). Two equal halves — neither is a
+   default the other departs from, so neither is drawn as one. */
+.c4-side-choice {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.c4-side-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--tap-size);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* The chosen half wears the accent softly: this is a setting the player
+   already made, not the screen's main action (the opponent buttons are). */
+.c4-side-option-on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+/* The two discs in the order they would be dropped. */
+.c4-order {
+  display: inline-flex;
+  gap: 3px;
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* The tutorial draws a 5×4 corner of the frame: enough for a line of four
+   without shrinking the discs to dots (§9). */
+.c4-figure {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  width: 180px;
+  padding: 4px;
+  background: var(--c4-frame);
+  border-radius: 10px;
+}
+
+.c4-figure-slot {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c4-hole);
+  border-radius: 50%;
+}
+
+.c4-figure-disc {
+  width: 84%;
+  height: 84%;
+  border-radius: 50%;
+}
+
+.c4-figure-you {
+  background: var(--accent);
+}
+
+.c4-figure-cpu {
+  background: var(--c4-cpu);
+}
+
+/* The disc the step is talking about. */
+.c4-figure-fresh {
+  box-shadow:
+    inset 0 0 0 2px var(--paper),
+    0 0 0 2px var(--ink);
+}

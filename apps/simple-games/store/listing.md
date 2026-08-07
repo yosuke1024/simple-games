@@ -5,10 +5,10 @@
 > あわせて Play Console でアプリ内商品(管理された商品)`remove_ads` を
 > 基準価格 USD 3.99 で作成すること(国別価格は自動調整に任せる)。
 
-> 掲載は収録ゲーム 15 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
-> Minesweeper / 2048 / Block Puzzle / Brick Breaker / Nonogram / Number Match /
-> Water Sort / Sliding Puzzle / Memory Match / Sky Fighter / Bunny Hop)の
-> 状態で書いてある。
+> 掲載は収録ゲーム 17 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
+> Minesweeper / 2048 / Block Puzzle / Reversi / Connect Four / Brick Breaker /
+> Nonogram / Number Match / Water Sort / Sliding Puzzle / Memory Match /
+> Sky Fighter / Bunny Hop)の状態で書いてある。
 > 未収録のゲームは名前も含めて掲載文に出さず、**実際に収録できた時点で**
 > 説明・スクリーンショットへ追加する(未収録のゲームを "Coming Soon" として
 > 掲載しない)。
@@ -21,7 +21,8 @@
 3. `Simple Games: Sudoku & More`
 
 キーワード優先順位: Offline > Sudoku > Solitaire > Spider Solitaire > FreeCell >
-Minesweeper > 2048 > Block Puzzle > Brick Breaker > Nonogram > Puzzle >
+Minesweeper > 2048 > Block Puzzle > Reversi > Connect Four > Brick Breaker >
+Nonogram > Puzzle >
 Number Match > Water Sort > Sliding Puzzle > Memory Match > Sky Fighter >
 Bunny Hop > Simple Games > PixApps
 (ゲーム名は検索流入の中核。収録済みの名前だけを、検索需要の大きい順に置く)
@@ -64,6 +65,8 @@ INCLUDED GAMES
 • Minesweeper
 • 2048
 • Block Puzzle
+• Reversi
+• Connect Four
 • Brick Breaker
 • Nonogram
 • Number Match

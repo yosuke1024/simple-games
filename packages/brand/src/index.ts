@@ -289,39 +289,85 @@ export const titleAccents = {
     softDark: '#343a1c',
   },
   /**
-   * Spider Solitaire — a deeper, truer green than Solitaire's felt. Both are
-   * card tables, so both belong in the green a card table has always been; the
-   * pair reads as two games of one family without blurring, because this one is
-   * greener and colder (dE 22 apart, where the closest pair already shipped is
-   * dE 11). Green also keeps the accent away from the card red: this title
-   * shows more face-down cards than any other, and their backs are drawn in
-   * `--accent-ring-soft` — a warm accent would make a back and a heart answer
-   * to the same glance.
+   * Reversi — violet. The board is felt and black-and-white discs (all of it
+   * game content), so the accent lives in the chrome alone; even the mark on
+   * the last disc played is drawn in the other disc's colour, because a
+   * single accent cannot be legible on black and white at once.
+   *
+   * It was moss until Bunny Hop landed with a meadow green one shade away
+   * (#6e7a34 against #6d7a3a) — two titles that would have been the same
+   * colour on the collection home. Violet is the widest gap the series has
+   * left, between Nonogram's plum and Block Puzzle's orchid, and it is the
+   * more saturated and bluer of the three; with fifteen titles the palette
+   * holds families rather than fifteen separate hues, and this one says so
+   * plainly rather than pretending otherwise.
    */
-  spiderSolitaire: {
-    light: '#31802f',
+  reversi: {
+    light: '#7f4a9c',
     onLight: '#ffffff',
-    softLight: '#dff5de',
-    dark: '#7fcc7d',
-    onDark: '#0c1a0c',
-    softDark: '#183a17',
+    softLight: '#ece2f4',
+    dark: '#c48ad6',
+    onDark: '#1b1020',
+    softDark: '#33253f',
   },
   /**
-   * FreeCell — muted violet. The one title that sits directly under Solitaire
-   * on the collection home, so it takes the hue furthest from felt green
-   * instead of a third card-table colour. Violet was the widest gap left in the
-   * palette (between Nonogram's plum and Block Puzzle's orchid, dE 23 from
-   * either), and it is as far from the card red as the wheel allows — which
-   * matters here for a different reason than in Spider: every one of FreeCell's
-   * 52 cards is face up, so the accent is only ever beside card faces.
+   * Connect Four — muted red. Here the accent *is* the player's disc, so it
+   * has to hold its own against the opponent's fixed teal at arm's length:
+   * red against blue-green is the one high-contrast pair that survives the
+   * common colour-vision deficiencies, and the winning line is ringed as
+   * well as coloured so the ending never rests on hue alone. Red was the
+   * last hue family the series had not used — Sliding Puzzle's clay is
+   * orange and Memory Match's rose is pink, and this sits squarely between
+   * them. It is desaturated well past the warning colour (`warn`), which no
+   * game may be mistaken for.
    */
-  freecell: {
-    light: '#853795',
+  connectFour: {
+    light: '#a8433d',
     onLight: '#ffffff',
-    softLight: '#f2e0f5',
-    dark: '#c288d0',
-    onDark: '#1a0d1d',
-    softDark: '#3a1a41',
+    softLight: '#f5e0dd',
+    dark: '#dd8f89',
+    onDark: '#1e100e',
+    softDark: '#3f2320',
+    /**
+     * Spider Solitaire — a deeper, truer green than Solitaire's felt. Both are
+     * card tables, so both belong in the green a card table has always been; the
+     * pair reads as two games of one family without blurring, because this one is
+     * greener and colder (dE 22 apart, where the closest pair already shipped is
+     * dE 11). Green also keeps the accent away from the card red: this title
+     * shows more face-down cards than any other, and their backs are drawn in
+     * `--accent-ring-soft` — a warm accent would make a back and a heart answer
+     * to the same glance.
+     */
+    spiderSolitaire: {
+      light: '#31802f',
+      onLight: '#ffffff',
+      softLight: '#dff5de',
+      dark: '#7fcc7d',
+      onDark: '#0c1a0c',
+      softDark: '#183a17',
+    },
+    /**
+     * FreeCell — deep indigo. This was violet until Reversi shipped and took
+     * that gap for the same reason this title wanted it; measured against the
+     * merged palette the two were dE 10.6 apart in light and dE 2.3 in dark,
+     * which is not two colours. Indigo is the slot left: dE 23 from Nonogram's
+     * plum and from Sky Fighter's dusk blue, which it separates from by being
+     * far darker and more saturated rather than by hue.
+     *
+     * It is the darkest accent in the series, and that suits the one solitaire
+     * where nothing is hidden — every card face up from the deal, the whole
+     * problem visible at once. It also sits directly under Solitaire on the
+     * collection home, so it takes a hue far from felt green rather than
+     * becoming a third card-table colour.
+     */
+    freecell: {
+      light: '#25256a',
+      onLight: '#ffffff',
+      softLight: '#e0e0f2',
+      dark: '#6e6ecf',
+      onDark: '#060614',
+      softDark: '#1e1e42',
+    },
   },
 } as const;
 

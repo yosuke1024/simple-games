@@ -68,8 +68,9 @@ PRODUCT_PRINCIPLES.md「適用範囲」と WEB_VERSION.md)。
 - "Open source."
 
 ストア文面では収録済みのゲーム名を具体的に挙げる(現在は "Sudoku, Solitaire,
-Spider Solitaire, FreeCell, Minesweeper, 2048, Block Puzzle, Brick Breaker,
-Nonogram, Number Match, Water Sort, Sliding Puzzle, Memory Match, Sky Fighter,
+Spider Solitaire, FreeCell, Minesweeper, 2048, Block Puzzle, Reversi,
+Connect Four, Brick Breaker, Nonogram, Number Match, Water Sort, Sliding Puzzle,
+Memory Match, Sky Fighter,
 Bunny Hop" の 15 本)。
 未収録のゲーム名は、**実際に収録された時点で**初めて足す。
 ゲーム名は検索流入の中核だが、不自然なキーワード詰め込みはしない。
@@ -206,7 +207,7 @@ OSS を先頭に出さない。
 
 ### アクセントを選ぶ手順
 
-色相の空きは 13 タイトルの時点でほぼ埋まっており、「空いていそうな色相」を目で選ぶ
+色相の空きは 13 タイトルの時点で既にほぼ埋まっており、「空いていそうな色相」を目で選ぶ
 方法はもう通らない(Spider / FreeCell の選定では、当初案の**スチールシアンがこの方法で
 失格になった** — シアン〜青の帯 135°〜225° はどの値を採っても既存色に近づきすぎる)。
 新しいアクセントは次の順で決める。
@@ -220,6 +221,9 @@ OSS を先頭に出さない。
 3. コレクションホームでの**隣接**を見る。2 列グリッドなので、上下と左右のタイルとの
    距離が全体の平均より効く。
 4. そのゲームの盤面がアクセントをどこに出すかを見る(カードの裏面・タイル・敵など)。
+5. **並行しているブランチを疑う。**選定は、選んだ時点のパレットに対してしか正しくない。
+   FreeCell の菫は Reversi が同じ枠を取ってマージされたことで失格になった(ライト
+   ΔE 10.6・ダーク 2.3)。マージの直前にもう一度測り直すこと。
 
 ### コントラスト
 

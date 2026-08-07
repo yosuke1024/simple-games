@@ -27,7 +27,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけで、現在 15 本のゲームを収録しています。
+アプリは 1 つだけで、現在 17 本のゲームを収録しています。
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Games`(ランチャー表示名: `Simple Games`)
@@ -45,6 +45,8 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 | Minesweeper             | `minesweeper/`      | 難易度 3 種 + デイリー                   | Hint(Undo なし)                              | [docs/MINESWEEPER_RULES.md](docs/MINESWEEPER_RULES.md)           |
 | 2048                    | `2048/`             | エンドレス(レベルなし)                   | Undo(Hint なし)                              | [docs/GAME_2048_RULES.md](docs/GAME_2048_RULES.md)               |
 | Block Puzzle            | `block-puzzle/`     | エンドレス(レベルなし)                   | Undo(Hint なし)                              | [docs/BLOCK_PUZZLE_RULES.md](docs/BLOCK_PUZZLE_RULES.md)         |
+| Reversi                 | `reversi/`          | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                              | [docs/REVERSI_RULES.md](docs/REVERSI_RULES.md)                   |
+| Connect Four            | `connect-four/`     | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                              | [docs/CONNECT_FOUR_RULES.md](docs/CONNECT_FOUR_RULES.md)         |
 | Brick Breaker           | `brick-breaker/`    | 100 レベル(デイリーなし)                 | 同じ盤面への即時リトライ(Undo / Hint なし)   | [docs/BRICK_BREAKER_RULES.md](docs/BRICK_BREAKER_RULES.md)       |
 | Nonogram                | `nonogram/`         | 100 レベル + デイリー                    | Hint(Undo なし)                              | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md)                 |
 | Number Match            | `number-match/`     | 100 レベル + デイリー                    | Undo / Hint                                  | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md)         |
@@ -63,7 +65,9 @@ Undo を作らず、Sliding Puzzle は盤面に隠れた情報がないため Hi
 無制限にしています。Bunny Hop はリアルタイムの反射が中身のため Undo も Hint も作らず、
 代わりに次のランへの即時リトライを無料にしています。FreeCell は 52 枚すべてが最初から
 表向きで隠れた情報が 1 つもないため Hint を作らず、Undo を無制限にしています。Spider は
-伏せカードがあり見えていない情報が実在するため、Solitaire と同じく Hint を持ちます)。
+伏せカードがあり見えていない情報が実在するため、Solitaire と同じく Hint を持ちます。
+Reversi と Connect Four も盤面がすべて見えているため Hint を作らず、Undo だけを
+持ちます)。
 理由は各ルール文書と
 [docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md)。
 
@@ -87,6 +91,8 @@ simple-games/
 │           │   ├── solitaire/
 │           │   ├── spider-solitaire/
 │           │   ├── freecell/
+│           │   ├── reversi/
+│           │   ├── connect-four/
 │           │   ├── minesweeper/
 │           │   ├── 2048/
 │           │   ├── block-puzzle/

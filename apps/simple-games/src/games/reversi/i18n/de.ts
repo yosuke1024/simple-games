@@ -1,0 +1,45 @@
+import type { ReversiMessages } from './en';
+
+export const de: ReversiMessages = {
+  reversiName: 'Reversi',
+  reversiChooseOpponent: 'Gegner wählen',
+  reversiDifficulty_easy: 'Leicht',
+  reversiDifficulty_normal: 'Normal',
+  reversiDifficulty_hard: 'Schwer',
+  reversiRecordNote: '{wins} Siege · {losses} Niederlagen',
+  reversiBoardLabel: 'Reversi-Brett, 8 mal 8',
+  reversiCellEmpty: 'Zeile {row}, Spalte {col}: leer',
+  reversiCellLegal: 'Zeile {row}, Spalte {col}: dein Zug',
+  reversiCellMine: 'Zeile {row}, Spalte {col}: dein Stein',
+  reversiCellTheirs: 'Zeile {row}, Spalte {col}: CPU-Stein',
+  reversiChooseSideLabel: 'Welche Farbe du spielst',
+  reversiPlayBlack: 'Schwarz · zuerst',
+  reversiPlayWhite: 'Weiß · danach',
+  reversiYou: 'Du',
+  reversiCpu: 'CPU',
+  reversiYourTurn: 'Du bist dran',
+  reversiCpuTurn: 'Die CPU denkt nach…',
+  reversiPassYou: 'Kein Zug für dich — die CPU ist noch einmal dran',
+  reversiPassCpu: 'Die CPU kann nicht ziehen — du bist wieder dran',
+  reversiWinTitle: 'Du hast gewonnen!',
+  reversiWinBody: 'Am Ende gehörte dir der größere Teil des Bretts.',
+  reversiLoseTitle: 'Die CPU gewinnt',
+  reversiLoseBody: 'Die CPU hatte am Ende mehr Steine. Die nächste Partie ist kostenlos.',
+  reversiDrawTitle: 'Unentschieden',
+  reversiDrawBody: 'Beide Seiten hatten gleich viele Steine.',
+  reversiWins: 'Siege',
+  reversiLosses: 'Niederlagen',
+  reversiDraws: 'Unentschieden',
+  reversiStep1Title: 'Steine einschließen und umdrehen',
+  reversiStep1Body:
+    'Lege auf ein gepunktetes Feld, sodass deine Steine die Reihe schließen — alles dazwischen gehört dann dir.',
+  reversiStep2Title: 'Kein Zug? Du setzt aus',
+  reversiStep2Body:
+    'Gibt es kein gültiges Feld, wird dein Zug automatisch übersprungen — nichts zu drücken.',
+  reversiStep3Title: 'Die meisten Steine gewinnen',
+  reversiStep3Body:
+    'Wenn keine Seite mehr ziehen kann, wird gezählt. Zurücknehmen ist kostenlos und unbegrenzt.',
+  reversiConfirmSwitchTitle: 'Laufende Partie ersetzen?',
+  reversiConfirmSwitchBody:
+    'Deine Partie ({current}) wird durch eine neue Partie ({next}) ersetzt.',
+};

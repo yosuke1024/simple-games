@@ -46,6 +46,8 @@ src/
 │   ├── sky-fighter/
 │   ├── 2048/
 │   ├── block-puzzle/
+│   ├── reversi/
+│   ├── connect-four/
 │   └── bunny-hop/
 ├── monetization/           # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 ├── services/               # 共有: ads(バナーのみ) / network / sound / haptics
@@ -71,6 +73,8 @@ src/
 [SKY_FIGHTER_RULES.md](SKY_FIGHTER_RULES.md) /
 [GAME_2048_RULES.md](GAME_2048_RULES.md) /
 [BLOCK_PUZZLE_RULES.md](BLOCK_PUZZLE_RULES.md) /
+[REVERSI_RULES.md](REVERSI_RULES.md) /
+[CONNECT_FOUR_RULES.md](CONNECT_FOUR_RULES.md) /
 [BUNNY_HOP_RULES.md](BUNNY_HOP_RULES.md) を唯一のソースとする。
 
 レイヤー規則:
@@ -194,6 +198,8 @@ src/
 | Number Match     | 藍                       | `#3f5b8f` | `#7d9ccf` |
 | Sudoku           | くすんだティール         | `#2f6f62` | `#6fb3a3` |
 | Solitaire        | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
+| Spider Solitaire | 深い緑                   | `#31802f` | `#7fcc7d` |
+| FreeCell         | 深い藍                   | `#25256a` | `#6e6ecf` |
 | Minesweeper      | スレートブルー           | `#4a5a72` | `#93a4bd` |
 | Nonogram         | くすんだプラム           | `#6d5192` | `#a893cf` |
 | Water Sort       | くすんだアクア           | `#33708c` | `#7fb4c9` |
@@ -204,8 +210,8 @@ src/
 | 2048             | ジェイド                 | `#2b7d59` | `#79c39c` |
 | Block Puzzle     | オーキッド               | `#8b4f80` | `#c795bd` |
 | Bunny Hop        | 草原の緑                 | `#6e7a34` | `#b6c274` |
-| Spider Solitaire | 深い緑                   | `#31802f` | `#7fcc7d` |
-| FreeCell         | くすんだ菫               | `#853795` | `#c288d0` |
+| Reversi          | 菫                       | `#7f4a9c` | `#c48ad6` |
+| Connect Four     | くすんだ赤               | `#a8433d` | `#dd8f89` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
@@ -233,13 +239,22 @@ src/
   チュートリアル・バナースロットなどの共通クロム。
 - **全タイトルが規約に従っている**: `number-match.css` / `sudoku.css` /
   `minesweeper.css` / `nonogram.css` / `sliding-puzzle.css` / `memory-match.css` /
-  `water-sort.css` / `solitaire.css` / `brick-breaker.css` / `sky-fighter.css`。
+  `water-sort.css` / `solitaire.css` / `brick-breaker.css` / `sky-fighter.css` /
+  `game-2048.css` / `block-puzzle.css` / `reversi.css` / `connect-four.css` /
+  `bunny-hop.css`。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。
 - ゲームの CSS は色を書かない。共有のカスタムプロパティ(`--accent` など)だけを使い、
   どの色になるかはシェルが root に付けた `data-game` が決める。
   ゲーム側にパレット値が複製されないので、下地を変えるときに触る場所は 1 か所で済む。
+  **例外はゲームの中身そのものが色である場合だけ**で、その色はそのゲームの CSS に
+  書く: Minesweeper の数字、Memory Match の 15 色、Water Sort の 9 色、2048 の
+  タイルランプ、Reversi の盤(フェルトと黒白の石)、Connect Four の対戦相手の
+  ディスク。いずれも「クロムは 1 タイトル 1 色、盤面はそのゲームのもの」という
+  同じ線で、BRAND.md の一行を破っているわけではない。Reversi の石と Connect Four の
+  相手色がテーマで反転しないのは、反転すれば盤面の意味が変わるからである
+  (黒石がダークテーマの明るいインクを着たら、それはもう黒石ではない)。
 
 ## 広告と課金
 
@@ -273,6 +288,10 @@ src/
 | `sf.*`        | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)   |
 | `tm.*`        | 2048(saveGame / stats / flags。デイリーもレベル進行もない)        |
 | `bp.*`        | Block Puzzle(saveGame / stats / flags。同上)                      |
+| `rv.*`        | Reversi(saveGame / stats / flags / prefs。統計は難易度別)         |
+| `c4.*`        | Connect Four(saveGame / stats / flags / prefs。同上)              |
+| `ss.*`        | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)    |
+| `fc.*`        | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)    |
 | `bh.*`        | Bunny Hop(stats / flags。**saveGame なし** — 下記)                |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
@@ -287,13 +306,9 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 `progress` もない(自己ベストは stats 内 — `GAME_2048_RULES.md` §9 /
 `BLOCK_PUZZLE_RULES.md` §9)。
 
-**アーケード 3 本(Brick Breaker / Sky Fighter / Bunny Hop)は `saveGame` を
-持たない。**リアルタイムの盤面を復元しても「開いた瞬間に球が落ちてくる」
-ものにしかならず、正直な再開にならないため、退出は挑戦の破棄で、リトライは
-無料・即時とした(`BRICK_BREAKER_RULES.md` §10 / `SKY_FIGHTER_RULES.md` §10 /
-`BUNNY_HOP_RULES.md` §10)。破棄されるのは挑戦中の盤面だけで、統計と進行は
-常に保存される。Bunny Hop はレベルもデイリーも持たないエンドレスなので
-`progress` もなく、キーは `bh.stats` と `bh.flags` の 2 つだけである。
+[REVERSI_RULES.md](REVERSI_RULES.md) /
+[CONNECT_FOUR_RULES.md](CONNECT_FOUR_RULES.md) /
+[BUNNY_HOP_RULES.md](BUNNY_HOP_RULES.md) を唯一のソースとする。
 
 - 共有レコードは `sg.` 接頭辞。ゲーム固有レコードはゲームごとの接頭辞。
 - ゲーム固有設定は共有 `sg.settings` に混ぜず、そのゲームの接頭辞に置く
@@ -325,7 +340,7 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
   乗り、1 本のゲームだけが使うキーはそのゲームの `src/games/<id>/i18n/*.ts` に
   移してゲームのチャンクへ同梱する。ゲームを開かないプレイヤーは、その文言を
   一度もパースしない。
-- 現在 14 言語。シェル 79 キー(エントリに乗る) + ゲーム別 15 カタログ(合計 388
+- 現在 14 言語。シェル 79 キー(エントリに乗る) + ゲーム別 17 カタログ(合計 460
   キー、13〜42 キー/ゲーム、開いたときだけパースされる)。ロケールタグは小文字で
   持つ。en と ja 以外は来歴 `machine`(AI の助けを借りて書き、その言語のネイティブ
   は読んでいない)。高リスクキーはリリース前の門で逆翻訳を作者が読む
@@ -419,7 +434,7 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 これ以上の共通化(`packages/` への抽出)は実際に重複が確認されてから行う。
 ゲーム固有の概念(盤面・ルール・Hint 等)は共通パッケージへ入れない。
 
-現時点で唯一の実測された重複は `games/*/game/rng.ts` で、**10 ゲームすべてが同じ
+現時点で唯一の実測された重複は `games/*/game/rng.ts` で、**15 ゲームすべてが同じ
 seed 付き乱数を持っている**(`games/A/` から `games/B/` を import できない以上、
 このコピーは規約どおりでもある)。抽出を検討する条件(重複が確認された)は
 満たしているが、`game/` の Pure TS 純度を保ったまま `packages/` へ出せるかが論点で、
@@ -438,7 +453,7 @@ seed 付き乱数を持っている**(`games/A/` から `games/B/` を import �
   署名済み AAB(Play 用)と署名済み APK(実機確認用)をアーティファクトとして出す。
   `versionName` / `versionCode` はタグが決める。ストアへのアップロードは手動。
   タグに製品名を付けないのは、リリース対象がこのアプリ 1 つだけだから
-  (10 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
+  (15 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
 - Secrets は `ADMOB_ANDROID_APP_ID` / `ADMOB_ANDROID_BANNER_ID` のみ
   (インタースティシャル系は無い。プラットフォーム名を含むのは AdMob ID が
   OS ごとに別なため — iOS 版では `ADMOB_IOS_*` が並ぶ)。
