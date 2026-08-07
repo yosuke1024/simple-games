@@ -3,6 +3,7 @@ import {
   BOARD_WIDTH,
   DUCK_HEIGHT,
   GRAVITY,
+  HIT_INSET,
   JUMP_VELOCITY,
   MAX_SPEED,
   MIN_GAP_SECONDS,
@@ -103,12 +104,15 @@ describe('the jump (§3, §4)', () => {
 describe('the pose (§3, §7)', () => {
   it('is half as tall while ducking, and only on the ground', () => {
     const ducked = setDucking(running(), true);
-    expect(runnerBox(ducked).top - runnerBox(ducked).bottom).toBeCloseTo(DUCK_HEIGHT - 4, 5);
+    expect(runnerBox(ducked).top - runnerBox(ducked).bottom).toBeCloseTo(
+      DUCK_HEIGHT - 2 * HIT_INSET,
+      5,
+    );
 
     const duckedInAir = advance(setDucking(running(), true), 100);
     expect(duckedInAir.runnerY).toBeGreaterThan(0);
     const box = runnerBox(duckedInAir);
-    expect(box.top - box.bottom).toBeCloseTo(RUNNER_HEIGHT - 4, 5);
+    expect(box.top - box.bottom).toBeCloseTo(RUNNER_HEIGHT - 2 * HIT_INSET, 5);
   });
 });
 

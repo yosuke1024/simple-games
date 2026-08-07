@@ -16,12 +16,13 @@ export const BOARD_HEIGHT = 240;
 export const GROUND_Y = 202;
 
 /** The runner never moves along the track; the world moves past it (§1). */
-export const RUNNER_X = 48;
-export const RUNNER_WIDTH = 24;
-export const RUNNER_HEIGHT = 38;
+export const RUNNER_X = 44;
+/** The drawn runner exactly: 19×20 cells of art at 2px (ui/components/sprites.ts). */
+export const RUNNER_WIDTH = 38;
+export const RUNNER_HEIGHT = 40;
 /** Ducking is wider and half as tall — the whole point of the pose (§3). */
-export const DUCK_WIDTH = 34;
-export const DUCK_HEIGHT = 21;
+export const DUCK_WIDTH = 44;
+export const DUCK_HEIGHT = 22;
 
 /**
  * The jump, in the two numbers that decide it: it rises 97px and is in the
@@ -47,7 +48,7 @@ export const MILESTONE_EVERY = 100;
  * Collision forgiveness, inset on the runner's box only. A hit has to look
  * like a hit; a pixel of overlap between two drawn shapes does not (§7).
  */
-export const HIT_INSET = 2;
+export const HIT_INSET = 3;
 
 /** Birds join the track once the run is worth this much (§5). */
 export const BIRD_FROM_SCORE = 200;

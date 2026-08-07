@@ -41,7 +41,7 @@ import {
 import { obstacleKind } from '../../game/obstacles';
 import type { GameState } from '../../game/types';
 import {
-  BIRD_WINGS,
+  BIRD_FRAMES,
   CLOUD,
   DUCK_BODY,
   DUCK_EYE,
@@ -139,11 +139,11 @@ function render(ctx: CanvasRenderingContext2D, state: GameState, palette: Palett
     const x = obstacleX(state.distance, obstacle);
     if (x > BOARD_WIDTH || x + kind.width < 0) continue;
     const y = GROUND_Y - kind.bottom - kind.height;
-    blit(ctx, OBSTACLE_SHAPES[obstacle.kindId], x, y);
     if (kind.flying) {
-      const beat = Math.floor(scroll / WINGBEAT_PX) % BIRD_WINGS.length;
-      const [wx, wy, ww, wh] = BIRD_WINGS[beat]!;
-      ctx.fillRect(x + wx, y + wy, ww, wh);
+      const beat = Math.floor(scroll / WINGBEAT_PX) % BIRD_FRAMES.length;
+      blit(ctx, BIRD_FRAMES[beat]!, x, y);
+    } else {
+      blit(ctx, OBSTACLE_SHAPES[obstacle.kindId], x, y);
     }
   }
 
@@ -162,13 +162,11 @@ function render(ctx: CanvasRenderingContext2D, state: GameState, palette: Palett
     blit(ctx, grounded ? RUNNER_LEGS[stride]! : RUNNER_LEGS_AIR, RUNNER_X, top);
   }
 
-  // The eye last, punched back out in the surface colour. A crashed runner
-  // loses it — the one thing on screen that says the run is over without a
-  // word to translate (§12).
-  if (state.status !== 'over') {
-    ctx.fillStyle = palette.surface;
-    const [ex, ey, ew, eh] = ducking ? DUCK_EYE : RUNNER_EYE;
-    ctx.fillRect(RUNNER_X + ex, top + ey, ew, eh);
+  // The eye is a hole in the art, so it needs no drawing while the runner is
+  // alive. A crashed one has it filled in — the one thing on screen that says
+  // the run is over without a word to translate (§12).
+  if (state.status === 'over') {
+    blit(ctx, ducking ? DUCK_EYE : RUNNER_EYE, RUNNER_X, top);
   }
 }
 

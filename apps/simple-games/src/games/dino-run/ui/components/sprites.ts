@@ -1,139 +1,272 @@
 /**
- * Everything on the track, as lists of rectangles.
+ * Everything on the track, drawn as pictures.
  *
- * Blocky on purpose (docs/DINO_RUN_RULES.md §12): a runner at 24×38 px on a
- * cheap phone reads better as a handful of squares than as a curve, the whole
- * board is a few dozen `fillRect` calls per frame, and the shapes stay legible
- * with the accent inverted in dark mode. No sprite sheet, no image to load —
- * an offline game should not wait on bytes to draw its own hero.
+ * The shapes are written out as art rather than as coordinates: a dinosaur
+ * made of `[x, y, w, h]` tuples is a dinosaur nobody can see while editing
+ * it, and the first version of this file proved it — the numbers were
+ * plausible and the result did not read as an animal. Here the source shows
+ * what the screen shows, so a head that is too small is visible in the diff.
  *
- * Coordinates are `[x, y, width, height]` inside the shape's own box, with y
- * measured **down** from the top of that box. The board places the box; the
- * shapes never know where they are.
+ * `#` is drawn, `.` is empty, and `o` is a hole punched through the shape —
+ * the runner's eye, which the surface shows through (§12).
+ *
+ * One cell is PIXEL board pixels. Blocky on purpose (§12): at this size
+ * squares read better than curves on a cheap phone, the whole board is a few
+ * dozen `fillRect` calls per frame, and the shapes stay legible with the
+ * accent inverted in dark mode. No sprite sheet, no image to load — an
+ * offline game should not wait on bytes to draw its own hero.
  */
+
+/** `[x, y, width, height]`, relative to the shape's own top-left corner. */
 export type Rect = readonly [number, number, number, number];
+
+/** Board pixels per cell of art. */
+const PIXEL = 2;
+
+/** One rectangle per horizontal run of `ch`; rows stack into solid shapes. */
+function runs(rows: readonly string[], ch: string): Rect[] {
+  const out: Rect[] = [];
+  rows.forEach((row, y) => {
+    let x = 0;
+    while (x < row.length) {
+      if (row[x] !== ch) {
+        x += 1;
+        continue;
+      }
+      let end = x;
+      while (end < row.length && row[end] === ch) end += 1;
+      out.push([x * PIXEL, y * PIXEL, (end - x) * PIXEL, PIXEL]);
+      x = end;
+    }
+  });
+  return out;
+}
+
+const drawn = (rows: readonly string[]): Rect[] => runs(rows, '#');
+/** The eye: empty while the runner is alive, filled in when it crashes. */
+const hole = (rows: readonly string[]): Rect[] => runs(rows, 'o');
 
 // ---------- the runner ----------
 
-/** Head, neck, body, tail and arm — the parts that never move. */
-export const RUNNER_BODY: readonly Rect[] = [
-  [12, 0, 12, 12],
-  [12, 12, 7, 6],
-  [3, 18, 16, 11],
-  [0, 16, 4, 7],
-  [19, 19, 4, 3],
+/**
+ * Standing: head, jaw, neck, body, tail and the one small arm — 19×20 cells,
+ * so 38×40 board pixels. Everything above the hips; the legs are separate
+ * because they are the only part that moves.
+ */
+const RUNNER_ART = [
+  '..........########.',
+  '..........#########',
+  '..........###o#####',
+  '..........#########',
+  '..........#####.###',
+  '..........#####....',
+  '.........######....',
+  '..##.....######....',
+  '..####..#######....',
+  '..#####.########...',
+  '..###############..',
+  '...##############..',
+  '....#############..',
+  '....###########....',
+  '....##########.....',
 ];
 
-/** Punched out of the head in the surface colour, so the runner has an eye. */
-export const RUNNER_EYE: Rect = [19, 3, 3, 3];
+export const RUNNER_BODY: readonly Rect[] = drawn(RUNNER_ART);
+export const RUNNER_EYE: readonly Rect[] = hole(RUNNER_ART);
 
-/** The two strides, alternating on a fixed beat while the runner is grounded. */
-export const RUNNER_LEGS: readonly (readonly Rect[])[] = [
+/**
+ * The stride, two frames: one leg planted, the other lifted, then swapped.
+ * They start at row 15 of the same picture, so they line up with the body
+ * without any offset arithmetic.
+ */
+const LEG_ROWS = 15;
+
+const RUNNER_LEG_ART: readonly (readonly string[])[] = [
   [
-    [5, 29, 4, 9],
-    [12, 29, 4, 6],
-    [12, 35, 7, 3],
+    '....##...##........',
+    '....##...##........',
+    '....##...###.......',
+    '....##.............',
+    '...###.............',
   ],
   [
-    [5, 29, 4, 6],
-    [5, 35, 7, 3],
-    [12, 29, 4, 9],
+    '....##...##........',
+    '....##...##........',
+    '...###...##........',
+    '.........##........',
+    '.........###.......',
   ],
 ];
 
-/** Both legs tucked: the pose in the air, where there is nothing to stride on. */
-export const RUNNER_LEGS_AIR: readonly Rect[] = [
-  [5, 29, 4, 7],
-  [12, 29, 4, 7],
+/** In the air there is nothing to stride on: both legs tucked, no feet. */
+const RUNNER_LEGS_AIR_ART = [
+  '....##...##........',
+  '....##...##........',
+  '....##...##........',
+  '....##...##........',
+  '...................',
 ];
 
-/** Ducking: the same animal, flattened. Box is 34×21. */
-export const DUCK_BODY: readonly Rect[] = [
-  [22, 0, 12, 10],
-  [3, 5, 20, 11],
-  [0, 3, 4, 7],
+const withLegOffset = (rects: readonly Rect[]): Rect[] =>
+  rects.map(([x, y, w, h]) => [x, y + LEG_ROWS * PIXEL, w, h] as Rect);
+
+export const RUNNER_LEGS: readonly (readonly Rect[])[] = RUNNER_LEG_ART.map((art) =>
+  withLegOffset(drawn(art)),
+);
+
+export const RUNNER_LEGS_AIR: readonly Rect[] = withLegOffset(drawn(RUNNER_LEGS_AIR_ART));
+
+/**
+ * Ducking: the same animal flattened — 22×11 cells, so 44×22 board pixels.
+ * The head drops to the height a bird flies over, which is the whole point of
+ * the pose, and the legs keep striding underneath.
+ */
+const DUCK_ART = [
+  '..............########',
+  '.###..........########',
+  '.####.........#####o##',
+  '..####################',
+  '...###################',
+  '....#################.',
+  '....###############...',
 ];
 
-export const DUCK_EYE: Rect = [29, 2, 3, 3];
+export const DUCK_BODY: readonly Rect[] = drawn(DUCK_ART);
+export const DUCK_EYE: readonly Rect[] = hole(DUCK_ART);
 
-export const DUCK_LEGS: readonly (readonly Rect[])[] = [
+const DUCK_LEG_ROWS = 7;
+
+const DUCK_LEG_ART: readonly (readonly string[])[] = [
   [
-    [7, 16, 4, 5],
-    [15, 16, 4, 5],
+    '....##....##..........',
+    '....##....##..........',
+    '...###....##..........',
+    '......................',
   ],
   [
-    [9, 16, 4, 5],
-    [17, 16, 4, 5],
+    '....##....##..........',
+    '....##....##..........',
+    '....##...###..........',
+    '......................',
   ],
 ];
+
+export const DUCK_LEGS: readonly (readonly Rect[])[] = DUCK_LEG_ART.map((art) =>
+  drawn(art).map(([x, y, w, h]) => [x, y + DUCK_LEG_ROWS * PIXEL, w, h] as Rect),
+);
 
 // ---------- what stands in the way ----------
 
-/**
- * One cactus, 15×30 — trunk and two arms. The arms are long: at this size an
- * arm that only pokes out reads as a stray pixel, and the silhouette is the
- * whole warning the player gets.
- */
-const CACTUS_SMALL: readonly Rect[] = [
-  [5, 0, 5, 30],
-  [1, 6, 4, 12],
-  [1, 14, 5, 4],
-  [10, 3, 4, 12],
-  [9, 11, 5, 4],
+/** One saguaro, 9×15 cells — 18×30 board pixels. Two arms, at two heights. */
+const CACTUS_SMALL_ART = [
+  '...###...',
+  '...###...',
+  '...###...',
+  '##.###...',
+  '##.###.##',
+  '##.###.##',
+  '######.##',
+  '...###.##',
+  '...######',
+  '...###...',
+  '...###...',
+  '...###...',
+  '...###...',
+  '...###...',
+  '...###...',
 ];
 
-/** The tall one, 18×42. Same plant, a jump's worth taller. */
-const CACTUS_TALL: readonly Rect[] = [
-  [6, 0, 6, 42],
-  [1, 8, 4, 16],
-  [1, 20, 6, 4],
-  [13, 4, 4, 16],
-  [11, 16, 6, 4],
+/** The tall one, 9×21 cells — 18×42. The same plant, a jump's worth taller. */
+const CACTUS_TALL_ART = [
+  '...###...',
+  '...###...',
+  '...###...',
+  '##.###...',
+  '##.###.##',
+  '##.###.##',
+  '##.###.##',
+  '######.##',
+  '...###.##',
+  '...######',
+  '...###...',
+  '...###...',
+  '...###...',
+  '...###...',
+  '...###...',
+  '...###...',
+  '...###...',
+  '...###...',
+  '...###...',
+  '...###...',
+  '...###...',
 ];
 
 /** Shifts a shape sideways, which is all a cluster of cacti is. */
 const shifted = (rects: readonly Rect[], dx: number): Rect[] =>
   rects.map(([x, y, w, h]) => [x + dx, y, w, h] as Rect);
 
-/** Two side by side, 32×30. */
-const CACTUS_PAIR: readonly Rect[] = [...CACTUS_SMALL, ...shifted(CACTUS_SMALL, 17)];
+const CACTUS_SMALL = drawn(CACTUS_SMALL_ART);
 
-/** Three side by side, 47×30 — the widest thing a single jump has to clear. */
+/** Two side by side, 40×30. */
+const CACTUS_PAIR: readonly Rect[] = [...CACTUS_SMALL, ...shifted(CACTUS_SMALL, 22)];
+
+/** Three side by side, 58×30 — the widest thing a single jump has to clear. */
 const CACTUS_WIDE: readonly Rect[] = [
   ...CACTUS_SMALL,
-  ...shifted(CACTUS_SMALL, 16),
-  ...shifted(CACTUS_SMALL, 32),
+  ...shifted(CACTUS_SMALL, 20),
+  ...shifted(CACTUS_SMALL, 40),
 ];
 
-/** The bird, 28×18, without its wing. */
-const BIRD_BODY: readonly Rect[] = [
-  [7, 6, 14, 6],
-  [19, 4, 7, 6],
-  [25, 6, 3, 2],
-  [4, 5, 4, 4],
+/**
+ * The bird, 14×9 cells — 28×18. Two frames and no more: a wing up and a wing
+ * down is a beat, and a beat is enough to say "this one is flying".
+ */
+const BIRD_ART: readonly (readonly string[])[] = [
+  [
+    '...##.........',
+    '..####........',
+    '.######.......',
+    '.#######......',
+    '..###########.',
+    '..############',
+    '...########...',
+    '..............',
+    '..............',
+  ],
+  [
+    '..............',
+    '..............',
+    '..............',
+    '..#####.......',
+    '..###########.',
+    '..############',
+    '.#########....',
+    '.########.....',
+    '..#####.......',
+  ],
 ];
 
-/** Wing up, then wing down: two frames are a beat, and a beat is enough. */
-export const BIRD_WINGS: readonly Rect[] = [
-  [9, 0, 10, 6],
-  [9, 12, 10, 6],
-];
+export const BIRD_FRAMES: readonly (readonly Rect[])[] = BIRD_ART.map(drawn);
 
 export const OBSTACLE_SHAPES = {
   'cactus-small': CACTUS_SMALL,
-  'cactus-tall': CACTUS_TALL,
+  'cactus-tall': drawn(CACTUS_TALL_ART),
   'cactus-pair': CACTUS_PAIR,
   'cactus-wide': CACTUS_WIDE,
-  'bird-low': BIRD_BODY,
-  'bird-mid': BIRD_BODY,
-  'bird-high': BIRD_BODY,
+  // The birds are drawn from BIRD_FRAMES instead — they are the only thing on
+  // the track with more than one frame.
+  'bird-low': [],
+  'bird-mid': [],
+  'bird-high': [],
 } as const;
 
 // ---------- the scenery ----------
 
-/** A cloud, 26×10. Three blocks, because a soft edge would cost a gradient. */
-export const CLOUD: readonly Rect[] = [
-  [6, 0, 14, 4],
-  [0, 4, 26, 4],
-  [4, 8, 16, 2],
-];
+/** A cloud, 13×5 cells — 26×10. Three blocks; a soft edge would cost a blur. */
+export const CLOUD: readonly Rect[] = drawn([
+  '...#######...',
+  '..#########..',
+  '#############',
+  '.###########.',
+  '..#######....',
+]);

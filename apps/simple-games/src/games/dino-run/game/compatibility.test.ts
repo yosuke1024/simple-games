@@ -38,9 +38,8 @@ function runBlind(seed: string, ms: number): { state: GameState; track: string }
 describe('tracks that must never change', () => {
   it("the opening of seed 'dino-golden' is unchanged", () => {
     expect(runBlind('dino-golden', 12_000).track).toBe(
-      'cactus-small@216.0|cactus-tall@544.5|cactus-pair@921.9|cactus-pair@1173.4|' +
-        'cactus-small@1483.0|cactus-tall@1710.5|cactus-small@2105.5|cactus-pair@2500.0|' +
-        'cactus-pair@2759.5',
+      'cactus-small@216.0|cactus-tall@547.5|cactus-pair@1184.5|cactus-small@1502.5|' +
+        'cactus-tall@1733.4|cactus-small@2129.2|cactus-pair@2527.5|cactus-pair@2795.4',
     );
   });
 

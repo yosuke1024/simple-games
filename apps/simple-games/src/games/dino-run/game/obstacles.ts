@@ -25,18 +25,18 @@ import { createRng } from './rng';
 import type { ObstacleKind, ObstacleKindId } from './types';
 
 export const OBSTACLE_KINDS: Record<ObstacleKindId, ObstacleKind> = {
-  'cactus-small': { id: 'cactus-small', width: 15, height: 30, bottom: 0, flying: false },
+  'cactus-small': { id: 'cactus-small', width: 18, height: 30, bottom: 0, flying: false },
   'cactus-tall': { id: 'cactus-tall', width: 18, height: 42, bottom: 0, flying: false },
-  'cactus-pair': { id: 'cactus-pair', width: 32, height: 30, bottom: 0, flying: false },
-  'cactus-wide': { id: 'cactus-wide', width: 47, height: 30, bottom: 0, flying: false },
+  'cactus-pair': { id: 'cactus-pair', width: 40, height: 30, bottom: 0, flying: false },
+  'cactus-wide': { id: 'cactus-wide', width: 58, height: 30, bottom: 0, flying: false },
   // The three birds are the same bird at three heights — the only thing that
   // differs is what it asks of the runner, and that is exactly what its
   // height on screen says.
   //
-  // Low: a ducking runner (21px tall) is still inside it, so this one has to
+  // Low: a ducking runner (22px tall) is still inside it, so this one has to
   // be jumped. It is the reason ducking is not a free answer to everything.
   'bird-low': { id: 'bird-low', width: 28, height: 18, bottom: 4, flying: true },
-  // Head height for a standing runner (38px), clear of a ducking one.
+  // Head height for a standing runner (40px), clear of a ducking one.
   'bird-mid': { id: 'bird-mid', width: 28, height: 18, bottom: 26, flying: true },
   // Above a standing runner entirely. Only a jump can reach it.
   'bird-high': { id: 'bird-high', width: 28, height: 18, bottom: 52, flying: true },
