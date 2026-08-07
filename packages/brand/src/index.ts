@@ -328,46 +328,46 @@ export const titleAccents = {
     dark: '#dd8f89',
     onDark: '#1e100e',
     softDark: '#3f2320',
-    /**
-     * Spider Solitaire — a deeper, truer green than Solitaire's felt. Both are
-     * card tables, so both belong in the green a card table has always been; the
-     * pair reads as two games of one family without blurring, because this one is
-     * greener and colder (dE 22 apart, where the closest pair already shipped is
-     * dE 11). Green also keeps the accent away from the card red: this title
-     * shows more face-down cards than any other, and their backs are drawn in
-     * `--accent-ring-soft` — a warm accent would make a back and a heart answer
-     * to the same glance.
-     */
-    spiderSolitaire: {
-      light: '#31802f',
-      onLight: '#ffffff',
-      softLight: '#dff5de',
-      dark: '#7fcc7d',
-      onDark: '#0c1a0c',
-      softDark: '#183a17',
-    },
-    /**
-     * FreeCell — deep indigo. This was violet until Reversi shipped and took
-     * that gap for the same reason this title wanted it; measured against the
-     * merged palette the two were dE 10.6 apart in light and dE 2.3 in dark,
-     * which is not two colours. Indigo is the slot left: dE 23 from Nonogram's
-     * plum and from Sky Fighter's dusk blue, which it separates from by being
-     * far darker and more saturated rather than by hue.
-     *
-     * It is the darkest accent in the series, and that suits the one solitaire
-     * where nothing is hidden — every card face up from the deal, the whole
-     * problem visible at once. It also sits directly under Solitaire on the
-     * collection home, so it takes a hue far from felt green rather than
-     * becoming a third card-table colour.
-     */
-    freecell: {
-      light: '#25256a',
-      onLight: '#ffffff',
-      softLight: '#e0e0f2',
-      dark: '#6e6ecf',
-      onDark: '#060614',
-      softDark: '#1e1e42',
-    },
+  },
+  /**
+   * Spider Solitaire — a deeper, truer green than Solitaire's felt. Both are
+   * card tables, so both belong in the green a card table has always been; the
+   * pair reads as two games of one family without blurring, because this one is
+   * greener and colder (dE 22 apart, where the closest pair already shipped is
+   * dE 11). Green also keeps the accent away from the card red: this title
+   * shows more face-down cards than any other, and their backs are drawn in
+   * `--accent-ring-soft` — a warm accent would make a back and a heart answer
+   * to the same glance.
+   */
+  spiderSolitaire: {
+    light: '#31802f',
+    onLight: '#ffffff',
+    softLight: '#dff5de',
+    dark: '#7fcc7d',
+    onDark: '#0c1a0c',
+    softDark: '#183a17',
+  },
+  /**
+   * FreeCell — deep indigo. This was violet until Reversi shipped and took
+   * that gap for the same reason this title wanted it; measured against the
+   * merged palette the two were dE 10.6 apart in light and dE 2.3 in dark,
+   * which is not two colours. Indigo is the slot left: dE 23 from Nonogram's
+   * plum and from Sky Fighter's dusk blue, which it separates from by being
+   * far darker and more saturated rather than by hue.
+   *
+   * It is the darkest accent in the series, and that suits the one solitaire
+   * where nothing is hidden — every card face up from the deal, the whole
+   * problem visible at once. It also sits directly under Solitaire on the
+   * collection home, so it takes a hue far from felt green rather than
+   * becoming a third card-table colour.
+   */
+  freecell: {
+    light: '#25256a',
+    onLight: '#ffffff',
+    softLight: '#e0e0f2',
+    dark: '#6e6ecf',
+    onDark: '#060614',
+    softDark: '#1e1e42',
   },
   /**
    * Quick Math — mustard. The board is an equation in ink with one accent
