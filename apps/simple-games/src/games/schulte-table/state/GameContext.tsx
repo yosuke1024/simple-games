@@ -174,16 +174,44 @@ export function SchulteProvider({
     [persistProgress, persistStats],
   );
 
+  /**
+   * Books what an unfinished round leaves behind, and returns the updated
+   * statistics rather than persisting them.
+   *
+   * Returning instead of saving is what makes it safe to chain: `statsRef`
+   * only catches up on the next render, so two `persistStats` calls in one
+   * tick would both read the pre-change record and the first would be lost.
+   */
+  const bookAbandoned = useCallback(
+    (stats: Stats): Stats => {
+      const current = sessionRef.current;
+      if (!current || current.status !== 'playing') return stats;
+      const synced = withElapsed(current);
+      const unbooked = Math.max(0, synced.elapsedSeconds - bookedRef.current);
+      bookedRef.current = synced.elapsedSeconds;
+      return applyAbandonedMisses(
+        applyPlayTime(stats, synced.size, unbooked),
+        synced.size,
+        synced.missCount,
+      );
+    },
+    [withElapsed],
+  );
+
   const beginSession = useCallback(
     (next: SchulteSession) => {
-      persistStats(applyGameStart(statsRef.current, next.size));
+      // Whatever was on screen is being thrown away right now — Retry is the
+      // path that reaches here mid-round — so book its seconds and its wrong
+      // taps before the new round replaces it. A finished round has already
+      // been booked by `finish`, and `bookAbandoned` leaves it alone.
+      persistStats(applyGameStart(bookAbandoned(statsRef.current), next.size));
       setLastResult(null);
       setSession(next);
       elapsedRef.current = 0;
       bookedRef.current = 0;
       setScreen('game');
     },
-    [persistStats],
+    [bookAbandoned, persistStats],
   );
 
   const startLevel = useCallback(
@@ -230,19 +258,8 @@ export function SchulteProvider({
    * finished. `played` was already counted when it started.
    */
   const abandonActiveRound = useCallback(() => {
-    const current = sessionRef.current;
-    if (!current || current.status !== 'playing') return;
-    const synced = withElapsed(current);
-    const unbooked = Math.max(0, synced.elapsedSeconds - bookedRef.current);
-    bookedRef.current = synced.elapsedSeconds;
-    persistStats(
-      applyAbandonedMisses(
-        applyPlayTime(statsRef.current, synced.size, unbooked),
-        synced.size,
-        synced.missCount,
-      ),
-    );
-  }, [persistStats, withElapsed]);
+    persistStats(bookAbandoned(statsRef.current));
+  }, [bookAbandoned, persistStats]);
 
   const goHome = useCallback(() => {
     abandonActiveRound();

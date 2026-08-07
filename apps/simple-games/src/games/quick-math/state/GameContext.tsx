@@ -49,6 +49,7 @@ import {
 import {
   applyCleared,
   applyClearToProgress,
+  applyDiscardedMisses,
   applyGameStart,
   applyPlayTime,
   bucketFor,
@@ -207,15 +208,52 @@ export function QuickMathProvider({
     setScreen('game');
   }, []);
 
+  /**
+   * Books what a set in `mode`'s slot leaves behind, because it is about to be
+   * replaced, and returns the updated statistics rather than persisting them.
+   *
+   * Returning instead of saving is what makes it safe to chain: `statsRef`
+   * only catches up on the next render, so two `persistStats` calls in one
+   * tick would both read the pre-change record and the first would be lost.
+   *
+   * Play time is booked only for the set on screen. A suspended set had its
+   * seconds booked when the player left it (`syncActiveGame`), and a set
+   * restored from disk arrives with its time already counted, so booking again
+   * here would double it.
+   */
+  const bookDiscarded = useCallback(
+    (stats: Stats, mode: GameMode): Stats => {
+      const current = sessionsRef.current[mode];
+      if (!current || current.status !== 'playing') return stats;
+      const onScreen = mode === activeModeRef.current;
+      const synced = onScreen ? withElapsed(current) : current;
+      const bucket = bucketFor(synced);
+
+      let next = stats;
+      if (onScreen) {
+        const unbooked = Math.max(0, synced.elapsedSeconds - bookedRef.current);
+        bookedRef.current = synced.elapsedSeconds;
+        next = applyPlayTime(next, bucket, unbooked);
+      }
+      return applyDiscardedMisses(next, bucket, synced.missCount);
+    },
+    [withElapsed],
+  );
+
   const beginSession = useCallback(
     (next: QuickMathSession) => {
-      persistStats(applyGameStart(statsRef.current, bucketFor(next)));
+      // Every path that throws a set away comes through here — Retry, and
+      // picking a different level or day while one is suspended — so the
+      // discard is booked in one place rather than at each call site. A
+      // finished set was already booked by `commitSession`, and
+      // `bookDiscarded` leaves it alone.
+      persistStats(applyGameStart(bookDiscarded(statsRef.current, next.mode), bucketFor(next)));
       setLastResult(null);
       putSession(next.mode, next);
       activate(next);
       void saveGame(next);
     },
-    [activate, persistStats, putSession],
+    [activate, bookDiscarded, persistStats, putSession],
   );
 
   const canResume = useCallback(

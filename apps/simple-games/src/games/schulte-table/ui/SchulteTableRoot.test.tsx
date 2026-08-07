@@ -267,6 +267,64 @@ describe('leaving a round (§11)', () => {
   });
 });
 
+describe('throwing a round away (§10, §11)', () => {
+  // Retry mid-round replaces the session outright. Everything the abandoned
+  // round produced still happened: its seconds were played and its wrong taps
+  // were tapped, and `totalMisses` is defined as every wrong tap ever made.
+  it('books the seconds and the wrong taps of the round Retry discards', async () => {
+    deviceStore.set(ST_STORAGE_KEYS.flags, tutorialDone[ST_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      fireEvent.click(cellFor(5)); // a wrong tap
+      fireEvent.click(cellFor(7)); // another
+      act(() => vi.advanceTimersByTime(6_000));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+      await settle();
+
+      const stats = storedStats();
+      expect(stats?.size3.totalMisses).toBe(2);
+      expect(stats?.size3.totalPlaySeconds).toBe(6);
+      // Started twice, finished neither.
+      expect(stats?.size3.played).toBe(2);
+      expect(stats?.size3.cleared).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not book a finished round twice when Retry follows it', async () => {
+    deviceStore.set(ST_STORAGE_KEYS.flags, tutorialDone[ST_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      fireEvent.click(cellFor(5)); // one wrong tap, then a clean run
+      for (let i = 1; i <= 9; i++) fireEvent.click(cellFor(target()));
+      act(() => vi.advanceTimersByTime(4_000));
+      await settle();
+      expect(storedStats()?.size3.totalMisses).toBe(1);
+
+      // The finished round was booked by `finish`; Retry must not book it
+      // again. Scoped to the dialog: the top bar carries the same label.
+      const dialog = screen.getByRole('alertdialog');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Retry same board' }));
+      await settle();
+      expect(storedStats()?.size3.totalMisses).toBe(1);
+      expect(storedStats()?.size3.cleared).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe('backgrounding', () => {
   // Play, background the app, let Android kill it, come back. There is no
   // saved round to restore (§11) — but the seconds played were real, and

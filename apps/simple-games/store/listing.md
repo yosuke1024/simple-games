@@ -10,11 +10,14 @@
 > Number Match / Quick Math / Schulte Table / Number Recall / Water Sort /
 > Sliding Puzzle / Memory Match / Sky Fighter / Bunny Hop)の状態で書いてある。
 >
-> **脳トレドリル 3 本(Quick Math / Schulte Table / Number Recall)の掲載文では、
-> 効能を一切主張しない。**「脳年齢」「IQ が上がる」「記憶力が向上」「認知症予防」は
-> 書かない — 科学的裏付けが係争的であり、Honest by design と両立しない
-> (docs/SCHULTE_TABLE_RULES.md §14-2)。書けるのは「制限時間なし」「減点なし」
-> 「自己ベストだけを記録」といった、実際にそうである事実だけである。
+> **ドリル 3 本(Quick Math / Schulte Table / Number Recall)の掲載文では、
+> このジャンルの定番である効能の主張を一切しない。日本語のジャンル名そのものも
+> 書かない**(名前の形をした主張であるため)。禁じている表現の一覧と理由は
+> [docs/SCHULTE_TABLE_RULES.md](../../../docs/SCHULTE_TABLE_RULES.md) §14-2 にあり、
+> **このファイルは `.github/scripts/check-principles.sh` §7 の検査対象なので、
+> ここに一覧を書き写すことはできない**(規則を書くこと自体が違反になる)。
+> 書けるのは「制限時間なし」「減点なし」「自己ベストだけを記録」といった、
+> 実際にそうである事実だけである。
 > 未収録のゲームは名前も含めて掲載文に出さず、**実際に収録できた時点で**
 > 説明・スクリーンショットへ追加する(未収録のゲームを "Coming Soon" として
 > 掲載しない)。

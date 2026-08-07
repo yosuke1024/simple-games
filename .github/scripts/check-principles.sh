@@ -147,13 +147,67 @@ fi
 efficacy_en='brain (age|training|power|fitness|health)|train(s|ing)? your brain|boosts? (your )?(memory|IQ|brainpower)|improves? (your )?(memory|focus|concentration|cognition|cognitive)|cognitive (decline|improvement|training)|prevents? dementia|mental age|sharpen your mind'
 efficacy_ja='脳年齢|脳トレ|脳を鍛|脳力|記憶力が(上が|向上)|集中力が(上が|向上)|認知症(予防|の予防)|認知機能の(改善|向上)|頭が良くな|IQ が(上が|伸び)'
 allow_marker='\[check-principles: allow\]'
+
+# **アプリ内の文字列だけでは足りない。** 効能を誤って謳うリスクが最も高いのは
+# ストア掲載文面であり、そこは `src` の外にある。対象を明示列挙で足す。
+#
+# docs/ 全体を舐めないのは意図である: ポリシー文書は禁止表現そのものを説明する
+# ために書いており(SCHULTE_TABLE_RULES.md §14-2 が実例)、blanket scan すると
+# 規則を書くこと自体が違反になる。線引きは「利用者に向けて言うかどうか」で
+# あって「どのファイルにあるか」ではない。
+copy_targets=("${src_dirs[@]}")
+for f in apps/*/store/listing.md; do [ -f "$f" ] && copy_targets+=("$f"); done
+
 hits=""
-add "$(grep -rniE "$efficacy_en" "${src_dirs[@]}" | grep -vE "$allow_marker" || true)"
-add "$(grep -rnE "$efficacy_ja" "${src_dirs[@]}" | grep -vE "$allow_marker" || true)"
+add "$(grep -rniE "$efficacy_en" "${copy_targets[@]}" | grep -vE "$allow_marker" || true)"
+add "$(grep -rnE "$efficacy_ja" "${copy_targets[@]}" | grep -vE "$allow_marker" || true)"
 if [ -n "$hits" ]; then
   report "脳への効能を主張する表現があります(docs/SCHULTE_TABLE_RULES.md §14-2)" "$hits"
 else
-  ok "効能の主張なし(英語・日本語の範囲)"
+  ok "効能の主張なし(英語・日本語の範囲、ストア掲載文面を含む)"
+fi
+
+# パターン自身の生存確認。**不在を検査するガードの最悪の壊れ方は、落ちなくなる
+# ことではなく「何も見ていない状態で緑になる」ことである** — 正規表現を編集して
+# 壊しても、対象ディレクトリの綴りを間違えても、上の検査は静かに ok を出す。
+#
+# **プローブは 1 本では足りない。** 最初はまとめて 1 文で叩いていたが、それでは
+# 式のどれか 1 つが生きていれば緑になり、他の節を壊しても素通りした(実際に
+# `brain (age|…)` の節だけを壊して確かめた)。節ごとに 1 本ずつ当てる。
+probe_en=(
+  'Brain age is a claim'
+  'Brain training every day'
+  'It trains your brain'
+  'Boosts your memory'
+  'Improves your concentration'
+  'Cognitive decline is a claim'
+  'Prevents dementia'
+  'Your mental age drops'
+  'Sharpen your mind'
+)
+probe_ja=(
+  '脳年齢が下がる'
+  '毎日の脳トレ'
+  '脳を鍛える'
+  '脳力が伸びる'
+  '記憶力が向上する'
+  '集中力が上がる'
+  '認知症予防になる'
+  '認知機能の改善が期待できる'
+  '頭が良くなる'
+  'IQ が上がる'
+)
+dead=""
+for probe in "${probe_en[@]}"; do
+  printf '%s' "$probe" | grep -qiE "$efficacy_en" || dead="${dead}en: ${probe}"$'\n'
+done
+for probe in "${probe_ja[@]}"; do
+  printf '%s' "$probe" | grep -qE "$efficacy_ja" || dead="${dead}ja: ${probe}"$'\n'
+done
+if [ -n "$dead" ]; then
+  report "§7 の検査パターンが既知の効能表現を検出できません(ガードが no-op です)" "$dead"
+else
+  ok "効能パターンの自己検査(${#probe_en[@]} + ${#probe_ja[@]} 本の既知違反文を検出できる)"
 fi
 
 if [ "$fail" -ne 0 ]; then

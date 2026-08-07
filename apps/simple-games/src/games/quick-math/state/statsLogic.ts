@@ -62,6 +62,30 @@ export function applyPlayTime(stats: Stats, bucket: StatsBucket, seconds: number
   return next;
 }
 
+/**
+ * Books the wrong answers of a set that is being thrown away.
+ *
+ * A discarded set counts as played but never as cleared, and its wrong answers
+ * happened all the same — `totalMisses` is defined as every wrong answer ever
+ * given in the band (storage/schemas.ts), so dropping them would make the
+ * running total quietly depend on whether people finish what they start.
+ *
+ * This is booked at the moment the set is *replaced*, not when the player goes
+ * home: a set left on the home screen is still alive and will book its misses
+ * through `applyCleared` if it is ever finished. Booking at both points would
+ * count them twice.
+ */
+export function applyDiscardedMisses(
+  stats: Stats,
+  bucket: StatsBucket,
+  misses: number,
+): Stats {
+  if (misses <= 0) return stats;
+  const next = clone(stats);
+  next[bucket].totalMisses += misses;
+  return next;
+}
+
 export interface ClearOutcome {
   readonly progress: Progress;
   /** True when this set beat the board's previous best time. */

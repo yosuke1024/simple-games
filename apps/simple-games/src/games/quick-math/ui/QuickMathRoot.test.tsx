@@ -1,11 +1,11 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
 import { answerDigits, questionsForLevel } from '../game';
-import { QM_STORAGE_KEYS } from '../storage/schemas';
+import { QM_STORAGE_KEYS, type Stats } from '../storage/schemas';
 import { QuickMathRoot } from './QuickMathRoot';
 
 const { deviceStore } = vi.hoisted(() => ({ deviceStore: new Map<string, string>() }));
@@ -73,6 +73,35 @@ const unlockedTo = (level: number) => ({
 async function startLevelOne(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole('button', { name: /Level 1/ }));
 }
+
+/** Launches against the device store, the way a player's phone does. */
+function launch() {
+  render(
+    <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+      <QuickMathRoot onExit={vi.fn()} />
+    </SettingsProvider>,
+  );
+}
+
+/** Lets local reads and the saves they trigger resolve (promises, not timers). */
+const settle = () => act(async () => undefined);
+
+function storedStats(): Stats | null {
+  const raw = deviceStore.get(QM_STORAGE_KEYS.stats);
+  return raw === undefined ? null : (JSON.parse(raw) as Stats);
+}
+
+/** Types digits with fireEvent, which works under fake timers. */
+function press(value: number) {
+  for (const digit of String(value)) fireEvent.click(key(Number(digit)));
+}
+
+/** A wrong answer of the same length, so it is judged on the same keypress. */
+const wrongFor = (answer: number): number => {
+  const digits = String(answer).length;
+  const other = answer + 1;
+  return String(other).length === digits ? other : answer - 1;
+};
 
 afterEach(() => {
   cleanup();
@@ -284,5 +313,104 @@ describe('home', () => {
     expect(screen.getByRole('button', { name: /Daily Challenge/ })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'All games' }));
     expect(onExit).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('throwing a set away (§10)', () => {
+  // Retry mid-set replaces the session outright. Everything the discarded set
+  // produced still happened: its seconds were played and its wrong answers
+  // were given, and `totalMisses` is defined as every wrong answer ever given.
+  it('books the seconds and the wrong answers of the set Retry discards', async () => {
+    deviceStore.set(QM_STORAGE_KEYS.flags, tutorialDone[QM_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      press(wrongFor(levelOneAnswers[0]!));
+      press(wrongFor(levelOneAnswers[0]!));
+      act(() => vi.advanceTimersByTime(7_000));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+      await settle();
+
+      const stats = storedStats();
+      expect(stats?.addSub.totalMisses).toBe(2);
+      expect(stats?.addSub.totalPlaySeconds).toBe(7);
+      expect(stats?.addSub.played).toBe(2);
+      expect(stats?.addSub.cleared).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps a suspended set’s wrong answers when a different level replaces it', async () => {
+    // Home books the seconds but leaves the set alive, so its misses are not
+    // confirmed there — they are confirmed at the moment the slot is reused.
+    deviceStore.set(QM_STORAGE_KEYS.flags, tutorialDone[QM_STORAGE_KEYS.flags]!);
+    deviceStore.set(
+      QM_STORAGE_KEYS.progress,
+      JSON.stringify({
+        schemaVersion: 1,
+        highestUnlocked: 2,
+        bestSeconds: {},
+        dailySeconds: {},
+      }),
+    );
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 2/ }));
+
+      press(wrongFor(questionsForLevel(2)[0]!.answer));
+      act(() => vi.advanceTimersByTime(5_000));
+      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+      await settle();
+
+      // Left, not finished: the seconds are booked, the miss is still pending.
+      expect(storedStats()?.addSub.totalPlaySeconds).toBe(5);
+
+      // Now discard it by starting a different level.
+      fireEvent.click(screen.getByRole('button', { name: 'Levels' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Level 1' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+      await settle();
+
+      const stats = storedStats();
+      expect(stats?.addSub.totalMisses).toBe(1);
+      // And the five seconds are still five, not ten.
+      expect(stats?.addSub.totalPlaySeconds).toBe(5);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not book a finished set twice when Retry follows it', async () => {
+    deviceStore.set(QM_STORAGE_KEYS.flags, tutorialDone[QM_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      press(wrongFor(levelOneAnswers[0]!));
+      for (const answer of levelOneAnswers) press(answer);
+      await settle();
+      expect(storedStats()?.addSub.totalMisses).toBe(1);
+      expect(storedStats()?.addSub.cleared).toBe(1);
+
+      // The finished set was booked by `commitSession`; Retry must not book it
+      // again. Scoped to the dialog: the top bar carries the same label.
+      const dialog = screen.getByRole('alertdialog');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Retry same board' }));
+      await settle();
+      expect(storedStats()?.addSub.totalMisses).toBe(1);
+      expect(storedStats()?.addSub.cleared).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
