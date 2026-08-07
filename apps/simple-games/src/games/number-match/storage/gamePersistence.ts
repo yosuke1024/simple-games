@@ -9,7 +9,13 @@ import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
 import { loadRecord, removeRecord, saveRecord } from '../../../storage/repo';
 import { decodeBoard, encodeBoard, restoreSession, type GameMode, type GameSession } from '../game';
-import { dailyGameSchema, gameSchema, NM_STORAGE_KEYS, type PersistedGame } from './schemas';
+import {
+  dailyGameSchema,
+  gameSchema,
+  NM_STORAGE_KEYS,
+  strandedDailySchema,
+  type PersistedGame,
+} from './schemas';
 
 export interface SavedGames {
   level: GameSession | null;
@@ -60,22 +66,30 @@ function toSession(persisted: PersistedGame | null): GameSession | null {
 /**
  * Loads both slots. Builds before the split kept a daily game in the level
  * slot; such a record is moved to its own slot once, on first load.
+ *
+ * The level key is therefore read twice, with two schemas: `gameSchema` reads
+ * it as what it is now (level games only — a daily record there is never
+ * resumed in place), and `strandedDailySchema` reads it as what the old builds
+ * left behind. Only one of the two can find anything, because there is only
+ * one record. Splitting the read this way is what lets the live slot stay
+ * strict while the migration keeps working.
  */
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
-  const [legacySlot, dailySlot] = await Promise.all([
+  const [levelSlot, dailySlot, strandedDaily] = await Promise.all([
     loadRecord(gameSchema, kv),
     loadRecord(dailyGameSchema, kv),
+    loadRecord(strandedDailySchema, kv),
   ]);
 
-  if (legacySlot?.mode === 'daily') {
+  if (strandedDaily !== null) {
     const migrated = dailySlot === null;
-    if (migrated) await saveRecord(dailyGameSchema, legacySlot, kv);
+    if (migrated) await saveRecord(dailyGameSchema, strandedDaily, kv);
     await removeRecord(NM_STORAGE_KEYS.game, kv);
-    return { level: null, daily: toSession(migrated ? legacySlot : dailySlot) };
+    return { level: null, daily: toSession(migrated ? strandedDaily : dailySlot) };
   }
 
   return {
-    level: toSession(legacySlot),
+    level: toSession(levelSlot),
     daily: toSession(dailySlot),
   };
 }

@@ -248,17 +248,41 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
 };
 
 /**
- * One slot per mode. Both hold the same record shape; the mode field inside
- * the record is what says which slot it belongs to.
+ * One slot per mode. Both hold the same record shape, so the KEY is what says
+ * which mode a record is — and a record that disagrees with its key is corrupt
+ * data, not an instruction to switch modes.
+ *
+ * That is the whole point of passing the expected mode in. Without it, a
+ * daily record sitting in the `level` key loads happily, and resuming
+ * it switches the app to the daily slot: the player asks for one game and
+ * is shown the other one, or a blank screen where the other one isn't.
  */
-function gameSlotSchema(key: string): SchemaDef<PersistedGame | null> {
-  return { key, version: 2, defaultValue: () => null, validate: validatePersistedGame };
+function gameSlotSchema(key: string, expectedMode: GameMode): SchemaDef<PersistedGame | null> {
+  return {
+    key,
+    version: 2,
+    defaultValue: () => null,
+    validate: (raw) => {
+      const parsed = validatePersistedGame(raw);
+      return parsed !== null && parsed.mode === expectedMode ? parsed : null;
+    },
+  };
 }
 
 /** Suspended level game. */
-export const gameSchema = gameSlotSchema(NM_STORAGE_KEYS.game);
+export const gameSchema = gameSlotSchema(NM_STORAGE_KEYS.game, 'level');
 /** Suspended daily game, kept separately so neither mode evicts the other. */
-export const dailyGameSchema = gameSlotSchema(NM_STORAGE_KEYS.dailyGame);
+export const dailyGameSchema = gameSlotSchema(NM_STORAGE_KEYS.dailyGame, 'daily');
+
+/**
+ * The level key as builds before the daily got its own slot left it: they kept
+ * the daily game here too. Such a record is the one thing that key may hold
+ * that is not a level game, and it is not corrupt — but it is readable only in
+ * order to be moved. `gamePersistence.ts` reads it once, writes it to the daily
+ * slot and clears the key. Nothing else may use this, and `gameSchema` above
+ * still refuses it, so no daily record can be resumed as a level game.
+ */
+export const strandedDailySchema = gameSlotSchema(NM_STORAGE_KEYS.game, 'daily');
 
 // ---------- level progress & personal best scores ----------
 
