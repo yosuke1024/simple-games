@@ -14,6 +14,7 @@ import {
   COLUMNS,
   isCompleteRun,
   isMovableRun,
+  isValidStockSize,
   RANKS,
   rankOf,
   suitOf,
@@ -128,6 +129,11 @@ export function moveRun(
  * dug them out, and it is the reason an empty column is worth holding.
  */
 export function canDeal(board: SpiderBoard): boolean {
+  // A stock that is not whole rows cannot have come from a deal (types.ts).
+  // The saved-game validator already refuses one, and this refuses it again:
+  // a board that reached the engine anyway must not be made worse by dealing
+  // short rows from it, and fifteen would otherwise deal ten and leave five.
+  if (!isValidStockSize(board.stock.length)) return false;
   if (board.stock.length === 0) return false;
   return board.tableau.every((pile) => pile.up.length > 0 || pile.down.length > 0);
 }

@@ -40,6 +40,34 @@ function board(partial: Partial<SpiderBoard> = {}): SpiderBoard {
 const piles = (...up: Card[][]): Pile[] =>
   Array.from({ length: COLUMNS }, (_, i) => ({ down: [], up: up[i] ?? [] }));
 
+/**
+ * A real deal — 104 cards, each exactly once, every column occupied — whose
+ * stock has been given a length no deal could produce. Cards are shifted
+ * between the stock and the face-down parts, so nothing is invented or lost:
+ * the only thing wrong with the board is the one thing under test.
+ */
+function boardWithStockOf(count: number): SpiderBoard {
+  const dealt = dealBoard('ss-free-stock-invariant', 4);
+  const stock = [...dealt.stock];
+  // Mutable copies on purpose: the shifting below is what makes the fixture.
+  const tableau = dealt.tableau.map((pile) => ({ down: [...pile.down], up: [...pile.up] }));
+  let column = 0;
+  while (stock.length > count) tableau[0]!.down.push(stock.pop()!);
+  while (stock.length < count) {
+    while (tableau[column]!.down.length === 0) column++;
+    stock.push(tableau[column]!.down.pop()!);
+  }
+  return { ...dealt, stock, tableau };
+}
+
+/** Every card on a board, to prove a fixture is still a whole pack. */
+function allCards(board: SpiderBoard): Card[] {
+  const out: Card[] = [...board.stock];
+  for (const run of board.completed) out.push(...run);
+  for (const pile of board.tableau) out.push(...pile.down, ...pile.up);
+  return out;
+}
+
 describe('dealBoard', () => {
   it('lays 54 cards into ten columns of 6,6,6,6,5,5,5,5,5,5 with 50 in stock', () => {
     const dealt = dealBoard('ss-daily-2026-08-07', 1);
@@ -222,6 +250,32 @@ describe('the stock (§3)', () => {
     });
     expect(canDeal(spent)).toBe(false);
     expect(dealRow(spent)).toBeNull();
+  });
+
+  it('refuses a stock that is not whole undealt rows', () => {
+    // 50, 40, 30, 20, 10, 0 are the only lengths a stock can reach (§3).
+    for (const count of [5, 15, 60]) {
+      const b = boardWithStockOf(count);
+      // The fixture is a whole pack: only the stock's length is impossible.
+      expect(allCards(b)).toHaveLength(CARD_COUNT);
+      expect(new Set(allCards(b)).size).toBe(CARD_COUNT);
+      expect(b.stock).toHaveLength(count);
+      expect(isValidBoard(b)).toBe(false);
+    }
+    expect(isValidBoard(boardWithStockOf(40))).toBe(true);
+  });
+
+  it('will not deal a short row, even from a stock long enough to fill one', () => {
+    // Five would hand `undefined` to the last five columns. Fifteen is the
+    // one that hides: it can fill all ten and would leave a stock of five
+    // behind for the next press.
+    for (const count of [5, 15]) {
+      const b = boardWithStockOf(count);
+      // Not the empty-column rule doing the refusing — every column is occupied.
+      expect(b.tableau.every((pile) => pile.up.length > 0)).toBe(true);
+      expect(canDeal(b)).toBe(false);
+      expect(dealRow(b)).toBeNull();
+    }
   });
 
   it('runs the deal out in exactly five rows', () => {

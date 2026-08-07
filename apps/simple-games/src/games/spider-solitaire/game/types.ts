@@ -115,14 +115,28 @@ export function isCompleteRun(run: readonly Card[], suitCount: SuitCount): boole
 }
 
 /**
+ * The sizes a stock can really have (§3). It is dealt with fifty and leaves ten
+ * at a time, so it holds 50, 40, 30, 20, 10 or 0 — never 5, never 15, never 60.
+ *
+ * This is not pedantry about a saved file. `dealRow` takes the last ten cards
+ * and hands one to each of the ten columns; a stock of five hands `undefined`
+ * to five of them, and a stock of fifteen deals once and leaves a stock of
+ * five behind to do it on the next press.
+ */
+export const isValidStockSize = (count: number): boolean =>
+  Number.isInteger(count) && count >= 0 && count <= COLUMNS * STOCK_DEALS && count % COLUMNS === 0;
+
+/**
  * A board that could have come from a deal and legal play: every one of the
- * 104 cards exactly once, ten columns, no column showing a face-down top under
- * an empty face-up part, and every completed pile a real king-to-ace run.
+ * 104 cards exactly once, ten columns, a stock of whole undealt rows, no column
+ * showing a face-down top under an empty face-up part, and every completed pile
+ * a real king-to-ace run.
  */
 export function isValidBoard(board: SpiderBoard): boolean {
   if (board.tableau.length !== COLUMNS) return false;
   if (board.completed.length > RUNS_TO_WIN) return false;
   if (board.suitCount !== 1 && board.suitCount !== 2 && board.suitCount !== 4) return false;
+  if (!isValidStockSize(board.stock.length)) return false;
 
   const seen = new Array<boolean>(CARD_COUNT).fill(false);
   const see = (card: Card): boolean => {
