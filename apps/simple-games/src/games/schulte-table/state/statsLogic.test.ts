@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createDailySession, createLevelSession, type SchulteSession } from '../game';
 import { progressSchema, statsSchema } from '../storage/schemas';
 import {
-  applyAbandonedMisses,
+  applyMisses,
   applyCleared,
   applyClearToProgress,
   applyGameStart,
@@ -27,12 +27,14 @@ describe('statistics (docs/SCHULTE_TABLE_RULES.md §10)', () => {
     expect(stats.size5.played).toBe(0);
   });
 
-  it('records a finish, its best time and its wrong taps', () => {
+  it('records a finish and its best time', () => {
     const session = finished(createLevelSession(1), 12, 3);
     const stats = applyCleared(applyGameStart(statsSchema.defaultValue(), 3), session);
     expect(stats.size3.cleared).toBe(1);
     expect(stats.size3.bestSeconds).toBe(12);
-    expect(stats.size3.totalMisses).toBe(3);
+    // Not the wrong taps: those are booked as they happen, by `applyMisses`,
+    // because a round that is killed while backgrounded never reaches a finish.
+    expect(stats.size3.totalMisses).toBe(0);
   });
 
   it('keeps only the faster of two finishes', () => {
@@ -48,9 +50,23 @@ describe('statistics (docs/SCHULTE_TABLE_RULES.md §10)', () => {
     // §9: a "fewest misses" best is set by tapping slowly, so the total is the
     // only shape this number is allowed to take.
     let stats = statsSchema.defaultValue();
-    stats = applyCleared(stats, finished(createLevelSession(1), 10, 4));
-    stats = applyCleared(stats, finished(createLevelSession(1), 10, 1));
+    stats = applyMisses(stats, 3, 4);
+    stats = applyMisses(stats, 3, 1);
     expect(stats.size3.totalMisses).toBe(5);
+  });
+
+  it('books wrong taps separately, so a finish cannot double-count them', () => {
+    // The mirror of the play-time rule below: both totals accumulate during
+    // the round, and the finish adds neither of them again.
+    let stats = applyMisses(statsSchema.defaultValue(), 3, 2);
+    stats = applyCleared(applyMisses(stats, 3, 1), finished(createLevelSession(1), 12, 3));
+    expect(stats.size3.totalMisses).toBe(3);
+  });
+
+  it('ignores a non-positive miss booking', () => {
+    const stats = statsSchema.defaultValue();
+    expect(applyMisses(stats, 3, 0)).toBe(stats);
+    expect(applyMisses(stats, 3, -2)).toBe(stats);
   });
 
   it('books play time separately, so a finish cannot double-count seconds', () => {
@@ -68,7 +84,7 @@ describe('statistics (docs/SCHULTE_TABLE_RULES.md §10)', () => {
   it('keeps the wrong taps of a round the player walked away from', () => {
     // §11: an abandoned round counts as played but never as cleared — and its
     // wrong taps happened all the same.
-    const stats = applyAbandonedMisses(applyGameStart(statsSchema.defaultValue(), 5), 5, 2);
+    const stats = applyMisses(applyGameStart(statsSchema.defaultValue(), 5), 5, 2);
     expect(stats.size5.played).toBe(1);
     expect(stats.size5.cleared).toBe(0);
     expect(stats.size5.totalMisses).toBe(2);

@@ -36,6 +36,7 @@ import {
   restartSession,
   tapCell,
   type SchulteSession,
+  type Size,
 } from '../game';
 import {
   flagsSchema,
@@ -46,10 +47,10 @@ import {
   type Stats,
 } from '../storage/schemas';
 import {
-  applyAbandonedMisses,
   applyCleared,
   applyClearToProgress,
   applyGameStart,
+  applyMisses,
   applyPlayTime,
 } from './statsLogic';
 
@@ -129,6 +130,23 @@ export function SchulteProvider({
   const elapsedRef = useRef(0);
   /** Play seconds already booked into the statistics for this round. */
   const bookedRef = useRef(0);
+  /**
+   * Wrong taps already booked for this round.
+   *
+   * The round is never persisted (§11), so a wrong tap survives the OS killing
+   * a backgrounded app only if it was booked before the kill — the same reason
+   * the seconds are booked there. That forces both to be deltas: a checkpoint
+   * that booked the whole `missCount` would count the earlier taps again every
+   * time the player came back.
+   */
+  const bookedMissesRef = useRef(0);
+
+  /** Books the wrong taps of a round that have not been counted yet. */
+  const bookMisses = useCallback((stats: Stats, size: Size, misses: number): Stats => {
+    const unbooked = Math.max(0, misses - bookedMissesRef.current);
+    bookedMissesRef.current = misses;
+    return applyMisses(stats, size, unbooked);
+  }, []);
 
   const withElapsed = useCallback((s: SchulteSession): SchulteSession => {
     return s.elapsedSeconds === elapsedRef.current
@@ -155,7 +173,8 @@ export function SchulteProvider({
       // cannot count the same time twice.
       const unbooked = Math.max(0, next.elapsedSeconds - bookedRef.current);
       bookedRef.current = next.elapsedSeconds;
-      persistStats(applyCleared(applyPlayTime(statsRef.current, next.size, unbooked), next));
+      const timed = applyPlayTime(statsRef.current, next.size, unbooked);
+      persistStats(applyCleared(bookMisses(timed, next.size, next.missCount), next));
 
       // A level short enough to finish in seconds is not worth a review ask.
       if (next.mode === 'daily' || (next.level ?? 0) >= REVIEW_FROM_LEVEL) {
@@ -171,7 +190,7 @@ export function SchulteProvider({
         misses: next.missCount,
       });
     },
-    [persistProgress, persistStats],
+    [bookMisses, persistProgress, persistStats],
   );
 
   /**
@@ -189,13 +208,9 @@ export function SchulteProvider({
       const synced = withElapsed(current);
       const unbooked = Math.max(0, synced.elapsedSeconds - bookedRef.current);
       bookedRef.current = synced.elapsedSeconds;
-      return applyAbandonedMisses(
-        applyPlayTime(stats, synced.size, unbooked),
-        synced.size,
-        synced.missCount,
-      );
+      return bookMisses(applyPlayTime(stats, synced.size, unbooked), synced.size, synced.missCount);
     },
-    [withElapsed],
+    [bookMisses, withElapsed],
   );
 
   const beginSession = useCallback(
@@ -209,6 +224,7 @@ export function SchulteProvider({
       setSession(next);
       elapsedRef.current = 0;
       bookedRef.current = 0;
+      bookedMissesRef.current = 0;
       setScreen('game');
     },
     [bookAbandoned, persistStats],
@@ -292,18 +308,22 @@ export function SchulteProvider({
     return () => window.clearInterval(id);
   }, [playing]);
 
-  // Backgrounding books the play time so far but does NOT end the round: the
-  // player may be answering a message and coming straight back, and the board
-  // is still on screen. Booking is what stops the OS killing a backgrounded app
-  // from taking the seconds with it.
+  // Backgrounding books what has happened so far but does NOT end the round:
+  // the player may be answering a message and coming straight back, and the
+  // board is still on screen. Booking is what stops the OS killing a
+  // backgrounded app from taking the seconds — and the wrong taps — with it.
+  // Nothing here is the end of the round, so both are booked as deltas and the
+  // player coming back to finish adds only what happened after.
   useEffect(() => {
     const bookNow = () => {
       const current = sessionRef.current;
       if (!current || current.status !== 'playing') return;
-      const unbooked = Math.max(0, elapsedRef.current - bookedRef.current);
-      if (unbooked <= 0) return;
+      const unbookedSeconds = Math.max(0, elapsedRef.current - bookedRef.current);
+      const unbookedMisses = Math.max(0, current.missCount - bookedMissesRef.current);
+      if (unbookedSeconds <= 0 && unbookedMisses <= 0) return;
       bookedRef.current = elapsedRef.current;
-      persistStats(applyPlayTime(statsRef.current, current.size, unbooked));
+      const timed = applyPlayTime(statsRef.current, current.size, unbookedSeconds);
+      persistStats(bookMisses(timed, current.size, current.missCount));
     };
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') bookNow();
@@ -316,7 +336,7 @@ export function SchulteProvider({
       document.removeEventListener('visibilitychange', onVisibility);
       void pauseHandle?.then((handle) => handle.remove()).catch(() => undefined);
     };
-  }, [persistStats]);
+  }, [bookMisses, persistStats]);
 
   // Android hardware back: leave sub-screens; from the game's home, hand
   // control back to the collection.

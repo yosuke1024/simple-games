@@ -26,18 +26,17 @@ export function applyGameStart(stats: Stats, size: Size): Stats {
 }
 
 /**
- * Registers a finished round: the count, the best time, and the misses it took.
+ * Registers a finished round: the count and the best time.
  *
- * Play time is deliberately NOT touched here. It accumulates through
- * `applyPlayTime` as the clock runs, and a finish is booked on top of whatever
- * has already been counted — otherwise the same seconds would land in
- * totalPlaySeconds twice.
+ * Neither play time nor wrong taps are touched here. Both accumulate through
+ * `applyPlayTime` and `applyMisses` as the round runs, and a finish is booked
+ * on top of whatever has already been counted — otherwise the same second or
+ * the same wrong tap would land in the totals twice.
  */
 export function applyCleared(stats: Stats, session: SchulteSession): Stats {
   const next = clone(stats);
   const bucket = next[sizeKey(session.size)];
   bucket.cleared += 1;
-  bucket.totalMisses += session.missCount;
   if (bucket.bestSeconds === null || session.elapsedSeconds < bucket.bestSeconds) {
     bucket.bestSeconds = session.elapsedSeconds;
   }
@@ -53,13 +52,16 @@ export function applyPlayTime(stats: Stats, size: Size, seconds: number): Stats 
 }
 
 /**
- * Books the misses of a round the player walked away from.
+ * Books wrong taps that have not been counted yet.
  *
- * An abandoned round counts as played but never as cleared (§11), and its
- * wrong taps happened all the same — dropping them would make the running
- * total quietly depend on whether people finish.
+ * The round is never persisted (§11), so a wrong tap only survives the app
+ * being killed if it was already booked — which is why this is called at every
+ * break, not just at the end: backgrounding, finishing, and walking away all
+ * book the difference. An abandoned round counts as played but never as
+ * cleared, and its wrong taps happened all the same; dropping them would make
+ * the running total quietly depend on whether people finish.
  */
-export function applyAbandonedMisses(stats: Stats, size: Size, misses: number): Stats {
+export function applyMisses(stats: Stats, size: Size, misses: number): Stats {
   if (misses <= 0) return stats;
   const next = clone(stats);
   next[sizeKey(size)].totalMisses += misses;

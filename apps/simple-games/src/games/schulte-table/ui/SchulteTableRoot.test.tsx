@@ -327,8 +327,93 @@ describe('throwing a round away (§10, §11)', () => {
 
 describe('backgrounding', () => {
   // Play, background the app, let Android kill it, come back. There is no
-  // saved round to restore (§11) — but the seconds played were real, and
-  // booking them before the kill is the only chance to keep them.
+  // saved round to restore (§11) — but the seconds played and the wrong taps
+  // made were real, and booking them before the kill is the only chance to
+  // keep them. `totalMisses` is every wrong tap ever made, and the round dying
+  // in the background must not be the one way out of that.
+  it('books wrong taps before the app can be killed', async () => {
+    deviceStore.set(ST_STORAGE_KEYS.flags, tutorialDone[ST_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      fireEvent.click(cellFor(5)); // two wrong taps, mid-round
+      fireEvent.click(cellFor(7));
+      act(() => vi.advanceTimersByTime(4_000));
+      background();
+      await settle();
+      expect(storedStats()?.size3.totalMisses).toBe(2);
+
+      // The process dies here; the round is gone with it. What was booked is
+      // all that is left, and it is still there.
+      cleanup();
+      launch();
+      await settle();
+      expect(storedStats()?.size3.totalMisses).toBe(2);
+      expect(storedStats()?.size3.totalPlaySeconds).toBe(4);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not count a booked wrong tap again when the player comes back', async () => {
+    deviceStore.set(ST_STORAGE_KEYS.flags, tutorialDone[ST_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      fireEvent.click(cellFor(5)); // booked by backgrounding...
+      background();
+      await settle();
+      expect(storedStats()?.size3.totalMisses).toBe(1);
+
+      // ...and the same round carries on to a finish, one more wrong tap in.
+      fireEvent.click(cellFor(7));
+      for (let i = 1; i <= 9; i++) fireEvent.click(cellFor(target()));
+      await settle();
+      // Two wrong taps happened; two are counted, not three.
+      expect(storedStats()?.size3.totalMisses).toBe(2);
+      expect(storedStats()?.size3.cleared).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not count a booked wrong tap again when the round is thrown away', async () => {
+    deviceStore.set(ST_STORAGE_KEYS.flags, tutorialDone[ST_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      fireEvent.click(cellFor(5));
+      background();
+      await settle();
+      expect(storedStats()?.size3.totalMisses).toBe(1);
+
+      // Retry and Home both discard the round; neither may re-book what
+      // backgrounding already counted.
+      fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+      await settle();
+      expect(storedStats()?.size3.totalMisses).toBe(1);
+
+      fireEvent.click(cellFor(target() === 5 ? 7 : 5)); // a wrong tap in the new round
+      background();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+      await settle();
+      expect(storedStats()?.size3.totalMisses).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('books play time before the app can be killed, and never twice', async () => {
     deviceStore.set(ST_STORAGE_KEYS.flags, tutorialDone[ST_STORAGE_KEYS.flags]!);
     // The play clock is a plain interval, so it has to be faked before the game
