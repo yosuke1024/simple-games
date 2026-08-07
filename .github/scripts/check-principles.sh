@@ -126,6 +126,90 @@ else
   ok "禁止表現なし(英語・日本語の範囲)"
 fi
 
+# 7. 効能の主張 ---------------------------------------------------------------
+# 脳トレドリル 3 本(Quick Math / Schulte Table / Number Recall)の収録にあたって
+# 決めた規則(docs/SCHULTE_TABLE_RULES.md §14-2)。「脳年齢」「IQ が上がる」
+# 「認知症予防」の類は、このジャンルの定番の売り文句でありながら科学的裏付けが
+# 係争的で、Honest by design と両立しない。**このジャンルを収録している以上、
+# 書かない理由を文書に置くだけでは足りない**ので、ここで不在を検査する。
+#
+# 6 と同じ限界を持つ: **英語と日本語しか見ていない。** 残り 12 言語で同じ主張が
+# されていないことは grep では判定できない(I18N_POLICY.md の門と別モデル監査の
+# 担当)。ゲーム名・ジャンル名としての "brain training" 自体を禁じているので、
+# 説明文の中で言い訳的に使うこともできない。
+#
+# 誤検出を避ける工夫: "brain" 単体は拾わず、効能を主張する結合のみを見る。
+#
+# **例外は 1 つだけ、明示的に置く。** この規則を強制しているテスト自身は、禁止語を
+# 書かなければ「無いこと」を検査できない。そこで `[check-principles: allow]` を
+# 書いた行だけを除外する — 除外はソース上に見える形で残り、grep すれば全件出る。
+# ファイル種別(*.test.ts など)でまとめて除外しない: 除外の範囲が黙って広がる。
+efficacy_en='brain (age|training|power|fitness|health)|train(s|ing)? your brain|boosts? (your )?(memory|IQ|brainpower)|improves? (your )?(memory|focus|concentration|cognition|cognitive)|cognitive (decline|improvement|training)|prevents? dementia|mental age|sharpen your mind'
+efficacy_ja='脳年齢|脳トレ|脳を鍛|脳力|記憶力が(上が|向上)|集中力が(上が|向上)|認知症(予防|の予防)|認知機能の(改善|向上)|頭が良くな|IQ が(上が|伸び)'
+allow_marker='\[check-principles: allow\]'
+
+# **アプリ内の文字列だけでは足りない。** 効能を誤って謳うリスクが最も高いのは
+# ストア掲載文面であり、そこは `src` の外にある。対象を明示列挙で足す。
+#
+# docs/ 全体を舐めないのは意図である: ポリシー文書は禁止表現そのものを説明する
+# ために書いており(SCHULTE_TABLE_RULES.md §14-2 が実例)、blanket scan すると
+# 規則を書くこと自体が違反になる。線引きは「利用者に向けて言うかどうか」で
+# あって「どのファイルにあるか」ではない。
+copy_targets=("${src_dirs[@]}")
+for f in apps/*/store/listing.md; do [ -f "$f" ] && copy_targets+=("$f"); done
+
+hits=""
+add "$(grep -rniE "$efficacy_en" "${copy_targets[@]}" | grep -vE "$allow_marker" || true)"
+add "$(grep -rnE "$efficacy_ja" "${copy_targets[@]}" | grep -vE "$allow_marker" || true)"
+if [ -n "$hits" ]; then
+  report "脳への効能を主張する表現があります(docs/SCHULTE_TABLE_RULES.md §14-2)" "$hits"
+else
+  ok "効能の主張なし(英語・日本語の範囲、ストア掲載文面を含む)"
+fi
+
+# パターン自身の生存確認。**不在を検査するガードの最悪の壊れ方は、落ちなくなる
+# ことではなく「何も見ていない状態で緑になる」ことである** — 正規表現を編集して
+# 壊しても、対象ディレクトリの綴りを間違えても、上の検査は静かに ok を出す。
+#
+# **プローブは 1 本では足りない。** 最初はまとめて 1 文で叩いていたが、それでは
+# 式のどれか 1 つが生きていれば緑になり、他の節を壊しても素通りした(実際に
+# `brain (age|…)` の節だけを壊して確かめた)。節ごとに 1 本ずつ当てる。
+probe_en=(
+  'Brain age is a claim'
+  'Brain training every day'
+  'It trains your brain'
+  'Boosts your memory'
+  'Improves your concentration'
+  'Cognitive decline is a claim'
+  'Prevents dementia'
+  'Your mental age drops'
+  'Sharpen your mind'
+)
+probe_ja=(
+  '脳年齢が下がる'
+  '毎日の脳トレ'
+  '脳を鍛える'
+  '脳力が伸びる'
+  '記憶力が向上する'
+  '集中力が上がる'
+  '認知症予防になる'
+  '認知機能の改善が期待できる'
+  '頭が良くなる'
+  'IQ が上がる'
+)
+dead=""
+for probe in "${probe_en[@]}"; do
+  printf '%s' "$probe" | grep -qiE "$efficacy_en" || dead="${dead}en: ${probe}"$'\n'
+done
+for probe in "${probe_ja[@]}"; do
+  printf '%s' "$probe" | grep -qE "$efficacy_ja" || dead="${dead}ja: ${probe}"$'\n'
+done
+if [ -n "$dead" ]; then
+  report "§7 の検査パターンが既知の効能表現を検出できません(ガードが no-op です)" "$dead"
+else
+  ok "効能パターンの自己検査(${#probe_en[@]} + ${#probe_ja[@]} 本の既知違反文を検出できる)"
+fi
+
 if [ "$fail" -ne 0 ]; then
   printf '\n原則ガードが失敗しました。実装を直すか、約束そのものを変えるなら docs/ の該当\n'
   printf 'ポリシーとこのスクリプトを同じ PR で意図的に更新してください。\n'
