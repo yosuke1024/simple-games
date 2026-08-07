@@ -7,7 +7,6 @@ export const tr: DinoRunMessages = {
   dinoStartRun: 'Koşmaya başla',
   dinoRunAgain: 'Yeniden koş',
   dinoJump: 'Zıpla',
-  dinoDuck: 'Eğil',
   dinoTapToStart: 'Başlamak için parkura dokun',
   dinoObstaclesPassed: 'Geçilen engeller',
   dinoOverTitle: 'Çarptın',
@@ -15,9 +14,9 @@ export const tr: DinoRunMessages = {
   dinoNewBestScore: 'Şimdiye kadarki en iyi puanın.',
   dinoStep1Title: 'Zıplamak için dokun',
   dinoStep1Body: 'Koşucu hiç durmaz. Kaktüsü aşmak için parkura dokun ya da Zıpla düğmesine bas.',
-  dinoStep2Title: 'Eğilmek için basılı tut',
+  dinoStep2Title: 'Kuşlar da var',
   dinoStep2Body:
-    'Kuşlar baş hizasında uçar. Altlarından geçmek için Eğil düğmesini basılı tut; alçaktan uçanları zıplayarak aş.',
+    'Alçaktan uçanları kaktüs gibi zıplayarak aş; yüksektekiler sadece havadayken çarpar.',
   dinoStep3Title: 'Gitgide hızlanır',
   dinoStep3Body: 'Tek temas koşuyu bitirir, sonraki koşu hemen ve ücretsiz başlar.',
 };

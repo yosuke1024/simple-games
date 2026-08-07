@@ -45,30 +45,37 @@ function JumpFigure() {
   );
 }
 
-/** Hold, and the runner flattens under what is flying at head height (§3). */
-function DuckFigure() {
+/** Birds come at two heights: one to jump, one to ignore (§5). */
+function BirdFigure() {
   return (
     <div className="tutorial-example" aria-hidden="true">
       <svg className="dr-figure" viewBox="0 0 160 90" role="presentation">
         <path d="M0 74 H160" stroke="var(--ink-soft)" strokeWidth="2" fill="none" />
+        {/* High: above the runner's head, harmless while it stays down. */}
         <g fill="var(--accent)">
-          <rect x="86" y="44" width="26" height="8" />
-          <rect x="106" y="40" width="12" height="8" />
-          <rect x="90" y="34" width="16" height="8" />
+          <rect x="96" y="18" width="26" height="7" />
+          <rect x="102" y="12" width="12" height="6" />
+          <rect x="118" y="20" width="10" height="3" />
         </g>
-        <g fill="var(--ink)">
-          <rect x="18" y="58" width="30" height="10" />
-          <rect x="44" y="54" width="14" height="10" />
-          <rect x="22" y="68" width="5" height="6" />
-          <rect x="34" y="68" width="5" height="6" />
+        {/* Low: in the runner's path, so it is jumped like a cactus. */}
+        <g fill="var(--accent)">
+          <rect x="96" y="56" width="26" height="7" />
+          <rect x="102" y="63" width="12" height="6" />
+          <rect x="118" y="58" width="10" height="3" />
         </g>
         <path
-          d="M62 40 V60 M62 60 L56 54 M62 60 L68 54"
+          d="M28 66 Q62 26 96 60"
           stroke="var(--ink-soft)"
-          strokeWidth="2.5"
-          strokeLinecap="round"
+          strokeWidth="2"
+          strokeDasharray="4 5"
           fill="none"
         />
+        <g fill="var(--ink)">
+          <rect x="22" y="46" width="14" height="12" />
+          <rect x="14" y="52" width="12" height="10" />
+          <rect x="16" y="62" width="4" height="8" />
+          <rect x="24" y="62" width="4" height="8" />
+        </g>
       </svg>
     </div>
   );
@@ -112,7 +119,7 @@ export function DinoTutorialScreen() {
 
   const steps = [
     { title: t('dinoStep1Title'), body: t('dinoStep1Body'), example: <JumpFigure /> },
-    { title: t('dinoStep2Title'), body: t('dinoStep2Body'), example: <DuckFigure /> },
+    { title: t('dinoStep2Title'), body: t('dinoStep2Body'), example: <BirdFigure /> },
     { title: t('dinoStep3Title'), body: t('dinoStep3Body'), example: <SpeedFigure /> },
   ];
   const current = steps[step] ?? steps[0]!;

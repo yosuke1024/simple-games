@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   BOARD_WIDTH,
-  DUCK_HEIGHT,
   GRAVITY,
   HIT_INSET,
   JUMP_VELOCITY,
@@ -9,6 +8,7 @@ import {
   MIN_GAP_SECONDS,
   PX_PER_POINT,
   RUNNER_HEIGHT,
+  RUNNER_WIDTH,
   RUNNER_X,
   START_SPEED,
 } from './constants';
@@ -19,7 +19,6 @@ import {
   obstacleBox,
   obstacleX,
   runnerBox,
-  setDucking,
   step,
 } from './engine';
 import { obstacleKind } from './obstacles';
@@ -48,17 +47,13 @@ describe('starting a run (§2)', () => {
     expect(later.obstacles).toEqual([]);
   });
 
-  it('starts on a jump, and on a duck', () => {
+  it('starts on the first jump', () => {
     expect(jump(createInitialState('test')).status).toBe('running');
-    expect(setDucking(createInitialState('test'), true).status).toBe('running');
-    // Letting go of a duck that never started a run does not start one.
-    expect(setDucking(createInitialState('test'), false).status).toBe('ready');
   });
 
   it('ignores every input once the run is over', () => {
     const over: GameState = { ...running(), status: 'over' };
     expect(jump(over)).toBe(over);
-    expect(setDucking(over, true)).toBe(over);
     expect(step(over, STEP_MS)).toBe(over);
   });
 });
@@ -66,9 +61,9 @@ describe('starting a run (§2)', () => {
 describe('the jump (§3, §4)', () => {
   it('leaves the ground and comes back to it', () => {
     const state = running();
-    const midAir = advance(state, 300);
-    expect(midAir.runnerY).toBeGreaterThan(80);
-    // The whole arc is 2 × 640 / 2100 = 0.61s; a beat later it has landed.
+    const midAir = advance(state, 250);
+    expect(midAir.runnerY).toBeGreaterThan(70);
+    // The whole arc is 2 × 580 / 2100 = 0.55s; a beat later it has landed.
     const landed = advance(state, 700);
     expect(landed.runnerY).toBe(0);
     expect(isGrounded(landed)).toBe(true);
@@ -92,27 +87,18 @@ describe('the jump (§3, §4)', () => {
     expect(again.runnerVelocity).toBe(midAir.runnerVelocity);
     expect(again).toBe(midAir);
   });
-
-  it('drops faster when ducking is held in the air (§3)', () => {
-    const midAir = advance(running(), 200);
-    const gliding = advance(midAir, 150);
-    const diving = advance(setDucking(midAir, true), 150);
-    expect(diving.runnerY).toBeLessThan(gliding.runnerY);
-  });
 });
 
-describe('the pose (§3, §7)', () => {
-  it('is half as tall while ducking, and only on the ground', () => {
-    const ducked = setDucking(running(), true);
-    expect(runnerBox(ducked).top - runnerBox(ducked).bottom).toBeCloseTo(
-      DUCK_HEIGHT - 2 * HIT_INSET,
-      5,
-    );
-
-    const duckedInAir = advance(setDucking(running(), true), 100);
-    expect(duckedInAir.runnerY).toBeGreaterThan(0);
-    const box = runnerBox(duckedInAir);
+describe('the box (§7)', () => {
+  it('is the drawn runner, pulled in on every side', () => {
+    const box = runnerBox(running());
+    expect(box.right - box.left).toBeCloseTo(RUNNER_WIDTH - 2 * HIT_INSET, 5);
     expect(box.top - box.bottom).toBeCloseTo(RUNNER_HEIGHT - 2 * HIT_INSET, 5);
+  });
+
+  it('rises with the jump, so a cactus passes underneath', () => {
+    const midAir = advance(running(), 250);
+    expect(runnerBox(midAir).bottom).toBeGreaterThan(40);
   });
 });
 
@@ -130,7 +116,7 @@ describe('the track (§5)', () => {
     // what is under test is the spacing, not the survival.
     let state = running('gap-check');
     const spawned: { spawnDistance: number; width: number; speed: number }[] = [];
-    for (let i = 0; i < 12000; i++) {
+    for (let i = 0; i < 20000; i++) {
       const before = state.obstacles.length;
       state = step(state, STEP_MS);
       if (state.obstacles.length > before) {
@@ -178,7 +164,7 @@ describe('speed and score (§5, §6)', () => {
     const airborne = (state: GameState) => ({ ...state, status: 'running' as const, runnerY: 200 });
     const early = advance(running(), 3000, airborne);
     expect(early.speed).toBeGreaterThan(START_SPEED);
-    const late = advance(running(), 90_000, airborne);
+    const late = advance(running(), 150_000, airborne);
     expect(late.speed).toBe(MAX_SPEED);
   });
 
@@ -217,21 +203,20 @@ describe('the crash (§7)', () => {
     expect(stillCounted.obstaclesPassed).toBe(state.obstaclesPassed);
   });
 
-  it('lets a ducking runner through a bird at head height', () => {
-    // A mid bird sits 26px up; ducking is 21px tall, so it passes under.
-    const state = running('duck-check');
-    const kind = obstacleKind('bird-mid');
-    const ducked = setDucking({ ...state, distance: 100 }, true);
+  it('lets a grounded runner under a high bird, and catches one in the air', () => {
+    // The high bird sits above a runner on the ground; only a jump reaches it.
+    const grounded = { ...running('bird-check'), distance: 100 };
     const bird = {
       id: 1,
-      kindId: 'bird-mid' as const,
+      kindId: 'bird-high' as const,
       spawnDistance: 100 - BOARD_WIDTH + RUNNER_X,
       passed: false,
     };
-    const box = obstacleBox(ducked.distance, bird);
-    const runner = runnerBox(ducked);
-    expect(box.left).toBeLessThan(runner.right);
-    expect(runner.top).toBeLessThan(box.bottom);
-    expect(kind.bottom).toBeGreaterThan(DUCK_HEIGHT);
+    const box = obstacleBox(grounded.distance, bird);
+    expect(box.left).toBeLessThan(runnerBox(grounded).right);
+    expect(runnerBox(grounded).top).toBeLessThan(box.bottom);
+
+    const midAir = { ...grounded, runnerY: 60 };
+    expect(runnerBox(midAir).top).toBeGreaterThan(box.bottom);
   });
 });

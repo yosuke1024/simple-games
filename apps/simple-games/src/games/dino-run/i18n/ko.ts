@@ -7,7 +7,6 @@ export const ko: DinoRunMessages = {
   dinoStartRun: '달리기 시작',
   dinoRunAgain: '다시 달리기',
   dinoJump: '점프',
-  dinoDuck: '숙이기',
   dinoTapToStart: '트랙을 탭하면 시작',
   dinoObstaclesPassed: '넘은 장애물',
   dinoOverTitle: '부딪혔습니다',
@@ -15,9 +14,8 @@ export const ko: DinoRunMessages = {
   dinoNewBestScore: '지금까지 최고 점수입니다.',
   dinoStep1Title: '탭해서 점프',
   dinoStep1Body: '달리기는 멈추지 않습니다. 트랙을 탭하거나 점프를 눌러 선인장을 넘으세요.',
-  dinoStep2Title: '길게 눌러 숙이기',
-  dinoStep2Body:
-    '새는 머리 높이로 납니다. 숙이기를 누른 채로 지나가고, 낮게 나는 새는 점프로 피하세요.',
+  dinoStep2Title: '새도 날아옵니다',
+  dinoStep2Body: '낮게 나는 새는 선인장처럼 점프로 넘고, 높이 나는 새는 점프했을 때만 부딪힙니다.',
   dinoStep3Title: '점점 빨라집니다',
   dinoStep3Body: '한 번 닿으면 끝이고, 다음 달리기는 바로 무료로 시작됩니다.',
 };

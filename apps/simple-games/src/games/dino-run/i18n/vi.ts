@@ -7,7 +7,6 @@ export const vi: DinoRunMessages = {
   dinoStartRun: 'Bắt đầu chạy',
   dinoRunAgain: 'Chạy lại',
   dinoJump: 'Nhảy',
-  dinoDuck: 'Cúi',
   dinoTapToStart: 'Chạm vào đường chạy để bắt đầu',
   dinoObstaclesPassed: 'Chướng ngại đã vượt',
   dinoOverTitle: 'Đã va chạm',
@@ -16,8 +15,8 @@ export const vi: DinoRunMessages = {
   dinoStep1Title: 'Chạm để nhảy',
   dinoStep1Body:
     'Nhân vật chạy không ngừng. Chạm vào đường chạy hoặc nhấn Nhảy để vượt xương rồng.',
-  dinoStep2Title: 'Giữ để cúi',
-  dinoStep2Body: 'Chim bay ngang tầm đầu. Giữ nút Cúi để chui qua; con bay thấp thì phải nhảy.',
+  dinoStep2Title: 'Còn có chim nữa',
+  dinoStep2Body: 'Con bay thấp phải nhảy như xương rồng; con bay cao chỉ trúng khi bạn đang nhảy.',
   dinoStep3Title: 'Ngày càng nhanh hơn',
   dinoStep3Body: 'Chạm một lần là hết lượt, và lượt sau bắt đầu ngay, miễn phí.',
 };

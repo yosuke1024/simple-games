@@ -1,10 +1,10 @@
 /**
  * The Dino Run game screen (docs/DINO_RUN_RULES.md §2, §6).
  *
- * The status row carries the run's score and the personal best beside it —
- * the game's own measures, never a clock (product principle §6: no timer
- * pressure). The best score sits there rather than on the result screen alone
- * because it is the only thing a run is being measured against.
+ * The run's score and the personal best are drawn on the track itself, in the
+ * board's own digits — so this screen carries only the two things the board
+ * cannot: the way back, and the free retry (§8). The score is still here as a
+ * labelled value for screen readers, which cannot read a canvas.
  */
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
@@ -22,7 +22,6 @@ export function DinoGameScreen() {
 
   if (!attempt) return null;
   const settled = lastResult !== null;
-  const best = Math.max(stats.bestScore, hud.score);
 
   return (
     <div className="screen game-screen">
@@ -32,17 +31,7 @@ export function DinoGameScreen() {
             <IconBack />
           </button>
           <div className="game-status">
-            {best > 0 ? (
-              <span className="dr-best">
-                {t('dinoBestScore')} {best}
-              </span>
-            ) : null}
-            {/* Keyed on the milestone so the flash replays on each hundred. */}
-            <span
-              key={hud.milestones}
-              className={`dr-score ${hud.milestones > 0 ? 'dr-score-mark' : ''}`}
-              aria-label={t('score')}
-            >
+            <span className="dr-sr-only" aria-label={t('score')}>
               {hud.score}
             </span>
           </div>
@@ -60,12 +49,12 @@ export function DinoGameScreen() {
           <DinoBoard
             key={`${attempt.seed}:${attempt.nonce}`}
             seed={attempt.seed}
+            best={stats.bestScore}
             onRunEnd={reportRunEnd}
             onBookSeconds={bookPlaySeconds}
             onHudChange={setHud}
             ariaLabel={t('dinoBoardLabel')}
             jumpLabel={t('dinoJump')}
-            duckLabel={t('dinoDuck')}
           />
           {hud.status === 'ready' ? <p className="dr-hint">{t('dinoTapToStart')}</p> : null}
         </div>

@@ -34,7 +34,7 @@ describe('first run', () => {
 
     expect(await screen.findByText('Tap to jump')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Next' }));
-    expect(screen.getByText('Hold to duck')).toBeInTheDocument();
+    expect(screen.getByText('Birds fly too')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Next' }));
     expect(screen.getByText('It only gets faster')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Start Playing' }));
@@ -84,14 +84,14 @@ describe('home', () => {
 });
 
 describe('playing', () => {
-  it('mounts the track with the score and both controls, and no clock (§2, §3)', async () => {
+  it('mounts the track with one control, a readable score, and no clock (§2, §3)', async () => {
     const user = userEvent.setup();
     renderGame(tutorialDone);
 
     await user.click(await screen.findByRole('button', { name: /Start Running/ }));
     expect(screen.getByRole('img', { name: 'Dino Run track' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Jump' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Duck' })).toBeInTheDocument();
+    // The score is painted on the track; this is the copy screen readers get.
     expect(screen.getByLabelText('Score')).toHaveTextContent('0');
     expect(screen.getByText('Tap the track to start')).toBeInTheDocument();
     expect(screen.queryByText(/\d+:\d\d/)).not.toBeInTheDocument();

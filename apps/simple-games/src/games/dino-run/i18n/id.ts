@@ -7,7 +7,6 @@ export const id: DinoRunMessages = {
   dinoStartRun: 'Mulai Berlari',
   dinoRunAgain: 'Lari lagi',
   dinoJump: 'Lompat',
-  dinoDuck: 'Menunduk',
   dinoTapToStart: 'Ketuk lintasan untuk mulai',
   dinoObstaclesPassed: 'Rintangan terlewati',
   dinoOverTitle: 'Menabrak',
@@ -16,9 +15,9 @@ export const id: DinoRunMessages = {
   dinoStep1Title: 'Ketuk untuk melompat',
   dinoStep1Body:
     'Pelari tidak pernah berhenti. Ketuk lintasan atau tekan Lompat untuk melewati kaktus.',
-  dinoStep2Title: 'Tahan untuk menunduk',
+  dinoStep2Title: 'Ada burung juga',
   dinoStep2Body:
-    'Burung terbang setinggi kepala. Tahan Menunduk untuk lewat di bawahnya; yang terbang rendah harus dilompati.',
+    'Yang terbang rendah harus dilompati seperti kaktus; yang tinggi hanya mengenaimu saat melompat.',
   dinoStep3Title: 'Makin lama makin cepat',
   dinoStep3Body: 'Sekali menabrak larinya selesai, dan lari berikutnya langsung dimulai, gratis.',
 };

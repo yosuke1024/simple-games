@@ -7,7 +7,6 @@ export const es: DinoRunMessages = {
   dinoStartRun: 'Empezar a correr',
   dinoRunAgain: 'Correr otra vez',
   dinoJump: 'Saltar',
-  dinoDuck: 'Agacharse',
   dinoTapToStart: 'Toca la pista para empezar',
   dinoObstaclesPassed: 'Obstáculos superados',
   dinoOverTitle: 'Choque',
@@ -15,9 +14,9 @@ export const es: DinoRunMessages = {
   dinoNewBestScore: 'Tu mejor puntuación hasta ahora.',
   dinoStep1Title: 'Toca para saltar',
   dinoStep1Body: 'El corredor nunca se detiene. Toca la pista o pulsa Saltar para pasar un cactus.',
-  dinoStep2Title: 'Mantén para agacharte',
+  dinoStep2Title: 'También hay pájaros',
   dinoStep2Body:
-    'Los pájaros vuelan a la altura de la cabeza. Mantén Agacharse para pasar por debajo; los que vuelan bajo hay que saltarlos.',
+    'A los que vuelan bajo hay que saltarlos como a un cactus; los altos solo te alcanzan en el salto.',
   dinoStep3Title: 'Cada vez más rápido',
   dinoStep3Body: 'Un solo golpe termina la carrera, y la siguiente empieza al instante, gratis.',
 };

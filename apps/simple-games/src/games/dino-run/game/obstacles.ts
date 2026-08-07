@@ -2,44 +2,37 @@
  * What the track is made of, and how it is drawn from a seed
  * (docs/DINO_RUN_RULES.md §5).
  *
- * Seven shapes, and each one asks exactly one question:
- *
- *   the four cacti — jump, and the wide one asks whether you jumped early
- *     enough rather than whether you jumped at all;
- *   the low bird — jump, because ducking still leaves the runner in its path;
- *   the mid bird — duck, because it flies at head height;
- *   the high bird — do nothing, because it only ever hits a runner in the
- *     air. It is the one obstacle that punishes a reflex.
+ * Seven shapes and one question: jump, or don't. The cacti differ in how
+ * early the jump has to start — one saguaro forgives a late one, three in a
+ * row do not — and the birds differ in whether they are a hazard at all: the
+ * low one flies straight through the runner and has to be jumped, the high
+ * one only ever hits a runner that is already in the air. It is the one
+ * obstacle that punishes a reflex.
  *
  * The stream is a pure function of (seed, index): the same run replays the
  * same track, which is what the golden test in compatibility.test.ts pins.
  */
 import {
   BIRD_FROM_SCORE,
+  CLUSTER_FROM_SCORE,
   HIGH_BIRD_MIN_GAP_SECONDS,
   MAX_GAP_SECONDS,
   MIN_GAP_SECONDS,
-  WIDE_CACTUS_FROM_SCORE,
 } from './constants';
 import { createRng } from './rng';
 import type { ObstacleKind, ObstacleKindId } from './types';
 
 export const OBSTACLE_KINDS: Record<ObstacleKindId, ObstacleKind> = {
-  'cactus-small': { id: 'cactus-small', width: 18, height: 30, bottom: 0, flying: false },
-  'cactus-tall': { id: 'cactus-tall', width: 18, height: 42, bottom: 0, flying: false },
-  'cactus-pair': { id: 'cactus-pair', width: 40, height: 30, bottom: 0, flying: false },
-  'cactus-wide': { id: 'cactus-wide', width: 58, height: 30, bottom: 0, flying: false },
-  // The three birds are the same bird at three heights — the only thing that
-  // differs is what it asks of the runner, and that is exactly what its
-  // height on screen says.
-  //
-  // Low: a ducking runner (22px tall) is still inside it, so this one has to
-  // be jumped. It is the reason ducking is not a free answer to everything.
-  'bird-low': { id: 'bird-low', width: 28, height: 18, bottom: 4, flying: true },
-  // Head height for a standing runner (40px), clear of a ducking one.
-  'bird-mid': { id: 'bird-mid', width: 28, height: 18, bottom: 26, flying: true },
-  // Above a standing runner entirely. Only a jump can reach it.
-  'bird-high': { id: 'bird-high', width: 28, height: 18, bottom: 52, flying: true },
+  'cactus-small': { id: 'cactus-small', width: 18, height: 36, bottom: 0, flying: false },
+  'cactus-pair': { id: 'cactus-pair', width: 62, height: 36, bottom: 0, flying: false },
+  'cactus-trio': { id: 'cactus-trio', width: 106, height: 36, bottom: 0, flying: false },
+  'cactus-large': { id: 'cactus-large', width: 26, height: 50, bottom: 0, flying: false },
+  'cactus-large-pair': { id: 'cactus-large-pair', width: 86, height: 50, bottom: 0, flying: false },
+  // Low: it flies through the runner, so it has to be jumped like a cactus.
+  // It is the reason a bird is not automatically something to ignore.
+  'bird-low': { id: 'bird-low', width: 46, height: 40, bottom: 6, flying: true },
+  // High: clear of a runner on the ground (42px), and only a jump reaches it.
+  'bird-high': { id: 'bird-high', width: 46, height: 40, bottom: 58, flying: true },
 };
 
 export const obstacleKind = (id: ObstacleKindId): ObstacleKind => OBSTACLE_KINDS[id];
@@ -53,16 +46,16 @@ interface Weighted {
 
 /**
  * Weights, not a rotation: a track that cycles through the shapes teaches its
- * own order within three runs. The openings stay the most common thing on the
- * track at every speed — the run gets faster, not more crowded (§5).
+ * own order within three runs. The single saguaro stays the most common thing
+ * on the track at every speed — the run gets faster, not more crowded (§5).
  */
 const TABLE: readonly Weighted[] = [
   { id: 'cactus-small', weight: 3, from: 0 },
-  { id: 'cactus-tall', weight: 2, from: 0 },
+  { id: 'cactus-large', weight: 2, from: 0 },
   { id: 'cactus-pair', weight: 2, from: 0 },
-  { id: 'cactus-wide', weight: 2, from: WIDE_CACTUS_FROM_SCORE },
-  { id: 'bird-low', weight: 1.5, from: BIRD_FROM_SCORE },
-  { id: 'bird-mid', weight: 2, from: BIRD_FROM_SCORE },
+  { id: 'cactus-trio', weight: 1.5, from: CLUSTER_FROM_SCORE },
+  { id: 'cactus-large-pair', weight: 1.5, from: CLUSTER_FROM_SCORE },
+  { id: 'bird-low', weight: 2, from: BIRD_FROM_SCORE },
   { id: 'bird-high', weight: 1, from: BIRD_FROM_SCORE },
 ];
 

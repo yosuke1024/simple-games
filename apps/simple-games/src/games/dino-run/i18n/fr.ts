@@ -7,7 +7,6 @@ export const fr: DinoRunMessages = {
   dinoStartRun: 'Commencer à courir',
   dinoRunAgain: 'Recourir',
   dinoJump: 'Sauter',
-  dinoDuck: 'Se baisser',
   dinoTapToStart: 'Touchez la piste pour commencer',
   dinoObstaclesPassed: 'Obstacles franchis',
   dinoOverTitle: 'Collision',
@@ -16,9 +15,9 @@ export const fr: DinoRunMessages = {
   dinoStep1Title: 'Touchez pour sauter',
   dinoStep1Body:
     'Le coureur ne s’arrête jamais. Touchez la piste ou appuyez sur Sauter pour franchir un cactus.',
-  dinoStep2Title: 'Maintenez pour vous baisser',
+  dinoStep2Title: 'Il y a aussi des oiseaux',
   dinoStep2Body:
-    'Les oiseaux volent à hauteur de tête. Maintenez Se baisser pour passer dessous ; ceux qui volent bas se sautent.',
+    'Ceux qui volent bas se sautent comme un cactus ; les hauts ne touchent qu’en plein saut.',
   dinoStep3Title: 'Ça ne fait qu’accélérer',
   dinoStep3Body:
     'Un seul contact met fin à la course, et la suivante démarre aussitôt, gratuitement.',

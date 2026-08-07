@@ -7,7 +7,6 @@ export const de: DinoRunMessages = {
   dinoStartRun: 'Losrennen',
   dinoRunAgain: 'Noch einmal rennen',
   dinoJump: 'Springen',
-  dinoDuck: 'Ducken',
   dinoTapToStart: 'Zum Starten die Strecke antippen',
   dinoObstaclesPassed: 'Überwundene Hindernisse',
   dinoOverTitle: 'Zusammenstoß',
@@ -16,9 +15,9 @@ export const de: DinoRunMessages = {
   dinoStep1Title: 'Tippen zum Springen',
   dinoStep1Body:
     'Der Läufer hält nie an. Tippe auf die Strecke oder drücke Springen, um über einen Kaktus zu kommen.',
-  dinoStep2Title: 'Halten zum Ducken',
+  dinoStep2Title: 'Auch Vögel kommen',
   dinoStep2Body:
-    'Vögel fliegen auf Kopfhöhe. Halte Ducken, um darunter durchzulaufen; tief fliegende musst du überspringen.',
+    'Tief fliegende musst du wie einen Kaktus überspringen; hohe treffen dich nur im Sprung.',
   dinoStep3Title: 'Es wird immer schneller',
   dinoStep3Body: 'Eine Berührung beendet den Lauf, und der nächste startet sofort und kostenlos.',
 };

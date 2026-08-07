@@ -38,15 +38,16 @@ function runBlind(seed: string, ms: number): { state: GameState; track: string }
 describe('tracks that must never change', () => {
   it("the opening of seed 'dino-golden' is unchanged", () => {
     expect(runBlind('dino-golden', 12_000).track).toBe(
-      'cactus-small@216.0|cactus-tall@547.5|cactus-pair@1184.5|cactus-small@1502.5|' +
-        'cactus-tall@1733.4|cactus-small@2129.2|cactus-pair@2527.5|cactus-pair@2795.4',
+      'cactus-small@360.0|cactus-large@869.9|cactus-pair@1446.3|cactus-pair@1831.8|' +
+        'cactus-small@2298.8|cactus-large@2618.7|cactus-small@3180.3|cactus-pair@3726.1|' +
+        'cactus-pair@4094.4',
     );
   });
 
   it('the same seed a minute in is unchanged', () => {
     const { state } = runBlind('dino-golden', 60_000);
     expect(`${state.score}/${state.obstaclesPassed}/${state.speed.toFixed(1)}`).toBe(
-      '1191/45/460.0',
+      '672/48/556.0',
     );
   });
 });

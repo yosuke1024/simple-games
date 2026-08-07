@@ -1,7 +1,7 @@
 /**
  * The run, as a pure function of its inputs (docs/DINO_RUN_RULES.md). No
  * canvas, no React, no clock of its own: the view hands it fixed steps and
- * the two things a player can do — jump and duck.
+ * the one thing a player can do — jump.
  *
  * The world does not move; the runner's distance grows and every obstacle's
  * position is read from it (`obstacleX`). That is what keeps a long run
@@ -10,9 +10,6 @@
  */
 import {
   BOARD_WIDTH,
-  DUCK_HEIGHT,
-  DUCK_WIDTH,
-  FAST_FALL_GRAVITY,
   GRAVITY,
   HIT_INSET,
   JUMP_VELOCITY,
@@ -37,7 +34,6 @@ export function createInitialState(seed = 'prototype'): GameState {
     speed: START_SPEED,
     runnerY: 0,
     runnerVelocity: 0,
-    ducking: false,
     obstacles: [],
     nextObstacleIndex: 0,
     // The first obstacle enters after a beat of empty track, so the run
@@ -59,27 +55,16 @@ export function obstacleX(distance: number, obstacle: Obstacle): number {
 export const isGrounded = (state: GameState): boolean => state.runnerY <= 0;
 
 /**
- * Jump. Only from the ground: a second jump in mid-air would make every gap
- * survivable and the track meaningless (§3). The first jump also starts the
- * run, which is why a player never has to find a separate start control.
+ * Jump — the only input there is (§3). Only from the ground: a second jump in
+ * mid-air would make every gap survivable and the track meaningless. The
+ * first jump also starts the run, which is why a player never has to find a
+ * separate start control.
  */
 export function jump(state: GameState): GameState {
   if (state.status === 'over') return state;
   const started = state.status === 'ready' ? { ...state, status: 'running' as const } : state;
   if (!isGrounded(started)) return started;
-  return { ...started, runnerVelocity: JUMP_VELOCITY, ducking: false };
-}
-
-/**
- * Duck, held. In mid-air it is a dive instead: the runner drops fast and is
- * ducking when it lands, so a mistimed jump can still be saved (§3).
- */
-export function setDucking(state: GameState, ducking: boolean): GameState {
-  if (state.status === 'over') return state;
-  const started =
-    state.status === 'ready' && ducking ? { ...state, status: 'running' as const } : state;
-  if (started.ducking === ducking) return started;
-  return { ...started, ducking };
+  return { ...started, runnerVelocity: JUMP_VELOCITY };
 }
 
 export interface Box {
@@ -90,15 +75,13 @@ export interface Box {
   top: number;
 }
 
-/** The runner's box for the current pose (§7). */
+/** The runner's box: the drawn shape, pulled in on every side (§7). */
 export function runnerBox(state: GameState): Box {
-  const width = state.ducking && isGrounded(state) ? DUCK_WIDTH : RUNNER_WIDTH;
-  const height = state.ducking && isGrounded(state) ? DUCK_HEIGHT : RUNNER_HEIGHT;
   return {
     left: RUNNER_X + HIT_INSET,
-    right: RUNNER_X + width - HIT_INSET,
+    right: RUNNER_X + RUNNER_WIDTH - HIT_INSET,
     bottom: state.runnerY + HIT_INSET,
-    top: state.runnerY + height - HIT_INSET,
+    top: state.runnerY + RUNNER_HEIGHT - HIT_INSET,
   };
 }
 
@@ -130,12 +113,11 @@ export function step(state: GameState, dtMs: number): GameState {
   const speed = speedAt(elapsedMs);
   const distance = state.distance + speed * dt;
 
-  // The jump arc. Ducking in the air pulls the runner down harder (§3).
+  // The jump arc.
   let runnerY = state.runnerY;
   let runnerVelocity = state.runnerVelocity;
   if (runnerY > 0 || runnerVelocity > 0) {
-    const gravity = state.ducking ? FAST_FALL_GRAVITY : GRAVITY;
-    runnerVelocity -= gravity * dt;
+    runnerVelocity -= GRAVITY * dt;
     runnerY += runnerVelocity * dt;
     if (runnerY <= 0) {
       runnerY = 0;

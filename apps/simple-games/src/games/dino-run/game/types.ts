@@ -1,11 +1,11 @@
 /** What kinds of thing stand on (or fly over) the track. */
 export type ObstacleKindId =
   | 'cactus-small'
-  | 'cactus-tall'
   | 'cactus-pair'
-  | 'cactus-wide'
+  | 'cactus-trio'
+  | 'cactus-large'
+  | 'cactus-large-pair'
   | 'bird-low'
-  | 'bird-mid'
   | 'bird-high';
 
 export interface ObstacleKind {
@@ -47,7 +47,6 @@ export interface GameState {
   runnerY: number;
   /** Vertical speed, positive upwards. */
   runnerVelocity: number;
-  ducking: boolean;
   obstacles: Obstacle[];
   /** Index into the seed's obstacle stream — the draw's second coordinate. */
   nextObstacleIndex: number;

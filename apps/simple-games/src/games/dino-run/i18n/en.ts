@@ -10,7 +10,6 @@ export const en = {
   dinoStartRun: 'Start Running',
   dinoRunAgain: 'Run again',
   dinoJump: 'Jump',
-  dinoDuck: 'Duck',
   dinoTapToStart: 'Tap the track to start',
   dinoObstaclesPassed: 'Obstacles passed',
   dinoOverTitle: 'Crashed',
@@ -18,8 +17,8 @@ export const en = {
   dinoNewBestScore: 'Your best score yet.',
   dinoStep1Title: 'Tap to jump',
   dinoStep1Body: 'The runner never stops. Tap the track, or press Jump, to clear a cactus.',
-  dinoStep2Title: 'Hold to duck',
-  dinoStep2Body: 'Birds fly at head height. Hold Duck to pass under one — low ones must be jumped.',
+  dinoStep2Title: 'Birds fly too',
+  dinoStep2Body: 'Low ones have to be jumped like a cactus; high ones only catch you mid-jump.',
   dinoStep3Title: 'It only gets faster',
   dinoStep3Body: 'One touch ends the run, and the next one starts straight away, free.',
 } as const;

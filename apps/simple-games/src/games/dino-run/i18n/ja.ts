@@ -7,7 +7,6 @@ export const ja: DinoRunMessages = {
   dinoStartRun: '走りはじめる',
   dinoRunAgain: 'もう一度走る',
   dinoJump: 'ジャンプ',
-  dinoDuck: 'しゃがむ',
   dinoTapToStart: 'コースをタップで開始',
   dinoObstaclesPassed: '越えた障害物',
   dinoOverTitle: 'ぶつかった',
@@ -15,8 +14,8 @@ export const ja: DinoRunMessages = {
   dinoNewBestScore: '自己ベスト更新！',
   dinoStep1Title: 'タップでジャンプ',
   dinoStep1Body: '走りは止まりません。コースをタップ、またはジャンプでサボテンを越えます。',
-  dinoStep2Title: '長押しでしゃがむ',
-  dinoStep2Body: '鳥は頭の高さを飛びます。長押しでくぐり、低い鳥はジャンプでよけます。',
+  dinoStep2Title: '鳥も飛んでくる',
+  dinoStep2Body: '低い鳥はサボテンと同じくジャンプで。高い鳥は、跳ばなければ当たりません。',
   dinoStep3Title: '速くなっていく',
   dinoStep3Body: '一度当たれば終わり。次の走りはすぐ、無料で始められます。',
 };

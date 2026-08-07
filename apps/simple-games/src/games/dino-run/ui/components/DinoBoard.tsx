@@ -1,13 +1,18 @@
 /**
  * The Dino Run board: a Canvas 2D view over the pure simulation in
- * game/engine.ts, plus the two controls that drive it.
+ * game/engine.ts, plus the control that drives it.
  *
- * The controls live here rather than on the game screen because they are part
- * of the board's input surface: tapping the track jumps, and the two buttons
- * under it do the same two things with a name and a hit area big enough for a
- * thumb (docs/DINO_RUN_RULES.md §3). Keeping them together is also what lets
- * every input path — canvas, buttons, keyboard — go through one function
- * each, instead of three that can drift apart.
+ * The score is drawn on the track rather than in the app's status row
+ * (§6): digits are the same rectangles as the runner, they need no
+ * translation, and a scoreboard over the horizon is what this game has looked
+ * like since the browser's offline page. The status row keeps the score only
+ * as a labelled, screen-reader-visible value.
+ *
+ * The jump button lives here rather than on the game screen because it is
+ * part of the board's input surface: tapping the track jumps, and the button
+ * does the same thing with a name and a hit area big enough for a thumb
+ * (§3). Keeping them together is also what lets every input path — canvas,
+ * button, keyboard — go through one function instead of three that can drift.
  *
  * Battery discipline (§9, §12): the loop runs only while this component is
  * mounted and the page visible; backgrounding stops it outright, and a
@@ -22,30 +27,16 @@ import { useCallback, useEffect, useRef, type PointerEvent } from 'react';
 import { haptics } from '@/services/haptics';
 import { sounds } from '@/services/sound';
 import { useReducedMotion } from '@/ui/useReducedMotion';
-import {
-  BOARD_HEIGHT,
-  BOARD_WIDTH,
-  DUCK_HEIGHT,
-  GROUND_Y,
-  RUNNER_HEIGHT,
-  RUNNER_X,
-} from '../../game/constants';
-import {
-  createInitialState,
-  isGrounded,
-  jump,
-  obstacleX,
-  setDucking,
-  step,
-} from '../../game/engine';
+import { BOARD_HEIGHT, BOARD_WIDTH, GROUND_Y, RUNNER_HEIGHT, RUNNER_X } from '../../game/constants';
+import { createInitialState, isGrounded, jump, obstacleX, step } from '../../game/engine';
 import { obstacleKind } from '../../game/obstacles';
 import type { GameState } from '../../game/types';
 import {
   BIRD_FRAMES,
   CLOUD,
-  DUCK_BODY,
-  DUCK_EYE,
-  DUCK_LEGS,
+  GLYPH_GAP,
+  GLYPH_WIDTH,
+  GLYPHS,
   OBSTACLE_SHAPES,
   RUNNER_BODY,
   RUNNER_EYE,
@@ -60,27 +51,37 @@ const MAX_FRAME_DT_MS = 250;
 
 /** One stride, and one wingbeat. Both are read off the distance run, so they
     speed up with the track instead of drifting away from it. */
-const STRIDE_PX = 26;
-const WINGBEAT_PX = 90;
+const STRIDE_PX = 34;
+const WINGBEAT_PX = 120;
 
 /** Clouds drift at a third of the ground's speed — depth for two fillRects. */
 const CLOUD_PARALLAX = 0.34;
 const CLOUDS: readonly (readonly [number, number])[] = [
-  [40, 26],
-  [190, 44],
-  [300, 18],
+  [70, 26],
+  [280, 44],
+  [470, 18],
 ];
 
-/** The pebbles on the ground, spaced unevenly so the track is not a ruler. */
-const PEBBLES: readonly (readonly [number, number, number])[] = [
-  [14, 5, 7],
+/** The horizon's bumps and pebbles, spaced unevenly so it is not a ruler. */
+const GROUND_MARKS: readonly (readonly [number, number, number])[] = [
+  [24, 5, 9],
   [96, 3, 4],
-  [151, 6, 3],
-  [223, 4, 8],
-  [287, 3, 5],
-  [341, 5, 6],
+  [151, 8, 3],
+  [223, 4, 11],
+  [287, 3, 6],
+  [341, 7, 5],
+  [412, 4, 8],
+  [488, 6, 3],
+  [545, 3, 7],
 ];
-const PEBBLE_SPAN = 400;
+const GROUND_SPAN = 640;
+
+/** The score is zero-padded to this many digits, scoreboard style (§6). */
+const SCORE_DIGITS = 5;
+const SCORE_RIGHT = BOARD_WIDTH - 14;
+const SCORE_TOP = 12;
+/** Blinks after a hundred: shown, hidden, shown — three beats and done. */
+const MILESTONE_BLINK_MS = 900;
 
 interface Palette {
   surface: string;
@@ -95,7 +96,7 @@ function readPalette(): Palette {
   const pick = (name: string, fallback: string) => style.getPropertyValue(name).trim() || fallback;
   return {
     surface: pick('--surface', '#fffdf8'),
-    accent: pick('--accent', '#8a6a2b'),
+    accent: pick('--accent', '#6e7a34'),
     ink: pick('--ink', '#232a33'),
     inkSoft: pick('--ink-soft', '#6b7480'),
   };
@@ -106,13 +107,34 @@ function blit(ctx: CanvasRenderingContext2D, rects: readonly Rect[], x: number, 
   for (const [rx, ry, rw, rh] of rects) ctx.fillRect(x + rx, y + ry, rw, rh);
 }
 
-/**
- * `calm` is reduced motion (§12). The track itself still moves — that is the
- * game, not decoration — but everything that moves *only* to look alive stops:
- * the clouds and pebbles hold still and the runner keeps one pose.
- */
-function render(ctx: CanvasRenderingContext2D, state: GameState, palette: Palette, calm: boolean) {
-  const scroll = calm ? 0 : state.distance;
+/** Draws text right-aligned at `right`, in the glyphs the sprites define. */
+function blitText(ctx: CanvasRenderingContext2D, text: string, right: number, top: number): void {
+  const step = GLYPH_WIDTH + GLYPH_GAP;
+  let x = right - text.length * step + GLYPH_GAP;
+  for (const char of text) {
+    const glyph = GLYPHS[char];
+    if (glyph) blit(ctx, glyph, x, top);
+    x += step;
+  }
+}
+
+const pad = (value: number): string => String(Math.min(value, 99999)).padStart(SCORE_DIGITS, '0');
+
+export interface RenderExtras {
+  best: number;
+  /** Counts down while the hundred just passed is being blinked (§6). */
+  blinkMs: number;
+  /** Reduced motion: the decoration holds still, the track does not (§12). */
+  calm: boolean;
+}
+
+function render(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  palette: Palette,
+  extras: RenderExtras,
+) {
+  const scroll = extras.calm ? 0 : state.distance;
 
   ctx.fillStyle = palette.surface;
   ctx.fillRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
@@ -125,10 +147,14 @@ function render(ctx: CanvasRenderingContext2D, state: GameState, palette: Palett
     blit(ctx, CLOUD, ((((x - drift) % cloudSpan) + cloudSpan) % cloudSpan) - 30, y);
   }
 
+  // The horizon: a line with bumps sitting on it and grit scattered below —
+  // the ground reads as ground, and the scrolling is visible even on the
+  // stretches where no obstacle is on screen.
   ctx.fillRect(0, GROUND_Y, BOARD_WIDTH, 2);
-  for (const [x, offset, width] of PEBBLES) {
-    const px = ((((x - scroll) % PEBBLE_SPAN) + PEBBLE_SPAN) % PEBBLE_SPAN) - 20;
+  for (const [x, offset, width] of GROUND_MARKS) {
+    const px = ((((x - scroll) % GROUND_SPAN) + GROUND_SPAN) % GROUND_SPAN) - 20;
     ctx.fillRect(px, GROUND_Y + 3 + offset, width, 2);
+    ctx.fillRect(px + 6, GROUND_Y - 2, width, 2);
   }
 
   // Obstacles in the accent, the runner in ink: colour says what is a hazard
@@ -148,38 +174,40 @@ function render(ctx: CanvasRenderingContext2D, state: GameState, palette: Palett
   }
 
   const grounded = isGrounded(state);
-  const ducking = state.ducking && grounded;
-  const height = ducking ? DUCK_HEIGHT : RUNNER_HEIGHT;
-  const top = GROUND_Y - state.runnerY - height;
+  const top = GROUND_Y - state.runnerY - RUNNER_HEIGHT;
+  const stride = Math.floor(scroll / STRIDE_PX) % 2;
 
   ctx.fillStyle = palette.ink;
-  const stride = Math.floor(scroll / STRIDE_PX) % 2;
-  if (ducking) {
-    blit(ctx, DUCK_BODY, RUNNER_X, top);
-    blit(ctx, DUCK_LEGS[stride]!, RUNNER_X, top);
-  } else {
-    blit(ctx, RUNNER_BODY, RUNNER_X, top);
-    blit(ctx, grounded ? RUNNER_LEGS[stride]! : RUNNER_LEGS_AIR, RUNNER_X, top);
-  }
-
+  blit(ctx, RUNNER_BODY, RUNNER_X, top);
+  blit(ctx, grounded ? RUNNER_LEGS[stride]! : RUNNER_LEGS_AIR, RUNNER_X, top);
   // The eye is a hole in the art, so it needs no drawing while the runner is
   // alive. A crashed one has it filled in — the one thing on screen that says
   // the run is over without a word to translate (§12).
-  if (state.status === 'over') {
-    blit(ctx, ducking ? DUCK_EYE : RUNNER_EYE, RUNNER_X, top);
+  if (state.status === 'over') blit(ctx, RUNNER_EYE, RUNNER_X, top);
+
+  // The scoreboard. The best score sits to the left of the run's own, and
+  // only once there is one — a fresh install has nothing to beat.
+  const blinking = extras.blinkMs > 0 && Math.floor(extras.blinkMs / 150) % 2 === 1;
+  ctx.fillStyle = palette.inkSoft;
+  if (extras.best > 0) {
+    const width = (SCORE_DIGITS + 4) * (GLYPH_WIDTH + GLYPH_GAP);
+    blitText(ctx, `HI ${pad(extras.best)}`, SCORE_RIGHT - width, SCORE_TOP);
   }
+  if (!blinking) blitText(ctx, pad(state.score), SCORE_RIGHT, SCORE_TOP);
 }
 
 export interface BoardHud {
   score: number;
   status: GameState['status'];
-  /** Rises every 100 points; the score line flashes when it changes (§6). */
+  /** Rises every 100 points; the board blinks the score when it changes (§6). */
   milestones: number;
 }
 
 export interface DinoBoardProps {
   /** The track. A new seed remounts the board through the screen's key. */
   seed: string;
+  /** The personal best to show beside the run's score; 0 hides it. */
+  best: number;
   /** Fired exactly once, when the run ends (§2). */
   onRunEnd: (score: number, obstaclesPassed: number) => void;
   /** Books play seconds that just became final (§9). */
@@ -188,23 +216,24 @@ export interface DinoBoardProps {
   onHudChange: (hud: BoardHud) => void;
   ariaLabel: string;
   jumpLabel: string;
-  duckLabel: string;
 }
 
 export function DinoBoard({
   seed,
+  best,
   onRunEnd,
   onBookSeconds,
   onHudChange,
   ariaLabel,
   jumpLabel,
-  duckLabel,
 }: DinoBoardProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const stateRef = useRef<GameState>(createInitialState(seed));
   const reduced = useReducedMotion();
   const reducedRef = useRef(reduced);
   reducedRef.current = reduced;
+  const bestRef = useRef(best);
+  bestRef.current = best;
 
   const onRunEndRef = useRef(onRunEnd);
   onRunEndRef.current = onRunEnd;
@@ -227,8 +256,8 @@ export function DinoBoard({
     }
   }, []);
 
-  // The three input paths, each one line deep. Sound and haptics belong to
-  // the act of jumping, not to the frame that notices it.
+  // Every input path is this one function. Sound and haptics belong to the
+  // act of jumping, not to the frame that notices it.
   const doJump = useCallback(() => {
     const before = stateRef.current;
     const after = jump(before);
@@ -240,12 +269,8 @@ export function DinoBoard({
     }
   }, []);
 
-  const doDuck = useCallback((ducking: boolean) => {
-    stateRef.current = setDucking(stateRef.current, ducking);
-  }, []);
-
   const onCanvasPointerDown = useCallback(
-    (event: PointerEvent<HTMLCanvasElement>) => {
+    (event: PointerEvent<HTMLDivElement>) => {
       event.preventDefault();
       doJump();
     },
@@ -257,27 +282,17 @@ export function DinoBoard({
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.repeat) return;
-      // A focused control button handles its own keys; taking them here too
-      // would jump *and* duck from one press of the space bar.
+      // A focused button handles its own keys; taking them here as well would
+      // jump twice on one press of the space bar.
       if (event.target instanceof HTMLButtonElement) return;
       if (event.key === ' ' || event.key === 'ArrowUp' || event.key === 'w') {
         event.preventDefault();
         doJump();
-      } else if (event.key === 'ArrowDown' || event.key === 's') {
-        event.preventDefault();
-        doDuck(true);
       }
     };
-    const onKeyUp = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowDown' || event.key === 's') doDuck(false);
-    };
     window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
-    };
-  }, [doJump, doDuck]);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [doJump]);
 
   useEffect(() => {
     // The status row is real even where canvas is not (jsdom): publish the
@@ -298,10 +313,16 @@ export function DinoBoard({
     canvas.height = BOARD_HEIGHT * dpr;
     ctx.scale(dpr, dpr);
 
+    let blinkMs = 0;
     let palette = readPalette();
+    const extras = (): RenderExtras => ({
+      best: Math.max(bestRef.current, stateRef.current.score),
+      blinkMs: reducedRef.current ? 0 : blinkMs,
+      calm: reducedRef.current,
+    });
     const repaint = () => {
       palette = readPalette();
-      render(ctx, stateRef.current, palette, reducedRef.current);
+      render(ctx, stateRef.current, palette, extras());
     };
     // The shell swaps accent tokens by attribute; the OS may flip dark mode.
     const observer = new MutationObserver(repaint);
@@ -368,11 +389,15 @@ export function DinoBoard({
       }
 
       const current = stateRef.current;
-      if (current.milestones > prevMilestones) sounds.match();
+      if (current.milestones > prevMilestones) {
+        blinkMs = MILESTONE_BLINK_MS;
+        sounds.match();
+      }
       prevMilestones = current.milestones;
+      if (blinkMs > 0) blinkMs = Math.max(0, blinkMs - dt);
 
       publishHud(current);
-      render(ctx, current, palette, reducedRef.current);
+      render(ctx, current, palette, extras());
 
       // A finished run stops the loop after its final frame (battery, §12).
       if (current.status === 'over') {
@@ -392,13 +417,11 @@ export function DinoBoard({
       rafId = null;
     };
 
-    // Backgrounding stops the loop, drops the held duck (the finger is gone
-    // as far as this game knows) and books the seconds run so far — the OS
+    // Backgrounding stops the loop and books the seconds run so far — the OS
     // can kill the app without another event (§9).
     const onVisibility = () => {
       if (document.hidden) {
         stop();
-        stateRef.current = setDucking(stateRef.current, false);
         flushSeconds();
       } else {
         start();
@@ -433,57 +456,36 @@ export function DinoBoard({
 
   return (
     <>
-      <canvas
-        ref={canvasRef}
-        className="dr-canvas"
-        style={{ aspectRatio: `${BOARD_WIDTH} / ${BOARD_HEIGHT}` }}
-        role="img"
-        aria-label={ariaLabel}
-        onPointerDown={onCanvasPointerDown}
-      />
-      <div className="dr-controls">
-        <button
-          type="button"
-          className="dr-control"
-          aria-label={jumpLabel}
-          onPointerDown={(event) => {
-            // On the first frame the finger lands, not on the frame it lifts:
-            // a runner is judged in tenths of a second (§3).
-            event.preventDefault();
-            doJump();
-          }}
-          // `detail === 0` is a click that came from a keyboard or an
-          // assistive technology, where no pointer event ran before it.
-          onClick={(event) => {
-            if (event.detail === 0) doJump();
-          }}
-        >
-          <span aria-hidden="true">↑</span>
-        </button>
-        <button
-          type="button"
-          className="dr-control"
-          aria-label={duckLabel}
-          onPointerDown={(event) => {
-            event.preventDefault();
-            doDuck(true);
-          }}
-          onPointerUp={() => doDuck(false)}
-          onPointerCancel={() => doDuck(false)}
-          onPointerLeave={() => doDuck(false)}
-          // Held from the keyboard too: a button already reports its own key
-          // down and up, so ducking works while the key is held rather than
-          // for some duration this game would have to invent.
-          onKeyDown={(event) => {
-            if (event.key === ' ' || event.key === 'Enter') doDuck(true);
-          }}
-          onKeyUp={(event) => {
-            if (event.key === ' ' || event.key === 'Enter') doDuck(false);
-          }}
-        >
-          <span aria-hidden="true">↓</span>
-        </button>
+      {/* The whole area around the track jumps, not just the strip itself:
+          the board is a short band on a tall phone, and a thumb should not
+          have to find it (§3). */}
+      <div className="dr-stage" onPointerDown={onCanvasPointerDown}>
+        <canvas
+          ref={canvasRef}
+          className="dr-canvas"
+          style={{ aspectRatio: `${BOARD_WIDTH} / ${BOARD_HEIGHT}` }}
+          role="img"
+          aria-label={ariaLabel}
+        />
       </div>
+      <button
+        type="button"
+        className="dr-jump"
+        aria-label={jumpLabel}
+        onPointerDown={(event) => {
+          // On the first frame the finger lands, not on the frame it lifts:
+          // a runner is judged in tenths of a second (§3).
+          event.preventDefault();
+          doJump();
+        }}
+        // `detail === 0` is a click that came from a keyboard or an assistive
+        // technology, where no pointer event ran before it.
+        onClick={(event) => {
+          if (event.detail === 0) doJump();
+        }}
+      >
+        <span aria-hidden="true">↑</span>
+      </button>
     </>
   );
 }
