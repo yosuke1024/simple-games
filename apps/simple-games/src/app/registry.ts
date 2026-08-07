@@ -28,6 +28,8 @@ import { BB_STORAGE_KEYS } from '../games/brick-breaker/storage/keys';
 import { BP_STORAGE_KEYS } from '../games/block-puzzle/storage/keys';
 import { BH_STORAGE_KEYS } from '../games/bunny-hop/storage/keys';
 import { C4_STORAGE_KEYS } from '../games/connect-four/storage/keys';
+import { CK_STORAGE_KEYS } from '../games/checkers/storage/keys';
+import { GM_STORAGE_KEYS } from '../games/gomoku/storage/keys';
 import { FC_STORAGE_KEYS } from '../games/freecell/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
@@ -64,8 +66,10 @@ export type GameId =
   | 'bunny-hop'
   | '2048'
   | 'block-puzzle'
+  | 'checkers'
   | 'reversi'
-  | 'connect-four';
+  | 'connect-four'
+  | 'gomoku';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -210,6 +214,19 @@ export const GAMES: readonly GameDefinition[] = [
       })),
   },
   {
+    id: 'checkers',
+    // The mark is the board itself: two dark squares on the diagonal, which
+    // is the one picture no other title in the collection could be. The
+    // draughts piece that was the first choice is a filled circle, and it
+    // would have sat beside Reversi's half-filled one.
+    title: 'Checkers',
+    category: 'board',
+    glyph: '▚',
+    storageKeys: Object.values(CK_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/checkers/ui/CheckersRoot').then((m) => ({ default: m.CheckersRoot })),
+  },
+  {
     id: 'reversi',
     title: 'Reversi',
     category: 'board',
@@ -228,6 +245,17 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/connect-four/ui/ConnectFourRoot').then((m) => ({
         default: m.ConnectFourRoot,
       })),
+  },
+  {
+    id: 'gomoku',
+    // Five dots, where Connect Four has four (U+2058 and U+2059): the two
+    // titles are the same idea at different lengths, and the marks say so.
+    title: 'Gomoku',
+    category: 'board',
+    glyph: '⁙',
+    storageKeys: Object.values(GM_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/gomoku/ui/GomokuRoot').then((m) => ({ default: m.GomokuRoot })),
   },
   {
     id: 'brick-breaker',

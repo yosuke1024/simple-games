@@ -49,8 +49,10 @@ src/
 │   ├── sky-fighter/
 │   ├── 2048/
 │   ├── block-puzzle/
+│   ├── checkers/
 │   ├── reversi/
 │   ├── connect-four/
+│   ├── gomoku/
 │   └── bunny-hop/
 ├── monetization/           # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 ├── services/               # 共有: ads(バナーのみ) / network / sound / haptics
@@ -180,7 +182,7 @@ src/
   並べていたらこの形は 14 言語で保てない。
 - **グリッドはカテゴリ別のセクションに分ける**(`registry.ts` の `GAME_CATEGORIES`、
   現在はロジック / カード / パズル / ボードゲーム / アーケード / ドリルの 6 つ)。
-  20 本を 1 枚のグリッドに敷くと結局全タイトルを読んで探すことになるため、
+  22 本を 1 枚のグリッドに敷くと結局全タイトルを読んで探すことになるため、
   見出しでセクションごと読み飛ばせるようにした。ゲームはレジストリで `category` を
   1 つ名乗り、セクション内の並びはレジストリの配列順。カテゴリ見出しは固有名詞では
   ないので、シェルカタログの `category*` キーで 14 言語に翻訳する(タイトルと違い
@@ -233,6 +235,11 @@ src/
 | Bunny Hop        | 草原の緑                 | `#6e7a34` | `#b6c274` |
 | Reversi          | 菫                       | `#7f4a9c` | `#c48ad6` |
 | Connect Four     | くすんだ赤               | `#a8433d` | `#dd8f89` |
+| Quick Math       | マスタード               | `#776e18` | `#c4ba6b` |
+| Schulte Table    | ペトロール               | `#18787b` | `#6cbcc1` |
+| Number Recall    | 深いエメラルド           | `#1d6b33` | `#92dfa8` |
+| Checkers         | ウォルナット             | `#5a4632` | `#cbb08a` |
+| Gomoku           | 牡丹                     | `#a32d76` | `#e086bb` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
@@ -260,9 +267,11 @@ src/
   チュートリアル・バナースロットなどの共通クロム。
 - **全タイトルが規約に従っている**: `number-match.css` / `sudoku.css` /
   `minesweeper.css` / `nonogram.css` / `sliding-puzzle.css` / `memory-match.css` /
-  `water-sort.css` / `solitaire.css` / `brick-breaker.css` / `sky-fighter.css` /
-  `game-2048.css` / `block-puzzle.css` / `reversi.css` / `connect-four.css` /
-  `bunny-hop.css`。
+  `water-sort.css` / `solitaire.css` / `spider-solitaire.css` / `freecell.css` /
+  `brick-breaker.css` / `sky-fighter.css` /
+  `game-2048.css` / `block-puzzle.css` / `checkers.css` / `reversi.css` /
+  `connect-four.css` / `gomoku.css` / `quick-math.css` / `schulte-table.css` /
+  `number-recall.css` / `bunny-hop.css`。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。
@@ -309,8 +318,10 @@ src/
 | `sf.*`        | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)   |
 | `tm.*`        | 2048(saveGame / stats / flags。デイリーもレベル進行もない)        |
 | `bp.*`        | Block Puzzle(saveGame / stats / flags。同上)                      |
+| `ck.*`        | Checkers(saveGame / stats / flags / prefs。統計は難易度別)        |
 | `rv.*`        | Reversi(saveGame / stats / flags / prefs。統計は難易度別)         |
 | `c4.*`        | Connect Four(saveGame / stats / flags / prefs。同上)              |
+| `gm.*`        | Gomoku(saveGame / stats / flags / prefs。同上)                    |
 | `ss.*`        | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)    |
 | `fc.*`        | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)    |
 | `bh.*`        | Bunny Hop(stats / flags。**saveGame なし** — 下記)                |

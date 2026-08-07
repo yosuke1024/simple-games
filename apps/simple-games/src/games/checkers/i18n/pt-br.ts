@@ -1,0 +1,50 @@
+import type { CheckersMessages } from './en';
+
+export const ptBR: CheckersMessages = {
+  checkersName: 'Checkers',
+  checkersChooseOpponent: 'Escolha seu adversário',
+  checkersDifficulty_easy: 'Fácil',
+  checkersDifficulty_normal: 'Normal',
+  checkersDifficulty_hard: 'Difícil',
+  checkersChooseSideLabel: 'Quem começa',
+  checkersGoFirst: 'Você primeiro',
+  checkersGoSecond: 'CPU primeiro',
+  checkersRecordNote: '{wins} vitórias · {losses} derrotas',
+  checkersBoardLabel: 'Tabuleiro de Checkers, 8 por 8',
+  checkersSquareEmpty: 'Linha {row}, coluna {col}: vazia',
+  checkersSquareYourMan: 'Linha {row}, coluna {col}: sua peça',
+  checkersSquareYourKing: 'Linha {row}, coluna {col}: sua dama',
+  checkersSquareCpuMan: 'Linha {row}, coluna {col}: peça da CPU',
+  checkersSquareCpuKing: 'Linha {row}, coluna {col}: dama da CPU',
+  checkersSquareSelected: 'Linha {row}, coluna {col}: sua peça, selecionada',
+  checkersSquareTarget: 'Linha {row}, coluna {col}: mover para cá',
+  checkersYou: 'Você',
+  checkersCpu: 'CPU',
+  checkersYourTurn: 'Sua vez',
+  checkersCpuTurn: 'A CPU está pensando…',
+  checkersMustCapture:
+    'Há uma captura disponível: só as peças que podem pular é que podem se mover.',
+  checkersJumpAgain: 'Pule de novo com a mesma peça.',
+  checkersKings: 'Damas',
+  checkersWinTitle: 'Você venceu!',
+  checkersWinBody: 'A CPU ficou sem jogadas.',
+  checkersLoseTitle: 'A CPU venceu',
+  checkersLoseBody: 'Sem jogadas restantes. A próxima partida é gratuita.',
+  checkersDrawTitle: 'Empate',
+  checkersDrawBody:
+    'Cinquenta lances sem captura e sem nenhuma peça avançar — ninguém está progredindo.',
+  checkersWins: 'Vitórias',
+  checkersLosses: 'Derrotas',
+  checkersDraws: 'Empates',
+  checkersStep1Title: 'Avance na diagonal',
+  checkersStep1Body:
+    'Uma casa escura por vez. Pule sobre uma peça adversária para capturá-la — e quando puder pular, essa é a única jogada.',
+  checkersStep2Title: 'Continue pulando',
+  checkersStep2Body: 'Se a mesma peça puder pular de novo de onde caiu, ela precisa pular.',
+  checkersStep3Title: 'Chegue à última linha para coroar',
+  checkersStep3Body:
+    'A dama também anda para trás. Capture todas as peças adversárias — ou deixe-as sem saída — e você vence.',
+  checkersConfirmSwitchTitle: 'Substituir a partida em andamento?',
+  checkersConfirmSwitchBody:
+    'Sua partida em {current} será substituída por uma nova partida em {next}.',
+};

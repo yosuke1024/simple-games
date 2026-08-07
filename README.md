@@ -27,7 +27,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけで、現在 20 本のゲームを収録しています。
+アプリは 1 つだけで、現在 22 本のゲームを収録しています。
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Games`(ランチャー表示名: `Simple Games`)
@@ -45,8 +45,10 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 | Minesweeper               | `minesweeper/`      | 難易度 3 種 + デイリー                   | Hint(Undo なし)                                    | [docs/MINESWEEPER_RULES.md](docs/MINESWEEPER_RULES.md)           |
 | 2048                      | `2048/`             | エンドレス(レベルなし)                   | Undo(Hint なし)                                    | [docs/GAME_2048_RULES.md](docs/GAME_2048_RULES.md)               |
 | Block Puzzle              | `block-puzzle/`     | エンドレス(レベルなし)                   | Undo(Hint なし)                                    | [docs/BLOCK_PUZZLE_RULES.md](docs/BLOCK_PUZZLE_RULES.md)         |
+| Checkers(チェッカー)      | `checkers/`         | CPU 対局・難易度 3 種(デイリーなし)      | Undo + 動かせる駒と行き先の表示(Hint なし)         | [docs/CHECKERS_RULES.md](docs/CHECKERS_RULES.md)                 |
 | Reversi                   | `reversi/`          | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                                    | [docs/REVERSI_RULES.md](docs/REVERSI_RULES.md)                   |
 | Connect Four              | `connect-four/`     | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                                    | [docs/CONNECT_FOUR_RULES.md](docs/CONNECT_FOUR_RULES.md)         |
+| Gomoku(五目並べ)          | `gomoku/`           | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                                    | [docs/GOMOKU_RULES.md](docs/GOMOKU_RULES.md)                     |
 | Brick Breaker             | `brick-breaker/`    | 100 レベル(デイリーなし)                 | 同じ盤面への即時リトライ(Undo / Hint なし)         | [docs/BRICK_BREAKER_RULES.md](docs/BRICK_BREAKER_RULES.md)       |
 | Nonogram                  | `nonogram/`         | 100 レベル + デイリー                    | Hint(Undo なし)                                    | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md)                 |
 | Number Match              | `number-match/`     | 100 レベル + デイリー                    | Undo / Hint                                        | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md)         |
@@ -70,7 +72,10 @@ Undo を作らず、Sliding Puzzle は盤面に隠れた情報がないため Hi
 表向きで隠れた情報が 1 つもないため Hint を作らず、Undo を無制限にしています。Spider は
 伏せカードがあり見えていない情報が実在するため、Solitaire と同じく Hint を持ちます。
 Reversi と Connect Four も盤面がすべて見えているため Hint を作らず、Undo だけを
-持ちます。ドリル 3 本は、Schulte Table と Quick Math が「探すこと・計算すること」
+持ちます。Gomoku も同じ理由で Undo だけです。Checkers は Undo に加えて「動かせる駒と
+その行き先」を示します — 捕獲義務(取れるときは取る手しか打てない)が初心者の最初の壁で
+あり、跳べる駒だけが選べる形にすると規則が説明ではなく操作として伝わるためで、これは
+ルールの可視化であって最善手の提案ではありません。ドリル 3 本は、Schulte Table と Quick Math が「探すこと・計算すること」
 そのものを中身とするため次の一手を教えず、Number Recall はタップが記憶の主張そのもので
 あるため Undo を作りません)。
 理由は各ルール文書と
@@ -103,8 +108,10 @@ simple-games/
 │           │   ├── solitaire/
 │           │   ├── spider-solitaire/
 │           │   ├── freecell/
+│           │   ├── checkers/
 │           │   ├── reversi/
 │           │   ├── connect-four/
+│           │   ├── gomoku/
 │           │   ├── minesweeper/
 │           │   ├── 2048/
 │           │   ├── block-puzzle/
@@ -116,8 +123,10 @@ simple-games/
 │           │   ├── memory-match/
 │           │   ├── sky-fighter/
 │           │   ├── bunny-hop/
+│           │   ├── checkers/
 │           │   ├── reversi/
 │           │   ├── connect-four/
+│           │   ├── gomoku/
 │           │   ├── quick-math/
 │           │   ├── schulte-table/
 │           │   └── number-recall/

@@ -1,0 +1,50 @@
+import type { CheckersMessages } from './en';
+
+export const fr: CheckersMessages = {
+  checkersName: 'Checkers',
+  checkersChooseOpponent: 'Choisis ton adversaire',
+  checkersDifficulty_easy: 'Facile',
+  checkersDifficulty_normal: 'Normal',
+  checkersDifficulty_hard: 'Difficile',
+  checkersChooseSideLabel: 'Qui commence',
+  checkersGoFirst: 'Toi d’abord',
+  checkersGoSecond: 'CPU d’abord',
+  checkersRecordNote: '{wins} victoires · {losses} défaites',
+  checkersBoardLabel: 'Damier Checkers, 8 sur 8',
+  checkersSquareEmpty: 'Ligne {row}, colonne {col} : vide',
+  checkersSquareYourMan: 'Ligne {row}, colonne {col} : ton pion',
+  checkersSquareYourKing: 'Ligne {row}, colonne {col} : ta dame',
+  checkersSquareCpuMan: 'Ligne {row}, colonne {col} : pion du CPU',
+  checkersSquareCpuKing: 'Ligne {row}, colonne {col} : dame du CPU',
+  checkersSquareSelected: 'Ligne {row}, colonne {col} : ton pion, sélectionné',
+  checkersSquareTarget: 'Ligne {row}, colonne {col} : déplacer ici',
+  checkersYou: 'Toi',
+  checkersCpu: 'CPU',
+  checkersYourTurn: 'À toi',
+  checkersCpuTurn: 'Le CPU réfléchit…',
+  checkersMustCapture:
+    'Une prise est possible : seuls les pions qui peuvent sauter ont le droit de bouger.',
+  checkersJumpAgain: 'Saute encore avec le même pion.',
+  checkersKings: 'Dames',
+  checkersWinTitle: 'Tu as gagné !',
+  checkersWinBody: 'Le CPU n’a plus aucun coup.',
+  checkersLoseTitle: 'Le CPU gagne',
+  checkersLoseBody: 'Plus aucun coup possible. La partie suivante est gratuite.',
+  checkersDrawTitle: 'Match nul',
+  checkersDrawBody: 'Cinquante coups sans prise et sans qu’un pion avance : personne ne progresse.',
+  checkersWins: 'Victoires',
+  checkersLosses: 'Défaites',
+  checkersDraws: 'Nuls',
+  checkersStep1Title: 'Avance en diagonale',
+  checkersStep1Body:
+    'Une case sombre à la fois. Saute par-dessus un pion adverse pour le prendre — et quand tu peux sauter, c’est le seul coup autorisé.',
+  checkersStep2Title: 'Continue de sauter',
+  checkersStep2Body:
+    'Si le même pion peut encore sauter depuis sa case d’arrivée, il doit le faire.',
+  checkersStep3Title: 'Atteins la dernière rangée pour être promu',
+  checkersStep3Body:
+    'Une dame recule aussi. Prends tous les pions adverses — ou bloque-les — et tu gagnes.',
+  checkersConfirmSwitchTitle: 'Remplacer la partie en cours ?',
+  checkersConfirmSwitchBody:
+    'Ta partie en {current} sera remplacée par une nouvelle partie en {next}.',
+};

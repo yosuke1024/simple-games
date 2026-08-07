@@ -427,6 +427,52 @@ export const titleAccents = {
     onDark: '#0b1a10',
     softDark: '#1c3a27',
   },
+  /**
+   * Checkers — walnut. The accent *is* the player's twelve pieces, so this is
+   * one of the largest accent areas in the collection, and a wooden draughts
+   * set is what the colour should say before anything else; the opponent takes
+   * the game's own slate, which is the pair that survives a colour vision
+   * deficiency (games/checkers/ui/checkers.css).
+   *
+   * Measured against all twenty shipped titles it is ΔE 26.8 from Sliding
+   * Puzzle's clay in light and ΔE 15.8 from Brick Breaker's ochre in dark —
+   * comfortably past the floor, which is the closest pair already shipped
+   * (10.9 light, 7.9 dark). The warm quarter of the wheel holds four titles
+   * within thirty degrees, so what separates this one is not hue but value:
+   * at L27% it is the darkest and least saturated of the five, where Brick
+   * Breaker's ochre and Quick Math's mustard are light and pure
+   * (docs/BRAND.md「アクセントを選ぶ手順」).
+   */
+  checkers: {
+    light: '#5a4632',
+    onLight: '#ffffff',
+    softLight: '#ede6de',
+    dark: '#cbb08a',
+    onDark: '#161310',
+    softDark: '#36302b',
+  },
+  /**
+   * Gomoku — peony. The board is black and white stones on a wood field, all
+   * of it game content, so the accent lives in the chrome alone (Reversi's
+   * arrangement) and can afford to be the saturated one: it never has to sit
+   * behind a stone.
+   *
+   * The magenta band between Reversi's violet, Block Puzzle's orchid and
+   * Memory Match's rose is the widest gap the wheel has left at twenty-one
+   * titles, and this takes it by being deeper and far more saturated than any
+   * of the three: ΔE 22.2 from Block Puzzle in light, 16.2 in dark, against
+   * floors of 10.9 and 7.9. It is a magenta rather than a pink on purpose —
+   * Memory Match already holds the muted rose, and two quiet pinks would be
+   * one colour on the collection home.
+   */
+  gomoku: {
+    light: '#a32d76',
+    onLight: '#ffffff',
+    softLight: '#f3d8e9',
+    dark: '#e086bb',
+    onDark: '#190d15',
+    softDark: '#3c2533',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;
