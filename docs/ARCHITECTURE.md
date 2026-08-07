@@ -34,6 +34,8 @@ src/
 ├── games/                  # 各ゲームは game/ state/ storage/ ui/ で自己完結
 │   ├── sudoku/
 │   ├── solitaire/
+│   ├── spider-solitaire/
+│   ├── freecell/
 │   ├── minesweeper/
 │   ├── nonogram/
 │   ├── number-match/
@@ -59,6 +61,8 @@ src/
 [plans/2026-07-30-collection-and-sudoku.md](plans/2026-07-30-collection-and-sudoku.md) を参照。
 各ゲームのルールは [SUDOKU_RULES.md](SUDOKU_RULES.md) /
 [SOLITAIRE_RULES.md](SOLITAIRE_RULES.md) /
+[SPIDER_SOLITAIRE_RULES.md](SPIDER_SOLITAIRE_RULES.md) /
+[FREECELL_RULES.md](FREECELL_RULES.md) /
 [MINESWEEPER_RULES.md](MINESWEEPER_RULES.md) /
 [NONOGRAM_RULES.md](NONOGRAM_RULES.md) /
 [NUMBER_MATCH_RULES.md](NUMBER_MATCH_RULES.md) /
@@ -108,14 +112,14 @@ src/
 ローダー」だけで、プラグイン機構ではない。ゲームの追加は keys の import 1 行と
 配列要素 1 つで済む。
 
-| フィールド             | 内容                                                                                                                                                                                                                                                                                           |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                   | `'sudoku'` / `'solitaire'` / `'minesweeper'` / `'nonogram'` / `'number-match'` / `'water-sort'` / `'sliding-puzzle'` / `'memory-match'` / `'brick-breaker'` / `'sky-fighter'` / `'2048'` / `'block-puzzle'` / `'reversi'` / `'connect-four'` / `'bunny-hop'`。`data-game` 属性にもこの値を使う |
-| `title`                | 固有名詞。全言語で同一表記(翻訳しない)                                                                                                                                                                                                                                                         |
-| `glyph`                | シリーズマーク。そのタイトルのアクセント色のタイルに 1 文字                                                                                                                                                                                                                                    |
-| `storageKeys`          | そのゲームが保存する全キー。各ゲームの **import ゼロの葉** `storage/keys.ts` から同期 import する                                                                                                                                                                                              |
-| `loadRoot`             | ゲームのルートコンポーネントを動的 `import()` で返すローダー。Root が受け取る props は `onExit` だけ                                                                                                                                                                                           |
-| `loadSettingsSection?` | 任意。共有設定画面に差し込むゲーム固有の設定のローダー                                                                                                                                                                                                                                         |
+| フィールド             | 内容                                                                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                   | 収録タイトルの識別子(`GameId` の union が正本。`'sudoku'` / `'solitaire'` / `'spider-solitaire'` / `'freecell'` / …)。`data-game` 属性にもこの値を使う |
+| `title`                | 固有名詞。全言語で同一表記(翻訳しない)                                                                                                                 |
+| `glyph`                | シリーズマーク。そのタイトルのアクセント色のタイルに 1 文字                                                                                            |
+| `storageKeys`          | そのゲームが保存する全キー。各ゲームの **import ゼロの葉** `storage/keys.ts` から同期 import する                                                      |
+| `loadRoot`             | ゲームのルートコンポーネントを動的 `import()` で返すローダー。Root が受け取る props は `onExit` だけ                                                   |
+| `loadSettingsSection?` | 任意。共有設定画面に差し込むゲーム固有の設定のローダー                                                                                                 |
 
 ### ゲーム単位の lazy チャンク(issue #26)
 
@@ -189,23 +193,25 @@ src/
 
 - アクセントは `packages/brand` の `titleAccents` に 1 タイトル 1 エントリ。
 
-| ゲーム         | アクセント               | ライト    | ダーク    |
-| -------------- | ------------------------ | --------- | --------- |
-| Number Match   | 藍                       | `#3f5b8f` | `#7d9ccf` |
-| Sudoku         | くすんだティール         | `#2f6f62` | `#6fb3a3` |
-| Solitaire      | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
-| Minesweeper    | スレートブルー           | `#4a5a72` | `#93a4bd` |
-| Nonogram       | くすんだプラム           | `#6d5192` | `#a893cf` |
-| Water Sort     | くすんだアクア           | `#33708c` | `#7fb4c9` |
-| Sliding Puzzle | 温かみのある陶土色       | `#9c5b3c` | `#d1926f` |
-| Memory Match   | くすんだローズ           | `#9e5468` | `#cf8fa4` |
-| Brick Breaker  | 黄土                     | `#8a6a2b` | `#c9a765` |
-| Sky Fighter    | 夕闇の青                 | `#5d5aa8` | `#9d9be0` |
-| 2048           | ジェイド                 | `#2b7d59` | `#79c39c` |
-| Block Puzzle   | オーキッド               | `#8b4f80` | `#c795bd` |
-| Reversi        | バイオレット             | `#7f4a9c` | `#c48ad6` |
-| Connect Four   | くすんだ赤               | `#a8433d` | `#dd8f89` |
-| Bunny Hop      | 草原の緑                 | `#6e7a34` | `#b6c274` |
+| ゲーム           | アクセント               | ライト    | ダーク    |
+| ---------------- | ------------------------ | --------- | --------- |
+| Number Match     | 藍                       | `#3f5b8f` | `#7d9ccf` |
+| Sudoku           | くすんだティール         | `#2f6f62` | `#6fb3a3` |
+| Solitaire        | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
+| Spider Solitaire | 深い緑                   | `#31802f` | `#7fcc7d` |
+| FreeCell         | 深い藍                   | `#25256a` | `#6e6ecf` |
+| Minesweeper      | スレートブルー           | `#4a5a72` | `#93a4bd` |
+| Nonogram         | くすんだプラム           | `#6d5192` | `#a893cf` |
+| Water Sort       | くすんだアクア           | `#33708c` | `#7fb4c9` |
+| Sliding Puzzle   | 温かみのある陶土色       | `#9c5b3c` | `#d1926f` |
+| Memory Match     | くすんだローズ           | `#9e5468` | `#cf8fa4` |
+| Brick Breaker    | 黄土                     | `#8a6a2b` | `#c9a765` |
+| Sky Fighter      | 夕闇の青                 | `#5d5aa8` | `#9d9be0` |
+| 2048             | ジェイド                 | `#2b7d59` | `#79c39c` |
+| Block Puzzle     | オーキッド               | `#8b4f80` | `#c795bd` |
+| Bunny Hop        | 草原の緑                 | `#6e7a34` | `#b6c274` |
+| Reversi          | 菫                       | `#7f4a9c` | `#c48ad6` |
+| Connect Four     | くすんだ赤               | `#a8433d` | `#dd8f89` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
@@ -217,7 +223,7 @@ src/
   書かないので、あるタイトルの色がホームとゲーム内で食い違うことはない。
 - Number Match のアクセントは `:root` の既定値そのもの(コレクションホームと同じ)なので、
   `data-game='number-match'` の上書きブロックも `.accent-number-match` も持たない。
-  残り 7 タイトルが上書きする。
+  残りのタイトルが上書きする。
 - **シリーズの下地(`seriesColors`)は変えない。** 別のゲームが「同じシリーズ」に
   見えているのはこの下地であり、変わるのは 1 タイトル 1 色だけ(BRAND.md)。
 - ゲーム側に色の分岐を書かない。ゲームは `var(--accent)` を使うだけで、
@@ -231,7 +237,7 @@ src/
 - `ui/styles.css` に置くのは共有シェルのみ: デザイントークン(下地・アクセント・
   `data-game` の上書き)、コレクションホーム、設定 / About、ダイアログ・トースト・
   チュートリアル・バナースロットなどの共通クロム。
-- **15 タイトルすべてが規約に従っている**: `number-match.css` / `sudoku.css` /
+- **全タイトルが規約に従っている**: `number-match.css` / `sudoku.css` /
   `minesweeper.css` / `nonogram.css` / `sliding-puzzle.css` / `memory-match.css` /
   `water-sort.css` / `solitaire.css` / `brick-breaker.css` / `sky-fighter.css` /
   `game-2048.css` / `block-puzzle.css` / `reversi.css` / `connect-four.css` /
@@ -284,6 +290,8 @@ src/
 | `bp.*`        | Block Puzzle(saveGame / stats / flags。同上)                      |
 | `rv.*`        | Reversi(saveGame / stats / flags / prefs。統計は難易度別)         |
 | `c4.*`        | Connect Four(saveGame / stats / flags / prefs。同上)              |
+| `ss.*`        | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)    |
+| `fc.*`        | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)    |
 | `bh.*`        | Bunny Hop(stats / flags。**saveGame なし** — 下記)                |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
@@ -310,6 +318,14 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 - `kv` / `repo` / `SchemaDef` と schemaVersion 運用は全ゲームで共有する。
 - ゲームごとに保存領域を分離し、一方の破損が他方へ波及しない(validate で防御)。
   ゲームの追加が既存ゲームの保存データを失わせてはならない。
+- **中断スロットを 2 つ持つゲームでは、どちらのモードのレコードかを決めるのは
+  「キー」であってレコード内の `mode` ではない。**両スロットは同じ形のレコードを
+  持つので、スロット schema には期待するモードを渡し、食い違うレコードは
+  破損として `null` に落とす。これを怠ると、フリーのキーに `mode: 'daily'` の
+  正当なレコードが入ったときにそれが読み込まれ、再開した瞬間にアプリがもう一方の
+  スロットへ切り替わる — プレイヤーは頼んだのと別のゲームか、空白の画面を見る。
+  規則の遵守は `src/test/savedGameSlots.test.ts` が構造的に、各ゲームの
+  `storage/slots.test.ts` が実レコードで確かめる。
 - **`repo.ts` はキーごとに操作を直列化する。** 書き込みは全レイヤーで fire-and-forget
   (ゲームを保存待ちで止めない)なので、1 つのキーに対して複数の操作が同時に飛びうる。
   順序を保証しないと、最後に着地したものが勝ってしまう。実害が見えるのは
@@ -332,8 +348,8 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
   乗り、1 本のゲームだけが使うキーはそのゲームの `src/games/<id>/i18n/*.ts` に
   移してゲームのチャンクへ同梱する。ゲームを開かないプレイヤーは、その文言を
   一度もパースしない。
-- 現在 14 言語。シェル 79 キー(エントリに乗る) + ゲーム別 15 カタログ(合計 384
-  キー、13〜38 キー/ゲーム、開いたときだけパースされる)。ロケールタグは小文字で
+- 現在 14 言語。シェル 79 キー(エントリに乗る) + ゲーム別 17 カタログ(合計 460
+  キー、13〜42 キー/ゲーム、開いたときだけパースされる)。ロケールタグは小文字で
   持つ。en と ja 以外は来歴 `machine`(AI の助けを借りて書き、その言語のネイティブ
   は読んでいない)。高リスクキーはリリース前の門で逆翻訳を作者が読む
   (`docs/I18N_POLICY.md`)。
@@ -359,7 +375,7 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
   カタログをチャンクごと保持しているため、ロードは発生しない
   (docs/OFFLINE_POLICY.md)。
 - Sudoku の難易度表記 (`sudokuTier_*`) や Minesweeper / Memory Match の難易度
-  (`*Difficulty_*`) のように `t(\`prefix_${variable}\`)` で動的に組み立てる
+  (`*Difficulty_*`) のように `t(\`prefix\_${variable}\`)` で動的に組み立てる
 キーは、静的解析では「未使用」に見える。`i18n.test.ts` がロケールごとに
   実際の解決を確認して、削除で無言に壊れるのを防ぐ。
 - 解決順(ロケール自体の決定): アプリ内の明示選択 → 端末の優先言語リストを

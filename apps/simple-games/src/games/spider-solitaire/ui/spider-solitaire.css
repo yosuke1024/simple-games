@@ -1,0 +1,413 @@
+/* Spider Solitaire — all of this game's styling, imported by SpiderRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --radius, --font-display, --tap-size, …) so the
+   game reads as part of the same app and follows the theme without knowing
+   about it.
+
+   Class names are prefixed `sp-` so this file can never collide with the shell
+   or with another game.
+
+   The card red below is game content, not chrome — hearts and diamonds are red
+   in any deck; black cards use the series ink. This is the documented
+   exception to "game CSS does not write colours" (docs/ARCHITECTURE.md), the
+   same one Klondike and FreeCell take. */
+
+/* Card faces stay paper in BOTH themes, unlike every other surface in the app.
+   Suit decides which runs may travel (§3), and a dark card face turns the
+   black suits near-white. The dark theme dims the paper instead of inverting
+   it, and darkens the felt around it. */
+:root {
+  --sp-face: #fffdf8;
+  --sp-ink: #232a33;
+  --sp-red: #b0483f;
+  --sp-face-line: #ddd7ca;
+  /* The felt. Cooler and greyer than Klondike's green so the three card tables
+     are not mistaken for one another at a glance. */
+  --sp-felt: #c2cfc0;
+  --sp-felt-light: rgba(255, 255, 255, 0.38);
+  /* Where a held run may legally land (§3). Deliberately outside the felt, the
+     card red, and this title's green accent. */
+  --sp-target: #c08a2e;
+}
+
+:root[data-theme='dark'] {
+  --sp-face: #e6e2d9;
+  --sp-ink: #1d232b;
+  --sp-red: #a8382f;
+  --sp-face-line: #bfb9ac;
+  --sp-felt: #151a15;
+  --sp-felt-light: rgba(255, 255, 255, 0.045);
+  --sp-target: #e0ad4f;
+}
+
+/* ---------- table ---------- */
+
+.sp-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 8px 12px;
+  min-height: 0;
+  overflow-y: auto;
+  background-color: var(--sp-felt);
+  background-image: radial-gradient(120% 62% at 50% 0%, var(--sp-felt-light), rgba(0, 0, 0, 0) 72%);
+  box-shadow: inset 0 2px 5px rgba(35, 42, 51, 0.14);
+}
+
+:root[data-theme='dark'] .sp-body {
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Width resolves against the column's content box, never the viewport.
+   The cap is wider than the other card games' 420px because ten columns split
+   that into postage stamps on a large phone; at 460px a card is still under
+   46px, which is well inside the series' card size. */
+.sp-table {
+  width: min(100%, 460px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* The stock sits in the first column's place and the eight run slots fill the
+   rest, so the top row lines up with the ten columns below (§1). */
+.sp-top-row {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 3px;
+  align-items: start;
+}
+
+.sp-runs {
+  grid-column: 3 / -1;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 3px;
+}
+
+.sp-cascades {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 3px;
+  align-content: start;
+}
+
+.sp-pile {
+  display: flex;
+  flex-direction: column;
+  min-height: 50px;
+}
+
+/* ---------- cards ---------- */
+
+.sp-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  padding: 0;
+  border: 1px solid var(--sp-face-line);
+  border-radius: 5px;
+  background-color: var(--sp-face);
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 55%);
+  color: var(--sp-ink);
+  cursor: pointer;
+  display: block;
+  font-family: var(--font-display);
+  box-shadow:
+    0 1px 2px rgba(20, 24, 30, 0.24),
+    0 0 0 0.5px rgba(20, 24, 30, 0.08);
+}
+
+:root[data-theme='dark'] .sp-card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+
+.sp-card-red {
+  color: var(--sp-red);
+}
+
+.sp-card-black {
+  color: var(--sp-ink);
+}
+
+/* The index is a ROW — rank beside suit — not the stacked column the other two
+   card games use. At ten columns a covered card shows roughly 11px, and a
+   stacked index needs about 22px: the rank comes out cut in half. Measured at
+   320 / 360 / 420px before this file was written (§12). Both halves have to
+   survive, because at four suits a run only travels if every card shares a
+   suit, and colour alone cannot separate a spade from a club. */
+.sp-card-index {
+  position: absolute;
+  top: 1px;
+  left: 2px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1px;
+  line-height: 1;
+}
+
+.sp-card-rank {
+  font-size: clamp(11px, 3vw, 14px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.sp-card-index .sp-suit {
+  width: clamp(7px, 2vw, 9px);
+  height: clamp(7px, 2vw, 9px);
+}
+
+.sp-card-middle {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sp-card-middle .sp-suit {
+  width: 42%;
+  height: 42%;
+}
+
+/* The back: a woven diagonal in the title's accent, bordered like a real card
+   back. */
+.sp-card-back {
+  background-color: var(--accent-soft);
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      var(--accent-ring-soft) 0,
+      var(--accent-ring-soft) 2px,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 0, 0, 0) 5px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      var(--accent-ring-soft) 0,
+      var(--accent-ring-soft) 2px,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 0, 0, 0) 5px
+    );
+  border: 1px solid var(--line);
+  cursor: default;
+}
+
+button.sp-card-back {
+  cursor: pointer;
+}
+
+/* How many deals are left — the number a player actually plans around (§3). */
+.sp-stock-count {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: clamp(12px, 3.4vw, 15px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.sp-slot-empty {
+  background-color: rgba(0, 0, 0, 0.03);
+  background-image: none;
+  border: 1px dashed var(--line);
+  box-shadow: inset 0 1px 3px rgba(35, 42, 51, 0.07);
+}
+
+:root[data-theme='dark'] .sp-slot-empty {
+  background-color: rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* A finished run is a record, not a card in play. */
+.sp-run-slot {
+  cursor: default;
+}
+
+/* ---------- stacking ---------- */
+
+/* Margin percentages resolve against the column width, and a card is 140% of
+   its width tall (aspect 5/7). -94% leaves a 46%-of-width strip; -118% leaves
+   the face-down sliver.
+
+   The strip has to clear the index's DESCENDERS, not just its line box. At
+   -100% the strip came to 11.1px on a 320px screen against an 11px rank, and
+   a covered queen lost its tail and read as an O — caught in the browser, not
+   in a test. A Spider column can hold twenty cards after five deals, so every
+   percent here is paid for twenty times over; -94% is the least that clears a
+   Q. */
+.sp-overlap {
+  margin-top: -94%;
+}
+
+.sp-overlap-down {
+  margin-top: -118%;
+}
+
+.sp-pile .sp-card-back + .sp-card:not(.sp-overlap) {
+  /* First face-up card over a face-down stack: leave the sliver visible. */
+  margin-top: -118%;
+}
+
+/* ---------- selection, destinations, hints (§3, §8, §12) ---------- */
+
+.sp-selected {
+  transform: translateY(-6px);
+  border-color: var(--sp-ink);
+  box-shadow:
+    0 0 0 2px var(--sp-ink),
+    0 6px 10px rgba(20, 24, 30, 0.3);
+  z-index: 2;
+}
+
+.sp-destination {
+  border-color: var(--sp-target);
+  box-shadow:
+    0 0 0 3px var(--sp-target),
+    0 0 10px 2px rgba(192, 138, 46, 0.4);
+  z-index: 1;
+}
+
+:root[data-theme='dark'] .sp-destination {
+  box-shadow:
+    0 0 0 3px var(--sp-target),
+    0 0 12px 3px rgba(224, 173, 79, 0.35);
+}
+
+.sp-hinted {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* ---------- top bar ---------- */
+
+.sp-status {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.sp-mode {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.sp-move-count {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 15px;
+}
+
+/* ---------- actions ---------- */
+
+.action-bar.sp-actions {
+  justify-content: center;
+  gap: 24px;
+}
+
+/* ---------- the dead end (§2) ---------- */
+
+.sp-stuck {
+  width: min(100%, 460px);
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: center;
+}
+
+.sp-stuck-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.sp-stuck-body {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* ---------- home ---------- */
+
+.sp-suit-toggle {
+  align-self: center;
+}
+
+.sp-suit-note {
+  margin: -4px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+.sp-figure {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.sp-figure-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 44px;
+  height: 61px;
+  border: 1px solid var(--sp-face-line);
+  border-radius: 6px;
+  background: var(--sp-face);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  /* No `color` here on purpose: every figure card carries .sp-card-red or
+     .sp-card-black, and a colour set at this specificity would win by source
+     order and paint the red suits black. */
+}
+
+.sp-figure-card .sp-suit {
+  width: 14px;
+  height: 14px;
+}
+
+.sp-figure-card.sp-card-back {
+  background: var(--accent-soft);
+}
+
+.sp-figure-arrow {
+  color: var(--ink-soft);
+  font-size: 18px;
+}
+
+/* ---------- daily list ---------- */
+
+.sp-daily-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-daily-badge-done {
+  color: var(--ink-soft);
+}

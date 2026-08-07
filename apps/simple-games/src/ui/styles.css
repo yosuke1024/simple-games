@@ -173,6 +173,24 @@
   --accent-ring-soft: rgba(110, 122, 52, 0.14);
 }
 
+:root[data-game='spider-solitaire'],
+.accent-spider-solitaire {
+  --accent: #31802f;
+  --accent-ink: #ffffff;
+  --accent-soft: #dff5de;
+  --accent-ring: rgba(49, 128, 47, 0.38);
+  --accent-ring-soft: rgba(49, 128, 47, 0.12);
+}
+
+:root[data-game='freecell'],
+.accent-freecell {
+  --accent: #25256a;
+  --accent-ink: #ffffff;
+  --accent-soft: #e0e0f2;
+  --accent-ring: rgba(37, 37, 106, 0.38);
+  --accent-ring-soft: rgba(37, 37, 106, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -319,6 +337,24 @@
   --accent-soft: #343a1c;
   --accent-ring: rgba(182, 194, 116, 0.42);
   --accent-ring-soft: rgba(182, 194, 116, 0.14);
+}
+
+:root[data-theme='dark'][data-game='spider-solitaire'],
+[data-theme='dark'] .accent-spider-solitaire {
+  --accent: #7fcc7d;
+  --accent-ink: #0c1a0c;
+  --accent-soft: #183a17;
+  --accent-ring: rgba(127, 204, 125, 0.42);
+  --accent-ring-soft: rgba(127, 204, 125, 0.14);
+}
+
+:root[data-theme='dark'][data-game='freecell'],
+[data-theme='dark'] .accent-freecell {
+  --accent: #6e6ecf;
+  --accent-ink: #060614;
+  --accent-soft: #1e1e42;
+  --accent-ring: rgba(110, 110, 207, 0.42);
+  --accent-ring-soft: rgba(110, 110, 207, 0.14);
 }
 
 * {
