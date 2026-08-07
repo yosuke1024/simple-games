@@ -42,6 +42,13 @@ export const colOf = (index: number): number => index % BOARD_SIZE;
 
 export const opponentOf = (player: Player): Player => (player === BLACK ? WHITE : BLACK);
 
+/**
+ * The discs already on the board before anyone moves (§1). A board therefore
+ * holds exactly this many plus one per move played, which is what lets a
+ * saved game check its own move count (storage/gamePersistence.ts).
+ */
+export const OPENING_DISCS = 4;
+
 /** The four centre cells, occupied from the first frame to the last (§1). */
 const CENTER = (): { cell: number; piece: Piece }[] => {
   const half = BOARD_SIZE / 2;

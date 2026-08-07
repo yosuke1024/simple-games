@@ -10,7 +10,13 @@
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
 import { loadRecord, removeRecord, saveRecord } from '../../../storage/repo';
-import { decodeBoard, encodeBoard, restoreSession, type ConnectFourSession } from '../game';
+import {
+  countPieces,
+  decodeBoard,
+  encodeBoard,
+  restoreSession,
+  type ConnectFourSession,
+} from '../game';
 import { gameSchema, type PersistedGame } from './schemas';
 
 export function toPersisted(session: ConnectFourSession, savedAt: number): PersistedGame {
@@ -30,6 +36,14 @@ function toSession(persisted: PersistedGame | null): ConnectFourSession | null {
   if (persisted === null) return null;
   const board = decodeBoard(persisted.board, persisted.first);
   if (board === null) return null;
+
+  // Every drop puts exactly one disc down, so the count on the board *is* the
+  // move count. A save where the two disagree could not have come from play,
+  // and it is not harmless: the move count is half the CPU's draw (§4), so a
+  // resumed match would answer differently than the one that was saved —
+  // which is the promise Undo rests on. Fail closed, like the board itself.
+  const { player, cpu } = countPieces(board);
+  if (persisted.moveCount !== player + cpu) return null;
 
   const session = restoreSession({
     seed: persisted.seed,

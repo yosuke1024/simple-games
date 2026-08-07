@@ -125,8 +125,9 @@ export const statsSchema: SchemaDef<Stats> = {
 
 /**
  * One slot, holding a match mid-play (§8). The undo history is not part of
- * it, and neither is the turn: the player always drops first, so the disc
- * counts already say whose move it is (session.ts, restoreSession).
+ * it, and neither is the turn: the alternation never breaks in this game, so
+ * the disc counts and the stored opener say whose move it is between them
+ * (session.ts, restoreSession).
  */
 export interface PersistedGame {
   schemaVersion: 1;
