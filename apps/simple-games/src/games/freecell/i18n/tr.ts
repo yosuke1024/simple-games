@@ -1,0 +1,41 @@
+import type { FreeCellMessages } from './en';
+
+export const tr: FreeCellMessages = {
+  freecellName: 'FreeCell',
+  fcNewDeal: 'Yeni el',
+  fcTableLabel: 'FreeCell masası',
+  fcCardLabel: '{suit} {rank}',
+  fcSuit_spades: 'maça',
+  fcSuit_hearts: 'kupa',
+  fcSuit_diamonds: 'karo',
+  fcSuit_clubs: 'sinek',
+  fcCellLabel: 'Serbest hücre {n}, {card}',
+  fcCellEmpty: 'Serbest hücre {n}, boş',
+  fcCellsLabel: 'Serbest hücreler',
+  fcFoundationCard: 'Temel, {card}',
+  fcFoundationEmpty: 'Temel, {suit}, boş',
+  fcColumnLabel: 'Sütun {n}',
+  fcColumnEmpty: 'Sütun {n}, boş — buraya her kart gelebilir',
+  fcAutoFinish: 'Oyunu bitir',
+  fcStuckTitle: 'Hamle kalmadı',
+  fcStuckBody:
+    'Bütün hücreler dolu ve hiçbir kart sığmıyor. Bir hamle geri al ya da yeni el dağıt.',
+  fcWonTitle: 'Kazandın!',
+  fcWonBody: 'Dört tür de tamamlandı.',
+  fcNewBestMoves: 'Şimdiye kadarki en az hamlen.',
+  fcNewBestTime: 'Şimdiye kadarki en hızlı süren.',
+  fcBestMoves: 'En az hamle',
+  fcDealsPlayed: 'Oynanan eller',
+  fcGamesWon: 'Kazanılan oyunlar',
+  fcWinRate: 'Kazanma oranı',
+  fcDailiesWon: 'Kazanılan günlükler',
+  fcDailyBacklogHint: 'Önceki günler her zaman açık. Acelesi yok.',
+  fcStep1Title: 'Bir küçük, renkler dönüşümlü',
+  fcStep1Body:
+    'Kartları kırmızı-siyah dönüşümlü, azalan sırayla diz. Bir karta, sonra gideceği yere dokun.',
+  fcStep2Title: 'Dört hücre, her birine bir kart',
+  fcStep2Body:
+    'Altını kazmak için bir kartı serbest hücreye bırak. Boş hücre arttıkça bir seferde daha çok kart taşırsın.',
+  fcStep3Title: 'Astan papaza',
+  fcStep3Body: 'Her türü astan papaza temeline taşı. Dördünü tamamlayan kazanır.',
+};

@@ -1,0 +1,41 @@
+import type { FreeCellMessages } from './en';
+
+export const ptBR: FreeCellMessages = {
+  freecellName: 'FreeCell',
+  fcNewDeal: 'Nova distribuição',
+  fcTableLabel: 'Mesa de FreeCell',
+  fcCardLabel: '{rank} de {suit}',
+  fcSuit_spades: 'espadas',
+  fcSuit_hearts: 'copas',
+  fcSuit_diamonds: 'ouros',
+  fcSuit_clubs: 'paus',
+  fcCellLabel: 'Célula livre {n}, {card}',
+  fcCellEmpty: 'Célula livre {n}, vazia',
+  fcCellsLabel: 'Células livres',
+  fcFoundationCard: 'Fundação, {card}',
+  fcFoundationEmpty: 'Fundação, {suit}, vazia',
+  fcColumnLabel: 'Coluna {n}',
+  fcColumnEmpty: 'Coluna {n}, vazia — qualquer carta pode vir para cá',
+  fcAutoFinish: 'Terminar o jogo',
+  fcStuckTitle: 'Sem jogadas',
+  fcStuckBody:
+    'Todas as células estão cheias e nada cabe. Desfaça uma jogada ou peça nova distribuição.',
+  fcWonTitle: 'Você venceu!',
+  fcWonBody: 'Os quatro naipes estão completos.',
+  fcNewBestMoves: 'Seu recorde de menos jogadas.',
+  fcNewBestTime: 'Seu tempo mais rápido até agora.',
+  fcBestMoves: 'Menos jogadas',
+  fcDealsPlayed: 'Distribuições jogadas',
+  fcGamesWon: 'Jogos vencidos',
+  fcWinRate: 'Taxa de vitórias',
+  fcDailiesWon: 'Diários vencidos',
+  fcDailyBacklogHint: 'Os dias anteriores continuam abertos. Vá com calma.',
+  fcStep1Title: 'Um a menos, cores alternadas',
+  fcStep1Body:
+    'Empilhe em ordem decrescente alternando vermelho e preto. Toque na carta e depois no destino.',
+  fcStep2Title: 'Quatro células, uma carta cada',
+  fcStep2Body:
+    'Guarde uma carta numa célula livre para cavar embaixo dela. Quanto mais células vazias, mais cartas você leva de uma vez.',
+  fcStep3Title: 'Do ás ao rei',
+  fcStep3Body: 'Leve cada naipe à sua fundação do ás ao rei. Complete os quatro para vencer.',
+};

@@ -1,0 +1,41 @@
+import type { FreeCellMessages } from './en';
+
+export const de: FreeCellMessages = {
+  freecellName: 'FreeCell',
+  fcNewDeal: 'Neues Blatt',
+  fcTableLabel: 'FreeCell-Tisch',
+  fcCardLabel: '{rank} {suit}',
+  fcSuit_spades: 'Pik',
+  fcSuit_hearts: 'Herz',
+  fcSuit_diamonds: 'Karo',
+  fcSuit_clubs: 'Kreuz',
+  fcCellLabel: 'Freie Zelle {n}, {card}',
+  fcCellEmpty: 'Freie Zelle {n}, leer',
+  fcCellsLabel: 'Freie Zellen',
+  fcFoundationCard: 'Ablage, {card}',
+  fcFoundationEmpty: 'Ablage, {suit}, leer',
+  fcColumnLabel: 'Spalte {n}',
+  fcColumnEmpty: 'Spalte {n}, leer — hier darf jede Karte hin',
+  fcAutoFinish: 'Spiel abschließen',
+  fcStuckTitle: 'Keine Züge mehr',
+  fcStuckBody:
+    'Alle Zellen sind belegt und nichts passt. Mach einen Zug rückgängig oder nimm ein neues Blatt.',
+  fcWonTitle: 'Gewonnen!',
+  fcWonBody: 'Alle vier Farben sind vollständig.',
+  fcNewBestMoves: 'Deine wenigsten Züge bisher.',
+  fcNewBestTime: 'Deine schnellste Zeit bisher.',
+  fcBestMoves: 'Wenigste Züge',
+  fcDealsPlayed: 'Gespielte Blätter',
+  fcGamesWon: 'Gewonnene Spiele',
+  fcWinRate: 'Siegquote',
+  fcDailiesWon: 'Gewonnene Tagesblätter',
+  fcDailyBacklogHint: 'Alle früheren Tage bleiben offen. Lass dir Zeit.',
+  fcStep1Title: 'Absteigend, Farben im Wechsel',
+  fcStep1Body: 'Lege abwärts, Rot auf Schwarz auf Rot. Tippe eine Karte an, dann ihr Ziel.',
+  fcStep2Title: 'Vier Zellen, je eine Karte',
+  fcStep2Body:
+    'Parke eine Karte in einer freien Zelle, um darunter zu graben. Je mehr Zellen leer bleiben, desto mehr Karten trägst du auf einmal.',
+  fcStep3Title: 'Vom Ass zum König',
+  fcStep3Body:
+    'Bringe jede Farbe vom Ass bis zum König auf die Ablage. Alle vier komplett — gewonnen.',
+};

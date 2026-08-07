@@ -24,6 +24,7 @@ import type { ComponentType } from 'react';
 import { BB_STORAGE_KEYS } from '../games/brick-breaker/storage/keys';
 import { BP_STORAGE_KEYS } from '../games/block-puzzle/storage/keys';
 import { BH_STORAGE_KEYS } from '../games/bunny-hop/storage/keys';
+import { FC_STORAGE_KEYS } from '../games/freecell/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
 import { NG_STORAGE_KEYS } from '../games/nonogram/storage/keys';
@@ -44,6 +45,7 @@ export type GameId =
   | 'memory-match'
   | 'water-sort'
   | 'solitaire'
+  | 'freecell'
   | 'brick-breaker'
   | 'sky-fighter'
   | 'bunny-hop'
@@ -105,6 +107,14 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(SO_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/solitaire/ui/SolitaireRoot').then((m) => ({ default: m.SolitaireRoot })),
+  },
+  {
+    id: 'freecell',
+    title: 'FreeCell',
+    glyph: '♥',
+    storageKeys: Object.values(FC_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/freecell/ui/FreeCellRoot').then((m) => ({ default: m.FreeCellRoot })),
   },
   {
     id: 'minesweeper',
