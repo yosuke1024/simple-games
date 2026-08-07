@@ -288,6 +288,47 @@ export const titleAccents = {
     onDark: '#171a0d',
     softDark: '#343a1c',
   },
+  /**
+   * Reversi — violet. The board is felt and black-and-white discs (all of it
+   * game content), so the accent lives in the chrome alone; even the mark on
+   * the last disc played is drawn in the other disc's colour, because a
+   * single accent cannot be legible on black and white at once.
+   *
+   * It was moss until Bunny Hop landed with a meadow green one shade away
+   * (#6e7a34 against #6d7a3a) — two titles that would have been the same
+   * colour on the collection home. Violet is the widest gap the series has
+   * left, between Nonogram's plum and Block Puzzle's orchid, and it is the
+   * more saturated and bluer of the three; with fifteen titles the palette
+   * holds families rather than fifteen separate hues, and this one says so
+   * plainly rather than pretending otherwise.
+   */
+  reversi: {
+    light: '#7f4a9c',
+    onLight: '#ffffff',
+    softLight: '#ece2f4',
+    dark: '#c48ad6',
+    onDark: '#1b1020',
+    softDark: '#33253f',
+  },
+  /**
+   * Connect Four — muted red. Here the accent *is* the player's disc, so it
+   * has to hold its own against the opponent's fixed teal at arm's length:
+   * red against blue-green is the one high-contrast pair that survives the
+   * common colour-vision deficiencies, and the winning line is ringed as
+   * well as coloured so the ending never rests on hue alone. Red was the
+   * last hue family the series had not used — Sliding Puzzle's clay is
+   * orange and Memory Match's rose is pink, and this sits squarely between
+   * them. It is desaturated well past the warning colour (`warn`), which no
+   * game may be mistaken for.
+   */
+  connectFour: {
+    light: '#a8433d',
+    onLight: '#ffffff',
+    softLight: '#f5e0dd',
+    dark: '#dd8f89',
+    onDark: '#1e100e',
+    softDark: '#3f2320',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;
