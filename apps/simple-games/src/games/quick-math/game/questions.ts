@@ -51,16 +51,21 @@ function binary(rng: () => number, op: Operator, maxA: number, maxB: number): Qu
       answer = a - b;
       break;
     case '×':
-      a = pick(rng, 1, maxA);
-      b = pick(rng, 1, maxB);
+      // Both sides start at 2. The times table is taught 2 to 9, and a row of
+      // `1 × 6` asks nothing — the first draft put three of them in one
+      // ten-question level.
+      a = pick(rng, 2, Math.max(2, maxA));
+      b = pick(rng, 2, Math.max(2, maxB));
       answer = a * b;
       break;
     case '÷':
     default:
-      // Built from the answer out, so it always divides exactly. The divisor
-      // starts at 2: "n ÷ 1" is not a question.
+      // Built from the answer out, so it always divides exactly. Both the
+      // divisor and the quotient start at 2: `n ÷ 1` is not a question, and
+      // neither is `n ÷ n` — the first draft answered 1 to three of the ten
+      // questions in the opening division level.
       b = pick(rng, 2, Math.max(2, maxB));
-      answer = pick(rng, 1, maxA);
+      answer = pick(rng, 2, Math.max(2, maxA));
       a = b * answer;
       break;
   }
@@ -83,7 +88,7 @@ function missing(rng: () => number, op: Operator, maxA: number, maxB: number): Q
 
   switch (op) {
     case '+':
-      a = pick(rng, 1, maxA);
+      a = pick(rng, 2, Math.max(2, maxA));
       answer = pick(rng, 1, maxB);
       c = a + answer;
       break;
@@ -93,14 +98,16 @@ function missing(rng: () => number, op: Operator, maxA: number, maxB: number): Q
       c = a - answer;
       break;
     case '×':
+      // Same floors as the binary form, for the same reason: `6 × ? = 6` and
+      // `1 × ? = 9` are both questions with nothing in them.
       a = pick(rng, 2, Math.max(2, maxA));
-      answer = pick(rng, 1, maxB);
+      answer = pick(rng, 2, Math.max(2, maxB));
       c = a * answer;
       break;
     case '÷':
     default:
       answer = pick(rng, 2, Math.max(2, maxB));
-      c = pick(rng, 1, maxA);
+      c = pick(rng, 2, Math.max(2, maxA));
       a = answer * c;
       break;
   }
