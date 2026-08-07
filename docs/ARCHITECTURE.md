@@ -34,6 +34,8 @@ src/
 ├── games/                  # 各ゲームは game/ state/ storage/ ui/ で自己完結
 │   ├── sudoku/
 │   ├── solitaire/
+│   ├── spider-solitaire/
+│   ├── freecell/
 │   ├── minesweeper/
 │   ├── nonogram/
 │   ├── number-match/
@@ -57,6 +59,8 @@ src/
 [plans/2026-07-30-collection-and-sudoku.md](plans/2026-07-30-collection-and-sudoku.md) を参照。
 各ゲームのルールは [SUDOKU_RULES.md](SUDOKU_RULES.md) /
 [SOLITAIRE_RULES.md](SOLITAIRE_RULES.md) /
+[SPIDER_SOLITAIRE_RULES.md](SPIDER_SOLITAIRE_RULES.md) /
+[FREECELL_RULES.md](FREECELL_RULES.md) /
 [MINESWEEPER_RULES.md](MINESWEEPER_RULES.md) /
 [NONOGRAM_RULES.md](NONOGRAM_RULES.md) /
 [NUMBER_MATCH_RULES.md](NUMBER_MATCH_RULES.md) /
@@ -104,14 +108,14 @@ src/
 ローダー」だけで、プラグイン機構ではない。ゲームの追加は keys の import 1 行と
 配列要素 1 つで済む。
 
-| フィールド             | 内容                                                                                                                                                                                                            |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                   | `'sudoku'` / `'solitaire'` / `'minesweeper'` / `'nonogram'` / `'number-match'` / `'water-sort'` / `'sliding-puzzle'` / `'memory-match'` / `'brick-breaker'` / `'sky-fighter'`。`data-game` 属性にもこの値を使う |
-| `title`                | 固有名詞。全言語で同一表記(翻訳しない)                                                                                                                                                                          |
-| `glyph`                | シリーズマーク。そのタイトルのアクセント色のタイルに 1 文字                                                                                                                                                     |
-| `storageKeys`          | そのゲームが保存する全キー。各ゲームの **import ゼロの葉** `storage/keys.ts` から同期 import する                                                                                                               |
-| `loadRoot`             | ゲームのルートコンポーネントを動的 `import()` で返すローダー。Root が受け取る props は `onExit` だけ                                                                                                            |
-| `loadSettingsSection?` | 任意。共有設定画面に差し込むゲーム固有の設定のローダー                                                                                                                                                          |
+| フィールド             | 内容                                                                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                   | 収録タイトルの識別子(`GameId` の union が正本。`'sudoku'` / `'solitaire'` / `'spider-solitaire'` / `'freecell'` / …)。`data-game` 属性にもこの値を使う |
+| `title`                | 固有名詞。全言語で同一表記(翻訳しない)                                                                                                                 |
+| `glyph`                | シリーズマーク。そのタイトルのアクセント色のタイルに 1 文字                                                                                            |
+| `storageKeys`          | そのゲームが保存する全キー。各ゲームの **import ゼロの葉** `storage/keys.ts` から同期 import する                                                      |
+| `loadRoot`             | ゲームのルートコンポーネントを動的 `import()` で返すローダー。Root が受け取る props は `onExit` だけ                                                   |
+| `loadSettingsSection?` | 任意。共有設定画面に差し込むゲーム固有の設定のローダー                                                                                                 |
 
 ### ゲーム単位の lazy チャンク(issue #26)
 
@@ -213,7 +217,7 @@ src/
   書かないので、あるタイトルの色がホームとゲーム内で食い違うことはない。
 - Number Match のアクセントは `:root` の既定値そのもの(コレクションホームと同じ)なので、
   `data-game='number-match'` の上書きブロックも `.accent-number-match` も持たない。
-  残り 7 タイトルが上書きする。
+  残りのタイトルが上書きする。
 - **シリーズの下地(`seriesColors`)は変えない。** 別のゲームが「同じシリーズ」に
   見えているのはこの下地であり、変わるのは 1 タイトル 1 色だけ(BRAND.md)。
 - ゲーム側に色の分岐を書かない。ゲームは `var(--accent)` を使うだけで、
@@ -227,7 +231,7 @@ src/
 - `ui/styles.css` に置くのは共有シェルのみ: デザイントークン(下地・アクセント・
   `data-game` の上書き)、コレクションホーム、設定 / About、ダイアログ・トースト・
   チュートリアル・バナースロットなどの共通クロム。
-- **10 タイトルすべてが規約に従っている**: `number-match.css` / `sudoku.css` /
+- **全タイトルが規約に従っている**: `number-match.css` / `sudoku.css` /
   `minesweeper.css` / `nonogram.css` / `sliding-puzzle.css` / `memory-match.css` /
   `water-sort.css` / `solitaire.css` / `brick-breaker.css` / `sky-fighter.css`。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
@@ -321,8 +325,8 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
   乗り、1 本のゲームだけが使うキーはそのゲームの `src/games/<id>/i18n/*.ts` に
   移してゲームのチャンクへ同梱する。ゲームを開かないプレイヤーは、その文言を
   一度もパースしない。
-- 現在 14 言語。シェル 78 キー(エントリに乗る) + ゲーム別 10 カタログ(合計 257
-  キー、13〜38 キー/ゲーム、開いたときだけパースされる)。ロケールタグは小文字で
+- 現在 14 言語。シェル 79 キー(エントリに乗る) + ゲーム別 15 カタログ(合計 388
+  キー、13〜42 キー/ゲーム、開いたときだけパースされる)。ロケールタグは小文字で
   持つ。en と ja 以外は来歴 `machine`(AI の助けを借りて書き、その言語のネイティブ
   は読んでいない)。高リスクキーはリリース前の門で逆翻訳を作者が読む
   (`docs/I18N_POLICY.md`)。
