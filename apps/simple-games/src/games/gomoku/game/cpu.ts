@@ -13,6 +13,14 @@
  * stone played out in the empty half of the board neither builds nor blocks
  * anything — and the search reads only the busiest few of those.
  *
+ * That narrowing is by *busyness*, which knows nothing about winning, so it
+ * is overruled wherever a five is at stake: a node that can complete five
+ * reads that move and no other, and one whose opponent can reads the answers
+ * to it and no other. This is not a strength tweak. Busyness once ranked the
+ * opponent's winning intersection twelfth of the empty cells, outside the
+ * eight a node reads, and a search that cannot see the move that ends the game
+ * does not play worse — it plays into it (`collectCandidates`, §4).
+ *
  * And the position's score is kept as a running total rather than recomputed.
  * Placing a stone can only change the four lines through it, so make and
  * unmake subtract those four lines and add them back; the evaluation at a
@@ -49,9 +57,14 @@ import {
  * The number is measured, not guessed, and it was calibrated against the CPU
  * opponents already shipped rather than against a stopwatch on one machine:
  * on the same container, Reversi's hard reply costs ~248ms and Connect Four's
- * ~301ms, where this one costs ~256ms at the budget below (cpu.bench.test.ts
+ * ~301ms, where this one costs ~283ms at the budget below (cpu.bench.test.ts
  * re-measures it). Those two ship and fit inside the 450ms pause, so landing
- * level with the cheaper of them is the honest way to say this one fits too.
+ * between them is the honest way to say this one fits too.
+ *
+ * It was ~256ms before each node started asking whether a five was available
+ * (`collectCandidates`). That question costs, and it is worth what it costs: a
+ * search that reads two more plies but cannot see the move that ends the game
+ * is not the stronger opponent, it is the one that loses on move nine.
  *
  * The pause exists to make the turn visible; a search that outlived it would
  * turn it into waiting, and "the strongest opponent that fits in the pause"
@@ -267,6 +280,14 @@ interface Search {
   readonly near: Int8Array;
   /** One candidate list per level of recursion, allocated once per reply. */
   readonly candidates: Int32Array[];
+  /**
+   * Scratch for the two tactical answers a node can have. One pair serves
+   * every level: they are filled and read inside a single `collectCandidates`
+   * call, which copies its answer into that level's own list before returning,
+   * so nothing in them has to survive the recursion that follows.
+   */
+  readonly forcing: Int32Array;
+  readonly blocking: Int32Array;
   readonly limit: number;
   black: number;
   white: number;
@@ -285,6 +306,8 @@ function createSearch(board: Board): Search {
     board: cells,
     near,
     candidates: Array.from({ length: HARD_MAX_DEPTH + 2 }, () => new Int32Array(HARD_BRANCH)),
+    forcing: new Int32Array(HARD_BRANCH),
+    blocking: new Int32Array(HARD_BRANCH),
     limit: HARD_NODE_LIMIT,
     black: scoreFor(cells, BLACK),
     white: scoreFor(cells, WHITE),
@@ -377,10 +400,16 @@ function scoreOf(state: Search, me: Player): number {
   return me === BLACK ? state.black - DEFENCE * state.white : state.white - DEFENCE * state.black;
 }
 
-/** Whether the stone on `cell` completes a line of five or more (§3). */
-function wins(board: ArrayLike<number>, cell: number): boolean {
-  const player = board[cell];
-  if (player === EMPTY) return false;
+/**
+ * Whether a stone of `player` on `cell` would complete a line of five or more
+ * (§3) — asked without placing it, and without touching the running score.
+ *
+ * Each walk stops at the first intersection that is not theirs, so the usual
+ * cost is a handful of reads. That is what makes it affordable to ask at every
+ * node about every candidate, which is the point: a five the candidate list
+ * prunes away is a five the search cannot see.
+ */
+function completesFive(board: ArrayLike<number>, cell: number, player: number): boolean {
   const row = rowOf(cell);
   const col = colOf(cell);
   for (let d = 0; d < DIRECTION_COUNT; d++) {
@@ -406,18 +435,89 @@ function wins(board: ArrayLike<number>, cell: number): boolean {
   return false;
 }
 
+/** Whether the stone already on `cell` completes a line of five or more (§3). */
+function wins(board: ArrayLike<number>, cell: number): boolean {
+  const player = board[cell];
+  if (player === EMPTY || player === undefined) return false;
+  return completesFive(board, cell, player);
+}
+
 /**
- * The busiest empty intersections with a stone in reach, written into `out`
- * in descending order; returns how many. One pass with an insertion into a
- * list of at most `width`, because a node cannot afford to allocate an array
- * and sort it — that alone was most of the cost of a reply.
+ * What the position forces, if it forces anything (§4): the intersections that
+ * complete five for `player` — nothing outranks taking the game — and failing
+ * those, the ones that would complete five for the opponent, which have to be
+ * answered or the game ends on their next stone.
+ *
+ * This is the pair of properties the rule document calls non-negotiable, and
+ * it cannot be left to the evaluation to notice. The numbers do not say it:
+ * blocking a four leaves the blocker's own position looking modest, while
+ * building an open four of one's own scores six figures, so a CPU comparing
+ * only those would build its four and lose to the five that lands first. The
+ * question here is exact, and it is asked before anything is weighed.
  */
-function collectCandidates(state: Search, out: Int32Array, width: number): number {
+function forcedMoves(
+  board: ArrayLike<number>,
+  player: Player,
+  candidates: readonly number[],
+): number[] | null {
+  const mine: number[] = [];
+  for (const cell of candidates) {
+    if (completesFive(board, cell, player)) mine.push(cell);
+  }
+  if (mine.length > 0) return mine;
+
+  const them = opponentOf(player);
+  const theirs: number[] = [];
+  for (const cell of candidates) {
+    if (completesFive(board, cell, them)) theirs.push(cell);
+  }
+  return theirs.length > 0 ? theirs : null;
+}
+
+/**
+ * What this node should read, written into `out`; returns how many.
+ *
+ * A five for either colour comes first and comes alone. When the side to move
+ * can complete five, no other move at this node is worth a node — the game
+ * ends there. When the opponent can, every move except the ones that stop it
+ * loses on the reply, so those are the whole list. Both cases *narrow* the
+ * tree, which buys back more than the scan costs.
+ *
+ * Only when neither is true does busyness decide, and then only the `width`
+ * busiest: one pass with an insertion into a fixed list, because a node cannot
+ * afford to allocate an array and sort it — that alone was most of the cost of
+ * a reply.
+ *
+ * The tactical half is not a refinement. Busyness knows nothing about a five,
+ * and in the position this was written for the opponent's winning intersection
+ * ranked *twelfth* among the empty cells by stones-in-reach: a node reading
+ * the busiest eight never saw the move that ended the game, at any depth.
+ */
+function collectCandidates(state: Search, toMove: Player, out: Int32Array, width: number): number {
+  const them = opponentOf(toMove);
+  const mineBuffer = state.forcing;
+  const theirsBuffer = state.blocking;
+  let mine = 0;
+  let theirs = 0;
   let count = 0;
+
   for (let cell = 0; cell < CELL_COUNT; cell++) {
     if (state.board[cell] !== EMPTY) continue;
     const weight = state.near[cell]!;
     if (weight === 0) continue;
+
+    // Completing five here needs four more of one colour on a line through
+    // this intersection, and two of those four always land within the two
+    // rings `near` counts — so a cell with fewer than two stones in reach
+    // cannot be a five for anyone, and the scan can skip it outright. That is
+    // exact, not a heuristic: it is most of the fringe, and it is most of what
+    // asking this question at every node would otherwise cost.
+    if (weight >= 2) {
+      if (mine < width && completesFive(state.board, cell, toMove)) mineBuffer[mine++] = cell;
+      else if (theirs < width && completesFive(state.board, cell, them))
+        theirsBuffer[theirs++] = cell;
+    }
+
     if (count < width) {
       let i = count;
       count += 1;
@@ -435,7 +535,12 @@ function collectCandidates(state: Search, out: Int32Array, width: number): numbe
       out[i] = cell;
     }
   }
-  return count;
+
+  const forced = mine > 0 ? mineBuffer : theirs > 0 ? theirsBuffer : null;
+  if (forced === null) return count;
+  const forcedCount = mine > 0 ? mine : theirs;
+  for (let i = 0; i < forcedCount; i++) out[i] = forced[i]!;
+  return forcedCount;
 }
 
 /**
@@ -460,12 +565,12 @@ function search(
   state.nodes += 1;
   if (depth === 0) return scoreOf(state, me);
 
-  // Busyness order, and no more than that. Sorting the children by what they
-  // score would prune better, but it costs a make and unmake each — which
-  // more than doubles the price of every node — and the root already does it
-  // where the pruning is worth most.
+  // A five either way, and otherwise busyness order and no more than that.
+  // Sorting the quiet children by what they score would prune better, but it
+  // costs a make and unmake each — which more than doubles the price of every
+  // node — and the root already does it where the pruning is worth most.
   const buffer = state.candidates[level]!;
-  const count = collectCandidates(state, buffer, HARD_BRANCH);
+  const count = collectCandidates(state, toMove, buffer, HARD_BRANCH);
   if (count === 0) return scoreOf(state, me);
 
   const maximising = toMove === me;
@@ -575,10 +680,19 @@ export function chooseCpuMove(input: CpuMoveInput): number | null {
   const shuffledCandidates = shuffled(candidates, rng);
   const state = createSearch(board);
 
+  // What the position forces is decided before anything is weighed, and it
+  // replaces the candidate list rather than joining it: the alternatives to
+  // taking a five, or to stopping one, are all worse than the worst of these.
+  // Normal has no lookahead to discover that with, and hard's root would trim
+  // the answer away — `ROOT_BRANCH` keeps the best-*scoring* sixteen, and a
+  // move that merely stops a loss does not score well.
+  const forced = forcedMoves(state.board, player, shuffledCandidates);
+
   if (difficulty === 'normal') {
-    let best = shuffledCandidates[0]!;
+    const options = forced ?? shuffledCandidates;
+    let best = options[0]!;
     let bestValue = -Infinity;
-    for (const cell of shuffledCandidates) {
+    for (const cell of options) {
       make(state, cell, player);
       const value = wins(state.board, cell) ? WIN_VALUE : scoreOf(state, player);
       unmake(state, cell);
@@ -591,7 +705,7 @@ export function chooseCpuMove(input: CpuMoveInput): number | null {
     return best;
   }
 
-  const rootMoves = orderByScore(state, player, shuffledCandidates, ROOT_BRANCH);
+  const rootMoves = forced ?? orderByScore(state, player, shuffledCandidates, ROOT_BRANCH);
   // Depth 1 always completes within the budget, so hard is never weaker than
   // normal; each finished depth replaces the answer, an unfinished one is
   // discarded whole (§4).
@@ -605,5 +719,9 @@ export function chooseCpuMove(input: CpuMoveInput): number | null {
   return chosen;
 }
 
-/** Exported for the test that holds the incremental score to its definition. */
-export const __test = { createSearch, make, unmake };
+/**
+ * Exported for the test that holds the incremental score to its definition,
+ * and for the one that reads what a node is willing to look at — the bug that
+ * made this list tactical was invisible from the outside at depth 1.
+ */
+export const __test = { createSearch, make, unmake, collectCandidates, completesFive };

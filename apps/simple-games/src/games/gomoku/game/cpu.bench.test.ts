@@ -13,7 +13,7 @@
  *
  * The node budget itself was chosen by measuring against the opponents
  * already shipped — Reversi ~248ms a reply and Connect Four ~301ms on the
- * machine this was written on, against ~256ms here. That measurement belongs
+ * machine this was written on, against ~283ms here. That measurement belongs
  * in a commit message and a rule document, not in an assertion that fails
  * when a runner is busy.
  */
