@@ -87,10 +87,17 @@ export interface Selection {
   readonly index: number;
 }
 
-/** What the current hint points at, for the outline (§8). */
+/**
+ * What the current hint points at, for the outline (§8): the move itself, not
+ * the columns it happens to touch. A column mid-game is mostly cards the move
+ * leaves alone, and outlining those would say "look here" about the wrong ones.
+ */
 export interface HintMarks {
   readonly stock?: boolean;
-  readonly piles?: readonly number[];
+  /** The run to move: the cards from `index` up in column `pile`. */
+  readonly from?: { readonly pile: number; readonly index: number };
+  /** Where it lands: the top card of this column, or its empty slot. */
+  readonly to?: number;
 }
 
 export interface SpiderTableProps {
@@ -262,7 +269,8 @@ export const SpiderTable = memo(function SpiderTable({
       <div className="sp-cascades">
         {board.tableau.map((pile, pileIndex) => {
           const isDestination = destinations.includes(pileIndex);
-          const hinted = hint?.piles?.includes(pileIndex) ?? false;
+          const hintRunStart = hint?.from?.pile === pileIndex ? hint.from.index : null;
+          const hintLanding = hint?.to === pileIndex;
           return (
             <div
               key={pileIndex}
@@ -274,7 +282,7 @@ export const SpiderTable = memo(function SpiderTable({
                 <button
                   type="button"
                   className={`sp-card sp-slot sp-slot-empty ${isDestination ? 'sp-destination' : ''} ${
-                    hinted ? 'sp-hinted' : ''
+                    hintLanding ? 'sp-hinted' : ''
                   }`}
                   aria-label={t('spiderColumnEmpty', { n: pileIndex + 1 })}
                   onClick={() => onColumnTap(pileIndex, null)}
@@ -295,6 +303,11 @@ export const SpiderTable = memo(function SpiderTable({
                     const held =
                       selection !== null && selection.pile === pileIndex && selection.index <= i;
                     const overlapped = pile.down.length > 0 || i > 0;
+                    // Hinted cards mirror a selection's reach: the run from its
+                    // start up, plus the one card the run would land on.
+                    const hinted =
+                      (hintRunStart !== null && hintRunStart <= i) ||
+                      (hintLanding && i === pile.up.length - 1);
                     return (
                       <button
                         key={`card-${card}`}

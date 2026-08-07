@@ -147,7 +147,9 @@ export function SpiderGameScreen() {
       return;
     }
     const marks: HintMarks =
-      move.kind === 'deal' ? { stock: true } : { piles: [move.from, move.to] };
+      move.kind === 'deal'
+        ? { stock: true }
+        : { from: { pile: move.from, index: move.index }, to: move.to };
     setHint(marks);
     hintTimeout(() => {
       setHint((current) => (current === marks ? null : current));

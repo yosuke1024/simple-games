@@ -54,9 +54,51 @@ const savedGoldenGame = {
   [SS_STORAGE_KEYS.game]: JSON.stringify(toPersisted(createFreeSession(1, 'ss-free-golden'), 1)),
 };
 
+/**
+ * A crafted one-suit save whose only sound move is the ace of column 1 onto
+ * the 2 of column 2 (a card is `copy * 13 + rank - 1`, types.ts). Kings and
+ * jacks land nowhere and take nothing, three completed runs and the stock
+ * absorb the rest of the 104, and — the point of the fixture — both columns
+ * of the move hold cards the move does not touch: the 5 and 9 above the ace,
+ * the 8 under the 2.
+ */
+const hintTableau = [
+  { down: [], up: [4, 8, 0] }, // 5♠ 9♠ A♠ — only the ace moves
+  { down: [], up: [7, 1] }, // 8♠ 2♠ — the ace lands on the 2
+  { down: [], up: [55, 12] }, // 4♠ under a king
+  { down: [], up: [57, 64] }, // 6♠ under a king
+  { down: [], up: [77] },
+  { down: [], up: [90] },
+  { down: [], up: [103] },
+  { down: [], up: [62] },
+  { down: [], up: [75] },
+  { down: [], up: [88] },
+];
+const hintCompleted = [1, 2, 3].map((copy) =>
+  Array.from({ length: 13 }, (_, i) => copy * 13 + 12 - i),
+);
+const hintDealt = new Set([...hintTableau.flatMap((pile) => pile.up), ...hintCompleted.flat()]);
+const savedHintGame = {
+  ...tutorialDone,
+  [SS_STORAGE_KEYS.game]: JSON.stringify({
+    schemaVersion: 1,
+    mode: 'free',
+    seed: 'ss-free-hint-marks',
+    suitCount: 1,
+    dailyDate: null,
+    stock: Array.from({ length: 104 }, (_, card) => card).filter((card) => !hintDealt.has(card)),
+    tableau: hintTableau,
+    completed: hintCompleted,
+    moveCount: 0,
+    hintCount: 0,
+    elapsedSeconds: 0,
+    savedAt: 1,
+  }),
+};
+
 const table = () => screen.getByRole('group', { name: 'Spider Solitaire table' });
 
-async function resumeGoldenGame(user: ReturnType<typeof userEvent.setup>) {
+async function resumeSavedGame(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole('button', { name: /Resume/ }));
 }
 
@@ -150,7 +192,7 @@ describe('playing', () => {
   it('moves a run with two taps and turns over what it uncovers (§3)', async () => {
     const user = userEvent.setup();
     renderGame(savedGoldenGame);
-    await resumeGoldenGame(user);
+    await resumeSavedGame(user);
 
     expect(within(table()).getAllByRole('img', { name: 'Face down' })).toHaveLength(44);
 
@@ -166,7 +208,7 @@ describe('playing', () => {
   it('deals a row from the stock and undoes it whole (§3, §8)', async () => {
     const user = userEvent.setup();
     renderGame(savedGoldenGame);
-    await resumeGoldenGame(user);
+    await resumeSavedGame(user);
 
     expect(screen.getByRole('button', { name: /Undo/ })).toBeDisabled();
     await user.click(
@@ -191,7 +233,7 @@ describe('playing', () => {
   it('never names a face-down card, and shows no clock or streak (§4, §12)', async () => {
     const user = userEvent.setup();
     renderGame(savedGoldenGame);
-    await resumeGoldenGame(user);
+    await resumeSavedGame(user);
 
     for (const back of within(table()).getAllByRole('img', { name: 'Face down' })) {
       expect(back).not.toHaveAttribute('data-card');
@@ -203,12 +245,26 @@ describe('playing', () => {
   it('offers a hint, and it is free (§8)', async () => {
     const user = userEvent.setup();
     renderGame(savedGoldenGame);
-    await resumeGoldenGame(user);
+    await resumeSavedGame(user);
 
     await user.click(screen.getByRole('button', { name: /Hint/ }));
     // A hint changes nothing on the board and costs nothing.
     expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Undo/ })).toBeDisabled();
+  });
+
+  it('outlines only the run to move and the card it lands on (§8)', async () => {
+    const user = userEvent.setup();
+    renderGame(savedHintGame);
+    await resumeSavedGame(user);
+
+    await user.click(screen.getByRole('button', { name: /Hint/ }));
+
+    // The fixture's one sound move is the ace onto the 2. The outline marks
+    // that move and nothing else — not the columns it happens to touch.
+    expect(within(table()).getByRole('button', { name: 'A of spades' })).toHaveClass('sp-hinted');
+    expect(within(table()).getByRole('button', { name: '2 of spades' })).toHaveClass('sp-hinted');
+    expect(table().querySelectorAll('.sp-hinted')).toHaveLength(2);
   });
 });
 
