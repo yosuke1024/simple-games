@@ -191,6 +191,33 @@
   --accent-ring-soft: rgba(37, 37, 106, 0.12);
 }
 
+:root[data-game='quick-math'],
+.accent-quick-math {
+  --accent: #776e18;
+  --accent-ink: #ffffff;
+  --accent-soft: #eeead0;
+  --accent-ring: rgba(119, 110, 24, 0.38);
+  --accent-ring-soft: rgba(119, 110, 24, 0.14);
+}
+
+:root[data-game='schulte-table'],
+.accent-schulte-table {
+  --accent: #18787b;
+  --accent-ink: #ffffff;
+  --accent-soft: #dbecec;
+  --accent-ring: rgba(24, 120, 123, 0.38);
+  --accent-ring-soft: rgba(24, 120, 123, 0.12);
+}
+
+:root[data-game='number-recall'],
+.accent-number-recall {
+  --accent: #1d6b33;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcefe2;
+  --accent-ring: rgba(29, 107, 51, 0.38);
+  --accent-ring-soft: rgba(29, 107, 51, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -355,6 +382,33 @@
   --accent-soft: #1e1e42;
   --accent-ring: rgba(110, 110, 207, 0.42);
   --accent-ring-soft: rgba(110, 110, 207, 0.14);
+}
+
+:root[data-theme='dark'][data-game='quick-math'],
+[data-theme='dark'] .accent-quick-math {
+  --accent: #c4ba6b;
+  --accent-ink: #191807;
+  --accent-soft: #39351a;
+  --accent-ring: rgba(196, 186, 107, 0.42);
+  --accent-ring-soft: rgba(196, 186, 107, 0.14);
+}
+
+:root[data-theme='dark'][data-game='schulte-table'],
+[data-theme='dark'] .accent-schulte-table {
+  --accent: #6cbcc1;
+  --accent-ink: #0d1a1b;
+  --accent-soft: #1d3739;
+  --accent-ring: rgba(108, 188, 193, 0.42);
+  --accent-ring-soft: rgba(108, 188, 193, 0.14);
+}
+
+:root[data-theme='dark'][data-game='number-recall'],
+[data-theme='dark'] .accent-number-recall {
+  --accent: #92dfa8;
+  --accent-ink: #0b1a10;
+  --accent-soft: #1c3a27;
+  --accent-ring: rgba(146, 223, 168, 0.42);
+  --accent-ring-soft: rgba(146, 223, 168, 0.14);
 }
 
 * {

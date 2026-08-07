@@ -18,6 +18,11 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'brick-breaker': ['bb.stats', 'bb.progress', 'bb.flags'],
   nonogram: ['ng.saveGame', 'ng.saveDaily', 'ng.stats', 'ng.progress', 'ng.flags', 'ng.prefs'],
   'number-match': ['nm.saveGame', 'nm.stats', 'nm.flags', 'nm.progress', 'nm.saveDaily'],
+  'quick-math': ['qm.saveGame', 'qm.saveDaily', 'qm.stats', 'qm.progress', 'qm.flags'],
+  // Two keys short of the others on purpose: neither drill saves a round in
+  // progress (docs/SCHULTE_TABLE_RULES.md §11, docs/NUMBER_RECALL_RULES.md §12).
+  'schulte-table': ['st.stats', 'st.progress', 'st.flags'],
+  'number-recall': ['nr.stats', 'nr.progress', 'nr.flags'],
   'water-sort': ['ws.saveGame', 'ws.saveDaily', 'ws.stats', 'ws.progress', 'ws.flags'],
   'sliding-puzzle': ['sp.saveGame', 'sp.saveDaily', 'sp.stats', 'sp.progress', 'sp.flags'],
   'memory-match': ['mm.saveGame', 'mm.saveDaily', 'mm.stats', 'mm.flags'],
@@ -38,6 +43,9 @@ const PREFIXES: Record<string, string> = {
   'brick-breaker': 'bb.',
   nonogram: 'ng.',
   'number-match': 'nm.',
+  'quick-math': 'qm.',
+  'schulte-table': 'st.',
+  'number-recall': 'nr.',
   'water-sort': 'ws.',
   'sliding-puzzle': 'sp.',
   'memory-match': 'mm.',

@@ -369,6 +369,64 @@ export const titleAccents = {
       softDark: '#1e1e42',
     },
   },
+  /**
+   * Quick Math — mustard. The board is an equation in ink with one accent
+   * blank, so the accent covers almost nothing here and can afford to be the
+   * saturated one: it marks the slot being filled in and nothing else. Yellow
+   * is the pencil-and-workbook colour, and it takes the gap between Brick
+   * Breaker's ochre and Bunny Hop's meadow — the two it must not be mistaken
+   * for on the collection home. It is darker and purer than either, which is
+   * what separates three neighbours fifteen degrees apart.
+   */
+  quickMath: {
+    light: '#776e18',
+    onLight: '#ffffff',
+    softLight: '#eeead0',
+    dark: '#c4ba6b',
+    onDark: '#191807',
+    softDark: '#39351a',
+  },
+  /**
+   * Schulte Table — petrol. The grid is deliberately colourless (a coloured
+   * cell would be doing the searching, docs/SCHULTE_TABLE_RULES.md §1), so the
+   * accent lives on the one number above the board that says what to look for.
+   * It sits between Sudoku's muted teal and Water Sort's aqua and is far more
+   * saturated than both, which is how three titles share a hue family without
+   * sharing a colour — the same trick Minesweeper's slate and Number Match's
+   * indigo already play three degrees apart.
+   */
+  schulteTable: {
+    light: '#18787b',
+    onLight: '#ffffff',
+    softLight: '#dbecec',
+    dark: '#6cbcc1',
+    onDark: '#0d1a1b',
+    softDark: '#1d3739',
+  },
+  /**
+   * Number Recall — deep emerald. Tiles are told apart by their face rather
+   * than by hue (a colour-coded face-down tile would hand a different game to a
+   * player with a colour vision deficiency), so the accent marks the number
+   * wanted next and the ring around a missed tile.
+   *
+   * It took the gap between Solitaire's felt green and 2048's jade — and then
+   * Spider Solitaire landed in the same gap while this branch was open,
+   * `#31802f` / `#7fcc7d`. Against the first choice (`#2f7a3e` / `#76c37f`)
+   * that measured ΔE 11.0 light and 6.2 dark, and 6.2 would have been the
+   * closest pair in the whole collection (the existing closest is 7.9). So the
+   * green went deeper and more saturated: Spider is now 14.5 / 15.1 away, and
+   * the nearest colour of any title is 2048 at 14.4 light / 12.4 dark. The
+   * wheel is full either way — the next title differentiates by lightness and
+   * saturation, not by hue (docs/BRAND.md「アクセントを選ぶ手順」).
+   */
+  numberRecall: {
+    light: '#1d6b33',
+    onLight: '#ffffff',
+    softLight: '#dcefe2',
+    dark: '#92dfa8',
+    onDark: '#0b1a10',
+    softDark: '#1c3a27',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

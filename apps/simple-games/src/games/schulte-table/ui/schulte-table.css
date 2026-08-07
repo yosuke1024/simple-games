@@ -1,0 +1,184 @@
+/* Schulte Table — all of this game's styling, imported by SchulteTableRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --radius, --font-display, --tap-size, …) so the game
+   reads as part of the same app and follows the theme without knowing about it.
+
+   Class names are prefixed `schulte-` so this file can never collide with the
+   shell or with another game.
+
+   Nothing in here colours a cell by its value or by what comes next
+   (docs/SCHULTE_TABLE_RULES.md §1, §9): the accent marks the number being
+   looked for above the board, never its cell. A tapped cell is told apart by
+   its surface and its ink weight, not by hue — so the board still works with
+   any colour vision. */
+
+/* ---------- board ---------- */
+
+/* The board sits between the top bar and the banner, centred so a tall phone
+   brings it into thumb reach instead of pinning it up top. */
+.schulte-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 4px 12px 10px;
+  min-height: 0;
+}
+
+/* The number being searched for. Big, because it is read once per tap and the
+   eyes are busy elsewhere; in the accent, because it is the only thing on this
+   screen that is not part of the board. */
+.schulte-target {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+}
+
+.schulte-target-label {
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.schulte-target-value {
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  /* Two digits and one digit must not shift the board below. */
+  min-width: 1.6em;
+  text-align: center;
+}
+
+/* Square at every size. It takes the full width it is allowed, so a 5x5 cell
+   stays a comfortable target on a small phone (§13): on a 360px-wide screen
+   that is a ~64px cell, comfortably past --tap-size. The `min()` against
+   viewport height keeps it square on a short screen too. */
+.schulte-board {
+  display: grid;
+  gap: 4px;
+  width: min(100%, 420px, 52vh);
+  aspect-ratio: 1;
+  padding: 4px;
+  background: var(--surface-recessed);
+  border: 2px solid var(--ink-soft);
+  border-radius: var(--radius);
+}
+
+.schulte-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-display);
+  /* Sized against the board rather than the viewport: a 5x5 cell is a fifth of
+     the same box a 3x3 cell fills a third of. */
+  font-size: clamp(15px, 6vw, 30px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease-out,
+    color 0.12s ease-out;
+}
+
+/* Reduced Motion needs nothing here: the transition above is a plain CSS
+   transition, and the shell already zeroes every transition-duration from the
+   in-app setting (:root[data-reduced-motion]) and the OS preference alike
+   (styles.css「reduced motion」). A game-level override would only be needed
+   for animation this file drove itself, and it drives none (§13). */
+
+/* Tapped: sunk into the board and quiet, but still legible and still exactly
+   where it was (§3). Removing it would make the board emptier as the round went
+   on, so the last numbers would be easy to find for a reason that has nothing
+   to do with the player. */
+.schulte-cell-done {
+  background: var(--surface-recessed);
+  border-color: transparent;
+  color: var(--ink-soft);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.schulte-cell:active:not(.schulte-cell-done) {
+  background: var(--accent-soft);
+}
+
+/* ---------- top bar ---------- */
+
+.schulte-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.schulte-mode {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ---------- level list & daily list ---------- */
+
+.schulte-level-best {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.schulte-daily-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- tutorial figure ---------- */
+
+/* The same 3x3 the real board draws, at figure scale (§12). */
+.schulte-figure {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  width: 160px;
+  aspect-ratio: 1;
+  padding: 4px;
+  background: var(--surface-recessed);
+  border: 2px solid var(--ink-soft);
+  border-radius: 10px;
+}
+
+.schulte-figure-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.schulte-figure-cell-done {
+  background: var(--surface-recessed);
+  border-color: transparent;
+  color: var(--ink-soft);
+  opacity: 0.45;
+}

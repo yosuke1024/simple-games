@@ -30,8 +30,11 @@ import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
 import { NG_STORAGE_KEYS } from '../games/nonogram/storage/keys';
 import { NM_STORAGE_KEYS } from '../games/number-match/storage/keys';
+import { NR_STORAGE_KEYS } from '../games/number-recall/storage/keys';
+import { QM_STORAGE_KEYS } from '../games/quick-math/storage/keys';
 import { RV_STORAGE_KEYS } from '../games/reversi/storage/keys';
 import { SD_STORAGE_KEYS } from '../games/sudoku/storage/keys';
+import { ST_STORAGE_KEYS } from '../games/schulte-table/storage/keys';
 import { SF_STORAGE_KEYS } from '../games/sky-fighter/storage/keys';
 import { SO_STORAGE_KEYS } from '../games/solitaire/storage/keys';
 import { SS_STORAGE_KEYS } from '../games/spider-solitaire/storage/keys';
@@ -44,6 +47,9 @@ export type GameId =
   | 'minesweeper'
   | 'nonogram'
   | 'number-match'
+  | 'quick-math'
+  | 'schulte-table'
+  | 'number-recall'
   | 'sliding-puzzle'
   | 'memory-match'
   | 'water-sort'
@@ -202,6 +208,36 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/number-match/ui/NumberMatchRoot').then((m) => ({
         default: m.NumberMatchRoot,
+      })),
+  },
+  // The three drills sit together, after Number Match: they are the shortest
+  // sittings in the collection and the only titles measured in seconds.
+  {
+    id: 'quick-math',
+    title: 'Quick Math',
+    glyph: '÷',
+    storageKeys: Object.values(QM_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/quick-math/ui/QuickMathRoot').then((m) => ({ default: m.QuickMathRoot })),
+  },
+  {
+    id: 'schulte-table',
+    title: 'Schulte Table',
+    glyph: '⌖',
+    storageKeys: Object.values(ST_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/schulte-table/ui/SchulteTableRoot').then((m) => ({
+        default: m.SchulteTableRoot,
+      })),
+  },
+  {
+    id: 'number-recall',
+    title: 'Number Recall',
+    glyph: '?',
+    storageKeys: Object.values(NR_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/number-recall/ui/NumberRecallRoot').then((m) => ({
+        default: m.NumberRecallRoot,
       })),
   },
   {
