@@ -69,7 +69,8 @@ PRODUCT_PRINCIPLES.md「適用範囲」と WEB_VERSION.md)。
 
 ストア文面では収録済みのゲーム名を具体的に挙げる(現在は "Sudoku, Solitaire,
 Minesweeper, 2048, Block Puzzle, Reversi, Connect Four, Brick Breaker, Nonogram,
-Number Match, Water Sort, Sliding Puzzle, Memory Match, Sky Fighter" の 14 本)。
+Number Match, Water Sort, Sliding Puzzle, Memory Match, Sky Fighter,
+Bunny Hop" の 15 本)。
 未収録のゲーム名は、**実際に収録された時点で**初めて足す。
 ゲーム名は検索流入の中核だが、不自然なキーワード詰め込みはしない。
 
@@ -193,7 +194,7 @@ OSS を先頭に出さない。
   [ARCHITECTURE.md](ARCHITECTURE.md) の「タイトルごとのアクセント色」)。
 - 新タイトルを追加するときは `titleAccents` に1エントリ足すだけにする。
   **存在しないゲームのアクセントを先回りして定義しない。** 現在エントリを持つのは
-  収録済みの 14 タイトルだけ。
+  収録済みの 15 タイトルだけ。
 
 ### コントラスト
 

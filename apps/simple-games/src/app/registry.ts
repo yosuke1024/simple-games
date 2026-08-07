@@ -23,6 +23,7 @@
 import type { ComponentType } from 'react';
 import { BB_STORAGE_KEYS } from '../games/brick-breaker/storage/keys';
 import { BP_STORAGE_KEYS } from '../games/block-puzzle/storage/keys';
+import { BH_STORAGE_KEYS } from '../games/bunny-hop/storage/keys';
 import { C4_STORAGE_KEYS } from '../games/connect-four/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
@@ -47,6 +48,7 @@ export type GameId =
   | 'solitaire'
   | 'brick-breaker'
   | 'sky-fighter'
+  | 'bunny-hop'
   | '2048'
   | 'block-puzzle'
   | 'reversi'
@@ -218,6 +220,16 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/sky-fighter/ui/SkyFighterRoot').then((m) => ({
         default: m.SkyFighterRoot,
+      })),
+  },
+  {
+    id: 'bunny-hop',
+    title: 'Bunny Hop',
+    glyph: '⌃',
+    storageKeys: Object.values(BH_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/bunny-hop/ui/BunnyHopRoot').then((m) => ({
+        default: m.BunnyHopRoot,
       })),
   },
 ];

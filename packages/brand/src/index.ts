@@ -273,19 +273,42 @@ export const titleAccents = {
     softDark: '#3a2a38',
   },
   /**
-   * Reversi — moss. The board is felt and discs (all of it game content), so
-   * the accent lives in the chrome and in the mark on the last disc played.
-   * Yellow-green is a family the series did not have: it reads as a marker
-   * beside Solitaire's blue-leaning felt green rather than as the same
-   * colour, and it stays clear of the reds Connect Four just took.
+   * Bunny Hop — meadow. The bushes, fences and birds are drawn in the accent
+   * while the rabbit and the ground are ink, so the accent is what the player
+   * reads as "in the way"; a grass green keeps that legible against both
+   * papers without turning the meadow into a warning sign. It takes the
+   * yellow-green gap between Solitaire's felt green and Brick Breaker's ochre
+   * — the two neighbours it must not be mistaken for on the collection home.
+   */
+  bunnyHop: {
+    light: '#6e7a34',
+    onLight: '#ffffff',
+    softLight: '#e8ecd6',
+    dark: '#b6c274',
+    onDark: '#171a0d',
+    softDark: '#343a1c',
+  },
+  /**
+   * Reversi — violet. The board is felt and black-and-white discs (all of it
+   * game content), so the accent lives in the chrome alone; even the mark on
+   * the last disc played is drawn in the other disc's colour, because a
+   * single accent cannot be legible on black and white at once.
+   *
+   * It was moss until Bunny Hop landed with a meadow green one shade away
+   * (#6e7a34 against #6d7a3a) — two titles that would have been the same
+   * colour on the collection home. Violet is the widest gap the series has
+   * left, between Nonogram's plum and Block Puzzle's orchid, and it is the
+   * more saturated and bluer of the three; with fifteen titles the palette
+   * holds families rather than fifteen separate hues, and this one says so
+   * plainly rather than pretending otherwise.
    */
   reversi: {
-    light: '#6d7a3a',
+    light: '#7f4a9c',
     onLight: '#ffffff',
-    softLight: '#e8ecd9',
-    dark: '#a9b972',
-    onDark: '#161a0d',
-    softDark: '#2f3620',
+    softLight: '#ece2f4',
+    dark: '#c48ad6',
+    onDark: '#1b1020',
+    softDark: '#33253f',
   },
   /**
    * Connect Four — muted red. Here the accent *is* the player's disc, so it

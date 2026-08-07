@@ -5,9 +5,10 @@
 > あわせて Play Console でアプリ内商品(管理された商品)`remove_ads` を
 > 基準価格 USD 3.99 で作成すること(国別価格は自動調整に任せる)。
 
-> 掲載は収録ゲーム 14 本(Sudoku / Solitaire / Minesweeper / 2048 /
-> Block Puzzle / Reversi / Connect Four / Brick Breaker / Nonogram / Number Match / Water Sort /
-> Sliding Puzzle / Memory Match / Sky Fighter)の状態で書いてある。
+> 掲載は収録ゲーム 15 本(Sudoku / Solitaire / Minesweeper / 2048 /
+> Block Puzzle / Reversi / Connect Four / Brick Breaker / Nonogram /
+> Number Match / Water Sort / Sliding Puzzle / Memory Match / Sky Fighter /
+> Bunny Hop)の状態で書いてある。
 > 未収録のゲームは名前も含めて掲載文に出さず、**実際に収録できた時点で**
 > 説明・スクリーンショットへ追加する(未収録のゲームを "Coming Soon" として
 > 掲載しない)。
@@ -20,8 +21,9 @@
 3. `Simple Games: Sudoku & More`
 
 キーワード優先順位: Offline > Sudoku > Solitaire > Minesweeper > 2048 >
-Block Puzzle > Reversi > Connect Four > Brick Breaker > Nonogram > Puzzle > Number Match > Water Sort >
-Sliding Puzzle > Memory Match > Sky Fighter > Simple Games > PixApps
+Block Puzzle > Reversi > Connect Four > Brick Breaker > Nonogram > Puzzle >
+Number Match > Water Sort > Sliding Puzzle > Memory Match > Sky Fighter >
+Bunny Hop > Simple Games > PixApps
 (ゲーム名は検索流入の中核。収録済みの名前だけを、検索需要の大きい順に置く)
 
 ## 訴求の順序(BRAND.md と同一。この順で書く)
@@ -69,6 +71,7 @@ INCLUDED GAMES
 • Sliding Puzzle
 • Memory Match
 • Sky Fighter
+• Bunny Hop
 
 No game feature is locked behind a payment, and there is no subscription. Hints and undo are free wherever a game has them — no limit on how often you use them, and never an ad to watch first.
 

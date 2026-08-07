@@ -148,11 +148,11 @@
 
 :root[data-game='reversi'],
 .accent-reversi {
-  --accent: #6d7a3a;
+  --accent: #7f4a9c;
   --accent-ink: #ffffff;
-  --accent-soft: #e8ecd9;
-  --accent-ring: rgba(109, 122, 58, 0.38);
-  --accent-ring-soft: rgba(109, 122, 58, 0.12);
+  --accent-soft: #ece2f4;
+  --accent-ring: rgba(127, 74, 156, 0.38);
+  --accent-ring-soft: rgba(127, 74, 156, 0.12);
 }
 
 :root[data-game='connect-four'],
@@ -162,6 +162,15 @@
   --accent-soft: #f5e0dd;
   --accent-ring: rgba(168, 67, 61, 0.38);
   --accent-ring-soft: rgba(168, 67, 61, 0.12);
+}
+
+:root[data-game='bunny-hop'],
+.accent-bunny-hop {
+  --accent: #6e7a34;
+  --accent-ink: #ffffff;
+  --accent-soft: #e8ecd6;
+  --accent-ring: rgba(110, 122, 52, 0.38);
+  --accent-ring-soft: rgba(110, 122, 52, 0.14);
 }
 
 :root[data-theme='dark'] {
@@ -287,11 +296,11 @@
 
 :root[data-theme='dark'][data-game='reversi'],
 [data-theme='dark'] .accent-reversi {
-  --accent: #a9b972;
-  --accent-ink: #161a0d;
-  --accent-soft: #2f3620;
-  --accent-ring: rgba(169, 185, 114, 0.42);
-  --accent-ring-soft: rgba(169, 185, 114, 0.14);
+  --accent: #c48ad6;
+  --accent-ink: #1b1020;
+  --accent-soft: #33253f;
+  --accent-ring: rgba(196, 138, 214, 0.42);
+  --accent-ring-soft: rgba(196, 138, 214, 0.14);
 }
 
 :root[data-theme='dark'][data-game='connect-four'],
@@ -301,6 +310,15 @@
   --accent-soft: #3f2320;
   --accent-ring: rgba(221, 143, 137, 0.42);
   --accent-ring-soft: rgba(221, 143, 137, 0.14);
+}
+
+:root[data-theme='dark'][data-game='bunny-hop'],
+[data-theme='dark'] .accent-bunny-hop {
+  --accent: #b6c274;
+  --accent-ink: #171a0d;
+  --accent-soft: #343a1c;
+  --accent-ring: rgba(182, 194, 116, 0.42);
+  --accent-ring-soft: rgba(182, 194, 116, 0.14);
 }
 
 * {
