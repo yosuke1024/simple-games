@@ -288,6 +288,41 @@ export const titleAccents = {
     onDark: '#171a0d',
     softDark: '#343a1c',
   },
+  /**
+   * Spider Solitaire — a deeper, truer green than Solitaire's felt. Both are
+   * card tables, so both belong in the green a card table has always been; the
+   * pair reads as two games of one family without blurring, because this one is
+   * greener and colder (dE 22 apart, where the closest pair already shipped is
+   * dE 11). Green also keeps the accent away from the card red: this title
+   * shows more face-down cards than any other, and their backs are drawn in
+   * `--accent-ring-soft` — a warm accent would make a back and a heart answer
+   * to the same glance.
+   */
+  spiderSolitaire: {
+    light: '#31802f',
+    onLight: '#ffffff',
+    softLight: '#dff5de',
+    dark: '#7fcc7d',
+    onDark: '#0c1a0c',
+    softDark: '#183a17',
+  },
+  /**
+   * FreeCell — muted violet. The one title that sits directly under Solitaire
+   * on the collection home, so it takes the hue furthest from felt green
+   * instead of a third card-table colour. Violet was the widest gap left in the
+   * palette (between Nonogram's plum and Block Puzzle's orchid, dE 23 from
+   * either), and it is as far from the card red as the wheel allows — which
+   * matters here for a different reason than in Spider: every one of FreeCell's
+   * 52 cards is face up, so the accent is only ever beside card faces.
+   */
+  freecell: {
+    light: '#853795',
+    onLight: '#ffffff',
+    softLight: '#f2e0f5',
+    dark: '#c288d0',
+    onDark: '#1a0d1d',
+    softDark: '#3a1a41',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

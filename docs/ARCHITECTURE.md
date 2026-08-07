@@ -185,21 +185,23 @@ src/
 
 - アクセントは `packages/brand` の `titleAccents` に 1 タイトル 1 エントリ。
 
-| ゲーム         | アクセント               | ライト    | ダーク    |
-| -------------- | ------------------------ | --------- | --------- |
-| Number Match   | 藍                       | `#3f5b8f` | `#7d9ccf` |
-| Sudoku         | くすんだティール         | `#2f6f62` | `#6fb3a3` |
-| Solitaire      | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
-| Minesweeper    | スレートブルー           | `#4a5a72` | `#93a4bd` |
-| Nonogram       | くすんだプラム           | `#6d5192` | `#a893cf` |
-| Water Sort     | くすんだアクア           | `#33708c` | `#7fb4c9` |
-| Sliding Puzzle | 温かみのある陶土色       | `#9c5b3c` | `#d1926f` |
-| Memory Match   | くすんだローズ           | `#9e5468` | `#cf8fa4` |
-| Brick Breaker  | 黄土                     | `#8a6a2b` | `#c9a765` |
-| Sky Fighter    | 夕闇の青                 | `#5d5aa8` | `#9d9be0` |
-| 2048           | ジェイド                 | `#2b7d59` | `#79c39c` |
-| Block Puzzle   | オーキッド               | `#8b4f80` | `#c795bd` |
-| Bunny Hop      | 草原の緑                 | `#6e7a34` | `#b6c274` |
+| ゲーム           | アクセント               | ライト    | ダーク    |
+| ---------------- | ------------------------ | --------- | --------- |
+| Number Match     | 藍                       | `#3f5b8f` | `#7d9ccf` |
+| Sudoku           | くすんだティール         | `#2f6f62` | `#6fb3a3` |
+| Solitaire        | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
+| Minesweeper      | スレートブルー           | `#4a5a72` | `#93a4bd` |
+| Nonogram         | くすんだプラム           | `#6d5192` | `#a893cf` |
+| Water Sort       | くすんだアクア           | `#33708c` | `#7fb4c9` |
+| Sliding Puzzle   | 温かみのある陶土色       | `#9c5b3c` | `#d1926f` |
+| Memory Match     | くすんだローズ           | `#9e5468` | `#cf8fa4` |
+| Brick Breaker    | 黄土                     | `#8a6a2b` | `#c9a765` |
+| Sky Fighter      | 夕闇の青                 | `#5d5aa8` | `#9d9be0` |
+| 2048             | ジェイド                 | `#2b7d59` | `#79c39c` |
+| Block Puzzle     | オーキッド               | `#8b4f80` | `#c795bd` |
+| Bunny Hop        | 草原の緑                 | `#6e7a34` | `#b6c274` |
+| Spider Solitaire | 深い緑                   | `#31802f` | `#7fcc7d` |
+| FreeCell         | くすんだ菫               | `#853795` | `#c288d0` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
@@ -267,7 +269,7 @@ src/
 | `sf.*`        | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)   |
 | `tm.*`        | 2048(saveGame / stats / flags。デイリーもレベル進行もない)        |
 | `bp.*`        | Block Puzzle(saveGame / stats / flags。同上)                      |
-| `bh.*`        | Bunny Hop(stats / flags。**saveGame なし** — 下記)               |
+| `bh.*`        | Bunny Hop(stats / flags。**saveGame なし** — 下記)                |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/
@@ -346,7 +348,7 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
   カタログをチャンクごと保持しているため、ロードは発生しない
   (docs/OFFLINE_POLICY.md)。
 - Sudoku の難易度表記 (`sudokuTier_*`) や Minesweeper / Memory Match の難易度
-  (`*Difficulty_*`) のように `t(\`prefix_${variable}\`)` で動的に組み立てる
+  (`*Difficulty_*`) のように `t(\`prefix\_${variable}\`)` で動的に組み立てる
 キーは、静的解析では「未使用」に見える。`i18n.test.ts` がロケールごとに
   実際の解決を確認して、削除で無言に壊れるのを防ぐ。
 - 解決順(ロケール自体の決定): アプリ内の明示選択 → 端末の優先言語リストを
