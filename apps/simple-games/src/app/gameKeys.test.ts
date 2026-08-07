@@ -20,7 +20,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'sliding-puzzle': ['sp.saveGame', 'sp.saveDaily', 'sp.stats', 'sp.progress', 'sp.flags'],
   'memory-match': ['mm.saveGame', 'mm.saveDaily', 'mm.stats', 'mm.flags'],
   'sky-fighter': ['sf.stats', 'sf.progress', 'sf.flags'],
-  'dino-run': ['dr.stats', 'dr.flags'],
+  'bunny-hop': ['bh.stats', 'bh.flags'],
   '2048': ['tm.saveGame', 'tm.stats', 'tm.flags'],
   'block-puzzle': ['bp.saveGame', 'bp.stats', 'bp.flags'],
 };
@@ -36,7 +36,7 @@ const PREFIXES: Record<string, string> = {
   'sliding-puzzle': 'sp.',
   'memory-match': 'mm.',
   'sky-fighter': 'sf.',
-  'dino-run': 'dr.',
+  'bunny-hop': 'bh.',
   '2048': 'tm.',
   'block-puzzle': 'bp.',
 };

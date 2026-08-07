@@ -146,8 +146,8 @@
   --accent-ring-soft: rgba(139, 79, 128, 0.12);
 }
 
-:root[data-game='dino-run'],
-.accent-dino-run {
+:root[data-game='bunny-hop'],
+.accent-bunny-hop {
   --accent: #6e7a34;
   --accent-ink: #ffffff;
   --accent-soft: #e8ecd6;
@@ -276,8 +276,8 @@
   --accent-ring-soft: rgba(199, 149, 189, 0.14);
 }
 
-:root[data-theme='dark'][data-game='dino-run'],
-[data-theme='dark'] .accent-dino-run {
+:root[data-theme='dark'][data-game='bunny-hop'],
+[data-theme='dark'] .accent-bunny-hop {
   --accent: #b6c274;
   --accent-ink: #171a0d;
   --accent-soft: #343a1c;

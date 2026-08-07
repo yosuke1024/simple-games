@@ -23,7 +23,7 @@
 import type { ComponentType } from 'react';
 import { BB_STORAGE_KEYS } from '../games/brick-breaker/storage/keys';
 import { BP_STORAGE_KEYS } from '../games/block-puzzle/storage/keys';
-import { DR_STORAGE_KEYS } from '../games/dino-run/storage/keys';
+import { BH_STORAGE_KEYS } from '../games/bunny-hop/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
 import { NG_STORAGE_KEYS } from '../games/nonogram/storage/keys';
@@ -46,7 +46,7 @@ export type GameId =
   | 'solitaire'
   | 'brick-breaker'
   | 'sky-fighter'
-  | 'dino-run'
+  | 'bunny-hop'
   | '2048'
   | 'block-puzzle';
 
@@ -201,13 +201,13 @@ export const GAMES: readonly GameDefinition[] = [
       })),
   },
   {
-    id: 'dino-run',
-    title: 'Dino Run',
-    glyph: '⌁',
-    storageKeys: Object.values(DR_STORAGE_KEYS),
+    id: 'bunny-hop',
+    title: 'Bunny Hop',
+    glyph: '⌃',
+    storageKeys: Object.values(BH_STORAGE_KEYS),
     loadRoot: () =>
-      import('../games/dino-run/ui/DinoRunRoot').then((m) => ({
-        default: m.DinoRunRoot,
+      import('../games/bunny-hop/ui/BunnyHopRoot').then((m) => ({
+        default: m.BunnyHopRoot,
       })),
   },
 ];

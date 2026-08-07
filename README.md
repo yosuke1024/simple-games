@@ -50,7 +50,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 | Sliding Puzzle          | `sliding-puzzle/` | 100 レベル + デイリー     | Undo(Hint なし)                              | [docs/SLIDING_PUZZLE_RULES.md](docs/SLIDING_PUZZLE_RULES.md) |
 | Memory Match(神経衰弱)  | `memory-match/`   | 難易度 3 種 + デイリー    | 同じ盤面への再挑戦(Undo / Hint なし)         | [docs/MEMORY_MATCH_RULES.md](docs/MEMORY_MATCH_RULES.md)     |
 | Sky Fighter             | `sky-fighter/`    | 100 レベル(デイリーなし)  | 同じレベルへの即時リトライ(Undo / Hint なし) | [docs/SKY_FIGHTER_RULES.md](docs/SKY_FIGHTER_RULES.md)       |
-| Dino Run                | `dino-run/`       | エンドレス(レベルなし)    | 次のランへの即時リトライ(Undo / Hint なし)   | [docs/DINO_RUN_RULES.md](docs/DINO_RUN_RULES.md)             |
+| Bunny Hop               | `bunny-hop/`      | エンドレス(レベルなし)    | 次のランへの即時リトライ(Undo / Hint なし)   | [docs/BUNNY_HOP_RULES.md](docs/BUNNY_HOP_RULES.md)           |
 
 助けの内容がゲームごとに違うのは意図したものです。**どのゲームにも無料・無制限の助けを
 用意し、その形はそのゲームの中身を空にしないものを選びます**(Minesweeper は推測なしで
@@ -58,7 +58,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 Undo を作らず、Sliding Puzzle は盤面に隠れた情報がないため Hint を作らず、Memory Match は
 記憶そのものが中身のため Undo も Hint も作らず、代わりに同じ盤面への再挑戦を無料にして
 います。2048 と Block Puzzle は盤面に隠れた情報がないため Hint を作らず、そのぶん Undo を
-無制限にしています。Dino Run はリアルタイムの反射が中身のため Undo も Hint も作らず、
+無制限にしています。Bunny Hop はリアルタイムの反射が中身のため Undo も Hint も作らず、
 代わりに次のランへの即時リトライを無料にしています)。理由は各ルール文書と
 [docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md)。
 
@@ -88,7 +88,7 @@ simple-games/
 │           │   ├── sliding-puzzle/
 │           │   ├── memory-match/
 │           │   ├── sky-fighter/
-│           │   └── dino-run/
+│           │   └── bunny-hop/
 │           ├── monetization/   # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 │           ├── services/       # 共有: ads(バナーのみ) / network / sound / haptics
 │           ├── state/          # 共有: SettingsContext

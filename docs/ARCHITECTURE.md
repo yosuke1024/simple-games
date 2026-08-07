@@ -44,7 +44,7 @@ src/
 │   ├── sky-fighter/
 │   ├── 2048/
 │   ├── block-puzzle/
-│   └── dino-run/
+│   └── bunny-hop/
 ├── monetization/           # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 ├── services/               # 共有: ads(バナーのみ) / network / sound / haptics
 ├── state/                  # 共有: SettingsContext
@@ -67,7 +67,7 @@ src/
 [SKY_FIGHTER_RULES.md](SKY_FIGHTER_RULES.md) /
 [GAME_2048_RULES.md](GAME_2048_RULES.md) /
 [BLOCK_PUZZLE_RULES.md](BLOCK_PUZZLE_RULES.md) /
-[DINO_RUN_RULES.md](DINO_RUN_RULES.md) を唯一のソースとする。
+[BUNNY_HOP_RULES.md](BUNNY_HOP_RULES.md) を唯一のソースとする。
 
 レイヤー規則:
 
@@ -199,7 +199,7 @@ src/
 | Sky Fighter    | 夕闇の青                 | `#5d5aa8` | `#9d9be0` |
 | 2048           | ジェイド                 | `#2b7d59` | `#79c39c` |
 | Block Puzzle   | オーキッド               | `#8b4f80` | `#c795bd` |
-| Dino Run       | 砂漠の草                 | `#6e7a34` | `#b6c274` |
+| Bunny Hop      | 草原の緑                 | `#6e7a34` | `#b6c274` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
@@ -267,7 +267,7 @@ src/
 | `sf.*`        | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)   |
 | `tm.*`        | 2048(saveGame / stats / flags。デイリーもレベル進行もない)        |
 | `bp.*`        | Block Puzzle(saveGame / stats / flags。同上)                      |
-| `dr.*`        | Dino Run(stats / flags。**saveGame なし** — 下記)                |
+| `bh.*`        | Bunny Hop(stats / flags。**saveGame なし** — 下記)               |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/
@@ -281,13 +281,13 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 `progress` もない(自己ベストは stats 内 — `GAME_2048_RULES.md` §9 /
 `BLOCK_PUZZLE_RULES.md` §9)。
 
-**アーケード 3 本(Brick Breaker / Sky Fighter / Dino Run)は `saveGame` を
+**アーケード 3 本(Brick Breaker / Sky Fighter / Bunny Hop)は `saveGame` を
 持たない。**リアルタイムの盤面を復元しても「開いた瞬間に球が落ちてくる」
 ものにしかならず、正直な再開にならないため、退出は挑戦の破棄で、リトライは
 無料・即時とした(`BRICK_BREAKER_RULES.md` §10 / `SKY_FIGHTER_RULES.md` §10 /
-`DINO_RUN_RULES.md` §10)。破棄されるのは挑戦中の盤面だけで、統計と進行は
-常に保存される。Dino Run はレベルもデイリーも持たないエンドレスなので
-`progress` もなく、キーは `dr.stats` と `dr.flags` の 2 つだけである。
+`BUNNY_HOP_RULES.md` §10)。破棄されるのは挑戦中の盤面だけで、統計と進行は
+常に保存される。Bunny Hop はレベルもデイリーも持たないエンドレスなので
+`progress` もなく、キーは `bh.stats` と `bh.flags` の 2 つだけである。
 
 - 共有レコードは `sg.` 接頭辞。ゲーム固有レコードはゲームごとの接頭辞。
 - ゲーム固有設定は共有 `sg.settings` に混ぜず、そのゲームの接頭辞に置く

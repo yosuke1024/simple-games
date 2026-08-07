@@ -7,7 +7,7 @@
 
 > 掲載は収録ゲーム 13 本(Sudoku / Solitaire / Minesweeper / 2048 /
 > Block Puzzle / Brick Breaker / Nonogram / Number Match / Water Sort /
-> Sliding Puzzle / Memory Match / Sky Fighter / Dino Run)の状態で書いてある。
+> Sliding Puzzle / Memory Match / Sky Fighter / Bunny Hop)の状態で書いてある。
 > 未収録のゲームは名前も含めて掲載文に出さず、**実際に収録できた時点で**
 > 説明・スクリーンショットへ追加する(未収録のゲームを "Coming Soon" として
 > 掲載しない)。
@@ -21,7 +21,7 @@
 
 キーワード優先順位: Offline > Sudoku > Solitaire > Minesweeper > 2048 >
 Block Puzzle > Brick Breaker > Nonogram > Puzzle > Number Match > Water Sort >
-Sliding Puzzle > Memory Match > Sky Fighter > Dino Run > Simple Games > PixApps
+Sliding Puzzle > Memory Match > Sky Fighter > Bunny Hop > Simple Games > PixApps
 (ゲーム名は検索流入の中核。収録済みの名前だけを、検索需要の大きい順に置く)
 
 ## 訴求の順序(BRAND.md と同一。この順で書く)
@@ -67,7 +67,7 @@ INCLUDED GAMES
 • Sliding Puzzle
 • Memory Match
 • Sky Fighter
-• Dino Run
+• Bunny Hop
 
 No game feature is locked behind a payment, and there is no subscription. Hints and undo are free wherever a game has them — no limit on how often you use them, and never an ad to watch first.
 
