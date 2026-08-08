@@ -240,6 +240,7 @@ src/
 | Number Recall    | 深いエメラルド           | `#1d6b33` | `#92dfa8` |
 | Checkers         | ウォルナット             | `#5a4632` | `#cbb08a` |
 | Gomoku           | 牡丹                     | `#a32d76` | `#e086bb` |
+| Takuzu           | ワイン                   | `#88355e` | `#cb7ea4` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
