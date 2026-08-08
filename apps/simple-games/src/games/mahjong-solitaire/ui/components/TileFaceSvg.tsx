@@ -1,14 +1,20 @@
 /**
  * The 42 tile faces, drawn in code (docs/MAHJONG_SOLITAIRE_RULES.md §12).
  *
+ * Every face carries its own count, the way a real tile does: dots and
+ * bamboo show it as pips (nine dots read as nine, the way five dice pips
+ * do — no numeral needed), and characters show it as the numeral-over-萬
+ * pair, both drawn. There is no separate corner index — an index is what a
+ * playing card needs because a suit alone does not say rank; a mahjong face
+ * already says its own count or its own character, so a second label would
+ * only repeat it.
+ *
  * Dots and bamboo are procedural; every kanji — the character numerals, 萬,
  * the winds and the dragons — is stroke PATH DATA, deliberately not text. A
  * CJK glyph rendered as <text> depends on the device having a CJK font, and
  * the floor devices this series ships to may not: a missing font would turn
- * half the tile set into tofu. Arabic corner indices and the E/S/W/N wind
- * letters ARE text — Latin digits and letters exist in every system font, and
- * the corner index is what carries legibility at 37px tiles (the kanji may
- * be simplified; the index may not lie).
+ * half the tile set into tofu. Path data sidesteps that entirely — legibility
+ * rides the stroke shapes themselves, checked on the static mock (§12).
  *
  * Faces are paper-on-paper in both themes, like the card games (mahjong.css
  * explains the exception); the colours here are game content — the red and
@@ -27,7 +33,7 @@ export const TILE_PAPER = '#fffdf8';
 
 type Stroke = string;
 
-/** Simplified stroke kanji in a 0..100 box; legibility rides the corner index. */
+/** Simplified stroke kanji in a 0..100 box. */
 const KANJI: Record<string, readonly Stroke[]> = {
   n1: ['M12,50 H88'],
   n2: ['M20,32 H80', 'M12,68 H88'],
@@ -121,22 +127,6 @@ function KanjiGlyph({
         />
       ))}
     </g>
-  );
-}
-
-/** Corner index — Latin text, safe in every font (§12). */
-function Corner({ text, color }: { text: string; color: string }) {
-  return (
-    <text
-      x="5"
-      y="15"
-      fontSize="13"
-      fontWeight="700"
-      fontFamily="system-ui, sans-serif"
-      fill={color}
-    >
-      {text}
-    </text>
   );
 }
 
@@ -430,11 +420,11 @@ function Season({ n }: { n: number }) {
 
 // ---------- the face ----------
 
-const WIND_GLYPHS: Record<string, [string, string]> = {
-  e: ['east', 'E'],
-  s: ['south', 'S'],
-  w: ['west', 'W'],
-  n: ['north', 'N'],
+const WIND_GLYPHS: Record<string, string> = {
+  e: 'east',
+  s: 'south',
+  w: 'west',
+  n: 'north',
 };
 
 function FaceBody({ face }: { face: TileFace }) {
@@ -443,35 +433,16 @@ function FaceBody({ face }: { face: TileFace }) {
   if (suit === 'c') {
     return (
       <>
-        <Corner text={String(n)} color={INK} />
         <KanjiGlyph glyph={`n${n}`} color={INK} x={8} y={8} size={44} width={9} />
         <KanjiGlyph glyph="wan" color={RED} x={8} y={40} size={44} width={8} />
       </>
     );
   }
-  if (suit === 'o') {
-    return (
-      <>
-        <Corner text={String(n)} color={INK} />
-        <Dots n={n} />
-      </>
-    );
-  }
-  if (suit === 'b') {
-    return (
-      <>
-        <Corner text={String(n)} color={INK} />
-        <Bamboo n={n} />
-      </>
-    );
-  }
+  if (suit === 'o') return <Dots n={n} />;
+  if (suit === 'b') return <Bamboo n={n} />;
   if (suit === 'w') {
-    const [glyph, letter] = WIND_GLYPHS[face[1]!]!;
     return (
-      <>
-        <Corner text={letter} color={INK} />
-        <KanjiGlyph glyph={glyph} color={INK} x={8} y={14} size={46} width={8} />
-      </>
+      <KanjiGlyph glyph={WIND_GLYPHS[face[1]!]!} color={INK} x={8} y={14} size={46} width={8} />
     );
   }
   if (face === 'dr')
@@ -483,20 +454,8 @@ function FaceBody({ face }: { face: TileFace }) {
       <rect x={12} y={16} width={36} height={52} rx={3} fill="none" stroke={BLUE} strokeWidth={4} />
     );
   }
-  if (suit === 'f') {
-    return (
-      <>
-        <Corner text={String(n)} color={RED} />
-        <Flower n={n} />
-      </>
-    );
-  }
-  return (
-    <>
-      <Corner text={String(n)} color={GREEN} />
-      <Season n={n} />
-    </>
-  );
+  if (suit === 'f') return <Flower n={n} />;
+  return <Season n={n} />;
 }
 
 /** One face, filling its tile. Decorative: the tile button carries the label. */
