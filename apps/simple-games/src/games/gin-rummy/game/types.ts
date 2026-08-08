@@ -235,6 +235,8 @@ interface Replay {
   held: [number, number];
   /** Taken off the pile in the open, and not yet thrown back. */
   known: [Set<Card>, Set<Card>];
+  /** Which declaration ended the hand, when one did. */
+  declared: 'knock' | 'gin' | null;
 }
 
 /**
@@ -318,6 +320,7 @@ function replayEvent(state: Replay, event: PublicEvent, at: number, dealer: Seat
         // The declaration settles the hand and `turn` stays on the knocker.
         state.phase = 'over';
         state.ending = 'knock';
+        state.declared = event.kind;
         return true;
       }
       // A hand whose stock is down to two has no turn left to begin (§3.1).
@@ -384,6 +387,7 @@ export function isConsistentLog(hand: HandState): boolean {
     stock: INITIAL_STOCK,
     held: [HAND_SIZE, HAND_SIZE],
     known: [new Set<Card>(), new Set<Card>()],
+    declared: null,
   };
 
   for (let at = 0; at < hand.log.length; at++) {
@@ -396,6 +400,15 @@ export function isConsistentLog(hand: HandState): boolean {
   if (state.mustDrawStock !== hand.mustDrawStock) return false;
   if (state.takenFromDiscard !== hand.takenFromDiscard) return false;
   if (state.stock !== hand.stock.length) return false;
+  // Which word was used is not the declarer's to choose: engine.ts calls it
+  // gin when the hand it puts down is worth nothing and a knock otherwise, so
+  // the two are the same fact said twice. A record that disagrees with the
+  // cards it left behind — a seven-point knock relabelled gin, or a gin
+  // written down as a knock — is a record play could not have written.
+  if (state.declared !== null) {
+    const empty = bestMeldPlan(hand.hands[hand.turn]).deadwoodValue === 0;
+    if (empty !== (state.declared === 'gin')) return false;
+  }
   for (const seat of SEATS) {
     if (state.held[seat] !== hand.hands[seat].length) return false;
     // A card taken off the pile in the open leaves the hand only by being put

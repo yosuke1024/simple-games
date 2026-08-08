@@ -7,9 +7,10 @@
  * where the fifty-two cards do not add up.
  */
 import { describe, expect, it } from 'vitest';
-import { cardOf, sortedCards, type Card, type Suit } from './cards';
+import { cardOf, deadwoodValueOf, sortedCards, type Card, type Suit } from './cards';
 import { buildCpuView, knowledgeOf } from './cpu';
 import { dealHand, discardCard, drawFromStock, knock, passUpcard, takeUpcard } from './engine';
+import { bestMeldPlan } from './melds';
 import { decodeHand, encodeHand } from './serialize';
 import {
   CPU,
@@ -420,6 +421,55 @@ describe('the public log has to be a game that could have been played', () => {
     const after: PublicEvent = { kind: 'pass', seat: dead.turn };
     expect(isConsistentLog({ ...dead, log: [...dead.log, after] })).toBe(false);
     rejects(encodeHand({ ...dead, log: [...dead.log, after] }));
+  });
+
+  it('refuses a declaration called by the wrong name', () => {
+    // Gin or knock is not the declarer's word to choose: engine.ts says gin
+    // when the hand put down is worth nothing and knock otherwise. So the two
+    // are one fact stated twice, and a record whose word disagrees with the
+    // cards it left behind is a record play could not have written — even
+    // though every card in it sits exactly where it belongs.
+    // This deal cannot knock on the first turn, so it is played straight —
+    // draw the stock, put down the dearest card — until somebody can.
+    let state = opened;
+    let knocked: HandState | null = null;
+    while (knocked === null && state.phase !== 'over') {
+      if (state.phase === 'draw') {
+        state = drawFromStock(state)!;
+        continue;
+      }
+      const eligible = state.hands[state.turn].filter((card) => card !== state.takenFromDiscard);
+      knocked = eligible.map((card) => knock(state, card)).find((next) => next !== null) ?? null;
+      if (knocked === null) {
+        // Put down the dearest card that is in no meld, so the hand actually
+        // comes down towards a knock rather than wandering to a dead stock.
+        const loose = new Set(bestMeldPlan(state.hands[state.turn]).deadwood);
+        const dearest = [...eligible]
+          .filter((card) => loose.has(card))
+          .sort((a, b) => deadwoodValueOf(b) - deadwoodValueOf(a))[0];
+        state = discardCard(state, dearest ?? eligible[eligible.length - 1]!)!;
+      }
+    }
+    expect(knocked).not.toBeNull();
+    const settled = knocked!;
+    expect(settled.ending).toBe('knock');
+
+    const declaration = settled.log[settled.log.length - 1]!;
+    expect(declaration.kind === 'knock' || declaration.kind === 'gin').toBe(true);
+    // The word matches the cards, so the honest record still comes back.
+    const empty = bestMeldPlan(settled.hands[settled.turn]).deadwoodValue === 0;
+    expect(declaration.kind === 'gin').toBe(empty);
+    expect(decodeHand(encodeHand(settled))).toEqual(settled);
+
+    const relabelled: PublicEvent = {
+      ...declaration,
+      kind: declaration.kind === 'gin' ? 'knock' : 'gin',
+    } as PublicEvent;
+    const lying: HandState = { ...settled, log: [...settled.log.slice(0, -1), relabelled] };
+    // Nothing else moved: the same table, the same cards, one word changed.
+    expect(isValidHand(lying)).toBe(true);
+    expect(isConsistentLog(lying)).toBe(false);
+    rejects(encodeHand(lying));
   });
 });
 
