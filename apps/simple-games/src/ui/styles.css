@@ -254,6 +254,15 @@
   --accent-ring-soft: rgba(41, 96, 58, 0.12);
 }
 
+:root[data-game='kakuro'],
+.accent-kakuro {
+  --accent: #794e2f;
+  --accent-ink: #ffffff;
+  --accent-soft: #f1e5dc;
+  --accent-ring: rgba(121, 78, 47, 0.38);
+  --accent-ring-soft: rgba(121, 78, 47, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -481,6 +490,15 @@
   --accent-soft: #203d29;
   --accent-ring: rgba(116, 200, 141, 0.42);
   --accent-ring-soft: rgba(116, 200, 141, 0.14);
+}
+
+:root[data-theme='dark'][data-game='kakuro'],
+[data-theme='dark'] .accent-kakuro {
+  --accent: #cb9e7e;
+  --accent-ink: #1c130c;
+  --accent-soft: #3d2c20;
+  --accent-ring: rgba(203, 158, 126, 0.42);
+  --accent-ring-soft: rgba(203, 158, 126, 0.14);
 }
 
 * {

@@ -245,6 +245,8 @@ src/
 | Checkers         | ウォルナット             | `#5a4632` | `#cbb08a` |
 | Gomoku           | 牡丹                     | `#a32d76` | `#e086bb` |
 | Takuzu           | ワイン                   | `#88355e` | `#cb7ea4` |
+| Futoshiki        | パイン                   | `#29603a` | `#74c88d` |
+| Kakuro           | タバコ                   | `#794e2f` | `#cb9e7e` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える

@@ -519,6 +519,27 @@ export const titleAccents = {
     onDark: '#0c1c11',
     softDark: '#203d29',
   },
+  /**
+   * Kakuro — tobacco. A newspaper pencil puzzle, and the colour says so: the
+   * board is sums in ink on paper, with the accent on the selected white cell
+   * and the two runs it belongs to, so a warm brown reads as the pencil rather
+   * than as a second kind of clue.
+   *
+   * The warm quarter is where Checkers found there was no hue left at twenty
+   * titles, and there is still none at twenty-four; this separates on depth
+   * and saturation between Sliding Puzzle's clay and Checkers' walnut — ΔE
+   * 12.6 from the clay in light and 9.2 in dark, against floors of 10.9 and
+   * 7.9. Chosen together with Takuzu's wine and Futoshiki's pine, since the
+   * three share the logic shelf.
+   */
+  kakuro: {
+    light: '#794e2f',
+    onLight: '#ffffff',
+    softLight: '#f1e5dc',
+    dark: '#cb9e7e',
+    onDark: '#1c130c',
+    softDark: '#3d2c20',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;
