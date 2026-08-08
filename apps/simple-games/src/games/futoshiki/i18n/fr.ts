@@ -36,6 +36,5 @@ export const fr: FutoshikiMessages = {
   futoshikiStep2Title: 'Suivez les signes',
   futoshikiStep2Body: 'Le signe entre deux cases pointe vers la plus petite.',
   futoshikiStep3Title: 'Notes et indices',
-  futoshikiStep3Body:
-    'Notez les candidats en cas de doute. Indices et annulation sont toujours gratuits.',
+  futoshikiStep3Body: 'Notez les candidats en cas de doute. Bloqué ? Prenez un indice.',
 };

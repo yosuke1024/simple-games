@@ -35,5 +35,5 @@ export const ko: FutoshikiMessages = {
   futoshikiStep2Title: '부등호를 따르세요',
   futoshikiStep2Body: '두 칸 사이의 기호는 더 작은 칸을 가리킵니다.',
   futoshikiStep3Title: '메모와 힌트',
-  futoshikiStep3Body: '헷갈리면 메모하세요. 힌트와 되돌리기는 언제나 무료입니다.',
+  futoshikiStep3Body: '헷갈리면 메모하세요. 막히면 힌트를 보세요.',
 };

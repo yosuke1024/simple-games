@@ -35,5 +35,5 @@ export const th: FutoshikiMessages = {
   futoshikiStep2Title: 'ทำตามเครื่องหมาย',
   futoshikiStep2Body: 'เครื่องหมายระหว่างสองช่องชี้ไปที่ช่องที่น้อยกว่า',
   futoshikiStep3Title: 'โน้ตและคำใบ้',
-  futoshikiStep3Body: 'ไม่แน่ใจก็จดโน้ตไว้ก่อน คำใบ้และเลิกทำฟรีเสมอ',
+  futoshikiStep3Body: 'ไม่แน่ใจก็จดโน้ตไว้ก่อน ติดขัดก็ขอคำใบ้',
 };

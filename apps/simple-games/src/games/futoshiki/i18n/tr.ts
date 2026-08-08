@@ -36,5 +36,5 @@ export const tr: FutoshikiMessages = {
   futoshikiStep2Title: 'İşaretleri izle',
   futoshikiStep2Body: 'İki kare arasındaki işaret küçük olanı gösterir.',
   futoshikiStep3Title: 'Notlar ve ipuçları',
-  futoshikiStep3Body: 'Emin değilsen not al. İpucu ve geri alma her zaman ücretsiz.',
+  futoshikiStep3Body: 'Emin değilsen not al. Takıldın mı? İpucu al.',
 };

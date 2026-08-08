@@ -36,5 +36,5 @@ export const vi: FutoshikiMessages = {
   futoshikiStep2Title: 'Theo dấu',
   futoshikiStep2Body: 'Dấu giữa hai ô chỉ về phía ô nhỏ hơn.',
   futoshikiStep3Title: 'Ghi chú và gợi ý',
-  futoshikiStep3Body: 'Chưa chắc thì ghi chú. Gợi ý và hoàn tác luôn miễn phí.',
+  futoshikiStep3Body: 'Chưa chắc thì ghi chú. Bí thì lấy gợi ý.',
 };

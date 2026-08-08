@@ -35,5 +35,5 @@ export const zhHant: FutoshikiMessages = {
   futoshikiStep2Title: '遵守不等號',
   futoshikiStep2Body: '兩格之間的符號，尖端指向較小的那一格。',
   futoshikiStep3Title: '筆記與提示',
-  futoshikiStep3Body: '沒把握就先做筆記。提示與復原永遠免費。',
+  futoshikiStep3Body: '沒把握就先做筆記。卡住了就看提示。',
 };

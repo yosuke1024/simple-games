@@ -62,7 +62,7 @@ export const en = {
   futoshikiStep2Title: 'Follow the signs',
   futoshikiStep2Body: 'A sign between two squares points at the smaller one.',
   futoshikiStep3Title: 'Notes and hints',
-  futoshikiStep3Body: 'Pencil in candidates when unsure. Hints and undo are always free.',
+  futoshikiStep3Body: 'Pencil in candidates when unsure. Stuck? Take a hint.',
 } as const;
 
 /** Every locale of this game must provide exactly these keys. */

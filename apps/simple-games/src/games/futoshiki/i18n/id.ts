@@ -36,5 +36,5 @@ export const id: FutoshikiMessages = {
   futoshikiStep2Title: 'Ikuti tandanya',
   futoshikiStep2Body: 'Tanda di antara dua kotak menunjuk ke kotak yang lebih kecil.',
   futoshikiStep3Title: 'Catatan dan petunjuk',
-  futoshikiStep3Body: 'Ragu? Tulis catatan dulu. Petunjuk dan urungkan selalu gratis.',
+  futoshikiStep3Body: 'Ragu? Tulis catatan dulu. Buntu? Minta petunjuk.',
 };

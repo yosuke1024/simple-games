@@ -36,5 +36,5 @@ export const ptBR: FutoshikiMessages = {
   futoshikiStep2Title: 'Siga os sinais',
   futoshikiStep2Body: 'O sinal entre dois quadrados aponta para o menor.',
   futoshikiStep3Title: 'Notas e dicas',
-  futoshikiStep3Body: 'Anote candidatos na dúvida. Dicas e desfazer são sempre grátis.',
+  futoshikiStep3Body: 'Anote candidatos na dúvida. Travou? Peça uma dica.',
 };

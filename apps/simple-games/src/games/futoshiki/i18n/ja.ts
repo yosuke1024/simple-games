@@ -35,5 +35,5 @@ export const ja: FutoshikiMessages = {
   futoshikiStep2Title: '不等号に従う',
   futoshikiStep2Body: '2 マスの間の記号は、小さい方のマスを指しています。',
   futoshikiStep3Title: 'メモとヒント',
-  futoshikiStep3Body: '迷ったらメモ。ヒントと Undo はいつでも無料です。',
+  futoshikiStep3Body: '迷ったらメモ。詰まったら Hint。',
 };

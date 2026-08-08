@@ -36,5 +36,5 @@ export const de: FutoshikiMessages = {
   futoshikiStep2Title: 'Den Zeichen folgen',
   futoshikiStep2Body: 'Das Zeichen zwischen zwei Feldern zeigt auf das kleinere.',
   futoshikiStep3Title: 'Notizen und Tipps',
-  futoshikiStep3Body: 'Im Zweifel Kandidaten notieren. Tipps und Rückgängig sind immer kostenlos.',
+  futoshikiStep3Body: 'Im Zweifel Kandidaten notieren. Fest? Hol dir einen Tipp.',
 };

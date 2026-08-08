@@ -311,6 +311,14 @@ describe('a board of the wrong length is not a win (§2)', () => {
     expect(isSolved(SOLUTION.slice(0, -1), TABLE)).toBe(false);
   });
 
+  it('refuses a grid with cells past the end of the table', () => {
+    // The extra cell is one this layout has no opinion about, which is the
+    // point: every white cell reads correctly and the answer is still no,
+    // because a longer grid is not this board.
+    expect(isSolved(SOLUTION, TABLE)).toBe(true);
+    expect(isSolved([...SOLUTION, 1], TABLE)).toBe(false);
+  });
+
   it('refuses a table with no white cells, however clean it reads', () => {
     const nothing: RunTable = { runs: [], rowRun: [], colRun: [], white: [] };
     expect(isSolved([], nothing)).toBe(false);

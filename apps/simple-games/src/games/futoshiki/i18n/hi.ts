@@ -36,5 +36,5 @@ export const hi: FutoshikiMessages = {
   futoshikiStep2Title: 'चिह्नों का पालन करें',
   futoshikiStep2Body: 'दो खानों के बीच का चिह्न छोटे खाने की ओर इशारा करता है।',
   futoshikiStep3Title: 'नोट्स और संकेत',
-  futoshikiStep3Body: 'शक हो तो नोट लिख लें। संकेत और पहले जैसा करना हमेशा मुफ़्त है।',
+  futoshikiStep3Body: 'शक हो तो नोट लिख लें। अटकें तो संकेत लें।',
 };

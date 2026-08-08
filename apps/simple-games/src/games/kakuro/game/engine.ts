@@ -401,6 +401,13 @@ export function mistakenCells(board: Board, solution: readonly number[]): Readon
  * coincide: on a full run "no repeat" and "adds to the clue" is exactly §3.
  */
 export function isSolved(entries: readonly number[], table: RunTable): boolean {
+  // The length check is not about the cells this function reads — it reads only
+  // the white ones and would be right about every one of them. It is about the
+  // ones it does not: a grid carrying extra cells past the end of the table is
+  // not this board, and answering "solved" for it says the caller's grid and
+  // this layout are the same thing when they are not. `isFullyDetermined`
+  // (solver.ts) guards identically.
+  if (entries.length !== table.rowRun.length) return false;
   if (table.white.length === 0) return false;
   if (table.white.some((index) => (entries[index] ?? EMPTY) === EMPTY)) return false;
   return !findViolations(entries, table).any;

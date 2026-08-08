@@ -36,5 +36,5 @@ export const es: FutoshikiMessages = {
   futoshikiStep2Title: 'Sigue los signos',
   futoshikiStep2Body: 'El signo entre dos casillas apunta a la más pequeña.',
   futoshikiStep3Title: 'Notas y pistas',
-  futoshikiStep3Body: 'Anota candidatas si dudas. Las pistas y deshacer son siempre gratis.',
+  futoshikiStep3Body: 'Anota candidatas si dudas. ¿Atascado? Pide una pista.',
 };
