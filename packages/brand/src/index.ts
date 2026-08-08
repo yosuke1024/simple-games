@@ -473,6 +473,29 @@ export const titleAccents = {
     onDark: '#190d15',
     softDark: '#3c2533',
   },
+  /**
+   * Takuzu — wine. The board is a field of noughts and ones drawn in ink on two
+   * quiet ground tints of its own, so the accent stays in the chrome and on the
+   * selected cell: a small area, which is why it can be a mid-tone rather than
+   * the near-black a large one would need.
+   *
+   * At twenty-two titles no hue is free — a sweep in 1° steps found an existing
+   * accent within 30° of every band — so this is separated by depth and
+   * saturation inside the magenta quarter, sitting below Gomoku's peony and
+   * beside Block Puzzle's orchid without being either: ΔE 14.6 from Block
+   * Puzzle in light and 9.8 from Gomoku in dark, against floors of 10.9 and
+   * 7.9. It is also the tile that shares the logic shelf with Nonogram's plum,
+   * where the grid puts them one row apart; that pair measures 29.4 light and
+   * 25.5 dark, so the two read as different colours where it matters most.
+   */
+  takuzu: {
+    light: '#88355e',
+    onLight: '#ffffff',
+    softLight: '#f1dce6',
+    dark: '#cb7ea4',
+    onDark: '#1c0c14',
+    softDark: '#3d202e',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;
