@@ -223,6 +223,8 @@ src/
 | Solitaire        | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
 | Spider Solitaire | 深い緑                   | `#31802f` | `#7fcc7d` |
 | FreeCell         | 深い藍                   | `#25256a` | `#6e6ecf` |
+| Hearts           | スチールブルー           | `#2763c4` | `#96bde4` |
+| Gin Rummy        | 深い菫                   | `#772b97` | `#b35dd5` |
 | Minesweeper      | スレートブルー           | `#4a5a72` | `#93a4bd` |
 | Nonogram         | くすんだプラム           | `#6d5192` | `#a893cf` |
 | Water Sort       | くすんだアクア           | `#33708c` | `#7fb4c9` |

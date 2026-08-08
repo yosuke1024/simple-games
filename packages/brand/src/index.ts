@@ -473,6 +473,56 @@ export const titleAccents = {
     onDark: '#190d15',
     softDark: '#3c2533',
   },
+  /**
+   * Hearts — steel blue. The one title whose name names the colour it cannot
+   * have. Its board is a felt table covered in red hearts and diamonds, and
+   * the series red is Connect Four's, which measures ΔE 3.1 from the card red
+   * all three solitaires draw (#b0483f) — the same colour, not a neighbour of
+   * it. A third card-table green is closed too; FreeCell refused that slot for
+   * the same reason. Blue is what the wheel had left, and it suits the work
+   * the accent does here: it marks which cards may legally be played, so it
+   * sits on white card faces among red and black pips and must be neither
+   * (ΔE 86.9 from the card red, 58.4 from the black of Q♠).
+   *
+   * Four blues already ship, so this one separates by saturation rather than by
+   * hue — the move docs/BRAND.md prescribes once the wheel is full. At S67% it
+   * is the most saturated blue by a wide margin (Minesweeper's slate is 21%,
+   * Number Match's indigo 39%, Water Sort's aqua 47%) and sits level with the
+   * two most saturated colours the series has, Schulte Table's petrol and Quick
+   * Math's mustard. Measured against all twenty-two: ΔE 15.5 from Sky Fighter in
+   * light, 12.2 from Water Sort in dark, against floors of 10.9 and 7.9
+   * (docs/BRAND.md「アクセントを選ぶ手順」).
+   */
+  hearts: {
+    light: '#2763c4',
+    onLight: '#ffffff',
+    softLight: '#dce3ef',
+    dark: '#96bde4',
+    onDark: '#0e141b',
+    softDark: '#23303e',
+  },
+  /**
+   * Gin Rummy — deep violet. The accent is chrome alone here (the deadwood
+   * count and the knock button; the cards themselves are game content), which
+   * is the arrangement that can afford to be the saturated one — Gomoku's
+   * reasoning. Like Hearts it may not be red, because the ♢ on its own cards
+   * is, and it may not be a card-table green.
+   *
+   * It shares Reversi's hue, 282° against 285°, and separates the way the
+   * series separates colours now: by depth and saturation rather than by hue.
+   * L38% S56% against Reversi's L45% S36% is ΔE 16.7 in light and 27.9 in dark
+   * (floors 10.9 / 7.9), and the two are never adjacent — Reversi is on the
+   * board shelf, this is the last tile of the cards shelf, directly under
+   * FreeCell's indigo at ΔE 30.8 light / 28.8 dark.
+   */
+  ginRummy: {
+    light: '#772b97',
+    onLight: '#ffffff',
+    softLight: '#e9dcef',
+    dark: '#b35dd5',
+    onDark: '#170e1b',
+    softDark: '#36233e',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;
