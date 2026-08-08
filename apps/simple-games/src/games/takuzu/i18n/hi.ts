@@ -1,0 +1,29 @@
+import type { TakuzuMessages } from './en';
+
+export const hi: TakuzuMessages = {
+  takuzuName: 'Takuzu',
+  takuzuBoardLabel: 'Takuzu बोर्ड, {size}×{size}',
+  takuzuCellEmpty: 'खाली, पंक्ति {row}, स्तंभ {col}',
+  takuzuCellZero: '0, पंक्ति {row}, स्तंभ {col}',
+  takuzuCellOne: '1, पंक्ति {row}, स्तंभ {col}',
+  takuzuCellFixed: 'दिया गया {digit}, पंक्ति {row}, स्तंभ {col}',
+  takuzuRuleBroken: 'नियम टूटा',
+  takuzuSizeLabel: '{n}×{n}',
+  takuzuHintFound: 'हाइलाइट पंक्ति से चिह्नित खाना तय होता है।',
+  takuzuHintBroken: 'हाइलाइट पंक्ति एक नियम तोड़ रही है।',
+  takuzuHintNone: 'अभी कोई निश्चित चाल नहीं मिली।',
+  takuzuSolvedTitle: 'हल हो गया!',
+  takuzuSolvedBody: 'हर पंक्ति और हर स्तंभ सही है।',
+  takuzuHintsUsed: 'इस्तेमाल हुए संकेत',
+  takuzuNewBestTime: 'आपका सबसे तेज़ समय।',
+  takuzuLevelsSolved: 'हल किए गए स्तर',
+  takuzuDailiesSolved: 'हल की गई दैनिक पहेलियाँ',
+  takuzuDailyBacklogHint: 'पिछले दिन हमेशा खुले रहते हैं।',
+  takuzuStep1Title: 'लगातार तीन नहीं',
+  takuzuStep1Body:
+    'टैप करने पर खाना 0, 1, खाली में बदलता है। एक ही अंक लगातार तीन बार नहीं आ सकता।',
+  takuzuStep2Title: 'आधा-आधा',
+  takuzuStep2Body: 'हर पंक्ति और हर स्तंभ में 0 और 1 बराबर संख्या में होते हैं।',
+  takuzuStep3Title: 'एक जैसी दो पंक्तियाँ नहीं',
+  takuzuStep3Body: 'दो पंक्तियाँ एक जैसी नहीं हो सकतीं, और दो स्तंभ भी नहीं।',
+};

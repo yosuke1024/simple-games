@@ -44,6 +44,7 @@ import { SF_STORAGE_KEYS } from '../games/sky-fighter/storage/keys';
 import { SO_STORAGE_KEYS } from '../games/solitaire/storage/keys';
 import { SS_STORAGE_KEYS } from '../games/spider-solitaire/storage/keys';
 import { SP_STORAGE_KEYS } from '../games/sliding-puzzle/storage/keys';
+import { TK_STORAGE_KEYS } from '../games/takuzu/storage/keys';
 import { TM_STORAGE_KEYS } from '../games/2048/storage/keys';
 import { WS_STORAGE_KEYS } from '../games/water-sort/storage/keys';
 
@@ -69,7 +70,8 @@ export type GameId =
   | 'checkers'
   | 'reversi'
   | 'connect-four'
-  | 'gomoku';
+  | 'gomoku'
+  | 'takuzu';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -276,6 +278,24 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(NG_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/nonogram/ui/NonogramRoot').then((m) => ({ default: m.NonogramRoot })),
+  },
+  {
+    id: 'takuzu',
+    // Two characters, like Number Match's `10`: the mark names the puzzle's
+    // two digits, which is the whole of what a Takuzu cell can hold. The one
+    // thing worth checking was whether `01` reads as `10` at tile size, and it
+    // does not have to: the two live in different sections (logic and puzzle,
+    // with the cards between them), so the grid never sets them side by side,
+    // and each card carries its own accent and its title underneath. The
+    // alternative on the table, `◧`, would have landed in this same section
+    // beside Nonogram's `▦` — two squares telling each other apart by their
+    // fill, which is the closer call of the two.
+    title: 'Takuzu',
+    category: 'logic',
+    glyph: '01',
+    storageKeys: Object.values(TK_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/takuzu/ui/TakuzuRoot').then((m) => ({ default: m.TakuzuRoot })),
   },
   {
     id: 'number-match',

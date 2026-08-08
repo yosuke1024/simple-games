@@ -1,0 +1,28 @@
+import type { TakuzuMessages } from './en';
+
+export const zhHans: TakuzuMessages = {
+  takuzuName: 'Takuzu',
+  takuzuBoardLabel: 'Takuzu 盘面，{size}×{size}',
+  takuzuCellEmpty: '空，第 {row} 行第 {col} 列',
+  takuzuCellZero: '0，第 {row} 行第 {col} 列',
+  takuzuCellOne: '1，第 {row} 行第 {col} 列',
+  takuzuCellFixed: '题目数字 {digit}，第 {row} 行第 {col} 列',
+  takuzuRuleBroken: '违反规则',
+  takuzuSizeLabel: '{n}×{n}',
+  takuzuHintFound: '高亮的行列可确定标记的格子。',
+  takuzuHintBroken: '高亮的行列违反了规则。',
+  takuzuHintNone: '现在没有可确定的一步。',
+  takuzuSolvedTitle: '完成！',
+  takuzuSolvedBody: '每一行和每一列都符合规则。',
+  takuzuHintsUsed: '使用的提示',
+  takuzuNewBestTime: '个人最快纪录。',
+  takuzuLevelsSolved: '已完成的关卡',
+  takuzuDailiesSolved: '已完成的每日挑战',
+  takuzuDailyBacklogHint: '之前的日期随时可以挑战。',
+  takuzuStep1Title: '不能连着三个',
+  takuzuStep1Body: '点击格子在 0、1、空之间切换。同一个数字不能连续出现三次。',
+  takuzuStep2Title: '0 和 1 各占一半',
+  takuzuStep2Body: '每一行、每一列的 0 和 1 数量相同。',
+  takuzuStep3Title: '没有重复的行列',
+  takuzuStep3Body: '任意两行不能完全相同，任意两列也不能。',
+};

@@ -56,6 +56,7 @@ describe('gameLandingUrl', () => {
       'quick-math',
       'schulte-table',
       'number-recall',
+      'takuzu',
     ]) {
       expect(gameLandingUrl(id, 'en')).toBeNull();
       expect(gameLandingUrl(id, 'ja')).toBeNull();

@@ -38,6 +38,7 @@ src/
 │   ├── freecell/
 │   ├── minesweeper/
 │   ├── nonogram/
+│   ├── takuzu/
 │   ├── number-match/
 │   ├── quick-math/
 │   ├── schulte-table/
@@ -70,6 +71,7 @@ src/
 [FREECELL_RULES.md](FREECELL_RULES.md) /
 [MINESWEEPER_RULES.md](MINESWEEPER_RULES.md) /
 [NONOGRAM_RULES.md](NONOGRAM_RULES.md) /
+[TAKUZU_RULES.md](TAKUZU_RULES.md) /
 [NUMBER_MATCH_RULES.md](NUMBER_MATCH_RULES.md) /
 [QUICK_MATH_RULES.md](QUICK_MATH_RULES.md) /
 [SCHULTE_TABLE_RULES.md](SCHULTE_TABLE_RULES.md) /
@@ -267,7 +269,8 @@ src/
   `data-game` の上書き)、コレクションホーム、設定 / About、ダイアログ・トースト・
   チュートリアル・バナースロットなどの共通クロム。
 - **全タイトルが規約に従っている**: `number-match.css` / `sudoku.css` /
-  `minesweeper.css` / `nonogram.css` / `sliding-puzzle.css` / `memory-match.css` /
+  `minesweeper.css` / `nonogram.css` / `takuzu.css` / `sliding-puzzle.css` /
+  `memory-match.css` /
   `water-sort.css` / `solitaire.css` / `spider-solitaire.css` / `freecell.css` /
   `brick-breaker.css` / `sky-fighter.css` /
   `game-2048.css` / `block-puzzle.css` / `checkers.css` / `reversi.css` /
@@ -301,37 +304,40 @@ src/
 
 ## ストレージキーの規約
 
-| キー          | 内容                                                              |
-| ------------- | ----------------------------------------------------------------- |
-| `sg.settings` | 共有設定(言語 / テーマ / 音 / 振動 / Reduced Motion)              |
-| `sg.iap`      | 広告削除購入状態のローカルキャッシュ                              |
-| `sg.review`   | ストアレビュー導線の状態(完了数 / 表示回数 / 解決済みフラグ)      |
-| `sg.recent`   | 「最近遊んだ」のゲーム id(新しい順・最大 2 件)                    |
-| `sd.*`        | Sudoku(saveGame / saveDaily / stats / progress / flags / prefs)   |
-| `so.*`        | Solitaire(saveGame / saveDaily / stats / flags / prefs)           |
-| `ms.*`        | Minesweeper(saveGame / saveDaily / stats / flags / prefs)         |
-| `ng.*`        | Nonogram(saveGame / saveDaily / stats / progress / flags / prefs) |
-| `nm.*`        | Number Match(saveGame / saveDaily / stats / progress / flags)     |
-| `ws.*`        | Water Sort(saveGame / saveDaily / stats / progress / flags)       |
-| `sp.*`        | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags)   |
-| `mm.*`        | Memory Match(saveGame / saveDaily / stats / flags)                |
-| `bb.*`        | Brick Breaker(stats / progress / flags。**saveGame なし** — 下記) |
-| `sf.*`        | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)   |
-| `tm.*`        | 2048(saveGame / stats / flags。デイリーもレベル進行もない)        |
-| `bp.*`        | Block Puzzle(saveGame / stats / flags。同上)                      |
-| `ck.*`        | Checkers(saveGame / stats / flags / prefs。統計は難易度別)        |
-| `rv.*`        | Reversi(saveGame / stats / flags / prefs。統計は難易度別)         |
-| `c4.*`        | Connect Four(saveGame / stats / flags / prefs。同上)              |
-| `gm.*`        | Gomoku(saveGame / stats / flags / prefs。同上)                    |
-| `ss.*`        | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)    |
-| `fc.*`        | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)    |
-| `bh.*`        | Bunny Hop(stats / flags。**saveGame なし** — 下記)                |
+| キー          | 内容                                                                    |
+| ------------- | ----------------------------------------------------------------------- |
+| `sg.settings` | 共有設定(言語 / テーマ / 音 / 振動 / Reduced Motion)                    |
+| `sg.iap`      | 広告削除購入状態のローカルキャッシュ                                    |
+| `sg.review`   | ストアレビュー導線の状態(完了数 / 表示回数 / 解決済みフラグ)            |
+| `sg.recent`   | 「最近遊んだ」のゲーム id(新しい順・最大 2 件)                          |
+| `sd.*`        | Sudoku(saveGame / saveDaily / stats / progress / flags / prefs)         |
+| `so.*`        | Solitaire(saveGame / saveDaily / stats / flags / prefs)                 |
+| `ms.*`        | Minesweeper(saveGame / saveDaily / stats / flags / prefs)               |
+| `ng.*`        | Nonogram(saveGame / saveDaily / stats / progress / flags / prefs)       |
+| `tk.*`        | Takuzu(saveGame / saveDaily / stats / progress / flags。**prefs なし**) |
+| `nm.*`        | Number Match(saveGame / saveDaily / stats / progress / flags)           |
+| `ws.*`        | Water Sort(saveGame / saveDaily / stats / progress / flags)             |
+| `sp.*`        | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags)         |
+| `mm.*`        | Memory Match(saveGame / saveDaily / stats / flags)                      |
+| `bb.*`        | Brick Breaker(stats / progress / flags。**saveGame なし** — 下記)       |
+| `sf.*`        | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)         |
+| `tm.*`        | 2048(saveGame / stats / flags。デイリーもレベル進行もない)              |
+| `bp.*`        | Block Puzzle(saveGame / stats / flags。同上)                            |
+| `ck.*`        | Checkers(saveGame / stats / flags / prefs。統計は難易度別)              |
+| `rv.*`        | Reversi(saveGame / stats / flags / prefs。統計は難易度別)               |
+| `c4.*`        | Connect Four(saveGame / stats / flags / prefs。同上)                    |
+| `gm.*`        | Gomoku(saveGame / stats / flags / prefs。同上)                          |
+| `ss.*`        | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)          |
+| `fc.*`        | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)          |
+| `bh.*`        | Bunny Hop(stats / flags。**saveGame なし** — 下記)                      |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/
 `sd.flags`(チュートリアル完了)/ `sd.prefs`(ゲーム固有設定)。
 Minesweeper はレベル進行を持たないため `progress` がなく、代わりに旗モードの
-`ms.prefs` を持つ。Nonogram は ×モードの `ng.prefs` を持つ。Solitaire は
+`ms.prefs` を持つ。Nonogram は ×モードの `ng.prefs` を持つ。Takuzu は逆に 5 キーで、
+タップ 1 種で操作が閉じ、違反表示は設定でなく規則なので `prefs` に入れるものがない
+(`TAKUZU_RULES.md` §4 / §9)。Solitaire は
 Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設定も持たない
 (デイリーの記録は両者とも stats 内)。デイリーを持つパズルはいずれも中断が
 「通常モード用」と「デイリー用」の 2 スロットで独立する。2048 と Block Puzzle は

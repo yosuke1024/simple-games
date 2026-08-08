@@ -1,0 +1,28 @@
+import type { TakuzuMessages } from './en';
+
+export const vi: TakuzuMessages = {
+  takuzuName: 'Takuzu',
+  takuzuBoardLabel: 'Bảng Takuzu, {size}×{size}',
+  takuzuCellEmpty: 'Trống, hàng {row}, cột {col}',
+  takuzuCellZero: '0, hàng {row}, cột {col}',
+  takuzuCellOne: '1, hàng {row}, cột {col}',
+  takuzuCellFixed: 'Số cố định {digit}, hàng {row}, cột {col}',
+  takuzuRuleBroken: 'phạm luật',
+  takuzuSizeLabel: '{n}×{n}',
+  takuzuHintFound: 'Dòng được tô sáng xác định ô được đánh dấu.',
+  takuzuHintBroken: 'Dòng được tô sáng đang phạm luật.',
+  takuzuHintNone: 'Hiện chưa có nước đi chắc chắn.',
+  takuzuSolvedTitle: 'Hoàn thành!',
+  takuzuSolvedBody: 'Mọi hàng và cột đều đúng.',
+  takuzuHintsUsed: 'Gợi ý đã dùng',
+  takuzuNewBestTime: 'Thời gian nhanh nhất của bạn.',
+  takuzuLevelsSolved: 'Màn đã giải',
+  takuzuDailiesSolved: 'Thử thách ngày đã giải',
+  takuzuDailyBacklogHint: 'Những ngày trước luôn mở.',
+  takuzuStep1Title: 'Không ba ô liền nhau',
+  takuzuStep1Body: 'Chạm vào ô để đổi 0, 1, trống. Cùng một chữ số không được nằm ba ô liền nhau.',
+  takuzuStep2Title: 'Chia đều',
+  takuzuStep2Body: 'Mỗi hàng và mỗi cột có số 0 bằng số 1.',
+  takuzuStep3Title: 'Không hàng nào lặp lại',
+  takuzuStep3Body: 'Không hai hàng nào giống nhau, hai cột cũng vậy.',
+};

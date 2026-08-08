@@ -17,6 +17,9 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   minesweeper: ['ms.saveGame', 'ms.saveDaily', 'ms.stats', 'ms.flags', 'ms.prefs'],
   'brick-breaker': ['bb.stats', 'bb.progress', 'bb.flags'],
   nonogram: ['ng.saveGame', 'ng.saveDaily', 'ng.stats', 'ng.progress', 'ng.flags', 'ng.prefs'],
+  // Five, not six: Takuzu has no per-game setting to keep
+  // (docs/TAKUZU_RULES.md §4, §9).
+  takuzu: ['tk.saveGame', 'tk.saveDaily', 'tk.stats', 'tk.progress', 'tk.flags'],
   'number-match': ['nm.saveGame', 'nm.stats', 'nm.flags', 'nm.progress', 'nm.saveDaily'],
   'quick-math': ['qm.saveGame', 'qm.saveDaily', 'qm.stats', 'qm.progress', 'qm.flags'],
   // Two keys short of the others on purpose: neither drill saves a round in
@@ -44,6 +47,7 @@ const PREFIXES: Record<string, string> = {
   minesweeper: 'ms.',
   'brick-breaker': 'bb.',
   nonogram: 'ng.',
+  takuzu: 'tk.',
   'number-match': 'nm.',
   'quick-math': 'qm.',
   'schulte-table': 'st.',
