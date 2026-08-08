@@ -182,7 +182,7 @@ src/
   並べていたらこの形は 14 言語で保てない。
 - **グリッドはカテゴリ別のセクションに分ける**(`registry.ts` の `GAME_CATEGORIES`、
   現在はロジック / カード / パズル / ボードゲーム / アーケード / ドリルの 6 つ)。
-  22 本を 1 枚のグリッドに敷くと結局全タイトルを読んで探すことになるため、
+  24 本を 1 枚のグリッドに敷くと結局全タイトルを読んで探すことになるため、
   見出しでセクションごと読み飛ばせるようにした。ゲームはレジストリで `category` を
   1 つ名乗り、セクション内の並びはレジストリの配列順。カテゴリ見出しは固有名詞では
   ないので、シェルカタログの `category*` キーで 14 言語に翻訳する(タイトルと違い
@@ -327,6 +327,8 @@ src/
 | `gm.*`        | Gomoku(saveGame / stats / flags / prefs。同上)                    |
 | `ss.*`        | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)    |
 | `fc.*`        | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)    |
+| `ht.*`        | Hearts(saveGame / stats / flags / prefs。統計は難易度別)          |
+| `gr.*`        | Gin Rummy(saveGame / stats / flags / prefs。同上)                 |
 | `bh.*`        | Bunny Hop(stats / flags。**saveGame なし** — 下記)                |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
