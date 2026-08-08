@@ -31,6 +31,9 @@ import { C4_STORAGE_KEYS } from '../games/connect-four/storage/keys';
 import { CK_STORAGE_KEYS } from '../games/checkers/storage/keys';
 import { GM_STORAGE_KEYS } from '../games/gomoku/storage/keys';
 import { FC_STORAGE_KEYS } from '../games/freecell/storage/keys';
+import { HT_STORAGE_KEYS } from '../games/hearts/storage/keys';
+import { GR_STORAGE_KEYS } from '../games/gin-rummy/storage/keys';
+
 import { FT_STORAGE_KEYS } from '../games/futoshiki/storage/keys';
 import { KK_STORAGE_KEYS } from '../games/kakuro/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
@@ -64,6 +67,8 @@ export type GameId =
   | 'solitaire'
   | 'spider-solitaire'
   | 'freecell'
+  | 'hearts'
+  | 'gin-rummy'
   | 'brick-breaker'
   | 'sky-fighter'
   | 'bunny-hop'
@@ -189,6 +194,32 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/freecell/ui/FreeCellRoot').then((m) => ({ default: m.FreeCellRoot })),
   },
   {
+    id: 'hearts',
+    // The more searched-for of the two games with opponents, so it opens that
+    // half of the shelf directly after the three patiences. Its outlined heart
+    // pairs with Gin Rummy's outlined diamond: filled suits are the solo
+    // patiences, outlined ones have somebody sitting opposite
+    // (docs/HEARTS_RULES.md §1 — here, three somebodies).
+    title: 'Hearts',
+    category: 'cards',
+    glyph: '♡',
+    storageKeys: Object.values(HT_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/hearts/ui/HeartsRoot').then((m) => ({ default: m.HeartsRoot })),
+  },
+  {
+    id: 'gin-rummy',
+    // An outlined suit, where the three patiences take filled ones: the shelf
+    // now holds two kinds of card game, and the marks say which is which
+    // (docs/GIN_RUMMY_RULES.md §1 — this one has an opponent).
+    title: 'Gin Rummy',
+    category: 'cards',
+    glyph: '♢',
+    storageKeys: Object.values(GR_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/gin-rummy/ui/GinRummyRoot').then((m) => ({ default: m.GinRummyRoot })),
+  },
+  {
     id: 'minesweeper',
     title: 'Minesweeper',
     category: 'logic',
@@ -306,7 +337,7 @@ export const GAMES: readonly GameDefinition[] = [
     // U+2276, the two signs the game is played with folded into one figure:
     // the mark IS the rule, the way Takuzu's `01` is its two digits.
     //
-    // Unique against the other twenty-three, and the near misses were looked
+    // Unique against the other twenty-six, and the near misses were looked
     // at rather than assumed. Brick Breaker's `≡` and Water Sort's `≋` are the
     // only other stacked-stroke marks, and both sit in other sections (arcade
     // and puzzle) under their own accents. In this one it stands beside `⌗`,
@@ -338,7 +369,7 @@ export const GAMES: readonly GameDefinition[] = [
     // Every clue square on this board is a sum, and nothing else on it means
     // anything.
     //
-    // Unique against the other twenty-four, and the near misses were looked at
+    // Unique against the other twenty-six, and the near misses were looked at
     // rather than assumed. In this section it stands beside `⌗`, `◆`, `▦`, `01`
     // and `≶`; the closest call is `≶`, since both are built from strokes
     // rather than a filled shape, but a folded pair of angle brackets and a

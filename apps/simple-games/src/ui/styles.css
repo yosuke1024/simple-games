@@ -236,6 +236,23 @@
   --accent-ring-soft: rgba(163, 45, 118, 0.12);
 }
 
+:root[data-game='hearts'],
+.accent-hearts {
+  --accent: #2763c4;
+  --accent-ink: #ffffff;
+  --accent-soft: #dce3ef;
+  --accent-ring: rgba(39, 99, 196, 0.38);
+  --accent-ring-soft: rgba(39, 99, 196, 0.12);
+}
+
+:root[data-game='gin-rummy'],
+.accent-gin-rummy {
+  --accent: #772b97;
+  --accent-ink: #ffffff;
+  --accent-soft: #e9dcef;
+  --accent-ring: rgba(119, 43, 151, 0.38);
+  --accent-ring-soft: rgba(119, 43, 151, 0.12);
+
 :root[data-game='takuzu'],
 .accent-takuzu {
   --accent: #88355e;
@@ -473,6 +490,23 @@
   --accent-ring: rgba(224, 134, 187, 0.42);
   --accent-ring-soft: rgba(224, 134, 187, 0.14);
 }
+
+:root[data-theme='dark'][data-game='hearts'],
+[data-theme='dark'] .accent-hearts {
+  --accent: #96bde4;
+  --accent-ink: #0e141b;
+  --accent-soft: #23303e;
+  --accent-ring: rgba(150, 189, 228, 0.42);
+  --accent-ring-soft: rgba(150, 189, 228, 0.14);
+}
+
+:root[data-theme='dark'][data-game='gin-rummy'],
+[data-theme='dark'] .accent-gin-rummy {
+  --accent: #b35dd5;
+  --accent-ink: #170e1b;
+  --accent-soft: #36233e;
+  --accent-ring: rgba(179, 93, 213, 0.42);
+  --accent-ring-soft: rgba(179, 93, 213, 0.14);
 
 :root[data-theme='dark'][data-game='takuzu'],
 [data-theme='dark'] .accent-takuzu {

@@ -36,6 +36,8 @@ src/
 │   ├── solitaire/
 │   ├── spider-solitaire/
 │   ├── freecell/
+│   ├── hearts/
+│   ├── gin-rummy/
 │   ├── minesweeper/
 │   ├── nonogram/
 │   ├── takuzu/
@@ -71,6 +73,8 @@ src/
 [SOLITAIRE_RULES.md](SOLITAIRE_RULES.md) /
 [SPIDER_SOLITAIRE_RULES.md](SPIDER_SOLITAIRE_RULES.md) /
 [FREECELL_RULES.md](FREECELL_RULES.md) /
+[HEARTS_RULES.md](HEARTS_RULES.md) /
+[GIN_RUMMY_RULES.md](GIN_RUMMY_RULES.md) /
 [MINESWEEPER_RULES.md](MINESWEEPER_RULES.md) /
 [NONOGRAM_RULES.md](NONOGRAM_RULES.md) /
 [TAKUZU_RULES.md](TAKUZU_RULES.md) /
@@ -87,8 +91,10 @@ src/
 [SKY_FIGHTER_RULES.md](SKY_FIGHTER_RULES.md) /
 [GAME_2048_RULES.md](GAME_2048_RULES.md) /
 [BLOCK_PUZZLE_RULES.md](BLOCK_PUZZLE_RULES.md) /
+[CHECKERS_RULES.md](CHECKERS_RULES.md) /
 [REVERSI_RULES.md](REVERSI_RULES.md) /
 [CONNECT_FOUR_RULES.md](CONNECT_FOUR_RULES.md) /
+[GOMOKU_RULES.md](GOMOKU_RULES.md) /
 [BUNNY_HOP_RULES.md](BUNNY_HOP_RULES.md) を唯一のソースとする。
 
 レイヤー規則:
@@ -188,7 +194,7 @@ src/
   並べていたらこの形は 14 言語で保てない。
 - **グリッドはカテゴリ別のセクションに分ける**(`registry.ts` の `GAME_CATEGORIES`、
   現在はロジック / カード / パズル / ボードゲーム / アーケード / ドリルの 6 つ)。
-  25 本を 1 枚のグリッドに敷くと結局全タイトルを読んで探すことになるため、
+  27 本を 1 枚のグリッドに敷くと結局全タイトルを読んで探すことになるため、
   見出しでセクションごと読み飛ばせるようにした。ゲームはレジストリで `category` を
   1 つ名乗り、セクション内の並びはレジストリの配列順。カテゴリ見出しは固有名詞では
   ないので、シェルカタログの `category*` キーで 14 言語に翻訳する(タイトルと違い
@@ -229,6 +235,8 @@ src/
 | Solitaire        | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
 | Spider Solitaire | 深い緑                   | `#31802f` | `#7fcc7d` |
 | FreeCell         | 深い藍                   | `#25256a` | `#6e6ecf` |
+| Hearts           | スチールブルー           | `#2763c4` | `#96bde4` |
+| Gin Rummy        | 深い菫                   | `#772b97` | `#b35dd5` |
 | Minesweeper      | スレートブルー           | `#4a5a72` | `#93a4bd` |
 | Nonogram         | くすんだプラム           | `#6d5192` | `#a893cf` |
 | Water Sort       | くすんだアクア           | `#33708c` | `#7fb4c9` |
@@ -280,6 +288,7 @@ src/
   `sliding-puzzle.css` /
   `memory-match.css` /
   `water-sort.css` / `solitaire.css` / `spider-solitaire.css` / `freecell.css` /
+  `hearts.css` / `gin-rummy.css` /
   `brick-breaker.css` / `sky-fighter.css` /
   `game-2048.css` / `block-puzzle.css` / `checkers.css` / `reversi.css` /
   `connect-four.css` / `gomoku.css` / `quick-math.css` / `schulte-table.css` /
@@ -339,6 +348,8 @@ src/
 | `gm.*`        | Gomoku(saveGame / stats / flags / prefs。同上)                          |
 | `ss.*`        | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)          |
 | `fc.*`        | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)          |
+| `ht.*`        | Hearts(saveGame / stats / flags / prefs。統計は難易度別)                |
+| `gr.*`        | Gin Rummy(saveGame / stats / flags / prefs。同上)                       |
 | `bh.*`        | Bunny Hop(stats / flags。**saveGame なし** — 下記)                      |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
@@ -400,8 +411,8 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
   乗り、1 本のゲームだけが使うキーはそのゲームの `src/games/<id>/i18n/*.ts` に
   移してゲームのチャンクへ同梱する。ゲームを開かないプレイヤーは、その文言を
   一度もパースしない。
-- 現在 14 言語。シェル 85 キー(エントリに乗る) + ゲーム別 25 カタログ(合計 698
-  キー、13〜42 キー/ゲーム、開いたときだけパースされる)。ロケールタグは小文字で
+- 現在 14 言語。シェル 85 キー(エントリに乗る) + ゲーム別 27 カタログ(合計 815
+  キー、13〜59 キー/ゲーム、開いたときだけパースされる)。ロケールタグは小文字で
   持つ。en と ja 以外は来歴 `machine`(AI の助けを借りて書き、その言語のネイティブ
   は読んでいない)。高リスクキーはリリース前の門で逆翻訳を作者が読む
   (`docs/I18N_POLICY.md`)。
@@ -494,7 +505,7 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 これ以上の共通化(`packages/` への抽出)は実際に重複が確認されてから行う。
 ゲーム固有の概念(盤面・ルール・Hint 等)は共通パッケージへ入れない。
 
-現時点で唯一の実測された重複は `games/*/game/rng.ts` で、**25 ゲームすべてが同じ
+現時点で唯一の実測された重複は `games/*/game/rng.ts` で、**27 ゲームすべてが同じ
 seed 付き乱数を持っている**(`games/A/` から `games/B/` を import できない以上、
 このコピーは規約どおりでもある)。抽出を検討する条件(重複が確認された)は
 満たしているが、`game/` の Pure TS 純度を保ったまま `packages/` へ出せるかが論点で、
@@ -513,7 +524,7 @@ seed 付き乱数を持っている**(`games/A/` から `games/B/` を import �
   署名済み AAB(Play 用)と署名済み APK(実機確認用)をアーティファクトとして出す。
   `versionName` / `versionCode` はタグが決める。ストアへのアップロードは手動。
   タグに製品名を付けないのは、リリース対象がこのアプリ 1 つだけだから
-  (25 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
+  (27 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
 - Secrets は `ADMOB_ANDROID_APP_ID` / `ADMOB_ANDROID_BANNER_ID` のみ
   (インタースティシャル系は無い。プラットフォーム名を含むのは AdMob ID が
   OS ごとに別なため — iOS 版では `ADMOB_IOS_*` が並ぶ)。

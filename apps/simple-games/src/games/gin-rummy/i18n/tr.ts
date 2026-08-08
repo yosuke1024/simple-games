@@ -1,0 +1,72 @@
+import type { GinRummyMessages } from './en';
+
+export const tr: GinRummyMessages = {
+  ginName: 'Gin Rummy',
+
+  ginChooseOpponent: 'Rakibini seç',
+  ginDifficulty_easy: 'Kolay',
+  ginDifficulty_normal: 'Normal',
+  ginDifficulty_hard: 'Zor',
+  ginRecordNote: '{wins} galibiyet · {losses} yenilgi',
+  ginConfirmSwitchTitle: 'Devam eden maç değiştirilsin mi?',
+  ginConfirmSwitchBody: '{current} maçın yeni bir {next} maçıyla değiştirilecek.',
+
+  ginTableLabel: 'Gin Rummy masası',
+  ginHandLabel: 'Elindeki kartlar',
+  ginOpponentLabel: 'CPU {n} kart tutuyor',
+  ginStockLabel: 'Deste, {n} kart',
+  ginDiscardLabel: 'Atılanlar, en üstte {card}',
+  ginDiscardEmpty: 'Atılanlar, boş',
+  ginCardLabel: '{suit} {rank}',
+  ginSuit_spades: 'maça',
+  ginSuit_hearts: 'kupa',
+  ginSuit_diamonds: 'karo',
+  ginSuit_clubs: 'sinek',
+  ginCardInMeld: '{card}, kombinasyon {n}',
+  ginCardDeadwood: '{card}, ölü kart',
+  ginDeadwood: 'Ölü puan',
+  ginYou: 'Sen',
+  ginCpu: 'CPU',
+
+  ginUpcardPrompt: 'Açık kartı al ya da pas geç',
+  ginDrawPrompt: 'Desteden ya da atılanlardan çek',
+  ginDiscardPrompt: 'Bir karta dokun, atmak için tekrar dokun',
+  ginKnockPrompt: 'Knock yapacağın karta dokun, sonra tekrar dokun',
+  ginCpuTurn: 'CPU düşünüyor…',
+  ginCpuPassed: 'CPU açık kartı pas geçti',
+  ginCpuDrewStock: 'CPU desteden çekti',
+  ginCpuTookDiscard: 'CPU {card} aldı',
+  ginCpuDiscarded: 'CPU {card} attı',
+  ginTake: 'Al',
+  ginPass: 'Pas',
+  ginKnock: 'Knock',
+
+  ginHandGinTitle: 'Gin',
+  ginHandKnockTitle: 'Knock',
+  ginHandUndercutTitle: 'Undercut',
+  ginHandDeadTitle: 'El iptal',
+  ginHandDeadBody: 'Destede iki kart kaldı. Kimse puan almaz, aynı dağıtan yeniden dağıtır.',
+  ginHandYouTook: 'Sen {points} puan aldın',
+  ginHandCpuTook: 'CPU {points} puan aldı',
+  ginYourMelds: 'Senin kombinasyonların',
+  ginCpuMelds: 'CPU kombinasyonları',
+  ginLaidOff: 'Eklenen kartlar',
+  ginNextHand: 'Sonraki el',
+
+  ginWinTitle: 'Kazandın!',
+  ginWinBody: 'CPU’dan önce yüz puana ulaştın.',
+  ginLoseTitle: 'CPU kazandı',
+  ginLoseBody: 'CPU yüz puanı önce geçti. Sonraki maç ücretsiz.',
+
+  ginWins: 'Galibiyet',
+  ginLosses: 'Yenilgi',
+
+  ginStep1Title: 'Bir çek, bir at',
+  ginStep1Body:
+    'Kapalı desteden ya da atılanların en üstünden bir kart al, sonra başka bir kart at.',
+  ginStep2Title: 'Üçlüler ve seriler',
+  ginStep2Body:
+    'Aynı değerden üç kart ya da aynı renkten ardışık üç kart; kalanlar ölü puandır ve senin için toplanır.',
+  ginStep3Title: 'On ve altında knock',
+  ginStep3Body: 'Ölü puanın on veya altına düşünce Knock düğmesi belirir ve eli bitirir.',
+};

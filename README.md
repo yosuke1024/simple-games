@@ -27,7 +27,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけで、現在 25 本のゲームを収録しています。
+アプリは 1 つだけで、現在 27 本のゲームを収録しています。
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Games`(ランチャー表示名: `Simple Games`)
@@ -42,6 +42,8 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 | Solitaire(クロンダイク)   | `solitaire/`        | フリー配札 + デイリー配札                | Undo / Hint(定石の合法手)                          | [docs/SOLITAIRE_RULES.md](docs/SOLITAIRE_RULES.md)               |
 | Spider Solitaire          | `spider-solitaire/` | フリー配札 + デイリー配札(スート数 3 種) | Undo / Hint(定石の合法手)                          | [docs/SPIDER_SOLITAIRE_RULES.md](docs/SPIDER_SOLITAIRE_RULES.md) |
 | FreeCell                  | `freecell/`         | フリー配札 + デイリー配札                | Undo(Hint なし)                                    | [docs/FREECELL_RULES.md](docs/FREECELL_RULES.md)                 |
+| Hearts(ハーツ)            | `hearts/`           | CPU 対局・難易度 3 種(デイリーなし)      | 出せる札の表示(Undo / Hint なし)                   | [docs/HEARTS_RULES.md](docs/HEARTS_RULES.md)                     |
+| Gin Rummy(ジンラミー)     | `gin-rummy/`        | CPU 対局・難易度 3 種(デイリーなし)      | メルド整理とデッドウッド表示(Undo / Hint なし)     | [docs/GIN_RUMMY_RULES.md](docs/GIN_RUMMY_RULES.md)               |
 | Minesweeper               | `minesweeper/`      | 難易度 3 種 + デイリー                   | Hint(Undo なし)                                    | [docs/MINESWEEPER_RULES.md](docs/MINESWEEPER_RULES.md)           |
 | 2048                      | `2048/`             | エンドレス(レベルなし)                   | Undo(Hint なし)                                    | [docs/GAME_2048_RULES.md](docs/GAME_2048_RULES.md)               |
 | Block Puzzle              | `block-puzzle/`     | エンドレス(レベルなし)                   | Undo(Hint なし)                                    | [docs/BLOCK_PUZZLE_RULES.md](docs/BLOCK_PUZZLE_RULES.md)         |
@@ -79,11 +81,18 @@ Reversi と Connect Four も盤面がすべて見えているため Hint を作�
 持ちます。Gomoku も同じ理由で Undo だけです。Checkers は Undo に加えて「動かせる駒と
 その行き先」を示します — 捕獲義務(取れるときは取る手しか打てない)が初心者の最初の壁で
 あり、跳べる駒だけが選べる形にすると規則が説明ではなく操作として伝わるためで、これは
-ルールの可視化であって最善手の提案ではありません。Futoshiki と Kakuro は Sudoku と
-同じ側で、Undo と Hint の両方を持ちます — メモを置いたマスに数字を入れると同じ行・列や
-ひと続きのメモが自動で消えるため、1 手が非自明に不可逆になり、戻す先のある Undo が
-実在するからです。出題が常に一意解であることは、論理だけで正当化できる次の一手が必ず
-あるということでもあるので、Hint にも誠実に言えることが残ります。ドリル 3 本は、Schulte Table と Quick Math が「探すこと・計算すること」
+ルールの可視化であって最善手の提案ではありません。Hearts と Gin Rummy は隠れた情報がある
+対局なので、どちらにも Undo を作りません — CPU の応手を見てから戻せる Undo では戻せるのは
+手だけで、知ってしまったことは戻らず、取り消せない情報の漏れになるためです(Minesweeper の
+「取り消せるなら賭けが残らない」と同族の理由)。代わりに Hearts は「出せる札」を常時示し
+(スートを追う義務・初トリックの点札禁止・ブレイク前の ♥ リード禁止の可視化で、Checkers の
+「動かせる駒の表示」と同じ物差しです)、Gin Rummy はメルドを自動で整理してデッドウッドを
+常時表示します — どちらもルールが定める制約と算術であって、何を渡し・何を引き・いつノックする
+かの判断は残ります。Futoshiki と Kakuro は Sudoku と同じ側で、Undo と Hint の両方を持ちます —
+メモを置いたマスに数字を入れると同じ行・列やひと続きのメモが自動で消えるため、1 手が非自明に
+不可逆になり、戻す先のある Undo が実在するからです。出題が常に一意解であることは、論理だけで
+正当化できる次の一手が必ずあるということでもあるので、Hint にも誠実に言えることが残ります。
+ドリル 3 本は、Schulte Table と Quick Math が「探すこと・計算すること」
 そのものを中身とするため次の一手を教えず、Number Recall はタップが記憶の主張そのもので
 あるため Undo を作りません)。
 理由は各ルール文書と
@@ -117,6 +126,8 @@ simple-games/
 │           │   ├── solitaire/
 │           │   ├── spider-solitaire/
 │           │   ├── freecell/
+│           │   ├── hearts/
+│           │   ├── gin-rummy/
 │           │   ├── checkers/
 │           │   ├── reversi/
 │           │   ├── connect-four/
@@ -178,7 +189,7 @@ Android ビルド手順は [apps/simple-games/README.md](apps/simple-games/READM
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 14 言語・783 キー
+**One app. Many games. Many languages.** 現在は 14 言語・900 キー
 (en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
 中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。

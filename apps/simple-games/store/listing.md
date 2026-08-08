@@ -10,12 +10,14 @@
 > ストア掲載情報(説明文・スクリーンショット・キーワード)にはまだ反映していない。
 > 反映は手動作業であり、**実行には人間の明示的な承認が必要**(タグ発行・
 > versionCode・ストア公開と同じ扱い)。承認より先に Console を編集しないこと。
+> Hearts / Gin Rummy も同じ状態である。
 
-> 掲載は収録ゲーム 25 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
-> Minesweeper / 2048 / Block Puzzle / Checkers / Reversi / Connect Four /
-> Gomoku / Brick Breaker / Nonogram / Takuzu / Futoshiki / Kakuro /
-> Number Match / Quick Math / Schulte Table / Number Recall / Water Sort /
-> Sliding Puzzle / Memory Match / Sky Fighter / Bunny Hop)の状態で書いてある。
+> 掲載は収録ゲーム 27 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
+> Hearts / Gin Rummy / Minesweeper / 2048 / Block Puzzle / Checkers / Reversi /
+> Connect Four / Gomoku / Brick Breaker / Nonogram / Takuzu / Futoshiki /
+> Kakuro / Number Match / Quick Math / Schulte Table / Number Recall /
+> Water Sort / Sliding Puzzle / Memory Match / Sky Fighter / Bunny Hop)の
+> 状態で書いてある。
 >
 > **ドリル 3 本(Quick Math / Schulte Table / Number Recall)の掲載文では、
 > このジャンルの定番である効能の主張を一切しない。日本語のジャンル名そのものも
@@ -37,8 +39,9 @@
 3. `Simple Games: Sudoku & More`
 
 キーワード優先順位: Offline > Sudoku > Solitaire > Spider Solitaire > FreeCell >
-Minesweeper > Checkers > 2048 > Block Puzzle > Reversi > Connect Four >
-Gomoku > Brick Breaker > Nonogram > Kakuro > Cross Sums > Futoshiki > Puzzle >
+Hearts > Gin Rummy > Minesweeper > Checkers > 2048 > Block Puzzle > Reversi >
+Connect Four > Gomoku > Brick Breaker > Nonogram > Kakuro > Cross Sums >
+Futoshiki > Puzzle >
 Number Match > Quick Math > Schulte Table > Number Recall > Water Sort >
 Sliding Puzzle > Memory Match > Binary Puzzle > Takuzu > Sky Fighter >
 Bunny Hop > Simple Games > PixApps
@@ -86,6 +89,8 @@ INCLUDED GAMES
 • Solitaire
 • Spider Solitaire
 • FreeCell
+• Hearts
+• Gin Rummy
 • Minesweeper
 • 2048
 • Block Puzzle
