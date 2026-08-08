@@ -35,11 +35,12 @@ const PAGE_LOCALES = ['en', 'ja', 'es'] as const;
 
 /**
  * The titles whose guides are live at `${LANDING_BASE_URL}/games/<id>/<locale>/`
- * in every PAGE_LOCALES language. Every shipped title has one as of the
- * 22-game collection. The mechanism stays: a future title ships without an
- * entry here until its guides are deployed, and until then the tutorial
- * simply ends without a "Learn More" — which is honest, where a dead link
- * would not be.
+ * in every PAGE_LOCALES language. Twenty-two of the twenty-four shipped
+ * titles have one; Hearts and Gin Rummy are the exception, and are absent
+ * here on purpose until their pages go up. That is the mechanism working: a
+ * title ships without an entry until its guides are deployed, and until then
+ * the tutorial simply ends without a "Learn More" — which is honest, where a
+ * dead link would not be.
  */
 const PUBLISHED_GAME_IDS: readonly string[] = [
   'sudoku',

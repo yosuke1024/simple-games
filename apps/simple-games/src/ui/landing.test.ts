@@ -53,11 +53,15 @@ describe('gameLandingUrl', () => {
     }
   });
 
-  it('offers no link for a title that is not in the published list', () => {
-    // Every shipped title has a guide today, so this exercises the mechanism
-    // with a future id: a title that ships before its guide is written gets
-    // null, which keeps the tutorial's last screen from ending in a 404. The
-    // button appears in the release after its pages go up.
+  it('offers no link for a shipped game whose guide is not written yet', () => {
+    // Hearts and Gin Rummy ship in this release; their guides do not. Returning
+    // null is what keeps the tutorial's last screen from ending in a 404, and
+    // the button appears in the release after their pages go up.
+    for (const id of ['hearts', 'gin-rummy']) {
+      expect(gameLandingUrl(id, 'en')).toBeNull();
+      expect(gameLandingUrl(id, 'ja')).toBeNull();
+    }
+    // The same mechanism, exercised with an id that is not a game at all.
     expect(gameLandingUrl('some-future-game', 'en')).toBeNull();
     expect(gameLandingUrl('some-future-game', 'ja')).toBeNull();
   });

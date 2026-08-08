@@ -1,0 +1,713 @@
+/* Hearts — all of this game's styling, imported by HeartsRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --radius, --font-display, --tap-size, …) so the
+   game reads as part of the same app and follows the theme without knowing
+   about it.
+
+   Class names are prefixed `ht-` so this file can never collide with the
+   shell or with another game.
+
+   The card red below is game content, not chrome — hearts and diamonds are
+   red in any deck, and in this game the red suit is also the one that costs.
+   This is the documented exception to "game CSS does not write colours"
+   (docs/ARCHITECTURE.md), and it is the same exception Klondike, FreeCell and
+   Gin Rummy take, for the same reason. */
+
+/* Card faces stay paper in BOTH themes, unlike every other surface in the
+   app. A dark card face turns the black suits near-white, and a hand you
+   cannot read the suits of is not a hand. The dark theme dims the paper
+   instead of inverting it, and darkens the felt around it. */
+:root {
+  --ht-face: #fffdf8;
+  --ht-ink: #232a33;
+  --ht-red: #b0483f;
+  --ht-face-line: #ddd7ca;
+  /* The felt. A cool blue-grey: away from Reversi's green board, Gin Rummy's
+     warm brown table and FreeCell's neutral grey, and quiet enough under a
+     table full of red pips. */
+  --ht-felt: #93a9b0;
+  --ht-felt-light: rgba(255, 255, 255, 0.32);
+  /* The back of a face-down card, and the seat marks drawn from it. */
+  --ht-back: #55627d;
+  --ht-back-line: #414c63;
+  /* A seat's little card of information sits on the felt, so it brings its
+     own paper: text on the felt itself could not be held to 4.5:1 in both
+     themes without repainting the felt for one of them. */
+  --ht-chip: rgba(255, 253, 248, 0.82);
+  --ht-chip-ink: #232a33;
+  --ht-chip-soft: #5c6672;
+  --ht-chip-red: #a3413a;
+}
+
+:root[data-theme='dark'] {
+  --ht-face: #e6e2d9;
+  --ht-ink: #1d232b;
+  --ht-red: #a8382f;
+  --ht-face-line: #bfb9ac;
+  --ht-felt: #1b2429;
+  --ht-felt-light: rgba(255, 255, 255, 0.05);
+  --ht-back: #333e52;
+  --ht-back-line: #252d3c;
+  --ht-chip: rgba(233, 230, 223, 0.11);
+  --ht-chip-ink: #e9e6df;
+  --ht-chip-soft: #a5aeb9;
+  --ht-chip-red: #e08b80;
+}
+
+/* ---------- the table ---------- */
+
+.ht-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  /* The 6px side padding is load-bearing: it is what the hand fan's tap
+     arithmetic (components/HeartsHand.tsx) measures its width against. */
+  padding: 8px 6px 10px;
+  min-height: 0;
+  overflow-y: auto;
+  background-color: var(--ht-felt);
+  /* Lit from above, the way a table under a lamp is — it keeps the large
+     empty surface from reading as a flat fill. */
+  background-image: radial-gradient(120% 62% at 50% 0%, var(--ht-felt-light), rgba(0, 0, 0, 0) 72%);
+  box-shadow: inset 0 2px 5px rgba(35, 42, 51, 0.14);
+}
+
+:root[data-theme='dark'] .ht-body {
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Four seats round a table, laid out as the table: you are the bottom of the
+   screen (your cards are the fan below), CPU 1 to the left, CPU 2 across the
+   top, CPU 3 to the right. The middle column carries the trick — or, while
+   the four seats are choosing, the pass's direction.
+
+   Width resolves against the column's content box, never the viewport: a
+   vw-derived width overflows the moment anything narrows the column (a
+   scrollbar, a safe-area inset, the web build's site chrome). */
+.ht-table {
+  width: min(100%, 420px);
+  display: grid;
+  grid-template-columns: 0.8fr 2.4fr 0.8fr;
+  grid-template-areas:
+    '.    north .'
+    'west trick east';
+  align-items: center;
+  justify-items: center;
+  gap: 4px;
+}
+
+/* ---------- the three CPU seats ---------- */
+
+.ht-seat {
+  grid-area: north;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+  padding: 4px 6px 5px;
+  border-radius: 10px;
+  background: var(--ht-chip);
+  color: var(--ht-chip-ink);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.ht-seat-north {
+  grid-area: north;
+}
+
+.ht-seat-west {
+  grid-area: west;
+}
+
+.ht-seat-east {
+  grid-area: east;
+}
+
+/* The mark the board shelf puts on the last piece moved, in this game's
+   terms: whoever took the last trick is on lead, and that is the one fact a
+   player loses track of between beats. A ring as well as a dot — colour is
+   never the only channel. */
+.ht-seat-took {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.ht-seat-mark {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.ht-seat-name {
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.ht-seat-holding {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--ht-chip-soft);
+}
+
+/* One card back, not one per card held: three seats and a column this narrow
+   have no room for thirteen apiece, and the number beside it is the whole of
+   what is known about that hand anyway. */
+.ht-seat-back {
+  width: 11px;
+  height: 15px;
+  border-radius: 2px;
+  background-color: var(--ht-back);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.16) 0 2px,
+    rgba(0, 0, 0, 0) 2px 4px
+  );
+  border: 1px solid var(--ht-back-line);
+}
+
+.ht-seat-count,
+.ht-seat-total,
+.ht-seat-taken {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.ht-seat-scores {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.ht-seat-total {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/* What this seat has taken in this hand. Red because what it took is hearts
+   and the queen — the points are the red cards. */
+.ht-seat-taken {
+  font-size: 11px;
+  color: var(--ht-chip-red);
+  white-space: nowrap;
+}
+
+/* ---------- the trick ---------- */
+
+/* A cross, not a row: a card lands on the side of the table the seat that
+   played it sits on, so "who played the queen" is readable without a caption.
+   The four cards overlap towards the middle, which is what a real trick on a
+   table looks like and what keeps the whole cross inside one screen's height.
+
+   The height is fixed by the aspect ratio whether or not there is a card on
+   the table, so the fan below never moves as the trick fills and empties. */
+.ht-trick {
+  grid-area: trick;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 100 / 82;
+}
+
+/* Positioned with margins rather than translate, so `transform` stays free
+   for the fold-away below. A percentage margin — vertical ones included —
+   resolves against the containing block's width, which is what makes
+   -25.2% exactly half of a card's height (1.4 × 36% ÷ 2). */
+.ht-trick-card {
+  position: absolute;
+  width: 36%;
+}
+
+.ht-at-north {
+  top: 0;
+  left: 50%;
+  margin-left: -18%;
+  z-index: 1;
+}
+
+.ht-at-west {
+  left: 0;
+  top: 50%;
+  margin-top: -25.2%;
+  z-index: 2;
+}
+
+.ht-at-east {
+  right: 0;
+  top: 50%;
+  margin-top: -25.2%;
+  z-index: 3;
+}
+
+/* Yours on top: it is the one card you put there on purpose. */
+.ht-at-south {
+  bottom: 0;
+  left: 50%;
+  margin-left: -18%;
+  z-index: 4;
+}
+
+/* The finished trick folding towards whoever took it. Shorter than one beat
+   (screens/GameScreen.tsx FOLD_MS = 380 against CPU_DELAY_MS = 450), and
+   stopped outright by the shell's Reduced Motion rule — at which point the
+   four cards simply vanish, which is the same information without the
+   movement. */
+.ht-folding .ht-trick-card {
+  animation: ht-fold 380ms ease-in forwards;
+}
+
+.ht-fold-north {
+  --ht-fold-x: 0;
+  --ht-fold-y: -62%;
+}
+
+.ht-fold-south {
+  --ht-fold-x: 0;
+  --ht-fold-y: 62%;
+}
+
+.ht-fold-west {
+  --ht-fold-x: -70%;
+  --ht-fold-y: 0;
+}
+
+.ht-fold-east {
+  --ht-fold-x: 70%;
+  --ht-fold-y: 0;
+}
+
+@keyframes ht-fold {
+  to {
+    transform: translate(var(--ht-fold-x), var(--ht-fold-y)) scale(0.68);
+    opacity: 0;
+  }
+}
+
+/* ---------- the pass, in the middle of the table ---------- */
+
+.ht-pass-panel {
+  grid-area: trick;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 12px;
+  border-radius: 12px;
+  background: var(--ht-chip);
+  color: var(--ht-chip-ink);
+}
+
+/* The arrow points at the seat the three cards are actually going to, which
+   is why the seats are laid out as directions in the first place. */
+.ht-pass-arrow {
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.ht-pass-word {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---------- cards ---------- */
+
+/* A card. Paper white with a hairline edge and a soft shadow, so a fan of
+   them reads as a spread of objects rather than as a striped rectangle. */
+.ht-card {
+  position: relative;
+  flex: 0 0 auto;
+  aspect-ratio: 5 / 7;
+  padding: 0;
+  border: 1px solid var(--ht-face-line);
+  border-radius: 6px;
+  background-color: var(--ht-face);
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 55%);
+  color: var(--ht-ink);
+  cursor: pointer;
+  display: block;
+  font-family: var(--font-display);
+  box-shadow:
+    0 1px 2px rgba(20, 24, 30, 0.24),
+    0 0 0 0.5px rgba(20, 24, 30, 0.08);
+}
+
+:root[data-theme='dark'] .ht-card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+
+.ht-card-red {
+  color: var(--ht-red);
+}
+
+.ht-card-black {
+  color: var(--ht-ink);
+}
+
+/* The index: rank over suit in the top-left, the way a real card is printed.
+   In this game's fan that corner is the part a card keeps when the row below
+   covers its bottom, so it carries the identity. */
+.ht-card-index {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1;
+}
+
+.ht-card-rank {
+  font-size: clamp(13px, 4vw, 17px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.ht-card-index .ht-suit {
+  width: clamp(8px, 2.4vw, 11px);
+  height: clamp(8px, 2.4vw, 11px);
+}
+
+/* One large suit in the middle of the card, centred. */
+.ht-card-middle {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ht-card-middle .ht-suit {
+  width: 42%;
+  height: 42%;
+}
+
+/* ---------- the hand fan ---------- */
+
+.ht-fan {
+  width: min(100%, 420px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Three rows of at most five, and the overlap runs down the page rather than
+   across it. components/HeartsHand.tsx carries the arithmetic that chose
+   these numbers and the measurements they give at 320 / 360 / 420px; changing
+   any of them without redoing that is how the tap target quietly goes under
+   the series' 48px floor. */
+.ht-hand {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  /* Room above for the lift, so a raised card is not clipped by the trick. */
+  padding-top: 10px;
+}
+
+.ht-hand-row {
+  display: flex;
+  justify-content: center;
+}
+
+/* Card height is 28% of the fan and the rows are pitched 18% apart, so the
+   overlap is the difference. A percentage margin resolves against the
+   containing block's width, which is the fan — the same width the card's own
+   20% is measured from, so the two can never drift apart. */
+.ht-hand-row + .ht-hand-row {
+  margin-top: -10%;
+}
+
+.ht-hand-card {
+  width: 20%;
+  transition: transform 140ms ease-out;
+}
+
+/* The first card of a new suit casts a felt-coloured sliver to its left. It
+   separates the suits without moving anything, which matters in a game whose
+   one obligation is to find the suit that was led. */
+.ht-suit-start {
+  box-shadow:
+    -3px 0 0 0 var(--ht-felt),
+    0 1px 2px rgba(20, 24, 30, 0.24);
+}
+
+/* Lifted by the first tap, waiting for the second (the two-tap confirm). The
+   outline is what says "held", not the lift alone — colour and position are
+   never the only channel. */
+.ht-lifted {
+  transform: translateY(-12px);
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 8px 12px rgba(20, 24, 30, 0.32);
+  z-index: 3;
+}
+
+/* A card the rules will not take right now: the wrong suit while you hold the
+   suit that was led, a point on the opening trick, a heart led before they are
+   broken. Sunk rather than scolded; tapping it does nothing, quietly, with no
+   sound and no buzz (docs/HEARTS_RULES.md §2.2). */
+.ht-sunk {
+  filter: grayscale(0.5);
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ---------- the pass tray ---------- */
+
+/* The three cards on their way out sit above the fan, behind the arrow that
+   says where they are going. They are out of the hand and visibly so, which
+   is what makes "chosen" unmistakable without a second kind of highlight. */
+.ht-tray {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 0 2px;
+}
+
+.ht-tray-arrow {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ht-ink);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+:root[data-theme='dark'] .ht-tray-arrow {
+  color: var(--ink);
+  text-shadow: none;
+}
+
+.ht-tray-card,
+.ht-tray-slot {
+  width: 15%;
+}
+
+/* An empty slot: a recess where a card will go, not a floating outline. */
+.ht-tray-slot {
+  background-color: rgba(0, 0, 0, 0.08);
+  background-image: none;
+  border: 1px dashed var(--ht-back-line);
+  box-shadow: inset 0 1px 3px rgba(35, 42, 51, 0.1);
+  cursor: default;
+}
+
+/* ---------- top bar ---------- */
+
+.ht-status {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.ht-status-took {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.ht-status-name {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ht-status-total {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.ht-status-taken {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* Being on lead, drawn the same way for your seat as for the other three. */
+.ht-status-mark {
+  align-self: center;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* ---------- the line under the table ---------- */
+
+/* One line, always present, so the table never jumps: what to do now, or —
+   for a beat — who took the trick that just went. */
+.ht-line {
+  width: min(100%, 420px);
+  margin: 8px 0 0;
+  min-height: 20px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ht-ink);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+:root[data-theme='dark'] .ht-line {
+  color: var(--ink);
+  text-shadow: none;
+}
+
+/* ---------- actions ---------- */
+
+/* Present for the pass and absent for the play: the one button this game has
+   belongs to the pass, and during the tricks the height is worth more to the
+   table than an empty strip is (screens/GameScreen.tsx). */
+.action-bar.ht-actions {
+  justify-content: center;
+}
+
+/* ---------- home ---------- */
+
+.ht-choose-label {
+  margin: 0 0 2px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* ---------- the scoreboards ---------- */
+
+/* Four seats, so the settlement and the final standing are small tables
+   rather than sentences. Your own row is marked by weight and by a bar in the
+   title's colour — never by colour alone. */
+.ht-scoreboard {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4px 0 14px;
+  font-size: 14px;
+}
+
+.ht-scoreboard-caption {
+  caption-side: top;
+  padding-bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  text-align: left;
+}
+
+.ht-scoreboard th,
+.ht-scoreboard td {
+  padding: 6px 4px;
+  text-align: right;
+}
+
+.ht-scoreboard thead th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+
+.ht-scoreboard tbody tr {
+  border-top: 1px solid var(--line);
+}
+
+.ht-scoreboard-seat {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.ht-scoreboard-place {
+  width: 1.6em;
+  text-align: left;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.ht-scoreboard-total {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.ht-scoreboard-you th,
+.ht-scoreboard-you td {
+  font-weight: 800;
+}
+
+.ht-scoreboard-you .ht-scoreboard-seat {
+  padding-left: 8px;
+  box-shadow: inset 3px 0 0 0 var(--accent);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+.ht-figure {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ht-figure-pair {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.ht-figure-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 46px;
+  height: 64px;
+  border: 1px solid var(--ht-face-line);
+  border-radius: 6px;
+  background: var(--ht-face);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  /* No `color` here on purpose: every figure card carries .ht-card-red or
+     .ht-card-black, and a colour set at this specificity would win by source
+     order and paint the red suits black. */
+}
+
+.ht-figure-card .ht-suit {
+  width: 14px;
+  height: 14px;
+}
+
+.ht-figure-arrow {
+  color: var(--ink-soft);
+  font-size: 18px;
+}
+
+.ht-figure-note {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--accent);
+}

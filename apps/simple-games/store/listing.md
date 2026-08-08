@@ -5,8 +5,8 @@
 > あわせて Play Console でアプリ内商品(管理された商品)`remove_ads` を
 > 基準価格 USD 3.99 で作成すること(国別価格は自動調整に任せる)。
 
-> 掲載は収録ゲーム 22 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
-> Minesweeper / 2048 / Block Puzzle / Checkers / Reversi / Connect Four /
+> 掲載は収録ゲーム 24 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
+> Hearts / Gin Rummy / Minesweeper / 2048 / Block Puzzle / Checkers / Reversi / Connect Four /
 > Gomoku / Brick Breaker / Nonogram / Number Match / Quick Math /
 > Schulte Table / Number Recall / Water Sort / Sliding Puzzle / Memory Match /
 > Sky Fighter / Bunny Hop)の状態で書いてある。
@@ -31,7 +31,7 @@
 3. `Simple Games: Sudoku & More`
 
 キーワード優先順位: Offline > Sudoku > Solitaire > Spider Solitaire > FreeCell >
-Minesweeper > Checkers > 2048 > Block Puzzle > Reversi > Connect Four >
+Hearts > Gin Rummy > Minesweeper > Checkers > 2048 > Block Puzzle > Reversi > Connect Four >
 Gomoku > Brick Breaker > Nonogram > Puzzle >
 Number Match > Quick Math > Schulte Table > Number Recall > Water Sort >
 Sliding Puzzle > Memory Match > Sky Fighter >
@@ -76,6 +76,8 @@ INCLUDED GAMES
 • Solitaire
 • Spider Solitaire
 • FreeCell
+• Hearts
+• Gin Rummy
 • Minesweeper
 • 2048
 • Block Puzzle

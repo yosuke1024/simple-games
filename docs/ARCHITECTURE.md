@@ -182,7 +182,7 @@ src/
   並べていたらこの形は 14 言語で保てない。
 - **グリッドはカテゴリ別のセクションに分ける**(`registry.ts` の `GAME_CATEGORIES`、
   現在はロジック / カード / パズル / ボードゲーム / アーケード / ドリルの 6 つ)。
-  22 本を 1 枚のグリッドに敷くと結局全タイトルを読んで探すことになるため、
+  24 本を 1 枚のグリッドに敷くと結局全タイトルを読んで探すことになるため、
   見出しでセクションごと読み飛ばせるようにした。ゲームはレジストリで `category` を
   1 つ名乗り、セクション内の並びはレジストリの配列順。カテゴリ見出しは固有名詞では
   ないので、シェルカタログの `category*` キーで 14 言語に翻訳する(タイトルと違い
@@ -223,6 +223,8 @@ src/
 | Solitaire        | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
 | Spider Solitaire | 深い緑                   | `#31802f` | `#7fcc7d` |
 | FreeCell         | 深い藍                   | `#25256a` | `#6e6ecf` |
+| Hearts           | スチールブルー           | `#2763c4` | `#96bde4` |
+| Gin Rummy        | 深い菫                   | `#772b97` | `#b35dd5` |
 | Minesweeper      | スレートブルー           | `#4a5a72` | `#93a4bd` |
 | Nonogram         | くすんだプラム           | `#6d5192` | `#a893cf` |
 | Water Sort       | くすんだアクア           | `#33708c` | `#7fb4c9` |
@@ -268,6 +270,7 @@ src/
 - **全タイトルが規約に従っている**: `number-match.css` / `sudoku.css` /
   `minesweeper.css` / `nonogram.css` / `sliding-puzzle.css` / `memory-match.css` /
   `water-sort.css` / `solitaire.css` / `spider-solitaire.css` / `freecell.css` /
+  `hearts.css` / `gin-rummy.css` /
   `brick-breaker.css` / `sky-fighter.css` /
   `game-2048.css` / `block-puzzle.css` / `checkers.css` / `reversi.css` /
   `connect-four.css` / `gomoku.css` / `quick-math.css` / `schulte-table.css` /
@@ -324,6 +327,8 @@ src/
 | `gm.*`        | Gomoku(saveGame / stats / flags / prefs。同上)                    |
 | `ss.*`        | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)    |
 | `fc.*`        | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)    |
+| `ht.*`        | Hearts(saveGame / stats / flags / prefs。統計は難易度別)          |
+| `gr.*`        | Gin Rummy(saveGame / stats / flags / prefs。同上)                 |
 | `bh.*`        | Bunny Hop(stats / flags。**saveGame なし** — 下記)                |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。

@@ -31,6 +31,8 @@ import { C4_STORAGE_KEYS } from '../games/connect-four/storage/keys';
 import { CK_STORAGE_KEYS } from '../games/checkers/storage/keys';
 import { GM_STORAGE_KEYS } from '../games/gomoku/storage/keys';
 import { FC_STORAGE_KEYS } from '../games/freecell/storage/keys';
+import { HT_STORAGE_KEYS } from '../games/hearts/storage/keys';
+import { GR_STORAGE_KEYS } from '../games/gin-rummy/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
 import { NG_STORAGE_KEYS } from '../games/nonogram/storage/keys';
@@ -61,6 +63,8 @@ export type GameId =
   | 'solitaire'
   | 'spider-solitaire'
   | 'freecell'
+  | 'hearts'
+  | 'gin-rummy'
   | 'brick-breaker'
   | 'sky-fighter'
   | 'bunny-hop'
@@ -181,6 +185,32 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(FC_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/freecell/ui/FreeCellRoot').then((m) => ({ default: m.FreeCellRoot })),
+  },
+  {
+    id: 'hearts',
+    // The more searched-for of the two games with opponents, so it opens that
+    // half of the shelf directly after the three patiences. Its outlined heart
+    // pairs with Gin Rummy's outlined diamond: filled suits are the solo
+    // patiences, outlined ones have somebody sitting opposite
+    // (docs/HEARTS_RULES.md §1 — here, three somebodies).
+    title: 'Hearts',
+    category: 'cards',
+    glyph: '♡',
+    storageKeys: Object.values(HT_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/hearts/ui/HeartsRoot').then((m) => ({ default: m.HeartsRoot })),
+  },
+  {
+    id: 'gin-rummy',
+    // An outlined suit, where the three patiences take filled ones: the shelf
+    // now holds two kinds of card game, and the marks say which is which
+    // (docs/GIN_RUMMY_RULES.md §1 — this one has an opponent).
+    title: 'Gin Rummy',
+    category: 'cards',
+    glyph: '♢',
+    storageKeys: Object.values(GR_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/gin-rummy/ui/GinRummyRoot').then((m) => ({ default: m.GinRummyRoot })),
   },
   {
     id: 'minesweeper',

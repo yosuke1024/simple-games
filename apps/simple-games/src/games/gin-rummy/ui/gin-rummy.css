@@ -1,0 +1,473 @@
+/* Gin Rummy — all of this game's styling, imported by GinRummyRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --radius, --font-display, --tap-size, …) so the
+   game reads as part of the same app and follows the theme without knowing
+   about it.
+
+   Class names are prefixed `gr-` so this file can never collide with the
+   shell or with another game.
+
+   The card red below is game content, not chrome — hearts and diamonds are
+   red in any deck; black cards use the series ink. This is the documented
+   exception to "game CSS does not write colours" (docs/ARCHITECTURE.md), and
+   it is the same exception Klondike and FreeCell take, for the same reason. */
+
+/* Card faces stay paper in BOTH themes, unlike every other surface in the
+   app. A dark card face turns the black suits near-white, and a hand you
+   cannot read the suits of is not a hand. The dark theme dims the paper
+   instead of inverting it, and darkens the felt around it. */
+:root {
+  --gr-face: #fffdf8;
+  --gr-ink: #232a33;
+  --gr-red: #b0483f;
+  --gr-face-line: #ddd7ca;
+  /* The felt. Warmer and browner than FreeCell's grey table and Reversi's
+     green board, so the three surfaces are not mistaken for one another. */
+  --gr-felt: #b9a68f;
+  --gr-felt-light: rgba(255, 255, 255, 0.34);
+  /* The back of a face-down card: one flat colour and a hairline, drawn so a
+     stack of them reads as "cards you cannot see" rather than as a gap. */
+  --gr-back: #6d7f97;
+  --gr-back-line: #55647a;
+  /* The two meld tints. Adjacent melds alternate between them, which is what
+     makes three runs in a row read as three groups instead of nine cards.
+     Deliberately away from the card red, the card ink and this title's violet
+     accent, so a meld bar is never mistaken for a suit or for a selection. */
+  --gr-meld-a: #2f7d6b;
+  --gr-meld-b: #7a6bbf;
+}
+
+:root[data-theme='dark'] {
+  --gr-face: #e6e2d9;
+  --gr-ink: #1d232b;
+  --gr-red: #a8382f;
+  --gr-face-line: #bfb9ac;
+  --gr-felt: #241f1a;
+  --gr-felt-light: rgba(255, 255, 255, 0.05);
+  --gr-back: #3d4a5c;
+  --gr-back-line: #2b3543;
+  --gr-meld-a: #48b39a;
+  --gr-meld-b: #a493e6;
+}
+
+/* ---------- the table ---------- */
+
+.gr-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  /* The 6px side padding is load-bearing: it is what the hand fan's tap
+     arithmetic (components/GinRummyTable.tsx) measures its width against. */
+  padding: 8px 6px 10px;
+  min-height: 0;
+  overflow-y: auto;
+  background-color: var(--gr-felt);
+  /* Lit from above, the way a table under a lamp is — it keeps the large
+     empty surface from reading as a flat fill. */
+  background-image: radial-gradient(120% 62% at 50% 0%, var(--gr-felt-light), rgba(0, 0, 0, 0) 72%);
+  box-shadow: inset 0 2px 5px rgba(35, 42, 51, 0.14);
+}
+
+:root[data-theme='dark'] .gr-body {
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Width resolves against the column's content box, never the viewport: a
+   vw-derived width overflows the moment anything narrows the column (a
+   scrollbar, a safe-area inset, the web build's site chrome). */
+.gr-table {
+  width: min(100%, 420px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- the opponent's seat ---------- */
+
+/* Card backs, one per card held, overlapped half over half: the count is the
+   whole of what is known about that hand, and the row is a picture of the
+   count. Eleven of them — the most a seat ever holds, mid-turn — come to
+   11 × 11% − 10 × 5.5% = 66% of the table, so the row always fits and always
+   centres. Nothing here is tappable; there is nothing to do to it. */
+.gr-seat {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.gr-seat-card {
+  width: 11%;
+  pointer-events: none;
+}
+
+.gr-seat-card + .gr-seat-card {
+  margin-left: -5.5%;
+}
+
+/* ---------- stock and discard ---------- */
+
+.gr-centre {
+  display: flex;
+  justify-content: center;
+  gap: 14%;
+  width: 100%;
+}
+
+.gr-pile-card {
+  width: 18%;
+}
+
+/* ---------- cards ---------- */
+
+/* A card. Paper white with a hairline edge and a soft shadow, so a fan of
+   them reads as a spread of objects rather than as a striped rectangle. */
+.gr-card {
+  position: relative;
+  flex: 0 0 auto;
+  aspect-ratio: 5 / 7;
+  padding: 0;
+  border: 1px solid var(--gr-face-line);
+  border-radius: 6px;
+  background-color: var(--gr-face);
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 55%);
+  color: var(--gr-ink);
+  cursor: pointer;
+  display: block;
+  font-family: var(--font-display);
+  box-shadow:
+    0 1px 2px rgba(20, 24, 30, 0.24),
+    0 0 0 0.5px rgba(20, 24, 30, 0.08);
+}
+
+:root[data-theme='dark'] .gr-card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+
+.gr-card-red {
+  color: var(--gr-red);
+}
+
+.gr-card-black {
+  color: var(--gr-ink);
+}
+
+/* Face down: the stock, and every card in the opponent's seat. */
+.gr-back {
+  background-color: var(--gr-back);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.14) 0 3px,
+    rgba(0, 0, 0, 0) 3px 6px
+  );
+  border-color: var(--gr-back-line);
+}
+
+/* An empty slot: a recess where a card could be, not a floating outline. */
+.gr-slot-empty {
+  background-color: rgba(0, 0, 0, 0.06);
+  background-image: none;
+  border: 1px dashed var(--gr-back-line);
+  box-shadow: inset 0 1px 3px rgba(35, 42, 51, 0.1);
+  cursor: default;
+}
+
+/* The index: rank over suit in the top-left, the way a real card is printed.
+   This is the only part an overlapped card shows, so it carries the identity
+   and the fan's overlap below is measured against it. */
+.gr-card-index {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1;
+}
+
+.gr-card-rank {
+  font-size: clamp(13px, 4vw, 17px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.gr-card-index .gr-suit {
+  width: clamp(8px, 2.4vw, 11px);
+  height: clamp(8px, 2.4vw, 11px);
+}
+
+/* One large suit in the middle of the card, centred. */
+.gr-card-middle {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gr-card-middle .gr-suit {
+  width: 42%;
+  height: 42%;
+}
+
+/* ---------- the hand fan ---------- */
+
+/* Two rows of at most six. The geometry is closed on purpose — six cards are
+   exactly 6 × 20% − 5 × 4% = 100% of the fan — so a row can never overflow
+   and a row of five simply centres. components/GinRummyTable.tsx carries the
+   arithmetic that chose these two numbers, and the measurements they give at
+   320 / 360 / 420px; changing either without redoing that is how the tap
+   target quietly goes under the series' 48px floor. */
+.gr-hand {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  /* Room above for the lift, so a raised card is not clipped by the row. */
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.gr-hand-row {
+  display: flex;
+  justify-content: center;
+}
+
+.gr-hand-card {
+  width: 20%;
+  transition: transform 140ms ease-out;
+}
+
+.gr-hand-card + .gr-hand-card {
+  margin-left: -4%;
+}
+
+/* The first card of a meld — or of the deadwood — casts a felt-coloured
+   sliver to its left. It separates the groups without moving anything, which
+   the exact geometry above leaves no room to do. */
+.gr-group-start {
+  box-shadow:
+    -3px 0 0 0 var(--gr-felt),
+    0 1px 2px rgba(20, 24, 30, 0.24);
+}
+
+/* The meld bar runs down the card's left edge — the part of an overlapped
+   card that stays visible — so the arrangement survives the fan. */
+.gr-meld-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  border-radius: 5px 0 0 5px;
+}
+
+.gr-meld-0::before {
+  background: var(--gr-meld-a);
+}
+
+.gr-meld-1::before {
+  background: var(--gr-meld-b);
+}
+
+/* Lifted by the first tap, waiting for the second (the two-tap confirm). The
+   outline is what says "held", not the lift alone — colour and position are
+   never the only channel. */
+.gr-selected {
+  transform: translateY(-10px);
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 8px 12px rgba(20, 24, 30, 0.32);
+  z-index: 2;
+}
+
+/* A card the rules will not take this turn: the one just picked off the pile,
+   or — once the knock has been asked for — one that would not declare. Sunk
+   rather than scolded; tapping it does nothing, quietly. */
+.gr-sunk {
+  filter: grayscale(0.5);
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ---------- top bar ---------- */
+
+.gr-status {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.gr-score {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+/* The always-on deadwood count: the game's one piece of arithmetic, and the
+   only number here in the title's own colour. */
+.gr-deadwood {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+/* ---------- the line under the table ---------- */
+
+/* One line, always present, so the table never jumps: what to do now, or —
+   for a beat — what the CPU just did. */
+.gr-line {
+  width: min(100%, 420px);
+  margin: 8px 0 0;
+  min-height: 20px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gr-ink);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+:root[data-theme='dark'] .gr-line {
+  color: var(--ink);
+  text-shadow: none;
+}
+
+/* ---------- actions ---------- */
+
+.action-bar.gr-actions {
+  justify-content: center;
+  gap: 16px;
+  /* Held even when nothing is in it: the Knock button appears and disappears
+     with the rules, and the table must not slide up and down under it. */
+  min-height: calc(var(--tap-size) + 20px);
+}
+
+/* ---------- home ---------- */
+
+.gr-choose-label {
+  margin: 0 0 2px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* ---------- the settled hand ---------- */
+
+.gr-settlement {
+  margin: 4px 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.gr-settlement-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.gr-settlement-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.gr-settlement-row dt {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.gr-settlement-row dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.gr-settlement-melds {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.gr-settlement-deadwood {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+.gr-figure {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.gr-figure-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 46px;
+  height: 64px;
+  border: 1px solid var(--gr-face-line);
+  border-radius: 6px;
+  background: var(--gr-face);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  /* No `color` here on purpose: every figure card carries .gr-card-red or
+     .gr-card-black, and a colour set at this specificity would win by source
+     order and paint the red suits black. */
+}
+
+.gr-figure-card .gr-suit {
+  width: 14px;
+  height: 14px;
+}
+
+.gr-figure-back {
+  background-color: var(--gr-back);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.14) 0 3px,
+    rgba(0, 0, 0, 0) 3px 6px
+  );
+  border-color: var(--gr-back-line);
+}
+
+.gr-figure-arrow {
+  color: var(--ink-soft);
+  font-size: 18px;
+}
+
+.gr-figure-note {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--accent);
+}
