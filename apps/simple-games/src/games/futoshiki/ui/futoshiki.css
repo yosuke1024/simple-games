@@ -1,0 +1,422 @@
+/* Futoshiki — the board, the signs between its squares, the digit pad, and
+   the Quick Rules figures. Everything here is drawn by this game alone.
+
+   Imported by FutoshikiRoot, so none of it is parsed until the game is opened.
+   Shared chrome (screens, buttons, dialogs, the action bar) lives in
+   src/ui/styles.css.
+
+   Colours come from the shared custom properties, so this file never repeats a
+   palette value — the accent it draws with is whichever one the shell has
+   stamped on the root element. Class names are prefixed `futoshiki-` so this
+   file can never collide with the shell or with another game. */
+
+/* ---------- board ---------- */
+
+/* The board takes what is left and scrolls when a 7×7 will not fit; the pad
+   below it keeps its natural height. The 24px the cell arithmetic subtracts is
+   spent here once, by .futoshiki-body — this element adds none of its own, so
+   the two cannot drift apart into 48px. */
+.futoshiki-board-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0 12px;
+}
+
+/*
+  THE 320px MEASUREMENT (docs/FUTOSHIKI_RULES.md §13, §14)
+
+  This is the one number the size table had to clear, and it is not the number
+  Sudoku or Takuzu had to clear: this board spends a gap between every pair of
+  neighbouring squares, because that is where the signs live. Six gaps on a
+  7×7 are subtracted before a single square is drawn, so the arithmetic below
+  is the whole of §14's answer to "Sudoku manages 9×9".
+
+  The gap is a fixed 14px rather than a share of the cell. What has to stay
+  readable is the sign inside it, and a sign that shrank with the board would
+  be smallest exactly where legibility is already tightest.
+
+    cell = (viewport − 24px body padding − 2 × 4px board padding
+            − 2px border − 6 × 14px gaps) / 7
+
+    320px → (320 − 24 − 8 − 2 − 84) / 7 = 202 / 7 = 28.9px
+    360px → (360 − 24 − 8 − 2 − 84) / 7 = 242 / 7 = 34.6px
+    420px → (420 − 24 − 8 − 2 − 84) / 7 = 302 / 7 = 43.1px
+
+  28.9px at the narrowest supported screen. That clears the floor this
+  collection already draws by some margin: Takuzu's 10×10 computes to 26.8px
+  on the same 320px and shipped, and both it and Nonogram clamp lower still
+  (24px and 18px) rather than shrink further. So 7×7 holds, and the upper band
+  stays 7×7 — §13's gate is met, not waived.
+
+  Below 24px the board scrolls instead of shrinking, because a square too
+  small to hit is worse than a board that moves.
+*/
+.futoshiki-board {
+  --futoshiki-gap: 14px;
+  --futoshiki-pad: 4px;
+  --futoshiki-cell: clamp(
+    24px,
+    calc(
+      (
+          100vw - 24px - 2 * var(--futoshiki-pad) - 2px - (var(--futoshiki-size) - 1) *
+            var(--futoshiki-gap)
+        ) /
+        var(--futoshiki-size)
+    ),
+    44px
+  );
+  display: grid;
+  grid-template-columns: repeat(var(--futoshiki-size), var(--futoshiki-cell));
+  grid-auto-rows: var(--futoshiki-cell);
+  gap: var(--futoshiki-gap);
+  padding: var(--futoshiki-pad);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  /* A tap is a digit, not a text selection or a double-tap zoom (§4). */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---------- squares ---------- */
+
+.futoshiki-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: clamp(13px, calc(var(--futoshiki-cell) * 0.56), 26px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+/*
+  A given is the puzzle talking; an entry is the player talking. Weight is what
+  separates them, not colour (§13) — the accent on an entry is support, and a
+  reader who cannot see it has lost nothing, because the heavier stroke and the
+  recessed ground say the same thing.
+*/
+.futoshiki-cell-given {
+  background: var(--surface-recessed);
+  border-color: var(--stone-line);
+  color: var(--ink);
+  font-weight: 800;
+}
+
+/* The shell dims disabled buttons to 0.4, which is right for a button nobody
+   may press and wrong for the one thing on this board that is certain. */
+.futoshiki-cell:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+/* Selection and its two lines (§4): the row and column the selected square
+   sits on, and every square already holding the same digit, a step stronger. */
+.futoshiki-cell-peer {
+  background: var(--accent-ring-soft);
+}
+
+.futoshiki-cell-same {
+  background: var(--accent-soft);
+}
+
+.futoshiki-cell-selected {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* Always-on violation display (§5): a rule this square takes part in breaking.
+   Warn colour AND a border, never colour alone (§13). */
+.futoshiki-cell-broken {
+  background: var(--warn-soft);
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+/* The optional half of §5: a digit that disagrees with the one answer. Off
+   when the player has turned it off; the violation above stays either way. */
+.futoshiki-cell-mistake {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+/* Hint (§6): the square the reasoning settles, and the written digits and
+   signs that carry the proof. The digit is never written for the player. */
+.futoshiki-cell-support:not(.futoshiki-cell-broken) {
+  background: var(--accent-soft);
+}
+
+.futoshiki-cell-reason:not(.futoshiki-cell-broken):not(.futoshiki-cell-support) {
+  background: var(--accent-ring-soft);
+}
+
+.futoshiki-cell-hint {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+/* A break outranks any deduction, so the hint points at the break (§6). */
+.futoshiki-cell-hint-broken {
+  border-color: var(--warn);
+  box-shadow: 0 0 0 2px var(--warn);
+}
+
+/* ---------- signs ---------- */
+
+/*
+  The sign sits in the gap, and the gap is exactly what the negative margin
+  gives back: the element is aligned to the end of its square's track and then
+  pushed one whole gap past it, so it lands in the space between two squares
+  without a track of its own.
+
+  It is display only. `pointer-events: none` is the rule of §13 — only squares
+  are pressable — and it carries no border or shadow, so nothing here looks
+  pressable and then isn't.
+*/
+.futoshiki-sign {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-size: clamp(11px, calc(var(--futoshiki-gap) * 0.95), 15px);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ink-soft);
+}
+
+.futoshiki-sign-across {
+  justify-self: end;
+  width: var(--futoshiki-gap);
+  margin-right: calc(-1 * var(--futoshiki-gap));
+}
+
+/*
+  Down the board the same two characters are turned a quarter turn, so the
+  point still aims at the smaller square. Rotating is what keeps the DOM text
+  the ASCII the rules fix it to (§1) — a separate pair of vertical glyphs would
+  be a second alphabet to keep true, and a screen reader hears the words
+  either way.
+*/
+.futoshiki-sign-down {
+  align-self: end;
+  height: var(--futoshiki-gap);
+  margin-bottom: calc(-1 * var(--futoshiki-gap));
+}
+
+.futoshiki-sign-down .futoshiki-sign-glyph {
+  display: block;
+  transform: rotate(90deg);
+}
+
+/* A sign whose two squares read the wrong way (§5) — the gap tints with them. */
+.futoshiki-sign-broken {
+  color: var(--warn);
+}
+
+/* A sign the hint is reasoning from (§6). */
+.futoshiki-sign-hint {
+  color: var(--accent);
+}
+
+/* ---------- notes ---------- */
+
+/* A shadow of the pad inside the square, so a digit is always in the same
+   corner and can be found without reading (§4). */
+.futoshiki-notes {
+  display: grid;
+  grid-template-columns: repeat(var(--futoshiki-note-cols), 1fr);
+  width: 100%;
+  height: 100%;
+  padding: 1px;
+  font-size: clamp(7px, calc(var(--futoshiki-cell) * 0.26), 11px);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ink-soft);
+}
+
+.futoshiki-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- digit pad ---------- */
+
+/* Board above, pad below, and the 12px on each side that the cell arithmetic
+   is measured against. */
+.futoshiki-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 12px 10px;
+}
+
+/* The pad follows the board (§4): four keys on a 4×4, seven on a 7×7. A digit
+   this size has not got never gets a key. */
+.futoshiki-pad {
+  display: grid;
+  grid-template-columns: repeat(var(--futoshiki-size), 1fr);
+  gap: 4px;
+  width: min(100%, 400px);
+  margin: 0 auto;
+}
+
+.futoshiki-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-height: 52px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: clamp(17px, 5vw, 23px);
+  font-weight: 700;
+}
+
+.futoshiki-key:active {
+  background: var(--accent-soft);
+}
+
+/* Notes mode says itself in the accent, without a caption. */
+.futoshiki-key-notes {
+  color: var(--accent);
+}
+
+/* How many of this digit are still to be placed. Quiet: it is bookkeeping
+   the player would otherwise do by counting, not part of the puzzle (§4). */
+.futoshiki-key-left {
+  font-family: system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+/* ---------- top bar ---------- */
+
+.futoshiki-status {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.futoshiki-mode {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.futoshiki-size-tag {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- home ---------- */
+
+/* The mark is the rule: two squares and the sign that orders them. Set a
+   little tighter than the tile's default so the pair reads as one figure. */
+.futoshiki-logo {
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+/* ---------- level select ---------- */
+
+.futoshiki-level-done {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.level-cell-current .futoshiki-level-done {
+  color: var(--accent-ink);
+  opacity: 0.85;
+}
+
+/* ---------- daily list ---------- */
+
+.futoshiki-daily-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.futoshiki-daily-badge-done {
+  color: var(--ink-soft);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* A real line of a real board, signs included — the shape the whole game is
+   read in. */
+.futoshiki-figure {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.futoshiki-figure-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--ink);
+}
+
+/* The square the step is about. */
+.futoshiki-figure-cell-mark {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+  color: var(--accent);
+}
+
+.futoshiki-figure-sign {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ink-soft);
+}
+
+/* ---------- Reduced Motion ---------- */
+
+/* Digits appear at once, with nothing to wait for (§13). */
+@media (prefers-reduced-motion: reduce) {
+  .futoshiki-cell {
+    transition: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .futoshiki-cell {
+  transition: none;
+}

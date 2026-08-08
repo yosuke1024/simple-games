@@ -1,0 +1,28 @@
+import type { TakuzuMessages } from './en';
+
+export const ja: TakuzuMessages = {
+  takuzuName: 'Takuzu',
+  takuzuBoardLabel: 'Takuzu の盤面、{size}×{size}',
+  takuzuCellEmpty: '空、{row}行 {col}列',
+  takuzuCellZero: '0、{row}行 {col}列',
+  takuzuCellOne: '1、{row}行 {col}列',
+  takuzuCellFixed: '初期数字 {digit}、{row}行 {col}列',
+  takuzuRuleBroken: 'ルール違反',
+  takuzuSizeLabel: '{n}×{n}',
+  takuzuHintFound: '強調された行・列で、印のマスが確定します。',
+  takuzuHintBroken: '強調された行・列がルールを破っています。',
+  takuzuHintNone: '今わかる手が見つかりません。',
+  takuzuSolvedTitle: '完成！',
+  takuzuSolvedBody: 'すべての行と列がルールを満たしました。',
+  takuzuHintsUsed: '使ったヒント',
+  takuzuNewBestTime: '自己最速です。',
+  takuzuLevelsSolved: 'クリアしたレベル',
+  takuzuDailiesSolved: 'クリアしたデイリー',
+  takuzuDailyBacklogHint: '過去の日はいつでも挑戦できます。',
+  takuzuStep1Title: '同じ数字は3つ続けない',
+  takuzuStep1Body: 'タップで 0、1、空 と切り替わります。同じ数字は3つ続けられません。',
+  takuzuStep2Title: '半分ずつ',
+  takuzuStep2Body: 'どの行・どの列も、0 と 1 が同じ数になります。',
+  takuzuStep3Title: '同じ並びは2つ作れない',
+  takuzuStep3Body: '同じ並びの行は2つ作れません。列も同じです。',
+};

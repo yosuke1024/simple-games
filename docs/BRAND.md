@@ -69,10 +69,9 @@ PRODUCT_PRINCIPLES.md「適用範囲」と WEB_VERSION.md)。
 
 ストア文面では収録済みのゲーム名を具体的に挙げる(現在は "Sudoku, Solitaire,
 Spider Solitaire, FreeCell, Hearts, Gin Rummy, Minesweeper, 2048, Block Puzzle,
-Checkers, Reversi,
-Connect Four, Gomoku, Brick Breaker, Nonogram, Number Match, Quick Math,
-Schulte Table, Number Recall, Water Sort, Sliding Puzzle, Memory Match,
-Sky Fighter, Bunny Hop" の 24 本)。
+Checkers, Reversi, Connect Four, Gomoku, Brick Breaker, Nonogram, Takuzu,
+Futoshiki, Kakuro, Number Match, Quick Math, Schulte Table, Number Recall,
+Water Sort, Sliding Puzzle, Memory Match, Sky Fighter, Bunny Hop" の 27 本)。
 未収録のゲーム名は、**実際に収録された時点で**初めて足す。
 ゲーム名は検索流入の中核だが、不自然なキーワード詰め込みはしない。
 
@@ -193,6 +192,9 @@ OSS を先頭に出さない。
 | Gomoku           | 牡丹                     | `#a32d76` | `#e086bb` | 盤面は木地に白黒の石(すべてゲーム内容)なのでアクセントはクロムだけに置け、石の背後に回らないぶん彩度を上げられる。21 タイトル時点で最も広い空きは Reversi の菫・Block Puzzle のオーキッド・Memory Match のローズに挟まれたマゼンタ帯で、三者より深く彩度を上げて取る(Block Puzzle からライト ΔE 22.2・ダーク 16.2)。桃ではなくマゼンタなのは、くすんだ桃を Memory Match が既に持っているため                                                                                                                                                                                                                                      |
 | Hearts           | スチールブルー           | `#2763c4` | `#96bde4` | **名前が指す色を採れない唯一のタイトル。**盤面はフェルトの上の赤い ♥ ♦ で、シリーズの赤(Connect Four)はカードの赤 `#b0483f` から ΔE 3.1 — 隣の色ではなく同じ色である。カード台の緑も三色目は塞がっている(FreeCell の判断)。アクセントは「出せる札」の印としてカード面の赤と黒の間に置かれるので、どちらでもない色でなければならない(赤から ΔE 86.9・Q♠ の黒から 58.4)。既存の青 4 本とは色相ではなく彩度で離す — S67% は青の中で突出し(Minesweeper のスレート 21%・Number Match の藍 39%・Water Sort のアクア 47%)、シリーズ最高の Schulte Table・Quick Math と同水準(Sky Fighter からライト ΔE 15.5・Water Sort からダーク 12.2) |
 | Gin Rummy        | 深い菫                   | `#772b97` | `#b35dd5` | 盤面はフェルトの上のカード(すべてゲーム内容)なのでアクセントはクロムだけ — デッドウッドの数とノックボタン — に置け、彩度を上げられる(Gomoku と同型)。Reversi と色相を共有し(282° 対 285°)、色相ではなく深さと彩度で離れる: L38% S56% 対 Reversi の L45% S36% でライト ΔE 16.7・ダーク 27.9。Hearts と同じく赤(♢)もカード台の緑も採れない。ホームでは FreeCell の真下に来る(ΔE 30.8 / 28.8)                                                                                                                                                                                                                                        |
+| Takuzu           | ワイン                   | `#88355e` | `#cb7ea4` | 盤面は 0 と 1 を自前の 2 つの静かな地色に置く(インクが主役)ため、アクセントはクロムと選択マスだけ — 面積が小さいので中明度で足りる。22 タイトルでは 1° 刻みの走査でもどの帯にも 30° 以内に既存色があり、隔てるのは色相ではなくマゼンタ四半分の中の深さと彩度(Block Puzzle からライト ΔE 14.6・Gomoku からダーク 9.8)。同じロジック節で 1 行違いに並ぶ Nonogram のプラムとはライト 29.4・ダーク 25.5                                                                                                                                                                                                                               |
+| Futoshiki        | パイン                   | `#29603a` | `#74c88d` | 盤面は数字と不等号のインクで、アクセントは選択マスとその行・列、そして数字パッドに乗る — Sudoku のティールと同じく「入力が盤面いっぱいに並んでも読み疲れない」ことが条件なので、緑帯で取れる最も明るい値ではなく深く彩度を抑えた値を採る。緑の四半分はコレクションで最も混んでおり(Solitaire / Spider / Number Recall / 2048 / Bunny Hop)、23 タイトルでは空き色相がないため隔てるのは深さ(Number Recall からライト ΔE 12.6・ダーク 9.4)                                                                                                                                                                                          |
+| Kakuro           | タバコ                   | `#794e2f` | `#cb9e7e` | 新聞の鉛筆パズルであることを色が言う。盤面は紙の上のインクで、アクセントは選択した白マスとそれが属する 2 つの run に乗るので、暖かい茶が「鉛筆」として読まれ、手がかりの一種には見えない。暖色帯は Checkers が 20 タイトル時点で「空き色相なし」を確認した場所で、24 タイトルでも同じ — Sliding Puzzle の陶土と Checkers のウォルナットの間を深さと彩度で取る(陶土からライト ΔE 12.6・ダーク 9.2)                                                                                                                                                                                                                                 |
 
 **盤面が自前の色階調を持つ場合の例外。** Minesweeper の数字スケール、Water Sort の
 9 色、Memory Match の 15 色記号、そして **2048 の値ごとのタイル色**は、クロムではなく

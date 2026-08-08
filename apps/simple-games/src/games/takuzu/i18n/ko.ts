@@ -1,0 +1,28 @@
+import type { TakuzuMessages } from './en';
+
+export const ko: TakuzuMessages = {
+  takuzuName: 'Takuzu',
+  takuzuBoardLabel: 'Takuzu 판, {size}×{size}',
+  takuzuCellEmpty: '빈칸, {row}행 {col}열',
+  takuzuCellZero: '0, {row}행 {col}열',
+  takuzuCellOne: '1, {row}행 {col}열',
+  takuzuCellFixed: '고정 {digit}, {row}행 {col}열',
+  takuzuRuleBroken: '규칙 위반',
+  takuzuSizeLabel: '{n}×{n}',
+  takuzuHintFound: '강조된 줄에서 표시된 칸이 확정됩니다.',
+  takuzuHintBroken: '강조된 줄이 규칙을 어겼습니다.',
+  takuzuHintNone: '지금은 확실한 수가 없습니다.',
+  takuzuSolvedTitle: '완성!',
+  takuzuSolvedBody: '모든 행과 열이 규칙을 만족합니다.',
+  takuzuHintsUsed: '사용한 힌트',
+  takuzuNewBestTime: '자기 최고 기록입니다.',
+  takuzuLevelsSolved: '클리어한 레벨',
+  takuzuDailiesSolved: '클리어한 데일리',
+  takuzuDailyBacklogHint: '지난 날짜는 언제든 도전할 수 있습니다.',
+  takuzuStep1Title: '세 칸 연속 금지',
+  takuzuStep1Body: '칸을 탭하면 0, 1, 빈칸으로 바뀝니다. 같은 숫자는 세 칸 연속될 수 없습니다.',
+  takuzuStep2Title: '반반씩',
+  takuzuStep2Body: '모든 행과 모든 열에 0과 1이 같은 개수로 들어갑니다.',
+  takuzuStep3Title: '중복되는 줄 금지',
+  takuzuStep3Body: '배열이 똑같은 두 행은 있을 수 없고, 두 열도 마찬가지입니다.',
+};

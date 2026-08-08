@@ -1,0 +1,286 @@
+/* Takuzu — all of this game's styling, imported by TakuzuRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --stone, --radius, --font-display, …) so the game
+   reads as part of the same app and follows the theme without knowing about
+   it.
+
+   Class names are prefixed `takuzu-` so this file can never collide with the
+   shell or with another game. */
+
+/* ---------- board ---------- */
+
+.takuzu-board-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px 12px;
+}
+
+/*
+  The cell is whatever is left of the viewport once the scroll padding (24px),
+  the board's own padding (8px) and border (2px), and the gaps between cells
+  are taken out. That works out at 26.8px per cell for a 10×10 on a 320px
+  screen — the narrowest board on the narrowest phone this app supports, and
+  the one measurement the size table had to clear (§1). Anything narrower
+  clamps at 24px and scrolls instead of shrinking further, because a cell too
+  small to hit is worse than a board that moves.
+*/
+.takuzu-board {
+  --takuzu-gap: 2px;
+  --takuzu-pad: 4px;
+  --takuzu-cell: clamp(
+    24px,
+    calc(
+      (100vw - 24px - 2 * var(--takuzu-pad) - 2px - (var(--takuzu-size) - 1) * var(--takuzu-gap)) /
+        var(--takuzu-size)
+    ),
+    44px
+  );
+  display: grid;
+  grid-template-columns: repeat(var(--takuzu-size), var(--takuzu-cell));
+  grid-auto-rows: var(--takuzu-cell);
+  gap: var(--takuzu-gap);
+  padding: var(--takuzu-pad);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  /* A tap is a digit, not a text selection or a double-tap zoom (§4). */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---------- cells ---------- */
+
+.takuzu-cell {
+  position: relative;
+  width: var(--takuzu-cell);
+  height: var(--takuzu-cell);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.takuzu-cell:active {
+  background: var(--accent-soft);
+}
+
+/*
+  The two grounds of §13, and the one place this file is allowed a colour of
+  its own (docs/ARCHITECTURE.md「CSS の分割」lists the precedents: Minesweeper's
+  numbers, Water Sort's liquids, Reversi's board).
+
+  They are two weights of one existing token rather than two hues, which is
+  what keeps them support instead of meaning: the digit says which cell is
+  which, and a reader who cannot separate the two tints has lost nothing. Two
+  weights also follow the theme for free, and derive from --stone rather than
+  from a literal — the tint is the token at an opacity, so light and dark both
+  come out right without a second palette living here.
+*/
+.takuzu-cell-zero::before,
+.takuzu-cell-one::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--stone);
+}
+
+.takuzu-cell-zero::before {
+  opacity: 0.1;
+}
+
+.takuzu-cell-one::before {
+  opacity: 0.3;
+}
+
+/* The digit is the meaning (§13), so it sits above the ground. */
+.takuzu-digit {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: clamp(13px, calc(var(--takuzu-cell) * 0.56), 24px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--ink);
+}
+
+/*
+  A fixed cell is pressed into the board and cannot be moved (§4). The shell
+  dims disabled buttons to 0.4, which is right for a button nobody may press
+  and wrong for the one thing on this board that is certain.
+*/
+.takuzu-cell-fixed {
+  background: var(--surface-recessed);
+  border-color: var(--stone-line);
+}
+
+.takuzu-cell:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.takuzu-cell-fixed .takuzu-digit {
+  font-weight: 800;
+}
+
+/* Rule 2 splits every line down the middle, so the middle is where a divider
+   earns its keep: "half of ten" becomes two groups of five to read (§3). */
+.takuzu-cell-half-left {
+  box-shadow: -2px 0 0 0 var(--stone);
+}
+
+.takuzu-cell-half-top {
+  box-shadow: 0 -2px 0 0 var(--stone);
+}
+
+.takuzu-cell-half-left.takuzu-cell-half-top {
+  box-shadow:
+    -2px 0 0 0 var(--stone),
+    0 -2px 0 0 var(--stone);
+}
+
+/* Always-on violation display (§9): a rule this cell takes part in breaking. */
+.takuzu-cell-broken {
+  background: var(--warn-soft);
+  border-color: var(--warn);
+}
+
+.takuzu-cell-broken .takuzu-digit {
+  color: var(--warn);
+}
+
+/* Lightened over the warn ground, so the break still reads as warm — the two
+   grounds stay apart, but they yield to the thing that is wrong. */
+.takuzu-cell-broken.takuzu-cell-one::before {
+  opacity: 0.18;
+}
+
+/* Hint: the proved cell, the written digits that carry the proof, and the
+   line they were read off (§8). The digit is never written for the player. */
+.takuzu-cell-reason:not(.takuzu-cell-broken) {
+  background: var(--accent-ring-soft);
+}
+
+.takuzu-cell-support:not(.takuzu-cell-broken) {
+  background: var(--accent-soft);
+}
+
+.takuzu-cell-hint {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+/* A broken line outranks any deduction, so the hint points at the break (§8). */
+.takuzu-cell-hint-broken {
+  border-color: var(--warn);
+  box-shadow: 0 0 0 2px var(--warn);
+}
+
+/* Reduced Motion: digits appear at once, with nothing to wait for (§13). */
+@media (prefers-reduced-motion: reduce) {
+  .takuzu-cell {
+    transition: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .takuzu-cell {
+  transition: none;
+}
+
+/* ---------- top bar ---------- */
+
+.takuzu-size-tag {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- home ---------- */
+
+/* Two characters in a tile sized for one: the mark is the pair of digits the
+   whole game is played with, so it is set tighter rather than smaller. */
+.takuzu-logo {
+  font-size: 20px;
+  letter-spacing: -0.04em;
+}
+
+/* ---------- level select ---------- */
+
+/* A solved level wears a quiet check; the time it holds lives in its label. */
+.takuzu-level-done {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.level-cell-current .takuzu-level-done {
+  color: var(--accent-ink);
+  opacity: 0.85;
+}
+
+/* ---------- daily list ---------- */
+
+.takuzu-daily-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.takuzu-daily-badge-done {
+  color: var(--ink-soft);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* Real lines of a real board — the shape the whole game is read in. */
+.takuzu-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.takuzu-figure-line {
+  display: flex;
+  gap: 4px;
+}
+
+.takuzu-figure-cell {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--ink);
+}
+
+/* Above the ground, exactly as on the board. */
+.takuzu-figure-digit {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* The square the step is about. */
+.takuzu-figure-cell-mark {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}

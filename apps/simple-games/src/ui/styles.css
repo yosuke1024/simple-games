@@ -252,6 +252,32 @@
   --accent-soft: #e9dcef;
   --accent-ring: rgba(119, 43, 151, 0.38);
   --accent-ring-soft: rgba(119, 43, 151, 0.12);
+
+:root[data-game='takuzu'],
+.accent-takuzu {
+  --accent: #88355e;
+  --accent-ink: #ffffff;
+  --accent-soft: #f1dce6;
+  --accent-ring: rgba(136, 53, 94, 0.38);
+  --accent-ring-soft: rgba(136, 53, 94, 0.12);
+}
+
+:root[data-game='futoshiki'],
+.accent-futoshiki {
+  --accent: #29603a;
+  --accent-ink: #ffffff;
+  --accent-soft: #ddf0e3;
+  --accent-ring: rgba(41, 96, 58, 0.38);
+  --accent-ring-soft: rgba(41, 96, 58, 0.12);
+}
+
+:root[data-game='kakuro'],
+.accent-kakuro {
+  --accent: #794e2f;
+  --accent-ink: #ffffff;
+  --accent-soft: #f1e5dc;
+  --accent-ring: rgba(121, 78, 47, 0.38);
+  --accent-ring-soft: rgba(121, 78, 47, 0.12);
 }
 
 :root[data-theme='dark'] {
@@ -481,6 +507,32 @@
   --accent-soft: #36233e;
   --accent-ring: rgba(179, 93, 213, 0.42);
   --accent-ring-soft: rgba(179, 93, 213, 0.14);
+
+:root[data-theme='dark'][data-game='takuzu'],
+[data-theme='dark'] .accent-takuzu {
+  --accent: #cb7ea4;
+  --accent-ink: #1c0c14;
+  --accent-soft: #3d202e;
+  --accent-ring: rgba(203, 126, 164, 0.42);
+  --accent-ring-soft: rgba(203, 126, 164, 0.14);
+}
+
+:root[data-theme='dark'][data-game='futoshiki'],
+[data-theme='dark'] .accent-futoshiki {
+  --accent: #74c88d;
+  --accent-ink: #0c1c11;
+  --accent-soft: #203d29;
+  --accent-ring: rgba(116, 200, 141, 0.42);
+  --accent-ring-soft: rgba(116, 200, 141, 0.14);
+}
+
+:root[data-theme='dark'][data-game='kakuro'],
+[data-theme='dark'] .accent-kakuro {
+  --accent: #cb9e7e;
+  --accent-ink: #1c130c;
+  --accent-soft: #3d2c20;
+  --accent-ring: rgba(203, 158, 126, 0.42);
+  --accent-ring-soft: rgba(203, 158, 126, 0.14);
 }
 
 * {

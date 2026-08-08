@@ -19,6 +19,17 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   minesweeper: ['ms.saveGame', 'ms.saveDaily', 'ms.stats', 'ms.flags', 'ms.prefs'],
   'brick-breaker': ['bb.stats', 'bb.progress', 'bb.flags'],
   nonogram: ['ng.saveGame', 'ng.saveDaily', 'ng.stats', 'ng.progress', 'ng.flags', 'ng.prefs'],
+  // Five, not six: Takuzu has no per-game setting to keep
+  // (docs/TAKUZU_RULES.md §4, §9).
+  takuzu: ['tk.saveGame', 'tk.saveDaily', 'tk.stats', 'tk.progress', 'tk.flags'],
+  // Six, where Takuzu has five: this game keeps one setting across boards —
+  // whether a digit that disagrees with the answer is marked as it lands
+  // (docs/FUTOSHIKI_RULES.md §5, §11).
+  futoshiki: ['ft.saveGame', 'ft.saveDaily', 'ft.stats', 'ft.progress', 'ft.flags', 'ft.prefs'],
+  // Six as well, and for the same one reason: the mistake-highlight toggle is
+  // the only thing this game remembers across boards (docs/KAKURO_RULES.md
+  // §5, §11).
+  kakuro: ['kk.saveGame', 'kk.saveDaily', 'kk.stats', 'kk.progress', 'kk.flags', 'kk.prefs'],
   'number-match': ['nm.saveGame', 'nm.stats', 'nm.flags', 'nm.progress', 'nm.saveDaily'],
   'quick-math': ['qm.saveGame', 'qm.saveDaily', 'qm.stats', 'qm.progress', 'qm.flags'],
   // Two keys short of the others on purpose: neither drill saves a round in
@@ -48,6 +59,9 @@ const PREFIXES: Record<string, string> = {
   minesweeper: 'ms.',
   'brick-breaker': 'bb.',
   nonogram: 'ng.',
+  takuzu: 'tk.',
+  futoshiki: 'ft.',
+  kakuro: 'kk.',
   'number-match': 'nm.',
   'quick-math': 'qm.',
   'schulte-table': 'st.',

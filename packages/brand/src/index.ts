@@ -523,6 +523,82 @@ export const titleAccents = {
     onDark: '#170e1b',
     softDark: '#36233e',
   },
+  /**
+   * Takuzu — wine. The board is a field of noughts and ones drawn in ink on two
+   * quiet ground tints of its own, so the accent stays in the chrome and on the
+   * selected cell: a small area, which is why it can be a mid-tone rather than
+   * the near-black a large one would need.
+   *
+   * At twenty-two titles no hue is free — a sweep in 1° steps found an existing
+   * accent within 30° of every band — so this is separated by depth and
+   * saturation inside the magenta quarter, sitting below Gomoku's peony and
+   * beside Block Puzzle's orchid without being either: ΔE 14.6 from Block
+   * Puzzle in light and 9.8 from Gomoku in dark, against floors of 10.9 and
+   * 7.9. It is also the tile that shares the logic shelf with Nonogram's plum,
+   * where the grid puts them one row apart; that pair measures 29.4 light and
+   * 25.5 dark, so the two read as different colours where it matters most.
+   *
+   * Re-measured when Hearts and Gin Rummy merged: 55.6 / 44.0 from Hearts and
+   * 39.4 / 44.9 from Gin Rummy, so the magenta quarter still holds it.
+   */
+  takuzu: {
+    light: '#88355e',
+    onLight: '#ffffff',
+    softLight: '#f1dce6',
+    dark: '#cb7ea4',
+    onDark: '#1c0c14',
+    softDark: '#3d202e',
+  },
+  /**
+   * Futoshiki — pine. The board is digits and inequality signs in ink, with the
+   * accent on the selected cell, its row and column, and the digit pad, so like
+   * Sudoku's teal this is a colour a whole grid of entries has to stay restful
+   * under — which is why it is deep and only moderately saturated rather than
+   * the brighter green the gap could have taken.
+   *
+   * The green quarter is the collection's most crowded (Solitaire, Spider,
+   * Number Recall, 2048, Bunny Hop), and at twenty-three titles no hue is free
+   * at all — a 1 degree sweep finds a neighbour within 30 degrees everywhere.
+   * This separates on depth: ΔE 12.6 from Number Recall in light and 9.4 in
+   * dark, against floors of 10.9 and 7.9. Chosen at the same time as Takuzu's
+   * wine and Kakuro's tobacco, since the three share the logic shelf and
+   * deciding adjacent tiles one at a time spends the next one's options.
+   *
+   * Re-measured when Hearts and Gin Rummy merged: nothing either of them took
+   * comes near the green quarter (85.1 light is the closest of the four).
+   */
+  futoshiki: {
+    light: '#29603a',
+    onLight: '#ffffff',
+    softLight: '#ddf0e3',
+    dark: '#74c88d',
+    onDark: '#0c1c11',
+    softDark: '#203d29',
+  },
+  /**
+   * Kakuro — tobacco. A newspaper pencil puzzle, and the colour says so: the
+   * board is sums in ink on paper, with the accent on the selected white cell
+   * and the two runs it belongs to, so a warm brown reads as the pencil rather
+   * than as a second kind of clue.
+   *
+   * The warm quarter is where Checkers found there was no hue left at twenty
+   * titles, and there is still none at twenty-four; this separates on depth
+   * and saturation between Sliding Puzzle's clay and Checkers' walnut — ΔE
+   * 12.6 from the clay in light and 9.2 in dark, against floors of 10.9 and
+   * 7.9. Chosen together with Takuzu's wine and Futoshiki's pine, since the
+   * three share the logic shelf.
+   *
+   * Re-measured when Hearts and Gin Rummy merged: both are cool hues, so the
+   * warm quarter is untouched (49.9 dark is the closest of the four).
+   */
+  kakuro: {
+    light: '#794e2f',
+    onLight: '#ffffff',
+    softLight: '#f1e5dc',
+    dark: '#cb9e7e',
+    onDark: '#1c130c',
+    softDark: '#3d2c20',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

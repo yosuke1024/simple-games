@@ -1,0 +1,28 @@
+import type { TakuzuMessages } from './en';
+
+export const th: TakuzuMessages = {
+  takuzuName: 'Takuzu',
+  takuzuBoardLabel: 'กระดาน Takuzu {size}×{size}',
+  takuzuCellEmpty: 'ว่าง แถว {row} คอลัมน์ {col}',
+  takuzuCellZero: '0 แถว {row} คอลัมน์ {col}',
+  takuzuCellOne: '1 แถว {row} คอลัมน์ {col}',
+  takuzuCellFixed: 'เลขตั้งต้น {digit} แถว {row} คอลัมน์ {col}',
+  takuzuRuleBroken: 'ผิดกติกา',
+  takuzuSizeLabel: '{n}×{n}',
+  takuzuHintFound: 'แถวหรือคอลัมน์ที่เน้นกำหนดช่องที่ทำเครื่องหมายไว้',
+  takuzuHintBroken: 'แถวหรือคอลัมน์ที่เน้นผิดกติกาแล้ว',
+  takuzuHintNone: 'ตอนนี้ยังไม่พบตาเดินที่แน่นอน',
+  takuzuSolvedTitle: 'สำเร็จ!',
+  takuzuSolvedBody: 'ทุกแถวและทุกคอลัมน์ถูกต้องแล้ว',
+  takuzuHintsUsed: 'คำใบ้ที่ใช้',
+  takuzuNewBestTime: 'เร็วที่สุดของคุณ',
+  takuzuLevelsSolved: 'ด่านที่ผ่านแล้ว',
+  takuzuDailiesSolved: 'เดลี่ที่ผ่านแล้ว',
+  takuzuDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ',
+  takuzuStep1Title: 'ห้ามซ้ำสามช่องติด',
+  takuzuStep1Body: 'แตะช่องเพื่อสลับ 0, 1, ว่าง เลขเดียวกันห้ามติดกันสามช่อง',
+  takuzuStep2Title: 'ครึ่งต่อครึ่ง',
+  takuzuStep2Body: 'ทุกแถวและทุกคอลัมน์มี 0 กับ 1 เท่ากัน',
+  takuzuStep3Title: 'ห้ามมีแถวซ้ำ',
+  takuzuStep3Body: 'ห้ามมีสองแถวเหมือนกัน และสองคอลัมน์ก็เช่นกัน',
+};

@@ -1,0 +1,28 @@
+import type { TakuzuMessages } from './en';
+
+export const tr: TakuzuMessages = {
+  takuzuName: 'Takuzu',
+  takuzuBoardLabel: 'Takuzu tahtası, {size}×{size}',
+  takuzuCellEmpty: 'Boş, satır {row}, sütun {col}',
+  takuzuCellZero: '0, satır {row}, sütun {col}',
+  takuzuCellOne: '1, satır {row}, sütun {col}',
+  takuzuCellFixed: 'Verili {digit}, satır {row}, sütun {col}',
+  takuzuRuleBroken: 'bir kuralı bozuyor',
+  takuzuSizeLabel: '{n}×{n}',
+  takuzuHintFound: 'Vurgulanan çizgi işaretli kareyi belirliyor.',
+  takuzuHintBroken: 'Vurgulanan çizgi bir kuralı bozuyor.',
+  takuzuHintNone: 'Şu an kesin bir hamle bulunamadı.',
+  takuzuSolvedTitle: 'Çözüldü!',
+  takuzuSolvedBody: 'Tüm satır ve sütunlar tutuyor.',
+  takuzuHintsUsed: 'Kullanılan ipuçları',
+  takuzuNewBestTime: 'En hızlı süren.',
+  takuzuLevelsSolved: 'Çözülen seviyeler',
+  takuzuDailiesSolved: 'Çözülen günlükler',
+  takuzuDailyBacklogHint: 'Önceki günler açık kalır.',
+  takuzuStep1Title: 'Asla üç yan yana',
+  takuzuStep1Body: 'Kareye dokununca 0, 1, boş arasında geçer. Aynı rakam üç kez yan yana gelemez.',
+  takuzuStep2Title: 'Yarı yarıya',
+  takuzuStep2Body: 'Her satır ve her sütunda 0 ile 1 eşit sayıda bulunur.',
+  takuzuStep3Title: 'Aynı dizi iki kez olmaz',
+  takuzuStep3Body: 'İki satır aynı olamaz, iki sütun da aynı olamaz.',
+};

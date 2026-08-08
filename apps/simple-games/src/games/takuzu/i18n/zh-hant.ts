@@ -1,0 +1,28 @@
+import type { TakuzuMessages } from './en';
+
+export const zhHant: TakuzuMessages = {
+  takuzuName: 'Takuzu',
+  takuzuBoardLabel: 'Takuzu 盤面，{size}×{size}',
+  takuzuCellEmpty: '空白，第 {row} 列第 {col} 欄',
+  takuzuCellZero: '0，第 {row} 列第 {col} 欄',
+  takuzuCellOne: '1，第 {row} 列第 {col} 欄',
+  takuzuCellFixed: '題目數字 {digit}，第 {row} 列第 {col} 欄',
+  takuzuRuleBroken: '違反規則',
+  takuzuSizeLabel: '{n}×{n}',
+  takuzuHintFound: '標示的整列或整欄可確定標記的方格。',
+  takuzuHintBroken: '標示的整列或整欄違反了規則。',
+  takuzuHintNone: '目前還推不出下一步。',
+  takuzuSolvedTitle: '完成！',
+  takuzuSolvedBody: '每一列與每一欄都符合規則。',
+  takuzuHintsUsed: '使用的提示',
+  takuzuNewBestTime: '個人最快紀錄。',
+  takuzuLevelsSolved: '已完成的關卡',
+  takuzuDailiesSolved: '已完成的每日挑戰',
+  takuzuDailyBacklogHint: '之前的日期隨時可以挑戰。',
+  takuzuStep1Title: '不得連續三格',
+  takuzuStep1Body: '輕點方格即可在 0、1、空白之間切換。同一個數字不得連續三格。',
+  takuzuStep2Title: '0 與 1 各半',
+  takuzuStep2Body: '每一列、每一欄的 0 與 1 個數相同。',
+  takuzuStep3Title: '沒有重複的列或欄',
+  takuzuStep3Body: '任兩列不得完全相同，任兩欄也不得相同。',
+};

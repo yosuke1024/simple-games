@@ -33,6 +33,9 @@ import { GM_STORAGE_KEYS } from '../games/gomoku/storage/keys';
 import { FC_STORAGE_KEYS } from '../games/freecell/storage/keys';
 import { HT_STORAGE_KEYS } from '../games/hearts/storage/keys';
 import { GR_STORAGE_KEYS } from '../games/gin-rummy/storage/keys';
+
+import { FT_STORAGE_KEYS } from '../games/futoshiki/storage/keys';
+import { KK_STORAGE_KEYS } from '../games/kakuro/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
 import { NG_STORAGE_KEYS } from '../games/nonogram/storage/keys';
@@ -46,6 +49,7 @@ import { SF_STORAGE_KEYS } from '../games/sky-fighter/storage/keys';
 import { SO_STORAGE_KEYS } from '../games/solitaire/storage/keys';
 import { SS_STORAGE_KEYS } from '../games/spider-solitaire/storage/keys';
 import { SP_STORAGE_KEYS } from '../games/sliding-puzzle/storage/keys';
+import { TK_STORAGE_KEYS } from '../games/takuzu/storage/keys';
 import { TM_STORAGE_KEYS } from '../games/2048/storage/keys';
 import { WS_STORAGE_KEYS } from '../games/water-sort/storage/keys';
 
@@ -73,7 +77,10 @@ export type GameId =
   | 'checkers'
   | 'reversi'
   | 'connect-four'
-  | 'gomoku';
+  | 'gomoku'
+  | 'takuzu'
+  | 'futoshiki'
+  | 'kakuro';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -306,6 +313,84 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(NG_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/nonogram/ui/NonogramRoot').then((m) => ({ default: m.NonogramRoot })),
+  },
+  {
+    id: 'takuzu',
+    // Two characters, like Number Match's `10`: the mark names the puzzle's
+    // two digits, which is the whole of what a Takuzu cell can hold. The one
+    // thing worth checking was whether `01` reads as `10` at tile size, and it
+    // does not have to: the two live in different sections (logic and puzzle,
+    // with the cards between them), so the grid never sets them side by side,
+    // and each card carries its own accent and its title underneath. The
+    // alternative on the table, `◧`, would have landed in this same section
+    // beside Nonogram's `▦` — two squares telling each other apart by their
+    // fill, which is the closer call of the two.
+    title: 'Takuzu',
+    category: 'logic',
+    glyph: '01',
+    storageKeys: Object.values(TK_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/takuzu/ui/TakuzuRoot').then((m) => ({ default: m.TakuzuRoot })),
+  },
+  {
+    id: 'futoshiki',
+    // U+2276, the two signs the game is played with folded into one figure:
+    // the mark IS the rule, the way Takuzu's `01` is its two digits.
+    //
+    // Unique against the other twenty-six, and the near misses were looked
+    // at rather than assumed. Brick Breaker's `≡` and Water Sort's `≋` are the
+    // only other stacked-stroke marks, and both sit in other sections (arcade
+    // and puzzle) under their own accents. In this one it stands beside `⌗`,
+    // `◆`, `▦` and `01`, and it is the only mark here built from strokes
+    // rather than a filled shape.
+    //
+    // It renders, and that was checked rather than hoped at: the bundled
+    // Nunito subset (@fontsource/nunito latin-700/800) carries 230 glyphs and
+    // none of this collection's symbol marks — not `⌗`, `◆`, `▦`, `≡` or `≋`.
+    // Every one of them already resolves through the `ui-rounded, system-ui,
+    // sans-serif` tail of --font-display, so five shipped titles are the
+    // evidence that this path draws. `≶` sits in Mathematical Operators, the
+    // same block `≡` and `≋` come from, and takes exactly the same route.
+    title: 'Futoshiki',
+    category: 'logic',
+    glyph: '≶',
+    storageKeys: Object.values(FT_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/futoshiki/ui/FutoshikiRoot').then((m) => ({ default: m.FutoshikiRoot })),
+    loadSettingsSection: () =>
+      import('../games/futoshiki/ui/FutoshikiSettingsSection').then((m) => ({
+        default: m.FutoshikiSettingsSection,
+      })),
+  },
+  {
+    id: 'kakuro',
+    // U+2211, the summation sign: the mark IS the rule here, the way
+    // Futoshiki's `≶` is its two signs and Takuzu's `01` is its two digits.
+    // Every clue square on this board is a sum, and nothing else on it means
+    // anything.
+    //
+    // Unique against the other twenty-six, and the near misses were looked at
+    // rather than assumed. In this section it stands beside `⌗`, `◆`, `▦`, `01`
+    // and `≶`; the closest call is `≶`, since both are built from strokes
+    // rather than a filled shape, but a folded pair of angle brackets and a
+    // capital sigma share no silhouette, and the two cards carry different
+    // accents and their titles underneath.
+    //
+    // It renders by the same route the other symbol marks take: the bundled
+    // Nunito subset (@fontsource/nunito latin-700/800) carries none of them,
+    // and all of them resolve through the `ui-rounded, system-ui, sans-serif`
+    // tail of --font-display. `∑` sits in Mathematical Operators, the same
+    // block `≡`, `≋` and `≶` come from.
+    title: 'Kakuro',
+    category: 'logic',
+    glyph: '∑',
+    storageKeys: Object.values(KK_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/kakuro/ui/KakuroRoot').then((m) => ({ default: m.KakuroRoot })),
+    loadSettingsSection: () =>
+      import('../games/kakuro/ui/KakuroSettingsSection').then((m) => ({
+        default: m.KakuroSettingsSection,
+      })),
   },
   {
     id: 'number-match',
