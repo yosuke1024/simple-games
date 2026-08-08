@@ -1,0 +1,446 @@
+/* Kakuro — the board, its split clue squares, the digit pad, and the Quick
+   Rules figures. Everything here is drawn by this game alone.
+
+   Imported by KakuroRoot, so none of it is parsed until the game is opened.
+   Shared chrome (screens, buttons, dialogs, the action bar) lives in
+   src/ui/styles.css.
+
+   Colours come from the shared custom properties, so this file never repeats a
+   palette value — the accent it draws with is whichever one the shell has
+   stamped on the root element. Class names are prefixed `kakuro-` so this file
+   can never collide with the shell or with another game. */
+
+/* ---------- board ---------- */
+
+/* The board takes what is left and scrolls when a 10×10 will not fit; the pad
+   below it keeps its natural height. The 24px the cell arithmetic subtracts is
+   spent here once, by this element — the board adds none of its own, so the
+   two cannot drift apart into 48px. */
+.kakuro-board-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px 12px;
+}
+
+/*
+  THE 320px MEASUREMENT (docs/KAKURO_RULES.md §13)
+
+  §13 says outright that this is the most character-dense board in the
+  collection and that nobody had measured it: one square holds a diagonal
+  split with a two-digit number on each side of it, and the largest clue this
+  game can print is 45. So the number that had to clear is not "is the square
+  big enough to hit" — Takuzu and Futoshiki already answered that shape — it
+  is "do two two-digit numbers still read inside one square".
+
+  The grid lines are the board's own ground showing through a 1px gap, so a
+  square loses nothing to a border of its own:
+
+    cell = (viewport − 24px scroll padding − 2 × 1px board padding
+            − (n − 1) × 1px grid line) / n
+
+    320px → (320 − 24 − 2 − 9) / 10 = 285 / 10 = 28.5px
+    360px → (360 − 24 − 2 − 9) / 10 = 325 / 10 = 32.5px
+    420px → (420 − 24 − 2 − 9) / 10 = 385 / 10 = 38.5px
+
+    320px, 8×8  → (320 − 24 − 2 − 7) / 8 = 287 / 8  = 35.9px
+    320px, 6×6  → (320 − 24 − 2 − 5) / 6 = 289 / 6  = 48.2px → capped at 44px
+
+  THE SQUARE. 28.5px on the narrowest supported screen, for the largest board.
+  That is the same order as the two logic titles already shipped — Takuzu's
+  10×10 computes to 26.8px and Futoshiki's 7×7 to 28.9px, and both clamp at
+  24px rather than shrink further. It is NOT a 44px finger-sized target, and no
+  full board in this collection is one at 320px; what it clears is the floor
+  this collection actually draws, by 4.5px.
+
+  THE CLUE, which is the measurement §13 was really asking for. The number is
+  0.40 of the square, so at the narrowest it sets at 11.4px:
+
+    two tabular digits ≈ 2 × 0.6em = 1.2 × 11.4px = 13.7px wide
+    inset 8% (2.3px) from the right edge → the pair spans x = 12.5 … 26.2
+    at the pair's own middle (y = 1.7 + 5.7 = 7.4px) the diagonal is at x = 7.4
+
+  so the pair clears the diagonal by 5.1px, and its baseline box ends at
+  13.1px — above the square's midline of 14.25px. Two two-digit sums fit,
+  with room, at 320px. 11.4px is small: it is a shade over the 10px ceiling
+  Sudoku sets for a pencil mark, and about what a newspaper prints a Kakuro
+  clue at. It is legible arithmetic, not a proven-legible screenshot — §13
+  also asks for static mocks at 320 / 360 / 420 in both themes, and that gate
+  is still owed.
+
+  Below 26px the board scrolls instead of shrinking, because a clue too small
+  to read is worse than a board that moves — and 26px is where the pair would
+  drop under 10.4px, which is pencil-mark size for text that IS the puzzle. No
+  supported width reaches it: 28.5px is the tightest case.
+*/
+.kakuro-board {
+  --kakuro-line: 1px;
+  --kakuro-cell: clamp(
+    26px,
+    calc(
+      (100vw - 24px - 2 * var(--kakuro-line) - (var(--kakuro-size) - 1) * var(--kakuro-line)) /
+        var(--kakuro-size)
+    ),
+    44px
+  );
+  display: grid;
+  grid-template-columns: repeat(var(--kakuro-size), var(--kakuro-cell));
+  grid-auto-rows: var(--kakuro-cell);
+  gap: var(--kakuro-line);
+  padding: var(--kakuro-line);
+  border-radius: 8px;
+  /* The grid lines ARE this background, seen through the gaps. One rule draws
+     every line at exactly one pixel, inside and out. */
+  background: var(--line);
+  /* A tap is a digit, not a text selection or a double-tap zoom (§4). */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---------- white squares ---------- */
+
+.kakuro-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 0;
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: clamp(13px, calc(var(--kakuro-cell) * 0.55), 24px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition:
+    background-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+/*
+  Selection and the two runs it belongs to (§4). Kakuro's clues sit OUTSIDE the
+  square being filled and arrive from two directions at once, so "which two
+  sums am I working against" is board-reading rather than puzzle-solving — the
+  highlight hands it over instead of making the player trace it.
+*/
+.kakuro-cell-run {
+  background: var(--accent-ring-soft);
+}
+
+.kakuro-cell-selected {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* Always-on violation display (§5): a rule this square takes part in breaking.
+   Warn colour AND an inset border, never colour alone (§13). */
+.kakuro-cell-broken {
+  background: var(--warn-soft);
+  box-shadow: inset 0 0 0 2px var(--warn);
+  color: var(--warn);
+}
+
+/* The optional half of §5: a digit that disagrees with the one answer. Off
+   when the player has turned it off; the violation above stays either way. */
+.kakuro-cell-mistake {
+  color: var(--warn);
+  box-shadow: inset 0 0 0 1px var(--warn);
+}
+
+/* Hint (§6): the square the reasoning settles, the digits that carry the
+   proof, and the runs they were read off. The digit is never written for the
+   player. */
+.kakuro-cell-support:not(.kakuro-cell-broken) {
+  background: var(--accent-soft);
+}
+
+.kakuro-cell-reason:not(.kakuro-cell-broken):not(.kakuro-cell-support) {
+  background: var(--accent-ring-soft);
+}
+
+.kakuro-cell-hint {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* A break outranks any deduction, so the hint points at the break (§6). */
+.kakuro-cell-hint-broken {
+  box-shadow: inset 0 0 0 2px var(--warn);
+}
+
+/* ---------- clue squares ---------- */
+
+/*
+  THE CLUE IS TEXT (§13). The diagonal is a background line and the two sums
+  are real elements holding real digits — drawn as pseudo-content and hidden
+  from assistive technology, this board would be an empty grid, because a
+  Kakuro hands out no digits at all and the clues are the whole of the puzzle
+  (§1).
+
+  It is display only. No border, no shadow, no `:active` — a clue square is not
+  somewhere a digit goes (§4), so nothing here may look pressable and then not
+  be. It is not a <button> in the DOM either, so "not tappable" is a fact about
+  the markup rather than a rule some handler has to remember.
+
+  The diagonal runs corner to corner because `to top right` puts the gradient
+  axis on the anti-diagonal, which makes its bands — the line — run top-left to
+  bottom-right. The squares are square, so the corners land at exactly 50%.
+*/
+.kakuro-clue {
+  position: relative;
+  background: var(--surface-recessed);
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-size: clamp(9px, calc(var(--kakuro-cell) * 0.4), 15px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.kakuro-clue-split {
+  background-image: linear-gradient(
+    to top right,
+    transparent calc(50% - 0.5px),
+    var(--stone-line) calc(50% - 0.5px),
+    var(--stone-line) calc(50% + 0.5px),
+    transparent calc(50% + 0.5px)
+  );
+}
+
+.kakuro-clue-right,
+.kakuro-clue-down {
+  position: absolute;
+  display: block;
+}
+
+.kakuro-clue-right {
+  top: 6%;
+  right: 8%;
+}
+
+.kakuro-clue-down {
+  bottom: 6%;
+  left: 8%;
+}
+
+/* Both runs of the selected square light up with it, clue squares included
+   (§4) — the break in the middle is what says where a run stops. */
+.kakuro-clue-active {
+  background: var(--accent-ring-soft);
+  color: var(--accent);
+}
+
+/* A run this square carries is broken (§5). The clue changes colour with the
+   digits, because what is torn is the run, not one square (§13). */
+.kakuro-clue-broken {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+/* A run the hint is reasoning from (§6). */
+.kakuro-clue-hint {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ---------- notes ---------- */
+
+/* A shadow of the pad inside the square, so a digit is always in the same
+   place and can be found without reading (§4). Player digits and notes are
+   told apart by SIZE, not colour — there are no givens here for weight to
+   separate them from (§1, §13). */
+.kakuro-notes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 100%;
+  height: 100%;
+  padding: 1px;
+  font-size: clamp(7px, calc(var(--kakuro-cell) * 0.25), 10px);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ink-soft);
+}
+
+.kakuro-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- digit pad ---------- */
+
+/* Board above, pad below, and the 12px on each side that the cell arithmetic
+   is measured against. */
+.kakuro-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 12px 10px;
+}
+
+/* Nine keys at every size, because the digits are 1–9 at every size (§3).
+   NO REMAINING COUNT (§4, §14): Sudoku and Futoshiki can print one because
+   their answers hold each digit a fixed number of times, so "N minus what is
+   on the board" is a fact about the solution. Kakuro has no such constant to
+   subtract from — how often a digit appears is decided by the layout, and the
+   same row may legally hold it twice — so a counter here would be a number
+   the player would rightly read as an invariant and it would not be one. */
+.kakuro-pad {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 4px;
+  width: min(100%, 400px);
+  margin: 0 auto;
+}
+
+.kakuro-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: clamp(15px, 4.5vw, 23px);
+  font-weight: 700;
+}
+
+.kakuro-key:active {
+  background: var(--accent-soft);
+}
+
+/* Notes mode says itself in the accent, without a caption. */
+.kakuro-key-notes {
+  color: var(--accent);
+}
+
+/* ---------- top bar ---------- */
+
+.kakuro-status {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.kakuro-mode {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.kakuro-size-tag {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- home ---------- */
+
+/* The mark is the sum itself. Set a shade smaller than the tile's default,
+   because the glyph carries more ink than the letters and marks around it. */
+.kakuro-logo {
+  font-size: 21px;
+}
+
+/* ---------- level select ---------- */
+
+.kakuro-level-done {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.level-cell-current .kakuro-level-done {
+  color: var(--accent-ink);
+  opacity: 0.85;
+}
+
+/* ---------- daily list ---------- */
+
+.kakuro-daily-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.kakuro-daily-badge-done {
+  color: var(--ink-soft);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* A real piece of a real board, clue square and all — the shape the whole game
+   is read in. Fixed at 38px a square because a figure is not the board and has
+   no viewport arithmetic to answer to. */
+.kakuro-figure {
+  display: grid;
+  gap: 1px;
+  padding: 1px;
+  background: var(--line);
+  border-radius: 6px;
+}
+
+.kakuro-figure-cell,
+.kakuro-figure-clue {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.kakuro-figure-cell {
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 19px;
+}
+
+.kakuro-figure-clue {
+  background: var(--surface-recessed);
+  color: var(--ink-soft);
+  font-size: 14px;
+  background-image: linear-gradient(
+    to top right,
+    transparent calc(50% - 0.5px),
+    var(--stone-line) calc(50% - 0.5px),
+    var(--stone-line) calc(50% + 0.5px),
+    transparent calc(50% + 0.5px)
+  );
+}
+
+/* The square the step is about. */
+.kakuro-figure-cell-mark {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  color: var(--accent);
+}
+
+/* The step that shows a rule being broken — the one figure that may. */
+.kakuro-figure-cell-broken {
+  box-shadow: inset 0 0 0 2px var(--warn);
+  color: var(--warn);
+}
+
+/* ---------- Reduced Motion ---------- */
+
+/* Digits appear at once, with nothing to wait for (§13). */
+@media (prefers-reduced-motion: reduce) {
+  .kakuro-cell {
+    transition: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .kakuro-cell {
+  transition: none;
+}

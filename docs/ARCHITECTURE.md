@@ -40,6 +40,7 @@ src/
 │   ├── nonogram/
 │   ├── takuzu/
 │   ├── futoshiki/
+│   ├── kakuro/
 │   ├── number-match/
 │   ├── quick-math/
 │   ├── schulte-table/
@@ -74,6 +75,7 @@ src/
 [NONOGRAM_RULES.md](NONOGRAM_RULES.md) /
 [TAKUZU_RULES.md](TAKUZU_RULES.md) /
 [FUTOSHIKI_RULES.md](FUTOSHIKI_RULES.md) /
+[KAKURO_RULES.md](KAKURO_RULES.md) /
 [NUMBER_MATCH_RULES.md](NUMBER_MATCH_RULES.md) /
 [QUICK_MATH_RULES.md](QUICK_MATH_RULES.md) /
 [SCHULTE_TABLE_RULES.md](SCHULTE_TABLE_RULES.md) /
@@ -186,7 +188,7 @@ src/
   並べていたらこの形は 14 言語で保てない。
 - **グリッドはカテゴリ別のセクションに分ける**(`registry.ts` の `GAME_CATEGORIES`、
   現在はロジック / カード / パズル / ボードゲーム / アーケード / ドリルの 6 つ)。
-  22 本を 1 枚のグリッドに敷くと結局全タイトルを読んで探すことになるため、
+  25 本を 1 枚のグリッドに敷くと結局全タイトルを読んで探すことになるため、
   見出しでセクションごと読み飛ばせるようにした。ゲームはレジストリで `category` を
   1 つ名乗り、セクション内の並びはレジストリの配列順。カテゴリ見出しは固有名詞では
   ないので、シェルカタログの `category*` キーで 14 言語に翻訳する(タイトルと違い
@@ -274,6 +276,7 @@ src/
   チュートリアル・バナースロットなどの共通クロム。
 - **全タイトルが規約に従っている**: `number-match.css` / `sudoku.css` /
   `minesweeper.css` / `nonogram.css` / `takuzu.css` / `futoshiki.css` /
+  `kakuro.css` /
   `sliding-puzzle.css` /
   `memory-match.css` /
   `water-sort.css` / `solitaire.css` / `spider-solitaire.css` / `freecell.css` /
@@ -321,6 +324,7 @@ src/
 | `ng.*`        | Nonogram(saveGame / saveDaily / stats / progress / flags / prefs)       |
 | `tk.*`        | Takuzu(saveGame / saveDaily / stats / progress / flags。**prefs なし**) |
 | `ft.*`        | Futoshiki(saveGame / saveDaily / stats / progress / flags / prefs)      |
+| `kk.*`        | Kakuro(saveGame / saveDaily / stats / progress / flags / prefs)         |
 | `nm.*`        | Number Match(saveGame / saveDaily / stats / progress / flags)           |
 | `ws.*`        | Water Sort(saveGame / saveDaily / stats / progress / flags)             |
 | `sp.*`        | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags)         |
@@ -396,7 +400,7 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
   乗り、1 本のゲームだけが使うキーはそのゲームの `src/games/<id>/i18n/*.ts` に
   移してゲームのチャンクへ同梱する。ゲームを開かないプレイヤーは、その文言を
   一度もパースしない。
-- 現在 14 言語。シェル 79 キー(エントリに乗る) + ゲーム別 17 カタログ(合計 460
+- 現在 14 言語。シェル 85 キー(エントリに乗る) + ゲーム別 25 カタログ(合計 698
   キー、13〜42 キー/ゲーム、開いたときだけパースされる)。ロケールタグは小文字で
   持つ。en と ja 以外は来歴 `machine`(AI の助けを借りて書き、その言語のネイティブ
   は読んでいない)。高リスクキーはリリース前の門で逆翻訳を作者が読む
@@ -490,7 +494,7 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 これ以上の共通化(`packages/` への抽出)は実際に重複が確認されてから行う。
 ゲーム固有の概念(盤面・ルール・Hint 等)は共通パッケージへ入れない。
 
-現時点で唯一の実測された重複は `games/*/game/rng.ts` で、**20 ゲームすべてが同じ
+現時点で唯一の実測された重複は `games/*/game/rng.ts` で、**25 ゲームすべてが同じ
 seed 付き乱数を持っている**(`games/A/` から `games/B/` を import できない以上、
 このコピーは規約どおりでもある)。抽出を検討する条件(重複が確認された)は
 満たしているが、`game/` の Pure TS 純度を保ったまま `packages/` へ出せるかが論点で、
@@ -509,7 +513,7 @@ seed 付き乱数を持っている**(`games/A/` から `games/B/` を import �
   署名済み AAB(Play 用)と署名済み APK(実機確認用)をアーティファクトとして出す。
   `versionName` / `versionCode` はタグが決める。ストアへのアップロードは手動。
   タグに製品名を付けないのは、リリース対象がこのアプリ 1 つだけだから
-  (20 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
+  (25 ゲームは 1 アプリ。`packages/` はリリース対象ではない)。
 - Secrets は `ADMOB_ANDROID_APP_ID` / `ADMOB_ANDROID_BANNER_ID` のみ
   (インタースティシャル系は無い。プラットフォーム名を含むのは AdMob ID が
   OS ごとに別なため — iOS 版では `ADMOB_IOS_*` が並ぶ)。

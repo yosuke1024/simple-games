@@ -27,7 +27,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけで、現在 22 本のゲームを収録しています。
+アプリは 1 つだけで、現在 25 本のゲームを収録しています。
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Games`(ランチャー表示名: `Simple Games`)
@@ -51,6 +51,9 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 | Gomoku(五目並べ)          | `gomoku/`           | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                                    | [docs/GOMOKU_RULES.md](docs/GOMOKU_RULES.md)                     |
 | Brick Breaker             | `brick-breaker/`    | 100 レベル(デイリーなし)                 | 同じ盤面への即時リトライ(Undo / Hint なし)         | [docs/BRICK_BREAKER_RULES.md](docs/BRICK_BREAKER_RULES.md)       |
 | Nonogram                  | `nonogram/`         | 100 レベル + デイリー                    | Hint(Undo なし)                                    | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md)                 |
+| Takuzu(バイナリーパズル)  | `takuzu/`           | 100 レベル + デイリー                    | Hint(Undo なし)                                    | [docs/TAKUZU_RULES.md](docs/TAKUZU_RULES.md)                     |
+| Futoshiki(不等式)         | `futoshiki/`        | 100 レベル + デイリー                    | Undo / Hint                                        | [docs/FUTOSHIKI_RULES.md](docs/FUTOSHIKI_RULES.md)               |
+| Kakuro(クロスサム)        | `kakuro/`           | 100 レベル + デイリー                    | Undo / Hint                                        | [docs/KAKURO_RULES.md](docs/KAKURO_RULES.md)                     |
 | Number Match              | `number-match/`     | 100 レベル + デイリー                    | Undo / Hint                                        | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md)         |
 | Quick Math(計算ドリル)    | `quick-math/`       | 100 レベル + デイリー                    | 無制限の解き直し + 途中保存(Undo / Hint なし)      | [docs/QUICK_MATH_RULES.md](docs/QUICK_MATH_RULES.md)             |
 | Schulte Table(順番タッチ) | `schulte-table/`    | 100 レベル + デイリー                    | 同じ面への即時リトライ(Undo / Hint なし)           | [docs/SCHULTE_TABLE_RULES.md](docs/SCHULTE_TABLE_RULES.md)       |
@@ -64,6 +67,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 助けの内容がゲームごとに違うのは意図したものです。**どのゲームにも無料・無制限の助けを
 用意し、その形はそのゲームの中身を空にしないものを選びます**(Minesweeper は推測なしで
 解ける保証があるため Undo を作らず、Nonogram は印がタップで自由に付け外しできるため
+Undo を作らず、Takuzu も空 → 0 → 1 → 空 とタップで一巡できてどの手もそのまま戻せるため
 Undo を作らず、Sliding Puzzle は盤面に隠れた情報がないため Hint を作らず、Memory Match は
 記憶そのものが中身のため Undo も Hint も作らず、代わりに同じ盤面への再挑戦を無料にして
 います。2048 と Block Puzzle は盤面に隠れた情報がないため Hint を作らず、そのぶん Undo を
@@ -75,7 +79,11 @@ Reversi と Connect Four も盤面がすべて見えているため Hint を作�
 持ちます。Gomoku も同じ理由で Undo だけです。Checkers は Undo に加えて「動かせる駒と
 その行き先」を示します — 捕獲義務(取れるときは取る手しか打てない)が初心者の最初の壁で
 あり、跳べる駒だけが選べる形にすると規則が説明ではなく操作として伝わるためで、これは
-ルールの可視化であって最善手の提案ではありません。ドリル 3 本は、Schulte Table と Quick Math が「探すこと・計算すること」
+ルールの可視化であって最善手の提案ではありません。Futoshiki と Kakuro は Sudoku と
+同じ側で、Undo と Hint の両方を持ちます — メモを置いたマスに数字を入れると同じ行・列や
+ひと続きのメモが自動で消えるため、1 手が非自明に不可逆になり、戻す先のある Undo が
+実在するからです。出題が常に一意解であることは、論理だけで正当化できる次の一手が必ず
+あるということでもあるので、Hint にも誠実に言えることが残ります。ドリル 3 本は、Schulte Table と Quick Math が「探すこと・計算すること」
 そのものを中身とするため次の一手を教えず、Number Recall はタップが記憶の主張そのもので
 あるため Undo を作りません)。
 理由は各ルール文書と
@@ -88,8 +96,9 @@ Reversi と Connect Four も盤面がすべて見えているため Hint を作�
 同じ理由で、このジャンルの定番である**制限時間・タイムアタックも作りません** —
 時間は記録するだけで、締切にはしません([docs/SCHULTE_TABLE_RULES.md](docs/SCHULTE_TABLE_RULES.md) §14)。
 
-後続候補: Kakuro / Futoshiki / Takuzu(**いずれも未着手**)。
-いずれもローカル生成で完結し、コンテンツサーバーを必要としないものを優先します。
+後続候補は**現在ありません** — Kakuro / Futoshiki / Takuzu は 3 本とも収録済みで、
+待ち行列は空です。次を選ぶときは、ローカル生成で完結しコンテンツサーバーを必要と
+しないものを優先します。
 未収録のゲームをストアやアプリ内で "Coming Soon" として見せることはしません。
 
 収録ゲームはワークスペースパッケージではなくフォルダで分割します。共通のゲームフレームワークは意図的に作りません。
@@ -117,16 +126,15 @@ simple-games/
 │           │   ├── block-puzzle/
 │           │   ├── brick-breaker/
 │           │   ├── nonogram/
+│           │   ├── takuzu/
+│           │   ├── futoshiki/
+│           │   ├── kakuro/
 │           │   ├── number-match/
 │           │   ├── water-sort/
 │           │   ├── sliding-puzzle/
 │           │   ├── memory-match/
 │           │   ├── sky-fighter/
 │           │   ├── bunny-hop/
-│           │   ├── checkers/
-│           │   ├── reversi/
-│           │   ├── connect-four/
-│           │   ├── gomoku/
 │           │   ├── quick-math/
 │           │   ├── schulte-table/
 │           │   └── number-recall/
@@ -170,7 +178,7 @@ Android ビルド手順は [apps/simple-games/README.md](apps/simple-games/READM
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 14 言語・227 キー
+**One app. Many games. Many languages.** 現在は 14 言語・783 キー
 (en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
 中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。

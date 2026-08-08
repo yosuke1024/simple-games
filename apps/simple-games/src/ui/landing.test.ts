@@ -58,6 +58,7 @@ describe('gameLandingUrl', () => {
       'number-recall',
       'takuzu',
       'futoshiki',
+      'kakuro',
     ]) {
       expect(gameLandingUrl(id, 'en')).toBeNull();
       expect(gameLandingUrl(id, 'ja')).toBeNull();

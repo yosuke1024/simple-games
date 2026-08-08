@@ -190,6 +190,13 @@ describe('stopping the win in front of it', () => {
       expect(cell).toBe(cellAt(7, 8));
     });
 
+    // Eight searches, one set of them at `hard`, and the assertion is about the
+    // move rather than about how long it took — but vitest's 5s default made
+    // the wall clock the judge anyway: this passes alone in a fraction of that
+    // and times out under a loaded `pnpm test`, where the other forks compete
+    // for the same cores. A gate that fails occasionally is as bad as one that
+    // never passes (SUDOKU_RULES.md §7), so the limit sits where it can only
+    // catch a real hang.
     it(`${difficulty} blocks whatever the seed`, () => {
       // The tie-break is seeded, and a guarantee that held for one seed and
       // not another would not be a guarantee.
@@ -197,7 +204,7 @@ describe('stopping the win in front of it', () => {
         const cell = cpuMove({ board: mustBlock, player: BLACK, difficulty, seed, moveCount: 8 });
         expect(cell).toBe(cellAt(7, 8));
       }
-    });
+    }, 60_000);
   }
 
   /**

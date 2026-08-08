@@ -69,9 +69,9 @@ PRODUCT_PRINCIPLES.md「適用範囲」と WEB_VERSION.md)。
 
 ストア文面では収録済みのゲーム名を具体的に挙げる(現在は "Sudoku, Solitaire,
 Spider Solitaire, FreeCell, Minesweeper, 2048, Block Puzzle, Checkers, Reversi,
-Connect Four, Gomoku, Brick Breaker, Nonogram, Number Match, Quick Math,
-Schulte Table, Number Recall, Water Sort, Sliding Puzzle, Memory Match,
-Sky Fighter, Bunny Hop" の 22 本)。
+Connect Four, Gomoku, Brick Breaker, Nonogram, Takuzu, Futoshiki, Kakuro,
+Number Match, Quick Math, Schulte Table, Number Recall, Water Sort,
+Sliding Puzzle, Memory Match, Sky Fighter, Bunny Hop" の 25 本)。
 未収録のゲーム名は、**実際に収録された時点で**初めて足す。
 ゲーム名は検索流入の中核だが、不自然なキーワード詰め込みはしない。
 

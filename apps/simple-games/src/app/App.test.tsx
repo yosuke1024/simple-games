@@ -99,7 +99,7 @@ describe('shared settings', () => {
 
     // Sudoku contributes this section; the shell only lends it a place. The
     // section is addressed by the game's own name rather than by the toggle
-    // inside it, because two contributors now offer a setting under the same
+    // inside it, because three contributors now offer a setting under the same
     // words — which is the arrangement working, not a collision: each lives in
     // its own labelled region, and that region is what tells them apart.
     const sudoku = await screen.findByRole('region', { name: 'Sudoku' });
@@ -115,9 +115,9 @@ describe('shared settings', () => {
     await user.click(screen.getByRole('button', { name: 'Settings' }));
 
     // The shell knows none of these names — it walks GAMES and renders
-    // whatever each title hands it. A second contributor is what makes that
-    // claim testable at all: one could have been a special case.
-    for (const game of ['Sudoku', 'Futoshiki']) {
+    // whatever each title hands it. More than one contributor is what makes
+    // that claim testable at all: a single one could have been a special case.
+    for (const game of ['Sudoku', 'Futoshiki', 'Kakuro']) {
       const section = await screen.findByRole('region', { name: game });
       expect(within(section).getByRole('switch')).toBeInTheDocument();
     }

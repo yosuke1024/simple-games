@@ -32,6 +32,7 @@ import { CK_STORAGE_KEYS } from '../games/checkers/storage/keys';
 import { GM_STORAGE_KEYS } from '../games/gomoku/storage/keys';
 import { FC_STORAGE_KEYS } from '../games/freecell/storage/keys';
 import { FT_STORAGE_KEYS } from '../games/futoshiki/storage/keys';
+import { KK_STORAGE_KEYS } from '../games/kakuro/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
 import { NG_STORAGE_KEYS } from '../games/nonogram/storage/keys';
@@ -73,7 +74,8 @@ export type GameId =
   | 'connect-four'
   | 'gomoku'
   | 'takuzu'
-  | 'futoshiki';
+  | 'futoshiki'
+  | 'kakuro';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -327,6 +329,36 @@ export const GAMES: readonly GameDefinition[] = [
     loadSettingsSection: () =>
       import('../games/futoshiki/ui/FutoshikiSettingsSection').then((m) => ({
         default: m.FutoshikiSettingsSection,
+      })),
+  },
+  {
+    id: 'kakuro',
+    // U+2211, the summation sign: the mark IS the rule here, the way
+    // Futoshiki's `≶` is its two signs and Takuzu's `01` is its two digits.
+    // Every clue square on this board is a sum, and nothing else on it means
+    // anything.
+    //
+    // Unique against the other twenty-four, and the near misses were looked at
+    // rather than assumed. In this section it stands beside `⌗`, `◆`, `▦`, `01`
+    // and `≶`; the closest call is `≶`, since both are built from strokes
+    // rather than a filled shape, but a folded pair of angle brackets and a
+    // capital sigma share no silhouette, and the two cards carry different
+    // accents and their titles underneath.
+    //
+    // It renders by the same route the other symbol marks take: the bundled
+    // Nunito subset (@fontsource/nunito latin-700/800) carries none of them,
+    // and all of them resolve through the `ui-rounded, system-ui, sans-serif`
+    // tail of --font-display. `∑` sits in Mathematical Operators, the same
+    // block `≡`, `≋` and `≶` come from.
+    title: 'Kakuro',
+    category: 'logic',
+    glyph: '∑',
+    storageKeys: Object.values(KK_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/kakuro/ui/KakuroRoot').then((m) => ({ default: m.KakuroRoot })),
+    loadSettingsSection: () =>
+      import('../games/kakuro/ui/KakuroSettingsSection').then((m) => ({
+        default: m.KakuroSettingsSection,
       })),
   },
   {

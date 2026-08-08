@@ -123,10 +123,17 @@ describe('a fixed game (released — do not edit to make green)', () => {
     ]);
   });
 
+  // Three 24-ply games, one of them at `hard`, so this is the slowest test in
+  // the file by a wide margin. What it asserts is that the boards differ, not
+  // that they arrive quickly — and vitest's 5s default made the wall clock the
+  // judge anyway: it passes alone in a fraction of that and times out under a
+  // loaded `pnpm test`, where six other forks are competing. A gate that fails
+  // occasionally is as bad as one that never passes (SUDOKU_RULES.md §7), so
+  // the limit is set where it can only catch a real hang.
   it('reads differently at each strength — the difficulty is not decoration', () => {
     const boards = (['easy', 'normal', 'hard'] as const).map((difficulty) =>
       encodeBoard(playOut(difficulty, 24).session.board),
     );
     expect(new Set(boards).size).toBe(3);
-  });
+  }, 60_000);
 });
