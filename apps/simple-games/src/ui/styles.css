@@ -245,6 +245,15 @@
   --accent-ring-soft: rgba(136, 53, 94, 0.12);
 }
 
+:root[data-game='futoshiki'],
+.accent-futoshiki {
+  --accent: #29603a;
+  --accent-ink: #ffffff;
+  --accent-soft: #ddf0e3;
+  --accent-ring: rgba(41, 96, 58, 0.38);
+  --accent-ring-soft: rgba(41, 96, 58, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -463,6 +472,15 @@
   --accent-soft: #3d202e;
   --accent-ring: rgba(203, 126, 164, 0.42);
   --accent-ring-soft: rgba(203, 126, 164, 0.14);
+}
+
+:root[data-theme='dark'][data-game='futoshiki'],
+[data-theme='dark'] .accent-futoshiki {
+  --accent: #74c88d;
+  --accent-ink: #0c1c11;
+  --accent-soft: #203d29;
+  --accent-ring: rgba(116, 200, 141, 0.42);
+  --accent-ring-soft: rgba(116, 200, 141, 0.14);
 }
 
 * {

@@ -496,6 +496,29 @@ export const titleAccents = {
     onDark: '#1c0c14',
     softDark: '#3d202e',
   },
+  /**
+   * Futoshiki — pine. The board is digits and inequality signs in ink, with the
+   * accent on the selected cell, its row and column, and the digit pad, so like
+   * Sudoku's teal this is a colour a whole grid of entries has to stay restful
+   * under — which is why it is deep and only moderately saturated rather than
+   * the brighter green the gap could have taken.
+   *
+   * The green quarter is the collection's most crowded (Solitaire, Spider,
+   * Number Recall, 2048, Bunny Hop), and at twenty-three titles no hue is free
+   * at all — a 1 degree sweep finds a neighbour within 30 degrees everywhere.
+   * This separates on depth: ΔE 12.6 from Number Recall in light and 9.4 in
+   * dark, against floors of 10.9 and 7.9. Chosen at the same time as Takuzu's
+   * wine and Kakuro's tobacco, since the three share the logic shelf and
+   * deciding adjacent tiles one at a time spends the next one's options.
+   */
+  futoshiki: {
+    light: '#29603a',
+    onLight: '#ffffff',
+    softLight: '#ddf0e3',
+    dark: '#74c88d',
+    onDark: '#0c1c11',
+    softDark: '#203d29',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;
