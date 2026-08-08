@@ -36,29 +36,29 @@ describe('gameLandingUrl', () => {
       'water-sort',
       'memory-match',
       'sky-fighter',
+      'spider-solitaire',
+      'freecell',
+      '2048',
+      'block-puzzle',
+      'checkers',
+      'reversi',
+      'connect-four',
+      'gomoku',
+      'quick-math',
+      'schulte-table',
+      'number-recall',
+      'bunny-hop',
     ]) {
       expect(gameLandingUrl(id, 'en')).toBe(`https://pixapps.ai/simple-games/games/${id}/en/`);
     }
   });
 
-  it('offers no link for a shipped game whose guide is not written yet', () => {
-    // These ship in the collection but have no guide. Returning null is what
-    // keeps the tutorial's last screen from ending in a 404; the button
-    // appears in the release after their pages go up.
-    for (const id of [
-      '2048',
-      'block-puzzle',
-      'bunny-hop',
-      'checkers',
-      'freecell',
-      'gomoku',
-      'spider-solitaire',
-      'quick-math',
-      'schulte-table',
-      'number-recall',
-    ]) {
-      expect(gameLandingUrl(id, 'en')).toBeNull();
-      expect(gameLandingUrl(id, 'ja')).toBeNull();
-    }
+  it('offers no link for a title that is not in the published list', () => {
+    // Every shipped title has a guide today, so this exercises the mechanism
+    // with a future id: a title that ships before its guide is written gets
+    // null, which keeps the tutorial's last screen from ending in a 404. The
+    // button appears in the release after its pages go up.
+    expect(gameLandingUrl('some-future-game', 'en')).toBeNull();
+    expect(gameLandingUrl('some-future-game', 'ja')).toBeNull();
   });
 });
