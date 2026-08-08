@@ -1,0 +1,224 @@
+/* Mahjong Solitaire — all of this game's styling, imported by MahjongRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --radius, --font-display, --tap-size, …) so the
+   game reads as part of the same app and follows the theme without knowing
+   about it.
+
+   THE ONE EXCEPTION, like the card games: tile faces stay paper in BOTH
+   themes. A mahjong tile is a physical object with a printed face; painting
+   it dark would repaint the object, not the room. The face colours (paper,
+   ink, the set's red and green) live in TileFaceSvg.tsx as game content —
+   docs/MAHJONG_SOLITAIRE_RULES.md §12.
+
+   Class names are prefixed `mj-` so this file can never collide with the
+   shell or with another game. */
+
+/* ---------- board ---------- */
+
+.mj-board-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 8px 12px;
+}
+
+/*
+  Tiles are sized from the viewport and the layout's column count in one
+  place. Layers lift up-left (0.14 / 0.12 of a tile per layer — measured
+  legible on the static mock at 320px, §12); the `+ 0.62` in the width share
+  reserves that lift margin so eight columns plus a five-deck pyramid still
+  fit a 320px viewport without horizontal scroll.
+*/
+.mj-board {
+  --mj-tile-w: clamp(24px, calc((100vw - 32px) / (var(--mj-cols) + 0.62)), 54px);
+  --mj-tile-h: calc(var(--mj-tile-w) * 4 / 3);
+  --mj-lift-x: calc(var(--mj-tile-w) * 0.14);
+  --mj-lift-y: calc(var(--mj-tile-h) * 0.12);
+  position: relative;
+  width: calc(var(--mj-cols) * var(--mj-tile-w) + 4.5 * var(--mj-lift-x));
+  height: calc(var(--mj-rows) * var(--mj-tile-h) + 4.5 * var(--mj-lift-y));
+  margin: 0 auto;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---------- tiles ---------- */
+
+/* Positioned by half-units; the (4 - z) term turns the up-left layer lift
+   into positive offsets so nothing leaves the container. DOM order is paint
+   order (the layout data is sorted z, y, x). */
+.mj-tile {
+  position: absolute;
+  left: calc(var(--mj-x) * var(--mj-tile-w) / 2 + (4 - var(--mj-z)) * var(--mj-lift-x));
+  top: calc(var(--mj-y) * var(--mj-tile-h) / 2 + (4 - var(--mj-z)) * var(--mj-lift-y));
+  width: var(--mj-tile-w);
+  height: var(--mj-tile-h);
+  padding: 0;
+  border: none;
+  background: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The tile object: paper face in both themes (see the header comment), a
+   warm edge for thickness at bottom-right, and a drop shadow that deepens
+   with the layer — that shadow ladder is what makes five decks readable. */
+.mj-tile-body {
+  position: absolute;
+  inset: 0;
+  border-radius: 9% / 7%;
+  background: #fffdf8;
+  border: 1px solid #b9b2a4;
+  box-shadow:
+    2px 3px 0 0 #cfc8b8,
+    3px 5px 4px rgba(35, 42, 51, 0.38);
+}
+
+.mj-z1 .mj-tile-body {
+  box-shadow:
+    2px 3px 0 0 #cfc8b8,
+    5px 8px 6px rgba(35, 42, 51, 0.42);
+}
+
+.mj-z2 .mj-tile-body {
+  box-shadow:
+    2px 3px 0 0 #cfc8b8,
+    6px 10px 7px rgba(35, 42, 51, 0.46);
+}
+
+.mj-z3 .mj-tile-body {
+  box-shadow:
+    2px 3px 0 0 #cfc8b8,
+    7px 12px 8px rgba(35, 42, 51, 0.5);
+}
+
+.mj-z4 .mj-tile-body {
+  box-shadow:
+    2px 3px 0 0 #cfc8b8,
+    8px 14px 9px rgba(35, 42, 51, 0.54);
+}
+
+.mj-face {
+  position: absolute;
+  inset: 4% 6%;
+  width: 88%;
+  height: 92%;
+  pointer-events: none;
+}
+
+/* Selection and hint ride the title accent — chrome, not tile paint. The
+   face keeps its paper: an outline and ring say "held" without repainting
+   the object. */
+.mj-selected .mj-tile-body {
+  outline: 3px solid var(--accent);
+  outline-offset: -2px;
+  box-shadow:
+    2px 3px 0 0 #cfc8b8,
+    0 0 0 3px var(--accent-ring);
+}
+
+.mj-hint .mj-tile-body {
+  outline: 3px solid var(--accent);
+  outline-offset: -2px;
+  box-shadow:
+    2px 3px 0 0 #cfc8b8,
+    0 0 0 3px var(--accent-ring);
+}
+
+/* ---------- top bar ---------- */
+
+.mj-count-tag {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- stuck notice (§7): a quiet fact with its ways out ---------- */
+
+.mj-stuck {
+  margin: 8px 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.mj-stuck-title {
+  margin: 0 0 2px;
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.mj-stuck-body {
+  margin: 0 0 8px;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.mj-stuck-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---------- level select / daily list ---------- */
+
+/* A cleared level wears a quiet check; the time it holds lives in its label. */
+.mj-level-done {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.level-cell-current .mj-level-done {
+  color: var(--accent-ink);
+  opacity: 0.85;
+}
+
+.mj-daily-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.mj-daily-badge-done {
+  color: var(--ink-soft);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+.mj-figure {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mj-figure-tile {
+  position: relative;
+  width: 44px;
+  height: 58px;
+  display: inline-block;
+}
+
+.mj-figure-tile .mj-tile-body {
+  box-shadow:
+    2px 3px 0 0 #cfc8b8,
+    3px 5px 4px rgba(35, 42, 51, 0.3);
+}
+
+.mj-figure-tile .mj-face {
+  position: absolute;
+  inset: 4% 6%;
+}
+
+.mj-figure-marked .mj-tile-body {
+  outline: 3px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* Reduced Motion: nothing here animates — tiles appear and leave at once —
+   so there is nothing to switch off (§12). This rule documents the fact. */

@@ -599,6 +599,37 @@ export const titleAccents = {
     onDark: '#1c130c',
     softDark: '#3d2c20',
   },
+  /**
+   * Mahjong Solitaire — deep blue-violet. The board is a field of paper
+   * tiles whose faces carry the set's own red and green (game content, like
+   * the cards), and the accent sits ON those faces as the selection and hint
+   * rings — which is why red and green were excluded before measuring, and
+   * the tiles themselves stay paper in both themes.
+   *
+   * Chosen in the three-title selection of docs/plans/2026-08-08-mahjong-
+   * bubble-ludo.md Phase 1 (with Bubble Pop's oxblood and Ludo's magenta,
+   * since the three ship together and mutual distance is part of the floor):
+   * candidates were clamped to the shipped palette's median band (|S−44| ≤
+   * 10, |L−37| ≤ 7) and the weakest margin over every floor maximized,
+   * rather than maximizing raw distance — the unconstrained winners were
+   * primaries that read as another product. Re-measured at registration
+   * against everything in main (27 accents + --warn + the two reserved
+   * parallels), per BRAND.md step 5: closest light is Gin Rummy at ΔE 19.1,
+   * closest dark Sky Fighter at 13.9, against floors of 10.9 / 7.9 with the
+   * 1.15 margin required; home neighbours (2048 right, Block Puzzle below)
+   * are 40.0+ light / 28.3+ dark against their 15 / 11 floor. White ink
+   * 10.17; the dark value clears the dark paper at 4.52 — above FreeCell's
+   * shipped 4.10, and depth was chosen over brightness on purpose: at L65%
+   * this would sit ΔE 8.3 from Sky Fighter's dusk, below the floor.
+   */
+  mahjongSolitaire: {
+    light: '#3b3196',
+    onLight: '#ffffff',
+    softLight: '#e4e2f4',
+    dark: '#7e77c0',
+    onDark: '#161225',
+    softDark: '#2c2946',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;
