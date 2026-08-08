@@ -1,6 +1,9 @@
 /**
  * The three opponents — and, more importantly, **what they can see**.
  *
+ * The contract this file is held to is docs/HEARTS_RULES.md §5, and the
+ * strengths below are tabulated in §4.
+ *
  * Closed-source card apps have been suspected of peeking at the player's hand
  * for as long as they have existed, and the suspicion cannot be argued away.
  * So it is settled in the type system instead: everything this file reads
@@ -19,9 +22,9 @@
  * once it has resolved — a real player would remember handing the queen to the
  * left, and these do not, which errs in the player's favour.
  *
- * The deal's seed never reaches here (the plan: cpu.ts は配札シードを受け取ら
- * ない). Ties need a coin, so one float comes in as a second argument from a
- * stream of its own — a number, not a key to the deck.
+ * The deal's seed never reaches here (docs/HEARTS_RULES.md §5). Ties need a
+ * coin, so one float comes in as a second argument from a stream of its own —
+ * a number, not a key to the deck.
  *
  * There is no search. Every decision below is arithmetic over thirteen cards
  * and the tricks already played, far inside the CPU's own 450ms pause
@@ -205,8 +208,8 @@ const MOON_ALERT = 12;
 
 /**
  * The seat about to take all twenty-six, or null. Never this seat: the CPU
- * does not shoot for the moon itself (the plan: 自分のムーン狙いはしない —
- * it only ever tries to stop one).
+ * does not shoot for the moon itself (docs/HEARTS_RULES.md §4.2 — it only ever
+ * tries to stop one).
  */
 export function moonThreatOf(view: CpuView): Seat | null {
   let shooter: Seat | null = null;
@@ -233,8 +236,7 @@ const HIGH_HEART_URGENCY = 20;
 const VOID_BONUS = 8;
 
 /**
- * How badly this seat wants a card gone (the plan: easy はランダム寄り、
- * normal 以上は Q♠/A♠/K♠ と短スート処理).
+ * How badly this seat wants a card gone (docs/HEARTS_RULES.md §4.1).
  *
  * Easy prices a card at its rank and nothing else: it throws its big cards
  * away and keeps the rest, which is what somebody who has just learnt the
@@ -404,7 +406,7 @@ function discardCostOf(card: Card, view: CpuView, knowledge: Knowledge): number 
 }
 
 /**
- * Blocking a moon (hard only, the plan: ムーン検知…妨害に切り替え). When one
+ * Blocking a moon (hard only — docs/HEARTS_RULES.md §4.2). When one
  * seat has taken every point so far, letting them take one more is worse than
  * taking points oneself: twenty-six lands on the other three. So if the
  * shooter is on top of this trick and it can be taken off them, it is — as

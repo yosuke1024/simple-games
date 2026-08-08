@@ -326,7 +326,7 @@ describe('the table', () => {
     await settle();
     resume();
 
-    // Nothing on screen is formatted as a running time (the plan: 時計は出さない).
+    // Nothing on screen is formatted as a running time (the rules, §8 and §11.2).
     expect(screen.queryByText(/\d+:\d\d/)).not.toBeInTheDocument();
     // And there is no take-back: watching three replies and then handing the
     // card back is a leak no undo can undo (game/session.ts).

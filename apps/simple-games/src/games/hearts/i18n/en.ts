@@ -9,8 +9,9 @@
  * different reason — they are seats round a table, and a digit is the one
  * label every reader of the fourteen languages recognises in the same place.
  *
- * One family of strings here carries the game's only piece of help (the plan's
- * 助けの形): a card the rules will not take right now is announced as blocked
+ * One family of strings here carries the game's only piece of help
+ * (docs/HEARTS_RULES.md §7): a card the rules will not take right now is
+ * announced as blocked
  * rather than merely drawn dim, so following suit is audible as well as
  * visible. It is worded as a fact about the card — never as advice about which
  * one to play.

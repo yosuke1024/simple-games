@@ -1,91 +1,73 @@
-/*
- * PLACEHOLDER — this catalog is still the English text, word for word.
- *
- * The file exists so the fourteen-locale shape holds and the i18n tests can
- * see this game at all: every locale must carry every key as a non-empty
- * string with the same placeholders (src/i18n/i18n.test.ts). English standing
- * in for a missing translation is what the runtime already falls back to, so
- * this is the fallback written down rather than a claim that it was
- * translated. Replacing it is the next commit on this game, and
- * docs/I18N_POLICY.md governs how.
- */
 import type { HeartsMessages } from './en';
+
 export const hi: HeartsMessages = {
   heartsName: 'Hearts',
 
-  // ---------- home ----------
-  heartsChooseOpponent: 'Choose your opponents',
-  heartsDifficulty_easy: 'Easy',
-  heartsDifficulty_normal: 'Normal',
-  heartsDifficulty_hard: 'Hard',
-  heartsRecordNote: 'Won {wins} · Lost {losses} · Drawn {draws}',
-  heartsConfirmSwitchTitle: 'Replace the match in progress?',
-  heartsConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  heartsChooseOpponent: 'अपने प्रतिद्वंद्वी चुनें',
+  heartsDifficulty_easy: 'आसान',
+  heartsDifficulty_normal: 'सामान्य',
+  heartsDifficulty_hard: 'कठिन',
+  heartsRecordNote: '{wins} जीत · {losses} हार · {draws} बराबरी',
+  heartsConfirmSwitchTitle: 'चालू मैच बदलें?',
+  heartsConfirmSwitchBody: 'आपका {current} मैच नए {next} मैच से बदल जाएगा।',
 
-  // ---------- the table ----------
-  heartsTableLabel: 'Hearts table',
-  heartsHandLabel: 'Your hand',
-  heartsTrickLabel: 'The trick',
-  heartsTrayLabel: 'Cards you are passing',
-  heartsYou: 'You',
+  heartsTableLabel: 'Hearts की मेज़',
+  heartsHandLabel: 'आपके पत्ते',
+  heartsTrickLabel: 'मेज़ की चाल',
+  heartsTrayLabel: 'जो पत्ते आप दे रहे हैं',
+  heartsYou: 'आप',
   heartsCpuSeat: 'CPU {n}',
-  heartsYouLabel: 'You: {hand} points this hand, {total} in the match',
-  heartsSeatLabel: 'CPU {n}: {cards} cards, {hand} points this hand, {total} in the match',
-  heartsTookLastTrick: 'Took the last trick',
-  heartsCardLabel: '{rank} of {suit}',
-  heartsSuit_spades: 'spades',
-  heartsSuit_hearts: 'hearts',
-  heartsSuit_diamonds: 'diamonds',
-  heartsSuit_clubs: 'clubs',
-  heartsCardBlocked: '{card}, not allowed now',
-  heartsCardChosen: '{card}, chosen to pass',
+  heartsYouLabel: 'आप: इस दौर में {hand} अंक, मैच में {total}',
+  heartsSeatLabel: 'CPU {n}: {cards} पत्ते, इस दौर में {hand} अंक, मैच में {total}',
+  heartsTookLastTrick: 'पिछली चाल जीती',
+  heartsCardLabel: '{suit} का {rank}',
+  heartsSuit_spades: 'हुकुम',
+  heartsSuit_hearts: 'पान',
+  heartsSuit_diamonds: 'ईंट',
+  heartsSuit_clubs: 'चिड़ी',
+  heartsCardBlocked: '{card}, अभी नहीं चल सकते',
+  heartsCardChosen: '{card}, देने के लिए चुना गया',
   heartsTrickCard: '{card}, {seat}',
 
-  // ---------- the pass ----------
-  heartsPassPrompt: 'Choose three cards to pass',
-  heartsPassLeft: 'Passing left',
-  heartsPassAcross: 'Passing across',
-  heartsPassRight: 'Passing right',
-  heartsPassConfirm: 'Pass these three',
-  heartsPassWaiting: 'Waiting for the other seats…',
+  heartsPassPrompt: 'देने के लिए तीन पत्ते चुनें',
+  heartsPassLeft: 'बाईं ओर दे रहे हैं',
+  heartsPassAcross: 'सामने वाले को दे रहे हैं',
+  heartsPassRight: 'दाईं ओर दे रहे हैं',
+  heartsPassConfirm: 'ये तीन दें',
+  heartsPassWaiting: 'बाकी खिलाड़ियों का इंतज़ार…',
 
-  // ---------- the tricks ----------
-  heartsPlayPrompt: 'Tap a card, then tap it again to play it',
-  heartsCpuTurn: 'CPU {n} is playing…',
-  heartsTrickYou: 'You took the trick',
-  heartsTrickCpu: 'CPU {n} took the trick',
+  heartsPlayPrompt: 'पत्ते पर टैप करें, चलने के लिए फिर टैप करें',
+  heartsCpuTurn: 'CPU {n} चल रहा है…',
+  heartsTrickYou: 'यह चाल आपने जीती',
+  heartsTrickCpu: 'यह चाल CPU {n} ने जीती',
 
-  // ---------- the hand, scored ----------
-  heartsHandTitle: 'Hand scored',
-  heartsMoonTitle: 'Shot the moon',
-  heartsMoonYou: 'You took all twenty-six, so the other three seats take 26 each.',
-  heartsMoonCpu: 'CPU {n} took all twenty-six, so everybody else takes 26.',
-  heartsThisHand: 'This hand',
-  heartsMatchTotal: 'Match',
-  heartsNextHand: 'Next hand',
+  heartsHandTitle: 'दौर का हिसाब',
+  heartsMoonTitle: 'पूरे छब्बीस',
+  heartsMoonYou: 'आपने पूरे छब्बीस अंक ले लिए, इसलिए बाकी तीनों को 26-26 अंक मिलते हैं।',
+  heartsMoonCpu: 'CPU {n} ने पूरे छब्बीस अंक ले लिए, इसलिए बाकी सबको 26 अंक मिलते हैं।',
+  heartsThisHand: 'यह दौर',
+  heartsMatchTotal: 'मैच',
+  heartsNextHand: 'अगला दौर',
 
-  // ---------- the match, decided ----------
-  heartsWinTitle: 'You win!',
-  heartsWinBody: 'The fewest points when somebody passed a hundred.',
-  heartsLoseTitle: 'The CPU wins',
-  heartsLoseBody: 'Another seat finished on fewer points. The next match is free.',
-  heartsDrawTitle: 'A draw',
-  heartsDrawBody: 'You finished level with another seat on the lowest score.',
-  heartsFinalScores: 'Final scores',
+  heartsWinTitle: 'आप जीत गए!',
+  heartsWinBody: 'जब कोई सौ अंक पार कर गया, तब सबसे कम अंक आपके थे।',
+  heartsLoseTitle: 'CPU जीत गया',
+  heartsLoseBody: 'किसी और खिलाड़ी के अंक आपसे कम रहे। अगला मैच मुफ़्त है।',
+  heartsDrawTitle: 'बराबरी',
+  heartsDrawBody: 'सबसे कम अंकों पर आप किसी और खिलाड़ी के बराबर रहे।',
+  heartsFinalScores: 'आख़िरी अंक',
 
-  // ---------- statistics ----------
-  heartsWins: 'Wins',
-  heartsLosses: 'Losses',
-  heartsDraws: 'Draws',
+  heartsWins: 'जीत',
+  heartsLosses: 'हार',
+  heartsDraws: 'बराबरी',
 
-  // ---------- Quick Rules: three steps, one sentence each ----------
-  heartsStep1Title: 'Pass three',
+  heartsStep1Title: 'तीन पत्ते दें',
   heartsStep1Body:
-    'Before most hands you choose three cards and pass them on — left, then right, then across, then a hand where nobody passes.',
-  heartsStep2Title: 'Follow the suit',
+    'ज़्यादातर दौरों की शुरुआत में तीन पत्ते चुनकर आगे दिए जाते हैं — पहले बाएँ, फिर दाएँ, फिर सामने, और फिर एक दौर जिसमें कोई नहीं देता।',
+  heartsStep2Title: 'सूट का साथ दें',
   heartsStep2Body:
-    'Follow the suit that was led whenever you can; every heart costs a point and the queen of spades costs thirteen.',
-  heartsStep3Title: 'Fewest points wins',
+    'पहला पत्ता जिस सूट का चला जाए, वही सूट आपके पास रहने तक चलना है, और उस सूट का सबसे बड़ा पत्ता चाल जीत लेता है।',
+  heartsStep3Title: 'सबसे कम अंक जीतते हैं',
   heartsStep3Body:
-    'The highest card of the suit led takes the trick and everything in it, and when somebody passes a hundred the fewest points wins.',
+    'आपके पास आया हर पान एक अंक का है और हुकुम की बेगम तेरह अंकों की, इसलिए जब कोई सौ अंक पार करे तब सबसे कम अंकों वाला जीतता है।',
 };

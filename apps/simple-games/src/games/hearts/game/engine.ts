@@ -7,11 +7,11 @@
  * knows about seats being human or CPU, about time, or about the match score;
  * a hand is a hand.
  *
- * The rules are the plan's (docs/plans/2026-08-08-hearts-and-gin-rummy.md,
- * "Hearts"). The ones that are easy to get subtly wrong are stated where they
- * are enforced: the exchange resolves for all four seats at once and not one
- * at a time, the queen of spades does not break hearts, and a finished trick
- * sits on the table for a beat before anybody takes it in.
+ * The rules are docs/HEARTS_RULES.md §1–§3. The ones that are easy to get
+ * subtly wrong are stated where they are enforced: the exchange resolves for
+ * all four seats at once and not one at a time, the queen of spades does not
+ * break hearts, and a finished trick sits on the table for a beat before
+ * anybody takes it in.
  *
  * `isValidHand` lives here rather than in types.ts (where Gin Rummy keeps its
  * twin) because the only honest way to know a Hearts position could have come
@@ -74,14 +74,13 @@ function holderOfTwoOfClubs(hands: BySeat<readonly Card[]>): Seat {
 }
 
 /**
- * The deal (the plan: 52 枚を 13 枚ずつ). Cards go one at a time round the
- * table from the player's seat, and everything comes from the seed and the
+ * The deal (§1: fifty-two cards, thirteen each). Cards go one at a time round
+ * the table from the player's seat, and everything comes from the seed and the
  * hand number, so a match replays exactly: the same seed deals the same fifth
  * hand as it did the first time.
  *
  * A hand whose pass offset is zero skips the pass entirely — there is nothing
- * to sit through when nothing moves (the plan: なしの回はパスフェーズ自体を
- * スキップ).
+ * to sit through when nothing moves (§2.1).
  */
 export function dealHand(seed: string, handNumber: number): HandState {
   const rng = createRng(`${seed}:deal:${handNumber}`);
@@ -160,8 +159,8 @@ export interface PassResult {
  * Commits a seat's three cards. Exactly three — two is not a pass, and the
  * rules have no way to make up the difference.
  *
- * The fourth confirmation resolves the whole exchange at once (the plan:
- * 交換は 4 席同時に解決). Doing it a seat at a time would be a different game:
+ * The fourth confirmation resolves the whole exchange at once (§2.1). Doing it
+ * a seat at a time would be a different game:
  * a seat that had already given its cards away would be choosing out of a hand
  * the others had changed.
  */
@@ -221,8 +220,8 @@ export const canPlay = (hand: HandState, card: Card): boolean => legalPlays(hand
  * them moves.
  *
  * Hearts break here and nowhere else, and only on a heart: the queen of spades
- * is worth thirteen points and breaks nothing (the plan: Q♠ はブレイクに
- * 数えない).
+ * is worth thirteen points and breaks nothing (§2.2, and §12 for why the
+ * variant that says otherwise is not taken).
  */
 export function playCard(hand: HandState, card: Card): HandState | null {
   const seat = seatToPlay(hand);
@@ -297,15 +296,15 @@ export interface HandOutcome {
 }
 
 /**
- * Scores a finished hand (the plan: ♥ = 1 点 × 13、Q♠ = 13 点、ムーンは
- * 他 3 席に +26).
+ * Scores a finished hand (§3.2: a heart is a point, the queen is thirteen, and
+ * a moon puts twenty-six on the other three seats).
  *
  * Shooting the moon — taking every point there is — is the one place the
  * arithmetic is not simply "what you took". The shooter scores nothing and the
  * other three take twenty-six apiece. The variant where the shooter may
  * instead subtract twenty-six from their own score is **not** offered: it is a
  * choice with no decision in it (you take whichever is better) and a second
- * scoring path for the screen to explain (意図的な差分).
+ * scoring path for the screen to explain (docs/HEARTS_RULES.md §12).
  *
  * A seat that took only the queen has thirteen — half the pot, and nowhere
  * near a moon.

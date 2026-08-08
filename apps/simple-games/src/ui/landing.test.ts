@@ -53,6 +53,7 @@ describe('gameLandingUrl', () => {
       'freecell',
       'gin-rummy',
       'gomoku',
+      'hearts',
       'spider-solitaire',
       'quick-math',
       'schulte-table',

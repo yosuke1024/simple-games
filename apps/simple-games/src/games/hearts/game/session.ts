@@ -4,7 +4,7 @@
  * dispatches into these functions; all the rules live here, in engine.ts and
  * in cpu.ts.
  *
- * **There is no undo, and no function here to add one to.** The board games'
+ * **There is no undo, and no function here to add one to** (§6). The board games'
  * undo works because both players can see everything; here, taking a move back
  * after watching three replies would hand back a card you now know was safe.
  * The leak cannot be undone by undoing the move, so the take-back is not
@@ -101,9 +101,8 @@ export function createSession(
 }
 
 /**
- * The match's verdict, said from the player's side of the table (the plan:
- * あなたが単独最少 = 勝ち / CPU が単独最少 = 負け / あなたを含む同点最少 =
- * 引き分け).
+ * The match's verdict, said from the player's side of the table
+ * (docs/HEARTS_RULES.md §3.3).
  *
  * Hearts is won by having the fewest points, and four seats make ties
  * ordinary rather than exotic — so a tie the player is part of is a draw, and

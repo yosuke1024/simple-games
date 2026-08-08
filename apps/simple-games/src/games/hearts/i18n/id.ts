@@ -1,91 +1,75 @@
-/*
- * PLACEHOLDER — this catalog is still the English text, word for word.
- *
- * The file exists so the fourteen-locale shape holds and the i18n tests can
- * see this game at all: every locale must carry every key as a non-empty
- * string with the same placeholders (src/i18n/i18n.test.ts). English standing
- * in for a missing translation is what the runtime already falls back to, so
- * this is the fallback written down rather than a claim that it was
- * translated. Replacing it is the next commit on this game, and
- * docs/I18N_POLICY.md governs how.
- */
 import type { HeartsMessages } from './en';
+
 export const id: HeartsMessages = {
   heartsName: 'Hearts',
 
-  // ---------- home ----------
-  heartsChooseOpponent: 'Choose your opponents',
-  heartsDifficulty_easy: 'Easy',
-  heartsDifficulty_normal: 'Normal',
-  heartsDifficulty_hard: 'Hard',
-  heartsRecordNote: 'Won {wins} · Lost {losses} · Drawn {draws}',
-  heartsConfirmSwitchTitle: 'Replace the match in progress?',
-  heartsConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  heartsChooseOpponent: 'Pilih lawan Anda',
+  heartsDifficulty_easy: 'Mudah',
+  heartsDifficulty_normal: 'Sedang',
+  heartsDifficulty_hard: 'Sulit',
+  heartsRecordNote: 'Menang {wins} · Kalah {losses} · Seri {draws}',
+  heartsConfirmSwitchTitle: 'Ganti pertandingan yang sedang berjalan?',
+  heartsConfirmSwitchBody:
+    'Pertandingan {current} Anda akan diganti dengan pertandingan {next} baru.',
 
-  // ---------- the table ----------
-  heartsTableLabel: 'Hearts table',
-  heartsHandLabel: 'Your hand',
-  heartsTrickLabel: 'The trick',
-  heartsTrayLabel: 'Cards you are passing',
-  heartsYou: 'You',
+  heartsTableLabel: 'Meja Hearts',
+  heartsHandLabel: 'Kartu Anda',
+  heartsTrickLabel: 'Trik di meja',
+  heartsTrayLabel: 'Kartu yang Anda oper',
+  heartsYou: 'Anda',
   heartsCpuSeat: 'CPU {n}',
-  heartsYouLabel: 'You: {hand} points this hand, {total} in the match',
-  heartsSeatLabel: 'CPU {n}: {cards} cards, {hand} points this hand, {total} in the match',
-  heartsTookLastTrick: 'Took the last trick',
-  heartsCardLabel: '{rank} of {suit}',
-  heartsSuit_spades: 'spades',
-  heartsSuit_hearts: 'hearts',
-  heartsSuit_diamonds: 'diamonds',
-  heartsSuit_clubs: 'clubs',
-  heartsCardBlocked: '{card}, not allowed now',
-  heartsCardChosen: '{card}, chosen to pass',
+  heartsYouLabel: 'Anda: {hand} poin di ronde ini, {total} di pertandingan',
+  heartsSeatLabel: 'CPU {n}: {cards} kartu, {hand} poin di ronde ini, {total} di pertandingan',
+  heartsTookLastTrick: 'Memenangkan trik terakhir',
+  heartsCardLabel: '{rank} {suit}',
+  heartsSuit_spades: 'sekop',
+  heartsSuit_hearts: 'hati',
+  heartsSuit_diamonds: 'wajik',
+  heartsSuit_clubs: 'keriting',
+  heartsCardBlocked: '{card}, belum boleh dimainkan',
+  heartsCardChosen: '{card}, dipilih untuk dioper',
   heartsTrickCard: '{card}, {seat}',
 
-  // ---------- the pass ----------
-  heartsPassPrompt: 'Choose three cards to pass',
-  heartsPassLeft: 'Passing left',
-  heartsPassAcross: 'Passing across',
-  heartsPassRight: 'Passing right',
-  heartsPassConfirm: 'Pass these three',
-  heartsPassWaiting: 'Waiting for the other seats…',
+  heartsPassPrompt: 'Pilih tiga kartu untuk dioper',
+  heartsPassLeft: 'Mengoper ke kiri',
+  heartsPassAcross: 'Mengoper ke seberang',
+  heartsPassRight: 'Mengoper ke kanan',
+  heartsPassConfirm: 'Oper tiga ini',
+  heartsPassWaiting: 'Menunggu pemain lain…',
 
-  // ---------- the tricks ----------
-  heartsPlayPrompt: 'Tap a card, then tap it again to play it',
-  heartsCpuTurn: 'CPU {n} is playing…',
-  heartsTrickYou: 'You took the trick',
-  heartsTrickCpu: 'CPU {n} took the trick',
+  heartsPlayPrompt: 'Ketuk kartu, lalu ketuk lagi untuk memainkannya',
+  heartsCpuTurn: 'CPU {n} sedang bermain…',
+  heartsTrickYou: 'Anda memenangkan trik ini',
+  heartsTrickCpu: 'CPU {n} memenangkan trik ini',
 
-  // ---------- the hand, scored ----------
-  heartsHandTitle: 'Hand scored',
-  heartsMoonTitle: 'Shot the moon',
-  heartsMoonYou: 'You took all twenty-six, so the other three seats take 26 each.',
-  heartsMoonCpu: 'CPU {n} took all twenty-six, so everybody else takes 26.',
-  heartsThisHand: 'This hand',
-  heartsMatchTotal: 'Match',
-  heartsNextHand: 'Next hand',
+  heartsHandTitle: 'Ronde dihitung',
+  heartsMoonTitle: 'Menyapu semua poin',
+  heartsMoonYou:
+    'Anda mengambil semua dua puluh enam poin, jadi tiga pemain lain masing-masing mendapat 26.',
+  heartsMoonCpu: 'CPU {n} mengambil semua dua puluh enam poin, jadi semua pemain lain mendapat 26.',
+  heartsThisHand: 'Ronde ini',
+  heartsMatchTotal: 'Pertandingan',
+  heartsNextHand: 'Ronde berikutnya',
 
-  // ---------- the match, decided ----------
-  heartsWinTitle: 'You win!',
-  heartsWinBody: 'The fewest points when somebody passed a hundred.',
-  heartsLoseTitle: 'The CPU wins',
-  heartsLoseBody: 'Another seat finished on fewer points. The next match is free.',
-  heartsDrawTitle: 'A draw',
-  heartsDrawBody: 'You finished level with another seat on the lowest score.',
-  heartsFinalScores: 'Final scores',
+  heartsWinTitle: 'Anda menang!',
+  heartsWinBody: 'Poin paling sedikit saat ada yang melewati seratus.',
+  heartsLoseTitle: 'CPU menang',
+  heartsLoseBody: 'Pemain lain selesai dengan poin lebih sedikit. Pertandingan berikutnya gratis.',
+  heartsDrawTitle: 'Seri',
+  heartsDrawBody: 'Anda selesai sama rendahnya dengan pemain lain.',
+  heartsFinalScores: 'Skor akhir',
 
-  // ---------- statistics ----------
-  heartsWins: 'Wins',
-  heartsLosses: 'Losses',
-  heartsDraws: 'Draws',
+  heartsWins: 'Menang',
+  heartsLosses: 'Kalah',
+  heartsDraws: 'Seri',
 
-  // ---------- Quick Rules: three steps, one sentence each ----------
-  heartsStep1Title: 'Pass three',
+  heartsStep1Title: 'Oper tiga kartu',
   heartsStep1Body:
-    'Before most hands you choose three cards and pass them on — left, then right, then across, then a hand where nobody passes.',
-  heartsStep2Title: 'Follow the suit',
+    'Sebelum hampir setiap ronde, Anda memilih tiga kartu dan mengopernya — ke kiri, lalu ke kanan, lalu ke seberang, lalu satu ronde tanpa operan.',
+  heartsStep2Title: 'Ikuti jenis kartunya',
   heartsStep2Body:
-    'Follow the suit that was led whenever you can; every heart costs a point and the queen of spades costs thirteen.',
-  heartsStep3Title: 'Fewest points wins',
+    'Kartu pertama menentukan jenisnya dan Anda harus mengikutinya selama masih punya; kartu tertinggi dari jenis itu memenangkan trik.',
+  heartsStep3Title: 'Poin paling sedikit menang',
   heartsStep3Body:
-    'The highest card of the suit led takes the trick and everything in it, and when somebody passes a hundred the fewest points wins.',
+    'Setiap hati yang Anda ambil bernilai satu poin dan Q sekop tiga belas, jadi saat ada yang melewati seratus, poin paling sedikit yang menang.',
 };

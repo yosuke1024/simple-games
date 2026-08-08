@@ -9,8 +9,8 @@
  * anything from src/games/ (src/i18n/registry.ts explains the pairing).
  *
  * Provenance, as docs/I18N_POLICY.md records it: `en` is the source, `ja` is
- * the author's own, and the other twelve are English standing in until they
- * are written. None of this game's keys is a high-risk key
+ * the author's own, and the other twelve are `machine` — written with AI help
+ * and read by no native speaker. None of this game's keys is a high-risk key
  * (src/i18n/highRiskKeys.ts), so none of them goes through the release gate;
  * what holds them honest is the machine check (placeholders, emptiness,
  * markup) and reports from readers.

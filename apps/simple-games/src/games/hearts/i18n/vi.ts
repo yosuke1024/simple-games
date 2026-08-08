@@ -1,91 +1,73 @@
-/*
- * PLACEHOLDER — this catalog is still the English text, word for word.
- *
- * The file exists so the fourteen-locale shape holds and the i18n tests can
- * see this game at all: every locale must carry every key as a non-empty
- * string with the same placeholders (src/i18n/i18n.test.ts). English standing
- * in for a missing translation is what the runtime already falls back to, so
- * this is the fallback written down rather than a claim that it was
- * translated. Replacing it is the next commit on this game, and
- * docs/I18N_POLICY.md governs how.
- */
 import type { HeartsMessages } from './en';
+
 export const vi: HeartsMessages = {
   heartsName: 'Hearts',
 
-  // ---------- home ----------
-  heartsChooseOpponent: 'Choose your opponents',
-  heartsDifficulty_easy: 'Easy',
-  heartsDifficulty_normal: 'Normal',
-  heartsDifficulty_hard: 'Hard',
-  heartsRecordNote: 'Won {wins} · Lost {losses} · Drawn {draws}',
-  heartsConfirmSwitchTitle: 'Replace the match in progress?',
-  heartsConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  heartsChooseOpponent: 'Chọn đối thủ',
+  heartsDifficulty_easy: 'Dễ',
+  heartsDifficulty_normal: 'Vừa',
+  heartsDifficulty_hard: 'Khó',
+  heartsRecordNote: 'Thắng {wins} · Thua {losses} · Hòa {draws}',
+  heartsConfirmSwitchTitle: 'Thay trận đang chơi?',
+  heartsConfirmSwitchBody: 'Trận {current} của bạn sẽ được thay bằng trận {next} mới.',
 
-  // ---------- the table ----------
-  heartsTableLabel: 'Hearts table',
-  heartsHandLabel: 'Your hand',
-  heartsTrickLabel: 'The trick',
-  heartsTrayLabel: 'Cards you are passing',
-  heartsYou: 'You',
+  heartsTableLabel: 'Bàn Hearts',
+  heartsHandLabel: 'Bài trên tay bạn',
+  heartsTrickLabel: 'Vòng bài trên bàn',
+  heartsTrayLabel: 'Những lá bạn sẽ chuyển đi',
+  heartsYou: 'Bạn',
   heartsCpuSeat: 'CPU {n}',
-  heartsYouLabel: 'You: {hand} points this hand, {total} in the match',
-  heartsSeatLabel: 'CPU {n}: {cards} cards, {hand} points this hand, {total} in the match',
-  heartsTookLastTrick: 'Took the last trick',
-  heartsCardLabel: '{rank} of {suit}',
-  heartsSuit_spades: 'spades',
-  heartsSuit_hearts: 'hearts',
-  heartsSuit_diamonds: 'diamonds',
-  heartsSuit_clubs: 'clubs',
-  heartsCardBlocked: '{card}, not allowed now',
-  heartsCardChosen: '{card}, chosen to pass',
+  heartsYouLabel: 'Bạn: {hand} điểm ván này, {total} điểm cả trận',
+  heartsSeatLabel: 'CPU {n}: {cards} lá, {hand} điểm ván này, {total} điểm cả trận',
+  heartsTookLastTrick: 'Đã ăn vòng vừa rồi',
+  heartsCardLabel: '{rank} {suit}',
+  heartsSuit_spades: 'bích',
+  heartsSuit_hearts: 'cơ',
+  heartsSuit_diamonds: 'rô',
+  heartsSuit_clubs: 'chuồn',
+  heartsCardBlocked: '{card}, lúc này chưa đánh được',
+  heartsCardChosen: '{card}, đã chọn để chuyển đi',
   heartsTrickCard: '{card}, {seat}',
 
-  // ---------- the pass ----------
-  heartsPassPrompt: 'Choose three cards to pass',
-  heartsPassLeft: 'Passing left',
-  heartsPassAcross: 'Passing across',
-  heartsPassRight: 'Passing right',
-  heartsPassConfirm: 'Pass these three',
-  heartsPassWaiting: 'Waiting for the other seats…',
+  heartsPassPrompt: 'Chọn ba lá để chuyển đi',
+  heartsPassLeft: 'Chuyển sang trái',
+  heartsPassAcross: 'Chuyển sang đối diện',
+  heartsPassRight: 'Chuyển sang phải',
+  heartsPassConfirm: 'Chuyển ba lá này',
+  heartsPassWaiting: 'Đang đợi những chỗ còn lại…',
 
-  // ---------- the tricks ----------
-  heartsPlayPrompt: 'Tap a card, then tap it again to play it',
-  heartsCpuTurn: 'CPU {n} is playing…',
-  heartsTrickYou: 'You took the trick',
-  heartsTrickCpu: 'CPU {n} took the trick',
+  heartsPlayPrompt: 'Chạm vào một lá, chạm lần nữa để đánh ra',
+  heartsCpuTurn: 'CPU {n} đang đánh…',
+  heartsTrickYou: 'Bạn ăn vòng này',
+  heartsTrickCpu: 'CPU {n} ăn vòng này',
 
-  // ---------- the hand, scored ----------
-  heartsHandTitle: 'Hand scored',
-  heartsMoonTitle: 'Shot the moon',
-  heartsMoonYou: 'You took all twenty-six, so the other three seats take 26 each.',
-  heartsMoonCpu: 'CPU {n} took all twenty-six, so everybody else takes 26.',
-  heartsThisHand: 'This hand',
-  heartsMatchTotal: 'Match',
-  heartsNextHand: 'Next hand',
+  heartsHandTitle: 'Tính điểm ván',
+  heartsMoonTitle: 'Ăn trọn 26 điểm',
+  heartsMoonYou: 'Bạn ăn trọn cả hai mươi sáu điểm, nên ba chỗ còn lại mỗi bên nhận 26.',
+  heartsMoonCpu: 'CPU {n} ăn trọn cả hai mươi sáu điểm, nên tất cả những chỗ còn lại nhận 26.',
+  heartsThisHand: 'Ván này',
+  heartsMatchTotal: 'Cả trận',
+  heartsNextHand: 'Ván tiếp',
 
-  // ---------- the match, decided ----------
-  heartsWinTitle: 'You win!',
-  heartsWinBody: 'The fewest points when somebody passed a hundred.',
-  heartsLoseTitle: 'The CPU wins',
-  heartsLoseBody: 'Another seat finished on fewer points. The next match is free.',
-  heartsDrawTitle: 'A draw',
-  heartsDrawBody: 'You finished level with another seat on the lowest score.',
-  heartsFinalScores: 'Final scores',
+  heartsWinTitle: 'Bạn thắng!',
+  heartsWinBody: 'Khi có người vượt một trăm điểm, bạn là người ít điểm nhất.',
+  heartsLoseTitle: 'CPU thắng',
+  heartsLoseBody: 'Một chỗ khác kết thúc với ít điểm hơn. Trận sau chơi miễn phí.',
+  heartsDrawTitle: 'Hòa',
+  heartsDrawBody: 'Bạn kết thúc bằng điểm với một chỗ khác ở mức thấp nhất.',
+  heartsFinalScores: 'Điểm cuối cùng',
 
-  // ---------- statistics ----------
-  heartsWins: 'Wins',
-  heartsLosses: 'Losses',
-  heartsDraws: 'Draws',
+  heartsWins: 'Thắng',
+  heartsLosses: 'Thua',
+  heartsDraws: 'Hòa',
 
-  // ---------- Quick Rules: three steps, one sentence each ----------
-  heartsStep1Title: 'Pass three',
+  heartsStep1Title: 'Chuyển đi ba lá',
   heartsStep1Body:
-    'Before most hands you choose three cards and pass them on — left, then right, then across, then a hand where nobody passes.',
-  heartsStep2Title: 'Follow the suit',
+    'Trước hầu hết các ván, bạn chọn ba lá và chuyển đi — sang trái, rồi sang phải, rồi sang đối diện, rồi một ván không ai chuyển.',
+  heartsStep2Title: 'Theo đúng chất',
   heartsStep2Body:
-    'Follow the suit that was led whenever you can; every heart costs a point and the queen of spades costs thirteen.',
-  heartsStep3Title: 'Fewest points wins',
+    'Lá đầu tiên định ra chất, còn giữ chất đó thì phải theo, và lá lớn nhất của chất đó ăn cả vòng.',
+  heartsStep3Title: 'Ít điểm nhất thì thắng',
   heartsStep3Body:
-    'The highest card of the suit led takes the trick and everything in it, and when somebody passes a hundred the fewest points wins.',
+    'Mỗi lá cơ bạn ăn về là một điểm và Q bích là mười ba điểm, nên khi có người vượt một trăm, ai ít điểm nhất là người thắng.',
 };

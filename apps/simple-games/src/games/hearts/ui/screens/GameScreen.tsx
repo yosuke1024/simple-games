@@ -1,5 +1,5 @@
 /**
- * The Hearts game screen (the plan's「Game 画面の設計」).
+ * The Hearts game screen (docs/HEARTS_RULES.md §2, §7, §11).
  *
  * Owns the two-tap machine: the first tap lifts a card, the second commits it
  * — put down onto the trick, or picked out for the pass (Gomoku's precedent,
@@ -111,8 +111,8 @@ export function HeartsGameScreen() {
   /**
    * The two-tap confirm. The first tap lifts; the second commits. A tap the
    * rules refuse cannot get here — the fan sinks those cards — and a tap on a
-   * different card simply moves the lift, without a sound of complaint (the
-   * plan: 無効操作を叱らない).
+   * different card simply moves the lift, without a sound of complaint
+   * (docs/HEARTS_RULES.md §2.2).
    */
   const onCardTap = useCallback(
     (card: Card) => {

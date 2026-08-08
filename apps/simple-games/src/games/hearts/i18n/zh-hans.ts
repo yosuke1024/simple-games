@@ -1,91 +1,72 @@
-/*
- * PLACEHOLDER — this catalog is still the English text, word for word.
- *
- * The file exists so the fourteen-locale shape holds and the i18n tests can
- * see this game at all: every locale must carry every key as a non-empty
- * string with the same placeholders (src/i18n/i18n.test.ts). English standing
- * in for a missing translation is what the runtime already falls back to, so
- * this is the fallback written down rather than a claim that it was
- * translated. Replacing it is the next commit on this game, and
- * docs/I18N_POLICY.md governs how.
- */
 import type { HeartsMessages } from './en';
+
 export const zhHans: HeartsMessages = {
   heartsName: 'Hearts',
 
-  // ---------- home ----------
-  heartsChooseOpponent: 'Choose your opponents',
-  heartsDifficulty_easy: 'Easy',
-  heartsDifficulty_normal: 'Normal',
-  heartsDifficulty_hard: 'Hard',
-  heartsRecordNote: 'Won {wins} · Lost {losses} · Drawn {draws}',
-  heartsConfirmSwitchTitle: 'Replace the match in progress?',
-  heartsConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  heartsChooseOpponent: '选择对手',
+  heartsDifficulty_easy: '简单',
+  heartsDifficulty_normal: '普通',
+  heartsDifficulty_hard: '困难',
+  heartsRecordNote: '{wins} 胜 · {losses} 负 · {draws} 平',
+  heartsConfirmSwitchTitle: '替换进行中的对局？',
+  heartsConfirmSwitchBody: '进行中的“{current}”对局会被新的“{next}”对局替换。',
 
-  // ---------- the table ----------
-  heartsTableLabel: 'Hearts table',
-  heartsHandLabel: 'Your hand',
-  heartsTrickLabel: 'The trick',
-  heartsTrayLabel: 'Cards you are passing',
-  heartsYou: 'You',
+  heartsTableLabel: 'Hearts 牌桌',
+  heartsHandLabel: '你的手牌',
+  heartsTrickLabel: '这一墩',
+  heartsTrayLabel: '你要传出的牌',
+  heartsYou: '你',
   heartsCpuSeat: 'CPU {n}',
-  heartsYouLabel: 'You: {hand} points this hand, {total} in the match',
-  heartsSeatLabel: 'CPU {n}: {cards} cards, {hand} points this hand, {total} in the match',
-  heartsTookLastTrick: 'Took the last trick',
-  heartsCardLabel: '{rank} of {suit}',
-  heartsSuit_spades: 'spades',
-  heartsSuit_hearts: 'hearts',
-  heartsSuit_diamonds: 'diamonds',
-  heartsSuit_clubs: 'clubs',
-  heartsCardBlocked: '{card}, not allowed now',
-  heartsCardChosen: '{card}, chosen to pass',
-  heartsTrickCard: '{card}, {seat}',
+  heartsYouLabel: '你：本局 {hand} 分，全场 {total} 分',
+  heartsSeatLabel: 'CPU {n}：{cards} 张牌，本局 {hand} 分，全场 {total} 分',
+  heartsTookLastTrick: '赢下了上一墩',
+  heartsCardLabel: '{suit}{rank}',
+  heartsSuit_spades: '黑桃',
+  heartsSuit_hearts: '红心',
+  heartsSuit_diamonds: '方块',
+  heartsSuit_clubs: '梅花',
+  heartsCardBlocked: '{card}，现在不能出',
+  heartsCardChosen: '{card}，已选为传出',
+  heartsTrickCard: '{card}，{seat}',
 
-  // ---------- the pass ----------
-  heartsPassPrompt: 'Choose three cards to pass',
-  heartsPassLeft: 'Passing left',
-  heartsPassAcross: 'Passing across',
-  heartsPassRight: 'Passing right',
-  heartsPassConfirm: 'Pass these three',
-  heartsPassWaiting: 'Waiting for the other seats…',
+  heartsPassPrompt: '选三张牌传出去',
+  heartsPassLeft: '向左传牌',
+  heartsPassAcross: '向对家传牌',
+  heartsPassRight: '向右传牌',
+  heartsPassConfirm: '传出这三张',
+  heartsPassWaiting: '等待其他座位…',
 
-  // ---------- the tricks ----------
-  heartsPlayPrompt: 'Tap a card, then tap it again to play it',
-  heartsCpuTurn: 'CPU {n} is playing…',
-  heartsTrickYou: 'You took the trick',
-  heartsTrickCpu: 'CPU {n} took the trick',
+  heartsPlayPrompt: '点按一张牌，再点一次打出去',
+  heartsCpuTurn: 'CPU {n} 出牌中…',
+  heartsTrickYou: '你赢下了这一墩',
+  heartsTrickCpu: 'CPU {n} 赢下了这一墩',
 
-  // ---------- the hand, scored ----------
-  heartsHandTitle: 'Hand scored',
-  heartsMoonTitle: 'Shot the moon',
-  heartsMoonYou: 'You took all twenty-six, so the other three seats take 26 each.',
-  heartsMoonCpu: 'CPU {n} took all twenty-six, so everybody else takes 26.',
-  heartsThisHand: 'This hand',
-  heartsMatchTotal: 'Match',
-  heartsNextHand: 'Next hand',
+  heartsHandTitle: '本局结算',
+  heartsMoonTitle: '通吃',
+  heartsMoonYou: '你把二十六分全收了，另外三家各得 26 分。',
+  heartsMoonCpu: 'CPU {n} 把二十六分全收了，其余各家都得 26 分。',
+  heartsThisHand: '本局',
+  heartsMatchTotal: '全场',
+  heartsNextHand: '下一局',
 
-  // ---------- the match, decided ----------
-  heartsWinTitle: 'You win!',
-  heartsWinBody: 'The fewest points when somebody passed a hundred.',
-  heartsLoseTitle: 'The CPU wins',
-  heartsLoseBody: 'Another seat finished on fewer points. The next match is free.',
-  heartsDrawTitle: 'A draw',
-  heartsDrawBody: 'You finished level with another seat on the lowest score.',
-  heartsFinalScores: 'Final scores',
+  heartsWinTitle: '你赢了！',
+  heartsWinBody: '有人超过一百分时，你的分数最少。',
+  heartsLoseTitle: 'CPU 获胜',
+  heartsLoseBody: '别的座位以更少的分数结束。下一场对局免费。',
+  heartsDrawTitle: '平局',
+  heartsDrawBody: '你与另一个座位并列最少分。',
+  heartsFinalScores: '最终得分',
 
-  // ---------- statistics ----------
-  heartsWins: 'Wins',
-  heartsLosses: 'Losses',
-  heartsDraws: 'Draws',
+  heartsWins: '胜',
+  heartsLosses: '负',
+  heartsDraws: '平',
 
-  // ---------- Quick Rules: three steps, one sentence each ----------
-  heartsStep1Title: 'Pass three',
+  heartsStep1Title: '传出三张',
   heartsStep1Body:
-    'Before most hands you choose three cards and pass them on — left, then right, then across, then a hand where nobody passes.',
-  heartsStep2Title: 'Follow the suit',
-  heartsStep2Body:
-    'Follow the suit that was led whenever you can; every heart costs a point and the queen of spades costs thirteen.',
-  heartsStep3Title: 'Fewest points wins',
+    '多数牌局开始前都要挑三张牌传给别人 — 先向左，再向右，然后对家，接着是谁都不传的一局。',
+  heartsStep2Title: '跟出同花色',
+  heartsStep2Body: '首家出的牌定下花色，只要手里还有就得跟出，该花色最大的一张赢下这一墩。',
+  heartsStep3Title: '分最少者胜',
   heartsStep3Body:
-    'The highest card of the suit led takes the trick and everything in it, and when somebody passes a hundred the fewest points wins.',
+    '收进来的每张红心算一分，黑桃 Q 算十三分，所以有人超过一百分时，分数最少的一方获胜。',
 };

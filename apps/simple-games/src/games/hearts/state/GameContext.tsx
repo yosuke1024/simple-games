@@ -157,7 +157,7 @@ export interface HeartsContextValue {
   confirmPass: () => boolean;
   /**
    * The cards the rules allow right now, ascending — the whole of this game's
-   * help (the plan: 出せる札の常時表示). Empty when it is not the player's turn.
+   * help (docs/HEARTS_RULES.md §7). Empty when it is not the player's turn.
    */
   playable: readonly Card[];
   /** Plays one card. False when the rules or the turn order refuse it. */

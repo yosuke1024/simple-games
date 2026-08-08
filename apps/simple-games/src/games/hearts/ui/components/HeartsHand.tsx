@@ -5,9 +5,9 @@
  * THE HAND FAN, AND WHY IT IS THREE ROWS
  *
  * The plan left this number open and asked for it to be measured before
- * anything was built rather than after
- * (docs/plans/2026-08-08-hearts-and-gin-rummy.md,「手札ファン UI」). The
- * arithmetic settles it, and it settles it at three.
+ * anything was built rather than after; the arithmetic settles it, and it
+ * settles it at three. The measurements and their conclusion are recorded in
+ * docs/HEARTS_RULES.md §11.1.
  *
  * A row of n cards laid side by side, each overlapping the last, is (n − 1)
  * visible strips plus one whole card: `(n − 1)·s + w = A`, where A is the
@@ -48,10 +48,11 @@
  * a hand holds, not in how big a card is.
  *
  * RE-FLOWING AS THE HAND EMPTIES. The number of rows is `ceil(n / 5)`, so the
- * fan drops to two rows when the third trick is led (ten cards) and to one at
- * five — the table gains the height back exactly as the tricks pile up and the
- * trick in the middle has more to show. Rows are balanced with the earlier
- * ones taking the extra, so thirteen is 5 + 4 + 4.
+ * fan drops to two rows at ten cards and to one at five — the table gains the
+ * height back exactly as the tricks pile up and the trick in the middle has
+ * more to show. Rows are balanced with the earlier ones taking the extra, so
+ * thirteen is 5 + 4 + 4. During the pass the fan is always two rows: three of
+ * the thirteen are on the tray.
  *
  * THE ORDER IS SUIT, THEN RANK. `hands[seat]` is already stored that way
  * (a card is `suit × 13 + rank − 1`), and it is the order a trick-taking game

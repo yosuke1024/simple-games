@@ -1,5 +1,5 @@
 /**
- * A hand, scored and laid out (the plan: ハンド清算 overlay).
+ * A hand, scored and laid out (docs/HEARTS_RULES.md §3.2, §11.2).
  *
  * Four seats, so the settlement is a small table rather than a sentence: what
  * each seat took this hand, and what that made its match total. Both columns

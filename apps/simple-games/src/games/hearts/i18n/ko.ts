@@ -1,91 +1,73 @@
-/*
- * PLACEHOLDER — this catalog is still the English text, word for word.
- *
- * The file exists so the fourteen-locale shape holds and the i18n tests can
- * see this game at all: every locale must carry every key as a non-empty
- * string with the same placeholders (src/i18n/i18n.test.ts). English standing
- * in for a missing translation is what the runtime already falls back to, so
- * this is the fallback written down rather than a claim that it was
- * translated. Replacing it is the next commit on this game, and
- * docs/I18N_POLICY.md governs how.
- */
 import type { HeartsMessages } from './en';
+
 export const ko: HeartsMessages = {
   heartsName: 'Hearts',
 
-  // ---------- home ----------
-  heartsChooseOpponent: 'Choose your opponents',
-  heartsDifficulty_easy: 'Easy',
-  heartsDifficulty_normal: 'Normal',
-  heartsDifficulty_hard: 'Hard',
-  heartsRecordNote: 'Won {wins} · Lost {losses} · Drawn {draws}',
-  heartsConfirmSwitchTitle: 'Replace the match in progress?',
-  heartsConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  heartsChooseOpponent: '상대 선택',
+  heartsDifficulty_easy: '쉬움',
+  heartsDifficulty_normal: '보통',
+  heartsDifficulty_hard: '어려움',
+  heartsRecordNote: '{wins}승 · {losses}패 · {draws}무',
+  heartsConfirmSwitchTitle: '진행 중인 매치를 바꿀까요?',
+  heartsConfirmSwitchBody: '진행 중인 {current} 매치가 새 {next} 매치로 바뀝니다.',
 
-  // ---------- the table ----------
-  heartsTableLabel: 'Hearts table',
-  heartsHandLabel: 'Your hand',
-  heartsTrickLabel: 'The trick',
-  heartsTrayLabel: 'Cards you are passing',
-  heartsYou: 'You',
+  heartsTableLabel: 'Hearts 테이블',
+  heartsHandLabel: '내 패',
+  heartsTrickLabel: '이번 트릭',
+  heartsTrayLabel: '넘길 카드',
+  heartsYou: '나',
   heartsCpuSeat: 'CPU {n}',
-  heartsYouLabel: 'You: {hand} points this hand, {total} in the match',
-  heartsSeatLabel: 'CPU {n}: {cards} cards, {hand} points this hand, {total} in the match',
-  heartsTookLastTrick: 'Took the last trick',
-  heartsCardLabel: '{rank} of {suit}',
-  heartsSuit_spades: 'spades',
-  heartsSuit_hearts: 'hearts',
-  heartsSuit_diamonds: 'diamonds',
-  heartsSuit_clubs: 'clubs',
-  heartsCardBlocked: '{card}, not allowed now',
-  heartsCardChosen: '{card}, chosen to pass',
+  heartsYouLabel: '나: 이번 판 {hand}점, 매치 누계 {total}점',
+  heartsSeatLabel: 'CPU {n}: 카드 {cards}장, 이번 판 {hand}점, 매치 누계 {total}점',
+  heartsTookLastTrick: '직전 트릭을 가져갔습니다',
+  heartsCardLabel: '{suit} {rank}',
+  heartsSuit_spades: '스페이드',
+  heartsSuit_hearts: '하트',
+  heartsSuit_diamonds: '다이아몬드',
+  heartsSuit_clubs: '클럽',
+  heartsCardBlocked: '{card}, 지금은 낼 수 없습니다',
+  heartsCardChosen: '{card}, 넘기려고 고른 카드',
   heartsTrickCard: '{card}, {seat}',
 
-  // ---------- the pass ----------
-  heartsPassPrompt: 'Choose three cards to pass',
-  heartsPassLeft: 'Passing left',
-  heartsPassAcross: 'Passing across',
-  heartsPassRight: 'Passing right',
-  heartsPassConfirm: 'Pass these three',
-  heartsPassWaiting: 'Waiting for the other seats…',
+  heartsPassPrompt: '넘길 카드 세 장을 고르세요',
+  heartsPassLeft: '왼쪽으로 넘기기',
+  heartsPassAcross: '맞은편으로 넘기기',
+  heartsPassRight: '오른쪽으로 넘기기',
+  heartsPassConfirm: '이 세 장 넘기기',
+  heartsPassWaiting: '다른 자리를 기다리는 중…',
 
-  // ---------- the tricks ----------
-  heartsPlayPrompt: 'Tap a card, then tap it again to play it',
-  heartsCpuTurn: 'CPU {n} is playing…',
-  heartsTrickYou: 'You took the trick',
-  heartsTrickCpu: 'CPU {n} took the trick',
+  heartsPlayPrompt: '카드를 탭하고, 다시 탭하면 냅니다',
+  heartsCpuTurn: 'CPU {n} 차례입니다…',
+  heartsTrickYou: '내가 트릭을 가져갔습니다',
+  heartsTrickCpu: 'CPU {n}이(가) 트릭을 가져갔습니다',
 
-  // ---------- the hand, scored ----------
-  heartsHandTitle: 'Hand scored',
-  heartsMoonTitle: 'Shot the moon',
-  heartsMoonYou: 'You took all twenty-six, so the other three seats take 26 each.',
-  heartsMoonCpu: 'CPU {n} took all twenty-six, so everybody else takes 26.',
-  heartsThisHand: 'This hand',
-  heartsMatchTotal: 'Match',
-  heartsNextHand: 'Next hand',
+  heartsHandTitle: '판 정산',
+  heartsMoonTitle: '26점 독식',
+  heartsMoonYou: '내가 26점을 모두 가져갔으므로 나머지 세 자리가 26점씩 받습니다.',
+  heartsMoonCpu: 'CPU {n}이(가) 26점을 모두 가져갔으므로 나머지 모두가 26점씩 받습니다.',
+  heartsThisHand: '이번 판',
+  heartsMatchTotal: '매치 누계',
+  heartsNextHand: '다음 판',
 
-  // ---------- the match, decided ----------
-  heartsWinTitle: 'You win!',
-  heartsWinBody: 'The fewest points when somebody passed a hundred.',
-  heartsLoseTitle: 'The CPU wins',
-  heartsLoseBody: 'Another seat finished on fewer points. The next match is free.',
-  heartsDrawTitle: 'A draw',
-  heartsDrawBody: 'You finished level with another seat on the lowest score.',
-  heartsFinalScores: 'Final scores',
+  heartsWinTitle: '승리!',
+  heartsWinBody: '누군가 100점을 넘긴 시점에 점수가 가장 적었습니다.',
+  heartsLoseTitle: 'CPU 승리',
+  heartsLoseBody: '다른 자리가 더 적은 점수로 끝냈습니다. 다음 매치는 무료입니다.',
+  heartsDrawTitle: '무승부',
+  heartsDrawBody: '가장 적은 점수에서 다른 자리와 동점으로 끝났습니다.',
+  heartsFinalScores: '최종 점수',
 
-  // ---------- statistics ----------
-  heartsWins: 'Wins',
-  heartsLosses: 'Losses',
-  heartsDraws: 'Draws',
+  heartsWins: '승리',
+  heartsLosses: '패배',
+  heartsDraws: '무승부',
 
-  // ---------- Quick Rules: three steps, one sentence each ----------
-  heartsStep1Title: 'Pass three',
+  heartsStep1Title: '세 장 넘기기',
   heartsStep1Body:
-    'Before most hands you choose three cards and pass them on — left, then right, then across, then a hand where nobody passes.',
-  heartsStep2Title: 'Follow the suit',
+    '대부분의 판은 카드 세 장을 골라 넘기며 시작합니다 — 왼쪽, 오른쪽, 맞은편, 그리고 아무도 넘기지 않는 판 순서입니다.',
+  heartsStep2Title: '무늬 따라내기',
   heartsStep2Body:
-    'Follow the suit that was led whenever you can; every heart costs a point and the queen of spades costs thirteen.',
-  heartsStep3Title: 'Fewest points wins',
+    '먼저 나온 카드가 무늬를 정하고, 그 무늬가 있는 한 따라내야 하며, 그 무늬에서 가장 큰 카드가 트릭을 가져갑니다.',
+  heartsStep3Title: '점수가 적을수록 승리',
   heartsStep3Body:
-    'The highest card of the suit led takes the trick and everything in it, and when somebody passes a hundred the fewest points wins.',
+    '가져온 하트는 한 장에 1점, 스페이드 Q는 13점이므로, 누군가 100점을 넘기면 점수가 가장 적은 쪽이 이깁니다.',
 };

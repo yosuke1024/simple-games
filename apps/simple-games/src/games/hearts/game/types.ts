@@ -2,10 +2,8 @@
  * Core Hearts types: the four seats, one hand of the match, and the small
  * derivations every other module reads a hand through.
  *
- * The rules these shapes serve are in
- * docs/plans/2026-08-08-hearts-and-gin-rummy.md ("Hearts") until
- * docs/HEARTS_RULES.md exists; from then on that document is the source of
- * truth and this file follows it.
+ * The rules these shapes serve are docs/HEARTS_RULES.md §1–§3; that document is
+ * the source of truth and this file follows it.
  *
  * Two things are deliberate. First, **the completed tricks are the public
  * record**: there is no separate log, because in Hearts everything that ever
@@ -71,7 +69,7 @@ export type PassOffset = 0 | 1 | 2 | 3;
 
 /**
  * Left, right, across, none — in that order, repeating every four hands
- * (the plan: 左 → 右 → 対面 → なしの輪番). Hand numbers start at 1.
+ * (docs/HEARTS_RULES.md §2.1). Hand numbers start at 1.
  */
 export const PASS_CYCLE: readonly PassOffset[] = [1, 3, 2, 0];
 
@@ -226,8 +224,7 @@ export interface PlayContext {
 }
 
 /**
- * The legal plays, ascending (the plan: 2♣ 強制リード・スート追い義務・初トリック
- * 点札禁止・♥ リードはブレイク後).
+ * The legal plays, ascending (docs/HEARTS_RULES.md §2.2).
  *
  * Four rules, in the order they apply:
  *

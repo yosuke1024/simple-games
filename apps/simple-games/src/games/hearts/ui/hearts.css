@@ -457,7 +457,7 @@
 /* A card the rules will not take right now: the wrong suit while you hold the
    suit that was led, a point on the opening trick, a heart led before they are
    broken. Sunk rather than scolded; tapping it does nothing, quietly, with no
-   sound and no buzz (the plan: 無効操作を叱らない). */
+   sound and no buzz (docs/HEARTS_RULES.md §2.2). */
 .ht-sunk {
   filter: grayscale(0.5);
   opacity: 0.55;

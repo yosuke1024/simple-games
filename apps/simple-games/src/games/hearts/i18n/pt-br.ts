@@ -1,91 +1,74 @@
-/*
- * PLACEHOLDER — this catalog is still the English text, word for word.
- *
- * The file exists so the fourteen-locale shape holds and the i18n tests can
- * see this game at all: every locale must carry every key as a non-empty
- * string with the same placeholders (src/i18n/i18n.test.ts). English standing
- * in for a missing translation is what the runtime already falls back to, so
- * this is the fallback written down rather than a claim that it was
- * translated. Replacing it is the next commit on this game, and
- * docs/I18N_POLICY.md governs how.
- */
 import type { HeartsMessages } from './en';
+
 export const ptBR: HeartsMessages = {
   heartsName: 'Hearts',
 
-  // ---------- home ----------
-  heartsChooseOpponent: 'Choose your opponents',
-  heartsDifficulty_easy: 'Easy',
+  heartsChooseOpponent: 'Escolha seus adversários',
+  heartsDifficulty_easy: 'Fácil',
   heartsDifficulty_normal: 'Normal',
-  heartsDifficulty_hard: 'Hard',
-  heartsRecordNote: 'Won {wins} · Lost {losses} · Drawn {draws}',
-  heartsConfirmSwitchTitle: 'Replace the match in progress?',
-  heartsConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  heartsDifficulty_hard: 'Difícil',
+  heartsRecordNote: '{wins} vitórias · {losses} derrotas · {draws} empates',
+  heartsConfirmSwitchTitle: 'Substituir a partida em andamento?',
+  heartsConfirmSwitchBody: 'Sua partida {current} será substituída por uma nova partida {next}.',
 
-  // ---------- the table ----------
-  heartsTableLabel: 'Hearts table',
-  heartsHandLabel: 'Your hand',
-  heartsTrickLabel: 'The trick',
-  heartsTrayLabel: 'Cards you are passing',
-  heartsYou: 'You',
+  heartsTableLabel: 'Mesa de Hearts',
+  heartsHandLabel: 'Sua mão',
+  heartsTrickLabel: 'A vaza',
+  heartsTrayLabel: 'Cartas que você vai passar',
+  heartsYou: 'Você',
   heartsCpuSeat: 'CPU {n}',
-  heartsYouLabel: 'You: {hand} points this hand, {total} in the match',
-  heartsSeatLabel: 'CPU {n}: {cards} cards, {hand} points this hand, {total} in the match',
-  heartsTookLastTrick: 'Took the last trick',
-  heartsCardLabel: '{rank} of {suit}',
-  heartsSuit_spades: 'spades',
-  heartsSuit_hearts: 'hearts',
-  heartsSuit_diamonds: 'diamonds',
-  heartsSuit_clubs: 'clubs',
-  heartsCardBlocked: '{card}, not allowed now',
-  heartsCardChosen: '{card}, chosen to pass',
+  heartsYouLabel: 'Você: {hand} pontos nesta mão, {total} na partida',
+  heartsSeatLabel: 'CPU {n}: {cards} cartas, {hand} pontos nesta mão, {total} na partida',
+  heartsTookLastTrick: 'Levou a última vaza',
+  heartsCardLabel: '{rank} de {suit}',
+  heartsSuit_spades: 'espadas',
+  heartsSuit_hearts: 'copas',
+  heartsSuit_diamonds: 'ouros',
+  heartsSuit_clubs: 'paus',
+  heartsCardBlocked: '{card}, não pode ser jogada agora',
+  heartsCardChosen: '{card}, escolhida para passar',
   heartsTrickCard: '{card}, {seat}',
 
-  // ---------- the pass ----------
-  heartsPassPrompt: 'Choose three cards to pass',
-  heartsPassLeft: 'Passing left',
-  heartsPassAcross: 'Passing across',
-  heartsPassRight: 'Passing right',
-  heartsPassConfirm: 'Pass these three',
-  heartsPassWaiting: 'Waiting for the other seats…',
+  heartsPassPrompt: 'Escolha três cartas para passar',
+  heartsPassLeft: 'Passando para a esquerda',
+  heartsPassAcross: 'Passando para quem está à frente',
+  heartsPassRight: 'Passando para a direita',
+  heartsPassConfirm: 'Passar estas três',
+  heartsPassWaiting: 'Esperando os outros jogadores…',
 
-  // ---------- the tricks ----------
-  heartsPlayPrompt: 'Tap a card, then tap it again to play it',
-  heartsCpuTurn: 'CPU {n} is playing…',
-  heartsTrickYou: 'You took the trick',
-  heartsTrickCpu: 'CPU {n} took the trick',
+  heartsPlayPrompt: 'Toque em uma carta e toque de novo para jogá-la',
+  heartsCpuTurn: 'A CPU {n} está jogando…',
+  heartsTrickYou: 'Você levou a vaza',
+  heartsTrickCpu: 'A CPU {n} levou a vaza',
 
-  // ---------- the hand, scored ----------
-  heartsHandTitle: 'Hand scored',
-  heartsMoonTitle: 'Shot the moon',
-  heartsMoonYou: 'You took all twenty-six, so the other three seats take 26 each.',
-  heartsMoonCpu: 'CPU {n} took all twenty-six, so everybody else takes 26.',
-  heartsThisHand: 'This hand',
-  heartsMatchTotal: 'Match',
-  heartsNextHand: 'Next hand',
+  heartsHandTitle: 'Contagem da mão',
+  heartsMoonTitle: 'Caçou a lua',
+  heartsMoonYou:
+    'Você levou os vinte e seis pontos, então os outros três jogadores ficam com 26 cada um.',
+  heartsMoonCpu: 'A CPU {n} levou os vinte e seis pontos, então todos os outros ficam com 26.',
+  heartsThisHand: 'Esta mão',
+  heartsMatchTotal: 'Partida',
+  heartsNextHand: 'Próxima mão',
 
-  // ---------- the match, decided ----------
-  heartsWinTitle: 'You win!',
-  heartsWinBody: 'The fewest points when somebody passed a hundred.',
-  heartsLoseTitle: 'The CPU wins',
-  heartsLoseBody: 'Another seat finished on fewer points. The next match is free.',
-  heartsDrawTitle: 'A draw',
-  heartsDrawBody: 'You finished level with another seat on the lowest score.',
-  heartsFinalScores: 'Final scores',
+  heartsWinTitle: 'Você venceu!',
+  heartsWinBody: 'Menos pontos que todos quando alguém passou de cem.',
+  heartsLoseTitle: 'A CPU venceu',
+  heartsLoseBody: 'Outro jogador terminou com menos pontos. A próxima partida é grátis.',
+  heartsDrawTitle: 'Empate',
+  heartsDrawBody: 'Você terminou empatado com outro jogador na menor pontuação.',
+  heartsFinalScores: 'Pontuação final',
 
-  // ---------- statistics ----------
-  heartsWins: 'Wins',
-  heartsLosses: 'Losses',
-  heartsDraws: 'Draws',
+  heartsWins: 'Vitórias',
+  heartsLosses: 'Derrotas',
+  heartsDraws: 'Empates',
 
-  // ---------- Quick Rules: three steps, one sentence each ----------
-  heartsStep1Title: 'Pass three',
+  heartsStep1Title: 'Passe três cartas',
   heartsStep1Body:
-    'Before most hands you choose three cards and pass them on — left, then right, then across, then a hand where nobody passes.',
-  heartsStep2Title: 'Follow the suit',
+    'Antes de quase toda mão você escolhe três cartas e as passa adiante: para a esquerda, depois para a direita, depois para quem está à frente, e depois uma mão em que ninguém passa.',
+  heartsStep2Title: 'Siga o naipe',
   heartsStep2Body:
-    'Follow the suit that was led whenever you can; every heart costs a point and the queen of spades costs thirteen.',
-  heartsStep3Title: 'Fewest points wins',
+    'Quem sai define o naipe e você tem de segui-lo enquanto tiver; a carta mais alta desse naipe leva a vaza.',
+  heartsStep3Title: 'Vence quem fizer menos pontos',
   heartsStep3Body:
-    'The highest card of the suit led takes the trick and everything in it, and when somebody passes a hundred the fewest points wins.',
+    'Cada copas que você recolhe custa um ponto e a Q de espadas custa treze, então quando alguém passa de cem vence quem tiver menos pontos.',
 };
