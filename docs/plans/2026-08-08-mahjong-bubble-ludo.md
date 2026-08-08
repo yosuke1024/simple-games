@@ -631,8 +631,17 @@ Serial 87218719 ほか)は本文書が記録している。`Mahjong Solitaire` `
    - `docs/ARCHITECTURE.md`(registry id 列挙・ストレージキー表・CSS 列挙・
      i18n キー数)/ `docs/I18N_POLICY.md`(キー数)/ `docs/WEB_VERSION.md`
      (本数が出ていれば)。
-   - スイープ: `grep -rniE "twenty|thirty|2[2-9] ?本|30 ?本|2[2-9] games|30 games"`
+   - スイープ: `grep -rniE "(eight|ten|twelve|thirteen|fifteen|seventeen|eighteen|nineteen|twenty|thirty)|[0-9]{1,2} ?(本|ゲーム|games|titles)"`
      を README.md / docs / apps/simple-games に掛けて取りこぼしを拾う。
+     **単位は 3 つある** — `本` だけでなく **`ゲーム`** と `games` も数える
+     (`docs/WEB_VERSION.md` は「18 ゲーム」と書く。単位を 1 つ落とすと、
+     その文書ではマッチが 0 件になり、スイープを通したのに何も直らない)。
+     **範囲は 22 から始めない** — 収録数は 8 → 10 → 12 → 13 → 15 → 20 → 22 と
+     動いてきたので、**今すでに古い数**が残っている(`WEB_VERSION.md` の
+     「18 ゲーム」3 箇所、`ARCHITECTURE.md` の「20 ゲーム」2 箇所は 2026-08-08
+     時点で既に誤り)。30 にしたときこれらは誤ったまま残るので、**過去の全ての
+     収録数を掃く**。ヒットは 1 件ずつ読む — 収録数ではない数字(バージョン・
+     行数・ミリ秒)を機械的に書き換えない。
 2. **アクセント再測定**(Phase 1 で予約): マージ時点の全色(並行 5 本込み)で
    ΔE 床を再確認。割れたら BRAND 手順で深め直す(Number Recall の前例)。
 3. **品質ゲート**: `pnpm lint && pnpm typecheck && pnpm test && pnpm build &&
@@ -659,6 +668,19 @@ pnpm --filter simple-games build:web && pnpm --filter simple-games size:check` +
 - **Web 先行公開はタグに先行してよい**(WEB_VERSION.md「先行公開」)。この 3 本は
   選定理由が検索流入なので、**先行公開と landing ガイド(フォローアップ)が
   実装と同格の deliverable である** — 収録して終わりにしない。
+- **ただし先行公開を使うと、タグの条件は「5 本マージ + 実機確認」では足りない。**
+  RELEASE_CHECKLIST §0「先行公開からの正式収録」が別に 4 つの門を課す。実装が
+  通っただけで正式収録へ上げられないよう、ここに明示する:
+  1. **直近 2 週間、スキーマ変更(セーブを消す変更)・既知のクラッシュ・進行不能が
+     ない**。壊す変更を入れたら 2 週間を数え直す — この 3 本は保存形式が本 PR の
+     レビュー中に何度も変わっており、**最後にスキーマを触った日から数える**。
+  2. **計測の滞在時間が十分**(シェル層イベント。既収録ゲームを参照点に人間が
+     判断する)。先行公開の第一の用途がこの判断である(WEB_VERSION.md「計測」)。
+  3. **スキーマ凍結** — 永続化ラウンドトリップを作り、以後は移行のみ(Phase 2 /
+     Phase 4 の該当テスト)。
+  4. **Web 版の BETA バッジとセーブ注意文(en/ja)を外す**。
+     1 と 2 は**時間と実データが要る門**で、コードが緑になった日には満たせない。
+     Phase 5 の完了 = タグではない。
 
 ## リスクと対処
 
@@ -675,6 +697,8 @@ pnpm --filter simple-games build:web && pnpm --filter simple-games size:check` +
 | 2 スロットの門(`savedGameSlots`)で最初の実行から落ちる | 両スロットで**同じレコード形**を使い、`mode` を持って `gameSlotSchema(key, expectedMode)` で突き合わせ、`storage/slots.test.ts` を置く(§10)                                                                         |
 | 盤面 golden が緑のまま既存の保存が読めなくなる         | **保存を持つ 2 本(Mahjong / Ludo)とも**永続化ラウンドトリップを別に敷く(Mahjong は空でない除去列 + `hintCount` をレベルとデイリーに、Ludo は開幕でない v1 ペイロード)。RELEASE_CHECKLIST「golden だけでは足りない」 |
 | 共有の刻み・カウンタから 1 本だけ外れる                | `recordGameCompleted()` は 3 本ともクリア / 勝利で呼ぶ(閾値は全ゲーム横断の 5 勝)。`ResultAdSlot` は 3 本ともリザルトに置く(3 局 1 回はセッション横断の刻み)                                                        |
+| 収録数のスイープが取りこぼす                           | 単位を 3 つ(`本` / `ゲーム` / `games`)、範囲を過去の全収録数まで広げる。**今すでに古い数**(WEB_VERSION の「18 ゲーム」・ARCHITECTURE の「20 ゲーム」)が実在する(Phase 5)                                            |
+| 先行公開のまま正式収録へ上げてしまう                   | タグの条件に RELEASE_CHECKLIST §0 の 4 門を明記(2 週間の静穏・滞在時間・スキーマ凍結・BETA バッジ除去)。**1 と 2 はコードが緑になった日には満たせない**                                                             |
 | 逆順構成が単調な配置を作る                             | 難易度レバー(段・同種の重なり)をカーブとして固定し、実走で確かめる                                                                                                                                                  |
 | Bubble の物理が床の実機で 60fps を割る                 | BB の手順(エミュ + CPU スロットル)。同時泡数・DPR 1.5 の調整余地                                                                                                                                                    |
 | フル軌道ガイドで遊びが浅くなる                         | ガイドは着弾セルだけ(ポップ結果・落下は示さない)— 線引きを §8 に明記                                                                                                                                                |
