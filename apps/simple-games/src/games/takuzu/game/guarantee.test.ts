@@ -36,8 +36,14 @@ const WORK_BUDGET = 60_000;
  */
 const ATTEMPT_BUDGET = 8;
 
-/** 60 days is two months of daily seeds — enough to see a bad day coming. */
-const DAILY_DAYS = 60;
+/**
+ * Two years of daily seeds. The figure is not decorative: the budgets above
+ * are stated against "the worst of two years of dailies", and a gate that
+ * walked two months while the claim said two years would be leaving 670 days
+ * of fallback, retry and work regressions unguarded behind a promise. The
+ * whole walk — 100 levels and 730 dates — costs a few seconds.
+ */
+const DAILY_DAYS = 730;
 
 interface Run {
   readonly name: string;

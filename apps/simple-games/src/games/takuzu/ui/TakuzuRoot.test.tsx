@@ -132,6 +132,36 @@ describe('backgrounding (§11)', () => {
       vi.useRealTimers();
     }
   });
+
+  // The path that made the booking baseline matter: a suspended game is on
+  // disk, the player opens Takuzu, looks at the home screen and leaves without
+  // resuming. Nothing was played, so nothing may be booked — and the second
+  // visit must not book it again either. Before the baseline was seeded from
+  // the restored session, each visit added its whole elapsed time.
+  it('books nothing when a suspended game is opened and left unresumed', async () => {
+    deviceStore.set(TK_STORAGE_KEYS.flags, tutorialDone[TK_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+      act(() => vi.advanceTimersByTime(7_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(7);
+
+      for (const _visit of [1, 2]) {
+        cleanup();
+        launch();
+        await settle();
+        background();
+        await settle();
+        expect(storedPlaySeconds()).toBe(7);
+      }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe('first run', () => {

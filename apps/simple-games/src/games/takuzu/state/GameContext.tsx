@@ -98,6 +98,12 @@ export interface TakuzuProviderProps {
   children: ReactNode;
 }
 
+/**
+ * The mode a freshly mounted game is pointed at, before anything is resumed.
+ * Named because the play-clock baseline has to be read from the same slot.
+ */
+const INITIAL_MODE: GameMode = 'level';
+
 export function TakuzuProvider({
   initialStats,
   initialFlags,
@@ -110,7 +116,7 @@ export function TakuzuProvider({
     initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
-  const [activeMode, setActiveMode] = useState<GameMode>('level');
+  const [activeMode, setActiveMode] = useState<GameMode>(INITIAL_MODE);
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
@@ -131,9 +137,21 @@ export function TakuzuProvider({
   const session = sessions[activeMode];
 
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
-  /** Play seconds already booked into the statistics for this session. */
-  const bookedRef = useRef(0);
+  const elapsedRef = useRef(initialSessions[INITIAL_MODE]?.elapsedSeconds ?? 0);
+  /**
+   * Play seconds already booked into the statistics for this session.
+   *
+   * Seeded from the restored game rather than from zero, because a suspended
+   * game arrives with its seconds already in `totalPlaySeconds` — they were
+   * booked by the sync that saved it. `activate` re-establishes this baseline
+   * whenever a game comes on screen, but the mount before that is reachable:
+   * opening the game and leaving from its home without resuming runs
+   * `syncActiveGame` against the restored session, and from a zero baseline
+   * that books its whole elapsed time a second time. Open and leave twice and
+   * it lands twice. The comment on the visibility effect below already states
+   * this invariant — this is the line that makes it true.
+   */
+  const bookedRef = useRef(initialSessions[INITIAL_MODE]?.elapsedSeconds ?? 0);
 
   const withElapsed = useCallback(
     (s: TakuzuSession): TakuzuSession => withElapsedSeconds(s, elapsedRef.current),
