@@ -8,6 +8,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { cycleCell, emptyMarks, findViolations, isSolved, mergeBoard } from './engine';
+import { buildSolution } from './generator';
 import { EMPTY, ONE, ZERO, type Mark } from './types';
 
 const board = (...rows: string[]): Mark[] =>
@@ -166,5 +167,24 @@ describe('the win (§2)', () => {
     broken[2] = ZERO;
     expect(isSolved(broken, 6)).toBe(false);
     expect(findViolations(broken, 6).any).toBe(true);
+  });
+});
+
+describe('a board of the wrong length is not a win (§2)', () => {
+  // `every` on an empty array is true and a short board reads as all-empty, so
+  // without an explicit length check the emptiest possible board is "solved" —
+  // which is how a generator that returned nothing would reach the result
+  // screen as a win rather than as a crash.
+  it('refuses an empty board', () => {
+    expect(isSolved([], 6)).toBe(false);
+    expect(isSolved([], 8)).toBe(false);
+    expect(isSolved([], 10)).toBe(false);
+  });
+
+  it('refuses a board that is short by one cell', () => {
+    const solved = buildSolution('takuzu-level-1', 6) as Mark[] | null;
+    expect(solved).not.toBeNull();
+    expect(isSolved(solved!, 6)).toBe(true);
+    expect(isSolved(solved!.slice(0, -1), 6)).toBe(false);
   });
 });

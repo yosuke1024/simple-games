@@ -57,7 +57,6 @@ export const TakuzuBoard = memo(function TakuzuBoard({ session, hint, onTap }: T
       className="takuzu-board"
       role="group"
       aria-label={t('takuzuBoardLabel', { size })}
-      data-size={size}
       style={{ '--takuzu-size': size } as CSSProperties}
     >
       {givens.map((given, index) => {

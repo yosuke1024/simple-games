@@ -152,5 +152,11 @@ export const isFull = (board: readonly Mark[]): boolean => board.every((cell) =>
  * exactly half of each, since the two counts sum to the line length.
  */
 export function isSolved(board: readonly Mark[], size: Size): boolean {
+  // The length check is not paranoia about a caller: `every` on a board of the
+  // wrong length is vacuously true and `findViolations` reads a short board as
+  // all-empty, so without it `isSolved([], 6)` is `true` and an empty board
+  // arrives at the result screen as a win. `isFullyDetermined` (solver.ts)
+  // guards the same way for the same reason.
+  if (board.length !== cellCount(size)) return false;
   return isFull(board) && !findViolations(board, size).any;
 }

@@ -217,12 +217,24 @@ export function generatePuzzle(seed: string, size: Size, givensRatio: number): G
     if (best === null || count < best.count) best = { solution, givens, count };
   }
 
-  const fallback = best ?? { solution: [] as Cell[], givens: [] as Mark[], count: 0 };
+  // Two failures live here and only one of them is allowed to ship. Digging
+  // short of the band's target is a real puzzle that is easier than its number
+  // promised, so it goes out with `fallback` set (§6). Failing to build ANY
+  // solution is not a degraded puzzle — it means `buildSolution` gave up on all
+  // 24 derived seeds, which cannot happen for a legal size and would mean this
+  // file is broken. Returning an empty board for it would hand the player a
+  // blank grid with nothing to tap and `status: 'playing'`, and persist it.
+  if (best === null) {
+    throw new Error(
+      `takuzu: no ${size}x${size} solution after ${ATTEMPT_LIMIT} seeds from "${seed}"`,
+    );
+  }
+
   return {
     size,
-    solution: fallback.solution,
-    givens: fallback.givens,
-    givensCount: fallback.count,
+    solution: best.solution,
+    givens: best.givens,
+    givensCount: best.count,
     attempts: ATTEMPT_LIMIT,
     work: solverWork.read() - before,
     fallback: true,
