@@ -31,6 +31,7 @@ import { C4_STORAGE_KEYS } from '../games/connect-four/storage/keys';
 import { CK_STORAGE_KEYS } from '../games/checkers/storage/keys';
 import { GM_STORAGE_KEYS } from '../games/gomoku/storage/keys';
 import { FC_STORAGE_KEYS } from '../games/freecell/storage/keys';
+import { FT_STORAGE_KEYS } from '../games/futoshiki/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
 import { NG_STORAGE_KEYS } from '../games/nonogram/storage/keys';
@@ -71,7 +72,8 @@ export type GameId =
   | 'reversi'
   | 'connect-four'
   | 'gomoku'
-  | 'takuzu';
+  | 'takuzu'
+  | 'futoshiki';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -296,6 +298,36 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(TK_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/takuzu/ui/TakuzuRoot').then((m) => ({ default: m.TakuzuRoot })),
+  },
+  {
+    id: 'futoshiki',
+    // U+2276, the two signs the game is played with folded into one figure:
+    // the mark IS the rule, the way Takuzu's `01` is its two digits.
+    //
+    // Unique against the other twenty-three, and the near misses were looked
+    // at rather than assumed. Brick Breaker's `≡` and Water Sort's `≋` are the
+    // only other stacked-stroke marks, and both sit in other sections (arcade
+    // and puzzle) under their own accents. In this one it stands beside `⌗`,
+    // `◆`, `▦` and `01`, and it is the only mark here built from strokes
+    // rather than a filled shape.
+    //
+    // It renders, and that was checked rather than hoped at: the bundled
+    // Nunito subset (@fontsource/nunito latin-700/800) carries 230 glyphs and
+    // none of this collection's symbol marks — not `⌗`, `◆`, `▦`, `≡` or `≋`.
+    // Every one of them already resolves through the `ui-rounded, system-ui,
+    // sans-serif` tail of --font-display, so five shipped titles are the
+    // evidence that this path draws. `≶` sits in Mathematical Operators, the
+    // same block `≡` and `≋` come from, and takes exactly the same route.
+    title: 'Futoshiki',
+    category: 'logic',
+    glyph: '≶',
+    storageKeys: Object.values(FT_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/futoshiki/ui/FutoshikiRoot').then((m) => ({ default: m.FutoshikiRoot })),
+    loadSettingsSection: () =>
+      import('../games/futoshiki/ui/FutoshikiSettingsSection').then((m) => ({
+        default: m.FutoshikiSettingsSection,
+      })),
   },
   {
     id: 'number-match',

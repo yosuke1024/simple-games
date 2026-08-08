@@ -20,6 +20,10 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // Five, not six: Takuzu has no per-game setting to keep
   // (docs/TAKUZU_RULES.md §4, §9).
   takuzu: ['tk.saveGame', 'tk.saveDaily', 'tk.stats', 'tk.progress', 'tk.flags'],
+  // Six, where Takuzu has five: this game keeps one setting across boards —
+  // whether a digit that disagrees with the answer is marked as it lands
+  // (docs/FUTOSHIKI_RULES.md §5, §11).
+  futoshiki: ['ft.saveGame', 'ft.saveDaily', 'ft.stats', 'ft.progress', 'ft.flags', 'ft.prefs'],
   'number-match': ['nm.saveGame', 'nm.stats', 'nm.flags', 'nm.progress', 'nm.saveDaily'],
   'quick-math': ['qm.saveGame', 'qm.saveDaily', 'qm.stats', 'qm.progress', 'qm.flags'],
   // Two keys short of the others on purpose: neither drill saves a round in
@@ -48,6 +52,7 @@ const PREFIXES: Record<string, string> = {
   'brick-breaker': 'bb.',
   nonogram: 'ng.',
   takuzu: 'tk.',
+  futoshiki: 'ft.',
   'number-match': 'nm.',
   'quick-math': 'qm.',
   'schulte-table': 'st.',

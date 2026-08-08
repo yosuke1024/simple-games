@@ -57,6 +57,7 @@ describe('gameLandingUrl', () => {
       'schulte-table',
       'number-recall',
       'takuzu',
+      'futoshiki',
     ]) {
       expect(gameLandingUrl(id, 'en')).toBeNull();
       expect(gameLandingUrl(id, 'ja')).toBeNull();

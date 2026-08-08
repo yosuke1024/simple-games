@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SettingsProvider } from '../state/SettingsContext';
@@ -97,10 +97,29 @@ describe('shared settings', () => {
     renderShell();
     await user.click(screen.getByRole('button', { name: 'Settings' }));
 
-    // Sudoku contributes this section; the shell only lends it a place.
-    const toggle = await screen.findByRole('switch', { name: 'Show mistakes' });
+    // Sudoku contributes this section; the shell only lends it a place. The
+    // section is addressed by the game's own name rather than by the toggle
+    // inside it, because two contributors now offer a setting under the same
+    // words — which is the arrangement working, not a collision: each lives in
+    // its own labelled region, and that region is what tells them apart.
+    const sudoku = await screen.findByRole('region', { name: 'Sudoku' });
+    const toggle = within(sudoku).getByRole('switch', { name: 'Show mistakes' });
     expect(toggle).toHaveAttribute('aria-checked', 'true');
     await user.click(toggle);
     expect(toggle).toHaveAttribute('aria-checked', 'false');
+  });
+
+  it('hosts every contributor, each under its own name', async () => {
+    const user = userEvent.setup();
+    renderShell();
+    await user.click(screen.getByRole('button', { name: 'Settings' }));
+
+    // The shell knows none of these names — it walks GAMES and renders
+    // whatever each title hands it. A second contributor is what makes that
+    // claim testable at all: one could have been a special case.
+    for (const game of ['Sudoku', 'Futoshiki']) {
+      const section = await screen.findByRole('region', { name: game });
+      expect(within(section).getByRole('switch')).toBeInTheDocument();
+    }
   });
 });
