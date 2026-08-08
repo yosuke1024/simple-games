@@ -17,9 +17,10 @@
  *
  * The hands here are dealt by hand rather than played into existence, so a
  * settlement worth a hundred points is one call away instead of a hundred. Each
- * one is checked against `isValidHand` as it is built, so a crafted position
- * the rules could not produce fails loudly here rather than quietly proving
- * something about a game nobody can play.
+ * one is checked against `isValidHand` *and* `isConsistentLog` as it is built —
+ * the position the rules allow, and a history that could have reached it — so a
+ * crafted hand fails loudly here rather than quietly proving something about a
+ * game nobody can play.
  */
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -27,6 +28,7 @@ import {
   CARD_COUNT,
   CPU,
   createSession,
+  isConsistentLog,
   isValidHand,
   MATCH_TARGET,
   opponentOf,
@@ -36,6 +38,7 @@ import {
   type Card,
   type GinRummySession,
   type HandState,
+  type PublicEvent,
   type Seat,
 } from '../game';
 import { gameSchema, statsSchema, type Prefs, type Stats } from '../storage/schemas';
@@ -69,14 +72,15 @@ vi.mock('../../../services/review', () => ({ recordGameCompleted }));
 
 /**
  * A position mid-hand: the two holdings as given, every other card face down.
- * In the discard phase the seat to move holds eleven and the pile may be empty;
- * in the draw phase both hold ten and there is a card to take.
+ * In the discard phase the seat to move holds eleven; in the draw phase both
+ * hold ten and there is a card to take.
  *
- * The log says how the position was reached, because these sessions are saved
- * and the decoder rebuilds the pile from the log before it hands one back
- * (game/types.ts): nothing has happened yet on the draw, and on the discard the
- * seat to move took the turned card, which is the only way to be holding eleven
- * with an empty pile.
+ * The log says how the position was reached, and it has to be a history that
+ * really could have been played: these sessions are saved, and the decoder
+ * replays the record as a hand before it hands one back (game/types.ts). Both
+ * positions below take the opening one — the turned card refused twice, which
+ * is what leaves the non-dealer to move — and the discard phase is one stock
+ * draw further on.
  */
 function craft(
   you: readonly Card[],
@@ -87,27 +91,30 @@ function craft(
   const held = new Set<Card>([...you, ...cpu]);
   const rest: Card[] = [];
   for (let card = 0; card < CARD_COUNT; card++) if (!held.has(card)) rest.push(card);
-  const upcard = phase === 'draw' ? rest[0]! : sortedCards(turn === YOU ? you : cpu)[0]!;
+  const upcard = rest[0]!;
+  const refused: PublicEvent[] = [
+    { kind: 'upcard', card: upcard },
+    { kind: 'pass', seat: turn },
+    { kind: 'pass', seat: opponentOf(turn) },
+  ];
   const hand: HandState = {
     dealer: opponentOf(turn),
     hands: [sortedCards(you), sortedCards(cpu)],
-    stock: phase === 'draw' ? rest.slice(1) : rest,
-    discard: phase === 'draw' ? [upcard] : [],
+    stock: rest.slice(1),
+    discard: [upcard],
     turn,
     phase,
     ending: 'none',
     takenFromDiscard: null,
-    mustDrawStock: false,
-    log:
-      phase === 'draw'
-        ? [{ kind: 'upcard', card: upcard }]
-        : [
-            { kind: 'upcard', card: upcard },
-            { kind: 'draw-discard', seat: turn, card: upcard },
-          ],
+    // The refused card stays refused until the non-dealer has opened from the
+    // stock, which is exactly the difference between these two positions.
+    mustDrawStock: phase === 'draw',
+    log: phase === 'draw' ? refused : [...refused, { kind: 'draw-stock', seat: turn }],
   };
-  // A crafted position the rules could not produce proves nothing.
+  // A crafted position the rules could not produce proves nothing, and neither
+  // does one whose history the rules could not have produced.
   if (!isValidHand(hand)) throw new Error('crafted hand is not a hand');
+  if (!isConsistentLog(hand)) throw new Error('crafted history is not one that could be played');
   return hand;
 }
 

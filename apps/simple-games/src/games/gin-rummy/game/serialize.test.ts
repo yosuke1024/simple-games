@@ -7,10 +7,19 @@
  * where the fifty-two cards do not add up.
  */
 import { describe, expect, it } from 'vitest';
-import { cardOf, type Card, type Suit } from './cards';
+import { cardOf, sortedCards, type Card, type Suit } from './cards';
+import { buildCpuView, knowledgeOf } from './cpu';
 import { dealHand, discardCard, drawFromStock, knock, passUpcard, takeUpcard } from './engine';
 import { decodeHand, encodeHand } from './serialize';
-import { CPU, YOU, type HandState } from './types';
+import {
+  CPU,
+  isConsistentLog,
+  isValidHand,
+  topDiscard,
+  YOU,
+  type HandState,
+  type PublicEvent,
+} from './types';
 
 const SUIT_LETTERS = 'SHDC';
 const RANK_LETTERS = 'A23456789TJQK';
@@ -248,6 +257,169 @@ describe('the public log has to match the table', () => {
   it('refuses a log that does not begin with the turned card', () => {
     const written = events(opened);
     rejects(withLog(opened, [...written.slice(1), written[0]!].join('')));
+  });
+});
+
+/**
+ * Adding the record up is not enough, because a forgery can be made to add up.
+ * The record is replayed as a *game* — every event legal where it stands, and
+ * the position it ends on the position that was saved — and these are the
+ * forgeries that survive the arithmetic and die on the replay. Each one leaves
+ * the pile, the stock and both hand sizes exactly as they were, which is why
+ * every one of them is checked through `isValidHand` first: the table is not
+ * what gives them away.
+ */
+describe('the public log has to be a game that could have been played', () => {
+  const rejects = (text: string) => expect(decodeHand(text)).toBeNull();
+
+  /** The upcard taken: the player holds eleven and the pile is empty. */
+  const taken = takeUpcard(dealt)!;
+  /** Both players refused it; the non-dealer must open from the stock. */
+  const bothPassed = passUpcard(passUpcard(dealt)!)!;
+  /** …and did. */
+  const opened = drawFromStock(bothPassed)!;
+
+  /** What the opponent would take the record to mean about the player's hand. */
+  const opponentThinksPlayerHolds = (hand: HandState): ReadonlySet<Card> =>
+    knowledgeOf(buildCpuView(hand, CPU, 'hard', [0, 0])).holds;
+
+  it('refuses a discard and a take of the same card, appended to a record that was played', () => {
+    // The pair that cancels itself out. A card goes down and comes straight
+    // back up, so the pile is pushed and popped, one card leaves the hand and
+    // one returns, and the stock is never touched: every total the record
+    // could be summed into is exactly what it was.
+    const victim = taken.hands[YOU].find((card) => card !== taken.takenFromDiscard)!;
+    const forged: HandState = {
+      ...taken,
+      log: [
+        ...taken.log,
+        { kind: 'discard', seat: YOU, card: victim },
+        { kind: 'draw-discard', seat: YOU, card: victim },
+      ],
+    };
+    expect(isValidHand(forged)).toBe(true);
+    expect(forged.discard).toEqual(taken.discard);
+    expect(forged.stock).toEqual(taken.stock);
+    expect(forged.hands.map((cards) => cards.length)).toEqual([11, 10]);
+
+    // And this is what the pair buys: a card out of the player's own hand,
+    // which the opponent now reads as one it watched the player pick up
+    // (game/cpu.ts `knowledgeOf`, and hard's `riskOf` plays around it).
+    expect(opponentThinksPlayerHolds(forged).has(victim)).toBe(true);
+
+    // Replayed as a game it is not one: the discard handed the turn over, and
+    // the take that follows is not the taker's to make.
+    expect(isConsistentLog(forged)).toBe(false);
+    rejects(encodeHand(forged));
+  });
+
+  it('refuses the same pair written in at the front, over two refusals', () => {
+    // The other end of the record, and the same hole: the two passes that open
+    // this hand rewritten as a discard and an immediate take. Passes move no
+    // cards, so the substitution is invisible to every total as well.
+    const victim = opened.hands[YOU][0]!;
+    const written = events(opened);
+    expect(written.slice(1)).toEqual(['p0--', 'p1--', 's0--']);
+    rejects(
+      withLog(
+        opened,
+        [written[0]!, `x0${code(victim)}`, `d0${code(victim)}`, written[3]!].join(''),
+      ),
+    );
+  });
+
+  it('refuses an event from the seat whose turn it was not', () => {
+    // The non-dealer gets the first look at the turned card, and the dealer
+    // the second. A record that refuses them the other way round describes a
+    // different game — and refusing moves no cards, so nothing on the table
+    // disagrees with it.
+    const written = events(bothPassed);
+    expect(written.slice(1)).toEqual(['p0--', 'p1--']);
+    rejects(withLog(bothPassed, [written[0]!, written[2]!, written[1]!].join('')));
+  });
+
+  it('refuses the card just taken off the pile going straight back down', () => {
+    // §2.2, the rule that stops the pile being used as a free look: the taken
+    // card may not be this turn's discard. The table the record leaves behind
+    // is an ordinary one — the card is simply back where it came from.
+    const back = taken.takenFromDiscard!;
+    const forged: HandState = {
+      ...taken,
+      hands: [taken.hands[YOU].filter((card) => card !== back), taken.hands[CPU]],
+      discard: [...taken.discard, back],
+      turn: CPU,
+      phase: 'draw',
+      takenFromDiscard: null,
+      log: [...taken.log, { kind: 'discard', seat: YOU, card: back }],
+    };
+    expect(isValidHand(forged)).toBe(true);
+    rejects(encodeHand(forged));
+  });
+
+  it('refuses the refused card being taken after all', () => {
+    // Both players passed, so the turned card stays refused and the non-dealer
+    // opens from the stock (§2.1). A record that takes it anyway is a record of
+    // a move the engine has no door for.
+    const refused = topDiscard(bothPassed)!;
+    const forged: HandState = {
+      ...bothPassed,
+      hands: [sortedCards([...bothPassed.hands[YOU], refused]), bothPassed.hands[CPU]],
+      discard: [],
+      phase: 'discard',
+      takenFromDiscard: refused,
+      mustDrawStock: false,
+      log: [...bothPassed.log, { kind: 'draw-discard', seat: YOU, card: refused }],
+    };
+    expect(isValidHand(forged)).toBe(true);
+    rejects(encodeHand(forged));
+  });
+
+  it('refuses a record that says a hand holds a card it does not', () => {
+    // A take off the pile is the one thing the record says about whose cards
+    // are whose, and it says it out loud: the card was face up when it moved,
+    // and it leaves that hand only by being put back down — which is an event
+    // of its own. Here the taken card has been quietly swapped for the top of
+    // the stock, which leaves every count intact and leaves the opponent
+    // certain about a card that is face down.
+    const put = discardCard(
+      taken,
+      taken.hands[YOU].find((c) => c !== taken.takenFromDiscard)!,
+    )!;
+    const picked = taken.takenFromDiscard!;
+    const buried = put.stock[put.stock.length - 1]!;
+    const forged: HandState = {
+      ...put,
+      hands: [
+        sortedCards([...put.hands[YOU].filter((card) => card !== picked), buried]),
+        put.hands[CPU],
+      ],
+      stock: [...put.stock.slice(0, -1), picked],
+    };
+    expect(isValidHand(forged)).toBe(true);
+    expect(opponentThinksPlayerHolds(forged).has(picked)).toBe(true);
+    expect(forged.hands[YOU]).not.toContain(picked);
+    rejects(encodeHand(forged));
+  });
+
+  it('refuses anything at all after the hand has settled', () => {
+    // Nobody knocks, the stock runs down to two and the hand is void (§3.1).
+    // A settled hand takes no more moves — not even one that moves no cards.
+    let dead = bothPassed;
+    while (dead.phase !== 'over') {
+      dead =
+        dead.phase === 'draw'
+          ? drawFromStock(dead)!
+          : discardCard(
+              dead,
+              dead.hands[dead.turn].find((c) => c !== dead.takenFromDiscard)!,
+            )!;
+    }
+    expect(dead.ending).toBe('dead');
+    expect(decodeHand(encodeHand(dead))).toEqual(dead);
+
+    const after: PublicEvent = { kind: 'pass', seat: dead.turn };
+    expect(isConsistentLog({ ...dead, log: [...dead.log, after] })).toBe(false);
+    rejects(encodeHand({ ...dead, log: [...dead.log, after] }));
   });
 });
 

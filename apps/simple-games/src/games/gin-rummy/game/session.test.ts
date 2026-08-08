@@ -32,7 +32,16 @@ import {
   type TurnOutcome,
 } from './session';
 import { createRng } from './rng';
-import { CPU, DIFFICULTIES, MATCH_TARGET, YOU, type Difficulty, type HandAction } from './types';
+import {
+  CPU,
+  DIFFICULTIES,
+  isConsistentLog,
+  MATCH_TARGET,
+  YOU,
+  type Difficulty,
+  type HandAction,
+  type HandState,
+} from './types';
 
 /** Routes an action through the player-facing wrappers, as the screen would. */
 function playerAction(session: GinRummySession, action: HandAction): TurnOutcome | null {
@@ -245,6 +254,128 @@ describe('suspend and resume', () => {
     expect(won.status).toBe('won');
     expect(lost.status).toBe('lost');
     expect(restoreSession({ ...session, scores: [99, 99] }).status).toBe('playing');
+  });
+});
+
+/**
+ * The other side of the save's strictness, and the side that is easy to get
+ * quietly wrong.
+ *
+ * `isConsistentLog` (game/types.ts) refuses a record by replaying it as a hand
+ * and requiring every event to have been legal where it stands. A replay that
+ * is *stricter* than the engine refuses records that really were played — and
+ * a save refused is a match a player loses for nothing, which is a worse fault
+ * than the forgery the check was put there to stop. So it is measured against
+ * play itself rather than argued about: seventy-two matches, every hand, every
+ * position on the way, saved and read back.
+ *
+ * The routes are counted and the counts asserted. A sweep that stopped
+ * covering the upcard being taken, or the forced opening draw, or a hand dying
+ * with the stock at two, would stay green while proving much less. Only the
+ * dead hand has to be arranged — no CPU sits on a knocking hand for
+ * twenty-five turns — so it is played out by a hand-driven player that never
+ * declares, the same way the dead-hand test above builds one.
+ */
+describe('every position a match passes through survives the save', () => {
+  const SWEEP_SEEDS = 24;
+
+  /** Every route the rules have through a hand, counted as it is walked. */
+  interface Routes {
+    pass: number;
+    forcedDraw: number;
+    takeUpcard: number;
+    drawDiscard: number;
+    drawStock: number;
+    knock: number;
+    gin: number;
+    undercut: number;
+    dead: number;
+    deals: number;
+    positions: number;
+  }
+
+  const noRoutes = (): Routes => ({
+    pass: 0,
+    forcedDraw: 0,
+    takeUpcard: 0,
+    drawDiscard: 0,
+    drawStock: 0,
+    knock: 0,
+    gin: 0,
+    undercut: 0,
+    dead: 0,
+    deals: 0,
+    positions: 0,
+  });
+
+  /**
+   * The save, made and read back. Encoding the decoded hand and comparing the
+   * text is the whole answer: the encoding is total and the decoder is the
+   * only gate, so identical text is an identical hand.
+   */
+  function survives(hand: HandState): boolean {
+    if (!isConsistentLog(hand)) return false;
+    const text = encodeHand(hand);
+    const back = decodeHand(text);
+    return back !== null && encodeHand(back) === text;
+  }
+
+  it('is a save that comes back, whatever route the hand took', () => {
+    const routes = noRoutes();
+    const lost: HandState[] = [];
+    const check = (hand: HandState): void => {
+      routes.positions += 1;
+      if (!survives(hand)) lost.push(hand);
+    };
+
+    for (const difficulty of DIFFICULTIES) {
+      for (let seed = 0; seed < SWEEP_SEEDS; seed++) {
+        let session = createSession(difficulty, `gin-sweep-${difficulty}-${seed}`);
+        check(session.hand);
+        for (let taken = 0; taken < STEP_LIMIT && session.status === 'playing'; taken++) {
+          const before = session;
+          session = step(session);
+          check(session.hand);
+          if (session.handNumber !== before.handNumber) {
+            routes.deals += 1;
+            continue;
+          }
+          if (before.hand.phase !== 'over' && session.hand.phase === 'over') {
+            routes[session.lastHand!.kind] += 1;
+          }
+          const event = session.hand.log[session.hand.log.length - 1]!;
+          if (event.kind === 'pass') {
+            routes.pass += 1;
+            // The dealer's refusal is the one that forces the opening draw.
+            if (session.hand.mustDrawStock) routes.forcedDraw += 1;
+          } else if (event.kind === 'draw-discard') {
+            if (before.hand.phase === 'upcard') routes.takeUpcard += 1;
+            else routes.drawDiscard += 1;
+          } else if (event.kind === 'draw-stock') {
+            routes.drawStock += 1;
+          }
+        }
+      }
+    }
+
+    let dead = passUpcard(passUpcard(createSession('normal', 'gin-sweep-dead').hand)!)!;
+    while (dead.phase !== 'over') {
+      dead =
+        dead.phase === 'draw'
+          ? drawFromStock(dead)!
+          : discardCard(
+              dead,
+              dead.hands[dead.turn].find((c) => c !== dead.takenFromDiscard)!,
+            )!;
+      check(dead);
+    }
+    if (dead.ending === 'dead') routes.dead += 1;
+
+    expect(lost).toEqual([]);
+    expect(routes.positions).toBeGreaterThan(10_000);
+    for (const [route, count] of Object.entries(routes)) {
+      expect(count, `the sweep never reached: ${route}`).toBeGreaterThan(0);
+    }
   });
 });
 

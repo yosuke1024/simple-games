@@ -216,8 +216,128 @@ export function isValidHand(hand: HandState): boolean {
 }
 
 /**
- * The public log, replayed against the table it says it produced
- * (docs/GIN_RUMMY_RULES.md §9).
+ * The abstract table a public log replays into: everything a rule looks at,
+ * and nothing a face-down card could tell you. Which cards are *in* the two
+ * hands is not knowable from the record — that is the point of the record —
+ * so the hands are counts, plus the small set of cards a seat was seen to take
+ * off the pile and has not put back down.
+ */
+interface Replay {
+  phase: Phase;
+  turn: Seat;
+  ending: HandEnding;
+  mustDrawStock: boolean;
+  takenFromDiscard: Card | null;
+  /** Face up, bottom first — the same order `hand.discard` is in. */
+  pile: Card[];
+  /** How many cards are left face down. Never which. */
+  stock: number;
+  held: [number, number];
+  /** Taken off the pile in the open, and not yet thrown back. */
+  known: [Set<Card>, Set<Card>];
+}
+
+/**
+ * One event, applied to the abstract table — or false, when the rules would
+ * not have allowed it there. This is engine.ts's four transitions written
+ * against what the record can see, and it has to stay in step with them: a
+ * move the engine makes and this refuses would throw away a real save.
+ */
+function replayEvent(state: Replay, event: PublicEvent, at: number, dealer: Seat): boolean {
+  // Every hand opens with the twenty-first card turned, and a card is turned
+  // only at a deal, so this event is the first one or the record is not one.
+  if ((event.kind === 'upcard') !== (at === 0)) return false;
+  if (event.kind === 'upcard') {
+    state.pile.push(event.card);
+    return true;
+  }
+  // A settled hand takes no more moves, and the only seat that moves is the
+  // one to move. Between them these two lines are most of the check: a
+  // forgery has to put its extra events *somewhere*, and every place it could
+  // put them belongs to somebody.
+  if (state.phase === 'over' || event.seat !== state.turn) return false;
+
+  switch (event.kind) {
+    case 'pass': {
+      if (state.phase !== 'upcard') return false;
+      // The non-dealer's refusal passes the option across the table; the
+      // dealer's ends the offer and forces the opening draw from the stock.
+      if (state.turn !== dealer) {
+        state.turn = dealer;
+        return true;
+      }
+      state.turn = opponentOf(dealer);
+      state.phase = 'draw';
+      state.mustDrawStock = true;
+      return true;
+    }
+    case 'draw-stock': {
+      if (state.phase !== 'draw' || state.stock < 1) return false;
+      state.stock -= 1;
+      state.held[event.seat] += 1;
+      state.phase = 'discard';
+      state.takenFromDiscard = null;
+      state.mustDrawStock = false;
+      return true;
+    }
+    case 'draw-discard': {
+      // Taking the offered upcard and taking the pile's top mid-hand are the
+      // same act on the pile and the same event; the refused card, though, is
+      // refused, so the one forced draw allows neither.
+      if (state.phase !== 'upcard' && state.phase !== 'draw') return false;
+      if (state.mustDrawStock) return false;
+      // `pop` on an empty pile gives undefined, which is no card: a take with
+      // nothing to take from fails here and not by accident.
+      if (state.pile.pop() !== event.card) return false;
+      state.held[event.seat] += 1;
+      state.known[event.seat].add(event.card);
+      state.phase = 'discard';
+      state.takenFromDiscard = event.card;
+      return true;
+    }
+    case 'discard':
+    case 'knock':
+    case 'gin': {
+      if (state.phase !== 'discard') return false;
+      // The card just taken off the pile may not go straight back down.
+      if (event.card === state.takenFromDiscard) return false;
+      // And a card nobody could be holding cannot be put down: one lying face
+      // up on the pile, or one the *opponent* was seen to take and has not
+      // thrown back. This is the only grip the record has on whose cards are
+      // whose, and it is the grip that matters — `knowledgeOf` (cpu.ts) reads
+      // every take off the pile as "they are holding that".
+      if (state.pile.includes(event.card)) return false;
+      if (state.known[opponentOf(event.seat)].has(event.card)) return false;
+
+      state.pile.push(event.card);
+      state.held[event.seat] -= 1;
+      state.known[event.seat].delete(event.card);
+      state.takenFromDiscard = null;
+      state.mustDrawStock = false;
+      if (event.kind !== 'discard') {
+        // The declaration settles the hand and `turn` stays on the knocker.
+        state.phase = 'over';
+        state.ending = 'knock';
+        return true;
+      }
+      // A hand whose stock is down to two has no turn left to begin (§3.1).
+      if (state.stock <= DEAD_HAND_STOCK) {
+        state.phase = 'over';
+        state.ending = 'dead';
+        return true;
+      }
+      state.turn = opponentOf(event.seat);
+      state.phase = 'draw';
+      return true;
+    }
+    default:
+      return false;
+  }
+}
+
+/**
+ * The public log, replayed as a hand of Gin Rummy and checked against the
+ * table it says it left behind (docs/GIN_RUMMY_RULES.md §9).
  *
  * The log is not decoration. It is the only memory the CPU has of the hand
  * (cpu.ts), and `knowledgeOf` reads every `draw-discard` as "the opponent is
@@ -227,61 +347,65 @@ export function isValidHand(hand: HandState): boolean {
  * never there. That is precisely the side channel the public-log boundary
  * exists to close, so the record has to be checked as closely as the cards.
  *
- * It can be, because the pile is fully determined by the record: the turned
- * card starts it, discards and declarations go on top of it, and every take off
- * it names the card it took. So the whole record is replayed — the pile, the
- * depth of the stock, and how many cards each seat holds — and every one of
- * them has to come out as the table says. A take off an empty pile, or one
- * naming anything but the card on top, is refused rather than repaired.
+ * Adding up what the record moved is not enough, because a forgery can be
+ * made to add up: a discard and a take of the same card, pushed and popped in
+ * the same breath, leave the pile, the stock and both hand sizes exactly as
+ * they were — and leave `knowledgeOf` believing the opponent picked up a card
+ * out of the forger's own hand. So the record is **replayed as a game**
+ * instead. Every event has to have been legal where it stands — the right
+ * phase, the seat whose turn it was, a pile with the named card on top, not
+ * the card just taken, not a card the opponent is holding — and the position
+ * the replay ends on has to be the position that was saved, down to the flags.
+ * The self-cancelling pair above dies on the first of those: the discard hands
+ * the turn to the other seat, and the take that follows is not the taker's to
+ * make.
  *
- * The three answers are not independent: with fifty-two cards conserved, any
- * two of them fix the third. All three are compared anyway, because each is a
- * sentence about the hand rather than a step in a proof, and a validator that
- * only says two-thirds of what it knows is a validator somebody will widen.
+ * What is compared at the end — the pile in order, the depth of the stock,
+ * both hand sizes, the phase, the seat to move, both flags, and every card a
+ * seat was seen to take and never throw back — is more than a proof needs;
+ * with fifty-two cards conserved, most of it implies the rest. All of it is
+ * compared anyway, because each is a sentence about the hand rather than a
+ * step in a proof, and a validator that only says part of what it knows is a
+ * validator somebody will widen.
  */
 export function isConsistentLog(hand: HandState): boolean {
   if (!Array.isArray(hand.log) || hand.log.length === 0) return false;
+  if (!isSeat(hand.dealer)) return false;
 
-  const pile: Card[] = [];
-  const held: [number, number] = [HAND_SIZE, HAND_SIZE];
-  const moved = (seat: Seat, by: number): void => {
-    held[seat] = held[seat]! + by;
+  const state: Replay = {
+    // The deal, before the turned card: ten each, the rest face down, and the
+    // non-dealer with the first look at what comes next.
+    phase: 'upcard',
+    turn: opponentOf(hand.dealer),
+    ending: 'none',
+    mustDrawStock: false,
+    takenFromDiscard: null,
+    pile: [],
+    stock: INITIAL_STOCK,
+    held: [HAND_SIZE, HAND_SIZE],
+    known: [new Set<Card>(), new Set<Card>()],
   };
-  let stock = INITIAL_STOCK;
 
   for (let at = 0; at < hand.log.length; at++) {
-    const event = hand.log[at]!;
-    // Every hand opens with the twenty-first card turned, and a card is turned
-    // only at a deal, so this event is the first one or the record is not one.
-    if ((event.kind === 'upcard') !== (at === 0)) return false;
-    switch (event.kind) {
-      case 'upcard':
-        pile.push(event.card);
-        break;
-      case 'pass':
-        break;
-      case 'draw-stock':
-        stock -= 1;
-        moved(event.seat, 1);
-        break;
-      case 'draw-discard':
-        // `pop` on an empty pile gives undefined, which is no card: a take
-        // with nothing to take from fails here and not by accident.
-        if (pile.pop() !== event.card) return false;
-        moved(event.seat, 1);
-        break;
-      case 'discard':
-      case 'knock':
-      case 'gin':
-        pile.push(event.card);
-        moved(event.seat, -1);
-        break;
-      default:
-        return false;
-    }
+    if (!replayEvent(state, hand.log[at]!, at, hand.dealer)) return false;
   }
 
-  if (stock !== hand.stock.length) return false;
-  for (const seat of SEATS) if (held[seat] !== hand.hands[seat].length) return false;
-  return pile.length === hand.discard.length && pile.every((card, at) => card === hand.discard[at]);
+  if (state.phase !== hand.phase) return false;
+  if (state.turn !== hand.turn) return false;
+  if (state.ending !== hand.ending) return false;
+  if (state.mustDrawStock !== hand.mustDrawStock) return false;
+  if (state.takenFromDiscard !== hand.takenFromDiscard) return false;
+  if (state.stock !== hand.stock.length) return false;
+  for (const seat of SEATS) {
+    if (state.held[seat] !== hand.hands[seat].length) return false;
+    // A card taken off the pile in the open leaves the hand only by being put
+    // back down, which is an event of its own — so it is still there.
+    for (const card of state.known[seat]) {
+      if (!hand.hands[seat].includes(card)) return false;
+    }
+  }
+  return (
+    state.pile.length === hand.discard.length &&
+    state.pile.every((card, at) => card === hand.discard[at])
+  );
 }

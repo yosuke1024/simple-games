@@ -7,6 +7,7 @@ import { settingsSchema } from '@/storage/schemas';
 import {
   CARD_COUNT,
   createSession,
+  isConsistentLog,
   isValidHand,
   MATCH_TARGET,
   opponentOf,
@@ -49,21 +50,23 @@ vi.mock('@capacitor/preferences', () => ({
  * two holdings as given, every other card face down. Playing a match into the
  * position these tests need would take a hundred taps and pin nothing extra.
  *
- * The one way to be holding eleven cards with nothing on the pile is to have
- * taken the turned card off it, so that is the history the log carries — and it
- * has to, because the decoder rebuilds the pile from the log and refuses a save
- * whose record does not produce the table it was saved with (game/types.ts).
+ * The log has to be a history that really could have produced the position,
+ * not only one that adds up: the decoder replays it as a hand and refuses a
+ * save whose record does not end where the record says it ended
+ * (game/types.ts). The shortest history that leaves the seat to move holding
+ * eleven with nothing forbidden is the opening one — both players refuse the
+ * turned card, and the non-dealer opens from the stock.
  */
 function craft(you: readonly Card[], cpu: readonly Card[], turn: Seat): HandState {
   const held = new Set<Card>([...you, ...cpu]);
   const rest: Card[] = [];
   for (let card = 0; card < CARD_COUNT; card++) if (!held.has(card)) rest.push(card);
-  const upcard = sortedCards(turn === YOU ? you : cpu)[0]!;
+  const upcard = rest[0]!;
   const hand: HandState = {
     dealer: opponentOf(turn),
     hands: [sortedCards(you), sortedCards(cpu)],
-    stock: rest,
-    discard: [],
+    stock: rest.slice(1),
+    discard: [upcard],
     turn,
     phase: 'discard',
     ending: 'none',
@@ -71,11 +74,15 @@ function craft(you: readonly Card[], cpu: readonly Card[], turn: Seat): HandStat
     mustDrawStock: false,
     log: [
       { kind: 'upcard', card: upcard },
-      { kind: 'draw-discard', seat: turn, card: upcard },
+      { kind: 'pass', seat: turn },
+      { kind: 'pass', seat: opponentOf(turn) },
+      { kind: 'draw-stock', seat: turn },
     ],
   };
-  // A crafted position the rules could not produce proves nothing.
+  // A crafted position the rules could not produce proves nothing, and neither
+  // does one whose history the rules could not have produced.
   if (!isValidHand(hand)) throw new Error('crafted hand is not a hand');
+  if (!isConsistentLog(hand)) throw new Error('crafted history is not one that could be played');
   return hand;
 }
 
