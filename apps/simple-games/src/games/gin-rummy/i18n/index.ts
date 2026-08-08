@@ -8,11 +8,12 @@
  * keys into the app-wide MessageKey union without the shell importing
  * anything from src/games/ (src/i18n/registry.ts explains the pairing).
  *
- * Twelve of these files are still the English text (each says so at the top).
- * They are placeholders for a translation pass, not translations — the runtime
- * already falls back to English for a missing string, and writing that
- * fallback down is what lets the catalog-shape tests cover this game now
- * instead of after the pass.
+ * Provenance, as docs/I18N_POLICY.md records it: `en` is the source, `ja` is
+ * the author's own, and the other twelve are `machine` — written with AI help
+ * and read by no native speaker. None of this game's keys is a high-risk key
+ * (src/i18n/highRiskKeys.ts), so none of them goes through the release gate;
+ * what holds them honest is the machine check (placeholders, emptiness,
+ * markup) and reports from readers.
  */
 import type { Locale } from '@/i18n';
 import { registerGameMessages } from '@/i18n/registry';

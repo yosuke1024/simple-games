@@ -1,88 +1,72 @@
-/*
- * PLACEHOLDER — this catalog is still the English text, word for word.
- *
- * The file exists so the fourteen-locale shape holds and the i18n tests can
- * see this game at all: every locale must carry every key as a non-empty
- * string with the same placeholders (src/i18n/i18n.test.ts). English standing
- * in for a missing translation is what the runtime already falls back to, so
- * this is the fallback written down rather than a claim that it was
- * translated. Replacing it is the next commit on this game, and
- * docs/I18N_POLICY.md governs how.
- */
 import type { GinRummyMessages } from './en';
+
 export const tr: GinRummyMessages = {
   ginName: 'Gin Rummy',
 
-  // ---------- home ----------
-  ginChooseOpponent: 'Choose your opponent',
-  ginDifficulty_easy: 'Easy',
+  ginChooseOpponent: 'Rakibini seç',
+  ginDifficulty_easy: 'Kolay',
   ginDifficulty_normal: 'Normal',
-  ginDifficulty_hard: 'Hard',
-  ginRecordNote: 'Won {wins} · Lost {losses}',
-  ginConfirmSwitchTitle: 'Replace the match in progress?',
-  ginConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  ginDifficulty_hard: 'Zor',
+  ginRecordNote: '{wins} galibiyet · {losses} yenilgi',
+  ginConfirmSwitchTitle: 'Devam eden maç değiştirilsin mi?',
+  ginConfirmSwitchBody: '{current} maçın yeni bir {next} maçıyla değiştirilecek.',
 
-  // ---------- the table ----------
-  ginTableLabel: 'Gin Rummy table',
-  ginHandLabel: 'Your hand',
-  ginOpponentLabel: 'CPU holds {n} cards',
-  ginStockLabel: 'Stock, {n} cards',
-  ginDiscardLabel: 'Discard pile, {card} on top',
-  ginDiscardEmpty: 'Discard pile, empty',
-  ginCardLabel: '{rank} of {suit}',
-  ginSuit_spades: 'spades',
-  ginSuit_hearts: 'hearts',
-  ginSuit_diamonds: 'diamonds',
-  ginSuit_clubs: 'clubs',
-  ginCardInMeld: '{card}, meld {n}',
-  ginCardDeadwood: '{card}, deadwood',
-  ginDeadwood: 'Deadwood',
-  ginYou: 'You',
+  ginTableLabel: 'Gin Rummy masası',
+  ginHandLabel: 'Elindeki kartlar',
+  ginOpponentLabel: 'CPU {n} kart tutuyor',
+  ginStockLabel: 'Deste, {n} kart',
+  ginDiscardLabel: 'Atılanlar, en üstte {card}',
+  ginDiscardEmpty: 'Atılanlar, boş',
+  ginCardLabel: '{suit} {rank}',
+  ginSuit_spades: 'maça',
+  ginSuit_hearts: 'kupa',
+  ginSuit_diamonds: 'karo',
+  ginSuit_clubs: 'sinek',
+  ginCardInMeld: '{card}, kombinasyon {n}',
+  ginCardDeadwood: '{card}, ölü kart',
+  ginDeadwood: 'Ölü puan',
+  ginYou: 'Sen',
   ginCpu: 'CPU',
 
-  // ---------- prompts and what just happened ----------
-  ginUpcardPrompt: 'Take the upcard, or pass',
-  ginDrawPrompt: 'Draw from the stock or the pile',
-  ginDiscardPrompt: 'Tap a card, then tap it again to put it down',
-  ginKnockPrompt: 'Tap the card to knock with, then tap it again',
-  ginCpuTurn: 'CPU is thinking…',
-  ginCpuPassed: 'The CPU passed the upcard',
-  ginCpuDrewStock: 'The CPU drew from the stock',
-  ginCpuTookDiscard: 'The CPU took the {card}',
-  ginCpuDiscarded: 'The CPU put down the {card}',
-  ginTake: 'Take',
-  ginPass: 'Pass',
+  ginUpcardPrompt: 'Açık kartı al ya da pas geç',
+  ginDrawPrompt: 'Desteden ya da atılanlardan çek',
+  ginDiscardPrompt: 'Bir karta dokun, atmak için tekrar dokun',
+  ginKnockPrompt: 'Knock yapacağın karta dokun, sonra tekrar dokun',
+  ginCpuTurn: 'CPU düşünüyor…',
+  ginCpuPassed: 'CPU açık kartı pas geçti',
+  ginCpuDrewStock: 'CPU desteden çekti',
+  ginCpuTookDiscard: 'CPU {card} aldı',
+  ginCpuDiscarded: 'CPU {card} attı',
+  ginTake: 'Al',
+  ginPass: 'Pas',
   ginKnock: 'Knock',
 
-  // ---------- the hand, settled ----------
   ginHandGinTitle: 'Gin',
   ginHandKnockTitle: 'Knock',
   ginHandUndercutTitle: 'Undercut',
-  ginHandDeadTitle: 'Dead hand',
-  ginHandDeadBody: 'Two cards left in the stock. Nobody scores, and the same dealer deals again.',
-  ginHandYouTook: 'You take {points}',
-  ginHandCpuTook: 'The CPU takes {points}',
-  ginYourMelds: 'Your melds',
-  ginCpuMelds: 'CPU melds',
-  ginLaidOff: 'Laid off',
-  ginNextHand: 'Next hand',
+  ginHandDeadTitle: 'El iptal',
+  ginHandDeadBody: 'Destede iki kart kaldı. Kimse puan almaz, aynı dağıtan yeniden dağıtır.',
+  ginHandYouTook: 'Sen {points} puan aldın',
+  ginHandCpuTook: 'CPU {points} puan aldı',
+  ginYourMelds: 'Senin kombinasyonların',
+  ginCpuMelds: 'CPU kombinasyonları',
+  ginLaidOff: 'Eklenen kartlar',
+  ginNextHand: 'Sonraki el',
 
-  // ---------- the match, decided ----------
-  ginWinTitle: 'You win!',
-  ginWinBody: 'A hundred points before the CPU got there.',
-  ginLoseTitle: 'The CPU wins',
-  ginLoseBody: 'The CPU passed a hundred first. The next match is free.',
+  ginWinTitle: 'Kazandın!',
+  ginWinBody: 'CPU’dan önce yüz puana ulaştın.',
+  ginLoseTitle: 'CPU kazandı',
+  ginLoseBody: 'CPU yüz puanı önce geçti. Sonraki maç ücretsiz.',
 
-  // ---------- statistics ----------
-  ginWins: 'Wins',
-  ginLosses: 'Losses',
+  ginWins: 'Galibiyet',
+  ginLosses: 'Yenilgi',
 
-  // ---------- Quick Rules: three steps, one sentence each ----------
-  ginStep1Title: 'Draw one, throw one',
-  ginStep1Body: 'Take the face-down stock or the top of the pile, then put another card down.',
-  ginStep2Title: 'Sets and runs',
+  ginStep1Title: 'Bir çek, bir at',
+  ginStep1Body:
+    'Kapalı desteden ya da atılanların en üstünden bir kart al, sonra başka bir kart at.',
+  ginStep2Title: 'Üçlüler ve seriler',
   ginStep2Body:
-    'Three of a rank, or three in a row in one suit — the rest is deadwood, counted for you.',
-  ginStep3Title: 'Knock at ten or less',
-  ginStep3Body: 'Once your deadwood is ten or under, the Knock button appears and ends the hand.',
+    'Aynı değerden üç kart ya da aynı renkten ardışık üç kart; kalanlar ölü puandır ve senin için toplanır.',
+  ginStep3Title: 'On ve altında knock',
+  ginStep3Body: 'Ölü puanın on veya altına düşünce Knock düğmesi belirir ve eli bitirir.',
 };

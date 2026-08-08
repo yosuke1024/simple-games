@@ -1,6 +1,8 @@
 /**
  * The opponent — and, more importantly, **what the opponent can see**.
  *
+ * The contract this file is held to is docs/GIN_RUMMY_RULES.md §5.
+ *
  * Closed-source card apps have been suspected of peeking at the player's hand
  * for as long as they have existed, and the suspicion cannot be argued away.
  * So it is settled in the type system instead: everything this file reads
@@ -15,9 +17,9 @@
  * which cards the opponent took off the pile. An expert remembers all of that;
  * this CPU may too, and no more.
  *
- * The deal's seed never reaches here (the plan: cpu.ts は配札シードを受け取
- * らない). Ties need a coin, so one float comes in as a second argument from a
- * stream of its own — a number, not a key to the deck.
+ * The deal's seed never reaches here (docs/GIN_RUMMY_RULES.md §5). Ties need a
+ * coin, so one float comes in as a second argument from a stream of its own — a
+ * number, not a key to the deck.
  *
  * There is no search: every decision below is a heuristic that runs in a
  * handful of exhaustive eleven-card meld solves, well inside the CPU's own

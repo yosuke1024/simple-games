@@ -1,88 +1,73 @@
-/*
- * PLACEHOLDER — this catalog is still the English text, word for word.
- *
- * The file exists so the fourteen-locale shape holds and the i18n tests can
- * see this game at all: every locale must carry every key as a non-empty
- * string with the same placeholders (src/i18n/i18n.test.ts). English standing
- * in for a missing translation is what the runtime already falls back to, so
- * this is the fallback written down rather than a claim that it was
- * translated. Replacing it is the next commit on this game, and
- * docs/I18N_POLICY.md governs how.
- */
 import type { GinRummyMessages } from './en';
+
 export const ptBR: GinRummyMessages = {
   ginName: 'Gin Rummy',
 
-  // ---------- home ----------
-  ginChooseOpponent: 'Choose your opponent',
-  ginDifficulty_easy: 'Easy',
+  ginChooseOpponent: 'Escolha seu adversário',
+  ginDifficulty_easy: 'Fácil',
   ginDifficulty_normal: 'Normal',
-  ginDifficulty_hard: 'Hard',
-  ginRecordNote: 'Won {wins} · Lost {losses}',
-  ginConfirmSwitchTitle: 'Replace the match in progress?',
-  ginConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  ginDifficulty_hard: 'Difícil',
+  ginRecordNote: '{wins} vitórias · {losses} derrotas',
+  ginConfirmSwitchTitle: 'Substituir a partida em andamento?',
+  ginConfirmSwitchBody: 'Sua partida {current} será substituída por uma nova partida {next}.',
 
-  // ---------- the table ----------
-  ginTableLabel: 'Gin Rummy table',
-  ginHandLabel: 'Your hand',
-  ginOpponentLabel: 'CPU holds {n} cards',
-  ginStockLabel: 'Stock, {n} cards',
-  ginDiscardLabel: 'Discard pile, {card} on top',
-  ginDiscardEmpty: 'Discard pile, empty',
-  ginCardLabel: '{rank} of {suit}',
-  ginSuit_spades: 'spades',
-  ginSuit_hearts: 'hearts',
-  ginSuit_diamonds: 'diamonds',
-  ginSuit_clubs: 'clubs',
-  ginCardInMeld: '{card}, meld {n}',
-  ginCardDeadwood: '{card}, deadwood',
-  ginDeadwood: 'Deadwood',
-  ginYou: 'You',
+  ginTableLabel: 'Mesa de Gin Rummy',
+  ginHandLabel: 'Sua mão',
+  ginOpponentLabel: 'A CPU tem {n} cartas',
+  ginStockLabel: 'Monte, {n} cartas',
+  ginDiscardLabel: 'Descarte, {card} no topo',
+  ginDiscardEmpty: 'Descarte vazio',
+  ginCardLabel: '{rank} de {suit}',
+  ginSuit_spades: 'espadas',
+  ginSuit_hearts: 'copas',
+  ginSuit_diamonds: 'ouros',
+  ginSuit_clubs: 'paus',
+  ginCardInMeld: '{card}, combinação {n}',
+  ginCardDeadwood: '{card}, carta solta',
+  ginDeadwood: 'Soltas',
+  ginYou: 'Você',
   ginCpu: 'CPU',
 
-  // ---------- prompts and what just happened ----------
-  ginUpcardPrompt: 'Take the upcard, or pass',
-  ginDrawPrompt: 'Draw from the stock or the pile',
-  ginDiscardPrompt: 'Tap a card, then tap it again to put it down',
-  ginKnockPrompt: 'Tap the card to knock with, then tap it again',
-  ginCpuTurn: 'CPU is thinking…',
-  ginCpuPassed: 'The CPU passed the upcard',
-  ginCpuDrewStock: 'The CPU drew from the stock',
-  ginCpuTookDiscard: 'The CPU took the {card}',
-  ginCpuDiscarded: 'The CPU put down the {card}',
-  ginTake: 'Take',
-  ginPass: 'Pass',
-  ginKnock: 'Knock',
+  ginUpcardPrompt: 'Pegue a carta virada ou passe',
+  ginDrawPrompt: 'Compre do monte ou do descarte',
+  ginDiscardPrompt: 'Toque em uma carta e toque de novo para descartar',
+  ginKnockPrompt: 'Toque na carta usada para bater e toque de novo',
+  ginCpuTurn: 'A CPU está pensando…',
+  ginCpuPassed: 'A CPU passou a carta virada',
+  ginCpuDrewStock: 'A CPU comprou do monte',
+  ginCpuTookDiscard: 'A CPU pegou {card}',
+  ginCpuDiscarded: 'A CPU descartou {card}',
+  ginTake: 'Pegar',
+  ginPass: 'Passar',
+  ginKnock: 'Bater',
 
-  // ---------- the hand, settled ----------
   ginHandGinTitle: 'Gin',
-  ginHandKnockTitle: 'Knock',
+  ginHandKnockTitle: 'Batida',
   ginHandUndercutTitle: 'Undercut',
-  ginHandDeadTitle: 'Dead hand',
-  ginHandDeadBody: 'Two cards left in the stock. Nobody scores, and the same dealer deals again.',
-  ginHandYouTook: 'You take {points}',
-  ginHandCpuTook: 'The CPU takes {points}',
-  ginYourMelds: 'Your melds',
-  ginCpuMelds: 'CPU melds',
-  ginLaidOff: 'Laid off',
-  ginNextHand: 'Next hand',
+  ginHandDeadTitle: 'Mão anulada',
+  ginHandDeadBody:
+    'Restam duas cartas no monte. Ninguém pontua e o mesmo jogador dá as cartas de novo.',
+  ginHandYouTook: 'Você fica com {points}',
+  ginHandCpuTook: 'A CPU fica com {points}',
+  ginYourMelds: 'Suas combinações',
+  ginCpuMelds: 'Combinações da CPU',
+  ginLaidOff: 'Cartas encaixadas',
+  ginNextHand: 'Próxima mão',
 
-  // ---------- the match, decided ----------
-  ginWinTitle: 'You win!',
-  ginWinBody: 'A hundred points before the CPU got there.',
-  ginLoseTitle: 'The CPU wins',
-  ginLoseBody: 'The CPU passed a hundred first. The next match is free.',
+  ginWinTitle: 'Você venceu!',
+  ginWinBody: 'Cem pontos antes da CPU chegar lá.',
+  ginLoseTitle: 'A CPU venceu',
+  ginLoseBody: 'A CPU passou de cem primeiro. A próxima partida é grátis.',
 
-  // ---------- statistics ----------
-  ginWins: 'Wins',
-  ginLosses: 'Losses',
+  ginWins: 'Vitórias',
+  ginLosses: 'Derrotas',
 
-  // ---------- Quick Rules: three steps, one sentence each ----------
-  ginStep1Title: 'Draw one, throw one',
-  ginStep1Body: 'Take the face-down stock or the top of the pile, then put another card down.',
-  ginStep2Title: 'Sets and runs',
+  ginStep1Title: 'Compre uma, descarte outra',
+  ginStep1Body: 'Compre do monte fechado ou do topo do descarte e depois descarte outra carta.',
+  ginStep2Title: 'Trincas e sequências',
   ginStep2Body:
-    'Three of a rank, or three in a row in one suit — the rest is deadwood, counted for you.',
-  ginStep3Title: 'Knock at ten or less',
-  ginStep3Body: 'Once your deadwood is ten or under, the Knock button appears and ends the hand.',
+    'Três do mesmo valor ou três seguidas do mesmo naipe; o resto fica solto e é somado para você.',
+  ginStep3Title: 'Bata com dez ou menos',
+  ginStep3Body:
+    'Quando suas cartas soltas somam dez ou menos, o botão Bater aparece e encerra a mão.',
 };

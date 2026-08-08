@@ -1,88 +1,73 @@
-/*
- * PLACEHOLDER — this catalog is still the English text, word for word.
- *
- * The file exists so the fourteen-locale shape holds and the i18n tests can
- * see this game at all: every locale must carry every key as a non-empty
- * string with the same placeholders (src/i18n/i18n.test.ts). English standing
- * in for a missing translation is what the runtime already falls back to, so
- * this is the fallback written down rather than a claim that it was
- * translated. Replacing it is the next commit on this game, and
- * docs/I18N_POLICY.md governs how.
- */
 import type { GinRummyMessages } from './en';
+
 export const fr: GinRummyMessages = {
   ginName: 'Gin Rummy',
 
-  // ---------- home ----------
-  ginChooseOpponent: 'Choose your opponent',
-  ginDifficulty_easy: 'Easy',
+  ginChooseOpponent: 'Choisissez votre adversaire',
+  ginDifficulty_easy: 'Facile',
   ginDifficulty_normal: 'Normal',
-  ginDifficulty_hard: 'Hard',
-  ginRecordNote: 'Won {wins} · Lost {losses}',
-  ginConfirmSwitchTitle: 'Replace the match in progress?',
-  ginConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  ginDifficulty_hard: 'Difficile',
+  ginRecordNote: '{wins} victoires · {losses} défaites',
+  ginConfirmSwitchTitle: 'Remplacer la partie en cours ?',
+  ginConfirmSwitchBody: 'Votre partie {current} sera remplacée par une nouvelle partie {next}.',
 
-  // ---------- the table ----------
-  ginTableLabel: 'Gin Rummy table',
-  ginHandLabel: 'Your hand',
-  ginOpponentLabel: 'CPU holds {n} cards',
-  ginStockLabel: 'Stock, {n} cards',
-  ginDiscardLabel: 'Discard pile, {card} on top',
-  ginDiscardEmpty: 'Discard pile, empty',
-  ginCardLabel: '{rank} of {suit}',
-  ginSuit_spades: 'spades',
-  ginSuit_hearts: 'hearts',
-  ginSuit_diamonds: 'diamonds',
-  ginSuit_clubs: 'clubs',
-  ginCardInMeld: '{card}, meld {n}',
-  ginCardDeadwood: '{card}, deadwood',
-  ginDeadwood: 'Deadwood',
-  ginYou: 'You',
+  ginTableLabel: 'Table de Gin Rummy',
+  ginHandLabel: 'Votre main',
+  ginOpponentLabel: 'Le CPU a {n} cartes',
+  ginStockLabel: 'Pioche, {n} cartes',
+  ginDiscardLabel: 'Défausse, {card} au-dessus',
+  ginDiscardEmpty: 'Défausse vide',
+  ginCardLabel: '{rank} de {suit}',
+  ginSuit_spades: 'pique',
+  ginSuit_hearts: 'cœur',
+  ginSuit_diamonds: 'carreau',
+  ginSuit_clubs: 'trèfle',
+  ginCardInMeld: '{card}, combinaison {n}',
+  ginCardDeadwood: '{card}, carte morte',
+  ginDeadwood: 'Cartes mortes',
+  ginYou: 'Vous',
   ginCpu: 'CPU',
 
-  // ---------- prompts and what just happened ----------
-  ginUpcardPrompt: 'Take the upcard, or pass',
-  ginDrawPrompt: 'Draw from the stock or the pile',
-  ginDiscardPrompt: 'Tap a card, then tap it again to put it down',
-  ginKnockPrompt: 'Tap the card to knock with, then tap it again',
-  ginCpuTurn: 'CPU is thinking…',
-  ginCpuPassed: 'The CPU passed the upcard',
-  ginCpuDrewStock: 'The CPU drew from the stock',
-  ginCpuTookDiscard: 'The CPU took the {card}',
-  ginCpuDiscarded: 'The CPU put down the {card}',
-  ginTake: 'Take',
-  ginPass: 'Pass',
-  ginKnock: 'Knock',
+  ginUpcardPrompt: 'Prenez la carte retournée ou passez',
+  ginDrawPrompt: 'Piochez ou prenez le dessus de la défausse',
+  ginDiscardPrompt: 'Touchez une carte, puis touchez-la à nouveau pour la défausser',
+  ginKnockPrompt: 'Touchez la carte pour frapper, puis touchez-la à nouveau',
+  ginCpuTurn: 'Le CPU réfléchit…',
+  ginCpuPassed: 'Le CPU a passé la carte retournée',
+  ginCpuDrewStock: 'Le CPU a pioché une carte',
+  ginCpuTookDiscard: 'Le CPU a pris {card}',
+  ginCpuDiscarded: 'Le CPU a défaussé {card}',
+  ginTake: 'Prendre',
+  ginPass: 'Passer',
+  ginKnock: 'Frapper',
 
-  // ---------- the hand, settled ----------
   ginHandGinTitle: 'Gin',
-  ginHandKnockTitle: 'Knock',
+  ginHandKnockTitle: 'Frappe',
   ginHandUndercutTitle: 'Undercut',
-  ginHandDeadTitle: 'Dead hand',
-  ginHandDeadBody: 'Two cards left in the stock. Nobody scores, and the same dealer deals again.',
-  ginHandYouTook: 'You take {points}',
-  ginHandCpuTook: 'The CPU takes {points}',
-  ginYourMelds: 'Your melds',
-  ginCpuMelds: 'CPU melds',
-  ginLaidOff: 'Laid off',
-  ginNextHand: 'Next hand',
+  ginHandDeadTitle: 'Main annulée',
+  ginHandDeadBody:
+    'Il reste deux cartes dans la pioche. Personne ne marque et le même donneur redistribue.',
+  ginHandYouTook: 'Vous prenez {points}',
+  ginHandCpuTook: 'Le CPU prend {points}',
+  ginYourMelds: 'Vos combinaisons',
+  ginCpuMelds: 'Combinaisons du CPU',
+  ginLaidOff: 'Cartes ajoutées',
+  ginNextHand: 'Main suivante',
 
-  // ---------- the match, decided ----------
-  ginWinTitle: 'You win!',
-  ginWinBody: 'A hundred points before the CPU got there.',
-  ginLoseTitle: 'The CPU wins',
-  ginLoseBody: 'The CPU passed a hundred first. The next match is free.',
+  ginWinTitle: 'Vous avez gagné !',
+  ginWinBody: 'Cent points avant le CPU.',
+  ginLoseTitle: 'Le CPU gagne',
+  ginLoseBody: 'Le CPU a dépassé cent le premier. La prochaine partie est gratuite.',
 
-  // ---------- statistics ----------
-  ginWins: 'Wins',
-  ginLosses: 'Losses',
+  ginWins: 'Victoires',
+  ginLosses: 'Défaites',
 
-  // ---------- Quick Rules: three steps, one sentence each ----------
-  ginStep1Title: 'Draw one, throw one',
-  ginStep1Body: 'Take the face-down stock or the top of the pile, then put another card down.',
-  ginStep2Title: 'Sets and runs',
+  ginStep1Title: 'Piochez une carte, jetez-en une',
+  ginStep1Body: 'Prenez la pioche face cachée ou le dessus de la défausse, puis jetez une carte.',
+  ginStep2Title: 'Brelans et suites',
   ginStep2Body:
-    'Three of a rank, or three in a row in one suit — the rest is deadwood, counted for you.',
-  ginStep3Title: 'Knock at ten or less',
-  ginStep3Body: 'Once your deadwood is ten or under, the Knock button appears and ends the hand.',
+    'Trois cartes de même valeur ou trois qui se suivent dans la même couleur ; le reste est mort et compté pour vous.',
+  ginStep3Title: 'Frappez à dix ou moins',
+  ginStep3Body:
+    'Dès que vos cartes mortes tombent à dix ou moins, le bouton Frapper apparaît et clôt la main.',
 };

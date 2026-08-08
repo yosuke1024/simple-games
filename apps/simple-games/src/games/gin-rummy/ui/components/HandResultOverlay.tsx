@@ -1,5 +1,5 @@
 /**
- * A hand, settled and laid out (the plan: ハンド清算 overlay).
+ * A hand, settled and laid out (docs/GIN_RUMMY_RULES.md §3.2, §11.2).
  *
  * This is the one screen in the game where both hands are face up, and it is
  * the reason the arithmetic is worth showing rather than only its answer: the

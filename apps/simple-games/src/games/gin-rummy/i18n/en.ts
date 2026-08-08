@@ -6,9 +6,9 @@
  * `ginName` is the literal 'Gin Rummy' in every locale: a game's title is a
  * proper noun and is never translated (docs/I18N_POLICY.md).
  *
- * Two families of strings here carry the game's one piece of help (the plan's
- * 助けの形): the deadwood readout, and the meld / deadwood suffix every card in
- * the hand is announced with. They are what a screen reader hears instead of
+ * Two families of strings here carry the game's help (docs/GIN_RUMMY_RULES.md
+ * §7): the deadwood readout, and the meld / deadwood suffix every card in the
+ * hand is announced with. They are what a screen reader hears instead of
  * the arrangement a sighted player sees, so they are worded as facts about the
  * card, never as advice about the move.
  */

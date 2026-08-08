@@ -7,9 +7,8 @@
  * knows about seats being human or CPU, about time, or about the match score;
  * a hand is a hand.
  *
- * The rules are the plan's (docs/plans/2026-08-08-hearts-and-gin-rummy.md,
- * "Gin Rummy"), and the two that are easy to get subtly wrong are stated where
- * they are enforced: the card just taken from the discard pile may not go
+ * The rules are docs/GIN_RUMMY_RULES.md §1–§3, and the two that are easy to get
+ * subtly wrong are stated where they are enforced: the card just taken from the discard pile may not go
  * straight back down, and a hand dies when the stock reaches two — not zero.
  */
 import { sortedCards, CARD_COUNT, type Card } from './cards';
@@ -51,7 +50,7 @@ const logged = (hand: HandState, event: PublicEvent): readonly PublicEvent[] => 
 ];
 
 /**
- * The deal (the plan: 10 枚配り・21 枚目が台札). Cards go one at a time
+ * The deal (§1: ten each, the twenty-first face up). Cards go one at a time
  * starting with the non-dealer, the twenty-first turns face up, and the rest
  * become the stock with its top at the end of the array — the patience
  * shelf's convention, so "draw" is always a pop.
@@ -88,7 +87,7 @@ export function dealHand(seed: string, handNumber: number, dealer: Seat): HandSt
   };
 }
 
-/** Picks the upcard up and goes straight to the discard (the plan's 取得権). */
+/** Picks the upcard up and goes straight to the discard (§2.1). */
 export function takeUpcard(hand: HandState): HandState | null {
   if (hand.phase !== 'upcard') return null;
   const card = topDiscard(hand);
@@ -162,7 +161,7 @@ export function canDiscard(hand: HandState, card: Card): boolean {
 /**
  * Puts a card down and hands the turn over — unless that draw took the stock
  * to two, at which point nobody could begin a turn and the hand dies with no
- * score (the plan: 山残り 2 枚でハンド無効).
+ * score (§3.1).
  */
 export function discardCard(hand: HandState, card: Card): HandState | null {
   if (!canDiscard(hand, card)) return null;
@@ -272,7 +271,7 @@ const DEAD_HAND: HandOutcome = {
 };
 
 /**
- * Scores a finished hand (the plan: ジン +25 / レイオフ / アンダーカット).
+ * Scores a finished hand (§3.2: gin +25, lay-offs, the undercut).
  *
  * Both sides' splits are computed rather than declared, and the defender's
  * split and lay-offs are chosen together — keeping a card in a meld of your

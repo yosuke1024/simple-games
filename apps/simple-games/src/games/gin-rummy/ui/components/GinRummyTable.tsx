@@ -7,9 +7,9 @@
  * THE HAND FAN, AND WHY IT IS TWO ROWS
  *
  * The plan asked for eleven cards overlapped in one row, and for the tap width
- * of a single card to be measured before anything was built rather than after
- * (docs/plans/2026-08-08-hearts-and-gin-rummy.md,「手札ファン UI」). The
- * arithmetic settles it, and it settles it against one row.
+ * of a single card to be measured before anything was built rather than after.
+ * The arithmetic settles it, and it settles it against one row; the measurement
+ * and its conclusion are recorded in docs/GIN_RUMMY_RULES.md §11.1.
  *
  * A row of n overlapping cards is (n − 1) visible strips plus one whole card:
  * `(n − 1)·s + w = A`, where A is the fan's own width — `min(100% − 12px
@@ -24,7 +24,7 @@
  * Not close, and not fixable by shrinking the cards: at 420px — the widest
  * this game is ever laid out for — eleven strips of 48px would need 528px.
  * One row cannot hold eleven cards at this floor on any phone, so the fallback
- * the plan named is taken: **two rows, six and five** (`MAX_PER_ROW`).
+ * the plan named is taken: **two rows, six and five** (`MAX_PER_ROW`, §11.1).
  *
  *   two rows, ≤6 each    A = 308 (320px)   A = 348 (360px)   A = 408 (420px)
  *     card    w = 20%       61.6px            69.6px            81.6px
@@ -72,7 +72,8 @@ interface FanCard {
 }
 
 /**
- * The hand, sorted into melds and then deadwood — the plan's メルドの自動整理.
+ * The hand, sorted into melds and then deadwood (§7: the melds are arranged for
+ * the player, and never arranged wrong).
  * `bestMeldPlan` is exhaustive, so this is the arrangement that leaves the
  * least deadwood, not merely a good one, and the player never has to sort
  * anything by hand (there is no manual reorder, on purpose).
@@ -170,7 +171,7 @@ export const GinRummyTable = memo(function GinRummyTable({
    * pile cannot go straight back (the engine refuses it), and in knock mode
    * only a card that leaves a declarable hand can. Both sink the card rather
    * than scold a tap on it — an invalid tap is nothing, silently, with no
-   * sound and no buzz (the plan: 無効操作を叱らない).
+   * sound and no buzz (§2.2).
    */
   const takeable = (card: Card): boolean => {
     if (!discarding) return false;

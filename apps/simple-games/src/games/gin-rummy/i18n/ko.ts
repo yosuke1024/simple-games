@@ -1,88 +1,71 @@
-/*
- * PLACEHOLDER — this catalog is still the English text, word for word.
- *
- * The file exists so the fourteen-locale shape holds and the i18n tests can
- * see this game at all: every locale must carry every key as a non-empty
- * string with the same placeholders (src/i18n/i18n.test.ts). English standing
- * in for a missing translation is what the runtime already falls back to, so
- * this is the fallback written down rather than a claim that it was
- * translated. Replacing it is the next commit on this game, and
- * docs/I18N_POLICY.md governs how.
- */
 import type { GinRummyMessages } from './en';
+
 export const ko: GinRummyMessages = {
   ginName: 'Gin Rummy',
 
-  // ---------- home ----------
-  ginChooseOpponent: 'Choose your opponent',
-  ginDifficulty_easy: 'Easy',
-  ginDifficulty_normal: 'Normal',
-  ginDifficulty_hard: 'Hard',
-  ginRecordNote: 'Won {wins} · Lost {losses}',
-  ginConfirmSwitchTitle: 'Replace the match in progress?',
-  ginConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  ginChooseOpponent: '상대 선택',
+  ginDifficulty_easy: '쉬움',
+  ginDifficulty_normal: '보통',
+  ginDifficulty_hard: '어려움',
+  ginRecordNote: '{wins}승 · {losses}패',
+  ginConfirmSwitchTitle: '진행 중인 매치를 바꿀까요?',
+  ginConfirmSwitchBody: '진행 중인 {current} 매치가 새 {next} 매치로 바뀝니다.',
 
-  // ---------- the table ----------
-  ginTableLabel: 'Gin Rummy table',
-  ginHandLabel: 'Your hand',
-  ginOpponentLabel: 'CPU holds {n} cards',
-  ginStockLabel: 'Stock, {n} cards',
-  ginDiscardLabel: 'Discard pile, {card} on top',
-  ginDiscardEmpty: 'Discard pile, empty',
-  ginCardLabel: '{rank} of {suit}',
-  ginSuit_spades: 'spades',
-  ginSuit_hearts: 'hearts',
-  ginSuit_diamonds: 'diamonds',
-  ginSuit_clubs: 'clubs',
-  ginCardInMeld: '{card}, meld {n}',
-  ginCardDeadwood: '{card}, deadwood',
-  ginDeadwood: 'Deadwood',
-  ginYou: 'You',
+  ginTableLabel: 'Gin Rummy 테이블',
+  ginHandLabel: '내 패',
+  ginOpponentLabel: 'CPU가 {n}장을 들고 있습니다',
+  ginStockLabel: '더미, {n}장',
+  ginDiscardLabel: '버린 패 더미, 맨 위는 {card}',
+  ginDiscardEmpty: '버린 패 더미, 비어 있음',
+  ginCardLabel: '{suit} {rank}',
+  ginSuit_spades: '스페이드',
+  ginSuit_hearts: '하트',
+  ginSuit_diamonds: '다이아몬드',
+  ginSuit_clubs: '클럽',
+  ginCardInMeld: '{card}, 조합 {n}',
+  ginCardDeadwood: '{card}, 데드우드',
+  ginDeadwood: '데드우드',
+  ginYou: '나',
   ginCpu: 'CPU',
 
-  // ---------- prompts and what just happened ----------
-  ginUpcardPrompt: 'Take the upcard, or pass',
-  ginDrawPrompt: 'Draw from the stock or the pile',
-  ginDiscardPrompt: 'Tap a card, then tap it again to put it down',
-  ginKnockPrompt: 'Tap the card to knock with, then tap it again',
-  ginCpuTurn: 'CPU is thinking…',
-  ginCpuPassed: 'The CPU passed the upcard',
-  ginCpuDrewStock: 'The CPU drew from the stock',
-  ginCpuTookDiscard: 'The CPU took the {card}',
-  ginCpuDiscarded: 'The CPU put down the {card}',
-  ginTake: 'Take',
-  ginPass: 'Pass',
-  ginKnock: 'Knock',
+  ginUpcardPrompt: '펼친 패를 가져가거나 넘깁니다',
+  ginDrawPrompt: '더미나 버린 패에서 한 장 가져옵니다',
+  ginDiscardPrompt: '패를 탭하고, 다시 탭하면 버립니다',
+  ginKnockPrompt: '노크에 쓸 패를 탭하고, 다시 탭하세요',
+  ginCpuTurn: 'CPU가 생각 중입니다…',
+  ginCpuPassed: 'CPU가 펼친 패를 넘겼습니다',
+  ginCpuDrewStock: 'CPU가 더미에서 한 장 가져갔습니다',
+  ginCpuTookDiscard: 'CPU가 가져간 패: {card}',
+  ginCpuDiscarded: 'CPU가 버린 패: {card}',
+  ginTake: '가져오기',
+  ginPass: '넘기기',
+  ginKnock: '노크',
 
-  // ---------- the hand, settled ----------
-  ginHandGinTitle: 'Gin',
-  ginHandKnockTitle: 'Knock',
-  ginHandUndercutTitle: 'Undercut',
-  ginHandDeadTitle: 'Dead hand',
-  ginHandDeadBody: 'Two cards left in the stock. Nobody scores, and the same dealer deals again.',
-  ginHandYouTook: 'You take {points}',
-  ginHandCpuTook: 'The CPU takes {points}',
-  ginYourMelds: 'Your melds',
-  ginCpuMelds: 'CPU melds',
-  ginLaidOff: 'Laid off',
-  ginNextHand: 'Next hand',
+  ginHandGinTitle: '진',
+  ginHandKnockTitle: '노크',
+  ginHandUndercutTitle: '언더컷',
+  ginHandDeadTitle: '무효 판',
+  ginHandDeadBody: '더미에 두 장이 남았습니다. 점수 없이 같은 딜러가 다시 돌립니다.',
+  ginHandYouTook: '내가 {points}점 획득',
+  ginHandCpuTook: 'CPU가 {points}점 획득',
+  ginYourMelds: '내 조합',
+  ginCpuMelds: 'CPU 조합',
+  ginLaidOff: '붙인 패',
+  ginNextHand: '다음 판',
 
-  // ---------- the match, decided ----------
-  ginWinTitle: 'You win!',
-  ginWinBody: 'A hundred points before the CPU got there.',
-  ginLoseTitle: 'The CPU wins',
-  ginLoseBody: 'The CPU passed a hundred first. The next match is free.',
+  ginWinTitle: '승리!',
+  ginWinBody: 'CPU보다 먼저 100점에 도달했습니다.',
+  ginLoseTitle: 'CPU 승리',
+  ginLoseBody: 'CPU가 먼저 100점을 넘었습니다. 다음 매치는 무료입니다.',
 
-  // ---------- statistics ----------
-  ginWins: 'Wins',
-  ginLosses: 'Losses',
+  ginWins: '승리',
+  ginLosses: '패배',
 
-  // ---------- Quick Rules: three steps, one sentence each ----------
-  ginStep1Title: 'Draw one, throw one',
-  ginStep1Body: 'Take the face-down stock or the top of the pile, then put another card down.',
-  ginStep2Title: 'Sets and runs',
+  ginStep1Title: '한 장 가져오고, 한 장 버리기',
+  ginStep1Body: '엎어둔 더미나 버린 패 맨 위에서 한 장 가져온 뒤, 다른 한 장을 버립니다.',
+  ginStep2Title: '세트와 런',
   ginStep2Body:
-    'Three of a rank, or three in a row in one suit — the rest is deadwood, counted for you.',
-  ginStep3Title: 'Knock at ten or less',
-  ginStep3Body: 'Once your deadwood is ten or under, the Knock button appears and ends the hand.',
+    '같은 숫자 3장, 또는 같은 무늬로 이어지는 3장. 나머지가 데드우드이고 합계는 자동으로 표시됩니다.',
+  ginStep3Title: '데드우드 10 이하면 노크',
+  ginStep3Body: '데드우드가 10 이하가 되면 노크 버튼이 나타나고, 그 판이 끝납니다.',
 };

@@ -1,88 +1,71 @@
-/*
- * PLACEHOLDER — this catalog is still the English text, word for word.
- *
- * The file exists so the fourteen-locale shape holds and the i18n tests can
- * see this game at all: every locale must carry every key as a non-empty
- * string with the same placeholders (src/i18n/i18n.test.ts). English standing
- * in for a missing translation is what the runtime already falls back to, so
- * this is the fallback written down rather than a claim that it was
- * translated. Replacing it is the next commit on this game, and
- * docs/I18N_POLICY.md governs how.
- */
 import type { GinRummyMessages } from './en';
+
 export const vi: GinRummyMessages = {
   ginName: 'Gin Rummy',
 
-  // ---------- home ----------
-  ginChooseOpponent: 'Choose your opponent',
-  ginDifficulty_easy: 'Easy',
-  ginDifficulty_normal: 'Normal',
-  ginDifficulty_hard: 'Hard',
-  ginRecordNote: 'Won {wins} · Lost {losses}',
-  ginConfirmSwitchTitle: 'Replace the match in progress?',
-  ginConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  ginChooseOpponent: 'Chọn đối thủ',
+  ginDifficulty_easy: 'Dễ',
+  ginDifficulty_normal: 'Vừa',
+  ginDifficulty_hard: 'Khó',
+  ginRecordNote: 'Thắng {wins} · Thua {losses}',
+  ginConfirmSwitchTitle: 'Thay trận đang chơi?',
+  ginConfirmSwitchBody: 'Trận {current} của bạn sẽ được thay bằng trận {next} mới.',
 
-  // ---------- the table ----------
-  ginTableLabel: 'Gin Rummy table',
-  ginHandLabel: 'Your hand',
-  ginOpponentLabel: 'CPU holds {n} cards',
-  ginStockLabel: 'Stock, {n} cards',
-  ginDiscardLabel: 'Discard pile, {card} on top',
-  ginDiscardEmpty: 'Discard pile, empty',
-  ginCardLabel: '{rank} of {suit}',
-  ginSuit_spades: 'spades',
-  ginSuit_hearts: 'hearts',
-  ginSuit_diamonds: 'diamonds',
-  ginSuit_clubs: 'clubs',
-  ginCardInMeld: '{card}, meld {n}',
-  ginCardDeadwood: '{card}, deadwood',
-  ginDeadwood: 'Deadwood',
-  ginYou: 'You',
+  ginTableLabel: 'Bàn Gin Rummy',
+  ginHandLabel: 'Bài trên tay bạn',
+  ginOpponentLabel: 'CPU cầm {n} lá',
+  ginStockLabel: 'Nọc, {n} lá',
+  ginDiscardLabel: 'Chồng bỏ, trên cùng là {card}',
+  ginDiscardEmpty: 'Chồng bỏ, trống',
+  ginCardLabel: '{rank} {suit}',
+  ginSuit_spades: 'bích',
+  ginSuit_hearts: 'cơ',
+  ginSuit_diamonds: 'rô',
+  ginSuit_clubs: 'chuồn',
+  ginCardInMeld: '{card}, phỏm {n}',
+  ginCardDeadwood: '{card}, bài thừa',
+  ginDeadwood: 'Điểm thừa',
+  ginYou: 'Bạn',
   ginCpu: 'CPU',
 
-  // ---------- prompts and what just happened ----------
-  ginUpcardPrompt: 'Take the upcard, or pass',
-  ginDrawPrompt: 'Draw from the stock or the pile',
-  ginDiscardPrompt: 'Tap a card, then tap it again to put it down',
-  ginKnockPrompt: 'Tap the card to knock with, then tap it again',
-  ginCpuTurn: 'CPU is thinking…',
-  ginCpuPassed: 'The CPU passed the upcard',
-  ginCpuDrewStock: 'The CPU drew from the stock',
-  ginCpuTookDiscard: 'The CPU took the {card}',
-  ginCpuDiscarded: 'The CPU put down the {card}',
-  ginTake: 'Take',
-  ginPass: 'Pass',
+  ginUpcardPrompt: 'Lấy lá ngửa, hoặc bỏ qua',
+  ginDrawPrompt: 'Rút từ nọc hoặc lấy lá trên chồng bỏ',
+  ginDiscardPrompt: 'Chạm vào một lá, chạm lần nữa để đánh ra',
+  ginKnockPrompt: 'Chạm lá dùng để knock, rồi chạm lần nữa',
+  ginCpuTurn: 'CPU đang suy nghĩ…',
+  ginCpuPassed: 'CPU đã bỏ qua lá ngửa',
+  ginCpuDrewStock: 'CPU đã rút từ nọc',
+  ginCpuTookDiscard: 'CPU đã lấy {card}',
+  ginCpuDiscarded: 'CPU đã đánh ra {card}',
+  ginTake: 'Lấy',
+  ginPass: 'Bỏ qua',
   ginKnock: 'Knock',
 
-  // ---------- the hand, settled ----------
   ginHandGinTitle: 'Gin',
   ginHandKnockTitle: 'Knock',
   ginHandUndercutTitle: 'Undercut',
-  ginHandDeadTitle: 'Dead hand',
-  ginHandDeadBody: 'Two cards left in the stock. Nobody scores, and the same dealer deals again.',
-  ginHandYouTook: 'You take {points}',
-  ginHandCpuTook: 'The CPU takes {points}',
-  ginYourMelds: 'Your melds',
-  ginCpuMelds: 'CPU melds',
-  ginLaidOff: 'Laid off',
-  ginNextHand: 'Next hand',
+  ginHandDeadTitle: 'Ván hủy',
+  ginHandDeadBody: 'Nọc chỉ còn hai lá. Không ai được điểm, và người chia cũ chia lại.',
+  ginHandYouTook: 'Bạn được {points} điểm',
+  ginHandCpuTook: 'CPU được {points} điểm',
+  ginYourMelds: 'Phỏm của bạn',
+  ginCpuMelds: 'Phỏm của CPU',
+  ginLaidOff: 'Bài gửi',
+  ginNextHand: 'Ván tiếp',
 
-  // ---------- the match, decided ----------
-  ginWinTitle: 'You win!',
-  ginWinBody: 'A hundred points before the CPU got there.',
-  ginLoseTitle: 'The CPU wins',
-  ginLoseBody: 'The CPU passed a hundred first. The next match is free.',
+  ginWinTitle: 'Bạn thắng!',
+  ginWinBody: 'Bạn đạt một trăm điểm trước CPU.',
+  ginLoseTitle: 'CPU thắng',
+  ginLoseBody: 'CPU vượt một trăm điểm trước. Trận sau chơi miễn phí.',
 
-  // ---------- statistics ----------
-  ginWins: 'Wins',
-  ginLosses: 'Losses',
+  ginWins: 'Thắng',
+  ginLosses: 'Thua',
 
-  // ---------- Quick Rules: three steps, one sentence each ----------
-  ginStep1Title: 'Draw one, throw one',
-  ginStep1Body: 'Take the face-down stock or the top of the pile, then put another card down.',
-  ginStep2Title: 'Sets and runs',
+  ginStep1Title: 'Rút một, đánh một',
+  ginStep1Body: 'Rút lá úp từ nọc hoặc lấy lá trên chồng bỏ, rồi đánh ra một lá khác.',
+  ginStep2Title: 'Bộ ba và sảnh',
   ginStep2Body:
-    'Three of a rank, or three in a row in one suit — the rest is deadwood, counted for you.',
-  ginStep3Title: 'Knock at ten or less',
-  ginStep3Body: 'Once your deadwood is ten or under, the Knock button appears and ends the hand.',
+    'Ba lá cùng số, hoặc ba lá liên tiếp cùng chất — phần còn lại là bài thừa, được tính sẵn cho bạn.',
+  ginStep3Title: 'Knock khi còn mười điểm trở xuống',
+  ginStep3Body: 'Khi điểm thừa còn mười trở xuống, nút Knock hiện ra và kết thúc ván.',
 };

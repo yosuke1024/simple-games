@@ -1,5 +1,5 @@
 /**
- * The Gin Rummy game screen (the plan's「Game 画面の設計」).
+ * The Gin Rummy game screen (docs/GIN_RUMMY_RULES.md §2, §7, §11).
  *
  * Owns the two-tap machine: the first tap lifts a card, the second puts it
  * down (Gomoku's precedent, and the answer to a fan where the cards overlap).
@@ -9,8 +9,8 @@
  * HELP HERE IS THE ARITHMETIC, NOT THE MOVE. The hand is arranged into its
  * best melds and the deadwood total is on screen at all times, and the Knock
  * button exists only while a knock is actually available. All three are rules
- * being made visible — the plan's 助けの形 — and none of them says which card
- * to keep. There is no hint, and there is **no Undo**: this game has hidden
+ * being made visible (§7), and none of them says which card to keep. There is
+ * no hint, and there is **no Undo** (§6): this game has hidden
  * information, and taking a move back after seeing the reply would hand back a
  * card you now know the opponent wanted (game/session.ts).
  *
@@ -81,7 +81,7 @@ export function GinRummyGameScreen() {
    * The two-tap confirm. The first tap lifts; the second commits. A tap that
    * the rules refuse cannot get here — the table sinks those cards — and a tap
    * on a different card simply moves the lift, without a sound of complaint
-   * (the plan: 無効操作を叱らない).
+   * (§2.2).
    */
   const onCardTap = useCallback(
     (card: Card) => {

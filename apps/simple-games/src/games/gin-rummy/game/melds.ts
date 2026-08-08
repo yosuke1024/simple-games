@@ -1,7 +1,6 @@
 /**
  * Melds, the best way to split a hand into them, and lay-offs — the whole of
- * Gin Rummy's arithmetic (docs/plans/2026-08-08-hearts-and-gin-rummy.md,
- * "Gin Rummy").
+ * Gin Rummy's arithmetic (docs/GIN_RUMMY_RULES.md §1, §3.2).
  *
  * Two shapes count: a **set** of three or four cards of one rank, and a **run**
  * of three or more cards in one suit at consecutive ranks. The ace is low only
@@ -11,8 +10,8 @@
  * Everything is exhaustive rather than clever. A hand is ten or eleven cards,
  * so the whole space of splits fits in a search over 2^11 subsets, and being
  * able to say "this is the best split, not a good one" is what lets the screen
- * arrange the player's hand for them without ever arranging it wrong (the
- * plan's 助けの形: メルドの自動整理とデッドウッドの常時表示). Ties are broken
+ * arrange the player's hand for them without ever arranging it wrong (§7: the
+ * help this game offers is the rules' arithmetic). Ties are broken
  * by enumeration order and pinned by tests, so the same hand always draws the
  * same picture.
  */
@@ -114,7 +113,7 @@ function maskOf(meld: Meld, position: ReadonlyMap<Card, number>): number {
 }
 
 /**
- * The split that leaves the least deadwood (§ the plan's "最適分割").
+ * The split that leaves the least deadwood (docs/GIN_RUMMY_RULES.md §3.2, §7).
  *
  * The search walks the lowest card the split has not placed yet and tries
  * every meld containing it before trying it as deadwood, memoising on the set
@@ -215,7 +214,7 @@ function missingFourth(meld: Meld): Card | null {
 
 /**
  * Places as many of `loose` as will go onto the knocker's melds and returns
- * what is left (the plan: ランの両端延長・セットの 4 枚目).
+ * what is left (§3.2: runs extend at both ends, a set takes its fourth).
  *
  * Extending a run opens the next rank along, so each run is walked outwards
  * until it stops — 4-5-6♠ takes a 7♠ and then an 8♠. Greedy is safe here
@@ -277,7 +276,7 @@ export function layOff(
  * do exhaustively.
  *
  * Pass an empty `knockerMelds` for gin: there is nothing to lay off against
- * (the plan: ジンへのレイオフはない), and the call then reduces to the
+ * (§3.2: there are no lay-offs against gin), and the call then reduces to the
  * defender's own best split.
  */
 export function bestDefence(cards: readonly Card[], knockerMelds: readonly Meld[]): DefenceResult {

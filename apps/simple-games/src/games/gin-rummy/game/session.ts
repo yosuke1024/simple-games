@@ -3,7 +3,7 @@
  * played, the running score, and nothing else. The React layer only dispatches
  * into these functions; all the rules live here, in engine.ts and in cpu.ts.
  *
- * **There is no undo, and no function here to add one to.** The board games'
+ * **There is no undo, and no function here to add one to** (§6). The board games'
  * undo works because both players can see everything; here, taking a move back
  * after watching the reply would hand back a card you now know the opponent
  * wanted. The leak cannot be undone by undoing the move, so the take-back is
@@ -176,7 +176,7 @@ export const canDealNextHand = (session: GinRummySession): boolean =>
 
 /**
  * Deals the next hand: the winner deals it, and a dead hand goes back to the
- * same dealer (the plan: ハンドの勝者が次の配り手 / ハンド無効時は同じ配り手).
+ * same dealer (docs/GIN_RUMMY_RULES.md §1, §3.1).
  * Null once the match is decided — a finished match deals nothing.
  */
 export function doNextHand(session: GinRummySession): GinRummySession | null {

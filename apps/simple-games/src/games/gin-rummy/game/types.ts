@@ -2,10 +2,8 @@
  * Core Gin Rummy types: the two seats, one hand of the match, and what a hand
  * state has to look like to have come from play.
  *
- * The rules these shapes serve are in
- * docs/plans/2026-08-08-hearts-and-gin-rummy.md ("Gin Rummy") until
- * docs/GIN_RUMMY_RULES.md exists; from then on that document is the source of
- * truth and this file follows it.
+ * The rules these shapes serve are docs/GIN_RUMMY_RULES.md §1–§3; that document
+ * is the source of truth and this file follows it.
  *
  * Two things are deliberate here. The **public log** is a first-class part of
  * the state rather than a debugging aid: it is exactly what a player at the
@@ -73,7 +71,8 @@ export type MatchStatus = 'playing' | 'won' | 'lost';
  *
  * `knock` and `gin` carry the card put down to declare with. It goes onto the
  * discard pile face down at a real table; here it simply lies on top, which
- * keeps the fifty-two-card count honest and changes nothing — the hand is over.
+ * keeps the fifty-two-card count honest and changes nothing — the hand is over
+ * (docs/GIN_RUMMY_RULES.md §2.3, and §12 for why the difference is deliberate).
  */
 export type PublicEvent =
   | { readonly kind: 'upcard'; readonly card: Card }

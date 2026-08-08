@@ -1,88 +1,70 @@
-/*
- * PLACEHOLDER — this catalog is still the English text, word for word.
- *
- * The file exists so the fourteen-locale shape holds and the i18n tests can
- * see this game at all: every locale must carry every key as a non-empty
- * string with the same placeholders (src/i18n/i18n.test.ts). English standing
- * in for a missing translation is what the runtime already falls back to, so
- * this is the fallback written down rather than a claim that it was
- * translated. Replacing it is the next commit on this game, and
- * docs/I18N_POLICY.md governs how.
- */
 import type { GinRummyMessages } from './en';
+
 export const zhHant: GinRummyMessages = {
   ginName: 'Gin Rummy',
 
-  // ---------- home ----------
-  ginChooseOpponent: 'Choose your opponent',
-  ginDifficulty_easy: 'Easy',
-  ginDifficulty_normal: 'Normal',
-  ginDifficulty_hard: 'Hard',
-  ginRecordNote: 'Won {wins} · Lost {losses}',
-  ginConfirmSwitchTitle: 'Replace the match in progress?',
-  ginConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  ginChooseOpponent: '選擇對手',
+  ginDifficulty_easy: '簡單',
+  ginDifficulty_normal: '普通',
+  ginDifficulty_hard: '困難',
+  ginRecordNote: '{wins} 勝 · {losses} 敗',
+  ginConfirmSwitchTitle: '要替換進行中的對局嗎？',
+  ginConfirmSwitchBody: '進行中的「{current}」對局會被新的「{next}」對局取代。',
 
-  // ---------- the table ----------
-  ginTableLabel: 'Gin Rummy table',
-  ginHandLabel: 'Your hand',
-  ginOpponentLabel: 'CPU holds {n} cards',
-  ginStockLabel: 'Stock, {n} cards',
-  ginDiscardLabel: 'Discard pile, {card} on top',
-  ginDiscardEmpty: 'Discard pile, empty',
-  ginCardLabel: '{rank} of {suit}',
-  ginSuit_spades: 'spades',
-  ginSuit_hearts: 'hearts',
-  ginSuit_diamonds: 'diamonds',
-  ginSuit_clubs: 'clubs',
-  ginCardInMeld: '{card}, meld {n}',
-  ginCardDeadwood: '{card}, deadwood',
-  ginDeadwood: 'Deadwood',
-  ginYou: 'You',
+  ginTableLabel: 'Gin Rummy 牌桌',
+  ginHandLabel: '你的手牌',
+  ginOpponentLabel: 'CPU 有 {n} 張牌',
+  ginStockLabel: '牌庫，{n} 張',
+  ginDiscardLabel: '棄牌堆，最上面是 {card}',
+  ginDiscardEmpty: '棄牌堆，空的',
+  ginCardLabel: '{suit}{rank}',
+  ginSuit_spades: '黑桃',
+  ginSuit_hearts: '紅心',
+  ginSuit_diamonds: '方塊',
+  ginSuit_clubs: '梅花',
+  ginCardInMeld: '{card}，牌組 {n}',
+  ginCardDeadwood: '{card}，廢牌',
+  ginDeadwood: '廢牌',
+  ginYou: '你',
   ginCpu: 'CPU',
 
-  // ---------- prompts and what just happened ----------
-  ginUpcardPrompt: 'Take the upcard, or pass',
-  ginDrawPrompt: 'Draw from the stock or the pile',
-  ginDiscardPrompt: 'Tap a card, then tap it again to put it down',
-  ginKnockPrompt: 'Tap the card to knock with, then tap it again',
-  ginCpuTurn: 'CPU is thinking…',
-  ginCpuPassed: 'The CPU passed the upcard',
-  ginCpuDrewStock: 'The CPU drew from the stock',
-  ginCpuTookDiscard: 'The CPU took the {card}',
-  ginCpuDiscarded: 'The CPU put down the {card}',
-  ginTake: 'Take',
-  ginPass: 'Pass',
-  ginKnock: 'Knock',
+  ginUpcardPrompt: '拿走明牌，或是過',
+  ginDrawPrompt: '從牌庫或棄牌堆摸一張',
+  ginDiscardPrompt: '點一下牌，再點一次打出去',
+  ginKnockPrompt: '點一下要用來敲牌的那張，再點一次',
+  ginCpuTurn: 'CPU 思考中…',
+  ginCpuPassed: 'CPU 放過了明牌',
+  ginCpuDrewStock: 'CPU 從牌庫摸了一張',
+  ginCpuTookDiscard: 'CPU 拿走了 {card}',
+  ginCpuDiscarded: 'CPU 打出了 {card}',
+  ginTake: '拿走',
+  ginPass: '過',
+  ginKnock: '敲牌',
 
-  // ---------- the hand, settled ----------
   ginHandGinTitle: 'Gin',
-  ginHandKnockTitle: 'Knock',
-  ginHandUndercutTitle: 'Undercut',
-  ginHandDeadTitle: 'Dead hand',
-  ginHandDeadBody: 'Two cards left in the stock. Nobody scores, and the same dealer deals again.',
-  ginHandYouTook: 'You take {points}',
-  ginHandCpuTook: 'The CPU takes {points}',
-  ginYourMelds: 'Your melds',
-  ginCpuMelds: 'CPU melds',
-  ginLaidOff: 'Laid off',
-  ginNextHand: 'Next hand',
+  ginHandKnockTitle: '敲牌',
+  ginHandUndercutTitle: '反敲',
+  ginHandDeadTitle: '本局作廢',
+  ginHandDeadBody: '牌庫只剩兩張。雙方都不得分，由同一位發牌者重新發牌。',
+  ginHandYouTook: '你得 {points} 分',
+  ginHandCpuTook: 'CPU 得 {points} 分',
+  ginYourMelds: '你的牌組',
+  ginCpuMelds: 'CPU 的牌組',
+  ginLaidOff: '搭出的牌',
+  ginNextHand: '下一局',
 
-  // ---------- the match, decided ----------
-  ginWinTitle: 'You win!',
-  ginWinBody: 'A hundred points before the CPU got there.',
-  ginLoseTitle: 'The CPU wins',
-  ginLoseBody: 'The CPU passed a hundred first. The next match is free.',
+  ginWinTitle: '你贏了！',
+  ginWinBody: '你比 CPU 先到一百分。',
+  ginLoseTitle: 'CPU 獲勝',
+  ginLoseBody: 'CPU 先超過一百分。下一場對局免費。',
 
-  // ---------- statistics ----------
-  ginWins: 'Wins',
-  ginLosses: 'Losses',
+  ginWins: '勝',
+  ginLosses: '敗',
 
-  // ---------- Quick Rules: three steps, one sentence each ----------
-  ginStep1Title: 'Draw one, throw one',
-  ginStep1Body: 'Take the face-down stock or the top of the pile, then put another card down.',
-  ginStep2Title: 'Sets and runs',
-  ginStep2Body:
-    'Three of a rank, or three in a row in one suit — the rest is deadwood, counted for you.',
-  ginStep3Title: 'Knock at ten or less',
-  ginStep3Body: 'Once your deadwood is ten or under, the Knock button appears and ends the hand.',
+  ginStep1Title: '摸一張，打一張',
+  ginStep1Body: '從蓋著的牌庫或棄牌堆頂摸一張，然後打出另一張。',
+  ginStep2Title: '三條和順子',
+  ginStep2Body: '同點數三張，或同花色連續三張；其餘就是廢牌，會自動幫你算好。',
+  ginStep3Title: '廢牌十分以內可敲牌',
+  ginStep3Body: '廢牌降到十分或更少時，敲牌按鈕就會出現，按下即結束這一局。',
 };
