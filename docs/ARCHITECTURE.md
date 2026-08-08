@@ -270,6 +270,7 @@ src/
 - **全タイトルが規約に従っている**: `number-match.css` / `sudoku.css` /
   `minesweeper.css` / `nonogram.css` / `sliding-puzzle.css` / `memory-match.css` /
   `water-sort.css` / `solitaire.css` / `spider-solitaire.css` / `freecell.css` /
+  `gin-rummy.css` /
   `brick-breaker.css` / `sky-fighter.css` /
   `game-2048.css` / `block-puzzle.css` / `checkers.css` / `reversi.css` /
   `connect-four.css` / `gomoku.css` / `quick-math.css` / `schulte-table.css` /
