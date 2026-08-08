@@ -78,8 +78,16 @@ describe('a save play could not have produced (§11)', () => {
   it('drops a sign that points against the solution', () => {
     // The strongest invariant this format has: generation reads the direction
     // off the solution, so a token pointing the other way never came from play.
-    const flipped = levelRecord.constraints.replace(/[<>]/, (symbol) =>
-      symbol === '<' ? '>' : '<',
+    // Exactly one sign is turned around, by index — a regex replace without
+    // /g reads like a sanitizer that missed the rest of the string, and both
+    // CodeQL and the next reader are right to distrust it. One is the point
+    // here: the smallest corruption the decoder has to catch.
+    const at = levelRecord.constraints.search(/[<>]/);
+    expect(at).toBeGreaterThanOrEqual(0);
+    const flipped = withCharacter(
+      levelRecord.constraints,
+      at,
+      levelRecord.constraints[at] === '<' ? '>' : '<',
     );
     expect(flipped).not.toBe(levelRecord.constraints);
     expect(toSession({ ...levelRecord, constraints: flipped })).toBeNull();
