@@ -24,6 +24,17 @@ function card(text: string): Card {
 
 const dealt = dealHand('gin-serialize', 1, CPU);
 
+/** A card as the two base-36 digits the format writes it with. */
+const code = (value: Card): string => value.toString(36).padStart(2, '0');
+
+/** The same record with a different public log. */
+const withLog = (state: HandState, log: string): string =>
+  [...encodeHand(state).split('/').slice(0, 7), log].join('/');
+
+/** The log as the encoder wrote it, one four-character event at a time. */
+const events = (state: HandState): string[] =>
+  encodeHand(state).split('/')[7]!.match(/.{4}/g) ?? [];
+
 /** A few positions from one hand, one per phase. */
 function positions(): HandState[] {
   const taken = takeUpcard(dealt)!;
@@ -171,6 +182,72 @@ describe('fails closed', () => {
     const fields = valid.split('/');
     rejects([fields[0]!, `2${fields[1]!.slice(1)}`, ...fields.slice(2)].join('/'));
     rejects([...fields.slice(0, 7), 'x200'].join('/'));
+  });
+});
+
+/**
+ * The public log is the CPU's whole memory of the hand (game/cpu.ts), so a log
+ * nothing checks is a way to tell the opponent things that never happened. The
+ * discard pile is the answer: every card that ever went onto it or came off it
+ * is named in the record, so the pile can be rebuilt from the log and compared
+ * with the one on the table.
+ */
+describe('the public log has to match the table', () => {
+  const rejects = (text: string) => expect(decodeHand(text)).toBeNull();
+
+  /** Both players refused the upcard and the non-dealer opened from the stock. */
+  const opened = drawFromStock(passUpcard(passUpcard(dealt)!)!)!;
+
+  it('keeps a log that really was played', () => {
+    for (const state of positions()) expect(decodeHand(encodeHand(state))).toEqual(state);
+    expect(decodeHand(encodeHand(opened))).toEqual(opened);
+  });
+
+  it('refuses a face-down draw rewritten as a card off the pile', () => {
+    // The attack the boundary exists to stop: the last event is the player
+    // drawing a card nobody saw. Rewritten as a take off the pile, naming a
+    // card out of the player's own hand, `knowledgeOf` would read that card as
+    // one the *opponent* is holding and hard would play around it. The pile
+    // says otherwise — nothing was taken off it — so the save does not come back.
+    const written = events(opened);
+    expect(written[written.length - 1]).toBe('s0--');
+    const held = opened.hands[YOU][0]!;
+    rejects(withLog(opened, [...written.slice(0, -1), `d0${code(held)}`].join('')));
+  });
+
+  it('refuses a take that names anything but the card on top', () => {
+    const taken = takeUpcard(dealt)!;
+    const written = events(taken);
+    // The upcard really was taken; the record claims a different card was.
+    const other = taken.hands[YOU].find((card) => card !== taken.takenFromDiscard)!;
+    rejects(withLog(taken, [written[0]!, `d0${code(other)}`].join('')));
+  });
+
+  it('refuses a take off a pile with nothing on it', () => {
+    const taken = takeUpcard(dealt)!;
+    const put = discardCard(
+      taken,
+      taken.hands[YOU].find((c) => c !== taken.takenFromDiscard)!,
+    )!;
+    const written = events(put);
+    // The last event put a card down onto an empty pile. Read as a take
+    // instead, there is nothing there to take.
+    expect(written[2]!.startsWith('x')).toBe(true);
+    rejects(withLog(put, [...written.slice(0, 2), `d${written[2]!.slice(1)}`].join('')));
+  });
+
+  it('refuses a log that skips what the table remembers', () => {
+    // The hand as played, with the opening stock draw simply deleted: the
+    // stock is a card shallower than a log with no draw in it could leave it,
+    // and the player is holding one more card than it accounts for.
+    rejects(withLog(opened, events(opened).slice(0, -1).join('')));
+    // And with nothing in it at all — every hand begins with a turned card.
+    rejects(withLog(opened, ''));
+  });
+
+  it('refuses a log that does not begin with the turned card', () => {
+    const written = events(opened);
+    rejects(withLog(opened, [...written.slice(1), written[0]!].join('')));
   });
 });
 

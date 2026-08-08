@@ -71,6 +71,12 @@ vi.mock('../../../services/review', () => ({ recordGameCompleted }));
  * A position mid-hand: the two holdings as given, every other card face down.
  * In the discard phase the seat to move holds eleven and the pile may be empty;
  * in the draw phase both hold ten and there is a card to take.
+ *
+ * The log says how the position was reached, because these sessions are saved
+ * and the decoder rebuilds the pile from the log before it hands one back
+ * (game/types.ts): nothing has happened yet on the draw, and on the discard the
+ * seat to move took the turned card, which is the only way to be holding eleven
+ * with an empty pile.
  */
 function craft(
   you: readonly Card[],
@@ -81,25 +87,42 @@ function craft(
   const held = new Set<Card>([...you, ...cpu]);
   const rest: Card[] = [];
   for (let card = 0; card < CARD_COUNT; card++) if (!held.has(card)) rest.push(card);
+  const upcard = phase === 'draw' ? rest[0]! : sortedCards(turn === YOU ? you : cpu)[0]!;
   const hand: HandState = {
     dealer: opponentOf(turn),
     hands: [sortedCards(you), sortedCards(cpu)],
     stock: phase === 'draw' ? rest.slice(1) : rest,
-    discard: phase === 'draw' ? [rest[0]!] : [],
+    discard: phase === 'draw' ? [upcard] : [],
     turn,
     phase,
     ending: 'none',
     takenFromDiscard: null,
     mustDrawStock: false,
-    log: [{ kind: 'upcard', card: rest[0]! }],
+    log:
+      phase === 'draw'
+        ? [{ kind: 'upcard', card: upcard }]
+        : [
+            { kind: 'upcard', card: upcard },
+            { kind: 'draw-discard', seat: turn, card: upcard },
+          ],
   };
   // A crafted position the rules could not produce proves nothing.
   if (!isValidHand(hand)) throw new Error('crafted hand is not a hand');
   return hand;
 }
 
+/**
+ * The match around the position. On the first hand the move count is not free:
+ * it is exactly the actions this hand's log carries (storage/gamePersistence.ts),
+ * so a session built here is one the store would give back unchanged.
+ */
 const sessionWith = (hand: HandState, scores: [number, number] = [0, 0]): GinRummySession =>
-  restoreSession({ ...createSession('normal', 'gin-ctx'), hand, scores, moveCount: 4 });
+  restoreSession({
+    ...createSession('normal', 'gin-ctx'),
+    hand,
+    scores,
+    moveCount: hand.log.length - 1,
+  });
 
 /** Three A-2-3 runs and the ace of clubs on top: gin the moment 2♣ goes down. */
 const GIN_HAND = [0, 1, 2, 13, 14, 15, 26, 27, 28, 39, 40];
@@ -235,11 +258,11 @@ describe('the CPU plays on a timer, one beat per action', () => {
     // Nothing happens while the match is only *loaded* — the game screen is
     // not showing it yet.
     await advance(CPU_DELAY_MS * 3);
-    expect(api().session!.moveCount).toBe(4);
+    expect(api().session!.moveCount).toBe(cpuToDraw().moveCount);
 
     act(() => api().resumeGame());
     await advance(CPU_DELAY_MS);
-    expect(api().session!.moveCount).toBe(5);
+    expect(api().session!.moveCount).toBe(cpuToDraw().moveCount + 1);
   });
 
   it('is disarmed by leaving the game screen', async () => {
@@ -286,7 +309,8 @@ describe('the CPU plays on a timer, one beat per action', () => {
 
 describe('the player’s actions', () => {
   it('are refused, silently, when they are not legal', async () => {
-    const { api } = resumed(sessionWith(craft(LIMIT_HAND, TIGHT_HAND, YOU, 'discard')));
+    const session = sessionWith(craft(LIMIT_HAND, TIGHT_HAND, YOU, 'discard'));
+    const { api } = resumed(session);
     // Mid-turn the player has already drawn; there is nothing left to draw.
     expect(tap(() => api().drawStock())).toBe(false);
     expect(tap(() => api().drawDiscard())).toBe(false);
@@ -294,7 +318,8 @@ describe('the player’s actions', () => {
     // Putting an ace down breaks the set that was holding two others up, and
     // twelve points of deadwood is over the limit: not a knock.
     expect(tap(() => api().knock(0))).toBe(false);
-    expect(api().session!.moveCount).toBe(4);
+    // Nothing landed, so nothing counted: the tie-break stream has not moved.
+    expect(api().session!.moveCount).toBe(session.moveCount);
     await settle();
   });
 

@@ -48,11 +48,17 @@ vi.mock('@capacitor/preferences', () => ({
  * A position mid-hand, the same way state/GameContext.test.tsx builds one: the
  * two holdings as given, every other card face down. Playing a match into the
  * position these tests need would take a hundred taps and pin nothing extra.
+ *
+ * The one way to be holding eleven cards with nothing on the pile is to have
+ * taken the turned card off it, so that is the history the log carries — and it
+ * has to, because the decoder rebuilds the pile from the log and refuses a save
+ * whose record does not produce the table it was saved with (game/types.ts).
  */
 function craft(you: readonly Card[], cpu: readonly Card[], turn: Seat): HandState {
   const held = new Set<Card>([...you, ...cpu]);
   const rest: Card[] = [];
   for (let card = 0; card < CARD_COUNT; card++) if (!held.has(card)) rest.push(card);
+  const upcard = sortedCards(turn === YOU ? you : cpu)[0]!;
   const hand: HandState = {
     dealer: opponentOf(turn),
     hands: [sortedCards(you), sortedCards(cpu)],
@@ -63,15 +69,27 @@ function craft(you: readonly Card[], cpu: readonly Card[], turn: Seat): HandStat
     ending: 'none',
     takenFromDiscard: null,
     mustDrawStock: false,
-    log: [{ kind: 'upcard', card: rest[0]! }],
+    log: [
+      { kind: 'upcard', card: upcard },
+      { kind: 'draw-discard', seat: turn, card: upcard },
+    ],
   };
   // A crafted position the rules could not produce proves nothing.
   if (!isValidHand(hand)) throw new Error('crafted hand is not a hand');
   return hand;
 }
 
+/**
+ * The match around the position. On the first hand the move count is not free:
+ * it is exactly the actions this hand's log carries (storage/gamePersistence.ts).
+ */
 const sessionWith = (hand: HandState, scores: [number, number] = [0, 0]): GinRummySession =>
-  restoreSession({ ...createSession('normal', 'gin-uitest'), hand, scores, moveCount: 4 });
+  restoreSession({
+    ...createSession('normal', 'gin-uitest'),
+    hand,
+    scores,
+    moveCount: hand.log.length - 1,
+  });
 
 /** Three sets and a king: exactly ten deadwood once 2♣ goes down — a knock. */
 const LIMIT_HAND = [0, 1, 2, 13, 14, 15, 26, 27, 28, 40, 51];

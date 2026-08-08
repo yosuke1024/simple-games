@@ -122,6 +122,24 @@ describe('fail closed', () => {
     expect(await loadSavedGame(saved({ ...record(), moveCount: 3 }))).not.toBeNull();
   });
 
+  it('pins the move count exactly while the first hand is the only hand', async () => {
+    // Nothing has happened but this hand, so three is not a floor — it is the
+    // count. A record claiming four is claiming an action that left no trace,
+    // and one step along `${seed}:cpu:${moveCount}` is a different opponent.
+    expect(await loadSavedGame(saved({ ...record(), moveCount: 4 }))).toBeNull();
+    expect(await loadSavedGame(saved({ ...record(), moveCount: 30 }))).toBeNull();
+  });
+
+  it('keeps the floor once earlier hands are behind it', async () => {
+    // From the second hand on, what those hands cost is not in the position
+    // and cannot be recomputed — only the deals and this hand's own log are.
+    // Two deals and three actions is the floor; above it, anything may stand.
+    const deep = restoreSession({ ...midHand(), handNumber: 3, moveCount: 5 });
+    expect(await loadSavedGame(saved(record(deep)))).not.toBeNull();
+    expect(await loadSavedGame(saved({ ...record(deep), moveCount: 61 }))).not.toBeNull();
+    expect(await loadSavedGame(saved({ ...record(deep), moveCount: 4 }))).toBeNull();
+  });
+
   it('discards a record with a field missing', async () => {
     for (const field of [
       'seed',
@@ -163,7 +181,9 @@ describe('the one slot', () => {
   it('keeps only the last save — one match at a time', async () => {
     const kv = createMemoryKV();
     await saveGame(midHand(), kv);
-    const later = restoreSession({ ...midHand(), scores: [17, 5], moveCount: 9 });
+    // The score is what tells the two saves apart: on the first hand the move
+    // count is pinned to the hand's own log, so it is not free to vary here.
+    const later = restoreSession({ ...midHand(), scores: [17, 5] });
     await saveGame(later, kv);
     expect((await loadSavedGame(kv))!.scores).toEqual([17, 5]);
   });

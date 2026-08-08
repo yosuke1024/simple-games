@@ -11,12 +11,19 @@
  *
  * Decoding **fails closed**. A record that could not have come from play — a
  * missing or duplicated card, hand sizes the phase does not allow, a flag in a
- * phase that has no such flag, a knock over the limit — returns null, and the
+ * phase that has no such flag, a knock over the limit, a public log that does
+ * not rebuild the discard pile it claims to have left — returns null, and the
  * caller drops the save and goes home rather than dealing the player into an
  * invented position. Nothing here repairs anything.
+ *
+ * The log is checked as strictly as the cards because it is *read* as strictly
+ * as the cards: it is the CPU's whole memory of the hand, so an unchecked one
+ * would be a way to hand the opponent knowledge from outside the game
+ * (types.ts `isConsistentLog`).
  */
 import { isCard, type Card } from './cards';
 import {
+  isConsistentLog,
   isSeat,
   isValidHand,
   type HandEnding,
@@ -186,5 +193,11 @@ export function decodeHand(text: string): HandState | null {
     mustDrawStock: flags[4] === '1',
     log,
   };
-  return isValidHand(hand) ? hand : null;
+  // Two questions, asked in two places on purpose. `isValidHand` asks whether
+  // the cards on the table form a position the rules allow — the engine's own
+  // tests build positions card by card to assert about them, so it has to stay
+  // answerable about a table with no history attached. `isConsistentLog` asks
+  // whether the public record could have produced that table, and the only
+  // place a record arrives from outside the program is right here.
+  return isValidHand(hand) && isConsistentLog(hand) ? hand : null;
 }

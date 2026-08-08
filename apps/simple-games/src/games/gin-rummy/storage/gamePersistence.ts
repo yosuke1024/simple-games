@@ -41,12 +41,24 @@ function toSession(persisted: PersistedGame | null): GinRummySession | null {
   // The move count is half the CPU's tie-break draw (`${seed}:cpu:${moveCount}`
   // in game/session.ts), so a save whose count disagrees with its own history
   // would resume a match that answers differently from the one that was put
-  // down. Earlier hands' action counts are not stored, but the floor is: every
-  // event in this hand after the deal's upcard was one action, and every deal
-  // after the first was one more. Anything under that could not have come from
-  // play. Fail closed, like the hand itself.
-  const minimumMoves = persisted.handNumber - 1 + Math.max(0, hand.log.length - 1);
-  if (persisted.moveCount < minimumMoves) return null;
+  // down. What this hand cost is visible: every event in its log after the
+  // deal's upcard was one action, and every deal after the first was one more.
+  //
+  // On the **first hand** there is nothing else — no earlier hand's actions to
+  // add — so that sum is not a floor but the number itself, and a record one
+  // step off it is claiming an action that left no trace. Check it exactly.
+  // From the second hand on, what the hands before this one cost is gone: they
+  // were dealt away and their logs with them, and no part of the position
+  // remembers how many turns they took. The sum is then a genuine floor, and a
+  // floor is all this can honestly be. (Hearts checks every hand exactly —
+  // there the whole match's beats are still visible in the position.)
+  const thisHand = Math.max(0, hand.log.length - 1);
+  const deals = persisted.handNumber - 1;
+  if (persisted.handNumber === 1) {
+    if (persisted.moveCount !== thisHand) return null;
+  } else if (persisted.moveCount < deals + thisHand) {
+    return null;
+  }
 
   const session = restoreSession({
     seed: persisted.seed,

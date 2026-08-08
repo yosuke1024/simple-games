@@ -214,3 +214,74 @@ export function isValidHand(hand: HandState): boolean {
       return false;
   }
 }
+
+/**
+ * The public log, replayed against the table it says it produced
+ * (docs/GIN_RUMMY_RULES.md §9).
+ *
+ * The log is not decoration. It is the only memory the CPU has of the hand
+ * (cpu.ts), and `knowledgeOf` reads every `draw-discard` as "the opponent is
+ * holding that card". So a log nothing checks is a way to *tell* the opponent
+ * things: rewrite a face-down stock draw as a card taken off the pile, name a
+ * card out of your own hand, and hard's `riskOf` plays around a card that was
+ * never there. That is precisely the side channel the public-log boundary
+ * exists to close, so the record has to be checked as closely as the cards.
+ *
+ * It can be, because the pile is fully determined by the record: the turned
+ * card starts it, discards and declarations go on top of it, and every take off
+ * it names the card it took. So the whole record is replayed — the pile, the
+ * depth of the stock, and how many cards each seat holds — and every one of
+ * them has to come out as the table says. A take off an empty pile, or one
+ * naming anything but the card on top, is refused rather than repaired.
+ *
+ * The three answers are not independent: with fifty-two cards conserved, any
+ * two of them fix the third. All three are compared anyway, because each is a
+ * sentence about the hand rather than a step in a proof, and a validator that
+ * only says two-thirds of what it knows is a validator somebody will widen.
+ */
+export function isConsistentLog(hand: HandState): boolean {
+  if (!Array.isArray(hand.log) || hand.log.length === 0) return false;
+
+  const pile: Card[] = [];
+  const held: [number, number] = [HAND_SIZE, HAND_SIZE];
+  const moved = (seat: Seat, by: number): void => {
+    held[seat] = held[seat]! + by;
+  };
+  let stock = INITIAL_STOCK;
+
+  for (let at = 0; at < hand.log.length; at++) {
+    const event = hand.log[at]!;
+    // Every hand opens with the twenty-first card turned, and a card is turned
+    // only at a deal, so this event is the first one or the record is not one.
+    if ((event.kind === 'upcard') !== (at === 0)) return false;
+    switch (event.kind) {
+      case 'upcard':
+        pile.push(event.card);
+        break;
+      case 'pass':
+        break;
+      case 'draw-stock':
+        stock -= 1;
+        moved(event.seat, 1);
+        break;
+      case 'draw-discard':
+        // `pop` on an empty pile gives undefined, which is no card: a take
+        // with nothing to take from fails here and not by accident.
+        if (pile.pop() !== event.card) return false;
+        moved(event.seat, 1);
+        break;
+      case 'discard':
+      case 'knock':
+      case 'gin':
+        pile.push(event.card);
+        moved(event.seat, -1);
+        break;
+      default:
+        return false;
+    }
+  }
+
+  if (stock !== hand.stock.length) return false;
+  for (const seat of SEATS) if (held[seat] !== hand.hands[seat].length) return false;
+  return pile.length === hand.discard.length && pile.every((card, at) => card === hand.discard[at]);
+}

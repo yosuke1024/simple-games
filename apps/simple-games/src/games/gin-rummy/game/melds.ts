@@ -11,9 +11,11 @@
  * so the whole space of splits fits in a search over 2^11 subsets, and being
  * able to say "this is the best split, not a good one" is what lets the screen
  * arrange the player's hand for them without ever arranging it wrong (§7: the
- * help this game offers is the rules' arithmetic). Ties are broken
- * by enumeration order and pinned by tests, so the same hand always draws the
- * same picture.
+ * help this game offers is the rules' arithmetic). The same goes for lay-offs:
+ * which of the knocker's melds each card goes onto is an assignment problem
+ * (`layOff`), not a walk, and it is solved rather than approximated because the
+ * points it decides are the undercut. Ties are broken by enumeration order and
+ * pinned by tests, so the same hand always draws the same picture.
  */
 import {
   cardOf,
@@ -213,15 +215,76 @@ function missingFourth(meld: Meld): Card | null {
 }
 
 /**
+ * Every set of cards one meld could take out of `pool`, fullest first.
+ *
+ * A set offers exactly one place — its missing fourth — so it has two claims:
+ * take it, or leave it. A run offers a ladder at each end, and a rung is only
+ * reachable once the one under it is filled, so its claims are exactly the
+ * pairs "the nearest `below` cards downwards and the nearest `above` upwards".
+ * Fullest first, because ties are settled by enumeration order.
+ */
+function claimsFor(meld: Meld, pool: ReadonlySet<Card>): Card[][] {
+  if (meld.kind === 'set') {
+    const fourth = missingFourth(meld);
+    return fourth !== null && pool.has(fourth) ? [[fourth], []] : [[]];
+  }
+
+  const suit = suitOf(meld.cards[0]!);
+  // Downwards stops at the ace: it is the bottom of the ladder, not a rung
+  // below the king.
+  const down: Card[] = [];
+  for (let rank = rankOf(meld.cards[0]!) - 1; rank >= 1; rank--) {
+    const card = cardOf(suit, rank);
+    if (!pool.has(card)) break;
+    down.push(card);
+  }
+  const up: Card[] = [];
+  for (let rank = rankOf(meld.cards[meld.cards.length - 1]!) + 1; rank <= RANKS; rank++) {
+    const card = cardOf(suit, rank);
+    if (!pool.has(card)) break;
+    up.push(card);
+  }
+
+  const claims: Card[][] = [];
+  for (let below = down.length; below >= 0; below--) {
+    for (let above = up.length; above >= 0; above--) {
+      claims.push([...down.slice(0, below), ...up.slice(0, above)]);
+    }
+  }
+  return claims;
+}
+
+/** One meld's chosen claim, and what the rest of the melds did with the rest. */
+interface Assignment {
+  readonly value: number;
+  /** Index into each meld's claim list, meld by meld. */
+  readonly picks: readonly number[];
+}
+
+/**
  * Places as many of `loose` as will go onto the knocker's melds and returns
  * what is left (§3.2: runs extend at both ends, a set takes its fourth).
  *
- * Extending a run opens the next rank along, so each run is walked outwards
- * until it stops — 4-5-6♠ takes a 7♠ and then an 8♠. Greedy is safe here
- * because a lay-off only ever removes a card from the deadwood and never
- * closes a place another card could have gone: a set has exactly one opening
- * (its missing fourth), and two runs of one suit that could both take the same
- * card can each be extended the other way instead, for the same total.
+ * **The placements have to be solved together, not walked meld by meld.**
+ * Giving each meld whatever it can take, in turn, gets this wrong, because a
+ * set's single opening can be the very card a run's ladder needs next — and
+ * the ladder may have more behind it. Against a set of S5 H5 D5 and a run of
+ * C2 C3 C4, a defender holding C5 C6 must lend the five to the **run**:
+ * completing the set with it strands the six at six points, while C2-C3-C4-C5
+ * opens the place the six was waiting for and the defender ends on nothing.
+ * Same card, two places, different hands — so choosing between them *is* the
+ * problem, and the number it decides is the undercut.
+ *
+ * So every meld's claims are enumerated (`claimsFor`) and the best combination
+ * of disjoint ones is taken. The walk goes meld by meld over a bitmask of the
+ * cards some meld could take, memoised on (meld, cards already used). A knocker
+ * lays down at most three melds and a defender holds at most ten loose cards,
+ * so that is at most 3 x 2^10 states with a few dozen claims each — small
+ * enough that "the best assignment" can mean it literally. In practice the
+ * mask covers only the handful of cards that can go anywhere at all.
+ *
+ * Ties go to the fullest claim at the earliest meld, so the same loose cards
+ * always land in the same places and the screen draws the same picture.
  *
  * A card melded in the defender's own hand is not in `loose` and so is never
  * laid off — which split to keep and which cards to give away is the caller's
@@ -232,31 +295,44 @@ export function layOff(
   knockerMelds: readonly Meld[],
 ): { layoffs: Layoff[]; remaining: Card[] } {
   const pool = new Set(loose);
-  const layoffs: Layoff[] = [];
+  const claims = knockerMelds.map((meld) => claimsFor(meld, pool));
 
-  knockerMelds.forEach((meld, meldIndex) => {
-    if (meld.kind === 'set') {
-      const fourth = missingFourth(meld);
-      if (fourth !== null && pool.has(fourth)) {
-        pool.delete(fourth);
-        layoffs.push({ card: fourth, meldIndex });
-      }
-      return;
+  // Only the cards some meld could actually take get a bit: the rest cannot
+  // affect the choice, and leaving them out keeps the state space tiny.
+  const position = new Map<Card, number>();
+  for (const list of claims) {
+    for (const cards of list) {
+      for (const card of cards) if (!position.has(card)) position.set(card, position.size);
     }
-    const suit = suitOf(meld.cards[0]!);
-    let low = rankOf(meld.cards[0]!);
-    let high = rankOf(meld.cards[meld.cards.length - 1]!);
-    // Downwards stops at the ace: it is the bottom of the ladder, not a rung
-    // below the king.
-    while (low > 1 && pool.has(cardOf(suit, low - 1))) {
-      low -= 1;
-      const card = cardOf(suit, low);
-      pool.delete(card);
-      layoffs.push({ card, meldIndex });
+  }
+  const width = position.size;
+  const masks = claims.map((list) =>
+    list.map((cards) => cards.reduce((mask, card) => mask | (1 << position.get(card)!), 0)),
+  );
+  const values = claims.map((list) => list.map(deadwoodTotal));
+
+  const memo = new Map<number, Assignment>();
+  const solve = (at: number, used: number): Assignment => {
+    if (at === claims.length) return { value: 0, picks: [] };
+    const key = (at << width) | used;
+    const cached = memo.get(key);
+    if (cached !== undefined) return cached;
+
+    let best: Assignment | null = null;
+    for (let choice = 0; choice < claims[at]!.length; choice++) {
+      if (masks[at]![choice]! & used) continue;
+      const rest = solve(at + 1, used | masks[at]![choice]!);
+      const value = values[at]![choice]! + rest.value;
+      if (best === null || value > best.value) best = { value, picks: [choice, ...rest.picks] };
     }
-    while (high < RANKS && pool.has(cardOf(suit, high + 1))) {
-      high += 1;
-      const card = cardOf(suit, high);
+    // Every meld may always claim nothing, so there is always an answer.
+    memo.set(key, best!);
+    return best!;
+  };
+
+  const layoffs: Layoff[] = [];
+  solve(0, 0).picks.forEach((choice, meldIndex) => {
+    for (const card of claims[meldIndex]![choice]!) {
       pool.delete(card);
       layoffs.push({ card, meldIndex });
     }
