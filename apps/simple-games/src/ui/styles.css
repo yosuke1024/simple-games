@@ -252,6 +252,7 @@
   --accent-soft: #e9dcef;
   --accent-ring: rgba(119, 43, 151, 0.38);
   --accent-ring-soft: rgba(119, 43, 151, 0.12);
+}
 
 :root[data-game='takuzu'],
 .accent-takuzu {
@@ -278,6 +279,15 @@
   --accent-soft: #f1e5dc;
   --accent-ring: rgba(121, 78, 47, 0.38);
   --accent-ring-soft: rgba(121, 78, 47, 0.12);
+}
+
+:root[data-game='mahjong-solitaire'],
+.accent-mahjong-solitaire {
+  --accent: #3b3196;
+  --accent-ink: #ffffff;
+  --accent-soft: #e4e2f4;
+  --accent-ring: rgba(59, 49, 150, 0.38);
+  --accent-ring-soft: rgba(59, 49, 150, 0.12);
 }
 
 :root[data-theme='dark'] {
@@ -507,6 +517,7 @@
   --accent-soft: #36233e;
   --accent-ring: rgba(179, 93, 213, 0.42);
   --accent-ring-soft: rgba(179, 93, 213, 0.14);
+}
 
 :root[data-theme='dark'][data-game='takuzu'],
 [data-theme='dark'] .accent-takuzu {
@@ -533,6 +544,15 @@
   --accent-soft: #3d2c20;
   --accent-ring: rgba(203, 158, 126, 0.42);
   --accent-ring-soft: rgba(203, 158, 126, 0.14);
+}
+
+:root[data-theme='dark'][data-game='mahjong-solitaire'],
+[data-theme='dark'] .accent-mahjong-solitaire {
+  --accent: #7e77c0;
+  --accent-ink: #161225;
+  --accent-soft: #2c2946;
+  --accent-ring: rgba(126, 119, 192, 0.42);
+  --accent-ring-soft: rgba(126, 119, 192, 0.14);
 }
 
 * {

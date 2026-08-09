@@ -19,6 +19,10 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   minesweeper: ['ms.saveGame', 'ms.saveDaily', 'ms.stats', 'ms.flags', 'ms.prefs'],
   'brick-breaker': ['bb.stats', 'bb.progress', 'bb.flags'],
   nonogram: ['ng.saveGame', 'ng.saveDaily', 'ng.stats', 'ng.progress', 'ng.flags', 'ng.prefs'],
+  // Five, not six: no per-game setting to keep, and none of the record is a
+  // board — a save is identity plus the removal order
+  // (docs/MAHJONG_SOLITAIRE_RULES.md §10).
+  'mahjong-solitaire': ['mj.saveGame', 'mj.saveDaily', 'mj.stats', 'mj.progress', 'mj.flags'],
   // Five, not six: Takuzu has no per-game setting to keep
   // (docs/TAKUZU_RULES.md §4, §9).
   takuzu: ['tk.saveGame', 'tk.saveDaily', 'tk.stats', 'tk.progress', 'tk.flags'],
@@ -59,6 +63,7 @@ const PREFIXES: Record<string, string> = {
   minesweeper: 'ms.',
   'brick-breaker': 'bb.',
   nonogram: 'ng.',
+  'mahjong-solitaire': 'mj.',
   takuzu: 'tk.',
   futoshiki: 'ft.',
   kakuro: 'kk.',

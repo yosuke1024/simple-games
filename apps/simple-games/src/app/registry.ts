@@ -36,6 +36,7 @@ import { GR_STORAGE_KEYS } from '../games/gin-rummy/storage/keys';
 
 import { FT_STORAGE_KEYS } from '../games/futoshiki/storage/keys';
 import { KK_STORAGE_KEYS } from '../games/kakuro/storage/keys';
+import { MJ_STORAGE_KEYS } from '../games/mahjong-solitaire/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
 import { NG_STORAGE_KEYS } from '../games/nonogram/storage/keys';
@@ -57,6 +58,7 @@ export type GameId =
   | 'sudoku'
   | 'minesweeper'
   | 'nonogram'
+  | 'mahjong-solitaire'
   | 'number-match'
   | 'quick-math'
   | 'schulte-table'
@@ -228,6 +230,26 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/minesweeper/ui/MinesweeperRoot').then((m) => ({
         default: m.MinesweeperRoot,
+      })),
+  },
+  {
+    id: 'mahjong-solitaire',
+    // Head of the puzzle shelf: sections order by name-search demand, and
+    // "mahjong" out-searches every other title here. The mark is the one
+    // dot — the circle tile itself, and the collection's only concentric
+    // circles (Reversi's ◐ lives on the board shelf and is half-filled, so
+    // the silhouettes never blur). The first choice ⧈ was dropped: it drew
+    // almost identically to Block Puzzle's ▣, which sits directly below in
+    // this very section (docs/plans/2026-08-08-mahjong-bubble-ludo.md,
+    // Phase 1). Not "Mahjong" alone — in ja / zh / ko that names the
+    // four-player game, and this is the solitaire (docs/MAHJONG_SOLITAIRE_RULES.md).
+    title: 'Mahjong Solitaire',
+    category: 'puzzle',
+    glyph: '◎',
+    storageKeys: Object.values(MJ_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/mahjong-solitaire/ui/MahjongRoot').then((m) => ({
+        default: m.MahjongRoot,
       })),
   },
   {

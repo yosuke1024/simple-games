@@ -40,6 +40,7 @@ src/
 │   ├── gin-rummy/
 │   ├── minesweeper/
 │   ├── nonogram/
+│   ├── mahjong-solitaire/
 │   ├── takuzu/
 │   ├── futoshiki/
 │   ├── kakuro/
@@ -77,6 +78,7 @@ src/
 [GIN_RUMMY_RULES.md](GIN_RUMMY_RULES.md) /
 [MINESWEEPER_RULES.md](MINESWEEPER_RULES.md) /
 [NONOGRAM_RULES.md](NONOGRAM_RULES.md) /
+[MAHJONG_SOLITAIRE_RULES.md](MAHJONG_SOLITAIRE_RULES.md) /
 [TAKUZU_RULES.md](TAKUZU_RULES.md) /
 [FUTOSHIKI_RULES.md](FUTOSHIKI_RULES.md) /
 [KAKURO_RULES.md](KAKURO_RULES.md) /
@@ -257,6 +259,7 @@ src/
 | Takuzu           | ワイン                   | `#88355e` | `#cb7ea4` |
 | Futoshiki        | パイン                   | `#29603a` | `#74c88d` |
 | Kakuro           | タバコ                   | `#794e2f` | `#cb9e7e` |
+| Mahjong Solitaire | 深い青菫                | `#3b3196` | `#7e77c0` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
@@ -283,7 +286,7 @@ src/
   `data-game` の上書き)、コレクションホーム、設定 / About、ダイアログ・トースト・
   チュートリアル・バナースロットなどの共通クロム。
 - **全タイトルが規約に従っている**: `number-match.css` / `sudoku.css` /
-  `minesweeper.css` / `nonogram.css` / `takuzu.css` / `futoshiki.css` /
+  `minesweeper.css` / `nonogram.css` / `mahjong-solitaire.css` / `takuzu.css` / `futoshiki.css` /
   `kakuro.css` /
   `sliding-puzzle.css` /
   `memory-match.css` /
@@ -331,6 +334,7 @@ src/
 | `so.*`        | Solitaire(saveGame / saveDaily / stats / flags / prefs)                 |
 | `ms.*`        | Minesweeper(saveGame / saveDaily / stats / flags / prefs)               |
 | `ng.*`        | Nonogram(saveGame / saveDaily / stats / progress / flags / prefs)       |
+| `mj.*`        | Mahjong Solitaire(saveGame / saveDaily / stats / progress / flags。**prefs なし**) |
 | `tk.*`        | Takuzu(saveGame / saveDaily / stats / progress / flags。**prefs なし**) |
 | `ft.*`        | Futoshiki(saveGame / saveDaily / stats / progress / flags / prefs)      |
 | `kk.*`        | Kakuro(saveGame / saveDaily / stats / progress / flags / prefs)         |
@@ -411,7 +415,7 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
   乗り、1 本のゲームだけが使うキーはそのゲームの `src/games/<id>/i18n/*.ts` に
   移してゲームのチャンクへ同梱する。ゲームを開かないプレイヤーは、その文言を
   一度もパースしない。
-- 現在 14 言語。シェル 85 キー(エントリに乗る) + ゲーム別 27 カタログ(合計 815
+- 現在 14 言語。シェル 85 キー(エントリに乗る) + ゲーム別 28 カタログ(合計 849
   キー、13〜59 キー/ゲーム、開いたときだけパースされる)。ロケールタグは小文字で
   持つ。en と ja 以外は来歴 `machine`(AI の助けを借りて書き、その言語のネイティブ
   は読んでいない)。高リスクキーはリリース前の門で逆翻訳を作者が読む
