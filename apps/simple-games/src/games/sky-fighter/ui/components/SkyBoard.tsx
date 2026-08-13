@@ -538,7 +538,8 @@ export function SkyBoard({
 
     let prevEnemies = new Map(stateRef.current.enemies.map((enemy) => [enemy.id, enemy]));
     let prevBoss: Boss | null = stateRef.current.boss;
-    let prevLevel = stateRef.current.level;
+    /** Highest stage already reported cleared; the run starts one below. */
+    let clearedThrough = stateRef.current.level - 1;
     let prevScore = stateRef.current.score;
     let prevLives = stateRef.current.lives;
     let prevPickupSeq = stateRef.current.pickup?.seq ?? 0;
@@ -585,7 +586,10 @@ export function SkyBoard({
       if (state.status === 'cleared') {
         // The final stage's clear is real progress even though no next stage
         // follows it (§7).
-        onStageClearedRef.current(state.level);
+        if (clearedThrough < state.level) {
+          onStageClearedRef.current(state.level);
+          clearedThrough = state.level;
+        }
         sounds.clear();
         void haptics.clear();
         onRunEndRef.current('cleared', state.score, state.level);
@@ -637,13 +641,18 @@ export function SkyBoard({
       }
       prevScore = current.score;
 
-      // A finished stage is reported the moment the run flies past it (§7).
-      if (current.level > prevLevel) {
-        for (let stage = prevLevel; stage < current.level; stage++) {
-          onStageClearedRef.current(stage);
-        }
+      // A finished stage is reported the moment it settles (§7): normal
+      // stages as the run flies past them, a boss stage the moment the boss
+      // falls — not when the reward is chosen, so leaving from the untimed
+      // reward dialog (Android Back, app death) still keeps the clear.
+      for (let stage = clearedThrough + 1; stage < current.level; stage++) {
+        onStageClearedRef.current(stage);
+        clearedThrough = stage;
       }
-      prevLevel = current.level;
+      if (current.status === 'reward' && clearedThrough < current.level) {
+        onStageClearedRef.current(current.level);
+        clearedThrough = current.level;
+      }
 
       if (!reducedRef.current) {
         const live = new Set(current.enemies.map((enemy) => enemy.id));
