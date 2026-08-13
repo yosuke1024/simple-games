@@ -9,8 +9,9 @@ export const id: BunnyHopMessages = {
   bunnyJump: 'Lompat',
   bunnyTapToStart: 'Ketuk padang rumput untuk mulai',
   bunnyObstaclesPassed: 'Rintangan terlewati',
+  bunnyCarrots: 'Wortel',
   bunnyOverTitle: 'Menabrak',
-  bunnyOverBody: 'Sekali menabrak, larinya selesai. Padang berikutnya gratis.',
+  bunnyOverBody: 'Wortel habis. Padang berikutnya gratis.',
   bunnyNewBestScore: 'Skor terbaikmu sejauh ini.',
   bunnyStep1Title: 'Ketuk untuk melompat',
   bunnyStep1Body:
@@ -19,5 +20,5 @@ export const id: BunnyHopMessages = {
   bunnyStep2Body:
     'Yang terbang rendah harus dilompati seperti semak; yang tinggi hanya mengenaimu saat melompat.',
   bunnyStep3Title: 'Makin lama makin cepat',
-  bunnyStep3Body: 'Sekali menabrak larinya selesai, dan lari berikutnya langsung dimulai, gratis.',
+  bunnyStep3Body: 'Wortel di trek melindungi dari satu tabrak – sampai tiga. Tanpa wortel, sekali menabrak larinya selesai.',
 };

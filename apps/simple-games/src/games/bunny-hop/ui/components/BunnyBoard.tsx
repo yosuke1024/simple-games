@@ -27,14 +27,24 @@ import { useCallback, useEffect, useRef, type PointerEvent } from 'react';
 import { haptics } from '@/services/haptics';
 import { sounds } from '@/services/sound';
 import { useReducedMotion } from '@/ui/useReducedMotion';
-import { BOARD_HEIGHT, BOARD_WIDTH, GROUND_Y, RUNNER_HEIGHT, RUNNER_X } from '../../game/constants';
-import { createInitialState, isGrounded, jump, obstacleX, step } from '../../game/engine';
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  CARROT_HEIGHT,
+  CARROT_MAX,
+  CARROT_WIDTH,
+  GROUND_Y,
+  RUNNER_HEIGHT,
+  RUNNER_X,
+} from '../../game/constants';
+import { carrotX, createInitialState, isGrounded, jump, obstacleX, step } from '../../game/engine';
 import { obstacleKind } from '../../game/obstacles';
 import type { GameState } from '../../game/types';
 import {
   BIRD_DRAW_OFFSET_X,
   BIRD_DRAW_OFFSET_Y,
   BIRD_FRAMES,
+  CARROT,
   CLOUD,
   GLYPH_GAP,
   GLYPH_WIDTH,
@@ -84,6 +94,15 @@ const SCORE_RIGHT = BOARD_WIDTH - 14;
 const SCORE_TOP = 12;
 /** Blinks after a hundred: shown, hidden, shown — three beats and done. */
 const MILESTONE_BLINK_MS = 900;
+
+/** Held carrots, top-left: one icon per slot, empty ones shown too so the
+    cap of three is legible at a glance (§5). */
+const HUD_CARROT_LEFT = 12;
+const HUD_CARROT_TOP = 10;
+const HUD_CARROT_GAP = 4;
+
+/** How fast the runner blinks while invulnerable — on, off, on... (§7). */
+const INVULN_BLINK_MS = 100;
 
 interface Palette {
   surface: string;
@@ -176,17 +195,40 @@ function render(
     }
   }
 
+  // Carrots in ink, like the runner: friendly, not a hazard (§12). Drawn
+  // before the runner so a carrot the runner is standing on reads as picked
+  // up, not as sitting on top of it.
+  ctx.fillStyle = palette.ink;
+  for (const carrot of state.carrotItems) {
+    const x = carrotX(state.distance, carrot);
+    if (x > BOARD_WIDTH || x + CARROT_WIDTH < 0) continue;
+    blit(ctx, CARROT, x, GROUND_Y - carrot.bottom - CARROT_HEIGHT);
+  }
+
   const grounded = isGrounded(state);
   const top = GROUND_Y - state.runnerY - RUNNER_HEIGHT;
   const stride = Math.floor(scroll / STRIDE_PX) % 2;
 
-  ctx.fillStyle = palette.ink;
-  blit(ctx, RUNNER_BODY, RUNNER_X, top);
-  blit(ctx, grounded ? RUNNER_LEGS[stride]! : RUNNER_LEGS_AIR, RUNNER_X, top);
-  // The eye is a hole in the art, so it needs no drawing while the runner is
-  // alive. A crashed one has it filled in — the one thing on screen that says
-  // the run is over without a word to translate (§12).
-  if (state.status === 'over') blit(ctx, RUNNER_EYE, RUNNER_X, top);
+  // While invulnerable, the runner blinks — visible even under Reduced
+  // Motion, because it reports game state and not decoration (§7, §12).
+  const blinkedOut =
+    state.invulnerableMs > 0 && Math.floor(state.invulnerableMs / INVULN_BLINK_MS) % 2 === 1;
+  if (!blinkedOut) {
+    ctx.fillStyle = palette.ink;
+    blit(ctx, RUNNER_BODY, RUNNER_X, top);
+    blit(ctx, grounded ? RUNNER_LEGS[stride]! : RUNNER_LEGS_AIR, RUNNER_X, top);
+    // The eye is a hole in the art, so it needs no drawing while the runner
+    // is alive. A crashed one has it filled in — the one thing on screen
+    // that says the run is over without a word to translate (§12).
+    if (state.status === 'over') blit(ctx, RUNNER_EYE, RUNNER_X, top);
+  }
+
+  // Held carrots, top-left: one icon per slot, so the cap of three is always
+  // visible and not just implied by a number (§5).
+  for (let slot = 0; slot < CARROT_MAX; slot++) {
+    ctx.fillStyle = slot < state.carrots ? palette.ink : palette.inkSoft;
+    blit(ctx, CARROT, HUD_CARROT_LEFT + slot * (CARROT_WIDTH + HUD_CARROT_GAP), HUD_CARROT_TOP);
+  }
 
   // The scoreboard. The best score sits to the left of the run's own, and
   // only once there is one — a fresh install has nothing to beat.
@@ -204,6 +246,8 @@ export interface BoardHud {
   status: GameState['status'];
   /** Rises every 100 points; the board blinks the score when it changes (§6). */
   milestones: number;
+  /** Held carrots, 0 to CARROT_MAX — the status row's screen-reader value (§5). */
+  carrots: number;
 }
 
 export interface BunnyBoardProps {
@@ -305,6 +349,7 @@ export function BunnyBoard({
       score: opening.score,
       status: opening.status,
       milestones: opening.milestones,
+      carrots: opening.carrots,
     });
 
     const canvas = canvasRef.current;
@@ -342,12 +387,14 @@ export function BunnyBoard({
         score: state.score,
         status: state.status,
         milestones: state.milestones,
+        carrots: state.carrots,
       };
       if (
         prevHud &&
         prevHud.score === hud.score &&
         prevHud.status === hud.status &&
-        prevHud.milestones === hud.milestones
+        prevHud.milestones === hud.milestones &&
+        prevHud.carrots === hud.carrots
       ) {
         return;
       }
@@ -369,6 +416,7 @@ export function BunnyBoard({
     };
 
     let prevMilestones = stateRef.current.milestones;
+    let prevCarrots = stateRef.current.carrots;
 
     const frame = (now: number) => {
       rafId = requestAnimationFrame(frame);
@@ -398,6 +446,17 @@ export function BunnyBoard({
       }
       prevMilestones = current.milestones;
       if (blinkMs > 0) blinkMs = Math.max(0, blinkMs - dt);
+
+      // Held carrots rising is a pickup; falling — while the run is still
+      // going — is a hit that got absorbed instead of ending it (§7).
+      if (current.carrots > prevCarrots) {
+        sounds.match();
+        void haptics.match();
+      } else if (current.carrots < prevCarrots && current.status === 'running') {
+        sounds.invalid();
+        void haptics.invalid();
+      }
+      prevCarrots = current.carrots;
 
       publishHud(current);
       render(ctx, current, palette, extras());

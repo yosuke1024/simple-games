@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { drawCarrot } from './carrots';
 import {
   BOARD_WIDTH,
+  CARROT_MAX,
   GRAVITY,
   HIT_INSET,
+  HIT_INVULN_MS,
   JUMP_VELOCITY,
   MAX_SPEED,
   MIN_GAP_SECONDS,
@@ -218,5 +221,112 @@ describe('the crash (§7)', () => {
 
     const midAir = { ...grounded, runnerY: 60 };
     expect(runnerBox(midAir).top).toBeGreaterThan(box.bottom);
+  });
+});
+
+describe('carrots (§5, §7)', () => {
+  const DISTANCE = 1000;
+  // Both land the item's left edge at 30 — inside the grounded runner's box
+  // (28 to 60), via the same distance/spawnDistance math obstacleX uses.
+  const AT_RUNNER_SPAWN = DISTANCE - (BOARD_WIDTH - 30);
+
+  /** A running state parked with nothing about to spawn, so a dtMs: 0 step
+      only exercises pickup and collision — never generation. */
+  function groundedRunning(seed = 'carrot-test'): GameState {
+    return {
+      ...createInitialState(seed),
+      status: 'running',
+      runnerY: 0,
+      runnerVelocity: 0,
+      distance: DISTANCE,
+      nextSpawnDistance: DISTANCE + 1_000_000,
+    };
+  }
+
+  const carrotHere = (id: number): GameState['carrotItems'][number] => ({
+    id,
+    spawnDistance: AT_RUNNER_SPAWN,
+    bottom: 0,
+  });
+  const obstacleHere = (id: number): GameState['obstacles'][number] => ({
+    id,
+    kindId: 'bush',
+    spawnDistance: AT_RUNNER_SPAWN,
+    passed: false,
+  });
+
+  it('is picked up: +1 held, +1 collected this run, gone from the track', () => {
+    const state: GameState = { ...groundedRunning(), carrotItems: [carrotHere(1)] };
+    const after = step(state, 0);
+    expect(after.carrots).toBe(1);
+    expect(after.carrotsCollected).toBe(1);
+    expect(after.carrotItems).toEqual([]);
+  });
+
+  it('stays on the track, uncollected, once the runner already holds the max', () => {
+    const state: GameState = {
+      ...groundedRunning(),
+      carrots: CARROT_MAX,
+      carrotItems: [carrotHere(1)],
+    };
+    const after = step(state, 0);
+    expect(after.carrots).toBe(CARROT_MAX);
+    expect(after.carrotsCollected).toBe(0);
+    expect(after.carrotItems).toEqual([carrotHere(1)]);
+  });
+
+  it('a hit spends exactly one carrot and opens an invulnerable window', () => {
+    const state: GameState = {
+      ...groundedRunning(),
+      carrots: 2,
+      obstacles: [obstacleHere(1)],
+    };
+    const hit = step(state, 0);
+    expect(hit.status).toBe('running');
+    expect(hit.carrots).toBe(1);
+    expect(hit.invulnerableMs).toBe(HIT_INVULN_MS);
+
+    // Struck again while the window is still open: nothing more is spent.
+    const again = step(hit, 0);
+    expect(again.status).toBe('running');
+    expect(again.carrots).toBe(1);
+    expect(again.invulnerableMs).toBe(HIT_INVULN_MS);
+  });
+
+  it('ends the run on a hit with no carrots held, exactly as before', () => {
+    const state: GameState = {
+      ...groundedRunning(),
+      carrots: 0,
+      obstacles: [obstacleHere(1)],
+    };
+    expect(step(state, 0).status).toBe('over');
+  });
+
+  it('spawns from its own rng stream, deterministically per seed', () => {
+    // Same seed, same index: the two draws (present, air) never differ.
+    expect(drawCarrot('carrot-seed', 5)).toEqual(drawCarrot('carrot-seed', 5));
+
+    // Held in the air the whole time, so nothing is ever picked up and the
+    // full spawn sequence for the seed gets generated. Tracked by id rather
+    // than array length, since carrots also cull off-screen mid-run.
+    const track = (seed: string) => {
+      let state = running(seed);
+      let prevId = state.nextCarrotId;
+      const spawned: string[] = [];
+      for (let elapsed = 0; elapsed < 20_000; elapsed += STEP_MS) {
+        state = step({ ...state, status: 'running', runnerY: 200 }, STEP_MS);
+        for (let id = prevId; id < state.nextCarrotId; id++) {
+          const item = state.carrotItems.find((carrot) => carrot.id === id);
+          if (item) spawned.push(`${item.spawnDistance.toFixed(1)}:${item.bottom}`);
+        }
+        prevId = state.nextCarrotId;
+      }
+      return spawned.join('|');
+    };
+
+    const track1 = track('carrot-fixed');
+    expect(track1.length).toBeGreaterThan(0);
+    expect(track('carrot-fixed')).toBe(track1);
+    expect(track('carrot-other')).not.toBe(track1);
   });
 });

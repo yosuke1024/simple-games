@@ -10,8 +10,14 @@
  */
 import {
   BOARD_WIDTH,
+  CARROT_AIR_BOTTOM,
+  CARROT_HEIGHT,
+  CARROT_MAX,
+  CARROT_MIN_GAP_SECONDS,
+  CARROT_WIDTH,
   GRAVITY,
   HIT_INSET,
+  HIT_INVULN_MS,
   JUMP_VELOCITY,
   MAX_SPEED,
   MILESTONE_EVERY,
@@ -22,8 +28,9 @@ import {
   SPEED_GAIN,
   START_SPEED,
 } from './constants';
+import { drawCarrot } from './carrots';
 import { drawObstacle, obstacleKind } from './obstacles';
-import type { GameState, Obstacle } from './types';
+import type { Carrot, GameState, Obstacle } from './types';
 
 /** A fresh run, standing still until the first input (§2). */
 export function createInitialState(seed = 'prototype'): GameState {
@@ -44,12 +51,29 @@ export function createInitialState(seed = 'prototype'): GameState {
     score: 0,
     milestones: 0,
     elapsedMs: 0,
+    carrots: 0,
+    carrotItems: [],
+    nextCarrotId: 1,
+    carrotsCollected: 0,
+    invulnerableMs: 0,
   };
+}
+
+/** Where a track item's left edge is right now, in board coordinates. Shared
+    by obstacles and carrots — both are placed purely as a function of the
+    run's distance and their own spawnDistance (§1). */
+function trackX(distance: number, spawnDistance: number): number {
+  return BOARD_WIDTH - (distance - spawnDistance);
 }
 
 /** Where an obstacle's left edge is right now, in board coordinates. */
 export function obstacleX(distance: number, obstacle: Obstacle): number {
-  return BOARD_WIDTH - (distance - obstacle.spawnDistance);
+  return trackX(distance, obstacle.spawnDistance);
+}
+
+/** Where a carrot's left edge is right now, in board coordinates. */
+export function carrotX(distance: number, carrot: Carrot): number {
+  return trackX(distance, carrot.spawnDistance);
 }
 
 export const isGrounded = (state: GameState): boolean => state.runnerY <= 0;
@@ -96,6 +120,19 @@ export function obstacleBox(distance: number, obstacle: Obstacle): Box {
   };
 }
 
+/** A carrot's box, drawn at its full declared size — there is no inset here,
+    reaching one is a bonus and not a hazard the runner has to be forgiven
+    for grazing (§7). */
+export function carrotBox(distance: number, carrot: Carrot): Box {
+  const left = carrotX(distance, carrot);
+  return {
+    left,
+    right: left + CARROT_WIDTH,
+    bottom: carrot.bottom,
+    top: carrot.bottom + CARROT_HEIGHT,
+  };
+}
+
 const overlaps = (a: Box, b: Box): boolean =>
   a.left < b.right && b.left < a.right && a.bottom < b.top && b.bottom < a.top;
 
@@ -131,25 +168,51 @@ export function step(state: GameState, dtMs: number): GameState {
   // the right edge of the board, so an obstacle scheduled between two steps
   // still enters at exactly the right place instead of at the step boundary.
   let obstacles = state.obstacles;
+  let carrotItems = state.carrotItems;
   let nextObstacleIndex = state.nextObstacleIndex;
   let nextSpawnDistance = state.nextSpawnDistance;
   let nextObstacleId = state.nextObstacleId;
+  let nextCarrotId = state.nextCarrotId;
   while (distance >= nextSpawnDistance) {
     const draw = drawObstacle(state.seed, nextObstacleIndex, score);
     const kind = obstacleKind(draw.kindId);
+    const obstacleSpawn = nextSpawnDistance;
     obstacles = [
       ...obstacles,
       {
         id: nextObstacleId++,
         kindId: draw.kindId,
-        spawnDistance: nextSpawnDistance,
+        spawnDistance: obstacleSpawn,
         passed: false,
       },
     ];
+
+    // A carrot, maybe, riding in the room behind this obstacle — drawn from
+    // its own rng stream (game/carrots.ts) so it can never shift the obstacle
+    // draw after it, which is what the golden test in compatibility.test.ts
+    // pins. Only a gap roomy enough that reaching for the carrot is never
+    // also a dodge, and never airborne right behind a high bird — that would
+    // bait the one jump that turns a harmless bird into a hit (§5).
+    const gapPx = draw.gapSeconds * speed;
+    if (draw.gapSeconds >= CARROT_MIN_GAP_SECONDS) {
+      const carrot = drawCarrot(state.seed, nextObstacleIndex);
+      if (carrot.present) {
+        const air = carrot.air && draw.kindId !== 'bird-high';
+        carrotItems = [
+          ...carrotItems,
+          {
+            id: nextCarrotId++,
+            spawnDistance: obstacleSpawn + kind.width + (gapPx - CARROT_WIDTH) / 2,
+            bottom: air ? CARROT_AIR_BOTTOM : 0,
+          },
+        ];
+      }
+    }
+
     // Edge to edge: the gap is the room between two obstacles, never the
     // distance between their left corners — a row of bushes would otherwise
     // eat the gap it stands in.
-    nextSpawnDistance += kind.width + draw.gapSeconds * speed;
+    nextSpawnDistance += kind.width + gapPx;
     nextObstacleIndex += 1;
   }
 
@@ -175,6 +238,35 @@ export function step(state: GameState, dtMs: number): GameState {
   }
   if (changed || kept.length !== obstacles.length) obstacles = kept;
 
+  const runner: Box = {
+    left: RUNNER_X + HIT_INSET,
+    right: RUNNER_X + RUNNER_WIDTH - HIT_INSET,
+    bottom: runnerY + HIT_INSET,
+    top: runnerY + RUNNER_HEIGHT - HIT_INSET,
+  };
+
+  // Carrots: culled the same way as obstacles that scroll off, and picked up
+  // on overlap with the runner — but only while there is a slot free. A held
+  // one is spent below to survive a hit; a track already at the cap just
+  // scrolls a spare carrot by uncollected (§5).
+  let carrots = state.carrots;
+  let carrotsCollected = state.carrotsCollected;
+  const keptCarrots: Carrot[] = [];
+  for (const carrot of carrotItems) {
+    const left = carrotX(distance, carrot);
+    if (left + CARROT_WIDTH < 0) continue;
+    if (carrots < CARROT_MAX && overlaps(runner, carrotBox(distance, carrot))) {
+      carrots += 1;
+      carrotsCollected += 1;
+      continue;
+    }
+    keptCarrots.push(carrot);
+  }
+  if (keptCarrots.length !== carrotItems.length) carrotItems = keptCarrots;
+
+  // Invulnerability counts down every running step, hit or not (§7).
+  const invulnerableMs = Math.max(0, state.invulnerableMs - dtMs);
+
   const next: GameState = {
     ...state,
     distance,
@@ -189,11 +281,25 @@ export function step(state: GameState, dtMs: number): GameState {
     score,
     milestones: Math.floor(score / MILESTONE_EVERY),
     elapsedMs,
+    carrots,
+    carrotItems,
+    nextCarrotId,
+    carrotsCollected,
+    invulnerableMs,
   };
 
-  // One touch ends the run (§7). Checked after everything has moved, so what
-  // the next frame draws is the frame the run ended on.
-  const runner = runnerBox(next);
+  // Carrots are the lives now (§7). While invulnerable, a struck obstacle is
+  // ignored outright — the point of the window is that one wide cluster
+  // cannot cost more than the one carrot it started with. Otherwise a hit
+  // with a carrot in hand spends it and opens the window instead of ending
+  // the run; with none held, it ends the run exactly as it always has.
+  // Checked after everything has moved, so what the next frame draws is the
+  // frame the hit (or the crash) happened on.
+  if (invulnerableMs > 0) return next;
   const struck = obstacles.some((obstacle) => overlaps(runner, obstacleBox(distance, obstacle)));
-  return struck ? { ...next, status: 'over' } : next;
+  if (!struck) return next;
+  if (carrots > 0) {
+    return { ...next, carrots: carrots - 1, invulnerableMs: HIT_INVULN_MS };
+  }
+  return { ...next, status: 'over' };
 }

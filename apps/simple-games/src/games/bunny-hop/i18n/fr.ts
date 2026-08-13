@@ -9,8 +9,9 @@ export const fr: BunnyHopMessages = {
   bunnyJump: 'Sauter',
   bunnyTapToStart: 'Touchez la prairie pour commencer',
   bunnyObstaclesPassed: 'Obstacles franchis',
+  bunnyCarrots: 'Carottes',
   bunnyOverTitle: 'Collision',
-  bunnyOverBody: 'Un seul contact met fin à la course. La prairie suivante est gratuite.',
+  bunnyOverBody: 'Plus de carottes. La prairie suivante est gratuite.',
   bunnyNewBestScore: 'Votre meilleur score jusqu’ici.',
   bunnyStep1Title: 'Touchez pour sauter',
   bunnyStep1Body:
@@ -20,5 +21,5 @@ export const fr: BunnyHopMessages = {
     'Ceux qui volent bas se sautent comme un buisson ; les hauts ne touchent qu’en plein saut.',
   bunnyStep3Title: 'Ça ne fait qu’accélérer',
   bunnyStep3Body:
-    'Un seul contact met fin à la course, et la suivante démarre aussitôt, gratuitement.',
+    'Une carotte sur la piste vous protège d’un coup – jusqu’à trois. Sans carotte, un contact met fin à la course.',
 };

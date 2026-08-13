@@ -66,3 +66,34 @@ export const MAX_GAP_SECONDS = 1.6;
  * next — while it is still overhead (§5).
  */
 export const HIGH_BIRD_MIN_GAP_SECONDS = 1.1;
+
+/**
+ * Carrots: the hit points that replaced one-touch death (§2, §7). Held, not
+ * scored — a carrot buys forgiveness for one hit and nothing else.
+ */
+export const CARROT_MAX = 3;
+/**
+ * How long a spent carrot buys, once it is spent. Longer than the time it
+ * takes to cross the widest cluster at the run's starting speed, so one wide
+ * obstacle can only ever cost one carrot; short enough that it never turns
+ * the rest of the track into a free pass.
+ */
+export const HIT_INVULN_MS = 800;
+/** The odds a given obstacle's trailing gap carries a carrot at all (§5). */
+export const CARROT_CHANCE = 0.35;
+/** Of the carrots that do spawn, the share that sit airborne, mid-jump only. */
+export const CARROT_AIR_CHANCE = 0.4;
+/**
+ * Only a gap at least this roomy carries a carrot, so reaching for one is
+ * never also a dodge — the choice to grab it stays a free one (§5).
+ */
+export const CARROT_MIN_GAP_SECONDS = 1.0;
+
+/**
+ * The carrot's box. The ground one sits on the ground like an obstacle; the
+ * air one is set above what a grounded runner's inset box reaches (38px, from
+ * RUNNER_HEIGHT − HIT_INSET) so it is only ever reachable mid-jump.
+ */
+export const CARROT_WIDTH = 14;
+export const CARROT_HEIGHT = 22;
+export const CARROT_AIR_BOTTOM = 48;

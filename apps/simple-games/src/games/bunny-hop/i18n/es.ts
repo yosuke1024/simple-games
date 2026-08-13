@@ -9,8 +9,9 @@ export const es: BunnyHopMessages = {
   bunnyJump: 'Saltar',
   bunnyTapToStart: 'Toca el prado para empezar',
   bunnyObstaclesPassed: 'Obstáculos superados',
+  bunnyCarrots: 'Zanahorias',
   bunnyOverTitle: 'Choque',
-  bunnyOverBody: 'Un solo golpe termina la carrera. El siguiente prado es gratis.',
+  bunnyOverBody: 'Sin zanahorias. El siguiente prado es gratis.',
   bunnyNewBestScore: 'Tu mejor puntuación hasta ahora.',
   bunnyStep1Title: 'Toca para saltar',
   bunnyStep1Body: 'El conejo nunca se detiene. Toca el prado o pulsa Saltar para pasar un arbusto.',
@@ -18,5 +19,5 @@ export const es: BunnyHopMessages = {
   bunnyStep2Body:
     'A los que vuelan bajo hay que saltarlos como a un arbusto; los altos solo te alcanzan en el salto.',
   bunnyStep3Title: 'Cada vez más rápido',
-  bunnyStep3Body: 'Un solo golpe termina la carrera, y la siguiente empieza al instante, gratis.',
+  bunnyStep3Body: 'Una zanahoria en la pista te salva un golpe – máximo tres. Sin zanahorias, un golpe y se acabó.',
 };

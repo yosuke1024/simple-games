@@ -9,8 +9,9 @@ export const de: BunnyHopMessages = {
   bunnyJump: 'Springen',
   bunnyTapToStart: 'Zum Starten die Wiese antippen',
   bunnyObstaclesPassed: 'Überwundene Hindernisse',
+  bunnyCarrots: 'Möhren',
   bunnyOverTitle: 'Zusammenstoß',
-  bunnyOverBody: 'Eine Berührung beendet den Lauf. Die nächste Wiese ist kostenlos.',
+  bunnyOverBody: 'Keine Möhren mehr. Die nächste Wiese ist kostenlos.',
   bunnyNewBestScore: 'Deine bisher beste Punktzahl.',
   bunnyStep1Title: 'Tippen zum Springen',
   bunnyStep1Body:
@@ -19,5 +20,5 @@ export const de: BunnyHopMessages = {
   bunnyStep2Body:
     'Tief fliegende musst du wie einen Busch überspringen; hohe treffen dich nur im Sprung.',
   bunnyStep3Title: 'Es wird immer schneller',
-  bunnyStep3Body: 'Eine Berührung beendet den Lauf, und der nächste startet sofort und kostenlos.',
+  bunnyStep3Body: 'Eine Möhre auf der Strecke fängt einen Treffer ab – bis zu drei. Ohne Möhren endet der Lauf beim ersten Treffer.',
 };

@@ -18,7 +18,12 @@ export function BunnyGameScreen() {
   const { attempt, stats, lastResult, reportRunEnd, bookPlaySeconds, startRun, goHome } =
     useBunnyHop();
   const { t } = useSettings();
-  const [hud, setHud] = useState<BoardHud>({ score: 0, status: 'ready', milestones: 0 });
+  const [hud, setHud] = useState<BoardHud>({
+    score: 0,
+    status: 'ready',
+    milestones: 0,
+    carrots: 0,
+  });
 
   if (!attempt) return null;
   const settled = lastResult !== null;
@@ -33,6 +38,9 @@ export function BunnyGameScreen() {
           <div className="game-status">
             <span className="bh-sr-only" aria-label={t('score')}>
               {hud.score}
+            </span>
+            <span className="bh-sr-only" aria-label={t('bunnyCarrots')}>
+              {hud.carrots}
             </span>
           </div>
           <button

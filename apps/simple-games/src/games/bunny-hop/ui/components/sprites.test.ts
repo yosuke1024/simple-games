@@ -11,13 +11,14 @@
  * worth anything if the two sides are checked against each other.
  */
 import { describe, expect, it } from 'vitest';
-import { HIT_INSET, RUNNER_HEIGHT, RUNNER_WIDTH } from '../../game/constants';
+import { CARROT_HEIGHT, CARROT_WIDTH, HIT_INSET, RUNNER_HEIGHT, RUNNER_WIDTH } from '../../game/constants';
 import { OBSTACLE_KINDS } from '../../game/obstacles';
 import type { ObstacleKindId } from '../../game/types';
 import {
   BIRD_DRAW_OFFSET_X,
   BIRD_DRAW_OFFSET_Y,
   BIRD_FRAMES,
+  CARROT,
   OBSTACLE_SHAPES,
   RUNNER_BODY,
   RUNNER_LEGS,
@@ -85,6 +86,20 @@ describe('what stands in the way', () => {
     expect(OBSTACLE_SHAPES['bush-pair'].length).toBe(OBSTACLE_SHAPES.bush.length * 2);
     expect(OBSTACLE_SHAPES['bush-trio'].length).toBe(OBSTACLE_SHAPES.bush.length * 3);
     expect(OBSTACLE_SHAPES['hedge-pair'].length).toBe(OBSTACLE_SHAPES.hedge.length * 2);
+  });
+});
+
+describe('the carrot', () => {
+  it('fills its box exactly', () => {
+    // Same proof as the standing obstacles: the box is declared once in
+    // game/constants.ts and the art is written apart from it, so nothing
+    // catches a drawing that drifts from its own hitbox but a check like
+    // this one.
+    const box = extentOf(CARROT);
+    expect(box.left).toBe(0);
+    expect(box.top).toBe(0);
+    expect(box.right).toBe(CARROT_WIDTH);
+    expect(box.bottom).toBe(CARROT_HEIGHT);
   });
 });
 

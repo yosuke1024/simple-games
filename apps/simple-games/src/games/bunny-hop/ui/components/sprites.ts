@@ -250,6 +250,31 @@ export const OBSTACLE_SHAPES = {
   'bird-high': [] as readonly Rect[],
 } as const;
 
+// ---------- the carrot ----------
+
+/**
+ * The carrot, 7×11 cells — 14×22 board pixels, exactly the box
+ * (game/constants.ts, CARROT_WIDTH/CARROT_HEIGHT). A leafy top, spread wide
+ * enough to reach both edges of the box, over a root that tapers to a point
+ * at the bottom edge: the two features that read as "carrot" and not "orange
+ * rectangle" at this size, in one flat colour.
+ */
+const CARROT_ART = [
+  '#.....#',
+  '.#...#.',
+  '..#.#..',
+  '.#####.',
+  '#######',
+  '.#####.',
+  '.#####.',
+  '..###..',
+  '..###..',
+  '...#...',
+  '...#...',
+];
+
+export const CARROT: readonly Rect[] = drawn(CARROT_ART);
+
 // ---------- the score ----------
 
 /**
