@@ -1,0 +1,523 @@
+/* Ludo — all of this game's styling, imported by LudoRoot. Everything is built
+   from the series tokens in src/ui/styles.css (--surface, --ink, --line,
+   --accent, --radius, --font-display, --tap-size, …) so the game reads as part
+   of the same app and follows the theme without knowing about it.
+
+   Class names are prefixed `ld-` so this file can never collide with the shell
+   or with another game.
+
+   THE FOUR SEAT COLOURS ARE GAME CONTENT, AND THEY LIVE HERE (docs/LUDO_RULES.md
+   §12). Red, green, yellow and blue are not decoration: a pawn's colour is
+   which seat owns it, which is the single most-read fact on the board. That
+   puts them in the same class as the red and black of a deck of cards — the
+   documented exception to "one accent per title" (docs/BRAND.md) — and it is
+   why they are fixed values here rather than derived from the theme or the
+   accent.
+
+   They also deliberately avoid the accent's own hue family (magenta-purple
+   #ad34a7 / #cd6ac8). Four seats sit round this board and no more; a fifth
+   colour close enough to be mistaken for a seat would read as a fifth player,
+   so the title's accent stays out of the seat palette entirely and the seat
+   palette stays out of the accent's hues.
+
+   Colour is never the only carrier: every pawn wears a shape mark as well
+   (circle, triangle, square, diamond), the seat strip names each seat in
+   words, and the board reads out every pawn's seat and square. */
+
+:root {
+  /* Seat 0 you (bottom) · 1 CPU 1 (left) · 2 CPU 2 (across) · 3 CPU 3 (right).
+     Each is far from the others in hue and in lightness, so a photograph in
+     greyscale — or a red-green colour vision deficiency — still separates them
+     by tone before the shape mark is even needed. */
+  --ld-seat-0: #d2352c;
+  --ld-seat-1: #2f8f46;
+  --ld-seat-2: #d9a400;
+  --ld-seat-3: #2563b0;
+
+  --ld-board-bg: #f3ede2;
+  --ld-track: #fffdf8;
+  --ld-line: #cfc4b2;
+  --ld-yard: rgba(0, 0, 0, 0.05);
+  --ld-star: rgba(60, 44, 22, 0.34);
+  --ld-pawn-edge: rgba(255, 255, 255, 0.72);
+  --ld-mark: rgba(255, 255, 255, 0.88);
+}
+
+:root[data-theme='dark'] {
+  /* Lifted, not re-hued: a seat is the same seat in either theme. */
+  --ld-seat-0: #e4574c;
+  --ld-seat-1: #4fae66;
+  --ld-seat-2: #e8bb2c;
+  --ld-seat-3: #4d8ed6;
+
+  --ld-board-bg: #29241d;
+  --ld-track: #3a352c;
+  --ld-line: #4c4539;
+  --ld-yard: rgba(255, 255, 255, 0.06);
+  --ld-star: rgba(246, 240, 228, 0.4);
+  --ld-pawn-edge: rgba(18, 14, 8, 0.5);
+  --ld-mark: rgba(20, 16, 10, 0.86);
+}
+
+/* ---------- the seat strip ---------- */
+
+/* Its own row above the board, full width: four seats named and counted do
+   not fit between the two icon buttons of a top bar at 320px. */
+.ld-seats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  width: min(100%, 420px, 46vh);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ld-seat-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.62;
+}
+
+/* Whose throw it is, marked by weight rather than by colour alone — the seat
+   colours are already spoken for. */
+.ld-seat-on {
+  opacity: 1;
+  font-weight: 800;
+}
+
+.ld-seat-name {
+  white-space: nowrap;
+}
+
+.ld-seat-home {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+.ld-chip {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--ld-seat-0);
+}
+
+.ld-chip-big {
+  width: 22px;
+  height: 22px;
+}
+
+.ld-seat-0 .ld-chip,
+.ld-chip.ld-seat-0 {
+  background: var(--ld-seat-0);
+}
+.ld-seat-1 .ld-chip,
+.ld-chip.ld-seat-1 {
+  background: var(--ld-seat-1);
+}
+.ld-seat-2 .ld-chip,
+.ld-chip.ld-seat-2 {
+  background: var(--ld-seat-2);
+}
+.ld-seat-3 .ld-chip,
+.ld-chip.ld-seat-3 {
+  background: var(--ld-seat-3);
+}
+
+/* The home screen's mark: the four seats, not an accent glyph. */
+.ld-logo {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  place-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.ld-logo .ld-chip {
+  width: 15px;
+  height: 15px;
+}
+
+.ld-choose-label {
+  margin: 0 0 10px;
+  font-size: 14px;
+  opacity: 0.75;
+  text-align: center;
+}
+
+/* ---------- the board ---------- */
+
+.ld-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 4px 12px 10px;
+  min-height: 0;
+}
+
+/* Square at every size, and as large as its own column honestly allows (the
+   `100%` first term, not `vw` — docs/ARCHITECTURE.md, the board-width lesson
+   every title relearned). The `min()` against viewport height keeps it square
+   on a short screen rather than pushing the die off the bottom. */
+.ld-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  grid-template-rows: repeat(15, 1fr);
+  width: min(100%, 420px, 46vh);
+  aspect-ratio: 1;
+  padding: 2px;
+  background: var(--ld-board-bg);
+  border: 2px solid var(--ld-line);
+  border-radius: var(--radius);
+}
+
+.ld-cell {
+  border: 1px solid var(--ld-line);
+  box-sizing: border-box;
+}
+
+.ld-track {
+  background: var(--ld-track);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The eight squares nothing can be captured on (§2.3), marked with a star so
+   the rule is on the board rather than only in the rules. */
+.ld-star {
+  width: 62%;
+  height: 62%;
+  background: var(--ld-star);
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+}
+
+.ld-entrance.ld-seat-0 {
+  background: color-mix(in srgb, var(--ld-seat-0) 26%, var(--ld-track));
+}
+.ld-entrance.ld-seat-1 {
+  background: color-mix(in srgb, var(--ld-seat-1) 26%, var(--ld-track));
+}
+.ld-entrance.ld-seat-2 {
+  background: color-mix(in srgb, var(--ld-seat-2) 26%, var(--ld-track));
+}
+.ld-entrance.ld-seat-3 {
+  background: color-mix(in srgb, var(--ld-seat-3) 26%, var(--ld-track));
+}
+
+.ld-column.ld-seat-0 {
+  background: color-mix(in srgb, var(--ld-seat-0) 62%, var(--ld-track));
+}
+.ld-column.ld-seat-1 {
+  background: color-mix(in srgb, var(--ld-seat-1) 62%, var(--ld-track));
+}
+.ld-column.ld-seat-2 {
+  background: color-mix(in srgb, var(--ld-seat-2) 62%, var(--ld-track));
+}
+.ld-column.ld-seat-3 {
+  background: color-mix(in srgb, var(--ld-seat-3) 62%, var(--ld-track));
+}
+
+.ld-goal {
+  background: var(--ld-track);
+  border-radius: 50%;
+}
+
+/* The four yards, as blocks behind their slots. */
+.ld-yard {
+  border-radius: calc(var(--radius) / 2);
+  background: var(--ld-yard);
+  border: 1px solid var(--ld-line);
+}
+
+.ld-yard.ld-seat-0 {
+  background: color-mix(in srgb, var(--ld-seat-0) 16%, transparent);
+}
+.ld-yard.ld-seat-1 {
+  background: color-mix(in srgb, var(--ld-seat-1) 16%, transparent);
+}
+.ld-yard.ld-seat-2 {
+  background: color-mix(in srgb, var(--ld-seat-2) 16%, transparent);
+}
+.ld-yard.ld-seat-3 {
+  background: color-mix(in srgb, var(--ld-seat-3) 16%, transparent);
+}
+
+.ld-slot {
+  border-radius: 50%;
+  border-style: dashed;
+  background: var(--ld-track);
+}
+
+/* ---------- pawns ---------- */
+
+/* A pawn sits on its square and is fanned sideways when it shares one (§2.4 —
+   sharing is legal, and each pawn on the square stays its own thing to tap).
+   `--ld-lift` puts the later ones of a fan on top so the fan reads as a fan. */
+.ld-pawn {
+  position: relative;
+  z-index: calc(2 + var(--ld-lift, 0));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  transform: translateX(var(--ld-fan, 0));
+  /* Everything that is not a movable pawn is drawn, never pressed. This is
+     what makes the enlarged target below safe: an inert pawn cannot swallow a
+     tap meant for the live one it overlaps. */
+  pointer-events: none;
+}
+
+.ld-pawn::before {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  border: 1px solid var(--ld-pawn-edge);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  background: var(--ld-seat-0);
+}
+
+.ld-pawn.ld-seat-0::before {
+  background: var(--ld-seat-0);
+}
+.ld-pawn.ld-seat-1::before {
+  background: var(--ld-seat-1);
+}
+.ld-pawn.ld-seat-2::before {
+  background: var(--ld-seat-2);
+}
+.ld-pawn.ld-seat-3::before {
+  background: var(--ld-seat-3);
+}
+
+/* The shape mark: colour is never the only carrier (§12). Circle, triangle,
+   square, diamond — one per seat, drawn on top of the disc. */
+.ld-mark {
+  position: relative;
+  z-index: 1;
+  width: 42%;
+  height: 42%;
+  background: var(--ld-mark);
+}
+
+.ld-seat-0 .ld-mark {
+  border-radius: 50%;
+}
+.ld-seat-1 .ld-mark {
+  clip-path: polygon(50% 4%, 96% 92%, 4% 92%);
+}
+.ld-seat-2 .ld-mark {
+  border-radius: 1px;
+}
+.ld-seat-3 .ld-mark {
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+/* THE TARGET IS BIGGER THAN THE SQUARE. At 320px a square is about 21px
+   across, which no finger can pick out; the pseudo-element below grows the
+   pressable area to roughly two and a bit squares without moving the pawn a
+   pixel. Only movable pawns get one — everything else has pointer-events
+   turned off above — so an overlap can never steal a neighbour's tap. */
+.ld-pawn-live {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.ld-pawn-live::after {
+  content: '';
+  position: absolute;
+  inset: -60%;
+}
+
+/* A pawn that shares its square keeps a trimmed target: the generous one is
+   for a pawn standing alone, where nothing beside it can be taken by mistake. */
+.ld-pawn-live.ld-pawn-fanned::after {
+  inset: -14%;
+}
+
+/* The pawns the rules allow, marked so they are found without hunting (§7). */
+.ld-pawn-live::before {
+  border-color: var(--ink);
+  box-shadow:
+    0 0 0 2px var(--ink),
+    0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* The walk: the pawn starts where it came from and arrives where it is,
+   capped at 220ms (§12). Reduced Motion never adds this class at all, so the
+   pawn is simply where it landed. */
+@keyframes ld-walk {
+  from {
+    transform: translate(calc(var(--ld-fan, 0px) + var(--ld-walk-x, 0px)), var(--ld-walk-y, 0px));
+  }
+  to {
+    transform: translate(var(--ld-fan, 0px), 0);
+  }
+}
+
+.ld-pawn-walk {
+  animation: ld-walk var(--ld-walk-ms, 180ms) ease-out;
+}
+
+/* ---------- the die and the line ---------- */
+
+.ld-tray {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.ld-die {
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.ld-die-live {
+  min-width: var(--tap-size);
+  min-height: var(--tap-size);
+  border-color: var(--accent);
+  cursor: pointer;
+}
+
+.ld-die-hint {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.ld-die-face {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 36px;
+  height: 36px;
+  gap: 2px;
+}
+
+.ld-pip {
+  border-radius: 50%;
+  background: transparent;
+}
+
+.ld-pip-on {
+  background: var(--ink);
+}
+
+/* One quarter-turn, and never longer than 220ms (§12). No particles, no
+   screen shake — here or anywhere in this game. */
+@keyframes ld-die-spin {
+  from {
+    transform: rotate(-90deg) scale(0.86);
+  }
+  to {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+.ld-die-spin {
+  animation: ld-die-spin 220ms ease-out;
+}
+
+.ld-line {
+  margin: 0;
+  min-height: 20px;
+  font-size: 14px;
+  text-align: center;
+  opacity: 0.85;
+}
+
+/* ---------- the result standing ---------- */
+
+.ld-standing {
+  margin: 4px 0 12px;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ld-standing li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.ld-standing-name {
+  flex: 1;
+  text-align: left;
+}
+
+.ld-standing-home {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+.ld-standing-you {
+  font-weight: 700;
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+.ld-figure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.ld-figure-arrow {
+  font-size: 18px;
+  opacity: 0.6;
+}
+
+.ld-figure-die {
+  min-width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--line);
+  border-radius: 7px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+}
