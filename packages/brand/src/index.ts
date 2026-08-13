@@ -630,6 +630,37 @@ export const titleAccents = {
     onDark: '#161225',
     softDark: '#2c2946',
   },
+  /**
+   * Bubble Pop — oxblood. The trajectory guide is drawn in the accent, laid
+   * directly over the bubbles it aims — which runs the constraint the
+   * opposite way from every other title here: the accent was picked first,
+   * and the ball palette (docs/BUBBLE_POP_RULES.md §12) is chosen to leave
+   * this hue family clear, rather than the accent dodging a palette the
+   * board already owned.
+   *
+   * Chosen in the three-title selection of docs/plans/2026-08-08-mahjong-
+   * bubble-ludo.md Phase 1 (with Mahjong Solitaire's blue-violet and Ludo's
+   * magenta, since the three ship together and mutual distance is part of
+   * the floor): candidates were clamped to the shipped palette's median band
+   * (|S−44| ≤ 10, |L−37| ≤ 7) and the weakest margin over every floor
+   * maximized, rather than maximizing raw distance — the unconstrained
+   * winners were primaries that read as another product. Re-measured at
+   * registration against everything in main (28 accents + --warn + the
+   * reserved Ludo colour), per BRAND.md step 5: closest light is Memory
+   * Match at ΔE 20.5, closest dark Connect Four at 15.0, against floors of
+   * 10.9 / 7.9 with the 1.15 margin required; home neighbours (Brick Breaker
+   * right, Sky Fighter below the arcade section head) are 39.8 light / 43.9
+   * dark against their 15 / 11 floor. White ink 9.91; the dark value clears
+   * the dark paper at 5.03.
+   */
+  bubblePop: {
+    light: '#712d2f',
+    onLight: '#ffffff',
+    softLight: '#f0dbdb',
+    dark: '#cd6a6d',
+    onDark: '#1c0d0d',
+    softDark: '#3b1c1d',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

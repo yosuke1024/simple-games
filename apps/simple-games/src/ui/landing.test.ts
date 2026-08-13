@@ -64,6 +64,7 @@ describe('gameLandingUrl', () => {
       'futoshiki',
       'kakuro',
       'mahjong-solitaire',
+      'bubble-pop',
     ]) {
       expect(gameLandingUrl(id, 'en')).toBeNull();
       expect(gameLandingUrl(id, 'ja')).toBeNull();
