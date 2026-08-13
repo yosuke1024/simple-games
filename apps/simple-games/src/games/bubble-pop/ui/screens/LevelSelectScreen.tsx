@@ -12,7 +12,10 @@ import { useBubblePop } from '../../state/GameContext';
 export function BubbleLevelSelectScreen() {
   const { goHome, startLevel, progress } = useBubblePop();
   const { t } = useSettings();
-  const highest = progress.highestUnlocked;
+  // highestUnlocked can be LEVEL_COUNT+1 once the run is fully cleared (the
+  // one value that means "cleared", not "unlocked" — see statsLogic.ts);
+  // this grid only ever has LEVEL_COUNT real cells to address.
+  const highest = Math.min(progress.highestUnlocked, LEVEL_COUNT);
 
   const cells = [];
   for (let level = 1; level <= LEVEL_COUNT; level++) {

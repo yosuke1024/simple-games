@@ -22,9 +22,14 @@ export function applyPlayTime(stats: Stats, seconds: number): Stats {
   return { ...stats, totalPlaySeconds: stats.totalPlaySeconds + seconds };
 }
 
-/** Unlocks the next level. Replaying an old level never moves the frontier back. */
+/**
+ * Unlocks the next level. Replaying an old level never moves the frontier
+ * back. The clamp is LEVEL_COUNT+1, not LEVEL_COUNT: LEVEL_COUNT+1 is the
+ * only value that means "LEVEL_COUNT itself was cleared" rather than just
+ * unlocked, so clearing the last level must be able to reach it.
+ */
 export function applyClearToProgress(progress: Progress, level: number): Progress {
-  const highestUnlocked = Math.min(LEVEL_COUNT, Math.max(progress.highestUnlocked, level + 1));
+  const highestUnlocked = Math.min(LEVEL_COUNT + 1, Math.max(progress.highestUnlocked, level + 1));
   return highestUnlocked === progress.highestUnlocked ? progress : { ...progress, highestUnlocked };
 }
 

@@ -1,6 +1,7 @@
 import { useSettings } from '@/state/SettingsContext';
 import { IconBack, IconChart, IconGrid } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
+import { LEVEL_COUNT } from '../../game/levels';
 import { useBubblePop } from '../../state/GameContext';
 
 /**
@@ -11,6 +12,10 @@ import { useBubblePop } from '../../state/GameContext';
 export function BubbleHomeScreen() {
   const { navigate, progress, startLevel, exitToCollection } = useBubblePop();
   const { t } = useSettings();
+  // highestUnlocked can sit one past LEVEL_COUNT once the run is fully
+  // cleared (it then means "cleared", not "unlocked" — see statsLogic.ts);
+  // the button always names a real, playable level.
+  const homeLevel = Math.min(progress.highestUnlocked, LEVEL_COUNT);
 
   return (
     <div className="screen home-screen">
@@ -44,9 +49,9 @@ export function BubbleHomeScreen() {
         <button
           type="button"
           className="btn btn-primary btn-big"
-          onClick={() => startLevel(progress.highestUnlocked)}
+          onClick={() => startLevel(homeLevel)}
         >
-          {t('modeLevel', { n: progress.highestUnlocked })}
+          {t('modeLevel', { n: homeLevel })}
         </button>
 
         <nav className="home-chips">

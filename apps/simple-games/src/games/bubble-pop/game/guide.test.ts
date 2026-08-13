@@ -15,7 +15,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { AIM_MAX_ANGLE_FROM_VERTICAL } from './constants';
-import { placeAndResolve, simulateShot } from './engine';
+import { crossesLossLine, placeAndResolve, simulateShot } from './engine';
 import { buildBoard } from './generator';
 import { cellKey } from './grid';
 import { aimGuide, createSession, fireShot, type BubblePopSession } from './session';
@@ -28,7 +28,26 @@ const BOARDS: ReadonlyArray<{ seed: string; level: number }> = [
   { seed: 'guide-c', level: 100 },
 ];
 
-const CEILING_OFFSETS = [0, 1, 2, 4, 7];
+/**
+ * Every ceiling offset a real game can actually reach for this board: 0 up
+ * to (but not including) the offset where the ceiling's descent would cross
+ * the loss line. Legal play never advances ceilingOffset past that point —
+ * a group where the board is already lost is not a state the guide has to
+ * agree with a shot from — so this *is* the full reachable domain, derived
+ * straight from crossesLossLine rather than sampled or hard-coded. The loop
+ * has a safety cap only to fail loudly instead of hanging if that geometric
+ * assumption is ever wrong.
+ */
+function reachableOffsets(board: Board): number[] {
+  const offsets: number[] = [];
+  let offset = 0;
+  while (!crossesLossLine(board, offset)) {
+    offsets.push(offset);
+    offset++;
+    if (offset > 500) throw new Error('guide.test: reachableOffsets did not converge');
+  }
+  return offsets;
+}
 
 /**
  * A uniform sweep across the clamp, plus every angle where the landing cell
@@ -66,7 +85,8 @@ function sweepAngles(board: Board, ceilingOffset: number): number[] {
 
 describe('the guide and the real shot always agree', () => {
   for (const { seed, level } of BOARDS) {
-    for (const ceilingOffset of CEILING_OFFSETS) {
+    const board = buildBoard(seed, level);
+    for (const ceilingOffset of reachableOffsets(board)) {
       // The 60s timeout: Level 100's board (9 rows, 6 colors) plus
       // sweepAngles's boundary bisection is the heaviest case here (measured
       // 3-5s running alone, well past vitest's default 5s per-test timeout).
@@ -75,7 +95,6 @@ describe('the guide and the real shot always agree', () => {
       // alone (autoplay.test.ts's comment has the numbers), and this gate is
       // about correctness, not speed.
       it(`seed=${seed} level=${level} ceilingOffset=${ceilingOffset}`, () => {
-        const board = buildBoard(seed, level);
         const base = createSession(seed, level);
         // Pinning board/ceilingOffset directly (rather than playing shots
         // to get there) is what lets this test sweep every offset against

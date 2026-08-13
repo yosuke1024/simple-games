@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
@@ -111,5 +111,20 @@ describe('playing', () => {
     expect(
       screen.getByRole('button', { name: 'Swap current and next bubble' }),
     ).toBeInTheDocument();
+  });
+
+  it('fires on Space alone, with no arrow key steering it first', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+
+    await user.click(await screen.findByRole('button', { name: 'Level 1' }));
+    expect(screen.getByText('8 shots until the ceiling drops')).toBeInTheDocument();
+
+    // No ArrowLeft/ArrowRight here — Space must fire the aim it already has
+    // (straight up) on its own, not only after a drag or an arrow key has
+    // set draggingRef.
+    fireEvent.keyDown(window, { key: ' ' });
+
+    expect(await screen.findByText('7 shots until the ceiling drops')).toBeInTheDocument();
   });
 });

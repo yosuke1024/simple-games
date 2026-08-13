@@ -295,10 +295,21 @@ export function BubbleBoard({
         traveled: 0,
         color: session.current,
       };
+      const landingKey = cellKey(shot.landingCell);
       resolveRef.current = {
         ceilingOffset: session.ceilingOffset,
         landing: { cell: shot.landingCell, color: session.current },
-        popped: outcome.popped.map((cell) => ({ cell, color: colorOf(session.board, cell) })),
+        // outcome.popped is computed on the post-placement board, so it can
+        // include the landing cell itself, which colorOf(session.board, _)
+        // (the pre-placement board) has not seen yet and would throw on;
+        // every other popped cell was already sitting on session.board.
+        popped: outcome.popped.map((cell) => ({
+          cell,
+          color: cellKey(cell) === landingKey ? session.current : colorOf(session.board, cell),
+        })),
+        // fell is derived from the post-pop board with the popped group
+        // (including any landing cell) already removed, so every fallen cell
+        // was necessarily present on session.board before this shot.
         fell: outcome.fell.map((cell) => ({ cell, color: colorOf(session.board, cell) })),
         age: -1, // -1 marks "still flying"; set to 0 once the flight lands
         nextSession,
@@ -358,12 +369,16 @@ export function BubbleBoard({
         angleRef.current = clampAimAngle(angleRef.current + STEP);
       } else if (event.key === ' ' || event.code === 'Space') {
         event.preventDefault();
-        if (draggingRef.current) endDrag();
+        // Space always fires at the current aim, whether or not an arrow
+        // key (or a pointer drag) has run first — it does not require
+        // draggingRef to be set the way endDrag's callers do.
+        draggingRef.current = false;
+        fire(angleRef.current);
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [endDrag]);
+  }, [fire]);
 
   useEffect(() => {
     // Publish the opening HUD before the rendering guard — the status row is

@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { IconClose } from '@/ui/components/icons';
+import { LEVEL_COUNT } from '../../game/levels';
 import { useBubblePop } from '../../state/GameContext';
 
 /** Drag from the launcher; the dashed guide always shows the true landing spot (§8). */
@@ -120,7 +121,9 @@ export function BubbleTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startLevel(progress.highestUnlocked);
+      // highestUnlocked can be LEVEL_COUNT+1 once fully cleared (see
+      // statsLogic.ts); this always starts a real, playable level.
+      startLevel(Math.min(progress.highestUnlocked, LEVEL_COUNT));
     } else {
       goHome();
     }

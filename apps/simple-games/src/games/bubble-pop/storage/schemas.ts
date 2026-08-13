@@ -70,7 +70,12 @@ export const statsSchema: SchemaDef<Stats> = {
 
 export interface Progress {
   schemaVersion: 1;
-  /** Highest level the player may start (1..LEVEL_COUNT). */
+  /**
+   * Highest level the player may start, 1..LEVEL_COUNT+1. LEVEL_COUNT+1 is
+   * the one value above the level range: the sole way to tell "cleared
+   * LEVEL_COUNT" apart from "merely unlocked LEVEL_COUNT" (see
+   * clearedLevelCount in statsLogic.ts).
+   */
   highestUnlocked: number;
 }
 
@@ -80,7 +85,7 @@ export const progressSchema: SchemaDef<Progress> = {
   defaultValue: () => ({ schemaVersion: 1, highestUnlocked: 1 }),
   validate: (raw) => {
     if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
-    const highestUnlocked = asInt(raw.highestUnlocked, 1, LEVEL_COUNT);
+    const highestUnlocked = asInt(raw.highestUnlocked, 1, LEVEL_COUNT + 1);
     return highestUnlocked === null ? null : { schemaVersion: 1, highestUnlocked };
   },
 };

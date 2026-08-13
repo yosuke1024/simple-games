@@ -134,7 +134,14 @@ export function BubbleProvider({
   /** Begins an attempt at a level: counts it and mounts a fresh board. */
   const beginAttempt = useCallback(
     (level: number) => {
-      const clamped = Math.min(Math.max(1, Math.floor(level)), progressRef.current.highestUnlocked);
+      // highestUnlocked can be LEVEL_COUNT+1 once the last level is cleared
+      // (the value that means "cleared", not merely "unlocked" — see
+      // statsLogic.ts), so the game-start ceiling is capped separately at
+      // LEVEL_COUNT, the highest level that actually exists.
+      const clamped = Math.min(
+        Math.max(1, Math.floor(level)),
+        Math.min(LEVEL_COUNT, progressRef.current.highestUnlocked),
+      );
       persistStats(applyAttemptStart(statsRef.current));
       setLastResult(null);
       setAttempt((current) => ({ level: clamped, nonce: (current?.nonce ?? 0) + 1 }));

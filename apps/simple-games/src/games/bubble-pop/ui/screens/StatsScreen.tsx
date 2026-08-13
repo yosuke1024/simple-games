@@ -1,6 +1,7 @@
 import { useSettings } from '@/state/SettingsContext';
 import { IconBack } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
+import { LEVEL_COUNT } from '../../game/levels';
 import { useBubblePop } from '../../state/GameContext';
 import { clearedLevelCount } from '../../state/statsLogic';
 
@@ -29,7 +30,10 @@ export function BubbleStatsScreen() {
           <dl className="stats-grid">
             <div className="stats-row">
               <dt>{t('reachedLevel')}</dt>
-              <dd>{progress.highestUnlocked}</dd>
+              {/* highestUnlocked can be LEVEL_COUNT+1 once fully cleared
+                  (see statsLogic.ts); the reached-level display always
+                  names a real level. */}
+              <dd>{Math.min(progress.highestUnlocked, LEVEL_COUNT)}</dd>
             </div>
             <div className="stats-row">
               <dt>{t('levelsCleared')}</dt>
