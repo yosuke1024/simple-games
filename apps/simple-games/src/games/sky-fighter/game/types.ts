@@ -30,17 +30,43 @@ export interface Item {
   kind: ItemKind;
 }
 
-/** `tier` indexes ENEMY_RADII: 0 is the largest, SMALLEST_TIER is destroyed for good. */
+/**
+ * What a craft *is* (docs/SKY_FIGHTER_RULES.md §4). Six of them, told apart by
+ * silhouette; three sizes still carry weight, hp and score, but the kind is
+ * what decides how a craft flies, what it shoots, and what it leaves behind.
+ *
+ * `bomber`/`fighter`/`scout` are the splitting chain. `heavy`, `gunship` and
+ * `darter` enter waves as themselves.
+ */
+export type EnemyKind = 'bomber' | 'fighter' | 'scout' | 'heavy' | 'gunship' | 'darter';
+
+/** How a craft shoots (§4). The gun is the kind's, not the size's. */
+export type EnemyGun =
+  /** Unarmed: pressure comes from where it flies, not from what it fires. */
+  | 'none'
+  /** One shot straight down the craft's own column. */
+  | 'straight'
+  /** A short downward curtain — dodged by reading the gaps. */
+  | 'spread'
+  /** One shot at where the ship is now. */
+  | 'aimed';
+
 export interface Enemy {
   id: number;
   x: number;
   y: number;
   dx: number;
   dy: number;
+  /**
+   * Size class, always `ENEMY_KIND_TIER[kind]`: 0 is the largest and
+   * SMALLEST_TIER is the one that leaves nothing behind. Carried on the craft
+   * so the hot loop reads one field instead of two lookups.
+   */
   tier: number;
+  kind: EnemyKind;
   /** Hits left. Splitting happens when this reaches zero. */
   hp: number;
-  /** Counts down to this craft's next shot. Only the bomber tier uses it. */
+  /** Counts down to this craft's next shot. Unarmed kinds leave it unset. */
   fireCooldownMs?: number;
   /** Set on a non-lethal hit so the view can flash the craft briefly. */
   hitMs?: number;

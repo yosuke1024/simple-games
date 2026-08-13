@@ -9,18 +9,26 @@
  *
  * If a change here is intended, regenerate the strings and say so in the
  * commit message, along with what it costs existing players.
+ *
+ * These strings were regenerated once, for the six-craft roster (§4): the wave
+ * mix now draws a *kind* where it used to draw a size, so every formation in
+ * the game moved. BOARD_SEED went to `v2` in the same commit rather than
+ * leaving `v1` naming skies no v1 player ever flew. What it cost: a player who
+ * knew a stage by heart has to learn it again. Nothing was saved per stage
+ * beyond which ones are unlocked (storage/schemas.ts), so no record was
+ * invalidated by the move.
  */
 import { describe, expect, it } from 'vitest';
 import { BOARD_SEED } from './constants';
 import type { Enemy } from './types';
 import { spawnWave } from './waves';
 
-/** tier:x,y,dy per craft — every number that decides what the player meets. */
+/** kind:x,y,dy per craft — every number that decides what the player meets. */
 function waveToString(enemies: readonly Enemy[]): string {
   return enemies
     .map(
       (e) =>
-        `${e.tier}:${e.x.toFixed(1)},${e.y.toFixed(1)},${e.dy.toFixed(1)}` +
+        `${e.kind}:${e.x.toFixed(1)},${e.y.toFixed(1)},${e.dy.toFixed(1)}` +
         (e.fireCooldownMs !== undefined ? `,f${e.fireCooldownMs.toFixed(0)}` : ''),
     )
     .join('|');
@@ -29,13 +37,13 @@ function waveToString(enemies: readonly Enemy[]): string {
 describe('waves that must never change', () => {
   it('level 1, wave 1 is unchanged', () => {
     expect(waveToString(spawnWave(BOARD_SEED, 1, 0, 1).enemies)).toBe(
-      '1:55.2,-14.0,56.1|1:246.1,-32.0,51.1',
+      'fighter:72.2,-14.0,61.9|gunship:188.8,-32.0,47.4,f1519|gunship:319.4,-50.0,49.1,f1456',
     );
   });
 
   it('level 60, wave 3 is unchanged', () => {
     expect(waveToString(spawnWave(BOARD_SEED, 60, 2, 1).enemies)).toBe(
-      '1:52.4,-14.0,99.5|0:148.6,-40.0,91.5,f954|0:230.0,-58.0,92.9,f2669|1:325.0,-68.0,91.6',
+      'darter:28.0,-9.0,154.4|gunship:125.5,-32.0,79.2,f644|fighter:174.7,-50.0,80.0|gunship:268.5,-68.0,89.6,f663|darter:317.3,-81.0,151.3',
     );
   });
 });

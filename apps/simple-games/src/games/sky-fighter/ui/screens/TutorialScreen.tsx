@@ -48,26 +48,46 @@ function AimFigure() {
   );
 }
 
-/** Bomber → fighters → darts; only the bomber shoots (§4, §6). */
+/**
+ * Bomber → fighters → scouts on the left, and on the right the thing the copy
+ * now warns about: an armed craft whose shot leans toward the ship instead of
+ * falling straight (§4, §11).
+ */
 function SplitFigure() {
   return (
     <div className="tutorial-example" aria-hidden="true">
       <svg className="sf-figure" viewBox="0 0 160 90" role="presentation">
         <g fill="var(--accent)" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round">
-          <path d="M36 22 L48 42 L24 42 Z" />
-          <path d="M88 18 L96 32 L80 32 Z" />
-          <path d="M112 30 L120 44 L104 44 Z" />
-          <path d="M134 14 L139 24 L129 24 Z" />
+          <path d="M30 20 L42 40 L18 40 Z" />
+          <path d="M74 18 L82 32 L66 32 Z" />
+          <path d="M96 30 L104 44 L88 44 Z" />
+          <path d="M116 14 L121 24 L111 24 Z" />
         </g>
         <path
-          d="M56 32 L72 26 M56 36 L98 40"
+          d="M50 30 L58 24 M50 34 L84 40"
           stroke="var(--ink-soft)"
           strokeWidth="1.5"
           strokeDasharray="3 4"
           strokeLinecap="round"
           fill="none"
         />
-        <path d="M36 50 L36 64" stroke="var(--accent)" strokeWidth="3.5" strokeLinecap="round" />
+        <path d="M30 48 L30 62" stroke="var(--accent)" strokeWidth="3.5" strokeLinecap="round" />
+        {/* The aimed shot: it leans off vertical, toward the ship below it. */}
+        <path
+          d="M136 34 L146 46 L126 46 Z"
+          fill="var(--accent)"
+          stroke="var(--accent)"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+        <path d="M135 52 L127 66" stroke="var(--accent)" strokeWidth="3.5" strokeLinecap="round" />
+        <path
+          d="M122 70 L127 82 L117 82 Z"
+          fill="var(--ink)"
+          stroke="var(--ink)"
+          strokeWidth="3"
+          strokeLinejoin="round"
+        />
       </svg>
     </div>
   );

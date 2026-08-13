@@ -34,7 +34,8 @@ export const de: SkyFighterMessages = {
   sfStep1Body:
     'Dein Jäger feuert von selbst. Zieh in jede Richtung — wo du fliegst, dorthin zielst du.',
   sfStep2Title: 'Große zerfallen',
-  sfStep2Body: 'Ein Bomber zerfällt in Jäger, Jäger in Späher. Nur Bomber schießen zurück.',
+  sfStep2Body:
+    'Ein Bomber zerfällt in Jäger, Jäger in Späher. Achte auf die Bewaffneten — ein Kanonenboot zielt auf dich.',
   sfStep3Title: 'Fang auf, was fällt',
   sfStep3Body:
     'Abgeschossene Späher lassen Verstärkungen und Herzen fallen. Jede zehnte Stufe bewacht ein Boss eine Auswahl an Verbesserungen.',

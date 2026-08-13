@@ -38,7 +38,8 @@ export const en = {
   sfStep1Body:
     'Your fighter fires on its own. Drag in any direction — where you fly is where you aim.',
   sfStep2Title: 'Big ones break up',
-  sfStep2Body: 'A bomber splits into fighters, and fighters into scouts. Only bombers shoot back.',
+  sfStep2Body:
+    'A bomber splits into fighters, and fighters into scouts. Watch the armed ones — a gunship aims at you.',
   sfStep3Title: 'Catch what falls',
   sfStep3Body:
     'Downed scouts drop weapon crates and hearts. Every tenth stage, a boss guards a choice of upgrades.',

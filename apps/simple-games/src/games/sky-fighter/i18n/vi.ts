@@ -34,7 +34,7 @@ export const vi: SkyFighterMessages = {
   sfStep1Body: 'Máy bay tự bắn. Kéo theo mọi hướng — bay đến đâu là nhắm đến đó.',
   sfStep2Title: 'Máy bay lớn tách nhỏ',
   sfStep2Body:
-    'Máy bay ném bom tách thành tiêm kích, tiêm kích tách thành trinh sát. Chỉ máy bay ném bom bắn trả.',
+    'Máy bay ném bom tách thành tiêm kích, tiêm kích tách thành trinh sát. Coi chừng loại có súng — pháo hạm nhắm vào bạn.',
   sfStep3Title: 'Bắt lấy thứ rơi xuống',
   sfStep3Body:
     'Trinh sát bị hạ thả nâng cấp và tim. Cứ mười chặng lại có trùm canh giữ một lượt chọn nâng cấp.',

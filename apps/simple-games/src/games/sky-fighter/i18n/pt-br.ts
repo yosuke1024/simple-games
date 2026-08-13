@@ -35,7 +35,7 @@ export const ptBR: SkyFighterMessages = {
     'Seu caça atira sozinho. Arraste em qualquer direção — onde você voa é onde você mira.',
   sfStep2Title: 'Os grandes se dividem',
   sfStep2Body:
-    'Um bombardeiro se divide em caças, e caças em batedores. Só os bombardeiros revidam.',
+    'Um bombardeiro se divide em caças, e caças em batedores. Cuidado com os armados: a canhoneira mira em você.',
   sfStep3Title: 'Pegue o que cair',
   sfStep3Body:
     'Batedores abatidos soltam melhorias e corações. A cada dez fases, um chefe guarda uma escolha de melhorias.',
