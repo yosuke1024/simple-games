@@ -14,7 +14,9 @@
  * waiting on a move, or a state that has already moved on — because an
  * automatic pass and a forfeited third six are not choices anybody makes,
  * they are what the rules say happens next. That is also why neither one
- * shows up as a `Move`: there is nothing to choose.
+ * shows up as a `Move`: there is nothing to choose. It refuses to roll at
+ * all — returning null instead — for a match that is already over or that
+ * is still waiting on a move from the roll before this one.
  */
 import { rollFor } from './dice';
 import {
@@ -26,7 +28,6 @@ import {
   SEAT_COUNT,
   YOU,
   type BySeat,
-  type MatchResult,
   type MatchState,
   type Move,
   type Seat,
@@ -42,9 +43,20 @@ import {
  * not be rejected as if its save file were corrupt. Reaching the cap ends
  * the match in a no-contest (`{ kind: 'noContest' }`), never a win.
  */
-// TODO(ludo): pin this from a self-play sweep across all three difficulties
-// once cpu.ts exists (docs/plans/2026-08-08-mahjong-bubble-ludo.md, Phase 4 §D).
-export const MAX_ROLLS = 4000;
+// Pinned from a self-play sweep (Phase 4 §D): every seat driven by
+// `chooseCpuMove` (cpu.ts), 2,000 seeds per difficulty, MAX_ROLLS
+// temporarily raised to 200,000 so nothing was cut off mid-measurement.
+// Observed roll counts to a decision (median / p99 / p99.9 / max):
+//   easy:    413 /  594 /  709 /  714
+//   normal:  477 /  798 /  962 / 1101
+//   hard:    520 /  858 / 1066 / 1090
+// No sweep produced a no-contest at that raised cap — every one of the
+// 6,000 matches ended in a win. The observed max across all three was
+// 1,101; this cap sits at roughly 9x that, both comfortably past any real
+// match and a round number. rollDistribution.test.ts re-checks a smaller
+// sweep on every CI run; the full sweep's numbers live above, not in code
+// that re-derives them.
+export const MAX_ROLLS = 10_000;
 
 /** All sixteen pawns in the yard, seat 0 to move first (§2.7 — fixed by rule, not by seed). */
 export function initialState(): MatchState {
@@ -92,7 +104,7 @@ export function legalMovesFor(state: MatchState, seat: Seat, die: number): Move[
 /** What one call to `rollDie` resolved to. */
 export interface RollOutcome {
   readonly die: number;
-  readonly kind: 'move' | 'autoPass' | 'thirdSix';
+  readonly kind: 'move' | 'autoPass' | 'thirdSix' | 'noContest';
   /** The state after this roll — `awaitingMove` (die set) only when `kind` is `'move'`. */
   readonly state: MatchState;
   /** The seat's legal replies to `die`. Non-empty only when `kind` is `'move'`. */
@@ -102,28 +114,59 @@ export interface RollOutcome {
 /**
  * Rolls once for the seat on turn and carries it all the way to a stop.
  *
- * Three things can happen, decided in this order:
+ * Returns null rather than rolling when there is nothing to roll for: a
+ * finished match does not get another roll (`state.result !== null`), and
+ * neither does a match already waiting on a move for the roll it just made
+ * (`state.die !== null`) — that roll has to be resolved with `applyMove`
+ * first, not re-rolled out from under it.
  *
- *   1. This is the seat's third six in a row (§2.1): the turn is forfeited
+ * Otherwise, four things can happen, decided in this order:
+ *
+ *   1. This is the roll that reaches `MAX_ROLLS` (§2.9): the match ends in a
+ *      no-contest right here, before any of the ordinary outcomes below get
+ *      a chance to apply — whatever this roll would otherwise have resolved
+ *      to (a move, an auto-pass, a forfeited third six) is moot, because the
+ *      rule is that the match is over the instant the roll count reaches the
+ *      cap, not that it plays out this one roll first. The die is reported
+ *      as rolled, but `state.die` is null and `moves` is empty: there is
+ *      nothing left to play, on screen or off it. (Before this outcome
+ *      existed, a capped roll that would have had a legal move returned
+ *      `kind: 'move'` with that move listed *and* `result: { kind:
+ *      'noContest' }` set at the same time — a move the screen could show
+ *      but `applyMove` would always refuse, since it checks
+ *      `state.result !== null` before anything else. That state is no
+ *      longer reachable.)
+ *   2. This is the seat's third six in a row (§2.1): the turn is forfeited
  *      without offering a move, the streak resets, and turn passes on.
- *   2. The roll has no legal reply for this seat: an automatic pass. A six
+ *   3. The roll has no legal reply for this seat: an automatic pass. A six
  *      still earns the seat another roll here — §2.6's point is that an
  *      automatic pass spends the *move* a six would otherwise unlock, not
  *      the *extra roll* a six grants by itself — so the streak carries
  *      forward unreset and the same seat rolls again; anything else passes
  *      turn and resets the streak.
- *   3. Otherwise: the roll stands, waiting on a move.
+ *   4. Otherwise: the roll stands, waiting on a move.
  *
  * `rollIndex` advances by one on every call, win or lose, move or not —
  * it counts rolls, and every call here is exactly one roll.
  */
-export function rollDie(state: MatchState, seed: string): RollOutcome {
+export function rollDie(state: MatchState, seed: string): RollOutcome | null {
+  if (state.result !== null || state.die !== null) return null;
   const seat = state.turn;
   const die = rollFor(seed, state.rollIndex);
   const rollIndex = state.rollIndex + 1;
-  // The roll cap is checked against the *count of rolls made*, independent
-  // of what this particular roll otherwise resolves to (see MAX_ROLLS).
-  const cappedResult: MatchResult | null = rollIndex >= MAX_ROLLS ? { kind: 'noContest' } : null;
+
+  // The cap is checked against the *count of rolls made*. Reaching it
+  // decides the outcome on its own (point 1 above), so nothing past this
+  // point — thirdSix, autoPass, or the legal moves themselves — is computed.
+  if (rollIndex >= MAX_ROLLS) {
+    const nextState: MatchState = {
+      ...state,
+      rollIndex,
+      die: null,
+      result: { kind: 'noContest' },
+    };
+    return { die, kind: 'noContest', state: nextState, moves: [] };
+  }
 
   const consecutiveSixes = die === 6 ? state.sixStreak + 1 : 0;
   if (consecutiveSixes >= 3) {
@@ -133,7 +176,7 @@ export function rollDie(state: MatchState, seed: string): RollOutcome {
       rollIndex,
       sixStreak: 0,
       die: null,
-      result: cappedResult,
+      result: null,
     };
     return { die, kind: 'thirdSix', state: nextState, moves: [] };
   }
@@ -147,7 +190,7 @@ export function rollDie(state: MatchState, seed: string): RollOutcome {
       rollIndex,
       sixStreak: rollsAgain ? consecutiveSixes : 0,
       die: null,
-      result: cappedResult,
+      result: null,
     };
     return { die, kind: 'autoPass', state: nextState, moves: [] };
   }
@@ -157,7 +200,7 @@ export function rollDie(state: MatchState, seed: string): RollOutcome {
     rollIndex,
     sixStreak: consecutiveSixes,
     die,
-    result: cappedResult,
+    result: null,
   };
   return { die, kind: 'move', state: nextState, moves };
 }

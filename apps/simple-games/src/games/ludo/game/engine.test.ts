@@ -12,7 +12,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { rollFor } from './dice';
-import { applyMove, initialState, legalMovesFor, MAX_ROLLS, rollDie } from './engine';
+import { applyMove, legalMovesFor, MAX_ROLLS, rollDie } from './engine';
 import {
   bySeat,
   globalSquareOf,
@@ -210,7 +210,7 @@ describe('a seat can share a square with itself', () => {
 describe('three sixes in a row forfeit the turn', () => {
   it('the third six moves nobody and passes turn on', () => {
     const before = stateWith({ turn: YOU, sixStreak: 2, rollIndex: ROLL_INDEX_OF_SIX });
-    const outcome = rollDie(before, ENGINE_SEED);
+    const outcome = rollDie(before, ENGINE_SEED)!;
     expect(outcome.die).toBe(6);
     expect(outcome.kind).toBe('thirdSix');
     expect(outcome.moves).toEqual([]);
@@ -221,7 +221,7 @@ describe('three sixes in a row forfeit the turn', () => {
 
   it('a second six in a row does not forfeit anything', () => {
     const before = stateWith({ turn: YOU, sixStreak: 1, rollIndex: ROLL_INDEX_OF_SIX });
-    const outcome = rollDie(before, ENGINE_SEED);
+    const outcome = rollDie(before, ENGINE_SEED)!;
     expect(outcome.kind).toBe('move');
     expect(outcome.state.turn).toBe(YOU);
     expect(outcome.state.sixStreak).toBe(2);
@@ -241,7 +241,7 @@ describe('a roll with no legal reply auto-passes', () => {
       rollIndex: ROLL_INDEX_OF_FIVE,
       pawns: { [YOU]: stuck },
     });
-    const outcome = rollDie(before, ENGINE_SEED);
+    const outcome = rollDie(before, ENGINE_SEED)!;
     expect(outcome.die).toBe(5);
     expect(outcome.kind).toBe('autoPass');
     expect(outcome.moves).toEqual([]);
@@ -256,7 +256,7 @@ describe('a roll with no legal reply auto-passes', () => {
       rollIndex: ROLL_INDEX_OF_SIX,
       pawns: { [YOU]: stuck },
     });
-    const outcome = rollDie(before, ENGINE_SEED);
+    const outcome = rollDie(before, ENGINE_SEED)!;
     expect(outcome.die).toBe(6);
     expect(outcome.kind).toBe('autoPass');
     // The auto-pass spent the move a six would have unlocked, not the extra
@@ -282,15 +282,88 @@ describe('the match ends the instant all four pawns are home', () => {
   });
 });
 
+/**
+ * Searches seeds, starting from `startAt`, for one whose die at `rollIndex`
+ * satisfies `wants`. Cheap in practice: any predicate a fair die satisfies a
+ * sixth or a fifth of the time is found within a handful of tries, and this
+ * is how the fixtures below pin down a *specific* die at the roll right
+ * before `MAX_ROLLS` without hard-coding a value that would go stale the
+ * moment `MAX_ROLLS` itself is retuned (see the TODO on that constant).
+ */
+function seedRolling(rollIndex: number, wants: (die: number) => boolean, startAt = 0): string {
+  for (let salt = startAt; salt < startAt + 1000; salt++) {
+    const seed = `ludo-cap-search-${salt}`;
+    if (wants(rollFor(seed, rollIndex))) return seed;
+  }
+  throw new Error(`unreachable: no seed within range satisfied the predicate at ${rollIndex}`);
+}
+
 describe('the roll cap', () => {
-  it('reaching MAX_ROLLS ends the match in a no-contest', () => {
-    let state = initialState();
-    for (let rolled = 0; rolled < MAX_ROLLS; rolled++) {
-      expect(state.result, `still playing after ${rolled} rolls`).toBeNull();
-      state = rollDie(state, 'ludo-cap-test').state;
-    }
-    expect(state.rollIndex).toBe(MAX_ROLLS);
-    expect(state.result).toEqual({ kind: 'noContest' });
+  it('the roll right before the cap resolves normally', () => {
+    const rollIndex = MAX_ROLLS - 2;
+    const before = stateWith({ turn: YOU, rollIndex });
+    const outcome = rollDie(
+      before,
+      seedRolling(rollIndex, () => true),
+    )!;
+    expect(outcome.state.rollIndex).toBe(MAX_ROLLS - 1);
+    expect(outcome.kind).not.toBe('noContest');
+    expect(outcome.state.result).toBeNull();
+  });
+
+  it('the roll that reaches MAX_ROLLS ends the match in a no-contest, with no move to make', () => {
+    // All four pawns still in the yard, and a seed chosen so this particular
+    // roll is a six — the one die that would ordinarily free a yard pawn.
+    // Before this outcome existed, this exact case (a legal move sitting
+    // alongside a match already marked over) is what a screen could show
+    // but applyMove would always refuse.
+    const rollIndex = MAX_ROLLS - 1;
+    const before = stateWith({ turn: YOU, rollIndex });
+    const seed = seedRolling(rollIndex, (die) => die === 6);
+    const outcome = rollDie(before, seed)!;
+
+    expect(outcome.die).toBe(6);
+    expect(outcome.kind).toBe('noContest');
+    expect(outcome.moves).toEqual([]);
+    expect(outcome.state.rollIndex).toBe(MAX_ROLLS);
+    expect(outcome.state.die).toBeNull();
+    expect(outcome.state.result).toEqual({ kind: 'noContest' });
+
+    // What this roll would otherwise have offered — proof there really was
+    // a move here, not just an empty roll that happened not to matter.
+    const wouldHaveBeenLegal = legalMovesFor(before, YOU, 6);
+    expect(wouldHaveBeenLegal.length).toBeGreaterThan(0);
+    // And it cannot be played: no move was returned to apply, and even the
+    // move that would have been legal is refused once the match is over.
+    expect(applyMove(outcome.state, wouldHaveBeenLegal[0]!)).toBeNull();
+  });
+
+  it('a roll that would otherwise auto-pass is overridden the same way at the cap', () => {
+    // Stuck pawns (same fixture as the auto-pass tests above), and a seed
+    // chosen so this roll is not a six — ordinarily an auto-pass, not a
+    // move — to show the override applies regardless of what the roll would
+    // otherwise have resolved to (§2.9), not only to the case with a move.
+    const rollIndex = MAX_ROLLS - 1;
+    const stuck: Pawns = [55, 56, 57, 58];
+    const before = stateWith({ turn: YOU, rollIndex, pawns: { [YOU]: stuck } });
+    const seed = seedRolling(rollIndex, (die) => die !== 6);
+    const outcome = rollDie(before, seed)!;
+
+    expect(outcome.kind).toBe('noContest');
+    expect(outcome.moves).toEqual([]);
+    expect(outcome.state.result).toEqual({ kind: 'noContest' });
+  });
+});
+
+describe("rollDie's precondition guard", () => {
+  it('refuses to roll a match that is already over', () => {
+    const before = stateWith({ turn: YOU, result: { kind: 'win', winner: YOU } });
+    expect(rollDie(before, ENGINE_SEED)).toBeNull();
+  });
+
+  it('refuses to roll again while a move is still waiting', () => {
+    const before = stateWith({ turn: YOU, die: 3 });
+    expect(rollDie(before, ENGINE_SEED)).toBeNull();
   });
 });
 
