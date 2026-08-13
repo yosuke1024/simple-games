@@ -9,13 +9,20 @@ import {
   BULLET_RADIUS,
   BULLET_SPEED,
   CAPPED_WEAPON_BONUS,
+  DARTER_MAX_DX,
+  DARTER_STEER_ACCEL,
   ENEMY_BULLET_RADIUS,
   ENEMY_BULLET_SPEED,
-  ENEMY_FIRE_INTERVAL_MS,
-  ENEMY_RADII,
+  ENEMY_KIND_GUN,
+  ENEMY_KIND_RADIUS,
+  ENEMY_KIND_SCORE,
+  ENEMY_KIND_SPLITS_INTO,
+  ENEMY_KIND_TIER,
   ENEMY_SPLIT_SPEED,
   FIRE_INTERVAL_MS,
-  FIRING_TIER,
+  GUNSHIP_AIM_JITTER,
+  HEAVY_SPREAD_ANGLE,
+  HEAVY_SPREAD_COUNT,
   INVULNERABLE_MS,
   ITEM_FALL_SPEED,
   ITEM_RADIUS,
@@ -29,7 +36,6 @@ import {
   MISSILE_TURN_RATE,
   RAPID_STEP_MS,
   REWARD_BONUS_SCORE,
-  SCORE_PER_TIER,
   SHIP_MIN_Y,
   SHIP_RADIUS,
   SHIP_START_Y,
@@ -38,7 +44,14 @@ import {
   WAVE_BREAK_MS,
   WEAPON_DROP_CHANCE,
 } from './constants';
-import { LEVEL_COUNT, bossSpec, enemyHp, isBossStage, wavesInLevel } from './levels';
+import {
+  LEVEL_COUNT,
+  bossSpec,
+  enemyFireIntervalMs,
+  enemyHp,
+  isBossStage,
+  wavesInLevel,
+} from './levels';
 import { createRng } from './rng';
 import type {
   Boss,
@@ -172,23 +185,31 @@ function volley(shipX: number, shipY: number, spread: number): Bullet[] {
   }));
 }
 
-/** A hit splits one enemy into two, or removes it if it was the smallest. */
+/**
+ * A hit splits one craft into two of whatever its kind breaks into, or removes
+ * it if it breaks into nothing. What comes out is quieter than what went in —
+ * except for the heavy, whose two gunships are armed (§4).
+ */
 function splitEnemy(
   enemy: Enemy,
   level: number,
   nextId: number,
 ): { children: Enemy[]; nextId: number } {
-  if (enemy.tier >= SMALLEST_TIER) return { children: [], nextId };
-  const tier = enemy.tier + 1;
+  const childKind = ENEMY_KIND_SPLITS_INTO[enemy.kind];
+  if (childKind === null) return { children: [], nextId };
+  const interval = enemyFireIntervalMs(level, childKind);
   let id = nextId;
-  const children: Enemy[] = [-1, 1].map((direction) => ({
+  const children: Enemy[] = [-1, 1].map((direction, index) => ({
     id: id++,
     x: enemy.x,
     y: enemy.y,
     dx: direction * ENEMY_SPLIT_SPEED,
     dy: enemy.dy,
-    tier,
-    hp: enemyHp(level, tier),
+    tier: ENEMY_KIND_TIER[childKind],
+    kind: childKind,
+    hp: enemyHp(level, childKind),
+    // A split pair never fires as one, and never the instant it appears.
+    fireCooldownMs: interval === 0 ? undefined : interval * (0.7 + index * 0.4),
   }));
   return { children, nextId: id };
 }
@@ -355,25 +376,50 @@ export function step(state: GameState, dtMs: number): GameState {
         missile.x - MISSILE_RADIUS < BOARD_WIDTH,
     );
 
-  // Bombers shoot back. Everything they break into is unarmed, so clearing a
-  // bomber is what makes the sky quieter (§4).
+  // Three of the six kinds shoot, each in its own voice (§4): the bomber down
+  // its own column, the heavy in a short curtain, the gunship at where the
+  // ship is now. Nothing fires from above the top edge, and nothing fires
+  // during the quiet beat between waves.
   const firedShots: EnemyBullet[] = [];
   enemies = enemies.map((enemy) => {
     const flashed =
       enemy.hitMs !== undefined
         ? { ...enemy, hitMs: enemy.hitMs > dtMs ? enemy.hitMs - dtMs : undefined }
         : enemy;
-    if (flashed.tier !== FIRING_TIER) return flashed;
+    const gun = ENEMY_KIND_GUN[flashed.kind];
+    if (gun === 'none') return flashed;
     if (flashed.y <= 0) return flashed;
-    const cooldown = (flashed.fireCooldownMs ?? ENEMY_FIRE_INTERVAL_MS) - dtMs;
+    const interval = enemyFireIntervalMs(level, flashed.kind);
+    const cooldown = (flashed.fireCooldownMs ?? interval) - dtMs;
     if (cooldown > 0) return { ...flashed, fireCooldownMs: cooldown };
-    firedShots.push({
-      x: flashed.x,
-      y: flashed.y + ENEMY_RADII[flashed.tier]!,
-      dx: 0,
-      dy: ENEMY_BULLET_SPEED,
-    });
-    return { ...flashed, fireCooldownMs: ENEMY_FIRE_INTERVAL_MS };
+    const muzzleY = flashed.y + ENEMY_KIND_RADIUS[flashed.kind] * 0.8;
+    if (gun === 'straight') {
+      firedShots.push({ x: flashed.x, y: muzzleY, dx: 0, dy: ENEMY_BULLET_SPEED });
+    } else if (gun === 'spread') {
+      for (let i = 0; i < HEAVY_SPREAD_COUNT; i++) {
+        const angle = -HEAVY_SPREAD_ANGLE + (2 * HEAVY_SPREAD_ANGLE * i) / (HEAVY_SPREAD_COUNT - 1);
+        firedShots.push({
+          x: flashed.x,
+          y: muzzleY,
+          dx: Math.sin(angle) * ENEMY_BULLET_SPEED,
+          dy: Math.cos(angle) * ENEMY_BULLET_SPEED,
+        });
+      }
+    } else {
+      // Aimed, but never perfectly: the lead is nudged off by a fixed amount
+      // that alternates with the craft's id, so a wall of gunships converges
+      // on a spot beside the ship rather than exactly on it.
+      const aim =
+        Math.atan2(state.shipX - flashed.x, Math.max(1, state.shipY - flashed.y)) +
+        (flashed.id % 2 === 0 ? GUNSHIP_AIM_JITTER : -GUNSHIP_AIM_JITTER);
+      firedShots.push({
+        x: flashed.x,
+        y: muzzleY,
+        dx: Math.sin(aim) * ENEMY_BULLET_SPEED,
+        dy: Math.cos(aim) * ENEMY_BULLET_SPEED,
+      });
+    }
+    return { ...flashed, fireCooldownMs: interval };
   });
 
   // The boss flies its pattern: descend to altitude, patrol the width, and
@@ -432,14 +478,18 @@ export function step(state: GameState, dtMs: number): GameState {
         if (bossSpawn <= 0) {
           bossSpawn = spec.spawnIntervalMs;
           if (enemies.length < 6) {
+            // What the carrier launches is the darter itself (§7): it steers
+            // for the ship, which is what makes ignoring the deck expensive.
+            const radius = ENEMY_KIND_RADIUS.darter;
             const dart = (side: number): Enemy => ({
               id: nextEnemyId++,
-              x: Math.min(BOARD_WIDTH - 9, Math.max(9, x + side * boss!.radius * 0.8)),
+              x: Math.min(BOARD_WIDTH - radius, Math.max(radius, x + side * boss!.radius * 0.8)),
               y: y + boss!.radius * 0.4,
               dx: side * 46,
               dy: 88,
-              tier: SMALLEST_TIER,
-              hp: enemyHp(level, SMALLEST_TIER),
+              tier: ENEMY_KIND_TIER.darter,
+              kind: 'darter',
+              hp: enemyHp(level, 'darter'),
             });
             enemies = [...enemies, dart(-1), dart(1)];
           }
@@ -460,9 +510,16 @@ export function step(state: GameState, dtMs: number): GameState {
     );
 
   enemies = enemies.map((enemy) => {
-    const radius = ENEMY_RADII[enemy.tier]!;
-    let x = enemy.x + enemy.dx * dt;
+    const radius = ENEMY_KIND_RADIUS[enemy.kind];
     let dx = enemy.dx;
+    // The darter is the one craft that comes for the ship: it leans toward the
+    // ship's column at a fixed rate, capped well under the ship's own speed so
+    // it can always be flown around (§4).
+    if (enemy.kind === 'darter') {
+      const toward = enemy.x < state.shipX ? 1 : -1;
+      dx = Math.max(-DARTER_MAX_DX, Math.min(DARTER_MAX_DX, dx + toward * DARTER_STEER_ACCEL * dt));
+    }
+    let x = enemy.x + dx * dt;
     if (x - radius < 0) {
       x = radius;
       dx = Math.abs(dx);
@@ -488,7 +545,7 @@ export function step(state: GameState, dtMs: number): GameState {
     for (const enemy of enemies) {
       const left = hpLeft.get(enemy.id)!;
       if (left <= 0) continue;
-      if (!hits(x, y, radius, enemy.x, enemy.y, ENEMY_RADII[enemy.tier]!)) continue;
+      if (!hits(x, y, radius, enemy.x, enemy.y, ENEMY_KIND_RADIUS[enemy.kind])) continue;
       hpLeft.set(enemy.id, left - damage);
       if (left - damage > 0) flashedEnemies.add(enemy.id);
       return true;
@@ -523,7 +580,7 @@ export function step(state: GameState, dtMs: number): GameState {
     if (left === enemy.hp) continue;
     if (left > 0) continue;
     anyDowned = true;
-    score += SCORE_PER_TIER[enemy.tier]!;
+    score += ENEMY_KIND_SCORE[enemy.kind];
     const split = splitEnemy(enemy, level, nextEnemyId);
     nextEnemyId = split.nextId;
     spawnedChildren.push(...split.children);
@@ -570,7 +627,7 @@ export function step(state: GameState, dtMs: number): GameState {
 
   // Enemies that get past the ship simply drift away. Only being hit costs a
   // life — letting one escape costs the points it was worth, nothing more.
-  enemies = enemies.filter((enemy) => enemy.y - ENEMY_RADII[enemy.tier]! <= BOARD_HEIGHT);
+  enemies = enemies.filter((enemy) => enemy.y - ENEMY_KIND_RADIUS[enemy.kind] <= BOARD_HEIGHT);
 
   // Items fall straight and are caught with the ship — the same motion that
   // kills you, turned into the reward (§5, §6).
@@ -653,7 +710,7 @@ export function step(state: GameState, dtMs: number): GameState {
   }
   if (invulnerableMs === 0) {
     const struckBy = enemies.find((enemy) =>
-      hits(state.shipX, state.shipY, SHIP_RADIUS, enemy.x, enemy.y, ENEMY_RADII[enemy.tier]!),
+      hits(state.shipX, state.shipY, SHIP_RADIUS, enemy.x, enemy.y, ENEMY_KIND_RADIUS[enemy.kind]),
     );
     if (struckBy) {
       lives -= 1;

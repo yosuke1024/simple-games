@@ -33,7 +33,7 @@ export const zhHans: SkyFighterMessages = {
   sfStep1Title: '移动就是瞄准',
   sfStep1Body: '战机自动开火。任意方向拖动——飞到哪里，就瞄准哪里。',
   sfStep2Title: '大型机体会分裂',
-  sfStep2Body: '轰炸机分裂成战斗机，战斗机分裂成侦察机。只有轰炸机会还击。',
+  sfStep2Body: '轰炸机分裂成战斗机，战斗机分裂成侦察机。小心带枪的机体——炮艇机会瞄准你。',
   sfStep3Title: '接住掉落物',
   sfStep3Body: '被击落的侦察机会掉落强化和爱心。每十关会出现 BOSS，击败后可以挑选强化。',
 };

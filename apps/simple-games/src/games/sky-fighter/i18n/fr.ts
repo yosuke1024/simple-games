@@ -35,7 +35,7 @@ export const fr: SkyFighterMessages = {
     'Ton chasseur tire tout seul. Glisse dans toutes les directions : là où tu voles, tu vises.',
   sfStep2Title: 'Les gros se scindent',
   sfStep2Body:
-    'Un bombardier se scinde en chasseurs, les chasseurs en éclaireurs. Seuls les bombardiers ripostent.',
+    'Un bombardier se scinde en chasseurs, les chasseurs en éclaireurs. Méfie-toi des armés : la canonnière te vise.',
   sfStep3Title: 'Attrape ce qui tombe',
   sfStep3Body:
     'Les éclaireurs abattus lâchent des bonus et des cœurs. Toutes les dix étapes, un boss garde un choix d’améliorations.',

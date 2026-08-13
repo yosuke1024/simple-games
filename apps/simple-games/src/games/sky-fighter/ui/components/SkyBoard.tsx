@@ -22,7 +22,7 @@ import {
   BOARD_WIDTH,
   BULLET_RADIUS,
   ENEMY_BULLET_RADIUS,
-  ENEMY_RADII,
+  ENEMY_KIND_RADIUS,
   ITEM_RADIUS,
   MISSILE_RADIUS,
   SHIP_RADIUS,
@@ -33,6 +33,7 @@ import { wavesInLevel } from '../../game/levels';
 import type {
   Boss,
   BossKind,
+  EnemyKind,
   GameState,
   Pickup,
   RewardKind,
@@ -89,14 +90,19 @@ const PLAYER_OUTLINE: Outline = [
 ];
 
 /**
- * One silhouette per enemy tier, all of them nose-down. Size already tells the
- * three apart; the shapes make each one a *kind* of aircraft, so a wave reads
- * as a formation rather than as three copies of the same circle (§12).
+ * One silhouette per enemy kind, all of them nose-down. Size tells the three
+ * classes apart; the shapes tell the six *craft* apart, so a wave reads as a
+ * formation of things that behave differently rather than as copies of one
+ * circle at three scales (§4, §12).
+ *
+ * The armed kinds are the ones with something under the wing: the bomber's
+ * wide slab, the heavy's stepped double wing, the gunship's chin. The two
+ * unarmed small craft are the clean ones.
  */
-const ENEMY_OUTLINES: readonly Outline[] = [
-  // Tier 0 — bomber. Long straight wings and a wide tailplane: heavy, the one
-  // that breaks into the most pieces, and the only one that shoots back (§4).
-  [
+const ENEMY_OUTLINES: Readonly<Record<EnemyKind, Outline>> = {
+  // Bomber — long straight wings and a wide tailplane: heavy, the one that
+  // breaks into the most pieces, and the plainest gun in the sky (§4).
+  bomber: [
     [0, 1],
     [0.24, 0.52],
     [1, 0.16],
@@ -105,8 +111,21 @@ const ENEMY_OUTLINES: readonly Outline[] = [
     [0.74, -0.9],
     [0, -0.72],
   ],
-  // Tier 1 — fighter. The player's own planform, flown the other way.
-  [
+  // Heavy — a blunt-nosed slab, wider than anything else in a wave, with a
+  // second wing stepped in behind the first. Two wings, two gunships (§4).
+  heavy: [
+    [0.26, 0.95],
+    [0.3, 0.5],
+    [1.18, 0.26],
+    [1.18, 0.0],
+    [0.36, -0.14],
+    [0.86, -0.44],
+    [0.86, -0.7],
+    [0.3, -0.6],
+    [0, -0.92],
+  ],
+  // Fighter — the player's own planform, flown the other way.
+  fighter: [
     [0, 1],
     [0.14, 0.35],
     [0.88, -0.2],
@@ -115,9 +134,21 @@ const ENEMY_OUTLINES: readonly Outline[] = [
     [0.38, -0.88],
     [0, -0.7],
   ],
-  // Tier 2 — dart. Sharply swept and narrow, so the smallest still reads as
-  // fast rather than as a speck.
-  [
+  // Gunship — the fighter's opposite at the same size: a flat nose and
+  // straight, square-tipped wings where the fighter is pointed and swept. The
+  // craft that shoots at *you*, and the shape says so before the shot does.
+  gunship: [
+    [0.3, 0.95],
+    [0.26, 0.44],
+    [1.0, 0.18],
+    [1.0, -0.1],
+    [0.26, -0.24],
+    [0.52, -0.88],
+    [0, -0.72],
+  ],
+  // Scout — sharply swept and narrow, so the smallest still reads as fast
+  // rather than as a speck. What a cascade ends in.
+  scout: [
     [0, 1],
     [0.12, 0.24],
     [0.66, -0.56],
@@ -125,7 +156,17 @@ const ENEMY_OUTLINES: readonly Outline[] = [
     [0.3, -0.96],
     [0, -0.8],
   ],
-];
+  // Darter — a needle: almost no wing, all length. The one shape in the sky
+  // that is pointing somewhere rather than falling.
+  darter: [
+    [0, 1.15],
+    [0.09, 0.2],
+    [0.44, -0.34],
+    [0.13, -0.42],
+    [0.26, -1.0],
+    [0, -0.88],
+  ],
+};
 
 /**
  * One hull per boss archetype (§7), nose-down like every enemy but drawn far
@@ -257,10 +298,10 @@ function render(
   ctx.strokeStyle = palette.accent;
   ctx.lineWidth = 1;
   for (const enemy of state.enemies) {
-    const radius = ENEMY_RADII[enemy.tier]!;
+    const radius = ENEMY_KIND_RADIUS[enemy.kind];
     const flashing = enemy.hitMs !== undefined;
     if (flashing) ctx.globalAlpha = 0.45;
-    craftPath(ctx, ENEMY_OUTLINES[enemy.tier]!, enemy.x, enemy.y, radius - 0.5);
+    craftPath(ctx, ENEMY_OUTLINES[enemy.kind], enemy.x, enemy.y, radius - 0.5);
     ctx.fill();
     ctx.stroke();
     if (flashing) ctx.globalAlpha = 1;
@@ -658,7 +699,7 @@ export function SkyBoard({
         const live = new Set(current.enemies.map((enemy) => enemy.id));
         for (const [id, enemy] of prevEnemies) {
           if (live.has(id)) continue;
-          const radius = ENEMY_RADII[enemy.tier]!;
+          const radius = ENEMY_KIND_RADIUS[enemy.kind];
           // A craft that drifted off the bottom was never shot down, and must
           // not leave a wreck behind at the edge of the board.
           if (enemy.y - radius > BOARD_HEIGHT - 4) continue;
@@ -666,7 +707,7 @@ export function SkyBoard({
             x: enemy.x,
             y: enemy.y,
             radius,
-            outline: ENEMY_OUTLINES[enemy.tier]!,
+            outline: ENEMY_OUTLINES[enemy.kind],
             spin: (id % 2 === 0 ? 1 : -1) * 0.9,
             age: 0,
             life: DOWN_MS,

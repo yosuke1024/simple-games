@@ -3,19 +3,22 @@ import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
   ENEMY_BULLET_SPEED,
-  ENEMY_FIRE_INTERVAL_MS,
-  ENEMY_RADII,
+  DARTER_MAX_DX,
+  ENEMY_KIND_GUN,
+  ENEMY_KIND_RADIUS,
+  ENEMY_KIND_TIER,
   FIRE_INTERVAL_MS,
-  FIRING_TIER,
+  HEAVY_SPREAD_COUNT,
   MAX_LIVES_CAP,
+  MIN_ENEMY_FIRE_INTERVAL_MS,
   MIN_FIRE_INTERVAL_MS,
   MISSILE_MAX_LEVEL,
   POWER_MAX_LEVEL,
   RAPID_MAX_LEVEL,
   SHIP_MIN_Y,
   SHIP_RADIUS,
+  SHIP_SPEED,
   SHIP_START_Y,
-  SMALLEST_TIER,
   SPREAD_MAX_LEVEL,
   STARTING_LIVES,
   WAVE_BREAK_MS,
@@ -28,8 +31,16 @@ import {
   setShipPos,
   step,
 } from './engine';
-import { LEVEL_COUNT, bossSpec, enemyHp, isBossStage, waveSpec, wavesInLevel } from './levels';
-import type { Enemy, GameState, WeaponUpgrades } from './types';
+import {
+  LEVEL_COUNT,
+  bossSpec,
+  enemyFireIntervalMs,
+  enemyHp,
+  isBossStage,
+  waveSpec,
+  wavesInLevel,
+} from './levels';
+import type { Enemy, EnemyKind, GameState, WeaponUpgrades } from './types';
 import { spawnWave } from './waves';
 
 const STEP_MS = 1000 / 120;
@@ -42,6 +53,17 @@ const MAXED_UPGRADES: WeaponUpgrades = {
   spread: SPREAD_MAX_LEVEL,
   missile: MISSILE_MAX_LEVEL,
 };
+
+/** The share of a stage's mix that carries a gun — the §4 pressure lever. */
+function armedShare(spec: ReturnType<typeof waveSpec>): number {
+  let armed = 0;
+  let total = 0;
+  for (const entry of spec.mix) {
+    total += entry.weight;
+    if (ENEMY_KIND_GUN[entry.kind] !== 'none') armed += entry.weight;
+  }
+  return armed / total;
+}
 
 function stepMany(state: GameState, count: number, dtMs = STEP_MS): GameState {
   let next = state;
@@ -59,9 +81,24 @@ function clearWave(state: GameState): GameState {
   return step({ ...state, enemies: [], bullets: [], missiles: [] }, STEP_MS);
 }
 
-/** A one-hit enemy at a spot, for tests that only care about the kill. */
-function frailEnemy(id: number, tier: number, x = 180, y = 200): Enemy {
-  return { id, x, y, dx: 0, dy: 0, tier, hp: 1 };
+/** A one-hit craft at a spot, for tests that only care about the kill. */
+function frailEnemy(id: number, kind: EnemyKind, x = 180, y = 200): Enemy {
+  return { id, x, y, dx: 0, dy: 0, tier: ENEMY_KIND_TIER[kind], kind, hp: 1 };
+}
+
+/** A craft of `kind` with enough hp to survive whatever the test does to it. */
+function toughEnemy(kind: EnemyKind, over: Partial<Enemy> = {}): Enemy {
+  return {
+    id: 1,
+    x: 180,
+    y: 200,
+    dx: 0,
+    dy: 0,
+    tier: ENEMY_KIND_TIER[kind],
+    kind,
+    hp: 9,
+    ...over,
+  };
 }
 
 /** Runs a boss stage up to the moment the boss is on screen and fighting. */
@@ -84,7 +121,9 @@ describe('sky-fighter levels', () => {
       const low = finalWave(a);
       const high = finalWave(b);
       expect(high.speedMin).toBeGreaterThan(low.speedMin);
-      expect(high.bigChance).toBeGreaterThan(low.bigChance);
+      // Later stages field more kinds, and a larger share of them shoot (§4).
+      expect(high.mix.length).toBeGreaterThanOrEqual(low.mix.length);
+      expect(armedShare(high)).toBeGreaterThan(armedShare(low));
       expect(high.count).toBeGreaterThanOrEqual(low.count);
     }
     // Across the whole ladder every lever must actually have moved.
@@ -117,9 +156,15 @@ describe('sky-fighter levels', () => {
     expect(isBossStage(100)).toBe(true);
   });
 
-  it('the smallest tier stays a one-shot kill for the whole ladder (§4)', () => {
-    for (const level of [1, 50, 100]) expect(enemyHp(level, SMALLEST_TIER)).toBe(1);
-    expect(enemyHp(100, 0)).toBeGreaterThan(enemyHp(1, 0));
+  it('the smallest craft stay one-shot kills for the whole ladder (§4)', () => {
+    for (const level of [1, 50, 100]) {
+      expect(enemyHp(level, 'scout')).toBe(1);
+      expect(enemyHp(level, 'darter')).toBe(1);
+    }
+    expect(enemyHp(100, 'bomber')).toBeGreaterThan(enemyHp(1, 'bomber'));
+    // The two craft built to soak are the two that carry the heavier guns.
+    expect(enemyHp(1, 'heavy')).toBeGreaterThan(enemyHp(1, 'bomber'));
+    expect(enemyHp(1, 'gunship')).toBeGreaterThan(enemyHp(1, 'fighter'));
   });
 
   it('boss archetypes cycle and every later boss of a kind is stronger (§7)', () => {
@@ -156,7 +201,7 @@ describe('sky-fighter engine', () => {
       if (isBossStage(level)) continue;
       for (let w = 0; w < wavesInLevel(level); w++) {
         for (const enemy of spawnWave('bounds', level, w, 1).enemies) {
-          const radius = ENEMY_RADII[enemy.tier]!;
+          const radius = ENEMY_KIND_RADIUS[enemy.kind];
           expect(enemy.x).toBeGreaterThanOrEqual(radius - 0.001);
           expect(enemy.x).toBeLessThanOrEqual(BOARD_WIDTH - radius + 0.001);
         }
@@ -206,13 +251,13 @@ describe('sky-fighter engine', () => {
     let state = afterFirstWave();
     state = {
       ...state,
-      enemies: [frailEnemy(1001, 0)],
+      enemies: [frailEnemy(1001, 'bomber')],
       bullets: [{ x: 180, y: 200, dx: 0, dy: 0 }],
       score: 0,
     };
     state = step(state, STEP_MS);
     expect(state.enemies).toHaveLength(2);
-    expect(state.enemies.every((b) => b.tier === 1)).toBe(true);
+    expect(state.enemies.every((b) => b.kind === 'fighter')).toBe(true);
     expect(state.bullets).toHaveLength(0);
     expect(state.score).toBeGreaterThan(0);
   });
@@ -221,7 +266,7 @@ describe('sky-fighter engine', () => {
     const base = afterFirstWave();
     let state: GameState = {
       ...base,
-      enemies: [{ id: 1, x: 180, y: 200, dx: 0, dy: 0, tier: 0, hp: 2 }],
+      enemies: [toughEnemy('bomber', { hp: 2 })],
       bullets: [{ x: 180, y: 200, dx: 0, dy: 0 }],
     };
     state = step(state, STEP_MS);
@@ -243,21 +288,21 @@ describe('sky-fighter engine', () => {
       {
         ...base,
         upgrades: { ...NO_UPGRADES, power: 1 },
-        enemies: [{ id: 1, x: 180, y: 200, dx: 0, dy: 0, tier: 0, hp: 2 }],
+        enemies: [toughEnemy('bomber', { hp: 2 })],
         bullets: [{ x: 180, y: 200, dx: 0, dy: 0 }],
       },
       STEP_MS,
     );
     // Two damage against two hp: down in one shot.
     expect(state.enemies).toHaveLength(2);
-    expect(state.enemies.every((b) => b.tier === 1)).toBe(true);
+    expect(state.enemies.every((b) => b.kind === 'fighter')).toBe(true);
   });
 
   it('the smallest enemy is destroyed for good instead of splitting', () => {
     let state = afterFirstWave();
     state = {
       ...state,
-      enemies: [frailEnemy(999, SMALLEST_TIER)],
+      enemies: [frailEnemy(999, 'scout')],
       bullets: [{ x: 180, y: 200, dx: 0, dy: 0 }],
     };
     state = step(state, STEP_MS);
@@ -268,7 +313,7 @@ describe('sky-fighter engine', () => {
     let state = afterFirstWave();
     state = {
       ...state,
-      enemies: [frailEnemy(901, SMALLEST_TIER, 180), frailEnemy(902, SMALLEST_TIER, 184)],
+      enemies: [frailEnemy(901, 'scout', 180), frailEnemy(902, 'scout', 184)],
       bullets: [{ x: 182, y: 200, dx: 0, dy: 0 }],
     };
     state = step(state, STEP_MS);
@@ -277,10 +322,10 @@ describe('sky-fighter engine', () => {
 
   it('enemies bounce off the side walls instead of leaving', () => {
     let state = afterFirstWave();
-    const radius = ENEMY_RADII[0]!;
+    const radius = ENEMY_KIND_RADIUS.bomber;
     state = {
       ...state,
-      enemies: [{ id: 801, x: radius + 1, y: 100, dx: -80, dy: 0, tier: 0, hp: 2 }],
+      enemies: [toughEnemy('bomber', { id: 801, x: radius + 1, y: 100, dx: -80, hp: 2 })],
       bullets: [],
     };
     state = step(state, 1000 / 60);
@@ -293,7 +338,12 @@ describe('sky-fighter engine', () => {
     state = {
       ...state,
       enemies: [
-        { id: 701, x: 180, y: BOARD_HEIGHT + ENEMY_RADII[0]! - 1, dx: 0, dy: 200, tier: 0, hp: 2 },
+        toughEnemy('bomber', {
+          id: 701,
+          y: BOARD_HEIGHT + ENEMY_KIND_RADIUS.bomber - 1,
+          dy: 200,
+          hp: 2,
+        }),
       ],
       bullets: [],
       lives: STARTING_LIVES,
@@ -313,7 +363,7 @@ describe('sky-fighter engine', () => {
       shipX: 180,
       shipY: SHIP_START_Y,
       upgrades,
-      enemies: [{ id: 601, x: 180, y: SHIP_START_Y, dx: 0, dy: 0, tier: 0, hp: 2 }],
+      enemies: [toughEnemy('bomber', { id: 601, y: SHIP_START_Y, hp: 2 })],
       bullets: [],
       lives: STARTING_LIVES,
       invulnerableMs: 0,
@@ -331,8 +381,8 @@ describe('sky-fighter engine', () => {
       shipX: 180,
       shipY: SHIP_START_Y,
       enemies: [
-        { id: 501, x: 180, y: SHIP_START_Y, dx: 0, dy: 0, tier: 0, hp: 2 },
-        { id: 502, x: 180, y: SHIP_START_Y, dx: 0, dy: 0, tier: 0, hp: 2 },
+        toughEnemy('bomber', { id: 501, y: SHIP_START_Y, hp: 2 }),
+        toughEnemy('bomber', { id: 502, y: SHIP_START_Y, hp: 2 }),
       ],
       bullets: [],
       lives: 2,
@@ -349,7 +399,7 @@ describe('sky-fighter engine', () => {
       ...state,
       shipX: 180,
       shipY: SHIP_START_Y,
-      enemies: [{ id: 401, x: 180, y: SHIP_START_Y, dx: 0, dy: 0, tier: 0, hp: 2 }],
+      enemies: [toughEnemy('bomber', { id: 401, y: SHIP_START_Y, hp: 2 })],
       bullets: [],
       lives: 1,
       invulnerableMs: 0,
@@ -443,7 +493,7 @@ describe('sky-fighter engine', () => {
     let state: GameState = {
       ...base,
       upgrades: { ...NO_UPGRADES, missile: 2 },
-      enemies: [{ id: 1, x: 180, y: 300, dx: 0, dy: 0, tier: 0, hp: 99 }],
+      enemies: [toughEnemy('bomber', { y: 300, hp: 99 })],
       bullets: [],
       missiles: [],
       fireCooldownMs: 5000,
@@ -472,7 +522,7 @@ describe('sky-fighter engine', () => {
       const downed = step(
         {
           ...base,
-          enemies: [frailEnemy(id, 0)],
+          enemies: [frailEnemy(id, 'bomber')],
           bullets: [{ x: 180, y: 200, dx: 0, dy: 0 }],
           items: [],
         },
@@ -493,7 +543,7 @@ describe('sky-fighter engine', () => {
           {
             ...base,
             runSeed,
-            enemies: [frailEnemy(id, SMALLEST_TIER)],
+            enemies: [frailEnemy(id, 'scout')],
             bullets: [{ x: 180, y: 200, dx: 0, dy: 0 }],
             items: [],
           },
@@ -518,7 +568,7 @@ describe('sky-fighter engine', () => {
       const state = step(
         {
           ...base,
-          enemies: [frailEnemy(id, SMALLEST_TIER)],
+          enemies: [frailEnemy(id, 'scout')],
           bullets: [{ x: 180, y: 200, dx: 0, dy: 0 }],
           items: [{ id: 900, x: 40, y: 100, kind: 'weapon' }],
         },
@@ -672,39 +722,89 @@ describe('sky-fighter engine', () => {
 
   // ---------- bombers still shoot back (§4) ----------
 
-  it('only the bomber tier shoots back', () => {
+  /** Runs one craft on its own for a few frames and returns what it fired. */
+  function shotsFrom(kind: EnemyKind, over: Partial<Enemy> = {}, frames = 4) {
     const base = afterFirstWave();
-    const armedTiers = [0, 1, 2].map((tier) => {
-      const state = stepMany(
-        {
-          ...base,
-          enemies: [{ id: 1, x: 180, y: 200, dx: 0, dy: 0, tier, hp: 9, fireCooldownMs: 1 }],
-          bullets: [],
-          enemyBullets: [],
-        },
-        4,
-      );
-      return state.enemyBullets.length;
-    });
-    expect(armedTiers[FIRING_TIER]).toBeGreaterThan(0);
-    expect(armedTiers[1]).toBe(0);
-    expect(armedTiers[2]).toBe(0);
-  });
-
-  it('a bomber above the top edge holds its fire until it is on screen', () => {
-    const base = afterFirstWave();
-    const offScreen = stepMany(
+    return stepMany(
       {
         ...base,
-        enemies: [
-          { id: 1, x: 180, y: -30, dx: 0, dy: 0, tier: FIRING_TIER, hp: 9, fireCooldownMs: 1 },
-        ],
+        enemies: [toughEnemy(kind, { fireCooldownMs: 1, ...over })],
         bullets: [],
         enemyBullets: [],
       },
-      4,
+      frames,
+    ).enemyBullets;
+  }
+
+  it('three of the six kinds shoot, and three do not (§4)', () => {
+    for (const kind of ['bomber', 'heavy', 'gunship'] as const) {
+      expect(shotsFrom(kind).length).toBeGreaterThan(0);
+    }
+    for (const kind of ['fighter', 'scout', 'darter'] as const) {
+      expect(shotsFrom(kind)).toHaveLength(0);
+    }
+  });
+
+  it('a bomber fires one shot straight down its own column (§4)', () => {
+    const shots = shotsFrom('bomber');
+    expect(shots).toHaveLength(1);
+    expect(shots[0]!.dx).toBe(0);
+    expect(shots[0]!.dy).toBeGreaterThan(0);
+  });
+
+  it('a heavy fires a downward curtain, not a single shot (§4)', () => {
+    const shots = shotsFrom('heavy');
+    expect(shots).toHaveLength(HEAVY_SPREAD_COUNT);
+    // Every shot travels down, and the curtain opens to both sides.
+    expect(shots.every((shot) => shot.dy > 0)).toBe(true);
+    expect(Math.min(...shots.map((shot) => shot.dx))).toBeLessThan(0);
+    expect(Math.max(...shots.map((shot) => shot.dx))).toBeGreaterThan(0);
+  });
+
+  it('a gunship shoots at where the ship is, from either side (§4)', () => {
+    // Ship sits left of the craft: the shot must lean left, and the mirror
+    // case must lean right. Aim, not a fixed direction.
+    const left = shotsFrom('gunship', { x: 300 })[0]!;
+    const right = shotsFrom('gunship', { x: 60 })[0]!;
+    expect(left.dx).toBeLessThan(0);
+    expect(right.dx).toBeGreaterThan(0);
+    expect(left.dy).toBeGreaterThan(0);
+    expect(right.dy).toBeGreaterThan(0);
+  });
+
+  it('every enemy gun gets quicker with the ladder and stops at a floor (§4)', () => {
+    for (const kind of ['bomber', 'heavy', 'gunship'] as const) {
+      expect(enemyFireIntervalMs(100, kind)).toBeLessThan(enemyFireIntervalMs(1, kind));
+      expect(enemyFireIntervalMs(100, kind)).toBeGreaterThanOrEqual(MIN_ENEMY_FIRE_INTERVAL_MS);
+    }
+    for (const kind of ['fighter', 'scout', 'darter'] as const) {
+      expect(enemyFireIntervalMs(50, kind)).toBe(0);
+    }
+  });
+
+  it('a darter steers toward the ship instead of falling past it (§4)', () => {
+    const base = afterFirstWave();
+    const start = 60;
+    const state = stepMany(
+      {
+        ...base,
+        shipX: 300,
+        enemies: [toughEnemy('darter', { x: start, dx: 0, dy: 0 })],
+        bullets: [],
+      },
+      30,
     );
-    expect(offScreen.enemyBullets).toHaveLength(0);
+    const darter = state.enemies[0]!;
+    expect(darter.x).toBeGreaterThan(start);
+    // Never faster sideways than the ship, so it is always out-flyable.
+    expect(Math.abs(darter.dx)).toBeLessThanOrEqual(DARTER_MAX_DX);
+    expect(DARTER_MAX_DX).toBeLessThan(SHIP_SPEED);
+  });
+
+  it('no armed craft fires from above the top edge', () => {
+    for (const kind of ['bomber', 'heavy', 'gunship'] as const) {
+      expect(shotsFrom(kind, { y: -30 })).toHaveLength(0);
+    }
   });
 
   it('an enemy shot travels downward and leaves the board', () => {
@@ -766,30 +866,59 @@ describe('sky-fighter engine', () => {
     expect(state.lives).toBe(STARTING_LIVES);
   });
 
-  it('a formation of bombers does not fire on the same beat', () => {
+  it('an armed formation does not fire on the same beat', () => {
     const { enemies } = spawnWave('stagger', 99, 0, 1);
     const cooldowns = enemies
-      .filter((e) => e.tier === FIRING_TIER)
+      .filter((e) => ENEMY_KIND_GUN[e.kind] !== 'none')
       .map((e) => e.fireCooldownMs)
       .filter((c): c is number => c !== undefined);
     expect(cooldowns.length).toBeGreaterThan(1);
     expect(new Set(cooldowns).size).toBe(cooldowns.length);
-    for (const c of cooldowns) expect(c).toBeLessThanOrEqual(ENEMY_FIRE_INTERVAL_MS * 1.3);
+    for (const enemy of enemies) {
+      if (ENEMY_KIND_GUN[enemy.kind] === 'none') continue;
+      expect(enemy.fireCooldownMs).toBeLessThanOrEqual(enemyFireIntervalMs(99, enemy.kind) * 1.3);
+    }
   });
 
-  it('splits are unarmed, so killing the bomber is what quietens the sky', () => {
+  /** Downs one craft with a point-blank shot and returns what it left behind. */
+  function splitOf(kind: EnemyKind): Enemy[] {
     const base = afterFirstWave();
-    const state = step(
+    return step(
       {
         ...base,
-        enemies: [frailEnemy(1, 0)],
+        enemies: [frailEnemy(1, kind)],
         bullets: [{ x: 180, y: 200, dx: 0, dy: 0 }],
         enemyBullets: [],
       },
       STEP_MS,
-    );
-    expect(state.enemies).toHaveLength(2);
-    expect(state.enemies.every((e) => e.tier !== FIRING_TIER)).toBe(true);
+    ).enemies;
+  }
+
+  it('a bomber comes apart into something quieter than it was (§4)', () => {
+    const children = splitOf('bomber');
+    expect(children).toHaveLength(2);
+    expect(children.every((e) => ENEMY_KIND_GUN[e.kind] === 'none')).toBe(true);
+  });
+
+  it('the heavy is the exception: its halves are armed (§4)', () => {
+    const children = splitOf('heavy');
+    expect(children).toHaveLength(2);
+    expect(children.every((e) => e.kind === 'gunship')).toBe(true);
+    // ...and they do not both fire the instant they appear.
+    const cooldowns = children.map((e) => e.fireCooldownMs);
+    expect(cooldowns.every((c) => c !== undefined && c > 0)).toBe(true);
+    expect(new Set(cooldowns).size).toBe(2);
+  });
+
+  it('a gunship comes apart into unarmed scouts (§4)', () => {
+    const children = splitOf('gunship');
+    expect(children).toHaveLength(2);
+    expect(children.every((e) => e.kind === 'scout')).toBe(true);
+  });
+
+  it('the two smallest craft leave nothing behind (§4)', () => {
+    expect(splitOf('scout')).toHaveLength(0);
+    expect(splitOf('darter')).toHaveLength(0);
   });
 
   // ---------- a fresh run starts from nothing (§2) ----------
@@ -841,7 +970,7 @@ describe('sky-fighter bosses (§7, §8)', () => {
     expect(state.boss!.kind).toBe('carrier');
     state = stepMany(state, 800);
     expect(state.enemies.length).toBeGreaterThan(0);
-    expect(state.enemies.every((e) => e.tier === SMALLEST_TIER)).toBe(true);
+    expect(state.enemies.every((e) => e.kind === 'darter')).toBe(true);
   });
 
   it('player fire wears the boss down and a surviving hit flashes it', () => {
