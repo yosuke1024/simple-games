@@ -230,36 +230,37 @@ src/
 
 - アクセントは `packages/brand` の `titleAccents` に 1 タイトル 1 エントリ。
 
-| ゲーム           | アクセント               | ライト    | ダーク    |
-| ---------------- | ------------------------ | --------- | --------- |
-| Number Match     | 藍                       | `#3f5b8f` | `#7d9ccf` |
-| Sudoku           | くすんだティール         | `#2f6f62` | `#6fb3a3` |
-| Solitaire        | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
-| Spider Solitaire | 深い緑                   | `#31802f` | `#7fcc7d` |
-| FreeCell         | 深い藍                   | `#25256a` | `#6e6ecf` |
-| Hearts           | スチールブルー           | `#2763c4` | `#96bde4` |
-| Gin Rummy        | 深い菫                   | `#772b97` | `#b35dd5` |
-| Minesweeper      | スレートブルー           | `#4a5a72` | `#93a4bd` |
-| Nonogram         | くすんだプラム           | `#6d5192` | `#a893cf` |
-| Water Sort       | くすんだアクア           | `#33708c` | `#7fb4c9` |
-| Sliding Puzzle   | 温かみのある陶土色       | `#9c5b3c` | `#d1926f` |
-| Memory Match     | くすんだローズ           | `#9e5468` | `#cf8fa4` |
-| Brick Breaker    | 黄土                     | `#8a6a2b` | `#c9a765` |
-| Sky Fighter      | 夕闇の青                 | `#5d5aa8` | `#9d9be0` |
-| 2048             | ジェイド                 | `#2b7d59` | `#79c39c` |
-| Block Puzzle     | オーキッド               | `#8b4f80` | `#c795bd` |
-| Bunny Hop        | 草原の緑                 | `#6e7a34` | `#b6c274` |
-| Reversi          | 菫                       | `#7f4a9c` | `#c48ad6` |
-| Connect Four     | くすんだ赤               | `#a8433d` | `#dd8f89` |
-| Quick Math       | マスタード               | `#776e18` | `#c4ba6b` |
-| Schulte Table    | ペトロール               | `#18787b` | `#6cbcc1` |
-| Number Recall    | 深いエメラルド           | `#1d6b33` | `#92dfa8` |
-| Checkers         | ウォルナット             | `#5a4632` | `#cbb08a` |
-| Gomoku           | 牡丹                     | `#a32d76` | `#e086bb` |
-| Takuzu           | ワイン                   | `#88355e` | `#cb7ea4` |
-| Futoshiki        | パイン                   | `#29603a` | `#74c88d` |
-| Kakuro           | タバコ                   | `#794e2f` | `#cb9e7e` |
-| Mahjong Solitaire | 深い青菫                | `#3b3196` | `#7e77c0` |
+| ゲーム            | アクセント               | ライト    | ダーク    |
+| ----------------- | ------------------------ | --------- | --------- |
+| Number Match      | 藍                       | `#3f5b8f` | `#7d9ccf` |
+| Sudoku            | くすんだティール         | `#2f6f62` | `#6fb3a3` |
+| Solitaire         | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
+| Spider Solitaire  | 深い緑                   | `#31802f` | `#7fcc7d` |
+| FreeCell          | 深い藍                   | `#25256a` | `#6e6ecf` |
+| Hearts            | スチールブルー           | `#2763c4` | `#96bde4` |
+| Gin Rummy         | 深い菫                   | `#772b97` | `#b35dd5` |
+| Minesweeper       | スレートブルー           | `#4a5a72` | `#93a4bd` |
+| Nonogram          | くすんだプラム           | `#6d5192` | `#a893cf` |
+| Water Sort        | くすんだアクア           | `#33708c` | `#7fb4c9` |
+| Sliding Puzzle    | 温かみのある陶土色       | `#9c5b3c` | `#d1926f` |
+| Memory Match      | くすんだローズ           | `#9e5468` | `#cf8fa4` |
+| Brick Breaker     | 黄土                     | `#8a6a2b` | `#c9a765` |
+| Sky Fighter       | 夕闇の青                 | `#5d5aa8` | `#9d9be0` |
+| 2048              | ジェイド                 | `#2b7d59` | `#79c39c` |
+| Block Puzzle      | オーキッド               | `#8b4f80` | `#c795bd` |
+| Bunny Hop         | 草原の緑                 | `#6e7a34` | `#b6c274` |
+| Reversi           | 菫                       | `#7f4a9c` | `#c48ad6` |
+| Connect Four      | くすんだ赤               | `#a8433d` | `#dd8f89` |
+| Quick Math        | マスタード               | `#776e18` | `#c4ba6b` |
+| Schulte Table     | ペトロール               | `#18787b` | `#6cbcc1` |
+| Number Recall     | 深いエメラルド           | `#1d6b33` | `#92dfa8` |
+| Checkers          | ウォルナット             | `#5a4632` | `#cbb08a` |
+| Gomoku            | 牡丹                     | `#a32d76` | `#e086bb` |
+| Takuzu            | ワイン                   | `#88355e` | `#cb7ea4` |
+| Futoshiki         | パイン                   | `#29603a` | `#74c88d` |
+| Kakuro            | タバコ                   | `#794e2f` | `#cb9e7e` |
+| Mahjong Solitaire | 深い青菫                 | `#3b3196` | `#7e77c0` |
+| Bubble Pop        | オックスブラッド         | `#712d2f` | `#cd6a6d` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
@@ -324,37 +325,37 @@ src/
 
 ## ストレージキーの規約
 
-| キー          | 内容                                                                    |
-| ------------- | ----------------------------------------------------------------------- |
-| `sg.settings` | 共有設定(言語 / テーマ / 音 / 振動 / Reduced Motion)                    |
-| `sg.iap`      | 広告削除購入状態のローカルキャッシュ                                    |
-| `sg.review`   | ストアレビュー導線の状態(完了数 / 表示回数 / 解決済みフラグ)            |
-| `sg.recent`   | 「最近遊んだ」のゲーム id(新しい順・最大 2 件)                          |
-| `sd.*`        | Sudoku(saveGame / saveDaily / stats / progress / flags / prefs)         |
-| `so.*`        | Solitaire(saveGame / saveDaily / stats / flags / prefs)                 |
-| `ms.*`        | Minesweeper(saveGame / saveDaily / stats / flags / prefs)               |
-| `ng.*`        | Nonogram(saveGame / saveDaily / stats / progress / flags / prefs)       |
+| キー          | 内容                                                                               |
+| ------------- | ---------------------------------------------------------------------------------- |
+| `sg.settings` | 共有設定(言語 / テーマ / 音 / 振動 / Reduced Motion)                               |
+| `sg.iap`      | 広告削除購入状態のローカルキャッシュ                                               |
+| `sg.review`   | ストアレビュー導線の状態(完了数 / 表示回数 / 解決済みフラグ)                       |
+| `sg.recent`   | 「最近遊んだ」のゲーム id(新しい順・最大 2 件)                                     |
+| `sd.*`        | Sudoku(saveGame / saveDaily / stats / progress / flags / prefs)                    |
+| `so.*`        | Solitaire(saveGame / saveDaily / stats / flags / prefs)                            |
+| `ms.*`        | Minesweeper(saveGame / saveDaily / stats / flags / prefs)                          |
+| `ng.*`        | Nonogram(saveGame / saveDaily / stats / progress / flags / prefs)                  |
 | `mj.*`        | Mahjong Solitaire(saveGame / saveDaily / stats / progress / flags。**prefs なし**) |
-| `tk.*`        | Takuzu(saveGame / saveDaily / stats / progress / flags。**prefs なし**) |
-| `ft.*`        | Futoshiki(saveGame / saveDaily / stats / progress / flags / prefs)      |
-| `kk.*`        | Kakuro(saveGame / saveDaily / stats / progress / flags / prefs)         |
-| `nm.*`        | Number Match(saveGame / saveDaily / stats / progress / flags)           |
-| `ws.*`        | Water Sort(saveGame / saveDaily / stats / progress / flags)             |
-| `sp.*`        | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags)         |
-| `mm.*`        | Memory Match(saveGame / saveDaily / stats / flags)                      |
-| `bb.*`        | Brick Breaker(stats / progress / flags。**saveGame なし** — 下記)       |
-| `sf.*`        | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)         |
-| `tm.*`        | 2048(saveGame / stats / flags。デイリーもレベル進行もない)              |
-| `bp.*`        | Block Puzzle(saveGame / stats / flags。同上)                            |
-| `ck.*`        | Checkers(saveGame / stats / flags / prefs。統計は難易度別)              |
-| `rv.*`        | Reversi(saveGame / stats / flags / prefs。統計は難易度別)               |
-| `c4.*`        | Connect Four(saveGame / stats / flags / prefs。同上)                    |
-| `gm.*`        | Gomoku(saveGame / stats / flags / prefs。同上)                          |
-| `ss.*`        | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)          |
-| `fc.*`        | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)          |
-| `ht.*`        | Hearts(saveGame / stats / flags / prefs。統計は難易度別)                |
-| `gr.*`        | Gin Rummy(saveGame / stats / flags / prefs。同上)                       |
-| `bh.*`        | Bunny Hop(stats / flags。**saveGame なし** — 下記)                      |
+| `tk.*`        | Takuzu(saveGame / saveDaily / stats / progress / flags。**prefs なし**)            |
+| `ft.*`        | Futoshiki(saveGame / saveDaily / stats / progress / flags / prefs)                 |
+| `kk.*`        | Kakuro(saveGame / saveDaily / stats / progress / flags / prefs)                    |
+| `nm.*`        | Number Match(saveGame / saveDaily / stats / progress / flags)                      |
+| `ws.*`        | Water Sort(saveGame / saveDaily / stats / progress / flags)                        |
+| `sp.*`        | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags)                    |
+| `mm.*`        | Memory Match(saveGame / saveDaily / stats / flags)                                 |
+| `bb.*`        | Brick Breaker(stats / progress / flags。**saveGame なし** — 下記)                  |
+| `sf.*`        | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)                    |
+| `tm.*`        | 2048(saveGame / stats / flags。デイリーもレベル進行もない)                         |
+| `bp.*`        | Block Puzzle(saveGame / stats / flags。同上)                                       |
+| `ck.*`        | Checkers(saveGame / stats / flags / prefs。統計は難易度別)                         |
+| `rv.*`        | Reversi(saveGame / stats / flags / prefs。統計は難易度別)                          |
+| `c4.*`        | Connect Four(saveGame / stats / flags / prefs。同上)                               |
+| `gm.*`        | Gomoku(saveGame / stats / flags / prefs。同上)                                     |
+| `ss.*`        | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)                     |
+| `fc.*`        | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)                     |
+| `ht.*`        | Hearts(saveGame / stats / flags / prefs。統計は難易度別)                           |
+| `gr.*`        | Gin Rummy(saveGame / stats / flags / prefs。同上)                                  |
+| `bh.*`        | Bunny Hop(stats / flags。**saveGame なし** — 下記)                                 |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/
