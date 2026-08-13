@@ -38,15 +38,15 @@ describe('boards that must never change', () => {
       [
         'pgpgyppb/bbybygb/pggygppy/bybgygb/pybpbbgp',
         'pgpgyppb/bbybygb/pggygppy/bybgygb/pybpbbgp/...g...',
-        'pgpgyppb/bbybygb/pggygppy/bybgygb/pybpbbgp/..yg...',
-        'pgpgyppb/bbybygb/pggygppy/bybgygb/pybp..gp/..yg...',
-        'pgpgyppb/bbybygb/pggygppy/bybgygb/pybp..gp/..yg.../...y....',
-        'pgpgyppb/bbybygb/pggygppy/bybgygb/pybp..gp/...g...',
-        'pgpgyppb/bbybygb/pggygppy/bybgy.b/pybp...p/...g...',
-        'pgpgyppb/bbybygb/pggygppy/bybgy.b/pybp...p/b..g...',
-        'pgpgyppb/bbybygb/pggygppy/bybgy.b/pybp...p/b..g..p',
-        'pgpgyppb/bbybygb/pggygppy/bybgy.b/pybp...p/b..g..p/b.......',
-        'pgpgyppb/bbybygb/pggygppy/bybgy.b/pybp...p/b..g..p/b...g...',
+        'pgpgyppb/bbybygb/pggygppy/bybgygb/pybpbbgp/...gy..',
+        'pgpgyppb/bbybygb/pggygppy/by.gygb/py.pbbgp/...gy..',
+        'pgpgyppb/bbybygb/pggygppy/by.gy.b/py.pbb.p/...gy..',
+        'pgpgyppb/bbybygb/pggygppy/b..gy.b/p..pbb.p/...gy..',
+        'pgpgyppb/bbybygb/pggygppy/b..gy.b/pg.pbb.p/...gy..',
+        'pgpgyppb/bbybygb/pggygppy/b..gy.b/pg.pbb.p/...gy../....b...',
+        'pgpgyppb/bbybygb/pggygppy/b..gy.b/pg.pbb.p/...gy../....bp..',
+        'pgpgyppb/bbybygb/pggygppy/b..gy.b/pgbpbb.p/...gy../....bp..',
+        'pgpgyppb/bbybygb/pggygppy/b..gy.b/pgbpbb.p/...gy.g/....bp..',
       ].join('\n---\n'),
     );
   });
@@ -54,17 +54,17 @@ describe('boards that must never change', () => {
   it('level 100 (deep — 9 rows, 6 colors), ten scripted shots, is unchanged', () => {
     expect(trace(100)).toBe(
       [
-        'cygybocg/cyobogp/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyygp/yopbbpyc',
-        'cygybocg/cyobogp/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyygp/yopbbpyc/...c...',
-        'cygybocg/cyobogp/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyygp/yopbbpyc/g..c...',
-        'cygybocg/cyobogp/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyygp/yopbbpyc/g..c..c',
-        'cygybocg/cyobogp/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyygp/yopbbpyc/g..c..c/......p.',
-        'cygybocg/cyobogp/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyygp/yopbbpyc/g..c..c/.c....p.',
-        'cygybocg/cyobogp/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyygp/yopbbpyc/g..c..c/.c.p..p.',
-        'cygybocg/cyobogp/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyygp/yopbbpyc/g..c..c/.c.pp.p.',
-        'cygybocg/cyobogp/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyygp/yopbbpyc/g..c..c/.c.pp.p./......y',
-        'cygybocg/cyobogp/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyygp/yopbbpyc/g..c..c/.c.pp.p./p.....y',
-        'cygybocg/cyobogp/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyygp/yopbbpyc/g..c..c/.c.ppop./p.....y',
+        'cygybocg/cyobogo/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyygp/yopbbpgc',
+        'cygybocg/cyobogo/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyygp/yopbbpgc/...o...',
+        'cygybocg/cyobogo/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyy.p/yopbbp.c/...o...',
+        'cygybocg/cyobogo/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyy.p/yopbbp.c/o..o...',
+        'cygybocg/cyobogo/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyy.p/yopbbp.c/o..o.../p.......',
+        'cygybocg/cyobogo/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyy.p/yopbbp.c/o..o.c./p.......',
+        'cygybocg/cyobogo/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyy.p/yopbbp.c/o..o.c./p.....p.',
+        'cygybocg/cyobogo/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyy.p/yopbbp.c/o..o.c./p.....p./p......',
+        'cygybocg/cyobogo/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyy.p/yopbbp.c/o..oyc./p.....p./p......',
+        'cygybocg/cyobogo/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyy.p/yopbbp.c/o.poyc./p.....p./p......',
+        'cygybocg/cyobogo/pbppgycg/ygyoyoy/ogcogogp/pbbygbp/gopcboyg/bgcyy.p/yopbbp.c/o.poyc./p.....p./p....p.',
       ].join('\n---\n'),
     );
   });

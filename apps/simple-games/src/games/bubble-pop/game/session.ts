@@ -17,7 +17,7 @@ import {
   placeAndResolve,
   simulateShot,
 } from './engine';
-import { buildBoard, remainingColors, supplyColorFor } from './generator';
+import { buildBoard, supplyColorFor } from './generator';
 import { levelSpec } from './levels';
 import type { Board, BubbleColor, RunStatus, ShotResult } from './types';
 
@@ -39,7 +39,6 @@ export interface BubblePopSession {
 /** A fresh (or restarted) level session — deterministic per (seed, level). */
 export function createSession(seed: string, level: number): BubblePopSession {
   const board = buildBoard(seed, level);
-  const startingSupply = remainingColors(board);
   return {
     seed,
     level,
@@ -47,8 +46,8 @@ export function createSession(seed: string, level: number): BubblePopSession {
     ceilingOffset: 0,
     shotsUntilDescent: levelSpec(level).descentEvery,
     shotIndex: 2,
-    current: supplyColorFor(seed, level, 0, startingSupply),
-    next: supplyColorFor(seed, level, 1, startingSupply),
+    current: supplyColorFor(seed, level, 0, board),
+    next: supplyColorFor(seed, level, 1, board),
     status: 'playing',
   };
 }
@@ -94,7 +93,6 @@ export function fireShot(session: BubblePopSession, angle: number): BubblePopSes
     return { ...session, board: outcome.board, ceilingOffset, shotsUntilDescent, status: 'cleared' };
   }
 
-  const remaining = remainingColors(outcome.board);
   return {
     ...session,
     board: outcome.board,
@@ -102,7 +100,7 @@ export function fireShot(session: BubblePopSession, angle: number): BubblePopSes
     shotsUntilDescent,
     shotIndex: session.shotIndex + 1,
     current: session.next,
-    next: supplyColorFor(session.seed, session.level, session.shotIndex, remaining),
+    next: supplyColorFor(session.seed, session.level, session.shotIndex, outcome.board),
     status: 'playing',
   };
 }

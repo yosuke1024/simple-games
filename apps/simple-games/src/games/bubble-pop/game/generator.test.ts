@@ -10,7 +10,24 @@ import { connectedGroup } from './engine';
 import { allCellsInRow, cellKey } from './grid';
 import { LEVEL_COUNT, levelSpec } from './levels';
 import { boardToString, buildBoard, remainingColors, supplyColorFor } from './generator';
-import type { BubbleColor } from './types';
+import type { Board, BubbleColor } from './types';
+
+/** A synthetic board holding exactly these colors, spread across rows 0..n. */
+function boardWith(colors: readonly BubbleColor[]): Board {
+  const board = new Map<string, BubbleColor>();
+  let row = 0;
+  let col = 0;
+  for (const color of colors) {
+    const rowCells = allCellsInRow(row);
+    if (col >= rowCells.length) {
+      row++;
+      col = 0;
+    }
+    board.set(cellKey({ row, col }), color);
+    col++;
+  }
+  return board;
+}
 
 describe('buildBoard determinism', () => {
   it('the same seed and level build the same board', () => {
@@ -99,35 +116,57 @@ describe('remainingColors', () => {
   });
 });
 
-describe('supplyColorFor — dispensed colors depend only on what remains', () => {
+describe('supplyColorFor — dispensed colors depend only on what remains, weighted by abundance', () => {
   it('never dispenses a color absent from the board', () => {
-    const remaining: BubbleColor[] = ['green', 'orange'];
+    const board = boardWith(['green', 'green', 'green', 'orange']);
     for (let shotIndex = 0; shotIndex < 50; shotIndex++) {
-      const color = supplyColorFor('seed', 12, shotIndex, remaining);
-      expect(remaining).toContain(color);
+      const color = supplyColorFor('seed', 12, shotIndex, board);
+      expect(['green', 'orange']).toContain(color);
     }
   });
 
-  it('is deterministic in (seed, level, shotIndex, remaining)', () => {
-    const remaining: BubbleColor[] = ['blue', 'green', 'yellow'];
-    const a = supplyColorFor('seed', 12, 3, remaining);
-    const b = supplyColorFor('seed', 12, 3, remaining);
+  it('is deterministic in (seed, level, shotIndex, board)', () => {
+    const board = boardWith(['blue', 'green', 'yellow']);
+    const a = supplyColorFor('seed', 12, 3, board);
+    const b = supplyColorFor('seed', 12, 3, board);
     expect(a).toBe(b);
   });
 
   it('changing which colors remain can change the dispensed color', () => {
-    const wide: BubbleColor[] = ['blue', 'green', 'yellow', 'purple'];
-    const narrow: BubbleColor[] = ['yellow'];
+    const wide = boardWith(['blue', 'green', 'yellow', 'purple']);
+    const narrow = boardWith(['yellow']);
     expect(supplyColorFor('seed', 12, 7, narrow)).toBe('yellow');
     // Not a strict inequality claim (the wide draw could coincidentally also
     // be yellow) — only that narrowing the pool restricts the outcome.
-    expect(wide).toContain(supplyColorFor('seed', 12, 7, wide));
+    expect(['blue', 'green', 'yellow', 'purple']).toContain(supplyColorFor('seed', 12, 7, wide));
   });
 
-  it('a shot index used across many boards never produces a color outside a one-color board', () => {
-    const remaining: BubbleColor[] = ['cyan'];
+  it('a shot index used against a one-color board never produces another color', () => {
+    const board = boardWith(['cyan']);
     for (let shotIndex = 0; shotIndex < 20; shotIndex++) {
-      expect(supplyColorFor('seed', 1, shotIndex, remaining)).toBe('cyan');
+      expect(supplyColorFor('seed', 1, shotIndex, board)).toBe('cyan');
     }
+  });
+
+  /**
+   * The load-bearing behavior change (constants.ts's LOSS_LINE_Y comment,
+   * levels.ts's scatterBias comment): a color with more instances left on
+   * the board is dispensed more often, not with equal odds to a color that
+   * is nearly gone. Measured over many independent shot indices rather than
+   * asserting an exact ratio — the draw is still randomized, just no longer
+   * uniform.
+   */
+  it('a far more abundant color is dispensed far more often than a scarce one', () => {
+    const board = boardWith([...Array<BubbleColor>(18).fill('blue'), 'orange']);
+    let blueCount = 0;
+    const trials = 200;
+    for (let shotIndex = 0; shotIndex < trials; shotIndex++) {
+      if (supplyColorFor('weighted-seed', 30, shotIndex, board) === 'blue') blueCount++;
+    }
+    // Uniform would land near 50%; weighted by count (18:1) should land
+    // near 18/19 ≈ 94.7%. The threshold is well clear of a uniform draw's
+    // plausible range so this fails loudly if the weighting regresses to
+    // uniform, without pinning an exact count.
+    expect(blueCount).toBeGreaterThan(trials * 0.8);
   });
 });

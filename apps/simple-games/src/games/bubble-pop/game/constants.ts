@@ -55,21 +55,25 @@ export const LAUNCHER_Y = BOARD_HEIGHT - 24;
  * shots of runway) makes the loss line decorative, not a threat, and reads
  * as the clock-stripped-off timer the collection's brand forbids — the
  * margin has to be tight enough that clearing efficiently is the only way
- * through, the same as Brick Breaker's wall. 672 rather than a plainer 640
- * is not padding for its own sake: it is the smallest height inside the
- * requested 6–8 row band that a strengthened shooter (see below) could
- * clear the full shipped ladder against — 640 (≈7.1 rows) left 8 of 100
- * levels unclearable even with that shooter.
+ * through, the same as Brick Breaker's wall. 672 sits at the top of the
+ * requested 6–8 row band, not the middle of it — every smaller height tried
+ * inside that band (640 ≈ 7.1 rows) still left some of the shipped ladder's
+ * hardest levels short of the shot budget, geometry margin alone was never
+ * going to be the only lever doing this work.
  *
- * A margin this tight only ships because clearability moved to the other
- * side of the equation: **the shooter, not the runway, is what's proven
- * strong enough.** autoplay.test.ts plays every one of the 100 shipped-seed
- * (BOARD_SEED) levels with a shooter that biases toward clearing the
- * *deepest* occupied rows first, not just any pop — see that file's
- * `scoreCellForColor` — because a shallow-but-large pop can leave the
- * dangerous bottom rows untouched even while it feels productive. A human
- * player, who can plan a shot around the whole board rather than one
- * greedy score, has more room than this bot does, not less.
+ * A margin this tight only ships because clearability moved onto two other
+ * levers, not the runway alone. **The shooter** (autoplay.test.ts) biases
+ * toward clearing the *deepest* occupied rows first, not just any pop — see
+ * that file's `scoreCellForColor` — because a shallow-but-large pop can
+ * leave the dangerous bottom rows untouched even while it feels productive.
+ * **The supply** (generator.ts's `supplyColorFor`) weights the dispensed
+ * color by how abundant it still is on the board, so shots are rarely
+ * wasted on a nearly-exhausted color the frontier has no use for. Neither
+ * lever alone closed the gap to all 100 shipped levels — the shooter alone
+ * left a handful of the 90s short, and it was the supply weighting, tuned
+ * against that same shooter, that cleared the rest. A human player, who can
+ * plan a shot around the whole board rather than one greedy score, has more
+ * room than this bot does, not less.
  *
  * The clearability claim is scoped to BOARD_SEED specifically, not to
  * "boards in general": a level's identity is (BOARD_SEED, level), pinned by

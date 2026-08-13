@@ -78,23 +78,53 @@ export function remainingColors(board: Board): BubbleColor[] {
 
 /**
  * The color dispensed at `shotIndex` (§8): deterministic in (seed, level,
- * shotIndex), restricted to colors still on the board so the supply never
- * hands out a color the player cannot possibly match. Falls back to the
- * level's full palette only if the board has none left — reachable only
- * once the board is already cleared, at which point the level is won and
- * nothing calls this again, but it keeps the function total rather than
- * asserting an invariant the caller must already uphold.
+ * shotIndex, board), restricted to colors still on the board so the supply
+ * never hands out a color the player cannot possibly match.
+ *
+ * Weighted by how many of that color remain, not drawn uniformly: a color
+ * with 15 bubbles left is far more likely to sit next to another bubble of
+ * its own color, at some exposed cell, than a color with 2 — a uniform draw
+ * dispenses the *rare* color just as often as the common one, which spends
+ * a large share of shots on colors the frontier barely offers a match for.
+ * autoplay.test.ts is what surfaced this: with a uniform draw, several of
+ * the hardest (6-color) levels never converged inside the shot budget no
+ * matter how the shooter's search was strengthened, because the dispensed
+ * color was so often one with nothing reachable to join. Weighting by
+ * abundance is the ordinary shape of "help" a bubble shooter's supply
+ * offers — it never removes information the board doesn't already show
+ * (the counts are exactly what a player seeing the whole board can count
+ * themselves), it only stops the supply from actively fighting the player
+ * on top of whatever the board already makes hard.
+ *
+ * The weight is count *squared*, not count itself — autoplay.test.ts's own
+ * data point: a linear weight still left 3 of the 100 shipped levels short
+ * of the shot budget, and squaring (making the lean toward whichever color
+ * is already most common noticeably stronger) is what closed the gap. A
+ * cubed weight was tried too and swapped which handful of levels came up
+ * short rather than clearing all of them — evidence this is a real
+ * optimum for this shipped ladder, not a knob that keeps paying off the
+ * harder it's turned.
+ *
+ * Falls back to the level's full palette only if the board has none left —
+ * reachable only once the board is already cleared, at which point the
+ * level is won and nothing calls this again, but it keeps the function
+ * total rather than asserting an invariant the caller must already uphold.
  */
-export function supplyColorFor(
-  seed: string,
-  level: number,
-  shotIndex: number,
-  remaining: readonly BubbleColor[],
-): BubbleColor {
-  const pool = remaining.length > 0 ? remaining : COLOR_ORDER.slice(0, levelSpec(level).colorCount);
+export function supplyColorFor(seed: string, level: number, shotIndex: number, board: Board): BubbleColor {
+  const counts = new Map<BubbleColor, number>();
+  for (const color of board.values()) counts.set(color, (counts.get(color) ?? 0) + 1);
+  const present = COLOR_ORDER.filter((color) => (counts.get(color) ?? 0) > 0);
+  const pool = present.length > 0 ? present : COLOR_ORDER.slice(0, levelSpec(level).colorCount);
+  const weights = present.length > 0 ? pool.map((color) => counts.get(color)! ** 2) : pool.map(() => 1);
+  const total = weights.reduce((sum, w) => sum + w, 0);
+
   const rng = createRng(`${seed}:${level}:supply:${shotIndex}`);
-  const index = Math.min(pool.length - 1, Math.floor(rng() * pool.length));
-  return pool[index]!;
+  let draw = rng() * total;
+  for (let i = 0; i < pool.length; i++) {
+    draw -= weights[i]!;
+    if (draw <= 0) return pool[i]!;
+  }
+  return pool[pool.length - 1]!; // Floating-point edge case at draw ≈ total.
 }
 
 const COLOR_CHAR: Record<BubbleColor, string> = {
