@@ -31,6 +31,14 @@ export interface Obstacle {
  */
 export type RunStatus = 'ready' | 'running' | 'over';
 
+export interface Carrot {
+  id: number;
+  /** Same convention as Obstacle.spawnDistance: run distance when its leading edge enters from the right. */
+  spawnDistance: number;
+  /** Height of the underside above the ground; 0 sits on it, airborne ones must be jumped for. */
+  bottom: number;
+}
+
 export interface GameState {
   seed: string;
   status: RunStatus;
@@ -52,4 +60,13 @@ export interface GameState {
   /** Milestones crossed so far; the view flashes when this changes (§6). */
   milestones: number;
   elapsedMs: number;
+  /** Held carrots, 0 to CARROT_MAX — the hit points that replaced one-touch death (§2, §7). */
+  carrots: number;
+  /** Carrots currently on the track, not yet collected or scrolled off. */
+  carrotItems: Carrot[];
+  nextCarrotId: number;
+  /** Total carrots picked up this run, whether or not they were later spent. */
+  carrotsCollected: number;
+  /** Counts down to 0 after a hit is absorbed; obstacle collisions are ignored while it is positive (§7). */
+  invulnerableMs: number;
 }

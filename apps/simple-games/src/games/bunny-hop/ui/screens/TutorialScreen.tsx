@@ -15,6 +15,7 @@ import { openExternal } from '@/ui/openExternal';
 import { useBunnyHop } from '../../state/GameContext';
 import {
   BIRD_FRAMES,
+  CARROT,
   OBSTACLE_SHAPES,
   RUNNER_BODY,
   RUNNER_LEGS,
@@ -107,7 +108,8 @@ function BirdFigure() {
   );
 }
 
-/** One touch ends the run, and the meadow only gets faster (§5, §7). */
+/** A carrot takes a bump for you, up to three held; run out and one touch
+    ends it, and the meadow only gets faster (§5, §7). */
 function SpeedFigure() {
   return (
     <div className="tutorial-example" aria-hidden="true">
@@ -119,6 +121,8 @@ function SpeedFigure() {
           <rect x="4" y="56" width="8" height="3" />
         </g>
         <Rabbit x={18} />
+        {/* Friendly, like the rabbit — ink, not the obstacles' accent (§12). */}
+        <Sprite rects={CARROT} x={54} y={GROUND - 22 * FIGURE_SCALE} fill="var(--ink)" />
         {/* The gaps close up towards the right: the meadow gets faster (§5). */}
         <Sprite rects={OBSTACLE_SHAPES.bush} x={74} y={GROUND - 36 * FIGURE_SCALE} />
         <Sprite rects={OBSTACLE_SHAPES.hedge} x={104} y={GROUND - 50 * FIGURE_SCALE} />
