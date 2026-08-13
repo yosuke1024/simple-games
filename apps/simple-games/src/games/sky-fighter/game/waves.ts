@@ -5,7 +5,7 @@ import {
   FIRING_TIER,
   MAX_FALL_SPEED,
 } from './constants';
-import { waveSpec } from './levels';
+import { enemyHp, waveSpec } from './levels';
 import { createRng } from './rng';
 import type { Enemy } from './types';
 
@@ -40,6 +40,9 @@ export function spawnWave(
       dx: (rng() - 0.5) * 34,
       dy,
       tier,
+      // Read from the level table, not rolled: adding it costs no rng draw,
+      // so the pinned golden waves stay exactly where they were.
+      hp: enemyHp(level, tier),
       // Staggered so a formation of bombers never fires on the same beat.
       fireCooldownMs:
         tier === FIRING_TIER ? ENEMY_FIRE_INTERVAL_MS * (0.4 + rng() * 0.9) : undefined,

@@ -61,28 +61,32 @@ afterEach(() => {
 });
 
 describe('a run ending in one tick (§9)', () => {
-  it('keeps the final seconds, the clear, and the score', async () => {
+  it('keeps the final seconds, the cleared stages, and the score', async () => {
     const api = mount();
     act(() => api().startLevel(2));
 
     act(() => {
       api().bookPlaySeconds(44);
-      api().reportRunEnd('cleared', 1200);
+      // The board reports each finished stage as it happens (§7), then the
+      // run's end in the same tick.
+      api().reportStageCleared(2);
+      api().reportStageCleared(3);
+      api().reportRunEnd('failed', 1200, 4);
     });
     await settle();
 
-    expect(storedStats()).toMatchObject({ cleared: 1, bestScore: 1200, totalPlaySeconds: 44 });
+    expect(storedStats()).toMatchObject({ cleared: 2, bestScore: 1200, totalPlaySeconds: 44 });
     expect(api().stats.totalPlaySeconds).toBe(44);
   });
 
-  it('keeps the final seconds and the score when the run is lost', async () => {
+  it('keeps the final seconds and the score when the run is lost at once', async () => {
     const api = mount();
     act(() => api().startLevel(1));
 
     // The points were scored whether or not the last wave fell (§9).
     act(() => {
       api().bookPlaySeconds(20);
-      api().reportRunEnd('failed', 640);
+      api().reportRunEnd('failed', 640, 1);
     });
     await settle();
 
@@ -92,13 +96,46 @@ describe('a run ending in one tick (§9)', () => {
   it('does not lower a best score a weaker run failed to beat', async () => {
     const api = mount();
     act(() => api().startLevel(1));
-    act(() => api().reportRunEnd('failed', 900));
+    act(() => api().reportRunEnd('failed', 900, 3));
     await settle();
     act(() => api().retryLevel());
-    act(() => api().reportRunEnd('failed', 100));
+    act(() => api().reportRunEnd('failed', 100, 2));
     await settle();
 
     expect(api().stats.bestScore).toBe(900);
     expect(api().lastResult).toMatchObject({ isNewBestScore: false, bestScore: 900 });
+  });
+});
+
+describe('stage clears move the frontier mid-run (§7)', () => {
+  it('unlocks the next stage the moment a stage falls, run still alive', async () => {
+    const api = mount();
+    act(() => api().startLevel(3));
+    act(() => api().reportStageCleared(3));
+    await settle();
+
+    expect(api().progress.highestUnlocked).toBe(4);
+    // No result yet: the run is still flying.
+    expect(api().lastResult).toBeNull();
+  });
+
+  it('replaying an old stage never moves the frontier back', async () => {
+    const api = mount();
+    act(() => api().startLevel(1));
+    act(() => api().reportStageCleared(1));
+    await settle();
+
+    expect(api().progress.highestUnlocked).toBe(3);
+  });
+
+  it('two runs mean two fresh run seeds', () => {
+    const api = mount();
+    act(() => api().startLevel(1));
+    const first = api().attempt?.runSeed;
+    act(() => api().retryLevel());
+    const second = api().attempt?.runSeed;
+    expect(first).toBeTruthy();
+    expect(second).toBeTruthy();
+    expect(second).not.toBe(first);
   });
 });

@@ -1,26 +1,23 @@
 /**
  * The end-of-run screen (docs/SKY_FIGHTER_RULES.md §2, §8, §9). Both endings
- * lead with the same free choices, and both show the score — the points were
- * scored whether or not the last wave fell.
+ * lead with the same free choices, and both show the score and the stage the
+ * run reached — the points were scored whether or not the last stage fell.
  */
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
-import { LEVEL_COUNT } from '../../game/levels';
 import type { LastResult } from '../../state/GameContext';
 
 export interface SkyResultOverlayProps {
   result: LastResult | null;
-  onNextLevel: () => void;
   onRetry: () => void;
   onHome: () => void;
 }
 
-export function SkyResultOverlay({ result, onNextLevel, onRetry, onHome }: SkyResultOverlayProps) {
+export function SkyResultOverlay({ result, onRetry, onHome }: SkyResultOverlayProps) {
   const { t } = useSettings();
   if (result === null) return null;
 
   const cleared = result.outcome === 'cleared';
-  const hasNextLevel = cleared && result.level < LEVEL_COUNT;
   const title = cleared ? t('sfClearedTitle') : t('sfFailedTitle');
 
   return (
@@ -36,6 +33,10 @@ export function SkyResultOverlay({ result, onNextLevel, onRetry, onHome }: SkyRe
 
         <dl className="result-facts">
           <div>
+            <dt>{t('sfStageReached')}</dt>
+            <dd>{result.stage}</dd>
+          </div>
+          <div>
             <dt>{t('score')}</dt>
             <dd>{result.score}</dd>
           </div>
@@ -50,17 +51,7 @@ export function SkyResultOverlay({ result, onNextLevel, onRetry, onHome }: SkyRe
         )}
 
         <div className="result-actions">
-          {hasNextLevel ? (
-            <button type="button" className="btn btn-primary" onClick={onNextLevel} autoFocus>
-              {t('nextLevel')}
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className={`btn ${hasNextLevel ? 'btn-secondary' : 'btn-primary'}`}
-            onClick={onRetry}
-            autoFocus={!hasNextLevel}
-          >
+          <button type="button" className="btn btn-primary" onClick={onRetry} autoFocus>
             {t('tryAgain')}
           </button>
           <button type="button" className="btn btn-ghost" onClick={onHome}>
