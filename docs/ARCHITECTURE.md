@@ -296,7 +296,7 @@ src/
   `brick-breaker.css` / `sky-fighter.css` /
   `game-2048.css` / `block-puzzle.css` / `checkers.css` / `reversi.css` /
   `connect-four.css` / `gomoku.css` / `quick-math.css` / `schulte-table.css` /
-  `number-recall.css` / `bunny-hop.css`。
+  `number-recall.css` / `bunny-hop.css` / `bubble-pop.css`。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。

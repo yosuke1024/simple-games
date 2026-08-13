@@ -14,7 +14,7 @@ export const BOARD_SEED = 'bubble-pop-v1';
  * starting row rather than picked first and squared against it after.
  */
 export const BOARD_WIDTH = 320;
-export const BOARD_HEIGHT = 640;
+export const BOARD_HEIGHT = 672;
 
 /**
  * 8 columns on the wide (even) rows. At 320px this puts the bubble diameter
@@ -48,14 +48,18 @@ export const LAUNCHER_Y = BOARD_HEIGHT - 24;
  * launcher itself is never in the danger band.
  *
  * The margin between the deepest starting row (row 8, levels.ts's rows = 9
- * at level 100) and this line is about 7 row heights at BOARD_HEIGHT = 640 —
- * i.e. at LEVEL_COUNT's descentEvery = 5 shots per drop, roughly 35 shots of
+ * at level 100) and this line is about 8 row heights at BOARD_HEIGHT = 672 —
+ * i.e. at LEVEL_COUNT's descentEvery = 5 shots per drop, roughly 40 shots of
  * runway before an untouched bottom row fails the level. That is the
  * pressure §3 asks for: a wide margin (an earlier draft used ~22 rows, ~110
  * shots of runway) makes the loss line decorative, not a threat, and reads
  * as the clock-stripped-off timer the collection's brand forbids — the
  * margin has to be tight enough that clearing efficiently is the only way
- * through, the same as Brick Breaker's wall.
+ * through, the same as Brick Breaker's wall. 672 rather than a plainer 640
+ * is not padding for its own sake: it is the smallest height inside the
+ * requested 6–8 row band that a strengthened shooter (see below) could
+ * clear the full shipped ladder against — 640 (≈7.1 rows) left 8 of 100
+ * levels unclearable even with that shooter.
  *
  * A margin this tight only ships because clearability moved to the other
  * side of the equation: **the shooter, not the runway, is what's proven
@@ -113,9 +117,9 @@ export const SHOT_SPEED = 720;
  * dt), independent of how many times it bounces off a side wall (bounces
  * only ever change the horizontal component). At the
  * AIM_MAX_ANGLE_FROM_VERTICAL clamp with BOARD_HEIGHT's runway that worst
- * case is around eleven hundred — guide.test.ts and autoplay.test.ts
- * exercise many thousands of real shots across the whole board and level
- * range without ever hitting this fallback. The cap exists only so a future
+ * case is around six hundred — guide.test.ts and autoplay.test.ts exercise
+ * many thousands of real shots across the whole board and level range
+ * without ever hitting this fallback. The cap exists only so a future
  * change to the geometry or clamp fails loudly (an unresolved shot lands at
  * the fallback cell, which reads as "wrong cell" in a test) instead of
  * hanging.

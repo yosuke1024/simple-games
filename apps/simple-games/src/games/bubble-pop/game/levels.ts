@@ -8,13 +8,15 @@
  * inside generator.ts to lean away from handing out free same-color
  * neighbor pairs — it climbs alongside the others so a board never reads as
  * "randomly happens to be easy" at the top of the ladder. It stays modest
- * (autoplay.test.ts's data point: 0.08 → 0.30) because the other three
- * levers are already the real difficulty — an aggressively scattered board
- * fights the player at matching *at all*, which autoplay.test.ts caught
- * directly: an early, harsher scatter curve (0.15 → 0.70) made the top of
- * the ladder fail even a competent scripted shooter within a few dozen
- * shots, not because the ceiling out-raced it but because the board never
- * offered enough adjacency to clear fast enough to matter.
+ * (0.05 → 0.14) because the other three levers are already the real
+ * difficulty, and LOSS_LINE_Y's margin is tight by design (constants.ts) —
+ * an aggressively scattered board fights the player at matching *at all*,
+ * which autoplay.test.ts caught directly, twice: an early curve (0.15 →
+ * 0.70) made the top of the ladder fail a scripted shooter within a few
+ * dozen shots outright, and even a much gentler one (0.08 → 0.30) left a
+ * handful of the hardest levels short once LOSS_LINE_Y's margin was tuned
+ * tight (constants.ts) — the two levers interact, so scatter had to come
+ * down again once the runway did.
  *
  * Every lever is continuous in `level`; nothing saturates before 100 (the
  * plan's Phase 2 lesson: Brick Breaker's first prototype capped after 27
@@ -48,6 +50,6 @@ export function levelSpec(level: number): LevelSpec {
     rows: 5 + Math.round(t * 4),
     colorCount: 4 + Math.round(t * 2),
     descentEvery: 8 - Math.round(t * 3),
-    scatterBias: 0.08 + t * 0.22,
+    scatterBias: 0.05 + t * 0.09,
   };
 }

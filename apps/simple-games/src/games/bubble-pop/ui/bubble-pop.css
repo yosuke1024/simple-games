@@ -1,0 +1,144 @@
+/* Bubble Pop — board chrome only. Screens, buttons, dialogs, and the arcade
+   status row (level / shots-left / the "life"-dot idiom) come from the
+   shared stylesheet (ui/styles.css); the accent arrives via the data-game
+   tokens the shell stamps. The board itself is a canvas
+   (components/BubbleBoard.tsx) that reads the same tokens.
+
+   Class names are prefixed `bu-` so this file can never collide with the
+   shell or with another game (docs/ARCHITECTURE.md's per-game CSS rule).
+
+   The six bubble colors below are game content, not chrome — the same
+   standing as Water Sort's nine liquid colors or Minesweeper's number scale
+   (ARCHITECTURE.md's one named exception to "games don't write color").
+   Ordered to match game/constants.ts's COLOR_ORDER. No red: the accent is
+   oxblood and the trajectory guide is drawn in the accent color over the
+   bubbles, so the palette keeps clear of that hue family on purpose
+   (docs/plans/2026-08-08-mahjong-bubble-ludo.md §Bubble Pop §12). The dark
+   variants are not the light ones simply lightened — same reasoning as
+   Water Sort's palette comment: pastels of six hues all drift toward grey
+   once dimmed evenly, so these keep saturation up and spread lightness
+   instead. Every bubble also carries a shape mark (BubbleBoard.tsx's
+   BUBBLE_MARKS) so color is never the only channel a player can read (§12). */
+
+:root {
+  --bu-c-blue: #3b6fc4;
+  --bu-c-green: #4b8f57;
+  --bu-c-yellow: #c99a2e;
+  --bu-c-purple: #8452b0;
+  --bu-c-orange: #c9782f;
+  --bu-c-cyan: #2f9e9e;
+  --bu-mark: rgba(255, 255, 255, 0.94);
+  --bu-mark-stroke: rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme='dark'] {
+  --bu-c-blue: #7099e6;
+  --bu-c-green: #6dbf7a;
+  --bu-c-yellow: #e0bd5c;
+  --bu-c-purple: #ab84d9;
+  --bu-c-orange: #e0983f;
+  --bu-c-cyan: #4dbdbd;
+  --bu-mark: rgba(20, 23, 28, 0.88);
+  --bu-mark-stroke: rgba(255, 255, 255, 0.28);
+}
+
+/* ---------- board ---------- */
+
+.bu-board-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.bu-canvas {
+  width: min(100%, 320px);
+  max-height: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  touch-action: none;
+  cursor: pointer;
+}
+
+/* Visually hidden but announced: the aim/landing-cell live region
+   (docs/plans/2026-08-08-mahjong-bubble-ludo.md §Bubble Pop i18n note). */
+.bu-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- current / next tray ---------- */
+
+.bu-tray {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.bu-swatch {
+  display: block;
+  border-radius: 50%;
+  box-shadow: var(--shadow);
+}
+
+.bu-swatch-current {
+  width: 44px;
+  height: 44px;
+}
+
+.bu-swatch-next {
+  width: 30px;
+  height: 30px;
+  opacity: 0.85;
+}
+
+.bu-swap-btn {
+  font-size: 20px;
+  transform: rotate(0deg);
+}
+
+.bu-swatch-fill {
+  stroke: none;
+}
+.bu-swatch-blue {
+  fill: var(--bu-c-blue);
+}
+.bu-swatch-green {
+  fill: var(--bu-c-green);
+}
+.bu-swatch-yellow {
+  fill: var(--bu-c-yellow);
+}
+.bu-swatch-purple {
+  fill: var(--bu-c-purple);
+}
+.bu-swatch-orange {
+  fill: var(--bu-c-orange);
+}
+.bu-swatch-cyan {
+  fill: var(--bu-c-cyan);
+}
+
+.bu-swatch-mark {
+  fill: var(--bu-mark);
+  stroke: var(--bu-mark-stroke);
+  stroke-width: 1;
+}
+
+/* Quick Rules figures: little SVG scenes in the series tokens. */
+.bu-figure {
+  width: min(70vw, 220px);
+  height: auto;
+  display: block;
+}

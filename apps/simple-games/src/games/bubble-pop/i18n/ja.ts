@@ -1,0 +1,27 @@
+import type { BubblePopMessages } from './en';
+
+export const ja: BubblePopMessages = {
+  bubbleName: 'Bubble Pop',
+  bubbleBoardLabel: 'バブルポップの盤面',
+  bubbleShotsLabel: '天井が下がるまで残り {n} 発',
+  bubbleCurrentLabel: '次に撃つ泡: {color}',
+  bubbleNextLabel: 'その次の泡: {color}',
+  bubbleSwapLabel: '次に撃つ泡とその次の泡を入れ替える',
+  bubbleAimLabel: '狙い中 — 着弾は {row} 行 {col} 列',
+  bubbleClearedTitle: '全部割った！',
+  bubbleClearedBody: '泡はすべて消えました。',
+  bubbleFailedTitle: '今回は届かず',
+  bubbleFailedBody: 'リトライは無料。同じ盤面、同じ泡です。',
+  bubbleStep1Title: 'ドラッグで狙う',
+  bubbleStep1Body: 'ガイドの線は着弾位置をそのまま示します — 無料で常時表示。',
+  bubbleStep2Title: '同じ色が3つ以上でポップ',
+  bubbleStep2Body: '同色を3つ以上つなげると割れます。天井から切り離された泡も落ちます。',
+  bubbleStep3Title: '天井は少しずつ下がる',
+  bubbleStep3Body: '数発ごとに天井が1段下がります。泡が点線に届く前に、盤面を空にしましょう。',
+  bubbleColor_blue: '青',
+  bubbleColor_green: '緑',
+  bubbleColor_yellow: '黄',
+  bubbleColor_purple: '紫',
+  bubbleColor_orange: '橙',
+  bubbleColor_cyan: '水色',
+};
