@@ -1,0 +1,27 @@
+import type { BubblePopMessages } from './en';
+
+export const zhHans: BubblePopMessages = {
+  bubbleName: 'Bubble Pop',
+  bubbleBoardLabel: 'Bubble Pop 面板',
+  bubbleShotsLabel: '还差 {n} 发天花板就会下降',
+  bubbleCurrentLabel: '当前泡泡：{color}',
+  bubbleNextLabel: '下一个泡泡：{color}',
+  bubbleSwapLabel: '交换当前泡泡和下一个泡泡',
+  bubbleAimLabel: '瞄准中——将落在第 {row} 行第 {col} 列',
+  bubbleClearedTitle: '面板清空！',
+  bubbleClearedBody: '所有泡泡都消除了。',
+  bubbleFailedTitle: '这次差一点',
+  bubbleFailedBody: '重试免费——同一面板，同样的泡泡。',
+  bubbleStep1Title: '拖动瞄准',
+  bubbleStep1Body: '引导线始终精确显示泡泡会落在哪里——免费，始终开启。',
+  bubbleStep2Title: '同色 3 个连在一起就消除',
+  bubbleStep2Body: '凑齐 3 个或更多同色泡泡就会消除，悬空的泡泡也会一起掉落。',
+  bubbleStep3Title: '天花板缓缓下降',
+  bubbleStep3Body: '每隔几发，天花板就会下降一行。在泡泡碰到虚线之前清空它们。',
+  bubbleColor_blue: '蓝色',
+  bubbleColor_green: '绿色',
+  bubbleColor_yellow: '黄色',
+  bubbleColor_purple: '紫色',
+  bubbleColor_orange: '橙色',
+  bubbleColor_cyan: '青色',
+};

@@ -27,6 +27,7 @@ import type { Messages } from '../i18n/locales/en';
 import { BB_STORAGE_KEYS } from '../games/brick-breaker/storage/keys';
 import { BP_STORAGE_KEYS } from '../games/block-puzzle/storage/keys';
 import { BH_STORAGE_KEYS } from '../games/bunny-hop/storage/keys';
+import { BU_STORAGE_KEYS } from '../games/bubble-pop/storage/keys';
 import { C4_STORAGE_KEYS } from '../games/connect-four/storage/keys';
 import { CK_STORAGE_KEYS } from '../games/checkers/storage/keys';
 import { GM_STORAGE_KEYS } from '../games/gomoku/storage/keys';
@@ -71,6 +72,7 @@ export type GameId =
   | 'freecell'
   | 'hearts'
   | 'gin-rummy'
+  | 'bubble-pop'
   | 'brick-breaker'
   | 'sky-fighter'
   | 'bunny-hop'
@@ -315,6 +317,19 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(GM_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/gomoku/ui/GomokuRoot').then((m) => ({ default: m.GomokuRoot })),
+  },
+  {
+    // Head of the arcade shelf: sections order by name-search demand, and
+    // "bubble" out-searches "brick breaker" (docs/plans/2026-08-08-mahjong-bubble-ludo.md).
+    id: 'bubble-pop',
+    title: 'Bubble Pop',
+    category: 'arcade',
+    glyph: '○',
+    storageKeys: Object.values(BU_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/bubble-pop/ui/BubblePopRoot').then((m) => ({
+        default: m.BubblePopRoot,
+      })),
   },
   {
     id: 'brick-breaker',

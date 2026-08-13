@@ -23,7 +23,7 @@ export const STARTING_LIVES = 3;
 
 /**
  * Extra balls are the one way the player gets stronger, and they work the
- * mirror of Bubble Pop's barrels: earned in play, free, capped, gone when the
+ * mirror of Sky Fighter's barrels: earned in play, free, capped, gone when the
  * level ends. Losing one costs a ball, not a life — only the last ball does.
  */
 export const MAX_BALLS = 3;
