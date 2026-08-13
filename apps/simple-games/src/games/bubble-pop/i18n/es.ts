@@ -13,8 +13,7 @@ export const es: BubblePopMessages = {
   bubbleFailedTitle: 'Esta vez no',
   bubbleFailedBody: 'Reintentar es gratis: mismo tablero, mismas burbujas.',
   bubbleStep1Title: 'Arrastra para apuntar',
-  bubbleStep1Body:
-    'La línea guía siempre muestra dónde caerá la burbuja — gratis, siempre activa.',
+  bubbleStep1Body: 'La línea guía siempre muestra dónde caerá la burbuja — gratis, siempre activa.',
   bubbleStep2Title: '3 en línea revientan',
   bubbleStep2Body:
     'Junta 3 o más burbujas del mismo color y revientan. Las que quedan flotando también caen.',

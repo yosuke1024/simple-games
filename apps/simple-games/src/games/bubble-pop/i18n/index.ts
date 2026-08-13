@@ -8,20 +8,23 @@
  * The `declare module` block is the type-side twin: it merges this game's
  * keys into the app-wide MessageKey union without the shell importing
  * anything from src/games/ (src/i18n/registry.ts explains the pairing).
- *
- * TODO(translation team, docs/plans/2026-08-08-mahjong-bubble-ludo.md):
- * only en/ja are authored for this UI slice — hi/th/id/vi/ko/zh-hans/zh-hant/
- * es/pt-br/fr/de/tr are placeholder aliases of `en` below so `catalogs`
- * type-checks as `Record<Locale, BubblePopMessages>` and the i18n
- * consistency/gate tests (which glob every game's index.ts) stay green. This
- * is the "type allows the fallback" branch the hand-off note calls for —
- * replace each alias with a real locale module (mirroring brick-breaker's
- * i18n/ folder) and import it above instead of falling back to `en`.
  */
 import type { Locale } from '@/i18n';
 import { registerGameMessages } from '@/i18n/registry';
+import { de } from './de';
 import { en, type BubblePopMessages } from './en';
+import { es } from './es';
+import { fr } from './fr';
+import { hi } from './hi';
+import { id } from './id';
 import { ja } from './ja';
+import { ko } from './ko';
+import { ptBR } from './pt-br';
+import { th } from './th';
+import { tr } from './tr';
+import { vi } from './vi';
+import { zhHans } from './zh-hans';
+import { zhHant } from './zh-hant';
 
 declare module '@/i18n/registry' {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- the extends clause is the contribution
@@ -31,19 +34,18 @@ declare module '@/i18n/registry' {
 export const catalogs: Record<Locale, BubblePopMessages> = {
   en,
   ja,
-  // TODO(translation team): replace with authored locale modules (en fallback).
-  hi: en,
-  th: en,
-  id: en,
-  vi: en,
-  ko: en,
-  'zh-hans': en,
-  'zh-hant': en,
-  es: en,
-  'pt-br': en,
-  fr: en,
-  de: en,
-  tr: en,
+  hi,
+  th,
+  id,
+  vi,
+  ko,
+  'zh-hans': zhHans,
+  'zh-hant': zhHant,
+  es,
+  'pt-br': ptBR,
+  fr,
+  de,
+  tr,
 };
 
 registerGameMessages('bubble-pop', catalogs);

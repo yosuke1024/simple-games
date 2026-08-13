@@ -17,6 +17,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   hearts: ['ht.saveGame', 'ht.stats', 'ht.flags', 'ht.prefs'],
   'gin-rummy': ['gr.saveGame', 'gr.stats', 'gr.flags', 'gr.prefs'],
   minesweeper: ['ms.saveGame', 'ms.saveDaily', 'ms.stats', 'ms.flags', 'ms.prefs'],
+  'bubble-pop': ['bu.stats', 'bu.progress', 'bu.flags'],
   'brick-breaker': ['bb.stats', 'bb.progress', 'bb.flags'],
   nonogram: ['ng.saveGame', 'ng.saveDaily', 'ng.stats', 'ng.progress', 'ng.flags', 'ng.prefs'],
   // Five, not six: no per-game setting to keep, and none of the record is a
@@ -61,6 +62,7 @@ const PREFIXES: Record<string, string> = {
   hearts: 'ht.',
   'gin-rummy': 'gr.',
   minesweeper: 'ms.',
+  'bubble-pop': 'bu.',
   'brick-breaker': 'bb.',
   nonogram: 'ng.',
   'mahjong-solitaire': 'mj.',
