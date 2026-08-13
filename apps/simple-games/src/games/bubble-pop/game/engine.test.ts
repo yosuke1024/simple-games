@@ -123,9 +123,7 @@ describe('placeAndResolve — popping and cluster fall', () => {
   it('three same-color connected bubbles pop, and only those three', () => {
     const board = boardFromRows(['bb......']);
     const outcome = placeAndResolve(board, { row: 0, col: 2 }, 'blue');
-    expect(outcome.popped.map((c) => cellKey(c)).sort()).toEqual(
-      ['0,0', '0,1', '0,2'].sort(),
-    );
+    expect(outcome.popped.map((c) => cellKey(c)).sort()).toEqual(['0,0', '0,1', '0,2'].sort());
     expect(outcome.board.size).toBe(0);
   });
 
@@ -149,9 +147,7 @@ describe('placeAndResolve — popping and cluster fall', () => {
     // Two bridges hold up the same lower bubble; popping only one leaves it standing.
     const board = boardFromRows(['bbb.....', '.g......']);
     const outcome = placeAndResolve(board, { row: 0, col: 3 }, 'blue');
-    expect(outcome.popped.map(cellKey).sort()).toEqual(
-      ['0,0', '0,1', '0,2', '0,3'].sort(),
-    );
+    expect(outcome.popped.map(cellKey).sort()).toEqual(['0,0', '0,1', '0,2', '0,3'].sort());
     // row0 is fully cleared, but row1's bubble was only ever connected
     // through row0 col1 — once every row0 cell here is gone it must fall too.
     expect(outcome.fell.map(cellKey)).toEqual(['1,1']);

@@ -110,12 +110,18 @@ export function remainingColors(board: Board): BubbleColor[] {
  * level is won and nothing calls this again, but it keeps the function
  * total rather than asserting an invariant the caller must already uphold.
  */
-export function supplyColorFor(seed: string, level: number, shotIndex: number, board: Board): BubbleColor {
+export function supplyColorFor(
+  seed: string,
+  level: number,
+  shotIndex: number,
+  board: Board,
+): BubbleColor {
   const counts = new Map<BubbleColor, number>();
   for (const color of board.values()) counts.set(color, (counts.get(color) ?? 0) + 1);
   const present = COLOR_ORDER.filter((color) => (counts.get(color) ?? 0) > 0);
   const pool = present.length > 0 ? present : COLOR_ORDER.slice(0, levelSpec(level).colorCount);
-  const weights = present.length > 0 ? pool.map((color) => counts.get(color)! ** 2) : pool.map(() => 1);
+  const weights =
+    present.length > 0 ? pool.map((color) => counts.get(color)! ** 2) : pool.map(() => 1);
   const total = weights.reduce((sum, w) => sum + w, 0);
 
   const rng = createRng(`${seed}:${level}:supply:${shotIndex}`);

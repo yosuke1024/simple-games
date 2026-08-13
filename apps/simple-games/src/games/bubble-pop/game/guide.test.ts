@@ -67,35 +67,31 @@ function sweepAngles(board: Board, ceilingOffset: number): number[] {
 describe('the guide and the real shot always agree', () => {
   for (const { seed, level } of BOARDS) {
     for (const ceilingOffset of CEILING_OFFSETS) {
-      it(
-        `seed=${seed} level=${level} ceilingOffset=${ceilingOffset}`,
-        () => {
-          const board = buildBoard(seed, level);
-          const base = createSession(seed, level);
-          // Pinning board/ceilingOffset directly (rather than playing shots
-          // to get there) is what lets this test sweep every offset against
-          // every board independently of how many shots a real game would
-          // take to reach that offset.
-          const session: BubblePopSession = { ...base, board, ceilingOffset };
+      // The 60s timeout: Level 100's board (9 rows, 6 colors) plus
+      // sweepAngles's boundary bisection is the heaviest case here (measured
+      // 3-5s running alone, well past vitest's default 5s per-test timeout).
+      // Kept generous rather than snug: running inside the full repo suite
+      // under shared CPU load is measurably slower than running this file
+      // alone (autoplay.test.ts's comment has the numbers), and this gate is
+      // about correctness, not speed.
+      it(`seed=${seed} level=${level} ceilingOffset=${ceilingOffset}`, () => {
+        const board = buildBoard(seed, level);
+        const base = createSession(seed, level);
+        // Pinning board/ceilingOffset directly (rather than playing shots
+        // to get there) is what lets this test sweep every offset against
+        // every board independently of how many shots a real game would
+        // take to reach that offset.
+        const session: BubblePopSession = { ...base, board, ceilingOffset };
 
-          for (const angle of sweepAngles(board, ceilingOffset)) {
-            const guess = aimGuide(session, angle);
-            // What fireShot must produce if it truly reads the guide's own
-            // board and offset: place the guide's predicted cell and resolve.
-            const expectedBoard = placeAndResolve(board, guess.landingCell, session.current).board;
-            const actualBoard = fireShot(session, angle).board;
-            expect(actualBoard).toEqual(expectedBoard);
-          }
-        },
-        // Level 100's board (9 rows, 6 colors) plus sweepAngles's boundary
-        // bisection is the heaviest case here (measured 3-5s running alone,
-        // well past vitest's default 5s per-test timeout on its own). Kept
-        // generous rather than snug: running inside the full repo suite
-        // under shared CPU load is measurably slower than running this file
-        // alone (autoplay.test.ts's comment has the numbers), and this gate
-        // is about correctness, not speed.
-        60_000,
-      );
+        for (const angle of sweepAngles(board, ceilingOffset)) {
+          const guess = aimGuide(session, angle);
+          // What fireShot must produce if it truly reads the guide's own
+          // board and offset: place the guide's predicted cell and resolve.
+          const expectedBoard = placeAndResolve(board, guess.landingCell, session.current).board;
+          const actualBoard = fireShot(session, angle).board;
+          expect(actualBoard).toEqual(expectedBoard);
+        }
+      }, 60_000);
     }
   }
 });

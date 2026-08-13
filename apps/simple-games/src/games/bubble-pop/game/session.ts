@@ -90,7 +90,13 @@ export function fireShot(session: BubblePopSession, angle: number): BubblePopSes
     return { ...session, board: outcome.board, ceilingOffset, shotsUntilDescent, status: 'failed' };
   }
   if (isBoardCleared(outcome.board)) {
-    return { ...session, board: outcome.board, ceilingOffset, shotsUntilDescent, status: 'cleared' };
+    return {
+      ...session,
+      board: outcome.board,
+      ceilingOffset,
+      shotsUntilDescent,
+      status: 'cleared',
+    };
   }
 
   return {

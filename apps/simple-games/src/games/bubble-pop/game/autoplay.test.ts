@@ -108,7 +108,11 @@ function scoreCellForColor(session: BubblePopSession, cell: Cell, color: BubbleC
 function allCandidates(session: BubblePopSession): Candidate[] {
   const out: Candidate[] = [];
   const seenCells = new Set<string>();
-  for (let angle = -AIM_MAX_ANGLE_FROM_VERTICAL; angle <= AIM_MAX_ANGLE_FROM_VERTICAL; angle += ANGLE_STEP) {
+  for (
+    let angle = -AIM_MAX_ANGLE_FROM_VERTICAL;
+    angle <= AIM_MAX_ANGLE_FROM_VERTICAL;
+    angle += ANGLE_STEP
+  ) {
     const cell = aimGuide(session, angle).landingCell;
     const key = cellKey(cell);
     if (seenCells.has(key)) continue; // several angles often land the same cell
@@ -141,7 +145,11 @@ function playOneShot(session: BubblePopSession): BubblePopSession {
       const aimed = candidate.usesNext ? swapNext(session) : session;
       const result = fireShot(aimed, candidate.angle);
       const lookahead =
-        result.status === 'cleared' ? Infinity : result.status === 'failed' ? -Infinity : bestScore(result);
+        result.status === 'cleared'
+          ? Infinity
+          : result.status === 'failed'
+            ? -Infinity
+            : bestScore(result);
       const total = candidate.score + lookahead;
       if (total > bestTotal) {
         bestTotal = total;
