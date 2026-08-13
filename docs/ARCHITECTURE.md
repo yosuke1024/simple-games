@@ -55,6 +55,7 @@ src/
 │   ├── sky-fighter/
 │   ├── 2048/
 │   ├── block-puzzle/
+│   ├── ludo/
 │   ├── checkers/
 │   ├── reversi/
 │   ├── connect-four/
@@ -261,6 +262,7 @@ src/
 | Kakuro            | タバコ                   | `#794e2f` | `#cb9e7e` |
 | Mahjong Solitaire | 深い青菫                 | `#3b3196` | `#7e77c0` |
 | Bubble Pop        | オックスブラッド         | `#712d2f` | `#cd6a6d` |
+| Ludo              | マゼンタ紫               | `#ad34a7` | `#cd6ac8` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
@@ -286,17 +288,13 @@ src/
 - `ui/styles.css` に置くのは共有シェルのみ: デザイントークン(下地・アクセント・
   `data-game` の上書き)、コレクションホーム、設定 / About、ダイアログ・トースト・
   チュートリアル・バナースロットなどの共通クロム。
-- **全タイトルが規約に従っている**: `number-match.css` / `sudoku.css` /
-  `minesweeper.css` / `nonogram.css` / `mahjong-solitaire.css` / `takuzu.css` / `futoshiki.css` /
-  `kakuro.css` /
-  `sliding-puzzle.css` /
-  `memory-match.css` /
-  `water-sort.css` / `solitaire.css` / `spider-solitaire.css` / `freecell.css` /
-  `hearts.css` / `gin-rummy.css` /
-  `brick-breaker.css` / `sky-fighter.css` /
-  `game-2048.css` / `block-puzzle.css` / `checkers.css` / `reversi.css` /
-  `connect-four.css` / `gomoku.css` / `quick-math.css` / `schulte-table.css` /
-  `number-recall.css` / `bunny-hop.css` / `bubble-pop.css`。
+- **全タイトルが規約に従っている**: `number-match.css` / `sudoku.css` / `minesweeper.css` / `nonogram.css` /
+  `mahjong-solitaire.css` / `takuzu.css` / `futoshiki.css` / `kakuro.css` /
+  `sliding-puzzle.css` / `memory-match.css` / `water-sort.css` / `solitaire.css` /
+  `spider-solitaire.css` / `freecell.css` / `hearts.css` / `gin-rummy.css` /
+  `brick-breaker.css` / `sky-fighter.css` / `game-2048.css` / `block-puzzle.css` / `ludo.css` /
+  `checkers.css` / `reversi.css` / `connect-four.css` / `gomoku.css` / `quick-math.css` /
+  `schulte-table.css` / `number-recall.css` / `bunny-hop.css` / `bubble-pop.css`。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。
@@ -347,6 +345,7 @@ src/
 | `sf.*`        | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)                    |
 | `tm.*`        | 2048(saveGame / stats / flags。デイリーもレベル進行もない)                         |
 | `bp.*`        | Block Puzzle(saveGame / stats / flags。同上)                                       |
+| `ld.*`        | Ludo(saveGame / stats / flags / prefs。統計は難易度別。デイリーが無いので 1 枠)    |
 | `ck.*`        | Checkers(saveGame / stats / flags / prefs。統計は難易度別)                         |
 | `rv.*`        | Reversi(saveGame / stats / flags / prefs。統計は難易度別)                          |
 | `c4.*`        | Connect Four(saveGame / stats / flags / prefs。同上)                               |

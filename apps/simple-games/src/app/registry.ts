@@ -37,6 +37,7 @@ import { GR_STORAGE_KEYS } from '../games/gin-rummy/storage/keys';
 
 import { FT_STORAGE_KEYS } from '../games/futoshiki/storage/keys';
 import { KK_STORAGE_KEYS } from '../games/kakuro/storage/keys';
+import { LD_STORAGE_KEYS } from '../games/ludo/storage/keys';
 import { MJ_STORAGE_KEYS } from '../games/mahjong-solitaire/storage/keys';
 import { MM_STORAGE_KEYS } from '../games/memory-match/storage/keys';
 import { MS_STORAGE_KEYS } from '../games/minesweeper/storage/keys';
@@ -84,7 +85,8 @@ export type GameId =
   | 'gomoku'
   | 'takuzu'
   | 'futoshiki'
-  | 'kakuro';
+  | 'kakuro'
+  | 'ludo';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -273,6 +275,33 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/block-puzzle/ui/BlockPuzzleRoot').then((m) => ({
         default: m.BlockPuzzleRoot,
       })),
+  },
+  {
+    id: 'ludo',
+    // Head of the board shelf: sections order by name-search demand, and
+    // "ludo" out-searches the four titles under it
+    // (docs/plans/2026-08-08-mahjong-bubble-ludo.md, Phase 1).
+    //
+    // The mark is a die showing six. This is the only game in the collection
+    // that has a die at all, and six is the roll that sends a piece out of its
+    // yard — the mark is the game's one object and its one rule at once. It
+    // comes from Miscellaneous Symbols, the block the shipped `♠ ♣ ♥ ♡ ♢`
+    // already draw from, so it takes the font route those five prove. The near
+    // miss is the dot family, and it parts on the frame: Connect Four's `⁘`
+    // and Gomoku's `⁙` are bare dots where this one boxes them, and the two
+    // are not adjacent to it either — they close this section, this opens it.
+    //
+    // What is NOT settled is whether it draws everywhere. Of the three glyphs
+    // chosen in that plan it has the thinnest font coverage by a wide margin —
+    // 8 of this environment's 59 fonts, where `♠` reaches 19 — and it has not
+    // yet been looked at on a low-spec handset (Chromium 88, system fonts
+    // only). If it lands there as a box or an unreadable smudge the fallback
+    // is `⚄`, and then `◈`.
+    title: 'Ludo',
+    category: 'board',
+    glyph: '⚅',
+    storageKeys: Object.values(LD_STORAGE_KEYS),
+    loadRoot: () => import('../games/ludo/ui/LudoRoot').then((m) => ({ default: m.LudoRoot })),
   },
   {
     id: 'checkers',
