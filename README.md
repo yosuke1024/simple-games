@@ -27,7 +27,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 
 ## アプリと収録ゲーム
 
-アプリは 1 つだけで、現在 29 本のゲームを収録しています。
+アプリは 1 つだけで、現在 30 本のゲームを収録しています。
 
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Games`(ランチャー表示名: `Simple Games`)
@@ -48,6 +48,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 | Mahjong Solitaire(麻雀ソリティア) | `mahjong-solitaire/` | 100 レベル + デイリー                    | Undo / Hint(取れる一致ペア)                        | [docs/MAHJONG_SOLITAIRE_RULES.md](docs/MAHJONG_SOLITAIRE_RULES.md) |
 | 2048                              | `2048/`              | エンドレス(レベルなし)                   | Undo(Hint なし)                                    | [docs/GAME_2048_RULES.md](docs/GAME_2048_RULES.md)                 |
 | Block Puzzle                      | `block-puzzle/`      | エンドレス(レベルなし)                   | Undo(Hint なし)                                    | [docs/BLOCK_PUZZLE_RULES.md](docs/BLOCK_PUZZLE_RULES.md)           |
+| Ludo(西洋すごろく)                | `ludo/`              | CPU 対局・難易度 3 種(デイリーなし)      | 動かせるコマの常時表示(Undo / Hint なし)           | [docs/LUDO_RULES.md](docs/LUDO_RULES.md)                           |
 | Checkers(チェッカー)              | `checkers/`          | CPU 対局・難易度 3 種(デイリーなし)      | Undo + 動かせる駒と行き先の表示(Hint なし)         | [docs/CHECKERS_RULES.md](docs/CHECKERS_RULES.md)                   |
 | Reversi                           | `reversi/`           | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                                    | [docs/REVERSI_RULES.md](docs/REVERSI_RULES.md)                     |
 | Connect Four                      | `connect-four/`      | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                                    | [docs/CONNECT_FOUR_RULES.md](docs/CONNECT_FOUR_RULES.md)           |
@@ -94,7 +95,11 @@ Reversi と Connect Four も盤面がすべて見えているため Hint を作�
 (スートを追う義務・初トリックの点札禁止・ブレイク前の ♥ リード禁止の可視化で、Checkers の
 「動かせる駒の表示」と同じ物差しです)、Gin Rummy はメルドを自動で整理してデッドウッドを
 常時表示します — どちらもルールが定める制約と算術であって、何を渡し・何を引き・いつノックする
-かの判断は残ります。Futoshiki と Kakuro は Sudoku と同じ側で、Undo と Hint の両方を持ちます —
+かの判断は残ります。Ludo にも Undo を作りません — 出目を維持したまま戻せば次の出目を知った
+うえでの先読みになり、振り直せば Undo がリロールになって「同じシードなら同じ出目」という
+決定性と両立しないためで、どちらへ倒しても成立しません([docs/LUDO_RULES.md](docs/LUDO_RULES.md)
+§3 / §6)。助けは動かせるコマの常時表示だけで、これも Checkers の「動かせる駒の表示」と同じ
+ルールの可視化です。Futoshiki と Kakuro は Sudoku と同じ側で、Undo と Hint の両方を持ちます —
 メモを置いたマスに数字を入れると同じ行・列やひと続きのメモが自動で消えるため、1 手が非自明に
 不可逆になり、戻す先のある Undo が実在するからです。出題が常に一意解であることは、論理だけで
 正当化できる次の一手が必ずあるということでもあるので、Hint にも誠実に言えることが残ります。
@@ -134,6 +139,7 @@ simple-games/
 │           │   ├── freecell/
 │           │   ├── hearts/
 │           │   ├── gin-rummy/
+│           │   ├── ludo/
 │           │   ├── checkers/
 │           │   ├── reversi/
 │           │   ├── connect-four/

@@ -661,6 +661,39 @@ export const titleAccents = {
     onDark: '#1c0d0d',
     softDark: '#3b1c1d',
   },
+  /**
+   * Ludo — magenta violet. Four seats sit on this board in red, green, yellow
+   * and blue, and those four are game content (games/ludo/ui/ludo.css), so all
+   * four bands were struck out before anything was measured: chrome in any of
+   * them reads as a fifth seat. That is the same move Hearts made with red and
+   * FreeCell with the card-table green, run four times over.
+   *
+   * Chosen in the three-title selection of docs/plans/2026-08-08-mahjong-
+   * bubble-ludo.md Phase 1 (with Mahjong Solitaire's blue-violet and Bubble
+   * Pop's oxblood, since the three ship together and mutual distance is part
+   * of the floor): candidates were clamped to the shipped palette's median
+   * band (|S−44| ≤ 10, |L−37| ≤ 7) and the weakest margin over every floor
+   * maximized, rather than maximizing raw distance — the unconstrained winners
+   * were primaries that read as another product.
+   *
+   * Re-measured at registration against all 29 shipped accents + `--warn`, per
+   * BRAND.md step 5, and the floor had not moved: the closest shipped pair is
+   * still Sudoku × Schulte Table at ΔE 10.88 in light and Nonogram × Sky
+   * Fighter at 7.91 in dark. Closest to this colour is Gin Rummy, 17.74 light
+   * and 16.61 dark, well past the 1.15 margin those floors require (12.5 /
+   * 9.1). Home neighbours — it heads the board shelf, so Checkers is to its
+   * right and Reversi below it, Reversi being the nearer — are 24.53 light and
+   * 18.04 dark against their 15 / 11 floor, and `--warn` is 77.74 / 67.88
+   * away. White ink 5.49; the dark value clears the dark paper at 5.55.
+   */
+  ludo: {
+    light: '#ad34a7',
+    onLight: '#ffffff',
+    softLight: '#f0dbef',
+    dark: '#cd6ac8',
+    onDark: '#1a0e19',
+    softDark: '#3d243c',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

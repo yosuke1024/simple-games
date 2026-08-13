@@ -54,9 +54,9 @@ describe('gameLandingUrl', () => {
   });
 
   it('offers no link for a shipped game whose guide is not written yet', () => {
-    // These six ship in the collection but have no guide yet. Returning null is
-    // what keeps the tutorial's last screen from ending in a 404, and the button
-    // appears in the release after their pages go up.
+    // These eight ship in the collection but have no guide yet. Returning null
+    // is what keeps the tutorial's last screen from ending in a 404, and the
+    // button appears in the release after their pages go up.
     for (const id of [
       'hearts',
       'gin-rummy',
@@ -65,6 +65,7 @@ describe('gameLandingUrl', () => {
       'kakuro',
       'mahjong-solitaire',
       'bubble-pop',
+      'ludo',
     ]) {
       expect(gameLandingUrl(id, 'en')).toBeNull();
       expect(gameLandingUrl(id, 'ja')).toBeNull();

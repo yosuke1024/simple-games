@@ -48,6 +48,11 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'bunny-hop': ['bh.stats', 'bh.flags'],
   '2048': ['tm.saveGame', 'tm.stats', 'tm.flags'],
   'block-puzzle': ['bp.saveGame', 'bp.stats', 'bp.flags'],
+  // Four, the shape every CPU-opponent title in the collection has: one saved
+  // match (no daily, so no second slot — docs/LUDO_RULES.md §10), stats,
+  // flags, and a prefs that holds the difficulty. Hearts, Gin Rummy and the
+  // four board games below keep exactly these four, for exactly these reasons.
+  ludo: ['ld.saveGame', 'ld.stats', 'ld.flags', 'ld.prefs'],
   checkers: ['ck.saveGame', 'ck.stats', 'ck.flags', 'ck.prefs'],
   reversi: ['rv.saveGame', 'rv.stats', 'rv.flags', 'rv.prefs'],
   'connect-four': ['c4.saveGame', 'c4.stats', 'c4.flags', 'c4.prefs'],
@@ -80,6 +85,7 @@ const PREFIXES: Record<string, string> = {
   'bunny-hop': 'bh.',
   '2048': 'tm.',
   'block-puzzle': 'bp.',
+  ludo: 'ld.',
   checkers: 'ck.',
   reversi: 'rv.',
   'connect-four': 'c4.',
