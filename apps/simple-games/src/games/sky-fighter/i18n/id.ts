@@ -35,7 +35,7 @@ export const id: SkyFighterMessages = {
     'Pesawatmu menembak sendiri. Seret ke segala arah — ke mana kamu terbang, ke situ bidikanmu.',
   sfStep2Title: 'Yang besar pecah',
   sfStep2Body:
-    'Pengebom pecah menjadi pesawat tempur, pesawat tempur menjadi pengintai. Hanya pengebom yang balas menembak.',
+    'Pengebom pecah menjadi pesawat tempur, pesawat tempur menjadi pengintai. Awas yang bersenjata — kapal meriam membidik kamu.',
   sfStep3Title: 'Tangkap yang jatuh',
   sfStep3Body:
     'Pengintai yang jatuh menjatuhkan peningkatan dan hati. Tiap tahap kesepuluh, bos menjaga pilihan peningkatan.',

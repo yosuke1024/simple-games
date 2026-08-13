@@ -35,7 +35,7 @@ export const es: SkyFighterMessages = {
     'Tu caza dispara solo. Arrastra en cualquier dirección: hacia donde vueles, allí apuntas.',
   sfStep2Title: 'Los grandes se dividen',
   sfStep2Body:
-    'Un bombardero se divide en cazas, y los cazas en exploradores. Solo los bombarderos devuelven el fuego.',
+    'Un bombardero se divide en cazas, y los cazas en exploradores. Cuidado con los armados: la cañonera te apunta.',
   sfStep3Title: 'Atrapa lo que cae',
   sfStep3Body:
     'Los exploradores derribados sueltan mejoras y corazones. Cada diez fases, un jefe guarda una elección de mejoras.',

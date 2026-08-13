@@ -33,7 +33,7 @@ export const zhHant: SkyFighterMessages = {
   sfStep1Title: '移動就是瞄準',
   sfStep1Body: '戰機自動開火。任意方向拖動——飛到哪裡，就瞄準哪裡。',
   sfStep2Title: '大型機體會分裂',
-  sfStep2Body: '轟炸機分裂成戰鬥機，戰鬥機分裂成偵察機。只有轟炸機會還擊。',
+  sfStep2Body: '轟炸機分裂成戰鬥機，戰鬥機分裂成偵察機。小心帶槍的機體——砲艇機會瞄準你。',
   sfStep3Title: '接住掉落物',
   sfStep3Body: '被擊落的偵察機會掉落強化和愛心。每十關會出現 BOSS，擊敗後可以挑選強化。',
 };

@@ -34,7 +34,7 @@ export const tr: SkyFighterMessages = {
   sfStep1Body: 'Uçağın kendiliğinden ateş eder. Her yöne sürükle — nereye uçarsan orayı vurursun.',
   sfStep2Title: 'Büyükler parçalanır',
   sfStep2Body:
-    'Bombardıman uçağı avcılara, avcılar keşif uçaklarına bölünür. Yalnızca bombardıman uçakları karşılık verir.',
+    'Bombardıman uçağı avcılara, avcılar keşif uçaklarına bölünür. Silahlı olanlara dikkat — top gemisi seni hedef alır.',
   sfStep3Title: 'Düşeni yakala',
   sfStep3Body:
     'Düşen keşif uçakları geliştirme ve kalp bırakır. Her onuncu aşamada bir boss, seçmelik geliştirmeleri korur.',
