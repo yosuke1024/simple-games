@@ -1,69 +1,69 @@
-// TODO(ludo): 未翻訳。次の担当が置き換える。
 import type { LudoMessages } from './en';
 
 export const id: LudoMessages = {
   ludoName: 'Ludo',
-  ludoChooseOpponent: 'Choose your opponent',
-  ludoDifficulty_easy: 'Easy',
-  ludoDifficulty_normal: 'Normal',
-  ludoDifficulty_hard: 'Hard',
-  ludoRecordNote: 'Won {wins} · Lost {losses}',
-  ludoConfirmSwitchTitle: 'Replace the match in progress?',
-  ludoConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  ludoChooseOpponent: 'Pilih lawanmu',
+  ludoDifficulty_easy: 'Mudah',
+  ludoDifficulty_normal: 'Sedang',
+  ludoDifficulty_hard: 'Sulit',
+  ludoRecordNote: 'Menang {wins} · Kalah {losses}',
+  ludoConfirmSwitchTitle: 'Ganti pertandingan yang sedang berjalan?',
+  ludoConfirmSwitchBody:
+    'Pertandingan {current} kamu akan diganti dengan pertandingan {next} yang baru.',
 
   // ---- the board ----
-  ludoBoardLabel: 'Ludo board',
-  ludoYou: 'You',
+  ludoBoardLabel: 'Papan Ludo',
+  ludoYou: 'Kamu',
   ludoCpu: 'CPU {n}',
-  ludoSeatHome: '{home} of 4 home',
-  ludoSafeSquare: 'Safe square',
+  ludoSeatHome: '{home} dari 4 sudah sampai rumah',
+  ludoSafeSquare: 'Petak aman',
   // Where a pawn is, in words. Composed into the two labels below so a seat, a
   // square and a state are each translated once.
-  ludoWhereYard: 'in the yard',
-  ludoWhereSquare: 'on square {n}',
-  ludoWhereSafe: 'on safe square {n}',
-  ludoWhereColumn: 'on home column square {n}',
-  ludoWhereHome: 'home',
+  ludoWhereYard: 'di kandang',
+  ludoWhereSquare: 'di petak {n}',
+  ludoWhereSafe: 'di petak aman {n}',
+  ludoWhereColumn: 'di petak {n} jalur rumah',
+  ludoWhereHome: 'sudah sampai rumah',
   ludoPawnAt: '{seat}, {where}',
-  ludoMovePawn: 'Move your pawn {where}',
+  ludoMovePawn: 'Gerakkan bidakmu yang {where}',
 
   // ---- the die and the turn ----
-  ludoRollAction: 'Roll',
-  ludoRollLabel: 'Roll the die',
-  ludoDieLabel: 'Die shows {die}',
-  ludoDieUnrolled: 'The die has not been thrown yet',
-  ludoTurnRoll: 'Your turn — throw the die.',
-  ludoTurnMove: 'You rolled {die}. Tap a pawn to move it.',
-  ludoTurnCpu: 'CPU {n} is playing…',
-  ludoAutoPass: 'Nothing can move on that roll — it passes.',
-  ludoThirdSix: 'Three sixes in a row — the turn passes on.',
-  ludoRollAgain: 'A six — throw again.',
+  ludoRollAction: 'Lempar',
+  ludoRollLabel: 'Lempar dadu',
+  ludoDieLabel: 'Dadu menunjukkan {die}',
+  ludoDieUnrolled: 'Dadu belum dilempar',
+  ludoTurnRoll: 'Giliranmu — lempar dadunya.',
+  ludoTurnMove: 'Kamu dapat {die}. Ketuk sebuah bidak untuk menggerakkannya.',
+  ludoTurnCpu: 'CPU {n} sedang bermain…',
+  ludoAutoPass: 'Tidak ada bidak yang bisa jalan dengan angka itu — giliran lewat.',
+  ludoThirdSix: 'Tiga kali enam berturut-turut — giliran pindah ke yang lain.',
+  ludoRollAgain: 'Dapat enam — lempar lagi.',
 
   // ---- the end of a match ----
-  ludoWinTitle: 'You win!',
-  ludoWinBody: 'All four of your pawns are home.',
-  ludoLoseTitle: 'CPU {n} wins',
-  ludoLoseBody: 'All four of their pawns are home. The next match is free.',
-  ludoNoContestTitle: 'No contest',
+  ludoWinTitle: 'Kamu menang!',
+  ludoWinBody: 'Keempat bidakmu sudah sampai rumah.',
+  ludoLoseTitle: 'CPU {n} menang',
+  ludoLoseBody: 'Keempat bidaknya sudah sampai rumah. Pertandingan berikutnya gratis.',
+  ludoNoContestTitle: 'Tanpa hasil',
   ludoNoContestBody:
-    'The match reached its limit of throws with nobody home. It counts as played, and as neither a win nor a loss.',
-  ludoWins: 'Wins',
-  ludoLosses: 'Losses',
+    'Pertandingan mencapai batas lemparan tanpa ada yang sampai rumah. Ini dihitung sebagai pertandingan yang dimainkan, tapi bukan menang maupun kalah.',
+  ludoWins: 'Menang',
+  ludoLosses: 'Kalah',
 
   // ---- Quick Rules (docs/LUDO_RULES.md §11) ----
-  ludoStep1Title: 'A six lets a pawn out',
+  ludoStep1Title: 'Angka enam mengeluarkan bidak',
   ludoStep1Body:
-    'Throw the die, then tap a pawn to move it. Only the pawns the rules allow can be tapped — everything else stays put.',
-  ludoStep2Title: 'A six throws again',
+    'Lempar dadunya, lalu ketuk sebuah bidak untuk menggerakkannya. Hanya bidak yang diizinkan aturan yang bisa diketuk — bidak lain tetap diam.',
+  ludoStep2Title: 'Angka enam dapat lempar lagi',
   ludoStep2Body:
-    'Roll a six and you throw once more. Three sixes in a row, though, and the turn passes on with nothing moved.',
-  ludoStep3Title: 'Landing on an enemy sends it back',
+    'Dapat angka enam dan kamu lempar sekali lagi. Tapi tiga kali enam berturut-turut, giliran langsung pindah tanpa ada bidak yang bergerak.',
+  ludoStep3Title: 'Menginjak lawan mengirimnya pulang',
   ludoStep3Body:
-    'Every enemy pawn on that square goes back to its yard at once. Safe squares are immune. Capturing does not earn you another throw — only a six does.',
-  ludoStep4Title: 'Stacking your own pawns protects nothing',
+    'Semua bidak lawan di petak itu langsung kembali ke kandangnya. Petak aman kebal dari ini. Menangkap tidak memberimu lemparan tambahan — hanya angka enam yang memberi itu.',
+  ludoStep4Title: 'Menumpuk bidak sendiri tidak melindungi apa pun',
   ludoStep4Body:
-    'Two of your pawns on one square block nobody and guard nothing. An enemy landing there sends the whole stack home, so a pile is a target, not a fort.',
-  ludoStep5Title: 'Come home on an exact count',
+    'Dua bidakmu di satu petak tidak menghalangi siapa pun dan tidak melindungi apa pun. Kalau lawan menginjak petak itu, seluruh tumpukan langsung kembali ke kandang — tumpukan itu sasaran, bukan benteng.',
+  ludoStep5Title: 'Sampai rumah harus dengan angka pas',
   ludoStep5Body:
-    'A throw that would overshoot home cannot move that pawn at all. Get all four home to win. Every face comes from the match seed, each of the six is equally likely, and no seat is thrown for differently.',
+    'Lemparan yang melebihi rumah membuat bidak itu tidak bisa jalan sama sekali. Bawa keempat bidakmu sampai rumah untuk menang. Setiap angka berasal dari seed pertandingan, keenam angka sama peluangnya, dan tidak ada pemain yang dadunya beda.',
 };

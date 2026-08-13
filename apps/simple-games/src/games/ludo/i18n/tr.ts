@@ -1,69 +1,68 @@
-// TODO(ludo): 未翻訳。次の担当が置き換える。
 import type { LudoMessages } from './en';
 
 export const tr: LudoMessages = {
   ludoName: 'Ludo',
-  ludoChooseOpponent: 'Choose your opponent',
-  ludoDifficulty_easy: 'Easy',
+  ludoChooseOpponent: 'Rakibini seç',
+  ludoDifficulty_easy: 'Kolay',
   ludoDifficulty_normal: 'Normal',
-  ludoDifficulty_hard: 'Hard',
-  ludoRecordNote: 'Won {wins} · Lost {losses}',
-  ludoConfirmSwitchTitle: 'Replace the match in progress?',
-  ludoConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  ludoDifficulty_hard: 'Zor',
+  ludoRecordNote: '{wins} galibiyet · {losses} mağlubiyet',
+  ludoConfirmSwitchTitle: 'Devam eden maç değiştirilsin mi?',
+  ludoConfirmSwitchBody: '{current} maçın yeni bir {next} maçıyla değiştirilecek.',
 
   // ---- the board ----
-  ludoBoardLabel: 'Ludo board',
-  ludoYou: 'You',
+  ludoBoardLabel: 'Ludo tahtası',
+  ludoYou: 'Sen',
   ludoCpu: 'CPU {n}',
-  ludoSeatHome: '{home} of 4 home',
-  ludoSafeSquare: 'Safe square',
+  ludoSeatHome: '4 taştan {home} tanesi evde',
+  ludoSafeSquare: 'Güvenli kare',
   // Where a pawn is, in words. Composed into the two labels below so a seat, a
   // square and a state are each translated once.
-  ludoWhereYard: 'in the yard',
-  ludoWhereSquare: 'on square {n}',
-  ludoWhereSafe: 'on safe square {n}',
-  ludoWhereColumn: 'on home column square {n}',
-  ludoWhereHome: 'home',
+  ludoWhereYard: 'başlangıçta',
+  ludoWhereSquare: '{n} numaralı karede',
+  ludoWhereSafe: '{n} numaralı güvenli karede',
+  ludoWhereColumn: 'bitiş koridorunun {n}. karesinde',
+  ludoWhereHome: 'evde',
   ludoPawnAt: '{seat}, {where}',
-  ludoMovePawn: 'Move your pawn {where}',
+  ludoMovePawn: '{where} taşını oynat',
 
   // ---- the die and the turn ----
-  ludoRollAction: 'Roll',
-  ludoRollLabel: 'Roll the die',
-  ludoDieLabel: 'Die shows {die}',
-  ludoDieUnrolled: 'The die has not been thrown yet',
-  ludoTurnRoll: 'Your turn — throw the die.',
-  ludoTurnMove: 'You rolled {die}. Tap a pawn to move it.',
-  ludoTurnCpu: 'CPU {n} is playing…',
-  ludoAutoPass: 'Nothing can move on that roll — it passes.',
-  ludoThirdSix: 'Three sixes in a row — the turn passes on.',
-  ludoRollAgain: 'A six — throw again.',
+  ludoRollAction: 'At',
+  ludoRollLabel: 'Zar at',
+  ludoDieLabel: 'Zar {die} gösteriyor',
+  ludoDieUnrolled: 'Zar henüz atılmadı',
+  ludoTurnRoll: 'Sıra sende — zarı at.',
+  ludoTurnMove: '{die} attın. Oynatmak için bir taşa dokun.',
+  ludoTurnCpu: 'CPU {n} oynuyor…',
+  ludoAutoPass: 'Bu sayıyla oynatılacak taş yok — sıra geçiyor.',
+  ludoThirdSix: 'Art arda üç kez altı geldi — sıra diğerine geçiyor.',
+  ludoRollAgain: 'Altı geldi — tekrar at.',
 
   // ---- the end of a match ----
-  ludoWinTitle: 'You win!',
-  ludoWinBody: 'All four of your pawns are home.',
-  ludoLoseTitle: 'CPU {n} wins',
-  ludoLoseBody: 'All four of their pawns are home. The next match is free.',
-  ludoNoContestTitle: 'No contest',
+  ludoWinTitle: 'Kazandın!',
+  ludoWinBody: 'Dört taşın da evde.',
+  ludoLoseTitle: 'CPU {n} kazandı',
+  ludoLoseBody: 'Onun dört taşı da evde. Sonraki maç ücretsiz.',
+  ludoNoContestTitle: 'Sonuçsuz',
   ludoNoContestBody:
-    'The match reached its limit of throws with nobody home. It counts as played, and as neither a win nor a loss.',
-  ludoWins: 'Wins',
-  ludoLosses: 'Losses',
+    'Maç, kimse eve ulaşamadan atış sınırına ulaştı. Oynanmış sayılır ama galibiyet ya da mağlubiyet sayılmaz.',
+  ludoWins: 'Galibiyet',
+  ludoLosses: 'Mağlubiyet',
 
   // ---- Quick Rules (docs/LUDO_RULES.md §11) ----
-  ludoStep1Title: 'A six lets a pawn out',
+  ludoStep1Title: 'Altı bir taşı çıkarır',
   ludoStep1Body:
-    'Throw the die, then tap a pawn to move it. Only the pawns the rules allow can be tapped — everything else stays put.',
-  ludoStep2Title: 'A six throws again',
+    'Zarı at, sonra oynatmak için bir taşa dokun. Yalnızca kuralların izin verdiği taşlara dokunabilirsin — geri kalanlar yerinde kalır.',
+  ludoStep2Title: 'Altı tekrar attırır',
   ludoStep2Body:
-    'Roll a six and you throw once more. Three sixes in a row, though, and the turn passes on with nothing moved.',
-  ludoStep3Title: 'Landing on an enemy sends it back',
+    'Altı atarsan bir kez daha atarsın. Ama art arda üç altı gelirse, hiçbir taş oynamadan sıra diğerine geçer.',
+  ludoStep3Title: 'Rakibin üzerine gelmek onu geri gönderir',
   ludoStep3Body:
-    'Every enemy pawn on that square goes back to its yard at once. Safe squares are immune. Capturing does not earn you another throw — only a six does.',
-  ludoStep4Title: 'Stacking your own pawns protects nothing',
+    'O karedeki bütün rakip taşları anında kendi başlangıcına döner. Güvenli kareler buna kapalıdır. Taş almak sana ekstra atış kazandırmaz — bunu yalnızca altı yapar.',
+  ludoStep4Title: 'Kendi taşlarını üst üste koymak korumaz',
   ludoStep4Body:
-    'Two of your pawns on one square block nobody and guard nothing. An enemy landing there sends the whole stack home, so a pile is a target, not a fort.',
-  ludoStep5Title: 'Come home on an exact count',
+    'Aynı karedeki iki taşın kimseyi engellemez, kimseyi korumaz. Bir rakip oraya gelirse yığının tamamı birden başlangıca döner — yığın bir kale değil, hedeftir.',
+  ludoStep5Title: 'Eve tam sayıyla girilir',
   ludoStep5Body:
-    'A throw that would overshoot home cannot move that pawn at all. Get all four home to win. Every face comes from the match seed, each of the six is equally likely, and no seat is thrown for differently.',
+    'Evi aşacak bir atış o taşı hiç oynatmaz. Kazanmak için dört taşını da eve götür. Her sayı maçın seed’inden gelir, altı yüz de eşit olasılıklıdır ve hiçbir oyuncu için zar farklı atılmaz.',
 };

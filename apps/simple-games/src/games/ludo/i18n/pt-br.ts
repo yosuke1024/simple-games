@@ -1,69 +1,68 @@
-// TODO(ludo): 未翻訳。次の担当が置き換える。
 import type { LudoMessages } from './en';
 
 export const ptBR: LudoMessages = {
   ludoName: 'Ludo',
-  ludoChooseOpponent: 'Choose your opponent',
-  ludoDifficulty_easy: 'Easy',
+  ludoChooseOpponent: 'Escolha seu adversário',
+  ludoDifficulty_easy: 'Fácil',
   ludoDifficulty_normal: 'Normal',
-  ludoDifficulty_hard: 'Hard',
-  ludoRecordNote: 'Won {wins} · Lost {losses}',
-  ludoConfirmSwitchTitle: 'Replace the match in progress?',
-  ludoConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
+  ludoDifficulty_hard: 'Difícil',
+  ludoRecordNote: '{wins} vitórias · {losses} derrotas',
+  ludoConfirmSwitchTitle: 'Substituir a partida em andamento?',
+  ludoConfirmSwitchBody: 'Sua partida {current} será substituída por uma nova partida {next}.',
 
   // ---- the board ----
-  ludoBoardLabel: 'Ludo board',
-  ludoYou: 'You',
+  ludoBoardLabel: 'Tabuleiro de Ludo',
+  ludoYou: 'Você',
   ludoCpu: 'CPU {n}',
-  ludoSeatHome: '{home} of 4 home',
-  ludoSafeSquare: 'Safe square',
+  ludoSeatHome: '{home} de 4 na meta',
+  ludoSafeSquare: 'Casa segura',
   // Where a pawn is, in words. Composed into the two labels below so a seat, a
   // square and a state are each translated once.
-  ludoWhereYard: 'in the yard',
-  ludoWhereSquare: 'on square {n}',
-  ludoWhereSafe: 'on safe square {n}',
-  ludoWhereColumn: 'on home column square {n}',
-  ludoWhereHome: 'home',
+  ludoWhereYard: 'na base',
+  ludoWhereSquare: 'na casa {n}',
+  ludoWhereSafe: 'na casa segura {n}',
+  ludoWhereColumn: 'na casa {n} do corredor final',
+  ludoWhereHome: 'na meta',
   ludoPawnAt: '{seat}, {where}',
-  ludoMovePawn: 'Move your pawn {where}',
+  ludoMovePawn: 'Mover sua peça {where}',
 
   // ---- the die and the turn ----
-  ludoRollAction: 'Roll',
-  ludoRollLabel: 'Roll the die',
-  ludoDieLabel: 'Die shows {die}',
-  ludoDieUnrolled: 'The die has not been thrown yet',
-  ludoTurnRoll: 'Your turn — throw the die.',
-  ludoTurnMove: 'You rolled {die}. Tap a pawn to move it.',
-  ludoTurnCpu: 'CPU {n} is playing…',
-  ludoAutoPass: 'Nothing can move on that roll — it passes.',
-  ludoThirdSix: 'Three sixes in a row — the turn passes on.',
-  ludoRollAgain: 'A six — throw again.',
+  ludoRollAction: 'Jogar',
+  ludoRollLabel: 'Jogar o dado',
+  ludoDieLabel: 'O dado mostra {die}',
+  ludoDieUnrolled: 'O dado ainda não foi lançado',
+  ludoTurnRoll: 'Sua vez — jogue o dado.',
+  ludoTurnMove: 'Você tirou {die}. Toque numa peça para movê-la.',
+  ludoTurnCpu: 'A CPU {n} está jogando…',
+  ludoAutoPass: 'Nada pode se mover com esse número — a vez passa.',
+  ludoThirdSix: 'Três seis seguidos — a vez passa adiante.',
+  ludoRollAgain: 'Um seis — jogue de novo.',
 
   // ---- the end of a match ----
-  ludoWinTitle: 'You win!',
-  ludoWinBody: 'All four of your pawns are home.',
-  ludoLoseTitle: 'CPU {n} wins',
-  ludoLoseBody: 'All four of their pawns are home. The next match is free.',
-  ludoNoContestTitle: 'No contest',
+  ludoWinTitle: 'Você venceu!',
+  ludoWinBody: 'Suas quatro peças chegaram à meta.',
+  ludoLoseTitle: 'A CPU {n} venceu',
+  ludoLoseBody: 'As quatro peças dela chegaram à meta. A próxima partida é grátis.',
+  ludoNoContestTitle: 'Sem resultado',
   ludoNoContestBody:
-    'The match reached its limit of throws with nobody home. It counts as played, and as neither a win nor a loss.',
-  ludoWins: 'Wins',
-  ludoLosses: 'Losses',
+    'A partida atingiu o limite de jogadas sem que ninguém chegasse à meta. Ela conta como jogada, mas não como vitória nem como derrota.',
+  ludoWins: 'Vitórias',
+  ludoLosses: 'Derrotas',
 
   // ---- Quick Rules (docs/LUDO_RULES.md §11) ----
-  ludoStep1Title: 'A six lets a pawn out',
+  ludoStep1Title: 'Um seis solta uma peça',
   ludoStep1Body:
-    'Throw the die, then tap a pawn to move it. Only the pawns the rules allow can be tapped — everything else stays put.',
-  ludoStep2Title: 'A six throws again',
+    'Jogue o dado e depois toque numa peça para movê-la. Só dá para tocar nas peças que as regras permitem mover — as outras ficam paradas.',
+  ludoStep2Title: 'Um seis joga de novo',
   ludoStep2Body:
-    'Roll a six and you throw once more. Three sixes in a row, though, and the turn passes on with nothing moved.',
-  ludoStep3Title: 'Landing on an enemy sends it back',
+    'Tire um seis e você joga mais uma vez. Mas três seis seguidos fazem a vez passar adiante sem mover nada.',
+  ludoStep3Title: 'Cair sobre um adversário manda ele de volta',
   ludoStep3Body:
-    'Every enemy pawn on that square goes back to its yard at once. Safe squares are immune. Capturing does not earn you another throw — only a six does.',
-  ludoStep4Title: 'Stacking your own pawns protects nothing',
+    'Toda peça adversária naquela casa volta de uma vez para a base. Casas seguras ficam livres disso. Capturar não te dá outra jogada — só um seis dá.',
+  ludoStep4Title: 'Empilhar suas peças não protege nada',
   ludoStep4Body:
-    'Two of your pawns on one square block nobody and guard nothing. An enemy landing there sends the whole stack home, so a pile is a target, not a fort.',
-  ludoStep5Title: 'Come home on an exact count',
+    'Duas peças suas na mesma casa não bloqueiam ninguém nem se protegem. Se um adversário cair ali, a pilha inteira volta de uma vez para a base — um monte de peças é um alvo, não uma fortaleza.',
+  ludoStep5Title: 'Só chega à meta com o número exato',
   ludoStep5Body:
-    'A throw that would overshoot home cannot move that pawn at all. Get all four home to win. Every face comes from the match seed, each of the six is equally likely, and no seat is thrown for differently.',
+    'Uma jogada que passaria da meta não move essa peça. Leve suas quatro peças até a meta para vencer. Cada número vem da semente da partida, os seis valores têm a mesma chance, e nenhuma posição joga diferente.',
 };
