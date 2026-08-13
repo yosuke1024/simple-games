@@ -36,11 +36,11 @@ describe('first run', () => {
     await user.click(screen.getByRole('button', { name: 'Next' }));
     expect(screen.getByText('Big ones break up')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Next' }));
-    expect(screen.getByText('Catch the spare craft')).toBeInTheDocument();
+    expect(screen.getByText('Catch what falls')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Start Playing' }));
 
     expect(screen.getByRole('img', { name: 'Sky Fighter board' })).toBeInTheDocument();
-    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(screen.getByText('Stage 1')).toBeInTheDocument();
     expect(screen.getByText('Wave 1 / 4')).toBeInTheDocument();
   });
 });
@@ -89,7 +89,7 @@ describe('home', () => {
 });
 
 describe('playing', () => {
-  it('mounts the board with score, wave and lives in the status row (§2)', async () => {
+  it('mounts the board with score, wave, lives and the weapon line (§2, §5)', async () => {
     const user = userEvent.setup();
     renderGame(tutorialDone);
 
@@ -97,6 +97,9 @@ describe('playing', () => {
     expect(screen.getByRole('img', { name: 'Sky Fighter board' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Lives: 3' })).toBeInTheDocument();
     expect(screen.getByLabelText('Score')).toHaveTextContent('0');
+    // The four weapon axes, folded into one small line (§5).
+    expect(screen.getByLabelText('Power 0')).toBeInTheDocument();
+    expect(screen.getByLabelText('Missile 0')).toBeInTheDocument();
     expect(screen.queryByText(/\d+:\d\d/)).not.toBeInTheDocument();
   });
 });

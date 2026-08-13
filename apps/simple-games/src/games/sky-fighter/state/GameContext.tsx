@@ -23,7 +23,6 @@ import {
 } from 'react';
 import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
-import { LEVEL_COUNT } from '../game/levels';
 import {
   flagsSchema,
   progressSchema,
@@ -46,16 +45,24 @@ export type RunOutcome = 'cleared' | 'failed';
 
 export interface LastResult {
   readonly outcome: RunOutcome;
-  readonly level: number;
+  /** The stage the run was flying when it ended (§2). */
+  readonly stage: number;
   readonly score: number;
   readonly isNewBestScore: boolean;
   readonly bestScore: number;
 }
 
 export interface Attempt {
+  /** The stage the run starts at; the run flies on from here (§2). */
   readonly level: number;
   /** Changes on every retry so the board remounts fresh. */
   readonly nonce: number;
+  /**
+   * Rolled fresh per attempt: the waves are the board seed's promise, but
+   * this is what makes each run's drops and offers its own (§5). Never
+   * persisted — a run lives and dies inside its attempt (§10).
+   */
+  readonly runSeed: string;
 }
 
 export interface SkyContextValue {
@@ -67,10 +74,11 @@ export interface SkyContextValue {
   tutorialCompleted: boolean;
   lastResult: LastResult | null;
   startLevel: (level: number) => void;
-  startNextLevel: () => void;
   retryLevel: () => void;
+  /** The board reports each stage the run finishes, as it happens (§7). */
+  reportStageCleared: (stage: number) => void;
   /** The board reports a finished run exactly once (§2). */
-  reportRunEnd: (outcome: RunOutcome, score: number) => void;
+  reportRunEnd: (outcome: RunOutcome, score: number, stage: number) => void;
   /** The board books play seconds that just became final (§9). */
   bookPlaySeconds: (seconds: number) => void;
   goHome: () => void;
@@ -133,24 +141,25 @@ export function SkyProvider({
     void saveRecord(progressSchema, next);
   }, []);
 
-  /** Begins an attempt at a level: counts it and mounts a fresh board. */
+  /** Begins a run from a stage: counts it and mounts a fresh board (§2). */
   const beginAttempt = useCallback(
     (level: number) => {
       const clamped = Math.min(Math.max(1, Math.floor(level)), progressRef.current.highestUnlocked);
       persistStats(applyAttemptStart(statsRef.current));
       setLastResult(null);
-      setAttempt((current) => ({ level: clamped, nonce: (current?.nonce ?? 0) + 1 }));
+      setAttempt((current) => ({
+        level: clamped,
+        nonce: (current?.nonce ?? 0) + 1,
+        // Not derived from the board seed: this is exactly the part of a run
+        // that must differ between runs (§5).
+        runSeed: `${Date.now().toString(36)}-${Math.floor(Math.random() * 0xffffffff).toString(36)}`,
+      }));
       setScreen('game');
     },
     [persistStats],
   );
 
   const startLevel = useCallback((level: number) => beginAttempt(level), [beginAttempt]);
-
-  const startNextLevel = useCallback(() => {
-    const current = attemptRef.current;
-    beginAttempt(Math.min(LEVEL_COUNT, (current?.level ?? 0) + 1));
-  }, [beginAttempt]);
 
   const retryLevel = useCallback(() => {
     const current = attemptRef.current;
@@ -164,28 +173,37 @@ export function SkyProvider({
     [persistStats],
   );
 
+  /**
+   * A stage the run finished, reported as it happens (§7): the frontier and
+   * the cleared count move mid-run, so a run that later fails still keeps
+   * every stage it actually won.
+   */
+  const reportStageCleared = useCallback(
+    (stage: number) => {
+      persistProgress(applyClearToProgress(progressRef.current, stage));
+      persistStats(applyCleared(statsRef.current));
+      recordGameCompleted();
+    },
+    [persistProgress, persistStats],
+  );
+
   const reportRunEnd = useCallback(
-    (outcome: RunOutcome, score: number) => {
+    (outcome: RunOutcome, score: number, stage: number) => {
       const current = attemptRef.current;
       if (!current) return;
-      // The score stands whether or not the last wave fell (§9).
+      // The score stands whether or not the last stage fell (§9). Stage
+      // clears were already booked one by one through reportStageCleared.
       const scored = applyRunScore(statsRef.current, score);
-      let next = scored.stats;
-      if (outcome === 'cleared') {
-        next = applyCleared(next);
-        persistProgress(applyClearToProgress(progressRef.current, current.level));
-        recordGameCompleted();
-      }
-      persistStats(next);
+      persistStats(scored.stats);
       setLastResult({
         outcome,
-        level: current.level,
+        stage,
         score,
         isNewBestScore: scored.isNewBestScore,
         bestScore: scored.bestScore,
       });
     },
-    [persistProgress, persistStats],
+    [persistStats],
   );
 
   const goHome = useCallback(() => {
@@ -232,8 +250,8 @@ export function SkyProvider({
       tutorialCompleted: flags.tutorialCompleted,
       lastResult,
       startLevel,
-      startNextLevel,
       retryLevel,
+      reportStageCleared,
       reportRunEnd,
       bookPlaySeconds,
       goHome,
@@ -249,8 +267,8 @@ export function SkyProvider({
       flags.tutorialCompleted,
       lastResult,
       startLevel,
-      startNextLevel,
       retryLevel,
+      reportStageCleared,
       reportRunEnd,
       bookPlaySeconds,
       goHome,

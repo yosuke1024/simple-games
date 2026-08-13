@@ -31,3 +31,112 @@
   height: auto;
   display: block;
 }
+
+/* The board and everything anchored over it (pickup toast). */
+.sf-board-area {
+  position: relative;
+}
+
+.sf-board-wrap {
+  display: contents;
+}
+
+/* The weapon build, one glanceable line under the status row (§5): letter +
+   level per axis. Muted until an axis has its first level, so the opening
+   screen stays quiet. */
+.sf-weapons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 12px 2px;
+}
+
+.sf-weapon-chip {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  opacity: 0.55;
+}
+
+.sf-weapon-chip-live {
+  color: var(--accent);
+  opacity: 1;
+}
+
+/* What was just caught, named briefly over the sky and gone (§5). */
+.sf-toast {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: var(--shadow);
+  pointer-events: none;
+  animation: sf-toast-fade 1.6s ease-out forwards;
+}
+
+@keyframes sf-toast-fade {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px);
+  }
+  12% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-toast {
+    animation: sf-toast-hold 1.6s step-end forwards;
+  }
+  @keyframes sf-toast-hold {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}
+
+/* The boss offer (§8): a small card, a name and one line per option. */
+.sf-reward-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.sf-reward-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+}
+
+.sf-reward-name {
+  font-weight: 800;
+}
+
+.sf-reward-desc {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
