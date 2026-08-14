@@ -13,6 +13,9 @@ describe('gameLandingUrl', () => {
     expect(gameLandingUrl('block-puzzle', 'pt-br')).toBe(
       'https://pixapps.ai/simple-games/games/block-puzzle/pt-br/',
     );
+    expect(gameLandingUrl('gomoku', 'fr')).toBe(
+      'https://pixapps.ai/simple-games/games/gomoku/fr/',
+    );
   });
 
   it('falls back to English rather than pointing at a page that does not exist', () => {
