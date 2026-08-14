@@ -48,29 +48,23 @@ describe('gameLandingUrl', () => {
       'schulte-table',
       'number-recall',
       'bunny-hop',
+      'hearts',
+      'gin-rummy',
+      'mahjong-solitaire',
+      'ludo',
+      'bubble-pop',
+      'takuzu',
+      'futoshiki',
+      'kakuro',
     ]) {
       expect(gameLandingUrl(id, 'en')).toBe(`https://pixapps.ai/simple-games/games/${id}/en/`);
     }
   });
 
-  it('offers no link for a shipped game whose guide is not written yet', () => {
-    // These eight ship in the collection but have no guide yet. Returning null
-    // is what keeps the tutorial's last screen from ending in a 404, and the
-    // button appears in the release after their pages go up.
-    for (const id of [
-      'hearts',
-      'gin-rummy',
-      'takuzu',
-      'futoshiki',
-      'kakuro',
-      'mahjong-solitaire',
-      'bubble-pop',
-      'ludo',
-    ]) {
-      expect(gameLandingUrl(id, 'en')).toBeNull();
-      expect(gameLandingUrl(id, 'ja')).toBeNull();
-    }
-    // The same mechanism, exercised with an id that is not a game at all.
+  it('offers no link for a game whose guide is not written yet', () => {
+    // Every shipped title has a guide now, so the mechanism is exercised with
+    // an id that is not a game at all: returning null is what keeps a future
+    // title's tutorial from ending in a 404 before its pages go up.
     expect(gameLandingUrl('some-future-game', 'en')).toBeNull();
     expect(gameLandingUrl('some-future-game', 'ja')).toBeNull();
   });

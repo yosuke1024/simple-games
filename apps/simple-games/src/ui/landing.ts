@@ -35,13 +35,10 @@ const PAGE_LOCALES = ['en', 'ja', 'es'] as const;
 
 /**
  * The titles whose guides are live at `${LANDING_BASE_URL}/games/<id>/<locale>/`
- * in every PAGE_LOCALES language. Twenty-two of the twenty-eight shipped
- * titles have one; Hearts, Gin Rummy, Takuzu, Futoshiki, Kakuro and Mahjong
- * Solitaire are the exceptions, and are absent here on purpose until their
- * pages go up. That is the mechanism working: a
- * title ships without an entry until its guides are deployed, and until then
- * the tutorial simply ends without a "Learn More" — which is honest, where a
- * dead link would not be.
+ * in every PAGE_LOCALES language. All thirty shipped titles have one. The
+ * mechanism stays: a future title ships without an entry until its guides are
+ * deployed, and until then the tutorial simply ends without a "Learn More" —
+ * which is honest, where a dead link would not be.
  */
 const PUBLISHED_GAME_IDS: readonly string[] = [
   'sudoku',
@@ -66,6 +63,14 @@ const PUBLISHED_GAME_IDS: readonly string[] = [
   'schulte-table',
   'number-recall',
   'bunny-hop',
+  'hearts',
+  'gin-rummy',
+  'mahjong-solitaire',
+  'ludo',
+  'bubble-pop',
+  'takuzu',
+  'futoshiki',
+  'kakuro',
 ];
 
 /** The game's landing page, or null while there is nothing to link to. */
