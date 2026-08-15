@@ -31,7 +31,7 @@ const GAME_PAGES_PUBLISHED = true;
  * tools/game-guides-content.js. Everything else falls back to English.
  * Adding one here before the pages are deployed is how you ship a 404.
  */
-const PAGE_LOCALES = ['en', 'ja', 'es', 'pt-br', 'fr'] as const;
+const PAGE_LOCALES = ['en', 'ja', 'es', 'pt-br', 'fr', 'id', 'de'] as const;
 
 /**
  * The titles whose guides are live at `${LANDING_BASE_URL}/games/<id>/<locale>/`

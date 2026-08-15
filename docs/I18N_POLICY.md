@@ -270,7 +270,7 @@ zh-Hans / zh-Hant のスクリプト解決(zh-TW → zh-Hant 等)は中国語対
 | -------- | ------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | 置き場所 | `apps/simple-games/src/i18n/locales/`(シェル)+ `src/games/<id>/i18n/`(ゲーム別) | 別リポジトリ `tools/game-guides-content.js` の `LOCALES` |
 | 単位     | 短いラベル 900 キー(シェル 85 + ゲーム別 815)                                   | 1 ゲームあたり数千語の長文                               |
-| 現在     | 14 言語                                                                         | en / ja / es / pt-br / fr                                |
+| 現在     | 14 言語                                                                         | en / ja / es / pt-br / fr / id / de                      |
 | 参照元   | `i18n/index.ts`                                                                 | `apps/simple-games/src/ui/landing.ts` の `PAGE_LOCALES`  |
 
 ガイドを 14 言語へ機械翻訳で一括展開しない。理由は 2 つある。
@@ -300,7 +300,9 @@ zh-Hans / zh-Hant のスクリプト解決(zh-TW → zh-Hant 等)は中国語対
 | es     | machine | 済           | **未**     | **未**     | 済           | 用語はアプリの `locales/es.ts` に準拠(bloque / casilla / cifra / ficha / hueco / Comodín / Piedra / Pista / Deshacer)。造語 4 件は `simple-games-wording.js` の `coinages` に記録 |
 
 | pt-br  | machine | 済           | 済         | **未**     | **未**       | 全 30 ゲーム。手順は `pixapps-landing/.claude/skills/translation-review/SKILL.md`(キャリブレーション合格: 重要カテゴリ 12/12 検出)。記録は `pixapps-landing/docs/translation-reviews/pt-br-*.md`。用語はアプリの `pt-br.ts` カタログ準拠。造語 6 件が作者裁定待ち(暫定判断で統一済み)。別モデル監査は PR 上の Codex レビューで実施中 |
-| fr     | machine | 済           | 済         | **未**     | **未**       | 全 30 ゲーム。手順は同 SKILL.md(キャリブレーション合格: 重要カテゴリ 9/9 検出。同回の id / de は 8/9 で不合格・非公開)。記録は `pixapps-landing/docs/translation-reviews/fr-*.md`。用語はアプリの `fr.ts` カタログ準拠(スートは solitaire 系 3 ゲームで famille — アプリ画面語に一致)。造語・暫定裁定は wording.js の fr `coinages` に記録、作者裁定待ち。別モデル監査は PR 上の Codex レビューで実施中 |
+| fr     | machine | 済           | 済         | **未**     | **未**       | 全 30 ゲーム。手順は同 SKILL.md(キャリブレーション合格: 重要カテゴリ 9/9 検出。同回の id / de は 8/9 で不合格 — のち 2026-08-15 の第 2 回で合格・公開)。記録は `pixapps-landing/docs/translation-reviews/fr-*.md`。用語はアプリの `fr.ts` カタログ準拠(スートは solitaire 系 3 ゲームで famille — アプリ画面語に一致)。造語・暫定裁定は wording.js の fr `coinages` に記録、作者裁定待ち。別モデル監査は PR 上の Codex レビューで実施中 |
+| id     | machine | 済           | 済         | **未**     | **未**       | 全 30 ゲーム。第 1 回キャリブレーション不合格(8/9)後、構成変更(判定の逐語照合節・独立判定 2 体・ツール遮断のハーネス強制)のうえ第 2 回 9/9 で合格して展開。記録は `pixapps-landing/docs/translation-reviews/id-*.md`(round2 キャリブレーション記録を含む)。用語はアプリの `id.ts` カタログ準拠(難易度 Sedang はゲーム別にアプリへ追随、checkers のみ Normal)。暫定裁定 6 件は作者裁定待ち |
+| de     | machine | 済           | 済         | **未**     | **未**       | 全 30 ゲーム。id と同じ再挑戦構成で第 2 回キャリブレーション 9/9 合格。記録は `pixapps-landing/docs/translation-reviews/de-*.md`。用語はアプリの `de.ts` カタログ準拠(Farbe=スート、barrel は sfFailedBody の Lauf と衝突するため Rohr)。暫定裁定 7 件は作者裁定待ち |
 
 `es` の「独立逆翻訳」が未なのは、**逆翻訳を書いた本人がやってしまったため**。
 自己確認なので済とは書けず、作者が読んだ逆翻訳も同じ理由で「作者の確認」には数えない。
