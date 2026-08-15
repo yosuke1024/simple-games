@@ -122,6 +122,26 @@ bash .github/scripts/check-principles.sh
 - [ ] ダークモードで全画面を確認
 - [ ] フォント倍率を最大にして主要画面が崩れない
 
+## 4.5 R8 スモークテスト(リリースビルドの実機確認)
+
+リリースビルドは R8 でコード縮小される(`android/app/build.gradle` の
+`minifyEnabled true`。keep ルールは `android/app/proguard-rules.pro`)。
+**R8 の問題は JS テストでは絶対に出ない** — 縮小はネイティブ側だけで起き、
+壊れるのはプラグイン呼び出しの実行時。だから release ビルド
+(`assembleRelease` した APK、debug ビルドは不可)を実機に入れて、
+ネイティブプラグインを使う導線を 1 つずつ通す:
+
+- [ ] バナー広告が表示される(オンラインで確認 — @capacitor-community/admob)
+- [ ] 広告削除の購入と「購入を復元」が動く(@capgo/native-purchases。
+      Play 配布ビルドが必要 — §5 の経路で確認)
+- [ ] ストアレビュー導線が動く(@capacitor-community/in-app-review)
+- [ ] ハプティクス(振動)が動く(@capacitor/haptics)
+- [ ] 機内モードでオフライン検出が働く(@capacitor/network)
+- [ ] 設定がアプリ再起動後も残る(@capacitor/preferences)
+- [ ] スプラッシュ画面が正常に表示・消灯する(@capacitor/splash-screen)
+- [ ] フォアグラウンド/バックグラウンド遷移が正常
+      (バックグラウンド滞在時間の計上を含む — @capacitor/app)
+
 ## 5. 広告と課金(本番接続)
 
 - [ ] AdMob に本番バナーユニットを作成し、GitHub Secrets に設定

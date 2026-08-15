@@ -55,7 +55,12 @@ android {
             if (sgHasKeystore) {
                 signingConfig signingConfigs.getByName("release")
             }
-            minifyEnabled false
+            // Code/resource shrinking is release-only; debug builds stay
+            // unshrunk so local development keeps fast, debuggable builds.
+            // Keep rules (and the audit that justifies them) live in
+            // proguard-rules.pro next to this file.
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
