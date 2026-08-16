@@ -16,11 +16,20 @@ describe('gameLandingUrl', () => {
     expect(gameLandingUrl('gomoku', 'fr')).toBe(
       'https://pixapps.ai/simple-games/games/gomoku/fr/',
     );
+    expect(gameLandingUrl('kakuro', 'th')).toBe(
+      'https://pixapps.ai/simple-games/games/kakuro/th/',
+    );
+    expect(gameLandingUrl('water-sort', 'vi')).toBe(
+      'https://pixapps.ai/simple-games/games/water-sort/vi/',
+    );
+    expect(gameLandingUrl('solitaire', 'ko')).toBe(
+      'https://pixapps.ai/simple-games/games/solitaire/ko/',
+    );
   });
 
   it('falls back to English rather than pointing at a page that does not exist', () => {
     // The app ships fourteen locales; only some of them have written pages.
-    for (const locale of ['th', 'zh-hant', 'hi', 'tr']) {
+    for (const locale of ['zh-hant', 'hi', 'tr']) {
       expect(gameLandingUrl('minesweeper', locale)).toBe(
         'https://pixapps.ai/simple-games/games/minesweeper/en/',
       );
