@@ -48,7 +48,7 @@ export function ResultAdSlot() {
   return (
     <div className="web-ad-slot web-ad-slot-result">
       <Suspense fallback={null}>
-        <AdUnit slot={slotResult} compact />
+        <AdUnit slot={slotResult} placement="result" compact />
       </Suspense>
     </div>
   );

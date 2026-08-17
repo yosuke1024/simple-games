@@ -5,17 +5,26 @@
  */
 import { afterEach, describe, expect, it } from 'vitest';
 import { setOnlineForTesting } from '../../network';
+import { setAdMaxIdsForTesting } from './admax';
 import { initWebAds } from './boot';
 import { setWebAdsConfigForTesting } from './config';
 
+type AdMaxWindow = Window & { admaxads?: unknown[] };
+
 const bar = () => document.querySelector('.web-anchor-test');
 const adsScript = () => document.head.querySelector('script[data-sg-adsense]');
+const admaxBar = () => document.querySelector('.web-admax-anchor');
+const admaxScript = () => document.head.querySelector('script[data-sg-admax]');
 
 afterEach(() => {
   setWebAdsConfigForTesting(null);
+  setAdMaxIdsForTesting(null);
   setOnlineForTesting(true);
   bar()?.remove();
   adsScript()?.remove();
+  admaxBar()?.remove();
+  admaxScript()?.remove();
+  delete (window as AdMaxWindow).admaxads;
 });
 
 describe('initWebAds', () => {
@@ -25,6 +34,9 @@ describe('initWebAds', () => {
     expect(document.querySelectorAll('.web-anchor-test')).toHaveLength(1);
     expect(bar()).toHaveTextContent('Test ad');
     expect(adsScript()).toBeNull();
+    // The fallback network is no exception to "zero network in test mode".
+    expect(admaxScript()).toBeNull();
+    expect((window as AdMaxWindow).admaxads).toBeUndefined();
   });
 
   it('production online: loads the loader (anchor formats come from the console)', () => {
@@ -56,5 +68,62 @@ describe('initWebAds', () => {
     initWebAds();
     expect(adsScript()).toBeNull();
     expect(bar()).toBeNull();
+  });
+});
+
+/**
+ * The anchor's runtime fallback (docs/ADS_POLICY.md「Web 版」フォールバック):
+ * a failed AdSense loader — the one anchor-level failure that is detectable —
+ * mounts a fixed bottom bar with a 忍者AdMax frame in the reserved bottom
+ * space. Nothing else mounts it, and a working loader never sees AdMax.
+ */
+describe('initWebAds AdMax anchor fallback', () => {
+  const failAdSenseLoader = () => adsScript()?.dispatchEvent(new Event('error'));
+
+  it('loader failure with anchor frames: mounts the bar once, widest frame that fits', () => {
+    setWebAdsConfigForTesting({ testMode: false, client: 'test-client' });
+    setAdMaxIdsForTesting({ anchor728x90: 'anchor-wide', anchor320x100: 'anchor-mobile' });
+    initWebAds();
+    expect(admaxBar()).toBeNull(); // nothing until the loader actually fails
+
+    failAdSenseLoader();
+    // jsdom's viewport is desktop-wide, so the 728×90 frame wins.
+    expect(document.querySelectorAll('.web-admax-anchor')).toHaveLength(1);
+    expect(admaxBar()?.querySelector('.admax-ads')).toHaveAttribute(
+      'data-admax-id',
+      'anchor-wide',
+    );
+    expect((window as AdMaxWindow).admaxads).toEqual([
+      { admax_id: 'anchor-wide', type: 'banner' },
+    ]);
+    expect(admaxScript()).not.toBeNull();
+  });
+
+  it('loader success: no AdMax contact at all', () => {
+    setWebAdsConfigForTesting({ testMode: false, client: 'test-client' });
+    setAdMaxIdsForTesting({ anchor728x90: 'anchor-wide' });
+    initWebAds();
+    expect(admaxBar()).toBeNull();
+    expect(admaxScript()).toBeNull();
+    expect((window as AdMaxWindow).admaxads).toBeUndefined();
+  });
+
+  it('loader failure without anchor frames: quiet nothing', () => {
+    setWebAdsConfigForTesting({ testMode: false, client: 'test-client' });
+    initWebAds();
+    failAdSenseLoader();
+    expect(admaxBar()).toBeNull();
+    expect(admaxScript()).toBeNull();
+  });
+
+  it('AdMax loader failing too removes the bar — no empty shelf', () => {
+    setWebAdsConfigForTesting({ testMode: false, client: 'test-client' });
+    setAdMaxIdsForTesting({ anchor728x90: 'anchor-wide' });
+    initWebAds();
+    failAdSenseLoader();
+    expect(admaxBar()).not.toBeNull();
+
+    admaxScript()?.dispatchEvent(new Event('error'));
+    expect(admaxBar()).toBeNull();
   });
 });

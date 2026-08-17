@@ -16,11 +16,26 @@
  * - Test mode renders a local placeholder and contacts no ad network:
  *   AdSense has no official test client ID, so honest testing is "no request
  *   at all", not "a request marked as a test".
+ *
+ * Runtime fallback (docs/ADS_POLICY.md「Web 版」フォールバック): when AdSense
+ * demonstrably fails — its loader errors, or it reports this unit `unfilled` —
+ * the same reserved box swaps to a same-size 忍者AdMax frame (admax.ts)
+ * instead of collapsing. AdSense stays the primary network: nothing here runs
+ * before an AdSense attempt failed, and a build without an AdSense client
+ * contacts no network at all, AdMax included.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { isOnline } from '../../network';
+import {
+  type AdPlacement,
+  adMaxScriptFailed,
+  adMaxSlotId,
+  ensureAdMaxScript,
+  onAdMaxScriptError,
+  pushAdMaxAd,
+} from './admax';
 import { webAdsConfig } from './config';
-import { ensureAdSenseScript } from './script';
+import { adSenseScriptFailed, ensureAdSenseScript, onAdSenseScriptError } from './script';
 
 type AdsWindow = Window & { adsbygoogle?: unknown[] };
 
@@ -61,6 +76,8 @@ export function pickAdSize(available: number): AdSize | null {
 export interface AdUnitProps {
   /** AdSense slot ID for this placement; null renders nothing. */
   slot: string | null;
+  /** Which placement this is — keys the AdMax fallback frame lookup. */
+  placement: AdPlacement;
   /** Never use the wide size, even if the container could hold it. */
   compact?: boolean;
 }
@@ -83,12 +100,17 @@ function setPlacementHidden(host: HTMLDivElement | null, hidden: boolean): void 
   placement.style.display = hidden ? 'none' : '';
 }
 
-export default function AdUnit({ slot, compact = false }: AdUnitProps) {
+export default function AdUnit({ slot, placement, compact = false }: AdUnitProps) {
   const { testMode, client } = webAdsConfig();
   const hostRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState<AdSize | null>(null);
   const insRef = useRef<HTMLModElement | null>(null);
   const requestedRef = useRef(false);
+  // The 忍者AdMax frame standing in for this unit once AdSense demonstrably
+  // failed (docs/ADS_POLICY.md「Web 版」フォールバック). One-way for this
+  // mount: a placement never flips back and forth between networks.
+  const [fallbackId, setFallbackId] = useState<string | null>(null);
+  const fallbackRequestedRef = useRef(false);
 
   // Before paint, so the unit is sized on its first appearance. The host box
   // is already the slot's reserved height, so filling it in shifts nothing.
@@ -109,10 +131,31 @@ export default function AdUnit({ slot, compact = false }: AdUnitProps) {
     // that does not exist would be a request the reader never sees.
     if (!live || !client || !size || requestedRef.current || !insRef.current) return;
 
+    // Every AdSense failure below lands here: swap in the AdMax frame for
+    // this exact placement×size, or — with no frame configured — collapse
+    // the placement as an unfilled unit always has.
+    const admaxId = adMaxSlotId(placement, size);
+    const failOver = () => {
+      if (admaxId) {
+        setPlacementHidden(hostRef.current, false);
+        setFallbackId(admaxId);
+      } else {
+        setPlacementHidden(hostRef.current, true);
+      }
+    };
+
+    // The loader already failed earlier this page view: go straight to the
+    // fallback rather than queueing a push nothing will read (re-requesting
+    // the loader would be the retry loop we don't do).
+    if (adSenseScriptFailed()) {
+      failOver();
+      return;
+    }
+
     const unit = insRef.current;
     const syncFillState = () => {
       const status = unit.getAttribute('data-ad-status');
-      if (status === 'unfilled') setPlacementHidden(hostRef.current, true);
+      if (status === 'unfilled') failOver();
       if (status === 'filled') setPlacementHidden(hostRef.current, false);
     };
     const observer = new MutationObserver(syncFillState);
@@ -130,15 +173,35 @@ export default function AdUnit({ slot, compact = false }: AdUnitProps) {
     requestedRef.current = true;
     setPlacementHidden(hostRef.current, false);
     ensureAdSenseScript(client);
+    const unsubscribe = onAdSenseScriptError(failOver);
     try {
       const w = window as AdsWindow;
       (w.adsbygoogle = w.adsbygoogle ?? []).push({});
     } catch {
-      setPlacementHidden(hostRef.current, true);
+      failOver();
     }
 
-    return () => observer.disconnect();
-  }, [live, client, size]);
+    return () => {
+      observer.disconnect();
+      unsubscribe();
+    };
+  }, [live, client, size, placement]);
+
+  // The fallback mount: render happened first (the .admax-ads div must be in
+  // the DOM before its queue entry is processed), then this pushes exactly
+  // once per mount. AdMax's loader failing too — typically an ad blocker —
+  // collapses the placement like a plain unfilled: no empty shelf.
+  useEffect(() => {
+    if (!fallbackId || fallbackRequestedRef.current) return;
+    if (!isOnline() || adMaxScriptFailed()) {
+      setPlacementHidden(hostRef.current, true);
+      return;
+    }
+    fallbackRequestedRef.current = true;
+    pushAdMaxAd(fallbackId);
+    ensureAdMaxScript();
+    return onAdMaxScriptError(() => setPlacementHidden(hostRef.current, true));
+  }, [fallbackId]);
 
   // Nothing can ever appear here (no client, no slot): render nothing at all
   // rather than an empty host, so a build with no ad IDs stays literally empty.
@@ -157,7 +220,13 @@ export default function AdUnit({ slot, compact = false }: AdUnitProps) {
         >
           Test ad
         </div>
-      ) : live ? (
+      ) : !live ? null : fallbackId ? (
+        <div
+          className="admax-ads"
+          data-admax-id={fallbackId}
+          style={{ display: 'inline-block', width: size.width, height: size.height }}
+        />
+      ) : (
         <ins
           ref={insRef}
           className="adsbygoogle"
@@ -165,7 +234,7 @@ export default function AdUnit({ slot, compact = false }: AdUnitProps) {
           data-ad-client={client}
           data-ad-slot={slot}
         />
-      ) : null}
+      )}
     </div>
   );
 }
