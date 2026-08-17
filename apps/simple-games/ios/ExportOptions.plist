@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Export options for the App Store Connect / TestFlight lane. The
+	     Android counterpart lives in .github/workflows/android-release.yml;
+	     iOS keeps its distribution settings here because xcodebuild takes
+	     them as a file rather than as flags.
+
+	     Nothing in this file is a secret: the team ID is public in every
+	     shipped binary, and the App Store Connect API key stays outside the
+	     repository and is passed to xcodebuild by path
+	     (docs/RELEASE_CHECKLIST.md §4.7). -->
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>teamID</key>
+	<string>8XR3LLAS54</string>
+
+	<!-- Write an .ipa to disk rather than uploading straight from the export.
+	     The upload is a separate, deliberate command so the artifact can be
+	     inspected first — and so a failed upload never means re-archiving. -->
+	<key>destination</key>
+	<string>export</string>
+
+	<!-- Automatic signing, matching CODE_SIGN_STYLE in the Xcode project.
+	     The distribution certificate and the App Store provisioning profile
+	     are created on demand by `-allowProvisioningUpdates`. -->
+	<key>signingStyle</key>
+	<string>automatic</string>
+
+	<!-- Symbols go up with the build so App Store Connect can symbolicate
+	     crash reports. The app collects no analytics of its own
+	     (docs/PRIVACY_POLICY.md); this is Apple-side crash reporting, which
+	     users opt into through iOS itself. -->
+	<key>uploadSymbols</key>
+	<true/>
+
+	<!-- Version and build number come from the Xcode project
+	     (MARKETING_VERSION / CURRENT_PROJECT_VERSION), never from Xcode
+	     silently bumping them during export — the same reason the Android
+	     lane derives versionCode from the tag instead of keeping it by hand. -->
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+</dict>
+</plist>
