@@ -53,6 +53,7 @@ export const zhHant: Messages = {
   reducedMotion: '減少動態效果',
   privacyPolicy: '隱私權政策',
   termsOfUse: '使用條款',
+  adPrivacyOptions: '廣告隱私選項',
   resetData: '清除本機資料',
   resetConfirmTitle: '刪除所有本機資料？',
   resetConfirmBody: '這會從這台裝置刪除你的遊戲、統計和設定，而且無法復原。',

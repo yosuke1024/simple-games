@@ -53,6 +53,7 @@ export const ptBR: Messages = {
   reducedMotion: 'Reduzir movimento',
   privacyPolicy: 'Política de Privacidade',
   termsOfUse: 'Termos de uso',
+  adPrivacyOptions: 'Opções de privacidade de anúncios',
   resetData: 'Apagar dados locais',
   resetConfirmTitle: 'Apagar todos os dados locais?',
   resetConfirmBody:

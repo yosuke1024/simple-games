@@ -79,20 +79,62 @@ CI の原則ガードが `apps/*/src` を走査して検証する。
 - 開発環境では Google 公式のテスト広告 ID のみ使用する
   (`VITE_ADMOB_USE_TEST_ADS` で明示的に切り替え可能)。
 - 本番広告 ID はコードへ直接埋め込まず、ビルド時に環境変数で注入する。
-  - バナー広告ユニット ID(Web 側): `VITE_ADMOB_ANDROID_BANNER_ID`。
-    未設定の場合、広告は表示しない(ゲームは通常動作)。
-  - AdMob アプリケーション ID(ネイティブ側): `ADMOB_ANDROID_APP_ID`
-    (Gradle manifestPlaceholder)。未設定ならテスト用 app ID にフォールバック。
+  - バナー広告ユニット ID(Web 側): `VITE_ADMOB_ANDROID_BANNER_ID` /
+    `VITE_ADMOB_IOS_BANNER_ID`。未設定の場合、広告は表示しない
+    (ゲームは通常動作)。
+  - AdMob アプリケーション ID(ネイティブ側): Android は `ADMOB_ANDROID_APP_ID`
+    (Gradle manifestPlaceholder)、iOS は `ADMOB_IOS_APP_ID`(Xcode のビルド設定 →
+    `Info.plist` の `GADApplicationIdentifier`)。どちらも未設定ならその OS の
+    テスト用 app ID にフォールバックする。
 - **ID の名前にはプラットフォームを含める。** AdMob のアプリ ID・ユニット ID は
-  OS ごとに別であり、iOS 版を出すときは `ADMOB_IOS_APP_ID` /
-  `VITE_ADMOB_IOS_BANNER_ID` が**並んで増える**(Android の名前を使い回さない)。
+  OS ごとに別であり、`ADMOB_IOS_*` は Android の名前を使い回さずに並んでいる。
+  **選択は実行時に `Capacitor.getPlatform()` で行う**(`services/ads/banner.ts`)。
+  ネイティブの JS バンドルは 1 つを両 OS へコピーする作りなので、「iOS ビルドに
+  Android の ID が含まれない」ことはリリースレーンが片方しか注入しないことで、
+  「iOS が Android のユニットを**配信しない**」ことはこの実行時分岐で守る
+  (後者を `banner.test.ts` が検査する)。
+- テスト広告 ID も OS ごとに別である(Google 公式のアダプティブバナー用を各 OS で
+  使う)。ここを共有すると、テスト中だけ通って本番で別 OS の在庫を引く。
 - インタースティシャル用の ID・シークレットは存在しない。
 
 ## 同意(UMP)
 
+実装は `src/services/ads/consent.ts`(バナー本体とは別モジュール。答える問いが
+違う — こちらは「リクエストしてよいか」、`banner.ts` は「出したいか」)。
+
 - 広告同意が法的に必要な地域では UMP の同意フォームを表示する。
+- **UMP が `canRequestAds` を真と答えるまで広告をリクエストしない。**
+  同意が取れないことは「同意なしで広告を出す」ではなく「広告を出さない」に倒す。
 - 同意処理はゲーム初期化と切り離す。同意フォームの取得・表示の失敗で
   ゲームを止めない・遅らせない。オフライン時は同意処理も行わない。
+- **リトライループを作らない。** 試行は 1 起動あたり最大 2 回(起動時と、
+  最初にバナーが要求されたとき)。オフラインでの見送りは試行に数えない —
+  通信を 1 件も出していないため。オフラインで起動して後からオンラインになった
+  回でも広告が出るのは、この 2 回目の枠による。
+- **Privacy Options** が UMP から required と返ったときだけ、設定 / About に
+  「Ad Privacy Options」の行を出す(`adPrivacyOptions`)。required でない地域では
+  行そのものを描かない — 説明のつかない行を並べないため。
+
+### ATT(App Tracking Transparency)を使わない
+
+**iOS で ATT の許可ダイアログを出さない。** `NSUserTrackingUsageDescription` を
+`Info.plist` に置かず、`AdMob.requestTrackingAuthorization` を呼ばない。
+
+理由: ATT が必要になるのは **IDFA を使って他社のアプリ・サイトをまたいで
+ユーザーを追跡する**場合である。この製品は analytics SDK を native ビルドに
+入れず(`check-principles.sh`)、広告はコンテキスト連動のバナー 1 枠だけで、
+追跡のための識別子を必要としていない。許可を求めないので IDFA は取得できず、
+App Store の「トラッキング」の申告も「しない」で一貫する。
+
+インストール計測は **SKAdNetwork** が担う(`Info.plist` の `SKAdNetworkItems`)。
+これは端末が署名済みの集計値をアドネットワークへ返す仕組みで、ユーザー単位の
+識別子は端末から出ない — だから ATT なしで同居できる。
+
+**この判断は覆せる。** ATT を出すのは技術的には数行だが、出した瞬間に
+「追跡しない」という申告と製品の説明が変わる。変えるなら
+[PRIVACY_POLICY.md](PRIVACY_POLICY.md) の公開ページと App Store の申告を
+同じ回で直すこと。ATT を導入する場合でも、**拒否がゲーム機能・広告削除の購入・
+オフラインプレイに影響してはならない**(拒否は正常系である)。
 
 ## ストア表現
 

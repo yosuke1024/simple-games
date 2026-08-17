@@ -35,6 +35,8 @@ import {
 } from '../../monetization/adRemoval';
 import { useAdRemovalPurchased, usePurchaseAvailable } from '../../monetization/useAdRemoval';
 import { isNativeAdsPlatform } from '../../services/ads/banner';
+import { showPrivacyOptions } from '../../services/ads/consent';
+import { usePrivacyOptionsRequired } from '../../services/ads/useConsent';
 import { initReview } from '../../services/review';
 import { useSettings } from '../../state/SettingsContext';
 import { clearLocalData } from '../../storage/repo';
@@ -113,6 +115,12 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const purchasable = usePurchaseAvailable() && !purchased;
   /** Ads exist on this platform at all — false on the web build. */
   const adsExist = isNativeAdsPlatform();
+  /**
+   * UMP requires a way back into the privacy options form. Only true where
+   * consent law asks for it, so most players never see this row
+   * (docs/ADS_POLICY.md「同意(UMP)」).
+   */
+  const privacyOptionsRequired = usePrivacyOptionsRequired();
   const [price, setPrice] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -283,6 +291,22 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               </span>
             </button>
           ))}
+          {/* Reopens Google's consent form. Placed beside the privacy policy
+              because that is what it is — a privacy control, not an ad
+              setting — and rendered only where UMP says an entry point is
+              required, so it never appears as an unexplained extra row. */}
+          {privacyOptionsRequired ? (
+            <button
+              type="button"
+              className="settings-row"
+              onClick={() => void showPrivacyOptions()}
+            >
+              <span className="settings-row-label">{t('adPrivacyOptions')}</span>
+              <span className="settings-row-chevron" aria-hidden="true">
+                <IconChevronRight />
+              </span>
+            </button>
+          ) : null}
         </section>
 
         <button

@@ -6,6 +6,7 @@
  * Hard rules implemented here:
  * - Ads never gate game features; every failure path is silent.
  * - Offline → no ad requests at all, and no retry loops (battery).
+ * - No ad is requested before UMP says it may be (consent.ts).
  * - The ad-removal purchase is honored by the caller (BannerSlot): once the
  *   entitlement is active this module is simply never asked to show anything.
  * - Dev builds use Google's official test ad unit. The production unit ID is
@@ -14,33 +15,61 @@
  */
 import {
   AdMob,
-  AdmobConsentStatus,
   BannerAdPluginEvents,
   BannerAdPosition,
   BannerAdSize,
 } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 import { isOnline } from '../network';
+import { canRequestAds } from './consent';
 
 /**
- * Google's official ANDROID test banner ID (safe to hardcode; never earns
- * revenue). AdMob app and unit IDs are per-OS, which is why every ID name
- * here carries the platform: a future iOS build brings Google's iOS test
- * unit and its own VITE_ADMOB_IOS_BANNER_ID, selected by platform — it does
- * not reuse these.
+ * AdMob app IDs and unit IDs are per-OS, so every ID here is keyed by
+ * platform and nothing is ever shared between the two. That is also why the
+ * environment variables carry the platform in their names
+ * (docs/ADS_POLICY.md「広告 ID の管理」).
  */
-const ANDROID_TEST_BANNER_ID = 'ca-app-pub-3940256099942544/9214589741';
+type AdPlatform = 'android' | 'ios';
+
+/**
+ * Google's official test banner units (safe to hardcode; they never earn
+ * revenue). Both are the ADAPTIVE banner unit for their OS — the fixed-size
+ * test units would not exercise the size the app actually asks for.
+ */
+const TEST_BANNER_ID: Record<AdPlatform, string> = {
+  android: 'ca-app-pub-3940256099942544/9214589741',
+  ios: 'ca-app-pub-3940256099942544/2435281174',
+};
+
+/**
+ * Production units, injected at build time and never committed. Written as
+ * whole `import.meta.env.VITE_…` expressions because Vite substitutes those
+ * textually — a computed lookup would leave both IDs in every build, which is
+ * exactly what "an iOS build must not carry the Android ID" forbids.
+ */
+const PRODUCTION_BANNER_ID: Record<AdPlatform, string | undefined> = {
+  android: import.meta.env.VITE_ADMOB_ANDROID_BANNER_ID,
+  ios: import.meta.env.VITE_ADMOB_IOS_BANNER_ID,
+};
 
 const useTestAds: boolean =
   import.meta.env.DEV || import.meta.env.VITE_ADMOB_USE_TEST_ADS === 'true';
 
-function bannerAdUnitId(): string | null {
-  if (useTestAds) return ANDROID_TEST_BANNER_ID;
+/** The ad platform, or null where the app shows no native banner at all. */
+export function adPlatform(): AdPlatform | null {
+  const platform = Capacitor.getPlatform();
+  return platform === 'android' || platform === 'ios' ? platform : null;
+}
+
+export function bannerAdUnitId(): string | null {
+  const platform = adPlatform();
+  if (!platform) return null;
+  if (useTestAds) return TEST_BANNER_ID[platform];
   // The release workflow passes '' when ads are not configured, and Vite
   // embeds that as the empty string rather than undefined — so `?? null` alone
   // would hand back '' here. The caller's `if (!adId)` already stops that, but
   // normalizing at the source keeps the next caller from having to know.
-  const injected = import.meta.env.VITE_ADMOB_ANDROID_BANNER_ID?.trim() ?? '';
+  const injected = PRODUCTION_BANNER_ID[platform]?.trim() ?? '';
   return injected === '' ? null : injected;
 }
 
@@ -72,27 +101,14 @@ export async function initAds(): Promise<void> {
       bannerCreated = false;
       bannerShowing = false;
     });
-    void requestConsentIfNeeded();
+    // Ask for consent early so the first game screen does not have to wait,
+    // but never wait for it here: the answer is required before an ad
+    // request, not before the app finishes booting.
+    void canRequestAds();
     // The game screen may have been entered before init finished.
     if (bannerWanted) void applyBannerState();
   } catch {
     // SDK init failed (offline etc.): game unaffected; retried next launch.
-  }
-}
-
-/**
- * UMP consent, decoupled from game initialization: failures are ignored and
- * the game never waits for this.
- */
-async function requestConsentIfNeeded(): Promise<void> {
-  if (!isOnline()) return;
-  try {
-    const info = await AdMob.requestConsentInfo();
-    if (info.isConsentFormAvailable && info.status === AdmobConsentStatus.REQUIRED) {
-      await AdMob.showConsentForm();
-    }
-  } catch {
-    // No consent config / offline: continue without personalized ads.
   }
 }
 
@@ -135,6 +151,11 @@ async function applyBannerState(): Promise<void> {
     if (!isOnline()) return;
     const adId = bannerAdUnitId();
     if (!adId) return;
+    // Last gate before the only ad request this app makes. Awaiting here can
+    // let the player leave the game screen first, so the intent is rechecked
+    // below rather than assumed.
+    if (!(await canRequestAds())) return;
+    if (!bannerWanted || bannerCreated) return;
     await AdMob.showBanner({
       adId,
       adSize: BannerAdSize.ADAPTIVE_BANNER,
@@ -149,4 +170,14 @@ async function applyBannerState(): Promise<void> {
   } finally {
     bannerBusy = false;
   }
+}
+
+/** Test hook. */
+export function resetBannerForTesting(): void {
+  initialized = false;
+  bannerCreated = false;
+  bannerShowing = false;
+  bannerWanted = false;
+  bannerBusy = false;
+  bannerSizeListeners.clear();
 }

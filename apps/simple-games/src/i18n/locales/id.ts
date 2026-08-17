@@ -53,6 +53,7 @@ export const id: Messages = {
   reducedMotion: 'Kurangi animasi',
   privacyPolicy: 'Kebijakan Privasi',
   termsOfUse: 'Ketentuan Penggunaan',
+  adPrivacyOptions: 'Opsi Privasi Iklan',
   resetData: 'Hapus Data Lokal',
   resetConfirmTitle: 'Hapus semua data lokal?',
   resetConfirmBody:

@@ -61,6 +61,7 @@ export const en = {
   reducedMotion: 'Reduce motion',
   privacyPolicy: 'Privacy Policy',
   termsOfUse: 'Terms of Use',
+  adPrivacyOptions: 'Ad Privacy Options',
   resetData: 'Reset Local Data',
   resetConfirmTitle: 'Delete all local data?',
   resetConfirmBody:

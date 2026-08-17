@@ -53,6 +53,7 @@ export const hi: Messages = {
   reducedMotion: 'कम एनिमेशन',
   privacyPolicy: 'गोपनीयता नीति',
   termsOfUse: 'उपयोग की शर्तें',
+  adPrivacyOptions: 'विज्ञापन गोपनीयता विकल्प',
   resetData: 'लोकल डेटा हटाएँ',
   resetConfirmTitle: 'सभी लोकल डेटा हटाएँ?',
   resetConfirmBody: 'इस डिवाइस से गेम, आंकड़े और सेटिंग्स हट जाएँगी। इसे वापस नहीं किया जा सकता।',

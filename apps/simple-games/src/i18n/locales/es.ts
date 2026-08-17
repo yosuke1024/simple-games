@@ -53,6 +53,7 @@ export const es: Messages = {
   reducedMotion: 'Reducir movimiento',
   privacyPolicy: 'Política de privacidad',
   termsOfUse: 'Términos de uso',
+  adPrivacyOptions: 'Opciones de privacidad de anuncios',
   resetData: 'Borrar datos locales',
   resetConfirmTitle: '¿Borrar todos los datos locales?',
   resetConfirmBody:

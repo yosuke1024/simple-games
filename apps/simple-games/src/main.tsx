@@ -5,7 +5,7 @@ import { App } from './app/App';
 import { initRecentGames } from './app/recentGames';
 import { resolveLocale } from './i18n';
 import { initAdRemoval, isAdRemovalPurchased } from './monetization/adRemoval';
-import { initPlayBilling } from './monetization/playBilling';
+import { initNativeStore } from './monetization/nativeStore';
 import { initAds } from './services/ads/banner';
 import { webAdsEnabled } from './services/ads/web/config';
 import { initNetwork } from './services/network';
@@ -86,7 +86,7 @@ async function boot(): Promise<void> {
   // gate the app. With the ad-removal purchase active the ad SDK is never
   // initialized at all (battery, and no ad code runs for paying users).
   if (!isAdRemovalPurchased()) void initAds();
-  void initPlayBilling();
+  void initNativeStore();
   void SplashScreen.hide().catch(() => undefined);
 }
 

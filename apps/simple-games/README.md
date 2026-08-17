@@ -137,6 +137,30 @@ minSdk 24(Android 7.0)+ **WebView Chromium 88 相当(2021 年初)**。JS は es2
 - appName: `Simple Games: Offline Puzzles`
 - 収録ゲームの追加・更新は 1 つのアプリリリースとして出す(アプリ単位で更新)
 
+## iOS
+
+```bash
+pnpm --filter simple-games build
+cd apps/simple-games && pnpm exec cap sync ios
+xcodebuild -project ios/App/App.xcodeproj -scheme App \
+  -destination 'generic/platform=iOS' -allowProvisioningUpdates build
+```
+
+要件: Xcode(iOS SDK)。依存は Swift Package Manager で解決される
+(CocoaPods 不要)。署名は Automatic — 初回は Xcode で開発チームにログインして
+おくこと。実機へは `xcrun devicectl device install app` で入れる。
+
+- appId / appName は Android と同一(`capacitor.config.ts` が単一の出所)
+- AdMob アプリ ID は Xcode ビルド設定 `ADMOB_IOS_APP_ID` → `Info.plist` の
+  `GADApplicationIdentifier`(未設定なら Google のテスト用 app ID)。バナー
+  ユニットは `VITE_ADMOB_IOS_BANNER_ID`(web ビルド時に注入)。iOS が Android の
+  ID を読むことはない(`services/ads/banner.ts` が実行時に OS で選ぶ)
+- ATT(トラッキング許可ダイアログ)は使わない。方針と理由は
+  [docs/ADS_POLICY.md](../../docs/ADS_POLICY.md)「ATT を使わない」
+- 広告削除 IAP は StoreKit 2 を `@capgo/native-purchases` 経由で使う。
+  App Store Connect に非消費型 `remove_ads` が要る(Sandbox で確認 —
+  [docs/RELEASE_CHECKLIST.md](../../docs/RELEASE_CHECKLIST.md) §4.7)
+
 ### リリースはタグで作る
 
 `versionName` / `versionCode` は **git タグが決める**。`build.gradle` の値は

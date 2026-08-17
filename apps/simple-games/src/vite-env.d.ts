@@ -2,14 +2,16 @@
 
 interface ImportMetaEnv {
   /**
-   * The production AdMob banner unit ID for the ANDROID app — the app's only
-   * ad unit — injected at build time. Never committed. AdMob IDs are per-OS,
-   * so the name carries the platform: an iOS build adds
-   * VITE_ADMOB_IOS_BANNER_ID beside this rather than reusing it.
+   * The production AdMob banner unit IDs — the app's only ad unit, once per
+   * OS — injected at build time. Never committed. AdMob IDs are per-OS, so
+   * the names carry the platform and neither build ever reads the other's
+   * (services/ads/banner.ts selects by Capacitor.getPlatform()).
    * (The AdMob APPLICATION_ID is native-side: a Gradle manifest placeholder
-   * fed by the ADMOB_ANDROID_APP_ID env var — see android/app/build.gradle.)
+   * fed by ADMOB_ANDROID_APP_ID — see android/app/build.gradle — and an Xcode
+   * build setting fed by ADMOB_IOS_APP_ID — see ios/App/App/Info.plist.)
    */
   readonly VITE_ADMOB_ANDROID_BANNER_ID?: string;
+  readonly VITE_ADMOB_IOS_BANNER_ID?: string;
   /** 'true' to force Google test ad units in a production-mode build. */
   readonly VITE_ADMOB_USE_TEST_ADS?: string;
   /**
