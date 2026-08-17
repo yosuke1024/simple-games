@@ -25,6 +25,19 @@ interface ImportMetaEnv {
   /** 'true' renders the local placeholder test ad (no ad-network contact). */
   readonly VITE_ADSENSE_USE_TEST_ADS?: string;
   /**
+   * Web build only — 忍者AdMax frame IDs for the RUNTIME fallback: a frame
+   * mounts only after AdSense demonstrably failed on this page view (loader
+   * error, or a display unit reporting `unfilled` — docs/ADS_POLICY.md
+   * 「Web 版」フォールバック). Injected at build time, never committed.
+   * AdMax frames are fixed-size, so the name carries the exact size; a
+   * missing ID means that placement×size simply has no fallback.
+   */
+  readonly VITE_ADMAX_SLOT_HOME_728X90?: string;
+  readonly VITE_ADMAX_SLOT_HOME_320X100?: string;
+  readonly VITE_ADMAX_SLOT_RESULT_320X100?: string;
+  readonly VITE_ADMAX_ANCHOR_728X90?: string;
+  readonly VITE_ADMAX_ANCHOR_320X100?: string;
+  /**
    * Web build only — the GA4 Web Stream measurement ID for
    * pixapps.ai/simple-games/play/. Missing or invalid means analytics is off.
    * Never commit the real ID; inject it when building the web artifact.

@@ -1,0 +1,24 @@
+/* Runtime fallback for the anchor (docs/ADS_POLICY.md「Web 版」フォール
+   バック): a fixed bottom bar with a 忍者AdMax unit, mounted by boot.ts ONLY
+   after the AdSense loader failed — so it replaces the Google anchor, never
+   doubles it. It lives inside the bottom space every screen already reserves
+   (116px + safe area), so like the anchor it can never cover game controls.
+   Height is set inline to the actual unit (90 or 100px + safe area); this
+   rule is the shared geometry, same stacking as the test placeholder.
+
+   This file rides with the web-only boot module (like chrome/web/chrome.css)
+   rather than ui/styles.css: the shared stylesheet ships in the NATIVE bundle
+   too, and check-dist-ads-separation.sh proves that artifact carries no
+   ad-network trace — "admax" included. */
+.web-admax-anchor {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  z-index: 30;
+}

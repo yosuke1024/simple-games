@@ -11,27 +11,36 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { setOnlineForTesting } from '../../network';
 import AdUnit, { pickAdSize } from './AdUnit';
+import { setAdMaxIdsForTesting } from './admax';
 import { adIdFromEnv, setWebAdsConfigForTesting, webAdsEnabled, webAdsSlotEnabled } from './config';
+import { ensureAdSenseScript } from './script';
 
-type AdsWindow = Window & { adsbygoogle?: unknown[] };
+type AdsWindow = Window & { adsbygoogle?: unknown[]; admaxads?: unknown[] };
 
 const adsScript = () => document.head.querySelector('script[data-sg-adsense]');
+const admaxScript = () => document.head.querySelector('script[data-sg-admax]');
 
 afterEach(() => {
   setWebAdsConfigForTesting(null);
+  setAdMaxIdsForTesting(null);
   setOnlineForTesting(true);
   adsScript()?.remove();
+  admaxScript()?.remove();
   delete (window as AdsWindow).adsbygoogle;
+  delete (window as AdsWindow).admaxads;
 });
 
 describe('AdUnit in test mode', () => {
   it('renders the placeholder and contacts no ad network', () => {
     // Vitest runs as a dev-mode build, so test mode is already on — the same
     // default a `pnpm dev:web` session gets.
-    render(<AdUnit slot="test-slot" />);
+    render(<AdUnit slot="test-slot" placement="home" />);
     expect(screen.getByText('Test ad')).toBeInTheDocument();
     expect(adsScript()).toBeNull();
     expect((window as AdsWindow).adsbygoogle).toBeUndefined();
+    // The fallback network is no exception to "zero network in test mode".
+    expect(admaxScript()).toBeNull();
+    expect((window as AdsWindow).admaxads).toBeUndefined();
   });
 });
 
@@ -40,8 +49,8 @@ describe('AdUnit in production mode', () => {
     setWebAdsConfigForTesting({ testMode: false, client: 'test-client' });
     const { container } = render(
       <>
-        <AdUnit slot="slot-a" />
-        <AdUnit slot="slot-b" />
+        <AdUnit slot="slot-a" placement="home" />
+        <AdUnit slot="slot-b" placement="home" />
       </>,
     );
     const units = container.querySelectorAll('ins.adsbygoogle');
@@ -59,7 +68,7 @@ describe('AdUnit in production mode', () => {
     setWebAdsConfigForTesting({ testMode: false, client: 'test-client' });
     const { container } = render(
       <div className="web-ad-slot">
-        <AdUnit slot="slot-a" />
+        <AdUnit slot="slot-a" placement="home" />
       </div>,
     );
     const placement = container.querySelector<HTMLElement>('.web-ad-slot');
@@ -87,7 +96,7 @@ describe('AdUnit in production mode', () => {
     setOnlineForTesting(false);
     const { container } = render(
       <div className="web-ad-slot">
-        <AdUnit slot="slot-a" />
+        <AdUnit slot="slot-a" placement="home" />
       </div>,
     );
     // The unit remains in the DOM for a future fresh mount, but the unused
@@ -103,13 +112,95 @@ describe('AdUnit in production mode', () => {
 
   it('renders nothing without an injected client or slot', () => {
     setWebAdsConfigForTesting({ testMode: false, client: null });
-    const { container } = render(<AdUnit slot="slot-a" />);
+    const { container } = render(<AdUnit slot="slot-a" placement="home" />);
     expect(container).toBeEmptyDOMElement();
 
     setWebAdsConfigForTesting({ testMode: false, client: 'test-client' });
-    const { container: noSlot } = render(<AdUnit slot={null} />);
+    const { container: noSlot } = render(<AdUnit slot={null} placement="home" />);
     expect(noSlot).toBeEmptyDOMElement();
     expect(adsScript()).toBeNull();
+  });
+});
+
+/**
+ * The runtime fallback (docs/ADS_POLICY.md「Web 版」フォールバック): only a
+ * demonstrable AdSense failure — `unfilled`, or the loader itself erroring —
+ * swaps the reserved box to a same-size 忍者AdMax frame. jsdom reports a
+ * desktop-wide viewport, so these placements size to 728×90 and the fallback
+ * frame under test is the home slot's wide one.
+ */
+describe('AdUnit fallback to 忍者AdMax', () => {
+  const renderPlacement = () =>
+    render(
+      <div className="web-ad-slot">
+        <AdUnit slot="slot-a" placement="home" />
+      </div>,
+    );
+
+  it('unfilled with a configured frame: swaps the same box to AdMax instead of collapsing', async () => {
+    setWebAdsConfigForTesting({ testMode: false, client: 'test-client' });
+    setAdMaxIdsForTesting({ slotHome728x90: 'home-wide' });
+    const { container } = renderPlacement();
+    const placement = container.querySelector<HTMLElement>('.web-ad-slot');
+
+    container.querySelector('ins.adsbygoogle')?.setAttribute('data-ad-status', 'unfilled');
+    await waitFor(() => {
+      expect(container.querySelector('.admax-ads')).toHaveAttribute('data-admax-id', 'home-wide');
+    });
+    // The AdSense unit is gone, the box stays visible at the same size, and
+    // the AdMax queue plus its loader carry exactly this one frame.
+    expect(container.querySelector('ins.adsbygoogle')).toBeNull();
+    expect(placement).not.toHaveAttribute('hidden');
+    expect((window as AdsWindow).admaxads).toEqual([{ admax_id: 'home-wide', type: 'banner' }]);
+    expect(admaxScript()).not.toBeNull();
+  });
+
+  it('loader failure: the mounted unit falls over to AdMax', async () => {
+    setWebAdsConfigForTesting({ testMode: false, client: 'test-client' });
+    setAdMaxIdsForTesting({ slotHome728x90: 'home-wide' });
+    const { container } = renderPlacement();
+    adsScript()?.dispatchEvent(new Event('error'));
+    await waitFor(() => {
+      expect(container.querySelector('.admax-ads')).toHaveAttribute('data-admax-id', 'home-wide');
+    });
+  });
+
+  it('loader already failed before mount: straight to AdMax, no AdSense push', async () => {
+    setWebAdsConfigForTesting({ testMode: false, client: 'test-client' });
+    setAdMaxIdsForTesting({ slotHome728x90: 'home-wide' });
+    ensureAdSenseScript('test-client');
+    adsScript()?.dispatchEvent(new Event('error'));
+
+    const { container } = renderPlacement();
+    await waitFor(() => {
+      expect(container.querySelector('.admax-ads')).toHaveAttribute('data-admax-id', 'home-wide');
+    });
+    expect((window as AdsWindow).adsbygoogle).toBeUndefined();
+  });
+
+  it('without a frame for the size, unfilled still collapses (no near-miss serving)', async () => {
+    setWebAdsConfigForTesting({ testMode: false, client: 'test-client' });
+    setAdMaxIdsForTesting({ slotHome728x90: null, slotHome320x100: 'home-mobile' });
+    const { container } = renderPlacement();
+    container.querySelector('ins.adsbygoogle')?.setAttribute('data-ad-status', 'unfilled');
+    await waitFor(() => {
+      expect(container.querySelector('.web-ad-slot')).toHaveAttribute('hidden');
+    });
+    expect(container.querySelector('.admax-ads')).toBeNull();
+    expect((window as AdsWindow).admaxads).toBeUndefined();
+  });
+
+  it('AdMax loader failing too collapses the placement — no empty shelf', async () => {
+    setWebAdsConfigForTesting({ testMode: false, client: 'test-client' });
+    setAdMaxIdsForTesting({ slotHome728x90: 'home-wide' });
+    const { container } = renderPlacement();
+    container.querySelector('ins.adsbygoogle')?.setAttribute('data-ad-status', 'unfilled');
+    await waitFor(() => expect(admaxScript()).not.toBeNull());
+
+    admaxScript()?.dispatchEvent(new Event('error'));
+    await waitFor(() => {
+      expect(container.querySelector('.web-ad-slot')).toHaveAttribute('hidden');
+    });
   });
 });
 

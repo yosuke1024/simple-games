@@ -26,7 +26,8 @@ target="${1:-both}"
 native_dist="apps/simple-games/dist"
 web_dist="apps/simple-games/dist-web"
 # 検査語彙: ローダー・タグ・ID 接頭辞。native 側はどれか 1 つでも出たら失敗。
-ads_pattern='adsbygoogle|googlesyndication|ca-pub-'
+# admax / shinobi は忍者AdMax(実行時フォールバック — ADS_POLICY.md「Web 版」)。
+ads_pattern='adsbygoogle|googlesyndication|ca-pub-|admax|shinobi'
 analytics_pattern='googletagmanager|simple_games_play|game_open|game_close'
 measurement_id_pattern='G-[A-Z0-9]{6,}'
 chrome_pattern='global-header|data-global-header|sg-web-chrome'
@@ -79,6 +80,14 @@ check_web() {
   else
     printf '\n\033[31mFAIL\033[0m web ビルドに AdSense 統合が見つかりません。\n'
     printf 'WebAdSlot の --mode web ゲートか lazy import の配線が切れています(静かに広告なしになるだけなので、ここで検知します)。\n'
+    fail=1
+  fi
+
+  if grep -rqE 'admaxads' "$web_dist"; then
+    printf '\033[32mok\033[0m   web dist に AdMax フォールバック統合あり\n'
+  else
+    printf '\n\033[31mFAIL\033[0m web ビルドに忍者AdMax のフォールバック統合が見つかりません。\n'
+    printf 'services/ads/web/admax.ts の配線が切れています(AdSense 失敗時に静かに何も出なくなるだけなので、ここで検知します)。\n'
     fail=1
   fi
 

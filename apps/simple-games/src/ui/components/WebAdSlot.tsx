@@ -25,7 +25,7 @@ export function WebAdSlot() {
   return (
     <div className="web-ad-slot">
       <Suspense fallback={null}>
-        <AdUnit slot={slotHome} />
+        <AdUnit slot={slotHome} placement="home" />
       </Suspense>
     </div>
   );
