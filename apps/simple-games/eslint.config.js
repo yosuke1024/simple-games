@@ -1,7 +1,9 @@
 import react from '@simple-games/eslint-config/react';
 
 export default [
-  { ignores: ['dist/', 'dist-web/', 'android/', 'node_modules/'] },
+  // The two native projects are generated and hold a copy of the built web
+  // assets; neither is source this config has anything to say about.
+  { ignores: ['dist/', 'dist-web/', 'android/', 'ios/', 'node_modules/'] },
   ...react,
   {
     // Build-time tooling, not shipped code: it runs in Node, not the WebView,

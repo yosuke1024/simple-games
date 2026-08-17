@@ -159,6 +159,47 @@ bash .github/scripts/check-principles.sh
 - [ ] 別端末で「購入を復元」が機能する
 - [ ] 購入前の画面で購入を繰り返し促していない
 
+## 4.7 iOS(issue #72。App Store 提出まで)
+
+ビルド:
+
+- [ ] `pnpm --filter simple-games build` → `cd apps/simple-games && pnpm exec cap sync ios`
+- [ ] `xcodebuild -project ios/App/App.xcodeproj -scheme App` が通る(署名は
+      Automatic + 開発チーム。配布用の署名・Archive は App Store Connect 側の
+      作業と合わせて行う)
+- [ ] iOS 実機でゲーム起動・全ゲームプレイが可能/初回起動からオフラインで
+      ゲーム可能/機内モードで広告・consent の通信リトライが発生しない
+
+広告(AdMob iOS):
+
+- [ ] AdMob コンソールに iOS アプリを登録し、iOS 用バナーユニットを作成
+      (`ADMOB_IOS_APP_ID` / `ADMOB_IOS_BANNER_ID`。Android の ID は使い回さない)
+- [ ] リリースビルドで `ADMOB_IOS_APP_ID`(Xcode ビルド設定)と
+      `VITE_ADMOB_IOS_BANNER_ID`(web ビルド)を注入し、テスト ID の
+      フォールバックが残っていないことを確認
+- [ ] オンライン時のみ anchored adaptive banner 1 枠が表示される/
+      広告ロード失敗・consent 失敗がゲームを中断しない
+- [ ] UMP: EEA 相当のテスト地域設定で同意フォームが出る・拒否してもゲームが
+      動く・Privacy Options required のとき設定に「Ad Privacy Options」行が出る
+- [ ] ATT を使っていないことの再確認: `NSUserTrackingUsageDescription` が
+      Info.plist に**無い**こと(入れるなら ADS_POLICY.md の節に従い申告ごと変える)
+
+課金(StoreKit):
+
+- [ ] App Store Connect に非消費型 `remove_ads` を作成(USD 3.99 基準)
+- [ ] Sandbox テスターで購入 → バナーが消える → 再起動後も消えたまま
+- [ ] 購入キャンセル・「承認と購入のリクエスト」(Ask to Buy)保留で
+      エラー表示が出ない・entitlement が付与されない
+- [ ] 再インストール後に「購入を復元」が機能する(Sandbox)
+- [ ] Play 側の既存挙動が壊れていない(§4.5 のスモークを iOS 追加後にも 1 周)
+
+App Store Privacy:
+
+- [ ] App Store Connect のプライバシー申告(おおよその場所・デバイス ID・
+      製品の操作・広告データ・クラッシュ・パフォーマンス)と、実際の iOS
+      ビルドの SDK / 通信が一致している(トラッキング=「しない」。ATT 不使用と
+      SKAdNetwork の関係は [ADS_POLICY.md](ADS_POLICY.md)「ATT を使わない」)
+
 ## 5.5 レビュー導線([REVIEW_PROMPT_POLICY.md](REVIEW_PROMPT_POLICY.md))
 
 - [ ] 合計 5 勝するまで質問が出ない/5 勝後、ゲームから戻った時だけ出る

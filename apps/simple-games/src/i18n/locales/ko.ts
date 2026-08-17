@@ -53,6 +53,7 @@ export const ko: Messages = {
   reducedMotion: '동작 줄이기',
   privacyPolicy: '개인정보 처리방침',
   termsOfUse: '이용약관',
+  adPrivacyOptions: '광고 개인정보 설정',
   resetData: '로컬 데이터 삭제',
   resetConfirmTitle: '모든 로컬 데이터를 삭제할까요?',
   resetConfirmBody: '이 기기에서 게임, 통계, 설정이 삭제됩니다. 되돌릴 수 없습니다.',

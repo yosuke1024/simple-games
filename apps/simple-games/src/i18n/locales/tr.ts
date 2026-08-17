@@ -53,6 +53,7 @@ export const tr: Messages = {
   reducedMotion: 'Hareketi azalt',
   privacyPolicy: 'Gizlilik Politikası',
   termsOfUse: 'Kullanım Koşulları',
+  adPrivacyOptions: 'Reklam gizlilik seçenekleri',
   resetData: 'Yerel Verileri Sil',
   resetConfirmTitle: 'Tüm yerel veriler silinsin mi?',
   resetConfirmBody:

@@ -25,6 +25,19 @@ for d in apps/*/src packages/*/src; do [ -d "$d" ] && src_dirs+=("$d"); done
 manifests=(apps/*/android/app/src/main/AndroidManifest.xml)
 pkg_jsons=(package.json apps/*/package.json packages/*/package.json)
 
+# 本番の AdMob **アプリ** ID が入りうるネイティブ側のファイル。ユニット ID は
+# `src` から注入されるが、アプリ ID はビルドシステムが持つ: Android は Gradle の
+# manifestPlaceholder(build.gradle)、iOS は Xcode のビルド設定(project.pbxproj)
+# から Info.plist の GADApplicationIdentifier へ入る。**どちらもテスト ID を
+# フォールバックとして持つので、うっかり本番 ID を書き換えてコミットできてしまう**
+# — §5 がここも見るのはそのためである。
+native_ad_ids=()
+for f in apps/*/android/app/build.gradle \
+         apps/*/ios/App/App.xcodeproj/project.pbxproj \
+         apps/*/ios/App/App/Info.plist; do
+  [ -f "$f" ] && native_ad_ids+=("$f")
+done
+
 # 1. 通信しないこと ------------------------------------------------------------
 # API サーバー・アプリ用 DB・コンテンツ配信サーバーを持たない(README / PRODUCT_PRINCIPLES)。
 # ネットワークの用途はオンライン判定と広告 SDK / 課金 SDK / レビュー SDK だけで、
@@ -73,11 +86,12 @@ else
   ok "Android 権限は INTERNET / BILLING のみ"
 fi
 
-# 5. 本番広告ユニット ID -------------------------------------------------------
-# 本番の AdMob ユニット ID はビルド時に環境変数で注入する。ソースに出てよいのは
-# Google 公式のテスト ID だけ(収益が発生しないもの)。
+# 5. 本番広告 ID ---------------------------------------------------------------
+# 本番の AdMob ID はビルド時に注入する(ユニット ID は環境変数、アプリ ID は
+# Gradle / Xcode のビルド設定)。ソースに出てよいのは Google 公式のテスト ID
+# だけ(収益が発生しないもの)。
 test_ids='ca-app-pub-3940256099942544'
-hits="$(grep -rn 'ca-app-pub-' "${src_dirs[@]}" | grep -v "$test_ids" || true)"
+hits="$(grep -rn 'ca-app-pub-' "${src_dirs[@]}" "${native_ad_ids[@]}" | grep -v "$test_ids" || true)"
 if [ -n "$hits" ]; then
   report "テスト用以外の AdMob ユニット ID がソースにあります(注入するもので、コミットするものではありません)" "$hits"
 else

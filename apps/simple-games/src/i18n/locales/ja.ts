@@ -53,6 +53,7 @@ export const ja: Messages = {
   reducedMotion: 'アニメーションを減らす',
   privacyPolicy: 'プライバシーポリシー',
   termsOfUse: '利用規約',
+  adPrivacyOptions: '広告のプライバシー設定',
   resetData: 'ローカルデータを削除',
   resetConfirmTitle: 'すべてのローカルデータを削除しますか？',
   resetConfirmBody: 'この端末のゲーム・統計・設定が削除されます。元に戻せません。',

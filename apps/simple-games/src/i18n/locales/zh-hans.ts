@@ -53,6 +53,7 @@ export const zhHans: Messages = {
   reducedMotion: '减少动画',
   privacyPolicy: '隐私政策',
   termsOfUse: '使用条款',
+  adPrivacyOptions: '广告隐私选项',
   resetData: '清除本地数据',
   resetConfirmTitle: '删除全部本地数据？',
   resetConfirmBody: '这将从本设备删除你的游戏、统计和设置。此操作无法撤销。',

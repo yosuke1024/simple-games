@@ -53,6 +53,7 @@ export const vi: Messages = {
   reducedMotion: 'Giảm chuyển động',
   privacyPolicy: 'Chính sách bảo mật',
   termsOfUse: 'Điều khoản sử dụng',
+  adPrivacyOptions: 'Tùy chọn quyền riêng tư quảng cáo',
   resetData: 'Xóa dữ liệu trên máy',
   resetConfirmTitle: 'Xóa toàn bộ dữ liệu trên máy?',
   resetConfirmBody:

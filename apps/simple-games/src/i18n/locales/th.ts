@@ -53,6 +53,7 @@ export const th: Messages = {
   reducedMotion: 'ลดแอนิเมชัน',
   privacyPolicy: 'นโยบายความเป็นส่วนตัว',
   termsOfUse: 'ข้อกำหนดการใช้งาน',
+  adPrivacyOptions: 'ตัวเลือกความเป็นส่วนตัวของโฆษณา',
   resetData: 'ลบข้อมูลในเครื่อง',
   resetConfirmTitle: 'ลบข้อมูลทั้งหมดในเครื่อง?',
   resetConfirmBody: 'เกม สถิติ และการตั้งค่าในเครื่องนี้จะถูกลบ และกู้คืนไม่ได้',

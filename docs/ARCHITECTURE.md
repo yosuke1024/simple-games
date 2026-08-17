@@ -466,12 +466,20 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 - 保存はイベント駆動(可視性変化 / pause / 状態遷移時)。
 - プレイ時計は ref 加算のみで、再レンダリングを起こさない。
 
-## Web / Android
+## Web / Android / iOS
 
-- Vite で静的 Web アプリとしてビルドし、Capacitor で Android アプリ化する。
+- Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS アプリ化する。
   SSR / API Routes は不要のため Next.js は使用しない。
-- `apps/simple-games/android/` は Capacitor が生成したネイティブプロジェクトをコミットする
-  (ビルド成果物・local.properties は除外)。
+- `apps/simple-games/android/` / `apps/simple-games/ios/` は Capacitor が生成した
+  ネイティブプロジェクトをコミットする(ビルド成果物・local.properties・
+  `ios/App/App/public/`(web 資産のコピー)は除外)。
+- **プラットフォーム差分は 2 箇所に限定する**: 広告 ID とストアの可用性判定。
+  どちらも実行時に `Capacitor.getPlatform()` で選ぶ
+  (`services/ads/banner.ts` / `monetization/nativeStore.ts` の `PlatformRules`)。
+  ゲーム・保存・i18n のコードに `if (ios)` を書かない。
+- iOS 側の AdMob アプリ ID は Xcode ビルド設定 `ADMOB_IOS_APP_ID` →
+  `Info.plist` の `GADApplicationIdentifier`(Android の manifestPlaceholder と
+  同型。未設定はテスト用 app ID)。ATT は使わない(ADS_POLICY.md)。
 - ハードウェア戻るボタン: ゲーム内ホーム→コレクションへ、コレクション→アプリ最小化。
   `AndroidManifest.xml` の `android:enableOnBackInvokedCallback="false"` は削除しない
   ——targetSdk 36(Android 16)から予測型戻る(predictive back)が既定で有効になり、

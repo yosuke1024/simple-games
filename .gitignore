@@ -20,6 +20,12 @@ apps/*/android/local.properties
 apps/*/android/.idea/
 apps/*/android/capacitor-cordova-android-plugins/build/
 
+# iOS build outputs (native project itself is committed; ios/.gitignore
+# excludes the web-asset copy and generated config beside these)
+apps/*/ios/App/build/
+apps/*/ios/App/output/
+apps/*/ios/DerivedData/
+
 # Signing material must never be committed
 *.keystore
 *.jks
