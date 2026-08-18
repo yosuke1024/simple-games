@@ -23,6 +23,8 @@ import {
   SOURCE_REPO_URL,
   TERMS_URL,
 } from '@simple-games/brand';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import packageJson from '../../../package.json';
 import { initRecentGames } from '../../app/recentGames';
 import { GAMES, type GameId } from '../../app/registry';
@@ -124,6 +126,11 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [price, setPrice] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [busy, setBusy] = useState(false);
+  // On native the installed build's real version (from the release tag, via
+  // Capacitor's App.getInfo) is the source of truth — package.json's version
+  // field is never bumped and would otherwise show a permanently stale
+  // number. The web build has no such tag, so it keeps package.json's value.
+  const [displayVersion, setDisplayVersion] = useState(packageJson.version);
 
   useEffect(() => {
     if (!purchasable) return;
@@ -135,6 +142,19 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
       cancelled = true;
     };
   }, [purchasable]);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let cancelled = false;
+    void CapacitorApp.getInfo()
+      .then((info) => {
+        if (!cancelled) setDisplayVersion(info.version);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const resetAllData = async () => {
     const keys = [...Object.values(STORAGE_KEYS), ...GAMES.flatMap((game) => game.storageKeys)];
@@ -322,7 +342,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
         <div className="settings-row settings-row-static">
           <span className="settings-row-label">{t('version')}</span>
-          <span className="settings-row-value">{packageJson.version}</span>
+          <span className="settings-row-value">{displayVersion}</span>
         </div>
       </div>
 
