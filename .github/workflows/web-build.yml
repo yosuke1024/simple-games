@@ -6,17 +6,20 @@
 # landing の main への push が即公開になり得るため、そこは自動化しない。
 #
 # 広告モード(docs/ADS_POLICY.md「Web 版」):
-#   test       — ローカルのプレースホルダ広告(既定)。AdSense には一切接続しない。
-#                AdSense に公式テスト ID が存在しないための誠実なテスト形。
-#   production — AdSense。ADSENSE_CLIENT の secret が必須(これだけで Auto ads の
-#                アンカーが動く)。ディスプレイ枠は ADSENSE_SLOT_HOME /
-#                ADSENSE_SLOT_RESULT が揃った枠だけ出る(無い枠は出ないだけ)。
-#                有効化の前提(サイト審査・プライバシー文言・同意・Auto ads で
-#                アンカーのみ有効化)は人間作業 — ADS_POLICY.md「Web 版」を参照。
-#                忍者AdMax の ADMAX_* secrets は**実行時フォールバック**
-#                (AdSense ローダー失敗 / unfilled のときだけ差し替え)。
-#                サイズ固定の枠 ID で、無い枠はその組み合わせで出ないだけ。
+#   test       — ローカルのプレースホルダ広告(既定)。広告ネットワークには
+#                一切接続しない。AdSense に公式テスト ID が存在しないための
+#                誠実なテスト形。
+#   production — 実 ID を注入する。どちらのネットワークが配信するかは
+#                `network` 入力が決める(下記)。有効化の前提(サイト審査・
+#                プライバシー文言・同意)は人間作業 — ADS_POLICY.md を参照。
 #   disabled   — 広告コードは同梱されるが、ID もテストモードもないため何も出ない。
+#
+# ネットワーク(production のときだけ意味を持つ):
+#   admax   — 忍者AdMax が全面を配信(既定)。AdSense の ID は注入しないので、
+#             成果物から Google へのリクエストは 1 件も出ない。AdSense の審査が
+#             通っていない間はこちら。
+#   adsense — AdSense が主。ADSENSE_CLIENT が必須で、ADMAX_* は実行時
+#             フォールバック(ローダー失敗 / unfilled のときだけ差し替え)。
 #
 # Analytics(docs/WEB_VERSION.md「計測」): GA_MEASUREMENT_ID secret が有効な
 # G-... ID のときだけ Web ビルドへ注入する。未設定・不正値は既定 OFF。
@@ -26,10 +29,15 @@ on:
   workflow_dispatch:
     inputs:
       ads:
-        description: '広告(test: プレースホルダ / production: secrets の AdSense ID / disabled: なし)'
+        description: '広告(test: プレースホルダ / production: secrets の実 ID / disabled: なし)'
         type: choice
         options: [test, production, disabled]
         default: test
+      network:
+        description: '配信ネットワーク(production のときのみ。admax: 忍者AdMax 単独 / adsense: AdSense 主 + AdMax フォールバック)'
+        type: choice
+        options: [admax, adsense]
+        default: admax
 
 permissions:
   contents: read
@@ -52,6 +60,7 @@ jobs:
       - name: Decide ad mode
         env:
           ADS_INPUT: ${{ inputs.ads }}
+          NETWORK_INPUT: ${{ inputs.network }}
           CLIENT: ${{ secrets.ADSENSE_CLIENT }}
           SLOT_HOME: ${{ secrets.ADSENSE_SLOT_HOME }}
           SLOT_RESULT: ${{ secrets.ADSENSE_SLOT_RESULT }}
@@ -66,28 +75,37 @@ jobs:
           case "$ADS_INPUT" in
             test)
               echo "SG_WEB_ADS_MODE=test" >> "$GITHUB_ENV"
+              echo "SG_WEB_ADS_NETWORK=none" >> "$GITHUB_ENV"
               echo "- 広告: **テスト**(プレースホルダ。広告ネットワークへの通信なし)" >> "$GITHUB_STEP_SUMMARY"
               ;;
             production)
-              if [ -n "$CLIENT" ]; then
+              admax_count=0
+              for v in "$ADMAX_HOME_WIDE" "$ADMAX_HOME_MOBILE" "$ADMAX_RESULT" "$ADMAX_ANCHOR_WIDE" "$ADMAX_ANCHOR_MOBILE"; do
+                [ -n "$v" ] && admax_count=$((admax_count + 1))
+              done
+              if [ "$NETWORK_INPUT" = "adsense" ] && [ -n "$CLIENT" ]; then
                 echo "SG_WEB_ADS_MODE=production" >> "$GITHUB_ENV"
-                echo "- 広告: 本番 AdSense ID でビルド(アンカー有効)" >> "$GITHUB_STEP_SUMMARY"
+                echo "SG_WEB_ADS_NETWORK=adsense" >> "$GITHUB_ENV"
+                echo "- 広告: **AdSense** が主(アンカー有効)" >> "$GITHUB_STEP_SUMMARY"
                 [ -n "$SLOT_HOME" ]   && echo "  - ホーム枠: あり" >> "$GITHUB_STEP_SUMMARY"   || echo "  - ホーム枠: なし(ADSENSE_SLOT_HOME 未設定)" >> "$GITHUB_STEP_SUMMARY"
                 [ -n "$SLOT_RESULT" ] && echo "  - リザルト枠: あり" >> "$GITHUB_STEP_SUMMARY" || echo "  - リザルト枠: なし(ADSENSE_SLOT_RESULT 未設定)" >> "$GITHUB_STEP_SUMMARY"
-                admax_count=0
-                for v in "$ADMAX_HOME_WIDE" "$ADMAX_HOME_MOBILE" "$ADMAX_RESULT" "$ADMAX_ANCHOR_WIDE" "$ADMAX_ANCHOR_MOBILE"; do
-                  [ -n "$v" ] && admax_count=$((admax_count + 1))
-                done
                 echo "  - AdMax フォールバック枠: ${admax_count}/5 設定済み(実行時の AdSense 失敗時のみ使用)" >> "$GITHUB_STEP_SUMMARY"
                 echo "::notice::本番有効化の前提(サイト審査・プライバシー文言・同意・Auto ads でアンカーのみ有効化)は人間作業です。docs/ADS_POLICY.md「Web 版」を参照。"
+              elif [ "$NETWORK_INPUT" = "admax" ] && [ "$admax_count" -gt 0 ]; then
+                echo "SG_WEB_ADS_MODE=production" >> "$GITHUB_ENV"
+                echo "SG_WEB_ADS_NETWORK=admax" >> "$GITHUB_ENV"
+                echo "- 広告: **忍者AdMax** が全面を配信(枠 ${admax_count}/5 設定済み)" >> "$GITHUB_STEP_SUMMARY"
+                echo "  - AdSense の ID は注入しない → 成果物から Google へのリクエストはゼロ" >> "$GITHUB_STEP_SUMMARY"
               else
                 echo "SG_WEB_ADS_MODE=disabled" >> "$GITHUB_ENV"
-                echo "- 広告: **無効**(ADSENSE_CLIENT の secret が未設定)" >> "$GITHUB_STEP_SUMMARY"
-                echo "::warning::ADSENSE_CLIENT が未設定のため、広告なしでビルドしました。"
+                echo "SG_WEB_ADS_NETWORK=none" >> "$GITHUB_ENV"
+                echo "- 広告: **無効**(選んだネットワークの ID が未設定)" >> "$GITHUB_STEP_SUMMARY"
+                echo "::warning::network=${NETWORK_INPUT} に必要な secret が未設定のため、広告なしでビルドしました。"
               fi
               ;;
             disabled)
               echo "SG_WEB_ADS_MODE=disabled" >> "$GITHUB_ENV"
+              echo "SG_WEB_ADS_NETWORK=none" >> "$GITHUB_ENV"
               echo "- 広告: 無効" >> "$GITHUB_STEP_SUMMARY"
               ;;
           esac
@@ -110,9 +128,12 @@ jobs:
         run: pnpm --filter simple-games build:web
         env:
           VITE_ADSENSE_USE_TEST_ADS: ${{ env.SG_WEB_ADS_MODE == 'test' && 'true' || '' }}
-          VITE_ADSENSE_CLIENT: ${{ env.SG_WEB_ADS_MODE == 'production' && secrets.ADSENSE_CLIENT || '' }}
-          VITE_ADSENSE_SLOT_HOME: ${{ env.SG_WEB_ADS_MODE == 'production' && secrets.ADSENSE_SLOT_HOME || '' }}
-          VITE_ADSENSE_SLOT_RESULT: ${{ env.SG_WEB_ADS_MODE == 'production' && secrets.ADSENSE_SLOT_RESULT || '' }}
+          # AdSense の ID は network=adsense のときだけ注入する。注入しなければ
+          # 成果物は AdMax 単独で動き、Google へのリクエストは 1 件も出ない
+          # (docs/ADS_POLICY.md「Web 版」の「二つのネットワーク」)。
+          VITE_ADSENSE_CLIENT: ${{ env.SG_WEB_ADS_NETWORK == 'adsense' && secrets.ADSENSE_CLIENT || '' }}
+          VITE_ADSENSE_SLOT_HOME: ${{ env.SG_WEB_ADS_NETWORK == 'adsense' && secrets.ADSENSE_SLOT_HOME || '' }}
+          VITE_ADSENSE_SLOT_RESULT: ${{ env.SG_WEB_ADS_NETWORK == 'adsense' && secrets.ADSENSE_SLOT_RESULT || '' }}
           VITE_ADMAX_SLOT_HOME_728X90: ${{ env.SG_WEB_ADS_MODE == 'production' && secrets.ADMAX_SLOT_HOME_728X90 || '' }}
           VITE_ADMAX_SLOT_HOME_320X100: ${{ env.SG_WEB_ADS_MODE == 'production' && secrets.ADMAX_SLOT_HOME_320X100 || '' }}
           VITE_ADMAX_SLOT_RESULT_320X100: ${{ env.SG_WEB_ADS_MODE == 'production' && secrets.ADMAX_SLOT_RESULT_320X100 || '' }}
@@ -130,7 +151,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: simple-games-web-${{ env.SG_WEB_ADS_MODE }}
+          name: simple-games-web-${{ env.SG_WEB_ADS_MODE }}-${{ env.SG_WEB_ADS_NETWORK }}
           path: apps/simple-games/dist-web
           if-no-files-found: error
           retention-days: 14

@@ -12,7 +12,7 @@
  * check-dist-ads-separation.sh).
  */
 import { Suspense, lazy, useLayoutEffect, useRef, useState } from 'react';
-import { webAdsConfig, webAdsSlotEnabled } from '../../services/ads/web/config';
+import { webAdsSlotEnabled } from '../../services/ads/web/config';
 import { recordResultView } from '../../services/ads/web/resultCadence';
 
 const AdUnit =
@@ -32,9 +32,8 @@ export function ResultAdSlot() {
   // One count per mounted result view, even under StrictMode's double-invoked
   // effects (the ref survives the invoke-cleanup-invoke cycle).
   const counted = useRef(false);
-  const { slotResult } = webAdsConfig();
   const tallEnough = typeof window === 'undefined' || window.innerHeight >= MIN_VIEWPORT_HEIGHT;
-  const enabled = AdUnit !== null && tallEnough && webAdsSlotEnabled(slotResult);
+  const enabled = AdUnit !== null && tallEnough && webAdsSlotEnabled('result');
 
   // Layout effect so the reserved box is part of the overlay's first painted
   // frame — the dialog never grows after it becomes visible.
@@ -48,7 +47,7 @@ export function ResultAdSlot() {
   return (
     <div className="web-ad-slot web-ad-slot-result">
       <Suspense fallback={null}>
-        <AdUnit slot={slotResult} placement="result" compact />
+        <AdUnit placement="result" compact />
       </Suspense>
     </div>
   );

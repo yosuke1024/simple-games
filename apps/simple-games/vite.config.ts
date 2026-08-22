@@ -1,10 +1,38 @@
 /// <reference types="vitest/config" />
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
+
+const APP_ROOT = fileURLToPath(new URL('.', import.meta.url));
+
+/**
+ * Whether this build carries 忍者AdMax frame IDs (docs/ADS_POLICY.md「Web 版」).
+ *
+ * The shared ad config (services/ads/web/config.ts) needs this answer before
+ * first paint — it decides whether to reserve the anchor's bottom space and
+ * the display slots — but that module ALSO ships in the native app bundle,
+ * and reading `import.meta.env.VITE_ADMAX_*` there would inline the frame IDs
+ * into that bundle whenever the variables happen to be set. AdMax IDs are
+ * opaque hex with no recognisable prefix, so check-dist-ads-separation.sh
+ * could not catch them the way it catches `ca-pub-`.
+ *
+ * So the shared side gets a plain boolean and never the IDs: only
+ * services/ads/web/admax.ts — a module the native build cannot reach — reads
+ * the values themselves. Non-web builds get `false` regardless of the
+ * environment, which is what makes the app artifact's freedom from ad-network
+ * identifiers structural rather than a matter of build hygiene.
+ */
+function hasAdFrames(mode: string): boolean {
+  if (mode !== 'web') return false;
+  const env = loadEnv(mode, APP_ROOT, 'VITE_');
+  return Object.entries(env).some(
+    ([name, value]) => name.startsWith('VITE_ADMAX_') && value.trim() !== '',
+  );
+}
 
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
+  define: { __SG_HAS_AD_FRAMES__: JSON.stringify(hasAdFrames(mode)) },
   resolve: {
     // '@/' is the app root. Games sit three or four folders deep, so shared
     // imports would otherwise be long chains of '../'.

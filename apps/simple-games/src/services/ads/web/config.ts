@@ -11,6 +11,16 @@
  * IDs are injected at build time and never committed. AdSense has no official
  * test client ID (unlike AdMob), so test mode renders a local placeholder and
  * contacts no ad network at all.
+ *
+ * WHICH NETWORK SERVES is decided by what the build carries, not by a runtime
+ * switch (docs/ADS_POLICY.md「Web 版」の「二つのネットワーク」):
+ * - AdSense client injected → AdSense serves, 忍者AdMax is its runtime
+ *   fallback (a frame mounts only where AdSense demonstrably failed).
+ * - No client, but AdMax frames → **AdMax serves everything** and not one
+ *   request reaches Google.
+ * - Neither → no ads at all, and no ad code runs.
+ * The switch is therefore an operational one (which secrets the publish
+ * workflow injects), which is what makes it reviewable in a build log.
  */
 
 export interface WebAdsConfig {
@@ -22,7 +32,18 @@ export interface WebAdsConfig {
   slotHome: string | null;
   /** Display-unit slot ID for the result screens, via VITE_ADSENSE_SLOT_RESULT. */
   slotResult: string | null;
+  /**
+   * Whether this build carries any 忍者AdMax frame — the fixed-size units of
+   * services/ads/web/admax.ts. Deliberately a boolean and not the IDs: this
+   * module ships in the native bundle too, and inlining opaque frame IDs
+   * there is exactly what the app promises not to do (vite.config.ts's
+   * `hasAdFrames` explains why a build-time constant carries the answer).
+   */
+  hasFrames: boolean;
 }
+
+/** The two display placements the web build owns (docs/ADS_POLICY.md「Web 版」). */
+export type WebAdPlacement = 'home' | 'result';
 
 /**
  * An unset variable and one set to the empty string mean the same thing here:
@@ -48,6 +69,8 @@ function fromEnv(): WebAdsConfig {
     client: adIdFromEnv(import.meta.env.VITE_ADSENSE_CLIENT),
     slotHome: adIdFromEnv(import.meta.env.VITE_ADSENSE_SLOT_HOME),
     slotResult: adIdFromEnv(import.meta.env.VITE_ADSENSE_SLOT_RESULT),
+    // Build-time constant, `false` in every non-web build (vite.config.ts).
+    hasFrames: __SG_HAS_AD_FRAMES__,
   };
 }
 
@@ -58,25 +81,31 @@ export function webAdsConfig(): WebAdsConfig {
 }
 
 /**
- * Whether web ads exist at all in this build: test mode, or an injected
- * client ID. The client alone is enough for the Auto-ads anchor (it has no
- * slot ID — the AdSense console decides its formats), which is why this does
- * not require a slot. Drives the boot loader and the reserved bottom space.
+ * Whether web ads exist at all in this build: test mode, an injected client
+ * ID, or AdMax frames. The client alone is enough for the Auto-ads anchor (it
+ * has no slot ID — the AdSense console decides its formats) and a frame alone
+ * is enough for the bar that stands in for it, which is why neither requires
+ * a slot. Drives the boot loader and the reserved bottom space.
  */
 export function webAdsEnabled(): boolean {
   // Truthiness, not `!== null`: an empty ID is an absent ID here, and this
   // predicate decides whether any ad code runs at all.
-  return config.testMode || Boolean(config.client);
+  return config.testMode || Boolean(config.client) || config.hasFrames;
 }
 
 /**
- * Whether one specific display placement can render: its slot ID must be
- * injected alongside the client (or test mode shows the placeholder). With
- * neither, that slot renders nothing — no empty box is reserved (a decision
- * fixed at build time, so it can never cause a layout shift at runtime).
+ * Whether one display placement can render anything at all in this build:
+ * test mode, an AdSense slot injected beside the client, or an AdMax frame.
+ * With none of those the slot renders nothing and no empty box is reserved —
+ * a decision fixed at build time, so it can never shift the layout.
+ *
+ * Frames are counted per build, not per size: whether the ONE frame that fits
+ * the measured width exists is a runtime question, and AdUnit settles it
+ * before the first paint rather than reserving a box it then has to collapse.
  */
-export function webAdsSlotEnabled(slot: string | null): boolean {
-  return config.testMode || (Boolean(config.client) && Boolean(slot));
+export function webAdsSlotEnabled(placement: WebAdPlacement): boolean {
+  const slot = placement === 'home' ? config.slotHome : config.slotResult;
+  return config.testMode || (Boolean(config.client) && Boolean(slot)) || config.hasFrames;
 }
 
 /** Test hook (same pattern as setOnlineForTesting). `null` restores env values. */
