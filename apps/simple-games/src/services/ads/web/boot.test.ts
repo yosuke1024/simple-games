@@ -213,12 +213,22 @@ describe('initWebAds when the anchor frame comes back empty', () => {
     mountAnchor();
 
     // What a filled frame looks like: t.js writes an iframe into the unit and
-    // the exchange puts a creative inside it.
+    // the exchange puts a creative inside it. jsdom gives every element a zero
+    // rect, and the check asks for real dimensions (a 1×1 pixel is not a
+    // creative), so the creative's size has to be spelled out.
     const unit = admaxBar()?.querySelector('.admax-ads');
     const frame = document.createElement('iframe');
     unit?.appendChild(frame);
     const doc = frame.contentDocument;
-    if (doc) doc.body.innerHTML = '<img src="creative.png">';
+    if (doc) {
+      doc.body.innerHTML = '<img src="creative.png">';
+      const image = doc.querySelector('img');
+      if (image) {
+        Object.defineProperty(image, 'getBoundingClientRect', {
+          value: () => ({ width: 728, height: 90 }),
+        });
+      }
+    }
 
     vi.runAllTimers();
 

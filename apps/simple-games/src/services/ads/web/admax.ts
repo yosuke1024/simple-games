@@ -213,10 +213,11 @@ export function adMaxUnitRendered(unit: Element | null): boolean {
     // A cross-origin creative is not ours to judge — and it is a creative.
     if (!doc?.body) return true;
 
-    if (doc.querySelector('img, picture, video, canvas, svg')) return true;
-    for (const nested of Array.from(doc.querySelectorAll('iframe'))) {
-      const rect = nested.getBoundingClientRect();
-      // Sync frames are 0×0 or 1×1; a creative has size.
+    // Size, not presence: the same no-fill responses that carry a cookie sync
+    // carry tracking pixels, and a 1×1 image is not something a reader sees.
+    // Anything with real dimensions is a creative.
+    for (const visual of Array.from(doc.querySelectorAll('img, picture, video, canvas, svg, iframe'))) {
+      const rect = visual.getBoundingClientRect();
       if (rect.width > 1 && rect.height > 1) return true;
     }
 

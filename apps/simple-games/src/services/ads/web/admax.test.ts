@@ -191,21 +191,36 @@ describe('adMaxUnitRendered', () => {
     expect(adMaxUnitRendered(unit)).toBe(false);
   });
 
-  it('says yes for a creative — an image, text, or a sized frame', () => {
-    expect(adMaxUnitRendered(unitWith((doc) => (doc.body.innerHTML = '<img src="ad.png">')))).toBe(
-      true,
-    );
+  /** jsdom gives every element a zero rect, so sizes have to be spelled out. */
+  const sizeOf = (unit: Element, selector: string, width: number, height: number): void => {
+    const el = unit.querySelector('iframe')?.contentDocument?.querySelector(selector);
+    Object.defineProperty(el as Element, 'getBoundingClientRect', {
+      value: () => ({ width, height }),
+    });
+  };
+
+  it('says yes for a creative — a sized image, a sized frame, or text', () => {
+    const image = unitWith((doc) => (doc.body.innerHTML = '<img src="ad.png">'));
+    sizeOf(image, 'img', 320, 100);
+    expect(adMaxUnitRendered(image)).toBe(true);
+
+    const frame = unitWith((doc) => (doc.body.innerHTML = '<iframe id="creative"></iframe>'));
+    sizeOf(frame, '#creative', 320, 100);
+    expect(adMaxUnitRendered(frame)).toBe(true);
+
     expect(
       adMaxUnitRendered(unitWith((doc) => (doc.body.innerHTML = '<a href="#">Sponsored</a>'))),
     ).toBe(true);
+  });
 
-    // jsdom gives every element a zero rect, so the sized nested frame — what
-    // a real creative is — has to be spelled out.
-    const sized = unitWith((doc) => (doc.body.innerHTML = '<iframe id="creative"></iframe>'));
-    const nested = sized.querySelector('iframe')?.contentDocument?.getElementById('creative');
-    Object.defineProperty(nested as Element, 'getBoundingClientRect', {
-      value: () => ({ width: 320, height: 100 }),
-    });
-    expect(adMaxUnitRendered(sized)).toBe(true);
+  /**
+   * The same responses that carry a cookie sync carry tracking pixels, so
+   * "there is an <img>" is not the question — "is there anything a reader can
+   * see" is.
+   */
+  it('says no for a 1×1 tracking pixel', () => {
+    const pixel = unitWith((doc) => (doc.body.innerHTML = '<img src="track.gif">'));
+    sizeOf(pixel, 'img', 1, 1);
+    expect(adMaxUnitRendered(pixel)).toBe(false);
   });
 });
