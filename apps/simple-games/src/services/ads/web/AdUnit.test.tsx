@@ -17,7 +17,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { setOnlineForTesting } from '../../network';
 import AdUnit, { pickAdSize } from './AdUnit';
 import { setAdMaxIdsForTesting } from './admax';
-import { adIdFromEnv, setWebAdsConfigForTesting, webAdsEnabled, webAdsSlotEnabled } from './config';
+import {
+  adIdFromEnv,
+  setWebAdsConfigForTesting,
+  webAdsSlotEnabled,
+  webAnchorEnabled,
+} from './config';
 import { ensureAdSenseScript } from './script';
 
 type AdsWindow = Window & { adsbygoogle?: unknown[]; admaxads?: unknown[] };
@@ -41,7 +46,7 @@ const adMaxBuild = () =>
     client: null,
     slotHome: null,
     slotResult: null,
-    hasFrames: true,
+    frames: { anchor: true, home: true, result: true },
   });
 
 afterEach(() => {
@@ -308,7 +313,12 @@ describe('AdUnit in an AdMax build', () => {
   });
 
   it('renders nothing when the build carries no frames at all', () => {
-    setWebAdsConfigForTesting({ testMode: false, client: null, slotHome: null, hasFrames: false });
+    setWebAdsConfigForTesting({
+      testMode: false,
+      client: null,
+      slotHome: null,
+      frames: { anchor: false, home: false, result: false },
+    });
     const { container } = render(<AdUnit placement="home" />);
     expect(container).toBeEmptyDOMElement();
   });
@@ -338,23 +348,23 @@ describe('pickAdSize', () => {
 });
 
 describe('web ads config', () => {
-  it('webAdsEnabled: test mode, an injected client, or AdMax frames', () => {
+  it('webAnchorEnabled: test mode, an injected client, or an AdMax anchor frame', () => {
     setWebAdsConfigForTesting({
       testMode: true,
       client: null,
       slotHome: null,
       slotResult: null,
-      hasFrames: false,
+      frames: { anchor: false, home: false, result: false },
     });
-    expect(webAdsEnabled()).toBe(true);
+    expect(webAnchorEnabled()).toBe(true);
     setWebAdsConfigForTesting({ testMode: false });
-    expect(webAdsEnabled()).toBe(false);
+    expect(webAnchorEnabled()).toBe(false);
     // Either network alone is enough — neither the Auto-ads anchor nor the
     // AdMax bar that stands in for it has a slot ID.
     setWebAdsConfigForTesting({ client: 'test-client' });
-    expect(webAdsEnabled()).toBe(true);
-    setWebAdsConfigForTesting({ client: null, hasFrames: true });
-    expect(webAdsEnabled()).toBe(true);
+    expect(webAnchorEnabled()).toBe(true);
+    setWebAdsConfigForTesting({ client: null, frames: { anchor: true, home: true, result: true } });
+    expect(webAnchorEnabled()).toBe(true);
   });
 
   /**
@@ -375,9 +385,9 @@ describe('web ads config', () => {
       client: '',
       slotHome: '',
       slotResult: '',
-      hasFrames: false,
+      frames: { anchor: false, home: false, result: false },
     });
-    expect(webAdsEnabled()).toBe(false);
+    expect(webAnchorEnabled()).toBe(false);
     expect(webAdsSlotEnabled('home')).toBe(false);
   });
 
@@ -387,7 +397,7 @@ describe('web ads config', () => {
       client: null,
       slotHome: null,
       slotResult: null,
-      hasFrames: false,
+      frames: { anchor: false, home: false, result: false },
     });
     expect(webAdsSlotEnabled('home')).toBe(false);
 
@@ -397,10 +407,48 @@ describe('web ads config', () => {
     expect(webAdsSlotEnabled('result')).toBe(false);
 
     // AdMax frames carry the placements AdSense cannot.
-    setWebAdsConfigForTesting({ hasFrames: true });
+    setWebAdsConfigForTesting({ frames: { anchor: true, home: true, result: true } });
     expect(webAdsSlotEnabled('result')).toBe(true);
 
-    setWebAdsConfigForTesting({ testMode: true, client: null, slotHome: null, hasFrames: false });
+    setWebAdsConfigForTesting({
+      testMode: true,
+      client: null,
+      slotHome: null,
+      frames: { anchor: false, home: false, result: false },
+    });
     expect(webAdsSlotEnabled('home')).toBe(true);
+  });
+
+  /**
+   * A partly-configured frame set is a supported state — the publish workflow
+   * injects whichever secrets exist — and each surface has to answer for
+   * itself. An aggregate "this build has frames" flag said yes for surfaces
+   * with no frame, which reserved 116px of bottom space no bar could fill,
+   * and mounted display boxes that the lazy unit then took away after the
+   * first paint.
+   */
+  it('answers per surface when only some frames are configured', () => {
+    const noneConfigured = {
+      testMode: false,
+      client: null,
+      slotHome: null,
+      slotResult: null,
+    };
+
+    setWebAdsConfigForTesting({
+      ...noneConfigured,
+      frames: { anchor: true, home: false, result: false },
+    });
+    expect(webAnchorEnabled()).toBe(true);
+    expect(webAdsSlotEnabled('home')).toBe(false);
+    expect(webAdsSlotEnabled('result')).toBe(false);
+
+    setWebAdsConfigForTesting({
+      ...noneConfigured,
+      frames: { anchor: false, home: true, result: false },
+    });
+    expect(webAnchorEnabled()).toBe(false);
+    expect(webAdsSlotEnabled('home')).toBe(true);
+    expect(webAdsSlotEnabled('result')).toBe(false);
   });
 });

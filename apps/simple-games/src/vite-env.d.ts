@@ -49,12 +49,13 @@ interface ImportMetaEnv {
 }
 
 /**
- * Build-time constant from vite.config.ts: whether this build carries any
- * 忍者AdMax frame ID. The shared ad config reads this instead of the IDs
- * themselves, so the native bundle cannot carry them — see the comment on
- * `hasAdFrames` in vite.config.ts for why that indirection exists.
+ * Build-time constant from vite.config.ts: which ad surfaces this build
+ * carries a 忍者AdMax frame for. The shared ad config reads this instead of
+ * the IDs themselves, so the native bundle cannot carry them — see the
+ * comment on `adFrameSurfaces` in vite.config.ts for why that indirection
+ * exists, and why it is one flag per surface.
  */
-declare const __SG_HAS_AD_FRAMES__: boolean;
+declare const __SG_AD_FRAMES__: { anchor: boolean; home: boolean; result: boolean };
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
