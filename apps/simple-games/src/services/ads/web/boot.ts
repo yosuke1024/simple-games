@@ -28,6 +28,7 @@ import { isOnline } from '../../network';
 import {
   adMaxAnchorChoice,
   adMaxScriptFailed,
+  collapseIfAdMaxUnitEmpty,
   onAdMaxScriptError,
   requestAdMaxFrame,
 } from './admax';
@@ -63,6 +64,27 @@ function mountAnchorTestPlaceholder(): void {
  * If AdMax's own loader then fails (typically an ad blocker), the bar is
  * removed — a quiet nothing, not an empty shelf.
  */
+/**
+ * Take the bar away, and with it the bottom space every screen was keeping
+ * clear for it.
+ *
+ * That reservation exists so a bottom-edge ad can never cover game controls,
+ * and it is set before the first paint precisely so nothing moves when the ad
+ * arrives. Releasing it therefore does move the layout, once — which is the
+ * trade accepted deliberately (docs/ADS_POLICY.md「Web 版」): when no ad is
+ * coming, an empty strip across the bottom of every screen is the worse of
+ * the two. Nothing re-reserves it afterwards, because nothing will mount
+ * there for the rest of this page view.
+ */
+function removeAnchorBar(bar: HTMLElement): void {
+  try {
+    bar.remove();
+    delete document.documentElement.dataset.sgWebAds;
+  } catch {
+    // Ads never block play.
+  }
+}
+
 function mountAdMaxAnchor(): void {
   try {
     if (document.querySelector(`.${ADMAX_ANCHOR_CLASS}`)) return;
@@ -83,7 +105,12 @@ function mountAdMaxAnchor(): void {
     // The div must be in the DOM before the frame is requested.
     document.body.appendChild(bar);
     requestAdMaxFrame(choice.id);
-    onAdMaxScriptError(() => bar.remove());
+
+    onAdMaxScriptError(() => removeAnchorBar(bar));
+    // A no-fill leaves an empty bar rather than saying anything (admax.ts),
+    // and an empty strip across the bottom of every screen is worse than the
+    // one layout change that taking it away costs.
+    collapseIfAdMaxUnitEmpty(unit, () => removeAnchorBar(bar));
   } catch {
     // Ads never block play.
   }
