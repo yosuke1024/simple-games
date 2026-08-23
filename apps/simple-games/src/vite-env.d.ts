@@ -27,12 +27,13 @@ interface ImportMetaEnv {
   /** 'true' renders the local placeholder test ad (no ad-network contact). */
   readonly VITE_ADSENSE_USE_TEST_ADS?: string;
   /**
-   * Web build only — 忍者AdMax frame IDs for the RUNTIME fallback: a frame
-   * mounts only after AdSense demonstrably failed on this page view (loader
-   * error, or a display unit reporting `unfilled` — docs/ADS_POLICY.md
-   * 「Web 版」フォールバック). Injected at build time, never committed.
+   * Web build only — 忍者AdMax frame IDs (docs/ADS_POLICY.md「Web 版」).
+   * Which network serves is decided by what this build carries: with an
+   * AdSense client these are the runtime fallback, without one they are the
+   * primary network. Injected at build time, never committed; keep them in
+   * `.env.web` locally, so a native build cannot pick them up.
    * AdMax frames are fixed-size, so the name carries the exact size; a
-   * missing ID means that placement×size simply has no fallback.
+   * missing ID means that placement×size simply has no ad.
    */
   readonly VITE_ADMAX_SLOT_HOME_728X90?: string;
   readonly VITE_ADMAX_SLOT_HOME_320X100?: string;
@@ -46,6 +47,15 @@ interface ImportMetaEnv {
    */
   readonly VITE_GA_MEASUREMENT_ID?: string;
 }
+
+/**
+ * Build-time constant from vite.config.ts: which ad surfaces this build
+ * carries a 忍者AdMax frame for. The shared ad config reads this instead of
+ * the IDs themselves, so the native bundle cannot carry them — see the
+ * comment on `adFrameSurfaces` in vite.config.ts for why that indirection
+ * exists, and why it is one flag per surface.
+ */
+declare const __SG_AD_FRAMES__: { anchor: boolean; home: boolean; result: boolean };
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;

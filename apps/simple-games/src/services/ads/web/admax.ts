@@ -1,24 +1,25 @@
 /**
- * 忍者AdMax — the web build's RUNTIME fallback ad network
- * (docs/ADS_POLICY.md「Web 版」の「フォールバック(忍者AdMax)」).
+ * 忍者AdMax — the web build's second ad network
+ * (docs/ADS_POLICY.md「Web 版」の「二つのネットワーク」).
  *
- * AdMax never runs on its own: a unit mounts only after AdSense demonstrably
- * failed on this page view — the loader script erroring, or a display unit
- * reporting `unfilled`. A build without an AdSense client contacts no ad
- * network at all, AdMax included (the fallback is runtime-only by decision,
- * not a second ad network), and test mode never touches AdMax either.
+ * Which role it plays is decided by what the build carries (config.ts): with
+ * an AdSense client it is the runtime fallback, mounting only where AdSense
+ * demonstrably failed; without one it serves every placement itself. Test
+ * mode never touches it either way — a placeholder is drawn locally and no ad
+ * network is contacted at all.
  *
- * Like every module in this folder except config.ts, it must never reach the
- * native bundle (verified by check-dist-ads-separation.sh, which greps the
- * built artifacts for the identifiers below).
+ * This module holds the frame IDs, so unlike config.ts it must never reach
+ * the native bundle. That is structural, not a convention: nothing outside
+ * `--mode web` imports it, and check-dist-ads-separation.sh greps the built
+ * app artifact for the loader host and tag below.
  *
- * ID handling mirrors AdSense (config.ts): frame IDs are injected at build
- * time via VITE_ADMAX_* and never committed. AdMax frames are fixed-size, so
- * each (placement, size) pair is its own frame — a frame must not appear
- * twice on one page, and the home slot and the anchor can be visible
- * together. AdMax has no 234×60, so that size simply has no fallback.
+ * IDs are injected at build time via VITE_ADMAX_* and never committed. AdMax
+ * frames are fixed-size and a frame must not appear twice on one page, so
+ * each (placement, size) pair is its own frame — the home slot and the anchor
+ * bar can be on screen together. AdMax has no 234×60, the size the result
+ * overlay falls to on the narrowest phones, so there the slot stays empty.
  */
-import { adIdFromEnv } from './config';
+import { type WebAdPlacement, adIdFromEnv } from './config';
 
 export interface AdMaxIds {
   /** Home display slot, 728×90 (desktop widths). */
@@ -27,9 +28,9 @@ export interface AdMaxIds {
   slotHome320x100: string | null;
   /** Result display slot, 320×100 (the compact placement's only size). */
   slotResult320x100: string | null;
-  /** Anchor-replacement bar, 728×90 (desktop widths). */
+  /** Anchor bar, 728×90 (desktop widths). */
   anchor728x90: string | null;
-  /** Anchor-replacement bar, 320×100 (phone widths). */
+  /** Anchor bar, 320×100 (phone widths). */
   anchor320x100: string | null;
 }
 
@@ -45,15 +46,13 @@ function fromEnv(): AdMaxIds {
 
 let ids: AdMaxIds = fromEnv();
 
-export type AdPlacement = 'home' | 'result';
-
 /**
- * The AdMax frame that can stand in for one display placement at one exact
- * size, or null when no frame exists for the pair — then the placement
- * collapses exactly as an unfilled AdSense unit always has.
+ * The AdMax frame for one display placement at one exact size, or null when
+ * no frame exists for the pair — then that placement shows nothing, exactly
+ * as an unfilled AdSense unit always has.
  */
-export function adMaxSlotId(
-  placement: AdPlacement,
+export function adMaxFrameId(
+  placement: WebAdPlacement,
   size: { width: number; height: number },
 ): string | null {
   const key = `${size.width}x${size.height}`;

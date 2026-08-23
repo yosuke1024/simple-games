@@ -7,7 +7,7 @@ import { resolveLocale } from './i18n';
 import { initAdRemoval, isAdRemovalPurchased } from './monetization/adRemoval';
 import { initNativeStore } from './monetization/nativeStore';
 import { initAds } from './services/ads/banner';
-import { webAdsEnabled } from './services/ads/web/config';
+import { webAnchorEnabled } from './services/ads/web/config';
 import { initNetwork } from './services/network';
 import { initReview } from './services/review';
 import { loadRecord } from './storage/repo';
@@ -42,11 +42,12 @@ async function boot(): Promise<void> {
 
   // Web build only — the whole block folds out of the native bundle
   // (import.meta.env.MODE is a build-time constant). The data attribute
-  // reserves the Auto-ads anchor's bottom space on every screen BEFORE first
-  // paint (styles.css), so the overlay ad can never cover game controls and
-  // nothing shifts when it appears. The loader itself (services/ads/web/
-  // boot.ts) is fire-and-forget, like the AdMob init below.
-  if (import.meta.env.MODE === 'web' && webAdsEnabled()) {
+  // reserves the anchor's bottom space on every screen BEFORE first paint
+  // (styles.css), so the bottom-edge ad — Google's overlay or our own AdMax
+  // bar — can never cover game controls and nothing shifts when it appears.
+  // The boot itself (services/ads/web/boot.ts) is fire-and-forget, like the
+  // AdMob init below.
+  if (import.meta.env.MODE === 'web' && webAnchorEnabled()) {
     document.documentElement.dataset.sgWebAds = '';
     void import('./services/ads/web/boot').then((m) => m.initWebAds()).catch(() => undefined);
   }

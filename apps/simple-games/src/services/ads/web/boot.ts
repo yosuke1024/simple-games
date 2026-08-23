@@ -2,23 +2,26 @@
  * Web-build ad bootstrap, dynamically imported by main.tsx behind the
  * `--mode web` gate — the native bundle never contains this module.
  *
- * Its one production job is loading the AdSense script at boot so the
- * Auto-ads ANCHOR can appear: the anchor is Google's own bottom-edge
- * overlay, enabled per-format in the AdSense console (anchor ON, every
- * other Auto-ads format OFF — docs/ADS_POLICY.md「Web 版」), so no ad
- * element is rendered here. The layout answer to an overlay ad lives in
- * styles.css: `data-sg-web-ads` (set by main.tsx before first paint)
- * reserves bottom space on every screen so the anchor can never cover
- * game controls.
+ * Its production job is putting the ANCHOR — the bottom-edge ad — on the
+ * page, which takes a different shape per network (docs/ADS_POLICY.md
+ * 「Web 版」の「二つのネットワーク」):
+ * - AdSense: load the script and stop. The anchor is Google's own overlay,
+ *   enabled per-format in the AdSense console (anchor ON, every other
+ *   Auto-ads format OFF), so no ad element is rendered here. Should the
+ *   loader fail, the AdMax bar below stands in for the anchor that now
+ *   cannot exist.
+ * - 忍者AdMax (no AdSense client in this build): AdMax has no overlay format,
+ *   so the bar below IS the anchor, mounted at boot.
+ *
+ * Either way the layout answer is the same and predates the ad:
+ * `data-sg-web-ads` (set by main.tsx before first paint) reserves bottom
+ * space on every screen, so nothing at the bottom edge can cover game
+ * controls and the bar's arrival shifts nothing.
  *
  * In test mode this contacts no ad network and mounts a fixed placeholder
  * bar with the anchor's geometry instead. Offline: not a single request and
  * no retry — the next page load while online tries again
  * (docs/OFFLINE_POLICY.md).
- *
- * Its second job is the anchor's runtime fallback: if the AdSense loader
- * fails to load, a fixed bottom bar with a 忍者AdMax frame stands in for the
- * Google anchor that now cannot exist (mountAdMaxAnchor below).
  */
 import './admax.css';
 import { isOnline } from '../../network';
@@ -49,14 +52,16 @@ function mountAnchorTestPlaceholder(): void {
 }
 
 /**
- * The anchor's runtime fallback (docs/ADS_POLICY.md「Web 版」フォールバック):
- * mounted ONLY when the AdSense loader itself failed to load — the single
- * anchor-level failure that is detectable (Auto ads has no per-ad status).
- * With no AdSense there is no Google anchor, so this bar replaces it rather
- * than doubling it, inside the bottom space every screen already reserves
- * (`data-sg-web-ads` — the bar can never cover game controls). Fixed size
+ * The 忍者AdMax anchor bar: this build's anchor when no AdSense client was
+ * injected, and the stand-in for Google's overlay when the AdSense loader
+ * failed to load (the single anchor-level failure that is detectable — Auto
+ * ads has no per-ad status). It never doubles a working Google anchor: both
+ * paths below mount it only where Google's cannot exist.
+ *
+ * It sits inside the bottom space every screen already reserves
+ * (`data-sg-web-ads`), so it can never cover game controls. Fixed size
  * chosen at mount from the viewport, like AdUnit: nothing shifts later.
- * If AdMax's own loader then fails too (typically an ad blocker), the bar is
+ * If AdMax's own loader then fails (typically an ad blocker), the bar is
  * removed — a quiet nothing, not an empty shelf.
  */
 function mountAdMaxAnchor(): void {
@@ -92,9 +97,15 @@ export function initWebAds(): void {
     mountAnchorTestPlaceholder();
     return;
   }
+  if (!isOnline()) return;
   // Truthiness: an empty client is an absent client (see config.ts). Getting
   // this wrong here is what sends a request from a build that promises none.
-  if (!client || !isOnline()) return;
-  ensureAdSenseScript(client);
-  onAdSenseScriptError(mountAdMaxAnchor);
+  if (client) {
+    ensureAdSenseScript(client);
+    onAdSenseScriptError(mountAdMaxAnchor);
+    return;
+  }
+  // No AdSense in this build: AdMax is the anchor, and Google is contacted
+  // nowhere on the page.
+  mountAdMaxAnchor();
 }

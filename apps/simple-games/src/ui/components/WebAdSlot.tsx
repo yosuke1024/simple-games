@@ -11,21 +11,21 @@
  * ad never moves the game list.
  */
 import { Suspense, lazy } from 'react';
-import { webAdsConfig, webAdsSlotEnabled } from '../../services/ads/web/config';
+import { webAdsSlotEnabled } from '../../services/ads/web/config';
 
 // `import.meta.env.MODE` is replaced at build time, so in the default
 // (native-mode) build this whole expression folds to `null` and the dynamic
-// import — and with it every AdSense identifier — is dropped from the bundle.
+// import — and with it every ad-network identifier — is dropped from the
+// bundle.
 const AdUnit =
   import.meta.env.MODE === 'web' ? lazy(() => import('../../services/ads/web/AdUnit')) : null;
 
 export function WebAdSlot() {
-  const { slotHome } = webAdsConfig();
-  if (!AdUnit || !webAdsSlotEnabled(slotHome)) return null;
+  if (!AdUnit || !webAdsSlotEnabled('home')) return null;
   return (
     <div className="web-ad-slot">
       <Suspense fallback={null}>
-        <AdUnit slot={slotHome} placement="home" />
+        <AdUnit placement="home" />
       </Suspense>
     </div>
   );

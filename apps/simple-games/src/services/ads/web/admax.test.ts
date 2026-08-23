@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   adMaxAnchorChoice,
   adMaxScriptFailed,
-  adMaxSlotId,
+  adMaxFrameId,
   ensureAdMaxScript,
   onAdMaxScriptError,
   pushAdMaxAd,
@@ -25,26 +25,26 @@ afterEach(() => {
   delete (window as AdMaxWindow).admaxads;
 });
 
-describe('adMaxSlotId', () => {
+describe('adMaxFrameId', () => {
   it('matches a frame only for its exact placement and size', () => {
     setAdMaxIdsForTesting({
       slotHome728x90: 'home-wide',
       slotHome320x100: 'home-mobile',
       slotResult320x100: 'result-mobile',
     });
-    expect(adMaxSlotId('home', { width: 728, height: 90 })).toBe('home-wide');
-    expect(adMaxSlotId('home', { width: 320, height: 100 })).toBe('home-mobile');
-    expect(adMaxSlotId('result', { width: 320, height: 100 })).toBe('result-mobile');
+    expect(adMaxFrameId('home', { width: 728, height: 90 })).toBe('home-wide');
+    expect(adMaxFrameId('home', { width: 320, height: 100 })).toBe('home-mobile');
+    expect(adMaxFrameId('result', { width: 320, height: 100 })).toBe('result-mobile');
     // AdMax has no 234×60 — that size has no fallback, in either placement.
-    expect(adMaxSlotId('home', { width: 234, height: 60 })).toBeNull();
-    expect(adMaxSlotId('result', { width: 234, height: 60 })).toBeNull();
+    expect(adMaxFrameId('home', { width: 234, height: 60 })).toBeNull();
+    expect(adMaxFrameId('result', { width: 234, height: 60 })).toBeNull();
     // The result placement never uses the wide size (compact rule).
-    expect(adMaxSlotId('result', { width: 728, height: 90 })).toBeNull();
+    expect(adMaxFrameId('result', { width: 728, height: 90 })).toBeNull();
   });
 
   it('returns null when the frame for a size is not configured', () => {
     setAdMaxIdsForTesting({ slotHome728x90: 'home-wide' });
-    expect(adMaxSlotId('home', { width: 320, height: 100 })).toBeNull();
+    expect(adMaxFrameId('home', { width: 320, height: 100 })).toBeNull();
   });
 });
 

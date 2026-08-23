@@ -1,10 +1,48 @@
 /// <reference types="vitest/config" />
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
+
+const APP_ROOT = fileURLToPath(new URL('.', import.meta.url));
+
+/**
+ * Which ad surfaces this build carries a 忍者AdMax frame for
+ * (docs/ADS_POLICY.md「Web 版」).
+ *
+ * The shared ad config (services/ads/web/config.ts) needs this answer before
+ * first paint — it decides whether to reserve the anchor's bottom space and
+ * whether each display slot exists — but that module ALSO ships in the native
+ * app bundle, and reading `import.meta.env.VITE_ADMAX_*` there would inline
+ * the frame IDs into that bundle whenever the variables happen to be set.
+ * AdMax IDs are opaque hex with no recognisable prefix, so
+ * check-dist-ads-separation.sh could not catch them the way it catches
+ * `ca-pub-`.
+ *
+ * So the shared side gets plain booleans and never the IDs: only
+ * services/ads/web/admax.ts — a module the native build cannot reach — reads
+ * the values themselves. Non-web builds get `false` regardless of the
+ * environment, which is what makes the app artifact's freedom from ad-network
+ * identifiers structural rather than a matter of build hygiene.
+ *
+ * One flag per surface, not one for the build: a partly-configured set of
+ * frames is a supported state (the workflow injects whichever secrets exist),
+ * and an aggregate flag would answer "yes" for surfaces that have no frame —
+ * reserving bottom space no bar will ever fill, or mounting a slot the lazy
+ * unit then has to take away after the first paint.
+ */
+function adFrameSurfaces(mode: string): { anchor: boolean; home: boolean; result: boolean } {
+  const env = mode === 'web' ? loadEnv(mode, APP_ROOT, 'VITE_') : {};
+  const has = (...names: string[]) => names.some((name) => (env[name] ?? '').trim() !== '');
+  return {
+    anchor: has('VITE_ADMAX_ANCHOR_728X90', 'VITE_ADMAX_ANCHOR_320X100'),
+    home: has('VITE_ADMAX_SLOT_HOME_728X90', 'VITE_ADMAX_SLOT_HOME_320X100'),
+    result: has('VITE_ADMAX_SLOT_RESULT_320X100'),
+  };
+}
 
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
+  define: { __SG_AD_FRAMES__: JSON.stringify(adFrameSurfaces(mode)) },
   resolve: {
     // '@/' is the app root. Games sit three or four folders deep, so shared
     // imports would otherwise be long chains of '../'.
