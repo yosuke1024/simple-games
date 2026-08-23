@@ -8,6 +8,7 @@ import {
   adMaxAnchorChoice,
   adMaxFrameId,
   adMaxScriptFailed,
+  adMaxUnitRendered,
   onAdMaxScriptError,
   requestAdMaxFrame,
   resetAdMaxLoaderForTesting,
@@ -146,5 +147,65 @@ describe('requestAdMaxFrame', () => {
     // And nothing queues for a loader that will not come.
     requestAdMaxFrame('frame-b');
     expect(admaxScripts()).toHaveLength(1);
+  });
+});
+
+/**
+ * AdMax answers a no-fill by writing an iframe and putting nothing useful in
+ * it — measured in production, one page view carried only Criteo's 0×0 cookie
+ * sync while the next carried a real creative. Since there is no status
+ * attribute to read, "was this box filled" is a question about its contents,
+ * and the answer has to lean towards YES: collapsing a real ad costs revenue
+ * and shows the reader a flicker.
+ */
+describe('adMaxUnitRendered', () => {
+  const unitWith = (write?: (doc: Document) => void): HTMLElement => {
+    const unit = document.createElement('div');
+    unit.className = 'admax-ads';
+    document.body.appendChild(unit);
+    if (!write) return unit;
+
+    const frame = document.createElement('iframe');
+    unit.appendChild(frame);
+    const doc = frame.contentDocument;
+    if (doc) write(doc);
+    return unit;
+  };
+
+  afterEach(() => {
+    document.querySelectorAll('body > .admax-ads').forEach((node) => node.remove());
+  });
+
+  it('says no when nothing was written into the unit', () => {
+    expect(adMaxUnitRendered(unitWith())).toBe(false);
+    expect(adMaxUnitRendered(null)).toBe(false);
+  });
+
+  it('says no for a frame holding only a cookie sync', () => {
+    const unit = unitWith((doc) => {
+      doc.body.innerHTML =
+        '<script>window.Criteo = window.Criteo || {};</script><iframe id="sync"></iframe>';
+    });
+    // jsdom gives every element a zero rect, which is what a 0×0 sync frame
+    // has in a browser too.
+    expect(adMaxUnitRendered(unit)).toBe(false);
+  });
+
+  it('says yes for a creative — an image, text, or a sized frame', () => {
+    expect(adMaxUnitRendered(unitWith((doc) => (doc.body.innerHTML = '<img src="ad.png">')))).toBe(
+      true,
+    );
+    expect(
+      adMaxUnitRendered(unitWith((doc) => (doc.body.innerHTML = '<a href="#">Sponsored</a>'))),
+    ).toBe(true);
+
+    // jsdom gives every element a zero rect, so the sized nested frame — what
+    // a real creative is — has to be spelled out.
+    const sized = unitWith((doc) => (doc.body.innerHTML = '<iframe id="creative"></iframe>'));
+    const nested = sized.querySelector('iframe')?.contentDocument?.getElementById('creative');
+    Object.defineProperty(nested as Element, 'getBoundingClientRect', {
+      value: () => ({ width: 320, height: 100 }),
+    });
+    expect(adMaxUnitRendered(sized)).toBe(true);
   });
 });

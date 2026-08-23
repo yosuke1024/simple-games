@@ -3,7 +3,7 @@
  * and contacts no ad network; production loads the AdSense loader exactly
  * once, and only while online; without a client nothing happens at all.
  */
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { setOnlineForTesting } from '../../network';
 import { resetAdMaxLoaderForTesting, setAdMaxIdsForTesting } from './admax';
 import { initWebAds } from './boot';
@@ -171,5 +171,58 @@ describe('initWebAds AdMax anchor fallback', () => {
 
     admaxScript()?.dispatchEvent(new Event('error'));
     expect(admaxBar()).toBeNull();
+  });
+});
+
+/**
+ * A no-fill is silent in AdMax: the bar keeps standing with an empty frame in
+ * it. The bar goes, and so does the bottom space every screen was keeping
+ * clear for it — an empty strip under every screen is worse than the single
+ * layout change that releasing it costs (the trade recorded in
+ * docs/ADS_POLICY.md「Web 版」).
+ */
+describe('initWebAds when the anchor frame comes back empty', () => {
+  const reservedSpace = () => document.documentElement.hasAttribute('data-sg-web-ads');
+
+  const mountAnchor = () => {
+    setWebAdsConfigForTesting({ testMode: false, client: null });
+    setAdMaxIdsForTesting({ anchor728x90: 'anchor-wide' });
+    document.documentElement.dataset.sgWebAds = '';
+    initWebAds();
+  };
+
+  afterEach(() => {
+    vi.useRealTimers();
+    delete document.documentElement.dataset.sgWebAds;
+  });
+
+  it('takes the bar and the reserved space away when nothing rendered', () => {
+    vi.useFakeTimers();
+    mountAnchor();
+    expect(admaxBar()).not.toBeNull();
+    expect(reservedSpace()).toBe(true);
+
+    vi.runAllTimers();
+
+    expect(admaxBar()).toBeNull();
+    expect(reservedSpace()).toBe(false);
+  });
+
+  it('leaves both alone when a creative did render', () => {
+    vi.useFakeTimers();
+    mountAnchor();
+
+    // What a filled frame looks like: t.js writes an iframe into the unit and
+    // the exchange puts a creative inside it.
+    const unit = admaxBar()?.querySelector('.admax-ads');
+    const frame = document.createElement('iframe');
+    unit?.appendChild(frame);
+    const doc = frame.contentDocument;
+    if (doc) doc.body.innerHTML = '<img src="creative.png">';
+
+    vi.runAllTimers();
+
+    expect(admaxBar()).not.toBeNull();
+    expect(reservedSpace()).toBe(true);
   });
 });

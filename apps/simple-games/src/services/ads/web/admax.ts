@@ -174,6 +174,81 @@ export function resetAdMaxLoaderForTesting(): void {
   loadInFlight = false;
 }
 
+/**
+ * How long to give a requested frame before deciding nothing came.
+ *
+ * Long enough that a slow creative is not mistaken for an empty one — a
+ * collapsed box that then fills is worse than a box that waits — and short
+ * enough that a reader is not looking at an empty strip while they play.
+ */
+const EMPTY_CHECK_MS = 6000;
+
+/**
+ * Whether a frame actually rendered something a reader can see.
+ *
+ * AdMax reports no fill state at all (docs/ADS_POLICY.md「Web 版」), unlike
+ * AdSense's `data-ad-status`, and a no-fill is not silent: the exchange still
+ * writes an iframe into the unit and can fill it with nothing but a cookie
+ * sync — measured in production, one page view carried only Criteo's 0×0 sync
+ * frame while the next carried a real 320×100 creative. So "did the box get
+ * an ad" has to be answered by looking at what is in it.
+ *
+ * The answer defaults to YES on anything unclear: an ad wrongly collapsed is
+ * revenue thrown away and a reader shown a flicker, while an empty box left
+ * up is only the state this check exists to improve.
+ */
+export function adMaxUnitRendered(unit: Element | null): boolean {
+  if (!unit) return false;
+  try {
+    const frame = unit.querySelector('iframe');
+    // Nothing was written into the unit at all.
+    if (!frame) return false;
+
+    let doc: Document | null = null;
+    try {
+      doc = frame.contentDocument;
+    } catch {
+      doc = null;
+    }
+    // A cross-origin creative is not ours to judge — and it is a creative.
+    if (!doc?.body) return true;
+
+    if (doc.querySelector('img, picture, video, canvas, svg')) return true;
+    for (const nested of Array.from(doc.querySelectorAll('iframe'))) {
+      const rect = nested.getBoundingClientRect();
+      // Sync frames are 0×0 or 1×1; a creative has size.
+      if (rect.width > 1 && rect.height > 1) return true;
+    }
+
+    // Text ads exist, but script source is not text a reader sees.
+    const visible = doc.body.cloneNode(true) as HTMLElement;
+    for (const hidden of Array.from(visible.querySelectorAll('script, style, noscript'))) {
+      hidden.remove();
+    }
+    return (visible.textContent ?? '').trim().length > 0;
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Collapse the box if nothing rendered into it, once, after the grace period
+ * above. Returns a cancel for React effect cleanup.
+ */
+export function collapseIfAdMaxUnitEmpty(unit: Element | null, collapse: () => void): () => void {
+  let timer = 0;
+  try {
+    timer = window.setTimeout(() => {
+      if (!adMaxUnitRendered(unit)) collapse();
+    }, EMPTY_CHECK_MS);
+  } catch {
+    // Ads never block play.
+  }
+  return () => {
+    if (timer) window.clearTimeout(timer);
+  };
+}
+
 export function adMaxScriptFailed(): boolean {
   try {
     return document.querySelector(`script[${ADMAX_FAILED_MARKER}]`) !== null;

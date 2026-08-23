@@ -26,7 +26,13 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { isOnline } from '../../network';
-import { adMaxFrameId, adMaxScriptFailed, onAdMaxScriptError, requestAdMaxFrame } from './admax';
+import {
+  adMaxFrameId,
+  adMaxScriptFailed,
+  collapseIfAdMaxUnitEmpty,
+  onAdMaxScriptError,
+  requestAdMaxFrame,
+} from './admax';
 import { type WebAdPlacement, webAdsConfig, webAdsSlotEnabled } from './config';
 import { adSenseScriptFailed, ensureAdSenseScript, onAdSenseScriptError } from './script';
 
@@ -205,7 +211,20 @@ export default function AdUnit({ placement, compact = false }: AdUnitProps) {
     frameRequestedRef.current = true;
     setPlacementHidden(hostRef.current, false);
     requestAdMaxFrame(frameId);
-    return onAdMaxScriptError(() => setPlacementHidden(hostRef.current, true));
+
+    const collapse = () => setPlacementHidden(hostRef.current, true);
+    const unsubscribe = onAdMaxScriptError(collapse);
+    // AdMax answers a no-fill with an empty box rather than a status, so the
+    // box has to be checked (admax.ts) instead of asked.
+    const cancelEmptyCheck = collapseIfAdMaxUnitEmpty(
+      hostRef.current?.querySelector('.admax-ads') ?? null,
+      collapse,
+    );
+
+    return () => {
+      unsubscribe();
+      cancelEmptyCheck();
+    };
   }, [frameId]);
 
   // Nothing can ever appear here (no network configured for this placement):
