@@ -5,26 +5,29 @@
  */
 import { afterEach, describe, expect, it } from 'vitest';
 import { setOnlineForTesting } from '../../network';
-import { setAdMaxIdsForTesting } from './admax';
+import { resetAdMaxLoaderForTesting, setAdMaxIdsForTesting } from './admax';
 import { initWebAds } from './boot';
 import { setWebAdsConfigForTesting } from './config';
 
-type AdMaxWindow = Window & { admaxads?: unknown[] };
+type AdMaxWindow = Window & { admaxads?: unknown[]; __admax_tag__?: unknown };
 
 const bar = () => document.querySelector('.web-anchor-test');
 const adsScript = () => document.head.querySelector('script[data-sg-adsense]');
 const admaxBar = () => document.querySelector('.web-admax-anchor');
+const admaxScripts = () => document.head.querySelectorAll('script[data-sg-admax]');
 const admaxScript = () => document.head.querySelector('script[data-sg-admax]');
 
 afterEach(() => {
   setWebAdsConfigForTesting(null);
   setAdMaxIdsForTesting(null);
+  resetAdMaxLoaderForTesting();
   setOnlineForTesting(true);
   bar()?.remove();
   adsScript()?.remove();
   admaxBar()?.remove();
-  admaxScript()?.remove();
+  admaxScripts().forEach((script) => script.remove());
   delete (window as AdMaxWindow).admaxads;
+  delete (window as AdMaxWindow).__admax_tag__;
 });
 
 describe('initWebAds', () => {

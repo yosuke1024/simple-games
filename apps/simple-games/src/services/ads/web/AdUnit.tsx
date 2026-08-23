@@ -26,13 +26,7 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { isOnline } from '../../network';
-import {
-  adMaxFrameId,
-  adMaxScriptFailed,
-  ensureAdMaxScript,
-  onAdMaxScriptError,
-  pushAdMaxAd,
-} from './admax';
+import { adMaxFrameId, adMaxScriptFailed, onAdMaxScriptError, requestAdMaxFrame } from './admax';
 import { type WebAdPlacement, webAdsConfig, webAdsSlotEnabled } from './config';
 import { adSenseScriptFailed, ensureAdSenseScript, onAdSenseScriptError } from './script';
 
@@ -196,10 +190,12 @@ export default function AdUnit({ placement, compact = false }: AdUnitProps) {
 
   // The AdMax mount — this build's only network, or the fallback after an
   // AdSense failure; the code is the same either way. Render happens first
-  // (the .admax-ads div must be in the DOM before its queue entry is
-  // processed), then this pushes exactly once per mount. AdMax's loader
-  // failing too — typically an ad blocker — collapses the placement like a
-  // plain unfilled: no empty shelf.
+  // (the .admax-ads div must be in the DOM before the frame is requested),
+  // then this asks for it exactly once per mount. Both display slots reach
+  // this from a lazily-imported chunk, which is why requestAdMaxFrame has to
+  // be able to serve a frame that arrives after t.js already ran (admax.ts).
+  // AdMax's loader failing — typically an ad blocker — collapses the
+  // placement like a plain unfilled: no empty shelf.
   useEffect(() => {
     if (!frameId || frameRequestedRef.current) return;
     if (!isOnline() || adMaxScriptFailed()) {
@@ -208,8 +204,7 @@ export default function AdUnit({ placement, compact = false }: AdUnitProps) {
     }
     frameRequestedRef.current = true;
     setPlacementHidden(hostRef.current, false);
-    pushAdMaxAd(frameId);
-    ensureAdMaxScript();
+    requestAdMaxFrame(frameId);
     return onAdMaxScriptError(() => setPlacementHidden(hostRef.current, true));
   }, [frameId]);
 

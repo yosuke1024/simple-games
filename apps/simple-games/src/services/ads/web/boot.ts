@@ -28,9 +28,8 @@ import { isOnline } from '../../network';
 import {
   adMaxAnchorChoice,
   adMaxScriptFailed,
-  ensureAdMaxScript,
   onAdMaxScriptError,
-  pushAdMaxAd,
+  requestAdMaxFrame,
 } from './admax';
 import { webAdsConfig } from './config';
 import { ensureAdSenseScript, onAdSenseScriptError } from './script';
@@ -81,10 +80,9 @@ function mountAdMaxAnchor(): void {
     unit.style.width = `${choice.width}px`;
     unit.style.height = `${choice.height}px`;
     bar.appendChild(unit);
-    // The div must be in the DOM before its queue entry is processed.
+    // The div must be in the DOM before the frame is requested.
     document.body.appendChild(bar);
-    pushAdMaxAd(choice.id);
-    ensureAdMaxScript();
+    requestAdMaxFrame(choice.id);
     onAdMaxScriptError(() => bar.remove());
   } catch {
     // Ads never block play.

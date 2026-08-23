@@ -92,44 +92,86 @@ const ADMAX_ERROR_EVENT = 'sg-admax-error';
 
 /**
  * AdMax's async tag: each unit is a `.admax-ads` div plus one entry in the
- * `admaxads` queue, processed by a single t.js load. Pushing the same frame
- * again on a later mount is the documented SPA pattern, so the queue is
- * append-only. The div must be in the DOM before the push is processed —
- * callers render it first (React effects run after render; boot.ts appends
- * the bar before pushing).
+ * `admaxads` queue, and t.js turns those into requests.
+ *
+ * The part that shapes this whole module: **t.js does that exactly once per
+ * page.** Its bundle ends in `if (void 0 !== window.__admax_tag__) ; else
+ * { …scan the DOM, drain the queue… }`, so the first load wins and every
+ * later load returns immediately. A screen this app mounts afterwards — the
+ * home slot arrives with a lazily-imported chunk, the result slot minutes
+ * into a session — pushes into a queue nothing will ever read again.
+ *
+ * That is not a hypothesis: in production only the anchor (mounted at boot,
+ * so it triggered the single pass) was ever requested, while the home slot
+ * sat in the queue unserved. Clearing the guard and loading t.js again with
+ * the queue holding only the new frame served it immediately, which is what
+ * requestAdMaxFrame does below.
  */
-type AdMaxWindow = Window & { admaxads?: { admax_id: string; type: 'banner' }[] };
+type AdMaxWindow = Window & {
+  admaxads?: { admax_id: string; type: 'banner' }[];
+  __admax_tag__?: unknown;
+};
 
-export function pushAdMaxAd(id: string): void {
+let pendingFrames: string[] = [];
+let loadInFlight = false;
+
+/**
+ * Ask AdMax for one frame. The div must already be in the DOM — callers
+ * render it first (React effects run after render; boot.ts appends the bar
+ * before calling).
+ *
+ * Loads are serialised rather than fired per call: frames that ask while a
+ * load is in flight ride the next one together, and the queue is REPLACED
+ * with just that batch. Replacing is what keeps a second load from
+ * re-requesting frames the first one already filled — t.js pops elements by
+ * `admax_id`, so an id that is not in the queue is left alone.
+ */
+export function requestAdMaxFrame(id: string): void {
   try {
-    const w = window as AdMaxWindow;
-    (w.admaxads = w.admaxads ?? []).push({ admax_id: id, type: 'banner' });
+    pendingFrames.push(id);
+    drainAdMaxQueue();
   } catch {
     // Ads never block play.
   }
 }
 
-/**
- * DOM-marker guarded like ensureAdSenseScript, and the same failure rule:
- * silent and final for this page view — no retry loop (docs/OFFLINE_POLICY.md).
- * The error marker lets later mounts collapse quietly instead of pushing to a
- * queue nothing will ever read.
- */
-export function ensureAdMaxScript(): void {
-  try {
-    if (document.querySelector(`script[${ADMAX_SCRIPT_MARKER}]`)) return;
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = ADMAX_SRC;
-    script.setAttribute(ADMAX_SCRIPT_MARKER, '');
-    script.addEventListener('error', () => {
-      script.setAttribute(ADMAX_FAILED_MARKER, '');
-      document.dispatchEvent(new Event(ADMAX_ERROR_EVENT));
-    });
-    document.head.appendChild(script);
-  } catch {
-    // Ads never block play.
-  }
+function drainAdMaxQueue(): void {
+  if (loadInFlight || pendingFrames.length === 0 || adMaxScriptFailed()) return;
+
+  const batch = pendingFrames;
+  pendingFrames = [];
+  loadInFlight = true;
+
+  const w = window as AdMaxWindow;
+  w.admaxads = batch.map((admax_id) => ({ admax_id, type: 'banner' as const }));
+  // Both halves of t.js's one-shot behaviour have to be reset together: the
+  // queue it drains, and the guard that makes it skip the scan entirely.
+  w.__admax_tag__ = undefined;
+
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = ADMAX_SRC;
+  script.setAttribute(ADMAX_SCRIPT_MARKER, '');
+  script.addEventListener('load', () => {
+    loadInFlight = false;
+    drainAdMaxQueue();
+  });
+  // Failure is silent and final for this page view — no retry loop
+  // (docs/OFFLINE_POLICY.md). The marker lets later mounts collapse quietly
+  // instead of queueing for a loader that will not come.
+  script.addEventListener('error', () => {
+    loadInFlight = false;
+    pendingFrames = [];
+    script.setAttribute(ADMAX_FAILED_MARKER, '');
+    document.dispatchEvent(new Event(ADMAX_ERROR_EVENT));
+  });
+  document.head.appendChild(script);
+}
+
+/** Test hook: forget any batch a previous test left queued. */
+export function resetAdMaxLoaderForTesting(): void {
+  pendingFrames = [];
+  loadInFlight = false;
 }
 
 export function adMaxScriptFailed(): boolean {
