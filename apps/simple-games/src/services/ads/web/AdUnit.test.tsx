@@ -16,7 +16,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { setOnlineForTesting } from '../../network';
 import AdUnit, { pickAdSize } from './AdUnit';
-import { setAdMaxIdsForTesting } from './admax';
+import { resetAdMaxLoaderForTesting, setAdMaxIdsForTesting } from './admax';
 import {
   adIdFromEnv,
   setWebAdsConfigForTesting,
@@ -25,9 +25,10 @@ import {
 } from './config';
 import { ensureAdSenseScript } from './script';
 
-type AdsWindow = Window & { adsbygoogle?: unknown[]; admaxads?: unknown[] };
+type AdsWindow = Window & { adsbygoogle?: unknown[]; admaxads?: unknown[]; __admax_tag__?: unknown };
 
 const adsScript = () => document.head.querySelector('script[data-sg-adsense]');
+const admaxScripts = () => document.head.querySelectorAll('script[data-sg-admax]');
 const admaxScript = () => document.head.querySelector('script[data-sg-admax]');
 
 /** An AdSense build: the client and both display slots are injected. */
@@ -52,11 +53,13 @@ const adMaxBuild = () =>
 afterEach(() => {
   setWebAdsConfigForTesting(null);
   setAdMaxIdsForTesting(null);
+  resetAdMaxLoaderForTesting();
   setOnlineForTesting(true);
   adsScript()?.remove();
-  admaxScript()?.remove();
+  admaxScripts().forEach((script) => script.remove());
   delete (window as AdsWindow).adsbygoogle;
   delete (window as AdsWindow).admaxads;
+  delete (window as AdsWindow).__admax_tag__;
 });
 
 describe('AdUnit in test mode', () => {
