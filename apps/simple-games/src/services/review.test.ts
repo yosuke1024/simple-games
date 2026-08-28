@@ -1,20 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { capacitorMock, inAppReviewMock, networkMock, openExternalMock } = vi.hoisted(() => ({
-  capacitorMock: { native: true },
+  capacitorMock: { native: true, platform: 'android' },
   inAppReviewMock: { requestReview: vi.fn() },
   networkMock: { online: true },
   openExternalMock: vi.fn(),
 }));
 
 vi.mock('@capacitor/core', () => ({
-  Capacitor: { isNativePlatform: () => capacitorMock.native },
+  Capacitor: {
+    isNativePlatform: () => capacitorMock.native,
+    getPlatform: () => capacitorMock.platform,
+  },
 }));
 vi.mock('@capacitor-community/in-app-review', () => ({ InAppReview: inAppReviewMock }));
 vi.mock('./network', () => ({ isOnline: () => networkMock.online }));
 vi.mock('../ui/openExternal', () => ({ openExternal: openExternalMock }));
 
-import { PLAY_STORE_URL } from '@simple-games/brand';
+import { APP_STORE_URL, PLAY_STORE_URL } from '@simple-games/brand';
 import { createMemoryKV } from '../storage/kv';
 import { loadRecord } from '../storage/repo';
 import { reviewSchema, STORAGE_KEYS } from '../storage/schemas';
@@ -32,6 +35,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   networkMock.online = true;
   capacitorMock.native = true;
+  capacitorMock.platform = 'android';
 });
 
 afterEach(() => {
@@ -120,13 +124,23 @@ describe('review prompt cadence', () => {
 describe('requestStoreReview', () => {
   it('falls back to the store listing off-device', async () => {
     capacitorMock.native = false;
+    capacitorMock.platform = 'web';
     await requestStoreReview();
     expect(openExternalMock).toHaveBeenCalledWith(PLAY_STORE_URL);
   });
 
-  it('falls back to the store listing when the native card fails', async () => {
+  it('falls back to Play when the native card fails on Android', async () => {
     inAppReviewMock.requestReview.mockRejectedValueOnce(new Error('no quota'));
     await requestStoreReview();
     expect(openExternalMock).toHaveBeenCalledWith(PLAY_STORE_URL);
+  });
+
+  // An iPhone opened on Google Play cannot install anything: the fallback has
+  // to know which store this device came from.
+  it('falls back to the App Store when the native card fails on iOS', async () => {
+    capacitorMock.platform = 'ios';
+    inAppReviewMock.requestReview.mockRejectedValueOnce(new Error('no quota'));
+    await requestStoreReview();
+    expect(openExternalMock).toHaveBeenCalledWith(APP_STORE_URL);
   });
 });

@@ -64,10 +64,26 @@ export const SUPPORT_EMAIL = 'suzuki.yosuke@pixapps.ai';
 
 /**
  * The collection's Play Store listing — the fallback review destination when
- * the native in-app review card cannot be shown.
+ * the native in-app review card cannot be shown on Android.
+ *
+ * Also carried by the landing page (sibling `pixapps-landing`,
+ * public/simple-games/index.html and public/index.html), which keeps its own
+ * copy by hand; `tests/ui.test.js` over there pins the same string, so a
+ * change here is a change in two repositories.
  */
 export const PLAY_STORE_URL =
   'https://play.google.com/store/apps/details?id=com.pixapps.simplegames';
+
+/**
+ * The App Store listing — the same fallback on iOS, where opening Google Play
+ * would send the player to a store their device cannot install from.
+ *
+ * Deliberately the storefront-less short form: the app ships fourteen UI
+ * languages, so Apple should route each visitor to their own storefront
+ * rather than pinning everyone to `/jp/`. The landing page carries this same
+ * string by hand, as above.
+ */
+export const APP_STORE_URL = 'https://apps.apple.com/app/id6802321137';
 
 /**
  * The series base: a warm, paper-like surface that stays readable for a long

@@ -204,9 +204,14 @@ App Store Privacy:
 
 - [ ] 合計 5 勝するまで質問が出ない/5 勝後、ゲームから戻った時だけ出る
 - [ ] 「楽しい」→ In-App Review カードが表示される(内部テストトラックで確認。
-      Play のクォータにより出ないことがある — その場合ストア掲載ページが開く)
+      Play のクォータ・iOS の年あたり上限により出ないことがある — その場合は
+      ストア掲載ページが開く)
+- [ ] カードが出なかったとき、開くのが**その端末のストア**であること。
+      iOS は App Store、Android は Google Play(`services/review.ts` の
+      `storeListingUrl`。iPhone を Play へ送ると入手できないページに着く)
 - [ ] 「いまいち」→ メールドラフトが開き、宛先が brand の `SUPPORT_EMAIL`
-- [ ] Play Console のサポートメールアドレスを `SUPPORT_EMAIL` と一致させる
+- [ ] Play Console と App Store Connect のサポートメールアドレスを
+      `SUPPORT_EMAIL` と一致させる
 - [ ] 回答後は二度と出ない/「あとで」は 20 勝後に一度だけ再表示
 
 ## 6. ストア掲載
