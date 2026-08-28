@@ -19,7 +19,7 @@
  */
 import { InAppReview } from '@capacitor-community/in-app-review';
 import { Capacitor } from '@capacitor/core';
-import { PLAY_STORE_URL, SUPPORT_EMAIL } from '@simple-games/brand';
+import { APP_STORE_URL, PLAY_STORE_URL, SUPPORT_EMAIL } from '@simple-games/brand';
 import packageJson from '../../package.json';
 import type { KVStore } from '../storage/kv';
 import { preferencesKV } from '../storage/kv';
@@ -85,9 +85,25 @@ export function resolveReviewPrompt(): void {
 }
 
 /**
- * Opens the native in-app review card; Play decides whether it actually
- * appears (quota). Falls back to the store listing, and fails quietly —
- * a review must never produce an error screen.
+ * The listing to open when the native review card cannot be shown. Picked by
+ * platform, because the two stores are not interchangeable destinations: an
+ * iPhone sent to Google Play lands on a page it cannot install from, which
+ * reads as a broken button rather than as a review invitation.
+ *
+ * Off a native platform there is no install to review at all — the question is
+ * never asked on the web build (see the module comment) — so Play is the
+ * arbitrary-but-harmless default for the one path that can still get here,
+ * a direct call from a test or a future surface.
+ */
+function storeListingUrl(): string {
+  return Capacitor.getPlatform() === 'ios' ? APP_STORE_URL : PLAY_STORE_URL;
+}
+
+/**
+ * Opens the native in-app review card; the store decides whether it actually
+ * appears (Play has a quota, and iOS caps the prompt per year). Falls back to
+ * this platform's listing, and fails quietly — a review must never produce an
+ * error screen.
  */
 export async function requestStoreReview(): Promise<void> {
   if (Capacitor.isNativePlatform()) {
@@ -98,7 +114,7 @@ export async function requestStoreReview(): Promise<void> {
       // Fall through to the listing.
     }
   }
-  openExternal(PLAY_STORE_URL);
+  openExternal(storeListingUrl());
 }
 
 /**

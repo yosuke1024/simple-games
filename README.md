@@ -197,7 +197,7 @@ pnpm --filter simple-games test
 pnpm --filter simple-games build
 ```
 
-Android ビルド手順は [apps/simple-games/README.md](apps/simple-games/README.md) を参照してください。
+Android / iOS のビルド手順は [apps/simple-games/README.md](apps/simple-games/README.md) を参照してください。
 
 ## 多言語
 
