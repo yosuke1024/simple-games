@@ -213,3 +213,123 @@
   color: var(--ink);
   font-size: 15px;
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; Medium enlarges the stacked layout; Wide moves the digit pad
+   and the action bar to the board's right so a mouse never crosses the
+   screen between reading a cell and answering it.
+
+   The Wide rules are scoped to `:root[data-game='sudoku']` because they
+   reach shared chrome (.game-content, .action-bar): this stylesheet stays
+   loaded after leaving the game, and without the scope it would restyle
+   every other game's screen. */
+
+@media (min-width: 600px) {
+  .sudoku-body {
+    gap: 18px;
+    padding: 8px 16px 14px;
+  }
+
+  /* Wider, but never taller than the space between the top bar and the
+     action bar — a 500px board on a short PC screen would push its own
+     digit pad off screen. The svh line is a progressive refinement; the vh
+     line above it is the Chromium 88 fallback. */
+  .sudoku-grid,
+  .digit-pad {
+    width: min(100%, 500px, calc(100vh - 350px));
+    width: min(100%, 500px, calc(100svh - 350px));
+  }
+
+  .sudoku-cell {
+    font-size: clamp(24px, 4.5vw, 30px);
+  }
+
+  .sudoku-notes {
+    font-size: clamp(9px, 1.3vw, 13px);
+  }
+
+  .digit-key {
+    min-height: 56px;
+  }
+
+  .digit-key-left {
+    font-size: 11px;
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  /* Board left, controls right. The board spans four rows; the two
+     stretchy rows above and below the pad centre the control column on the
+     board. The banner row is empty on the web build (BannerSlot renders
+     null there) and collapses to nothing. */
+  :root[data-game='sudoku'] .game-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto 264px minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'topbar topbar topbar topbar'
+      '.      board  .      .'
+      '.      board  pad    .'
+      '.      board  action .'
+      '.      board  .      .'
+      'banner banner banner banner';
+    column-gap: 28px;
+    padding: 0 16px 8px;
+    --game-shell-max: 860px;
+  }
+
+  :root[data-game='sudoku'] .game-topbar {
+    grid-area: topbar;
+  }
+
+  :root[data-game='sudoku'] .banner-slot {
+    grid-area: banner;
+  }
+
+  /* The body's children become grid items of .game-content; the wrapper
+     itself contributes nothing in this layout. */
+  :root[data-game='sudoku'] .sudoku-body {
+    display: contents;
+  }
+
+  :root[data-game='sudoku'] .sudoku-grid {
+    grid-area: board;
+    align-self: center;
+    width: min(56vw, 540px, calc(100vh - 220px));
+    width: min(56vw, 540px, calc(100svh - 220px));
+  }
+
+  /* The pad regroups 9-in-a-row into 3x3 — the column is narrow, and the
+     numpad shape is what a keyboard hand already knows. */
+  :root[data-game='sudoku'] .digit-pad {
+    grid-area: pad;
+    width: 100%;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  :root[data-game='sudoku'] .digit-key {
+    min-height: 60px;
+  }
+
+  /* The action bar stops being a bottom bar: it joins the control column
+     as a quiet 2x2 block under the pad. */
+  :root[data-game='sudoku'] .action-bar {
+    grid-area: action;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    max-width: none;
+    margin-top: 8px;
+    padding: 0;
+    border-top: none;
+    background: none;
+  }
+
+  :root[data-game='sudoku'] .action-btn {
+    max-width: none;
+  }
+}
