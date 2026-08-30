@@ -156,6 +156,10 @@ async function refreshBannerForViewport(): Promise<void> {
     onViewportResize();
     return;
   }
+  // Busy while the old view comes down, so a concurrent setBannerVisible
+  // cannot request a new banner that the still-running removal would then
+  // take with it. The wanted state it records is applied right below.
+  bannerBusy = true;
   bannerCreated = false;
   bannerShowing = false;
   bannerCreatedWidth = null;
@@ -163,6 +167,8 @@ async function refreshBannerForViewport(): Promise<void> {
     await AdMob.removeBanner();
   } catch {
     // A view that was already gone: nothing to remove.
+  } finally {
+    bannerBusy = false;
   }
   // Hidden (home screen): stop here, so the next game entry creates the
   // banner at the new width without spending a request now.
@@ -209,10 +215,10 @@ async function applyBannerState(): Promise<void> {
     const adId = bannerAdUnitId();
     if (!adId) return;
     // Last gate before the only ad request this app makes. Awaiting here can
-    // let the player leave the game screen first, so the intent is rechecked
-    // below rather than assumed.
+    // let the player leave the game screen first — or the network drop — so
+    // both intents are rechecked below rather than assumed.
     if (!(await canRequestAds())) return;
-    if (!bannerWanted || bannerCreated) return;
+    if (!bannerWanted || bannerCreated || !isOnline()) return;
     const requestedWidth = window.innerWidth;
     await AdMob.showBanner({
       adId,

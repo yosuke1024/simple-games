@@ -31,8 +31,12 @@ vi.mock('../network', () => ({
   isOnline: () => networkMock.online,
 }));
 
+const { consentMock } = vi.hoisted(() => ({
+  consentMock: { impl: () => Promise.resolve(true) },
+}));
+
 vi.mock('./consent', () => ({
-  canRequestAds: () => Promise.resolve(true),
+  canRequestAds: () => consentMock.impl(),
 }));
 
 /**
@@ -150,6 +154,25 @@ describe('viewport-follow (issue #93)', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    consentMock.impl = () => Promise.resolve(true);
+  });
+
+  it('rechecks the network after the consent await — no request if it dropped', async () => {
+    setWidth(768);
+    networkMock.online = true;
+    for (const fn of Object.values(admobMock)) fn.mockClear();
+    consentMock.impl = () => {
+      // The connection dies while consent is being answered.
+      networkMock.online = false;
+      return Promise.resolve(true);
+    };
+
+    const banner = await loadBanner('ios', BOTH);
+    await banner.initAds();
+    await banner.setBannerVisible(true);
+
+    expect(admobMock.showBanner).not.toHaveBeenCalled();
+    banner.resetBannerForTesting();
   });
 
   it('recreates the shown banner once after a rotation-sized change', async () => {
