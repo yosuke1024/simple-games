@@ -227,6 +227,8 @@ en / ja / es / pt-br / fr / id / de / th / vi / ko)で、残る 4 ロケール
 ゲームロジックが Pure TypeScript なので、同じソースから **ブラウザ版**を配信します
 (`https://pixapps.ai/simple-games/play/` で公開中)。
 Cloudflare Pages の静的アセットのみで動き、サーバー機能は使いません。
+ゲーム別 Landing Page からは `…/play/?game=<game-id>` でそのゲームを直接開けます
+(不明な ID はコレクションホームにフォールバック。アプリ版では動きません)。
 アプリ版との役割の違い(広告・課金・オフラインの範囲・計測・保存)は
 [docs/WEB_VERSION.md](docs/WEB_VERSION.md)、レイヤー構成は
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) を参照してください。
