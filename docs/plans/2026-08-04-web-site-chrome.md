@@ -191,6 +191,8 @@
 
 - fixed 常時表示・デスクトップだけ常時表示(必要になったら別途)。
 - ディープリンク / hash ナビ(M4)・計測の有効化(別マイルストーン)。
+  ディープリンクはこの計画の外で 2026-08-30 に入った(`?game=<game-id>`。
+  issue #83、[../WEB_VERSION.md](../WEB_VERSION.md)「URL(ゲーム別の入口)」)。
 - ヘッダーの多言語化(サイトが ja/en である事実は landing 側の課題)。
 - native への変更・landing のヘッダー実装の改造。SPA 側 override が §5 の実測で
   破綻した場合に限り、landing に「inflow モード」を足す案へ切り替える
