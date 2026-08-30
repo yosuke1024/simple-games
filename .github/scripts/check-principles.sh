@@ -126,18 +126,54 @@ fi
 # (privacy2)と "Prefer no ads?"(adSupportBody = ADS_POLICY.md の説明文の正文)は
 # 拾わない。日本語は「機能課金なし」「課金ロックなし」が BRAND.md の指定する
 # 代替表現なので、「課金なし」の一致から除く。
+#
+# **§7 と同じ除外マーカーを持つ**(`[check-principles: allow]` を書いた行だけ)。
+# 理由も同じで、この規則を 14 言語ぶん強制しているテスト自身は、禁止語を書かな
+# ければ「無いこと」を検査できない(src/ui/components/WebAppPrompt.test.tsx が
+# 実例)。除外はソース上に見える形で 1 行ずつ残り、grep すれば全件出る。
+# ファイル種別でまとめて除外しない: 除外の範囲が黙って広がる。
 banned_any='ad-?free|completely free of ads|no popup ads|no forced ads|no in-app purchases|lifetime access|fully free|completely free'
 banned_claim='No (ads|purchases)\b'
+banned_allow_marker='\[check-principles: allow\]'
 hits=""
 add() { [ -n "$1" ] && hits="${hits}${1}"$'\n'; return 0; } # $() は末尾改行を落とすので自前で足す
-add "$(grep -rniE "$banned_any" "${src_dirs[@]}" || true)"
-add "$(grep -rnE "$banned_claim" "${src_dirs[@]}" || true)"
-add "$(grep -rnE '完全無課金|完全無料|広告なし' "${src_dirs[@]}" || true)"
-add "$(grep -rnE '課金なし' "${src_dirs[@]}" | grep -vE '機能課金なし|課金ロックなし' || true)"
+add "$(grep -rniE "$banned_any" "${src_dirs[@]}" | grep -vE "$banned_allow_marker" || true)"
+add "$(grep -rnE "$banned_claim" "${src_dirs[@]}" | grep -vE "$banned_allow_marker" || true)"
+add "$(grep -rnE '完全無課金|完全無料|広告なし' "${src_dirs[@]}" | grep -vE "$banned_allow_marker" || true)"
+add "$(grep -rnE '課金なし' "${src_dirs[@]}" | grep -vE '機能課金なし|課金ロックなし' | grep -vE "$banned_allow_marker" || true)"
 if [ -n "$hits" ]; then
   report "広告・課金について使用禁止の表現があります(docs/BRAND.md「表現ルール」)" "$hits"
 else
   ok "禁止表現なし(英語・日本語の範囲)"
+fi
+
+# パターンと除外マーカーの生存確認(§7 の自己検査と同じ理由)。除外を足したぶん
+# 「何も見ていない状態で緑になる」壊れ方が 1 つ増えている —— `banned_allow_marker`
+# が空文字なら `grep -v` は全行を落とし、§6 は永久に緑になる。そこで既知の違反文が
+# (1)パターンに当たり、(2)マーカーの無い行として除外を生き延びることを両方見る。
+probe_banned=(
+  'Ad-free forever'
+  'No ads'
+  'No purchases'
+  '完全無料'
+  '完全無課金'
+  '広告なし'
+)
+dead=""
+for probe in "${probe_banned[@]}"; do
+  if printf '%s' "$probe" | grep -qiE "$banned_any" ||
+    printf '%s' "$probe" | grep -qE "$banned_claim" ||
+    printf '%s' "$probe" | grep -qE '完全無課金|完全無料|広告なし'; then
+    printf '%s' "$probe" | grep -qvE "$banned_allow_marker" ||
+      dead="${dead}除外マーカーが無印の行を落としています: ${probe}"$'\n'
+  else
+    dead="${dead}検出できません: ${probe}"$'\n'
+  fi
+done
+if [ -n "$dead" ]; then
+  report "§6 の検査パターンまたは除外マーカーが壊れています(ガードが no-op です)" "$dead"
+else
+  ok "禁止表現パターンの自己検査(${#probe_banned[@]} 本の既知違反文を検出し、無印の行は除外しない)"
 fi
 
 # 7. 効能の主張 ---------------------------------------------------------------

@@ -1054,6 +1054,79 @@ button:disabled {
   flex: 1;
 }
 
+/* The browser version's one-time app card (docs/WEB_VERSION.md「アプリへの送客」,
+   WebAppPrompt.tsx). Same column and gutters as the two blocks above, so it
+   reads as one more section of the home rather than as something dropped on
+   top of it — and it is in the flow, so the list below simply starts lower
+   while it is there and closes up when it goes.
+
+   Height is deliberately small: two short lines and a row of buttons that
+   wraps rather than pushing the first category off a 360x640 screen. The
+   surface is the recessed one, not the raised one the tiles use, so the card
+   sits behind the games rather than competing with them for the tap. */
+.app-prompt {
+  /* The two blocks above are 420px wide with 24px gutters, so their content
+     column is 48px narrower than the block. This card IS its own surface —
+     it has a border and a background — so it has to match that column rather
+     than the block, or it runs edge to edge past every game row above it. */
+  width: calc(100% - 48px);
+  max-width: 372px;
+  margin: 0 auto 20px;
+  padding: 12px 14px 10px;
+  box-sizing: border-box;
+  background: var(--surface-recessed);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.app-prompt-title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.app-prompt-body {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* Wraps, because two store buttons plus "Close" do not fit one line at 360px
+   in every language — and a fourteen-language card that only fits in English
+   is a card that breaks somewhere nobody is looking. */
+.app-prompt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Shorter and narrower than the full-height .btn: this is a card in a list of
+   games, not the primary action of a screen. `flex: 1 1 auto` keeps the store
+   buttons an even pair when both stores are offered, and the trimmed side
+   padding is what lets that pair share one line at 320px — at .btn's own 20px
+   they miss it by a few pixels and stack one per row. 44px stays the tap
+   target the rest of the app uses. */
+.app-prompt-store,
+.app-prompt-close {
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 15px;
+}
+
+.app-prompt-store {
+  flex: 1 1 auto;
+}
+
+/* Sits at the end of whichever line it lands on — beside the store buttons
+   when they leave room, at the far edge of its own line when they do not.
+   `inline-start` rather than `left` so a future RTL locale mirrors it. */
+.app-prompt-close {
+  margin-inline-start: auto;
+}
+
 .game-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

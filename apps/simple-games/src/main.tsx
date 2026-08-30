@@ -10,6 +10,7 @@ import { initAds } from './services/ads/banner';
 import { webAnchorEnabled } from './services/ads/web/config';
 import { initNetwork } from './services/network';
 import { initReview } from './services/review';
+import { initWebAppPrompt } from './services/webAppPrompt';
 import { loadRecord } from './storage/repo';
 import { settingsSchema } from './storage/schemas';
 import { SettingsProvider } from './state/SettingsContext';
@@ -35,6 +36,7 @@ async function boot(): Promise<void> {
     await initAdRemoval();
     await initReview();
     await initRecentGames();
+    await initWebAppPrompt();
     settings = await loadRecord(settingsSchema);
   } catch {
     // Even unexpected boot failures must not prevent playing: use defaults.

@@ -104,6 +104,10 @@ export const zhHant: Messages = {
     '歡迎寄封信告訴我——每則訊息我都會看。在你於郵件 App 按下傳送之前,不會送出任何內容。',
   reviewFeedbackAction: '寫郵件',
 
+  // The browser version's one-time pointer at the app
+  webAppPromptTitle: '更安靜地玩，從第一次啟動就完全離線。',
+  webAppPromptBody: 'App 可以從主畫面直接開啟，並把你的進度儲存在這台裝置上。',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: '生命：{n}',
   levelsCleared: '已通過關卡',

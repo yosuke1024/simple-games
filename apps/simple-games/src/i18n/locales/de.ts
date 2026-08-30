@@ -105,6 +105,11 @@ export const de: Messages = {
     'Schreib mir eine E-Mail — ich lese jede Nachricht. Es wird nichts gesendet, bis du in deiner Mail-App auf Senden tippst.',
   reviewFeedbackAction: 'E-Mail schreiben',
 
+  // The browser version's one-time pointer at the app
+  webAppPromptTitle: 'Ruhiger spielen — schon beim ersten Start vollständig offline.',
+  webAppPromptBody:
+    'Du startest die App direkt vom Startbildschirm, und dein Fortschritt bleibt auf deinem Gerät.',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Leben: {n}',
   levelsCleared: 'Geschaffte Level',

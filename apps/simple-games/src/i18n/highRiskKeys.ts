@@ -49,4 +49,11 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   'tagline',
   'step3Body',
   'sudokuStep3Body',
+
+  // アプリへの送客(Web 版のみ) — アプリの利点を盛らず、Web 版に機能制限が
+  // あるようにも読ませないこと。「最初から完全オフライン」はアプリの約束
+  // そのもので、弱めても盛っても約束の反故になる(docs/WEB_VERSION.md
+  // 「アプリへの送客」/「オフラインの扱い」)。
+  'webAppPromptTitle',
+  'webAppPromptBody',
 ];

@@ -118,6 +118,12 @@ export const en = {
     'Tell me in an email — I read every message. Nothing is sent until you press send in your mail app.',
   reviewFeedbackAction: 'Write an email',
 
+  // The browser version's one-time pointer at the app (docs/WEB_VERSION.md
+  // 「アプリへの送客」). Says only what the app actually adds; it never implies
+  // the web build is missing a game or a feature, because it is not.
+  webAppPromptTitle: 'A quieter way to play, offline from the first launch.',
+  webAppPromptBody: 'The app opens from your home screen and keeps your progress on your device.',
+
   // ---- Arcade (shared by Brick Breaker and Sky Fighter) ----
   livesLeft: 'Lives: {n}',
   levelsCleared: 'Levels cleared',

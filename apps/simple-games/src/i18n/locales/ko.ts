@@ -104,6 +104,10 @@ export const ko: Messages = {
     '이메일로 의견을 보내주세요. 모든 메시지를 읽고 있습니다. 메일 앱에서 보내기를 누르기 전까지는 아무것도 전송되지 않습니다.',
   reviewFeedbackAction: '메일 쓰기',
 
+  // The browser version's one-time pointer at the app
+  webAppPromptTitle: '더 조용하게, 처음 실행할 때부터 완전히 오프라인으로.',
+  webAppPromptBody: '앱은 홈 화면에서 바로 실행되고, 진행 상황은 기기에 저장됩니다.',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: '라이프: {n}',
   levelsCleared: '클리어한 레벨',

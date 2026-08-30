@@ -15,9 +15,15 @@ import { Capacitor } from '@capacitor/core';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { markReviewPromptShown, shouldPromptReview } from '../services/review';
 import { releaseSound } from '../services/sound';
+import {
+  markWebAppPromptShown,
+  recordWebGameExit,
+  shouldShowWebAppPrompt,
+} from '../services/webAppPrompt';
 import { GameErrorBoundary } from '../ui/components/GameErrorBoundary';
 import { GameLoadingFallback } from '../ui/components/GameLoadingFallback';
 import { ReviewPrompt } from '../ui/components/ReviewPrompt';
+import { WebAppPrompt } from '../ui/components/WebAppPrompt';
 import { CollectionHomeScreen } from '../ui/screens/CollectionHomeScreen';
 import { SettingsScreen } from '../ui/screens/SettingsScreen';
 import { getLazyRoot, resetLazyRoot } from './lazyRoots';
@@ -70,6 +76,7 @@ function initialView(): View {
 export function App() {
   const [view, setView] = useState<View>(initialView);
   const [reviewPromptOpen, setReviewPromptOpen] = useState(false);
+  const [appPromptOpen, setAppPromptOpen] = useState(false);
   // Bumped by the error screen's retry so the game subtree remounts and the
   // recreated lazy wrapper (lazyRoots.ts) gets a fresh chance to load.
   const [gameNonce, setGameNonce] = useState(0);
@@ -87,6 +94,14 @@ export function App() {
   const viewRef = useRef(view);
   const show = useCallback((next: View) => {
     viewRef.current = next;
+    // The app card belongs to the arrival that earned it, and leaving the
+    // collection ends that showing. Without this, the flag outlives the screen
+    // — `CollectionHomeScreen` unmounts but `App` does not — and a player who
+    // answered by scrolling past the card would meet it again on the way back
+    // from every later game, which is the opposite of asking once.
+    // Nothing is re-booked either way: the record was written when it first
+    // rendered, so `showAppPromptIfDue` answers no from here on.
+    if (next.kind !== 'collection') setAppPromptOpen(false);
     setView(next);
   }, []);
 
@@ -105,6 +120,9 @@ export function App() {
    */
   const leaveGame = useCallback((gameId: GameId) => {
     trackWebGameClosed(gameId);
+    // Browser only, and counting is all it does — whether the count is worth
+    // a card is asked at the collection, below (services/webAppPrompt.ts).
+    recordWebGameExit();
     // The game's audio must not outlive it: suspend the shared context now
     // instead of waiting out its idle timer (docs/GAME_LIFECYCLE.md).
     releaseSound();
@@ -112,6 +130,27 @@ export function App() {
       markReviewPromptShown();
       setReviewPromptOpen(true);
     }
+  }, []);
+
+  /**
+   * The browser version's one-time app card (docs/WEB_VERSION.md
+   * 「アプリへの送客」). Asked at the two moments the collection home is the
+   * screen somebody has arrived at with games already behind them: back from
+   * a game, and a launch that opens here.
+   *
+   * The showing is booked before it renders, so a reload — or a tab killed
+   * with the card on screen — cannot turn one card into a second. Offline the
+   * question simply answers no and books nothing: the store link would open
+   * nothing, and there is no retry to arrange because the next arrival asks
+   * again by itself.
+   *
+   * On the app build every call here is `false` at the first condition, so
+   * nothing is shown, counted, or stored (services/webAppPrompt.ts).
+   */
+  const showAppPromptIfDue = useCallback(() => {
+    if (!shouldShowWebAppPrompt()) return;
+    markWebAppPromptShown();
+    setAppPromptOpen(true);
   }, []);
 
   // Opening a game is also what feeds the home's shortcut row: the shell
@@ -143,8 +182,9 @@ export function App() {
     if (current.kind !== 'game') return;
     leaveGame(current.gameId);
     show({ kind: 'collection' });
+    showAppPromptIfDue();
     if (webRoutingEnabled()) popRoute();
-  }, [leaveGame, show]);
+  }, [leaveGame, show, showAppPromptIfDue]);
 
   /**
    * Boot, browser only: settle the address on the screen that was just opened
@@ -189,12 +229,36 @@ export function App() {
       const target = currentRouteGame();
       if (showing === target) return;
       if (showing !== null) leaveGame(showing);
-      if (target !== null) enterGame(target);
-      else show({ kind: 'collection' });
+      if (target !== null) {
+        enterGame(target);
+      } else {
+        show({ kind: 'collection' });
+        showAppPromptIfDue();
+      }
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, [enterGame, leaveGame, show]);
+  }, [enterGame, leaveGame, show, showAppPromptIfDue]);
+
+  /**
+   * A launch that opens on the collection, browser only: somebody who became
+   * eligible in an earlier visit — or while offline — gets the card here
+   * rather than having to play a third game for it. It cannot fire on a first
+   * visit or after one game, because the count it reads comes from exits
+   * already stored.
+   *
+   * Guarded by a ref rather than an empty dependency list because React's
+   * StrictMode runs mount effects twice in development; the booking inside
+   * would make the second run a no-op anyway, but a card is not a thing to
+   * decide twice for one arrival.
+   */
+  const appPromptChecked = useRef(false);
+  useEffect(() => {
+    if (appPromptChecked.current) return;
+    appPromptChecked.current = true;
+    if (viewRef.current.kind !== 'collection') return;
+    showAppPromptIfDue();
+  }, [showAppPromptIfDue]);
 
   // One accent per title (packages/brand titleAccents): the shell stamps which
   // game is on screen and styles.css swaps just the accent tokens. The series
@@ -246,7 +310,11 @@ export function App() {
   }
   return (
     <>
-      <CollectionHomeScreen onOpenGame={openGame} onOpenSettings={openSettings} />
+      <CollectionHomeScreen
+        onOpenGame={openGame}
+        onOpenSettings={openSettings}
+        appPrompt={appPromptOpen ? <WebAppPrompt onClose={() => setAppPromptOpen(false)} /> : null}
+      />
       <ReviewPrompt open={reviewPromptOpen} onClose={() => setReviewPromptOpen(false)} />
     </>
   );

@@ -105,6 +105,10 @@ export const ptBR: Messages = {
     'Conte para mim por e-mail — leio todas as mensagens. Nada é enviado até você tocar em enviar no app de e-mail.',
   reviewFeedbackAction: 'Escrever e-mail',
 
+  // The browser version's one-time pointer at the app
+  webAppPromptTitle: 'Um jeito mais tranquilo de jogar, offline desde o primeiro uso.',
+  webAppPromptBody: 'O app abre direto da tela inicial e guarda seu progresso no seu dispositivo.',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Vidas: {n}',
   levelsCleared: 'Níveis concluídos',

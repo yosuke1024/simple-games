@@ -30,6 +30,7 @@
  */
 import { Capacitor } from '@capacitor/core';
 import { SERIES_BY_LINE, SERIES_NAME } from '@simple-games/brand';
+import type { ReactNode } from 'react';
 import { getRecentGames } from '../../app/recentGames';
 import { GAMES, GAME_CATEGORIES, type GameId, type GameDefinition } from '../../app/registry';
 import { useSettings } from '../../state/SettingsContext';
@@ -55,9 +56,19 @@ function GameTile({ game }: { game: GameDefinition }) {
 export interface CollectionHomeScreenProps {
   onOpenGame: (gameId: GameId) => void;
   onOpenSettings: () => void;
+  /**
+   * The browser version's one-time app card, when the shell has decided this
+   * is its moment (app/App.tsx, docs/WEB_VERSION.md「アプリへの送客」). The home
+   * owns only where it goes; whether it exists at all is not its question.
+   */
+  appPrompt?: ReactNode;
 }
 
-export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionHomeScreenProps) {
+export function CollectionHomeScreen({
+  onOpenGame,
+  onOpenSettings,
+  appPrompt,
+}: CollectionHomeScreenProps) {
   const { t } = useSettings();
   // Read once per mount, not live: the shell remounts this screen on the way
   // back from a game, so the row is current without the home ever watching
@@ -144,6 +155,12 @@ export function CollectionHomeScreen({ onOpenGame, onOpenSettings }: CollectionH
           ))}
         </nav>
       ) : null}
+
+      {/* Below the shortcuts and above the full list: past the row somebody
+          came back for, before the twenty titles they scroll. It is one card
+          in the flow, so the games under it move down by its height and by
+          nothing else — no overlay, no reserved space when it is absent. */}
+      {appPrompt}
 
       {/* One landmark for the whole list, headed sections inside: six category
           navs would drown the landmark list, while the headings still let a
