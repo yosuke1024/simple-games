@@ -90,7 +90,12 @@ Please use GitHub issues:
 
 ## License and brand
 
-The source code is licensed under [Apache-2.0](LICENSE). The "Simple Games"
-and "PixApps" names, logos, icons, and store-listing brand assets are **not**
-covered by that license (Apache-2.0 §6). You may build from source, but you
-may not present your build as the official app.
+The source code is licensed under [Apache-2.0](LICENSE) — use it, modify it,
+redistribute it, sell it. What that license does **not** grant is permission to
+use the "Simple Games" and "PixApps" names, icon, or store branding as source
+identifiers (Apache-2.0 §6). You may build from source; you may not present
+your build as the official PixApps app.
+
+A fork that ships needs its own app name, application ID, icon and store
+listing. [TRADEMARKS.md](TRADEMARKS.md) explains the boundary and lists what to
+replace — it is an explanation of Apache-2.0, not a separate license.
