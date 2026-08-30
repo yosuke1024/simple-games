@@ -1894,3 +1894,94 @@ button:disabled {
   height: 14px;
   color: var(--accent);
 }
+
+/* ---------- wide viewports (PC / iPad) ----------
+
+   Everything above is the Compact layout — the phone design, unchanged.
+   Wider viewports only ADD rules, in three tiers (issue #93):
+
+     Medium   @media (min-width: 600px)
+              same stacked layout, board and content enlarged
+     Large    @media (min-width: 900px)
+              still stacked; wider lists, never stretched to the edge
+     Wide     @media (min-width: 900px) and (orientation: landscape)
+              a game may place its board and controls side by side
+
+   Tiers follow the actual viewport, never the device name: an iPad in
+   Split View lands back in Medium or Compact by width alone, and a phone
+   held sideways stays Compact by width. The Chromium 88 floor applies to
+   these rules too (an Android tablet on an old WebView can be 900px wide),
+   so nothing here — or in a game's own media queries — may depend on
+   container queries, :has(), subgrid, or svh/dvh without a vh fallback.
+
+   A game sizes its own board in its own CSS with the same queries. The
+   shell contributes one knob: `--game-shell-max`, the column the game
+   chrome (top bar, action bar) aligns to. The 560px default matches the
+   boards' typical Medium width; a game whose Wide layout is wider (the
+   card tables) overrides it on .game-content in its own stylesheet. */
+
+@media (min-width: 600px) {
+  /* Home: three columns. The grid grows by adding columns, not by
+     stretching cards — a .game-cell keeps roughly its phone size. */
+  .game-recent,
+  .game-sections {
+    max-width: 700px;
+  }
+
+  .game-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* The (at most two) shortcut rows share one line instead of stacking
+     full-width — quicker to reach, and quieter than two banner-wide rows. */
+  .game-recent {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .game-recent .home-section-label {
+    grid-column: 1 / -1;
+  }
+
+  .app-prompt {
+    max-width: 560px;
+  }
+
+  .settings-list {
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  /* Game chrome follows the content column instead of the viewport edge,
+     so the back button and the action buttons stay near the board. */
+  .game-screen .game-topbar,
+  .game-screen .action-bar {
+    width: 100%;
+    max-width: var(--game-shell-max, 560px);
+    margin-inline: auto;
+  }
+}
+
+@media (min-width: 900px) {
+  .game-recent,
+  .game-sections {
+    max-width: 940px;
+  }
+
+  .game-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .game-recent,
+  .game-sections {
+    max-width: 1160px;
+  }
+
+  .game-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
