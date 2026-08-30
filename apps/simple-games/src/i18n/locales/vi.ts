@@ -107,7 +107,7 @@ export const vi: Messages = {
 
   // The browser version's one-time pointer at the app
   webAppPromptTitle: 'Chơi yên tĩnh hơn, hoàn toàn ngoại tuyến ngay từ lần mở đầu tiên.',
-  webAppPromptBody: 'Ứng dụng mở từ màn hình chính và lưu tiến trình của bạn trên thiết bị.',
+  webAppPromptBody: 'Ứng dụng mở ngay từ màn hình chính và lưu tiến độ của bạn trên thiết bị.',
 
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Mạng: {n}',

@@ -106,7 +106,7 @@ export const es: Messages = {
   reviewFeedbackAction: 'Escribir un correo',
 
   // The browser version's one-time pointer at the app
-  webAppPromptTitle: 'Una forma más tranquila de jugar, sin conexión desde el primer inicio.',
+  webAppPromptTitle: 'Una forma más tranquila de jugar, sin conexión desde el primer momento.',
   webAppPromptBody:
     'La app se abre desde tu pantalla de inicio y guarda tu progreso en tu dispositivo.',
 

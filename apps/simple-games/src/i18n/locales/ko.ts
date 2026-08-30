@@ -106,7 +106,7 @@ export const ko: Messages = {
 
   // The browser version's one-time pointer at the app
   webAppPromptTitle: '더 조용하게, 처음 실행할 때부터 완전히 오프라인으로.',
-  webAppPromptBody: '앱은 홈 화면에서 바로 열리고, 진행 상황을 기기 안에 저장합니다.',
+  webAppPromptBody: '앱은 홈 화면에서 바로 실행되고, 진행 상황은 기기에 저장됩니다.',
 
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: '라이프: {n}',

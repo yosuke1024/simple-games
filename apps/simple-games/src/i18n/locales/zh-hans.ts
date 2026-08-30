@@ -105,8 +105,8 @@ export const zhHans: Messages = {
   reviewFeedbackAction: '写邮件',
 
   // The browser version's one-time pointer at the app
-  webAppPromptTitle: '更安静地玩,从第一次启动就完全离线。',
-  webAppPromptBody: '应用可以从主屏幕直接打开,并把你的进度保存在本机。',
+  webAppPromptTitle: '更安静地玩，从第一次启动就完全离线。',
+  webAppPromptBody: '应用可以从主屏幕直接打开，并把你的进度保存在这台设备上。',
 
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: '生命：{n}',

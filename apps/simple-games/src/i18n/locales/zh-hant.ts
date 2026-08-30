@@ -105,8 +105,8 @@ export const zhHant: Messages = {
   reviewFeedbackAction: '寫郵件',
 
   // The browser version's one-time pointer at the app
-  webAppPromptTitle: '更安靜地玩,從第一次啟動就完全離線。',
-  webAppPromptBody: 'App 可以從主畫面直接開啟,並把你的進度儲存在本機。',
+  webAppPromptTitle: '更安靜地玩，從第一次啟動就完全離線。',
+  webAppPromptBody: 'App 可以從主畫面直接開啟，並把你的進度儲存在這台裝置上。',
 
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: '生命：{n}',

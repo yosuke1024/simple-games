@@ -106,8 +106,8 @@ export const ptBR: Messages = {
   reviewFeedbackAction: 'Escrever e-mail',
 
   // The browser version's one-time pointer at the app
-  webAppPromptTitle: 'Um jeito mais tranquilo de jogar, offline desde a primeira abertura.',
-  webAppPromptBody: 'O app abre pela tela inicial e guarda seu progresso no seu aparelho.',
+  webAppPromptTitle: 'Um jeito mais tranquilo de jogar, offline desde o primeiro uso.',
+  webAppPromptBody: 'O app abre direto da tela inicial e guarda seu progresso no seu dispositivo.',
 
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Vidas: {n}',

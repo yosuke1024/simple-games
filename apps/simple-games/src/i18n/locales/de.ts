@@ -108,7 +108,7 @@ export const de: Messages = {
   // The browser version's one-time pointer at the app
   webAppPromptTitle: 'Ruhiger spielen — schon beim ersten Start vollständig offline.',
   webAppPromptBody:
-    'Die App startet direkt vom Startbildschirm und speichert deinen Fortschritt auf deinem Gerät.',
+    'Du startest die App direkt vom Startbildschirm, und dein Fortschritt bleibt auf deinem Gerät.',
 
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Leben: {n}',

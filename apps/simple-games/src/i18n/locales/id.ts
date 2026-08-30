@@ -106,8 +106,9 @@ export const id: Messages = {
   reviewFeedbackAction: 'Tulis email',
 
   // The browser version's one-time pointer at the app
-  webAppPromptTitle: 'Cara bermain yang lebih tenang, offline sepenuhnya sejak pertama dibuka.',
-  webAppPromptBody: 'Aplikasi terbuka dari layar utama dan menyimpan progres kamu di perangkat.',
+  webAppPromptTitle: 'Main lebih tenang, offline sepenuhnya sejak pertama dibuka.',
+  webAppPromptBody:
+    'Aplikasi bisa dibuka langsung dari layar beranda dan menyimpan progres kamu di perangkat.',
 
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Nyawa: {n}',

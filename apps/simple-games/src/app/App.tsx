@@ -94,6 +94,14 @@ export function App() {
   const viewRef = useRef(view);
   const show = useCallback((next: View) => {
     viewRef.current = next;
+    // The app card belongs to the arrival that earned it, and leaving the
+    // collection ends that showing. Without this, the flag outlives the screen
+    // — `CollectionHomeScreen` unmounts but `App` does not — and a player who
+    // answered by scrolling past the card would meet it again on the way back
+    // from every later game, which is the opposite of asking once.
+    // Nothing is re-booked either way: the record was written when it first
+    // rendered, so `showAppPromptIfDue` answers no from here on.
+    if (next.kind !== 'collection') setAppPromptOpen(false);
     setView(next);
   }, []);
 

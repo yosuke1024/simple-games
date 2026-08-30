@@ -107,6 +107,24 @@ async function playAndReturn(user: ReturnType<typeof userEvent.setup>, title: st
   await settle();
 }
 
+/**
+ * The other way home: the browser's own Back button. It takes a different path
+ * through the shell — the popstate handler, not `exitGame` — and since a
+ * `?game=<id>` link is a supported entry point (issue #83), it is how a real
+ * visitor returns as often as the in-game control is.
+ */
+async function playAndGoBack(user: ReturnType<typeof userEvent.setup>, title: string) {
+  const list = screen.getByRole('navigation', { name: en.gamesHeading });
+  await user.click(within(list).getByRole('button', { name: title }));
+  await screen.findByText(/^playing /);
+  window.history.back();
+  await settle();
+  // A history traversal is asynchronous in jsdom as in a browser, and one
+  // macrotask is not a promise that popstate has landed: wait for the screen
+  // the address now names rather than assuming it is already painted.
+  await screen.findByRole('navigation', { name: en.gamesHeading });
+}
+
 beforeEach(async () => {
   vi.clearAllMocks();
   capacitorMock.native = false;
@@ -167,6 +185,52 @@ describe('the browser version', () => {
       container.querySelectorAll('.game-recent, .app-prompt, .game-sections'),
     ).map((element) => element.className.split(' ')[0]);
     expect(blocks).toEqual(['game-recent', 'app-prompt', 'game-sections']);
+  });
+
+  /**
+   * Scrolling past the card is an answer, and the card's own doc comment says
+   * so. The record is written the moment it renders, so the browser has had
+   * its one card whether or not anything was tapped — and the screen has to
+   * agree with the record. This is the path that regressed once: the shell
+   * kept the "card is open" flag while the home unmounted, so every later
+   * return painted it again.
+   */
+  it('does not come back on the next game when it was simply left alone', async () => {
+    const user = userEvent.setup();
+    renderShell();
+    await playAndReturn(user, 'Sudoku');
+    await playAndReturn(user, 'Kakuro');
+    expect(card()).toBeInTheDocument();
+
+    await playAndReturn(user, 'Reversi');
+    expect(card()).not.toBeInTheDocument();
+  });
+
+  it('does not come back from a trip through the settings screen', async () => {
+    const user = userEvent.setup();
+    renderShell();
+    await playAndReturn(user, 'Sudoku');
+    await playAndReturn(user, 'Kakuro');
+    expect(card()).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: en.settings }));
+    await user.click(await screen.findByRole('button', { name: en.back }));
+    expect(card()).not.toBeInTheDocument();
+  });
+
+  /**
+   * The browser's Back button reaches the collection through the popstate
+   * handler rather than through `exitGame`, so it is a second wiring of the
+   * same decision — and the one a visitor who arrived on a `?game=` link uses.
+   */
+  it('counts a return made with the browser Back button, and shows the card there', async () => {
+    const user = userEvent.setup();
+    renderShell();
+    await playAndGoBack(user, 'Sudoku');
+    expect(card()).not.toBeInTheDocument();
+
+    await playAndGoBack(user, 'Kakuro');
+    expect(card()).toBeInTheDocument();
   });
 
   it('goes away when closed and does not come back on the next game', async () => {
