@@ -404,3 +404,86 @@ button.sol-card-back {
 .sol-daily-badge-done {
   color: var(--ink-soft);
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. The table's
+   seven-column grid and the percentage overlaps already scale with width —
+   widening the table cap is what grows the cards. The corner index fonts
+   are viewport-clamped, so each tier restates them to keep the rank in
+   proportion to the card it sits on.
+
+   Wide caps the table by height too: a table sized by width alone would
+   push the first deal's tallest pile under the fold of a 1366x768 PC. The
+   1.7 factor is table-height ≈ (top row 1.4 + six slivers 1.44 + one face
+   1.4) × card-width + gaps, solved for width. */
+
+@media (min-width: 600px) {
+  .sol-table {
+    width: min(100%, 560px);
+  }
+
+  .sol-top-row,
+  .sol-tableau {
+    gap: 6px;
+  }
+
+  .sol-card {
+    border-radius: 8px;
+  }
+
+  .sol-card-rank {
+    font-size: clamp(15px, 2.6vw, 18px);
+  }
+
+  .sol-card-index .sol-suit {
+    width: clamp(9px, 1.6vw, 11px);
+    height: clamp(9px, 1.6vw, 11px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .sol-body {
+    padding: 14px 16px 16px;
+  }
+
+  .sol-table {
+    width: min(100%, 940px, calc((100vh - 246px) * 1.7));
+    width: min(100%, 940px, calc((100svh - 246px) * 1.7));
+    gap: 14px;
+  }
+
+  .sol-top-row,
+  .sol-tableau {
+    gap: 8px;
+  }
+
+  .sol-card {
+    border-radius: 10px;
+  }
+
+  .sol-card-index {
+    top: 3px;
+    left: 5px;
+    gap: 2px;
+  }
+
+  .sol-card-rank {
+    font-size: clamp(16px, 1.9vw, 24px);
+  }
+
+  .sol-card-index .sol-suit {
+    width: clamp(10px, 1.2vw, 15px);
+    height: clamp(10px, 1.2vw, 15px);
+  }
+
+  .sol-slot-mark {
+    font-size: 24px;
+  }
+
+  /* The chrome column follows the wide table (scoped: this stylesheet
+     stays loaded after leaving the game). */
+  :root[data-game='solitaire'] .game-content {
+    --game-shell-max: 940px;
+  }
+}
