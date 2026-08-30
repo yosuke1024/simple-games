@@ -235,7 +235,8 @@ function sendGameEvent(
     // parked tab inflates it — read as a median, never as "play time".
     params.play_duration_ms = elapsed.durationMs;
     // GA4's: foreground time only, which is what the tag would have counted
-    // for itself. Never the same number as above, and never larger.
+    // for itself. Equal to the number above for a player who never leaves
+    // the tab, and never larger — the gap between them IS the parked time.
     params.engagement_time_msec = elapsed.visibleMs;
   }
 

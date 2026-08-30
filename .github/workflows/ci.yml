@@ -44,6 +44,20 @@ jobs:
       # check. Needs both dist/ and dist-web/, so it lives here too.
       - run: pnpm --filter simple-games size:check
 
+      # 上の検査は「ID が環境に無いとき native 成果物に ID が無い」ことしか
+      # 見ていない。守っているのは実際にはソースの並び順 —— mode ゲートを
+      # `import.meta.env.VITE_GA_MEASUREMENT_ID` の読み出しより**先**に置く
+      # ことだけで、順番が逆だと Vite が埋め込んだ文字列がツリーシェイクを
+      # 生き延びる(`"G-…"?.trim()` は副作用ありとみなされる)。CI が ID を
+      # 持たない限り、その穴は緑のまま通る。だからここでダミーを注入して
+      # 一度ビルドし、成果物に残らないことを確かめる(issue #84)。
+      # turbo は Vite の VITE_* をキャッシュキーに含めるので、これは
+      # 直前のビルドのキャッシュではなく実際の再ビルドになる。
+      - name: Native build must not carry a measurement ID even when one is in the env
+        run: pnpm build && bash .github/scripts/check-dist-ads-separation.sh native
+        env:
+          VITE_GA_MEASUREMENT_ID: G-CIGUARD01
+
   # Runs without installing anything: it only greps the source. Kept separate so a
   # broken promise is reported as a broken promise, not as "the build failed".
   principles:
