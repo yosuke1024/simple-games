@@ -239,9 +239,9 @@ Bubble Pop は Undo も Hint も作らない。代わりに、この収録の柱
 2. 同色 3 個以上の連結でポップ。宙に浮いた房も落ちる。
 3. 天井は少しずつ下がる。点線に触れる前に泡を減らす。
 
-Landing Page はまだ公開されていない(`src/ui/landing.test.ts` の「ガイド未公開」
-一覧に `bubble-pop` があるとおり)。公開後は Quick Rules の最終画面から
-`https://pixapps.ai/simple-games/games/bubble-pop/<locale>/` を開く。
+詳細は Landing Page(`https://pixapps.ai/simple-games/games/bubble-pop/<locale>/`)へ。
+Quick Rules の最終画面の「詳しく見る」から開く。オフラインでは何も起きない
+(ゲームは止めない)。
 
 ## 12. 色・内側マーク・演出とアクセシビリティ
 
