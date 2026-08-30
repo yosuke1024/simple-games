@@ -150,14 +150,18 @@ describe('web analytics', () => {
   });
 
   // A tag that never loads leaves a queue that only grows. Players hear
-  // nothing about it; whoever is holding the browser open should.
-  it('says so in development when the Google tag script fails to load', () => {
+  // nothing about it; whoever is holding the browser open should — and the
+  // marker outlives the warning, which a shipped build does not carry.
+  it('records a Google tag that failed to load, and says so in development', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     expect(initWebAnalytics('G-ABC12345')).toBe(true);
     document.querySelector('script[data-simple-games-ga4]')?.dispatchEvent(new Event('error'));
 
-    expect(warn).toHaveBeenCalledOnce();
+    expect(document.querySelector('script[data-simple-games-ga4-failed]')).not.toBeNull();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('did not load'), expect.anything());
+    // Recorded, never retried: one element, and no second attempt.
+    expect(document.querySelectorAll('script[data-simple-games-ga4]')).toHaveLength(1);
   });
 
   it('says so in development when the measurement ID is set but unusable', () => {
@@ -165,7 +169,7 @@ describe('web analytics', () => {
 
     expect(initWebAnalytics('UA-12345-1')).toBe(false);
     expect(document.querySelector('script[data-simple-games-ga4]')).toBeNull();
-    expect(warn).toHaveBeenCalledOnce();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('measurement ID'), expect.anything());
   });
 
   it('stays quiet when no measurement ID is configured at all', () => {

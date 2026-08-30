@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SettingsProvider } from '../state/SettingsContext';
@@ -59,6 +59,28 @@ describe('collection home', () => {
     expect(await screen.findByText('Equal, or adds up to 10')).toBeInTheDocument();
     // Quick Rules stay short; the long-form rules are one link away (ui/landing.ts).
     expect(screen.getByRole('button', { name: 'Learn More' })).toBeInTheDocument();
+  });
+});
+
+/**
+ * The shell's own echo of the artifact check. Measurement lives behind the
+ * build-time `--mode web` gate (docs/WEB_VERSION.md「計測」), so opening a
+ * game in any other bundle — native, and this test run — must leave no tag,
+ * no queue and no request. CI proves the same thing from the built files
+ * (.github/scripts/check-dist-ads-separation.sh); this catches a lost gate
+ * at the point someone removes it.
+ */
+describe('measurement outside the web-mode build', () => {
+  it('opens a game without installing a Google tag', async () => {
+    const user = userEvent.setup();
+    renderShell();
+
+    await user.click(screen.getByRole('button', { name: /Kakuro/ }));
+    await waitFor(() => expect(document.documentElement.dataset.game).toBe('kakuro'));
+
+    expect(document.querySelector('script[data-simple-games-ga4]')).toBeNull();
+    expect(window.dataLayer).toBeUndefined();
+    expect(window.gtag).toBeUndefined();
   });
 });
 

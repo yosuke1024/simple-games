@@ -36,6 +36,16 @@ declare global {
 
 const CONTENT_GROUP = 'simple_games_play';
 const SCRIPT_ATTRIBUTE = 'data-simple-games-ga4';
+/**
+ * Stamped on the tag element when it demonstrably could not do its job.
+ *
+ * **A marker, not a log line** — it is still there in a shipped build, where
+ * the developer warning below has been compiled away, so checking the live
+ * page is one selector rather than a console that says nothing. Same idiom,
+ * and the same "recorded, never retried" rule, as the AdSense loader's
+ * `data-sg-adsense-failed` (`services/ads/web/script.ts`).
+ */
+const SCRIPT_FAILED_ATTRIBUTE = 'data-simple-games-ga4-failed';
 
 let initializationAttempted = false;
 let initialized = false;
@@ -91,8 +101,13 @@ function ensureGoogleTagScript(measurementId: string): void {
   script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
   script.setAttribute(SCRIPT_ATTRIBUTE, measurementId);
   // A tag that never arrives is the failure that looks like success: the
-  // commands below keep queueing and nothing ever drains them.
-  script.addEventListener('error', () => reportFailure('the Google tag script did not load'));
+  // commands below keep queueing and nothing ever drains them. The failed
+  // element stays in the DOM, so the load is never re-attempted this page
+  // view — offline and blocked are handled the same way (OFFLINE_POLICY.md).
+  script.addEventListener('error', () => {
+    script.setAttribute(SCRIPT_FAILED_ATTRIBUTE, '');
+    reportFailure('the Google tag script did not load');
+  });
   document.head.appendChild(script);
 }
 
