@@ -79,6 +79,22 @@ let bannerShowing = false;
 /** Desired banner visibility, remembered across the async SDK init. */
 let bannerWanted = false;
 let bannerBusy = false;
+/** The viewport width the current banner was requested for (see below). */
+let bannerCreatedWidth: number | null = null;
+let viewportWatched = false;
+let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * An adaptive banner's size is fixed at request time — the plugin measures
+ * the view once inside showBanner and never re-measures (BannerExecutor.swift
+ * does the same on Android). On a portrait-locked phone that is the end of
+ * the story; an iPad rotating or entering Split View (issue #93) is exactly
+ * the case Google documents as "load a new banner". So: after a resize
+ * settles, if the width moved enough to matter, the banner is recreated —
+ * once per settled resize, never per resize event, and never offline.
+ */
+const RESIZE_SETTLE_MS = 600;
+const RECREATE_MIN_DELTA_PX = 64;
 
 const bannerSizeListeners = new Set<(height: number) => void>();
 
@@ -100,16 +116,57 @@ export async function initAds(): Promise<void> {
     void AdMob.addListener(BannerAdPluginEvents.FailedToLoad, () => {
       bannerCreated = false;
       bannerShowing = false;
+      bannerCreatedWidth = null;
     });
     // Ask for consent early so the first game screen does not have to wait,
     // but never wait for it here: the answer is required before an ad
     // request, not before the app finishes booting.
     void canRequestAds();
+    if (!viewportWatched) {
+      viewportWatched = true;
+      window.addEventListener('resize', onViewportResize);
+    }
     // The game screen may have been entered before init finished.
     if (bannerWanted) void applyBannerState();
   } catch {
     // SDK init failed (offline etc.): game unaffected; retried next launch.
   }
+}
+
+function onViewportResize(): void {
+  if (resizeTimer !== null) clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    resizeTimer = null;
+    void refreshBannerForViewport();
+  }, RESIZE_SETTLE_MS);
+}
+
+async function refreshBannerForViewport(): Promise<void> {
+  if (!initialized || !bannerCreated) return;
+  if (
+    bannerCreatedWidth !== null &&
+    Math.abs(window.innerWidth - bannerCreatedWidth) < RECREATE_MIN_DELTA_PX
+  ) {
+    return;
+  }
+  // Offline: a stale-width banner beats a queued request (no retry loops).
+  if (!isOnline()) return;
+  if (bannerBusy) {
+    // A show/hide is in flight; let it finish and measure again.
+    onViewportResize();
+    return;
+  }
+  bannerCreated = false;
+  bannerShowing = false;
+  bannerCreatedWidth = null;
+  try {
+    await AdMob.removeBanner();
+  } catch {
+    // A view that was already gone: nothing to remove.
+  }
+  // Hidden (home screen): stop here, so the next game entry creates the
+  // banner at the new width without spending a request now.
+  if (bannerWanted) await applyBannerState();
 }
 
 /** Subscribes to native banner height changes (for the reserved slot). */
@@ -156,6 +213,7 @@ async function applyBannerState(): Promise<void> {
     // below rather than assumed.
     if (!(await canRequestAds())) return;
     if (!bannerWanted || bannerCreated) return;
+    const requestedWidth = window.innerWidth;
     await AdMob.showBanner({
       adId,
       adSize: BannerAdSize.ADAPTIVE_BANNER,
@@ -165,6 +223,7 @@ async function applyBannerState(): Promise<void> {
     });
     bannerCreated = true;
     bannerShowing = true;
+    bannerCreatedWidth = requestedWidth;
   } catch {
     // Banner failure: the reserved slot stays quietly empty.
   } finally {
@@ -179,5 +238,14 @@ export function resetBannerForTesting(): void {
   bannerShowing = false;
   bannerWanted = false;
   bannerBusy = false;
+  bannerCreatedWidth = null;
+  if (resizeTimer !== null) {
+    clearTimeout(resizeTimer);
+    resizeTimer = null;
+  }
+  if (viewportWatched) {
+    window.removeEventListener('resize', onViewportResize);
+    viewportWatched = false;
+  }
   bannerSizeListeners.clear();
 }

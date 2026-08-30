@@ -259,13 +259,15 @@
 	<array>
 		<string>armv7</string>
 	</array>
-	<!-- Portrait only, on every device family, matching the Android manifest's
-	     android:screenOrientation="portrait". Every board in the collection is
-	     laid out for a portrait screen; a rotated iPad would only stretch it.
-	     UIRequiresFullScreen is what lets an iPad build declare a restricted
-	     orientation set at all. -->
-	<key>UIRequiresFullScreen</key>
-	<true/>
+	<!-- iPhone stays portrait only, matching the Android manifest's
+	     android:screenOrientation="portrait" — a phone board is a portrait
+	     board. The iPad is a Universal App citizen (issue #93): all four
+	     orientations, and no UIRequiresFullScreen, so Split View and Stage
+	     Manager may resize the window freely; the shared responsive CSS
+	     (docs/ARCHITECTURE.md「ワイド画面のレイアウト」) follows the actual
+	     width, and the game keeps its state because nothing remounts on
+	     rotation. Supporting every orientation is also what iPadOS requires
+	     of an app that gives up UIRequiresFullScreen. -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -274,6 +276,8 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
