@@ -105,6 +105,11 @@ export const es: Messages = {
     'Cuéntamelo en un correo: leo todos los mensajes. No se envía nada hasta que pulses enviar en tu app de correo.',
   reviewFeedbackAction: 'Escribir un correo',
 
+  // The browser version's one-time pointer at the app
+  webAppPromptTitle: 'Una forma más tranquila de jugar, sin conexión desde el primer inicio.',
+  webAppPromptBody:
+    'La app se abre desde tu pantalla de inicio y guarda tu progreso en tu dispositivo.',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Vidas: {n}',
   levelsCleared: 'Niveles superados',

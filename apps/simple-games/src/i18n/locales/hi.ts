@@ -104,6 +104,10 @@ export const hi: Messages = {
     'मुझे ईमेल से बताएँ — मैं हर संदेश पढ़ता हूँ। जब तक आप मेल ऐप में भेजें नहीं दबाते, कुछ भी नहीं भेजा जाता।',
   reviewFeedbackAction: 'ईमेल लिखें',
 
+  // The browser version's one-time pointer at the app
+  webAppPromptTitle: 'और भी शांति से खेलें — पहली बार खोलने से ही पूरी तरह ऑफ़लाइन।',
+  webAppPromptBody: 'ऐप आपकी होम स्क्रीन से खुलता है और आपकी प्रगति आपके डिवाइस में सहेजता है।',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'जीवन: {n}',
   levelsCleared: 'पूरे किए स्तर',

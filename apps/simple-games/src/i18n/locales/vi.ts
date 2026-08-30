@@ -105,6 +105,10 @@ export const vi: Messages = {
     'Hãy cho tôi biết qua email — tôi đọc mọi tin nhắn. Sẽ không có gì được gửi cho đến khi bạn nhấn gửi trong ứng dụng thư.',
   reviewFeedbackAction: 'Viết email',
 
+  // The browser version's one-time pointer at the app
+  webAppPromptTitle: 'Chơi yên tĩnh hơn, hoàn toàn ngoại tuyến ngay từ lần mở đầu tiên.',
+  webAppPromptBody: 'Ứng dụng mở từ màn hình chính và lưu tiến trình của bạn trên thiết bị.',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Mạng: {n}',
   levelsCleared: 'Màn đã qua',

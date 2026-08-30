@@ -104,6 +104,10 @@ export const th: Messages = {
     'บอกผมทางอีเมลได้เลย ผมอ่านทุกข้อความ จะไม่มีการส่งอะไรจนกว่าคุณจะกดส่งในแอปอีเมล',
   reviewFeedbackAction: 'เขียนอีเมล',
 
+  // The browser version's one-time pointer at the app
+  webAppPromptTitle: 'เล่นได้เงียบกว่าเดิม ออฟไลน์เต็มรูปแบบตั้งแต่เปิดครั้งแรก',
+  webAppPromptBody: 'แอปเปิดจากหน้าจอโฮมได้ทันที และเก็บความคืบหน้าของคุณไว้ในเครื่อง',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'ชีวิต: {n}',
   levelsCleared: 'ด่านที่ผ่านแล้ว',

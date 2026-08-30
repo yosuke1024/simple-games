@@ -105,6 +105,11 @@ export const fr: Messages = {
     "Dites-le-moi par e-mail — je lis chaque message. Rien n'est envoyé tant que vous n'appuyez pas sur envoyer dans votre app de messagerie.",
   reviewFeedbackAction: 'Écrire un e-mail',
 
+  // The browser version's one-time pointer at the app
+  webAppPromptTitle: 'Une façon plus calme de jouer, hors ligne dès le premier lancement.',
+  webAppPromptBody:
+    'L’application s’ouvre depuis votre écran d’accueil et conserve votre progression sur votre appareil.',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Vies : {n}',
   levelsCleared: 'Niveaux terminés',

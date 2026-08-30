@@ -105,6 +105,10 @@ export const ja: Messages = {
     'メールでご意見をお聞かせください。すべて目を通しています。メールアプリで送信するまで、何も送信されません。',
   reviewFeedbackAction: 'メールを書く',
 
+  // The browser version's one-time pointer at the app
+  webAppPromptTitle: 'もっと静かに、最初から完全オフラインで。',
+  webAppPromptBody: 'アプリなら、ホーム画面からすぐ起動でき、進行状況を端末内に保存できます。',
+
   // ---- Arcade (shared by Brick Breaker and Sky Fighter) ----
   livesLeft: 'ライフ: {n}',
   levelsCleared: 'クリアしたレベル',

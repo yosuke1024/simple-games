@@ -105,6 +105,10 @@ export const id: Messages = {
     'Beri tahu saya lewat email — saya membaca setiap pesan. Tidak ada yang terkirim sampai kamu menekan kirim di aplikasi email.',
   reviewFeedbackAction: 'Tulis email',
 
+  // The browser version's one-time pointer at the app
+  webAppPromptTitle: 'Cara bermain yang lebih tenang, offline sepenuhnya sejak pertama dibuka.',
+  webAppPromptBody: 'Aplikasi terbuka dari layar utama dan menyimpan progres kamu di perangkat.',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Nyawa: {n}',
   levelsCleared: 'Level selesai',

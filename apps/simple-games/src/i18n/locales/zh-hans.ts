@@ -104,6 +104,10 @@ export const zhHans: Messages = {
     '欢迎发邮件告诉我——每条消息我都会看。在你于邮件应用中按下发送之前,不会发送任何内容。',
   reviewFeedbackAction: '写邮件',
 
+  // The browser version's one-time pointer at the app
+  webAppPromptTitle: '更安静地玩,从第一次启动就完全离线。',
+  webAppPromptBody: '应用可以从主屏幕直接打开,并把你的进度保存在本机。',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: '生命：{n}',
   levelsCleared: '已通过关卡',

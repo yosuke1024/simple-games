@@ -105,6 +105,10 @@ export const tr: Messages = {
     'Bana e-postayla anlat — her mesajı okuyorum. Posta uygulamanda gönder düğmesine basana kadar hiçbir şey gönderilmez.',
   reviewFeedbackAction: 'E-posta yaz',
 
+  // The browser version's one-time pointer at the app
+  webAppPromptTitle: 'Daha sakin bir oyun, ilk açılıştan itibaren tamamen çevrimdışı.',
+  webAppPromptBody: 'Uygulama ana ekranınızdan açılır ve ilerlemenizi cihazınızda saklar.',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Can: {n}',
   levelsCleared: 'Tamamlanan seviye',

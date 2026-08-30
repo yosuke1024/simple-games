@@ -40,6 +40,7 @@ import { isNativeAdsPlatform } from '../../services/ads/banner';
 import { showPrivacyOptions } from '../../services/ads/consent';
 import { usePrivacyOptionsRequired } from '../../services/ads/useConsent';
 import { initReview } from '../../services/review';
+import { initWebAppPrompt } from '../../services/webAppPrompt';
 import { useSettings } from '../../state/SettingsContext';
 import { clearLocalData } from '../../storage/repo';
 import {
@@ -166,6 +167,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     await initAdRemoval();
     await initReview();
     await initRecentGames();
+    await initWebAppPrompt();
   };
 
   return (
