@@ -257,6 +257,13 @@ src/
   優先する。
 - リサイズ・回転でゲーム Root を再マウントしない。レイアウトは CSS が追従し、
   進行中の盤面・Undo 履歴・選択状態は React の状態として生き続ける。
+- **キーボードは入力アダプター**(issue #93)。共有は `ui/useGameKeys` の
+  薄い登録シームだけ(handled のときだけ preventDefault / 入力要素は素通し /
+  モーダル・リザルト中は enabled=false で解除)。キーの意味は各ゲームが
+  自分のタップ handler の隣に持ち、**画面に無い機能をキーボード専用に
+  しない**。全ゲーム共通の型は Undo = Ctrl/Cmd+Z、Hint = H(その画面に
+  ボタンがある場合のみ・ボタンと同じ有効条件)。ゲーム固有のキーは各
+  `docs/<GAME>_RULES.md` の「操作」に書く。
 - Chromium 88 床はワイド段階の規則にも適用する(古い WebView の Android
   タブレットが 900px 幅で到達する)。container query / `:has()` / subgrid は
   使わず、`svh`/`dvh` は `vh` フォールバックの後にだけ書く。
