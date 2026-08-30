@@ -56,13 +56,14 @@ let initialized = false;
  * `openedAtMs` is wall time and answers "how long was this game the mounted
  * screen" — `play_duration_ms`, ours to define. `visibleMs` counts only the
  * stretches the tab was in the foreground, and is what
- * `engagement_time_msec` gets: **that name is GA4's, not ours** — the tag
- * sums it into the property's engagement time, engagement rate and
- * engaged-session count, and the property is shared with the rest of
- * pixapps.ai. Handing it wall time would bill a tab left open overnight to
- * the whole site's engagement, and would rank games by "which one do people
- * park in a background tab" — close to the opposite of what the ranking is
- * for (docs/GROWTH_MEASUREMENT.md「このデータで言えないこと」).
+ * `engagement_time_msec` gets: **that name is GA4's, not ours** — it feeds
+ * the property's engagement figures, and the property is shared with the
+ * rest of pixapps.ai. Handing it wall time would bill a tab left open
+ * overnight to the whole site's engagement, and would rank games by "which
+ * one do people park in a background tab" — close to the opposite of what
+ * the ranking is for. (Exactly how the tag folds an explicit value into its
+ * own measurement has not been observed here; either way, foreground time is
+ * the number that name asks for — docs/GROWTH_MEASUREMENT.md「実装状況」.)
  */
 let activeGame: {
   gameId: GameId;

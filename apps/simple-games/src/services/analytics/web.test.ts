@@ -213,6 +213,28 @@ describe('web analytics', () => {
     });
   });
 
+  // Opening into a hidden tab is the start condition the foreground clock is
+  // easiest to lose in a refactor: with it wrong, the whole hidden stretch is
+  // counted and engagement collapses back onto wall time — silently, because
+  // every other test opens a visible tab.
+  it('counts nothing until a game opened in a hidden tab comes forward', () => {
+    const now = vi.spyOn(performance, 'now');
+    //   open (hidden) 0 → visible 4_000 → close 6_000
+    // wall clock 6_000, foreground 2_000.
+    now.mockReturnValueOnce(0).mockReturnValueOnce(4_000).mockReturnValue(6_000);
+
+    expect(initWebAnalytics('G-ABC12345')).toBe(true);
+    setTabHidden(true);
+    trackGameOpened('sudoku', 'G-ABC12345');
+    setTabHidden(false);
+    trackGameClosed('sudoku', 'G-ABC12345');
+
+    expect(queuedCommands()[3]?.[2]).toMatchObject({
+      play_duration_ms: 6_000,
+      engagement_time_msec: 2_000,
+    });
+  });
+
   // The listener belongs to the shell for the life of the page, like the
   // audio service's (docs/GAME_LIFECYCLE.md). A refactor that registers it
   // per game would double-count every stretch instead of failing loudly.
@@ -231,8 +253,12 @@ describe('web analytics', () => {
 
   it('stays quiet when no measurement ID is configured at all', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    // Stamped rather than passed: `undefined` is what makes the default
+    // parameter read the environment, so an argument would test the caller
+    // and a machine with a real ID in its own `.env` would go red here.
+    vi.stubEnv('VITE_GA_MEASUREMENT_ID', '');
 
-    expect(initWebAnalytics(undefined)).toBe(false);
+    expect(initWebAnalytics()).toBe(false);
     expect(warn).not.toHaveBeenCalled();
   });
 });
