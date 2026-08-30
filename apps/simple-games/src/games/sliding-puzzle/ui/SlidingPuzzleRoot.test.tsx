@@ -225,6 +225,102 @@ describe('playing', () => {
   });
 });
 
+/* Keyboard input is an adapter over the same tap/undo handlers (issue #93):
+   every assertion here checks board state the taps also produce, and the
+   direction test pins down which tile travels for which arrow. */
+describe('keyboard (issue #93)', () => {
+  const ARROW_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'] as const;
+
+  /** The cell whose tile would travel into the gap for a given arrow — the
+   *  tile's own direction, not the gap's (issue #93's locked semantics). All
+   *  spots are 1-indexed, matching `spotOf`. */
+  function sourceForKey(gapSpot: Spot, size: number, key: string): Spot | null {
+    const { row, col } = gapSpot;
+    if (key === 'ArrowLeft') return col < size ? { row, col: col + 1 } : null;
+    if (key === 'ArrowRight') return col > 1 ? { row, col: col - 1 } : null;
+    if (key === 'ArrowUp') return row < size ? { row: row + 1, col } : null;
+    if (key === 'ArrowDown') return row > 1 ? { row: row - 1, col } : null;
+    return null;
+  }
+
+  function tileAt(spot: Spot): HTMLElement {
+    const found = tiles().find((tile) => {
+      const here = spotOf(tile);
+      return here.row === spot.row && here.col === spot.col;
+    });
+    if (!found) throw new Error(`no tile at row ${spot.row}, column ${spot.col}`);
+    return found;
+  }
+
+  it('an arrow key slides the tile that travels that way into the gap', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const size = Number(board().dataset.size);
+    const gapWas = spotOf(gap());
+    const candidate = ARROW_KEYS.map((key) => ({ key, source: sourceForKey(gapWas, size, key) })).find(
+      (entry) => entry.source !== null,
+    )!;
+    const movingTile = tileAt(candidate.source!);
+    const value = movingTile.textContent;
+
+    fireEvent.keyDown(window, { key: candidate.key });
+
+    // The tile that travelled is where the gap was, and the gap is where that
+    // tile used to be — the exact semantics issue #93 locks in per arrow.
+    expect(spotOf(movingTile)).toEqual(gapWas);
+    expect(movingTile.textContent).toBe(value);
+    expect(spotOf(gap())).toEqual(candidate.source);
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+  });
+
+  it('an arrow with no tile in that direction changes nothing', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const size = Number(board().dataset.size);
+    let gapSpot = spotOf(gap());
+    let invalidKey = ARROW_KEYS.find((key) => sourceForKey(gapSpot, size, key) === null);
+    if (!invalidKey) {
+      // Every direction has a tile only with the gap away from every edge;
+      // one legal move is enough to put it back on one.
+      const validKey = ARROW_KEYS.find((key) => sourceForKey(gapSpot, size, key) !== null)!;
+      fireEvent.keyDown(window, { key: validKey });
+      gapSpot = spotOf(gap());
+      invalidKey = ARROW_KEYS.find((key) => sourceForKey(gapSpot, size, key) === null);
+    }
+    const before = tiles().map((tile) => tile.getAttribute('aria-label'));
+    const movesBefore = screen.getByText(/Moves\s*\d+/).textContent;
+
+    fireEvent.keyDown(window, { key: invalidKey! });
+
+    expect(tiles().map((tile) => tile.getAttribute('aria-label'))).toEqual(before);
+    expect(spotOf(gap())).toEqual(gapSpot);
+    expect(screen.getByText(/Moves\s*\d+/).textContent).toBe(movesBefore);
+  });
+
+  it('Ctrl+Z undoes the same as the Undo button', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const gapWas = spotOf(gap());
+    const tile = tileBesideGap();
+    const tileWas = spotOf(tile);
+    await user.click(tile);
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+
+    expect(spotOf(tile)).toEqual(tileWas);
+    expect(spotOf(gap())).toEqual(gapWas);
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+});
+
 describe('what this game deliberately does not have', () => {
   it('offers no hint, at any point in a game (§8)', async () => {
     const user = userEvent.setup();

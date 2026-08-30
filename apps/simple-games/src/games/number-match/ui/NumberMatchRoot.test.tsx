@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
@@ -122,6 +122,27 @@ describe('gameplay', () => {
     const undoButton = screen.getByRole('button', { name: 'Undo' });
     expect(undoButton).toBeEnabled();
     await user.click(undoButton);
+    expect(within(board).getAllByRole('button')).toHaveLength(LEVEL1_CELLS);
+  });
+});
+
+/* Keyboard input is an adapter over the same tap handlers (issue #93): this
+   checks board state the Undo button also produces, never a keyboard-only
+   behaviour. */
+describe('keyboard (issue #93)', () => {
+  it('Ctrl+Z undoes the last match, same as the Undo button', async () => {
+    const user = userEvent.setup();
+    renderApp(done);
+    await user.click(screen.getByRole('button', { name: /Level 1/ }));
+
+    await user.click(screen.getByRole('button', { name: 'Hint' }));
+    const board = screen.getByRole('group', { name: 'Game board' });
+    const hinted = board.querySelectorAll('.cell-hint');
+    await user.click(hinted[0] as HTMLElement);
+    await user.click(hinted[1] as HTMLElement);
+    expect(within(board).getAllByRole('button').length).toBeLessThanOrEqual(LEVEL1_CELLS - 2);
+
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
     expect(within(board).getAllByRole('button')).toHaveLength(LEVEL1_CELLS);
   });
 });

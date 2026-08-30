@@ -20,6 +20,7 @@ import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconHint, IconRetry, IconUndo } from '@/ui/components/icons';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
+import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
 import { canUndo, isWhite, type Digit, type Hint } from '../../game';
 import { useKakuro } from '../../state/GameContext';
 import { DigitPad } from '../components/DigitPad';
@@ -154,6 +155,24 @@ export function KakuroGameScreen() {
     sounds.select();
     showToast(t(hintMessage(next)));
   }, [showToast, t, takeHint]);
+
+  /* Keyboard as an adapter over the tap handlers above (issue #93): Ctrl/Cmd+Z
+     undoes, H asks for the hint — both one-shot actions, so key repeat is
+     ignored for each. */
+  const onKey = (event: KeyboardEvent): boolean => {
+    if (session === null) return false;
+    if (isUndoKey(event)) {
+      if (!event.repeat && canUndo(session)) onUndo();
+      return true;
+    }
+    if (event.ctrlKey || event.metaKey || event.altKey) return false;
+    if (event.key === 'h' || event.key === 'H') {
+      if (!event.repeat) onHint();
+      return true;
+    }
+    return false;
+  };
+  useGameKeys(onKey, session !== null && session.status === 'playing' && !confirmRestart);
 
   if (!session) return null;
 

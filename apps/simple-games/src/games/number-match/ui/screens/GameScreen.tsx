@@ -20,6 +20,7 @@ import { BoardView, type MatchAnim } from '../components/BoardView';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconAdd, IconBack, IconHint, IconRetry, IconUndo } from '@/ui/components/icons';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
+import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
 import { ResultOverlay } from '../components/ResultOverlay';
 
 const HINT_COOLDOWN_MS = 2000;
@@ -245,6 +246,25 @@ export function GameScreen() {
       void haptics.tap();
     }
   }, [applyAdd]);
+
+  /* Keyboard as an adapter over the tap handlers above (issue #93): Ctrl/Cmd+Z
+     undoes, H asks for the hint — both one-shot actions, so key repeat is
+     ignored for each; H also honors the hint cooldown the button already
+     respects. */
+  const onKey = (event: KeyboardEvent): boolean => {
+    if (session === null) return false;
+    if (isUndoKey(event)) {
+      if (!event.repeat && canUndo(session)) onUndo();
+      return true;
+    }
+    if (event.ctrlKey || event.metaKey || event.altKey) return false;
+    if (event.key === 'h' || event.key === 'H') {
+      if (!event.repeat && !hintCoolingDown) onHint();
+      return true;
+    }
+    return false;
+  };
+  useGameKeys(onKey, session !== null && session.status === 'playing' && !confirmRestart);
 
   if (!session) return null;
 

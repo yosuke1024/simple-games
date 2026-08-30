@@ -9,7 +9,7 @@
  * the whole board is visible and nothing is hidden, so a "best move" button
  * would be the app playing instead of the player.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { haptics } from '@/services/haptics';
 import { sounds } from '@/services/sound';
 import { useSettings } from '@/state/SettingsContext';
@@ -19,6 +19,7 @@ import { AnimatedNumber } from '@/ui/components/AnimatedNumber';
 import { IconBack, IconRetry, IconUndo } from '@/ui/components/icons';
 import { useReducedMotion } from '@/ui/useReducedMotion';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
+import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
 import { canUndo, type Direction } from '../../game';
 import { useGame2048 } from '../../state/GameContext';
 import { MergeBoard } from '../components/MergeBoard';
@@ -86,17 +87,24 @@ export function Game2048GameScreen() {
   // the pointer; a window-level key listener has to be told separately.
   const blocked = announceReached || confirmNewGame || session?.status === 'over';
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const direction = KEY_DIRECTIONS[event.key];
-      if (!direction || blocked) return;
-      // The page must not scroll under the board while it is being played.
-      event.preventDefault();
-      onSwipe(direction);
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [blocked, onSwipe]);
+  /* Keyboard as an adapter over onSwipe/onUndo above (issue #93): an arrow
+     always swallows the key, even while blocked, so a held or mistimed one
+     cannot scroll the page mid-game — but it only slides the board when
+     nothing is blocking it, and repeat never replays a slide, because a move
+     here is a turn like any other. */
+  const onKey = (event: KeyboardEvent): boolean => {
+    if (!session) return false;
+    if (isUndoKey(event)) {
+      if (!event.repeat && !blocked && canUndo(session)) onUndo();
+      return true;
+    }
+    if (event.ctrlKey || event.metaKey || event.altKey) return false;
+    const direction = KEY_DIRECTIONS[event.key];
+    if (!direction) return false;
+    if (!blocked && !event.repeat) onSwipe(direction);
+    return true;
+  };
+  useGameKeys(onKey, session !== null);
 
   if (!session) return null;
 

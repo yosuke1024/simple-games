@@ -549,6 +549,26 @@ describe('home', () => {
   });
 });
 
+/* Keyboard input is an adapter over the same tap handlers (issue #93): this
+   checks board state the Undo button also produces, never a keyboard-only
+   behaviour. */
+describe('keyboard (issue #93)', () => {
+  it('Ctrl+Z undoes the last digit, same as the Undo button', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const index = openCells[0]!;
+    const { row, col } = positionOf(index);
+    await user.click(cellAt(row, col));
+    await user.click(padKey(truth.solution[index]!));
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^\d,/);
+
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^Empty/);
+  });
+});
+
 /**
  * How many clue squares carry two sums on this board. A square with both
  * prints two numbers into one element, so the count of printed elements is

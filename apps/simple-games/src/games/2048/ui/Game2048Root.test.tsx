@@ -138,6 +138,44 @@ describe('playing', () => {
   });
 });
 
+/* Keyboard input is an adapter over the same swipe/undo handlers (issue #93):
+   every assertion here checks board state the taps also produce. */
+describe('keyboard (issue #93)', () => {
+  it('an arrow keydown slides the board the same as the swipe path', async () => {
+    const user = userEvent.setup();
+    renderGame(savedGame);
+    await user.click(await screen.findByRole('button', { name: /Resume/ }));
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(screen.getByText(/Score\s*4/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeEnabled();
+  });
+
+  it('a held arrow key does not replay the slide', async () => {
+    const user = userEvent.setup();
+    renderGame(savedGame);
+    await user.click(await screen.findByRole('button', { name: /Resume/ }));
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft', repeat: true });
+    expect(screen.getByText(/Score\s*0/)).toBeInTheDocument();
+    expect(tiles()).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+
+  it('Ctrl+Z undoes the same as the Undo button', async () => {
+    const user = userEvent.setup();
+    renderGame(savedGame);
+    await user.click(await screen.findByRole('button', { name: /Resume/ }));
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(screen.getByText(/Score\s*4/)).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    expect(screen.getByText(/Score\s*0/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+});
+
 describe('home', () => {
   it('exits to the collection', async () => {
     const user = userEvent.setup();

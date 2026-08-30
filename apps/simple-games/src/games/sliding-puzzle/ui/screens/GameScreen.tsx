@@ -16,6 +16,8 @@ import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconRetry, IconUndo } from '@/ui/components/icons';
+import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
+import { blankIndex, canUndo, colOf, indexOf, rowOf } from '../../game';
 import { useSlidingPuzzle } from '../../state/GameContext';
 import { SlidingBoard } from '../components/SlidingBoard';
 import { SlidingPuzzleResultOverlay } from '../components/SlidingPuzzleResultOverlay';
@@ -40,6 +42,37 @@ export function SlidingPuzzleGameScreen() {
   const onUndo = useCallback(() => {
     if (applyUndo()) sounds.undo();
   }, [applyUndo]);
+
+  /* Keyboard as an adapter over onTileTap/onUndo above (issue #93): an arrow
+     slides the tile that would travel that way — one step, into the gap — and
+     the direction named is the tile's own, not the gap's. At an edge where
+     that tile does not exist, nothing changes but the key is still answered.
+     Ctrl/Cmd+Z undoes; there is no hint key, by design (§8). */
+  const onKey = (event: KeyboardEvent): boolean => {
+    if (!session) return false;
+    if (isUndoKey(event)) {
+      if (!event.repeat && canUndo(session)) onUndo();
+      return true;
+    }
+    if (event.ctrlKey || event.metaKey || event.altKey) return false;
+    const { key } = event;
+    if (key !== 'ArrowLeft' && key !== 'ArrowRight' && key !== 'ArrowUp' && key !== 'ArrowDown') {
+      return false;
+    }
+    const { size, tiles } = session;
+    const blank = blankIndex(tiles);
+    if (blank < 0) return true;
+    const row = rowOf(blank, size);
+    const col = colOf(blank, size);
+    let target: number | null = null;
+    if (key === 'ArrowLeft' && col < size - 1) target = indexOf(row, col + 1, size);
+    else if (key === 'ArrowRight' && col > 0) target = indexOf(row, col - 1, size);
+    else if (key === 'ArrowUp' && row < size - 1) target = indexOf(row + 1, col, size);
+    else if (key === 'ArrowDown' && row > 0) target = indexOf(row - 1, col, size);
+    if (target !== null) onTileTap(target);
+    return true;
+  };
+  useGameKeys(onKey, session !== null && session.status !== 'solved' && !confirmRestart);
 
   if (!session) return null;
 

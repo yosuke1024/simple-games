@@ -321,3 +321,18 @@ describe('the board a screen reader hears (§12)', () => {
     }
   });
 });
+
+/* Keyboard input is an adapter over the same tap handler (issue #93): this
+   checks board state the Hint button also produces, never a keyboard-only
+   behaviour. */
+describe('keyboard (issue #93)', () => {
+  it('H asks for the hint, same as the Hint button', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    fireEvent.keyDown(window, { key: 'h' });
+    expect(screen.getByRole('status').textContent).toMatch(/safe/i);
+  });
+});

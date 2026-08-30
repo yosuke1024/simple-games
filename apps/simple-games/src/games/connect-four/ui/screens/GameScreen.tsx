@@ -15,6 +15,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconRetry, IconUndo } from '@/ui/components/icons';
+import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
 import { canUndo, CPU, PLAYER } from '../../game';
 import { useConnectFour } from '../../state/GameContext';
 import { ConnectFourBoard } from '../components/ConnectFourBoard';
@@ -56,6 +57,20 @@ export function ConnectFourGameScreen() {
       void haptics.invalid();
     }
   }, [status]);
+
+  /* Keyboard as an adapter over the Undo button (issue #93): Ctrl/Cmd+Z takes
+     back the drop and the CPU's reply exactly when the button would —
+     mirroring its disabled condition — and does nothing once the match ends
+     or the new-game dialog is up. */
+  const onKey = (event: KeyboardEvent): boolean => {
+    if (session === null) return false;
+    if (isUndoKey(event)) {
+      if (!event.repeat && canUndo(session)) onUndo();
+      return true;
+    }
+    return false;
+  };
+  useGameKeys(onKey, session !== null && session.status === 'playing' && !confirmNewGame);
 
   if (!session) return null;
 
