@@ -142,3 +142,24 @@
   height: auto;
   display: block;
 }
+
+/* Wide viewports (issue #93; tiers in ui/styles.css「wide viewports」).
+   The board is taller than it is wide (320x672), so on a PC the limit is
+   nearly always the height: width follows from the height that remains
+   under the chrome (factor 0.476 ≈ 320/672). The canvas backing store
+   follows the displayed size (BubbleBoard.tsx), so growing here stays
+   sharp. */
+
+@media (min-width: 600px) {
+  .bu-canvas {
+    width: min(100%, 400px, calc((100vh - 230px) * 0.476));
+    width: min(100%, 400px, calc((100svh - 230px) * 0.476));
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .bu-canvas {
+    width: min(100%, 440px, calc((100vh - 210px) * 0.476));
+    width: min(100%, 440px, calc((100svh - 210px) * 0.476));
+  }
+}

@@ -313,3 +313,26 @@
     inset 0 0 0 2px var(--paper),
     0 0 0 2px var(--ink);
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; Medium and Wide only enlarge the board — discs carry no digits
+   or vw-scaled type, so nothing besides the board's own width needs to grow
+   with it. The Wide height term goes through the board's own 7:6 aspect
+   ratio (height is width × 6/7, so a width from the available height needs
+   the inverse, × 7/6) rather than a plain vh guess. */
+
+@media (min-width: 600px) {
+  .c4-board {
+    width: min(100%, 500px, 66vh);
+    width: min(100%, 500px, 66svh);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .c4-board {
+    width: min(100%, 560px, calc((100vh - 290px) * 7 / 6));
+    width: min(100%, 560px, calc((100svh - 290px) * 7 / 6));
+  }
+}

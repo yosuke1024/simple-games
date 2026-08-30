@@ -405,3 +405,32 @@
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; Medium and Wide only enlarge the board. The Wide cap here runs
+   ahead of the other CPU-opponent boards (600px, not 560px) because fifteen
+   points to a side leave each crossing thinner than an eight-wide board at
+   the same size, and stones carry no digits or vw-scaled type — so nothing
+   besides the board's own width needs to grow with it. */
+
+@media (min-width: 600px) {
+  .gm-board {
+    width: min(100%, 520px, 58vh);
+    width: min(100%, 520px, 58svh);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .gm-board {
+    width: min(100%, 600px, calc(100vh - 290px));
+    width: min(100%, 600px, calc(100svh - 290px));
+  }
+
+  /* The chrome column follows the wider board (scoped: this stylesheet
+     stays loaded after leaving the game). */
+  :root[data-game='gomoku'] .game-content {
+    --game-shell-max: 600px;
+  }
+}

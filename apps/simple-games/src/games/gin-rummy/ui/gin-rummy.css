@@ -471,3 +471,84 @@
   font-size: 15px;
   color: var(--accent);
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Like Hearts, this
+   is a seat-and-fan table, not a column tableau, so both tiers below stay
+   flat px caps with no vw and no height-derived calc: .gr-table's own
+   percentage children (.gr-seat-card, .gr-pile-card, .gr-hand-card, …) do
+   the actual scaling once the table itself is wider. .gr-body's side padding
+   is left alone for the same load-bearing reason its own comment gives: the
+   hand fan's tap-target arithmetic (components/GinRummyTable.tsx) measures
+   against that exact number.
+
+   .gr-line shares .gr-table's own cap in every tier (it already does at the
+   Compact size above) so the line under the table tracks the table above it
+   instead of reading as a narrower column of its own. */
+
+@media (min-width: 600px) {
+  .gr-table,
+  .gr-line {
+    width: min(100%, 520px);
+  }
+
+  .gr-card {
+    border-radius: 7px;
+  }
+
+  .gr-card-rank {
+    font-size: clamp(17px, 2.8vw, 19px);
+  }
+
+  .gr-card-index .gr-suit {
+    width: clamp(11px, 1.7vw, 13px);
+    height: clamp(11px, 1.7vw, 13px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .gr-table,
+  .gr-line {
+    width: min(100%, 640px);
+  }
+
+  .gr-card {
+    border-radius: 8px;
+  }
+
+  .gr-card-index {
+    top: 4px;
+    left: 5px;
+    gap: 2px;
+  }
+
+  .gr-card-rank {
+    font-size: clamp(18px, 2.2vw, 21px);
+  }
+
+  .gr-card-index .gr-suit {
+    width: clamp(12px, 1.3vw, 14px);
+    height: clamp(12px, 1.3vw, 14px);
+  }
+
+  /* The chrome column follows the wide table (scoped: this stylesheet
+     stays loaded after leaving the game). */
+  :root[data-game='gin-rummy'] .game-content {
+    --game-shell-max: 640px;
+  }
+}
+
+/* Same height guard as Hearts: on a wide but low screen the stacked
+   table + hand outgrows the viewport before the width does, so the caps
+   step back toward the phone size below 900px of height (issue #93). */
+@media (min-width: 900px) and (orientation: landscape) and (max-height: 900px) {
+  .gr-table,
+  .gr-line {
+    width: min(100%, 500px);
+  }
+
+  :root[data-game='gin-rummy'] .game-content {
+    --game-shell-max: 560px;
+  }
+}

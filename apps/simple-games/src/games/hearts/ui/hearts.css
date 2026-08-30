@@ -711,3 +711,94 @@
   font-size: 14px;
   color: var(--accent);
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. .ht-table's own
+   comment above warns that a vw-derived width overflows the moment the
+   column narrows — that is a warning about this table's width specifically,
+   so both tiers below stay flat px caps with no vw and no height-derived
+   calc, unlike Spider's and FreeCell's tables. .ht-body's side padding is
+   left alone for the same load-bearing reason its own comment gives: the
+   hand fan's tap-target arithmetic (components/HeartsHand.tsx) measures
+   against that exact number, and changing it here without redoing that math
+   is how a tap target quietly goes under the series' 48px floor.
+
+   .ht-fan and .ht-line share .ht-table's own cap in every tier (they already
+   do at the Compact size above) so the seats, the trick, the player's own
+   hand, and the status line grow as one column instead of drifting apart —
+   .ht-fan in particular sizes every card in the hand off this same number
+   (components/HeartsHand.tsx), so leaving it behind would shrink your own
+   cards against a table that grew. */
+
+@media (min-width: 600px) {
+  .ht-table,
+  .ht-fan,
+  .ht-line {
+    width: min(100%, 520px);
+  }
+
+  .ht-card {
+    border-radius: 7px;
+  }
+
+  .ht-card-rank {
+    font-size: clamp(17px, 2.8vw, 19px);
+  }
+
+  .ht-card-index .ht-suit {
+    width: clamp(11px, 1.7vw, 13px);
+    height: clamp(11px, 1.7vw, 13px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .ht-table,
+  .ht-fan,
+  .ht-line {
+    width: min(100%, 640px);
+  }
+
+  .ht-card {
+    border-radius: 8px;
+  }
+
+  .ht-card-index {
+    top: 4px;
+    left: 5px;
+    gap: 2px;
+  }
+
+  .ht-card-rank {
+    font-size: clamp(18px, 2.2vw, 21px);
+  }
+
+  .ht-card-index .ht-suit {
+    width: clamp(12px, 1.3vw, 14px);
+    height: clamp(12px, 1.3vw, 14px);
+  }
+
+  /* The chrome column follows the wide table (scoped: this stylesheet
+     stays loaded after leaving the game). */
+  :root[data-game='hearts'] .game-content {
+    --game-shell-max: 640px;
+  }
+}
+
+/* A wide but LOW screen (a 1366x768 laptop) cannot afford the full 640px
+   table: every card in the hand scales off this width, and the passing
+   fan — the tallest state this screen has — runs under the fold well
+   before the table itself does. Below 900px of height the caps step back
+   toward the phone size so the fan stays reachable; taller wide screens
+   keep the 640px above (issue #93). */
+@media (min-width: 900px) and (orientation: landscape) and (max-height: 900px) {
+  .ht-table,
+  .ht-fan,
+  .ht-line {
+    width: min(100%, 480px);
+  }
+
+  :root[data-game='hearts'] .game-content {
+    --game-shell-max: 560px;
+  }
+}

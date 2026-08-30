@@ -416,3 +416,65 @@
 .mm-daily-badge-done {
   color: var(--ink-soft);
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. .mm-board's width
+   is already the tightest of four limits (see the comment above it); only
+   the flat cap — the "wallpaper" ceiling — is raised per tier. Every other
+   term, including the env() safe-area term and --mm-card-max, is copied
+   verbatim, so the height budget and the per-card ceiling stay exactly what
+   they are in Compact and every term stays non-decreasing across tiers. */
+
+@media (min-width: 600px) {
+  /* The per-card ceiling is the binding limit on the easy and medium boards,
+     so the tiers raise it too — still card-sized (the Wide value matches a
+     wide Solitaire card), never wallpaper. */
+  :root {
+    --mm-card-max: 100px;
+  }
+
+  .mm-board {
+    width: min(
+      100%,
+      500px,
+      calc(
+        (100vh - 142px - env(safe-area-inset-bottom, 0px)) * var(--mm-cols) / var(--mm-rows) * 5 / 7
+      ),
+      calc(var(--mm-cols) * var(--mm-card-max) + (var(--mm-cols) - 1) * 7px)
+    );
+    width: min(
+      100%,
+      500px,
+      calc(
+        (100svh - 142px - env(safe-area-inset-bottom, 0px)) * var(--mm-cols) / var(--mm-rows) * 5 / 7
+      ),
+      calc(var(--mm-cols) * var(--mm-card-max) + (var(--mm-cols) - 1) * 7px)
+    );
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  :root {
+    --mm-card-max: 112px;
+  }
+
+  .mm-board {
+    width: min(
+      100%,
+      560px,
+      calc(
+        (100vh - 142px - env(safe-area-inset-bottom, 0px)) * var(--mm-cols) / var(--mm-rows) * 5 / 7
+      ),
+      calc(var(--mm-cols) * var(--mm-card-max) + (var(--mm-cols) - 1) * 7px)
+    );
+    width: min(
+      100%,
+      560px,
+      calc(
+        (100svh - 142px - env(safe-area-inset-bottom, 0px)) * var(--mm-cols) / var(--mm-rows) * 5 / 7
+      ),
+      calc(var(--mm-cols) * var(--mm-card-max) + (var(--mm-cols) - 1) * 7px)
+    );
+  }
+}

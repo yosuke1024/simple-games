@@ -321,3 +321,35 @@
     animation: none;
   }
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; Medium and Wide only raise the board and tray caps. The height
+   budget named in the comment on .bp-board (top bar, tray, action bar, this
+   element's padding, the reserved banner) does not change with viewport
+   width, so the same calc() carries over unchanged at both tiers — only the
+   px cap grows. The tray's cap tracks the board's cap so three pieces on
+   offer never read wider than the board they are aimed at. */
+
+@media (min-width: 600px) {
+  .bp-board {
+    width: min(100%, 480px, calc(100vh - 326px - env(safe-area-inset-bottom, 0px)));
+    width: min(100%, 480px, calc(100svh - 326px - env(safe-area-inset-bottom, 0px)));
+  }
+
+  .bp-tray {
+    width: min(100%, 480px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .bp-board {
+    width: min(100%, 520px, calc(100vh - 326px - env(safe-area-inset-bottom, 0px)));
+    width: min(100%, 520px, calc(100svh - 326px - env(safe-area-inset-bottom, 0px)));
+  }
+
+  .bp-tray {
+    width: min(100%, 520px);
+  }
+}

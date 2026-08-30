@@ -521,3 +521,25 @@
   font-weight: 800;
   font-size: 15px;
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. The seat strip
+   and the board share one cap so the strip never reads wider or narrower
+   than the board it names (see the comment above .ld-seats) — both
+   selectors are restated together here for exactly that reason. */
+
+@media (min-width: 600px) {
+  .ld-seats,
+  .ld-board {
+    width: min(100%, 500px, 50vh);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .ld-seats,
+  .ld-board {
+    width: min(100%, 560px, calc(100vh - 330px));
+    width: min(100%, 560px, calc(100svh - 330px));
+  }
+}

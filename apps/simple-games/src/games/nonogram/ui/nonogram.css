@@ -268,3 +268,33 @@
 .nono-figure-cell-crossed {
   background: var(--surface-recessed);
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; both tiers only raise the ceiling of the board's own clamp.
+   `--nono-band`, fixed at 2.6 cells, is derived from `--nono-cell` and grows
+   with it for free — same for `.nono-glyph`, a plain share of the cell with
+   no clamp of its own. `.nono-clue`'s font is also cell-derived, but its own
+   15px ceiling is already what binds at the base clamp's 40px max, so it
+   holds there rather than shrinking as the cell grows further. */
+
+@media (min-width: 600px) {
+  .nono-board {
+    --nono-cell: clamp(
+      18px,
+      calc((100vw - 24px - (var(--nono-size) + 1) * var(--nono-gap)) / (var(--nono-size) + 2.6)),
+      44px
+    );
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .nono-board {
+    --nono-cell: clamp(
+      18px,
+      calc((100vw - 24px - (var(--nono-size) + 1) * var(--nono-gap)) / (var(--nono-size) + 2.6)),
+      48px
+    );
+  }
+}

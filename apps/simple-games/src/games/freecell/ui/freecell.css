@@ -383,3 +383,93 @@
 .fc-daily-badge-done {
   color: var(--ink-soft);
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. The eight-column
+   grid and the percentage overlap already scale with width — widening the
+   table cap is what grows the cards. .fc-stuck shares .fc-table's own cap in
+   every tier (it already does at the Compact size above) so the dead-end
+   card lines up with the table instead of reading as a narrower column of
+   its own.
+
+   Wide caps the table by height too, the same way Solitaire's does: sized by
+   width alone, the tallest starting cascade would push under the fold of a
+   1366x768 PC. Every card here is face up (§ the .fc-overlap comment above),
+   so there is no face-down sliver to shrink the sum — the tallest starting
+   cascade is seven cards: one full face plus six overlapped strips at ~0.36
+   card-widths each, and the top row above it is another full card. Table-
+   height ≈ (top row 1.4 + cascade 1.4 + six strips ~2.16) card-widths, solved
+   for width against eight columns of that card-width gives the 1.55 factor
+   below. */
+
+@media (min-width: 600px) {
+  .fc-table,
+  .fc-stuck {
+    width: min(100%, 580px);
+  }
+
+  .fc-top-row,
+  .fc-cascades {
+    gap: 5px;
+  }
+
+  .fc-card {
+    border-radius: 7px;
+  }
+
+  .fc-card-rank {
+    font-size: clamp(14px, 2.3vw, 17px);
+  }
+
+  .fc-card-index .fc-suit {
+    width: clamp(8px, 1.4vw, 10px);
+    height: clamp(8px, 1.4vw, 10px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .fc-body {
+    padding: 14px 16px 16px;
+  }
+
+  .fc-table,
+  .fc-stuck {
+    width: min(100%, 900px, calc((100vh - 250px) * 1.55));
+    width: min(100%, 900px, calc((100svh - 250px) * 1.55));
+  }
+
+  .fc-table {
+    gap: 14px;
+  }
+
+  .fc-top-row,
+  .fc-cascades {
+    gap: 7px;
+  }
+
+  .fc-card {
+    border-radius: 9px;
+  }
+
+  .fc-card-index {
+    top: 3px;
+    left: 4px;
+    gap: 2px;
+  }
+
+  .fc-card-rank {
+    font-size: clamp(15px, 1.7vw, 22px);
+  }
+
+  .fc-card-index .fc-suit {
+    width: clamp(9px, 1vw, 13px);
+    height: clamp(9px, 1vw, 13px);
+  }
+
+  /* The chrome column follows the wide table (scoped: this stylesheet
+     stays loaded after leaving the game). */
+  :root[data-game='freecell'] .game-content {
+    --game-shell-max: 900px;
+  }
+}
