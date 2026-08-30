@@ -504,6 +504,10 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
   Web 版のためにこのレイヤーへ何かを足す必要はない。
 - 保存は `KVStore` 契約(`src/storage/kv.ts`)の背後にあり、Web 版は
   Capacitor Preferences の web 実装(`localStorage`)を差すだけで動く。
+- **住所はクエリパラメータ 1 本**(`?game=<game-id>`)。ゲーム別ガイドから対象
+  ゲームを直接開くための入口で、シェル(`app/webRoute.ts`)だけが読み書きし、
+  `Capacitor.isNativePlatform()` の実行時ガードで native では動かない。契約と
+  履歴の扱いは [WEB_VERSION.md](WEB_VERSION.md)「URL(ゲーム別の入口)」が正本。
 - ホスティングは Cloudflare Pages(`pixapps-landing` リポジトリへの生成物コミット)。
   GitHub Pages でも配信できる**純静的構成**を維持する。Functions / Workers / D1 / KV /
   Durable Objects / R2 / 独自 API / 認証 / クラウドセーブ / サーバー側生成は使わない。

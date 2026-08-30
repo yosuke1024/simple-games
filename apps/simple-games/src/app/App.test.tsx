@@ -15,6 +15,16 @@ function renderShell() {
 
 afterEach(() => {
   cleanup();
+  // The shell writes the game it opened into the address bar (app/webRoute.ts),
+  // and jsdom keeps one document per file — so without this the next test
+  // starts on the previous test's game instead of the collection. What the
+  // address does and how it is followed back is App.route.test.tsx's subject.
+  //
+  // This is enough only because no test here *leaves* a game: leaving asks the
+  // browser to walk back, and that traversal would land after this line and put
+  // the next test somewhere else again. A test that adds the return trip has to
+  // wait the traversal out before this runs.
+  window.history.replaceState(null, '', '/');
   try {
     window.localStorage.clear();
   } catch {
@@ -116,6 +126,20 @@ describe('measurement and the web-mode gate', () => {
       expect(document.querySelector('script[data-simple-games-ga4]')).not.toBeNull(),
     );
     expect(window.dataLayer?.length).toBeGreaterThan(0);
+  });
+});
+
+describe('a game address', () => {
+  // The browser version's address is a real entry point, not a bookmark the
+  // shell writes and never reads: the chunk a tile opens has to mount from a
+  // link a guide page carries, with no tap in between (app/webRoute.ts). Only
+  // that end of it is here — the history behaviour, invalid ids and the app's
+  // indifference to all of it are App.route.test.tsx, which stubs the games.
+  it('opens the game it names', async () => {
+    window.history.replaceState(null, '', '/simple-games/play/?game=number-match');
+    renderShell();
+    expect(await screen.findByText('Equal, or adds up to 10')).toBeInTheDocument();
+    expect(document.documentElement.dataset.game).toBe('number-match');
   });
 });
 
