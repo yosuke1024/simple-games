@@ -308,3 +308,92 @@ describe('statistics', () => {
     expect(screen.queryByText(/streak/i)).not.toBeInTheDocument();
   });
 });
+
+/* Keyboard input is an adapter over the same tap handlers (issue #93):
+   every assertion here checks board state the taps also produce, never a
+   keyboard-only behaviour. */
+describe('keyboard (issue #93)', () => {
+  async function startLevel(user: ReturnType<typeof userEvent.setup>) {
+    renderSudoku(tutorialDone);
+    await user.click(await screen.findByRole('button', { name: /Level 1/ }));
+    const grid = screen.getByRole('group', { name: 'Sudoku grid' });
+    return { grid, cells: within(grid).getAllByRole('button') };
+  }
+
+  it('first arrow lands centre, then arrows walk and clamp at the edge', async () => {
+    const user = userEvent.setup();
+    const { cells } = await startLevel(user);
+
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(cells[40]).toHaveAttribute('aria-pressed', 'true'); // row 4, col 4
+
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(cells[41]).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.keyDown(window, { key: 'ArrowUp' });
+    expect(cells[32]).toHaveAttribute('aria-pressed', 'true');
+
+    // Walk to the top edge and keep pressing: the selection stays put.
+    for (let i = 0; i < 8; i++) fireEvent.keyDown(window, { key: 'ArrowUp' });
+    expect(cells[5]).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('digits place, Backspace erases, Ctrl+Z undoes — same as the taps', async () => {
+    const user = userEvent.setup();
+    const { cells } = await startLevel(user);
+    const empty = cells.find((cell) => cell.getAttribute('aria-label')?.startsWith('Empty'))!;
+    await user.click(empty);
+
+    fireEvent.keyDown(window, { key: '5' });
+    expect(empty.getAttribute('aria-label')!.startsWith('5,')).toBe(true);
+
+    fireEvent.keyDown(window, { key: 'Backspace' });
+    expect(empty.getAttribute('aria-label')!.startsWith('Empty')).toBe(true);
+
+    fireEvent.keyDown(window, { key: '5' });
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    expect(empty.getAttribute('aria-label')!.startsWith('Empty')).toBe(true);
+  });
+
+  it('a held digit key places once — repeats are swallowed, not replayed', async () => {
+    const user = userEvent.setup();
+    const { cells } = await startLevel(user);
+    const empty = cells.find((cell) => cell.getAttribute('aria-label')?.startsWith('Empty'))!;
+    await user.click(empty);
+
+    fireEvent.keyDown(window, { key: '5', repeat: true });
+    expect(empty.getAttribute('aria-label')!.startsWith('Empty')).toBe(true);
+  });
+
+  it('N pencils notes, H asks for the hint', async () => {
+    const user = userEvent.setup();
+    const { cells } = await startLevel(user);
+    const empty = cells.find((cell) => cell.getAttribute('aria-label')?.startsWith('Empty'))!;
+    await user.click(empty);
+
+    fireEvent.keyDown(window, { key: 'n' });
+    expect(screen.getByRole('button', { name: 'Notes' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.keyDown(window, { key: '5' });
+    expect(empty.getAttribute('aria-label')!.startsWith('Empty')).toBe(true);
+    expect(empty.querySelector('.sudoku-notes')).not.toBeNull();
+
+    fireEvent.keyDown(window, { key: 'n' });
+    fireEvent.keyDown(window, { key: 'h' });
+    expect(screen.getByRole('status')).toBeInTheDocument();
+  });
+
+  it('goes quiet while the restart dialog is up', async () => {
+    const user = userEvent.setup();
+    const { cells } = await startLevel(user);
+    const empty = cells.find((cell) => cell.getAttribute('aria-label')?.startsWith('Empty'))!;
+    await user.click(empty);
+
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+    fireEvent.keyDown(window, { key: '5' });
+    expect(empty.getAttribute('aria-label')!.startsWith('Empty')).toBe(true);
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.keyDown(window, { key: '5' });
+    expect(empty.getAttribute('aria-label')!.startsWith('5,')).toBe(true);
+  });
+});
