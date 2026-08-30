@@ -60,7 +60,13 @@ async function boot(): Promise<void> {
   if (import.meta.env.MODE === 'web' && gaMeasurementId) {
     void import('./services/analytics/web')
       .then((m) => m.initWebAnalytics(gaMeasurementId))
-      .catch(() => undefined);
+      // A chunk that never arrives must not disturb the player — but it must
+      // not be invisible to the person building either, which is how a broken
+      // integration stayed shipped (issue #84). `import.meta.env.DEV` is false
+      // in every released build, so this line folds away with its message.
+      .catch((error: unknown) => {
+        if (import.meta.env.DEV) console.warn('web analytics did not load', error);
+      });
   }
 
   createRoot(container).render(

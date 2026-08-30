@@ -107,6 +107,22 @@ check_web() {
       printf 'VITE_GA_MEASUREMENT_ID の注入と web-only dynamic import を確認してください。\n'
       fail=1
     fi
+
+    # イベント名が成果物にあることと、それが Google へ届くことは別である
+    # (docs/GROWTH_MEASUREMENT.md「なぜ静かに壊れたか」)。Google タグは
+    # dataLayer の要素を **Arguments オブジェクトのときだけ** コマンドとして
+    # 実行し、配列は黙って捨てる。2026-08-30 まではその配列を積んでおり、
+    # ユニットテストは緑のまま本番で 1 件も送信されていなかった。
+    # `arguments` は予約語で minify されず、`.push` も短縮されないので、
+    # 公式の形が残っていることは成果物から確認できる。
+    if grep -rqF 'push(arguments)' "$web_dist"; then
+      printf '\033[32mok\033[0m   web dist の gtag シムが Arguments を push している\n'
+    else
+      printf '\n\033[31mFAIL\033[0m gtag シムが Arguments オブジェクトを push していません。\n'
+      printf 'Google タグは Arguments 以外のキュー要素をコマンドとして実行しません(issue #84)。\n'
+      printf 'アロー関数化や [...arguments] へのリファクタで、静かに無送信へ戻ります。\n'
+      fail=1
+    fi
   elif grep -rqE "$measurement_id_pattern" "$web_dist"; then
     printf '\n\033[31mFAIL\033[0m Analytics 無効ビルドに GA4 測定 ID が残っています。\n'
     printf 'ID 未設定時は計測を既定 OFF にする約束です(docs/WEB_VERSION.md)。\n'

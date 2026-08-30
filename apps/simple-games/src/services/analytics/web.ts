@@ -14,9 +14,22 @@ import { isOnline } from '../network';
 
 type Gtag = (...args: unknown[]) => void;
 
+/**
+ * The Google tag's command queue.
+ *
+ * The tag executes an entry as a command **only when it is an `arguments`
+ * object** — the shape Google's own snippet pushes. A plain array is neither
+ * a command nor a state object, so the tag drains it and drops it: the queue
+ * fills up and nothing is ever sent. That is exactly what this integration
+ * did in production until 2026-08-30 (issue #84).
+ *
+ * Typed `IArguments[]` and not `unknown[][]` for that reason — **the old type
+ * was what made the array-pushing shim look correct**. Now `tsc` refuses the
+ * regression as well as the tests do.
+ */
 declare global {
   interface Window {
-    dataLayer?: unknown[][];
+    dataLayer?: IArguments[];
     gtag?: Gtag;
   }
 }
@@ -37,11 +50,34 @@ function nowMs(): number {
   return typeof performance !== 'undefined' ? performance.now() : Date.now();
 }
 
+/**
+ * Developer seam. Measurement may never take a game down, so every failure
+ * here stays swallowed — but **a swallowed failure nobody can see is how this
+ * integration spent weeks queueing events that were never sent** (issue #84).
+ * Development and test builds say what went wrong; `import.meta.env.DEV` is
+ * false in every shipped build, so a player never reads a line about it
+ * (the same seam brick-breaker's frame pump uses).
+ */
+function reportFailure(reason: string, error?: unknown): void {
+  if (import.meta.env.DEV) console.warn(`web analytics: ${reason}`, error ?? '');
+}
+
 function ensureGtag(): Gtag {
   window.dataLayer ??= [];
   if (!window.gtag) {
-    window.gtag = (...args: unknown[]) => {
-      window.dataLayer?.push(args);
+    // Google's official snippet, in shape as well as in effect:
+    //   function gtag(){dataLayer.push(arguments);}
+    // **It cannot become an arrow function** — an arrow has no `arguments`
+    // binding — and `arguments` must be pushed as it is: rest parameters,
+    // `[...arguments]`, `Array.from(...)` and `slice` all hand the queue an
+    // array, the one shape the tag drops. That was the whole of issue #84.
+    window.gtag = function gtagShim(): void {
+      // Re-read the queue on every call instead of closing over the array
+      // above: the tag takes the queue over when it loads, and the test hook
+      // deletes it outright. A captured reference would keep pushing into a
+      // detached array — the same silent loss, one layer down.
+      // eslint-disable-next-line prefer-rest-params
+      (window.dataLayer ??= []).push(arguments);
     };
   }
   return window.gtag;
@@ -54,6 +90,9 @@ function ensureGoogleTagScript(measurementId: string): void {
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
   script.setAttribute(SCRIPT_ATTRIBUTE, measurementId);
+  // A tag that never arrives is the failure that looks like success: the
+  // commands below keep queueing and nothing ever drains them.
+  script.addEventListener('error', () => reportFailure('the Google tag script did not load'));
   document.head.appendChild(script);
 }
 
@@ -69,15 +108,32 @@ export function initWebAnalytics(
   initializationAttempted = true;
 
   const measurementId = measurementIdFromEnv(rawMeasurementId);
-  if (!measurementId || !isOnline() || typeof window === 'undefined' || typeof document === 'undefined') {
+  if (!measurementId) {
+    // No ID is the default and not a failure. An ID that was supplied and is
+    // unusable is — and it fails exactly like being switched off.
+    if ((rawMeasurementId ?? '').trim() !== '') {
+      reportFailure('the measurement ID is not a G-… web stream ID');
+    }
     return false;
   }
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    reportFailure('there is no browser document to attach the tag to');
+    return false;
+  }
+  // Offline is a normal state, never an error (docs/OFFLINE_POLICY.md): the
+  // tag is not requested, and this page load will not ask again.
+  if (!isOnline()) return false;
 
-  const hadGtag = typeof window.gtag === 'function';
   const gtag = ensureGtag();
   ensureGoogleTagScript(measurementId);
 
-  if (!hadGtag) gtag('js', new Date());
+  // `js` always precedes `config`, even when something else on the page had
+  // already installed a gtag of its own: a consent stub is conventionally
+  // written `window.gtag = window.gtag || function(){...}` and issues only
+  // `consent` commands, so "a gtag exists" does not mean "the tag was
+  // bootstrapped". Repeating `js` records a container start time and sends
+  // no hit; skipping it when it was needed fails silently.
+  gtag('js', new Date());
   gtag('config', measurementId, {
     content_group: CONTENT_GROUP,
     content_type: 'game_collection',
@@ -87,7 +143,11 @@ export function initWebAnalytics(
   return true;
 }
 
-function sendGameEvent(eventName: 'game_open' | 'game_close', gameId: GameId, durationMs?: number): void {
+function sendGameEvent(
+  eventName: 'game_open' | 'game_close',
+  gameId: GameId,
+  durationMs?: number,
+): void {
   const gtag = window.gtag;
   if (!initialized || !gtag) return;
 
@@ -125,7 +185,9 @@ export function trackGameClosed(
   if (!initWebAnalytics(rawMeasurementId)) return;
 
   const durationMs =
-    activeGame?.gameId === gameId ? Math.max(0, Math.round(nowMs() - activeGame.openedAtMs)) : undefined;
+    activeGame?.gameId === gameId
+      ? Math.max(0, Math.round(nowMs() - activeGame.openedAtMs))
+      : undefined;
   activeGame = null;
   sendGameEvent('game_close', gameId, durationMs);
 }
