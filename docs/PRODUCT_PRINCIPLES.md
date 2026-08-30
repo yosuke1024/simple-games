@@ -22,7 +22,8 @@ Simple Games の全収録タイトルは以下を守る。これはブランド�
 (アプリ = バナー 1 枠のみ / Web = 複数形式)、広告削除の買い切り(アプリのみ)、
 オフラインの範囲(アプリ = 初回起動から / Web = 初回アクセスの読み込み後)、
 計測(アプリ = Analytics なし / Web = サイト共通のページ解析 —
-[WEB_VERSION.md](WEB_VERSION.md)「計測」)、
+[WEB_VERSION.md](WEB_VERSION.md)「計測」、読み方と限界は
+[GROWTH_MEASUREMENT.md](GROWTH_MEASUREMENT.md))、
 収録タイミング(アプリ = 検証済みの正式収録のみ / Web = 新作の先行公開あり —
 [WEB_VERSION.md](WEB_VERSION.md)「先行公開」)。
 どちらの版でも、その版で成立しない約束を掲げない。

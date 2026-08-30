@@ -124,10 +124,13 @@ src/
   向き: ゲーム → `ui/components/`)。シェルは「ゲームの内部のどこがホームか」を
   知らないままでいられる — 知ろうとすると registry がゲーム内部のビューを
   列挙することになる([WEB_VERSION.md](WEB_VERSION.md)「サイトクローム」)。
-- Analytics / Remote Config / トラッキングのサービスは**アプリに存在しない**
-  (初期リリースで削除済み。公開コードに追跡コードが無いことが透明性の証明)。
-  Web 版のページ解析は方針決定のみで未実装([WEB_VERSION.md](WEB_VERSION.md)
-  「計測」)。導入時も `--mode web` 限定で、native 成果物には含めない。
+- Analytics / Remote Config / トラッキングのサービスは**アプリの成果物に
+  存在しない**(初期リリースで削除済み)。Web 版のページ解析は実装済みで、
+  ソースには居るが `--mode web` 限定であり、native 成果物には不在
+  ([WEB_VERSION.md](WEB_VERSION.md)「計測」、運用は
+  [GROWTH_MEASUREMENT.md](GROWTH_MEASUREMENT.md))。**証明はもう
+  「公開コードに追跡コードが無いこと」ではなく、成果物にそれが無いことを
+  CI が示すこと**である(`check-dist-ads-separation.sh`)。
 
 ## ゲームレジストリの契約
 

@@ -56,11 +56,29 @@ async function boot(): Promise<void> {
   // ID the integration chunk is never requested and no analytics request is
   // made. Network state was resolved above; an offline first attempt is not
   // retried during this page load (docs/WEB_VERSION.md「計測」).
-  const gaMeasurementId = import.meta.env.VITE_GA_MEASUREMENT_ID?.trim();
-  if (import.meta.env.MODE === 'web' && gaMeasurementId) {
-    void import('./services/analytics/web')
-      .then((m) => m.initWebAnalytics(gaMeasurementId))
-      .catch(() => undefined);
+  //
+  // **The mode gate has to come first, before the environment is read at
+  // all.** Vite inlines the variable as a literal in every build, and
+  // `"G-…"?.trim()` reads as side-effecting, so the minifier keeps the string
+  // even after dropping the branch that uses it: a native build made on a
+  // machine where the variable happens to be exported would carry the
+  // measurement ID (proven with a build, 2026-08-30). Inside the gate the
+  // whole statement is unreachable and goes with it. App.tsx's two callers
+  // already have this shape.
+  if (import.meta.env.MODE === 'web') {
+    const gaMeasurementId = import.meta.env.VITE_GA_MEASUREMENT_ID?.trim();
+    if (gaMeasurementId) {
+      void import('./services/analytics/web')
+        .then((m) => m.initWebAnalytics(gaMeasurementId))
+        // A chunk that never arrives must not disturb the player — but it
+        // must not be invisible to the person building either, which is how
+        // a broken integration stayed shipped (issue #84).
+        // `import.meta.env.DEV` is false in every released build, so this
+        // line folds away with its message.
+        .catch((error: unknown) => {
+          if (import.meta.env.DEV) console.warn('web analytics did not load', error);
+        });
+    }
   }
 
   createRoot(container).render(

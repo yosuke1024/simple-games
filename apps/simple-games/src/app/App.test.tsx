@@ -1,6 +1,6 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '../state/SettingsContext';
 import { settingsSchema } from '../storage/schemas';
 import { App } from './App';
@@ -69,6 +69,63 @@ describe('collection home', () => {
     expect(await screen.findByText('Equal, or adds up to 10')).toBeInTheDocument();
     // Quick Rules stay short; the long-form rules are one link away (ui/landing.ts).
     expect(screen.getByRole('button', { name: 'Learn More' })).toBeInTheDocument();
+  });
+});
+
+/**
+ * The shell's own echo of the artifact check. Measurement lives behind the
+ * build-time `--mode web` gate (docs/WEB_VERSION.md「計測」), so opening a
+ * game in any other bundle — native, and this test run — must leave no tag,
+ * no queue and no request. CI proves the same thing from the built files
+ * (.github/scripts/check-dist-ads-separation.sh).
+ *
+ * **Both cases stamp a measurement ID on purpose.** Without one, the first
+ * test would pass just as happily with the gate deleted — nothing is
+ * configured in a test run, so nothing would be installed either way, and
+ * the test would only be restating its own environment. With an ID present,
+ * the build mode is the one thing standing between a tap and a Google tag.
+ */
+describe('measurement and the web-mode gate', () => {
+  afterEach(async () => {
+    const analytics = await import('../services/analytics/web');
+    analytics.resetWebAnalyticsForTesting();
+    vi.unstubAllEnvs();
+  });
+
+  it('opens a game without installing a Google tag', async () => {
+    const user = userEvent.setup();
+    renderShell();
+    // An ID is available; only the build mode says no.
+    vi.stubEnv('VITE_GA_MEASUREMENT_ID', 'G-ABC12345');
+
+    await user.click(screen.getByRole('button', { name: /Kakuro/ }));
+    await waitFor(() => expect(document.documentElement.dataset.game).toBe('kakuro'));
+    // The shell's import is fire-and-forget, so load the same module here and
+    // drain the queue: without this the assertion below would be about the
+    // clock rather than about the gate, and it would pass with no gate at all.
+    await import('../services/analytics/web');
+    await act(async () => undefined);
+
+    expect(document.querySelector('script[data-simple-games-ga4]')).toBeNull();
+    expect(window.dataLayer).toBeUndefined();
+    expect(window.gtag).toBeUndefined();
+  });
+
+  it('installs the tag when the build is the web one', async () => {
+    const user = userEvent.setup();
+    renderShell();
+    // Stamped after the render so only the shell's measurement path reads it,
+    // and the browser build's other web-only surfaces stay out of this test.
+    vi.stubEnv('MODE', 'web');
+    vi.stubEnv('VITE_GA_MEASUREMENT_ID', 'G-ABC12345');
+
+    // A game the tests above have not opened: the shortcut row would
+    // otherwise offer a second button with the same name.
+    await user.click(screen.getByRole('button', { name: /Takuzu/ }));
+    await waitFor(() =>
+      expect(document.querySelector('script[data-simple-games-ga4]')).not.toBeNull(),
+    );
+    expect(window.dataLayer?.length).toBeGreaterThan(0);
   });
 });
 

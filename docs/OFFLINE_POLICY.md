@@ -66,5 +66,6 @@ Undo、Hint、Add Numbers、ゲームクリア、ゲームオーバー、設定�
 
 Analytics・Remote Config・トラッキングは存在しない。ネットワークに送信される
 ゲームデータもない。(Web 版のページ解析は本文書の範囲外 —
-[WEB_VERSION.md](WEB_VERSION.md)「計測」。ゲームデータを送らない点は
+[WEB_VERSION.md](WEB_VERSION.md)「計測」、その運用は
+[GROWTH_MEASUREMENT.md](GROWTH_MEASUREMENT.md)。ゲームデータを送らない点は
 版をまたいで同じ。)

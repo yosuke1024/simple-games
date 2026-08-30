@@ -27,6 +27,14 @@ import { currentRouteGame, popRoute, pushRoute, startRoute, webRoutingEnabled } 
 
 type View = { kind: 'collection' } | { kind: 'settings' } | { kind: 'game'; gameId: GameId };
 
+// Measurement must never disturb a player, so a chunk that never arrives is
+// swallowed — but not silently: an unheard failure is how the browser build
+// shipped while sending nothing at all (issue #84). `import.meta.env.DEV` is
+// false in every released build, so this folds away with its message.
+function reportAnalyticsLoadFailure(error: unknown): void {
+  if (import.meta.env.DEV) console.warn('web analytics did not load', error);
+}
+
 function trackWebGameOpened(gameId: GameId): void {
   if (import.meta.env.MODE !== 'web') return;
   const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID?.trim();
@@ -34,7 +42,7 @@ function trackWebGameOpened(gameId: GameId): void {
 
   void import('../services/analytics/web')
     .then((m) => m.trackGameOpened(gameId, measurementId))
-    .catch(() => undefined);
+    .catch(reportAnalyticsLoadFailure);
 }
 
 function trackWebGameClosed(gameId: GameId): void {
@@ -44,7 +52,7 @@ function trackWebGameClosed(gameId: GameId): void {
 
   void import('../services/analytics/web')
     .then((m) => m.trackGameClosed(gameId, measurementId))
-    .catch(() => undefined);
+    .catch(reportAnalyticsLoadFailure);
 }
 
 /**

@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 # Web 専用コードの「分離」を、ソースではなく**ビルド成果物**で検証する
-# (docs/WEB_VERSION.md「計測」/ docs/ADS_POLICY.md「Web 版」)。
+# (docs/WEB_VERSION.md「計測」/ docs/ADS_POLICY.md「Web 版」。計測の読み方と
+# 限界は docs/GROWTH_MEASUREMENT.md)。
 #
 #   native (apps/simple-games/dist/)    — AdSense / GA4 / サイトクロームの痕跡が
 #       **不在**。アプリの約束は「バナー 1 枠のみ」「Analytics なし」、そして
 #       インストール済みアプリに「サイトへ戻る」ヘッダーは要らない。build-time
 #       ゲートが実際に効いていることをバンドラの出力で確かめる。
 #   web    (apps/simple-games/dist-web/) — AdSense 統合とサイトクロームが**存在**。
-#       GA4 は EXPECT_WEB_ANALYTICS=1 のとき統合と測定 ID が存在し、
-#       それ以外では測定 ID が成果物に存在しないことを確認する。
+#       gtag シムが `push(arguments)` の形であることは測定 ID の有無に関係なく
+#       見る(ID 未設定のビルドにも計測チャンクは入るため)。GA4 は
+#       EXPECT_WEB_ANALYTICS=1 のとき統合と測定 ID が存在し、それ以外では
+#       測定 ID が成果物に存在しないことを確認する。
 #
 # check-principles.sh は grep だけで動く(ビルド不要)という分担なので、
 # ビルドを前提とするこの検査は別スクリプトになっている。ci.yml が
@@ -96,6 +99,27 @@ check_web() {
   else
     printf '\n\033[31mFAIL\033[0m web ビルドにサイトクローム統合が見つかりません。\n'
     printf 'WebChromeSlot の --mode web ゲートか lazy import の配線が切れています(静かにヘッダーなしになるだけなので、ここで検知します)。\n'
+    fail=1
+  fi
+
+  # イベント名が成果物にあることと、それが Google へ届くことは別である
+  # (docs/GROWTH_MEASUREMENT.md「なぜ静かに壊れたか」)。Google タグは
+  # dataLayer の要素を **Arguments オブジェクトのときだけ** コマンドとして
+  # 実行し、配列は黙って捨てる。2026-08-30 まではその配列を積んでおり、
+  # ユニットテストは緑のまま本番で 1 件も送信されていなかった。
+  # `arguments` は予約語で minify されず、`.push` も短縮されないので、
+  # 公式の形が残っていることは成果物から確認できる。
+  #
+  # **測定 ID の有無で分岐させない。** 計測チャンクは既定 OFF のビルドにも
+  # 入っており、退行が届くのは PR — つまり ci.yml が引数なしで呼ぶ、ID の無い
+  # ビルド — である。EXPECT_WEB_ANALYTICS=1 の枝に置くと、この検査は
+  # 手動 dispatch のときしか動かない(「何も見ていない状態で緑になる」)。
+  if grep -rqF 'push(arguments)' "$web_dist"; then
+    printf '\033[32mok\033[0m   web dist の gtag シムが Arguments を push している\n'
+  else
+    printf '\n\033[31mFAIL\033[0m gtag シムが Arguments オブジェクトを push していません。\n'
+    printf 'Google タグは Arguments 以外のキュー要素をコマンドとして実行しません(issue #84)。\n'
+    printf 'アロー関数化や [...arguments] へのリファクタで、静かに無送信へ戻ります。\n'
     fail=1
   fi
 
