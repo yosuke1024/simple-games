@@ -48,6 +48,9 @@
   トラッキング依存、Android 権限、本番広告 ID の不在、禁止表現。
 - `docs/ADS_POLICY.md` / `docs/OFFLINE_POLICY.md` / `docs/PRODUCT_PRINCIPLES.md` —
   何を約束しているかの定義。公開ページはその要約にすぎない。
+- `docs/WEB_VERSION.md`「計測」/ `docs/GROWTH_MEASUREMENT.md` — Web 版が何を
+  送り、何を送らないか。公開ページの Google Analytics の記述はこの 2 つと
+  一致していなければならない。
 - `docs/RELEASE_CHECKLIST.md` — Play Console の「データセーフティ」欄を公開ページと
   一致させる確認(未了: 法的レビュー)。
 

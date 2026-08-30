@@ -21,8 +21,9 @@
 #   adsense — AdSense が主。ADSENSE_CLIENT が必須で、ADMAX_* は実行時
 #             フォールバック(ローダー失敗 / unfilled のときだけ差し替え)。
 #
-# Analytics(docs/WEB_VERSION.md「計測」): GA_MEASUREMENT_ID secret が有効な
-# G-... ID のときだけ Web ビルドへ注入する。未設定・不正値は既定 OFF。
+# Analytics(docs/WEB_VERSION.md「計測」、読み方は docs/GROWTH_MEASUREMENT.md):
+# GA_MEASUREMENT_ID secret が有効な G-... ID のときだけ Web ビルドへ注入する。
+# 未設定・不正値は既定 OFF。
 name: Web build
 
 on:

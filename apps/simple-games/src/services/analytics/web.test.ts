@@ -11,8 +11,18 @@ import {
 afterEach(() => {
   resetWebAnalyticsForTesting();
   setOnlineForTesting(true);
+  Reflect.deleteProperty(document, 'visibilityState');
   vi.restoreAllMocks();
 });
+
+/** The tab goes to the background, and comes back. */
+function setTabHidden(hidden: boolean): void {
+  Object.defineProperty(document, 'visibilityState', {
+    configurable: true,
+    value: hidden ? 'hidden' : 'visible',
+  });
+  document.dispatchEvent(new Event('visibilitychange'));
+}
 
 /** The queue holds `arguments` objects; read them as the tag would. */
 function queuedCommands(): unknown[][] {
@@ -41,7 +51,8 @@ describe('web analytics', () => {
 
   it('queues the page view and shell-level game events only', () => {
     const now = vi.spyOn(performance, 'now');
-    now.mockReturnValueOnce(100).mockReturnValueOnce(1_600);
+    // Opened at 100, still in front, closed at 1_600.
+    now.mockReturnValueOnce(100).mockReturnValue(1_600);
 
     expect(initWebAnalytics('G-ABC12345')).toBe(true);
     trackGameOpened('sudoku', 'G-ABC12345');
@@ -170,6 +181,52 @@ describe('web analytics', () => {
     expect(initWebAnalytics('UA-12345-1')).toBe(false);
     expect(document.querySelector('script[data-simple-games-ga4]')).toBeNull();
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('measurement ID'), expect.anything());
+  });
+
+  // `play_duration_ms` is ours and means "how long the game was the screen".
+  // `engagement_time_msec` is GA4's, feeds the whole shared property's
+  // engagement maths, and must therefore count foreground time only —
+  // otherwise a tab left open overnight is billed to pixapps.ai as
+  // engagement, and the per-game ranking measures parked tabs.
+  it('bills GA4 only for the time the tab was in front', () => {
+    const now = vi.spyOn(performance, 'now');
+    //   open 0 → hidden 1_000 → visible 9_000 → close 11_000
+    // wall clock 11_000, foreground 1_000 + 2_000.
+    now
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(1_000)
+      .mockReturnValueOnce(9_000)
+      .mockReturnValueOnce(11_000)
+      .mockReturnValue(11_000);
+
+    expect(initWebAnalytics('G-ABC12345')).toBe(true);
+    trackGameOpened('sudoku', 'G-ABC12345');
+    setTabHidden(true);
+    setTabHidden(false);
+    trackGameClosed('sudoku', 'G-ABC12345');
+
+    const close = queuedCommands()[3];
+    expect(close?.[2]).toMatchObject({
+      game_id: 'sudoku',
+      play_duration_ms: 11_000,
+      engagement_time_msec: 3_000,
+    });
+  });
+
+  // The listener belongs to the shell for the life of the page, like the
+  // audio service's (docs/GAME_LIFECYCLE.md). A refactor that registers it
+  // per game would double-count every stretch instead of failing loudly.
+  it('watches visibility once, however many games are opened', () => {
+    const listen = vi.spyOn(document, 'addEventListener');
+
+    expect(initWebAnalytics('G-ABC12345')).toBe(true);
+    trackGameOpened('sudoku', 'G-ABC12345');
+    trackGameClosed('sudoku', 'G-ABC12345');
+    trackGameOpened('kakuro', 'G-ABC12345');
+    trackGameClosed('kakuro', 'G-ABC12345');
+
+    const visibility = listen.mock.calls.filter(([type]) => type === 'visibilitychange');
+    expect(visibility).toHaveLength(1);
   });
 
   it('stays quiet when no measurement ID is configured at all', () => {

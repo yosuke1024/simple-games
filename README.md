@@ -20,7 +20,8 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 - ゲームデータは端末内にのみ保存(クラウド同期なし)
 - ストリークや人工的な緊急性なし
 - アプリに Analytics・トラッキングコードなし(公開コードで確認可能。Web 版の
-  ページ解析は [docs/WEB_VERSION.md](docs/WEB_VERSION.md)「計測」)
+  ページ解析は [docs/WEB_VERSION.md](docs/WEB_VERSION.md)「計測」、その読み方と
+  限界は [docs/GROWTH_MEASUREMENT.md](docs/GROWTH_MEASUREMENT.md))
 - API サーバー・アプリ用 DB・コンテンツ配信サーバーなし
 
 詳細は [docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md) を参照してください。
@@ -240,6 +241,8 @@ Cloudflare Pages の静的アセットのみで動き、サーバー機能は使
 - 助け(Undo / Hint)は常に無料・無制限。ただし全ゲームで同じ機能を並べず、
   そのゲームの中身を空にしない形の助けを用意する
 - オフライン時は広告リクエストを行わない(低消費電力・[docs/OFFLINE_POLICY.md](docs/OFFLINE_POLICY.md))
+- 計測は Web 版だけ。何を見て次のゲームを選ぶか、そのデータで何が言えないかを
+  文書に残す([docs/GROWTH_MEASUREMENT.md](docs/GROWTH_MEASUREMENT.md))
 - 巨大な共通ゲームフレームワークを作らない
 - 一度しか使われていないコードを共通化しない(重複が確認されてから抽出)
 - 収録ゲームの追加・更新はアプリのリリースとして一体で行う。ただしゲーム追加が

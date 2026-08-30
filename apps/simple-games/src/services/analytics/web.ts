@@ -49,7 +49,28 @@ const SCRIPT_FAILED_ATTRIBUTE = 'data-simple-games-ga4-failed';
 
 let initializationAttempted = false;
 let initialized = false;
-let activeGame: { gameId: GameId; openedAtMs: number } | null = null;
+
+/**
+ * The game on screen, with two clocks.
+ *
+ * `openedAtMs` is wall time and answers "how long was this game the mounted
+ * screen" — `play_duration_ms`, ours to define. `visibleMs` counts only the
+ * stretches the tab was in the foreground, and is what
+ * `engagement_time_msec` gets: **that name is GA4's, not ours** — the tag
+ * sums it into the property's engagement time, engagement rate and
+ * engaged-session count, and the property is shared with the rest of
+ * pixapps.ai. Handing it wall time would bill a tab left open overnight to
+ * the whole site's engagement, and would rank games by "which one do people
+ * park in a background tab" — close to the opposite of what the ranking is
+ * for (docs/GROWTH_MEASUREMENT.md「このデータで言えないこと」).
+ */
+let activeGame: {
+  gameId: GameId;
+  openedAtMs: number;
+  visibleMs: number;
+  /** Start of the current foreground stretch, or null while hidden. */
+  visibleSinceMs: number | null;
+} | null = null;
 
 export function measurementIdFromEnv(value: string | undefined): string | null {
   const trimmed = value?.trim() ?? '';
@@ -70,6 +91,41 @@ function nowMs(): number {
  */
 function reportFailure(reason: string, error?: unknown): void {
   if (import.meta.env.DEV) console.warn(`web analytics: ${reason}`, error ?? '');
+}
+
+function isHidden(): boolean {
+  return typeof document !== 'undefined' && document.visibilityState === 'hidden';
+}
+
+/** Closes the open foreground stretch, if there is one. */
+function pauseVisibleTime(): void {
+  if (!activeGame || activeGame.visibleSinceMs === null) return;
+  activeGame.visibleMs += Math.max(0, nowMs() - activeGame.visibleSinceMs);
+  activeGame.visibleSinceMs = null;
+}
+
+function resumeVisibleTime(): void {
+  if (!activeGame || activeGame.visibleSinceMs !== null) return;
+  activeGame.visibleSinceMs = nowMs();
+}
+
+function onVisibilityChange(): void {
+  if (isHidden()) pauseVisibleTime();
+  else resumeVisibleTime();
+}
+
+/**
+ * One listener for the life of the page, registered once by a successful
+ * initialization — the same category as the audio service's, which
+ * docs/GAME_LIFECYCLE.md puts outside a game's release duty because it
+ * belongs to the shell and no game may create its own. **Do not turn this
+ * into a per-game effect**: measurement is imported only by `main.tsx` and
+ * `app/App.tsx`, and a game that registered its own copy would be a game
+ * writing measurement code.
+ */
+function watchVisibility(): void {
+  if (typeof document === 'undefined') return;
+  document.addEventListener('visibilitychange', onVisibilityChange);
 }
 
 function ensureGtag(): Gtag {
@@ -141,6 +197,7 @@ export function initWebAnalytics(
 
   const gtag = ensureGtag();
   ensureGoogleTagScript(measurementId);
+  watchVisibility();
 
   // `js` always precedes `config`, even when something else on the page had
   // already installed a gtag of its own: a consent stub is conventionally
@@ -161,7 +218,7 @@ export function initWebAnalytics(
 function sendGameEvent(
   eventName: 'game_open' | 'game_close',
   gameId: GameId,
-  durationMs?: number,
+  elapsed?: { durationMs: number; visibleMs: number },
 ): void {
   const gtag = window.gtag;
   if (!initialized || !gtag) return;
@@ -173,11 +230,13 @@ function sendGameEvent(
     game_id: gameId,
   };
 
-  if (durationMs !== undefined) {
-    params.play_duration_ms = durationMs;
-    // GA4 uses this reserved parameter when calculating engagement for
-    // custom events. It is elapsed shell time, not game content.
-    params.engagement_time_msec = durationMs;
+  if (elapsed) {
+    // Ours: how long the game was the screen. Uncapped wall time, so a
+    // parked tab inflates it — read as a median, never as "play time".
+    params.play_duration_ms = elapsed.durationMs;
+    // GA4's: foreground time only, which is what the tag would have counted
+    // for itself. Never the same number as above, and never larger.
+    params.engagement_time_msec = elapsed.visibleMs;
   }
 
   gtag('event', eventName, params);
@@ -189,7 +248,15 @@ export function trackGameOpened(
 ): void {
   if (!initWebAnalytics(rawMeasurementId)) return;
 
-  activeGame = { gameId, openedAtMs: nowMs() };
+  const startedAtMs = nowMs();
+  activeGame = {
+    gameId,
+    openedAtMs: startedAtMs,
+    visibleMs: 0,
+    // Opened into a hidden tab (a restored session, a background click):
+    // the foreground clock starts when the tab comes forward, not now.
+    visibleSinceMs: isHidden() ? null : startedAtMs,
+  };
   sendGameEvent('game_open', gameId);
 }
 
@@ -199,12 +266,16 @@ export function trackGameClosed(
 ): void {
   if (!initWebAnalytics(rawMeasurementId)) return;
 
-  const durationMs =
+  pauseVisibleTime();
+  const elapsed =
     activeGame?.gameId === gameId
-      ? Math.max(0, Math.round(nowMs() - activeGame.openedAtMs))
+      ? {
+          durationMs: Math.max(0, Math.round(nowMs() - activeGame.openedAtMs)),
+          visibleMs: Math.round(activeGame.visibleMs),
+        }
       : undefined;
   activeGame = null;
-  sendGameEvent('game_close', gameId, durationMs);
+  sendGameEvent('game_close', gameId, elapsed);
 }
 
 /** Test hook. Production code never resets a failed or completed attempt. */
@@ -213,6 +284,7 @@ export function resetWebAnalyticsForTesting(): void {
   initialized = false;
   activeGame = null;
   if (typeof document !== 'undefined') {
+    document.removeEventListener('visibilitychange', onVisibilityChange);
     document.querySelector(`script[${SCRIPT_ATTRIBUTE}]`)?.remove();
   }
   if (typeof window !== 'undefined') {
