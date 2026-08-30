@@ -218,8 +218,10 @@ pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満�
 
 アプリ内のゲーム説明は Quick Rules(最大 3 ステップ)のみとし、詳細ルール・攻略・FAQ は
 ゲーム別 Landing Page(`https://pixapps.ai/simple-games/games/<game-id>/<locale>/`、
-別リポジトリ)へ分離します。**ページは en / ja のみ**で、他の 12 ロケールは en へ
-フォールバックします(長文のルール解説を機械翻訳で量産しないため。`src/ui/landing.ts`)。
+別リポジトリ)へ分離します。**ページは 10 言語**(`src/ui/landing.ts` の `PAGE_LOCALES`:
+en / ja / es / pt-br / fr / id / de / th / vi / ko)で、残る 4 ロケール
+(hi / tr / zh-hans / zh-hant)は en へフォールバックします
+(長文のルール解説を 14 言語すべてへ機械翻訳で量産しないため)。
 オフラインで外部リンクが開けなくてもゲームは止まりません。
 
 ゲームロジックが Pure TypeScript なので、同じソースから **ブラウザ版**を配信します

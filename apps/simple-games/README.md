@@ -97,7 +97,8 @@ zh-hans)。pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条
 静かに何もしません(ゲームは止まりません)。
 
 Landing Page が書かれている言語は `src/ui/landing.ts` の `PAGE_LOCALES`
-(現在 en / ja / es)。アプリの 14 ロケールのうちそれ以外は英語ページへ送ります。
+(現在 10 言語: en / ja / es / pt-br / fr / id / de / th / vi / ko)。アプリの 14 ロケール
+のうち残る 4 つ(hi / tr / zh-hans / zh-hant)は英語ページへ送ります。
 **ページが公開される前にここへ言語を足すと 404 を配ることになる**ので、
 順序は「ページを公開してから `PAGE_LOCALES` を足す」です。
 
