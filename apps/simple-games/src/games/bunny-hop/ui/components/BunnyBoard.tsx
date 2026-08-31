@@ -356,10 +356,25 @@ export function BunnyBoard({
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = BOARD_WIDTH * dpr;
-    canvas.height = BOARD_HEIGHT * dpr;
-    ctx.scale(dpr, dpr);
+    // The backing store follows the DISPLAYED size (#93): a wide viewport
+    // shows a larger board, and stretching a phone-sized bitmap there would
+    // blur it. Game logic never sees this — the transform maps the logical
+    // 600x150 space onto whatever the CSS layout granted, and inputs already
+    // convert through getBoundingClientRect. clientWidth can be 0 (jsdom, a
+    // not-yet-laid-out webview): fall back to the logical size and let the
+    // resize observer correct it once the canvas is measurable.
+    const sizeCanvas = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const width = Math.max(1, Math.round((canvas.clientWidth || BOARD_WIDTH) * dpr));
+      const height = Math.max(1, Math.round(width * (BOARD_HEIGHT / BOARD_WIDTH)));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      const scale = width / BOARD_WIDTH;
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    };
+    sizeCanvas();
 
     let blinkMs = 0;
     let palette = readPalette();
@@ -380,6 +395,19 @@ export function BunnyBoard({
     });
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     media.addEventListener('change', repaint);
+
+    // Rotation, Split View, a resized window: re-derive the backing store
+    // and repaint in place. Never the game state — a run survives a resize
+    // untouched. The window listener also catches a devicePixelRatio change
+    // (moving the window to another monitor) that leaves the CSS size alone.
+    const onViewportChange = () => {
+      sizeCanvas();
+      repaint();
+    };
+    const resizeObserver =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(onViewportChange);
+    resizeObserver?.observe(canvas);
+    window.addEventListener('resize', onViewportChange);
 
     let prevHud: BoardHud | null = null;
     const publishHud = (state: GameState) => {
@@ -504,6 +532,8 @@ export function BunnyBoard({
       stop();
       flushSeconds();
       document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('resize', onViewportChange);
+      resizeObserver?.disconnect();
       media.removeEventListener('change', repaint);
       observer.disconnect();
       if (import.meta.env.DEV) {

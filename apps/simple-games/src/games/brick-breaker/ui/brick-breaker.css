@@ -21,3 +21,23 @@
   height: auto;
   display: block;
 }
+
+/* Wide viewports (issue #93; tiers in ui/styles.css「wide viewports」).
+   The 9:16 board is tall, so on a PC the limit is nearly always the
+   height: width follows from the height that remains under the chrome
+   (factor 0.5625 = 360/640). The canvas backing store follows the
+   displayed size (BrickBoard.tsx), so growing here stays sharp. */
+
+@media (min-width: 600px) {
+  .bb-canvas {
+    width: min(100%, 420px, calc((100vh - 230px) * 0.5625));
+    width: min(100%, 420px, calc((100svh - 230px) * 0.5625));
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .bb-canvas {
+    width: min(100%, 480px, calc((100vh - 210px) * 0.5625));
+    width: min(100%, 480px, calc((100svh - 210px) * 0.5625));
+  }
+}

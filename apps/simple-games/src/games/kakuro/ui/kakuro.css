@@ -444,3 +444,50 @@
 :root[data-reduced-motion='true'] .kakuro-cell {
   transition: none;
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above,
+   including THE 320px MEASUREMENT, is untouched; both tiers only raise the
+   ceiling of the board's own clamp, and give the pad the same wider column as
+   the board next to it. `.kakuro-cell`, `.kakuro-clue`, and `.kakuro-notes`
+   are each a share of `--kakuro-cell`, but all three already hold at their own
+   font ceiling (24px / 15px / 10px) at the base clamp's 44px max, so they stay
+   put rather than shrinking as the cell grows further. The pad's own key font
+   (`clamp(15px, 4.5vw, 23px)`) is left as-is, same as Sudoku's digit pad:
+   already flat at its own ceiling by 511px wide, so a bigger pad column does
+   not shrink it. */
+
+@media (min-width: 600px) {
+  .kakuro-board {
+    --kakuro-cell: clamp(
+      26px,
+      calc(
+        (100vw - 24px - 2 * var(--kakuro-line) - (var(--kakuro-size) - 1) * var(--kakuro-line)) /
+          var(--kakuro-size)
+      ),
+      48px
+    );
+  }
+
+  .kakuro-pad {
+    width: min(100%, 480px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .kakuro-board {
+    --kakuro-cell: clamp(
+      26px,
+      calc(
+        (100vw - 24px - 2 * var(--kakuro-line) - (var(--kakuro-size) - 1) * var(--kakuro-line)) /
+          var(--kakuro-size)
+      ),
+      52px
+    );
+  }
+
+  .kakuro-pad {
+    width: min(100%, 480px);
+  }
+}

@@ -219,3 +219,32 @@
 .mines-tutorial-board .mines-cell {
   cursor: default;
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; both tiers only raise the ceiling of the board's own clamp, so a
+   wide screen gets bigger cells without moving the 320px floor. `.mines-cell`
+   and `.mines-glyph` are both a share of `--mines-cell` (font-size: calc(...)
+   with no clamp of their own), so they scale up for free and need no rule
+   here. */
+
+@media (min-width: 600px) {
+  .mines-board {
+    --mines-cell: clamp(
+      22px,
+      calc((100vw - 24px - (var(--mines-cols) - 1) * var(--mines-gap)) / var(--mines-cols)),
+      44px
+    );
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .mines-board {
+    --mines-cell: clamp(
+      22px,
+      calc((100vw - 24px - (var(--mines-cols) - 1) * var(--mines-gap)) / var(--mines-cols)),
+      48px
+    );
+  }
+}

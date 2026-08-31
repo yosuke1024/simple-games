@@ -409,3 +409,24 @@
   border-radius: 50%;
   background: var(--ck-dot);
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; Medium and Wide only enlarge the board — pieces carry no
+   digits or vw-scaled type, so nothing besides the board's own width needs
+   to grow with it. */
+
+@media (min-width: 600px) {
+  .ck-board {
+    width: min(100%, 500px, 56vh);
+    width: min(100%, 500px, 56svh);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .ck-board {
+    width: min(100%, 560px, calc(100vh - 300px));
+    width: min(100%, 560px, calc(100svh - 300px));
+  }
+}

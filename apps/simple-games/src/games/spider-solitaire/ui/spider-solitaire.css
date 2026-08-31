@@ -411,3 +411,111 @@ button.sp-card-back {
 .sp-daily-badge-done {
   color: var(--ink-soft);
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Ten columns leave
+   less width per card than the other two Klondike-family tables, which is
+   why the corner index here is already a row rather than a stack (see the
+   comment on .sp-card-index above) — every tier below restates its clamp to
+   keep the rank legible in that row without it outgrowing the column.
+   .sp-stuck shares .sp-table's own cap in every tier (it already does at the
+   Compact size above) so the dead-end card lines up with the table rather
+   than reading as a narrower, separate column.
+
+   Wide caps the table by height too, the same way Solitaire's does: sized by
+   width alone, the tallest starting column would push under the fold of a
+   1366x768 PC. Every card is a full column-width wide (§ the .sp-runs rule
+   below keeps its own gap equal to the tableau's so the stock/foundation row
+   still lines up with the columns beneath it once that gap changes). The
+   starting deal's tallest column is six cards — five face-down slivers at
+   ~0.22 card-widths each plus one face-up card at 1.4 — so table-height ≈
+   (top row 1.4 + five slivers ~1.1 + one face 1.4 + the row gap) card-widths,
+   solved for width against ten columns of that card-width gives the 1.9
+   factor below; it lands well short of the tight algebraic solve on purpose,
+   the same margin Solitaire's own 1.7 keeps over its own tighter number. */
+
+@media (min-width: 600px) {
+  .sp-table,
+  .sp-stuck {
+    width: min(100%, 620px);
+  }
+
+  /* .sp-runs is a sub-grid inside .sp-top-row (grid-column: 3 / -1): its own
+     gap has to match the tableau's for the eight run slots to stay aligned
+     with the columns below them, so it moves with .sp-top-row and
+     .sp-cascades rather than being listed with the unrelated gaps above. */
+  .sp-top-row,
+  .sp-runs,
+  .sp-cascades {
+    gap: 5px;
+  }
+
+  .sp-card {
+    border-radius: 6px;
+  }
+
+  .sp-card-rank {
+    font-size: clamp(14px, 1.8vw, 17px);
+  }
+
+  .sp-card-index .sp-suit {
+    width: clamp(9px, 1.2vw, 11px);
+    height: clamp(9px, 1.2vw, 11px);
+  }
+
+  .sp-stock-count {
+    font-size: clamp(15px, 2vw, 18px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .sp-body {
+    padding: 14px 16px 16px;
+  }
+
+  .sp-table,
+  .sp-stuck {
+    width: min(100%, 1000px, calc((100vh - 250px) * 1.9));
+    width: min(100%, 1000px, calc((100svh - 250px) * 1.9));
+  }
+
+  .sp-table {
+    gap: 14px;
+  }
+
+  .sp-top-row,
+  .sp-runs,
+  .sp-cascades {
+    gap: 8px;
+  }
+
+  .sp-card {
+    border-radius: 8px;
+  }
+
+  .sp-card-index {
+    top: 2px;
+    left: 3px;
+    gap: 2px;
+  }
+
+  .sp-card-rank {
+    font-size: clamp(15px, 1.3vw, 22px);
+  }
+
+  .sp-card-index .sp-suit {
+    width: clamp(10px, 0.9vw, 14px);
+    height: clamp(10px, 0.9vw, 14px);
+  }
+
+  .sp-stock-count {
+    font-size: clamp(16px, 1.5vw, 23px);
+  }
+
+  /* The chrome column follows the wide table (scoped: this stylesheet
+     stays loaded after leaving the game). */
+  :root[data-game='spider-solitaire'] .game-content {
+    --game-shell-max: 1000px;
+  }
+}

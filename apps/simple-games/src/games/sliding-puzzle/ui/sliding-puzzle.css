@@ -210,3 +210,26 @@
 .slide-daily-badge-done {
   color: var(--ink-soft);
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. The board's own
+   cap is the only thing that needs restating: a tile is a percentage of the
+   board (.slide-tile) and the board keeps its aspect-ratio square, so both
+   grow with the wider box automatically. The numeral (.slide-tile-face) is a
+   vw clamp that already reaches its ceiling below 600px in every board size,
+   so it holds steady through both tiers rather than shrinking or needing a
+   restate. */
+
+@media (min-width: 600px) {
+  .slide-board {
+    width: min(100%, 500px, 56vh);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .slide-board {
+    width: min(100%, 560px, calc(100vh - 300px));
+    width: min(100%, 560px, calc(100svh - 300px));
+  }
+}

@@ -275,6 +275,31 @@ describe('playing', () => {
   });
 });
 
+/* Keyboard input is an adapter over the same Undo handler (issue #93): this
+   board is drag/tap only, so Ctrl+Z is the one key it answers. */
+describe('keyboard (issue #93)', () => {
+  it('Ctrl+Z undoes the same as the Undo button', async () => {
+    const user = userEvent.setup();
+    renderGame(savedGame);
+    await resume(user);
+
+    const undo = () => screen.getByRole('button', { name: 'Undo' });
+    expect(undo()).toBeDisabled();
+
+    await user.click(within(tray()).getByRole('button', { name: /^Piece 1,/ }));
+    await user.click(cell(3, 3));
+    expect(board().querySelectorAll('.bp-cell-filled')).toHaveLength(cellsInSlot(0));
+    expect(undo()).toBeEnabled();
+
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+
+    expect(board().querySelectorAll('.bp-cell-filled')).toHaveLength(0);
+    expect(screen.getByText(/Score\s*0/)).toBeInTheDocument();
+    expect(within(tray()).getByRole('button', { name: /^Piece 1,/ })).toBeInTheDocument();
+    expect(undo()).toBeDisabled();
+  });
+});
+
 describe('home', () => {
   it('exits to the collection', async () => {
     const user = userEvent.setup();

@@ -222,3 +222,25 @@
 
 /* Reduced Motion: nothing here animates — tiles appear and leave at once —
    so there is nothing to switch off (§12). This rule documents the fact. */
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; both tiers only raise the ceiling of the tile's own clamp.
+   `--mj-tile-h`, `--mj-lift-x`, and `--mj-lift-y` are all ratios of
+   `--mj-tile-w`, and the board's own width/height are calc() on those same
+   four variables, so the whole layout grows for free. Tile faces
+   (TileFaceSvg.tsx, §12) are sized as a percentage of the tile in `.mj-face`,
+   so they need no rule here either. */
+
+@media (min-width: 600px) {
+  .mj-board {
+    --mj-tile-w: clamp(24px, calc((100vw - 32px) / (var(--mj-cols) + 0.62)), 60px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .mj-board {
+    --mj-tile-w: clamp(24px, calc((100vw - 32px) / (var(--mj-cols) + 0.62)), 66px);
+  }
+}

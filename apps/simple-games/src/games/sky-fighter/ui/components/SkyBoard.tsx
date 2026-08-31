@@ -518,17 +518,18 @@ export function SkyBoard({
     lastPointRef.current = null;
   }, []);
 
-  // Keyboard play for the web build: arrows steer in both axes; firing is
+  // Keyboard play for the web build: arrows or WASD steer in both axes
+  // (aliased the way Brick Breaker's A/D alias its own arrows); firing is
   // automatic (§3). Left/right behave exactly as they always have.
   useEffect(() => {
-    const setKey = (key: string, down: boolean) => {
-      if (key === 'ArrowLeft') keysRef.current.left = down;
-      if (key === 'ArrowRight') keysRef.current.right = down;
-      if (key === 'ArrowUp') keysRef.current.up = down;
-      if (key === 'ArrowDown') keysRef.current.down = down;
+    const setKey = (event: KeyboardEvent, down: boolean) => {
+      if (event.key === 'ArrowLeft' || event.code === 'KeyA') keysRef.current.left = down;
+      if (event.key === 'ArrowRight' || event.code === 'KeyD') keysRef.current.right = down;
+      if (event.key === 'ArrowUp' || event.code === 'KeyW') keysRef.current.up = down;
+      if (event.key === 'ArrowDown' || event.code === 'KeyS') keysRef.current.down = down;
     };
-    const onKeyDown = (event: KeyboardEvent) => setKey(event.key, true);
-    const onKeyUp = (event: KeyboardEvent) => setKey(event.key, false);
+    const onKeyDown = (event: KeyboardEvent) => setKey(event, true);
+    const onKeyUp = (event: KeyboardEvent) => setKey(event, false);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
     return () => {
@@ -557,10 +558,25 @@ export function SkyBoard({
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = BOARD_WIDTH * dpr;
-    canvas.height = BOARD_HEIGHT * dpr;
-    ctx.scale(dpr, dpr);
+    // The backing store follows the DISPLAYED size (#93): a wide viewport
+    // shows a larger board, and stretching a phone-sized bitmap there would
+    // blur it. Game logic never sees this — the transform maps the logical
+    // 360x640 space onto whatever the CSS layout granted, and inputs already
+    // convert through getBoundingClientRect. clientWidth can be 0 (jsdom, a
+    // not-yet-laid-out webview): fall back to the logical size and let the
+    // resize observer correct it once the canvas is measurable.
+    const sizeCanvas = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const width = Math.max(1, Math.round((canvas.clientWidth || BOARD_WIDTH) * dpr));
+      const height = Math.max(1, Math.round(width * (BOARD_HEIGHT / BOARD_WIDTH)));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      const scale = width / BOARD_WIDTH;
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    };
+    sizeCanvas();
 
     let falling: Falling[] = [];
     let palette = readPalette();
@@ -576,6 +592,19 @@ export function SkyBoard({
     });
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     media.addEventListener('change', repaint);
+
+    // Rotation, Split View, a resized window: re-derive the backing store
+    // and repaint in place. Never the game state — a run survives a resize
+    // untouched. The window listener also catches a devicePixelRatio change
+    // (moving the window to another monitor) that leaves the CSS size alone.
+    const onViewportChange = () => {
+      sizeCanvas();
+      repaint();
+    };
+    const resizeObserver =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(onViewportChange);
+    resizeObserver?.observe(canvas);
+    window.addEventListener('resize', onViewportChange);
 
     let prevEnemies = new Map(stateRef.current.enemies.map((enemy) => [enemy.id, enemy]));
     let prevBoss: Boss | null = stateRef.current.boss;
@@ -805,6 +834,8 @@ export function SkyBoard({
       flushSeconds();
       resumeRef.current = null;
       document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('resize', onViewportChange);
+      resizeObserver?.disconnect();
       media.removeEventListener('change', repaint);
       observer.disconnect();
       if (import.meta.env.DEV) {

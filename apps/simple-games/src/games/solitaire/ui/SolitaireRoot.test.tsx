@@ -313,3 +313,25 @@ describe('home', () => {
     expect(screen.queryByText(/streak/i)).not.toBeInTheDocument();
   });
 });
+
+/* Keyboard input is an adapter over the same tap handlers (issue #93): this
+   checks board state the Undo button also produces, never a keyboard-only
+   behaviour. */
+describe('keyboard (issue #93)', () => {
+  it('Ctrl+Z undoes a draw, same as the Undo button (§3, §8)', async () => {
+    const user = userEvent.setup();
+    renderGame(savedGoldenGame);
+    await resumeGoldenGame(user);
+
+    await user.click(
+      within(table()).getByRole('button', { name: 'Stock, 24 cards — tap to draw' }),
+    );
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(
+      within(table()).getByRole('button', { name: 'Stock, 24 cards — tap to draw' }),
+    ).toBeInTheDocument();
+  });
+});

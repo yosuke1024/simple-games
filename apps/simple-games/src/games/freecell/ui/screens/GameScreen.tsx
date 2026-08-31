@@ -22,6 +22,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconCheck, IconRetry, IconUndo } from '@/ui/components/icons';
+import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
 import {
   canAutoFinish,
   canPlaceOnCascade,
@@ -223,6 +224,21 @@ export function FreeCellGameScreen() {
     }
     wonRef.current = won;
   }, [won]);
+
+  /* Keyboard as an adapter over the tap handler above (issue #93): Ctrl/Cmd+Z
+     undoes, exactly like the action-bar button below — mirroring its disabled
+     condition rather than trusting the handler to no-op quietly. No H-for-hint
+     here: this screen has no Hint button to mirror (§8), and being stuck (§2)
+     does not disable Undo, so it does not disable the key either. */
+  const onKey = (event: KeyboardEvent): boolean => {
+    if (session === null) return false;
+    if (isUndoKey(event)) {
+      if (!event.repeat && session.history.length > 0) onUndo();
+      return true;
+    }
+    return false;
+  };
+  useGameKeys(onKey, session !== null && session.status !== 'won' && !confirmRestart);
 
   if (!session || !board) return null;
 

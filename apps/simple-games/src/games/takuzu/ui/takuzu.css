@@ -284,3 +284,43 @@
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-ring);
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; both tiers only raise the ceiling of the board's own clamp.
+   `.takuzu-digit`'s font is a share of `--takuzu-cell`, but its own 24px
+   ceiling is already what binds at the base clamp's 44px max, so it holds
+   there rather than shrinking as the cell grows further. */
+
+@media (min-width: 600px) {
+  .takuzu-board {
+    --takuzu-cell: clamp(
+      24px,
+      calc(
+        (
+            100vw - 24px - 2 * var(--takuzu-pad) - 2px - (var(--takuzu-size) - 1) *
+              var(--takuzu-gap)
+          ) /
+          var(--takuzu-size)
+      ),
+      50px
+    );
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .takuzu-board {
+    --takuzu-cell: clamp(
+      24px,
+      calc(
+        (
+            100vw - 24px - 2 * var(--takuzu-pad) - 2px - (var(--takuzu-size) - 1) *
+              var(--takuzu-gap)
+          ) /
+          var(--takuzu-size)
+      ),
+      54px
+    );
+  }
+}

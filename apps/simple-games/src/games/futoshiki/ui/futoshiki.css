@@ -420,3 +420,57 @@
 :root[data-reduced-motion='true'] .futoshiki-cell {
   transition: none;
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above,
+   including THE 320px MEASUREMENT, is untouched; both tiers only raise the
+   ceiling of the board's own clamp, and give the pad the same wider column as
+   the board next to it. `.futoshiki-cell`'s and `.futoshiki-notes`'s fonts are
+   both a share of `--futoshiki-cell`, so they scale up too — `.futoshiki-cell`
+   still short of its own 26px ceiling at Medium's 50px cell, `.futoshiki-notes`
+   already holding at its 11px one, same as at the base clamp's 44px max. The
+   pad's own key font (`clamp(17px, 5vw, 23px)`) is left as-is, same as Sudoku's
+   digit pad: already flat at its own ceiling by 460px wide, so a bigger pad
+   column does not shrink it. `.futoshiki-sign` is a share of `--futoshiki-gap`,
+   a fixed 14px unrelated to this resize. */
+
+@media (min-width: 600px) {
+  .futoshiki-board {
+    --futoshiki-cell: clamp(
+      24px,
+      calc(
+        (
+            100vw - 24px - 2 * var(--futoshiki-pad) - 2px - (var(--futoshiki-size) - 1) *
+              var(--futoshiki-gap)
+          ) /
+          var(--futoshiki-size)
+      ),
+      50px
+    );
+  }
+
+  .futoshiki-pad {
+    width: min(100%, 480px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .futoshiki-board {
+    --futoshiki-cell: clamp(
+      24px,
+      calc(
+        (
+            100vw - 24px - 2 * var(--futoshiki-pad) - 2px - (var(--futoshiki-size) - 1) *
+              var(--futoshiki-gap)
+          ) /
+          var(--futoshiki-size)
+      ),
+      54px
+    );
+  }
+
+  .futoshiki-pad {
+    width: min(100%, 480px);
+  }
+}

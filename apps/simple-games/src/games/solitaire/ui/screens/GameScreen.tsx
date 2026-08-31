@@ -18,6 +18,7 @@ import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconCheck, IconHint, IconRetry, IconUndo } from '@/ui/components/icons';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
+import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
 import {
   canAutoFinish,
   canPlaceOnFoundation,
@@ -266,6 +267,25 @@ export function SolitaireGameScreen() {
     }
     wonRef.current = won;
   }, [won]);
+
+  /* Keyboard as an adapter over the tap handlers above (issue #93): Ctrl/Cmd+Z
+     undoes and H asks for a hint, exactly like the two action-bar buttons
+     below — the undo key mirrors the button's own disabled condition rather
+     than trusting the handler to no-op quietly. */
+  const onKey = (event: KeyboardEvent): boolean => {
+    if (session === null) return false;
+    if (isUndoKey(event)) {
+      if (!event.repeat && session.history.length > 0) onUndo();
+      return true;
+    }
+    if (event.ctrlKey || event.metaKey || event.altKey) return false;
+    if (event.key === 'h' || event.key === 'H') {
+      if (!event.repeat) onHint();
+      return true;
+    }
+    return false;
+  };
+  useGameKeys(onKey, session !== null && session.status !== 'won' && !confirmRestart);
 
   if (!session || !board) return null;
 

@@ -1,7 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const { capacitorMock } = vi.hoisted(() => ({
+const { capacitorMock, admobMock, networkMock } = vi.hoisted(() => ({
   capacitorMock: { platform: 'android' as string },
+  admobMock: {
+    initialize: vi.fn(() => Promise.resolve()),
+    addListener: vi.fn(() => Promise.resolve({ remove: () => Promise.resolve() })),
+    showBanner: vi.fn(() => Promise.resolve()),
+    hideBanner: vi.fn(() => Promise.resolve()),
+    resumeBanner: vi.fn(() => Promise.resolve()),
+    removeBanner: vi.fn(() => Promise.resolve()),
+  },
+  networkMock: { online: true },
 }));
 
 vi.mock('@capacitor/core', () => ({
@@ -12,10 +21,22 @@ vi.mock('@capacitor/core', () => ({
 }));
 
 vi.mock('@capacitor-community/admob', () => ({
-  AdMob: {},
-  BannerAdPluginEvents: {},
-  BannerAdPosition: {},
-  BannerAdSize: {},
+  AdMob: admobMock,
+  BannerAdPluginEvents: { SizeChanged: 'bannerAdSizeChanged', FailedToLoad: 'bannerAdFailedToLoad' },
+  BannerAdPosition: { BOTTOM_CENTER: 'BOTTOM_CENTER' },
+  BannerAdSize: { ADAPTIVE_BANNER: 'ADAPTIVE_BANNER' },
+}));
+
+vi.mock('../network', () => ({
+  isOnline: () => networkMock.online,
+}));
+
+const { consentMock } = vi.hoisted(() => ({
+  consentMock: { impl: () => Promise.resolve(true) },
+}));
+
+vi.mock('./consent', () => ({
+  canRequestAds: () => consentMock.impl(),
 }));
 
 /**
@@ -104,5 +125,111 @@ describe('bannerAdUnitId', () => {
     expect(android).toBe('ca-app-pub-3940256099942544/9214589741');
     expect(ios).toBe('ca-app-pub-3940256099942544/2435281174');
     expect(ios).not.toBe(android);
+  });
+});
+
+/* An adaptive banner is sized at request time, so an iPad rotation or Split
+   View change must recreate it — once per settled resize, never offline,
+   never while it would spend a request on a hidden banner (issue #93). */
+describe('viewport-follow (issue #93)', () => {
+  function setWidth(width: number) {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: width });
+  }
+
+  async function bootShownBanner() {
+    setWidth(768);
+    networkMock.online = true;
+    for (const fn of Object.values(admobMock)) fn.mockClear();
+    const banner = await loadBanner('ios', BOTH);
+    await banner.initAds();
+    await banner.setBannerVisible(true);
+    expect(admobMock.showBanner).toHaveBeenCalledTimes(1);
+    return banner;
+  }
+
+  async function settleResize() {
+    window.dispatchEvent(new Event('resize'));
+    await vi.advanceTimersByTimeAsync(700);
+  }
+
+  afterEach(() => {
+    vi.useRealTimers();
+    consentMock.impl = () => Promise.resolve(true);
+  });
+
+  it('rechecks the network after the consent await — no request if it dropped', async () => {
+    setWidth(768);
+    networkMock.online = true;
+    for (const fn of Object.values(admobMock)) fn.mockClear();
+    consentMock.impl = () => {
+      // The connection dies while consent is being answered.
+      networkMock.online = false;
+      return Promise.resolve(true);
+    };
+
+    const banner = await loadBanner('ios', BOTH);
+    await banner.initAds();
+    await banner.setBannerVisible(true);
+
+    expect(admobMock.showBanner).not.toHaveBeenCalled();
+    banner.resetBannerForTesting();
+  });
+
+  it('recreates the shown banner once after a rotation-sized change', async () => {
+    vi.useFakeTimers();
+    const banner = await bootShownBanner();
+
+    setWidth(1024);
+    // A rotation produces a burst of resize events; one settle, one request.
+    window.dispatchEvent(new Event('resize'));
+    window.dispatchEvent(new Event('resize'));
+    await settleResize();
+
+    expect(admobMock.removeBanner).toHaveBeenCalledTimes(1);
+    expect(admobMock.showBanner).toHaveBeenCalledTimes(2);
+    banner.resetBannerForTesting();
+  });
+
+  it('leaves the banner alone for sub-threshold nudges', async () => {
+    vi.useFakeTimers();
+    const banner = await bootShownBanner();
+
+    setWidth(768 + 40);
+    await settleResize();
+
+    expect(admobMock.removeBanner).not.toHaveBeenCalled();
+    expect(admobMock.showBanner).toHaveBeenCalledTimes(1);
+    banner.resetBannerForTesting();
+  });
+
+  it('makes no request offline — the stale-width banner stays', async () => {
+    vi.useFakeTimers();
+    const banner = await bootShownBanner();
+
+    networkMock.online = false;
+    setWidth(1024);
+    await settleResize();
+
+    expect(admobMock.removeBanner).not.toHaveBeenCalled();
+    expect(admobMock.showBanner).toHaveBeenCalledTimes(1);
+    banner.resetBannerForTesting();
+  });
+
+  it('drops a hidden banner without spending a request, and sizes the next one fresh', async () => {
+    vi.useFakeTimers();
+    const banner = await bootShownBanner();
+
+    await banner.setBannerVisible(false);
+    setWidth(1024);
+    await settleResize();
+
+    // Removed so the stale size cannot resume, but no new request while hidden.
+    expect(admobMock.removeBanner).toHaveBeenCalledTimes(1);
+    expect(admobMock.showBanner).toHaveBeenCalledTimes(1);
+
+    await banner.setBannerVisible(true);
+    expect(admobMock.showBanner).toHaveBeenCalledTimes(2);
+    expect(admobMock.resumeBanner).not.toHaveBeenCalled();
+    banner.resetBannerForTesting();
   });
 });

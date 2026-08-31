@@ -389,3 +389,34 @@
 .ws-daily-badge-done {
   color: var(--ink-soft);
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. The rack's width
+   already follows the tube count (var(--ws-cols)); only the per-tube pixel
+   budget needs raising per tier, and .ws-tube's own cap has to grow with it
+   or the extra rack width would just widen the gaps between glasses instead
+   of the glasses themselves. .ws-tube-glass's own aspect-ratio and height
+   cap are untouched, so a tube still stops growing at the same fraction of
+   the screen's height — and the pour animation measures the DOM live
+   (WaterBoard), so a wider tube here is safe. */
+
+@media (min-width: 600px) {
+  .ws-rack {
+    width: min(100%, calc(var(--ws-cols) * 104px));
+  }
+
+  .ws-tube {
+    max-width: 94px;
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .ws-rack {
+    width: min(100%, calc(var(--ws-cols) * 112px));
+  }
+
+  .ws-tube {
+    max-width: 100px;
+  }
+}

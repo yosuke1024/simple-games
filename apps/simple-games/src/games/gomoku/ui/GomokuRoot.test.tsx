@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
@@ -215,5 +215,24 @@ describe('home', () => {
     expect(screen.getAllByText('Games played')).toHaveLength(3);
     expect(screen.getAllByText('Losses')).toHaveLength(3);
     expect(screen.queryByText(/streak/i)).not.toBeInTheDocument();
+  });
+});
+
+/* Keyboard input is an adapter over the same tap handlers (issue #93): this
+   checks board state the Undo button also produces, never a keyboard-only
+   behaviour. */
+describe('keyboard (issue #93)', () => {
+  it('Ctrl+Z undoes the stone and the reply together, same as the button', async () => {
+    const user = userEvent.setup();
+    renderGame(savedGame);
+    await user.click(await screen.findByRole('button', { name: /Easy/ }));
+
+    await user.click(screen.getByRole('button', { name: 'Row 8, column 8: empty' }));
+    await user.click(screen.getByRole('button', { name: 'Row 8, column 8: tap again to place' }));
+    await waitFor(() => expect(stones()).toHaveLength(2));
+
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    expect(stones()).toHaveLength(0);
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
   });
 });

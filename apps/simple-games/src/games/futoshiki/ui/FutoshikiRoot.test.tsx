@@ -505,3 +505,22 @@ describe('home', () => {
     expect(onExit).toHaveBeenCalledTimes(1);
   });
 });
+
+/* Keyboard input is an adapter over the same tap handlers (issue #93): this
+   checks board state the Undo button also produces, never a keyboard-only
+   behaviour. */
+describe('keyboard (issue #93)', () => {
+  it('Ctrl+Z undoes the last digit, same as the Undo button', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const { row, col } = positionOf(openCells[0]!);
+    await user.click(cellAt(row, col));
+    await user.click(padKey(truth.solution[openCells[0]!]!));
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^\d,/);
+
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^Empty/);
+  });
+});

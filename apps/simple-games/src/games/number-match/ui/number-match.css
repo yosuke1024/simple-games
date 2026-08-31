@@ -376,3 +376,33 @@
   font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. This board is the
+   one outlier in the collection: it sizes itself with a bare max-width rather
+   than a per-cell clamp, so there is no custom property to raise here — just
+   the max-width itself, tier by tier. `.cell`'s font is a raw vw clamp, not a
+   share of any cell variable, so it cannot follow the board's growth on its
+   own; it is restated here too, floored at the previous tier's own ceiling
+   (24px, then 28px) so the new value can only ever grow, never shrink. */
+
+@media (min-width: 600px) {
+  .board {
+    max-width: 500px;
+  }
+
+  .cell {
+    font-size: clamp(24px, 4vw, 28px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .board {
+    max-width: 560px;
+  }
+
+  .cell {
+    font-size: clamp(28px, 3.6vw, 32px);
+  }
+}

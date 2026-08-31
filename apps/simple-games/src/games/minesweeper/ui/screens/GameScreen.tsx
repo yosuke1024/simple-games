@@ -18,6 +18,7 @@ import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconHint, IconRetry } from '@/ui/components/icons';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
+import { useGameKeys } from '@/ui/useGameKeys';
 import { hasStarted, remainingMines, type SafeCell } from '../../game';
 import { useMinesweeper } from '../../state/GameContext';
 import { MinesBoard } from '../components/MinesBoard';
@@ -111,6 +112,20 @@ export function MinesGameScreen() {
     sounds.select();
     showToast(t('minesHintFound'));
   }, [showToast, t, takeHint]);
+
+  /* Keyboard as an adapter over the tap handler above (issue #93): H asks for
+     the hint, the same one-shot action the button triggers, so key repeat is
+     ignored. */
+  const onKey = (event: KeyboardEvent): boolean => {
+    if (session === null) return false;
+    if (event.ctrlKey || event.metaKey || event.altKey) return false;
+    if (event.key === 'h' || event.key === 'H') {
+      if (!event.repeat) onHint();
+      return true;
+    }
+    return false;
+  };
+  useGameKeys(onKey, session !== null && session.status === 'playing' && !confirmRestart);
 
   if (!session) return null;
 

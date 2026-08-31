@@ -31,6 +31,7 @@ import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconRetry, IconUndo } from '@/ui/components/icons';
 import { useReducedMotion } from '@/ui/useReducedMotion';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
+import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
 import { AnimatedNumber } from '@/ui/components/AnimatedNumber';
 import {
   BOARD_SIZE,
@@ -415,6 +416,18 @@ export function BlockGameScreen() {
   const onUndo = useCallback(() => {
     if (applyUndo()) sounds.undo();
   }, [applyUndo]);
+
+  /* Keyboard as an adapter over onUndo above (issue #93): Ctrl/Cmd+Z only —
+     this board is played by drag or tap-then-tap, and has no arrow or hint
+     equivalent to mirror. */
+  const onKey = (event: KeyboardEvent): boolean => {
+    if (isUndoKey(event)) {
+      if (!event.repeat && canUndoNow) onUndo();
+      return true;
+    }
+    return false;
+  };
+  useGameKeys(onKey, session !== null && session.status !== 'over' && !confirmNewGame);
 
   if (!session) return null;
 

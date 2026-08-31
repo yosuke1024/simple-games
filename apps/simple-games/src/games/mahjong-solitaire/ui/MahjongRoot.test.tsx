@@ -271,3 +271,22 @@ describe('home', () => {
     expect(onExit).toHaveBeenCalledTimes(1);
   });
 });
+
+/* Keyboard input is an adapter over the same tap handlers (issue #93): this
+   checks board state the Undo button also produces, never a keyboard-only
+   behaviour. */
+describe('keyboard (issue #93)', () => {
+  it('Ctrl+Z undoes the last pair, same as the Undo button', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const pair = within(board()).getAllByRole('button', { name: 'Bamboo 2, can be taken' });
+    await user.click(pair[0]!);
+    await user.click(pair[1]!);
+    expect(screen.getByText('22 tiles left')).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    expect(screen.getByText('24 tiles left')).toBeInTheDocument();
+  });
+});

@@ -89,3 +89,24 @@
   height: auto;
   display: block;
 }
+
+/* Wide viewports (issue #93; tiers in ui/styles.css「wide viewports」).
+   Unlike the other arcade boards this track is a wide letterbox (600x150),
+   so height is never the binding constraint the way it is for a portrait
+   board — only the cap on the track's own width needs to grow. The canvas
+   backing store follows the displayed size (BunnyBoard.tsx), so growing
+   here stays sharp. */
+
+@media (min-width: 600px) {
+  .bh-canvas,
+  .bh-jump {
+    max-width: 680px;
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .bh-canvas,
+  .bh-jump {
+    max-width: 760px;
+  }
+}

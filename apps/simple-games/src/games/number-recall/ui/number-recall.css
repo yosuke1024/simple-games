@@ -264,3 +264,24 @@
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-ring);
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. The board is the
+   only thing that needs a new cap — cells are grid tracks sized from the
+   board's own box (grid-auto-rows: 1fr), so they grow with it automatically.
+   .recall-tile's numeral is a vw clamp that already reaches its 30px ceiling
+   below 600px, so it holds steady through both tiers rather than shrinking. */
+
+@media (min-width: 600px) {
+  .recall-board {
+    width: min(100%, 480px, 56vh);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .recall-board {
+    width: min(100%, 520px, calc(100vh - 300px));
+    width: min(100%, 520px, calc(100svh - 300px));
+  }
+}

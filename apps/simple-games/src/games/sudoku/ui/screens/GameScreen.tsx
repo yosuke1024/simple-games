@@ -12,7 +12,8 @@ import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconHint, IconRetry, IconUndo } from '@/ui/components/icons';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
-import { isGiven, type Digit, type Hint } from '../../game';
+import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
+import { colOf, indexOf, isGiven, rowOf, SIZE, type Digit, type Hint } from '../../game';
 import { useSudoku } from '../../state/GameContext';
 import { DigitPad } from '../components/DigitPad';
 import { SudokuGrid } from '../components/SudokuGrid';
@@ -130,6 +131,56 @@ export function SudokuGameScreen() {
       }),
     );
   }, [showToast, t, takeHint]);
+
+  /* Keyboard as an adapter over the tap handlers above (issue #93): arrows
+     move the selection, 1-9 place (or note), Backspace/Delete erase, N flips
+     notes, H asks for the hint, Ctrl/Cmd+Z undoes. State-changing keys ignore
+     key repeat — holding 5 must not place a digit per repeat frame — while
+     arrows accept it, because held-arrow travel is the point of arrows.
+     Backspace answers `true` even when there is nothing to erase, so the
+     browser never treats it as "navigate back" mid-game. */
+  const onKey = (event: KeyboardEvent): boolean => {
+    if (session === null) return false;
+    if (isUndoKey(event)) {
+      if (!event.repeat) onUndo();
+      return true;
+    }
+    if (event.ctrlKey || event.metaKey || event.altKey) return false;
+    const { key } = event;
+    if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight') {
+      setSelected((current) => {
+        // The first arrow lands in the middle of the board — where the eyes
+        // already are — and edges clamp instead of wrapping.
+        if (current === null) return indexOf(4, 4);
+        const row = rowOf(current);
+        const col = colOf(current);
+        if (key === 'ArrowUp') return row > 0 ? indexOf(row - 1, col) : current;
+        if (key === 'ArrowDown') return row < SIZE - 1 ? indexOf(row + 1, col) : current;
+        if (key === 'ArrowLeft') return col > 0 ? indexOf(row, col - 1) : current;
+        return col < SIZE - 1 ? indexOf(row, col + 1) : current;
+      });
+      setHint(null);
+      return true;
+    }
+    if (key.length === 1 && key >= '1' && key <= '9') {
+      if (!event.repeat) onDigit(Number(key) as Digit);
+      return true;
+    }
+    if (key === 'Backspace' || key === 'Delete') {
+      if (!event.repeat) onErase();
+      return true;
+    }
+    if (key === 'n' || key === 'N') {
+      if (!event.repeat) setNotesMode((current) => !current);
+      return true;
+    }
+    if (key === 'h' || key === 'H') {
+      if (!event.repeat) onHint();
+      return true;
+    }
+    return false;
+  };
+  useGameKeys(onKey, session !== null && session.status !== 'solved' && !confirmRestart);
 
   if (!session) return null;
 

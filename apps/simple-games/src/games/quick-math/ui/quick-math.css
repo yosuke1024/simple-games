@@ -162,3 +162,34 @@
 .tutorial-example .qmath-question {
   font-size: 30px;
 }
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. The keypad is the
+   element with an explicit cap; the equation has none of its own (it just
+   wraps within .qmath-body), so there is no width to raise. Its font IS a vw
+   clamp though (.qmath-question), and restating it keeps the equation in
+   proportion to the bigger keypad instead of holding flat at the Compact
+   ceiling. Each restated clamp computes to at least the previous tier's
+   value at that tier's own boundary width (44px at 600px; 50px at 900px), so
+   crossing into a wider tier never shrinks the equation. */
+
+@media (min-width: 600px) {
+  .qmath-question {
+    font-size: clamp(32px, 8vw, 50px);
+  }
+
+  .qmath-keypad {
+    width: min(100%, 480px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .qmath-question {
+    font-size: clamp(34px, 6vw, 56px);
+  }
+
+  .qmath-keypad {
+    width: min(100%, 520px);
+  }
+}
