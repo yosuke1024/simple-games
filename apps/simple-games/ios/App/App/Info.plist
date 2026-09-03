@@ -259,15 +259,20 @@
 	<array>
 		<string>armv7</string>
 	</array>
-	<!-- iPhone stays portrait only, matching the Android manifest's
-	     android:screenOrientation="portrait" — a phone board is a portrait
-	     board. The iPad is a Universal App citizen (issue #93): all four
-	     orientations, and no UIRequiresFullScreen, so Split View and Stage
-	     Manager may resize the window freely; the shared responsive CSS
-	     (docs/ARCHITECTURE.md「ワイド画面のレイアウト」) follows the actual
-	     width, and the game keeps its state because nothing remounts on
-	     rotation. Supporting every orientation is also what iPadOS requires
-	     of an app that gives up UIRequiresFullScreen. -->
+	<!-- Portrait only, on every device family, matching the Android manifest's
+	     android:screenOrientation="portrait". Every board in the collection is
+	     laid out for a portrait screen. UIRequiresFullScreen is what lets the
+	     build declare a restricted orientation set at all.
+
+	     The wide-screen CSS of issue #93 is still here and still shipping — it
+	     is what the browser version and a large phone use. What is NOT shipping
+	     is the iPad *binary*: TARGETED_DEVICE_FAMILY went back to 1 because
+	     iPad support has never been verified on real hardware (rotation, Split
+	     View, Stage Manager) and the 13" screenshots App Store Connect demands
+	     of a Universal app do not exist yet. Turning this back on is one line
+	     here and one in project.pbxproj, once those two are done. -->
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -276,8 +281,6 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
