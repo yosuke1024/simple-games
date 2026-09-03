@@ -34,6 +34,7 @@ import {
   CARROT_MAX,
   CARROT_WIDTH,
   GROUND_Y,
+  PX_PER_POINT,
   RUNNER_HEIGHT,
   RUNNER_X,
 } from '../../game/constants';
@@ -41,6 +42,9 @@ import { carrotX, createInitialState, isGrounded, jump, obstacleX, step } from '
 import { obstacleKind } from '../../game/obstacles';
 import type { GameState } from '../../game/types';
 import {
+  BEST_FLAG,
+  BEST_FLAG_HEIGHT,
+  BEST_FLAG_WIDTH,
   BIRD_DRAW_OFFSET_X,
   BIRD_DRAW_OFFSET_Y,
   BIRD_FRAMES,
@@ -143,6 +147,12 @@ const pad = (value: number): string => String(Math.min(value, 99999)).padStart(S
 
 export interface RenderExtras {
   best: number;
+  /**
+   * The record as it stood when the run began, in points — where the
+   * best-run post is planted (§6). Unlike `best` it does not move with the
+   * score, or the post would ride along under the runner once passed.
+   */
+  bestPost: number;
   /** Counts down while the hundred just passed is being blinked (§6). */
   blinkMs: number;
   /** Reduced motion: the decoration holds still, the track does not (§12). */
@@ -203,6 +213,19 @@ function render(
     const x = carrotX(state.distance, carrot);
     if (x > BOARD_WIDTH || x + CARROT_WIDTH < 0) continue;
     blit(ctx, CARROT, x, GROUND_Y - carrot.bottom - CARROT_HEIGHT);
+  }
+
+  // The best-run post (§6): planted at the distance the record reached, in
+  // track coordinates like everything else, so it comes in from the right as
+  // the run closes on it and slides away behind the runner the moment the
+  // record falls — the one wordless "you just passed it" the course has.
+  // Soft ink, drawn before the runner, so the runner is always in front.
+  if (extras.bestPost > 0) {
+    const postX = RUNNER_X + extras.bestPost * PX_PER_POINT - state.distance;
+    if (postX + BEST_FLAG_WIDTH > 0 && postX < BOARD_WIDTH) {
+      ctx.fillStyle = palette.inkSoft;
+      blit(ctx, BEST_FLAG, postX, GROUND_Y - BEST_FLAG_HEIGHT + 1);
+    }
   }
 
   const grounded = isGrounded(state);
@@ -380,6 +403,7 @@ export function BunnyBoard({
     let palette = readPalette();
     const extras = (): RenderExtras => ({
       best: Math.max(bestRef.current, stateRef.current.score),
+      bestPost: bestRef.current,
       blinkMs: reducedRef.current ? 0 : blinkMs,
       calm: reducedRef.current,
     });

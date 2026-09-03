@@ -100,6 +100,27 @@
   box-shadow: inset 0 0 0 3px var(--accent);
 }
 
+/* A row, column or box that just came together glows once and settles
+   (§3「完成の合図」): the accent wash rises for a beat and drains away. It is
+   one keyframe over the cell's own background, so a selected or same-digit
+   tint underneath is what is left when it is gone. Reduced Motion collapses
+   the animation to nothing (ui/styles.css). */
+.sudoku-cell-complete {
+  animation: sudoku-complete 0.7s ease-out;
+}
+
+@keyframes sudoku-complete {
+  0% {
+    box-shadow: inset 0 0 0 40px var(--accent-soft);
+  }
+  35% {
+    box-shadow: inset 0 0 0 40px var(--accent-soft);
+  }
+  100% {
+    box-shadow: inset 0 0 0 40px transparent;
+  }
+}
+
 /* Notes: a 3x3 shadow of the pad inside the cell, so a digit always sits in
    the same corner and can be found without reading. */
 .sudoku-notes {
@@ -145,6 +166,16 @@
 
 .digit-key:active {
   background: var(--accent-soft);
+}
+
+/* A digit that is all placed sinks: recessed face, quiet ink, no count. The
+   pad already refuses the tap (§3); this is the eye being told before the
+   finger is. */
+.digit-key:disabled {
+  background: var(--surface-recessed);
+  border-color: transparent;
+  color: var(--ink-soft);
+  opacity: 0.6;
 }
 
 .digit-key-notes {

@@ -11,9 +11,19 @@ import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconHint, IconRetry, IconUndo } from '@/ui/components/icons';
+import { useReducedMotion } from '@/ui/useReducedMotion';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
-import { colOf, indexOf, isGiven, rowOf, SIZE, type Digit, type Hint } from '../../game';
+import {
+  colOf,
+  indexOf,
+  isGiven,
+  rowOf,
+  SIZE,
+  unitsCompletedBy,
+  type Digit,
+  type Hint,
+} from '../../game';
 import { useSudoku } from '../../state/GameContext';
 import { DigitPad } from '../components/DigitPad';
 import { SudokuGrid } from '../components/SudokuGrid';
@@ -24,6 +34,12 @@ import { SudokuResultOverlay } from '../components/SudokuResultOverlay';
  * single word, and plenty of players are reading it in a second language.
  */
 const TOAST_MS = 5000;
+
+/**
+ * How long a finished row, column or box glows (§3「完成の合図」): one beat,
+ * long enough to be seen, short enough to be gone before the next digit.
+ */
+const COMPLETE_FLASH_MS = 700;
 
 /** One plain sentence per hint shape — no technique names (§5). */
 const HINT_MESSAGE = {
@@ -56,13 +72,18 @@ export function SudokuGameScreen() {
   const [hint, setHint] = useState<Hint | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [confirmRestart, setConfirmRestart] = useState(false);
+  /** The cells of the units the last digit finished, while they glow. */
+  const [completed, setCompleted] = useState<ReadonlySet<number> | null>(null);
   const toastTimeout = useTransientTimeout();
+  const completeTimeout = useTransientTimeout();
+  const reducedMotion = useReducedMotion();
 
   // A new game is a clean slate.
   useEffect(() => {
     setSelected(null);
     setHint(null);
     setNotesMode(false);
+    setCompleted(null);
   }, [sessionEpoch]);
 
   const showToast = useCallback(
@@ -90,18 +111,30 @@ export function SudokuGameScreen() {
         if (toggleNote(selected, digit)) sounds.select();
         return;
       }
+      // Read before the digit lands: the units this tap finishes (§3).
+      const finished = unitsCompletedBy(session.board, selected, digit);
       if (!place(selected, digit)) return;
       // A wrong digit gets a quieter sound and nothing else: it is counted, not
       // punished, and the board is never blocked because of one (§4).
       if (session.solution[selected] !== digit) {
         sounds.invalid();
         void haptics.invalid();
+      } else if (finished.length > 0) {
+        // A row, column or box just came together: the match tone a few
+        // rungs up (higher again for two or three at once), and the unit
+        // glows for a beat. Reduced Motion keeps the tone and skips the glow.
+        sounds.match(2 * finished.length + 1);
+        void haptics.match();
+        if (!reducedMotion) {
+          setCompleted(new Set(finished.flatMap((unit) => unit.cells)));
+          completeTimeout(() => setCompleted(null), COMPLETE_FLASH_MS);
+        }
       } else {
         sounds.match();
         void haptics.match();
       }
     },
-    [notesMode, place, selected, session, toggleNote],
+    [completeTimeout, notesMode, place, reducedMotion, selected, session, toggleNote],
   );
 
   const onErase = useCallback(() => {
@@ -217,6 +250,7 @@ export function SudokuGameScreen() {
             solution={session.solution}
             selected={selected}
             hint={hint}
+            completed={completed}
             highlightMistakes={prefs.highlightMistakes}
             onCellTap={onCellTap}
           />

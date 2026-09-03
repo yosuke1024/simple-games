@@ -188,7 +188,11 @@ export function GameScreen() {
           prevBoard: session.board,
           rowsRemoved: detail.rowsRemoved,
         });
-        sounds.match();
+        // The streak multiplier (§12) said in pitch: ×1.0 is the base note
+        // and each tenth is a rung, so a run of matches climbs and Add
+        // Numbers brings it back down. Read off the score state before the
+        // match books it, which is the multiplier this match was worth.
+        sounds.match(session.score.streakTenths - 10);
         void haptics.match();
       } else {
         sounds.invalid();

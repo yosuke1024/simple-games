@@ -55,6 +55,7 @@ describe('SudokuResultOverlay', () => {
     renderOverlay(session, {
       isNewBest: false,
       bestSeconds: 100,
+      previousBestSeconds: 100,
       seconds: 125,
       mistakes: 2,
       hints: 1,
@@ -65,21 +66,36 @@ describe('SudokuResultOverlay', () => {
     expect(screen.getByText('Mistakes')).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
     expect(screen.getByText('Hint')).toBeInTheDocument();
-    // The previous best is stated, not celebrated.
+    // The previous best is stated, not celebrated — with how far off it was.
     expect(screen.getByText(/1:40/)).toBeInTheDocument();
+    expect(screen.getByText('+0:25')).toBeInTheDocument();
     expect(screen.queryByText(/score/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/streak/i)).not.toBeInTheDocument();
   });
 
-  it('marks a personal best exactly once', () => {
+  it('marks a personal best exactly once, with the margin it was won by', () => {
     renderOverlay(solvedSession(1, 90), {
       isNewBest: true,
       bestSeconds: 90,
+      previousBestSeconds: 100,
       seconds: 90,
       mistakes: 0,
       hints: 0,
     });
     expect(screen.getAllByText('Your fastest yet.')).toHaveLength(1);
+    expect(screen.getByText('−0:10')).toHaveClass('result-delta-better');
+  });
+
+  it('has no margin to give on a first clear', () => {
+    renderOverlay(solvedSession(1, 90), {
+      isNewBest: true,
+      bestSeconds: 90,
+      previousBestSeconds: null,
+      seconds: 90,
+      mistakes: 0,
+      hints: 0,
+    });
+    expect(screen.queryByText(/^[+−±]/)).not.toBeInTheDocument();
   });
 
   it('offers the next level for a level game', async () => {

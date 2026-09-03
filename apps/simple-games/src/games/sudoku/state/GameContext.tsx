@@ -52,13 +52,21 @@ import {
   type Progress,
   type Stats,
 } from '../storage/schemas';
-import { applyGameStart, applyPlayTime, applySolved, applySolveToProgress } from './statsLogic';
+import {
+  applyGameStart,
+  applyPlayTime,
+  applySolved,
+  applySolveToProgress,
+  previousBestFor,
+} from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats';
 
 export interface LastResult {
   readonly isNewBest: boolean;
   readonly bestSeconds: number;
+  /** The board's record before this run, or null on its first clear (§12). */
+  readonly previousBestSeconds: number | null;
   readonly seconds: number;
   readonly mistakes: number;
   readonly hints: number;
@@ -187,11 +195,14 @@ export function SudokuProvider({
         ),
       );
       recordGameCompleted();
+      // Read before the record moves: what this run is measured against.
+      const previousBestSeconds = previousBestFor(progressRef.current, next);
       const outcome = applySolveToProgress(progressRef.current, next);
       persistProgress(outcome.progress);
       setLastResult({
         isNewBest: outcome.isNewBest,
         bestSeconds: outcome.bestSeconds,
+        previousBestSeconds,
         seconds: next.elapsedSeconds,
         mistakes: next.mistakeCount,
         hints: next.hintCount,

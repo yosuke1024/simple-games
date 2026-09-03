@@ -3,7 +3,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
-import { MAX_LEVEL } from '../../game';
+import { difficultyForLevel, MAX_LEVEL } from '../../game';
 import { useSudoku } from '../../state/GameContext';
 
 /**
@@ -31,6 +31,18 @@ export function SudokuLevelSelectScreen() {
   for (let level = 1; level <= MAX_LEVEL; level++) {
     const unlocked = level <= highest;
     const best = progress.bestTimes[String(level)];
+    // The tier (§9), as one to three dots: a player looking for a hard one
+    // they have not beaten fast can find it without opening each level.
+    const difficulty = difficultyForLevel(level);
+    const tier = t(`sudokuTier_${difficulty}`);
+    const dots = difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : 3;
+    const tierMark = (
+      <span className="level-cell-tier" aria-hidden="true">
+        {Array.from({ length: dots }, (_, i) => (
+          <i key={i} />
+        ))}
+      </span>
+    );
     cells.push(
       unlocked ? (
         <button
@@ -39,8 +51,8 @@ export function SudokuLevelSelectScreen() {
           className={`level-cell ${level === highest ? 'level-cell-current' : ''}`}
           aria-label={
             best !== undefined
-              ? `${t('modeLevel', { n: level })}, ${t('bestTime')} ${formatDuration(best)}`
-              : t('modeLevel', { n: level })
+              ? `${t('modeLevel', { n: level })}, ${tier}, ${t('bestTime')} ${formatDuration(best)}`
+              : `${t('modeLevel', { n: level })}, ${tier}`
           }
           onClick={() => onPick(level)}
         >
@@ -48,6 +60,7 @@ export function SudokuLevelSelectScreen() {
           {best !== undefined ? (
             <span className="level-cell-best">{formatDuration(best)}</span>
           ) : null}
+          {tierMark}
         </button>
       ) : (
         // Disabled buttons still expose their accessible name to TalkBack.
@@ -56,9 +69,10 @@ export function SudokuLevelSelectScreen() {
           type="button"
           disabled
           className="level-cell level-cell-locked"
-          aria-label={t('levelLocked', { n: level })}
+          aria-label={`${t('levelLocked', { n: level })}, ${tier}`}
         >
           <span className="level-cell-number">{level}</span>
+          {tierMark}
         </button>
       ),
     );

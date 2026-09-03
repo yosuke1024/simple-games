@@ -88,6 +88,8 @@ export interface MoveOutcome {
   readonly justReached: boolean;
   /** True when at least one pair joined, which the screen sounds out (§12). */
   readonly merged: boolean;
+  /** The biggest tile the joins made (0 when none): the pitch of that sound. */
+  readonly largestMerge: number;
 }
 
 /**
@@ -128,6 +130,7 @@ export function applyMove(session: Game2048Session, direction: Direction): MoveO
     },
     justReached: reached2048 && !session.reached2048,
     merged: result.gained > 0,
+    largestMerge: result.largestMerge,
   };
 }
 

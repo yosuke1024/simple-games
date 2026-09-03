@@ -18,6 +18,7 @@ import {
   type Digit,
   type Grid,
   type Puzzle,
+  type Unit,
 } from './types';
 
 export interface Board {
@@ -156,6 +157,33 @@ export function toggleNote(board: Board, index: number, digit: Digit): Board | n
 
 export function hasNote(board: Board, index: number, digit: Digit): boolean {
   return hasBit(board.notes[index]!, digit);
+}
+
+/**
+ * The units of `index` that writing `digit` there would finish: all nine
+ * cells holding nine different digits (§3「完成の合図」). Read off the board
+ * as it stands, before the digit lands, so the screen can act on the same tap
+ * that makes it. A rule-level fact — nine distinct digits — not a check
+ * against the solution; the screen decides what to do with it.
+ */
+export function unitsCompletedBy(board: Board, index: number, digit: Digit): Unit[] {
+  if (isGiven(board, index)) return [];
+  const finished: Unit[] = [];
+  for (const unit of ALL_UNITS) {
+    if (!unit.cells.includes(index)) continue;
+    let seen = 0;
+    let complete = true;
+    for (const cell of unit.cells) {
+      const value = cell === index ? digit : valueAt(board, cell);
+      if (value === 0 || hasBit(seen, value)) {
+        complete = false;
+        break;
+      }
+      seen |= bitOf(value);
+    }
+    if (complete) finished.push(unit);
+  }
+  return finished;
 }
 
 /** Solved: every cell filled and nothing repeated (§2). */

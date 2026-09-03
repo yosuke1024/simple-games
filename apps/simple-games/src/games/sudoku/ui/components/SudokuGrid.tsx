@@ -27,6 +27,8 @@ export interface SudokuGridProps {
   solution: Grid;
   selected: number | null;
   hint: Hint | null;
+  /** Cells of the units the last digit finished, while they glow (§3). */
+  completed?: ReadonlySet<number> | null;
   /** Whether a wrong digit is shown as soon as it lands (§4, setting). */
   highlightMistakes: boolean;
   onCellTap: (index: number) => void;
@@ -39,6 +41,7 @@ export const SudokuGrid = memo(function SudokuGrid({
   solution,
   selected,
   hint,
+  completed = null,
   highlightMistakes,
   onCellTap,
 }: SudokuGridProps) {
@@ -73,6 +76,7 @@ export const SudokuGrid = memo(function SudokuGrid({
           isWrong ? 'sudoku-cell-conflict' : '',
           hintCells.has(index) ? 'sudoku-cell-hint' : '',
           hint?.target === index ? 'sudoku-cell-hint-target' : '',
+          completed?.has(index) ? 'sudoku-cell-complete' : '',
         ]
           .filter(Boolean)
           .join(' ');

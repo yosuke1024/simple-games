@@ -108,9 +108,15 @@ export function WaterGameScreen() {
         const source = selected;
         if (!tryPour(source, index)) return;
         showPour(source, index);
-        // A pour that finishes a tube earns the brighter chime.
-        if (isTubeComplete(preview.tubes[index]!)) sounds.match();
-        else sounds.select();
+        // A pour that finishes a tube earns the brighter chime — and each
+        // tube finished so far lifts it one rung, so the last colour sorted
+        // rings highest (§12). The count is what the board already shows.
+        if (isTubeComplete(preview.tubes[index]!)) {
+          const finished = preview.tubes.filter(isTubeComplete).length;
+          sounds.match(finished - 1);
+        } else {
+          sounds.select();
+        }
         void haptics.tap();
         return;
       }

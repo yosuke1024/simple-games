@@ -63,7 +63,10 @@ export function Game2048GameScreen() {
       if (!outcome.moved) return;
       sounds.select();
       if (outcome.merged) {
-        sounds.match();
+        // Pitched to the biggest tile the move made: a 4 sits on the base
+        // note, each doubling one rung up (§12). The value is on the board,
+        // so the ear only hears what the eye already sees.
+        sounds.match(Math.log2(outcome.largestMerge) - 2);
         void haptics.tap();
         // Only a merge moves the score, so only a merge acknowledges it.
         if (!reducedMotion) {

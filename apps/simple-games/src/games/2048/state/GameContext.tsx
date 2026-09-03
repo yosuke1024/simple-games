@@ -44,10 +44,12 @@ export interface SlideOutcome {
   /** False when the board did not change: nothing happens, silently (§3). */
   readonly moved: boolean;
   readonly merged: boolean;
+  /** The biggest tile the move made, 0 when none joined — its sound's pitch (§12). */
+  readonly largestMerge: number;
   readonly over: boolean;
 }
 
-const NOTHING_HAPPENED: SlideOutcome = { moved: false, merged: false, over: false };
+const NOTHING_HAPPENED: SlideOutcome = { moved: false, merged: false, largestMerge: 0, over: false };
 
 export interface LastResult {
   readonly score: number;
@@ -222,6 +224,7 @@ export function Game2048Provider({
       return {
         moved: true,
         merged: outcome.merged,
+        largestMerge: outcome.largestMerge,
         over: outcome.session.status === 'over',
       };
     },
