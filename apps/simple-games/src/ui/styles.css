@@ -1477,6 +1477,49 @@ button:disabled {
   gap: 8px;
 }
 
+/* The optional share (ui/components/ShareAction.tsx, issue #86). Deliberately
+   the quietest thing on the card: below the buttons that continue play, drawn
+   in the soft ink with no fill of its own, and never wider than its own label.
+   A player scanning for "Next" must never land on this by accident, which is
+   also why it is not a `.btn` — the three button weights on this card all mean
+   "keep playing", and this does not.
+
+   The row wraps rather than reserving a line for the copied note: the note
+   only exists after a clipboard fallback, and on the phones where it would sit
+   beside the button there is nothing to reserve. */
+.result-share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 10px;
+  margin-top: 14px;
+}
+
+.result-share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.result-share-btn:active {
+  background: var(--accent-soft);
+}
+
+/* "Link copied" — said once, quietly, and only when the link went to the
+   clipboard instead of a share sheet. An empty span the rest of the time. */
+.result-share-note {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
 /* The result card arrives rather than appears: after the board has had its
    beat (ui/useResultReveal.ts) the card rises a few pixels and fades in. One
    short keyframe on the card alone — the scrim behind it is instant, so the
