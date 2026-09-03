@@ -374,13 +374,13 @@ src/
 | `sd.*`            | Sudoku(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                    |
 | `so.*`            | Solitaire(saveGame / saveDaily / stats / flags / prefs)                                       |
 | `ms.*`            | Minesweeper(saveGame / saveDaily / stats / flags / prefs)                                     |
-| `ng.*`            | Nonogram(saveGame / saveDaily / stats / progress / flags / prefs)                             |
+| `ng.*`            | Nonogram(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                  |
 | `mj.*`            | Mahjong Solitaire(saveGame / saveDaily / stats / progress / flags。**prefs なし**)            |
-| `tk.*`            | Takuzu(saveGame / saveDaily / stats / progress / flags。**prefs なし**)                       |
-| `ft.*`            | Futoshiki(saveGame / saveDaily / stats / progress / flags / prefs)                            |
-| `kk.*`            | Kakuro(saveGame / saveDaily / stats / progress / flags / prefs)                               |
+| `tk.*`            | Takuzu(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ) |
+| `ft.*`            | Futoshiki(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                 |
+| `kk.*`            | Kakuro(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                    |
 | `nm.*`            | Number Match(saveGame / saveDaily / stats / progress / flags)                                 |
-| `ws.*`            | Water Sort(saveGame / saveDaily / stats / progress / flags)                                   |
+| `ws.*`            | Water Sort(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ) |
 | `sp.*`            | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags)                               |
 | `mm.*`            | Memory Match(saveGame / saveDaily / stats / flags)                                            |
 | `bb.*`            | Brick Breaker(stats / progress / flags。**saveGame なし** — 下記)                             |
