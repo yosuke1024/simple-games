@@ -11,7 +11,13 @@
  * worth anything if the two sides are checked against each other.
  */
 import { describe, expect, it } from 'vitest';
-import { CARROT_HEIGHT, CARROT_WIDTH, HIT_INSET, RUNNER_HEIGHT, RUNNER_WIDTH } from '../../game/constants';
+import {
+  CARROT_HEIGHT,
+  CARROT_WIDTH,
+  HIT_INSET,
+  RUNNER_HEIGHT,
+  RUNNER_WIDTH,
+} from '../../game/constants';
 import { OBSTACLE_KINDS } from '../../game/obstacles';
 import type { ObstacleKindId } from '../../game/types';
 import {

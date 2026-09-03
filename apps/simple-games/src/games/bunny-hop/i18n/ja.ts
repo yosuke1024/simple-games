@@ -18,5 +18,6 @@ export const ja: BunnyHopMessages = {
   bunnyStep2Title: '鳥も飛んでくる',
   bunnyStep2Body: '低い鳥は茂みと同じくジャンプで。高い鳥は、跳ばなければ当たりません。',
   bunnyStep3Title: '速くなっていく',
-  bunnyStep3Body: 'コースのニンジンは 1 回のミスを肩代わりする(最大 3 本)。ニンジンなしで当たればランは終わり。',
+  bunnyStep3Body:
+    'コースのニンジンは 1 回のミスを肩代わりする(最大 3 本)。ニンジンなしで当たればランは終わり。',
 };

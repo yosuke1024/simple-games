@@ -47,7 +47,7 @@ import {
 } from '../game';
 import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
 import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
-import { applyGameStart, applyPlayTime, applyWon } from './statsLogic';
+import { applyGameStart, applyPlayTime, applyWon, previousBestsFor } from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'daily' | 'game' | 'stats';
 
@@ -56,6 +56,9 @@ export interface LastResult {
   readonly isNewBestTime: boolean;
   readonly bestMoves: number;
   readonly bestSeconds: number;
+  /** The records before this run, or null where there was none yet (§9). */
+  readonly previousBestMoves: number | null;
+  readonly previousBestSeconds: number | null;
   readonly moves: number;
   readonly seconds: number;
 }
@@ -162,6 +165,8 @@ export function FreeCellProvider({
       void clearSavedGame(next.mode);
       const unbooked = Math.max(0, next.elapsedSeconds - bookedRef.current);
       bookedRef.current = next.elapsedSeconds;
+      // Read before the records move: what this run is measured against.
+      const previous = previousBestsFor(statsRef.current, next);
       const outcome = applyWon(applyPlayTime(statsRef.current, unbooked), next);
       persistStats(outcome.stats);
       recordGameCompleted();
@@ -170,6 +175,8 @@ export function FreeCellProvider({
         isNewBestTime: outcome.isNewBestTime,
         bestMoves: outcome.bestMoves,
         bestSeconds: outcome.bestSeconds,
+        previousBestMoves: previous.moves,
+        previousBestSeconds: previous.seconds,
         moves: next.moveCount,
         seconds: next.elapsedSeconds,
       });

@@ -19,5 +19,6 @@ export const tr: BunnyHopMessages = {
   bunnyStep2Body:
     'Alçaktan uçanları çalı gibi zıplayarak aş; yüksektekiler sadece havadayken çarpar.',
   bunnyStep3Title: 'Gitgide hızlanır',
-  bunnyStep3Body: 'Piste bir havuç seni bir çarpışmadan kurtarır – en fazla 3. Havuç yoksa tek temas koşuyu bitirir.',
+  bunnyStep3Body:
+    'Piste bir havuç seni bir çarpışmadan kurtarır – en fazla 3. Havuç yoksa tek temas koşuyu bitirir.',
 };

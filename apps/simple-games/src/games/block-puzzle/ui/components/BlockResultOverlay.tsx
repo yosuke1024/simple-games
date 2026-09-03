@@ -10,7 +10,9 @@
  * too early can be taken back for nothing.
  */
 import { useSettings } from '@/state/SettingsContext';
+import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { useResultReveal } from '@/ui/useResultReveal';
 import type { BlockSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
@@ -28,10 +30,12 @@ export function BlockResultOverlay({
   onHome,
 }: BlockResultOverlayProps) {
   const { t } = useSettings();
-  if (session.status !== 'over') return null;
+  // The full board gets its beat before the card covers it (§12).
+  const revealed = useResultReveal(session.status === 'over');
+  if (!revealed) return null;
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className="dialog result"
         role="alertdialog"
@@ -53,10 +57,24 @@ export function BlockResultOverlay({
         </dl>
 
         {lastResult?.isNewBestScore && session.score > 0 ? (
-          <p className="dialog-body">{t('blockNewBestScore')}</p>
+          <p className="dialog-body">
+            {t('blockNewBestScore')}
+            <BestDelta
+              value={session.score}
+              previous={lastResult.previousBestScore}
+              kind="count"
+              lowerIsBetter={false}
+            />
+          </p>
         ) : lastResult ? (
           <p className="dialog-body">
             {t('blockBestScore')} {lastResult.bestScore}
+            <BestDelta
+              value={session.score}
+              previous={lastResult.previousBestScore}
+              kind="count"
+              lowerIsBetter={false}
+            />
           </p>
         ) : null}
 

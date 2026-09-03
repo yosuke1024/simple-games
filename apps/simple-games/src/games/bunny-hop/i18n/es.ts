@@ -19,5 +19,6 @@ export const es: BunnyHopMessages = {
   bunnyStep2Body:
     'A los que vuelan bajo hay que saltarlos como a un arbusto; los altos solo te alcanzan en el salto.',
   bunnyStep3Title: 'Cada vez más rápido',
-  bunnyStep3Body: 'Una zanahoria en la pista te salva un golpe – máximo tres. Sin zanahorias, un golpe y se acabó.',
+  bunnyStep3Body:
+    'Una zanahoria en la pista te salva un golpe – máximo tres. Sin zanahorias, un golpe y se acabó.',
 };

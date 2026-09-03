@@ -35,7 +35,7 @@ import {
 } from '../game';
 import { clearSavedGame, saveGame } from '../storage/gamePersistence';
 import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
-import { applyGameStart, applyPlayTime, applyRunEnd } from './statsLogic';
+import { applyGameStart, applyPlayTime, applyRunEnd, previousBestScore } from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'game' | 'stats';
 
@@ -59,6 +59,8 @@ const NOTHING_HAPPENED: SlideOutcome = {
 export interface LastResult {
   readonly score: number;
   readonly bestScore: number;
+  /** The record before this run, or null while there was none (§9). */
+  readonly previousBestScore: number | null;
   readonly bestTile: number;
   readonly isNewBestScore: boolean;
 }
@@ -176,11 +178,14 @@ export function Game2048Provider({
         return;
       }
       void clearSavedGame();
+      // Read before the record moves: what this run is measured against.
+      const previous = previousBestScore(statsRef.current);
       const outcome = finalizeRun(next);
       recordGameCompleted();
       setLastResult({
         score: next.score,
         bestScore: outcome?.stats.bestScore ?? statsRef.current.bestScore,
+        previousBestScore: previous,
         bestTile: largestTile(next.board),
         isNewBestScore: outcome?.isNewBestScore ?? false,
       });

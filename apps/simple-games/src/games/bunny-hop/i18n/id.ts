@@ -20,5 +20,6 @@ export const id: BunnyHopMessages = {
   bunnyStep2Body:
     'Yang terbang rendah harus dilompati seperti semak; yang tinggi hanya mengenaimu saat melompat.',
   bunnyStep3Title: 'Makin lama makin cepat',
-  bunnyStep3Body: 'Wortel di trek melindungi dari satu tabrak – sampai tiga. Tanpa wortel, sekali menabrak larinya selesai.',
+  bunnyStep3Body:
+    'Wortel di trek melindungi dari satu tabrak – sampai tiga. Tanpa wortel, sekali menabrak larinya selesai.',
 };

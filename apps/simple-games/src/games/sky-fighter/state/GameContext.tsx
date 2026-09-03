@@ -37,6 +37,7 @@ import {
   applyClearToProgress,
   applyPlayTime,
   applyRunScore,
+  previousBestScore,
 } from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'levels' | 'game' | 'stats';
@@ -50,6 +51,8 @@ export interface LastResult {
   readonly score: number;
   readonly isNewBestScore: boolean;
   readonly bestScore: number;
+  /** The record before this run, or null while there was none (§9). */
+  readonly previousBestScore: number | null;
 }
 
 export interface Attempt {
@@ -193,6 +196,8 @@ export function SkyProvider({
       if (!current) return;
       // The score stands whether or not the last stage fell (§9). Stage
       // clears were already booked one by one through reportStageCleared.
+      // The record is read before it moves: what this run is measured against.
+      const previous = previousBestScore(statsRef.current);
       const scored = applyRunScore(statsRef.current, score);
       persistStats(scored.stats);
       setLastResult({
@@ -201,6 +206,7 @@ export function SkyProvider({
         score,
         isNewBestScore: scored.isNewBestScore,
         bestScore: scored.bestScore,
+        previousBestScore: previous,
       });
     },
     [persistStats],

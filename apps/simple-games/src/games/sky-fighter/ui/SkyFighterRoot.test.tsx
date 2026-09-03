@@ -62,7 +62,10 @@ describe('home', () => {
       [SF_STORAGE_KEYS.progress]: JSON.stringify({ schemaVersion: 1, highestUnlocked: 5 }),
     });
 
-    await user.click(await screen.findByRole('button', { name: 'Levels' }));
+    const levels = await screen.findByRole('button', { name: /^Levels/ });
+    // The chip says how far up the hundred the frontier is: four cleared.
+    expect(levels).toHaveTextContent('4/100');
+    await user.click(levels);
     expect(screen.getByRole('button', { name: 'Level 5' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Level 6, locked' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Level 1' })).toBeEnabled();

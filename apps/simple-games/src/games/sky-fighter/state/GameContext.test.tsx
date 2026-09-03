@@ -91,6 +91,8 @@ describe('a run ending in one tick (§9)', () => {
     await settle();
 
     expect(storedStats()).toMatchObject({ cleared: 0, bestScore: 640, totalPlaySeconds: 20 });
+    // A first run has no record to be measured against.
+    expect(api().lastResult).toMatchObject({ isNewBestScore: true, previousBestScore: null });
   });
 
   it('does not lower a best score a weaker run failed to beat', async () => {
@@ -103,7 +105,12 @@ describe('a run ending in one tick (§9)', () => {
     await settle();
 
     expect(api().stats.bestScore).toBe(900);
-    expect(api().lastResult).toMatchObject({ isNewBestScore: false, bestScore: 900 });
+    expect(api().lastResult).toMatchObject({
+      isNewBestScore: false,
+      bestScore: 900,
+      // The record as it stood before the run — what the card measures against.
+      previousBestScore: 900,
+    });
   });
 });
 

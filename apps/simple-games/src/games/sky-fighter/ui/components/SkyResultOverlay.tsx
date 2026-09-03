@@ -4,7 +4,9 @@
  * run reached — the points were scored whether or not the last stage fell.
  */
 import { useSettings } from '@/state/SettingsContext';
+import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { useResultReveal } from '@/ui/useResultReveal';
 import type { LastResult } from '../../state/GameContext';
 
 export interface SkyResultOverlayProps {
@@ -15,13 +17,15 @@ export interface SkyResultOverlayProps {
 
 export function SkyResultOverlay({ result, onRetry, onHome }: SkyResultOverlayProps) {
   const { t } = useSettings();
-  if (result === null) return null;
+  // The settled sky gets its beat before the card covers it (§12).
+  const revealed = useResultReveal(result !== null);
+  if (!revealed || result === null) return null;
 
   const cleared = result.outcome === 'cleared';
   const title = cleared ? t('sfClearedTitle') : t('sfFailedTitle');
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className={`dialog result ${cleared ? 'result-clear' : ''}`}
         role="alertdialog"
@@ -43,10 +47,24 @@ export function SkyResultOverlay({ result, onRetry, onHome }: SkyResultOverlayPr
         </dl>
 
         {result.isNewBestScore && result.score > 0 ? (
-          <p className="dialog-body">{t('sfNewBestScore')}</p>
+          <p className="dialog-body">
+            {t('sfNewBestScore')}
+            <BestDelta
+              value={result.score}
+              previous={result.previousBestScore}
+              kind="count"
+              lowerIsBetter={false}
+            />
+          </p>
         ) : (
           <p className="dialog-body">
             {t('bestScore')} {result.bestScore}
+            <BestDelta
+              value={result.score}
+              previous={result.previousBestScore}
+              kind="count"
+              lowerIsBetter={false}
+            />
           </p>
         )}
 

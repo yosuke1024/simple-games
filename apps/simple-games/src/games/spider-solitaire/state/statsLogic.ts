@@ -119,6 +119,26 @@ export function dailyResultFor(
 }
 
 /**
+ * The records this run is measured against — that difficulty's bests before
+ * the win is booked — or null for each that does not exist yet (§9). Read
+ * before `applyWon`, which is what moves them: the lifetime row for a free
+ * deal, that date's entry at that difficulty for a daily.
+ */
+export function previousBestsFor(
+  stats: Stats,
+  session: SpiderSession,
+): { moves: number | null; seconds: number | null } {
+  if (session.mode === 'daily' && session.dailyDate !== null) {
+    const day = dailyResultFor(stats, session.dailyDate, session.suitCount);
+    return day === null
+      ? { moves: null, seconds: null }
+      : { moves: day.moves, seconds: day.seconds };
+  }
+  const row = statsFor(stats, session.suitCount);
+  return { moves: row.bestMoves, seconds: row.bestSeconds };
+}
+
+/**
  * How many daily deals have been won. A count, never a run of days (§6). A day
  * counts once however many difficulties it was won at — the day is the
  * achievement, the moves and the time are what belong to the difficulty.
