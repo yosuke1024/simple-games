@@ -371,7 +371,7 @@ src/
 | `sg.review`       | ストアレビュー導線の状態(完了数 / 表示回数 / 解決済みフラグ)                                  |
 | `sg.recent`       | 「最近遊んだ」のゲーム id(新しい順・最大 2 件)                                                |
 | `sg.webAppPrompt` | Web 版のアプリ案内カードの状態(ゲーム離脱回数 / 表示済みフラグ)。**Web 版でのみ読み書きする** |
-| `sd.*`            | Sudoku(saveGame / saveDaily / stats / progress / flags / prefs)                               |
+| `sd.*`            | Sudoku(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                    |
 | `so.*`            | Solitaire(saveGame / saveDaily / stats / flags / prefs)                                       |
 | `ms.*`            | Minesweeper(saveGame / saveDaily / stats / flags / prefs)                                     |
 | `ng.*`            | Nonogram(saveGame / saveDaily / stats / progress / flags / prefs)                             |
