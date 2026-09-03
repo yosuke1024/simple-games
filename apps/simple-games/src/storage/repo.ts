@@ -1,6 +1,6 @@
 /**
- * Load/save helpers on top of the KV store. Never throw; corrupt or missing
- * data falls back to the schema default.
+ * Load/save helpers on top of the KV store. Loads and saves never throw;
+ * corrupt or missing data falls back to the schema default.
  */
 import type { KVStore } from './kv';
 import { preferencesKV } from './kv';
@@ -42,16 +42,54 @@ function enqueue<T>(key: string, op: () => Promise<T>): Promise<T> {
   return run;
 }
 
-export async function loadRecord<T>(def: SchemaDef<T>, kv: KVStore = preferencesKV): Promise<T> {
-  const raw = await enqueue(def.key, () => kv.get(def.key));
-  if (raw === null) return def.defaultValue();
+/**
+ * A record read, together with whether the store answered at all.
+ *
+ * `loadRecord` cannot say: it returns the schema default for "nothing saved
+ * yet", for "the saved data is corrupt" AND for "the store could not be
+ * read". That is the right answer for a preference — a fresh install and an
+ * unreadable store both leave the player with defaults — and the wrong one
+ * for the ad-removal entitlement, where "could not read" taken as "has not
+ * bought it" puts ads in front of someone who paid to remove them (issue
+ * #96). Callers that must tell the two apart read this instead.
+ */
+export interface RecordLoad<T> {
+  /** The stored record, or the schema default. */
+  readonly value: T;
+  /**
+   * False for one reason only: the store itself failed. Missing or corrupt
+   * data is `true` — the store answered, and the answer was "nothing usable
+   * is saved here".
+   */
+  readonly readable: boolean;
+}
+
+export async function loadRecordWithStatus<T>(
+  def: SchemaDef<T>,
+  kv: KVStore = preferencesKV,
+): Promise<RecordLoad<T>> {
+  let raw: string | null;
+  try {
+    // Inside the guard. `preferencesKV` swallows its own failures, but the
+    // parameter is a `KVStore` and the contract is this function's to keep:
+    // a store that rejects has to land here, not in whichever `try` the
+    // caller's caller happens to sit in (issue #96).
+    raw = await enqueue(def.key, () => kv.get(def.key));
+  } catch {
+    return { value: def.defaultValue(), readable: false };
+  }
+  if (raw === null) return { value: def.defaultValue(), readable: true };
   try {
     const parsed: unknown = JSON.parse(raw);
     const validated = def.validate(parsed);
-    return validated ?? def.defaultValue();
+    return { value: validated ?? def.defaultValue(), readable: true };
   } catch {
-    return def.defaultValue();
+    return { value: def.defaultValue(), readable: true };
   }
+}
+
+export async function loadRecord<T>(def: SchemaDef<T>, kv: KVStore = preferencesKV): Promise<T> {
+  return (await loadRecordWithStatus(def, kv)).value;
 }
 
 export async function saveRecord<T>(

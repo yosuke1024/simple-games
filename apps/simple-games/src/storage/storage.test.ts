@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { KVStore } from './kv';
 import { createMemoryKV } from './kv';
-import { clearLocalData, loadRecord, saveRecord } from './repo';
+import { clearLocalData, loadRecord, loadRecordWithStatus, saveRecord } from './repo';
 import { iapSchema, settingsSchema, STORAGE_KEYS, type SchemaDef } from './schemas';
 
 describe('loadRecord (shared records)', () => {
@@ -48,6 +48,64 @@ describe('loadRecord (shared records)', () => {
       }),
     });
     expect(await loadRecord(iapSchema, kv)).toEqual(iapSchema.defaultValue());
+  });
+});
+
+/**
+ * A store that fails rather than answering. `preferencesKV` swallows its own
+ * failures, so this is what any other `KVStore` — or a future one — looks like
+ * when the device cannot answer at all.
+ */
+const unreadableKV = (): KVStore => ({
+  get: () => Promise.reject(new Error('storage unavailable')),
+  set: () => Promise.resolve(),
+  remove: () => Promise.resolve(),
+});
+
+describe('loadRecordWithStatus (issue #96)', () => {
+  it('reports a store that could not be read, and still hands back a value', async () => {
+    const load = await loadRecordWithStatus(iapSchema, unreadableKV());
+    expect(load.readable).toBe(false);
+    expect(load.value).toEqual(iapSchema.defaultValue());
+  });
+
+  it('counts missing and corrupt data as read: the store answered', async () => {
+    const empty = await loadRecordWithStatus(iapSchema, createMemoryKV());
+    expect(empty).toEqual({ value: iapSchema.defaultValue(), readable: true });
+
+    const corrupt = await loadRecordWithStatus(
+      iapSchema,
+      createMemoryKV({ [STORAGE_KEYS.iap]: '{not json!!' }),
+    );
+    expect(corrupt).toEqual({ value: iapSchema.defaultValue(), readable: true });
+  });
+
+  it('reports a stored record as read', async () => {
+    const iap = { schemaVersion: 1 as const, adRemovalPurchased: true, purchasedAt: 123 };
+    const kv = createMemoryKV({ [STORAGE_KEYS.iap]: JSON.stringify(iap) });
+    expect(await loadRecordWithStatus(iapSchema, kv)).toEqual({ value: iap, readable: true });
+  });
+
+  it('loadRecord falls back to the default instead of rejecting', async () => {
+    // The whole point of the guard: the failure stops here, where the caller
+    // can see it, instead of unwinding through every await above it.
+    expect(await loadRecord(settingsSchema, unreadableKV())).toEqual(settingsSchema.defaultValue());
+  });
+
+  it('a failed read does not strand the later operations on that key', async () => {
+    let failNext = true;
+    const kv: KVStore = {
+      ...createMemoryKV(),
+      get: () => {
+        if (failNext) {
+          failNext = false;
+          return Promise.reject(new Error('storage unavailable'));
+        }
+        return Promise.resolve(null);
+      },
+    };
+    expect((await loadRecordWithStatus(iapSchema, kv)).readable).toBe(false);
+    expect((await loadRecordWithStatus(iapSchema, kv)).readable).toBe(true);
   });
 });
 
