@@ -52,7 +52,8 @@ export const isWritten = (value: Mark | undefined): value is Cell =>
 /** The other digit — the whole of what rules 1 and 2 ever conclude. */
 export const other = (value: Cell): Cell => (value === ZERO ? ONE : ZERO);
 
-export type GameMode = 'level' | 'daily';
+/** Level list, the daily, or a free board at a chosen tier (§7「フリープレイ」). */
+export type GameMode = 'level' | 'daily' | 'free';
 
 /** There is no losing a Takuzu — no mistakes counted, no lives (§2, §14). */
 export type GameStatus = 'playing' | 'solved';

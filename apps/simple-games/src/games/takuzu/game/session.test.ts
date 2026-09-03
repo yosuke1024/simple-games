@@ -3,13 +3,17 @@
  */
 import { describe, expect, it } from 'vitest';
 import { addDays, dayDifference, localDateString } from './daily';
+import { FREE_TIER_LEVEL, sizeForLevel } from './levels';
 import {
   boardOf,
   createDailySession,
+  createFreeSession,
   createLevelSession,
   doHintUse,
   doTap,
+  freeSeed,
   hintFor,
+  newSeedToken,
   restartSession,
   restoreSession,
   violationsOf,
@@ -104,6 +108,44 @@ describe('sessions (§7)', () => {
 
     const { status: _fresh, ...unplayed } = createLevelSession(3);
     expect(restoreSession(unplayed).status).toBe('playing');
+  });
+});
+
+describe('createFreeSession (§7「フリープレイ」)', () => {
+  it('builds a board at the tier asked for, with no level and no date', () => {
+    const session = createFreeSession('hard');
+    expect(session.mode).toBe('free');
+    expect(session.size).toBe(sizeForLevel(FREE_TIER_LEVEL.hard));
+    expect(session.level).toBeNull();
+    expect(session.dailyDate).toBeNull();
+    expect(session.seed.startsWith('takuzu-free-')).toBe(true);
+    expect(session.status).toBe('playing');
+    expect(violationsOf(session).any).toBe(false);
+  });
+
+  it('gives a new board each time, and the same board for the same seed', () => {
+    const a = createFreeSession('easy', freeSeed(newSeedToken(1, () => 0.25)));
+    const b = createFreeSession('easy', freeSeed(newSeedToken(2, () => 0.5)));
+    expect(b.givens).not.toEqual(a.givens);
+    const again = createFreeSession('easy', a.seed);
+    expect(again.givens).toEqual(a.givens);
+    expect(again.solution).toEqual(a.solution);
+  });
+
+  it('restart rebuilds the identical free board with a clean board', () => {
+    const session = createFreeSession('medium');
+    const played = doTap(session, session.givens.indexOf(EMPTY))!;
+    const restarted = restartSession(played);
+    expect(restarted.seed).toBe(session.seed);
+    expect(restarted.size).toBe(session.size);
+    expect(restarted.givens).toEqual(session.givens);
+    expect(restarted.marks.every((mark) => mark === EMPTY)).toBe(true);
+  });
+
+  it('never collides with a level or a daily seed', () => {
+    const token = newSeedToken(1, () => 0);
+    expect(freeSeed(token)).not.toBe('takuzu-level-1');
+    expect(freeSeed(token)).not.toMatch(/^takuzu-daily-/);
   });
 });
 

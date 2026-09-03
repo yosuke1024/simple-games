@@ -1,5 +1,5 @@
 /**
- * The two saved-game slots. Both hold the same record shape, so the KEY is
+ * The three saved-game slots. All hold the same record shape, so the KEY is
  * what says which mode a record is — and a record that disagrees with its key
  * is corrupt data, not an instruction to change modes. Loading one would send
  * a player who asked to resume their level game into the daily slot: the
@@ -11,14 +11,15 @@
  * rules would leave the player with a board that cannot be finished.
  */
 import { describe, expect, it } from 'vitest';
-import { createDailySession, createLevelSession, EMPTY } from '../game';
+import { createDailySession, createFreeSession, createLevelSession, EMPTY } from '../game';
 import { toPersisted, toSession } from './gamePersistence';
-import { dailyGameSchema, gameSchema } from './schemas';
+import { dailyGameSchema, freeGameSchema, gameSchema } from './schemas';
 
 const SAVED_AT = 1_754_000_000_000;
 const levelSession = createLevelSession(1);
 const levelRecord = toPersisted(levelSession, SAVED_AT);
 const dailyRecord = toPersisted(createDailySession('2026-08-07'), SAVED_AT);
+const freeRecord = toPersisted(createFreeSession('hard'), SAVED_AT);
 
 /** The first fixed cell of level 1 — the one no tap is allowed to move (§4). */
 const givenIndex = levelSession.givens.findIndex((cell) => cell !== EMPTY);
@@ -31,13 +32,26 @@ describe('saved-game slots', () => {
   it('loads each record from its own slot', () => {
     expect(gameSchema.validate(levelRecord)?.mode).toBe('level');
     expect(dailyGameSchema.validate(dailyRecord)?.mode).toBe('daily');
+    expect(freeGameSchema.validate(freeRecord)?.mode).toBe('free');
+    // A free board's tier travels as its size (§7): hard is the 10×10.
+    expect(freeGameSchema.validate(freeRecord)?.size).toBe(10);
+    expect(toSession(freeRecord)?.mode).toBe('free');
   });
 
-  it('refuses a record written for the other mode', () => {
-    // Both records are what the game itself writes, and both are otherwise
+  it('refuses a record written for another mode', () => {
+    // All records are what the game itself writes, and all are otherwise
     // perfectly valid. The only thing wrong is the slot they are sitting in.
     expect(gameSchema.validate(dailyRecord)).toBeNull();
+    expect(gameSchema.validate(freeRecord)).toBeNull();
     expect(dailyGameSchema.validate(levelRecord)).toBeNull();
+    expect(dailyGameSchema.validate(freeRecord)).toBeNull();
+    expect(freeGameSchema.validate(levelRecord)).toBeNull();
+    expect(freeGameSchema.validate(dailyRecord)).toBeNull();
+  });
+
+  it('refuses a free record that claims a level or a date', () => {
+    expect(freeGameSchema.validate({ ...freeRecord, level: 3 })).toBeNull();
+    expect(freeGameSchema.validate({ ...freeRecord, dailyDate: '2026-08-07' })).toBeNull();
   });
 });
 

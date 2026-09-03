@@ -8,7 +8,16 @@
  */
 import type { SchemaDef } from '../../../storage/schemas';
 import { asDateString, asBool, asInt, asString, isRecord } from '../../../storage/validate';
-import { cellCount, isSize, MAX_LEVEL, SIZES, type GameMode, type Size } from '../game';
+import {
+  cellCount,
+  isFreeTier,
+  isSize,
+  MAX_LEVEL,
+  SIZES,
+  type FreeTier,
+  type GameMode,
+  type Size,
+} from '../game';
 
 import { TK_STORAGE_KEYS } from './keys';
 
@@ -41,9 +50,31 @@ export const flagsSchema: SchemaDef<Flags> = {
   },
 };
 
-// There is no prefs record. Takuzu has nothing to prefer: one gesture does
-// everything (§4) and the violation display is a rule rather than an option
-// (§9), so the five keys of storage/keys.ts are the whole of it.
+// ---------- preferences ----------
+
+/**
+ * The one thing Takuzu remembers across boards: where the Free Play picker
+ * stands (§7「フリープレイ」). Not a setting — one gesture does everything
+ * (§4) and the violation display is a rule rather than an option (§9) — so
+ * nothing here changes how a board plays; it only saves choosing again.
+ */
+export interface Prefs {
+  schemaVersion: 1;
+  freeTier: FreeTier;
+}
+
+export const prefsSchema: SchemaDef<Prefs> = {
+  key: TK_STORAGE_KEYS.prefs,
+  version: 1,
+  defaultValue: () => ({ schemaVersion: 1, freeTier: 'medium' }),
+  validate: (raw) => {
+    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
+    // A record without the field is older, not corrupt: the picker simply
+    // starts where a fresh install would.
+    if (raw.freeTier === undefined) return { schemaVersion: 1, freeTier: 'medium' };
+    return isFreeTier(raw.freeTier) ? { schemaVersion: 1, freeTier: raw.freeTier } : null;
+  },
+};
 
 // ---------- statistics ----------
 
@@ -200,7 +231,8 @@ export interface PersistedGame {
 
 const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
-  const mode = raw.mode === 'level' || raw.mode === 'daily' ? raw.mode : null;
+  const mode =
+    raw.mode === 'level' || raw.mode === 'daily' || raw.mode === 'free' ? raw.mode : null;
   const seed = asString(raw.seed);
   const size = asSize(raw.size);
   const dailyDate = raw.dailyDate === null ? null : asDateString(raw.dailyDate);
@@ -230,6 +262,8 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (level === null && raw.level !== null) return null;
   if (mode === 'daily' && dailyDate === null) return null;
   if (mode === 'level' && level === null) return null;
+  // A free board has neither a level number nor a date to be about.
+  if (mode === 'free' && (level !== null || dailyDate !== null)) return null;
 
   return {
     schemaVersion: 1,
@@ -248,7 +282,7 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
 };
 
 /**
- * One slot per mode. Both hold the same record shape, so the KEY is what says
+ * One slot per mode. All hold the same record shape, so the KEY is what says
  * which mode a record is — and a record that disagrees with its key is corrupt
  * data, not an instruction to switch modes.
  *
@@ -278,3 +312,5 @@ function gameSlotSchema(key: string, expectedMode: GameMode): SchemaDef<Persiste
 export const gameSchema = gameSlotSchema(TK_STORAGE_KEYS.game, 'level');
 /** Suspended daily game, kept separately so neither mode evicts the other. */
 export const dailyGameSchema = gameSlotSchema(TK_STORAGE_KEYS.dailyGame, 'daily');
+/** Suspended free board (§7「フリープレイ」): its own slot, for the same reason. */
+export const freeGameSchema = gameSlotSchema(TK_STORAGE_KEYS.freeGame, 'free');

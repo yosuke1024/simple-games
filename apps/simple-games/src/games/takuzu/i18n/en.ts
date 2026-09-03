@@ -24,6 +24,10 @@ export const en = {
   takuzuSolvedBody: 'Every row and column holds.',
   takuzuHintsUsed: 'Hints used',
   takuzuNewBestTime: 'Your fastest yet.',
+  /** The Free Play tiers (§7「フリープレイ」): a level's generation, a seed of its own. */
+  takuzuTier_easy: 'Easy',
+  takuzuTier_medium: 'Medium',
+  takuzuTier_hard: 'Hard',
   takuzuLevelsSolved: 'Levels solved',
   takuzuDailiesSolved: 'Dailies solved',
   takuzuDailyBacklogHint: 'Every earlier day stays open.',

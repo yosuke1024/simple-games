@@ -3,7 +3,16 @@
  * silently reshuffle 100 puzzles under players' progress.
  */
 import { describe, expect, it } from 'vitest';
-import { clampLevel, givensRatioForLevel, levelSeed, MAX_LEVEL, sizeForLevel } from './levels';
+import {
+  clampLevel,
+  FREE_TIER_LEVEL,
+  FREE_TIERS,
+  freeTierForSize,
+  givensRatioForLevel,
+  levelSeed,
+  MAX_LEVEL,
+  sizeForLevel,
+} from './levels';
 import { cellCount } from './types';
 
 /** Where each band starts and ends (§7) — the one place these numbers live. */
@@ -84,5 +93,23 @@ describe('levels (§7)', () => {
     expect(levelSeed(42)).toBe('takuzu-level-42');
     expect(levelSeed(0)).toBe('takuzu-level-1');
     expect(levelSeed(999)).toBe(`takuzu-level-${MAX_LEVEL}`);
+  });
+});
+
+describe('free play tiers (§7「フリープレイ」)', () => {
+  it('borrows one level from inside each band', () => {
+    expect(FREE_TIER_LEVEL).toEqual({ easy: 10, medium: 50, hard: 95 });
+    expect(FREE_TIERS.map((tier) => sizeForLevel(FREE_TIER_LEVEL[tier]))).toEqual([6, 8, 10]);
+  });
+
+  /**
+   * A saved free board carries its size and nothing else about its tier, so
+   * the size has to name the tier on its own — which holds exactly as long as
+   * the three representative levels sit in three different bands.
+   */
+  it('reads the tier back from the size', () => {
+    for (const tier of FREE_TIERS) {
+      expect(freeTierForSize(sizeForLevel(FREE_TIER_LEVEL[tier]))).toBe(tier);
+    }
   });
 });

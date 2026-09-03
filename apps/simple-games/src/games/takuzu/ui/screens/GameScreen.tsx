@@ -18,7 +18,7 @@ import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconHint, IconRetry } from '@/ui/components/icons';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import { useGameKeys } from '@/ui/useGameKeys';
-import type { Hint } from '../../game';
+import { freeTierForSize, type Hint } from '../../game';
 import { useTakuzu } from '../../state/GameContext';
 import { TakuzuBoard } from '../components/TakuzuBoard';
 import { TakuzuResultOverlay } from '../components/TakuzuResultOverlay';
@@ -36,6 +36,7 @@ export function TakuzuGameScreen() {
     goHome,
     restartCurrent,
     startNextLevel,
+    startFree,
   } = useTakuzu();
   const { t } = useSettings();
 
@@ -121,7 +122,9 @@ export function TakuzuGameScreen() {
             <span className="game-mode">
               {session.mode === 'daily'
                 ? t('modeDaily')
-                : t('modeLevel', { n: session.level ?? 1 })}
+                : session.mode === 'free'
+                  ? t('freePlay')
+                  : t('modeLevel', { n: session.level ?? 1 })}
             </span>
             <span className="takuzu-size-tag">{t('takuzuSizeLabel', { n: session.size })}</span>
           </div>
@@ -162,6 +165,7 @@ export function TakuzuGameScreen() {
         lastResult={lastResult}
         onRetry={restartCurrent}
         onNextLevel={startNextLevel}
+        onNewFree={() => startFree(freeTierForSize(session.size))}
         onHome={goHome}
       />
 
