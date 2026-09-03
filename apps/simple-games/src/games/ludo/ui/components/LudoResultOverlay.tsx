@@ -13,6 +13,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { useResultReveal } from '@/ui/useResultReveal';
 import { HOME_PROGRESS, SEATS, YOU, type LudoSession, type Seat } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 import type { Stats } from '../../storage/schemas';
@@ -34,7 +35,9 @@ export function LudoResultOverlay({
   onHome,
 }: LudoResultOverlayProps) {
   const { t } = useSettings();
-  if (session.status === 'playing' || !lastResult) return null;
+  // The final board gets its beat before the card covers it (§12).
+  const revealed = useResultReveal(session.status !== 'playing' && lastResult !== null);
+  if (!revealed || !lastResult) return null;
 
   const result = session.state.result;
   const winner: Seat | null = result !== null && result.kind === 'win' ? result.winner : null;
@@ -55,7 +58,7 @@ export function LudoResultOverlay({
   const record = stats[session.difficulty];
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className={`dialog result ${status === 'won' ? 'result-clear' : ''}`}
         role="alertdialog"
