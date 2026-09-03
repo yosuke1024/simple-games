@@ -15,6 +15,9 @@ export const ko: WaterSortMessages = {
   waterLevelsSolved: '완료한 레벨',
   waterDailiesSolved: '완료한 데일리',
   waterDailyBacklogHint: '지난 날짜는 언제든 열려 있습니다.',
+  waterTier_easy: '쉬움',
+  waterTier_medium: '보통',
+  waterTier_hard: '어려움',
   waterStep1Title: '같은 색 위에 붓기',
   waterStep1Body:
     '시험관을 하나씩 두 번 탭하세요. 맨 위 색이 같으면 부을 수 있고, 빈 시험관에는 언제든지.',

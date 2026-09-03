@@ -70,7 +70,18 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // progress (docs/SCHULTE_TABLE_RULES.md §11, docs/NUMBER_RECALL_RULES.md §12).
   'schulte-table': ['st.stats', 'st.progress', 'st.flags'],
   'number-recall': ['nr.stats', 'nr.progress', 'nr.flags'],
-  'water-sort': ['ws.saveGame', 'ws.saveDaily', 'ws.stats', 'ws.progress', 'ws.flags'],
+  // Seven since Free Play (2026-09-03): the free slot, and a prefs record
+  // that holds only the tier the picker last stood on
+  // (docs/WATER_SORT_RULES.md §6「フリープレイ」, §10).
+  'water-sort': [
+    'ws.saveGame',
+    'ws.saveDaily',
+    'ws.saveFree',
+    'ws.stats',
+    'ws.progress',
+    'ws.flags',
+    'ws.prefs',
+  ],
   'sliding-puzzle': ['sp.saveGame', 'sp.saveDaily', 'sp.stats', 'sp.progress', 'sp.flags'],
   'memory-match': ['mm.saveGame', 'mm.saveDaily', 'mm.stats', 'mm.flags'],
   'sky-fighter': ['sf.stats', 'sf.progress', 'sf.flags'],

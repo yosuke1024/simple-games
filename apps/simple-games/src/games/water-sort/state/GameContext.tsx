@@ -4,8 +4,8 @@
  * orchestration; the only ad surface is the shared BannerSlot the game screen
  * renders.
  *
- * Two games are suspended independently — one level, one daily (§10) — so
- * switching modes never costs the player either one.
+ * Three games are suspended independently — one level, one daily, one free
+ * board (§10) — so switching modes never costs the player any of them.
  *
  * The Hint runs the solver on the main thread; benched worst cases are a few
  * milliseconds (§5), and it only ever runs on an explicit tap — no polling,
@@ -32,6 +32,7 @@ import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
 import {
   createDailySession,
+  createFreeSession,
   createLevelSession,
   findWinningPour,
   localDateString,
@@ -40,6 +41,7 @@ import {
   recordHint,
   restartSession,
   undo,
+  type FreeTier,
   type GameMode,
   type Pour,
   type WaterSession,
@@ -47,13 +49,21 @@ import {
 import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
 import {
   flagsSchema,
+  prefsSchema,
   progressSchema,
   statsSchema,
   type Flags,
+  type Prefs,
   type Progress,
   type Stats,
 } from '../storage/schemas';
-import { applyGameStart, applyPlayTime, applySolved, applySolveToProgress } from './statsLogic';
+import {
+  applyGameStart,
+  applyPlayTime,
+  applySolved,
+  applySolveToProgress,
+  previousBestFor,
+} from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats';
 
@@ -62,6 +72,9 @@ export interface LastResult {
   readonly isNewBestTime: boolean;
   readonly bestMoves: number;
   readonly bestSeconds: number;
+  /** The board's records before this run, or null on its first clear (§9). */
+  readonly previousBestMoves: number | null;
+  readonly previousBestSeconds: number | null;
   readonly moves: number;
   readonly seconds: number;
   readonly hints: number;
@@ -81,6 +94,11 @@ export interface WaterContextValue {
   startLevel: (level: number) => void;
   startNextLevel: () => void;
   startDaily: (date?: string) => void;
+  /** A fresh free board at the picker's tier — or the one given (§6). */
+  startFree: (tier?: FreeTier) => void;
+  /** Where the Free Play picker stands; remembered across launches. */
+  freeTier: FreeTier;
+  setFreeTier: (tier: FreeTier) => void;
   restartCurrent: () => void;
   resumeGame: (mode: GameMode) => void;
   /** Pours one tube into another. False when the pour was not legal (§3). */
@@ -102,6 +120,7 @@ export interface WaterProviderProps {
   initialStats: Stats;
   initialFlags: Flags;
   initialProgress: Progress;
+  initialPrefs: Prefs;
   initialSessions: SavedGames;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
@@ -112,6 +131,7 @@ export function WaterProvider({
   initialStats,
   initialFlags,
   initialProgress,
+  initialPrefs,
   initialSessions,
   onExit,
   children,
@@ -124,6 +144,7 @@ export function WaterProvider({
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
+  const [freeTier, setFreeTierState] = useState<FreeTier>(initialPrefs.freeTier);
   const [lastResult, setLastResult] = useState<LastResult | null>(null);
 
   const sessionsRef = useRef(sessions);
@@ -136,6 +157,8 @@ export function WaterProvider({
   progressRef.current = progress;
   const statsRef = useRef(stats);
   statsRef.current = stats;
+  const freeTierRef = useRef(freeTier);
+  freeTierRef.current = freeTier;
 
   const session = sessions[activeMode];
 
@@ -181,6 +204,9 @@ export function WaterProvider({
       bookedRef.current = next.elapsedSeconds;
       persistStats(applySolved(applyPlayTime(statsRef.current, unbooked)));
       recordGameCompleted();
+      // Read before the records move: what this run is measured against.
+      // A free board has none (statsLogic), and its card says so by silence.
+      const previous = previousBestFor(progressRef.current, next);
       const outcome = applySolveToProgress(progressRef.current, next);
       persistProgress(outcome.progress);
       setLastResult({
@@ -188,6 +214,8 @@ export function WaterProvider({
         isNewBestTime: outcome.isNewBestTime,
         bestMoves: outcome.bestMoves,
         bestSeconds: outcome.bestSeconds,
+        previousBestMoves: previous.moves,
+        previousBestSeconds: previous.seconds,
         moves: next.moveCount,
         seconds: next.elapsedSeconds,
         hints: next.hintCount,
@@ -258,6 +286,22 @@ export function WaterProvider({
       beginSession(createDailySession(target));
     },
     [beginSession, resumeGame],
+  );
+
+  const startFree = useCallback(
+    (tier: FreeTier = freeTierRef.current) => {
+      beginSession(createFreeSession(tier));
+    },
+    [beginSession],
+  );
+
+  const setFreeTier = useCallback(
+    (tier: FreeTier) => {
+      setFreeTierState(tier);
+      // The picker is the only thing that writes this record.
+      void saveRecord(prefsSchema, { ...initialPrefs, freeTier: tier });
+    },
+    [initialPrefs],
   );
 
   const restartCurrent = useCallback(() => {
@@ -393,6 +437,9 @@ export function WaterProvider({
       startLevel,
       startNextLevel,
       startDaily,
+      startFree,
+      freeTier,
+      setFreeTier,
       restartCurrent,
       resumeGame,
       tryPour,
@@ -416,6 +463,9 @@ export function WaterProvider({
       startLevel,
       startNextLevel,
       startDaily,
+      startFree,
+      freeTier,
+      setFreeTier,
       restartCurrent,
       resumeGame,
       tryPour,

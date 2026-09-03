@@ -15,6 +15,9 @@ export const tr: WaterSortMessages = {
   waterLevelsSolved: 'Çözülen seviyeler',
   waterDailiesSolved: 'Çözülen günlükler',
   waterDailyBacklogHint: 'Önceki günler her zaman açık.',
+  waterTier_easy: 'Kolay',
+  waterTier_medium: 'Orta',
+  waterTier_hard: 'Zor',
   waterStep1Title: 'Aynıyı aynının üstüne dök',
   waterStep1Body:
     'Bir tüpe, sonra bir başkasına dokun. Üstteki renk uyuşuyorsa dökülür — boş tüpe her zaman dökebilirsin.',

@@ -5,11 +5,15 @@
  */
 import { describe, expect, it } from 'vitest';
 import { canPour } from './engine';
+import { FREE_TIER_LEVEL, FREE_TIERS, levelSeed } from './levels';
 import { decodeTubes, encodeTubes } from './serialize';
 import {
   canUndo,
   createDailySession,
+  createFreeSession,
   createLevelSession,
+  freeSeed,
+  newSeedToken,
   pour,
   recordHint,
   restartSession,
@@ -42,6 +46,52 @@ describe('createLevelSession / createDailySession', () => {
     expect(session.colors).toBe(6);
     expect(session.dailyDate).toBe('2026-08-01');
     expect(session.tubes).toEqual(createDailySession('2026-08-01').tubes);
+  });
+});
+
+describe('createFreeSession (§6「フリープレイ」)', () => {
+  it('deals a board at the tier asked for, with no level and no date', () => {
+    const session = createFreeSession('hard');
+    expect(session.mode).toBe('free');
+    expect(session.freeTier).toBe('hard');
+    expect(session.colors).toBe(9);
+    expect(session.level).toBeNull();
+    expect(session.dailyDate).toBeNull();
+    expect(session.seed.startsWith('water-free-')).toBe(true);
+    expect(session.status).toBe('playing');
+  });
+
+  it("is one level's deal under another seed: levels 10 / 50 / 95", () => {
+    for (const tier of FREE_TIERS) {
+      const level = FREE_TIER_LEVEL[tier];
+      expect(createFreeSession(tier, levelSeed(level)).tubes).toEqual(
+        createLevelSession(level).tubes,
+      );
+    }
+  });
+
+  it('gives a new board each time, and the same board for the same seed', () => {
+    const a = createFreeSession('medium', freeSeed(newSeedToken(1, () => 0.25)));
+    const b = createFreeSession('medium', freeSeed(newSeedToken(2, () => 0.5)));
+    expect(b.tubes).not.toEqual(a.tubes);
+    const again = createFreeSession('medium', a.seed);
+    expect(again.tubes).toEqual(a.tubes);
+  });
+
+  it('restart rebuilds the identical free board', () => {
+    const session = createFreeSession('easy');
+    const move = legalPour(session);
+    const restarted = restartSession(pour(session, move.from, move.to)!);
+    expect(restarted.seed).toBe(session.seed);
+    expect(restarted.freeTier).toBe('easy');
+    expect(restarted.tubes).toEqual(session.tubes);
+    expect(restarted.moveCount).toBe(0);
+  });
+
+  it('never collides with a level or a daily seed', () => {
+    const token = newSeedToken(1, () => 0);
+    expect(freeSeed(token)).not.toBe(levelSeed(1));
+    expect(freeSeed(token)).not.toMatch(/^water-daily-/);
   });
 });
 
@@ -98,6 +148,7 @@ describe('restart and restore', () => {
       colors: played.colors,
       dailyDate: played.dailyDate,
       level: played.level,
+      freeTier: played.freeTier,
       tubes: played.tubes,
       moveCount: played.moveCount,
       hintCount: played.hintCount,

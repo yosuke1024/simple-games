@@ -15,6 +15,9 @@ export const id: WaterSortMessages = {
   waterLevelsSolved: 'Level selesai',
   waterDailiesSolved: 'Harian selesai',
   waterDailyBacklogHint: 'Hari-hari sebelumnya selalu terbuka.',
+  waterTier_easy: 'Mudah',
+  waterTier_medium: 'Sedang',
+  waterTier_hard: 'Sulit',
   waterStep1Title: 'Tuang warna ke warna yang sama',
   waterStep1Body:
     'Ketuk satu tabung, lalu tabung lain. Warna teratas tertuang jika cocok — atau ke tabung kosong kapan saja.',

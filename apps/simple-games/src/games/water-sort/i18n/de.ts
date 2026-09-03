@@ -15,6 +15,9 @@ export const de: WaterSortMessages = {
   waterLevelsSolved: 'Gelöste Level',
   waterDailiesSolved: 'Gelöste Tagesrätsel',
   waterDailyBacklogHint: 'Alle früheren Tage bleiben offen.',
+  waterTier_easy: 'Leicht',
+  waterTier_medium: 'Mittel',
+  waterTier_hard: 'Schwer',
   waterStep1Title: 'Gleich auf gleich gießen',
   waterStep1Body:
     'Tippe ein Röhrchen an, dann ein zweites. Die oberste Farbe fließt, wenn sie passt — oder in ein leeres Röhrchen.',

@@ -44,6 +44,8 @@ export function WaterGameScreen() {
     goHome,
     restartCurrent,
     startNextLevel,
+    startFree,
+    freeTier,
   } = useWaterSort();
   const { t } = useSettings();
   const [selected, setSelected] = useState<number | null>(null);
@@ -193,7 +195,9 @@ export function WaterGameScreen() {
             <span className="ws-mode">
               {session.mode === 'daily'
                 ? t('modeDaily')
-                : t('modeLevel', { n: session.level ?? 1 })}
+                : session.mode === 'free'
+                  ? t('freePlay')
+                  : t('modeLevel', { n: session.level ?? 1 })}
             </span>
             <span className="ws-move-count">
               {t('movesLabel')} {session.moveCount}
@@ -253,6 +257,7 @@ export function WaterGameScreen() {
         lastResult={lastResult}
         onRetry={restartCurrent}
         onNextLevel={startNextLevel}
+        onNewFree={() => startFree(session.freeTier ?? freeTier)}
         onHome={goHome}
       />
 

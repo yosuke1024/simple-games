@@ -15,6 +15,9 @@ export const vi: WaterSortMessages = {
   waterLevelsSolved: 'Màn đã xong',
   waterDailiesSolved: 'Thử thách ngày đã xong',
   waterDailyBacklogHint: 'Những ngày trước luôn mở.',
+  waterTier_easy: 'Dễ',
+  waterTier_medium: 'Vừa',
+  waterTier_hard: 'Khó',
   waterStep1Title: 'Rót màu lên màu giống nó',
   waterStep1Body:
     'Chạm một ống, rồi chạm ống khác. Màu trên cùng trùng nhau thì rót được — ống trống thì lúc nào cũng được.',
