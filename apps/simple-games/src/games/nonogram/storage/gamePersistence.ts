@@ -4,7 +4,7 @@
  * from the saved solution, which cannot drift from it.
  *
  * Each mode has its own slot, so suspending a level game and playing the daily
- * never costs you either one.
+ * (or a free board, §6) never costs you any of them.
  */
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
@@ -17,14 +17,16 @@ import {
   type GameMode,
   type NonogramSession,
 } from '../game';
-import { dailyGameSchema, gameSchema, type PersistedGame } from './schemas';
+import { dailyGameSchema, freeGameSchema, gameSchema, type PersistedGame } from './schemas';
 
 export interface SavedGames {
   level: NonogramSession | null;
   daily: NonogramSession | null;
+  free: NonogramSession | null;
 }
 
-const schemaFor = (mode: GameMode) => (mode === 'daily' ? dailyGameSchema : gameSchema);
+const schemaFor = (mode: GameMode) =>
+  mode === 'daily' ? dailyGameSchema : mode === 'free' ? freeGameSchema : gameSchema;
 
 export function toPersisted(session: NonogramSession, savedAt: number): PersistedGame {
   return {
@@ -34,6 +36,7 @@ export function toPersisted(session: NonogramSession, savedAt: number): Persiste
     size: session.size,
     dailyDate: session.dailyDate,
     level: session.level,
+    freeTier: session.freeTier,
     solution: encodeCells(session.solution),
     marks: encodeCells(session.marks),
     elapsedSeconds: session.elapsedSeconds,
@@ -54,6 +57,7 @@ function toSession(persisted: PersistedGame | null): NonogramSession | null {
     size: persisted.size,
     dailyDate: persisted.dailyDate,
     level: persisted.level,
+    freeTier: persisted.freeTier,
     solution,
     marks,
     elapsedSeconds: persisted.elapsedSeconds,
@@ -64,11 +68,12 @@ function toSession(persisted: PersistedGame | null): NonogramSession | null {
 }
 
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
-  const [level, daily] = await Promise.all([
+  const [level, daily, free] = await Promise.all([
     loadRecord(gameSchema, kv),
     loadRecord(dailyGameSchema, kv),
+    loadRecord(freeGameSchema, kv),
   ]);
-  return { level: toSession(level), daily: toSession(daily) };
+  return { level: toSession(level), daily: toSession(daily), free: toSession(free) };
 }
 
 export async function saveGame(

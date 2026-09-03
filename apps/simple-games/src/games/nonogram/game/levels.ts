@@ -60,3 +60,20 @@ export function fillRateForLevel(level: number): number {
   const progress = (target - band.from) / span;
   return band.fillFrom + (band.fillTo - band.fillFrom) * progress;
 }
+
+/**
+ * Free Play tiers (§6「フリープレイ」): nothing new to tune. A tier is the
+ * generation parameters — size and fill rate — of one representative level,
+ * drawn with a seed of its own. Easy is the 5×5 band, medium the middle of
+ * the 10×10 climb, hard near its top.
+ */
+export type FreeTier = 'easy' | 'medium' | 'hard';
+export const FREE_TIERS: readonly FreeTier[] = ['easy', 'medium', 'hard'];
+export const FREE_TIER_LEVEL: Readonly<Record<FreeTier, number>> = {
+  easy: 10,
+  medium: 50,
+  hard: 95,
+};
+
+export const isFreeTier = (value: unknown): value is FreeTier =>
+  value === 'easy' || value === 'medium' || value === 'hard';

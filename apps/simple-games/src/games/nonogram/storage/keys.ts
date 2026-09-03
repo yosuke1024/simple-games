@@ -7,6 +7,7 @@
 export const NG_STORAGE_KEYS = {
   game: 'ng.saveGame',
   dailyGame: 'ng.saveDaily',
+  freeGame: 'ng.saveFree',
   stats: 'ng.stats',
   progress: 'ng.progress',
   flags: 'ng.flags',

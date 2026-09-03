@@ -4,7 +4,15 @@
  */
 import { describe, expect, it } from 'vitest';
 import { cellCount } from './types';
-import { clampLevel, fillRateForLevel, levelSeed, MAX_LEVEL, sizeForLevel } from './levels';
+import {
+  clampLevel,
+  fillRateForLevel,
+  FREE_TIER_LEVEL,
+  isFreeTier,
+  levelSeed,
+  MAX_LEVEL,
+  sizeForLevel,
+} from './levels';
 
 describe('levels (§6)', () => {
   it('pins the band table', () => {
@@ -49,6 +57,19 @@ describe('levels (§6)', () => {
       const span = expectedCells(from) - expectedCells(to);
       expect(span, `band ${from}-${to}`).toBeGreaterThan(1);
     }
+  });
+
+  it('pins each free tier to its representative level (フリープレイ)', () => {
+    // Nothing of its own to tune: a tier is a level's size and fill rate.
+    expect(FREE_TIER_LEVEL).toEqual({ easy: 10, medium: 50, hard: 95 });
+    expect(sizeForLevel(FREE_TIER_LEVEL.easy)).toBe(5);
+    expect(sizeForLevel(FREE_TIER_LEVEL.medium)).toBe(10);
+    expect(sizeForLevel(FREE_TIER_LEVEL.hard)).toBe(10);
+    expect(fillRateForLevel(FREE_TIER_LEVEL.hard)).toBeLessThan(
+      fillRateForLevel(FREE_TIER_LEVEL.medium),
+    );
+    expect(isFreeTier('hard')).toBe(true);
+    expect(isFreeTier('x')).toBe(false);
   });
 
   it('clamps and seeds deterministically', () => {

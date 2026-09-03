@@ -5,9 +5,12 @@ import { describe, expect, it } from 'vitest';
 import {
   countHintUse,
   createDailySession,
+  createFreeSession,
   createLevelSession,
   crossCell,
+  freeSeed,
   hintFor,
+  newSeedToken,
   paintCell,
   restartSession,
   restoreSession,
@@ -59,6 +62,46 @@ describe('sessions (§6)', () => {
     const restored = restoreSession(persisted);
     expect(restored.status).toBe('solved');
     expect(restored.clues).toEqual(solved.clues);
+  });
+});
+
+describe('createFreeSession (§6 フリープレイ)', () => {
+  it('draws a board at the tier asked for, with no level and no date', () => {
+    const easy = createFreeSession('easy');
+    expect(easy.mode).toBe('free');
+    expect(easy.freeTier).toBe('easy');
+    expect(easy.size).toBe(5);
+    expect(easy.level).toBeNull();
+    expect(easy.dailyDate).toBeNull();
+    expect(easy.seed.startsWith('nono-free-')).toBe(true);
+    expect(easy.status).toBe('playing');
+
+    expect(createFreeSession('medium').size).toBe(10);
+    expect(createFreeSession('hard').size).toBe(10);
+  });
+
+  it('gives a new board each time, and the same board for the same seed', () => {
+    const a = createFreeSession('medium', freeSeed(newSeedToken(1, () => 0.25)));
+    const b = createFreeSession('medium', freeSeed(newSeedToken(2, () => 0.5)));
+    expect(b.solution).not.toEqual(a.solution);
+    const again = createFreeSession('medium', a.seed);
+    expect(again.solution).toEqual(a.solution);
+    expect(again.clues).toEqual(a.clues);
+  });
+
+  it('restart rebuilds the identical free board', () => {
+    const session = createFreeSession('hard');
+    const restarted = restartSession(paintCell(session, 0)!);
+    expect(restarted.seed).toBe(session.seed);
+    expect(restarted.freeTier).toBe('hard');
+    expect(restarted.solution).toEqual(session.solution);
+    expect(restarted.marks.every((mark) => mark === UNKNOWN)).toBe(true);
+  });
+
+  it('never collides with a level or a daily seed', () => {
+    const token = newSeedToken(1, () => 0);
+    expect(freeSeed(token)).not.toBe('nono-level-1');
+    expect(freeSeed(token)).not.toMatch(/^nono-daily-/);
   });
 });
 
