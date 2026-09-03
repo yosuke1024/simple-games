@@ -117,5 +117,6 @@ export interface Puzzle {
   readonly solution: Grid;
 }
 
-export type GameMode = 'level' | 'daily';
+/** Level list, the daily, or a free board at a chosen tier (§9). */
+export type GameMode = 'level' | 'daily' | 'free';
 export type GameStatus = 'playing' | 'solved';

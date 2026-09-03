@@ -29,6 +29,12 @@ export const en = {
   dailyToday: 'Today',
   dailyBacklogHint: 'Clear a day to unlock the one before it.',
   modeDaily: 'Daily',
+  // Free Play — a fresh board on demand, beside the level list and the
+  // daily (docs/SUDOKU_RULES.md §9「フリープレイ」). Shared by every
+  // puzzle that has it; `difficulty` labels its picker.
+  freePlay: 'Free Play',
+  freePlayNote: 'A new board, whenever you like.',
+  difficulty: 'Difficulty',
   undo: 'Undo',
   hint: 'Hint',
   timeLabel: 'Time',

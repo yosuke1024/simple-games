@@ -1,14 +1,17 @@
+import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { formatDuration } from '@/ui/format';
-import { localDateString, MAX_LEVEL } from '../../game';
+import { DIFFICULTIES, localDateString, MAX_LEVEL } from '../../game';
 import { useSudoku } from '../../state/GameContext';
 import { solvedLevelCount } from '../../state/statsLogic';
 
 /**
  * Each mode has its own entry point and its own suspended game, so nothing
- * here can cost the player a game in progress — no confirmation needed.
+ * here can cost the player a game in progress — the one exception is asking
+ * for a *new* free board while one is suspended, which asks first (§9).
  */
 export function SudokuHomeScreen() {
   const {
@@ -18,13 +21,18 @@ export function SudokuHomeScreen() {
     dailyDoneToday,
     startLevel,
     startDaily,
+    startFree,
+    freeDifficulty,
+    setFreeDifficulty,
     resumeGame,
     exitToCollection,
   } = useSudoku();
   const { t } = useSettings();
+  const [confirmNewFree, setConfirmNewFree] = useState(false);
 
   const levelGame = sessions.level?.status === 'playing' ? sessions.level : null;
   const dailyGame = sessions.daily?.status === 'playing' ? sessions.daily : null;
+  const freeGame = sessions.free?.status === 'playing' ? sessions.free : null;
   const today = localDateString(new Date());
   const dailyIsToday = dailyGame?.dailyDate === today;
   const frontierBest = progress.bestTimes[String(progress.highestUnlocked)];
@@ -91,6 +99,42 @@ export function SudokuHomeScreen() {
           ) : null}
         </button>
 
+        {/* Free Play (§9「フリープレイ」): a fresh board at the tier below,
+            beside the climb and the daily rather than instead of them. A
+            suspended free board resumes from the same button; a new one while
+            it is suspended is a separate, confirmed ask. */}
+        <button
+          type="button"
+          className="btn btn-secondary btn-big"
+          onClick={() => (freeGame ? resumeGame('free') : startFree())}
+        >
+          {t('freePlay')}
+          <span className="btn-note">
+            {freeGame
+              ? `${t('resume')} · ${t(`sudokuTier_${freeGame.difficulty}`)}`
+              : t(`sudokuTier_${freeDifficulty}`)}
+          </span>
+        </button>
+        {freeGame ? (
+          <button type="button" className="btn btn-ghost" onClick={() => setConfirmNewFree(true)}>
+            {t('newGame')}
+          </button>
+        ) : null}
+        <div className="segmented free-play-toggle" role="group" aria-label={t('difficulty')}>
+          {DIFFICULTIES.map((difficulty) => (
+            <button
+              key={difficulty}
+              type="button"
+              className={`segment ${difficulty === freeDifficulty ? 'segment-active' : ''}`}
+              aria-pressed={difficulty === freeDifficulty}
+              onClick={() => setFreeDifficulty(difficulty)}
+            >
+              {t(`sudokuTier_${difficulty}`)}
+            </button>
+          ))}
+        </div>
+        <p className="free-play-note">{t('freePlayNote')}</p>
+
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('levels')}>
             <IconGrid className="home-chip-icon" />
@@ -116,6 +160,19 @@ export function SudokuHomeScreen() {
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmNewFree}
+        title={t('confirmNewGameTitle')}
+        body={t('confirmNewGameBody')}
+        cancelLabel={t('cancel')}
+        confirmLabel={t('confirm')}
+        onCancel={() => setConfirmNewFree(false)}
+        onConfirm={() => {
+          setConfirmNewFree(false);
+          startFree();
+        }}
+      />
     </div>
   );
 }

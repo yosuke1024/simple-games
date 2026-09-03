@@ -16,6 +16,8 @@ export interface SudokuResultOverlayProps {
   lastResult: LastResult | null;
   onRetry: () => void;
   onNextLevel: () => void;
+  /** Free play's "next": another board at the same tier (§9). */
+  onNewFree: () => void;
   onHome: () => void;
 }
 
@@ -24,6 +26,7 @@ export function SudokuResultOverlay({
   lastResult,
   onRetry,
   onNextLevel,
+  onNewFree,
   onHome,
 }: SudokuResultOverlayProps) {
   const { t } = useSettings();
@@ -33,6 +36,9 @@ export function SudokuResultOverlay({
 
   const hasNextLevel =
     session.mode === 'level' && session.level !== null && session.level < MAX_LEVEL;
+  // A free board's "next" is another board at the same tier; a level's is the
+  // next level; a daily has neither, and the retry leads.
+  const hasNext = hasNextLevel || session.mode === 'free';
 
   return (
     <div className="overlay overlay-result">
@@ -85,12 +91,16 @@ export function SudokuResultOverlay({
             <button type="button" className="btn btn-primary" onClick={onNextLevel} autoFocus>
               {t('nextLevel')}
             </button>
+          ) : session.mode === 'free' ? (
+            <button type="button" className="btn btn-primary" onClick={onNewFree} autoFocus>
+              {t('newGame')}
+            </button>
           ) : null}
           <button
             type="button"
-            className={`btn ${hasNextLevel ? 'btn-secondary' : 'btn-primary'}`}
+            className={`btn ${hasNext ? 'btn-secondary' : 'btn-primary'}`}
             onClick={onRetry}
-            autoFocus={!hasNextLevel}
+            autoFocus={!hasNext}
           >
             {t('tryAgain')}
           </button>

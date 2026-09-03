@@ -64,6 +64,7 @@ export function SudokuGameScreen() {
     goHome,
     restartCurrent,
     startNextLevel,
+    startFree,
   } = useSudoku();
   const { t } = useSettings();
 
@@ -230,7 +231,9 @@ export function SudokuGameScreen() {
             <span className="sudoku-mode">
               {session.mode === 'daily'
                 ? t('modeDaily')
-                : t('modeLevel', { n: session.level ?? 1 })}
+                : session.mode === 'free'
+                  ? t('freePlay')
+                  : t('modeLevel', { n: session.level ?? 1 })}
             </span>
             <span>{t(`sudokuTier_${session.difficulty}`)}</span>
           </div>
@@ -313,6 +316,7 @@ export function SudokuGameScreen() {
         lastResult={lastResult}
         onRetry={restartCurrent}
         onNextLevel={startNextLevel}
+        onNewFree={() => startFree(session.difficulty)}
         onHome={goHome}
       />
 

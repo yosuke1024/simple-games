@@ -49,7 +49,12 @@ export interface SlideOutcome {
   readonly over: boolean;
 }
 
-const NOTHING_HAPPENED: SlideOutcome = { moved: false, merged: false, largestMerge: 0, over: false };
+const NOTHING_HAPPENED: SlideOutcome = {
+  moved: false,
+  merged: false,
+  largestMerge: 0,
+  over: false,
+};
 
 export interface LastResult {
   readonly score: number;

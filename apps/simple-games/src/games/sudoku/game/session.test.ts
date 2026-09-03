@@ -22,14 +22,17 @@ import {
   canUndo,
   countHintUse,
   createDailySession,
+  createFreeSession,
   createLevelSession,
   eraseCell,
+  freeSeed,
+  newSeedToken,
   placeDigit,
   restartSession,
   restoreSession,
   toggleCellNote,
-  undo,
   type SudokuSession,
+  undo,
 } from './session';
 import { CELLS, type Digit } from './types';
 
@@ -100,6 +103,41 @@ describe('createDailySession', () => {
     const a = createDailySession('2026-08-03');
     const b = createDailySession('2026-08-04');
     expect(a.board.givens).not.toEqual(b.board.givens);
+  });
+});
+
+describe('createFreeSession (§9)', () => {
+  it('builds a board at the tier asked for, with no level and no date', () => {
+    const session = createFreeSession('hard');
+    expect(session.mode).toBe('free');
+    expect(session.difficulty).toBe('hard');
+    expect(session.level).toBeNull();
+    expect(session.dailyDate).toBeNull();
+    expect(session.seed.startsWith('sudoku-free-')).toBe(true);
+    expect(session.status).toBe('playing');
+  });
+
+  it('gives a new board each time, and the same board for the same seed', () => {
+    const a = createFreeSession('easy', freeSeed(newSeedToken(1, () => 0.25)));
+    const b = createFreeSession('easy', freeSeed(newSeedToken(2, () => 0.5)));
+    expect(b.board.givens).not.toEqual(a.board.givens);
+    const again = createFreeSession('easy', a.seed);
+    expect(again.board.givens).toEqual(a.board.givens);
+    expect(again.solution).toEqual(a.solution);
+  });
+
+  it('restart rebuilds the identical free board', () => {
+    const session = createFreeSession('medium');
+    const restarted = restartSession(session);
+    expect(restarted.seed).toBe(session.seed);
+    expect(restarted.difficulty).toBe('medium');
+    expect(restarted.board.givens).toEqual(session.board.givens);
+  });
+
+  it('never collides with a level or a daily seed', () => {
+    const token = newSeedToken(1, () => 0);
+    expect(freeSeed(token)).not.toBe('sudoku-level-1');
+    expect(freeSeed(token)).not.toMatch(/^sudoku-daily-/);
   });
 });
 

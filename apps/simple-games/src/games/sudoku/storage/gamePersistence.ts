@@ -3,7 +3,7 @@
  * Undo history is intentionally not persisted (docs/SUDOKU_RULES.md §11).
  *
  * Each mode has its own slot, so suspending a level game and playing the daily
- * never costs you either one.
+ * (or a free board, §9) never costs you any of them.
  */
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
@@ -17,14 +17,16 @@ import {
   type GameMode,
   type SudokuSession,
 } from '../game';
-import { dailyGameSchema, gameSchema, type PersistedGame } from './schemas';
+import { dailyGameSchema, freeGameSchema, gameSchema, type PersistedGame } from './schemas';
 
 export interface SavedGames {
   level: SudokuSession | null;
   daily: SudokuSession | null;
+  free: SudokuSession | null;
 }
 
-const schemaFor = (mode: GameMode) => (mode === 'daily' ? dailyGameSchema : gameSchema);
+const schemaFor = (mode: GameMode) =>
+  mode === 'daily' ? dailyGameSchema : mode === 'free' ? freeGameSchema : gameSchema;
 
 export function toPersisted(session: SudokuSession, savedAt: number): PersistedGame {
   const board = encodeBoard(session.board);
@@ -73,11 +75,12 @@ function toSession(persisted: PersistedGame | null): SudokuSession | null {
 }
 
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
-  const [level, daily] = await Promise.all([
+  const [level, daily, free] = await Promise.all([
     loadRecord(gameSchema, kv),
     loadRecord(dailyGameSchema, kv),
+    loadRecord(freeGameSchema, kv),
   ]);
-  return { level: toSession(level), daily: toSession(daily) };
+  return { level: toSession(level), daily: toSession(daily), free: toSession(free) };
 }
 
 export async function saveGame(session: SudokuSession, kv: KVStore = preferencesKV): Promise<void> {

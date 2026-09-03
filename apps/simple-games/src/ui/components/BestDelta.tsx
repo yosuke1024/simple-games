@@ -28,7 +28,5 @@ export function BestDelta({ value, previous, kind, lowerIsBetter = true }: BestD
   if (delta === 0) return null;
   const better = lowerIsBetter ? delta < 0 : delta > 0;
   const text = kind === 'time' ? formatSignedDuration(delta) : formatSignedCount(delta);
-  return (
-    <span className={`result-delta${better ? ' result-delta-better' : ''}`}>{text}</span>
-  );
+  return <span className={`result-delta${better ? ' result-delta-better' : ''}`}>{text}</span>;
 }

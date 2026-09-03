@@ -27,6 +27,7 @@ function solvedSession(level: number, elapsedSeconds: number): SudokuSession {
 function renderOverlay(session: SudokuSession, lastResult: LastResult | null) {
   const onRetry = vi.fn();
   const onNextLevel = vi.fn();
+  const onNewFree = vi.fn();
   const onHome = vi.fn();
   render(
     <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
@@ -35,11 +36,12 @@ function renderOverlay(session: SudokuSession, lastResult: LastResult | null) {
         lastResult={lastResult}
         onRetry={onRetry}
         onNextLevel={onNextLevel}
+        onNewFree={onNewFree}
         onHome={onHome}
       />
     </SettingsProvider>,
   );
-  return { onRetry, onNextLevel, onHome };
+  return { onRetry, onNextLevel, onNewFree, onHome };
 }
 
 afterEach(cleanup);
@@ -108,6 +110,16 @@ describe('SudokuResultOverlay', () => {
     expect(onRetry).toHaveBeenCalledTimes(1);
     await user.click(screen.getByRole('button', { name: 'Home' }));
     expect(onHome).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers another board at the same tier after a free one (§9)', async () => {
+    const user = userEvent.setup();
+    const free = { ...solvedSession(3, 60), mode: 'free' as const, level: null };
+    const { onNewFree, onNextLevel } = renderOverlay(free, null);
+    expect(screen.queryByRole('button', { name: 'Next Level' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    expect(onNewFree).toHaveBeenCalledTimes(1);
+    expect(onNextLevel).not.toHaveBeenCalled();
   });
 
   it('has no next level for a daily game', () => {

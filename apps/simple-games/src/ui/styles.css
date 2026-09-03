@@ -886,6 +886,20 @@ button:disabled {
   color: var(--accent);
 }
 
+/* Free Play's tier picker and its one-line note, under the Free Play button
+   on a game's home (docs/SUDOKU_RULES.md §9「フリープレイ」). The picker is
+   the shared segmented control; these only place it. */
+.free-play-toggle {
+  align-self: center;
+}
+
+.free-play-note {
+  margin: -4px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
 /* The count under the Levels chip: how many of the hundred are done. A
    fraction with an end, not a bar that fills — the climb is finishable and
    this says how far along it is (docs/SUDOKU_RULES.md §9). */

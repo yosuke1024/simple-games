@@ -72,13 +72,17 @@ describe('useResultReveal', () => {
     });
     expect(screen.getByRole('status')).toHaveTextContent('shown');
     rerender(
-      <SettingsProvider initialSettings={{ ...settingsSchema.defaultValue(), reducedMotion: false }}>
+      <SettingsProvider
+        initialSettings={{ ...settingsSchema.defaultValue(), reducedMotion: false }}
+      >
         <Probe open={false} />
       </SettingsProvider>,
     );
     expect(screen.getByRole('status')).toHaveTextContent('waiting');
     rerender(
-      <SettingsProvider initialSettings={{ ...settingsSchema.defaultValue(), reducedMotion: false }}>
+      <SettingsProvider
+        initialSettings={{ ...settingsSchema.defaultValue(), reducedMotion: false }}
+      >
         <Probe open />
       </SettingsProvider>,
     );

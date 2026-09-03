@@ -3,8 +3,8 @@
  * persistence. Pure local state — no analytics, no ad orchestration; the only
  * ad surface is the shared BannerSlot the game screen renders.
  *
- * Two games are suspended independently — one level, one daily (§11) — so
- * switching modes never costs the player either one.
+ * Three games are suspended independently — one level, one daily, one free
+ * board (§11) — so switching modes never costs the player any of them.
  *
  * Battery note: the play clock lives in a mutable ref and does NOT set React
  * state, so nothing re-renders while a game is running. It is never shown
@@ -28,6 +28,7 @@ import { saveRecord } from '../../../storage/repo';
 import {
   countHintUse,
   createDailySession,
+  createFreeSession,
   createLevelSession,
   eraseCell,
   findHint,
@@ -37,6 +38,7 @@ import {
   restartSession,
   toggleCellNote,
   undo,
+  type Difficulty,
   type Digit,
   type GameMode,
   type Hint,
@@ -45,6 +47,7 @@ import {
 import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
 import {
   flagsSchema,
+  prefsSchema,
   progressSchema,
   statsSchema,
   type Flags,
@@ -89,6 +92,11 @@ export interface SudokuContextValue {
   startLevel: (level: number) => void;
   startNextLevel: () => void;
   startDaily: (date?: string) => void;
+  /** A fresh free board at the picker's tier — or the one given (§9). */
+  startFree: (difficulty?: Difficulty) => void;
+  /** Where the Free Play picker stands; remembered across launches. */
+  freeDifficulty: Difficulty;
+  setFreeDifficulty: (difficulty: Difficulty) => void;
   restartCurrent: () => void;
   resumeGame: (mode: GameMode) => void;
   place: (index: number, digit: Digit) => boolean;
@@ -131,6 +139,7 @@ export function SudokuProvider({
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
+  const [freeDifficulty, setFreeDifficultyState] = useState<Difficulty>(prefs.freeDifficulty);
   const [lastResult, setLastResult] = useState<LastResult | null>(null);
   const [sessionEpoch, setSessionEpoch] = useState(0);
 
@@ -144,6 +153,8 @@ export function SudokuProvider({
   progressRef.current = progress;
   const statsRef = useRef(stats);
   statsRef.current = stats;
+  const freeDifficultyRef = useRef(freeDifficulty);
+  freeDifficultyRef.current = freeDifficulty;
 
   const session = sessions[activeMode];
 
@@ -187,6 +198,14 @@ export function SudokuProvider({
       void clearSavedGame(next.mode);
       const unbooked = Math.max(0, next.elapsedSeconds - bookedRef.current);
       bookedRef.current = next.elapsedSeconds;
+      // Read before any record moves: what this run is measured against. A
+      // level or a daily has its own board's record; a free board has no
+      // board to keep one for, so it stands against the tier's fastest
+      // clear — the number the statistics screen shows (§12).
+      const previousBestSeconds =
+        next.mode === 'free'
+          ? statsRef.current[next.difficulty].bestSeconds
+          : previousBestFor(progressRef.current, next);
       persistStats(
         applySolved(
           applyPlayTime(statsRef.current, next.difficulty, unbooked),
@@ -195,13 +214,15 @@ export function SudokuProvider({
         ),
       );
       recordGameCompleted();
-      // Read before the record moves: what this run is measured against.
-      const previousBestSeconds = previousBestFor(progressRef.current, next);
       const outcome = applySolveToProgress(progressRef.current, next);
       persistProgress(outcome.progress);
+      const freeIsBest = previousBestSeconds === null || next.elapsedSeconds < previousBestSeconds;
       setLastResult({
-        isNewBest: outcome.isNewBest,
-        bestSeconds: outcome.bestSeconds,
+        isNewBest: next.mode === 'free' ? freeIsBest : outcome.isNewBest,
+        bestSeconds:
+          next.mode === 'free'
+            ? Math.min(next.elapsedSeconds, previousBestSeconds ?? Infinity)
+            : outcome.bestSeconds,
         previousBestSeconds,
         seconds: next.elapsedSeconds,
         mistakes: next.mistakeCount,
@@ -274,6 +295,23 @@ export function SudokuProvider({
       beginSession(createDailySession(target));
     },
     [beginSession, resumeGame],
+  );
+
+  const startFree = useCallback(
+    (difficulty: Difficulty = freeDifficultyRef.current) => {
+      beginSession(createFreeSession(difficulty));
+    },
+    [beginSession],
+  );
+
+  const setFreeDifficulty = useCallback(
+    (difficulty: Difficulty) => {
+      setFreeDifficultyState(difficulty);
+      // The rest of the record is the settings screen's, which cannot be
+      // open while a game is mounted — so the prop is current.
+      void saveRecord(prefsSchema, { ...prefs, freeDifficulty: difficulty });
+    },
+    [prefs],
   );
 
   const restartCurrent = useCallback(() => {
@@ -414,6 +452,8 @@ export function SudokuProvider({
       stats,
       progress,
       prefs,
+      freeDifficulty,
+      setFreeDifficulty,
       tutorialCompleted: flags.tutorialCompleted,
       dailyDoneToday: progress.dailyTimes[today] !== undefined,
       lastResult,
@@ -422,6 +462,7 @@ export function SudokuProvider({
       startLevel,
       startNextLevel,
       startDaily,
+      startFree,
       restartCurrent,
       resumeGame,
       place,
@@ -441,6 +482,8 @@ export function SudokuProvider({
       stats,
       progress,
       prefs,
+      freeDifficulty,
+      setFreeDifficulty,
       flags.tutorialCompleted,
       today,
       lastResult,
@@ -449,6 +492,7 @@ export function SudokuProvider({
       startLevel,
       startNextLevel,
       startDaily,
+      startFree,
       restartCurrent,
       resumeGame,
       place,

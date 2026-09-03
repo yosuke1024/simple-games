@@ -145,6 +145,61 @@ describe('home', () => {
   });
 });
 
+describe('free play (§9)', () => {
+  it('starts a board at the chosen tier, and resumes it from the home', async () => {
+    const user = userEvent.setup();
+    renderSudoku(tutorialDone);
+    await screen.findByRole('button', { name: /Level 1/ });
+
+    // The picker stands on medium until told otherwise; here, hard.
+    const picker = screen.getByRole('group', { name: 'Difficulty' });
+    await user.click(within(picker).getByRole('button', { name: 'Hard' }));
+    await user.click(screen.getByRole('button', { name: /Free Play/ }));
+
+    // The top bar names the mode and the tier — no level number, no clock.
+    expect(screen.getByText('Free Play')).toBeInTheDocument();
+    expect(screen.getByText('Hard')).toBeInTheDocument();
+    expect(screen.queryByText(/Level \d/)).not.toBeInTheDocument();
+
+    // A digit, then away and back: the board is where it was left.
+    const grid = screen.getByRole('group', { name: 'Sudoku grid' });
+    const empty = within(grid)
+      .getAllByRole('button')
+      .find((cell) => cell.getAttribute('aria-label')?.startsWith('Empty'))!;
+    await user.click(empty);
+    const pad = screen.getByRole('group', { name: 'Number pad' });
+    await user.click(
+      within(pad)
+        .getAllByRole('button')
+        .find((button) => !button.hasAttribute('disabled'))!,
+    );
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    expect(screen.getByRole('button', { name: /Free Play.*Resume.*Hard/ })).toBeInTheDocument();
+    // The level climb is untouched by a free board.
+    expect(screen.getByRole('button', { name: /Level 1/ })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Free Play/ }));
+    expect(screen.getByText('Hard')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('group', { name: 'Sudoku grid' }))
+        .getAllByRole('button')
+        .some((cell) => cell.getAttribute('aria-label')?.startsWith('Empty')),
+    ).toBe(true);
+  });
+
+  it('asks before replacing a suspended free board with a new one', async () => {
+    const user = userEvent.setup();
+    renderSudoku(tutorialDone);
+    await user.click(await screen.findByRole('button', { name: /Free Play/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    expect(screen.getByRole('alertdialog', { name: 'Start a new game?' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('button', { name: /Free Play.*Resume/ })).toBeInTheDocument();
+  });
+});
+
 describe('playing', () => {
   it('places a digit into the selected cell', async () => {
     const user = userEvent.setup();

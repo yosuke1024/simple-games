@@ -21,9 +21,9 @@ export interface SudokuSession {
   readonly mode: GameMode;
   readonly seed: string;
   readonly difficulty: Difficulty;
-  /** Local YYYY-MM-DD for daily mode, null for level mode. */
+  /** Local YYYY-MM-DD for daily mode, null otherwise. */
   readonly dailyDate: string | null;
-  /** 1..999 for level mode, null for daily. */
+  /** 1..100 for level mode, null for the daily and for free play. */
   readonly level: number | null;
   readonly board: Board;
   /** The one solution the puzzle admits — what a mistake is measured against. */
@@ -85,11 +85,32 @@ export function createDailySession(dateString: string): SudokuSession {
   );
 }
 
+/**
+ * A token that makes one free board's seed its own (§9「フリープレイ」). Free
+ * play has no level number and no date to seed from, so a new game gets a
+ * new board — while the seed still pins that board down completely, which is
+ * what makes "retry the same board" exact and the saved game restorable.
+ */
+export function newSeedToken(now: number = Date.now(), random: () => number = Math.random): string {
+  return `${now.toString(36)}-${Math.floor(random() * 0xffffff).toString(36)}`;
+}
+
+export const freeSeed = (token: string): string => `sudoku-free-${token}`;
+
+/** A fresh free board at a chosen tier — new unless a seed pins an old one. */
+export function createFreeSession(
+  difficulty: Difficulty,
+  seed: string = freeSeed(newSeedToken()),
+): SudokuSession {
+  const puzzle = generatePuzzle(seed, difficulty);
+  return baseSession('free', seed, difficulty, null, null, puzzle.givens, puzzle.solution);
+}
+
 /** Rebuilds the same puzzle from scratch (Restart). */
 export function restartSession(session: SudokuSession): SudokuSession {
-  return session.mode === 'level' && session.level !== null
-    ? createLevelSession(session.level)
-    : createDailySession(session.dailyDate ?? '');
+  if (session.mode === 'level' && session.level !== null) return createLevelSession(session.level);
+  if (session.mode === 'daily') return createDailySession(session.dailyDate ?? '');
+  return createFreeSession(session.difficulty, session.seed);
 }
 
 /** Restores a session from persisted state (undo history is not persisted). */
