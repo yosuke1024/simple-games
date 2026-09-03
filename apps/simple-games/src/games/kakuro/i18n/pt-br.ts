@@ -2,6 +2,9 @@ import type { KakuroMessages } from './en';
 
 export const ptBR: KakuroMessages = {
   kakuroName: 'Kakuro',
+  kakuroTier_easy: 'Fácil',
+  kakuroTier_medium: 'Médio',
+  kakuroTier_hard: 'Difícil',
   kakuroBoardLabel: 'Tabuleiro de Kakuro, {size} por {size}',
   kakuroCellEmpty: 'Vazia, linha {row}, coluna {col}',
   kakuroCellEntry: '{value}, linha {row}, coluna {col}',

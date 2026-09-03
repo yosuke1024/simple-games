@@ -8,8 +8,10 @@
  * There is no losing screen, because there is no losing (§2, §14).
  */
 import { useSettings } from '@/state/SettingsContext';
+import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { formatDuration } from '@/ui/format';
+import { useResultReveal } from '@/ui/useResultReveal';
 import { MAX_LEVEL, type KakuroSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
@@ -18,6 +20,8 @@ export interface KakuroResultOverlayProps {
   lastResult: LastResult | null;
   onRetry: () => void;
   onNextLevel: () => void;
+  /** Free play's "next": another board at the same tier (§9). */
+  onNewFree: () => void;
   onHome: () => void;
 }
 
@@ -26,16 +30,22 @@ export function KakuroResultOverlay({
   lastResult,
   onRetry,
   onNextLevel,
+  onNewFree,
   onHome,
 }: KakuroResultOverlayProps) {
   const { t } = useSettings();
-  if (session.status !== 'solved') return null;
+  // The filled board gets its beat before the card covers it (§13).
+  const revealed = useResultReveal(session.status === 'solved');
+  if (!revealed) return null;
 
   const hasNextLevel =
     session.mode === 'level' && session.level !== null && session.level < MAX_LEVEL;
+  // A free board's "next" is another board at the same tier; a level's is the
+  // next level; a daily has neither, and the retry leads.
+  const hasNext = hasNextLevel || session.mode === 'free';
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className="dialog result result-clear"
         role="alertdialog"
@@ -61,10 +71,22 @@ export function KakuroResultOverlay({
         </dl>
 
         {lastResult?.isNewBestTime ? (
-          <p className="dialog-body">{t('kakuroNewBestTime')}</p>
+          <p className="dialog-body">
+            {t('kakuroNewBestTime')}
+            <BestDelta
+              value={lastResult.seconds}
+              previous={lastResult.previousBestSeconds}
+              kind="time"
+            />
+          </p>
         ) : lastResult ? (
           <p className="dialog-body">
             {t('bestTime')} {formatDuration(lastResult.bestSeconds)}
+            <BestDelta
+              value={lastResult.seconds}
+              previous={lastResult.previousBestSeconds}
+              kind="time"
+            />
           </p>
         ) : null}
 
@@ -73,12 +95,16 @@ export function KakuroResultOverlay({
             <button type="button" className="btn btn-primary" onClick={onNextLevel} autoFocus>
               {t('nextLevel')}
             </button>
+          ) : session.mode === 'free' ? (
+            <button type="button" className="btn btn-primary" onClick={onNewFree} autoFocus>
+              {t('newGame')}
+            </button>
           ) : null}
           <button
             type="button"
-            className={`btn ${hasNextLevel ? 'btn-secondary' : 'btn-primary'}`}
+            className={`btn ${hasNext ? 'btn-secondary' : 'btn-primary'}`}
             onClick={onRetry}
-            autoFocus={!hasNextLevel}
+            autoFocus={!hasNext}
           >
             {t('tryAgain')}
           </button>

@@ -2,6 +2,9 @@ import type { KakuroMessages } from './en';
 
 export const ja: KakuroMessages = {
   kakuroName: 'Kakuro',
+  kakuroTier_easy: 'かんたん',
+  kakuroTier_medium: 'ふつう',
+  kakuroTier_hard: 'むずかしい',
   kakuroBoardLabel: 'Kakuro の盤面、{size}×{size}',
   kakuroCellEmpty: '空、{row}行 {col}列',
   kakuroCellEntry: '{value}、{row}行 {col}列',

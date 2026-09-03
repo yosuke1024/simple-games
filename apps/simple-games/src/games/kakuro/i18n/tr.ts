@@ -2,6 +2,9 @@ import type { KakuroMessages } from './en';
 
 export const tr: KakuroMessages = {
   kakuroName: 'Kakuro',
+  kakuroTier_easy: 'Kolay',
+  kakuroTier_medium: 'Orta',
+  kakuroTier_hard: 'Zor',
   kakuroBoardLabel: 'Kakuro tahtası, {size} çarpı {size}',
   kakuroCellEmpty: 'Boş, satır {row}, sütun {col}',
   kakuroCellEntry: '{value}, satır {row}, sütun {col}',

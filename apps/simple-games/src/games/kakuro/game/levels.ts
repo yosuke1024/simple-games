@@ -126,3 +126,23 @@ export const whiteRatioForLevel = (level: number): number =>
 export function specForLevel(level: number): PuzzleSpec {
   return { blocks: blocksForLevel(level) };
 }
+
+/**
+ * Free Play's three tiers (§9「フリープレイ」). A tier is a representative
+ * level's size and density with a free seed — nothing new to tune, and
+ * nothing the level list has not already measured: level 10 sits in the 6×6
+ * band, 50 in the 8×8 band, 95 in the 10×10 band, each past the middle of its
+ * band. The names are the picker's, not the game's — this game has no
+ * difficulty type (§7) — and a free board is exactly as hard as the level it
+ * borrows from.
+ */
+export type FreeTier = 'easy' | 'medium' | 'hard';
+export const FREE_TIERS: readonly FreeTier[] = ['easy', 'medium', 'hard'];
+export const FREE_TIER_LEVEL: Readonly<Record<FreeTier, number>> = {
+  easy: 10,
+  medium: 50,
+  hard: 95,
+};
+
+export const isFreeTier = (value: unknown): value is FreeTier =>
+  FREE_TIERS.includes(value as FreeTier);

@@ -1,5 +1,5 @@
 /**
- * The two saved-game slots. Both hold the same record shape, so the KEY is
+ * The three saved-game slots. All hold the same record shape, so the KEY is
  * what says which mode a record is — and a record that disagrees with its key
  * is corrupt data, not an instruction to change modes. Loading one would send
  * a player who asked to resume their level game into the daily slot: the
@@ -15,14 +15,15 @@
  * of the split, and what these cases are really pinning.
  */
 import { describe, expect, it } from 'vitest';
-import { cluesOf, createDailySession, createLevelSession } from '../game';
+import { cluesOf, createDailySession, createFreeSession, createLevelSession } from '../game';
 import { toPersisted, toSession } from './gamePersistence';
-import { dailyGameSchema, gameSchema } from './schemas';
+import { dailyGameSchema, freeGameSchema, gameSchema } from './schemas';
 
 const SAVED_AT = 1_754_000_000_000;
 const levelSession = createLevelSession(1);
 const levelRecord = toPersisted(levelSession, SAVED_AT);
 const dailyRecord = toPersisted(createDailySession('2026-08-07'), SAVED_AT);
+const freeRecord = toPersisted(createFreeSession('easy'), SAVED_AT);
 
 /** The first cell the player writes in, and the first that carries a sum. */
 const whiteIndex = levelSession.table.white[0]!;
@@ -45,13 +46,36 @@ describe('saved-game slots', () => {
   it('loads each record from its own slot', () => {
     expect(gameSchema.validate(levelRecord)?.mode).toBe('level');
     expect(dailyGameSchema.validate(dailyRecord)?.mode).toBe('daily');
+    expect(freeGameSchema.validate(freeRecord)?.mode).toBe('free');
+    expect(freeGameSchema.validate(freeRecord)?.freeTier).toBe('easy');
+    expect(toSession(freeRecord)?.freeTier).toBe('easy');
   });
 
-  it('refuses a record written for the other mode', () => {
-    // Both records are what the game itself writes, and both are otherwise
+  it('refuses a record written for another mode', () => {
+    // All records are what the game itself writes, and all are otherwise
     // perfectly valid. The only thing wrong is the slot they are sitting in.
     expect(gameSchema.validate(dailyRecord)).toBeNull();
+    expect(gameSchema.validate(freeRecord)).toBeNull();
     expect(dailyGameSchema.validate(levelRecord)).toBeNull();
+    expect(dailyGameSchema.validate(freeRecord)).toBeNull();
+    expect(freeGameSchema.validate(levelRecord)).toBeNull();
+    expect(freeGameSchema.validate(dailyRecord)).toBeNull();
+  });
+
+  it('refuses a free record that claims a level or a date, or has no tier', () => {
+    expect(freeGameSchema.validate({ ...freeRecord, level: 3 })).toBeNull();
+    expect(freeGameSchema.validate({ ...freeRecord, dailyDate: '2026-08-07' })).toBeNull();
+    expect(freeGameSchema.validate({ ...freeRecord, freeTier: null })).toBeNull();
+    expect(freeGameSchema.validate({ ...freeRecord, freeTier: 'x' })).toBeNull();
+    // The tier names the size (§9): an easy board is a 6×6, never a 10×10.
+    expect(freeGameSchema.validate({ ...freeRecord, freeTier: 'hard' })).toBeNull();
+    // And a level or a daily carries no tier at all.
+    expect(gameSchema.validate({ ...levelRecord, freeTier: 'easy' })).toBeNull();
+  });
+
+  it('reads a level or daily record from before Free Play existed', () => {
+    const { freeTier: _tier, ...older } = levelRecord;
+    expect(gameSchema.validate(older)?.freeTier).toBeNull();
   });
 
   it('refuses a record whose size the game does not have', () => {
@@ -68,6 +92,7 @@ describe('the clues are rebuilt, never read back (§11)', () => {
       'dailyDate',
       'elapsedSeconds',
       'entries',
+      'freeTier',
       'hintCount',
       'layout',
       'level',

@@ -63,7 +63,15 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // Six as well, and for the same one reason: the mistake-highlight toggle is
   // the only thing this game remembers across boards (docs/KAKURO_RULES.md
   // §5, §11).
-  kakuro: ['kk.saveGame', 'kk.saveDaily', 'kk.stats', 'kk.progress', 'kk.flags', 'kk.prefs'],
+  kakuro: [
+    'kk.saveGame',
+    'kk.saveDaily',
+    'kk.saveFree',
+    'kk.stats',
+    'kk.progress',
+    'kk.flags',
+    'kk.prefs',
+  ],
   'number-match': ['nm.saveGame', 'nm.stats', 'nm.flags', 'nm.progress', 'nm.saveDaily'],
   'quick-math': ['qm.saveGame', 'qm.saveDaily', 'qm.stats', 'qm.progress', 'qm.flags'],
   // Two keys short of the others on purpose: neither drill saves a round in

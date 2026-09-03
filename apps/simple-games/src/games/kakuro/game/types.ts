@@ -191,7 +191,8 @@ export interface Clue {
   readonly down: number | null;
 }
 
-export type GameMode = 'level' | 'daily';
+/** Level list, the daily, or a free board at a chosen tier (§9「フリープレイ」). */
+export type GameMode = 'level' | 'daily' | 'free';
 
 /** There is no losing a Kakuro — no mistake limit, no lives (§2, §14). */
 export type GameStatus = 'playing' | 'solved';

@@ -2,6 +2,9 @@ import type { KakuroMessages } from './en';
 
 export const vi: KakuroMessages = {
   kakuroName: 'Kakuro',
+  kakuroTier_easy: 'Dễ',
+  kakuroTier_medium: 'Vừa',
+  kakuroTier_hard: 'Khó',
   kakuroBoardLabel: 'Bàn Kakuro, {size} nhân {size}',
   kakuroCellEmpty: 'Trống, hàng {row}, cột {col}',
   kakuroCellEntry: '{value}, hàng {row}, cột {col}',

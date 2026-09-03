@@ -79,7 +79,7 @@ export function KakuroRoot({ onExit, kv = preferencesKV }: KakuroRootProps) {
         flags: flagsSchema.defaultValue(),
         progress: progressSchema.defaultValue(),
         prefs: prefsSchema.defaultValue(),
-        sessions: { level: null, daily: null },
+        sessions: { level: null, daily: null, free: null },
       };
       try {
         const [stats, flags, progress, prefs, sessions] = await Promise.all([

@@ -34,7 +34,7 @@ import {
   type Violations,
 } from './engine';
 import { generatePuzzle } from './generator';
-import { levelSeed, sizeForLevel, specForLevel } from './levels';
+import { FREE_TIER_LEVEL, levelSeed, sizeForLevel, specForLevel, type FreeTier } from './levels';
 import { findHint, type Hint } from './solver';
 import type { Clue, Digit, GameMode, GameStatus, Layout, RunTable, Size } from './types';
 
@@ -48,10 +48,16 @@ export interface KakuroSession {
   readonly mode: GameMode;
   readonly seed: string;
   readonly size: Size;
-  /** Local YYYY-MM-DD for daily mode, null for level mode. */
+  /** Local YYYY-MM-DD for daily mode, null otherwise. */
   readonly dailyDate: string | null;
-  /** 1..100 for level mode, null for daily. */
+  /** 1..100 for level mode, null for the daily and for free play. */
   readonly level: number | null;
+  /**
+   * Free Play's tier (§9「フリープレイ」), null for a level or a daily. A
+   * restart regenerates from it: the seed says which board, the tier says
+   * which level's size and density it was drawn at.
+   */
+  readonly freeTier: FreeTier | null;
   /** Which cells the player writes in and which carry the sums (§1). */
   readonly layout: Layout;
   /** The one answer the puzzle admits — what a mistake is measured against. */
@@ -104,6 +110,7 @@ function baseSession(
   size: Size,
   dailyDate: string | null,
   level: number | null,
+  freeTier: FreeTier | null,
   layout: Layout,
   solution: readonly number[],
   table: RunTable,
@@ -114,6 +121,7 @@ function baseSession(
     size,
     dailyDate,
     level,
+    freeTier,
     layout,
     solution,
     table,
@@ -137,6 +145,7 @@ export function createLevelSession(level: number): KakuroSession {
     size,
     null,
     level,
+    null,
     puzzle.layout,
     puzzle.solution,
     puzzle.table,
@@ -153,6 +162,44 @@ export function createDailySession(dateString: string): KakuroSession {
     DAILY_SIZE,
     dateString,
     null,
+    null,
+    puzzle.layout,
+    puzzle.solution,
+    puzzle.table,
+  );
+}
+
+/**
+ * A token that makes one free board's seed its own (§9「フリープレイ」). Free
+ * play has no level number and no date to seed from, so a new game gets a
+ * new board — while the seed still pins that board down completely, which is
+ * what makes "retry the same board" exact and the saved game restorable.
+ */
+export function newSeedToken(now: number = Date.now(), random: () => number = Math.random): string {
+  return `${now.toString(36)}-${Math.floor(random() * 0xffffff).toString(36)}`;
+}
+
+export const freeSeed = (token: string): string => `kakuro-free-${token}`;
+
+/**
+ * A fresh free board at a chosen tier — new unless a seed pins an old one.
+ * The tier is a representative level's size and density (§9): the same
+ * generation the level list has already measured, with only the seed free.
+ */
+export function createFreeSession(
+  tier: FreeTier,
+  seed: string = freeSeed(newSeedToken()),
+): KakuroSession {
+  const level = FREE_TIER_LEVEL[tier];
+  const size = sizeForLevel(level);
+  const puzzle = generatePuzzle(seed, size, specForLevel(level));
+  return baseSession(
+    'free',
+    seed,
+    size,
+    null,
+    null,
+    tier,
     puzzle.layout,
     puzzle.solution,
     puzzle.table,
@@ -161,9 +208,9 @@ export function createDailySession(dateString: string): KakuroSession {
 
 /** Rebuilds the same puzzle from scratch (Restart). */
 export function restartSession(session: KakuroSession): KakuroSession {
-  return session.mode === 'level' && session.level !== null
-    ? createLevelSession(session.level)
-    : createDailySession(session.dailyDate ?? '');
+  if (session.mode === 'level' && session.level !== null) return createLevelSession(session.level);
+  if (session.mode === 'daily') return createDailySession(session.dailyDate ?? '');
+  return createFreeSession(session.freeTier ?? 'medium', session.seed);
 }
 
 /**
