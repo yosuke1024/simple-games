@@ -7,6 +7,7 @@ import { generateLevelBoard, isLive } from '../game';
 import { AppProvider } from '../state/GameContext';
 import {
   flagsSchema,
+  prefsSchema,
   progressSchema,
   statsSchema,
   type Flags,
@@ -27,7 +28,8 @@ function renderApp(
         initialStats={statsSchema.defaultValue()}
         initialFlags={flags}
         initialProgress={progress}
-        initialSessions={{ level: null, daily: null }}
+        initialPrefs={prefsSchema.defaultValue()}
+        initialSessions={{ level: null, daily: null, free: null }}
         onExit={onExit}
       >
         <NumberMatchScreens />
@@ -74,8 +76,9 @@ describe('home flow', () => {
 
     expect(screen.getByRole('button', { name: /Level 1/ })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Statistics' }));
-    // Two play sections: Levels and Daily Challenge, plus the best-score block.
-    expect(screen.getAllByText('Games played')).toHaveLength(2);
+    // Three play sections: Levels, Daily Challenge and Free Play, plus the
+    // best-score block.
+    expect(screen.getAllByText('Games played')).toHaveLength(3);
     expect(screen.getByText('Best Scores')).toBeInTheDocument();
   });
 
@@ -91,13 +94,75 @@ describe('home flow', () => {
     const user = userEvent.setup();
     renderApp(done, { ...progressSchema.defaultValue(), highestUnlocked: 3 });
 
-    await user.click(screen.getByRole('button', { name: 'Levels' }));
+    await user.click(screen.getByRole('button', { name: /^Levels/ }));
     expect(screen.getByRole('button', { name: 'Level 3' })).toBeInTheDocument();
     expect(screen.getByLabelText('Level 4, locked')).toBeInTheDocument();
     // Starting an unlocked level goes straight to the board.
     await user.click(screen.getByRole('button', { name: 'Level 2' }));
     expect(screen.getByText('Level 2')).toBeInTheDocument();
     expect(screen.getByRole('group', { name: 'Game board' })).toBeInTheDocument();
+  });
+});
+
+describe('levels chip', () => {
+  it('counts the levels with a recorded best out of the hundred', () => {
+    renderApp(done, {
+      ...progressSchema.defaultValue(),
+      highestUnlocked: 3,
+      bestScores: { '1': 200, '2': 180 },
+    });
+    expect(screen.getByRole('button', { name: /^Levels/ })).toHaveTextContent('2/100');
+  });
+});
+
+describe('free play (§11)', () => {
+  it('starts a board at the chosen tier, and resumes it from the home', async () => {
+    const user = userEvent.setup();
+    renderApp(done);
+
+    // The picker stands on medium until told otherwise; here, hard.
+    const picker = screen.getByRole('group', { name: 'Difficulty' });
+    expect(within(picker).getByRole('button', { name: 'Medium' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await user.click(within(picker).getByRole('button', { name: 'Hard' }));
+    await user.click(screen.getByRole('button', { name: /Free Play/ }));
+
+    // The top bar names the mode and the tier — no level number.
+    expect(screen.getByText('Free Play · Hard')).toBeInTheDocument();
+    expect(screen.queryByText(/^Level \d/)).not.toBeInTheDocument();
+
+    // A match, then away and back: the board is where it was left.
+    const board = screen.getByRole('group', { name: 'Game board' });
+    const fresh = within(board).getAllByRole('button').length;
+    await user.click(screen.getByRole('button', { name: 'Hint' }));
+    const hinted = board.querySelectorAll('.cell-hint');
+    await user.click(hinted[0] as HTMLElement);
+    await user.click(hinted[1] as HTMLElement);
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    expect(screen.getByRole('button', { name: /Free Play.*Resume.*Hard/ })).toBeInTheDocument();
+    // The level climb is untouched by a free board.
+    expect(screen.getByRole('button', { name: /Level 1/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Levels/ })).toHaveTextContent('0/100');
+
+    await user.click(screen.getByRole('button', { name: /Free Play/ }));
+    expect(screen.getByText('Free Play · Hard')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('group', { name: 'Game board' })).getAllByRole('button').length,
+    ).toBeLessThan(fresh);
+  });
+
+  it('asks before replacing a suspended free board with a new one', async () => {
+    const user = userEvent.setup();
+    renderApp(done);
+    await user.click(screen.getByRole('button', { name: /Free Play/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    expect(screen.getByRole('alertdialog', { name: 'Start a new game?' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('button', { name: /Free Play.*Resume/ })).toBeInTheDocument();
   });
 });
 

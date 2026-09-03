@@ -379,7 +379,7 @@ src/
 | `tk.*`            | Takuzu(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ) |
 | `ft.*`            | Futoshiki(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                 |
 | `kk.*`            | Kakuro(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                    |
-| `nm.*`            | Number Match(saveGame / saveDaily / stats / progress / flags)                                 |
+| `nm.*`            | Number Match(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ) |
 | `ws.*`            | Water Sort(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ) |
 | `sp.*`            | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags)                               |
 | `mm.*`            | Memory Match(saveGame / saveDaily / stats / flags)                                            |

@@ -45,6 +45,7 @@ export function GameScreen() {
     goHome,
     restartCurrent,
     startNextLevel,
+    startFree,
     flags,
     markIntroSeen,
   } = useApp();
@@ -288,7 +289,11 @@ export function GameScreen() {
             <span className="game-mode">
               {session.mode === 'daily'
                 ? t('modeDaily')
-                : t('modeLevel', { n: session.level ?? 1 })}
+                : session.mode === 'free'
+                  ? t('freePlay')
+                  : t('modeLevel', { n: session.level ?? 1 })}
+              {/* A free board also says its tier: the one thing that names it. */}
+              {session.freeTier !== null ? ` · ${t(`nmTier_${session.freeTier}`)}` : null}
             </span>
             <span className="game-score">
               <span className="visually-hidden">{t('score')} </span>
@@ -362,6 +367,7 @@ export function GameScreen() {
         lastResult={lastResult}
         onRetry={restartCurrent}
         onNextLevel={startNextLevel}
+        onNewFree={() => startFree(session.freeTier ?? undefined)}
         onHome={goHome}
       />
 

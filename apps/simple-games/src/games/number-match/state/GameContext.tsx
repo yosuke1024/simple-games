@@ -4,8 +4,8 @@
  * analytics and no ad orchestration here; the only ad surface is the shared
  * BannerSlot the game screen renders.
  *
- * Two games are suspended independently — one level, one daily (docs §14) —
- * so switching modes never costs the player either one.
+ * Three games are suspended independently — one level, one daily, one free
+ * board (docs §14) — so switching modes never costs the player any of them.
  *
  * Battery note: the play clock lives in a mutable ref and does NOT set React
  * state, so nothing re-renders while a game is running. It is never shown
@@ -29,6 +29,7 @@ import { saveRecord } from '../../../storage/repo';
 import {
   countHintUse,
   createDailySession,
+  createFreeSession,
   createLevelSession,
   findHint,
   localDateString,
@@ -37,19 +38,22 @@ import {
   performAddNumbers,
   restartSession,
   undo,
+  type FreeTier,
   type GameMode,
   type GameSession,
 } from '../game';
 import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
 import {
   flagsSchema,
+  prefsSchema,
   progressSchema,
   statsSchema,
   type Flags,
+  type Prefs,
   type Progress,
   type Stats,
 } from '../storage/schemas';
-import { applyClearToProgress } from './progressLogic';
+import { applyClearToProgress, previousBestFor } from './progressLogic';
 import { applyGameEnd, applyGameStart } from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats';
@@ -57,6 +61,8 @@ export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats'
 export interface LastResult {
   isNewBest: boolean;
   bestScore: number;
+  /** The board's record before this run, or null on its first clear (§12). */
+  previousBestScore: number | null;
 }
 
 export interface AppContextValue {
@@ -78,6 +84,11 @@ export interface AppContextValue {
   startLevel: (level: number) => void;
   startNextLevel: () => void;
   startDaily: (date?: string) => void;
+  /** A fresh free board at the picker's tier — or the one given (§11). */
+  startFree: (tier?: FreeTier) => void;
+  /** Where the Free Play picker stands; remembered across launches. */
+  freeTier: FreeTier;
+  setFreeTier: (tier: FreeTier) => void;
   restartCurrent: () => void;
   resumeGame: (mode: GameMode) => void;
   applyPair: (i: number, j: number) => boolean;
@@ -100,6 +111,7 @@ export interface AppProviderProps {
   initialStats: Stats;
   initialFlags: Flags;
   initialProgress: Progress;
+  initialPrefs: Prefs;
   initialSessions: SavedGames;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
@@ -110,6 +122,7 @@ export function AppProvider({
   initialStats,
   initialFlags,
   initialProgress,
+  initialPrefs,
   initialSessions,
   onExit,
   children,
@@ -122,6 +135,7 @@ export function AppProvider({
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
+  const [freeTier, setFreeTierState] = useState<FreeTier>(initialPrefs.freeTier);
   const [lastResult, setLastResult] = useState<LastResult | null>(null);
   const [sessionEpoch, setSessionEpoch] = useState(0);
 
@@ -135,6 +149,8 @@ export function AppProvider({
   progressRef.current = progress;
   const statsRef = useRef(stats);
   statsRef.current = stats;
+  const freeTierRef = useRef(freeTier);
+  freeTierRef.current = freeTier;
 
   const session = sessions[activeMode];
 
@@ -177,9 +193,19 @@ export function AppProvider({
       persistStats(applyGameEnd(statsRef.current, next));
       if (next.status === 'cleared') {
         recordGameCompleted();
+        // A free board has no level to unlock and no board to keep a record
+        // for (§11「フリープレイ」): the climb and the calendar stay as they
+        // are, and the card shows the score alone — nothing to compare with.
+        if (next.mode === 'free') return;
+        // Read before the record moves: what this run is measured against.
+        const previousBestScore = previousBestFor(progressRef.current, next);
         const outcome = applyClearToProgress(progressRef.current, next, Date.now());
         persistProgress(outcome.progress);
-        setLastResult({ isNewBest: outcome.isNewBest, bestScore: outcome.bestScore });
+        setLastResult({
+          isNewBest: outcome.isNewBest,
+          bestScore: outcome.bestScore,
+          previousBestScore,
+        });
       }
     },
     [persistProgress, persistStats, putSession],
@@ -250,6 +276,20 @@ export function AppProvider({
     },
     [beginSession, resumeGame],
   );
+
+  const startFree = useCallback(
+    (tier: FreeTier = freeTierRef.current) => {
+      beginSession(createFreeSession(tier));
+    },
+    [beginSession],
+  );
+
+  const setFreeTier = useCallback((tier: FreeTier) => {
+    setFreeTierState(tier);
+    // The tier is the whole preferences record, so there is nothing else to
+    // carry over into the write.
+    void saveRecord(prefsSchema, { schemaVersion: 1, freeTier: tier });
+  }, []);
 
   const restartCurrent = useCallback(() => {
     const current = sessionsRef.current[activeModeRef.current];
@@ -403,6 +443,9 @@ export function AppProvider({
       startLevel,
       startNextLevel,
       startDaily,
+      startFree,
+      freeTier,
+      setFreeTier,
       restartCurrent,
       resumeGame,
       applyPair,
@@ -431,6 +474,9 @@ export function AppProvider({
       startLevel,
       startNextLevel,
       startDaily,
+      startFree,
+      freeTier,
+      setFreeTier,
       restartCurrent,
       resumeGame,
       applyPair,

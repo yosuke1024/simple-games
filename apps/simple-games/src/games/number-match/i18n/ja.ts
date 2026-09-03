@@ -30,4 +30,7 @@ export const ja: NumberMatchMessages = {
   step3Title: '全部消せばクリア',
   step3Body: '詰まったら「追加」で残りの数字を足せます。ヒントも戻すも、ずっと無料です。',
   gameOverCount: 'ゲームオーバー',
+  nmTier_easy: 'かんたん',
+  nmTier_medium: 'ふつう',
+  nmTier_hard: 'むずかしい',
 };

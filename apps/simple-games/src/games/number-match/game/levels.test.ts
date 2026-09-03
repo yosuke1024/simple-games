@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { hasAnyMove } from './hint';
 import { isDigit, isStone } from './types';
 import {
+  FREE_TIER_LEVEL,
+  FREE_TIERS,
+  generateFreeBoard,
   generateLevelBoard,
   initialCellsForLevel,
   levelSeed,
@@ -132,5 +135,33 @@ describe('stone and wild schedule (§16)', () => {
       }
     }
     expect(shortfalls).toEqual([]);
+  });
+});
+
+describe('free tiers (§11 フリープレイ)', () => {
+  it('stand in for levels 10, 50 and 95', () => {
+    expect(FREE_TIERS).toEqual(['easy', 'medium', 'hard']);
+    expect(FREE_TIER_LEVEL).toEqual({ easy: 10, medium: 50, hard: 95 });
+  });
+
+  it("borrows the representative level's parameters and changes only the draw", () => {
+    for (const tier of FREE_TIERS) {
+      const level = FREE_TIER_LEVEL[tier];
+      const board = generateFreeBoard(tier, `free-test-${tier}`);
+      const reference = generateLevelBoard(level);
+      // Same outline: the holes fall in the same places, so the row count
+      // and the size agree too.
+      expect(board.map((c) => c === null)).toEqual(reference.map((c) => c === null));
+      expect(board.filter(isStone)).toHaveLength(stoneCountForLevel(level));
+      expect(board.filter((c) => c?.kind === 'wild')).toHaveLength(wildCountForLevel(level));
+      expect(hasAnyMove(board)).toBe(true);
+      // And not the level's own numbers.
+      expect(board).not.toEqual(reference);
+    }
+  });
+
+  it('is deterministic per seed, which is what makes a retry exact', () => {
+    expect(generateFreeBoard('hard', 'free-x')).toEqual(generateFreeBoard('hard', 'free-x'));
+    expect(generateFreeBoard('hard', 'free-x')).not.toEqual(generateFreeBoard('hard', 'free-y'));
   });
 });

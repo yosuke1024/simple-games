@@ -11,4 +11,8 @@ export const NM_STORAGE_KEYS = {
   progress: 'nm.progress',
   /** Daily games suspend independently of level games (docs §14). */
   dailyGame: 'nm.saveDaily',
+  /** So do free boards (§11「フリープレイ」): the third slot. */
+  freeGame: 'nm.saveFree',
+  /** Small choices that outlive a game — the Free Play tier. */
+  prefs: 'nm.prefs',
 } as const;

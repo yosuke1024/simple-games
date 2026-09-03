@@ -80,7 +80,18 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
     'kk.flags',
     'kk.prefs',
   ],
-  'number-match': ['nm.saveGame', 'nm.stats', 'nm.flags', 'nm.progress', 'nm.saveDaily'],
+  // Seven since Free Play (2026-09-03): the free slot, and a prefs record
+  // that holds only the tier the picker last stood on
+  // (docs/NUMBER_MATCH_RULES.md §11「フリープレイ」, §14).
+  'number-match': [
+    'nm.saveGame',
+    'nm.stats',
+    'nm.flags',
+    'nm.progress',
+    'nm.saveDaily',
+    'nm.saveFree',
+    'nm.prefs',
+  ],
   'quick-math': ['qm.saveGame', 'qm.saveDaily', 'qm.stats', 'qm.progress', 'qm.flags'],
   // Two keys short of the others on purpose: neither drill saves a round in
   // progress (docs/SCHULTE_TABLE_RULES.md §11, docs/NUMBER_RECALL_RULES.md §12).

@@ -31,4 +31,7 @@ export const id: NumberMatchMessages = {
   step3Body:
     'Jika buntu, tekan "Tambah" untuk menambahkan angka tersisa. Urungkan dan petunjuk selalu gratis.',
   gameOverCount: 'Game over',
+  nmTier_easy: 'Mudah',
+  nmTier_medium: 'Sedang',
+  nmTier_hard: 'Sulit',
 };

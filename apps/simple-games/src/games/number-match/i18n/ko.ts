@@ -31,4 +31,7 @@ export const ko: NumberMatchMessages = {
   step3Body:
     '막혔나요? 추가를 누르면 남은 숫자가 이어 붙습니다. 되돌리기와 힌트는 언제나 무료입니다.',
   gameOverCount: '게임 오버',
+  nmTier_easy: '쉬움',
+  nmTier_medium: '보통',
+  nmTier_hard: '어려움',
 };

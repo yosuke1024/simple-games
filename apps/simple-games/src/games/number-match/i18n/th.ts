@@ -30,4 +30,7 @@ export const th: NumberMatchMessages = {
   step3Title: 'ลบให้หมดเพื่อชนะ',
   step3Body: 'ถ้าติดขัด กด "เพิ่ม" เพื่อเติมตัวเลขที่เหลือ ย้อนกลับและคำใบ้ใช้ฟรีตลอด',
   gameOverCount: 'เกมโอเวอร์',
+  nmTier_easy: 'ง่าย',
+  nmTier_medium: 'ปกติ',
+  nmTier_hard: 'ยาก',
 };

@@ -3,7 +3,7 @@
  * Streak counters were removed with stats v3 — the daily record that remains
  * is progress.bestDaily, a calendar of days, not a chain to maintain.
  */
-import type { GameSession } from '../game';
+import type { GameMode, GameSession } from '../game';
 import type { Stats } from '../storage/schemas';
 
 /**
@@ -14,7 +14,7 @@ import type { Stats } from '../storage/schemas';
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
 /** Registers a started game (new game or restart, not resume). */
-export function applyGameStart(stats: Stats, mode: 'level' | 'daily'): Stats {
+export function applyGameStart(stats: Stats, mode: GameMode): Stats {
   const next = clone(stats);
   next[mode].played += 1;
   return next;

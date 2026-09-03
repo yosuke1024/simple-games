@@ -123,6 +123,8 @@ describe('scoreClear', () => {
     expect(clearBonusBase('level', 1)).toBe(165);
     expect(clearBonusBase('level', 999)).toBe(150 + 15 * 999);
     expect(clearBonusBase('daily', null)).toBe(300);
+    // A free board is scored as the level its tier stands in for (§11).
+    expect(clearBonusBase('free', 50)).toBe(900);
   });
 
   it('reduces the bonus 25% per Add Numbers use, never below zero', () => {

@@ -30,4 +30,7 @@ export const hi: NumberMatchMessages = {
   step3Title: 'सब हटाएँ और जीतें',
   step3Body: 'अटक जाएँ तो "जोड़ें" से बची संख्याएँ जुड़ जाती हैं। अनडू और संकेत हमेशा मुफ़्त हैं।',
   gameOverCount: 'गेम ओवर',
+  nmTier_easy: 'आसान',
+  nmTier_medium: 'मध्यम',
+  nmTier_hard: 'कठिन',
 };

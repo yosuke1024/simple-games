@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { generateLevelBoard } from './levels';
+import { FREE_TIER_LEVEL, generateFreeBoard, generateLevelBoard } from './levels';
 import { findHint } from './hint';
-import { createScore, INITIAL_SCORE } from './score';
+import { clearBonusBase, createScore, INITIAL_SCORE } from './score';
 import {
   canUndo,
   countHintUse,
   createDailySession,
+  createFreeSession,
   createLevelSession,
+  freeSeed,
   liveCellCount,
   matchPair,
+  newSeedToken,
   performAddNumbers,
   restartSession,
   restoreSession,
@@ -51,6 +54,57 @@ describe('createLevelSession / createDailySession', () => {
     expect(restarted.board).toEqual(first.board);
     expect(restarted.score).toEqual(createScore(liveCellCount(first.board)));
     expect(restarted.moveCount).toBe(0);
+  });
+});
+
+describe('createFreeSession (§11 フリープレイ)', () => {
+  it('builds a board at the tier asked for, with no level and no date', () => {
+    const session = createFreeSession('hard');
+    expect(session.mode).toBe('free');
+    expect(session.freeTier).toBe('hard');
+    expect(session.level).toBeNull();
+    expect(session.dailyDate).toBeNull();
+    expect(session.seed.startsWith('free-')).toBe(true);
+    expect(session.status).toBe('playing');
+    expect(session.board).toEqual(generateFreeBoard('hard', session.seed));
+    expect(session.score).toEqual(createScore(liveCellCount(session.board)));
+  });
+
+  it('gives a new board each time, and the same board for the same seed', () => {
+    const a = createFreeSession('easy', freeSeed(newSeedToken(1, () => 0.25)));
+    const b = createFreeSession('easy', freeSeed(newSeedToken(2, () => 0.5)));
+    expect(b.board).not.toEqual(a.board);
+    expect(createFreeSession('easy', a.seed).board).toEqual(a.board);
+  });
+
+  it('restart rebuilds the identical free board at the same tier', () => {
+    const session = createFreeSession('medium');
+    const [i, j] = findHint(session.board)!;
+    const restarted = restartSession(matchPair(session, i, j)!);
+    expect(restarted.seed).toBe(session.seed);
+    expect(restarted.freeTier).toBe('medium');
+    expect(restarted.board).toEqual(session.board);
+    expect(restarted.moveCount).toBe(0);
+  });
+
+  it('never collides with a level or a daily seed', () => {
+    const token = newSeedToken(1, () => 0);
+    expect(freeSeed(token)).not.toMatch(/^level-/);
+    expect(freeSeed(token)).not.toMatch(/^daily-/);
+  });
+
+  it('scores the clear bonus as the level the tier stands in for (§12)', () => {
+    // Two numbers left on a medium board: the clear bonus is level 50's.
+    const s0: GameSession = {
+      ...createFreeSession('medium'),
+      board: makeBoard('19'),
+      history: [],
+      status: 'playing',
+    };
+    const s1 = matchPair(s0, 0, 1)!;
+    expect(s1.status).toBe('cleared');
+    expect(s1.score.clearBonus).toBe(clearBonusBase('level', FREE_TIER_LEVEL.medium));
+    expect(s1.score.clearBonus).toBe(900);
   });
 });
 
@@ -197,6 +251,7 @@ describe('restoreSession', () => {
       seed: 'level-5',
       dailyDate: null,
       level: 5,
+      freeTier: null,
       board: makeBoard('19'),
       score,
       moveCount: 4,

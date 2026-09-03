@@ -7,7 +7,14 @@ import { generateBoard } from './board';
 import { INITIAL_CELLS, MAX_CELLS, UNDO_HISTORY_LIMIT } from './constants';
 import { dailyDecorations, dailySeed } from './daily';
 import { addNumbers, applyMatchDetailed, getStatus } from './engine';
-import { DAILY_PAIR_BIAS, generateLevelBoard, levelSeed } from './levels';
+import {
+  DAILY_PAIR_BIAS,
+  FREE_TIER_LEVEL,
+  generateFreeBoard,
+  generateLevelBoard,
+  levelSeed,
+  type FreeTier,
+} from './levels';
 import { connectionGap } from './rules';
 import { createScore, scoreAddNumbers, scoreClear, scoreMatch, type ScoreState } from './score';
 import { shapeForDaily } from './shapes';
@@ -27,10 +34,12 @@ export interface HistoryEntry {
 export interface GameSession {
   readonly mode: GameMode;
   readonly seed: string;
-  /** Local YYYY-MM-DD for daily mode, null for level mode. */
+  /** Local YYYY-MM-DD for daily mode, null otherwise. */
   readonly dailyDate: string | null;
-  /** 1..999 for level mode, null for daily. */
+  /** 1..100 for level mode, null for the daily and for free play. */
   readonly level: number | null;
+  /** The tier a free board was drawn at (§11「フリープレイ」), null otherwise. */
+  readonly freeTier: FreeTier | null;
   readonly board: Board;
   /** Board snapshots before each mutation (match / add numbers). */
   readonly history: readonly HistoryEntry[];
@@ -54,6 +63,7 @@ function baseSession(
   seed: string,
   dailyDate: string | null,
   level: number | null,
+  freeTier: FreeTier | null,
   board: Board,
 ): GameSession {
   return {
@@ -61,6 +71,7 @@ function baseSession(
     seed,
     dailyDate,
     level,
+    freeTier,
     board,
     history: [],
     status: getStatus(board),
@@ -74,7 +85,7 @@ function baseSession(
 
 /** A fresh (or restarted) level game — deterministic per level. */
 export function createLevelSession(level: number): GameSession {
-  return baseSession('level', levelSeed(level), null, level, generateLevelBoard(level));
+  return baseSession('level', levelSeed(level), null, level, null, generateLevelBoard(level));
 }
 
 /** A fresh (or restarted) daily game for a local YYYY-MM-DD date. */
@@ -88,14 +99,37 @@ export function createDailySession(dateString: string): GameSession {
     pairBias: DAILY_PAIR_BIAS,
     ...dailyDecorations(dateString),
   });
-  return baseSession('daily', seed, dateString, null, board);
+  return baseSession('daily', seed, dateString, null, null, board);
+}
+
+/**
+ * A token that makes one free board's seed its own (§11「フリープレイ」).
+ * Free play has no level number and no date to seed from, so a new game gets
+ * a new board — while the seed still pins that board down completely, which
+ * is what makes "retry the same board" exact and the saved game restorable.
+ */
+export function newSeedToken(now: number = Date.now(), random: () => number = Math.random): string {
+  return `${now.toString(36)}-${Math.floor(random() * 0xffffff).toString(36)}`;
+}
+
+/** Its own prefix beside `level-` and `daily-`, so the three never collide. */
+export const freeSeed = (token: string): string => `free-${token}`;
+
+/** A fresh free board at a chosen tier — new unless a seed pins an old one. */
+export function createFreeSession(
+  tier: FreeTier,
+  seed: string = freeSeed(newSeedToken()),
+): GameSession {
+  return baseSession('free', seed, null, null, tier, generateFreeBoard(tier, seed));
 }
 
 /** Recreates the same board for a session's seed (Restart). */
 export function restartSession(session: GameSession): GameSession {
-  return session.mode === 'level' && session.level !== null
-    ? createLevelSession(session.level)
-    : createDailySession(session.dailyDate ?? '');
+  if (session.mode === 'level' && session.level !== null) return createLevelSession(session.level);
+  if (session.mode === 'free' && session.freeTier !== null) {
+    return createFreeSession(session.freeTier, session.seed);
+  }
+  return createDailySession(session.dailyDate ?? '');
 }
 
 /** Restores a session from persisted state (undo history is not persisted). */
@@ -106,6 +140,7 @@ export function restoreSession(
     | 'seed'
     | 'dailyDate'
     | 'level'
+    | 'freeTier'
     | 'board'
     | 'score'
     | 'moveCount'
@@ -137,7 +172,13 @@ export function matchPair(session: GameSession, i: number, j: number): GameSessi
   let score = scoreMatch(session.score, gap, result.rowsRemoved, result.rowCellsRemoved);
   const hintCount = session.hintCount;
   if (status === 'cleared') {
-    score = scoreClear(score, session.mode, session.level, session.addCount, hintCount);
+    // A free board is worth what the level it stands in for is worth (§12):
+    // it was generated as that level, so its clear bonus is that level's.
+    const bonusLevel =
+      session.mode === 'free' && session.freeTier !== null
+        ? FREE_TIER_LEVEL[session.freeTier]
+        : session.level;
+    score = scoreClear(score, session.mode, bonusLevel, session.addCount, hintCount);
   }
   return {
     ...session,

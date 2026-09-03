@@ -93,6 +93,7 @@ export function StatsScreen() {
         <BestScoresSection />
         <StatsSection title={t('levelsTitle')} stats={stats.level} />
         <StatsSection title={t('dailyChallenge')} stats={stats.daily} />
+        <StatsSection title={t('freePlay')} stats={stats.free} />
       </div>
     </div>
   );

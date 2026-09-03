@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { createMemoryKV } from '../../../storage/kv';
 import { clearLocalData, loadRecord, saveRecord } from '../../../storage/repo';
-import { createDailySession, createLevelSession } from '../game';
+import { createDailySession, createFreeSession, createLevelSession } from '../game';
 import { clearSavedGame, loadSavedGames, saveGame } from './gamePersistence';
-import { flagsSchema, gameSchema, NM_STORAGE_KEYS, progressSchema, statsSchema } from './schemas';
+import {
+  flagsSchema,
+  gameSchema,
+  NM_STORAGE_KEYS,
+  prefsSchema,
+  progressSchema,
+  statsSchema,
+} from './schemas';
 
 describe('loadRecord (Number Match records)', () => {
   it('returns defaults for an unknown schemaVersion (every schema)', async () => {
@@ -11,6 +18,7 @@ describe('loadRecord (Number Match records)', () => {
       statsSchema,
       flagsSchema,
       progressSchema,
+      prefsSchema,
     ];
     for (const schema of schemas) {
       const kv = createMemoryKV({ [schema.key]: JSON.stringify({ schemaVersion: 99 }) });
@@ -49,6 +57,31 @@ describe('loadRecord (Number Match records)', () => {
       tutorialCompleted: true,
       wildIntroSeen: false,
       stoneIntroSeen: false,
+    });
+  });
+
+  it('keeps a stats record written before the free bucket existed', () => {
+    // Nothing had been counted there yet (§11): an empty bucket, not a
+    // rejected record that would zero the level and daily counts too.
+    const level = {
+      played: 4,
+      cleared: 2,
+      gameOver: 1,
+      totalPlaySeconds: 300,
+      bestClearSeconds: 70,
+    };
+    const daily = {
+      played: 3,
+      cleared: 3,
+      gameOver: 0,
+      totalPlaySeconds: 250,
+      bestClearSeconds: 60,
+    };
+    expect(statsSchema.validate({ schemaVersion: 3, level, daily })).toEqual({
+      schemaVersion: 3,
+      level,
+      daily,
+      free: { played: 0, cleared: 0, gameOver: 0, totalPlaySeconds: 0, bestClearSeconds: null },
     });
   });
 });
@@ -117,14 +150,31 @@ describe('saved game persistence', () => {
   });
 });
 
-describe('two save slots', () => {
-  it('keeps a level game and a daily game at the same time', async () => {
+describe('three save slots', () => {
+  it('keeps a level game, a daily game and a free board at the same time', async () => {
     const kv = createMemoryKV();
     await saveGame(createLevelSession(4), kv);
     await saveGame(createDailySession('2026-07-28'), kv);
+    const free = createFreeSession('hard');
+    await saveGame(free, kv);
     const games = await loadSavedGames(kv);
     expect(games.level?.level).toBe(4);
     expect(games.daily?.dailyDate).toBe('2026-07-28');
+    expect(games.free?.freeTier).toBe('hard');
+    expect(games.free?.seed).toBe(free.seed);
+    expect(games.free?.board).toEqual(free.board);
+  });
+
+  it('clearing the free slot leaves the other two intact', async () => {
+    const kv = createMemoryKV();
+    await saveGame(createLevelSession(4), kv);
+    await saveGame(createDailySession('2026-07-28'), kv);
+    await saveGame(createFreeSession('easy'), kv);
+    await clearSavedGame('free', kv);
+    const games = await loadSavedGames(kv);
+    expect(games.level?.level).toBe(4);
+    expect(games.daily?.dailyDate).toBe('2026-07-28');
+    expect(games.free).toBeNull();
   });
 
   it('clearing one slot leaves the other intact', async () => {
@@ -215,6 +265,7 @@ describe('schema migrations', () => {
       schemaVersion: 3,
       level: { played: 4, cleared: 2, gameOver: 1, totalPlaySeconds: 300, bestClearSeconds: 70 },
       daily: { played: 3, cleared: 3, gameOver: 0, totalPlaySeconds: 250, bestClearSeconds: 60 },
+      free: { played: 0, cleared: 0, gameOver: 0, totalPlaySeconds: 0, bestClearSeconds: null },
     });
   });
 
@@ -351,7 +402,9 @@ describe("clearLocalData with the game's keys", () => {
   it('wipes every Number Match record', async () => {
     const kv = createMemoryKV();
     await saveRecord(statsSchema, statsSchema.defaultValue(), kv);
+    await saveRecord(prefsSchema, { schemaVersion: 1, freeTier: 'hard' }, kv);
     await saveGame(createLevelSession(3), kv);
+    await saveGame(createFreeSession('hard'), kv);
     await clearLocalData(Object.values(NM_STORAGE_KEYS), kv);
     for (const key of Object.values(NM_STORAGE_KEYS)) {
       expect(await kv.get(key)).toBeNull();

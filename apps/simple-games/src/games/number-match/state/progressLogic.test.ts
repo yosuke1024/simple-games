@@ -1,10 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, createDailySession, createLevelSession, type GameSession } from '../game';
+import {
+  addDays,
+  createDailySession,
+  createFreeSession,
+  createLevelSession,
+  type GameSession,
+} from '../game';
 import { progressSchema } from '../storage/schemas';
 import {
   applyClearToProgress,
   availableDailyDates,
   canPlayDaily,
+  previousBestFor,
+  solvedLevelCount,
   totalBestScore,
 } from './progressLogic';
 
@@ -116,6 +124,58 @@ describe('applyClearToProgress', () => {
     const better = applyClearToProgress(replay.progress, clearedDaily('2026-07-27', 260), NOW + 40);
     expect(better.isNewBest).toBe(true);
     expect(better.progress.bestDaily['2026-07-27']).toBe(260);
+  });
+});
+
+describe('a free board (§11 フリープレイ)', () => {
+  it('touches neither the level climb nor the daily calendar nor the ranking', () => {
+    const before = applyClearToProgress(
+      progressSchema.defaultValue(),
+      clearedLevel(1, 200),
+      NOW,
+    ).progress;
+    const free = createFreeSession('hard');
+    const outcome = applyClearToProgress(
+      before,
+      { ...free, status: 'cleared', score: { ...free.score, total: 9999, matchPoints: 9999 } },
+      NOW + 1,
+    );
+    expect(outcome.progress).toEqual(before);
+    expect(outcome.isNewBest).toBe(false);
+    expect(outcome.bestScore).toBe(9999);
+  });
+});
+
+describe('previousBestFor', () => {
+  it('is the record before the run, and null when there is none yet', () => {
+    const fresh = progressSchema.defaultValue();
+    expect(previousBestFor(fresh, clearedLevel(1, 200))).toBeNull();
+    const { progress } = applyClearToProgress(fresh, clearedLevel(1, 200), NOW);
+    // Read before the clear books it: still the old record, whatever this run scored.
+    expect(previousBestFor(progress, clearedLevel(1, 350))).toBe(200);
+    expect(previousBestFor(progress, clearedLevel(2, 100))).toBeNull();
+  });
+
+  it('reads a daily against its own date, and a free board against nothing', () => {
+    const { progress } = applyClearToProgress(
+      progressSchema.defaultValue(),
+      clearedDaily('2026-07-27', 250),
+      NOW,
+    );
+    expect(previousBestFor(progress, clearedDaily('2026-07-27', 100))).toBe(250);
+    expect(previousBestFor(progress, clearedDaily('2026-07-26', 100))).toBeNull();
+    expect(previousBestFor(progress, createFreeSession('easy'))).toBeNull();
+  });
+});
+
+describe('solvedLevelCount', () => {
+  it('counts the levels with a recorded best, replays included once', () => {
+    let progress = progressSchema.defaultValue();
+    expect(solvedLevelCount(progress)).toBe(0);
+    progress = applyClearToProgress(progress, clearedLevel(1, 100), NOW).progress;
+    progress = applyClearToProgress(progress, clearedLevel(2, 150), NOW).progress;
+    progress = applyClearToProgress(progress, clearedLevel(1, 120), NOW).progress;
+    expect(solvedLevelCount(progress)).toBe(2);
   });
 });
 
