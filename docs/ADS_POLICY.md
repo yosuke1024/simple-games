@@ -122,6 +122,15 @@ CI の原則ガードが `apps/*/src` を走査して検証する。
 - **Privacy Options** が UMP から required と返ったときだけ、設定 / About に
   「Ad Privacy Options」の行を出す(`adPrivacyOptions`)。required でない地域では
   行そのものを描かない — 説明のつかない行を並べないため。
+- **同意フォームを出せなかった起動でも、Privacy Options の要否は記録する**
+  (issue #95)。`showConsentForm()` の失敗(ロード失敗・提示先の view controller
+  が無い・UMP のエラー)で直前の `requestConsentInfo()` の応答ごと捨てると、
+  フォームが required になる EEA / UK —— 撤回の導線がいちばん必要な地域 —— で
+  だけ上の行が消える。**ただし記録するのはこの 1 項目だけで、同じ応答の
+  `canRequestAds` は真でも採らない。** UMP は status = REQUIRED と
+  `canRequestAds` = true を同時に返しうるが、それに従うと未回答のフォームのまま
+  広告を出すことになり、一つ上の「同意が取れないなら広告を出さない」と衝突する。
+  失うのはその起動 1 回分のバナーで、次の起動では通常どおり尋ね直す。
 
 ### ATT(App Tracking Transparency)を使わない
 

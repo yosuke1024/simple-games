@@ -68,6 +68,16 @@ describe('canRequestAds', () => {
     expect(adMob.showConsentForm).toHaveBeenCalledTimes(1);
   });
 
+  it('refuses ads when the form cannot be shown, even if UMP would allow them', async () => {
+    // UMP can answer REQUIRED and canRequestAds = true at once. A form the
+    // player never saw is not an answer, so this launch gets no ads.
+    adMob.requestConsentInfo.mockResolvedValue(
+      info({ status: 'REQUIRED', isConsentFormAvailable: true, canRequestAds: true }),
+    );
+    adMob.showConsentForm.mockRejectedValue(new Error('form failed to load'));
+    expect(await canRequestAds()).toBe(false);
+  });
+
   it('does not show a form that UMP has not made available', async () => {
     adMob.requestConsentInfo.mockResolvedValue(
       info({ status: 'REQUIRED', isConsentFormAvailable: false, canRequestAds: false }),
@@ -132,6 +142,26 @@ describe('privacy options', () => {
       info({ privacyOptionsRequirementStatus: 'REQUIRED' }),
     );
     await canRequestAds();
+    expect(isPrivacyOptionsRequired()).toBe(true);
+    expect(listener).toHaveBeenCalled();
+    unsubscribe();
+  });
+
+  it('stays required when the consent form could not be shown', async () => {
+    const listener = vi.fn();
+    const unsubscribe = subscribeConsent(listener);
+    adMob.requestConsentInfo.mockResolvedValue(
+      info({
+        status: 'REQUIRED',
+        isConsentFormAvailable: true,
+        canRequestAds: false,
+        privacyOptionsRequirementStatus: 'REQUIRED',
+      }),
+    );
+    adMob.showConsentForm.mockRejectedValue(new Error('no view controller'));
+    expect(await canRequestAds()).toBe(false);
+    // The pre-form answer already knew this, and Settings needs it: without
+    // the row there is no way to withdraw consent (issue #95).
     expect(isPrivacyOptionsRequired()).toBe(true);
     expect(listener).toHaveBeenCalled();
     unsubscribe();
