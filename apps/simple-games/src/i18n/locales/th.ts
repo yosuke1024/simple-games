@@ -111,6 +111,14 @@ export const th: Messages = {
   webAppPromptTitle: 'เล่นได้เงียบกว่าเดิม ออฟไลน์เต็มรูปแบบตั้งแต่เปิดครั้งแรก',
   webAppPromptBody: 'แอปเปิดจากหน้าจอโฮมได้ทันที และเก็บความคืบหน้าของคุณไว้ในเครื่อง',
 
+  // The optional share on a result screen. {game} is the registry title, a
+  // proper noun that is not translated; `cleared` is only used for a real win.
+  shareAction: 'แชร์',
+  shareCleared: 'ฉันเล่น {game} จบแล้วใน Simple Games',
+  sharePlayed: 'ฉันเล่น {game} ใน Simple Games',
+  shareInvite: 'เล่นได้ทันทีในเบราว์เซอร์',
+  shareCopied: 'คัดลอกลิงก์แล้ว',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'ชีวิต: {n}',
   levelsCleared: 'ด่านที่ผ่านแล้ว',

@@ -113,6 +113,14 @@ export const fr: Messages = {
   webAppPromptBody:
     'L’application s’ouvre depuis votre écran d’accueil et conserve votre progression sur votre appareil.',
 
+  // The optional share on a result screen. {game} is the registry title, a
+  // proper noun that is not translated; `cleared` is only used for a real win.
+  shareAction: 'Partager',
+  shareCleared: 'J’ai terminé {game} sur Simple Games.',
+  sharePlayed: 'J’ai joué à {game} sur Simple Games.',
+  shareInvite: 'Vous pouvez y jouer directement dans le navigateur.',
+  shareCopied: 'Lien copié',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Vies : {n}',
   levelsCleared: 'Niveaux terminés',

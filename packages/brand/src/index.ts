@@ -33,6 +33,18 @@ export const SOURCE_REPO_URL = 'https://github.com/yosuke1024/simple-games';
 export const LANDING_BASE_URL = 'https://pixapps.ai/simple-games';
 
 /**
+ * The browser version itself (docs/WEB_VERSION.md): one static page, with the
+ * game to open carried in `?game=<id>` (issue #83, `app/webRoute.ts`).
+ *
+ * A shared URL rather than an app-local one because it is the address the
+ * whole product hands out — the app's share action builds a link at a game
+ * from it, and the landing site links here from every guide. The trailing
+ * slash is part of it: the page is served from a directory, and dropping it
+ * costs a redirect on every shared link.
+ */
+export const WEB_PLAY_URL = `${LANDING_BASE_URL}/play/`;
+
+/**
  * The privacy policy and terms of use. These pages are the SINGLE SOURCE for
  * both documents (2026-08-02): the app links to them instead of carrying its
  * own copy.

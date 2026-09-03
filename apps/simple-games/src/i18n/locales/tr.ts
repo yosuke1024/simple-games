@@ -112,6 +112,14 @@ export const tr: Messages = {
   webAppPromptTitle: 'Daha sakin bir oyun, ilk açılıştan itibaren tamamen çevrimdışı.',
   webAppPromptBody: 'Uygulama ana ekranınızdan açılır ve ilerlemenizi cihazınızda saklar.',
 
+  // The optional share on a result screen. {game} is the registry title, a
+  // proper noun that is not translated; `cleared` is only used for a real win.
+  shareAction: 'Paylaş',
+  shareCleared: 'Simple Games’te {game} oyununu bitirdim.',
+  sharePlayed: 'Simple Games’te {game} oynadım.',
+  shareInvite: 'Doğrudan tarayıcıda oynayabilirsin.',
+  shareCopied: 'Bağlantı kopyalandı',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Can: {n}',
   levelsCleared: 'Tamamlanan seviye',

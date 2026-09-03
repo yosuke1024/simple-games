@@ -111,6 +111,14 @@ export const ko: Messages = {
   webAppPromptTitle: '더 조용하게, 처음 실행할 때부터 완전히 오프라인으로.',
   webAppPromptBody: '앱은 홈 화면에서 바로 실행되고, 진행 상황은 기기에 저장됩니다.',
 
+  // The optional share on a result screen. {game} is the registry title, a
+  // proper noun that is not translated; `cleared` is only used for a real win.
+  shareAction: '공유',
+  shareCleared: 'Simple Games에서 {game}을(를) 클리어했습니다.',
+  sharePlayed: 'Simple Games에서 {game}을(를) 플레이했습니다.',
+  shareInvite: '브라우저에서 바로 즐길 수 있습니다.',
+  shareCopied: '링크를 복사했습니다',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: '라이프: {n}',
   levelsCleared: '클리어한 레벨',

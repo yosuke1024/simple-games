@@ -112,6 +112,14 @@ export const ptBR: Messages = {
   webAppPromptTitle: 'Um jeito mais tranquilo de jogar, offline desde o primeiro uso.',
   webAppPromptBody: 'O app abre direto da tela inicial e guarda seu progresso no seu dispositivo.',
 
+  // The optional share on a result screen. {game} is the registry title, a
+  // proper noun that is not translated; `cleared` is only used for a real win.
+  shareAction: 'Compartilhar',
+  shareCleared: 'Completei {game} no Simple Games.',
+  sharePlayed: 'Joguei {game} no Simple Games.',
+  shareInvite: 'Dá para jogar direto no navegador.',
+  shareCopied: 'Link copiado',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Vidas: {n}',
   levelsCleared: 'Níveis concluídos',
