@@ -2,6 +2,9 @@ import type { KakuroMessages } from './en';
 
 export const th: KakuroMessages = {
   kakuroName: 'Kakuro',
+  kakuroTier_easy: 'ง่าย',
+  kakuroTier_medium: 'ปกติ',
+  kakuroTier_hard: 'ยาก',
   kakuroBoardLabel: 'กระดาน Kakuro {size} คูณ {size}',
   kakuroCellEmpty: 'ว่าง แถว {row} หลัก {col}',
   kakuroCellEntry: '{value} แถว {row} หลัก {col}',

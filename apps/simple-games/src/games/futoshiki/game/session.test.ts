@@ -4,19 +4,23 @@
 import { describe, expect, it } from 'vitest';
 import { addDays, dayDifference, localDateString } from './daily';
 import { hasNote, valueAt } from './engine';
+import { FREE_TIER_LEVEL, FREE_TIERS, sizeForLevel, specForLevel } from './levels';
 import {
   UNDO_HISTORY_LIMIT,
   canUndo,
   createDailySession,
+  createFreeSession,
   createLevelSession,
   doErase,
   doHintUse,
   doPlace,
   doToggleNote,
   doUndo,
+  freeSeed,
   gridOf,
   hintFor,
   mistakesOf,
+  newSeedToken,
   remainingOf,
   restartSession,
   restoreSession,
@@ -302,5 +306,52 @@ describe('the clock is carried, never read (§10)', () => {
     const played = doPlace(session, firstFree(session), 1)!;
     expect(played.elapsedSeconds).toBe(90);
     expect(restartSession(played).elapsedSeconds).toBe(0);
+  });
+});
+
+describe('free play (§9「フリープレイ」)', () => {
+  it('draws the board with the representative level’s parameters, and no level or date', () => {
+    for (const tier of FREE_TIERS) {
+      const level = FREE_TIER_LEVEL[tier];
+      const session = createFreeSession(tier, freeSeed(newSeedToken(1, () => 0.5)));
+      expect(session.mode).toBe('free');
+      expect(session.freeTier).toBe(tier);
+      expect(session.level).toBeNull();
+      expect(session.dailyDate).toBeNull();
+      expect(session.size).toBe(sizeForLevel(level));
+      // The signs are chosen, never dug, so their count is exact (§8).
+      expect(session.constraints).toHaveLength(specForLevel(level).constraints);
+      expect(session.seed.startsWith('futoshiki-free-')).toBe(true);
+      expect(session.status).toBe('playing');
+      expect(violationsOf(session).any).toBe(false);
+    }
+  });
+
+  it('gives a new board each time, and the same board for the same seed', () => {
+    const a = createFreeSession('easy', freeSeed(newSeedToken(1, () => 0.25)));
+    const b = createFreeSession('easy', freeSeed(newSeedToken(2, () => 0.5)));
+    expect(b.seed).not.toBe(a.seed);
+    expect([b.solution, b.constraints]).not.toEqual([a.solution, a.constraints]);
+    const again = createFreeSession('easy', a.seed);
+    expect(again.board.givens).toEqual(a.board.givens);
+    expect(again.constraints).toEqual(a.constraints);
+    expect(again.solution).toEqual(a.solution);
+  });
+
+  it('restart rebuilds the identical free board', () => {
+    const session = createFreeSession('medium');
+    const played = doPlace(session, firstFree(session), 1)!;
+    const restarted = restartSession(played);
+    expect(restarted.seed).toBe(session.seed);
+    expect(restarted.freeTier).toBe('medium');
+    expect(restarted.board).toEqual(session.board);
+    expect(restarted.constraints).toEqual(session.constraints);
+    expect(restarted.elapsedSeconds).toBe(0);
+  });
+
+  it('never collides with a level or a daily seed', () => {
+    const token = newSeedToken(1, () => 0);
+    expect(freeSeed(token)).not.toMatch(/^futoshiki-level-/);
+    expect(freeSeed(token)).not.toMatch(/^futoshiki-daily-/);
   });
 });

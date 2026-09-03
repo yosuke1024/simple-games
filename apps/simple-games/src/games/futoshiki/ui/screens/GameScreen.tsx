@@ -66,6 +66,8 @@ export function FutoshikiGameScreen() {
     goHome,
     restartCurrent,
     startNextLevel,
+    startFree,
+    freeTier,
   } = useFutoshiki();
   const { t } = useSettings();
 
@@ -191,7 +193,9 @@ export function FutoshikiGameScreen() {
             <span className="futoshiki-mode">
               {session.mode === 'daily'
                 ? t('modeDaily')
-                : t('modeLevel', { n: session.level ?? 1 })}
+                : session.mode === 'free'
+                  ? t('freePlay')
+                  : t('modeLevel', { n: session.level ?? 1 })}
             </span>
             <span className="futoshiki-size-tag">
               {t('futoshikiSizeLabel', { n: session.size })}
@@ -276,6 +280,7 @@ export function FutoshikiGameScreen() {
         lastResult={lastResult}
         onRetry={restartCurrent}
         onNextLevel={startNextLevel}
+        onNewFree={() => startFree(session.freeTier ?? freeTier)}
         onHome={goHome}
       />
 

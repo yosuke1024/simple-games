@@ -300,9 +300,7 @@ describe('keyboard (issue #93)', () => {
     await waitFor(() => expect(screen.getByText('Your turn')).toBeInTheDocument());
 
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
-    expect(
-      screen.getByRole('button', { name: 'Row 6, column 3: your piece' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Row 6, column 3: your piece' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
   });
 });

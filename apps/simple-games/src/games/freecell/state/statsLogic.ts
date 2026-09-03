@@ -86,6 +86,25 @@ export function applyWon(stats: Stats, session: FreeCellSession): WinOutcome {
   };
 }
 
+/**
+ * The records this run is measured against — the bests before the win is
+ * booked — or null for each that does not exist yet (§9). Read before
+ * `applyWon`, which is what moves them: the overall bests for a free deal,
+ * that date's own for a daily.
+ */
+export function previousBestsFor(
+  stats: Stats,
+  session: FreeCellSession,
+): { moves: number | null; seconds: number | null } {
+  if (session.mode === 'daily' && session.dailyDate !== null) {
+    return {
+      moves: stats.dailyMoves[session.dailyDate] ?? null,
+      seconds: stats.dailySeconds[session.dailyDate] ?? null,
+    };
+  }
+  return { moves: stats.bestMoves, seconds: stats.bestSeconds };
+}
+
 /** How many daily deals have been won. A count, never a run of days (§6). */
 export function wonDailyCount(stats: Stats): number {
   return Object.keys(stats.dailyMoves).length;

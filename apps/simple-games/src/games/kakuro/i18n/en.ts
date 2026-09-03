@@ -30,6 +30,14 @@
  */
 export const en = {
   kakuroName: 'Kakuro',
+  /**
+   * Free Play's three tiers (§9「フリープレイ」): levels 10 / 50 / 95 by
+   * another name. The picker's words, not the game's — this game has no
+   * difficulty type (§7), and the board shows its size, not a tier.
+   */
+  kakuroTier_easy: 'Easy',
+  kakuroTier_medium: 'Medium',
+  kakuroTier_hard: 'Hard',
   kakuroBoardLabel: 'Kakuro board, {size} by {size}',
   kakuroCellEmpty: 'Empty, row {row}, column {col}',
   kakuroCellEntry: '{value}, row {row}, column {col}',

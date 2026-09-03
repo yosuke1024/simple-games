@@ -99,8 +99,14 @@ export function scoreAddNumbers(state: ScoreState): ScoreState {
   return { ...state, streakTenths: INITIAL_SCORE.streakTenths };
 }
 
+/**
+ * What a clear is worth before Add Numbers trims it: scaled by the level for
+ * a level board — and for a free board by the level its tier stands in for
+ * (§11「フリープレイ」; the session passes that level in). A daily has no
+ * level and takes the flat 300.
+ */
 export function clearBonusBase(mode: GameMode, level: number | null): number {
-  return mode === 'level' && level !== null ? 150 + 15 * level : 300;
+  return mode !== 'daily' && level !== null ? 150 + 15 * level : 300;
 }
 
 /**

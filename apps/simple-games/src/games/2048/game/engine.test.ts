@@ -99,6 +99,15 @@ describe('where the tiles went (§12)', () => {
     expect(trace.merged[0]).toBe(true);
     expect(trace.merged[1]).toBe(false);
   });
+
+  it('reports the biggest tile the move made, and 0 when nothing joined', () => {
+    // Two joins in one move: a 4 and a 16. The sound is pitched to the 16.
+    const trace = traceMove(board([2, 2, 0, 0], [8, 8, 0, 0], ZERO, ZERO), 'left');
+    expect(trace.largestMerge).toBe(16);
+    expect(move(board([2, 2, 0, 0], [8, 8, 0, 0], ZERO, ZERO), 'left').largestMerge).toBe(16);
+    // A move that only packs makes nothing.
+    expect(traceMove(board([0, 2, 0, 4], ZERO, ZERO, ZERO), 'left').largestMerge).toBe(0);
+  });
 });
 
 describe('the new tile (§5)', () => {

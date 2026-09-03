@@ -7,6 +7,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { useResultReveal } from '@/ui/useResultReveal';
 import { YOU, type GinRummySession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 import type { Stats } from '../../storage/schemas';
@@ -27,7 +28,9 @@ export function GinRummyResultOverlay({
   onHome,
 }: GinRummyResultOverlayProps) {
   const { t } = useSettings();
-  if (session.status === 'playing' || !lastResult) return null;
+  // The last settled hand gets its beat before the card covers it (§11.2).
+  const revealed = useResultReveal(session.status !== 'playing' && lastResult !== null);
+  if (!revealed || !lastResult) return null;
 
   const won = session.status === 'won';
   const title = won ? t('ginWinTitle') : t('ginLoseTitle');
@@ -37,7 +40,7 @@ export function GinRummyResultOverlay({
   const decider = session.lastHand;
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className={`dialog result ${won ? 'result-clear' : ''}`}
         role="alertdialog"

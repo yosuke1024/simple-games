@@ -16,6 +16,15 @@ export function applyPlayTime(stats: Stats, seconds: number): Stats {
   return { ...stats, totalPlaySeconds: stats.totalPlaySeconds + seconds };
 }
 
+/**
+ * The record this run is measured against, or null while there is none — a
+ * best of 0 is no record yet (§9). Read before `applyRunEnd`, which is what
+ * moves it.
+ */
+export function previousBestScore(stats: Stats): number | null {
+  return stats.bestScore > 0 ? stats.bestScore : null;
+}
+
 export interface ScoreOutcome {
   readonly stats: Stats;
   /** True when this run beat the previous best score. */

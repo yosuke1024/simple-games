@@ -14,7 +14,7 @@
 import { DAILY_COLORS, DAILY_MIX, dailySeed } from './daily';
 import { applyPour, isSolved } from './engine';
 import { generatePuzzle } from './generator';
-import { colorsForLevel, levelSeed, mixForLevel } from './levels';
+import { colorsForLevel, FREE_TIER_LEVEL, levelSeed, mixForLevel, type FreeTier } from './levels';
 import type { GameMode, GameStatus, Tubes } from './types';
 
 /** Practically unlimited undo; a real game never comes close (§8). */
@@ -30,10 +30,12 @@ export interface WaterSession {
   readonly mode: GameMode;
   readonly seed: string;
   readonly colors: number;
-  /** Local YYYY-MM-DD for daily mode, null for level mode. */
+  /** Local YYYY-MM-DD for daily mode, null otherwise. */
   readonly dailyDate: string | null;
-  /** 1..999 for level mode, null for daily. */
+  /** 1..100 for level mode, null for the daily and for free play. */
   readonly level: number | null;
+  /** The tier a free board was dealt at (§6「フリープレイ」), null otherwise. */
+  readonly freeTier: FreeTier | null;
   readonly tubes: Tubes;
   /** Board snapshots before each pour, oldest first. */
   readonly history: readonly HistoryEntry[];
@@ -51,6 +53,7 @@ function baseSession(
   colors: number,
   dailyDate: string | null,
   level: number | null,
+  freeTier: FreeTier | null,
   tubes: Tubes,
 ): WaterSession {
   return {
@@ -59,6 +62,7 @@ function baseSession(
     colors,
     dailyDate,
     level,
+    freeTier,
     tubes,
     history: [],
     status: isSolved(tubes) ? 'solved' : 'playing',
@@ -73,21 +77,47 @@ export function createLevelSession(level: number): WaterSession {
   const colors = colorsForLevel(level);
   const seed = levelSeed(level);
   const puzzle = generatePuzzle(seed, colors, mixForLevel(level));
-  return baseSession('level', seed, colors, null, level, puzzle.tubes);
+  return baseSession('level', seed, colors, null, level, null, puzzle.tubes);
 }
 
 /** A fresh (or restarted) daily game for a local YYYY-MM-DD date. */
 export function createDailySession(dateString: string): WaterSession {
   const seed = dailySeed(dateString);
   const puzzle = generatePuzzle(seed, DAILY_COLORS, DAILY_MIX);
-  return baseSession('daily', seed, DAILY_COLORS, dateString, null, puzzle.tubes);
+  return baseSession('daily', seed, DAILY_COLORS, dateString, null, null, puzzle.tubes);
+}
+
+/**
+ * A token that makes one free board's seed its own (§6「フリープレイ」). Free
+ * play has no level number and no date to seed from, so a new game gets a
+ * new deal — while the seed still pins that deal down completely, which is
+ * what makes "retry the same board" exact and the saved game restorable.
+ */
+export function newSeedToken(now: number = Date.now(), random: () => number = Math.random): string {
+  return `${now.toString(36)}-${Math.floor(random() * 0xffffff).toString(36)}`;
+}
+
+export const freeSeed = (token: string): string => `water-free-${token}`;
+
+/**
+ * A fresh free board at a chosen tier — new unless a seed pins an old one.
+ * The deal is the tier's representative level's (levels.ts), seed aside.
+ */
+export function createFreeSession(
+  tier: FreeTier,
+  seed: string = freeSeed(newSeedToken()),
+): WaterSession {
+  const level = FREE_TIER_LEVEL[tier];
+  const colors = colorsForLevel(level);
+  const puzzle = generatePuzzle(seed, colors, mixForLevel(level));
+  return baseSession('free', seed, colors, null, null, tier, puzzle.tubes);
 }
 
 /** Rebuilds the same board from scratch (Restart). */
 export function restartSession(session: WaterSession): WaterSession {
-  return session.mode === 'level' && session.level !== null
-    ? createLevelSession(session.level)
-    : createDailySession(session.dailyDate ?? '');
+  if (session.mode === 'level' && session.level !== null) return createLevelSession(session.level);
+  if (session.mode === 'daily') return createDailySession(session.dailyDate ?? '');
+  return createFreeSession(session.freeTier ?? 'medium', session.seed);
 }
 
 /** Restores a session from persisted state (undo history is not persisted). */

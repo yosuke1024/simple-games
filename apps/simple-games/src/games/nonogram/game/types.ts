@@ -32,7 +32,8 @@ export const CROSSED: Mark = 2;
 /** One row's or column's clue: run lengths in order. An empty line is `[]`. */
 export type Clue = readonly number[];
 
-export type GameMode = 'level' | 'daily';
+/** Level list, the daily, or a free board at a chosen tier (§6「フリープレイ」). */
+export type GameMode = 'level' | 'daily' | 'free';
 
 /** There is no losing a Nonogram — no mistakes counted, no lives (§2, §13). */
 export type GameStatus = 'playing' | 'solved';

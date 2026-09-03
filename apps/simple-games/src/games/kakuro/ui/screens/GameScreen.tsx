@@ -65,6 +65,7 @@ export function KakuroGameScreen() {
     goHome,
     restartCurrent,
     startNextLevel,
+    startFree,
   } = useKakuro();
   const { t } = useSettings();
 
@@ -192,7 +193,9 @@ export function KakuroGameScreen() {
             <span className="kakuro-mode">
               {session.mode === 'daily'
                 ? t('modeDaily')
-                : t('modeLevel', { n: session.level ?? 1 })}
+                : session.mode === 'free'
+                  ? t('freePlay')
+                  : t('modeLevel', { n: session.level ?? 1 })}
             </span>
             <span className="kakuro-size-tag">{t('kakuroSizeLabel', { n: session.size })}</span>
           </div>
@@ -270,6 +273,7 @@ export function KakuroGameScreen() {
         lastResult={lastResult}
         onRetry={restartCurrent}
         onNextLevel={startNextLevel}
+        onNewFree={() => startFree(session.freeTier)}
         onHome={goHome}
       />
 

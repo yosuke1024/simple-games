@@ -25,7 +25,7 @@ import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
 import { bunnySeed, newSeedToken } from '../game/seed';
 import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
-import { applyPlayTime, applyRunEnd, applyRunStart } from './statsLogic';
+import { applyPlayTime, applyRunEnd, applyRunStart, previousBestScore } from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'game' | 'stats';
 
@@ -43,6 +43,8 @@ export interface LastResult {
   readonly obstaclesPassed: number;
   readonly isNewBestScore: boolean;
   readonly bestScore: number;
+  /** The record before this run, or null while there was none (§9). */
+  readonly previousBestScore: number | null;
 }
 
 export interface Attempt {
@@ -137,6 +139,8 @@ export function BunnyProvider({
     (score: number, obstaclesPassed: number) => {
       if (!attemptRef.current || endedRef.current) return;
       endedRef.current = true;
+      // Read before the record moves: what this run is measured against.
+      const previous = previousBestScore(statsRef.current);
       const outcome = applyRunEnd(statsRef.current, score, obstaclesPassed);
       persistStats(outcome.stats);
       if (score >= REVIEW_MIN_SCORE) recordGameCompleted();
@@ -145,6 +149,7 @@ export function BunnyProvider({
         obstaclesPassed,
         isNewBestScore: outcome.isNewBestScore,
         bestScore: outcome.bestScore,
+        previousBestScore: previous,
       });
     },
     [persistStats],

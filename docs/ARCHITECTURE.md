@@ -371,16 +371,16 @@ src/
 | `sg.review`       | ストアレビュー導線の状態(完了数 / 表示回数 / 解決済みフラグ)                                  |
 | `sg.recent`       | 「最近遊んだ」のゲーム id(新しい順・最大 2 件)                                                |
 | `sg.webAppPrompt` | Web 版のアプリ案内カードの状態(ゲーム離脱回数 / 表示済みフラグ)。**Web 版でのみ読み書きする** |
-| `sd.*`            | Sudoku(saveGame / saveDaily / stats / progress / flags / prefs)                               |
+| `sd.*`            | Sudoku(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                    |
 | `so.*`            | Solitaire(saveGame / saveDaily / stats / flags / prefs)                                       |
 | `ms.*`            | Minesweeper(saveGame / saveDaily / stats / flags / prefs)                                     |
-| `ng.*`            | Nonogram(saveGame / saveDaily / stats / progress / flags / prefs)                             |
+| `ng.*`            | Nonogram(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                  |
 | `mj.*`            | Mahjong Solitaire(saveGame / saveDaily / stats / progress / flags。**prefs なし**)            |
-| `tk.*`            | Takuzu(saveGame / saveDaily / stats / progress / flags。**prefs なし**)                       |
-| `ft.*`            | Futoshiki(saveGame / saveDaily / stats / progress / flags / prefs)                            |
-| `kk.*`            | Kakuro(saveGame / saveDaily / stats / progress / flags / prefs)                               |
-| `nm.*`            | Number Match(saveGame / saveDaily / stats / progress / flags)                                 |
-| `ws.*`            | Water Sort(saveGame / saveDaily / stats / progress / flags)                                   |
+| `tk.*`            | Takuzu(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ) |
+| `ft.*`            | Futoshiki(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                 |
+| `kk.*`            | Kakuro(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                    |
+| `nm.*`            | Number Match(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ) |
+| `ws.*`            | Water Sort(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ) |
 | `sp.*`            | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags)                               |
 | `mm.*`            | Memory Match(saveGame / saveDaily / stats / flags)                                            |
 | `bb.*`            | Brick Breaker(stats / progress / flags。**saveGame なし** — 下記)                             |
@@ -457,7 +457,7 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
   乗り、1 本のゲームだけが使うキーはそのゲームの `src/games/<id>/i18n/*.ts` に
   移してゲームのチャンクへ同梱する。ゲームを開かないプレイヤーは、その文言を
   一度もパースしない。
-- 現在 14 言語。シェル 85 キー(エントリに乗る) + ゲーム別 28 カタログ(合計 849
+- 現在 14 言語。シェル 91 キー(エントリに乗る) + ゲーム別 30 カタログ(合計 959
   キー、13〜59 キー/ゲーム、開いたときだけパースされる)。ロケールタグは小文字で
   持つ。en と ja 以外は来歴 `machine`(AI の助けを借りて書き、その言語のネイティブ
   は読んでいない)。高リスクキーはリリース前の門で逆翻訳を作者が読む

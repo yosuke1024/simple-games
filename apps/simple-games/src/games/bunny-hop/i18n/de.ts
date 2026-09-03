@@ -20,5 +20,6 @@ export const de: BunnyHopMessages = {
   bunnyStep2Body:
     'Tief fliegende musst du wie einen Busch überspringen; hohe treffen dich nur im Sprung.',
   bunnyStep3Title: 'Es wird immer schneller',
-  bunnyStep3Body: 'Eine Möhre auf der Strecke fängt einen Treffer ab – bis zu drei. Ohne Möhren endet der Lauf beim ersten Treffer.',
+  bunnyStep3Body:
+    'Eine Möhre auf der Strecke fängt einen Treffer ab – bis zu drei. Ohne Möhren endet der Lauf beim ersten Treffer.',
 };

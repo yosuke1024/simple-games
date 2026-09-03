@@ -7,6 +7,7 @@
 export const SD_STORAGE_KEYS = {
   game: 'sd.saveGame',
   dailyGame: 'sd.saveDaily',
+  freeGame: 'sd.saveFree',
   stats: 'sd.stats',
   progress: 'sd.progress',
   flags: 'sd.flags',

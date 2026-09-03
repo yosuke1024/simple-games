@@ -19,5 +19,6 @@ export const ptBR: BunnyHopMessages = {
   bunnyStep2Body:
     'Os que voam baixo precisam ser pulados como um arbusto; os altos só pegam você no salto.',
   bunnyStep3Title: 'Só fica mais rápido',
-  bunnyStep3Body: 'Uma cenoura no campo salva você de uma batida – até três. Sem cenoura, uma batida encerra a corrida.',
+  bunnyStep3Body:
+    'Uma cenoura no campo salva você de uma batida – até três. Sem cenoura, uma batida encerra a corrida.',
 };

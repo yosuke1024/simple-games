@@ -30,7 +30,8 @@ export interface Puzzle {
   readonly tubes: Tubes;
 }
 
-export type GameMode = 'level' | 'daily';
+/** The level list, the daily, or a free board at a chosen tier (§6). */
+export type GameMode = 'level' | 'daily' | 'free';
 export type GameStatus = 'playing' | 'solved';
 
 /** One pour: source tube index → destination tube index. */

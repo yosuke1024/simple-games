@@ -31,4 +31,7 @@ export const es: NumberMatchMessages = {
   step3Body:
     '¿Te atascaste? Toca Agregar para sumar los números restantes. Deshacer y las pistas siempre son gratis.',
   gameOverCount: 'Derrotas',
+  nmTier_easy: 'Fácil',
+  nmTier_medium: 'Medio',
+  nmTier_hard: 'Difícil',
 };

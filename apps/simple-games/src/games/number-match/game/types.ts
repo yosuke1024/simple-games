@@ -39,7 +39,8 @@ export type Board = readonly BoardCell[];
 
 export type GameStatus = 'playing' | 'cleared' | 'gameOver';
 
-export type GameMode = 'level' | 'daily';
+/** Level list, the daily, or a free board at a chosen tier (§11「フリープレイ」). */
+export type GameMode = 'level' | 'daily' | 'free';
 
 /** A slot the player can still pair off: an uncleared number or wild. */
 export function isLive(cell: BoardCell | undefined): cell is DigitCell | WildCell {

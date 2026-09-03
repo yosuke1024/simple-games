@@ -1,12 +1,16 @@
+import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
-import { localDateString } from '../../game';
+import { FREE_TIERS, localDateString, MAX_LEVEL } from '../../game';
 import { useNonogram } from '../../state/GameContext';
+import { solvedLevelCount } from '../../state/statsLogic';
 
 /**
  * Each mode has its own entry point and its own suspended game, so nothing
- * here can cost the player a game in progress — no confirmation needed.
+ * here can cost the player a game in progress — the one exception is asking
+ * for a *new* free board while one is suspended, which asks first (§6).
  */
 export function NonoHomeScreen() {
   const {
@@ -16,15 +20,22 @@ export function NonoHomeScreen() {
     dailyDoneToday,
     startLevel,
     startDaily,
+    startFree,
+    freeTier,
+    setFreeTier,
     resumeGame,
     exitToCollection,
   } = useNonogram();
   const { t } = useSettings();
+  const [confirmNewFree, setConfirmNewFree] = useState(false);
 
   const levelGame = sessions.level?.status === 'playing' ? sessions.level : null;
   const dailyGame = sessions.daily?.status === 'playing' ? sessions.daily : null;
+  const freeGame = sessions.free?.status === 'playing' ? sessions.free : null;
   const today = localDateString(new Date());
   const dailyIsToday = dailyGame?.dailyDate === today;
+  // A suspended free board names its own tier, not the picker's.
+  const suspendedTier = freeGame?.freeTier ?? freeTier;
 
   return (
     <div className="screen home-screen">
@@ -82,10 +93,50 @@ export function NonoHomeScreen() {
           ) : null}
         </button>
 
+        {/* Free Play (§6「フリープレイ」): a fresh board at the tier below,
+            beside the climb and the daily rather than instead of them. A
+            suspended free board resumes from the same button; a new one while
+            it is suspended is a separate, confirmed ask. */}
+        <button
+          type="button"
+          className="btn btn-secondary btn-big"
+          onClick={() => (freeGame ? resumeGame('free') : startFree())}
+        >
+          {t('freePlay')}
+          <span className="btn-note">
+            {freeGame
+              ? `${t('resume')} · ${t(`nonoTier_${suspendedTier}`)}`
+              : t(`nonoTier_${freeTier}`)}
+          </span>
+        </button>
+        {freeGame ? (
+          <button type="button" className="btn btn-ghost" onClick={() => setConfirmNewFree(true)}>
+            {t('newGame')}
+          </button>
+        ) : null}
+        <div className="segmented free-play-toggle" role="group" aria-label={t('difficulty')}>
+          {FREE_TIERS.map((tier) => (
+            <button
+              key={tier}
+              type="button"
+              className={`segment ${tier === freeTier ? 'segment-active' : ''}`}
+              aria-pressed={tier === freeTier}
+              onClick={() => setFreeTier(tier)}
+            >
+              {t(`nonoTier_${tier}`)}
+            </button>
+          ))}
+        </div>
+        <p className="free-play-note">{t('freePlayNote')}</p>
+
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('levels')}>
             <IconGrid className="home-chip-icon" />
             <span>{t('levelsTitle')}</span>
+            {/* How far up the hundred: a fraction with an end, said once. */}
+            <span className="home-chip-count">
+              {solvedLevelCount(progress)}/{MAX_LEVEL}
+            </span>
           </button>
           <button type="button" className="home-chip" onClick={() => navigate('daily')}>
             <IconCalendar className="home-chip-icon" />
@@ -103,6 +154,19 @@ export function NonoHomeScreen() {
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmNewFree}
+        title={t('confirmNewGameTitle')}
+        body={t('confirmNewGameBody')}
+        cancelLabel={t('cancel')}
+        confirmLabel={t('confirm')}
+        onCancel={() => setConfirmNewFree(false)}
+        onConfirm={() => {
+          setConfirmNewFree(false);
+          startFree();
+        }}
+      />
     </div>
   );
 }

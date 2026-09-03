@@ -46,7 +46,13 @@ import {
   type Progress,
   type Stats,
 } from '../storage/schemas';
-import { applyGameStart, applyPlayTime, applySolved, applySolveToProgress } from './statsLogic';
+import {
+  applyGameStart,
+  applyPlayTime,
+  applySolved,
+  applySolveToProgress,
+  previousBestsFor,
+} from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats';
 
@@ -55,6 +61,9 @@ export interface LastResult {
   readonly isNewBestTime: boolean;
   readonly bestMoves: number;
   readonly bestSeconds: number;
+  /** The board's records before this run, null for each it is the first of (§9). */
+  readonly previousBestMoves: number | null;
+  readonly previousBestSeconds: number | null;
   readonly moves: number;
   readonly seconds: number;
 }
@@ -175,6 +184,8 @@ export function SlidingPuzzleProvider({
         ),
       );
       recordGameCompleted();
+      // Read before the records move: what this run is measured against.
+      const previous = previousBestsFor(progressRef.current, next);
       const outcome = applySolveToProgress(progressRef.current, next);
       persistProgress(outcome.progress);
       setLastResult({
@@ -182,6 +193,8 @@ export function SlidingPuzzleProvider({
         isNewBestTime: outcome.isNewBestTime,
         bestMoves: outcome.bestMoves,
         bestSeconds: outcome.bestSeconds,
+        previousBestMoves: previous.moves,
+        previousBestSeconds: previous.seconds,
         moves: next.moveCount,
         seconds: next.elapsedSeconds,
       });

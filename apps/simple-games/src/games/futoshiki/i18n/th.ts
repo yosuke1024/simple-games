@@ -2,6 +2,9 @@ import type { FutoshikiMessages } from './en';
 
 export const th: FutoshikiMessages = {
   futoshikiName: 'Futoshiki',
+  futoshikiTier_easy: 'ง่าย',
+  futoshikiTier_medium: 'ปกติ',
+  futoshikiTier_hard: 'ยาก',
   futoshikiBoardLabel: 'กระดาน Futoshiki {size} คูณ {size}',
   futoshikiCellEmpty: 'ว่าง แถว {row} หลัก {col}',
   futoshikiCellEntry: '{value} แถว {row} หลัก {col}',

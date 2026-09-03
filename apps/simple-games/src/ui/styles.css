@@ -886,6 +886,29 @@ button:disabled {
   color: var(--accent);
 }
 
+/* Free Play's tier picker and its one-line note, under the Free Play button
+   on a game's home (docs/SUDOKU_RULES.md §9「フリープレイ」). The picker is
+   the shared segmented control; these only place it. */
+.free-play-toggle {
+  align-self: center;
+}
+
+.free-play-note {
+  margin: -4px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* The count under the Levels chip: how many of the hundred are done. A
+   fraction with an end, not a bar that fills — the climb is finishable and
+   this says how far along it is (docs/SUDOKU_RULES.md §9). */
+.home-chip-count {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
 .home-links {
   display: flex;
   justify-content: center;
@@ -1454,6 +1477,42 @@ button:disabled {
   gap: 8px;
 }
 
+/* The result card arrives rather than appears: after the board has had its
+   beat (ui/useResultReveal.ts) the card rises a few pixels and fades in. One
+   short keyframe on the card alone — the scrim behind it is instant, so the
+   board dims first and the card follows. Reduced Motion collapses it to
+   nothing (the global rule below). */
+.overlay-result .dialog {
+  animation: result-in 0.26s ease-out;
+}
+
+@keyframes result-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* How this run stands against the player's own record, beside that record
+   (ui/components/BestDelta.tsx). Quiet by default; a new record wears the
+   accent, since that is the one line on the card worth a colour. */
+.result-delta {
+  margin-left: 8px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.result-delta-better {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* ---------- toast ---------- */
 
 .toast {
@@ -1709,6 +1768,23 @@ button:disabled {
 
 .level-cell-locked {
   background: var(--surface-recessed);
+}
+
+/* A level's tier, as one to three dots under its number — so a player can
+   find "a hard one I have not beaten fast" without opening each level. Dots,
+   not colour, so the tiers stay apart in any theme and on the current cell. */
+.level-cell-tier {
+  display: flex;
+  gap: 3px;
+  margin-top: 1px;
+}
+
+.level-cell-tier i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.55;
 }
 
 .level-cell-locked:disabled {

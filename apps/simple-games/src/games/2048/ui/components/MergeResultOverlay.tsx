@@ -10,7 +10,9 @@
  * buy and no ad to watch for one more move (§8, ADS_POLICY.md).
  */
 import { useSettings } from '@/state/SettingsContext';
+import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { useResultReveal } from '@/ui/useResultReveal';
 import { largestTile, type Game2048Session } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
@@ -33,13 +35,17 @@ export function MergeResultOverlay({
 }: MergeResultOverlayProps) {
   const { t } = useSettings();
   const over = session.status === 'over';
+  // Either card waits the beat after the last slide (§12) — one wait for
+  // both, since the two arrive on the same move when they coincide.
+  const revealed = useResultReveal(over || announceReached);
+  if (!revealed) return null;
 
   // Both at once is possible — the move that makes 2048 can also fill the
   // board. The ending wins: "Keep Going" would be an offer the board cannot
   // honour, and the reach is on the statistics screen either way (§9).
   if (over) {
     return (
-      <div className="overlay">
+      <div className="overlay overlay-result">
         <div
           className="dialog result"
           role="alertdialog"
@@ -61,10 +67,24 @@ export function MergeResultOverlay({
           </dl>
 
           {lastResult?.isNewBestScore ? (
-            <p className="dialog-body">{t('mergeNewBestScore')}</p>
+            <p className="dialog-body">
+              {t('mergeNewBestScore')}
+              <BestDelta
+                value={lastResult.score}
+                previous={lastResult.previousBestScore}
+                kind="count"
+                lowerIsBetter={false}
+              />
+            </p>
           ) : lastResult ? (
             <p className="dialog-body">
               {t('mergeBestScore')} {lastResult.bestScore}
+              <BestDelta
+                value={lastResult.score}
+                previous={lastResult.previousBestScore}
+                kind="count"
+                lowerIsBetter={false}
+              />
             </p>
           ) : null}
 
@@ -85,7 +105,7 @@ export function MergeResultOverlay({
   if (!announceReached) return null;
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className="dialog result result-clear"
         role="alertdialog"

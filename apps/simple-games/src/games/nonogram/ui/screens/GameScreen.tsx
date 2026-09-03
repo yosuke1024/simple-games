@@ -39,6 +39,7 @@ export function NonoGameScreen() {
     goHome,
     restartCurrent,
     startNextLevel,
+    startFree,
   } = useNonogram();
   const { t } = useSettings();
 
@@ -141,7 +142,9 @@ export function NonoGameScreen() {
             <span className="game-mode">
               {session.mode === 'daily'
                 ? t('modeDaily')
-                : t('modeLevel', { n: session.level ?? 1 })}
+                : session.mode === 'free'
+                  ? t('freePlay')
+                  : t('modeLevel', { n: session.level ?? 1 })}
             </span>
             <span className="nono-size-tag">{t('nonoSizeLabel', { n: session.size })}</span>
           </div>
@@ -199,6 +202,7 @@ export function NonoGameScreen() {
         lastResult={lastResult}
         onRetry={restartCurrent}
         onNextLevel={startNextLevel}
+        onNewFree={() => startFree(session.freeTier)}
         onHome={goHome}
       />
 

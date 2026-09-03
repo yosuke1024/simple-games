@@ -48,13 +48,18 @@ export interface ClearOutcome {
   bestScore: number;
 }
 
-/** Registers a cleared game: unlocks the next level and updates bests. */
+/**
+ * Registers a cleared game: unlocks the next level and updates bests. A free
+ * board (§11「フリープレイ」) has no level to unlock and no board to keep a
+ * record for, so it leaves the climb and the calendar exactly as they were.
+ */
 export function applyClearToProgress(
   progress: Progress,
   session: GameSession,
   now: number,
 ): ClearOutcome {
   const score = session.score.total;
+  if (session.mode === 'free') return { progress, isNewBest: false, bestScore: score };
   const next = clone(progress);
 
   let ref: string;
@@ -90,6 +95,27 @@ export function applyClearToProgress(
     .slice(0, TOP_SCORES_LIMIT);
 
   return { progress: next, isNewBest, bestScore };
+}
+
+/**
+ * The record this run is measured against — the board's best before the run
+ * is booked — or null when there is none yet (§12). Read before
+ * `applyClearToProgress`, which is what moves the record. A free board has
+ * no board to keep a record for, so nothing to be measured against (§11).
+ */
+export function previousBestFor(progress: Progress, session: GameSession): number | null {
+  if (session.mode === 'level' && session.level !== null) {
+    return progress.bestScores[String(session.level)] ?? null;
+  }
+  if (session.mode === 'daily' && session.dailyDate !== null) {
+    return progress.bestDaily[session.dailyDate] ?? null;
+  }
+  return null;
+}
+
+/** How many of the hundred have a recorded best — the count under the Levels chip. */
+export function solvedLevelCount(progress: Progress): number {
+  return Object.keys(progress.bestScores).length;
 }
 
 /** Sum of all level best scores — the quiet "total" shown in Statistics. */

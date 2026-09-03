@@ -18,5 +18,6 @@ export const ko: BunnyHopMessages = {
   bunnyStep2Title: '새도 날아옵니다',
   bunnyStep2Body: '낮게 나는 새는 덤불처럼 점프로 넘고, 높이 나는 새는 점프했을 때만 부딪힙니다.',
   bunnyStep3Title: '점점 빨라집니다',
-  bunnyStep3Body: '코스의 당근은 한 번의 충돌을 막아줍니다 – 최대 3개. 당근 없으면 한 번 닿으면 끝입니다.',
+  bunnyStep3Body:
+    '코스의 당근은 한 번의 충돌을 막아줍니다 – 최대 3개. 당근 없으면 한 번 닿으면 끝입니다.',
 };

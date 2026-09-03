@@ -4,8 +4,8 @@
  * orchestration; the only ad surface is the shared BannerSlot the game screen
  * renders.
  *
- * Two games are suspended independently — one level, one daily (§6, §10) — so
- * switching modes never costs the player either one.
+ * Three games are suspended independently — one level, one daily, one free
+ * board (§6, §10) — so switching modes never costs the player any of them.
  *
  * Battery note: the play clock lives in a mutable ref and does NOT set React
  * state, so nothing re-renders while a game is running. It is never shown
@@ -29,6 +29,7 @@ import { saveRecord } from '../../../storage/repo';
 import {
   countHintUse,
   createDailySession,
+  createFreeSession,
   createLevelSession,
   crossCell,
   hintFor,
@@ -36,6 +37,7 @@ import {
   MAX_LEVEL,
   paintCell,
   restartSession,
+  type FreeTier,
   type GameMode,
   type Hint,
   type NonogramSession,
@@ -45,13 +47,20 @@ import {
   flagsSchema,
   prefsSchema,
   progressSchema,
+  sizeKey,
   statsSchema,
   type Flags,
   type Prefs,
   type Progress,
   type Stats,
 } from '../storage/schemas';
-import { applyGameStart, applyPlayTime, applySolved, applySolveToProgress } from './statsLogic';
+import {
+  applyGameStart,
+  applyPlayTime,
+  applySolved,
+  applySolveToProgress,
+  previousBestFor,
+} from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats';
 
@@ -61,6 +70,8 @@ export interface LastResult {
   /** True when this solve beat the time the player had before. */
   readonly isNewBestTime: boolean;
   readonly bestSeconds: number;
+  /** The record before this run, or null on a first clear (§9). */
+  readonly previousBestSeconds: number | null;
 }
 
 export interface NonogramContextValue {
@@ -80,6 +91,11 @@ export interface NonogramContextValue {
   startLevel: (level: number) => void;
   startNextLevel: () => void;
   startDaily: (date?: string) => void;
+  /** A fresh free board at the picker's tier — or the one given (§6). */
+  startFree: (tier?: FreeTier | null) => void;
+  /** Where the Free Play picker stands; remembered across launches. */
+  freeTier: FreeTier;
+  setFreeTier: (tier: FreeTier) => void;
   restartCurrent: () => void;
   resumeGame: (mode: GameMode) => void;
   /** Paints a cell. Returns false when the tap changed nothing (§3). */
@@ -182,6 +198,14 @@ export function NonogramProvider({
       void clearSavedGame(next.mode);
       const unbooked = Math.max(0, next.elapsedSeconds - bookedRef.current);
       bookedRef.current = next.elapsedSeconds;
+      // Read before any record moves: what this run is measured against. A
+      // level or a daily has its own board's record; a free board has no
+      // board to keep one for, so it stands against its size's fastest
+      // clear — the number the statistics screen shows (§6, §9).
+      const previousBestSeconds =
+        next.mode === 'free'
+          ? statsRef.current[sizeKey(next.size)].bestSeconds
+          : previousBestFor(progressRef.current, next);
       persistStats(
         applySolved(
           applyPlayTime(statsRef.current, next.size, unbooked),
@@ -192,11 +216,16 @@ export function NonogramProvider({
       recordGameCompleted();
       const outcome = applySolveToProgress(progressRef.current, next);
       persistProgress(outcome.progress);
+      const freeIsBest = previousBestSeconds === null || next.elapsedSeconds < previousBestSeconds;
       setLastResult({
         seconds: next.elapsedSeconds,
         hints: next.hintCount,
-        isNewBestTime: outcome.isNewBestTime,
-        bestSeconds: outcome.bestSeconds,
+        isNewBestTime: next.mode === 'free' ? freeIsBest : outcome.isNewBestTime,
+        bestSeconds:
+          next.mode === 'free'
+            ? Math.min(next.elapsedSeconds, previousBestSeconds ?? Infinity)
+            : outcome.bestSeconds,
+        previousBestSeconds,
       });
     },
     [persistProgress, persistStats, putSession],
@@ -266,6 +295,19 @@ export function NonogramProvider({
     },
     [beginSession, resumeGame],
   );
+
+  const startFree = useCallback(
+    (tier?: FreeTier | null) => {
+      beginSession(createFreeSession(tier ?? prefsRef.current.freeTier));
+    },
+    [beginSession],
+  );
+
+  const setFreeTier = useCallback((tier: FreeTier) => {
+    const next = { ...prefsRef.current, freeTier: tier };
+    setPrefs(next);
+    void saveRecord(prefsSchema, next);
+  }, []);
 
   const restartCurrent = useCallback(() => {
     const current = sessionsRef.current[activeModeRef.current];
@@ -405,6 +447,9 @@ export function NonogramProvider({
       startLevel,
       startNextLevel,
       startDaily,
+      startFree,
+      freeTier: prefs.freeTier,
+      setFreeTier,
       restartCurrent,
       resumeGame,
       paint,
@@ -431,6 +476,8 @@ export function NonogramProvider({
       startLevel,
       startNextLevel,
       startDaily,
+      startFree,
+      setFreeTier,
       restartCurrent,
       resumeGame,
       paint,

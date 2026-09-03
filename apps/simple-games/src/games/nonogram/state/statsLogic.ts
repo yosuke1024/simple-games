@@ -87,6 +87,20 @@ export function applySolveToProgress(progress: Progress, session: NonogramSessio
   return { progress: next, isNewBestTime: false, bestSeconds: seconds };
 }
 
+/**
+ * The record this run is measured against — the board's best before the run
+ * is booked — or null when there is none yet (§9). Read before
+ * `applySolveToProgress`, which is what moves the record. A free board has
+ * no record of its own here; the context reads its size's best instead.
+ */
+export function previousBestFor(progress: Progress, session: NonogramSession): number | null {
+  if (session.mode === 'level' && session.level !== null) {
+    return progress.bestSeconds[String(session.level)] ?? null;
+  }
+  if (session.dailyDate !== null) return progress.dailySeconds[session.dailyDate] ?? null;
+  return null;
+}
+
 /** How many levels have been solved — shown on the level list. */
 export function solvedLevelCount(progress: Progress): number {
   return Object.keys(progress.bestSeconds).length;

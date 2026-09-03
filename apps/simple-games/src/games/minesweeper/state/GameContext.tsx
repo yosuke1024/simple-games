@@ -51,7 +51,7 @@ import {
   type Prefs,
   type Stats,
 } from '../storage/schemas';
-import { applyGameStart, applyPlayTime, applyWin } from './statsLogic';
+import { applyGameStart, applyPlayTime, applyWin, previousBestFor } from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'daily' | 'game' | 'stats';
 
@@ -63,6 +63,8 @@ export interface LastResult {
   readonly isNewBest: boolean;
   /** The time to beat for this difficulty or this day, if there is one. */
   readonly bestSeconds: number | null;
+  /** The record before a won run (§9); null on a first win — and on a loss, which sets no time. */
+  readonly previousBestSeconds: number | null;
 }
 
 export interface MinesweeperContextValue {
@@ -173,6 +175,8 @@ export function MinesweeperProvider({
       const unbooked = Math.max(0, next.elapsedSeconds - bookedRef.current);
       bookedRef.current = next.elapsedSeconds;
       const played = applyPlayTime(statsRef.current, next.difficulty, unbooked);
+      // Read before the record moves: what a win is measured against.
+      const previousBestSeconds = previousBestFor(played, next);
 
       if (next.status === 'won') {
         recordGameCompleted();
@@ -184,23 +188,22 @@ export function MinesweeperProvider({
           hints: next.hintCount,
           isNewBest: outcome.isNewBest,
           bestSeconds: outcome.bestSeconds,
+          previousBestSeconds,
         });
         return;
       }
 
       // A loss is the end of the game, not a penalty (§2): the counts stand as
-      // they are and the same board is offered straight back.
+      // they are and the same board is offered straight back. The record is
+      // still stated, but an unfinished run has no time to set against it.
       persistStats(played);
-      const best =
-        next.mode === 'daily' && next.dailyDate !== null
-          ? (played.dailyTimes[next.dailyDate] ?? null)
-          : played[next.difficulty].bestSeconds;
       setLastResult({
         won: false,
         seconds: next.elapsedSeconds,
         hints: next.hintCount,
         isNewBest: false,
-        bestSeconds: best,
+        bestSeconds: previousBestSeconds,
+        previousBestSeconds: null,
       });
     },
     [persistStats, putSession],

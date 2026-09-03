@@ -316,3 +316,26 @@ export const CLOUD: readonly Rect[] = drawn([
   '.###########.',
   '..#######....',
 ]);
+
+/**
+ * The personal-best post (§6): a pennant on a stick, planted on the track at
+ * the distance the best run reached. Drawn in soft ink, like the clouds and
+ * the pebbles — a landmark on the course, not a hazard and not a prize.
+ */
+const BEST_FLAG_ART = [
+  '#....',
+  '####.',
+  '#####',
+  '#####',
+  '####.',
+  '#....',
+  '#....',
+  '#....',
+  '#....',
+  '#....',
+  '#....',
+  '#....',
+];
+export const BEST_FLAG: readonly Rect[] = drawn(BEST_FLAG_ART);
+export const BEST_FLAG_WIDTH = 5 * PIXEL;
+export const BEST_FLAG_HEIGHT = BEST_FLAG_ART.length * PIXEL;

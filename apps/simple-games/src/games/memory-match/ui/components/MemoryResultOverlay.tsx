@@ -6,10 +6,12 @@
  * celebrated.
  */
 import { useSettings } from '@/state/SettingsContext';
+import { BestDelta } from '@/ui/components/BestDelta';
+import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { formatDuration } from '@/ui/format';
+import { useResultReveal } from '@/ui/useResultReveal';
 import type { MemorySession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
-import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 
 export interface MemoryResultOverlayProps {
   session: MemorySession;
@@ -25,10 +27,12 @@ export function MemoryResultOverlay({
   onHome,
 }: MemoryResultOverlayProps) {
   const { t } = useSettings();
-  if (session.status !== 'solved') return null;
+  // The face-up board gets its beat before the card covers it (§12).
+  const revealed = useResultReveal(session.status === 'solved');
+  if (!revealed) return null;
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className="dialog result result-clear"
         role="alertdialog"
@@ -50,18 +54,42 @@ export function MemoryResultOverlay({
         </dl>
 
         {lastResult?.isNewBestMoves ? (
-          <p className="dialog-body">{t('memoryNewBestMoves')}</p>
+          <p className="dialog-body">
+            {t('memoryNewBestMoves')}
+            <BestDelta
+              value={lastResult.moves}
+              previous={lastResult.previousBestMoves}
+              kind="count"
+            />
+          </p>
         ) : lastResult ? (
           <p className="dialog-body">
             {t('memoryBestMoves')} {lastResult.bestMoves}
+            <BestDelta
+              value={lastResult.moves}
+              previous={lastResult.previousBestMoves}
+              kind="count"
+            />
           </p>
         ) : null}
 
         {lastResult?.isNewBestTime ? (
-          <p className="dialog-body">{t('memoryNewBestTime')}</p>
+          <p className="dialog-body">
+            {t('memoryNewBestTime')}
+            <BestDelta
+              value={lastResult.seconds}
+              previous={lastResult.previousBestSeconds}
+              kind="time"
+            />
+          </p>
         ) : lastResult ? (
           <p className="dialog-body">
             {t('bestTime')} {formatDuration(lastResult.bestSeconds)}
+            <BestDelta
+              value={lastResult.seconds}
+              previous={lastResult.previousBestSeconds}
+              kind="time"
+            />
           </p>
         ) : null}
 

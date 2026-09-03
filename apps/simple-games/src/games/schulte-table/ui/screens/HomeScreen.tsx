@@ -2,8 +2,9 @@ import { useSettings } from '@/state/SettingsContext';
 import { IconBack, IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { formatDuration } from '@/ui/format';
-import { localDateString } from '../../game';
+import { localDateString, MAX_LEVEL } from '../../game';
 import { useSchulte } from '../../state/GameContext';
+import { clearedLevelCount } from '../../state/statsLogic';
 
 /**
  * Nothing here can cost the player a round in progress: a round is never
@@ -76,6 +77,10 @@ export function SchulteHomeScreen() {
           <button type="button" className="home-chip" onClick={() => navigate('levels')}>
             <IconGrid className="home-chip-icon" />
             <span>{t('levelsTitle')}</span>
+            {/* How far up the hundred: a fraction with an end, said once. */}
+            <span className="home-chip-count">
+              {clearedLevelCount(progress)}/{MAX_LEVEL}
+            </span>
           </button>
           <button type="button" className="home-chip" onClick={() => navigate('daily')}>
             <IconCalendar className="home-chip-icon" />

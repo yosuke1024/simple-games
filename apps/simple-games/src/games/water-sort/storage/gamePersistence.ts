@@ -3,7 +3,7 @@
  * history is intentionally not persisted (docs/WATER_SORT_RULES.md §10).
  *
  * Each mode has its own slot, so suspending a level game and playing the
- * daily never costs you either one.
+ * daily (or a free board, §6) never costs you any of them.
  */
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
@@ -15,14 +15,16 @@ import {
   type GameMode,
   type WaterSession,
 } from '../game';
-import { dailyGameSchema, gameSchema, type PersistedGame } from './schemas';
+import { dailyGameSchema, freeGameSchema, gameSchema, type PersistedGame } from './schemas';
 
 export interface SavedGames {
   level: WaterSession | null;
   daily: WaterSession | null;
+  free: WaterSession | null;
 }
 
-const schemaFor = (mode: GameMode) => (mode === 'daily' ? dailyGameSchema : gameSchema);
+const schemaFor = (mode: GameMode) =>
+  mode === 'daily' ? dailyGameSchema : mode === 'free' ? freeGameSchema : gameSchema;
 
 export function toPersisted(session: WaterSession, savedAt: number): PersistedGame {
   return {
@@ -32,6 +34,7 @@ export function toPersisted(session: WaterSession, savedAt: number): PersistedGa
     colors: session.colors,
     dailyDate: session.dailyDate,
     level: session.level,
+    freeTier: session.freeTier,
     tubes: encodeTubes(session.tubes),
     moveCount: session.moveCount,
     hintCount: session.hintCount,
@@ -51,6 +54,7 @@ function toSession(persisted: PersistedGame | null): WaterSession | null {
     colors: persisted.colors,
     dailyDate: persisted.dailyDate,
     level: persisted.level,
+    freeTier: persisted.freeTier,
     tubes,
     moveCount: persisted.moveCount,
     hintCount: persisted.hintCount,
@@ -61,11 +65,12 @@ function toSession(persisted: PersistedGame | null): WaterSession | null {
 }
 
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
-  const [level, daily] = await Promise.all([
+  const [level, daily, free] = await Promise.all([
     loadRecord(gameSchema, kv),
     loadRecord(dailyGameSchema, kv),
+    loadRecord(freeGameSchema, kv),
   ]);
-  return { level: toSession(level), daily: toSession(daily) };
+  return { level: toSession(level), daily: toSession(daily), free: toSession(free) };
 }
 
 export async function saveGame(session: WaterSession, kv: KVStore = preferencesKV): Promise<void> {

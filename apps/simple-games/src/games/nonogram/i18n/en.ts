@@ -13,6 +13,11 @@ export const en = {
   nonoRowClueLabel: 'Row {n}: {clue}',
   nonoColClueLabel: 'Column {n}: {clue}',
   nonoSizeLabel: '{n}×{n}',
+  // Free Play tiers (docs/NONOGRAM_RULES.md §6「フリープレイ」): the
+  // picker's three labels, and the note on a suspended free board.
+  nonoTier_easy: 'Easy',
+  nonoTier_medium: 'Medium',
+  nonoTier_hard: 'Hard',
   nonoXMode: 'X Mode',
   nonoXModeNote: 'Tap crosses out; long-press paints.',
   nonoHintFound: 'The highlighted line decides a square.',

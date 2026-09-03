@@ -38,7 +38,7 @@ import {
 } from '../game';
 import { clearSavedGame, saveGame } from '../storage/gamePersistence';
 import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
-import { applyGameStart, applyPlayTime, applyRunEnd } from './statsLogic';
+import { applyGameStart, applyPlayTime, applyRunEnd, previousBestScore } from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'game' | 'stats';
 
@@ -59,6 +59,8 @@ const NOTHING_HAPPENED: PlaceOutcome = { placed: false, lines: 0, over: false, c
 export interface LastResult {
   readonly isNewBestScore: boolean;
   readonly bestScore: number;
+  /** The record before this run, or null while there was none (§9). */
+  readonly previousBestScore: number | null;
 }
 
 export interface BlockContextValue {
@@ -167,12 +169,15 @@ export function BlockProvider({
       void clearSavedGame();
       const unbooked = Math.max(0, next.elapsedSeconds - bookedRef.current);
       bookedRef.current = next.elapsedSeconds;
+      // Read before the record moves: what this run is measured against.
+      const previous = previousBestScore(statsRef.current);
       const outcome = applyRunEnd(applyPlayTime(statsRef.current, unbooked), next);
       persistStats(outcome.stats);
       recordGameCompleted();
       setLastResult({
         isNewBestScore: outcome.isNewBestScore,
         bestScore: outcome.stats.bestScore,
+        previousBestScore: previous,
       });
     },
     [persistStats],

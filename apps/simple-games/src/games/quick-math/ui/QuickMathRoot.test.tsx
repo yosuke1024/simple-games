@@ -374,7 +374,7 @@ describe('throwing a set away (§10)', () => {
       expect(storedStats()?.addSub.totalPlaySeconds).toBe(5);
 
       // Now discard it by starting a different level.
-      fireEvent.click(screen.getByRole('button', { name: 'Levels' }));
+      fireEvent.click(screen.getByRole('button', { name: /^Levels/ }));
       fireEvent.click(screen.getByRole('button', { name: 'Level 1' }));
       fireEvent.click(screen.getByRole('button', { name: 'Start' }));
       await settle();

@@ -18,9 +18,11 @@ import { TakuzuProvider, useTakuzu } from '../state/GameContext';
 import { loadSavedGames, type SavedGames } from '../storage/gamePersistence';
 import {
   flagsSchema,
+  prefsSchema,
   progressSchema,
   statsSchema,
   type Flags,
+  type Prefs,
   type Progress,
   type Stats,
 } from '../storage/schemas';
@@ -55,6 +57,7 @@ interface LoadedData {
   stats: Stats;
   flags: Flags;
   progress: Progress;
+  prefs: Prefs;
   sessions: SavedGames;
 }
 
@@ -75,16 +78,18 @@ export function TakuzuRoot({ onExit, kv = preferencesKV }: TakuzuRootProps) {
         stats: statsSchema.defaultValue(),
         flags: flagsSchema.defaultValue(),
         progress: progressSchema.defaultValue(),
-        sessions: { level: null, daily: null },
+        prefs: prefsSchema.defaultValue(),
+        sessions: { level: null, daily: null, free: null },
       };
       try {
-        const [stats, flags, progress, sessions] = await Promise.all([
+        const [stats, flags, progress, prefs, sessions] = await Promise.all([
           loadRecord(statsSchema, kv),
           loadRecord(flagsSchema, kv),
           loadRecord(progressSchema, kv),
+          loadRecord(prefsSchema, kv),
           loadSavedGames(kv),
         ]);
-        loaded = { stats, flags, progress, sessions };
+        loaded = { stats, flags, progress, prefs, sessions };
       } catch {
         // Even unexpected load failures must not prevent playing: defaults.
       }
@@ -104,6 +109,7 @@ export function TakuzuRoot({ onExit, kv = preferencesKV }: TakuzuRootProps) {
       initialFlags={data.flags}
       initialProgress={data.progress}
       initialSessions={data.sessions}
+      prefs={data.prefs}
       onExit={onExit}
     >
       <TakuzuScreens />

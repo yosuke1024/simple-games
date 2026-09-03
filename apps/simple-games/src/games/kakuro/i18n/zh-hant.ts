@@ -2,6 +2,9 @@ import type { KakuroMessages } from './en';
 
 export const zhHant: KakuroMessages = {
   kakuroName: 'Kakuro',
+  kakuroTier_easy: '簡單',
+  kakuroTier_medium: '中等',
+  kakuroTier_hard: '困難',
   kakuroBoardLabel: 'Kakuro 棋盤，{size}×{size}',
   kakuroCellEmpty: '空格，第 {row} 列第 {col} 欄',
   kakuroCellEntry: '{value}，第 {row} 列第 {col} 欄',

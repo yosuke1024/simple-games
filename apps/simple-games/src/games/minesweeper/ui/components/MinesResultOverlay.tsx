@@ -7,10 +7,12 @@
  * second chance — the retry is free, immediate, and the first button (§13).
  */
 import { useSettings } from '@/state/SettingsContext';
+import { BestDelta } from '@/ui/components/BestDelta';
+import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { formatDuration } from '@/ui/format';
+import { useResultReveal } from '@/ui/useResultReveal';
 import type { MinesweeperSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
-import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 
 export interface MinesResultOverlayProps {
   session: MinesweeperSession;
@@ -28,7 +30,9 @@ export function MinesResultOverlay({
   onHome,
 }: MinesResultOverlayProps) {
   const { t } = useSettings();
-  if (session.status === 'playing') return null;
+  // The finished board — cleared or blown — gets its beat before the card covers it (§12).
+  const revealed = useResultReveal(session.status !== 'playing');
+  if (!revealed) return null;
 
   const won = session.status === 'won';
   const title = won ? t('minesWonTitle') : t('minesLostTitle');
@@ -36,7 +40,7 @@ export function MinesResultOverlay({
   const canStartNew = session.mode === 'difficulty';
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className={`dialog result ${won ? 'result-clear' : ''}`}
         role="alertdialog"
@@ -58,10 +62,22 @@ export function MinesResultOverlay({
         </dl>
 
         {won && lastResult?.isNewBest ? (
-          <p className="dialog-body">{t('minesNewBestTime')}</p>
+          <p className="dialog-body">
+            {t('minesNewBestTime')}
+            <BestDelta
+              value={lastResult.seconds}
+              previous={lastResult.previousBestSeconds}
+              kind="time"
+            />
+          </p>
         ) : lastResult?.bestSeconds != null ? (
           <p className="dialog-body">
             {t('bestTime')} {formatDuration(lastResult.bestSeconds)}
+            <BestDelta
+              value={lastResult.seconds}
+              previous={lastResult.previousBestSeconds}
+              kind="time"
+            />
           </p>
         ) : null}
 

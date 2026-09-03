@@ -34,6 +34,11 @@ export const en = {
   step3Title: 'Clear the board to win',
   step3Body: 'Stuck? Tap Add to append the remaining numbers. Undo and hints are always free.',
   gameOverCount: 'Game overs',
+  // Free Play's tier picker (§11「フリープレイ」): the three levels a tier
+  // stands in for, named the way every puzzle in the series names them.
+  nmTier_easy: 'Easy',
+  nmTier_medium: 'Medium',
+  nmTier_hard: 'Hard',
 } as const;
 
 /** Every locale of this game must provide exactly these keys. */

@@ -162,7 +162,9 @@ export function BlockGameScreen() {
       // A clear and an ending are their own events, not louder placements —
       // each adds its own note rather than replacing the one before it (§12).
       if (outcome.lines > 0) {
-        sounds.clear();
+        // Two lines at once is one event, and the chime says so: a rung
+        // higher per extra line, ringing together at the end (§12).
+        sounds.clear(outcome.lines);
         void haptics.clear();
       }
       if (outcome.over) {

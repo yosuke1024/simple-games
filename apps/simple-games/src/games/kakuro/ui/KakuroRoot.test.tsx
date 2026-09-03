@@ -506,9 +506,60 @@ describe('the pickers ask before replacing a suspended game (§9)', () => {
 
     await user.click(await screen.findByRole('button', { name: /Level 3/ }));
     await user.click(screen.getByRole('button', { name: 'Home' }));
-    await user.click(screen.getByRole('button', { name: 'Levels' }));
+    // The chip also says how far up the hundred the player is (§9).
+    await user.click(screen.getByRole('button', { name: /^Levels/ }));
     await user.click(screen.getByRole('button', { name: 'Level 1' }));
     expect(screen.getByRole('alertdialog', { name: 'Start a new game?' })).toBeInTheDocument();
+  });
+});
+
+describe('free play (§9)', () => {
+  it('starts a board at the chosen tier, and resumes it from the home', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await screen.findByRole('button', { name: /Level 1/ });
+
+    // The picker stands on medium until told otherwise; here, easy — level
+    // 10's 6×6, which is what proves the tier was honoured.
+    const picker = screen.getByRole('group', { name: 'Difficulty' });
+    await user.click(within(picker).getByRole('button', { name: 'Easy' }));
+    await user.click(screen.getByRole('button', { name: /Free Play/ }));
+
+    // The top bar names the mode and the size — no level number, no clock.
+    expect(screen.getByText('Free Play')).toBeInTheDocument();
+    expect(screen.getByText('6×6')).toBeInTheDocument();
+    expect(screen.queryByText(/Level \d/)).not.toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Kakuro board, 6 by 6' })).toBeInTheDocument();
+
+    // A digit, then away and back: the board is where it was left.
+    const first = within(board()).getAllByRole('button')[0]!;
+    await user.click(first);
+    await user.click(padKey(1));
+    expect(first.getAttribute('aria-label')).toMatch(/^1,/);
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    expect(screen.getByRole('button', { name: /Free Play.*Resume.*Easy/ })).toBeInTheDocument();
+    // The level climb is untouched by a free board.
+    expect(screen.getByRole('button', { name: /Level 1/ })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Free Play/ }));
+    expect(screen.getByText('6×6')).toBeInTheDocument();
+    expect(
+      within(board())
+        .getAllByRole('button')
+        .some((cell) => cell.getAttribute('aria-label')?.startsWith('1,')),
+    ).toBe(true);
+  });
+
+  it('asks before replacing a suspended free board with a new one', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await user.click(await screen.findByRole('button', { name: /Free Play/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    expect(screen.getByRole('alertdialog', { name: 'Start a new game?' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('button', { name: /Free Play.*Resume/ })).toBeInTheDocument();
   });
 });
 

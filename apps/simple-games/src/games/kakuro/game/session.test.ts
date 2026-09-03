@@ -4,19 +4,23 @@
 import { describe, expect, it } from 'vitest';
 import { addDays, dayDifference, localDateString } from './daily';
 import { hasNote } from './engine';
+import { FREE_TIER_LEVEL, blocksForLevel, sizeForLevel } from './levels';
 import {
   UNDO_HISTORY_LIMIT,
   canUndo,
   cluesOf,
   createDailySession,
+  createFreeSession,
   createLevelSession,
   doErase,
   doHintUse,
   doPlace,
   doToggleNote,
   doUndo,
+  freeSeed,
   hintFor,
   mistakesOf,
+  newSeedToken,
   restartSession,
   restoreSession,
   runsAt,
@@ -24,7 +28,7 @@ import {
   withElapsedSeconds,
   type KakuroSession,
 } from './session';
-import { EMPTY, isWhite, type Digit } from './types';
+import { BLOCK, EMPTY, isWhite, type Digit } from './types';
 
 /** Writes the answer the only way a player can: one digit at a time. */
 function solveByPlacing(session: KakuroSession): KakuroSession {
@@ -155,6 +159,64 @@ describe('sessions (§9)', () => {
 
     const { status: _fresh, history: _stack, ...unplayed } = createLevelSession(3);
     expect(restoreSession(unplayed).status).toBe('playing');
+  });
+});
+
+describe('free play (§9「フリープレイ」)', () => {
+  it('builds a board at the tier asked for, with no level and no date', () => {
+    const session = createFreeSession('easy');
+    expect(session.mode).toBe('free');
+    expect(session.freeTier).toBe('easy');
+    expect(session.level).toBeNull();
+    expect(session.dailyDate).toBeNull();
+    expect(session.seed.startsWith('kakuro-free-')).toBe(true);
+    expect(session.status).toBe('playing');
+    expect(session.board.entries.every((entry) => entry === EMPTY)).toBe(true);
+  });
+
+  /**
+   * A tier is a representative level with the seed left free (§9): level 10's
+   * 6×6, level 50's 8×8, level 95's 10×10, each at that level's density. There
+   * is no dial of its own to drift from the table.
+   */
+  it('borrows a representative level: its size and its density, seed apart', () => {
+    expect(FREE_TIER_LEVEL).toEqual({ easy: 10, medium: 50, hard: 95 });
+    const easy = createFreeSession('easy', freeSeed(newSeedToken(1, () => 0.25)));
+    expect(easy.size).toBe(sizeForLevel(10));
+    const interiorBlocks = easy.layout.cells.filter(
+      (cell, index) => cell === BLOCK && index >= easy.size && index % easy.size !== 0,
+    ).length;
+    expect(interiorBlocks).toBe(blocksForLevel(10));
+    expect(createFreeSession('medium').size).toBe(sizeForLevel(50));
+    expect(createFreeSession('hard').size).toBe(sizeForLevel(95));
+  });
+
+  it('gives a new board each time, and the same board for the same seed', () => {
+    const a = createFreeSession('easy', freeSeed(newSeedToken(1, () => 0.25)));
+    const b = createFreeSession('easy', freeSeed(newSeedToken(2, () => 0.5)));
+    expect(b.solution).not.toEqual(a.solution);
+    const again = createFreeSession('easy', a.seed);
+    expect(again.layout).toEqual(a.layout);
+    expect(again.solution).toEqual(a.solution);
+  });
+
+  it('restart rebuilds the identical free board', () => {
+    const session = createFreeSession('easy');
+    const played = withElapsedSeconds(doPlace(session, firstWhite(session), 1)!, 30);
+    const restarted = restartSession(played);
+    expect(restarted.seed).toBe(session.seed);
+    expect(restarted.freeTier).toBe('easy');
+    expect(restarted.layout).toEqual(session.layout);
+    expect(restarted.solution).toEqual(session.solution);
+    expect(restarted.board).toEqual(session.board);
+    expect(restarted.elapsedSeconds).toBe(0);
+  });
+
+  it('never collides with a level or a daily seed', () => {
+    const token = newSeedToken(1, () => 0);
+    expect(freeSeed(token)).toMatch(/^kakuro-free-/);
+    expect(freeSeed(token)).not.toBe('kakuro-level-1');
+    expect(freeSeed(token)).not.toMatch(/^kakuro-daily-/);
   });
 });
 

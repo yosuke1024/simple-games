@@ -31,4 +31,7 @@ export const ptBR: NumberMatchMessages = {
   step3Body:
     'Travou? Toque em Adicionar para incluir os números restantes. Desfazer e dicas são sempre grátis.',
   gameOverCount: 'Derrotas',
+  nmTier_easy: 'Fácil',
+  nmTier_medium: 'Médio',
+  nmTier_hard: 'Difícil',
 };

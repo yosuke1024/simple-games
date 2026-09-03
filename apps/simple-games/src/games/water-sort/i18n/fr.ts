@@ -15,6 +15,9 @@ export const fr: WaterSortMessages = {
   waterLevelsSolved: 'Niveaux résolus',
   waterDailiesSolved: 'Défis quotidiens résolus',
   waterDailyBacklogHint: 'Les jours précédents restent ouverts.',
+  waterTier_easy: 'Facile',
+  waterTier_medium: 'Moyen',
+  waterTier_hard: 'Difficile',
   waterStep1Title: 'Versez pareil sur pareil',
   waterStep1Body:
     "Touchez un tube, puis un autre. La couleur du dessus se verse si elle correspond — ou dans n'importe quel tube vide.",

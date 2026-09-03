@@ -8,7 +8,18 @@
  */
 import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asDateString, asInt, asString, isRecord } from '../../../storage/validate';
-import { cellCount, isSize, MAX_LEVEL, SIZES, type GameMode, type Size } from '../game';
+import {
+  cellCount,
+  FREE_TIER_LEVEL,
+  isFreeTier,
+  isSize,
+  MAX_LEVEL,
+  SIZES,
+  sizeForLevel,
+  type FreeTier,
+  type GameMode,
+  type Size,
+} from '../game';
 
 import { FT_STORAGE_KEYS } from './keys';
 
@@ -19,6 +30,7 @@ export type SizeKey = `size${Size}`;
 export const sizeKey = (size: Size): SizeKey => `size${size}`;
 
 const asSize = (value: unknown): Size | null => (isSize(value) ? value : null);
+const asFreeTier = (value: unknown): FreeTier | null => (isFreeTier(value) ? value : null);
 
 /** The longest grid string any size produces — one character per cell. */
 const MAX_GRID_LENGTH = cellCount(SIZES[SIZES.length - 1] ?? 7);
@@ -56,25 +68,33 @@ export const flagsSchema: SchemaDef<Flags> = {
 // ---------- preferences ----------
 
 /**
- * The one setting this game remembers across boards (§5). Marking a digit that
+ * What this game remembers across boards (§5, §9). Marking a digit that
  * disagrees with the answer the moment it lands helps most players and is on
  * by default; turning it off is for players who would rather find their own
  * mistakes. The violation display is not in here — that is a rule, not an
- * option (§5), and it is on either way.
+ * option (§5), and it is on either way. The Free Play tier is where the
+ * picker last stood, so the next launch starts from the same place.
  */
 export interface Prefs {
   schemaVersion: 1;
   highlightMistakes: boolean;
+  /** The tier the Free Play picker last stood on (§9「フリープレイ」). */
+  freeTier: FreeTier;
 }
 
 export const prefsSchema: SchemaDef<Prefs> = {
   key: FT_STORAGE_KEYS.prefs,
   version: 1,
-  defaultValue: () => ({ schemaVersion: 1, highlightMistakes: true }),
+  defaultValue: () => ({ schemaVersion: 1, highlightMistakes: true, freeTier: 'medium' }),
   validate: (raw) => {
     if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
     const highlightMistakes = asBool(raw.highlightMistakes);
-    return highlightMistakes === null ? null : { schemaVersion: 1, highlightMistakes };
+    if (highlightMistakes === null) return null;
+    // Added after release: a record without it is older, not corrupt, and
+    // the picker simply starts where a fresh install would.
+    const freeTier = raw.freeTier === undefined ? 'medium' : asFreeTier(raw.freeTier);
+    if (freeTier === null) return null;
+    return { schemaVersion: 1, highlightMistakes, freeTier };
   },
 };
 
@@ -234,6 +254,8 @@ export interface PersistedGame {
   size: Size;
   dailyDate: string | null;
   level: number | null;
+  /** The tier a free board was drawn at (§9); null for a level or a daily. */
+  freeTier: FreeTier | null;
   solution: string;
   constraints: string;
   givens: string;
@@ -247,11 +269,16 @@ export interface PersistedGame {
 
 const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
-  const mode = raw.mode === 'level' || raw.mode === 'daily' ? raw.mode : null;
+  const mode =
+    raw.mode === 'level' || raw.mode === 'daily' || raw.mode === 'free' ? raw.mode : null;
   const seed = asString(raw.seed);
   const size = asSize(raw.size);
   const dailyDate = raw.dailyDate === null ? null : asDateString(raw.dailyDate);
   const level = raw.level === null ? null : asInt(raw.level, 1, MAX_LEVEL);
+  // Free Play joined after release (§9): a level or daily record without the
+  // field is older, not corrupt.
+  const freeTier =
+    raw.freeTier === undefined || raw.freeTier === null ? null : asFreeTier(raw.freeTier);
   const solution = asString(raw.solution, MAX_GRID_LENGTH);
   const constraints = asString(raw.constraints, MAX_CONSTRAINTS_LENGTH);
   const givens = asString(raw.givens, MAX_GRID_LENGTH);
@@ -281,8 +308,16 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   }
   if (dailyDate === null && raw.dailyDate !== null) return null;
   if (level === null && raw.level !== null) return null;
+  if (freeTier === null && raw.freeTier !== undefined && raw.freeTier !== null) return null;
   if (mode === 'daily' && dailyDate === null) return null;
   if (mode === 'level' && level === null) return null;
+  // A free board has neither a level number nor a date to be about, and it
+  // carries the tier it was drawn at; a level or a daily carries no tier.
+  if (mode === 'free' && (level !== null || dailyDate !== null || freeTier === null)) return null;
+  if (mode !== 'free' && freeTier !== null) return null;
+  // The tier is a level's parameters, and that level says the size (§9): a
+  // record whose size disagrees with its tier never came from play.
+  if (freeTier !== null && sizeForLevel(FREE_TIER_LEVEL[freeTier]) !== size) return null;
 
   return {
     schemaVersion: 1,
@@ -291,6 +326,7 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
     size,
     dailyDate,
     level,
+    freeTier,
     solution,
     constraints,
     givens,
@@ -304,7 +340,7 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
 };
 
 /**
- * One slot per mode. Both hold the same record shape, so the KEY is what says
+ * One slot per mode. All hold the same record shape, so the KEY is what says
  * which mode a record is — and a record that disagrees with its key is corrupt
  * data, not an instruction to switch modes (§11).
  *
@@ -335,3 +371,5 @@ function gameSlotSchema(key: string, expectedMode: GameMode): SchemaDef<Persiste
 export const gameSchema = gameSlotSchema(FT_STORAGE_KEYS.game, 'level');
 /** Suspended daily game, kept separately so neither mode evicts the other. */
 export const dailyGameSchema = gameSlotSchema(FT_STORAGE_KEYS.dailyGame, 'daily');
+/** Suspended free board (§9「フリープレイ」): its own slot, for the same reason. */
+export const freeGameSchema = gameSlotSchema(FT_STORAGE_KEYS.freeGame, 'free');

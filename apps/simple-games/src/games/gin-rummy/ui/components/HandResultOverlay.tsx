@@ -12,6 +12,7 @@
  * screen on its own (state/GameContext.tsx says the same from the other side).
  */
 import { useSettings } from '@/state/SettingsContext';
+import { useResultReveal } from '@/ui/useResultReveal';
 import { CPU, YOU, type HandOutcome, type Meld, type Seat } from '../../game';
 import { cardListLabel } from './cardText';
 
@@ -31,6 +32,11 @@ const TITLE_KEYS = {
 
 export function HandResultOverlay({ outcome, scores, onNext }: HandResultOverlayProps) {
   const { t } = useSettings();
+  // The screen mounts this the moment the hand is decided, so mounting is
+  // the moment: the knock gets its beat before the settlement covers it
+  // (§11.2).
+  const revealed = useResultReveal(true);
+  if (!revealed) return null;
 
   const title = t(TITLE_KEYS[outcome.kind]);
   const dead = outcome.kind === 'dead';
@@ -50,7 +56,7 @@ export function HandResultOverlay({ outcome, scores, onNext }: HandResultOverlay
   const laidOff = outcome.layoffs.map((layoff) => layoff.card);
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div className="dialog result" role="alertdialog" aria-modal="true" aria-label={title}>
         <h2 className="dialog-title">{title}</h2>
         <p className="dialog-body">

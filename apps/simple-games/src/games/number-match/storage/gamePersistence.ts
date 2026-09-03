@@ -3,7 +3,7 @@
  * Undo history is intentionally not persisted (spec §8.1).
  *
  * Each mode has its own slot, so suspending a level game and playing the
- * daily never costs you either one (docs §14).
+ * daily — or a free board (§11) — never costs you any of them (docs §14).
  */
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
@@ -11,6 +11,7 @@ import { loadRecord, removeRecord, saveRecord } from '../../../storage/repo';
 import { decodeBoard, encodeBoard, restoreSession, type GameMode, type GameSession } from '../game';
 import {
   dailyGameSchema,
+  freeGameSchema,
   gameSchema,
   NM_STORAGE_KEYS,
   strandedDailySchema,
@@ -20,9 +21,11 @@ import {
 export interface SavedGames {
   level: GameSession | null;
   daily: GameSession | null;
+  free: GameSession | null;
 }
 
-const schemaFor = (mode: GameMode) => (mode === 'daily' ? dailyGameSchema : gameSchema);
+const schemaFor = (mode: GameMode) =>
+  mode === 'daily' ? dailyGameSchema : mode === 'free' ? freeGameSchema : gameSchema;
 
 export function toPersisted(session: GameSession, savedAt: number): PersistedGame {
   const { values, mask } = encodeBoard(session.board);
@@ -32,6 +35,7 @@ export function toPersisted(session: GameSession, savedAt: number): PersistedGam
     seed: session.seed,
     dailyDate: session.dailyDate,
     level: session.level,
+    freeTier: session.freeTier,
     values,
     mask,
     score: session.score,
@@ -52,6 +56,7 @@ function toSession(persisted: PersistedGame | null): GameSession | null {
     seed: persisted.seed,
     dailyDate: persisted.dailyDate,
     level: persisted.level,
+    freeTier: persisted.freeTier,
     board,
     score: persisted.score,
     moveCount: persisted.moveCount,
@@ -64,33 +69,37 @@ function toSession(persisted: PersistedGame | null): GameSession | null {
 }
 
 /**
- * Loads both slots. Builds before the split kept a daily game in the level
- * slot; such a record is moved to its own slot once, on first load.
+ * Loads the three slots. Builds before the split kept a daily game in the
+ * level slot; such a record is moved to its own slot once, on first load.
  *
  * The level key is therefore read twice, with two schemas: `gameSchema` reads
  * it as what it is now (level games only — a daily record there is never
  * resumed in place), and `strandedDailySchema` reads it as what the old builds
  * left behind. Only one of the two can find anything, because there is only
  * one record. Splitting the read this way is what lets the live slot stay
- * strict while the migration keeps working.
+ * strict while the migration keeps working. The free slot is younger than
+ * the split and has no such history.
  */
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
-  const [levelSlot, dailySlot, strandedDaily] = await Promise.all([
+  const [levelSlot, dailySlot, freeSlot, strandedDaily] = await Promise.all([
     loadRecord(gameSchema, kv),
     loadRecord(dailyGameSchema, kv),
+    loadRecord(freeGameSchema, kv),
     loadRecord(strandedDailySchema, kv),
   ]);
+  const free = toSession(freeSlot);
 
   if (strandedDaily !== null) {
     const migrated = dailySlot === null;
     if (migrated) await saveRecord(dailyGameSchema, strandedDaily, kv);
     await removeRecord(NM_STORAGE_KEYS.game, kv);
-    return { level: null, daily: toSession(migrated ? strandedDaily : dailySlot) };
+    return { level: null, daily: toSession(migrated ? strandedDaily : dailySlot), free };
   }
 
   return {
     level: toSession(levelSlot),
     daily: toSession(dailySlot),
+    free,
   };
 }
 

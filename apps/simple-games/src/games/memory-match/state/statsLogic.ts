@@ -89,6 +89,23 @@ export function applySolved(stats: Stats, session: MemorySession): ClearOutcome 
   };
 }
 
+/**
+ * The records this run is measured against — the difficulty's, or that
+ * date's, fewest moves and fastest time before the run is booked — null for
+ * each there is none of yet (§9). Read before `applySolved`, which moves them.
+ */
+export function previousBestsFor(
+  stats: Stats,
+  session: MemorySession,
+): { moves: number | null; seconds: number | null } {
+  if (session.mode === 'daily' && session.dailyDate !== null) {
+    const date = session.dailyDate;
+    return { moves: stats.dailyMoves[date] ?? null, seconds: stats.dailySeconds[date] ?? null };
+  }
+  const bucket = stats[session.difficulty];
+  return { moves: bucket.bestMoves, seconds: bucket.bestSeconds };
+}
+
 /** How many daily boards have been completed. A count, never a run of days. */
 export function solvedDailyCount(stats: Stats): number {
   return Object.keys(stats.dailyMoves).length;

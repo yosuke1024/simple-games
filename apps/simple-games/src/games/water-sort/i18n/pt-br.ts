@@ -15,6 +15,9 @@ export const ptBR: WaterSortMessages = {
   waterLevelsSolved: 'Níveis resolvidos',
   waterDailiesSolved: 'Diários resolvidos',
   waterDailyBacklogHint: 'Os dias anteriores continuam abertos.',
+  waterTier_easy: 'Fácil',
+  waterTier_medium: 'Médio',
+  waterTier_hard: 'Difícil',
   waterStep1Title: 'Despeje igual sobre igual',
   waterStep1Body:
     'Toque em um tubo e depois em outro. A cor do topo é despejada se combinar — ou em qualquer tubo vazio.',

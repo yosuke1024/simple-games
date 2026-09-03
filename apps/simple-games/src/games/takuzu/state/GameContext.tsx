@@ -3,8 +3,8 @@
  * persistence. Pure local state — no analytics, no ad orchestration; the only
  * ad surface is the shared BannerSlot the game screen renders.
  *
- * Two games are suspended independently — one level, one daily (§7, §11) — so
- * switching modes never costs the player either one.
+ * Three games are suspended independently — one level, one daily, one free
+ * board (§7, §11) — so switching modes never costs the player any of them.
  *
  * Battery note: the play clock lives in a mutable ref and does NOT set React
  * state, so nothing re-renders while a game is running. It is never shown
@@ -27,6 +27,7 @@ import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
 import {
   createDailySession,
+  createFreeSession,
   createLevelSession,
   doHintUse,
   doTap,
@@ -35,6 +36,7 @@ import {
   MAX_LEVEL,
   restartSession,
   withElapsedSeconds,
+  type FreeTier,
   type GameMode,
   type Hint,
   type TakuzuSession,
@@ -42,13 +44,22 @@ import {
 import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
 import {
   flagsSchema,
+  prefsSchema,
   progressSchema,
+  sizeKey,
   statsSchema,
   type Flags,
+  type Prefs,
   type Progress,
   type Stats,
 } from '../storage/schemas';
-import { applyGameStart, applyPlayTime, applySolved, applySolveToProgress } from './statsLogic';
+import {
+  applyGameStart,
+  applyPlayTime,
+  applySolved,
+  applySolveToProgress,
+  previousBestFor,
+} from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats';
 
@@ -58,6 +69,8 @@ export interface LastResult {
   /** True when this solve beat the time the player had before. */
   readonly isNewBestTime: boolean;
   readonly bestSeconds: number;
+  /** The record before this run, or null on a first clear (§10). */
+  readonly previousBestSeconds: number | null;
 }
 
 export interface TakuzuContextValue {
@@ -76,6 +89,11 @@ export interface TakuzuContextValue {
   startLevel: (level: number) => void;
   startNextLevel: () => void;
   startDaily: (date?: string) => void;
+  /** A fresh free board at the picker's tier — or the one given (§7). */
+  startFree: (tier?: FreeTier) => void;
+  /** Where the Free Play picker stands; remembered across launches. */
+  freeTier: FreeTier;
+  setFreeTier: (tier: FreeTier) => void;
   restartCurrent: () => void;
   resumeGame: (mode: GameMode) => void;
   /** Cycles a cell empty → 0 → 1 → empty. False when the tap changed nothing (§4). */
@@ -93,6 +111,7 @@ export interface TakuzuProviderProps {
   initialFlags: Flags;
   initialProgress: Progress;
   initialSessions: SavedGames;
+  prefs: Prefs;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
   children: ReactNode;
@@ -109,6 +128,7 @@ export function TakuzuProvider({
   initialFlags,
   initialProgress,
   initialSessions,
+  prefs,
   onExit,
   children,
 }: TakuzuProviderProps) {
@@ -120,6 +140,7 @@ export function TakuzuProvider({
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
+  const [freeTier, setFreeTierState] = useState<FreeTier>(prefs.freeTier);
   const [lastResult, setLastResult] = useState<LastResult | null>(null);
   const [sessionEpoch, setSessionEpoch] = useState(0);
 
@@ -133,6 +154,8 @@ export function TakuzuProvider({
   progressRef.current = progress;
   const statsRef = useRef(stats);
   statsRef.current = stats;
+  const freeTierRef = useRef(freeTier);
+  freeTierRef.current = freeTier;
 
   const session = sessions[activeMode];
 
@@ -187,6 +210,14 @@ export function TakuzuProvider({
       void clearSavedGame(next.mode);
       const unbooked = Math.max(0, next.elapsedSeconds - bookedRef.current);
       bookedRef.current = next.elapsedSeconds;
+      // Read before any record moves: what this run is measured against. A
+      // level or a daily has its own board's record; a free board has no
+      // board to keep one for, so it stands against its size's fastest
+      // clear — the number the statistics screen shows (§10).
+      const previousBestSeconds =
+        next.mode === 'free'
+          ? statsRef.current[sizeKey(next.size)].bestSeconds
+          : previousBestFor(progressRef.current, next);
       persistStats(
         applySolved(
           applyPlayTime(statsRef.current, next.size, unbooked),
@@ -197,11 +228,16 @@ export function TakuzuProvider({
       recordGameCompleted();
       const outcome = applySolveToProgress(progressRef.current, next);
       persistProgress(outcome.progress);
+      const freeIsBest = previousBestSeconds === null || next.elapsedSeconds < previousBestSeconds;
       setLastResult({
         seconds: next.elapsedSeconds,
         hints: next.hintCount,
-        isNewBestTime: outcome.isNewBestTime,
-        bestSeconds: outcome.bestSeconds,
+        isNewBestTime: next.mode === 'free' ? freeIsBest : outcome.isNewBestTime,
+        bestSeconds:
+          next.mode === 'free'
+            ? Math.min(next.elapsedSeconds, previousBestSeconds ?? Infinity)
+            : outcome.bestSeconds,
+        previousBestSeconds,
       });
     },
     [persistProgress, persistStats, putSession],
@@ -270,6 +306,22 @@ export function TakuzuProvider({
       beginSession(createDailySession(target));
     },
     [beginSession, resumeGame],
+  );
+
+  const startFree = useCallback(
+    (tier: FreeTier = freeTierRef.current) => {
+      beginSession(createFreeSession(tier));
+    },
+    [beginSession],
+  );
+
+  const setFreeTier = useCallback(
+    (tier: FreeTier) => {
+      setFreeTierState(tier);
+      // The whole record is this one field, loaded once at mount (TakuzuRoot).
+      void saveRecord(prefsSchema, { ...prefs, freeTier: tier });
+    },
+    [prefs],
   );
 
   const restartCurrent = useCallback(() => {
@@ -402,6 +454,9 @@ export function TakuzuProvider({
       startLevel,
       startNextLevel,
       startDaily,
+      startFree,
+      freeTier,
+      setFreeTier,
       restartCurrent,
       resumeGame,
       tap,
@@ -425,6 +480,9 @@ export function TakuzuProvider({
       startLevel,
       startNextLevel,
       startDaily,
+      startFree,
+      freeTier,
+      setFreeTier,
       restartCurrent,
       resumeGame,
       tap,

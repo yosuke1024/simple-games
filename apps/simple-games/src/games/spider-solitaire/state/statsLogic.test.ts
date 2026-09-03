@@ -6,7 +6,14 @@
 import { describe, expect, it } from 'vitest';
 import { createDailySession, createFreeSession, type SpiderSession, type SuitCount } from '../game';
 import { statsSchema } from '../storage/schemas';
-import { applyGameStart, applyWon, dailyResultFor, statsFor, wonDailyCount } from './statsLogic';
+import {
+  applyGameStart,
+  applyWon,
+  dailyResultFor,
+  previousBestsFor,
+  statsFor,
+  wonDailyCount,
+} from './statsLogic';
 
 const won = (session: SpiderSession, moves: number, seconds: number): SpiderSession => ({
   ...session,
@@ -98,5 +105,32 @@ describe('applyWon — per-difficulty records', () => {
     const outcome = applyWon(statsSchema.defaultValue(), daily('2026-08-07', 1, 100, 600));
     expect(dailyResultFor(outcome.stats, '2026-08-07', 4)).toBeNull();
     expect(dailyResultFor(outcome.stats, '2026-08-06', 1)).toBeNull();
+  });
+});
+
+describe('previousBestsFor — the record a run is measured against (§9)', () => {
+  it('reads that difficulty’s record for the day, and nothing where there is none', () => {
+    let stats = statsSchema.defaultValue();
+    stats = applyWon(stats, daily('2026-08-07', 1, 100, 600)).stats;
+
+    expect(previousBestsFor(stats, daily('2026-08-07', 1, 90, 700))).toEqual({
+      moves: 100,
+      seconds: 600,
+    });
+    // The same day at four suits is a different record, and there is none yet.
+    expect(previousBestsFor(stats, daily('2026-08-07', 4, 90, 700))).toEqual({
+      moves: null,
+      seconds: null,
+    });
+  });
+
+  it('reads the lifetime row for a free deal', () => {
+    let stats = statsSchema.defaultValue();
+    const free = (suitCount: SuitCount) => won(createFreeSession(suitCount), 120, 500);
+    expect(previousBestsFor(stats, free(2))).toEqual({ moves: null, seconds: null });
+
+    stats = applyWon(stats, won(createFreeSession(2), 100, 600)).stats;
+    expect(previousBestsFor(stats, free(2))).toEqual({ moves: 100, seconds: 600 });
+    expect(previousBestsFor(stats, free(4))).toEqual({ moves: null, seconds: null });
   });
 });

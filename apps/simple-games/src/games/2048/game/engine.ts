@@ -43,6 +43,8 @@ interface LineOutcome {
   readonly to: readonly number[];
   /** Per destination slot: whether this move merged the tile sitting there. */
   readonly merged: readonly boolean[];
+  /** The biggest tile this line's joins made, or 0 when none joined (§12). */
+  readonly largestMerge: number;
 }
 
 /** Packs one line towards its head and merges neighbouring equals (§4). */
@@ -51,6 +53,7 @@ function collapseLine(line: readonly number[]): LineOutcome {
   const to = new Array<number>(line.length).fill(-1);
   const merged = new Array<boolean>(line.length).fill(false);
   let gained = 0;
+  let largestMerge = 0;
 
   const filled: number[] = [];
   for (let slot = 0; slot < line.length; slot++) if (line[slot] !== 0) filled.push(slot);
@@ -67,6 +70,7 @@ function collapseLine(line: readonly number[]): LineOutcome {
       const doubled = value * 2;
       values.push(doubled);
       gained += doubled;
+      if (doubled > largestMerge) largestMerge = doubled;
       merged[destination] = true;
       to[slot] = destination;
       to[partner] = destination;
@@ -78,7 +82,7 @@ function collapseLine(line: readonly number[]): LineOutcome {
   }
 
   while (values.length < line.length) values.push(0);
-  return { values, gained, to, merged };
+  return { values, gained, to, merged, largestMerge };
 }
 
 export interface MoveTrace {
@@ -91,6 +95,8 @@ export interface MoveTrace {
   readonly to: readonly number[];
   /** Per cell: whether the tile now sitting there was merged into being. */
   readonly merged: readonly boolean[];
+  /** The biggest tile the move made — what its sound is pitched to (§12). */
+  readonly largestMerge: number;
 }
 
 /** Resolves a move and reports how every tile got where it is (§4, §12). */
@@ -99,12 +105,14 @@ export function traceMove(board: Board, direction: Direction): MoveTrace {
   const to = new Array<number>(CELL_COUNT).fill(-1);
   const merged = new Array<boolean>(CELL_COUNT).fill(false);
   let gained = 0;
+  let largestMerge = 0;
   let moved = false;
 
   for (let line = 0; line < BOARD_SIZE; line++) {
     const cells = lineCells(direction, line);
     const outcome = collapseLine(cells.map((cell) => board[cell]!));
     gained += outcome.gained;
+    if (outcome.largestMerge > largestMerge) largestMerge = outcome.largestMerge;
 
     for (let slot = 0; slot < BOARD_SIZE; slot++) {
       const cell = cells[slot]!;
@@ -117,19 +125,26 @@ export function traceMove(board: Board, direction: Direction): MoveTrace {
     }
   }
 
-  return { board: next, gained, moved, to, merged };
+  return { board: next, gained, moved, to, merged, largestMerge };
 }
 
 export interface MoveResult {
   readonly board: Board;
   readonly gained: number;
   readonly moved: boolean;
+  /** The biggest tile the move made, 0 when nothing joined (§12). */
+  readonly largestMerge: number;
 }
 
 /** One move (§4). `moved: false` means the caller should do nothing (§3). */
 export function move(board: Board, direction: Direction): MoveResult {
   const trace = traceMove(board, direction);
-  return { board: trace.board, gained: trace.gained, moved: trace.moved };
+  return {
+    board: trace.board,
+    gained: trace.gained,
+    moved: trace.moved,
+    largestMerge: trace.largestMerge,
+  };
 }
 
 export function emptyCells(board: Board): number[] {

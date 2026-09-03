@@ -15,6 +15,9 @@ export const hi: WaterSortMessages = {
   waterLevelsSolved: 'हल किए स्तर',
   waterDailiesSolved: 'पूरे किए दैनिक',
   waterDailyBacklogHint: 'पिछले सभी दिन हमेशा खुले रहते हैं।',
+  waterTier_easy: 'आसान',
+  waterTier_medium: 'मध्यम',
+  waterTier_hard: 'कठिन',
   waterStep1Title: 'रंग पर वही रंग उड़ेलें',
   waterStep1Body:
     'एक नली पर टैप करें, फिर दूसरी पर। ऊपर का रंग मिलता हो तो उड़ेल सकते हैं — खाली नली में कभी भी।',

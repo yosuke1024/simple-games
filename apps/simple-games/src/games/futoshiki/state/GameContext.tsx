@@ -4,9 +4,9 @@
  * orchestration; the only ad surface is the shared BannerSlot the game screen
  * renders.
  *
- * Two games are suspended independently — one level, one daily
- * (docs/FUTOSHIKI_RULES.md §9, §11) — so switching modes never costs the
- * player either one.
+ * Three games are suspended independently — one level, one daily, one free
+ * board (docs/FUTOSHIKI_RULES.md §9, §11) — so switching modes never costs
+ * the player any of them.
  *
  * Battery note: the play clock lives in a mutable ref and does NOT set React
  * state, so nothing re-renders while a game is running. It is never shown
@@ -29,6 +29,7 @@ import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
 import {
   createDailySession,
+  createFreeSession,
   createLevelSession,
   doErase,
   doHintUse,
@@ -41,6 +42,7 @@ import {
   restartSession,
   withElapsedSeconds,
   type Digit,
+  type FreeTier,
   type FutoshikiSession,
   type GameMode,
   type Hint,
@@ -48,14 +50,22 @@ import {
 import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
 import {
   flagsSchema,
+  prefsSchema,
   progressSchema,
+  sizeKey,
   statsSchema,
   type Flags,
   type Prefs,
   type Progress,
   type Stats,
 } from '../storage/schemas';
-import { applyGameStart, applyPlayTime, applySolved, applySolveToProgress } from './statsLogic';
+import {
+  applyGameStart,
+  applyPlayTime,
+  applySolved,
+  applySolveToProgress,
+  previousBestFor,
+} from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats';
 
@@ -66,6 +76,8 @@ export interface LastResult {
   /** True when this solve beat the time the player had before. */
   readonly isNewBestTime: boolean;
   readonly bestSeconds: number;
+  /** The record before this run, or null on a first clear (§10). */
+  readonly previousBestSeconds: number | null;
 }
 
 export interface FutoshikiContextValue {
@@ -85,6 +97,11 @@ export interface FutoshikiContextValue {
   startLevel: (level: number) => void;
   startNextLevel: () => void;
   startDaily: (date?: string) => void;
+  /** A fresh free board at the picker's tier — or the one given (§9). */
+  startFree: (tier?: FreeTier) => void;
+  /** Where the Free Play picker stands; remembered across launches. */
+  freeTier: FreeTier;
+  setFreeTier: (tier: FreeTier) => void;
   restartCurrent: () => void;
   resumeGame: (mode: GameMode) => void;
   /** Writes a digit. False when the move changes nothing (§4). */
@@ -134,6 +151,7 @@ export function FutoshikiProvider({
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
+  const [freeTier, setFreeTierState] = useState<FreeTier>(prefs.freeTier);
   const [lastResult, setLastResult] = useState<LastResult | null>(null);
   const [sessionEpoch, setSessionEpoch] = useState(0);
 
@@ -147,6 +165,8 @@ export function FutoshikiProvider({
   progressRef.current = progress;
   const statsRef = useRef(stats);
   statsRef.current = stats;
+  const freeTierRef = useRef(freeTier);
+  freeTierRef.current = freeTier;
 
   const session = sessions[activeMode];
 
@@ -201,6 +221,14 @@ export function FutoshikiProvider({
       void clearSavedGame(next.mode);
       const unbooked = Math.max(0, next.elapsedSeconds - bookedRef.current);
       bookedRef.current = next.elapsedSeconds;
+      // Read before any record moves: what this run is measured against. A
+      // level or a daily has its own board's record; a free board has no
+      // board to keep one for, so it stands against its size's fastest
+      // clear — the number the statistics screen shows (§9, §10).
+      const previousBestSeconds =
+        next.mode === 'free'
+          ? statsRef.current[sizeKey(next.size)].bestSeconds
+          : previousBestFor(progressRef.current, next);
       persistStats(
         applySolved(
           applyPlayTime(statsRef.current, next.size, unbooked),
@@ -211,12 +239,17 @@ export function FutoshikiProvider({
       recordGameCompleted();
       const outcome = applySolveToProgress(progressRef.current, next);
       persistProgress(outcome.progress);
+      const freeIsBest = previousBestSeconds === null || next.elapsedSeconds < previousBestSeconds;
       setLastResult({
         seconds: next.elapsedSeconds,
         mistakes: next.mistakeCount,
         hints: next.hintCount,
-        isNewBestTime: outcome.isNewBestTime,
-        bestSeconds: outcome.bestSeconds,
+        isNewBestTime: next.mode === 'free' ? freeIsBest : outcome.isNewBestTime,
+        bestSeconds:
+          next.mode === 'free'
+            ? Math.min(next.elapsedSeconds, previousBestSeconds ?? Infinity)
+            : outcome.bestSeconds,
+        previousBestSeconds,
       });
     },
     [persistProgress, persistStats, putSession],
@@ -285,6 +318,23 @@ export function FutoshikiProvider({
       beginSession(createDailySession(target));
     },
     [beginSession, resumeGame],
+  );
+
+  const startFree = useCallback(
+    (tier: FreeTier = freeTierRef.current) => {
+      beginSession(createFreeSession(tier));
+    },
+    [beginSession],
+  );
+
+  const setFreeTier = useCallback(
+    (tier: FreeTier) => {
+      setFreeTierState(tier);
+      // The rest of the record is the settings screen's, which cannot be
+      // open while a game is mounted — so the prop is current (§5).
+      void saveRecord(prefsSchema, { ...prefs, freeTier: tier });
+    },
+    [prefs],
   );
 
   const restartCurrent = useCallback(() => {
@@ -422,6 +472,8 @@ export function FutoshikiProvider({
       stats,
       progress,
       prefs,
+      freeTier,
+      setFreeTier,
       tutorialCompleted: flags.tutorialCompleted,
       dailyDoneToday: progress.dailySeconds[today] !== undefined,
       lastResult,
@@ -430,6 +482,7 @@ export function FutoshikiProvider({
       startLevel,
       startNextLevel,
       startDaily,
+      startFree,
       restartCurrent,
       resumeGame,
       place,
@@ -449,6 +502,8 @@ export function FutoshikiProvider({
       stats,
       progress,
       prefs,
+      freeTier,
+      setFreeTier,
       flags.tutorialCompleted,
       today,
       lastResult,
@@ -457,6 +512,7 @@ export function FutoshikiProvider({
       startLevel,
       startNextLevel,
       startDaily,
+      startFree,
       restartCurrent,
       resumeGame,
       place,

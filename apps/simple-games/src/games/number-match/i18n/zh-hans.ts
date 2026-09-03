@@ -30,4 +30,7 @@ export const zhHans: NumberMatchMessages = {
   step3Title: '消完全部即获胜',
   step3Body: '卡住了？点“添加”把剩下的数字接到后面。撤销和提示始终免费。',
   gameOverCount: '失败次数',
+  nmTier_easy: '简单',
+  nmTier_medium: '中等',
+  nmTier_hard: '困难',
 };

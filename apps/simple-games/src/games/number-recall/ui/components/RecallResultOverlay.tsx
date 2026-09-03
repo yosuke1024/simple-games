@@ -12,8 +12,10 @@
  * what was just on screen.
  */
 import { useSettings } from '@/state/SettingsContext';
+import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { formatDuration } from '@/ui/format';
+import { useResultReveal } from '@/ui/useResultReveal';
 import { MAX_LEVEL, type RecallSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
@@ -33,13 +35,15 @@ export function RecallResultOverlay({
   onHome,
 }: RecallResultOverlayProps) {
   const { t } = useSettings();
-  if (session.status !== 'cleared') return null;
+  // The last tile turned gets its beat before the card covers the board (§14).
+  const revealed = useResultReveal(session.status === 'cleared');
+  if (!revealed) return null;
 
   const hasNextLevel =
     session.mode === 'level' && session.level !== null && session.level < MAX_LEVEL;
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className="dialog result result-clear"
         role="alertdialog"
@@ -61,10 +65,22 @@ export function RecallResultOverlay({
         </dl>
 
         {lastResult?.isNewBest ? (
-          <p className="dialog-body">{t('recallNewBestTime')}</p>
+          <p className="dialog-body">
+            {t('recallNewBestTime')}
+            <BestDelta
+              value={lastResult.seconds}
+              previous={lastResult.previousBestSeconds}
+              kind="time"
+            />
+          </p>
         ) : lastResult ? (
           <p className="dialog-body">
             {t('bestTime')} {formatDuration(lastResult.bestSeconds)}
+            <BestDelta
+              value={lastResult.seconds}
+              previous={lastResult.previousBestSeconds}
+              kind="time"
+            />
           </p>
         ) : null}
 

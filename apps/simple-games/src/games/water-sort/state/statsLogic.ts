@@ -96,6 +96,8 @@ export function applySolveToProgress(progress: Progress, session: WaterSession):
     return record(next.dailyMoves, next.dailySeconds, session.dailyDate);
   }
 
+  // A free board (§6「フリープレイ」) has no board to keep a record for:
+  // nothing moves, and the run's own numbers are all the card can state.
   return {
     progress: next,
     isNewBestMoves: false,
@@ -103,6 +105,33 @@ export function applySolveToProgress(progress: Progress, session: WaterSession):
     bestMoves: moves,
     bestSeconds: seconds,
   };
+}
+
+/** The two records a board keeps, or null where there is none yet. */
+export interface PreviousBest {
+  readonly moves: number | null;
+  readonly seconds: number | null;
+}
+
+/**
+ * The records this run is measured against — the board's bests before the
+ * run is booked — or null where there is none yet (§9). Read before
+ * `applySolveToProgress`, which is what moves them. A free board has none:
+ * the statistics hold counts, not bests, so there is nothing to stand
+ * against and the card says nothing about a record.
+ */
+export function previousBestFor(progress: Progress, session: WaterSession): PreviousBest {
+  if (session.mode === 'level' && session.level !== null) {
+    const key = String(session.level);
+    return { moves: progress.bestMoves[key] ?? null, seconds: progress.bestSeconds[key] ?? null };
+  }
+  if (session.dailyDate !== null) {
+    return {
+      moves: progress.dailyMoves[session.dailyDate] ?? null,
+      seconds: progress.dailySeconds[session.dailyDate] ?? null,
+    };
+  }
+  return { moves: null, seconds: null };
 }
 
 /** How many levels have been solved — shown on the level list. */

@@ -1,7 +1,9 @@
 import { useSettings } from '@/state/SettingsContext';
 import { IconBack, IconChart, IconGrid } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
+import { LEVEL_COUNT } from '../../game/levels';
 import { useSkyFighter } from '../../state/GameContext';
+import { clearedLevelCount } from '../../state/statsLogic';
 
 /**
  * There is no suspended game to guard (docs/SKY_FIGHTER_RULES.md §10), so
@@ -57,6 +59,10 @@ export function SkyHomeScreen() {
           <button type="button" className="home-chip" onClick={() => navigate('levels')}>
             <IconGrid className="home-chip-icon" />
             <span>{t('levelsTitle')}</span>
+            {/* How far up the hundred: a fraction with an end, said once (§7). */}
+            <span className="home-chip-count">
+              {clearedLevelCount(progress)}/{LEVEL_COUNT}
+            </span>
           </button>
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>
             <IconChart className="home-chip-icon" />

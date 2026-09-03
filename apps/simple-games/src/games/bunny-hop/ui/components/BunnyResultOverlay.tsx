@@ -8,7 +8,9 @@
  * into an event.
  */
 import { useSettings } from '@/state/SettingsContext';
+import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { useResultReveal } from '@/ui/useResultReveal';
 import type { LastResult } from '../../state/GameContext';
 
 export interface BunnyResultOverlayProps {
@@ -19,10 +21,12 @@ export interface BunnyResultOverlayProps {
 
 export function BunnyResultOverlay({ result, onRunAgain, onHome }: BunnyResultOverlayProps) {
   const { t } = useSettings();
-  if (result === null) return null;
+  // The stopped track gets its beat before the card covers it (§12).
+  const revealed = useResultReveal(result !== null);
+  if (!revealed || result === null) return null;
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className="dialog result"
         role="alertdialog"
@@ -44,10 +48,24 @@ export function BunnyResultOverlay({ result, onRunAgain, onHome }: BunnyResultOv
         </dl>
 
         {result.isNewBestScore && result.score > 0 ? (
-          <p className="dialog-body">{t('bunnyNewBestScore')}</p>
+          <p className="dialog-body">
+            {t('bunnyNewBestScore')}
+            <BestDelta
+              value={result.score}
+              previous={result.previousBestScore}
+              kind="count"
+              lowerIsBetter={false}
+            />
+          </p>
         ) : (
           <p className="dialog-body">
             {t('bunnyBestScore')} {result.bestScore}
+            <BestDelta
+              value={result.score}
+              previous={result.previousBestScore}
+              kind="count"
+              lowerIsBetter={false}
+            />
           </p>
         )}
 

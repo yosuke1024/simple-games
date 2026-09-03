@@ -2,6 +2,9 @@ import type { KakuroMessages } from './en';
 
 export const hi: KakuroMessages = {
   kakuroName: 'Kakuro',
+  kakuroTier_easy: 'आसान',
+  kakuroTier_medium: 'मध्यम',
+  kakuroTier_hard: 'कठिन',
   kakuroBoardLabel: 'Kakuro बोर्ड, {size} गुणा {size}',
   kakuroCellEmpty: 'खाली, पंक्ति {row}, स्तंभ {col}',
   kakuroCellEntry: '{value}, पंक्ति {row}, स्तंभ {col}',

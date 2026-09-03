@@ -14,7 +14,7 @@
  * top was never reached by anybody. The same journey now happens across 100
  * levels; the endless side of the game is the daily board, which is unchanged.
  */
-import { generateBoard } from './board';
+import { generateBoard, type GenerateOptions } from './board';
 import { shapeForLevel } from './shapes';
 import type { Board } from './types';
 
@@ -54,6 +54,20 @@ export function pairBiasForLevel(level: number): number {
  */
 export const DAILY_PAIR_BIAS = 0.4;
 
+/**
+ * Free Play's tiers (§11「フリープレイ」). A tier is not a third knob: it is
+ * one level's generation parameters — size, pair density, stones, wilds and
+ * outline — drawn with a seed of its own. Nothing new to tune, and the rules
+ * doc can say exactly which board a tier is: level 10, 50 or 95.
+ */
+export type FreeTier = 'easy' | 'medium' | 'hard';
+export const FREE_TIERS: readonly FreeTier[] = ['easy', 'medium', 'hard'];
+export const FREE_TIER_LEVEL: Readonly<Record<FreeTier, number>> = {
+  easy: 10,
+  medium: 50,
+  hard: 95,
+};
+
 // Where stones and wilds start appearing (§16). The wild comes first: it only
 // ever helps, so it introduces the idea of a special tile before the obstacle
 // that punishes bad planning shows up. Both are deliberately low — they are
@@ -79,14 +93,28 @@ export function stoneCountForLevel(level: number): number {
   return Math.min(MAX_STONES, 1 + Math.floor((l - FIRST_STONE_LEVEL) / LEVELS_PER_EXTRA_STONE));
 }
 
-/** Deterministic level board: same level → same board, on every device. */
-export function generateLevelBoard(level: number): Board {
-  const l = clampLevel(level);
-  return generateBoard(levelSeed(l), {
+/** The generation parameters of a level — what a free tier borrows (§11). */
+function optionsForLevel(l: number): GenerateOptions {
+  return {
     shape: shapeForLevel(l),
     cellCount: initialCellsForLevel(l),
     pairBias: pairBiasForLevel(l),
     stoneCount: stoneCountForLevel(l),
     wildCount: wildCountForLevel(l),
-  });
+  };
+}
+
+/** Deterministic level board: same level → same board, on every device. */
+export function generateLevelBoard(level: number): Board {
+  const l = clampLevel(level);
+  return generateBoard(levelSeed(l), optionsForLevel(l));
+}
+
+/**
+ * A free board: the tier's representative level, generated from `seed`
+ * instead of the level's own (§11「フリープレイ」). Same outline, same size,
+ * same pair density, same number of stones and wilds — only the draw differs.
+ */
+export function generateFreeBoard(tier: FreeTier, seed: string): Board {
+  return generateBoard(seed, optionsForLevel(FREE_TIER_LEVEL[tier]));
 }

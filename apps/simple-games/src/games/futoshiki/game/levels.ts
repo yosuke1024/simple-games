@@ -108,3 +108,22 @@ export function givensForLevel(level: number): number {
 export function specForLevel(level: number): PuzzleSpec {
   return { constraints: signsForLevel(level), givens: givensForLevel(level) };
 }
+
+/**
+ * Free Play's three tiers (§9「フリープレイ」). This game has no tier of its
+ * own — difficulty is the two counts above, and a tier enum would name the
+ * same technique set at every level (types.ts) — so a tier here is a *level*:
+ * the generation parameters of one representative level, drawn with a seed of
+ * its own. Nothing new to tune, and nothing the table above does not already
+ * promise: easy is level 10's board, medium level 50's, hard level 95's.
+ */
+export type FreeTier = 'easy' | 'medium' | 'hard';
+export const FREE_TIERS: readonly FreeTier[] = ['easy', 'medium', 'hard'];
+export const FREE_TIER_LEVEL: Readonly<Record<FreeTier, number>> = {
+  easy: 10,
+  medium: 50,
+  hard: 95,
+};
+
+export const isFreeTier = (value: unknown): value is FreeTier =>
+  FREE_TIERS.includes(value as FreeTier);

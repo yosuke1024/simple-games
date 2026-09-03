@@ -22,6 +22,15 @@ export function applyPlayTime(stats: Stats, seconds: number): Stats {
   return { ...stats, totalPlaySeconds: stats.totalPlaySeconds + seconds };
 }
 
+/**
+ * The record this run is measured against, or null while there is none — a
+ * best of 0 is no record yet (§9). Read before `applyRunScore`, which is what
+ * moves it.
+ */
+export function previousBestScore(stats: Stats): number | null {
+  return stats.bestScore > 0 ? stats.bestScore : null;
+}
+
 export interface ScoreOutcome {
   readonly stats: Stats;
   /** True when this run beat the previous best score. */
@@ -49,7 +58,12 @@ export function applyClearToProgress(progress: Progress, level: number): Progres
   return highestUnlocked === progress.highestUnlocked ? progress : { ...progress, highestUnlocked };
 }
 
-/** How many levels have been cleared — the frontier minus the one being faced. */
+/**
+ * How many of the hundred have been cleared — the frontier minus the one
+ * being faced, never past the ladder (§7). The last stage cleared leaves the
+ * frontier on it, so this reads 99 at most; the ladder's end is a fact, not
+ * a number to chase.
+ */
 export function clearedLevelCount(progress: Progress): number {
-  return progress.highestUnlocked - 1;
+  return Math.max(0, Math.min(progress.highestUnlocked, LEVEL_COUNT) - 1);
 }

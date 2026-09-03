@@ -18,5 +18,6 @@ export const vi: BunnyHopMessages = {
   bunnyStep2Title: 'Còn có chim nữa',
   bunnyStep2Body: 'Con bay thấp phải nhảy như bụi cây; con bay cao chỉ trúng khi bạn đang nhảy.',
   bunnyStep3Title: 'Ngày càng nhanh hơn',
-  bunnyStep3Body: 'Cà rốt trên đường cứu bạn một lần – tối đa 3. Hết cà rốt, chạm một lần là hết lượt.',
+  bunnyStep3Body:
+    'Cà rốt trên đường cứu bạn một lần – tối đa 3. Hết cà rốt, chạm một lần là hết lượt.',
 };

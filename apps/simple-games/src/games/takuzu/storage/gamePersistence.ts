@@ -9,7 +9,7 @@
  * alternative is handing the player a puzzle whose answer is wrong.
  *
  * Each mode has its own slot, so suspending a level game and playing the daily
- * never costs you either one.
+ * (or a free board, §7) never costs you any of them.
  */
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
@@ -21,14 +21,16 @@ import {
   type GameMode,
   type TakuzuSession,
 } from '../game';
-import { dailyGameSchema, gameSchema, type PersistedGame } from './schemas';
+import { dailyGameSchema, freeGameSchema, gameSchema, type PersistedGame } from './schemas';
 
 export interface SavedGames {
   level: TakuzuSession | null;
   daily: TakuzuSession | null;
+  free: TakuzuSession | null;
 }
 
-const schemaFor = (mode: GameMode) => (mode === 'daily' ? dailyGameSchema : gameSchema);
+const schemaFor = (mode: GameMode) =>
+  mode === 'daily' ? dailyGameSchema : mode === 'free' ? freeGameSchema : gameSchema;
 
 export function toPersisted(session: TakuzuSession, savedAt: number): PersistedGame {
   return {
@@ -69,11 +71,12 @@ export function toSession(persisted: PersistedGame | null): TakuzuSession | null
 }
 
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
-  const [level, daily] = await Promise.all([
+  const [level, daily, free] = await Promise.all([
     loadRecord(gameSchema, kv),
     loadRecord(dailyGameSchema, kv),
+    loadRecord(freeGameSchema, kv),
   ]);
-  return { level: toSession(level), daily: toSession(daily) };
+  return { level: toSession(level), daily: toSession(daily), free: toSession(free) };
 }
 
 export async function saveGame(session: TakuzuSession, kv: KVStore = preferencesKV): Promise<void> {

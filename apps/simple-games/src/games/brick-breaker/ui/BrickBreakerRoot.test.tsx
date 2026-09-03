@@ -61,7 +61,10 @@ describe('home', () => {
       [BB_STORAGE_KEYS.progress]: JSON.stringify({ schemaVersion: 1, highestUnlocked: 3 }),
     });
 
-    await user.click(await screen.findByRole('button', { name: 'Levels' }));
+    // The Levels chip says how many of the hundred are behind the frontier.
+    const chip = await screen.findByRole('button', { name: /^Levels/ });
+    expect(chip).toHaveTextContent('2/100');
+    await user.click(chip);
     expect(screen.getByRole('button', { name: 'Level 3' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Level 4, locked' })).toBeDisabled();
     // Cleared levels stay replayable.

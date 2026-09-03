@@ -2,6 +2,9 @@ import type { FutoshikiMessages } from './en';
 
 export const zhHans: FutoshikiMessages = {
   futoshikiName: 'Futoshiki',
+  futoshikiTier_easy: '简单',
+  futoshikiTier_medium: '中等',
+  futoshikiTier_hard: '困难',
   futoshikiBoardLabel: 'Futoshiki 棋盘，{size}×{size}',
   futoshikiCellEmpty: '空格，第 {row} 行第 {col} 列',
   futoshikiCellEntry: '{value}，第 {row} 行第 {col} 列',

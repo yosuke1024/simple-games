@@ -76,3 +76,36 @@ export function givensRatioForLevel(level: number): number {
   const progress = (target - band.from) / span;
   return band.givensFrom + (band.givensTo - band.givensFrom) * progress;
 }
+
+// ---------- free play (§7「フリープレイ」) ----------
+
+/**
+ * The three tiers of Free Play. Not a fourth dial: each one IS a level of the
+ * table above — its size and its givens ratio — with a seed that is not that
+ * level's. There is nothing to tune here, and nothing that can drift away
+ * from the levels players already know.
+ */
+export type FreeTier = 'easy' | 'medium' | 'hard';
+export const FREE_TIERS: readonly FreeTier[] = ['easy', 'medium', 'hard'];
+
+export const isFreeTier = (value: unknown): value is FreeTier =>
+  FREE_TIERS.includes(value as FreeTier);
+
+/**
+ * The level each tier borrows its generation from: one from inside each
+ * band, well past the band's opening so the tier feels like the band rather
+ * than its first step, and short of its end so an unlucky seed still has
+ * room to reach the target (§6).
+ */
+export const FREE_TIER_LEVEL: Record<FreeTier, number> = { easy: 10, medium: 50, hard: 95 };
+
+/**
+ * A free board's tier, read back from its size. The three representative
+ * levels sit one per band, so the size names the tier on its own and a saved
+ * free board needs no extra field to be restarted at the same tier
+ * (levels.test.ts pins that the three sizes stay apart).
+ */
+export function freeTierForSize(size: Size): FreeTier {
+  for (const tier of FREE_TIERS) if (sizeForLevel(FREE_TIER_LEVEL[tier]) === size) return tier;
+  return 'medium';
+}

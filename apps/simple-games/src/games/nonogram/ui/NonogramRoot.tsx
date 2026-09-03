@@ -79,7 +79,7 @@ export function NonogramRoot({ onExit, kv = preferencesKV }: NonogramRootProps) 
         flags: flagsSchema.defaultValue(),
         prefs: prefsSchema.defaultValue(),
         progress: progressSchema.defaultValue(),
-        sessions: { level: null, daily: null },
+        sessions: { level: null, daily: null, free: null },
       };
       try {
         const [stats, flags, prefs, progress, sessions] = await Promise.all([

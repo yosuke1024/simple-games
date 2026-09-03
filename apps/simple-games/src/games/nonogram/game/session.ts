@@ -13,7 +13,13 @@
 import { DAILY_FILL_RATE, DAILY_SIZE, dailySeed } from './daily';
 import { computeClues, emptyMarks, isSolved, toggleCross, togglePaint, type Clues } from './engine';
 import { generatePuzzle } from './generator';
-import { fillRateForLevel, levelSeed, sizeForLevel } from './levels';
+import {
+  FREE_TIER_LEVEL,
+  fillRateForLevel,
+  levelSeed,
+  sizeForLevel,
+  type FreeTier,
+} from './levels';
 import { findHint, type Hint } from './solver';
 import type { Cell, GameMode, GameStatus, Mark, Size } from './types';
 
@@ -21,10 +27,12 @@ export interface NonogramSession {
   readonly mode: GameMode;
   readonly seed: string;
   readonly size: Size;
-  /** Local YYYY-MM-DD for daily mode, null for level mode. */
+  /** Local YYYY-MM-DD for daily mode, null otherwise. */
   readonly dailyDate: string | null;
-  /** 1..999 for level mode, null for daily. */
+  /** 1..100 for level mode, null for the daily and for free play. */
   readonly level: number | null;
+  /** The tier a free board was drawn at (§6「フリープレイ」), null otherwise. */
+  readonly freeTier: FreeTier | null;
   readonly solution: readonly Cell[];
   readonly clues: Clues;
   readonly marks: readonly Mark[];
@@ -39,6 +47,7 @@ function baseSession(
   size: Size,
   dailyDate: string | null,
   level: number | null,
+  freeTier: FreeTier | null,
   solution: readonly Cell[],
   clues: Clues,
 ): NonogramSession {
@@ -48,6 +57,7 @@ function baseSession(
     size,
     dailyDate,
     level,
+    freeTier,
     solution,
     clues,
     marks: emptyMarks(size),
@@ -61,21 +71,68 @@ function baseSession(
 export function createLevelSession(level: number): NonogramSession {
   const size = sizeForLevel(level);
   const puzzle = generatePuzzle(levelSeed(level), size, fillRateForLevel(level));
-  return baseSession('level', levelSeed(level), size, null, level, puzzle.solution, puzzle.clues);
+  return baseSession(
+    'level',
+    levelSeed(level),
+    size,
+    null,
+    level,
+    null,
+    puzzle.solution,
+    puzzle.clues,
+  );
 }
 
 /** A fresh (or restarted) daily game for a local YYYY-MM-DD date (§6). */
 export function createDailySession(dateString: string): NonogramSession {
   const seed = dailySeed(dateString);
   const puzzle = generatePuzzle(seed, DAILY_SIZE, DAILY_FILL_RATE);
-  return baseSession('daily', seed, DAILY_SIZE, dateString, null, puzzle.solution, puzzle.clues);
+  return baseSession(
+    'daily',
+    seed,
+    DAILY_SIZE,
+    dateString,
+    null,
+    null,
+    puzzle.solution,
+    puzzle.clues,
+  );
+}
+
+/**
+ * A token that makes one free board's seed its own (§6「フリープレイ」). Free
+ * play has no level number and no date to seed from, so a new game gets a
+ * new board — while the seed still pins that board down completely (§5),
+ * which is what makes "retry the same board" exact and the saved game
+ * restorable.
+ */
+export function newSeedToken(now: number = Date.now(), random: () => number = Math.random): string {
+  return `${now.toString(36)}-${Math.floor(random() * 0xffffff).toString(36)}`;
+}
+
+export const freeSeed = (token: string): string => `nono-free-${token}`;
+
+/**
+ * A fresh free board at a chosen tier — new unless a seed pins an old one.
+ * The tier is a representative level's size and fill rate, nothing more.
+ */
+export function createFreeSession(
+  tier: FreeTier,
+  seed: string = freeSeed(newSeedToken()),
+): NonogramSession {
+  const level = FREE_TIER_LEVEL[tier];
+  const size = sizeForLevel(level);
+  const puzzle = generatePuzzle(seed, size, fillRateForLevel(level));
+  return baseSession('free', seed, size, null, null, tier, puzzle.solution, puzzle.clues);
 }
 
 /** Rebuilds the same puzzle from scratch (Restart). */
 export function restartSession(session: NonogramSession): NonogramSession {
-  return session.mode === 'level' && session.level !== null
-    ? createLevelSession(session.level)
-    : createDailySession(session.dailyDate ?? '');
+  if (session.mode === 'level' && session.level !== null) return createLevelSession(session.level);
+  if (session.mode === 'free' && session.freeTier !== null) {
+    return createFreeSession(session.freeTier, session.seed);
+  }
+  return createDailySession(session.dailyDate ?? '');
 }
 
 /** Restores a session from persisted state; the win is re-derived, not trusted. */

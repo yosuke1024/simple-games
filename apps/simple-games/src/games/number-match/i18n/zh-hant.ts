@@ -30,4 +30,7 @@ export const zhHant: NumberMatchMessages = {
   step3Title: '全部消完就過關',
   step3Body: '卡住了？點「新增」把剩下的數字接到後面。復原和提示永遠免費。',
   gameOverCount: '失敗次數',
+  nmTier_easy: '簡單',
+  nmTier_medium: '中等',
+  nmTier_hard: '困難',
 };

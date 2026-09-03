@@ -45,16 +45,24 @@ export const flagsSchema: SchemaDef<Flags> = {
 export interface Prefs {
   schemaVersion: 1;
   highlightMistakes: boolean;
+  /** The tier the Free Play picker last stood on (§9「フリープレイ」). */
+  freeDifficulty: Difficulty;
 }
 
 export const prefsSchema: SchemaDef<Prefs> = {
   key: SD_STORAGE_KEYS.prefs,
   version: 1,
-  defaultValue: () => ({ schemaVersion: 1, highlightMistakes: true }),
+  defaultValue: () => ({ schemaVersion: 1, highlightMistakes: true, freeDifficulty: 'medium' }),
   validate: (raw) => {
     if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
     const highlightMistakes = asBool(raw.highlightMistakes);
-    return highlightMistakes === null ? null : { schemaVersion: 1, highlightMistakes };
+    if (highlightMistakes === null) return null;
+    // Added after release: a record without it is older, not corrupt, and
+    // the picker simply starts where a fresh install would.
+    const freeDifficulty =
+      raw.freeDifficulty === undefined ? 'medium' : asDifficulty(raw.freeDifficulty);
+    if (freeDifficulty === null) return null;
+    return { schemaVersion: 1, highlightMistakes, freeDifficulty };
   },
 };
 
@@ -222,7 +230,8 @@ export interface PersistedGame {
 
 const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
-  const mode = raw.mode === 'level' || raw.mode === 'daily' ? raw.mode : null;
+  const mode =
+    raw.mode === 'level' || raw.mode === 'daily' || raw.mode === 'free' ? raw.mode : null;
   const seed = asString(raw.seed);
   const difficulty = asDifficulty(raw.difficulty);
   const dailyDate = raw.dailyDate === null ? null : asDateString(raw.dailyDate);
@@ -257,6 +266,8 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (level === null && raw.level !== null) return null;
   if (mode === 'daily' && dailyDate === null) return null;
   if (mode === 'level' && level === null) return null;
+  // A free board has neither a level number nor a date to be about.
+  if (mode === 'free' && (level !== null || dailyDate !== null)) return null;
 
   return {
     schemaVersion: 1,
@@ -277,7 +288,7 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
 };
 
 /**
- * One slot per mode. Both hold the same record shape, so the KEY is what says
+ * One slot per mode. All hold the same record shape, so the KEY is what says
  * which mode a record is — and a record that disagrees with its key is corrupt
  * data, not an instruction to switch modes.
  *
@@ -302,3 +313,5 @@ function gameSlotSchema(key: string, expectedMode: GameMode): SchemaDef<Persiste
 export const gameSchema = gameSlotSchema(SD_STORAGE_KEYS.game, 'level');
 /** Suspended daily game, kept separately so neither mode evicts the other. */
 export const dailyGameSchema = gameSlotSchema(SD_STORAGE_KEYS.dailyGame, 'daily');
+/** Suspended free board (§9「フリープレイ」): its own slot, for the same reason. */
+export const freeGameSchema = gameSlotSchema(SD_STORAGE_KEYS.freeGame, 'free');

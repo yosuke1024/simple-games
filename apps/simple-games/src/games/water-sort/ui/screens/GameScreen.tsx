@@ -44,6 +44,8 @@ export function WaterGameScreen() {
     goHome,
     restartCurrent,
     startNextLevel,
+    startFree,
+    freeTier,
   } = useWaterSort();
   const { t } = useSettings();
   const [selected, setSelected] = useState<number | null>(null);
@@ -108,9 +110,15 @@ export function WaterGameScreen() {
         const source = selected;
         if (!tryPour(source, index)) return;
         showPour(source, index);
-        // A pour that finishes a tube earns the brighter chime.
-        if (isTubeComplete(preview.tubes[index]!)) sounds.match();
-        else sounds.select();
+        // A pour that finishes a tube earns the brighter chime — and each
+        // tube finished so far lifts it one rung, so the last colour sorted
+        // rings highest (§12). The count is what the board already shows.
+        if (isTubeComplete(preview.tubes[index]!)) {
+          const finished = preview.tubes.filter(isTubeComplete).length;
+          sounds.match(finished - 1);
+        } else {
+          sounds.select();
+        }
         void haptics.tap();
         return;
       }
@@ -187,7 +195,9 @@ export function WaterGameScreen() {
             <span className="ws-mode">
               {session.mode === 'daily'
                 ? t('modeDaily')
-                : t('modeLevel', { n: session.level ?? 1 })}
+                : session.mode === 'free'
+                  ? t('freePlay')
+                  : t('modeLevel', { n: session.level ?? 1 })}
             </span>
             <span className="ws-move-count">
               {t('movesLabel')} {session.moveCount}
@@ -247,6 +257,7 @@ export function WaterGameScreen() {
         lastResult={lastResult}
         onRetry={restartCurrent}
         onNextLevel={startNextLevel}
+        onNewFree={() => startFree(session.freeTier ?? freeTier)}
         onHome={goHome}
       />
 

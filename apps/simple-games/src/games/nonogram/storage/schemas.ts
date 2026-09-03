@@ -8,7 +8,16 @@
  */
 import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asDateString, asInt, asString, isRecord } from '../../../storage/validate';
-import { cellCount, isSize, MAX_LEVEL, SIZES, type GameMode, type Size } from '../game';
+import {
+  cellCount,
+  isFreeTier,
+  isSize,
+  MAX_LEVEL,
+  SIZES,
+  type FreeTier,
+  type GameMode,
+  type Size,
+} from '../game';
 
 import { NG_STORAGE_KEYS } from './keys';
 
@@ -47,16 +56,24 @@ export const flagsSchema: SchemaDef<Flags> = {
 export interface Prefs {
   schemaVersion: 1;
   xMode: boolean;
+  /** The tier the Free Play picker last stood on (§6「フリープレイ」). */
+  freeTier: FreeTier;
 }
 
 export const prefsSchema: SchemaDef<Prefs> = {
   key: NG_STORAGE_KEYS.prefs,
   version: 1,
-  defaultValue: () => ({ schemaVersion: 1, xMode: false }),
+  defaultValue: () => ({ schemaVersion: 1, xMode: false, freeTier: 'medium' }),
   validate: (raw) => {
     if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
     const xMode = asBool(raw.xMode);
-    return xMode === null ? null : { schemaVersion: 1, xMode };
+    if (xMode === null) return null;
+    // Added after release: a record without it is older, not corrupt, and
+    // the picker simply starts where a fresh install would.
+    const freeTier =
+      raw.freeTier === undefined ? 'medium' : isFreeTier(raw.freeTier) ? raw.freeTier : null;
+    if (freeTier === null) return null;
+    return { schemaVersion: 1, xMode, freeTier };
   },
 };
 
@@ -210,6 +227,7 @@ export interface PersistedGame {
   size: Size;
   dailyDate: string | null;
   level: number | null;
+  freeTier: FreeTier | null;
   solution: string;
   marks: string;
   elapsedSeconds: number;
@@ -219,11 +237,15 @@ export interface PersistedGame {
 
 const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
-  const mode = raw.mode === 'level' || raw.mode === 'daily' ? raw.mode : null;
+  const mode =
+    raw.mode === 'level' || raw.mode === 'daily' || raw.mode === 'free' ? raw.mode : null;
   const seed = asString(raw.seed);
   const size = asSize(raw.size);
   const dailyDate = raw.dailyDate === null ? null : asDateString(raw.dailyDate);
   const level = raw.level === null ? null : asInt(raw.level, 1, MAX_LEVEL);
+  // Joined the record with Free Play: a level or a daily saved before then
+  // simply has no field, which reads the same as the null it writes now.
+  const freeTier = isFreeTier(raw.freeTier) ? raw.freeTier : null;
   const solution = asString(raw.solution, MAX_BOARD_LENGTH);
   const marks = asString(raw.marks, MAX_BOARD_LENGTH);
   const elapsedSeconds = asInt(raw.elapsedSeconds, 0, 1e9);
@@ -245,8 +267,12 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   }
   if (dailyDate === null && raw.dailyDate !== null) return null;
   if (level === null && raw.level !== null) return null;
+  if (freeTier === null && raw.freeTier !== undefined && raw.freeTier !== null) return null;
   if (mode === 'daily' && dailyDate === null) return null;
   if (mode === 'level' && level === null) return null;
+  // A free board is drawn at a tier and is about neither a level nor a date.
+  if (mode === 'free' && (freeTier === null || level !== null || dailyDate !== null)) return null;
+  if (mode !== 'free' && freeTier !== null) return null;
 
   return {
     schemaVersion: 1,
@@ -255,6 +281,7 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
     size,
     dailyDate,
     level,
+    freeTier,
     solution,
     marks,
     elapsedSeconds,
@@ -264,7 +291,7 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
 };
 
 /**
- * One slot per mode. Both hold the same record shape, so the KEY is what says
+ * One slot per mode. All hold the same record shape, so the KEY is what says
  * which mode a record is — and a record that disagrees with its key is corrupt
  * data, not an instruction to switch modes.
  *
@@ -289,3 +316,5 @@ function gameSlotSchema(key: string, expectedMode: GameMode): SchemaDef<Persiste
 export const gameSchema = gameSlotSchema(NG_STORAGE_KEYS.game, 'level');
 /** Suspended daily game, kept separately so neither mode evicts the other. */
 export const dailyGameSchema = gameSlotSchema(NG_STORAGE_KEYS.dailyGame, 'daily');
+/** Suspended free board (§6「フリープレイ」): its own slot, for the same reason. */
+export const freeGameSchema = gameSlotSchema(NG_STORAGE_KEYS.freeGame, 'free');

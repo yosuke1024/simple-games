@@ -19,6 +19,10 @@ export const en = {
   waterLevelsSolved: 'Levels solved',
   waterDailiesSolved: 'Dailies solved',
   waterDailyBacklogHint: 'Every earlier day stays open.',
+  // Free Play's tier picker (docs/WATER_SORT_RULES.md §6「フリープレイ」).
+  waterTier_easy: 'Easy',
+  waterTier_medium: 'Medium',
+  waterTier_hard: 'Hard',
   waterStep1Title: 'Pour same onto same',
   waterStep1Body:
     'Tap a tube, then another. The top color pours when it matches — or into any empty tube.',

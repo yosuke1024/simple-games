@@ -63,3 +63,14 @@ export function mixForLevel(level: number): number {
   const span = band.to - band.from;
   return span === 0 ? 0 : (target - band.from) / span;
 }
+
+/**
+ * Free Play's tiers (§6「フリープレイ」). A tier is not a new knob: it is one
+ * level's generation parameters — colour count and starting mix — dealt
+ * under a seed of its own. Easy stands in the four-colour band, medium at the
+ * daily's six, hard near the top of the list. Nothing to tune, nothing that
+ * can drift from the curve the levels already walk.
+ */
+export type FreeTier = 'easy' | 'medium' | 'hard';
+export const FREE_TIERS: readonly FreeTier[] = ['easy', 'medium', 'hard'];
+export const FREE_TIER_LEVEL: Record<FreeTier, number> = { easy: 10, medium: 50, hard: 95 };

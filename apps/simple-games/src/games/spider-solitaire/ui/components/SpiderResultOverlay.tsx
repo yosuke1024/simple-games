@@ -5,10 +5,12 @@
  * never a deduction: they were free (§8).
  */
 import { useSettings } from '@/state/SettingsContext';
+import { BestDelta } from '@/ui/components/BestDelta';
+import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { formatDuration } from '@/ui/format';
+import { useResultReveal } from '@/ui/useResultReveal';
 import type { SpiderSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
-import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 
 export interface SpiderResultOverlayProps {
   session: SpiderSession;
@@ -26,10 +28,12 @@ export function SpiderResultOverlay({
   onHome,
 }: SpiderResultOverlayProps) {
   const { t } = useSettings();
-  if (session.status !== 'won') return null;
+  // The completed foundations get their beat before the card covers them (§12).
+  const revealed = useResultReveal(session.status === 'won');
+  if (!revealed) return null;
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className="dialog result result-clear"
         role="alertdialog"
@@ -57,18 +61,42 @@ export function SpiderResultOverlay({
         </dl>
 
         {lastResult?.isNewBestMoves ? (
-          <p className="dialog-body">{t('spiderNewBestMoves')}</p>
+          <p className="dialog-body">
+            {t('spiderNewBestMoves')}
+            <BestDelta
+              value={lastResult.moves}
+              previous={lastResult.previousBestMoves}
+              kind="count"
+            />
+          </p>
         ) : lastResult ? (
           <p className="dialog-body">
             {t('spiderBestMoves')} {lastResult.bestMoves}
+            <BestDelta
+              value={lastResult.moves}
+              previous={lastResult.previousBestMoves}
+              kind="count"
+            />
           </p>
         ) : null}
 
         {lastResult?.isNewBestTime ? (
-          <p className="dialog-body">{t('spiderNewBestTime')}</p>
+          <p className="dialog-body">
+            {t('spiderNewBestTime')}
+            <BestDelta
+              value={lastResult.seconds}
+              previous={lastResult.previousBestSeconds}
+              kind="time"
+            />
+          </p>
         ) : lastResult ? (
           <p className="dialog-body">
             {t('bestTime')} {formatDuration(lastResult.bestSeconds)}
+            <BestDelta
+              value={lastResult.seconds}
+              previous={lastResult.previousBestSeconds}
+              kind="time"
+            />
           </p>
         ) : null}
 

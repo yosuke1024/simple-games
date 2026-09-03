@@ -31,4 +31,7 @@ export const fr: NumberMatchMessages = {
   step3Body:
     'Vous bloquez ? Touchez Ajouter pour ajouter les nombres restants. Annuler et les indices sont toujours gratuits.',
   gameOverCount: 'Défaites',
+  nmTier_easy: 'Facile',
+  nmTier_medium: 'Moyen',
+  nmTier_hard: 'Difficile',
 };

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { createDailySession, createLevelSession, type GameSession } from '../game';
+import {
+  createDailySession,
+  createFreeSession,
+  createLevelSession,
+  type GameSession,
+} from '../game';
 import { statsSchema } from '../storage/schemas';
 import { applyGameEnd, applyGameStart } from './statsLogic';
 
@@ -15,8 +20,10 @@ describe('applyGameStart', () => {
     stats = applyGameStart(stats, 'level');
     stats = applyGameStart(stats, 'level');
     stats = applyGameStart(stats, 'daily');
+    stats = applyGameStart(stats, 'free');
     expect(stats.level.played).toBe(2);
     expect(stats.daily.played).toBe(1);
+    expect(stats.free.played).toBe(1);
   });
 
   it('does not mutate its input', () => {
@@ -62,5 +69,13 @@ describe('applyGameEnd', () => {
     );
     expect(stats.daily.cleared).toBe(1);
     expect(stats.level.cleared).toBe(0);
+  });
+
+  it('books a free clear under its own bucket, like any clear (§11)', () => {
+    const stats = applyGameEnd(statsSchema.defaultValue(), cleared(createFreeSession('easy'), 50));
+    expect(stats.free.cleared).toBe(1);
+    expect(stats.free.bestClearSeconds).toBe(50);
+    expect(stats.level.cleared).toBe(0);
+    expect(stats.daily.cleared).toBe(0);
   });
 });

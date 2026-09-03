@@ -7,7 +7,9 @@
 export const WS_STORAGE_KEYS = {
   game: 'ws.saveGame',
   dailyGame: 'ws.saveDaily',
+  freeGame: 'ws.saveFree',
   stats: 'ws.stats',
   progress: 'ws.progress',
   flags: 'ws.flags',
+  prefs: 'ws.prefs',
 } as const;

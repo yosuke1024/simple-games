@@ -23,7 +23,14 @@ import {
   type Violations,
 } from './engine';
 import { generatePuzzle } from './generator';
-import { givensRatioForLevel, levelSeed, sizeForLevel } from './levels';
+import {
+  FREE_TIER_LEVEL,
+  freeTierForSize,
+  givensRatioForLevel,
+  levelSeed,
+  sizeForLevel,
+  type FreeTier,
+} from './levels';
 import { findHint, type Hint } from './solver';
 import type { Cell, GameMode, GameStatus, Mark, Size } from './types';
 
@@ -31,9 +38,9 @@ export interface TakuzuSession {
   readonly mode: GameMode;
   readonly seed: string;
   readonly size: Size;
-  /** Local YYYY-MM-DD for daily mode, null for level mode. */
+  /** Local YYYY-MM-DD for daily mode, null otherwise. */
   readonly dailyDate: string | null;
-  /** 1..100 for level mode, null for daily. */
+  /** 1..100 for level mode, null for the daily and for free play. */
   readonly level: number | null;
   readonly solution: readonly Cell[];
   /** The fixed cells (§1). EMPTY wherever the player has to work it out. */
@@ -94,11 +101,38 @@ export function createDailySession(dateString: string): TakuzuSession {
   return baseSession('daily', seed, DAILY_SIZE, dateString, null, puzzle.solution, puzzle.givens);
 }
 
+/**
+ * A token that makes one free board's seed its own (§7「フリープレイ」). Free
+ * play has no level number and no date to seed from, so a new game gets a
+ * new board — while the seed still pins that board down completely, which is
+ * what makes "retry the same board" exact and the saved game restorable.
+ */
+export function newSeedToken(now: number = Date.now(), random: () => number = Math.random): string {
+  return `${now.toString(36)}-${Math.floor(random() * 0xffffff).toString(36)}`;
+}
+
+export const freeSeed = (token: string): string => `takuzu-free-${token}`;
+
+/**
+ * A fresh free board at a chosen tier — new unless a seed pins an old one.
+ * The tier is a level of §7's table (levels.ts): same size, same givens
+ * ratio, only the seed differs.
+ */
+export function createFreeSession(
+  tier: FreeTier,
+  seed: string = freeSeed(newSeedToken()),
+): TakuzuSession {
+  const level = FREE_TIER_LEVEL[tier];
+  const size = sizeForLevel(level);
+  const puzzle = generatePuzzle(seed, size, givensRatioForLevel(level));
+  return baseSession('free', seed, size, null, null, puzzle.solution, puzzle.givens);
+}
+
 /** Rebuilds the same puzzle from scratch (Restart). */
 export function restartSession(session: TakuzuSession): TakuzuSession {
-  return session.mode === 'level' && session.level !== null
-    ? createLevelSession(session.level)
-    : createDailySession(session.dailyDate ?? '');
+  if (session.mode === 'level' && session.level !== null) return createLevelSession(session.level);
+  if (session.mode === 'daily') return createDailySession(session.dailyDate ?? '');
+  return createFreeSession(freeTierForSize(session.size), session.seed);
 }
 
 /**

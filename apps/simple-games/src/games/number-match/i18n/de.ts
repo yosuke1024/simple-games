@@ -31,4 +31,7 @@ export const de: NumberMatchMessages = {
   step3Body:
     'Steckst du fest? Mit Nachlegen kommen die restlichen Zahlen dazu. Rückgängig und Tipps sind immer gratis.',
   gameOverCount: 'Verlorene Spiele',
+  nmTier_easy: 'Leicht',
+  nmTier_medium: 'Mittel',
+  nmTier_hard: 'Schwer',
 };

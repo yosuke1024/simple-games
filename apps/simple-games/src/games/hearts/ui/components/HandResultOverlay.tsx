@@ -16,6 +16,7 @@
  * screen on its own (state/GameContext.tsx says the same from the other side).
  */
 import { useSettings } from '@/state/SettingsContext';
+import { useResultReveal } from '@/ui/useResultReveal';
 import { SEATS, YOU, type BySeat, type HandOutcome } from '../../game';
 import { seatLabel } from './cardText';
 
@@ -28,12 +29,17 @@ export interface HandResultOverlayProps {
 
 export function HandResultOverlay({ outcome, scores, onNext }: HandResultOverlayProps) {
   const { t } = useSettings();
+  // The screen mounts this the moment the hand is scored, so mounting is the
+  // moment: the folded last trick gets its beat before the table covers it
+  // (§11.2).
+  const revealed = useResultReveal(true);
+  if (!revealed) return null;
 
   const moon = outcome.moonShooter;
   const title = moon === null ? t('heartsHandTitle') : t('heartsMoonTitle');
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div className="dialog result" role="alertdialog" aria-modal="true" aria-label={title}>
         <h2 className="dialog-title">{title}</h2>
 

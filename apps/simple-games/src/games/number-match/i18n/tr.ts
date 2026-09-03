@@ -31,4 +31,7 @@ export const tr: NumberMatchMessages = {
   step3Body:
     'Sıkıştın mı? Ekle ile kalan sayılar alta eklenir. Geri alma ve ipuçları her zaman ücretsiz.',
   gameOverCount: 'Kaybedilen oyun',
+  nmTier_easy: 'Kolay',
+  nmTier_medium: 'Orta',
+  nmTier_hard: 'Zor',
 };

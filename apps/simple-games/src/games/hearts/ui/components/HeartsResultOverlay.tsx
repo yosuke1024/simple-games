@@ -12,6 +12,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { useResultReveal } from '@/ui/useResultReveal';
 import { SEATS, YOU, type HeartsSession, type Seat } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 import type { Stats } from '../../storage/schemas';
@@ -33,7 +34,9 @@ export function HeartsResultOverlay({
   onHome,
 }: HeartsResultOverlayProps) {
   const { t } = useSettings();
-  if (session.status === 'playing' || !lastResult) return null;
+  // The last settled hand gets its beat before the card covers it (§11.2).
+  const revealed = useResultReveal(session.status !== 'playing' && lastResult !== null);
+  if (!revealed || !lastResult) return null;
 
   const { status, scores } = lastResult;
   const title =
@@ -55,7 +58,7 @@ export function HeartsResultOverlay({
   const standing = [...SEATS].sort((a, b) => scores[a] - scores[b] || a - b) as Seat[];
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className={`dialog result ${status === 'won' ? 'result-clear' : ''}`}
         role="alertdialog"

@@ -22,13 +22,19 @@ export function applyPlayTime(stats: Stats, seconds: number): Stats {
   return { ...stats, totalPlaySeconds: stats.totalPlaySeconds + seconds };
 }
 
-/** Unlocks the next level. Replaying an old level never moves the frontier back. */
+/**
+ * Unlocks the next level. Replaying an old level never moves the frontier
+ * back. Clearing the last level moves it one past LEVEL_COUNT: there it
+ * means "cleared", not "unlocked" (Bubble Pop's model), so that the count
+ * below can reach 100/100 — the frontier used to stop at 100 and the count
+ * at 99, with the last clear leaving no trace.
+ */
 export function applyClearToProgress(progress: Progress, level: number): Progress {
-  const highestUnlocked = Math.min(LEVEL_COUNT, Math.max(progress.highestUnlocked, level + 1));
+  const highestUnlocked = Math.min(LEVEL_COUNT + 1, Math.max(progress.highestUnlocked, level + 1));
   return highestUnlocked === progress.highestUnlocked ? progress : { ...progress, highestUnlocked };
 }
 
 /** How many levels have been cleared — the frontier minus the one being faced. */
 export function clearedLevelCount(progress: Progress): number {
-  return progress.highestUnlocked - 1;
+  return Math.max(0, Math.min(progress.highestUnlocked, LEVEL_COUNT + 1) - 1);
 }

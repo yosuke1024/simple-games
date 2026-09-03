@@ -35,7 +35,7 @@ import {
 } from '../game';
 import { clearSavedGame, saveGame } from '../storage/gamePersistence';
 import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
-import { applyGameStart, applyPlayTime, applyRunEnd } from './statsLogic';
+import { applyGameStart, applyPlayTime, applyRunEnd, previousBestScore } from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'game' | 'stats';
 
@@ -44,14 +44,23 @@ export interface SlideOutcome {
   /** False when the board did not change: nothing happens, silently (§3). */
   readonly moved: boolean;
   readonly merged: boolean;
+  /** The biggest tile the move made, 0 when none joined — its sound's pitch (§12). */
+  readonly largestMerge: number;
   readonly over: boolean;
 }
 
-const NOTHING_HAPPENED: SlideOutcome = { moved: false, merged: false, over: false };
+const NOTHING_HAPPENED: SlideOutcome = {
+  moved: false,
+  merged: false,
+  largestMerge: 0,
+  over: false,
+};
 
 export interface LastResult {
   readonly score: number;
   readonly bestScore: number;
+  /** The record before this run, or null while there was none (§9). */
+  readonly previousBestScore: number | null;
   readonly bestTile: number;
   readonly isNewBestScore: boolean;
 }
@@ -169,11 +178,14 @@ export function Game2048Provider({
         return;
       }
       void clearSavedGame();
+      // Read before the record moves: what this run is measured against.
+      const previous = previousBestScore(statsRef.current);
       const outcome = finalizeRun(next);
       recordGameCompleted();
       setLastResult({
         score: next.score,
         bestScore: outcome?.stats.bestScore ?? statsRef.current.bestScore,
+        previousBestScore: previous,
         bestTile: largestTile(next.board),
         isNewBestScore: outcome?.isNewBestScore ?? false,
       });
@@ -222,6 +234,7 @@ export function Game2048Provider({
       return {
         moved: true,
         merged: outcome.merged,
+        largestMerge: outcome.largestMerge,
         over: outcome.session.status === 'over',
       };
     },

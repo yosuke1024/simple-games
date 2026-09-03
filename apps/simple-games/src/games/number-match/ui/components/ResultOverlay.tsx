@@ -1,14 +1,23 @@
+/**
+ * The card at the natural break when a game ends — cleared, or out of moves.
+ * It states the score and its parts, the time and the moves, and mentions a
+ * personal best quietly rather than celebrating it at length.
+ */
 import { MAX_LEVEL, type GameSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 import { useSettings } from '@/state/SettingsContext';
-import { formatDuration } from '@/ui/format';
+import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { formatDuration } from '@/ui/format';
+import { useResultReveal } from '@/ui/useResultReveal';
 
 export interface ResultOverlayProps {
   session: GameSession;
   lastResult: LastResult | null;
   onRetry: () => void;
   onNextLevel: () => void;
+  /** Free play's "next": another board at the same tier (§11). */
+  onNewFree: () => void;
   onHome: () => void;
 }
 
@@ -18,17 +27,25 @@ export function ResultOverlay({
   lastResult,
   onRetry,
   onNextLevel,
+  onNewFree,
   onHome,
 }: ResultOverlayProps) {
   const { t } = useSettings();
-  if (session.status === 'playing') return null;
+  // The emptied board — or the one that ran out of room — gets its beat
+  // before the card covers it (§12).
+  const revealed = useResultReveal(session.status !== 'playing');
+  if (!revealed) return null;
   const cleared = session.status === 'cleared';
   const { score } = session;
   const hasNextLevel =
     cleared && session.mode === 'level' && session.level !== null && session.level < MAX_LEVEL;
+  // A free board's "next" is another board at the same tier, after a clear
+  // and a dead end alike; a level's is the next level; a daily has neither,
+  // and the retry leads.
+  const hasNext = hasNextLevel || session.mode === 'free';
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className={`dialog result ${cleared ? 'result-clear' : 'result-over'}`}
         role="alertdialog"
@@ -43,10 +60,24 @@ export function ResultOverlay({
             <div className="score-total-row">
               <span className="score-total">{score.total}</span>
               {lastResult?.isNewBest ? (
-                <span className="score-newbest">{t('newBest')}</span>
+                <span className="score-newbest">
+                  {t('newBest')}
+                  <BestDelta
+                    value={score.total}
+                    previous={lastResult.previousBestScore}
+                    kind="count"
+                    lowerIsBetter={false}
+                  />
+                </span>
               ) : lastResult ? (
                 <span className="score-best-note">
                   {t('best')} {lastResult.bestScore}
+                  <BestDelta
+                    value={score.total}
+                    previous={lastResult.previousBestScore}
+                    kind="count"
+                    lowerIsBetter={false}
+                  />
                 </span>
               ) : null}
             </div>
@@ -97,12 +128,16 @@ export function ResultOverlay({
             <button type="button" className="btn btn-primary" onClick={onNextLevel} autoFocus>
               {t('nextLevel')}
             </button>
+          ) : session.mode === 'free' ? (
+            <button type="button" className="btn btn-primary" onClick={onNewFree} autoFocus>
+              {t('newGame')}
+            </button>
           ) : null}
           <button
             type="button"
-            className={`btn ${hasNextLevel ? 'btn-secondary' : 'btn-primary'}`}
+            className={`btn ${hasNext ? 'btn-secondary' : 'btn-primary'}`}
             onClick={onRetry}
-            autoFocus={!hasNextLevel}
+            autoFocus={!hasNext}
           >
             {t('tryAgain')}
           </button>

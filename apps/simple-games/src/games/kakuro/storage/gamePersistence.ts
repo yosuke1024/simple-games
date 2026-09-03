@@ -18,7 +18,7 @@
  * the two from drifting.
  *
  * Each mode has its own slot, so suspending a level game and playing the daily
- * never costs you either one.
+ * (or a free board, §9) never costs you any of them.
  */
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
@@ -32,14 +32,16 @@ import {
   type GameMode,
   type KakuroSession,
 } from '../game';
-import { dailyGameSchema, gameSchema, type PersistedGame } from './schemas';
+import { dailyGameSchema, freeGameSchema, gameSchema, type PersistedGame } from './schemas';
 
 export interface SavedGames {
   level: KakuroSession | null;
   daily: KakuroSession | null;
+  free: KakuroSession | null;
 }
 
-const schemaFor = (mode: GameMode) => (mode === 'daily' ? dailyGameSchema : gameSchema);
+const schemaFor = (mode: GameMode) =>
+  mode === 'daily' ? dailyGameSchema : mode === 'free' ? freeGameSchema : gameSchema;
 
 export function toPersisted(session: KakuroSession, savedAt: number): PersistedGame {
   return {
@@ -49,6 +51,7 @@ export function toPersisted(session: KakuroSession, savedAt: number): PersistedG
     size: session.size,
     dailyDate: session.dailyDate,
     level: session.level,
+    freeTier: session.freeTier,
     layout: encodeLayout(session.layout),
     solution: encodeGrid(session.solution),
     entries: encodeGrid(session.board.entries),
@@ -71,6 +74,7 @@ export function toSession(persisted: PersistedGame | null): KakuroSession | null
     size: persisted.size,
     dailyDate: persisted.dailyDate,
     level: persisted.level,
+    freeTier: persisted.freeTier,
     layout: decoded.layout,
     solution: decoded.solution,
     table: decoded.table,
@@ -84,11 +88,12 @@ export function toSession(persisted: PersistedGame | null): KakuroSession | null
 }
 
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
-  const [level, daily] = await Promise.all([
+  const [level, daily, free] = await Promise.all([
     loadRecord(gameSchema, kv),
     loadRecord(dailyGameSchema, kv),
+    loadRecord(freeGameSchema, kv),
   ]);
-  return { level: toSession(level), daily: toSession(daily) };
+  return { level: toSession(level), daily: toSession(daily), free: toSession(free) };
 }
 
 export async function saveGame(session: KakuroSession, kv: KVStore = preferencesKV): Promise<void> {

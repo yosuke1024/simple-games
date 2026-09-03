@@ -30,4 +30,7 @@ export const vi: NumberMatchMessages = {
   step3Title: 'Dọn sạch bảng để thắng',
   step3Body: 'Bí? Nhấn Thêm để nối các số còn lại vào cuối. Hoàn tác và gợi ý luôn miễn phí.',
   gameOverCount: 'Ván thua',
+  nmTier_easy: 'Dễ',
+  nmTier_medium: 'Vừa',
+  nmTier_hard: 'Khó',
 };

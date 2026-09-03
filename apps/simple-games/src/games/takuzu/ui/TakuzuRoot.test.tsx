@@ -301,6 +301,50 @@ describe('home', () => {
   });
 });
 
+describe('free play (§7)', () => {
+  it('starts a board at the chosen tier, and resumes it from the home', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await screen.findByRole('button', { name: /Level 1/ });
+
+    // The picker stands on medium until told otherwise; here, hard.
+    const picker = screen.getByRole('group', { name: 'Difficulty' });
+    await user.click(within(picker).getByRole('button', { name: 'Hard' }));
+    await user.click(screen.getByRole('button', { name: /Free Play/ }));
+
+    // The top bar names the mode and the size — no level number, no clock.
+    // Hard is level 95's generation, so a 10×10.
+    expect(screen.getByText('Free Play')).toBeInTheDocument();
+    expect(screen.getByText('10×10')).toBeInTheDocument();
+    expect(screen.queryByText(/Level \d/)).not.toBeInTheDocument();
+    expect(within(board()).getAllByRole('button')).toHaveLength(100);
+
+    // A digit, then away and back: the board is where it was left.
+    await user.click(within(board()).getAllByRole('button', { name: /^Empty/ })[0]!);
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    expect(screen.getByRole('button', { name: /Free Play.*Resume.*Hard/ })).toBeInTheDocument();
+    // The level climb is untouched by a free board: still at level 1, none solved.
+    expect(screen.getByRole('button', { name: /Level 1/ })).toBeInTheDocument();
+    expect(screen.getByText('0/100')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Free Play/ }));
+    expect(screen.getByText('10×10')).toBeInTheDocument();
+    expect(within(board()).getAllByRole('button', { name: /^0,/ })).toHaveLength(1);
+  });
+
+  it('asks before replacing a suspended free board with a new one', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await user.click(await screen.findByRole('button', { name: /Free Play/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    expect(screen.getByRole('alertdialog', { name: 'Start a new game?' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('button', { name: /Free Play.*Resume/ })).toBeInTheDocument();
+  });
+});
+
 /* Keyboard input is an adapter over the same tap handler (issue #93): this
    checks board state the Hint button also produces, never a keyboard-only
    behaviour. */

@@ -5,10 +5,12 @@
  * score, and a personal best is mentioned quietly rather than celebrated.
  */
 import { useSettings } from '@/state/SettingsContext';
+import { BestDelta } from '@/ui/components/BestDelta';
+import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { formatDuration } from '@/ui/format';
+import { useResultReveal } from '@/ui/useResultReveal';
 import { MAX_LEVEL, type SlidingPuzzleSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
-import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 
 export interface SlidingPuzzleResultOverlayProps {
   session: SlidingPuzzleSession;
@@ -26,13 +28,15 @@ export function SlidingPuzzleResultOverlay({
   onHome,
 }: SlidingPuzzleResultOverlayProps) {
   const { t } = useSettings();
-  if (session.status !== 'solved') return null;
+  // The ordered board gets its beat before the card covers it (§12).
+  const revealed = useResultReveal(session.status === 'solved');
+  if (!revealed) return null;
 
   const hasNextLevel =
     session.mode === 'level' && session.level !== null && session.level < MAX_LEVEL;
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className="dialog result result-clear"
         role="alertdialog"
@@ -54,18 +58,42 @@ export function SlidingPuzzleResultOverlay({
         </dl>
 
         {lastResult?.isNewBestMoves ? (
-          <p className="dialog-body">{t('slideNewBestMoves')}</p>
+          <p className="dialog-body">
+            {t('slideNewBestMoves')}
+            <BestDelta
+              value={lastResult.moves}
+              previous={lastResult.previousBestMoves}
+              kind="count"
+            />
+          </p>
         ) : lastResult ? (
           <p className="dialog-body">
             {t('slideBestMoves')} {lastResult.bestMoves}
+            <BestDelta
+              value={lastResult.moves}
+              previous={lastResult.previousBestMoves}
+              kind="count"
+            />
           </p>
         ) : null}
 
         {lastResult?.isNewBestTime ? (
-          <p className="dialog-body">{t('slideNewBestTime')}</p>
+          <p className="dialog-body">
+            {t('slideNewBestTime')}
+            <BestDelta
+              value={lastResult.seconds}
+              previous={lastResult.previousBestSeconds}
+              kind="time"
+            />
+          </p>
         ) : lastResult ? (
           <p className="dialog-body">
             {t('bestTime')} {formatDuration(lastResult.bestSeconds)}
+            <BestDelta
+              value={lastResult.seconds}
+              previous={lastResult.previousBestSeconds}
+              kind="time"
+            />
           </p>
         ) : null}
 

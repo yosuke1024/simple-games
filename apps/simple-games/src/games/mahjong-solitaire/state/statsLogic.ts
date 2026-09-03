@@ -67,6 +67,19 @@ export function applyClearToProgress(progress: Progress, session: MahjongSession
   return { progress: next, isNewBestTime: false, bestSeconds: seconds };
 }
 
+/**
+ * The record this run is measured against — the board's best before the run
+ * is booked — or null when there is none yet (§9). Read before
+ * `applyClearToProgress`, which is what moves the record.
+ */
+export function previousBestFor(progress: Progress, session: MahjongSession): number | null {
+  if (session.mode === 'level' && session.level !== null) {
+    return progress.bestSeconds[String(session.level)] ?? null;
+  }
+  if (session.dailyDate !== null) return progress.dailySeconds[session.dailyDate] ?? null;
+  return null;
+}
+
 /** How many levels have been cleared — shown on the statistics screen. */
 export function clearedLevelCount(progress: Progress): number {
   return Object.keys(progress.bestSeconds).length;

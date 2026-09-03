@@ -3,6 +3,7 @@ import { IconBack, IconChart, IconGrid } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { LEVEL_COUNT } from '../../game/levels';
 import { useBubblePop } from '../../state/GameContext';
+import { clearedLevelCount } from '../../state/statsLogic';
 
 /**
  * There is no suspended game to guard (no mid-run save —
@@ -58,6 +59,11 @@ export function BubbleHomeScreen() {
           <button type="button" className="home-chip" onClick={() => navigate('levels')}>
             <IconGrid className="home-chip-icon" />
             <span>{t('levelsTitle')}</span>
+            {/* How far up the hundred: levels cleared, a fraction with an end.
+                The frontier may sit one past the last level, so it is capped. */}
+            <span className="home-chip-count">
+              {Math.min(clearedLevelCount(progress), LEVEL_COUNT)}/{LEVEL_COUNT}
+            </span>
           </button>
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>
             <IconChart className="home-chip-icon" />

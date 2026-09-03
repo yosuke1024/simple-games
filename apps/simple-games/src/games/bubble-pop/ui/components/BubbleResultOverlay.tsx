@@ -7,6 +7,7 @@
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { formatDuration } from '@/ui/format';
+import { useResultReveal } from '@/ui/useResultReveal';
 import { LEVEL_COUNT } from '../../game/levels';
 import type { LastResult } from '../../state/GameContext';
 
@@ -24,14 +25,17 @@ export function BubbleResultOverlay({
   onHome,
 }: BubbleResultOverlayProps) {
   const { t } = useSettings();
-  if (result === null) return null;
+  // The emptied board — or the one that crossed the line — gets its beat
+  // before the card covers it (docs/BUBBLE_POP_RULES.md §12).
+  const revealed = useResultReveal(result !== null);
+  if (!revealed || result === null) return null;
 
   const cleared = result.outcome === 'cleared';
   const hasNextLevel = cleared && result.level < LEVEL_COUNT;
   const title = cleared ? t('bubbleClearedTitle') : t('bubbleFailedTitle');
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className={`dialog result ${cleared ? 'result-clear' : ''}`}
         role="alertdialog"

@@ -7,6 +7,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { useResultReveal } from '@/ui/useResultReveal';
 import { countPieces, type CheckersSession } from '../../game';
 import type { Stats } from '../../storage/schemas';
 
@@ -24,7 +25,9 @@ export function CheckersResultOverlay({
   onHome,
 }: CheckersResultOverlayProps) {
   const { t } = useSettings();
-  if (session.status === 'playing') return null;
+  // The final position gets its beat before the card covers it (§10).
+  const revealed = useResultReveal(session.status !== 'playing');
+  if (!revealed) return null;
 
   const title =
     session.status === 'won'
@@ -42,7 +45,7 @@ export function CheckersResultOverlay({
   const counts = countPieces(session.board);
 
   return (
-    <div className="overlay">
+    <div className="overlay overlay-result">
       <div
         className={`dialog result ${session.status === 'won' ? 'result-clear' : ''}`}
         role="alertdialog"

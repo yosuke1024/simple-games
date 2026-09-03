@@ -39,7 +39,7 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 
 | ゲーム                            | フォルダ             | 進行                                     | 無料・無制限の助け                                 | ルール文書                                                         |
 | --------------------------------- | -------------------- | ---------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------ |
-| Sudoku(ナンプレ)                  | `sudoku/`            | 100 レベル + デイリー                    | Undo / Hint                                        | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md)                       |
+| Sudoku(ナンプレ)                  | `sudoku/`            | 100 レベル + デイリー + フリープレイ     | Undo / Hint                                        | [docs/SUDOKU_RULES.md](docs/SUDOKU_RULES.md)                       |
 | Solitaire(クロンダイク)           | `solitaire/`         | フリー配札 + デイリー配札                | Undo / Hint(定石の合法手)                          | [docs/SOLITAIRE_RULES.md](docs/SOLITAIRE_RULES.md)                 |
 | Spider Solitaire                  | `spider-solitaire/`  | フリー配札 + デイリー配札(スート数 3 種) | Undo / Hint(定石の合法手)                          | [docs/SPIDER_SOLITAIRE_RULES.md](docs/SPIDER_SOLITAIRE_RULES.md)   |
 | FreeCell                          | `freecell/`          | フリー配札 + デイリー配札                | Undo(Hint なし)                                    | [docs/FREECELL_RULES.md](docs/FREECELL_RULES.md)                   |
@@ -56,19 +56,27 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 | Gomoku(五目並べ)                  | `gomoku/`            | CPU 対局・難易度 3 種(デイリーなし)      | Undo(Hint なし)                                    | [docs/GOMOKU_RULES.md](docs/GOMOKU_RULES.md)                       |
 | Bubble Pop                        | `bubble-pop/`        | 100 レベル(デイリーなし)                 | 常時フル軌道ガイド(Undo / Hint なし)               | [docs/BUBBLE_POP_RULES.md](docs/BUBBLE_POP_RULES.md)               |
 | Brick Breaker                     | `brick-breaker/`     | 100 レベル(デイリーなし)                 | 同じ盤面への即時リトライ(Undo / Hint なし)         | [docs/BRICK_BREAKER_RULES.md](docs/BRICK_BREAKER_RULES.md)         |
-| Nonogram                          | `nonogram/`          | 100 レベル + デイリー                    | Hint(Undo なし)                                    | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md)                   |
-| Takuzu(バイナリーパズル)          | `takuzu/`            | 100 レベル + デイリー                    | Hint(Undo なし)                                    | [docs/TAKUZU_RULES.md](docs/TAKUZU_RULES.md)                       |
-| Futoshiki(不等式)                 | `futoshiki/`         | 100 レベル + デイリー                    | Undo / Hint                                        | [docs/FUTOSHIKI_RULES.md](docs/FUTOSHIKI_RULES.md)                 |
-| Kakuro(クロスサム)                | `kakuro/`            | 100 レベル + デイリー                    | Undo / Hint                                        | [docs/KAKURO_RULES.md](docs/KAKURO_RULES.md)                       |
-| Number Match                      | `number-match/`      | 100 レベル + デイリー                    | Undo / Hint                                        | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md)           |
+| Nonogram                          | `nonogram/`          | 100 レベル + デイリー + フリープレイ     | Hint(Undo なし)                                    | [docs/NONOGRAM_RULES.md](docs/NONOGRAM_RULES.md)                   |
+| Takuzu(バイナリーパズル)          | `takuzu/`            | 100 レベル + デイリー + フリープレイ     | Hint(Undo なし)                                    | [docs/TAKUZU_RULES.md](docs/TAKUZU_RULES.md)                       |
+| Futoshiki(不等式)                 | `futoshiki/`         | 100 レベル + デイリー + フリープレイ     | Undo / Hint                                        | [docs/FUTOSHIKI_RULES.md](docs/FUTOSHIKI_RULES.md)                 |
+| Kakuro(クロスサム)                | `kakuro/`            | 100 レベル + デイリー + フリープレイ     | Undo / Hint                                        | [docs/KAKURO_RULES.md](docs/KAKURO_RULES.md)                       |
+| Number Match                      | `number-match/`      | 100 レベル + デイリー + フリープレイ     | Undo / Hint                                        | [docs/NUMBER_MATCH_RULES.md](docs/NUMBER_MATCH_RULES.md)           |
 | Quick Math(計算ドリル)            | `quick-math/`        | 100 レベル + デイリー                    | 無制限の解き直し + 途中保存(Undo / Hint なし)      | [docs/QUICK_MATH_RULES.md](docs/QUICK_MATH_RULES.md)               |
 | Schulte Table(順番タッチ)         | `schulte-table/`     | 100 レベル + デイリー                    | 同じ面への即時リトライ(Undo / Hint なし)           | [docs/SCHULTE_TABLE_RULES.md](docs/SCHULTE_TABLE_RULES.md)         |
 | Number Recall(位置記憶)           | `number-recall/`     | 100 レベル + デイリー                    | 同レベル・新配置への即時リトライ(Undo / Hint なし) | [docs/NUMBER_RECALL_RULES.md](docs/NUMBER_RECALL_RULES.md)         |
-| Water Sort                        | `water-sort/`        | 100 レベル + デイリー                    | Undo / Hint(ソルバー証明付き)                      | [docs/WATER_SORT_RULES.md](docs/WATER_SORT_RULES.md)               |
+| Water Sort                        | `water-sort/`        | 100 レベル + デイリー + フリープレイ     | Undo / Hint(ソルバー証明付き)                      | [docs/WATER_SORT_RULES.md](docs/WATER_SORT_RULES.md)               |
 | Sliding Puzzle                    | `sliding-puzzle/`    | 100 レベル + デイリー                    | Undo(Hint なし)                                    | [docs/SLIDING_PUZZLE_RULES.md](docs/SLIDING_PUZZLE_RULES.md)       |
 | Memory Match(神経衰弱)            | `memory-match/`      | 難易度 3 種 + デイリー                   | 同じ盤面への再挑戦(Undo / Hint なし)               | [docs/MEMORY_MATCH_RULES.md](docs/MEMORY_MATCH_RULES.md)           |
 | Sky Fighter                       | `sky-fighter/`       | 100 レベル(デイリーなし)                 | 同じレベルへの即時リトライ(Undo / Hint なし)       | [docs/SKY_FIGHTER_RULES.md](docs/SKY_FIGHTER_RULES.md)             |
 | Bunny Hop                         | `bunny-hop/`         | エンドレス(レベルなし)                   | 次のランへの即時リトライ(Undo / Hint なし)         | [docs/BUNNY_HOP_RULES.md](docs/BUNNY_HOP_RULES.md)                 |
+
+「フリープレイ」は、レベルの坂とデイリーの隣にある**ティアを選んで新しい盤面を引く入口**です
+(2026-09-03 追加)。ティアはレベル 10 / 50 / 95 と同じ生成条件で seed だけが違い、レベル進行にも
+デイリーの記録にも触れません。Hard を遊ぶために 70 レベル登る必要はなく、100 を終えた人にも
+1 日 1 問以上の盤面が残ります。どのゲームの手応えも「自分の記録との差(`+0:18` / `−0:05`)」
+「完成した盤面を見せてから出る結果カード」「揃った・消した・できた大きさに応じて高くなる
+効果音」までで、ストリーク・称号・タイマー・通知は作りません
+([docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md)「UI / UX の原則」)。
 
 助けの内容がゲームごとに違うのは意図したものです。**どのゲームにも無料・無制限の助けを
 用意し、その形はそのゲームの中身を空にしないものを選びます**(Minesweeper は推測なしで
@@ -202,7 +210,7 @@ Android / iOS のビルド手順は [apps/simple-games/README.md](apps/simple-ga
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 14 言語・900 キー
+**One app. Many games. Many languages.** 現在は 14 言語・1,050 キー
 (en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
 中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。
