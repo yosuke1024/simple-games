@@ -115,7 +115,14 @@ export function FreeCellResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="freecell" outcome="completed" />
+        <ShareAction
+          gameId="freecell"
+          outcome="completed"
+          details={[
+            { label: t('movesLabel'), value: String(session.moveCount) },
+            { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+          ]}
+        />
       </div>
       <ResultAdSlot />
     </div>

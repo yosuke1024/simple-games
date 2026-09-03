@@ -106,7 +106,14 @@ export function TakuzuResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="takuzu" outcome="completed" />
+        <ShareAction
+          gameId="takuzu"
+          outcome="completed"
+          details={[
+            { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+            { label: t('takuzuHintsUsed'), value: String(session.hintCount) },
+          ]}
+        />
       </div>
       <ResultAdSlot />
     </div>

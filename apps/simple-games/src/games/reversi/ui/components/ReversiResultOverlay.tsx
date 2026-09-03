@@ -82,7 +82,16 @@ export function ReversiResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="reversi" outcome={session.status === 'won' ? 'completed' : 'played'} />
+        <ShareAction
+          gameId="reversi"
+          outcome={session.status === 'won' ? 'completed' : 'played'}
+          // The final count, win or lose or draw — it is the one honest
+          // summary of a finished game, never a streak.
+          details={[
+            { label: t('reversiYou'), value: String(lastResult.mine) },
+            { label: t('reversiCpu'), value: String(lastResult.theirs) },
+          ]}
+        />
       </div>
       <ResultAdSlot />
     </div>

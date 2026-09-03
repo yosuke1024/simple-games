@@ -82,6 +82,78 @@ describe('with a share sheet', () => {
   });
 });
 
+describe('with a picture', () => {
+  const card = () => new File([new Uint8Array([1, 2, 3])], 'x.png', { type: 'image/png' });
+
+  it('shares the file alongside the text when the target can take it', async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+    const canShare = vi.fn().mockReturnValue(true);
+    const copy = writeText();
+    stubNavigator({ share, canShare, clipboard: { writeText: copy } });
+
+    await expect(shareGame(message, card())).resolves.toBe('shared');
+    expect(share).toHaveBeenCalledTimes(1);
+    expect(share).toHaveBeenCalledWith({
+      files: [expect.any(File)],
+      text: message.text,
+      url: message.url,
+    });
+    expect(copy).not.toHaveBeenCalled();
+  });
+
+  it('falls back to text when the target refuses the file payload', async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+    // Accepts the text-only payload but not one carrying a file.
+    const canShare = vi.fn((data: ShareData) => !('files' in data));
+    const copy = writeText();
+    stubNavigator({ share, canShare, clipboard: { writeText: copy } });
+
+    await expect(shareGame(message, card())).resolves.toBe('shared');
+    expect(share).toHaveBeenCalledTimes(1);
+    expect(share).toHaveBeenCalledWith({ text: message.text, url: message.url });
+  });
+
+  it('treats a dismissal of the picture sheet as an answer, with no second attempt', async () => {
+    // As the browser reports it: a DOMException, which is not reliably an
+    // `Error` instance on every WebView — the name is what identifies it.
+    const abort = new DOMException('cancelled', 'AbortError');
+    const share = vi.fn().mockRejectedValue(abort);
+    const canShare = vi.fn().mockReturnValue(true);
+    const copy = writeText();
+    stubNavigator({ share, canShare, clipboard: { writeText: copy } });
+
+    await expect(shareGame(message, card())).resolves.toBe('dismissed');
+    expect(share).toHaveBeenCalledTimes(1);
+    expect(copy).not.toHaveBeenCalled();
+  });
+
+  it('retries as text when the picture sheet fails for any other reason', async () => {
+    const share = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('the target choked on the file'))
+      .mockResolvedValueOnce(undefined);
+    const canShare = vi.fn().mockReturnValue(true);
+    stubNavigator({ share, canShare, clipboard: { writeText: writeText() } });
+
+    await expect(shareGame(message, card())).resolves.toBe('shared');
+    expect(share).toHaveBeenCalledTimes(2);
+    expect(share).toHaveBeenNthCalledWith(1, {
+      files: [expect.any(File)],
+      text: message.text,
+      url: message.url,
+    });
+    expect(share).toHaveBeenNthCalledWith(2, { text: message.text, url: message.url });
+  });
+
+  it('ignores the card and copies the text when there is no share sheet at all', async () => {
+    const copy = writeText();
+    stubNavigator({ clipboard: { writeText: copy } });
+
+    await expect(shareGame(message, card())).resolves.toBe('copied');
+    expect(copy).toHaveBeenCalledWith(`${message.text}\n${message.url}`);
+  });
+});
+
 describe('without a share sheet', () => {
   it('copies the whole message, link included', async () => {
     const copy = writeText();

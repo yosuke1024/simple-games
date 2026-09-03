@@ -9,6 +9,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
+import type { ShareDetail } from '@/services/share/message';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
 import type { MemorySession } from '../../game';
@@ -31,6 +32,11 @@ export function MemoryResultOverlay({
   // The face-up board gets its beat before the card covers it (§12).
   const revealed = useResultReveal(session.status === 'solved');
   if (!revealed) return null;
+
+  const details: ShareDetail[] = [
+    { label: t('movesLabel'), value: String(session.moveCount) },
+    { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+  ];
 
   return (
     <div className="overlay overlay-result">
@@ -102,7 +108,7 @@ export function MemoryResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="memory-match" outcome="completed" />
+        <ShareAction gameId="memory-match" outcome="completed" details={details} />
       </div>
       <ResultAdSlot />
     </div>

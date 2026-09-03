@@ -9,6 +9,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
+import type { ShareDetail } from '@/services/share/message';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
 
@@ -44,6 +45,15 @@ export function ResultOverlay({
   // and a dead end alike; a level's is the next level; a daily has neither,
   // and the retry leads.
   const hasNext = hasNextLevel || session.mode === 'free';
+
+  // Score total, time, moves — the same trio either way. The cleared card
+  // shows the total as a bare number under its own heading; away from that
+  // heading, in a message, it needs the same caption the game-over card uses.
+  const details: ShareDetail[] = [
+    { label: t('score'), value: String(score.total) },
+    { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+    { label: t('movesLabel'), value: String(session.moveCount) },
+  ];
 
   return (
     <div className="overlay overlay-result">
@@ -146,7 +156,11 @@ export function ResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="number-match" outcome={cleared ? 'completed' : 'played'} />
+        <ShareAction
+          gameId="number-match"
+          outcome={cleared ? 'completed' : 'played'}
+          details={details}
+        />
       </div>
       <ResultAdSlot />
     </div>

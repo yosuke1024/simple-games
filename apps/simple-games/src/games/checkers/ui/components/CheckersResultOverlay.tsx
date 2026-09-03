@@ -83,6 +83,10 @@ export function CheckersResultOverlay({
         <ShareAction
           gameId="checkers"
           outcome={session.status === 'won' ? 'completed' : 'played'}
+          details={[
+            { label: t('checkersYou'), value: String(counts.player) },
+            { label: t('checkersCpu'), value: String(counts.cpu) },
+          ]}
         />
       </div>
       <ResultAdSlot />

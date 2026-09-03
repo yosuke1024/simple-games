@@ -78,7 +78,14 @@ export function BunnyResultOverlay({ result, onRunAgain, onHome }: BunnyResultOv
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="bunny-hop" outcome="played" />
+        <ShareAction
+          gameId="bunny-hop"
+          outcome="played"
+          details={[
+            { label: t('score'), value: String(result.score) },
+            { label: t('bunnyObstaclesPassed'), value: String(result.obstaclesPassed) },
+          ]}
+        />
       </div>
       <ResultAdSlot />
     </div>

@@ -10,6 +10,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
+import type { ShareDetail } from '@/services/share/message';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
 import type { MinesweeperSession } from '../../game';
@@ -39,6 +40,14 @@ export function MinesResultOverlay({
   const title = won ? t('minesWonTitle') : t('minesLostTitle');
   // A daily is one board a day: there is no other board to offer (§8).
   const canStartNew = session.mode === 'difficulty';
+
+  // A lost board's time is not a result worth sharing — only a clear is.
+  const details: ShareDetail[] = won
+    ? [
+        { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+        { label: t('minesHintsUsed'), value: String(session.hintCount) },
+      ]
+    : [];
 
   return (
     <div className="overlay overlay-result">
@@ -95,7 +104,11 @@ export function MinesResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="minesweeper" outcome={won ? 'completed' : 'played'} />
+        <ShareAction
+          gameId="minesweeper"
+          outcome={won ? 'completed' : 'played'}
+          details={details}
+        />
       </div>
       <ResultAdSlot />
     </div>

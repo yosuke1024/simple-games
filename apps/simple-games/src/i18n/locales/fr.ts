@@ -119,6 +119,8 @@ export const fr: Messages = {
   shareCleared: 'J’ai terminé {game} sur Simple Games.',
   sharePlayed: 'J’ai joué à {game} sur Simple Games.',
   shareInvite: 'Vous pouvez y jouer directement dans le navigateur.',
+  shareChallenge: 'Envie d’essayer ?',
+  shareCardCleared: 'Terminé !',
   shareCopied: 'Lien copié',
 
   // ---- Arcade (Brick Breaker / Sky Fighter) ----

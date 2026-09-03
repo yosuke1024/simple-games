@@ -109,7 +109,15 @@ export function SudokuResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="sudoku" outcome="completed" />
+        <ShareAction
+          gameId="sudoku"
+          outcome="completed"
+          details={[
+            { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+            { label: t('sudokuMistakes'), value: String(session.mistakeCount) },
+            { label: t('hint'), value: String(session.hintCount) },
+          ]}
+        />
       </div>
       <ResultAdSlot />
     </div>

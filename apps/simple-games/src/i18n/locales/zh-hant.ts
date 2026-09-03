@@ -117,6 +117,8 @@ export const zhHant: Messages = {
   shareCleared: '我在 Simple Games 裡通關了 {game}。',
   sharePlayed: '我在 Simple Games 裡玩了 {game}。',
   shareInvite: '在瀏覽器裡就能直接玩。',
+  shareChallenge: '你也來試試?',
+  shareCardCleared: '破關!',
   shareCopied: '已複製連結',
 
   // ---- Arcade (Brick Breaker / Sky Fighter) ----

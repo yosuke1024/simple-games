@@ -9,6 +9,7 @@
  * best is set by answering slowly, and keeping it would tell the player which
  * of speed and care the game wants (§4).
  */
+import type { ShareDetail } from '@/services/share/message';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
@@ -40,6 +41,14 @@ export function QuickMathResultOverlay({
 
   const hasNextLevel =
     session.mode === 'level' && session.level !== null && session.level < MAX_LEVEL;
+
+  // The same two facts the card shows. A daily run's date is not among them —
+  // this card never prints it — so the share does not carry it either: a share
+  // may only repeat what the screen said (services/share/message.ts).
+  const details: ShareDetail[] = [
+    { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+    { label: t('qmathMisses'), value: String(session.missCount) },
+  ];
 
   return (
     <div className="overlay overlay-result">
@@ -101,7 +110,7 @@ export function QuickMathResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="quick-math" outcome="completed" />
+        <ShareAction gameId="quick-math" outcome="completed" details={details} />
       </div>
       <ResultAdSlot />
     </div>

@@ -116,7 +116,14 @@ export function SlidingPuzzleResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="sliding-puzzle" outcome="completed" />
+        <ShareAction
+          gameId="sliding-puzzle"
+          outcome="completed"
+          details={[
+            { label: t('slideMoves'), value: String(session.moveCount) },
+            { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+          ]}
+        />
       </div>
       <ResultAdSlot />
     </div>

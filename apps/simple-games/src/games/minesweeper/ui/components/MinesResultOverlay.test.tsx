@@ -124,7 +124,7 @@ describe('the share on that card', () => {
     expect(share.mock.calls[1]?.[0].text).not.toContain('cleared');
   });
 
-  it('sends the game and its link, and no number from the run', async () => {
+  it("sends the game and its link, with this run's time and hints but never the best record", async () => {
     const share = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', { share });
 
@@ -140,8 +140,28 @@ describe('the share on that card', () => {
 
     const [{ text, url }] = share.mock.calls[0] as [{ text: string; url: string }];
     expect(url).toBe('https://pixapps.ai/simple-games/play/?game=minesweeper');
-    // The card on screen shows 2:05, a hint count and a new record; the
-    // message carries none of it.
+    // The card also states a new record against the previous best (3:20); the
+    // message repeats this run's own time and hint count, never that history.
+    expect(text).toContain('Time 2:05');
+    expect(text).toContain('Hints 1');
+    expect(text).not.toMatch(/3:20/);
+  });
+
+  it('sends no number from a lost board — its time is not a result', async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { share });
+
+    renderOverlay(endedSession('lost', 40), {
+      won: false,
+      seconds: 40,
+      hints: 1,
+      isNewBest: false,
+      bestSeconds: 100,
+      previousBestSeconds: null,
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Share' }));
+
+    const [{ text }] = share.mock.calls[0] as [{ text: string; url: string }];
     expect(text).not.toMatch(/\d/);
   });
 });

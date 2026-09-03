@@ -4,6 +4,7 @@
  * nothing and rebuilds the identical board (same seed, same level) — and a
  * clear shows the run's elapsed time; a clock never appears during play.
  */
+import type { ShareDetail } from '@/services/share/message';
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
@@ -34,6 +35,11 @@ export function BubbleResultOverlay({
   const cleared = result.outcome === 'cleared';
   const hasNextLevel = cleared && result.level < LEVEL_COUNT;
   const title = cleared ? t('bubbleClearedTitle') : t('bubbleFailedTitle');
+  // A failed board shows no figure to repeat — the share has nothing to say
+  // beyond "played" until the board is actually cleared.
+  const details: ShareDetail[] = cleared
+    ? [{ label: t('timeLabel'), value: formatDuration(result.seconds) }]
+    : [];
 
   return (
     <div className="overlay overlay-result">
@@ -73,7 +79,11 @@ export function BubbleResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="bubble-pop" outcome={cleared ? 'completed' : 'played'} />
+        <ShareAction
+          gameId="bubble-pop"
+          outcome={cleared ? 'completed' : 'played'}
+          details={details}
+        />
       </div>
       <ResultAdSlot />
     </div>

@@ -87,7 +87,14 @@ export function BlockResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="block-puzzle" outcome="played" />
+        <ShareAction
+          gameId="block-puzzle"
+          outcome="played"
+          details={[
+            { label: t('score'), value: String(session.score) },
+            { label: t('blockLines'), value: String(session.linesCleared) },
+          ]}
+        />
       </div>
       <ResultAdSlot />
     </div>

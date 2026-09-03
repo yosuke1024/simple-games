@@ -12,10 +12,12 @@
  * is quiet, drawn below the buttons that continue play, and it says what it
  * does before it does anything.
  *
- * The message is built from the game's id and the honest result — the games
- * pass `completed` only where the player actually won — so no result screen
- * has to write share copy of its own, and none of them can accidentally send a
- * score, a time, or a streak (services/share/message.ts).
+ * The message and the picture card both repeat the facts the result screen
+ * showed — the game passes them in as `details`, the same translated labels
+ * and formatted values already on screen, and nothing here computes a number
+ * of its own (services/share/message.ts, services/share/card.ts). The one
+ * thing this component decides is `cleared` vs. `played`, from the honest
+ * `outcome` the game hands it. Still no reward, no second ask, no counting.
  *
  * Games render this the way they render ResultAdSlot: an import from shared
  * UI, inside their own result card (docs/ARCHITECTURE.md, レイヤー規則).
@@ -23,7 +25,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GameId } from '../../app/registry';
 import { shareGame } from '../../services/share/share';
-import { buildShareMessage, type ShareOutcome } from '../../services/share/message';
+import {
+  buildShareMessage,
+  type ShareDetail,
+  type ShareOutcome,
+} from '../../services/share/message';
+import { renderShareCard } from '../../services/share/card';
 import { useSettings } from '../../state/SettingsContext';
 import { useTransientTimeout } from '../useTransientTimeout';
 import { IconShare } from './icons';
@@ -38,9 +45,18 @@ export interface ShareActionProps {
    * cleared; every loss, draw and endless run is `played`.
    */
   outcome: ShareOutcome;
+  /**
+   * The facts of the run, exactly as this result screen shows them — the same
+   * translated labels and formatted values, headline first, at most three
+   * (services/share/message.ts MAX_SHARE_DETAILS). Required rather than
+   * optional so a new result screen has to decide what it sends; `[]` is a
+   * decision too, for a run with nothing worth repeating (a loss with no
+   * figure, an abandoned endless run).
+   */
+  details: readonly ShareDetail[];
 }
 
-export function ShareAction({ gameId, outcome }: ShareActionProps) {
+export function ShareAction({ gameId, outcome, details }: ShareActionProps) {
   const { t } = useSettings();
   const [copied, setCopied] = useState(false);
   const hideLater = useTransientTimeout();
@@ -60,13 +76,21 @@ export function ShareAction({ gameId, outcome }: ShareActionProps) {
 
   const onShare = useCallback(() => {
     // Nothing is awaited before shareGame(), so the click's user activation is
-    // still valid when the share sheet is asked for.
-    void shareGame(buildShareMessage(gameId, outcome, t)).then((result) => {
+    // still valid when the share sheet is asked for — that includes drawing
+    // the card, which is synchronous for the same reason (services/share/card.ts).
+    const message = buildShareMessage({ gameId, outcome, details }, t);
+    const card = renderShareCard({
+      gameId,
+      outcome,
+      details,
+      clearedLabel: t('shareCardCleared'),
+    });
+    void shareGame(message, card).then((result) => {
       if (!mounted.current || result !== 'copied') return;
       setCopied(true);
       hideLater(() => setCopied(false), COPIED_MS);
     });
-  }, [gameId, outcome, t, hideLater]);
+  }, [gameId, outcome, details, t, hideLater]);
 
   return (
     <div className="result-share">

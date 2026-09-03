@@ -118,6 +118,8 @@ export const tr: Messages = {
   shareCleared: 'Simple Games’te {game} oyununu bitirdim.',
   sharePlayed: 'Simple Games’te {game} oynadım.',
   shareInvite: 'Doğrudan tarayıcıda oynayabilirsin.',
+  shareChallenge: 'Sen de dener misin?',
+  shareCardCleared: 'Tamamlandı!',
   shareCopied: 'Bağlantı kopyalandı',
 
   // ---- Arcade (Brick Breaker / Sky Fighter) ----

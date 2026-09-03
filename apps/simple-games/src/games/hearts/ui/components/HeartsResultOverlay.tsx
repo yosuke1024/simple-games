@@ -13,6 +13,7 @@
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
+import type { ShareDetail } from '@/services/share/message';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { SEATS, YOU, type HeartsSession, type Seat } from '../../game';
 import type { LastResult } from '../../state/GameContext';
@@ -58,6 +59,11 @@ export function HeartsResultOverlay({
   // points keep their seat order, which is stable and means nothing more.
   const standing = [...SEATS].sort((a, b) => scores[a] - scores[b] || a - b) as Seat[];
 
+  // The player's own line from the standings table, won or lost or drawn —
+  // the seats are a placement, not a difference, so there is no other single
+  // figure that summarises the hand.
+  const details: ShareDetail[] = [{ label: seatLabel(t, YOU), value: String(scores[YOU]) }];
+
   return (
     <div className="overlay overlay-result">
       <div
@@ -101,7 +107,11 @@ export function HeartsResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="hearts" outcome={status === 'won' ? 'completed' : 'played'} />
+        <ShareAction
+          gameId="hearts"
+          outcome={status === 'won' ? 'completed' : 'played'}
+          details={details}
+        />
       </div>
       <ResultAdSlot />
     </div>

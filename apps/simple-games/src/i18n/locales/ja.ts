@@ -112,12 +112,16 @@ export const ja: Messages = {
   webAppPromptTitle: 'もっと静かに、最初から完全オフラインで。',
   webAppPromptBody: 'アプリなら、ホーム画面からすぐ起動でき、進行状況を端末内に保存できます。',
 
-  // The optional share on a result screen. {game} is the registry title, a
-  // proper noun that is not translated; `cleared` is only used for a real win.
+  // The optional share on a result screen. The message and the picture card
+  // carry the facts the result screen showed, passed in by the game as
+  // already-formatted strings. {game} is the registry title, a proper noun
+  // that is not translated; `cleared` is only used for a real win.
   shareAction: '共有',
   shareCleared: 'Simple Games で {game} をクリアしました。',
   sharePlayed: 'Simple Games で {game} を遊びました。',
   shareInvite: 'ブラウザですぐ遊べます。',
+  shareChallenge: 'あなたも挑戦してみて。',
+  shareCardCleared: 'クリア!',
   shareCopied: 'リンクをコピーしました',
 
   // ---- Arcade (shared by Brick Breaker and Sky Fighter) ----

@@ -102,7 +102,14 @@ export function SchulteResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="schulte-table" outcome="completed" />
+        <ShareAction
+          gameId="schulte-table"
+          outcome="completed"
+          details={[
+            { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+            { label: t('schulteMisses'), value: String(session.missCount) },
+          ]}
+        />
       </div>
       <ResultAdSlot />
     </div>

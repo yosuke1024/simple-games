@@ -4,6 +4,7 @@
  * the identical wall on the next attempt. The clear shows the run's time; a
  * clock never appears during play (§6).
  */
+import type { ShareDetail } from '@/services/share/message';
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
@@ -34,6 +35,11 @@ export function BrickResultOverlay({
   const cleared = result.outcome === 'cleared';
   const hasNextLevel = cleared && result.level < LEVEL_COUNT;
   const title = cleared ? t('bbClearedTitle') : t('bbFailedTitle');
+  // A failed wall shows no figure to repeat — the share has nothing to say
+  // beyond "played" until the wall is actually cleared.
+  const details: ShareDetail[] = cleared
+    ? [{ label: t('timeLabel'), value: formatDuration(result.seconds) }]
+    : [];
 
   return (
     <div className="overlay overlay-result">
@@ -73,7 +79,11 @@ export function BrickResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="brick-breaker" outcome={cleared ? 'completed' : 'played'} />
+        <ShareAction
+          gameId="brick-breaker"
+          outcome={cleared ? 'completed' : 'played'}
+          details={details}
+        />
       </div>
       <ResultAdSlot />
     </div>
