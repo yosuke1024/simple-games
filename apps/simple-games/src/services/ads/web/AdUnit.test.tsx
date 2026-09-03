@@ -25,7 +25,11 @@ import {
 } from './config';
 import { ensureAdSenseScript } from './script';
 
-type AdsWindow = Window & { adsbygoogle?: unknown[]; admaxads?: unknown[]; __admax_tag__?: unknown };
+type AdsWindow = Window & {
+  adsbygoogle?: unknown[];
+  admaxads?: unknown[];
+  __admax_tag__?: unknown;
+};
 
 const adsScript = () => document.head.querySelector('script[data-sg-adsense]');
 const admaxScripts = () => document.head.querySelectorAll('script[data-sg-admax]');

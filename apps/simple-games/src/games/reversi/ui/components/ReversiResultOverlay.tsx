@@ -7,6 +7,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
 import type { ReversiSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
@@ -81,6 +82,7 @@ export function ReversiResultOverlay({
             {t('backHome')}
           </button>
         </div>
+        <ShareAction gameId="reversi" outcome={session.status === 'won' ? 'completed' : 'played'} />
       </div>
       <ResultAdSlot />
     </div>

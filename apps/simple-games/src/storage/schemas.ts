@@ -89,7 +89,13 @@ export const settingsSchema: SchemaDef<Settings> = {
     const sound = asBool(raw.sound);
     const vibration = asBool(raw.vibration);
     const reducedMotion = asBool(raw.reducedMotion);
-    if (language === null || theme === null || sound === null || vibration === null || reducedMotion === null) {
+    if (
+      language === null ||
+      theme === null ||
+      sound === null ||
+      vibration === null ||
+      reducedMotion === null
+    ) {
       return null;
     }
     return { schemaVersion: 1, language, theme, sound, vibration, reducedMotion };
@@ -209,7 +215,12 @@ export const reviewSchema: SchemaDef<ReviewState> = {
     const promptsShown = asInt(raw.promptsShown, 0, 100);
     const nextPromptAt = asInt(raw.nextPromptAt, 0, 1e9);
     const resolved = asBool(raw.resolved);
-    if (gamesCompleted === null || promptsShown === null || nextPromptAt === null || resolved === null) {
+    if (
+      gamesCompleted === null ||
+      promptsShown === null ||
+      nextPromptAt === null ||
+      resolved === null
+    ) {
       return null;
     }
     return { schemaVersion: 1, gamesCompleted, promptsShown, nextPromptAt, resolved };

@@ -6,6 +6,7 @@
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
 import type { LastResult } from '../../state/GameContext';
 
@@ -76,6 +77,7 @@ export function SkyResultOverlay({ result, onRetry, onHome }: SkyResultOverlayPr
             {t('backHome')}
           </button>
         </div>
+        <ShareAction gameId="sky-fighter" outcome={cleared ? 'completed' : 'played'} />
       </div>
       <ResultAdSlot />
     </div>

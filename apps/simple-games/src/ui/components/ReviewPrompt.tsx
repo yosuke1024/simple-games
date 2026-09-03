@@ -7,11 +7,7 @@
  * closing this dialog never costs the player anything.
  */
 import { useState } from 'react';
-import {
-  openFeedbackEmail,
-  requestStoreReview,
-  resolveReviewPrompt,
-} from '../../services/review';
+import { openFeedbackEmail, requestStoreReview, resolveReviewPrompt } from '../../services/review';
 import { useSettings } from '../../state/SettingsContext';
 
 export interface ReviewPromptProps {

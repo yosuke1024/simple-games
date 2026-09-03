@@ -12,6 +12,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { SEATS, YOU, type HeartsSession, type Seat } from '../../game';
 import type { LastResult } from '../../state/GameContext';
@@ -100,6 +101,7 @@ export function HeartsResultOverlay({
             {t('backHome')}
           </button>
         </div>
+        <ShareAction gameId="hearts" outcome={status === 'won' ? 'completed' : 'played'} />
       </div>
       <ResultAdSlot />
     </div>

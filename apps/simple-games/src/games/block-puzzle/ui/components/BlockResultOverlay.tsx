@@ -12,6 +12,7 @@
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
 import type { BlockSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
@@ -86,6 +87,7 @@ export function BlockResultOverlay({
             {t('backHome')}
           </button>
         </div>
+        <ShareAction gameId="block-puzzle" outcome="played" />
       </div>
       <ResultAdSlot />
     </div>

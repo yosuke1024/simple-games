@@ -19,7 +19,10 @@ export function AnimatedNumber({ value }: { value: number }) {
     // Reduced motion, or no frames coming (hidden webview): show it now.
     // rAF self-heals on the next painted frame, but "eventually right" is not
     // good enough for a score.
-    if (reducedMotion || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) {
+    if (
+      reducedMotion ||
+      (typeof document !== 'undefined' && document.visibilityState === 'hidden')
+    ) {
       shownRef.current = value;
       setShown(value);
       return;

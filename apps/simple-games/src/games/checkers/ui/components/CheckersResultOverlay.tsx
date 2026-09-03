@@ -7,6 +7,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { countPieces, type CheckersSession } from '../../game';
 import type { Stats } from '../../storage/schemas';
@@ -79,6 +80,10 @@ export function CheckersResultOverlay({
             {t('backHome')}
           </button>
         </div>
+        <ShareAction
+          gameId="checkers"
+          outcome={session.status === 'won' ? 'completed' : 'played'}
+        />
       </div>
       <ResultAdSlot />
     </div>

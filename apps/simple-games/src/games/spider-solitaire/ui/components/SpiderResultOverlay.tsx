@@ -7,6 +7,7 @@
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
 import type { SpiderSession } from '../../game';
@@ -118,6 +119,7 @@ export function SpiderResultOverlay({
             {t('backHome')}
           </button>
         </div>
+        <ShareAction gameId="spider-solitaire" outcome="completed" />
       </div>
       <ResultAdSlot />
     </div>

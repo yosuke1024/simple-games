@@ -238,6 +238,11 @@ en / ja / es / pt-br / fr / id / de / th / vi / ko)で、残る 4 ロケール
 Cloudflare Pages の静的アセットのみで動き、サーバー機能は使いません。
 ゲーム別 Landing Page からは `…/play/?game=<game-id>` でそのゲームを直接開けます
 (不明な ID はコレクションホームにフォールバック。アプリ版では動きません)。
+同じ URL は、結果画面の任意の「共有」がそのまま配るリンクでもあります —— 遊んだ
+ゲームの名前とリンクだけを送り、スコア・時間・ヒント回数・連続日数は一切含めません。
+勝敗が確定した結果だけが「クリアしました」を名乗り、敗北・引き分け・エンドレスの
+終了は「遊びました」になります。共有しても報酬・機能解放・再催促はなく、共有した
+こと自体はどの版でも計測しません([docs/GROWTH_MEASUREMENT.md](docs/GROWTH_MEASUREMENT.md))。
 アプリ版との役割の違い(広告・課金・オフラインの範囲・計測・保存)は
 [docs/WEB_VERSION.md](docs/WEB_VERSION.md)、レイヤー構成は
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) を参照してください。
@@ -253,6 +258,8 @@ Cloudflare Pages の静的アセットのみで動き、サーバー機能は使
 - オフライン時は広告リクエストを行わない(低消費電力・[docs/OFFLINE_POLICY.md](docs/OFFLINE_POLICY.md))
 - 計測は Web 版だけ。何を見て次のゲームを選ぶか、そのデータで何が言えないかを
   文書に残す([docs/GROWTH_MEASUREMENT.md](docs/GROWTH_MEASUREMENT.md))
+- 共有は任意の二次アクション。共有報酬・招待ボーナス・紹介コード・ランキングは
+  作らない([docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md))
 - 巨大な共通ゲームフレームワークを作らない
 - 一度しか使われていないコードを共通化しない(重複が確認されてから抽出)
 - 収録ゲームの追加・更新はアプリのリリースとして一体で行う。ただしゲーム追加が

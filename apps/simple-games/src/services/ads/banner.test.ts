@@ -22,7 +22,10 @@ vi.mock('@capacitor/core', () => ({
 
 vi.mock('@capacitor-community/admob', () => ({
   AdMob: admobMock,
-  BannerAdPluginEvents: { SizeChanged: 'bannerAdSizeChanged', FailedToLoad: 'bannerAdFailedToLoad' },
+  BannerAdPluginEvents: {
+    SizeChanged: 'bannerAdSizeChanged',
+    FailedToLoad: 'bannerAdFailedToLoad',
+  },
   BannerAdPosition: { BOTTOM_CENTER: 'BOTTOM_CENTER' },
   BannerAdSize: { ADAPTIVE_BANNER: 'ADAPTIVE_BANNER' },
 }));

@@ -29,11 +29,7 @@ import {
   resetAdRemovalForTesting,
   restoreAdRemoval,
 } from './adRemoval';
-import {
-  initNativeStore,
-  isEntitlingTransaction,
-  resetNativeStoreForTesting,
-} from './nativeStore';
+import { initNativeStore, isEntitlingTransaction, resetNativeStoreForTesting } from './nativeStore';
 
 beforeEach(async () => {
   vi.clearAllMocks();

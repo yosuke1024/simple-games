@@ -6,6 +6,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { LEVEL_COUNT } from '../../game/levels';
@@ -72,6 +73,7 @@ export function BrickResultOverlay({
             {t('backHome')}
           </button>
         </div>
+        <ShareAction gameId="brick-breaker" outcome={cleared ? 'completed' : 'played'} />
       </div>
       <ResultAdSlot />
     </div>
