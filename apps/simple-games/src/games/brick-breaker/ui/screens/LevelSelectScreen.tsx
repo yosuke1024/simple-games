@@ -11,12 +11,16 @@ import { useBrickBreaker } from '../../state/GameContext';
 export function BrickLevelSelectScreen() {
   const { goHome, startLevel, progress } = useBrickBreaker();
   const { t } = useSettings();
-  const highest = progress.highestUnlocked;
+  // highestUnlocked can be LEVEL_COUNT + 1 once the run is fully cleared
+  // (statsLogic.ts); the grid only ever has LEVEL_COUNT cells to address, so
+  // the "current" marker stays on the last one. Cleared is read off the real
+  // frontier, so the last level's tick appears once it is earned.
+  const highest = Math.min(progress.highestUnlocked, LEVEL_COUNT);
 
   const cells = [];
   for (let level = 1; level <= LEVEL_COUNT; level++) {
     const unlocked = level <= highest;
-    const clearedLevel = level < highest;
+    const clearedLevel = level < progress.highestUnlocked;
     cells.push(
       unlocked ? (
         <button

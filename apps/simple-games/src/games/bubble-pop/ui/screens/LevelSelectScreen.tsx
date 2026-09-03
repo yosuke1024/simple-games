@@ -20,7 +20,8 @@ export function BubbleLevelSelectScreen() {
   const cells = [];
   for (let level = 1; level <= LEVEL_COUNT; level++) {
     const unlocked = level <= highest;
-    const clearedLevel = level < highest;
+    // Off the real frontier, so the last level's tick appears once earned.
+    const clearedLevel = level < progress.highestUnlocked;
     cells.push(
       unlocked ? (
         <button
