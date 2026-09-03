@@ -97,7 +97,14 @@ export function MergeResultOverlay({
               {t('backHome')}
             </button>
           </div>
-          <ShareAction gameId="2048" outcome="played" />
+          <ShareAction
+            gameId="2048"
+            outcome="played"
+            details={[
+              { label: t('score'), value: String(session.score) },
+              { label: t('mergeBestTile'), value: String(largestTile(session.board)) },
+            ]}
+          />
         </div>
         <ResultAdSlot />
       </div>
@@ -135,7 +142,11 @@ export function MergeResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="2048" outcome="completed" />
+        <ShareAction
+          gameId="2048"
+          outcome="completed"
+          details={[{ label: t('score'), value: String(session.score) }]}
+        />
       </div>
       <ResultAdSlot />
     </div>

@@ -126,15 +126,20 @@ src/
   列挙することになる([WEB_VERSION.md](WEB_VERSION.md)「サイトクローム」)。
 - **結果画面の任意の共有**は共有の `ShareAction`(`ui/components/ShareAction.tsx`,
   issue #86)。向きは `ResultAdSlot` と同じ(ゲーム → `ui/components/`)で、
-  ゲームが渡すのは `gameId` と**嘘のない結果種別**(`completed` / `played`)の 2 つ
-  だけ。文面と URL は `services/share/message.ts`(Pure TypeScript)、share sheet と
-  clipboard は `services/share/share.ts` が持つ。スコア・時間・ヒント回数・
-  連続日数は**渡す口が無い** — ゲーム固有の共有フォーマッタを 30 個作らないのと、
-  結果の数値が端末の外へ出ないのは、同じ 1 つの設計から出ている。
+  ゲームが渡すのは `gameId`・**嘘のない結果種別**(`completed` / `played`)・
+  `details`(結果画面が表示しているのと同じ翻訳済みラベルと整形済み値、最大 3 件、
+  見出しの数字を先頭に)の 3 つ。文面は `services/share/message.ts`(Pure
+  TypeScript)、画像カードは `services/share/card.ts`、share sheet と clipboard は
+  `services/share/share.ts` が持つ。共有が言えるのは結果画面が言ったことだけ
+  (ゲームが同じ文字列を渡す) —— 履歴(自己ベスト・通算成績)は渡さない。
+  ゲーム固有の共有フォーマッタを 30 個作らないのは変わらない: 渡す文字列は
+  結果画面が既に整形しているものそのままである。
   `completed` を使ってよいのは勝ち・クリアが確定した結果だけで、敗北・引き分け・
   エンドレスの終了はすべて `played`。全 30 ゲームに置かれていることと、各タグが
   自分のゲーム id を名乗っていることは `src/test/shareWiring.test.ts` が
-  機械的に見る。共有は報酬・機能解放・再催促を一切生まない
+  機械的に見る。画像カードは同じ Web Share API(`files`)に乗り、
+  `navigator.canShare({ files })` が偽を返す環境では文面のみの共有に落ちる。
+  共有は報酬・機能解放・再催促を一切生まない
   ([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「初期リリースで実装しないもの」)。
 - Analytics / Remote Config / トラッキングのサービスは**アプリの成果物に
   存在しない**(初期リリースで削除済み)。Web 版のページ解析は実装済みで、

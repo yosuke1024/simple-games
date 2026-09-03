@@ -25,6 +25,13 @@
  * two — and if a device is ever found where the sheet does not open, the
  * plugin can be added then, against evidence, rather than pre-emptively.
  *
+ * The picture card (card.ts) rides this same API rather than a second one:
+ * `navigator.canShare({ files })` is the standard feature test for whether a
+ * target can take a file, so it is asked before a file is ever offered, and
+ * everywhere it says no — an older WebView, a target that only takes text —
+ * the text-only rung below runs exactly as it did before the card existed.
+ * Nothing regresses on a platform that cannot take a file.
+ *
  * NOTHING IS COUNTED
  *
  * Not how often this is pressed, not which game, not whether the sheet was
@@ -44,9 +51,17 @@ import { shareMessageAsText, type ShareMessage } from './message';
  */
 export type ShareResult = 'shared' | 'dismissed' | 'copied' | 'unavailable';
 
-/** A cancelled share sheet. Firefox reports it as AbortError too. */
+/**
+ * A cancelled share sheet. Firefox reports it as AbortError too. Read the
+ * name structurally rather than through `instanceof Error`: the sheet rejects
+ * with a DOMException, and a WebView (or a cross-realm one) does not always
+ * put Error on that prototype chain — and mistaking a "no" for a failure here
+ * would open a second sheet right after the player closed the first.
+ */
 function isDismissal(error: unknown): boolean {
-  return error instanceof Error && error.name === 'AbortError';
+  return (
+    typeof error === 'object' && error !== null && 'name' in error && error.name === 'AbortError'
+  );
 }
 
 /**
@@ -98,13 +113,14 @@ async function copyLink(message: ShareMessage): Promise<ShareResult> {
 }
 
 /**
- * Opens the share sheet, or copies the link, or does nothing.
- *
- * Call it straight from the click handler: `navigator.share` needs the user
- * activation of the gesture that started it, and nothing is awaited before it
- * here so that activation is still in hand when the sheet is asked for.
+ * The text-only rung: the share sheet with `{ text, url }`, or the clipboard
+ * ladder when there is no sheet or it fails for anything but a dismissal.
+ * This is the whole of `shareGame` before the picture card existed, kept as
+ * its own function because the picture rung above it falls back to exactly
+ * this — a target that cannot or will not take a file gets what a browser
+ * without file sharing gets, not a worse experience for having one.
  */
-export async function shareGame(message: ShareMessage): Promise<ShareResult> {
+async function shareText(message: ShareMessage): Promise<ShareResult> {
   const data: ShareData = { text: message.text, url: message.url };
   const share = typeof navigator !== 'undefined' ? navigator.share : undefined;
   if (share && (navigator.canShare?.(data) ?? true)) {
@@ -121,4 +137,38 @@ export async function shareGame(message: ShareMessage): Promise<ShareResult> {
     }
   }
   return copyLink(message);
+}
+
+/**
+ * Opens the share sheet, or copies the link, or does nothing.
+ *
+ * Call it straight from the click handler: `navigator.share` needs the user
+ * activation of the gesture that started it, and nothing is awaited before it
+ * here so that activation is still in hand when the sheet is asked for. That
+ * includes drawing `card`: it has to already exist by the time this runs
+ * (card.ts is synchronous for the same reason).
+ *
+ * `card` is optional and defaults to none, so every caller from before the
+ * picture card existed is still calling this the same way.
+ */
+export async function shareGame(
+  message: ShareMessage,
+  card: File | null = null,
+): Promise<ShareResult> {
+  const share = typeof navigator !== 'undefined' ? navigator.share : undefined;
+  if (share && card) {
+    const data: ShareData = { files: [card], text: message.text, url: message.url };
+    if (navigator.canShare?.(data)) {
+      try {
+        await share.call(navigator, data);
+        return 'shared';
+      } catch (error) {
+        if (isDismissal(error)) return 'dismissed';
+        // A target that accepted the feature test but refused the file
+        // anyway — falls through to the text-only rung below, same as a
+        // platform that never claimed to take files in the first place.
+      }
+    }
+  }
+  return shareText(message);
 }

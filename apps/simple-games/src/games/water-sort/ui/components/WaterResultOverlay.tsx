@@ -4,6 +4,7 @@
  * it while playing would be a clock counting up at someone thinking. Hints
  * are a fact, never a deduction: they were free (§8).
  */
+import type { ShareDetail } from '@/services/share/message';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
@@ -45,6 +46,15 @@ export function WaterResultOverlay({
   // hold counts, not bests (§6「フリープレイ」) — so its card states the run
   // and stops.
   const records = session.mode === 'free' ? null : lastResult;
+
+  // Same facts the card shows; hints only when the card shows them.
+  const details: ShareDetail[] = [
+    { label: t('movesLabel'), value: String(session.moveCount) },
+    { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+  ];
+  if (session.hintCount > 0) {
+    details.push({ label: t('waterHintsUsed'), value: String(session.hintCount) });
+  }
 
   return (
     <div className="overlay overlay-result">
@@ -120,7 +130,7 @@ export function WaterResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="water-sort" outcome="completed" />
+        <ShareAction gameId="water-sort" outcome="completed" details={details} />
       </div>
       <ResultAdSlot />
     </div>

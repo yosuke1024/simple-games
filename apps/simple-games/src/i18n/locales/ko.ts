@@ -117,6 +117,8 @@ export const ko: Messages = {
   shareCleared: 'Simple Games에서 {game}을(를) 클리어했습니다.',
   sharePlayed: 'Simple Games에서 {game}을(를) 플레이했습니다.',
   shareInvite: '브라우저에서 바로 즐길 수 있습니다.',
+  shareChallenge: '도전해 보시겠어요?',
+  shareCardCleared: '클리어!',
   shareCopied: '링크를 복사했습니다',
 
   // ---- Arcade (Brick Breaker / Sky Fighter) ----

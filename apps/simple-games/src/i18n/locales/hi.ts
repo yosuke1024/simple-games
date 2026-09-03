@@ -117,6 +117,8 @@ export const hi: Messages = {
   shareCleared: 'मैंने Simple Games पर {game} पूरा किया।',
   sharePlayed: 'मैंने Simple Games पर {game} खेला।',
   shareInvite: 'इसे सीधे ब्राउज़र में खेला जा सकता है।',
+  shareChallenge: 'क्या आप भी आज़माएँगे?',
+  shareCardCleared: 'पूरा हुआ!',
   shareCopied: 'लिंक कॉपी हो गया',
 
   // ---- Arcade (Brick Breaker / Sky Fighter) ----

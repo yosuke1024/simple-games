@@ -118,6 +118,8 @@ export const ptBR: Messages = {
   shareCleared: 'Completei {game} no Simple Games.',
   sharePlayed: 'Joguei {game} no Simple Games.',
   shareInvite: 'Dá para jogar direto no navegador.',
+  shareChallenge: 'Quer tentar também?',
+  shareCardCleared: 'Concluído!',
   shareCopied: 'Link copiado',
 
   // ---- Arcade (Brick Breaker / Sky Fighter) ----

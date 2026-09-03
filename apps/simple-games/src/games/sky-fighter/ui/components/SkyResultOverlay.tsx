@@ -77,7 +77,16 @@ export function SkyResultOverlay({ result, onRetry, onHome }: SkyResultOverlayPr
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="sky-fighter" outcome={cleared ? 'completed' : 'played'} />
+        <ShareAction
+          gameId="sky-fighter"
+          outcome={cleared ? 'completed' : 'played'}
+          // Stage and score are earned whether or not the run cleared, so a
+          // failed run shares the same two facts as a cleared one.
+          details={[
+            { label: t('sfStageReached'), value: String(result.stage) },
+            { label: t('score'), value: String(result.score) },
+          ]}
+        />
       </div>
       <ResultAdSlot />
     </div>

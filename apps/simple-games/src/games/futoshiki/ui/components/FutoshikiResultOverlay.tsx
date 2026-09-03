@@ -114,7 +114,15 @@ export function FutoshikiResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="futoshiki" outcome="completed" />
+        <ShareAction
+          gameId="futoshiki"
+          outcome="completed"
+          details={[
+            { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+            { label: t('futoshikiMistakes'), value: String(session.mistakeCount) },
+            { label: t('futoshikiHintsUsed'), value: String(session.hintCount) },
+          ]}
+        />
       </div>
       <ResultAdSlot />
     </div>

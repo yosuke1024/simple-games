@@ -4,6 +4,7 @@
  * while playing would be a clock counting up at someone thinking. Hints are
  * a fact, never a deduction: they were free (§8).
  */
+import type { ShareDetail } from '@/services/share/message';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
@@ -32,6 +33,15 @@ export function SolitaireResultOverlay({
   // The completed foundations get their beat before the card covers them (§12).
   const revealed = useResultReveal(session.status === 'won');
   if (!revealed) return null;
+
+  // Same facts the card shows; hints only when the card shows them.
+  const details: ShareDetail[] = [
+    { label: t('movesLabel'), value: String(session.moveCount) },
+    { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+  ];
+  if (session.hintCount > 0) {
+    details.push({ label: t('solHintsUsed'), value: String(session.hintCount) });
+  }
 
   return (
     <div className="overlay overlay-result">
@@ -119,7 +129,7 @@ export function SolitaireResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="solitaire" outcome="completed" />
+        <ShareAction gameId="solitaire" outcome="completed" details={details} />
       </div>
       <ResultAdSlot />
     </div>

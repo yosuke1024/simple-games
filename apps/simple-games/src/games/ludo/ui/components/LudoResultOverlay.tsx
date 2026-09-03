@@ -100,7 +100,13 @@ export function LudoResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="ludo" outcome={status === 'won' ? 'completed' : 'played'} />
+        {/* No per-run figure is worth sending here — pawns home is a standing
+            among three, not a summary, and the record note is history. */}
+        <ShareAction
+          gameId="ludo"
+          outcome={status === 'won' ? 'completed' : 'played'}
+          details={[]}
+        />
       </div>
       {/* Shared with Hearts, Mahjong and Bubble Pop: the every-third-result
           cadence is one counter across the whole session, so a game that

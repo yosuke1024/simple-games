@@ -68,9 +68,12 @@ export function ConnectFourResultOverlay({
             {t('backHome')}
           </button>
         </div>
+        {/* No per-run figure appears on this overlay — only the record note,
+            which a share may never repeat — so there is nothing to send. */}
         <ShareAction
           gameId="connect-four"
           outcome={session.status === 'won' ? 'completed' : 'played'}
+          details={[]}
         />
       </div>
       <ResultAdSlot />

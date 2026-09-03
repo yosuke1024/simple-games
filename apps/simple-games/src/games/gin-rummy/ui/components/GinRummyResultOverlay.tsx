@@ -83,7 +83,16 @@ export function GinRummyResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="gin-rummy" outcome={won ? 'completed' : 'played'} />
+        {/* The final scores only — the per-hand decider line above is history
+            for this match, not a fact the share line may repeat. */}
+        <ShareAction
+          gameId="gin-rummy"
+          outcome={won ? 'completed' : 'played'}
+          details={[
+            { label: t('ginYou'), value: String(lastResult.mine) },
+            { label: t('ginCpu'), value: String(lastResult.theirs) },
+          ]}
+        />
       </div>
       <ResultAdSlot />
     </div>

@@ -119,6 +119,8 @@ export const de: Messages = {
   shareCleared: 'Ich habe {game} bei Simple Games geschafft.',
   sharePlayed: 'Ich habe {game} bei Simple Games gespielt.',
   shareInvite: 'Direkt im Browser spielbar.',
+  shareChallenge: 'Schaffst du es auch?',
+  shareCardCleared: 'Geschafft!',
   shareCopied: 'Link kopiert',
 
   // ---- Arcade (Brick Breaker / Sky Fighter) ----

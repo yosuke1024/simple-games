@@ -9,6 +9,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
+import type { ShareDetail } from '@/services/share/message';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { MAX_LEVEL, type MahjongSession } from '../../game';
@@ -36,6 +37,11 @@ export function MahjongResultOverlay({
 
   const hasNextLevel =
     session.mode === 'level' && session.level !== null && session.level < MAX_LEVEL;
+
+  const details: ShareDetail[] = [
+    { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+    { label: t('mahjongHintsUsed'), value: String(session.hintCount) },
+  ];
 
   return (
     <div className="overlay overlay-result">
@@ -97,7 +103,7 @@ export function MahjongResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="mahjong-solitaire" outcome="completed" />
+        <ShareAction gameId="mahjong-solitaire" outcome="completed" details={details} />
       </div>
       <ResultAdSlot />
     </div>

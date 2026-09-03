@@ -68,7 +68,13 @@ export function GomokuResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="gomoku" outcome={session.status === 'won' ? 'completed' : 'played'} />
+        {/* No per-run figure is shown here — only the standing record note,
+            which is history and never shared. */}
+        <ShareAction
+          gameId="gomoku"
+          outcome={session.status === 'won' ? 'completed' : 'played'}
+          details={[]}
+        />
       </div>
       <ResultAdSlot />
     </div>

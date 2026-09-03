@@ -11,6 +11,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
+import type { ShareDetail } from '@/services/share/message';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { MAX_LEVEL, type KakuroSession } from '../../game';
@@ -44,6 +45,12 @@ export function KakuroResultOverlay({
   // A free board's "next" is another board at the same tier; a level's is the
   // next level; a daily has neither, and the retry leads.
   const hasNext = hasNextLevel || session.mode === 'free';
+
+  const details: ShareDetail[] = [
+    { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+    { label: t('kakuroMistakes'), value: String(session.mistakeCount) },
+    { label: t('kakuroHintsUsed'), value: String(session.hintCount) },
+  ];
 
   return (
     <div className="overlay overlay-result">
@@ -113,7 +120,7 @@ export function KakuroResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction gameId="kakuro" outcome="completed" />
+        <ShareAction gameId="kakuro" outcome="completed" details={details} />
       </div>
       <ResultAdSlot />
     </div>
