@@ -90,7 +90,23 @@ export function applySolveToProgress(progress: Progress, session: FutoshikiSessi
     return record(next.dailySeconds, session.dailyDate);
   }
 
+  // A free board (§9) has no level and no date: progress is left as it was.
   return { progress: next, isNewBestTime: false, bestSeconds: seconds };
+}
+
+/**
+ * The record this run is measured against — the board's best before the run
+ * is booked — or null when there is none yet (§10). Read before
+ * `applySolveToProgress`, which is what moves the record. A free board has no
+ * board to keep one for; its record is the size's, and the caller reads that
+ * off the statistics (§9).
+ */
+export function previousBestFor(progress: Progress, session: FutoshikiSession): number | null {
+  if (session.mode === 'level' && session.level !== null) {
+    return progress.bestSeconds[String(session.level)] ?? null;
+  }
+  if (session.dailyDate !== null) return progress.dailySeconds[session.dailyDate] ?? null;
+  return null;
 }
 
 /** How many levels have been solved — shown on the statistics screen. */

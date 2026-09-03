@@ -2,6 +2,9 @@ import type { FutoshikiMessages } from './en';
 
 export const tr: FutoshikiMessages = {
   futoshikiName: 'Futoshiki',
+  futoshikiTier_easy: 'Kolay',
+  futoshikiTier_medium: 'Orta',
+  futoshikiTier_hard: 'Zor',
   futoshikiBoardLabel: 'Futoshiki tahtası, {size} çarpı {size}',
   futoshikiCellEmpty: 'Boş, satır {row}, sütun {col}',
   futoshikiCellEntry: '{value}, satır {row}, sütun {col}',

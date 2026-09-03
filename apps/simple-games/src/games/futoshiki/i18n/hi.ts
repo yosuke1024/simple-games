@@ -2,6 +2,9 @@ import type { FutoshikiMessages } from './en';
 
 export const hi: FutoshikiMessages = {
   futoshikiName: 'Futoshiki',
+  futoshikiTier_easy: 'आसान',
+  futoshikiTier_medium: 'मध्यम',
+  futoshikiTier_hard: 'कठिन',
   futoshikiBoardLabel: 'Futoshiki बोर्ड, {size} गुणा {size}',
   futoshikiCellEmpty: 'खाली, पंक्ति {row}, स्तंभ {col}',
   futoshikiCellEntry: '{value}, पंक्ति {row}, स्तंभ {col}',

@@ -56,13 +56,21 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
     'tk.flags',
     'tk.prefs',
   ],
-  // Six, where Takuzu has five: this game keeps one setting across boards —
-  // whether a digit that disagrees with the answer is marked as it lands
-  // (docs/FUTOSHIKI_RULES.md §5, §11).
-  futoshiki: ['ft.saveGame', 'ft.saveDaily', 'ft.stats', 'ft.progress', 'ft.flags', 'ft.prefs'],
-  // Six as well, and for the same one reason: the mistake-highlight toggle is
-  // the only thing this game remembers across boards (docs/KAKURO_RULES.md
-  // §5, §11).
+  // Seven: the free slot, and a prefs that keeps two settings across boards —
+  // whether a digit that disagrees with the answer is marked as it lands,
+  // and the Free Play tier (docs/FUTOSHIKI_RULES.md §5, §9, §11).
+  futoshiki: [
+    'ft.saveGame',
+    'ft.saveDaily',
+    'ft.saveFree',
+    'ft.stats',
+    'ft.progress',
+    'ft.flags',
+    'ft.prefs',
+  ],
+  // Seven as well, for the same two reasons: the mistake-highlight toggle and
+  // the Free Play tier are what this game remembers across boards
+  // (docs/KAKURO_RULES.md §5, §9, §11).
   kakuro: [
     'kk.saveGame',
     'kk.saveDaily',

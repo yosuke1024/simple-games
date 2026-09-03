@@ -147,7 +147,8 @@ export function isConstraint(value: unknown, size: Size): value is Constraint {
   return constraintAxis({ less: less as number, greater: greater as number }, size) !== null;
 }
 
-export type GameMode = 'level' | 'daily';
+/** The level list, the daily, or a free board at a chosen tier (§9). */
+export type GameMode = 'level' | 'daily' | 'free';
 
 /** There is no losing a Futoshiki — no mistake limit, no lives (§2, §14). */
 export type GameStatus = 'playing' | 'solved';

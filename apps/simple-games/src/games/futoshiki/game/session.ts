@@ -29,7 +29,7 @@ import {
   type Violations,
 } from './engine';
 import { generatePuzzle } from './generator';
-import { levelSeed, sizeForLevel, specForLevel } from './levels';
+import { FREE_TIER_LEVEL, levelSeed, sizeForLevel, specForLevel, type FreeTier } from './levels';
 import { findHint, type Hint } from './solver';
 import type { Constraint, Digit, GameMode, GameStatus, Size } from './types';
 
@@ -43,10 +43,16 @@ export interface FutoshikiSession {
   readonly mode: GameMode;
   readonly seed: string;
   readonly size: Size;
-  /** Local YYYY-MM-DD for daily mode, null for level mode. */
+  /** Local YYYY-MM-DD for daily mode, null otherwise. */
   readonly dailyDate: string | null;
-  /** 1..100 for level mode, null for daily. */
+  /** 1..100 for level mode, null for the daily and for free play. */
   readonly level: number | null;
+  /**
+   * The tier a free board was drawn at (§9「フリープレイ」), null otherwise.
+   * The seed pins the board; the tier says which level's parameters it was
+   * drawn with, which is what a restart from the same seed has to know.
+   */
+  readonly freeTier: FreeTier | null;
   /** The one answer the puzzle admits — what a mistake is measured against. */
   readonly solution: readonly number[];
   /** The signs, in reading order (§1). A hint names one by its position here. */
@@ -78,25 +84,21 @@ export const mistakesOf = (session: FutoshikiSession): ReadonlySet<number> =>
 export const remainingOf = (session: FutoshikiSession, digit: Digit): number =>
   remainingForDigit(session.board, session.size, digit);
 
+/** What names a session before its board exists: the mode, and where it came from. */
+type Identity = Pick<
+  FutoshikiSession,
+  'mode' | 'seed' | 'size' | 'dailyDate' | 'level' | 'freeTier'
+>;
+
 function baseSession(
-  mode: GameMode,
-  seed: string,
-  size: Size,
-  dailyDate: string | null,
-  level: number | null,
-  solution: readonly number[],
-  constraints: readonly Constraint[],
-  givens: readonly number[],
+  identity: Identity,
+  puzzle: ReturnType<typeof generatePuzzle>,
 ): FutoshikiSession {
   return {
-    mode,
-    seed,
-    size,
-    dailyDate,
-    level,
-    solution,
-    constraints,
-    board: createBoard(givens),
+    ...identity,
+    solution: puzzle.solution,
+    constraints: puzzle.constraints,
+    board: createBoard(puzzle.givens),
     history: [],
     status: 'playing',
     mistakeCount: 0,
@@ -109,40 +111,57 @@ function baseSession(
 export function createLevelSession(level: number): FutoshikiSession {
   const size = sizeForLevel(level);
   const seed = levelSeed(level);
-  const puzzle = generatePuzzle(seed, size, specForLevel(level));
   return baseSession(
-    'level',
-    seed,
-    size,
-    null,
-    level,
-    puzzle.solution,
-    puzzle.constraints,
-    puzzle.givens,
+    { mode: 'level', seed, size, dailyDate: null, level, freeTier: null },
+    generatePuzzle(seed, size, specForLevel(level)),
   );
 }
 
 /** A fresh (or restarted) daily game for a local YYYY-MM-DD date (§9). */
 export function createDailySession(dateString: string): FutoshikiSession {
   const seed = dailySeed(dateString);
-  const puzzle = generatePuzzle(seed, DAILY_SIZE, DAILY_SPEC);
   return baseSession(
-    'daily',
-    seed,
-    DAILY_SIZE,
-    dateString,
-    null,
-    puzzle.solution,
-    puzzle.constraints,
-    puzzle.givens,
+    { mode: 'daily', seed, size: DAILY_SIZE, dailyDate: dateString, level: null, freeTier: null },
+    generatePuzzle(seed, DAILY_SIZE, DAILY_SPEC),
+  );
+}
+
+/**
+ * A token that makes one free board's seed its own (§9「フリープレイ」). Free
+ * play has no level number and no date to seed from, so a new game gets a new
+ * board — while the seed still pins that board down completely, which is what
+ * makes "retry the same board" exact and the saved game restorable.
+ */
+export function newSeedToken(now: number = Date.now(), random: () => number = Math.random): string {
+  return `${now.toString(36)}-${Math.floor(random() * 0xffffff).toString(36)}`;
+}
+
+export const freeSeed = (token: string): string => `futoshiki-free-${token}`;
+
+/**
+ * A fresh free board at a chosen tier — new unless a seed pins an old one. The
+ * tier is a representative level's parameters (§9): the size, sign count and
+ * givens count of level 10, 50 or 95, with a seed of its own.
+ */
+export function createFreeSession(
+  tier: FreeTier,
+  seed: string = freeSeed(newSeedToken()),
+): FutoshikiSession {
+  const level = FREE_TIER_LEVEL[tier];
+  const size = sizeForLevel(level);
+  return baseSession(
+    { mode: 'free', seed, size, dailyDate: null, level: null, freeTier: tier },
+    generatePuzzle(seed, size, specForLevel(level)),
   );
 }
 
 /** Rebuilds the same puzzle from scratch (Restart). */
 export function restartSession(session: FutoshikiSession): FutoshikiSession {
-  return session.mode === 'level' && session.level !== null
-    ? createLevelSession(session.level)
-    : createDailySession(session.dailyDate ?? '');
+  if (session.mode === 'level' && session.level !== null) return createLevelSession(session.level);
+  if (session.mode === 'free' && session.freeTier !== null) {
+    return createFreeSession(session.freeTier, session.seed);
+  }
+  return createDailySession(session.dailyDate ?? '');
 }
 
 /**

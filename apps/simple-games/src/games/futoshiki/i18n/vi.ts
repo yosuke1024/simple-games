@@ -2,6 +2,9 @@ import type { FutoshikiMessages } from './en';
 
 export const vi: FutoshikiMessages = {
   futoshikiName: 'Futoshiki',
+  futoshikiTier_easy: 'Dễ',
+  futoshikiTier_medium: 'Vừa',
+  futoshikiTier_hard: 'Khó',
   futoshikiBoardLabel: 'Bàn Futoshiki, {size} nhân {size}',
   futoshikiCellEmpty: 'Trống, hàng {row}, cột {col}',
   futoshikiCellEntry: '{value}, hàng {row}, cột {col}',

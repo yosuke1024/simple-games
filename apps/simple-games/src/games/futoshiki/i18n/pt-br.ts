@@ -2,6 +2,9 @@ import type { FutoshikiMessages } from './en';
 
 export const ptBR: FutoshikiMessages = {
   futoshikiName: 'Futoshiki',
+  futoshikiTier_easy: 'Fácil',
+  futoshikiTier_medium: 'Médio',
+  futoshikiTier_hard: 'Difícil',
   futoshikiBoardLabel: 'Tabuleiro de Futoshiki, {size} por {size}',
   futoshikiCellEmpty: 'Vazia, linha {row}, coluna {col}',
   futoshikiCellEntry: '{value}, linha {row}, coluna {col}',

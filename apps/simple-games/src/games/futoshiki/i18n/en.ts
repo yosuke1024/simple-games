@@ -22,6 +22,14 @@
  */
 export const en = {
   futoshikiName: 'Futoshiki',
+  /**
+   * Free Play's tiers (docs/FUTOSHIKI_RULES.md §9「フリープレイ」). This
+   * game has no tiers of its own — a tier here names a representative
+   * level's parameters — so the three words are the usual three.
+   */
+  futoshikiTier_easy: 'Easy',
+  futoshikiTier_medium: 'Medium',
+  futoshikiTier_hard: 'Hard',
   futoshikiBoardLabel: 'Futoshiki board, {size} by {size}',
   futoshikiCellEmpty: 'Empty, row {row}, column {col}',
   futoshikiCellEntry: '{value}, row {row}, column {col}',

@@ -5,6 +5,8 @@
 import { describe, expect, it } from 'vitest';
 import { adjacentPairs } from './generator';
 import {
+  FREE_TIER_LEVEL,
+  FREE_TIERS,
   MAX_LEVEL,
   clampLevel,
   givensForLevel,
@@ -100,6 +102,16 @@ describe('levels (§9)', () => {
         expect(share(band.from)).toBeLessThan(share(previous.from));
       }
     }
+  });
+
+  /**
+   * A free tier is a level's parameters, not a new set of numbers (§9
+   * 「フリープレイ」): the three representative levels are pinned so a
+   * reshuffle of the table cannot quietly move what "hard" means.
+   */
+  it('names a representative level for each free tier', () => {
+    expect(FREE_TIER_LEVEL).toEqual({ easy: 10, medium: 50, hard: 95 });
+    expect(FREE_TIERS.map((tier) => sizeForLevel(FREE_TIER_LEVEL[tier]))).toEqual([4, 6, 7]);
   });
 
   it('clamps and seeds deterministically', () => {
