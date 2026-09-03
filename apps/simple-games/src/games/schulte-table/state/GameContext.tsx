@@ -52,6 +52,7 @@ import {
   applyGameStart,
   applyMisses,
   applyPlayTime,
+  previousBestFor,
 } from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats';
@@ -59,6 +60,8 @@ export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats'
 export interface LastResult {
   readonly isNewBest: boolean;
   readonly bestSeconds: number;
+  /** The record before this round, or null on the first clear (§10). */
+  readonly previousBestSeconds: number | null;
   readonly seconds: number;
   readonly misses: number;
 }
@@ -181,11 +184,14 @@ export function SchulteProvider({
         recordGameCompleted();
       }
 
+      // Read before the record moves: what this round is measured against.
+      const previousBestSeconds = previousBestFor(progressRef.current, next);
       const outcome = applyClearToProgress(progressRef.current, next);
       persistProgress(outcome.progress);
       setLastResult({
         isNewBest: outcome.isNewBest,
         bestSeconds: outcome.bestSeconds,
+        previousBestSeconds,
         seconds: next.elapsedSeconds,
         misses: next.missCount,
       });

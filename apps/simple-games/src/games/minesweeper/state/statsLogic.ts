@@ -74,6 +74,18 @@ export function applyWin(stats: Stats, session: MinesweeperSession): WinOutcome 
 }
 
 /**
+ * The record this run is measured against — the difficulty's or the day's
+ * fastest win before the run is booked — or null when there is none yet (§9).
+ * Read before `applyWin`, which is what moves the record.
+ */
+export function previousBestFor(stats: Stats, session: MinesweeperSession): number | null {
+  if (session.mode === 'daily' && session.dailyDate !== null) {
+    return stats.dailyTimes[session.dailyDate] ?? null;
+  }
+  return stats[session.difficulty].bestSeconds;
+}
+
+/**
  * Wins over games played, 0..1, or null before the first game. A fact, shown
  * plainly (§9) — with no target attached to it.
  */

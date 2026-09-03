@@ -75,11 +75,7 @@ export function applyPlayTime(stats: Stats, bucket: StatsBucket, seconds: number
  * through `applyCleared` if it is ever finished. Booking at both points would
  * count them twice.
  */
-export function applyDiscardedMisses(
-  stats: Stats,
-  bucket: StatsBucket,
-  misses: number,
-): Stats {
+export function applyDiscardedMisses(stats: Stats, bucket: StatsBucket, misses: number): Stats {
   if (misses <= 0) return stats;
   const next = clone(stats);
   next[bucket].totalMisses += misses;
@@ -124,6 +120,19 @@ export function applyClearToProgress(progress: Progress, session: QuickMathSessi
   }
 
   return { progress: next, isNewBest: false, bestSeconds: seconds };
+}
+
+/**
+ * The record this set is measured against — the level's or the day's best
+ * before the set is booked — or null when there is none yet (§10). Read
+ * before `applyClearToProgress`, which is what moves the record.
+ */
+export function previousBestFor(progress: Progress, session: QuickMathSession): number | null {
+  if (session.mode === 'level' && session.level !== null) {
+    return progress.bestSeconds[String(session.level)] ?? null;
+  }
+  if (session.dailyDate !== null) return progress.dailySeconds[session.dailyDate] ?? null;
+  return null;
 }
 
 /** How many levels have been finished — shown in Statistics. */

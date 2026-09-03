@@ -48,7 +48,13 @@ import {
   type Progress,
   type Stats,
 } from '../storage/schemas';
-import { applyCleared, applyClearToProgress, applyGameStart, applyPlayTime } from './statsLogic';
+import {
+  applyCleared,
+  applyClearToProgress,
+  applyGameStart,
+  applyPlayTime,
+  previousBestFor,
+} from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats';
 
@@ -58,6 +64,8 @@ export interface LastResult {
   /** True when this clear beat the time the player had before. */
   readonly isNewBestTime: boolean;
   readonly bestSeconds: number;
+  /** The board's record before this run, or null on its first clear (§9). */
+  readonly previousBestSeconds: number | null;
 }
 
 export interface MahjongContextValue {
@@ -175,6 +183,8 @@ export function MahjongProvider({
       bookedRef.current = next.elapsedSeconds;
       persistStats(applyCleared(applyPlayTime(statsRef.current, unbooked)));
       recordGameCompleted();
+      // Read before the record moves: what this run is measured against.
+      const previousBestSeconds = previousBestFor(progressRef.current, next);
       const outcome = applyClearToProgress(progressRef.current, next);
       persistProgress(outcome.progress);
       setLastResult({
@@ -182,6 +192,7 @@ export function MahjongProvider({
         hints: next.hintCount,
         isNewBestTime: outcome.isNewBestTime,
         bestSeconds: outcome.bestSeconds,
+        previousBestSeconds,
       });
     },
     [persistProgress, persistStats, putSession],

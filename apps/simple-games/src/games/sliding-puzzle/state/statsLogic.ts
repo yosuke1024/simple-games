@@ -118,6 +118,29 @@ export function applySolveToProgress(
   };
 }
 
+/**
+ * The records this run is measured against — the board's fewest moves and
+ * fastest time before the run is booked — null for each there is none of yet
+ * (§9). Read before `applySolveToProgress`, which is what moves them.
+ */
+export function previousBestsFor(
+  progress: Progress,
+  session: SlidingPuzzleSession,
+): { moves: number | null; seconds: number | null } {
+  if (session.mode === 'level' && session.level !== null) {
+    const key = String(session.level);
+    return { moves: progress.bestMoves[key] ?? null, seconds: progress.bestSeconds[key] ?? null };
+  }
+  if (session.dailyDate !== null) {
+    const date = session.dailyDate;
+    return {
+      moves: progress.dailyMoves[date] ?? null,
+      seconds: progress.dailySeconds[date] ?? null,
+    };
+  }
+  return { moves: null, seconds: null };
+}
+
 /** How many levels have been solved — shown on the level list. */
 export function solvedLevelCount(progress: Progress): number {
   return Object.keys(progress.bestMoves).length;

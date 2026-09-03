@@ -44,13 +44,21 @@ import {
   type Progress,
   type Stats,
 } from '../storage/schemas';
-import { applyCleared, applyClearToProgress, applyGameStart, applyPlayTime } from './statsLogic';
+import {
+  applyCleared,
+  applyClearToProgress,
+  applyGameStart,
+  applyPlayTime,
+  previousBestFor,
+} from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats';
 
 export interface LastResult {
   readonly isNewBest: boolean;
   readonly bestSeconds: number;
+  /** The record before this round, or null on the first clear (§11). */
+  readonly previousBestSeconds: number | null;
   readonly seconds: number;
   /** True when the level was done at the first attempt (§5). */
   readonly firstTry: boolean;
@@ -170,11 +178,14 @@ export function RecallProvider({
         recordGameCompleted();
       }
 
+      // Read before the record moves: what this round is measured against.
+      const previousBestSeconds = previousBestFor(progressRef.current, next);
       const outcome = applyClearToProgress(progressRef.current, next);
       persistProgress(outcome.progress);
       setLastResult({
         isNewBest: outcome.isNewBest,
         bestSeconds: outcome.bestSeconds,
+        previousBestSeconds,
         seconds: next.elapsedSeconds,
         firstTry: next.attempt === 0,
       });

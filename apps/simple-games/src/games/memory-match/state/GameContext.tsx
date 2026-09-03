@@ -37,7 +37,7 @@ import {
 } from '../game';
 import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
 import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
-import { applyGameStart, applyPlayTime, applySolved } from './statsLogic';
+import { applyGameStart, applyPlayTime, applySolved, previousBestsFor } from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'daily' | 'game' | 'stats';
 
@@ -49,6 +49,9 @@ export interface LastResult {
   readonly isNewBestTime: boolean;
   readonly bestMoves: number;
   readonly bestSeconds: number;
+  /** The records before this run, null for each it is the first of (§9). */
+  readonly previousBestMoves: number | null;
+  readonly previousBestSeconds: number | null;
   readonly moves: number;
   readonly seconds: number;
 }
@@ -147,6 +150,8 @@ export function MemoryProvider({
       void clearSavedGame(next.mode);
       const unbooked = Math.max(0, next.elapsedSeconds - bookedRef.current);
       bookedRef.current = next.elapsedSeconds;
+      // Read before the records move: what this run is measured against.
+      const previous = previousBestsFor(statsRef.current, next);
       const outcome = applySolved(applyPlayTime(statsRef.current, next.difficulty, unbooked), next);
       persistStats(outcome.stats);
       recordGameCompleted();
@@ -155,6 +160,8 @@ export function MemoryProvider({
         isNewBestTime: outcome.isNewBestTime,
         bestMoves: outcome.bestMoves,
         bestSeconds: outcome.bestSeconds,
+        previousBestMoves: previous.moves,
+        previousBestSeconds: previous.seconds,
         moves: next.moveCount,
         seconds: next.elapsedSeconds,
       });

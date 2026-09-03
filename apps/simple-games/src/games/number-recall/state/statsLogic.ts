@@ -93,6 +93,19 @@ export function applyClearToProgress(progress: Progress, session: RecallSession)
   return { progress: next, isNewBest: false, bestSeconds: seconds };
 }
 
+/**
+ * The record this round is measured against — the level's or the day's best
+ * before the round is booked — or null when there is none yet (§11). Read
+ * before `applyClearToProgress`, which is what moves the record.
+ */
+export function previousBestFor(progress: Progress, session: RecallSession): number | null {
+  if (session.mode === 'level' && session.level !== null) {
+    return progress.bestSeconds[String(session.level)] ?? null;
+  }
+  if (session.dailyDate !== null) return progress.dailySeconds[session.dailyDate] ?? null;
+  return null;
+}
+
 /** How many levels have been finished — shown in Statistics. */
 export function clearedLevelCount(progress: Progress): number {
   return Object.keys(progress.bestSeconds).length;
