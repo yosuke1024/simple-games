@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { KVStore } from '../storage/kv';
 import { createMemoryKV } from '../storage/kv';
 import { STORAGE_KEYS } from '../storage/schemas';
 import {
   initAdRemoval,
+  isAdRemovalActive,
   isAdRemovalPurchased,
   isPurchaseAvailable,
   purchaseAdRemoval,
@@ -77,6 +79,23 @@ describe('ad removal entitlement', () => {
     expect(isAdRemovalPurchased()).toBe(true);
   });
 
+  it('an ordinary launch without a purchase still gets a banner', async () => {
+    await initAdRemoval(createMemoryKV());
+    expect(isAdRemovalActive()).toBe(false);
+  });
+
+  it('a cached purchase takes effect for the launch', async () => {
+    const kv = createMemoryKV({
+      [STORAGE_KEYS.iap]: JSON.stringify({
+        schemaVersion: 1,
+        adRemovalPurchased: true,
+        purchasedAt: 123,
+      }),
+    });
+    await initAdRemoval(kv);
+    expect(isAdRemovalActive()).toBe(true);
+  });
+
   it('a throwing store backend never breaks the app', async () => {
     await initAdRemoval(createMemoryKV());
     setAdRemovalStore(
@@ -88,5 +107,43 @@ describe('ad removal entitlement', () => {
     expect(await purchaseAdRemoval()).toBe(false);
     expect(await restoreAdRemoval()).toBe(false);
     expect(isAdRemovalPurchased()).toBe(false);
+  });
+});
+
+/**
+ * An entitlement that cannot be read is not the same as one that says "not
+ * purchased", and the app must not treat it as such: the reader is a `KVStore`
+ * whose contract allows it to fail, and answering "no purchase" would put ads
+ * in front of someone who paid to remove them.
+ */
+describe('an entitlement that cannot be read (issue #96)', () => {
+  const unreadableKV = (): KVStore => ({
+    get: () => Promise.reject(new Error('storage unavailable')),
+    set: () => Promise.resolve(),
+    remove: () => Promise.resolve(),
+  });
+
+  it('does not initialize the ad SDK: the launch falls to the no-banner side', async () => {
+    await initAdRemoval(unreadableKV());
+    expect(isAdRemovalActive()).toBe(true);
+  });
+
+  it('still does not claim the player bought anything', async () => {
+    await initAdRemoval(unreadableKV());
+    // What the settings screen reads. Falling closed on ads must not turn
+    // into a purchase nobody made.
+    expect(isAdRemovalPurchased()).toBe(false);
+  });
+
+  it('never throws: boot cannot be taken down by a failed read', async () => {
+    await expect(initAdRemoval(unreadableKV())).resolves.toBeUndefined();
+  });
+
+  it('stops guessing once a restore answers', async () => {
+    await initAdRemoval(unreadableKV());
+    setAdRemovalStore(fakeStore({ restore: () => Promise.resolve(true) }));
+    expect(await restoreAdRemoval()).toBe(true);
+    expect(isAdRemovalPurchased()).toBe(true);
+    expect(isAdRemovalActive()).toBe(true);
   });
 });

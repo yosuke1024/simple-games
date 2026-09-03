@@ -16,7 +16,7 @@
  */
 import type { KVStore } from '../storage/kv';
 import { preferencesKV } from '../storage/kv';
-import { loadRecord, saveRecord } from '../storage/repo';
+import { loadRecordWithStatus, saveRecord } from '../storage/repo';
 import { iapSchema, type IapState } from '../storage/schemas';
 
 /** Play Console managed product ID (not a secret; must exist in the console). */
@@ -46,6 +46,12 @@ const unavailableStore: AdRemovalStore = {
 
 let store: AdRemovalStore = unavailableStore;
 let state: IapState = iapSchema.defaultValue();
+/**
+ * Whether `state` is what the device actually holds. False for exactly one
+ * reason — the entitlement could not be read — which is not the same as
+ * "nothing is purchased" (see `isAdRemovalActive`).
+ */
+let entitlementKnown = true;
 let kvStore: KVStore = preferencesKV;
 
 const listeners = new Set<() => void>();
@@ -64,15 +70,46 @@ export function setAdRemovalStore(next: AdRemovalStore): void {
   notify();
 }
 
-/** Loads the cached entitlement at boot. Never blocks the app. */
+/**
+ * Loads the cached entitlement at boot. Never blocks the app, and never
+ * throws: a store that cannot be read is recorded as unread here rather than
+ * escaping into the boot sequence, where nobody could tell it from "this
+ * player has not bought anything".
+ */
 export async function initAdRemoval(kv: KVStore = preferencesKV): Promise<void> {
   kvStore = kv;
-  state = await loadRecord(iapSchema, kv);
+  const { value, readable } = await loadRecordWithStatus(iapSchema, kv);
+  state = value;
+  entitlementKnown = readable;
   notify();
 }
 
+/**
+ * Whether this player owns the entitlement. The settings screen asks this,
+ * because it must not claim a purchase nobody made. Ad-side callers ask
+ * `isAdRemovalActive()`, which answers a different question.
+ */
 export function isAdRemovalPurchased(): boolean {
   return state.adRemovalPurchased;
+}
+
+/**
+ * Whether the ad removal takes effect on this launch — what `app/boot.ts`
+ * asks before initializing the ad SDK, and what `BannerSlot` asks before
+ * reserving its strip. Deliberately NOT the negation of
+ * `isAdRemovalPurchased()`.
+ *
+ * A launch whose entitlement read failed knows nothing about what the player
+ * owns, and the two ways of being wrong do not cost the same. Guessing "not
+ * purchased" shows a banner to someone who paid to remove it — the one thing
+ * the purchase promises, and nothing on screen or in the log would say why.
+ * Guessing "purchased" costs a free player one launch without a banner. So an
+ * unread entitlement falls to the no-banner side (issue #96), the same
+ * direction consent already falls in when UMP gives no answer
+ * (`services/ads/consent.ts`): without an answer, nothing is requested.
+ */
+export function isAdRemovalActive(): boolean {
+  return state.adRemovalPurchased || !entitlementKnown;
 }
 
 export function isPurchaseAvailable(): boolean {
@@ -85,6 +122,9 @@ export function getAdRemovalPrice(): Promise<string | null> {
 
 function markPurchased(): void {
   state = { schemaVersion: 1, adRemovalPurchased: true, purchasedAt: Date.now() };
+  // The store just answered, so a launch that started without a readable
+  // cache is no longer guessing.
+  entitlementKnown = true;
   void saveRecord(iapSchema, state, kvStore);
   notify();
 }
@@ -128,6 +168,7 @@ export function subscribeAdRemoval(listener: () => void): () => void {
 export function resetAdRemovalForTesting(): void {
   store = unavailableStore;
   state = iapSchema.defaultValue();
+  entitlementKnown = true;
   kvStore = preferencesKV;
   listeners.clear();
 }
