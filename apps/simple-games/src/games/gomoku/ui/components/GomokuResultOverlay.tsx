@@ -7,6 +7,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
 import type { GomokuSession } from '../../game';
 import type { Stats } from '../../storage/schemas';
@@ -67,6 +68,7 @@ export function GomokuResultOverlay({
             {t('backHome')}
           </button>
         </div>
+        <ShareAction gameId="gomoku" outcome={session.status === 'won' ? 'completed' : 'played'} />
       </div>
       <ResultAdSlot />
     </div>

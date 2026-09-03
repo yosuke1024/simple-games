@@ -112,6 +112,14 @@ export const vi: Messages = {
   webAppPromptTitle: 'Chơi yên tĩnh hơn, hoàn toàn ngoại tuyến ngay từ lần mở đầu tiên.',
   webAppPromptBody: 'Ứng dụng mở ngay từ màn hình chính và lưu tiến độ của bạn trên thiết bị.',
 
+  // The optional share on a result screen. {game} is the registry title, a
+  // proper noun that is not translated; `cleared` is only used for a real win.
+  shareAction: 'Chia sẻ',
+  shareCleared: 'Tôi đã hoàn thành {game} trên Simple Games.',
+  sharePlayed: 'Tôi đã chơi {game} trên Simple Games.',
+  shareInvite: 'Bạn có thể chơi ngay trong trình duyệt.',
+  shareCopied: 'Đã sao chép liên kết',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Mạng: {n}',
   levelsCleared: 'Màn đã qua',

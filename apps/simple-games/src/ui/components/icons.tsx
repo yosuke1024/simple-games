@@ -150,3 +150,19 @@ export function IconCheck(props: SVGProps<SVGSVGElement>) {
     </Icon>
   );
 }
+
+/**
+ * Share: a link leaving the device. The arrow out of an open box is the one
+ * share mark both platforms' users read the same way — Android's three-node
+ * graph means nothing on iOS, and iOS's own glyph is a system asset we may
+ * not draw.
+ */
+export function IconShare(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M12 15V3" />
+      <path d="m8 7 4-4 4 4" />
+      <path d="M20 14v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5" />
+    </Icon>
+  );
+}

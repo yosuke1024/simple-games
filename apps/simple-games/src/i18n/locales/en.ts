@@ -130,6 +130,17 @@ export const en = {
   webAppPromptTitle: 'A quieter way to play, offline from the first launch.',
   webAppPromptBody: 'The app opens from your home screen and keeps your progress on your device.',
 
+  // The optional share on a result screen (issue #86). The message is the
+  // game's name and a link at that game, and nothing else: no score, no time,
+  // no streak. `cleared` is only ever used where the player actually won —
+  // every other ending, loss and draw and endless run alike, says `played`.
+  // {game} is the registry title, a proper noun that is not translated.
+  shareAction: 'Share',
+  shareCleared: 'I cleared {game} on Simple Games.',
+  sharePlayed: 'I played {game} on Simple Games.',
+  shareInvite: 'You can play it right in your browser.',
+  shareCopied: 'Link copied',
+
   // ---- Arcade (shared by Brick Breaker and Sky Fighter) ----
   livesLeft: 'Lives: {n}',
   levelsCleared: 'Levels cleared',

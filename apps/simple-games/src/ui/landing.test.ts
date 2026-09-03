@@ -13,12 +13,8 @@ describe('gameLandingUrl', () => {
     expect(gameLandingUrl('block-puzzle', 'pt-br')).toBe(
       'https://pixapps.ai/simple-games/games/block-puzzle/pt-br/',
     );
-    expect(gameLandingUrl('gomoku', 'fr')).toBe(
-      'https://pixapps.ai/simple-games/games/gomoku/fr/',
-    );
-    expect(gameLandingUrl('kakuro', 'th')).toBe(
-      'https://pixapps.ai/simple-games/games/kakuro/th/',
-    );
+    expect(gameLandingUrl('gomoku', 'fr')).toBe('https://pixapps.ai/simple-games/games/gomoku/fr/');
+    expect(gameLandingUrl('kakuro', 'th')).toBe('https://pixapps.ai/simple-games/games/kakuro/th/');
     expect(gameLandingUrl('water-sort', 'vi')).toBe(
       'https://pixapps.ai/simple-games/games/water-sort/vi/',
     );

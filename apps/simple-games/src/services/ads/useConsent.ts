@@ -8,9 +8,5 @@ import { isPrivacyOptionsRequired, subscribeConsent } from './consent';
  * the world, where the row must not appear at all.
  */
 export function usePrivacyOptionsRequired(): boolean {
-  return useSyncExternalStore(
-    subscribeConsent,
-    isPrivacyOptionsRequired,
-    isPrivacyOptionsRequired,
-  );
+  return useSyncExternalStore(subscribeConsent, isPrivacyOptionsRequired, isPrivacyOptionsRequired);
 }

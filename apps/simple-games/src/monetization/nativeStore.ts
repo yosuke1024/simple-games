@@ -168,8 +168,7 @@ const nativeStore: AdRemovalStore = {
       const { purchases } = await NativePurchases.getPurchases(rules?.purchasesQuery());
       return purchases.some(
         (purchase) =>
-          purchase.productIdentifier === AD_REMOVAL_PRODUCT_ID &&
-          isEntitlingTransaction(purchase),
+          purchase.productIdentifier === AD_REMOVAL_PRODUCT_ID && isEntitlingTransaction(purchase),
       );
     } catch {
       return false;

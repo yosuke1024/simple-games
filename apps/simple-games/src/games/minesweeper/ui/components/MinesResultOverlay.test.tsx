@@ -4,6 +4,7 @@
  * once, and the margin against it only when a win set one.
  */
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { settingsSchema } from '@/storage/schemas';
@@ -34,7 +35,10 @@ function renderOverlay(session: MinesweeperSession, lastResult: LastResult | nul
   return { onRetry, onNewBoard, onHome };
 }
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe('MinesResultOverlay', () => {
   it('shows nothing while the game is still in progress', () => {
@@ -96,5 +100,48 @@ describe('MinesResultOverlay', () => {
     expect(screen.getByRole('alertdialog', { name: 'Mine opened' })).toBeInTheDocument();
     expect(screen.getByText(/1:40/)).toBeInTheDocument();
     expect(screen.queryByText(/^[+−±]/)).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Minesweeper is the plainest test of the share's one honesty rule (issue #86):
+ * the same card ends both ways, so a message that read "cleared" after a mine
+ * would be the product telling somebody's friends a small lie in their name.
+ */
+describe('the share on that card', () => {
+  it('says "cleared" after a win and "played" after a mine', async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { share });
+
+    renderOverlay(endedSession('won', 40), null);
+    await userEvent.click(screen.getByRole('button', { name: 'Share' }));
+    expect(share.mock.calls[0]?.[0].text).toContain('I cleared Minesweeper');
+
+    cleanup();
+    renderOverlay(endedSession('lost', 40), null);
+    await userEvent.click(screen.getByRole('button', { name: 'Share' }));
+    expect(share.mock.calls[1]?.[0].text).toContain('I played Minesweeper');
+    expect(share.mock.calls[1]?.[0].text).not.toContain('cleared');
+  });
+
+  it('sends the game and its link, and no number from the run', async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { share });
+
+    renderOverlay(endedSession('won', 125), {
+      won: true,
+      seconds: 125,
+      hints: 1,
+      isNewBest: true,
+      bestSeconds: 125,
+      previousBestSeconds: 200,
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Share' }));
+
+    const [{ text, url }] = share.mock.calls[0] as [{ text: string; url: string }];
+    expect(url).toBe('https://pixapps.ai/simple-games/play/?game=minesweeper');
+    // The card on screen shows 2:05, a hint count and a new record; the
+    // message carries none of it.
+    expect(text).not.toMatch(/\d/);
   });
 });

@@ -12,6 +12,7 @@
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { largestTile, type Game2048Session } from '../../game';
 import type { LastResult } from '../../state/GameContext';
@@ -96,6 +97,7 @@ export function MergeResultOverlay({
               {t('backHome')}
             </button>
           </div>
+          <ShareAction gameId="2048" outcome="played" />
         </div>
         <ResultAdSlot />
       </div>
@@ -133,6 +135,7 @@ export function MergeResultOverlay({
             {t('backHome')}
           </button>
         </div>
+        <ShareAction gameId="2048" outcome="completed" />
       </div>
       <ResultAdSlot />
     </div>

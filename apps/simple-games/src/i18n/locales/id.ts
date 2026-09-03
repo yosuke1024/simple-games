@@ -113,6 +113,14 @@ export const id: Messages = {
   webAppPromptBody:
     'Aplikasi bisa dibuka langsung dari layar beranda dan menyimpan progres kamu di perangkat.',
 
+  // The optional share on a result screen. {game} is the registry title, a
+  // proper noun that is not translated; `cleared` is only used for a real win.
+  shareAction: 'Bagikan',
+  shareCleared: 'Saya menyelesaikan {game} di Simple Games.',
+  sharePlayed: 'Saya bermain {game} di Simple Games.',
+  shareInvite: 'Bisa langsung dimainkan di browser.',
+  shareCopied: 'Tautan disalin',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Nyawa: {n}',
   levelsCleared: 'Level selesai',

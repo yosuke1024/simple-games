@@ -13,6 +13,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { HOME_PROGRESS, SEATS, YOU, type LudoSession, type Seat } from '../../game';
 import type { LastResult } from '../../state/GameContext';
@@ -99,6 +100,7 @@ export function LudoResultOverlay({
             {t('backHome')}
           </button>
         </div>
+        <ShareAction gameId="ludo" outcome={status === 'won' ? 'completed' : 'played'} />
       </div>
       {/* Shared with Hearts, Mahjong and Bubble Pop: the every-third-result
           cadence is one counter across the whole session, so a game that

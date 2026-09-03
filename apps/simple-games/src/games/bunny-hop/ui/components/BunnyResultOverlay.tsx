@@ -10,6 +10,7 @@
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
 import type { LastResult } from '../../state/GameContext';
 
@@ -77,6 +78,7 @@ export function BunnyResultOverlay({ result, onRunAgain, onHome }: BunnyResultOv
             {t('backHome')}
           </button>
         </div>
+        <ShareAction gameId="bunny-hop" outcome="played" />
       </div>
       <ResultAdSlot />
     </div>

@@ -12,7 +12,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { resolveLocale, translate, type Locale, type MessageKey, type TranslateVars } from '../i18n';
+import {
+  resolveLocale,
+  translate,
+  type Locale,
+  type MessageKey,
+  type TranslateVars,
+} from '../i18n';
 import { setVibrationEnabled } from '../services/haptics';
 import { setSoundEnabled } from '../services/sound';
 import { saveRecord } from '../storage/repo';

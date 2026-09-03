@@ -111,6 +111,14 @@ export const hi: Messages = {
   webAppPromptTitle: 'और भी शांति से खेलें — पहली बार खोलने से ही पूरी तरह ऑफ़लाइन।',
   webAppPromptBody: 'ऐप आपकी होम स्क्रीन से खुलता है और आपकी प्रगति आपके डिवाइस में सहेजता है।',
 
+  // The optional share on a result screen. {game} is the registry title, a
+  // proper noun that is not translated; `cleared` is only used for a real win.
+  shareAction: 'साझा करें',
+  shareCleared: 'मैंने Simple Games पर {game} पूरा किया।',
+  sharePlayed: 'मैंने Simple Games पर {game} खेला।',
+  shareInvite: 'इसे सीधे ब्राउज़र में खेला जा सकता है।',
+  shareCopied: 'लिंक कॉपी हो गया',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'जीवन: {n}',
   levelsCleared: 'पूरे किए स्तर',

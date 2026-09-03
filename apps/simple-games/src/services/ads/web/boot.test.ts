@@ -89,10 +89,7 @@ describe('initWebAds with 忍者AdMax as the network', () => {
 
     // jsdom's viewport is desktop-wide, so the 728×90 frame wins.
     expect(document.querySelectorAll('.web-admax-anchor')).toHaveLength(1);
-    expect(admaxBar()?.querySelector('.admax-ads')).toHaveAttribute(
-      'data-admax-id',
-      'anchor-wide',
-    );
+    expect(admaxBar()?.querySelector('.admax-ads')).toHaveAttribute('data-admax-id', 'anchor-wide');
     expect((window as AdMaxWindow).admaxads).toEqual([{ admax_id: 'anchor-wide', type: 'banner' }]);
     expect(admaxScript()).not.toBeNull();
     expect(adsScript()).toBeNull();
@@ -135,13 +132,8 @@ describe('initWebAds AdMax anchor fallback', () => {
     failAdSenseLoader();
     // jsdom's viewport is desktop-wide, so the 728×90 frame wins.
     expect(document.querySelectorAll('.web-admax-anchor')).toHaveLength(1);
-    expect(admaxBar()?.querySelector('.admax-ads')).toHaveAttribute(
-      'data-admax-id',
-      'anchor-wide',
-    );
-    expect((window as AdMaxWindow).admaxads).toEqual([
-      { admax_id: 'anchor-wide', type: 'banner' },
-    ]);
+    expect(admaxBar()?.querySelector('.admax-ads')).toHaveAttribute('data-admax-id', 'anchor-wide');
+    expect((window as AdMaxWindow).admaxads).toEqual([{ admax_id: 'anchor-wide', type: 'banner' }]);
     expect(admaxScript()).not.toBeNull();
   });
 

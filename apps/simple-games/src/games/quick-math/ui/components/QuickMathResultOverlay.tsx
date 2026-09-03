@@ -12,6 +12,7 @@
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { MAX_LEVEL, type QuickMathSession } from '../../game';
@@ -100,6 +101,7 @@ export function QuickMathResultOverlay({
             {t('backHome')}
           </button>
         </div>
+        <ShareAction gameId="quick-math" outcome="completed" />
       </div>
       <ResultAdSlot />
     </div>

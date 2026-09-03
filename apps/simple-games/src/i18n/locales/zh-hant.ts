@@ -111,6 +111,14 @@ export const zhHant: Messages = {
   webAppPromptTitle: '更安靜地玩，從第一次啟動就完全離線。',
   webAppPromptBody: 'App 可以從主畫面直接開啟，並把你的進度儲存在這台裝置上。',
 
+  // The optional share on a result screen. {game} is the registry title, a
+  // proper noun that is not translated; `cleared` is only used for a real win.
+  shareAction: '分享',
+  shareCleared: '我在 Simple Games 裡通關了 {game}。',
+  sharePlayed: '我在 Simple Games 裡玩了 {game}。',
+  shareInvite: '在瀏覽器裡就能直接玩。',
+  shareCopied: '已複製連結',
+
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: '生命：{n}',
   levelsCleared: '已通過關卡',

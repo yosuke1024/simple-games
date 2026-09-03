@@ -7,6 +7,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
+import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
 import { YOU, type GinRummySession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
@@ -82,6 +83,7 @@ export function GinRummyResultOverlay({
             {t('backHome')}
           </button>
         </div>
+        <ShareAction gameId="gin-rummy" outcome={won ? 'completed' : 'played'} />
       </div>
       <ResultAdSlot />
     </div>
