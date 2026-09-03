@@ -10,7 +10,18 @@ import { describe, expect, it } from 'vitest';
 import { GAMES } from './registry';
 
 const RELEASED_KEYS: Record<string, readonly string[]> = {
-  sudoku: ['sd.saveGame', 'sd.saveDaily', 'sd.stats', 'sd.progress', 'sd.flags', 'sd.prefs'],
+  // saveFree is the third suspended-game slot, added with Free Play
+  // (2026-09-03, docs/SUDOKU_RULES.md §9「フリープレイ」). Purely additive: no
+  // released key changed meaning or moved, so nothing is stranded.
+  sudoku: [
+    'sd.saveGame',
+    'sd.saveDaily',
+    'sd.saveFree',
+    'sd.stats',
+    'sd.progress',
+    'sd.flags',
+    'sd.prefs',
+  ],
   solitaire: ['so.saveGame', 'so.saveDaily', 'so.stats', 'so.flags', 'so.prefs'],
   'spider-solitaire': ['ss.saveGame', 'ss.saveDaily', 'ss.stats', 'ss.flags', 'ss.prefs'],
   freecell: ['fc.saveGame', 'fc.saveDaily', 'fc.stats', 'fc.flags'],
@@ -19,14 +30,32 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   minesweeper: ['ms.saveGame', 'ms.saveDaily', 'ms.stats', 'ms.flags', 'ms.prefs'],
   'bubble-pop': ['bu.stats', 'bu.progress', 'bu.flags'],
   'brick-breaker': ['bb.stats', 'bb.progress', 'bb.flags'],
-  nonogram: ['ng.saveGame', 'ng.saveDaily', 'ng.stats', 'ng.progress', 'ng.flags', 'ng.prefs'],
+  nonogram: [
+    'ng.saveGame',
+    'ng.saveDaily',
+    'ng.saveFree',
+    'ng.stats',
+    'ng.progress',
+    'ng.flags',
+    'ng.prefs',
+  ],
   // Five, not six: no per-game setting to keep, and none of the record is a
   // board — a save is identity plus the removal order
   // (docs/MAHJONG_SOLITAIRE_RULES.md §10).
   'mahjong-solitaire': ['mj.saveGame', 'mj.saveDaily', 'mj.stats', 'mj.progress', 'mj.flags'],
-  // Five, not six: Takuzu has no per-game setting to keep
-  // (docs/TAKUZU_RULES.md §4, §9).
-  takuzu: ['tk.saveGame', 'tk.saveDaily', 'tk.stats', 'tk.progress', 'tk.flags'],
+  // Seven since Free Play (2026-09-03): the free slot, and a prefs record that
+  // exists for one thing only — the tier the Free Play picker last stood on
+  // (docs/TAKUZU_RULES.md §7「フリープレイ」, §11). Before that Takuzu kept five,
+  // having no per-game setting.
+  takuzu: [
+    'tk.saveGame',
+    'tk.saveDaily',
+    'tk.saveFree',
+    'tk.stats',
+    'tk.progress',
+    'tk.flags',
+    'tk.prefs',
+  ],
   // Six, where Takuzu has five: this game keeps one setting across boards —
   // whether a digit that disagrees with the answer is marked as it lands
   // (docs/FUTOSHIKI_RULES.md §5, §11).
