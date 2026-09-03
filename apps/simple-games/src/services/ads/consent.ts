@@ -6,6 +6,10 @@
  * Hard rules implemented here (docs/ADS_POLICY.md「同意(UMP)」):
  * - No ad is requested before UMP reports `canRequestAds`. Failing to obtain
  *   consent means no ads — never ads without an answer.
+ * - A consent form that cannot be shown still records where UMP requires a
+ *   privacy options entry point, so Settings keeps the withdrawal route in the
+ *   region that required the form. The `canRequestAds` sitting beside it in
+ *   that unanswered response is not recorded (issue #95).
  * - Consent never gates the game. Every failure resolves quietly and the app
  *   behaves exactly like a build with no ads at all.
  * - Offline sends nothing and schedules nothing. There is no retry loop: the
@@ -52,6 +56,15 @@ function notify(): void {
 
 function record(info: AdmobConsentInfo): void {
   adsAllowed = info.canRequestAds;
+  recordPrivacyOptions(info);
+}
+
+/**
+ * The half of {@link record} that survives a form the player never answered:
+ * whether a withdrawal entry point is required is a property of the region
+ * they are in, not of an answer they gave.
+ */
+function recordPrivacyOptions(info: AdmobConsentInfo): void {
   privacyOptionsRequired =
     String(info.privacyOptionsRequirementStatus) === PRIVACY_OPTIONS_REQUIRED;
   notify();
@@ -81,9 +94,30 @@ async function runConsentFlow(): Promise<boolean> {
   try {
     let info = await AdMob.requestConsentInfo();
     if (info.isConsentFormAvailable && info.status === AdmobConsentStatus.REQUIRED) {
-      // Showing the form updates the same fields, so its answer replaces the
-      // pre-form one rather than being merged with it.
-      info = await AdMob.showConsentForm();
+      try {
+        // Showing the form updates the same fields, so its answer replaces the
+        // pre-form one rather than being merged with it.
+        info = await AdMob.showConsentForm();
+      } catch {
+        // The form could not be shown: it failed to load, there was no view
+        // controller to present it from, or UMP itself errored. The pre-form
+        // answer already carries `privacyOptionsRequirementStatus`, and
+        // dropping it hides the Settings row (`adPrivacyOptions`) exactly
+        // where a form was required — the EEA / UK, where withdrawing consent
+        // has to stay reachable. So that one field is kept (issue #95).
+        //
+        // Only that one. The same response's `canRequestAds` is dropped even
+        // when it is true, which UMP can report beside status = REQUIRED:
+        // honouring it would serve ads for a form the player never saw. Of the
+        // two readings — UMP's `canRequestAds` as the authority, and this
+        // module's "never ads without an answer"
+        // (docs/ADS_POLICY.md「同意(UMP)」) — the stricter one wins. It costs
+        // one launch of banner revenue in a rare failure; the other costs
+        // consent we could not show we were given. Ads are off for this launch
+        // only: the next one asks again.
+        recordPrivacyOptions(info);
+        return false;
+      }
     }
     record(info);
     return adsAllowed;
