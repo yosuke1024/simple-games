@@ -254,6 +254,14 @@ src/
 広げる(issue #93)。端末名や User-Agent では判定しない — iPad の Split View で
 幅が縮めば、幅だけを理由に Compact / Medium へ戻る。
 
+**ただし iOS の出荷バイナリは iPhone 専用である**(`TARGETED_DEVICE_FAMILY = 1`)。
+ここで書くワイド段階が実際に効くのは Web 版と大きめの端末幅であって、iPad
+アプリとしては配信していない。理由は能力ではなく検証で、iPad 実機での回転 /
+Split View / Stage Manager を一度も確認できておらず、Universal 化に App Store
+Connect が要求する 13 インチのスクリーンショットも用意していないため
+([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §4.7)。**CSS を消す話ではない** —
+戻すときは `project.pbxproj` の 1 行と `Info.plist` の 1 ブロックだけで足りる。
+
 | 段階 | 条件 | 方針 |
 | --- | --- | --- |
 | Compact | 600px 未満(基準) | 既存のスマホ縦積みを変えない |

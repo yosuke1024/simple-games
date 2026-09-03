@@ -168,6 +168,14 @@ bash .github/scripts/check-principles.sh
 - [ ] `xcodebuild -project ios/App/App.xcodeproj -scheme App` が通る(署名は
       Automatic + 開発チーム。配布用の署名・Archive は App Store Connect 側の
       作業と合わせて行う)
+- [ ] **`TARGETED_DEVICE_FAMILY = 1`(iPhone 専用)のままであること。**
+      `"1,2"` にした版を出すには、その前に (a) iPad 実機での回転・Split View・
+      Stage Manager の確認と、(b) 13 インチ iPad のスクリーンショット
+      (シミュレータ `iPad Pro 13-inch` の `xcrun simctl io … screenshot` が
+      2064×2752 = 要求サイズそのまま。**テスト広告が写らないビルドで撮る**)が要る。
+      Universal は 2026-08-30 に一度コードへ入ったが、この 2 つが揃うまで
+      バイナリとしては出さない([ARCHITECTURE.md](ARCHITECTURE.md)
+      「ワイド画面のレイアウト」)
 - [ ] iOS 実機でゲーム起動・全ゲームプレイが可能/初回起動からオフラインで
       ゲーム可能/機内モードで広告・consent の通信リトライが発生しない
 
