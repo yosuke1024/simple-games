@@ -104,6 +104,18 @@
         "target": "sha256:e2f8c957a74c36453944ec3d535101fdb04f4dc2e449165372acee993559aaa9",
         "reviewedOn": "2026-08-03",
         "by": "claude-blind-agent"
+      },
+      "webAppPromptTitle": {
+        "source": "sha256:6a32ed26c3824858398dba2eb95db9dc3043ed109fd1900e80bd17aee04ccd04",
+        "target": "sha256:a9f56483c12fdebcce008225c342e2006ee8677bcbbfe43830b4c87e7b191a66",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptBody": {
+        "source": "sha256:2bc122278939b29367a065ea7c8a88cb63a05676642a18a8af04e1bee265df75",
+        "target": "sha256:32648ede6e0445902e92e73287762e97de8d935bfc696a88ff24981aebd52a76",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
       }
     },
     "th": {
@@ -189,6 +201,18 @@
         "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
         "target": "sha256:0f7e1031857c265fe78c574cb0d4970954884a3f6c82c4339a80333ae33a0f58",
         "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptTitle": {
+        "source": "sha256:6a32ed26c3824858398dba2eb95db9dc3043ed109fd1900e80bd17aee04ccd04",
+        "target": "sha256:dc728f38d2db90549c9402afd61595b94ed5e7fb4fb8c14dce93db94449bdb78",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptBody": {
+        "source": "sha256:2bc122278939b29367a065ea7c8a88cb63a05676642a18a8af04e1bee265df75",
+        "target": "sha256:3844eaec5df7c0aeda1ad9a0a07b0b4462e1f23996575dd1b25f736ca4365dbc",
+        "reviewedOn": "2026-09-03",
         "by": "claude-blind-agent"
       }
     },
@@ -276,6 +300,18 @@
         "target": "sha256:007719e75221c987026a55120874d80f13c7595ee3c4283b90476b3fdc58c6aa",
         "reviewedOn": "2026-08-03",
         "by": "claude-blind-agent"
+      },
+      "webAppPromptTitle": {
+        "source": "sha256:6a32ed26c3824858398dba2eb95db9dc3043ed109fd1900e80bd17aee04ccd04",
+        "target": "sha256:b8eab2f5e5aedefe21028ed70d9c76797e79319c50fee43296d18d396cfe01e0",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptBody": {
+        "source": "sha256:2bc122278939b29367a065ea7c8a88cb63a05676642a18a8af04e1bee265df75",
+        "target": "sha256:c07d45076cd3b3627c12e473c86a9eb4ba1dc2b69e1520e40a159cb1fe6faf45",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
       }
     },
     "vi": {
@@ -361,6 +397,18 @@
         "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
         "target": "sha256:34508dc3ea3d43b940cecc5c2627297158d445528ee61be61d0ad008c35fa0a0",
         "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptTitle": {
+        "source": "sha256:6a32ed26c3824858398dba2eb95db9dc3043ed109fd1900e80bd17aee04ccd04",
+        "target": "sha256:192b0fdab8bd304afa9ef0269a8c42ec61b50cc7df8b479ce15412f9dd8c00fb",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptBody": {
+        "source": "sha256:2bc122278939b29367a065ea7c8a88cb63a05676642a18a8af04e1bee265df75",
+        "target": "sha256:2ad9497be2fb45d93fe341a794e9aaced1f3eb9a20edc90916a452583ecb288c",
+        "reviewedOn": "2026-09-03",
         "by": "claude-blind-agent"
       }
     },
@@ -448,6 +496,18 @@
         "target": "sha256:2e04543439b70c7ed2b19ce8a6be4339c8545072d91b09071876211b31b172a3",
         "reviewedOn": "2026-08-03",
         "by": "claude-blind-agent"
+      },
+      "webAppPromptTitle": {
+        "source": "sha256:6a32ed26c3824858398dba2eb95db9dc3043ed109fd1900e80bd17aee04ccd04",
+        "target": "sha256:9e5ea4a2561ef4f0bf65139a1b4d23edefcbd92ac1f9b5b2332ffdd3c8cc5fd7",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptBody": {
+        "source": "sha256:2bc122278939b29367a065ea7c8a88cb63a05676642a18a8af04e1bee265df75",
+        "target": "sha256:7587add5bfac3e6f4a48e5f0bd743d907d8aa2914a94816c0b01a010cee50cd9",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
       }
     },
     "zh-hans": {
@@ -533,6 +593,18 @@
         "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
         "target": "sha256:1106c2779c6a00a097f1f6d4777090f708a0b33ba5a842880da5628e3b11cf03",
         "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptTitle": {
+        "source": "sha256:6a32ed26c3824858398dba2eb95db9dc3043ed109fd1900e80bd17aee04ccd04",
+        "target": "sha256:bf094068443b6d174f9cd70e71f2d0dbee42b7cbdf466a20fd40cecec75de38e",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptBody": {
+        "source": "sha256:2bc122278939b29367a065ea7c8a88cb63a05676642a18a8af04e1bee265df75",
+        "target": "sha256:37f3b6fae42367406b43fd322e8af17638ed7a2a6f62df53c2a3545409a48d1e",
+        "reviewedOn": "2026-09-03",
         "by": "claude-blind-agent"
       }
     },
@@ -620,6 +692,18 @@
         "target": "sha256:424c5b1c2dbc0acfe63126ef5f5fd75feef9ea517cd554b40a95ebadf922b2f3",
         "reviewedOn": "2026-08-03",
         "by": "claude-blind-agent"
+      },
+      "webAppPromptTitle": {
+        "source": "sha256:6a32ed26c3824858398dba2eb95db9dc3043ed109fd1900e80bd17aee04ccd04",
+        "target": "sha256:f854ec1a70f154af13d6052f951c4f9b1ec72f33bfc3ea582f9eb18b8a44a2c7",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptBody": {
+        "source": "sha256:2bc122278939b29367a065ea7c8a88cb63a05676642a18a8af04e1bee265df75",
+        "target": "sha256:ba52db19adda7d15546cd87fabe84821450426ef0e8a62f323364dd1ee94c1af",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
       }
     },
     "es": {
@@ -705,6 +789,18 @@
         "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
         "target": "sha256:adcc5d609e375e235cbf3ba32c07ea5101599d15a6099df3e303525cadb780b9",
         "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptTitle": {
+        "source": "sha256:6a32ed26c3824858398dba2eb95db9dc3043ed109fd1900e80bd17aee04ccd04",
+        "target": "sha256:36b70a86a7fda743586896898f038d3aee715c5209e1cba4c658afd55a1181ed",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptBody": {
+        "source": "sha256:2bc122278939b29367a065ea7c8a88cb63a05676642a18a8af04e1bee265df75",
+        "target": "sha256:bedc6343b989b67b8def880077ed44b519db6a1958b50e43a82e63bd6172031b",
+        "reviewedOn": "2026-09-03",
         "by": "claude-blind-agent"
       }
     },
@@ -792,6 +888,18 @@
         "target": "sha256:765363781fdb42b308abd8dc6d0eee4db3124267f0bd62b407480762a59a09f6",
         "reviewedOn": "2026-08-03",
         "by": "claude-blind-agent"
+      },
+      "webAppPromptTitle": {
+        "source": "sha256:6a32ed26c3824858398dba2eb95db9dc3043ed109fd1900e80bd17aee04ccd04",
+        "target": "sha256:22c8bb49243dd75f220e0850196a5bf7c3ed5f285570994cd96291d483adb9a0",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptBody": {
+        "source": "sha256:2bc122278939b29367a065ea7c8a88cb63a05676642a18a8af04e1bee265df75",
+        "target": "sha256:e96f2457b792ec73635243326ab8297a4027424462b8ec10c8384ba72a6081fb",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
       }
     },
     "fr": {
@@ -877,6 +985,18 @@
         "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
         "target": "sha256:e34a9f204e3c689327c715d17a23f92db6abf62c7a9fa154e96dcda1acfe07d0",
         "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptTitle": {
+        "source": "sha256:6a32ed26c3824858398dba2eb95db9dc3043ed109fd1900e80bd17aee04ccd04",
+        "target": "sha256:aa13fa2fd5c9342e514b0370e09ad9ca5ee22c128141b13c9a29a790f292c2b3",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptBody": {
+        "source": "sha256:2bc122278939b29367a065ea7c8a88cb63a05676642a18a8af04e1bee265df75",
+        "target": "sha256:3277fc610175dd43201028601930459f2878021700292c38bf8435f3da4cda90",
+        "reviewedOn": "2026-09-03",
         "by": "claude-blind-agent"
       }
     },
@@ -964,6 +1084,18 @@
         "target": "sha256:a03bdcf0d00f5d34ee76db256b7787e717373bf1502e40f85f74c22d7cf7f996",
         "reviewedOn": "2026-08-03",
         "by": "claude-blind-agent"
+      },
+      "webAppPromptTitle": {
+        "source": "sha256:6a32ed26c3824858398dba2eb95db9dc3043ed109fd1900e80bd17aee04ccd04",
+        "target": "sha256:991db8358eb71b831d373aa7010d69bd82abe390812fcff28f994bb55ce55432",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptBody": {
+        "source": "sha256:2bc122278939b29367a065ea7c8a88cb63a05676642a18a8af04e1bee265df75",
+        "target": "sha256:d3c46662d079e764fb914362f12bf62f4975683af663f95877a55b25a64f2ca3",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
       }
     },
     "tr": {
@@ -1049,6 +1181,18 @@
         "source": "sha256:096917123f380de53189525c5a1197b16c87d52c39da6524c00122faf1b43d40",
         "target": "sha256:cc33a9a2439a5717f15284f1f74d11d4ad488590df5739e1bc0da37964d46bc6",
         "reviewedOn": "2026-08-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptTitle": {
+        "source": "sha256:6a32ed26c3824858398dba2eb95db9dc3043ed109fd1900e80bd17aee04ccd04",
+        "target": "sha256:c1bc6ea0d86b987eda82d67a8552abe8436ec3d1398a9c9b38e1fcbf9c4caaac",
+        "reviewedOn": "2026-09-03",
+        "by": "claude-blind-agent"
+      },
+      "webAppPromptBody": {
+        "source": "sha256:2bc122278939b29367a065ea7c8a88cb63a05676642a18a8af04e1bee265df75",
+        "target": "sha256:97e7d4365c9eebc0abee7d7d2ff24cebbbf89ea1939f0cc4a755c0d8ead774dc",
+        "reviewedOn": "2026-09-03",
         "by": "claude-blind-agent"
       }
     }
