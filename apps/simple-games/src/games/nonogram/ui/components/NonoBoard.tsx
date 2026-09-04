@@ -16,8 +16,22 @@
  * stroke, so a finger that wanders back over its own path does not unpick it.
  * Moves are measured against the grid's own rectangle rather than handled per
  * cell, because a captured pointer stops visiting the cells it passes over.
+ *
+ * Where there is a mouse, the right button crosses (issue #112) — the second
+ * mark without the mode the touch player needs. It is the one input that means
+ * the same thing whichever way X mode has the tap, because a player who
+ * reached for the right button asked for a cross, not for the other half of a
+ * mode. It draws nothing: strokes stay the left button's (§3).
  */
-import { memo, useCallback, useEffect, useRef, type CSSProperties, type PointerEvent } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  type CSSProperties,
+  type MouseEvent,
+  type PointerEvent,
+} from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import {
   colIndices,
@@ -94,8 +108,20 @@ export const NonoBoard = memo(function NonoBoard({
   const { size, marks, clues } = session;
 
   const timerRef = useRef<number | null>(null);
-  /** Set by a long press or a stroke, so the click that follows does nothing. */
-  const handledRef = useRef(false);
+  /**
+   * The cell a long press, a stroke, or a right click has already acted on, so
+   * the click that may follow does not act on it twice. The cell rather than a
+   * bare flag: a right click leaves no click behind on most platforms, and a
+   * mark that named no cell would sit there waiting to swallow an unrelated
+   * one.
+   */
+  const handledRef = useRef<number | null>(null);
+  /**
+   * How the press in progress arrived. Touch raises a context menu of its own
+   * at the end of a long press, and that one must not cross — the long press
+   * already has.
+   */
+  const pointerTypeRef = useRef('mouse');
   const cellsRef = useRef<HTMLDivElement | null>(null);
   const strokeRef = useRef<Stroke | null>(null);
 
@@ -167,11 +193,16 @@ export const NonoBoard = memo(function NonoBoard({
 
   const onPointerDown = useCallback(
     (event: PointerEvent<HTMLButtonElement>, index: number) => {
-      handledRef.current = false;
+      pointerTypeRef.current = event.pointerType;
+      // The right button crosses on its context menu below, and draws nothing.
+      // Arming a long press for it as well would act twice over one press —
+      // once each — and take the cross straight back off.
+      if (event.button !== 0) return;
+      handledRef.current = null;
       clearTimer();
       timerRef.current = window.setTimeout(() => {
         timerRef.current = null;
-        handledRef.current = true;
+        handledRef.current = index;
         secondary(index);
         // Held long enough to cross, and still down: a drag from here carries
         // on with what the long press just did, rather than painting over it.
@@ -234,7 +265,10 @@ export const NonoBoard = memo(function NonoBoard({
         clearTimer();
         fresh.unshift(stroke.origin);
       }
-      handledRef.current = true;
+      // The click a release leaves behind reaches a cell only as the one the
+      // press began on: capture retargets it there, and without capture a
+      // drag that ended elsewhere lands on the grid, which takes no clicks.
+      handledRef.current = stroke.origin;
       for (const index of fresh) stroke.visited.add(index);
       onStroke(fresh, stroke.mark);
     },
@@ -253,11 +287,49 @@ export const NonoBoard = memo(function NonoBoard({
     strokeRef.current = null;
   }, []);
 
-  const onClick = useCallback(
-    (index: number) => {
+  /**
+   * The right button (issue #112): the cross, either way round, whatever X
+   * mode says. It never paints and never starts a stroke — one press, one
+   * mark, the same one every time.
+   */
+  const onCellContextMenu = useCallback(
+    (event: MouseEvent<HTMLButtonElement>, index: number) => {
+      // Touch raises it at the end of a long press, which has crossed already;
+      // crossing here as well would take that cross straight back off.
+      if (pointerTypeRef.current === 'touch' || pointerTypeRef.current === 'pen') return;
+      // macOS raises it from the primary button (ctrl+click), so a long press
+      // may be armed, a stroke may be waiting on its first move, and a click
+      // may still follow: drop the first two, and mark the cell so the third
+      // paints nothing.
       clearTimer();
-      if (handledRef.current) {
-        handledRef.current = false;
+      strokeRef.current = null;
+      handledRef.current = index;
+      onCross(index);
+    },
+    [clearTimer, onCross],
+  );
+
+  /**
+   * No browser menu anywhere over the board. Bound to the board rather than to
+   * the cells because the gaps between them are a target too, and so are the
+   * clues: crossing fast with the right button, a click that misses a cell by
+   * a pixel would otherwise open the native menu over the board the player is
+   * reading.
+   */
+  const onBoardContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+  }, []);
+
+  const onClick = useCallback(
+    (event: MouseEvent<HTMLButtonElement>, index: number) => {
+      clearTimer();
+      // The mark is about the click a press leaves behind, and `detail` is the
+      // count of clicks in that press: a keyboard activation has none, and so
+      // is never the click the mark was left for. Without that, a right click
+      // — which most platforms never follow with a click — would leave its
+      // mark standing and swallow the Enter a keyboard player pressed next.
+      if (event.detail > 0 && handledRef.current === index) {
+        handledRef.current = null;
         return;
       }
       primary(index);
@@ -304,6 +376,7 @@ export const NonoBoard = memo(function NonoBoard({
       aria-label={t('nonoBoardLabel', { size })}
       data-size={size}
       style={{ '--nono-size': size } as CSSProperties}
+      onContextMenu={onBoardContextMenu}
     >
       <div className="nono-corner" aria-hidden="true" />
 
@@ -376,8 +449,8 @@ export const NonoBoard = memo(function NonoBoard({
               onPointerUp={clearTimer}
               onPointerLeave={clearTimer}
               onPointerCancel={clearTimer}
-              onContextMenu={(event) => event.preventDefault()}
-              onClick={() => onClick(index)}
+              onContextMenu={(event) => onCellContextMenu(event, index)}
+              onClick={(event) => onClick(event, index)}
             >
               {mark === CROSSED ? (
                 <span className="nono-glyph" aria-hidden="true">
