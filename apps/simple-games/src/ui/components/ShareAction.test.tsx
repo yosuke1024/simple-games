@@ -22,6 +22,7 @@ import { en } from '../../i18n/locales/en';
 import { SettingsProvider } from '../../state/SettingsContext';
 import { settingsSchema } from '../../storage/schemas';
 import { renderShareCard } from '../../services/share/card';
+import type { ShareCard } from '../../services/share/card';
 import type { ShareDetail } from '../../services/share/message';
 import { ShareAction } from './ShareAction';
 
@@ -144,7 +145,8 @@ describe('the share button', () => {
 describe('the picture card', () => {
   it('reaches the sheet as a file, alongside the same text and link', async () => {
     const file = new File([new Uint8Array([1, 2, 3])], 'card.png', { type: 'image/png' });
-    vi.mocked(renderShareCard).mockReturnValueOnce(file);
+    const card: ShareCard = { file, base64: 'AAEC', name: 'card.png' };
+    vi.mocked(renderShareCard).mockReturnValueOnce(card);
     const share = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', {
       share,

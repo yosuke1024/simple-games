@@ -8,7 +8,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { titleAccents } from '@simple-games/brand';
 import { GAMES } from '../../app/registry';
-import { accentKeyOf, renderShareCard, type ShareCardInput } from './card';
+import { accentKeyOf, renderShareCard, type ShareCard, type ShareCardInput } from './card';
 import type { ShareDetail } from './message';
 
 interface FillTextCall {
@@ -91,7 +91,7 @@ const baseInput: ShareCardInput = {
 describe('renderShareCard', () => {
   it('returns null and does not throw when there is no 2D context', () => {
     stubGetContext(null);
-    let result: File | null = null;
+    let result: ShareCard | null = null;
     expect(() => {
       result = renderShareCard(baseInput);
     }).not.toThrow();
@@ -106,17 +106,20 @@ describe('renderShareCard', () => {
     expect(renderShareCard(baseInput)).toBeNull();
   });
 
-  it('builds a PNG File and draws the title, the facts and the footer', () => {
+  it('builds a card and draws the title, the facts and the footer', () => {
     const ctx = createFakeContext();
     stubGetContext(ctx);
     stubToDataURL(() => TINY_PNG_DATA_URL);
 
-    const file = renderShareCard(baseInput);
+    const card = renderShareCard(baseInput);
 
-    expect(file).not.toBeNull();
-    expect(file?.name).toBe('simple-games-sudoku.png');
-    expect(file?.type).toBe('image/png');
-    expect(file?.size).toBeGreaterThan(0);
+    expect(card).not.toBeNull();
+    expect(card?.name).toBe('simple-games-sudoku.png');
+    expect(card?.base64.length).toBeGreaterThan(0);
+    expect(card?.file).not.toBeNull();
+    expect(card?.file?.name).toBe('simple-games-sudoku.png');
+    expect(card?.file?.type).toBe('image/png');
+    expect(card?.file?.size).toBeGreaterThan(0);
 
     const texts = ctx.calls.map((call) => call.text);
     expect(texts).toContain('Sudoku');
@@ -197,6 +200,28 @@ describe('renderShareCard', () => {
       const accent = titleAccents[accentKeyOf(game.id)];
       expect(accent.light, `${game.id} light`).toMatch(hex);
       expect(accent.onLight, `${game.id} onLight`).toMatch(hex);
+    }
+  });
+
+  it('still hands back the base64 when this WebView has no File constructor', () => {
+    stubGetContext(createFakeContext());
+    stubToDataURL(() => TINY_PNG_DATA_URL);
+
+    const OriginalFile = globalThis.File;
+    class ThrowingFile {
+      constructor() {
+        throw new Error('File is not implemented');
+      }
+    }
+    globalThis.File = ThrowingFile as unknown as typeof File;
+
+    try {
+      const card = renderShareCard(baseInput);
+      expect(card).not.toBeNull();
+      expect(card?.file).toBeNull();
+      expect(card?.base64.length).toBeGreaterThan(0);
+    } finally {
+      globalThis.File = OriginalFile;
     }
   });
 });

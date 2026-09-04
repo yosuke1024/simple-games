@@ -35,6 +35,26 @@ import { LANDING_BASE_URL, SERIES_NAME, seriesColors, titleAccents } from '@simp
 import { GAMES, type GameId } from '../../app/registry';
 import { shareTitleOf, usableDetails, type ShareDetail, type ShareOutcome } from './message';
 
+/**
+ * The drawn card, in the two shapes the two share paths need.
+ *
+ * `file` is what the Web Share API takes; `base64` is what the native share
+ * plugin needs, because on a device the picture travels as a file on disk
+ * rather than as an object in the page (share.ts). Drawing happens once and
+ * both shapes come out of the same canvas, so they cannot disagree.
+ *
+ * `file` alone is nullable: a WebView old enough to lack the `File`
+ * constructor still gets a perfectly good `base64`, and the native path — the
+ * one that platform actually uses — keeps working.
+ */
+export interface ShareCard {
+  file: File | null;
+  /** PNG bytes, base64, with no `data:` prefix. */
+  base64: string;
+  /** `simple-games-<game>.png` — the name the receiver sees. */
+  name: string;
+}
+
 export interface ShareCardInput {
   gameId: GameId;
   outcome: ShareOutcome;
@@ -119,8 +139,20 @@ function fitFont(
   return px;
 }
 
+/** The PNG as a `File`, or null where this WebView has no `File` to build. */
+function toFile(base64: string, name: string): File | null {
+  try {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new File([bytes], name, { type: 'image/png' });
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Draws the card and hands it back as a `File`, or `null` on any failure —
+ * Draws the card and hands it back, or `null` on any failure —
  * no `document`, `getContext('2d')` returning null (jsdom, and any WebView
  * that lied about canvas support), a `toDataURL` or `File` that throws.
  * Every ending here is a normal ending, the same rule share.ts is held to:
@@ -128,7 +160,7 @@ function fitFont(
  *
  * Call it synchronously, right before `shareGame` — see the header for why.
  */
-export function renderShareCard(input: ShareCardInput): File | null {
+export function renderShareCard(input: ShareCardInput): ShareCard | null {
   try {
     if (typeof document === 'undefined') return null;
     const canvas = document.createElement('canvas');
@@ -250,10 +282,8 @@ export function renderShareCard(input: ShareCardInput): File | null {
 
     const dataUrl = canvas.toDataURL('image/png');
     const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return new File([bytes], `simple-games-${gameId}.png`, { type: 'image/png' });
+    const name = `simple-games-${gameId}.png`;
+    return { file: toFile(base64, name), base64, name };
   } catch {
     return null;
   }

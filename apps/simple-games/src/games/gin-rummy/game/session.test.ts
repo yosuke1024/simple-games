@@ -320,6 +320,12 @@ describe('every position a match passes through survives the save', () => {
     return back !== null && encodeHand(back) === text;
   }
 
+  // 20 seconds, not the default 5. This sweep walks every position of 24 seeds
+  // per difficulty — over 10,000 of them — and it is deterministic: what it
+  // asserts is the work, never the clock (docs/SUDOKU_RULES.md §7 says the same
+  // of the generation-cost tests). Alone it finishes in about 2 seconds; run
+  // beside the rest of the suite it has crossed 5 on this machine three times,
+  // and a release gate that fails by coin-flip is a gate nobody reads.
   it('is a save that comes back, whatever route the hand took', () => {
     const routes = noRoutes();
     const lost: HandState[] = [];
@@ -376,7 +382,7 @@ describe('every position a match passes through survives the save', () => {
     for (const [route, count] of Object.entries(routes)) {
       expect(count, `the sweep never reached: ${route}`).toBeGreaterThan(0);
     }
-  });
+  }, 20_000);
 });
 
 describe('a finished match takes no more moves', () => {

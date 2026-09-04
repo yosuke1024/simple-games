@@ -137,8 +137,13 @@ src/
   `completed` を使ってよいのは勝ち・クリアが確定した結果だけで、敗北・引き分け・
   エンドレスの終了はすべて `played`。全 30 ゲームに置かれていることと、各タグが
   自分のゲーム id を名乗っていることは `src/test/shareWiring.test.ts` が
-  機械的に見る。画像カードは同じ Web Share API(`files`)に乗り、
-  `navigator.canShare({ files })` が偽を返す環境では文面のみの共有に落ちる。
+  機械的に見る。**共有シートの開き方はネイティブとブラウザで別**(2026-09-04):
+  アプリは `@capacitor/share` + `@capacitor/filesystem`(画像はキャッシュへ書いて
+  URL を渡す)、ブラウザは Web Share API の `files`。分けたのは好みではなく計測結果で、
+  **Android の WebView には `navigator.share` が存在しない**(WebView 148 /
+  `https://localhost` で `undefined`)。それまでの Android は共有シートが一度も
+  開かず、クリップボードへ落ちていた。プラグインが失敗した場合はブラウザ側の
+  梯子(Web Share → clipboard)へそのまま落ちるので、退化はしない。
   共有は報酬・機能解放・再催促を一切生まない
   ([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「初期リリースで実装しないもの」)。
 - Analytics / Remote Config / トラッキングのサービスは**アプリの成果物に
