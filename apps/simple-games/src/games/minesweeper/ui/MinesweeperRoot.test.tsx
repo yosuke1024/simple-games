@@ -245,10 +245,270 @@ describe('flag mode (§3)', () => {
     const target = shutCells()[0]!;
     vi.useFakeTimers();
     try {
-      fireEvent.pointerDown(target);
+      fireEvent.pointerDown(target, { button: 0, pointerType: 'touch' });
       act(() => vi.advanceTimersByTime(LONG_PRESS_MS + 20));
-      fireEvent.pointerUp(target);
-      fireEvent.click(target);
+      fireEvent.pointerUp(target, { button: 0, pointerType: 'touch' });
+      fireEvent.click(target, { button: 0, detail: 1 });
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(target.getAttribute('aria-label')).toMatch(/^Flagged/);
+  });
+
+  it('takes a flag back the same way, without opening the square', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    const target = shutCells()[0]!;
+    const label = target.getAttribute('aria-label')!;
+    const shut = shutCells().length;
+
+    /** One long press, and the click the finger leaves behind on the way up. */
+    const longPress = () => {
+      vi.useFakeTimers();
+      try {
+        fireEvent.pointerDown(target, { button: 0, pointerType: 'touch' });
+        act(() => vi.advanceTimersByTime(LONG_PRESS_MS + 20));
+        fireEvent.pointerUp(target, { button: 0, pointerType: 'touch' });
+        fireEvent.click(target, { button: 0, detail: 1 });
+      } finally {
+        vi.useRealTimers();
+      }
+    };
+
+    longPress();
+    expect(target.getAttribute('aria-label')).toMatch(/^Flagged/);
+    // Lifting the flag leaves a plain shut square, which the trailing click
+    // would open if the long press did not already own this press.
+    longPress();
+    expect(target.getAttribute('aria-label')).toBe(label);
+    expect(shutCells()).toHaveLength(shut);
+  });
+});
+
+/* The right button is what every desktop Minesweeper taught (§3, issue #111).
+   The event orders below are the browsers' own: Windows raises the context menu
+   after the button comes back up and macOS raises it on the way down, but
+   neither delivers a click for the right button — while macOS's ctrl+click
+   raises the menu from the primary button and does deliver one. */
+describe('right click (§3, issue #111)', () => {
+  /**
+   * Raises the context menu and insists it was cancelled — a cancelled
+   * contextmenu is the whole of "no browser menu over the board" (§3).
+   * fireEvent hands back what dispatchEvent returned, which is false exactly
+   * when something called preventDefault on it.
+   */
+  function contextMenu(cell: HTMLElement, init: Record<string, unknown>) {
+    expect(fireEvent.contextMenu(cell, init)).toBe(false);
+  }
+
+  /** A right click as a browser delivers it. No click event ever follows one. */
+  function rightClick(cell: HTMLElement) {
+    fireEvent.pointerDown(cell, { button: 2, pointerType: 'mouse' });
+    contextMenu(cell, { button: 2 });
+    fireEvent.pointerUp(cell, { button: 2, pointerType: 'mouse' });
+  }
+
+  /** macOS ctrl+click: the primary button raises the menu, and a click follows. */
+  function ctrlClick(cell: HTMLElement) {
+    fireEvent.pointerDown(cell, { button: 0, pointerType: 'mouse', ctrlKey: true });
+    contextMenu(cell, { button: 0, ctrlKey: true });
+    fireEvent.pointerUp(cell, { button: 0, pointerType: 'mouse', ctrlKey: true });
+    fireEvent.click(cell, { button: 0, ctrlKey: true, detail: 1 });
+  }
+
+  it('plants a flag, lifts it again, and never opens the square', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    const target = shutCells()[0]!;
+    const label = target.getAttribute('aria-label')!;
+    const shut = shutCells().length;
+
+    rightClick(target);
+    expect(target.getAttribute('aria-label')).toMatch(/^Flagged/);
+    // One flag down, one fewer mine to find (§6) — and nothing was opened.
+    expect(screen.getByText('9')).toBeInTheDocument();
+    expect(shutCells()).toHaveLength(shut - 1);
+
+    // A second one takes it back: one right click is one action, never two.
+    rightClick(target);
+    expect(target.getAttribute('aria-label')).toBe(label);
+    expect(screen.getByText('10')).toBeInTheDocument();
+    expect(shutCells()).toHaveLength(shut);
+  });
+
+  it('leaves an open number alone — chording stays the tap\'s (§3)', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    const open = cells().find((cell) => /mines nearby/.test(cell.getAttribute('aria-label')!))!;
+    const label = open.getAttribute('aria-label')!;
+    const shut = shutCells().length;
+
+    rightClick(open);
+    // No flag on a number, and no neighbours opened behind the player's back.
+    expect(open.getAttribute('aria-label')).toBe(label);
+    expect(shutCells()).toHaveLength(shut);
+  });
+
+  it('still flags in flag mode: the button means one thing (§3)', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+    await user.click(screen.getByRole('button', { name: 'Flag mode' }));
+
+    const target = shutCells()[0]!;
+    const shut = shutCells().length;
+
+    // Flag mode gives the long press the open — the right button does not
+    // follow it there, or a right click would mean two different things.
+    rightClick(target);
+    expect(target.getAttribute('aria-label')).toMatch(/^Flagged/);
+    expect(shutCells()).toHaveLength(shut - 1);
+  });
+
+  it('acts once when the button is held down (§3)', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    const target = shutCells()[0]!;
+    vi.useFakeTimers();
+    try {
+      // Windows raises the menu only once the button comes back up. A long
+      // press armed on the way down would therefore flag on its own timer and
+      // the menu would take the flag straight back off — so none is armed.
+      fireEvent.pointerDown(target, { button: 2, pointerType: 'mouse' });
+      act(() => vi.advanceTimersByTime(LONG_PRESS_MS + 20));
+      fireEvent.pointerUp(target, { button: 2, pointerType: 'mouse' });
+      fireEvent.contextMenu(target, { button: 2 });
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(target.getAttribute('aria-label')).toMatch(/^Flagged/);
+  });
+
+  it('acts once when a click follows the menu (macOS ctrl+click)', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    const target = shutCells()[0]!;
+    const shut = shutCells().length;
+
+    ctrlClick(target);
+    // The menu flagged it; the click that came after must not open it as well.
+    expect(target.getAttribute('aria-label')).toMatch(/^Flagged/);
+    expect(shutCells()).toHaveLength(shut - 1);
+  });
+
+  it('lifts a flag without opening what was under it (macOS ctrl+click)', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    const target = shutCells()[0]!;
+    const label = target.getAttribute('aria-label')!;
+    const shut = shutCells().length;
+
+    ctrlClick(target);
+    expect(target.getAttribute('aria-label')).toMatch(/^Flagged/);
+
+    // The dangerous direction: the menu takes the flag off, and the click that
+    // follows would find an unflagged square to open if it were let through.
+    ctrlClick(target);
+    expect(target.getAttribute('aria-label')).toBe(label);
+    expect(shutCells()).toHaveLength(shut);
+  });
+
+  it('answers a mouse on a touchscreen laptop (§3)', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    const target = shutCells()[0]!;
+    // A finger first: the context menu a touch raises is ignored. The mouse
+    // that follows must not inherit that — both inputs live on one machine.
+    fireEvent.pointerDown(target, { button: 0, pointerType: 'touch' });
+    fireEvent.pointerUp(target, { button: 0, pointerType: 'touch' });
+
+    rightClick(target);
+    expect(target.getAttribute('aria-label')).toMatch(/^Flagged/);
+  });
+
+  it('holds the flag while the button stays down (macOS ctrl+click)', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    const target = shutCells()[0]!;
+    vi.useFakeTimers();
+    try {
+      // The primary button raises the menu on the way down, so a long press is
+      // armed underneath it. Held past the long press, that timer would flag a
+      // second time and undo the flag the menu just planted.
+      fireEvent.pointerDown(target, { button: 0, pointerType: 'mouse', ctrlKey: true });
+      contextMenu(target, { button: 0, ctrlKey: true });
+      act(() => vi.advanceTimersByTime(LONG_PRESS_MS + 20));
+      fireEvent.pointerUp(target, { button: 0, pointerType: 'mouse', ctrlKey: true });
+      fireEvent.click(target, { button: 0, ctrlKey: true, detail: 1 });
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(target.getAttribute('aria-label')).toMatch(/^Flagged/);
+  });
+
+  it('leaves the keyboard its own turn on the square it just flagged', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    const target = shutCells()[0]!;
+    rightClick(target);
+    rightClick(target);
+    expect(target.getAttribute('aria-label')).toMatch(/^Unopened/);
+
+    // A right click leaves no click behind on most platforms, so nothing comes
+    // to clear what it handled. The next Enter is not that click, and must not
+    // be mistaken for it — a keyboard player would just see the square ignore
+    // them. userEvent gives it the empty click count a real key press has.
+    target.focus();
+    await user.keyboard('{Enter}');
+    expect(target.getAttribute('aria-label')).not.toMatch(/^(Unopened|Flagged)/);
+  });
+
+  it('lets the touch long press keep its flag (§3)', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    const target = shutCells()[0]!;
+    vi.useFakeTimers();
+    try {
+      // Chrome on Android raises a context menu of its own at the end of a long
+      // press. The long press has already flagged by then, so handling that one
+      // as a right click would take the flag straight back off.
+      fireEvent.pointerDown(target, { button: 0, pointerType: 'touch' });
+      act(() => vi.advanceTimersByTime(LONG_PRESS_MS + 20));
+      // Cancelled here as well: the menu is stopped before the touch is let go.
+      contextMenu(target, { button: 0 });
+      fireEvent.pointerUp(target, { button: 0, pointerType: 'touch' });
+      fireEvent.click(target, { button: 0, detail: 1 });
     } finally {
       vi.useRealTimers();
     }
