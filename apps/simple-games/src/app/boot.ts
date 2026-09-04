@@ -16,6 +16,7 @@ import { initReview } from '../services/review';
 import { initWebAppPrompt } from '../services/webAppPrompt';
 import { loadRecord } from '../storage/repo';
 import { settingsSchema, type Settings } from '../storage/schemas';
+import { initFavoriteGames } from './favoriteGames';
 import { initRecentGames } from './recentGames';
 
 /** Runs one boot step on its own. Boot itself cannot fail. */
@@ -39,6 +40,7 @@ export async function initShellState(): Promise<Settings> {
   await bootStep(initAdRemoval);
   await bootStep(initReview);
   await bootStep(initRecentGames);
+  await bootStep(initFavoriteGames);
   await bootStep(initWebAppPrompt);
 
   let settings = settingsSchema.defaultValue();

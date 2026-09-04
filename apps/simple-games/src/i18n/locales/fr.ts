@@ -72,6 +72,9 @@ export const fr: Messages = {
   // Collection shell
   gamesHeading: 'Jeux',
   recentHeading: 'Joués récemment',
+  favoritesHeading: 'Favoris',
+  addToFavorites: 'Ajouter aux favoris',
+  removeFromFavorites: 'Retirer des favoris',
   categoryLogic: 'Logique',
   categoryCards: 'Cartes',
   categoryPuzzle: 'Puzzle',

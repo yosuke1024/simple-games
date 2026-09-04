@@ -84,6 +84,12 @@ export const en = {
   // Collection shell
   gamesHeading: 'Games',
   recentHeading: 'Recently played',
+  // Pinned games (issue #109). The heading names the shelf on the collection
+  // home and the picker in Settings; the two actions are what the sheet a long
+  // press opens offers. Nothing here says how a game was played.
+  favoritesHeading: 'Favorites',
+  addToFavorites: 'Add to Favorites',
+  removeFromFavorites: 'Remove from Favorites',
   // Section headings on the collection home, one per GameCategoryId
   // (app/registry.ts GAME_CATEGORIES)
   categoryLogic: 'Logic',

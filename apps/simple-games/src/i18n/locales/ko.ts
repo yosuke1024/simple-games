@@ -71,6 +71,9 @@ export const ko: Messages = {
   // Collection shell
   gamesHeading: '게임',
   recentHeading: '최근 플레이',
+  favoritesHeading: '즐겨찾기',
+  addToFavorites: '즐겨찾기에 추가',
+  removeFromFavorites: '즐겨찾기에서 제거',
   categoryLogic: '로직',
   categoryCards: '카드',
   categoryPuzzle: '퍼즐',

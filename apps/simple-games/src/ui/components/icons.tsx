@@ -152,6 +152,27 @@ export function IconCheck(props: SVGProps<SVGSVGElement>) {
 }
 
 /**
+ * Favourite: the one mark a pinned item wears in every app anyone has used,
+ * which is why it is a star and not a nicer idea of our own. Outlined means
+ * "not pinned" and filled means "pinned", so the same glyph says both — but
+ * it never says it alone: every control that uses it carries a text label or
+ * `aria-pressed` beside it (issue #109).
+ */
+export function IconStar({
+  filled = false,
+  ...props
+}: { filled?: boolean } & SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path
+        d="M12 3 14.12 9.09 20.56 9.22 15.42 13.11 17.29 19.28 12 15.6 6.71 19.28 8.58 13.11 3.44 9.22 9.88 9.09Z"
+        fill={filled ? 'currentColor' : 'none'}
+      />
+    </Icon>
+  );
+}
+
+/**
  * Share: a link leaving the device. The arrow out of an open box is the one
  * share mark both platforms' users read the same way — Android's three-node
  * graph means nothing on iOS, and iOS's own glyph is a system asset we may

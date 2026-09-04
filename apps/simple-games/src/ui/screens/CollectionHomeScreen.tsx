@@ -19,37 +19,115 @@
  * - Each tile wears its own title's accent (packages/brand titleAccents) rather
  *   than one shared colour, so a game can be found by colour and position
  *   instead of by reading every label.
- * - Above it all, the games opened most recently (app/recentGames.ts) — so the
- *   games somebody actually plays stay at zero scroll however long the grid
- *   grows, and no category has to double as "favourites" to keep up.
+ * - Above it all, two short blocks that keep the games somebody actually plays
+ *   at zero scroll however long the grid grows, so no category has to double
+ *   as "favourites" to keep up: the games they pinned themselves
+ *   (app/favoriteGames.ts), then the games opened most recently
+ *   (app/recentGames.ts).
  *
- * What the shortcut row is not: it carries no timestamp, no progress, no
- * "continue where you left off", and it is absent entirely on a fresh install
- * rather than showing an empty state. It is a door that remembers, not a
- * status board.
+ * Why both, and in that order (issue #109): the recent row is written by the
+ * shell and answers "where was I", which is the wrong question for a game
+ * somebody returns to every day and a poor one for a game they play twice a
+ * week. Pinning answers "keep this here" and nothing else can. A pinned game
+ * is dropped from the recent row rather than shown twice — the row's two
+ * slots are for doors that are not already open, and the games most likely to
+ * be pinned are exactly the ones most likely to be recent, so without this the
+ * common case is the broken-looking one.
+ *
+ * What neither block is: they carry no timestamp, no progress, no "continue
+ * where you left off", and each is absent entirely rather than showing an
+ * empty state. They are doors that remember, not a status board.
  */
 import { Capacitor } from '@capacitor/core';
 import { SERIES_BY_LINE, SERIES_NAME } from '@simple-games/brand';
-import type { ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { getFavoriteGames, toggleFavoriteGame } from '../../app/favoriteGames';
 import { getRecentGames } from '../../app/recentGames';
 import { GAMES, GAME_CATEGORIES, type GameId, type GameDefinition } from '../../app/registry';
 import { useSettings } from '../../state/SettingsContext';
+import { GameActionSheet } from '../components/GameActionSheet';
+import { GameTile } from '../components/GameTile';
 import { IconChevronRight, IconGear } from '../components/icons';
 import { WebAdSlot } from '../components/WebAdSlot';
 import { WebChromeSlot } from '../components/WebChromeSlot';
 
 /**
- * The tile carries the title's accent by class, which `ui/styles.css` maps to
- * the same tokens `:root[data-game='…']` sets while that game is mounted —
- * one set of accent values, used in both places. Number Match needs no class:
- * its accent is the series default, which is what the home is already painted
- * with (docs/ARCHITECTURE.md「タイトルごとのアクセント色」).
+ * How long a press has to last before it means "the menu" instead of "open
+ * the game". The same 450ms Minesweeper's board uses for its own long press:
+ * long enough not to fire while tapping, short enough not to feel stuck.
  */
-function GameTile({ game }: { game: GameDefinition }) {
+export const GAME_MENU_PRESS_MS = 450;
+
+interface GameButtonProps {
+  game: GameDefinition;
+  className: string;
+  onOpen: (gameId: GameId) => void;
+  onMenu: (game: GameDefinition, trigger: HTMLElement | null, midPress: boolean) => void;
+  children: ReactNode;
+}
+
+/**
+ * A tile. A tap opens the game; a long press, a right-click, or the keyboard's
+ * context-menu key opens the sheet instead (issue #109).
+ *
+ * The click that ends a long press is not suppressed here. `GameActionSheet`
+ * swallows it, and it is the only place that can: by the time that click is
+ * dispatched the sheet's full-screen backdrop is over this button, so the
+ * click lands on the backdrop — never on the tile — and a guard here would sit
+ * unreachable while the one case that matters went unhandled.
+ */
+function GameButton({ game, className, onOpen, onMenu, children }: GameButtonProps) {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const timerRef = useRef<number | null>(null);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  // A tile can be unmounted mid-press — pinning a game rebuilds the shelf
+  // above it — and a timer that fired afterwards would open a sheet nobody
+  // asked for.
+  useEffect(() => clearTimer, [clearTimer]);
+
   return (
-    <span className={`game-tile accent-${game.id}`} aria-hidden="true">
-      {game.glyph}
-    </span>
+    <button
+      ref={buttonRef}
+      type="button"
+      className={className}
+      // Which game this door leads to, for the one caller that has to find a
+      // door again after the one it was holding disappeared (`closeMenu`).
+      data-game-id={game.id}
+      onPointerDown={(event) => {
+        // Only the primary button arms the press. A right-click has its own
+        // doorway below, and arming here as well would open the sheet twice.
+        if (event.button > 0) return;
+        clearTimer();
+        timerRef.current = window.setTimeout(() => {
+          timerRef.current = null;
+          onMenu(game, buttonRef.current, true);
+        }, GAME_MENU_PRESS_MS);
+      }}
+      onPointerUp={clearTimer}
+      onPointerLeave={clearTimer}
+      onPointerCancel={clearTimer}
+      onContextMenu={(event) => {
+        // A right-click, and the keyboard's own menu key (Shift+F10): the
+        // browser raises this same event for both, so the mouse route and one
+        // keyboard route cost three lines between them.
+        event.preventDefault();
+        clearTimer();
+        onMenu(game, buttonRef.current, false);
+      }}
+      onClick={() => {
+        clearTimer();
+        onOpen(game.id);
+      }}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -70,12 +148,67 @@ export function CollectionHomeScreen({
   appPrompt,
 }: CollectionHomeScreenProps) {
   const { t } = useSettings();
+
+  /**
+   * The pinned shelf. State rather than a read per render, because unlike the
+   * recent row this one changes while the screen is open: the sheet below
+   * pins and unpins, and the shelf has to move under it.
+   */
+  const [favoriteIds, setFavoriteIds] = useState<readonly GameId[]>(getFavoriteGames);
+  const [menuGame, setMenuGame] = useState<GameDefinition | null>(null);
+  /** Where the sheet was opened from, so closing it hands focus back. */
+  const menuTriggerRef = useRef<{ element: HTMLElement | null; gameId: GameId } | null>(null);
+
+  const [menuMidPress, setMenuMidPress] = useState(false);
+
+  const openMenu = useCallback(
+    (game: GameDefinition, trigger: HTMLElement | null, midPress: boolean) => {
+      menuTriggerRef.current = { element: trigger, gameId: game.id };
+      setMenuMidPress(midPress);
+      setMenuGame(game);
+    },
+    [],
+  );
+
+  const closeMenu = useCallback(() => setMenuGame(null), []);
+
+  /**
+   * Focus goes back where the sheet was opened from — after the commit that
+   * closed it, not during. The tile that opened it may be gone by then:
+   * unpinning removes the shelf tile the sheet was opened from, and a check
+   * made before React has updated the DOM would say it is still there, focus
+   * it, and watch the browser drop focus to `<body>` a moment later. That
+   * leaves a keyboard user at the top of the document with no way back to
+   * where they were, in the one flow this sheet exists to support.
+   *
+   * When the tile really is gone, the game still has its tile in its own
+   * category — the same door, one section down — so focus lands there.
+   */
+  useEffect(() => {
+    if (menuGame !== null) return;
+    const from = menuTriggerRef.current;
+    if (from === null) return;
+    menuTriggerRef.current = null;
+    const target = from.element?.isConnected
+      ? from.element
+      : document.querySelector<HTMLElement>(`[data-game-id="${from.gameId}"]`);
+    target?.focus();
+  }, [menuGame]);
+
+  const byId = (id: GameId) => GAMES.find((game) => game.id === id);
+  const isDefined = (game: GameDefinition | undefined): game is GameDefinition =>
+    game !== undefined;
+
+  const favorites = favoriteIds.map(byId).filter(isDefined);
+  const pinned = new Set(favoriteIds);
   // Read once per mount, not live: the shell remounts this screen on the way
   // back from a game, so the row is current without the home ever watching
   // anything (and it never reorders under a finger that is mid-tap).
   const recent = getRecentGames()
-    .map((id) => GAMES.find((game) => game.id === id))
-    .filter((game): game is GameDefinition => game !== undefined);
+    .filter((id) => !pinned.has(id))
+    .map(byId)
+    .filter(isDefined);
+
   /**
    * The tagline promises offline play, which is the app's promise and not the
    * web build's: the browser has to download the assets on a first visit, and
@@ -134,24 +267,50 @@ export function CollectionHomeScreen({
         {taglineIsTrue ? <p className="home-tagline">{t('tagline')}</p> : null}
       </div>
 
+      {/* The shelf the player arranged, above the one the shell keeps. Same
+          grid as the category sections, because it is the same kind of thing:
+          a shelf of titles, in an order somebody chose. */}
+      {favorites.length > 0 ? (
+        <nav className="game-favorites" aria-labelledby="home-favorites-heading">
+          <h2 className="home-section-label" id="home-favorites-heading">
+            {t('favoritesHeading')}
+          </h2>
+          <div className="game-grid">
+            {favorites.map((game) => (
+              <GameButton
+                key={game.id}
+                game={game}
+                className="game-cell"
+                onOpen={onOpenGame}
+                onMenu={openMenu}
+              >
+                <GameTile game={game} />
+                <span className="game-cell-title">{game.title}</span>
+              </GameButton>
+            ))}
+          </div>
+        </nav>
+      ) : null}
+
       {recent.length > 0 ? (
         <nav className="game-recent" aria-labelledby="home-recent-heading">
           <h2 className="home-section-label" id="home-recent-heading">
             {t('recentHeading')}
           </h2>
           {recent.map((game) => (
-            <button
+            <GameButton
               key={game.id}
-              type="button"
+              game={game}
               className="game-row"
-              onClick={() => onOpenGame(game.id)}
+              onOpen={onOpenGame}
+              onMenu={openMenu}
             >
               <GameTile game={game} />
               <span className="game-row-title">{game.title}</span>
               <span className="game-row-chevron" aria-hidden="true">
                 <IconChevronRight />
               </span>
-            </button>
+            </GameButton>
           ))}
         </nav>
       ) : null}
@@ -176,15 +335,16 @@ export function CollectionHomeScreen({
               <h2 className="home-section-label">{t(category.headingKey)}</h2>
               <div className="game-grid">
                 {games.map((game) => (
-                  <button
+                  <GameButton
                     key={game.id}
-                    type="button"
+                    game={game}
                     className="game-cell"
-                    onClick={() => onOpenGame(game.id)}
+                    onOpen={onOpenGame}
+                    onMenu={openMenu}
                   >
                     <GameTile game={game} />
                     <span className="game-cell-title">{game.title}</span>
-                  </button>
+                  </GameButton>
                 ))}
               </div>
             </div>
@@ -202,6 +362,17 @@ export function CollectionHomeScreen({
         <span className="brand-name">{SERIES_NAME}</span>
         <span className="brand-by">{SERIES_BY_LINE}</span>
       </footer>
+
+      <GameActionSheet
+        game={menuGame}
+        isFavorite={menuGame !== null && pinned.has(menuGame.id)}
+        openedMidPress={menuMidPress}
+        onToggleFavorite={() => {
+          if (menuGame) setFavoriteIds(toggleFavoriteGame(menuGame.id));
+          closeMenu();
+        }}
+        onClose={closeMenu}
+      />
     </div>
   );
 }

@@ -71,6 +71,9 @@ export const th: Messages = {
   // Collection shell
   gamesHeading: 'เกม',
   recentHeading: 'เล่นล่าสุด',
+  favoritesHeading: 'รายการโปรด',
+  addToFavorites: 'เพิ่มในรายการโปรด',
+  removeFromFavorites: 'นำออกจากรายการโปรด',
   categoryLogic: 'ตรรกะ',
   categoryCards: 'ไพ่',
   categoryPuzzle: 'ปริศนา',

@@ -71,6 +71,9 @@ export const zhHans: Messages = {
   // Collection shell
   gamesHeading: '游戏',
   recentHeading: '最近玩过',
+  favoritesHeading: '收藏',
+  addToFavorites: '添加到收藏',
+  removeFromFavorites: '从收藏中移除',
   categoryLogic: '逻辑',
   categoryCards: '纸牌',
   categoryPuzzle: '益智',

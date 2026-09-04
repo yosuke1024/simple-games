@@ -72,6 +72,9 @@ export const vi: Messages = {
   // Collection shell
   gamesHeading: 'Trò chơi',
   recentHeading: 'Chơi gần đây',
+  favoritesHeading: 'Yêu thích',
+  addToFavorites: 'Thêm vào yêu thích',
+  removeFromFavorites: 'Bỏ khỏi yêu thích',
   categoryLogic: 'Logic',
   categoryCards: 'Bài',
   categoryPuzzle: 'Giải đố',

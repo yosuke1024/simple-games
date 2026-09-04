@@ -71,6 +71,9 @@ export const hi: Messages = {
   // Collection shell
   gamesHeading: 'गेम',
   recentHeading: 'हाल में खेले गए',
+  favoritesHeading: 'पसंदीदा',
+  addToFavorites: 'पसंदीदा में जोड़ें',
+  removeFromFavorites: 'पसंदीदा से निकालें',
   categoryLogic: 'लॉजिक',
   categoryCards: 'ताश',
   categoryPuzzle: 'पहेली',

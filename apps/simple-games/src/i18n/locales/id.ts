@@ -72,6 +72,9 @@ export const id: Messages = {
   // Collection shell
   gamesHeading: 'Game',
   recentHeading: 'Baru dimainkan',
+  favoritesHeading: 'Favorit',
+  addToFavorites: 'Tambahkan ke Favorit',
+  removeFromFavorites: 'Keluarkan dari Favorit',
   categoryLogic: 'Logika',
   categoryCards: 'Kartu',
   categoryPuzzle: 'Puzzle',

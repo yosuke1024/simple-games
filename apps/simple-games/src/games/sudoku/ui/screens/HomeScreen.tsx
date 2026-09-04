@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
+import { FavoriteAction } from '@/ui/components/FavoriteAction';
 import { IconBack, IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { formatDuration } from '@/ui/format';
@@ -53,7 +54,7 @@ export function SudokuHomeScreen() {
         >
           <IconBack />
         </button>
-        <span className="icon-btn-placeholder" />
+        <FavoriteAction gameId="sudoku" />
       </header>
 
       <div className="home-hero">

@@ -71,6 +71,9 @@ export const ja: Messages = {
   // Collection shell
   gamesHeading: 'ゲーム',
   recentHeading: '最近遊んだ',
+  favoritesHeading: 'お気に入り',
+  addToFavorites: 'お気に入りに追加',
+  removeFromFavorites: 'お気に入りから外す',
   categoryLogic: 'ロジック',
   categoryCards: 'カード',
   categoryPuzzle: 'パズル',

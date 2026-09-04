@@ -706,6 +706,18 @@ button:disabled {
   background: var(--accent-soft);
 }
 
+/* The star in a game's own header (FavoriteAction.tsx). It sits in the slot
+   every game home kept empty opposite its back button, so the header's shape
+   is unchanged — a control where there was a spacer. Unpinned it is exactly
+   the `.icon-btn` the back arrow is, so a game nobody has pinned has a header
+   no louder than before this existed; pinned it takes that game's accent.
+
+   The state arrives as a class rather than being read off the glyph's fill:
+   the Chromium 88 floor this file declares has no `:has()`. */
+.favorite-btn-on {
+  color: var(--accent);
+}
+
 .icon-btn-placeholder {
   min-width: var(--tap-size);
 }
@@ -1039,9 +1051,11 @@ button:disabled {
 
 /* ---------- collection home ---------- */
 
-/* Two blocks, both centred on the same column: the shortcut rows, then the
-   category sections. See CollectionHomeScreen.tsx for why the home is shaped
-   this way — the short version is that it has to stay usable at twenty games. */
+/* Three blocks, all centred on the same column: the pinned shelf, the shortcut
+   rows, then the category sections. See CollectionHomeScreen.tsx for why the
+   home is shaped this way — the short version is that it has to stay usable at
+   twenty games. */
+.game-favorites,
 .game-recent,
 .game-sections {
   width: 100%;
@@ -1056,6 +1070,13 @@ button:disabled {
   font-weight: 700;
   letter-spacing: 0.6px;
   color: var(--ink-soft);
+}
+
+/* Favourites: the same grid as the category sections below, because it is the
+   same kind of thing — a shelf of titles somebody arranged. Only its position
+   is special (CollectionHomeScreen.tsx). */
+.game-favorites {
+  margin-bottom: 20px;
 }
 
 /* Recently played: full-width rows, because there are at most two of them and
@@ -1251,6 +1272,67 @@ button:disabled {
   margin: 0 0 2px;
 }
 
+/* The Favorites picker in Settings: every game as a pressed/unpressed star
+   (SettingsScreen.tsx). Two columns rather than a column of rows — thirty
+   games as full-width rows would be three screens of scrolling, and the star
+   is the only thing to the right of each name. */
+.favorite-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Name and star, and deliberately not the accent tile the home puts beside
+   every title. Two of these have to fit a 320px screen, and `Minesweeper` —
+   the longest title with no space to break at — needs the room the tile would
+   take: with it, the word splits across two lines on most phones. The home is
+   where a game is found by its colour; here it is looked up by a name the
+   reader already has in mind, and the tile was decoration charging rent. */
+.favorite-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap-size);
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  text-align: start;
+}
+
+.favorite-pick-title {
+  flex: 1;
+  min-width: 0;
+  /* 13px, not the list's 16px: `Minesweeper` at 14px is two pixels wider than
+     the room two of these leave on a 320px screen. */
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+  /* Nothing in the collection needs this at any supported width — but a
+     device at 200% font scaling makes every title too long, and a broken word
+     beats a row that runs off the screen. `break-word` and not `anywhere`,
+     which needs Safari 15.4 and would do nothing on the iOS 15.0 this ships to. */
+  overflow-wrap: break-word;
+}
+
+/* The star is never the only signal: the button carries `aria-pressed`, and
+   the border says the same thing to anyone who does not read the fill. */
+.favorite-pick-star {
+  display: inline-flex;
+  flex: none;
+  color: var(--ink-soft);
+  font-size: 16px;
+}
+
+.favorite-pick-on {
+  border-color: var(--accent);
+  background: var(--accent-ring-soft);
+}
+
+.favorite-pick-on .favorite-pick-star {
+  color: var(--accent);
+}
+
 .settings-note {
   margin: 0 0 4px;
   font-size: 14px;
@@ -1438,6 +1520,63 @@ button:disabled {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 8px;
+}
+
+/* The sheet a long press opens on a game tile (GameActionSheet.tsx). It is a
+   dialog card like the others rather than a panel sliding off the bottom edge:
+   the app has one way of asking a question, and a second one bought nothing
+   here but a second set of edge cases. Narrower than the confirmations,
+   because it holds a title and one action. */
+.action-sheet {
+  max-width: 320px;
+}
+
+.action-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.action-sheet .game-tile {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+.action-sheet-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  /* A title is a proper noun and never translated, but "Mahjong Solitaire"
+     still has to wrap rather than push the card wider. `break-word` and not
+     `anywhere`: the app ships to iOS 15.0 and `anywhere` needs Safari 15.4,
+     where it would quietly do nothing at all. */
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+/* Icon first, then the label — not `.settings-row`, which pushes its two
+   children to opposite edges. */
+.action-sheet-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: var(--tap-size);
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--surface-recessed);
+  border: 1px solid var(--line);
+  text-align: start;
+  font-size: 16px;
+}
+
+.action-sheet-icon {
+  display: inline-flex;
+  color: var(--accent);
+  font-size: 20px;
 }
 
 /* Three-way choices (the review question) stack; every option reads whole. */
@@ -2042,6 +2181,7 @@ button:disabled {
 @media (min-width: 600px) {
   /* Home: three columns. The grid grows by adding columns, not by
      stretching cards — a .game-cell keeps roughly its phone size. */
+  .game-favorites,
   .game-recent,
   .game-sections {
     max-width: 700px;
@@ -2073,6 +2213,11 @@ button:disabled {
     margin: 0 auto;
   }
 
+  /* The picker grows by columns, like the home grid it mirrors. */
+  .favorite-picker {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
   /* Game chrome follows the content column instead of the viewport edge,
      so the back button and the action buttons stay near the board. */
   .game-screen .game-topbar,
@@ -2084,6 +2229,7 @@ button:disabled {
 }
 
 @media (min-width: 900px) {
+  .game-favorites,
   .game-recent,
   .game-sections {
     max-width: 940px;
@@ -2095,6 +2241,7 @@ button:disabled {
 }
 
 @media (min-width: 1280px) {
+  .game-favorites,
   .game-recent,
   .game-sections {
     max-width: 1160px;

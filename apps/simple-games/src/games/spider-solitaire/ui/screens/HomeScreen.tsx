@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
+import { FavoriteAction } from '@/ui/components/FavoriteAction';
 import { IconBack, IconCalendar, IconChart, IconCheck } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { localDateString, SUIT_COUNTS, type SuitCount } from '../../game';
@@ -55,7 +56,7 @@ export function SpiderHomeScreen() {
         >
           <IconBack />
         </button>
-        <span className="icon-btn-placeholder" />
+        <FavoriteAction gameId="spider-solitaire" />
       </header>
 
       <div className="home-hero">
