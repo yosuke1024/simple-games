@@ -6,8 +6,26 @@
  * the same contract every other service in this app is held to
  * (docs/OFFLINE_POLICY.md).
  */
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+// Controllable per test; defaults to false so every browser-path test below
+// keeps exercising exactly the ladder it did before the native plugin existed.
+vi.mock('@capacitor/core', () => ({
+  Capacitor: { isNativePlatform: vi.fn(() => false) },
+}));
+vi.mock('@capacitor/filesystem', () => ({
+  Filesystem: { writeFile: vi.fn() },
+  Directory: { Cache: 'CACHE' },
+}));
+vi.mock('@capacitor/share', () => ({
+  Share: { share: vi.fn() },
+}));
+
+import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import { shareGame } from './share';
+import type { ShareCard } from './card';
 import type { ShareMessage } from './message';
 
 const message: ShareMessage = {
@@ -33,6 +51,11 @@ function stubExecCommand(result: boolean): ReturnType<typeof vi.fn> {
   (document as WithExecCommand).execCommand = execCommand;
   return execCommand;
 }
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
+});
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -83,7 +106,11 @@ describe('with a share sheet', () => {
 });
 
 describe('with a picture', () => {
-  const card = () => new File([new Uint8Array([1, 2, 3])], 'x.png', { type: 'image/png' });
+  const card = (): ShareCard => ({
+    file: new File([new Uint8Array([1, 2, 3])], 'x.png', { type: 'image/png' }),
+    base64: 'AAEC',
+    name: 'simple-games-sudoku.png',
+  });
 
   it('shares the file alongside the text when the target can take it', async () => {
     const share = vi.fn().mockResolvedValue(undefined);
@@ -185,5 +212,99 @@ describe('without a share sheet', () => {
     // An old WebView with neither API. Nothing throws; nothing happens.
     stubNavigator({});
     await expect(shareGame(message)).resolves.toBe('unavailable');
+  });
+});
+
+describe('on a device', () => {
+  const card = (): ShareCard => ({
+    file: new File([new Uint8Array([1, 2, 3])], 'x.png', { type: 'image/png' }),
+    base64: 'AAEC',
+    name: 'simple-games-sudoku.png',
+  });
+
+  beforeEach(() => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
+  });
+
+  it('writes the picture to the cache and hands the sheet its uri', async () => {
+    vi.mocked(Filesystem.writeFile).mockResolvedValue({
+      uri: 'file:///cache/simple-games-sudoku.png',
+    });
+    vi.mocked(Share.share).mockResolvedValue({});
+
+    await expect(shareGame(message, card())).resolves.toBe('shared');
+
+    expect(Filesystem.writeFile).toHaveBeenCalledWith({
+      path: 'simple-games-sudoku.png',
+      data: 'AAEC',
+      directory: Directory.Cache,
+    });
+    expect(Share.share).toHaveBeenCalledWith({
+      text: message.text,
+      url: message.url,
+      files: ['file:///cache/simple-games-sudoku.png'],
+    });
+  });
+
+  it('shares text and url alone, with no files key, when there is no card', async () => {
+    vi.mocked(Share.share).mockResolvedValue({});
+
+    await expect(shareGame(message)).resolves.toBe('shared');
+
+    expect(Filesystem.writeFile).not.toHaveBeenCalled();
+    expect(Share.share).toHaveBeenCalledWith({ text: message.text, url: message.url });
+    expect(vi.mocked(Share.share).mock.calls[0]?.[0]).not.toHaveProperty('files');
+  });
+
+  it('still shares the words when the picture cannot be written', async () => {
+    vi.mocked(Filesystem.writeFile).mockRejectedValue(new Error('disk full'));
+    vi.mocked(Share.share).mockResolvedValue({});
+
+    await expect(shareGame(message, card())).resolves.toBe('shared');
+
+    expect(Share.share).toHaveBeenCalledWith({ text: message.text, url: message.url });
+  });
+
+  it('treats a cancelled sheet as an answer, never opening the browser ladder', async () => {
+    vi.mocked(Filesystem.writeFile).mockResolvedValue({
+      uri: 'file:///cache/simple-games-sudoku.png',
+    });
+    vi.mocked(Share.share).mockRejectedValue(new Error('Share canceled'));
+    const share = vi.fn();
+    const copy = writeText();
+    stubNavigator({ share, clipboard: { writeText: copy } });
+
+    await expect(shareGame(message, card())).resolves.toBe('dismissed');
+
+    expect(share).not.toHaveBeenCalled();
+    expect(copy).not.toHaveBeenCalled();
+  });
+
+  it('falls through to the browser ladder on any other plugin failure', async () => {
+    vi.mocked(Filesystem.writeFile).mockResolvedValue({
+      uri: 'file:///cache/simple-games-sudoku.png',
+    });
+    vi.mocked(Share.share).mockRejectedValue(new Error('boom'));
+    const share = vi.fn().mockResolvedValue(undefined);
+    stubNavigator({ share, clipboard: { writeText: writeText() } });
+
+    await expect(shareGame(message, card())).resolves.toBe('shared');
+
+    expect(share).toHaveBeenCalled();
+  });
+
+  it('never touches the browser ladder when the plugin succeeds', async () => {
+    vi.mocked(Filesystem.writeFile).mockResolvedValue({
+      uri: 'file:///cache/simple-games-sudoku.png',
+    });
+    vi.mocked(Share.share).mockResolvedValue({});
+    const share = vi.fn();
+    const copy = writeText();
+    stubNavigator({ share, clipboard: { writeText: copy } });
+
+    await expect(shareGame(message, card())).resolves.toBe('shared');
+
+    expect(share).not.toHaveBeenCalled();
+    expect(copy).not.toHaveBeenCalled();
   });
 });

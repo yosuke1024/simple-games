@@ -13,24 +13,37 @@
  * no caller has to guard a share with a try/catch to keep a game running
  * (docs/OFFLINE_POLICY.md: a service's failure never reaches the game).
  *
- * WEB SHARE API ON ALL THREE PLATFORMS
+ * THE NATIVE APPS DO NOT HAVE THE WEB SHARE API — ANDROID PROVED IT
  *
- * No Capacitor share plugin. `navigator.share` is implemented by the Android
- * WebView and by WKWebView, and both open the real system sheet from it, so
- * the app and the browser take the same path and the native bundle gains no
- * dependency for this. The one thing that is genuinely uncertain is iOS: the
- * app runs on `capacitor://localhost`, and a custom scheme is not always a
- * secure context, which is where `navigator.share` and `navigator.clipboard`
- * both live. That uncertainty is why the ladder has a third rung rather than
- * two — and if a device is ever found where the sheet does not open, the
- * plugin can be added then, against evidence, rather than pre-emptively.
+ * This module used to assume `navigator.share` existed in both native
+ * WebViews, and shipped without a Capacitor plugin on that basis. It was
+ * wrong. Measured 2026-09-04 inside the app on Android 17 / WebView 148, on
+ * the app's own secure `https://localhost` origin:
  *
- * The picture card (card.ts) rides this same API rather than a second one:
- * `navigator.canShare({ files })` is the standard feature test for whether a
- * target can take a file, so it is asked before a file is ever offered, and
- * everywhere it says no — an older WebView, a target that only takes text —
- * the text-only rung below runs exactly as it did before the card existed.
- * Nothing regresses on a platform that cannot take a file.
+ *     navigator.share = undefined      navigator.canShare = undefined
+ *
+ * Android's WebView does not implement Web Share at all, at any version. So
+ * every Android share fell all the way down this ladder to the clipboard: no
+ * sheet ever opened, and the player had to paste the text somewhere by hand.
+ * iOS was fine, because WKWebView does implement it — which is exactly why
+ * the gap went unseen until someone shared from a phone.
+ *
+ * So the native platforms now go through `@capacitor/share`, which is the
+ * OS-level share sheet, and the picture travels as a file written to the
+ * app's cache (`@capacitor/filesystem`) because that plugin takes file URLs
+ * rather than in-memory blobs. Two plugins, no new permissions (both declare
+ * an empty Android manifest), and nothing about the browser path changes.
+ *
+ * iOS goes through the plugin too, even though Web Share worked there: one
+ * path is easier to keep honest than two, and the web rungs below are still
+ * the fallback if the plugin ever fails. Nothing regresses — a native failure
+ * falls through to exactly the ladder that ran before.
+ *
+ * IN THE BROWSER, THE WEB SHARE API IS STILL THE PATH
+ *
+ * The picture rides `navigator.share`'s `files`, and
+ * `navigator.canShare({ files })` is asked first: where it says no, the
+ * text-only rung runs exactly as it did before the card existed.
  *
  * NOTHING IS COUNTED
  *
@@ -39,6 +52,10 @@
  * (docs/ARCHITECTURE.md), and a share counter would be the first
  * (docs/GROWTH_MEASUREMENT.md keeps growth measurement off the device).
  */
+import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import type { ShareCard } from './card';
 import { shareMessageAsText, type ShareMessage } from './message';
 
 /**
@@ -61,6 +78,23 @@ export type ShareResult = 'shared' | 'dismissed' | 'copied' | 'unavailable';
 function isDismissal(error: unknown): boolean {
   return (
     typeof error === 'object' && error !== null && 'name' in error && error.name === 'AbortError'
+  );
+}
+
+/**
+ * The plugin's cancellation. Both platforms reject with this exact sentence
+ * (`SharePlugin.java`, `SharePlugin.swift`), and there is no code or class to
+ * match on instead — so the string is the contract, and a wording change on
+ * their side degrades to "fell through to the web path", never to a second
+ * sheet in the player's face.
+ */
+function isPluginDismissal(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as { message: unknown }).message === 'string' &&
+    /share canceled/i.test((error as { message: string }).message)
   );
 }
 
@@ -113,6 +147,50 @@ async function copyLink(message: ShareMessage): Promise<ShareResult> {
 }
 
 /**
+ * The native rung: the OS share sheet through `@capacitor/share`.
+ *
+ * Returns a result when the sheet did its job, and `null` when this path did
+ * not work out — the caller then runs the browser ladder below, which is what
+ * every native build did before this plugin existed. A missing picture is not
+ * a failure: the sheet still opens with the sentences and the link.
+ *
+ * The picture is written to the cache directory because the plugin shares
+ * file URLs, not blobs. Cache is the right home for it: the OS may reclaim it
+ * whenever it likes, nothing reads it back, and it needs no permission. The
+ * name is stable per game, so repeated shares overwrite rather than pile up.
+ */
+async function shareViaPlugin(
+  message: ShareMessage,
+  card: ShareCard | null,
+): Promise<ShareResult | null> {
+  try {
+    let files: string[] | undefined;
+    if (card) {
+      try {
+        const written = await Filesystem.writeFile({
+          path: card.name,
+          data: card.base64,
+          directory: Directory.Cache,
+        });
+        files = [written.uri];
+      } catch {
+        // Could not write the picture. Share the words rather than nothing.
+      }
+    }
+    await Share.share({
+      text: message.text,
+      url: message.url,
+      ...(files ? { files } : {}),
+    });
+    return 'shared';
+  } catch (error) {
+    // A cancelled sheet is an answer; opening a second one would argue with it.
+    if (isPluginDismissal(error)) return 'dismissed';
+    return null;
+  }
+}
+
+/**
  * The text-only rung: the share sheet with `{ text, url }`, or the clipboard
  * ladder when there is no sheet or it fails for anything but a dismissal.
  * This is the whole of `shareGame` before the picture card existed, kept as
@@ -149,15 +227,25 @@ async function shareText(message: ShareMessage): Promise<ShareResult> {
  * (card.ts is synchronous for the same reason).
  *
  * `card` is optional and defaults to none, so every caller from before the
- * picture card existed is still calling this the same way.
+ * picture card existed is still calling this the same way. On a device the
+ * plugin above answers first; `card.file` is only ever read by the browser
+ * rungs.
  */
 export async function shareGame(
   message: ShareMessage,
-  card: File | null = null,
+  card: ShareCard | null = null,
 ): Promise<ShareResult> {
+  // Synchronous, so the browser path below still reaches `navigator.share`
+  // inside the click's user activation.
+  if (Capacitor.isNativePlatform()) {
+    const viaPlugin = await shareViaPlugin(message, card);
+    if (viaPlugin) return viaPlugin;
+  }
+
+  const file = card?.file ?? null;
   const share = typeof navigator !== 'undefined' ? navigator.share : undefined;
-  if (share && card) {
-    const data: ShareData = { files: [card], text: message.text, url: message.url };
+  if (share && file) {
+    const data: ShareData = { files: [file], text: message.text, url: message.url };
     if (navigator.canShare?.(data)) {
       try {
         await share.call(navigator, data);

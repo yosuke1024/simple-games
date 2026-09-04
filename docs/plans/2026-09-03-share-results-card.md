@@ -73,6 +73,16 @@ services/share/share.ts            shareGame(message, card?) — files 付きシ
   のみ)→ 無音。ネイティブ WebView で files が通らなくても、今日までの挙動に
   そのまま落ちる。plugin(公式 Share + Filesystem)は実機で「開かない」と分かって
   から入れる(RELEASE_CHECKLIST 5.7)。
+
+  **2026-09-04 追記 —— 実機がこの前提を否定した。** Android の WebView には
+  `navigator.share` 自体が無い(WebView 148 / `https://localhost` で `undefined`)。
+  つまり Android は梯子を最後まで落ちてクリップボードへ行っており、共有シートは
+  一度も開いていなかった。上の「plugin は開かないと分かってから入れる」条件が
+  満たされたので、v1.1.1 で `@capacitor/share` + `@capacitor/filesystem` を入れ、
+  ネイティブ 2 プラットフォームともプラグイン経由にした(画像はキャッシュへ書いて
+  file URL を渡す)。ブラウザは Web Share API のまま。プラグインが失敗したら
+  ブラウザ側の梯子へ落ちるので、退化する道は無い。
+
 - アクセントの引き当て: `titleAccents` のキーは camelCase(`numberMatch`)、
   ゲーム id は kebab(`number-match`)。`accentKeyOf` で変換し、`'2048'` だけ
   `game2048`。全 `GAMES` が実在キーに解決することをテストが見る(新作の門)。
