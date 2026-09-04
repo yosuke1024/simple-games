@@ -172,16 +172,26 @@ export function SudokuProvider({
   const navigate = useCallback((next: Screen) => setScreen(next), []);
 
   const persistStats = useCallback((next: Stats) => {
+    // The ref leads the state, for the reason putSession's does below: a run
+    // can be booked and the next one started inside one tap, and the second
+    // write reads this ref — a stale read would undo the first one's booking.
+    statsRef.current = next;
     setStats(next);
     void saveRecord(statsSchema, next);
   }, []);
 
   const persistProgress = useCallback((next: Progress) => {
+    // The ref leads the state, for the same reason persistStats' does.
+    progressRef.current = next;
     setProgress(next);
     void saveRecord(progressSchema, next);
   }, []);
 
   const putSession = useCallback((mode: GameMode, next: SudokuSession | null) => {
+    // The ref leads the state deliberately (docs/ARCHITECTURE.md「状態と ref」):
+    // React batches what one task raises, so a second mutation in that task
+    // would otherwise start from the session the first one already replaced.
+    sessionsRef.current = { ...sessionsRef.current, [mode]: next };
     setSessions((current) => ({ ...current, [mode]: next }));
   }, []);
 

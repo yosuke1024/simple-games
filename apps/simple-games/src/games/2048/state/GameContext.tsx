@@ -169,10 +169,19 @@ export function Game2048Provider({
     [persistStats],
   );
 
+  /** The one door the session goes through, so the ref cannot be forgotten. */
+  const putSession = useCallback((next: Game2048Session | null) => {
+    // The ref leads the state deliberately (docs/ARCHITECTURE.md「状態と ref」):
+    // React batches what one task raises, so a second mutation in that task
+    // would otherwise start from the session the first one already replaced.
+    sessionRef.current = next;
+    setSession(next);
+  }, []);
+
   /** Handles a session transition, persisting or finalizing as needed. */
   const commitSession = useCallback(
     (next: Game2048Session) => {
-      setSession(next);
+      putSession(next);
       if (next.status === 'playing') {
         void saveGame(next);
         return;
@@ -190,7 +199,7 @@ export function Game2048Provider({
         isNewBestScore: outcome?.isNewBestScore ?? false,
       });
     },
-    [finalizeRun],
+    [finalizeRun, putSession],
   );
 
   /** Brings a game on screen and hands the clock over to it. */
@@ -216,10 +225,10 @@ export function Game2048Provider({
     persistStats(applyGameStart(statsRef.current));
     setLastResult(null);
     setAnnounceReached(false);
-    setSession(next);
+    putSession(next);
     activate(next);
     void saveGame(next);
-  }, [activate, finalizeRun, persistStats, withElapsed]);
+  }, [activate, finalizeRun, persistStats, putSession, withElapsed]);
 
   const slide = useCallback(
     (direction: Direction): SlideOutcome => {
@@ -249,10 +258,10 @@ export function Game2048Provider({
     // An undone board is placed, not slid: the tiles did not travel backwards.
     setLastDirection(null);
     setLastResult(null);
-    setSession(next);
+    putSession(next);
     void saveGame(next);
     return true;
-  }, [withElapsed]);
+  }, [putSession, withElapsed]);
 
   const dismissReached = useCallback(() => setAnnounceReached(false), []);
 
@@ -261,7 +270,7 @@ export function Game2048Provider({
     const current = sessionRef.current;
     if (current && current.status === 'playing') {
       const synced = withElapsed(current);
-      setSession(synced);
+      putSession(synced);
       void saveGame(synced);
       const unbooked = Math.max(0, synced.elapsedSeconds - bookedRef.current);
       if (unbooked > 0) {
@@ -269,7 +278,7 @@ export function Game2048Provider({
         persistStats(applyPlayTime(statsRef.current, unbooked));
       }
     }
-  }, [persistStats, withElapsed]);
+  }, [persistStats, putSession, withElapsed]);
 
   const goHome = useCallback(() => {
     syncActiveGame();

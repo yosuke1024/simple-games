@@ -216,10 +216,19 @@ export function GinRummyProvider({
     [persistStats],
   );
 
+  /** The one door the session goes through, so the ref cannot be forgotten. */
+  const putSession = useCallback((next: GinRummySession | null) => {
+    // The ref leads the state deliberately (docs/ARCHITECTURE.md「状態と ref」):
+    // React batches what one task raises, so a second mutation in that task
+    // would otherwise start from the session the first one already replaced.
+    sessionRef.current = next;
+    setSession(next);
+  }, []);
+
   /** Handles a session transition, persisting or finalizing as needed. */
   const commitSession = useCallback(
     (next: GinRummySession) => {
-      setSession(next);
+      putSession(next);
       if (next.status === 'playing') {
         void saveGame(next);
         return;
@@ -232,7 +241,7 @@ export function GinRummyProvider({
       if (next.status === 'won') recordGameCompleted();
       setLastResult({ status: next.status, mine: next.scores[YOU], theirs: next.scores[CPU] });
     },
-    [finalizeMatch],
+    [finalizeMatch, putSession],
   );
 
   /** Brings a match on screen and hands the clock over to it. */
@@ -277,11 +286,11 @@ export function GinRummyProvider({
       setDifficulty(difficulty);
       persistStats(applyGameStart(statsRef.current, difficulty));
       setLastResult(null);
-      setSession(next);
+      putSession(next);
       activate(next);
       void saveGame(next);
     },
-    [activate, finalizeMatch, persistStats, setDifficulty, withElapsed],
+    [activate, finalizeMatch, persistStats, putSession, setDifficulty, withElapsed],
   );
 
   /**
@@ -355,7 +364,7 @@ export function GinRummyProvider({
     const current = sessionRef.current;
     if (current && current.status === 'playing') {
       const synced = withElapsed(current);
-      setSession(synced);
+      putSession(synced);
       void saveGame(synced);
       const unbooked = Math.max(0, synced.elapsedSeconds - bookedRef.current);
       if (unbooked > 0) {
@@ -363,7 +372,7 @@ export function GinRummyProvider({
         persistStats(applyPlayTime(statsRef.current, unbooked));
       }
     }
-  }, [persistStats, withElapsed]);
+  }, [persistStats, putSession, withElapsed]);
 
   const goHome = useCallback(() => {
     syncActiveGame();
