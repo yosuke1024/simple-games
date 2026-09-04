@@ -21,7 +21,22 @@
  * mark without the mode the touch player needs. It is the one input that means
  * the same thing whichever way X mode has the tap, because a player who
  * reached for the right button asked for a cross, not for the other half of a
- * mode. It draws nothing: strokes stay the left button's (§3).
+ * mode. Held down and moved, it crosses the whole run (issue #130): the other
+ * half of the desktop board's "left paints, right crosses", and the last
+ * place a nonogram player was still made to visit X mode to cross a line.
+ * A pen's barrel button is the right button here too — pressed while hovering
+ * it arrives as button 2, and held as the tip comes down it arrives inside
+ * `buttons` instead, because what changed then was the contact.
+ *
+ * That gives one right press two possible writers, because the browsers
+ * disagree on when the context menu belongs to it: macOS raises it on the way
+ * down, before anyone can know a stroke is coming, and Windows only once the
+ * button is back up, when the stroke is already over. Where the menu comes
+ * first it crosses the cell the press began on, and the stroke that may follow
+ * writes that same cell the same way. Where it comes last, a stroke that has
+ * drawn swallows it — from the window, because a run drawn to the end of a row
+ * is let go past the last cell as often as not, and the menu is then raised
+ * somewhere the board never sees (§3).
  */
 import {
   memo,
@@ -64,6 +79,12 @@ interface Stroke {
   readonly pointerId: number;
   /** The cell the press began on. It joins the stroke only once one starts. */
   readonly origin: number;
+  /**
+   * True when the right button (or a pen's barrel) started it. Such a stroke
+   * crosses and never paints, and the context menu of the press that started
+   * it must not end it — on macOS that menu arrives first (§3).
+   */
+  readonly right: boolean;
   /** What every cell of this stroke is set to, decided when it started. */
   mark: Mark;
   /**
@@ -122,6 +143,21 @@ export const NonoBoard = memo(function NonoBoard({
    * already has.
    */
   const pointerTypeRef = useRef('mouse');
+  /**
+   * Whether the press in progress is the right button's — a pen's barrel
+   * counts. This is how the menu a barrel raises is told apart from the one a
+   * pen's tip raises at the end of a long press, which has crossed already.
+   */
+  const rightPressRef = useRef(false);
+  /** Whether this press has had its context menu yet (macOS raises it first). */
+  const menuSeenRef = useRef(false);
+  /**
+   * Whether a context menu still to come belongs to a right stroke that has
+   * already crossed its cells, and so has nothing left to say. It outlives the
+   * release on purpose: Windows raises that menu only after the button comes
+   * back up, when the stroke itself is already gone.
+   */
+  const swallowMenuRef = useRef(false);
   const cellsRef = useRef<HTMLDivElement | null>(null);
   const strokeRef = useRef<Stroke | null>(null);
 
@@ -133,6 +169,25 @@ export const NonoBoard = memo(function NonoBoard({
   }, []);
 
   useEffect(() => clearTimer, [clearTimer]);
+
+  /**
+   * The menu a finished right stroke leaves behind, wherever it lands. A run
+   * drawn to the end of a row is let go past the last cell as often as not,
+   * and the board's own handler covers only the board — a pixel to its right
+   * is the screen behind it, where the native menu would open over the puzzle
+   * the player is reading. Caught on the window, in the capture phase, so it
+   * is stopped before it can reach a cell and cross one more.
+   */
+  useEffect(() => {
+    const swallow = (event: Event) => {
+      if (!swallowMenuRef.current) return;
+      swallowMenuRef.current = false;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    window.addEventListener('contextmenu', swallow, true);
+    return () => window.removeEventListener('contextmenu', swallow, true);
+  }, []);
 
   const primary = useCallback(
     (index: number) => (xMode ? onCross(index) : onPaint(index)),
@@ -156,6 +211,12 @@ export const NonoBoard = memo(function NonoBoard({
     (index: number): Mark => (xMode ? paintTarget(marks, index) : crossTarget(marks, index)),
     [marks, xMode],
   );
+
+  /**
+   * And for the right button's, which is the cross wherever X mode stands —
+   * the same answer a right click on that cell alone would have given (§3).
+   */
+  const rightTarget = useCallback((index: number): Mark => crossTarget(marks, index), [marks]);
 
   /**
    * Every cell the straight line between two samples passes through, in order.
@@ -194,24 +255,39 @@ export const NonoBoard = memo(function NonoBoard({
   const onPointerDown = useCallback(
     (event: PointerEvent<HTMLButtonElement>, index: number) => {
       pointerTypeRef.current = event.pointerType;
-      // The right button crosses on its context menu below, and draws nothing.
-      // Arming a long press for it as well would act twice over one press —
-      // once each — and take the cross straight back off.
-      if (event.button !== 0) return;
+      // The button that changed is the right one when the hand pressed it, and
+      // the contact when a pen's barrel was already held as the tip came down
+      // — so ask what is down, not only what moved. A mouse's left press
+      // carries `buttons` 1 and is not caught by it.
+      const right = event.button === 2 || (event.buttons & 2) !== 0;
+      rightPressRef.current = right;
+      menuSeenRef.current = false;
+      // Cleared on the way down rather than on release, because on Windows the
+      // menu arrives after the release and would find the answer thrown away.
+      swallowMenuRef.current = false;
+      // Nothing else means anything here — not the middle button, not a pen's
+      // eraser end.
+      if (event.button !== 0 && !right) return;
       handledRef.current = null;
       clearTimer();
-      timerRef.current = window.setTimeout(() => {
-        timerRef.current = null;
-        handledRef.current = index;
-        secondary(index);
-        // Held long enough to cross, and still down: a drag from here carries
-        // on with what the long press just did, rather than painting over it.
-        const stroke = strokeRef.current;
-        if (stroke !== null && stroke.origin === index) {
-          stroke.mark = secondaryTarget(index);
-          stroke.started = true;
-        }
-      }, LONG_PRESS_MS);
+      // No long press under the right button. Windows raises its menu only
+      // once the button is back up, so a timer would cross on its own and the
+      // menu would take that cross straight back off, over one single press.
+      if (!right) {
+        timerRef.current = window.setTimeout(() => {
+          timerRef.current = null;
+          handledRef.current = index;
+          secondary(index);
+          // Held long enough to cross, and still down: a drag from here
+          // carries on with what the long press just did, rather than
+          // painting over it.
+          const stroke = strokeRef.current;
+          if (stroke !== null && stroke.origin === index) {
+            stroke.mark = secondaryTarget(index);
+            stroke.started = true;
+          }
+        }, LONG_PRESS_MS);
+      }
       const cells = cellsRef.current;
       strokeRef.current =
         cells === null
@@ -219,7 +295,8 @@ export const NonoBoard = memo(function NonoBoard({
           : {
               pointerId: event.pointerId,
               origin: index,
-              mark: primaryTarget(index),
+              right,
+              mark: right ? rightTarget(index) : primaryTarget(index),
               rect: cells.getBoundingClientRect(),
               started: false,
               x: event.clientX,
@@ -229,14 +306,17 @@ export const NonoBoard = memo(function NonoBoard({
       // Capture keeps the moves coming to this button — and so, by bubbling,
       // to the grid below — after the finger has left the cell. An
       // improvement, never a precondition: it throws if the pointer is
-      // already gone, and the moves that stay over the board arrive anyway.
+      // already gone, and the moves that stay over the board arrive anyway. The
+      // right button takes it as well now, so a press held on its way off the
+      // board keeps the pointer to this cell until it is let go — nothing
+      // outside the board sees it pass.
       try {
         event.currentTarget.setPointerCapture(event.pointerId);
       } catch {
         // The stroke still works from the events we do get.
       }
     },
-    [clearTimer, primaryTarget, secondary, secondaryTarget],
+    [clearTimer, primaryTarget, rightTarget, secondary, secondaryTarget],
   );
 
   /**
@@ -263,6 +343,11 @@ export const NonoBoard = memo(function NonoBoard({
         // and the click it would otherwise have ended in are both dropped.
         stroke.started = true;
         clearTimer();
+        // A right press that has drawn answers its own context menu — but
+        // only one that is still to come. Where the menu came first (macOS) it
+        // has already crossed the cell this stroke began on, and nothing is
+        // owed; leaving the flag up there would swallow an unrelated menu.
+        if (stroke.right && !menuSeenRef.current) swallowMenuRef.current = true;
         fresh.unshift(stroke.origin);
       }
       // The click a release leaves behind reaches a cell only as the one the
@@ -288,21 +373,34 @@ export const NonoBoard = memo(function NonoBoard({
   }, []);
 
   /**
-   * The right button (issue #112): the cross, either way round, whatever X
-   * mode says. It never paints and never starts a stroke — one press, one
-   * mark, the same one every time.
+   * The right button (issues #112, #130): the cross, either way round,
+   * whatever X mode says. One press, one mark — and where the press goes on to
+   * draw a run, this is the cell it began on, written the same way the stroke
+   * will write it.
    */
   const onCellContextMenu = useCallback(
     (event: MouseEvent<HTMLButtonElement>, index: number) => {
-      // Touch raises it at the end of a long press, which has crossed already;
-      // crossing here as well would take that cross straight back off.
-      if (pointerTypeRef.current === 'touch' || pointerTypeRef.current === 'pen') return;
+      // A menu owed to a stroke never gets here: the window swallows it above.
+      // Touch and a pen's tip both raise a menu at the end of a long press,
+      // which has crossed already; crossing here as well would take that cross
+      // straight back off. A pen's barrel is not that press — it is the right
+      // button, and it arms no long press.
+      if (
+        !rightPressRef.current &&
+        (pointerTypeRef.current === 'touch' || pointerTypeRef.current === 'pen')
+      ) {
+        return;
+      }
       // macOS raises it from the primary button (ctrl+click), so a long press
       // may be armed, a stroke may be waiting on its first move, and a click
       // may still follow: drop the first two, and mark the cell so the third
-      // paints nothing.
+      // paints nothing. A right button's own stroke is left standing — macOS
+      // raises this menu on the way down, before the hand has said whether it
+      // meant one cross or a run, and dropping it there would put the right
+      // button back where #112 left it. What that stroke goes on to write to
+      // this cell is the mark being written here, so the two agree.
       clearTimer();
-      strokeRef.current = null;
+      if (strokeRef.current?.right !== true) strokeRef.current = null;
       handledRef.current = index;
       onCross(index);
     },
@@ -317,6 +415,10 @@ export const NonoBoard = memo(function NonoBoard({
    * reading.
    */
   const onBoardContextMenu = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    // Every menu raised over the board passes here, the ones that came from a
+    // cell included: it is where a press learns that its menu has been and
+    // gone, and so that a stroke starting now is owed no second one.
+    menuSeenRef.current = true;
     event.preventDefault();
   }, []);
 
