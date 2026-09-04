@@ -105,20 +105,55 @@ export function emptyMarks(size: number): Mark[] {
 }
 
 /**
- * Paint / unpaint one cell (§3). A cross is overwritten — the newest intent
- * wins. Returns null when the index is out of range.
+ * What painting `index` leaves behind: paint, or clear a paint already there
+ * (§3). A cross is overwritten — the newest intent wins.
+ *
+ * The answer is separate from the toggle below because a drag stroke asks it
+ * once, at the cell it starts on, and then writes that one answer to every
+ * cell it crosses (`setMarks`). One rule, both ways of using it.
  */
+export const paintTarget = (marks: readonly Mark[], index: number): Mark =>
+  marks[index] === FILLED ? UNKNOWN : FILLED;
+
+/** What crossing `index` leaves behind. Paint is overwritten, same as above. */
+export const crossTarget = (marks: readonly Mark[], index: number): Mark =>
+  marks[index] === CROSSED ? UNKNOWN : CROSSED;
+
+/** Paint / unpaint one cell (§3). Returns null when the index is out of range. */
 export function togglePaint(marks: readonly Mark[], index: number): Mark[] | null {
   if (index < 0 || index >= marks.length) return null;
   const next = [...marks];
-  next[index] = marks[index] === FILLED ? UNKNOWN : FILLED;
+  next[index] = paintTarget(marks, index);
   return next;
 }
 
-/** Cross / uncross one cell (§3). Paint is overwritten, same as above. */
+/** Cross / uncross one cell (§3). Same refusal as above. */
 export function toggleCross(marks: readonly Mark[], index: number): Mark[] | null {
   if (index < 0 || index >= marks.length) return null;
   const next = [...marks];
-  next[index] = marks[index] === CROSSED ? UNKNOWN : CROSSED;
+  next[index] = crossTarget(marks, index);
+  return next;
+}
+
+/**
+ * Set every listed cell to one mark, ignoring indices out of range (§3).
+ *
+ * The explicit target is what makes a drag stroke safe: re-entering a cell the
+ * same stroke already touched writes the same value again instead of toggling
+ * it back. Returns null when nothing would change, so a stroke crossing cells
+ * it has already settled costs no new board.
+ */
+export function setMarks(
+  marks: readonly Mark[],
+  indices: readonly number[],
+  mark: Mark,
+): Mark[] | null {
+  let next: Mark[] | null = null;
+  for (const index of indices) {
+    if (index < 0 || index >= marks.length) continue;
+    if ((next ?? marks)[index] === mark) continue;
+    next ??= [...marks];
+    next[index] = mark;
+  }
   return next;
 }

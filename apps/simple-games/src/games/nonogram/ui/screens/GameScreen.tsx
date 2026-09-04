@@ -18,7 +18,7 @@ import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconHint, IconRetry } from '@/ui/components/icons';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import { useGameKeys } from '@/ui/useGameKeys';
-import type { Hint } from '../../game';
+import type { Hint, Mark } from '../../game';
 import { useNonogram } from '../../state/GameContext';
 import { NonoBoard } from '../components/NonoBoard';
 import { NonoResultOverlay } from '../components/NonoResultOverlay';
@@ -34,6 +34,7 @@ export function NonoGameScreen() {
     sessionEpoch,
     paint,
     cross,
+    markCells,
     takeHint,
     setXMode,
     goHome,
@@ -92,6 +93,20 @@ export function NonoGameScreen() {
       void haptics.tap();
     },
     [cross],
+  );
+
+  /* One drag stroke reports the cells it has just crossed, all set to the one
+     mark it decided on when it started (§3). Feedback is per batch rather than
+     per cell: a fast finger crossing three cells in one frame is one event to
+     the player, not three. */
+  const onStroke = useCallback(
+    (indices: readonly number[], mark: Mark) => {
+      setHint(null);
+      if (!markCells(indices, mark)) return;
+      sounds.select();
+      void haptics.tap();
+    },
+    [markCells],
   );
 
   /** Turning X mode on says what it changed; turning it off needs no words. */
@@ -165,6 +180,7 @@ export function NonoGameScreen() {
             xMode={prefs.xMode}
             onPaint={onPaint}
             onCross={onCross}
+            onStroke={onStroke}
           />
         </div>
 
