@@ -168,10 +168,19 @@ export function GomokuProvider({
     [persistStats],
   );
 
+  /** The one door the session goes through, so the ref cannot be forgotten. */
+  const putSession = useCallback((next: GomokuSession | null) => {
+    // The ref leads the state deliberately (docs/ARCHITECTURE.md「状態と ref」):
+    // React batches what one task raises, so a second mutation in that task
+    // would otherwise start from the session the first one already replaced.
+    sessionRef.current = next;
+    setSession(next);
+  }, []);
+
   /** Handles a session transition, persisting or finalizing as needed. */
   const commitSession = useCallback(
     (next: GomokuSession) => {
-      setSession(next);
+      putSession(next);
       if (next.status === 'playing') {
         void saveGame(next);
         return;
@@ -180,7 +189,7 @@ export function GomokuProvider({
       finalizeMatch(next);
       recordGameCompleted();
     },
-    [finalizeMatch],
+    [finalizeMatch, putSession],
   );
 
   /** Brings a match on screen and hands the clock over to it. */
@@ -218,11 +227,11 @@ export function GomokuProvider({
       const next = createSession(difficulty, prefsRef.current.playerIsBlack ? BLACK : WHITE);
       finalizedRef.current = false;
       persistStats(applyGameStart(statsRef.current, difficulty));
-      setSession(next);
+      putSession(next);
       activate(next);
       void saveGame(next);
     },
-    [activate, finalizeMatch, persistStats, withElapsed],
+    [activate, finalizeMatch, persistStats, putSession, withElapsed],
   );
 
   const playCell = useCallback(
@@ -251,10 +260,10 @@ export function GomokuProvider({
     // An undone board is placed, not replayed: nothing pops, and any
     // scheduled CPU reply is against a session that no longer exists.
     setLastMove(null);
-    setSession(next);
+    putSession(next);
     void saveGame(next);
     return true;
-  }, [withElapsed]);
+  }, [putSession, withElapsed]);
 
   // The CPU's turn: one armed timeout whenever the game screen shows a live
   // session with the CPU to move (§4). Depends on the session itself, so any
@@ -283,7 +292,7 @@ export function GomokuProvider({
     const current = sessionRef.current;
     if (current && current.status === 'playing') {
       const synced = withElapsed(current);
-      setSession(synced);
+      putSession(synced);
       void saveGame(synced);
       const unbooked = Math.max(0, synced.elapsedSeconds - bookedRef.current);
       if (unbooked > 0) {
@@ -291,7 +300,7 @@ export function GomokuProvider({
         persistStats(applyPlayTime(statsRef.current, unbooked));
       }
     }
-  }, [persistStats, withElapsed]);
+  }, [persistStats, putSession, withElapsed]);
 
   const goHome = useCallback(() => {
     syncActiveGame();

@@ -156,10 +156,19 @@ export function BlockProvider({
     persistStats(applyPlayTime(statsRef.current, unbooked));
   }, [persistStats]);
 
+  /** The one door the session goes through, so the ref cannot be forgotten. */
+  const putSession = useCallback((next: BlockSession | null) => {
+    // The ref leads the state deliberately (docs/ARCHITECTURE.md「状態と ref」):
+    // React batches what one task raises, so a second mutation in that task
+    // would otherwise start from the session the first one already replaced.
+    sessionRef.current = next;
+    setSession(next);
+  }, []);
+
   /** Handles a session transition, persisting or finalizing as needed. */
   const commitSession = useCallback(
     (next: BlockSession) => {
-      setSession(next);
+      putSession(next);
       if (next.status === 'playing') {
         void saveGame(next);
         return;
@@ -180,7 +189,7 @@ export function BlockProvider({
         previousBestScore: previous,
       });
     },
-    [persistStats],
+    [persistStats, putSession],
   );
 
   /** Brings a game on screen and hands the clock over to it. */
@@ -200,10 +209,10 @@ export function BlockProvider({
     const next = createSession();
     persistStats(applyGameStart(statsRef.current));
     setLastResult(null);
-    setSession(next);
+    putSession(next);
     activate(next);
     void saveGame(next);
-  }, [activate, bookElapsed, persistStats]);
+  }, [activate, bookElapsed, persistStats, putSession]);
 
   const resumeGame = useCallback(() => {
     const current = sessionRef.current;
@@ -241,21 +250,21 @@ export function BlockProvider({
     if (!current || current.status !== 'playing') return false;
     const next = undo(withElapsed(current));
     if (!next) return false;
-    setSession(next);
+    putSession(next);
     void saveGame(next);
     return true;
-  }, [withElapsed]);
+  }, [putSession, withElapsed]);
 
   /** Saves the on-screen game and books its play time so far. */
   const syncActiveGame = useCallback(() => {
     const current = sessionRef.current;
     if (current && current.status === 'playing') {
       const synced = withElapsed(current);
-      setSession(synced);
+      putSession(synced);
       void saveGame(synced);
     }
     bookElapsed();
-  }, [bookElapsed, withElapsed]);
+  }, [bookElapsed, putSession, withElapsed]);
 
   const goHome = useCallback(() => {
     syncActiveGame();

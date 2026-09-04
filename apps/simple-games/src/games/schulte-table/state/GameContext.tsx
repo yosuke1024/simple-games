@@ -160,11 +160,17 @@ export function SchulteProvider({
   const navigate = useCallback((next: Screen) => setScreen(next), []);
 
   const persistStats = useCallback((next: Stats) => {
+    // The ref leads the state, for the reason putSession's does below: a run
+    // can be booked and the next one started inside one tap, and the second
+    // write reads this ref — a stale read would undo the first one's booking.
+    statsRef.current = next;
     setStats(next);
     void saveRecord(statsSchema, next);
   }, []);
 
   const persistProgress = useCallback((next: Progress) => {
+    // The ref leads the state, for the same reason persistStats' does.
+    progressRef.current = next;
     setProgress(next);
     void saveRecord(progressSchema, next);
   }, []);
@@ -219,6 +225,15 @@ export function SchulteProvider({
     [bookMisses, withElapsed],
   );
 
+  /** The one door the session goes through, so the ref cannot be forgotten. */
+  const putSession = useCallback((next: SchulteSession | null) => {
+    // The ref leads the state deliberately (docs/ARCHITECTURE.md「状態と ref」):
+    // React batches what one task raises, so a second mutation in that task
+    // would otherwise start from the session the first one already replaced.
+    sessionRef.current = next;
+    setSession(next);
+  }, []);
+
   const beginSession = useCallback(
     (next: SchulteSession) => {
       // Whatever was on screen is being thrown away right now — Retry is the
@@ -227,13 +242,13 @@ export function SchulteProvider({
       // been booked by `finish`, and `bookAbandoned` leaves it alone.
       persistStats(applyGameStart(bookAbandoned(statsRef.current), next.size));
       setLastResult(null);
-      setSession(next);
+      putSession(next);
       elapsedRef.current = 0;
       bookedRef.current = 0;
       bookedMissesRef.current = 0;
       setScreen('game');
     },
-    [bookAbandoned, persistStats],
+    [bookAbandoned, persistStats, putSession],
   );
 
   const startLevel = useCallback(
@@ -265,11 +280,11 @@ export function SchulteProvider({
       if (!current) return false;
       const outcome = tapCell(withElapsed(current), index);
       if (!outcome) return false;
-      setSession(outcome.session);
+      putSession(outcome.session);
       if (outcome.session.status === 'cleared') finish(outcome.session);
       return outcome.hit;
     },
-    [finish, withElapsed],
+    [finish, putSession, withElapsed],
   );
 
   /**
@@ -285,15 +300,15 @@ export function SchulteProvider({
 
   const goHome = useCallback(() => {
     abandonActiveRound();
-    setSession(null);
+    putSession(null);
     setScreen('home');
-  }, [abandonActiveRound]);
+  }, [abandonActiveRound, putSession]);
 
   const exitToCollection = useCallback(() => {
     abandonActiveRound();
-    setSession(null);
+    putSession(null);
     onExit();
-  }, [abandonActiveRound, onExit]);
+  }, [abandonActiveRound, onExit, putSession]);
 
   const completeTutorial = useCallback(() => {
     if (flagsRef.current.tutorialCompleted) return;

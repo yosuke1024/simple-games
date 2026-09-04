@@ -142,11 +142,17 @@ export function RecallProvider({
   const navigate = useCallback((next: Screen) => setScreen(next), []);
 
   const persistStats = useCallback((next: Stats) => {
+    // The ref leads the state, for the reason putSession's does below: a run
+    // can be booked and the next one started inside one tap, and the second
+    // write reads this ref — a stale read would undo the first one's booking.
+    statsRef.current = next;
     setStats(next);
     void saveRecord(statsSchema, next);
   }, []);
 
   const persistProgress = useCallback((next: Progress) => {
+    // The ref leads the state, for the same reason persistStats' does.
+    progressRef.current = next;
     setProgress(next);
     void saveRecord(progressSchema, next);
   }, []);
@@ -193,16 +199,25 @@ export function RecallProvider({
     [bookPlayTime, persistProgress, persistStats],
   );
 
+  /** The one door the session goes through, so the ref cannot be forgotten. */
+  const putSession = useCallback((next: RecallSession | null) => {
+    // The ref leads the state deliberately (docs/ARCHITECTURE.md「状態と ref」):
+    // React batches what one task raises, so a second mutation in that task
+    // would otherwise start from the session the first one already replaced.
+    sessionRef.current = next;
+    setSession(next);
+  }, []);
+
   const beginSession = useCallback(
     (next: RecallSession) => {
       persistStats(applyGameStart(statsRef.current, next.size));
       setLastResult(null);
-      setSession(next);
+      putSession(next);
       elapsedRef.current = 0;
       bookedRef.current = 0;
       setScreen('game');
     },
-    [persistStats],
+    [persistStats, putSession],
   );
 
   const startLevel = useCallback(
@@ -234,11 +249,11 @@ export function RecallProvider({
       if (!current) return false;
       const next = tapCell(withElapsed(current), index);
       if (!next) return false;
-      setSession(next);
+      putSession(next);
       if (next.status !== 'playing') finish(next);
       return true;
     },
-    [finish, withElapsed],
+    [finish, putSession, withElapsed],
   );
 
   /**
@@ -256,15 +271,15 @@ export function RecallProvider({
 
   const goHome = useCallback(() => {
     abandonActiveRound();
-    setSession(null);
+    putSession(null);
     setScreen('home');
-  }, [abandonActiveRound]);
+  }, [abandonActiveRound, putSession]);
 
   const exitToCollection = useCallback(() => {
     abandonActiveRound();
-    setSession(null);
+    putSession(null);
     onExit();
-  }, [abandonActiveRound, onExit]);
+  }, [abandonActiveRound, onExit, putSession]);
 
   const completeTutorial = useCallback(() => {
     if (flagsRef.current.tutorialCompleted) return;
