@@ -23,7 +23,11 @@ export const hi: Messages = {
   dailyToday: 'आज',
   dailyBacklogHint: 'किसी दिन को पूरा करें, तो उससे पिछला दिन खुल जाता है।',
   modeDaily: 'डेली',
-  freePlay: 'फ़्री प्ले',
+  // 'फ़्री' reads first as "free of charge" in Hindi, which this mode is not
+  // about — every game feature is free with or without it. मुक्त खेल is the
+  // unrestricted-play sense the mode actually has (docs/BRAND.md「表現ルール」:
+  // never let a word claim the app is free without saying what is free).
+  freePlay: 'मुक्त खेल',
   freePlayNote: 'जब चाहें, एक नया बोर्ड।',
   difficulty: 'कठिनाई',
   undo: 'अनडू',
