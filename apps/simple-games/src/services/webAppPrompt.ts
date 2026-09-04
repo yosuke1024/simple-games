@@ -11,7 +11,11 @@
  *   and nothing is written — an installed app never carries a record about
  *   installing itself.
  * - Experience first: nothing before WEB_APP_PROMPT_AT games have been left
- *   for the collection. A first visit and a first game see no card at all.
+ *   for the collection. A first visit and a first game see no card at all —
+ *   unless this visit *began* on a game, which is what a shared link does, and
+ *   then one game is enough (WEB_APP_PROMPT_FROM_LINK_AT). Somebody sent here
+ *   by a friend has already had the recommendation, and usually plays exactly
+ *   the one game they were sent; waiting for a second costs them the card.
  * - Once, ever. The showing is booked the moment the card renders, so a
  *   reload or a killed tab cannot turn one card into several.
  * - Offline it simply does not appear, and nothing is booked or retried
@@ -31,11 +35,24 @@ import { APP_STORE_URL, PLAY_STORE_URL } from '@simple-games/brand';
 import type { KVStore } from '../storage/kv';
 import { preferencesKV } from '../storage/kv';
 import { loadRecord, saveRecord } from '../storage/repo';
-import { WEB_APP_PROMPT_AT, webAppPromptSchema, type WebAppPromptState } from '../storage/schemas';
+import {
+  WEB_APP_PROMPT_AT,
+  WEB_APP_PROMPT_FROM_LINK_AT,
+  webAppPromptSchema,
+  type WebAppPromptState,
+} from '../storage/schemas';
 import { isOnline } from './network';
 
 let state: WebAppPromptState = webAppPromptSchema.defaultValue();
 let kvStore: KVStore = preferencesKV;
+
+/**
+ * Whether this visit started on a game rather than on the collection. Session
+ * state on purpose, not a saved field: it is a fact about how somebody arrived
+ * this time, and the moment they come back under their own steam they are an
+ * ordinary visitor again. Nothing about it is written down or sent.
+ */
+let arrivedOnGame = false;
 
 /**
  * Loads the counter at boot. Local read only; never blocks the app. On the
@@ -44,8 +61,20 @@ let kvStore: KVStore = preferencesKV;
 export async function initWebAppPrompt(kv: KVStore = preferencesKV): Promise<void> {
   kvStore = kv;
   state = webAppPromptSchema.defaultValue();
+  arrivedOnGame = false;
   if (Capacitor.isNativePlatform()) return;
   state = await loadRecord(webAppPromptSchema, kv);
+}
+
+/**
+ * Told once, by the shell, as it works out what to show first: this visit
+ * opened on a game (`?game=<id>`) rather than on the collection. The service
+ * is not allowed to read the URL itself — routing belongs to `app/webRoute.ts`
+ * and services do not reach into it.
+ */
+export function noteWebArrivalOnGame(): void {
+  if (Capacitor.isNativePlatform()) return;
+  arrivedOnGame = true;
 }
 
 /**
@@ -62,12 +91,8 @@ export function recordWebGameExit(): void {
 
 /** Whether the collection home should carry the card right now. */
 export function shouldShowWebAppPrompt(): boolean {
-  return (
-    !Capacitor.isNativePlatform() &&
-    !state.shown &&
-    state.gameExits >= WEB_APP_PROMPT_AT &&
-    isOnline()
-  );
+  const after = arrivedOnGame ? WEB_APP_PROMPT_FROM_LINK_AT : WEB_APP_PROMPT_AT;
+  return !Capacitor.isNativePlatform() && !state.shown && state.gameExits >= after && isOnline();
 }
 
 /**

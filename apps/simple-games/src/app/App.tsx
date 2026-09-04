@@ -17,6 +17,7 @@ import { markReviewPromptShown, shouldPromptReview } from '../services/review';
 import { releaseSound } from '../services/sound';
 import {
   markWebAppPromptShown,
+  noteWebArrivalOnGame,
   recordWebGameExit,
   shouldShowWebAppPrompt,
 } from '../services/webAppPrompt';
@@ -70,7 +71,12 @@ function trackWebGameClosed(gameId: GameId): void {
 function initialView(): View {
   if (!webRoutingEnabled()) return { kind: 'collection' };
   const gameId = currentRouteGame();
-  return gameId ? { kind: 'game', gameId } : { kind: 'collection' };
+  if (!gameId) return { kind: 'collection' };
+  // Arriving straight on a game means somebody else pointed here — a shared
+  // result, a guide page. The app card is offered one game earlier for them
+  // (services/webAppPrompt.ts); this is the only place that knows.
+  noteWebArrivalOnGame();
+  return { kind: 'game', gameId };
 }
 
 export function App() {

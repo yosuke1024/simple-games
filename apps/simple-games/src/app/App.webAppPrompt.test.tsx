@@ -289,6 +289,28 @@ describe('the browser version', () => {
   });
 });
 
+/**
+ * The other way in: a `?game=<id>` address (issue #83). `App.tsx`'s
+ * `initialView()` is the only place that knows a visit began this way, and it
+ * tells the service (`noteWebArrivalOnGame`) so the card can meet a visitor
+ * who was already recommended the app — once, one game earlier
+ * (`WEB_APP_PROMPT_FROM_LINK_AT`, docs/WEB_VERSION.md「アプリへの送客」).
+ */
+describe('a visitor who arrives on a game link', () => {
+  it('sees the card after leaving that one game, not after a second', async () => {
+    const user = userEvent.setup();
+    window.history.replaceState(null, '', '/?game=sudoku');
+    renderShell();
+    await screen.findByText('playing sudoku');
+    expect(card()).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'All games' }));
+    await settle();
+
+    expect(card()).toBeInTheDocument();
+  });
+});
+
 describe('the app build', () => {
   it('never shows the card, however many games are played', async () => {
     capacitorMock.native = true;

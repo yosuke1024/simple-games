@@ -259,6 +259,25 @@ export interface WebAppPromptState {
  */
 export const WEB_APP_PROMPT_AT = 2;
 
+/**
+ * The same card, one game earlier, for a visitor who arrived on a game rather
+ * than on the collection — a shared link or a guide link put them there
+ * (`?game=<id>`, docs/WEB_VERSION.md「URL(ゲーム別の入口)」).
+ *
+ * Why they are not the same number: somebody who opened the collection on
+ * their own is browsing, and asking them about an app before they have played
+ * twice is asking before they know what this is. Somebody who followed a link
+ * a friend sent them was already recommended the thing — they arrived on one
+ * game, and if they leave after that game they leave never having been told
+ * an app exists. **Two is the wrong number for them, because they usually
+ * only ever play one.**
+ *
+ * It is still not zero, and it is still once ever: the card comes after a
+ * game, never before one, and it is a card in the page rather than anything
+ * that interrupts (docs/WEB_VERSION.md「アプリへの送客」).
+ */
+export const WEB_APP_PROMPT_FROM_LINK_AT = 1;
+
 export const webAppPromptSchema: SchemaDef<WebAppPromptState> = {
   key: STORAGE_KEYS.webAppPrompt,
   version: 1,
