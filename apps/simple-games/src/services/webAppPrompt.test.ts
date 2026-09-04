@@ -24,6 +24,7 @@ import {
   getWebAppPromptStateForTesting,
   initWebAppPrompt,
   markWebAppPromptShown,
+  noteWebArrivalOnGame,
   recordWebGameExit,
   resetWebAppPromptForTesting,
   shouldShowWebAppPrompt,
@@ -46,6 +47,9 @@ const leaveGames = (n: number) => {
 };
 
 describe('when the card becomes due', () => {
+  // Pinned against WEB_APP_PROMPT_FROM_LINK_AT below loosening this: an
+  // ordinary visitor — nobody called `noteWebArrivalOnGame()` — still needs
+  // the full two exits. One is not enough.
   it('says nothing on a first visit or after a single game', async () => {
     await initWebAppPrompt(createMemoryKV());
     expect(shouldShowWebAppPrompt()).toBe(false);
@@ -77,6 +81,71 @@ describe('when the card becomes due', () => {
     // the card to show — the retry is the visitor's, not a timer's.
     networkMock.online = true;
     expect(shouldShowWebAppPrompt()).toBe(true);
+  });
+});
+
+/**
+ * The lowered threshold for a visitor who arrived on a game rather than on
+ * the collection (`WEB_APP_PROMPT_FROM_LINK_AT`, docs/WEB_VERSION.md
+ * 「アプリへの送客」): a shared link or a guide link already recommended the
+ * app once, so waiting for a second exit costs them the card outright, since
+ * that kind of visitor usually only ever plays the one game they were sent.
+ */
+describe('a visitor who arrived on a game', () => {
+  it('is eligible after a single exit, not two', async () => {
+    await initWebAppPrompt(createMemoryKV());
+    noteWebArrivalOnGame();
+    expect(shouldShowWebAppPrompt()).toBe(false);
+    recordWebGameExit();
+    expect(shouldShowWebAppPrompt()).toBe(true);
+  });
+
+  it('does nothing when called on the native build', async () => {
+    capacitorMock.native = true;
+    await initWebAppPrompt(createMemoryKV());
+    // Guarded no-op: isNativePlatform() is true at the moment this is called.
+    noteWebArrivalOnGame();
+    capacitorMock.native = false;
+    recordWebGameExit();
+    // Had the flag actually been set, one exit would already be enough.
+    expect(shouldShowWebAppPrompt()).toBe(false);
+    recordWebGameExit();
+    expect(shouldShowWebAppPrompt()).toBe(true);
+  });
+
+  it('is cleared by initWebAppPrompt, so a later visit needs the ordinary two', async () => {
+    const kv = createMemoryKV();
+    await initWebAppPrompt(kv);
+    noteWebArrivalOnGame();
+    recordWebGameExit();
+    expect(shouldShowWebAppPrompt()).toBe(true);
+
+    // A later visit that opens on the collection this time, not on a game.
+    await initWebAppPrompt(kv);
+    expect(shouldShowWebAppPrompt()).toBe(false);
+    recordWebGameExit();
+    expect(shouldShowWebAppPrompt()).toBe(true);
+  });
+
+  it('is still suppressed offline', async () => {
+    await initWebAppPrompt(createMemoryKV());
+    noteWebArrivalOnGame();
+    recordWebGameExit();
+    networkMock.online = false;
+    expect(shouldShowWebAppPrompt()).toBe(false);
+    networkMock.online = true;
+    expect(shouldShowWebAppPrompt()).toBe(true);
+  });
+
+  it('is still a once-ever showing', async () => {
+    await initWebAppPrompt(createMemoryKV());
+    noteWebArrivalOnGame();
+    recordWebGameExit();
+    markWebAppPromptShown();
+    expect(shouldShowWebAppPrompt()).toBe(false);
+    recordWebGameExit();
+    recordWebGameExit();
+    expect(shouldShowWebAppPrompt()).toBe(false);
   });
 });
 

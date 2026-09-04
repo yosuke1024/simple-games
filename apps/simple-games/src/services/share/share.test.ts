@@ -10,8 +10,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Controllable per test; defaults to false so every browser-path test below
 // keeps exercising exactly the ladder it did before the native plugin existed.
+// `getPlatform` only matters to the "on a device" tests below (it is read
+// only inside the plugin rung); `vi.resetAllMocks()` in the top-level
+// `beforeEach` strips this default anyway, which is why every "on a device"
+// test sets it again explicitly rather than leaning on one here.
 vi.mock('@capacitor/core', () => ({
-  Capacitor: { isNativePlatform: vi.fn(() => false) },
+  Capacitor: { isNativePlatform: vi.fn(() => false), getPlatform: vi.fn(() => 'android') },
 }));
 vi.mock('@capacitor/filesystem', () => ({
   Filesystem: { writeFile: vi.fn() },
@@ -26,7 +30,7 @@ import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { shareGame } from './share';
 import type { ShareCard } from './card';
-import type { ShareMessage } from './message';
+import { shareMessageAsText, type ShareMessage } from './message';
 
 const message: ShareMessage = {
   text: 'I played Sudoku on Simple Games.\nYou can play it right in your browser.',
@@ -227,6 +231,7 @@ describe('on a device', () => {
   });
 
   it('writes the picture to the cache and hands the sheet its uri', async () => {
+    vi.mocked(Capacitor.getPlatform).mockReturnValue('ios');
     vi.mocked(Filesystem.writeFile).mockResolvedValue({
       uri: 'file:///cache/simple-games-sudoku.png',
     });
@@ -240,32 +245,34 @@ describe('on a device', () => {
       directory: Directory.Cache,
     });
     expect(Share.share).toHaveBeenCalledWith({
-      text: message.text,
-      url: message.url,
+      text: shareMessageAsText(message),
       files: ['file:///cache/simple-games-sudoku.png'],
     });
   });
 
-  it('shares text and url alone, with no files key, when there is no card', async () => {
+  it('shares the words and the link alone, with no files key, when there is no card', async () => {
+    vi.mocked(Capacitor.getPlatform).mockReturnValue('ios');
     vi.mocked(Share.share).mockResolvedValue({});
 
     await expect(shareGame(message)).resolves.toBe('shared');
 
     expect(Filesystem.writeFile).not.toHaveBeenCalled();
-    expect(Share.share).toHaveBeenCalledWith({ text: message.text, url: message.url });
+    expect(Share.share).toHaveBeenCalledWith({ text: shareMessageAsText(message) });
     expect(vi.mocked(Share.share).mock.calls[0]?.[0]).not.toHaveProperty('files');
   });
 
   it('still shares the words when the picture cannot be written', async () => {
+    vi.mocked(Capacitor.getPlatform).mockReturnValue('ios');
     vi.mocked(Filesystem.writeFile).mockRejectedValue(new Error('disk full'));
     vi.mocked(Share.share).mockResolvedValue({});
 
     await expect(shareGame(message, card())).resolves.toBe('shared');
 
-    expect(Share.share).toHaveBeenCalledWith({ text: message.text, url: message.url });
+    expect(Share.share).toHaveBeenCalledWith({ text: shareMessageAsText(message) });
   });
 
   it('treats a cancelled sheet as an answer, never opening the browser ladder', async () => {
+    vi.mocked(Capacitor.getPlatform).mockReturnValue('android');
     vi.mocked(Filesystem.writeFile).mockResolvedValue({
       uri: 'file:///cache/simple-games-sudoku.png',
     });
@@ -281,6 +288,7 @@ describe('on a device', () => {
   });
 
   it('falls through to the browser ladder on any other plugin failure', async () => {
+    vi.mocked(Capacitor.getPlatform).mockReturnValue('android');
     vi.mocked(Filesystem.writeFile).mockResolvedValue({
       uri: 'file:///cache/simple-games-sudoku.png',
     });
@@ -294,6 +302,7 @@ describe('on a device', () => {
   });
 
   it('never touches the browser ladder when the plugin succeeds', async () => {
+    vi.mocked(Capacitor.getPlatform).mockReturnValue('ios');
     vi.mocked(Filesystem.writeFile).mockResolvedValue({
       uri: 'file:///cache/simple-games-sudoku.png',
     });
@@ -306,5 +315,49 @@ describe('on a device', () => {
 
     expect(share).not.toHaveBeenCalled();
     expect(copy).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The reason for the platform branch (`share.ts`'s "ANDROID GETS THE LINK
+   * INSIDE THE TEXT" note): `@capacitor/share`'s Android code joins `text` and
+   * `url` with a space when both are given, and X's Android receiver then
+   * drops that trailing link once a picture is attached. The same message
+   * posted fine when the link sat on its own line inside `text` instead — so
+   * Android gets the whole message, link included, in `text`, and no `url` at
+   * all; iOS is unaffected and keeps the two apart.
+   */
+  describe('where the link goes', () => {
+    // The link is the point of the share, and a receiver is free to decline a
+    // separate `url` field — X does, on a post carrying a picture, and that is
+    // what shipped a message with no address in it. So it travels as part of
+    // the text, on both platforms, and exactly once.
+    for (const platform of ['android', 'ios'] as const) {
+      it(`sends the link inside the text, exactly once, on ${platform}`, async () => {
+        vi.mocked(Capacitor.getPlatform).mockReturnValue(platform);
+        vi.mocked(Filesystem.writeFile).mockResolvedValue({
+          uri: 'file:///cache/simple-games-sudoku.png',
+        });
+        vi.mocked(Share.share).mockResolvedValue({});
+
+        await expect(shareGame(message, card())).resolves.toBe('shared');
+
+        const payload = vi.mocked(Share.share).mock.calls[0]?.[0];
+        expect(payload).toHaveProperty('text', shareMessageAsText(message));
+        expect(payload).toHaveProperty('files', ['file:///cache/simple-games-sudoku.png']);
+        // Never as its own field: passing both would send the address twice on
+        // Android, where the plugin appends `url` to the text as well.
+        expect(payload).not.toHaveProperty('url');
+        expect(String(payload?.text).split(message.url)).toHaveLength(2);
+      });
+    }
+
+    it('still carries the link when there is no picture to attach', async () => {
+      vi.mocked(Capacitor.getPlatform).mockReturnValue('ios');
+      vi.mocked(Share.share).mockResolvedValue({});
+
+      await expect(shareGame(message)).resolves.toBe('shared');
+
+      expect(Share.share).toHaveBeenCalledWith({ text: shareMessageAsText(message) });
+    });
   });
 });

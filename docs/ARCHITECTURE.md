@@ -144,6 +144,11 @@ src/
   `https://localhost` で `undefined`)。それまでの Android は共有シートが一度も
   開かず、クリップボードへ落ちていた。プラグインが失敗した場合はブラウザ側の
   梯子(Web Share → clipboard)へそのまま落ちるので、退化はしない。
+  **Android だけは文面と URL を自前で 1 つの text にまとめ、`url` を渡さない**
+  —— プラグインは両方渡すと「本文 + 半角スペース + URL」に連結するが、X の
+  Android 受け口は画像が付くとその末尾 URL を捨てる(2026-09-04 の実機で確認。
+  URL が独立行だったクリップボード経由の文面は残っていた)。iOS は URL を
+  別項目のまま渡す(共有シートが本物の URL として扱うため)。
   共有は報酬・機能解放・再催促を一切生まない
   ([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「初期リリースで実装しないもの」)。
 - Analytics / Remote Config / トラッキングのサービスは**アプリの成果物に

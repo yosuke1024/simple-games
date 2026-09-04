@@ -177,9 +177,25 @@ async function shareViaPlugin(
         // Could not write the picture. Share the words rather than nothing.
       }
     }
+    // THE LINK TRAVELS INSIDE THE TEXT, NEVER AS A SEPARATE `url`
+    //
+    // A share whose link does not arrive is not a share: the picture is the
+    // invitation, the address is the whole of what it invites you to. Handed
+    // over as its own field, the address is something the receiving app may
+    // decline — and X does, on a post that carries a picture. Reported from
+    // iOS on 2026-09-04: the three sentences arrived, the address did not.
+    // The same message pasted as one block of text — the clipboard fallback
+    // below, where the address sits on its own line — posted with the address
+    // intact.
+    //
+    // So both platforms get one string, with the address on its own line, and
+    // `url` is not passed at all (passing both would send the address twice:
+    // Android's plugin appends it to the text as well, `SharePlugin.java`).
+    // What this gives up is the receiver's chance to treat the address as a
+    // real URL rather than as characters — worth losing, since a link that is
+    // only text still opens, and a link that is dropped does not exist.
     await Share.share({
-      text: message.text,
-      url: message.url,
+      text: shareMessageAsText(message),
       ...(files ? { files } : {}),
     });
     return 'shared';
