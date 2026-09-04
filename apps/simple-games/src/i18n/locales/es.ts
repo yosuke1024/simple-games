@@ -72,6 +72,9 @@ export const es: Messages = {
   // Collection shell
   gamesHeading: 'Juegos',
   recentHeading: 'Jugados hace poco',
+  favoritesHeading: 'Favoritos',
+  addToFavorites: 'Agregar a favoritos',
+  removeFromFavorites: 'Quitar de favoritos',
   categoryLogic: 'Lógica',
   categoryCards: 'Cartas',
   categoryPuzzle: 'Rompecabezas',

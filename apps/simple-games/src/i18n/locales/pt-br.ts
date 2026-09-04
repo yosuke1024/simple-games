@@ -72,6 +72,9 @@ export const ptBR: Messages = {
   // Collection shell
   gamesHeading: 'Jogos',
   recentHeading: 'Jogados recentemente',
+  favoritesHeading: 'Favoritos',
+  addToFavorites: 'Adicionar aos favoritos',
+  removeFromFavorites: 'Remover dos favoritos',
   categoryLogic: 'Lógica',
   categoryCards: 'Cartas',
   categoryPuzzle: 'Quebra-cabeça',

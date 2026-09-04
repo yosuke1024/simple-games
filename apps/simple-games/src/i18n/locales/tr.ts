@@ -72,6 +72,9 @@ export const tr: Messages = {
   // Collection shell
   gamesHeading: 'Oyunlar',
   recentHeading: 'Son oynananlar',
+  favoritesHeading: 'Favoriler',
+  addToFavorites: 'Favorilere ekle',
+  removeFromFavorites: 'Favorilerden çıkar',
   categoryLogic: 'Mantık',
   categoryCards: 'Kart oyunları',
   categoryPuzzle: 'Bulmaca',

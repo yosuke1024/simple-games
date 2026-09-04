@@ -26,6 +26,7 @@ import {
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import packageJson from '../../../package.json';
+import { getFavoriteGames, initFavoriteGames, toggleFavoriteGame } from '../../app/favoriteGames';
 import { initRecentGames } from '../../app/recentGames';
 import { GAMES, type GameId } from '../../app/registry';
 import { LANGUAGE_NAMES } from '../../i18n';
@@ -52,7 +53,7 @@ import {
   type ThemeSetting,
 } from '../../storage/schemas';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { IconBack, IconChevronRight } from '../components/icons';
+import { IconBack, IconChevronRight, IconStar } from '../components/icons';
 import { Toggle } from '../components/Toggle';
 import { WebChromeSlot } from '../components/WebChromeSlot';
 import { openExternal } from '../openExternal';
@@ -132,6 +133,12 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   // field is never bumped and would otherwise show a permanently stale
   // number. The web build has no such tag, so it keeps package.json's value.
   const [displayVersion, setDisplayVersion] = useState(packageJson.version);
+  /**
+   * The pinned shelf, kept here so the picker below repaints as it is used.
+   * The collection home reads the same module when it mounts, which it does
+   * on the way back from this screen (app/App.tsx).
+   */
+  const [favoriteIds, setFavoriteIds] = useState<readonly GameId[]>(getFavoriteGames);
 
   useEffect(() => {
     if (!purchasable) return;
@@ -157,7 +164,23 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     };
   }, []);
 
+  /**
+   * `busy` is held for the whole delete, not just for the store calls: the
+   * Favorites picker below writes to one of the records being deleted, and a
+   * star tapped between `clearLocalData` finishing and `initFavoriteGames`
+   * reloading would write this screen's stale in-memory shelf straight back
+   * to storage — the delete would have run, and the shelf would survive it.
+   */
   const resetAllData = async () => {
+    setBusy(true);
+    try {
+      await runReset();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const runReset = async () => {
     const keys = [...Object.values(STORAGE_KEYS), ...GAMES.flatMap((game) => game.storageKeys)];
     await clearLocalData(keys);
     // Reload the in-memory copies of the shared records from their defaults.
@@ -167,6 +190,8 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     await initAdRemoval();
     await initReview();
     await initRecentGames();
+    await initFavoriteGames();
+    setFavoriteIds(getFavoriteGames());
     await initWebAppPrompt();
   };
 
@@ -282,6 +307,40 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
             )}
           </section>
         ) : null}
+
+        {/* Pinning, the way that does not depend on a gesture. The collection
+            home opens the same choice from a long press or a right-click
+            (ui/components/GameActionSheet.tsx), which is quicker but is
+            neither discoverable nor reachable from a keyboard — so this list
+            is the one that has to exist, not the convenience (issue #109).
+
+            Every game, in registry order, as a pressed/unpressed star. No
+            counts and no times beside them: what is pinned is a choice, and
+            this screen is where it is made, not where play is reported. */}
+        <section className="settings-group" aria-label={t('favoritesHeading')}>
+          <h2 className="settings-group-title">{t('favoritesHeading')}</h2>
+          <div className="favorite-picker">
+            {GAMES.map((game) => {
+              const isFavorite = favoriteIds.includes(game.id);
+              return (
+                <button
+                  key={game.id}
+                  type="button"
+                  className={`favorite-pick ${isFavorite ? 'favorite-pick-on' : ''}`}
+                  aria-pressed={isFavorite}
+                  // Off while "Reset Local Data" is deleting: see resetAllData.
+                  disabled={busy}
+                  onClick={() => setFavoriteIds(toggleFavoriteGame(game.id))}
+                >
+                  <span className="favorite-pick-title">{game.title}</span>
+                  <span className="favorite-pick-star" aria-hidden="true">
+                    <IconStar filled={isFavorite} />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         {/* Each game's own options, contributed by the game itself. Lazy —
             the section rides in the game's chunk — behind a null fallback,

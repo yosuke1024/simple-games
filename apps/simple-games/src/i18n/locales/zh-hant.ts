@@ -71,6 +71,9 @@ export const zhHant: Messages = {
   // Collection shell
   gamesHeading: '遊戲',
   recentHeading: '最近玩過',
+  favoritesHeading: '收藏',
+  addToFavorites: '加入收藏',
+  removeFromFavorites: '從收藏中移除',
   categoryLogic: '邏輯',
   categoryCards: '紙牌',
   categoryPuzzle: '益智',

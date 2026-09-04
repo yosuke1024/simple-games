@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
+import { FavoriteAction } from '@/ui/components/FavoriteAction';
 import { IconBack, IconCalendar, IconChart, IconCheck } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { localDateString } from '../../game';
@@ -49,7 +50,7 @@ export function FreeCellHomeScreen() {
         >
           <IconBack />
         </button>
-        <span className="icon-btn-placeholder" />
+        <FavoriteAction gameId="freecell" />
       </header>
 
       <div className="home-hero">

@@ -1,4 +1,5 @@
 import { useSettings } from '@/state/SettingsContext';
+import { FavoriteAction } from '@/ui/components/FavoriteAction';
 import { IconBack, IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { formatDuration } from '@/ui/format';
@@ -45,7 +46,7 @@ export function QuickMathHomeScreen() {
         >
           <IconBack />
         </button>
-        <span className="icon-btn-placeholder" />
+        <FavoriteAction gameId="quick-math" />
       </header>
 
       <div className="home-hero">

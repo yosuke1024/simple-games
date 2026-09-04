@@ -15,6 +15,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
+import { FavoriteAction } from '@/ui/components/FavoriteAction';
 import { IconBack, IconChart } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { DIFFICULTIES, type Difficulty } from '../../game';
@@ -62,7 +63,7 @@ export function LudoHomeScreen() {
         >
           <IconBack />
         </button>
-        <span className="icon-btn-placeholder" />
+        <FavoriteAction gameId="ludo" />
       </header>
 
       <div className="home-hero">

@@ -4,7 +4,7 @@
  * the web build (docs/WEB_VERSION.md) does neither. A claim that is true in
  * one of them is a false claim in the other, so it is gated, not translated.
  */
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -25,6 +25,13 @@ vi.mock('../../storage/repo', async (importOriginal) => {
 });
 
 import { PRIVACY_URL, TERMS_URL } from '@simple-games/brand';
+import {
+  getFavoriteGames,
+  initFavoriteGames,
+  resetFavoriteGamesForTesting,
+  toggleFavoriteGame,
+} from '../../app/favoriteGames';
+import { GAMES } from '../../app/registry';
 import {
   getRecentGames,
   initRecentGames,
@@ -57,6 +64,7 @@ function renderSettings() {
 beforeEach(() => {
   capacitorMock.native = false;
   resetRecentGamesForTesting();
+  resetFavoriteGamesForTesting();
   resetWebAppPromptForTesting();
   openExternalMock.mockClear();
 });
@@ -204,5 +212,121 @@ describe('reset local data', () => {
     recordWebGameExit();
     recordWebGameExit();
     await waitFor(() => expect(shouldShowWebAppPrompt()).toBe(true));
+  });
+});
+
+/**
+ * Pinning without the gesture (issue #109). The collection home offers a long
+ * press and a right-click, which are quicker and which a keyboard cannot
+ * perform — so this list is the route that has to work, and these pin down
+ * that it does: every game present, both directions, and reachable by keyboard
+ * alone.
+ */
+describe('favorites', () => {
+  it('lists every game, none of them pinned on a fresh install', async () => {
+    await initFavoriteGames(createMemoryKV());
+    renderSettings();
+
+    const picker = screen.getByRole('region', { name: 'Favorites' });
+    const picks = within(picker).getAllByRole('button');
+    expect(picks.map((button) => button.textContent)).toEqual(GAMES.map((game) => game.title));
+    expect(picks.every((button) => button.getAttribute('aria-pressed') === 'false')).toBe(true);
+  });
+
+  it('pins and unpins the game its row names', async () => {
+    await initFavoriteGames(createMemoryKV());
+    const user = userEvent.setup();
+    renderSettings();
+
+    const picker = screen.getByRole('region', { name: 'Favorites' });
+    const sudoku = within(picker).getByRole('button', { name: 'Sudoku' });
+
+    await user.click(sudoku);
+    expect(getFavoriteGames()).toEqual(['sudoku']);
+    expect(sudoku).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(sudoku);
+    expect(getFavoriteGames()).toEqual([]);
+    expect(sudoku).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('can be worked from the keyboard alone', async () => {
+    await initFavoriteGames(createMemoryKV());
+    const user = userEvent.setup();
+    renderSettings();
+
+    const picker = screen.getByRole('region', { name: 'Favorites' });
+    within(picker).getByRole('button', { name: 'Hearts' }).focus();
+    await user.keyboard('{Enter}');
+
+    expect(getFavoriteGames()).toEqual(['hearts']);
+  });
+
+  it('shows what is already pinned when the screen opens', async () => {
+    await initFavoriteGames(createMemoryKV());
+    toggleFavoriteGame('nonogram');
+    renderSettings();
+
+    const picker = screen.getByRole('region', { name: 'Favorites' });
+    expect(within(picker).getByRole('button', { name: 'Nonogram' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('is emptied by "Reset Local Data", in storage and on screen', async () => {
+    await initFavoriteGames(createMemoryKV());
+    toggleFavoriteGame('sudoku');
+
+    const user = userEvent.setup();
+    renderSettings();
+    await user.click(screen.getByRole('button', { name: /Reset Local Data/ }));
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() => expect(clearLocalData).toHaveBeenCalled());
+    const [keys] = vi.mocked(clearLocalData).mock.calls[0] ?? [[]];
+    expect(keys).toContain(STORAGE_KEYS.favorites);
+    await waitFor(() => expect(getFavoriteGames()).toEqual([]));
+    const picker = screen.getByRole('region', { name: 'Favorites' });
+    expect(within(picker).getByRole('button', { name: 'Sudoku' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
+});
+
+/**
+ * The picker writes to a record "Reset Local Data" is in the middle of
+ * deleting. A star tapped in that window would write this screen's stale copy
+ * of the shelf back to storage, and the delete would have run while the data
+ * survived it.
+ */
+describe('favorites during a reset', () => {
+  it('cannot be touched while the delete is in flight', async () => {
+    await initFavoriteGames(createMemoryKV());
+    toggleFavoriteGame('sudoku');
+
+    let finishDelete = () => undefined as void;
+    vi.mocked(clearLocalData).mockImplementationOnce(
+      () => new Promise<void>((resolve) => (finishDelete = () => resolve())),
+    );
+
+    const user = userEvent.setup();
+    renderSettings();
+    const picker = screen.getByRole('region', { name: 'Favorites' });
+    await user.click(screen.getByRole('button', { name: /Reset Local Data/ }));
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() =>
+      expect(within(picker).getByRole('button', { name: 'Sudoku' })).toBeDisabled(),
+    );
+    // And the delete really is still in flight — otherwise this pins nothing.
+    expect(getFavoriteGames()).toEqual(['sudoku']);
+
+    finishDelete();
+    await waitFor(() =>
+      expect(within(picker).getByRole('button', { name: 'Sudoku' })).toBeEnabled(),
+    );
+    await waitFor(() => expect(getFavoriteGames()).toEqual([]));
   });
 });

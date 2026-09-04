@@ -16,6 +16,7 @@ export const STORAGE_KEYS = {
   iap: 'sg.iap',
   review: 'sg.review',
   recent: 'sg.recent',
+  favorites: 'sg.favorites',
   webAppPrompt: 'sg.webAppPrompt',
 } as const;
 
@@ -173,6 +174,58 @@ export const recentGamesSchema: SchemaDef<RecentGames> = {
       if (!ids.includes(id)) ids.push(id);
     }
     return { schemaVersion: 1, ids: ids.slice(0, RECENT_GAMES_LIMIT) };
+  },
+};
+
+// ---------- pinned games ----------
+
+/**
+ * The games somebody pinned to the top of the collection home (issue #109).
+ *
+ * `sg.recent` above is a history the shell writes; this is a choice the player
+ * makes and unmakes. That difference is the reason it exists at all — an
+ * automatic list of the last two games opened can never be "the ones I always
+ * want here", and stretching it to try would cost it the one job it does well.
+ *
+ * Ids only, in the order they were pinned. No counts, no times, no "last
+ * played": the shelf is a set of doors, not a report on how they were used
+ * (docs/PRODUCT_PRINCIPLES.md「ユーザーを急かさない」). Losing the record costs
+ * nobody a saved game, which is why there is no migration to write and why
+ * "Reset Local Data" may simply drop it.
+ *
+ * Ids are validated as strings only — storage does not know which games exist.
+ * `app/favoriteGames.ts` drops the ones the registry no longer carries, so a
+ * game withdrawn from a future build quietly leaves the shelf rather than
+ * leaving a door to nowhere; the id stays in the record, so a game that comes
+ * back comes back pinned.
+ */
+export interface FavoriteGames {
+  schemaVersion: 1;
+  ids: string[];
+}
+
+/**
+ * A bound on the record, not a rule on the player. The collection has never
+ * held this many games, so nobody reaches it by pinning; it is here so that a
+ * corrupt — or hand-edited — record cannot grow without limit. When it does
+ * bite, the newest entries are the ones kept, matching `sg.recent`.
+ */
+export const FAVORITE_GAMES_MAX = 64;
+
+export const favoriteGamesSchema: SchemaDef<FavoriteGames> = {
+  key: STORAGE_KEYS.favorites,
+  version: 1,
+  defaultValue: () => ({ schemaVersion: 1, ids: [] }),
+  validate: (raw) => {
+    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
+    if (!Array.isArray(raw.ids)) return null;
+    const ids: string[] = [];
+    for (const value of raw.ids) {
+      const id = asString(value, 40);
+      if (id === null) return null;
+      if (!ids.includes(id)) ids.push(id);
+    }
+    return { schemaVersion: 1, ids: ids.slice(-FAVORITE_GAMES_MAX) };
   },
 };
 
