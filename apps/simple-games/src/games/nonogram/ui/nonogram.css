@@ -105,11 +105,18 @@
 
 /* ---------- cells ---------- */
 
+/*
+  A finger on the cells is drawing, never scrolling (issue #108): the browser
+  must not take a stroke away as a pan halfway through one. A board too tall
+  for the screen is still scrolled by dragging the clue bands or the space
+  around them, which keep the `manipulation` of `.nono-board` above.
+*/
 .nono-cells {
   display: grid;
   grid-template-columns: repeat(var(--nono-size), var(--nono-cell));
   grid-auto-rows: var(--nono-cell);
   gap: var(--nono-gap);
+  touch-action: none;
 }
 
 .nono-cell {

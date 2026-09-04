@@ -10,6 +10,7 @@ import {
   crossCell,
   freeSeed,
   hintFor,
+  markCells,
   newSeedToken,
   paintCell,
   restartSession,
@@ -123,6 +124,26 @@ describe('marks and the win (§2, §3)', () => {
     const solved = solveByPainting(createLevelSession(2));
     expect(solved.status).toBe('solved');
     expect(solved.marks.some((mark) => mark === CROSSED)).toBe(false);
+  });
+
+  it('marks a stroke of cells at once, and refuses one after the win (§3)', () => {
+    const session = createLevelSession(1);
+    const stroke = markCells(session, [0, 1, 2], FILLED)!;
+    expect(stroke.marks.slice(0, 4)).toEqual([FILLED, FILLED, FILLED, UNKNOWN]);
+    // The same stroke crossing its own path again changes nothing.
+    expect(markCells(stroke, [0, 1, 2], FILLED)).toBeNull();
+
+    const solved = solveByPainting(session);
+    expect(markCells(solved, [0], UNKNOWN)).toBeNull();
+  });
+
+  it('finishes the board when the stroke is the last thing it needed (§2)', () => {
+    const session = createLevelSession(3);
+    const painted: number[] = [];
+    session.solution.forEach((cell, index) => {
+      if (cell === PAINTED) painted.push(index);
+    });
+    expect(markCells(session, painted, FILLED)?.status).toBe('solved');
   });
 });
 

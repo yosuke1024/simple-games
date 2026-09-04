@@ -11,7 +11,15 @@
  * never shown while the game is running (§8).
  */
 import { DAILY_FILL_RATE, DAILY_SIZE, dailySeed } from './daily';
-import { computeClues, emptyMarks, isSolved, toggleCross, togglePaint, type Clues } from './engine';
+import {
+  computeClues,
+  emptyMarks,
+  isSolved,
+  setMarks,
+  toggleCross,
+  togglePaint,
+  type Clues,
+} from './engine';
 import { generatePuzzle } from './generator';
 import {
   FREE_TIER_LEVEL,
@@ -167,6 +175,24 @@ export function paintCell(session: NonogramSession, index: number): NonogramSess
 export function crossCell(session: NonogramSession, index: number): NonogramSession | null {
   if (session.status !== 'playing') return null;
   const marks = toggleCross(session.marks, index);
+  return marks === null ? null : withMarks(session, marks);
+}
+
+/**
+ * Set a stretch of cells to one mark — a drag stroke (§3). Same refusals as
+ * above, plus: null when every listed cell already reads that way.
+ *
+ * The stroke decides its target once, when it starts, and every cell it
+ * crosses is written to that target rather than toggled. That is what lets a
+ * finger wander back over its own path without unpicking it.
+ */
+export function markCells(
+  session: NonogramSession,
+  indices: readonly number[],
+  mark: Mark,
+): NonogramSession | null {
+  if (session.status !== 'playing') return null;
+  const marks = setMarks(session.marks, indices, mark);
   return marks === null ? null : withMarks(session, marks);
 }
 

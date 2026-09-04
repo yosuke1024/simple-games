@@ -6,6 +6,7 @@ import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
 import { createLevelSession, PAINTED } from '../game';
 import { NG_STORAGE_KEYS, type Stats } from '../storage/schemas';
+import { LONG_PRESS_MS } from './components/NonoBoard';
 import { NonogramRoot } from './NonogramRoot';
 
 /**
@@ -46,6 +47,55 @@ const tutorialDone = {
 const board = () => screen.getByRole('group', { name: /Nonogram board/ });
 const cellAt = (row: number, col: number) =>
   within(board()).getByRole('button', { name: new RegExp(`row ${row}, column ${col}$`) });
+const markAt = (row: number, col: number) => cellAt(row, col).getAttribute('aria-label') ?? '';
+
+/** A pretend cell, in CSS pixels. Level 1 is a 5×5 (§6). */
+const CELL_PX = 40;
+const LEVEL_ONE_SIZE = 5;
+
+/**
+ * jsdom lays nothing out, so a drag is measured against a rectangle handed to
+ * the cell grid by force. Gutters are left out of it on purpose: the board
+ * divides the rectangle by the size, which is the same approximation.
+ */
+function giveCellsALayout(size = LEVEL_ONE_SIZE): void {
+  const cells = board().querySelector('.nono-cells');
+  const side = CELL_PX * size;
+  vi.spyOn(cells as Element, 'getBoundingClientRect').mockReturnValue({
+    left: 0,
+    top: 0,
+    width: side,
+    height: side,
+    right: side,
+    bottom: side,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  } as DOMRect);
+}
+
+/** The middle of one cell, so rounding cannot pick a neighbour. */
+const pointAt = (row: number, col: number) => ({
+  clientX: CELL_PX * (col - 1 + 0.5),
+  clientY: CELL_PX * (row - 1 + 0.5),
+});
+
+type Coord = readonly [row: number, col: number];
+
+/**
+ * One finger: press on the first cell, travel through the rest, lift on the
+ * last. The click a real gesture leaves behind is fired too — every drag here
+ * therefore also proves it does not act a second time.
+ */
+function drag(path: readonly Coord[], pointerId = 1): void {
+  const origin = cellAt(...path[0]!);
+  fireEvent.pointerDown(origin, { pointerId, ...pointAt(...path[0]!) });
+  for (const step of path.slice(1)) {
+    fireEvent.pointerMove(origin, { pointerId, ...pointAt(...step) });
+  }
+  fireEvent.pointerUp(origin, { pointerId, ...pointAt(...path[path.length - 1]!) });
+  fireEvent.click(origin);
+}
 
 async function startLevelOne(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole('button', { name: /Level 1/ }));
@@ -84,6 +134,7 @@ function storedPlaySeconds(): number {
 afterEach(() => {
   cleanup();
   deviceStore.clear();
+  vi.restoreAllMocks();
 });
 
 describe('backgrounding (§10)', () => {
@@ -186,6 +237,205 @@ describe('playing (§2, §3)', () => {
 
     expect(await screen.findByRole('alertdialog', { name: 'Solved!' })).toBeInTheDocument();
     expect(screen.getByText('Hints used')).toBeInTheDocument();
+  });
+});
+
+describe('drag strokes (issue #108)', () => {
+  it('paints every cell the finger crosses, and the click that follows adds nothing', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+    giveCellsALayout();
+
+    drag([
+      [1, 1],
+      [1, 2],
+      [1, 3],
+    ]);
+
+    expect(markAt(1, 1)).toMatch(/^Painted/);
+    expect(markAt(1, 2)).toMatch(/^Painted/);
+    expect(markAt(1, 3)).toMatch(/^Painted/);
+    // The cell the stroke began on is painted once, not painted and undone.
+    expect(markAt(1, 4)).toMatch(/^Blank/);
+  });
+
+  it('fills the cells a flick skipped over, not just the ones it landed on', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+    giveCellsALayout();
+
+    // One move, four cells: the whole run is painted, gaps included.
+    drag([
+      [3, 1],
+      [3, 5],
+    ]);
+
+    for (let col = 1; col <= 5; col++) expect(markAt(3, col)).toMatch(/^Painted/);
+  });
+
+  it('erases a run when the stroke starts on a painted cell', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+    giveCellsALayout();
+
+    drag([
+      [2, 1],
+      [2, 2],
+      [2, 3],
+    ]);
+    expect(markAt(2, 2)).toMatch(/^Painted/);
+
+    drag([
+      [2, 1],
+      [2, 2],
+      [2, 3],
+    ]);
+    for (let col = 1; col <= 3; col++) expect(markAt(2, col)).toMatch(/^Blank/);
+  });
+
+  it('crosses a run while X mode is on, and erases one it starts on', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+    await user.click(screen.getByRole('button', { name: 'X Mode' }));
+    giveCellsALayout();
+
+    drag([
+      [4, 2],
+      [4, 3],
+      [4, 4],
+    ]);
+    for (let col = 2; col <= 4; col++) expect(markAt(4, col)).toMatch(/^Crossed/);
+
+    drag([
+      [4, 2],
+      [4, 3],
+      [4, 4],
+    ]);
+    for (let col = 2; col <= 4; col++) expect(markAt(4, col)).toMatch(/^Blank/);
+  });
+
+  it('leaves a cell as the stroke set it when the same stroke comes back over it', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+    giveCellsALayout();
+
+    drag([
+      [1, 1],
+      [1, 2],
+      [1, 1],
+      [1, 2],
+    ]);
+
+    expect(markAt(1, 1)).toMatch(/^Painted/);
+    expect(markAt(1, 2)).toMatch(/^Painted/);
+  });
+
+  it('paints only the part of its path that was on the board', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+    giveCellsALayout();
+
+    const origin = cellAt(1, 1);
+    fireEvent.pointerDown(origin, { pointerId: 1, ...pointAt(1, 1) });
+    // Off the grid entirely, then back onto a cell two rows down.
+    fireEvent.pointerMove(origin, { pointerId: 1, clientX: -400, clientY: -400 });
+    fireEvent.pointerMove(origin, { pointerId: 1, ...pointAt(3, 1) });
+    fireEvent.pointerUp(origin, { pointerId: 1, ...pointAt(3, 1) });
+    fireEvent.click(origin);
+
+    expect(markAt(1, 1)).toMatch(/^Painted/);
+    expect(markAt(3, 1)).toMatch(/^Painted/);
+  });
+
+  it('keeps what a cancelled stroke had written, and takes taps afterwards', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+    giveCellsALayout();
+
+    const origin = cellAt(5, 1);
+    fireEvent.pointerDown(origin, { pointerId: 1, ...pointAt(5, 1) });
+    fireEvent.pointerMove(origin, { pointerId: 1, ...pointAt(5, 2) });
+    // The system takes the gesture away — a call, a system gesture, a pinch.
+    fireEvent.pointerCancel(origin, { pointerId: 1, ...pointAt(5, 2) });
+
+    expect(markAt(5, 1)).toMatch(/^Painted/);
+    expect(markAt(5, 2)).toMatch(/^Painted/);
+
+    // The board is not stuck in a stroke: the next tap is an ordinary tap.
+    await user.click(cellAt(5, 3));
+    expect(markAt(5, 3)).toMatch(/^Painted/);
+    await user.click(cellAt(5, 1));
+    expect(markAt(5, 1)).toMatch(/^Blank/);
+  });
+
+  it('keeps every cell when two moves land in one render', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+    giveCellsALayout();
+
+    // Both moves inside one act(): React coalesces the two updates, which is
+    // what a slow device does with two pointer moves in one frame. The second
+    // move must build on the first, not on the board it replaced.
+    const origin = cellAt(4, 1);
+    fireEvent.pointerDown(origin, { pointerId: 1, ...pointAt(4, 1) });
+    act(() => {
+      fireEvent.pointerMove(origin, { pointerId: 1, ...pointAt(4, 2) });
+      fireEvent.pointerMove(origin, { pointerId: 1, ...pointAt(4, 3) });
+    });
+    fireEvent.pointerUp(origin, { pointerId: 1, ...pointAt(4, 3) });
+    fireEvent.click(origin);
+
+    for (let col = 1; col <= 3; col++) expect(markAt(4, col)).toMatch(/^Painted/);
+  });
+
+  it('is still a tap when the press never leaves its cell', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+    giveCellsALayout();
+
+    // A tremor inside one cell, then a release: one toggle, from the click.
+    const origin = cellAt(2, 2);
+    fireEvent.pointerDown(origin, { pointerId: 1, ...pointAt(2, 2) });
+    fireEvent.pointerMove(origin, { pointerId: 1, clientX: CELL_PX * 1.6, clientY: CELL_PX * 1.6 });
+    fireEvent.pointerUp(origin, { pointerId: 1, clientX: CELL_PX * 1.6, clientY: CELL_PX * 1.6 });
+    fireEvent.click(origin);
+
+    expect(markAt(2, 2)).toMatch(/^Painted/);
+  });
+
+  it('crosses on a long press, and carries on crossing if the finger then moves', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+    giveCellsALayout();
+
+    vi.useFakeTimers();
+    try {
+      const origin = cellAt(1, 1);
+      fireEvent.pointerDown(origin, { pointerId: 1, ...pointAt(1, 1) });
+      act(() => vi.advanceTimersByTime(LONG_PRESS_MS));
+      expect(markAt(1, 1)).toMatch(/^Crossed/);
+
+      // Still held: the drag continues what the long press started rather
+      // than painting over it.
+      fireEvent.pointerMove(origin, { pointerId: 1, ...pointAt(1, 2) });
+      fireEvent.pointerUp(origin, { pointerId: 1, ...pointAt(1, 2) });
+      fireEvent.click(origin);
+
+      expect(markAt(1, 1)).toMatch(/^Crossed/);
+      expect(markAt(1, 2)).toMatch(/^Crossed/);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

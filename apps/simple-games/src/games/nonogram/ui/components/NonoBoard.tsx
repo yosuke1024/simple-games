@@ -9,21 +9,64 @@
  * Input follows §3. A tap paints and a long press crosses; X mode swaps the
  * two, which is what makes the game playable one-handed and without a long
  * press at all.
+ *
+ * A press that then moves is a stroke (issue #108): it decides once what it
+ * writes — the same thing a tap on the cell it began on would have written —
+ * and writes exactly that to every cell it crosses. Nothing toggles inside a
+ * stroke, so a finger that wanders back over its own path does not unpick it.
+ * Moves are measured against the grid's own rectangle rather than handled per
+ * cell, because a captured pointer stops visiting the cells it passes over.
  */
-import { memo, useCallback, useEffect, useRef, type CSSProperties } from 'react';
+import { memo, useCallback, useEffect, useRef, type CSSProperties, type PointerEvent } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import {
   colIndices,
   CROSSED,
+  crossTarget,
   FILLED,
   lineSatisfied,
+  paintTarget,
   rowIndices,
   type Hint,
+  type Mark,
   type NonogramSession,
 } from '../../game';
 
 /** Long enough not to fire while tapping, short enough not to feel stuck. */
 export const LONG_PRESS_MS = 450;
+
+/**
+ * How finely one pointer move is walked, in samples per cell. A flick sends a
+ * single move across several cells, and painting only where the events landed
+ * would leave holes in the run; two samples per cell cannot skip one.
+ */
+const STROKE_SAMPLES_PER_CELL = 2;
+
+/**
+ * One drag in progress. A ref, not state: none of it is drawn, and it does not
+ * survive the pointer being released or cancelled.
+ */
+interface Stroke {
+  readonly pointerId: number;
+  /** The cell the press began on. It joins the stroke only once one starts. */
+  readonly origin: number;
+  /** What every cell of this stroke is set to, decided when it started. */
+  mark: Mark;
+  /**
+   * The grid's rectangle, measured once. Reading it per move would force a
+   * layout on every event, on top of the board React has just re-rendered —
+   * and the grid cannot move under a finger that is drawing on it: the cells
+   * refuse to pan (`touch-action: none`).
+   */
+  readonly rect: DOMRect;
+  /** True once the finger has left `origin`: a stroke, no longer a tap. */
+  started: boolean;
+  /** The last sampled point, so a jump can be walked cell by cell. */
+  x: number;
+  y: number;
+  /** Cells already settled — re-entering one writes nothing new. */
+  readonly visited: Set<number>;
+}
 
 export interface NonoBoardProps {
   session: NonogramSession;
@@ -33,6 +76,8 @@ export interface NonoBoardProps {
   xMode: boolean;
   onPaint: (index: number) => void;
   onCross: (index: number) => void;
+  /** A drag: the cells just crossed, and the one mark they all take (§3). */
+  onStroke: (indices: readonly number[], mark: Mark) => void;
 }
 
 const clueText = (clue: readonly number[]): string => (clue.length === 0 ? '0' : clue.join(' '));
@@ -43,13 +88,16 @@ export const NonoBoard = memo(function NonoBoard({
   xMode,
   onPaint,
   onCross,
+  onStroke,
 }: NonoBoardProps) {
   const { t } = useSettings();
   const { size, marks, clues } = session;
 
   const timerRef = useRef<number | null>(null);
-  /** Set by the long press so the click that follows does not act twice. */
+  /** Set by a long press or a stroke, so the click that follows does nothing. */
   const handledRef = useRef(false);
+  const cellsRef = useRef<HTMLDivElement | null>(null);
+  const strokeRef = useRef<Stroke | null>(null);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current !== null) {
@@ -71,18 +119,139 @@ export const NonoBoard = memo(function NonoBoard({
     [onCross, onPaint, xMode],
   );
 
+  /** What a stroke from `index` writes — what a tap there would have (§3). */
+  const primaryTarget = useCallback(
+    (index: number): Mark => (xMode ? crossTarget(marks, index) : paintTarget(marks, index)),
+    [marks, xMode],
+  );
+
+  /** The same question for the long press's action, for a stroke after one. */
+  const secondaryTarget = useCallback(
+    (index: number): Mark => (xMode ? paintTarget(marks, index) : crossTarget(marks, index)),
+    [marks, xMode],
+  );
+
+  /**
+   * Every cell the straight line between two samples passes through, in order.
+   * Samples off the grid contribute nothing, so a finger that leaves the board
+   * and comes back paints only the part of its path that was on it.
+   *
+   * Cell pitch is taken as the grid's width over its size — the 2px gutters
+   * shift a boundary by less than one gutter, which is inside the gutter.
+   */
+  const cellsBetween = useCallback(
+    (rect: DOMRect, fromX: number, fromY: number, toX: number, toY: number): number[] => {
+      const width = rect.width / size;
+      const height = rect.height / size;
+      const fromCol = (fromX - rect.left) / width;
+      const fromRow = (fromY - rect.top) / height;
+      const toCol = (toX - rect.left) / width;
+      const toRow = (toY - rect.top) / height;
+      const span = Math.max(Math.abs(toCol - fromCol), Math.abs(toRow - fromRow));
+      const steps = Math.max(1, Math.ceil(span * STROKE_SAMPLES_PER_CELL));
+      const out: number[] = [];
+      let previous = -1;
+      for (let step = 1; step <= steps; step++) {
+        const col = Math.floor(fromCol + ((toCol - fromCol) * step) / steps);
+        const row = Math.floor(fromRow + ((toRow - fromRow) * step) / steps);
+        if (col < 0 || col >= size || row < 0 || row >= size) continue;
+        const index = row * size + col;
+        if (index === previous) continue;
+        previous = index;
+        out.push(index);
+      }
+      return out;
+    },
+    [size],
+  );
+
   const onPointerDown = useCallback(
-    (index: number) => {
+    (event: PointerEvent<HTMLButtonElement>, index: number) => {
       handledRef.current = false;
       clearTimer();
       timerRef.current = window.setTimeout(() => {
         timerRef.current = null;
         handledRef.current = true;
         secondary(index);
+        // Held long enough to cross, and still down: a drag from here carries
+        // on with what the long press just did, rather than painting over it.
+        const stroke = strokeRef.current;
+        if (stroke !== null && stroke.origin === index) {
+          stroke.mark = secondaryTarget(index);
+          stroke.started = true;
+        }
       }, LONG_PRESS_MS);
+      const cells = cellsRef.current;
+      strokeRef.current =
+        cells === null
+          ? null
+          : {
+              pointerId: event.pointerId,
+              origin: index,
+              mark: primaryTarget(index),
+              rect: cells.getBoundingClientRect(),
+              started: false,
+              x: event.clientX,
+              y: event.clientY,
+              visited: new Set([index]),
+            };
+      // Capture keeps the moves coming to this button — and so, by bubbling,
+      // to the grid below — after the finger has left the cell. An
+      // improvement, never a precondition: it throws if the pointer is
+      // already gone, and the moves that stay over the board arrive anyway.
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        // The stroke still works from the events we do get.
+      }
     },
-    [clearTimer, secondary],
+    [clearTimer, primaryTarget, secondary, secondaryTarget],
   );
+
+  /**
+   * Bound to the grid, not to the cell the press began on: pointer capture
+   * retargets every move to that cell, and they bubble here from it.
+   */
+  const onCellsPointerMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      const stroke = strokeRef.current;
+      if (stroke === null || stroke.pointerId !== event.pointerId) return;
+      // A grid with no layout yet can say nothing honest about where a cell is.
+      if (stroke.rect.width === 0 || stroke.rect.height === 0) return;
+
+      const crossed = cellsBetween(stroke.rect, stroke.x, stroke.y, event.clientX, event.clientY);
+      stroke.x = event.clientX;
+      stroke.y = event.clientY;
+
+      const fresh = crossed.filter((index) => !stroke.visited.has(index));
+      if (fresh.length === 0) return;
+
+      if (!stroke.started) {
+        // The finger has reached a second cell, so the press was a stroke
+        // after all: the cell it began on is written now, and the long press
+        // and the click it would otherwise have ended in are both dropped.
+        stroke.started = true;
+        clearTimer();
+        fresh.unshift(stroke.origin);
+      }
+      handledRef.current = true;
+      for (const index of fresh) stroke.visited.add(index);
+      onStroke(fresh, stroke.mark);
+    },
+    [cellsBetween, clearTimer, onStroke],
+  );
+
+  /**
+   * A released or cancelled pointer ends the stroke where it stands. What it
+   * has already written stays: the player watched every cell of it go down.
+   * The long press is stopped by the cell's own handlers, which a captured
+   * pointer's release and cancellation both still reach.
+   */
+  const onCellsPointerEnd = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    const stroke = strokeRef.current;
+    if (stroke === null || stroke.pointerId !== event.pointerId) return;
+    strokeRef.current = null;
+  }, []);
 
   const onClick = useCallback(
     (index: number) => {
@@ -168,7 +337,13 @@ export const NonoBoard = memo(function NonoBoard({
         ))}
       </div>
 
-      <div className="nono-cells">
+      <div
+        className="nono-cells"
+        ref={cellsRef}
+        onPointerMove={onCellsPointerMove}
+        onPointerUp={onCellsPointerEnd}
+        onPointerCancel={onCellsPointerEnd}
+      >
         {marks.map((mark, index) => {
           const row = Math.floor(index / size);
           const col = index % size;
@@ -197,7 +372,7 @@ export const NonoBoard = memo(function NonoBoard({
               type="button"
               className={classes}
               aria-label={label}
-              onPointerDown={() => onPointerDown(index)}
+              onPointerDown={(event) => onPointerDown(event, index)}
               onPointerUp={clearTimer}
               onPointerLeave={clearTimer}
               onPointerCancel={clearTimer}

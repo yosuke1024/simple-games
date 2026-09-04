@@ -34,12 +34,14 @@ import {
   crossCell,
   hintFor,
   localDateString,
+  markCells as markSessionCells,
   MAX_LEVEL,
   paintCell,
   restartSession,
   type FreeTier,
   type GameMode,
   type Hint,
+  type Mark,
   type NonogramSession,
 } from '../game';
 import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
@@ -102,6 +104,8 @@ export interface NonogramContextValue {
   paint: (index: number) => boolean;
   /** Crosses a cell. Same contract as paint. */
   cross: (index: number) => boolean;
+  /** Sets a stretch of cells to one mark — a drag stroke (§3). */
+  markCells: (indices: readonly number[], mark: Mark) => boolean;
   takeHint: () => Hint | null;
   setXMode: (value: boolean) => void;
   goHome: () => void;
@@ -182,6 +186,13 @@ export function NonogramProvider({
   }, []);
 
   const putSession = useCallback((mode: GameMode, next: NonogramSession | null) => {
+    // The ref leads the state deliberately. React batches updates raised in
+    // one task, and a drag stroke (issue #108) can raise two before it
+    // re-renders — on a slow device, two pointer moves in one frame. Reading
+    // the state's ref then would hand the second move the board the first one
+    // had already replaced, and its cells would be lost. The render below
+    // assigns the same value again, so the two never disagree.
+    sessionsRef.current = { ...sessionsRef.current, [mode]: next };
     setSessions((current) => ({ ...current, [mode]: next }));
   }, []);
 
@@ -329,6 +340,10 @@ export function NonogramProvider({
 
   const paint = useCallback((index: number) => mutate((s) => paintCell(s, index)), [mutate]);
   const cross = useCallback((index: number) => mutate((s) => crossCell(s, index)), [mutate]);
+  const markCells = useCallback(
+    (indices: readonly number[], mark: Mark) => mutate((s) => markSessionCells(s, indices, mark)),
+    [mutate],
+  );
 
   const takeHint = useCallback((): Hint | null => {
     const mode = activeModeRef.current;
@@ -454,6 +469,7 @@ export function NonogramProvider({
       resumeGame,
       paint,
       cross,
+      markCells,
       takeHint,
       setXMode,
       goHome,
@@ -482,6 +498,7 @@ export function NonogramProvider({
       resumeGame,
       paint,
       cross,
+      markCells,
       takeHint,
       setXMode,
       goHome,
