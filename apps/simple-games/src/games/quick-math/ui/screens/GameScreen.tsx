@@ -21,6 +21,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconRetry } from '@/ui/components/icons';
+import { useGameKeys } from '@/ui/useGameKeys';
 import { answerDigits, currentQuestion } from '../../game';
 import { useQuickMath } from '../../state/GameContext';
 import { Keypad } from '../components/Keypad';
@@ -69,6 +70,31 @@ export function QuickMathGameScreen() {
   );
 
   const onBackspace = useCallback(() => setEntry((value) => value.slice(0, -1)), []);
+
+  /* Keyboard as an adapter over the keypad above (issue #93, #143): 0-9 type a
+     digit, Backspace takes one back — the same two handlers the keys on screen
+     call, and nothing else. There is no Enter, because there is no OK key to
+     mirror: an answer is judged when it reaches the answer's length (§3).
+
+     Key repeat is ignored on both. A held 7 must not fill the box a frame at a
+     time, and a held Backspace must not empty it. Backspace answers `true`
+     even with nothing typed, so the browser never treats it as "navigate back"
+     mid-question. */
+  const onKey = (event: KeyboardEvent): boolean => {
+    if (question === null) return false;
+    if (event.ctrlKey || event.metaKey || event.altKey) return false;
+    const { key } = event;
+    if (key.length === 1 && key >= '0' && key <= '9') {
+      if (!event.repeat) onDigit(Number(key));
+      return true;
+    }
+    if (key === 'Backspace') {
+      if (!event.repeat) onBackspace();
+      return true;
+    }
+    return false;
+  };
+  useGameKeys(onKey, session !== null && session.status !== 'cleared' && !confirmRestart);
 
   if (!session) return null;
 

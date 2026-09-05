@@ -815,7 +815,13 @@ describe('home', () => {
 /* Keyboard input is an adapter over the same tap handlers (issue #93): this
    checks board state the Undo button also produces, never a keyboard-only
    behaviour. */
-describe('keyboard (issue #93)', () => {
+/* Keyboard input is an adapter over the same tap handlers (issue #93, #143):
+   every assertion here checks board state a tap also produces, never a
+   keyboard-only behaviour. */
+describe('keyboard (issue #93, #143)', () => {
+  /** The digit level 1 wants in a square, as the key that types it. */
+  const answerKey = (index: number) => String(truth.solution[index]!);
+
   it('Ctrl+Z undoes the last digit, same as the Undo button', async () => {
     const user = userEvent.setup();
     renderGame(tutorialDone);
@@ -829,6 +835,125 @@ describe('keyboard (issue #93)', () => {
 
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
     expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^Empty/);
+  });
+
+  it('the first arrow lands mid-board, then arrows walk and clamp at the edge', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    // Level 1 is a deterministic 6×6 (§9) whose middle square — row 4,
+    // column 4 — is white, so the first arrow lands there whichever arrow it
+    // was: the eyes are already in the middle.
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(cellAt(4, 4)).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(cellAt(4, 5)).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(cellAt(4, 4)).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.keyDown(window, { key: 'ArrowDown' });
+    expect(cellAt(5, 4)).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.keyDown(window, { key: 'ArrowUp' });
+    expect(cellAt(4, 4)).toHaveAttribute('aria-pressed', 'true');
+
+    // Everything above that square in its column is clue squares, which are
+    // not buttons at all and cannot be selected by tap either (§4). The arrow
+    // walks the rest of the column, finds no white square, and stays put.
+    fireEvent.keyDown(window, { key: 'ArrowUp' });
+    expect(cellAt(4, 4)).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('digits place and Backspace erases — same as the pad and the Erase button', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const index = openCells[0]!;
+    const { row, col } = positionOf(index);
+    await user.click(cellAt(row, col));
+
+    fireEvent.keyDown(window, { key: answerKey(index) });
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(
+      new RegExp(`^${answerKey(index)},`),
+    );
+
+    fireEvent.keyDown(window, { key: 'Backspace' });
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^Empty/);
+  });
+
+  it('a held digit key places once — repeats are swallowed, not replayed', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const index = openCells[0]!;
+    const { row, col } = positionOf(index);
+    await user.click(cellAt(row, col));
+
+    fireEvent.keyDown(window, { key: answerKey(index), repeat: true });
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^Empty/);
+  });
+
+  it('N pencils notes, H asks for the hint', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const index = openCells[0]!;
+    const { row, col } = positionOf(index);
+    await user.click(cellAt(row, col));
+
+    fireEvent.keyDown(window, { key: 'n' });
+    expect(screen.getByRole('button', { name: 'Notes' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.keyDown(window, { key: answerKey(index) });
+    // A note is a candidate, not an answer: the square is still empty.
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^Empty/);
+    expect(cellAt(row, col).textContent).toContain(answerKey(index));
+
+    fireEvent.keyDown(window, { key: 'n' });
+    fireEvent.keyDown(window, { key: 'h' });
+    expect(screen.getByRole('status')).toBeInTheDocument();
+  });
+
+  it('keeps all nine digit keys live, the same as the pad (§4)', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    // This game counts nothing down and greys nothing out, so no digit key
+    // ever goes dead — not even one already written all over the board.
+    for (const index of openCells) {
+      const { row, col } = positionOf(index);
+      await user.click(cellAt(row, col));
+      fireEvent.keyDown(window, { key: answerKey(index) });
+      expect(cellAt(row, col).getAttribute('aria-label')).toMatch(
+        new RegExp(`^${answerKey(index)},`),
+      );
+    }
+  });
+
+  it('goes quiet while the restart dialog is up', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const index = openCells[0]!;
+    const { row, col } = positionOf(index);
+    await user.click(cellAt(row, col));
+
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+    fireEvent.keyDown(window, { key: answerKey(index) });
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^Empty/);
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.keyDown(window, { key: answerKey(index) });
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(
+      new RegExp(`^${answerKey(index)},`),
+    );
   });
 });
 

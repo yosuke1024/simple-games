@@ -736,7 +736,13 @@ describe('home', () => {
 /* Keyboard input is an adapter over the same tap handlers (issue #93): this
    checks board state the Undo button also produces, never a keyboard-only
    behaviour. */
-describe('keyboard (issue #93)', () => {
+/* Keyboard input is an adapter over the same tap handlers (issue #93, #143):
+   every assertion here checks board state a tap also produces, never a
+   keyboard-only behaviour. */
+describe('keyboard (issue #93, #143)', () => {
+  /** The digit level 1 wants in a square, as the key that types it. */
+  const answerKey = (index: number) => String(truth.solution[index]!);
+
   it('Ctrl+Z undoes the last digit, same as the Undo button', async () => {
     const user = userEvent.setup();
     renderGame(tutorialDone);
@@ -749,6 +755,142 @@ describe('keyboard (issue #93)', () => {
 
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
     expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^Empty/);
+  });
+
+  it('the first arrow lands mid-board, then arrows walk and clamp at the edge', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    // Level 1 is a deterministic 4×4 (§9) whose middle square — row 3,
+    // column 3 — is one the player fills, so the first arrow lands there
+    // whichever arrow it was: the eyes are already in the middle.
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(cellAt(3, 3)).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(cellAt(3, 2)).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.keyDown(window, { key: 'ArrowUp' });
+    expect(cellAt(2, 2)).toHaveAttribute('aria-pressed', 'true');
+
+    // Row 1 of that column is a given, which is a disabled button no tap can
+    // select (§4). The arrow walks past it, finds nothing beyond, and the
+    // selection stays where it was rather than wrapping or landing on it.
+    fireEvent.keyDown(window, { key: 'ArrowUp' });
+    expect(cellAt(2, 2)).toHaveAttribute('aria-pressed', 'true');
+    expect(cellAt(1, 2)).toBeDisabled();
+    expect(cellAt(1, 2)).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('digits place and Backspace erases — same as the pad and the Erase button', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const index = openCells[0]!;
+    const { row, col } = positionOf(index);
+    await user.click(cellAt(row, col));
+
+    fireEvent.keyDown(window, { key: answerKey(index) });
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(
+      new RegExp(`^${answerKey(index)},`),
+    );
+
+    fireEvent.keyDown(window, { key: 'Backspace' });
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^Empty/);
+  });
+
+  it('a held digit key places once — repeats are swallowed, not replayed', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const index = openCells[0]!;
+    const { row, col } = positionOf(index);
+    await user.click(cellAt(row, col));
+
+    fireEvent.keyDown(window, { key: answerKey(index), repeat: true });
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^Empty/);
+  });
+
+  it('N pencils notes, H asks for the hint', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const index = openCells[0]!;
+    const { row, col } = positionOf(index);
+    await user.click(cellAt(row, col));
+
+    fireEvent.keyDown(window, { key: 'n' });
+    expect(screen.getByRole('button', { name: 'Notes' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.keyDown(window, { key: answerKey(index) });
+    // A note is a candidate, not an answer: the square is still empty.
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^Empty/);
+    expect(cellAt(row, col).textContent).toContain(answerKey(index));
+
+    fireEvent.keyDown(window, { key: 'n' });
+    fireEvent.keyDown(window, { key: 'h' });
+    expect(screen.getByRole('status')).toBeInTheDocument();
+  });
+
+  it('has no key for a digit this board size has not got', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const { row, col } = positionOf(openCells[0]!);
+    await user.click(cellAt(row, col));
+
+    // The pad follows the board — a 4×4 has no 5 key (§4) — so neither has
+    // the keyboard, and the key is left to the browser rather than swallowed.
+    fireEvent.keyDown(window, { key: '5' });
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^Empty/);
+  });
+
+  it('goes dead with the pad once a digit is all placed', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    // Three of the four 4s are given; placing the fourth disables the pad's
+    // 4 (§4). The key is that same key, so it stops writing with it.
+    const last = truth.solution.findIndex(
+      (value, index) => value === 4 && truth.board.givens[index] === EMPTY,
+    );
+    const lastPosition = positionOf(last);
+    await user.click(cellAt(lastPosition.row, lastPosition.col));
+    await user.click(padKey(4));
+    expect(padKey(4)).toBeDisabled();
+
+    const spare = openCells.find((index) => index !== last)!;
+    const sparePosition = positionOf(spare);
+    await user.click(cellAt(sparePosition.row, sparePosition.col));
+    fireEvent.keyDown(window, { key: '4' });
+    expect(cellAt(sparePosition.row, sparePosition.col).getAttribute('aria-label')).toMatch(
+      /^Empty/,
+    );
+  });
+
+  it('goes quiet while the restart dialog is up', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const index = openCells[0]!;
+    const { row, col } = positionOf(index);
+    await user.click(cellAt(row, col));
+
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+    fireEvent.keyDown(window, { key: answerKey(index) });
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^Empty/);
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.keyDown(window, { key: answerKey(index) });
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(
+      new RegExp(`^${answerKey(index)},`),
+    );
   });
 });
 
