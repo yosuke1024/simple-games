@@ -367,13 +367,16 @@ export function SchulteProvider({
       if (screen === 'home') {
         exitToCollection();
       } else {
+        // Leaving Quick Rules by Back counts as having seen them (issue #142):
+        // otherwise this game opens on the tutorial on every launch.
+        if (screen === 'tutorial') completeTutorial();
         goHome();
       }
     });
     return () => {
       void backHandle.then((handle) => handle.remove()).catch(() => undefined);
     };
-  }, [screen, exitToCollection, goHome]);
+  }, [screen, exitToCollection, goHome, completeTutorial]);
 
   const today = localDateString(new Date());
   const value = useMemo<SchulteContextValue>(

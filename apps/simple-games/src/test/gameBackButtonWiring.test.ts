@@ -31,7 +31,9 @@
  * sub-screen first (24 games do that with `syncActiveGame(); setScreen(
  * 'home');`, six with `goHome()` — this gate does not pick between them: how
  * a game leaves its own sub-screen is its own business, only that it does so
- * before falling through to the collection). The effect's cleanup removes
+ * before falling through to the collection; that leaving the tutorial this
+ * way also marks it seen is behaviour, and test/tutorialBackWiring.test.tsx
+ * pins it by pressing the button, issue #142). The effect's cleanup removes
  * the handle it registered.
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
