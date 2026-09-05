@@ -115,7 +115,7 @@ export function Game2048GameScreen() {
 
   return (
     <div className="screen game-screen">
-      <div className="game-content" inert={over || announceReached}>
+      <div className="game-content" inert={over || announceReached || confirmNewGame}>
         <header className="game-topbar">
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
             <IconBack />

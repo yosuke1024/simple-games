@@ -190,7 +190,7 @@ src/
 
 ## Web / Android / iOS
 
-Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS アプリ化する(SSR 不要のため Next.js は使用しない)。**プラットフォーム差分は 3 箇所に限定する**: 広告 ID・ストアの可用性判定・ホーム画面ショートカット(Android の Pinned Shortcut と iOS の Quick Actions は同じ `services/homeShortcut/` に住む)。いずれも実行時に `Capacitor.getPlatform()` で選び、ゲーム・保存・i18n のコードに `if (ios)` を書かない。**ハードウェア戻るボタン**: ゲーム内ホーム→コレクションへ、コレクション→アプリ最小化。`android:enableOnBackInvokedCallback="false"` は削除しない——targetSdk 36 の予測型戻るが既定で有効になると `@capacitor/app` の `backButton` イベントが一切発火しなくなる実機バグを回避するためで、外すとハードウェア戻るがアプリ全体で無反応になる。
+Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS アプリ化する(SSR 不要のため Next.js は使用しない)。**プラットフォーム差分は 3 箇所に限定する**: 広告 ID・ストアの可用性判定・ホーム画面ショートカット(Android の Pinned Shortcut と iOS の Quick Actions は同じ `services/homeShortcut/` に住む)。いずれも実行時に `Capacitor.getPlatform()` で選び、ゲーム・保存・i18n のコードに `if (ios)` を書かない。**ハードウェア戻るボタン**: ゲーム内ホーム→コレクションへ、コレクション→アプリ最小化。持ち主は常に 1 つ——ゲームが載っている間はそのゲームの `GameContext`(自分の画面→ホーム→コレクション)、チャンクの読み込み中と読み込み失敗の画面は `ui/useHardwareBackExit`、設定画面はシェル(`App.tsx`)、それ以外はコレクションホーム(検索を閉じてから最小化)。Capacitor の `backButton` は登録された全リスナーに届くので、2 つ目の持ち主は「閉じた画面の下でアプリが最小化する」事故になる。ゲーム側の配線(native ガード付きで 1 回だけ登録し、ホームでは `exitToCollection`)は `src/test/gameBackButtonWiring.test.ts` が、シェル側の受け渡しは `src/app/App.load.test.tsx` が固定する(issue #120)。`android:enableOnBackInvokedCallback="false"` は削除しない——targetSdk 36 の予測型戻るが既定で有効になると `@capacitor/app` の `backButton` イベントが一切発火しなくなる実機バグを回避するためで、外すとハードウェア戻るがアプリ全体で無反応になる。
 
 → 全文: [architecture/platforms.md](architecture/platforms.md)
 
@@ -222,6 +222,15 @@ Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS 
   12 本と 7 本の 2 群に残り 11 本が独自 → ゲームに残す。結果画面の外枠は 6/30 しか
   同一でない → 引き上げない。Root の読み込み effect 30/30 同一(読む記録の一覧だけ
   違う)→ `useLoadedRecords`。
+- **モーダルの間、盤面は inert。** 確認ダイアログ(`ConfirmDialog`)と結果オーバーレイが出ている間、
+  `.game-content` は `inert` にする——`open` のフラグを inert 式に含める(`inert={finished ||
+  confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカスは遮らず、`useGameKeys` の
+  `enabled` も window のキーリスナーを外すだけなので、これが無いと自動フォーカスされた Cancel から
+  Shift+Tab → Space で裏の手が進む。実測(2026-09-05): 確認ダイアログを持つ 25 本のうち inert 式に
+  そのフラグを含めていたのは 7 本 → `scripts/codemods/2026-09-05-inert-during-confirm-dialog.mjs` で
+  揃え、`src/test/modalIsolationWiring.test.ts` が新しいゲームにも同じ配線を要求する(issue #120)。
+  Chromium 102 未満の WebView 向けフォールバックは `styles.css` の `.game-content[inert]`
+  (`pointer-events: none`)。
 - **全ゲームに同じ変更を入れるときは codemod で入れる**(`scripts/codemods/`)。手で
   30 ファイルを編集しない: 変換スクリプトを 1 本書き、掛け、触ったファイルだけ
   prettier を通し、`src/test/` の横断ゲートで受ける。スクリプトは PR に同梱する。

@@ -108,16 +108,20 @@ export async function initAds(): Promise<void> {
   try {
     await AdMob.initialize({});
     initialized = true;
+    // Fire-and-forget like the rest of init — and caught like the rest of it:
+    // `void` drops the handle, not a rejection, and a plugin that refuses the
+    // registration must not escape this function's own try as an unhandled
+    // rejection (issue #120).
     void AdMob.addListener(BannerAdPluginEvents.SizeChanged, (size) => {
       for (const listener of bannerSizeListeners) listener(size.height);
-    });
+    }).catch(() => undefined);
     // A failed load destroys the native ad view; forget it so the next
     // game-screen entry recreates the banner instead of resuming nothing.
     void AdMob.addListener(BannerAdPluginEvents.FailedToLoad, () => {
       bannerCreated = false;
       bannerShowing = false;
       bannerCreatedWidth = null;
-    });
+    }).catch(() => undefined);
     // Ask for consent early so the first game screen does not have to wait,
     // but never wait for it here: the answer is required before an ad
     // request, not before the app finishes booting.
