@@ -99,6 +99,17 @@ function storedPlaySeconds(): number {
   );
 }
 
+/**
+ * The suspended daily's own clock, as it survives on disk (§11) — the number
+ * the player sees the board resume from, which is not the same fact as the
+ * statistics total and can be wrong while that total is right.
+ */
+function storedDailySeconds(): number {
+  const raw = deviceStore.get(KK_STORAGE_KEYS.dailyGame);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+}
+
 /** Level 1 is deterministic (§9), so a test knows its answer the same way a
  * player's device does. */
 const truth = createLevelSession(1);
@@ -178,6 +189,207 @@ describe('backgrounding (§11)', () => {
         await settle();
         expect(storedPlaySeconds()).toBe(7);
       }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+/**
+ * A pinned home-screen shortcut, and what Kakuro does about it (issue #113).
+ * The shell says only which door was used; every decision below is this
+ * game's, taken from its own three save slots (§11).
+ */
+describe('a home-screen shortcut', () => {
+  /** The same store a launch reads, entered by the other door. */
+  function launchFromShortcut() {
+    const onExit = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <KakuroRoot onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+    return onExit;
+  }
+
+  /** Quick Rules behind the player, the way every launch after the first finds them. */
+  function taughtAlready() {
+    deviceStore.set(KK_STORAGE_KEYS.flags, tutorialDone[KK_STORAGE_KEYS.flags]!);
+  }
+
+  /** Suspends one level game: start it, then leave from the board (§11). */
+  async function suspendLevelOne(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(await screen.findByRole('button', { name: /Level 1/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+  }
+
+  /**
+   * The board, or null. A `queryByRole` twin of the file-level `board()`,
+   * because half of what a shortcut has to be pinned for is a board that is
+   * *not* there — the absence is the `.not` at each call site, never the name.
+   */
+  const board = () => screen.queryByRole('group', { name: /Kakuro board/ });
+  const home = () => screen.queryByRole('button', { name: /Daily Challenge/ });
+
+  it('opens the one suspended game straight onto its board', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // The board itself, and the game it belongs to — the top bar names the
+    // level, so this is the suspended game and not a fresh one.
+    expect(board()).toBeInTheDocument();
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(home()).not.toBeInTheDocument();
+  });
+
+  it('leaves the board for this game’s home, not the collection', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+
+    const onExit = launchFromShortcut();
+    await settle();
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from a board is this game's home, whichever door the
+    // board was reached through: the way in did not add a screen to undo.
+    expect(home()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens a suspended free board just as readily as a level', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    // The free board is the slot a count most easily leaves out: it is last of
+    // the three and the one the home screen does not lead with. A rule that
+    // looked at only two slots would both miss this board and mistake a pair
+    // that includes it for a single answer.
+    await user.click(await screen.findByRole('button', { name: /Free Play/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(board()).toBeInTheDocument();
+    expect(screen.getByText('Free Play')).toBeInTheDocument();
+  });
+
+  it('opens the home screen when two games are suspended, rather than guessing', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    await user.click(screen.getByRole('button', { name: /Daily Challenge/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // Both are still there to be picked up by hand — nothing was chosen for
+    // the player, and nothing was thrown away either.
+    expect(board()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Level 1.*Resume/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Daily Challenge.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('opens the home screen when nothing is suspended', async () => {
+    taughtAlready();
+    launchFromShortcut();
+    await settle();
+
+    expect(board()).not.toBeInTheDocument();
+    expect(home()).toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+
+    launch();
+    await settle();
+
+    expect(board()).not.toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Level 1.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('teaches the game first, even with a game suspended and waiting', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+
+    // A suspended board AND no Quick Rules behind the player: the two have to
+    // be arranged together, because a launch against an empty store lands on
+    // the tutorial whatever the gate says. They meet in life through "Reset
+    // Local Data" and through a flags record that failed to parse —
+    // `flagsSchema` fails toward `tutorialCompleted: false` (§11's fail-closed
+    // reading, applied to every record). Quick Rules still win (§12).
+    deviceStore.delete(KK_STORAGE_KEYS.flags);
+    launchFromShortcut();
+
+    expect(await screen.findByText('Add up to the clue')).toBeInTheDocument();
+    expect(board()).not.toBeInTheDocument();
+  });
+
+  // The counterpart of the backgrounding tests above, and the reason both
+  // clock refs are seeded from the resumed slot rather than a fixed one: the
+  // daily is suspended while the level slot is empty, so a baseline read from
+  // the level slot would be zero and this game's whole elapse would be booked
+  // into the statistics a second time.
+  it('does not book the resumed game’s play seconds a second time', async () => {
+    taughtAlready();
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Daily Challenge/ }));
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+      expect(storedDailySeconds()).toBe(5);
+
+      cleanup();
+      launchFromShortcut();
+      await settle();
+      // The daily on its own, so this also pins the slot the count forgets.
+      expect(board()).toBeInTheDocument();
+      expect(screen.getByText('Daily')).toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(3_000));
+      background();
+      await settle();
+      // Eight seconds of play, counted once, on a board that still knows it
+      // has been played for eight. Both numbers are read because the total
+      // alone cannot see the worse mistake: with neither clock seeded the two
+      // errors can cancel, leaving the statistics right while the player's
+      // minutes are gone from the board they are still on.
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedDailySeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

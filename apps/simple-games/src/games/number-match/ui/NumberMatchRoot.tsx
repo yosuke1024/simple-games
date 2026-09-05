@@ -61,11 +61,17 @@ interface LoadedData {
 export interface NumberMatchRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: what a door means is the provider's
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
 
-export function NumberMatchRoot({ onExit, kv = preferencesKV }: NumberMatchRootProps) {
+export function NumberMatchRoot({ onExit, entry, kv = preferencesKV }: NumberMatchRootProps) {
   const [data, setData] = useState<LoadedData | null>(null);
 
   useEffect(() => {
@@ -108,6 +114,7 @@ export function NumberMatchRoot({ onExit, kv = preferencesKV }: NumberMatchRootP
       initialPrefs={data.prefs}
       initialSessions={data.sessions}
       onExit={onExit}
+      entry={entry}
     >
       <NumberMatchScreens />
     </AppProvider>

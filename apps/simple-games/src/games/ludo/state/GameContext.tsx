@@ -167,6 +167,8 @@ export interface LudoProviderProps {
   initialSession: LudoSession | null;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -176,10 +178,34 @@ export function LudoProvider({
   initialPrefs,
   initialSession,
   onExit,
+  entry,
   children,
 }: LudoProviderProps) {
+  /**
+   * Whether this launch opens straight onto the suspended match rather than
+   * onto the home screen (issue #113). Decided once, from the record the
+   * provider was mounted with: a launch means whatever it meant when it
+   * happened, and no save made later can change that.
+   *
+   * Only a home-screen shortcut asks — every other door opens the home, as it
+   * always did — and only once Quick Rules are behind the player: a first
+   * launch teaches the game before it shows a board (§11), and a shortcut is
+   * not a way past that. That clause lives here and nowhere else, which is why
+   * the screen below asks this first and the tutorial second: written the other
+   * way round the tutorial would be gated twice, and a guard nothing can
+   * observe failing is not a guard.
+   *
+   * There is nothing to disambiguate here, and that is the slot's doing rather
+   * than this line's: one match (§10), already replayed and dropped if play
+   * could not have produced it (§10.3), standing on the one state a record can
+   * express — you, about to throw (§10.2). So a session at all *is* the match
+   * to come back to.
+   */
+  const [resumeDirect] = useState(
+    () => entry === 'shortcut' && initialFlags.tutorialCompleted && initialSession !== null,
+  );
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeDirect ? 'game' : !initialFlags.tutorialCompleted ? 'tutorial' : 'home',
   );
   const [session, setSession] = useState<LudoSession | null>(initialSession);
   const [stats, setStats] = useState<Stats>(initialStats);
@@ -196,10 +222,19 @@ export function LudoProvider({
   const statsRef = useRef(stats);
   statsRef.current = stats;
 
+  // A match opened at mount arrives with its clock already run, and the two
+  // numbers it needs are exactly the two `activate` sets when the home screen
+  // hands a match over — which this launch never passes through. Starting them
+  // at zero instead would write the match's own elapsedSeconds back down to
+  // the seconds since mount on the first save; seeding only the live one would
+  // book every second already played into the statistics a second time (§9 —
+  // a restored elapsedSeconds comes back as *already booked*). Neither shows
+  // on screen: this game has no clock (§8).
+  const resumedSeconds = resumeDirect ? (initialSession?.elapsedSeconds ?? 0) : 0;
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
+  const elapsedRef = useRef(resumedSeconds);
   /** Play seconds already booked into the statistics for this match. */
-  const bookedRef = useRef(0);
+  const bookedRef = useRef(resumedSeconds);
   /** Whether this match's result has been booked; it happens exactly once. */
   const finalizedRef = useRef(false);
 

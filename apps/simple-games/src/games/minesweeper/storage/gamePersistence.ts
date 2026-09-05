@@ -79,6 +79,32 @@ function toSession(persisted: PersistedGame | null): MinesweeperSession | null {
   return session.status === 'playing' ? session : null;
 }
 
+/**
+ * The one suspended game a home-screen shortcut may open straight onto, or
+ * null when there is no single answer (issue #113).
+ *
+ * A shortcut is a way back into the game somebody was playing. With two
+ * independent slots — one difficulty board, one daily (§8, §10) — "the game
+ * they were playing" is only a fact when exactly one of them is suspended.
+ * Two would make it a guess, and guessing wrong drops somebody onto the other
+ * board mid-game. None and two both mean the home screen, which is where every
+ * other door leads anyway. Nothing is cleared either way.
+ *
+ * The status test is the one `toSession` already applied on the way in, so a
+ * finished or unreadable record cannot reach here; repeating it keeps this
+ * readable on its own and matches how the home screen re-derives the same fact.
+ *
+ * Reads the game's own saves and nothing else: the shell hands over which door
+ * was used and never learns what this decided
+ * (docs/ARCHITECTURE.md「ゲームレジストリの契約」).
+ */
+export function soleSuspendedMode(saved: SavedGames): GameMode | null {
+  const suspended = (['difficulty', 'daily'] as const).filter(
+    (mode) => saved[mode]?.status === 'playing',
+  );
+  return suspended.length === 1 ? suspended[0]! : null;
+}
+
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
   const [difficulty, daily] = await Promise.all([
     loadRecord(gameSchema, kv),

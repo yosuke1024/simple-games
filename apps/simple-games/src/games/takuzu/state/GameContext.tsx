@@ -41,7 +41,12 @@ import {
   type Hint,
   type TakuzuSession,
 } from '../game';
-import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
+import {
+  clearSavedGame,
+  saveGame,
+  soleSuspendedMode,
+  type SavedGames,
+} from '../storage/gamePersistence';
 import {
   flagsSchema,
   prefsSchema,
@@ -114,6 +119,8 @@ export interface TakuzuProviderProps {
   prefs: Prefs;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -130,13 +137,44 @@ export function TakuzuProvider({
   initialSessions,
   prefs,
   onExit,
+  entry,
   children,
 }: TakuzuProviderProps) {
+  /**
+   * The suspended game this launch opens straight onto, or null for the home
+   * screen (issue #113). Decided once, at mount, from the records the provider
+   * was handed: a launch means what it meant when it happened, and no save
+   * written later can change what door it came through.
+   *
+   * Only a home-screen shortcut asks, and only once Quick Rules are behind the
+   * player — a first launch teaches the game before it shows a board (§12),
+   * and a shortcut is not a way past that. `tk.flags` can validate back to its
+   * default while `tk.saveGame` survives, so the two really do meet; this is
+   * the one line that decides it, for the slot and the clocks below as well as
+   * for the screen.
+   */
+  const [resumeMode] = useState<GameMode | null>(() =>
+    entry === 'shortcut' && initialFlags.tutorialCompleted
+      ? soleSuspendedMode(initialSessions)
+      : null,
+  );
+  /**
+   * The slot this mount is pointed at. Named once and used three times below —
+   * the active mode and both play clocks have to agree on it, because a clock
+   * seeded from a different slot than the board on screen is exactly the bug
+   * §11 warns about.
+   */
+  const initialMode = resumeMode ?? INITIAL_MODE;
+
+  // Resume, or exactly what this line has always said. `resumeMode` already
+  // answers null until Quick Rules are behind the player, so the tutorial gate
+  // stays in one place rather than two — two would each cover for the other,
+  // and a guard nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeMode ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
-  const [activeMode, setActiveMode] = useState<GameMode>(INITIAL_MODE);
+  const [activeMode, setActiveMode] = useState<GameMode>(initialMode);
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
@@ -160,7 +198,7 @@ export function TakuzuProvider({
   const session = sessions[activeMode];
 
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(initialSessions[INITIAL_MODE]?.elapsedSeconds ?? 0);
+  const elapsedRef = useRef(initialSessions[initialMode]?.elapsedSeconds ?? 0);
   /**
    * Play seconds already booked into the statistics for this session.
    *
@@ -173,8 +211,16 @@ export function TakuzuProvider({
    * that books its whole elapsed time a second time. Open and leave twice and
    * it lands twice. The comment on the visibility effect below already states
    * this invariant — this is the line that makes it true.
+   *
+   * A shortcut that mounts straight onto the board (issue #113) never runs
+   * `activate`, so this and `elapsedRef` above are the only things standing in
+   * for it: both read `initialMode`, which is the resumed slot rather than the
+   * level one. Reading the level slot there would leave a resumed daily or
+   * free board baselined at 0, and since `withElapsedSeconds` takes a max the
+   * damage is silent — the first sync books the whole restored session again,
+   * and the live clock's first minutes vanish into the max().
    */
-  const bookedRef = useRef(initialSessions[INITIAL_MODE]?.elapsedSeconds ?? 0);
+  const bookedRef = useRef(initialSessions[initialMode]?.elapsedSeconds ?? 0);
 
   const withElapsed = useCallback(
     (s: TakuzuSession): TakuzuSession => withElapsedSeconds(s, elapsedRef.current),

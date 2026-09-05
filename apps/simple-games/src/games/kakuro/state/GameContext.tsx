@@ -47,7 +47,12 @@ import {
   type Hint,
   type KakuroSession,
 } from '../game';
-import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
+import {
+  clearSavedGame,
+  saveGame,
+  soleSuspendedMode,
+  type SavedGames,
+} from '../storage/gamePersistence';
 import {
   flagsSchema,
   prefsSchema,
@@ -124,6 +129,8 @@ export interface KakuroProviderProps {
   prefs: Prefs;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -140,13 +147,34 @@ export function KakuroProvider({
   initialSessions,
   prefs,
   onExit,
+  entry,
   children,
 }: KakuroProviderProps) {
+  /**
+   * The suspended game this launch opens straight onto, or null for the home
+   * screen (issue #113). Decided once, from the records the provider was
+   * mounted with: a launch means whatever it meant when it happened, and no
+   * save made later can change that.
+   *
+   * Only a home-screen shortcut asks, and only once Quick Rules are behind
+   * the player — a first launch teaches the game before it shows a board
+   * (§12), and that order has no exception. The flags record fails toward the
+   * tutorial when it is corrupt, so this fails that way too.
+   */
+  const [resumeMode] = useState<GameMode | null>(() =>
+    entry === 'shortcut' && initialFlags.tutorialCompleted
+      ? soleSuspendedMode(initialSessions)
+      : null,
+  );
+  // Resume, or exactly what this line has always said. `resumeMode` already
+  // answers null until Quick Rules are behind the player, so the gate is in
+  // one place rather than two — two would each cover for the other, and a
+  // guard nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeMode ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
-  const [activeMode, setActiveMode] = useState<GameMode>(INITIAL_MODE);
+  const [activeMode, setActiveMode] = useState<GameMode>(resumeMode ?? INITIAL_MODE);
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
@@ -169,8 +197,18 @@ export function KakuroProvider({
 
   const session = sessions[activeMode];
 
+  /**
+   * The seconds the clock starts on — read from the slot this mount is
+   * pointed at, which is the resumed one when a shortcut opened straight onto
+   * it (issue #113) and the mount's own otherwise. Reading a fixed slot would
+   * be wrong for exactly the case a shortcut creates: a sole suspended daily
+   * or free board means the level slot is empty, so a baseline taken from it
+   * would be zero against a game that has already been played for minutes.
+   */
+  const restoredSeconds = initialSessions[resumeMode ?? INITIAL_MODE]?.elapsedSeconds ?? 0;
+
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(initialSessions[INITIAL_MODE]?.elapsedSeconds ?? 0);
+  const elapsedRef = useRef(restoredSeconds);
   /**
    * Play seconds already booked into the statistics for this session.
    *
@@ -183,8 +221,12 @@ export function KakuroProvider({
    * that books its whole elapsed time a second time. Open and leave twice and
    * it lands twice. The comment on the visibility effect below already states
    * this invariant — this is the line that makes it true.
+   *
+   * A shortcut that mounts onto the board skips `activate` altogether, so
+   * these two lines are the only place that baseline gets set for it — which
+   * is why both refs, and not just this one, take the resumed slot's seconds.
    */
-  const bookedRef = useRef(initialSessions[INITIAL_MODE]?.elapsedSeconds ?? 0);
+  const bookedRef = useRef(restoredSeconds);
 
   const withElapsed = useCallback(
     (s: KakuroSession): KakuroSession => withElapsedSeconds(s, elapsedRef.current),

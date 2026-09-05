@@ -56,6 +56,32 @@ function toSession(persisted: PersistedGame | null): SpiderSession | null {
   return session.status === 'playing' ? session : null;
 }
 
+/**
+ * The one suspended deal a home-screen shortcut may open straight onto, or
+ * null when there is no single answer (issue #113).
+ *
+ * A shortcut is a way back into the game somebody was playing. With the two
+ * independent slots of §10 — one free deal, one daily — "the deal they were
+ * playing" is only a fact when exactly one of them is suspended. Two would
+ * make it a guess, and guessing wrong drops somebody onto a board they did
+ * not ask for, mid-deal. None and two both mean the home screen, which is
+ * where every other door leads anyway; neither slot is touched either way.
+ *
+ * Iterates the mode literals, not the storage keys: `SS_STORAGE_KEYS.game`
+ * holds the *free* deal (§10 — the key is what decides the mode), so a scan
+ * written over key names would silently never find anything.
+ *
+ * Reads the game's own saves and nothing else: the shell hands over which
+ * door was used and never learns what this decided
+ * (docs/ARCHITECTURE.md「ゲームレジストリの契約」).
+ */
+export function soleSuspendedMode(saved: SavedGames): GameMode | null {
+  const suspended = (['free', 'daily'] as const).filter(
+    (mode) => saved[mode]?.status === 'playing',
+  );
+  return suspended.length === 1 ? suspended[0]! : null;
+}
+
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
   const [free, daily] = await Promise.all([
     loadRecord(gameSchema, kv),

@@ -121,6 +121,33 @@ export const GAME_CATEGORIES: readonly GameCategory[] = [
   { id: 'drills', headingKey: 'categoryDrills' },
 ];
 
+/**
+ * How the player got to a game — a fact about the door, not an instruction.
+ * The shell knows which door was used and nothing else; what a door means is
+ * the game's own answer (issue #113).
+ *
+ * `'shortcut'` is a home-screen shortcut pinned to this game
+ * (app/shortcutLaunch.ts). A game that keeps exactly one suspended game of
+ * its own may open straight onto it rather than onto its home screen; a game
+ * with none, with more than one, or with nothing it can read may ignore this
+ * entirely, and most of the collection does. The shell asks no questions
+ * about any of that: it never learns a save schema, and a game that answers
+ * "my home screen, thanks" needs no code at all.
+ */
+export type GameEntry = 'collection' | 'shortcut';
+
+/**
+ * Everything the shell hands a game. Games declare these props themselves
+ * rather than importing this type — `onExit` has always been duplicated that
+ * way, and the assignment in `loadRoot` is what checks the two agree.
+ */
+export interface GameRootProps {
+  /** Hands control back to the collection home. */
+  onExit: () => void;
+  /** Which door this launch came through. Absent means the ordinary one. */
+  entry?: GameEntry;
+}
+
 export interface GameDefinition {
   id: GameId;
   /**
@@ -148,7 +175,7 @@ export interface GameDefinition {
    * named exports; the shim to `{ default }` is what React.lazy expects
    * (app/lazyRoots.ts caches the lazy wrapper per game).
    */
-  loadRoot: () => Promise<{ default: ComponentType<{ onExit: () => void }> }>;
+  loadRoot: () => Promise<{ default: ComponentType<GameRootProps> }>;
   /**
    * Optional: the game's own settings, rendered inside the shared settings
    * screen. A game owns its options; the shell only lends them a place.

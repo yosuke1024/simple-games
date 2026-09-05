@@ -37,7 +37,12 @@ import {
   type GameMode,
   type QuickMathSession,
 } from '../game';
-import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
+import {
+  clearSavedGame,
+  saveGame,
+  soleSuspendedMode,
+  type SavedGames,
+} from '../storage/gamePersistence';
 import {
   flagsSchema,
   progressSchema,
@@ -108,6 +113,8 @@ export interface QuickMathProviderProps {
   initialSessions: SavedGames;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -117,13 +124,35 @@ export function QuickMathProvider({
   initialProgress,
   initialSessions,
   onExit,
+  entry,
   children,
 }: QuickMathProviderProps) {
+  /**
+   * The suspended set this launch opens straight onto, or null for the home
+   * screen (issue #113). Decided once, from the records the provider was
+   * mounted with: a launch means whatever it meant when it happened, and no
+   * save made later can change that.
+   *
+   * Only a home-screen shortcut asks, and only once Quick Rules are behind the
+   * player — a first launch teaches the game before it shows a question (§11),
+   * and that order does not have an exception.
+   */
+  const [resumeMode] = useState<GameMode | null>(() =>
+    entry === 'shortcut' && initialFlags.tutorialCompleted
+      ? soleSuspendedMode(initialSessions)
+      : null,
+  );
+  // Resume, or exactly what this line has always said. `resumeMode` already
+  // answers null until Quick Rules are behind the player, so the gate is in one
+  // place rather than two — two would each cover for the other, and a guard
+  // nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeMode ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
-  const [activeMode, setActiveMode] = useState<GameMode>('level');
+  // The board draws `sessions[activeMode]`, so resuming the daily while this
+  // still said 'level' would render nothing at all.
+  const [activeMode, setActiveMode] = useState<GameMode>(resumeMode ?? 'level');
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
@@ -143,10 +172,18 @@ export function QuickMathProvider({
 
   const session = sessions[activeMode];
 
+  // A set resumed at mount arrives with its clock already run, and the two
+  // numbers `activate` hands over when Resume is pressed on the home screen are
+  // these same two. Starting them at zero would save the set back with fewer
+  // seconds than it was left with — and stamp that invented time into the best
+  // times on the way to a clear — while booking every second already played
+  // into the statistics a second time (§9: a restored set comes back with its
+  // time already counted).
+  const resumedSeconds = resumeMode ? (initialSessions[resumeMode]?.elapsedSeconds ?? 0) : 0;
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
+  const elapsedRef = useRef(resumedSeconds);
   /** Play seconds already booked into the statistics for this set. */
-  const bookedRef = useRef(0);
+  const bookedRef = useRef(resumedSeconds);
 
   const withElapsed = useCallback((s: QuickMathSession): QuickMathSession => {
     return s.elapsedSeconds === elapsedRef.current

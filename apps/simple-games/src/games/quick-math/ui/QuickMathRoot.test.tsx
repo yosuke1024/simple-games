@@ -5,7 +5,7 @@ import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
 import { answerDigits, questionsForLevel } from '../game';
-import { QM_STORAGE_KEYS, type Stats } from '../storage/schemas';
+import { QM_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { QuickMathRoot } from './QuickMathRoot';
 
 const { deviceStore } = vi.hoisted(() => ({ deviceStore: new Map<string, string>() }));
@@ -302,6 +302,229 @@ describe('resuming (docs/QUICK_MATH_RULES.md §9)', () => {
     expect(screen.getByText('0 / 10')).toBeInTheDocument();
     expect(document.querySelector('.qmath-blank')?.textContent).toBe('');
   });
+});
+
+/**
+ * A pinned home-screen shortcut, and what Quick Math does about it (issue
+ * #113). The shell says only which door was used; every decision below is this
+ * game's own, taken from its two save slots (§9).
+ */
+describe('a home-screen shortcut', () => {
+  /** The same device store a launch reads, entered by the other door. */
+  function launchFromShortcut() {
+    const onExit = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <QuickMathRoot onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+    return { onExit };
+  }
+
+  /**
+   * The ordinary door. Production never leaves `entry` off: App.tsx names
+   * 'collection' for a tile, for a web `?game=` address and for the
+   * error-boundary retry, and 'shortcut' at exactly one call site — so a launch
+   * with no entry at all is a shape only a test can make.
+   */
+  function launchFromCollection() {
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <QuickMathRoot onExit={vi.fn()} entry="collection" />
+      </SettingsProvider>,
+    );
+  }
+
+  /** Quick Rules behind the player, the way every launch after the first finds them. */
+  function taughtAlready() {
+    deviceStore.set(QM_STORAGE_KEYS.flags, tutorialDone[QM_STORAGE_KEYS.flags]!);
+  }
+
+  /** Suspends a level 1 set: start it, then leave by the back button. */
+  async function suspendLevelOne(user: ReturnType<typeof userEvent.setup>) {
+    await startLevelOne(user);
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+  }
+
+  /** A save slot as it sits on disk (§9). */
+  const storedGame = (key: string): PersistedGame | null => {
+    const raw = deviceStore.get(key);
+    return raw === undefined ? null : (JSON.parse(raw) as PersistedGame);
+  };
+
+  const board = () => screen.queryByRole('group', { name: 'Number keypad' });
+  const home = () => screen.queryByRole('button', { name: /Daily Challenge/ });
+
+  it('opens the one suspended set on the question it was left on', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await startLevelOne(user);
+    await type(user, levelOneAnswers[0]!);
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // The set as it was left — question two of ten — not a fresh one.
+    expect(board()).toBeInTheDocument();
+    expect(screen.getByText('1 / 10')).toBeInTheDocument();
+    expect(home()).not.toBeInTheDocument();
+  });
+
+  it('opens the daily when the daily is the suspended one', async () => {
+    // The slots are independent (§9), so the set to resume is not always the
+    // level one: a daily opened while the mode still said 'level' would draw
+    // a blank screen rather than the twenty questions.
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(board()).toBeInTheDocument();
+    expect(screen.getByText('0 / 20')).toBeInTheDocument();
+  });
+
+  it('leaves the board for this game’s home, not the collection', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+
+    const { onExit } = launchFromShortcut();
+    await settle();
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from a set is this game's home, whichever door the set was
+    // reached through: the way in did not add a screen to undo.
+    expect(home()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens the home screen when both sets are suspended, rather than guessing', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    await user.click(screen.getByRole('button', { name: /Daily Challenge/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // Both are still there to be picked up by hand — nothing was chosen for
+    // the player, and nothing was thrown away either.
+    expect(board()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Level 1.*Resume/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Daily Challenge.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('opens the home screen when nothing is suspended', async () => {
+    taughtAlready();
+    launchFromShortcut();
+    await settle();
+
+    expect(board()).not.toBeInTheDocument();
+    expect(home()).toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+
+    launchFromCollection();
+    await settle();
+
+    expect(board()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Level 1.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('teaches the game first on a launch that has never seen Quick Rules', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+
+    // The flags record lost while the saved set still reads fine — the one way
+    // the two can disagree. A shortcut is not a way past Quick Rules (§11).
+    deviceStore.delete(QM_STORAGE_KEYS.flags);
+    launchFromShortcut();
+
+    expect(await screen.findByText('Answer with the keypad')).toBeInTheDocument();
+    expect(board()).not.toBeInTheDocument();
+  });
+
+  /**
+   * The counterpart of the discard tests above: resuming at mount seeds the
+   * same two clocks `activate` does, so the seconds already played are neither
+   * lost from the saved set nor counted into the statistics again.
+   *
+   * Both numbers are read, and that is the point. The statistics alone cannot
+   * see the worse of the two mistakes: with NEITHER clock seeded the errors
+   * cancel — the save writes the set's own clock back DOWN to the seconds since
+   * mount, and the booking then adds exactly that many — so the total comes out
+   * right while the player's minutes are quietly gone from the set they are
+   * still on.
+   *
+   * Run over both slots, because the seed reads the resumed mode's own record:
+   * a version that always read the level slot would leave a resumed daily
+   * starting from zero, and nothing about a level set could show it.
+   */
+  it.each([
+    { slot: 'level', open: /Level 1/, key: QM_STORAGE_KEYS.game, bucket: 'addSub' },
+    { slot: 'daily', open: /Daily Challenge/, key: QM_STORAGE_KEYS.dailyGame, bucket: 'daily' },
+  ] as const)(
+    'neither loses nor re-books the play seconds of the $slot set it resumes',
+    async ({ open, key, bucket }) => {
+      taughtAlready();
+      vi.useFakeTimers();
+      try {
+        launch();
+        await settle();
+        fireEvent.click(screen.getByRole('button', { name: open }));
+        act(() => vi.advanceTimersByTime(5_000));
+        fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+        await settle();
+        expect(storedStats()?.[bucket].totalPlaySeconds).toBe(5);
+        expect(storedGame(key)?.elapsedSeconds).toBe(5);
+
+        cleanup();
+        launchFromShortcut();
+        await settle();
+        expect(board()).toBeInTheDocument();
+
+        act(() => vi.advanceTimersByTime(3_000));
+        fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+        await settle();
+
+        // Eight seconds were played, and the saved set still says so: a clock
+        // that restarted at zero would write five of them off the record — and
+        // a clear from there would stamp the invented time into best times.
+        expect(storedGame(key)?.elapsedSeconds).toBe(8);
+        expect(storedStats()?.[bucket].totalPlaySeconds).toBe(8);
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
 });
 
 describe('home', () => {

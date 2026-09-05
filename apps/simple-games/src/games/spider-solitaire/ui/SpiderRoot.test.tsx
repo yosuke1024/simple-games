@@ -6,7 +6,7 @@ import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
 import { createFreeSession } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
-import { SS_STORAGE_KEYS, type Stats } from '../storage/schemas';
+import { SS_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { SpiderRoot } from './SpiderRoot';
 
 /**
@@ -128,6 +128,18 @@ function storedPlaySeconds(): number {
   return (JSON.parse(raw) as Stats).totalPlaySeconds;
 }
 
+/**
+ * The free deal's own clock as it survives on disk. Worth reading separately
+ * from the statistics: a save writes the live clock *over* the session's
+ * elapsed seconds, so a clock that started from the wrong place destroys the
+ * deal's own record even where the lifetime total happens to come out right.
+ */
+function storedFreeElapsed(): number {
+  const raw = deviceStore.get(SS_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as PersistedGame).elapsedSeconds;
+}
+
 afterEach(() => {
   cleanup();
   deviceStore.clear();
@@ -158,6 +170,249 @@ describe('backgrounding (§10)', () => {
       act(() => vi.advanceTimersByTime(3_000));
       background();
       await settle();
+      expect(storedPlaySeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+/**
+ * A pinned home-screen shortcut, and what Spider does about it (issue #113).
+ * The shell says only which door was used; every decision below is this
+ * game's, taken from its own two save slots (§10).
+ */
+describe('a home-screen shortcut', () => {
+  /** The same store a launch reads, entered by the other door. */
+  function launchFromShortcut() {
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <SpiderRoot onExit={vi.fn()} entry="shortcut" />
+      </SettingsProvider>,
+    );
+  }
+
+  /** Quick Rules behind the player, the way every launch after the first finds them. */
+  function taughtAlready() {
+    deviceStore.set(SS_STORAGE_KEYS.flags, tutorialDone[SS_STORAGE_KEYS.flags]!);
+  }
+
+  const board = () => screen.queryByRole('group', { name: 'Spider Solitaire table' });
+  const home = () => screen.queryByRole('button', { name: /New deal/ });
+
+  /**
+   * Deals a free game, plays one row off the stock, then leaves it on the
+   * table and goes home.
+   *
+   * The move is the point. An untouched deal is indistinguishable from the one
+   * a launch would hand out by itself — same ten columns, same five deals in
+   * hand, same zero moves — so a test that suspends without playing cannot
+   * tell a resumed board from a fresh one, and would keep passing if the
+   * shortcut silently started a new deal (spending a play, §9).
+   */
+  async function suspendFreeDeal(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(await screen.findByRole('button', { name: /New deal/ }));
+    await user.click(
+      await within(table()).findByRole('button', {
+        name: 'Stock, 5 deals left — tap to deal a row',
+      }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+  }
+
+  /** The same for today's daily — the other slot, kept independently (§10). */
+  async function suspendDailyDeal(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
+    await user.click(
+      await within(table()).findByRole('button', {
+        name: 'Stock, 5 deals left — tap to deal a row',
+      }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+  }
+
+  it('opens the one suspended deal straight onto its table', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendFreeDeal(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // The deal that was waiting, and not a new one: a row already off the
+    // stock and the move that took it. A launch that dealt its own game would
+    // show five deals in hand and no moves.
+    expect(board()).toBeInTheDocument();
+    expect(
+      within(table()).getByRole('button', { name: 'Stock, 4 deals left — tap to deal a row' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(home()).not.toBeInTheDocument();
+  });
+
+  it('opens the daily when that is the one that was suspended', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendDailyDeal(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // The table reads whichever slot was resumed, so arriving at the daily has
+    // to move the active mode with it — the free slot is empty and would draw
+    // nothing at all. And it is the suspended daily, not a second one dealt on
+    // arrival: today's date would have dealt again just as readily.
+    expect(board()).toBeInTheDocument();
+    expect(screen.getByText('Daily')).toBeInTheDocument();
+    expect(
+      within(table()).getByRole('button', { name: 'Stock, 4 deals left — tap to deal a row' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+  });
+
+  it('leaves the table for this game’s home, not the collection', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendFreeDeal(user);
+    cleanup();
+
+    const onExit = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <SpiderRoot onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+    await settle();
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from a table is this game's home, whichever door the table
+    // was reached through: the way in did not add a screen to undo.
+    expect(home()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens the home screen when both deals are suspended, rather than guessing', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendFreeDeal(user);
+    await suspendDailyDeal(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // Both are still there to be picked up by hand — nothing was chosen for
+    // the player, and nothing was thrown away either.
+    expect(board()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Spider Solitaire\s*Resume/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Daily Challenge\s*Resume/ })).toBeInTheDocument();
+  });
+
+  it('opens the home screen when nothing is suspended', async () => {
+    taughtAlready();
+    launchFromShortcut();
+    await settle();
+
+    expect(board()).not.toBeInTheDocument();
+    expect(home()).toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendFreeDeal(user);
+    cleanup();
+
+    // The word itself, because it is the one the shell sends on every ordinary
+    // path — the collection tile, the web `?game=` view, Back into a game, the
+    // error-boundary retry (app/App.tsx). A gate written as `!== 'collection'`
+    // or as a truthiness check would pass every test that only omits the prop.
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <SpiderRoot onExit={vi.fn()} entry="collection" />
+      </SettingsProvider>,
+    );
+    await settle();
+
+    expect(board()).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: /Spider Solitaire\s*Resume/ }),
+    ).toBeInTheDocument();
+
+    // And a launch that names no door at all, which is what the tests above
+    // and the game's own screens do.
+    cleanup();
+    launch();
+    await settle();
+
+    expect(board()).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: /Spider Solitaire\s*Resume/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('teaches the game first, even with a deal waiting', async () => {
+    const user = userEvent.setup();
+    launch();
+    await settle();
+    // Quick Rules, and the free deal it hands out at the end (§11).
+    await user.click(await screen.findByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    cleanup();
+
+    // The one arrangement where the rule can be seen at all: a suspended deal
+    // on disk and Quick Rules still not behind the player. A shortcut is not
+    // an exception to the order — it is a way back in, not a way past.
+    deviceStore.delete(SS_STORAGE_KEYS.flags);
+    launchFromShortcut();
+
+    expect(await screen.findByText('Stack down by rank')).toBeInTheDocument();
+    expect(board()).not.toBeInTheDocument();
+  });
+
+  // The counterpart of the backgrounding test above: resuming at mount seeds
+  // the same two clocks `activate` does, so the seconds already played are
+  // neither lost nor counted again. Both numbers have to be checked — one
+  // catches a clock that restarted, the other a booking that started over.
+  it('keeps the resumed deal’s play seconds, and books them only once', async () => {
+    taughtAlready();
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /New deal/ }));
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+      expect(storedFreeElapsed()).toBe(5);
+
+      cleanup();
+      launchFromShortcut();
+      await settle();
+      expect(board()).toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(3_000));
+      background();
+      await settle();
+      // The deal has been played for eight seconds and the lifetime total says
+      // eight: the five it arrived with were carried, not re-run and not
+      // re-counted.
+      expect(storedFreeElapsed()).toBe(8);
       expect(storedPlaySeconds()).toBe(8);
     } finally {
       vi.useRealTimers();

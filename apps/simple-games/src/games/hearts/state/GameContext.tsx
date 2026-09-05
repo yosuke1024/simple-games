@@ -193,6 +193,8 @@ export interface HeartsProviderProps {
   initialSession: HeartsSession | null;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -202,10 +204,36 @@ export function HeartsProvider({
   initialPrefs,
   initialSession,
   onExit,
+  entry,
   children,
 }: HeartsProviderProps) {
+  /**
+   * Whether this launch opens straight onto the match it left, rather than on
+   * the home screen (issue #113). Decided once, from the records the provider
+   * was mounted with: a launch means whatever it meant when it happened, and
+   * no beat played afterwards can change that. `session` moves with every
+   * beat, so asking this as a derived value would keep re-asserting itself
+   * and drag the player back to the table after `goHome`.
+   *
+   * Only a home-screen shortcut asks. The match slot is one match (§9), and
+   * `loadSavedGame` hands back null for anything that is not a match to come
+   * back to — a decided one, a hand the engine cannot replay, a pass
+   * direction or a move count that disagrees with the hand number — so a
+   * session that got this far is the one unambiguous answer, and no
+   * ambiguity between slots is possible.
+   *
+   * Quick Rules keep their place at the front: a first launch teaches the
+   * game before it deals, and a shortcut is not a way past that (§10).
+   */
+  const [resumeAtMount] = useState(
+    () => entry === 'shortcut' && initialFlags.tutorialCompleted && initialSession !== null,
+  );
+  // Resume, or exactly what this line has always said. `resumeAtMount` already
+  // answers false until Quick Rules are behind the player, so the rule is
+  // stated once rather than twice — written in both places, each would cover
+  // for the other, and a guard nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeAtMount ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [session, setSession] = useState<HeartsSession | null>(initialSession);
   const [stats, setStats] = useState<Stats>(initialStats);
@@ -223,10 +251,17 @@ export function HeartsProvider({
   const statsRef = useRef(stats);
   statsRef.current = stats;
 
+  // A match that arrives on screen at mount has its clock already run, and the
+  // two numbers `activate` sets when it arrives by a tap are these same two.
+  // Starting them at zero would write the restored seconds back down to the
+  // seconds since mount on the very next beat (450ms later, unasked); seeding
+  // only the live one would book every second already played a second time.
+  // The restored elapsed seconds come back as *already counted* (§9).
+  const resumedSeconds = resumeAtMount ? (initialSession?.elapsedSeconds ?? 0) : 0;
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
+  const elapsedRef = useRef(resumedSeconds);
   /** Play seconds already booked into the statistics for this match. */
-  const bookedRef = useRef(0);
+  const bookedRef = useRef(resumedSeconds);
   /** Whether this match's result has been booked; it happens exactly once. */
   const finalizedRef = useRef(false);
 

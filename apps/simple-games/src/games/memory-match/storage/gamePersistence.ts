@@ -63,6 +63,30 @@ function toSession(persisted: PersistedGame | null): MemorySession | null {
   return session.status === 'playing' ? session : null;
 }
 
+/**
+ * The one suspended game a home-screen shortcut may open straight onto, or
+ * null when there is no single answer (issue #113).
+ *
+ * The two slots are independent by design (docs/MEMORY_MATCH_RULES.md §10), so
+ * both can hold a live game at once — a difficulty board put down on Tuesday
+ * and today's daily. "The game they were playing" is only a fact when exactly
+ * one of them is suspended; with two it would be a guess, and guessing wrong
+ * drops somebody onto a board they did not ask for, mid-game. None and two
+ * both mean the home screen, which is where every other door leads anyway.
+ *
+ * Reads this game's own saves and nothing else: the shell says which door was
+ * used and never learns what was decided here
+ * (docs/ARCHITECTURE.md「ゲームレジストリの契約」). A slot that survived the
+ * loader is already 'playing' — toSession drops a solved or unreadable
+ * record — so this can only ever offer a game there is something left to do in.
+ */
+export function soleSuspendedMode(saved: SavedGames): GameMode | null {
+  const suspended = (['difficulty', 'daily'] as const).filter(
+    (mode) => saved[mode]?.status === 'playing',
+  );
+  return suspended.length === 1 ? suspended[0]! : null;
+}
+
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
   const [difficulty, daily] = await Promise.all([
     loadRecord(gameSchema, kv),
