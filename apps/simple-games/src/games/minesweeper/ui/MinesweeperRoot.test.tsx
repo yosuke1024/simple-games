@@ -576,6 +576,27 @@ describe('right click (§3, issue #111)', () => {
     expect(shutCells()).toHaveLength(shut - 1);
   });
 
+  it('still flags in flag mode turned on by the keyboard (issue #115)', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+    fireEvent.keyDown(window, { key: 'f' });
+    expect(screen.getByRole('button', { name: 'Flag mode' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    const target = shutCells()[0]!;
+    const shut = shutCells().length;
+
+    // The F key only flips the same mode the button flips — right click
+    // still plants a flag regardless (§3), whichever input turned it on.
+    rightClick(target);
+    expect(target.getAttribute('aria-label')).toMatch(/^Flagged/);
+    expect(shutCells()).toHaveLength(shut - 1);
+  });
+
   it('acts once when the button is held down (§3)', async () => {
     const user = userEvent.setup();
     renderMinesweeper(tutorialDone);
@@ -783,9 +804,9 @@ describe('the board a screen reader hears (§12)', () => {
   });
 });
 
-/* Keyboard input is an adapter over the same tap handler (issue #93): this
-   checks board state the Hint button also produces, never a keyboard-only
-   behaviour. */
+/* Keyboard input is an adapter over the same tap handlers (issue #93): this
+   checks board state the Hint and Flag mode buttons also produce, never a
+   keyboard-only behaviour (issues #93, #115). */
 describe('keyboard (issue #93)', () => {
   it('H asks for the hint, same as the Hint button', async () => {
     const user = userEvent.setup();
@@ -795,6 +816,134 @@ describe('keyboard (issue #93)', () => {
 
     fireEvent.keyDown(window, { key: 'h' });
     expect(screen.getByRole('status').textContent).toMatch(/safe/i);
+  });
+
+  // F toggles flag mode (issue #115): the same one-shot action the Flag mode
+  // button triggers, proven both by the button's own state and by what a tap
+  // on the board does next.
+  it('F toggles flag mode, same as the button', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    fireEvent.keyDown(window, { key: 'f' });
+    expect(screen.getByRole('button', { name: 'Flag mode' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('status').textContent).toContain(
+      'A tap plants a flag; a long press opens.',
+    );
+
+    // The mode is not just a label: a plain click on a shut cell now flags
+    // it, the same board change the button's own click produces.
+    const target = shutCells()[0]!;
+    await user.click(target);
+    expect(target.getAttribute('aria-label')).toMatch(/^Flagged/);
+
+    // Upper case, as Shift or Caps Lock delivers it.
+    fireEvent.keyDown(window, { key: 'F' });
+    expect(screen.getByRole('button', { name: 'Flag mode' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+
+    // H still works after F was pressed: the two keys do not interfere.
+    fireEvent.keyDown(window, { key: 'h' });
+    expect(screen.getByRole('status').textContent).toMatch(/safe/i);
+  });
+
+  // Held keys act once, never once per repeat frame (the same rule H already
+  // follows): a long-held F must not flap the mode back and forth.
+  it('a held F toggles once — repeats are swallowed, not replayed', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+    const toggle = screen.getByRole('button', { name: 'Flag mode' });
+
+    // The initial press turns flag mode on...
+    fireEvent.keyDown(window, { key: 'f' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+
+    // ...and the browser's repeated keydown while the key stays held must not
+    // flap it back off. fireEvent hands back what dispatchEvent returned,
+    // which is false exactly when the handler called preventDefault — proof
+    // the repeat was swallowed here rather than left for the browser.
+    expect(fireEvent.keyDown(window, { key: 'f', repeat: true })).toBe(false);
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('leaves F to a field it is typed into, and to the browser with a modifier', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: 'f' });
+    document.body.removeChild(input);
+    expect(screen.getByRole('button', { name: 'Flag mode' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+
+    // fireEvent hands back what dispatchEvent returned: true means nothing
+    // called preventDefault, so the browser keeps Ctrl/Cmd+F for itself.
+    expect(fireEvent.keyDown(window, { key: 'f', ctrlKey: true })).toBe(true);
+    expect(fireEvent.keyDown(window, { key: 'f', metaKey: true })).toBe(true);
+    expect(fireEvent.keyDown(window, { key: 'f', altKey: true })).toBe(true);
+    expect(screen.getByRole('button', { name: 'Flag mode' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
+
+  it('goes quiet while the restart dialog is up', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+    fireEvent.keyDown(window, { key: 'f' });
+    expect(screen.getByRole('button', { name: 'Flag mode' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.keyDown(window, { key: 'f' });
+    expect(screen.getByRole('button', { name: 'Flag mode' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('goes quiet once the board is finished', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+    await settle();
+
+    // Find a still-shut mine from the saved board (the first tap's region is
+    // guaranteed safe, so the mines are all outside it) and open it to lose.
+    const raw = deviceStore.get(MS_STORAGE_KEYS.game)!;
+    const { mines } = JSON.parse(raw) as { mines: string };
+    const idx = mines.indexOf('1');
+    const row = Math.floor(idx / PRESETS.easy.width) + 1;
+    const col = (idx % PRESETS.easy.width) + 1;
+    await user.click(cellAt(row, col));
+    await screen.findByRole('alertdialog', { name: 'Mine opened' });
+
+    fireEvent.keyDown(window, { key: 'f' });
+    expect(screen.getByRole('button', { name: 'Flag mode' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
   });
 });
 

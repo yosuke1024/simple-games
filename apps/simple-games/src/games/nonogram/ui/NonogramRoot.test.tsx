@@ -782,6 +782,21 @@ describe('right click (§3, issue #112)', () => {
     expect(markAt(3, 3)).toMatch(/^Blank/);
   });
 
+  it('still crosses in X mode turned on from the keyboard (issue #115)', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+    fireEvent.keyDown(window, { key: 'x' });
+    expect(screen.getByRole('button', { name: 'X Mode' })).toHaveAttribute('aria-pressed', 'true');
+
+    // The X key is just another way to flip the same mode the button flips;
+    // the right button ignores the mode regardless of which one set it.
+    rightClick(cellAt(3, 4));
+    expect(markAt(3, 4)).toMatch(/^Crossed/);
+    rightClick(cellAt(3, 4));
+    expect(markAt(3, 4)).toMatch(/^Blank/);
+  });
+
   it('acts once when the button is held down (§3)', async () => {
     const user = userEvent.setup();
     renderGame(tutorialDone);
@@ -1249,9 +1264,9 @@ describe('free play (§6)', () => {
   });
 });
 
-/* Keyboard input is an adapter over the same tap handler (issue #93): this
-   checks board state the Hint button also produces, never a keyboard-only
-   behaviour. */
+/* Keyboard input is an adapter over the same tap handlers (issue #93): this
+   checks board state the Hint and X Mode buttons also produce, never a
+   keyboard-only behaviour (issues #93, #115). */
 describe('keyboard (issue #93)', () => {
   it('H asks for the hint, same as the Hint button', async () => {
     const user = userEvent.setup();
@@ -1260,6 +1275,111 @@ describe('keyboard (issue #93)', () => {
 
     fireEvent.keyDown(window, { key: 'h' });
     expect(screen.getByRole('status')).toHaveTextContent('The highlighted line decides a square.');
+  });
+
+  it('X toggles X mode, same as the button', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    fireEvent.keyDown(window, { key: 'x' });
+    const toggle = screen.getByRole('button', { name: 'X Mode' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('status')).toHaveTextContent('Tap crosses out; long-press paints.');
+
+    // The key is a genuine adapter over the button, not a look-alike: a plain
+    // tap now crosses, the same board effect the button's own click produces.
+    await user.click(cellAt(2, 3));
+    expect(markAt(2, 3)).toMatch(/^Crossed/);
+
+    // Shift or Caps Lock deliver the key as upper case; the handler must not
+    // care which case it sees.
+    fireEvent.keyDown(window, { key: 'X' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+
+    // H still works after X was pressed — the two branches do not trip on
+    // each other. The board has moved on since the earlier hint check, so
+    // this only pins the shared sentence prefix, not which of the two hint
+    // sentences (found / broken) it is.
+    fireEvent.keyDown(window, { key: 'h' });
+    expect(screen.getByRole('status')).toHaveTextContent(/^The highlighted line/);
+  });
+
+  it('a held X toggles once — repeats are swallowed, not replayed', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+    const toggle = screen.getByRole('button', { name: 'X Mode' });
+
+    // The initial press turns X mode on...
+    fireEvent.keyDown(window, { key: 'x' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+
+    // ...and the browser's repeated keydown while the key stays held must not
+    // flap it back off. fireEvent hands back what dispatchEvent returned,
+    // which is false exactly when the handler called preventDefault — proof
+    // the repeat was swallowed here rather than left for the browser.
+    expect(fireEvent.keyDown(window, { key: 'x', repeat: true })).toBe(false);
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('leaves X to a field it is typed into, and to the browser with a modifier', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+    const toggle = screen.getByRole('button', { name: 'X Mode' });
+
+    // Typed into a field, X is text, not a shortcut — the shared hook already
+    // withholds keys typed into input/textarea/select/contenteditable.
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: 'x' });
+    input.remove();
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+
+    // A modifier leaves the key to the browser: fireEvent returns true when
+    // nothing called preventDefault on it.
+    expect(fireEvent.keyDown(window, { key: 'x', ctrlKey: true })).toBe(true);
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(fireEvent.keyDown(window, { key: 'x', metaKey: true })).toBe(true);
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(fireEvent.keyDown(window, { key: 'x', altKey: true })).toBe(true);
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('goes quiet while the restart dialog is up', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+    const toggle = screen.getByRole('button', { name: 'X Mode' });
+
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+    fireEvent.keyDown(window, { key: 'x' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.keyDown(window, { key: 'x' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('goes quiet once the board is finished', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    // The level is deterministic (§6), so the test can know the answer the
+    // same way every player's device does.
+    const truth = createLevelSession(1);
+    for (let index = 0; index < truth.solution.length; index++) {
+      if (truth.solution[index] !== PAINTED) continue;
+      const row = Math.floor(index / truth.size) + 1;
+      const col = (index % truth.size) + 1;
+      await user.click(cellAt(row, col));
+    }
+    await screen.findByRole('alertdialog', { name: 'Solved!' });
+
+    fireEvent.keyDown(window, { key: 'x' });
+    expect(screen.getByRole('button', { name: 'X Mode' })).toHaveAttribute('aria-pressed', 'false');
   });
 });
 

@@ -6,8 +6,9 @@
  * hurry.
  *
  * Two actions, both free and unlimited: X mode, so a long press is never the
- * only way to cross a cell (§3), and Hint (§7). There is no undo button,
- * because every mark already toggles off with the tap that put it down (§7).
+ * only way to cross a cell (§3), and Hint (§7) — the keyboard reaches both
+ * too, X (issue #115) and H (issue #93). There is no undo button, because
+ * every mark already toggles off with the tap that put it down (§7).
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { haptics } from '@/services/haptics';
@@ -128,14 +129,19 @@ export function NonoGameScreen() {
     showToast(t(next.kind === 'cell' ? 'nonoHintFound' : 'nonoHintBroken'));
   }, [showToast, t, takeHint]);
 
-  /* Keyboard as an adapter over the tap handler above (issue #93): H asks for
-     the hint, the same one-shot action the button triggers, so key repeat is
-     ignored. */
+  /* Keyboard as an adapter over the tap handlers above (issue #93): H asks
+     for the hint and X toggles X mode (issue #115), the same one-shot
+     actions the two buttons trigger, so key repeat is ignored for both — a
+     held X must not flap the mode on every repeat frame. */
   const onKey = (event: KeyboardEvent): boolean => {
     if (session === null) return false;
     if (event.ctrlKey || event.metaKey || event.altKey) return false;
     if (event.key === 'h' || event.key === 'H') {
       if (!event.repeat) onHint();
+      return true;
+    }
+    if (event.key === 'x' || event.key === 'X') {
+      if (!event.repeat) onToggleXMode();
       return true;
     }
     return false;
