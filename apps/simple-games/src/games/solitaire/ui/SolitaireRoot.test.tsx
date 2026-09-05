@@ -101,6 +101,47 @@ const savedHintGame = {
   }),
 };
 
+/**
+ * A crafted save with one of every drag the issue names (issue #116), each
+ * with a legal destination and an illegal one within reach:
+ *
+ * - pile 1: A♠ alone — goes to the spades foundation, not onto a king
+ * - pile 2: J♥ 10♠ — receives the 9♥ 8♠ run from pile 3
+ * - pile 3: K♠ hidden under 9♥ 8♠ — the run that moves, and the flip it frees
+ * - pile 7: Q♦ — receives a J♠ from the waste
+ * - waste: whatever a test puts on top (an A♥ for its foundation, a J♠ for pile 7)
+ */
+const dragTableau = [
+  { down: [], up: [0] }, // A♠
+  { down: [], up: [23, 9] }, // J♥ 10♠
+  { down: [12], up: [21, 7] }, // K♠ hidden under 9♥ 8♠
+  { down: [], up: [51] }, // K♣
+  { down: [], up: [38] }, // K♦
+  { down: [], up: [50] }, // Q♣
+  { down: [], up: [37] }, // Q♦
+];
+function savedDragGame(waste: number[]) {
+  const dealt = new Set([...waste, ...dragTableau.flatMap((pile) => [...pile.down, ...pile.up])]);
+  return {
+    ...tutorialDone,
+    [SO_STORAGE_KEYS.game]: JSON.stringify({
+      schemaVersion: 1,
+      mode: 'free',
+      seed: 'sol-free-drag',
+      drawThree: false,
+      dailyDate: null,
+      stock: Array.from({ length: 52 }, (_, card) => card).filter((card) => !dealt.has(card)),
+      waste,
+      foundations: [[], [], [], []],
+      tableau: dragTableau,
+      moveCount: 0,
+      hintCount: 0,
+      elapsedSeconds: 0,
+      savedAt: 1,
+    }),
+  };
+}
+
 const table = () => screen.getByRole('group', { name: 'Solitaire table' });
 
 async function resumeGoldenGame(user: ReturnType<typeof userEvent.setup>) {
@@ -583,5 +624,333 @@ describe('opening a suspended game without resuming (#109)', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+/**
+ * Drag-to-move (docs/SOLITAIRE_RULES.md §3, issue #116). Every drag below ends
+ * in the same board a two-tap move would leave, checked the same way — a drag
+ * is a way in, not a second set of rules — and the tap path is checked again
+ * afterwards, because it is the one that must not have moved.
+ */
+describe('drag (issue #116)', () => {
+  /** The pretend table, in CSS pixels: seven 45px columns on a 50px pitch. */
+  const COL = 50;
+  const CARD_W = 45;
+  const ROW = { top: 0, height: 63 };
+  const TABLEAU_TOP = 75;
+  const rect = (left: number, top: number, width: number, height: number): DOMRect =>
+    ({
+      left,
+      top,
+      width,
+      height,
+      right: left + width,
+      bottom: top + height,
+      x: left,
+      y: top,
+      toJSON: () => ({}),
+    }) as DOMRect;
+
+  /**
+   * jsdom lays nothing out, so the table's zones are handed to it by force,
+   * keyed off the same data attributes the table reads them from. Everything
+   * else about the gesture is real.
+   */
+  let layoutSpy: ReturnType<typeof vi.spyOn> | null = null;
+  function giveTableALayout(): void {
+    layoutSpy = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: Element,
+    ) {
+      const el = this as HTMLElement;
+      if (el.dataset.topRow !== undefined)
+        return rect(0, ROW.top, COL * 7 - (COL - CARD_W), ROW.height);
+      if (el.dataset.pile !== undefined) {
+        return rect(Number(el.dataset.pile) * COL, TABLEAU_TOP, CARD_W, 200);
+      }
+      if (el.dataset.foundation !== undefined) {
+        return rect((3 + Number(el.dataset.foundation)) * COL, ROW.top, CARD_W, ROW.height);
+      }
+      return rect(0, 0, 0, 0);
+    });
+  }
+  afterEach(() => {
+    layoutSpy?.mockRestore();
+    layoutSpy = null;
+  });
+
+  /** A pointer over the middle of column `pile` (0-based), well into the tableau. */
+  const overColumn = (pile: number) => ({ clientX: pile * COL + CARD_W / 2, clientY: 160 });
+  /** A pointer over the middle of one suit's foundation. */
+  const overFoundation = (suit: number) => ({
+    clientX: (3 + suit) * COL + CARD_W / 2,
+    clientY: ROW.height / 2,
+  });
+  /** Where every press below starts: far enough from every target to travel. */
+  const PRESS = { clientX: 22, clientY: 160 };
+
+  const card = (name: string) => within(table()).getByRole('button', { name });
+  const column = (n: number) => within(table()).getByRole('group', { name: `Column ${n}` });
+
+  /** Presses a card and carries it to `to`, in the events a browser sends. */
+  function drag(el: HTMLElement, to: { clientX: number; clientY: number }): void {
+    fireEvent.pointerDown(el, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
+    fireEvent.pointerMove(el, { pointerId: 1, buttons: 1, ...to });
+    fireEvent.pointerUp(el, { pointerId: 1, button: 0, ...to });
+  }
+
+  async function resumeDragGame(user: ReturnType<typeof userEvent.setup>, waste: number[] = []) {
+    renderGame(savedDragGame(waste));
+    await resumeGoldenGame(user);
+    giveTableALayout();
+  }
+
+  it('moves a run onto another column (tableau → tableau, multi-card)', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    // The 9♥ is the head of a two-card run; both cards travel, and the K♠
+    // they were covering turns over — the move a tap makes, made by hand.
+    drag(card('9 of hearts'), overColumn(1));
+
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(within(column(2)).getByRole('button', { name: '9 of hearts' })).toBeInTheDocument();
+    expect(within(column(2)).getByRole('button', { name: '8 of spades' })).toBeInTheDocument();
+    expect(within(column(3)).getByRole('button', { name: 'K of spades' })).toBeInTheDocument();
+    expect(within(column(3)).queryByRole('img', { name: 'Face down' })).not.toBeInTheDocument();
+  });
+
+  it('sends a card to its foundation (tableau → foundation)', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    drag(card('A of spades'), overFoundation(0));
+
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(card('Foundation, A of spades')).toBeInTheDocument();
+    expect(card('Column 1, empty — a king can move here')).toBeInTheDocument();
+  });
+
+  it('plays the waste card to its foundation (waste → foundation)', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user, [10, 13]); // J♠ under A♥
+
+    drag(card('A of hearts'), overFoundation(1));
+
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(card('Foundation, A of hearts')).toBeInTheDocument();
+    // The next waste card is on top now, and still where it was.
+    expect(card('J of spades')).toBeInTheDocument();
+    expect(column(7).contains(card('J of spades'))).toBe(false);
+  });
+
+  it('plays the waste card onto a column (waste → tableau)', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user, [13, 10]); // A♥ under J♠
+
+    drag(card('J of spades'), overColumn(6));
+
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(within(column(7)).getByRole('button', { name: 'J of spades' })).toBeInTheDocument();
+    expect(within(column(7)).getByRole('button', { name: 'Q of diamonds' })).toBeInTheDocument();
+  });
+
+  it('changes nothing on a drop that is not legal, and selects nothing either', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    // An ace onto a king: not a move. The card is back where it lay, the
+    // board is as it was, and nothing is left held — a drag that failed is
+    // over, not half of a tap.
+    const ace = card('A of spades');
+    drag(ace, overColumn(3));
+
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(within(column(1)).getByRole('button', { name: 'A of spades' })).toBeInTheDocument();
+    expect(table().querySelectorAll('.sol-selected')).toHaveLength(0);
+    expect(table().querySelectorAll('.sol-dragging')).toHaveLength(0);
+    expect(table().querySelectorAll('.sol-drop-target')).toHaveLength(0);
+    expect(ace.style.transform).toBe('');
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+
+  it('changes nothing when let go off the table', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    drag(card('A of spades'), { clientX: 22, clientY: -200 });
+
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(within(column(1)).getByRole('button', { name: 'A of spades' })).toBeInTheDocument();
+    expect(table().querySelectorAll('.sol-selected')).toHaveLength(0);
+  });
+
+  it('does not let the click a drag leaves behind count as a tap', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    // A pointer released after a drag still ends in a click on the card it
+    // pressed. After a drop that moved nothing, that card is still there to
+    // hear it — and hearing it as a tap would leave the card selected, with
+    // the next tap anywhere legal moving it. Nothing moved, so nothing is held.
+    const ace = card('A of spades');
+    drag(ace, overColumn(3));
+    fireEvent.click(ace, { detail: 1 });
+
+    expect(table().querySelectorAll('.sol-selected')).toHaveLength(0);
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+
+    // The mark is spent on that one click: the same card, tapped for real
+    // afterwards, is selected like any other.
+    fireEvent.click(ace, { detail: 1 });
+    expect(ace).toHaveClass('sol-selected');
+  });
+
+  it('never swallows a keyboard activation, drag or no drag', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    // Enter on a button raises a click with no pointer behind it (detail 0).
+    // It is not the click the drag left, whatever card it lands on.
+    const ace = card('A of spades');
+    drag(ace, overColumn(3));
+    fireEvent.click(ace, { detail: 0 });
+
+    expect(ace).toHaveClass('sol-selected');
+  });
+
+  it('leaves the board and the table sound when the browser cancels the pointer', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    // Mid-drag, over a legal spot, the browser takes the gesture — a scroll it
+    // decided was its own. Nothing is played, the run goes back, and the next
+    // two taps work as they always did.
+    const nine = card('9 of hearts');
+    fireEvent.pointerDown(nine, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
+    fireEvent.pointerMove(nine, { pointerId: 1, buttons: 1, ...overColumn(1) });
+    expect(nine).toHaveClass('sol-dragging');
+    fireEvent.pointerCancel(nine, { pointerId: 1 });
+
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(within(column(3)).getByRole('button', { name: '9 of hearts' })).toBeInTheDocument();
+    expect(table().querySelectorAll('.sol-dragging')).toHaveLength(0);
+    expect(table().querySelectorAll('.sol-drop-target')).toHaveLength(0);
+    expect(nine.style.transform).toBe('');
+
+    await user.click(nine);
+    await user.click(card('10 of spades'));
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+  });
+
+  it('lights the places the carried card could go, and the one it is over', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    const nine = card('9 of hearts');
+    fireEvent.pointerDown(nine, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
+    fireEvent.pointerMove(nine, { pointerId: 1, buttons: 1, ...overColumn(1) });
+
+    // The same destinations a tap-selection lights (§3) — the 10♠ is the one
+    // place this run can go — and the spot under the finger is marked as
+    // where letting go will put it. Both cards of the run are in hand.
+    const ten = card('10 of spades');
+    expect(ten).toHaveClass('sol-destination');
+    expect(ten).toHaveClass('sol-drop-target');
+    expect(table().querySelectorAll('.sol-drop-target')).toHaveLength(1);
+    expect(nine).toHaveClass('sol-dragging');
+    expect(card('8 of spades')).toHaveClass('sol-dragging');
+    expect(table().querySelectorAll('.sol-dragging')).toHaveLength(2);
+
+    // Over a column it cannot land on, nothing is marked: the felt says
+    // nothing about a drop that will do nothing (§3).
+    fireEvent.pointerMove(nine, { pointerId: 1, buttons: 1, ...overColumn(3) });
+    expect(table().querySelectorAll('.sol-drop-target')).toHaveLength(0);
+    expect(ten).toHaveClass('sol-destination');
+
+    fireEvent.pointerUp(nine, { pointerId: 1, button: 0, ...overColumn(3) });
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+  });
+
+  it('puts down whatever a tap had selected when a card is picked up', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    // Select the ace by tap, then drag the run instead: the run moves, the
+    // ace does not, and nothing is left selected.
+    await user.click(card('A of spades'));
+    expect(card('A of spades')).toHaveClass('sol-selected');
+
+    drag(card('9 of hearts'), overColumn(1));
+
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(within(column(1)).getByRole('button', { name: 'A of spades' })).toBeInTheDocument();
+    expect(table().querySelectorAll('.sol-selected')).toHaveLength(0);
+  });
+
+  it('is still a tap below the travel threshold', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    // A finger that rolls a few pixels while tapping has not picked anything
+    // up: the press ends in the click the tap path has always answered.
+    const ace = card('A of spades');
+    fireEvent.pointerDown(ace, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
+    fireEvent.pointerMove(ace, {
+      pointerId: 1,
+      buttons: 1,
+      clientX: PRESS.clientX + 4,
+      clientY: PRESS.clientY + 4,
+    });
+    expect(table().querySelectorAll('.sol-dragging')).toHaveLength(0);
+    fireEvent.pointerUp(ace, { pointerId: 1, button: 0, clientX: PRESS.clientX + 4, clientY: 164 });
+    fireEvent.click(ace, { detail: 1 });
+
+    expect(ace).toHaveClass('sol-selected');
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+  });
+
+  it('takes a dragged move back with Undo, like any other (§8)', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    drag(card('9 of hearts'), overColumn(1));
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Undo' }));
+
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(within(column(3)).getByRole('button', { name: '9 of hearts' })).toBeInTheDocument();
+    expect(within(column(3)).getByRole('button', { name: '8 of spades' })).toBeInTheDocument();
+    // The K♠ the move had turned over is hidden again (§8).
+    expect(within(column(3)).getByRole('img', { name: 'Face down' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+
+  it('refuses a run bound for a foundation (§3)', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    // Two cards cannot go to a foundation together, whatever the head is.
+    drag(card('9 of hearts'), overFoundation(1));
+
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(within(column(3)).getByRole('button', { name: '9 of hearts' })).toBeInTheDocument();
+  });
+
+  it('moves the same card by two taps after a drag, and by a drag after two taps', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user, [13, 10]); // A♥ under J♠
+
+    // Neither path leaves anything behind that trips the other.
+    drag(card('J of spades'), overColumn(6));
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+
+    await user.click(card('A of hearts'));
+    await user.click(card('Foundation, hearts, empty'));
+    expect(screen.getByText(/Moves\s*2/)).toBeInTheDocument();
+
+    drag(card('A of spades'), overFoundation(0));
+    expect(screen.getByText(/Moves\s*3/)).toBeInTheDocument();
   });
 });
