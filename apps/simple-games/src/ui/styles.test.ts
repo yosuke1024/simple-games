@@ -52,17 +52,19 @@ describe('the home screens share .home-logo', () => {
 });
 
 /**
- * ARCHITECTURE.md claims every title keeps its styling in its own folder, and
- * then lists the files by name. A list written by hand goes stale the moment
- * a game is added, and it had: five titles were missing from it — the drills
- * and the two later card games — while the sentence above it still said
- * "every title". A claim nobody checks is not a claim.
+ * The architecture doc claims every title keeps its styling in its own folder,
+ * and then lists the files by name. A list written by hand goes stale the
+ * moment a game is added, and it had: five titles were missing from it — the
+ * drills and the two later card games — while the sentence above it still
+ * said "every title". A claim nobody checks is not a claim.
  *
  * This holds the list to the filesystem in both directions, which is the only
- * way the sentence stays true without anybody remembering to make it so.
+ * way the sentence stays true without anybody remembering to make it so. The
+ * full text of the「CSS の分割」section lives in docs/architecture/css-split.md
+ * since the 2026-09-05 split; ARCHITECTURE.md keeps the heading and a summary.
  */
-describe('the CSS-per-game list in ARCHITECTURE.md', () => {
-  const doc = readFileSync(resolve('../../docs/ARCHITECTURE.md'), 'utf8');
+describe('the CSS-per-game list in docs/architecture/css-split.md', () => {
+  const doc = readFileSync(resolve('../../docs/architecture/css-split.md'), 'utf8');
   const claim = doc.slice(doc.indexOf('**全タイトルが規約に従っている**'));
   const listed = new Set(
     [...claim.slice(0, 600).matchAll(/`([a-z0-9-]+\.css)`/g)].map((m) => m[1]!),
