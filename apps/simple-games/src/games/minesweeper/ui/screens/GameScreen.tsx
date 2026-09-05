@@ -6,9 +6,10 @@
  * is on screen is board information — how many mines are still unaccounted for.
  *
  * Two actions, both free and unlimited: flag mode, so a long press is never the
- * only way to plant a flag (§3), and Hint (§7). There is no undo button,
- * because there is no undo (§7) — the retry on the result card is the answer,
- * and it costs nothing.
+ * only way to plant a flag (§3), and Hint (§7) — the keyboard reaches both too,
+ * F (issue #115) and H (issue #93). There is no undo button, because there is
+ * no undo (§7) — the retry on the result card is the answer, and it costs
+ * nothing.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { haptics } from '@/services/haptics';
@@ -113,14 +114,19 @@ export function MinesGameScreen() {
     showToast(t('minesHintFound'));
   }, [showToast, t, takeHint]);
 
-  /* Keyboard as an adapter over the tap handler above (issue #93): H asks for
-     the hint, the same one-shot action the button triggers, so key repeat is
-     ignored. */
+  /* Keyboard as an adapter over the tap handlers above (issue #93): H asks for
+     the hint and F toggles flag mode (issue #115), the same one-shot actions
+     the two buttons trigger, so key repeat is ignored for both — a held F
+     must not flap the mode on every repeat frame. */
   const onKey = (event: KeyboardEvent): boolean => {
     if (session === null) return false;
     if (event.ctrlKey || event.metaKey || event.altKey) return false;
     if (event.key === 'h' || event.key === 'H') {
       if (!event.repeat) onHint();
+      return true;
+    }
+    if (event.key === 'f' || event.key === 'F') {
+      if (!event.repeat) onToggleFlagMode();
       return true;
     }
     return false;
