@@ -137,10 +137,17 @@ function GameButton({ game, className, onOpen, onMenu, children }: GameButtonPro
       onContextMenu={(event) => {
         // A right-click, and the keyboard's own menu key (Shift+F10): the
         // browser raises this same event for both, so the mouse route and one
-        // keyboard route cost three lines between them.
+        // keyboard route cost a few lines between them.
         event.preventDefault();
+        // A press still armed here is the primary button raising the menu —
+        // macOS ctrl+click — and, unlike a right-click, a click follows it
+        // (the shape MinesBoard answers too). The sheet is told, so its guard
+        // swallows that one click instead of letting it close the sheet the
+        // instant it opens. A right-click and the menu key arm no press, and
+        // the guard stays down for them (issue #120).
+        const midPress = timerRef.current !== null;
         clearTimer();
-        onMenu(game, buttonRef.current, false);
+        onMenu(game, buttonRef.current, midPress);
       }}
       onClick={() => {
         clearTimer();
@@ -205,6 +212,9 @@ export function CollectionHomeScreen({
    */
   const searchingRef = useRef(searching);
   searchingRef.current = searching;
+  /** The same, for the tile sheet: back closes it before it does anything else. */
+  const menuOpenRef = useRef(menuGame !== null);
+  menuOpenRef.current = menuGame !== null;
 
   /**
    * Focus follows the mode: into the field when it appears (which is also
@@ -228,8 +238,9 @@ export function CollectionHomeScreen({
    * Android's hardware back, for the collection itself. It lives here rather
    * than in the shell (App.tsx keeps exactly one owner per screen, and hands
    * this one over) because the answer depends on state only this screen has:
-   * searching closes the search, and the home — the root of the app — is
-   * where back leaves it, exactly as it always has.
+   * an open tile sheet closes (a dialog is what back closes first, on every
+   * screen), searching closes the search, and the home — the root of the app
+   * — is where back leaves it, exactly as it always has.
    *
    * The listener is registered once. It reads the mode through a ref instead
    * of closing over it, so a keystroke does not cost a deregister and a
@@ -245,7 +256,8 @@ export function CollectionHomeScreen({
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const handle = CapacitorApp.addListener('backButton', () => {
-      if (searchingRef.current) closeSearch();
+      if (menuOpenRef.current) setMenuGame(null);
+      else if (searchingRef.current) closeSearch();
       else void CapacitorApp.minimizeApp().catch(() => CapacitorApp.exitApp());
     });
     return () => {

@@ -462,3 +462,116 @@ describe('the shell the app runs', () => {
     expect(history.back).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * The settings screen is not in the address (App.tsx「Back and Forward,
+ * browser only」: only games are), so opening it must touch no history at all
+ * — and a forward-stack entry left by a game the visitor already left has to
+ * survive underneath it. That second half is what makes Forward from
+ * Settings land on the game rather than on nothing: `onPopState` compares
+ * the address with the game showing, and a screen that has no entry of its
+ * own is simply "no game showing" (issue #120).
+ */
+describe('the settings screen and the address', () => {
+  it('is not in the address, so opening it touches no history', async () => {
+    const user = userEvent.setup();
+    arriveAt(PLAY);
+    renderShell();
+    await collectionHome();
+    const history = watchHistory();
+
+    await user.click(screen.getByRole('button', { name: 'Settings' }));
+
+    expect(await screen.findByRole('heading', { name: 'Settings' })).toBeInTheDocument();
+    expect(history.push).not.toHaveBeenCalled();
+    expect(history.replace).not.toHaveBeenCalled();
+    expect(window.location.search).toBe('');
+  });
+
+  it('Forward from it lands on the game the entry names', async () => {
+    const user = userEvent.setup();
+    arriveAt(PLAY);
+    renderShell();
+    await collectionHome();
+    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await playing('sudoku');
+    await user.click(leaveGame());
+    await settle();
+    await collectionHome();
+
+    await user.click(screen.getByRole('button', { name: 'Settings' }));
+    await screen.findByRole('heading', { name: 'Settings' });
+
+    // The address wins over a screen that had no entry of its own.
+    await goForward();
+    expect(await playing('sudoku')).toBeInTheDocument();
+    expect(window.location.search).toBe('?game=sudoku');
+  });
+});
+
+/**
+ * `popstate` is a comparison, not a repair. onPopState (App.tsx「Back and
+ * Forward, browser only」) reads whatever the address currently says and
+ * closes or opens a game to match it, but it carries none of boot's tidying:
+ * `startRoute` (webRoute.ts) settles a `?game=` this build cannot open down
+ * to the plain collection address *because* there is a decision to make
+ * right then about what just opened. A later step arriving by `popstate` gets
+ * no equivalent rewrite — the handler only ever touches the screen, never the
+ * address it is reacting to. And it runs only in the browser: the effect
+ * `return`s before its `addEventListener` when routing is off
+ * (docs/ARCHITECTURE.md「ハードウェア戻るボタン」), which is a stronger claim
+ * than "the app ignores this" — there is no listener there to ignore it.
+ */
+describe('a step the address cannot honour', () => {
+  it('lands on the collection when a live step names a game this build does not carry', async () => {
+    const user = userEvent.setup();
+    arriveAt(PLAY);
+    renderShell();
+    await collectionHome();
+    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await playing('sudoku');
+
+    // Not a link somebody followed — the address is stepped onto the way a
+    // history entry from before this id was retired, or another script on
+    // the page, would land on it: no boot, no `startRoute` in between.
+    window.history.replaceState(null, '', `${PLAY}?game=not-a-game`);
+    vi.mocked(releaseSound).mockClear();
+    await act(async () => {
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+
+    expect(await collectionHome()).toBeInTheDocument();
+    expect(releaseSound).toHaveBeenCalledTimes(1);
+    // Deliberate asymmetry, documented rather than endorsed: boot's
+    // `startRoute` would have dropped this same `?game=not-a-game` down to
+    // the plain collection address (「arriving at a game address」, above),
+    // but `onPopState` never rewrites the address it just reacted to — only
+    // the screen. The collection is on screen and the bar above it still
+    // reads the id that put it there.
+    expect(window.location.search).toBe('?game=not-a-game');
+  });
+
+  it('is ignored by the app build, which never listens', async () => {
+    capacitorMock.native = true;
+    const user = userEvent.setup();
+    arriveAt(PLAY);
+    renderShell();
+    await collectionHome();
+    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await playing('sudoku');
+
+    // The collection's own address — carrying no game at all — is the
+    // strongest version of this step: even a listener that only reacted to
+    // *changes* would have something to do with it here. None does.
+    window.history.replaceState(null, '', PLAY);
+    const history = watchHistory();
+    await act(async () => {
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+
+    expect(await playing('sudoku')).toBeInTheDocument();
+    expect(history.push).not.toHaveBeenCalled();
+    expect(history.replace).not.toHaveBeenCalled();
+    expect(history.back).not.toHaveBeenCalled();
+  });
+});

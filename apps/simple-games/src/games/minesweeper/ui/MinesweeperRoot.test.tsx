@@ -922,6 +922,47 @@ describe('keyboard (issue #93)', () => {
     );
   });
 
+  /**
+   * The test above only proves the window listener is gone — `useGameKeys`
+   * detaches it and nothing more. That silences a stray F or H, but it does
+   * nothing about a screen reader's virtual cursor or Shift+Tab walking
+   * backward from the dialog's own Cancel button: either would still land on
+   * a square sitting right behind the dialog unless the board is actually
+   * pulled out of the tree. The overlay under `ConfirmDialog` stops pointers
+   * for a sighted mouse user, which is a different player from either of
+   * those two — so `.game-content`'s `inert` is what has to carry the rest
+   * (issue #120). jsdom does not itself enforce `inert` — a click still
+   * reaches an element under one — so this asserts on the attribute a real
+   * browser (and the CSS fallback for pre-`inert` WebViews pinned in
+   * src/ui/styles.test.ts) actually acts on, not on a click failing to land.
+   */
+  it('puts the board out of reach of focus while the restart dialog is up (issue #120)', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+
+    const square = cellAt(5, 5);
+    const inertAncestor = square.closest('[inert]');
+    expect(inertAncestor).not.toBeNull();
+    // The two free actions (§3, §7) are exactly as reachable as the board
+    // they act on — neither is left behind as a stray tab stop.
+    expect(inertAncestor).toContainElement(screen.getByRole('button', { name: 'Hint' }));
+    expect(inertAncestor).toContainElement(screen.getByRole('button', { name: 'Flag mode' }));
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(square.closest('[inert]')).toBeNull();
+    // Cancel only closed the dialog — the tap it stopped from reaching the
+    // board is not owed to the player, but the next one is.
+    const target = shutCells()[0]!;
+    expect(target.getAttribute('aria-label')).toMatch(/^Unopened/);
+    await user.click(target);
+    expect(target.getAttribute('aria-label')).not.toMatch(/^Unopened/);
+  });
+
   it('goes quiet once the board is finished', async () => {
     const user = userEvent.setup();
     renderMinesweeper(tutorialDone);

@@ -1,9 +1,11 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
+import { stubCanvas2d, stubMatchMedia } from '@/test/lifecycle';
+import { BOARD_HEIGHT, BOARD_WIDTH } from '../game/constants';
 import { BB_STORAGE_KEYS } from '../storage/schemas';
 import { BrickBreakerRoot } from './BrickBreakerRoot';
 
@@ -24,6 +26,28 @@ function renderGame(initial: Record<string, string> = {}) {
 const tutorialDone = {
   [BB_STORAGE_KEYS.flags]: JSON.stringify({ schemaVersion: 1, tutorialCompleted: true }),
 };
+
+/**
+ * jsdom lays nothing out, so the canvas is handed a rectangle by force —
+ * one CSS pixel per logical unit, so a clientX maps straight onto board x.
+ */
+function giveBoardALayout(canvas: HTMLElement): void {
+  vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+    left: 0,
+    top: 0,
+    width: BOARD_WIDTH,
+    height: BOARD_HEIGHT,
+    right: BOARD_WIDTH,
+    bottom: BOARD_HEIGHT,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  } as DOMRect);
+}
+
+/** The dev-only seam BrickBoard exposes while a run is live (see BrickBoard.tsx). */
+const paddleX = () =>
+  (window as unknown as { __bbState: () => { paddleX: number } }).__bbState().paddleX;
 
 afterEach(cleanup);
 
@@ -103,5 +127,45 @@ describe('playing', () => {
     // The golden level-1 board has 18 bricks (compatibility.test.ts).
     expect(screen.getByText('Bricks 18')).toBeInTheDocument();
     expect(screen.queryByText(/\d+:\d\d/)).not.toBeInTheDocument();
+  });
+
+  it('leaves the paddle where a cancelled drag left it, and steers again on a fresh press (#120)', async () => {
+    const restoreCanvas = stubCanvas2d();
+    const restoreMedia = stubMatchMedia();
+    const user = userEvent.setup();
+    try {
+      renderGame(tutorialDone);
+      await user.click(await screen.findByRole('button', { name: 'Level 1' }));
+      const canvas = screen.getByRole('img', { name: 'Brick Breaker board' });
+      giveBoardALayout(canvas);
+      // Without the canvas stub the loop never starts and this seam never
+      // appears — without it this test would silently be testing nothing.
+      expect(typeof (window as unknown as Record<string, unknown>).__bbState).toBe('function');
+
+      const start = paddleX();
+      fireEvent.pointerDown(canvas, { pointerId: 1, clientX: 100, clientY: 600 });
+      fireEvent.pointerMove(canvas, { pointerId: 1, clientX: 200, clientY: 600 });
+      const steered = paddleX();
+      expect(steered).not.toBe(start);
+      expect(steered).toBeCloseTo(200);
+
+      // The system takes the gesture away mid-drag — a call, a system
+      // gesture, a pinch — the same as onPointerUp (BrickBoard.tsx wires
+      // onPointerCancel={onPointerUp}), so dragging must end here too.
+      fireEvent.pointerCancel(canvas, { pointerId: 1 });
+
+      // A stray move with no pointerDown behind it must not still be
+      // steering: the cancel, not just the eventual pointerUp, ended the drag.
+      fireEvent.pointerMove(canvas, { pointerId: 1, clientX: 300, clientY: 600 });
+      expect(paddleX()).toBe(steered);
+
+      // A fresh press starts an ordinary drag again.
+      fireEvent.pointerDown(canvas, { pointerId: 2, clientX: 300, clientY: 600 });
+      fireEvent.pointerMove(canvas, { pointerId: 2, clientX: 250, clientY: 600 });
+      expect(paddleX()).toBeCloseTo(250);
+    } finally {
+      restoreMedia();
+      restoreCanvas();
+    }
   });
 });

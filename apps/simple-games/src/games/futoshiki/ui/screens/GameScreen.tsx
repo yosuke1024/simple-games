@@ -184,7 +184,7 @@ export function FutoshikiGameScreen() {
 
   return (
     <div className="screen game-screen">
-      <div className="game-content" inert={finished}>
+      <div className="game-content" inert={finished || confirmRestart}>
         <header className="game-topbar">
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
             <IconBack />

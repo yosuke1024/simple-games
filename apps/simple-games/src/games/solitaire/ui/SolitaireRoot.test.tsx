@@ -533,6 +533,30 @@ describe('playing', () => {
     expect(card('J of hearts')).not.toHaveClass('sol-hinted');
     expect(table().querySelectorAll('.sol-hinted')).toHaveLength(3);
   });
+
+  /**
+   * Every card on this table carries a live pointerdown handler (issue
+   * #116), so a stray focus + Space landing on one behind the dialog would
+   * still move it — a scrim over the pointer is not enough (issue #120).
+   * `.game-content`'s `inert` is what actually keeps play from reaching the
+   * table while the dialog is up, and Cancel has to give it back.
+   */
+  it('keeps the table out of reach while the restart dialog is up (issue #120)', async () => {
+    const user = userEvent.setup();
+    renderGame(savedGoldenGame);
+    await resumeGoldenGame(user);
+    const jack = () => within(table()).getByRole('button', { name: 'J of clubs' });
+
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+    expect(jack().closest('[inert]')).not.toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(jack().closest('[inert]')).toBeNull();
+
+    // Cancel only closed the dialog; the table answers the next tap like any other.
+    await user.click(jack());
+    expect(jack()).toHaveClass('sol-selected');
+  });
 });
 
 describe('home', () => {

@@ -38,6 +38,7 @@ import {
   recordGameOpened,
   resetRecentGamesForTesting,
 } from '../../app/recentGames';
+import { initAdRemoval, resetAdRemovalForTesting } from '../../monetization/adRemoval';
 import { setWebAdsConfigForTesting } from '../../services/ads/web/config';
 import {
   getWebAppPromptStateForTesting,
@@ -48,7 +49,7 @@ import {
   shouldShowWebAppPrompt,
 } from '../../services/webAppPrompt';
 import { SettingsProvider } from '../../state/SettingsContext';
-import { createMemoryKV } from '../../storage/kv';
+import { createMemoryKV, type KVStore } from '../../storage/kv';
 import { settingsSchema, STORAGE_KEYS } from '../../storage/schemas';
 import { clearLocalData } from '../../storage/repo';
 import { SettingsScreen } from './SettingsScreen';
@@ -72,6 +73,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   setWebAdsConfigForTesting(null);
+  resetAdRemovalForTesting();
 });
 
 describe('ads and support section', () => {
@@ -86,6 +88,51 @@ describe('ads and support section', () => {
     expect(screen.queryByText(/small banner ad/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Remove Ads$/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Restore Purchase' })).not.toBeInTheDocument();
+  });
+
+  /**
+   * A read failure is not "nothing purchased" — it is "we don't know" — and the
+   * one place that must never blur the two is the screen that thanks a payer
+   * by name. Claiming a purchase nobody made would be a false receipt; the
+   * ordinary support copy (still true — a free player still sees a banner
+   * here, docs/ADS_POLICY.md) is what stays on screen instead (issue #96,
+   * #120).
+   */
+  it('does not claim a purchase when the entitlement could not be read (issue #96, #120)', async () => {
+    capacitorMock.native = true;
+    const unreadableKV: KVStore = {
+      get: () => Promise.reject(new Error('storage unavailable')),
+      set: () => Promise.resolve(),
+      remove: () => Promise.resolve(),
+    };
+    await initAdRemoval(unreadableKV);
+    renderSettings();
+
+    expect(
+      screen.queryByText(/Banner ads are removed\. Thank you for supporting Simple Games\./),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/small banner ad/)).toBeInTheDocument();
+  });
+
+  /**
+   * Contrast with the case above: a cached purchase that DOES read back is the
+   * one time the thanks copy is the true thing to show.
+   */
+  it('thanks a player whose cached purchase reads back (issue #120)', async () => {
+    capacitorMock.native = true;
+    const kv = createMemoryKV({
+      [STORAGE_KEYS.iap]: JSON.stringify({
+        schemaVersion: 1,
+        adRemovalPurchased: true,
+        purchasedAt: 123,
+      }),
+    });
+    await initAdRemoval(kv);
+    renderSettings();
+
+    expect(
+      screen.getByText(/Banner ads are removed\. Thank you for supporting Simple Games\./),
+    ).toBeInTheDocument();
   });
 });
 

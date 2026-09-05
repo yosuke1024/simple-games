@@ -394,7 +394,7 @@ export function FreeCellGameScreen() {
 
   return (
     <div className="screen game-screen">
-      <div className="game-content" inert={won}>
+      <div className="game-content" inert={won || confirmRestart}>
         <header className="game-topbar">
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
             <IconBack />

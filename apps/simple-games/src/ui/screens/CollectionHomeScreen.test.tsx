@@ -433,6 +433,254 @@ describe('the tile action sheet', () => {
 
     expect(getFavoriteGames()).toEqual(['sudoku']);
   });
+
+  /**
+   * issue #120 (UX contract regression tests): a pointercancel before the
+   * threshold has to leave the press exactly where it found it. No sheet
+   * later when the timer would have fired, and the tap that follows opens
+   * the game as plainly as if the cancelled press had never happened.
+   */
+  it('opens nothing when the press is cancelled before the timer, and a later tap still opens the game', async () => {
+    await initFavoriteGames(createMemoryKV());
+    const onOpenGame = vi.fn();
+    renderHome(onOpenGame);
+
+    const tile = tileFor('Sudoku');
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(tile);
+      act(() => vi.advanceTimersByTime(GAME_MENU_PRESS_MS - 50));
+      fireEvent.pointerCancel(tile);
+      act(() => vi.advanceTimersByTime(200));
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+
+    fireEvent.click(tile);
+
+    expect(onOpenGame).toHaveBeenCalledWith('sudoku');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  /**
+   * GameActionSheet's guard swallows exactly one click — the one the long
+   * press itself produces — and stands itself down the moment it does
+   * (`release` inside the effect). A second, deliberate click on the action
+   * has to reach the button behind it rather than find the guard still armed.
+   */
+  it('lets a deliberate click through after swallowing the one the long press left behind', async () => {
+    await initFavoriteGames(createMemoryKV());
+    renderHome();
+
+    longPress(tileFor('Sudoku'));
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Favorites' }));
+
+    expect(getFavoriteGames()).toEqual(['sudoku']);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  /**
+   * The guard also stands down on any *new* interaction, not only on the
+   * click it is waiting for: a fresh press or a keydown means that stray
+   * click either already landed or is never coming. Without that release, the
+   * click below would be mistaken for the one being waited on, and swallowed
+   * instead of favouriting the game.
+   */
+  it('stands the guard down on a fresh key before the stray click arrives', async () => {
+    await initFavoriteGames(createMemoryKV());
+    renderHome();
+
+    const tile = tileFor('Sudoku');
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(tile);
+      act(() => vi.advanceTimersByTime(GAME_MENU_PRESS_MS + 20));
+      fireEvent.pointerUp(tile);
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'Tab' });
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Favorites' }));
+
+    expect(getFavoriteGames()).toEqual(['sudoku']);
+  });
+
+  /**
+   * Leaving search mid-press rebuilds the grid the tile was sitting in —
+   * pinning a game does the same to the shelf above it. GameButton's own
+   * unmount cleanup clears the pending timer for exactly this reason: a timer
+   * that fired after its tile is gone must not raise a sheet nobody can see.
+   */
+  it('opens nothing for a tile unmounted mid-press', async () => {
+    const user = userEvent.setup();
+    renderHome();
+
+    await openSearch(user);
+    await user.type(searchField(), 'sudoku');
+    const tile = tileFor('Sudoku');
+
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(tile);
+      fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+      act(() => vi.advanceTimersByTime(GAME_MENU_PRESS_MS + 20));
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  /**
+   * issue #120: macOS raises a right-click as ctrl+click on the primary
+   * button, which arms GameButton's own long-press timer before `contextmenu`
+   * fires — the shape MinesBoard already answers. The click the platform
+   * sends after that (still ctrl-held) lands on the sheet's backdrop exactly
+   * like a long press's own trailing click, and has to be swallowed the same
+   * way rather than closing the sheet the instant it opens.
+   */
+  it('survives the click that follows a ctrl+click (macOS)', async () => {
+    await initFavoriteGames(createMemoryKV());
+    const onOpenGame = vi.fn();
+    renderHome(onOpenGame);
+
+    const tile = tileFor('Sudoku');
+    fireEvent.pointerDown(tile, { button: 0, buttons: 1, ctrlKey: true, pointerId: 1 });
+    fireEvent.contextMenu(tile, { button: 0, ctrlKey: true });
+
+    expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
+
+    fireEvent.pointerUp(tile, { button: 0, buttons: 0, ctrlKey: true, pointerId: 1 });
+    // The click macOS sends after a ctrl+click, still carrying detail: 1.
+    fireEvent.click(tile, { detail: 1 });
+
+    expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
+    expect(onOpenGame).not.toHaveBeenCalled();
+
+    // The guard swallowed exactly that one click and stood itself down: a
+    // deliberate second click reaches the action behind it.
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Favorites' }));
+
+    expect(getFavoriteGames()).toEqual(['sudoku']);
+  });
+
+  /**
+   * issue #120: a plain right-click arms no press at all (GameButton's
+   * `onPointerDown` bails out for any button past the primary one), so the
+   * sheet it opens must not carry a guard waiting for a click that was never
+   * going to arrive.
+   */
+  it('arms no press for the right button', async () => {
+    await initFavoriteGames(createMemoryKV());
+    const onOpenGame = vi.fn();
+    renderHome(onOpenGame);
+
+    const tile = tileFor('Sudoku');
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(tile, { button: 2, buttons: 2, pointerId: 1 });
+      act(() => vi.advanceTimersByTime(GAME_MENU_PRESS_MS + 20));
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+
+    fireEvent.contextMenu(tile, { button: 2 });
+    expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
+
+    // No stray click to wait for, so the very first click acts.
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Favorites' }));
+
+    expect(getFavoriteGames()).toEqual(['sudoku']);
+    expect(onOpenGame).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The guard stands down on any *new* interaction, not only the keydown the
+   * sibling test above already covers: a fresh press elsewhere means the
+   * stray click either already landed or is never coming.
+   */
+  it('stands the guard down on a fresh press', async () => {
+    await initFavoriteGames(createMemoryKV());
+    renderHome();
+
+    const tile = tileFor('Sudoku');
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(tile, { pointerId: 1 });
+      act(() => vi.advanceTimersByTime(GAME_MENU_PRESS_MS + 20));
+      // The finger coming up, without the trailing click `longPress` fires —
+      // the guard is still armed and waiting for it here.
+      fireEvent.pointerUp(tile, { pointerId: 1 });
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
+
+    // A fresh press on the backdrop, not the stray click the guard is
+    // waiting for.
+    fireEvent.pointerDown(document.body, { pointerId: 2 });
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Favorites' }));
+
+    expect(getFavoriteGames()).toEqual(['sudoku']);
+  });
+
+  /**
+   * issue #120: a `pointercancel` is a promise that no click follows it — the
+   * browser cancelling the press itself, not the finger lifting off the
+   * button. A guard left armed past it would eat the next real click.
+   */
+  it('stands the guard down when the press is cancelled', async () => {
+    await initFavoriteGames(createMemoryKV());
+    renderHome();
+
+    const tile = tileFor('Sudoku');
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(tile, { pointerId: 1 });
+      act(() => vi.advanceTimersByTime(GAME_MENU_PRESS_MS + 20));
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
+
+    // The finger is still down; the browser cancels the press instead of
+    // ever delivering the click the guard was armed for.
+    fireEvent.pointerCancel(tile, { pointerId: 1 });
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Favorites' }));
+
+    expect(getFavoriteGames()).toEqual(['sudoku']);
+  });
+
+  /**
+   * The sheet works the same from a search result as from the full grid, and
+   * leaving search is not its job: pinning a game from a result has to leave
+   * the player exactly where they were, still searching.
+   */
+  it('opens from a search result and acts on it', async () => {
+    await initFavoriteGames(createMemoryKV());
+    const user = userEvent.setup();
+    renderHome();
+
+    await openSearch(user);
+    await user.type(searchField(), 'sudo');
+    fireEvent.contextMenu(tileFor('Sudoku'));
+
+    expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Favorites' }));
+
+    expect(getFavoriteGames()).toEqual(['sudoku']);
+    expect(searchField()).toBeInTheDocument();
+  });
 });
 
 /**
@@ -769,6 +1017,52 @@ describe('the hardware back button on the collection', () => {
     expect(appMock.App.minimizeApp).not.toHaveBeenCalled();
   });
 
+  /**
+   * issue #120: a dialog is what back closes first, on every screen — the
+   * tile sheet is no exception, and it sits ahead of search and of leaving
+   * the app in the same listener's priority.
+   */
+  it('closes an open tile sheet before anything else', async () => {
+    capacitorMock.native = true;
+    await initFavoriteGames(createMemoryKV());
+    renderHome();
+
+    fireEvent.contextMenu(tileFor('Sudoku'));
+    expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
+
+    pressBack();
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(appMock.App.minimizeApp).not.toHaveBeenCalled();
+    expect(screen.getByRole('heading', { name: 'Simple Games' })).toBeInTheDocument();
+
+    pressBack();
+
+    expect(appMock.App.minimizeApp).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes the sheet, not the search, when both are open', async () => {
+    capacitorMock.native = true;
+    await initFavoriteGames(createMemoryKV());
+    const user = userEvent.setup();
+    renderHome();
+
+    await openSearch(user);
+    await user.type(searchField(), 'sudoku');
+    fireEvent.contextMenu(tileFor('Sudoku'));
+    expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
+
+    pressBack();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(searchField()).toBeInTheDocument();
+
+    pressBack();
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+
+    pressBack();
+    expect(appMock.App.minimizeApp).toHaveBeenCalledTimes(1);
+  });
+
   it('still leaves the app from the home itself', () => {
     capacitorMock.native = true;
     renderHome();
@@ -776,6 +1070,25 @@ describe('the hardware back button on the collection', () => {
     pressBack();
 
     expect(appMock.App.minimizeApp).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * `minimizeApp` is the polite exit — it leaves the task running so a swipe
+   * back returns to it — but a WebView that cannot honour it must not leave
+   * the player stuck on the last screen with a hardware button that does
+   * nothing. The screen's own `.catch(() => exitApp())` is the fallback.
+   */
+  it('falls back to exiting the app when minimizing is rejected', async () => {
+    capacitorMock.native = true;
+    appMock.App.minimizeApp.mockRejectedValueOnce(new Error('unavailable'));
+    renderHome();
+
+    pressBack();
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(appMock.App.exitApp).toHaveBeenCalledTimes(1);
   });
 
   it('registers exactly one listener, whatever is typed into the field', async () => {

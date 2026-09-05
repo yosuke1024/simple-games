@@ -510,6 +510,41 @@ describe('a hand that settles', () => {
   });
 });
 
+/**
+ * "Hand scored" is not a ConfirmDialog, so it falls outside
+ * modalIsolationWiring.test.ts's static gate (issue #120) — `deciding` is
+ * folded into the same `.game-content` `inert` expression by hand
+ * (GameScreen.tsx `inert={matchOver || deciding || confirmNewGame}`). Hearts
+ * has no keyboard input to swallow (it does not call `useGameKeys`), so the
+ * contract here is only the pointer half: the table behind the overlay must
+ * not be reachable while it is up.
+ */
+describe('the hand-settlement overlay (issue #120)', () => {
+  it('inerts the table behind "Hand scored", and frees it once the next hand deals', async () => {
+    const session = lastCollect('hearts-ui-settle');
+    renderGame(saved(session));
+    await settle();
+    resume();
+
+    // One beat takes the thirteenth trick in, which ends the hand.
+    await advanceBeats(1);
+    const settlement = screen.getByRole('alertdialog', { name: 'Hand scored' });
+
+    // `.game-content` wraps the whole table, so the table's own group
+    // reaching a `[inert]` ancestor says the same thing the table itself is
+    // inert to. (Not `trick()`: the next hand it deals into opens on a pass,
+    // where `HeartsTable` swaps that group for the pass-direction panel.)
+    expect(table().closest('[inert]')).not.toBeNull();
+
+    fireEvent.click(within(settlement).getByRole('button', { name: 'Next hand' }));
+
+    // The next deal is on screen and the table answers again.
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(table().closest('[inert]')).toBeNull();
+    await settle();
+  });
+});
+
 describe('a match that ends', () => {
   it('states the final standing and offers a free rematch', async () => {
     renderGame(saved(endingIn(lastCollect('hearts-ui-won'), 'won')));

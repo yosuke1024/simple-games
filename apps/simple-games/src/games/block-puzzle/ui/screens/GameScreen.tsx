@@ -437,7 +437,7 @@ export function BlockGameScreen() {
 
   return (
     <div className="screen game-screen">
-      <div className="game-content" inert={over}>
+      <div className="game-content" inert={over || confirmNewGame}>
         <header className="game-topbar">
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
             <IconBack />

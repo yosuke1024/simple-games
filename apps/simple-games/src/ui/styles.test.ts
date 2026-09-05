@@ -20,12 +20,12 @@ import { describe, expect, it } from 'vitest';
 const css = readFileSync(resolve('src/ui/styles.css'), 'utf8');
 
 /** The declarations of one top-level rule, e.g. `.home-logo`. */
-function ruleBody(selector: string): string {
-  const start = css.indexOf(`\n${selector} {`);
-  expect(start, `${selector} is missing from styles.css`).toBeGreaterThan(-1);
-  const open = css.indexOf('{', start);
-  const close = css.indexOf('}', open);
-  return css.slice(open + 1, close);
+function ruleBody(selector: string, source = css): string {
+  const start = source.indexOf(`\n${selector} {`);
+  expect(start, `${selector} is missing from the stylesheet`).toBeGreaterThan(-1);
+  const open = source.indexOf('{', start);
+  const close = source.indexOf('}', open);
+  return source.slice(open + 1, close);
 }
 
 describe('the home screens share .home-logo', () => {
@@ -91,5 +91,51 @@ describe('the CSS-per-game list in docs/architecture/css-split.md', () => {
   it('is not empty — a broken match would pass the two above vacuously', () => {
     expect(onDisk.size).toBeGreaterThan(15);
     expect(listed.size).toBe(onDisk.size);
+  });
+});
+
+/**
+ * Issue #120: the app's whole promise is a board that doesn't jump around
+ * under the player mid-game. The strip reserved for a banner ad, and the
+ * fallback that keeps a finished board inert-but-untouched on an old WebView,
+ * both do their job through a couple of CSS declarations that a future pass
+ * on styles.css could drop without anything in TypeScript noticing.
+ */
+describe('the reserved ad strips never yield their space (issue #120)', () => {
+  it('never lets the flex column squeeze .banner-slot under a tall board', () => {
+    // If flex-shrink were allowed to default to 1 here, a board taller than
+    // the viewport would shrink the banner strip to fit instead — the ad
+    // would shift, resize, or vanish as boards change, exactly what the
+    // fixed reservation exists to prevent.
+    const slot = ruleBody('.banner-slot');
+    expect(slot).toMatch(/flex-shrink:\s*0/);
+  });
+
+  it('reserves .web-ad-slot at the same fixed height the comment promises', () => {
+    // The rule above this one in styles.css says outright that .web-ad-slot
+    // is "the .banner-slot rule, applied to the web" — a fixed height from
+    // mount so a loading, failing, or offline ad never moves the game list.
+    const slot = ruleBody('.web-ad-slot');
+    expect(slot).toMatch(/height:\s*100px/);
+  });
+
+  it('keeps a dialog-covered board untouchable even without the inert attribute', () => {
+    // docs/ARCHITECTURE.md's low-spec floor is Chromium 88; `inert` only
+    // works from Chromium 102. Below that the attribute is present in the
+    // DOM but inert, so the board behind a ConfirmDialog or a result screen
+    // would still take taps unless this fallback rule blocks pointer events
+    // itself, by the attribute selector rather than the browser's own effect.
+    const covered = ruleBody('.game-content[inert]');
+    expect(covered).toMatch(/pointer-events:\s*none/);
+  });
+
+  it('keeps a finger on the nonogram cells drawing, never scrolling the page (issue #108)', () => {
+    // vite.config.ts's test setup turns css off (`css: false`), so nothing
+    // rendered in a test can ever see this rule fire — every #108 pointer
+    // test in the nonogram suite would still pass with the property deleted.
+    // This file is the only thing standing between that regression and CI.
+    const nonogramCss = readFileSync(resolve('src/games/nonogram/ui/nonogram.css'), 'utf8');
+    const cells = ruleBody('.nono-cells', nonogramCss);
+    expect(cells).toMatch(/touch-action:\s*none/);
   });
 });

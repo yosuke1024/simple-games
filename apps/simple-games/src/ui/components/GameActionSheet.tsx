@@ -72,13 +72,17 @@ export function GameActionSheet({
    *
    * Even when armed, any *new* interaction stands it down: a fresh press or a
    * key means the click either already arrived or is never coming (Android
-   * suppresses it after its own long-press menu).
+   * suppresses it after its own long-press menu). So does the browser
+   * cancelling the press itself — a `pointercancel` is a promise that no
+   * click follows, and a guard left armed past it would eat the next real
+   * one (issue #120).
    */
   useEffect(() => {
     if (!game || !openedMidPress) return;
     function release() {
       window.removeEventListener('click', swallow, true);
       window.removeEventListener('pointerdown', release, true);
+      window.removeEventListener('pointercancel', release, true);
       window.removeEventListener('keydown', release, true);
     }
     function swallow(event: MouseEvent) {
@@ -88,6 +92,7 @@ export function GameActionSheet({
     }
     window.addEventListener('click', swallow, true);
     window.addEventListener('pointerdown', release, true);
+    window.addEventListener('pointercancel', release, true);
     window.addEventListener('keydown', release, true);
     return release;
   }, [game, openedMidPress]);

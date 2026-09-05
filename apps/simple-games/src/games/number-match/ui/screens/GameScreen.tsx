@@ -280,7 +280,7 @@ export function GameScreen() {
     <div className="screen game-screen">
       {/* inert while the result overlay is up: nothing behind the dialog is
           focusable or exposed to assistive technology. */}
-      <div className="game-content" inert={session.status !== 'playing'}>
+      <div className="game-content" inert={session.status !== 'playing' || confirmRestart}>
         <header className="game-topbar">
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
             <IconBack />

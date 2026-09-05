@@ -174,6 +174,31 @@ describe('the tap and the long press (§3)', () => {
     expect(onCross.mock.calls).toEqual([[5]]);
     expect(onPaint).not.toHaveBeenCalled();
   });
+
+  it('drops a long press that the browser cancels, and takes the next tap as a tap (issue #120)', () => {
+    const { cells, onPaint, onCross } = renderBoard();
+
+    vi.useFakeTimers();
+    try {
+      // The browser can hand a gesture to something else — a scroll claimed
+      // mid-press — before the long press timer runs out. That is not a
+      // press this board finished, so nothing should cross, then or later.
+      fireEvent.pointerDown(cells[7]!, { button: 0, pointerType: 'touch', pointerId: 1 });
+      vi.advanceTimersByTime(LONG_PRESS_MS - 50);
+      fireEvent.pointerCancel(cells[7]!, { pointerId: 1 });
+      vi.advanceTimersByTime(200);
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(onCross).not.toHaveBeenCalled();
+
+    // The tap that follows is a fresh press on the same cell, not the cancelled
+    // one coming back: it must paint, once, and cross nothing.
+    fireEvent.click(cells[7]!, { detail: 1 });
+
+    expect(onPaint.mock.calls).toEqual([[7]]);
+    expect(onCross).not.toHaveBeenCalled();
+  });
 });
 
 describe('the right button (§3, issue #112)', () => {
