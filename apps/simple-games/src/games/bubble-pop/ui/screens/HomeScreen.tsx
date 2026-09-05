@@ -1,7 +1,6 @@
 import { useSettings } from '@/state/SettingsContext';
-import { GameHomeActions } from '@/ui/components/GameHomeActions';
-import { IconBack, IconChart, IconGrid } from '@/ui/components/icons';
-import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
+import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { IconChart, IconGrid } from '@/ui/components/icons';
 import { LEVEL_COUNT } from '../../game/levels';
 import { useBubblePop } from '../../state/GameContext';
 import { clearedLevelCount } from '../../state/statsLogic';
@@ -21,22 +20,7 @@ export function BubbleHomeScreen() {
 
   return (
     <div className="screen home-screen">
-      {/* Web build only — the shared PixApps header (docs/WEB_VERSION.md
-          「サイトクローム」). Renders nothing on the native app. This game's
-          board and result screens deliberately have none. */}
-      <WebChromeSlot />
-
-      <header className="screen-header">
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={t('backToGames')}
-          onClick={exitToCollection}
-        >
-          <IconBack />
-        </button>
-        <GameHomeActions gameId="bubble-pop" />
-      </header>
+      <GameHomeHeader gameId="bubble-pop" onBack={exitToCollection} />
 
       <div className="home-hero">
         {/* The series mark: a bubble. */}

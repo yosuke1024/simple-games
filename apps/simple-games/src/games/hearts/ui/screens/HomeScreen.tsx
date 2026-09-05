@@ -16,9 +16,8 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
-import { GameHomeActions } from '@/ui/components/GameHomeActions';
-import { IconBack, IconChart } from '@/ui/components/icons';
-import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
+import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { IconChart } from '@/ui/components/icons';
 import { DIFFICULTIES, type Difficulty } from '../../game';
 import { useHearts } from '../../state/GameContext';
 
@@ -50,22 +49,7 @@ export function HeartsHomeScreen() {
 
   return (
     <div className="screen home-screen">
-      {/* Web build only — the shared PixApps header (docs/WEB_VERSION.md
-          「サイトクローム」). Renders nothing on the native app. This game's
-          table and result screens deliberately have none. */}
-      <WebChromeSlot />
-
-      <header className="screen-header">
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={t('backToGames')}
-          onClick={exitToCollection}
-        >
-          <IconBack />
-        </button>
-        <GameHomeActions gameId="hearts" />
-      </header>
+      <GameHomeHeader gameId="hearts" onBack={exitToCollection} />
 
       <div className="home-hero">
         {/* The same glyph the collection home puts on this title's tile

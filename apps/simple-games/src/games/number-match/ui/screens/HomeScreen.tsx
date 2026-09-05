@@ -4,9 +4,8 @@ import { useApp } from '../../state/GameContext';
 import { solvedLevelCount } from '../../state/progressLogic';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
-import { GameHomeActions } from '@/ui/components/GameHomeActions';
-import { IconBack, IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
-import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
+import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
 
 /**
@@ -39,22 +38,7 @@ export function HomeScreen() {
 
   return (
     <div className="screen home-screen">
-      {/* Web build only — the shared PixApps header (docs/WEB_VERSION.md
-          「サイトクローム」). Renders nothing on the native app. This game's
-          board and result screens deliberately have none. */}
-      <WebChromeSlot />
-
-      <header className="screen-header">
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={t('backToGames')}
-          onClick={exitToCollection}
-        >
-          <IconBack />
-        </button>
-        <GameHomeActions gameId="number-match" />
-      </header>
+      <GameHomeHeader gameId="number-match" onBack={exitToCollection} />
       <div className="home-hero">
         {/* The series mark: a tile holding the game's whole rule — make 10. */}
         <div className="home-logo" aria-hidden="true">

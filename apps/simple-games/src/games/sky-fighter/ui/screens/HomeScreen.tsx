@@ -1,7 +1,6 @@
 import { useSettings } from '@/state/SettingsContext';
-import { GameHomeActions } from '@/ui/components/GameHomeActions';
-import { IconBack, IconChart, IconGrid } from '@/ui/components/icons';
-import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
+import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { IconChart, IconGrid } from '@/ui/components/icons';
 import { LEVEL_COUNT } from '../../game/levels';
 import { useSkyFighter } from '../../state/GameContext';
 import { clearedLevelCount } from '../../state/statsLogic';
@@ -16,22 +15,7 @@ export function SkyHomeScreen() {
 
   return (
     <div className="screen home-screen">
-      {/* Web build only — the shared PixApps header (docs/WEB_VERSION.md
-          「サイトクローム」). Renders nothing on the native app. This game's
-          board and result screens deliberately have none. */}
-      <WebChromeSlot />
-
-      <header className="screen-header">
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={t('backToGames')}
-          onClick={exitToCollection}
-        >
-          <IconBack />
-        </button>
-        <GameHomeActions gameId="sky-fighter" />
-      </header>
+      <GameHomeHeader gameId="sky-fighter" onBack={exitToCollection} />
 
       <div className="home-hero">
         {/* The series mark: the player's craft, nose up. */}

@@ -1,8 +1,8 @@
 /**
- * The shell's header controls reach every game's home screen, and always
- * name the game whose header they sit in: the favourite star (issue #109)
- * and, on Android, "Add to Home Screen" (issue #110), together as
- * `GameHomeActions`.
+ * The shell's header reaches every game's home screen, and always names the
+ * game it sits on: `GameHomeHeader` carries the back button and, opposite it,
+ * the favourite star (issue #109) and, on Android, "Add to Home Screen"
+ * (issue #110) as `GameHomeActions`.
  *
  * Both halves matter. A title whose home forgot the group can only be pinned
  * — to the collection or to the OS home screen — by somebody who knows the
@@ -47,7 +47,7 @@ const usages: Usage[] = [];
 const strays: string[] = [];
 for (const file of sourceFiles(GAMES_DIR)) {
   const source = readFileSync(file, 'utf8');
-  for (const match of source.matchAll(/<GameHomeActions\s([^>]*?)\/>/gs)) {
+  for (const match of source.matchAll(/<GameHomeHeader\s([^>]*?)\/>/gs)) {
     const attributes = match[1] ?? '';
     usages.push({
       game: file.slice(GAMES_DIR.length + 1).split('/')[0]!,
@@ -55,19 +55,20 @@ for (const file of sourceFiles(GAMES_DIR)) {
       gameId: /gameId="([^"]+)"/.exec(attributes)?.[1] ?? null,
     });
   }
-  // The two controls are placed as one group and never on their own: a game
-  // that reached for the star alone would drop the shortcut from its header
-  // on Android, and one that reached for the shortcut alone would drop the
-  // star everywhere.
-  if (/<(FavoriteAction|HomeShortcutAction)\b/.test(source))
+  // The controls arrive with the frame and never on their own: a game that
+  // reached for the star alone would drop the shortcut from its header on
+  // Android, one that reached for the shortcut alone would drop the star
+  // everywhere, and one that placed the group itself would be the thirty-first
+  // copy of the header the frame exists to end.
+  if (/<(FavoriteAction|HomeShortcutAction|GameHomeActions)\b/.test(source))
     strays.push(file.slice(SRC.length + 1));
 }
 
-describe('the header controls on a game home', () => {
+describe('the header on a game home', () => {
   it('are on every game in the collection', () => {
     const covered = new Set(usages.map((usage) => usage.game));
     const missing = GAMES.map((game) => game.id).filter((id) => !covered.has(id));
-    expect(missing, `no header controls on: ${missing.join(', ')}`).toEqual([]);
+    expect(missing, `no header on: ${missing.join(', ')}`).toEqual([]);
   });
 
   it('name their own game, never a neighbour', () => {
@@ -94,10 +95,10 @@ describe('the header controls on a game home', () => {
     const twice = [...new Set(usages.map((u) => u.game))].filter(
       (game) => usages.filter((u) => u.game === game).length > 1,
     );
-    expect(twice, `more than one group on: ${twice.join(', ')}`).toEqual([]);
+    expect(twice, `more than one header on: ${twice.join(', ')}`).toEqual([]);
   });
 
-  it('are placed as the group, never as one control on its own', () => {
+  it('brings the controls with it, never one control or the group on its own', () => {
     expect(strays, strays.join('\n')).toEqual([]);
   });
 

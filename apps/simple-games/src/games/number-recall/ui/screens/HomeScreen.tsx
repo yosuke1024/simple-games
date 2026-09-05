@@ -1,7 +1,6 @@
 import { useSettings } from '@/state/SettingsContext';
-import { GameHomeActions } from '@/ui/components/GameHomeActions';
-import { IconBack, IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
-import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
+import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
 import { localDateString, MAX_LEVEL } from '../../game';
 import { useRecall } from '../../state/GameContext';
@@ -23,22 +22,7 @@ export function RecallHomeScreen() {
 
   return (
     <div className="screen home-screen">
-      {/* Web build only — the shared PixApps header (docs/WEB_VERSION.md
-          「サイトクローム」). Renders nothing on the native app. This game's
-          board and result screens deliberately have none. */}
-      <WebChromeSlot />
-
-      <header className="screen-header">
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={t('backToGames')}
-          onClick={exitToCollection}
-        >
-          <IconBack />
-        </button>
-        <GameHomeActions gameId="number-recall" />
-      </header>
+      <GameHomeHeader gameId="number-recall" onBack={exitToCollection} />
 
       <div className="home-hero">
         {/* The series mark: a question mark — the tile whose number you are
