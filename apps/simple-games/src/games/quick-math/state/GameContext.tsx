@@ -469,6 +469,9 @@ export function QuickMathProvider({
       if (screen === 'home') {
         exitToCollection();
       } else {
+        // Leaving Quick Rules by Back counts as having seen them (issue #142):
+        // otherwise this game opens on the tutorial on every launch.
+        if (screen === 'tutorial') completeTutorial();
         syncActiveGame();
         setScreen('home');
       }
@@ -476,7 +479,7 @@ export function QuickMathProvider({
     return () => {
       void backHandle.then((handle) => handle.remove()).catch(() => undefined);
     };
-  }, [screen, exitToCollection, syncActiveGame]);
+  }, [screen, exitToCollection, syncActiveGame, completeTutorial]);
 
   const today = localDateString(new Date());
   const value = useMemo<QuickMathContextValue>(
