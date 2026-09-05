@@ -341,11 +341,27 @@ export function BubbleBoard({
     [toBoardPoint, angleFromPoint],
   );
 
+  /** A release is the shot: the angle the finger left behind is what fires. */
   const endDrag = useCallback(() => {
     if (!draggingRef.current) return;
     draggingRef.current = false;
     fire(angleRef.current);
   }, [fire]);
+
+  /**
+   * The browser took the pointer away mid-aim — a notification shade, an
+   * incoming call, a palm. A cancel is not a release (docs/BUBBLE_POP_RULES.md
+   * §4): the aim is dropped and the bubble stays loaded, so the OS never
+   * spends a shot on the player's behalf. Same reading of `pointercancel` as
+   * Spider/Solitaire's drag, where nothing is played either (issue #119).
+   */
+  const cancelDrag = useCallback(() => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    // The guide goes with the drag, so the next aim must announce again even
+    // if it lands on the cell this abandoned one last named.
+    lastAnnouncedCellRef.current = null;
+  }, []);
 
   const onSwap = useCallback(() => {
     if (phaseRef.current !== 'idle' || sessionRef.current.status !== 'playing') return;
@@ -693,7 +709,7 @@ export function BubbleBoard({
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
-        onPointerCancel={endDrag}
+        onPointerCancel={cancelDrag}
       />
       <div className="bu-sr-only" aria-live="polite" ref={liveRef} />
       <div className="bu-tray">
