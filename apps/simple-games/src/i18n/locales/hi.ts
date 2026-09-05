@@ -79,6 +79,8 @@ export const hi: Messages = {
   addToFavorites: 'पसंदीदा में जोड़ें',
   removeFromFavorites: 'पसंदीदा से निकालें',
   addToHomeScreen: 'होम स्क्रीन पर जोड़ें',
+  searchGames: 'गेम खोजें',
+  searchNoResults: 'कोई गेम मेल नहीं खाता।',
   categoryLogic: 'लॉजिक',
   categoryCards: 'ताश',
   categoryPuzzle: 'पहेली',

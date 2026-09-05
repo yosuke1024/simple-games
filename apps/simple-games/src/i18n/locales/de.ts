@@ -76,6 +76,8 @@ export const de: Messages = {
   addToFavorites: 'Zu Favoriten hinzufügen',
   removeFromFavorites: 'Aus Favoriten entfernen',
   addToHomeScreen: 'Zum Startbildschirm hinzufügen',
+  searchGames: 'Spiele suchen',
+  searchNoResults: 'Keine passenden Spiele.',
   categoryLogic: 'Logik',
   categoryCards: 'Karten',
   categoryPuzzle: 'Puzzle',

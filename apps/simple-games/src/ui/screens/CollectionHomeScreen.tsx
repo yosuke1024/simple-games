@@ -43,11 +43,22 @@
  * (issue #110) — a second, independent decision from favouriting, gated by
  * `homeShortcutsAvailable()` so the action is simply absent everywhere the
  * launcher cannot honour it.
+ *
+ * Searching by name is the third answer to the same growth problem, for the
+ * case the other two cannot reach: a title somebody knows by name but has not
+ * pinned and did not play recently (issue #122). It is a mode, not a box —
+ * a small action in the header, and only once it is pressed does the header
+ * become a field and the sections collapse to one flat list of what matches
+ * (app/gameSearch.ts owns what "matches" means). A permanent search box at
+ * the top of a screen whose whole content is thirty labelled doors would be
+ * the loudest thing on it, for a question most arrivals are not asking.
  */
+import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { SERIES_BY_LINE, SERIES_NAME } from '@simple-games/brand';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { getFavoriteGames, toggleFavoriteGame } from '../../app/favoriteGames';
+import { searchGames } from '../../app/gameSearch';
 import { getRecentGames } from '../../app/recentGames';
 import { GAMES, GAME_CATEGORIES, type GameId, type GameDefinition } from '../../app/registry';
 import {
@@ -57,7 +68,7 @@ import {
 import { useSettings } from '../../state/SettingsContext';
 import { GameActionSheet } from '../components/GameActionSheet';
 import { GameTile } from '../components/GameTile';
-import { IconChevronRight, IconGear } from '../components/icons';
+import { IconBack, IconChevronRight, IconGear, IconSearch } from '../components/icons';
 import { WebAdSlot } from '../components/WebAdSlot';
 import { WebChromeSlot } from '../components/WebChromeSlot';
 
@@ -171,6 +182,77 @@ export function CollectionHomeScreen({
 
   const [menuMidPress, setMenuMidPress] = useState(false);
 
+  /**
+   * The search mode (issue #122): `null` while the home is the home, a string
+   * — possibly empty — while the header is a field. One piece of state for
+   * both the mode and the text, so leaving search always leaves an empty
+   * field behind. Re-entering starts from nothing, which is the only shape a
+   * feature that keeps no search history can have.
+   */
+  const [query, setQuery] = useState<string | null>(null);
+  const searching = query !== null;
+  const openSearch = useCallback(() => setQuery(''), []);
+  const closeSearch = useCallback(() => setQuery(null), []);
+
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
+  const searchFieldRef = useRef<HTMLInputElement>(null);
+
+  /**
+   * Readable from the hardware-back listener below, which is registered once
+   * and outlives every render that changes the query. Written during render
+   * rather than in an effect, so the listener never answers with a mode the
+   * screen has already left.
+   */
+  const searchingRef = useRef(searching);
+  searchingRef.current = searching;
+
+  /**
+   * Focus follows the mode: into the field when it appears (which is also
+   * what raises the on-screen keyboard for the tap that asked for it), and
+   * back to the action that opened it when it goes. `returnFocus` is what
+   * keeps the second half from firing on the first render, when nobody has
+   * been anywhere yet and the focus belongs to the document.
+   */
+  const returnFocus = useRef(false);
+  useEffect(() => {
+    if (searching) {
+      returnFocus.current = true;
+      searchFieldRef.current?.focus();
+    } else if (returnFocus.current) {
+      returnFocus.current = false;
+      searchButtonRef.current?.focus();
+    }
+  }, [searching]);
+
+  /**
+   * Android's hardware back, for the collection itself. It lives here rather
+   * than in the shell (App.tsx keeps exactly one owner per screen, and hands
+   * this one over) because the answer depends on state only this screen has:
+   * searching closes the search, and the home — the root of the app — is
+   * where back leaves it, exactly as it always has.
+   *
+   * The listener is registered once. It reads the mode through a ref instead
+   * of closing over it, so a keystroke does not cost a deregister and a
+   * re-register of an Android plugin listener.
+   *
+   * Not a doorway out of search: the browser's Back. Search is not in the
+   * address (app/webRoute.ts carries games and nothing else), the same way
+   * the settings screen is not — there, Back leaves the site, which is what
+   * Back has always done on every screen that is not a game
+   * (docs/WEB_VERSION.md「URL(ゲーム別の入口)」). Escape and the field's own
+   * back arrow are the browser's ways out.
+   */
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const handle = CapacitorApp.addListener('backButton', () => {
+      if (searchingRef.current) closeSearch();
+      else void CapacitorApp.minimizeApp().catch(() => CapacitorApp.exitApp());
+    });
+    return () => {
+      void handle.then((h) => h.remove()).catch(() => undefined);
+    };
+  }, [closeSearch]);
+
   const openMenu = useCallback(
     (game: GameDefinition, trigger: HTMLElement | null, midPress: boolean) => {
       menuTriggerRef.current = { element: trigger, gameId: game.id };
@@ -235,6 +317,10 @@ export function CollectionHomeScreen({
    * spends no new high-risk strings (docs/I18N_POLICY.md) to say it.
    */
   const taglineIsTrue = Capacitor.isNativePlatform();
+
+  /** The list the search mode shows: every game until something is typed. */
+  const results = query === null ? null : searchGames(query);
+
   return (
     <div className="screen home-screen collection-screen">
       {/* Web build only — the shared PixApps header (docs/WEB_VERSION.md
@@ -242,109 +328,146 @@ export function CollectionHomeScreen({
           site to return to. */}
       <WebChromeSlot />
 
-      <header className="screen-header">
-        <span className="icon-btn-placeholder" />
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={t('settings')}
-          onClick={onOpenSettings}
-        >
-          <IconGear />
-        </button>
-      </header>
+      {/* One header, two shapes. Searching, it is the field and the way back
+          out of it; otherwise it is the pair of actions that has always been
+          there plus the one that opens the field. The settings gear keeps the
+          far edge it has always had, so the new action arrives beside it
+          rather than moving it. */}
+      {query !== null ? (
+        <header className="screen-header" role="search">
+          <button type="button" className="icon-btn" aria-label={t('back')} onClick={closeSearch}>
+            <IconBack />
+          </button>
+          {/*
+            The app's only text field. It is `type="search"` for what that
+            tells the platform (and its keyboard), but the browser's own
+            decorations are reset in styles.css so it draws the same on every
+            WebView; the way out is the arrow beside it, not a clear button
+            inside it. Escape is the keyboard's version of that arrow — it is
+            handled here rather than on the window so it can never reach past
+            the field to something else that is listening (`GameActionSheet`
+            closes on Escape too, and while it is open the focus is inside it).
 
-      <div className="home-hero">
-        {/*
-          The collection mark, drawn to match assets/icon.svg (the launcher
-          icon), public/favicon.svg and the hero on the PixApps page — same
-          geometry, same colours, so the app opens on the icon that was
-          tapped. It carries its own ink rather than the theme accent for the
-          same reason an app icon does not repaint per theme. Keep the four in
-          step if the mark ever changes.
-
-          It replaced a ▦ glyph, which registry.ts also hands to Nonogram: the
-          collection and one of the games were wearing the same face.
-        */}
-        <svg className="home-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-          <rect width="64" height="64" rx="14" fill="#232a33" />
-          <rect x="13" y="13" width="17" height="17" rx="4" fill="#fffdf8" />
-          <rect x="34" y="13" width="17" height="17" rx="4" fill="#fffdf8" />
-          <rect x="13" y="34" width="17" height="17" rx="4" fill="#fffdf8" />
-          <rect x="34" y="34" width="17" height="17" rx="4" fill="#8b95a3" />
-        </svg>
-        <h1 className="home-title">{SERIES_NAME}</h1>
-        {taglineIsTrue ? <p className="home-tagline">{t('tagline')}</p> : null}
-      </div>
-
-      {/* The shelf the player arranged, above the one the shell keeps. Same
-          grid as the category sections, because it is the same kind of thing:
-          a shelf of titles, in an order somebody chose. */}
-      {favorites.length > 0 ? (
-        <nav className="game-favorites" aria-labelledby="home-favorites-heading">
-          <h2 className="home-section-label" id="home-favorites-heading">
-            {t('favoritesHeading')}
-          </h2>
-          <div className="game-grid">
-            {favorites.map((game) => (
-              <GameButton
-                key={game.id}
-                game={game}
-                className="game-cell"
-                onOpen={onOpenGame}
-                onMenu={openMenu}
-              >
-                <GameTile game={game} />
-                <span className="game-cell-title">{game.title}</span>
-              </GameButton>
-            ))}
-          </div>
-        </nav>
-      ) : null}
-
-      {recent.length > 0 ? (
-        <nav className="game-recent" aria-labelledby="home-recent-heading">
-          <h2 className="home-section-label" id="home-recent-heading">
-            {t('recentHeading')}
-          </h2>
-          {recent.map((game) => (
-            <GameButton
-              key={game.id}
-              game={game}
-              className="game-row"
-              onOpen={onOpenGame}
-              onMenu={openMenu}
+            `autoCapitalize` and the rest are off because what goes in here is
+            matched against a title, character for character, and a keyboard
+            that helpfully capitalises or corrects the first word is a
+            keyboard filling the field with something the player did not type.
+          */}
+          <input
+            ref={searchFieldRef}
+            type="search"
+            className="game-search-field"
+            value={query}
+            placeholder={t('searchGames')}
+            aria-label={t('searchGames')}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            enterKeyHint="done"
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') closeSearch();
+            }}
+          />
+        </header>
+      ) : (
+        <header className="screen-header">
+          <span className="icon-btn-placeholder" />
+          <div className="home-header-actions">
+            <button
+              ref={searchButtonRef}
+              type="button"
+              className="icon-btn"
+              aria-label={t('searchGames')}
+              onClick={openSearch}
             >
-              <GameTile game={game} />
-              <span className="game-row-title">{game.title}</span>
-              <span className="game-row-chevron" aria-hidden="true">
-                <IconChevronRight />
-              </span>
-            </GameButton>
-          ))}
+              <IconSearch />
+            </button>
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label={t('settings')}
+              onClick={onOpenSettings}
+            >
+              <IconGear />
+            </button>
+          </div>
+        </header>
+      )}
+
+      {/* Searching replaces the body outright — hero, both shelves and the
+          six sections — with one flat list of what matches. That is the
+          "simplified categories" the mode is for: the same games in the same
+          order, with the headings and the shortcuts taken away, because
+          somebody who typed a name is not browsing shelves. The landmark
+          keeps its name, so this is still the games list, filtered.
+
+          With nothing typed it is every game, which is why opening search
+          never shows an empty screen and clearing the field goes back to all
+          thirty rather than to the empty state below. */}
+      {results !== null ? (
+        <nav className="game-sections" aria-label={t('gamesHeading')}>
+          {results.length > 0 ? (
+            <div className="game-grid">
+              {results.map((game) => (
+                <GameButton
+                  key={game.id}
+                  game={game}
+                  className="game-cell"
+                  onOpen={onOpenGame}
+                  onMenu={openMenu}
+                >
+                  <GameTile game={game} />
+                  <span className="game-cell-title">{game.title}</span>
+                </GameButton>
+              ))}
+            </div>
+          ) : (
+            /* One quiet line, and no suggestions, no "did you mean", no
+               offer of something else to play. `role="status"` is what makes
+               it reach a screen reader at all: nothing else about the page
+               changes when the last match disappears. */
+            <p className="game-search-empty" role="status">
+              {t('searchNoResults')}
+            </p>
+          )}
         </nav>
-      ) : null}
+      ) : (
+        <>
+          <div className="home-hero">
+            {/*
+              The collection mark, drawn to match assets/icon.svg (the launcher
+              icon), public/favicon.svg and the hero on the PixApps page — same
+              geometry, same colours, so the app opens on the icon that was
+              tapped. It carries its own ink rather than the theme accent for the
+              same reason an app icon does not repaint per theme. Keep the four in
+              step if the mark ever changes.
 
-      {/* Below the shortcuts and above the full list: past the row somebody
-          came back for, before the twenty titles they scroll. It is one card
-          in the flow, so the games under it move down by its height and by
-          nothing else — no overlay, no reserved space when it is absent. */}
-      {appPrompt}
+              It replaced a ▦ glyph, which registry.ts also hands to Nonogram: the
+              collection and one of the games were wearing the same face.
+            */}
+            <svg className="home-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+              <rect width="64" height="64" rx="14" fill="#232a33" />
+              <rect x="13" y="13" width="17" height="17" rx="4" fill="#fffdf8" />
+              <rect x="34" y="13" width="17" height="17" rx="4" fill="#fffdf8" />
+              <rect x="13" y="34" width="17" height="17" rx="4" fill="#fffdf8" />
+              <rect x="34" y="34" width="17" height="17" rx="4" fill="#8b95a3" />
+            </svg>
+            <h1 className="home-title">{SERIES_NAME}</h1>
+            {taglineIsTrue ? <p className="home-tagline">{t('tagline')}</p> : null}
+          </div>
 
-      {/* One landmark for the whole list, headed sections inside: six category
-          navs would drown the landmark list, while the headings still let a
-          reader (or a screen-reader's heading jump) skip a shelf at a time.
-          Sections come from GAME_CATEGORIES; a game is listed under the one
-          category it names in the registry, in registry order. */}
-      <nav className="game-sections" aria-label={t('gamesHeading')}>
-        {GAME_CATEGORIES.map((category) => {
-          const games = GAMES.filter((game) => game.category === category.id);
-          if (games.length === 0) return null;
-          return (
-            <div key={category.id} className="game-category">
-              <h2 className="home-section-label">{t(category.headingKey)}</h2>
+          {/* The shelf the player arranged, above the one the shell keeps. Same
+              grid as the category sections, because it is the same kind of thing:
+              a shelf of titles, in an order somebody chose. */}
+          {favorites.length > 0 ? (
+            <nav className="game-favorites" aria-labelledby="home-favorites-heading">
+              <h2 className="home-section-label" id="home-favorites-heading">
+                {t('favoritesHeading')}
+              </h2>
               <div className="game-grid">
-                {games.map((game) => (
+                {favorites.map((game) => (
                   <GameButton
                     key={game.id}
                     game={game}
@@ -357,15 +480,80 @@ export function CollectionHomeScreen({
                   </GameButton>
                 ))}
               </div>
-            </div>
-          );
-        })}
-      </nav>
+            </nav>
+          ) : null}
+
+          {recent.length > 0 ? (
+            <nav className="game-recent" aria-labelledby="home-recent-heading">
+              <h2 className="home-section-label" id="home-recent-heading">
+                {t('recentHeading')}
+              </h2>
+              {recent.map((game) => (
+                <GameButton
+                  key={game.id}
+                  game={game}
+                  className="game-row"
+                  onOpen={onOpenGame}
+                  onMenu={openMenu}
+                >
+                  <GameTile game={game} />
+                  <span className="game-row-title">{game.title}</span>
+                  <span className="game-row-chevron" aria-hidden="true">
+                    <IconChevronRight />
+                  </span>
+                </GameButton>
+              ))}
+            </nav>
+          ) : null}
+
+          {/* Below the shortcuts and above the full list: past the row somebody
+              came back for, before the twenty titles they scroll. It is one card
+              in the flow, so the games under it move down by its height and by
+              nothing else — no overlay, no reserved space when it is absent. */}
+          {appPrompt}
+
+          {/* One landmark for the whole list, headed sections inside: six category
+              navs would drown the landmark list, while the headings still let a
+              reader (or a screen-reader's heading jump) skip a shelf at a time.
+              Sections come from GAME_CATEGORIES; a game is listed under the one
+              category it names in the registry, in registry order. */}
+          <nav className="game-sections" aria-label={t('gamesHeading')}>
+            {GAME_CATEGORIES.map((category) => {
+              const games = GAMES.filter((game) => game.category === category.id);
+              if (games.length === 0) return null;
+              return (
+                <div key={category.id} className="game-category">
+                  <h2 className="home-section-label">{t(category.headingKey)}</h2>
+                  <div className="game-grid">
+                    {games.map((game) => (
+                      <GameButton
+                        key={game.id}
+                        game={game}
+                        className="game-cell"
+                        onOpen={onOpenGame}
+                        onMenu={openMenu}
+                      >
+                        <GameTile game={game} />
+                        <span className="game-cell-title">{game.title}</span>
+                      </GameButton>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </nav>
+        </>
+      )}
 
       {/* Web build only — the home display unit (docs/ADS_POLICY.md「Web 版」).
           Renders nothing on the native app, whose only ad surface stays the
           anchored banner inside each game (BannerSlot). Kept outside the game
-          list and far from anything tappable toward a game. */}
+          list and far from anything tappable toward a game.
+
+          Outside the search branch as well, and deliberately: unmounting the
+          slot to open the search and mounting it again to close it would ask
+          AdSense for a fresh impression every time somebody looked something
+          up. The slot stays put and the results appear above it. */}
       <WebAdSlot />
 
       <footer className="brand-footer">

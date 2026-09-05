@@ -118,6 +118,15 @@ export function IconGear(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconSearch(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.6-3.6" />
+    </Icon>
+  );
+}
+
 export function IconChevronLeft(props: SVGProps<SVGSVGElement>) {
   return (
     <Icon {...props}>

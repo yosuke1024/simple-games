@@ -337,21 +337,20 @@ export function App() {
     else delete root.dataset.game;
   }, [view]);
 
-  // Hardware back at the shell level. While a game is mounted the game's own
-  // handler runs instead (this effect unregisters to keep exactly one owner).
+  // Hardware back for the settings screen. Every other screen owns its own,
+  // and exactly one owner is registered at a time: a game's while it is
+  // mounted, and the collection's otherwise — the collection answers back
+  // with state only it has (whether its search is open, issue #122), so the
+  // branch lives there rather than here (CollectionHomeScreen.tsx). Every
+  // Capacitor `backButton` listener fires, so a second one here would
+  // minimize the app underneath whatever that one just closed.
   useEffect(() => {
-    if (!Capacitor.isNativePlatform() || view.kind === 'game') return;
-    const handle = CapacitorApp.addListener('backButton', () => {
-      if (view.kind === 'settings') {
-        show({ kind: 'collection' });
-      } else {
-        void CapacitorApp.minimizeApp().catch(() => CapacitorApp.exitApp());
-      }
-    });
+    if (!Capacitor.isNativePlatform() || view.kind !== 'settings') return;
+    const handle = CapacitorApp.addListener('backButton', goCollection);
     return () => {
       void handle.then((h) => h.remove()).catch(() => undefined);
     };
-  }, [show, view.kind]);
+  }, [goCollection, view.kind]);
 
   if (view.kind === 'game') {
     const gameId = view.gameId;

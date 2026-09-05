@@ -75,6 +75,8 @@ export const zhHant: Messages = {
   addToFavorites: '加入收藏',
   removeFromFavorites: '從收藏中移除',
   addToHomeScreen: '加入主畫面',
+  searchGames: '搜尋遊戲',
+  searchNoResults: '沒有相符的遊戲。',
   categoryLogic: '邏輯',
   categoryCards: '紙牌',
   categoryPuzzle: '益智',
