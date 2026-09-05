@@ -44,9 +44,10 @@ import {
   YOU,
   type LudoSession,
   type MatchState,
+  type PersistedMatch,
 } from '../game';
 import { CPU_MOVE_DELAY_MS, CPU_ROLL_DELAY_MS, LudoProvider } from '../state/GameContext';
-import { LD_STORAGE_KEYS, prefsSchema, statsSchema } from '../storage/schemas';
+import { LD_STORAGE_KEYS, prefsSchema, statsSchema, type Stats } from '../storage/schemas';
 import { pawnLabel, placeLabel } from './components/seatText';
 import { LudoRoot, LudoScreens } from './LudoRoot';
 
@@ -516,6 +517,236 @@ describe('suspending and coming back', () => {
     renderGame({ ...tutorialDone, [LD_STORAGE_KEYS.game]: '{"schemaVersion":1}' });
     await settle();
     expect(screen.queryByRole('button', { name: /Resume/ })).not.toBeInTheDocument();
+  });
+});
+
+// ---------- the door the launch came through ----------
+
+/**
+ * A pinned home-screen shortcut, and what Ludo does about it (issue #113). The
+ * shell says only which door was used; the decision is this game's, taken from
+ * its own one save slot.
+ *
+ * Ambiguity is unreachable here rather than resolved, and that is §10's doing:
+ * there is one slot, and what comes out of it has already been replayed and
+ * dropped if play could not have produced it (§10.3) — so a suspended match at
+ * all *is* the match to come back to, standing on the player's throw (§10.2).
+ *
+ * These launches go against the device store rather than the `kv` seam: several
+ * of the saves under test are ones the game itself wrote a moment earlier, and
+ * a relaunch has to read back exactly what the mount before it left behind.
+ */
+describe('a home-screen shortcut', () => {
+  /** Quick Rules behind the player, as every launch after the first finds them. */
+  function taughtAlready() {
+    deviceStore.set(LD_STORAGE_KEYS.flags, tutorialDone[LD_STORAGE_KEYS.flags]!);
+  }
+
+  /** The ordinary door: a tile on the collection, or the browser's address. */
+  function launch() {
+    const onExit = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <LudoRoot onExit={onExit} />
+      </SettingsProvider>,
+    );
+    return { onExit };
+  }
+
+  /** The same store, entered by the other door. */
+  function launchFromShortcut() {
+    const onExit = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <LudoRoot onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+    return { onExit };
+  }
+
+  /** Starts a match against Normal and puts it down again, the way a player does. */
+  async function suspendAMatch() {
+    fireEvent.click(screen.getByRole('button', { name: /Normal/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+  }
+
+  /**
+   * A match with moves already in it, wound forward through the pure functions
+   * until the throw is the player's again — and written into the slot.
+   *
+   * A match put down on its opening cannot say *which* match came back: its
+   * board is sixteen pawns in four yards, exactly what dealing a fresh one
+   * would show. Suspending one that has been played gives the board a position
+   * only this match has, so the assertion is about identity and not merely
+   * about landing on a board.
+   */
+  function suspendAPlayedMatch(): LudoSession {
+    let expected = doRoll(createSession('normal', SEED_OPENS_WITH_A_SIX))!;
+    expected = doMovePawn(expected, movablePawns(expected)[0]!)!;
+    while (cpuBeatOwed(expected) !== null) {
+      const owed = cpuBeatOwed(expected)!;
+      expected = (owed.kind === 'roll' ? applyCpuRoll(expected) : applyCpuMove(expected))!;
+    }
+    deviceStore.set(LD_STORAGE_KEYS.game, JSON.stringify(canonicalRecordOf(expected, 1)));
+    return expected;
+  }
+
+  /** The app goes to background. Android may kill it without another event. */
+  function background() {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    Reflect.deleteProperty(document, 'visibilityState');
+  }
+
+  /** Play seconds as they survive on disk, booked into the statistics. */
+  function storedPlaySeconds(): number {
+    const raw = deviceStore.get(LD_STORAGE_KEYS.stats);
+    return raw === undefined ? 0 : (JSON.parse(raw) as Stats).totalPlaySeconds;
+  }
+
+  /** The suspended match's own clock, as it survives on disk. */
+  function storedMatchSeconds(): number | null {
+    const raw = deviceStore.get(LD_STORAGE_KEYS.game);
+    return raw === undefined ? null : (JSON.parse(raw) as PersistedMatch).elapsedSeconds;
+  }
+
+  const boardShown = () => screen.queryByRole('group', { name: 'Ludo board' });
+  const homeShown = () => screen.queryByRole('button', { name: /Easy/ });
+
+  it('opens the suspended match straight onto its board', async () => {
+    taughtAlready();
+    const expected = suspendAPlayedMatch();
+
+    launchFromShortcut();
+    await settle();
+
+    // The board, with the die still to be thrown — the same place a tap on
+    // Normal would have led, minus the tap. And *this* board: the whole
+    // position is read back, because a launch that dealt a fresh match would
+    // also show a board, a die and no home screen.
+    expectBoardMatches(expected);
+    expect(dieButton()).toBeInTheDocument();
+    expect(homeShown()).not.toBeInTheDocument();
+    await settle();
+  });
+
+  it('leaves the board for this game’s home, not the collection', async () => {
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendAMatch();
+    cleanup();
+
+    const onExit = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <LudoRoot onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+    await settle();
+    fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from a board is this game's home, whichever door the board
+    // was reached through: the way in did not add a screen to undo.
+    expect(homeShown()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+    await settle();
+  });
+
+  it('opens the home screen when nothing is suspended', async () => {
+    taughtAlready();
+    launchFromShortcut();
+    await settle();
+
+    expect(boardShown()).not.toBeInTheDocument();
+    expect(homeShown()).toBeInTheDocument();
+  });
+
+  it('opens the home screen when the save could not have come from play', async () => {
+    taughtAlready();
+    const real = canonicalRecordOf(createSession('normal', SEED_OPENS_WITH_A_SIX), 1)!;
+    deviceStore.set(
+      LD_STORAGE_KEYS.game,
+      JSON.stringify({ ...real, rollCount: 4, choices: '3333' }),
+    );
+
+    launchFromShortcut();
+    await settle();
+
+    // Booting does not stop on bad local data, and a shortcut is no exception:
+    // the replay drops the record and the launch lands where it always did,
+    // with nothing to resume and nothing repaired (§10.3).
+    expect(boardShown()).not.toBeInTheDocument();
+    expect(homeShown()).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Resume/ })).not.toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendAMatch();
+    cleanup();
+
+    launch();
+    await settle();
+
+    expect(boardShown()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Normal.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('teaches the game first, even with a match to come back to', async () => {
+    // Quick Rules unseen *and* a suspended match — the only shape in which the
+    // tutorial is the thing being asked, since without a match every launch
+    // lands on Quick Rules anyway and the gate could be deleted unnoticed. It
+    // is reachable: the flags record going unreadable leaves the schema default
+    // (`tutorialCompleted: false`) while the save beside it is untouched.
+    deviceStore.set(
+      LD_STORAGE_KEYS.game,
+      JSON.stringify(canonicalRecordOf(createSession('normal', SEED_OPENS_WITH_A_SIX), 1)),
+    );
+
+    launchFromShortcut();
+    await settle();
+
+    // A shortcut is not a way past Quick Rules (§11); the match keeps.
+    expect(screen.getByText('A six lets a pawn out')).toBeInTheDocument();
+    expect(boardShown()).not.toBeInTheDocument();
+  });
+
+  // The counterpart of the backgrounding path. Opening the board at mount skips
+  // `activate`, so it has to seed the same two clocks by hand: the seconds
+  // already played are neither booked again nor written away. Neither mistake
+  // shows on screen — this game has no clock (§8) — so disk is the only witness,
+  // and both of the numbers there are checked.
+  it('does not book the resumed match’s play seconds twice, or lose them', async () => {
+    taughtAlready();
+    launch();
+    await settle();
+    fireEvent.click(screen.getByRole('button', { name: /Normal/ }));
+
+    await advance(5_000);
+    background();
+    await settle();
+    expect(storedPlaySeconds()).toBe(5);
+    expect(storedMatchSeconds()).toBe(5);
+
+    // The process dies here; nothing else runs. The shortcut brings it back.
+    cleanup();
+    launchFromShortcut();
+    await settle();
+    expect(boardShown()).toBeInTheDocument();
+
+    await advance(3_000);
+    background();
+    await settle();
+    // Eight seconds of play, counted once — and still eight on the match, which
+    // is where a clock started from zero would have written the first five away.
+    expect(storedPlaySeconds()).toBe(8);
+    expect(storedMatchSeconds()).toBe(8);
   });
 });
 

@@ -64,6 +64,29 @@ function toSession(persisted: PersistedGame | null): WaterSession | null {
   return session.status === 'playing' ? session : null;
 }
 
+/**
+ * The one suspended game a home-screen shortcut may open straight onto, or
+ * null when there is no single answer (issue #113).
+ *
+ * A shortcut is a way back into the game somebody was playing. With three
+ * slots kept side by side — a level, the daily, a free board (§10) — "the
+ * game they were playing" is only a fact when exactly one of them is
+ * suspended. Two would make it a guess, and guessing wrong drops somebody
+ * onto a board they did not ask for, mid-puzzle. None and two both mean the
+ * home screen, which is where every other door leads anyway, and where both
+ * suspended games are still offered by name.
+ *
+ * Reads this game's own saves and nothing else: the shell says which door was
+ * used and never learns what was decided here
+ * (docs/ARCHITECTURE.md「ゲームレジストリの契約」).
+ */
+export function soleSuspendedMode(saved: SavedGames): GameMode | null {
+  const suspended = (['level', 'daily', 'free'] as const).filter(
+    (mode) => saved[mode]?.status === 'playing',
+  );
+  return suspended.length === 1 ? suspended[0]! : null;
+}
+
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
   const [level, daily, free] = await Promise.all([
     loadRecord(gameSchema, kv),

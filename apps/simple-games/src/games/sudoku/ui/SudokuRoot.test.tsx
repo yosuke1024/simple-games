@@ -61,19 +61,19 @@ function background() {
   Reflect.deleteProperty(document, 'visibilityState');
 }
 
+/** The suspended level board's own clock, as it survives on disk (§11). */
+function storedLevelSeconds(): number {
+  const raw = deviceStore.get(SD_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+}
+
 /** Total play seconds as they survive on disk, across every tier. */
 function storedPlaySeconds(): number {
   const raw = deviceStore.get(SD_STORAGE_KEYS.stats);
   if (raw === undefined) return 0;
   const stats = JSON.parse(raw) as Stats;
   return stats.easy.totalPlaySeconds + stats.medium.totalPlaySeconds + stats.hard.totalPlaySeconds;
-}
-
-/** The suspended board's own clock, as it survives on disk. */
-function storedBoardSeconds(): number {
-  const raw = deviceStore.get(SD_STORAGE_KEYS.game);
-  if (raw === undefined) return 0;
-  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
 }
 
 const tutorialDone = {
@@ -376,7 +376,7 @@ describe('opening a suspended game without resuming (#109)', () => {
       act(() => vi.advanceTimersByTime(9_000));
       background();
       await settle();
-      expect(storedBoardSeconds()).toBe(9);
+      expect(storedLevelSeconds()).toBe(9);
 
       // The process dies here. Relaunch and stop on the game's own home.
       cleanup();
@@ -387,7 +387,234 @@ describe('opening a suspended game without resuming (#109)', () => {
       // Away again without ever resuming: the nine seconds are still there.
       background();
       await settle();
-      expect(storedBoardSeconds()).toBe(9);
+      expect(storedLevelSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+/**
+ * A pinned home-screen shortcut, and what Sudoku does about it (issue #113).
+ * The shell says only which door was used; every decision below is this
+ * game's, taken from its own three save slots (§11).
+ */
+describe('a home-screen shortcut', () => {
+  /** The same store a launch reads, entered by the other door. */
+  function launchFromShortcut() {
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <SudokuRoot onExit={vi.fn()} entry="shortcut" />
+      </SettingsProvider>,
+    );
+  }
+
+  /** Quick Rules behind the player, the way every launch after the first finds them. */
+  function taughtAlready() {
+    deviceStore.set(SD_STORAGE_KEYS.flags, tutorialDone[SD_STORAGE_KEYS.flags]!);
+  }
+
+  const board = () => screen.queryByRole('group', { name: 'Sudoku grid' });
+  const home = () => screen.queryByRole('button', { name: /Daily Challenge/ });
+
+  it('opens the one suspended game straight onto its board', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await user.click(screen.getByRole('button', { name: /Level 1/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(board()).toBeInTheDocument();
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(home()).not.toBeInTheDocument();
+  });
+
+  it('leaves the board for this game’s home, not the collection', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await user.click(screen.getByRole('button', { name: /Level 1/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    cleanup();
+
+    const onExit = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <SudokuRoot onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+    await settle();
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from a board is this game's home, whichever door the
+    // board was reached through: the way in did not add a screen to undo.
+    expect(home()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens a suspended daily just as readily as a level', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    // The daily is the slot most easily forgotten: it is not the one the home
+    // screen leads with, and a rule that counted only two of the three would
+    // both miss this board and mistake a level+daily pair for a single answer.
+    await user.click(screen.getByRole('button', { name: /Daily Challenge/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(board()).toBeInTheDocument();
+    expect(screen.getByText('Daily')).toBeInTheDocument();
+  });
+
+  it('opens a suspended free board too, and is not confused by a save it cannot read', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await user.click(screen.getByRole('button', { name: /Free Play/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    cleanup();
+    // A level record that is not a record at all. It must not count as a
+    // second suspended game — a save nobody can read is not a game somebody
+    // was playing, and treating it as one would turn every corrupt record
+    // into a shortcut that stopped working (§11: 壊れた保存データは読み捨てる).
+    deviceStore.set(SD_STORAGE_KEYS.game, '{"schemaVersion":1,"mode":"lev');
+
+    launchFromShortcut();
+    await settle();
+
+    expect(board()).toBeInTheDocument();
+    expect(screen.getByText('Free Play')).toBeInTheDocument();
+  });
+
+  it('opens the home screen when the only save is one it cannot read', async () => {
+    taughtAlready();
+    deviceStore.set(SD_STORAGE_KEYS.game, 'not json at all');
+
+    launchFromShortcut();
+    await settle();
+
+    // Fail-safe, and the game still runs: broken local data does not stop a
+    // launch, it only means there is nothing to come back to.
+    expect(board()).not.toBeInTheDocument();
+    expect(home()).toBeInTheDocument();
+  });
+
+  it('opens the home screen when two games are suspended, rather than guessing', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await user.click(screen.getByRole('button', { name: /Level 1/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await user.click(screen.getByRole('button', { name: /Free Play/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // Both are still there to be picked up by hand — nothing was chosen for
+    // the player, and nothing was thrown away either.
+    expect(board()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Level 1.*Resume/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Free Play.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('opens the home screen when nothing is suspended', async () => {
+    taughtAlready();
+    launchFromShortcut();
+    await settle();
+
+    expect(board()).not.toBeInTheDocument();
+    expect(home()).toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await user.click(screen.getByRole('button', { name: /Level 1/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    cleanup();
+
+    launch();
+    await settle();
+
+    expect(board()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Level 1.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('teaches the game first on a launch that has never seen it', async () => {
+    const user = userEvent.setup();
+    // A suspended board AND no Quick Rules behind the player. The two can
+    // only meet through "Reset Local Data", which wipes the flags and leaves
+    // the saves — but the test has to arrange it, because a launch with an
+    // empty store would land on the tutorial whatever the gate said.
+    taughtAlready();
+    launch();
+    await settle();
+    await user.click(screen.getByRole('button', { name: /Level 1/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    cleanup();
+    deviceStore.delete(SD_STORAGE_KEYS.flags);
+
+    launchFromShortcut();
+
+    // Quick Rules first: a shortcut is not a way past them (§13).
+    expect(await screen.findByText('1-9, once each')).toBeInTheDocument();
+    expect(board()).not.toBeInTheDocument();
+  });
+
+  /**
+   * The counterpart of the backgrounding test above: resuming at mount seeds
+   * the same two clocks `activate` does, so the seconds already played are
+   * neither lost nor counted again.
+   *
+   * Both numbers are read, and that is the point. The statistics alone cannot
+   * see the worse of the two mistakes: with NEITHER clock seeded the errors
+   * cancel — `withElapsed` writes the board's own clock back DOWN to the
+   * seconds since mount, and the booking then adds exactly that many — so the
+   * total comes out right while the player's five minutes are quietly gone
+   * from the board they are still playing.
+   */
+  it('does not lose or double-book the resumed game’s play seconds', async () => {
+    taughtAlready();
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+      expect(storedLevelSeconds()).toBe(5);
+
+      cleanup();
+      launchFromShortcut();
+      await settle();
+      expect(board()).toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(3_000));
+      background();
+      await settle();
+      // Eight seconds of play, counted once, on a board that still knows it
+      // has been played for eight.
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedLevelSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

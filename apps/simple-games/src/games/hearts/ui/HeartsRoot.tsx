@@ -57,11 +57,17 @@ interface LoadedData {
 export interface HeartsRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight on: what a door means is the provider's answer,
+   * taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
 
-export function HeartsRoot({ onExit, kv = preferencesKV }: HeartsRootProps) {
+export function HeartsRoot({ onExit, entry, kv = preferencesKV }: HeartsRootProps) {
   const [data, setData] = useState<LoadedData | null>(null);
 
   useEffect(() => {
@@ -101,6 +107,7 @@ export function HeartsRoot({ onExit, kv = preferencesKV }: HeartsRootProps) {
       initialPrefs={data.prefs}
       initialSession={data.session}
       onExit={onExit}
+      entry={entry}
     >
       <HeartsScreens />
     </HeartsProvider>

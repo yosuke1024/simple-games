@@ -99,6 +99,13 @@ function storedPlaySeconds(): number {
   );
 }
 
+/** One suspended board's own clock, as it survives on disk (§11). */
+function storedSessionSeconds(key: string): number {
+  const raw = deviceStore.get(key);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+}
+
 /** Level 1 is deterministic (§9), so a test knows its answer the same way a
  * player's device does. */
 const truth = createLevelSession(1);
@@ -178,6 +185,222 @@ describe('backgrounding (§11)', () => {
         await settle();
         expect(storedPlaySeconds()).toBe(7);
       }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+/**
+ * A pinned home-screen shortcut, and what Futoshiki does about it (issue
+ * #113). The shell says only which door was used; every decision below is
+ * this game's, taken from its own three save slots (§9, §11).
+ */
+describe('a home-screen shortcut', () => {
+  /** The same device store a launch reads, entered by the other door. */
+  function launchFromShortcut(onExit = vi.fn()) {
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <FutoshikiRoot onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+    return onExit;
+  }
+
+  /** Quick Rules behind the player, the way every launch after the first finds them. */
+  function taughtAlready() {
+    deviceStore.set(FT_STORAGE_KEYS.flags, tutorialDone[FT_STORAGE_KEYS.flags]!);
+  }
+
+  const maybeBoard = () => screen.queryByRole('group', { name: /Futoshiki board/ });
+  const maybeHome = () => screen.queryByRole('button', { name: /Daily Challenge/ });
+
+  /** Suspends level 1: start it, then step back to this game's home. */
+  async function suspendLevelOne(user: ReturnType<typeof userEvent.setup>) {
+    await startLevelOne(user);
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+  }
+
+  it('opens the one suspended game straight onto its board', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // The 4×4 the player left, not the home screen that offers it.
+    expect(maybeBoard()).toBeInTheDocument();
+    expect(within(board()).getAllByRole('button')).toHaveLength(16);
+    expect(maybeHome()).not.toBeInTheDocument();
+  });
+
+  it('leaves the board for this game’s home, not the collection', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+
+    const onExit = launchFromShortcut();
+    await settle();
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from a board is this game's home, whichever door the
+    // board was reached through: the way in did not add a screen to undo.
+    expect(maybeHome()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens a suspended daily just as readily as a level', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    // The daily is the slot most easily forgotten: it is not the one the home
+    // screen leads with, and a rule that counted only the other two would both
+    // miss this board and mistake a level+daily pair for a single answer.
+    await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(maybeBoard()).toBeInTheDocument();
+    expect(screen.getByText('Daily')).toBeInTheDocument();
+    // A daily is a 6×6 (§9), so this is that board and not the 4×4 level slot.
+    expect(within(board()).getAllByRole('button')).toHaveLength(36);
+  });
+
+  it('opens the home screen when two games are suspended, rather than guessing', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    await user.click(screen.getByRole('button', { name: /Free Play/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // Both are still there to be picked up by hand — neither was chosen for
+    // the player, and neither was thrown away either (§11).
+    expect(maybeBoard()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Level 1.*Resume/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Free Play.*Resume/ })).toBeInTheDocument();
+  });
+
+  // The same rule over the pair the counting is likeliest to get wrong: a slot
+  // left out of the count makes this look like a single answer, and the player
+  // lands on the level they did not ask for with the daily still waiting.
+  it('counts a suspended daily too, and so offers both rather than guessing', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    await user.click(screen.getByRole('button', { name: /Daily Challenge/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(maybeBoard()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Level 1.*Resume/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Daily Challenge.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('opens the home screen when nothing is suspended', async () => {
+    taughtAlready();
+    launchFromShortcut();
+    await settle();
+
+    expect(maybeBoard()).not.toBeInTheDocument();
+    expect(maybeHome()).toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+
+    launch();
+    await settle();
+
+    expect(maybeBoard()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Level 1.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('teaches the game first on a launch that has never seen it (§12)', async () => {
+    const user = userEvent.setup();
+    // A suspended board AND no Quick Rules behind the player, together. The
+    // two can only meet through "Reset Local Data", which wipes the flags and
+    // leaves the saves — but the test has to arrange it, because a launch
+    // against an empty store lands on Quick Rules whatever the gate says, and
+    // would pin nothing at all.
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+    deviceStore.delete(FT_STORAGE_KEYS.flags);
+
+    launchFromShortcut();
+
+    // Quick Rules first: a shortcut is not a way past them.
+    expect(await screen.findByText('Each digit once')).toBeInTheDocument();
+    expect(maybeBoard()).not.toBeInTheDocument();
+  });
+
+  // The counterpart of the backgrounding tests above, on the slot that would
+  // hide the mistake: mounting straight onto a game never runs `activate`, so
+  // both clocks have to be seeded from the resumed slot at mount. A free
+  // board is the one that proves it — seeded from the level slot instead, the
+  // baseline would be zero and this session's five seconds would land twice.
+  //
+  // Both numbers are read, and that is the point. The statistics alone cannot
+  // see the whole of it: leave the live clock at zero and the board's own
+  // elapsedSeconds stops moving until the mount has run as long as the game
+  // already had, which understates the eventual clear and can mint a best time
+  // nobody played (§10). The board has to still know how long it has been
+  // played, not just the totals.
+  it('does not book the resumed game’s play seconds a second time', async () => {
+    taughtAlready();
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Free Play/ }));
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+      expect(storedSessionSeconds(FT_STORAGE_KEYS.freeGame)).toBe(5);
+
+      cleanup();
+      launchFromShortcut();
+      await settle();
+      expect(maybeBoard()).toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(3_000));
+      background();
+      await settle();
+      // Eight seconds of play, counted once, on a board that still knows it
+      // has been played for eight — so the eventual clear is measured
+      // honestly (§10).
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedSessionSeconds(FT_STORAGE_KEYS.freeGame)).toBe(8);
     } finally {
       vi.useRealTimers();
     }

@@ -67,10 +67,17 @@ vi.mock('../services/sound', async (importOriginal) => ({
 
 vi.mock('./lazyRoots', () => ({
   getLazyRoot: (gameId: string) =>
-    function StubGameRoot({ onExit }: { onExit: () => void }) {
+    function StubGameRoot({
+      onExit,
+      entry,
+    }: {
+      onExit: () => void;
+      entry?: 'collection' | 'shortcut';
+    }) {
       return (
         <div>
           <p>{`playing ${gameId}`}</p>
+          <p data-testid="entry">{entry ?? 'none'}</p>
           <button type="button" onClick={onExit}>
             All games
           </button>
@@ -171,6 +178,20 @@ afterEach(() => {
 });
 
 describe('arriving at a game address', () => {
+  /**
+   * The browser has no home screen to pin a game to, so nothing here is a
+   * shortcut (issue #113). A link somebody followed introduces the game; it
+   * is not a way back into one already begun, and the game is told so — which
+   * is what keeps「Web は変更なし」a fact rather than a coincidence.
+   */
+  it('is the ordinary door, whoever pointed at it', async () => {
+    window.history.replaceState(null, '', `${PLAY}?game=sudoku`);
+    renderShell();
+
+    expect(screen.getByText('playing sudoku')).toBeInTheDocument();
+    expect(screen.getByTestId('entry').textContent).toBe('collection');
+  });
+
   it('opens that game instead of the collection', async () => {
     arriveAt(`${PLAY}?game=sudoku`);
     renderShell();
@@ -297,6 +318,10 @@ describe('walking in from the collection', () => {
     await goForward();
     expect(await playing('sudoku')).toBeInTheDocument();
     expect(document.documentElement.dataset.game).toBe('sudoku');
+    // Forward is the address changing, and an address is not a home-screen
+    // shortcut (issue #113): the game opens on its own home, as it did on the
+    // way in, rather than on whatever board was suspended.
+    expect(screen.getByTestId('entry').textContent).toBe('collection');
   });
 
   // Leaving is a step back onto the collection, never a third entry pushed on

@@ -50,11 +50,17 @@ interface LoadedData {
 export interface FreeCellRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: what a door means is FreeCell's own
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
 
-export function FreeCellRoot({ onExit, kv = preferencesKV }: FreeCellRootProps) {
+export function FreeCellRoot({ onExit, entry, kv = preferencesKV }: FreeCellRootProps) {
   const [data, setData] = useState<LoadedData | null>(null);
 
   useEffect(() => {
@@ -91,6 +97,7 @@ export function FreeCellRoot({ onExit, kv = preferencesKV }: FreeCellRootProps) 
       initialFlags={data.flags}
       initialSessions={data.sessions}
       onExit={onExit}
+      entry={entry}
     >
       <FreeCellScreens />
     </FreeCellProvider>

@@ -69,6 +69,29 @@ function toSession(persisted: PersistedGame | null): GameSession | null {
 }
 
 /**
+ * The one suspended game a home-screen shortcut may open straight onto, or
+ * null when there is no single answer (issue #113).
+ *
+ * The three slots exist precisely so that a level game, a daily and a free
+ * board coexist without evicting one another (docs §14「中断は 3 つ独立して
+ * 保持する」). That is also why "the game they were playing" is only a fact
+ * here when exactly one of them is suspended: with two, picking the most
+ * recent would drop somebody onto a board they did not ask for, mid-game.
+ * None and two both mean the home screen — where every other door leads
+ * anyway, and where all three are offered by name.
+ *
+ * Reads this game's own saves and nothing else: the shell says which door was
+ * used and never learns what was decided here
+ * (docs/ARCHITECTURE.md「ゲームレジストリの契約」).
+ */
+export function soleSuspendedMode(saved: SavedGames): GameMode | null {
+  const suspended = (['level', 'daily', 'free'] as const).filter(
+    (mode) => saved[mode]?.status === 'playing',
+  );
+  return suspended.length === 1 ? suspended[0]! : null;
+}
+
+/**
  * Loads the three slots. Builds before the split kept a daily game in the
  * level slot; such a record is moved to its own slot once, on first load.
  *

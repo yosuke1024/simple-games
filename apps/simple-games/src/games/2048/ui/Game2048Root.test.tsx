@@ -6,13 +6,14 @@ import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
 import { createSession, type Board } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
-import { TM_STORAGE_KEYS } from '../storage/schemas';
+import { TM_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { Game2048Root } from './Game2048Root';
 
 /**
  * A stand-in for the device store. The `kv` prop below is a load-side seam
- * only — saves always go to Capacitor Preferences — so a test that has to read
- * back what a save actually wrote has to stand behind both.
+ * only — saves always go to Capacitor Preferences — so every save lands here,
+ * and the blocks that have to read back what a save actually wrote go through
+ * `storedPlaySeconds` / `storedRunSeconds` below.
  */
 const { deviceStore } = vi.hoisted(() => ({ deviceStore: new Map<string, string>() }));
 vi.mock('@capacitor/preferences', () => ({
@@ -41,10 +42,10 @@ function renderGame(initial: Record<string, string> = {}) {
 }
 
 /** Launches the app against the device store, the way a player's phone does. */
-function launch() {
+function launch(onExit: () => void = vi.fn()) {
   render(
     <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
-      <Game2048Root onExit={vi.fn()} />
+      <Game2048Root onExit={onExit} />
     </SettingsProvider>,
   );
 }
@@ -62,11 +63,18 @@ function background() {
   Reflect.deleteProperty(document, 'visibilityState');
 }
 
-/** The suspended board's own clock, as it survives on disk. */
-function storedBoardSeconds(): number {
-  const raw = deviceStore.get(TM_STORAGE_KEYS.game);
+/** Total play seconds as they survive on disk. */
+function storedPlaySeconds(): number {
+  const raw = deviceStore.get(TM_STORAGE_KEYS.stats);
   if (raw === undefined) return 0;
-  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+  return (JSON.parse(raw) as Stats).totalPlaySeconds;
+}
+
+/** The saved run's own clock, which is what all later booking is measured from. */
+function storedRunSeconds(): number | null {
+  const raw = deviceStore.get(TM_STORAGE_KEYS.game);
+  if (raw === undefined) return null;
+  return (JSON.parse(raw) as PersistedGame).elapsedSeconds;
 }
 
 const tutorialDone = {
@@ -248,7 +256,7 @@ describe('opening a suspended game without resuming (#109)', () => {
       act(() => vi.advanceTimersByTime(9_000));
       background();
       await settle();
-      expect(storedBoardSeconds()).toBe(9);
+      expect(storedRunSeconds()).toBe(9);
 
       // The process dies here. Relaunch and stop on the game's own home.
       cleanup();
@@ -259,7 +267,145 @@ describe('opening a suspended game without resuming (#109)', () => {
       // Away again without ever resuming: the nine seconds are still there.
       background();
       await settle();
-      expect(storedBoardSeconds()).toBe(9);
+      expect(storedRunSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+/**
+ * A pinned home-screen shortcut, and what 2048 does about it (issue #113).
+ * The shell says only which door was used; every decision below is this
+ * game's, taken from its own save.
+ *
+ * There is no "two suspended games" case to disambiguate here: 2048 keeps one
+ * slot (§10), and `loadSavedGame` hands back null for anything that is not a
+ * board still worth coming back to. Either there is one game to resume, or
+ * there is none.
+ */
+describe('a home-screen shortcut', () => {
+  /** The same store a launch reads, entered by the other door. */
+  function launchFromShortcut(onExit: () => void = vi.fn()) {
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <Game2048Root onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+  }
+
+  /** Quick Rules behind the player, the way every launch after the first finds them. */
+  function taughtAlready() {
+    deviceStore.set(TM_STORAGE_KEYS.flags, tutorialDone[TM_STORAGE_KEYS.flags]!);
+  }
+
+  /** Leaves one suspended board on the device the way a player does: by
+   * starting a game and walking away from it (§10). */
+  async function suspendOneGame() {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+  }
+
+  const boardShown = () => screen.queryByRole('group', { name: /2048 board/ });
+  /** The one control only this game's home carries. */
+  const homeShown = () => screen.queryByRole('button', { name: 'All games' });
+
+  it('opens the one suspended game straight onto its board', async () => {
+    await suspendOneGame();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(boardShown()).toBeInTheDocument();
+    expect(homeShown()).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Resume/ })).not.toBeInTheDocument();
+  });
+
+  it('leaves the board for this game’s home, not the collection', async () => {
+    const user = userEvent.setup();
+    await suspendOneGame();
+
+    const onExit = vi.fn();
+    launchFromShortcut(onExit);
+    await settle();
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from a board is this game's home, whichever door the
+    // board was reached through: the way in did not add a screen to undo.
+    expect(homeShown()).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Resume/ })).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens the home screen when nothing is suspended', async () => {
+    taughtAlready();
+    launchFromShortcut();
+    await settle();
+
+    expect(boardShown()).not.toBeInTheDocument();
+    expect(homeShown()).toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    await suspendOneGame();
+
+    launch();
+    await settle();
+
+    expect(boardShown()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Resume/ })).toBeInTheDocument();
+  });
+
+  it('teaches the game first on a launch that has never seen Quick Rules', async () => {
+    await suspendOneGame();
+    // A save and the flags are separate records, so "board kept, rules not yet
+    // taught" is reachable: a flags record that fails to validate is read past
+    // and falls back to its default while `tm.saveGame` still loads (§10).
+    // What this pins is that a shortcut cannot become a way past §11.
+    deviceStore.delete(TM_STORAGE_KEYS.flags);
+
+    launchFromShortcut();
+    await settle();
+
+    expect(screen.getByText('Swipe to slide')).toBeInTheDocument();
+    expect(boardShown()).not.toBeInTheDocument();
+  });
+
+  // The counterpart of `activate`: opening onto the board at mount seeds the
+  // same two clocks Resume does, so the seconds already played are neither
+  // lost from the run nor counted into the statistics again.
+  it('does not book the resumed game’s play seconds a second time', async () => {
+    taughtAlready();
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: 'New Game' }));
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedRunSeconds()).toBe(5);
+      expect(storedPlaySeconds()).toBe(5);
+
+      cleanup();
+      launchFromShortcut();
+      await settle();
+      expect(boardShown()).toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(3_000));
+      background();
+      await settle();
+
+      // The run carries on from the clock it was saved with...
+      expect(storedRunSeconds()).toBe(8);
+      // ...and only the three seconds since are added to the total.
+      expect(storedPlaySeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

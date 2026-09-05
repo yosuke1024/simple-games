@@ -184,6 +184,247 @@ describe('backgrounding (§10)', () => {
   });
 });
 
+/**
+ * A pinned home-screen shortcut, and what Nonogram does about it (issue #113).
+ * The shell says only which door was used; every decision below is this
+ * game's, taken from its own three save slots (§10).
+ */
+describe('a home-screen shortcut', () => {
+  /** The same store a launch reads, entered by the other door. */
+  function launchFromShortcut() {
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <NonogramRoot onExit={vi.fn()} entry="shortcut" />
+      </SettingsProvider>,
+    );
+  }
+
+  /** Quick Rules behind the player, the way every launch after the first finds them. */
+  function taughtAlready() {
+    deviceStore.set(NG_STORAGE_KEYS.flags, tutorialDone[NG_STORAGE_KEYS.flags]!);
+  }
+
+  const anyBoard = () => screen.queryByRole('group', { name: /Nonogram board/ });
+  const home = () => screen.queryByRole('button', { name: /Daily Challenge/ });
+
+  /** Opens level 1 and steps back off it, which is what suspends it (§10). */
+  async function suspendLevelOne(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(await screen.findByRole('button', { name: /Level 1/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+  }
+
+  it('opens the one suspended game straight onto its board', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(anyBoard()).toBeInTheDocument();
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(home()).not.toBeInTheDocument();
+  });
+
+  it('opens a suspended free board too, not the level slot behind it', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await user.click(await screen.findByRole('button', { name: /Free Play/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // The board reads whichever slot is active, so the resumed mode has to
+    // arrive selected — 'level' is empty here, and would render nothing.
+    expect(anyBoard()).toBeInTheDocument();
+    expect(screen.getByText('Free Play')).toBeInTheDocument();
+    expect(screen.queryByText(/Level \d/)).not.toBeInTheDocument();
+  });
+
+  it('opens a suspended daily just as readily as a level', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    // The daily is the slot most easily forgotten: it is not the one the home
+    // screen leads with, and a rule that counted only two of the three would
+    // both miss this board and mistake a level+daily pair for a single answer.
+    await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(anyBoard()).toBeInTheDocument();
+    expect(screen.getByText('Daily')).toBeInTheDocument();
+  });
+
+  it('leaves the board for this game’s home, not the collection', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+
+    const onExit = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <NonogramRoot onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+    await settle();
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from a board is this game's home, whichever door the
+    // board was reached through: the way in did not add a screen to undo.
+    expect(home()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens the home screen when two games are suspended, rather than guessing', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    await user.click(screen.getByRole('button', { name: /Free Play/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // Both are still there to be picked up by hand — nothing was chosen for
+    // the player, and nothing was thrown away either.
+    expect(anyBoard()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Level 1.*Resume/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Free Play.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('counts the daily as one of the two, rather than picking the level', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // A pair is a pair whichever two slots it is made of: the daily is not a
+    // lesser board that a level beside it may be assumed to outrank.
+    expect(anyBoard()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Level 1.*Resume/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Daily Challenge.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('opens the home screen when nothing is suspended', async () => {
+    taughtAlready();
+    launchFromShortcut();
+    await settle();
+
+    expect(anyBoard()).not.toBeInTheDocument();
+    expect(home()).toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+
+    launch();
+    await settle();
+
+    expect(anyBoard()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Level 1.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('teaches the game first on a launch that has never seen it', async () => {
+    const user = userEvent.setup();
+    // A suspended board AND no Quick Rules behind the player. The two can
+    // only meet through "Reset Local Data", which wipes the flags and leaves
+    // the saves — but the test has to arrange it, because a launch with an
+    // empty store would land on the tutorial whatever the gate said.
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendLevelOne(user);
+    cleanup();
+    deviceStore.delete(NG_STORAGE_KEYS.flags);
+
+    launchFromShortcut();
+
+    // Quick Rules first: a shortcut is not a way past them (§11).
+    expect(await screen.findByText('Numbers are runs')).toBeInTheDocument();
+    expect(anyBoard()).not.toBeInTheDocument();
+  });
+
+  /** The level slot's elapsed seconds as they survive on disk. */
+  function storedLevelSeconds(): number {
+    const raw = deviceStore.get(NG_STORAGE_KEYS.game);
+    if (raw === undefined) return 0;
+    return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+  }
+
+  // The counterpart of the backgrounding test above: resuming at mount seeds
+  // the same two clocks `activate` does. Both numbers are checked, because
+  // each one is wrong in its own direction and neither shows the other's
+  // failure — an unseeded play clock rewrites the session's elapsed time
+  // *down* to the seconds since mount (a fabricated best time, §9), while an
+  // unseeded booking mark counts the restored seconds into the statistics a
+  // second time.
+  it('does not lose or double-book the resumed game’s play seconds', async () => {
+    taughtAlready();
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+      expect(storedLevelSeconds()).toBe(5);
+
+      cleanup();
+      launchFromShortcut();
+      await settle();
+      expect(anyBoard()).toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(3_000));
+      background();
+      await settle();
+      // Eight seconds of play, on the board and in the statistics, counted
+      // once: the restored five are neither lost nor booked again.
+      expect(storedLevelSeconds()).toBe(8);
+      expect(storedPlaySeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe('first run', () => {
   it('shows Quick Rules and starts level 1 right after (§11)', async () => {
     const user = userEvent.setup();

@@ -61,11 +61,17 @@ interface LoadedData {
 export interface SlidingPuzzleRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: what a door means is the provider's
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
 
-export function SlidingPuzzleRoot({ onExit, kv = preferencesKV }: SlidingPuzzleRootProps) {
+export function SlidingPuzzleRoot({ onExit, entry, kv = preferencesKV }: SlidingPuzzleRootProps) {
   const [data, setData] = useState<LoadedData | null>(null);
 
   useEffect(() => {
@@ -105,6 +111,7 @@ export function SlidingPuzzleRoot({ onExit, kv = preferencesKV }: SlidingPuzzleR
       initialProgress={data.progress}
       initialSessions={data.sessions}
       onExit={onExit}
+      entry={entry}
     >
       <SlidingPuzzleScreens />
     </SlidingPuzzleProvider>

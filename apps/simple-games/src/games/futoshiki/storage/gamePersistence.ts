@@ -85,6 +85,33 @@ export function toSession(persisted: PersistedGame | null): FutoshikiSession | n
   return session.status === 'playing' ? session : null;
 }
 
+/**
+ * The one suspended game a home-screen shortcut may open straight onto, or
+ * null when there is no single answer (issue #113).
+ *
+ * A shortcut is a way back into the game somebody was playing. With three
+ * slots held independently — a level, the daily, a free board (§9, §11) —
+ * "the game they were playing" is only a fact when exactly one of them is
+ * suspended. Two make it a guess, and guessing wrong drops the player onto a
+ * board mid-puzzle that they did not ask for. `savedAt` is on every record
+ * and would break the tie, which is exactly why it is not read here: the
+ * newer of two is still a guess, only a better dressed one. None and two
+ * both mean the home screen, where every other door already leads and where
+ * both games are still offered by hand.
+ *
+ * The status test is the home screen's own (`sessions.level?.status ===
+ * 'playing'` and its two siblings), so what a shortcut resumes and what the
+ * home offers can never drift apart. Reads this game's saves and nothing
+ * else: the shell says which door was used and never learns what was decided
+ * (docs/ARCHITECTURE.md「ゲームレジストリの契約」).
+ */
+export function soleSuspendedMode(saved: SavedGames): GameMode | null {
+  const suspended = (['level', 'daily', 'free'] as const).filter(
+    (mode) => saved[mode]?.status === 'playing',
+  );
+  return suspended.length === 1 ? suspended[0]! : null;
+}
+
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
   const [level, daily, free] = await Promise.all([
     loadRecord(gameSchema, kv),

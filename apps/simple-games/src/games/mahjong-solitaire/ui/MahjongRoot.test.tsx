@@ -86,6 +86,13 @@ function storedPlaySeconds(): number {
   return stats.totalPlaySeconds;
 }
 
+/** The suspended level game's own clock, as it survives on disk (§10). */
+function storedLevelSeconds(): number {
+  const raw = deviceStore.get(MJ_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+}
+
 afterEach(() => {
   cleanup();
   deviceStore.clear();
@@ -125,6 +132,198 @@ describe('backgrounding (§10)', () => {
       // Eight seconds of play, counted once: the restored five are neither
       // lost nor booked a second time.
       expect(storedPlaySeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+/**
+ * A pinned home-screen shortcut, and what this game does about it (issue
+ * #113). The shell says only which door was used; every decision below is
+ * Mahjong Solitaire's own, taken from its two save slots (§6, §10).
+ */
+describe('a home-screen shortcut', () => {
+  /** The same device store a launch reads, entered by the other door. */
+  function launchFromShortcut(onExit: () => void = vi.fn()) {
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <MahjongRoot onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+  }
+
+  /** Quick Rules behind the player, the way every launch after the first finds them. */
+  function taughtAlready() {
+    deviceStore.set(MJ_STORAGE_KEYS.flags, tutorialDone[MJ_STORAGE_KEYS.flags]!);
+  }
+
+  /** Leaves the board the way the back arrow does, which is what suspends it. */
+  async function suspend(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+  }
+
+  const anyBoard = () => screen.queryByRole('group', { name: /Mahjong board/ });
+  const home = () => screen.queryByRole('button', { name: /Daily Challenge/ });
+
+  it('opens the one suspended game straight onto its board', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await startLevelOne(user);
+    await suspend(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(anyBoard()).toBeInTheDocument();
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(home()).not.toBeInTheDocument();
+  });
+
+  it('opens the daily when that is the suspended one, on the daily slot', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
+    await suspend(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // The board reads through the active slot, so resuming the daily has to
+    // move that slot too — pointing it at the empty level slot would render
+    // nothing at all (§6: the two are kept apart on purpose).
+    expect(anyBoard()).toBeInTheDocument();
+    expect(screen.getByText('Daily')).toBeInTheDocument();
+  });
+
+  it('leaves that board for this game’s home, not the collection', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await startLevelOne(user);
+    await suspend(user);
+    cleanup();
+
+    const onExit = vi.fn();
+    launchFromShortcut(onExit);
+    await settle();
+    await suspend(user);
+
+    // One step back from a board is this game's home, whichever door the board
+    // was reached through: the way in did not add a screen to undo.
+    expect(home()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens the home screen when both slots are suspended, rather than guessing', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await startLevelOne(user);
+    await suspend(user);
+    await user.click(screen.getByRole('button', { name: /Daily Challenge/ }));
+    await suspend(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // A level and the daily are kept apart on purpose (§6), so a shortcut
+    // carries no signal saying which one was meant. Both are still there to be
+    // picked up by hand — nothing was chosen for the player, and nothing was
+    // thrown away either.
+    expect(anyBoard()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Level 1.*Resume/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Daily Challenge.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('opens the home screen when nothing is suspended', async () => {
+    taughtAlready();
+    launchFromShortcut();
+    await settle();
+
+    expect(anyBoard()).not.toBeInTheDocument();
+    expect(home()).toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await startLevelOne(user);
+    await suspend(user);
+    cleanup();
+
+    launch();
+    await settle();
+
+    expect(anyBoard()).not.toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Level 1.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('teaches the game first, even with a game suspended (§11)', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await startLevelOne(user);
+    await suspend(user);
+    cleanup();
+
+    // The flag and the saves are independent keys (`mj.flags` vs
+    // `mj.saveGame`), so a cleared or unreadable flag can sit beside a good
+    // board — and then Quick Rules are what this launch has not seen yet. A
+    // shortcut does not become a way past them; the board is still there
+    // afterwards, unchanged.
+    deviceStore.delete(MJ_STORAGE_KEYS.flags);
+    launchFromShortcut();
+
+    expect(await screen.findByText('Take matching pairs')).toBeInTheDocument();
+    expect(anyBoard()).not.toBeInTheDocument();
+  });
+
+  // The counterpart of the backgrounding test above: mounting straight onto a
+  // board seeds the same two clocks `activate` does, so the seconds already
+  // played are neither lost nor counted again.
+  it('does not book the resumed game’s play seconds a second time', async () => {
+    taughtAlready();
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+      expect(storedLevelSeconds()).toBe(5);
+
+      // The process dies here; the shortcut is the next thing that happens.
+      cleanup();
+      launchFromShortcut();
+      await settle();
+      expect(anyBoard()).toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(3_000));
+      background();
+      await settle();
+      // Eight seconds of play, counted once — and still eight on the board's
+      // own clock. The two are separate failures: a booked clock that starts
+      // at zero writes the five restored seconds off the save (and off any
+      // best time computed from it), while a live clock seeded without its
+      // booked twin adds all five to the statistics a second time.
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedLevelSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

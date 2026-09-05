@@ -11,6 +11,13 @@
  * same baseline, or those restored seconds are booked into the statistics a
  * second time. The two are one invariant, so they are checked together.
  *
+ * The slot to read is whichever one THIS mount is pointed at — the one a
+ * shortcut opened straight onto (issue #113) or the one the home screen starts
+ * on. That is why the seed may not be gated on the resume, and why the active
+ * mode and the seed have to read one shared expression: gate it and the
+ * collection-launch path is back to zero; pin it to `INITIAL_MODE` and a
+ * shortcut resuming a daily or free board seeds from an empty slot.
+ *
  * Like the saved-game-slot and import-boundary gates, this lives in a test
  * rather than a script: a check anyone can skip is not a gate. It reads the
  * filesystem and imports nothing from `src/games/`, so the layering rule holds.
@@ -47,23 +54,30 @@ describe('play clock seeding (docs/ARCHITECTURE.md「状態と ref」)', () => {
     expect(multiSlot.length).toBeGreaterThanOrEqual(12);
   });
 
-  it.each(restoring)('%s seeds its play clock from the restored game', (game) => {
+  it.each(restoring)('%s seeds its play clock from the game it mounts on', (game) => {
     const src = providerOf(game);
-    const seed = String.raw`\(\s*(?:initialSessions\[INITIAL_MODE\]|initialSession)\?\.elapsedSeconds \?\? 0,?\s*\)`;
-    expect(src).toMatch(new RegExp(String.raw`const elapsedRef = useRef${seed};`));
+    // One baseline, named once, read by every ref that needs it.
+    expect(src).toMatch(
+      /^ {2}const mountedSeconds = (?:initialSessions\[mountedMode\]|initialSession)\?\.elapsedSeconds \?\? 0;$/m,
+    );
+    expect(src).toContain('const elapsedRef = useRef(mountedSeconds);');
     // number-match books its play time in one go at the end and keeps no
     // baseline; every other game's has to move with the clock.
-    if (src.includes('bookedRef')) {
-      expect(src).toMatch(new RegExp(String.raw`const bookedRef = useRef${seed};`));
+    if (/^ {2}const bookedRef = /m.test(src)) {
+      expect(src).toContain('const bookedRef = useRef(mountedSeconds);');
     }
+    // Gating the baseline on the resume is the shape that left the
+    // collection-launch path seeding from zero (issue #109).
+    expect(src).not.toMatch(/const mountedSeconds = \w+ \?[^?]/);
   });
 
-  it.each(multiSlot)('%s names the slot it mounts on', (game) => {
+  it.each(multiSlot)('%s names the slot it mounts on, once', (game) => {
     const src = providerOf(game);
-    // The mode is a name rather than a literal in two places, because the
-    // clock's baseline has to come from the slot `activeMode` actually starts
-    // on — the two drift apart the moment someone changes only one of them.
+    // The active mode and the clock's baseline must read the SAME expression:
+    // a mode taken from one slot and a clock from another is the whole trap.
     expect(src).toMatch(/^const INITIAL_MODE: GameMode = '[a-z]+';$/m);
-    expect(src).toContain('useState<GameMode>(INITIAL_MODE)');
+    expect(src).toMatch(/^ {2}const mountedMode = resumeMode \?\? INITIAL_MODE;$/m);
+    expect(src).toContain('useState<GameMode>(mountedMode)');
+    expect(src).toContain('initialSessions[mountedMode]');
   });
 });

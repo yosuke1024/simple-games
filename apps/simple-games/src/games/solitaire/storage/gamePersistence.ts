@@ -57,6 +57,28 @@ function toSession(persisted: PersistedGame | null): SolitaireSession | null {
   return session.status === 'playing' ? session : null;
 }
 
+/**
+ * The one suspended deal a home-screen shortcut may open straight onto, or
+ * null when there is no single answer (issue #113).
+ *
+ * A shortcut is a way back into the deal somebody was in the middle of. With
+ * the two independent slots §10 keeps — one free, one daily — "the deal they
+ * were playing" is only a fact when exactly one of them is suspended. Two
+ * would make it a guess, and a wrong guess drops the player onto a board they
+ * did not ask for, mid-deal. None and two both mean the home screen, which is
+ * where every other door leads anyway; neither slot is touched either way.
+ *
+ * Reads this game's own saves and nothing else: the shell hands over which
+ * door was used and never learns what was decided here
+ * (docs/ARCHITECTURE.md「ゲームレジストリの契約」).
+ */
+export function soleSuspendedMode(saved: SavedGames): GameMode | null {
+  const suspended = (['free', 'daily'] as const).filter(
+    (mode) => saved[mode]?.status === 'playing',
+  );
+  return suspended.length === 1 ? suspended[0]! : null;
+}
+
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
   const [free, daily] = await Promise.all([
     loadRecord(gameSchema, kv),

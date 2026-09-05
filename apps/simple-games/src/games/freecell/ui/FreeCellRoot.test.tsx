@@ -96,6 +96,13 @@ function storedPlaySeconds(): number {
   return (JSON.parse(raw) as Stats).totalPlaySeconds;
 }
 
+/** The suspended free deal's own clock, as it survives on disk (§10). */
+function storedDealSeconds(): number {
+  const raw = deviceStore.get(FC_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+}
+
 afterEach(() => {
   cleanup();
   deviceStore.clear();
@@ -133,6 +140,196 @@ describe('backgrounding (§10)', () => {
       // Eight seconds of play, counted once: the restored five are neither
       // lost nor booked a second time.
       expect(storedPlaySeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+/**
+ * A pinned home-screen shortcut, and what FreeCell does about it (issue #113).
+ * The shell says only which door was used; every decision below is this game's,
+ * taken from its own two save slots (§10).
+ */
+describe('a home-screen shortcut', () => {
+  /** The same device store a launch reads, entered by the other door. */
+  function launchFromShortcut(onExit: () => void = vi.fn()) {
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <FreeCellRoot onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+  }
+
+  /** Quick Rules behind the player, the way every launch after the first finds them. */
+  function taughtAlready() {
+    deviceStore.set(FC_STORAGE_KEYS.flags, tutorialDone[FC_STORAGE_KEYS.flags]!);
+  }
+
+  const board = () => screen.queryByRole('group', { name: 'FreeCell table' });
+  const home = () => screen.queryByRole('button', { name: /New deal/ });
+
+  /** Deals a free game and walks away from it, the way a player suspends one. */
+  async function suspendFreeDeal(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(await screen.findByRole('button', { name: /New deal/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+  }
+
+  /** The same, for the other slot: today's daily, left in progress. */
+  async function suspendDailyDeal(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+  }
+
+  it('opens the one suspended deal straight onto its table', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await suspendFreeDeal(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(board()).toBeInTheDocument();
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(home()).not.toBeInTheDocument();
+  });
+
+  it('opens a suspended daily onto the daily, not the empty free slot', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await suspendDailyDeal(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // The mode has to be seeded with the screen: `session` is an index into
+    // the two slots, so resuming the daily on the default 'free' would put an
+    // empty table on screen instead of a wrong one.
+    expect(board()).toBeInTheDocument();
+    expect(screen.getByText('Daily')).toBeInTheDocument();
+  });
+
+  it('leaves the table for this game’s home, not the collection', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await suspendFreeDeal(user);
+    cleanup();
+
+    const onExit = vi.fn();
+    launchFromShortcut(onExit);
+    await settle();
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from a table is this game's home, whichever door the table
+    // was reached through: the way in did not add a screen to undo.
+    expect(home()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens the home screen when both deals are suspended, rather than guessing', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await suspendFreeDeal(user);
+    await suspendDailyDeal(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // Both are still there to be picked up by hand — neither was chosen for the
+    // player, and neither was thrown away either (§10).
+    expect(board()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /FreeCell.*Resume/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Daily Challenge.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('opens the home screen when nothing is suspended', async () => {
+    taughtAlready();
+    launchFromShortcut();
+    await settle();
+
+    expect(board()).not.toBeInTheDocument();
+    expect(home()).toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await suspendFreeDeal(user);
+    cleanup();
+
+    launch();
+    await settle();
+
+    expect(board()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /FreeCell.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('teaches the game first on a launch that has never seen it', async () => {
+    const user = userEvent.setup();
+    // A suspended deal AND no Quick Rules behind the player. The two can only
+    // meet through "Reset Local Data", which wipes the flags and leaves the
+    // saves — but the test has to arrange it, because a launch against an empty
+    // store would land on the tutorial whatever the gate said.
+    taughtAlready();
+    launch();
+    await suspendFreeDeal(user);
+    cleanup();
+    deviceStore.delete(FC_STORAGE_KEYS.flags);
+
+    launchFromShortcut();
+
+    // Quick Rules first: a shortcut is not a way past them (§11).
+    expect(await screen.findByText('Down by one, colors alternate')).toBeInTheDocument();
+    expect(board()).not.toBeInTheDocument();
+  });
+
+  /**
+   * The counterpart of the backgrounding test above: resuming at mount seeds
+   * the same two clocks `activate` does, so the seconds already played are
+   * neither lost nor counted again.
+   *
+   * Both numbers are read, and that is the point. The statistics alone cannot
+   * see the worse of the two mistakes: with NEITHER clock seeded the errors
+   * cancel — `withElapsed` writes the deal's own clock back DOWN to the
+   * seconds since mount, and the booking then adds exactly that many — so the
+   * total comes out right while the minutes the player spent are quietly gone
+   * from the deal they are still playing.
+   */
+  it('does not lose or double-book the resumed deal’s play seconds', async () => {
+    deviceStore.set(FC_STORAGE_KEYS.flags, tutorialDone[FC_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /New deal/ }));
+
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+      expect(storedDealSeconds()).toBe(5);
+
+      // The process dies here; the shortcut is what starts the next one.
+      cleanup();
+      launchFromShortcut();
+      await settle();
+      expect(board()).toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(3_000));
+      background();
+      await settle();
+      // Eight seconds of play, counted once, on a deal that still knows it has
+      // been played for eight.
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedDealSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

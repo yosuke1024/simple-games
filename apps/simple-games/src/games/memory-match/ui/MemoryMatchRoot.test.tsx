@@ -115,6 +115,13 @@ function storedPlaySeconds(): number {
   return stats.easy.totalPlaySeconds + stats.medium.totalPlaySeconds + stats.hard.totalPlaySeconds;
 }
 
+/** The play clock the difficulty slot itself carries on disk (§10). */
+function storedElapsedSeconds(): number {
+  const raw = deviceStore.get(MM_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+}
+
 afterEach(() => {
   cleanup();
   deviceStore.clear();
@@ -152,6 +159,187 @@ describe('backgrounding (§10)', () => {
       // Eight seconds of play, counted once: the restored five are neither
       // lost nor booked a second time.
       expect(storedPlaySeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+/**
+ * A pinned home-screen shortcut, and what Memory Match does about it (issue
+ * #113). The shell says only which door was used; every decision below is this
+ * game's, taken from its own two save slots (§10).
+ */
+describe('a home-screen shortcut', () => {
+  /** The same store a launch reads, entered by the other door. */
+  function launchFromShortcut(onExit: () => void = vi.fn()) {
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <MemoryMatchRoot onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+  }
+
+  /** Quick Rules behind the player, the way every launch after the first finds them. */
+  function taughtAlready() {
+    deviceStore.set(MM_STORAGE_KEYS.flags, tutorialDone[MM_STORAGE_KEYS.flags]!);
+  }
+
+  /** Puts one game down mid-play, the way the player does: start it, step back. */
+  async function suspend(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
+    await user.click(await screen.findByRole('button', { name }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+  }
+
+  const anyBoard = () => screen.queryByRole('group', { name: /Memory board/ });
+  const homeScreen = () => screen.queryByRole('button', { name: /Daily Challenge/ });
+
+  it('opens the one suspended game straight onto its board', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspend(user, /Easy/);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(anyBoard()).toBeInTheDocument();
+    expect(screen.getByText('Easy')).toBeInTheDocument();
+    expect(homeScreen()).not.toBeInTheDocument();
+  });
+
+  // The daily lives in the other slot, and the board on screen is whichever
+  // slot `activeMode` names. Opening the game screen without moving that too
+  // would render nothing at all — the sharpest way to get this wrong.
+  it('opens a suspended daily onto the daily board, not an empty screen', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspend(user, /Daily Challenge/);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(anyBoard()).toBeInTheDocument();
+    expect(screen.getByText('Daily')).toBeInTheDocument();
+  });
+
+  it('leaves the board for this game’s home, not the collection', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspend(user, /Easy/);
+    cleanup();
+
+    const onExit = vi.fn();
+    launchFromShortcut(onExit);
+    await settle();
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from a board is this game's home, whichever door the board
+    // was reached through: the way in did not add a screen to undo.
+    expect(homeScreen()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens the home screen when two games are suspended, rather than guessing', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspend(user, /Easy/);
+    await suspend(user, /Daily Challenge/);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // Both are still there to be picked up by hand — nothing was chosen for
+    // the player, and nothing was thrown away either (§10).
+    expect(anyBoard()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Easy.*Resume/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Daily Challenge.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('opens the home screen when nothing is suspended', async () => {
+    taughtAlready();
+    launchFromShortcut();
+    await settle();
+
+    expect(anyBoard()).not.toBeInTheDocument();
+    expect(homeScreen()).toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspend(user, /Easy/);
+    cleanup();
+
+    launch();
+    await settle();
+
+    expect(anyBoard()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Easy.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('teaches the game first on a launch that has never seen it', async () => {
+    const user = userEvent.setup();
+    // A suspended board AND no Quick Rules behind the player. The two can only
+    // meet through "Reset Local Data", which wipes the flags and leaves the
+    // saves — but the test has to arrange it, because a launch with an empty
+    // store would land on the tutorial whatever the gate said.
+    taughtAlready();
+    launch();
+    await settle();
+    await suspend(user, /Easy/);
+    cleanup();
+    deviceStore.delete(MM_STORAGE_KEYS.flags);
+
+    launchFromShortcut();
+
+    // Quick Rules first: a shortcut is not a way past them (§11).
+    expect(await screen.findByText('Flip two cards')).toBeInTheDocument();
+    expect(anyBoard()).not.toBeInTheDocument();
+  });
+
+  // The counterpart of the backgrounding test above: mounting onto the board
+  // seeds the same two clocks `activate` does. Both numbers are asserted,
+  // because each ref left at zero fails a different way — an unseeded
+  // elapsedRef saves the board back with only the seconds since mount, and an
+  // unbooked bookedRef counts the restored ones into the statistics twice.
+  it('does not lose or double-book the resumed game’s play seconds', async () => {
+    taughtAlready();
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+      expect(storedElapsedSeconds()).toBe(5);
+
+      // The process dies here. The shortcut is what brings it back.
+      cleanup();
+      launchFromShortcut();
+      await settle();
+      expect(anyBoard()).toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(3_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedElapsedSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

@@ -20,7 +20,7 @@ import {
   type Seat,
 } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
-import { GR_STORAGE_KEYS, type Stats } from '../storage/schemas';
+import { GR_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { GinRummyRoot } from './GinRummyRoot';
 
 /**
@@ -174,6 +174,13 @@ function storedPlaySeconds(): number {
   const raw = deviceStore.get(GR_STORAGE_KEYS.stats);
   if (raw === undefined) return 0;
   return (JSON.parse(raw) as Stats).totalPlaySeconds;
+}
+
+/** The saved match's own clock, which the statistics are booked against. */
+function storedElapsedSeconds(): number {
+  const raw = deviceStore.get(GR_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as PersistedGame).elapsedSeconds;
 }
 
 afterEach(() => {
@@ -363,6 +370,157 @@ describe('backgrounding', () => {
       // Eight seconds of play, counted once: the restored five are neither
       // lost nor booked a second time.
       expect(storedPlaySeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+// ---------- the shortcut door ----------
+
+/**
+ * A pinned home-screen shortcut, and what Gin Rummy does about it (issue #113).
+ * The shell says only which door was used; every decision below is this game's,
+ * taken from its own one match slot (§9).
+ */
+describe('a home-screen shortcut', () => {
+  /** The same launch as `renderGame`, entered by the other door. */
+  function renderShortcut(initial: Record<string, string> = {}) {
+    const onExit = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <GinRummyRoot onExit={onExit} entry="shortcut" kv={createMemoryKV(initial)} />
+      </SettingsProvider>,
+    );
+    return { onExit };
+  }
+
+  /** The same as `launch`, against the device store, by the shortcut door. */
+  function launchFromShortcut() {
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <GinRummyRoot onExit={vi.fn()} entry="shortcut" />
+      </SettingsProvider>,
+    );
+  }
+
+  const suspended = () => saved(sessionWith(craft(LIMIT_HAND, TIGHT_HAND, YOU)));
+  const anyTable = () => screen.queryByRole('group', { name: 'Gin Rummy table' });
+  /** The opponent picker is the whole home screen, and Easy is always on it. */
+  const anyHome = () => screen.queryByRole('button', { name: /Easy/ });
+
+  it('opens the suspended match straight onto the table', async () => {
+    renderShortcut(suspended());
+
+    // No opponent to choose, because the match already has one: the shortcut
+    // lands on the position, mid-hand, exactly as it was put down.
+    expect(await screen.findByRole('group', { name: 'Gin Rummy table' })).toBeInTheDocument();
+    expect(screen.getByText(/Deadwood\s*10/)).toBeInTheDocument();
+    expect(anyHome()).not.toBeInTheDocument();
+  });
+
+  it('leaves the table for this game’s home, not the collection', async () => {
+    const user = userEvent.setup();
+    const { onExit } = renderShortcut(suspended());
+    await screen.findByRole('group', { name: 'Gin Rummy table' });
+
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from the table is this game's home, whichever door the
+    // table was reached through: the way in did not add a screen to undo.
+    expect(anyHome()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens the home screen when there is no match to come back to', async () => {
+    renderShortcut(tutorialDone);
+
+    expect(await screen.findByRole('button', { name: /Easy/ })).toBeInTheDocument();
+    expect(anyTable()).not.toBeInTheDocument();
+  });
+
+  // The single-slot form of "do not guess". With one slot there is never a
+  // second candidate to rank — the only way the answer can be "no match" is
+  // the loader refusing this one, and a refused save is read past, never
+  // replaced: §9「壊れた保存は読み捨ててホームへ戻る(勝手に新しい対局を始めない)」.
+  it('opens the home screen when the save cannot be trusted, and deals nothing', async () => {
+    const session = sessionWith(craft(LIMIT_HAND, TIGHT_HAND, YOU));
+    // One move that left no trace in the hand's own history. On the first hand
+    // the count is not free — it is the log, exactly — so the record is
+    // claiming a turn that never happened, and the loader refuses it.
+    const tampered = { ...toPersisted(session, 1), moveCount: session.moveCount + 1 };
+    renderShortcut({ ...tutorialDone, [GR_STORAGE_KEYS.game]: JSON.stringify(tampered) });
+
+    expect(await screen.findByRole('button', { name: /Easy/ })).toBeInTheDocument();
+    expect(anyTable()).not.toBeInTheDocument();
+    // Nothing was dealt to fill the gap: the opponent buttons are an offer,
+    // and a launch that found no match has not played one.
+    expect(screen.queryByRole('button', { name: /Resume/ })).not.toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    renderGame(suspended());
+
+    expect(await screen.findByRole('button', { name: /Normal.*Resume/ })).toBeInTheDocument();
+    expect(anyTable()).not.toBeInTheDocument();
+  });
+
+  it('teaches the game first on a launch that has never seen Quick Rules', async () => {
+    // The flag is missing while the match is not: a failed flag write, or
+    // flags cleared on their own. The shortcut is still not a way past §10.
+    //
+    // Both halves have to be seeded together for this to pin anything. A
+    // shortcut against an empty store lands on Quick Rules whatever the gate
+    // says — there is no match to open — so only a launch that *could* have
+    // resumed shows that it deliberately did not.
+    renderShortcut({
+      [GR_STORAGE_KEYS.game]: JSON.stringify(
+        toPersisted(sessionWith(craft(LIMIT_HAND, TIGHT_HAND, YOU)), 1),
+      ),
+    });
+
+    expect(await screen.findByText('Draw one, throw one')).toBeInTheDocument();
+    expect(anyTable()).not.toBeInTheDocument();
+  });
+
+  // The counterpart of the backgrounding test above, and the reason the two
+  // clock refs are seeded at all: mounting onto the table skips `activate`, so
+  // the seconds already played have to arrive as *already booked* some other
+  // way, or they are counted twice (§9).
+  it('does not book the resumed match’s play seconds a second time', async () => {
+    deviceStore.set(GR_STORAGE_KEYS.flags, tutorialDone[GR_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+      });
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // The process dies here. The next launch is the shortcut, straight onto
+      // the table — no Resume tap in between.
+      cleanup();
+      launchFromShortcut();
+      await settle();
+      expect(anyTable()).toBeInTheDocument();
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3_000);
+      });
+      background();
+      await settle();
+      // Eight seconds of play, counted once: the restored five are not booked
+      // a second time (that would read 13).
+      expect(storedPlaySeconds()).toBe(8);
+      // And the match's own clock carried on from five rather than restarting
+      // at zero — a live clock left at zero writes the save *down* to three
+      // here, losing the five for good while the total above still reads 8.
+      expect(storedElapsedSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

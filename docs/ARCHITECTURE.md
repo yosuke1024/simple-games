@@ -214,24 +214,41 @@ hearts の 3 人分の応手も 1 タスク 1 手に割れている)。
 
 `elapsedRef` / `bookedRef`(再生時間の時計)は state の写しではなく**独立した ref**
 で、render では追随しない。だから**マウント時の種**が要る:セッションを復元する
-ゲームは、`activeMode` が最初に指すスロットの `elapsedSeconds` を両方に入れて起動
-する。`syncActiveGame` は表示中の画面に関係なく visibilitychange / pause で走り、
+ゲームは、**そのマウントが指しているスロット**の `elapsedSeconds` を両方に入れて
+起動する。`syncActiveGame` は表示中の画面に関係なく visibilitychange / pause で走り、
 `withElapsed` がこの ref をそのままセッションへ書き込むので、0 のままバックグラウンド
 に入ると**中断した盤の時計だけが 0 で上書きされる**(issue #109)。盤そのものは無傷で、
 `unbooked` も 0 になるので統計にも傷が出ない —— 消えるのはプレイヤーが積んだ分数だけ
 で、どこにも音が鳴らない。`bookedRef` を同じ値にしないと今度は復元済みの秒が統計へ
 二重計上されるので、**2 つで 1 つの不変条件**であり片方だけ直してはいけない。
-`activate`(= Resume)の種付けだけで足りないのは、**ゲームを開いてホームから戻るだけ
-でこの経路に届く**からである。`src/test/playClockSeed.test.ts` が機械的に見る。
+`src/test/playClockSeed.test.ts` が機械的に見る。
+
+**「指しているスロット」は扉によって変わる**、というのが #109 と #113 の合流点で
+ある。ショートカットが中断局へ直接入った launch ではその局のスロット、それ以外では
+ホームが最初に指すスロット。だから名前は 1 つで、`activeMode` の初期値と時計の種の
+両方がそれを読む:
+
+```ts
+const mountedMode = resumeMode ?? INITIAL_MODE;      // スロットが複数のゲーム
+const mountedSeconds = initialSessions[mountedMode]?.elapsedSeconds ?? 0;
+```
+
+スロットが 1 つのゲームは `initialSession` がそのままマウント中のセッションなので、
+扉に関係なくそこから読む。**種を「再開したときだけ」に gate してはいけない**:
+コレクションから開いてホームに居るだけの launch も `syncActiveGame` に届くので、
+gate すると #109 がそこに残る。逆に `INITIAL_MODE` 固定にすると、デイリーやフリーだけ
+中断中のときショートカット再開が空スロットから 0 を読む。**どちらの片側も穴が残る。**
 
 - 実測(2026-09-05):セッションを持つ 24 本のうち 21 本が `useRef(0)` のままだった
   (futoshiki / kakuro / takuzu だけが先に種を持っていた)。形は単一スロット 9 本と
   複数スロット 12 本の 2 つだけで、
-  `scripts/codemods/2026-09-05-seed-play-clock-refs.mjs` で揃えた。複数スロット側は
-  `INITIAL_MODE` を名前として起こし、`useState<GameMode>` と種の両方が同じスロットを
-  指すようにしている(リテラルを 2 か所に置くと片方だけ動く)。回帰テストは各ゲームの
-  Root テストに 1 本ずつ、`scripts/codemods/2026-09-05-suspended-clock-tests.mjs` で
-  入れた。
+  `scripts/codemods/2026-09-05-seed-play-clock-refs.mjs` で揃えた。回帰テストは
+  各ゲームの Root テストに 1 本ずつ、
+  `scripts/codemods/2026-09-05-suspended-clock-tests.mjs` で入れた。
+- #113 との合流(2026-09-05):main 側は同じ概念に 3 つの名前(`mountedMode` /
+  `initialMode` / インライン式の `restoredSeconds`)を持ち、残り 21 本は種を
+  再開に gate していた。`scripts/codemods/2026-09-05-merge-mounted-slot-clock.mjs`
+  で 24 本を上の 1 形に正規化した。
 
 `flagsRef` / `prefsRef` / `activeModeRef` は同じように写しているが**対象外**。1 タスクに
 2 回書く経路が無く、書き込みも単発トグルの全置換だからである(CPU 対戦 7 本の
@@ -249,14 +266,14 @@ hearts の 3 人分の応手も 1 タスク 1 手に割れている)。
 ローダー」だけで、プラグイン機構ではない。ゲームの追加は keys の import 1 行と
 配列要素 1 つで済む。
 
-| フィールド             | 内容                                                                                                                                                   |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                   | 収録タイトルの識別子(`GameId` の union が正本。`'sudoku'` / `'solitaire'` / `'spider-solitaire'` / `'freecell'` / …)。`data-game` 属性にもこの値を使う |
-| `title`                | 固有名詞。全言語で同一表記(翻訳しない)                                                                                                                 |
-| `glyph`                | シリーズマーク。そのタイトルのアクセント色のタイルに 1 文字                                                                                            |
-| `storageKeys`          | そのゲームが保存する全キー。各ゲームの **import ゼロの葉** `storage/keys.ts` から同期 import する                                                      |
-| `loadRoot`             | ゲームのルートコンポーネントを動的 `import()` で返すローダー。Root が受け取る props は `onExit` だけ                                                   |
-| `loadSettingsSection?` | 任意。共有設定画面に差し込むゲーム固有の設定のローダー                                                                                                 |
+| フィールド             | 内容                                                                                                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                   | 収録タイトルの識別子(`GameId` の union が正本。`'sudoku'` / `'solitaire'` / `'spider-solitaire'` / `'freecell'` / …)。`data-game` 属性にもこの値を使う             |
+| `title`                | 固有名詞。全言語で同一表記(翻訳しない)                                                                                                                             |
+| `glyph`                | シリーズマーク。そのタイトルのアクセント色のタイルに 1 文字                                                                                                        |
+| `storageKeys`          | そのゲームが保存する全キー。各ゲームの **import ゼロの葉** `storage/keys.ts` から同期 import する                                                                  |
+| `loadRoot`             | ゲームのルートコンポーネントを動的 `import()` で返すローダー。Root が受け取る props は `GameRootProps` = `onExit` と任意の `entry`(どの扉から入ったか、issue #113) |
+| `loadSettingsSection?` | 任意。共有設定画面に差し込むゲーム固有の設定のローダー                                                                                                             |
 
 ### ゲーム単位の lazy チャンク(issue #26)
 
@@ -410,8 +427,63 @@ hearts の 3 人分の応手も 1 タスク 1 手に割れている)。
   - ネイティブ側はこの機能だけのローカル Capacitor プラグイン
     (`HomeShortcutPlugin.java`)が `ShortcutManagerCompat` を薄く包むだけで、
     新しい権限は増えていない。
-  - スコープ外:進行中セッションへ直接 Resume する挙動は #113、iOS の
-    Quick Actions は #114。
+  - **ショートカットからの起動だけは、中断中の 1 局へ直接入る**(issue #113)。
+    シェルが渡すのは `entry`(`'collection'` / `'shortcut'`)の 1 語だけで、
+    それは**指示ではなく事実**である。何をするかは各ゲームが**自分の保存領域
+    だけ**を見て決め、シェルはその結果を知らない——ここでシェルがセッションを
+    覗けば、レジストリが 30 本ぶんの保存スキーマを知ることになる。全ゲーム共通の
+    resume フレームワークも作らない。判定は数行で、置き場所は
+    `state/GameContext.tsx` の mount 時の 1 か所。スロットを 2 つ以上持つ
+    15 本だけが「中断中はちょうど 1 つか」を数える小さな純関数
+    (`soleSuspendedMode`)を `storage/gamePersistence.ts` に置く —— 1 スロットの
+    9 本(2048 / Block Puzzle / Checkers / Connect Four / Gin Rummy / Gomoku /
+    Hearts / Ludo / Reversi)は数えるものが無いので、loader が既に落としている
+    「再開できない保存」の裏返し(`initialSession !== null`)がそのまま答えになる。
+    - 直接入るのは**中断中のセッションがちょうど 1 つのときだけ**。0 なら開く
+      ものが無く、2 つ以上なら「さっきまで遊んでいたやつ」はもう事実ではなく
+      推測になる(Sudoku / Number Match などはレベル・デイリー・フリーで
+      3 スロットを別々に持つ)。どちらもゲームホームへ入る——他のすべての扉が
+      行き着く場所と同じである。**捨てるものは無い**:選ばれなかった中断局は
+      ホームでそのまま待っている。
+    - **チュートリアル未了なら Quick Rules が先。** ショートカットは説明を
+      飛ばす裏口ではない。
+    - 盤面へ直接入るときは、**ホームの Resume が呼ぶ `activate` が積むのと
+      同じ時計**を復元済みの経過秒で積む。29 本では 2 本(`elapsedRef` =
+      進行中の秒、`bookedRef` = すでに統計へ計上済みの秒)で、Number Match
+      だけは終局時に一括計上するので 1 本しかない
+      (「プレイ時間の計上モデルは 8 本とも同じ」ではない)。**両方を外すと
+      統計は合ったまま盤面の経過秒が破壊され、`bookedRef` だけを外すと
+      復元した秒がもう一度計上される** —— 前者は統計の数字が偶然そろうので、
+      テストは**中断中の保存そのものの経過秒**も読まないと当たらない
+      (`src/test/refLeading.test.ts` と同じ種類の落とし穴)。
+    - **戻るは不自然な履歴を作らない。** 盤面から 1 歩戻ればそのゲームの
+      ホームで、入り口が違っても undo すべき画面は増えていない。
+    - **すでにそのゲームが開いているときのショートカットは、何もしない。**
+      #110 からの「同じゲームなら触らない」がそのまま優先される —— ゲームの
+      ホームに居る人がショートカットを叩いても盤面へは入らない。扉は
+      **入るためのもの**であって、居る場所を作り直すためのものではない。
+    - **過去日のデイリーも「中断中の 1 局」として扱う**(2026-09-05 の判断)。
+      デイリーのスロットは日付が変わっても掃除されず、過去日に遡って遊べる
+      ゲームでは何週間も前の日付のまま残りうる。それでも開くのは、
+      **ホームの Resume が渡すのと同じ盤面**だからである——違いは、ホームには
+      日付が併記されていて(`· ${dailyGame.dailyDate}`)、盤面には無いこと
+      だけで、これは #113 以前からの盤面ヘッダーの性質である。ここで
+      「今日のデイリーでなければ曖昧」という規則を足すと、過去日を消化して
+      いる人のショートカットだけが理由なく効かなくなる。**盤面ヘッダーに
+      日付を出すかどうかは別の問題**として残っている。
+    - **コレクションのタイルからの起動は従来どおりゲームホーム**、Web の
+      `?game=` も同じ(`entry` は `'collection'`)。ブラウザにはピン留めする
+      ホーム画面が無く、誰かが渡したリンクは「始めた対局への帰り道」ではなく
+      そのゲームの紹介である([WEB_VERSION.md](WEB_VERSION.md)
+      「URL(ゲーム別の入口)」)。
+    - **途中保存を持たないゲームは何も書かない**(アーケード 4 本 /
+      Schulte Table / Number Recall)。再開できる対象が無いところで扉を
+      区別すると、残るのは「ショートカットが黙って新しいランを始める」で、
+      それは別の——そして統計の `played` を勝手に増やす——機能である。
+      「セッションを持つゲームは全部これに答えていること」と「持たない
+      ゲームは口を開けていないこと」は
+      `src/test/shortcutResumeWiring.test.ts` が機械的に見る。
+    - スコープ外:iOS の Quick Actions は #114。
 - **ゲーム名の検索**(issue #122)。「お気に入り」でも「最近遊んだ」でも届かない
   ケース——**名前は分かっているが、留めてもいないし最近も遊んでいないタイトル**——
   のための 3 つ目の答え。判定は `app/gameSearch.ts` が持つ。
@@ -458,12 +530,12 @@ Connect が要求する 13 インチのスクリーンショットも用意し�
 ([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §4.7)。**CSS を消す話ではない** —
 戻すときは `project.pbxproj` の 1 行と `Info.plist` の 1 ブロックだけで足りる。
 
-| 段階 | 条件 | 方針 |
-| --- | --- | --- |
-| Compact | 600px 未満(基準) | 既存のスマホ縦積みを変えない |
-| Medium | `min-width: 600px` | 縦積みのまま盤面・コンテンツを拡大 |
-| Large | `min-width: 900px` | 縦積みを保ち、リスト幅だけ広げる(過度に横へ伸ばさない) |
-| Wide | `min-width: 900px` かつ `orientation: landscape` | 対象ゲームは「盤面+操作領域」の横配置を許可 |
+| 段階    | 条件                                             | 方針                                                   |
+| ------- | ------------------------------------------------ | ------------------------------------------------------ |
+| Compact | 600px 未満(基準)                                 | 既存のスマホ縦積みを変えない                           |
+| Medium  | `min-width: 600px`                               | 縦積みのまま盤面・コンテンツを拡大                     |
+| Large   | `min-width: 900px`                               | 縦積みを保ち、リスト幅だけ広げる(過度に横へ伸ばさない) |
+| Wide    | `min-width: 900px` かつ `orientation: landscape` | 対象ゲームは「盤面+操作領域」の横配置を許可            |
 
 - 600px はスマホ横持ち(高さ側が 600 未満)と iPad Split View 半分(約 507〜559px)
   を Compact 側に残す線。900px は iPad 縦(768〜834px)を Medium に、iPad 横
@@ -591,40 +663,40 @@ Connect が要求する 13 インチのスクリーンショットも用意し�
 
 ## ストレージキーの規約
 
-| キー              | 内容                                                                                          |
-| ----------------- | --------------------------------------------------------------------------------------------- |
-| `sg.settings`     | 共有設定(言語 / テーマ / 音 / 振動 / Reduced Motion)                                          |
-| `sg.iap`          | 広告削除購入状態のローカルキャッシュ                                                          |
-| `sg.review`       | ストアレビュー導線の状態(完了数 / 表示回数 / 解決済みフラグ)                                  |
-| `sg.recent`       | 「最近遊んだ」のゲーム id(新しい順・最大 2 件)                                                |
-| `sg.favorites`    | 「お気に入り」に固定したゲーム id(**留めた順**・上限は実質なし)                              |
-| `sg.webAppPrompt` | Web 版のアプリ案内カードの状態(ゲーム離脱回数 / 表示済みフラグ)。**Web 版でのみ読み書きする** |
-| `sd.*`            | Sudoku(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                    |
-| `so.*`            | Solitaire(saveGame / saveDaily / stats / flags / prefs)                                       |
-| `ms.*`            | Minesweeper(saveGame / saveDaily / stats / flags / prefs)                                     |
-| `ng.*`            | Nonogram(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                  |
-| `mj.*`            | Mahjong Solitaire(saveGame / saveDaily / stats / progress / flags。**prefs なし**)            |
-| `tk.*`            | Takuzu(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ) |
-| `ft.*`            | Futoshiki(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                 |
-| `kk.*`            | Kakuro(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                    |
+| キー              | 内容                                                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `sg.settings`     | 共有設定(言語 / テーマ / 音 / 振動 / Reduced Motion)                                                                |
+| `sg.iap`          | 広告削除購入状態のローカルキャッシュ                                                                                |
+| `sg.review`       | ストアレビュー導線の状態(完了数 / 表示回数 / 解決済みフラグ)                                                        |
+| `sg.recent`       | 「最近遊んだ」のゲーム id(新しい順・最大 2 件)                                                                      |
+| `sg.favorites`    | 「お気に入り」に固定したゲーム id(**留めた順**・上限は実質なし)                                                     |
+| `sg.webAppPrompt` | Web 版のアプリ案内カードの状態(ゲーム離脱回数 / 表示済みフラグ)。**Web 版でのみ読み書きする**                       |
+| `sd.*`            | Sudoku(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                                          |
+| `so.*`            | Solitaire(saveGame / saveDaily / stats / flags / prefs)                                                             |
+| `ms.*`            | Minesweeper(saveGame / saveDaily / stats / flags / prefs)                                                           |
+| `ng.*`            | Nonogram(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                                        |
+| `mj.*`            | Mahjong Solitaire(saveGame / saveDaily / stats / progress / flags。**prefs なし**)                                  |
+| `tk.*`            | Takuzu(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ)       |
+| `ft.*`            | Futoshiki(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                                       |
+| `kk.*`            | Kakuro(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                                          |
 | `nm.*`            | Number Match(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ) |
-| `ws.*`            | Water Sort(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ) |
-| `sp.*`            | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags)                               |
-| `mm.*`            | Memory Match(saveGame / saveDaily / stats / flags)                                            |
-| `bb.*`            | Brick Breaker(stats / progress / flags。**saveGame なし** — 下記)                             |
-| `sf.*`            | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)                               |
-| `tm.*`            | 2048(saveGame / stats / flags。デイリーもレベル進行もない)                                    |
-| `bp.*`            | Block Puzzle(saveGame / stats / flags。同上)                                                  |
-| `ld.*`            | Ludo(saveGame / stats / flags / prefs。統計は難易度別。デイリーが無いので 1 枠)               |
-| `ck.*`            | Checkers(saveGame / stats / flags / prefs。統計は難易度別)                                    |
-| `rv.*`            | Reversi(saveGame / stats / flags / prefs。統計は難易度別)                                     |
-| `c4.*`            | Connect Four(saveGame / stats / flags / prefs。同上)                                          |
-| `gm.*`            | Gomoku(saveGame / stats / flags / prefs。同上)                                                |
-| `ss.*`            | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)                                |
-| `fc.*`            | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)                                |
-| `ht.*`            | Hearts(saveGame / stats / flags / prefs。統計は難易度別)                                      |
-| `gr.*`            | Gin Rummy(saveGame / stats / flags / prefs。同上)                                             |
-| `bh.*`            | Bunny Hop(stats / flags。**saveGame なし** — 下記)                                            |
+| `ws.*`            | Water Sort(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ)   |
+| `sp.*`            | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags)                                                     |
+| `mm.*`            | Memory Match(saveGame / saveDaily / stats / flags)                                                                  |
+| `bb.*`            | Brick Breaker(stats / progress / flags。**saveGame なし** — 下記)                                                   |
+| `sf.*`            | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)                                                     |
+| `tm.*`            | 2048(saveGame / stats / flags。デイリーもレベル進行もない)                                                          |
+| `bp.*`            | Block Puzzle(saveGame / stats / flags。同上)                                                                        |
+| `ld.*`            | Ludo(saveGame / stats / flags / prefs。統計は難易度別。デイリーが無いので 1 枠)                                     |
+| `ck.*`            | Checkers(saveGame / stats / flags / prefs。統計は難易度別)                                                          |
+| `rv.*`            | Reversi(saveGame / stats / flags / prefs。統計は難易度別)                                                           |
+| `c4.*`            | Connect Four(saveGame / stats / flags / prefs。同上)                                                                |
+| `gm.*`            | Gomoku(saveGame / stats / flags / prefs。同上)                                                                      |
+| `ss.*`            | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)                                                      |
+| `fc.*`            | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)                                                      |
+| `ht.*`            | Hearts(saveGame / stats / flags / prefs。統計は難易度別)                                                            |
+| `gr.*`            | Gin Rummy(saveGame / stats / flags / prefs。同上)                                                                   |
+| `bh.*`            | Bunny Hop(stats / flags。**saveGame なし** — 下記)                                                                  |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/
