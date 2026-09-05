@@ -212,6 +212,27 @@ hearts の 3 人分の応手も 1 タスク 1 手に割れている)。
 - 両方を `src/test/refLeading.test.ts` が機械的に見る(`importBoundaries.test.ts`
   や `shareWiring.test.ts` と同じ立て付けで、新しいゲームが増えた日に落ちる)。
 
+`elapsedRef` / `bookedRef`(再生時間の時計)は state の写しではなく**独立した ref**
+で、render では追随しない。だから**マウント時の種**が要る:セッションを復元する
+ゲームは、`activeMode` が最初に指すスロットの `elapsedSeconds` を両方に入れて起動
+する。`syncActiveGame` は表示中の画面に関係なく visibilitychange / pause で走り、
+`withElapsed` がこの ref をそのままセッションへ書き込むので、0 のままバックグラウンド
+に入ると**中断した盤の時計だけが 0 で上書きされる**(issue #109)。盤そのものは無傷で、
+`unbooked` も 0 になるので統計にも傷が出ない —— 消えるのはプレイヤーが積んだ分数だけ
+で、どこにも音が鳴らない。`bookedRef` を同じ値にしないと今度は復元済みの秒が統計へ
+二重計上されるので、**2 つで 1 つの不変条件**であり片方だけ直してはいけない。
+`activate`(= Resume)の種付けだけで足りないのは、**ゲームを開いてホームから戻るだけ
+でこの経路に届く**からである。`src/test/playClockSeed.test.ts` が機械的に見る。
+
+- 実測(2026-09-05):セッションを持つ 24 本のうち 21 本が `useRef(0)` のままだった
+  (futoshiki / kakuro / takuzu だけが先に種を持っていた)。形は単一スロット 9 本と
+  複数スロット 12 本の 2 つだけで、
+  `scripts/codemods/2026-09-05-seed-play-clock-refs.mjs` で揃えた。複数スロット側は
+  `INITIAL_MODE` を名前として起こし、`useState<GameMode>` と種の両方が同じスロットを
+  指すようにしている(リテラルを 2 か所に置くと片方だけ動く)。回帰テストは各ゲームの
+  Root テストに 1 本ずつ、`scripts/codemods/2026-09-05-suspended-clock-tests.mjs` で
+  入れた。
+
 `flagsRef` / `prefsRef` / `activeModeRef` は同じように写しているが**対象外**。1 タスクに
 2 回書く経路が無く、書き込みも単発トグルの全置換だからである(CPU 対戦 7 本の
 `prefsRef` だけは「先後を選んでから始める」が本当に 1 タップなので先行させている ——

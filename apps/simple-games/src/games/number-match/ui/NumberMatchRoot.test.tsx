@@ -1,12 +1,14 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { settingsSchema } from '@/storage/schemas';
-import { generateLevelBoard, isLive } from '../game';
+import { createLevelSession, generateLevelBoard, isLive } from '../game';
 import { AppProvider } from '../state/GameContext';
+import { type SavedGames } from '../storage/gamePersistence';
 import {
   flagsSchema,
+  NM_STORAGE_KEYS,
   prefsSchema,
   progressSchema,
   statsSchema,
@@ -15,11 +17,32 @@ import {
 } from '../storage/schemas';
 import { NumberMatchScreens } from './NumberMatchRoot';
 
+/**
+ * A stand-in for the device store. The sessions below are handed to the
+ * provider directly, so this is only ever read back — it is what a save
+ * actually wrote.
+ */
+const { deviceStore } = vi.hoisted(() => ({ deviceStore: new Map<string, string>() }));
+vi.mock('@capacitor/preferences', () => ({
+  Preferences: {
+    get: ({ key }: { key: string }) => Promise.resolve({ value: deviceStore.get(key) ?? null }),
+    set: ({ key, value }: { key: string; value: string }) => {
+      deviceStore.set(key, value);
+      return Promise.resolve();
+    },
+    remove: ({ key }: { key: string }) => {
+      deviceStore.delete(key);
+      return Promise.resolve();
+    },
+  },
+}));
+
 const LEVEL1_CELLS = generateLevelBoard(1).filter(isLive).length;
 
 function renderApp(
   flags: Flags = flagsSchema.defaultValue(),
   progress: Progress = progressSchema.defaultValue(),
+  sessions: SavedGames = { level: null, daily: null, free: null },
 ) {
   const onExit = vi.fn();
   render(
@@ -29,7 +52,7 @@ function renderApp(
         initialFlags={flags}
         initialProgress={progress}
         initialPrefs={prefsSchema.defaultValue()}
-        initialSessions={{ level: null, daily: null, free: null }}
+        initialSessions={sessions}
         onExit={onExit}
       >
         <NumberMatchScreens />
@@ -46,7 +69,30 @@ const done: Flags = {
   stoneIntroSeen: true,
 };
 
-afterEach(cleanup);
+/** Lets the saves a background triggers resolve (they are promises, not
+ * timers). */
+const settle = () => act(async () => undefined);
+
+/** The app goes to background. Android may kill it without another event. */
+function background() {
+  Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+  act(() => {
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  Reflect.deleteProperty(document, 'visibilityState');
+}
+
+/** The suspended board's own clock, as it survives on disk. */
+function storedBoardSeconds(): number {
+  const raw = deviceStore.get(NM_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+}
+
+afterEach(() => {
+  cleanup();
+  deviceStore.clear();
+});
 
 describe('first run flow', () => {
   it('shows the 3-step tutorial and starts level 1 right after (spec §17)', async () => {
@@ -209,5 +255,31 @@ describe('keyboard (issue #93)', () => {
 
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
     expect(within(board).getAllByRole('button')).toHaveLength(LEVEL1_CELLS);
+  });
+});
+
+describe('opening a suspended game without resuming (#109)', () => {
+  // The board is not the only thing a suspended game carries — the minutes on
+  // its clock are the player's too. `syncActiveGame` runs on every background
+  // from whichever screen is showing, and it writes this provider's play clock
+  // into the session it saves. Open the game, never press Resume, background:
+  // a clock that never took the restored board's seconds saves a zero over
+  // them, and the board comes back looking untouched.
+  it("keeps a suspended board's clock when backgrounded from the game's home", async () => {
+    // A level board suspended with nine seconds on it, the way the last launch
+    // left it on disk.
+    const suspended = { ...createLevelSession(1), elapsedSeconds: 9 };
+    renderApp(done, progressSchema.defaultValue(), {
+      level: suspended,
+      daily: null,
+      free: null,
+    });
+
+    // The game's own home — Resume is there to be pressed, and is not.
+    expect(screen.getByRole('button', { name: 'Statistics' })).toBeInTheDocument();
+
+    background();
+    await settle();
+    expect(storedBoardSeconds()).toBe(9);
   });
 });

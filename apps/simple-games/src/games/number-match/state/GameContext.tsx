@@ -118,6 +118,12 @@ export interface AppProviderProps {
   children: ReactNode;
 }
 
+/**
+ * The mode a freshly mounted game is pointed at, before anything is resumed.
+ * Named because the play-clock baseline has to be read from the same slot.
+ */
+const INITIAL_MODE: GameMode = 'level';
+
 export function AppProvider({
   initialStats,
   initialFlags,
@@ -131,7 +137,7 @@ export function AppProvider({
     initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
-  const [activeMode, setActiveMode] = useState<GameMode>('level');
+  const [activeMode, setActiveMode] = useState<GameMode>(INITIAL_MODE);
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
@@ -154,8 +160,19 @@ export function AppProvider({
 
   const session = sessions[activeMode];
 
-  /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
+  /**
+   * The live play clock (seconds). Mutated by the interval, never state.
+   *
+   * Seeded from the restored game rather than from zero, because every save
+   * merges this ref into the session and `syncActiveGame` runs on any
+   * background, not only from the game screen. Open the game, stay on its own
+   * home without pressing Resume, then background the app: from a zero
+   * baseline that writes `elapsedSeconds: 0` over a suspended board, and the
+   * minutes already on its clock are gone. `activate` re-establishes the
+   * baseline whenever a game comes on screen; this line covers the mount
+   * before that.
+   */
+  const elapsedRef = useRef(initialSessions[INITIAL_MODE]?.elapsedSeconds ?? 0);
 
   /** Session with the live clock merged in — used whenever it leaves React. */
   const withElapsed = useCallback((s: GameSession): GameSession => {

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
@@ -11,8 +11,8 @@ import { ReversiRoot } from './ReversiRoot';
 
 /**
  * A stand-in for the device store. The `kv` prop below is a load-side seam
- * only — saves always go to Capacitor Preferences — so nothing here reads a
- * save back; these tests are about what the screens show.
+ * only — saves always go to Capacitor Preferences — so a test that has to read
+ * back what a save actually wrote has to stand behind both.
  */
 const { deviceStore } = vi.hoisted(() => ({ deviceStore: new Map<string, string>() }));
 vi.mock('@capacitor/preferences', () => ({
@@ -37,6 +37,35 @@ function renderGame(initial: Record<string, string> = {}) {
     </SettingsProvider>,
   );
   return { onExit };
+}
+
+/** Launches the app against the device store, the way a player's phone does. */
+function launch() {
+  render(
+    <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+      <ReversiRoot onExit={vi.fn()} />
+    </SettingsProvider>,
+  );
+}
+
+/** Lets the local reads and the saves they trigger resolve (they are promises,
+ * not timers, so this works under fake timers too). */
+const settle = () => act(async () => undefined);
+
+/** The app goes to background. Android may kill it without another event. */
+function background() {
+  Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+  act(() => {
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  Reflect.deleteProperty(document, 'visibilityState');
+}
+
+/** The suspended board's own clock, as it survives on disk. */
+function storedBoardSeconds(): number {
+  const raw = deviceStore.get(RV_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
 }
 
 const tutorialDone = {
@@ -198,5 +227,45 @@ describe('keyboard (issue #93)', () => {
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
     expect(screen.getByText(/You\s*2/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+});
+
+describe('opening a suspended game without resuming (#109)', () => {
+  // The board is not the only thing a suspended game carries — the minutes on
+  // its clock are the player's too. `syncActiveGame` runs on every background
+  // from whichever screen is showing, and it writes this provider's play clock
+  // into the session it saves. Open the game, never press Resume, background:
+  // a clock that never took the restored board's seconds saves a zero over
+  // them, and the board comes back looking untouched.
+  it("keeps a suspended board's clock when backgrounded from the game's home", async () => {
+    deviceStore.set(RV_STORAGE_KEYS.flags, tutorialDone[RV_STORAGE_KEYS.flags]!);
+    // The play clock is a plain interval, so it has to be faked before the game
+    // screen mounts — which rules out userEvent here (it waits on real timers).
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(9_000);
+      });
+      background();
+      await settle();
+      expect(storedBoardSeconds()).toBe(9);
+
+      // The process dies here. Relaunch and stop on the game's own home.
+      cleanup();
+      launch();
+      await settle();
+      expect(screen.getByRole('button', { name: 'Statistics' })).toBeInTheDocument();
+
+      // Away again without ever resuming: the nine seconds are still there.
+      background();
+      await settle();
+      expect(storedBoardSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

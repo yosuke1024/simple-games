@@ -124,10 +124,33 @@ export function ConnectFourProvider({
   const statsRef = useRef(stats);
   statsRef.current = stats;
 
-  /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
-  /** Play seconds already booked into the statistics for this match. */
-  const bookedRef = useRef(0);
+  /**
+   * The live play clock (seconds). Mutated by the interval, never state.
+   *
+   * Seeded from the restored game rather than from zero, because every save
+   * merges this ref into the session and `syncActiveGame` runs on any
+   * background, not only from the game screen. Open the game, stay on its own
+   * home without pressing Resume, then background the app: from a zero
+   * baseline that writes `elapsedSeconds: 0` over a suspended board, and the
+   * minutes already on its clock are gone. `activate` re-establishes the
+   * baseline whenever a game comes on screen; this line covers the mount
+   * before that.
+   */
+  const elapsedRef = useRef(initialSession?.elapsedSeconds ?? 0);
+  /**
+   * Play seconds already booked into the statistics for this match.
+   *
+   * Seeded from the restored game rather than from zero, because a suspended
+   * game arrives with its seconds already in `totalPlaySeconds` — they were
+   * booked by the sync that saved it. `activate` re-establishes this baseline
+   * whenever a game comes on screen, but the mount before that is reachable:
+   * opening the game and leaving from its home without resuming runs
+   * `syncActiveGame` against the restored session, and from a zero baseline
+   * that books its whole elapsed time a second time. Open and leave twice and
+   * it lands twice. The comment on the visibility effect below already states
+   * this invariant — this is the line that makes it true.
+   */
+  const bookedRef = useRef(initialSession?.elapsedSeconds ?? 0);
   /** Whether this match's result has been booked; it happens exactly once. */
   const finalizedRef = useRef(false);
 
