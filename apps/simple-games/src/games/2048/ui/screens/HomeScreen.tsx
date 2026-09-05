@@ -10,7 +10,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
-import { FavoriteAction } from '@/ui/components/FavoriteAction';
+import { GameHomeActions } from '@/ui/components/GameHomeActions';
 import { IconBack, IconChart } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { useGame2048 } from '../../state/GameContext';
@@ -37,7 +37,7 @@ export function Game2048HomeScreen() {
         >
           <IconBack />
         </button>
-        <FavoriteAction gameId="2048" />
+        <GameHomeActions gameId="2048" />
       </header>
 
       <div className="home-hero">

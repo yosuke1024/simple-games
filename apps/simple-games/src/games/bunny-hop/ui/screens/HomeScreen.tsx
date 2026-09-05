@@ -1,5 +1,5 @@
 import { useSettings } from '@/state/SettingsContext';
-import { FavoriteAction } from '@/ui/components/FavoriteAction';
+import { GameHomeActions } from '@/ui/components/GameHomeActions';
 import { IconBack, IconChart } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { useBunnyHop } from '../../state/GameContext';
@@ -29,7 +29,7 @@ export function BunnyHomeScreen() {
         >
           <IconBack />
         </button>
-        <FavoriteAction gameId="bunny-hop" />
+        <GameHomeActions gameId="bunny-hop" />
       </header>
 
       <div className="home-hero">

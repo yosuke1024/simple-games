@@ -14,7 +14,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
-import { FavoriteAction } from '@/ui/components/FavoriteAction';
+import { GameHomeActions } from '@/ui/components/GameHomeActions';
 import { IconBack, IconChart } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { DIFFICULTIES, type Difficulty } from '../../game';
@@ -63,7 +63,7 @@ export function ReversiHomeScreen() {
         >
           <IconBack />
         </button>
-        <FavoriteAction gameId="reversi" />
+        <GameHomeActions gameId="reversi" />
       </header>
 
       <div className="home-hero">

@@ -124,16 +124,21 @@ src/
   向き: ゲーム → `ui/components/`)。シェルは「ゲームの内部のどこがホームか」を
   知らないままでいられる — 知ろうとすると registry がゲーム内部のビューを
   列挙することになる([WEB_VERSION.md](WEB_VERSION.md)「サイトクローム」)。
-- **ゲームホームのお気に入り**は共有の `FavoriteAction`
-  (`ui/components/FavoriteAction.tsx`, issue #109)。向きは `ShareAction` と同じ
-  (ゲーム → `ui/components/`)で、ゲームが渡すのは `gameId` だけ。置き場所は
-  ゲームホームのヘッダー右——**全 30 ゲームが戻るボタンの反対側に空けていた
-  `icon-btn-placeholder` の位置**なので、ヘッダーの形は変わらない(空白だった枠が
-  操作になっただけ)。**盤面と結果画面には置かない**: 固定はコレクションについての
-  判断であって、勝った直後に求める種類のものではない
+- **ゲームホームのヘッダー右の操作群**は共有の `GameHomeActions`
+  (`ui/components/GameHomeActions.tsx`)。中身はお気に入りの星
+  (`FavoriteAction.tsx`, issue #109)と、Android だけの「ホーム画面に追加」
+  (`HomeShortcutAction.tsx`, issue #110。対応 Launcher でなければ描かない)。
+  向きは `ShareAction` と同じ(ゲーム → `ui/components/`)で、ゲームが渡すのは
+  `gameId` だけ——どちらの操作がそのプラットフォームに存在するかはシェルの事情。
+  置き場所は**全 30 ゲームが戻るボタンの反対側に空けていた
+  `icon-btn-placeholder` の位置**で、群として 1 子要素にまとめてあるので、
+  操作が 1 つでも 2 つでもヘッダーの形(2 子要素の space-between)は変わらない。
+  **盤面と結果画面には置かない**: 固定はコレクションについての判断であって、
+  勝った直後に求める種類のものではない
   ([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))。全 30 ゲームに 1 つずつ
   置かれていること・各タグが自分のゲーム id を名乗っていること・ホーム以外に
-  無いことは `src/test/favoriteWiring.test.ts` が機械的に見る。
+  無いこと・星や追加ボタンを単独で置いていないことは
+  `src/test/homeActionsWiring.test.ts` が機械的に見る。
 - **結果画面の任意の共有**は共有の `ShareAction`(`ui/components/ShareAction.tsx`,
   issue #86)。向きは `ResultAdSlot` と同じ(ゲーム → `ui/components/`)で、
   ゲームが渡すのは `gameId`・**嘘のない結果種別**(`completed` / `played`)・
@@ -361,11 +366,15 @@ hearts の 3 人分の応手も 1 タスク 1 手に割れている)。
     **Launcher/OS の確認フローを尊重し、結果は返ってこない**——拒否・失敗・
     未対応のいずれもエラー扱いにせず、ゲーム利用を妨げない
     (`services/homeShortcut/homeShortcut.ts`)。
-  - 置き場所は Action Sheet の 2 つ目の行(`ui/components/GameActionSheet.tsx`)。
+  - 操作は 2 経路。お気に入りと同じ理由で、**ゲームホームのヘッダー**(星の隣、
+    `ui/components/HomeShortcutAction.tsx`)が気づかれる経路、タイルの Action Sheet
+    の 2 つ目の行(`ui/components/GameActionSheet.tsx`)が知っている人の近道。
     対応 Launcher かどうかは起動時に一度確定し
     (`ShortcutManagerCompat.isRequestPinShortcutSupported`)、
-    `homeShortcutsAvailable()` が真の時だけ行を描く——押しても何も起きない
-    ボタンを出さないため。
+    `homeShortcutsAvailable()` が真の時だけどちらも描く——押しても何も起きない
+    ボタンを出さないため。「追加済み」の状態は描かない: Launcher は結果を返さず、
+    アイコンを消しても unpin しない Launcher があるので、推測して隠すと
+    戻したい時に扉が無い。
   - 起動経路は cold / warm の 2 つ。cold start は boot の `initShortcutLaunch`
     が Intent の URI を読み、`initialView` がコレクションを経由せずそのゲームの
     ホームを最初に描く。warm start(`MainActivity` が singleTask ゆえの

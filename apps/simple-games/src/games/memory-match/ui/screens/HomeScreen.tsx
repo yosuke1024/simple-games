@@ -10,7 +10,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
-import { FavoriteAction } from '@/ui/components/FavoriteAction';
+import { GameHomeActions } from '@/ui/components/GameHomeActions';
 import { IconBack, IconCalendar, IconChart, IconCheck } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { DIFFICULTIES, LAYOUTS, localDateString, type Difficulty } from '../../game';
@@ -61,7 +61,7 @@ export function MemoryHomeScreen() {
         >
           <IconBack />
         </button>
-        <FavoriteAction gameId="memory-match" />
+        <GameHomeActions gameId="memory-match" />
       </header>
 
       <div className="home-hero">

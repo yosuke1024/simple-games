@@ -1,5 +1,5 @@
 import { useSettings } from '@/state/SettingsContext';
-import { FavoriteAction } from '@/ui/components/FavoriteAction';
+import { GameHomeActions } from '@/ui/components/GameHomeActions';
 import { IconBack, IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { formatDuration } from '@/ui/format';
@@ -37,7 +37,7 @@ export function SchulteHomeScreen() {
         >
           <IconBack />
         </button>
-        <FavoriteAction gameId="schulte-table" />
+        <GameHomeActions gameId="schulte-table" />
       </header>
 
       <div className="home-hero">
