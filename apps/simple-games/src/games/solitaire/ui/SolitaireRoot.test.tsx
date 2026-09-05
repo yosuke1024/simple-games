@@ -953,4 +953,47 @@ describe('drag (issue #116)', () => {
     drag(card('A of spades'), overFoundation(0));
     expect(screen.getByText(/Moves\s*3/)).toBeInTheDocument();
   });
+
+  it('finishes a second tap that rolled a little as the tap it was', async () => {
+    // Select the run by tap, then place it with a finger that travels 12px on
+    // the way down — past this table's threshold, inside the platform's own,
+    // so the click still comes. The move the player was making happens; the
+    // selection is not quietly dropped for a drag nobody meant to start.
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+    await user.click(card('9 of hearts'));
+    expect(card('9 of hearts')).toHaveClass('sol-selected');
+
+    const ten = card('10 of spades');
+    const roll = { clientX: 72, clientY: 172 };
+    fireEvent.pointerDown(ten, {
+      pointerId: 1,
+      button: 0,
+      buttons: 1,
+      clientX: 72,
+      clientY: 160,
+    });
+    fireEvent.pointerMove(ten, { pointerId: 1, buttons: 1, ...roll });
+    fireEvent.pointerUp(ten, { pointerId: 1, button: 0, ...roll });
+    fireEvent.click(ten, { detail: 1 });
+
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(within(column(2)).getByRole('button', { name: '9 of hearts' })).toBeInTheDocument();
+    expect(within(column(2)).getByRole('button', { name: '8 of spades' })).toBeInTheDocument();
+  });
+
+  it('leaves nothing selected after a drag let go off the table', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user, [13, 10]); // A♥ under J♠
+
+    // A drag that went somewhere and came back with nothing is a finished
+    // act, not the first tap of one: the click it leaves picks nothing up.
+    const jack = card('J of spades');
+    drag(jack, { clientX: 22, clientY: -200 });
+    fireEvent.click(jack, { detail: 1 });
+
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(table().querySelectorAll('.sol-selected')).toHaveLength(0);
+    expect(table().querySelectorAll('.sol-destination')).toHaveLength(0);
+  });
 });

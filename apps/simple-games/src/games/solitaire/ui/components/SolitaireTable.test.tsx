@@ -87,7 +87,7 @@ describe('SolitaireTable drag reporting', () => {
    * carry is clamped to. Without them, the table falls back to the fingertip
    * and clamps nothing, which is what the other tests here rely on.
    */
-  function giveTableALayout(cards = false): void {
+  function giveTableALayout(cards = false, felt: DOMRect = rect(-10, -10, 400, 400)): void {
     vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
       this: Element,
     ) {
@@ -99,9 +99,16 @@ describe('SolitaireTable drag reporting', () => {
         return rect((3 + Number(el.dataset.foundation)) * COL, 0, CARD_W, 63);
       }
       if (cards && el.dataset.card !== undefined) return rect(0, 75, CARD_W, 63);
-      if (cards && el.classList.contains('sol-body')) return rect(-10, -10, 400, 400);
+      if (cards && el.classList.contains('sol-body')) return felt;
       return rect(0, 0, 0, 0);
     });
+  }
+
+  /** What the felt holds and how far it is scrolled, which jsdom cannot say. */
+  function giveFeltAScroll(scrollTop: number, scrollHeight: number): void {
+    const body = document.querySelector('.sol-body')!;
+    Object.defineProperty(body, 'scrollTop', { configurable: true, value: scrollTop });
+    Object.defineProperty(body, 'scrollHeight', { configurable: true, value: scrollHeight });
   }
 
   function renderTable(overrides: Partial<SolitaireTableProps> = {}) {
@@ -172,7 +179,11 @@ describe('SolitaireTable drag reporting', () => {
 
     fireEvent.pointerUp(el, { pointerId: 1, button: 0, clientX: 24, clientY: 32 });
     expect(props.onDragEnd).toHaveBeenCalledTimes(1);
-    expect(props.onDragEnd).toHaveBeenCalledWith({ type: 'tableau', pile: 0, index: 0 }, null);
+    expect(props.onDragEnd).toHaveBeenCalledWith(
+      { type: 'tableau', pile: 0, index: 0 },
+      null,
+      false,
+    );
   });
 
   it('carries the pressed cards by an inline transform, and puts them back', () => {
@@ -256,7 +267,11 @@ describe('SolitaireTable drag reporting', () => {
     expect(el.style.transform).toBe('translate(50px, 40px)');
 
     fireEvent.pointerDown(el, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
-    expect(props.onDragEnd).toHaveBeenCalledWith({ type: 'tableau', pile: 0, index: 0 }, null);
+    expect(props.onDragEnd).toHaveBeenCalledWith(
+      { type: 'tableau', pile: 0, index: 0 },
+      null,
+      false,
+    );
     expect(el.style.transform).toBe('');
     // And the new press is a live one.
     fireEvent.pointerMove(el, { pointerId: 1, buttons: 1, clientX: 122, clientY: 200 });
@@ -296,13 +311,14 @@ describe('SolitaireTable drag reporting', () => {
     expect(el.style.transform).toBe('translate(345px, 252px)');
   });
 
-  it('lets the click through when the cards were let go back on their own column', () => {
+  it('hands a press let go all but where it began back to the tap path', () => {
     const props = renderTable();
     giveTableALayout();
 
     // Browsers draw their own line between a tap and a drag, and a press that
     // travelled past this table's line but not the browser's still ends in a
-    // click. Let go over its own column, that click is the tap it always was.
+    // click. Twelve pixels is that band: the screen is told a tap follows, and
+    // the click goes through as the tap it always was.
     const el = jack();
     fireEvent.pointerDown(el, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
     fireEvent.pointerMove(el, { pointerId: 1, buttons: 1, clientX: 22, clientY: 172 });
@@ -311,9 +327,30 @@ describe('SolitaireTable drag reporting', () => {
     expect(props.onDragEnd).toHaveBeenCalledWith(
       { type: 'tableau', pile: 0, index: 0 },
       { type: 'tableau', pile: 0 },
+      true,
     );
     fireEvent.click(el, { detail: 1 });
     expect(props.onTableauTap).toHaveBeenCalledWith(0, 0);
+  });
+
+  it('swallows the click of a real drag let go back on its own column', () => {
+    const props = renderTable();
+    giveTableALayout();
+
+    // Carried right down its own column and dropped: a finished drag, however
+    // little the board made of it. Nothing is picked up by the click it
+    // leaves — a failed drag is over, not the first tap of something (§3).
+    const el = jack();
+    fireEvent.pointerDown(el, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
+    fireEvent.pointerMove(el, { pointerId: 1, buttons: 1, clientX: 22, clientY: 300 });
+    fireEvent.pointerUp(el, { pointerId: 1, button: 0, clientX: 22, clientY: 300 });
+    expect(props.onDragEnd).toHaveBeenCalledWith(
+      { type: 'tableau', pile: 0, index: 0 },
+      { type: 'tableau', pile: 0 },
+      false,
+    );
+    fireEvent.click(el, { detail: 1 });
+    expect(props.onTableauTap).not.toHaveBeenCalled();
   });
 
   it('swallows the click after a drop somewhere else, wherever it lands', () => {
@@ -348,7 +385,11 @@ describe('SolitaireTable drag reporting', () => {
 
     const stock = within(table()).getByRole('button', { name: /^Stock/ });
     fireEvent.pointerDown(stock, { pointerId: 1, button: 0, buttons: 1, clientX: 22, clientY: 30 });
-    expect(props.onDragEnd).toHaveBeenCalledWith({ type: 'tableau', pile: 0, index: 0 }, null);
+    expect(props.onDragEnd).toHaveBeenCalledWith(
+      { type: 'tableau', pile: 0, index: 0 },
+      null,
+      false,
+    );
     expect(el.style.transform).toBe('');
     // And the stock's own click is not the one a drag left behind.
     fireEvent.click(stock, { detail: 1 });
@@ -383,7 +424,11 @@ describe('SolitaireTable drag reporting', () => {
       clientX: 80,
       clientY: 210,
     });
-    expect(props.onDragEnd).toHaveBeenCalledWith({ type: 'tableau', pile: 0, index: 0 }, null);
+    expect(props.onDragEnd).toHaveBeenCalledWith(
+      { type: 'tableau', pile: 0, index: 0 },
+      null,
+      false,
+    );
     expect(el.style.transform).toBe('');
   });
 
@@ -395,7 +440,11 @@ describe('SolitaireTable drag reporting', () => {
     fireEvent.pointerDown(el, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
     fireEvent.pointerMove(el, { pointerId: 1, buttons: 1, clientX: 72, clientY: 200 });
     fireEvent.blur(window);
-    expect(props.onDragEnd).toHaveBeenCalledWith({ type: 'tableau', pile: 0, index: 0 }, null);
+    expect(props.onDragEnd).toHaveBeenCalledWith(
+      { type: 'tableau', pile: 0, index: 0 },
+      null,
+      false,
+    );
     expect(el.style.transform).toBe('');
   });
 
@@ -404,5 +453,123 @@ describe('SolitaireTable drag reporting', () => {
     const marked = table().querySelectorAll('[data-foundation].sol-destination');
     expect(marked).toHaveLength(1);
     expect((marked[0] as HTMLElement).dataset.foundation).toBe('3');
+  });
+
+  it('carries a run whose tail is below the fold without jerking it', () => {
+    renderTable();
+    // A felt shorter than the pile it holds — a phone in landscape (§3). The
+    // run at rest already reaches below the visible bottom, and what it may
+    // not leave is the felt's content, not the part of it in view: bounding
+    // the carry by the visible box would snap the run upward on its first
+    // move, under a finger that went sideways.
+    giveTableALayout(true, rect(-10, -10, 400, 120));
+    giveFeltAScroll(0, 400);
+
+    const el = jack();
+    fireEvent.pointerDown(el, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
+    fireEvent.pointerMove(el, { pointerId: 1, buttons: 1, clientX: 30, clientY: 160 });
+    expect(el.style.transform).toBe('translate(8px, 0px)');
+
+    // And it can still be carried up to the foundations, as far as the top of
+    // the content — a run taller than the felt must not be pinned where it lies.
+    fireEvent.pointerMove(el, { pointerId: 1, buttons: 1, clientX: 22, clientY: -500 });
+    expect(el.style.transform).toBe('translate(0px, -85px)');
+  });
+
+  it('ends the drag when the felt scrolls under it', () => {
+    const props = renderTable();
+    giveTableALayout();
+    giveFeltAScroll(0, 400);
+
+    const el = jack();
+    fireEvent.pointerDown(el, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
+    fireEvent.pointerMove(el, { pointerId: 1, buttons: 1, clientX: 72, clientY: 200 });
+    // A wheel while the button is held: everything this drag measured is in
+    // the viewport's coordinates, and the table has just moved inside it.
+    // Better over than aimed at a column it is no longer above.
+    giveFeltAScroll(40, 400);
+    fireEvent.pointerMove(el, { pointerId: 1, buttons: 1, clientX: 74, clientY: 202 });
+
+    expect(props.onDragEnd).toHaveBeenCalledWith(
+      { type: 'tableau', pile: 0, index: 0 },
+      null,
+      false,
+    );
+    expect(el.style.transform).toBe('');
+  });
+
+  it('does not take the click after a drag the window blur ended for a tap', () => {
+    const props = renderTable();
+    giveTableALayout();
+
+    const el = jack();
+    fireEvent.pointerDown(el, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
+    fireEvent.pointerMove(el, { pointerId: 1, buttons: 1, clientX: 72, clientY: 200 });
+    fireEvent.blur(window);
+    // The window comes back and the button is let go over the table: the
+    // release finds no drag, but the click still arrives, and it belongs to
+    // the drag that was abandoned.
+    fireEvent.pointerUp(el, { pointerId: 1, button: 0, clientX: 72, clientY: 200 });
+    fireEvent.click(el, { detail: 1 });
+    expect(props.onTableauTap).not.toHaveBeenCalled();
+
+    // Spent by the next press, which is a live one.
+    fireEvent.pointerDown(el, { pointerId: 2, button: 0, buttons: 1, ...PRESS });
+    fireEvent.pointerUp(el, { pointerId: 2, button: 0, ...PRESS });
+    fireEvent.click(el, { detail: 1 });
+    expect(props.onTableauTap).toHaveBeenCalledWith(0, 0);
+  });
+
+  it('tells the screen when a board change takes a drag away', () => {
+    const props: SolitaireTableProps = {
+      board: dealBoard('sol-free-golden'),
+      moveTick: 0,
+      selection: null,
+      hint: null,
+      destinations: [],
+      foundationTarget: null,
+      drag: null,
+      drop: null,
+      dropLegal: false,
+      onStockTap: vi.fn(),
+      onWasteTap: vi.fn(),
+      onFoundationTap: vi.fn(),
+      onTableauTap: vi.fn(),
+      onDragStart: vi.fn(),
+      onDragTarget: vi.fn(),
+      onDragEnd: vi.fn(() => false),
+    };
+    const view = (extra: Partial<SolitaireTableProps> = {}) => (
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <div className="sol-body">
+          <SolitaireTable {...props} {...extra} />
+        </div>
+      </SettingsProvider>
+    );
+    const { rerender } = render(view());
+    giveTableALayout();
+
+    const el = jack();
+    fireEvent.pointerDown(el, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
+    fireEvent.pointerMove(el, { pointerId: 1, buttons: 1, clientX: 72, clientY: 200 });
+    expect(el.style.transform).toBe('translate(50px, 40px)');
+
+    // Undo from the keyboard while a card is in hand: the cards the drag was
+    // carrying may not be where it thinks any more. It ends, and the screen
+    // is told so its marks go down with the table's.
+    const targetCalls = (props.onDragTarget as ReturnType<typeof vi.fn>).mock.calls.length;
+    rerender(view({ board: dealBoard('sol-free-other'), moveTick: 1 }));
+    expect(props.onDragEnd).toHaveBeenCalledWith(
+      { type: 'tableau', pile: 0, index: 0 },
+      null,
+      false,
+    );
+
+    // And it really is over: the finger moving on has nothing to carry, and
+    // the release it eventually gets cannot end the drag a second time.
+    fireEvent.pointerMove(table(), { pointerId: 1, buttons: 1, clientX: 250, clientY: 300 });
+    fireEvent.pointerUp(table(), { pointerId: 1, button: 0, clientX: 250, clientY: 300 });
+    expect(props.onDragTarget).toHaveBeenCalledTimes(targetCalls);
+    expect(props.onDragEnd).toHaveBeenCalledTimes(1);
   });
 });

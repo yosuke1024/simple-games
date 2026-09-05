@@ -92,6 +92,14 @@ export function SolitaireGameScreen() {
    */
   const [drag, setDrag] = useState<DragSource | null>(null);
   const [drop, setDrop] = useState<DropTarget | null>(null);
+  /**
+   * What a tap had picked up when a press turned into a drag, kept until the
+   * release says which the press was. A press let go all but where it began
+   * is the tap the browser still thinks it is — the second tap of a
+   * select-then-place, say, made by a finger that rolled a little — and the
+   * selection it was going to place has to be there when its click lands.
+   */
+  const tapSelectionRef = useRef<Selection | null>(null);
   const [hint, setHint] = useState<HintMarks | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [confirmRestart, setConfirmRestart] = useState(false);
@@ -249,16 +257,23 @@ export function SolitaireGameScreen() {
 
   /**
    * A press on a card has travelled far enough to be a drag (§3, issue #116).
-   * Picking the card up is what a first tap does, and sounds the same — and
-   * it supersedes whatever the tap path had selected, so exactly one thing is
-   * held.
+   * Picking the card up supersedes whatever the tap path had selected, so
+   * exactly one thing is ever held — but what it had is remembered, because
+   * the release may yet say this press was that tap.
+   *
+   * Silent, like every other board in this app that is played by dragging:
+   * the card lifting under the finger and the places it can go lighting up
+   * are the answer, and a note here would land again a moment later when the
+   * card is put down.
    */
-  const onDragStart = useCallback((source: DragSource) => {
-    setSelection(null);
-    setDrag(source);
-    sounds.select();
-    void haptics.tap();
-  }, []);
+  const onDragStart = useCallback(
+    (source: DragSource) => {
+      tapSelectionRef.current = selection;
+      setSelection(null);
+      setDrag(source);
+    },
+    [selection],
+  );
 
   const onDragTarget = useCallback((target: DropTarget | null) => setDrop(target), []);
 
@@ -270,9 +285,19 @@ export function SolitaireGameScreen() {
    * back or let the replay settle them.
    */
   const onDragEnd = useCallback(
-    (source: DragSource, target: DropTarget | null): boolean => {
+    (source: DragSource, target: DropTarget | null, tapFollows: boolean): boolean => {
       setDrag(null);
       setDrop(null);
+      const wasHeld = tapSelectionRef.current;
+      tapSelectionRef.current = null;
+      // Barely moved: the press was the tap the browser is still about to
+      // report. Put back what it was holding and place nothing — the click
+      // that follows finishes the move the player was making, exactly as it
+      // did before this table could be dragged at all.
+      if (tapFollows) {
+        setSelection(wasHeld);
+        return false;
+      }
       if (target === null) return false;
       return target.type === 'tableau'
         ? placeOnTableau(source, target.pile)

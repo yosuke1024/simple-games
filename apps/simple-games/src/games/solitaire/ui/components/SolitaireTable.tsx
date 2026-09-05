@@ -64,6 +64,16 @@ const EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
 export const DRAG_THRESHOLD_PX = 8;
 
 /**
+ * How far from the press a release can still be the tap the browser thinks it
+ * is. Every platform draws its own line between a tap and a drag, a little
+ * above this table's threshold — and a mouse sends a click however far it
+ * travelled — so a press let go this close to where it began is handed back to
+ * the tap path whole rather than spent on a drop nobody aimed. Comfortably
+ * under a column's width: a real drag is farther than this.
+ */
+const TAP_SLOP_PX = 24;
+
+/**
  * A card in flight sits above a card being replayed (`play` below uses 6):
  * the one under the finger is the one the player is looking at.
  */
@@ -231,15 +241,6 @@ export function dropTargetAt(zones: DropZones, x: number, y: number): DropTarget
   return { type: 'tableau', pile };
 }
 
-/**
- * Whether a drag let go over the spot it started from: the run's own column,
- * or — for the waste, which is no target — nowhere at all.
- */
-function overSource(drag: Drag): boolean {
-  if (drag.source.type === 'waste') return drag.target === null;
-  return drag.target?.type === 'tableau' && drag.target.pile === drag.source.pile;
-}
-
 const targetKey = (target: DropTarget | null): string =>
   target === null ? '' : target.type === 'tableau' ? `t${target.pile}` : `f${target.suit}`;
 
@@ -282,6 +283,14 @@ interface Drag {
     readonly minY: number;
     readonly maxY: number;
   } | null;
+  /**
+   * Where the felt was scrolled to when the drag began. Everything below is
+   * measured in the viewport's coordinates once, so the felt scrolling under
+   * the drag — a wheel on a desktop, the one way it can still happen — would
+   * silently move the cards away from the finger and the spots away from
+   * where they were read. The drag ends instead of lying about where it is.
+   */
+  scrollTop: number;
   /** How far the cards have been carried from where they lay. */
   dx: number;
   dy: number;
@@ -375,8 +384,13 @@ export interface SolitaireTableProps {
    * by the browser. Returns true when the board changed — the cards then
    * settle from where they were released — and false when it did not, in
    * which case the table carries them back to where they came from.
+   *
+   * `tapFollows` says the press was let go all but where it began and the
+   * click it leaves is still coming: the screen puts back whatever the tap
+   * path was holding and places nothing, so the press finishes as the tap it
+   * always was.
    */
-  onDragEnd: (source: DragSource, target: DropTarget | null) => boolean;
+  onDragEnd: (source: DragSource, target: DropTarget | null, tapFollows: boolean) => boolean;
 }
 
 /**
@@ -463,13 +477,15 @@ export const SolitaireTable = memo(function SolitaireTable({
     const onPointerDown = (event: globalThis.PointerEvent) => {
       const root = tableRef.current;
       if (root) layoutRef.current = readLayout(root, board);
-      suppressClickRef.current = false;
       // The same pointer pressing again means its last release never
       // reached the table — capture refused and the button let go off it,
       // or the release went to a context menu. That drag is over, not still
       // in progress: the cards go back and nothing is played.
       const stale = dragRef.current;
       if (stale !== null && stale.pointerId === event.pointerId) abandonDrag();
+      // Cleared after that, and not before: this press's own click is live
+      // whatever mark the drag it just ended left behind.
+      suppressClickRef.current = false;
     };
     // Alt-Tab, a phone call, a system gesture: the window that owned the
     // press is not the one that sees it end. A drag cannot outlive the
@@ -495,10 +511,35 @@ export const SolitaireTable = memo(function SolitaireTable({
     if (drag === null) return;
     dragRef.current = null;
     if (!drag.moved) return;
+    // A click may still be coming — the button let go over the table once the
+    // window came back — and it belongs to a drag that is over, not to a tap.
+    suppressClickRef.current = true;
     const root = tableRef.current;
     if (root) releaseCards(root, drag.cards);
-    onDragEndRef.current(drag.source, null);
+    onDragEndRef.current(drag.source, null, false);
   }
+
+  /**
+   * A board that changed under a drag — Undo from the keyboard, a second
+   * finger on the stock — ends it: the cards it was carrying may not be
+   * where the drag thinks, or on the table at all. The screen is told, so it
+   * puts the marks down too; a drop's own board change never gets here,
+   * because the drag is already gone before the screen hears about it.
+   *
+   * Its own effect, keyed on the board alone: folded into the replay below it
+   * would also fire on a motion-preference flip, and take a drag nobody had
+   * let go of with it.
+   */
+  useLayoutEffect(() => {
+    const root = tableRef.current;
+    const interrupted = dragRef.current;
+    if (!root || !interrupted) return;
+    dragRef.current = null;
+    if (!interrupted.moved) return;
+    releaseCards(root, interrupted.cards);
+    suppressClickRef.current = true;
+    onDragEndRef.current(interrupted.source, null, false);
+  }, [board]);
 
   // Runs after the board has laid out with the move already applied and
   // before paint, so a card starts travelling on its first frame — it is
@@ -506,21 +547,6 @@ export const SolitaireTable = memo(function SolitaireTable({
   useLayoutEffect(() => {
     const root = tableRef.current;
     if (!root) return;
-
-    // A board that changed under a drag — Undo from the keyboard, a second
-    // finger on the stock — ends it: the cards it was carrying may not be
-    // where the drag thinks, or on the table at all. The screen has already
-    // let go of the drag on its side (its board effect), so nothing is owed
-    // but the transforms. A drop's own board change never gets here: the
-    // drag is gone before the screen is told.
-    const interrupted = dragRef.current;
-    if (interrupted) {
-      dragRef.current = null;
-      if (interrupted.moved) {
-        releaseCards(root, interrupted.cards);
-        suppressClickRef.current = true;
-      }
-    }
 
     const previous = layoutRef.current;
     const current = readLayout(root, board);
@@ -585,6 +611,8 @@ export const SolitaireTable = memo(function SolitaireTable({
    * button has always answered.
    */
   const onCardPointerDown = (event: PointerEvent<HTMLButtonElement>, source: DragSource) => {
+    const root = tableRef.current;
+    if (!root) return;
     // One drag at a time: a second finger while one is in flight picks
     // nothing up. (The same pointer pressing again cannot get here with a
     // drag still recorded — the document listener above ended it first.)
@@ -611,6 +639,7 @@ export const SolitaireTable = memo(function SolitaireTable({
       grabX: 0,
       grabY: 0,
       travel: null,
+      scrollTop: root.parentElement?.scrollTop ?? 0,
       dx: 0,
       dy: 0,
       targetKey: '',
@@ -643,16 +672,43 @@ export const SolitaireTable = memo(function SolitaireTable({
       abandonDrag();
       return;
     }
+    // Read before anything is written this frame, so it costs no layout: the
+    // felt scrolling under a drag would move the cards away from the finger
+    // and the spots away from where they were measured.
+    const body = root.parentElement;
+    if (drag.moved && body && body.scrollTop !== drag.scrollTop) {
+      abandonDrag();
+      return;
+    }
     let dx = event.clientX - drag.startX;
     let dy = event.clientY - drag.startY;
 
     if (!drag.moved) {
       if (dx * dx + dy * dy < DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX) return;
+      drag.moved = true;
+      // Measured against where the felt stands now, which is the frame
+      // everything below is read in.
+      drag.scrollTop = body?.scrollTop ?? drag.scrollTop;
       // Past the threshold: a drag after all. Everything is measured now, the
       // last moment the table is certainly laid out as the finger sees it,
       // and once per drag — reading it per move would force a layout on
       // every event.
-      drag.moved = true;
+      //
+      // First, though, the cards have to be showing where they lie. A card
+      // grabbed as it lands is still travelling under its arrival animation,
+      // and one picked by a tap wears the selection's lift: a rectangle read
+      // through either is of a place the card is passing through, not of the
+      // place it sits. The animation is cancelled rather than finished, so
+      // the z-index it would have stripped stays with the drag, and the
+      // transform written here is replaced by the carry a few lines below.
+      for (const card of drag.cards) {
+        const el = cardElement(root, card);
+        if (!el) continue;
+        if (typeof el.getAnimations === 'function') {
+          for (const running of el.getAnimations()) running.cancel();
+        }
+        el.style.transform = 'translate(0px, 0px)';
+      }
       drag.zones = readDropZones(root);
       const head = drag.cards[0] === undefined ? null : cardElement(root, drag.cards[0]);
       const last =
@@ -660,28 +716,28 @@ export const SolitaireTable = memo(function SolitaireTable({
       const headRect = head?.getBoundingClientRect();
       const lastRect = last?.getBoundingClientRect();
       if (headRect && headRect.width > 0) {
+        // The player aims with the card, not with the fingertip under it: a
+        // card grabbed by its lower edge and pushed up onto a foundation is
+        // over the foundation while the finger is still down on the felt.
         drag.grabX = headRect.left + headRect.width / 2 - drag.startX;
         drag.grabY = headRect.top + headRect.height / 2 - drag.startY;
-        // The felt is the table's scroll container, and the run may not leave
-        // it (see `travel`). The run spans from the head's top to the last
-        // card's bottom.
-        const felt = root.parentElement?.getBoundingClientRect();
-        if (felt && felt.width > 0 && lastRect) {
+        const felt = body?.getBoundingClientRect();
+        if (body && felt && felt.width > 0 && lastRect) {
+          // The run may not leave the felt (see `travel`) — but the felt
+          // scrolls where the screen is short (§3), so what it may not leave
+          // is the felt's CONTENT, not the part of it in view: half a pile
+          // can already lie below the fold. Bounded by the content, and never
+          // tighter than where the run already lies, because a clamp that
+          // excluded the resting place would jerk the run on the drag's very
+          // first move — or, for a run taller than the felt, pin it there.
+          const contentTop = felt.top - body.scrollTop;
+          const contentBottom = contentTop + Math.max(body.scrollHeight, felt.height);
           drag.travel = {
-            minX: felt.left - headRect.left,
-            maxX: felt.right - headRect.right,
-            minY: felt.top - headRect.top,
-            maxY: felt.bottom - lastRect.bottom,
+            minX: Math.min(0, felt.left - headRect.left),
+            maxX: Math.max(0, felt.right - headRect.right),
+            minY: Math.min(0, contentTop - headRect.top),
+            maxY: Math.max(0, contentBottom - lastRect.bottom),
           };
-        }
-      }
-      // A card grabbed as it lands would otherwise hold its arrival animation
-      // over the finger's transform for the rest of its duration — cancelled,
-      // not finished, so the lift the animation was going to strip stays.
-      for (const card of drag.cards) {
-        const el = cardElement(root, card);
-        if (el && typeof el.getAnimations === 'function') {
-          for (const running of el.getAnimations()) running.cancel();
         }
       }
       onDragStart(drag.source);
@@ -721,24 +777,30 @@ export const SolitaireTable = memo(function SolitaireTable({
     dragRef.current = null;
     // Never travelled: a tap, and the click that follows is the tap path's.
     if (!drag.moved) return;
-    // The click this release leaves behind must not count as a tap on top of
-    // the drop (issue #116) — unless the cards were let go back where they
-    // came from. Browsers draw their own line between a tap and a drag, a
-    // little above this table's threshold on some phones, and a press that
-    // fell between the two is a tap the browser will still send a click for:
-    // let it through, and the tap it always was happens.
-    suppressClickRef.current = !overSource(drag);
+    // Let go all but where it began: the platform's own line between a tap
+    // and a drag sits a little above this table's, and a mouse sends a click
+    // however far it travelled, so this press is one the browser still thinks
+    // is a tap. The click goes through and the screen puts back what the tap
+    // path was holding — the press finishes as the tap it always was. A press
+    // that really travelled is a drag whose click means nothing, wherever it
+    // was let go: over a column, over nothing, or off the table (§3).
+    const rx = event.clientX - drag.startX;
+    const ry = event.clientY - drag.startY;
+    const tapFollows = rx * rx + ry * ry < TAP_SLOP_PX * TAP_SLOP_PX;
+    suppressClickRef.current = !tapFollows;
 
     const root = tableRef.current;
-    if (root) releaseCards(root, drag.cards);
-    // Should the drop move the cards, the replay must start where the finger
-    // let go of them, not where they lay before the press — that is where
-    // the player last saw them. The reading taken at the press is moved by
-    // the drag for the carried cards, and only for them, and only once the
-    // screen says the board changed: a reading moved for a drop that moved
-    // nothing would send the next replay off from the wrong place.
+    if (root) {
+      releaseCards(root, drag.cards);
+      // Should the drop move the cards, the replay must start where the
+      // finger let go of them, not where they lay before the press — that is
+      // where the player last saw them. Read now rather than reusing the
+      // reading taken at the press: a rotation or a resize during the drag
+      // would have made that one a place the card never was (§12).
+      layoutRef.current = readLayout(root, board);
+    }
     const previous = layoutRef.current;
-    const landed = onDragEnd(drag.source, drag.target);
+    const landed = onDragEnd(drag.source, drag.target, tapFollows);
     if (!landed) {
       if (root) returnCards(root, drag, reducedMotion);
       return;
@@ -765,7 +827,7 @@ export const SolitaireTable = memo(function SolitaireTable({
     if (!drag.moved) return;
     suppressClickRef.current = true;
     if (tableRef.current) returnCards(tableRef.current, drag, reducedMotion);
-    onDragEnd(drag.source, null);
+    onDragEnd(drag.source, null, false);
   };
 
   /**
