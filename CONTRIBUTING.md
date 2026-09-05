@@ -13,6 +13,7 @@ Requirements: Node.js >= 20 and pnpm (see `packageManager` in `package.json`).
 pnpm install
 pnpm --filter simple-games dev    # run the app in a browser
 pnpm --filter simple-games test   # unit tests
+pnpm --filter simple-games verify:changed   # faster loop: lint/tests for your diff only (CI still runs everything)
 pnpm lint
 pnpm typecheck
 pnpm build

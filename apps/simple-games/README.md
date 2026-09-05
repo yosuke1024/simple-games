@@ -110,6 +110,7 @@ pnpm --filter simple-games dev        # ブラウザで開発
 pnpm --filter simple-games test       # 単体テスト
 pnpm --filter simple-games lint
 pnpm --filter simple-games typecheck
+pnpm --filter simple-games verify:changed  # 変更ファイルだけの高速ループ(scripts/verify-changed.mjs)
 pnpm --filter simple-games build      # dist/ へ production build
 ```
 
