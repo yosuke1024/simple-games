@@ -8,7 +8,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { titleAccents } from '@simple-games/brand';
 import { GAMES } from '../../app/registry';
-import { accentKeyOf, renderShareCard, type ShareCard, type ShareCardInput } from './card';
+import { accentKeyOf } from '../../app/titleAccent';
+import { renderShareCard, type ShareCard, type ShareCardInput } from './card';
 import type { ShareDetail } from './message';
 
 interface FillTextCall {

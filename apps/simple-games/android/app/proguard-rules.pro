@@ -22,6 +22,12 @@
 #   ee.forgr.nativepurchases.NativePurchasesPlugin) is @CapacitorPlugin-
 #   annotated and extends com.getcapacitor.Plugin, so the core rules above
 #   keep them. No per-plugin keeps needed.
+# - The app's own local plugin, com.pixapps.simplegames.HomeShortcutPlugin
+#   (issue #110), is @CapacitorPlugin-annotated and extends
+#   com.getcapacitor.Plugin just like the packaged plugins above, so
+#   @capacitor/android's consumer rules keep it too — no rule needed here.
+#   androidx.core, which it uses for ShortcutManagerCompat/IconCompat, ships
+#   its own consumer rules.
 # - AdMob (play-services-ads, user-messaging-platform) and Play Billing
 #   (com.android.billingclient:billing:8.3.0, used by @capgo/native-purchases)
 #   are remote AARs that bundle their own consumer rules; adding broad

@@ -18,6 +18,21 @@ vi.mock('@capacitor/core', () => ({
   Capacitor: { isNativePlatform: () => capacitorMock.native },
 }));
 
+// The real homeShortcut module (services/homeShortcut/homeShortcut.ts)
+// transitively imports plugin.ts, which calls `registerPlugin` at module
+// scope — a name the stub above does not provide. Stubbing the whole module
+// sidesteps that entirely, and lets each test say what the shell decided at
+// boot without touching Capacitor at all.
+const { homeShortcutsAvailable, requestHomeShortcut } = vi.hoisted(() => ({
+  homeShortcutsAvailable: vi.fn(),
+  requestHomeShortcut: vi.fn(),
+}));
+
+vi.mock('../../services/homeShortcut/homeShortcut', () => ({
+  homeShortcutsAvailable,
+  requestHomeShortcut,
+}));
+
 import {
   getFavoriteGames,
   initFavoriteGames,
@@ -48,6 +63,9 @@ beforeEach(() => {
   capacitorMock.native = false;
   resetRecentGamesForTesting();
   resetFavoriteGamesForTesting();
+  // Off by default, like every build the launcher cannot pin to.
+  homeShortcutsAvailable.mockReset().mockReturnValue(false);
+  requestHomeShortcut.mockReset().mockResolvedValue(true);
 });
 
 afterEach(() => {
@@ -418,5 +436,96 @@ describe('the sheet and the keyboard', () => {
     expect(document.activeElement).not.toBe(document.body);
     const list = screen.getByRole('navigation', { name: 'Games' });
     expect(document.activeElement).toBe(within(list).getByRole('button', { name: 'Sudoku' }));
+  });
+});
+
+/**
+ * The Android-only second action in the same sheet (issue #110): a pinned OS
+ * shortcut to one game, offered beside — and independent of — favouriting.
+ * Whether it appears at all is `homeShortcutsAvailable()`'s call, decided once
+ * at boot; this screen only reads that answer and draws accordingly.
+ */
+describe('add to home screen (issue #110)', () => {
+  it('is absent from the sheet when the shell has no launcher to pin to (web, iOS, an Android launcher without pin support)', async () => {
+    await initFavoriteGames(createMemoryKV());
+    homeShortcutsAvailable.mockReturnValue(false);
+    renderHome();
+
+    fireEvent.contextMenu(tileFor('Sudoku'));
+
+    expect(screen.queryByRole('button', { name: 'Add to Home Screen' })).not.toBeInTheDocument();
+  });
+
+  it('is present when the shell already confirmed the launcher takes pin requests', async () => {
+    await initFavoriteGames(createMemoryKV());
+    homeShortcutsAvailable.mockReturnValue(true);
+    renderHome();
+
+    fireEvent.contextMenu(tileFor('Sudoku'));
+
+    expect(screen.getByRole('button', { name: 'Add to Home Screen' })).toBeInTheDocument();
+  });
+
+  it('requests a shortcut for the game, closes the sheet, hands focus back, and leaves favourites untouched', async () => {
+    await initFavoriteGames(createMemoryKV());
+    homeShortcutsAvailable.mockReturnValue(true);
+    const user = userEvent.setup();
+    renderHome();
+
+    const tile = tileFor('Sudoku');
+    fireEvent.contextMenu(tile);
+    await user.click(screen.getByRole('button', { name: 'Add to Home Screen' }));
+
+    expect(requestHomeShortcut).toHaveBeenCalledTimes(1);
+    expect(requestHomeShortcut).toHaveBeenCalledWith(expect.objectContaining({ id: 'sudoku' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    // Favouriting and shortcuts are independent decisions (issue #110): this
+    // press never touches the favourites shelf.
+    expect(getFavoriteGames()).toEqual([]);
+    expect(document.activeElement).toBe(tile);
+  });
+
+  /**
+   * A screen reader's activation reaches the page as a bare click, exactly
+   * like the favourite action's own test above — this action has to work the
+   * same way.
+   */
+  it('acts on a bare click, the shape a screen reader sends', async () => {
+    await initFavoriteGames(createMemoryKV());
+    homeShortcutsAvailable.mockReturnValue(true);
+    renderHome();
+
+    fireEvent.contextMenu(tileFor('Sudoku'));
+    fireEvent.click(screen.getByRole('button', { name: 'Add to Home Screen' }));
+
+    expect(requestHomeShortcut).toHaveBeenCalledWith(expect.objectContaining({ id: 'sudoku' }));
+  });
+
+  it('never asks the launcher for a shortcut on Escape or Close', async () => {
+    await initFavoriteGames(createMemoryKV());
+    homeShortcutsAvailable.mockReturnValue(true);
+    const user = userEvent.setup();
+    renderHome();
+
+    fireEvent.contextMenu(tileFor('Sudoku'));
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(requestHomeShortcut).not.toHaveBeenCalled();
+
+    fireEvent.contextMenu(tileFor('Sudoku'));
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(requestHomeShortcut).not.toHaveBeenCalled();
+  });
+
+  it('leaves the favourite action working on its own, and never asks for a shortcut', async () => {
+    await initFavoriteGames(createMemoryKV());
+    homeShortcutsAvailable.mockReturnValue(true);
+    const user = userEvent.setup();
+    renderHome();
+
+    fireEvent.contextMenu(tileFor('Sudoku'));
+    await user.click(screen.getByRole('button', { name: 'Add to Favorites' }));
+
+    expect(getFavoriteGames()).toEqual(['sudoku']);
+    expect(requestHomeShortcut).not.toHaveBeenCalled();
   });
 });

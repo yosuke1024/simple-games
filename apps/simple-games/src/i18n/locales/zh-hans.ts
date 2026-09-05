@@ -74,6 +74,7 @@ export const zhHans: Messages = {
   favoritesHeading: '收藏',
   addToFavorites: '添加到收藏',
   removeFromFavorites: '从收藏中移除',
+  addToHomeScreen: '添加到主屏幕',
   categoryLogic: '逻辑',
   categoryCards: '纸牌',
   categoryPuzzle: '益智',

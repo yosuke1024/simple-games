@@ -75,6 +75,7 @@ export const tr: Messages = {
   favoritesHeading: 'Favoriler',
   addToFavorites: 'Favorilere ekle',
   removeFromFavorites: 'Favorilerden çıkar',
+  addToHomeScreen: 'Ana ekrana ekle',
   categoryLogic: 'Mantık',
   categoryCards: 'Kart oyunları',
   categoryPuzzle: 'Bulmaca',

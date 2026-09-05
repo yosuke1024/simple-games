@@ -18,6 +18,8 @@ const mocks = vi.hoisted(() => ({
   initRecentGames: vi.fn<() => Promise<void>>(),
   initFavoriteGames: vi.fn<() => Promise<void>>(),
   initWebAppPrompt: vi.fn<() => Promise<void>>(),
+  initShortcutLaunch: vi.fn<() => Promise<void>>(),
+  initHomeShortcuts: vi.fn<() => Promise<void>>(),
   loadRecord: vi.fn<() => Promise<Settings>>(),
   isAdRemovalActive: vi.fn<() => boolean>(),
   initAds: vi.fn<() => Promise<void>>(),
@@ -34,6 +36,10 @@ vi.mock('../services/webAppPrompt', () => ({ initWebAppPrompt: mocks.initWebAppP
 vi.mock('../storage/repo', () => ({ loadRecord: mocks.loadRecord }));
 vi.mock('./recentGames', () => ({ initRecentGames: mocks.initRecentGames }));
 vi.mock('./favoriteGames', () => ({ initFavoriteGames: mocks.initFavoriteGames }));
+vi.mock('./shortcutLaunch', () => ({ initShortcutLaunch: mocks.initShortcutLaunch }));
+vi.mock('../services/homeShortcut/homeShortcut', () => ({
+  initHomeShortcuts: mocks.initHomeShortcuts,
+}));
 
 const storedSettings: Settings = { ...settingsSchema.defaultValue(), theme: 'dark' };
 
@@ -46,6 +52,8 @@ beforeEach(() => {
   mocks.initRecentGames.mockReset().mockResolvedValue(undefined);
   mocks.initFavoriteGames.mockReset().mockResolvedValue(undefined);
   mocks.initWebAppPrompt.mockReset().mockResolvedValue(undefined);
+  mocks.initShortcutLaunch.mockReset().mockResolvedValue(undefined);
+  mocks.initHomeShortcuts.mockReset().mockResolvedValue(undefined);
   mocks.loadRecord.mockReset().mockResolvedValue(storedSettings);
   mocks.isAdRemovalActive.mockReset().mockReturnValue(false);
   mocks.initAds.mockReset().mockResolvedValue(undefined);
@@ -60,6 +68,10 @@ describe('initShellState (issue #96)', () => {
     expect(mocks.initRecentGames).toHaveBeenCalledTimes(1);
     expect(mocks.initFavoriteGames).toHaveBeenCalledTimes(1);
     expect(mocks.initWebAppPrompt).toHaveBeenCalledTimes(1);
+    // The Android shortcut steps (issue #110): which game a home-screen
+    // shortcut launched us into, and whether the launcher pins at all.
+    expect(mocks.initShortcutLaunch).toHaveBeenCalledTimes(1);
+    expect(mocks.initHomeShortcuts).toHaveBeenCalledTimes(1);
   });
 
   it('runs the later steps even when an earlier one fails', async () => {
@@ -72,6 +84,16 @@ describe('initShellState (issue #96)', () => {
     expect(mocks.initRecentGames).toHaveBeenCalledTimes(1);
     expect(mocks.initFavoriteGames).toHaveBeenCalledTimes(1);
     expect(mocks.initWebAppPrompt).toHaveBeenCalledTimes(1);
+    expect(mocks.initShortcutLaunch).toHaveBeenCalledTimes(1);
+    expect(mocks.initHomeShortcuts).toHaveBeenCalledTimes(1);
+  });
+
+  // A shortcut step that fails must cost only itself: the settings read
+  // behind it is the player's language and theme.
+  it('still reads the settings when a shortcut step fails', async () => {
+    mocks.initShortcutLaunch.mockImplementation(failing);
+    mocks.initHomeShortcuts.mockImplementation(failing);
+    await expect(initShellState()).resolves.toEqual(storedSettings);
   });
 
   it('falls back to the default settings when their own read fails', async () => {
@@ -86,6 +108,8 @@ describe('initShellState (issue #96)', () => {
     mocks.initRecentGames.mockImplementation(failing);
     mocks.initFavoriteGames.mockImplementation(failing);
     mocks.initWebAppPrompt.mockImplementation(failing);
+    mocks.initShortcutLaunch.mockImplementation(failing);
+    mocks.initHomeShortcuts.mockImplementation(failing);
     mocks.loadRecord.mockImplementation(failing);
     await expect(initShellState()).resolves.toEqual(settingsSchema.defaultValue());
   });

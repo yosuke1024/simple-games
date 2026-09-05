@@ -1573,6 +1573,12 @@ button:disabled {
   font-size: 16px;
 }
 
+/* Issue #110: a second action can now stack under the first (favourite, then
+   add to home screen) — a gap between them so they read as two rows, not one. */
+.action-sheet-action + .action-sheet-action {
+  margin-top: 8px;
+}
+
 .action-sheet-icon {
   display: inline-flex;
   color: var(--accent);

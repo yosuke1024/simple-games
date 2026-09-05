@@ -31,8 +31,9 @@
  * `useSettings()` or `prefers-color-scheme`; the dark palette simply does not
  * apply here.
  */
-import { LANDING_BASE_URL, SERIES_NAME, seriesColors, titleAccents } from '@simple-games/brand';
+import { LANDING_BASE_URL, SERIES_NAME, seriesColors } from '@simple-games/brand';
 import { GAMES, type GameId } from '../../app/registry';
+import { titleAccentOf } from '../../app/titleAccent';
 import { shareTitleOf, usableDetails, type ShareDetail, type ShareOutcome } from './message';
 
 /**
@@ -77,19 +78,6 @@ const CONTENT_WIDTH = CANVAS_SIZE - PADDING * 2; // 888
  */
 const FONT_FAMILY = 'Nunito, ui-rounded, system-ui, sans-serif';
 const fontOf = (weight: number, px: number): string => `${weight} ${px}px ${FONT_FAMILY}`;
-
-/**
- * The kebab-case game id to the camelCase key `titleAccents` uses
- * ('number-match' -> 'numberMatch', 'freecell' -> 'freecell'). '2048' is the
- * one id that cannot camel-case itself — not a legal identifier fragment —
- * so its accent is named 'game2048'.
- */
-export function accentKeyOf(gameId: GameId): keyof typeof titleAccents {
-  if (gameId === '2048') return 'game2048';
-  return gameId.replace(/-([a-z0-9])/g, (_match, ch: string) =>
-    ch.toUpperCase(),
-  ) as keyof typeof titleAccents;
-}
 
 /**
  * A rounded-rect path, built by hand from arcs: `ctx.roundRect` is past this
@@ -170,7 +158,9 @@ export function renderShareCard(input: ShareCardInput): ShareCard | null {
     if (!ctx) return null;
 
     const { gameId, outcome, clearedLabel } = input;
-    const accent = titleAccents[accentKeyOf(gameId)];
+    // The title's own accent, by the same lookup the home-screen shortcut
+    // icon draws with (app/titleAccent.ts) — one tile, two pictures, one colour.
+    const accent = titleAccentOf(gameId);
     const glyph = GAMES.find((game) => game.id === gameId)?.glyph ?? '';
     const title = shareTitleOf(gameId);
 

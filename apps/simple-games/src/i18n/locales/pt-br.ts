@@ -75,6 +75,7 @@ export const ptBR: Messages = {
   favoritesHeading: 'Favoritos',
   addToFavorites: 'Adicionar aos favoritos',
   removeFromFavorites: 'Remover dos favoritos',
+  addToHomeScreen: 'Adicionar à tela inicial',
   categoryLogic: 'Lógica',
   categoryCards: 'Cartas',
   categoryPuzzle: 'Quebra-cabeça',

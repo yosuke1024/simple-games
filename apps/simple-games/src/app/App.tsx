@@ -9,6 +9,12 @@
  * Forward back out again (app/webRoute.ts, issue #83). None of that runs in
  * the app, which has no address bar and whose hardware back button already
  * owns the same gesture.
+ *
+ * The Android app has one door of its own: a home-screen shortcut pinned to
+ * a game (app/shortcutLaunch.ts, issue #110). It carries the same `?game=`
+ * address, arrives through the App plugin instead of the address bar — at
+ * boot for a cold start, as `appUrlOpen` for a warm one — and touches no
+ * history, because there is none.
  */
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
@@ -30,6 +36,7 @@ import { SettingsScreen } from '../ui/screens/SettingsScreen';
 import { getLazyRoot, resetLazyRoot } from './lazyRoots';
 import { recordGameOpened } from './recentGames';
 import { type GameId } from './registry';
+import { gameIdFromShortcutUrl, shortcutLaunchGame } from './shortcutLaunch';
 import { currentRouteGame, popRoute, pushRoute, startRoute, webRoutingEnabled } from './webRoute';
 
 type View = { kind: 'collection' } | { kind: 'settings' } | { kind: 'game'; gameId: GameId };
@@ -65,11 +72,16 @@ function trackWebGameClosed(gameId: GameId): void {
 /**
  * The screen the shell opens on. In the browser that is whatever the address
  * asks for, decided before the first render so a direct link paints the game
- * rather than flashing the collection on the way to it. The app always opens
- * on the collection.
+ * rather than flashing the collection on the way to it. The app opens on the
+ * collection — unless an Android home-screen shortcut asked for a game, which
+ * boot has already read (app/shortcutLaunch.ts) so the same rule holds: the
+ * game paints first, and the collection never flashes on the way.
  */
 function initialView(): View {
-  if (!webRoutingEnabled()) return { kind: 'collection' };
+  if (!webRoutingEnabled()) {
+    const shortcutGame = shortcutLaunchGame();
+    return shortcutGame ? { kind: 'game', gameId: shortcutGame } : { kind: 'collection' };
+  }
   const gameId = currentRouteGame();
   if (!gameId) return { kind: 'collection' };
   // Arriving straight on a game means somebody else pointed here — a shared
@@ -116,13 +128,10 @@ export function App() {
 
   /**
    * Everything that happens when a game leaves the screen, wherever the
-   * request came from — the game's own back control, or the browser's.
-   *
-   * The review question's only doorway (docs/REVIEW_PROMPT_POLICY.md):
-   * leaving a game for the collection — a natural pause, never at launch and
-   * never mid-game. The showing is booked immediately so a killed app cannot
-   * turn one ask into several. It never fires in the browser, which has no
-   * installed app to rate.
+   * request came from — the game's own back control, the browser's, or a
+   * home-screen shortcut to a different game. Teardown only: what the player
+   * is shown next is the caller's decision, and so is whether this is a
+   * moment to ask them anything (`offerReviewIfDue`).
    */
   const leaveGame = useCallback((gameId: GameId) => {
     trackWebGameClosed(gameId);
@@ -132,10 +141,23 @@ export function App() {
     // The game's audio must not outlive it: suspend the shared context now
     // instead of waiting out its idle timer (docs/GAME_LIFECYCLE.md).
     releaseSound();
-    if (shouldPromptReview()) {
-      markReviewPromptShown();
-      setReviewPromptOpen(true);
-    }
+  }, []);
+
+  /**
+   * The review question's only doorway (docs/REVIEW_PROMPT_POLICY.md):
+   * leaving a game for the collection by the game's own back control — a
+   * natural pause, never at launch and never mid-game. The showing is booked
+   * immediately so a killed app cannot turn one ask into several. It never
+   * fires in the browser, which has no installed app to rate.
+   *
+   * Not a doorway: a home-screen shortcut that swaps one game for another, or
+   * a retired shortcut that lands on the collection (issue #110). The player
+   * was on their way somewhere; a question in the doorway is not a pause.
+   */
+  const offerReviewIfDue = useCallback(() => {
+    if (!shouldPromptReview()) return;
+    markReviewPromptShown();
+    setReviewPromptOpen(true);
   }, []);
 
   /**
@@ -188,15 +210,18 @@ export function App() {
     if (current.kind !== 'game') return;
     leaveGame(current.gameId);
     show({ kind: 'collection' });
+    offerReviewIfDue();
     showAppPromptIfDue();
     if (webRoutingEnabled()) popRoute();
-  }, [leaveGame, show, showAppPromptIfDue]);
+  }, [leaveGame, offerReviewIfDue, show, showAppPromptIfDue]);
 
   /**
-   * Boot, browser only: settle the address on the screen that was just opened
-   * — dropping an id the registry no longer carries — and count a direct
-   * arrival as an open, so the shortcut row and the shell's own measurement
-   * see it exactly the way they see a tap on a tile.
+   * Boot: count a direct arrival on a game as an open, so the shortcut row
+   * and the shell's own measurement see it exactly the way they see a tap on
+   * a tile. A direct arrival is the browser's `?game=` or, in the Android app,
+   * a home-screen shortcut (app/shortcutLaunch.ts). The browser also settles
+   * the address on the screen that was just opened — dropping an id the
+   * registry no longer carries; the app has no address to settle.
    *
    * Guarded rather than left to an empty dependency list because React's
    * StrictMode runs mount effects twice in development, and `game_open` is
@@ -204,16 +229,49 @@ export function App() {
    */
   const booted = useRef(false);
   useEffect(() => {
-    if (!webRoutingEnabled() || booted.current) return;
+    if (booted.current) return;
     booted.current = true;
     const arrived = viewRef.current;
     const gameId = arrived.kind === 'game' ? arrived.gameId : null;
-    startRoute(gameId);
+    if (webRoutingEnabled()) startRoute(gameId);
     if (gameId) {
       recordGameOpened(gameId);
       trackWebGameOpened(gameId);
     }
   }, []);
+
+  /**
+   * A home-screen shortcut tapped while the app is already running, Android
+   * only (issue #110). The activity is `singleTask`, so the launcher's Intent
+   * arrives as `onNewIntent` and the App plugin raises it here with the URI
+   * the shortcut carries — the same `?game=` address the browser reads.
+   *
+   * The same comparison the browser's `popstate` makes: what the URI asks for
+   * against what is showing. The same game already on screen — wherever
+   * inside it the player is — is left exactly alone; a shortcut is a door,
+   * not a reset. A different game closes this one and opens that one, without
+   * the review question in between (`offerReviewIfDue`). An id this build no
+   * longer carries lands on the collection: the fail-safe for a shortcut that
+   * outlived its game.
+   *
+   * On a cold start the plugin raises this once more for the launch Intent
+   * itself, retained until a listener exists. By then boot has already opened
+   * that game (`initialView`), so the comparison finds nothing to do.
+   */
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const handle = CapacitorApp.addListener('appUrlOpen', ({ url }) => {
+      const showing = viewRef.current.kind === 'game' ? viewRef.current.gameId : null;
+      const target = gameIdFromShortcutUrl(url);
+      if (showing === target) return;
+      if (showing !== null) leaveGame(showing);
+      if (target !== null) enterGame(target);
+      else show({ kind: 'collection' });
+    });
+    return () => {
+      void handle.then((h) => h.remove()).catch(() => undefined);
+    };
+  }, [enterGame, leaveGame, show]);
 
   /**
    * Back and Forward, browser only. The address is the truth here: whatever
@@ -239,12 +297,16 @@ export function App() {
         enterGame(target);
       } else {
         show({ kind: 'collection' });
+        // The browser's Back out of a game is the same pause as the game's
+        // own back control — though in the browser the question is never
+        // actually asked (services/review.ts is native-only).
+        offerReviewIfDue();
         showAppPromptIfDue();
       }
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, [enterGame, leaveGame, show, showAppPromptIfDue]);
+  }, [enterGame, leaveGame, offerReviewIfDue, show, showAppPromptIfDue]);
 
   /**
    * A launch that opens on the collection, browser only: somebody who became

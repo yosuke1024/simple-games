@@ -1,19 +1,26 @@
 /**
  * The small sheet a long press (or a right-click, or the keyboard's own menu
  * key) opens on a game tile: what can be done with this title other than open
- * it (issue #109). Today that is one thing — pin it to the top of the
- * collection, or unpin it.
+ * it (issue #109). It offers pinning the title to the top of the collection —
+ * on every platform — and on Android, separately, pinning it to the OS home
+ * screen (issue #110). The two sit side by side because they are two
+ * different decisions: favouriting never creates a shortcut, and a shortcut
+ * never touches the favourites shelf. Whether the second action exists at all
+ * is not this sheet's call — the shell decides that once at boot
+ * (`homeShortcutsAvailable`, services/homeShortcut/homeShortcut.ts) and hands
+ * this component a callback only when it does; the sheet just draws what it
+ * is given.
  *
- * It is deliberately not the only way to do that. `SettingsScreen` lists every
- * game with the same toggle, because a gesture nobody discovers is not a
- * feature, and because a long press is unavailable to anyone driving the app
- * from a keyboard or a switch.
+ * It is deliberately not the only way to pin a favourite. `SettingsScreen`
+ * lists every game with the same toggle, because a gesture nobody discovers is
+ * not a feature, and because a long press is unavailable to anyone driving the
+ * app from a keyboard or a switch.
  */
 import { useEffect } from 'react';
 import type { GameDefinition } from '../../app/registry';
 import { useSettings } from '../../state/SettingsContext';
 import { GameTile } from './GameTile';
-import { IconStar } from './icons';
+import { IconAddToHome, IconStar } from './icons';
 
 export interface GameActionSheetProps {
   /** The title the sheet is about; null closes it. */
@@ -26,6 +33,12 @@ export interface GameActionSheetProps {
    */
   openedMidPress: boolean;
   onToggleFavorite: () => void;
+  /**
+   * Android only (issue #110): present exactly when the shell has already
+   * confirmed the launcher takes pin requests. Absent everywhere else, which
+   * is why the sheet draws no second action rather than a disabled one.
+   */
+  onAddToHomeScreen?: () => void;
   onClose: () => void;
 }
 
@@ -34,6 +47,7 @@ export function GameActionSheet({
   isFavorite,
   openedMidPress,
   onToggleFavorite,
+  onAddToHomeScreen,
   onClose,
 }: GameActionSheetProps) {
   const { t } = useSettings();
@@ -115,6 +129,17 @@ export function GameActionSheet({
             {isFavorite ? t('removeFromFavorites') : t('addToFavorites')}
           </span>
         </button>
+
+        {onAddToHomeScreen ? (
+          // No autoFocus here — the favourite action above keeps first focus,
+          // this is only ever the second stop.
+          <button type="button" className="action-sheet-action" onClick={onAddToHomeScreen}>
+            <span className="action-sheet-icon" aria-hidden="true">
+              <IconAddToHome />
+            </span>
+            <span className="settings-row-label">{t('addToHomeScreen')}</span>
+          </button>
+        ) : null}
 
         <div className="dialog-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>

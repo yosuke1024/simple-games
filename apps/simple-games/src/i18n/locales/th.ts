@@ -74,6 +74,7 @@ export const th: Messages = {
   favoritesHeading: 'รายการโปรด',
   addToFavorites: 'เพิ่มในรายการโปรด',
   removeFromFavorites: 'นำออกจากรายการโปรด',
+  addToHomeScreen: 'เพิ่มไปยังหน้าจอหลัก',
   categoryLogic: 'ตรรกะ',
   categoryCards: 'ไพ่',
   categoryPuzzle: 'ปริศนา',
