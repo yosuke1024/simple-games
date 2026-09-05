@@ -9,9 +9,8 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
-import { GameHomeActions } from '@/ui/components/GameHomeActions';
-import { IconBack, IconCalendar, IconChart, IconCheck } from '@/ui/components/icons';
-import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
+import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { IconCalendar, IconChart, IconCheck } from '@/ui/components/icons';
 import { localDateString, SUIT_COUNTS, type SuitCount } from '../../game';
 import { useSpider } from '../../state/GameContext';
 import { statsFor } from '../../state/statsLogic';
@@ -43,21 +42,7 @@ export function SpiderHomeScreen() {
 
   return (
     <div className="screen home-screen">
-      {/* Web build only — the shared PixApps header (docs/WEB_VERSION.md
-          「サイトクローム」). Renders nothing on the native app. */}
-      <WebChromeSlot />
-
-      <header className="screen-header">
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={t('backToGames')}
-          onClick={exitToCollection}
-        >
-          <IconBack />
-        </button>
-        <GameHomeActions gameId="spider-solitaire" />
-      </header>
+      <GameHomeHeader gameId="spider-solitaire" onBack={exitToCollection} />
 
       <div className="home-hero">
         {/* The series mark: the club. Klondike wears the spade and FreeCell the

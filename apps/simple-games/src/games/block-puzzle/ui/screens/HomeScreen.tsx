@@ -12,9 +12,8 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
-import { GameHomeActions } from '@/ui/components/GameHomeActions';
-import { IconBack, IconChart } from '@/ui/components/icons';
-import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
+import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { IconChart } from '@/ui/components/icons';
 import { useBlockPuzzle } from '../../state/GameContext';
 
 export function BlockHomeScreen() {
@@ -25,21 +24,7 @@ export function BlockHomeScreen() {
 
   return (
     <div className="screen home-screen">
-      {/* Web build only — the shared PixApps header (docs/WEB_VERSION.md
-          「サイトクローム」). Renders nothing on the native app. */}
-      <WebChromeSlot />
-
-      <header className="screen-header">
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={t('backToGames')}
-          onClick={exitToCollection}
-        >
-          <IconBack />
-        </button>
-        <GameHomeActions gameId="block-puzzle" />
-      </header>
+      <GameHomeHeader gameId="block-puzzle" onBack={exitToCollection} />
 
       <div className="home-hero">
         {/* The series mark: four squares, one of them still to come. */}

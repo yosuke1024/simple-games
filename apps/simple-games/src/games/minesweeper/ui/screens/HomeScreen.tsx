@@ -10,9 +10,8 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
-import { GameHomeActions } from '@/ui/components/GameHomeActions';
-import { IconBack, IconCalendar, IconChart, IconCheck } from '@/ui/components/icons';
-import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
+import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { IconCalendar, IconChart, IconCheck } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
 import { DIFFICULTIES, localDateString, PRESETS, type Difficulty } from '../../game';
 import { useMinesweeper } from '../../state/GameContext';
@@ -48,22 +47,7 @@ export function MinesHomeScreen() {
 
   return (
     <div className="screen home-screen">
-      {/* Web build only — the shared PixApps header (docs/WEB_VERSION.md
-          「サイトクローム」). Renders nothing on the native app. This game's
-          board and result screens deliberately have none. */}
-      <WebChromeSlot />
-
-      <header className="screen-header">
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={t('backToGames')}
-          onClick={exitToCollection}
-        >
-          <IconBack />
-        </button>
-        <GameHomeActions gameId="minesweeper" />
-      </header>
+      <GameHomeHeader gameId="minesweeper" onBack={exitToCollection} />
 
       <div className="home-hero">
         {/* The series mark: a tile holding the game's whole shape — one mine. */}

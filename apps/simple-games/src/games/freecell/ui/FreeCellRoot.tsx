@@ -10,10 +10,10 @@
 // Register this game's 14-locale catalog the moment the chunk loads,
 // before anything below renders (issue #38, src/i18n/registry.ts).
 import '../i18n';
-import { useEffect, useState } from 'react';
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
+import { useLoadedRecords } from '../../../ui/useLoadedRecords';
 import { FreeCellProvider, useFreeCell } from '../state/GameContext';
 import { loadSavedGames, type SavedGames } from '../storage/gamePersistence';
 import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
@@ -60,35 +60,25 @@ export interface FreeCellRootProps {
   kv?: KVStore;
 }
 
+function defaultRecords(): LoadedData {
+  return {
+    stats: statsSchema.defaultValue(),
+    flags: flagsSchema.defaultValue(),
+    sessions: { free: null, daily: null },
+  };
+}
+
+async function loadRecords(kv: KVStore): Promise<LoadedData> {
+  const [stats, flags, sessions] = await Promise.all([
+    loadRecord(statsSchema, kv),
+    loadRecord(flagsSchema, kv),
+    loadSavedGames(kv),
+  ]);
+  return { stats, flags, sessions };
+}
+
 export function FreeCellRoot({ onExit, entry, kv = preferencesKV }: FreeCellRootProps) {
-  const [data, setData] = useState<LoadedData | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      let loaded: LoadedData = {
-        stats: statsSchema.defaultValue(),
-        flags: flagsSchema.defaultValue(),
-        sessions: { free: null, daily: null },
-      };
-      try {
-        const [stats, flags, sessions] = await Promise.all([
-          loadRecord(statsSchema, kv),
-          loadRecord(flagsSchema, kv),
-          loadSavedGames(kv),
-        ]);
-        loaded = { stats, flags, sessions };
-      } catch {
-        // Even unexpected load failures must not prevent playing: defaults.
-      }
-      if (!cancelled) setData(loaded);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [kv]);
-
-  // Local reads resolve in milliseconds; a spinner here would only flash.
+  const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
   return (
