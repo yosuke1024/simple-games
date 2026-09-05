@@ -35,7 +35,12 @@ import {
   type GameMode,
   type MemorySession,
 } from '../game';
-import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
+import {
+  clearSavedGame,
+  saveGame,
+  soleSuspendedMode,
+  type SavedGames,
+} from '../storage/gamePersistence';
 import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
 import { applyGameStart, applyPlayTime, applySolved, previousBestsFor } from './statsLogic';
 
@@ -85,6 +90,8 @@ export interface MemoryProviderProps {
   initialSessions: SavedGames;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -93,13 +100,38 @@ export function MemoryProvider({
   initialFlags,
   initialSessions,
   onExit,
+  entry,
   children,
 }: MemoryProviderProps) {
+  /**
+   * The suspended game this launch opens straight onto, or null for the home
+   * screen (issue #113). Decided once, from the records the provider was
+   * mounted with: a launch means whatever it meant when it happened, and no
+   * save made later can change that.
+   *
+   * Only a home-screen shortcut asks, and only once Quick Rules are behind the
+   * player — a first launch teaches the game before it shows a board (§11),
+   * and that order has no exception. The two records are independent, so a
+   * flags record that failed to read would otherwise let an intact save walk
+   * straight past the tutorial.
+   */
+  const [resumeMode] = useState<GameMode | null>(() =>
+    entry === 'shortcut' && initialFlags.tutorialCompleted
+      ? soleSuspendedMode(initialSessions)
+      : null,
+  );
+  // Resume, or exactly what this line has always said. `resumeMode` already
+  // answers null until Quick Rules are behind the player, so the gate lives in
+  // one place rather than two — two would each cover for the other, and a
+  // guard nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeMode ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
-  const [activeMode, setActiveMode] = useState<GameMode>('difficulty');
+  // The mode has to arrive with the screen: `session` below is
+  // `sessions[activeMode]`, so opening the board on 'difficulty' while the
+  // resumed game is the daily would render nothing at all.
+  const [activeMode, setActiveMode] = useState<GameMode>(resumeMode ?? 'difficulty');
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [lastResult, setLastResult] = useState<LastResult | null>(null);
@@ -115,10 +147,19 @@ export function MemoryProvider({
 
   const session = sessions[activeMode];
 
+  // A game resumed at mount arrives with its clock already run, and the two
+  // numbers `activate` sets when Resume is pressed on the home screen are these
+  // same two. Leaving them at zero would not merely lose the count: withElapsed
+  // rewrites the live session to elapsedRef, so the first sync would save the
+  // board back with only the seconds since mount — the play time gone for good,
+  // and a solve stamping a fabricated bestSeconds. Seeding only elapsedRef is
+  // the mirror mistake, booking the whole restored elapse a second time (§10 —
+  // the restored elapsedSeconds comes back as *already booked*).
+  const resumedSeconds = resumeMode ? (initialSessions[resumeMode]?.elapsedSeconds ?? 0) : 0;
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
+  const elapsedRef = useRef(resumedSeconds);
   /** Play seconds already booked into the statistics for this session. */
-  const bookedRef = useRef(0);
+  const bookedRef = useRef(resumedSeconds);
 
   const withElapsed = useCallback((s: MemorySession): MemorySession => {
     return s.elapsedSeconds === elapsedRef.current

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
@@ -6,13 +6,15 @@ import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
 import { BLACK, createSession } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
-import { GM_STORAGE_KEYS } from '../storage/schemas';
+import { GM_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { GomokuRoot } from './GomokuRoot';
 
 /**
  * A stand-in for the device store. The `kv` prop below is a load-side seam
- * only — saves always go to Capacitor Preferences — so nothing here reads a
- * save back; these tests are about what the screens show.
+ * only — saves always go to Capacitor Preferences — so the blocks that use it
+ * never read a save back; those tests are about what the screens show. The
+ * shortcut block is the exception: it launches against this store and asserts
+ * what the last sitting actually wrote to it.
  */
 const { deviceStore } = vi.hoisted(() => ({ deviceStore: new Map<string, string>() }));
 vi.mock('@capacitor/preferences', () => ({
@@ -195,6 +197,188 @@ describe('the play clock survives a backgrounding', () => {
       vi.useRealTimers();
     }
   });
+});
+
+/**
+ * A pinned home-screen shortcut, and what Gomoku does about it (issue #113).
+ *
+ * The shell says only which door the launch came through; every decision below
+ * is this game's, taken from its own save (§8). There is no "which match did
+ * they mean" case to cover here: one slot cannot be ambiguous, and
+ * `loadSavedGame` has already thrown away anything that is not a match still
+ * being played — so the whole question is whether there is a match at all.
+ *
+ * These launches read the device store rather than the `kv` seam the tests
+ * above use, because what a shortcut opens onto is decided by what the last
+ * sitting actually wrote.
+ */
+describe('a home-screen shortcut', () => {
+  /** Launches against the device store, the way a player's phone does. */
+  function launch() {
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <GomokuRoot onExit={vi.fn()} />
+      </SettingsProvider>,
+    );
+  }
+
+  /** The same store, entered by the other door. */
+  function launchFromShortcut() {
+    const onExit = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <GomokuRoot onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+    return { onExit };
+  }
+
+  /** Quick Rules behind the player, the way every launch after the first finds them. */
+  function taughtAlready() {
+    deviceStore.set(GM_STORAGE_KEYS.flags, tutorialDone[GM_STORAGE_KEYS.flags]!);
+  }
+
+  /** Lets the local reads, and the saves they trigger, resolve. */
+  const settle = () => act(async () => undefined);
+
+  const boardOrNull = () => screen.queryByRole('group', { name: /Gomoku board/ });
+  const findBoard = () => screen.findByRole('group', { name: /Gomoku board/ });
+  /** The home screen's Easy button once it is the way back into a match. */
+  const resumeButton = () => screen.queryByRole('button', { name: /Easy.*Resume/ });
+
+  /** Plays a match a couple of stones in and leaves it, as the player would. */
+  async function suspendAnEasyMatch() {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await user.click(await screen.findByRole('button', { name: /Easy/ }));
+    await user.click(screen.getByRole('button', { name: 'Row 8, column 8: empty' }));
+    await user.click(screen.getByRole('button', { name: 'Row 8, column 8: tap again to place' }));
+    await waitFor(() => expect(stones()).toHaveLength(2));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+  }
+
+  it('opens the one suspended match straight onto its board', async () => {
+    await suspendAnEasyMatch();
+
+    launchFromShortcut();
+
+    expect(await findBoard()).toBeInTheDocument();
+    // The position that was left, not a fresh board (§8).
+    expect(stones()).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: /Easy/ })).not.toBeInTheDocument();
+  });
+
+  it('leaves the board for this game’s home, not the collection', async () => {
+    await suspendAnEasyMatch();
+    const user = userEvent.setup();
+
+    const { onExit } = launchFromShortcut();
+    expect(await findBoard()).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from a board is this game's home, whichever door the board
+    // was reached through: the way in did not add a screen to undo.
+    expect(resumeButton()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens the home screen when no match is suspended', async () => {
+    taughtAlready();
+
+    launchFromShortcut();
+
+    expect(await screen.findByRole('button', { name: /Easy/ })).toBeInTheDocument();
+    expect(boardOrNull()).not.toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: the collection’s tile still opens the home', async () => {
+    await suspendAnEasyMatch();
+
+    launch();
+
+    // Untouched and still one tap away, exactly as before this issue.
+    expect(await screen.findByRole('button', { name: /Easy.*Resume/ })).toBeInTheDocument();
+    expect(boardOrNull()).not.toBeInTheDocument();
+  });
+
+  it('teaches the game first when Quick Rules were never finished', async () => {
+    await suspendAnEasyMatch();
+    // The flag and the match are separate records (§8), so the two states can
+    // disagree: a flags record that does not validate leaves the game with its
+    // defaults — Quick Rules unfinished — while the saved match still loads.
+    // A shortcut is not a way past them; the tutorial's only exit starts a new
+    // match, which would finalize this one away.
+    deviceStore.set(GM_STORAGE_KEYS.flags, JSON.stringify({ schemaVersion: 9 }));
+
+    launchFromShortcut();
+
+    expect(await screen.findByText('Tap once to aim, again to place')).toBeInTheDocument();
+    expect(boardOrNull()).not.toBeInTheDocument();
+  });
+
+  // The counterpart of the backgrounding block above: a match resumed at mount
+  // seeds the same two clocks `activate` does, so the seconds already played
+  // are neither lost from the match nor booked into the statistics twice (§7).
+  it('does not book the resumed match’s play seconds a second time', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      taughtAlready();
+      launch();
+      await user.click(await screen.findByRole('button', { name: /Easy/ }));
+
+      await vi.advanceTimersByTimeAsync(8000);
+      await background();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedElapsedSeconds()).toBe(8);
+      cleanup();
+
+      launchFromShortcut();
+      expect(await findBoard()).toBeInTheDocument();
+      await vi.advanceTimersByTimeAsync(3000);
+      await background();
+
+      // Eleven seconds played, counted once: the match keeps its own total,
+      // and the statistics gain only the three seconds that are new.
+      expect(storedElapsedSeconds()).toBe(11);
+      expect(storedPlaySeconds()).toBe(11);
+    } finally {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        get: () => 'visible',
+      });
+      vi.useRealTimers();
+    }
+  });
+
+  /** The OS hides the app — the last event a killed process is sure to get. */
+  async function background() {
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      get: () => 'hidden',
+    });
+    document.dispatchEvent(new Event('visibilitychange'));
+    await vi.advanceTimersByTimeAsync(0);
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      get: () => 'visible',
+    });
+  }
+
+  /** Total play seconds as they survive on disk (§7). */
+  function storedPlaySeconds(): number {
+    const raw = deviceStore.get(GM_STORAGE_KEYS.stats);
+    return raw === undefined ? 0 : (JSON.parse(raw) as Stats).totalPlaySeconds;
+  }
+
+  /** The suspended match's own accumulated play seconds, as saved (§8). */
+  function storedElapsedSeconds(): number {
+    const raw = deviceStore.get(GM_STORAGE_KEYS.game);
+    return raw === undefined ? 0 : (JSON.parse(raw) as PersistedGame).elapsedSeconds;
+  }
 });
 
 describe('home', () => {

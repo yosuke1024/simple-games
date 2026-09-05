@@ -91,6 +91,8 @@ export interface BlockProviderProps {
   initialSession: BlockSession | null;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -99,10 +101,34 @@ export function BlockProvider({
   initialFlags,
   initialSession,
   onExit,
+  entry,
   children,
 }: BlockProviderProps) {
+  /**
+   * Whether this launch opens straight onto the suspended board (issue #113).
+   * Decided once, from the record the provider was mounted with: a launch
+   * means whatever it meant when it happened, and no save made afterwards can
+   * change what it meant.
+   *
+   * Nothing to disambiguate here — there is one save slot (§10), and
+   * `loadSavedGame` returns null for anything that cannot be picked up, so a
+   * playable session *is* the game they were playing. Only a home-screen
+   * shortcut asks, and only once Quick Rules are behind the player: a first
+   * launch teaches the game before it shows a board (§11), and a shortcut is
+   * not a way around that.
+   */
+  const [resumeOnMount] = useState(
+    () =>
+      entry === 'shortcut' &&
+      initialFlags.tutorialCompleted &&
+      initialSession?.status === 'playing',
+  );
+  // Resume, or exactly what this line has always said. `resumeOnMount` already
+  // answers false until Quick Rules are behind the player, so the gate is in
+  // one place rather than two — two would each cover for the other, and a
+  // guard nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeOnMount ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [session, setSession] = useState<BlockSession | null>(initialSession);
   const [stats, setStats] = useState<Stats>(initialStats);
@@ -116,10 +142,19 @@ export function BlockProvider({
   const statsRef = useRef(stats);
   statsRef.current = stats;
 
+  // A board resumed at mount arrives with its clock already run, and the two
+  // numbers `activate` sets when Resume is pressed on the home screen are the
+  // same two — mounting straight onto the board is the one way onto it that
+  // does not go through `activate`, so it has to set them itself (§9).
+  // Leaving them at zero would book the restored elapse into the statistics a
+  // second time on the first sync (the load path hands elapsedSeconds back as
+  // *already booked*) and write the saved board's own elapse back down to the
+  // seconds since mount.
+  const resumedSeconds = resumeOnMount ? (initialSession?.elapsedSeconds ?? 0) : 0;
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
+  const elapsedRef = useRef(resumedSeconds);
   /** Play seconds already booked into the statistics for this session. */
-  const bookedRef = useRef(0);
+  const bookedRef = useRef(resumedSeconds);
 
   const withElapsed = useCallback((s: BlockSession): BlockSession => {
     return s.elapsedSeconds === elapsedRef.current

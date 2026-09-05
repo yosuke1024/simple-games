@@ -86,6 +86,13 @@ function background() {
   Reflect.deleteProperty(document, 'visibilityState');
 }
 
+/** The suspended difficulty board's own clock, as it survives on disk (§10). */
+function storedBoardSeconds(): number {
+  const raw = deviceStore.get(MS_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+}
+
 /** Total play seconds as they survive on disk, across every difficulty. */
 function storedPlaySeconds(): number {
   const raw = deviceStore.get(MS_STORAGE_KEYS.stats);
@@ -133,6 +140,200 @@ describe('backgrounding (§10)', () => {
       // Eight seconds of play, counted once: the restored five are neither
       // lost nor booked a second time.
       expect(storedPlaySeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+/**
+ * A pinned home-screen shortcut, and what Minesweeper does about it (issue
+ * #113). The shell says only which door was used; every decision below is this
+ * game's own, taken from its two save slots (§8, §10).
+ */
+describe('a home-screen shortcut', () => {
+  /** The same store a launch reads, entered by the other door. */
+  function launchFromShortcut(onExit: () => void = vi.fn()) {
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <MinesweeperRoot onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+  }
+
+  /** Quick Rules behind the player, the way every launch after the first finds them. */
+  function taughtAlready() {
+    deviceStore.set(MS_STORAGE_KEYS.flags, tutorialDone[MS_STORAGE_KEYS.flags]!);
+  }
+
+  const minefield = () => screen.queryByRole('group', { name: /^Minefield/ });
+  const home = () => screen.queryByRole('button', { name: /Daily Challenge/ });
+
+  /** Suspends an Easy board: started, then left the way the back arrow leaves it. */
+  async function suspendEasy(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(await screen.findByRole('button', { name: /^Easy/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+  }
+
+  /** Suspends today's daily alongside whatever the difficulty slot holds. */
+  async function suspendDaily(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole('button', { name: /Daily Challenge/ }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+  }
+
+  it('opens the one suspended board straight onto the minefield', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendEasy(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(minefield()).toBeInTheDocument();
+    // The board it left off on, named in the topbar — not a fresh one.
+    expect(screen.getByText('Easy')).toBeInTheDocument();
+    expect(home()).not.toBeInTheDocument();
+  });
+
+  it('opens a suspended daily on the daily board, not an empty difficulty slot', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendDaily(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // The other slot is the one this game defaults to, and it is empty here.
+    expect(minefield()).toBeInTheDocument();
+    expect(screen.getByText('Daily')).toBeInTheDocument();
+  });
+
+  it('leaves the board for this game’s home, not the collection', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendEasy(user);
+    cleanup();
+
+    const onExit = vi.fn();
+    launchFromShortcut(onExit);
+    await settle();
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from a board is this game's home, whichever door the board
+    // was reached through: the way in did not add a screen to undo.
+    expect(home()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens the home screen when both slots are suspended, rather than guessing', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendEasy(user);
+    await suspendDaily(user);
+    cleanup();
+
+    launchFromShortcut();
+    await settle();
+
+    // Both are still there to be picked up by hand — nothing was chosen for
+    // the player, and nothing was thrown away either.
+    expect(minefield()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Easy.*Resume/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Daily Challenge.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('opens the home screen when nothing is suspended', async () => {
+    taughtAlready();
+    launchFromShortcut();
+    await settle();
+
+    expect(minefield()).not.toBeInTheDocument();
+    expect(home()).toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendEasy(user);
+    cleanup();
+
+    launch();
+    await settle();
+
+    expect(minefield()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Easy.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('teaches the game first on a launch that has never seen Quick Rules (§11)', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    launch();
+    await settle();
+    await suspendEasy(user);
+    cleanup();
+    // A cleared or unreadable flags record reads back as "not taught yet" while
+    // the board survives. A shortcut is not a way past Quick Rules either.
+    deviceStore.delete(MS_STORAGE_KEYS.flags);
+
+    launchFromShortcut();
+    await settle();
+
+    expect(screen.getByText('A number counts mines')).toBeInTheDocument();
+    expect(minefield()).not.toBeInTheDocument();
+  });
+
+  /**
+   * The counterpart of the backgrounding test above: resuming at mount seeds
+   * the same two clocks `activate` does, so the seconds already played are
+   * neither lost nor counted again.
+   *
+   * Both numbers are read, and that is the point. The statistics alone cannot
+   * see the worse of the two mistakes: with NEITHER clock seeded the errors
+   * cancel — `withElapsed` writes the board's own clock back DOWN to the
+   * seconds since mount, and the booking then adds exactly that many — so the
+   * total comes out right while the player's five seconds are quietly gone
+   * from the board they are still playing.
+   */
+  it('does not lose or double-book the resumed board’s play seconds', async () => {
+    taughtAlready();
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /^Easy/ }));
+      // Nothing is timed before the first tap (§4), so open a square first.
+      fireEvent.click(cellAt(5, 5));
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+      expect(storedBoardSeconds()).toBe(5);
+
+      // The process dies here; the shortcut is the next thing that happens.
+      cleanup();
+      launchFromShortcut();
+      await settle();
+      expect(minefield()).toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(3_000));
+      background();
+      await settle();
+      // Eight seconds of play, counted once, on a board that still knows it
+      // has been played for eight.
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedBoardSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }
@@ -342,7 +543,7 @@ describe('right click (§3, issue #111)', () => {
     expect(shutCells()).toHaveLength(shut);
   });
 
-  it('leaves an open number alone — chording stays the tap\'s (§3)', async () => {
+  it("leaves an open number alone — chording stays the tap's (§3)", async () => {
     const user = userEvent.setup();
     renderMinesweeper(tutorialDone);
     await startEasy(user);

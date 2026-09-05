@@ -62,11 +62,17 @@ interface LoadedData {
 export interface LudoRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: a door is a fact, and what it means here
+   * is the provider's answer, taken once from the record loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
 
-export function LudoRoot({ onExit, kv = preferencesKV }: LudoRootProps) {
+export function LudoRoot({ onExit, entry, kv = preferencesKV }: LudoRootProps) {
   const [data, setData] = useState<LoadedData | null>(null);
 
   useEffect(() => {
@@ -106,6 +112,7 @@ export function LudoRoot({ onExit, kv = preferencesKV }: LudoRootProps) {
       initialPrefs={data.prefs}
       initialSession={data.session}
       onExit={onExit}
+      entry={entry}
     >
       <LudoScreens />
     </LudoProvider>

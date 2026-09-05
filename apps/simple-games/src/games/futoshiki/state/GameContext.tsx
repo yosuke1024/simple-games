@@ -47,7 +47,12 @@ import {
   type GameMode,
   type Hint,
 } from '../game';
-import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
+import {
+  clearSavedGame,
+  saveGame,
+  soleSuspendedMode,
+  type SavedGames,
+} from '../storage/gamePersistence';
 import {
   flagsSchema,
   prefsSchema,
@@ -125,12 +130,15 @@ export interface FutoshikiProviderProps {
   prefs: Prefs;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
 /**
- * The mode a freshly mounted game is pointed at, before anything is resumed.
- * Named because the play-clock baseline has to be read from the same slot.
+ * The mode a freshly mounted game is pointed at when nothing is resumed at
+ * mount. Named because the play-clock baseline has to be read from the same
+ * slot the game is pointed at, whichever slot that turns out to be.
  */
 const INITIAL_MODE: GameMode = 'level';
 
@@ -141,13 +149,42 @@ export function FutoshikiProvider({
   initialSessions,
   prefs,
   onExit,
+  entry,
   children,
 }: FutoshikiProviderProps) {
+  /**
+   * The suspended game this launch opens straight onto, or null for the home
+   * screen (issue #113). Decided once, from the records the provider was
+   * mounted with: what a launch meant is settled the moment it happened, and
+   * no save made later can change it.
+   *
+   * Only a home-screen shortcut asks, and only with Quick Rules behind the
+   * player — a first launch teaches the game before it shows a board (§12),
+   * and a shortcut is not a way around that. A shortcut is also the only door
+   * that asks: a tile on the collection and the browser's ?game= address open
+   * this game's home exactly as they always did.
+   */
+  const [resumeMode] = useState<GameMode | null>(() =>
+    entry === 'shortcut' && initialFlags.tutorialCompleted
+      ? soleSuspendedMode(initialSessions)
+      : null,
+  );
+  /**
+   * The slot this mount is pointed at. One expression for the screen, the
+   * active mode and both clock seeds below, because a mode seeded from one
+   * slot and a clock from another is the whole trap (see `bookedRef`).
+   */
+  const mountedMode = resumeMode ?? INITIAL_MODE;
+
+  // Resume, or exactly what this line has always said. The Quick Rules gate is
+  // written once, in `resumeMode` above — it already answers null until they
+  // are behind the player, so repeating the flag here would only mean the two
+  // copies cover for each other and neither can be observed failing.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeMode ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
-  const [activeMode, setActiveMode] = useState<GameMode>(INITIAL_MODE);
+  const [activeMode, setActiveMode] = useState<GameMode>(mountedMode);
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
@@ -171,7 +208,7 @@ export function FutoshikiProvider({
   const session = sessions[activeMode];
 
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(initialSessions[INITIAL_MODE]?.elapsedSeconds ?? 0);
+  const elapsedRef = useRef(initialSessions[mountedMode]?.elapsedSeconds ?? 0);
   /**
    * Play seconds already booked into the statistics for this session.
    *
@@ -184,8 +221,16 @@ export function FutoshikiProvider({
    * that books its whole elapsed time a second time. Open and leave twice and
    * it lands twice. The comment on the visibility effect below already states
    * this invariant — this is the line that makes it true.
+   *
+   * A shortcut that opens straight onto a suspended board (issue #113) is the
+   * same mount with a different slot under it, and it never runs `activate`
+   * at all — so both seeds read `mountedMode`, not the level slot. Read the
+   * level's seconds while playing the daily and the first background books
+   * the daily's whole elapsed time again; leave `elapsedRef` short of it and
+   * the clock is frozen instead, which understates the clear and can mint a
+   * best time nobody played (§10, §11).
    */
-  const bookedRef = useRef(initialSessions[INITIAL_MODE]?.elapsedSeconds ?? 0);
+  const bookedRef = useRef(initialSessions[mountedMode]?.elapsedSeconds ?? 0);
 
   const withElapsed = useCallback(
     (s: FutoshikiSession): FutoshikiSession => withElapsedSeconds(s, elapsedRef.current),

@@ -58,11 +58,17 @@ interface LoadedData {
 export interface SpiderRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: what a door means is the provider's
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
 
-export function SpiderRoot({ onExit, kv = preferencesKV }: SpiderRootProps) {
+export function SpiderRoot({ onExit, entry, kv = preferencesKV }: SpiderRootProps) {
   const [data, setData] = useState<LoadedData | null>(null);
 
   useEffect(() => {
@@ -102,6 +108,7 @@ export function SpiderRoot({ onExit, kv = preferencesKV }: SpiderRootProps) {
       initialPrefs={data.prefs}
       initialSessions={data.sessions}
       onExit={onExit}
+      entry={entry}
     >
       <SpiderScreens />
     </SpiderProvider>

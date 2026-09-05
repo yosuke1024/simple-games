@@ -64,11 +64,18 @@ interface LoadedData {
 export interface KakuroRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). A fact, not an instruction: passed straight down, because what a
+   * door means is the provider's answer, taken once from the records loaded
+   * below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
 
-export function KakuroRoot({ onExit, kv = preferencesKV }: KakuroRootProps) {
+export function KakuroRoot({ onExit, entry, kv = preferencesKV }: KakuroRootProps) {
   const [data, setData] = useState<LoadedData | null>(null);
 
   useEffect(() => {
@@ -111,6 +118,7 @@ export function KakuroRoot({ onExit, kv = preferencesKV }: KakuroRootProps) {
       initialSessions={data.sessions}
       prefs={data.prefs}
       onExit={onExit}
+      entry={entry}
     >
       <KakuroScreens />
     </KakuroProvider>

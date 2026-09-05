@@ -42,7 +42,12 @@ import {
   type MinesweeperSession,
   type SafeCell,
 } from '../game';
-import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
+import {
+  clearSavedGame,
+  saveGame,
+  soleSuspendedMode,
+  type SavedGames,
+} from '../storage/gamePersistence';
 import {
   flagsSchema,
   prefsSchema,
@@ -103,6 +108,8 @@ export interface MinesweeperProviderProps {
   initialSessions: SavedGames;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -112,13 +119,36 @@ export function MinesweeperProvider({
   initialPrefs,
   initialSessions,
   onExit,
+  entry,
   children,
 }: MinesweeperProviderProps) {
+  /**
+   * The suspended game this launch opens straight onto, or null for the home
+   * screen (issue #113). Decided once, from the records the provider was
+   * mounted with: a launch means whatever it meant when it happened, and no
+   * save made later can change that.
+   *
+   * Only a home-screen shortcut asks, and only once Quick Rules are behind the
+   * player — a first launch teaches the game before it shows a board (§11),
+   * and that order does not have an exception.
+   */
+  const [resumeMode] = useState<GameMode | null>(() =>
+    entry === 'shortcut' && initialFlags.tutorialCompleted
+      ? soleSuspendedMode(initialSessions)
+      : null,
+  );
+  // Resume, or exactly what this line has always said. `resumeMode` already
+  // answers null until Quick Rules are behind the player, so the gate is in one
+  // place rather than two — two would each cover for the other, and a guard
+  // nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeMode ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
-  const [activeMode, setActiveMode] = useState<GameMode>('difficulty');
+  // The resumed slot, not the default one: the board on screen is
+  // `sessions[activeMode]`, so a daily opened this way would otherwise look up
+  // an empty difficulty slot and render nothing at all.
+  const [activeMode, setActiveMode] = useState<GameMode>(resumeMode ?? 'difficulty');
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [prefs, setPrefs] = useState<Prefs>(initialPrefs);
@@ -138,10 +168,17 @@ export function MinesweeperProvider({
 
   const session = sessions[activeMode];
 
+  // A game resumed at mount arrives with its clock already run, and the two
+  // numbers `activate` hands over when Resume is pressed on the home screen are
+  // the same two. Left at zero, the first save would write the session's
+  // elapsedSeconds back down to nothing (§10 saves the elapsed seconds, so
+  // losing them here loses them on disk); booked alone at zero would instead
+  // count every restored second into the statistics a second time.
+  const resumedSeconds = resumeMode ? (initialSessions[resumeMode]?.elapsedSeconds ?? 0) : 0;
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
+  const elapsedRef = useRef(resumedSeconds);
   /** Play seconds already booked into the statistics for this session. */
-  const bookedRef = useRef(0);
+  const bookedRef = useRef(resumedSeconds);
 
   const withElapsed = useCallback((s: MinesweeperSession): MinesweeperSession => {
     return s.elapsedSeconds === elapsedRef.current

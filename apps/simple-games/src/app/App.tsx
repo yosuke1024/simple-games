@@ -15,6 +15,12 @@
  * address, arrives through the App plugin instead of the address bar — at
  * boot for a cold start, as `appUrlOpen` for a warm one — and touches no
  * history, because there is none.
+ *
+ * Which door was used is the one thing the shell tells a game about itself
+ * (`entry`, app/registry.ts, issue #113). It is a fact, not an instruction:
+ * a game that keeps a suspended game of its own may open straight onto it
+ * for a shortcut, and the shell never learns how it decided — or that it
+ * decided anything.
  */
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
@@ -35,11 +41,14 @@ import { CollectionHomeScreen } from '../ui/screens/CollectionHomeScreen';
 import { SettingsScreen } from '../ui/screens/SettingsScreen';
 import { getLazyRoot, resetLazyRoot } from './lazyRoots';
 import { recordGameOpened } from './recentGames';
-import { type GameId } from './registry';
+import { type GameEntry, type GameId } from './registry';
 import { gameIdFromShortcutUrl, shortcutLaunchGame } from './shortcutLaunch';
 import { currentRouteGame, popRoute, pushRoute, startRoute, webRoutingEnabled } from './webRoute';
 
-type View = { kind: 'collection' } | { kind: 'settings' } | { kind: 'game'; gameId: GameId };
+type View =
+  | { kind: 'collection' }
+  | { kind: 'settings' }
+  | { kind: 'game'; gameId: GameId; entry: GameEntry };
 
 // Measurement must never disturb a player, so a chunk that never arrives is
 // swallowed — but not silently: an unheard failure is how the browser build
@@ -76,11 +85,19 @@ function trackWebGameClosed(gameId: GameId): void {
  * collection — unless an Android home-screen shortcut asked for a game, which
  * boot has already read (app/shortcutLaunch.ts) so the same rule holds: the
  * game paints first, and the collection never flashes on the way.
+ *
+ * A `?game=` address is not a shortcut, however much the two share. The
+ * browser has no home screen to pin to, and a link somebody followed is an
+ * introduction to the game, not a way back into one already begun
+ * (docs/WEB_VERSION.md「URL(ゲーム別の入口)」) — so it enters by the
+ * ordinary door.
  */
 function initialView(): View {
   if (!webRoutingEnabled()) {
     const shortcutGame = shortcutLaunchGame();
-    return shortcutGame ? { kind: 'game', gameId: shortcutGame } : { kind: 'collection' };
+    return shortcutGame
+      ? { kind: 'game', gameId: shortcutGame, entry: 'shortcut' }
+      : { kind: 'collection' };
   }
   const gameId = currentRouteGame();
   if (!gameId) return { kind: 'collection' };
@@ -88,7 +105,7 @@ function initialView(): View {
   // result, a guide page. The app card is offered one game earlier for them
   // (services/webAppPrompt.ts); this is the only place that knows.
   noteWebArrivalOnGame();
-  return { kind: 'game', gameId };
+  return { kind: 'game', gameId, entry: 'collection' };
 }
 
 export function App() {
@@ -186,17 +203,17 @@ export function App() {
   // Recorded at the tap, not after the chunk resolves: the row reflects what
   // the player chose, and a load failure is rare enough not to complicate it.
   const enterGame = useCallback(
-    (gameId: GameId) => {
+    (gameId: GameId, entry: GameEntry) => {
       recordGameOpened(gameId);
       trackWebGameOpened(gameId);
-      show({ kind: 'game', gameId });
+      show({ kind: 'game', gameId, entry });
     },
     [show],
   );
 
   const openGame = useCallback(
     (gameId: GameId) => {
-      enterGame(gameId);
+      enterGame(gameId, 'collection');
       if (webRoutingEnabled()) pushRoute(gameId);
     },
     [enterGame],
@@ -265,7 +282,7 @@ export function App() {
       const target = gameIdFromShortcutUrl(url);
       if (showing === target) return;
       if (showing !== null) leaveGame(showing);
-      if (target !== null) enterGame(target);
+      if (target !== null) enterGame(target, 'shortcut');
       else show({ kind: 'collection' });
     });
     return () => {
@@ -294,7 +311,7 @@ export function App() {
       if (showing === target) return;
       if (showing !== null) leaveGame(showing);
       if (target !== null) {
-        enterGame(target);
+        enterGame(target, 'collection');
       } else {
         show({ kind: 'collection' });
         // The browser's Back out of a game is the same pause as the game's
@@ -362,11 +379,17 @@ export function App() {
           onExit={exitGame}
           onRetry={() => {
             resetLazyRoot(gameId);
+            // A second attempt goes in by the ordinary door. Whatever threw
+            // is unknown from here, and one of the things it could have been
+            // is the game opening straight onto a suspended board it could
+            // not draw (issue #113) — a retry that repeats that lands on the
+            // same screen twice.
+            show({ kind: 'game', gameId, entry: 'collection' });
             setGameNonce((n) => n + 1);
           }}
         >
           <Suspense fallback={<GameLoadingFallback onExit={exitGame} />}>
-            <LazyRoot onExit={exitGame} />
+            <LazyRoot onExit={exitGame} entry={view.entry} />
           </Suspense>
         </GameErrorBoundary>
       );

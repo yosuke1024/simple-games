@@ -143,6 +143,8 @@ export interface GinRummyProviderProps {
   initialSession: GinRummySession | null;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -152,10 +154,36 @@ export function GinRummyProvider({
   initialPrefs,
   initialSession,
   onExit,
+  entry,
   children,
 }: GinRummyProviderProps) {
+  /**
+   * Whether this launch opens straight onto the saved match instead of the
+   * home screen (issue #113). Decided once, from the records the provider was
+   * mounted with: a launch means what it meant when it happened, and a match
+   * saved or cleared afterwards cannot reach back and change it.
+   *
+   * Only a pinned home-screen shortcut asks. There is one match slot (§9), and
+   * the loader has already answered the whole question — a record the decoder
+   * refuses, a history that could not have been played, a move count that
+   * disagrees with the hand, a finished match: all of them come back null — so
+   * a session here IS the one match there is to come back to, the same fact
+   * `canResume` states to the home screen. Nothing is guessed and nothing is
+   * ranked, because with one slot there is never a second candidate.
+   *
+   * Quick Rules still come first (§10). A save can outlive a lost flag, and
+   * teaching the game before showing a table has no exception.
+   */
+  const [resumeAtMount] = useState(
+    () => entry === 'shortcut' && initialFlags.tutorialCompleted && initialSession !== null,
+  );
+  // Resume, or exactly what this line has always said. `resumeAtMount` already
+  // answers false until Quick Rules are behind the player, so the gate lives in
+  // one place rather than two — written twice, each copy covers for the other
+  // and neither can be seen to fail, and a guard nothing can observe failing is
+  // not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeAtMount ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [session, setSession] = useState<GinRummySession | null>(initialSession);
   const [stats, setStats] = useState<Stats>(initialStats);
@@ -173,10 +201,17 @@ export function GinRummyProvider({
   const statsRef = useRef(stats);
   statsRef.current = stats;
 
+  // A match resumed at mount arrives with its clock already run, and the two
+  // numbers it needs are exactly the two `activate` sets when the home screen
+  // hands a match back. Starting both at zero would have the first sync write
+  // the saved elapsedSeconds *down* to the seconds since launch; seeding only
+  // the live one would book the whole restored elapse into the statistics a
+  // second time. §9:「復元した経過秒は「計上済み」として扱い、二重計上しない」.
+  const resumedSeconds = resumeAtMount ? (initialSession?.elapsedSeconds ?? 0) : 0;
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
+  const elapsedRef = useRef(resumedSeconds);
   /** Play seconds already booked into the statistics for this match. */
-  const bookedRef = useRef(0);
+  const bookedRef = useRef(resumedSeconds);
   /** Whether this match's result has been booked; it happens exactly once. */
   const finalizedRef = useRef(false);
 

@@ -96,6 +96,8 @@ export interface Game2048ProviderProps {
   initialSession: Game2048Session | null;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -104,10 +106,31 @@ export function Game2048Provider({
   initialFlags,
   initialSession,
   onExit,
+  entry,
   children,
 }: Game2048ProviderProps) {
+  /**
+   * The suspended game this launch opens straight onto, or null for the home
+   * screen (issue #113). Decided once, from the record the provider was
+   * mounted with: a launch means whatever it meant when it happened, and no
+   * save made later can change that.
+   *
+   * Only a home-screen shortcut asks. There is one slot (§10), and it only
+   * ever holds a game still worth coming back to — `loadSavedGame` drops a
+   * finished or unreadable board to null — so "the game they were playing" is
+   * never a guess here; either it is there or it is not. And it is only asked
+   * once Quick Rules are behind the player: a first launch teaches the game
+   * before it shows a board (§11), and a shortcut is not a way past that.
+   */
+  const [resumed] = useState<Game2048Session | null>(() =>
+    entry === 'shortcut' && initialFlags.tutorialCompleted ? initialSession : null,
+  );
+  // Resume, or exactly what this line has always said. `resumed` already
+  // answers null until Quick Rules are behind the player, so the gate lives in
+  // one place rather than two — two would each cover for the other, and a
+  // guard nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumed ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [session, setSession] = useState<Game2048Session | null>(initialSession);
   const [stats, setStats] = useState<Stats>(initialStats);
@@ -123,10 +146,18 @@ export function Game2048Provider({
   const statsRef = useRef(stats);
   statsRef.current = stats;
 
+  // A game opened straight onto its board arrives with its clock already run,
+  // and the two numbers `activate` sets when Resume is pressed on the home
+  // screen are the same two. Starting them at zero would write this run's
+  // elapsed seconds back down to the seconds since mount, or — with only the
+  // first one seeded — book every second already played into the statistics a
+  // second time (§10: the restored elapsedSeconds comes back as *already
+  // booked*).
+  const resumedSeconds = resumed?.elapsedSeconds ?? 0;
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
+  const elapsedRef = useRef(resumedSeconds);
   /** Play seconds already booked into the statistics for this session. */
-  const bookedRef = useRef(0);
+  const bookedRef = useRef(resumedSeconds);
   /** Whether this run's records have been booked; it happens exactly once. */
   const finalizedRef = useRef(false);
 

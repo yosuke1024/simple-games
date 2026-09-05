@@ -52,6 +52,29 @@ function toSession(persisted: PersistedGame | null): QuickMathSession | null {
   return session !== null && session.status === 'playing' ? session : null;
 }
 
+/**
+ * The one suspended set a home-screen shortcut may open straight onto, or null
+ * when there is no single answer (issue #113).
+ *
+ * A shortcut is a way back into the set somebody was in the middle of. The two
+ * slots are held independently and neither evicts the other (§9), so "the set
+ * they were on" is only a fact when exactly one of them is suspended. Two would
+ * make it a guess, and guessing wrong drops somebody into the mode they did not
+ * ask for, mid-set — the daily when they meant level 30. None and two both mean
+ * the home screen, which is where every other door leads anyway, and where both
+ * sets are offered by name.
+ *
+ * Reads this game's own saves and nothing else: the shell says which door was
+ * used and never learns what was decided here
+ * (docs/ARCHITECTURE.md「ゲームレジストリの契約」).
+ */
+export function soleSuspendedMode(saved: SavedGames): GameMode | null {
+  const suspended = (['level', 'daily'] as const).filter(
+    (mode) => saved[mode]?.status === 'playing',
+  );
+  return suspended.length === 1 ? suspended[0]! : null;
+}
+
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
   const [level, daily] = await Promise.all([
     loadRecord(gameSchema, kv),

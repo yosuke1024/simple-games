@@ -57,11 +57,17 @@ interface LoadedData {
 export interface ReversiRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: what a door means is the provider's
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
 
-export function ReversiRoot({ onExit, kv = preferencesKV }: ReversiRootProps) {
+export function ReversiRoot({ onExit, entry, kv = preferencesKV }: ReversiRootProps) {
   const [data, setData] = useState<LoadedData | null>(null);
 
   useEffect(() => {
@@ -101,6 +107,7 @@ export function ReversiRoot({ onExit, kv = preferencesKV }: ReversiRootProps) {
       initialPrefs={data.prefs}
       initialSession={data.session}
       onExit={onExit}
+      entry={entry}
     >
       <ReversiScreens />
     </ReversiProvider>

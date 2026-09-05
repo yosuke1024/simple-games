@@ -95,6 +95,8 @@ export interface ConnectFourProviderProps {
   initialSession: ConnectFourSession | null;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -104,10 +106,35 @@ export function ConnectFourProvider({
   initialPrefs,
   initialSession,
   onExit,
+  entry,
   children,
 }: ConnectFourProviderProps) {
+  /**
+   * Whether this launch opens straight onto the saved match rather than the
+   * home screen (issue #113). Decided once, from the records the provider was
+   * mounted with: a launch means whatever it meant when it happened, and no
+   * match started later can change that.
+   *
+   * Only a home-screen shortcut asks — a tile on the collection, and the
+   * browser, open this game's home as they always did.
+   *
+   * There is one slot (§8), so "the match they were playing" is never a
+   * guess here: `loadSavedGame` has already discarded everything that is not
+   * a live match — a finished board, a board whose disc count disagrees with
+   * the move count, a board that could not have been played — so a session at
+   * all IS the one suspended match. Quick Rules still come first: a first
+   * launch teaches the game before it shows a board (§9), and the two records
+   * can disagree if one write was lost.
+   */
+  const [resumeDirectly] = useState(
+    () => entry === 'shortcut' && initialFlags.tutorialCompleted && initialSession !== null,
+  );
+  // Resume, or exactly what this line has always said. `resumeDirectly` already
+  // answers false until Quick Rules are behind the player, so the gate is in
+  // one place rather than two — two would each cover for the other, and a
+  // guard nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeDirectly ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [session, setSession] = useState<ConnectFourSession | null>(initialSession);
   const [stats, setStats] = useState<Stats>(initialStats);
@@ -124,10 +151,17 @@ export function ConnectFourProvider({
   const statsRef = useRef(stats);
   statsRef.current = stats;
 
+  // A match that arrives on screen at mount has its clock already run, and the
+  // two numbers `activate` sets when Resume is pressed on the home screen are
+  // these two. Leaving them at zero would write the played seconds back *down*
+  // to this sitting's on the first save; seeding only the first would book the
+  // whole restored elapse into the statistics a second time (§8 — a restored
+  // elapsedSeconds comes back as already booked).
+  const resumedSeconds = resumeDirectly ? (initialSession?.elapsedSeconds ?? 0) : 0;
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
+  const elapsedRef = useRef(resumedSeconds);
   /** Play seconds already booked into the statistics for this match. */
-  const bookedRef = useRef(0);
+  const bookedRef = useRef(resumedSeconds);
   /** Whether this match's result has been booked; it happens exactly once. */
   const finalizedRef = useRef(false);
 

@@ -96,6 +96,8 @@ export interface GomokuProviderProps {
   initialSession: GomokuSession | null;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -105,10 +107,35 @@ export function GomokuProvider({
   initialPrefs,
   initialSession,
   onExit,
+  entry,
   children,
 }: GomokuProviderProps) {
+  /**
+   * Whether this launch opens straight onto the suspended match instead of
+   * this game's home (issue #113). Decided once, from the record the provider
+   * was mounted with: a launch means whatever it meant when it happened, and
+   * no save made later in the session can change that.
+   *
+   * Only a home-screen shortcut asks — every other door opens the home, as it
+   * always did — and only once Quick Rules are behind the player: a first
+   * launch teaches the game before it shows a board (§9), and that gate has no
+   * close button, so its only way out starts a new easy match, which would
+   * finalize the saved one away.
+   *
+   * There is one slot and no ambiguity to resolve: `loadSavedGame` has already
+   * discarded a save that does not decode, whose stone count disagrees with
+   * its move count, or that is not a match still being played (§8), so a
+   * non-null session is the whole test.
+   */
+  const [resumeAtMount] = useState(
+    () => entry === 'shortcut' && initialFlags.tutorialCompleted && initialSession !== null,
+  );
+  // Resume, or exactly what this line has always said. `resumeAtMount` already
+  // answers false until Quick Rules are behind the player, so the gate is in
+  // one place rather than two — two would each cover for the other, and a
+  // guard nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeAtMount ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [session, setSession] = useState<GomokuSession | null>(initialSession);
   const [stats, setStats] = useState<Stats>(initialStats);
@@ -125,10 +152,20 @@ export function GomokuProvider({
   const statsRef = useRef(stats);
   statsRef.current = stats;
 
+  // A match resumed at mount arrives with its clock already run, and the two
+  // numbers it needs are the two `activate` sets when Resume is tapped on the
+  // home screen — a direct mount is the same arrival, without the tap. Leaving
+  // them at zero breaks the match's play time in one of two silent ways:
+  // `withElapsed` would write the accumulated seconds back *down* to this
+  // sitting's, or — with only the live clock seeded — `syncActiveGame` would
+  // book every second already counted a second time (see the backgrounding
+  // note below: the next launch hands the restored elapsedSeconds back as
+  // *already booked*).
+  const resumedSeconds = resumeAtMount ? (initialSession?.elapsedSeconds ?? 0) : 0;
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
+  const elapsedRef = useRef(resumedSeconds);
   /** Play seconds already booked into the statistics for this match. */
-  const bookedRef = useRef(0);
+  const bookedRef = useRef(resumedSeconds);
   /** Whether this match's result has been booked; it happens exactly once. */
   const finalizedRef = useRef(false);
 

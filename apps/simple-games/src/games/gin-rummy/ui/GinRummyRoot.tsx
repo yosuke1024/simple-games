@@ -57,11 +57,17 @@ interface LoadedData {
 export interface GinRummyRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). A fact, not an instruction: what a door means is the provider's
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
 
-export function GinRummyRoot({ onExit, kv = preferencesKV }: GinRummyRootProps) {
+export function GinRummyRoot({ onExit, entry, kv = preferencesKV }: GinRummyRootProps) {
   const [data, setData] = useState<LoadedData | null>(null);
 
   useEffect(() => {
@@ -101,6 +107,7 @@ export function GinRummyRoot({ onExit, kv = preferencesKV }: GinRummyRootProps) 
       initialPrefs={data.prefs}
       initialSession={data.session}
       onExit={onExit}
+      entry={entry}
     >
       <GinRummyScreens />
     </GinRummyProvider>

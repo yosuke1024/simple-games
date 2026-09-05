@@ -39,7 +39,12 @@ import {
   type GameMode,
   type MahjongSession,
 } from '../game';
-import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
+import {
+  clearSavedGame,
+  saveGame,
+  soleSuspendedMode,
+  type SavedGames,
+} from '../storage/gamePersistence';
 import {
   flagsSchema,
   progressSchema,
@@ -106,6 +111,8 @@ export interface MahjongProviderProps {
   initialSessions: SavedGames;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -115,13 +122,35 @@ export function MahjongProvider({
   initialProgress,
   initialSessions,
   onExit,
+  entry,
   children,
 }: MahjongProviderProps) {
+  /**
+   * The suspended game this launch opens straight onto, or null for the home
+   * screen (issue #113). Decided once, from the records the provider was
+   * mounted with: a launch means whatever it meant when it happened, and no
+   * game saved later can change that.
+   *
+   * Only a home-screen shortcut asks, and only once Quick Rules are behind
+   * the player — a first launch teaches the game before it shows a board
+   * (§11), and that order has no exception.
+   */
+  const [resumeMode] = useState<GameMode | null>(() =>
+    entry === 'shortcut' && initialFlags.tutorialCompleted
+      ? soleSuspendedMode(initialSessions)
+      : null,
+  );
+  // Resume, or exactly what this line has always said. `resumeMode` already
+  // answers null until Quick Rules are behind the player, so the gate lives in
+  // one place rather than two — two would each cover for the other, and a
+  // guard nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeMode ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
-  const [activeMode, setActiveMode] = useState<GameMode>('level');
+  // The slot the board reads through (`sessions[activeMode]` below): resuming
+  // the daily without this would render the level slot, which is empty.
+  const [activeMode, setActiveMode] = useState<GameMode>(resumeMode ?? 'level');
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
@@ -141,10 +170,17 @@ export function MahjongProvider({
 
   const session = sessions[activeMode];
 
+  // A game resumed at mount arrives with its clock already run, and the two
+  // numbers `activate` sets when Resume is pressed on the home screen are the
+  // same two. Starting them at zero would both book every second already
+  // played into the statistics a second time and let `withElapsed` rewrite
+  // the saved elapsedSeconds down to the seconds since mount — a fabricated
+  // best time (§10: the restored elapsedSeconds comes back *already booked*).
+  const resumedSeconds = resumeMode ? (initialSessions[resumeMode]?.elapsedSeconds ?? 0) : 0;
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
+  const elapsedRef = useRef(resumedSeconds);
   /** Play seconds already booked into the statistics for this session. */
-  const bookedRef = useRef(0);
+  const bookedRef = useRef(resumedSeconds);
 
   const withElapsed = useCallback((s: MahjongSession): MahjongSession => {
     return s.elapsedSeconds === elapsedRef.current

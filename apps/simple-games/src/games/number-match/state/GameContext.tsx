@@ -42,7 +42,12 @@ import {
   type GameMode,
   type GameSession,
 } from '../game';
-import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
+import {
+  clearSavedGame,
+  saveGame,
+  soleSuspendedMode,
+  type SavedGames,
+} from '../storage/gamePersistence';
 import {
   flagsSchema,
   prefsSchema,
@@ -115,6 +120,8 @@ export interface AppProviderProps {
   initialSessions: SavedGames;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -125,13 +132,36 @@ export function AppProvider({
   initialPrefs,
   initialSessions,
   onExit,
+  entry,
   children,
 }: AppProviderProps) {
+  /**
+   * The suspended game this launch opens straight onto, or null for the home
+   * screen (issue #113). Decided once, from the records the provider was
+   * mounted with: a launch means whatever it meant when it happened, and no
+   * save made later can change that.
+   *
+   * Only a home-screen shortcut asks, and only once the tutorial is behind
+   * the player — a first launch teaches the three steps before it shows a
+   * board (spec §17), and a shortcut is not a way past them.
+   */
+  const [resumeMode] = useState<GameMode | null>(() =>
+    entry === 'shortcut' && initialFlags.tutorialCompleted
+      ? soleSuspendedMode(initialSessions)
+      : null,
+  );
+  // Resume, or exactly what this line has always said. `resumeMode` already
+  // answers null until the tutorial is behind the player, so the gate is in
+  // one place rather than two — two would each cover for the other, and a
+  // guard nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeMode ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
-  const [activeMode, setActiveMode] = useState<GameMode>('level');
+  // The slot the board reads through (`sessions[activeMode]` below). A resume
+  // that left this on 'level' while the suspended game is the daily or a free
+  // board would render nothing at all — GameScreen has no session to draw.
+  const [activeMode, setActiveMode] = useState<GameMode>(resumeMode ?? 'level');
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
@@ -154,8 +184,16 @@ export function AppProvider({
 
   const session = sessions[activeMode];
 
+  // A game resumed at mount arrives with its clock already run, and the one
+  // number `activate` hands over when Resume is pressed on the home screen is
+  // this one. Left at zero, the first save — a match, a hint, backgrounding —
+  // would write the session's elapsed seconds back down to the seconds since
+  // mount, losing the play and, on the clear that follows, stamping
+  // `bestClearSeconds` with a time nobody played (statsLogic.ts — the score
+  // itself has no time element, §12; this is a statistics field).
+  const resumedSeconds = resumeMode ? (initialSessions[resumeMode]?.elapsedSeconds ?? 0) : 0;
   /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
+  const elapsedRef = useRef(resumedSeconds);
 
   /** Session with the live clock merged in — used whenever it leaves React. */
   const withElapsed = useCallback((s: GameSession): GameSession => {
