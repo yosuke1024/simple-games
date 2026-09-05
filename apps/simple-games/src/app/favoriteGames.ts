@@ -15,6 +15,14 @@
  *
  * State lives at module level with fire-and-forget persistence, mirroring
  * `recentGames.ts`. A failed save costs a pin, never a saved game.
+ *
+ * The shelf has one reader outside the screens: on iOS it is mirrored onto
+ * the app icon's quick actions (services/homeShortcut/quickActions.ts, issue
+ * #114). That reader subscribes (`subscribeFavoriteGames`, the shape
+ * monetization/adRemoval.ts uses) and is told after every change, including
+ * the reload "Reset Local Data" performs. Nothing here knows what it does
+ * with the news, and no other shape of this module changed for it — the
+ * order, the record, and the three ways of pinning are what they were.
  */
 import type { KVStore } from '../storage/kv';
 import { preferencesKV } from '../storage/kv';
@@ -25,10 +33,23 @@ import { GAMES, type GameId } from './registry';
 let state: FavoriteGames = favoriteGamesSchema.defaultValue();
 let kvStore: KVStore = preferencesKV;
 
-/** Loads the shelf at boot. Local read only; never blocks the app. */
+type FavoriteGamesListener = (favorites: readonly GameId[]) => void;
+const listeners = new Set<FavoriteGamesListener>();
+
+function notify(): void {
+  const favorites = getFavoriteGames();
+  for (const listener of listeners) listener(favorites);
+}
+
+/**
+ * Loads the shelf at boot. Local read only; never blocks the app. Also what
+ * "Reset Local Data" calls to reload the emptied record, so subscribers hear
+ * about that too.
+ */
 export async function initFavoriteGames(kv: KVStore = preferencesKV): Promise<void> {
   kvStore = kv;
   state = await loadRecord(favoriteGamesSchema, kv);
+  notify();
 }
 
 const isKnownGame = (id: string): id is GameId => GAMES.some((game) => game.id === id);
@@ -61,11 +82,27 @@ export function toggleFavoriteGame(gameId: GameId): readonly GameId[] {
       [...state.ids, gameId].slice(-FAVORITE_GAMES_MAX);
   state = { ...state, ids };
   void saveRecord(favoriteGamesSchema, state, kvStore);
+  notify();
   return getFavoriteGames();
+}
+
+/**
+ * Hears the shelf after every change — a pin, an unpin, a reload — with the
+ * shelf as `getFavoriteGames` would answer it. Returns the unsubscriber. Not
+ * for the screens, which each own their own copy and repaint from the return
+ * value of `toggleFavoriteGame`; for the one thing outside the screens that
+ * has to follow the shelf (see the header).
+ */
+export function subscribeFavoriteGames(listener: FavoriteGamesListener): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 /** Test hook. */
 export function resetFavoriteGamesForTesting(): void {
   state = favoriteGamesSchema.defaultValue();
   kvStore = preferencesKV;
+  listeners.clear();
 }

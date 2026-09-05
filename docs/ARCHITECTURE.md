@@ -138,7 +138,7 @@ src/
 
 ## コレクションホーム
 
-収録数が増えても使えることが設計条件(`CollectionHomeScreen.tsx`)。**全ゲームはグリッド**(スマホ 2 列、広い画面で 3〜5 列)で、カテゴリ別セクションに分ける。**説明文はホームに置かない**——Quick Rules と Landing Page が担う。**「最近遊んだ」**(上限 2・0 件なら節ごと非表示・時刻や進捗を持たない)と**「お気に入り」**(留めた順・3 経路とも同じ `sg.favorites` を書く・お気に入りは最近遊んだから落とす)がグリッドの上に乗る。**「ホーム画面ショートカット」**(Android のみ。ショートカットからの起動だけは、中断中の局がちょうど 1 つのときに限りその盤面へ直接入る——判定はシェルではなく各ゲームが自分の保存領域だけを見て行い、`src/test/shortcutResumeWiring.test.ts` が機械的に見る。issue #113)と**ゲーム名の検索**(常設の検索ボックスは置かない・一致は表示中タイトルへの部分一致のみ)も同じ画面の機能で、いずれも状態表示ではなく近道であることを繰り返し原則にする。
+収録数が増えても使えることが設計条件(`CollectionHomeScreen.tsx`)。**全ゲームはグリッド**(スマホ 2 列、広い画面で 3〜5 列)で、カテゴリ別セクションに分ける。**説明文はホームに置かない**——Quick Rules と Landing Page が担う。**「最近遊んだ」**(上限 2・0 件なら節ごと非表示・時刻や進捗を持たない)と**「お気に入り」**(留めた順・3 経路とも同じ `sg.favorites` を書く・お気に入りは最近遊んだから落とす)がグリッドの上に乗る。**「ホーム画面ショートカット」**(Android のみ。ショートカットからの起動だけは、中断中の局がちょうど 1 つのときに限りその盤面へ直接入る——判定はシェルではなく各ゲームが自分の保存領域だけを見て行い、`src/test/shortcutResumeWiring.test.ts` が機械的に見る。issue #113)、**「ホーム画面の Quick Actions」**(iOS のみ。お気に入りの先頭 4 本をアプリアイコン長押しのメニューに映す。項目は Android のショートカットと同じ `?game=<id>` の住所を運び、起動経路も同じ 1 本。issue #114)と**ゲーム名の検索**(常設の検索ボックスは置かない・一致は表示中タイトルへの部分一致のみ)も同じ画面の機能で、いずれも状態表示ではなく近道であることを繰り返し原則にする。
 
 → 全文: [architecture/collection-home.md](architecture/collection-home.md)
 
@@ -190,7 +190,7 @@ src/
 
 ## Web / Android / iOS
 
-Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS アプリ化する(SSR 不要のため Next.js は使用しない)。**プラットフォーム差分は 3 箇所に限定する**: 広告 ID・ストアの可用性判定・ホーム画面ショートカット。いずれも実行時に `Capacitor.getPlatform()` で選び、ゲーム・保存・i18n のコードに `if (ios)` を書かない。**ハードウェア戻るボタン**: ゲーム内ホーム→コレクションへ、コレクション→アプリ最小化。`android:enableOnBackInvokedCallback="false"` は削除しない——targetSdk 36 の予測型戻るが既定で有効になると `@capacitor/app` の `backButton` イベントが一切発火しなくなる実機バグを回避するためで、外すとハードウェア戻るがアプリ全体で無反応になる。
+Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS アプリ化する(SSR 不要のため Next.js は使用しない)。**プラットフォーム差分は 3 箇所に限定する**: 広告 ID・ストアの可用性判定・ホーム画面ショートカット(Android の Pinned Shortcut と iOS の Quick Actions は同じ `services/homeShortcut/` に住む)。いずれも実行時に `Capacitor.getPlatform()` で選び、ゲーム・保存・i18n のコードに `if (ios)` を書かない。**ハードウェア戻るボタン**: ゲーム内ホーム→コレクションへ、コレクション→アプリ最小化。`android:enableOnBackInvokedCallback="false"` は削除しない——targetSdk 36 の予測型戻るが既定で有効になると `@capacitor/app` の `backButton` イベントが一切発火しなくなる実機バグを回避するためで、外すとハードウェア戻るがアプリ全体で無反応になる。
 
 → 全文: [architecture/platforms.md](architecture/platforms.md)
 

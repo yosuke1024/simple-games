@@ -371,6 +371,37 @@ JS 側は自動テストが見ている(`src/app/App.shortcut.test.tsx` /
       `Rechercher un jeu`)
 - [ ] ダークテーマで入力欄の枠・文字・プレースホルダーが読めること
 
+## 5.11 iOS のホーム画面 Quick Actions([ARCHITECTURE.md](ARCHITECTURE.md)「コレクションホーム」, issue #114)
+
+JS 側は自動テストが見ている(`src/services/homeShortcut/quickActions.test.ts` /
+`src/app/favoriteGames.test.ts` / `src/app/shortcutLaunch.test.ts` /
+`src/app/App.shortcut.test.tsx`)。ネイティブ側(`AppDelegate.swift` /
+`QuickActionsPlugin.swift` / `MainViewController.swift`)はこのリポジトリの CI では
+ビルドされないので、**Xcode でのビルドと実機確認がここに残る**。
+
+- [ ] §4.7 の `xcodebuild … build` が通ること。`Main.storyboard` の初期 VC が
+      `MainViewController` になっていること(`cap sync ios` は戻さない)
+- [ ] お気に入り 0 件でアプリアイコンを長押しすると、ゲームの項目が 1 つも
+      無いこと(OS 自身の「アプリを削除」「アプリを共有」だけ)
+- [ ] お気に入りを 1 本留めると、**再起動せずに**アイコン長押しにその 1 本が
+      出ること。外すと消えること
+- [ ] 5 本以上留めても項目は 4 本で、棚の**先頭 4 本(留めた順)**であること。
+      先頭の 1 本を外すと 5 本目が繰り上がること
+- [ ] 項目をタップして cold start(完全終了状態から)しても、コレクションを
+      経由せず対象ゲームのホームが最初に出ること。中断中の局がちょうど 1 つの
+      ゲームでは盤面へ直接入ること(#113)
+- [ ] 別のゲームを開いた状態でのタップ(warm start)で対象ゲームへ切り替わり、
+      レビューの質問が出ないこと。**同じゲームを開いている最中**のタップでは
+      何も変わらないこと
+- [ ] 通常のアプリアイコンからの起動は従来どおりコレクションが開くこと
+- [ ] 「ローカルデータを削除」のあと項目が全部消えていること
+- [ ] 3 経路(ゲームホームの星 / タイルの長押し / 設定の一覧)のどれで留めても
+      同じように反映されること
+- [ ] 長いタイトル(`Mahjong Solitaire` / `Spider Solitaire`)がメニューで
+      切れないこと。項目のアイコンは全部同じ再生記号であること(仕様)
+- [ ] Android / Web は変わっていないこと(Android の §5.9 が通り、お気に入り
+      登録でショートカットが作られないこと)
+
 ## 6. ストア掲載
 
 - [ ] `apps/simple-games/store/listing.md` の文言を各言語へ反映

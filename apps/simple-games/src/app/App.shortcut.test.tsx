@@ -1,7 +1,10 @@
 /**
- * The shell answering an Android home-screen shortcut (issue #110): a pinned
- * icon that launches the app straight into one game, the Android counterpart
- * of the browser's `?game=` arrival (App.route.test.tsx).
+ * The shell answering a home-screen shortcut: on Android a pinned icon (issue
+ * #110), on iOS a quick action in the app icon's menu (issue #114) — either
+ * launches the app straight into one game, the app's counterpart of the
+ * browser's `?game=` arrival (App.route.test.tsx). The two OSes feed the same
+ * plugin the same address, so the shell's answers below are written once and
+ * the iOS block at the end only checks that the platform changes nothing.
  *
  * Two arrivals, and each is pinned separately below:
  *
@@ -32,7 +35,7 @@ const { capacitorMock, appMock, reviewMock } = vi.hoisted(() => {
   const listeners = new Map<string, Set<Listener>>();
   const state = { launchUrl: undefined as string | undefined };
   return {
-    capacitorMock: { native: true },
+    capacitorMock: { platform: 'android' },
     reviewMock: {
       shouldPromptReview: vi.fn<() => boolean>(() => false),
       markReviewPromptShown: vi.fn(),
@@ -72,8 +75,8 @@ vi.mock('@capacitor/core', async (importOriginal) => {
     ...actual,
     Capacitor: {
       ...actual.Capacitor,
-      isNativePlatform: () => capacitorMock.native,
-      getPlatform: () => (capacitorMock.native ? 'android' : 'web'),
+      isNativePlatform: () => capacitorMock.platform !== 'web',
+      getPlatform: () => capacitorMock.platform,
     },
   };
 });
@@ -175,7 +178,7 @@ const collectionHome = () => screen.findByRole('heading', { name: 'Simple Games'
 const leaveGame = () => screen.getByRole('button', { name: 'All games' });
 
 beforeEach(() => {
-  capacitorMock.native = true;
+  capacitorMock.platform = 'android';
   appMock.state.launchUrl = undefined;
   appMock.listeners.clear();
   appMock.App.addListener.mockClear();
@@ -429,9 +432,69 @@ describe('the ordinary way in', () => {
   });
 });
 
+/**
+ * iOS (issue #114). AppDelegate.swift hands a tapped quick action to the App
+ * plugin as a URL open — into `getLaunchUrl` on a cold start, as `appUrlOpen`
+ * on a warm one — so the shell meets exactly the events the tests above feed
+ * it. What is pinned here is that nothing in the shell is keyed to Android:
+ * the same cold start, warm start, fail-safe landing and ordinary launch.
+ */
+describe('the same doors on iOS', () => {
+  beforeEach(() => {
+    capacitorMock.platform = 'ios';
+  });
+
+  it('opens the game a quick action names as the first thing on screen, by the shortcut door', async () => {
+    await launchFrom(shortcutUrlFor('freecell'));
+
+    expect(playing('freecell')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Simple Games' })).not.toBeInTheDocument();
+    expect(enteredBy()).toBe('shortcut');
+    expect(getRecentGames()).toEqual(['freecell']);
+  });
+
+  it('switches games for a quick action tapped while the app is running', async () => {
+    await launchFrom(undefined);
+    await collectionHome();
+
+    tapShortcut(shortcutUrlFor('minesweeper'));
+    expect(playing('minesweeper')).toBeInTheDocument();
+    expect(enteredBy()).toBe('shortcut');
+
+    tapShortcut(shortcutUrlFor('sudoku'));
+    expect(playing('sudoku')).toBeInTheDocument();
+    expect(screen.queryByText('playing minesweeper')).not.toBeInTheDocument();
+    expect(releaseSound).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves the same game alone when its own quick action is tapped again', async () => {
+    await launchFrom(shortcutUrlFor('sudoku'));
+    const board = playing('sudoku');
+
+    tapShortcut(shortcutUrlFor('sudoku'));
+
+    expect(playing('sudoku')).toBe(board);
+    expect(releaseSound).not.toHaveBeenCalled();
+  });
+
+  // A quick action from a build that still had the game; the OS list is
+  // rewritten at the next boot, but this launch is that boot.
+  it('lands a quick action for a game this build no longer carries on the collection', async () => {
+    await launchFrom(RETIRED);
+    expect(await collectionHome()).toBeInTheDocument();
+    expect(getRecentGames()).toEqual([]);
+  });
+
+  it('is not what a launch from the app icon does: that still opens the collection', async () => {
+    await launchFrom(undefined);
+    expect(await collectionHome()).toBeInTheDocument();
+    expect(document.documentElement.dataset.game).toBeUndefined();
+  });
+});
+
 describe('the shell the browser runs', () => {
   it('never registers for a shortcut, and never reads the launch', async () => {
-    capacitorMock.native = false;
+    capacitorMock.platform = 'web';
     await launchFrom(shortcutUrlFor('sudoku'));
 
     expect(await collectionHome()).toBeInTheDocument();

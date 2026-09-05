@@ -70,8 +70,8 @@ https://pixapps.ai/simple-games/play/?game=sudoku → Sudoku
 - 対象ゲーム以外の chunk を先読みしない。直接アクセスでもロードされるのは
   そのゲームの `game-<id>` 1 つだけ(`app/lazyRoots.ts`)。
 - **この住所で開くのはそのゲームのホームであって、中断中の盤面ではない。**
-  Android のホーム画面ショートカットは同じ `?game=` を運ぶが、進行中の 1 局が
-  一意ならそちらは盤面へ直接入る(issue #113)。シェルは両者を `entry`
+  Android のホーム画面ショートカットと iOS の Quick Action は同じ `?game=` を
+  運ぶが、進行中の 1 局が一意ならそちらは盤面へ直接入る(issue #113)。シェルは両者を `entry`
   (`'collection'` / `'shortcut'`)で区別し、ブラウザは常に前者を渡す ——
   ブラウザにはピン留めするホーム画面が無く、**誰かが渡したリンクは「始めた
   対局への帰り道」ではなくそのゲームの紹介**だからである。ショートカットは
@@ -119,8 +119,10 @@ App Links / Universal Links は導入しない。
 
 Android アプリのホーム画面ショートカット(issue #110)は、この同じ住所を
 Intent の中に運び、同じパーサで読み戻す——`app/shortcutLaunch.ts` が
-`?game=<id>` を組み立て、`gameIdFromHref` で読む。ゲーム別の入口はブラウザと
-ショートカットで 1 本の契約のまま増えていない。上の「履歴の扱い」
+`?game=<id>` を組み立て、`gameIdFromHref` で読む。iOS の Quick Action(issue #114)
+も同じ住所を項目の `userInfo` に運び、`AppDelegate.swift` が Capacitor の URL open
+に変換するので、読む側は 1 行も増えていない。ゲーム別の入口はブラウザ・
+ショートカット・Quick Action で 1 本の契約のまま増えていない。上の「履歴の扱い」
 (`history.back()` / `sgRouteDepth`)はそれでもアプリでは一度も動かない——
 住所欄も `history` も無い native の世界であることは変わらず、画面の切り替えは
 `app/App.tsx` の `appUrlOpen` リスナーが直接行う。
@@ -552,8 +554,9 @@ I18N_POLICY.md の高リスクキー 5 番(無料・オフライン・paywall �
   **URL ルーティングは 4 つ目の例外にしていない**(上の「URL(ゲーム別の入口)」)。
   外部の SDK もサイト側の資産も持ち込まず、native では 1 行も走らない実行時ガードで
   足りるものを、成果物の分離検査が要る側へ移す理由がないため。Android の
-  ホーム画面ショートカット(issue #110)も同じ理由でビルドゲートではなく
-  実行時ガード側に置く(`Capacitor.getPlatform() === 'android'`)。
+  ホーム画面ショートカット(issue #110)と iOS の Quick Actions(issue #114)も
+  同じ理由でビルドゲートではなく実行時ガード側に置く
+  (`Capacitor.getPlatform() === 'android'` / `=== 'ios'`)。
 - `index.html` は 1 枚のまま。Web 向けの meta / OGP / canonical はネイティブ側の
   WebView(Android WebView / iOS の WKWebView)が無視するので、分ける理由がない。
   **共有リンクのプレビューもこの 1 枚が持つ OGP をそのまま使う**(issue #86)。

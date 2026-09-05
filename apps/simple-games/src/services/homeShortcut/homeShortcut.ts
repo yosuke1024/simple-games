@@ -7,10 +7,12 @@
  * A pinned shortcut: the OS's own door straight to one game, made only when
  * somebody asks for it by name. Nothing here runs when a game is pinned to
  * the collection's Favorites shelf — the two are separate decisions offered
- * side by side in the same sheet, and a favourite never grows a home-screen
- * icon on its own. Nor is it a second app: the shortcut launches Simple Games
- * with a URI that names the game (app/shortcutLaunch.ts), and everything
- * after that is the app.
+ * side by side in the same sheet, and on Android a favourite never grows a
+ * home-screen icon on its own (a new icon on somebody's launcher is theirs to
+ * ask for; iOS, which places no icons, mirrors the shelf into the app icon's
+ * own menu instead — quickActions.ts). Nor is it a second app: the shortcut
+ * launches Simple Games with a URI that names the game
+ * (app/shortcutLaunch.ts), and everything after that is the app.
  *
  * EVERY ENDING IS A NORMAL ENDING
  *
@@ -27,8 +29,9 @@
  * (docs/ARCHITECTURE.md: no analytics in the app artifact).
  *
  * Android only, by runtime guard rather than by build (docs/WEB_VERSION.md
- * 「実装上の約束」). iOS has no pinned shortcuts — its Quick Actions are
- * issue #114 — and the browser has nothing to pin to.
+ * 「実装上の約束」). iOS has no pinned shortcuts — its quick actions are the
+ * sibling module quickActions.ts (issue #114) — and the browser has nothing
+ * to pin to.
  */
 import { Capacitor } from '@capacitor/core';
 import type { GameDefinition } from '../../app/registry';

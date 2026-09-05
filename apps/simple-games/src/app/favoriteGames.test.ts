@@ -4,13 +4,14 @@
  * moves another, and a record naming a game this build does not have shortens
  * the shelf instead of breaking the home.
  */
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMemoryKV } from '../storage/kv';
 import { FAVORITE_GAMES_MAX, STORAGE_KEYS, favoriteGamesSchema } from '../storage/schemas';
 import {
   getFavoriteGames,
   initFavoriteGames,
   resetFavoriteGamesForTesting,
+  subscribeFavoriteGames,
   toggleFavoriteGame,
 } from './favoriteGames';
 import { GAMES } from './registry';
@@ -118,6 +119,69 @@ describe('pinning', () => {
       remove: () => Promise.resolve(),
     });
     expect(getFavoriteGames()).toEqual([]);
+  });
+});
+
+/**
+ * The one reader outside the screens — the iOS quick actions
+ * (services/homeShortcut/quickActions.ts, issue #114) — follows the shelf by
+ * subscribing. What it must hear: every change, the reload "Reset Local Data"
+ * performs, and the shelf as the screens see it, never the raw record.
+ */
+describe('telling a subscriber', () => {
+  it('hears every pin and unpin, with the shelf as it now stands', async () => {
+    await initFavoriteGames(createMemoryKV());
+    const heard: (readonly string[])[] = [];
+    subscribeFavoriteGames((favorites) => heard.push(favorites));
+
+    toggleFavoriteGame('sudoku');
+    toggleFavoriteGame('hearts');
+    toggleFavoriteGame('sudoku');
+    expect(heard).toEqual([['sudoku'], ['sudoku', 'hearts'], ['hearts']]);
+  });
+
+  it('hears a reload, which is how "Reset Local Data" empties the shelf', async () => {
+    await initFavoriteGames(createMemoryKV());
+    toggleFavoriteGame('sudoku');
+    const heard: (readonly string[])[] = [];
+    subscribeFavoriteGames((favorites) => heard.push(favorites));
+
+    await initFavoriteGames(createMemoryKV());
+    expect(heard).toEqual([[]]);
+  });
+
+  it('hears the shelf, not the record: ids this build has no game for are already gone', async () => {
+    const heard: (readonly string[])[] = [];
+    subscribeFavoriteGames((favorites) => heard.push(favorites));
+    await initFavoriteGames(
+      createMemoryKV({
+        [STORAGE_KEYS.favorites]: JSON.stringify({
+          schemaVersion: 1,
+          ids: ['retired-game', 'sudoku'],
+        }),
+      }),
+    );
+    expect(heard).toEqual([['sudoku']]);
+  });
+
+  it('stops hearing once unsubscribed', async () => {
+    await initFavoriteGames(createMemoryKV());
+    const listener = vi.fn();
+    const unsubscribe = subscribeFavoriteGames(listener);
+    toggleFavoriteGame('sudoku');
+    unsubscribe();
+    toggleFavoriteGame('hearts');
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('is told after the shelf has changed, so what it reads back agrees', async () => {
+    await initFavoriteGames(createMemoryKV());
+    let readBack: readonly string[] = [];
+    subscribeFavoriteGames(() => {
+      readBack = getFavoriteGames();
+    });
+    toggleFavoriteGame('kakuro');
+    expect(readBack).toEqual(['kakuro']);
   });
 });
 

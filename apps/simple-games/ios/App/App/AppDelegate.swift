@@ -7,7 +7,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // A cold start from a Home Screen quick action (issue #114): the item
+        // the player tapped is in the launch options, before any JavaScript
+        // runs. Handing it over here, rather than waiting for
+        // performActionFor(_:) a moment later, is what lets boot read the game
+        // synchronously (`getLaunchUrl`) and paint it as the first screen —
+        // the collection never flashes on the way, exactly as on Android.
+        // Returning false is Apple's documented way of saying "handled here":
+        // UIKit then does not raise performActionFor(_:) for the same item,
+        // which would otherwise deliver the launch twice.
+        if let item = launchOptions?[.shortcutItem] as? UIApplicationShortcutItem {
+            openGame(from: item, in: application)
+            return false
+        }
         return true
     }
 
@@ -44,6 +56,40 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Feel free to add additional processing here, but if you want the App API to support
         // tracking app url opens, make sure to keep this call
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
+    }
+
+    /**
+     A Home Screen quick action tapped while the app is already running — the
+     warm start (issue #114). Capacitor's App plugin is loaded by now, so the
+     URL-open below reaches the JavaScript as `appUrlOpen`, the same event an
+     Android shortcut raises through onNewIntent, and App.tsx switches games.
+     */
+    func application(_ application: UIApplication, performActionFor shortcutItem: UIApplicationShortcutItem, completionHandler: @escaping (Bool) -> Void) {
+        completionHandler(openGame(from: shortcutItem, in: application))
+    }
+
+    /**
+     Turns a quick action into the URL-open the rest of the app already
+     understands. The item carries the game's address — the browser version's
+     own `?game=<id>` URL — in its `userInfo` (QuickActionsPlugin.swift), and
+     handing that to Capacitor's ApplicationDelegateProxy is exactly what a
+     real URL open does: it sets the launch URL `getLaunchUrl()` answers and
+     posts the notification the App plugin turns into `appUrlOpen`. Nothing
+     here reads the address; app/shortcutLaunch.ts does, with the one parser
+     the browser and Android already share, and an id this build no longer
+     carries lands on the collection there.
+
+     An item without an address — none is ever written, but a stale one from a
+     build this code did not make is not impossible — is simply not a launch
+     into a game: the ordinary launch proceeds and the collection opens.
+     */
+    @discardableResult
+    private func openGame(from item: UIApplicationShortcutItem, in application: UIApplication) -> Bool {
+        guard let raw = item.userInfo?[QuickActionsPlugin.urlKey] as? String,
+              let url = URL(string: raw) else {
+            return false
+        }
+        return ApplicationDelegateProxy.shared.application(application, open: url, options: [:])
     }
 
 }

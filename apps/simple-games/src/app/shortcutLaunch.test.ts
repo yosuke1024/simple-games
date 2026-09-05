@@ -1,10 +1,11 @@
 /**
- * How an Android home-screen shortcut names a game, and how boot reads it
- * back (issue #110). The address is the browser's own `?game=` contract, so
- * the two things pinned here are that the builder and the parser agree for
- * every game in the registry, and that nothing is read on any platform but
- * Android — the web and iOS are unchanged by this feature, and that has to be
- * a fact about the code rather than about which plugins happen to answer.
+ * How a home-screen shortcut names a game, and how boot reads it back — an
+ * Android pinned shortcut (issue #110) and an iOS quick action (issue #114)
+ * alike. The address is the browser's own `?game=` contract, so the two
+ * things pinned here are that the builder and the parser agree for every game
+ * in the registry, and that nothing is read in the browser — the web is
+ * unchanged by either feature, and that has to be a fact about the code
+ * rather than about which plugins happen to answer.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -100,8 +101,17 @@ describe('reading the launch at boot', () => {
     expect(shortcutLaunchGame()).toBeNull();
   });
 
-  it.each(['ios', 'web'])('asks nothing on %s, where no shortcut can exist', async (platform) => {
-    capacitorMock.platform = platform;
+  // The same plugin call, fed by AppDelegate.swift from the tapped quick
+  // action's address instead of by the launcher's Intent (issue #114).
+  it('reads the launch on iOS too, where a quick action carries the same address', async () => {
+    capacitorMock.platform = 'ios';
+    appMock.getLaunchUrl.mockResolvedValue({ url: shortcutUrlFor('freecell') });
+    await initShortcutLaunch();
+    expect(shortcutLaunchGame()).toBe('freecell');
+  });
+
+  it('asks nothing in the browser, where no shortcut can exist', async () => {
+    capacitorMock.platform = 'web';
     await initShortcutLaunch();
     expect(appMock.getLaunchUrl).not.toHaveBeenCalled();
     expect(shortcutLaunchGame()).toBeNull();

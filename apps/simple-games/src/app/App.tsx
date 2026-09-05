@@ -10,11 +10,12 @@
  * the app, which has no address bar and whose hardware back button already
  * owns the same gesture.
  *
- * The Android app has one door of its own: a home-screen shortcut pinned to
- * a game (app/shortcutLaunch.ts, issue #110). It carries the same `?game=`
- * address, arrives through the App plugin instead of the address bar — at
- * boot for a cold start, as `appUrlOpen` for a warm one — and touches no
- * history, because there is none.
+ * The app has one door of its own: a home-screen shortcut to a game — on
+ * Android an icon pinned to the launcher (issue #110), on iOS a quick action
+ * in the app icon's menu, mirrored from the favourites (issue #114). Either
+ * carries the same `?game=` address, arrives through the App plugin instead
+ * of the address bar — at boot for a cold start, as `appUrlOpen` for a warm
+ * one (app/shortcutLaunch.ts) — and touches no history, because there is none.
  *
  * Which door was used is the one thing the shell tells a game about itself
  * (`entry`, app/registry.ts, issue #113). It is a fact, not an instruction:
@@ -82,9 +83,9 @@ function trackWebGameClosed(gameId: GameId): void {
  * The screen the shell opens on. In the browser that is whatever the address
  * asks for, decided before the first render so a direct link paints the game
  * rather than flashing the collection on the way to it. The app opens on the
- * collection — unless an Android home-screen shortcut asked for a game, which
- * boot has already read (app/shortcutLaunch.ts) so the same rule holds: the
- * game paints first, and the collection never flashes on the way.
+ * collection — unless a home-screen shortcut asked for a game, which boot has
+ * already read (app/shortcutLaunch.ts) so the same rule holds: the game
+ * paints first, and the collection never flashes on the way.
  *
  * A `?game=` address is not a shortcut, however much the two share. The
  * browser has no home screen to pin to, and a link somebody followed is an
@@ -258,10 +259,12 @@ export function App() {
   }, []);
 
   /**
-   * A home-screen shortcut tapped while the app is already running, Android
-   * only (issue #110). The activity is `singleTask`, so the launcher's Intent
-   * arrives as `onNewIntent` and the App plugin raises it here with the URI
-   * the shortcut carries — the same `?game=` address the browser reads.
+   * A home-screen shortcut tapped while the app is already running. On
+   * Android the activity is `singleTask`, so the launcher's Intent arrives as
+   * `onNewIntent` and the App plugin raises it here with the URI the shortcut
+   * carries — the same `?game=` address the browser reads (issue #110). On
+   * iOS AppDelegate.swift hands a tapped quick action to the same plugin as a
+   * URL open, so it arrives here the same way (issue #114).
    *
    * The same comparison the browser's `popstate` makes: what the URI asks for
    * against what is showing. The same game already on screen — wherever
@@ -271,9 +274,11 @@ export function App() {
    * longer carries lands on the collection: the fail-safe for a shortcut that
    * outlived its game.
    *
-   * On a cold start the plugin raises this once more for the launch Intent
-   * itself, retained until a listener exists. By then boot has already opened
-   * that game (`initialView`), so the comparison finds nothing to do.
+   * On a cold start the plugin may raise this once more for the launch
+   * itself, retained until a listener exists (Android always does; iOS only
+   * when its App plugin was already loaded when the item was handed over).
+   * By then boot has already opened that game (`initialView`), so the
+   * comparison finds nothing to do.
    */
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
