@@ -10,10 +10,10 @@
 // Register this game's 14-locale catalog the moment the chunk loads,
 // before anything below renders (issue #38, src/i18n/registry.ts).
 import '../i18n';
-import { useEffect, useState } from 'react';
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
+import { useLoadedRecords } from '../../../ui/useLoadedRecords';
 import type { Game2048Session } from '../game';
 import { Game2048Provider, useGame2048 } from '../state/GameContext';
 import { loadSavedGame } from '../storage/gamePersistence';
@@ -52,35 +52,25 @@ export interface Game2048RootProps {
   kv?: KVStore;
 }
 
+function defaultRecords(): LoadedData {
+  return {
+    stats: statsSchema.defaultValue(),
+    flags: flagsSchema.defaultValue(),
+    session: null,
+  };
+}
+
+async function loadRecords(kv: KVStore): Promise<LoadedData> {
+  const [stats, flags, session] = await Promise.all([
+    loadRecord(statsSchema, kv),
+    loadRecord(flagsSchema, kv),
+    loadSavedGame(kv),
+  ]);
+  return { stats, flags, session };
+}
+
 export function Game2048Root({ onExit, kv = preferencesKV }: Game2048RootProps) {
-  const [data, setData] = useState<LoadedData | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      let loaded: LoadedData = {
-        stats: statsSchema.defaultValue(),
-        flags: flagsSchema.defaultValue(),
-        session: null,
-      };
-      try {
-        const [stats, flags, session] = await Promise.all([
-          loadRecord(statsSchema, kv),
-          loadRecord(flagsSchema, kv),
-          loadSavedGame(kv),
-        ]);
-        loaded = { stats, flags, session };
-      } catch {
-        // Even unexpected load failures must not prevent playing: defaults.
-      }
-      if (!cancelled) setData(loaded);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [kv]);
-
-  // Local reads resolve in milliseconds; a spinner here would only flash.
+  const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
   return (
