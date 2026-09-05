@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
-import { FavoriteAction } from '@/ui/components/FavoriteAction';
+import { GameHomeActions } from '@/ui/components/GameHomeActions';
 import { IconBack, IconCalendar, IconChart, IconCheck } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { localDateString } from '../../game';
@@ -50,7 +50,7 @@ export function SolitaireHomeScreen() {
         >
           <IconBack />
         </button>
-        <FavoriteAction gameId="solitaire" />
+        <GameHomeActions gameId="solitaire" />
       </header>
 
       <div className="home-hero">

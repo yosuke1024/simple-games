@@ -1,5 +1,5 @@
 import { useSettings } from '@/state/SettingsContext';
-import { FavoriteAction } from '@/ui/components/FavoriteAction';
+import { GameHomeActions } from '@/ui/components/GameHomeActions';
 import { IconBack, IconChart, IconGrid } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { LEVEL_COUNT } from '../../game/levels';
@@ -35,7 +35,7 @@ export function BubbleHomeScreen() {
         >
           <IconBack />
         </button>
-        <FavoriteAction gameId="bubble-pop" />
+        <GameHomeActions gameId="bubble-pop" />
       </header>
 
       <div className="home-hero">

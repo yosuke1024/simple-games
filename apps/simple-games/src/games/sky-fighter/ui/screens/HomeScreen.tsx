@@ -1,5 +1,5 @@
 import { useSettings } from '@/state/SettingsContext';
-import { FavoriteAction } from '@/ui/components/FavoriteAction';
+import { GameHomeActions } from '@/ui/components/GameHomeActions';
 import { IconBack, IconChart, IconGrid } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { LEVEL_COUNT } from '../../game/levels';
@@ -30,7 +30,7 @@ export function SkyHomeScreen() {
         >
           <IconBack />
         </button>
-        <FavoriteAction gameId="sky-fighter" />
+        <GameHomeActions gameId="sky-fighter" />
       </header>
 
       <div className="home-hero">

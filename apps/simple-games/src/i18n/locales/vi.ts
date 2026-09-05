@@ -75,6 +75,7 @@ export const vi: Messages = {
   favoritesHeading: 'Yêu thích',
   addToFavorites: 'Thêm vào yêu thích',
   removeFromFavorites: 'Bỏ khỏi yêu thích',
+  addToHomeScreen: 'Thêm vào màn hình chính',
   categoryLogic: 'Logic',
   categoryCards: 'Bài',
   categoryPuzzle: 'Giải đố',

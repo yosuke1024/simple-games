@@ -37,6 +37,12 @@
  * What neither block is: they carry no timestamp, no progress, no "continue
  * where you left off", and each is absent entirely rather than showing an
  * empty state. They are doors that remember, not a status board.
+ *
+ * The long press on a tile opens `GameActionSheet` (issue #109), which on
+ * Android also offers pinning that one game to the OS home screen
+ * (issue #110) — a second, independent decision from favouriting, gated by
+ * `homeShortcutsAvailable()` so the action is simply absent everywhere the
+ * launcher cannot honour it.
  */
 import { Capacitor } from '@capacitor/core';
 import { SERIES_BY_LINE, SERIES_NAME } from '@simple-games/brand';
@@ -44,6 +50,10 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { getFavoriteGames, toggleFavoriteGame } from '../../app/favoriteGames';
 import { getRecentGames } from '../../app/recentGames';
 import { GAMES, GAME_CATEGORIES, type GameId, type GameDefinition } from '../../app/registry';
+import {
+  homeShortcutsAvailable,
+  requestHomeShortcut,
+} from '../../services/homeShortcut/homeShortcut';
 import { useSettings } from '../../state/SettingsContext';
 import { GameActionSheet } from '../components/GameActionSheet';
 import { GameTile } from '../components/GameTile';
@@ -371,6 +381,22 @@ export function CollectionHomeScreen({
           if (menuGame) setFavoriteIds(toggleFavoriteGame(menuGame.id));
           closeMenu();
         }}
+        // Android only, and only when the launcher already answered "yes" at
+        // boot (`homeShortcutsAvailable`, a runtime guard read once) — every
+        // other build passes no prop at all, so the sheet draws no action for
+        // a door that would not open. The sheet closes immediately: the
+        // launcher raises its own confirmation on top of the app, and there
+        // is nothing to await, since `requestHomeShortcut` never reports
+        // whether a shortcut was actually created (issue #110). Favouriting
+        // is a separate state above and is left untouched either way.
+        onAddToHomeScreen={
+          homeShortcutsAvailable()
+            ? () => {
+                if (menuGame) void requestHomeShortcut(menuGame);
+                closeMenu();
+              }
+            : undefined
+        }
         onClose={closeMenu}
       />
     </div>

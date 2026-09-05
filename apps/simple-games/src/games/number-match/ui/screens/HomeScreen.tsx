@@ -4,7 +4,7 @@ import { useApp } from '../../state/GameContext';
 import { solvedLevelCount } from '../../state/progressLogic';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
-import { FavoriteAction } from '@/ui/components/FavoriteAction';
+import { GameHomeActions } from '@/ui/components/GameHomeActions';
 import { IconBack, IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { formatDuration } from '@/ui/format';
@@ -53,7 +53,7 @@ export function HomeScreen() {
         >
           <IconBack />
         </button>
-        <FavoriteAction gameId="number-match" />
+        <GameHomeActions gameId="number-match" />
       </header>
       <div className="home-hero">
         {/* The series mark: a tile holding the game's whole rule — make 10. */}

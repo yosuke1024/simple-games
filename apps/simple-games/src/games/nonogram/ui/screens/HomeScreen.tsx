@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
-import { FavoriteAction } from '@/ui/components/FavoriteAction';
+import { GameHomeActions } from '@/ui/components/GameHomeActions';
 import { IconBack, IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { WebChromeSlot } from '@/ui/components/WebChromeSlot';
 import { FREE_TIERS, localDateString, MAX_LEVEL } from '../../game';
@@ -54,7 +54,7 @@ export function NonoHomeScreen() {
         >
           <IconBack />
         </button>
-        <FavoriteAction gameId="nonogram" />
+        <GameHomeActions gameId="nonogram" />
       </header>
 
       <div className="home-hero">

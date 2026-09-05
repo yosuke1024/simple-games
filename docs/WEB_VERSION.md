@@ -105,6 +105,14 @@ https://pixapps.ai/simple-games/play/?game=sudoku → Sudoku
 ([ARCHITECTURE.md](ARCHITECTURE.md)「ハードウェア戻るボタン」)。
 App Links / Universal Links は導入しない。
 
+Android アプリのホーム画面ショートカット(issue #110)は、この同じ住所を
+Intent の中に運び、同じパーサで読み戻す——`app/shortcutLaunch.ts` が
+`?game=<id>` を組み立て、`gameIdFromHref` で読む。ゲーム別の入口はブラウザと
+ショートカットで 1 本の契約のまま増えていない。上の「履歴の扱い」
+(`history.back()` / `sgRouteDepth`)はそれでもアプリでは一度も動かない——
+住所欄も `history` も無い native の世界であることは変わらず、画面の切り替えは
+`app/App.tsx` の `appUrlOpen` リスナーが直接行う。
+
 ガイド側の「ブラウザで遊ぶ」CTA は landing リポジトリの
 `tools/build-game-guides.js` が全 30 ゲーム × 10 言語ぶんを生成する。手で 300 枚を
 直さない。
@@ -531,7 +539,9 @@ I18N_POLICY.md の高リスクキー 5 番(無料・オフライン・paywall �
   `check-principles.sh` とは別スクリプトになっており、CI の verify ジョブが呼ぶ)。
   **URL ルーティングは 4 つ目の例外にしていない**(上の「URL(ゲーム別の入口)」)。
   外部の SDK もサイト側の資産も持ち込まず、native では 1 行も走らない実行時ガードで
-  足りるものを、成果物の分離検査が要る側へ移す理由がないため。
+  足りるものを、成果物の分離検査が要る側へ移す理由がないため。Android の
+  ホーム画面ショートカット(issue #110)も同じ理由でビルドゲートではなく
+  実行時ガード側に置く(`Capacitor.getPlatform() === 'android'`)。
 - `index.html` は 1 枚のまま。Web 向けの meta / OGP / canonical はネイティブ側の
   WebView(Android WebView / iOS の WKWebView)が無視するので、分ける理由がない。
   **共有リンクのプレビューもこの 1 枚が持つ OGP をそのまま使う**(issue #86)。

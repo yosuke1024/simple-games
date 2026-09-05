@@ -13,11 +13,13 @@
  * of what is inside a game (docs/ARCHITECTURE.md「レイヤー規則」). It goes in
  * the empty slot every game home already keeps opposite its back button, so no
  * game's header changes shape — the balance that was drawn by a placeholder is
- * now drawn by a control.
+ * now drawn by a control. Since issue #110 the slot holds a small group
+ * (`GameHomeActions`): on Android, "Add to Home Screen" stands beside this
+ * star; everywhere else the group is this star alone.
  *
  * On the game's HOME only, never on a board or a result: pinning is a decision
- * about the collection, and the board is where the game is (`favoriteWiring`
- * in src/test/ enforces both halves).
+ * about the collection, and the board is where the game is
+ * (`homeActionsWiring` in src/test/ enforces both halves).
  */
 import { useState } from 'react';
 import { getFavoriteGames, toggleFavoriteGame } from '../../app/favoriteGames';

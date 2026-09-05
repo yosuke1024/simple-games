@@ -75,6 +75,7 @@ export const id: Messages = {
   favoritesHeading: 'Favorit',
   addToFavorites: 'Tambahkan ke Favorit',
   removeFromFavorites: 'Keluarkan dari Favorit',
+  addToHomeScreen: 'Tambahkan ke Layar Utama',
   categoryLogic: 'Logika',
   categoryCards: 'Kartu',
   categoryPuzzle: 'Puzzle',

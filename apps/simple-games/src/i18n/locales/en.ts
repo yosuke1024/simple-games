@@ -90,6 +90,10 @@ export const en = {
   favoritesHeading: 'Favorites',
   addToFavorites: 'Add to Favorites',
   removeFromFavorites: 'Remove from Favorites',
+  // The Android-only second action in the same sheet (issue #110): an OS
+  // pinned shortcut to one game, requested only when this is pressed and
+  // never created by favouriting.
+  addToHomeScreen: 'Add to Home Screen',
   // Section headings on the collection home, one per GameCategoryId
   // (app/registry.ts GAME_CATEGORIES)
   categoryLogic: 'Logic',

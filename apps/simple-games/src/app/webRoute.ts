@@ -20,13 +20,19 @@
  * and gets it, with the parameter dropped so the address and the screen agree
  * again.
  *
- * **Nothing here runs in the app.** `webRoutingEnabled()` is a runtime guard,
- * the way every other web/app difference in this product is expressed
- * (docs/WEB_VERSION.md「実装上の約束」 keeps the build-time gate list closed at
- * three: ads, analytics, site chrome). The app has no address bar to arrive
- * from and its hardware back button already owns this gesture
+ * **None of the history handling runs in the app.** `webRoutingEnabled()` is
+ * a runtime guard, the way every other web/app difference in this product is
+ * expressed (docs/WEB_VERSION.md「実装上の約束」 keeps the build-time gate
+ * list closed at three: ads, analytics, site chrome). The app has no address
+ * bar to arrive from and its hardware back button already owns this gesture
  * (docs/ARCHITECTURE.md「ハードウェア戻るボタン」), so on native every function
- * below is simply never called.
+ * that touches `window.history` or `window.location` is simply never called.
+ *
+ * The one thing the app does share is the address itself. An Android
+ * home-screen shortcut carries this same `?game=` URL inside its Intent and
+ * reads it back through `gameIdFromHref` (app/shortcutLaunch.ts, issue #110)
+ * — a pure function of a string, which is why it can be shared without the
+ * guard: one contract for "this address means that game", parsed in one place.
  */
 import { Capacitor } from '@capacitor/core';
 import { GAMES, type GameId } from './registry';

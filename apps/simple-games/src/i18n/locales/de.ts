@@ -75,6 +75,7 @@ export const de: Messages = {
   favoritesHeading: 'Favoriten',
   addToFavorites: 'Zu Favoriten hinzufügen',
   removeFromFavorites: 'Aus Favoriten entfernen',
+  addToHomeScreen: 'Zum Startbildschirm hinzufügen',
   categoryLogic: 'Logik',
   categoryCards: 'Karten',
   categoryPuzzle: 'Puzzle',

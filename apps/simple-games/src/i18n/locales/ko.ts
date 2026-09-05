@@ -74,6 +74,7 @@ export const ko: Messages = {
   favoritesHeading: '즐겨찾기',
   addToFavorites: '즐겨찾기에 추가',
   removeFromFavorites: '즐겨찾기에서 제거',
+  addToHomeScreen: '홈 화면에 추가',
   categoryLogic: '로직',
   categoryCards: '카드',
   categoryPuzzle: '퍼즐',

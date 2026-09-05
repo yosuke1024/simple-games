@@ -706,6 +706,18 @@ button:disabled {
   background: var(--accent-soft);
 }
 
+/* The shell's controls in a game's own header (GameHomeActions.tsx): "Add to
+   Home Screen" on Android, then the favourite star. One group in the slot
+   every game home kept empty opposite its back button, so the header keeps
+   its two-child shape whether the group holds one control or two. The gap
+   is smaller than the header's own: these are one cluster, not two
+   destinations. */
+.home-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* The star in a game's own header (FavoriteAction.tsx). It sits in the slot
    every game home kept empty opposite its back button, so the header's shape
    is unchanged — a control where there was a spacer. Unpinned it is exactly
@@ -1571,6 +1583,12 @@ button:disabled {
   border: 1px solid var(--line);
   text-align: start;
   font-size: 16px;
+}
+
+/* Issue #110: a second action can now stack under the first (favourite, then
+   add to home screen) — a gap between them so they read as two rows, not one. */
+.action-sheet-action + .action-sheet-action {
+  margin-top: 8px;
 }
 
 .action-sheet-icon {

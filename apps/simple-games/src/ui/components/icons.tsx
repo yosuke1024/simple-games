@@ -187,3 +187,19 @@ export function IconShare(props: SVGProps<SVGSVGElement>) {
     </Icon>
   );
 }
+
+/**
+ * Add to Home Screen (issue #110): a rounded tile standing in for an app
+ * icon, with a plus inside it. Every launcher's own "add to home screen"
+ * reaches for this exact picture, so it is the one glyph that reads as
+ * itself without a caption.
+ */
+export function IconAddToHome(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <rect x="4" y="4" width="16" height="16" rx="4" />
+      <path d="M12 9v6" />
+      <path d="M9 12h6" />
+    </Icon>
+  );
+}

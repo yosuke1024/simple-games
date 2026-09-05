@@ -78,6 +78,7 @@ export const hi: Messages = {
   favoritesHeading: 'पसंदीदा',
   addToFavorites: 'पसंदीदा में जोड़ें',
   removeFromFavorites: 'पसंदीदा से निकालें',
+  addToHomeScreen: 'होम स्क्रीन पर जोड़ें',
   categoryLogic: 'लॉजिक',
   categoryCards: 'ताश',
   categoryPuzzle: 'पहेली',

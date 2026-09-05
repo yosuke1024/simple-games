@@ -74,6 +74,7 @@ export const ja: Messages = {
   favoritesHeading: 'お気に入り',
   addToFavorites: 'お気に入りに追加',
   removeFromFavorites: 'お気に入りから外す',
+  addToHomeScreen: 'ホーム画面に追加',
   categoryLogic: 'ロジック',
   categoryCards: 'カード',
   categoryPuzzle: 'パズル',

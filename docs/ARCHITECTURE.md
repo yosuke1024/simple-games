@@ -124,16 +124,21 @@ src/
   向き: ゲーム → `ui/components/`)。シェルは「ゲームの内部のどこがホームか」を
   知らないままでいられる — 知ろうとすると registry がゲーム内部のビューを
   列挙することになる([WEB_VERSION.md](WEB_VERSION.md)「サイトクローム」)。
-- **ゲームホームのお気に入り**は共有の `FavoriteAction`
-  (`ui/components/FavoriteAction.tsx`, issue #109)。向きは `ShareAction` と同じ
-  (ゲーム → `ui/components/`)で、ゲームが渡すのは `gameId` だけ。置き場所は
-  ゲームホームのヘッダー右——**全 30 ゲームが戻るボタンの反対側に空けていた
-  `icon-btn-placeholder` の位置**なので、ヘッダーの形は変わらない(空白だった枠が
-  操作になっただけ)。**盤面と結果画面には置かない**: 固定はコレクションについての
-  判断であって、勝った直後に求める種類のものではない
+- **ゲームホームのヘッダー右の操作群**は共有の `GameHomeActions`
+  (`ui/components/GameHomeActions.tsx`)。中身はお気に入りの星
+  (`FavoriteAction.tsx`, issue #109)と、Android だけの「ホーム画面に追加」
+  (`HomeShortcutAction.tsx`, issue #110。対応 Launcher でなければ描かない)。
+  向きは `ShareAction` と同じ(ゲーム → `ui/components/`)で、ゲームが渡すのは
+  `gameId` だけ——どちらの操作がそのプラットフォームに存在するかはシェルの事情。
+  置き場所は**全 30 ゲームが戻るボタンの反対側に空けていた
+  `icon-btn-placeholder` の位置**で、群として 1 子要素にまとめてあるので、
+  操作が 1 つでも 2 つでもヘッダーの形(2 子要素の space-between)は変わらない。
+  **盤面と結果画面には置かない**: 固定はコレクションについての判断であって、
+  勝った直後に求める種類のものではない
   ([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))。全 30 ゲームに 1 つずつ
   置かれていること・各タグが自分のゲーム id を名乗っていること・ホーム以外に
-  無いことは `src/test/favoriteWiring.test.ts` が機械的に見る。
+  無いこと・星や追加ボタンを単独で置いていないことは
+  `src/test/homeActionsWiring.test.ts` が機械的に見る。
 - **結果画面の任意の共有**は共有の `ShareAction`(`ui/components/ShareAction.tsx`,
   issue #86)。向きは `ResultAdSlot` と同じ(ゲーム → `ui/components/`)で、
   ゲームが渡すのは `gameId`・**嘘のない結果種別**(`completed` / `played`)・
@@ -350,6 +355,42 @@ hearts の 3 人分の応手も 1 タスク 1 手に割れている)。
     伴わない裸の click としてページに届く。
   - レジストリに無い id は表示前に落とす。ただし**レコードからは消さない** —
     取り下げたゲームが戻ってきたら、留めたまま戻る。
+- **「ホーム画面ショートカット」**(Android のみ、issue #110)。OS 標準の
+  Pinned Shortcut で、よく遊ぶ 1 本を Collection Home を経由せずホーム画面から
+  直接開けるようにする。ゲーム別アプリを作るのではなく、実体は変わらず
+  Simple Games 本体を `?game=<id>` 付きで起動するショートカットが増えるだけ
+  ——Web 版の住所をそのまま共用する(`app/shortcutLaunch.ts`、契約の正本は
+  [WEB_VERSION.md](WEB_VERSION.md)「URL(ゲーム別の入口)」)。
+  - UX 原則は 3 つ。**お気に入り登録では作らない**(2 つは独立した決定)。
+    **「Add to Home Screen」を明示的に押した時だけ OS へ要求する**。
+    **Launcher/OS の確認フローを尊重し、結果は返ってこない**——拒否・失敗・
+    未対応のいずれもエラー扱いにせず、ゲーム利用を妨げない
+    (`services/homeShortcut/homeShortcut.ts`)。
+  - 操作は 2 経路。お気に入りと同じ理由で、**ゲームホームのヘッダー**(星の隣、
+    `ui/components/HomeShortcutAction.tsx`)が気づかれる経路、タイルの Action Sheet
+    の 2 つ目の行(`ui/components/GameActionSheet.tsx`)が知っている人の近道。
+    対応 Launcher かどうかは起動時に一度確定し
+    (`ShortcutManagerCompat.isRequestPinShortcutSupported`)、
+    `homeShortcutsAvailable()` が真の時だけどちらも描く——押しても何も起きない
+    ボタンを出さないため。「追加済み」の状態は描かない: Launcher は結果を返さず、
+    アイコンを消しても unpin しない Launcher があるので、推測して隠すと
+    戻したい時に扉が無い。
+  - 起動経路は cold / warm の 2 つ。cold start は boot の `initShortcutLaunch`
+    が Intent の URI を読み、`initialView` がコレクションを経由せずそのゲームの
+    ホームを最初に描く。warm start(`MainActivity` が singleTask ゆえの
+    `onNewIntent`)は Capacitor の `appUrlOpen` として届き、同じゲームが
+    既に開いていれば**触らず**、別ゲームなら閉じて開く——このときレビューの
+    質問は出ない(`offerReviewIfDue` は `exitGame` という扉だけの入口で、
+    ショートカットによる切り替えはその扉を通らない)。未知/廃止済み id は
+    共用パーサ(`gameIdFromHref`)が落とし、コレクションへ fail-safe する。
+  - アイコンは 30 本ぶんの drawable を用意する代わりに、共有カードと同じ
+    Canvas 2D でその場で描く(`services/homeShortcut/icon.ts`)——WebView が
+    既に持っているフォントでグリフの字形を保証できるため。
+  - ネイティブ側はこの機能だけのローカル Capacitor プラグイン
+    (`HomeShortcutPlugin.java`)が `ShortcutManagerCompat` を薄く包むだけで、
+    新しい権限は増えていない。
+  - スコープ外:進行中セッションへ直接 Resume する挙動は #113、iOS の
+    Quick Actions は #114。
 
 ## ワイド画面のレイアウト
 
@@ -658,9 +699,11 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 - `apps/simple-games/android/` / `apps/simple-games/ios/` は Capacitor が生成した
   ネイティブプロジェクトをコミットする(ビルド成果物・local.properties・
   `ios/App/App/public/`(web 資産のコピー)は除外)。
-- **プラットフォーム差分は 2 箇所に限定する**: 広告 ID とストアの可用性判定。
-  どちらも実行時に `Capacitor.getPlatform()` で選ぶ
-  (`services/ads/banner.ts` / `monetization/nativeStore.ts` の `PlatformRules`)。
+- **プラットフォーム差分は 3 箇所に限定する**: 広告 ID・ストアの可用性判定・
+  ホーム画面ショートカット。いずれも実行時に `Capacitor.getPlatform()` で選ぶ
+  (`services/ads/banner.ts` / `monetization/nativeStore.ts` の `PlatformRules` /
+  `services/homeShortcut/` + `app/shortcutLaunch.ts` が
+  `Capacitor.getPlatform() === 'android'` を見る、issue #110)。
   ゲーム・保存・i18n のコードに `if (ios)` を書かない。
 - iOS 側の AdMob アプリ ID は Xcode ビルド設定 `ADMOB_IOS_APP_ID` →
   `Info.plist` の `GADApplicationIdentifier`(Android の manifestPlaceholder と
