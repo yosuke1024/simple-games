@@ -81,7 +81,9 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   Simple Games 本体を `?game=<id>` 付きで起動するショートカットが増えるだけ
   ——Web 版の住所をそのまま共用する(`app/shortcutLaunch.ts`、契約の正本は
   [WEB_VERSION.md](../WEB_VERSION.md)「URL(ゲーム別の入口)」)。
-  - UX 原則は 3 つ。**お気に入り登録では作らない**(2 つは独立した決定)。
+  - UX 原則は 3 つ。**お気に入り登録では作らない**(2 つは独立した決定 ——
+    Launcher に**新しいアイコンを置く**のは本人が名指しで求めることであり、
+    自分のメニューの中身を並べるだけの iOS とは違う。次項)。
     **「Add to Home Screen」を明示的に押した時だけ OS へ要求する**。
     **Launcher/OS の確認フローを尊重し、結果は返ってこない**——拒否・失敗・
     未対応のいずれもエラー扱いにせず、ゲーム利用を妨げない
@@ -165,7 +167,42 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
       「セッションを持つゲームは全部これに答えていること」と「持たない
       ゲームは口を開けていないこと」は
       `src/test/shortcutResumeWiring.test.ts` が機械的に見る。
-    - スコープ外:iOS の Quick Actions は #114。
+    - iOS の Quick Actions からの起動も同じ `entry: 'shortcut'` で入る(次項)。
+- **「ホーム画面の Quick Actions」**(iOS のみ、issue #114)。アプリアイコンの
+  長押しで開く OS のメニューに、**お気に入りの先頭 4 本**をそのまま映す。iOS には
+  Android の Pinned Shortcut(ゲーム別アイコンを自由に置く)に当たるものが無く、
+  アプリに与えられる入口はアイコン自身のメニューだけなので、ここでは
+  **お気に入り = Quick Action** とする。#110 の「お気に入り登録では作らない」は
+  Launcher に新しいアイコンを置く Android の話で、自分のメニューの中身を並べる
+  だけの iOS には当てはまらない(#107「各 OS で自然な入口を使う」)。
+  - 映すのは棚の**先頭から 4 本**(iOS が表示する上限。`QUICK_ACTIONS_MAX`、
+    `services/homeShortcut/quickActions.ts`)。棚は留めた順なので、5 本目を留めても
+    上の 4 本は動かず、外した分だけ次が繰り上がる —— ランキングにしない。
+    0 件なら項目を 1 つも登録しない(OS 自身の「アプリを削除」等だけが残る)。
+  - 更新は棚が変わるたび(3 経路すべて、および「ローカルデータ削除」が行う
+    再読込)と、起動時に 1 回。`app/favoriteGames.ts` に足したのは購読フック
+    `subscribeFavoriteGames` だけ(`monetization/adRemoval.ts` と同じ形)で、
+    棚の並び・レコード・UI には何も足していない。起動時の書き込みは、取り下げた
+    ゲームの項目を OS から消し、失敗した書き込みを直すためのもので、数個の文字列を
+    代入するだけ —— 通信も要求もしない。書き込みは fire-and-forget で、
+    失敗しても boot もプレイも止めない。iOS 以外では即座に何もせず戻る。
+  - 項目が運ぶのは Android のショートカットと**同じ `?game=<id>` の住所**
+    (`shortcutUrlFor`)。`AppDelegate.swift` がタップされた項目の住所を Capacitor の
+    `ApplicationDelegateProxy` へ「URL を開いた」として渡すので、JS 側は cold start
+    (`getLaunchUrl`)/ warm start(`appUrlOpen`)とも Android と**同じ 1 本の経路**
+    (`app/shortcutLaunch.ts` / `App.tsx`)で受ける。#113 の直接 Resume もそのまま効き、
+    未知/廃止済み id はコレクションへ fail-safe する。cold start は
+    `didFinishLaunchingWithOptions` の `launchOptions` で受けて `false` を返す
+    (Apple の作法。同じ項目で `performActionFor` が二重に呼ばれない)ので、
+    JS が起動する前に住所が確定し、コレクションが一瞬も出ない。
+  - アイコンは OS 標準の再生記号 1 種類。Quick Action のアイコンは単色テンプレートで、
+    UIKit が受け取るのはアセット名かシステム記号だけなので、Android のように
+    その場で描くアクセント色のアイコン(`icon.ts`)は作れない。識別はタイトルが担う
+    (タイトルは全言語で同一の固有名詞)。
+  - ネイティブ側はこの機能だけのローカル Capacitor プラグイン
+    (`QuickActionsPlugin.swift`。`MainViewController.swift` が `capacitorDidLoad` で
+    登録し、`Main.storyboard` の初期 VC がそれを指す)が `UIApplication.shortcutItems`
+    を差し替えるだけ。権限も `Info.plist` の項目も増えていない。
 - **ゲーム名の検索**(issue #122)。「お気に入り」でも「最近遊んだ」でも届かない
   ケース——**名前は分かっているが、留めてもいないし最近も遊んでいないタイトル**——
   のための 3 つ目の答え。判定は `app/gameSearch.ts` が持つ。

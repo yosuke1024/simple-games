@@ -10,9 +10,15 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 - **プラットフォーム差分は 3 箇所に限定する**: 広告 ID・ストアの可用性判定・
   ホーム画面ショートカット。いずれも実行時に `Capacitor.getPlatform()` で選ぶ
   (`services/ads/banner.ts` / `monetization/nativeStore.ts` の `PlatformRules` /
-  `services/homeShortcut/` + `app/shortcutLaunch.ts` が
-  `Capacitor.getPlatform() === 'android'` を見る、issue #110)。
+  `services/homeShortcut/` —— `homeShortcut.ts` が `'android'`(Pinned Shortcut、
+  issue #110)、`quickActions.ts` が `'ios'`(Quick Actions、issue #114)を見る。
+  起動側の `app/shortcutLaunch.ts` は両 OS が同じ住所を同じプラグインで運ぶので
+  `isNativePlatform()` で足りる)。
   ゲーム・保存・i18n のコードに `if (ios)` を書かない。
+- iOS のネイティブ側で書いたのは `AppDelegate.swift`(Quick Action を Capacitor の
+  URL open に変換)、`QuickActionsPlugin.swift`(ローカルプラグイン)、それを登録する
+  `MainViewController.swift`(`CAPBridgeViewController` のサブクラス。
+  `Main.storyboard` の初期 VC)の 3 ファイルだけ。`cap sync ios` はこれらに触らない。
 - iOS 側の AdMob アプリ ID は Xcode ビルド設定 `ADMOB_IOS_APP_ID` →
   `Info.plist` の `GADApplicationIdentifier`(Android の manifestPlaceholder と
   同型。未設定はテスト用 app ID)。ATT は使わない(ADS_POLICY.md)。

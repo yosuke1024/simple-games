@@ -162,6 +162,13 @@ xcodebuild -project ios/App/App.xcodeproj -scheme App \
 - 広告削除 IAP は StoreKit 2 を `@capgo/native-purchases` 経由で使う。
   App Store Connect に非消費型 `remove_ads` が要る(Sandbox で確認 —
   [docs/RELEASE_CHECKLIST.md](../../docs/RELEASE_CHECKLIST.md) §4.7)
+- ホーム画面の Quick Actions(アプリアイコン長押し)には**お気に入りの先頭 4 本**
+  が映る(issue #114)。ネイティブ側は `ios/App/App/` の `QuickActionsPlugin.swift`
+  (ローカルプラグイン)・`MainViewController.swift`(登録)・`AppDelegate.swift`
+  (タップを Capacitor の URL open に変換)の 3 ファイルで、タップは Android の
+  ショートカットと同じ `?game=<id>` の住所として JS へ届く
+  ([docs/architecture/collection-home.md](../../docs/architecture/collection-home.md))。
+  Android には対応する変更が無い(Pinned Shortcut は明示的に求めた時だけ作る)
 
 ### リリースはタグで作る
 

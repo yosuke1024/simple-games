@@ -6,10 +6,12 @@
  * it is a few dozen lines around `ShortcutManagerCompat` and nothing else
  * would ever use it.
  *
- * There is no iOS implementation, and the web one below is a stub that
- * answers "unsupported", so a build without the native side — the browser, a
- * test — never has to catch a "not implemented" rejection. Callers gate on
- * the platform before reaching here anyway (homeShortcut.ts).
+ * There is no iOS implementation — iOS has no pinned shortcuts; its quick
+ * actions have their own local plugin, quickActionsPlugin.ts — and the web
+ * one below is a stub that answers "unsupported", so a build without the
+ * native side — the browser, a test — never has to catch a "not implemented"
+ * rejection. Callers gate on the platform before reaching here anyway
+ * (homeShortcut.ts).
  */
 import { registerPlugin } from '@capacitor/core';
 
