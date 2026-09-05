@@ -1183,6 +1183,69 @@ button:disabled {
   margin-inline-start: auto;
 }
 
+/* The search field the header turns into (issue #122, CollectionHomeScreen).
+   The app's only text input, which is why every reset here is spelled out:
+   `button` has a global reset above and `input` never needed one until now.
+
+   `font-size: 16px` is not a style choice — iOS Safari zooms the page when a
+   field smaller than that takes focus, and there is no way back out of that
+   zoom from inside the app. `user-select: text` undoes the body's
+   `user-select: none`, which otherwise reaches into the field and takes the
+   caret's selection with it on WebKit.
+
+   The browser's own search decorations are removed rather than styled: they
+   differ per WebView, and the way out of search is the arrow beside the
+   field, the same control on every platform. */
+.game-search-field {
+  flex: 1;
+  min-width: 0;
+  height: var(--tap-size);
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* The field is focused from the moment it appears, so this is its normal
+   state rather than a keyboard-only hint — and the browser's own ring is what
+   it replaces. Chrome's default draws amber over a dark theme, which is a
+   colour this palette does not contain and the loudest thing on the screen;
+   the accent ring is the same one the boards use to say "here". The border
+   still changes as well, so the focus is not carried by a colour alone. */
+.game-search-field:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring-soft);
+}
+
+.game-search-field::placeholder {
+  color: var(--ink-soft);
+  /* Some WebViews dim placeholders on top of the colour they are given. */
+  opacity: 1;
+}
+
+.game-search-field::-webkit-search-cancel-button,
+.game-search-field::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Nothing matched. One line, in the soft ink the section labels use, sitting
+   where the first row of games would have been rather than centred in the
+   space they left — the field above is what the eye is on. */
+.game-search-empty {
+  margin: 4px 0 0;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+
 .game-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

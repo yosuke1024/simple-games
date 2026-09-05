@@ -94,6 +94,12 @@ export const en = {
   // pinned shortcut to one game, requested only when this is pressed and
   // never created by favouriting.
   addToHomeScreen: 'Add to Home Screen',
+  // Searching the collection by name (issue #122). One label does three jobs
+  // — the action that opens the search, the field's accessible name, and its
+  // placeholder — because all three are asking the same question. The empty
+  // state says only that nothing matched: no suggestions, no alternatives.
+  searchGames: 'Search games',
+  searchNoResults: 'No games match.',
   // Section headings on the collection home, one per GameCategoryId
   // (app/registry.ts GAME_CATEGORIES)
   categoryLogic: 'Logic',

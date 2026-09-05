@@ -76,6 +76,8 @@ export const id: Messages = {
   addToFavorites: 'Tambahkan ke Favorit',
   removeFromFavorites: 'Keluarkan dari Favorit',
   addToHomeScreen: 'Tambahkan ke Layar Utama',
+  searchGames: 'Cari game',
+  searchNoResults: 'Tidak ada game yang cocok.',
   categoryLogic: 'Logika',
   categoryCards: 'Kartu',
   categoryPuzzle: 'Puzzle',

@@ -76,6 +76,8 @@ export const ptBR: Messages = {
   addToFavorites: 'Adicionar aos favoritos',
   removeFromFavorites: 'Remover dos favoritos',
   addToHomeScreen: 'Adicionar à tela inicial',
+  searchGames: 'Buscar jogos',
+  searchNoResults: 'Nenhum jogo corresponde.',
   categoryLogic: 'Lógica',
   categoryCards: 'Cartas',
   categoryPuzzle: 'Quebra-cabeça',

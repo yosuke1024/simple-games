@@ -76,6 +76,8 @@ export const vi: Messages = {
   addToFavorites: 'Thêm vào yêu thích',
   removeFromFavorites: 'Bỏ khỏi yêu thích',
   addToHomeScreen: 'Thêm vào màn hình chính',
+  searchGames: 'Tìm trò chơi',
+  searchNoResults: 'Không có trò chơi nào khớp.',
   categoryLogic: 'Logic',
   categoryCards: 'Bài',
   categoryPuzzle: 'Giải đố',

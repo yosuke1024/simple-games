@@ -12,11 +12,44 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { capacitorMock } = vi.hoisted(() => ({ capacitorMock: { native: false } }));
+const { capacitorMock, appMock } = vi.hoisted(() => {
+  type Listener = (event: unknown) => void;
+  const listeners = new Map<string, Set<Listener>>();
+  return {
+    capacitorMock: { native: false },
+    appMock: {
+      listeners,
+      /** Delivers one plugin event to every listener the screen registered. */
+      fire(name: string, event: unknown) {
+        for (const listener of listeners.get(name) ?? []) listener(event);
+      },
+      App: {
+        addListener: vi.fn((name: string, listener: Listener) => {
+          if (!listeners.has(name)) listeners.set(name, new Set());
+          listeners.get(name)!.add(listener);
+          return Promise.resolve({
+            remove: () => {
+              listeners.get(name)?.delete(listener);
+            },
+          });
+        }),
+        minimizeApp: vi.fn(() => Promise.resolve()),
+        exitApp: vi.fn(() => Promise.resolve()),
+      },
+    },
+  };
+});
 
 vi.mock('@capacitor/core', () => ({
   Capacitor: { isNativePlatform: () => capacitorMock.native },
 }));
+
+// The screen owns Android's hardware back for the collection (issue #122):
+// searching closes the search, and the home is where back leaves the app. The
+// real plugin cannot load beside the `@capacitor/core` stub above, which
+// provides no `registerPlugin` — and the point here is what the shell decides
+// anyway, not what Android sends.
+vi.mock('@capacitor/app', () => ({ App: appMock.App }));
 
 // The real homeShortcut module (services/homeShortcut/homeShortcut.ts)
 // transitively imports plugin.ts, which calls `registerPlugin` at module
@@ -61,6 +94,10 @@ function renderHome(onOpenGame: (gameId: GameId) => void = () => undefined) {
 
 beforeEach(() => {
   capacitorMock.native = false;
+  appMock.listeners.clear();
+  appMock.App.addListener.mockClear();
+  appMock.App.minimizeApp.mockClear();
+  appMock.App.exitApp.mockClear();
   resetRecentGamesForTesting();
   resetFavoriteGamesForTesting();
   // Off by default, like every build the launcher cannot pin to.
@@ -527,5 +564,236 @@ describe('add to home screen (issue #110)', () => {
 
     expect(getFavoriteGames()).toEqual(['sudoku']);
     expect(requestHomeShortcut).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Searching by name (issue #122). It is a mode, so what these pin is the way
+ * in and the way back out as much as the filtering itself: what the home
+ * looks like before anybody asks for it, what it replaces while it is open,
+ * and that everything it replaced is exactly as it was afterwards.
+ */
+const openSearch = async (user: ReturnType<typeof userEvent.setup>) =>
+  user.click(screen.getByRole('button', { name: 'Search games' }));
+
+const searchField = () => screen.getByRole('searchbox', { name: 'Search games' });
+
+/** The game titles on screen, in document order, whatever section they are in. */
+const titlesOnScreen = () =>
+  screen.getAllByRole('button').flatMap((button) => {
+    const game = GAMES.find((candidate) => button.textContent === cardFor(candidate));
+    return game ? [game.title] : [];
+  });
+
+describe('the search action', () => {
+  it('is one small action in the header, not a field on the home', () => {
+    renderHome();
+    expect(screen.getByRole('button', { name: 'Search games' })).toBeInTheDocument();
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+  });
+
+  it('leaves the settings gear where it was', () => {
+    renderHome();
+    expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument();
+  });
+
+  it('opens the field, focused, so the keyboard can start typing', async () => {
+    const user = userEvent.setup();
+    renderHome();
+
+    await openSearch(user);
+
+    expect(searchField()).toBeInTheDocument();
+    expect(document.activeElement).toBe(searchField());
+  });
+
+  it('replaces the home with the full list while nothing is typed', async () => {
+    await initFavoriteGames(createMemoryKV());
+    await initRecentGames(createMemoryKV());
+    toggleFavoriteGame('sudoku');
+    recordGameOpened('hearts');
+    const user = userEvent.setup();
+    renderHome();
+
+    await openSearch(user);
+
+    // The shelves, the hero and the category headings are gone; the games are
+    // all still there, in the order the home listed them.
+    expect(screen.queryByRole('navigation', { name: 'Favorites' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Recently played' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Simple Games' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Logic')).not.toBeInTheDocument();
+    expect(cardsIn(screen.getByRole('navigation', { name: 'Games' }))).toEqual(
+      GAME_CATEGORIES.flatMap((category) =>
+        GAMES.filter((game) => game.category === category.id).map(cardFor),
+      ),
+    );
+  });
+});
+
+describe('what a search matches', () => {
+  it('narrows the list as the name is typed', async () => {
+    const user = userEvent.setup();
+    renderHome();
+
+    await openSearch(user);
+    await user.type(searchField(), 'solitaire');
+
+    expect(titlesOnScreen()).toEqual(['Solitaire', 'Spider Solitaire', 'Mahjong Solitaire']);
+  });
+
+  it('ignores case', async () => {
+    const user = userEvent.setup();
+    renderHome();
+
+    await openSearch(user);
+    await user.type(searchField(), 'SUDO');
+
+    expect(titlesOnScreen()).toEqual(['Sudoku']);
+  });
+
+  it('says so quietly when nothing matches, and offers nothing else', async () => {
+    const user = userEvent.setup();
+    renderHome();
+
+    await openSearch(user);
+    await user.type(searchField(), 'chess');
+
+    expect(screen.getByRole('status')).toHaveTextContent('No games match.');
+    expect(titlesOnScreen()).toEqual([]);
+  });
+
+  it('comes back to every game when the field is cleared', async () => {
+    const user = userEvent.setup();
+    renderHome();
+
+    await openSearch(user);
+    await user.type(searchField(), 'chess');
+    await user.clear(searchField());
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(titlesOnScreen()).toHaveLength(GAMES.length);
+  });
+
+  it('opens the game a result is tapped on', async () => {
+    const user = userEvent.setup();
+    const onOpenGame = vi.fn();
+    renderHome(onOpenGame);
+
+    await openSearch(user);
+    await user.type(searchField(), 'water');
+    await user.click(screen.getByRole('button', { name: 'Water Sort' }));
+
+    expect(onOpenGame).toHaveBeenCalledWith('water-sort');
+  });
+});
+
+describe('leaving search', () => {
+  /** Everything the mode replaced, back exactly as it was. */
+  async function expectHomeIsBack() {
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Simple Games' })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Favorites' })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Recently played' })).toBeInTheDocument();
+    expect(screen.getByText('Logic')).toBeInTheDocument();
+    expect(cardsIn(screen.getByRole('navigation', { name: 'Games' }))).toEqual(
+      GAME_CATEGORIES.flatMap((category) =>
+        GAMES.filter((game) => game.category === category.id).map(cardFor),
+      ),
+    );
+  }
+
+  async function renderWithBothShelves() {
+    await initFavoriteGames(createMemoryKV());
+    await initRecentGames(createMemoryKV());
+    toggleFavoriteGame('sudoku');
+    recordGameOpened('hearts');
+    renderHome();
+  }
+
+  it('restores the home on the back arrow, and hands focus back to the action', async () => {
+    const user = userEvent.setup();
+    await renderWithBothShelves();
+
+    await openSearch(user);
+    await user.type(searchField(), 'sudoku');
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+
+    await expectHomeIsBack();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Search games' }));
+  });
+
+  it('restores the home on Escape', async () => {
+    const user = userEvent.setup();
+    await renderWithBothShelves();
+
+    await openSearch(user);
+    await user.type(searchField(), 'sudoku');
+    await user.keyboard('{Escape}');
+
+    await expectHomeIsBack();
+  });
+
+  /** No search history: the field that comes back is empty, not the last query. */
+  it('forgets what was typed', async () => {
+    const user = userEvent.setup();
+    renderHome();
+
+    await openSearch(user);
+    await user.type(searchField(), 'sudoku');
+    await user.keyboard('{Escape}');
+    await openSearch(user);
+
+    expect(searchField()).toHaveValue('');
+    expect(titlesOnScreen()).toHaveLength(GAMES.length);
+  });
+});
+
+/**
+ * Android's back button. The collection owns it (App.tsx hands it over), so
+ * these are the two answers it has to give — and the second is the one that
+ * was already true before search existed.
+ */
+describe('the hardware back button on the collection', () => {
+  const pressBack = () => act(() => appMock.fire('backButton', {}));
+
+  it('closes the search instead of leaving the app', async () => {
+    capacitorMock.native = true;
+    const user = userEvent.setup();
+    renderHome();
+
+    await openSearch(user);
+    pressBack();
+
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+    expect(appMock.App.minimizeApp).not.toHaveBeenCalled();
+  });
+
+  it('still leaves the app from the home itself', () => {
+    capacitorMock.native = true;
+    renderHome();
+
+    pressBack();
+
+    expect(appMock.App.minimizeApp).toHaveBeenCalledTimes(1);
+  });
+
+  it('registers exactly one listener, whatever is typed into the field', async () => {
+    capacitorMock.native = true;
+    const user = userEvent.setup();
+    renderHome();
+
+    await openSearch(user);
+    await user.type(searchField(), 'sudoku');
+
+    // The listener reads the mode through a ref; a keystroke must not cost a
+    // deregister and a re-register of an Android plugin listener.
+    expect(appMock.listeners.get('backButton')?.size).toBe(1);
+    expect(appMock.App.addListener).toHaveBeenCalledTimes(1);
+  });
+
+  it('registers nothing in the browser, which has no such button', () => {
+    renderHome();
+    expect(appMock.listeners.get('backButton')?.size ?? 0).toBe(0);
   });
 });

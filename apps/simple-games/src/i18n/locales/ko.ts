@@ -75,6 +75,8 @@ export const ko: Messages = {
   addToFavorites: '즐겨찾기에 추가',
   removeFromFavorites: '즐겨찾기에서 제거',
   addToHomeScreen: '홈 화면에 추가',
+  searchGames: '게임 검색',
+  searchNoResults: '일치하는 게임이 없습니다.',
   categoryLogic: '로직',
   categoryCards: '카드',
   categoryPuzzle: '퍼즐',
