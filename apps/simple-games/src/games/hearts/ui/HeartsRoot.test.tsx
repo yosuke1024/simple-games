@@ -53,7 +53,7 @@ import {
 } from '../game';
 import { CPU_DELAY_MS } from '../state/GameContext';
 import { toPersisted } from '../storage/gamePersistence';
-import { HT_STORAGE_KEYS, type Stats } from '../storage/schemas';
+import { HT_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { HeartsRoot } from './HeartsRoot';
 
 /**
@@ -197,6 +197,13 @@ function launch() {
   );
 }
 
+/** The suspended board's own clock, as it survives on disk. */
+function storedBoardSeconds(): number {
+  const raw = deviceStore.get(HT_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+}
+
 const tutorialDone = {
   [HT_STORAGE_KEYS.flags]: JSON.stringify({ schemaVersion: 1, tutorialCompleted: true }),
 };
@@ -269,6 +276,13 @@ function storedPlaySeconds(): number {
   const raw = deviceStore.get(HT_STORAGE_KEYS.stats);
   if (raw === undefined) return 0;
   return (JSON.parse(raw) as Stats).totalPlaySeconds;
+}
+
+/** The seconds the saved match itself carries — the other half of the clock. */
+function storedElapsedSeconds(): number {
+  const raw = deviceStore.get(HT_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as PersistedGame).elapsedSeconds;
 }
 
 beforeEach(() => {
@@ -569,6 +583,152 @@ describe('backgrounding', () => {
   });
 });
 
+// ---------- the pinned shortcut ----------
+
+/**
+ * A shortcut pinned to Hearts on the phone's home screen, and what this game
+ * does about it (issue #113). The shell says only which door was used; the
+ * decision below is Hearts', taken from its one match slot (§9).
+ *
+ * There is no ambiguity to resolve here and no helper to resolve it with: the
+ * slot holds one match, and `loadSavedGame` has already refused anything that
+ * is not a match to come back to. So "the match they were playing" is a fact
+ * whenever there is one at all.
+ */
+describe('a home-screen shortcut', () => {
+  /** The same store a launch reads, entered by the other door. */
+  function launchFromShortcut() {
+    const onExit = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <HeartsRoot onExit={onExit} entry="shortcut" />
+      </SettingsProvider>,
+    );
+    return { onExit };
+  }
+
+  /** Quick Rules behind the player, the way every launch after the first finds them. */
+  function taughtAlready() {
+    deviceStore.set(HT_STORAGE_KEYS.flags, tutorialDone[HT_STORAGE_KEYS.flags]!);
+  }
+
+  /**
+   * A match put down and left, the way a player leaves one: dealt from the
+   * home screen and backed out of, with the device store keeping what the
+   * next launch will read. The process ends here, as the OS may end it.
+   */
+  async function aMatchLeftBehind() {
+    taughtAlready();
+    launch();
+    await settle();
+    fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+  }
+
+  const tableShown = () => screen.queryByRole('group', { name: 'Hearts table' });
+  const homeShown = () => screen.queryByRole('button', { name: /Easy/ });
+
+  it('deals the player back into the match they left, with no tap in between', async () => {
+    await aMatchLeftBehind();
+
+    launchFromShortcut();
+    await settle();
+
+    expect(tableShown()).toBeInTheDocument();
+    expect(homeShown()).not.toBeInTheDocument();
+    // The match that was put down, not a fresh deal: the first hand, still
+    // passing left, with the thirteen cards it was left holding.
+    expect(screen.getByText('Passing left')).toBeInTheDocument();
+    expect(within(hand()).getAllByRole('button')).toHaveLength(13);
+    await settle();
+  });
+
+  it('leaves the table for this game’s home, not the collection', async () => {
+    await aMatchLeftBehind();
+
+    const { onExit } = launchFromShortcut();
+    await settle();
+    fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from the table is this game's home, whichever door the
+    // table was reached through: the way in did not add a screen to undo.
+    expect(homeShown()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+    // And the match is still there to be picked up by hand.
+    expect(screen.getByRole('button', { name: /Easy.*Resume/ })).toBeInTheDocument();
+    await settle();
+  });
+
+  it('opens the home screen when there is no match to come back to', async () => {
+    taughtAlready();
+    launchFromShortcut();
+    await settle();
+
+    expect(tableShown()).not.toBeInTheDocument();
+    expect(homeShown()).toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    await aMatchLeftBehind();
+
+    launch();
+    await settle();
+
+    expect(tableShown()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Easy.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('teaches the game first on a launch that has never seen Quick Rules', async () => {
+    // A match to come back to AND no Quick Rules behind the player. The two
+    // can only meet through "Reset Local Data", which wipes the flags and
+    // leaves the save — but the test has to arrange it, because a launch
+    // against an empty store lands on Quick Rules whatever the rule said, and
+    // would prove nothing about it (§10).
+    await aMatchLeftBehind();
+    deviceStore.delete(HT_STORAGE_KEYS.flags);
+
+    launchFromShortcut();
+    await settle();
+
+    expect(screen.getByText('Pass three')).toBeInTheDocument();
+    expect(tableShown()).not.toBeInTheDocument();
+  });
+
+  // The counterpart of the backgrounding case above. Arriving at the table
+  // without the tap that usually precedes it must still hand the clock over
+  // the way `activate` does — the restored seconds are already counted (§9) —
+  // and the first beat lands 450ms later, with nothing on screen to show it if
+  // this is wrong.
+  it('neither loses nor re-books the resumed match’s play seconds', async () => {
+    taughtAlready();
+    launch();
+    await settle();
+    fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+
+    await advance(5_000);
+    background();
+    await settle();
+    expect(storedPlaySeconds()).toBe(5);
+
+    // The process dies here; the shortcut is the relaunch.
+    cleanup();
+    launchFromShortcut();
+    await settle();
+    expect(tableShown()).toBeInTheDocument();
+
+    await advance(3_000);
+    background();
+    await settle();
+    // Eight seconds of play, counted once — and the match itself still
+    // carrying all eight, rather than written back down to the three since
+    // this launch began.
+    expect(storedPlaySeconds()).toBe(8);
+    expect(storedElapsedSeconds()).toBe(8);
+  });
+});
+
 // ---------- home ----------
 
 describe('home', () => {
@@ -592,5 +752,38 @@ describe('home', () => {
     expect(screen.getByRole('button', { name: /Easy/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'All games' }));
     expect(onExit).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('opening a suspended game without resuming (#109)', () => {
+  // The board is not the only thing a suspended game carries — the minutes on
+  // its clock are the player's too. `syncActiveGame` runs on every background
+  // from whichever screen is showing, and it writes this provider's play clock
+  // into the session it saves. Open the game, never press Resume, background:
+  // a clock that never took the restored board's seconds saves a zero over
+  // them, and the board comes back looking untouched.
+  it("keeps a suspended board's clock when backgrounded from the game's home", async () => {
+    deviceStore.set(HT_STORAGE_KEYS.flags, tutorialDone[HT_STORAGE_KEYS.flags]!);
+    launch();
+    await settle();
+    fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(9_000);
+    });
+    background();
+    await settle();
+    expect(storedBoardSeconds()).toBe(9);
+
+    // The process dies here. Relaunch and stop on the game's own home.
+    cleanup();
+    launch();
+    await settle();
+    expect(screen.getByRole('button', { name: 'Statistics' })).toBeInTheDocument();
+
+    // Away again without ever resuming: the nine seconds are still there.
+    background();
+    await settle();
+    expect(storedBoardSeconds()).toBe(9);
   });
 });

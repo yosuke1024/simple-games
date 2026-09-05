@@ -97,12 +97,22 @@ vi.mock('../services/sound', async (importOriginal) => ({
   releaseSound: vi.fn(),
 }));
 
+// The stub shows the door it was handed (issue #113). A real game answers
+// that fact by choosing its own first screen; the shell's side of the
+// contract is only that the fact arrives, and arrives correctly.
 vi.mock('./lazyRoots', () => ({
   getLazyRoot: (gameId: string) =>
-    function StubGameRoot({ onExit }: { onExit: () => void }) {
+    function StubGameRoot({
+      onExit,
+      entry,
+    }: {
+      onExit: () => void;
+      entry?: 'collection' | 'shortcut';
+    }) {
       return (
         <div>
           <p>{`playing ${gameId}`}</p>
+          <p data-testid="entry">{entry ?? 'none'}</p>
           <button type="button" onClick={onExit}>
             All games
           </button>
@@ -159,6 +169,8 @@ function watchHistory() {
 }
 
 const playing = (gameId: string) => screen.getByText(`playing ${gameId}`);
+/** Which door the shell told the game it came through (issue #113). */
+const enteredBy = () => screen.getByTestId('entry').textContent;
 const collectionHome = () => screen.findByRole('heading', { name: 'Simple Games' });
 const leaveGame = () => screen.getByRole('button', { name: 'All games' });
 
@@ -200,6 +212,15 @@ describe('a cold start from a home-screen shortcut', () => {
     // No address to write: the app has no history.
     expect(history.push).not.toHaveBeenCalled();
     expect(history.replace).not.toHaveBeenCalled();
+  });
+
+  it('tells the game the shortcut was the door it came through', async () => {
+    await launchFrom(shortcutUrlFor('sudoku'));
+
+    // What the game does about it is the game's own business: one that keeps
+    // a single suspended board may open straight onto it, and the shell never
+    // hears which it chose (app/registry.ts, issue #113).
+    expect(enteredBy()).toBe('shortcut');
   });
 
   it('counts as an open, so the game reaches the shortcut row on the home', async () => {
@@ -250,6 +271,7 @@ describe('a shortcut tapped while the app is running', () => {
     tapShortcut(shortcutUrlFor('sudoku'));
 
     expect(playing('sudoku')).toBeInTheDocument();
+    expect(enteredBy()).toBe('shortcut');
     expect(document.documentElement.dataset.game).toBe('sudoku');
     expect(getRecentGames()).toEqual(['sudoku']);
   });
@@ -273,6 +295,7 @@ describe('a shortcut tapped while the app is running', () => {
     tapShortcut(shortcutUrlFor('kakuro'));
 
     expect(playing('kakuro')).toBeInTheDocument();
+    expect(enteredBy()).toBe('shortcut');
     expect(screen.queryByText('playing sudoku')).not.toBeInTheDocument();
     expect(document.documentElement.dataset.game).toBe('kakuro');
     expect(releaseSound).toHaveBeenCalledTimes(1);
@@ -369,6 +392,40 @@ describe('the hardware back button after a shortcut launch', () => {
 
     expect(appMock.listeners.get('backButton')?.size ?? 0).toBe(0);
     expect(appMock.App.minimizeApp).not.toHaveBeenCalled();
+  });
+});
+
+describe('the ordinary way in', () => {
+  /**
+   * The contrast that gives the shortcut its meaning: a tap on a tile is
+   * somebody choosing a game from the collection, and it says so. A game may
+   * only open straight onto a suspended board for the other door (issue #113).
+   */
+  it('is a tile on the collection, and the game is told so', async () => {
+    const user = userEvent.setup();
+    await launchFrom(undefined);
+    await collectionHome();
+
+    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+
+    expect(playing('sudoku')).toBeInTheDocument();
+    expect(enteredBy()).toBe('collection');
+  });
+
+  it('is also how a game re-opened after a shortcut launch comes back', async () => {
+    const user = userEvent.setup();
+    await launchFrom(shortcutUrlFor('sudoku'));
+    expect(enteredBy()).toBe('shortcut');
+
+    await user.click(leaveGame());
+    await collectionHome();
+    // Two tiles carry the title now — the shortcut row remembers the game
+    // that was just played, and the grid always had it (app/recentGames.ts).
+    await user.click(screen.getAllByRole('button', { name: /Sudoku/ })[0]!);
+
+    // The launch is over. Coming back by hand is coming back by hand, and a
+    // game that resumed on the way in must not resume again on the way back.
+    expect(enteredBy()).toBe('collection');
   });
 });
 

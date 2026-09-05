@@ -48,6 +48,12 @@ interface LoadedData {
 export interface Game2048RootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: what a door means is the provider's
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
@@ -69,7 +75,7 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, session };
 }
 
-export function Game2048Root({ onExit, kv = preferencesKV }: Game2048RootProps) {
+export function Game2048Root({ onExit, entry, kv = preferencesKV }: Game2048RootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -79,6 +85,7 @@ export function Game2048Root({ onExit, kv = preferencesKV }: Game2048RootProps) 
       initialFlags={data.flags}
       initialSession={data.session}
       onExit={onExit}
+      entry={entry}
     >
       <Game2048Screens />
     </Game2048Provider>

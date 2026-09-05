@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
@@ -7,13 +7,13 @@ import { settingsSchema } from '@/storage/schemas';
 import { PLAYER, createSession, restoreSession, type Board, type Piece } from '../game';
 import { CPU_MAN, EMPTY, PLAYER_MAN, isDarkSquare } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
-import { CK_STORAGE_KEYS } from '../storage/schemas';
+import { CK_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { CheckersRoot } from './CheckersRoot';
 
 /**
  * A stand-in for the device store. The `kv` prop below is a load-side seam
- * only — saves always go to Capacitor Preferences — so nothing here reads a
- * save back; these tests are about what the screens show.
+ * only — saves always go to Capacitor Preferences — so a test that has to read
+ * back what a save actually wrote has to stand behind both.
  */
 const { deviceStore } = vi.hoisted(() => ({ deviceStore: new Map<string, string>() }));
 vi.mock('@capacitor/preferences', () => ({
@@ -53,6 +53,22 @@ function boardOf(rows: readonly string[]): Board {
     }
   }
   return cells;
+}
+
+/** Launches the app against the device store, the way a player's phone does. */
+function launch() {
+  render(
+    <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+      <CheckersRoot onExit={vi.fn()} />
+    </SettingsProvider>,
+  );
+}
+
+/** The suspended board's own clock, as it survives on disk. */
+function storedBoardSeconds(): number {
+  const raw = deviceStore.get(CK_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
 }
 
 const tutorialDone = {
@@ -103,6 +119,30 @@ const doubleJump = {
 
 const board = () => screen.getByRole('group', { name: /Checkers board/ });
 const pieces = () => board().querySelectorAll('.ck-piece');
+
+function setVisibility(state: 'visible' | 'hidden') {
+  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+}
+
+/**
+ * Lets the local reads, and the fire-and-forget saves they trigger, resolve.
+ * They are promises rather than timers, so this works under fake timers too.
+ */
+const settle = () => act(async () => undefined);
+
+/**
+ * The OS hiding the app — the last event a process that is about to be killed
+ * gets, and where the match and its play seconds are written (§8). Fake timers
+ * only: the saves are fire-and-forget, so they are given a tick to land.
+ */
+async function background() {
+  setVisibility('hidden');
+  act(() => {
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await vi.advanceTimersByTimeAsync(0);
+  setVisibility('visible');
+}
 
 afterEach(() => {
   cleanup();
@@ -247,19 +287,183 @@ describe('the play clock survives a backgrounding', () => {
       // point is that the sync path runs without throwing and the match is
       // still on screen afterwards, ready to be resumed.
       await vi.advanceTimersByTimeAsync(8000);
-      Object.defineProperty(document, 'visibilityState', {
-        configurable: true,
-        get: () => 'hidden',
-      });
-      document.dispatchEvent(new Event('visibilitychange'));
-      await vi.advanceTimersByTimeAsync(0);
+      await background();
 
       expect(board()).toBeInTheDocument();
     } finally {
-      Object.defineProperty(document, 'visibilityState', {
-        configurable: true,
-        get: () => 'visible',
-      });
+      setVisibility('visible');
+      vi.useRealTimers();
+    }
+  });
+});
+
+/**
+ * A pinned home-screen shortcut, and what Checkers does with it (issue #113).
+ * The shell says which door the launch came through and nothing else; the
+ * answer below is this game's own, read off its one save slot (§8).
+ *
+ * The saves here are made by playing, not written out: the store these tests
+ * relaunch from is the store a real second launch would find.
+ */
+describe('a home-screen shortcut', () => {
+  /** Everything the game has saved so far — what the next launch loads. */
+  const stored = (): Record<string, string> => Object.fromEntries(deviceStore);
+
+  const storedPlaySeconds = (): number => {
+    const raw = deviceStore.get(CK_STORAGE_KEYS.stats);
+    return raw === undefined ? 0 : (JSON.parse(raw) as Stats).totalPlaySeconds;
+  };
+
+  const storedElapsedSeconds = (): number => {
+    const raw = deviceStore.get(CK_STORAGE_KEYS.game);
+    return raw === undefined ? -1 : (JSON.parse(raw) as PersistedGame).elapsedSeconds;
+  };
+
+  /** The same launch, through the other door. */
+  function renderShortcut(initial: Record<string, string>) {
+    const onExit = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <CheckersRoot onExit={onExit} entry="shortcut" kv={createMemoryKV(initial)} />
+      </SettingsProvider>,
+    );
+    return { onExit };
+  }
+
+  const suspendedBoard = () => screen.queryByRole('group', { name: /Checkers board/ });
+  const homeScreen = () => screen.queryByText('Choose your opponent');
+
+  /**
+   * A first launch played through: Quick Rules, one move each, then away.
+   * Everything the next launch reads — the flag, the statistics, the match —
+   * is written by the game itself along the way. Returns that store.
+   */
+  async function playAndLeave(user: ReturnType<typeof userEvent.setup>) {
+    renderGame();
+    await user.click(await screen.findByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await user.click(screen.getByRole('button', { name: 'Row 6, column 3: your piece' }));
+    await user.click(screen.getByRole('button', { name: 'Row 5, column 2: move here' }));
+    // The CPU answers on its own timer (§4). Both halves are waited for: a
+    // wait for the line to be gone would be satisfied by the frame before it
+    // ever appeared, and the helper would return with the reply still owed.
+    // What comes back is not asserted on, because what the player is left
+    // facing depends on the match's own seed — often a forced capture (§2).
+    await waitFor(() => expect(screen.getByText('CPU is thinking…')).toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText('CPU is thinking…')).not.toBeInTheDocument(), {
+      timeout: 3000,
+    });
+    // Leaving the board is one of the moments the match is written (§8).
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await waitFor(() => expect(deviceStore.has(CK_STORAGE_KEYS.game)).toBe(true));
+    const saved = stored();
+    cleanup();
+    return saved;
+  }
+
+  it('opens the suspended match straight onto its board', async () => {
+    const user = userEvent.setup();
+    const saved = await playAndLeave(user);
+
+    renderShortcut(saved);
+
+    // The match that was left, not a new one: the man that moved is still
+    // where it landed, and the square it came from is still empty.
+    expect(
+      await screen.findByRole('button', { name: 'Row 5, column 2: your piece' }),
+    ).toBeVisible();
+    expect(suspendedBoard()).toBeInTheDocument();
+    expect(homeScreen()).not.toBeInTheDocument();
+  });
+
+  it('leaves that board for this game’s home, not the collection', async () => {
+    const user = userEvent.setup();
+    const saved = await playAndLeave(user);
+
+    const { onExit } = renderShortcut(saved);
+    await waitFor(() => expect(suspendedBoard()).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from a board is this game's home, whichever door the
+    // board was reached through: the way in did not add a screen to undo.
+    expect(homeScreen()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens the home screen when nothing is suspended', async () => {
+    renderShortcut(tutorialDone);
+
+    expect(await screen.findByText('Choose your opponent')).toBeInTheDocument();
+    expect(suspendedBoard()).not.toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    const user = userEvent.setup();
+    const saved = await playAndLeave(user);
+
+    renderGame(saved);
+
+    expect(await screen.findByText('Choose your opponent')).toBeInTheDocument();
+    expect(suspendedBoard()).not.toBeInTheDocument();
+    // And the match is still there, to be picked up by hand as before.
+    expect(screen.getByRole('button', { name: /Easy.*Resume/ })).toBeInTheDocument();
+  });
+
+  it('teaches the game first on a launch that has never seen Quick Rules', async () => {
+    const user = userEvent.setup();
+    const saved = await playAndLeave(user);
+    // The flag and the match are two independent records, so a store can hold
+    // the second without the first. A shortcut is not a way past §9.
+    const neverTaught = { ...saved };
+    delete neverTaught[CK_STORAGE_KEYS.flags];
+
+    renderShortcut(neverTaught);
+
+    expect(await screen.findByText('Move diagonally forward')).toBeInTheDocument();
+    expect(suspendedBoard()).not.toBeInTheDocument();
+  });
+
+  // The counterpart of the backgrounding test above: a board that is on
+  // screen from the first frame never went through `activate`, so the two
+  // clocks it hands over have to be handed over at mount instead (§7).
+  it('does not book the resumed match’s play seconds a second time', async () => {
+    // The clock moves only when this test says so. Left following real time
+    // as well, a slow load or a busy machine would add a tick of its own
+    // somewhere above and every count below would be one out.
+    vi.useFakeTimers();
+    try {
+      renderGame(tutorialDone);
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+
+      act(() => vi.advanceTimersByTime(5000));
+      await background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+      expect(storedElapsedSeconds()).toBe(5);
+      const saved = { ...tutorialDone, ...stored() };
+      cleanup();
+
+      renderShortcut(saved);
+      await settle();
+      expect(suspendedBoard()).toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(3000));
+      await background();
+      await settle();
+
+      // Five seconds already booked and three more played. Both numbers are
+      // read, and that is the point: with NEITHER clock seeded the two errors
+      // cancel in the statistics — the save writes the match's own clock back
+      // DOWN to the seconds since this launch, and the booking then adds
+      // exactly that many — so the total still comes out at eight while the
+      // player's earlier minutes are quietly gone from the board they are
+      // still playing.
+      expect(storedElapsedSeconds()).toBe(8);
+      expect(storedPlaySeconds()).toBe(8);
+    } finally {
+      setVisibility('visible');
       vi.useRealTimers();
     }
   });
@@ -302,5 +506,45 @@ describe('keyboard (issue #93)', () => {
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
     expect(screen.getByRole('button', { name: 'Row 6, column 3: your piece' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+});
+
+describe('opening a suspended game without resuming (#109)', () => {
+  // The board is not the only thing a suspended game carries — the minutes on
+  // its clock are the player's too. `syncActiveGame` runs on every background
+  // from whichever screen is showing, and it writes this provider's play clock
+  // into the session it saves. Open the game, never press Resume, background:
+  // a clock that never took the restored board's seconds saves a zero over
+  // them, and the board comes back looking untouched.
+  it("keeps a suspended board's clock when backgrounded from the game's home", async () => {
+    deviceStore.set(CK_STORAGE_KEYS.flags, tutorialDone[CK_STORAGE_KEYS.flags]!);
+    // The play clock is a plain interval, so it has to be faked before the game
+    // screen mounts — which rules out userEvent here (it waits on real timers).
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(9_000);
+      });
+      await background();
+      await settle();
+      expect(storedBoardSeconds()).toBe(9);
+
+      // The process dies here. Relaunch and stop on the game's own home.
+      cleanup();
+      launch();
+      await settle();
+      expect(screen.getByRole('button', { name: 'Statistics' })).toBeInTheDocument();
+
+      // Away again without ever resuming: the nine seconds are still there.
+      await background();
+      await settle();
+      expect(storedBoardSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -64,6 +64,12 @@ interface LoadedData {
 export interface NonogramRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: what a door means is the provider's
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
@@ -89,7 +95,7 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, prefs, progress, sessions };
 }
 
-export function NonogramRoot({ onExit, kv = preferencesKV }: NonogramRootProps) {
+export function NonogramRoot({ onExit, entry, kv = preferencesKV }: NonogramRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -101,6 +107,7 @@ export function NonogramRoot({ onExit, kv = preferencesKV }: NonogramRootProps) 
       initialProgress={data.progress}
       initialSessions={data.sessions}
       onExit={onExit}
+      entry={entry}
     >
       <NonogramScreens />
     </NonogramProvider>

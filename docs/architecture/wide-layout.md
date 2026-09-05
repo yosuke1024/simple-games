@@ -14,12 +14,12 @@ Connect が要求する 13 インチのスクリーンショットも用意し�
 ([RELEASE_CHECKLIST.md](../RELEASE_CHECKLIST.md) §4.7)。**CSS を消す話ではない** —
 戻すときは `project.pbxproj` の 1 行と `Info.plist` の 1 ブロックだけで足りる。
 
-| 段階 | 条件 | 方針 |
-| --- | --- | --- |
-| Compact | 600px 未満(基準) | 既存のスマホ縦積みを変えない |
-| Medium | `min-width: 600px` | 縦積みのまま盤面・コンテンツを拡大 |
-| Large | `min-width: 900px` | 縦積みを保ち、リスト幅だけ広げる(過度に横へ伸ばさない) |
-| Wide | `min-width: 900px` かつ `orientation: landscape` | 対象ゲームは「盤面+操作領域」の横配置を許可 |
+| 段階    | 条件                                             | 方針                                                   |
+| ------- | ------------------------------------------------ | ------------------------------------------------------ |
+| Compact | 600px 未満(基準)                                 | 既存のスマホ縦積みを変えない                           |
+| Medium  | `min-width: 600px`                               | 縦積みのまま盤面・コンテンツを拡大                     |
+| Large   | `min-width: 900px`                               | 縦積みを保ち、リスト幅だけ広げる(過度に横へ伸ばさない) |
+| Wide    | `min-width: 900px` かつ `orientation: landscape` | 対象ゲームは「盤面+操作領域」の横配置を許可            |
 
 - 600px はスマホ横持ち(高さ側が 600 未満)と iPad Split View 半分(約 507〜559px)
   を Compact 側に残す線。900px は iPad 縦(768〜834px)を Medium に、iPad 横

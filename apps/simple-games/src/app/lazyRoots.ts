@@ -13,9 +13,9 @@
  * retry as a bonus (ui/components/GameErrorBoundary.tsx).
  */
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
-import { GAMES, type GameId } from './registry';
+import { GAMES, type GameId, type GameRootProps } from './registry';
 
-type LazyRoot = LazyExoticComponent<ComponentType<{ onExit: () => void }>>;
+type LazyRoot = LazyExoticComponent<ComponentType<GameRootProps>>;
 
 const cache = new Map<GameId, LazyRoot>();
 

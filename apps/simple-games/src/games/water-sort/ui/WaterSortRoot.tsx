@@ -64,6 +64,12 @@ interface LoadedData {
 export interface WaterSortRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: what a door means is the provider's
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
@@ -89,7 +95,7 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, progress, prefs, sessions };
 }
 
-export function WaterSortRoot({ onExit, kv = preferencesKV }: WaterSortRootProps) {
+export function WaterSortRoot({ onExit, entry, kv = preferencesKV }: WaterSortRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -101,6 +107,7 @@ export function WaterSortRoot({ onExit, kv = preferencesKV }: WaterSortRootProps
       initialPrefs={data.prefs}
       initialSessions={data.sessions}
       onExit={onExit}
+      entry={entry}
     >
       <WaterScreens />
     </WaterProvider>

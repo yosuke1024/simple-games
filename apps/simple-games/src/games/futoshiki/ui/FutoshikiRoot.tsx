@@ -64,6 +64,12 @@ interface LoadedData {
 export interface FutoshikiRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: what a door means is the provider's
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
@@ -89,7 +95,7 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, progress, prefs, sessions };
 }
 
-export function FutoshikiRoot({ onExit, kv = preferencesKV }: FutoshikiRootProps) {
+export function FutoshikiRoot({ onExit, entry, kv = preferencesKV }: FutoshikiRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -101,6 +107,7 @@ export function FutoshikiRoot({ onExit, kv = preferencesKV }: FutoshikiRootProps
       initialSessions={data.sessions}
       prefs={data.prefs}
       onExit={onExit}
+      entry={entry}
     >
       <FutoshikiScreens />
     </FutoshikiProvider>

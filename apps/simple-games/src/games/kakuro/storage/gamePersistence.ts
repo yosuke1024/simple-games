@@ -87,6 +87,32 @@ export function toSession(persisted: PersistedGame | null): KakuroSession | null
   return session.status === 'playing' ? session : null;
 }
 
+/**
+ * The one suspended game a home-screen shortcut may open straight onto, or
+ * null when there is no single answer (issue #113).
+ *
+ * A shortcut is a way back into the game somebody was playing. With three
+ * slots — a level, the daily, a free board (§9, §11) — "the game they were
+ * playing" is only a fact when exactly one of them is suspended. Two would
+ * make it a guess, and guessing wrong drops somebody onto a board they did
+ * not ask for, mid-puzzle. None and two both mean the home screen, which is
+ * where every other door leads anyway.
+ *
+ * The status test is exact here rather than merely careful: `toSession` above
+ * has already dropped everything that is not still in progress, so counting
+ * the slots counts suspended games and nothing else.
+ *
+ * Reads this game's own saves and nothing else — the shell says which door
+ * was used and never learns what was decided
+ * (docs/ARCHITECTURE.md「ゲームレジストリの契約」).
+ */
+export function soleSuspendedMode(saved: SavedGames): GameMode | null {
+  const suspended = (['level', 'daily', 'free'] as const).filter(
+    (mode) => saved[mode]?.status === 'playing',
+  );
+  return suspended.length === 1 ? suspended[0]! : null;
+}
+
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
   const [level, daily, free] = await Promise.all([
     loadRecord(gameSchema, kv),

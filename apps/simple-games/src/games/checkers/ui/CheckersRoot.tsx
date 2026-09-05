@@ -57,6 +57,12 @@ interface LoadedData {
 export interface CheckersRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Handed straight on: what a door means is this game's own answer,
+   * and it is taken from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
@@ -80,7 +86,7 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, prefs, session };
 }
 
-export function CheckersRoot({ onExit, kv = preferencesKV }: CheckersRootProps) {
+export function CheckersRoot({ onExit, entry, kv = preferencesKV }: CheckersRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -91,6 +97,7 @@ export function CheckersRoot({ onExit, kv = preferencesKV }: CheckersRootProps) 
       initialPrefs={data.prefs}
       initialSession={data.session}
       onExit={onExit}
+      entry={entry}
     >
       <CheckersScreens />
     </CheckersProvider>

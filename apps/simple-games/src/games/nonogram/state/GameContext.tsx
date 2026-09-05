@@ -44,7 +44,12 @@ import {
   type Mark,
   type NonogramSession,
 } from '../game';
-import { clearSavedGame, saveGame, type SavedGames } from '../storage/gamePersistence';
+import {
+  clearSavedGame,
+  saveGame,
+  soleSuspendedMode,
+  type SavedGames,
+} from '../storage/gamePersistence';
 import {
   flagsSchema,
   prefsSchema,
@@ -123,8 +128,16 @@ export interface NonogramProviderProps {
   initialSessions: SavedGames;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
+
+/**
+ * The mode a freshly mounted game is pointed at when nothing is resumed.
+ * Named because the play-clock baseline has to be read from the same slot.
+ */
+const INITIAL_MODE: GameMode = 'level';
 
 export function NonogramProvider({
   initialStats,
@@ -133,13 +146,43 @@ export function NonogramProvider({
   initialProgress,
   initialSessions,
   onExit,
+  entry,
   children,
 }: NonogramProviderProps) {
+  /**
+   * The suspended game this launch opens straight onto, or null for the home
+   * screen (issue #113). Decided once, from the records the provider was
+   * mounted with: a launch means whatever it meant when it happened, and no
+   * save made later can change that — this game rewrites its three slots
+   * constantly while a board is on screen (§10).
+   *
+   * Only a home-screen shortcut asks, and only once Quick Rules are behind
+   * the player — a first launch teaches the game before it shows a board
+   * (§11), and that order does not have an exception.
+   */
+  const [resumeMode] = useState<GameMode | null>(() =>
+    entry === 'shortcut' && initialFlags.tutorialCompleted
+      ? soleSuspendedMode(initialSessions)
+      : null,
+  );
+  /**
+   * The slot this mount is pointed at: the one a shortcut opened straight
+   * onto (issue #113), or the one the home screen starts on. Named once and
+   * read by both the active mode and the clock seed below, because a mode
+   * taken from one slot and a clock taken from another is the whole trap.
+   */
+  const mountedMode = resumeMode ?? INITIAL_MODE;
+  // Resume, or exactly what this line has always said. `resumeMode` already
+  // answers null until Quick Rules are behind the player, so the gate is in
+  // one place rather than two — two would each cover for the other, and a
+  // guard nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeMode ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
-  const [activeMode, setActiveMode] = useState<GameMode>('level');
+  // The board reads `sessions[activeMode]`, so a resumed daily or free game
+  // has to arrive with its own slot selected — 'level' would render nothing.
+  const [activeMode, setActiveMode] = useState<GameMode>(mountedMode);
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [prefs, setPrefs] = useState<Prefs>(initialPrefs);
@@ -162,10 +205,32 @@ export function NonogramProvider({
 
   const session = sessions[activeMode];
 
-  /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
-  /** Play seconds already booked into the statistics for this session. */
-  const bookedRef = useRef(0);
+  /**
+   * The seconds the game on that slot already carries. Read from the slot
+   * itself rather than gated on the resume: a launch that stops on the
+   * game's own home reaches `syncActiveGame` too, and from a zero baseline
+   * that saves `elapsedSeconds: 0` over the suspended board (issue #109).
+   */
+  const mountedSeconds = initialSessions[mountedMode]?.elapsedSeconds ?? 0;
+  /**
+   * The live play clock (seconds). Mutated by the interval, never state.
+   *
+   * Starts on the mounted game rather than at zero, because every save merges
+   * this ref into the session and `syncActiveGame` runs on any background,
+   * not only from the game screen. `activate` re-establishes the baseline
+   * whenever a game comes on screen; this line covers the mount before that.
+   */
+  const elapsedRef = useRef(mountedSeconds);
+  /**
+   * Play seconds already booked into the statistics for this session.
+   *
+   * The same baseline, and it has to be: a suspended game arrives with its
+   * seconds already in `totalPlaySeconds` — they were booked by the sync
+   * that saved it. Seeding the clock alone would book its whole elapsed
+   * time a second time. The two are one invariant; neither moves without
+   * the other.
+   */
+  const bookedRef = useRef(mountedSeconds);
 
   const withElapsed = useCallback((s: NonogramSession): NonogramSession => {
     return s.elapsedSeconds === elapsedRef.current

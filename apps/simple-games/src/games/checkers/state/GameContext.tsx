@@ -111,6 +111,8 @@ export interface CheckersProviderProps {
   initialSession: CheckersSession | null;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -120,10 +122,32 @@ export function CheckersProvider({
   initialPrefs,
   initialSession,
   onExit,
+  entry,
   children,
 }: CheckersProviderProps) {
+  /**
+   * Whether this launch opens straight onto the saved match rather than on
+   * the home screen (issue #113). Decided once, from the record the provider
+   * was mounted with: a launch means whatever it meant when it happened, and
+   * no save made later can change that.
+   *
+   * Only a home-screen shortcut asks. There is one slot and one match (§8),
+   * and the loader has already thrown away everything that is not a match to
+   * come back to — a finished one, a drifted board, an obligation nothing can
+   * discharge — so a session that arrives at all is the match, with nothing
+   * left to guess at. The tutorial is ANDed in rather than implied by it: the
+   * flag and the board are two independent records, and a first launch is
+   * taught the game before it is shown one (§9).
+   */
+  const [resumeAtMount] = useState(
+    () => entry === 'shortcut' && initialFlags.tutorialCompleted && initialSession !== null,
+  );
+  // Resume, or exactly what this line has always said. `resumeAtMount` already
+  // answers false until Quick Rules are behind the player, so the tutorial
+  // gate is in one place rather than two — two would each cover for the other,
+  // and a guard nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeAtMount ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [session, setSession] = useState<CheckersSession | null>(initialSession);
   const [stats, setStats] = useState<Stats>(initialStats);
@@ -145,10 +169,34 @@ export function CheckersProvider({
   /** Rises with every step shown, so each one animates exactly once. */
   const stepIdRef = useRef(0);
 
-  /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
-  /** Play seconds already booked into the statistics for this match. */
-  const bookedRef = useRef(0);
+  /**
+   * The seconds the game this mount holds already carries. There is one
+   * slot, so it is the same session whichever door the launch came through
+   * — which is why this is not gated on the resume: a launch that stops on
+   * the game's own home reaches `syncActiveGame` too, and from a zero
+   * baseline that saves `elapsedSeconds: 0` over the suspended board
+   * (issue #109).
+   */
+  const mountedSeconds = initialSession?.elapsedSeconds ?? 0;
+  /**
+   * The live play clock (seconds). Mutated by the interval, never state.
+   *
+   * Starts on the mounted game rather than at zero, because every save merges
+   * this ref into the session and `syncActiveGame` runs on any background,
+   * not only from the game screen. `activate` re-establishes the baseline
+   * whenever a game comes on screen; this line covers the mount before that.
+   */
+  const elapsedRef = useRef(mountedSeconds);
+  /**
+   * Play seconds already booked into the statistics for this match.
+   *
+   * The same baseline, and it has to be: a suspended game arrives with its
+   * seconds already in `totalPlaySeconds` — they were booked by the sync
+   * that saved it. Seeding the clock alone would book its whole elapsed
+   * time a second time. The two are one invariant; neither moves without
+   * the other.
+   */
+  const bookedRef = useRef(mountedSeconds);
   /** Whether this match's result has been booked; it happens exactly once. */
   const finalizedRef = useRef(false);
 

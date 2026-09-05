@@ -167,6 +167,8 @@ export interface LudoProviderProps {
   initialSession: LudoSession | null;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -176,10 +178,34 @@ export function LudoProvider({
   initialPrefs,
   initialSession,
   onExit,
+  entry,
   children,
 }: LudoProviderProps) {
+  /**
+   * Whether this launch opens straight onto the suspended match rather than
+   * onto the home screen (issue #113). Decided once, from the record the
+   * provider was mounted with: a launch means whatever it meant when it
+   * happened, and no save made later can change that.
+   *
+   * Only a home-screen shortcut asks — every other door opens the home, as it
+   * always did — and only once Quick Rules are behind the player: a first
+   * launch teaches the game before it shows a board (§11), and a shortcut is
+   * not a way past that. That clause lives here and nowhere else, which is why
+   * the screen below asks this first and the tutorial second: written the other
+   * way round the tutorial would be gated twice, and a guard nothing can
+   * observe failing is not a guard.
+   *
+   * There is nothing to disambiguate here, and that is the slot's doing rather
+   * than this line's: one match (§10), already replayed and dropped if play
+   * could not have produced it (§10.3), standing on the one state a record can
+   * express — you, about to throw (§10.2). So a session at all *is* the match
+   * to come back to.
+   */
+  const [resumeDirect] = useState(
+    () => entry === 'shortcut' && initialFlags.tutorialCompleted && initialSession !== null,
+  );
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeDirect ? 'game' : !initialFlags.tutorialCompleted ? 'tutorial' : 'home',
   );
   const [session, setSession] = useState<LudoSession | null>(initialSession);
   const [stats, setStats] = useState<Stats>(initialStats);
@@ -196,10 +222,34 @@ export function LudoProvider({
   const statsRef = useRef(stats);
   statsRef.current = stats;
 
-  /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
-  /** Play seconds already booked into the statistics for this match. */
-  const bookedRef = useRef(0);
+  /**
+   * The seconds the game this mount holds already carries. There is one
+   * slot, so it is the same session whichever door the launch came through
+   * — which is why this is not gated on the resume: a launch that stops on
+   * the game's own home reaches `syncActiveGame` too, and from a zero
+   * baseline that saves `elapsedSeconds: 0` over the suspended board
+   * (issue #109).
+   */
+  const mountedSeconds = initialSession?.elapsedSeconds ?? 0;
+  /**
+   * The live play clock (seconds). Mutated by the interval, never state.
+   *
+   * Starts on the mounted game rather than at zero, because every save merges
+   * this ref into the session and `syncActiveGame` runs on any background,
+   * not only from the game screen. `activate` re-establishes the baseline
+   * whenever a game comes on screen; this line covers the mount before that.
+   */
+  const elapsedRef = useRef(mountedSeconds);
+  /**
+   * Play seconds already booked into the statistics for this match.
+   *
+   * The same baseline, and it has to be: a suspended game arrives with its
+   * seconds already in `totalPlaySeconds` — they were booked by the sync
+   * that saved it. Seeding the clock alone would book its whole elapsed
+   * time a second time. The two are one invariant; neither moves without
+   * the other.
+   */
+  const bookedRef = useRef(mountedSeconds);
   /** Whether this match's result has been booked; it happens exactly once. */
   const finalizedRef = useRef(false);
 

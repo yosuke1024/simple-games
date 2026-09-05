@@ -143,6 +143,8 @@ export interface GinRummyProviderProps {
   initialSession: GinRummySession | null;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -152,10 +154,36 @@ export function GinRummyProvider({
   initialPrefs,
   initialSession,
   onExit,
+  entry,
   children,
 }: GinRummyProviderProps) {
+  /**
+   * Whether this launch opens straight onto the saved match instead of the
+   * home screen (issue #113). Decided once, from the records the provider was
+   * mounted with: a launch means what it meant when it happened, and a match
+   * saved or cleared afterwards cannot reach back and change it.
+   *
+   * Only a pinned home-screen shortcut asks. There is one match slot (§9), and
+   * the loader has already answered the whole question — a record the decoder
+   * refuses, a history that could not have been played, a move count that
+   * disagrees with the hand, a finished match: all of them come back null — so
+   * a session here IS the one match there is to come back to, the same fact
+   * `canResume` states to the home screen. Nothing is guessed and nothing is
+   * ranked, because with one slot there is never a second candidate.
+   *
+   * Quick Rules still come first (§10). A save can outlive a lost flag, and
+   * teaching the game before showing a table has no exception.
+   */
+  const [resumeAtMount] = useState(
+    () => entry === 'shortcut' && initialFlags.tutorialCompleted && initialSession !== null,
+  );
+  // Resume, or exactly what this line has always said. `resumeAtMount` already
+  // answers false until Quick Rules are behind the player, so the gate lives in
+  // one place rather than two — written twice, each copy covers for the other
+  // and neither can be seen to fail, and a guard nothing can observe failing is
+  // not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeAtMount ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [session, setSession] = useState<GinRummySession | null>(initialSession);
   const [stats, setStats] = useState<Stats>(initialStats);
@@ -173,10 +201,34 @@ export function GinRummyProvider({
   const statsRef = useRef(stats);
   statsRef.current = stats;
 
-  /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
-  /** Play seconds already booked into the statistics for this match. */
-  const bookedRef = useRef(0);
+  /**
+   * The seconds the game this mount holds already carries. There is one
+   * slot, so it is the same session whichever door the launch came through
+   * — which is why this is not gated on the resume: a launch that stops on
+   * the game's own home reaches `syncActiveGame` too, and from a zero
+   * baseline that saves `elapsedSeconds: 0` over the suspended board
+   * (issue #109).
+   */
+  const mountedSeconds = initialSession?.elapsedSeconds ?? 0;
+  /**
+   * The live play clock (seconds). Mutated by the interval, never state.
+   *
+   * Starts on the mounted game rather than at zero, because every save merges
+   * this ref into the session and `syncActiveGame` runs on any background,
+   * not only from the game screen. `activate` re-establishes the baseline
+   * whenever a game comes on screen; this line covers the mount before that.
+   */
+  const elapsedRef = useRef(mountedSeconds);
+  /**
+   * Play seconds already booked into the statistics for this match.
+   *
+   * The same baseline, and it has to be: a suspended game arrives with its
+   * seconds already in `totalPlaySeconds` — they were booked by the sync
+   * that saved it. Seeding the clock alone would book its whole elapsed
+   * time a second time. The two are one invariant; neither moves without
+   * the other.
+   */
+  const bookedRef = useRef(mountedSeconds);
   /** Whether this match's result has been booked; it happens exactly once. */
   const finalizedRef = useRef(false);
 

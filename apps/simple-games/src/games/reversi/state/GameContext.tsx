@@ -109,6 +109,8 @@ export interface ReversiProviderProps {
   initialSession: ReversiSession | null;
   /** Provided by the shell: hands control back to the collection home. */
   onExit: () => void;
+  /** Provided by the shell: which door this launch came through (issue #113). */
+  entry?: 'collection' | 'shortcut';
   children: ReactNode;
 }
 
@@ -118,10 +120,35 @@ export function ReversiProvider({
   initialPrefs,
   initialSession,
   onExit,
+  entry,
   children,
 }: ReversiProviderProps) {
+  /**
+   * Whether this launch opens straight onto the saved match rather than the
+   * home screen (issue #113). Decided once, from the record the provider was
+   * mounted with: a launch means whatever it meant when it happened, and no
+   * save made afterwards can change it.
+   *
+   * Only a home-screen shortcut asks — every other door opens the home, as it
+   * always did — and only once Quick Rules are behind the player: a first
+   * launch teaches the game before it shows a board (§10), and a shortcut is
+   * not a way past that.
+   *
+   * Nothing has to be disambiguated here. Reversi keeps one match (§9), and
+   * `loadSavedGame` has already discarded anything that is not a match to come
+   * back to — finished, corrupt, or with a move count the discs disagree with
+   * — so a session at all is *the* one, the same fact `canResume` states on
+   * the home screen.
+   */
+  const [resumeAtMount] = useState(
+    () => entry === 'shortcut' && initialFlags.tutorialCompleted && initialSession !== null,
+  );
+  // Resume, or exactly what this line has always said. `resumeAtMount` already
+  // answers false until Quick Rules are behind the player, so the gate lives in
+  // one place rather than two — two would each cover for the other, and a guard
+  // nothing can observe failing is not a guard.
   const [screen, setScreen] = useState<Screen>(
-    initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeAtMount ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [session, setSession] = useState<ReversiSession | null>(initialSession);
   const [stats, setStats] = useState<Stats>(initialStats);
@@ -139,10 +166,34 @@ export function ReversiProvider({
   const statsRef = useRef(stats);
   statsRef.current = stats;
 
-  /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(0);
-  /** Play seconds already booked into the statistics for this match. */
-  const bookedRef = useRef(0);
+  /**
+   * The seconds the game this mount holds already carries. There is one
+   * slot, so it is the same session whichever door the launch came through
+   * — which is why this is not gated on the resume: a launch that stops on
+   * the game's own home reaches `syncActiveGame` too, and from a zero
+   * baseline that saves `elapsedSeconds: 0` over the suspended board
+   * (issue #109).
+   */
+  const mountedSeconds = initialSession?.elapsedSeconds ?? 0;
+  /**
+   * The live play clock (seconds). Mutated by the interval, never state.
+   *
+   * Starts on the mounted game rather than at zero, because every save merges
+   * this ref into the session and `syncActiveGame` runs on any background,
+   * not only from the game screen. `activate` re-establishes the baseline
+   * whenever a game comes on screen; this line covers the mount before that.
+   */
+  const elapsedRef = useRef(mountedSeconds);
+  /**
+   * Play seconds already booked into the statistics for this match.
+   *
+   * The same baseline, and it has to be: a suspended game arrives with its
+   * seconds already in `totalPlaySeconds` — they were booked by the sync
+   * that saved it. Seeding the clock alone would book its whole elapsed
+   * time a second time. The two are one invariant; neither moves without
+   * the other.
+   */
+  const bookedRef = useRef(mountedSeconds);
   /** Whether this match's result has been booked; it happens exactly once. */
   const finalizedRef = useRef(false);
 

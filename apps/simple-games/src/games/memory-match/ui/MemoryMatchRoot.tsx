@@ -50,6 +50,12 @@ interface LoadedData {
 export interface MemoryMatchRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: what a door means is the provider's
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
@@ -71,7 +77,7 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, sessions };
 }
 
-export function MemoryMatchRoot({ onExit, kv = preferencesKV }: MemoryMatchRootProps) {
+export function MemoryMatchRoot({ onExit, entry, kv = preferencesKV }: MemoryMatchRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -81,6 +87,7 @@ export function MemoryMatchRoot({ onExit, kv = preferencesKV }: MemoryMatchRootP
       initialFlags={data.flags}
       initialSessions={data.sessions}
       onExit={onExit}
+      entry={entry}
     >
       <MemoryScreens />
     </MemoryProvider>

@@ -58,6 +58,12 @@ interface LoadedData {
 export interface QuickMathRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: what a door means is the provider's
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
@@ -81,7 +87,7 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, progress, sessions };
 }
 
-export function QuickMathRoot({ onExit, kv = preferencesKV }: QuickMathRootProps) {
+export function QuickMathRoot({ onExit, entry, kv = preferencesKV }: QuickMathRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -92,6 +98,7 @@ export function QuickMathRoot({ onExit, kv = preferencesKV }: QuickMathRootProps
       initialProgress={data.progress}
       initialSessions={data.sessions}
       onExit={onExit}
+      entry={entry}
     >
       <QuickMathScreens />
     </QuickMathProvider>

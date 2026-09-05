@@ -40,6 +40,24 @@ function renderGame(initial: Record<string, string> = {}) {
   return { onExit, kv };
 }
 
+/** Launches the app against the device store, the way a player's phone does. */
+function launch() {
+  render(
+    <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+      <BlockPuzzleRoot onExit={vi.fn()} />
+    </SettingsProvider>,
+  );
+}
+
+/** The app goes to background. Android may kill it without another event. */
+function background() {
+  Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+  act(() => {
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  Reflect.deleteProperty(document, 'visibilityState');
+}
+
 const tutorialDone = {
   [BP_STORAGE_KEYS.flags]: JSON.stringify({ schemaVersion: 1, tutorialCompleted: true }),
 };
@@ -55,6 +73,18 @@ const savedGame = {
 
 /** Lets the async record loads and the fire-and-forget saves land. */
 const settle = () => act(async () => undefined);
+
+/** Total play seconds as they survive on disk. */
+const storedPlaySeconds = (): number => {
+  const raw = deviceStore.get(BP_STORAGE_KEYS.stats);
+  return raw === undefined ? 0 : (JSON.parse(raw) as { totalPlaySeconds: number }).totalPlaySeconds;
+};
+
+/** The suspended board's own clock, as it survives on disk (§10). */
+const storedElapsedSeconds = (): number => {
+  const raw = deviceStore.get(BP_STORAGE_KEYS.game);
+  return raw === undefined ? 0 : (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+};
 
 const board = () => screen.getByRole('group', { name: 'Block board, 8 by 8' });
 const tray = () => screen.getByRole('group', { name: 'Pieces' });
@@ -322,14 +352,6 @@ describe('home', () => {
 });
 
 describe('play time (§9)', () => {
-  /** Total play seconds as they survive on disk. */
-  const storedPlaySeconds = (): number => {
-    const raw = deviceStore.get(BP_STORAGE_KEYS.stats);
-    return raw === undefined
-      ? 0
-      : (JSON.parse(raw) as { totalPlaySeconds: number }).totalPlaySeconds;
-  };
-
   // Replacing a running board is the one exit that nothing else comes back
   // for: `activate` resets the clock refs to the new game's zero, so seconds
   // not booked before that are gone. A player who taps New Game after ten
@@ -358,6 +380,196 @@ describe('play time (§9)', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Home' }));
       await settle();
       expect(storedPlaySeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('opening a suspended game without resuming (#109)', () => {
+  // The board is not the only thing a suspended game carries — the minutes on
+  // its clock are the player's too. `syncActiveGame` runs on every background
+  // from whichever screen is showing, and it writes this provider's play clock
+  // into the session it saves. Open the game, never press Resume, background:
+  // a clock that never took the restored board's seconds saves a zero over
+  // them, and the board comes back looking untouched.
+  it("keeps a suspended board's clock when backgrounded from the game's home", async () => {
+    deviceStore.set(BP_STORAGE_KEYS.flags, tutorialDone[BP_STORAGE_KEYS.flags]!);
+    // The play clock is a plain interval, so it has to be faked before the game
+    // screen mounts — which rules out userEvent here (it waits on real timers).
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /New Game/ }));
+
+      act(() => vi.advanceTimersByTime(9_000));
+      background();
+      await settle();
+      expect(storedElapsedSeconds()).toBe(9);
+
+      // The process dies here. Relaunch and stop on the game's own home.
+      cleanup();
+      launch();
+      await settle();
+      expect(screen.getByRole('button', { name: 'Statistics' })).toBeInTheDocument();
+
+      // Away again without ever resuming: the nine seconds are still there.
+      background();
+      await settle();
+      expect(storedElapsedSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+/**
+ * A pinned home-screen shortcut, and what Block Puzzle does about it (issue
+ * #113). The shell says only which door the launch came through; every
+ * decision below is this game's, taken from its one save slot (§10).
+ *
+ * One slot is why there is no ambiguity to resolve here: "the game they were
+ * playing" cannot have two answers, and `loadSavedGame` already returns null
+ * for a board that is out of room or unreadable. So the whole question is
+ * whether there is a board to come back to — and whether Quick Rules are
+ * behind the player yet (§11).
+ */
+describe('a home-screen shortcut', () => {
+  /**
+   * The records the next launch reads. The `kv` prop is a load-side seam
+   * only, so what the game actually saved has to be handed back to it; the
+   * flag alongside is the one a first run wrote long before any of this.
+   */
+  const stored = () => ({ ...tutorialDone, ...Object.fromEntries(deviceStore) });
+
+  /** The same records a launch reads, entered by the other door. */
+  function launchFromShortcut(initial: Record<string, string> = stored()) {
+    const onExit = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <BlockPuzzleRoot onExit={onExit} entry="shortcut" kv={createMemoryKV(initial)} />
+      </SettingsProvider>,
+    );
+    return { onExit };
+  }
+
+  /**
+   * Leaves one suspended board on the device store the way a player leaves
+   * one: resume the pinned game, put a piece down so the board is
+   * recognisably the one that was left, then go back to the game's home (§10).
+   */
+  async function suspendOneBoard(user: ReturnType<typeof userEvent.setup>) {
+    renderGame(savedGame);
+    await resume(user);
+    await user.click(within(tray()).getByRole('button', { name: /^Piece 1,/ }));
+    await user.click(cell(3, 3));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+  }
+
+  const boardOrNull = () => screen.queryByRole('group', { name: 'Block board, 8 by 8' });
+  const resumeButton = () => screen.queryByRole('button', { name: 'Resume' });
+
+  it('opens the suspended game straight onto its board', async () => {
+    const user = userEvent.setup();
+    await suspendOneBoard(user);
+
+    launchFromShortcut();
+    await settle();
+
+    // The board that was left, not a fresh one: the piece is still down and
+    // the score it scored is still on the screen (§10).
+    expect(boardOrNull()).toBeInTheDocument();
+    expect(board().querySelectorAll('.bp-cell-filled')).toHaveLength(cellsInSlot(0));
+    expect(screen.getByText(new RegExp(`Score\\s*${cellsInSlot(0)}`))).toBeInTheDocument();
+    expect(resumeButton()).not.toBeInTheDocument();
+  });
+
+  it('leaves that board for this game’s home, not the collection', async () => {
+    const user = userEvent.setup();
+    await suspendOneBoard(user);
+
+    const { onExit } = launchFromShortcut();
+    await settle();
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+
+    // One step back from a board is this game's home, whichever door the
+    // board was reached through: the way in did not add a screen to undo.
+    expect(resumeButton()).toBeInTheDocument();
+    expect(onExit).not.toHaveBeenCalled();
+  });
+
+  it('opens the home screen when nothing is suspended', async () => {
+    launchFromShortcut(tutorialDone);
+    await settle();
+
+    // Nothing to come back to is not a reason to start something: a new board
+    // spends a play and writes it to the statistics (§9), and nobody asked.
+    expect(boardOrNull()).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /New Game/ })).toBeInTheDocument();
+  });
+
+  it('is the only door that resumes: a tile on the collection still opens the home', async () => {
+    const user = userEvent.setup();
+    await suspendOneBoard(user);
+
+    renderGame(stored());
+    await settle();
+
+    expect(boardOrNull()).not.toBeInTheDocument();
+    expect(resumeButton()).toBeInTheDocument();
+  });
+
+  it('teaches the game first on a launch that has never seen Quick Rules', async () => {
+    const user = userEvent.setup();
+    await suspendOneBoard(user);
+
+    // A saved board with the flag gone is reachable — the two are separate
+    // records and a corrupt one reads back as its default. The shortcut must
+    // not become the way past Quick Rules (§11); if it did, the flag would
+    // never be written and every later launch would show them again.
+    launchFromShortcut(Object.fromEntries(deviceStore));
+
+    expect(await screen.findByText('Drag a piece in')).toBeInTheDocument();
+    expect(boardOrNull()).not.toBeInTheDocument();
+  });
+
+  // The counterpart of the play-time test above. Mounting straight onto the
+  // board is the one way onto it that skips `activate`, so it is the one way
+  // the two clock refs can be left at zero — and neither mistake it allows
+  // shows up on screen.
+  it('does not book the resumed board’s play seconds a second time', async () => {
+    // The play clock is a plain interval, so it has to be faked before the
+    // game screen mounts — which rules out userEvent here.
+    vi.useFakeTimers();
+    try {
+      renderGame(savedGame);
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: 'Resume' }));
+      await settle();
+      act(() => vi.advanceTimersByTime(5_000));
+      // Home saves the board and books what it played, same as backgrounding.
+      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+      expect(storedElapsedSeconds()).toBe(5);
+      cleanup();
+
+      launchFromShortcut();
+      await settle();
+      expect(boardOrNull()).toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(3_000));
+      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+      await settle();
+
+      // Eight seconds played, counted once. Booking the restored five again
+      // would read 13; and had the board's own clock restarted at zero, the
+      // save would have written those five away.
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedElapsedSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }
