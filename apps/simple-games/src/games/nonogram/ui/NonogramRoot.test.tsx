@@ -567,35 +567,6 @@ describe('right click (§3, issue #112)', () => {
     expect(markAt(5, 5)).toMatch(/^Blank/);
   });
 
-  it('draws nothing when the right button is held and dragged (issue #108)', async () => {
-    const user = userEvent.setup();
-    renderGame(tutorialDone);
-    await startLevelOne(user);
-    giveCellsALayout();
-
-    const origin = cellAt(1, 1);
-    fireEvent.pointerDown(origin, {
-      button: 2,
-      pointerType: 'mouse',
-      pointerId: 1,
-      ...pointAt(1, 1),
-    });
-    contextMenu(origin, { button: 2 });
-    fireEvent.pointerMove(origin, { pointerId: 1, ...pointAt(1, 2) });
-    fireEvent.pointerMove(origin, { pointerId: 1, ...pointAt(1, 3) });
-    fireEvent.pointerUp(origin, {
-      button: 2,
-      pointerType: 'mouse',
-      pointerId: 1,
-      ...pointAt(1, 3),
-    });
-
-    // The one cell the menu crossed, and nothing along the way.
-    expect(markAt(1, 1)).toMatch(/^Crossed/);
-    expect(markAt(1, 2)).toMatch(/^Blank/);
-    expect(markAt(1, 3)).toMatch(/^Blank/);
-  });
-
   it('paints nothing over the cross when a ctrl+click then drags (issue #108)', async () => {
     const user = userEvent.setup();
     renderGame(tutorialDone);
@@ -673,6 +644,265 @@ describe('right click (§3, issue #112)', () => {
     contextMenu(board(), { button: 2 });
     contextMenu(board().querySelector('.nono-cells') as HTMLElement, { button: 2 });
     contextMenu(cellAt(1, 1), { button: 2 });
+  });
+
+  /* Held down and moved, the right button crosses the whole run (issue #130).
+     The hard part is the context menu one press owes: macOS raises it on the
+     way down, before anyone knows a stroke is coming, and Windows only once
+     the button is back up, when the stroke is already over. Both orders have
+     to end with the same three crosses standing. */
+  describe('right drag (§3, issue #130)', () => {
+    /**
+     * The right button held across a row. `order` is the browser's own: 'mac'
+     * raises the menu on the way down, 'win' after the release. No click ever
+     * follows a right release — an auxclick does — so none is fired here.
+     * `init` carries how the button arrived, which a pen's barrel changes.
+     */
+    function rightDrag(
+      path: readonly Coord[],
+      order: 'mac' | 'win',
+      init: Record<string, unknown> = { button: 2, pointerType: 'mouse' },
+    ): void {
+      const origin = cellAt(...path[0]!);
+      const last = path[path.length - 1]!;
+      fireEvent.pointerDown(origin, {
+        pointerId: 1,
+        buttons: 2,
+        ...init,
+        ...pointAt(...path[0]!),
+      });
+      if (order === 'mac') contextMenu(origin, { button: 2 });
+      for (const step of path.slice(1)) {
+        fireEvent.pointerMove(origin, { pointerId: 1, buttons: 2, ...pointAt(...step) });
+      }
+      fireEvent.pointerUp(origin, { pointerId: 1, button: 2, ...pointAt(...last) });
+      if (order === 'win') contextMenu(origin, { button: 2 });
+      // What a right release leaves behind, in place of the click the board
+      // listens for: fired so every one of these drags also proves that the
+      // handler for that click is never reached.
+      fireEvent(
+        origin,
+        new MouseEvent('auxclick', { bubbles: true, cancelable: true, button: 2, detail: 1 }),
+      );
+    }
+
+    it('crosses the whole run, and the menu that follows it leaves the run alone', async () => {
+      const user = userEvent.setup();
+      renderGame(tutorialDone);
+      await startLevelOne(user);
+      giveCellsALayout();
+
+      // Windows: the menu arrives after the release, when the stroke is gone.
+      // Answering it there would take the last cross straight back off.
+      rightDrag(
+        [
+          [1, 1],
+          [1, 2],
+          [1, 3],
+        ],
+        'win',
+      );
+
+      for (let col = 1; col <= 3; col++) expect(markAt(1, col)).toMatch(/^Crossed/);
+      expect(markAt(1, 4)).toMatch(/^Blank/);
+    });
+
+    it('crosses the whole run when the menu comes first instead (macOS)', async () => {
+      const user = userEvent.setup();
+      renderGame(tutorialDone);
+      await startLevelOne(user);
+      giveCellsALayout();
+
+      // The menu crosses the cell the press began on before the hand has said
+      // whether it meant one cross or a run. The stroke then writes that same
+      // cell the same way, so the two agree and the origin is not undone.
+      rightDrag(
+        [
+          [2, 1],
+          [2, 2],
+          [2, 3],
+        ],
+        'mac',
+      );
+
+      for (let col = 1; col <= 3; col++) expect(markAt(2, col)).toMatch(/^Crossed/);
+      expect(markAt(2, 4)).toMatch(/^Blank/);
+    });
+
+    it('takes a run of crosses back off when it starts on one', async () => {
+      const user = userEvent.setup();
+      renderGame(tutorialDone);
+      await startLevelOne(user);
+      giveCellsALayout();
+
+      const run: readonly Coord[] = [
+        [3, 1],
+        [3, 2],
+        [3, 3],
+      ];
+      rightDrag(run, 'win');
+      for (let col = 1; col <= 3; col++) expect(markAt(3, col)).toMatch(/^Crossed/);
+
+      // The same answer a right click on the cell it began on would give: what
+      // the stroke writes is decided once, and there it is the erase.
+      rightDrag(run, 'win');
+      for (let col = 1; col <= 3; col++) expect(markAt(3, col)).toMatch(/^Blank/);
+    });
+
+    it('crosses over paint, the way the single right click does (§3)', async () => {
+      const user = userEvent.setup();
+      renderGame(tutorialDone);
+      await startLevelOne(user);
+      giveCellsALayout();
+
+      drag([
+        [4, 1],
+        [4, 2],
+        [4, 3],
+      ]);
+      for (let col = 1; col <= 3; col++) expect(markAt(4, col)).toMatch(/^Painted/);
+
+      rightDrag(
+        [
+          [4, 1],
+          [4, 2],
+          [4, 3],
+        ],
+        'win',
+      );
+      for (let col = 1; col <= 3; col++) expect(markAt(4, col)).toMatch(/^Crossed/);
+    });
+
+    it('still crosses in X mode, and paints not one cell (§3)', async () => {
+      const user = userEvent.setup();
+      renderGame(tutorialDone);
+      await startLevelOne(user);
+      await user.click(screen.getByRole('button', { name: 'X Mode' }));
+      giveCellsALayout();
+
+      // X mode swaps what the tap and the long press do; the right button does
+      // not follow it there, whether it is clicked once or dragged across.
+      rightDrag(
+        [
+          [5, 1],
+          [5, 2],
+          [5, 3],
+        ],
+        'win',
+      );
+
+      for (let col = 1; col <= 3; col++) expect(markAt(5, col)).toMatch(/^Crossed/);
+      expect(within(board()).queryAllByRole('button', { name: /^Painted/ })).toHaveLength(0);
+    });
+
+    it('opens no browser menu for a run let go past the end of its row', async () => {
+      const user = userEvent.setup();
+      renderGame(tutorialDone);
+      await startLevelOne(user);
+      giveCellsALayout();
+
+      const origin = cellAt(3, 3);
+      fireEvent.pointerDown(origin, {
+        button: 2,
+        buttons: 2,
+        pointerType: 'mouse',
+        pointerId: 1,
+        ...pointAt(3, 3),
+      });
+      fireEvent.pointerMove(origin, { pointerId: 1, buttons: 2, ...pointAt(3, 4) });
+      fireEvent.pointerMove(origin, { pointerId: 1, buttons: 2, ...pointAt(3, 5) });
+      // Let go a cell's width past the last column, which is off the board.
+      fireEvent.pointerUp(origin, {
+        button: 2,
+        pointerId: 1,
+        clientX: CELL_PX * 5.5,
+        clientY: pointAt(3, 5).clientY,
+      });
+
+      // The board's own handler covers only the board, so the menu raised out
+      // there is the window's to swallow — or the native one opens over the
+      // puzzle the player is reading.
+      expect(fireEvent.contextMenu(document.body, { button: 2 })).toBe(false);
+      for (let col = 3; col <= 5; col++) expect(markAt(3, col)).toMatch(/^Crossed/);
+    });
+
+    it('leaves a later menu of its own to cross the cell it lands on', async () => {
+      const user = userEvent.setup();
+      renderGame(tutorialDone);
+      await startLevelOne(user);
+      giveCellsALayout();
+
+      // The macOS stroke was never owed a menu — it had one on the way down.
+      // A flag left standing here would be spent on the next right click
+      // instead, and that one cell would silently do nothing.
+      rightDrag(
+        [
+          [1, 1],
+          [1, 2],
+        ],
+        'mac',
+      );
+
+      contextMenu(cellAt(5, 5), { button: 2 });
+      expect(markAt(5, 5)).toMatch(/^Crossed/);
+    });
+
+    it("crosses the run under a pen's barrel held as the tip comes down", async () => {
+      const user = userEvent.setup();
+      renderGame(tutorialDone);
+      await startLevelOne(user);
+      giveCellsALayout();
+
+      // Already held when the contact was made, so what changed is the tip:
+      // the barrel arrives inside `buttons`, not as the button that moved.
+      rightDrag(
+        [
+          [4, 1],
+          [4, 2],
+          [4, 3],
+        ],
+        'win',
+        { button: 0, buttons: 3, pointerType: 'pen' },
+      );
+
+      for (let col = 1; col <= 3; col++) expect(markAt(4, col)).toMatch(/^Crossed/);
+      expect(within(board()).queryAllByRole('button', { name: /^Painted/ })).toHaveLength(0);
+    });
+
+    it("crosses on a barrel click, which the pen's own long-press menu may not", async () => {
+      const user = userEvent.setup();
+      renderGame(tutorialDone);
+      await startLevelOne(user);
+
+      // Pressed while hovering, the barrel arrives as button 2 — the right
+      // button, not the menu a pen tip raises at the end of a long press.
+      fireEvent.pointerDown(cellAt(2, 2), { button: 2, buttons: 2, pointerType: 'pen' });
+      contextMenu(cellAt(2, 2), { button: 2 });
+      fireEvent.pointerUp(cellAt(2, 2), { button: 2, pointerType: 'pen' });
+
+      expect(markAt(2, 2)).toMatch(/^Crossed/);
+    });
+
+    it("keeps the cross a pen tip's own long press just made (§3)", async () => {
+      const user = userEvent.setup();
+      renderGame(tutorialDone);
+      await startLevelOne(user);
+
+      vi.useFakeTimers();
+      try {
+        // The tip alone is unchanged by #130: it still arms a long press, and
+        // the menu that press ends in must not take the cross back off.
+        fireEvent.pointerDown(cellAt(1, 5), { button: 0, pointerType: 'pen', pointerId: 1 });
+        act(() => vi.advanceTimersByTime(LONG_PRESS_MS));
+        expect(markAt(1, 5)).toMatch(/^Crossed/);
+
+        contextMenu(cellAt(1, 5), { button: 0 });
+        fireEvent.pointerUp(cellAt(1, 5), { button: 0, pointerType: 'pen', pointerId: 1 });
+      } finally {
+        vi.useRealTimers();
+      }
+      expect(markAt(1, 5)).toMatch(/^Crossed/);
+    });
   });
 });
 

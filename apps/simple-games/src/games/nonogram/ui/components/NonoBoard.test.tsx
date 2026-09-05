@@ -7,10 +7,19 @@
  * arrived after a paint looks exactly like a cross that arrived alone.
  */
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { settingsSchema } from '@/storage/schemas';
-import { createLevelSession } from '../../game';
+import {
+  createLevelSession,
+  crossCell,
+  CROSSED,
+  FILLED,
+  paintCell,
+  UNKNOWN,
+  type Mark,
+  type NonogramSession,
+} from '../../game';
 import { LONG_PRESS_MS, NonoBoard } from './NonoBoard';
 
 /** Level 1 is a blank 5×5, and the same one on every machine (§6). */
@@ -20,14 +29,14 @@ const SESSION = createLevelSession(1);
 /** Row and column count from one, the way the labels do. */
 const indexAt = (row: number, col: number) => (row - 1) * SIZE + (col - 1);
 
-function renderBoard(xMode = false) {
+function renderBoard(xMode = false, session: NonogramSession = SESSION) {
   const onPaint = vi.fn();
   const onCross = vi.fn();
   const onStroke = vi.fn();
   render(
     <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
       <NonoBoard
-        session={SESSION}
+        session={session}
         hint={null}
         xMode={xMode}
         onPaint={onPaint}
@@ -78,18 +87,54 @@ function contextMenu(target: Element, init: Record<string, unknown>) {
 
 /** A right click as a browser delivers it. No click event ever follows one. */
 function rightClick(cell: Element) {
-  fireEvent.pointerDown(cell, { button: 2, pointerType: 'mouse' });
+  fireEvent.pointerDown(cell, { button: 2, buttons: 2, pointerType: 'mouse' });
   contextMenu(cell, { button: 2 });
   fireEvent.pointerUp(cell, { button: 2, pointerType: 'mouse' });
 }
 
 /** macOS ctrl+click: the primary button raises the menu, and a click follows. */
 function ctrlClick(cell: Element) {
-  fireEvent.pointerDown(cell, { button: 0, pointerType: 'mouse', ctrlKey: true });
+  fireEvent.pointerDown(cell, { button: 0, buttons: 1, pointerType: 'mouse', ctrlKey: true });
   contextMenu(cell, { button: 0, ctrlKey: true });
   fireEvent.pointerUp(cell, { button: 0, pointerType: 'mouse', ctrlKey: true });
   fireEvent.click(cell, { button: 0, ctrlKey: true, detail: 1 });
 }
+
+/**
+ * The press a right drag begins with. Where the menu goes is left to the
+ * caller: the browsers disagree on when it belongs to this press, and that
+ * disagreement is half of what the right drag has to answer for (§3).
+ */
+function rightPress(cell: Element, row: number, col: number, init: Record<string, unknown> = {}) {
+  fireEvent.pointerDown(cell, {
+    button: 2,
+    buttons: 2,
+    pointerType: 'mouse',
+    pointerId: 1,
+    ...pointAt(row, col),
+    ...init,
+  });
+}
+
+/**
+ * One move of a drag, fired at the cell the press began on: pointer capture
+ * retargets every move there, and they reach the grid by bubbling.
+ */
+function dragTo(origin: Element, row: number, col: number, init: Record<string, unknown> = {}) {
+  fireEvent.pointerMove(origin, { pointerId: 1, ...pointAt(row, col), ...init });
+}
+
+/** The release, wherever the drag ran out. */
+function release(origin: Element, row: number, col: number, init: Record<string, unknown> = {}) {
+  fireEvent.pointerUp(origin, { pointerId: 1, ...pointAt(row, col), ...init });
+}
+
+/** Every cell a run of strokes wrote, in the order they were written. */
+const strokeCells = (onStroke: Mock): number[] =>
+  onStroke.mock.calls.flatMap((call) => call[0] as number[]);
+
+/** The mark each of those strokes carried. One stroke should give one answer. */
+const strokeMarks = (onStroke: Mock): Mark[] => onStroke.mock.calls.map((call) => call[1] as Mark);
 
 afterEach(() => {
   cleanup();
@@ -160,7 +205,7 @@ describe('the right button (§3, issue #112)', () => {
       // Windows raises the menu only once the button comes back up. A long
       // press armed on the way down would cross on its own timer and the menu
       // would take the cross straight back off — so none is armed.
-      fireEvent.pointerDown(cells[4]!, { button: 2, pointerType: 'mouse' });
+      fireEvent.pointerDown(cells[4]!, { button: 2, buttons: 2, pointerType: 'mouse' });
       vi.advanceTimersByTime(LONG_PRESS_MS + 20);
       expect(onCross).not.toHaveBeenCalled();
       fireEvent.pointerUp(cells[4]!, { button: 2, pointerType: 'mouse' });
@@ -201,47 +246,6 @@ describe('the right button (§3, issue #112)', () => {
     expect(onPaint).not.toHaveBeenCalled();
   });
 
-  it('starts no stroke, where the same drag on the left button draws one', () => {
-    const held = renderBoard();
-    giveCellsALayout();
-
-    const origin = held.cells[indexAt(1, 1)]!;
-    fireEvent.pointerDown(origin, {
-      button: 2,
-      pointerType: 'mouse',
-      pointerId: 1,
-      ...pointAt(1, 1),
-    });
-    contextMenu(origin, { button: 2 });
-    fireEvent.pointerMove(origin, { pointerId: 1, ...pointAt(1, 2) });
-    fireEvent.pointerMove(origin, { pointerId: 1, ...pointAt(1, 3) });
-    fireEvent.pointerUp(origin, {
-      button: 2,
-      pointerType: 'mouse',
-      pointerId: 1,
-      ...pointAt(1, 3),
-    });
-
-    expect(held.onCross.mock.calls).toEqual([[indexAt(1, 1)]]);
-    expect(held.onStroke).not.toHaveBeenCalled();
-    cleanup();
-
-    // The same path under the primary button, so the rig is known to be able
-    // to raise a stroke at all (issue #108).
-    const drawn = renderBoard();
-    giveCellsALayout();
-    const left = drawn.cells[indexAt(1, 1)]!;
-    fireEvent.pointerDown(left, {
-      button: 0,
-      pointerType: 'mouse',
-      pointerId: 1,
-      ...pointAt(1, 1),
-    });
-    fireEvent.pointerMove(left, { pointerId: 1, ...pointAt(1, 2) });
-    fireEvent.pointerUp(left, { button: 0, pointerType: 'mouse', pointerId: 1, ...pointAt(1, 2) });
-    expect(drawn.onStroke).toHaveBeenCalled();
-  });
-
   it('drops the stroke the menu interrupted (macOS ctrl+drag)', () => {
     const { cells, onCross, onStroke } = renderBoard();
     giveCellsALayout();
@@ -267,28 +271,40 @@ describe('the right button (§3, issue #112)', () => {
   });
 
   it('crosses without painting when the right button joins a stroke in progress', () => {
-    const { cells, onCross, onStroke } = renderBoard();
+    const { cells, onPaint, onCross, onStroke } = renderBoard();
     giveCellsALayout();
 
     // A second button pressed while the first is down is a chorded press: the
     // browser sends a pointermove carrying the new buttons, never a second
-    // pointerdown. So the stroke is live when the menu arrives, and only the
-    // menu's own handler can end it.
+    // pointerdown. The left stroke is already drawing when it arrives — the
+    // move to the second cell below is what starts it — so the menu that
+    // follows is the only thing that can end it.
     const origin = cells[indexAt(4, 1)]!;
     fireEvent.pointerDown(origin, {
       button: 0,
+      buttons: 1,
       pointerType: 'mouse',
       pointerId: 1,
       ...pointAt(4, 1),
     });
-    fireEvent.pointerMove(origin, { button: 2, buttons: 3, pointerId: 1, ...pointAt(4, 1) });
+    dragTo(origin, 4, 2);
+    expect(strokeCells(onStroke)).toEqual([indexAt(4, 1), indexAt(4, 2)]);
+
+    dragTo(origin, 4, 3, { button: 2, buttons: 3 });
     contextMenu(origin, { button: 2 });
-    fireEvent.pointerMove(origin, { pointerId: 1, ...pointAt(4, 2) });
-    fireEvent.pointerUp(origin, { pointerId: 1, ...pointAt(4, 2) });
+    // The stroke is gone: what the hand does next writes nothing, and no
+    // second stroke starts under the button that joined.
+    dragTo(origin, 4, 4);
+    release(origin, 4, 4);
     fireEvent.click(origin, { detail: 1 });
 
+    // The chorded move carried on painting — a button added mid-stroke changes
+    // neither the run nor what it writes (§3) — and the menu crossed the cell
+    // the press began on, once.
+    expect(strokeCells(onStroke)).toEqual([indexAt(4, 1), indexAt(4, 2), indexAt(4, 3)]);
+    expect(strokeMarks(onStroke)).toEqual([FILLED, FILLED]);
     expect(onCross.mock.calls).toEqual([[indexAt(4, 1)]]);
-    expect(onStroke).not.toHaveBeenCalled();
+    expect(onPaint).not.toHaveBeenCalled();
   });
 
   it('leaves the cross a touch long press just made (§3)', () => {
@@ -315,11 +331,14 @@ describe('the right button (§3, issue #112)', () => {
   });
 
   it('leaves a pen long press alone the same way', () => {
-    const { cells, onCross } = renderBoard();
+    const { cells, onCross, onPaint } = renderBoard();
 
     vi.useFakeTimers();
     try {
-      fireEvent.pointerDown(cells[3]!, { button: 0, pointerType: 'pen', pointerId: 1 });
+      // The tip alone: the contact is the only button down (`buttons` 1), so
+      // this is the primary press, not the barrel, and the menu it raises at
+      // the end belongs to the long press that has crossed already.
+      fireEvent.pointerDown(cells[3]!, { button: 0, buttons: 1, pointerType: 'pen', pointerId: 1 });
       vi.advanceTimersByTime(LONG_PRESS_MS);
       contextMenu(cells[3]!, { button: 0 });
     } finally {
@@ -327,6 +346,7 @@ describe('the right button (§3, issue #112)', () => {
     }
 
     expect(onCross.mock.calls).toEqual([[3]]);
+    expect(onPaint).not.toHaveBeenCalled();
   });
 
   it('takes the mouse back after a finger has used the board', () => {
@@ -368,5 +388,335 @@ describe('the right button (§3, issue #112)', () => {
 
     contextMenu(cells[0]!, { button: 2 });
     expect(onCross.mock.calls).toEqual([[0]]);
+  });
+});
+
+/**
+ * The right button held and moved (§3, issue #130). It crosses the whole run,
+ * and the awkward part is not the run but the context menu: macOS raises it on
+ * the way down, before anyone can know a stroke is coming, and Windows only
+ * once the button is back up, when the stroke is already over. Both orders have
+ * to leave the same crosses behind.
+ */
+describe('the right drag (§3, issue #130)', () => {
+  it('crosses every cell of the run, and paints none of them (Windows order)', () => {
+    const { cells, onPaint, onCross, onStroke } = renderBoard();
+    giveCellsALayout();
+
+    const origin = cells[indexAt(2, 1)]!;
+    rightPress(origin, 2, 1);
+    dragTo(origin, 2, 2);
+    dragTo(origin, 2, 3);
+    release(origin, 2, 3);
+
+    // The cell the press began on joins the run as soon as the second one is
+    // reached, so the three read as one continuous stretch.
+    expect(strokeCells(onStroke)).toEqual([indexAt(2, 1), indexAt(2, 2), indexAt(2, 3)]);
+    expect(strokeMarks(onStroke)).toEqual([CROSSED, CROSSED]);
+    expect(onPaint).not.toHaveBeenCalled();
+    // The menu, and with it the single cross of #112, is still to come here.
+    expect(onCross).not.toHaveBeenCalled();
+  });
+
+  it('leaves the same run behind when the menu comes first (macOS order)', () => {
+    const { cells, onPaint, onCross, onStroke } = renderBoard();
+    giveCellsALayout();
+
+    const origin = cells[indexAt(2, 1)]!;
+    rightPress(origin, 2, 1);
+    // Raised before the hand has said whether it meant one cross or a run, so
+    // it crosses the cell it landed on, the way a lone right click does.
+    contextMenu(origin, { button: 2 });
+    dragTo(origin, 2, 2);
+    dragTo(origin, 2, 3);
+    release(origin, 2, 3);
+
+    expect(onCross.mock.calls).toEqual([[indexAt(2, 1)]]);
+    // The stroke writes that same cell again, and to the same thing: the menu
+    // crossed it and the stroke crosses it, so the two orders agree on the run.
+    expect(strokeCells(onStroke)).toEqual([indexAt(2, 1), indexAt(2, 2), indexAt(2, 3)]);
+    expect(strokeMarks(onStroke)).toEqual([CROSSED, CROSSED]);
+    expect(onPaint).not.toHaveBeenCalled();
+  });
+
+  it('takes crosses back off when it starts on one', () => {
+    const start = indexAt(3, 1);
+    const { cells, onPaint, onStroke } = renderBoard(false, crossCell(SESSION, start)!);
+    giveCellsALayout();
+
+    // The same rule the left button's stroke follows: the cell it began on
+    // decides, once, and every cell of the run is set to that answer (§3).
+    const origin = cells[start]!;
+    rightPress(origin, 3, 1);
+    dragTo(origin, 3, 2);
+    release(origin, 3, 2);
+
+    expect(strokeCells(onStroke)).toEqual([start, indexAt(3, 2)]);
+    expect(strokeMarks(onStroke)).toEqual([UNKNOWN]);
+    expect(onPaint).not.toHaveBeenCalled();
+  });
+
+  it('crosses when it starts on a painted cell', () => {
+    const start = indexAt(3, 1);
+    const { cells, onPaint, onStroke } = renderBoard(false, paintCell(SESSION, start)!);
+    giveCellsALayout();
+
+    // Paint is not a cross, so a right drag from it asks for one — the newest
+    // intent wins, and the run overwrites what was there.
+    const origin = cells[start]!;
+    rightPress(origin, 3, 1);
+    dragTo(origin, 3, 2);
+    release(origin, 3, 2);
+
+    expect(strokeMarks(onStroke)).toEqual([CROSSED]);
+    expect(onPaint).not.toHaveBeenCalled();
+  });
+
+  it('does not toggle inside one stroke, however it doubles back', () => {
+    const { cells, onStroke } = renderBoard();
+    giveCellsALayout();
+
+    // Out along the row and back over its own path. A hand that overshoots and
+    // corrects itself must not unpick what it has just drawn.
+    const origin = cells[indexAt(1, 1)]!;
+    rightPress(origin, 1, 1);
+    dragTo(origin, 1, 2);
+    dragTo(origin, 1, 3);
+    dragTo(origin, 1, 2);
+    dragTo(origin, 1, 1);
+    release(origin, 1, 1);
+
+    expect(strokeCells(onStroke)).toEqual([indexAt(1, 1), indexAt(1, 2), indexAt(1, 3)]);
+    expect(strokeMarks(onStroke).every((mark) => mark === CROSSED)).toBe(true);
+  });
+
+  it('still crosses in X mode: the button means one thing (§3)', () => {
+    const { cells, onPaint, onStroke } = renderBoard(true);
+    giveCellsALayout();
+
+    // X mode swaps what the tap and the long press do. The right button does
+    // not follow it there — held and moved, it is the same run either way.
+    const origin = cells[indexAt(4, 1)]!;
+    rightPress(origin, 4, 1);
+    dragTo(origin, 4, 2);
+    release(origin, 4, 2);
+
+    expect(strokeCells(onStroke)).toEqual([indexAt(4, 1), indexAt(4, 2)]);
+    expect(strokeMarks(onStroke)).toEqual([CROSSED]);
+    expect(onPaint).not.toHaveBeenCalled();
+  });
+
+  it('swallows the menu a drawn run leaves behind, rather than crossing again', () => {
+    const { cells, onCross, onStroke } = renderBoard();
+    giveCellsALayout();
+
+    // Windows raises it after the release. Acting on it would cross the cell
+    // the run began on a second time — taking straight back off the first × of
+    // the run the player just watched appear.
+    const origin = cells[indexAt(2, 1)]!;
+    rightPress(origin, 2, 1);
+    dragTo(origin, 2, 2);
+    release(origin, 2, 2);
+    contextMenu(origin, { button: 2 });
+
+    expect(onCross).not.toHaveBeenCalled();
+    expect(strokeCells(onStroke)).toEqual([indexAt(2, 1), indexAt(2, 2)]);
+  });
+
+  it('swallows that menu off the board as well', () => {
+    const { cells } = renderBoard();
+    giveCellsALayout();
+
+    // A run drawn to the end of a row is let go past the last cell as often as
+    // not, and the menu is then raised where the board's own handler cannot
+    // reach it — over the puzzle the player is reading. The window catches it.
+    const origin = cells[indexAt(2, 1)]!;
+    rightPress(origin, 2, 1);
+    dragTo(origin, 2, 5);
+    release(origin, 2, 5);
+
+    expect(fireEvent.contextMenu(document.body, { button: 2 })).toBe(false);
+  });
+
+  it('gives the window listener back when the board goes away', () => {
+    const { cells } = renderBoard();
+    giveCellsALayout();
+
+    const origin = cells[indexAt(2, 1)]!;
+    rightPress(origin, 2, 1);
+    dragTo(origin, 2, 2);
+    release(origin, 2, 2);
+    cleanup();
+
+    // An unmounted board owes nothing to anybody: the rest of the page keeps
+    // its own menu.
+    expect(fireEvent.contextMenu(document.body, { button: 2 })).toBe(true);
+  });
+
+  it('swallows only the menu it is owed, and no later one', () => {
+    const { cells, onCross } = renderBoard();
+    giveCellsALayout();
+
+    // macOS order: the menu came first, so the run owes none, and the flag it
+    // would have raised must not be left standing. A menu with no press behind
+    // it — the keyboard's menu key on another cell — still crosses that cell.
+    const origin = cells[indexAt(2, 1)]!;
+    rightPress(origin, 2, 1);
+    contextMenu(origin, { button: 2 });
+    dragTo(origin, 2, 2);
+    release(origin, 2, 2);
+
+    contextMenu(cells[indexAt(5, 5)]!, { button: 0, buttons: 0, detail: 0 });
+    expect(onCross.mock.calls).toEqual([[indexAt(2, 1)], [indexAt(5, 5)]]);
+  });
+
+  it('swallows one menu for one run, and hands the page back its own', () => {
+    const { cells } = renderBoard();
+    giveCellsALayout();
+
+    const origin = cells[indexAt(2, 1)]!;
+    rightPress(origin, 2, 1);
+    dragTo(origin, 2, 2);
+    release(origin, 2, 2);
+    contextMenu(origin, { button: 2 });
+
+    // The answer kept for that menu is spent on it. Anywhere else on the page
+    // no press of ours goes down to clear it, so a run that swallowed one and
+    // stayed hungry would leave the rest of the page without a menu at all.
+    expect(fireEvent.contextMenu(document.body, { button: 2 })).toBe(true);
+  });
+
+  it('forgets the menu it was owed when the run is cancelled instead', () => {
+    const { cells, onCross } = renderBoard();
+    giveCellsALayout();
+
+    // A pointer taken away mid-run — the browser handing the gesture to
+    // something else — is never followed by the menu the run was owed. The
+    // press after it has crossed nothing yet, and its menu is the only thing
+    // that will: a stale answer left over from the run would eat that one.
+    const origin = cells[indexAt(2, 1)]!;
+    rightPress(origin, 2, 1);
+    dragTo(origin, 2, 2);
+    fireEvent.pointerCancel(origin, { pointerId: 1, ...pointAt(2, 2) });
+
+    rightClick(cells[indexAt(5, 5)]!);
+    expect(onCross.mock.calls).toEqual([[indexAt(5, 5)]]);
+  });
+
+  it('swallows the menu of a run drawn after an earlier right click', () => {
+    const { cells, onCross, onStroke } = renderBoard();
+    giveCellsALayout();
+
+    // The menu of that first press has been and gone, and it belonged to it
+    // alone. The run that follows is still owed one of its own — Windows
+    // raises it on the release — and reading the earlier one as the run's
+    // would take the first × of the run straight back off.
+    rightClick(cells[indexAt(5, 5)]!);
+    expect(onCross.mock.calls).toEqual([[indexAt(5, 5)]]);
+
+    const origin = cells[indexAt(2, 1)]!;
+    rightPress(origin, 2, 1);
+    dragTo(origin, 2, 2);
+    release(origin, 2, 2);
+    contextMenu(origin, { button: 2 });
+
+    expect(onCross.mock.calls).toEqual([[indexAt(5, 5)]]);
+    expect(strokeCells(onStroke)).toEqual([indexAt(2, 1), indexAt(2, 2)]);
+    expect(strokeMarks(onStroke)).toEqual([CROSSED]);
+  });
+
+  it("takes a pen's barrel button for the right button, however it arrives", () => {
+    // Pressed while the pen hovers, the barrel is the button that changed.
+    const hovering = renderBoard();
+    giveCellsALayout();
+    const first = hovering.cells[indexAt(1, 1)]!;
+    rightPress(first, 1, 1, { button: 2, buttons: 2, pointerType: 'pen' });
+    dragTo(first, 1, 2);
+    release(first, 1, 2);
+    expect(strokeCells(hovering.onStroke)).toEqual([indexAt(1, 1), indexAt(1, 2)]);
+    expect(strokeMarks(hovering.onStroke)).toEqual([CROSSED]);
+    expect(hovering.onPaint).not.toHaveBeenCalled();
+    cleanup();
+
+    // Held as the tip comes down, the contact is what changed, and the barrel
+    // is only in `buttons`. Asking what is down rather than what moved is the
+    // whole of catching this one.
+    const held = renderBoard();
+    giveCellsALayout();
+    const second = held.cells[indexAt(1, 1)]!;
+    rightPress(second, 1, 1, { button: 0, buttons: 3, pointerType: 'pen' });
+    dragTo(second, 1, 2);
+    release(second, 1, 2);
+    expect(strokeCells(held.onStroke)).toEqual([indexAt(1, 1), indexAt(1, 2)]);
+    expect(strokeMarks(held.onStroke)).toEqual([CROSSED]);
+    expect(held.onPaint).not.toHaveBeenCalled();
+  });
+
+  it('crosses once on a barrel press that never moves', () => {
+    const { cells, onPaint, onCross, onStroke } = renderBoard();
+
+    // The menu a barrel raises is not the one a pen's tip raises at the end of
+    // a long press: nothing has crossed yet, so this one has to.
+    const cell = cells[indexAt(1, 4)]!;
+    fireEvent.pointerDown(cell, { button: 2, buttons: 2, pointerType: 'pen', pointerId: 1 });
+    contextMenu(cell, { button: 2 });
+    fireEvent.pointerUp(cell, { button: 2, pointerType: 'pen', pointerId: 1 });
+
+    expect(onCross.mock.calls).toEqual([[indexAt(1, 4)]]);
+    expect(onPaint).not.toHaveBeenCalled();
+    expect(onStroke).not.toHaveBeenCalled();
+  });
+
+  it("leaves a pen tip's own drag painting (issue #108)", () => {
+    const { cells, onCross, onStroke } = renderBoard();
+    giveCellsALayout();
+
+    // Nothing about the barrel reaches the tip: with only the contact down,
+    // the pen draws what a finger draws.
+    const origin = cells[indexAt(5, 1)]!;
+    rightPress(origin, 5, 1, { button: 0, buttons: 1, pointerType: 'pen' });
+    dragTo(origin, 5, 2);
+    release(origin, 5, 2);
+
+    expect(strokeCells(onStroke)).toEqual([indexAt(5, 1), indexAt(5, 2)]);
+    expect(strokeMarks(onStroke)).toEqual([FILLED]);
+    expect(onCross).not.toHaveBeenCalled();
+  });
+
+  it('keeps writing crosses when the left button joins the run', () => {
+    const { cells, onPaint, onStroke } = renderBoard();
+    giveCellsALayout();
+
+    // The other way round from the chorded press above, and the same rule: a
+    // button added mid-stroke starts no second stroke and changes nothing
+    // about what the first one writes (§3).
+    const origin = cells[indexAt(3, 1)]!;
+    rightPress(origin, 3, 1);
+    dragTo(origin, 3, 2);
+    dragTo(origin, 3, 3, { button: 0, buttons: 3 });
+    dragTo(origin, 3, 4);
+    release(origin, 3, 4);
+
+    expect(strokeCells(onStroke)).toEqual([
+      indexAt(3, 1),
+      indexAt(3, 2),
+      indexAt(3, 3),
+      indexAt(3, 4),
+    ]);
+    expect(strokeMarks(onStroke).every((mark) => mark === CROSSED)).toBe(true);
+    expect(onPaint).not.toHaveBeenCalled();
+  });
+
+  it('is still one cross when the button never moves (§3, issue #112)', () => {
+    const { cells, onPaint, onCross, onStroke } = renderBoard();
+    giveCellsALayout();
+
+    // The single right click of #112, with a grid that could have raised a
+    // stroke: standing still must not turn into a run of one.
+    rightClick(cells[indexAt(4, 4)]!);
+
+    expect(onCross.mock.calls).toEqual([[indexAt(4, 4)]]);
+    expect(onStroke).not.toHaveBeenCalled();
+    expect(onPaint).not.toHaveBeenCalled();
   });
 });
