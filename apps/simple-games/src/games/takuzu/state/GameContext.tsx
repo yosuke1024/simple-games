@@ -159,12 +159,12 @@ export function TakuzuProvider({
       : null,
   );
   /**
-   * The slot this mount is pointed at. Named once and used three times below —
-   * the active mode and both play clocks have to agree on it, because a clock
-   * seeded from a different slot than the board on screen is exactly the bug
-   * §11 warns about.
+   * The slot this mount is pointed at: the one a shortcut opened straight
+   * onto (issue #113), or the one the home screen starts on. Named once and
+   * read by both the active mode and the clock seed below, because a mode
+   * taken from one slot and a clock taken from another is the whole trap.
    */
-  const initialMode = resumeMode ?? INITIAL_MODE;
+  const mountedMode = resumeMode ?? INITIAL_MODE;
 
   // Resume, or exactly what this line has always said. `resumeMode` already
   // answers null until Quick Rules are behind the player, so the tutorial gate
@@ -174,7 +174,7 @@ export function TakuzuProvider({
     resumeMode ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
-  const [activeMode, setActiveMode] = useState<GameMode>(initialMode);
+  const [activeMode, setActiveMode] = useState<GameMode>(mountedMode);
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
@@ -197,30 +197,32 @@ export function TakuzuProvider({
 
   const session = sessions[activeMode];
 
-  /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(initialSessions[initialMode]?.elapsedSeconds ?? 0);
+  /**
+   * The seconds the game on that slot already carries. Read from the slot
+   * itself rather than gated on the resume: a launch that stops on the
+   * game's own home reaches `syncActiveGame` too, and from a zero baseline
+   * that saves `elapsedSeconds: 0` over the suspended board (issue #109).
+   */
+  const mountedSeconds = initialSessions[mountedMode]?.elapsedSeconds ?? 0;
+  /**
+   * The live play clock (seconds). Mutated by the interval, never state.
+   *
+   * Starts on the mounted game rather than at zero, because every save merges
+   * this ref into the session and `syncActiveGame` runs on any background,
+   * not only from the game screen. `activate` re-establishes the baseline
+   * whenever a game comes on screen; this line covers the mount before that.
+   */
+  const elapsedRef = useRef(mountedSeconds);
   /**
    * Play seconds already booked into the statistics for this session.
    *
-   * Seeded from the restored game rather than from zero, because a suspended
-   * game arrives with its seconds already in `totalPlaySeconds` — they were
-   * booked by the sync that saved it. `activate` re-establishes this baseline
-   * whenever a game comes on screen, but the mount before that is reachable:
-   * opening the game and leaving from its home without resuming runs
-   * `syncActiveGame` against the restored session, and from a zero baseline
-   * that books its whole elapsed time a second time. Open and leave twice and
-   * it lands twice. The comment on the visibility effect below already states
-   * this invariant — this is the line that makes it true.
-   *
-   * A shortcut that mounts straight onto the board (issue #113) never runs
-   * `activate`, so this and `elapsedRef` above are the only things standing in
-   * for it: both read `initialMode`, which is the resumed slot rather than the
-   * level one. Reading the level slot there would leave a resumed daily or
-   * free board baselined at 0, and since `withElapsedSeconds` takes a max the
-   * damage is silent — the first sync books the whole restored session again,
-   * and the live clock's first minutes vanish into the max().
+   * The same baseline, and it has to be: a suspended game arrives with its
+   * seconds already in `totalPlaySeconds` — they were booked by the sync
+   * that saved it. Seeding the clock alone would book its whole elapsed
+   * time a second time. The two are one invariant; neither moves without
+   * the other.
    */
-  const bookedRef = useRef(initialSessions[initialMode]?.elapsedSeconds ?? 0);
+  const bookedRef = useRef(mountedSeconds);
 
   const withElapsed = useCallback(
     (s: TakuzuSession): TakuzuSession => withElapsedSeconds(s, elapsedRef.current),

@@ -125,6 +125,12 @@ export interface AppProviderProps {
   children: ReactNode;
 }
 
+/**
+ * The mode a freshly mounted game is pointed at when nothing is resumed.
+ * Named because the play-clock baseline has to be read from the same slot.
+ */
+const INITIAL_MODE: GameMode = 'level';
+
 export function AppProvider({
   initialStats,
   initialFlags,
@@ -150,6 +156,13 @@ export function AppProvider({
       ? soleSuspendedMode(initialSessions)
       : null,
   );
+  /**
+   * The slot this mount is pointed at: the one a shortcut opened straight
+   * onto (issue #113), or the one the home screen starts on. Named once and
+   * read by both the active mode and the clock seed below, because a mode
+   * taken from one slot and a clock taken from another is the whole trap.
+   */
+  const mountedMode = resumeMode ?? INITIAL_MODE;
   // Resume, or exactly what this line has always said. `resumeMode` already
   // answers null until the tutorial is behind the player, so the gate is in
   // one place rather than two — two would each cover for the other, and a
@@ -161,7 +174,7 @@ export function AppProvider({
   // The slot the board reads through (`sessions[activeMode]` below). A resume
   // that left this on 'level' while the suspended game is the daily or a free
   // board would render nothing at all — GameScreen has no session to draw.
-  const [activeMode, setActiveMode] = useState<GameMode>(resumeMode ?? 'level');
+  const [activeMode, setActiveMode] = useState<GameMode>(mountedMode);
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
@@ -184,16 +197,22 @@ export function AppProvider({
 
   const session = sessions[activeMode];
 
-  // A game resumed at mount arrives with its clock already run, and the one
-  // number `activate` hands over when Resume is pressed on the home screen is
-  // this one. Left at zero, the first save — a match, a hint, backgrounding —
-  // would write the session's elapsed seconds back down to the seconds since
-  // mount, losing the play and, on the clear that follows, stamping
-  // `bestClearSeconds` with a time nobody played (statsLogic.ts — the score
-  // itself has no time element, §12; this is a statistics field).
-  const resumedSeconds = resumeMode ? (initialSessions[resumeMode]?.elapsedSeconds ?? 0) : 0;
-  /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(resumedSeconds);
+  /**
+   * The seconds the game on that slot already carries. Read from the slot
+   * itself rather than gated on the resume: a launch that stops on the
+   * game's own home reaches `syncActiveGame` too, and from a zero baseline
+   * that saves `elapsedSeconds: 0` over the suspended board (issue #109).
+   */
+  const mountedSeconds = initialSessions[mountedMode]?.elapsedSeconds ?? 0;
+  /**
+   * The live play clock (seconds). Mutated by the interval, never state.
+   *
+   * Starts on the mounted game rather than at zero, because every save merges
+   * this ref into the session and `syncActiveGame` runs on any background,
+   * not only from the game screen. `activate` re-establishes the baseline
+   * whenever a game comes on screen; this line covers the mount before that.
+   */
+  const elapsedRef = useRef(mountedSeconds);
 
   /** Session with the live clock merged in — used whenever it leaves React. */
   const withElapsed = useCallback((s: GameSession): GameSession => {

@@ -152,20 +152,34 @@ export function GomokuProvider({
   const statsRef = useRef(stats);
   statsRef.current = stats;
 
-  // A match resumed at mount arrives with its clock already run, and the two
-  // numbers it needs are the two `activate` sets when Resume is tapped on the
-  // home screen — a direct mount is the same arrival, without the tap. Leaving
-  // them at zero breaks the match's play time in one of two silent ways:
-  // `withElapsed` would write the accumulated seconds back *down* to this
-  // sitting's, or — with only the live clock seeded — `syncActiveGame` would
-  // book every second already counted a second time (see the backgrounding
-  // note below: the next launch hands the restored elapsedSeconds back as
-  // *already booked*).
-  const resumedSeconds = resumeAtMount ? (initialSession?.elapsedSeconds ?? 0) : 0;
-  /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(resumedSeconds);
-  /** Play seconds already booked into the statistics for this match. */
-  const bookedRef = useRef(resumedSeconds);
+  /**
+   * The seconds the game this mount holds already carries. There is one
+   * slot, so it is the same session whichever door the launch came through
+   * — which is why this is not gated on the resume: a launch that stops on
+   * the game's own home reaches `syncActiveGame` too, and from a zero
+   * baseline that saves `elapsedSeconds: 0` over the suspended board
+   * (issue #109).
+   */
+  const mountedSeconds = initialSession?.elapsedSeconds ?? 0;
+  /**
+   * The live play clock (seconds). Mutated by the interval, never state.
+   *
+   * Starts on the mounted game rather than at zero, because every save merges
+   * this ref into the session and `syncActiveGame` runs on any background,
+   * not only from the game screen. `activate` re-establishes the baseline
+   * whenever a game comes on screen; this line covers the mount before that.
+   */
+  const elapsedRef = useRef(mountedSeconds);
+  /**
+   * Play seconds already booked into the statistics for this match.
+   *
+   * The same baseline, and it has to be: a suspended game arrives with its
+   * seconds already in `totalPlaySeconds` — they were booked by the sync
+   * that saved it. Seeding the clock alone would book its whole elapsed
+   * time a second time. The two are one invariant; neither moves without
+   * the other.
+   */
+  const bookedRef = useRef(mountedSeconds);
   /** Whether this match's result has been booked; it happens exactly once. */
   const finalizedRef = useRef(false);
 

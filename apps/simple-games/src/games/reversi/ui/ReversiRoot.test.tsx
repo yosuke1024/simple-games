@@ -12,8 +12,8 @@ import { ReversiRoot } from './ReversiRoot';
 
 /**
  * A stand-in for the device store. The `kv` prop below is a load-side seam
- * only — saves always go to Capacitor Preferences — so nothing here reads a
- * save back; these tests are about what the screens show.
+ * only — saves always go to Capacitor Preferences — so the tests that read
+ * back what a save actually wrote stand behind both.
  */
 const { deviceStore } = vi.hoisted(() => ({ deviceStore: new Map<string, string>() }));
 vi.mock('@capacitor/preferences', () => ({
@@ -40,6 +40,56 @@ function renderGame(initial: Record<string, string> = {}) {
   return { onExit };
 }
 
+/**
+ * A launch through the ordinary door: a tile on the collection, or the web
+ * address. It stands against the device store, the way a player's phone does.
+ */
+function launchFromCollection() {
+  const onExit = vi.fn();
+  render(
+    <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+      <ReversiRoot onExit={onExit} />
+    </SettingsProvider>,
+  );
+  return onExit;
+}
+
+/** The same store, entered by the other door. */
+function launchFromShortcut() {
+  const onExit = vi.fn();
+  render(
+    <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+      <ReversiRoot onExit={onExit} entry="shortcut" />
+    </SettingsProvider>,
+  );
+  return onExit;
+}
+
+/** Lets the local reads and the saves they trigger resolve (they are promises,
+ * not timers, so this works under fake timers too). */
+const settle = () => act(async () => undefined);
+
+/** The app goes to background. Android may kill it without another event. */
+function background() {
+  Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+  act(() => {
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  Reflect.deleteProperty(document, 'visibilityState');
+}
+
+/** Total play seconds as they survive on disk (§8). */
+function storedPlaySeconds(): number {
+  const raw = deviceStore.get(RV_STORAGE_KEYS.stats);
+  return raw === undefined ? 0 : (JSON.parse(raw) as Stats).totalPlaySeconds;
+}
+
+/** The match's own clock as it survives on disk (§9). */
+function storedElapsedSeconds(): number {
+  const raw = deviceStore.get(RV_STORAGE_KEYS.game);
+  return raw === undefined ? 0 : (JSON.parse(raw) as PersistedGame).elapsedSeconds;
+}
+
 const tutorialDone = {
   [RV_STORAGE_KEYS.flags]: JSON.stringify({ schemaVersion: 1, tutorialCompleted: true }),
 };
@@ -50,6 +100,11 @@ const savedGame = {
     toPersisted(createSession('easy', BLACK, 'reversi-uitest'), 1),
   ),
 };
+
+/** Quick Rules behind the player, the way every launch after the first finds them. */
+function taughtAlready() {
+  deviceStore.set(RV_STORAGE_KEYS.flags, tutorialDone[RV_STORAGE_KEYS.flags]!);
+}
 
 const board = () => screen.getByRole('group', { name: /Reversi board/ });
 
@@ -202,68 +257,52 @@ describe('keyboard (issue #93)', () => {
   });
 });
 
+describe('opening a suspended game without resuming (#109)', () => {
+  // The board is not the only thing a suspended game carries — the minutes on
+  // its clock are the player's too. `syncActiveGame` runs on every background
+  // from whichever screen is showing, and it writes this provider's play clock
+  // into the session it saves. Open the game, never press Resume, background:
+  // a clock that never took the restored board's seconds saves a zero over
+  // them, and the board comes back looking untouched.
+  it("keeps a suspended board's clock when backgrounded from the game's home", async () => {
+    taughtAlready();
+    // The play clock is a plain interval, so it has to be faked before the game
+    // screen mounts — which rules out userEvent here (it waits on real timers).
+    vi.useFakeTimers();
+    try {
+      launchFromCollection();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(9_000);
+      });
+      background();
+      await settle();
+      expect(storedElapsedSeconds()).toBe(9);
+
+      // The process dies here. Relaunch and stop on the game's own home.
+      cleanup();
+      launchFromCollection();
+      await settle();
+      expect(screen.getByRole('button', { name: 'Statistics' })).toBeInTheDocument();
+
+      // Away again without ever resuming: the nine seconds are still there.
+      background();
+      await settle();
+      expect(storedElapsedSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 /**
  * A pinned home-screen shortcut, and what Reversi does about it (issue #113).
  * The shell says only which door was used; every decision below is this
  * game's, taken from its own single save slot (§9).
- *
- * These launches stand behind the device store rather than the `kv` seam,
- * because what they check is what a save actually wrote and a later launch
- * actually read back.
  */
 describe('a home-screen shortcut', () => {
-  /** A launch through the ordinary door: a tile on the collection, or the web address. */
-  function launchFromCollection() {
-    const onExit = vi.fn();
-    render(
-      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
-        <ReversiRoot onExit={onExit} />
-      </SettingsProvider>,
-    );
-    return onExit;
-  }
-
-  /** The same store, entered by the other door. */
-  function launchFromShortcut() {
-    const onExit = vi.fn();
-    render(
-      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
-        <ReversiRoot onExit={onExit} entry="shortcut" />
-      </SettingsProvider>,
-    );
-    return onExit;
-  }
-
-  /** Lets the local reads and the saves they trigger resolve (they are
-   *  promises, not timers, so this works under fake timers too). */
-  const settle = () => act(async () => undefined);
-
-  /** Quick Rules behind the player, the way every launch after the first finds them. */
-  function taughtAlready() {
-    deviceStore.set(RV_STORAGE_KEYS.flags, tutorialDone[RV_STORAGE_KEYS.flags]!);
-  }
-
-  /** The app goes to background. Android may kill it without another event. */
-  function background() {
-    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
-    act(() => {
-      document.dispatchEvent(new Event('visibilitychange'));
-    });
-    Reflect.deleteProperty(document, 'visibilityState');
-  }
-
-  /** Total play seconds as they survive on disk (§8). */
-  function storedPlaySeconds(): number {
-    const raw = deviceStore.get(RV_STORAGE_KEYS.stats);
-    return raw === undefined ? 0 : (JSON.parse(raw) as Stats).totalPlaySeconds;
-  }
-
-  /** The match's own clock as it survives on disk (§9). */
-  function storedElapsedSeconds(): number {
-    const raw = deviceStore.get(RV_STORAGE_KEYS.game);
-    return raw === undefined ? 0 : (JSON.parse(raw) as PersistedGame).elapsedSeconds;
-  }
-
   /**
    * Leaves one match suspended the way a player does: start it, play a move,
    * walk away. The move matters — it makes the saved position one a fresh

@@ -95,6 +95,12 @@ export interface MemoryProviderProps {
   children: ReactNode;
 }
 
+/**
+ * The mode a freshly mounted game is pointed at when nothing is resumed.
+ * Named because the play-clock baseline has to be read from the same slot.
+ */
+const INITIAL_MODE: GameMode = 'difficulty';
+
 export function MemoryProvider({
   initialStats,
   initialFlags,
@@ -120,6 +126,13 @@ export function MemoryProvider({
       ? soleSuspendedMode(initialSessions)
       : null,
   );
+  /**
+   * The slot this mount is pointed at: the one a shortcut opened straight
+   * onto (issue #113), or the one the home screen starts on. Named once and
+   * read by both the active mode and the clock seed below, because a mode
+   * taken from one slot and a clock taken from another is the whole trap.
+   */
+  const mountedMode = resumeMode ?? INITIAL_MODE;
   // Resume, or exactly what this line has always said. `resumeMode` already
   // answers null until Quick Rules are behind the player, so the gate lives in
   // one place rather than two — two would each cover for the other, and a
@@ -131,7 +144,7 @@ export function MemoryProvider({
   // The mode has to arrive with the screen: `session` below is
   // `sessions[activeMode]`, so opening the board on 'difficulty' while the
   // resumed game is the daily would render nothing at all.
-  const [activeMode, setActiveMode] = useState<GameMode>(resumeMode ?? 'difficulty');
+  const [activeMode, setActiveMode] = useState<GameMode>(mountedMode);
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [lastResult, setLastResult] = useState<LastResult | null>(null);
@@ -147,19 +160,32 @@ export function MemoryProvider({
 
   const session = sessions[activeMode];
 
-  // A game resumed at mount arrives with its clock already run, and the two
-  // numbers `activate` sets when Resume is pressed on the home screen are these
-  // same two. Leaving them at zero would not merely lose the count: withElapsed
-  // rewrites the live session to elapsedRef, so the first sync would save the
-  // board back with only the seconds since mount — the play time gone for good,
-  // and a solve stamping a fabricated bestSeconds. Seeding only elapsedRef is
-  // the mirror mistake, booking the whole restored elapse a second time (§10 —
-  // the restored elapsedSeconds comes back as *already booked*).
-  const resumedSeconds = resumeMode ? (initialSessions[resumeMode]?.elapsedSeconds ?? 0) : 0;
-  /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(resumedSeconds);
-  /** Play seconds already booked into the statistics for this session. */
-  const bookedRef = useRef(resumedSeconds);
+  /**
+   * The seconds the game on that slot already carries. Read from the slot
+   * itself rather than gated on the resume: a launch that stops on the
+   * game's own home reaches `syncActiveGame` too, and from a zero baseline
+   * that saves `elapsedSeconds: 0` over the suspended board (issue #109).
+   */
+  const mountedSeconds = initialSessions[mountedMode]?.elapsedSeconds ?? 0;
+  /**
+   * The live play clock (seconds). Mutated by the interval, never state.
+   *
+   * Starts on the mounted game rather than at zero, because every save merges
+   * this ref into the session and `syncActiveGame` runs on any background,
+   * not only from the game screen. `activate` re-establishes the baseline
+   * whenever a game comes on screen; this line covers the mount before that.
+   */
+  const elapsedRef = useRef(mountedSeconds);
+  /**
+   * Play seconds already booked into the statistics for this session.
+   *
+   * The same baseline, and it has to be: a suspended game arrives with its
+   * seconds already in `totalPlaySeconds` — they were booked by the sync
+   * that saved it. Seeding the clock alone would book its whole elapsed
+   * time a second time. The two are one invariant; neither moves without
+   * the other.
+   */
+  const bookedRef = useRef(mountedSeconds);
 
   const withElapsed = useCallback((s: MemorySession): MemorySession => {
     return s.elapsedSeconds === elapsedRef.current

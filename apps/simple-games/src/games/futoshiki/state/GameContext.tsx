@@ -170,9 +170,10 @@ export function FutoshikiProvider({
       : null,
   );
   /**
-   * The slot this mount is pointed at. One expression for the screen, the
-   * active mode and both clock seeds below, because a mode seeded from one
-   * slot and a clock from another is the whole trap (see `bookedRef`).
+   * The slot this mount is pointed at: the one a shortcut opened straight
+   * onto (issue #113), or the one the home screen starts on. Named once and
+   * read by both the active mode and the clock seed below, because a mode
+   * taken from one slot and a clock taken from another is the whole trap.
    */
   const mountedMode = resumeMode ?? INITIAL_MODE;
 
@@ -207,30 +208,32 @@ export function FutoshikiProvider({
 
   const session = sessions[activeMode];
 
-  /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(initialSessions[mountedMode]?.elapsedSeconds ?? 0);
+  /**
+   * The seconds the game on that slot already carries. Read from the slot
+   * itself rather than gated on the resume: a launch that stops on the
+   * game's own home reaches `syncActiveGame` too, and from a zero baseline
+   * that saves `elapsedSeconds: 0` over the suspended board (issue #109).
+   */
+  const mountedSeconds = initialSessions[mountedMode]?.elapsedSeconds ?? 0;
+  /**
+   * The live play clock (seconds). Mutated by the interval, never state.
+   *
+   * Starts on the mounted game rather than at zero, because every save merges
+   * this ref into the session and `syncActiveGame` runs on any background,
+   * not only from the game screen. `activate` re-establishes the baseline
+   * whenever a game comes on screen; this line covers the mount before that.
+   */
+  const elapsedRef = useRef(mountedSeconds);
   /**
    * Play seconds already booked into the statistics for this session.
    *
-   * Seeded from the restored game rather than from zero, because a suspended
-   * game arrives with its seconds already in `totalPlaySeconds` — they were
-   * booked by the sync that saved it. `activate` re-establishes this baseline
-   * whenever a game comes on screen, but the mount before that is reachable:
-   * opening the game and leaving from its home without resuming runs
-   * `syncActiveGame` against the restored session, and from a zero baseline
-   * that books its whole elapsed time a second time. Open and leave twice and
-   * it lands twice. The comment on the visibility effect below already states
-   * this invariant — this is the line that makes it true.
-   *
-   * A shortcut that opens straight onto a suspended board (issue #113) is the
-   * same mount with a different slot under it, and it never runs `activate`
-   * at all — so both seeds read `mountedMode`, not the level slot. Read the
-   * level's seconds while playing the daily and the first background books
-   * the daily's whole elapsed time again; leave `elapsedRef` short of it and
-   * the clock is frozen instead, which understates the clear and can mint a
-   * best time nobody played (§10, §11).
+   * The same baseline, and it has to be: a suspended game arrives with its
+   * seconds already in `totalPlaySeconds` — they were booked by the sync
+   * that saved it. Seeding the clock alone would book its whole elapsed
+   * time a second time. The two are one invariant; neither moves without
+   * the other.
    */
-  const bookedRef = useRef(initialSessions[mountedMode]?.elapsedSeconds ?? 0);
+  const bookedRef = useRef(mountedSeconds);
 
   const withElapsed = useCallback(
     (s: FutoshikiSession): FutoshikiSession => withElapsedSeconds(s, elapsedRef.current),

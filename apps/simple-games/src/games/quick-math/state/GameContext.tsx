@@ -118,6 +118,12 @@ export interface QuickMathProviderProps {
   children: ReactNode;
 }
 
+/**
+ * The mode a freshly mounted game is pointed at when nothing is resumed.
+ * Named because the play-clock baseline has to be read from the same slot.
+ */
+const INITIAL_MODE: GameMode = 'level';
+
 export function QuickMathProvider({
   initialStats,
   initialFlags,
@@ -142,6 +148,13 @@ export function QuickMathProvider({
       ? soleSuspendedMode(initialSessions)
       : null,
   );
+  /**
+   * The slot this mount is pointed at: the one a shortcut opened straight
+   * onto (issue #113), or the one the home screen starts on. Named once and
+   * read by both the active mode and the clock seed below, because a mode
+   * taken from one slot and a clock taken from another is the whole trap.
+   */
+  const mountedMode = resumeMode ?? INITIAL_MODE;
   // Resume, or exactly what this line has always said. `resumeMode` already
   // answers null until Quick Rules are behind the player, so the gate is in one
   // place rather than two — two would each cover for the other, and a guard
@@ -152,7 +165,7 @@ export function QuickMathProvider({
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
   // The board draws `sessions[activeMode]`, so resuming the daily while this
   // still said 'level' would render nothing at all.
-  const [activeMode, setActiveMode] = useState<GameMode>(resumeMode ?? 'level');
+  const [activeMode, setActiveMode] = useState<GameMode>(mountedMode);
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
@@ -172,18 +185,32 @@ export function QuickMathProvider({
 
   const session = sessions[activeMode];
 
-  // A set resumed at mount arrives with its clock already run, and the two
-  // numbers `activate` hands over when Resume is pressed on the home screen are
-  // these same two. Starting them at zero would save the set back with fewer
-  // seconds than it was left with — and stamp that invented time into the best
-  // times on the way to a clear — while booking every second already played
-  // into the statistics a second time (§9: a restored set comes back with its
-  // time already counted).
-  const resumedSeconds = resumeMode ? (initialSessions[resumeMode]?.elapsedSeconds ?? 0) : 0;
-  /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(resumedSeconds);
-  /** Play seconds already booked into the statistics for this set. */
-  const bookedRef = useRef(resumedSeconds);
+  /**
+   * The seconds the game on that slot already carries. Read from the slot
+   * itself rather than gated on the resume: a launch that stops on the
+   * game's own home reaches `syncActiveGame` too, and from a zero baseline
+   * that saves `elapsedSeconds: 0` over the suspended board (issue #109).
+   */
+  const mountedSeconds = initialSessions[mountedMode]?.elapsedSeconds ?? 0;
+  /**
+   * The live play clock (seconds). Mutated by the interval, never state.
+   *
+   * Starts on the mounted game rather than at zero, because every save merges
+   * this ref into the session and `syncActiveGame` runs on any background,
+   * not only from the game screen. `activate` re-establishes the baseline
+   * whenever a game comes on screen; this line covers the mount before that.
+   */
+  const elapsedRef = useRef(mountedSeconds);
+  /**
+   * Play seconds already booked into the statistics for this set.
+   *
+   * The same baseline, and it has to be: a suspended game arrives with its
+   * seconds already in `totalPlaySeconds` — they were booked by the sync
+   * that saved it. Seeding the clock alone would book its whole elapsed
+   * time a second time. The two are one invariant; neither moves without
+   * the other.
+   */
+  const bookedRef = useRef(mountedSeconds);
 
   const withElapsed = useCallback((s: QuickMathSession): QuickMathSession => {
     return s.elapsedSeconds === elapsedRef.current

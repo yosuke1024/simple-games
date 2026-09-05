@@ -797,3 +797,42 @@ describe('keyboard (issue #93)', () => {
     expect(screen.getByRole('status').textContent).toMatch(/safe/i);
   });
 });
+
+describe('opening a suspended game without resuming (#109)', () => {
+  // The board is not the only thing a suspended game carries — the minutes on
+  // its clock are the player's too. `syncActiveGame` runs on every background
+  // from whichever screen is showing, and it writes this provider's play clock
+  // into the session it saves. Open the game, never press Resume, background:
+  // a clock that never took the restored board's seconds saves a zero over
+  // them, and the board comes back looking untouched.
+  it("keeps a suspended board's clock when backgrounded from the game's home", async () => {
+    deviceStore.set(MS_STORAGE_KEYS.flags, tutorialDone[MS_STORAGE_KEYS.flags]!);
+    // The play clock is a plain interval, so it has to be faked before the game
+    // screen mounts — which rules out userEvent here (it waits on real timers).
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /^Easy/ }));
+      fireEvent.click(cellAt(5, 5));
+
+      act(() => vi.advanceTimersByTime(9_000));
+      background();
+      await settle();
+      expect(storedBoardSeconds()).toBe(9);
+
+      // The process dies here. Relaunch and stop on the game's own home.
+      cleanup();
+      launch();
+      await settle();
+      expect(screen.getByRole('button', { name: 'Statistics' })).toBeInTheDocument();
+
+      // Away again without ever resuming: the nine seconds are still there.
+      background();
+      await settle();
+      expect(storedBoardSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

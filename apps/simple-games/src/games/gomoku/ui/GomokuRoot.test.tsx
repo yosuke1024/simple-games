@@ -13,8 +13,8 @@ import { GomokuRoot } from './GomokuRoot';
  * A stand-in for the device store. The `kv` prop below is a load-side seam
  * only — saves always go to Capacitor Preferences — so the blocks that use it
  * never read a save back; those tests are about what the screens show. The
- * shortcut block is the exception: it launches against this store and asserts
- * what the last sitting actually wrote to it.
+ * blocks that do read one back — the shortcut block and #109 — launch against
+ * this store instead, and assert what the last sitting actually wrote to it.
  */
 const { deviceStore } = vi.hoisted(() => ({ deviceStore: new Map<string, string>() }));
 vi.mock('@capacitor/preferences', () => ({
@@ -39,6 +39,45 @@ function renderGame(initial: Record<string, string> = {}) {
     </SettingsProvider>,
   );
   return { onExit };
+}
+
+/** Launches against the device store, the way a player's phone does. */
+function launch() {
+  render(
+    <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+      <GomokuRoot onExit={vi.fn()} />
+    </SettingsProvider>,
+  );
+}
+
+/** Lets the local reads, and the saves they trigger, resolve (they are promises,
+ * not timers, so this works under fake timers too). */
+const settle = () => act(async () => undefined);
+
+/** The OS hides the app — the last event a killed process is sure to get. */
+async function background() {
+  Object.defineProperty(document, 'visibilityState', {
+    configurable: true,
+    get: () => 'hidden',
+  });
+  document.dispatchEvent(new Event('visibilitychange'));
+  await vi.advanceTimersByTimeAsync(0);
+  Object.defineProperty(document, 'visibilityState', {
+    configurable: true,
+    get: () => 'visible',
+  });
+}
+
+/** Total play seconds as they survive on disk (§7). */
+function storedPlaySeconds(): number {
+  const raw = deviceStore.get(GM_STORAGE_KEYS.stats);
+  return raw === undefined ? 0 : (JSON.parse(raw) as Stats).totalPlaySeconds;
+}
+
+/** The suspended match's own accumulated play seconds, as saved (§8). */
+function storedElapsedSeconds(): number {
+  const raw = deviceStore.get(GM_STORAGE_KEYS.game);
+  return raw === undefined ? 0 : (JSON.parse(raw) as PersistedGame).elapsedSeconds;
 }
 
 const tutorialDone = {
@@ -213,15 +252,6 @@ describe('the play clock survives a backgrounding', () => {
  * sitting actually wrote.
  */
 describe('a home-screen shortcut', () => {
-  /** Launches against the device store, the way a player's phone does. */
-  function launch() {
-    render(
-      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
-        <GomokuRoot onExit={vi.fn()} />
-      </SettingsProvider>,
-    );
-  }
-
   /** The same store, entered by the other door. */
   function launchFromShortcut() {
     const onExit = vi.fn();
@@ -237,9 +267,6 @@ describe('a home-screen shortcut', () => {
   function taughtAlready() {
     deviceStore.set(GM_STORAGE_KEYS.flags, tutorialDone[GM_STORAGE_KEYS.flags]!);
   }
-
-  /** Lets the local reads, and the saves they trigger, resolve. */
-  const settle = () => act(async () => undefined);
 
   const boardOrNull = () => screen.queryByRole('group', { name: /Gomoku board/ });
   const findBoard = () => screen.findByRole('group', { name: /Gomoku board/ });
@@ -353,32 +380,6 @@ describe('a home-screen shortcut', () => {
       vi.useRealTimers();
     }
   });
-
-  /** The OS hides the app — the last event a killed process is sure to get. */
-  async function background() {
-    Object.defineProperty(document, 'visibilityState', {
-      configurable: true,
-      get: () => 'hidden',
-    });
-    document.dispatchEvent(new Event('visibilitychange'));
-    await vi.advanceTimersByTimeAsync(0);
-    Object.defineProperty(document, 'visibilityState', {
-      configurable: true,
-      get: () => 'visible',
-    });
-  }
-
-  /** Total play seconds as they survive on disk (§7). */
-  function storedPlaySeconds(): number {
-    const raw = deviceStore.get(GM_STORAGE_KEYS.stats);
-    return raw === undefined ? 0 : (JSON.parse(raw) as Stats).totalPlaySeconds;
-  }
-
-  /** The suspended match's own accumulated play seconds, as saved (§8). */
-  function storedElapsedSeconds(): number {
-    const raw = deviceStore.get(GM_STORAGE_KEYS.game);
-    return raw === undefined ? 0 : (JSON.parse(raw) as PersistedGame).elapsedSeconds;
-  }
 });
 
 describe('home', () => {
@@ -418,5 +419,45 @@ describe('keyboard (issue #93)', () => {
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
     expect(stones()).toHaveLength(0);
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+});
+
+describe('opening a suspended game without resuming (#109)', () => {
+  // The board is not the only thing a suspended game carries — the minutes on
+  // its clock are the player's too. `syncActiveGame` runs on every background
+  // from whichever screen is showing, and it writes this provider's play clock
+  // into the session it saves. Open the game, never press Resume, background:
+  // a clock that never took the restored board's seconds saves a zero over
+  // them, and the board comes back looking untouched.
+  it("keeps a suspended board's clock when backgrounded from the game's home", async () => {
+    deviceStore.set(GM_STORAGE_KEYS.flags, tutorialDone[GM_STORAGE_KEYS.flags]!);
+    // The play clock is a plain interval, so it has to be faked before the game
+    // screen mounts — which rules out userEvent here (it waits on real timers).
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(9_000);
+      });
+      await background();
+      await settle();
+      expect(storedElapsedSeconds()).toBe(9);
+
+      // The process dies here. Relaunch and stop on the game's own home.
+      cleanup();
+      launch();
+      await settle();
+      expect(screen.getByRole('button', { name: 'Statistics' })).toBeInTheDocument();
+
+      // Away again without ever resuming: the nine seconds are still there.
+      await background();
+      await settle();
+      expect(storedElapsedSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -12,7 +12,8 @@ import { Game2048Root } from './Game2048Root';
 /**
  * A stand-in for the device store. The `kv` prop below is a load-side seam
  * only — saves always go to Capacitor Preferences — so every save lands here,
- * and `storedPlaySeconds` / `storedRunSeconds` below read them back out.
+ * and the blocks that have to read back what a save actually wrote go through
+ * `storedPlaySeconds` / `storedRunSeconds` below.
  */
 const { deviceStore } = vi.hoisted(() => ({ deviceStore: new Map<string, string>() }));
 vi.mock('@capacitor/preferences', () => ({
@@ -232,6 +233,44 @@ describe('home', () => {
     expect(screen.getByText('Largest tile')).toBeInTheDocument();
     expect(screen.getByText('Times you reached 2048')).toBeInTheDocument();
     expect(screen.queryByText(/streak/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('opening a suspended game without resuming (#109)', () => {
+  // The board is not the only thing a suspended game carries — the minutes on
+  // its clock are the player's too. `syncActiveGame` runs on every background
+  // from whichever screen is showing, and it writes this provider's play clock
+  // into the session it saves. Open the game, never press Resume, background:
+  // a clock that never took the restored board's seconds saves a zero over
+  // them, and the board comes back looking untouched.
+  it("keeps a suspended board's clock when backgrounded from the game's home", async () => {
+    deviceStore.set(TM_STORAGE_KEYS.flags, tutorialDone[TM_STORAGE_KEYS.flags]!);
+    // The play clock is a plain interval, so it has to be faked before the game
+    // screen mounts — which rules out userEvent here (it waits on real timers).
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /New Game/ }));
+
+      act(() => vi.advanceTimersByTime(9_000));
+      background();
+      await settle();
+      expect(storedRunSeconds()).toBe(9);
+
+      // The process dies here. Relaunch and stop on the game's own home.
+      cleanup();
+      launch();
+      await settle();
+      expect(screen.getByRole('button', { name: 'Statistics' })).toBeInTheDocument();
+
+      // Away again without ever resuming: the nine seconds are still there.
+      background();
+      await settle();
+      expect(storedRunSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

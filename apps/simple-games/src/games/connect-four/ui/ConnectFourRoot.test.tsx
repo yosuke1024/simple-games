@@ -72,11 +72,11 @@ function storedPlaySeconds(): number {
 }
 
 /**
- * The play seconds the saved match itself carries (§8). Read alongside the
- * statistics because the two fail in opposite directions: a clock that starts
- * over on a resume writes this one *down* while the booking still comes out
- * right, and a booking that forgets what was already counted inflates the
- * statistics while this one stays correct.
+ * The play seconds the saved match itself carries (§8). The booking test reads
+ * it alongside the statistics because the two fail in opposite directions: a
+ * clock that starts over on a resume writes this one *down* while the booking
+ * still comes out right, and a booking that forgets what was already counted
+ * inflates the statistics while this one stays correct.
  */
 function storedMatchSeconds(): number {
   const raw = deviceStore.get(C4_STORAGE_KEYS.game);
@@ -229,6 +229,46 @@ describe('keyboard (issue #93)', () => {
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
     expect(board().querySelectorAll('.c4-disc')).toHaveLength(0);
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+});
+
+describe('opening a suspended game without resuming (#109)', () => {
+  // The board is not the only thing a suspended game carries — the minutes on
+  // its clock are the player's too. `syncActiveGame` runs on every background
+  // from whichever screen is showing, and it writes this provider's play clock
+  // into the session it saves. Open the game, never press Resume, background:
+  // a clock that never took the restored board's seconds saves a zero over
+  // them, and the board comes back looking untouched.
+  it("keeps a suspended board's clock when backgrounded from the game's home", async () => {
+    deviceStore.set(C4_STORAGE_KEYS.flags, tutorialDone[C4_STORAGE_KEYS.flags]!);
+    // The play clock is a plain interval, so it has to be faked before the game
+    // screen mounts — which rules out userEvent here (it waits on real timers).
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(9_000);
+      });
+      background();
+      await settle();
+      expect(storedMatchSeconds()).toBe(9);
+
+      // The process dies here. Relaunch and stop on the game's own home.
+      cleanup();
+      launch();
+      await settle();
+      expect(screen.getByRole('button', { name: 'Statistics' })).toBeInTheDocument();
+
+      // Away again without ever resuming: the nine seconds are still there.
+      background();
+      await settle();
+      expect(storedMatchSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

@@ -166,6 +166,13 @@ export function KakuroProvider({
       ? soleSuspendedMode(initialSessions)
       : null,
   );
+  /**
+   * The slot this mount is pointed at: the one a shortcut opened straight
+   * onto (issue #113), or the one the home screen starts on. Named once and
+   * read by both the active mode and the clock seed below, because a mode
+   * taken from one slot and a clock taken from another is the whole trap.
+   */
+  const mountedMode = resumeMode ?? INITIAL_MODE;
   // Resume, or exactly what this line has always said. `resumeMode` already
   // answers null until Quick Rules are behind the player, so the gate is in
   // one place rather than two — two would each cover for the other, and a
@@ -174,7 +181,7 @@ export function KakuroProvider({
     resumeMode ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
-  const [activeMode, setActiveMode] = useState<GameMode>(resumeMode ?? INITIAL_MODE);
+  const [activeMode, setActiveMode] = useState<GameMode>(mountedMode);
   const [stats, setStats] = useState<Stats>(initialStats);
   const [flags, setFlags] = useState<Flags>(initialFlags);
   const [progress, setProgress] = useState<Progress>(initialProgress);
@@ -198,35 +205,31 @@ export function KakuroProvider({
   const session = sessions[activeMode];
 
   /**
-   * The seconds the clock starts on — read from the slot this mount is
-   * pointed at, which is the resumed one when a shortcut opened straight onto
-   * it (issue #113) and the mount's own otherwise. Reading a fixed slot would
-   * be wrong for exactly the case a shortcut creates: a sole suspended daily
-   * or free board means the level slot is empty, so a baseline taken from it
-   * would be zero against a game that has already been played for minutes.
+   * The seconds the game on that slot already carries. Read from the slot
+   * itself rather than gated on the resume: a launch that stops on the
+   * game's own home reaches `syncActiveGame` too, and from a zero baseline
+   * that saves `elapsedSeconds: 0` over the suspended board (issue #109).
    */
-  const restoredSeconds = initialSessions[resumeMode ?? INITIAL_MODE]?.elapsedSeconds ?? 0;
-
-  /** The live play clock (seconds). Mutated by the interval, never state. */
-  const elapsedRef = useRef(restoredSeconds);
+  const mountedSeconds = initialSessions[mountedMode]?.elapsedSeconds ?? 0;
+  /**
+   * The live play clock (seconds). Mutated by the interval, never state.
+   *
+   * Starts on the mounted game rather than at zero, because every save merges
+   * this ref into the session and `syncActiveGame` runs on any background,
+   * not only from the game screen. `activate` re-establishes the baseline
+   * whenever a game comes on screen; this line covers the mount before that.
+   */
+  const elapsedRef = useRef(mountedSeconds);
   /**
    * Play seconds already booked into the statistics for this session.
    *
-   * Seeded from the restored game rather than from zero, because a suspended
-   * game arrives with its seconds already in `totalPlaySeconds` — they were
-   * booked by the sync that saved it. `activate` re-establishes this baseline
-   * whenever a game comes on screen, but the mount before that is reachable:
-   * opening the game and leaving from its home without resuming runs
-   * `syncActiveGame` against the restored session, and from a zero baseline
-   * that books its whole elapsed time a second time. Open and leave twice and
-   * it lands twice. The comment on the visibility effect below already states
-   * this invariant — this is the line that makes it true.
-   *
-   * A shortcut that mounts onto the board skips `activate` altogether, so
-   * these two lines are the only place that baseline gets set for it — which
-   * is why both refs, and not just this one, take the resumed slot's seconds.
+   * The same baseline, and it has to be: a suspended game arrives with its
+   * seconds already in `totalPlaySeconds` — they were booked by the sync
+   * that saved it. Seeding the clock alone would book its whole elapsed
+   * time a second time. The two are one invariant; neither moves without
+   * the other.
    */
-  const bookedRef = useRef(restoredSeconds);
+  const bookedRef = useRef(mountedSeconds);
 
   const withElapsed = useCallback(
     (s: KakuroSession): KakuroSession => withElapsedSeconds(s, elapsedRef.current),

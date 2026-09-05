@@ -3,8 +3,15 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { settingsSchema } from '@/storage/schemas';
-import { createScore, generateLevelBoard, initialCellsForLevel, isLive } from '../game';
+import {
+  createLevelSession,
+  createScore,
+  generateLevelBoard,
+  initialCellsForLevel,
+  isLive,
+} from '../game';
 import { AppProvider } from '../state/GameContext';
+import { type SavedGames } from '../storage/gamePersistence';
 import {
   flagsSchema,
   NM_STORAGE_KEYS,
@@ -20,10 +27,11 @@ import {
 import { NumberMatchRoot, NumberMatchScreens } from './NumberMatchRoot';
 
 /**
- * A stand-in for the device store, for the tests below that launch the whole
- * game rather than mounting the provider by hand. The root's `kv` prop is a
+ * A stand-in for the device store, for the blocks below that read a save back
+ * rather than only checking what a screen shows. The root's `kv` prop is a
  * load-side seam only — saves always go to Capacitor Preferences — so a test
- * that plays, quits and relaunches has to stand behind both.
+ * that plays, quits and relaunches has to stand behind both, and a session
+ * handed to the provider by hand comes out here too.
  */
 const { deviceStore } = vi.hoisted(() => ({ deviceStore: new Map<string, string>() }));
 vi.mock('@capacitor/preferences', () => ({
@@ -45,6 +53,7 @@ const LEVEL1_CELLS = generateLevelBoard(1).filter(isLive).length;
 function renderApp(
   flags: Flags = flagsSchema.defaultValue(),
   progress: Progress = progressSchema.defaultValue(),
+  sessions: SavedGames = { level: null, daily: null, free: null },
 ) {
   const onExit = vi.fn();
   render(
@@ -54,7 +63,7 @@ function renderApp(
         initialFlags={flags}
         initialProgress={progress}
         initialPrefs={prefsSchema.defaultValue()}
-        initialSessions={{ level: null, daily: null, free: null }}
+        initialSessions={sessions}
         onExit={onExit}
       >
         <NumberMatchScreens />
@@ -273,6 +282,32 @@ describe('keyboard (issue #93)', () => {
 
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
     expect(within(board).getAllByRole('button')).toHaveLength(LEVEL1_CELLS);
+  });
+});
+
+describe('opening a suspended game without resuming (#109)', () => {
+  // The board is not the only thing a suspended game carries — the minutes on
+  // its clock are the player's too. `syncActiveGame` runs on every background
+  // from whichever screen is showing, and it writes this provider's play clock
+  // into the session it saves. Open the game, never press Resume, background:
+  // a clock that never took the restored board's seconds saves a zero over
+  // them, and the board comes back looking untouched.
+  it("keeps a suspended board's clock when backgrounded from the game's home", async () => {
+    // A level board suspended with nine seconds on it, the way the last launch
+    // left it on disk.
+    const suspended = { ...createLevelSession(1), elapsedSeconds: 9 };
+    renderApp(done, progressSchema.defaultValue(), {
+      level: suspended,
+      daily: null,
+      free: null,
+    });
+
+    // The game's own home — Resume is there to be pressed, and is not.
+    expect(screen.getByRole('button', { name: 'Statistics' })).toBeInTheDocument();
+
+    background();
+    await settle();
+    expect(storedElapsedSeconds(NM_STORAGE_KEYS.game)).toBe(9);
   });
 });
 
