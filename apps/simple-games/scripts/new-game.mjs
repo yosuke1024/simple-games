@@ -178,11 +178,11 @@ function checkAvailable(id, prefix) {
   if (existsSync(join(GAMES_DIR, id))) {
     fail(`refusing: src/games/${id}/ already exists`);
   }
+  // The id appears in registry.ts only as a quoted literal (the GameId union
+  // member and the entry's `id:`), so a plain substring check is exact — and
+  // builds no RegExp from the command line (CodeQL: js/regex-injection).
   const registrySource = readFileSync(REGISTRY_PATH, 'utf8');
-  if (
-    new RegExp(`\\|\\s*'${id}'`).test(registrySource) ||
-    new RegExp(`id:\\s*'${id}'`).test(registrySource)
-  ) {
+  if (registrySource.includes(`'${id}'`)) {
     fail(`refusing: "${id}" is already registered in src/app/registry.ts`);
   }
   const taken = existingPrefixes();
