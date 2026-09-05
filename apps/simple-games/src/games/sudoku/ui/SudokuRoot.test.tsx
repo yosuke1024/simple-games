@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createMemoryKV } from '@/storage/kv';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { settingsSchema } from '@/storage/schemas';
-import { CELLS } from '../game';
+import { CELLS, createLevelSession, encodeBoard, encodeSolution, type Board } from '../game';
 import { SD_STORAGE_KEYS, type Stats } from '../storage/schemas';
 import { SudokuRoot } from './SudokuRoot';
 
@@ -722,5 +722,68 @@ describe('keyboard (issue #93)', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     fireEvent.keyDown(window, { key: '5' });
     expect(empty.getAttribute('aria-label')!.startsWith('5,')).toBe(true);
+  });
+
+  it('goes quiet once the board is solved', async () => {
+    const user = userEvent.setup();
+    // Level 1 is deterministic (§9), so the test can compute the same
+    // solution every player's device would and seed a save that is one
+    // digit short of it — the last move a real game arrives at on its own.
+    const truth = createLevelSession(1);
+    const lastIndex = truth.board.givens.findIndex((given) => given === 0);
+    const entries = truth.board.givens.map((given, index) =>
+      given === 0 && index !== lastIndex ? truth.solution[index]! : 0,
+    );
+    const board: Board = { givens: truth.board.givens, entries, notes: new Array(CELLS).fill(0) };
+    const encoded = encodeBoard(board);
+    const persisted = {
+      schemaVersion: 1 as const,
+      mode: 'level' as const,
+      seed: truth.seed,
+      difficulty: truth.difficulty,
+      dailyDate: null,
+      level: 1,
+      givens: encoded.givens,
+      entries: encoded.entries,
+      notes: encoded.notes,
+      solution: encodeSolution(truth.solution),
+      mistakeCount: 0,
+      hintCount: 0,
+      elapsedSeconds: 0,
+      savedAt: Date.now(),
+    };
+
+    renderSudoku({ ...tutorialDone, [SD_STORAGE_KEYS.game]: JSON.stringify(persisted) });
+    await user.click(await screen.findByRole('button', { name: /Level 1.*Resume/ }));
+
+    const grid = screen.getByRole('group', { name: 'Sudoku grid' });
+    const cells = within(grid).getAllByRole('button');
+    await user.click(cells[lastIndex]!);
+    const pad = screen.getByRole('group', { name: 'Number pad' });
+    await user.click(within(pad).getAllByRole('button')[truth.solution[lastIndex]! - 1]!);
+
+    const dialog = await screen.findByRole('alertdialog', { name: 'Solved!' });
+    const labelsBefore = cells.map((cell) => cell.getAttribute('aria-label'));
+
+    fireEvent.keyDown(window, { key: '5' });
+    fireEvent.keyDown(window, { key: 'n' });
+    fireEvent.keyDown(window, { key: 'h' });
+
+    // Every free action goes quiet once the board is solved (issue #93), the
+    // same as it does while the restart dialog is up: nothing on the grid
+    // moved, and the result card is still the only thing in front of the
+    // player. Notes has no guard below the keyboard adapter itself (unlike
+    // digit-placing and hinting, which `session.ts` and `GameContext` also
+    // block), so this is the assertion that actually pins the adapter's own
+    // enable gate rather than a lower layer's.
+    expect(cells.map((cell) => cell.getAttribute('aria-label'))).toEqual(labelsBefore);
+    expect(screen.getByRole('button', { name: 'Notes' })).toHaveAttribute('aria-pressed', 'false');
+    // A blocked hint would otherwise still surface "No hint" (GameScreen's own
+    // onHint toasts on a null takeHint) — its absence rules out the key having
+    // reached onKey at all. The result card carries its own unrelated
+    // role="status" share note, so this checks the hint toast's own class
+    // rather than every status role on the page.
+    expect(document.querySelector('.toast')).toBeNull();
+    expect(dialog).toBeInTheDocument();
   });
 });

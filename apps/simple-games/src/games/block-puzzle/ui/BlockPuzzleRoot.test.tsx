@@ -229,6 +229,35 @@ describe('playing', () => {
     expect(screen.getByText(new RegExp(`Score\\s*${cellsInSlot(0)}`))).toBeInTheDocument();
   });
 
+  /**
+   * Pointer capture retargets `pointerup` to the tray button the drag started
+   * on, and a real browser still raises the `click` that a press-and-release
+   * on a button always leaves behind — on the very button the tap path reads
+   * as "select this piece". Nothing may answer that click a second time
+   * (issue #120): the drag above was the whole move, placement included.
+   */
+  it('does not let the click a completed drag leaves behind touch anything again (issue #120)', async () => {
+    const user = userEvent.setup();
+    renderGame(savedGame);
+    await resume(user);
+    giveBoardALayout();
+
+    const piece = within(tray()).getByRole('button', { name: /^Piece 1,/ });
+    const target = pointerFor(0, 2, 2);
+    fireEvent.pointerDown(piece, { pointerId: 1, clientX: 40, clientY: 600 });
+    fireEvent.pointerMove(piece, { pointerId: 1, ...target });
+    fireEvent.pointerUp(piece, { pointerId: 1, ...target });
+    const placed = cellsInSlot(0);
+    expect(board().querySelectorAll('.bp-cell-filled')).toHaveLength(placed);
+
+    fireEvent.click(piece, { detail: 1 });
+
+    // Nothing moved a second time, and the spent slot was not re-selected.
+    expect(board().querySelectorAll('.bp-cell-filled')).toHaveLength(placed);
+    expect(screen.getByText(new RegExp(`Score\\s*${placed}`))).toBeInTheDocument();
+    expect(piece).not.toHaveAttribute('aria-pressed', 'true');
+  });
+
   it('keeps the piece on screen where it will not fit, and refuses the drop (§3)', async () => {
     const user = userEvent.setup();
     renderGame(savedGame);
@@ -260,6 +289,13 @@ describe('playing', () => {
 
     fireEvent.pointerUp(second, { pointerId: 2, ...onTop });
     expect(board().querySelectorAll('.bp-cell-filled')).toHaveLength(filled);
+
+    // The trailing click a browser still raises for the refused drag must
+    // not fall through to the tap path and select the piece it just carried
+    // (issue #120) — a refusal is not owed a second chance at the same click.
+    fireEvent.click(second, { detail: 1 });
+    expect(board().querySelectorAll('.bp-cell-filled')).toHaveLength(filled);
+    expect(second).not.toHaveAttribute('aria-pressed', 'true');
   });
 
   it('returns a piece dropped off the board to the tray, silently (§3)', async () => {
@@ -284,6 +320,12 @@ describe('playing', () => {
       'aria-pressed',
       'false',
     );
+
+    // Same trailing click after an off-board drop: still nothing to see, and
+    // the tap path's selection was never reached (issue #120).
+    fireEvent.click(piece, { detail: 1 });
+    expect(board().querySelectorAll('.bp-cell-filled')).toHaveLength(0);
+    expect(piece).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('does nothing at all when the tap has no piece selected (§3)', async () => {
@@ -302,6 +344,66 @@ describe('playing', () => {
     await resume(user);
 
     expect(screen.queryByText(/\d+:\d\d/)).not.toBeInTheDocument();
+  });
+
+  /**
+   * `pointercancel` is the platform pulling a gesture out from under the
+   * player — a system edge swipe, the app losing the window — and it must
+   * leave exactly what a drag that never happened would (issue #120): no
+   * ghost, nothing placed, and the tray slot no longer drawn as lifted out.
+   */
+  it('ends a cancelled drag cleanly, and leaves the tap path alive (issue #120)', async () => {
+    const user = userEvent.setup();
+    renderGame(savedGame);
+    await resume(user);
+    giveBoardALayout();
+
+    const piece = within(tray()).getByRole('button', { name: /^Piece 1,/ });
+    const target = pointerFor(0, 2, 2);
+    fireEvent.pointerDown(piece, { pointerId: 1, clientX: 40, clientY: 600 });
+    fireEvent.pointerMove(piece, { pointerId: 1, ...target });
+
+    // Past the threshold and over a legal cell: the ghost is the piece's own
+    // shape, same as any other drag in flight.
+    expect(board().querySelectorAll('.bp-cell-ghost')).toHaveLength(cellsInSlot(0));
+
+    fireEvent.pointerCancel(piece, { pointerId: 1, ...target });
+
+    expect(board().querySelectorAll('.bp-cell-ghost')).toHaveLength(0);
+    expect(board().querySelectorAll('.bp-cell-filled')).toHaveLength(0);
+    expect(tray().querySelectorAll('.bp-slot-dragging')).toHaveLength(0);
+
+    // The trailing click a browser still raises for the cancelled gesture is
+    // swallowed the same way a completed drag's is.
+    fireEvent.click(piece, { detail: 1 });
+    expect(board().querySelectorAll('.bp-cell-filled')).toHaveLength(0);
+    expect(piece).not.toHaveAttribute('aria-pressed', 'true');
+
+    // And the tap path itself was never touched by any of this: a plain tap
+    // afterwards still selects the piece.
+    await user.click(piece);
+    expect(piece).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  /**
+   * The New Game dialog sits over the board, but its overlay only stops a
+   * mouse — a screen reader's virtual cursor or Shift+Tab from the dialog's
+   * own Cancel button would still land on a cell behind it unless the board
+   * is actually pulled out of the tree (docs/ARCHITECTURE.md「モーダルの間、
+   * 盤面は inert」, issue #120).
+   */
+  it('puts the board out of reach while the New Game dialog is up (issue #120)', async () => {
+    const user = userEvent.setup();
+    renderGame(savedGame);
+    await resume(user);
+
+    expect(board().closest('[inert]')).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    expect(board().closest('[inert]')).not.toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(board().closest('[inert]')).toBeNull();
   });
 });
 

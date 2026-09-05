@@ -5,6 +5,7 @@
  * door to a game this build does not have.
  */
 import { beforeEach, describe, expect, it } from 'vitest';
+import type { KVStore } from '../storage/kv';
 import { createMemoryKV } from '../storage/kv';
 import { RECENT_GAMES_LIMIT, STORAGE_KEYS, recentGamesSchema } from '../storage/schemas';
 import {
@@ -79,5 +80,50 @@ describe('the stored record', () => {
     expect(recentGamesSchema.validate({ schemaVersion: 1, ids })?.ids).toHaveLength(
       RECENT_GAMES_LIMIT,
     );
+  });
+});
+
+/**
+ * Boot must not stop for this file's read (issue #120: a local read failing
+ * during boot must not take the whole app down with it). `initRecentGames`
+ * sits behind `loadRecord`, which already turns a rejected read, a string
+ * that is not JSON, and JSON of the wrong shape into the same schema
+ * default — so all three land here as "resolves, list is empty", and the
+ * module is left in a state where recording a game afterwards still works,
+ * the same as any other post-boot open.
+ */
+describe('surviving a bad read at boot (issue #120)', () => {
+  const rejectingKV = (): KVStore => ({
+    get: () => Promise.reject(new Error('storage unavailable')),
+    set: () => Promise.resolve(),
+    remove: () => Promise.resolve(),
+  });
+
+  it('resolves instead of throwing when the store rejects, and keeps recording afterwards', async () => {
+    await expect(initRecentGames(rejectingKV())).resolves.toBeUndefined();
+    expect(getRecentGames()).toEqual([]);
+
+    recordGameOpened('sudoku');
+    expect(getRecentGames()).toEqual(['sudoku']);
+  });
+
+  it('falls back to empty for a string that is not JSON, and keeps recording afterwards', async () => {
+    const kv = createMemoryKV({ [STORAGE_KEYS.recent]: 'not valid json{' });
+    await initRecentGames(kv);
+    expect(getRecentGames()).toEqual([]);
+
+    recordGameOpened('sudoku');
+    expect(getRecentGames()).toEqual(['sudoku']);
+  });
+
+  it('falls back to empty for valid JSON of the wrong shape, and keeps recording afterwards', async () => {
+    const kv = createMemoryKV({
+      [STORAGE_KEYS.recent]: JSON.stringify({ schemaVersion: 1, ids: [7] }),
+    });
+    await initRecentGames(kv);
+    expect(getRecentGames()).toEqual([]);
+
+    recordGameOpened('sudoku');
+    expect(getRecentGames()).toEqual(['sudoku']);
   });
 });

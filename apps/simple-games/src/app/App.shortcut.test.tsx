@@ -477,6 +477,31 @@ describe('the same doors on iOS', () => {
     expect(releaseSound).not.toHaveBeenCalled();
   });
 
+  it('lands a retired quick action on the collection, closing the game that was showing', async () => {
+    reviewMock.shouldPromptReview.mockReturnValue(true);
+    await launchFrom(shortcutUrlFor('sudoku'));
+    playing('sudoku');
+
+    tapShortcut(RETIRED);
+
+    expect(await collectionHome()).toBeInTheDocument();
+    expect(screen.queryByText('playing sudoku')).not.toBeInTheDocument();
+    expect(releaseSound).toHaveBeenCalledTimes(1);
+    // A fail-safe landing is not the pause the question waits for either.
+    expect(reviewMock.markReviewPromptShown).not.toHaveBeenCalled();
+  });
+
+  it('does nothing on the collection for a retired quick action', async () => {
+    await launchFrom(undefined);
+    await collectionHome();
+
+    tapShortcut(RETIRED);
+
+    expect(await collectionHome()).toBeInTheDocument();
+    expect(releaseSound).not.toHaveBeenCalled();
+    expect(appMock.App.minimizeApp).not.toHaveBeenCalled();
+  });
+
   // A quick action from a build that still had the game; the OS list is
   // rewritten at the next boot, but this launch is that boot.
   it('lands a quick action for a game this build no longer carries on the collection', async () => {
@@ -500,5 +525,75 @@ describe('the shell the browser runs', () => {
     expect(await collectionHome()).toBeInTheDocument();
     expect(appMock.App.getLaunchUrl).not.toHaveBeenCalled();
     expect(appMock.listeners.get('appUrlOpen')?.size ?? 0).toBe(0);
+  });
+});
+
+/**
+ * The review question's doorway (docs/REVIEW_PROMPT_POLICY.md, issue #120):
+ * leaving a game for the collection by the game's own back control, and
+ * nowhere else. `App.route.test.tsx` and the shortcut tests above already
+ * pin that a shortcut swap and a fail-safe landing are not that doorway;
+ * what is missing is the doorway itself with the real dialog on screen, not
+ * the stub's `onExit`. `ReviewPrompt` is unmocked here on purpose — the
+ * dialog the player would actually see is what the doorway is for.
+ */
+describe("the review question's doorway (docs/REVIEW_PROMPT_POLICY.md, issue #120)", () => {
+  const reviewDialog = () => screen.queryByRole('dialog', { name: 'Enjoying Simple Games?' });
+  const dismissReviewDialog = () => screen.getByRole('button', { name: 'Not now' });
+
+  it('is never at launch', async () => {
+    reviewMock.shouldPromptReview.mockReturnValue(true);
+    await launchFrom(undefined);
+
+    expect(await collectionHome()).toBeInTheDocument();
+    expect(reviewDialog()).not.toBeInTheDocument();
+    expect(reviewMock.markReviewPromptShown).not.toHaveBeenCalled();
+  });
+
+  it('is never mid-game', async () => {
+    reviewMock.shouldPromptReview.mockReturnValue(true);
+    await launchFrom(shortcutUrlFor('sudoku'));
+
+    expect(playing('sudoku')).toBeInTheDocument();
+    expect(reviewDialog()).not.toBeInTheDocument();
+    expect(reviewMock.markReviewPromptShown).not.toHaveBeenCalled();
+  });
+
+  it("opens on the way out by the game's own back control, and is booked before it renders", async () => {
+    const user = userEvent.setup();
+    reviewMock.shouldPromptReview.mockReturnValue(true);
+    await launchFrom(shortcutUrlFor('sudoku'));
+
+    await user.click(leaveGame());
+    expect(await collectionHome()).toBeInTheDocument();
+
+    const dialog = reviewDialog();
+    expect(dialog).toBeInTheDocument();
+    expect(reviewMock.markReviewPromptShown).toHaveBeenCalledTimes(1);
+
+    await user.click(dismissReviewDialog());
+    expect(reviewDialog()).not.toBeInTheDocument();
+  });
+
+  it('does not reopen once booked', async () => {
+    const user = userEvent.setup();
+    reviewMock.shouldPromptReview.mockReturnValue(true);
+    await launchFrom(shortcutUrlFor('sudoku'));
+    await user.click(leaveGame());
+    await collectionHome();
+    await user.click(dismissReviewDialog());
+
+    // The booking already happened once; the real service would now answer
+    // "no" of its own accord (it never asks twice — REVIEW_PROMPT_POLICY.md).
+    // The mock stands in for that settled answer for the rest of this test.
+    reviewMock.shouldPromptReview.mockReturnValue(false);
+    reviewMock.markReviewPromptShown.mockClear();
+    tapShortcut(shortcutUrlFor('kakuro'));
+    expect(playing('kakuro')).toBeInTheDocument();
+
+    await user.click(leaveGame());
+    expect(await collectionHome()).toBeInTheDocument();
+    expect(reviewDialog()).not.toBeInTheDocument();
+    expect(reviewMock.markReviewPromptShown).not.toHaveBeenCalled();
   });
 });

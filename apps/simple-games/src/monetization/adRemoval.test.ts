@@ -146,4 +146,30 @@ describe('an entitlement that cannot be read (issue #96)', () => {
     expect(isAdRemovalPurchased()).toBe(true);
     expect(isAdRemovalActive()).toBe(true);
   });
+
+  /**
+   * A restore that finds nothing answers a different question than "is the
+   * on-device cache readable" — `markPurchased()` is the only place
+   * `entitlementKnown` becomes true (see adRemoval.ts), and it only runs when
+   * the store actually reports a purchase. So a negative or failed restore
+   * leaves the cache exactly as unread as it was, and per the fail-closed
+   * rule (docs/ADS_POLICY.md, issue #96) that keeps this launch on the
+   * no-banner side — a false from `restoreAdRemoval()` here must not be
+   * mistaken for a readable "this player has not purchased" (issue #120).
+   */
+  it('keeps guessing to the no-banner side after a restore that finds nothing', async () => {
+    await initAdRemoval(unreadableKV());
+    setAdRemovalStore(fakeStore({ restore: () => Promise.resolve(false) }));
+    expect(await restoreAdRemoval()).toBe(false);
+    expect(isAdRemovalActive()).toBe(true);
+    expect(isAdRemovalPurchased()).toBe(false);
+  });
+
+  it('keeps guessing to the no-banner side after a restore that rejects', async () => {
+    await initAdRemoval(unreadableKV());
+    setAdRemovalStore(fakeStore({ restore: () => Promise.reject(new Error('billing down')) }));
+    expect(await restoreAdRemoval()).toBe(false);
+    expect(isAdRemovalActive()).toBe(true);
+    expect(isAdRemovalPurchased()).toBe(false);
+  });
 });

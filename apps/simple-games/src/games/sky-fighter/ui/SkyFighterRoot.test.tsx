@@ -1,9 +1,12 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
+import { stubCanvas2d, stubMatchMedia } from '@/test/lifecycle';
+import { BOARD_HEIGHT, BOARD_WIDTH } from '../game/constants';
+import type { GameState } from '../game/types';
 import { SF_STORAGE_KEYS } from '../storage/schemas';
 import { SkyFighterRoot } from './SkyFighterRoot';
 
@@ -104,5 +107,103 @@ describe('playing', () => {
     expect(screen.getByLabelText('Power 0')).toBeInTheDocument();
     expect(screen.getByLabelText('Missile 0')).toBeInTheDocument();
     expect(screen.queryByText(/\d+:\d\d/)).not.toBeInTheDocument();
+  });
+
+  /**
+   * Ship steering is drag-follow and relative (§3): the ship moves by the
+   * *delta* between successive points, not to an absolute position, so a
+   * finger the OS pulls away mid-drag (a system gesture, an incoming call)
+   * must not leave a stale last-point behind for the next touch to turn into
+   * a phantom jump. onPointerCancel already aliases onPointerUp in
+   * SkyBoard.tsx — this pins that the reset it does (draggingRef,
+   * lastPointRef) is actually enough, the same contract Brick Breaker's
+   * paddle owes its own drag (issue #120).
+   */
+  it('drops a cancelled drag instead of resuming it, and steers again on the next touch (§3, issue #120)', async () => {
+    const restoreCanvas = stubCanvas2d();
+    const restoreMedia = stubMatchMedia();
+    const user = userEvent.setup();
+    try {
+      renderGame(tutorialDone);
+      await user.click(await screen.findByRole('button', { name: /Level 1/ }));
+      const board = screen.getByRole('img', { name: 'Sky Fighter board' });
+
+      // jsdom lays nothing out on its own; the board reads position only
+      // through getBoundingClientRect, so give it the logical box the game
+      // already assumes — client coordinates then equal logical ones
+      // one-for-one, and a delta of N logical px is a delta of N clientX px.
+      vi.spyOn(board, 'getBoundingClientRect').mockReturnValue({
+        left: 0,
+        top: 0,
+        width: BOARD_WIDTH,
+        height: BOARD_HEIGHT,
+        right: BOARD_WIDTH,
+        bottom: BOARD_HEIGHT,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      } as DOMRect);
+
+      // The dev seam appears only once the loop effect has passed its canvas
+      // guard (stubCanvas2d) — without it this test would silently be
+      // reading a shipX that can never move.
+      expect('__sfState' in window).toBe(true);
+      const shipX = () => (window as unknown as { __sfState: () => GameState }).__sfState().shipX;
+      const startX = shipX();
+
+      fireEvent.pointerDown(board, {
+        pointerId: 1,
+        button: 0,
+        buttons: 1,
+        pointerType: 'touch',
+        clientX: 100,
+        clientY: 300,
+      });
+      fireEvent.pointerMove(board, {
+        pointerId: 1,
+        buttons: 1,
+        pointerType: 'touch',
+        clientX: 150,
+        clientY: 300,
+      });
+      const afterDrag = shipX();
+      expect(afterDrag).not.toBe(startX);
+
+      fireEvent.pointerCancel(board, { pointerId: 1 });
+
+      // A second finger's move with no pointerdown of its own — exactly what
+      // a stray touch delivers once its drag has already been cancelled —
+      // must be ignored outright, not read as a continuation of the old one.
+      fireEvent.pointerMove(board, {
+        pointerId: 2,
+        buttons: 1,
+        pointerType: 'touch',
+        clientX: 250,
+        clientY: 300,
+      });
+      expect(shipX()).toBe(afterDrag);
+
+      // A fresh press still steers: the cancel released the drag, it did not
+      // wedge it.
+      fireEvent.pointerDown(board, {
+        pointerId: 3,
+        button: 0,
+        buttons: 1,
+        pointerType: 'touch',
+        clientX: 150,
+        clientY: 300,
+      });
+      fireEvent.pointerMove(board, {
+        pointerId: 3,
+        buttons: 1,
+        pointerType: 'touch',
+        clientX: 120,
+        clientY: 300,
+      });
+      expect(shipX()).not.toBe(afterDrag);
+    } finally {
+      restoreMedia();
+      restoreCanvas();
+    }
   });
 });

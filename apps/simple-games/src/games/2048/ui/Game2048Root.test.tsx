@@ -97,6 +97,25 @@ const savedGame = {
 const gameBoard = () => screen.getByRole('group', { name: /2048 board/ });
 const tiles = () => gameBoard().querySelectorAll('.tm-tile');
 
+/** Every live tile's row, column and value — a board's shape, not just its
+ * count. Ghosts (a merge's consumed pair, still sliding out underneath) are
+ * left out: nothing a keydown does while blocked could ever create one. */
+function tileLayout(): string[] {
+  return Array.from(tiles())
+    .filter((tile) => !tile.classList.contains('tm-tile-ghost'))
+    .map((tile) => {
+      const style = tile.getAttribute('style') ?? '';
+      const row = /--tm-row:\s*(\d+)/.exec(style)?.[1] ?? '?';
+      const col = /--tm-col:\s*(\d+)/.exec(style)?.[1] ?? '?';
+      return `${row},${col}=${tile.textContent}`;
+    })
+    .sort();
+}
+
+/** The score off the topbar specifically — the result overlay says "Score"
+ * on its own card too, so a plain text query would find both once it is up. */
+const topScore = () => document.querySelector('.tm-score')?.textContent ?? '';
+
 afterEach(() => {
   cleanup();
   deviceStore.clear();
@@ -210,6 +229,159 @@ describe('keyboard (issue #93)', () => {
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
     expect(screen.getByText(/Score\s*0/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+
+  /* 2048 does not detach its key listener behind a dialog (unlike the
+     `enabled` gate useGameKeys.ts describes for a modal) — GameScreen.tsx
+     keeps it attached and swallows every arrow and Ctrl+Z through `blocked`
+     instead, so a held or mistimed key can never scroll the page or slip a
+     move in behind the confirm. This pins that the swallowing changes
+     nothing: the board underneath is exactly as it was saved. */
+  it('goes quiet while the New Game dialog is up', async () => {
+    const user = userEvent.setup();
+    renderGame(savedGame);
+    await user.click(await screen.findByRole('button', { name: /Resume/ }));
+
+    const layout = tileLayout();
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    const dialog = await screen.findByRole('alertdialog', { name: 'Start a new game?' });
+
+    // Pointer input is covered by `inert` on `.game-content`; the keydown
+    // listener lives on `window` and has to be told separately (GameScreen.tsx).
+    expect(gameBoard().closest('[inert]')).not.toBeNull();
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+
+    // Neither reached the board behind the dialog: the pair sits exactly
+    // where it was saved, and the dialog is still the thing on screen.
+    expect(tileLayout()).toEqual(layout);
+    expect(screen.getByText(/Score\s*0/)).toBeInTheDocument();
+    expect(dialog).toBeInTheDocument();
+
+    // Cancel, and the same key the dialog just ate does exactly what the
+    // ungated slide test above expects (§3, §6) — the listener never left.
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(gameBoard().closest('[inert]')).toBeNull();
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(screen.getByText(/Score\s*4/)).toBeInTheDocument();
+    expect(gameBoard().querySelectorAll('.tm-tile-merge')).toHaveLength(1);
+    expect(gameBoard().querySelectorAll('.tm-tile-spawn')).toHaveLength(1);
+    expect(gameBoard().querySelectorAll('.tm-tile-ghost')).toHaveLength(2);
+  });
+
+  // A board one merge away from a stalemate (§2, §4): every cell filled, and
+  // the top-left pair is the only pair a left slide can join (ArrowLeft only
+  // ever resolves row-wise merges; the board's other equal neighbours all sit
+  // vertically, so they don't move under this key). Sliding the pair together
+  // spends the board's one move and leaves nothing to join — the ending is
+  // not staged, it is what this exact board does under ArrowLeft, with the
+  // same seed the rest of this file plays from.
+  //
+  // A board that is *already* lost can never reach the screen as a resumed
+  // save — restoreSession (game/session.ts) recomputes `status` from the
+  // board on every load, and gamePersistence.ts's `toSession` discards
+  // anything that is not `'playing'` (§8: "the next game is free and starts
+  // fresh"), so loadSavedGame hands back null rather than an over session.
+  // Reaching "the run is over" here the same way a player does — by playing
+  // the move that ends it — is therefore the only way this test can put a
+  // finished board on screen at all.
+  const ONE_MOVE_FROM_OVER = board([4, 4, 2, 4], [2, 4, 2, 4], [4, 2, 4, 2], [2, 4, 2, 4]);
+
+  it('goes quiet once the run is over', async () => {
+    const user = userEvent.setup();
+    const overSoon = {
+      ...tutorialDone,
+      [TM_STORAGE_KEYS.game]: JSON.stringify(
+        toPersisted({ ...createSession('2048-uitest'), board: ONE_MOVE_FROM_OVER }, 1),
+      ),
+    };
+    renderGame(overSoon);
+    await user.click(await screen.findByRole('button', { name: /Resume/ }));
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    await screen.findByRole('alertdialog', { name: 'No moves left' });
+    expect(gameBoard().closest('[inert]')).not.toBeNull();
+
+    const layout = tileLayout();
+    const score = topScore();
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+
+    // The finished board does not answer to a key any more than the dialog
+    // above did — this is the same `blocked` gate, not a second
+    // implementation of it.
+    expect(tileLayout()).toEqual(layout);
+    expect(topScore()).toBe(score);
+    expect(screen.getByRole('alertdialog', { name: 'No moves left' })).toBeInTheDocument();
+  });
+});
+
+/**
+ * The "reached 2048" milestone overlay is not a ConfirmDialog, so it falls
+ * outside modalIsolationWiring.test.ts's static gate (issue #120) — it is
+ * `announceReached` from GameContext, folded into the same `blocked` expression
+ * as the New Game dialog and the game-over overlay (GameScreen.tsx). This pins
+ * the same contract for it by hand: the board behind it is inert, the keyboard
+ * cannot move it or undo through it, and both come back once it is dismissed.
+ */
+describe('the reached-2048 overlay (issue #120)', () => {
+  // Two 1024s side by side merge into the board's first 2048 on a single
+  // ArrowLeft — `session.ts`'s `justReached` is true exactly on that move —
+  // while everywhere else stays empty, so the run does not also end: the
+  // milestone and game-over overlays are mutually exclusive
+  // (MergeResultOverlay.tsx picks the ending over the milestone when both
+  // would apply on the same move), and this board has to stay `'playing'`
+  // afterwards to exercise the milestone on its own.
+  const TWO_1024S = board([1024, 1024, 0, 0], ZERO, ZERO, ZERO);
+
+  it('inerts the board and swallows the keyboard while it is up, and releases both once dismissed', async () => {
+    const user = userEvent.setup();
+    const merging = {
+      ...tutorialDone,
+      [TM_STORAGE_KEYS.game]: JSON.stringify(
+        toPersisted({ ...createSession('2048-uitest'), board: TWO_1024S }, 1),
+      ),
+    };
+    renderGame(merging);
+    await user.click(await screen.findByRole('button', { name: /Resume/ }));
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    const dialog = await screen.findByRole('alertdialog', { name: 'You reached 2048!' });
+
+    // Same contract as the New Game and game-over dialogs above: the board
+    // behind the overlay is inert, and the keydown listener lives on `window`
+    // and has to be told separately through `blocked` (GameScreen.tsx).
+    expect(gameBoard().closest('[inert]')).not.toBeNull();
+
+    const layout = tileLayout();
+    const score = topScore();
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+
+    // None of the three reached the board behind the milestone overlay: the
+    // 2048 tile and its neighbour sit exactly where the merge left them, the
+    // score has not moved, and the overlay is still up.
+    expect(tileLayout()).toEqual(layout);
+    expect(topScore()).toBe(score);
+    expect(dialog).toBeInTheDocument();
+
+    // Dismiss, and the board answers the keyboard again. A further slide
+    // moves the tile the merge spawned and drops another one behind it, so a
+    // fresh (non-ghost) tile count says "this move actually happened"
+    // without pinning the seed's exact spawn cell. `tiles()` alone would still
+    // be counting the merge's own consumed pair here — MOVE_MS (110ms,
+    // MergeBoard.tsx) has not necessarily elapsed on the real clock this runs
+    // on — so `tileLayout()`'s ghost filter is what makes the count settled.
+    await user.click(screen.getByRole('button', { name: 'Keep Going' }));
+    expect(gameBoard().closest('[inert]')).toBeNull();
+    expect(tileLayout()).toHaveLength(2);
+
+    fireEvent.keyDown(window, { key: 'ArrowUp' });
+    expect(tileLayout()).toHaveLength(3);
   });
 });
 

@@ -311,6 +311,42 @@ describe('a hand that settles', () => {
   });
 });
 
+/**
+ * The hand-settlement overlay ("Undercut" above, or a knock/gin result more
+ * generally) is not a ConfirmDialog, so it falls outside
+ * modalIsolationWiring.test.ts's static gate (issue #120) — `deciding` is
+ * folded into the same `.game-content` `inert` expression by hand
+ * (GameScreen.tsx `inert={matchOver || deciding || confirmNewGame}`). Gin
+ * Rummy has no keyboard input to swallow (it does not call `useGameKeys`), so
+ * the contract here is only the pointer half: the table behind the overlay
+ * must not be reachable while it is up.
+ */
+describe('the hand-settlement overlay (issue #120)', () => {
+  it('inerts the table behind the settlement, and frees it once the next hand deals', async () => {
+    const user = userEvent.setup();
+    renderGame(saved(sessionWith(craft(LIMIT_HAND, TIGHT_HAND, YOU))));
+    await resume(user);
+
+    await user.click(screen.getByRole('button', { name: 'Knock' }));
+    const declare = within(hand()).getByRole('button', { name: TWO_OF_CLUBS });
+    await user.click(declare);
+    await user.click(declare);
+
+    const settlement = screen.getByRole('alertdialog', { name: 'Undercut' });
+
+    // `.game-content` wraps the whole table, so the table's own group
+    // reaching a `[inert]` ancestor says the same thing the table itself is
+    // inert to.
+    expect(table().closest('[inert]')).not.toBeNull();
+
+    await user.click(within(settlement).getByRole('button', { name: 'Next hand' }));
+
+    // The next deal is on screen and the table answers again.
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(table().closest('[inert]')).toBeNull();
+  });
+});
+
 describe('a match that ends', () => {
   it('states the score and offers a free rematch', async () => {
     const user = userEvent.setup();
