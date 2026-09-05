@@ -6,6 +6,13 @@
  * Tapping the held card again sends it to its foundation when that is legal;
  * a tap somewhere unhelpful moves the selection instead of scolding.
  *
+ * A drag is the same move by another hand (§3, issue #119): picking a card up
+ * lights the same places, and letting it go over one of them puts it there
+ * through the same three functions the second tap uses — nothing about the
+ * rules is asked twice. The tap path stays whole: it is how the game is
+ * played from a keyboard, by assistive technology, and by anyone whose hands
+ * do not do drags today.
+ *
  * There is no Hint button here, unlike Klondike and Spider. Every card is
  * face up from the deal, so a hint would not be uncovering anything the
  * player cannot see — it would be taking the decision (§8). Undo is free and
@@ -37,7 +44,12 @@ import {
 } from '../../game';
 import { useFreeCell } from '../../state/GameContext';
 import { FreeCellResultOverlay } from '../components/FreeCellResultOverlay';
-import { FreeCellTable, type Selection } from '../components/FreeCellTable';
+import {
+  FreeCellTable,
+  type DragSource,
+  type DropTarget,
+  type Selection,
+} from '../components/FreeCellTable';
 
 /** The card a selection would move (its head), or null. */
 function selectionHead(board: FreeCellBoard, selection: Selection): Card | null {
@@ -77,6 +89,22 @@ export function FreeCellGameScreen() {
   } = useFreeCell();
   const { t } = useSettings();
   const [selection, setSelection] = useState<Selection | null>(null);
+  /**
+   * The card or run under a finger, and the spot it is over (§3, issue #119).
+   * Held like a selection is held — the same destinations light up — but
+   * never at the same time as one: picking a card up puts down whatever a tap
+   * had selected, and a drag that ends is over, selected nothing.
+   */
+  const [drag, setDrag] = useState<DragSource | null>(null);
+  const [drop, setDrop] = useState<DropTarget | null>(null);
+  /**
+   * What a tap had picked up when a press turned into a drag, kept until the
+   * release says which the press was. A press let go all but where it began
+   * is the tap the browser still thinks it is — the second tap of a
+   * select-then-place, say, made by a finger that rolled a little — and the
+   * selection it was going to place has to be there when its click lands.
+   */
+  const tapSelectionRef = useRef<Selection | null>(null);
   const [confirmRestart, setConfirmRestart] = useState(false);
   // Counts the moves made on the board now showing, so the table can replay
   // each one (§12). Bumped only where a tap actually changed the board:
@@ -85,9 +113,12 @@ export function FreeCellGameScreen() {
 
   const board = session?.board ?? null;
 
-  // Board changed (move / undo / restart): a stale selection must not linger.
+  // Board changed (move / undo / restart): stale marks must not linger. A
+  // drag in flight is over too — the table lets go of its cards on its side.
   useEffect(() => {
     setSelection(null);
+    setDrag(null);
+    setDrop(null);
   }, [board]);
 
   const replay = useCallback(() => setMoveTick((n) => n + 1), []);
@@ -110,6 +141,68 @@ export function FreeCellGameScreen() {
     }
   }, []);
 
+  /**
+   * Puts what is held down on a cascade column (§3): the second tap's job,
+   * and a drop's. False when the move is not legal, and then nothing has
+   * changed — a non-run or a run too long for the free cells simply returns
+   * to where it was, the same as a tap selection the engine refuses.
+   */
+  const placeOnCascade = useCallback(
+    (held: Selection, pile: number): boolean => {
+      const ok =
+        held.type === 'cell'
+          ? cellToCascade(held.cell, pile)
+          : moveRun(held.pile, held.index, pile);
+      if (ok) moved(false);
+      return ok;
+    },
+    [cellToCascade, moveRun, moved],
+  );
+
+  /**
+   * Puts what is held down into one free cell (§3), for a tap and a drop
+   * alike: only a single cascade card goes into a cell — a cell card dropped
+   * on another cell is not a move, and `cascadeToCell` itself refuses an
+   * occupied one.
+   */
+  const placeOnCell = useCallback(
+    (held: Selection, cell: number): boolean => {
+      if (!board) return false;
+      const ok =
+        held.type === 'cascade' && selectionIsSingle(board, held) && cascadeToCell(held.pile, cell);
+      if (ok) moved(false);
+      return ok;
+    },
+    [board, cascadeToCell, moved],
+  );
+
+  /**
+   * Puts what is held down on one suit's foundation (§3), for a tap and a
+   * drop alike: the card has to be that suit's, alone, and the next one the
+   * foundation needs. False otherwise, board untouched — a foundation is
+   * never a source (§13), so this is only ever reached with a cell or
+   * cascade card in hand.
+   */
+  const placeOnFoundation = useCallback(
+    (held: Selection, suit: Suit): boolean => {
+      if (!board) return false;
+      const head = selectionHead(board, held);
+      if (
+        head === null ||
+        suitOf(head) !== suit ||
+        !selectionIsSingle(board, held) ||
+        !canPlaceOnFoundation(board, head)
+      ) {
+        return false;
+      }
+      const ok =
+        held.type === 'cell' ? cellToFoundation(held.cell) : cascadeToFoundation(held.pile);
+      if (ok) moved(true);
+      return ok;
+    },
+    [board, cascadeToFoundation, cellToFoundation, moved],
+  );
+
   const onCellTap = useCallback(
     (cell: number) => {
       if (!board) return;
@@ -122,21 +215,16 @@ export function FreeCellGameScreen() {
         return;
       }
 
-      // Placing into an empty cell — one card only (§3).
+      // Placing into an empty cell — one card only (§3), and a drop's job too.
       if (selection && occupant === null) {
-        if (selection.type === 'cascade' && selectionIsSingle(board, selection)) {
-          if (cascadeToCell(selection.pile, cell)) {
-            moved(false);
-            return;
-          }
-        }
+        if (placeOnCell(selection, cell)) return;
         setSelection(null);
         return;
       }
 
       if (occupant !== null) select({ type: 'cell', cell });
     },
-    [board, cascadeToCell, cellToFoundation, moved, select, selection],
+    [board, cellToFoundation, moved, placeOnCell, select, selection],
   );
 
   const onFoundationTap = useCallback(
@@ -145,25 +233,9 @@ export function FreeCellGameScreen() {
       // A card is never taken back off a foundation (§13), so a foundation is
       // only ever a destination.
       if (!selection) return;
-      const head = selectionHead(board, selection);
-      if (
-        head !== null &&
-        suitOf(head) === suit &&
-        selectionIsSingle(board, selection) &&
-        canPlaceOnFoundation(board, head)
-      ) {
-        const ok =
-          selection.type === 'cell'
-            ? cellToFoundation(selection.cell)
-            : cascadeToFoundation(selection.pile);
-        if (ok) {
-          moved(true);
-          return;
-        }
-      }
-      setSelection(null);
+      if (!placeOnFoundation(selection, suit)) setSelection(null);
     },
-    [board, cascadeToFoundation, cellToFoundation, moved, selection],
+    [board, placeOnFoundation, selection],
   );
 
   const onCascadeTap = useCallback(
@@ -182,20 +254,64 @@ export function FreeCellGameScreen() {
         return;
       }
 
-      const ok =
-        selection.type === 'cell'
-          ? cellToCascade(selection.cell, pile)
-          : moveRun(selection.pile, selection.index, pile);
-      if (ok) {
-        moved(false);
-        return;
-      }
+      if (placeOnCascade(selection, pile)) return;
 
       // Not a legal destination: the tap was picking a new card (§3).
       if (index !== null) select({ type: 'cascade', pile, index });
       else setSelection(null);
     },
-    [board, cascadeToFoundation, cellToCascade, moveRun, moved, select, selection],
+    [board, cascadeToFoundation, moved, placeOnCascade, select, selection],
+  );
+
+  /**
+   * A press on a card has travelled far enough to be a drag (§3, issue #119).
+   * Picking the card up supersedes whatever the tap path had selected, so
+   * exactly one thing is ever held — but what it had is remembered, because
+   * the release may yet say this press was that tap.
+   *
+   * Silent, like every other board in this app that is played by dragging:
+   * the card lifting under the finger and the places it can go lighting up
+   * are the answer, and a note here would land again a moment later when the
+   * card is put down.
+   */
+  const onDragStart = useCallback(
+    (source: DragSource) => {
+      tapSelectionRef.current = selection;
+      setSelection(null);
+      setDrag(source);
+    },
+    [selection],
+  );
+
+  const onDragTarget = useCallback((target: DropTarget | null) => setDrop(target), []);
+
+  /**
+   * The drag let go — over a spot, over nothing, or taken away. Over a spot it
+   * is the second tap by another hand: the same three functions decide, and a
+   * drop that is not legal changes nothing and selects nothing (§3). Returns
+   * whether the board changed, so the table knows whether to carry the cards
+   * back or let the replay settle them.
+   */
+  const onDragEnd = useCallback(
+    (source: DragSource, target: DropTarget | null, tapFollows: boolean): boolean => {
+      setDrag(null);
+      setDrop(null);
+      const wasHeld = tapSelectionRef.current;
+      tapSelectionRef.current = null;
+      // Barely moved: the press was the tap the browser is still about to
+      // report. Put back what it was holding and place nothing — the click
+      // that follows finishes the move the player was making, exactly as it
+      // did before this table could be dragged at all.
+      if (tapFollows) {
+        setSelection(wasHeld);
+        return false;
+      }
+      if (target === null) return false;
+      if (target.type === 'cascade') return placeOnCascade(source, target.pile);
+      if (target.type === 'cell') return placeOnCell(source, target.cell);
+      return placeOnFoundation(source, target.suit);
+    },
+    [placeOnCascade, placeOnCell, placeOnFoundation],
   );
 
   // Undo is a move like any other, and the cards go back the way they came.
@@ -242,27 +358,39 @@ export function FreeCellGameScreen() {
 
   if (!session || !board) return null;
 
-  // Destinations for the held cards, so the table can light them up (§3).
-  // A run that no free cell can carry lights nothing up, which is how the
-  // capacity rule shows itself without a number on screen.
-  const run = selection ? selectionRun(board, selection) : [];
+  // Destinations for the held cards, so the table can light them up (§3) —
+  // held by a tap or under a finger, the answer is the same. A run that no
+  // free cell can carry (or that is not a run at all — any card carried up
+  // by a drag, valid or not, §3, issue #119) lights nothing up, which is how
+  // the capacity rule shows itself without a number on screen.
+  const held: Selection | null = drag ?? selection;
+  const run = held ? selectionRun(board, held) : [];
   const head = run[0] ?? null;
   const destinations: number[] = [];
-  if (selection && head !== null && isValidRun(run)) {
+  if (held && head !== null && isValidRun(run)) {
     for (let pile = 0; pile < board.cascades.length; pile++) {
-      if (selection.type === 'cascade' && pile === selection.pile) continue;
+      if (held.type === 'cascade' && pile === held.pile) continue;
       if (!canPlaceOnCascade(board, head, pile)) continue;
       if (run.length > maxMoveSize(board, pile)) continue;
       destinations.push(pile);
     }
   }
   const foundationEligible =
-    selection !== null && head !== null && run.length === 1 && canPlaceOnFoundation(board, head);
+    held !== null && head !== null && run.length === 1 && canPlaceOnFoundation(board, head);
   const cellEligible =
-    selection !== null &&
-    selection.type === 'cascade' &&
-    run.length === 1 &&
-    freeCellCount(board) > 0;
+    held !== null && held.type === 'cascade' && run.length === 1 && freeCellCount(board) > 0;
+  // Whether letting go where the drag is would move: the one spot the table
+  // marks as such, read off the same answers as the highlights above. A cell
+  // is only a legal drop when it stands empty — the geometry alone cannot
+  // say that; a cascade card dropped back on its own occupied cell must not
+  // ring as though it would move.
+  const dropLegal =
+    drop !== null &&
+    (drop.type === 'cascade'
+      ? destinations.includes(drop.pile)
+      : drop.type === 'cell'
+        ? cellEligible && board.cells[drop.cell] === null
+        : foundationEligible && head !== null && suitOf(head) === drop.suit);
 
   return (
     <div className="screen game-screen">
@@ -297,9 +425,15 @@ export function FreeCellGameScreen() {
             destinations={destinations}
             foundationEligible={foundationEligible}
             cellEligible={cellEligible}
+            drag={drag}
+            drop={drop}
+            dropLegal={dropLegal}
             onCellTap={onCellTap}
             onFoundationTap={onFoundationTap}
             onCascadeTap={onCascadeTap}
+            onDragStart={onDragStart}
+            onDragTarget={onDragTarget}
+            onDragEnd={onDragEnd}
           />
 
           {/* Said once, quietly, beside the board — never as an alert over it.

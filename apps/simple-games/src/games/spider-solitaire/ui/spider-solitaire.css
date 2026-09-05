@@ -287,6 +287,65 @@ button.sp-card-back {
   box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
+/* ---------- drag (§3, issue #119) ---------- */
+
+/* A mouse dragging a card must not start selecting the rank glyphs under it,
+   and a finger held on one must not raise the text loupe or the callout. */
+.sp-table {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* A carried card is moved by a transform, and a transformed card still counts
+   toward the felt's scrollable overflow. The table clamps the carry to the
+   felt, and this keeps a horizontal bar from ever appearing at the edge. */
+.sp-body {
+  overflow-x: hidden;
+}
+
+/* A card a finger can pick up. `touch-action: none` is what turns a touch
+   that moves into a drag of the card rather than a scroll of the felt — and
+   it is set on face-up cards only, so the felt, the face-down cards, and the
+   gaps between columns still scroll the table on a screen too short for it.
+   The grab cursor is the one hint a desktop gets that the card moves as well
+   as taps. */
+.sp-draggable {
+  touch-action: none;
+  cursor: grab;
+}
+
+/* In hand. The transform that carries it is written inline per pointer
+   event, not here; this is the lift that says it has left the column. */
+.sp-dragging {
+  cursor: grabbing;
+  z-index: 7;
+  border-color: var(--sp-ink);
+  box-shadow:
+    0 0 0 1px var(--sp-ink),
+    0 10px 18px rgba(20, 24, 30, 0.35);
+}
+
+/* The one destination the carried run is over right now — where letting go
+   will put it down. The same target colour as .sp-destination, and a ring
+   nearly twice as wide, so the difference is a shape and not only a strength
+   of colour (§12). An illegal spot under the finger is marked with nothing
+   (§3) — the stock and the completed-run slots included, since a drop there
+   is never a target at all. */
+.sp-drop-target {
+  border-color: var(--sp-target);
+  box-shadow:
+    0 0 0 5px var(--sp-target),
+    0 0 14px 4px rgba(192, 138, 46, 0.55);
+  z-index: 3;
+}
+
+:root[data-theme='dark'] .sp-drop-target {
+  box-shadow:
+    0 0 0 5px var(--sp-target),
+    0 0 16px 5px rgba(224, 173, 79, 0.5);
+}
+
 /* ---------- top bar ---------- */
 
 .sp-status {
