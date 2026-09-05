@@ -21,7 +21,16 @@ import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconHint, IconRetry, IconUndo } from '@/ui/components/icons';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
-import { canUndo, isWhite, type Digit, type Hint } from '../../game';
+import {
+  canUndo,
+  colOf,
+  indexOf,
+  isWhite,
+  rowOf,
+  type Digit,
+  type Hint,
+  type KakuroSession,
+} from '../../game';
 import { useKakuro } from '../../state/GameContext';
 import { DigitPad } from '../components/DigitPad';
 import { KakuroBoard } from '../components/KakuroBoard';
@@ -49,6 +58,62 @@ function hintFocus(hint: Hint): number | null {
   if (hint.kind === 'violation') return hint.cells[0] ?? null;
   if (hint.step.kind === 'placement') return hint.step.index;
   return hint.step.eliminations[0]?.index ?? null;
+}
+
+/** Which way each arrow key walks the board, as (row, column) steps. */
+const ARROW_STEPS: Readonly<Record<string, readonly [number, number]>> = {
+  ArrowUp: [-1, 0],
+  ArrowDown: [1, 0],
+  ArrowLeft: [0, -1],
+  ArrowRight: [0, 1],
+};
+
+/**
+ * The square an arrow lands on from `from`, or null when that direction runs
+ * off the board.
+ *
+ * Clue squares are stepped over rather than landed on: they are not <button>s
+ * at all (`KakuroBoard`), so a tap cannot select one either (§4). An arrow
+ * therefore crosses a clue square to the next white one — the run on the far
+ * side is a different run, but it is still where a finger would have to go.
+ */
+function stepFrom(
+  session: KakuroSession,
+  from: number,
+  [rowStep, colStep]: readonly [number, number],
+): number | null {
+  const { width, height } = session.layout;
+  let row = rowOf(from, width);
+  let col = colOf(from, width);
+  for (;;) {
+    row += rowStep;
+    col += colStep;
+    if (row < 0 || row >= height || col < 0 || col >= width) return null;
+    const index = indexOf(row, col, width);
+    if (isWhite(session.layout, index)) return index;
+  }
+}
+
+/**
+ * Where the first arrow lands: the middle of the board — where the eyes
+ * already are — or the white square nearest it, since the middle of a Kakuro
+ * is as likely to be a clue square as not.
+ */
+function centreOf(session: KakuroSession): number | null {
+  const { width, height } = session.layout;
+  const middleRow = Math.floor(height / 2);
+  const middleCol = Math.floor(width / 2);
+  let best: number | null = null;
+  let bestDistance = Infinity;
+  for (const index of session.table.white) {
+    const distance =
+      Math.abs(rowOf(index, width) - middleRow) + Math.abs(colOf(index, width) - middleCol);
+    if (distance < bestDistance) {
+      best = index;
+      bestDistance = distance;
+    }
+  }
+  return best;
 }
 
 export function KakuroGameScreen() {
@@ -157,9 +222,19 @@ export function KakuroGameScreen() {
     showToast(t(hintMessage(next)));
   }, [showToast, t, takeHint]);
 
-  /* Keyboard as an adapter over the tap handlers above (issue #93): Ctrl/Cmd+Z
-     undoes, H asks for the hint — both one-shot actions, so key repeat is
-     ignored for each. */
+  /* Keyboard as an adapter over the tap handlers above (issue #93, #143):
+     arrows move the selection, 1-9 place (or note), Backspace/Delete erase,
+     N flips notes, H asks for the hint, Ctrl/Cmd+Z undoes. Every one of them
+     calls the handler its own on-screen control calls, so nothing here is
+     reachable by keyboard alone.
+
+     State-changing keys ignore key repeat — holding 3 must not place a digit
+     per repeat frame — while arrows accept it, because held-arrow travel is
+     the point of arrows. Backspace answers `true` even when there is nothing
+     to erase, so the browser never treats it as "navigate back" mid-game.
+
+     All nine digit keys stay live all game, the same as the pad: this game
+     greys nothing out and counts nothing down (§4). */
   const onKey = (event: KeyboardEvent): boolean => {
     if (session === null) return false;
     if (isUndoKey(event)) {
@@ -167,7 +242,30 @@ export function KakuroGameScreen() {
       return true;
     }
     if (event.ctrlKey || event.metaKey || event.altKey) return false;
-    if (event.key === 'h' || event.key === 'H') {
+    const { key } = event;
+    const step = ARROW_STEPS[key];
+    if (step) {
+      // Edges clamp instead of wrapping: an arrow that runs out of board
+      // leaves the selection where it is.
+      setSelected((current) =>
+        current === null ? centreOf(session) : (stepFrom(session, current, step) ?? current),
+      );
+      setHint(null);
+      return true;
+    }
+    if (key.length === 1 && key >= '1' && key <= '9') {
+      if (!event.repeat) onDigit(Number(key) as Digit);
+      return true;
+    }
+    if (key === 'Backspace' || key === 'Delete') {
+      if (!event.repeat) onErase();
+      return true;
+    }
+    if (key === 'n' || key === 'N') {
+      if (!event.repeat) setNotesMode((current) => !current);
+      return true;
+    }
+    if (key === 'h' || key === 'H') {
       if (!event.repeat) onHint();
       return true;
     }

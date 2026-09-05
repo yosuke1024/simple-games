@@ -21,7 +21,17 @@ import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconBack, IconHint, IconRetry, IconUndo } from '@/ui/components/icons';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
-import { canUndo, isGiven, type Digit, type Hint } from '../../game';
+import {
+  canUndo,
+  colOf,
+  indexOf,
+  isGiven,
+  remainingOf,
+  rowOf,
+  type Digit,
+  type FutoshikiSession,
+  type Hint,
+} from '../../game';
 import { useFutoshiki } from '../../state/GameContext';
 import { DigitPad } from '../components/DigitPad';
 import { FutoshikiBoard } from '../components/FutoshikiBoard';
@@ -50,6 +60,60 @@ function hintFocus(hint: Hint): number | null {
   if (hint.kind === 'violation') return hint.cells[0] ?? null;
   if (hint.step.kind === 'placement') return hint.step.index;
   return hint.step.eliminations[0]?.index ?? null;
+}
+
+/** Which way each arrow key walks the board, as (row, column) steps. */
+const ARROW_STEPS: Readonly<Record<string, readonly [number, number]>> = {
+  ArrowUp: [-1, 0],
+  ArrowDown: [1, 0],
+  ArrowLeft: [0, -1],
+  ArrowRight: [0, 1],
+};
+
+/**
+ * The square an arrow lands on from `from`, or null when that direction runs
+ * off the board.
+ *
+ * Givens are walked past rather than landed on, because a given is a disabled
+ * button on this board (`FutoshikiBoard`) — a tap cannot select one either,
+ * and the keyboard is the same pad by another route. That is the one place
+ * this differs from Sudoku's arrows, where every square is selectable.
+ */
+function stepFrom(
+  session: FutoshikiSession,
+  from: number,
+  [rowStep, colStep]: readonly [number, number],
+): number | null {
+  const { size } = session;
+  let row = rowOf(from, size);
+  let col = colOf(from, size);
+  for (;;) {
+    row += rowStep;
+    col += colStep;
+    if (row < 0 || row >= size || col < 0 || col >= size) return null;
+    const index = indexOf(row, col, size);
+    if (!isGiven(session.board, index)) return index;
+  }
+}
+
+/**
+ * Where the first arrow lands: the middle of the board — where the eyes
+ * already are — or the nearest square to it a tap could have selected.
+ */
+function centreOf(session: FutoshikiSession): number | null {
+  const { size } = session;
+  const middle = Math.floor(size / 2);
+  let best: number | null = null;
+  let bestDistance = Infinity;
+  for (let index = 0; index < size * size; index++) {
+    if (isGiven(session.board, index)) continue;
+    const distance = Math.abs(rowOf(index, size) - middle) + Math.abs(colOf(index, size) - middle);
+    if (distance < bestDistance) {
+      best = index;
+      bestDistance = distance;
+    }
+  }
+  return best;
 }
 
 export function FutoshikiGameScreen() {
@@ -160,9 +224,21 @@ export function FutoshikiGameScreen() {
     showToast(t(hintMessage(next)));
   }, [showToast, t, takeHint]);
 
-  /* Keyboard as an adapter over the tap handlers above (issue #93): Ctrl/Cmd+Z
-     undoes, H asks for the hint — both one-shot actions, so key repeat is
-     ignored for each. */
+  /* Keyboard as an adapter over the tap handlers above (issue #93, #143):
+     arrows move the selection, 1-N place (or note), Backspace/Delete erase,
+     N flips notes, H asks for the hint, Ctrl/Cmd+Z undoes. Every one of them
+     calls the handler its own on-screen control calls, so nothing here is
+     reachable by keyboard alone.
+
+     State-changing keys ignore key repeat — holding 3 must not place a digit
+     per repeat frame — while arrows accept it, because held-arrow travel is
+     the point of arrows. Backspace answers `true` even when there is nothing
+     to erase, so the browser never treats it as "navigate back" mid-game.
+
+     The digit keys stop where the pad stops: 1-N and no further, because a
+     board this size has no key for the rest (§4), and a digit already placed
+     N times writes nothing outside Notes — that is the state its key on the
+     pad is in, and the keyboard is that same pad by another route. */
   const onKey = (event: KeyboardEvent): boolean => {
     if (session === null) return false;
     if (isUndoKey(event)) {
@@ -170,7 +246,31 @@ export function FutoshikiGameScreen() {
       return true;
     }
     if (event.ctrlKey || event.metaKey || event.altKey) return false;
-    if (event.key === 'h' || event.key === 'H') {
+    const { key } = event;
+    const step = ARROW_STEPS[key];
+    if (step) {
+      // Edges clamp instead of wrapping: an arrow that runs out of board
+      // leaves the selection where it is.
+      setSelected((current) =>
+        current === null ? centreOf(session) : (stepFrom(session, current, step) ?? current),
+      );
+      setHint(null);
+      return true;
+    }
+    if (key.length === 1 && key >= '1' && key <= String(session.size)) {
+      const digit = Number(key) as Digit;
+      if (!event.repeat && (notesMode || remainingOf(session, digit) > 0)) onDigit(digit);
+      return true;
+    }
+    if (key === 'Backspace' || key === 'Delete') {
+      if (!event.repeat) onErase();
+      return true;
+    }
+    if (key === 'n' || key === 'N') {
+      if (!event.repeat) setNotesMode((current) => !current);
+      return true;
+    }
+    if (key === 'h' || key === 'H') {
       if (!event.repeat) onHint();
       return true;
     }

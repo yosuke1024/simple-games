@@ -230,6 +230,85 @@ describe('the keypad (docs/QUICK_MATH_RULES.md §3, §12)', () => {
   });
 });
 
+/* Keyboard input is an adapter over the same keypad handlers (issue #93,
+   #143): every assertion here checks a screen state a tap also produces,
+   never a keyboard-only behaviour. */
+describe('keyboard (issue #93, #143)', () => {
+  /** Types a whole number on the physical keyboard. */
+  function typeKeys(value: number) {
+    for (const digit of String(value)) fireEvent.keyDown(window, { key: digit });
+  }
+
+  it('digit keys answer the question, the same as the keypad', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const first = equation();
+    typeKeys(levelOneAnswers[0]!);
+
+    expect(screen.getByText('1 / 10')).toBeInTheDocument();
+    expect(equation()).not.toBe(first);
+  });
+
+  it('Backspace takes a digit back before the answer is judged', async () => {
+    // Only a multi-digit answer leaves anything in the box to take back, so
+    // this runs on the first level that opens with one (§3).
+    const level = twoDigitLevel();
+    const user = userEvent.setup();
+    renderGame({ ...tutorialDone, ...unlockedTo(level) });
+    await user.click(await screen.findByRole('button', { name: new RegExp(`Level ${level}`) }));
+
+    fireEvent.keyDown(window, { key: '1' });
+    expect(document.querySelector('.qmath-blank')?.textContent).toBe('1');
+
+    fireEvent.keyDown(window, { key: 'Backspace' });
+    expect(document.querySelector('.qmath-blank')?.textContent).toBe('');
+    // Nothing was judged, so nothing moved: the backspace corrects a mistype,
+    // it is not the undo this game does not have (§8).
+    expect(screen.getByText('0 / 10')).toBeInTheDocument();
+  });
+
+  it('a held digit key types once — repeats are swallowed, not replayed', async () => {
+    const level = twoDigitLevel();
+    const user = userEvent.setup();
+    renderGame({ ...tutorialDone, ...unlockedTo(level) });
+    await user.click(await screen.findByRole('button', { name: new RegExp(`Level ${level}`) }));
+
+    fireEvent.keyDown(window, { key: '1', repeat: true });
+    expect(document.querySelector('.qmath-blank')?.textContent).toBe('');
+  });
+
+  it('goes quiet while the restart dialog is up', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+    typeKeys(levelOneAnswers[0]!);
+    expect(screen.getByText('0 / 10')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    typeKeys(levelOneAnswers[0]!);
+    expect(screen.getByText('1 / 10')).toBeInTheDocument();
+  });
+
+  it('goes quiet once the set is finished', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    for (const answer of levelOneAnswers) typeKeys(answer);
+    expect(await screen.findByText('Set complete')).toBeInTheDocument();
+
+    // The result card is the only thing in front of the player now: keys hit
+    // behind it must not reach the questions underneath.
+    typeKeys(levelOneAnswers[0]!);
+    expect(screen.getByText('Set complete')).toBeInTheDocument();
+    expect(document.querySelector('.qmath-blank')).toBeNull();
+  });
+});
+
 describe('what this game deliberately does not have', () => {
   it('offers no hint and no undo, at any point (§8)', async () => {
     const user = userEvent.setup();
