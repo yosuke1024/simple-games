@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { createFreeSession } from '../game';
+import { createFreeSession, isValidBoard } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { FC_STORAGE_KEYS, type Stats } from '../storage/schemas';
 import { FreeCellRoot } from './FreeCellRoot';
@@ -484,5 +484,541 @@ describe('opening a suspended game without resuming (#109)', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+/**
+ * Drag-to-move (docs/FREECELL_RULES.md §3, issue #119): the screen's half.
+ * What the table itself does with a pointer is FreeCellTable.test.tsx's
+ * business — this covers the same move functions a tap uses, reached by a
+ * drop instead.
+ *
+ * Every card here is a plain number (`suit * 13 + rank - 1`, suits in the
+ * order spades, hearts, diamonds, clubs — types.ts), and the fixtures below
+ * are asserted valid in a test of their own: a wrong one would otherwise fail
+ * silently by falling back to a fresh deal, not by fireing loudly.
+ */
+describe('drag (issue #119)', () => {
+  const ACE_SPADES = 0; // A of spades
+  const NINE_SPADES = 8; // 9 of spades — head of the two-card run
+  const EIGHT_HEARTS = 20; // 8 of hearts — tail of that run
+  const TEN_HEARTS = 22; // 10 of hearts — the run's legal destination
+  const SIX_SPADES = 5; // 6 of spades
+  const FIVE_HEARTS = 17; // 5 of hearts — a legal single card onto the six
+  const EIGHT_CLUBS = 46; // 8 of clubs
+  const KING_SPADES = 12; // K of spades — nothing stacks on a king (§3)
+  const SEVEN_DIAMONDS = 32; // 7 of diamonds — a legal single card onto the eight
+  const ACE_HEARTS = 13; // A of hearts
+  const KING_DIAMONDS = 38; // K of diamonds — a cell filler, never touched
+
+  /** Column 8: everything not named above, so the deal still totals 52 (§1).
+   * Its own top (last entry, 51 = K of clubs) never accepts a card either,
+   * so it can never accidentally become a destination in these tests. */
+  const FILLER_COLUMN = [
+    1, 2, 3, 4, 6, 7, 9, 10, 11, 14, 15, 16, 18, 19, 21, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34,
+    35, 36, 37, 39, 40, 41, 42, 43, 44, 45, 47, 48, 49, 50, 51,
+  ];
+
+  const dragCascades = [
+    [ACE_SPADES],
+    [TEN_HEARTS],
+    [NINE_SPADES, EIGHT_HEARTS],
+    [SIX_SPADES],
+    [FIVE_HEARTS],
+    [EIGHT_CLUBS],
+    [KING_SPADES],
+    FILLER_COLUMN,
+  ];
+
+  /**
+   * One of every drag this issue names, each with a legal destination and an
+   * illegal one within reach:
+   *
+   * - column 1: A♠ alone — goes to its own foundation, not another suit's
+   * - column 2: 10♥ — receives the 9♠ 8♥ run from column 3
+   * - column 3: 9♠ hidden under nothing, topped by 8♥ — the run that moves
+   * - column 4: 6♠ — receives the 5♥ from column 5, or nothing from column 7
+   * - column 5: 5♥ — the single card that moves onto column 4
+   * - column 6: 8♣ — receives the 7♦ from a free cell, or moves into one
+   * - column 7: K♠ — nothing stacks here; a drop here always fails
+   * - free cells: K♦ (never touched), 7♦ (moves to column 6), one empty
+   *   slot, A♥ (moves to its own foundation)
+   */
+  const dragBoard = {
+    cells: [KING_DIAMONDS, SEVEN_DIAMONDS, null, ACE_HEARTS],
+    foundations: [[], [], [], []],
+    cascades: dragCascades,
+  };
+
+  /**
+   * The same deal with a second free cell open (cells 1 and 2 both empty),
+   * so a drop can be aimed at a specific one that is not simply the only
+   * candidate — the 7♦ that would otherwise sit in cell 1 goes to the front
+   * of column 8 instead, where it cannot change that column's own top card.
+   */
+  const dragBoardTwoEmptyCells = {
+    cells: [KING_DIAMONDS, null, null, ACE_HEARTS],
+    foundations: [[], [], [], []],
+    cascades: dragCascades.map((pile, i) => (i === 7 ? [SEVEN_DIAMONDS, ...pile] : pile)),
+  };
+
+  /**
+   * All four cells full and no empty column, so `maxMoveSize` is 1 — a run
+   * that would otherwise be a legal two-card move onto column 2 is carried
+   * for nothing, exactly as a tap selection the engine refuses.
+   */
+  const capacityBoard = {
+    cells: [0, 1, 2, 3],
+    foundations: [[], [], [], []],
+    cascades: [
+      [NINE_SPADES, EIGHT_HEARTS],
+      [TEN_HEARTS],
+      [4],
+      [6],
+      [7],
+      [9],
+      [10],
+      [
+        5, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,
+        35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51,
+      ],
+    ],
+  };
+
+  it('is a board that could have come from a deal — the fixtures are asserted, not assumed', () => {
+    expect(isValidBoard(dragBoard)).toBe(true);
+    expect(isValidBoard(dragBoardTwoEmptyCells)).toBe(true);
+    expect(isValidBoard(capacityBoard)).toBe(true);
+  });
+
+  function savedBoardGame(board: {
+    cells: (number | null)[];
+    foundations: number[][];
+    cascades: number[][];
+  }) {
+    return {
+      ...tutorialDone,
+      [FC_STORAGE_KEYS.game]: JSON.stringify({
+        schemaVersion: 1,
+        mode: 'free',
+        seed: 'fc-free-drag',
+        dailyDate: null,
+        cells: board.cells,
+        foundations: board.foundations,
+        cascades: board.cascades,
+        moveCount: 0,
+        elapsedSeconds: 0,
+        savedAt: 1,
+      }),
+    };
+  }
+
+  /** The pretend table, in CSS pixels: eight 45px columns on a 50px pitch. */
+  const COL = 50;
+  const CARD_W = 45;
+  const ROW = { top: 0, height: 63 };
+  const CASCADE_TOP = 75;
+  const rect = (left: number, top: number, width: number, height: number): DOMRect =>
+    ({
+      left,
+      top,
+      width,
+      height,
+      right: left + width,
+      bottom: top + height,
+      x: left,
+      y: top,
+      toJSON: () => ({}),
+    }) as DOMRect;
+
+  /**
+   * jsdom lays nothing out, so the table's zones are handed to it by force,
+   * keyed off the same data attributes the table reads them from. Everything
+   * else about the gesture is real.
+   */
+  let layoutSpy: ReturnType<typeof vi.spyOn> | null = null;
+  function giveTableALayout(): void {
+    layoutSpy = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: Element,
+    ) {
+      const el = this as HTMLElement;
+      if (el.dataset.topRow !== undefined)
+        return rect(0, ROW.top, COL * 8 - (COL - CARD_W), ROW.height);
+      if (el.dataset.pile !== undefined) {
+        return rect(Number(el.dataset.pile) * COL, CASCADE_TOP, CARD_W, 200);
+      }
+      if (el.dataset.cell !== undefined) {
+        return rect(Number(el.dataset.cell) * COL, ROW.top, CARD_W, ROW.height);
+      }
+      if (el.dataset.foundation !== undefined) {
+        return rect((4 + Number(el.dataset.foundation)) * COL, ROW.top, CARD_W, ROW.height);
+      }
+      return rect(0, 0, 0, 0);
+    });
+  }
+  afterEach(() => {
+    layoutSpy?.mockRestore();
+    layoutSpy = null;
+  });
+
+  /** A pointer over the middle of column `pile` (0-based), well into the cascades. */
+  const overColumn = (pile: number) => ({ clientX: pile * COL + CARD_W / 2, clientY: 160 });
+  /** A pointer over the middle of one free cell. */
+  const overCell = (cell: number) => ({
+    clientX: cell * COL + CARD_W / 2,
+    clientY: ROW.height / 2,
+  });
+  /** A pointer over the middle of one suit's foundation. */
+  const overFoundation = (suit: number) => ({
+    clientX: (4 + suit) * COL + CARD_W / 2,
+    clientY: ROW.height / 2,
+  });
+  /** Where every press below starts: far enough from every target to travel. */
+  const PRESS = { clientX: 22, clientY: 160 };
+  /**
+   * Where a press on a free cell's own card starts: the mocked centre of that
+   * cell. A cell card carries `data-cell` as well as `data-card`, so the table
+   * reads a real rectangle for it (unlike a cascade card, which the mock
+   * leaves at zero) and aims with that rectangle's centre (§3) — pressing
+   * anywhere else would carry a spurious offset into every target below.
+   */
+  const overCellCenter = (cell: number) => ({
+    clientX: cell * COL + CARD_W / 2,
+    clientY: ROW.height / 2,
+  });
+
+  const card = (name: string | RegExp) => within(table()).getByRole('button', { name });
+  const column = (n: number) => within(table()).getByRole('group', { name: `Column ${n}` });
+
+  /** Presses a card at `from` and carries it to `to`, in the events a browser sends. */
+  function dragFrom(
+    el: HTMLElement,
+    from: { clientX: number; clientY: number },
+    to: { clientX: number; clientY: number },
+  ): void {
+    fireEvent.pointerDown(el, { pointerId: 1, button: 0, buttons: 1, ...from });
+    fireEvent.pointerMove(el, { pointerId: 1, buttons: 1, ...to });
+    fireEvent.pointerUp(el, { pointerId: 1, button: 0, ...to });
+  }
+
+  /** Presses a card and carries it to `to`, in the events a browser sends. */
+  function drag(el: HTMLElement, to: { clientX: number; clientY: number }): void {
+    dragFrom(el, PRESS, to);
+  }
+
+  async function resumeDragGame(
+    user: ReturnType<typeof userEvent.setup>,
+    board: { cells: (number | null)[]; foundations: number[][]; cascades: number[][] } = dragBoard,
+  ) {
+    renderGame(savedBoardGame(board));
+    await resumeGoldenGame(user);
+    giveTableALayout();
+  }
+
+  it('moves a run onto another column (cascade → cascade, multi-card)', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    drag(card('9 of spades'), overColumn(1));
+
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(within(column(2)).getByRole('button', { name: '9 of spades' })).toBeInTheDocument();
+    expect(within(column(2)).getByRole('button', { name: '8 of hearts' })).toBeInTheDocument();
+    expect(within(column(3)).queryByRole('button', { name: /of/ })).not.toBeInTheDocument();
+  });
+
+  it('moves a single card onto another column (cascade → cascade, single card)', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    drag(card('5 of hearts'), overColumn(3));
+
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(within(column(4)).getByRole('button', { name: '5 of hearts' })).toBeInTheDocument();
+    expect(within(column(4)).getByRole('button', { name: '6 of spades' })).toBeInTheDocument();
+  });
+
+  it('parks a card in the free cell it was dropped on, not the first empty one', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user, dragBoardTwoEmptyCells);
+
+    // Cells 1 and 2 (0-based) are both empty; the card must land in the one
+    // the finger was over, not simply the first one the engine would pick.
+    drag(card('8 of clubs'), overCell(2));
+
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(card('Free cell 3, 8 of clubs')).toBeInTheDocument();
+    expect(card('Free cell 2, empty')).toBeInTheDocument();
+  });
+
+  it("sends a card to its own foundation, refusing another suit's (cascade → foundation)", async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    // Every foundation is empty, so an ace fits any of them by rank alone —
+    // the suit is what the drop must still get right.
+    drag(card('A of spades'), overFoundation(1));
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(within(column(1)).getByRole('button', { name: 'A of spades' })).toBeInTheDocument();
+
+    drag(card('A of spades'), overFoundation(0));
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(card('Foundation, A of spades')).toBeInTheDocument();
+  });
+
+  it('plays a free cell card onto a column (cell → cascade)', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    dragFrom(card('Free cell 2, 7 of diamonds'), overCellCenter(1), overColumn(5));
+
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(within(column(6)).getByRole('button', { name: '7 of diamonds' })).toBeInTheDocument();
+    expect(within(column(6)).getByRole('button', { name: '8 of clubs' })).toBeInTheDocument();
+    expect(card('Free cell 2, empty')).toBeInTheDocument();
+  });
+
+  it('sends a free cell card to its foundation (cell → foundation)', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    dragFrom(card('Free cell 4, A of hearts'), overCellCenter(3), overFoundation(1));
+
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(card('Foundation, A of hearts')).toBeInTheDocument();
+    expect(card('Free cell 4, empty')).toBeInTheDocument();
+  });
+
+  it('does nothing when a free cell card is dropped on an empty cell', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    dragFrom(card('Free cell 2, 7 of diamonds'), overCellCenter(1), overCell(2));
+
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(card('Free cell 2, 7 of diamonds')).toBeInTheDocument();
+    expect(card('Free cell 3, empty')).toBeInTheDocument();
+  });
+
+  it('changes nothing on a drop that is not legal, and selects nothing either', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    // A six onto a king: nothing stacks on a king at all (§3).
+    const six = card('6 of spades');
+    drag(six, overColumn(6));
+
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(within(column(4)).getByRole('button', { name: '6 of spades' })).toBeInTheDocument();
+    expect(table().querySelectorAll('.fc-selected')).toHaveLength(0);
+    expect(table().querySelectorAll('.fc-dragging')).toHaveLength(0);
+    expect(table().querySelectorAll('.fc-drop-target')).toHaveLength(0);
+    expect(six.style.transform).toBe('');
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+
+  it('lights nothing for a run too long for the free cells, and the drop returns it', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user, capacityBoard);
+
+    // The two-card run is a legal move onto column 2 by rank and colour
+    // alone — only the capacity rule stops it, and it stops it silently
+    // (§3): nothing lights, and the drop is spent for nothing.
+    const nine = card('9 of spades');
+    fireEvent.pointerDown(nine, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
+    fireEvent.pointerMove(nine, { pointerId: 1, buttons: 1, ...overColumn(1) });
+    expect(table().querySelectorAll('.fc-destination')).toHaveLength(0);
+    expect(table().querySelectorAll('.fc-drop-target')).toHaveLength(0);
+    fireEvent.pointerUp(nine, { pointerId: 1, button: 0, ...overColumn(1) });
+
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(within(column(1)).getByRole('button', { name: '9 of spades' })).toBeInTheDocument();
+  });
+
+  it('refuses a run bound for a foundation (§3)', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    // Two cards cannot go to a foundation together, whatever the head is.
+    drag(card('9 of spades'), overFoundation(0));
+
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(within(column(3)).getByRole('button', { name: '9 of spades' })).toBeInTheDocument();
+  });
+
+  it('changes nothing when let go off the table', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    drag(card('A of spades'), { clientX: 22, clientY: -200 });
+
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(within(column(1)).getByRole('button', { name: 'A of spades' })).toBeInTheDocument();
+    expect(table().querySelectorAll('.fc-selected')).toHaveLength(0);
+  });
+
+  it('does not let the click a drag leaves behind count as a tap', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    const six = card('6 of spades');
+    drag(six, overColumn(6));
+    fireEvent.click(six, { detail: 1 });
+
+    expect(table().querySelectorAll('.fc-selected')).toHaveLength(0);
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+
+    // The mark is spent on that one click: the same card, tapped for real
+    // afterwards, is selected like any other.
+    fireEvent.click(six, { detail: 1 });
+    expect(six).toHaveClass('fc-selected');
+  });
+
+  it('never swallows a keyboard activation, drag or no drag', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    // Enter on a button raises a click with no pointer behind it (detail 0).
+    // It is not the click the drag left, whatever card it lands on.
+    const six = card('6 of spades');
+    drag(six, overColumn(6));
+    fireEvent.click(six, { detail: 0 });
+
+    expect(six).toHaveClass('fc-selected');
+  });
+
+  it('leaves the board untouched when the browser cancels the pointer, and the tap path still works', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    const five = card('5 of hearts');
+    fireEvent.pointerDown(five, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
+    fireEvent.pointerMove(five, { pointerId: 1, buttons: 1, ...overColumn(3) });
+    expect(five).toHaveClass('fc-dragging');
+    fireEvent.pointerCancel(five, { pointerId: 1 });
+
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(within(column(5)).getByRole('button', { name: '5 of hearts' })).toBeInTheDocument();
+    expect(table().querySelectorAll('.fc-dragging')).toHaveLength(0);
+    expect(table().querySelectorAll('.fc-drop-target')).toHaveLength(0);
+    expect(five.style.transform).toBe('');
+
+    await user.click(five);
+    await user.click(card('6 of spades'));
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+  });
+
+  it('lights the places the carried card could go, and the one it is over — one foundation ring among four lit', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    const ace = card('A of spades');
+    fireEvent.pointerDown(ace, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
+    fireEvent.pointerMove(ace, { pointerId: 1, buttons: 1, ...overFoundation(1) });
+
+    // Any empty foundation fits an ace by rank alone, and the table lights
+    // all four the same way a tap selection would — that half of the
+    // highlight is not this issue's business. Only the ring is precise:
+    // it never appears over the wrong suit.
+    expect(table().querySelectorAll('[data-foundation].fc-destination')).toHaveLength(4);
+    expect(table().querySelectorAll('.fc-drop-target')).toHaveLength(0);
+
+    fireEvent.pointerMove(ace, { pointerId: 1, buttons: 1, ...overFoundation(0) });
+    expect(table().querySelectorAll('[data-foundation].fc-destination')).toHaveLength(4);
+    const rings = table().querySelectorAll('[data-foundation].fc-drop-target');
+    expect(rings).toHaveLength(1);
+    expect((rings[0] as HTMLElement).dataset.foundation).toBe('0');
+
+    fireEvent.pointerUp(ace, { pointerId: 1, button: 0, ...overFoundation(0) });
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+  });
+
+  it('puts down whatever a tap had selected when a card is picked up', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    await user.click(card('A of spades'));
+    expect(card('A of spades')).toHaveClass('fc-selected');
+
+    drag(card('9 of spades'), overColumn(1));
+
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(within(column(1)).getByRole('button', { name: 'A of spades' })).toBeInTheDocument();
+    expect(table().querySelectorAll('.fc-selected')).toHaveLength(0);
+  });
+
+  it('is still a tap below the travel threshold', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    const ace = card('A of spades');
+    fireEvent.pointerDown(ace, { pointerId: 1, button: 0, buttons: 1, ...PRESS });
+    fireEvent.pointerMove(ace, {
+      pointerId: 1,
+      buttons: 1,
+      clientX: PRESS.clientX + 4,
+      clientY: PRESS.clientY + 4,
+    });
+    expect(table().querySelectorAll('.fc-dragging')).toHaveLength(0);
+    fireEvent.pointerUp(ace, { pointerId: 1, button: 0, clientX: PRESS.clientX + 4, clientY: 164 });
+    fireEvent.click(ace, { detail: 1 });
+
+    expect(ace).toHaveClass('fc-selected');
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+  });
+
+  it('finishes a second tap that rolled a little as the tap it was', async () => {
+    // Select the run by tap, then place it with a finger that travels 12px
+    // on the way down — past this table's threshold, inside the platform's
+    // own, so the click still comes. The move the player was making happens.
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+    await user.click(card('9 of spades'));
+    expect(card('9 of spades')).toHaveClass('fc-selected');
+
+    const ten = card('10 of hearts');
+    const roll = { clientX: 72, clientY: 172 };
+    fireEvent.pointerDown(ten, { pointerId: 1, button: 0, buttons: 1, clientX: 72, clientY: 160 });
+    fireEvent.pointerMove(ten, { pointerId: 1, buttons: 1, ...roll });
+    fireEvent.pointerUp(ten, { pointerId: 1, button: 0, ...roll });
+    fireEvent.click(ten, { detail: 1 });
+
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    expect(within(column(2)).getByRole('button', { name: '9 of spades' })).toBeInTheDocument();
+    expect(within(column(2)).getByRole('button', { name: '8 of hearts' })).toBeInTheDocument();
+  });
+
+  it('takes a dragged move back with Undo, like any other (§8)', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    drag(card('5 of hearts'), overColumn(3));
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Undo' }));
+
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+    expect(within(column(5)).getByRole('button', { name: '5 of hearts' })).toBeInTheDocument();
+    expect(within(column(4)).getByRole('button', { name: '6 of spades' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+
+  it('moves the same card by two taps after a drag, and by a drag after two taps', async () => {
+    const user = userEvent.setup();
+    await resumeDragGame(user);
+
+    // A drag first.
+    drag(card('5 of hearts'), overColumn(3));
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+
+    // Then a two-tap move elsewhere: the held cell card to its own
+    // foundation (the second-tap-on-the-same-card shortcut, §3).
+    await user.click(card('Free cell 4, A of hearts'));
+    await user.click(card('Free cell 4, A of hearts'));
+    expect(screen.getByText(/Moves\s*2/)).toBeInTheDocument();
+
+    // Then a drag again, on a different card entirely.
+    drag(card('A of spades'), overFoundation(0));
+    expect(screen.getByText(/Moves\s*3/)).toBeInTheDocument();
   });
 });
