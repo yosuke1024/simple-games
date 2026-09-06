@@ -136,7 +136,7 @@ minSdk 24(Android 7.0)+ **WebView Chromium 88 相当(2021 年初)**。JS は es2
 ([docs/RELEASE_CHECKLIST.md](../../docs/RELEASE_CHECKLIST.md))。
 
 - appId: `com.pixapps.simplegames`
-- appName: `Simple Games: Offline Puzzles`
+- appName: `Simple Games: Offline Games`(`capacitor.config.ts` が単一の出所)
 - 収録ゲームの追加・更新は 1 つのアプリリリースとして出す(アプリ単位で更新)
 
 ## iOS
@@ -194,6 +194,22 @@ git tag v1.0.0 && git push origin v1.0.0
   ので、作り直すときは新しいタグを打つ。
 - 署名 secret が無いままタグを打つとワークフローは**失敗する**。未署名の生成物を
   「できた」として渡さないため。
+- **iOS の版だけはタグから導出できない。** Archive は Mac の上で人間が回し、
+  `ios/ExportOptions.plist` は `manageAppVersionAndBuildNumber` を false に
+  しているので、Xcode プロジェクトの `MARKETING_VERSION` /
+  `CURRENT_PROJECT_VERSION` がそのまま出荷される。だから**タグを打つ前に**
+  合わせる:
+
+  ```bash
+  pnpm --filter simple-games ios:version set 1.2.0   # → 1.2.0 / 10200
+  pnpm --filter simple-games ios:version check       # 整合を見る
+  ```
+
+  ビルド番号は Android の `versionCode` と同じ式で導く(1.2.0 → 10200)。
+  2 つのストアで別々の数を手で管理する理由が無いため。手で持つ値は腐るので
+  機械が見る —— 整合は CI が毎 PR で、**タグとの一致は `android-release.yml`
+  がタグ push で**(合っていなければ AAB を作る前に落ちる。実際 v1.0.1 から
+  v1.1.2 までの 4 つのタグの間、ここは 1.0 / 1 のままだった)。
 - タグに製品名を付けないのは、この monorepo のリリース対象が 1 つだけだから。
   5 ゲームは 1 つのアプリとして出すので、ゲームを足してもこのアプリのリリースに
   なるだけで、2 つ目のタグ空間は生まれない。`v1` のような雑なタグでも起動はするが、

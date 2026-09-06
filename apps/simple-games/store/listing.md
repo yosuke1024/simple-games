@@ -5,19 +5,21 @@
 > あわせて Play Console でアプリ内商品(管理された商品)`remove_ads` を
 > 基準価格 USD 3.99 で作成すること(国別価格は自動調整に任せる)。
 
-> **Play Console 未反映(2026-08-08)。** Takuzu / Futoshiki / Kakuro の 3 本を
-> 加えたこのドラフトは**このリポジトリの中だけの更新**で、Play Console の
-> ストア掲載情報(説明文・スクリーンショット・キーワード)にはまだ反映していない。
+> **Play Console / App Store Connect 未反映(2026-09-06 時点)。** Takuzu /
+> Futoshiki / Kakuro に続いて Mahjong Solitaire / Bubble Pop / Ludo の 3 本を
+> 加えたこのドラフトは**このリポジトリの中だけの更新**で、ストア側の掲載情報
+> (説明文・スクリーンショット・キーワード)にはまだ反映していない。
 > 反映は手動作業であり、**実行には人間の明示的な承認が必要**(タグ発行・
 > versionCode・ストア公開と同じ扱い)。承認より先に Console を編集しないこと。
 > Hearts / Gin Rummy も同じ状態である。
 
-> 掲載は収録ゲーム 27 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
-> Hearts / Gin Rummy / Minesweeper / 2048 / Block Puzzle / Checkers / Reversi /
-> Connect Four / Gomoku / Brick Breaker / Nonogram / Takuzu / Futoshiki /
+> 掲載は収録ゲーム 30 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
+> Mahjong Solitaire / Hearts / Gin Rummy / Minesweeper / Ludo / 2048 /
+> Block Puzzle / Checkers / Reversi / Connect Four / Gomoku / Bubble Pop /
+> Brick Breaker / Nonogram / Takuzu / Futoshiki /
 > Kakuro / Number Match / Quick Math / Schulte Table / Number Recall /
 > Water Sort / Sliding Puzzle / Memory Match / Sky Fighter / Bunny Hop)の
-> 状態で書いてある。
+> 状態で書いてある。`src/app/registry.ts` の収録数と食い違ったらこちらが古い。
 >
 > **ドリル 3 本(Quick Math / Schulte Table / Number Recall)の掲載文では、
 > このジャンルの定番である効能の主張を一切しない。日本語のジャンル名そのものも
@@ -39,9 +41,10 @@
 3. `Simple Games: Sudoku & More`
 
 キーワード優先順位: Offline > Sudoku > Solitaire > Spider Solitaire > FreeCell >
-Hearts > Gin Rummy > Minesweeper > Checkers > 2048 > Block Puzzle > Reversi >
-Connect Four > Gomoku > Brick Breaker > Nonogram > Kakuro > Cross Sums >
-Futoshiki > Puzzle >
+Mahjong Solitaire > Hearts > Gin Rummy > Minesweeper > Ludo > Checkers > 2048 >
+Block Puzzle > Reversi >
+Connect Four > Gomoku > Bubble Pop > Brick Breaker > Nonogram > Kakuro >
+Cross Sums > Futoshiki > Puzzle >
 Number Match > Quick Math > Schulte Table > Number Recall > Water Sort >
 Sliding Puzzle > Memory Match > Binary Puzzle > Takuzu > Sky Fighter >
 Bunny Hop > Simple Games > PixApps
@@ -89,15 +92,18 @@ INCLUDED GAMES
 • Solitaire
 • Spider Solitaire
 • FreeCell
+• Mahjong Solitaire
 • Hearts
 • Gin Rummy
 • Minesweeper
+• Ludo
 • 2048
 • Block Puzzle
 • Checkers (Draughts)
 • Reversi
 • Connect Four
 • Gomoku (Five in a Row)
+• Bubble Pop
 • Brick Breaker
 • Nonogram
 • Takuzu (Binary Puzzle)
@@ -220,3 +226,11 @@ Play Console の掲載言語スロット単位で必要になり、その単位�
   "No purchases" / "No in-app purchases" / 「課金なし」の無条件表現
   (代わりに "No paywalls" / "No subscriptions" を使う)
 - "Lifetime Access"(無期限なのは広告削除権であって、アプリのサービス存続期間ではない)
+- **`Mahjong` 単独**(ja / zh / ko で「麻雀 / 麻将」は 4 人対局を指すため、
+  単独名は誤誘導になる。掲載名は `Mahjong Solitaire`。日本語の併記に「上海」も
+  使わない —— サン電子の商品名。[MAHJONG_SOLITAIRE_RULES.md](../../../docs/MAHJONG_SOLITAIRE_RULES.md))
+- **`Bubble Shooter`**(Ilyon Dynamics が米国で出願・行使している商標。
+  遊び自体は自由でも実名・ソース公開のプロダクトで権利グレーは名乗らない。
+  掲載名は `Bubble Pop`。[BUBBLE_POP_RULES.md](../../../docs/BUBBLE_POP_RULES.md))
+- **`Ludo King` 等の他社タイトル名**(`Ludo` は 1896 年の英国のゲームに由来する
+  一般名なので単独では使える。[LUDO_RULES.md](../../../docs/LUDO_RULES.md))
