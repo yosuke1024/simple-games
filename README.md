@@ -9,6 +9,14 @@
 コンセプト: シンプル / 完全オフライン / 低消費電力 / 広告は控えめ / 急かさない /
 サブスクなし / 機能課金なし / ログインなし / ソースコード公開
 
+設計思想は **Built by subtraction** — 足すのではなく、削る。一般的な無料ゲームアプリが
+機能を足すことで競争するのに対し、Simple Games はユーザーとゲームのあいだにある不要な
+もの(手数・中断・義務・通信・サイズ・サーバー)を削ることで差別化します。目指すのは
+少ない機能ではなく、少ない負担です
+([docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md)「引き算の原則」)。
+
+> We remove what gets between you and the game.
+
 Simple Games は PixApps が提供するクラシックゲーム集のモノレポです。
 複数のゲームを収録した 1 つのアプリ `Simple Games: Offline Games` として配布します。
 すべての収録タイトルは以下を守ります。
@@ -250,6 +258,9 @@ Cloudflare Pages の静的アセットのみで動き、サーバー機能は使
 
 ## 原則(抜粋)
 
+- 新しい機能は、それによって増える複雑さと手数に見合う価値を示す。エンゲージメント
+  機能を足すより、ユーザーの操作・判断・通信・待ち時間を減らすことを優先する
+  ([docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md)「引き算の原則」)
 - 広告は Anchored Adaptive Banner のみ。Interstitial / Rewarded / App Open / Native は
   使わない([docs/ADS_POLICY.md](docs/ADS_POLICY.md))
 - アプリ内課金は「広告削除の買い切り(USD 3.99 基準)」1 商品のみ。
