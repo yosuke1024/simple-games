@@ -82,7 +82,12 @@ import { en } from '../../i18n/locales/en';
 import { SettingsProvider } from '../../state/SettingsContext';
 import { createMemoryKV } from '../../storage/kv';
 import { settingsSchema } from '../../storage/schemas';
-import { CollectionHomeScreen, GAME_MENU_PRESS_MS } from './CollectionHomeScreen';
+import {
+  CollectionHomeScreen,
+  GAME_MENU_MOVE_PX,
+  GAME_MENU_PRESS_MS,
+  GAME_MENU_SCROLL_PX,
+} from './CollectionHomeScreen';
 
 function renderHome(onOpenGame: (gameId: GameId) => void = () => undefined) {
   return render(
@@ -435,12 +440,16 @@ describe('the tile action sheet', () => {
   });
 
   /**
-   * issue #120 (UX contract regression tests): a pointercancel before the
-   * threshold has to leave the press exactly where it found it. No sheet
+   * issue #120 (UX contract regression tests): a mouse's pointercancel before
+   * the threshold has to leave the press exactly where it found it. No sheet
    * later when the timer would have fired, and the tap that follows opens
    * the game as plainly as if the cancelled press had never happened.
+   *
+   * A *touch* cancel is a different animal and the three tests under it say
+   * so: on iOS it arrives mid-hold, with the finger still down and still on
+   * the tile, and obeying it there is what left the sheet unopenable.
    */
-  it('opens nothing when the press is cancelled before the timer, and a later tap still opens the game', async () => {
+  it('opens nothing when a mouse press is cancelled before the timer, and a later tap still opens the game', async () => {
     await initFavoriteGames(createMemoryKV());
     const onOpenGame = vi.fn();
     renderHome(onOpenGame);
@@ -448,9 +457,9 @@ describe('the tile action sheet', () => {
     const tile = tileFor('Sudoku');
     vi.useFakeTimers();
     try {
-      fireEvent.pointerDown(tile);
+      fireEvent.pointerDown(tile, { pointerType: 'mouse' });
       act(() => vi.advanceTimersByTime(GAME_MENU_PRESS_MS - 50));
-      fireEvent.pointerCancel(tile);
+      fireEvent.pointerCancel(tile, { pointerType: 'mouse' });
       act(() => vi.advanceTimersByTime(200));
 
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -461,6 +470,112 @@ describe('the tile action sheet', () => {
     fireEvent.click(tile);
 
     expect(onOpenGame).toHaveBeenCalledWith('sudoku');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  /**
+   * The iOS shape, measured in the simulator: WebKit gives the touch to its
+   * scroller once it has drifted about ten pixels and fires `pointercancel`
+   * — around 380ms into a 450ms hold — while the finger is still down, still
+   * on the tile, and the page has not moved. The hold has not ended, so the
+   * sheet still opens; the drift is well inside GAME_MENU_MOVE_PX, and the
+   * touchmoves that keep arriving after the cancel are what say so.
+   */
+  it('still opens on a hold that drifts a few pixels, though the browser cancels the pointer partway', async () => {
+    await initFavoriteGames(createMemoryKV());
+    const onOpenGame = vi.fn();
+    renderHome(onOpenGame);
+
+    const tile = tileFor('Sudoku');
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(tile, { pointerType: 'touch', clientX: 100, clientY: 200 });
+      fireEvent.touchMove(tile, { touches: [{ clientX: 104, clientY: 206 }] });
+      act(() => vi.advanceTimersByTime(GAME_MENU_PRESS_MS - 80));
+      fireEvent.pointerCancel(tile, { pointerType: 'touch' });
+      fireEvent.touchMove(tile, { touches: [{ clientX: 106, clientY: 210 }] });
+      act(() => vi.advanceTimersByTime(120));
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
+    expect(onOpenGame).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The other half of the same rule: a finger that travels is scrolling the
+   * grid, and a scroll may never leave a sheet behind it — including past the
+   * cancel, which is exactly where a scroll's own touchmoves live.
+   */
+  it('opens nothing when the finger travels far enough to be scrolling', async () => {
+    await initFavoriteGames(createMemoryKV());
+    renderHome();
+
+    const tile = tileFor('Sudoku');
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(tile, { pointerType: 'touch', clientX: 100, clientY: 200 });
+      act(() => vi.advanceTimersByTime(60));
+      fireEvent.pointerCancel(tile, { pointerType: 'touch' });
+      fireEvent.touchMove(tile, {
+        touches: [{ clientX: 100, clientY: 200 + GAME_MENU_MOVE_PX + 1 }],
+      });
+      act(() => vi.advanceTimersByTime(GAME_MENU_PRESS_MS));
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  /**
+   * The list moving under the finger is a scroll saying so outright — the
+   * case a distance budget loose enough to survive iOS cannot catch on its
+   * own, because a slow drag scrolls the page without ever leaving the tile.
+   */
+  it('opens nothing when the list scrolls under the press', async () => {
+    await initFavoriteGames(createMemoryKV());
+    renderHome();
+
+    const tile = tileFor('Sudoku');
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(tile, { pointerType: 'touch', clientX: 100, clientY: 200 });
+      act(() => vi.advanceTimersByTime(120));
+      window.scrollY = GAME_MENU_SCROLL_PX + 4;
+      fireEvent.scroll(document);
+      act(() => vi.advanceTimersByTime(GAME_MENU_PRESS_MS));
+    } finally {
+      window.scrollY = 0;
+      vi.useRealTimers();
+    }
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  /**
+   * And a finger that leaves before the threshold takes the press with it.
+   * After a cancel there is no `pointerup` to hear — `touchend` is the only
+   * word the browser has left for "it is over", and a sheet appearing after
+   * the finger is gone would be the fix's own version of the bug.
+   */
+  it('opens nothing when the finger lifts before the threshold', async () => {
+    await initFavoriteGames(createMemoryKV());
+    renderHome();
+
+    const tile = tileFor('Sudoku');
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(tile, { pointerType: 'touch', clientX: 100, clientY: 200 });
+      act(() => vi.advanceTimersByTime(GAME_MENU_PRESS_MS - 200));
+      fireEvent.pointerCancel(tile, { pointerType: 'touch' });
+      fireEvent.touchEnd(tile);
+      act(() => vi.advanceTimersByTime(400));
+    } finally {
+      vi.useRealTimers();
+    }
+
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
