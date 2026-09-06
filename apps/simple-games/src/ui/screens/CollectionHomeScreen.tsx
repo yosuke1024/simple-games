@@ -139,6 +139,14 @@ interface GameButtonProps {
  * `GameActionSheet` stays down instead of waiting to swallow a click that is
  * never coming.
  *
+ * The press is armed from `touchstart` as well as `pointerdown`; for a finger
+ * the first of the two to arrive wins. On iOS a tile past the first screen
+ * can get its touch events without any `pointerdown` at all (the window
+ * listener in `CollectionHomeScreen` is what normally prevents that, and
+ * says why) — the touch stream is the one iOS always delivers, so it can
+ * arm the press on its own. The mouse and the pen still have only
+ * `pointerdown`.
+ *
  * The click that ends an uncancelled long press is not suppressed here.
  * `GameActionSheet` swallows it, and it is the only place that can: by the
  * time that click is dispatched the sheet's full-screen backdrop is over this
@@ -175,6 +183,29 @@ function GameButton({ game, className, onOpen, onMenu, children }: GameButtonPro
     [clearTimer],
   );
 
+  /** Start the press clock at a point; `x`/`y` are where the finger landed. */
+  const arm = useCallback(
+    (x: number, y: number) => {
+      originRef.current = { x, y };
+      cancelledRef.current = false;
+      // The page itself is this screen's scroller, so its own offset is what
+      // moves. Captured, because that event is dispatched at the document:
+      // the window is on its way down to it either way, which a listener
+      // waiting to be bubbled to is not.
+      const from = window.scrollY;
+      const watch = () => {
+        if (Math.abs(window.scrollY - from) > GAME_MENU_SCROLL_PX) clearTimer();
+      };
+      scrollWatchRef.current = watch;
+      window.addEventListener('scroll', watch, true);
+      timerRef.current = window.setTimeout(() => {
+        timerRef.current = null;
+        onMenu(game, buttonRef.current, !cancelledRef.current);
+      }, GAME_MENU_PRESS_MS);
+    },
+    [clearTimer, game, onMenu],
+  );
+
   // A tile can be unmounted mid-press — pinning a game rebuilds the shelf
   // above it — and a timer that fired afterwards would open a sheet nobody
   // asked for.
@@ -193,22 +224,16 @@ function GameButton({ game, className, onOpen, onMenu, children }: GameButtonPro
         // doorway below, and arming here as well would open the sheet twice.
         if (event.button > 0) return;
         clearTimer();
-        originRef.current = { x: event.clientX, y: event.clientY };
-        cancelledRef.current = false;
-        // The page itself is this screen's scroller, so its own offset is what
-        // moves. Captured, because that event is dispatched at the document:
-        // the window is on its way down to it either way, which a listener
-        // waiting to be bubbled to is not.
-        const from = window.scrollY;
-        const watch = () => {
-          if (Math.abs(window.scrollY - from) > GAME_MENU_SCROLL_PX) clearTimer();
-        };
-        scrollWatchRef.current = watch;
-        window.addEventListener('scroll', watch, true);
-        timerRef.current = window.setTimeout(() => {
-          timerRef.current = null;
-          onMenu(game, buttonRef.current, !cancelledRef.current);
-        }, GAME_MENU_PRESS_MS);
+        arm(event.clientX, event.clientY);
+      }}
+      // A finger's other way in. On a tile past the first screen iOS raises
+      // no `pointerdown` at all (see above), so the touch arms the press when
+      // nothing has; when both arrive, `pointerdown` comes first and this is
+      // a no-op.
+      onTouchStart={(event) => {
+        if (timerRef.current !== null) return;
+        const touch = event.touches[0];
+        if (touch) arm(touch.clientX, touch.clientY);
       }}
       onPointerMove={(event) => clearIfTravelled(event.clientX, event.clientY)}
       // The same question asked of the touch stream, which outlives the
@@ -364,6 +389,41 @@ export function CollectionHomeScreen({
       void handle.then((h) => h.remove()).catch(() => undefined);
     };
   }, [closeSearch]);
+
+  /**
+   * A passive, do-nothing touch listener on the window for as long as this
+   * screen is mounted. It changes nothing about what the page does with a
+   * touch — it changes what iOS does with one before the page hears of it.
+   *
+   * WebKit on iOS decides per region whether a touch has listeners waiting
+   * for it, and the region it draws for a listener is the box of the element
+   * the listener hangs on. Every handler in this app hangs on React's root,
+   * and `#root` is `height: 100%` — one viewport tall — with the collection
+   * overflowing it. Measured on an iPhone 11 on iOS 26.6: a press on a tile
+   * inside that first viewport-height of the document raised `pointerdown`
+   * within about 16ms; a press on a tile below it never raised one (eighteen
+   * presses at page-y ≤ 883 all had it, five at page-y ≥ 975 had none, on an
+   * 896px viewport), and the touch events it did raise came late enough that
+   * a 450ms hold counted from them felt like well over a second. That is the
+   * "only the tiles on the first screen work" the bug was reported as — the
+   * boundary moved with the favourites shelf, because the shelf is what
+   * decides which tiles fit on the first screen. With one touch listener on
+   * the window, whose region is the whole document, every press at every
+   * scroll offset raised `pointerdown` in 12–19ms and the sheet opened at
+   * 450ms (thirty-one presses, page-y up to 2724). The iOS 26.4 simulator
+   * never dropped a `pointerdown`, so none of this shows there.
+   *
+   * Passive, so it can never be the reason a scroll waits on the page; and
+   * only while the home is mounted, because it is the one screen whose
+   * content reaches past the root's box. `GameButton` still arms from
+   * `touchstart` when `pointerdown` does not come, for whatever WebKit does
+   * next.
+   */
+  useEffect(() => {
+    const listen = () => {};
+    window.addEventListener('touchstart', listen, { capture: true, passive: true });
+    return () => window.removeEventListener('touchstart', listen, { capture: true });
+  }, []);
 
   const openMenu = useCallback(
     (game: GameDefinition, trigger: HTMLElement | null, midPress: boolean) => {

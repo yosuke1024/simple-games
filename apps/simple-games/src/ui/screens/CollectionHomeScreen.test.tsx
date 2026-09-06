@@ -580,6 +580,83 @@ describe('the tile action sheet', () => {
   });
 
   /**
+   * iOS below the first screen (measured on iOS 26.6, see GameButton): the
+   * touch events arrive and `pointerdown` never does. The touch has to be
+   * enough to arm the press — and the click that ends it is still swallowed,
+   * because a hold is a hold whichever event announced it.
+   */
+  it('arms the press from touchstart when no pointerdown ever arrives', async () => {
+    await initFavoriteGames(createMemoryKV());
+    const onOpenGame = vi.fn();
+    renderHome(onOpenGame);
+
+    const tile = tileFor('Sudoku');
+    vi.useFakeTimers();
+    try {
+      fireEvent.touchStart(tile, { touches: [{ clientX: 100, clientY: 200 }] });
+      act(() => vi.advanceTimersByTime(GAME_MENU_PRESS_MS + 20));
+      fireEvent.touchEnd(tile);
+      fireEvent.click(tile);
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
+    expect(onOpenGame).not.toHaveBeenCalled();
+  });
+
+  /**
+   * When both arrive — the usual case, `pointerdown` a millisecond ahead —
+   * the touch must not restart the clock: the sheet opens 450ms after the
+   * first of them, not after the second.
+   */
+  it('does not re-arm the press when touchstart follows pointerdown', async () => {
+    await initFavoriteGames(createMemoryKV());
+    renderHome();
+
+    const tile = tileFor('Sudoku');
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(tile, { pointerType: 'touch', clientX: 100, clientY: 200 });
+      act(() => vi.advanceTimersByTime(30));
+      fireEvent.touchStart(tile, { touches: [{ clientX: 100, clientY: 200 }] });
+      // 450ms from the pointerdown has passed; 450ms from the touchstart has not.
+      act(() => vi.advanceTimersByTime(GAME_MENU_PRESS_MS - 30 + 5));
+      expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  /**
+   * The window listener that makes iOS deliver `pointerdown` past the first
+   * screen (see the effect in CollectionHomeScreen). Passive, so scrolling
+   * never waits on it; gone with the screen, so it is not left on the window
+   * for the game screens, which do not need it.
+   */
+  it('keeps one passive touchstart listener on the window only while mounted', async () => {
+    await initFavoriteGames(createMemoryKV());
+    const added = vi.spyOn(window, 'addEventListener');
+    const removed = vi.spyOn(window, 'removeEventListener');
+    try {
+      const { unmount } = renderHome();
+      const registered = added.mock.calls.filter(([type]) => type === 'touchstart');
+      expect(registered).toHaveLength(1);
+      const [, listener, options] = registered[0]!;
+      expect(options).toMatchObject({ passive: true, capture: true });
+
+      unmount();
+      const dropped = removed.mock.calls.filter(
+        ([type, fn]) => type === 'touchstart' && fn === listener,
+      );
+      expect(dropped).toHaveLength(1);
+    } finally {
+      added.mockRestore();
+      removed.mockRestore();
+    }
+  });
+
+  /**
    * GameActionSheet's guard swallows exactly one click — the one the long
    * press itself produces — and stands itself down the moment it does
    * (`release` inside the effect). A second, deliberate click on the action
