@@ -37,6 +37,47 @@ A Simple Game by PixApps
 PRODUCT_PRINCIPLES.md「適用範囲」と WEB_VERSION.md)。
 ストア文面では OSS を最後の訴求に置く(下の「訴求の順序」)。
 
+### 設計思想(Built by subtraction)
+
+Honest by design が「何を約束するか」なら、Built by subtraction は「その約束をどう
+生むか」— 足すのではなく削る、という判断軸である(issue #123。原則の本文は
+[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「引き算の原則」)。一般的な無料ゲーム
+アプリが機能を足すことで競争するのに対し、Simple Games はユーザーとゲームのあいだに
+ある不要なものを削ることで差別化する。2 つのラベルは別々のスローガンではなく 1 つの
+話で、削った結果が約束になり、その約束を公開ソースで検証できる。
+
+設計思想として:
+
+> Built by subtraction.
+
+ユーザーへの体験価値として:
+
+> Less between you and the game.
+
+一文で言うなら(LP の見出し。pixapps-landing の `tests/ui.test.js` がこの一文を
+固定しているので、言い換えるときは両リポジトリを同じ回で変える):
+
+> We remove what gets between you and the game.
+> あなたとゲームのあいだにあるものを、削る。
+
+内部の判断原則として(公開文面に出す必要はない):
+
+> We add features only when they remove friction.
+> Every new feature must justify the friction it adds.
+
+**「少ない機能」ではなく「少ない負担」である。** コピーでも「機能が少ない」
+「ミニマル」を売りにしない。削るのは手数・中断・義務・通信・サイズ・サーバーで
+あって、ゲームや Hint / Undo のような助けではない。
+
+置き場所の目安:
+
+- **LP**: 個別の特徴を並べるだけでなく、「他が足すことで競う中、こちらは削ることで
+  競う」という統一した話として置く(pixapps-landing の
+  `public/simple-games/index.html` の `#subtraction` —「削るもの / 残すもの」の表)。
+- **ストア掲載文**: 思想の説明は短く、ユーザーの実利を優先する(思想 2 割・
+  実利 8 割が目安。`apps/simple-games/store/listing.md`「構成の意図」)。
+- **README / 原則**: 判断原則として置く。
+
 ## メッセージ候補
 
 ブランドメッセージ(候補):
@@ -57,6 +98,7 @@ PRODUCT_PRINCIPLES.md「適用範囲」と WEB_VERSION.md)。
 
 - "Classic games in one quiet, offline app. No subscriptions or paywalls."
 - "Simple offline games with one small banner. Remove it forever with a single purchase."
+- 引き算の行: "Less between you and the game. Offline classics, no account, no subscription."
 - OSS 行: "Built in public. The source code is available on GitHub."
 
 スクリーンショット短句(この 5 句を基本とする):
@@ -105,6 +147,14 @@ OSS を先頭に出さない。
   「全ゲーム機能が無料」/ "All game features are free" のように対象を言う。
 - **使用禁止**: "Lifetime Access"(無期限なのは広告削除権であって、
   アプリのサービス存続期間ではない)。
+- **未実装の機能・未検証の性能を公開文面に書かない。** 「これから作る」ではなく
+  「すでにそうなっている」だけをブランドの根拠にする(未収録のゲーム名を書かない
+  規則と同じ)。Zero Friction の各機能(お気に入り・検索・ショートカット・直接復帰・
+  入力経路)も、実装が終わった 2026-09 以降にだけ公開文面に載せている。
+- **数値は公開時点の実測値だけ。** アプリの配布サイズを「約 x MB」と書くときは、
+  Play Console / App Store Connect が示すその時点の配布サイズを確認してから書く。
+  未確認の数値を固定コピーにしない。数字なしで「軽い」と言うほうが、古い数字を
+  残すより誠実である([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「引き算の原則」)。
 
 ### 禁止表現はストア文面だけの規則ではない
 

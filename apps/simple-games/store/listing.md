@@ -11,7 +11,9 @@
 > (説明文・スクリーンショット・キーワード)にはまだ反映していない。
 > 反映は手動作業であり、**実行には人間の明示的な承認が必要**(タグ発行・
 > versionCode・ストア公開と同じ扱い)。承認より先に Console を編集しないこと。
-> Hearts / Gin Rummy も同じ状態である。
+> Hearts / Gin Rummy も同じ状態である。2026-09-06 の「引き算」の改稿(issue #123、
+> 冒頭の要約 6 行と短い説明の候補 4)も同じくリポジトリの中だけの更新で、
+> Console 側には未反映。
 
 > 掲載は収録ゲーム 30 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
 > Mahjong Solitaire / Hearts / Gin Rummy / Minesweeper / Ludo / 2048 /
@@ -73,19 +75,27 @@ Sudoku の併記を「数独」でなく「ナンプレ」にしたのと同じ�
 1. `No rush, no connection needed. Classic games gathered into one simple app.`(74字)
 2. `Classic games in one quiet, offline app. No subscriptions or paywalls.`(70字)
 3. OSS 行(補助): `Built in public. The source code is available on GitHub.`(56字)
+4. 引き算の行: `Less between you and the game. Offline classics, no account, no subscription.`(77字)
 
 ## 詳細説明
 
 ```text
 I made this app because I wanted games I could play on a long flight, without worrying about a connection.
 
-Simple Games is a simple collection of classic games in one app. More games will be added gradually, as long as they fit this idea.
+Simple Games is a simple collection of classic games in one app. Where most game apps keep adding things, this one takes them away — everything that gets between you and the game. More games will be added gradually, as long as they fit this idea.
+
+• Plays offline, from the very first launch
+• No subscription, and no account to create
+• Nothing interrupts play: one small banner while you're online, never a full-screen or video ad
+• Every game feature is included, and hints and undo are free wherever a game has them
+• A small download — quick to install, light on storage
+• Favorites pin your games to the top; search finds the rest by name
 
 Nothing rushes you.
 No login bonuses, no day-streak counters, no limited-time events. No clock runs on screen while you play. Skip a day and you lose nothing.
 
 The games never go online.
-All of them run offline. Your progress stays on your device and nowhere else. No account, no cloud sync. To keep the app usable far from a charger, I left out anything power-hungry.
+All of them run offline. Your progress stays on your device and nowhere else. No account, no cloud sync, and no server behind the app — nothing to go down, and nothing you would ever have to pay to keep running. To keep the app usable far from a charger, I left out anything power-hungry.
 
 INCLUDED GAMES
 • Sudoku
@@ -146,6 +156,17 @@ Hint / Undo の詳細を 5 本ぶん並べていた。**それをやめた。**
 並び順は `src/app/registry.ts` と同じ(検索需要の大きい順)。
 未収録のゲームは名前も置かない。
 
+**冒頭の要約 6 行(2026-09-06、issue #123)。** 掲載文は上から読まれ、下まで読まれない。
+そこで 2 段落目の直後に、ユーザーが受け取るものを 1 行ずつ置いた —— オフライン /
+サブスクとアカウントの不在 / 中断しない広告 / 全ゲーム機能と無料の助け / 小さな
+ダウンロード / お気に入りと検索。ブランドの思想(「足すのではなく、削る」)は 2 段落目の
+1 文だけで、残りは実利である。**思想 2 割・実利 8 割**が目安で、ストアで思想の説明を
+長くしない([docs/BRAND.md](../../../docs/BRAND.md)「設計思想」)。要約と下の段落が
+同じ事実を二度言うのは意図で、要約は読まれる場所に置いた見出し、段落はその限定語
+(`wherever a game has them` / `while you're online`)を運ぶ本文である。要約の行を
+増やすときは、下の段落に対応する事実があること —— つまり**すでに実装されている**こと —— を
+先に確かめる。
+
 **トレードオフ**: ゲーム名の本文中の出現回数が減るため、Play の検索流入は理論上
 下がりうる。名前自体は残しているので消えはしない。もし取り戻す必要が出たら、
 ブロックを復活させるのではなく、名前の横にアプリ内 Quick Rules 相当の一行説明を
@@ -170,6 +191,15 @@ Hint / Undo の詳細を 5 本ぶん並べていた。**それをやめた。**
   `aucune connexion requise`(接続は**必要とされない**)を 80 字に収めるため
   `aucune connexion`(接続はいっさいなし)に縮め、オンライン時の広告表示と矛盾させた。
   **削るなら限定語ではなく名詞側を削る。**
+- **中断の書き方**: 「中断しない」はバナーの存在を認めた形で書く —— 要約の 3 行目が
+  その形で、バナーが 1 枠あると言ってから、全画面・動画の広告は無いと言う。
+  `No ads` に縮めない —— それは使用禁止表現であり、事実でもない。
+- **サイズの書き方**: 配布サイズは `A small download` のように数字なしで書く。
+  「約 x MB」と数字を書くのは、公開時点の Play Console / App Store Connect の配布
+  サイズを確認したときだけで、確認していない数値を固定コピーにしない
+  ([docs/PRODUCT_PRINCIPLES.md](../../../docs/PRODUCT_PRINCIPLES.md)「引き算の原則」)。
+- **お気に入り・検索の書き方**: 実装済み(issue #109 / #122、2026-09)だから書いている。
+  同じ理由で、未実装の機能は要約にも本文にも書かない。
 
 ## アプリ内購入の開示
 
