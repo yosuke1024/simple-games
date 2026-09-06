@@ -79,6 +79,37 @@ import { WebChromeSlot } from '../components/WebChromeSlot';
  */
 export const GAME_MENU_PRESS_MS = 450;
 
+/**
+ * How far the finger may travel in that time and still mean "hold". A thumb
+ * resting on a tile drifts a few pixels; a finger on its way to scrolling the
+ * grid is far past this inside the first frames, long before the threshold.
+ *
+ * The distance has to be measured here because the browser's own answer is
+ * too tight to use. The collection is the one long-press surface that lives
+ * inside a page that scrolls (Minesweeper's board, the other one, does not),
+ * and iOS WebKit hands a touch to its scroller — firing `pointercancel` — as
+ * soon as it has travelled about ten pixels, whether or not the page then
+ * scrolls at all. Ten pixels is less than a thumb drifts while holding still,
+ * so a press that obeys that event dies for a reason the player cannot see:
+ * measured in the iOS simulator, a hold drifting twelve pixels was cancelled
+ * at 381ms, and the same hold drifting a little slower reached 450ms and
+ * opened the sheet. That race is the "some tiles open the menu, some do
+ * nothing" this screen was reported for — it is per press, not per game.
+ */
+export const GAME_MENU_MOVE_PX = 24;
+
+/**
+ * And how far the page may move under the finger in that time. The budget
+ * above has to be generous enough to outlast iOS giving up on the pointer,
+ * and generous enough leaves room for a genuine, very slow drag — measured on
+ * an Android emulator, an inch-by-inch scroll of fifty-odd pixels over a
+ * second and a bit was still inside it. The list moving is the thing that
+ * says "this was a scroll" outright, so it ends the press on its own, with
+ * only enough slack to absorb the first pixels a scroller takes for itself
+ * when it decides the touch is its own.
+ */
+export const GAME_MENU_SCROLL_PX = 8;
+
 interface GameButtonProps {
   game: GameDefinition;
   className: string;
@@ -91,22 +122,58 @@ interface GameButtonProps {
  * A tile. A tap opens the game; a long press, a right-click, or the keyboard's
  * context-menu key opens the sheet instead (issue #109).
  *
- * The click that ends a long press is not suppressed here. `GameActionSheet`
- * swallows it, and it is the only place that can: by the time that click is
- * dispatched the sheet's full-screen backdrop is over this button, so the
- * click lands on the backdrop — never on the tile — and a guard here would sit
- * unreachable while the one case that matters went unhandled.
+ * What ends a press before the threshold is the finger *moving*: this is a
+ * page that scrolls, so travel past `GAME_MENU_MOVE_PX`, or the list itself
+ * sliding past `GAME_MENU_SCROLL_PX`, is somebody scrolling it — the second
+ * because the first has to be loose enough to catch a slow drag that scrolls
+ * without ever leaving the tile. A touch `pointercancel` is not that, whatever
+ * it looks like — on iOS it arrives while the finger is still down and still
+ * on the tile — so it is recorded rather than obeyed, and the touch stream
+ * that keeps flowing past it
+ * (`touchmove` right through to `touchend`, both watched below) is what
+ * decides. A mouse or a pen has no such stream behind its cancel, so for those
+ * a cancel still ends the press, as it always has (issue #120).
+ *
+ * What a cancel does mean, on any pointer, is that no click follows it — so a
+ * sheet opened after one is told it did not open mid-press, and the guard in
+ * `GameActionSheet` stays down instead of waiting to swallow a click that is
+ * never coming.
+ *
+ * The click that ends an uncancelled long press is not suppressed here.
+ * `GameActionSheet` swallows it, and it is the only place that can: by the
+ * time that click is dispatched the sheet's full-screen backdrop is over this
+ * button, so the click lands on the backdrop — never on the tile — and a guard
+ * here would sit unreachable while the one case that matters went unhandled.
  */
 function GameButton({ game, className, onOpen, onMenu, children }: GameButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const timerRef = useRef<number | null>(null);
+  /** Where the press landed — the point every later position is measured from. */
+  const originRef = useRef<{ x: number; y: number } | null>(null);
+  /** Whether the browser has disowned this press, and with it the click. */
+  const cancelledRef = useRef(false);
+  /** The scroll watch belonging to the press in flight, while there is one. */
+  const scrollWatchRef = useRef<(() => void) | null>(null);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current !== null) {
       window.clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+    if (scrollWatchRef.current !== null) {
+      window.removeEventListener('scroll', scrollWatchRef.current, true);
+      scrollWatchRef.current = null;
+    }
   }, []);
+
+  const clearIfTravelled = useCallback(
+    (x: number, y: number) => {
+      const origin = originRef.current;
+      if (origin === null) return;
+      if (Math.hypot(x - origin.x, y - origin.y) > GAME_MENU_MOVE_PX) clearTimer();
+    },
+    [clearTimer],
+  );
 
   // A tile can be unmounted mid-press — pinning a game rebuilds the shelf
   // above it — and a timer that fired afterwards would open a sheet nobody
@@ -126,14 +193,47 @@ function GameButton({ game, className, onOpen, onMenu, children }: GameButtonPro
         // doorway below, and arming here as well would open the sheet twice.
         if (event.button > 0) return;
         clearTimer();
+        originRef.current = { x: event.clientX, y: event.clientY };
+        cancelledRef.current = false;
+        // The page itself is this screen's scroller, so its own offset is what
+        // moves. Captured, because that event is dispatched at the document:
+        // the window is on its way down to it either way, which a listener
+        // waiting to be bubbled to is not.
+        const from = window.scrollY;
+        const watch = () => {
+          if (Math.abs(window.scrollY - from) > GAME_MENU_SCROLL_PX) clearTimer();
+        };
+        scrollWatchRef.current = watch;
+        window.addEventListener('scroll', watch, true);
         timerRef.current = window.setTimeout(() => {
           timerRef.current = null;
-          onMenu(game, buttonRef.current, true);
+          onMenu(game, buttonRef.current, !cancelledRef.current);
         }, GAME_MENU_PRESS_MS);
       }}
+      onPointerMove={(event) => clearIfTravelled(event.clientX, event.clientY)}
+      // The same question asked of the touch stream, which outlives the
+      // `pointercancel` that iOS raises partway through a hold.
+      onTouchMove={(event) => {
+        const touch = event.touches[0];
+        if (touch) clearIfTravelled(touch.clientX, touch.clientY);
+      }}
       onPointerUp={clearTimer}
-      onPointerLeave={clearTimer}
-      onPointerCancel={clearTimer}
+      // A touch that ends after its own cancel raises no `pointerup`, so this
+      // is what stands down a press the finger has already let go of.
+      onTouchEnd={clearTimer}
+      // The system taking the touch outright (a call, a system gesture) —
+      // unlike `pointercancel`, this really is the end of it.
+      onTouchCancel={clearTimer}
+      onPointerLeave={(event) => {
+        // A mouse leaving the button abandons the press. A touch raises this
+        // only once the press is over or cancelled, and obeying it there would
+        // undo everything above.
+        if (event.pointerType !== 'touch') clearTimer();
+      }}
+      onPointerCancel={(event) => {
+        cancelledRef.current = true;
+        if (event.pointerType !== 'touch') clearTimer();
+      }}
       onContextMenu={(event) => {
         // A right-click, and the keyboard's own menu key (Shift+F10): the
         // browser raises this same event for both, so the mouse route and one
