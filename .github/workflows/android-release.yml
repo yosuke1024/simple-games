@@ -113,6 +113,20 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      # A tag is one release of one product on two stores, so the iOS binary
+      # carries the same version as the AAB. Android takes it from the tag;
+      # iOS cannot (the archive is made by hand on a Mac and ships whatever the
+      # Xcode project says — ios/ExportOptions.plist keeps
+      # manageAppVersionAndBuildNumber false), so the number is kept in the
+      # pbxproj and only this job ever sees both it and the tag. Checked before
+      # anything is built: a mismatch means the iOS half of this release would
+      # go out numbered wrong, and the fix is a new tag, not a new build.
+      - name: Guard — the iOS version must match the tag
+        if: github.ref_type == 'tag'
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: node apps/simple-games/scripts/ios-version.mjs check --tag "$REF_NAME"
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

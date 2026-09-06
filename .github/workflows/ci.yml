@@ -39,6 +39,15 @@ jobs:
       - run: pnpm --filter simple-games build:web
       - run: bash .github/scripts/check-dist-ads-separation.sh
 
+      # The iOS version is the one version number this repository still keeps by
+      # hand: the Android lane derives it from the tag, but the iOS archive is
+      # made on a Mac and ships whatever the Xcode project says
+      # (apps/simple-games/scripts/ios-version.mjs). Hand-kept numbers rot —
+      # this one sat at 1.0 / 1 through four tags — so the pair is checked for
+      # internal consistency on every PR, and against the tag itself in
+      # android-release.yml.
+      - run: pnpm --filter simple-games ios:version check
+
       # Size gate (issue #26): raw/gzip per chunk against size-baseline.json,
       # per-game budgets once the lazy split exists, and the initial-graph
       # check. Needs both dist/ and dist-web/, so it lives here too.

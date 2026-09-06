@@ -164,6 +164,16 @@ bash .github/scripts/check-principles.sh
 
 ビルド:
 
+- [ ] **iOS の版をこのリリースのタグに合わせた**こと
+      (`pnpm --filter simple-games ios:version set <major>.<minor>.<patch>` →
+      `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` の 2 つが変わる)。
+      Android と違い iOS の版はタグから導出できない —— Archive は Mac の上で
+      人間が回し、`ios/ExportOptions.plist` は
+      `manageAppVersionAndBuildNumber` を false にしているので、Xcode
+      プロジェクトに書かれた値がそのまま出荷される。**手で持つ値は腐る**:
+      実際 v1.0.1 から v1.1.2 までの 4 つのタグの間、ここは 1.0 / 1 のまま
+      だった。整合は CI が毎 PR で、タグとの一致は `android-release.yml` が
+      タグ push で見る(`pnpm --filter simple-games ios:version check`)
 - [ ] `pnpm --filter simple-games build` → `cd apps/simple-games && pnpm exec cap sync ios`
 - [ ] `xcodebuild -project ios/App/App.xcodeproj -scheme App` が通る(署名は
       Automatic + 開発チーム。配布用の署名・Archive は App Store Connect 側の
@@ -402,6 +412,60 @@ JS 側は自動テストが見ている(`src/services/homeShortcut/quickActions.
 - [ ] Android / Web は変わっていないこと(Android の §5.9 が通り、お気に入り
       登録でショートカットが作られないこと)
 
+## 5.12 ドラッグでの移動(issue #116 / #119 / #144)
+
+Solitaire / Spider / FreeCell は**タップ操作を残したまま**ドラッグを足した
+(`SolitaireTable.tsx` / `SpiderTable.tsx` / `FreeCellTable.tsx`)。自動テストは
+合成した pointer イベントまでしか見られず、**指とスクロールの取り合いは実機に
+しか無い**。カードには `touch-action: none` が掛かっているので、カードの上から
+始めた縦スワイプはページを流さない —— 盤が画面に収まらない端末で最初に出る。
+
+- [ ] Android / iOS 実機で、札をつまんで運び、置ける場所で離すと動くこと。
+      置けない場所で離すと**元の位置へ戻る**こと(そこに落ちたままにならない)
+- [ ] **タップ→タップの 2 手が従来どおり動く**こと。8px 未満の押し込みは
+      ドラッグにならずタップとして扱われること(指はまっすぐ止まらない)
+- [ ] 盤が縦に収まらない端末で、**カードの上から始めた縦スワイプで盤が
+      スクロールしない**こと。逆に、余白から始めたスワイプでは従来どおり
+      スクロールすること
+- [ ] ドラッグの最中に盤がスクロールしたら、その運びが**取り消されて札が元へ
+      戻る**こと(測った座標と実際の位置がずれるため。宙に浮いた札が残らない)
+- [ ] 指が画面の外(ステータスバー・ホームバー・画面端)へ出て戻ってきても
+      札を取りこぼさないこと
+- [ ] ドラッグ中に通知シェード・着信・アプリ切り替えが割り込んでも、戻ったとき
+      札が宙に浮いていないこと(`pointercancel` は解放ではなく取り消し)
+- [ ] マウス(Chromebook / iPad + トラックパッド)で、ボタンを離した場所が
+      表の外でも札が戻ること
+- [ ] Bubble Pop: 狙っている最中に通知シェード・着信・パーム拒否が割り込んだとき
+      **発射しない**こと。弾は装填したまま残り、天井も降りないこと(#144)
+- [ ] Nonogram / Minesweeper のドラッグ(連続の塗り・× ・旗)が、盤の
+      スクロールと取り合いにならないこと
+- [ ] コレクションホームのタイルの長押し(§5.8)とドラッグが干渉しないこと ——
+      スクロールしようとして長押しシートが開かないこと
+- [ ] 運んでいる札が広告バナーの上を通っても、バナーが札を隠さないこと
+
+## 5.13 物理キーボード(issue #93 / #115 / #143)
+
+キーボードは「タップと同じ処理を呼ぶ入力アダプター」として入っている
+(`src/ui/useGameKeys.ts`)。**キーで届くものは画面にも必ずある**という約束なので、
+ここで見るのは新しい機能ではなく、**キーが余計なものを壊していないか**である。
+自動テストは合成キーイベントまで。実機に残るのは IME とソフトキーボードとの
+同居で、確認には Bluetooth キーボード(Android)か Magic Keyboard 等(iPad)が要る。
+
+- [ ] 矢印 / 数字 / Undo(Ctrl+Z・Cmd+Z)/ Hint が、対応するボタンを押したときと
+      同じ結果になること。**ボタンが無い操作がキーだけで起きないこと**
+- [ ] Minesweeper の `F`、Nonogram の `X` で入力モードが入れ替わること(#115)
+- [ ] Futoshiki / Kakuro / Quick Math が数字キーで入力でき、Backspace / Delete で
+      消せること(#143)
+- [ ] 日本語・中国語・韓国語の IME を**オンにした状態**で、変換のためのキーが
+      盤面を動かさないこと
+- [ ] 検索欄(§5.10)にフォーカスがある間、打った文字が盤面へ届かないこと
+      (入力欄の中のキーはゲームへ渡さない)
+- [ ] 結果オーバーレイ・確認ダイアログが出ている間、その裏の盤面がキーで
+      動かないこと(盤面を inert にしたのと同じ約束 — issue #120)
+- [ ] ゲームを離れたあとキーが効き続けないこと(リスナーが残らない ——
+      [GAME_LIFECYCLE.md](GAME_LIFECYCLE.md))
+- [ ] キーボードを使わない端末で、これまでと何も変わっていないこと
+
 ## 6. ストア掲載
 
 - [ ] `apps/simple-games/store/listing.md` の文言を各言語へ反映
@@ -415,16 +479,22 @@ JS 側は自動テストが見ている(`src/services/homeShortcut/quickActions.
 
 ## 7. 公開
 
+- [ ] **タグを打つ前に** iOS の版をそのタグに合わせて main へ入れておく
+      (§4.7 の 1 項目目。`pnpm --filter simple-games ios:version set <version>`。
+      合っていなければ `android-release.yml` が AAB を作る前に落ちる)
 - [ ] タグ `v<major>.<minor>.<patch>` を打って push する
       (`android-release.yml` が署名済み AAB + 確認用 APK を出す)
 - [ ] ワークフローが緑(署名 secret が無ければ失敗する)
 - [ ] AAB を Play Console の**内部テスト**トラックにアップロード(手動)
 - [ ] 内部テストトラック経由でインストールして動作確認
       (課金とレビュー導線はこの経路でしか確認できない)
+- [ ] iOS は同じタグの内容から Archive し、TestFlight へ上げる(Mac 上の手作業。
+      `ios/ExportOptions.plist` + App Store Connect API キー。§4.7)
 - [ ] 段階的公開で開始する
 
 作り直すときは `build.gradle` ではなく**新しいタグ**を打つ。`versionCode` はタグから
-導出され、Play は同じ `versionCode` を二度受け付けない。
+導出され、Play は同じ `versionCode` を二度受け付けない。iOS のビルド番号も同じ式で
+導く(`ios:version set`)ので、作り直しは**新しいタグ + iOS の版の更新**が対になる。
 
 ## 8. 公開後
 
