@@ -1,4 +1,4 @@
-# Simple Games: Offline Puzzles
+# Simple Games: Offline Games
 
 **Honest by design. Simple games, built in the open.**
 「無料ゲームを、誠実に。シンプルなゲームを、オープンに。」
