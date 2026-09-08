@@ -25,6 +25,16 @@
   board — clues included — is sized from the viewport in one place. On a 360px
   screen a 10×10 cell is ~25px; anything narrower scrolls instead of shrinking
   further, because a cell too small to hit is worse than a board that moves.
+
+  2.6 cells is the band's floor, not its size. A 10×10 line can carry five
+  runs ("1 1 1 1 1"), and five stacked numbers at the clue's font and gap need
+  more than 2.6 of a ~29px cell — on a phone that is ~97px against a 75px
+  band. With a fixed track the tallest column clue overflowed downward under
+  the cells and every column lost its last number (issue #177). The tracks
+  are therefore minmax(band, max-content): exactly 2.6 cells whenever that
+  fits, and just as much larger as the tallest (widest) clue needs when it
+  does not. `max-content` rather than `auto` so the free space on a wide
+  screen still goes to the cells' track, not the band.
 */
 .nono-board {
   --nono-gap: 2px;
@@ -37,8 +47,8 @@
   );
   --nono-band: calc(var(--nono-cell) * 2.6);
   display: grid;
-  grid-template-columns: var(--nono-band) auto;
-  grid-template-rows: var(--nono-band) auto;
+  grid-template-columns: minmax(var(--nono-band), max-content) auto;
+  grid-template-rows: minmax(var(--nono-band), max-content) auto;
   gap: var(--nono-gap);
   /* A long press is a cross, not a text selection or a browser gesture (§3). */
   touch-action: manipulation;
@@ -280,8 +290,8 @@
 
    Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
    untouched; both tiers only raise the ceiling of the board's own clamp.
-   `--nono-band`, fixed at 2.6 cells, is derived from `--nono-cell` and grows
-   with it for free — same for `.nono-glyph`, a plain share of the cell with
+   `--nono-band`, the 2.6-cell floor of the clue tracks, is derived from
+   `--nono-cell` and grows with it for free — same for `.nono-glyph`, a plain share of the cell with
    no clamp of its own. `.nono-clue`'s font is also cell-derived, but its own
    15px ceiling is already what binds at the base clamp's 40px max, so it
    holds there rather than shrinking as the cell grows further. */
