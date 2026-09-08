@@ -132,12 +132,31 @@ function occupiedPoints(board: Board, ceilingOffset: number): OccupiedPoint[] {
   return points;
 }
 
+/**
+ * The nearest bubble whose center is within one diameter of `at`, or null.
+ *
+ * The two axis rejections before the distance are not a second rule about
+ * what counts as a collision: a point more than CELL_DIAMETER away on one
+ * axis alone is already more than CELL_DIAMETER away, so they only skip
+ * points the `d > CELL_DIAMETER` line below would have discarded anyway —
+ * same scan, same order, same survivors, same answer. What they buy is that
+ * `Math.hypot` (this loop's whole cost: it used to run once per bubble per
+ * step, tens of millions of times across a shipped-board sweep) now runs
+ * only for the handful of bubbles actually in reach. Issue #158.
+ */
 function nearestOccupiedCollision(points: readonly OccupiedPoint[], at: Point): Cell | null {
+  const atX = at.x;
+  const atY = at.y;
+  const reach = CELL_DIAMETER;
   let best: OccupiedPoint | null = null;
   let bestDistance = Infinity;
   for (const point of points) {
-    const d = Math.hypot(point.x - at.x, point.y - at.y);
-    if (d > CELL_DIAMETER) continue;
+    const dy = point.y - atY;
+    if (dy > reach || dy < -reach) continue;
+    const dx = point.x - atX;
+    if (dx > reach || dx < -reach) continue;
+    const d = Math.hypot(dx, dy);
+    if (d > reach) continue;
     if (
       d < bestDistance - 1e-9 ||
       (Math.abs(d - bestDistance) <= 1e-9 &&
@@ -162,37 +181,58 @@ export function simulateShot(board: Board, ceilingOffset: number, angle: number)
   let x = LAUNCHER_X;
   let y = LAUNCHER_Y;
   let vx = SHOT_SPEED * Math.sin(clamped);
-  const vy = -SHOT_SPEED * Math.cos(clamped);
   const dt = SHOT_STEP_MS / 1000;
+  // The flight is a fixed vertical step plus a horizontal one that only ever
+  // flips sign at a wall, so the vertical step is loop-invariant. The three
+  // constants below are read into locals for the same reason that step is:
+  // the bundled app compiles a module constant to a constant either way, but
+  // the test runner's ESM transform makes every reference a property load on
+  // an imported namespace object, and this loop runs on the order of 10^8
+  // times across autoplay.test.ts's 100 levels (issue #158).
+  const stepY = -SHOT_SPEED * Math.cos(clamped) * dt;
+  const radius = CELL_RADIUS;
+  const width = BOARD_WIDTH;
+  const maxSteps = MAX_TRAJECTORY_STEPS;
   const path: Point[] = [{ x, y }];
   const ceilingY = ceilingOffset * ROW_HEIGHT;
   const points = occupiedPoints(board, ceilingOffset);
+  // Below the deepest bubble's row (plus the one diameter a collision can
+  // reach across) there is nothing to collide with, so those steps skip the
+  // scan entirely instead of rejecting every bubble one at a time. That is
+  // most of a shot: the flight from the launcher up to the stack is empty
+  // space by construction (constants.ts's LOSS_LINE_Y comment sizes it), and
+  // on the shipped boards ~99% of simulated steps fall in it. Issue #158.
+  let deepestY = -Infinity;
+  for (const point of points) if (point.y > deepestY) deepestY = point.y;
+  const collisionsPossibleBelowY = deepestY + CELL_DIAMETER;
 
-  for (let step = 0; step < MAX_TRAJECTORY_STEPS; step++) {
+  for (let step = 0; step < maxSteps; step++) {
     x += vx * dt;
-    y += vy * dt;
+    y += stepY;
 
-    if (x - CELL_RADIUS < 0) {
-      x = 2 * CELL_RADIUS - x;
+    if (x - radius < 0) {
+      x = 2 * radius - x;
       vx = Math.abs(vx);
       path.push({ x, y });
-    } else if (x + CELL_RADIUS > BOARD_WIDTH) {
-      x = 2 * (BOARD_WIDTH - CELL_RADIUS) - x;
+    } else if (x + radius > width) {
+      x = 2 * (width - radius) - x;
       vx = -Math.abs(vx);
       path.push({ x, y });
     }
 
-    if (y - CELL_RADIUS <= ceilingY) {
-      y = ceilingY + CELL_RADIUS;
+    if (y - radius <= ceilingY) {
+      y = ceilingY + radius;
       path.push({ x, y });
       const start = nearestCellInRow(0, x);
       return { path, landingCell: nearestEmptyCell(board, start, { x, y }, ceilingOffset) };
     }
 
-    const hit = nearestOccupiedCollision(points, { x, y });
-    if (hit) {
-      path.push({ x, y });
-      return { path, landingCell: nearestEmptyCell(board, hit, { x, y }, ceilingOffset) };
+    if (y <= collisionsPossibleBelowY) {
+      const hit = nearestOccupiedCollision(points, { x, y });
+      if (hit) {
+        path.push({ x, y });
+        return { path, landingCell: nearestEmptyCell(board, hit, { x, y }, ceilingOffset) };
+      }
     }
   }
 

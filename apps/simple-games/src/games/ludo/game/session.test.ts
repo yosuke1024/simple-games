@@ -173,22 +173,43 @@ const seedsNamed = (label: string, count: number): string[] =>
 
 describe('① a restored match agrees with one that was never put down', () => {
   for (const difficulty of DIFFICULTIES) {
-    it(`resumes into the same board, turn and dice position at every checkpoint (${difficulty})`, () => {
-      let checkpoints = 0;
-      for (const seed of seedsNamed(`resume-${difficulty}`, 6)) {
-        let session = createSession(difficulty, seed);
-        for (let taken = 0; taken < BEAT_LIMIT && session.status === 'playing'; taken++) {
-          // Every twenty-ninth beat, so checkpoints land on rolls, on moves
-          // and on both sides of the table rather than on one kind of moment.
-          if (taken % 29 === 0 && canonicalRecordOf(session, SAVED_AT) !== null) {
-            expectResumesIdentically(session);
-            checkpoints += 1;
+    // Six seeds used to be played inside one `it()` per difficulty, `hard`
+    // reaching over a second by itself. Each seed is a whole match played
+    // independently of the other five — nothing here is shared between them
+    // except the running `checkpoints` tally below — so this is the loop
+    // `it.each` is for: one case per seed, each far cheaper than the default
+    // 5s budget even at the 3-5x parallel-run skew SUDOKU_RULES.md §7
+    // measures, and a failure names its own seed instead of "(hard)" for all
+    // six (issue #158). The `checkpoints > 50` guard is not a per-seed
+    // property — it exists to catch the scan itself degenerating to zero
+    // checkpoints — so it stays an aggregate, summed across the six cases
+    // below and checked once they have all run.
+    const checkpointsPerSeed: number[] = [];
+
+    describe(difficulty, () => {
+      it.each(seedsNamed(`resume-${difficulty}`, 6))(
+        'resumes into the same board, turn and dice position at every checkpoint (%s)',
+        (seed) => {
+          let checkpoints = 0;
+          let session = createSession(difficulty, seed);
+          for (let taken = 0; taken < BEAT_LIMIT && session.status === 'playing'; taken++) {
+            // Every twenty-ninth beat, so checkpoints land on rolls, on moves
+            // and on both sides of the table rather than on one kind of moment.
+            if (taken % 29 === 0 && canonicalRecordOf(session, SAVED_AT) !== null) {
+              expectResumesIdentically(session);
+              checkpoints += 1;
+            }
+            session = step(session);
           }
-          session = step(session);
-        }
-        expect(session.status).not.toBe('playing');
-      }
-      expect(checkpoints).toBeGreaterThan(50);
+          expect(session.status).not.toBe('playing');
+          checkpointsPerSeed.push(checkpoints);
+        },
+      );
+
+      it('checked enough checkpoints across the six seeds to mean something', () => {
+        expect(checkpointsPerSeed).toHaveLength(6);
+        expect(checkpointsPerSeed.reduce((total, count) => total + count, 0)).toBeGreaterThan(50);
+      });
     });
   }
 

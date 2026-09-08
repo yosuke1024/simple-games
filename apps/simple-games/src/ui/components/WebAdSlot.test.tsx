@@ -6,12 +6,13 @@
  * (.github/scripts/check-dist-ads-separation.sh). The web-mode rendering
  * itself is AdUnit's own test file plus a `pnpm dev:web` session.
  */
-import { render } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { setWebAdsConfigForTesting } from '../../services/ads/web/config';
 import { WebAdSlot } from './WebAdSlot';
 
 afterEach(() => {
+  cleanup();
   setWebAdsConfigForTesting(null);
 });
 
@@ -36,6 +37,7 @@ vi.mock('../../services/ads/web/AdUnit', () => ({ default: () => <div data-testi
  */
 describe('WebAdSlot in the web-mode bundle', () => {
   afterEach(() => {
+    cleanup();
     setWebAdsConfigForTesting(null);
     vi.unstubAllEnvs();
     vi.resetModules();

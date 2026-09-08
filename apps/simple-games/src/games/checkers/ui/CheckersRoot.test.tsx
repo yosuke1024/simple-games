@@ -8,6 +8,7 @@ import { PLAYER, createSession, restoreSession, type Board, type Piece } from '.
 import { CPU_MAN, EMPTY, PLAYER_MAN, isDarkSquare } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { CK_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
+import { CPU_DELAY_MS, CPU_STEP_MS } from '../state/GameContext';
 import { CheckersRoot } from './CheckersRoot';
 
 /**
@@ -131,6 +132,48 @@ function setVisibility(state: 'visible' | 'hidden') {
 const settle = () => act(async () => undefined);
 
 /**
+ * Winds this file's clock on and lets React answer it.
+ *
+ * The CPU's move is armed on a real `setTimeout` and the search runs inside it
+ * (§4, state/GameContext.tsx `CPU_DELAY_MS`), so a test that waits for one on
+ * the wall clock is waiting for 450ms of product delay — plus 260ms for every
+ * further jump of a forced sequence — plus however long a busy runner takes to
+ * get round to each of them. `waitFor`'s default budget is 1000ms. That is
+ * issue #158's "CPU 探索・timeout 系" candidate, and a bigger budget is not the
+ * answer: SUDOKU_RULES.md「予算は仕事量で門にする」already settled that a shared
+ * runner's wall clock measures the runner, not the work. The tests below own
+ * the clock and step it themselves, so the reply lands on the beats the rules
+ * give it, on any machine.
+ *
+ * They drive the screen with `fireEvent` rather than `userEvent` for the same
+ * reason the clock tests below already do: userEvent's async wrapper drains
+ * itself through a real 0ms timeout, which a stopped clock never fires.
+ */
+const advance = async (ms: number) => {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(ms);
+  });
+};
+
+/** The turn line while the CPU has the move (screens/GameScreen.tsx). */
+const cpuThinking = () => screen.queryByText('CPU is thinking…');
+
+/**
+ * Runs the CPU's whole turn out, one armed beat at a time — `CPU_DELAY_MS` for
+ * the move and `CPU_STEP_MS` for each further jump, because §4 draws a capture
+ * sequence one jump at a time rather than in a single frame. How many that is
+ * belongs to the match's own seed, so the beats are stepped until the turn line
+ * stops saying the CPU has it; the bound only stops a runaway from hanging.
+ */
+async function advanceCpuTurn() {
+  expect(cpuThinking()).toBeInTheDocument();
+  for (let beat = 0; beat < 20 && cpuThinking(); beat++) {
+    await advance(beat === 0 ? CPU_DELAY_MS : CPU_STEP_MS);
+  }
+  expect(cpuThinking()).not.toBeInTheDocument();
+}
+
+/**
  * The OS hiding the app — the last event a process that is about to be killed
  * gets, and where the match and its play seconds are written (§8). Fake timers
  * only: the saves are fire-and-forget, so they are given a tick to land.
@@ -169,23 +212,34 @@ describe('first run', () => {
 
 describe('playing', () => {
   it('moves a piece in two taps and hands the turn over (§2, §4)', async () => {
-    const user = userEvent.setup();
-    renderGame(savedGame);
-    await user.click(await screen.findByRole('button', { name: /Easy/ }));
+    vi.useFakeTimers();
+    try {
+      renderGame(savedGame);
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
 
-    expect(screen.getByText('Your turn')).toBeInTheDocument();
-    // Pick up, then put down: the destination is only offered once a piece
-    // is held, which is what the second label proves.
-    await user.click(screen.getByRole('button', { name: 'Row 6, column 3: your piece' }));
-    expect(
-      screen.getByRole('button', { name: 'Row 6, column 3: your piece, selected' }),
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Row 5, column 2: move here' }));
+      expect(screen.getByText('Your turn')).toBeInTheDocument();
+      // Pick up, then put down: the destination is only offered once a piece
+      // is held, which is what the second label proves.
+      fireEvent.click(screen.getByRole('button', { name: 'Row 6, column 3: your piece' }));
+      expect(
+        screen.getByRole('button', { name: 'Row 6, column 3: your piece, selected' }),
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Row 5, column 2: move here' }));
 
-    await waitFor(() => expect(screen.getByText('CPU is thinking…')).toBeInTheDocument());
-    // The CPU answers on its own timer, and the count is back to even.
-    await waitFor(() => expect(screen.getByText('Your turn')).toBeInTheDocument());
-    expect(pieces()).toHaveLength(24);
+      // The CPU answers on its own timer, and on nothing else: a tick short of
+      // the delay it is still thinking (§4).
+      expect(cpuThinking()).toBeInTheDocument();
+      await advance(CPU_DELAY_MS - 1);
+      expect(cpuThinking()).toBeInTheDocument();
+      await advance(1);
+
+      // Nothing was taken on either side, so the count is back to even.
+      expect(screen.getByText('Your turn')).toBeInTheDocument();
+      expect(pieces()).toHaveLength(24);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('offers only the jumping piece while a capture is on (§2)', async () => {
@@ -247,19 +301,24 @@ describe('playing', () => {
 
 describe('choosing a side (§1)', () => {
   it('lets the CPU open when the player picks second, and keeps the choice', async () => {
-    const user = userEvent.setup();
-    renderGame(tutorialDone);
+    vi.useFakeTimers();
+    try {
+      renderGame(tutorialDone);
+      await settle();
 
-    const second = await screen.findByRole('radio', { name: 'CPU first' });
-    expect(screen.getByRole('radio', { name: 'You first' })).toBeChecked();
-    await user.click(second);
-    expect(second).toBeChecked();
+      const second = screen.getByRole('radio', { name: 'CPU first' });
+      expect(screen.getByRole('radio', { name: 'You first' })).toBeChecked();
+      fireEvent.click(second);
+      expect(second).toBeChecked();
 
-    await user.click(screen.getByRole('button', { name: /Easy/ }));
-    // The CPU's opening move arrives on its own timer; until then the board
-    // is not the player's to touch (§4).
-    expect(screen.getByText('CPU is thinking…')).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText('Your turn')).toBeInTheDocument());
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+      // The CPU's opening move arrives on its own timer; until then the board
+      // is not the player's to touch (§4).
+      await advanceCpuTurn();
+      expect(screen.getByText('Your turn')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('leaves the match in progress on the side it started with', async () => {
@@ -338,33 +397,39 @@ describe('a home-screen shortcut', () => {
    * Everything the next launch reads — the flag, the statistics, the match —
    * is written by the game itself along the way. Returns that store.
    */
-  async function playAndLeave(user: ReturnType<typeof userEvent.setup>) {
-    renderGame();
-    await user.click(await screen.findByRole('button', { name: 'Next' }));
-    await user.click(screen.getByRole('button', { name: 'Next' }));
-    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
-    await user.click(screen.getByRole('button', { name: 'Row 6, column 3: your piece' }));
-    await user.click(screen.getByRole('button', { name: 'Row 5, column 2: move here' }));
-    // The CPU answers on its own timer (§4). Both halves are waited for: a
-    // wait for the line to be gone would be satisfied by the frame before it
-    // ever appeared, and the helper would return with the reply still owed.
-    // What comes back is not asserted on, because what the player is left
-    // facing depends on the match's own seed — often a forced capture (§2).
-    await waitFor(() => expect(screen.getByText('CPU is thinking…')).toBeInTheDocument());
-    await waitFor(() => expect(screen.queryByText('CPU is thinking…')).not.toBeInTheDocument(), {
-      timeout: 3000,
-    });
-    // Leaving the board is one of the moments the match is written (§8).
-    await user.click(screen.getByRole('button', { name: 'Home' }));
-    await waitFor(() => expect(deviceStore.has(CK_STORAGE_KEYS.game)).toBe(true));
-    const saved = stored();
-    cleanup();
-    return saved;
+  async function playAndLeave() {
+    vi.useFakeTimers();
+    try {
+      renderGame();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Start Playing' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Row 6, column 3: your piece' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Row 5, column 2: move here' }));
+      // The CPU answers on its own timer (§4), and the reply is half of what
+      // the next launch will read back, so the turn is run out before leaving.
+      // `advanceCpuTurn` checks both halves: a wait for the line to be gone
+      // would be satisfied by the frame before it ever appeared, and this
+      // helper would return with the reply still owed. What comes back is not
+      // asserted on, because what the player is left facing depends on the
+      // match's own seed — often a forced capture (§2).
+      await advanceCpuTurn();
+      // Leaving the board is one of the moments the match is written (§8).
+      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+      // The save is fire-and-forget, and a promise rather than a timer.
+      await settle();
+      expect(deviceStore.has(CK_STORAGE_KEYS.game)).toBe(true);
+      const saved = stored();
+      cleanup();
+      return saved;
+    } finally {
+      vi.useRealTimers();
+    }
   }
 
   it('opens the suspended match straight onto its board', async () => {
-    const user = userEvent.setup();
-    const saved = await playAndLeave(user);
+    const saved = await playAndLeave();
 
     renderShortcut(saved);
 
@@ -379,7 +444,7 @@ describe('a home-screen shortcut', () => {
 
   it('leaves that board for this game’s home, not the collection', async () => {
     const user = userEvent.setup();
-    const saved = await playAndLeave(user);
+    const saved = await playAndLeave();
 
     const { onExit } = renderShortcut(saved);
     await waitFor(() => expect(suspendedBoard()).toBeInTheDocument());
@@ -399,8 +464,7 @@ describe('a home-screen shortcut', () => {
   });
 
   it('is the only door that resumes: a tile on the collection still opens the home', async () => {
-    const user = userEvent.setup();
-    const saved = await playAndLeave(user);
+    const saved = await playAndLeave();
 
     renderGame(saved);
 
@@ -411,8 +475,7 @@ describe('a home-screen shortcut', () => {
   });
 
   it('teaches the game first on a launch that has never seen Quick Rules', async () => {
-    const user = userEvent.setup();
-    const saved = await playAndLeave(user);
+    const saved = await playAndLeave();
     // The flag and the match are two independent records, so a store can hold
     // the second without the first. A shortcut is not a way past §9.
     const neverTaught = { ...saved };
@@ -495,17 +558,27 @@ describe('home', () => {
    behaviour. */
 describe('keyboard (issue #93)', () => {
   it('Ctrl+Z undoes the move and the reply together, same as the button', async () => {
-    const user = userEvent.setup();
-    renderGame(savedGame);
-    await user.click(await screen.findByRole('button', { name: /Easy/ }));
+    vi.useFakeTimers();
+    try {
+      renderGame(savedGame);
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
 
-    await user.click(screen.getByRole('button', { name: 'Row 6, column 3: your piece' }));
-    await user.click(screen.getByRole('button', { name: 'Row 5, column 2: move here' }));
-    await waitFor(() => expect(screen.getByText('Your turn')).toBeInTheDocument());
+      fireEvent.click(screen.getByRole('button', { name: 'Row 6, column 3: your piece' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Row 5, column 2: move here' }));
+      // The reply first: "the move and the reply together" has nothing to say
+      // until the reply is on the board.
+      await advanceCpuTurn();
+      expect(screen.getByText('Your turn')).toBeInTheDocument();
 
-    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
-    expect(screen.getByRole('button', { name: 'Row 6, column 3: your piece' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+      expect(
+        screen.getByRole('button', { name: 'Row 6, column 3: your piece' }),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

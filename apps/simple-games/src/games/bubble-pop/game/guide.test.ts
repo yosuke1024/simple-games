@@ -87,13 +87,15 @@ describe('the guide and the real shot always agree', () => {
   for (const { seed, level } of BOARDS) {
     const board = buildBoard(seed, level);
     for (const ceilingOffset of reachableOffsets(board)) {
-      // The 60s timeout: Level 100's board (9 rows, 6 colors) plus
-      // sweepAngles's boundary bisection is the heaviest case here (measured
-      // 3-5s running alone, well past vitest's default 5s per-test timeout).
-      // Kept generous rather than snug: running inside the full repo suite
-      // under shared CPU load is measurably slower than running this file
-      // alone (autoplay.test.ts's comment has the numbers), and this gate is
-      // about correctness, not speed.
+      // The 10s timeout: level 100's board (9 rows, 6 colors) plus
+      // sweepAngles's boundary bisection is the heaviest case here, and every
+      // case now measures under 200ms running alone (1.4s for the whole
+      // file). The guard was 60s while this file cost issue #158's measured
+      // 12s, and came down with the cost once `simulateShot` stopped
+      // measuring the distance to every bubble on the board at every step of
+      // the flight. Still a hang guard rather than a snug fit — this gate is
+      // about correctness, and a run sharing a loaded CPU is slower than this
+      // file alone (autoplay.test.ts's timeout comment has that reasoning).
       it(`seed=${seed} level=${level} ceilingOffset=${ceilingOffset}`, () => {
         const base = createSession(seed, level);
         // Pinning board/ceilingOffset directly (rather than playing shots
@@ -110,7 +112,7 @@ describe('the guide and the real shot always agree', () => {
           const actualBoard = fireShot(session, angle).board;
           expect(actualBoard).toEqual(expectedBoard);
         }
-      }, 60_000);
+      }, 10_000);
     }
   }
 });

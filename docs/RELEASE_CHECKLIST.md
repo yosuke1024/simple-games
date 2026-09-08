@@ -33,11 +33,16 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 - [ ] `git status` がクリーン(生成物の取りこぼしがない)
 - [ ] golden テスト(`compatibility.test.ts`)が通っている
       = 既存プレイヤーの盤面と自己ベストの土台が変わっていない
-- [ ] 生成コストのテストが通っている(Sudoku / Minesweeper / Nonogram)
-      = 生成の仕事量(探索した配置数・試行回数。Sudoku は配置数と技法走査数の
-      2 つ)が上限内。これは決定的な指標なので、落ちたら再実行せずに原因を
-      読むこと。**壁時計は判定していない**
-      ([SUDOKU_RULES.md](SUDOKU_RULES.md) §7)
+- [ ] 生成コスト・探索コストのテストが通っている(生成: Sudoku / Minesweeper /
+      Nonogram / Kakuro / Futoshiki / Takuzu / Water Sort、CPU 探索: Checkers /
+      Gomoku / Connect Four)
+      = 生成・探索の仕事量(探索した配置数・ノード数・試行回数。Sudoku は配置数と
+      技法走査数の 2 つ)が上限内。これは決定的な指標なので、落ちたら再実行せずに
+      原因を読むこと。**壁時計は判定していない**
+      ([SUDOKU_RULES.md](SUDOKU_RULES.md) §7、[ARCHITECTURE.md](ARCHITECTURE.md)
+      「CI / リリース」)。これはスイート全体の約束でもある: `pnpm test` の赤は
+      まず退行を疑う。単独再実行で通ることは「無関係」の証拠にならない
+      (issue #158)
 - [ ] サイズ Gate が緑(`pnpm build && pnpm --filter simple-games build:web`
       のあと `pnpm --filter simple-games size:check`)。`size-baseline.json` を
       更新した場合は、増加の理由が PR に書かれている(黙って上げない —

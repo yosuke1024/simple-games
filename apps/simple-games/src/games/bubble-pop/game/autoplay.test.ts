@@ -187,11 +187,24 @@ describe('every shipped level is clearable by a one-shot-lookahead greedy shoote
     },
     // Generous, not tight: this file's own gate is SHOT_BUDGET (workload),
     // never wall-clock — this timeout only keeps vitest itself from killing
-    // a healthy run early. Running inside the full repo suite under shared
-    // CPU load measured slower than running this file alone, the exact
-    // wall-clock skew Sudoku's §7 warns about (parallel runs can be off by
-    // up to 41x) — so this stays well above any single measurement.
-    10 * 60 * 1000,
+    // a run that is still making progress. It used to be 10 minutes against
+    // a 172-second run: 3.5x, thin enough that a loaded runner alone could
+    // turn it red (issue #158 — a gate that goes red without a regression
+    // behind it teaches the team to ignore red). The run is now 13-16s on
+    // the same machine, because engine.ts's `simulateShot` stopped measuring
+    // the distance to every bubble on the board at every step of every
+    // simulated shot, so the guard comes down with it: 4 minutes is ~15x.
+    // Nothing about what this test proves moved with the cost — the shooter
+    // takes the same shots it always did, cell for cell, on all 100 levels.
+    //
+    // Why the headroom is a factor and not a few seconds: wall-clock under a
+    // parallel suite measures the runner, not the workload (Sudoku's §7, the
+    // same discipline this file's gate comes from), and the smaller the
+    // measurement the wider it skews — that section's worst case is 41x on a
+    // millisecond-scale one. Measured here on a deliberately oversubscribed
+    // container, this test took 85s: 6.7x its own alone time, and still less
+    // than half of this guard.
+    4 * 60 * 1000,
   );
 
   it(
@@ -211,6 +224,10 @@ describe('every shipped level is clearable by a one-shot-lookahead greedy shoote
         expect(shots).toBeLessThan(startingSize + SHOT_BUDGET);
       }
     },
-    3 * 60 * 1000,
+    // The same hang guard as above, scaled to a test that replays 3 levels
+    // rather than 100: 0.25s alone, 1.8s on the oversubscribed container, so
+    // 30s is ~17x the loaded measurement. Not vitest's 5s default — at this
+    // size the runner's own skew is the bigger of the two numbers.
+    30 * 1000,
   );
 });

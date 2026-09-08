@@ -53,26 +53,47 @@ function playOne(seed: string, difficulty: Difficulty): PlayedMatch {
   return { rolls: state.rollIndex, noContest: state.result.kind === 'noContest' };
 }
 
+/**
+ * Seeds per `it()`. Each seed's match is independent of every other seed's —
+ * nothing is shared or accumulated across the sweep beyond "no seed breaks
+ * the rule" — so the property is per-seed, and how many seeds one case plays
+ * is only a question of budget. 300 matches in one `it()` (as this file used
+ * to run) made `hard` the slowest case in the file for no reason the property
+ * needed, and under a loaded `pnpm test` that is the case closest to vitest's
+ * 5s default; one `it()` per seed would be 900 cases of reporter noise for
+ * matches that take a few milliseconds each. Blocks of 30 keep every case a
+ * small fraction of the budget even at the 3-5x parallel-run skew
+ * SUDOKU_RULES.md §7 measures, and a failure still names the seed. The same
+ * 300 seeds per difficulty are played, with the same bound checked for every
+ * one of them (issue #158).
+ */
+const SEEDS_PER_CASE = 30;
+
 describe('roll counts stay well inside the cap', () => {
   for (const difficulty of DIFFICULTIES) {
-    it(`${difficulty}: ${SEEDS_PER_DIFFICULTY} self-played matches all decide, comfortably under the cap`, () => {
-      let maxRolls = 0;
-      let noContestCount = 0;
-      for (let index = 0; index < SEEDS_PER_DIFFICULTY; index++) {
-        const seed = `ludo-roll-distribution-${difficulty}-${index}`;
-        const played = playOne(seed, difficulty);
-        maxRolls = Math.max(maxRolls, played.rolls);
-        if (played.noContest) noContestCount += 1;
-      }
-      // No fixture here ever hits the cap itself — a match reaching
-      // MAX_ROLLS ends in a no-contest (§2.9), and none of this sweep's
-      // matches should. If one ever does, that is the signal to re-run the
-      // full sweep and reconsider MAX_ROLLS, not to raise this bound.
-      expect(noContestCount, `${difficulty}: no-contests in this sweep`).toBe(0);
-      expect(
-        maxRolls,
-        `${difficulty}: longest match (${maxRolls} rolls) should stay under MAX_ROLLS / 2 (${MAX_ROLLS / 2})`,
-      ).toBeLessThan(MAX_ROLLS / 2);
-    });
+    const blocks = Array.from({ length: SEEDS_PER_DIFFICULTY / SEEDS_PER_CASE }, (_, block) =>
+      Array.from(
+        { length: SEEDS_PER_CASE },
+        (_, offset) => `ludo-roll-distribution-${difficulty}-${block * SEEDS_PER_CASE + offset}`,
+      ),
+    );
+
+    it.each(blocks.map((seeds, block) => [block, seeds] as const))(
+      `${difficulty}: seeds block %i — every match decides, comfortably under the cap`,
+      (_block, seeds) => {
+        for (const seed of seeds) {
+          const played = playOne(seed, difficulty);
+          // No fixture here ever hits the cap itself — a match reaching
+          // MAX_ROLLS ends in a no-contest (§2.9), and none of this sweep's
+          // matches should. If one ever does, that is the signal to re-run the
+          // full sweep and reconsider MAX_ROLLS, not to raise this bound.
+          expect(played.noContest, `${seed}: no-contest`).toBe(false);
+          expect(
+            played.rolls,
+            `${seed}: this match (${played.rolls} rolls) should stay under MAX_ROLLS / 2 (${MAX_ROLLS / 2})`,
+          ).toBeLessThan(MAX_ROLLS / 2);
+        }
+      },
+    );
   }
 });

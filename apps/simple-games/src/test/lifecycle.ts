@@ -196,6 +196,15 @@ export function trackResources(): ResourceTracker {
   };
 }
 
+// Every stub below restores the real thing only while the stub it installed is
+// still the one in place. A test vitest gave up on ("Test timed out in 5000ms")
+// is abandoned mid-await, not aborted: its `finally` still runs whenever that
+// await settles, which can be after the NEXT test installed a stub of its own.
+// An unguarded restore rips that stub out from under the running test — the
+// board's getContext returns null again, its loop never starts, and a timeout
+// gets reported as a second, unrelated-looking failure one test later
+// (issue #158: red has to name the real problem).
+
 /**
  * A 2D context stand-in that absorbs any drawing call: jsdom's canvas has no
  * context at all, and the arcade boards bail out before starting their loop
@@ -214,11 +223,13 @@ export function stubCanvas2d(): () => void {
       apply: () => absorber(),
     });
   const original = HTMLCanvasElement.prototype.getContext;
-  HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, kind: string) {
+  const stub = function (this: HTMLCanvasElement, kind: string) {
     if (kind === '2d') return absorber() as CanvasRenderingContext2D;
     return null;
   } as typeof HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = stub;
   return () => {
+    if (HTMLCanvasElement.prototype.getContext !== stub) return;
     HTMLCanvasElement.prototype.getContext = original;
   };
 }
@@ -226,7 +237,7 @@ export function stubCanvas2d(): () => void {
 /** jsdom has no matchMedia; the boards read it for the dark-scheme repaint. */
 export function stubMatchMedia(): () => void {
   const original = window.matchMedia;
-  window.matchMedia = ((query: string) => ({
+  const stub = ((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -236,7 +247,45 @@ export function stubMatchMedia(): () => void {
     removeListener: () => undefined,
     dispatchEvent: () => false,
   })) as typeof window.matchMedia;
+  window.matchMedia = stub;
   return () => {
+    // Identity-guarded like stubCanvas2d's — see the note above it.
+    if (window.matchMedia !== stub) return;
     window.matchMedia = original;
+  };
+}
+
+/**
+ * Hands back animation-frame handles and never calls anything back, so that a
+ * test which pumps a game loop by hand through its dev seam (`__buFrame` and
+ * the siblings in BrickBoard / SkyBoard / BunnyBoard) is that loop's ONLY
+ * source of frames. Returns a restore function.
+ *
+ * vitest's jsdom runs with pretendToBeVisual, so requestAnimationFrame is real
+ * in these tests: it fires roughly every 16ms, and jsdom stamps each callback
+ * with `performance.now() - <window creation>`, an origin of its own that is
+ * always behind `performance.now()`. A board keeps a single `lastTime` for
+ * both sources (BubbleBoard.tsx:611-617), so any hand-pumped timestamp that
+ * sits behind the last real callback's turns `Math.min(now - lastTime, 250)`
+ * negative and runs the simulation backwards. Silencing the real frames
+ * removes the second clock rather than racing it (issue #158).
+ *
+ * Not for the leak tests: `trackResources()` above deliberately keeps jsdom's
+ * real frames, because "was every requested frame cancelled?" is answered by
+ * frames that actually fire.
+ */
+export function stubAnimationFrames(): () => void {
+  const originalRequest = window.requestAnimationFrame;
+  const originalCancel = window.cancelAnimationFrame;
+  let nextHandle = 1;
+  const request = (() => nextHandle++) as typeof window.requestAnimationFrame;
+  const cancel = (() => undefined) as typeof window.cancelAnimationFrame;
+  window.requestAnimationFrame = request;
+  window.cancelAnimationFrame = cancel;
+  return () => {
+    // Identity-guarded like stubCanvas2d's — see the note above it.
+    if (window.requestAnimationFrame !== request) return;
+    window.requestAnimationFrame = originalRequest;
+    window.cancelAnimationFrame = originalCancel;
   };
 }

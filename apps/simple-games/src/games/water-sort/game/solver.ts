@@ -34,6 +34,20 @@ import { TUBE_CAPACITY, type Pour, type Tubes } from './types';
  */
 export const DEFAULT_NODE_CAP = 120_000;
 
+/**
+ * What the last `solve()` call actually cost, in DFS nodes visited. Exported
+ * so a test can judge the search by its work rather than by a stopwatch:
+ * wall-clock on a shared CI runner measures the runner, and this repository
+ * already decided performance gates watch deterministic work instead
+ * (docs/RELEASE_CHECKLIST.md, docs/SUDOKU_RULES.md §7, issue #158).
+ *
+ * Written once per call, so it is only meaningful immediately after one —
+ * generation sums it itself across every attempt in a board's candidate
+ * batch (`generator.ts`). The write is a single field assignment on an
+ * already-allocated object, so it costs nothing worth measuring.
+ */
+export const solverCost = { nodes: 0 };
+
 export type SolveResult =
   | { readonly status: 'solved'; readonly moves: readonly Pour[] }
   | { readonly status: 'unsolvable' }
@@ -85,7 +99,10 @@ function candidatePours(tubes: Tubes): Pour[] {
 
 /** Exact search from this position. See the contract above. */
 export function solve(tubes: Tubes, nodeCap: number = DEFAULT_NODE_CAP): SolveResult {
-  if (isSolved(tubes)) return { status: 'solved', moves: [] };
+  if (isSolved(tubes)) {
+    solverCost.nodes = 0;
+    return { status: 'solved', moves: [] };
+  }
 
   const visited = new Set<string>([canonicalKey(tubes)]);
   const path: Pour[] = [];
@@ -111,7 +128,9 @@ export function solve(tubes: Tubes, nodeCap: number = DEFAULT_NODE_CAP): SolveRe
     return false;
   };
 
-  if (dfs(tubes)) return { status: 'solved', moves: [...path] };
+  const solved = dfs(tubes);
+  solverCost.nodes = nodes;
+  if (solved) return { status: 'solved', moves: [...path] };
   return capped ? { status: 'capped' } : { status: 'unsolvable' };
 }
 

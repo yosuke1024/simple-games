@@ -20,7 +20,7 @@
  */
 import { isTubeComplete, segmentCount } from './engine';
 import { createRng, shuffled } from './rng';
-import { solve } from './solver';
+import { solve, solverCost } from './solver';
 import { tubeCount, TUBE_CAPACITY, type Puzzle, type Tube, type Tubes } from './types';
 
 /**
@@ -41,6 +41,10 @@ const CANDIDATE_DEALS = 12;
 export function generatePuzzle(seed: string, colors: number, mix: number): Puzzle {
   const rng = createRng(seed);
   const candidates: Tubes[] = [];
+  // Summed across every solve() call below — accepted or rejected — because
+  // this is the board's whole generation cost, not just the winning attempt
+  // (§5, issue #158).
+  let solverNodes = 0;
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS && candidates.length < CANDIDATE_DEALS; attempt++) {
     const units: number[] = [];
@@ -56,9 +60,11 @@ export function generatePuzzle(seed: string, colors: number, mix: number): Puzzl
     for (let t = colors; t < tubeCount(colors); t++) tubes.push([]);
 
     // A board that starts with a finished tube hands out a freebie; deal
-    // again rather than shipping it (§5).
+    // again rather than shipping it (§5). No solve() is spent on it.
     if (tubes.some(isTubeComplete)) continue;
-    if (solve(tubes).status !== 'solved') continue;
+    const result = solve(tubes);
+    solverNodes += solverCost.nodes;
+    if (result.status !== 'solved') continue;
 
     candidates.push(tubes);
   }
@@ -76,7 +82,7 @@ export function generatePuzzle(seed: string, colors: number, mix: number): Puzzl
     .sort((a, b) => a.segments - b.segments || a.dealtAt - b.dealtAt);
   const position = Math.min(1, Math.max(0, mix)) * (ranked.length - 1);
 
-  return { seed, colors, tubes: ranked[Math.round(position)]!.tubes };
+  return { seed, colors, tubes: ranked[Math.round(position)]!.tubes, solverNodes };
 }
 
 /** Board string form for golden tests and fixtures: tubes joined by '.'. */

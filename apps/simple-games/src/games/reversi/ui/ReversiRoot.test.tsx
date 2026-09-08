@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
@@ -68,6 +68,29 @@ function launchFromShortcut() {
 /** Lets the local reads and the saves they trigger resolve (they are promises,
  * not timers, so this works under fake timers too). */
 const settle = () => act(async () => undefined);
+
+/**
+ * Winds this file's clock on and lets React answer it.
+ *
+ * The CPU's move is armed on a real `setTimeout` and the search runs inside it
+ * (§5, state/GameContext.tsx `CPU_DELAY_MS`), so a test that waits for one on
+ * the wall clock is waiting for 450ms of product delay plus however long a busy
+ * runner takes to get round to it — against `waitFor`'s default budget of
+ * 1000ms. That is issue #158's "CPU 探索・timeout 系" candidate, and a bigger
+ * budget is not the answer: SUDOKU_RULES.md「予算は仕事量で門にする」already
+ * settled that a shared runner's wall clock measures the runner, not the work.
+ * The tests below own the clock and step it themselves, so the reply lands on
+ * the beat the rules give it, on any machine.
+ *
+ * They drive the screen with `fireEvent` rather than `userEvent` for the same
+ * reason the clock tests below already do: userEvent's async wrapper drains
+ * itself through a real 0ms timeout, which a stopped clock never fires.
+ */
+const advance = async (ms: number) => {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(ms);
+  });
+};
 
 /** The app goes to background. Android may kill it without another event. */
 function background() {
@@ -151,26 +174,36 @@ describe('playing', () => {
   });
 
   it('turns the discs it traps, and takes the move back (§2, §6)', async () => {
-    const user = userEvent.setup();
-    renderGame(savedGame);
-    await user.click(await screen.findByRole('button', { name: /Easy/ }));
+    vi.useFakeTimers();
+    try {
+      renderGame(savedGame);
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
 
-    const undo = screen.getByRole('button', { name: 'Undo' });
-    expect(undo).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
 
-    await user.click(screen.getByRole('button', { name: 'Row 3, column 4: your move' }));
-    // One disc more on the board — the one placed. The disc it trapped was
-    // already there and only changed colour, which the counts report: black
-    // gains the placed disc and the turned one, white loses one (§2).
-    expect(board().querySelectorAll('.rv-disc')).toHaveLength(5);
-    expect(screen.getByText(/You\s*4/)).toBeInTheDocument();
-    expect(screen.getByText(/CPU\s*1/)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Row 3, column 4: your move' }));
+      // One disc more on the board — the one placed. The disc it trapped was
+      // already there and only changed colour, which the counts report: black
+      // gains the placed disc and the turned one, white loses one (§2).
+      expect(board().querySelectorAll('.rv-disc')).toHaveLength(5);
+      expect(screen.getByText(/You\s*4/)).toBeInTheDocument();
+      expect(screen.getByText(/CPU\s*1/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeEnabled();
 
-    // The CPU answers on a timer (§5); Undo comes back either way.
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Undo' })).toBeEnabled());
-    await user.click(screen.getByRole('button', { name: 'Undo' }));
-    expect(screen.getByText(/You\s*2/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      // The CPU answers on a timer (§5). Undo comes back either way, so the
+      // reply is put on the board first — otherwise "takes the move back"
+      // would be satisfied by a run where there was nothing to take back but
+      // the player's own move.
+      await advance(CPU_DELAY_MS);
+      expect(board().querySelectorAll('.rv-disc')).toHaveLength(6);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+      expect(screen.getByText(/You\s*2/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('shows no clock while playing (§11)', async () => {
@@ -185,23 +218,31 @@ describe('playing', () => {
 
 describe('choosing a colour (§1)', () => {
   it('lets the CPU open when the player takes white, and keeps the choice', async () => {
-    const user = userEvent.setup();
-    renderGame(tutorialDone);
+    vi.useFakeTimers();
+    try {
+      renderGame(tutorialDone);
+      await settle();
 
-    const white = await screen.findByRole('radio', { name: 'White · second' });
-    expect(screen.getByRole('radio', { name: 'Black · first' })).toBeChecked();
-    await user.click(white);
-    expect(white).toBeChecked();
+      const white = screen.getByRole('radio', { name: 'White · second' });
+      expect(screen.getByRole('radio', { name: 'Black · first' })).toBeChecked();
+      fireEvent.click(white);
+      expect(white).toBeChecked();
 
-    await user.click(screen.getByRole('button', { name: /Easy/ }));
-    // Black opens, and black is the CPU now: the opening move arrives on its
-    // own timer and the board is not the player's to touch until it lands.
-    expect(screen.getByText('CPU is thinking…')).toBeInTheDocument();
-    await waitFor(() => expect(board().querySelectorAll('.rv-disc')).toHaveLength(5));
-    await waitFor(() => expect(screen.getByText('Your turn')).toBeInTheDocument());
-    // The counts are told from the player's side whichever colour that is.
-    expect(screen.getByText(/You\s*1/)).toBeInTheDocument();
-    expect(screen.getByText(/CPU\s*4/)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+      // Black opens, and black is the CPU now: the opening move arrives on its
+      // own timer and the board is not the player's to touch until it lands.
+      expect(screen.getByText('CPU is thinking…')).toBeInTheDocument();
+      await advance(CPU_DELAY_MS - 1);
+      expect(screen.getByText('CPU is thinking…')).toBeInTheDocument();
+      await advance(1);
+      expect(board().querySelectorAll('.rv-disc')).toHaveLength(5);
+      expect(screen.getByText('Your turn')).toBeInTheDocument();
+      // The counts are told from the player's side whichever colour that is.
+      expect(screen.getByText(/You\s*1/)).toBeInTheDocument();
+      expect(screen.getByText(/CPU\s*4/)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('leaves the match in progress on the colour it started with', async () => {
@@ -244,16 +285,23 @@ describe('home', () => {
    behaviour. */
 describe('keyboard (issue #93)', () => {
   it('Ctrl+Z takes the move back, same as the Undo button', async () => {
-    const user = userEvent.setup();
-    renderGame(savedGame);
-    await user.click(await screen.findByRole('button', { name: /Easy/ }));
+    vi.useFakeTimers();
+    try {
+      renderGame(savedGame);
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
 
-    await user.click(screen.getByRole('button', { name: 'Row 3, column 4: your move' }));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Undo' })).toBeEnabled());
+      fireEvent.click(screen.getByRole('button', { name: 'Row 3, column 4: your move' }));
+      // The reply first, so this takes back the same pair the button does.
+      await advance(CPU_DELAY_MS);
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeEnabled();
 
-    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
-    expect(screen.getByText(/You\s*2/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+      expect(screen.getByText(/You\s*2/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -307,29 +355,35 @@ describe('a home-screen shortcut', () => {
    * Leaves one match suspended the way a player does: start it, play a move,
    * walk away. The move matters — it makes the saved position one a fresh
    * board could not be mistaken for.
+   *
+   * The reply is half of what gets saved, so this helper runs on its own fake
+   * clock (issue #158) and hands real timers back before the launch under test.
    */
-  async function suspendAnEasyMatch(user: ReturnType<typeof userEvent.setup>) {
-    taughtAlready();
-    launchFromCollection();
-    await settle();
-    await user.click(await screen.findByRole('button', { name: /Easy/ }));
-    await user.click(screen.getByRole('button', { name: 'Row 3, column 4: your move' }));
-    // The CPU answers on its own timer (§5), and the reply is part of what
-    // gets saved: one more disc, and the turn back with the player.
-    await waitFor(() => expect(board().querySelectorAll('.rv-disc')).toHaveLength(6), {
-      timeout: 3000,
-    });
-    await user.click(screen.getByRole('button', { name: 'Home' }));
-    await settle();
-    cleanup();
+  async function suspendAnEasyMatch() {
+    vi.useFakeTimers();
+    try {
+      taughtAlready();
+      launchFromCollection();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+      fireEvent.click(screen.getByRole('button', { name: 'Row 3, column 4: your move' }));
+      // The CPU answers on its own timer (§5), and the reply is part of what
+      // gets saved: one more disc, and the turn back with the player.
+      await advance(CPU_DELAY_MS);
+      expect(board().querySelectorAll('.rv-disc')).toHaveLength(6);
+      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+      await settle();
+      cleanup();
+    } finally {
+      vi.useRealTimers();
+    }
   }
 
   const maybeBoard = () => screen.queryByRole('group', { name: /Reversi board/ });
   const opponentList = () => screen.queryByRole('button', { name: /Easy/ });
 
   it('opens the suspended match straight onto its board', async () => {
-    const user = userEvent.setup();
-    await suspendAnEasyMatch(user);
+    await suspendAnEasyMatch();
 
     launchFromShortcut();
     await settle();
@@ -343,7 +397,7 @@ describe('a home-screen shortcut', () => {
 
   it('leaves the board for this game’s home, not the collection', async () => {
     const user = userEvent.setup();
-    await suspendAnEasyMatch(user);
+    await suspendAnEasyMatch();
 
     const onExit = launchFromShortcut();
     await settle();
@@ -387,9 +441,7 @@ describe('a home-screen shortcut', () => {
       expect(board().querySelectorAll('.rv-disc')).toHaveLength(5);
 
       // The same one timer the home's Resume arms, on the same delay.
-      await act(async () => {
-        vi.advanceTimersByTime(CPU_DELAY_MS);
-      });
+      await advance(CPU_DELAY_MS);
 
       expect(screen.getByText('Your turn')).toBeInTheDocument();
       expect(board().querySelectorAll('.rv-disc')).toHaveLength(6);
@@ -410,8 +462,7 @@ describe('a home-screen shortcut', () => {
   });
 
   it('is the only door that resumes: a tile on the collection still opens the home', async () => {
-    const user = userEvent.setup();
-    await suspendAnEasyMatch(user);
+    await suspendAnEasyMatch();
 
     launchFromCollection();
     await settle();
@@ -421,8 +472,7 @@ describe('a home-screen shortcut', () => {
   });
 
   it('teaches the game first on a launch that has never seen Quick Rules', async () => {
-    const user = userEvent.setup();
-    await suspendAnEasyMatch(user);
+    await suspendAnEasyMatch();
     // The flags record is the one that can come back unreadable while the
     // match survives; the validator fails closed to "not taught yet" (§9), and
     // a shortcut must not turn that into a way past Quick Rules (§10).

@@ -149,8 +149,26 @@ function renderShell() {
 const openSudoku = () => fireEvent.click(screen.getByRole('button', { name: /Sudoku/ }));
 const collectionHeading = () => screen.getByRole('heading', { name: 'Simple Games' });
 
-/** Lets a promise-driven state update (a resolved/rejected loader, a removed
- * plugin-listener handle) land before the next assertion, without a sleep. */
+/**
+ * Lets a promise-driven state update (a resolved/rejected loader, a removed
+ * plugin-listener handle) land before the next assertion, without a sleep.
+ *
+ * Enough by construction rather than by tick count: `act` awaits the callback,
+ * flushes React's queue, then keeps re-flushing behind a macrotask until React
+ * has nothing left (react/act). Any chain of already-resolved promises, and the
+ * renders they schedule, has therefore settled by the time this resolves; the
+ * two ticks inside only put the first flush after the loader's own `.then`.
+ *
+ * It is also why the assertions below reach for this instead of `findBy`.
+ * `findBy` turns the act environment off while it polls, which hands React back
+ * its own scheduler — and there a Suspense boundary that has already committed
+ * a fallback is held back for up to FALLBACK_THROTTLE_MS (300ms of real clock,
+ * react-dom) before the content is revealed. Measured, every reveal in this
+ * file spent a flat ~300ms of `findBy`'s 1000ms deadline waiting out that
+ * timer, leaving the rest of the deadline as the only margin against a loaded
+ * runner. Settled through `act` the same reveals take 1–12ms and no clock is
+ * consulted at all (issue #158).
+ */
 const flushMicrotasks = () =>
   act(async () => {
     await Promise.resolve();
@@ -194,7 +212,8 @@ describe('the loading indicator (no flash while a chunk loads)', () => {
     // hold it back.
     expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
 
-    expect(await screen.findByText('playing sudoku')).toBeInTheDocument();
+    await flushMicrotasks();
+    expect(screen.getByText('playing sudoku')).toBeInTheDocument();
     expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
   });
 
@@ -241,7 +260,8 @@ describe('a failed chunk', () => {
     renderShell();
 
     openSudoku();
-    expect(await screen.findByText('The game could not be loaded.')).toBeInTheDocument();
+    await flushMicrotasks();
+    expect(screen.getByText('The game could not be loaded.')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'All games' }));
 
@@ -257,14 +277,16 @@ describe('a failed chunk', () => {
     renderShell();
 
     openSudoku();
-    expect(await screen.findByText('The game could not be loaded.')).toBeInTheDocument();
+    await flushMicrotasks();
+    expect(screen.getByText('The game could not be loaded.')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
 
     // Reachable only if resetLazyRoot really dropped the cached wrapper:
     // React caches a rejected lazy() forever, so a retry that reused it would
     // replay the same rejection without the loader ever being asked again.
-    expect(await screen.findByText('playing sudoku')).toBeInTheDocument();
+    await flushMicrotasks();
+    expect(screen.getByText('playing sudoku')).toBeInTheDocument();
     expect(screen.getByTestId('entry')).toHaveTextContent('collection');
     expect(loader).toHaveBeenCalledTimes(2);
   });
@@ -311,7 +333,8 @@ describe('the hardware back button while no game is mounted', () => {
     await screen.findByRole('heading', { name: 'Simple Games' });
 
     openSudoku();
-    expect(await screen.findByText('The game could not be loaded.')).toBeInTheDocument();
+    await flushMicrotasks();
+    expect(screen.getByText('The game could not be loaded.')).toBeInTheDocument();
     await flushMicrotasks();
     expect(appMock.listeners.get('backButton')?.size).toBe(1);
 

@@ -11,7 +11,7 @@
  * differently from the one that was saved — which is the promise Undo rests
  * on (§4, §5).
  */
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { legalMoves } from './engine';
 import { encodeBoard } from './serialize';
 import { applyCpuMove, applyPlayerMove, createSession } from './session';
@@ -65,22 +65,40 @@ describe('the empty board (released — do not edit to make green)', () => {
 });
 
 describe('a fixed game (released — do not edit to make green)', () => {
+  /**
+   * Each difficulty's 12-turn game, played once and shared by every case
+   * below. This file used to play `hard` twice — once for its own golden and
+   * again inside "reads harder as the difficulty rises", which also replayed
+   * `easy` and `normal` — the same duplication checkers/game/compatibility.test.ts
+   * had, and the same fix (issue #158, docs/SUDOKU_RULES.md §7): play each
+   * difficulty once in `beforeAll` and let every case read the result.
+   */
+  let played: Record<Difficulty, ReturnType<typeof playOut>>;
+
+  beforeAll(() => {
+    played = {
+      easy: playOut('easy', 12),
+      normal: playOut('normal', 12),
+      hard: playOut('hard', 12),
+    };
+  });
+
   it('runs the same way on easy', () => {
-    const { session, cpuTrace } = playOut('easy', 12);
+    const { session, cpuTrace } = played.easy;
     expect(session.moveCount).toBe(24);
     expect(session.status).toBe('playing');
     expect(cpuTrace).toEqual([97, 110, 111, 126, 83, 84, 129, 2, 144, 81, 157, 85]);
   });
 
   it('runs the same way on normal', () => {
-    const { session, cpuTrace } = playOut('normal', 12);
+    const { session, cpuTrace } = played.normal;
     expect(session.moveCount).toBe(10);
     expect(session.status).toBe('lost');
     expect(cpuTrace).toEqual([140, 125, 80, 110, 95]);
   });
 
   it('runs the same way on hard', () => {
-    const { session, cpuTrace } = playOut('hard', 12);
+    const { session, cpuTrace } = played.hard;
     expect(session.moveCount).toBe(10);
     expect(session.status).toBe('lost');
     expect(cpuTrace).toEqual([126, 128, 127, 129, 130]);
@@ -90,8 +108,8 @@ describe('a fixed game (released — do not edit to make green)', () => {
 
   it('reads harder as the difficulty rises', () => {
     // Easy never finishes this game; the two that read do, and quickly.
-    expect(playOut('easy', 12).session.status).toBe('playing');
-    expect(playOut('normal', 12).session.status).toBe('lost');
-    expect(playOut('hard', 12).session.status).toBe('lost');
+    expect(played.easy.session.status).toBe('playing');
+    expect(played.normal.session.status).toBe('lost');
+    expect(played.hard.session.status).toBe('lost');
   });
 });

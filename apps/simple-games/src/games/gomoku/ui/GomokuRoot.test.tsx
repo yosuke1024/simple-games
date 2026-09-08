@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
@@ -7,6 +7,7 @@ import { settingsSchema } from '@/storage/schemas';
 import { BLACK, createSession } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { GM_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
+import { CPU_DELAY_MS } from '../state/GameContext';
 import { GomokuRoot } from './GomokuRoot';
 
 /**
@@ -53,6 +54,31 @@ function launch() {
 /** Lets the local reads, and the saves they trigger, resolve (they are promises,
  * not timers, so this works under fake timers too). */
 const settle = () => act(async () => undefined);
+
+/**
+ * Winds this file's clock on and lets React answer it.
+ *
+ * The CPU's reply is armed on a real `setTimeout` and the search runs inside it
+ * (§4, state/GameContext.tsx `CPU_DELAY_MS`), so a test that waits for one on
+ * the wall clock is waiting for 450ms of product delay plus however long the
+ * runner takes to get round to it — and `waitFor`'s default budget is 1000ms.
+ * Half of that budget is spent before the runner does anything at all, and the
+ * wait fails outright the moment the reply lands past 1000ms. It is one of
+ * issue #158's "CPU 探索・timeout 系" candidates, and the cure is the one
+ * SUDOKU_RULES.md「予算は仕事量で門にする」names: a shared runner's wall clock
+ * measures the runner, not the work, so stop letting it decide.
+ * The tests below own the clock and step it themselves, so the reply lands on
+ * the beat it is specified to land on, on any machine.
+ *
+ * They drive the screen with `fireEvent` rather than `userEvent` for the same
+ * reason the #109 test at the foot of this file does: userEvent's async wrapper
+ * drains itself through a real 0ms timeout, which a stopped clock never fires.
+ */
+const advance = async (ms: number) => {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(ms);
+  });
+};
 
 /** The OS hides the app — the last event a killed process is sure to get. */
 async function background() {
@@ -119,23 +145,32 @@ describe('first run', () => {
 
 describe('placing a stone takes two taps (§2)', () => {
   it('marks on the first tap and places on the second', async () => {
-    const user = userEvent.setup();
-    renderGame(savedGame);
-    await user.click(await screen.findByRole('button', { name: /Easy/ }));
+    vi.useFakeTimers();
+    try {
+      renderGame(savedGame);
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
 
-    expect(screen.getByText(/Your turn/)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Row 8, column 8: empty' }));
+      expect(screen.getByText(/Your turn/)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Row 8, column 8: empty' }));
 
-    // Nothing is on the board yet — the crossing is only aimed at.
-    expect(stones()).toHaveLength(0);
-    expect(screen.getByText('Tap the same point again to place your stone.')).toBeInTheDocument();
+      // Nothing is on the board yet — the crossing is only aimed at.
+      expect(stones()).toHaveLength(0);
+      expect(screen.getByText('Tap the same point again to place your stone.')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Row 8, column 8: tap again to place' }));
-    expect(stones()).toHaveLength(1);
+      fireEvent.click(screen.getByRole('button', { name: 'Row 8, column 8: tap again to place' }));
+      expect(stones()).toHaveLength(1);
 
-    // The CPU answers on its own timer.
-    await waitFor(() => expect(stones()).toHaveLength(2));
-    await waitFor(() => expect(screen.getByText(/Your turn/)).toBeInTheDocument());
+      // The CPU answers on its own timer, and on nothing else: a tick short of
+      // the delay the board is still the player's alone (§4).
+      await advance(CPU_DELAY_MS - 1);
+      expect(stones()).toHaveLength(1);
+      await advance(1);
+      expect(stones()).toHaveLength(2);
+      expect(screen.getByText(/Your turn/)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('moves the mark when another crossing is tapped, placing nothing', async () => {
@@ -156,20 +191,27 @@ describe('placing a stone takes two taps (§2)', () => {
 
 describe('playing', () => {
   it('takes back the stone and the reply together (§5)', async () => {
-    const user = userEvent.setup();
-    renderGame(savedGame);
-    await user.click(await screen.findByRole('button', { name: /Easy/ }));
+    vi.useFakeTimers();
+    try {
+      renderGame(savedGame);
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
 
-    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Row 8, column 8: empty' }));
-    await user.click(screen.getByRole('button', { name: 'Row 8, column 8: tap again to place' }));
-    await waitFor(() => expect(stones()).toHaveLength(2));
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: 'Row 8, column 8: empty' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Row 8, column 8: tap again to place' }));
+      // Undo takes back a pair, so the reply has to be on the board first.
+      await advance(CPU_DELAY_MS);
+      expect(stones()).toHaveLength(2);
 
-    await user.click(screen.getByRole('button', { name: 'Undo' }));
-    expect(stones()).toHaveLength(0);
-    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
-    // Help is one button; nothing suggests a crossing (§6).
-    expect(screen.queryByRole('button', { name: /hint/i })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+      expect(stones()).toHaveLength(0);
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      // Help is one button; nothing suggests a crossing (§6).
+      expect(screen.queryByRole('button', { name: /hint/i })).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('shows no clock while playing (§10)', async () => {
@@ -183,20 +225,26 @@ describe('playing', () => {
 
 describe('choosing a colour (§1)', () => {
   it('lets the CPU open when the player takes white, and keeps the choice', async () => {
-    const user = userEvent.setup();
-    renderGame(tutorialDone);
+    vi.useFakeTimers();
+    try {
+      renderGame(tutorialDone);
+      await settle();
 
-    const white = await screen.findByRole('radio', { name: 'White · second' });
-    expect(screen.getByRole('radio', { name: 'Black · first' })).toBeChecked();
-    await user.click(white);
-    expect(white).toBeChecked();
+      const white = screen.getByRole('radio', { name: 'White · second' });
+      expect(screen.getByRole('radio', { name: 'Black · first' })).toBeChecked();
+      fireEvent.click(white);
+      expect(white).toBeChecked();
 
-    await user.click(screen.getByRole('button', { name: /Easy/ }));
-    // Black opens and black is the CPU here, so the first stone is not the
-    // player's to place (§1, §4).
-    expect(screen.getByText('CPU is thinking…')).toBeInTheDocument();
-    await waitFor(() => expect(stones()).toHaveLength(1));
-    await waitFor(() => expect(screen.getByText(/Your turn/)).toBeInTheDocument());
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+      // Black opens and black is the CPU here, so the first stone is not the
+      // player's to place (§1, §4).
+      expect(screen.getByText('CPU is thinking…')).toBeInTheDocument();
+      await advance(CPU_DELAY_MS);
+      expect(stones()).toHaveLength(1);
+      expect(screen.getByText(/Your turn/)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('leaves the match in progress on the colour it started with', async () => {
@@ -273,18 +321,28 @@ describe('a home-screen shortcut', () => {
   /** The home screen's Easy button once it is the way back into a match. */
   const resumeButton = () => screen.queryByRole('button', { name: /Easy.*Resume/ });
 
-  /** Plays a match a couple of stones in and leaves it, as the player would. */
+  /**
+   * Plays a match a couple of stones in and leaves it, as the player would.
+   * The reply is half of what gets saved, so this helper runs on its own fake
+   * clock (issue #158) and hands real timers back before the launch under test.
+   */
   async function suspendAnEasyMatch() {
-    const user = userEvent.setup();
-    taughtAlready();
-    launch();
-    await user.click(await screen.findByRole('button', { name: /Easy/ }));
-    await user.click(screen.getByRole('button', { name: 'Row 8, column 8: empty' }));
-    await user.click(screen.getByRole('button', { name: 'Row 8, column 8: tap again to place' }));
-    await waitFor(() => expect(stones()).toHaveLength(2));
-    await user.click(screen.getByRole('button', { name: 'Home' }));
-    await settle();
-    cleanup();
+    vi.useFakeTimers();
+    try {
+      taughtAlready();
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+      fireEvent.click(screen.getByRole('button', { name: 'Row 8, column 8: empty' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Row 8, column 8: tap again to place' }));
+      await advance(CPU_DELAY_MS);
+      expect(stones()).toHaveLength(2);
+      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+      await settle();
+      cleanup();
+    } finally {
+      vi.useRealTimers();
+    }
   }
 
   it('opens the one suspended match straight onto its board', async () => {
@@ -408,17 +466,23 @@ describe('home', () => {
    behaviour. */
 describe('keyboard (issue #93)', () => {
   it('Ctrl+Z undoes the stone and the reply together, same as the button', async () => {
-    const user = userEvent.setup();
-    renderGame(savedGame);
-    await user.click(await screen.findByRole('button', { name: /Easy/ }));
+    vi.useFakeTimers();
+    try {
+      renderGame(savedGame);
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
 
-    await user.click(screen.getByRole('button', { name: 'Row 8, column 8: empty' }));
-    await user.click(screen.getByRole('button', { name: 'Row 8, column 8: tap again to place' }));
-    await waitFor(() => expect(stones()).toHaveLength(2));
+      fireEvent.click(screen.getByRole('button', { name: 'Row 8, column 8: empty' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Row 8, column 8: tap again to place' }));
+      await advance(CPU_DELAY_MS);
+      expect(stones()).toHaveLength(2);
 
-    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
-    expect(stones()).toHaveLength(0);
-    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+      expect(stones()).toHaveLength(0);
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

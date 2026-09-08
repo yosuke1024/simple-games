@@ -48,17 +48,30 @@ describe('games that must never change', () => {
     );
   });
 
-  it('answers the same way at each strength', () => {
-    // Easy plays its own game; the two reading opponents agree on this short
-    // opening, which is what a shallow and a deep read of the same position
-    // should do when the position is not yet sharp. They part later, and the
-    // point of pinning all three is that none of them may drift.
+  // Three independent games, one of them at `hard`, used to be asserted
+  // inside one `it()` — the same shape checkers/game/compatibility.test.ts and
+  // gomoku/game/compatibility.test.ts had, and the same fix (issue #158,
+  // docs/SUDOKU_RULES.md §7): each difficulty plays out on its own session
+  // with nothing shared between them, so splitting into one `it()` per
+  // difficulty costs nothing and keeps every case well under the default 5s
+  // budget at the 3-5x parallel-run skew §7 measures. Easy plays its own
+  // game; the two reading opponents agree on this short opening, which is
+  // what a shallow and a deep read of the same position should do when the
+  // position is not yet sharp — the point of pinning all three is that none
+  // of them may drift.
+  it('answers the same way at easy', () => {
     expect(playOut('easy')).toBe(
       '0000010000001100010120000012200000222000000000000000000000000000',
     );
+  });
+
+  it('answers the same way at normal — agrees with hard on this short opening', () => {
     expect(playOut('normal')).toBe(
       '0001000000001000222221000002200000012000000000000000000000000000',
     );
+  });
+
+  it('answers the same way at hard — agrees with normal on this short opening', () => {
     expect(playOut('hard')).toBe(
       '0001000000001000222221000002200000012000000000000000000000000000',
     );

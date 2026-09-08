@@ -281,6 +281,30 @@ Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS 
   広告分離(`check-dist-ads-separation.sh`)とサイズ Gate
   (`pnpm --filter simple-games size:check` — ゲーム別予算・エントリ成長・
   初期グラフへのゲームチャンク混入)を検証する。
+- **テストの門は壁時計で判定しない**(issue #158)。`pnpm test` は 337 ファイルを
+  CPU 数ぶん並列に走らせるので、同じ仕事でも壁時計は run ごとに数倍〜数十倍ぶれる
+  ([SUDOKU_RULES.md](SUDOKU_RULES.md) §7 の実測)。稀に落ちる門は信頼されない門であり、
+  赤を「たぶん負荷」と読む運用が本物の退行を隠す。だから、
+  - 生成・探索のコストは**仕事量**(探索した配置数・ノード数・試行回数)で門にし、
+    ミリ秒は出力するだけで判定に使わない(Sudoku / Minesweeper / Nonogram /
+    Kakuro / Futoshiki / Takuzu / Water Sort の生成、Checkers / Gomoku / Connect Four
+    の CPU 探索)。
+  - 製品コードの実タイマー(CPU の返し手 `CPU_DELAY_MS`、読み込み画面の 200ms 門)を
+    待つテストは fake timers で時計を進める。`waitFor` / `findBy` の既定 1000ms を
+    製品タイマーの待ちに使わない — 半分は待つ前に消えている。
+  - Canvas ループは dev シーム(`__buFrame` 等)から手で回し、`stubAnimationFrames()`
+    (`src/test/lifecycle.ts`)で jsdom の実 RAF を止めて、ループの時計を 1 本にする
+    (実 RAF と手回しが同じ `lastTime` を共有すると dt が負になる)。
+  - Suspense の reveal は `act` で settle して同期に読む。`findBy` は act 環境を切って
+    ポーリングするので、react-dom の fallback throttle(実時間 300ms)をまるごと
+    待つことになる。
+  - vitest の per-test timeout(5 秒)は性能ゲートではない。timeout を上げるのは
+    修正ではなく、1 秒級の決定的な仕事は `beforeAll` で 1 回だけ回して各 case に
+    読ませるか、独立な seed ごとに `it.each` で分ける。
+  - test globals は無効なので、`render` するファイルは自分で `cleanup()` を呼ぶ。
+
+  実施記録(候補一覧・再現条件・原因)は
+  [plans/2026-09-08-flaky-tests.md](plans/2026-09-08-flaky-tests.md)。
 - `android-release.yml`: 手動実行(workflow_dispatch)または `v*` タグでのみ実行し、
   署名済み AAB(Play 用)と署名済み APK(実機確認用)をアーティファクトとして出す。
   `versionName` / `versionCode` はタグが決める。ストアへのアップロードは手動。

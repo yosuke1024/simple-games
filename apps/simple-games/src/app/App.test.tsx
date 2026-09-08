@@ -1,8 +1,9 @@
 import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '../state/SettingsContext';
 import { settingsSchema } from '../storage/schemas';
+import { GAMES, type GameId } from './registry';
 import { App } from './App';
 
 function renderShell() {
@@ -12,6 +13,31 @@ function renderShell() {
     </SettingsProvider>,
   );
 }
+
+/**
+ * Warm the chunks this file opens, before any deadline is running.
+ *
+ * This is the one App test that loads the real game chunks — the others stub
+ * app/lazyRoots.ts — and under vitest a `loadRoot()` is not a read from disk
+ * but a transform and evaluation of the game's whole module graph: 0.4–0.9s of
+ * runner work on a loaded machine, measured. Left where the shell triggers it,
+ * that work falls inside `findBy`'s 1000ms deadline, and the wait stops being a
+ * question about the shell and becomes a race with the runner — under load the
+ * Sudoku case below did lose it, timing out on the loading screen (issue #158).
+ * The shipped app pays none of this: every chunk is a local file already on the
+ * device (docs/OFFLINE_POLICY.md). Awaiting the same loaders here is unbounded,
+ * so a busy machine makes this line slow instead of making a test red — the
+ * move the measurement test further down already makes for its own module.
+ */
+beforeAll(async () => {
+  // The games this file waits to see painted, plus every settings section,
+  // because the shared settings screen mounts all of them at once.
+  const opened = new Set<GameId>(['sudoku', 'number-match']);
+  await Promise.all([
+    ...GAMES.filter((game) => opened.has(game.id)).map((game) => game.loadRoot()),
+    ...GAMES.map((game) => game.loadSettingsSection?.()),
+  ]);
+});
 
 afterEach(() => {
   cleanup();
