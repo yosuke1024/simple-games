@@ -18,7 +18,9 @@
  * Only ids the registry still carries are accepted. An unknown, empty or
  * retired id is not an error screen — the visitor asked for this collection
  * and gets it, with the parameter dropped so the address and the screen agree
- * again.
+ * again. That holds however the visitor got to such an address: on arrival
+ * (`startRoute`) and on a later Back or Forward onto one (`settleStaleRoute`,
+ * issue #172) alike.
  *
  * **None of the history handling runs in the app.** `webRoutingEnabled()` is
  * a runtime guard, the way every other web/app difference in this product is
@@ -101,18 +103,44 @@ export function currentRouteGame(): GameId | null {
 }
 
 /**
- * Boot: settle the address on the screen the shell actually opened, without
- * adding an entry. This is what turns `?game=not-a-game` into the plain
- * collection address, and it re-stamps the depth so a reload of `?game=sudoku`
- * still remembers that the collection is one step back.
+ * The entry the visitor is standing on, rewritten in place: the address says
+ * `gameId`, no entry is added, and the depth already stamped here is kept —
+ * it describes this position in the stack, not the address written at it.
  */
-export function startRoute(gameId: GameId | null): void {
+function replaceRoute(gameId: GameId | null): void {
   const { history, location } = window;
   history.replaceState(
     { ...history.state, [DEPTH_KEY]: depthOf(history.state) },
     '',
     hrefWithGame(location.href, gameId),
   );
+}
+
+/**
+ * Boot: settle the address on the screen the shell actually opened, without
+ * adding an entry. This is what turns `?game=not-a-game` into the plain
+ * collection address on arrival, and it re-stamps the depth so a reload of
+ * `?game=sudoku` still remembers that the collection is one step back.
+ */
+export function startRoute(gameId: GameId | null): void {
+  replaceRoute(gameId);
+}
+
+/**
+ * The same tidying one step later. Back or Forward can land on an entry whose
+ * `?game=` this build cannot open — an address a newer build wrote, or a typo
+ * that was opened once and is still in the stack. The shell shows the
+ * collection for it, and the address has to say the same thing, or the
+ * visitor bookmarks and passes on an id that opens nothing (issue #172).
+ *
+ * Only a stale parameter is touched. An address naming a game the registry
+ * still carries, or naming none, is already true and is left exactly alone:
+ * walking through history does not rewrite the entries it walks.
+ */
+export function settleStaleRoute(): void {
+  const value = parse(window.location.href)?.searchParams.get(GAME_PARAM) ?? null;
+  if (value === null || isGameId(value)) return;
+  replaceRoute(null);
 }
 
 /** A game opened from inside the collection: a step forward, so Back returns. */
