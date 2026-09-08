@@ -37,6 +37,19 @@ import {
  */
 export const HARD_NODE_LIMIT = 30_000;
 
+/**
+ * What the last reply actually cost, in nodes visited. Exported so the test
+ * can judge the search by its work rather than by a stopwatch: wall-clock on
+ * a shared CI runner measures the runner, and this repository already
+ * decided performance gates watch deterministic work instead
+ * (docs/RELEASE_CHECKLIST.md, docs/SUDOKU_RULES.md §7).
+ *
+ * Written once per move, so it is only meaningful immediately after one. The
+ * write is a single field assignment on an already-allocated object, so it
+ * costs nothing worth measuring on the path that does not read it.
+ */
+export const searchCost = { nodes: 0 };
+
 const DEPTHS: Record<Difficulty, number> = { easy: 1, normal: 4, hard: 8 };
 
 /** A win is worth more than any shape; sooner is worth more than later. */
@@ -134,8 +147,11 @@ function search(
   beta: number,
   budget: SearchBudget,
 ): number {
+  // Checked before counting, so the budget means exactly what it says: the
+  // counter never reads higher than the limit, and the test can assert on it
+  // without an off-by-one to explain (docs/CONNECT_FOUR_RULES.md §4).
+  if (budget.nodes >= budget.limit) throw OUT_OF_NODES;
   budget.nodes += 1;
-  if (budget.nodes > budget.limit) throw OUT_OF_NODES;
 
   const columns = orderedColumns(board);
   if (columns.length === 0) return 0;
@@ -228,5 +244,6 @@ export function chooseCpuMove(input: CpuMoveInput): number {
     if (best === null) break;
     chosen = best;
   }
+  searchCost.nodes = budget.nodes;
   return chosen;
 }

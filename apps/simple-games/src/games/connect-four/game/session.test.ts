@@ -5,7 +5,7 @@
  * or not at all.
  */
 import { describe, expect, it } from 'vitest';
-import { chooseCpuMove } from './cpu';
+import { chooseCpuMove, HARD_NODE_LIMIT, searchCost } from './cpu';
 import { dropDisc } from './engine';
 import { decodeBoard, encodeBoard } from './serialize';
 import {
@@ -130,16 +130,33 @@ describe('the CPU (§4)', () => {
   });
 
   it('stays inside its node budget on a wide-open board (§4)', () => {
-    const started = Date.now();
-    chooseCpuMove({
-      board: emptyBoard(),
-      difficulty: 'hard',
-      seed: 'connect-four-t8',
-      moveCount: 0,
-    });
-    // The bound is nodes, not milliseconds; this only proves the search
-    // terminates rather than running away with the turn.
-    expect(Date.now() - started).toBeLessThan(4000);
+    // The bound is nodes, not milliseconds (docs/SUDOKU_RULES.md §7, issue
+    // #158): wall-clock on a shared CI runner measures the runner it landed
+    // on, not the search, and this repository already settled that question
+    // for the generation-cost tests. An empty board is the search's worst
+    // case here — no early win to cut branches short, no forced reply to
+    // narrow the root — so it is the position most likely to reach the
+    // limit.
+    const board = emptyBoard();
+    const input = { board, difficulty: 'hard', seed: 'connect-four-t8', moveCount: 0 } as const;
+
+    const started = performance.now();
+    chooseCpuMove(input);
+    const nodes = searchCost.nodes;
+    chooseCpuMove(input);
+    const elapsedMs = performance.now() - started;
+
+    expect(nodes).toBeLessThanOrEqual(HARD_NODE_LIMIT);
+    // Same board, same seed, same move count: the search must spend exactly
+    // the same work both times, or the bound above would only be telling us
+    // about one lucky run.
+    expect(searchCost.nodes).toBe(nodes);
+
+    // Reported for a reader, not judged: see the comment above.
+    console.log(
+      `connect four hard reply (empty board): ${(elapsedMs / 2).toFixed(1)}ms average over ` +
+        `2 searches (node limit ${HARD_NODE_LIMIT}) — reported, not asserted`,
+    );
   });
 });
 

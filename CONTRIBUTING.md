@@ -22,6 +22,11 @@ pnpm build
 Android build instructions are in
 [apps/simple-games/README.md](apps/simple-games/README.md).
 
+A red `pnpm test` means a regression until proven otherwise: the suite gates on
+deterministic work, fake timers and explicit completion, never on the wall
+clock, so "it passes when re-run alone" is not evidence that a failure is
+unrelated (docs/ARCHITECTURE.md「CI / リリース」, issue #158).
+
 ## Translations
 
 The full policy (in Japanese) is [docs/I18N_POLICY.md](docs/I18N_POLICY.md).

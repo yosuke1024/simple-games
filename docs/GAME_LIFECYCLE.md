@@ -88,6 +88,11 @@ close することはない。代わりにシェルがゲーム退出時に `rel
   ループを実際に走らせ、プレイ中のアンマウントで RAF・リスナー・DEV シームが
   消えることを検査する(jsdom の canvas は 2D コンテキストを返さないため、
   掃引テストではループが始まらない)。
+- ループを dev シーム(`__buFrame` 等)から手で回すテストは、`lifecycle.ts` の
+  `stubAnimationFrames()` で jsdom の実 RAF を止めてから盤面を mount する。
+  実フレームと手回しが同じ `lastTime` を共有すると dt が負になり、飛翔が巻き戻る
+  (issue #158)。leak テストには使わない — `trackResources` は実際に発火した
+  フレームで「全部 cancel されたか」に答える。
 
 module レベルで一度だけ登録されるもの(sound の visibilitychange、Capacitor の
 web shim)は「シェルの寿命」であり、テストは計測前に一度ウォームアップ mount を

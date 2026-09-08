@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
@@ -7,6 +7,7 @@ import { settingsSchema } from '@/storage/schemas';
 import { createSession, PLAYER } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { C4_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
+import { CPU_DELAY_MS } from '../state/GameContext';
 import { ConnectFourRoot } from './ConnectFourRoot';
 
 /**
@@ -54,6 +55,29 @@ function launch() {
 /** Lets the local reads and the saves they trigger resolve (they are promises,
  * not timers, so this works under fake timers too). */
 const settle = () => act(async () => undefined);
+
+/**
+ * Winds this file's clock on and lets React answer it.
+ *
+ * The CPU's drop is armed on a real `setTimeout` and the search runs inside it
+ * (§4, state/GameContext.tsx `CPU_DELAY_MS`), so a test that waits for one on
+ * the wall clock is waiting for 450ms of product delay plus however long a busy
+ * runner takes to get round to it — against `waitFor`'s default budget of
+ * 1000ms. That is issue #158's "CPU 探索・timeout 系" candidate, and raising the
+ * budget is not the answer: SUDOKU_RULES.md「予算は仕事量で門にする」already
+ * settled that a shared runner's wall clock measures the runner, not the work.
+ * The tests below own the clock and step it themselves, so the reply lands on
+ * the beat the rules give it, on any machine.
+ *
+ * They drive the screen with `fireEvent` rather than `userEvent` for the same
+ * reason the two clock tests below already do: userEvent's async wrapper drains
+ * itself through a real 0ms timeout, which a stopped clock never fires.
+ */
+const advance = async (ms: number) => {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(ms);
+  });
+};
 
 /** The app goes to background. Android may kill it without another event. */
 function background() {
@@ -122,34 +146,50 @@ describe('first run', () => {
 
 describe('playing', () => {
   it('drops one disc and hands the turn to the CPU (§2, §4)', async () => {
-    const user = userEvent.setup();
-    renderGame(savedGame);
-    await user.click(await screen.findByRole('button', { name: /Easy/ }));
+    vi.useFakeTimers();
+    try {
+      renderGame(savedGame);
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
 
-    expect(screen.getByText('Your turn')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Column 4: empty' }));
-    expect(board().querySelectorAll('.c4-disc')).toHaveLength(1);
+      expect(screen.getByText('Your turn')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Column 4: empty' }));
+      expect(board().querySelectorAll('.c4-disc')).toHaveLength(1);
 
-    // The CPU answers on a timer, and the board reads what is stacked in the
-    // column it used (§4, §10).
-    await waitFor(() => expect(board().querySelectorAll('.c4-disc')).toHaveLength(2));
-    await waitFor(() => expect(screen.getByText('Your turn')).toBeInTheDocument());
+      // The CPU answers on a timer and on nothing else: a tick short of the
+      // delay the board is still the player's alone, and the board reads what
+      // is stacked in the column it used (§4, §10).
+      await advance(CPU_DELAY_MS - 1);
+      expect(board().querySelectorAll('.c4-disc')).toHaveLength(1);
+      await advance(1);
+      expect(board().querySelectorAll('.c4-disc')).toHaveLength(2);
+      expect(screen.getByText('Your turn')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('takes back the drop and the reply together (§5)', async () => {
-    const user = userEvent.setup();
-    renderGame(savedGame);
-    await user.click(await screen.findByRole('button', { name: /Easy/ }));
+    vi.useFakeTimers();
+    try {
+      renderGame(savedGame);
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
 
-    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Column 4: empty' }));
-    await waitFor(() => expect(board().querySelectorAll('.c4-disc')).toHaveLength(2));
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: 'Column 4: empty' }));
+      // Undo takes back a pair, so the reply has to be on the board first.
+      await advance(CPU_DELAY_MS);
+      expect(board().querySelectorAll('.c4-disc')).toHaveLength(2);
 
-    await user.click(screen.getByRole('button', { name: 'Undo' }));
-    expect(board().querySelectorAll('.c4-disc')).toHaveLength(0);
-    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
-    // Help is one button; nothing suggests a column (§6).
-    expect(screen.queryByRole('button', { name: /hint/i })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+      expect(board().querySelectorAll('.c4-disc')).toHaveLength(0);
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      // Help is one button; nothing suggests a column (§6).
+      expect(screen.queryByRole('button', { name: /hint/i })).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('shows no clock while playing (§10)', async () => {
@@ -164,21 +204,27 @@ describe('playing', () => {
 
 describe('choosing a side (§1)', () => {
   it('lets the CPU open when the player picks second, and keeps the choice', async () => {
-    const user = userEvent.setup();
-    renderGame(tutorialDone);
+    vi.useFakeTimers();
+    try {
+      renderGame(tutorialDone);
+      await settle();
 
-    const second = await screen.findByRole('radio', { name: 'CPU first' });
-    expect(screen.getByRole('radio', { name: 'You first' })).toBeChecked();
-    await user.click(second);
-    expect(second).toBeChecked();
+      const second = screen.getByRole('radio', { name: 'CPU first' });
+      expect(screen.getByRole('radio', { name: 'You first' })).toBeChecked();
+      fireEvent.click(second);
+      expect(second).toBeChecked();
 
-    await user.click(screen.getByRole('button', { name: /Easy/ }));
-    // The CPU's opening drop arrives on its own timer; until then the board
-    // is not the player's to touch (§4).
-    expect(screen.getByText('CPU is thinking…')).toBeInTheDocument();
-    await waitFor(() => expect(board().querySelectorAll('.c4-disc')).toHaveLength(1));
-    expect(board().querySelectorAll('.c4-disc-cpu')).toHaveLength(1);
-    await waitFor(() => expect(screen.getByText('Your turn')).toBeInTheDocument());
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+      // The CPU's opening drop arrives on its own timer; until then the board
+      // is not the player's to touch (§4).
+      expect(screen.getByText('CPU is thinking…')).toBeInTheDocument();
+      await advance(CPU_DELAY_MS);
+      expect(board().querySelectorAll('.c4-disc')).toHaveLength(1);
+      expect(board().querySelectorAll('.c4-disc-cpu')).toHaveLength(1);
+      expect(screen.getByText('Your turn')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('leaves the match in progress on the side it started with', async () => {
@@ -219,16 +265,22 @@ describe('home', () => {
    behaviour. */
 describe('keyboard (issue #93)', () => {
   it('Ctrl+Z undoes the drop and the reply together, same as the button', async () => {
-    const user = userEvent.setup();
-    renderGame(savedGame);
-    await user.click(await screen.findByRole('button', { name: /Easy/ }));
+    vi.useFakeTimers();
+    try {
+      renderGame(savedGame);
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
 
-    await user.click(screen.getByRole('button', { name: 'Column 4: empty' }));
-    await waitFor(() => expect(board().querySelectorAll('.c4-disc')).toHaveLength(2));
+      fireEvent.click(screen.getByRole('button', { name: 'Column 4: empty' }));
+      await advance(CPU_DELAY_MS);
+      expect(board().querySelectorAll('.c4-disc')).toHaveLength(2);
 
-    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
-    expect(board().querySelectorAll('.c4-disc')).toHaveLength(0);
-    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+      expect(board().querySelectorAll('.c4-disc')).toHaveLength(0);
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -294,16 +346,26 @@ describe('a home-screen shortcut', () => {
     deviceStore.set(C4_STORAGE_KEYS.flags, tutorialDone[C4_STORAGE_KEYS.flags]!);
   }
 
-  /** Plays a move against Easy and walks away, the way a match is suspended (§8). */
+  /**
+   * Plays a move against Easy and walks away, the way a match is suspended (§8).
+   * The reply is half of what gets saved, so this helper runs on its own fake
+   * clock (issue #158) and hands real timers back before the launch under test.
+   */
   async function suspendAMatch() {
-    const user = userEvent.setup();
-    launch();
-    await settle();
-    await user.click(await screen.findByRole('button', { name: /Easy/ }));
-    await user.click(screen.getByRole('button', { name: 'Column 4: empty' }));
-    await waitFor(() => expect(board().querySelectorAll('.c4-disc')).toHaveLength(2));
-    await user.click(screen.getByRole('button', { name: 'Home' }));
-    cleanup();
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+      fireEvent.click(screen.getByRole('button', { name: 'Column 4: empty' }));
+      await advance(CPU_DELAY_MS);
+      expect(board().querySelectorAll('.c4-disc')).toHaveLength(2);
+      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+      await settle();
+      cleanup();
+    } finally {
+      vi.useRealTimers();
+    }
   }
 
   const boardShown = () => screen.queryByRole('group', { name: /Connect Four board/ });

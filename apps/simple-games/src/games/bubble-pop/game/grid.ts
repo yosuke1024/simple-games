@@ -27,9 +27,18 @@ export function cellKey(cell: Cell): string {
   return `${cell.row},${cell.col}`;
 }
 
+/**
+ * The inverse of `cellKey`. Reads the two numbers straight out of the string
+ * rather than going through `split(',').map(Number)`, which allocates an
+ * array of substrings and a second array to hold the parsed pair: engine.ts
+ * rebuilds every occupied cell's position from these keys once per simulated
+ * shot, and the aim guide simulates a shot on every pointer move, so this
+ * runs tens of times per frame on the devices this collection targets — and
+ * millions of times over autoplay.test.ts's 100-level sweep (issue #158).
+ */
 export function cellFromKey(key: string): Cell {
-  const [row, col] = key.split(',').map(Number);
-  return { row: row!, col: col! };
+  const comma = key.indexOf(',');
+  return { row: Number(key.slice(0, comma)), col: Number(key.slice(comma + 1)) };
 }
 
 /** The cell's center in board pixel space, ignoring any ceiling descent. */

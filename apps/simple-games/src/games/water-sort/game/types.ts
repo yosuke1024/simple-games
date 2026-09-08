@@ -28,6 +28,14 @@ export interface Puzzle {
   readonly seed: string;
   readonly colors: number;
   readonly tubes: Tubes;
+  /**
+   * Total solver DFS nodes spent proving this board's whole candidate batch
+   * (§5) — every attempt, accepted or rejected, since a rejected deal still
+   * has to be searched before it can be told apart from a solvable one. The
+   * deterministic form of the generation budget (issue #158): identical for
+   * a given seed on every machine, unlike the milliseconds it took.
+   */
+  readonly solverNodes: number;
 }
 
 /** The level list, the daily, or a free board at a chosen tier (§6). */

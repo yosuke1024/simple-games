@@ -197,6 +197,78 @@ export function trackResources(): ResourceTracker {
 }
 
 /**
+ * The three stubs below share one restore discipline, because vitest does not
+ * abort a test it gave up on ("Test timed out in 5000ms") — it abandons it
+ * mid-await, and the test's `finally` still runs whenever that await settles,
+ * which can be after the NEXT test installed a stub of its own on the same
+ * global. The two obvious answers both leave a red that does not name the real
+ * problem (issue #158):
+ *
+ * - restore unconditionally, and A's late restore rips B's stub out from
+ *   under B — the board's getContext returns null again, its loop never
+ *   starts, and A's timeout is reported as a second, unrelated-looking failure
+ *   one test later;
+ * - restore only while your own stub is still the one in place (an identity
+ *   guard), and A's late restore gives up as it should, but B then restores to
+ *   what IT found on install — A's stub — and stubA outlives both tests, for
+ *   every file that runs after them in the same worker.
+ *
+ * So each global keeps a stack of installations. A restore marks its own
+ * installation inactive whenever it happens to arrive, then puts back the top
+ * of whatever is still active: the newer test's stub while that test runs, the
+ * real value once nothing is left. A late restore never strips a live stub, no
+ * stub survives the last restore on its global, and restoring twice is a
+ * no-op. requestAnimationFrame / cancelAnimationFrame are one installation,
+ * not two, so a restore can never leave the pair half-swapped.
+ */
+interface Installation<T> {
+  readonly value: T;
+  active: boolean;
+}
+
+interface StubStack<T> {
+  /** What the global was before the first stub still on this stack went in. */
+  readonly base: T;
+  readonly installations: Installation<T>[];
+}
+
+/** One stack per global, keyed by name; dropped once its last stub is gone. */
+const stacks = new Map<string, StubStack<unknown>>();
+
+/**
+ * Installs `value` on the global that `read` / `write` reach, on top of
+ * whatever stubs are already there, and returns the restore for exactly this
+ * installation. `write` must set the whole global at once — for a pair of
+ * functions, both of them — so the stack only ever sees consistent states.
+ */
+function install<T>(key: string, read: () => T, write: (value: T) => void, value: T): () => void {
+  let stack = stacks.get(key) as StubStack<T> | undefined;
+  if (!stack) {
+    stack = { base: read(), installations: [] };
+    stacks.set(key, stack as StubStack<unknown>);
+  }
+  const owned = stack;
+  const installation: Installation<T> = { value, active: true };
+  owned.installations.push(installation);
+  write(value);
+  return () => {
+    if (!installation.active) return;
+    installation.active = false;
+    const { installations } = owned;
+    while (installations.length > 0 && !installations[installations.length - 1]!.active) {
+      installations.pop();
+    }
+    const top = installations[installations.length - 1];
+    if (top) {
+      write(top.value);
+      return;
+    }
+    stacks.delete(key);
+    write(owned.base);
+  };
+}
+
+/**
  * A 2D context stand-in that absorbs any drawing call: jsdom's canvas has no
  * context at all, and the arcade boards bail out before starting their loop
  * when getContext returns null — which would make a leak test of the loop
@@ -213,20 +285,23 @@ export function stubCanvas2d(): () => void {
       set: () => true,
       apply: () => absorber(),
     });
-  const original = HTMLCanvasElement.prototype.getContext;
-  HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, kind: string) {
+  const stub = function (this: HTMLCanvasElement, kind: string) {
     if (kind === '2d') return absorber() as CanvasRenderingContext2D;
     return null;
   } as typeof HTMLCanvasElement.prototype.getContext;
-  return () => {
-    HTMLCanvasElement.prototype.getContext = original;
-  };
+  return install(
+    'HTMLCanvasElement.prototype.getContext',
+    () => HTMLCanvasElement.prototype.getContext,
+    (value) => {
+      HTMLCanvasElement.prototype.getContext = value;
+    },
+    stub,
+  );
 }
 
 /** jsdom has no matchMedia; the boards read it for the dark-scheme repaint. */
 export function stubMatchMedia(): () => void {
-  const original = window.matchMedia;
-  window.matchMedia = ((query: string) => ({
+  const stub = ((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -236,7 +311,54 @@ export function stubMatchMedia(): () => void {
     removeListener: () => undefined,
     dispatchEvent: () => false,
   })) as typeof window.matchMedia;
-  return () => {
-    window.matchMedia = original;
+  return install(
+    'window.matchMedia',
+    () => window.matchMedia,
+    (value) => {
+      window.matchMedia = value;
+    },
+    stub,
+  );
+}
+
+/** The two halves of the animation-frame API, stubbed and restored as one. */
+interface AnimationFramePair {
+  readonly request: typeof window.requestAnimationFrame;
+  readonly cancel: typeof window.cancelAnimationFrame;
+}
+
+/**
+ * Hands back animation-frame handles and never calls anything back, so that a
+ * test which pumps a game loop by hand through its dev seam (`__buFrame` and
+ * the siblings in BrickBoard / SkyBoard / BunnyBoard) is that loop's ONLY
+ * source of frames. Returns a restore function.
+ *
+ * vitest's jsdom runs with pretendToBeVisual, so requestAnimationFrame is real
+ * in these tests: it fires roughly every 16ms, and jsdom stamps each callback
+ * with `performance.now() - <window creation>`, an origin of its own that is
+ * always behind `performance.now()`. A board keeps a single `lastTime` for
+ * both sources (BubbleBoard.tsx:611-617), so any hand-pumped timestamp that
+ * sits behind the last real callback's turns `Math.min(now - lastTime, 250)`
+ * negative and runs the simulation backwards. Silencing the real frames
+ * removes the second clock rather than racing it (issue #158).
+ *
+ * Not for the leak tests: `trackResources()` above deliberately keeps jsdom's
+ * real frames, because "was every requested frame cancelled?" is answered by
+ * frames that actually fire.
+ */
+export function stubAnimationFrames(): () => void {
+  let nextHandle = 1;
+  const pair: AnimationFramePair = {
+    request: (() => nextHandle++) as typeof window.requestAnimationFrame,
+    cancel: (() => undefined) as typeof window.cancelAnimationFrame,
   };
+  return install<AnimationFramePair>(
+    'window.requestAnimationFrame+cancelAnimationFrame',
+    () => ({ request: window.requestAnimationFrame, cancel: window.cancelAnimationFrame }),
+    (value) => {
+      window.requestAnimationFrame = value.request;
+      window.cancelAnimationFrame = value.cancel;
+    },
+    pair,
+  );
 }

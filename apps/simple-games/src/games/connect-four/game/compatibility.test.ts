@@ -40,17 +40,28 @@ function playOut(difficulty: Difficulty): { board: string; status: string } {
 }
 
 describe('games that must never change', () => {
-  it('finishes the same way at each strength', () => {
-    // Easy and Normal punish this player identically — against a plan this
-    // bad, one ply of reading is enough. Hard takes a different route.
+  // Three independent games, one of them at `hard`, used to be asserted
+  // inside one `it()` — the same shape checkers/game/compatibility.test.ts and
+  // gomoku/game/compatibility.test.ts had, and the same fix (issue #158,
+  // docs/SUDOKU_RULES.md §7): each difficulty plays out on its own session
+  // with nothing shared between them, so splitting into one `it()` per
+  // difficulty costs nothing and keeps every case well under the default 5s
+  // budget at the 3-5x parallel-run skew §7 measures.
+  it('finishes the same way at easy — punishes this player identically to normal', () => {
     expect(playOut('easy')).toEqual({
       board: '000000000000000000000000000000010001112222',
       status: 'lost',
     });
+  });
+
+  it('finishes the same way at normal — punishes this player identically to easy', () => {
     expect(playOut('normal')).toEqual({
       board: '000000000000000000000000000000010001112222',
       status: 'lost',
     });
+  });
+
+  it('finishes the same way at hard — a different route from easy and normal', () => {
     expect(playOut('hard')).toEqual({
       board: '000000000000000000000000100002222001112100',
       status: 'lost',

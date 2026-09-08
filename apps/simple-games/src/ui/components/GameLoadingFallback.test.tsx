@@ -96,14 +96,24 @@ describe('the loading text (no flash on a fast load)', () => {
     expect(screen.getByText('Loading…')).toBeInTheDocument();
   });
 
-  it('never shows the text, and leaves no timer running, for a load that finishes first', async () => {
-    // Real timers, because trackResources wraps window.setTimeout itself —
-    // and no sleep: a load that "finishes first" is simply the screen being
-    // replaced before the gate opens, which unmounting right away is.
+  it('never shows the text, and leaves no timer running, for a load that finishes first', () => {
+    // Real timers, and no await anywhere between the render and the unmount —
+    // that is what keeps this out of a race with the gate rather than merely
+    // ahead of it. Fake timers are not the alternative: trackResources
+    // reinstalls window.setTimeout as a bound copy (src/test/lifecycle.ts), and
+    // a fake installed underneath one loses the property vitest's uninstall
+    // looks for, leaving the rest of the file without a setTimeout at all.
+    //
+    // The awaited version of this test passed only by being quick: 200ms of
+    // runner time between the render and the assertion and SHOW_AFTER_MS opens
+    // the gate by itself. Measured on a loaded machine that window ran 7–63ms;
+    // held past 200ms it fails outright — a wall-clock gate of exactly the kind
+    // docs/SUDOKU_RULES.md「予算は仕事量で門にする」refuses (issue #158). A load
+    // that "finishes first" is simply the screen being replaced before the gate
+    // opens, and unmounting in the same turn as the render is that, exactly.
     const tracker = trackResources();
     try {
       const view = renderFallback();
-      await act(async () => undefined);
       expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
 
       view.unmount();

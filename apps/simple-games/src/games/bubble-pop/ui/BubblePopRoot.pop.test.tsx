@@ -9,6 +9,14 @@
  * seam (window.__buFrame / __buState — same idiom as
  * BubblePopRoot.leak.test.tsx), so a regression here fails as a thrown
  * error, not a silent no-op.
+ *
+ * Both tests below own the loop's clock outright. vitest's jsdom runs with
+ * pretendToBeVisual, so its requestAnimationFrame is real and keeps firing
+ * here on a timestamp origin of its own, while `frame` carries one `lastTime`
+ * for every caller (BubbleBoard.tsx:611-617) — two clocks, one closure, and a
+ * dt that goes negative whenever the pumped one is behind. stubAnimationFrames
+ * silences the real frames so the seam is the only thing that moves time
+ * (issue #158).
  */
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -16,7 +24,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { stubCanvas2d, stubMatchMedia } from '@/test/lifecycle';
+import { stubAnimationFrames, stubCanvas2d, stubMatchMedia } from '@/test/lifecycle';
 import { BOARD_HEIGHT, BOARD_WIDTH } from '../game/constants';
 import { BU_STORAGE_KEYS } from '../storage/schemas';
 import { BubblePopRoot } from './BubblePopRoot';
@@ -34,6 +42,9 @@ it('pops a cluster and keeps playing with Reduced Motion off (P1 regression)', a
   // the "Reduced Motion disabled" condition the crash needed.
   const restoreCanvas = stubCanvas2d();
   const restoreMedia = stubMatchMedia();
+  // Before the board mounts, so the loop never gets a frame this test did not
+  // hand it (see the file header and the pump below).
+  const restoreFrames = stubAnimationFrames();
   const user = userEvent.setup();
   try {
     render(
@@ -66,8 +77,17 @@ it('pops a cluster and keeps playing with Reduced Motion off (P1 regression)', a
 
     // Flight (path length / SHOT_SPEED, well under 1.1s for this board) plus
     // the 220ms pop/fall settle: pump enough by-hand, clamped-250ms frames
-    // to cover both — the dev seam exists precisely because a browser pane
-    // never fires real requestAnimationFrame callbacks here.
+    // to cover both — the dev seam is here for the review harness's browser
+    // pane, which never fires requestAnimationFrame at all (BubbleBoard.tsx's
+    // own note on it), and the stub above makes it this test's only frame
+    // source too. So this clock may start anywhere and only has to climb:
+    // `frame` takes the first pump as its `lastTime` (dt 0) and clamps each of
+    // the nine after it to 250ms, so every run simulates the same 2.25s. Left
+    // unstubbed it would not — jsdom's own frames set `lastTime` to a stamp
+    // measured from window creation, and the first pump at 300 would then hand
+    // `frame` a dt of minus however long this file had been running, unwinding
+    // the flight instead of advancing it (#158: "expected 38 to be less than
+    // 38", reported twice in PR #140).
     await act(async () => {
       let now = 0;
       for (let i = 0; i < 10; i++) {
@@ -82,6 +102,7 @@ it('pops a cluster and keeps playing with Reduced Motion off (P1 regression)', a
     // resolved rather than silently getting stuck mid-animation.
     expect(buState().board.size).toBeLessThan(boardSizeBefore);
   } finally {
+    restoreFrames();
     restoreMedia();
     restoreCanvas();
   }
@@ -98,6 +119,9 @@ it('does not fire on pointerCancel, and still fires on the next real drag (#144)
   // drag (#120).
   const restoreCanvas = stubCanvas2d();
   const restoreMedia = stubMatchMedia();
+  // Before the board mounts: the pumped frames below are the only ones the
+  // loop may see (see the file header).
+  const restoreFrames = stubAnimationFrames();
   const user = userEvent.setup();
   try {
     render(
@@ -139,24 +163,28 @@ it('does not fire on pointerCancel, and still fires on the next real drag (#144)
       }
     ).__buState;
     const buFrame = (window as unknown as { __buFrame: (now: number) => void }).__buFrame;
-    // `frame`'s own `lastTime` closure persists across calls to the seam and
-    // is shared with jsdom's real requestAnimationFrame, which does run here
-    // — so the simulated clock must be monotonic AND never behind the real
-    // one. Handing `frame` a timestamp older than the last real callback's
-    // makes its `Math.min(now - lastTime, 250)` dt negative, which unwinds
-    // whatever is in flight instead of advancing it and defers the commit to
-    // a later pump — precisely what would let a wrongly-staged shot slip
-    // past the assertion that is supposed to catch it.
-    let simNow = performance.now();
+    // `frame`'s own `lastTime` closure persists across calls to the seam
+    // (BubbleBoard.tsx:611-617), so this clock keeps climbing across all three
+    // settles below instead of restarting at 0 each time: handing `frame` a
+    // timestamp older than the one before makes its
+    // `Math.min(now - lastTime, 250)` dt negative, which unwinds whatever is
+    // in flight instead of advancing it and defers the commit to a later pump
+    // — precisely what would let a wrongly-staged shot slip past the assertion
+    // that is supposed to catch it. Nothing else writes `lastTime` any more,
+    // so no reading of the wall clock is needed to stay ahead of it: this used
+    // to start at `performance.now()` to outrun jsdom's real frames, which
+    // only left the sim thousands of ms ahead of them instead (#158).
+    let simNow = 0;
     const settle = async () => {
       // Flight (well under 1.1s for this board) plus the 220ms pop/fall
-      // settle, at the 250ms-clamped dt each pumped frame is worth — the
-      // seam exists because a browser pane never fires requestAnimationFrame
-      // at all. After a cancel there is nothing in flight to pump, but
-      // pumping anyway is the point: it gives a shot that *was* wrongly
-      // staged every chance to land and show up in the assertions below.
+      // settle, at the 250ms-clamped dt each pumped frame is worth: 2.25s of
+      // simulation for the first settle (its opening pump only sets
+      // `lastTime`) and 2.5s for the two after it — the same on every machine,
+      // now that these are the only frames the loop gets. After a cancel there
+      // is nothing in flight to pump, but pumping anyway is the point: it
+      // gives a shot that *was* wrongly staged every chance to land and show
+      // up in the assertions below.
       await act(async () => {
-        simNow = Math.max(simNow, performance.now());
         for (let i = 0; i < 10; i++) {
           simNow += 300;
           buFrame(simNow);
@@ -213,6 +241,7 @@ it('does not fire on pointerCancel, and still fires on the next real drag (#144)
     expect(afterFreshShot).not.toBe(beforeCancel);
     expect(afterFreshShot.current).toBe(beforeCancel.next);
   } finally {
+    restoreFrames();
     restoreMedia();
     restoreCanvas();
   }

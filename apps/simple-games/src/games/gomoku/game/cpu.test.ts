@@ -190,21 +190,22 @@ describe('stopping the win in front of it', () => {
       expect(cell).toBe(cellAt(7, 8));
     });
 
-    // Eight searches, one set of them at `hard`, and the assertion is about the
-    // move rather than about how long it took — but vitest's 5s default made
-    // the wall clock the judge anyway: this passes alone in a fraction of that
-    // and times out under a loaded `pnpm test`, where the other forks compete
-    // for the same cores. A gate that fails occasionally is as bad as one that
-    // never passes (SUDOKU_RULES.md §7), so the limit sits where it can only
-    // catch a real hang.
-    it(`${difficulty} blocks whatever the seed`, () => {
-      // The tie-break is seeded, and a guarantee that held for one seed and
-      // not another would not be a guarantee.
-      for (const seed of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) {
+    // Eight searches, one set of them at `hard`, and the assertion is about
+    // the move rather than about how long it took. This used to run all eight
+    // seeds inside one `it()` with its default timeout widened to 60 seconds
+    // to survive a loaded `pnpm test` — exactly the non-fix issue #158 calls
+    // out, since it just moves the threshold instead of the work. The tie-
+    // break is seeded, and a guarantee that held for one seed and not another
+    // would not be a guarantee, so the eight seeds are independent cases
+    // already; `it.each` gives each its own budget and names its seed on
+    // failure (SUDOKU_RULES.md §7), and the total work is unchanged.
+    it.each(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'])(
+      `${difficulty} blocks whatever the seed: %s`,
+      (seed) => {
         const cell = cpuMove({ board: mustBlock, player: BLACK, difficulty, seed, moveCount: 8 });
         expect(cell).toBe(cellAt(7, 8));
-      }
-    }, 60_000);
+      },
+    );
   }
 
   /**

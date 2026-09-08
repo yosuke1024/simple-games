@@ -11,7 +11,7 @@
  * differently from the one that was saved — which is the promise Undo rests
  * on (§4, §5).
  */
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { encodeBoard } from './serialize';
 import { applyCpuTurn, applyPlayerStep, createSession, currentMoves } from './session';
 import { PLAYER, initialBoard, type Difficulty } from './types';
@@ -56,8 +56,32 @@ describe('the opening position (released — do not edit to make green)', () => 
 });
 
 describe('a fixed game (released — do not edit to make green)', () => {
+  const PLAYED_DIFFICULTIES = ['easy', 'normal', 'hard'] as const;
+
+  /**
+   * Each difficulty's 24-ply game, played once and shared by every case
+   * below. This file used to play `hard` twice — once for its own golden and
+   * again inside "reads differently at each strength", which also replayed
+   * `easy` and `normal` — and hid the resulting ~1.1s-per-case cost from a
+   * loaded `pnpm test` behind a widened 60s timeout, exactly the non-fix
+   * issue #158 calls out (a wider timeout moves the threshold, it doesn't
+   * remove the duplicated work). Playing each difficulty once in `beforeAll`
+   * and having every case read the result removes the duplication instead,
+   * so the default 5s budget holds even at the 3-5x parallel-run skew
+   * SUDOKU_RULES.md §7 measures.
+   */
+  let played: Record<Difficulty, ReturnType<typeof playOut>>;
+
+  beforeAll(() => {
+    played = {
+      easy: playOut('easy', 24),
+      normal: playOut('normal', 24),
+      hard: playOut('hard', 24),
+    };
+  });
+
   it('runs the same way on easy', () => {
-    const { session, cpuTrace } = playOut('easy', 24);
+    const { session, cpuTrace } = played.easy;
     expect(encodeBoard(session.board)).toBe(
       '0200020200200020000000020000000000000201002000100101000100100010',
     );
@@ -80,7 +104,7 @@ describe('a fixed game (released — do not edit to make green)', () => {
   });
 
   it('runs the same way on normal', () => {
-    const { session, cpuTrace } = playOut('normal', 24);
+    const { session, cpuTrace } = played.normal;
     expect(encodeBoard(session.board)).toBe(
       '0202020200000000000000020000000000000000002000000000010110100010',
     );
@@ -102,7 +126,7 @@ describe('a fixed game (released — do not edit to make green)', () => {
   });
 
   it('runs the same way on hard', () => {
-    const { session, cpuTrace } = playOut('hard', 24);
+    const { session, cpuTrace } = played.hard;
     expect(encodeBoard(session.board)).toBe(
       '0202020200000000000000000020000000000201100000000000000110101000',
     );
@@ -123,17 +147,10 @@ describe('a fixed game (released — do not edit to make green)', () => {
     ]);
   });
 
-  // Three 24-ply games, one of them at `hard`, so this is the slowest test in
-  // the file by a wide margin. What it asserts is that the boards differ, not
-  // that they arrive quickly — and vitest's 5s default made the wall clock the
-  // judge anyway: it passes alone in a fraction of that and times out under a
-  // loaded `pnpm test`, where six other forks are competing. A gate that fails
-  // occasionally is as bad as one that never passes (SUDOKU_RULES.md §7), so
-  // the limit is set where it can only catch a real hang.
   it('reads differently at each strength — the difficulty is not decoration', () => {
-    const boards = (['easy', 'normal', 'hard'] as const).map((difficulty) =>
-      encodeBoard(playOut(difficulty, 24).session.board),
+    const boards = PLAYED_DIFFICULTIES.map((difficulty) =>
+      encodeBoard(played[difficulty].session.board),
     );
     expect(new Set(boards).size).toBe(3);
-  }, 60_000);
+  });
 });

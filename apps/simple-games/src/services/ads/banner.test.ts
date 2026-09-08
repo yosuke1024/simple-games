@@ -60,6 +60,8 @@ vi.mock('./consent', () => ({
  * and drop the unused branch. So each case stubs the environment first and
  * then imports a fresh copy of the module.
  */
+let activeBanner: Awaited<ReturnType<typeof loadBanner>> | null = null;
+
 async function loadBanner(platform: string, env: Record<string, string> = {}) {
   vi.resetModules();
   vi.unstubAllEnvs();
@@ -67,7 +69,9 @@ async function loadBanner(platform: string, env: Record<string, string> = {}) {
   vi.stubEnv('DEV', false);
   for (const [name, value] of Object.entries(env)) vi.stubEnv(name, value);
   capacitorMock.platform = platform;
-  return import('./banner');
+  const banner = await import('./banner');
+  activeBanner = banner;
+  return banner;
 }
 
 // Deliberately NOT shaped like real ad unit IDs. The principles guard
@@ -83,6 +87,15 @@ const BOTH = {
 };
 
 afterEach(() => {
+  // Undoes whatever the just-finished test's own module instance registered
+  // on the shared jsdom window (the viewport resize listener) — even if an
+  // assertion threw first. vi.resetModules() below only clears the import
+  // cache for the *next* loadBanner() call; it does not touch side effects
+  // the old instance already made, so a test that throws before reaching its
+  // own resetBannerForTesting() call must not be the only thing standing
+  // between that listener and the next test in this file.
+  activeBanner?.resetBannerForTesting();
+  activeBanner = null;
   vi.unstubAllEnvs();
   vi.resetModules();
 });
@@ -187,12 +200,11 @@ describe('viewport-follow (issue #93)', () => {
     await banner.setBannerVisible(true);
 
     expect(admobMock.showBanner).not.toHaveBeenCalled();
-    banner.resetBannerForTesting();
   });
 
   it('recreates the shown banner once after a rotation-sized change', async () => {
     vi.useFakeTimers();
-    const banner = await bootShownBanner();
+    await bootShownBanner();
 
     setWidth(1024);
     // A rotation produces a burst of resize events; one settle, one request.
@@ -202,24 +214,22 @@ describe('viewport-follow (issue #93)', () => {
 
     expect(admobMock.removeBanner).toHaveBeenCalledTimes(1);
     expect(admobMock.showBanner).toHaveBeenCalledTimes(2);
-    banner.resetBannerForTesting();
   });
 
   it('leaves the banner alone for sub-threshold nudges', async () => {
     vi.useFakeTimers();
-    const banner = await bootShownBanner();
+    await bootShownBanner();
 
     setWidth(768 + 40);
     await settleResize();
 
     expect(admobMock.removeBanner).not.toHaveBeenCalled();
     expect(admobMock.showBanner).toHaveBeenCalledTimes(1);
-    banner.resetBannerForTesting();
   });
 
   it('makes no request offline — the stale-width banner stays', async () => {
     vi.useFakeTimers();
-    const banner = await bootShownBanner();
+    await bootShownBanner();
 
     networkMock.online = false;
     setWidth(1024);
@@ -227,7 +237,6 @@ describe('viewport-follow (issue #93)', () => {
 
     expect(admobMock.removeBanner).not.toHaveBeenCalled();
     expect(admobMock.showBanner).toHaveBeenCalledTimes(1);
-    banner.resetBannerForTesting();
   });
 
   it('drops a hidden banner without spending a request, and sizes the next one fresh', async () => {
@@ -245,12 +254,11 @@ describe('viewport-follow (issue #93)', () => {
     await banner.setBannerVisible(true);
     expect(admobMock.showBanner).toHaveBeenCalledTimes(2);
     expect(admobMock.resumeBanner).not.toHaveBeenCalled();
-    banner.resetBannerForTesting();
   });
 
   it('recreates the banner even when removing the old view is refused', async () => {
     vi.useFakeTimers();
-    const banner = await bootShownBanner();
+    await bootShownBanner();
 
     // The old native view was already gone by the time removeBanner ran —
     // refreshBannerForViewport's own catch treats that as "nothing to
@@ -260,7 +268,6 @@ describe('viewport-follow (issue #93)', () => {
     await settleResize();
 
     expect(admobMock.showBanner).toHaveBeenCalledTimes(2);
-    banner.resetBannerForTesting();
   });
 });
 
@@ -306,7 +313,6 @@ describe('failure paths never touch the game (issue #120)', () => {
     // Init never got past the failure, so nothing here polls the SDK either.
     expect(admobMock.showBanner).not.toHaveBeenCalled();
     expect(vi.getTimerCount()).toBe(0);
-    banner.resetBannerForTesting();
   });
 
   it('requests nothing while offline, and only the next ask (not a retry) shows the ad', async () => {
@@ -329,7 +335,6 @@ describe('failure paths never touch the game (issue #120)', () => {
 
     await banner.setBannerVisible(true);
     expect(admobMock.showBanner).toHaveBeenCalledTimes(1);
-    banner.resetBannerForTesting();
   });
 
   it('a rejected show resolves quietly, and the next ask tries fresh rather than resuming it', async () => {
@@ -348,7 +353,6 @@ describe('failure paths never touch the game (issue #120)', () => {
     await banner.setBannerVisible(true);
     expect(admobMock.showBanner).toHaveBeenCalledTimes(2);
     expect(admobMock.resumeBanner).not.toHaveBeenCalled();
-    banner.resetBannerForTesting();
   });
 
   it('a load failure after showing forgets the view, so hide/show recreates it', async () => {
@@ -367,7 +371,6 @@ describe('failure paths never touch the game (issue #120)', () => {
 
     expect(admobMock.showBanner).toHaveBeenCalledTimes(2);
     expect(admobMock.resumeBanner).not.toHaveBeenCalled();
-    banner.resetBannerForTesting();
   });
 
   it('control: the same hide/show resumes instead of re-requesting when nothing failed', async () => {
@@ -382,7 +385,6 @@ describe('failure paths never touch the game (issue #120)', () => {
 
     expect(admobMock.showBanner).toHaveBeenCalledTimes(1);
     expect(admobMock.resumeBanner).toHaveBeenCalledTimes(1);
-    banner.resetBannerForTesting();
   });
 
   it('a consent refusal requests nothing and schedules nothing', async () => {
@@ -396,7 +398,6 @@ describe('failure paths never touch the game (issue #120)', () => {
 
     expect(admobMock.showBanner).not.toHaveBeenCalled();
     expect(vi.getTimerCount()).toBe(0);
-    banner.resetBannerForTesting();
   });
 
   it('a want expressed before init finishes is applied once, then the next ask resumes', async () => {
@@ -419,7 +420,6 @@ describe('failure paths never touch the game (issue #120)', () => {
     await banner.setBannerVisible(true);
     expect(admobMock.resumeBanner).toHaveBeenCalledTimes(1);
     expect(admobMock.showBanner).toHaveBeenCalledTimes(1);
-    banner.resetBannerForTesting();
   });
 
   it('the web build never calls AdMob at all', async () => {
@@ -432,7 +432,6 @@ describe('failure paths never touch the game (issue #120)', () => {
     expect(admobMock.initialize).not.toHaveBeenCalled();
     expect(admobMock.addListener).not.toHaveBeenCalled();
     expect(admobMock.showBanner).not.toHaveBeenCalled();
-    banner.resetBannerForTesting();
   });
 
   it('survives a plugin that refuses the event registrations', async () => {
@@ -468,7 +467,6 @@ describe('failure paths never touch the game (issue #120)', () => {
         },
       );
     }
-    banner.resetBannerForTesting();
   });
 
   it('shows nothing when the player left the screen while consent was still being asked', async () => {
@@ -496,7 +494,6 @@ describe('failure paths never touch the game (issue #120)', () => {
     // The next honest ask — the player is back on a game screen — shows it.
     await banner.setBannerVisible(true);
     expect(admobMock.showBanner).toHaveBeenCalledTimes(1);
-    banner.resetBannerForTesting();
   });
 
   it('a rejected hide leaves the next ask working', async () => {
@@ -514,7 +511,6 @@ describe('failure paths never touch the game (issue #120)', () => {
     await banner.setBannerVisible(true);
     expect(admobMock.resumeBanner).toHaveBeenCalledTimes(1);
     expect(admobMock.showBanner).toHaveBeenCalledTimes(1);
-    banner.resetBannerForTesting();
   });
 
   it('a rejected resume leaves the next ask working', async () => {
@@ -536,7 +532,6 @@ describe('failure paths never touch the game (issue #120)', () => {
     await banner.setBannerVisible(true);
     expect(admobMock.resumeBanner).toHaveBeenCalledTimes(2);
     expect(admobMock.showBanner).toHaveBeenCalledTimes(1);
-    banner.resetBannerForTesting();
   });
 });
 
@@ -577,7 +572,6 @@ describe('onBannerSize (issue #120)', () => {
     fireSizeChanged(96);
 
     expect(heights).toEqual([96]);
-    banner.resetBannerForTesting();
   });
 
   it('fans out to every subscriber, and stops calling one that unsubscribed', async () => {
@@ -601,7 +595,6 @@ describe('onBannerSize (issue #120)', () => {
     // only the one still listening does.
     expect(first).toEqual([96]);
     expect(second).toEqual([96, 50]);
-    banner.resetBannerForTesting();
   });
 
   it('throws nothing when the event arrives with no subscriber registered', async () => {
@@ -610,6 +603,5 @@ describe('onBannerSize (issue #120)', () => {
     await banner.initAds();
 
     expect(() => fireSizeChanged(96)).not.toThrow();
-    banner.resetBannerForTesting();
   });
 });
