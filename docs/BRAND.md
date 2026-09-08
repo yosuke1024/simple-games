@@ -114,12 +114,13 @@ Honest by design が「何を約束するか」なら、Built by subtraction は
 - "Banner ads only."
 - "Open source."
 
-ストア文面では収録済みのゲーム名を具体的に挙げる(現在は "Sudoku, Solitaire,
-Spider Solitaire, FreeCell, Hearts, Gin Rummy, Minesweeper, 2048, Block Puzzle,
-Checkers, Reversi, Connect Four, Gomoku, Brick Breaker, Nonogram, Takuzu,
-Futoshiki, Kakuro, Number Match, Quick Math, Schulte Table, Number Recall,
-Water Sort, Sliding Puzzle, Memory Match, Sky Fighter, Bunny Hop" の 27 本)。
-未収録のゲーム名は、**実際に収録された時点で**初めて足す。
+ストア文面では収録済みのゲーム名を具体的に挙げる。名前と並び順の正本は
+`apps/simple-games/src/app/registry.ts` の `GAMES`、掲載文での一覧は
+[`apps/simple-games/store/listing.md`](../apps/simple-games/store/listing.md)
+「INCLUDED GAMES」にある(掲載名の禁止形 — `Mahjong` 単独・`Bubble Shooter` —
+も同じファイルにある)。**ここに名前や本数を書き写さない。** 写しは収録のたびに
+古くなり、本数を書いた段落は上の「表現ルール」の「数値は公開時点の実測値だけ」に
+反する。未収録のゲーム名は、**実際に収録された時点で**初めて足す。
 ゲーム名は検索流入の中核だが、不自然なキーワード詰め込みはしない。
 
 ## 訴求の順序(ストア文面)
