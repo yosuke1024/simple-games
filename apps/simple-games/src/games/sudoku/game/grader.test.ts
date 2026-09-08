@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { gridFromString } from './generator';
-import { findStep, grade, TECHNIQUE_TIER, type Technique } from './grader';
+import { findStep, grade, logicWork, TECHNIQUE_TIER, type Technique } from './grader';
 import { boxOf, colOf, indexOf, rowOf, type Grid } from './types';
 
 const parse = (text: string): Grid => {
@@ -28,6 +28,25 @@ const EASY = parse(`
   060000280
   000419005
   000080079
+`);
+
+/**
+ * Rows 1 and 2 lock 1, 2 and 3 inside boxes 1 and 2, which leaves row 0 only
+ * its first three cells for them; the clues under those cells then take one
+ * cell away from each digit in turn, so no two of the three share a pair of
+ * seats. Shared by the ordering test below and the work counter, which reaches
+ * this step only after the seven cheaper scans find nothing.
+ */
+const HIDDEN_TRIPLE = parse(`
+  000000000
+  000123000
+  000000123
+  100000000
+  020000000
+  003000000
+  000000000
+  000000000
+  000000000
 `);
 
 describe('naked single', () => {
@@ -151,6 +170,48 @@ describe('locked candidates — claiming', () => {
     expect(step.eliminations.every(({ index }) => boxOf(index) === 2 && rowOf(index) !== 0)).toBe(
       true,
     );
+  });
+});
+
+describe('hidden triple', () => {
+  it('names the cells in the order the digits reach them', () => {
+    // 1 can only sit at (0,1) or (0,2), 2 at (0,0) or (0,2), 3 at (0,0) or
+    // (0,1) — three digits in three cells, while those cells still admit six
+    // others, so it is hidden rather than naked. The pattern follows the
+    // digits: 1 brings (0,1) and (0,2), 2 adds (0,0), 3 adds nothing. That
+    // order is what a hint highlights, so it belongs to the step rather than
+    // to whatever order the scan happened to visit cells in.
+    const step = findStep(HIDDEN_TRIPLE);
+    expect(step).not.toBeNull();
+    if (step === null || step.kind !== 'elimination') throw new Error('expected an elimination');
+    expect(step.technique).toBe('hiddenTriple');
+    expect(step.unit).toEqual({ kind: 'row', index: 0 });
+    expect(step.digits).toEqual([1, 2, 3]);
+    expect(step.pattern).toEqual([indexOf(0, 1), indexOf(0, 2), indexOf(0, 0)]);
+    expect(step.eliminations).toEqual([
+      { index: indexOf(0, 1), digits: [4, 5, 6, 7, 8, 9] },
+      { index: indexOf(0, 2), digits: [4, 5, 6, 7, 8, 9] },
+      { index: indexOf(0, 0), digits: [4, 5, 6, 7, 8, 9] },
+    ]);
+  });
+});
+
+describe('logic work', () => {
+  it('counts one scan per technique the search tries', () => {
+    // Generation's budget is asserted against this counter (§7), so it has to
+    // track the scans and nothing else. EASY yields to the first technique
+    // there is, which costs exactly one scan; the hidden triple is eighth in
+    // §8's order, and the seven cheaper scans that come up empty first are
+    // precisely what makes a board with no easy move expensive.
+    logicWork.reset();
+    expect(logicWork.read()).toBe(0);
+
+    expect(findStep(EASY)?.technique).toBe('nakedSingle');
+    expect(logicWork.read()).toBe(1);
+
+    logicWork.reset();
+    expect(findStep(HIDDEN_TRIPLE)?.technique).toBe('hiddenTriple');
+    expect(logicWork.read()).toBe(8);
   });
 });
 

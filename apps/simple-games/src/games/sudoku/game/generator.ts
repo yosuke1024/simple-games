@@ -21,7 +21,7 @@
  */
 import { solvableWithin } from './grader';
 import { createRng, shuffled } from './rng';
-import { countSolutions, generateSolvedGrid } from './solver';
+import { countSolutions, generateSolvedGrid, hasSolutionDifferingAt } from './solver';
 import { CELLS, SIZE, type Difficulty, type Grid, type Puzzle } from './types';
 
 /** The mathematical floor for a uniquely solvable Sudoku. */
@@ -58,6 +58,18 @@ export const CLUE_RANGE: Record<Difficulty, { readonly min: number; readonly max
 /** Derived-seed attempts, for the case a dig fails its own invariants. */
 const MAX_ATTEMPTS = 4;
 
+/**
+ * Placements the search may spend, per rejected removal, looking for the
+ * second solution that would prove the removal ambiguous for good (see
+ * `digBoard`). The number only trades one kind of work for another — a
+ * rejected group that is not certified within the budget is simply probed
+ * again on the next pass — so it cannot change a board, and `generator.test.ts`
+ * pins the total either way. Measured over every level: below this the next
+ * pass re-grades too many ambiguous boards; above it the search burns
+ * placements on boards whose second solution is deep.
+ */
+const SECOND_SOLUTION_BUDGET = 300;
+
 /** Removal groups: 180° symmetric pairs, or single cells. */
 function removalGroups(unitSize: 1 | 2): readonly (readonly number[])[] {
   if (unitSize === 1) return Array.from({ length: CELLS }, (_, index) => [index]);
@@ -85,12 +97,28 @@ export function clueCount(grid: Grid): number {
 }
 
 /**
- * Digs one board for the target tier. A removal is undone when it breaks
- * uniqueness or leaves a puzzle the tier's techniques cannot finish.
+ * Digs one board for the target tier. A removal is undone when it leaves a
+ * puzzle the tier's techniques cannot finish.
+ *
+ * That one check covers uniqueness too. Every technique the grader applies is
+ * sound — it only ever removes a candidate no solution could use — so a board
+ * it finishes has exactly the one solution it found. Asking the backtracking
+ * search first, as this used to, answered a question the grader was about to
+ * answer anyway, and it was the expensive one: proving a sparse hard board
+ * unique means exhausting its whole search tree, and that was nine tenths of
+ * a hard board's cost. The search is still run once on the finished board
+ * (`generatePuzzle`), as an independent witness.
  *
  * Passes repeat while progress is being made, reshuffling each time: a group
  * rejected early often becomes removable once the board around it changed, and
  * a different order reaches a different — usually deeper — minimal board.
+ * One kind of rejection never reverses, though. Digging only removes clues,
+ * and removing clues never removes a solution, so a group whose removal once
+ * admitted a second solution admits it on every later pass as well. Those
+ * groups are remembered and skipped; the search is what tells them apart
+ * from a board that is merely too hard, and it is asked only after a
+ * rejection, with a placement budget, because a second solution is usually
+ * shallow when it exists and the answer is not needed to decide the removal.
  */
 function digBoard(seed: string, target: Difficulty): { givens: Grid; solution: Grid } {
   const rng = createRng(seed);
@@ -100,6 +128,8 @@ function digBoard(seed: string, target: Difficulty): { givens: Grid; solution: G
 
   for (const unitSize of plan.unitSizes) {
     const groups = GROUPS[unitSize];
+    // Keyed by a group's first cell, which is unique within one unit size.
+    const ambiguous = new Uint8Array(CELLS);
     for (;;) {
       let progressed = false;
       for (const group of shuffled(groups, rng)) {
@@ -107,18 +137,19 @@ function digBoard(seed: string, target: Difficulty): { givens: Grid; solution: G
         // Checked against the whole group, not one cell: a pair removal must
         // not step over the floor either.
         if (clueCount(givens) - group.length < plan.minClues) continue;
+        if (ambiguous[group[0]!] === 1) continue;
 
         const removed = group.map((index) => givens[index]!);
         for (const index of group) givens[index] = 0;
 
-        // Uniqueness first: it is the cheaper check, and a board with two
-        // solutions can never be played — or graded — honestly.
-        const stillFair = countSolutions(givens, 2) === 1 && solvableWithin(givens, target);
-        if (!stillFair) {
-          group.forEach((index, k) => (givens[index] = removed[k]!));
+        if (solvableWithin(givens, target)) {
+          progressed = true;
           continue;
         }
-        progressed = true;
+        if (hasSolutionDifferingAt(givens, solution, group, SECOND_SOLUTION_BUDGET) === 'found') {
+          ambiguous[group[0]!] = 1;
+        }
+        group.forEach((index, k) => (givens[index] = removed[k]!));
       }
       if (!progressed) break;
     }
