@@ -370,6 +370,14 @@ export const NonoBoard = memo(function NonoBoard({
     const stroke = strokeRef.current;
     if (stroke === null || stroke.pointerId !== event.pointerId) return;
     strokeRef.current = null;
+    // A cancelled press is taken away rather than let go — a system gesture,
+    // a palm, a pen leaving range — and the menu the run was owed never comes.
+    // A release is the other way about: on Windows the menu is still ahead of
+    // it, so the answer has to outlive that one. Left standing after a cancel,
+    // it would be spent on the next menu to arrive without a press of ours
+    // behind it — the keyboard's menu key, or a right click off the board —
+    // which would then go silently missing (issue #174).
+    if (event.type === 'pointercancel') swallowMenuRef.current = false;
   }, []);
 
   /**

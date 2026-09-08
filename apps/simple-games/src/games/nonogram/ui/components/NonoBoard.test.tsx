@@ -628,6 +628,37 @@ describe('the right drag (§3, issue #130)', () => {
     expect(onCross.mock.calls).toEqual([[indexAt(5, 5)]]);
   });
 
+  it('leaves the keyboard its menu key after a run is cancelled (issue #174)', () => {
+    const { cells, onCross } = renderBoard();
+    giveCellsALayout();
+
+    // The menu key raises a menu with no press of ours in front of it, so
+    // nothing clears the answer the cancelled run left behind. Held up, it
+    // would eat this menu, and the cell would go uncrossed for no reason the
+    // player could see.
+    const origin = cells[indexAt(2, 1)]!;
+    rightPress(origin, 2, 1);
+    dragTo(origin, 2, 2);
+    fireEvent.pointerCancel(origin, { pointerId: 1, ...pointAt(2, 2) });
+
+    contextMenu(cells[indexAt(5, 5)]!, { button: 0, buttons: 0, detail: 0 });
+    expect(onCross.mock.calls).toEqual([[indexAt(5, 5)]]);
+  });
+
+  it('hands the page back its own menu after a run is cancelled (issue #174)', () => {
+    const { cells } = renderBoard();
+    giveCellsALayout();
+
+    const origin = cells[indexAt(2, 1)]!;
+    rightPress(origin, 2, 1);
+    dragTo(origin, 2, 2);
+    fireEvent.pointerCancel(origin, { pointerId: 1, ...pointAt(2, 2) });
+
+    // Off the board the window listener is the only one watching, and the
+    // cancelled run must have stopped owing it anything.
+    expect(fireEvent.contextMenu(document.body, { button: 2 })).toBe(true);
+  });
+
   it('swallows the menu of a run drawn after an earlier right click', () => {
     const { cells, onCross, onStroke } = renderBoard();
     giveCellsALayout();
