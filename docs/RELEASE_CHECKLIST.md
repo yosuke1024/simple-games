@@ -525,6 +525,9 @@ Solitaire / Spider / FreeCell は**タップ操作を残したまま**ドラッ�
 - [ ] 設定画面の「プライバシーポリシー」「利用規約」が実機で開くことを確認
       (アプリは文面を同梱せずリンクするだけになった)
 - [ ] 「Coming Soon」表記や未実装ゲームの名前が掲載文に含まれていない
+- [ ] GitHub リポジトリの description / homepage / topics が [BRAND.md](BRAND.md)
+      「GitHub リポジトリの公開 metadata」の値と一致し、homepage がリダイレクトなしで
+      開く(ゲーム数は書かない)
 
 ## 7. 公開
 
@@ -565,3 +568,6 @@ Solitaire / Spider / FreeCell は**タップ操作を残したまま**ドラッ�
    別セッションや Codex に出せるが、「約束が壊れていないか」の判定は作者が読む
    ほかない([I18N_POLICY.md](I18N_POLICY.md)「リリース前の門」)
 8. ゲーム別 Landing Page(pixapps.ai)の作成
+9. GitHub リポジトリの Description / Website / Topics の反映
+   ([BRAND.md](BRAND.md)「GitHub リポジトリの公開 metadata」が正本。About 欄は
+   手入力で、CI は検査しない)

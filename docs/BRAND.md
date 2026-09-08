@@ -204,6 +204,151 @@ OSS を先頭に出さない。
 そこは [I18N_POLICY.md](I18N_POLICY.md) の高リスクキーの門(独立逆翻訳 → 作者が読む)
 と別モデル監査の担当で、**ここが緑でも 12 言語を見たことにはならない。**
 
+## GitHub リポジトリの公開 metadata
+
+このリポジトリの GitHub 上の Description / Website(API と `gh` では homepage)/
+Topics は、README を開く前に検索結果・リポジトリカード・リンクプレビューとして
+目に入る。このリポジトリ自体が `SOURCE_REPO_URL`(`packages/brand/src/index.ts`)
+としてアプリの設定画面の About(「View Source Code」)から直接リンクされ、
+「OSS は誠実さの証明である」(上の「コンセプト」節)という約束を確かめに来た人が
+最初に読む文面でもある。つまりこの 3 項目は開発上のメタデータではなく**公開文面**
+であり、上の「表現ルール」と `apps/simple-games/store/listing.md`「表現の約束」が
+同じ強さでかかる(issue #159)。
+
+**この節がこの 3 項目の正本(source of truth)である。** GitHub の About 欄は
+人が手で入力する UI で、CI はここを検査しない。値を変えるときは、まずこの節を
+直す PR を作り、そのうえで同じ値を GitHub 側へ人手で反映する。現在の値は issue #159
+として 2026-09-08 に決めた。
+
+以前の Description は次のとおりだった:
+
+> Fully free. Fully offline. Simply playable. — Monorepo for the Simple Games series
+> by PixApps (first title: Number Match Offline).
+
+これは 2 点で誤っていた。「Fully free」は対象を言わず無条件に無料を主張する、
+上の「表現ルール」の禁止表現そのもの。「first title: Number Match Offline」は、
+ゲームごとに独立アプリを出す当初案の名残で、その案は 2026-07-30 に廃止され
+(`docs/plans/2026-07-30-collection-and-sudoku.md` §0)、現行の canonical 文書の
+どれにも残っていない。
+
+### Description
+
+```text
+A quiet, honest, offline collection of classic games by PixApps. No login and no subscriptions. Banner ads only, never a full-screen or video ad. Built in the open.
+```
+
+- **ゲーム数は書かない。** GitHub の About 欄に人手で打ち込んだ数字は、収録が変わった
+  瞬間に古くなる(この文書の「表現ルール」、および
+  [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「数値は公開時点の実測値だけ」)。
+  収録数の正は `README.md` と `apps/simple-games/src/app/registry.ts` が持ち、
+  収録が変わる PR と同じ PR で変わる。この Description はどちらの数とも独立させる。
+- **各語は「すでにそうなっている」ことだけを根拠にする。** "quiet" は上の
+  「メッセージ候補」のストア短文 "Classic games in one quiet, offline app." と
+  [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) の製品定義(「静かに、無料で、オフラインで
+  遊べる」)。"honest" は上の「コンセプト」節の Honest by design そのもの。
+  "No login and no subscriptions" は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)
+  「必須原則」のアカウント登録なし・サブスクなし(版をまたいで例外なく成立する側)で、
+  並びは「訴求の順序」の 3・4 番目に合わせている。
+- **"offline" はアプリの約束の言い換えである。** 根拠はアプリ名
+  `Simple Games: Offline Games` と [OFFLINE_POLICY.md](OFFLINE_POLICY.md)(適用範囲は
+  アプリ)。Web 版は初回アクセスにダウンロードが必要で、再訪時のオフライン動作
+  (Service Worker)は未実装([WEB_VERSION.md](WEB_VERSION.md)「オフラインの扱い」)。
+  この Description は Web 版の再訪オフラインを主張していないし、Web 版を主語にした
+  文面(Web 版・Landing Page)でこの語をこの形で使わない。
+- **広告は「ある」と言ってから「ない形式」を言う。** 「中断しない」を無条件の否定で
+  書かないのは `apps/simple-games/store/listing.md`「表現の約束」の「中断の書き方」
+  で、短い説明は検索結果に単独で出て、打ち消す文脈がないからだ。
+  "Banner ads only, never a full-screen or video ad." はストア掲載文の
+  "Nothing interrupts play: one small banner while you're online, never a full-screen
+  or video ad" と同じ形。根拠は [ADS_POLICY.md](ADS_POLICY.md): アプリは Anchored
+  Adaptive Banner 1 枠のみで盤面・操作に重ねず、Interstitial / Rewarded / App Open /
+  Native は不採用。Web 版(同「Web 版」節)はアンカー・ホームのリスト下・リザルト
+  (3 局に 1 回)のバナー枠だけで、Vignette(スキップ可の全画面)は未実装。
+  **Web 版に Vignette を入れる判断をするときは、この Description を同時に見直す** ——
+  その時点で "never a full-screen ad" は事実でなくなる。
+- 上の「表現ルール」の禁止表現は使わない — 旧 Description の "Fully free" が
+  まさにその違反だった。未実装・未検証の主張も書かない。OSS への言及は最後に置く
+  (「訴求の順序」8 番目)。"Built in the open." で締めているのはそのためで、
+  これはブランドプロミスそのものの言い換えでもある。
+- GitHub の Description は 350 字まで。現在の文字列は約 160 字。
+
+### Homepage
+
+```text
+https://pixapps.ai/simple-games/
+```
+
+`packages/brand/src/index.ts` の `LANDING_BASE_URL` に末尾スラッシュを足した値。
+このページは別リポジトリ `pixapps-landing` の `public/simple-games/index.html`
+(同ファイル `PLAY_STORE_URL` / `APP_STORE_URL` のコメントが指す、ストアリンクを
+載せた Simple Games のランディング)で、ディレクトリの index として配信されるため
+末尾スラッシュが正規の形になる(`WEB_PLAY_URL` と同じ理由。`PRIVACY_URL` /
+`TERMS_URL` は単一ページなので付かない)。プレイ URL(`WEB_PLAY_URL`)ではなく
+このページを指すのは、ブラウザ版(`/play/`)もゲーム別ガイド
+(`/games/<game-id>/<locale>/`)もこの配下にあり、その根にあたる入口だからで、
+プレイページはそのうちの 1 つでしかない。アプリの About 画面がリポジトリへ
+リンクするのに対し、Homepage はリポジトリからプロダクトへ**逆方向に**リンクする。
+この URL がリダイレクトなしで開くことはソースからは検証できないので、この節を
+変えたときと [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §6 で実際に開いて確かめる。
+
+### Topics
+
+```text
+offline-games, classic-games, puzzle-games, card-games, board-games, arcade-games,
+typescript, react, vite, capacitor, android, ios
+```
+
+**実装済みの事実だけを載せる。** ジャンル系トピックは
+`apps/simple-games/src/app/registry.ts` の `GAME_CATEGORIES`(logic / cards /
+puzzle / board / arcade / drills)に対応する(logic と puzzle → `puzzle-games`、
+cards → `card-games`、board → `board-games`、arcade → `arcade-games`)。
+**drills には対応するトピックを置かない** — Quick Math / Schulte Table /
+Number Recall / Memory Match の分類だが、それを素直に表す語(`brain-training` など)
+はプレイヤーへの効果を匂わせるので、下の理由で入れない。`classic-games` と
+`offline-games` は個々のカテゴリではなくコレクション全体を指し、アプリ名
+`Simple Games: Offline Games` の言い換えである。技術系トピックは
+`apps/simple-games/package.json`(TypeScript / React / Vite / Capacitor)と、
+`apps/simple-games/` 配下に実在する Android / iOS プロジェクトから採る。
+
+あえて含めていないもの:
+
+- `pwa` — Service Worker は [ARCHITECTURE.md](ARCHITECTURE.md) のとおり未実装。
+  付けると出荷していない機能を主張することになる。
+- `sudoku` のような個別ゲーム名 — 検索キーワードの詰め込みであり、issue #159 が
+  明示的に非目標としている。ゲーム名の訴求は
+  `apps/simple-games/store/listing.md`(ストア掲載文)の役割で、ここには置かない。
+- `brain-training` のようなプレイヤーへの効果を匂わせるトピック — 脳トレドリル 3 本
+  (Quick Math / Schulte Table / Number Recall)の掲載文が効能表現を避けているのと
+  同じ理由([SCHULTE_TABLE_RULES.md](SCHULTE_TABLE_RULES.md) §14)。
+
+トピックを足すのは、それが指すものが実際に出荷された時点だけ。成り立たなくなったら外す。
+
+### 適用方法
+
+リポジトリホーム(Code タブ)右側の About 欄の歯車から Description / Website /
+Topics を直接編集する(Settings ページにこの 3 項目はない)。GitHub CLI でも
+同じ変更ができる:
+
+```sh
+gh repo edit yosuke1024/simple-games \
+  --description "A quiet, honest, offline collection of classic games by PixApps. No login and no subscriptions. Banner ads only, never a full-screen or video ad. Built in the open." \
+  --homepage "https://pixapps.ai/simple-games/" \
+  --add-topic offline-games,classic-games,puzzle-games,card-games,board-games,arcade-games,typescript,react,vite,capacitor,android,ios
+```
+
+`--add-topic` は追加のみを行う。この節からトピックを外すときは、
+`--remove-topic`(または UI 側の操作)で別途外すこと。
+
+### 見直すタイミング
+
+- この節の値を変えたとき(同じ PR で GitHub 側も反映する)。
+- リリースのたび([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §6): 3 項目が
+  一致していること、Homepage がリダイレクトなしで開くこと。
+- Web 版に Vignette など全画面形式の広告を入れる判断をしたとき(上の Description の
+  広告の行)。
+- 収録ゲームやカテゴリが増減したとき。Description に数は無いので変わらないはずだが、
+  Topics とカテゴリの対応が崩れていないかは見る。
+
 ## ストーリー
 
 英語:
