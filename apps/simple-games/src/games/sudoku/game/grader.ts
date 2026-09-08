@@ -10,20 +10,24 @@
  * Every step names the cells and the unit that justify it, so a hint can point
  * at the reason instead of just filling in the answer. Technique names stay
  * internal — the UI paraphrases them (§5).
+ *
+ * The finders read a unit as bitmasks over its nine seats and allocate only
+ * once they have a step to return. Digging asks `solvableWithin` after every
+ * removal probe (§7), and most probes land on a board that goes nowhere and so
+ * pays for all nine scans — so a scan that finds nothing is what generation
+ * actually spends its budget on.
  */
 import { computeCandidates } from './solver';
 import {
   ALL_UNITS,
   bitOf,
-  BOXES,
+  BOX,
   boxOf,
   CELLS,
   colOf,
   COLS,
   digitsOf,
-  hasBit,
   PEERS,
-  popcount,
   rowOf,
   ROWS,
   SIZE,
@@ -133,12 +137,71 @@ function eliminate(state: SolveState, step: EliminationStep): boolean {
   return true;
 }
 
+// ---------- reading a unit as bitmasks ----------
+
+/** Where boxes begin in ALL_UNITS, which runs rows, then columns, then boxes. */
+const FIRST_BOX_UNIT = SIZE * 2;
+
+/** The 0-based index a one-bit mask stands for: a digit minus one, or a seat. */
+const bitIndex = (bit: number): number => 31 - Math.clz32(bit);
+
+/**
+ * Bits set in a nine-bit mask. Every scan below counts bits in its innermost
+ * loop — a triple asks it of eighty-four unions per unit — so the count is a
+ * table lookup rather than a loop over the bits.
+ */
+const BIT_COUNT = ((): Uint8Array => {
+  const counts = new Uint8Array(1 << SIZE);
+  for (let mask = 1; mask < counts.length; mask++) counts[mask] = counts[mask >> 1]! + (mask & 1);
+  return counts;
+})();
+
+/** The cells a seat mask picks out, in seat order. */
+function cellsFrom(cells: readonly number[], seats: number): number[] {
+  const out: number[] = [];
+  for (let rest = seats; rest !== 0; rest &= rest - 1) out.push(cells[bitIndex(rest & -rest)]!);
+  return out;
+}
+
+/**
+ * Seats of the unit `scanUnit` last read: one 9-bit mask per digit (indexed
+ * digit − 1), plus the mask of its empty seats. A seat is an empty cell that
+ * still admits the digit, which is what every technique below means by "where
+ * the digit can go".
+ */
+const unitSeats = new Int32Array(SIZE);
+let unitOpen = 0;
+
+/**
+ * Reads one unit into the masks above. They live at module scope because the
+ * grader is synchronous and single threaded, and the alternative is an array
+ * per unit per scan — paid on every scan, including the ones that find nothing.
+ */
+function scanUnit(cells: readonly number[], grid: Grid, candidates: readonly number[]): void {
+  unitSeats.fill(0);
+  unitOpen = 0;
+  for (let s = 0; s < SIZE; s++) {
+    const cell = cells[s]!;
+    if (grid[cell] !== 0) continue;
+    const seat = 1 << s;
+    unitOpen |= seat;
+    for (let rest = candidates[cell]!; rest !== 0; rest &= rest - 1) {
+      const digit = bitIndex(rest & -rest);
+      unitSeats[digit] = unitSeats[digit]! | seat;
+    }
+  }
+}
+
 // ---------- easy ----------
 
 function findNakedSingle(grid: Grid, candidates: readonly number[]): Step | null {
   for (let i = 0; i < CELLS; i++) {
     if (grid[i] !== 0) continue;
-    const digit = soleDigit(candidates[i]!);
+    const mask = candidates[i]!;
+    // Ruling a cell out with one test beats counting its bits, and this scan
+    // visits every empty cell before any other technique is even considered.
+    if (mask === 0 || (mask & (mask - 1)) !== 0) continue;
+    const digit = soleDigit(mask);
     if (digit !== null) {
       return { kind: 'placement', technique: 'nakedSingle', index: i, digit };
     }
@@ -148,31 +211,39 @@ function findNakedSingle(grid: Grid, candidates: readonly number[]): Step | null
 
 function findHiddenSingle(grid: Grid, candidates: readonly number[]): Step | null {
   for (const unit of ALL_UNITS) {
-    for (let d = 1; d <= SIZE; d++) {
-      const bit = bitOf(d);
-      let seat = -1;
-      let count = 0;
-      let alreadyPlaced = false;
-      for (const cell of unit.cells) {
-        if (grid[cell] === d) {
-          alreadyPlaced = true;
-          break;
-        }
-        if (grid[cell] === 0 && (candidates[cell]! & bit) !== 0) {
-          seat = cell;
-          count++;
-        }
+    // Which digits the unit's empty cells offer at all, and which they offer
+    // more than once: the difference is the digits down to a single seat. Seat
+    // masks would answer the same question, but this runs on every step.
+    let once = 0;
+    let twice = 0;
+    let placed = 0;
+    for (let s = 0; s < SIZE; s++) {
+      const cell = unit.cells[s]!;
+      const value = grid[cell]!;
+      if (value !== 0) {
+        placed |= bitOf(value);
+        continue;
       }
-      if (alreadyPlaced || count !== 1) continue;
-      // Naked singles are reported first, so this really is a hidden one.
-      if (popcount(candidates[seat]!) === 1) continue;
-      return {
-        kind: 'placement',
-        technique: 'hiddenSingle',
-        index: seat,
-        digit: d as Digit,
-        unit: unitRef(unit),
-      };
+      const mask = candidates[cell]!;
+      twice |= once & mask;
+      once |= mask;
+    }
+    for (let singles = once & ~twice & ~placed; singles !== 0; singles &= singles - 1) {
+      const bit = singles & -singles;
+      for (let s = 0; s < SIZE; s++) {
+        const index = unit.cells[s]!;
+        const mask = candidates[index]!;
+        if (grid[index] !== 0 || (mask & bit) === 0) continue;
+        // Naked singles are reported first, so this really is a hidden one.
+        if ((mask & (mask - 1)) === 0) break;
+        return {
+          kind: 'placement',
+          technique: 'hiddenSingle',
+          index,
+          digit: (bitIndex(bit) + 1) as Digit,
+          unit: unitRef(unit),
+        };
+      }
     }
   }
   return null;
@@ -180,14 +251,15 @@ function findHiddenSingle(grid: Grid, candidates: readonly number[]): Step | nul
 
 // ---------- medium: locked candidates ----------
 
-/** Cells of a unit that still admit `digit`. */
-function seatsFor(unit: Unit, grid: Grid, candidates: readonly number[], digit: number): number[] {
-  const bit = bitOf(digit);
-  const seats: number[] = [];
-  for (const cell of unit.cells) {
-    if (grid[cell] === 0 && (candidates[cell]! & bit) !== 0) seats.push(cell);
-  }
-  return seats;
+/** Seats of a unit taken three at a time: a box's rows, or a box's span of a line. */
+const TRIPLE_SEATS = [0b000000111, 0b000111000, 0b111000000];
+/** Seats of a box that share a column. */
+const BOX_COLUMN_SEATS = [0b001001001, 0b010010010, 0b100100100];
+
+/** Which of `groups` holds every seat, or -1 when they straddle more than one. */
+function seatGroup(seats: number, groups: readonly number[]): number {
+  for (let g = 0; g < BOX; g++) if ((seats & ~groups[g]!) === 0) return g;
+  return -1;
 }
 
 function eliminationStep(
@@ -196,8 +268,7 @@ function eliminationStep(
   digits: readonly Digit[],
   pattern: readonly number[],
   unit?: Unit,
-): EliminationStep | null {
-  if (targets.length === 0) return null;
+): EliminationStep {
   return {
     kind: 'elimination',
     technique,
@@ -214,20 +285,32 @@ function eliminationStep(
  */
 function findPointing(grid: Grid, candidates: readonly number[]): Step | null {
   for (let b = 0; b < SIZE; b++) {
-    const box: Unit = { kind: 'box', index: b, cells: BOXES[b]! };
+    const box = ALL_UNITS[FIRST_BOX_UNIT + b]!;
+    scanUnit(box.cells, grid, candidates);
     for (let d = 1; d <= SIZE; d++) {
-      const seats = seatsFor(box, grid, candidates, d);
-      if (seats.length < 2) continue;
-      const first = seats[0]!;
-      const sameRow = seats.every((c) => rowOf(c) === rowOf(first));
-      const sameCol = seats.every((c) => colOf(c) === colOf(first));
-      if (!sameRow && !sameCol) continue;
-      const line = sameRow ? ROWS[rowOf(first)]! : COLS[colOf(first)]!;
-      const targets = line.filter(
-        (c) => boxOf(c) !== b && grid[c] === 0 && hasBit(candidates[c]!, d),
+      const seats = unitSeats[d - 1]!;
+      if ((seats & (seats - 1)) === 0) continue;
+      const alongRow = seatGroup(seats, TRIPLE_SEATS) >= 0;
+      if (!alongRow && seatGroup(seats, BOX_COLUMN_SEATS) < 0) continue;
+      const first = box.cells[bitIndex(seats & -seats)]!;
+      const line = alongRow ? ROWS[rowOf(first)]! : COLS[colOf(first)]!;
+      // The box owns three consecutive seats of that line; the rest are targets.
+      const span = TRIPLE_SEATS[alongRow ? b % BOX : Math.floor(b / BOX)]!;
+      const bit = bitOf(d);
+      let targets = 0;
+      for (let s = 0; s < SIZE; s++) {
+        if ((span & (1 << s)) !== 0) continue;
+        const cell = line[s]!;
+        if (grid[cell] === 0 && (candidates[cell]! & bit) !== 0) targets |= 1 << s;
+      }
+      if (targets === 0) continue;
+      return eliminationStep(
+        'lockedCandidatesPointing',
+        cellsFrom(line, targets),
+        [d as Digit],
+        cellsFrom(box.cells, seats),
+        box,
       );
-      const step = eliminationStep('lockedCandidatesPointing', targets, [d as Digit], seats, box);
-      if (step) return step;
     }
   }
   return null;
@@ -238,21 +321,33 @@ function findPointing(grid: Grid, candidates: readonly number[]): Step | null {
  * that box cannot hold it.
  */
 function findClaiming(grid: Grid, candidates: readonly number[]): Step | null {
-  const lines: Unit[] = [
-    ...ROWS.map((cells, index) => ({ kind: 'row' as const, index, cells })),
-    ...COLS.map((cells, index) => ({ kind: 'col' as const, index, cells })),
-  ];
-  for (const line of lines) {
+  for (let l = 0; l < FIRST_BOX_UNIT; l++) {
+    const line = ALL_UNITS[l]!;
+    const alongRow = l < SIZE;
+    scanUnit(line.cells, grid, candidates);
     for (let d = 1; d <= SIZE; d++) {
-      const seats = seatsFor(line, grid, candidates, d);
-      if (seats.length < 2) continue;
-      const box = boxOf(seats[0]!);
-      if (!seats.every((c) => boxOf(c) === box)) continue;
-      const targets = BOXES[box]!.filter(
-        (c) => !seats.includes(c) && grid[c] === 0 && hasBit(candidates[c]!, d),
+      const seats = unitSeats[d - 1]!;
+      if ((seats & (seats - 1)) === 0) continue;
+      const third = seatGroup(seats, TRIPLE_SEATS);
+      if (third < 0) continue;
+      const box = ALL_UNITS[FIRST_BOX_UNIT + boxOf(line.cells[third * BOX]!)]!;
+      // The line owns three seats of that box; only the other six can lose the digit.
+      const shared = (alongRow ? TRIPLE_SEATS : BOX_COLUMN_SEATS)[l % BOX]!;
+      const bit = bitOf(d);
+      let targets = 0;
+      for (let s = 0; s < SIZE; s++) {
+        if ((shared & (1 << s)) !== 0) continue;
+        const cell = box.cells[s]!;
+        if (grid[cell] === 0 && (candidates[cell]! & bit) !== 0) targets |= 1 << s;
+      }
+      if (targets === 0) continue;
+      return eliminationStep(
+        'lockedCandidatesClaiming',
+        cellsFrom(box.cells, targets),
+        [d as Digit],
+        cellsFrom(line.cells, seats),
+        line,
       );
-      const step = eliminationStep('lockedCandidatesClaiming', targets, [d as Digit], seats, line);
-      if (step) return step;
     }
   }
   return null;
@@ -260,22 +355,31 @@ function findClaiming(grid: Grid, candidates: readonly number[]): Step | null {
 
 // ---------- naked / hidden subsets ----------
 
-/** Every combination of `size` items. */
-function combinations<T>(items: readonly T[], size: number): T[][] {
-  const out: T[][] = [];
-  const pick = (start: number, acc: T[]): void => {
-    if (acc.length === size) {
-      out.push([...acc]);
-      return;
-    }
-    for (let i = start; i < items.length; i++) {
-      acc.push(items[i]!);
-      pick(i + 1, acc);
-      acc.pop();
-    }
-  };
-  pick(0, []);
-  return out;
+/** Cells of a unit that can join a naked subset, in unit order, and their masks. */
+const openCells = new Array<number>(SIZE).fill(0);
+const openMasks = new Array<number>(SIZE).fill(0);
+
+/** The step a matched naked subset yields, or null when it rules nothing out. */
+function nakedSubsetStep(
+  technique: Technique,
+  unit: Unit,
+  open: number,
+  group: number,
+  union: number,
+): EliminationStep | null {
+  let targets = 0;
+  for (let t = 0; t < open; t++) {
+    if ((group & (1 << t)) !== 0) continue;
+    if ((openMasks[t]! & union) !== 0) targets |= 1 << t;
+  }
+  if (targets === 0) return null;
+  return eliminationStep(
+    technique,
+    cellsFrom(openCells, targets),
+    digitsOf(union),
+    cellsFrom(openCells, group),
+    unit,
+  );
 }
 
 /**
@@ -289,18 +393,91 @@ function findNakedSubset(
   technique: Technique,
 ): Step | null {
   for (const unit of ALL_UNITS) {
-    const open = unit.cells.filter((c) => grid[c] === 0 && popcount(candidates[c]!) >= 2);
-    if (open.length <= size) continue;
-    for (const group of combinations(open, size)) {
-      let union = 0;
-      for (const cell of group) union |= candidates[cell]!;
-      if (popcount(union) !== size) continue;
-      const targets = open.filter((c) => !group.includes(c) && (candidates[c]! & union) !== 0);
-      const step = eliminationStep(technique, targets, digitsOf(union), group, unit);
-      if (step) return step;
+    let open = 0;
+    for (let s = 0; s < SIZE; s++) {
+      const cell = unit.cells[s]!;
+      if (grid[cell] !== 0) continue;
+      const mask = candidates[cell]!;
+      if ((mask & (mask - 1)) === 0) continue;
+      openCells[open] = cell;
+      openMasks[open] = mask;
+      open++;
+    }
+    if (open <= size) continue;
+    for (let i = 0; i < open; i++) {
+      const first = openMasks[i]!;
+      // A union only grows, so a prefix already too wide can never be a subset.
+      if (BIT_COUNT[first]! > size) continue;
+      for (let j = i + 1; j < open; j++) {
+        const pair = first | openMasks[j]!;
+        if (BIT_COUNT[pair]! > size) continue;
+        if (size === 2) {
+          const step = nakedSubsetStep(technique, unit, open, (1 << i) | (1 << j), pair);
+          if (step !== null) return step;
+          continue;
+        }
+        for (let k = j + 1; k < open; k++) {
+          const union = pair | openMasks[k]!;
+          if (BIT_COUNT[union]! !== size) continue;
+          const step = nakedSubsetStep(
+            technique,
+            unit,
+            open,
+            (1 << i) | (1 << j) | (1 << k),
+            union,
+          );
+          if (step !== null) return step;
+        }
+      }
     }
   }
   return null;
+}
+
+/** Digits of the scanned unit that can join a hidden subset, ascending. */
+const subsetDigits = new Int32Array(SIZE);
+
+/** The step a matched hidden subset yields, or null when it rules nothing out. */
+function hiddenSubsetStep(
+  technique: Technique,
+  unit: Unit,
+  candidates: readonly number[],
+  group: number,
+  union: number,
+): EliminationStep | null {
+  // A subset whose cells hold nothing but the group is true but says nothing,
+  // and asking first is what keeps the arrays below off the failing path.
+  let eliminates = false;
+  for (let rest = union; rest !== 0 && !eliminates; rest &= rest - 1) {
+    const cell = unit.cells[bitIndex(rest & -rest)]!;
+    eliminates = (candidates[cell]! & ~group) !== 0;
+  }
+  if (!eliminates) return null;
+  // The pattern follows the digits into their seats — each digit in turn, its
+  // seats in unit order — so a cell is named where its first digit reaches it.
+  const pattern: number[] = [];
+  let seen = 0;
+  for (let digits = group; digits !== 0; digits &= digits - 1) {
+    for (let rest = unitSeats[bitIndex(digits & -digits)]!; rest !== 0; rest &= rest - 1) {
+      const seat = rest & -rest;
+      if ((seen & seat) !== 0) continue;
+      seen |= seat;
+      pattern.push(unit.cells[bitIndex(seat)]!);
+    }
+  }
+  const eliminations: { index: number; digits: Digit[] }[] = [];
+  for (const cell of pattern) {
+    const extra = candidates[cell]! & ~group;
+    if (extra !== 0) eliminations.push({ index: cell, digits: digitsOf(extra) });
+  }
+  return {
+    kind: 'elimination',
+    technique,
+    eliminations,
+    pattern,
+    digits: digitsOf(group),
+    unit: unitRef(unit),
+  };
 }
 
 /**
@@ -314,35 +491,39 @@ function findHiddenSubset(
   technique: Technique,
 ): Step | null {
   for (const unit of ALL_UNITS) {
-    const open = unit.cells.filter((c) => grid[c] === 0);
-    if (open.length <= size) continue;
-    const digitSeats = new Map<Digit, number[]>();
-    for (let d = 1; d <= SIZE; d++) {
-      const seats = open.filter((c) => hasBit(candidates[c]!, d));
-      if (seats.length >= 2 && seats.length <= size) digitSeats.set(d as Digit, seats);
-    }
-    const digitList = [...digitSeats.keys()];
-    if (digitList.length < size) continue;
-    for (const group of combinations(digitList, size)) {
-      const seatSet = new Set<number>();
-      for (const d of group) for (const c of digitSeats.get(d)!) seatSet.add(c);
-      if (seatSet.size !== size) continue;
-      let groupMask = 0;
-      for (const d of group) groupMask |= bitOf(d);
-      const eliminations: { index: number; digits: Digit[] }[] = [];
-      for (const cell of seatSet) {
-        const extra = candidates[cell]! & ~groupMask;
-        if (extra !== 0) eliminations.push({ index: cell, digits: digitsOf(extra) });
+    scanUnit(unit.cells, grid, candidates);
+    if (BIT_COUNT[unitOpen]! <= size) continue;
+    let count = 0;
+    for (let d = 0; d < SIZE; d++) {
+      const seats = BIT_COUNT[unitSeats[d]!]!;
+      if (seats >= 2 && seats <= size) {
+        subsetDigits[count] = d;
+        count++;
       }
-      if (eliminations.length === 0) continue;
-      return {
-        kind: 'elimination',
-        technique,
-        eliminations,
-        pattern: [...seatSet],
-        digits: group,
-        unit: unitRef(unit),
-      };
+    }
+    if (count < size) continue;
+    for (let i = 0; i < count; i++) {
+      const first = subsetDigits[i]!;
+      for (let j = i + 1; j < count; j++) {
+        const second = subsetDigits[j]!;
+        const pair = unitSeats[first]! | unitSeats[second]!;
+        // A union only grows, so a prefix already too wide can never be a subset.
+        if (BIT_COUNT[pair]! > size) continue;
+        if (size === 2) {
+          const group = (1 << first) | (1 << second);
+          const step = hiddenSubsetStep(technique, unit, candidates, group, pair);
+          if (step !== null) return step;
+          continue;
+        }
+        for (let k = j + 1; k < count; k++) {
+          const third = subsetDigits[k]!;
+          const union = pair | unitSeats[third]!;
+          if (BIT_COUNT[union]! !== size) continue;
+          const group = (1 << first) | (1 << second) | (1 << third);
+          const step = hiddenSubsetStep(technique, unit, candidates, group, union);
+          if (step !== null) return step;
+        }
+      }
     }
   }
   return null;
@@ -350,37 +531,69 @@ function findHiddenSubset(
 
 // ---------- hard: X-Wing ----------
 
+/** Seats per line of the orientation being scanned, indexed line * SIZE + digit − 1. */
+const lineSeats = new Int32Array(SIZE * SIZE);
+/** The lines where a digit has exactly two seats — the only ones that can pair up. */
+const pairLines = new Int32Array(SIZE);
+const pairSeats = new Int32Array(SIZE);
+
 /**
  * X-Wing: a digit confined to the same two columns in two different rows (or
  * the transpose) forms a rectangle; the digit then leaves those columns
  * everywhere else.
  */
 function findXWing(grid: Grid, candidates: readonly number[]): Step | null {
-  for (const orientation of ['row', 'col'] as const) {
-    const lines = orientation === 'row' ? ROWS : COLS;
-    const crossOf = orientation === 'row' ? colOf : rowOf;
-    const crossLines = orientation === 'row' ? COLS : ROWS;
+  for (let orientation = 0; orientation < 2; orientation++) {
+    const lines = orientation === 0 ? ROWS : COLS;
+    const crossLines = orientation === 0 ? COLS : ROWS;
+    for (let l = 0; l < SIZE; l++) {
+      scanUnit(lines[l]!, grid, candidates);
+      for (let d = 0; d < SIZE; d++) lineSeats[l * SIZE + d] = unitSeats[d]!;
+    }
     for (let d = 1; d <= SIZE; d++) {
-      const bit = bitOf(d);
-      const pairs: { cells: number[]; crosses: number[] }[] = [];
+      let pairs = 0;
       for (let l = 0; l < SIZE; l++) {
-        const cells = lines[l]!.filter((c) => grid[c] === 0 && (candidates[c]! & bit) !== 0);
-        if (cells.length === 2) pairs.push({ cells, crosses: cells.map(crossOf) });
+        const seats = lineSeats[l * SIZE + d - 1]!;
+        if (BIT_COUNT[seats]! !== 2) continue;
+        pairLines[pairs] = l;
+        pairSeats[pairs] = seats;
+        pairs++;
       }
-      for (const combo of combinations(pairs, 2)) {
-        const a = combo[0]!;
-        const b = combo[1]!;
-        if (a.crosses[0] !== b.crosses[0] || a.crosses[1] !== b.crosses[1]) continue;
-        const pattern = [...a.cells, ...b.cells];
-        const targets: number[] = [];
-        for (const cross of a.crosses) {
-          for (const cell of crossLines[cross!]!) {
-            if (pattern.includes(cell)) continue;
-            if (grid[cell] === 0 && (candidates[cell]! & bit) !== 0) targets.push(cell);
+      const bit = bitOf(d);
+      for (let i = 0; i < pairs; i++) {
+        for (let j = i + 1; j < pairs; j++) {
+          const seats = pairSeats[i]!;
+          if (seats !== pairSeats[j]!) continue;
+          const near = pairLines[i]!;
+          const far = pairLines[j]!;
+          const left = bitIndex(seats & -seats);
+          const right = bitIndex(seats & (seats - 1));
+          // The two cross lines lose the digit everywhere off the rectangle.
+          let targets = 0;
+          for (let c = 0; c < 2; c++) {
+            const cross = crossLines[c === 0 ? left : right]!;
+            for (let s = 0; s < SIZE; s++) {
+              if (s === near || s === far) continue;
+              const cell = cross[s]!;
+              if (grid[cell] === 0 && (candidates[cell]! & bit) !== 0) {
+                targets |= 1 << (c * SIZE + s);
+              }
+            }
           }
+          if (targets === 0) continue;
+          const eliminated: number[] = [];
+          for (let rest = targets; rest !== 0; rest &= rest - 1) {
+            const t = bitIndex(rest & -rest);
+            eliminated.push(crossLines[t < SIZE ? left : right]![t % SIZE]!);
+          }
+          const pattern = [
+            lines[near]![left]!,
+            lines[near]![right]!,
+            lines[far]![left]!,
+            lines[far]![right]!,
+          ];
+          return eliminationStep('xWing', eliminated, [d as Digit], pattern);
         }
-        const step = eliminationStep('xWing', targets, [d as Digit], pattern);
-        if (step) return step;
       }
     }
   }
@@ -405,9 +618,33 @@ const FINDERS: readonly Finder[] = [
   { tier: 'hard', find: findXWing },
 ];
 
+/**
+ * Every technique scan the grader runs, counted since the last reset.
+ *
+ * This is the unit of work grading is made of: digging asks `solvableWithin`
+ * after every removal probe, and each answer is a run of these scans — mostly
+ * scans that find nothing, since a probe that goes nowhere pays for all nine.
+ * A stopwatch measures that work times whatever else the machine happened to
+ * be doing; this counts the work itself, and a seed always produces the same
+ * count on any machine. It is the other half of `searchWork`: between them
+ * they are what generation costs, which is what makes the §7 budget assertable
+ * rather than merely observable — see `generator.test.ts`.
+ *
+ * Nothing at runtime reads it; it costs one integer increment per scan.
+ */
+let scans = 0;
+
+export const logicWork = {
+  read: (): number => scans,
+  reset: (): void => {
+    scans = 0;
+  },
+};
+
 function nextStep(state: SolveState, maxRank: number): Step | null {
   for (const finder of FINDERS) {
     if (TIER_RANK[finder.tier] > maxRank) continue;
+    scans++;
     const step = finder.find(state.grid, state.candidates);
     if (step !== null) return step;
   }

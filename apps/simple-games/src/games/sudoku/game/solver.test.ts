@@ -6,8 +6,10 @@ import {
   countSolutions,
   generateSolvedGrid,
   hasConflict,
+  hasSolutionDifferingAt,
   hasUniqueSolution,
   isGridSolved,
+  searchWork,
   solve,
 } from './solver';
 import { CELLS, ROWS, COLS, BOXES } from './types';
@@ -101,6 +103,52 @@ describe('countSolutions', () => {
       })
       .filter((count) => count !== null && count > 1);
     expect(ambiguous.length).toBeGreaterThan(0);
+  });
+});
+
+describe('hasSolutionDifferingAt', () => {
+  const base = gridFromString(UNIQUE)!;
+  const solution = gridFromString(UNIQUE_SOLUTION)!;
+  /** Far more placements than any of these boards can spend. */
+  const GENEROUS = 1_000_000;
+
+  const without = (...cells: number[]): number[] => {
+    const grid = [...base];
+    for (const cell of cells) grid[cell] = 0;
+    return grid;
+  };
+
+  it('finds the second solution a load-bearing clue was holding back', () => {
+    // Clue 20 is one of the clues countSolutions calls load-bearing, so this
+    // is exactly the removal a dig step has to refuse.
+    expect(countSolutions(without(20), 2)).toBe(2);
+    expect(hasSolutionDifferingAt(without(20), solution, [20], GENEROUS)).toBe('found');
+  });
+
+  it('reports none when the removed clue was redundant', () => {
+    // Clue 0 is over-specified: one solution survives without it, so nothing
+    // can differ there and the removal is safe to keep.
+    expect(countSolutions(without(0), 2)).toBe(1);
+    expect(hasSolutionDifferingAt(without(0), solution, [0], GENEROUS)).toBe('none');
+  });
+
+  it('runs out of budget rather than answering none', () => {
+    // The dangerous failure is a cheap 'none': a caller reads that as "safe to
+    // remove" and ships an ambiguous board. Out of budget must say so — and
+    // must cost exactly what it was allowed, no matter how far it got.
+    const grid = without(20);
+    searchWork.reset();
+    expect(hasSolutionDifferingAt(grid, solution, [20], 1)).toBe('unknown');
+    expect(searchWork.read()).toBe(1);
+  });
+
+  it('keeps looking past a cell that nothing differs on', () => {
+    // With 0 and 20 both removed no solution differs at 0, so the only witness
+    // lives in the partition that pins 0 to the known solution and frees 20.
+    // Stopping at the first cell would call this board unique.
+    const grid = without(0, 20);
+    expect(hasSolutionDifferingAt(grid, solution, [0], GENEROUS)).toBe('none');
+    expect(hasSolutionDifferingAt(grid, solution, [0, 20], GENEROUS)).toBe('found');
   });
 });
 
