@@ -151,6 +151,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 | --- | --- |
 | Product philosophy / prohibitions / UX principles | `docs/PRODUCT_PRINCIPLES.md` |
 | Brand / public wording | `docs/BRAND.md` |
+| GitHub repository metadata (description / homepage / topics) | `docs/BRAND.md`「GitHub リポジトリの公開 metadata」 |
 | Architecture / dependency rules | `docs/ARCHITECTURE.md` |
 | Offline behavior | `docs/OFFLINE_POLICY.md` |
 | App advertising / IAP | `docs/ADS_POLICY.md` |

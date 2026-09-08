@@ -204,6 +204,117 @@ OSS を先頭に出さない。
 そこは [I18N_POLICY.md](I18N_POLICY.md) の高リスクキーの門(独立逆翻訳 → 作者が読む)
 と別モデル監査の担当で、**ここが緑でも 12 言語を見たことにはならない。**
 
+## GitHub リポジトリの公開 metadata
+
+このリポジトリの GitHub 上の Description / Website / Topics は、README を開く前に
+検索結果・リポジトリカード・リンクプレビューとして目に入る。このリポジトリ自体が
+`SOURCE_REPO_URL`(`packages/brand/src/index.ts`)としてアプリの About 画面から
+直接リンクされ、「OSS は誠実さの証明である」(上の「コンセプト」節)という約束を
+確かめに来た人が最初に読む文面でもある。つまりこの 3 項目は開発上のメタデータでは
+なく**公開文面**であり、上の「表現ルール」が同じ強さでかかる(issue #159)。
+
+**この節がこの 3 項目の正本(source of truth)である。** GitHub の Settings 画面は
+人が手で入力する UI で、CI はここを検査しない。値を変えるときは、まずこの節を
+直す PR を作り、そのうえで同じ値を GitHub 側へ人手で反映する。現在の値は issue #159
+として 2026-09-08 に設定した。
+
+以前の Description は次のとおりだった:
+
+> Fully free. Fully offline. Simply playable. — Monorepo for the Simple Games series
+> by PixApps (first title: Number Match Offline).
+
+これは 2 点で誤っていた。「Fully free」は対象を言わず無条件に無料を主張する、
+上の「表現ルール」の禁止表現そのもの。「first title: Number Match Offline」は、
+1 タイトルだけをまず出す計画が後に取り下げられた名残で、現在このリポジトリの
+どの文書もそのような計画を説明していない。
+
+### Description
+
+```text
+A quiet, honest, offline collection of classic games by PixApps. No subscriptions, no login, and no gameplay interruptions. Built in the open.
+```
+
+- **ゲーム数は書かない。** GitHub Settings に人手で打ち込んだ数字は、収録が変わった
+  瞬間に古くなる(この文書の「表現ルール」、および
+  [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「数値は公開時点の実測値だけ」)。
+  収録数の正は `README.md` と `apps/simple-games/src/app/registry.ts` が持ち、
+  収録が変わる PR と同じ PR で変わる。この Description はどちらの数とも独立させる。
+- 各語は**「すでにそうなっている」**ことだけを根拠にする。"quiet" と "offline" は
+  アプリ名 `Simple Games: Offline Games` と [OFFLINE_POLICY.md](OFFLINE_POLICY.md)。
+  "honest" は上の「コンセプト」節の Honest by design そのもの。"No subscriptions,
+  no login" は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「必須原則」の
+  サブスクなし・アカウント登録なし(版をまたいで例外なく成立する側)。
+  "no gameplay interruptions" は [ADS_POLICY.md](ADS_POLICY.md)(アプリ: バナー
+  1 枠のみで盤面・操作領域に重ねず、Interstitial / Rewarded / App Open は不採用)と
+  [WEB_VERSION.md](WEB_VERSION.md)(Web: 広告は盤面・操作を妨害しない範囲でのみ)。
+- 上の「表現ルール」の禁止表現は使わない — 旧 Description の "Fully free" が
+  まさにその違反だった。未実装・未検証の主張も書かない。OSS への言及は最後に置く
+  (「訴求の順序」8 番目)。"Built in the open." で締めているのはそのためで、
+  これはブランドプロミスそのものの言い換えでもある。
+- GitHub の Description は 350 字まで。現在の文字列は英数字ベースで約 140 字。
+
+### Homepage
+
+```text
+https://pixapps.ai/simple-games/
+```
+
+`packages/brand/src/index.ts` の `LANDING_BASE_URL` に末尾スラッシュを足した値。
+末尾スラッシュを付ける理由は同ファイルの `WEB_PLAY_URL` と同じで、ページが
+ディレクトリから配信されるため、外すと共有されるたびにリダイレクトが挟まる。
+プレイ URL(`WEB_PLAY_URL`)ではなくランディングページを指すのは、ランディングが
+ストアへのリンク・ブラウザ版・ゲームごとのガイドを含む**すべての入口**であり、
+プレイページはそのうちの 1 つでしかないため。アプリの About 画面がリポジトリへ
+リンクするのに対し、Homepage はリポジトリからプロダクトへ**逆方向に**リンクする。
+
+### Topics
+
+```text
+offline-games, classic-games, puzzle-games, card-games, board-games, arcade-games,
+typescript, react, vite, capacitor, android, ios
+```
+
+**実装済みの事実だけを載せる。** ジャンル系トピックは
+`apps/simple-games/src/app/registry.ts` の `GAME_CATEGORIES` の分類に対応する
+(logic と puzzle → `puzzle-games`、cards → `card-games`、board → `board-games`、
+arcade → `arcade-games`)。`classic-games` と `offline-games` は個々のカテゴリでは
+なくコレクション全体を指し、アプリ名 `Simple Games: Offline Games` の言い換えである。
+技術系トピックは `apps/simple-games/package.json`(TypeScript / React / Vite /
+Capacitor)と、`apps/simple-games/` 配下に実在する Android / iOS プロジェクトから採る。
+
+あえて含めていないもの:
+
+- `pwa` — Service Worker は [ARCHITECTURE.md](ARCHITECTURE.md) のとおり未実装。
+  付けると出荷していない機能を主張することになる。
+- `sudoku` のような個別ゲーム名 — 検索キーワードの詰め込みであり、issue #159 が
+  明示的に非目標としている。ゲーム名の訴求は
+  `apps/simple-games/store/listing.md`(ストア掲載文)の役割で、ここには置かない。
+- `brain-training` のようなプレイヤーへの効果を匂わせるトピック — ドリル 3 本の
+  掲載文が効能表現を避けているのと同じ理由
+  ([SCHULTE_TABLE_RULES.md](SCHULTE_TABLE_RULES.md))。
+
+トピックを足すのは、それが指すものが実際に出荷された時点だけ。成り立たなくなったら外す。
+
+### 適用方法
+
+GitHub リポジトリの Settings → General、またはリポジトリホームの About 歯車から
+Description / Website / Topics を直接編集する。GitHub CLI でも同じ変更ができる:
+
+```sh
+gh repo edit yosuke1024/simple-games \
+  --description "A quiet, honest, offline collection of classic games by PixApps. No subscriptions, no login, and no gameplay interruptions. Built in the open." \
+  --homepage "https://pixapps.ai/simple-games/" \
+  --add-topic offline-games,classic-games,puzzle-games,card-games,board-games,arcade-games,typescript,react,vite,capacitor,android,ios
+```
+
+`--add-topic` は追加のみを行う。この節からトピックを外すときは、
+`--remove-topic`(または UI 側の操作)で別途外すこと。
+
+### 見直すタイミング
+
+この節の値を変えたとき、そしてリリースのたびに GitHub 側と一致しているか確認する
+([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §6)。
+
 ## ストーリー
 
 英語:

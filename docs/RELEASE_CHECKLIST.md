@@ -525,6 +525,8 @@ Solitaire / Spider / FreeCell は**タップ操作を残したまま**ドラッ�
 - [ ] 設定画面の「プライバシーポリシー」「利用規約」が実機で開くことを確認
       (アプリは文面を同梱せずリンクするだけになった)
 - [ ] 「Coming Soon」表記や未実装ゲームの名前が掲載文に含まれていない
+- [ ] GitHub リポジトリの description / homepage / topics が [BRAND.md](BRAND.md)
+      「GitHub リポジトリの公開 metadata」の値と一致している(ゲーム数は書かない)
 
 ## 7. 公開
 
