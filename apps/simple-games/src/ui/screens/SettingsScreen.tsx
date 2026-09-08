@@ -26,10 +26,12 @@ import {
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import packageJson from '../../../package.json';
+import { currentPlatform, pickBackupFile, saveBackupFile } from '../../backup/file';
+import type { BackupProblem, PreparedRestore } from '../../backup/restore';
 import { getFavoriteGames, initFavoriteGames, toggleFavoriteGame } from '../../app/favoriteGames';
 import { initRecentGames } from '../../app/recentGames';
 import { GAMES, type GameId } from '../../app/registry';
-import { LANGUAGE_NAMES } from '../../i18n';
+import { LANGUAGE_NAMES, type MessageKey } from '../../i18n';
 import {
   getAdRemovalPrice,
   initAdRemoval,
@@ -43,7 +45,7 @@ import { usePrivacyOptionsRequired } from '../../services/ads/useConsent';
 import { initReview } from '../../services/review';
 import { initWebAppPrompt } from '../../services/webAppPrompt';
 import { useSettings } from '../../state/SettingsContext';
-import { clearLocalData } from '../../storage/repo';
+import { clearLocalData, loadRecord } from '../../storage/repo';
 import {
   LANGUAGES,
   settingsSchema,
@@ -109,12 +111,58 @@ function getLazySettingsSection(id: GameId): ComponentType | null {
   return created;
 }
 
+/**
+ * READING AND WRITING A BACKUP ARRIVES WHEN IT IS ASKED FOR
+ *
+ * `backup/file.ts` is imported normally above — `pickBackupFile` has to be
+ * reached inside the click's user activation, so it cannot be behind an await.
+ * Everything else is loaded here, on the press: the format, the export, and
+ * the validation that walks every record. None of it is needed to draw this
+ * screen, and all of it would otherwise ride in the collection home's initial
+ * chunk, which is the one thing the size gate measures as a promise rather
+ * than a number (docs/architecture/registry.md「ゲーム単位の lazy チャンク」).
+ * The types above are erased at build time and cost nothing.
+ */
+const loadBackupWriter = () =>
+  Promise.all([import('../../backup/export'), import('../../backup/format')]);
+const loadBackupReader = () => import('../../backup/restore');
+
+/**
+ * What to say about a file that was refused. Three reasons, three answers —
+ * "pick another file", "update the app", "this copy is broken" — because a
+ * single "could not restore" would leave somebody retrying the one thing that
+ * cannot work (src/backup/restore.ts).
+ */
+const RESTORE_PROBLEM_MESSAGE: Record<BackupProblem, MessageKey> = {
+  unreadable: 'backupFileUnreadable',
+  newer: 'backupFileNewer',
+  damaged: 'backupFileDamaged',
+};
+
+/**
+ * The backup's date, in the reader's language, for the confirmation. Falls
+ * back to the plain ISO day: knowing WHICH backup is about to replace the
+ * device matters more than knowing it in the local format, and `Intl` is the
+ * one thing on this screen that can throw on an unexpected tag.
+ */
+function backupDate(iso: string, locale: string): string {
+  try {
+    return new Date(iso).toLocaleDateString(locale, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  } catch {
+    return iso.slice(0, 10);
+  }
+}
+
 export interface SettingsScreenProps {
   onBack: () => void;
 }
 
 export function SettingsScreen({ onBack }: SettingsScreenProps) {
-  const { settings, updateSettings, replaceSettings, t } = useSettings();
+  const { settings, updateSettings, replaceSettings, locale, t } = useSettings();
   const purchased = useAdRemovalPurchased();
   const purchasable = usePurchaseAvailable() && !purchased;
   /** Ads exist on this platform at all — false on the web build. */
@@ -128,6 +176,15 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [price, setPrice] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [busy, setBusy] = useState(false);
+  /**
+   * A backup that has been read and fully validated, waiting for the one
+   * destructive confirmation. Holding the checked payload — rather than the
+   * file — is what makes "nothing is written until the player says yes"
+   * true of this screen as well as of the layer beneath it.
+   */
+  const [pendingRestore, setPendingRestore] = useState<PreparedRestore | null>(null);
+  /** The one line Backup & Restore ever says. Cleared when a new attempt starts. */
+  const [backupNotice, setBackupNotice] = useState<MessageKey | null>(null);
   // On native the installed build's real version (from the release tag, via
   // Capacitor's App.getInfo) is the source of truth — package.json's version
   // field is never bumped and would otherwise show a permanently stale
@@ -180,19 +237,89 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     }
   };
 
-  const runReset = async () => {
-    const keys = [...Object.values(STORAGE_KEYS), ...GAMES.flatMap((game) => game.storageKeys)];
-    await clearLocalData(keys);
-    // Reload the in-memory copies of the shared records from their defaults.
-    // Skipping one would leave the deleted data on screen until a restart,
-    // which is the delete button lying about what it did.
-    replaceSettings(settingsSchema.defaultValue());
-    await initAdRemoval();
-    await initReview();
+  /**
+   * Re-read the shared records this screen keeps in memory. Skipping one
+   * would leave data that is no longer stored on screen until a restart,
+   * which is whichever button just ran lying about what it did — true of
+   * "Reset Local Data" and just as true of a restore.
+   */
+  const reloadSharedRecords = async () => {
+    replaceSettings(await loadRecord(settingsSchema));
     await initRecentGames();
     await initFavoriteGames();
     setFavoriteIds(getFavoriteGames());
+  };
+
+  const runReset = async () => {
+    const keys = [...Object.values(STORAGE_KEYS), ...GAMES.flatMap((game) => game.storageKeys)];
+    await clearLocalData(keys);
+    await reloadSharedRecords();
+    // The records a backup never touches, and which only a delete resets.
+    await initAdRemoval();
+    await initReview();
     await initWebAppPrompt();
+  };
+
+  /**
+   * Writes the backup and hands it to the platform. Nothing is said on
+   * success: the OS share sheet or the browser's download is the receipt, and
+   * a toast after it would be the app congratulating itself.
+   */
+  const exportBackup = async () => {
+    setBackupNotice(null);
+    setBusy(true);
+    try {
+      const [{ createBackup }, { backupFileName, serializeBackup }] = await loadBackupWriter();
+      const backup = await createBackup({
+        appVersion: displayVersion,
+        platform: currentPlatform(),
+      });
+      const saved = await saveBackupFile(backupFileName(new Date()), serializeBackup(backup));
+      if (!saved) setBackupNotice('backupExportFailed');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /**
+   * Opens the file picker, reads the file, and — only if every record in it
+   * validates — asks the one destructive question. A file that is refused
+   * never reaches the dialog, so the player is never asked to confirm
+   * something that was going to fail anyway.
+   *
+   * Not `async`: `pickBackupFile` has to be reached inside the click's user
+   * activation, and an awaited call before it would spend that (backup/file.ts).
+   */
+  const chooseBackup = () => {
+    setBackupNotice(null);
+    setBusy(true);
+    const picked = pickBackupFile();
+    void (async () => {
+      try {
+        const file = await picked;
+        if (file === null) return;
+        const { readBackupFile } = await loadBackupReader();
+        const read = await readBackupFile(file);
+        if (read.ok) setPendingRestore(read.prepared);
+        else setBackupNotice(RESTORE_PROBLEM_MESSAGE[read.problem]);
+      } finally {
+        setBusy(false);
+      }
+    })();
+  };
+
+  const runRestore = async (prepared: PreparedRestore) => {
+    setBusy(true);
+    try {
+      const { applyBackup } = await loadBackupReader();
+      const outcome = await applyBackup(prepared);
+      // On either outcome the store now holds what the player should see: the
+      // backup's records, or — after a rollback — the ones they started with.
+      await reloadSharedRecords();
+      setBackupNotice(outcome === 'restored' ? 'backupRestoreDone' : 'backupRestoreFailed');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -390,6 +517,42 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           ) : null}
         </section>
 
+        {/* Backup & Restore (issue #160). Simple Games keeps no account and
+            no cloud save, so a file the player moves themselves is the whole
+            of "I got a new phone" — and the only thing the app does is write
+            it and read it back (docs/architecture/backup.md).
+
+            No badge, no "you have not backed up in 30 days", no reminder.
+            Two buttons that do what they say, and one line of text when
+            there is something true to say (docs/PRODUCT_PRINCIPLES.md). */}
+        <section className="settings-group" aria-label={t('backupTitle')}>
+          <h2 className="settings-group-title">{t('backupTitle')}</h2>
+          <p className="settings-note">{t('backupBody')}</p>
+          <p className="settings-note">{t('backupPrivacyNote')}</p>
+          {/* Only where a purchase exists to be misunderstood — the web build
+              sells nothing (docs/WEB_VERSION.md). */}
+          {adsExist ? <p className="settings-note">{t('backupPurchaseNote')}</p> : null}
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={busy}
+            onClick={() => void exportBackup()}
+          >
+            {t('backupExport')}
+          </button>
+          <button type="button" className="btn btn-ghost" disabled={busy} onClick={chooseBackup}>
+            {t('backupRestore')}
+          </button>
+          {/* `role="status"` so the outcome is announced rather than only
+              drawn: this is the one place on the screen where something
+              happened that has no other visible trace. */}
+          {backupNotice ? (
+            <p className="settings-status" role="status">
+              {t(backupNotice)}
+            </p>
+          ) : null}
+        </section>
+
         <button
           type="button"
           className="settings-row settings-row-danger"
@@ -411,6 +574,28 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         <span className="brand-name">{SERIES_NAME}</span>
         <span className="brand-by">{SERIES_BY_LINE}</span>
       </footer>
+
+      {/* Asked only about a file that has already been read and validated in
+          full, and answered before a single byte of the device's data is
+          written (src/backup/restore.ts). */}
+      <ConfirmDialog
+        open={pendingRestore !== null}
+        title={t('backupRestoreConfirmTitle')}
+        body={
+          pendingRestore
+            ? t('backupRestoreConfirmBody', { date: backupDate(pendingRestore.createdAt, locale) })
+            : undefined
+        }
+        cancelLabel={t('cancel')}
+        confirmLabel={t('backupRestore')}
+        danger
+        onCancel={() => setPendingRestore(null)}
+        onConfirm={() => {
+          const prepared = pendingRestore;
+          setPendingRestore(null);
+          if (prepared) void runRestore(prepared);
+        }}
+      />
 
       <ConfirmDialog
         open={confirmReset}

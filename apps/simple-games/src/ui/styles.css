@@ -1415,6 +1415,19 @@ button:disabled {
   color: var(--ink-soft);
 }
 
+/* The one line Backup & Restore says after an attempt (issue #160). Reads as
+   a result rather than as more explanation — same size as the notes above it,
+   full ink instead of soft — because it is the only trace a restore leaves on
+   this screen. Not a toast: it stays until the next attempt, so somebody who
+   looked away has not missed it. */
+.settings-status {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 600;
+  color: var(--ink);
+}
+
 /* ---------- game ---------- */
 
 .game-screen {

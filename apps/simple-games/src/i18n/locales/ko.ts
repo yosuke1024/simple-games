@@ -57,6 +57,25 @@ export const ko: Messages = {
   privacyPolicy: '개인정보 처리방침',
   termsOfUse: '이용약관',
   adPrivacyOptions: '광고 개인정보 설정',
+  // Backup & Restore (issue #160). One file the player moves themselves —
+  // Simple Games has no account, no cloud save, and nothing that uploads it.
+  backupTitle: '백업 및 복원',
+  backupBody: '진행 상황을 다른 기기로 옮기거나, 사본을 보관할 수 있습니다.',
+  backupPrivacyNote:
+    '백업은 기기에 저장되는 암호화되지 않은 파일입니다. Simple Games는 이 파일을 업로드하지 않으며, 어디에 둘지는 사용자가 정합니다.',
+  backupPurchaseNote: '광고 제거 구매는 백업에 포함되지 않습니다. 스토어에서 복원하세요.',
+  backupExport: '백업 내보내기',
+  backupRestore: '백업에서 복원',
+  backupExportFailed: '백업 파일을 만들지 못했습니다.',
+  backupRestoreConfirmTitle: '이 기기의 데이터를 바꿀까요?',
+  backupRestoreConfirmBody:
+    '이 기기에 저장된 진행 중인 게임, 통계, 설정이 {date}의 백업으로 대체됩니다. 되돌릴 수 없습니다.',
+  backupRestoreDone: '데이터를 복원했습니다.',
+  backupRestoreFailed: '복원을 완료하지 못했습니다. 기존 데이터는 그대로 남아 있습니다.',
+  backupFileUnreadable: '이 파일은 Simple Games 백업이 아닙니다.',
+  backupFileDamaged: '이 백업 파일은 손상되었습니다. 아무것도 변경되지 않았습니다.',
+  backupFileNewer:
+    '이 백업은 더 새로운 버전의 Simple Games에서 만들었습니다. 앱을 업데이트한 뒤 다시 시도하세요.',
   resetData: '로컬 데이터 삭제',
   resetConfirmTitle: '모든 로컬 데이터를 삭제할까요?',
   resetConfirmBody: '이 기기에서 게임, 통계, 설정이 삭제됩니다. 되돌릴 수 없습니다.',

@@ -57,6 +57,26 @@ export const id: Messages = {
   privacyPolicy: 'Kebijakan Privasi',
   termsOfUse: 'Ketentuan Penggunaan',
   adPrivacyOptions: 'Opsi Privasi Iklan',
+  // Backup & Restore (issue #160). One file the player moves themselves —
+  // Simple Games has no account, no cloud save, and nothing that uploads it.
+  backupTitle: 'Cadangkan & Pulihkan',
+  backupBody: 'Pindahkan progresmu ke perangkat lain, atau simpan salinannya.',
+  backupPrivacyNote:
+    'Cadangan adalah berkas tanpa enkripsi di perangkatmu. Simple Games tidak pernah mengunggahnya, dan hanya kamu yang menentukan ke mana berkas itu pergi.',
+  backupPurchaseNote:
+    'Pembelian penghapusan iklan tidak termasuk dalam cadangan. Pulihkan lewat toko aplikasi.',
+  backupExport: 'Ekspor Cadangan',
+  backupRestore: 'Pulihkan Cadangan',
+  backupExportFailed: 'Berkas cadangan tidak dapat dibuat.',
+  backupRestoreConfirmTitle: 'Ganti data di perangkat ini?',
+  backupRestoreConfirmBody:
+    'Semua yang tersimpan di sini — permainan yang belum selesai, statistik, dan pengaturan — diganti dengan cadangan dari {date}. Tindakan ini tidak dapat dibatalkan.',
+  backupRestoreDone: 'Datamu telah dipulihkan.',
+  backupRestoreFailed: 'Pemulihan tidak dapat diselesaikan. Data yang ada tetap tersimpan.',
+  backupFileUnreadable: 'Berkas itu bukan cadangan Simple Games.',
+  backupFileDamaged: 'Berkas cadangan ini rusak. Tidak ada yang diubah.',
+  backupFileNewer:
+    'Cadangan ini dibuat oleh versi Simple Games yang lebih baru. Perbarui aplikasinya, lalu coba lagi.',
   resetData: 'Hapus Data Lokal',
   resetConfirmTitle: 'Hapus semua data lokal?',
   resetConfirmBody:

@@ -130,7 +130,7 @@ src/
 
 ## ゲームレジストリの契約
 
-`app/registry.ts` のエントリは「タイトルカード + そのゲームが持つキー + ゲーム本体のローダー」だけのプラグイン機構ではない薄い契約で、ゲームの追加は keys の import 1 行と配列要素 1 つで済む。ゲーム本体は静的 import せず `codeSplitting` でゲーム単位のチャンクに分かれる——例外は同期参照される import ゼロの葉 `storage/keys.ts` だけで、ここに import を足すとホームの初期チャンクへ引き戻される。`storageKeys` は「ローカルデータ削除」がゲームのチャンクを読まずに列挙するためのもので、released 済みキーの一覧は `gameKeys.test.ts` のゴールデンとして固定され、**テストを直して通すのは禁止**(プレイヤーのデータに対する削除行為になるため)。Root が受け取る props は `GameRootProps` = `onExit` と任意の `entry`(どの扉から入ったか、issue #113)。`SettingsSection` は任意で、ゲーム固有の設定はゲームが所有しシェルは場所だけ貸す。
+`app/registry.ts` のエントリは「タイトルカード + そのゲームが持つキー + ゲーム本体のローダー」だけのプラグイン機構ではない薄い契約で、ゲームの追加は keys の import 1 行と配列要素 1 つで済む。ゲーム本体は静的 import せず `codeSplitting` でゲーム単位のチャンクに分かれる——例外は同期参照される import ゼロの葉 `storage/keys.ts` だけで、ここに import を足すとホームの初期チャンクへ引き戻される。`storageKeys` は「ローカルデータ削除」とバックアップがゲームのチャンクを読まずに列挙するためのもので、released 済みキーの一覧は `gameKeys.test.ts` のゴールデンとして固定され、**テストを直して通すのは禁止**(プレイヤーのデータに対する削除行為になるため)。`loadStorageSchemas` は**必須**のローダーで、Backup & Restore がそのゲームのレコードを持ち主の `SchemaDef` で検証するための唯一の口 —— 任意にすると、書き出せるのに復元できないゲームが黙って増える(issue #160)。Root が受け取る props は `GameRootProps` = `onExit` と任意の `entry`(どの扉から入ったか、issue #113)。`SettingsSection` は任意で、ゲーム固有の設定はゲームが所有しシェルは場所だけ貸す。
 
 小見出し: 「ゲーム単位の lazy チャンク(issue #26)」
 
@@ -168,9 +168,15 @@ src/
 
 ## ストレージキーの規約
 
-共有レコードは `sg.` 接頭辞、ゲーム固有レコードはゲームごとの 2 文字接頭辞(表は全文参照)。**`loadRecord` は throw しない**——壊れた JSON もストア自体の失敗もスキーマ既定値に倒す。**起動時の読み出しは 1 段ずつ独立して守る**(`app/boot.ts`。1 つの `try` を共有すると無関係なレコード 1 件の失敗が残り全部を巻き添えにする)。**`repo.ts` はキーごとに操作を直列化する**——書き込みは全レイヤーで fire-and-forget なので、順序を保証しないと「ローカルデータ削除」の最中に飛んでいた保存が後から着地してレコードが復活しうる。中断スロットを 2 つ持つゲームでは、どちらのモードかを決めるのはキーであってレコード内の `mode` ではない。
+共有レコードは `sg.` 接頭辞、ゲーム固有レコードはゲームごとの 2 文字接頭辞(表は全文参照)。**`loadRecord` は throw しない**——壊れた JSON もストア自体の失敗もスキーマ既定値に倒す。**起動時の読み出しは 1 段ずつ独立して守る**(`app/boot.ts`。1 つの `try` を共有すると無関係なレコード 1 件の失敗が残り全部を巻き添えにする)。**`repo.ts` はキーごとに操作を直列化する**——書き込みは全レイヤーで fire-and-forget なので、順序を保証しないと「ローカルデータ削除」の最中に飛んでいた保存が後から着地してレコードが復活しうる(バックアップの復元も同じキューに載る。`loadRaw` / `saveRaw`)。中断スロットを 2 つ持つゲームでは、どちらのモードかを決めるのはキーであってレコード内の `mode` ではない。
 
 → 全文: [architecture/storage-keys.md](architecture/storage-keys.md)
+
+## バックアップと復元
+
+アカウント・クラウドセーブ・バックエンドを持たない以上、機種変更で進行が全部消える摩擦は**ユーザーが自分で運べる 1 ファイル**で引き受ける(issue #160、実装は `src/backup/`)。ファイルは `formatVersion` / `createdAt` / `appVersion` / `platform` / `data`(ストレージキー → パース済み JSON)の JSON で、**`appVersion` と `platform` は参考情報にすぎず復元可否を決めない** —— Android ↔ iOS ↔ Web を同じファイルで往復できることが目的である。運ぶ対象はレジストリの `storageKeys` とシェルの `sg.settings` / `sg.favorites` / `sg.recent`。**`sg.iap` は絶対に入れない**(ファイルはコピーできるので、入れた時点で「コピーできる買い切り」になる。docs/ADS_POLICY.md)。**レコードの検証はバックアップ層ではなく各レコードの `SchemaDef` が行い**、到達経路は必須フィールド `GameDefinition.loadStorageSchemas` —— 入れ忘れがコンパイルエラーになる。復元は `readBackup`(何も書かない・全件検証)と `applyBackup`(検証済みのものしか受け取れない)に分かれ、snapshot → 書き込み → **読み直して照合** → 不一致なら rollback。ファイルに無いキーは消す(**merge は作らない**)。未知キーと新しい `formatVersion` は黙って捨てず拒否する。Export / Restore に通信は無い。
+
+→ 全文: [architecture/backup.md](architecture/backup.md)
 
 ## i18n
 

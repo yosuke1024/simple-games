@@ -44,6 +44,17 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   // 破壊的操作の確認 — 誤訳がそのままデータ損失になる
   'confirmNewGameBody',
   'minesConfirmSwitchBody',
+  // Restore は「この端末のデータを置き換える」操作(issue #160)。誤訳で
+  // 「取り込む」「統合する」に読めた時点で、実際に起きるのは全置換なので
+  // 取り返しがつかない。日付プレースホルダ `{date}` の欠落も同じ重さで見る。
+  'backupRestoreConfirmTitle',
+  'backupRestoreConfirmBody',
+
+  // バックアップが何であって何でないか — アップロードしない / 暗号化されて
+  // いない / 課金は入っていない。どれも弱めても盛っても約束の反故になる
+  // (docs/OFFLINE_POLICY.md, docs/ADS_POLICY.md)。
+  'backupPrivacyNote',
+  'backupPurchaseNote',
 
   // 無料・オフライン・paywall 不在の保証
   'tagline',

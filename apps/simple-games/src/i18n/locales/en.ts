@@ -68,6 +68,26 @@ export const en = {
   privacyPolicy: 'Privacy Policy',
   termsOfUse: 'Terms of Use',
   adPrivacyOptions: 'Ad Privacy Options',
+  // Backup & Restore (issue #160). One file the player moves themselves —
+  // Simple Games has no account, no cloud save, and nothing that uploads it.
+  backupTitle: 'Backup & Restore',
+  backupBody: 'Move your progress to another device, or keep a copy of it.',
+  backupPrivacyNote:
+    'The backup is an unencrypted file on your device. Simple Games never uploads it, and only you decide where it goes.',
+  backupPurchaseNote:
+    'Your ad-removal purchase is not part of the backup. Restore it from the store instead.',
+  backupExport: 'Export Backup',
+  backupRestore: 'Restore Backup',
+  backupExportFailed: 'The backup file could not be created.',
+  backupRestoreConfirmTitle: 'Replace this device’s data?',
+  backupRestoreConfirmBody:
+    'Everything saved here — games in progress, statistics and settings — is replaced by the backup from {date}. It cannot be undone.',
+  backupRestoreDone: 'Your data was restored.',
+  backupRestoreFailed: 'The restore could not be completed. Your existing data was kept.',
+  backupFileUnreadable: 'That file is not a Simple Games backup.',
+  backupFileDamaged: 'This backup file is damaged. Nothing was changed.',
+  backupFileNewer:
+    'This backup was made by a newer version of Simple Games. Update the app, then try again.',
   resetData: 'Reset Local Data',
   resetConfirmTitle: 'Delete all local data?',
   resetConfirmBody:

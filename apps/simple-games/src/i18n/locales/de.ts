@@ -57,6 +57,27 @@ export const de: Messages = {
   privacyPolicy: 'Datenschutz',
   termsOfUse: 'Nutzungsbedingungen',
   adPrivacyOptions: 'Datenschutzoptionen für Werbung',
+  // Backup & Restore (issue #160). One file the player moves themselves —
+  // Simple Games has no account, no cloud save, and nothing that uploads it.
+  backupTitle: 'Sicherung & Wiederherstellung',
+  backupBody: 'Nimm deinen Fortschritt auf ein anderes Gerät mit oder bewahre eine Kopie auf.',
+  backupPrivacyNote:
+    'Die Sicherung ist eine unverschlüsselte Datei auf deinem Gerät. Simple Games lädt sie nirgendwohin hoch, und nur du entscheidest, wo sie landet.',
+  backupPurchaseNote:
+    'Der Kauf zum Entfernen der Werbung gehört nicht zur Sicherung. Stelle ihn stattdessen über den Store wieder her.',
+  backupExport: 'Sicherung exportieren',
+  backupRestore: 'Sicherung wiederherstellen',
+  backupExportFailed: 'Die Sicherungsdatei konnte nicht erstellt werden.',
+  backupRestoreConfirmTitle: 'Daten auf diesem Gerät ersetzen?',
+  backupRestoreConfirmBody:
+    'Alles, was hier gespeichert ist — laufende Spiele, Statistiken und Einstellungen — wird durch die Sicherung vom {date} ersetzt. Das lässt sich nicht rückgängig machen.',
+  backupRestoreDone: 'Deine Daten wurden wiederhergestellt.',
+  backupRestoreFailed:
+    'Die Wiederherstellung konnte nicht abgeschlossen werden. Deine vorhandenen Daten sind erhalten geblieben.',
+  backupFileUnreadable: 'Diese Datei ist keine Simple-Games-Sicherung.',
+  backupFileDamaged: 'Diese Sicherungsdatei ist beschädigt. Es wurde nichts geändert.',
+  backupFileNewer:
+    'Diese Sicherung stammt von einer neueren Version von Simple Games. Aktualisiere die App und versuche es erneut.',
   resetData: 'Lokale Daten löschen',
   resetConfirmTitle: 'Alle lokalen Daten löschen?',
   resetConfirmBody:
