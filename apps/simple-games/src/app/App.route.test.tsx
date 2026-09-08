@@ -510,15 +510,20 @@ describe('the settings screen and the address', () => {
 });
 
 /**
- * `popstate` is a comparison, not a repair. onPopState (App.tsx「Back and
- * Forward, browser only」) reads whatever the address currently says and
- * closes or opens a game to match it, but it carries none of boot's tidying:
- * `startRoute` (webRoute.ts) settles a `?game=` this build cannot open down
- * to the plain collection address *because* there is a decision to make
- * right then about what just opened. A later step arriving by `popstate` gets
- * no equivalent rewrite — the handler only ever touches the screen, never the
- * address it is reacting to. And it runs only in the browser: the effect
- * `return`s before its `addEventListener` when routing is off
+ * `popstate` is a comparison with exactly one repair in it. onPopState
+ * (App.tsx「Back and Forward, browser only」) reads whatever the address
+ * currently says and closes or opens a game to match it; the one thing it
+ * writes back is a `?game=` this build cannot open. `settleStaleRoute`
+ * (webRoute.ts) drops that down to the plain collection address, the same
+ * tidying boot's `startRoute` does on arrival — because which way the visitor
+ * reached the entry is not something the address bar should record, and a
+ * collection sitting under `?game=not-a-game` bookmarks and shares as an
+ * address that opens nothing (issue #172).
+ *
+ * Nothing else about the entry moves: no push, no walk, the depth left as it
+ * was, and an address naming a game this build does carry — or naming none —
+ * left exactly alone. And none of it runs in the app: the effect `return`s
+ * before its `addEventListener` when routing is off
  * (docs/ARCHITECTURE.md「ハードウェア戻るボタン」), which is a stronger claim
  * than "the app ignores this" — there is no listener there to ignore it.
  */
@@ -536,19 +541,58 @@ describe('a step the address cannot honour', () => {
     // the page, would land on it: no boot, no `startRoute` in between.
     window.history.replaceState(null, '', `${PLAY}?game=not-a-game`);
     vi.mocked(releaseSound).mockClear();
+    const history = watchHistory();
     await act(async () => {
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
 
     expect(await collectionHome()).toBeInTheDocument();
     expect(releaseSound).toHaveBeenCalledTimes(1);
-    // Deliberate asymmetry, documented rather than endorsed: boot's
-    // `startRoute` would have dropped this same `?game=not-a-game` down to
-    // the plain collection address (「arriving at a game address」, above),
-    // but `onPopState` never rewrites the address it just reacted to — only
-    // the screen. The collection is on screen and the bar above it still
-    // reads the id that put it there.
-    expect(window.location.search).toBe('?game=not-a-game');
+    // The id goes with the game it could not open: the collection is on
+    // screen and the bar above it is the collection's own address, the same
+    // one boot would have settled on (「arriving at a game address」, above).
+    expect(window.location.search).toBe('');
+    // In place. Repairing the entry is not stepping anywhere.
+    expect(history.push).not.toHaveBeenCalled();
+    expect(history.back).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The screen can already be right while the address is wrong — Back onto
+   * such an entry from the collection has nothing to draw differently. The
+   * repair still has to happen, which is why it runs ahead of onPopState's
+   * "showing what the address asks for, nothing to do" return.
+   */
+  it('drops the id even when the collection is already on screen', async () => {
+    arriveAt(PLAY);
+    renderShell();
+    await collectionHome();
+
+    window.history.replaceState(null, '', `${PLAY}?game=not-a-game`);
+    await act(async () => {
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+
+    expect(await collectionHome()).toBeInTheDocument();
+    expect(window.location.search).toBe('');
+  });
+
+  // The repair is for ids that answer to nothing. A step onto a game this
+  // build does carry is a true address, and is not rewritten on the way past.
+  it('leaves an address this build can honour exactly as it found it', async () => {
+    arriveAt(PLAY);
+    renderShell();
+    await collectionHome();
+
+    window.history.replaceState(null, '', `${PLAY}?utm_source=guide&game=sudoku`);
+    const history = watchHistory();
+    await act(async () => {
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+
+    expect(await playing('sudoku')).toBeInTheDocument();
+    expect(window.location.search).toBe('?utm_source=guide&game=sudoku');
+    expect(history.replace).not.toHaveBeenCalled();
   });
 
   it('is ignored by the app build, which never listens', async () => {

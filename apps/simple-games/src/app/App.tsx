@@ -44,7 +44,14 @@ import { getLazyRoot, resetLazyRoot } from './lazyRoots';
 import { recordGameOpened } from './recentGames';
 import { type GameEntry, type GameId } from './registry';
 import { gameIdFromShortcutUrl, shortcutLaunchGame } from './shortcutLaunch';
-import { currentRouteGame, popRoute, pushRoute, startRoute, webRoutingEnabled } from './webRoute';
+import {
+  currentRouteGame,
+  popRoute,
+  pushRoute,
+  settleStaleRoute,
+  startRoute,
+  webRoutingEnabled,
+} from './webRoute';
 
 type View =
   | { kind: 'collection' }
@@ -318,10 +325,19 @@ export function App() {
    * Only games are in the address. The settings screen is not, so Back does
    * not close it — it leaves the site, which is what Back did on every screen
    * before any of this existed (docs/WEB_VERSION.md「URL(ゲーム別の入口)」).
+   *
+   * The one thing this handler writes back is a `?game=` this build cannot
+   * open: `settleStaleRoute` drops it exactly as boot does, before the
+   * comparison, so an entry made by a newer build — or by a typo somebody
+   * opened once — leaves the collection on screen *and* an address that says
+   * so, rather than one that is still bookmarkable as nothing (issue #172).
+   * It fires ahead of the early return below because the address can be wrong
+   * while the screen is already right.
    */
   useEffect(() => {
     if (!webRoutingEnabled()) return;
     const onPopState = () => {
+      settleStaleRoute();
       const showing = viewRef.current.kind === 'game' ? viewRef.current.gameId : null;
       const target = currentRouteGame();
       if (showing === target) return;

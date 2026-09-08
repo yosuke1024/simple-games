@@ -17,6 +17,7 @@ import {
   hrefWithGame,
   popRoute,
   pushRoute,
+  settleStaleRoute,
   startRoute,
   webRoutingEnabled,
 } from './webRoute';
@@ -168,5 +169,61 @@ describe('the history the shell keeps', () => {
 
     expect(back).not.toHaveBeenCalled();
     expect(window.location.search).toBe('');
+  });
+});
+
+/**
+ * Boot is not the only way to end up standing on an id this build cannot
+ * open: Back and Forward reach entries written by an older or a newer build,
+ * and a typo that was opened once stays in the stack (issue #172). The shell
+ * calls this from `popstate`, and what it does there has to be the same
+ * tidying `startRoute` does on arrival — otherwise the collection is showing
+ * under an address that opens nothing, and that address is what gets
+ * bookmarked and passed on.
+ */
+describe('settling an entry this build cannot honour', () => {
+  it('drops the id, in place, without adding an entry', () => {
+    window.history.replaceState(null, '', '/simple-games/play/?game=not-a-game');
+    const before = window.history.length;
+    settleStaleRoute();
+    expect(window.location.search).toBe('');
+    expect(currentRouteGame()).toBeNull();
+    expect(window.history.length).toBe(before);
+  });
+
+  it('keeps whatever else that entry carried', () => {
+    window.history.replaceState(null, '', '/simple-games/play/?utm_source=guide&game=#rules');
+    settleStaleRoute();
+    expect(window.location.search).toBe('?utm_source=guide');
+    expect(window.location.hash).toBe('#rules');
+  });
+
+  it.each([
+    ['a game this build carries', '/simple-games/play/?game=sudoku'],
+    ['the collection itself', '/simple-games/play/'],
+  ])('leaves %s untouched — history is walked, not rewritten', (_case, href) => {
+    window.history.replaceState(null, '', href);
+    const replace = vi.spyOn(window.history, 'replaceState');
+    settleStaleRoute();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The depth belongs to the position in the stack, not to the address
+   * written at it. A collection that was one step behind is still one step
+   * behind after the parameter goes, so leaving still walks back rather than
+   * rewriting in place and stranding Forward.
+   */
+  it('keeps the depth stamped on the entry it repairs', () => {
+    window.history.replaceState(null, '', '/simple-games/play/');
+    startRoute(null);
+    pushRoute('sudoku');
+    window.history.replaceState(window.history.state, '', '/simple-games/play/?game=not-a-game');
+
+    settleStaleRoute();
+    const back = vi.spyOn(window.history, 'back');
+    popRoute();
+
+    expect(back).toHaveBeenCalledTimes(1);
   });
 });
