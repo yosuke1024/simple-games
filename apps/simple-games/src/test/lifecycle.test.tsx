@@ -11,7 +11,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { GAMES } from '@/app/registry';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { settingsSchema } from '@/storage/schemas';
-import { trackResources } from './lifecycle';
+import { stubAnimationFrames, stubCanvas2d, stubMatchMedia, trackResources } from './lifecycle';
 
 afterEach(cleanup);
 
@@ -47,6 +47,73 @@ describe('the harness itself', () => {
       tracker.restore();
     }
   });
+
+  /**
+   * The stubs' restore discipline (lifecycle.ts, the comment above `install`),
+   * proved against the sequence a timed-out test actually produces: vitest
+   * abandons the test mid-await, the next test installs its own stub on the
+   * same global, and only then does the first test's `finally` run — so the
+   * restores arrive A, B in install order, not B, A in nesting order. The
+   * same global is read back as a tuple so requestAnimationFrame and
+   * cancelAnimationFrame are checked as the pair they are swapped as.
+   */
+  const STUBS = [
+    {
+      name: 'stubCanvas2d',
+      install: stubCanvas2d,
+      read: (): readonly unknown[] => [HTMLCanvasElement.prototype.getContext],
+    },
+    {
+      name: 'stubMatchMedia',
+      install: stubMatchMedia,
+      read: (): readonly unknown[] => [window.matchMedia],
+    },
+    {
+      name: 'stubAnimationFrames',
+      install: stubAnimationFrames,
+      read: (): readonly unknown[] => [window.requestAnimationFrame, window.cancelAnimationFrame],
+    },
+  ];
+  const same = (a: readonly unknown[], b: readonly unknown[]) =>
+    a.length === b.length && a.every((value, i) => Object.is(value, b[i]));
+
+  for (const { name, install, read } of STUBS) {
+    it(`${name}: a restore that arrives after the next test stubbed the same global neither strips that stub nor outlives it`, () => {
+      const real = read();
+      const restoreA = install();
+      const stubA = read();
+      expect(same(stubA, real), 'the first install changed nothing').toBe(false);
+      // Test B installs over A's stub while A is still "running" its timeout.
+      const restoreB = install();
+      const stubB = read();
+      expect(same(stubB, stubA), 'the second install changed nothing').toBe(false);
+
+      // A's finally, late: B's stub must stay exactly as B installed it.
+      restoreA();
+      expect(same(read(), stubB), "A's late restore stripped B's stub").toBe(true);
+
+      // B's finally: back to the real thing, not to the stubA B found on install.
+      restoreB();
+      expect(same(read(), real), "B's restore left a stub behind").toBe(true);
+
+      // Restoring again is a no-op, whichever order the two arrived in.
+      restoreA();
+      restoreB();
+      expect(same(read(), real)).toBe(true);
+    });
+
+    it(`${name}: nested installs restore in nesting order too`, () => {
+      const real = read();
+      const restoreA = install();
+      const stubA = read();
+      const restoreB = install();
+
+      restoreB();
+      expect(same(read(), stubA), "B's restore did not hand the global back to A").toBe(true);
+      restoreA();
+      expect(same(read(), real), "A's restore left a stub behind").toBe(true);
+    });
+  }
 });
 
 describe('a closed game leaves nothing running', () => {

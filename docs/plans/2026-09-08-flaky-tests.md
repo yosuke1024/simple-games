@@ -43,8 +43,10 @@ canonical document と食い違えばそちらを正とする。
 方針は 1 つ: **壁時計を判定から外す**。timeout を上げた箇所は無く、skip / quarantine も無い。
 
 1. **Bubble Pop の手回しフレーム** — `src/test/lifecycle.ts` に `stubAnimationFrames()` を
-   追加(RAF はハンドルを返すだけで発火しない。restore は自分の stub が生きている間だけ
-   戻す)。pop テストは board を mount する前にこれを入れ、シームだけが時計を進める。
+   追加(RAF はハンドルを返すだけで発火しない。restore は global ごとの stack で行い、遅れて来た restore は自分の
+   installation を inactive にするだけで、今も active な最上位(次のテストの stub、
+   無ければ実値)へ戻す — identity guard だと A timeout → B stub → A.finally →
+   B.finally の順で stubA が残留する。`lifecycle.test.tsx` がこの順序を回帰テストにする)。pop テストは board を mount する前にこれを入れ、シームだけが時計を進める。
    `simNow` は 0 から単調増加。製品コードは変えない — ブラウザの RAF は単調で、
    `start()` が `lastTime` を毎回 null に戻すので、負の dt は出荷コードでは到達不能。
 2. **読み込み画面** — `GameLoadingFallback.test.tsx` は render → assert → unmount を

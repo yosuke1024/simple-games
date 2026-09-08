@@ -196,14 +196,77 @@ export function trackResources(): ResourceTracker {
   };
 }
 
-// Every stub below restores the real thing only while the stub it installed is
-// still the one in place. A test vitest gave up on ("Test timed out in 5000ms")
-// is abandoned mid-await, not aborted: its `finally` still runs whenever that
-// await settles, which can be after the NEXT test installed a stub of its own.
-// An unguarded restore rips that stub out from under the running test — the
-// board's getContext returns null again, its loop never starts, and a timeout
-// gets reported as a second, unrelated-looking failure one test later
-// (issue #158: red has to name the real problem).
+/**
+ * The three stubs below share one restore discipline, because vitest does not
+ * abort a test it gave up on ("Test timed out in 5000ms") — it abandons it
+ * mid-await, and the test's `finally` still runs whenever that await settles,
+ * which can be after the NEXT test installed a stub of its own on the same
+ * global. The two obvious answers both leave a red that does not name the real
+ * problem (issue #158):
+ *
+ * - restore unconditionally, and A's late restore rips B's stub out from
+ *   under B — the board's getContext returns null again, its loop never
+ *   starts, and A's timeout is reported as a second, unrelated-looking failure
+ *   one test later;
+ * - restore only while your own stub is still the one in place (an identity
+ *   guard), and A's late restore gives up as it should, but B then restores to
+ *   what IT found on install — A's stub — and stubA outlives both tests, for
+ *   every file that runs after them in the same worker.
+ *
+ * So each global keeps a stack of installations. A restore marks its own
+ * installation inactive whenever it happens to arrive, then puts back the top
+ * of whatever is still active: the newer test's stub while that test runs, the
+ * real value once nothing is left. A late restore never strips a live stub, no
+ * stub survives the last restore on its global, and restoring twice is a
+ * no-op. requestAnimationFrame / cancelAnimationFrame are one installation,
+ * not two, so a restore can never leave the pair half-swapped.
+ */
+interface Installation<T> {
+  readonly value: T;
+  active: boolean;
+}
+
+interface StubStack<T> {
+  /** What the global was before the first stub still on this stack went in. */
+  readonly base: T;
+  readonly installations: Installation<T>[];
+}
+
+/** One stack per global, keyed by name; dropped once its last stub is gone. */
+const stacks = new Map<string, StubStack<unknown>>();
+
+/**
+ * Installs `value` on the global that `read` / `write` reach, on top of
+ * whatever stubs are already there, and returns the restore for exactly this
+ * installation. `write` must set the whole global at once — for a pair of
+ * functions, both of them — so the stack only ever sees consistent states.
+ */
+function install<T>(key: string, read: () => T, write: (value: T) => void, value: T): () => void {
+  let stack = stacks.get(key) as StubStack<T> | undefined;
+  if (!stack) {
+    stack = { base: read(), installations: [] };
+    stacks.set(key, stack as StubStack<unknown>);
+  }
+  const owned = stack;
+  const installation: Installation<T> = { value, active: true };
+  owned.installations.push(installation);
+  write(value);
+  return () => {
+    if (!installation.active) return;
+    installation.active = false;
+    const { installations } = owned;
+    while (installations.length > 0 && !installations[installations.length - 1]!.active) {
+      installations.pop();
+    }
+    const top = installations[installations.length - 1];
+    if (top) {
+      write(top.value);
+      return;
+    }
+    stacks.delete(key);
+    write(owned.base);
+  };
+}
 
 /**
  * A 2D context stand-in that absorbs any drawing call: jsdom's canvas has no
@@ -222,21 +285,22 @@ export function stubCanvas2d(): () => void {
       set: () => true,
       apply: () => absorber(),
     });
-  const original = HTMLCanvasElement.prototype.getContext;
   const stub = function (this: HTMLCanvasElement, kind: string) {
     if (kind === '2d') return absorber() as CanvasRenderingContext2D;
     return null;
   } as typeof HTMLCanvasElement.prototype.getContext;
-  HTMLCanvasElement.prototype.getContext = stub;
-  return () => {
-    if (HTMLCanvasElement.prototype.getContext !== stub) return;
-    HTMLCanvasElement.prototype.getContext = original;
-  };
+  return install(
+    'HTMLCanvasElement.prototype.getContext',
+    () => HTMLCanvasElement.prototype.getContext,
+    (value) => {
+      HTMLCanvasElement.prototype.getContext = value;
+    },
+    stub,
+  );
 }
 
 /** jsdom has no matchMedia; the boards read it for the dark-scheme repaint. */
 export function stubMatchMedia(): () => void {
-  const original = window.matchMedia;
   const stub = ((query: string) => ({
     matches: false,
     media: query,
@@ -247,12 +311,20 @@ export function stubMatchMedia(): () => void {
     removeListener: () => undefined,
     dispatchEvent: () => false,
   })) as typeof window.matchMedia;
-  window.matchMedia = stub;
-  return () => {
-    // Identity-guarded like stubCanvas2d's — see the note above it.
-    if (window.matchMedia !== stub) return;
-    window.matchMedia = original;
-  };
+  return install(
+    'window.matchMedia',
+    () => window.matchMedia,
+    (value) => {
+      window.matchMedia = value;
+    },
+    stub,
+  );
+}
+
+/** The two halves of the animation-frame API, stubbed and restored as one. */
+interface AnimationFramePair {
+  readonly request: typeof window.requestAnimationFrame;
+  readonly cancel: typeof window.cancelAnimationFrame;
 }
 
 /**
@@ -275,17 +347,18 @@ export function stubMatchMedia(): () => void {
  * frames that actually fire.
  */
 export function stubAnimationFrames(): () => void {
-  const originalRequest = window.requestAnimationFrame;
-  const originalCancel = window.cancelAnimationFrame;
   let nextHandle = 1;
-  const request = (() => nextHandle++) as typeof window.requestAnimationFrame;
-  const cancel = (() => undefined) as typeof window.cancelAnimationFrame;
-  window.requestAnimationFrame = request;
-  window.cancelAnimationFrame = cancel;
-  return () => {
-    // Identity-guarded like stubCanvas2d's — see the note above it.
-    if (window.requestAnimationFrame !== request) return;
-    window.requestAnimationFrame = originalRequest;
-    window.cancelAnimationFrame = originalCancel;
+  const pair: AnimationFramePair = {
+    request: (() => nextHandle++) as typeof window.requestAnimationFrame,
+    cancel: (() => undefined) as typeof window.cancelAnimationFrame,
   };
+  return install<AnimationFramePair>(
+    'window.requestAnimationFrame+cancelAnimationFrame',
+    () => ({ request: window.requestAnimationFrame, cancel: window.cancelAnimationFrame }),
+    (value) => {
+      window.requestAnimationFrame = value.request;
+      window.cancelAnimationFrame = value.cancel;
+    },
+    pair,
+  );
 }
