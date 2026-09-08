@@ -39,6 +39,7 @@ const { capacitorMock, appMock, reviewMock } = vi.hoisted(() => {
     reviewMock: {
       shouldPromptReview: vi.fn<() => boolean>(() => false),
       markReviewPromptShown: vi.fn(),
+      resolveReviewPrompt: vi.fn(),
     },
     appMock: {
       state,
@@ -90,6 +91,7 @@ vi.mock('../services/review', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../services/review')>()),
   shouldPromptReview: reviewMock.shouldPromptReview,
   markReviewPromptShown: reviewMock.markReviewPromptShown,
+  resolveReviewPrompt: reviewMock.resolveReviewPrompt,
 }));
 
 // Closing a game releases the shared audio context — the visible edge of "the
@@ -186,6 +188,7 @@ beforeEach(() => {
   appMock.App.minimizeApp.mockClear();
   reviewMock.shouldPromptReview.mockReturnValue(false);
   reviewMock.markReviewPromptShown.mockClear();
+  reviewMock.resolveReviewPrompt.mockClear();
   vi.mocked(releaseSound).mockClear();
   resetRecentGamesForTesting();
   resetShortcutLaunchForTesting();
@@ -573,6 +576,65 @@ describe("the review question's doorway (docs/REVIEW_PROMPT_POLICY.md, issue #12
 
     await user.click(dismissReviewDialog());
     expect(reviewDialog()).not.toBeInTheDocument();
+  });
+
+  /**
+   * issue #173: the question arrives at the end of a press of back, so back
+   * is the most natural thing to press next — and on the collection there is
+   * exactly one listener, the collection's own (docs/ARCHITECTURE.md「ハード
+   * ウェア戻るボタン」). Until the shell handed it a way to close the dialog,
+   * that listener saw only the screen underneath and minimized the app with
+   * the question still open behind it.
+   */
+  it('is what the hardware back closes, instead of minimizing the app', async () => {
+    const user = userEvent.setup();
+    reviewMock.shouldPromptReview.mockReturnValue(true);
+    await launchFrom(shortcutUrlFor('sudoku'));
+
+    await user.click(leaveGame());
+    expect(await collectionHome()).toBeInTheDocument();
+    expect(reviewDialog()).toBeInTheDocument();
+
+    pressHardwareBack();
+
+    expect(reviewDialog()).not.toBeInTheDocument();
+    expect(appMock.App.minimizeApp).not.toHaveBeenCalled();
+    // "Not now", not an answer: the question retires only when one of the two
+    // answers is picked, and the showing was booked when it opened
+    // (docs/REVIEW_PROMPT_POLICY.md).
+    expect(reviewMock.resolveReviewPrompt).not.toHaveBeenCalled();
+    expect(reviewMock.markReviewPromptShown).toHaveBeenCalledTimes(1);
+
+    // And the collection has back back: the next press is the one that leaves.
+    pressHardwareBack();
+    expect(appMock.App.minimizeApp).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Back closes the dialog from the feedback offer too — the answer is
+   * already recorded, and walking back to the question would be the re-ask
+   * REVIEW_PROMPT_POLICY.md「禁止事項」rules out. What a later showing opens
+   * on is therefore the question again, not the step this one was left on.
+   */
+  it('leaves no half-answered dialog behind for the next showing', async () => {
+    const user = userEvent.setup();
+    reviewMock.shouldPromptReview.mockReturnValue(true);
+    await launchFrom(shortcutUrlFor('sudoku'));
+    await user.click(leaveGame());
+    await collectionHome();
+
+    await user.click(screen.getByRole('button', { name: 'Not really' }));
+    expect(screen.getByRole('dialog', { name: 'What could be better?' })).toBeInTheDocument();
+
+    pressHardwareBack();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    tapShortcut(shortcutUrlFor('kakuro'));
+    expect(playing('kakuro')).toBeInTheDocument();
+    await user.click(leaveGame());
+    expect(await collectionHome()).toBeInTheDocument();
+
+    expect(reviewDialog()).toBeInTheDocument();
   });
 
   it('does not reopen once booked', async () => {

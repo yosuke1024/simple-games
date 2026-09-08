@@ -1233,6 +1233,37 @@ describe('the hardware back button on the collection', () => {
     expect(appMock.App.minimizeApp).toHaveBeenCalledTimes(1);
   });
 
+  /**
+   * issue #173: the review question is the shell's dialog, drawn over this
+   * screen — and back reaches it through this listener, because on the
+   * collection there is no other one (docs/ARCHITECTURE.md「ハードウェア戻る
+   * ボタン」). So it goes at the head of the chain, ahead of the screen's own
+   * dialogs, and closing it leaves everything underneath where it was.
+   */
+  it("closes the shell's review question ahead of everything of its own", async () => {
+    capacitorMock.native = true;
+    await initFavoriteGames(createMemoryKV());
+    const dismissReviewPrompt = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <CollectionHomeScreen
+          onOpenGame={() => undefined}
+          onOpenSettings={() => undefined}
+          dismissReviewPrompt={dismissReviewPrompt}
+        />
+      </SettingsProvider>,
+    );
+
+    fireEvent.contextMenu(tileFor('Sudoku'));
+    expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
+
+    pressBack();
+
+    expect(dismissReviewPrompt).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
+    expect(appMock.App.minimizeApp).not.toHaveBeenCalled();
+  });
+
   it('closes the sheet, not the search, when both are open', async () => {
     capacitorMock.native = true;
     await initFavoriteGames(createMemoryKV());

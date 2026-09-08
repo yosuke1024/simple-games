@@ -179,6 +179,17 @@ export function App() {
   }, []);
 
   /**
+   * Closing the question, by every route there is: the dialog's own "not
+   * now", a tap outside it, and Android's hardware back — which reaches it
+   * through the collection's listener rather than one of the shell's, because
+   * back has exactly one owner per screen (see the effect below, issue #173).
+   * None of them is an answer (docs/REVIEW_PROMPT_POLICY.md「あとで」): the
+   * showing was booked when it opened, and the question retires only when the
+   * player picks one of the two answers.
+   */
+  const closeReviewPrompt = useCallback(() => setReviewPromptOpen(false), []);
+
+  /**
    * The browser version's one-time app card (docs/WEB_VERSION.md
    * 「アプリへの送客」). Asked at the two moments the collection home is the
    * screen somebody has arrived at with games already behind them: back from
@@ -365,7 +376,9 @@ export function App() {
   // with state only it has (whether its search is open, issue #122), so the
   // branch lives there rather than here (CollectionHomeScreen.tsx). Every
   // Capacitor `backButton` listener fires, so a second one here would
-  // minimize the app underneath whatever that one just closed.
+  // minimize the app underneath whatever that one just closed. That is why
+  // the review question below is handed to the collection as a way to close
+  // it instead of being given a listener of its own (issue #173).
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || view.kind !== 'settings') return;
     const handle = CapacitorApp.addListener('backButton', goCollection);
@@ -409,8 +422,9 @@ export function App() {
         onOpenGame={openGame}
         onOpenSettings={openSettings}
         appPrompt={appPromptOpen ? <WebAppPrompt onClose={() => setAppPromptOpen(false)} /> : null}
+        dismissReviewPrompt={reviewPromptOpen ? closeReviewPrompt : null}
       />
-      <ReviewPrompt open={reviewPromptOpen} onClose={() => setReviewPromptOpen(false)} />
+      {reviewPromptOpen && <ReviewPrompt onClose={closeReviewPrompt} />}
     </>
   );
 }

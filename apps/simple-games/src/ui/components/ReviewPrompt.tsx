@@ -5,29 +5,28 @@
  * offers a feedback mail draft instead. Dismissing is always the first,
  * easiest option to hit, and the caller has already booked the showing, so
  * closing this dialog never costs the player anything.
+ *
+ * Mounted only while it is shown, so which of the two steps is on screen
+ * never outlives a showing. That matters because closing is not this
+ * component's alone to do: Android's hardware back closes it from the
+ * collection's listener (issue #173), and a step kept across that would put
+ * the next showing's first screen on the feedback offer instead of the
+ * question.
  */
 import { useState } from 'react';
 import { openFeedbackEmail, requestStoreReview, resolveReviewPrompt } from '../../services/review';
 import { useSettings } from '../../state/SettingsContext';
 
 export interface ReviewPromptProps {
-  open: boolean;
   onClose: () => void;
 }
 
-export function ReviewPrompt({ open, onClose }: ReviewPromptProps) {
+export function ReviewPrompt({ onClose }: ReviewPromptProps) {
   const { locale, t } = useSettings();
   const [step, setStep] = useState<'ask' | 'feedback'>('ask');
 
-  if (!open) return null;
-
-  const close = () => {
-    setStep('ask');
-    onClose();
-  };
-
   return (
-    <div className="overlay" onClick={close}>
+    <div className="overlay" onClick={onClose}>
       <div
         className="dialog"
         role="dialog"
@@ -45,7 +44,7 @@ export function ReviewPrompt({ open, onClose }: ReviewPromptProps) {
                 onClick={() => {
                   resolveReviewPrompt();
                   void requestStoreReview();
-                  close();
+                  onClose();
                 }}
               >
                 {t('reviewYes')}
@@ -60,7 +59,7 @@ export function ReviewPrompt({ open, onClose }: ReviewPromptProps) {
               >
                 {t('reviewNo')}
               </button>
-              <button type="button" className="btn btn-ghost" onClick={close} autoFocus>
+              <button type="button" className="btn btn-ghost" onClick={onClose} autoFocus>
                 {t('reviewLater')}
               </button>
             </div>
@@ -75,12 +74,12 @@ export function ReviewPrompt({ open, onClose }: ReviewPromptProps) {
                 className="btn btn-primary"
                 onClick={() => {
                   openFeedbackEmail(locale);
-                  close();
+                  onClose();
                 }}
               >
                 {t('reviewFeedbackAction')}
               </button>
-              <button type="button" className="btn btn-ghost" onClick={close}>
+              <button type="button" className="btn btn-ghost" onClick={onClose}>
                 {t('close')}
               </button>
             </div>

@@ -293,12 +293,23 @@ export interface CollectionHomeScreenProps {
    * owns only where it goes; whether it exists at all is not its question.
    */
   appPrompt?: ReactNode;
+  /**
+   * How to close the review question, for as long as the shell has one on
+   * screen over this home (app/App.tsx, docs/REVIEW_PROMPT_POLICY.md); `null`
+   * the rest of the time. The dialog is not this screen's to draw — but back
+   * is this screen's to answer, and only one listener may be registered at a
+   * time, so the owner has to be told what is sitting on top of it. Without
+   * this the question stays open and the app minimizes underneath it
+   * (issue #173).
+   */
+  dismissReviewPrompt?: (() => void) | null;
 }
 
 export function CollectionHomeScreen({
   onOpenGame,
   onOpenSettings,
   appPrompt,
+  dismissReviewPrompt,
 }: CollectionHomeScreenProps) {
   const { t } = useSettings();
 
@@ -340,6 +351,12 @@ export function CollectionHomeScreen({
   /** The same, for the tile sheet: back closes it before it does anything else. */
   const menuOpenRef = useRef(menuGame !== null);
   menuOpenRef.current = menuGame !== null;
+  /**
+   * And for the shell's review question, which is drawn above everything this
+   * screen owns — so back closes that one first of all (issue #173).
+   */
+  const dismissReviewRef = useRef(dismissReviewPrompt);
+  dismissReviewRef.current = dismissReviewPrompt;
 
   /**
    * Focus follows the mode: into the field when it appears (which is also
@@ -365,7 +382,11 @@ export function CollectionHomeScreen({
    * this one over) because the answer depends on state only this screen has:
    * an open tile sheet closes (a dialog is what back closes first, on every
    * screen), searching closes the search, and the home — the root of the app
-   * — is where back leaves it, exactly as it always has.
+   * — is where back leaves it, exactly as it always has. The shell's review
+   * question sits above all of it, so it goes at the head of the same chain:
+   * it is the shell that draws it, but a second listener up there would fire
+   * alongside this one and minimize the app under the dialog it just closed
+   * (issue #173).
    *
    * The listener is registered once. It reads the mode through a ref instead
    * of closing over it, so a keystroke does not cost a deregister and a
@@ -381,7 +402,9 @@ export function CollectionHomeScreen({
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const handle = CapacitorApp.addListener('backButton', () => {
-      if (menuOpenRef.current) setMenuGame(null);
+      const dismissReview = dismissReviewRef.current;
+      if (dismissReview) dismissReview();
+      else if (menuOpenRef.current) setMenuGame(null);
       else if (searchingRef.current) closeSearch();
       else void CapacitorApp.minimizeApp().catch(() => CapacitorApp.exitApp());
     });
