@@ -40,6 +40,28 @@ function adFrameSurfaces(mode: string): { anchor: boolean; home: boolean; result
   };
 }
 
+/**
+ * Node 25 ships its experimental Web Storage switched on, so every test worker
+ * boots with a `globalThis.localStorage` that, without `--localstorage-file`,
+ * is a stub with no `getItem` / `clear` on it. Vitest's jsdom environment
+ * replaces a global that already exists only when the name is on its own key
+ * list, and `localStorage` is not (`Storage` is) — so under such a Node a
+ * test's bare `localStorage` stays Node's stub and `localStorage.clear()`
+ * throws (`window.localStorage` is the same object: vitest sets
+ * `window = globalThis`). CI's Node 22 has no such global, vitest installs
+ * jsdom's Storage there, and the identical test passes.
+ *
+ * Turning Web Storage off in the workers puts every Node on Node 22's footing:
+ * the global is absent until jsdom provides it. The flag goes in only when
+ * this Node exposes the global, because the option itself does not exist
+ * before Node 22.4 and `engines` still admits Node 20; on CI the list is
+ * empty, which is vitest's default, so `pnpm test` there is unchanged. It
+ * lives in the config rather than the `test` script so that
+ * `pnpm exec vitest run <file>` and scripts/verify-changed.mjs get the same
+ * runtime as `pnpm test`.
+ */
+const TEST_WORKER_EXEC_ARGV = 'localStorage' in globalThis ? ['--no-experimental-webstorage'] : [];
+
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
   define: { __SG_AD_FRAMES__: JSON.stringify(adFrameSurfaces(mode)) },
@@ -109,5 +131,6 @@ export default defineConfig(({ mode }) => ({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    execArgv: TEST_WORKER_EXEC_ARGV,
   },
 }));
