@@ -12,7 +12,7 @@
  * 728×90 unless a test says otherwise, and the AdMax frame under test is the
  * corresponding wide one.
  */
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { setOnlineForTesting } from '../../network';
 import AdUnit, { pickAdSize } from './AdUnit';
@@ -179,10 +179,19 @@ describe('AdUnit falling back from AdSense to 忍者AdMax', () => {
     const { container } = renderPlacement();
     const placement = container.querySelector<HTMLElement>('.web-ad-slot');
 
-    container.querySelector('ins.adsbygoogle')?.setAttribute('data-ad-status', 'unfilled');
-    await waitFor(() => {
-      expect(container.querySelector('.admax-ads')).toHaveAttribute('data-admax-id', 'home-wide');
+    // AdSense reports the status on the unit's attribute, which AdUnit watches
+    // with a MutationObserver — a microtask outside any React event. Settling
+    // it through `act` flushes both the render that swaps the box and the
+    // passive effect after it that queues the frame and appends the loader, so
+    // the finished swap is read synchronously below. A `waitFor` on the div
+    // alone can return between the two: the commit places the div, but the
+    // queue is written by an effect React schedules as its own task, and on a
+    // loaded runner that task lost to waitFor's post-pass 0ms timer — the
+    // `admaxads` assertion then saw `undefined` (policy: issue #158).
+    await act(async () => {
+      container.querySelector('ins.adsbygoogle')?.setAttribute('data-ad-status', 'unfilled');
     });
+    expect(container.querySelector('.admax-ads')).toHaveAttribute('data-admax-id', 'home-wide');
     // The AdSense unit is gone, the box stays visible at the same size, and
     // the AdMax queue plus its loader carry exactly this one frame.
     expect(container.querySelector('ins.adsbygoogle')).toBeNull();
