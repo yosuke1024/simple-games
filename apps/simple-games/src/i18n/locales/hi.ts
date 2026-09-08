@@ -61,6 +61,24 @@ export const hi: Messages = {
   privacyPolicy: 'गोपनीयता नीति',
   termsOfUse: 'उपयोग की शर्तें',
   adPrivacyOptions: 'विज्ञापन गोपनीयता विकल्प',
+  // Backup & Restore (issue #160). One file the player moves themselves —
+  // Simple Games has no account, no cloud save, and nothing that uploads it.
+  backupTitle: 'बैकअप और रीस्टोर',
+  backupBody: 'अपनी प्रगति दूसरे डिवाइस पर ले जाएँ, या उसकी एक कॉपी अपने पास रखें।',
+  backupPrivacyNote:
+    'बैकअप आपके डिवाइस पर एक बिना एन्क्रिप्शन वाली फ़ाइल है। Simple Games इसे कभी अपलोड नहीं करता, और यह कहाँ जाएगी यह सिर्फ़ आप तय करते हैं।',
+  backupPurchaseNote: 'विज्ञापन हटाने की खरीद बैकअप का हिस्सा नहीं है। उसे स्टोर से रीस्टोर करें।',
+  backupExport: 'बैकअप एक्सपोर्ट करें',
+  backupRestore: 'बैकअप से रीस्टोर करें',
+  backupExportFailed: 'बैकअप फ़ाइल नहीं बनाई जा सकी।',
+  backupRestoreConfirmTitle: 'इस डिवाइस का डेटा बदलें?',
+  backupRestoreConfirmBody:
+    'यहाँ सहेजा गया सब कुछ — चल रहे गेम, आंकड़े और सेटिंग्स — {date} के बैकअप से बदल जाएगा। इसे वापस नहीं किया जा सकता।',
+  backupRestoreDone: 'आपका डेटा रीस्टोर हो गया।',
+  backupRestoreFailed: 'रीस्टोर पूरा नहीं हो सका। आपका मौजूदा डेटा सुरक्षित रखा गया है।',
+  backupFileUnreadable: 'यह फ़ाइल Simple Games का बैकअप नहीं है।',
+  backupFileDamaged: 'यह बैकअप फ़ाइल खराब है। कुछ भी नहीं बदला गया।',
+  backupFileNewer: 'यह बैकअप Simple Games के नए वर्शन से बना है। ऐप अपडेट करके फिर कोशिश करें।',
   resetData: 'लोकल डेटा हटाएँ',
   resetConfirmTitle: 'सभी लोकल डेटा हटाएँ?',
   resetConfirmBody: 'इस डिवाइस से गेम, आंकड़े और सेटिंग्स हट जाएँगी। इसे वापस नहीं किया जा सकता।',

@@ -122,6 +122,50 @@ export async function removeRecord(key: string, kv: KVStore = preferencesKV): Pr
 }
 
 /**
+ * The stored text for one key, exactly as it sits in the store — or null when
+ * nothing is saved, the store could not be read, or the key was removed.
+ *
+ * Every other reader here goes through a `SchemaDef`, which is what a game
+ * wants: a typed record, or the default. Backup wants the opposite (issue
+ * #160). Export copies what is on the device without the shell knowing any
+ * game's shape, and restore has to put back the exact text a snapshot held —
+ * a value re-serialised through some other schema would be a different
+ * record. Both go through `enqueue`, so a save still in flight cannot land on
+ * top of a restore the way it once landed on top of "Reset Local Data".
+ */
+export async function loadRaw(key: string, kv: KVStore = preferencesKV): Promise<string | null> {
+  try {
+    return await enqueue(key, () => kv.get(key));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Writes `value` verbatim, or removes the key when it is null.
+ *
+ * Never throws and never reports: `preferencesKV` swallows its own failures,
+ * so "the write did not happen" is invisible from here. That is exactly why
+ * restore reads every key back afterwards instead of trusting this
+ * (backup/restore.ts) — a silent failure has to be caught by looking, not by
+ * being told.
+ */
+export async function saveRaw(
+  key: string,
+  value: string | null,
+  kv: KVStore = preferencesKV,
+): Promise<void> {
+  await enqueue(key, async () => {
+    try {
+      if (value === null) await kv.remove(key);
+      else await kv.set(key, value);
+    } catch {
+      // See above: the caller verifies by reading, not by catching.
+    }
+  });
+}
+
+/**
  * Settings画面の「ローカルデータ削除」。The shell collects the shared keys and
  * every registered game's keys — storage itself does not know the games.
  *

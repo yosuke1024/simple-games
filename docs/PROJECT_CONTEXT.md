@@ -1,6 +1,6 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-09-07
+Updated: 2026-09-08
 
 この文書は、Simple Games を変更・レビュー・説明するときの **共通の入口** である。
 ここに全仕様を複製しない。実装上の事実はコード、恒久的な原則は各 canonical document を正とし、
@@ -65,6 +65,9 @@ Design philosophy:
 - サブスクリプションを導入しない。
 - アカウント登録を要求しない。
 - ゲームデータを端末外へ保存しない。クラウドセーブを作らない。
+  (ユーザー自身が設定画面から書き出す 1 つのバックアップファイルはこれに当たらない。
+  端末外へ出すかどうかも、出す先を選ぶのもアプリではなく利用者であり、アプリは
+  転送先を知らない。issue #160 / `docs/architecture/backup.md`)
 - オンラインランキング、フレンド、対人オンライン機能を作らない。
 - ストリーク、ログインボーナス、期間限定イベント、人工的な緊急性を作らない。
 - Push / ローカル通知で再訪を促さない。
@@ -156,6 +159,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 | i18n | `docs/I18N_POLICY.md` |
 | Release gates | `docs/RELEASE_CHECKLIST.md` |
 | Review prompt | `docs/REVIEW_PROMPT_POLICY.md` |
+| Backup / restore format and versioning | `docs/architecture/backup.md` |
 | Game-specific behavior | `docs/<GAME>_RULES.md` |
 | Current game inventory | `apps/simple-games/src/app/registry.ts` |
 | Human-readable game inventory | `README.md` |
@@ -184,6 +188,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 - product / UX の変更: `PRODUCT_PRINCIPLES.md`
 - game の変更: 対象 `*_RULES.md`
 - storage / migration: `ARCHITECTURE.md` + 対象 game rules
+- backup / restore: `architecture/backup.md`(保存領域の所有と復元の安全性)
 - ads / purchase: `ADS_POLICY.md`
 - web only: `WEB_VERSION.md`
 - public copy: `BRAND.md`

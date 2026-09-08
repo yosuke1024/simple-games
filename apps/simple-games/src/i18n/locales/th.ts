@@ -57,6 +57,25 @@ export const th: Messages = {
   privacyPolicy: 'นโยบายความเป็นส่วนตัว',
   termsOfUse: 'ข้อกำหนดการใช้งาน',
   adPrivacyOptions: 'ตัวเลือกความเป็นส่วนตัวของโฆษณา',
+  // Backup & Restore (issue #160). One file the player moves themselves —
+  // Simple Games has no account, no cloud save, and nothing that uploads it.
+  backupTitle: 'สำรองและกู้คืนข้อมูล',
+  backupBody: 'ย้ายความคืบหน้าไปยังเครื่องอื่น หรือเก็บสำเนาไว้กับตัว',
+  backupPrivacyNote:
+    'ไฟล์สำรองเป็นไฟล์ที่ไม่ได้เข้ารหัสในเครื่องของคุณ Simple Games ไม่อัปโหลดไฟล์นี้ และคุณเป็นผู้ตัดสินใจว่าจะเก็บไว้ที่ไหน',
+  backupPurchaseNote: 'การซื้อเพื่อลบโฆษณาไม่รวมอยู่ในไฟล์สำรอง ให้กู้คืนจากสโตร์แทน',
+  backupExport: 'ส่งออกไฟล์สำรอง',
+  backupRestore: 'กู้คืนจากไฟล์สำรอง',
+  backupExportFailed: 'สร้างไฟล์สำรองไม่สำเร็จ',
+  backupRestoreConfirmTitle: 'แทนที่ข้อมูลในเครื่องนี้ไหม',
+  backupRestoreConfirmBody:
+    'ทุกอย่างที่บันทึกไว้ในเครื่องนี้ — เกมที่ค้างอยู่ สถิติ และการตั้งค่า — จะถูกแทนที่ด้วยไฟล์สำรองของ {date} และกู้คืนไม่ได้',
+  backupRestoreDone: 'กู้คืนข้อมูลของคุณแล้ว',
+  backupRestoreFailed: 'กู้คืนไม่สำเร็จ ข้อมูลเดิมของคุณยังอยู่ครบ',
+  backupFileUnreadable: 'ไฟล์นี้ไม่ใช่ไฟล์สำรองของ Simple Games',
+  backupFileDamaged: 'ไฟล์สำรองนี้เสียหาย จึงไม่มีการเปลี่ยนแปลงใด ๆ',
+  backupFileNewer:
+    'ไฟล์สำรองนี้สร้างจาก Simple Games เวอร์ชันที่ใหม่กว่า กรุณาอัปเดตแอปแล้วลองใหม่',
   resetData: 'ลบข้อมูลในเครื่อง',
   resetConfirmTitle: 'ลบข้อมูลทั้งหมดในเครื่อง?',
   resetConfirmBody: 'เกม สถิติ และการตั้งค่าในเครื่องนี้จะถูกลบ และกู้คืนไม่ได้',

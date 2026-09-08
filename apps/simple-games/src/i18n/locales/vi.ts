@@ -57,6 +57,27 @@ export const vi: Messages = {
   privacyPolicy: 'Chính sách bảo mật',
   termsOfUse: 'Điều khoản sử dụng',
   adPrivacyOptions: 'Tùy chọn quyền riêng tư quảng cáo',
+  // Backup & Restore (issue #160). One file the player moves themselves —
+  // Simple Games has no account, no cloud save, and nothing that uploads it.
+  backupTitle: 'Sao lưu & Khôi phục',
+  backupBody: 'Chuyển tiến trình của bạn sang máy khác, hoặc giữ một bản sao.',
+  backupPrivacyNote:
+    'Bản sao lưu là một tệp không mã hóa nằm trên máy bạn. Simple Games không bao giờ tải nó lên, và chỉ bạn quyết định cất nó ở đâu.',
+  backupPurchaseNote:
+    'Giao dịch mua gỡ quảng cáo không nằm trong bản sao lưu. Hãy khôi phục nó từ cửa hàng ứng dụng.',
+  backupExport: 'Xuất bản sao lưu',
+  backupRestore: 'Khôi phục từ bản sao lưu',
+  backupExportFailed: 'Không thể tạo tệp sao lưu.',
+  backupRestoreConfirmTitle: 'Thay dữ liệu trên máy này?',
+  backupRestoreConfirmBody:
+    'Mọi thứ đã lưu ở đây — ván đang dở, thống kê và cài đặt — sẽ được thay bằng bản sao lưu ngày {date}. Không thể hoàn tác.',
+  backupRestoreDone: 'Đã khôi phục dữ liệu của bạn.',
+  backupRestoreFailed:
+    'Không thể hoàn tất việc khôi phục. Dữ liệu hiện có của bạn vẫn được giữ nguyên.',
+  backupFileUnreadable: 'Tệp đó không phải là bản sao lưu của Simple Games.',
+  backupFileDamaged: 'Tệp sao lưu này bị hỏng. Không có gì bị thay đổi.',
+  backupFileNewer:
+    'Bản sao lưu này được tạo bởi phiên bản Simple Games mới hơn. Hãy cập nhật ứng dụng rồi thử lại.',
   resetData: 'Xóa dữ liệu trên máy',
   resetConfirmTitle: 'Xóa toàn bộ dữ liệu trên máy?',
   resetConfirmBody:

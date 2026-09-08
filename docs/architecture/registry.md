@@ -13,6 +13,7 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | `glyph`                | シリーズマーク。そのタイトルのアクセント色のタイルに 1 文字                                                                                                        |
 | `storageKeys`          | そのゲームが保存する全キー。各ゲームの **import ゼロの葉** `storage/keys.ts` から同期 import する                                                                  |
 | `loadRoot`             | ゲームのルートコンポーネントを動的 `import()` で返すローダー。Root が受け取る props は `GameRootProps` = `onExit` と任意の `entry`(どの扉から入ったか、issue #113) |
+| `loadStorageSchemas`   | **必須**。そのゲームの `storage/schemas.ts` を動的 `import()` で返すローダー。Backup & Restore がレコードを持ち主の `SchemaDef` で検証するために使う(issue #160)   |
 | `loadSettingsSection?` | 任意。共有設定画面に差し込むゲーム固有の設定のローダー                                                                                                             |
 
 ### ゲーム単位の lazy チャンク(issue #26)
@@ -43,6 +44,14 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   ロードせずに列挙できるよう、キーは `storage/keys.ts` の葉に置く。released 済み
   キーの一覧は `src/app/gameKeys.test.ts` がゴールデンとして固定する
   (**テストを直して通すのは禁止** — それはプレイヤーのデータに対する削除行為)。
+- `loadStorageSchemas` が**任意ではなく必須**なのは、忘れても何も起きないからである。
+  忘れたゲームは、バックアップに書き出されはするが復元では毎回拒否される —— 実害が
+  出るのは機種変更の当日、それも「1 本でも無効なら復元全体を拒否」の規則を通して
+  **他の 29 本ごと**である(docs/architecture/backup.md)。必須にすることで、
+  31 本目を足した瞬間にコンパイルエラーになる。宣言された全キーが実際に schema へ
+  解決することは `src/backup/keys.test.ts` が逆側から確かめる。
+  なお、シェルが `src/games/` へ踏み込めるのはレジストリ経由だけなので
+  (`src/test/importBoundaries.test.ts`)、glob で拾う形は取れない。
 - `SettingsSection` は任意。**ゲーム固有の設定はゲームが所有し、シェルは場所だけ貸す。**
   これがないと、ゲームの設定が増えるたびにシェル側へ
   `if (gameId === 'sudoku')` のような分岐が入り、シェルがゲーム内部を知ることになる。

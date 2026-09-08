@@ -57,6 +57,27 @@ export const fr: Messages = {
   privacyPolicy: 'Politique de confidentialité',
   termsOfUse: "Conditions d'utilisation",
   adPrivacyOptions: 'Options de confidentialité des annonces',
+  // Backup & Restore (issue #160). One file the player moves themselves —
+  // Simple Games has no account, no cloud save, and nothing that uploads it.
+  backupTitle: 'Sauvegarde et restauration',
+  backupBody: 'Emportez votre progression sur un autre appareil, ou gardez-en une copie.',
+  backupPrivacyNote:
+    'La sauvegarde est un fichier non chiffré sur votre appareil. Simple Games ne l’envoie jamais nulle part, et vous seul décidez où le ranger.',
+  backupPurchaseNote:
+    'L’achat qui retire la publicité ne fait pas partie de la sauvegarde. Restaurez-le depuis la boutique.',
+  backupExport: 'Exporter la sauvegarde',
+  backupRestore: 'Restaurer une sauvegarde',
+  backupExportFailed: 'Le fichier de sauvegarde n’a pas pu être créé.',
+  backupRestoreConfirmTitle: 'Remplacer les données de cet appareil ?',
+  backupRestoreConfirmBody:
+    'Tout ce qui est enregistré ici — parties en cours, statistiques et réglages — est remplacé par la sauvegarde du {date}. C’est irréversible.',
+  backupRestoreDone: 'Vos données ont été restaurées.',
+  backupRestoreFailed:
+    'La restauration n’a pas pu être menée à bout. Vos données actuelles ont été conservées.',
+  backupFileUnreadable: 'Ce fichier n’est pas une sauvegarde Simple Games.',
+  backupFileDamaged: 'Ce fichier de sauvegarde est endommagé. Rien n’a été modifié.',
+  backupFileNewer:
+    'Cette sauvegarde a été créée par une version plus récente de Simple Games. Mettez l’application à jour, puis réessayez.',
   resetData: 'Effacer les données locales',
   resetConfirmTitle: 'Effacer toutes les données locales ?',
   resetConfirmBody:

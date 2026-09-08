@@ -57,6 +57,25 @@ export const ja: Messages = {
   privacyPolicy: 'プライバシーポリシー',
   termsOfUse: '利用規約',
   adPrivacyOptions: '広告のプライバシー設定',
+  // Backup & Restore (issue #160). One file the player moves themselves —
+  // Simple Games has no account, no cloud save, and nothing that uploads it.
+  backupTitle: 'バックアップと復元',
+  backupBody: '進行データを別の端末へ移したり、手元に控えを残したりできます。',
+  backupPrivacyNote:
+    'バックアップは端末上の暗号化されていないファイルです。Simple Games がアップロードすることはなく、どこへ置くかはあなたが決めます。',
+  backupPurchaseNote: '広告削除の購入はバックアップに含まれません。ストアから復元してください。',
+  backupExport: 'バックアップを書き出す',
+  backupRestore: 'バックアップから復元',
+  backupExportFailed: 'バックアップファイルを作成できませんでした。',
+  backupRestoreConfirmTitle: 'この端末のデータを置き換えますか？',
+  backupRestoreConfirmBody:
+    'この端末に保存された中断中のゲーム・統計・設定は、{date} のバックアップに置き換わります。元に戻せません。',
+  backupRestoreDone: 'データを復元しました。',
+  backupRestoreFailed: '復元を完了できませんでした。既存のデータはそのまま残っています。',
+  backupFileUnreadable: 'このファイルは Simple Games のバックアップではありません。',
+  backupFileDamaged: 'このバックアップファイルは壊れています。何も変更していません。',
+  backupFileNewer:
+    'このバックアップは新しいバージョンの Simple Games で作成されています。アプリを更新してからやり直してください。',
   resetData: 'ローカルデータを削除',
   resetConfirmTitle: 'すべてのローカルデータを削除しますか？',
   resetConfirmBody: 'この端末のゲーム・統計・設定が削除されます。元に戻せません。',

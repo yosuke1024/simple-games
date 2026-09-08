@@ -57,6 +57,23 @@ export const zhHans: Messages = {
   privacyPolicy: '隐私政策',
   termsOfUse: '使用条款',
   adPrivacyOptions: '广告隐私选项',
+  // Backup & Restore (issue #160). One file the player moves themselves —
+  // Simple Games has no account, no cloud save, and nothing that uploads it.
+  backupTitle: '备份与恢复',
+  backupBody: '把你的进度转移到另一台设备，或者留一份副本。',
+  backupPrivacyNote: '备份是设备上的一个未加密文件。Simple Games 不会上传它，放在哪里由你决定。',
+  backupPurchaseNote: '去广告的购买不包含在备份中，请从应用商店恢复。',
+  backupExport: '导出备份',
+  backupRestore: '从备份恢复',
+  backupExportFailed: '无法创建备份文件。',
+  backupRestoreConfirmTitle: '替换这台设备上的数据？',
+  backupRestoreConfirmBody:
+    '这台设备上保存的一切 — 未完成的对局、统计和设置 — 都会被 {date} 的备份替换。此操作无法撤销。',
+  backupRestoreDone: '数据已恢复。',
+  backupRestoreFailed: '恢复未能完成，你现有的数据已保留。',
+  backupFileUnreadable: '该文件不是 Simple Games 的备份。',
+  backupFileDamaged: '这个备份文件已损坏，没有做任何更改。',
+  backupFileNewer: '这个备份由更新版本的 Simple Games 创建。请先更新应用再试。',
   resetData: '清除本地数据',
   resetConfirmTitle: '删除全部本地数据？',
   resetConfirmBody: '这将从本设备删除你的游戏、统计和设置。此操作无法撤销。',

@@ -399,7 +399,15 @@ SPA 側で中和する(`.sg-web-chrome` スコープで `position: relative`、
 - **端末間・アプリとの同期はしない。** アカウントがないため技術的にできない、
   ではなく、作らないという選択(`docs/PRODUCT_PRINCIPLES.md`)。
 - ブラウザのサイトデータ削除で消える。これは Web の仕様であり、静かに長く遊ぶなら
-  アプリを勧める理由のひとつ。
+  アプリを勧める理由のひとつ。**ただし、消える前に自分で退避できる** —— 設定画面の
+  `Backup & Restore` はアプリと同じ形式のファイルを扱い、Web では書き出しが
+  ブラウザのダウンロード、取り込みが `<input type="file">` になる(issue #160、
+  docs/architecture/backup.md)。
+- **バックアップは「同期しない」の例外ではない。** ファイルを運ぶのは利用者であり、
+  Web ↔ アプリ ↔ 別端末の往復も、利用者がファイルを渡したときだけ成立する。
+  保存スキーマが共通である範囲(= 全ゲームとシェルの `sg.settings` /
+  `sg.favorites` / `sg.recent`)はそのまま行き来し、`sg.webAppPrompt` のように
+  ブラウザ単位で意味を持つ状態は最初からファイルに入っていない。
 
 ## Web 版に存在しないもの
 
@@ -412,6 +420,8 @@ SPA 側で中和する(`.sg-web-chrome` スコープで `position: relative`、
   `ui/screens/SettingsScreen.tsx`、両プラットフォームの文言差は
   `SettingsScreen.test.tsx` が固定している。
   なお設定画面の「ローカルデータを削除」ボタン自体は Web でも動く。
+  `Backup & Restore` 節も Web に存在する(ここに買い切りは無いので、
+  「購入はバックアップに含まれない」の 1 行だけがアプリ側にしか出ない)。
 
   **Web 専用の文言は新造しない。** かつてここは「プライバシー要約 3 項目が
   Web では消える(privacy3 / privacy4 / privacy5 が事実にならないため)」と

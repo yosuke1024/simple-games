@@ -178,6 +178,7 @@ simple-games/
 │           │   ├── quick-math/
 │           │   ├── schulte-table/
 │           │   └── number-recall/
+│           ├── backup/        # 共有: ローカルバックアップの書き出しと復元
 │           ├── monetization/   # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 │           ├── services/       # 共有: ads(バナーのみ) / network / sound / haptics
 │           ├── state/          # 共有: SettingsContext
@@ -268,6 +269,10 @@ Cloudflare Pages の静的アセットのみで動き、サーバー機能は使
 - 助け(Undo / Hint)は常に無料・無制限。ただし全ゲームで同じ機能を並べず、
   そのゲームの中身を空にしない形の助けを用意する
 - オフライン時は広告リクエストを行わない(低消費電力・[docs/OFFLINE_POLICY.md](docs/OFFLINE_POLICY.md))
+- 進行データは端末内にだけ置く。クラウドセーブは作らない代わりに、**設定画面から
+  1 つのファイルへ書き出して自分で運べる**(Backup & Restore)。アプリはファイルを
+  OS へ渡すだけで、どこへ送られたかを知らない。広告削除の購入はファイルに入れない
+  ([docs/architecture/backup.md](docs/architecture/backup.md))
 - 計測は Web 版だけ。何を見て次のゲームを選ぶか、そのデータで何が言えないかを
   文書に残す([docs/GROWTH_MEASUREMENT.md](docs/GROWTH_MEASUREMENT.md))
 - 共有は任意の二次アクション。共有報酬・招待ボーナス・紹介コード・ランキングは

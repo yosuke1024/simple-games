@@ -57,6 +57,23 @@ export const zhHant: Messages = {
   privacyPolicy: '隱私權政策',
   termsOfUse: '使用條款',
   adPrivacyOptions: '廣告隱私選項',
+  // Backup & Restore (issue #160). One file the player moves themselves —
+  // Simple Games has no account, no cloud save, and nothing that uploads it.
+  backupTitle: '備份與還原',
+  backupBody: '把你的進度轉移到另一台裝置，或留一份副本。',
+  backupPrivacyNote: '備份是裝置上的一個未加密檔案。Simple Games 不會上傳它，要放在哪裡由你決定。',
+  backupPurchaseNote: '移除廣告的購買不包含在備份中，請從應用程式商店還原。',
+  backupExport: '匯出備份',
+  backupRestore: '從備份還原',
+  backupExportFailed: '無法建立備份檔案。',
+  backupRestoreConfirmTitle: '取代這台裝置上的資料？',
+  backupRestoreConfirmBody:
+    '這台裝置上儲存的一切 — 未完成的牌局、統計和設定 — 都會被 {date} 的備份取代，而且無法復原。',
+  backupRestoreDone: '資料已還原。',
+  backupRestoreFailed: '還原未能完成，你現有的資料已保留。',
+  backupFileUnreadable: '這個檔案不是 Simple Games 的備份。',
+  backupFileDamaged: '這個備份檔案已損毀，沒有做任何變更。',
+  backupFileNewer: '這個備份是由較新版本的 Simple Games 建立的。請先更新應用程式再試一次。',
   resetData: '清除本機資料',
   resetConfirmTitle: '刪除所有本機資料？',
   resetConfirmBody: '這會從這台裝置刪除你的遊戲、統計和設定，而且無法復原。',

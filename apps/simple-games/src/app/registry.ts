@@ -177,6 +177,26 @@ export interface GameDefinition {
    */
   loadRoot: () => Promise<{ default: ComponentType<GameRootProps> }>;
   /**
+   * Loads the game's record schemas — the same `SchemaDef`s the game itself
+   * validates and migrates its saves with (`storage/schemas.ts`).
+   *
+   * Required, not optional, and that is the whole point: Backup & Restore
+   * refuses any record it cannot put through its owner's validator
+   * (src/backup/), so a game that did not name its schemas here would be a
+   * game whose data exports and then always fails to come back. Making the
+   * field mandatory turns "did anyone remember?" into a compile error the
+   * day the thirty-first game is added.
+   *
+   * The shell still learns nothing about any save format. It reads the
+   * module's exports for the `SchemaDef` shape and hands each one the value
+   * from the file; what counts as valid stays entirely the game's answer
+   * (src/backup/owners.ts).
+   *
+   * Lazy, like `loadRoot`: the schemas ride in the game's chunk, and they are
+   * loaded only for the games a backup actually mentions.
+   */
+  loadStorageSchemas: () => Promise<Readonly<Record<string, unknown>>>;
+  /**
    * Optional: the game's own settings, rendered inside the shared settings
    * screen. A game owns its options; the shell only lends them a place.
    * Loading one pulls the game's chunk — acceptable, because it happens on
@@ -194,6 +214,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(SD_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/sudoku/ui/SudokuRoot').then((m) => ({ default: m.SudokuRoot })),
+    loadStorageSchemas: () => import('../games/sudoku/storage/schemas'),
     loadSettingsSection: () =>
       import('../games/sudoku/ui/SudokuSettingsSection').then((m) => ({
         default: m.SudokuSettingsSection,
@@ -207,6 +228,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(SO_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/solitaire/ui/SolitaireRoot').then((m) => ({ default: m.SolitaireRoot })),
+    loadStorageSchemas: () => import('../games/solitaire/storage/schemas'),
   },
   {
     id: 'spider-solitaire',
@@ -216,6 +238,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(SS_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/spider-solitaire/ui/SpiderRoot').then((m) => ({ default: m.SpiderRoot })),
+    loadStorageSchemas: () => import('../games/spider-solitaire/storage/schemas'),
   },
   {
     id: 'freecell',
@@ -225,6 +248,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(FC_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/freecell/ui/FreeCellRoot').then((m) => ({ default: m.FreeCellRoot })),
+    loadStorageSchemas: () => import('../games/freecell/storage/schemas'),
   },
   {
     id: 'hearts',
@@ -239,6 +263,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(HT_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/hearts/ui/HeartsRoot').then((m) => ({ default: m.HeartsRoot })),
+    loadStorageSchemas: () => import('../games/hearts/storage/schemas'),
   },
   {
     id: 'gin-rummy',
@@ -251,6 +276,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(GR_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/gin-rummy/ui/GinRummyRoot').then((m) => ({ default: m.GinRummyRoot })),
+    loadStorageSchemas: () => import('../games/gin-rummy/storage/schemas'),
   },
   {
     id: 'minesweeper',
@@ -262,6 +288,7 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/minesweeper/ui/MinesweeperRoot').then((m) => ({
         default: m.MinesweeperRoot,
       })),
+    loadStorageSchemas: () => import('../games/minesweeper/storage/schemas'),
   },
   {
     id: 'mahjong-solitaire',
@@ -282,6 +309,7 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/mahjong-solitaire/ui/MahjongRoot').then((m) => ({
         default: m.MahjongRoot,
       })),
+    loadStorageSchemas: () => import('../games/mahjong-solitaire/storage/schemas'),
   },
   {
     id: '2048',
@@ -291,6 +319,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(TM_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/2048/ui/Game2048Root').then((m) => ({ default: m.Game2048Root })),
+    loadStorageSchemas: () => import('../games/2048/storage/schemas'),
   },
   {
     id: 'block-puzzle',
@@ -302,6 +331,7 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/block-puzzle/ui/BlockPuzzleRoot').then((m) => ({
         default: m.BlockPuzzleRoot,
       })),
+    loadStorageSchemas: () => import('../games/block-puzzle/storage/schemas'),
   },
   {
     id: 'ludo',
@@ -329,6 +359,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '⚅',
     storageKeys: Object.values(LD_STORAGE_KEYS),
     loadRoot: () => import('../games/ludo/ui/LudoRoot').then((m) => ({ default: m.LudoRoot })),
+    loadStorageSchemas: () => import('../games/ludo/storage/schemas'),
   },
   {
     id: 'checkers',
@@ -342,6 +373,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(CK_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/checkers/ui/CheckersRoot').then((m) => ({ default: m.CheckersRoot })),
+    loadStorageSchemas: () => import('../games/checkers/storage/schemas'),
   },
   {
     id: 'reversi',
@@ -351,6 +383,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(RV_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/reversi/ui/ReversiRoot').then((m) => ({ default: m.ReversiRoot })),
+    loadStorageSchemas: () => import('../games/reversi/storage/schemas'),
   },
   {
     id: 'connect-four',
@@ -362,6 +395,7 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/connect-four/ui/ConnectFourRoot').then((m) => ({
         default: m.ConnectFourRoot,
       })),
+    loadStorageSchemas: () => import('../games/connect-four/storage/schemas'),
   },
   {
     id: 'gomoku',
@@ -373,6 +407,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(GM_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/gomoku/ui/GomokuRoot').then((m) => ({ default: m.GomokuRoot })),
+    loadStorageSchemas: () => import('../games/gomoku/storage/schemas'),
   },
   {
     // Head of the arcade shelf: sections order by name-search demand, and
@@ -386,6 +421,7 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/bubble-pop/ui/BubblePopRoot').then((m) => ({
         default: m.BubblePopRoot,
       })),
+    loadStorageSchemas: () => import('../games/bubble-pop/storage/schemas'),
   },
   {
     id: 'brick-breaker',
@@ -397,6 +433,7 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/brick-breaker/ui/BrickBreakerRoot').then((m) => ({
         default: m.BrickBreakerRoot,
       })),
+    loadStorageSchemas: () => import('../games/brick-breaker/storage/schemas'),
   },
   {
     id: 'nonogram',
@@ -406,6 +443,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(NG_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/nonogram/ui/NonogramRoot').then((m) => ({ default: m.NonogramRoot })),
+    loadStorageSchemas: () => import('../games/nonogram/storage/schemas'),
   },
   {
     id: 'takuzu',
@@ -424,6 +462,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(TK_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/takuzu/ui/TakuzuRoot').then((m) => ({ default: m.TakuzuRoot })),
+    loadStorageSchemas: () => import('../games/takuzu/storage/schemas'),
   },
   {
     id: 'futoshiki',
@@ -450,6 +489,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(FT_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/futoshiki/ui/FutoshikiRoot').then((m) => ({ default: m.FutoshikiRoot })),
+    loadStorageSchemas: () => import('../games/futoshiki/storage/schemas'),
     loadSettingsSection: () =>
       import('../games/futoshiki/ui/FutoshikiSettingsSection').then((m) => ({
         default: m.FutoshikiSettingsSection,
@@ -480,6 +520,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(KK_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/kakuro/ui/KakuroRoot').then((m) => ({ default: m.KakuroRoot })),
+    loadStorageSchemas: () => import('../games/kakuro/storage/schemas'),
     loadSettingsSection: () =>
       import('../games/kakuro/ui/KakuroSettingsSection').then((m) => ({
         default: m.KakuroSettingsSection,
@@ -495,6 +536,7 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/number-match/ui/NumberMatchRoot').then((m) => ({
         default: m.NumberMatchRoot,
       })),
+    loadStorageSchemas: () => import('../games/number-match/storage/schemas'),
   },
   // The three drills lead the drills section: they are the shortest sittings
   // in the collection and the only titles measured in seconds.
@@ -506,6 +548,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(QM_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/quick-math/ui/QuickMathRoot').then((m) => ({ default: m.QuickMathRoot })),
+    loadStorageSchemas: () => import('../games/quick-math/storage/schemas'),
   },
   {
     id: 'schulte-table',
@@ -517,6 +560,7 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/schulte-table/ui/SchulteTableRoot').then((m) => ({
         default: m.SchulteTableRoot,
       })),
+    loadStorageSchemas: () => import('../games/schulte-table/storage/schemas'),
   },
   {
     id: 'number-recall',
@@ -528,6 +572,7 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/number-recall/ui/NumberRecallRoot').then((m) => ({
         default: m.NumberRecallRoot,
       })),
+    loadStorageSchemas: () => import('../games/number-recall/storage/schemas'),
   },
   {
     id: 'water-sort',
@@ -537,6 +582,7 @@ export const GAMES: readonly GameDefinition[] = [
     storageKeys: Object.values(WS_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/water-sort/ui/WaterSortRoot').then((m) => ({ default: m.WaterSortRoot })),
+    loadStorageSchemas: () => import('../games/water-sort/storage/schemas'),
   },
   {
     id: 'sliding-puzzle',
@@ -548,6 +594,7 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/sliding-puzzle/ui/SlidingPuzzleRoot').then((m) => ({
         default: m.SlidingPuzzleRoot,
       })),
+    loadStorageSchemas: () => import('../games/sliding-puzzle/storage/schemas'),
   },
   {
     id: 'memory-match',
@@ -559,6 +606,7 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/memory-match/ui/MemoryMatchRoot').then((m) => ({
         default: m.MemoryMatchRoot,
       })),
+    loadStorageSchemas: () => import('../games/memory-match/storage/schemas'),
   },
   {
     id: 'sky-fighter',
@@ -570,6 +618,7 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/sky-fighter/ui/SkyFighterRoot').then((m) => ({
         default: m.SkyFighterRoot,
       })),
+    loadStorageSchemas: () => import('../games/sky-fighter/storage/schemas'),
   },
   {
     id: 'bunny-hop',
@@ -581,5 +630,6 @@ export const GAMES: readonly GameDefinition[] = [
       import('../games/bunny-hop/ui/BunnyHopRoot').then((m) => ({
         default: m.BunnyHopRoot,
       })),
+    loadStorageSchemas: () => import('../games/bunny-hop/storage/schemas'),
   },
 ];

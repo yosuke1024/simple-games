@@ -57,6 +57,26 @@ export const tr: Messages = {
   privacyPolicy: 'Gizlilik Politikası',
   termsOfUse: 'Kullanım Koşulları',
   adPrivacyOptions: 'Reklam gizlilik seçenekleri',
+  // Backup & Restore (issue #160). One file the player moves themselves —
+  // Simple Games has no account, no cloud save, and nothing that uploads it.
+  backupTitle: 'Yedekleme ve Geri Yükleme',
+  backupBody: 'İlerlemeni başka bir cihaza taşı ya da bir kopyasını sakla.',
+  backupPrivacyNote:
+    'Yedek, cihazındaki şifrelenmemiş bir dosyadır. Simple Games onu hiçbir yere yüklemez; nereye koyacağına yalnızca sen karar verirsin.',
+  backupPurchaseNote:
+    'Reklam kaldırma satın alımı yedeğe dahil değildir. Onu mağazadan geri yükle.',
+  backupExport: 'Yedeği Dışa Aktar',
+  backupRestore: 'Yedekten Geri Yükle',
+  backupExportFailed: 'Yedek dosyası oluşturulamadı.',
+  backupRestoreConfirmTitle: 'Bu cihazdaki veriler değiştirilsin mi?',
+  backupRestoreConfirmBody:
+    'Burada kayıtlı olan her şey — yarım kalan oyunlar, istatistikler ve ayarlar — {date} tarihli yedekle değiştirilir. Bu işlem geri alınamaz.',
+  backupRestoreDone: 'Verilerin geri yüklendi.',
+  backupRestoreFailed: 'Geri yükleme tamamlanamadı. Mevcut verilerin korundu.',
+  backupFileUnreadable: 'Bu dosya bir Simple Games yedeği değil.',
+  backupFileDamaged: 'Bu yedek dosyası bozuk. Hiçbir şey değiştirilmedi.',
+  backupFileNewer:
+    'Bu yedek, Simple Games’in daha yeni bir sürümüyle oluşturulmuş. Uygulamayı güncelleyip tekrar dene.',
   resetData: 'Yerel Verileri Sil',
   resetConfirmTitle: 'Tüm yerel veriler silinsin mi?',
   resetConfirmBody:
