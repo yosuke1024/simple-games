@@ -237,6 +237,20 @@ Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS 
   揃え、`src/test/modalIsolationWiring.test.ts` が新しいゲームにも同じ配線を要求する(issue #120)。
   Chromium 102 未満の WebView 向けフォールバックは `styles.css` の `.game-content[inert]`
   (`pointer-events: none`)。
+- **指を取り上げられたときの契約。** `pointercancel` は「この指の `pointerup` はもう来ない」
+  という OS からの通告(通知シェードが降りる・着信・パーム・ペンの離脱・ブラウザが自分の
+  ものにしたスクロール)で、これを聞かない盤面は押下が確保したもの——持ち上げた札・仕掛けた
+  タイマー・上げたガード——を持ち越す。規約は 2 つ。**離す(`onPointerUp`)を聞く要素は、
+  同じ要素で `onPointerCancel` も聞く**こと(Block Puzzle のようにトレイで指を取り、
+  本体で離す形があるので、ファイル単位ではなく要素単位)。**押下を聞く要素がクリックも聞く
+  なら、ドラッグが残すクリックは使い切る**こと(ドラッグの後にも `click` は届く)。cancel が
+  何を意味するか——札を戻す・撃たない・ピースをトレイへ返す——はゲームごとに違うので、
+  共通のポインタ処理は作らない。`src/test/pointerContractWiring.test.ts` は配線と「各ゲームの
+  自前テストが `pointercancel` と trailing click を流していること」だけを要求し、意味の証明は
+  各ゲームのテストに残す(`modalIsolationWiring.test.ts` と同じ形)。押下が何も抱えない 3 本
+  (2048 / Bunny Hop / Sliding Puzzle——押下は開始点を置くだけで、スワイプは離したときに
+  決まる)は理由を書いてゲート内の一覧で除外し、その 1 本が指を追い始めたら(`onPointerMove`・
+  `setPointerCapture`)除外が古くなったこと自体で赤になる(issue #169)。
 - **全ゲームに同じ変更を入れるときは codemod で入れる**(`scripts/codemods/`)。手で
   30 ファイルを編集しない: 変換スクリプトを 1 本書き、掛け、触ったファイルだけ
   prettier を通し、`src/test/` の横断ゲートで受ける。スクリプトは PR に同梱する。

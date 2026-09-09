@@ -1,6 +1,7 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { sounds } from '@/services/sound';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
@@ -95,6 +96,40 @@ describe('playing', () => {
     expect(screen.getByLabelText('Score')).toHaveTextContent('0');
     expect(screen.getByText('Tap the meadow to start')).toBeInTheDocument();
     expect(screen.queryByText(/\d+:\d\d/)).not.toBeInTheDocument();
+  });
+
+  /**
+   * The hop button answers the press rather than the click — a runner is
+   * judged in tenths of a second (§3) — and the browser still raises a click
+   * after that press. Spending it is what keeps one tap one hop; without the
+   * `detail` test the tap hops twice, and the second hop lands its sound and
+   * its haptic on a runner that has not moved yet. The same handler must
+   * still take a click with no press behind it (`detail === 0`), because that
+   * is the only hop a keyboard or a screen reader ever makes.
+   *
+   * The hop itself is what the sound follows here: the loop needs a canvas
+   * and jsdom has none (see the note at the top of this file), so nothing on
+   * screen moves — which is also why the runner is still on the ground for
+   * the keyboard hop that follows.
+   */
+  it('hops once for one tap, and once for a keyboard press (§3)', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+
+    await user.click(await screen.findByRole('button', { name: /Start Hopping/ }));
+    const hop = screen.getByRole('button', { name: 'Hop' });
+    const hopped = vi.spyOn(sounds, 'select');
+
+    try {
+      fireEvent.pointerDown(hop, { pointerId: 1, button: 0, buttons: 1 });
+      fireEvent.click(hop, { detail: 1 });
+      expect(hopped).toHaveBeenCalledTimes(1);
+
+      fireEvent.click(hop, { detail: 0 });
+      expect(hopped).toHaveBeenCalledTimes(2);
+    } finally {
+      hopped.mockRestore();
+    }
   });
 
   it('counts a started run once, whether it is the first or a retry (§9)', async () => {
