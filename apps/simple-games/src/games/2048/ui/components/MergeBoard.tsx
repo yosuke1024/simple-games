@@ -170,10 +170,21 @@ export const MergeBoard = memo(function MergeBoard({
     }
   }, [board, direction, moveCount, dropGhosts, nextId]);
 
-  const pointerRef = useRef<{ x: number; y: number } | null>(null);
+  /**
+   * Where the swipe being measured began, and which finger began it (§3).
+   *
+   * The id is what makes the reading belong to somebody: a second finger on
+   * the board used to overwrite the starting point, so releasing the *first*
+   * one measured a distance nobody travelled and tipped the board on a swipe
+   * the player never made (issue #187). One press is tracked at a time — the
+   * newest, because a release can go missing entirely (a finger that leaves
+   * the board before it lifts) and a record that outlived the next press
+   * would be worse than one that is replaced by it.
+   */
+  const pointerRef = useRef<{ id: number; x: number; y: number } | null>(null);
 
   const onPointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    pointerRef.current = { x: event.clientX, y: event.clientY };
+    pointerRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
   }, []);
 
   /**
@@ -184,8 +195,8 @@ export const MergeBoard = memo(function MergeBoard({
   const onPointerUp = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
       const start = pointerRef.current;
+      if (!start || start.id !== event.pointerId) return;
       pointerRef.current = null;
-      if (!start) return;
       const dx = event.clientX - start.x;
       const dy = event.clientY - start.y;
       if (Math.max(Math.abs(dx), Math.abs(dy)) < SWIPE_THRESHOLD_PX) return;
@@ -194,6 +205,17 @@ export const MergeBoard = memo(function MergeBoard({
     },
     [onSwipe],
   );
+
+  /**
+   * The platform took the finger away — the notification shade, an incoming
+   * call, a palm, a scroll the browser claimed. No release is coming for this
+   * pointer, so the reading is dropped and no move is made: without this it
+   * would sit here waiting to be measured against whatever released on the
+   * board next (docs/ARCHITECTURE.md「指を取り上げられたときの契約」).
+   */
+  const onPointerCancel = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (pointerRef.current?.id === event.pointerId) pointerRef.current = null;
+  }, []);
 
   const positionOf = (cell: number) =>
     ({ '--tm-row': rowOf(cell), '--tm-col': colOf(cell) }) as CSSProperties;
@@ -229,6 +251,7 @@ export const MergeBoard = memo(function MergeBoard({
       aria-label={t('mergeBoardLabel')}
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
     >
       {board.map((value, cell) => {
         const row = rowOf(cell) + 1;

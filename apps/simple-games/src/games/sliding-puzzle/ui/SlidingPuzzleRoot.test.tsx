@@ -445,10 +445,8 @@ describe('playing', () => {
    * pressed here is the one the swipe slides, which lands beside the gap it
    * just filled: an unspent click would slide it straight back.
    *
-   * The board hears no `pointercancel` and needs none (`src/test/
-   * pointerContractWiring.test.ts` says why): the press holds nothing but a
-   * starting point, and this flag is cleared by the next press rather than by
-   * the end of this one — which is what the second half of this test presses.
+   * `detail: 1` is what a browser puts on the click a press leaves behind; the
+   * block below presses the other half, a keyboard's `detail: 0` (issue #187).
    */
   it('plays a swipe once, and takes the next tap as an ordinary tap (§3)', async () => {
     const user = userEvent.setup();
@@ -468,7 +466,7 @@ describe('playing', () => {
     expect(spotOf(slider)).toEqual(gapWas);
     expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
 
-    fireEvent.click(slider);
+    fireEvent.click(slider, { detail: 1 });
 
     expect(spotOf(slider)).toEqual(gapWas);
     expect(slider.textContent).toBe(value);
@@ -495,6 +493,105 @@ describe('playing', () => {
     expect(spotOf(gap())).toEqual(gapWas);
     expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+});
+
+/**
+ * The swipe belongs to one finger, and the mark it leaves is only for a
+ * finger's click (issue #187).
+ *
+ * The press records where the gesture started and the release measures the
+ * distance from it, so the two have to be the same pointer. They were not:
+ * the reading carried no id, a second finger overwrote it, and a cancel left
+ * it standing — either way the next release on the board was measured against
+ * a point it had never started from, and a tile slid on a swipe nobody made.
+ *
+ * The other half is the mark a played swipe leaves for the click that follows
+ * it. A swipe released between the tiles leaves no tile to spend that mark, so
+ * it used to stand until the next press — and eat a keyboard activation on the
+ * way, which is not a click any gesture left behind.
+ */
+describe('the finger a swipe belongs to (issue #187)', () => {
+  /** A drag long enough to be a swipe, in a direction the gap has room for:
+   *  rightwards slides the tile on the gap's left into it, leftwards the one
+   *  on its right (the same choice the swipe test above makes). */
+  const swipeDx = (): number => (spotOf(gap()).col > 1 ? 40 : -40);
+
+  async function playLevelOne() {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+  }
+
+  it('does not read one finger’s release against another finger’s press', async () => {
+    await playLevelOne();
+
+    const gapWas = spotOf(gap());
+    const dx = swipeDx();
+
+    // A second finger lands on the board while the first is still down. The
+    // first then lifts far from where the second went down — which used to be
+    // measured as a swipe of that distance.
+    fireEvent.pointerDown(board(), { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerDown(board(), { pointerId: 2, clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(board(), { pointerId: 1, clientX: 100 + dx, clientY: 100 });
+
+    expect(spotOf(gap())).toEqual(gapWas);
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+
+    // And the second finger, which travelled nowhere, plays nothing either.
+    fireEvent.pointerUp(board(), { pointerId: 2, clientX: 100, clientY: 100 });
+
+    expect(spotOf(gap())).toEqual(gapWas);
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+  });
+
+  it('drops the press the platform took away, rather than leaving it to be measured', async () => {
+    await playLevelOne();
+
+    const gapWas = spotOf(gap());
+    const dx = swipeDx();
+
+    // The notification shade comes down over a finger resting on the board:
+    // no release is coming for it.
+    fireEvent.pointerDown(board(), { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerCancel(board(), { pointerId: 1, clientX: 100, clientY: 100 });
+
+    // A later press that began somewhere else — the header, a button — ends
+    // over the board. Only its release is heard here, and it starts nothing.
+    fireEvent.pointerUp(board(), { pointerId: 2, clientX: 100 + dx, clientY: 100 });
+
+    expect(spotOf(gap())).toEqual(gapWas);
+    expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+
+    // The board is not deaf afterwards: the next whole gesture still plays.
+    fireEvent.pointerDown(board(), { pointerId: 3, clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(board(), { pointerId: 3, clientX: 100 + dx, clientY: 100 });
+
+    expect(spotOf(gap())).not.toEqual(gapWas);
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+  });
+
+  it('lets the keyboard through after a swipe that ended off a tile', async () => {
+    await playLevelOne();
+
+    // Released on the board itself — between the tiles, on its padding — so no
+    // tile's click runs and the mark the swipe left is still standing.
+    fireEvent.pointerDown(board(), { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(board(), { pointerId: 1, clientX: 100 + swipeDx(), clientY: 100 });
+
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+
+    // Enter on a tile raises a click with no press behind it (detail 0). It
+    // cannot be the click a swipe left, whatever tile it lands on.
+    const tile = tileBesideGap();
+    const tileWas = spotOf(tile);
+    const gapWas = spotOf(gap());
+    fireEvent.click(tile, { detail: 0 });
+
+    expect(spotOf(tile)).toEqual(gapWas);
+    expect(spotOf(gap())).toEqual(tileWas);
+    expect(screen.getByText(/Moves\s*2/)).toBeInTheDocument();
   });
 });
 

@@ -194,6 +194,86 @@ describe('playing', () => {
   });
 });
 
+/**
+ * The swipe belongs to one finger (issue #187).
+ *
+ * The press records where the gesture started and the release measures the
+ * distance from it, so the two have to be the same pointer. They were not:
+ * the reading carried no id, a second finger overwrote it, and a cancel left
+ * it standing — either way the next release on the board was measured against
+ * a point it had never started from, and the board tipped on a swipe nobody
+ * made. A move here is not a small thing: it rebuilds the board and the only
+ * way back is Undo (§6).
+ *
+ * The saved board is a pair against the top edge, so a leftward swipe merges
+ * to 4 and anything else leaves the score at 0 — which is what these read.
+ */
+describe('the finger a swipe belongs to (issue #187)', () => {
+  /** Resumes the pinned save and hands back the board and how it looks now. */
+  async function resume() {
+    const user = userEvent.setup();
+    renderGame(savedGame);
+    await user.click(await screen.findByRole('button', { name: /Resume/ }));
+    return { board: gameBoard(), layout: tileLayout() };
+  }
+
+  /** Nothing was played: same tiles in the same places, same score, no undo. */
+  function nothingHappened(layout: string[]) {
+    expect(tileLayout()).toEqual(layout);
+    expect(screen.getByText(/Score\s*0/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  }
+
+  it('slides on the release of the finger that began the swipe (§3)', async () => {
+    const { board } = await resume();
+
+    fireEvent.pointerDown(board, { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(board, { pointerId: 1, clientX: 60, clientY: 100 });
+
+    expect(screen.getByText(/Score\s*4/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeEnabled();
+  });
+
+  it('does not read one finger’s release against another finger’s press', async () => {
+    const { board, layout } = await resume();
+
+    // A second finger lands on the board while the first is still down. The
+    // first then lifts far from where the second went down — which used to be
+    // measured as a swipe of that distance.
+    fireEvent.pointerDown(board, { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerDown(board, { pointerId: 2, clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(board, { pointerId: 1, clientX: 60, clientY: 100 });
+
+    nothingHappened(layout);
+
+    // And the second finger, which travelled nowhere, plays nothing either.
+    fireEvent.pointerUp(board, { pointerId: 2, clientX: 100, clientY: 100 });
+
+    nothingHappened(layout);
+  });
+
+  it('drops the press the platform took away, rather than leaving it to be measured', async () => {
+    const { board, layout } = await resume();
+
+    // The notification shade comes down over a finger resting on the board:
+    // no release is coming for it.
+    fireEvent.pointerDown(board, { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerCancel(board, { pointerId: 1, clientX: 100, clientY: 100 });
+
+    // A later press that began somewhere else — the header, a button — ends
+    // over the board. Only its release is heard here, and it starts nothing.
+    fireEvent.pointerUp(board, { pointerId: 2, clientX: 60, clientY: 100 });
+
+    nothingHappened(layout);
+
+    // The board is not deaf afterwards: the next whole gesture still plays.
+    fireEvent.pointerDown(board, { pointerId: 3, clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(board, { pointerId: 3, clientX: 60, clientY: 100 });
+
+    expect(screen.getByText(/Score\s*4/)).toBeInTheDocument();
+  });
+});
+
 /* Keyboard input is an adapter over the same swipe/undo handlers (issue #93):
    every assertion here checks board state the taps also produce. */
 describe('keyboard (issue #93)', () => {
