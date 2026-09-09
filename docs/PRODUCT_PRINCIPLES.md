@@ -299,11 +299,13 @@ Web 版のページ解析は「適用範囲」のとおり別の約束であり�
 
 ## Shared(Private Game Club)— Core の外にある任意の層
 
-2026-09-09 決定(issue #176、Epic #175)。製品設計は issue #161(Shared Server /
-Private Game Club)と #164(発見の導線)が持ち、**実装はまだ無い**。この節は機能の
-説明ではなく、#161 が Core を壊さずに成立するための境界である。順序は Epic のとおり
-この節 → #161 の設計 → #164 で、Friction first([PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)
-§5)より後に置き、#156 の High / Critical が残る間は着手しない。
+2026-09-09 決定(issue #176、Epic #175)。製品設計の正典は
+[architecture/club.md](architecture/club.md)(同日、issue #161 の設計。#164 の発見導線も
+その §13)で、issue #161 / #164 の本文とコメントは提案の記録である。**実装はまだ無い**。
+この節は機能の説明ではなく、#161 が Core を壊さずに成立するための境界である。順序は
+Epic のとおりこの節 → #161 の設計 → #164 で、Friction first
+([PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) §5)より後に置く(#156 の High / Critical は
+2026-09-09 に解けた)。
 
 ### 定義
 
@@ -423,8 +425,12 @@ Core の画面と Club 員向けの画面に金銭の文言を出さない。事
    **使わない** — native ビルドは Vite の modulepreload polyfill、`@capacitor/core`
    (CapacitorHttp)、`@capacitor/filesystem` がもともと `fetch(` を含む(2026-09-09 の
    dist で確認)。証明はトークンの不在ではなく、到達経路の不在で行う。
-4. **実行時** — 動的 import を呼ぶのは、保存された接続がある場合と招待リンクを開いた
-   操作のあとだけ。どちらも無ければ呼ばれないことをユニットテストで固定する(#161)。
+4. **実行時** — 動的 import を呼ぶのは、保存された接続がある場合、招待リンクを開いた
+   操作のあと、そして本人が設定 > Advanced の入口かホームの `Play together` を押した
+   操作のあと、の 3 つだけ(3 つ目は 2026-09-09 の設計で足した — 上の「3 つまで」の
+   入口 1 と 3 が押されたとき、Core が「参加する / 作る」の画面を持たずに済ませるには
+   `club/` を読むしかない。[architecture/club.md](architecture/club.md) §3)。どれも無ければ
+   呼ばれないこと、ホームを描いただけでは呼ばれないことをユニットテストで固定する(#161)。
 
 1 と 2 は本決定と同じ PR で入れてある(ディレクトリはまだ無く、除外と規則は宣言だけ —
 どちらも自己検査を持つ)。3 と 4 は `club/` が生まれる PR の受け入れ条件。
