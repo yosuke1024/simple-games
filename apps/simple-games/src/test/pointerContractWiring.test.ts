@@ -190,21 +190,53 @@ function openingTags(file: string, text: string): Tag[] {
   return tags;
 }
 
-/** Where a container tag's children end, by depth over its own name. */
+/**
+ * Where a container tag's children end, by depth over its own name. Scanned
+ * with `startsWith` rather than a `RegExp` built from the tag's name: a
+ * pattern assembled out of file text has to be escaped, and an escape written
+ * by hand here would be one more thing to get right for no gain.
+ */
 function subtreeEnd(text: string, tag: Tag, selfClosingStarts: ReadonlySet<number>): number {
-  const escaped = tag.name.replace(/\./g, '\\.');
-  const scan = new RegExp(`<${escaped}(?=[\\s/>])|</${escaped}\\s*>`, 'g');
-  scan.lastIndex = tag.openEnd;
+  const opens = `<${tag.name}`;
+  const closes = `</${tag.name}`;
   let depth = 1;
-  for (let match = scan.exec(text); match; match = scan.exec(text)) {
-    if (match[0].startsWith('</')) {
+  for (let i = tag.openEnd; i < text.length; i++) {
+    if (text[i] !== '<') continue;
+    // The name has to end where the needle does: `<div` must not match
+    // `<divider`, and `</Card` must not match `</CardBack>`.
+    if (text.startsWith(closes, i) && ENDS_A_TAG_NAME.test(text[i + closes.length] ?? '')) {
       depth--;
-      if (depth === 0) return match.index;
-    } else if (!selfClosingStarts.has(match.index)) {
+      if (depth === 0) return i;
+    } else if (
+      text.startsWith(opens, i) &&
+      ENDS_A_TAG_NAME.test(text[i + opens.length] ?? '') &&
+      !selfClosingStarts.has(i)
+    ) {
       depth++;
     }
   }
   return text.length;
+}
+
+/** What may follow a tag name: whitespace, or the end of the tag itself. */
+const ENDS_A_TAG_NAME = /[\s/>]/;
+
+/**
+ * Where the file declares `name`, or -1. `indexOf` rather than a `RegExp` put
+ * together from the name, for the reason `subtreeEnd` gives.
+ */
+function declarationOf(text: string, name: string): number {
+  let earliest = -1;
+  for (const keyword of ['const ', 'let ', 'function ']) {
+    const needle = `${keyword}${name}`;
+    for (let at = text.indexOf(needle); at >= 0; at = text.indexOf(needle, at + 1)) {
+      // `const drag` must not answer for `const dragRef`.
+      if (/[\w$]/.test(text[at + needle.length] ?? '')) continue;
+      if (earliest < 0 || at < earliest) earliest = at;
+      break;
+    }
+  }
+  return earliest;
 }
 
 /**
@@ -216,9 +248,9 @@ function handlerBody(text: string, expression: string): string | null {
   if (!/^[A-Za-z_$][\w$]*$/.test(expression)) {
     return expression.includes('=>') ? expression : null;
   }
-  const declaration = new RegExp(`\\b(?:const|let|function)\\s+${expression}\\b`).exec(text);
-  if (!declaration) return null;
-  const arrow = text.indexOf('=>', declaration.index);
+  const declaration = declarationOf(text, expression);
+  if (declaration < 0) return null;
+  const arrow = text.indexOf('=>', declaration);
   if (arrow < 0) return null;
   const brace = text.indexOf('{', arrow);
   if (brace < 0) return null;
