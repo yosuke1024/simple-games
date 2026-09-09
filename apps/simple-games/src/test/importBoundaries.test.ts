@@ -34,6 +34,13 @@
  * `import()`, and only test infrastructure may use it to reach games/ — see
  * GAME_I18N_GLOB below. `no-restricted-imports` cannot see it at all (it only
  * inspects `ImportDeclaration` nodes), so this scanner is its only gate.
+ *
+ * A glob's resolved path is a *pattern*, and its wildcard may sit before
+ * `games`: a glob of every `i18n/index.ts` anywhere under src/, written from
+ * ui/, resolves to `src/` followed by a wildcard, so `gameOf` sees no game in
+ * it — yet Vite expands it across every game and tows every game chunk into
+ * the importer. Rules 1, 2 and 5 therefore judge a glob by the literal head
+ * before its first wildcard (`globHead` below), never by a path test.
  */
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -64,11 +71,13 @@ interface Import {
   specifier: string;
   resolved: string | null; // absolute path inside src/, or null for externals
   dynamic: boolean;
-  // Existing rules only read `dynamic` (loaded eagerly vs. on demand); rule 5
-  // needs to tell a real `import()` call apart from `import.meta.glob`, which
-  // is also `dynamic: true` (see the comment above `importsOf`). Keeping
-  // `dynamic` untouched and adding `kind` alongside it means every existing
-  // rule's behaviour is unchanged.
+  // Rule 4 reads `dynamic` (loaded eagerly vs. on demand), and
+  // `import.meta.glob` is `dynamic: true` like a real `import()`. Two rules
+  // need more than that: rules 1 and 2 have to know a glob's `resolved` is a
+  // pattern, not a path, to judge it by its literal head (`globMayReachGames`),
+  // and rule 5 has to tell a real `import()` apart from a glob (only the
+  // former may reach `club/`). `kind` names the form that produced the entry;
+  // `dynamic` is untouched, so rule 4 is unchanged.
   kind: 'static' | 'import()' | 'glob';
 }
 
@@ -159,8 +168,10 @@ function importsOf(file: string): Import[] {
       // `import.meta.glob('y')` / `glob(['y', 'z'])`, with or without type
       // arguments. Treated as dynamic, like `import()`, for rules 1-4: both
       // are "loaded only when asked for", which is the distinction rule 4
-      // turns on. Rule 5 needs to tell them apart (only a real `import()`
-      // may reach into `club/`), hence the separate 'glob' kind.
+      // turns on. Its own 'glob' kind is what lets rules 1 and 2 read
+      // `resolved` as the pattern it is rather than as a path, and rule 5
+      // tell it apart from a real `import()` (only the latter may reach into
+      // `club/`).
       const callee = node.expression;
       if (
         ts.isPropertyAccessExpression(callee) &&
@@ -186,7 +197,9 @@ const registryFile = join(SRC, 'app', 'registry.ts');
  * The one glob shape issue #38's i18n tests use to aggregate every game's
  * catalog (`src/i18n/gate.test.ts`, `src/i18n/i18n.test.ts`,
  * `src/test/setup.ts`). Matched on the *resolved* path, so it is exempt no
- * matter which of those files' relative depths wrote it.
+ * matter which of those files' relative depths wrote it — and only this exact
+ * pattern: a wildcard placed before `games` resolves to a different string
+ * and is judged by `globMayReachGames` like any other glob.
  */
 const GAME_I18N_GLOB = join(SRC, 'games', '*', 'i18n', 'index.ts');
 const isTestInfra = (file: string): boolean =>
@@ -197,6 +210,101 @@ const gameOf = (path: string): string | null =>
   path.startsWith(gamesDir) ? (path.slice(gamesDir.length).split(sep)[0] ?? null) : null;
 
 const rel = (path: string) => path.slice(SRC.length + 1);
+const listed = (offenders: Import[]): string[] =>
+  offenders.map((o) => `${rel(o.file)} -> ${o.specifier}`);
+
+// Rules 1 and 2 for `import.meta.glob` (rule 5 below shares `globHead`). A
+// glob's `resolved` is a pattern, and a wildcard can sit *before* `games`, so
+// `gameOf` never sees a game in it:
+//
+//   import.meta.glob('../**/i18n/index.ts')       from ui/     -> src/**/i18n/index.ts
+//   import.meta.glob('../../../**/i18n/index.ts') from a game  -> src/**/i18n/index.ts
+//   import.meta.glob('../ga*/*/i18n/index.ts')    from ui/     -> src/ga*/*/i18n/index.ts
+//
+// Vite expands every one of those across every game and tows every game chunk
+// into the importer — the exact thing rule 2 exists to prevent. Only the
+// literal head before the first wildcard is known, so a glob counts as
+// reaching games/ whenever that head is games/ itself, something under it, or
+// an ancestor games/ hangs beneath (`src/`, `src/ga`); a head naming some
+// other directory (`src/ui/`, `src/gamesx/`) provably cannot. Deliberately
+// conservative: expanding the pattern against the filesystem would tie the
+// verdict to whatever is on disk today, and a gate should not go quiet
+// because a directory moved. (Line comments on purpose: `**` before `/`
+// would end a block comment.)
+const GLOB_META = /[*?[{]/;
+const globHead = (pattern: string): string => {
+  const at = pattern.search(GLOB_META);
+  return at === -1 ? pattern : pattern.slice(0, at);
+};
+const globMayReachGames = (pattern: string): boolean => {
+  const head = globHead(pattern);
+  return head.startsWith(gamesDir) || gamesDir.startsWith(head);
+};
+// For a glob written inside game `from`: may it match a file of *another*
+// game? Only a head already inside the game's own directory
+// (`src/games/sudoku/…`) is provably confined to it. A bare `src/games/sudoku`
+// (from '../../sudoku*/…') is not — a sibling `sudoku-plus/` would match too.
+const globMayReachOtherGame = (pattern: string, from: string): boolean =>
+  globMayReachGames(pattern) && !globHead(pattern).startsWith(join(gamesDir, from) + sep);
+
+/** Rule 1: `games/A/` never imports from `games/B/`. */
+function crossGameOffenders(imports: Import[]): Import[] {
+  return imports.filter((entry) => {
+    if (entry.resolved === null) return false;
+    const from = gameOf(entry.file);
+    if (from === null) return false;
+    if (entry.kind === 'glob') return globMayReachOtherGame(entry.resolved, from);
+    const to = gameOf(entry.resolved);
+    return to !== null && from !== to;
+  });
+}
+
+/**
+ * Rule 2: only `app/registry.ts`, code inside `src/games/`, and the issue #38
+ * i18n aggregator (GAME_I18N_GLOB, from recognised test files) reach into
+ * `src/games/`.
+ */
+function gamesReachOffenders(imports: Import[]): Import[] {
+  return imports.filter((entry) => {
+    if (entry.resolved === null) return false;
+    const reaches =
+      entry.kind === 'glob' ? globMayReachGames(entry.resolved) : gameOf(entry.resolved) !== null;
+    if (!reaches) return false;
+    if (gameOf(entry.file) !== null || entry.file === registryFile) return false;
+    // issue #38: the i18n tests glob every game's catalog to test it as a
+    // whole. Exempt only this exact resolved target, and only from
+    // recognised test files — a shell file (or any other glob shape,
+    // wildcard-before-`games` included) reaching into games/ still fails.
+    if (isTestInfra(entry.file) && entry.resolved === GAME_I18N_GLOB) return false;
+    return true;
+  });
+}
+
+// The real graph is green, so rules 1 and 2 can only be seen accepting. These
+// probes — synthetic entries in the exact shape importsOf() produces, a
+// relative specifier resolved against its file's directory the way `push`
+// does — show what each rule rejects, and that the glob-head treatment
+// neither misses a wildcard-first glob nor over-rejects a glob that provably
+// stays out of games/. The files need not exist.
+interface Probe {
+  file: string; // relative to src/
+  specifier: string;
+  kind: Import['kind'];
+  verdict: 'ok' | 'offender';
+}
+const probeImports = (probes: Probe[]): Import[] =>
+  probes.map(({ file, specifier, kind }) => {
+    const abs = join(SRC, file);
+    return {
+      file: abs,
+      specifier,
+      resolved: resolve(dirname(abs), specifier),
+      dynamic: kind !== 'static',
+      kind,
+    };
+  });
+const expectedOffenders = (probes: Probe[]): string[] =>
+  probes.filter((p) => p.verdict === 'offender').map((p) => `${p.file} -> ${p.specifier}`);
 
 // Rule 5. `src/club/` does not exist yet (issue #161 adds it), but the gate
 // is declared now so #161 lands against it. It is what turns the single
@@ -218,16 +326,15 @@ const reachesClub = (resolved: string): boolean =>
 // A glob's resolved "path" is a pattern, and a wildcard can sit *before*
 // `club` (`import.meta.glob('../**/api/*.ts')` from app/ resolves to
 // `src/**/api/*.ts`), so the prefix test above would never see it — the
-// second hole review found. Only the literal head before the first wildcard
-// is known; the pattern may reach club/ whenever that head is club/ itself,
-// something under it, or an ancestor club/ hangs beneath (`src/`, `src/cl`).
-// A head naming some other directory (`src/games/`) provably cannot. This is
-// deliberately conservative: expanding the glob against the filesystem would
-// go quiet exactly while club/ does not exist yet.
-const GLOB_META = /[*?[{]/;
+// second hole review found. Same treatment as `globMayReachGames`: only the
+// literal head before the first wildcard is known, and the pattern may reach
+// club/ whenever that head is club/ itself, something under it, or an
+// ancestor club/ hangs beneath (`src/`, `src/cl`). A head naming some other
+// directory (`src/games/`) provably cannot. Deliberately conservative for the
+// same reason, and doubly so here: expanding the glob against the filesystem
+// would go quiet exactly while club/ does not exist yet.
 const globMayReachClub = (resolved: string): boolean => {
-  const at = resolved.search(GLOB_META);
-  const head = at === -1 ? resolved : resolved.slice(0, at);
+  const head = globHead(resolved);
   return reachesClub(head) || clubDir.startsWith(head);
 };
 
@@ -256,27 +363,11 @@ describe('import boundaries (docs/ARCHITECTURE.md)', () => {
   });
 
   it('no game imports from another game', () => {
-    const offenders = allImports.filter((entry) => {
-      if (entry.resolved === null) return false;
-      const from = gameOf(entry.file);
-      const to = gameOf(entry.resolved);
-      return from !== null && to !== null && from !== to;
-    });
-    expect(offenders.map((o) => `${rel(o.file)} -> ${o.specifier}`)).toEqual([]);
+    expect(listed(crossGameOffenders(allImports))).toEqual([]);
   });
 
   it('only the registry, the games themselves, and the i18n test aggregator reach into src/games/', () => {
-    const offenders = allImports.filter((entry) => {
-      if (entry.resolved === null || gameOf(entry.resolved) === null) return false;
-      if (gameOf(entry.file) !== null || entry.file === registryFile) return false;
-      // issue #38: the i18n tests glob every game's catalog to test it as a
-      // whole. Exempt only this exact resolved target, and only from
-      // recognised test files — a shell file (or any other glob shape)
-      // reaching into games/ still fails below.
-      if (isTestInfra(entry.file) && entry.resolved === GAME_I18N_GLOB) return false;
-      return true;
-    });
-    expect(offenders.map((o) => `${rel(o.file)} -> ${o.specifier}`)).toEqual([]);
+    expect(listed(gamesReachOffenders(allImports))).toEqual([]);
   });
 
   it('every storage/keys.ts is a zero-import leaf', () => {
@@ -299,6 +390,103 @@ describe('import boundaries (docs/ARCHITECTURE.md)', () => {
         !/[\\/]storage[\\/]keys$/.test(entry.resolved),
     );
     expect(offenders.map((o) => o.specifier)).toEqual([]);
+  });
+
+  it('rule 1 rejects a sibling game, by path or by glob head (self-check on synthetic imports)', () => {
+    const own = 'games/sudoku/ui/SudokuRoot.tsx';
+    const probes: Probe[] = [
+      // Within the game, and out to shared code: allowed.
+      { file: own, specifier: '../game/solver', kind: 'static', verdict: 'ok' },
+      { file: own, specifier: '../../../storage/kv', kind: 'static', verdict: 'ok' },
+      // Another game, statically or lazily: offender either way.
+      { file: own, specifier: '../../minesweeper/game/board', kind: 'static', verdict: 'offender' },
+      {
+        file: own,
+        specifier: '../../minesweeper/ui/MinesweeperRoot',
+        kind: 'import()',
+        verdict: 'offender',
+      },
+      // A glob confined to the game's own directory: allowed.
+      { file: own, specifier: './components/*.tsx', kind: 'glob', verdict: 'ok' },
+      // A glob whose head is games/ itself: every sibling matches.
+      { file: own, specifier: '../../*/i18n/index.ts', kind: 'glob', verdict: 'offender' },
+      // The wildcard-first shape: resolves to src/**/i18n/index.ts, where
+      // gameOf() sees nothing — the hole the glob-head treatment closes.
+      { file: own, specifier: '../../../**/i18n/index.ts', kind: 'glob', verdict: 'offender' },
+      // A bare head `src/games/sudoku` is not the game's directory: a sibling
+      // named `sudoku-plus/` would match. Conservative, so an offender.
+      { file: own, specifier: '../../sudoku*/i18n/index.ts', kind: 'glob', verdict: 'offender' },
+      // A glob whose head names a directory games/ cannot hang under: allowed.
+      { file: own, specifier: '../../../ui/**/*.tsx', kind: 'glob', verdict: 'ok' },
+      // From outside games/ altogether: rule 2's business, not rule 1's.
+      {
+        file: 'ui/screens/HomeScreen.tsx',
+        specifier: '../../**/i18n/index.ts',
+        kind: 'glob',
+        verdict: 'ok',
+      },
+    ];
+    expect(listed(crossGameOffenders(probeImports(probes)))).toEqual(expectedOffenders(probes));
+  });
+
+  it('rule 2 rejects a reach into games/, by path or by glob head (self-check on synthetic imports)', () => {
+    const shell = 'ui/screens/HomeScreen.tsx';
+    const i18nTest = 'i18n/i18n.test.ts';
+    const probes: Probe[] = [
+      // The shell reaching past the registry, statically or lazily: offender.
+      {
+        file: shell,
+        specifier: '../../games/sudoku/ui/SudokuRoot',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: shell,
+        specifier: '../../games/sudoku/ui/SudokuResult',
+        kind: 'import()',
+        verdict: 'offender',
+      },
+      // A glob that stays in ui/: allowed.
+      { file: shell, specifier: '../components/*.tsx', kind: 'glob', verdict: 'ok' },
+      // The aggregator's exact shape, but from a shell file: offender.
+      { file: shell, specifier: '../../games/*/i18n/index.ts', kind: 'glob', verdict: 'offender' },
+      // Wildcard before `games` (resolves to src/**/i18n/index.ts): Vite
+      // expands it across every game — offender, though gameOf() sees nothing.
+      { file: shell, specifier: '../../**/i18n/index.ts', kind: 'glob', verdict: 'offender' },
+      // Heads that are a proper prefix of `src/games/`: `src/ga`, `src/games`.
+      { file: shell, specifier: '../../ga*/*/i18n/index.ts', kind: 'glob', verdict: 'offender' },
+      { file: shell, specifier: '../../games*/index.ts', kind: 'glob', verdict: 'offender' },
+      // A sibling directory that merely shares letters with games/: allowed.
+      { file: shell, specifier: '../../gamesx/**/*.ts', kind: 'glob', verdict: 'ok' },
+      // issue #38: the aggregator's shape from recognised test files: exempt.
+      { file: i18nTest, specifier: '../games/*/i18n/index.ts', kind: 'glob', verdict: 'ok' },
+      { file: 'test/setup.ts', specifier: '../games/*/i18n/index.ts', kind: 'glob', verdict: 'ok' },
+      // The same files with any other shape — wildcard first, a wider tail,
+      // a static import — get no pass.
+      { file: i18nTest, specifier: '../**/i18n/index.ts', kind: 'glob', verdict: 'offender' },
+      { file: i18nTest, specifier: '../games/*/i18n/*.ts', kind: 'glob', verdict: 'offender' },
+      {
+        file: i18nTest,
+        specifier: '../games/sudoku/i18n/index.ts',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      // The registry is rule 4's business, not rule 2's.
+      {
+        file: 'app/registry.ts',
+        specifier: '../games/sudoku/storage/keys',
+        kind: 'static',
+        verdict: 'ok',
+      },
+      // Inside games/ is rule 1's business, not rule 2's.
+      {
+        file: 'games/sudoku/ui/SudokuRoot.tsx',
+        specifier: '../../minesweeper/game/board',
+        kind: 'static',
+        verdict: 'ok',
+      },
+    ];
+    expect(listed(gamesReachOffenders(probeImports(probes)))).toEqual(expectedOffenders(probes));
   });
 
   it('the scanner resolves root-relative and @/ globs, so they cannot hide from any rule', () => {
