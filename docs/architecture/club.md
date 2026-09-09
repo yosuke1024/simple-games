@@ -38,7 +38,7 @@ issue #161 / #164 の本文とコメントは提案・検討の記録であり�
 | **Core**         | Shared を有効化していない状態のアプリと Web 版。PRODUCT_PRINCIPLES の全約束の主語                                                                                                                                   |
 | **Shared**       | 利用者が自分で建てたサーバへ明示的に接続したときだけ現れる任意の層。製品名は **Private Game Club**。UI と公開文面では **Club** と呼び、Shared / SharedHost / Server はコード・文書の語                              |
 | **サーバ**       | 利用者(または招待した知人)が建てた 1 台。**1 台 = 1 Club**(v1)。複数の Club に入る = 複数のサーバに接続する。API に Club の id を持たせるのはこの固定を将来ほどけるようにするためで、v1 のサーバは 1 つしか返さない |
-| **Host / Owner** | サーバを建てた人。`role: 'owner'` の member。建てる・払う・消すのはこの人で、PixApps は関与しない                                                                                                                   |
+| **Host / Owner** | サーバを建てた人。`role: 'owner'` の member。建てる・払う・消すのはこの人で、PixApps は関与しない。Owner の端末は複数持てる(Owner リンクで足す。§8-3)                                                               |
 | **Member**       | 招待で参加した人。端末ごとに member token を持つ。同じ人が別の端末で入れば別の member(§4)                                                                                                                           |
 | **Challenge**    | 「このゲームを、このモードで、この seed で」を Club に置いたもの。**終わった 1 局から作る**(§6)。締切は無い                                                                                                         |
 | **Result**       | 1 つの Challenge に対する member 1 人の結果。結果画面が表示した事実だけ(§6)。**1 人 1 回**                                                                                                                          |
@@ -203,6 +203,9 @@ interface ClubConnection {
   受け付けない(#161「arbitrary URL 接続時は localhost / private network 等の扱いを
   明示する」への答え: 明示的に**拒否**)。
 - 同じ `endpoint` への接続は 1 つまで(同じ Club に 2 つの nickname で入らない)。
+- 1 端末の接続は **10 件まで**(Owner として / Member として、を問わず合計)。11 件目は
+  参加画面で断る。アカウントが無いので「1 人あたり」の上限はサーバにも端末にも
+  置けず、置けるのはこの端末単位の上限だけである。
 - **バックアップに入れない**: `src/backup/keys.ts` の `SHELL_KEYS_LEFT_BEHIND` に
   理由付きで載せる — `sg.iap` と同じく、ファイルはコピーできるので入れた時点で
   「コピーできる鍵」になる。復元しても接続は戻らない。**`Reset Local Data` は消す**
@@ -256,6 +259,9 @@ interface OutboxItem {
 | 409  | `board_mismatch`      | Result の `boardDigest` が Challenge のものと違う(§6-4)              |
 | 409  | `invite_expired`      | 招待 token が無効(再発行済み)                                        |
 | 409  | `setup_key_used`      | Setup Key が既に使われた / 一致しない(§8)                            |
+| 409  | `last_owner`          | 最後の Owner を外そうとした(§8-3)                                    |
+| 409  | `too_many_owners`     | Club の Owner が上限(5)に達している(§8-3)                            |
+| 409  | `too_many_members`    | Club の member が上限(100)に達している                               |
 | 413  | `too_large`           | body が 16KB を超えた                                                |
 | 429  | `rate_limited`        | 下記の上限                                                           |
 | 501  | `unsupported_version` | `contractVersion` をサーバが知らない                                 |
@@ -305,32 +311,32 @@ interface Result {
 interface Hosting {
   provider: string | null; // 'railway' 等。サーバの環境変数から
   manageUrl: string | null; // 事業者側の管理画面
-  referralUrl: string | null; // Owner が置いた事業者の referral(§8-4)。無ければ null
+  referralUrl: string | null; // Owner が置いた、自分の referral リンク(§8-4)。無ければ null
   lastActivityAt: string | null; // 最後の書き込み(join / challenge / result)
 }
 ```
 
 ### 5-3. エンドポイント
 
-| Method / Path                  | 認証   | 目的                                                                      |
-| ------------------------------ | ------ | ------------------------------------------------------------------------- |
-| `GET /health`                  | 不要   | `{ ok: true, api: 1 }`。接続画面の疎通確認とテンプレートの healthcheck    |
-| `POST /join`                   | invite | 招待 token + nickname → member token                                      |
-| `POST /claim`                  | setup  | Setup Key + nickname → **owner** の member token(§8-3)                    |
-| `GET /club`                    | member | `{ club, me, members[] }`                                                 |
-| `GET /challenges`              | member | 新しい順。`?after=<id>` で続き。最大 50 件                                |
-| `POST /challenges`             | member | 作成 + 作成者の Result を同時に(§6-3)                                     |
-| `DELETE /challenges/:id`       | member | 作成者本人か Owner だけ。Result ごと消える                                |
-| `GET /challenges/:id`          | member | 1 件                                                                      |
-| `GET /challenges/:id/results`  | member | 提出順。**並べ替えはクライアント**(§6-1 の `order`)。最大 200 件          |
-| `POST /challenges/:id/results` | member | 自分の Result を 1 回だけ                                                 |
-| `GET /records`                 | member | `{ gameId, paramsKey, facts, memberId, nickname, challengeId }[]`。導出値 |
-| `GET /hosting`                 | member | `Hosting`。`manageUrl` は **Owner にだけ**返す(Member には null)          |
-| `PATCH /hosting`               | owner  | `{ referralUrl }` の設定 / 解除(`null`)                                   |
-| `GET /invite`                  | owner  | 現在の招待 `{ token, url }`                                               |
-| `POST /invite`                 | owner  | 招待を**作り直す**(前のものは即無効)                                      |
-| `DELETE /members/:id`          | owner  | Member を外す。その token は即 401。Result は残る(nickname 付き)          |
-| `PATCH /club`                  | owner  | `{ name }`                                                                |
+| Method / Path                  | 認証   | 目的                                                                                                                                                                          |
+| ------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /health`                  | 不要   | `{ ok: true, api: 1 }`。接続画面の疎通確認とテンプレートの healthcheck                                                                                                        |
+| `POST /join`                   | invite | 招待 token + nickname → member token                                                                                                                                          |
+| `POST /claim`                  | setup  | Setup Key + nickname → **owner** の member token(§8-3)。Setup Key が再設定されていればもう 1 回                                                                               |
+| `GET /club`                    | member | `{ club, me, members[] }`                                                                                                                                                     |
+| `GET /challenges`              | member | 新しい順。`?after=<id>` で続き。最大 50 件                                                                                                                                    |
+| `POST /challenges`             | member | 作成 + 作成者の Result を同時に(§6-3)                                                                                                                                         |
+| `DELETE /challenges/:id`       | member | 作成者本人か Owner だけ。Result ごと消える                                                                                                                                    |
+| `GET /challenges/:id`          | member | 1 件                                                                                                                                                                          |
+| `GET /challenges/:id/results`  | member | 提出順。**並べ替えはクライアント**(§6-1 の `order`)。最大 200 件                                                                                                              |
+| `POST /challenges/:id/results` | member | 自分の Result を 1 回だけ                                                                                                                                                     |
+| `GET /records`                 | member | `{ gameId, paramsKey, facts, memberId, nickname, challengeId }[]`。導出値                                                                                                     |
+| `GET /hosting`                 | member | `Hosting`。`manageUrl` は **Owner にだけ**返す(Member には null)                                                                                                              |
+| `PATCH /hosting`               | owner  | `{ referralUrl }` の設定 / 解除(`null`)                                                                                                                                       |
+| `GET /invite`                  | owner  | 現在の Member 招待 `{ token, url }`                                                                                                                                           |
+| `POST /invite`                 | owner  | `{ role: 'member' }` は Member 招待を**作り直す**(前のものは即無効)。`{ role: 'owner' }` は **Owner リンク** `{ token, url, expiresAt }` を 1 本発行(1 回限り・24 時間。§8-3) |
+| `DELETE /members/:id`          | owner  | member を外す(Owner も外せる)。その token は即 401。Result は残る(nickname 付き)。最後の Owner は外せない(`409 last_owner`)                                                   |
+| `PATCH /club`                  | owner  | `{ name }`                                                                                                                                                                    |
 
 ### 5-4. 主な request / response
 
@@ -578,7 +584,8 @@ https://<endpoint>/join#invite=<inviteToken>
   INTERNET / BILLING のまま)。相手は OS のカメラで読み、ブラウザで開く。描画は
   依存ゼロの Canvas 2D(`services/share/card.ts` と同じ道具立て)で、`club/` の中に置く。
 - 招待 URL は Owner が `POST /invite` で作り直せる。作り直すと前の URL は無効
-  (`409 invite_expired`)。
+  (`409 invite_expired`)。Owner リンク(§8-3)も同じ形の URL だが、**1 回使えば
+  無効**で、24 時間で期限が切れる。開いた端末は `role: 'owner'` で参加する。
 
 ### 7-3. どこで参加できるか
 
@@ -645,9 +652,11 @@ Your Club runs on a server in your own hosting account.
   直さない。
 - `Continue` はこの説明の下にだけある。金額は書かない(未計測の数字を約束にしない。
   PRODUCT_PRINCIPLES「Railway 実コストを未計測のまま固定額として宣伝していない」)。
-- Member が置いた referral(§8-4)があるとき、`Continue` の**下**に 1 行:
-  `Opens the provider through <nickname>'s referral link.` — 金銭の文言はこれ以上
-  出さない(「稼げる」を言わない)。
+- `Continue` が開く URL は 1 つ: いま居る Club の Owner が referral リンクを置いて
+  いれば(§8-4)**それ**、無ければ PixApps の template リンク `HOSTING_TEMPLATE_URL`。
+  前者のとき `Continue` の**下**に 1 行:
+  `Opens the provider through <nickname>'s link.` — 金銭の文言はこれ以上出さない
+  (「稼げる」を言わない)。URL は加工せずそのまま開く(§8-4)。
 
 ### 8-3. Setup Key と claim
 
@@ -665,18 +674,30 @@ Simple Games                                  SharedHost(事業者上)
   ← memberToken(role: 'owner')→ sg.club へ
 ```
 
-- Setup Key は**初回 claim 専用**。claim が成功した瞬間にサーバは hash を捨て、
-  端末も一時保存を消す。2 回目は `409 setup_key_used`。
+- Setup Key は **claim 1 回専用**。claim が成功した瞬間にサーバは hash を使用済みに
+  し、端末も一時保存を消す。同じ Key の 2 回目は `409 setup_key_used`。
+  **再設定はできる**: 事業者のダッシュボードで環境変数 `CLUB_SETUP_KEY` に新しい値を
+  置けば、サーバはもう 1 回だけ claim を受け付ける(使用済みの値は hash で覚えていて
+  再利用を断る)。これが「Owner の端末をすべて失った」ときの復旧経路で、ダッシュボード
+  に入れる人 = サーバの持ち主、という事実だけを根拠にする。
 - Setup Key を Simple Games が発行する理由は、利用者が「秘密を作って貼る」以外の
   技術操作をしないで済ませるためで(#161「Setup / Claim flow」)、Simple Games が
   そのサーバに対して持つ権限はこの 1 回の claim だけである。**事業者の API token を
   Simple Games に保存しない**。事業者側の project を Simple Games から操作する経路は
   一切作らない。
 - claim の前に `GET /health` で `X-Club-Api` を見る。知らない版なら止める(§10)。
-- Owner も他の端末では Member として招待から入る(Owner の token を配らない)。
-  Owner 権限のある端末を増やしたいときは、v1 では**その端末で claim し直す**ことが
-  できない(Setup Key は 1 回)ので、Owner 端末は 1 台。これは v1 の制約として文書化
-  し、必要が確認されたら「Owner が 2 台目用の Setup Key を発行する」を後続にする。
+- **Owner の端末は複数持てる**(2026-09-09、製品オーナーの判断)。足し方は
+  **Owner リンク**: Owner の端末で `POST /invite { role: 'owner' }` → 1 回限り・
+  24 時間の URL(§7-2)を、自分の別の端末で開くか、共同で管理したい人に渡す。開いた
+  端末は `role: 'owner'` の member として参加し、以後は Setup Key も元の端末も要らない。
+  Owner の token 自体は配らない — 配るのは「Owner になれる 1 回の入口」である。
+  サーバにとって「同じ人の 2 台目」と「別の人」は区別できず、区別しない(アカウントが
+  無い)。
+- 上限は 2 つ: 1 つの Club の Owner は **5 人(端末)まで**(`409 too_many_owners`)、
+  1 端末の接続は 10 件まで(§4-1)。Owner が増えるほど「誰が消せるか」が広がるので
+  少なく保つが、1 台に縛らない。
+- Owner は Owner を外せる(`DELETE /members/:id`)が、**最後の 1 人は外せない**
+  (`409 last_owner`)。最後の Owner が端末を失ったときの復旧は上の Setup Key の再設定。
 
 ### 8-4. Hosting(Owner の画面)
 
@@ -687,11 +708,23 @@ Server: Online            ← 直前の GET /hosting が通ったかどうか。
 Last activity: Sep 7, 2026
 
 [ Manage server ]          ← hosting.manageUrl を外部ブラウザで開く(openExternal)
+[ Add an Owner device ]    ← POST /invite { role: 'owner' } → Owner リンクを共有シート / QR で(§8-3)
 Referral link  [ none ]    ← PATCH /hosting。任意。無くても同じ UX
 
 To stop future hosting usage, delete the server in your hosting provider's dashboard.
 Hosting costs are paid to the provider and depend on usage.
 ```
+
+**Referral link は Host 自身のもの。** 事業者が利用者ごとに発行する referral リンクを、
+Host が自分の事業者アカウントで取得し、ここに貼る。使われるのは 1 か所 — この Club の
+Member が `Create your own Club`(§13-3)を選んだときの説明画面の `Continue` である
+(§8-2)。つまり **子の Host は親の Host のリンクで事業者へ行き**、子の Host が自分の
+Club に自分のリンクを置けば、孫は子のリンクで行く。親のいない最上位の Host だけが
+PixApps の template リンク(`HOSTING_TEMPLATE_URL`。事業者の制度上 PixApps 自身の
+referral を含み得る)で行く。Simple Games が持つのはこの「1 段上のリンクを 1 回開く」
+だけで、リンクの中身を加工しない・親子関係を保存しない・段数を数えない・報酬を
+表示しない(PRODUCT_PRINCIPLES「紹介」)。referral の制度が無い事業者でも同じ画面が
+同じに動く — 行が空のままになるだけである。
 
 - `Server: Online` は画面を開いたときの 1 回の結果で、定期確認は無い。
 - **通知しない**。使われていないサーバについて、Push・催促・バッジ・定期削除の案内を
@@ -710,8 +743,12 @@ and the others can still play. To stop hosting usage, delete the server in your
 hosting provider's dashboard.
 ```
 
-Owner が Disconnect しても、サーバは動き続ける。Owner 端末を切断すると Owner 権限を
-持つ端末が無くなる(§8-3 の制約)ので、Owner にはその 1 文を足す。
+Owner が Disconnect しても、サーバは動き続ける。切断は端末側だけの操作で(`sg.club`
+から接続を消す)、サーバの member は残る — Members の一覧に居続け、他の Owner が
+外せる。Owner の端末が切断するときは、直前に `GET /club` で他の Owner が居るかを見て、
+**自分が最後の Owner なら** 1 文を足す: `This is the only Owner device. Add another
+Owner device first, or reset the setup key in your hosting provider's dashboard to
+claim the Club again.`(§8-3)。確認すれば切断できる — 端末を手放す人を止めない。
 
 ## 9. Club の画面 — 情報設計
 
@@ -778,7 +815,8 @@ Results
 ### Settings(Club ごと)
 
 nickname の変更(`PATCH` は v1 に無い — 変えたいときは再参加。v1 の制約)、
-`Disconnect this device`(§8-5)、Owner: Club 名の変更、招待の作り直し。
+`Disconnect this device`(§8-5)、Owner: Club 名の変更、招待の作り直し、Owner 端末の
+追加(§8-3)。
 
 ### 後続(v1 では作らない)
 
@@ -899,7 +937,8 @@ PRODUCT_PRINCIPLES「機械で示すこと」の 3 と 4 を、実装の名前�
 - 置く場所: All Clubs の末尾(§9)、Club の Settings の末尾。Core には置かない。
 - 文言: `Create your own Club` / `Start a private game space for another group of
 friends or family.`。押した先が §8-2 の説明画面で、**お金の話はそこで初めて**出る。
-- referral(§8-4)は Owner が置いたときだけ、説明画面の `Continue` の下に 1 行。
+- `Continue` は、いま居る Club の Owner が置いた referral リンク(§8-4)があればそれを、
+  無ければ PixApps の template リンクを開く。前者のときだけ `Continue` の下に 1 行。
   `Invite friends and earn money` の類の CTA は作らない。紹介人数・報酬・ランキング・
   進捗バーは Simple Games のどこにも無い(PRODUCT_PRINCIPLES「紹介」)。
 
@@ -919,28 +958,35 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
 出荷するまで README・ストア・LP・GitHub metadata に書かない([../BRAND.md](../BRAND.md))。
 出荷時にプライバシーページへ Shared の節を足す(何を、どこへ、誰の管理下で)。
 
-## 14. 決めていないこと / 外部確認
+## 14. 決めたこと(製品オーナー確認済み)/ 外部確認
 
-この文書で決めた判断は、この文書を直す PR で変えられる。決めていないものは次のとおり。
+この文書で決めた判断は、この文書を直す PR で変えられる。
 
-**製品オーナーの確認が要るもの**(段取りの PR C に入る前に決める):
+**2026-09-09 に製品オーナーが確認した判断**:
 
-1. 最初の 3 本(Sudoku / Minesweeper / Water Sort)でよいか。
-2. 「1 人 1 回、最初に終わった局が数える」(§6-3)でよいか。代案は「自己ベストを
-   送れる」だが、それは同じ盤面を繰り返す圧力になる。
-3. Owner 端末は 1 台(§8-3)でよいか。
-4. Minesweeper の Challenge が初手を固定して始まる(§6-0)体験でよいか(参加者は
-   最初のひと開きを自分で選べない)。
-5. ホームの入口の位置(「最近遊んだ」の下、§2-2 / §2-3)。
+1. 最初の 3 本は Sudoku / Minesweeper / Water Sort(§6-0)。
+2. Result は「1 人 1 回、最初に終わった局が数える」(§6-3)。「自己ベストを送れる」は
+   採らない — 同じ盤面を繰り返す圧力になる。
+3. **Owner の端末は複数**(§8-3)。当初の「Owner 端末は 1 台」は却下され、Owner リンクで
+   端末を足す形に改めた。上限は端末あたりの接続数(10)と Club あたりの Owner 数(5)で
+   置き、台数では縛らない。
+4. Minesweeper の Challenge は初手を固定して始まる(§6-0)。参加者は最初のひと開きを
+   選べないが、それが「同じ盤面」の定義である。
+5. ホームの入口は「最近遊んだ」の下(§2-2 / §2-3)。
 
 **外部の事実確認**(#161 Phase 0 の未完了項目。確認できるまで文言と数字を出さない):
 
-6. ホスティング事業者の one-click template で、persistent volume / healthcheck /
-   環境変数 `CLUB_SETUP_KEY` の 1 回入力 / serverless 既定 OFF が実現できるか。
+6. 事業者は **Railway を第一候補**とする(#161 のとおり)。one-click template で
+   persistent volume / healthcheck / 環境変数 `CLUB_SETUP_KEY` の入力と再設定 /
+   serverless 既定 OFF が揃う見込みで、段取りの PR B の deploy で実際に確かめる。
 7. 少人数(5〜10 人、週数回)での実コスト。**計測値が出るまで金額を書かない**。
-8. referral commission と template kickback の**併用可否**(#161 comment)。未確認のまま
-   収益に数えない。
-9. 事業者の referral URL を template の deploy 導線へ安全に引き継げるか(§8-4)。
+8. referral commission と template kickback の併用は**前提にしない**(製品オーナー
+   判断)。両立すれば副次収益が 2 つになる、というだけで、どちらも Shared の採用条件
+   ではない。未確認のまま収益に数えない。
+9. 事業者が利用者ごとに referral リンクを発行していること(Host が自分のリンクを
+   §8-4 に置ける前提。Railway には referral program がある見込みで、PR E で確かめる)。
+   リンクを template の導線へ「引き継ぐ」仕組みは**要らない** — Host のリンクを
+   そのまま開くだけで、加工も追跡もしない(§8-4)。
 
 **このリポジトリの外**: サーバの実装(Node + SQLite + 1 volume)と template は別
 リポジトリ。§5 の契約テストをそちらに置き、`X-Club-Api: 1` を返す最初の版が

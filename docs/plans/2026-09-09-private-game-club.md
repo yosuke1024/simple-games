@@ -40,7 +40,7 @@ Core の画面・文言・保存・通信は #176 の前と同じである。
 | **B** | 別リポジトリ(サーバ) | Node + SQLite + 1 volume。club.md §5 の API v1 を満たす。§5 の JSON を fixture にした契約テスト。Web ビルドを `/` と `/join` で配る(`/join/` → `/join`)。CORS(自 origin / `https://localhost` / `capacitor://localhost`)。token は hash 保存。`X-Club-Api: 1`。事業者の template(volume / healthcheck / `CLUB_SETUP_KEY` / serverless 既定 OFF)。Dockerfile 1 枚で他の事業者でも動く           | 契約テスト緑。手元(localhost)と事業者上の 1 台で `/health` → `/claim` → `/join` → `/challenges` の往復を確認                        |
 | **C** | このリポジトリ       | **`club/` が生まれる PR**。`sg.club` / `sg.clubOutbox`(schema・backup 左置き・削除)、`src/app/clubGate.ts`(契機 3 つ)、`vite.config.ts` の `club` チャンク、`bundle-size.mjs` の club 規則、設定 > Advanced の行、`club/` の入口・参加(招待 URL 貼り付け / `/join`)・All Clubs・Club(Members / Settings / Disconnect)・API client・`club/i18n/`(14 言語)。**Challenge / 結果 / Create はまだ** | club.md §12 の 1・2・4・6・7。`pnpm test` / size gate 緑。Web 版で `/join#invite=` → Join が通る(B のサーバ)                        |
 | **D** | このリポジトリ       | 3 本の対応(Sudoku / Minesweeper / Water Sort): `challenge/contract.ts`(import ゼロ)、`GameRootProps.challenge`、4 つ目のスロット、`boardDigest`、`ClubResultAction`(Core 1 コンポーネント + 3 キー)、Club の Challenge / Results / Records、`New Challenge`、未送信キュー。**高リスクキー**(「終えたら結果を送る」)を `highRiskKeys.ts` へ                                                     | club.md §12 の 3・5。各ゲームの golden がそのまま緑(生成器に触らない)。`gameKeys.test.ts` の golden に新キー 3 つを**意図して**足す |
-| **E** | このリポジトリ       | Host になる: 説明画面(§8-2、高リスクキー 4 箇条)、Setup Key / claim、Hosting 画面、Disconnect の本文、referral の設定と表示、QR の描画。`HOSTING_TEMPLATE_URL` は B の template が公開されてから                                                                                                                                                                                               | 端末 → 事業者 → claim を実際に 1 回通す。**実コストの計測を開始**(club.md §14-7)                                                    |
+| **E** | このリポジトリ       | Host になる: 説明画面(§8-2、高リスクキー 4 箇条)、Setup Key / claim(再設定による復旧を含む)、Owner リンクで端末を足す、Hosting 画面、Disconnect の本文(最後の Owner の 1 文)、referral の設定と表示、QR の描画。`HOSTING_TEMPLATE_URL` は B の template が公開されてから                                                                                                                       | 端末 → 事業者 → claim を実際に 1 回通す。**実コストの計測を開始**(club.md §14-7)                                                    |
 | **F** | このリポジトリ(#164) | `Play together`(Core 2 キー)、`Create your own Club`(All Clubs / Settings の末尾)、pixapps.ai の Web 版での `Play together` の文言(招待リンクを開く案内)                                                                                                                                                                                                                                       | #164 の Acceptance Criteria(club.md §13 に写したもの)                                                                               |
 | **G** | このリポジトリ + LP  | 出荷: README / ストア / LP / GitHub metadata / プライバシーページに Shared の節。Core の約束は Core の主語のまま。RELEASE_CHECKLIST に Shared の節(未接続端末のリクエスト 0 件の実機確認)                                                                                                                                                                                                      | BRAND.md「表現ルール」。実機で「未接続 = 0 リクエスト」を見る                                                                       |
 
@@ -53,39 +53,41 @@ PR と同時に入れるため — 押しても何も送れない `Send to Club`
 #161 本文と comment、#164 本文の受け入れ条件を、この設計のどこが引き受けるかで写す。
 **満たすのは実装 PR であり、設計はそれを可能にするだけ。**
 
-| 条件(要約)                                                             | 引き受ける場所                                        |
-| ---------------------------------------------------------------------- | ----------------------------------------------------- |
-| Shared 未設定ユーザーの Core UX / offline / network が変わらない       | club.md §2(入口 3 つ)、§3(実行時ゲート)、§12-2・§12-8 |
-| Settings > Advanced からのみ有効化                                     | §2-1、§7-3、§8-1                                      |
-| 接続済みのときだけホームに入口                                         | §2-2(数字を出さない)                                  |
-| Hub の中心が Active Challenges で、順位 / pressure UI でない           | §9、§6-1 `order`(1 軸・番号無し)                      |
-| realtime multiplayer を導入しない                                      | §10、§9「後続」                                       |
-| Endpoint + Invite Token または URL で参加、初回 join 後に member token | §5-3 `/join`、§7                                      |
-| game save 全体を送らない                                               | §5-5、§6-1(facts の閉じた型)、§12-3                   |
-| Web ブラウザだけで参加できる                                           | §7-1・§7-4                                            |
-| one-click deploy 導線、飛ぶ前に account / 費用 / 自己管理を明示        | §8-1〜§8-3                                            |
-| Disconnect ≠ server delete                                             | §8-5                                                  |
-| Owner が hosting 管理画面へ移動できる                                  | §8-4                                                  |
-| serverless 既定 OFF、cold start を通常 UX へ持ち込まない               | 段取り B(template)、§14-6                             |
-| 実コストを未計測のまま宣伝しない                                       | §8-2(金額を書かない)、§14-7                           |
-| PixApps に固定 backend cost が無い / referral 無しでも成立             | §8、PRODUCT_PRINCIPLES「Shared」                      |
-| Shared Server 障害が Core gameplay を止めない                          | §10                                                   |
-| 1 端末から複数 Club、Owner / Member 両立、All Clubs                    | §4-1、§9「入口」                                      |
-| Challenge の結果は起点 Club にだけ自動送信、通常 play は明示のみ       | §2-2、§6-3                                            |
-| personal stats と Club records を分離                                  | §6-2-3(統計に入れない)、§5-4(導出値のみ)              |
-| Club ごとに nickname / token が独立                                    | §4-1                                                  |
-| 1 Host 障害が他 Host / Core へ波及しない                               | §10「Club ごとに独立」                                |
-| Owner が optional に referral URL を登録                               | §5-3 `PATCH /hosting`、§8-4                           |
-| referral tree / earning leaderboard / payout を持たない                | §13-3、PRODUCT_PRINCIPLES「紹介」                     |
-| (#164)`Play together` を自然に発見、技術語を主語にしない               | §2-3、§13-1                                           |
-| (#164)対応 game の Result から Challenge、既存 Club 参加者は Club 選択 | §2-2、§6-3                                            |
-| (#164)未参加者は Join / Create を選べる                                | §9「入口」                                            |
-| (#164)Club 体験後に `Create your own Club`                             | §13-3                                                 |
-| (#164)first-launch modal / badge / notification 無し                   | §13-5                                                 |
+| 条件(要約)                                                                | 引き受ける場所                                                            |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Shared 未設定ユーザーの Core UX / offline / network が変わらない          | club.md §2(入口 3 つ)、§3(実行時ゲート)、§12-2・§12-8                     |
+| Settings > Advanced からのみ有効化                                        | §2-1、§7-3、§8-1                                                          |
+| 接続済みのときだけホームに入口                                            | §2-2(数字を出さない)                                                      |
+| Hub の中心が Active Challenges で、順位 / pressure UI でない              | §9、§6-1 `order`(1 軸・番号無し)                                          |
+| realtime multiplayer を導入しない                                         | §10、§9「後続」                                                           |
+| Endpoint + Invite Token または URL で参加、初回 join 後に member token    | §5-3 `/join`、§7                                                          |
+| game save 全体を送らない                                                  | §5-5、§6-1(facts の閉じた型)、§12-3                                       |
+| Web ブラウザだけで参加できる                                              | §7-1・§7-4                                                                |
+| one-click deploy 導線、飛ぶ前に account / 費用 / 自己管理を明示           | §8-1〜§8-3                                                                |
+| Disconnect ≠ server delete                                                | §8-5                                                                      |
+| Owner が hosting 管理画面へ移動できる                                     | §8-4                                                                      |
+| serverless 既定 OFF、cold start を通常 UX へ持ち込まない                  | 段取り B(template)、§14-6                                                 |
+| 実コストを未計測のまま宣伝しない                                          | §8-2(金額を書かない)、§14-7                                               |
+| PixApps に固定 backend cost が無い / referral 無しでも成立                | §8、PRODUCT_PRINCIPLES「Shared」                                          |
+| Shared Server 障害が Core gameplay を止めない                             | §10                                                                       |
+| 1 端末から複数 Club、Owner / Member 両立、All Clubs                       | §4-1、§9「入口」                                                          |
+| Challenge の結果は起点 Club にだけ自動送信、通常 play は明示のみ          | §2-2、§6-3                                                                |
+| personal stats と Club records を分離                                     | §6-2-3(統計に入れない)、§5-4(導出値のみ)                                  |
+| Club ごとに nickname / token が独立                                       | §4-1                                                                      |
+| 1 Host 障害が他 Host / Core へ波及しない                                  | §10「Club ごとに独立」                                                    |
+| Owner が optional に referral URL を登録                                  | §5-3 `PATCH /hosting`、§8-4                                               |
+| Member の `Create your own Club` が、設定済みなら Host の referral を使う | §8-2、§8-4(親の Host のリンクをそのまま開く。最上位だけ PixApps のリンク) |
+| referral tree / earning leaderboard / payout を持たない                   | §13-3、PRODUCT_PRINCIPLES「紹介」                                         |
+| (#164)`Play together` を自然に発見、技術語を主語にしない                  | §2-3、§13-1                                                               |
+| (#164)対応 game の Result から Challenge、既存 Club 参加者は Club 選択    | §2-2、§6-3                                                                |
+| (#164)未参加者は Join / Create を選べる                                   | §9「入口」                                                                |
+| (#164)Club 体験後に `Create your own Club`                                | §13-3                                                                     |
+| (#164)first-launch modal / badge / notification 無し                      | §13-5                                                                     |
 
 **#164 から縮めたもの**: 未接続の端末の結果画面の `Challenge a friend`(club.md §2-4)。
 **#161 から変えたもの**: ホームの入口に件数を出さない(§2-2)、Challenge はフォームでは
-なく終わった局から作る(§6-3)、1 サーバ = 1 Club(§1)、Owner 端末 1 台(§8-3)。
+なく終わった局から作る(§6-3)、1 サーバ = 1 Club(§1)。Owner の端末は複数(§8-3。当初案の
+「1 台」は製品オーナーが却下し、Owner リンクで足す形に改めた)。
 
 ## 4. Epic #175 の Acceptance Criteria
 
