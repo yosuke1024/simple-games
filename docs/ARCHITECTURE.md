@@ -247,10 +247,18 @@ Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS 
   何を意味するか——札を戻す・撃たない・ピースをトレイへ返す——はゲームごとに違うので、
   共通のポインタ処理は作らない。`src/test/pointerContractWiring.test.ts` は配線と「各ゲームの
   自前テストが `pointercancel` と trailing click を流していること」だけを要求し、意味の証明は
-  各ゲームのテストに残す(`modalIsolationWiring.test.ts` と同じ形)。押下が何も抱えない 3 本
-  (2048 / Bunny Hop / Sliding Puzzle——押下は開始点を置くだけで、スワイプは離したときに
-  決まる)は理由を書いてゲート内の一覧で除外し、その 1 本が指を追い始めたら(`onPointerMove`・
+  各ゲームのテストに残す(`modalIsolationWiring.test.ts` と同じ形)。押下が何も抱えない 1 本
+  (Bunny Hop——ジャンプは押下そのもので起きるので、cancel が届くころには取り消すものが無い)は
+  理由を書いてゲート内の一覧で除外し、それが指を追い始めたら(`onPointerMove`・
   `setPointerCapture`)除外が古くなったこと自体で赤になる(issue #169)。
+- **押下の記録は誰のものか(pointerId)。** 開始点を置いて離したときに測る形
+  (2048 / Sliding Puzzle のスワイプ)でも、**記録には `pointerId` を持たせ、
+  離すときに同じ指かを確かめる**。持たない記録は、2 本目の指が上書きした点や
+  cancel の後に残った点を、別の指の `pointerup` が自分の開始点として測ってしまい、
+  していない手が 1 手入る(issue #187)。記録を持つ以上 `pointercancel` も聞く
+  (上の契約に戻る)。同じ理由で、**ジェスチャーが残すクリックを食べる印は
+  `event.detail > 0` のときだけ使う**——キーボードの活性化は押下を伴わない
+  (`detail === 0`)ので、印の対象ではない(Solitaire / FreeCell / Spider と同じ形)。
 - **全ゲームに同じ変更を入れるときは codemod で入れる**(`scripts/codemods/`)。手で
   30 ファイルを編集しない: 変換スクリプトを 1 本書き、掛け、触ったファイルだけ
   prettier を通し、`src/test/` の横断ゲートで受ける。スクリプトは PR に同梱する。

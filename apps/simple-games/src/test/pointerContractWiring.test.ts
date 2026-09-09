@@ -37,8 +37,8 @@
  *
  * THE EXCEPTIONS ARE WRITTEN DOWN, NOT DERIVED
  *
- * A press that arms nothing has nothing for a cancel to release, and three
- * boards are that kind (`PRESSES_THAT_HOLD_NOTHING`). The list is written out
+ * A press that arms nothing has nothing for a cancel to release, and one
+ * board is that kind (`PRESSES_THAT_HOLD_NOTHING`). The list is written out
  * with a reason each — the shape `backup/keys.ts` uses for the shell records a
  * backup leaves behind (`SHELL_KEYS_LEFT_BEHIND`) — rather than computed,
  * because the computation would be a guess about what a press left behind, and
@@ -46,6 +46,13 @@
  * board that starts tracking the finger (`onPointerMove`) or taking the
  * pointer (`setPointerCapture`) fails here until someone rewrites the reason
  * or wires the cancel. Not being on the list is what the default is.
+ *
+ * It started as three. 2048 and Sliding Puzzle were excused for recording a
+ * starting point and nothing else — and that was the bug rather than the
+ * excuse for it: the record carried no pointer id, so a second finger, or a
+ * cancel, left a reading for somebody else's release to be measured against
+ * (issue #187). Both hold a press until it ends now, and are gated here like
+ * the rest.
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -63,26 +70,10 @@ const GAMES_DIR = join(SRC, 'games');
  * tracks the finger nor takes the pointer.
  */
 const PRESSES_THAT_HOLD_NOTHING: Readonly<Record<string, string>> = {
-  '2048': [
-    'The press records a starting point and nothing else; the swipe is read',
-    'off the release (MergeBoard.tsx, GAME_2048_RULES.md §3). A cancel is the',
-    'promise that no release is coming, so the move is simply never made. The',
-    'start point it leaves behind is bookkeeping with no owner — the next',
-    'press overwrites it — and that the bookkeeping carries no pointer id at',
-    'all is issue #187, which is about the record rather than about the',
-    'cancel: wiring one here would not be the fix.',
-  ].join(' '),
   'bunny-hop': [
     'The jump happens on the press itself — a runner is judged in tenths of a',
     'second (BUNNY_HOP_RULES.md §3) — so by the time a cancel could arrive',
     'there is nothing in flight to take back.',
-  ].join(' '),
-  'sliding-puzzle': [
-    'Like 2048, and with the same open issue #187: the press records a',
-    'starting point, the swipe is decided on the release',
-    '(SLIDING_PUZZLE_RULES.md §3), and the flag that spends the click a swipe',
-    'leaves behind is cleared by the next press rather than by the end of',
-    'this one.',
   ].join(' '),
 };
 
@@ -365,7 +356,7 @@ describe('a board hears the pointer being taken away (issue #169)', () => {
     // And a scan that has stopped matching anything must fail loudly rather
     // than excusing every game at once.
     expect(withPress.length).toBeGreaterThanOrEqual(12);
-    expect(held.length).toBeGreaterThanOrEqual(9);
+    expect(held.length).toBeGreaterThanOrEqual(11);
     expect(clickAdjacent.length).toBeGreaterThanOrEqual(8);
   });
 

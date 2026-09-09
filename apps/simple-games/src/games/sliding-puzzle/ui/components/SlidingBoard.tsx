@@ -9,7 +9,14 @@
  * Every tile — and the gap — carries its number (or "empty") plus its row and
  * column, because a board read aloud is unusable without positions.
  */
-import { memo, useCallback, useRef, type CSSProperties, type PointerEvent } from 'react';
+import {
+  memo,
+  useCallback,
+  useRef,
+  type CSSProperties,
+  type MouseEvent,
+  type PointerEvent,
+} from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { useReducedMotion } from '@/ui/useReducedMotion';
 import { blankIndex, colOf, rowOf, solvedTiles, type Size, type Tiles } from '../../game';
@@ -32,13 +39,24 @@ export const SlidingBoard = memo(function SlidingBoard({
   const reducedMotion = useReducedMotion();
   const goal = solvedTiles(size);
 
-  const pointerRef = useRef<{ x: number; y: number } | null>(null);
+  /**
+   * Where the swipe being measured began, and which finger began it (§3).
+   *
+   * The id is what makes the reading belong to somebody: a second finger on
+   * the board used to overwrite the starting point, so releasing the *first*
+   * one measured a distance nobody travelled and slid a tile the player never
+   * pushed (issue #187). One press is tracked at a time — the newest, because
+   * a release can go missing entirely (a finger that leaves the board before
+   * it lifts) and a record that outlived the next press would be worse than
+   * one that is replaced by it.
+   */
+  const pointerRef = useRef<{ id: number; x: number; y: number } | null>(null);
   /** Set when a swipe has just played a move, so the click it precedes is not
    *  taken as a second move on whatever tile the finger happened to end on. */
   const swipedRef = useRef(false);
 
   const onPointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    pointerRef.current = { x: event.clientX, y: event.clientY };
+    pointerRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
     swipedRef.current = false;
   }, []);
 
@@ -50,8 +68,8 @@ export const SlidingBoard = memo(function SlidingBoard({
   const onPointerUp = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
       const start = pointerRef.current;
+      if (!start || start.id !== event.pointerId) return;
       pointerRef.current = null;
-      if (!start) return;
       const dx = event.clientX - start.x;
       const dy = event.clientY - start.y;
       if (Math.max(Math.abs(dx), Math.abs(dy)) < SWIPE_THRESHOLD_PX) return;
@@ -76,9 +94,31 @@ export const SlidingBoard = memo(function SlidingBoard({
     [onTileTap, size, tiles],
   );
 
+  /**
+   * The platform took the finger away — the notification shade, an incoming
+   * call, a palm, a scroll the browser claimed. No release is coming for this
+   * pointer, so the reading is dropped and no tile slides: without this it
+   * would sit here waiting to be measured against whatever released on the
+   * board next (docs/ARCHITECTURE.md「指を取り上げられたときの契約」). The
+   * mark a played swipe leaves is not touched — a cancelled press played no
+   * swipe, and the click an *earlier* one left behind is still on its way.
+   */
+  const onPointerCancel = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (pointerRef.current?.id === event.pointerId) pointerRef.current = null;
+  }, []);
+
+  /**
+   * A tap, unless it is the click the swipe just played left behind. The mark
+   * is about the click a press leaves, and `detail` is the count of clicks in
+   * that press: a keyboard activation has none, so it is never the click the
+   * mark was left for. Without that half, a swipe released off a tile — in the
+   * gaps, on the board's own padding — leaves the mark standing (no tile's
+   * `onTap` ran to spend it) and eats the next Enter (issue #187). Solitaire /
+   * FreeCell / Spider read `detail` for exactly this reason.
+   */
   const onTap = useCallback(
-    (index: number) => {
-      if (swipedRef.current) {
+    (event: MouseEvent<HTMLButtonElement>, index: number) => {
+      if (event.detail > 0 && swipedRef.current) {
         swipedRef.current = false;
         return;
       }
@@ -95,6 +135,7 @@ export const SlidingBoard = memo(function SlidingBoard({
       aria-label={t('slideBoardLabel')}
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
     >
       {tiles.map((value, index) => {
         const row = rowOf(index, size);
@@ -129,7 +170,7 @@ export const SlidingBoard = memo(function SlidingBoard({
             className={`slide-tile ${home ? 'slide-tile-home' : ''}`}
             style={position}
             aria-label={t('slideTileLabel', { value, row: row + 1, col: col + 1 })}
-            onClick={() => onTap(index)}
+            onClick={(event) => onTap(event, index)}
           >
             <span className="slide-tile-face">{value}</span>
           </button>
