@@ -988,6 +988,8 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
    リンクを template の導線へ「引き継ぐ」仕組みは**要らない** — Host のリンクを
    そのまま開くだけで、加工も追跡もしない(§8-4)。
 
-**このリポジトリの外**: サーバの実装(Node + SQLite + 1 volume)と template は別
-リポジトリ。§5 の契約テストをそちらに置き、`X-Club-Api: 1` を返す最初の版が
-デプロイできた時点で、こちらの段取りの PR C に入る。
+**このリポジトリの外**: サーバの実装(Node + SQLite + 1 volume)と template は
+[yosuke1024/simple-games-club](https://github.com/yosuke1024/simple-games-club)
+(2026-09-09 作成)。§5 の契約テストをそちらに置き、`X-Club-Api: 1` を返す最初の版が
+デプロイできた時点で、こちらの段取りの PR C に入る。名前は製品語の Club に合わせた
+(§1 — Shared / SharedHost / Server は実装側の語)。
