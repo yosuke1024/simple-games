@@ -1,6 +1,6 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-09-08
+Updated: 2026-09-09
 
 この文書は、Simple Games を変更・レビュー・説明するときの **共通の入口** である。
 ここに全仕様を複製しない。実装上の事実はコード、恒久的な原則は各 canonical document を正とし、
@@ -61,13 +61,21 @@ Design philosophy:
 
 以下は成長施策や一般的なゲームアプリ慣習より優先する。
 
+以下は **Core** — Shared を有効化していない状態のアプリと Web 版 — の約束である。
+Shared(Private Game Club、#161)は利用者が自分で建てたサーバへ明示的に接続したときだけ
+現れる任意の層で、Core の約束の例外ではなく **Core の外** に置く(2026-09-09、#176)。
+Shared を一度も触らない利用者にとって、以下は 1 つも変わらない。Shared の側の境界
+(PixApps はサーバーを持たない・送るのは結果画面の事実だけ・順位表ではなく結果の比較・
+Core の画面に現れる入口は 3 つまで・CI での証明)は `docs/PRODUCT_PRINCIPLES.md`「Shared」が定める。
+
 - ゲーム機能を課金または広告視聴で解放しない。
 - サブスクリプションを導入しない。
 - アカウント登録を要求しない。
 - ゲームデータを端末外へ保存しない。クラウドセーブを作らない。
   (ユーザー自身が設定画面から書き出す 1 つのバックアップファイルはこれに当たらない。
   端末外へ出すかどうかも、出す先を選ぶのもアプリではなく利用者であり、アプリは
-  転送先を知らない。issue #160 / `docs/architecture/backup.md`)
+  転送先を知らない。issue #160 / `docs/architecture/backup.md`。Shared が送る挑戦の結果も
+  同じ形 — 送るかどうかも送る先も利用者が選び、内容は結果画面が表示した事実だけ。同「Shared」)
 - オンラインランキング、フレンド、対人オンライン機能を作らない。
 - ストリーク、ログインボーナス、期間限定イベント、人工的な緊急性を作らない。
 - Push / ローカル通知で再訪を促さない。
@@ -97,6 +105,16 @@ Design philosophy:
 > **新機能を足す前に、その問題を「手数を削る」「待ちを削る」「迷いを削る」ことで解決できないか確認する。**
 
 これは `PRODUCT_PRINCIPLES.md` の Built by subtraction / Zero Friction を、現在の改善優先順位として明示したものである。
+
+### Shared は Friction first の後
+
+Shared(Private Game Club、#161 / #164)は任意の層であり、上の 1〜6 より優先しない。
+順序は Epic #175 のとおり — 原則の境界(#176、本文書と `PRODUCT_PRINCIPLES.md`「Shared」)
+→ #161 の設計 → #164 の発見導線 — で、#156 の High / Critical が残る間は着手しない。
+着手しても判断基準は同じで、Shared の UI も「手数を削る」で評価する(招待リンクから
+Join and Play までを 1 画面、インストールを参加条件にしない)。Shared を理由に Core へ
+入口を足せるのは「Shared」節が数える 3 つまでで、Friction first の側に Shared のための
+摩擦を持ち込まない。
 
 ## 6. Monetization
 
@@ -161,6 +179,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 | Release gates | `docs/RELEASE_CHECKLIST.md` |
 | Review prompt | `docs/REVIEW_PROMPT_POLICY.md` |
 | Backup / restore format and versioning | `docs/architecture/backup.md` |
+| Shared (Private Game Club) — Core との境界、CI での証明 | `docs/PRODUCT_PRINCIPLES.md`「Shared」 |
 | Game-specific behavior | `docs/<GAME>_RULES.md` |
 | Current game inventory | `apps/simple-games/src/app/registry.ts` |
 | Human-readable game inventory | `README.md` |
@@ -190,6 +209,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 - game の変更: 対象 `*_RULES.md`
 - storage / migration: `ARCHITECTURE.md` + 対象 game rules
 - backup / restore: `architecture/backup.md`(保存領域の所有と復元の安全性)
+- shared / club(`src/club/`、Private Game Club): `PRODUCT_PRINCIPLES.md`「Shared」
 - ads / purchase: `ADS_POLICY.md`
 - web only: `WEB_VERSION.md`
 - public copy: `BRAND.md`
