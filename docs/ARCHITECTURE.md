@@ -213,7 +213,7 @@ Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS 
 
 ## Shared(Private Game Club)
 
-Core の外にある任意の層(issue #176 の境界、#161 の設計。**実装はまだ無い**、2026-09-09)。Core が受け取る変更は 3 つの入口だけ — 設定 > Advanced の行 1 つ、接続済みの端末に限るホームの入口 1 つと対応ゲームの結果画面の副次操作 1 つ、未接続の端末のホームの静かな `Play together` 1 行 — で、どれも数字・バッジ・通信を持たない。コードは `src/club/` 1 か所、到達経路は `src/app/clubGate.ts` の動的 `import()` だけ、チャンクは `club` として独立。接続は shell-owned の `sg.club`(バックアップに入れない・削除で消える)。サーバとの契約(API v1)はこちらが持ち、サーバは別リポジトリでそれに合わせる。**Challenge は終わった 1 局から作り**(seed と `boardDigest` は遊んだ局が既に持っている)、結果は結果画面が表示した事実だけ、1 人 1 回、並べ替えは 1 軸で順位の数字を付けない。対応ゲームはレジストリに `challenge`(import ゼロの葉)を宣言し、`GameRootProps.challenge` で局を受け取り、4 つ目の中断スロットで遊ぶ。最初の 3 本は Sudoku / Minesweeper(初手が Challenge の一部)/ Water Sort。
+Core の外にある任意の層(issue #176 の境界、#161 の設計。**実装はまだ無い**、2026-09-09)。Core が受け取る変更は 3 つの入口だけ — 設定 > Advanced の行 1 つ、接続済みの端末に限るホームの入口 1 つと対応ゲームの結果画面の副次操作 1 つ、未接続の端末のホームの静かな `Play together` 1 行 — で、どれも数字・バッジ・通信を持たない。コードは `src/club/` 1 か所、到達経路は `src/app/clubGate.ts` の動的 `import()` だけ、チャンクは `club` として独立。接続は shell-owned の `sg.club`(バックアップに入れない・削除で消える)。サーバとの契約(API v1)はこちらが持ち、サーバは別リポジトリ `simple-games-club` でそれに合わせる。**Challenge は終わった 1 局から作り**(seed と `boardDigest` は遊んだ局が既に持っている)、結果は結果画面が表示した事実だけ、1 人 1 回、並べ替えは 1 軸で順位の数字を付けない。対応ゲームはレジストリに `challenge`(import ゼロの葉)を宣言し、`GameRootProps.challenge` で局を受け取り、4 つ目の中断スロットで遊ぶ。最初の 3 本は Sudoku / Minesweeper(初手が Challenge の一部)/ Water Sort。
 
 → 全文: [architecture/club.md](architecture/club.md)、段取り: [plans/2026-09-09-private-game-club.md](plans/2026-09-09-private-game-club.md)
 
