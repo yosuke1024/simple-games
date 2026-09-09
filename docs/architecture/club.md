@@ -243,36 +243,43 @@ interface OutboxItem {
 - ベース: `<endpoint>/api/v1/`。JSON(`Content-Type: application/json; charset=utf-8`)。
 - 認証: `Authorization: Bearer <memberToken>`。`/join`・`/claim`・`/health` だけは不要。
   token は URL・クエリ・ログに出さない。
-- サーバはレスポンスに `X-Club-Api: 1` を付ける。クライアントは**この値を見て**、
-  知らない版なら「このサーバは新しすぎます」を出して何も送らない(§10)。
+- サーバはレスポンスに `X-Club-Api: 1` を付ける(4xx / 5xx にも)。クライアントは
+  **この値を見て**、知らない版なら「このサーバは新しすぎます」を出して何も送らない(§10)。
+- 一覧を返すエンドポイント(`GET /challenges` / `GET /challenges/:id/results` /
+  `GET /records`)は JSON **配列**をそのまま返す。他はオブジェクト。
 - エラーは `{ "error": { "code": "<snake_case>", "message": "<英語 1 文>" } }`。
   `message` は開発者向けで、画面には出さない(画面の文言は `code` から
   クライアントのカタログで引く。§11)。
 
-| HTTP | code                  | いつ                                                                 |
-| ---- | --------------------- | -------------------------------------------------------------------- |
-| 400  | `invalid_request`     | body が契約に合わない                                                |
-| 401  | `unauthorized`        | token が無い / 不正 / **revoke 済み**(Member 削除)                   |
-| 403  | `forbidden`           | Owner 専用の操作を Member が呼んだ                                   |
-| 404  | `not_found`           | Challenge / Member が無い                                            |
-| 409  | `already_submitted`   | その Challenge にこの member の Result が既にある(§6-3「1 人 1 回」) |
-| 409  | `board_mismatch`      | Result の `boardDigest` が Challenge のものと違う(§6-4)              |
-| 409  | `invite_expired`      | 招待 token が無効(再発行済み)                                        |
-| 409  | `setup_key_used`      | Setup Key が既に使われた / 一致しない(§8)                            |
-| 409  | `last_owner`          | 最後の Owner を外そうとした(§8-3)                                    |
-| 409  | `too_many_owners`     | Club の Owner が上限(5)に達している(§8-3)                            |
-| 409  | `too_many_members`    | Club の member が上限(100)に達している                               |
-| 413  | `too_large`           | body が 16KB を超えた                                                |
-| 429  | `rate_limited`        | 下記の上限                                                           |
-| 501  | `unsupported_version` | `contractVersion` をサーバが知らない                                 |
+| HTTP | code                  | いつ                                                                    |
+| ---- | --------------------- | ----------------------------------------------------------------------- |
+| 400  | `invalid_request`     | body が契約に合わない                                                   |
+| 401  | `unauthorized`        | token が無い / 不正 / **revoke 済み**(Member 削除)                      |
+| 403  | `forbidden`           | Owner 専用の操作を Member が呼んだ                                      |
+| 404  | `not_found`           | Challenge / Member が無い                                               |
+| 409  | `already_submitted`   | その Challenge にこの member の Result が既にある(§6-3「1 人 1 回」)    |
+| 409  | `board_mismatch`      | Result の `boardDigest` が Challenge のものと違う(§6-4)                 |
+| 409  | `invite_expired`      | 招待 token が無効(再発行済み)                                           |
+| 409  | `setup_key_used`      | Setup Key が既に使われた / 一致しない(§8)                               |
+| 409  | `last_owner`          | 最後の Owner を外そうとした(§8-3)                                       |
+| 409  | `too_many_owners`     | Club の Owner が上限(5)に達している(§8-3)                               |
+| 409  | `too_many_members`    | Club の member が上限(100)に達している                                  |
+| 413  | `too_large`           | body が 16KB を超えた(`params` / `facts` が 1KB を超えたときは 400)     |
+| 429  | `rate_limited`        | 下記の上限                                                              |
+| 500  | `internal_error`      | サーバの不具合。クライアントは他の未知の code と同じく汎用の 1 行で扱う |
+| 501  | `unsupported_version` | `contractVersion` をサーバが知らない                                    |
 
 - rate limit は最小限: `/join` と `/claim` は IP あたり 10 回 / 分、それ以外は
   member あたり 60 回 / 分。超えたら 429 で、クライアントは再試行しない(次の操作まで)。
 - CORS: サーバは自分の origin、`https://localhost`(Android の Capacitor)、
   `capacitor://localhost`(iOS)を許可する。pixapps.ai は v1 では許可しない(§7-3)。
-- token の生成と保存: invite token は 128 bit、member token と Setup Key は 256 bit の
-  乱数を base64url で。サーバ DB には **SHA-256 の hash** だけを置く(server secret を
-  pepper として連結)。平文は発行時のレスポンスにしか存在しない。
+- token の生成と保存: invite token と Owner リンクは 128 bit、member token と Setup Key
+  は 256 bit の乱数を base64url で。サーバ DB には **SHA-256 の hash** だけを置く
+  (server secret を pepper として連結。secret は環境変数 `CLUB_SECRET`、無ければ
+  volume 上に生成して保つ)。例外は **Member 招待 token だけ**で、これは平文で保存する —
+  Owner が何度でも取り出して配るものであり(`GET /invite`)、作り直せば無効になる
+  入場券であって、既存の誰かを名乗れる鍵ではない。member token・Owner リンク・
+  Setup Key の平文は発行時のレスポンスにしか存在しない。
 
 ### 5-2. 型
 
@@ -320,9 +327,9 @@ interface Hosting {
 
 | Method / Path                  | 認証   | 目的                                                                                                                                                                          |
 | ------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /health`                  | 不要   | `{ ok: true, api: 1 }`。接続画面の疎通確認とテンプレートの healthcheck                                                                                                        |
+| `GET /health`                  | 不要   | `{ ok: true, api: 1, claimed }`。接続画面の疎通確認とテンプレートの healthcheck。`claimed` は Create 導線が「deploy 済み・claim 待ち」を知るため                              |
 | `POST /join`                   | invite | 招待 token + nickname → member token                                                                                                                                          |
-| `POST /claim`                  | setup  | Setup Key + nickname → **owner** の member token(§8-3)。Setup Key が再設定されていればもう 1 回                                                                               |
+| `POST /claim`                  | setup  | `{ setupKey, nickname, clubName? }` → **owner** の member token(§8-3)。`clubName` 省略時は `<nickname>'s Club`。Setup Key が再設定されていればもう 1 回                       |
 | `GET /club`                    | member | `{ club, me, members[] }`                                                                                                                                                     |
 | `GET /challenges`              | member | 新しい順。`?after=<id>` で続き。最大 50 件                                                                                                                                    |
 | `POST /challenges`             | member | 作成 + 作成者の Result を同時に(§6-3)                                                                                                                                         |
@@ -390,7 +397,11 @@ interface Hosting {
 `GET /records` の `paramsKey` は §6-1 のゲームごとの規則で作る文字列(`hard` /
 `medium` / `easy` など)。**Club 記録は Result から導出する値であり、サーバは
 Result 以外の集計(通算・ポイント・回数の順位)を持たない**。持てばそれは順位表の
-材料になる(PRODUCT_PRINCIPLES「挑戦をまたいで積み上げない」)。
+材料になる(PRODUCT_PRINCIPLES「挑戦をまたいで積み上げない」)。この導出のためだけに、
+サーバは §6-1 の表の `order`(比較軸)と `paramsKey`(モードを決める params の項目)を
+ゲーム id ごとに知る(`simple-games-club` の `src/contracts/games.ts`)。それ以外の場所で
+`params` / `facts` を読まない。表に無いゲームの Challenge と Result は普通に扱い、
+記録だけが(サーバがそのゲームを知るまで)導出されない。
 
 ### 5-5. 送らないもの(再掲、機械で見るもの)
 
@@ -992,4 +1003,7 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
 [yosuke1024/simple-games-club](https://github.com/yosuke1024/simple-games-club)
 (2026-09-09 作成)。§5 の契約テストをそちらに置き、`X-Club-Api: 1` を返す最初の版が
 デプロイできた時点で、こちらの段取りの PR C に入る。名前は製品語の Club に合わせた
-(§1 — Shared / SharedHost / Server は実装側の語)。
+(§1 — Shared / SharedHost / Server は実装側の語)。**最初の版は同日に置いた**: §5 の
+全エンドポイント、§5-4 の JSON をそのまま fixture にした契約テスト、Dockerfile、
+`railway.toml`(healthcheck・app sleeping OFF)。残りは事業者の template、Web ビルドの
+同梱、事業者上での往復確認(段取りの PR B の「受け入れ」)。
