@@ -66,8 +66,11 @@ const PRESSES_THAT_HOLD_NOTHING: Readonly<Record<string, string>> = {
   '2048': [
     'The press records a starting point and nothing else; the swipe is read',
     'off the release (MergeBoard.tsx, GAME_2048_RULES.md §3). A cancel is the',
-    'promise that no release is coming, so the move is simply never made, and',
-    'the point it left behind is overwritten by the next press.',
+    'promise that no release is coming, so the move is simply never made. The',
+    'start point it leaves behind is bookkeeping with no owner — the next',
+    'press overwrites it — and that the bookkeeping carries no pointer id at',
+    'all is issue #187, which is about the record rather than about the',
+    'cancel: wiring one here would not be the fix.',
   ].join(' '),
   'bunny-hop': [
     'The jump happens on the press itself — a runner is judged in tenths of a',
@@ -75,10 +78,11 @@ const PRESSES_THAT_HOLD_NOTHING: Readonly<Record<string, string>> = {
     'there is nothing in flight to take back.',
   ].join(' '),
   'sliding-puzzle': [
-    'Like 2048: the press records a starting point, the swipe is decided on',
-    'the release (SLIDING_PUZZLE_RULES.md §3), and the flag that spends the',
-    'click a swipe leaves behind is cleared by the next press rather than by',
-    'the end of this one.',
+    'Like 2048, and with the same open issue #187: the press records a',
+    'starting point, the swipe is decided on the release',
+    '(SLIDING_PUZZLE_RULES.md §3), and the flag that spends the click a swipe',
+    'leaves behind is cleared by the next press rather than by the end of',
+    'this one.',
   ].join(' '),
 };
 
