@@ -121,6 +121,16 @@ src/
   [GROWTH_MEASUREMENT.md](GROWTH_MEASUREMENT.md))。**証明はもう
   「公開コードに追跡コードが無いこと」ではなく、成果物にそれが無いことを
   CI が示すこと**である(`check-dist-ads-separation.sh`)。
+- **Shared(Private Game Club、issue #161)は `src/club/` 1 か所に置き、Core からは
+  `src/app/` の動的 `import()` でしか届かない**(2026-09-09、issue #176。ディレクトリは
+  まだ無い)。通信 API を書けるのはこのディレクトリだけで(`check-principles.sh` §1 の
+  唯一の除外)、`club/` の外からの静的 import は `src/test/importBoundaries.test.ts` が
+  禁じる。ゲーム・`ui/`・`services/`・`storage/` は `club/` を知らず、`club/` が
+  ゲームへ触るのは registry 経由だけ(上の規則どおり)。チャンクは `game-<id>` と同じく
+  独立させ、初期グラフに入らないことをサイズ Gate が見る(`club/` が生まれる PR の
+  受け入れ条件)。**`backup/` とは切り離す** — 接続情報(member token)はバックアップに
+  入れない(`sg.iap` と同じ理由)。境界の中身は
+  [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Shared」。
 
 ## 状態と ref
 

@@ -39,14 +39,90 @@ for f in apps/*/android/app/build.gradle \
 done
 
 # 1. 通信しないこと ------------------------------------------------------------
-# API サーバー・アプリ用 DB・コンテンツ配信サーバーを持たない(README / PRODUCT_PRINCIPLES)。
-# ネットワークの用途はオンライン判定と広告 SDK / 課金 SDK / レビュー SDK だけで、
-# アプリ自身のコードが通信することはない。
-hits="$(grep -rnE '\bfetch\(|XMLHttpRequest|\bWebSocket\b|sendBeacon|EventSource|\bnavigator\.geolocation' "${src_dirs[@]}" || true)"
+# Core(apps/simple-games/src/club/ を除く全ソース)は通信しない。ネットワークの
+# 用途はオンライン判定と広告 SDK / 課金 SDK / レビュー SDK だけで、Core 自身の
+# コードが通信することはない。
+#
+# 例外は 1 つだけ、パスで宣言する。2026-09-09、issue #176 で「Shared」
+# (製品名 Private Game Club)という任意加入のレイヤーを認めた: 利用者が明示的に
+# 接続した端末だけが、利用者または友人が自前で立てたサーバーへ挑戦の結果
+# (結果画面が表示した事実)だけを送る。PixApps 自身はサーバーを一切運用しない(詳細は
+# docs/PRODUCT_PRINCIPLES.md「Shared」)。実装は issue #161 であり、この時点では
+# apps/simple-games/src/club/ ディレクトリはまだ存在しない —— #161 が着地する先
+# として、ゲートを先に宣言してある。
+#
+# 「有効化しない限り送信しない」は grep では示せない性質なので、reachability で
+# 示す: src/test/importBoundaries.test.ts のルール 5 が、club/ の外から届くのは
+# src/app/ からの動的 import() だけであることを強制し(静的 import・
+# import type・`import('x').T` 型・import.meta.glob はすべて拒否)、サイズゲートが
+# club/ をエントリの静的グラフから締め出す。サーバー実装自体は
+# apps/*/src / packages/*/src の下に置かれない(別リポジトリ)ので、パスの例外は
+# これ 1 つで尽きる。
+#
+# 成果物(ビルド後のファイル)に対する fetch( の grep はわざと採用していない:
+# ネイティブビルドには Vite の modulepreload polyfill、@capacitor/core
+# (CapacitorHttp)、@capacitor/filesystem がそれぞれ fetch( を含むことを
+# 2026-09-09 に確認済みで、成果物からは Core 由来か SDK 由来かを区別できない。
+# ここで証明しているのは「トークンが無いこと」ではなく「到達できる経路が無い
+# こと」である。
+net_api='\bfetch\(|XMLHttpRequest|\bWebSocket\b|sendBeacon|EventSource'
+net_allowed='^apps/simple-games/src/club/'
+hits="$(grep -rnE "$net_api" "${src_dirs[@]}" | grep -vE "$net_allowed" || true)"
 if [ -n "$hits" ]; then
-  report "アプリのソースにネットワーク API があります(通信しない約束に反します)" "$hits"
+  report "Core のソースにネットワーク API があります(通信できるのは apps/simple-games/src/club/ だけです — docs/PRODUCT_PRINCIPLES.md「Shared」)" "$hits"
 else
-  ok "ネットワーク API なし"
+  ok "ネットワーク API なし(Core。例外は apps/simple-games/src/club/ のみ)"
+fi
+
+# 位置情報は Shared でも使わない。除外なしの独立した検査にする。
+hits="$(grep -rnE '\bnavigator\.geolocation' "${src_dirs[@]}" || true)"
+if [ -n "$hits" ]; then
+  report "位置情報 API があります(Shared を含め、いかなる経路でも使いません)" "$hits"
+else
+  ok "位置情報 API なし(例外なし)"
+fi
+
+# 自己検査(§7 と同じ理由): 不在を検査するガードの最悪の壊れ方は「何も見ていない
+# 状態で緑になる」ことである。除外パターンが壊れると向きが 2 つある —— Core の
+# 通信も見逃す向きと、club/ 以外の行まで拾って赤くする向き —— ので、トークン
+# ごとに 1 本ずつ当て、除外の効き方(除外されない/される)を実データではなく
+# 既知の文字列で確かめる。まとめて 1 文で当てると、どれか 1 つが生きているだけ
+# で緑になり他が壊れても素通りする(§6/§7 と同じ落とし穴)。
+probe_net_lines=(
+  'apps/simple-games/src/services/network.ts:12:  const r = await fetch(url)'
+  'apps/simple-games/src/services/network.ts:12:  const r = new XMLHttpRequest()'
+  'apps/simple-games/src/services/network.ts:12:  const r = new WebSocket(url)'
+  'apps/simple-games/src/services/network.ts:12:  navigator.sendBeacon(url)'
+  'apps/simple-games/src/services/network.ts:12:  const r = new EventSource(url)'
+)
+probe_core_mentions_club='apps/simple-games/src/ui/x.ts:3:  // apps/simple-games/src/club/ may call fetch('
+probe_club_line='apps/simple-games/src/club/api.ts:1:  const r = await fetch(url)'
+probe_geo_club='apps/simple-games/src/club/x.ts:1: navigator.geolocation.getCurrentPosition(f)'
+dead=""
+for probe in "${probe_net_lines[@]}"; do
+  if ! printf '%s' "$probe" | grep -qE "$net_api"; then
+    dead="${dead}net_api がトークンを検出できません: ${probe}"$'\n'
+  elif printf '%s' "$probe" | grep -qE "$net_allowed"; then
+    dead="${dead}Core の行が誤って除外されています: ${probe}"$'\n'
+  fi
+done
+if ! printf '%s' "$probe_core_mentions_club" | grep -qE "$net_api"; then
+  dead="${dead}net_api がトークンを検出できません: ${probe_core_mentions_club}"$'\n'
+elif printf '%s' "$probe_core_mentions_club" | grep -qE "$net_allowed"; then
+  dead="${dead}行の中身に club/ が出てくるだけで除外されています(パス以外を見ています): ${probe_core_mentions_club}"$'\n'
+fi
+if ! printf '%s' "$probe_club_line" | grep -qE "$net_api"; then
+  dead="${dead}net_api がトークンを検出できません: ${probe_club_line}"$'\n'
+elif ! printf '%s' "$probe_club_line" | grep -qE "$net_allowed"; then
+  dead="${dead}club/ の行が除外されていません: ${probe_club_line}"$'\n'
+fi
+if ! printf '%s' "$probe_geo_club" | grep -qE '\bnavigator\.geolocation'; then
+  dead="${dead}位置情報パターンが検出できません: ${probe_geo_club}"$'\n'
+fi
+if [ -n "$dead" ]; then
+  report "§1 の検査パターンまたは除外が壊れています(ガードが no-op です)" "$dead"
+else
+  ok "通信 / 位置情報の検査パターンと club/ 例外の自己検査(トークン別 ${#probe_net_lines[@]} 本 + 除外境界 2 本 + 位置情報 1 本)"
 fi
 
 # 2. 広告フォーマット ----------------------------------------------------------
