@@ -582,7 +582,9 @@ I18N_POLICY.md の高リスクキー 5 番(無料・オフライン・paywall �
   `src/club/` へは `src/app/` からの動的 `import()` だけ、チャンクは独立、初期グラフに
   入らない([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Shared」の「機械で示すこと」)。
   #161 の SharedHost が Web ビルドを同梱して配るのは**利用者のサーバ上**の話で、
-  pixapps.ai の「配信構成」(静的配信のみ)は変わらない。
+  pixapps.ai の「配信構成」(静的配信のみ)は変わらない。そのサーバ上では同じ
+  Web ビルドが `/join#invite=<token>` で招待を受け取る(`/join` は利用者のサーバだけが
+  持つ住所で、`?game=` の契約は変わらない。[architecture/club.md](architecture/club.md) §7)。
 - `index.html` は 1 枚のまま。Web 向けの meta / OGP / canonical はネイティブ側の
   WebView(Android WebView / iOS の WKWebView)が無視するので、分ける理由がない。
   **共有リンクのプレビューもこの 1 枚が持つ OGP をそのまま使う**(issue #86)。

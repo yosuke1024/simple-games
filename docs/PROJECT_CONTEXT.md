@@ -109,12 +109,13 @@ Core の画面に現れる入口は 3 つまで・CI での証明)は `docs/PROD
 ### Shared は Friction first の後
 
 Shared(Private Game Club、#161 / #164)は任意の層であり、上の 1〜6 より優先しない。
-順序は Epic #175 のとおり — 原則の境界(#176、本文書と `PRODUCT_PRINCIPLES.md`「Shared」)
-→ #161 の設計 → #164 の発見導線 — で、#156 の High / Critical が残る間は着手しない。
-着手しても判断基準は同じで、Shared の UI も「手数を削る」で評価する(招待リンクから
-Join and Play までを 1 画面、インストールを参加条件にしない)。Shared を理由に Core へ
-入口を足せるのは「Shared」節が数える 3 つまでで、Friction first の側に Shared のための
-摩擦を持ち込まない。
+順序は Epic #175 のとおり — 原則の境界(#176、本文書と `PRODUCT_PRINCIPLES.md`「Shared」。
+済)→ #161 の設計(`docs/architecture/club.md`、2026-09-09。済)→ 実装(段取りは
+`docs/plans/2026-09-09-private-game-club.md`)→ #164 の発見導線 — で、#156 の High /
+Critical は 2026-09-09 に解けている。着手しても判断基準は同じで、Shared の UI も
+「手数を削る」で評価する(招待リンクから Join and Play までを 1 画面、インストールを
+参加条件にしない)。Shared を理由に Core へ入口を足せるのは「Shared」節が数える 3 つまで
+(具体形は `club.md` §2)で、Friction first の側に Shared のための摩擦を持ち込まない。
 
 ## 6. Monetization
 
@@ -180,6 +181,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 | Review prompt | `docs/REVIEW_PROMPT_POLICY.md` |
 | Backup / restore format and versioning | `docs/architecture/backup.md` |
 | Shared (Private Game Club) — Core との境界、CI での証明 | `docs/PRODUCT_PRINCIPLES.md`「Shared」 |
+| Shared (Private Game Club) — クライアント側の契約(入口・保存・API・挑戦と結果・招待・Host・発見導線) | `docs/architecture/club.md` |
 | Game-specific behavior | `docs/<GAME>_RULES.md` |
 | Current game inventory | `apps/simple-games/src/app/registry.ts` |
 | Human-readable game inventory | `README.md` |
@@ -209,7 +211,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 - game の変更: 対象 `*_RULES.md`
 - storage / migration: `ARCHITECTURE.md` + 対象 game rules
 - backup / restore: `architecture/backup.md`(保存領域の所有と復元の安全性)
-- shared / club(`src/club/`、Private Game Club): `PRODUCT_PRINCIPLES.md`「Shared」
+- shared / club(`src/club/`、Private Game Club、対応ゲームの `challenge/`): `PRODUCT_PRINCIPLES.md`「Shared」+ `architecture/club.md`
 - ads / purchase: `ADS_POLICY.md`
 - web only: `WEB_VERSION.md`
 - public copy: `BRAND.md`
