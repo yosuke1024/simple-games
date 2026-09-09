@@ -65,6 +65,15 @@ const board = () => screen.getByRole('group', { name: 'Sliding puzzle board' });
 const gap = () => within(board()).getByRole('img');
 const tiles = () => within(board()).getAllByRole('button');
 
+const tileAt = (row: number, col: number): HTMLElement => {
+  const found = tiles().find((tile) => {
+    const spot = spotOf(tile);
+    return spot.row === row && spot.col === col;
+  });
+  if (!found) throw new Error(`no tile at row ${row}, column ${col}`);
+  return found;
+};
+
 /** A tile sharing an edge with the gap: the simplest legal move there is. */
 function tileBesideGap(): HTMLElement {
   const here = spotOf(gap());
@@ -427,6 +436,47 @@ describe('playing', () => {
     expect(diagonal.getAttribute('aria-label')).toBe(before);
     expect(spotOf(gap())).toEqual(here);
     expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+  });
+
+  /**
+   * A swipe is played on the release, and the browser then raises a click on
+   * whatever the finger was over — so the one gesture would move twice if the
+   * board did not spend that click (SlidingBoard's `swipedRef`, §3). The tile
+   * pressed here is the one the swipe slides, which lands beside the gap it
+   * just filled: an unspent click would slide it straight back.
+   *
+   * The board hears no `pointercancel` and needs none (`src/test/
+   * pointerContractWiring.test.ts` says why): the press holds nothing but a
+   * starting point, and this flag is cleared by the next press rather than by
+   * the end of this one — which is what the second half of this test presses.
+   */
+  it('plays a swipe once, and takes the next tap as an ordinary tap (§3)', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await startLevelOne(user);
+
+    const gapWas = spotOf(gap());
+    // Swiping right slides the tile on the gap's left into it, left the one on
+    // its right — whichever of the two the gap's own column leaves room for.
+    const right = gapWas.col > 1;
+    const slider = tileAt(gapWas.row, gapWas.col + (right ? -1 : 1));
+    const value = slider.textContent;
+
+    fireEvent.pointerDown(slider, { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(slider, { pointerId: 1, clientX: right ? 140 : 60, clientY: 100 });
+
+    expect(spotOf(slider)).toEqual(gapWas);
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+
+    fireEvent.click(slider);
+
+    expect(spotOf(slider)).toEqual(gapWas);
+    expect(slider.textContent).toBe(value);
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+
+    // And the tap that comes after is a tap like any other.
+    await user.click(tileBesideGap());
+    expect(screen.getByText(/Moves\s*2/)).toBeInTheDocument();
   });
 
   it('undo puts the board and the move count back (§8)', async () => {
