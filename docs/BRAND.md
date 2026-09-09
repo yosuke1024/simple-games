@@ -34,7 +34,8 @@ A Simple Game by PixApps
 **OSS は誠実さの証明である。** ソースコード公開は開発者向けの訴求ではなく、
 「広告はバナーだけ」「トラッキングなし」「オフラインで全機能」という**アプリの**
 約束をユーザー自身(または誰か)が検証できる仕組みとして扱う(版ごとの差分は
-PRODUCT_PRINCIPLES.md「適用範囲」と WEB_VERSION.md)。
+PRODUCT_PRINCIPLES.md「適用範囲」と WEB_VERSION.md、任意の Shared 層との境界は
+同「Shared」— これらの約束は Core、つまり Shared を有効化していない状態のもの)。
 ストア文面では OSS を最後の訴求に置く(下の「訴求の順序」)。
 
 ### 設計思想(Built by subtraction)
@@ -157,6 +158,14 @@ OSS を先頭に出さない。
   「すでにそうなっている」だけをブランドの根拠にする(未収録のゲーム名を書かない
   規則と同じ)。Zero Friction の各機能(お気に入り・検索・ショートカット・直接復帰・
   入力経路)も、実装が終わった 2026-09 以降にだけ公開文面に載せている。
+- **Shared(Private Game Club、issue #161)は出荷するまで公開文面に書かない** — 上の
+  規則そのもの(2026-09-09、issue #176)。出荷後も、この文書とストア文面の約束は
+  **Core**(Shared を有効化していない状態)の主語で言い、Shared の説明ではサーバの
+  持ち主(あなた、または招待してくれた人)を主語にする。Shared について "offline" /
+  "no server" / "no account" を言わず、Club 内の結果比較を "leaderboard" / "ranking" /
+  「ランキング」と呼ばない(Results /「結果」)。ストアの "The games never go online."
+  も Core について真のままだが、Shared を出荷する版ではその隣に置く説明を同じ PR で
+  書く。境界の本体は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Shared」。
 - **数値は公開時点の実測値だけ。** アプリの配布サイズを「約 x MB」と書くときは、
   Play Console / App Store Connect が示すその時点の配布サイズを確認してから書く。
   未確認の数値を固定コピーにしない。数字なしで「軽い」と言うほうが、古い数字を

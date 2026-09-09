@@ -60,7 +60,7 @@ grep で確定判定できる分は CI(`Brand principles` ジョブ)が毎 PR �
 bash .github/scripts/check-principles.sh
 ```
 
-- [ ] 原則ガードが緑(通信 API なし / バナー以外の広告なし / トラッキング依存なし /
+- [ ] 原則ガードが緑(Core に通信 API なし — 例外は `src/club/` のみ / バナー以外の広告なし / トラッキング依存なし /
       Android 権限は INTERNET・BILLING のみ / 本番広告 ID がソースにない)
 
 ガードが見ていない分は、コードを grep して**存在しないこと**を確認する:
