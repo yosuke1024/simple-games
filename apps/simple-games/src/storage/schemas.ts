@@ -17,7 +17,6 @@ export const STORAGE_KEYS = {
   review: 'sg.review',
   recent: 'sg.recent',
   favorites: 'sg.favorites',
-  webAppPrompt: 'sg.webAppPrompt',
 } as const;
 
 export interface SchemaDef<T> {
@@ -277,69 +276,5 @@ export const reviewSchema: SchemaDef<ReviewState> = {
       return null;
     }
     return { schemaVersion: 1, gamesCompleted, promptsShown, nextPromptAt, resolved };
-  },
-};
-
-// ---------- the browser version's one-time app card ----------
-
-/**
- * The web build's single, quiet pointer at the installed app
- * (docs/WEB_VERSION.md「アプリへの送客」). Two numbers is the whole record:
- * how many times a game has been left for the collection in this browser, and
- * whether the card has had its one showing.
- *
- * It is deliberately NOT part of `sg.review`. That record paces the store
- * review question by completed games and retires on an answer; folding a
- * second, differently-shaped ask into it would change what its counters mean
- * and make one flow's cadence a side effect of the other's.
- *
- * Nothing here is written on the app build — the counter is only ever
- * incremented behind a runtime guard (`services/webAppPrompt.ts`), so an
- * installed app never carries a record about installing itself.
- */
-export interface WebAppPromptState {
-  schemaVersion: 1;
-  /** Games left for the collection in this browser. Counted, never timed. */
-  gameExits: number;
-  /** The card has had its one showing. Never shown again in this browser. */
-  shown: boolean;
-}
-
-/**
- * Exits before the card is eligible. Two, because one is not yet a habit and
- * three is a visitor being asked late: the card should meet somebody who has
- * come back to the collection twice under their own steam.
- */
-export const WEB_APP_PROMPT_AT = 2;
-
-/**
- * The same card, one game earlier, for a visitor who arrived on a game rather
- * than on the collection — a shared link or a guide link put them there
- * (`?game=<id>`, docs/WEB_VERSION.md「URL(ゲーム別の入口)」).
- *
- * Why they are not the same number: somebody who opened the collection on
- * their own is browsing, and asking them about an app before they have played
- * twice is asking before they know what this is. Somebody who followed a link
- * a friend sent them was already recommended the thing — they arrived on one
- * game, and if they leave after that game they leave never having been told
- * an app exists. **Two is the wrong number for them, because they usually
- * only ever play one.**
- *
- * It is still not zero, and it is still once ever: the card comes after a
- * game, never before one, and it is a card in the page rather than anything
- * that interrupts (docs/WEB_VERSION.md「アプリへの送客」).
- */
-export const WEB_APP_PROMPT_FROM_LINK_AT = 1;
-
-export const webAppPromptSchema: SchemaDef<WebAppPromptState> = {
-  key: STORAGE_KEYS.webAppPrompt,
-  version: 1,
-  defaultValue: () => ({ schemaVersion: 1, gameExits: 0, shown: false }),
-  validate: (raw) => {
-    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
-    const gameExits = asInt(raw.gameExits, 0, 1e9);
-    const shown = asBool(raw.shown);
-    if (gameExits === null || shown === null) return null;
-    return { schemaVersion: 1, gameExits, shown };
   },
 };

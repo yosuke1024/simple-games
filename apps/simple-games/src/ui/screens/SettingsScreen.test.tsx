@@ -40,14 +40,6 @@ import {
 } from '../../app/recentGames';
 import { initAdRemoval, resetAdRemovalForTesting } from '../../monetization/adRemoval';
 import { setWebAdsConfigForTesting } from '../../services/ads/web/config';
-import {
-  getWebAppPromptStateForTesting,
-  initWebAppPrompt,
-  markWebAppPromptShown,
-  recordWebGameExit,
-  resetWebAppPromptForTesting,
-  shouldShowWebAppPrompt,
-} from '../../services/webAppPrompt';
 import { SettingsProvider } from '../../state/SettingsContext';
 import { createMemoryKV, type KVStore } from '../../storage/kv';
 import { settingsSchema, STORAGE_KEYS } from '../../storage/schemas';
@@ -66,7 +58,6 @@ beforeEach(() => {
   capacitorMock.native = false;
   resetRecentGamesForTesting();
   resetFavoriteGamesForTesting();
-  resetWebAppPromptForTesting();
   openExternalMock.mockClear();
 });
 
@@ -200,65 +191,6 @@ describe('reset local data', () => {
     await user.click(screen.getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => expect(getRecentGames()).toEqual([]));
-  });
-
-  /**
-   * The browser's one-time app card counts games in a record of its own
-   * (`sg.webAppPrompt`), so "this removes your data from this device" has to
-   * cover it too: the stored key, and the copy the running page is holding —
-   * or a card already spent stays spent on a browser that was just emptied.
-   *
-   * The screen deletes through the default store, so the two halves are
-   * checked separately: the key list `clearLocalData` was actually handed
-   * (the storage half — this is what would fail if the record were left out
-   * of STORAGE_KEYS), and the state the running page is left holding.
-   */
-  it('clears what the web app card remembers, in storage and in memory', async () => {
-    await initWebAppPrompt(createMemoryKV());
-    recordWebGameExit();
-    recordWebGameExit();
-    expect(shouldShowWebAppPrompt()).toBe(true);
-
-    const user = userEvent.setup();
-    renderSettings();
-    await user.click(screen.getByRole('button', { name: /Reset Local Data/ }));
-    await user.click(screen.getByRole('button', { name: 'Delete' }));
-
-    await waitFor(() => expect(clearLocalData).toHaveBeenCalled());
-    const [keys] = vi.mocked(clearLocalData).mock.calls[0] ?? [[]];
-    expect(keys).toContain(STORAGE_KEYS.webAppPrompt);
-    await waitFor(() =>
-      expect(getWebAppPromptStateForTesting()).toEqual({
-        schemaVersion: 1,
-        gameExits: 0,
-        shown: false,
-      }),
-    );
-  });
-
-  /**
-   * And what that reset MEANS for the card, which is a product decision and
-   * not an accident: a browser that has deleted its data is a browser that
-   * has not been asked, so playing two more games earns the card again. The
-   * store-review question resolves the same way (docs/REVIEW_PROMPT_POLICY.md
-   * 「保存」) — a delete that only half-deletes is the button lying twice.
-   */
-  it('lets a reset browser earn the card again, rather than half-forgetting', async () => {
-    await initWebAppPrompt(createMemoryKV());
-    recordWebGameExit();
-    recordWebGameExit();
-    markWebAppPromptShown();
-    expect(shouldShowWebAppPrompt()).toBe(false);
-
-    const user = userEvent.setup();
-    renderSettings();
-    await user.click(screen.getByRole('button', { name: /Reset Local Data/ }));
-    await user.click(screen.getByRole('button', { name: 'Delete' }));
-    await waitFor(() => expect(clearLocalData).toHaveBeenCalled());
-
-    recordWebGameExit();
-    recordWebGameExit();
-    await waitFor(() => expect(shouldShowWebAppPrompt()).toBe(true));
   });
 });
 

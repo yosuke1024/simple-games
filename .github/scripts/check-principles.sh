@@ -205,7 +205,7 @@ fi
 #
 # **§7 と同じ除外マーカーを持つ**(`[check-principles: allow]` を書いた行だけ)。
 # 理由も同じで、この規則を 14 言語ぶん強制しているテスト自身は、禁止語を書かな
-# ければ「無いこと」を検査できない(src/ui/components/WebAppPrompt.test.tsx が
+# ければ「無いこと」を検査できない(src/ui/components/WebAppStoreCard.test.tsx が
 # 実例)。除外はソース上に見える形で 1 行ずつ残り、grep すれば全件出る。
 # ファイル種別でまとめて除外しない: 除外の範囲が黙って広がる。
 banned_any='ad-?free|completely free of ads|no popup ads|no forced ads|no in-app purchases|lifetime access|fully free|completely free'

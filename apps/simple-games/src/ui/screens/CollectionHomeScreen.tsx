@@ -70,6 +70,7 @@ import { GameActionSheet } from '../components/GameActionSheet';
 import { GameTile } from '../components/GameTile';
 import { IconBack, IconChevronRight, IconGear, IconSearch } from '../components/icons';
 import { WebAdSlot } from '../components/WebAdSlot';
+import { WebAppStoreCard } from '../components/WebAppStoreCard';
 import { WebChromeSlot } from '../components/WebChromeSlot';
 
 /**
@@ -288,12 +289,6 @@ export interface CollectionHomeScreenProps {
   onOpenGame: (gameId: GameId) => void;
   onOpenSettings: () => void;
   /**
-   * The browser version's one-time app card, when the shell has decided this
-   * is its moment (app/App.tsx, docs/WEB_VERSION.md「アプリへの送客」). The home
-   * owns only where it goes; whether it exists at all is not its question.
-   */
-  appPrompt?: ReactNode;
-  /**
    * How to close the review question, for as long as the shell has one on
    * screen over this home (app/App.tsx, docs/REVIEW_PROMPT_POLICY.md); `null`
    * the rest of the time. The dialog is not this screen's to draw — but back
@@ -308,7 +303,6 @@ export interface CollectionHomeScreenProps {
 export function CollectionHomeScreen({
   onOpenGame,
   onOpenSettings,
-  appPrompt,
   dismissReviewPrompt,
 }: CollectionHomeScreenProps) {
   const { t } = useSettings();
@@ -653,6 +647,20 @@ export function CollectionHomeScreen({
             {taglineIsTrue ? <p className="home-tagline">{t('tagline')}</p> : null}
           </div>
 
+          {/* Browser only, and only while there is a store to reach — the card
+              answers both for itself, and renders nothing at all otherwise, so
+              the app build has no gap where it would have been
+              (WebAppStoreCard.tsx).
+
+              Directly under the hero rather than below the shelves, where it
+              used to sit (issue #192): the shelves grow with use, so on a
+              browser that has played a few games the card was most of a screen
+              down — and the arrivals it exists for are the ones who have never
+              been here before. Above them it is at a fixed place on every
+              visit, which is also what lets it stay small: nothing has to
+              compete for a first glance it already has. */}
+          <WebAppStoreCard />
+
           {/* The shelf the player arranged, above the one the shell keeps. Same
               grid as the category sections, because it is the same kind of thing:
               a shelf of titles, in an order somebody chose. */}
@@ -700,12 +708,6 @@ export function CollectionHomeScreen({
               ))}
             </nav>
           ) : null}
-
-          {/* Below the shortcuts and above the full list: past the row somebody
-              came back for, before the twenty titles they scroll. It is one card
-              in the flow, so the games under it move down by its height and by
-              nothing else — no overlay, no reserved space when it is absent. */}
-          {appPrompt}
 
           {/* One landmark for the whole list, headed sections inside: six category
               navs would drown the landmark list, while the headings still let a

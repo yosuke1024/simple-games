@@ -15,7 +15,6 @@ import { initHomeShortcuts } from '../services/homeShortcut/homeShortcut';
 import { initQuickActions } from '../services/homeShortcut/quickActions';
 import { initNetwork } from '../services/network';
 import { initReview } from '../services/review';
-import { initWebAppPrompt } from '../services/webAppPrompt';
 import { loadRecord } from '../storage/repo';
 import { settingsSchema, type Settings } from '../storage/schemas';
 import { initFavoriteGames } from './favoriteGames';
@@ -51,7 +50,6 @@ export async function initShellState(): Promise<Settings> {
   await bootStep(initReview);
   await bootStep(initRecentGames);
   await bootStep(initFavoriteGames);
-  await bootStep(initWebAppPrompt);
   await bootStep(initShortcutLaunch);
   await bootStep(initHomeShortcuts);
   await bootStep(initQuickActions);

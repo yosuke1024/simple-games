@@ -17,7 +17,6 @@ const mocks = vi.hoisted(() => ({
   initReview: vi.fn<() => Promise<void>>(),
   initRecentGames: vi.fn<() => Promise<void>>(),
   initFavoriteGames: vi.fn<() => Promise<void>>(),
-  initWebAppPrompt: vi.fn<() => Promise<void>>(),
   initShortcutLaunch: vi.fn<() => Promise<void>>(),
   initHomeShortcuts: vi.fn<() => Promise<void>>(),
   initQuickActions: vi.fn<() => Promise<void>>(),
@@ -33,7 +32,6 @@ vi.mock('../monetization/adRemoval', () => ({
 vi.mock('../services/ads/banner', () => ({ initAds: mocks.initAds }));
 vi.mock('../services/network', () => ({ initNetwork: mocks.initNetwork }));
 vi.mock('../services/review', () => ({ initReview: mocks.initReview }));
-vi.mock('../services/webAppPrompt', () => ({ initWebAppPrompt: mocks.initWebAppPrompt }));
 vi.mock('../storage/repo', () => ({ loadRecord: mocks.loadRecord }));
 vi.mock('./recentGames', () => ({ initRecentGames: mocks.initRecentGames }));
 vi.mock('./favoriteGames', () => ({ initFavoriteGames: mocks.initFavoriteGames }));
@@ -55,7 +53,6 @@ beforeEach(() => {
   mocks.initReview.mockReset().mockResolvedValue(undefined);
   mocks.initRecentGames.mockReset().mockResolvedValue(undefined);
   mocks.initFavoriteGames.mockReset().mockResolvedValue(undefined);
-  mocks.initWebAppPrompt.mockReset().mockResolvedValue(undefined);
   mocks.initShortcutLaunch.mockReset().mockResolvedValue(undefined);
   mocks.initHomeShortcuts.mockReset().mockResolvedValue(undefined);
   mocks.initQuickActions.mockReset().mockResolvedValue(undefined);
@@ -72,7 +69,6 @@ describe('initShellState (issue #96)', () => {
     expect(mocks.initReview).toHaveBeenCalledTimes(1);
     expect(mocks.initRecentGames).toHaveBeenCalledTimes(1);
     expect(mocks.initFavoriteGames).toHaveBeenCalledTimes(1);
-    expect(mocks.initWebAppPrompt).toHaveBeenCalledTimes(1);
     // The shortcut steps (issues #110 and #114): which game a home-screen
     // shortcut launched us into, whether the launcher pins at all, and the
     // iOS mirror of the favourites onto the quick actions.
@@ -99,7 +95,6 @@ describe('initShellState (issue #96)', () => {
     await expect(initShellState()).resolves.toEqual(storedSettings);
     expect(mocks.initRecentGames).toHaveBeenCalledTimes(1);
     expect(mocks.initFavoriteGames).toHaveBeenCalledTimes(1);
-    expect(mocks.initWebAppPrompt).toHaveBeenCalledTimes(1);
     expect(mocks.initShortcutLaunch).toHaveBeenCalledTimes(1);
     expect(mocks.initHomeShortcuts).toHaveBeenCalledTimes(1);
     expect(mocks.initQuickActions).toHaveBeenCalledTimes(1);
@@ -125,7 +120,6 @@ describe('initShellState (issue #96)', () => {
     mocks.initReview.mockImplementation(failing);
     mocks.initRecentGames.mockImplementation(failing);
     mocks.initFavoriteGames.mockImplementation(failing);
-    mocks.initWebAppPrompt.mockImplementation(failing);
     mocks.initShortcutLaunch.mockImplementation(failing);
     mocks.initHomeShortcuts.mockImplementation(failing);
     mocks.initQuickActions.mockImplementation(failing);

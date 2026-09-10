@@ -43,7 +43,6 @@ import { resetRecentGamesForTesting } from '../app/recentGames';
 import { GAMES } from '../app/registry';
 import { resetAdRemovalForTesting } from '../monetization/adRemoval';
 import { resetReviewForTesting } from '../services/review';
-import { resetWebAppPromptForTesting } from '../services/webAppPrompt';
 import { SettingsProvider } from '../state/SettingsContext';
 import { loadRaw, loadRecord, saveRaw } from '../storage/repo';
 import {
@@ -52,7 +51,6 @@ import {
   recentGamesSchema,
   reviewSchema,
   settingsSchema,
-  webAppPromptSchema,
   STORAGE_KEYS,
   type SchemaDef,
 } from '../storage/schemas';
@@ -65,7 +63,6 @@ const SHELL_SCHEMAS: readonly SchemaDef<unknown>[] = [
   reviewSchema,
   recentGamesSchema,
   favoriteGamesSchema,
-  webAppPromptSchema,
 ];
 
 const isRecordValue = (value: unknown): value is Record<string, unknown> =>
@@ -189,7 +186,6 @@ beforeEach(() => {
   localStorage.clear();
   resetRecentGamesForTesting();
   resetFavoriteGamesForTesting();
-  resetWebAppPromptForTesting();
   resetReviewForTesting();
   resetAdRemovalForTesting();
 });

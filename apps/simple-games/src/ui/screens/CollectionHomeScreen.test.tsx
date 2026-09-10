@@ -121,9 +121,20 @@ describe('collection tagline', () => {
     expect(screen.getByText('Works offline. No account. No paywalls.')).toBeInTheDocument();
   });
 
+  /**
+   * The gate is on the collection's claim about the thing being used right
+   * now. The app card on the same screen also says "offline" — about the app
+   * it points at, which really is offline from its first launch
+   * (docs/WEB_VERSION.md「アプリへの送客」). So the broad match this test used
+   * to make would now only ever find the card: the line is named directly,
+   * and the broad match is kept as "no OTHER offline claim on this screen",
+   * which is the part that was actually guarding anything.
+   */
   it('is absent on the web build, which needs a download on a first visit', () => {
     renderHome();
-    expect(screen.queryByText(/offline/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Works offline. No account. No paywalls.')).not.toBeInTheDocument();
+    const offlineClaims = screen.queryAllByText(/offline/i);
+    expect(offlineClaims.filter((element) => !element.closest('.app-store-card'))).toEqual([]);
   });
 });
 
