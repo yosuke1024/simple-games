@@ -1,9 +1,13 @@
 /**
- * The one-time app card as the shell actually produces it (issue #85,
- * docs/WEB_VERSION.md「アプリへの送客」). The service decides *when* and the
- * card says *what*; what is only visible from here is that the two meet at the
- * right moment and nowhere else — after two games, on the collection home, in
- * the browser, once.
+ * The app card as the shell actually produces it (issue #192,
+ * docs/WEB_VERSION.md「アプリへの送客」). The card says *what* and decides for
+ * itself *whether*; what is only visible from here is that nothing else does —
+ * the number of games played, the door somebody came in by, a reload, a trip
+ * through the settings and a browser that still carries the old record all
+ * leave it exactly where it is.
+ *
+ * That is the whole change this file was rewritten for. It used to pin the
+ * opposite: a counter, two thresholds, and one showing per browser.
  *
  * The games are stubbed for the same reason App.route.test.tsx stubs them:
  * every real title opens on its tutorial, which offers no way back to the
@@ -15,11 +19,15 @@ import { act, cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { capacitorMock, networkMock, openExternalMock } = vi.hoisted(() => ({
-  capacitorMock: { native: false },
-  networkMock: { online: true },
-  openExternalMock: vi.fn(),
-}));
+const { capacitorMock, networkMock, openExternalMock, storeData, storeTouched } = vi.hoisted(
+  () => ({
+    capacitorMock: { native: false },
+    networkMock: { online: true },
+    openExternalMock: vi.fn(),
+    storeData: new Map<string, string>(),
+    storeTouched: [] as string[],
+  }),
+);
 
 vi.mock('@capacitor/core', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@capacitor/core')>();
@@ -49,6 +57,31 @@ vi.mock('../services/network', () => ({
 
 vi.mock('../ui/openExternal', () => ({ openExternal: openExternalMock }));
 
+/**
+ * Every key the shell reads or writes while these tests run, recorded so the
+ * retired record can be asserted *gone* rather than merely unused: nothing
+ * gets `sg.webAppPrompt` and nothing sets it, whatever the browser already
+ * has under that key (issue #192).
+ */
+vi.mock('@capacitor/preferences', () => ({
+  Preferences: {
+    get: ({ key }: { key: string }) => {
+      storeTouched.push(key);
+      return Promise.resolve({ value: storeData.get(key) ?? null });
+    },
+    set: ({ key, value }: { key: string; value: string }) => {
+      storeTouched.push(key);
+      storeData.set(key, value);
+      return Promise.resolve();
+    },
+    remove: ({ key }: { key: string }) => {
+      storeTouched.push(key);
+      storeData.delete(key);
+      return Promise.resolve();
+    },
+  },
+}));
+
 vi.mock('./lazyRoots', () => ({
   getLazyRoot: (gameId: string) =>
     function StubGameRoot({ onExit }: { onExit: () => void }) {
@@ -65,13 +98,7 @@ vi.mock('./lazyRoots', () => ({
 }));
 
 import { PLAY_STORE_URL } from '@simple-games/brand';
-import {
-  initWebAppPrompt,
-  resetWebAppPromptForTesting,
-  shouldShowWebAppPrompt,
-} from '../services/webAppPrompt';
 import { SettingsProvider } from '../state/SettingsContext';
-import { createMemoryKV } from '../storage/kv';
 import { settingsSchema } from '../storage/schemas';
 import { en } from '../i18n/locales/en';
 import { resetRecentGamesForTesting } from './recentGames';
@@ -125,46 +152,25 @@ async function playAndGoBack(user: ReturnType<typeof userEvent.setup>, title: st
   await screen.findByRole('navigation', { name: en.gamesHeading });
 }
 
-beforeEach(async () => {
+beforeEach(() => {
   vi.clearAllMocks();
   capacitorMock.native = false;
   networkMock.online = true;
+  storeTouched.length = 0;
+  storeData.clear();
   resetRecentGamesForTesting();
-  await initWebAppPrompt(createMemoryKV());
   window.history.replaceState(null, '', '/');
 });
 
 afterEach(async () => {
   cleanup();
-  resetWebAppPromptForTesting();
   await settle();
   window.history.replaceState(null, '', '/');
-  try {
-    window.localStorage.clear();
-  } catch {
-    // jsdom without a storage implementation: nothing to clear.
-  }
 });
 
 describe('the browser version', () => {
-  it('says nothing on a first visit', () => {
+  it('shows the card on a first visit, before any game has been played', () => {
     renderShell();
-    expect(card()).not.toBeInTheDocument();
-  });
-
-  it('says nothing after one game', async () => {
-    const user = userEvent.setup();
-    renderShell();
-    await playAndReturn(user, 'Sudoku');
-    expect(card()).not.toBeInTheDocument();
-  });
-
-  it('shows the card when the second game hands the collection back', async () => {
-    const user = userEvent.setup();
-    renderShell();
-    await playAndReturn(user, 'Sudoku');
-    await playAndReturn(user, 'Kakuro');
-
     const shown = card();
     expect(shown).toBeInTheDocument();
     expect(shown).toHaveTextContent(en.webAppPromptBody);
@@ -172,132 +178,85 @@ describe('the browser version', () => {
 
   /**
    * Where it lands is the difference between an invitation and an
-   * interruption: below the games somebody just came back for, above the
-   * thirty they scroll through.
+   * interruption — and, now that it is permanent, between a card and a hero.
+   * Under the collection's own hero, above both shelves and the full list, at
+   * the same place on every visit however much the shelves grow.
    */
-  it('sits between the shortcut row and the full list', async () => {
+  it('sits under the hero and above the shelves and the full list', async () => {
     const user = userEvent.setup();
     const { container } = renderShell();
     await playAndReturn(user, 'Sudoku');
     await playAndReturn(user, 'Kakuro');
 
     const blocks = Array.from(
-      container.querySelectorAll('.game-recent, .app-prompt, .game-sections'),
+      container.querySelectorAll(
+        '.home-hero, .app-store-card, .game-favorites, .game-recent, .game-sections',
+      ),
     ).map((element) => element.className.split(' ')[0]);
-    expect(blocks).toEqual(['game-recent', 'app-prompt', 'game-sections']);
+    expect(blocks).toEqual(['home-hero', 'app-store-card', 'game-recent', 'game-sections']);
   });
 
-  /**
-   * Scrolling past the card is an answer, and the card's own doc comment says
-   * so. The record is written the moment it renders, so the browser has had
-   * its one card whether or not anything was tapped — and the screen has to
-   * agree with the record. This is the path that regressed once: the shell
-   * kept the "card is open" flag while the home unmounted, so every later
-   * return painted it again.
-   */
-  it('does not come back on the next game when it was simply left alone', async () => {
+  it('is still there after a game, and after several', async () => {
     const user = userEvent.setup();
     renderShell();
-    await playAndReturn(user, 'Sudoku');
-    await playAndReturn(user, 'Kakuro');
     expect(card()).toBeInTheDocument();
 
+    await playAndReturn(user, 'Sudoku');
+    expect(card()).toBeInTheDocument();
+
+    await playAndReturn(user, 'Kakuro');
     await playAndReturn(user, 'Reversi');
-    expect(card()).not.toBeInTheDocument();
+    expect(card()).toBeInTheDocument();
   });
 
-  it('does not come back from a trip through the settings screen', async () => {
+  it('is still there after a trip through the settings screen', async () => {
     const user = userEvent.setup();
     renderShell();
-    await playAndReturn(user, 'Sudoku');
-    await playAndReturn(user, 'Kakuro');
-    expect(card()).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: en.settings }));
     await user.click(await screen.findByRole('button', { name: en.back }));
-    expect(card()).not.toBeInTheDocument();
+    expect(card()).toBeInTheDocument();
   });
 
   /**
    * The browser's Back button reaches the collection through the popstate
    * handler rather than through `exitGame`, so it is a second wiring of the
-   * same decision — and the one a visitor who arrived on a `?game=` link uses.
+   * same screen — and the one a visitor who arrived on a `?game=` link uses.
    */
-  it('counts a return made with the browser Back button, and shows the card there', async () => {
+  it('is still there when the browser Back button is what came home', async () => {
     const user = userEvent.setup();
     renderShell();
     await playAndGoBack(user, 'Sudoku');
-    expect(card()).not.toBeInTheDocument();
-
-    await playAndGoBack(user, 'Kakuro');
     expect(card()).toBeInTheDocument();
   });
 
-  it('goes away when closed and does not come back on the next game', async () => {
-    const user = userEvent.setup();
-    renderShell();
-    await playAndReturn(user, 'Sudoku');
-    await playAndReturn(user, 'Kakuro');
-
-    await user.click(screen.getByRole('button', { name: en.close }));
-    expect(card()).not.toBeInTheDocument();
-
-    await playAndReturn(user, 'Sudoku');
-    expect(card()).not.toBeInTheDocument();
-  });
-
-  it('does not come back after a reload once it has been shown', async () => {
+  it('is still there after a reload', async () => {
     const user = userEvent.setup();
     const first = renderShell();
     await playAndReturn(user, 'Sudoku');
-    await playAndReturn(user, 'Kakuro');
     expect(card()).toBeInTheDocument();
     first.unmount();
 
     renderShell();
-    expect(card()).not.toBeInTheDocument();
-  });
-
-  /**
-   * A visit that ends before the card is due leaves the count behind, so the
-   * next launch opens on the collection with the card already earned — which
-   * is also how an offline visit gets its card once the connection is back.
-   */
-  it('shows a card earned in an earlier visit at the next launch', async () => {
-    const user = userEvent.setup();
-    const first = renderShell();
-    networkMock.online = false;
-    await playAndReturn(user, 'Sudoku');
-    await playAndReturn(user, 'Kakuro');
-    expect(card()).not.toBeInTheDocument();
-    first.unmount();
-
-    networkMock.online = true;
-    renderShell();
     expect(card()).toBeInTheDocument();
   });
 
-  it('sends a tap on the store button out to the listing, and closes', async () => {
+  it('sends a tap on the store button out to the listing, and stays', async () => {
     const user = userEvent.setup();
     renderShell();
-    await playAndReturn(user, 'Sudoku');
-    await playAndReturn(user, 'Kakuro');
 
     await user.click(screen.getByRole('button', { name: 'Google Play' }));
     expect(openExternalMock).toHaveBeenCalledWith(PLAY_STORE_URL);
-    expect(card()).not.toBeInTheDocument();
+    expect(card()).toBeInTheDocument();
   });
-});
 
-/**
- * The other way in: a `?game=<id>` address (issue #83). `App.tsx`'s
- * `initialView()` is the only place that knows a visit began this way, and it
- * tells the service (`noteWebArrivalOnGame`) so the card can meet a visitor
- * who was already recommended the app — once, one game earlier
- * (`WEB_APP_PROMPT_FROM_LINK_AT`, docs/WEB_VERSION.md「アプリへの送客」).
- */
-describe('a visitor who arrives on a game link', () => {
-  it('sees the card after leaving that one game, not after a second', async () => {
+  /**
+   * A visit that opens straight on a game (issue #83). It used to be the one
+   * arrival with a threshold of its own; now it is not an arrival the shell
+   * has any opinion about, and the collection behind the game carries the same
+   * card as every other visit.
+   */
+  it('carries the same card for a visitor who arrived on a game link', async () => {
     const user = userEvent.setup();
     window.history.replaceState(null, '', '/?game=sudoku');
     renderShell();
@@ -306,21 +265,71 @@ describe('a visitor who arrives on a game link', () => {
 
     await user.click(screen.getByRole('button', { name: 'All games' }));
     await settle();
-
     expect(card()).toBeInTheDocument();
   });
 });
 
+describe('offline', () => {
+  it('leaves the card out and the collection playable', async () => {
+    networkMock.online = false;
+    const user = userEvent.setup();
+    renderShell();
+    expect(card()).not.toBeInTheDocument();
+
+    // Nothing else about the home changed: a game still opens and comes back.
+    await playAndReturn(user, 'Sudoku');
+    expect(card()).not.toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: en.gamesHeading })).toBeInTheDocument();
+  });
+});
+
 describe('the app build', () => {
-  it('never shows the card, however many games are played', async () => {
+  it('never shows the card, before or after any number of games', async () => {
     capacitorMock.native = true;
+    const user = userEvent.setup();
+    renderShell();
+    expect(card()).not.toBeInTheDocument();
+
+    await playAndReturn(user, 'Sudoku');
+    await playAndReturn(user, 'Kakuro');
+    expect(card()).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * The retired record (issue #192). `sg.webAppPrompt` is not read, not written
+ * and not deleted — and a browser that still has one from an earlier version
+ * is treated exactly like a browser that never had one, because nothing looks.
+ */
+describe('the record this card no longer keeps', () => {
+  it('never touches sg.webAppPrompt, however the visit goes', async () => {
     const user = userEvent.setup();
     renderShell();
     await playAndReturn(user, 'Sudoku');
     await playAndReturn(user, 'Kakuro');
-    await playAndReturn(user, 'Reversi');
+    await user.click(screen.getByRole('button', { name: 'Google Play' }));
 
-    expect(card()).not.toBeInTheDocument();
-    expect(shouldShowWebAppPrompt()).toBe(false);
+    expect(storeTouched).not.toContain('sg.webAppPrompt');
+    // The shell did reach storage in the meantime, so the assertion above is
+    // about this key rather than about a store nobody called.
+    expect(storeTouched.length).toBeGreaterThan(0);
+  });
+
+  it('shows the card on a browser that still carries the retired record', () => {
+    // What a browser upgraded from the one-time card looks like: shown, and
+    // therefore never eligible again under the old rule.
+    storeData.set(
+      'sg.webAppPrompt',
+      JSON.stringify({ schemaVersion: 1, gameExits: 2, shown: true }),
+    );
+    renderShell();
+
+    expect(card()).toBeInTheDocument();
+    expect(storeTouched).not.toContain('sg.webAppPrompt');
+    // And it is left exactly as it was: no read, no write, and no delete
+    // dressed up as a migration (issue #192).
+    expect(storeData.get('sg.webAppPrompt')).toBe(
+      JSON.stringify({ schemaVersion: 1, gameExits: 2, shown: true }),
+    );
   });
 });

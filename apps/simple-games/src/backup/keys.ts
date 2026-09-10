@@ -63,11 +63,6 @@ export const SHELL_KEYS_LEFT_BEHIND: Readonly<Record<string, string>> = {
    * progress the player built, so neither is theirs to move.
    */
   [STORAGE_KEYS.review]: 'per-install prompt pacing — not progress',
-  /**
-   * The browser build's one-time app card (docs/WEB_VERSION.md). Per-browser
-   * by construction, and never written by the app build at all.
-   */
-  [STORAGE_KEYS.webAppPrompt]: 'per-browser, web-only — meaningless on another device',
 };
 
 /**

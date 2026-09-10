@@ -65,10 +65,12 @@ PRODUCT_PRINCIPLES「Core が Shared から受け取る変更は次の 3 つま�
 **接続済み** = 起動時に `sg.club` の接続が 1 つ以上ある(§4)。判定は Core の
 `src/app/` が保存の有無だけで行い、通信しない。
 
-- **ホームの入口**: 「最近遊んだ」の下・カテゴリ節の上(Web 版のアプリ案内カードと
-  同じ流れの中の 1 枚。`CollectionHomeScreen` の `appPrompt` と同じ位置に、同じく
-  「無ければ場所を取らない」形)。内容は見出し `Private Game Club` と、`sg.club` に
-  キャッシュされた Club 名を「 · 」で連結した 1 行(`Suzuki Family · Pune Office`)。
+- **ホームの入口**: 「最近遊んだ」の下・カテゴリ節の上(`CollectionHomeScreen` の
+  流れの中の 1 枚として、Web 版のアプリ案内カードと同じく「無ければ場所を取らない」
+  形。あちらはヒーローの直後に置かれるので位置は重ならない —— 2026-09-11 の
+  常設化で上へ移った。[WEB_VERSION.md](../WEB_VERSION.md)「アプリへの送客」)。
+  内容は見出し `Private Game Club` と、`sg.club` にキャッシュされた Club 名を
+  「 · 」で連結した 1 行(`Suzuki Family · Pune Office`)。
   **数字を出さない** — #161 の例にある「3 active challenges」は置かない。件数を出す
   にはホームを描くたびに通信する必要があり(PRODUCT_PRINCIPLES「通信は…本人の操作の
   直後にだけ」に反する)、出せたとしてもそれはバッジであり「まだ手に入れていないもの
@@ -620,7 +622,8 @@ Simple Games by PixApps
   全部入っているので、Challenge を押せばそのまま遊べる。
 - brand の一行(`Simple Games by PixApps`)は残し、インストールの壁は作らない
   (#164「install wall にしない」)。アプリの案内は Web 版の既存のカード
-  (`services/webAppPrompt.ts`、3 局目の後に 1 回)のままで、Shared のために増やさない。
+  (`ui/components/WebAppStoreCard.tsx`、コレクションホームの常設カード)のままで、
+  Shared のために増やさない。
 
 ## 8. Host になる — 説明画面・Setup Key・claim・Hosting
 
