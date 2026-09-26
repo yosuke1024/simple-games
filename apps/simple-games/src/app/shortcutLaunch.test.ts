@@ -44,9 +44,22 @@ describe('the address a shortcut carries', () => {
     expect(shortcutUrlFor('sudoku')).toBe('https://pixapps.ai/simple-games/play/?game=sudoku');
   });
 
-  it('reads back to the same game for every title in the collection', () => {
+  it('reads back to the same game for every title the app offers', () => {
     for (const game of GAMES) {
+      if (game.channel === 'web-beta') continue;
       expect(gameIdFromShortcutUrl(shortcutUrlFor(game.id)), game.id).toBe(game.id);
+    }
+  });
+
+  // A title in the browser's early release (docs/WEB_VERSION.md「先行公開」)
+  // is not on the app, so its address — which a browser bookmark or a pinned
+  // shortcut from a future release could still carry — lands on the
+  // collection, exactly as a retired id does (app/gameChannel.ts).
+  it('means the collection for a web-beta title, which the app does not offer', () => {
+    const beta = GAMES.filter((game) => game.channel === 'web-beta');
+    expect(beta.length).toBeGreaterThan(0);
+    for (const game of beta) {
+      expect(gameIdFromShortcutUrl(shortcutUrlFor(game.id)), game.id).toBeNull();
     }
   });
 

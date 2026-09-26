@@ -25,7 +25,7 @@
  * the whole of "remove the BETA badge" (docs/RELEASE_CHECKLIST.md §0).
  */
 import { Capacitor } from '@capacitor/core';
-import { GAMES, type GameDefinition, type GameId } from '../../app/registry';
+import { GAMES, type GameId } from '../../app/registry';
 import { useSettings } from '../../state/SettingsContext';
 
 /** The save caveat, in the two languages a native reader has checked. */
@@ -34,25 +34,7 @@ const SAVE_NOTE = {
   ja: '先行公開中: 反応を見て、アプリへの正式収録を決めます。このゲームの保存データは更新で消えることがあります。',
 } as const;
 
-/** The badge text is a proper mark, not a word — the same in every locale. */
-export const BETA_BADGE = 'BETA';
-
-/**
- * The mark on a title card (collection home: shelves, rows and sections). It
- * is part of the button's accessible name on purpose — "Crown Grid BETA" is
- * what the card says — and the space before it is a real text node, so the
- * name reads as two words and not one. Nothing for a released title, so the
- * thirty shipped cards are byte-for-byte what they were.
- */
-export function GameBetaBadge({ game }: { game: GameDefinition }) {
-  if (game.channel !== 'web-beta') return null;
-  return (
-    <>
-      {' '}
-      <span className="beta-badge">{BETA_BADGE}</span>
-    </>
-  );
-}
+import { BETA_BADGE } from './GameBetaBadge';
 
 export function WebBetaNotice({ gameId }: { gameId: GameId }) {
   const { locale } = useSettings();

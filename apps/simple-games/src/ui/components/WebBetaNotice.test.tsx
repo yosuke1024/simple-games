@@ -25,7 +25,8 @@ vi.mock('@capacitor/core', async (importOriginal) => {
 import { GAMES, type GameId } from '../../app/registry';
 import { SettingsProvider } from '../../state/SettingsContext';
 import { settingsSchema, type Settings } from '../../storage/schemas';
-import { GameBetaBadge, WebBetaNotice } from './WebBetaNotice';
+import { GameBetaBadge } from './GameBetaBadge';
+import { WebBetaNotice } from './WebBetaNotice';
 
 const beta = GAMES.find((game) => game.channel === 'web-beta')!;
 const released = GAMES.find((game) => game.channel !== 'web-beta')!;

@@ -70,7 +70,7 @@ import { useSettings } from '../../state/SettingsContext';
 import { GameActionSheet } from '../components/GameActionSheet';
 import { GameTile } from '../components/GameTile';
 import { IconBack, IconChevronRight, IconGear, IconSearch } from '../components/icons';
-import { GameBetaBadge } from '../components/WebBetaNotice';
+import { GameBetaBadge } from '../components/GameBetaBadge';
 import { WebAdSlot } from '../components/WebAdSlot';
 import { WebAppStoreCard } from '../components/WebAppStoreCard';
 import { WebChromeSlot } from '../components/WebChromeSlot';
