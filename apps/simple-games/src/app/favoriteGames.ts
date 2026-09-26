@@ -28,7 +28,8 @@ import type { KVStore } from '../storage/kv';
 import { preferencesKV } from '../storage/kv';
 import { loadRecord, saveRecord } from '../storage/repo';
 import { FAVORITE_GAMES_MAX, favoriteGamesSchema, type FavoriteGames } from '../storage/schemas';
-import { GAMES, type GameId } from './registry';
+import { isAvailableGameId } from './gameChannel';
+import type { GameId } from './registry';
 
 let state: FavoriteGames = favoriteGamesSchema.defaultValue();
 let kvStore: KVStore = preferencesKV;
@@ -52,7 +53,10 @@ export async function initFavoriteGames(kv: KVStore = preferencesKV): Promise<vo
   notify();
 }
 
-const isKnownGame = (id: string): id is GameId => GAMES.some((game) => game.id === id);
+// Known to this build, not merely to the registry: a web-beta title pinned in
+// the browser stays in the record, and stays off the app's shelf, the same way
+// a title a future build withdraws does (app/gameChannel.ts).
+const isKnownGame = (id: string): id is GameId => isAvailableGameId(id);
 
 /**
  * The pinned games, in the order they were pinned. Ids the registry no longer

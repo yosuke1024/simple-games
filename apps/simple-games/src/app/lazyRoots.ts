@@ -13,7 +13,8 @@
  * retry as a bonus (ui/components/GameErrorBoundary.tsx).
  */
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
-import { GAMES, type GameId, type GameRootProps } from './registry';
+import { findAvailableGame } from './gameChannel';
+import type { GameId, GameRootProps } from './registry';
 
 type LazyRoot = LazyExoticComponent<ComponentType<GameRootProps>>;
 
@@ -22,7 +23,10 @@ const cache = new Map<GameId, LazyRoot>();
 export function getLazyRoot(id: GameId): LazyRoot | null {
   const cached = cache.get(id);
   if (cached) return cached;
-  const game = GAMES.find((entry) => entry.id === id);
+  // Only a title this build offers gets a root: a web-beta id that somehow
+  // reached the shell on the app (app/gameChannel.ts) mounts nothing, and the
+  // shell shows the collection instead of a game the app does not have.
+  const game = findAvailableGame(id);
   if (!game) return null;
   const created = lazy(game.loadRoot);
   cache.set(id, created);

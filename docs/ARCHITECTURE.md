@@ -141,7 +141,7 @@ src/
 
 ## ゲームレジストリの契約
 
-`app/registry.ts` のエントリは「タイトルカード + そのゲームが持つキー + ゲーム本体のローダー」だけのプラグイン機構ではない薄い契約で、ゲームの追加は keys の import 1 行と配列要素 1 つで済む。ゲーム本体は静的 import せず `codeSplitting` でゲーム単位のチャンクに分かれる——例外は同期参照される import ゼロの葉 `storage/keys.ts` だけで、ここに import を足すとホームの初期チャンクへ引き戻される。`storageKeys` は「ローカルデータ削除」とバックアップがゲームのチャンクを読まずに列挙するためのもので、released 済みキーの一覧は `gameKeys.test.ts` のゴールデンとして固定され、**テストを直して通すのは禁止**(プレイヤーのデータに対する削除行為になるため)。`loadStorageSchemas` は**必須**のローダーで、Backup & Restore がそのゲームのレコードを持ち主の `SchemaDef` で検証するための唯一の口 —— 任意にすると、書き出せるのに復元できないゲームが黙って増える(issue #160)。Root が受け取る props は `GameRootProps` = `onExit` と任意の `entry`(どの扉から入ったか、issue #113)。`SettingsSection` は任意で、ゲーム固有の設定はゲームが所有しシェルは場所だけ貸す。
+`app/registry.ts` のエントリは「タイトルカード + そのゲームが持つキー + ゲーム本体のローダー」だけのプラグイン機構ではない薄い契約で、ゲームの追加は keys の import 1 行と配列要素 1 つで済む。ゲーム本体は静的 import せず `codeSplitting` でゲーム単位のチャンクに分かれる——例外は同期参照される import ゼロの葉 `storage/keys.ts` だけで、ここに import を足すとホームの初期チャンクへ引き戻される。`storageKeys` は「ローカルデータ削除」とバックアップがゲームのチャンクを読まずに列挙するためのもので、released 済みキーの一覧は `gameKeys.test.ts` のゴールデンとして固定され、**テストを直して通すのは禁止**(プレイヤーのデータに対する削除行為になるため)。`loadStorageSchemas` は**必須**のローダーで、Backup & Restore がそのゲームのレコードを持ち主の `SchemaDef` で検証するための唯一の口 —— 任意にすると、書き出せるのに復元できないゲームが黙って増える(issue #160)。Root が受け取る props は `GameRootProps` = `onExit` と任意の `entry`(どの扉から入ったか、issue #113)。`SettingsSection` は任意で、ゲーム固有の設定はゲームが所有しシェルは場所だけ貸す。`channel` も任意で、`'web-beta'` なら Web 版だけの先行公開 —— 出し分けはビルドではなく `app/gameChannel.ts` の実行時ガードで、ホーム・検索・お気に入り・最近・`?game=` の住所・lazy root がそこに問う([WEB_VERSION.md](WEB_VERSION.md)「先行公開」、issue #194)。
 
 小見出し: 「ゲーム単位の lazy チャンク(issue #26)」
 
@@ -247,7 +247,7 @@ Core の外にある任意の層(issue #176 の境界、#161 の設計。**実�
   違う)→ `useLoadedRecords`。
 - **モーダルの間、盤面は inert。** 確認ダイアログ(`ConfirmDialog`)と結果オーバーレイが出ている間、
   `.game-content` は `inert` にする——`open` のフラグを inert 式に含める(`inert={finished ||
-  confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカスは遮らず、`useGameKeys` の
+confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカスは遮らず、`useGameKeys` の
   `enabled` も window のキーリスナーを外すだけなので、これが無いと自動フォーカスされた Cancel から
   Shift+Tab → Space で裏の手が進む。実測(2026-09-05): 確認ダイアログを持つ 25 本のうち inert 式に
   そのフラグを含めていたのは 7 本 → `scripts/codemods/2026-09-05-inert-during-confirm-dialog.mjs` で
@@ -344,6 +344,7 @@ Core の外にある任意の層(issue #176 の境界、#161 の設計。**実�
 
   実施記録(候補一覧・再現条件・原因)は
   [plans/2026-09-08-flaky-tests.md](plans/2026-09-08-flaky-tests.md)。
+
 - `android-release.yml`: 手動実行(workflow_dispatch)または `v*` タグでのみ実行し、
   署名済み AAB(Play 用)と署名済み APK(実機確認用)をアーティファクトとして出す。
   `versionName` / `versionCode` はタグが決める。ストアへのアップロードは手動。

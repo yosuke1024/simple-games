@@ -647,6 +647,44 @@
   --accent-ring-soft: rgba(163, 123, 204, 0.14);
 }
 
+/* ---------- Web early release (docs/WEB_VERSION.md「先行公開」) ----------
+   The BETA mark a title wears while it is in the browser version only. The
+   badge is text in a small capsule rather than a colour: it has to read the
+   same on a tile, on a game's home and to a screen reader, in every locale
+   and both themes. The note under it is set in the soft ink, one sentence,
+   and appears only where a native reader has checked the wording (en / ja —
+   ui/components/WebBetaNotice.tsx). */
+.beta-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid var(--ink-soft);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  vertical-align: middle;
+}
+
+.web-beta-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px auto 0;
+  max-width: 420px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  text-align: left;
+}
+
+.web-beta-notice .beta-badge {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;

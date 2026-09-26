@@ -18,7 +18,8 @@
  * "MINESWEEPER" would stop matching Minesweeper. The titles are Latin proper
  * nouns; the locale-invariant mapping is the correct one for them.
  */
-import { GAMES, GAME_CATEGORIES, type GameDefinition } from './registry';
+import { availableGames } from './gameChannel';
+import { GAME_CATEGORIES, type GameDefinition } from './registry';
 
 /**
  * Every game in the order the collection home lists them — categories in
@@ -31,9 +32,14 @@ import { GAMES, GAME_CATEGORIES, type GameDefinition } from './registry';
  * here, exactly as it would be absent from the home; `gameSearch.test.ts`
  * pins the count against GAMES so that vanishing is loud.
  */
-const HOME_ORDER: readonly GameDefinition[] = GAME_CATEGORIES.flatMap((category) =>
-  GAMES.filter((game) => game.category === category.id),
-);
+const homeOrder = (): readonly GameDefinition[] => {
+  // Read per call rather than once at load: which titles this build offers is
+  // a runtime answer (app/gameChannel.ts), and thirty-odd entries cost nothing.
+  const games = availableGames();
+  return GAME_CATEGORIES.flatMap((category) =>
+    games.filter((game) => game.category === category.id),
+  );
+};
 
 /**
  * The games whose titles contain `query`, in home order. An empty query (or
@@ -43,6 +49,7 @@ const HOME_ORDER: readonly GameDefinition[] = GAME_CATEGORIES.flatMap((category)
  */
 export function searchGames(query: string): readonly GameDefinition[] {
   const needle = query.trim().toLowerCase();
-  if (needle === '') return HOME_ORDER;
-  return HOME_ORDER.filter((game) => game.title.toLowerCase().includes(needle));
+  const order = homeOrder();
+  if (needle === '') return order;
+  return order.filter((game) => game.title.toLowerCase().includes(needle));
 }

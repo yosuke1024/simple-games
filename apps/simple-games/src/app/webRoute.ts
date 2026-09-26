@@ -37,7 +37,8 @@
  * guard: one contract for "this address means that game", parsed in one place.
  */
 import { Capacitor } from '@capacitor/core';
-import { GAMES, type GameId } from './registry';
+import { isAvailableGameId } from './gameChannel';
+import type { GameId } from './registry';
 
 /** The one parameter the browser version reads. Also the one it writes. */
 export const GAME_PARAM = 'game';
@@ -54,8 +55,11 @@ export const GAME_PARAM = 'game';
  */
 const DEPTH_KEY = 'sgRouteDepth';
 
-const isGameId = (value: string | null): value is GameId =>
-  value !== null && GAMES.some((game) => game.id === value);
+// "Still carries" means offers on this build: a web-beta title's id is a
+// working address in the browser and, like a retired id, the collection on the
+// app (app/gameChannel.ts) — which is what keeps the shortcut and the browser
+// on one parser while the two builds offer different lists.
+const isGameId = (value: string | null): value is GameId => isAvailableGameId(value);
 
 function parse(href: string): URL | null {
   try {

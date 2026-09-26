@@ -1,6 +1,6 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-09-09
+Updated: 2026-09-26
 
 この文書は、Simple Games を変更・レビュー・説明するときの **共通の入口** である。
 ここに全仕様を複製しない。実装上の事実はコード、恒久的な原則は各 canonical document を正とし、
@@ -43,6 +43,10 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **30 games**。
+- ほかに **Web 版だけで先行公開(ベータ)中の新作が 3 本**(Crown Grid / Number Path /
+  Shape Regions、2026-09-26、issue #194)。正式収録の 30 本には数えない。チャンネルの
+  宣言は registry の `channel`、出し分けは `app/gameChannel.ts` の実行時ガード
+  (`docs/WEB_VERSION.md`「先行公開」)。
 - 実装上のゲーム一覧・ID・並び順・カテゴリの正は `apps/simple-games/src/app/registry.ts` の `GAMES` / `GAME_CATEGORIES`。
 - 人間向け一覧は root `README.md`。
 - 各ゲームの実装は `apps/simple-games/src/games/<game-id>/` に分離する。
@@ -166,26 +170,26 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 
 ## 9. Canonical documents map
 
-| Topic | Canonical source |
-| --- | --- |
-| Product philosophy / prohibitions / UX principles | `docs/PRODUCT_PRINCIPLES.md` |
-| Brand / public wording | `docs/BRAND.md` |
-| GitHub repository metadata (description / homepage / topics) | `docs/BRAND.md`「GitHub リポジトリの公開 metadata」 |
-| Architecture / dependency rules | `docs/ARCHITECTURE.md` |
-| Offline behavior | `docs/OFFLINE_POLICY.md` |
-| App advertising / IAP | `docs/ADS_POLICY.md` |
-| Web role / differences / web measurement | `docs/WEB_VERSION.md` |
-| Analytics interpretation | `docs/GROWTH_MEASUREMENT.md` |
-| i18n | `docs/I18N_POLICY.md` |
-| Release gates | `docs/RELEASE_CHECKLIST.md` |
-| Review prompt | `docs/REVIEW_PROMPT_POLICY.md` |
-| Backup / restore format and versioning | `docs/architecture/backup.md` |
-| Shared (Private Game Club) — Core との境界、CI での証明 | `docs/PRODUCT_PRINCIPLES.md`「Shared」 |
-| Shared (Private Game Club) — クライアント側の契約(入口・保存・API・挑戦と結果・招待・Host・発見導線) | `docs/architecture/club.md` |
-| Game-specific behavior | `docs/<GAME>_RULES.md` |
-| Current game inventory | `apps/simple-games/src/app/registry.ts` |
-| Human-readable game inventory | `README.md` |
-| Historical implementation plans | `docs/plans/` — not authoritative after completion |
+| Topic                                                                                                | Canonical source                                    |
+| ---------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| Product philosophy / prohibitions / UX principles                                                    | `docs/PRODUCT_PRINCIPLES.md`                        |
+| Brand / public wording                                                                               | `docs/BRAND.md`                                     |
+| GitHub repository metadata (description / homepage / topics)                                         | `docs/BRAND.md`「GitHub リポジトリの公開 metadata」 |
+| Architecture / dependency rules                                                                      | `docs/ARCHITECTURE.md`                              |
+| Offline behavior                                                                                     | `docs/OFFLINE_POLICY.md`                            |
+| App advertising / IAP                                                                                | `docs/ADS_POLICY.md`                                |
+| Web role / differences / web measurement                                                             | `docs/WEB_VERSION.md`                               |
+| Analytics interpretation                                                                             | `docs/GROWTH_MEASUREMENT.md`                        |
+| i18n                                                                                                 | `docs/I18N_POLICY.md`                               |
+| Release gates                                                                                        | `docs/RELEASE_CHECKLIST.md`                         |
+| Review prompt                                                                                        | `docs/REVIEW_PROMPT_POLICY.md`                      |
+| Backup / restore format and versioning                                                               | `docs/architecture/backup.md`                       |
+| Shared (Private Game Club) — Core との境界、CI での証明                                              | `docs/PRODUCT_PRINCIPLES.md`「Shared」              |
+| Shared (Private Game Club) — クライアント側の契約(入口・保存・API・挑戦と結果・招待・Host・発見導線) | `docs/architecture/club.md`                         |
+| Game-specific behavior                                                                               | `docs/<GAME>_RULES.md`                              |
+| Current game inventory                                                                               | `apps/simple-games/src/app/registry.ts`             |
+| Human-readable game inventory                                                                        | `README.md`                                         |
+| Historical implementation plans                                                                      | `docs/plans/` — not authoritative after completion  |
 
 ## 10. Decision rules for proposals
 
