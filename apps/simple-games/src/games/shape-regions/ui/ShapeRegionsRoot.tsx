@@ -1,57 +1,106 @@
 /**
- * ShapeRegions's root: loads the game's own records (local, fast, offline), then
- * mounts the provider and the home screen. The shell knows nothing beyond
- * this component and the storage keys; unmounting stops all of the game's
- * work.
+ * Shape Regions' root: loads the game's own records (local, fast, offline),
+ * then mounts the provider and screens. The shell knows nothing beyond this
+ * component and the storage keys; unmounting stops all of the game's work
+ * (battery: an off-screen game renders nothing).
  *
  * The game's stylesheet is imported here rather than from the shell, so the
  * whole title — logic, screens, and looks — lives inside this one folder.
- *
- * Scaffolded by scripts/new-game.mjs.
  */
-// Register this game's 14-locale catalog the moment the chunk loads, before
-// anything below renders (issue #38, src/i18n/registry.ts).
+// Register this game's 14-locale catalog the moment the chunk loads,
+// before anything below renders (issue #38, src/i18n/registry.ts).
 import '../i18n';
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
 import { useLoadedRecords } from '../../../ui/useLoadedRecords';
-import { ShapeRegionsProvider } from '../state/GameContext';
-import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
+import { ShapeRegionsProvider, useShapeRegions } from '../state/GameContext';
+import { loadSavedGames, type SavedGames } from '../storage/gamePersistence';
+import {
+  flagsSchema,
+  prefsSchema,
+  statsSchema,
+  type Flags,
+  type Prefs,
+  type Stats,
+} from '../storage/schemas';
 import './shape-regions.css';
+import { ShapeRegionsDailyScreen } from './screens/DailyScreen';
+import { ShapeRegionsGameScreen } from './screens/GameScreen';
 import { ShapeRegionsHomeScreen } from './screens/HomeScreen';
+import { ShapeRegionsStatsScreen } from './screens/StatsScreen';
+import { ShapeRegionsTutorialScreen } from './screens/TutorialScreen';
+
+export function ShapeRegionsScreens() {
+  const { screen } = useShapeRegions();
+  switch (screen) {
+    case 'tutorial':
+      return <ShapeRegionsTutorialScreen />;
+    case 'daily':
+      return <ShapeRegionsDailyScreen />;
+    case 'game':
+      return <ShapeRegionsGameScreen />;
+    case 'stats':
+      return <ShapeRegionsStatsScreen />;
+    case 'home':
+    default:
+      return <ShapeRegionsHomeScreen />;
+  }
+}
 
 interface LoadedData {
   stats: Stats;
   flags: Flags;
+  prefs: Prefs;
+  sessions: SavedGames;
 }
 
 export interface ShapeRegionsRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: what a door means is the provider's
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
 
 function defaultRecords(): LoadedData {
-  return { stats: statsSchema.defaultValue(), flags: flagsSchema.defaultValue() };
+  return {
+    stats: statsSchema.defaultValue(),
+    flags: flagsSchema.defaultValue(),
+    prefs: prefsSchema.defaultValue(),
+    sessions: { difficulty: null, daily: null },
+  };
 }
 
 async function loadRecords(kv: KVStore): Promise<LoadedData> {
-  const [stats, flags] = await Promise.all([
+  const [stats, flags, prefs, sessions] = await Promise.all([
     loadRecord(statsSchema, kv),
     loadRecord(flagsSchema, kv),
+    loadRecord(prefsSchema, kv),
+    loadSavedGames(kv),
   ]);
-  return { stats, flags };
+  return { stats, flags, prefs, sessions };
 }
 
-export function ShapeRegionsRoot({ onExit, kv = preferencesKV }: ShapeRegionsRootProps) {
+export function ShapeRegionsRoot({ onExit, entry, kv = preferencesKV }: ShapeRegionsRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
   return (
-    <ShapeRegionsProvider initialStats={data.stats} initialFlags={data.flags} onExit={onExit}>
-      <ShapeRegionsHomeScreen />
+    <ShapeRegionsProvider
+      initialStats={data.stats}
+      initialFlags={data.flags}
+      initialPrefs={data.prefs}
+      initialSessions={data.sessions}
+      onExit={onExit}
+      entry={entry}
+    >
+      <ShapeRegionsScreens />
     </ShapeRegionsProvider>
   );
 }
