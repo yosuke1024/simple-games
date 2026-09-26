@@ -354,6 +354,12 @@ Number Path / Shape Regions(計画は
   バッジ + 説明文。説明文は en / ja だけで、他 12 言語はバッジのみ。
 - ストア掲載文(`apps/simple-games/store/listing.md`)と landing のガイド
   (`ui/landing.ts` の `PUBLISHED_GAME_IDS`)には正式収録まで出さない。
+- landing 側のガード: `pixapps-landing` の `tests/ui.test.js`
+  (`testSimpleGamesLandingCollection`)は同期後の `play/assets/game-<id>-*.js` を
+  `LANDING_GAME_IDS` と突き合わせ、一覧に無いチャンクがあれば落ちる。先行公開の
+  ゲームはカードを出さないので、同期する PR では **`LANDING_GAME_IDS` に足すのでは
+  なく**、ベータ id の許容(チャンクはあるがカードは無い)をそのテストに設ける。
+  正式収録でカードを載せるときに、許容から `LANDING_GAME_IDS` へ移す。
 - 正式収録の手順は [RELEASE_CHECKLIST.md §0](RELEASE_CHECKLIST.md): 上の基準 1・2 を
   満たしたら、registry の `channel` を外す(バッジと説明文はそれで消える)、
   永続化ラウンドトリップテストを作る、README / ストア掲載文 / landing に載せる。

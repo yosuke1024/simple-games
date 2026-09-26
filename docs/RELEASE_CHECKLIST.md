@@ -26,6 +26,10 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
       `app/gameChannel.ts`)。README の「Web 先行公開」節から正式収録の表へ移し、
       ストア掲載文(`apps/simple-games/store/listing.md`)と landing のガイド
       (`ui/landing.ts` の `PUBLISHED_GAME_IDS`)はガイドが出てから足す
+- [ ] landing(`pixapps-landing`)の `tests/ui.test.js` で、そのゲームの id をベータ
+      許容リストから `LANDING_GAME_IDS` へ移し、`public/simple-games/index.html` に
+      カードを足す(先行公開中はチャンクだけが配信され、カードは無い —
+      [WEB_VERSION.md](WEB_VERSION.md)「先行公開」)
 
 ## 1. コードの検証(機械が判定できるもの)
 
