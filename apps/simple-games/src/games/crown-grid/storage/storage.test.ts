@@ -98,7 +98,7 @@ describe('statistics (§10)', () => {
 });
 
 describe('the daily backlog (§9)', () => {
-  it('opens today and the thirty days behind it, unconditionally', () => {
+  it('opens today and the 29 days before it, unconditionally', () => {
     const dates = availableDailyDates('2026-08-05');
     expect(dates[0]).toBe('2026-08-05');
     expect(dates[1]).toBe('2026-08-04');

@@ -20,7 +20,7 @@ export const id: CrownGridMessages = {
   crownGridHintPlace:
     'Kotak yang ditandai harus berisi mahkota — area yang disorot menunjukkan alasannya.',
   crownGridHintEliminate:
-    'Tidak ada mahkota di kotak yang ditandai — area yang disorot menunjukkan alasannya.',
+    'Mahkota tidak bisa ditempatkan di kotak yang ditandai — area yang disorot menunjukkan alasannya.',
   crownGridHintNone: 'Belum ada langkah pasti saat ini.',
   crownGridSolvedTitle: 'Selesai!',
   crownGridSolvedBody: 'Setiap baris, kolom, dan wilayah berisi satu mahkota.',

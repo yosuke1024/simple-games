@@ -4,12 +4,14 @@
  * Four steps per attempt. The crowns first: one per row, columns drawn in a
  * seed-shuffled order, backtracking so that no column repeats and crowns in
  * neighbouring rows sit at least two columns apart (§3). Then the regions,
- * grown from the crowns as seeds by weighted multi-source growth — each
+ * grown from the crowns as seeds by weighted multi-source growth — every
+ * region first takes one cell beside its crown (MIN_REGION_SIZE), then each
  * region has an appetite drawn from the seed, and one unassigned neighbour of
  * a region is claimed per step until the board is covered, so every region is
  * connected by construction and the appetites give the sizes their spread.
- * Then the counting solver says whether the board has exactly one answer, and
- * only then does the technique solver grade it (§7).
+ * Then the repair moves cells between regions until the counting solver finds
+ * exactly one answer, never thinning a region below the floor, and only then
+ * does the technique solver grade it (§7).
  *
  * A candidate that is not unique, or not of the tier asked for, costs one
  * derived seed and another try (`<seed>#2`, `#3`, …), the same shape Takuzu
@@ -29,6 +31,14 @@ export const ATTEMPT_LIMIT = 400;
  * so this only exists to keep a pathological seed from spinning.
  */
 export const CROWN_SEARCH_LIMIT = 5_000;
+
+/**
+ * No region is smaller than this (§8). A one-cell region is its own crown,
+ * handed over before the player has read anything — on a 6×6 a sixth of the
+ * puzzle. Growth starts every region at two cells and repair never takes a
+ * move that leaves one below the floor, so every board that ships clears it.
+ */
+export const MIN_REGION_SIZE = 2;
 
 /** The four side-neighbours of a cell that are on the board. */
 function sidesOf(index: number, size: Size): number[] {
@@ -55,7 +65,10 @@ export interface GeneratedPuzzle {
   readonly attempts: number;
   /** Solver steps spent building this puzzle: the budgeted work of §8. */
   readonly work: number;
-  /** True when the cap was hit and an easier-than-asked board shipped (§8). */
+  /**
+   * True when the cap was hit and the nearest other tier shipped (§8) —
+   * easier than asked, or for Easy, which has nothing easier, the next tier up.
+   */
   readonly fallback: boolean;
 }
 
@@ -152,7 +165,22 @@ export function growRegions(
     claim(row, indexOf(row, col, size));
   });
 
-  for (let assigned = size; assigned < total; assigned++) {
+  // The floor first (MIN_REGION_SIZE): every region, in order, takes a cell
+  // touching it before any appetite counts, so none is left at its seed. On
+  // the first round this can never come up empty — no cell sits beside two
+  // crowns, because crowns share no row or column and never touch — so with
+  // a floor of two every region is sure of its second cell.
+  let assigned = size;
+  for (let round = 1; round < MIN_REGION_SIZE; round++) {
+    for (let region = 0; region < size; region++) {
+      const options = [...frontier[region]!];
+      if (options.length === 0) continue;
+      claim(region, options[Math.floor(rng() * options.length)]!);
+      assigned++;
+    }
+  }
+
+  for (; assigned < total; assigned++) {
     let weight = 0;
     for (let region = 0; region < size; region++) {
       if (frontier[region]!.size > 0) weight += appetite[region]!;
@@ -212,11 +240,16 @@ function componentOf(
  * a second crown of the other answer, so that answer is gone. Where lifting
  * the cell would split its region, the pieces that do not hold the intended
  * crown go along with it — they hang off the moved cell, so both regions stay
- * connected. Of all the moves on offer, the one that displaces the fewest
- * cells is taken, which is what keeps regions from collapsing onto their own
- * crowns. Repeated until the counting solver finds nothing but the intended
- * answer, or the move limit is reached. The rng breaks ties and picks the
- * neighbour, so the repaired board is still a pure function of the seed.
+ * connected. A move that would leave the region below MIN_REGION_SIZE —
+ * counting what stays with the intended crown after the pieces have gone — is
+ * not on offer at all; of the moves that are, the one that displaces the
+ * fewest cells is taken. Fewest cells alone would not protect a region: a
+ * two-cell region's spare cell is always a one-cell move, and taking it
+ * leaves the crown alone, which is why the floor is a rule and not a
+ * tie-break. Repeated until the counting solver finds nothing but the
+ * intended answer, or the move limit is reached. The rng breaks ties and
+ * picks the neighbour, so the repaired board is still a pure function of the
+ * seed.
  */
 export function repairToUnique(
   rng: () => number,
@@ -227,7 +260,11 @@ export function repairToUnique(
   const differs = (columns: readonly number[]): boolean =>
     columns.some((col, row) => col !== solution[row]);
 
-  /** The cells that leave `cell`'s region with it, or null when nothing borders it. */
+  /**
+   * The cells that leave `cell`'s region with it, or null when the move is not
+   * on offer: nothing borders it, or what stays behind — the piece holding the
+   * intended crown — would be smaller than MIN_REGION_SIZE.
+   */
   const displaced = (cell: number): { cells: number[]; into: number } | null => {
     const from = regions[cell]!;
     const destinations = [...new Set(sidesOf(cell, size).map((side) => regions[side]!))].filter(
@@ -242,6 +279,7 @@ export function repairToUnique(
       indexOf(crownRow, solution[crownRow]!, size),
       cell,
     );
+    if (keep.size < MIN_REGION_SIZE) return null;
     const cells: number[] = [];
     for (let index = 0; index < regions.length; index++) {
       if (regions[index] === from && !keep.has(index)) cells.push(index);
@@ -302,15 +340,18 @@ export function repairToUnique(
         const move = displaced(cell);
         if (move !== null && (best === null || move.cells.length < best.cells.length)) best = move;
         // One cell is the least a move can displace, and the cells come
-        // hottest first, so the first such move is the one to take.
+        // hottest first, so the first such move is the one to take. The floor
+        // is already inside `displaced`: a move that would thin its region
+        // below MIN_REGION_SIZE never reaches this comparison.
         if (best !== null && best.cells.length === 1) break;
       }
       if (best === null) continue;
       for (const index of best.cells) regions[index] = best.into;
       moved = true;
     }
-    // Every crown the other answers differ in sits deep inside its region,
-    // with no neighbouring region to move it to: this board is given up.
+    // Every crown the other answers differ in sits deep inside its region
+    // with no neighbouring region to move it to, or could only leave by
+    // thinning its region below the floor: this board is given up.
     if (!moved) return false;
   }
   return false;
@@ -319,31 +360,49 @@ export function repairToUnique(
 const TIER_RANK: Record<Difficulty, number> = { easy: 0, medium: 1, hard: 2 };
 
 /**
+ * How far a graded candidate misses the tier asked for, for choosing the
+ * fallback (§8): any tier below the target beats any tier above it, and within
+ * a side the nearer tier wins. Below the target is the documented fallback —
+ * easier than asked, still finished by the tier's own techniques. Above it only
+ * ever wins for Easy, which has no tier below it, or where nothing below came up.
+ */
+function missBy(tier: Difficulty, want: number): number {
+  const rank = TIER_RANK[tier];
+  return rank < want ? want - rank : TIER_RANK.hard + (rank - want);
+}
+
+/**
  * The same seed always returns the same puzzle (§8): the retry loop derives
  * `<seed>#2`, `<seed>#3`, … deterministically, so the puzzle that ships is a
  * pure function of the seed and the difficulty alone.
  *
  * The tier is a target, not a promise about this board. A candidate that is
  * not unique or grades at another tier is dropped for the next derived seed;
- * when the cap is reached, the best unique candidate the tier's own technique
- * set finishes ships instead. That board is still unique and still needs no
- * guessing — it is only easier than asked for, which is the one failure worth
- * shipping. Tests watch the rate (it is zero across every walked seed today).
+ * when `attemptLimit` seeds have been drawn, the unique graded candidate
+ * nearest the tier ships instead (`missBy`) — easier than asked where one
+ * exists, which is still unique and still needs no guessing, and is the one
+ * failure worth shipping. Tests watch the rate (it is zero across every walked
+ * seed today). `attemptLimit` exists so a test can reach that branch; the game
+ * never passes it.
+ *
+ * Throwing is for one case only: not one of the derived seeds produced a unique
+ * board the techniques finish. That is not a degraded puzzle but a broken
+ * generator — a blank grid with nothing to tap would be worse than an error.
  */
-export function generatePuzzle(seed: string, difficulty: Difficulty): GeneratedPuzzle {
+export function generatePuzzle(
+  seed: string,
+  difficulty: Difficulty,
+  attemptLimit: number = ATTEMPT_LIMIT,
+): GeneratedPuzzle {
   const size = SIZE_FOR[difficulty];
   const before = solverWork.read();
   const want = TIER_RANK[difficulty];
 
   let best: { regions: number[]; solution: number[]; tier: Difficulty } | null = null;
+  let drawn = 0;
 
-  // Past the cap the loop only asks for something shippable at all: a
-  // unique board the tier's techniques finish. It has never been needed on
-  // a walked seed (guarantee.test.ts pins the cap itself as unreached), and
-  // it is bounded, because a blank board with nothing to tap is the one
-  // thing worse than a slow one.
-  for (let attempt = 1; attempt <= ATTEMPT_LIMIT * 4; attempt++) {
-    if (attempt > ATTEMPT_LIMIT && best !== null) break;
+  for (let attempt = 1; attempt <= attemptLimit; attempt++) {
+    drawn = attempt;
     const derived = attempt === 1 ? seed : `${seed}#${attempt}`;
     const rng = createRng(derived);
     const solution = buildCrowns(rng, size);
@@ -367,15 +426,14 @@ export function generatePuzzle(seed: string, difficulty: Difficulty): GeneratedP
         fallback: false,
       };
     }
-    const rank = TIER_RANK[graded.tier];
-    if (rank < want && (best === null || rank > TIER_RANK[best.tier])) {
+    if (best === null || missBy(graded.tier, want) < missBy(best.tier, want)) {
       best = { regions, solution, tier: graded.tier };
     }
   }
 
   if (best === null) {
     throw new Error(
-      `crown-grid: no ${difficulty} board after ${ATTEMPT_LIMIT * 4} seeds from "${seed}"`,
+      `crown-grid: no unique ${difficulty} candidate after ${drawn} seeds from "${seed}"`,
     );
   }
   return {
@@ -384,7 +442,7 @@ export function generatePuzzle(seed: string, difficulty: Difficulty): GeneratedP
     regions: best.regions,
     solution: best.solution,
     tier: best.tier,
-    attempts: ATTEMPT_LIMIT,
+    attempts: drawn,
     work: solverWork.read() - before,
     fallback: true,
   };

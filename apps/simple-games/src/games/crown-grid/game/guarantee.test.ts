@@ -1,9 +1,10 @@
 /**
  * The promises of docs/CROWN_GRID_RULES.md §7 and §8, measured rather than
- * assumed: every puzzle that ships has exactly one answer, grades at the tier
- * it was asked for, is settled by that tier's techniques alone, generation is
- * deterministic, the fallback stays theoretical, and the work stays inside
- * its budget.
+ * assumed: every puzzle that ships has exactly one answer, no region smaller
+ * than MIN_REGION_SIZE, grades at the tier it was asked for, is settled by
+ * that tier's techniques alone, generation is deterministic, the fallback
+ * stays theoretical — and, driven on purpose with a tiny attempt limit, ships
+ * what §8 says it ships — and the work stays inside its budget.
  *
  * Forty fixed seeds per tier and two years of dailies. The figure is not
  * decorative: the budgets below are stated against "the worst of two years of
@@ -14,7 +15,7 @@
 import { describe, expect, it } from 'vitest';
 import { addDays, DAILY_DIFFICULTY, dailySeed } from './daily';
 import { marksOf, isSolved } from './engine';
-import { ATTEMPT_LIMIT, generatePuzzle, type GeneratedPuzzle } from './generator';
+import { ATTEMPT_LIMIT, generatePuzzle, MIN_REGION_SIZE, type GeneratedPuzzle } from './generator';
 import {
   buildLayout,
   countSolutions,
@@ -87,6 +88,17 @@ describe('unique, tier-true generation (§7, §8)', () => {
     }
   });
 
+  it('never hands over a crown: no region is smaller than the floor', () => {
+    for (const { name, puzzle } of runs) {
+      const sizes = new Array<number>(puzzle.size).fill(0);
+      for (const region of puzzle.regions) sizes[region]!++;
+      expect(
+        Math.min(...sizes),
+        `${name} has a region of ${Math.min(...sizes)}`,
+      ).toBeGreaterThanOrEqual(MIN_REGION_SIZE);
+    }
+  });
+
   it("is settled by the tier's own techniques, and lands on the answer", () => {
     for (const { name, difficulty, puzzle } of runs) {
       const state = initialState(buildLayout(puzzle.regions, puzzle.size));
@@ -107,7 +119,7 @@ describe('unique, tier-true generation (§7, §8)', () => {
     }
   });
 
-  it('never falls back to a board easier than its tier asked for', () => {
+  it('never falls back: every board grades at the tier it asked for', () => {
     for (const { name, difficulty, puzzle } of runs) {
       expect(puzzle.fallback, `${name} fell back`).toBe(false);
       expect(puzzle.tier, `${name} shipped at another tier`).toBe(difficulty);
@@ -124,6 +136,59 @@ describe('unique, tier-true generation (§7, §8)', () => {
     // And a walked seed is a pure function of itself, walk or no walk.
     const again = generatePuzzle('crown-grid-hard-walk-7', 'hard');
     expect(again.regions).toEqual([...runs.find((run) => run.name === 'hard #7')!.puzzle.regions]);
+  });
+});
+
+/**
+ * §8 step 5, which no walked seed reaches: the limit is the one seam into it.
+ * The seeds are chosen for what their first derived seeds happen to grade at,
+ * so each case below is the fallback choosing between known candidates.
+ */
+describe('the fallback (§8 step 5)', () => {
+  const checkShippable = (puzzle: GeneratedPuzzle): void => {
+    expect(countSolutions(puzzle.regions, puzzle.size, 2)).toBe(1);
+    expect(isSolved(marksOf(puzzle.solution, puzzle.size), puzzle.regions, puzzle.size)).toBe(true);
+    const state = initialState(buildLayout(puzzle.regions, puzzle.size));
+    expect(solve(state, TIER_TECHNIQUES[puzzle.tier]).solved).toBe(true);
+    const sizes = new Array<number>(puzzle.size).fill(0);
+    for (const region of puzzle.regions) sizes[region]!++;
+    expect(Math.min(...sizes)).toBeGreaterThanOrEqual(MIN_REGION_SIZE);
+  };
+
+  it('ships the hardest easier board, flagged, with the seeds it really drew', () => {
+    // Hard walk-6: the first derived seed grades Easy, nothing better comes up
+    // in the second, and the third grades Medium.
+    const two = generatePuzzle('crown-grid-hard-walk-6', 'hard', 2);
+    expect(two).toMatchObject({ fallback: true, tier: 'easy', attempts: 2, difficulty: 'hard' });
+    checkShippable(two);
+    const three = generatePuzzle('crown-grid-hard-walk-6', 'hard', 3);
+    expect(three).toMatchObject({ fallback: true, tier: 'medium', attempts: 3 });
+    checkShippable(three);
+  });
+
+  it('ships Easy the nearest harder board, since nothing is easier than Easy', () => {
+    // Easy walk-5: the first derived seed grades Hard, the second Medium.
+    const one = generatePuzzle('crown-grid-easy-walk-5', 'easy', 1);
+    expect(one).toMatchObject({ fallback: true, tier: 'hard', attempts: 1, difficulty: 'easy' });
+    checkShippable(one);
+    const two = generatePuzzle('crown-grid-easy-walk-5', 'easy', 2);
+    expect(two).toMatchObject({ fallback: true, tier: 'medium', attempts: 2 });
+    checkShippable(two);
+  });
+
+  it('is still a pure function of the seed', () => {
+    const a = generatePuzzle('crown-grid-hard-walk-6', 'hard', 3);
+    const b = generatePuzzle('crown-grid-hard-walk-6', 'hard', 3);
+    expect(a.regions).toEqual(b.regions);
+    expect(a.work).toBe(b.work);
+  });
+
+  it('throws only when not one unique candidate came up', () => {
+    // Medium walk-1's first derived seed yields no unique board a tier finishes.
+    expect(() => generatePuzzle('crown-grid-medium-walk-1', 'medium', 1)).toThrow(
+      /no unique medium candidate after 1 seeds/,
+    );
+    expect(() => generatePuzzle('crown-grid-easy-walk-1', 'easy', 0)).toThrow(/after 0 seeds/);
   });
 });
 

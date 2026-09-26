@@ -19,10 +19,27 @@ import {
   encodeSolution,
 } from './serialize';
 import { createDifficultySession, doMarkCross, doTap } from './session';
+import { countSolutions } from './solver';
 import { CROSS, CROWN, EMPTY } from './types';
 
-/** A 6×6 with six connected regions (the easy golden board), and its one answer. */
+/**
+ * A 6×6 with six connected regions and one answer, '204153': the easy golden
+ * board of v1 (compatibility.test.ts). Regions b and e are one cell each — the
+ * generator no longer builds that (§8, MIN_REGION_SIZE), but a game suspended
+ * on such a board is still a unique puzzle, so it must still restore.
+ */
 const REGIONS = 'ddacff' + 'bdacff' + 'dddccf' + 'ddffff' + 'ddfffe' + 'ddffff';
+
+/**
+ * REGIONS with its last cell moved from f into e, so e is the two cells at the
+ * foot of the last column. Rows 4 and 5 can now trade their crowns between
+ * columns 3 and 5 — '204153' and '204135' both keep every rule — so this is a
+ * connected partition with a legal answer and exactly two answers.
+ */
+const TWO_ANSWERS = REGIONS.slice(0, 35) + 'e';
+
+/** One whole row per region: every legal crown layout is an answer. */
+const ROWS_AS_REGIONS = 'aaaaaa' + 'bbbbbb' + 'cccccc' + 'dddddd' + 'eeeeee' + 'ffffff';
 
 describe('serialize (§11)', () => {
   it('round-trips a whole saved game', () => {
@@ -60,6 +77,43 @@ describe('serialize (§11)', () => {
     expect(solution).toEqual([2, 0, 4, 1, 5, 3]);
   });
 
+  it('restores a v1 board with one-cell regions: the floor binds the generator, not old saves', () => {
+    const decoded = decodeBoards(
+      { regions: REGIONS, solution: '204153', marks: '.'.repeat(36) },
+      6,
+    );
+    expect(decoded?.solution).toEqual([2, 0, 4, 1, 5, 3]);
+  });
+
+  /**
+   * §8 never ships a partition with a second answer, and §6 leans on that: a
+   * crown off the stored answer is called wrong because the answer is the
+   * only one. Each part of these records is well-formed on its own, which is
+   * the point — only the counting solver on load tells them apart from a save.
+   */
+  describe('a partition with more than one answer', () => {
+    it('is well-formed part by part, so only the count can refuse it', () => {
+      const two = decodeRegions(TWO_ANSWERS, 6)!;
+      expect(two).not.toBeNull();
+      expect(decodeSolution('204153', two, 6)).not.toBeNull();
+      expect(decodeSolution('204135', two, 6)).not.toBeNull();
+      expect(countSolutions(two, 6, 3)).toBe(2);
+      const rows = decodeRegions(ROWS_AS_REGIONS, 6)!;
+      expect(decodeSolution('024135', rows, 6)).not.toBeNull();
+      expect(countSolutions(rows, 6, 3)).toBe(3); // three or more: the count stops at its limit
+    });
+
+    for (const [name, regions, solution] of [
+      ['two answers, stored as the first', TWO_ANSWERS, '204153'],
+      ['two answers, stored as the second', TWO_ANSWERS, '204135'],
+      ['a whole row per region', ROWS_AS_REGIONS, '024135'],
+    ] as const) {
+      it(`is refused on load: ${name}`, () => {
+        expect(decodeBoards({ regions, solution, marks: '.'.repeat(36) }, 6)).toBeNull();
+      });
+    }
+  });
+
   const regions6 = decodeRegions(REGIONS, 6)!;
 
   const malformed: Array<[string, () => unknown]> = [
@@ -68,7 +122,7 @@ describe('serialize (§11)', () => {
     ['regions read at the wrong size', () => decodeRegions(REGIONS, 8)],
     ['a region letter past N', () => decodeRegions('g' + REGIONS.slice(1), 6)],
     ['a stray character among the regions', () => decodeRegions('1' + REGIONS.slice(1), 6)],
-    // Region a at (0,0) and again at (5,5): two pieces.
+    // Region a at the top of column 2 and again at (5,5): two pieces.
     ['a region in two pieces', () => decodeRegions(REGIONS.slice(0, 35) + 'a', 6)],
     ['a partition missing a region', () => decodeRegions(REGIONS.replaceAll('a', 'b'), 6)],
     ['regions that are not a string', () => decodeRegions(null, 6)],

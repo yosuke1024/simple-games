@@ -10,12 +10,15 @@
  * Decoding fails closed, and closed here means more than "the characters
  * parse". A record only survives if it is a record play could have produced:
  * the regions are N connected regions covering the board, the solution keeps
- * both rules under them, and the marks hold nothing but the three characters.
- * A save that fails any of those did not come from this game, and the caller
- * drops it for a fresh board rather than handing the player a puzzle with no
- * answer.
+ * both rules under them and is the only answer they admit, and the marks hold
+ * nothing but the three characters. A save that fails any of those did not
+ * come from this game, and the caller drops it for a fresh board rather than
+ * handing the player a puzzle with no answer — or with several, which is the
+ * same thing to the hint (§6 reads a crown off the answer as wrong because
+ * the answer is the only one).
  */
 import { isValidRegions, isValidSolution } from './engine';
+import { countSolutions } from './solver';
 import {
   CROSS,
   CROWN,
@@ -94,6 +97,12 @@ export interface DecodedBoards {
  * The three parts of one saved game, checked against each other. Null when
  * any single part fails, so a caller has one call to make and one thing to
  * check rather than an order of operations to get right.
+ *
+ * The last check is the counting solver of §8, run again on load: the regions
+ * must admit exactly one answer, and since the stored solution already keeps
+ * the rules under them, that answer is the stored one. Nothing short of a
+ * corrupted or hand-edited save fails it, and it costs one bounded search —
+ * stopping at the second answer — on a board of 81 cells at most.
  */
 export function decodeBoards(
   parts: { regions: unknown; solution: unknown; marks: unknown },
@@ -103,6 +112,7 @@ export function decodeBoards(
   if (regions === null) return null;
   const solution = decodeSolution(parts.solution, regions, size);
   if (solution === null) return null;
+  if (countSolutions(regions, size, 2) !== 1) return null;
   const marks = decodeMarks(parts.marks, size);
   return marks === null ? null : { regions, solution, marks };
 }

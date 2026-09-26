@@ -8,7 +8,7 @@ import { useCrownGrid } from '../../state/GameContext';
 import { availableDailyDates } from '../../state/progressLogic';
 
 /**
- * The daily backlog: today and the thirty days behind it, all open (§9). A
+ * The daily backlog: today and the 29 days before it, all open (§9). A
  * solved day shows the time it took — a record of what was played, never a
  * run of days to protect.
  *

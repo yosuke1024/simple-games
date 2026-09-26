@@ -16,7 +16,17 @@
    that theme: the light set against --ink #232a33 lands between 10.3 and
    12.2, the dark set against --ink #e9e6df between 7.9 and 9.7. They are
    support, never the only signal — a thick border runs between regions too,
-   so a reader who cannot tell the tints apart has lost nothing. */
+   so a reader who cannot tell the tints apart has lost nothing.
+
+   The crown that breaks a rule (§5) is the one glyph not in --ink, and the
+   shared --warn is too light for it: #c2603f over the light tints measured
+   2.95–3.53, #d9805f over the dark ones 3.37–4.15. So the glyph takes
+   --cg-warn-ink, the same hue as --warn taken darker (light) or lighter
+   (dark) until every tint clears 4.5:1 — #91472e over the light set measures
+   4.73–5.65, #e4a48c over the dark set 4.67–5.75 (WCAG relative luminance;
+   ui/contrast.test.ts re-reads --ink and --cg-warn-ink from the stylesheets
+   and checks both against all nine tints in both themes). The ring stays
+   --warn: it is the second signal, not text. */
 
 .cg-board {
   --cg-r0: #f3d6cf;
@@ -28,6 +38,7 @@
   --cg-r6: #ddd5f3;
   --cg-r7: #f0d2e5;
   --cg-r8: #e2ded2;
+  --cg-warn-ink: #91472e;
 }
 
 :root[data-theme='dark'] .cg-board {
@@ -40,6 +51,7 @@
   --cg-r6: #3a3352;
   --cg-r7: #4a2f42;
   --cg-r8: #3a3834;
+  --cg-warn-ink: #e4a48c;
 }
 
 /* ---------- board ---------- */
@@ -177,7 +189,9 @@
 }
 
 /* Always-on violation display (§5): a crown that takes part in a broken rule,
-   in the warn colour and ringed, so it is never colour alone. */
+   in the warn colour and ringed, so it is never colour alone. The glyph is
+   --cg-warn-ink rather than --warn so it still reads at 4.5:1 on its region's
+   tint (§13; the measurements are at the top of this file). */
 .cg-cell-broken {
   outline: 2px solid var(--warn);
   outline-offset: -2px;
@@ -185,7 +199,7 @@
 }
 
 .cg-cell-broken .cg-glyph {
-  color: var(--warn);
+  color: var(--cg-warn-ink);
 }
 
 /* Hint (§6): the houses the reasoning was read off, the candidates that carry
