@@ -12,7 +12,7 @@ export const ja: ShapeRegionsMessages = {
   shapeRegionsDifficulty_medium: 'ふつう',
   shapeRegionsDifficulty_hard: 'むずかしい',
   shapeRegionsBoardNote: '{width}×{height}',
-  shapeRegionsConfirmSwitchTitle: '進行中の盤面を置き換えますか?',
+  shapeRegionsConfirmSwitchTitle: '進行中の盤面を置き換えますか？',
   shapeRegionsConfirmSwitchBody:
     '進行中の{current}のゲームは、新しい{next}の盤面に置き換わります。',
   shapeRegionsBoardLabel: 'Shape Regions の盤面、{width}×{height}',
@@ -30,7 +30,7 @@ export const ja: ShapeRegionsMessages = {
   shapeRegionsHintSole: '強調した形の置き方は 1 つしかありません。',
   shapeRegionsHintCommon: '強調した形のどの置き方にも、印のマスが入ります。',
   shapeRegionsHintNone: '今わかる手が見つかりません。',
-  shapeRegionsSolvedTitle: '完成!',
+  shapeRegionsSolvedTitle: '完成！',
   shapeRegionsSolvedBody: 'すべてのマスが形に属しました。',
   shapeRegionsHintsUsed: 'ヒント使用',
   shapeRegionsNewBestTime: '自己ベスト更新。',

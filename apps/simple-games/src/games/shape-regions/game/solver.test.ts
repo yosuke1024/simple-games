@@ -141,6 +141,48 @@ describe('counting solutions (§8)', () => {
   });
 });
 
+describe('counting solutions agrees with the rules, not just the catalog (§3, §7, §8)', () => {
+  it('has no rules-legal second solution beyond what countSolutions reports', () => {
+    // A 3×3 board, two number-only clues (5 + 4 cells):
+    //   0 1 2
+    //   3 4 5
+    //   6 7 8
+    // The generator-style answer tiles it as a corner {0,1,2,3,6} (arms of 3
+    // and 3) and a block {4,5,7,8} — both catalog shapes. But the same two
+    // clues also admit a second *connected* partition of the same nine
+    // cells — {0,1,3,4,6} and {2,5,7,8} — where the five-cell region is the
+    // P-pentomino (shapes.test.ts: outside the five categories) and the
+    // four-cell region is a corner. Before the fix to
+    // regionSatisfiesClue/findViolations, a number-only clue accepted that
+    // shape too, so a rules-only oracle (isSolved, with no reference to
+    // placements.ts/catalogFor) would have disagreed with countSolutions's
+    // catalog-only reading. This brute force is that independent oracle: it
+    // reads only isSolved, over every way to split the board, and this test
+    // pins that the two now agree.
+    const board = layout(3, 3, [
+      { index: 0, size: 5, shape: null },
+      { index: 8, size: 4, shape: null },
+    ]);
+    const cellCount = board.width * board.height;
+    // Cells 0 and 8 are each other clue's own cell already; every other cell
+    // goes to region 0 or region 1 — 2^7 = 128 boards, read straight from
+    // isSolved.
+    const free = [1, 2, 3, 4, 5, 6, 7];
+    let rulesLegal = 0;
+    for (let mask = 0; mask < 1 << free.length; mask++) {
+      const assignment = new Array<number>(cellCount).fill(UNASSIGNED);
+      assignment[0] = 0;
+      assignment[8] = 1;
+      free.forEach((cell, i) => {
+        assignment[cell] = (mask >> i) & 1;
+      });
+      if (isSolved(board, assignment)) rulesLegal++;
+    }
+    expect(rulesLegal).toBeGreaterThan(0);
+    expect(rulesLegal).toBe(countSolutions(board, rulesLegal + 1));
+  });
+});
+
 describe('technique 1 — forced cell (§7)', () => {
   it('gives a cell to the only region that can still reach it', () => {
     // B is a domino at the right end, so B never reaches cell 1: only A can.

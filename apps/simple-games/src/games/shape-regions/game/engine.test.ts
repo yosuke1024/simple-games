@@ -13,8 +13,10 @@ import {
   isSolved,
   reachableFromClue,
   regionCells,
+  regionSatisfiesClue,
   removeCell,
 } from './engine';
+import { classifyCells } from './shapes';
 import { UNASSIGNED, type Layout } from './types';
 
 const LINES: Layout = {
@@ -155,6 +157,68 @@ describe('violations (§5)', () => {
     // Seven cells breaks the size rule whatever the symbol says.
     const seven = addCells(six, wide, 0, [6])!;
     expect(findViolations(wide, seven).regions[0]).toBe(true);
+  });
+});
+
+describe('a number-only clue still requires a catalog shape (§3, rule 4)', () => {
+  // Two regions on a 2×4 board: {0,1,2,3,4} is the P-pentomino
+  // (shapes.test.ts: outside the five categories) and {5,6,7} is a corner
+  // tromino (inside them). Both clues give only a count, never a symbol —
+  // exactly the case placementsFor/catalogFor already narrowed to the
+  // catalog, and where the win used to accept anything of the right size.
+  const board: Layout = {
+    width: 2,
+    height: 4,
+    clues: [
+      { index: 0, size: 5, shape: null },
+      { index: 5, size: 3, shape: null },
+    ],
+  };
+  const pPentomino = [0, 1, 2, 3, 4];
+  const cornerTromino = [5, 6, 7];
+
+  it('rejects the P-pentomino: not solved, and the region is flagged', () => {
+    expect(classifyCells(pPentomino, board.width)).toBeNull();
+    expect(regionSatisfiesClue(pPentomino, board.clues[0]!, board.width)).toBe(false);
+    expect(classifyCells(cornerTromino, board.width)).toBe('corner');
+    expect(regionSatisfiesClue(cornerTromino, board.clues[1]!, board.width)).toBe(true);
+    const assignment = [0, 0, 0, 0, 0, 1, 1, 1];
+    expect(isSolved(board, assignment)).toBe(false);
+    const violations = findViolations(board, assignment);
+    expect(violations.regions).toEqual([true, false]);
+    expect(violations.any).toBe(true);
+  });
+
+  it('accepts a different, catalog-shaped partition of the very same clues', () => {
+    // The same two clues, tiled the other way: a corner {0,2,4,6,7} (arms of
+    // 4 and 2) and a line {1,3,5} — both catalog shapes, so this partition
+    // wins where the P-pentomino one did not.
+    const corner = [0, 2, 4, 6, 7];
+    const line = [1, 3, 5];
+    expect(classifyCells(corner, board.width)).toBe('corner');
+    expect(classifyCells(line, board.width)).toBe('line');
+    const assignment = [0, 1, 0, 1, 0, 1, 0, 0];
+    expect(isSolved(board, assignment)).toBe(true);
+    expect(findViolations(board, assignment).any).toBe(false);
+  });
+
+  it('flags the plus-pentomino too, on a board with room for it', () => {
+    // '.#.' / '###' / '.#.', centred on the clue — five cells, no full board
+    // needed since findViolations reads one region at a time.
+    const plus: Layout = { width: 3, height: 3, clues: [{ index: 4, size: 5, shape: null }] };
+    const plusCells = [1, 3, 4, 5, 7];
+    expect(classifyCells(plusCells, plus.width)).toBeNull();
+    expect(regionSatisfiesClue(plusCells, plus.clues[0]!, plus.width)).toBe(false);
+    const assignment = new Array(9).fill(UNASSIGNED);
+    for (const cell of plusCells) assignment[cell] = 0;
+    expect(findViolations(plus, assignment).regions[0]).toBe(true);
+  });
+
+  it('still accepts a number-only clue whose shape is a catalog shape (the ordinary case)', () => {
+    const block: Layout = { width: 2, height: 2, clues: [{ index: 0, size: 4, shape: null }] };
+    expect(classifyCells([0, 1, 2, 3], block.width)).toBe('block');
+    expect(isSolved(block, [0, 0, 0, 0])).toBe(true);
+    expect(findViolations(block, [0, 0, 0, 0]).any).toBe(false);
   });
 });
 

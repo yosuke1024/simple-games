@@ -110,11 +110,20 @@ export function removeCell(assignment: Assignment, layout: Layout, index: number
   return next;
 }
 
-/** Whether a finished region's cells answer to its clue (§3, rule 4). */
+/**
+ * Whether a finished region's cells answer to its clue (§3, rule 4). Every
+ * region, symbol-clued or not, must land in one of the five categories of §2
+ * — a number-only clue fixes the size, but the shape is still read from the
+ * same catalog every solver and the generator's uniqueness proof assume
+ * (`placementsFor` narrows candidates to the catalog regardless of whether
+ * the clue names a symbol), so the win condition has to agree.
+ */
 export function regionSatisfiesClue(cells: readonly number[], clue: Clue, width: number): boolean {
   if (cells.length < MIN_REGION_SIZE || cells.length > MAX_REGION_SIZE) return false;
   if (clue.size !== null && cells.length !== clue.size) return false;
-  if (clue.shape !== null && classifyCells(cells, width) !== clue.shape) return false;
+  const category = classifyCells(cells, width);
+  if (category === null) return false;
+  if (clue.shape !== null && category !== clue.shape) return false;
   return true;
 }
 
@@ -140,15 +149,14 @@ export function findViolations(layout: Layout, assignment: Assignment): Violatio
     // Bigger than the number, or bigger than any region may be.
     let broken = count > MAX_REGION_SIZE || (clue.size !== null && count > clue.size);
     // Complete — at the number, or at the ceiling when there is no number —
-    // and not the shape the symbol names.
+    // and either not one of the five categories at all, or not the shape the
+    // symbol names (§3, rule 4).
     const complete = clue.size !== null ? count === clue.size : count === MAX_REGION_SIZE;
-    if (
-      !broken &&
-      complete &&
-      clue.shape !== null &&
-      classifyCells(held, layout.width) !== clue.shape
-    ) {
-      broken = true;
+    if (!broken && complete) {
+      const category = classifyCells(held, layout.width);
+      if (category === null || (clue.shape !== null && category !== clue.shape)) {
+        broken = true;
+      }
     }
     if (broken) {
       regions[region] = true;

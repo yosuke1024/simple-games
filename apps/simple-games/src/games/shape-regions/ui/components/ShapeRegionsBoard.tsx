@@ -276,7 +276,6 @@ export const ShapeRegionsBoard = memo(function ShapeRegionsBoard({
           const classes = [
             'sr-cell',
             assigned ? `sr-tint-${region % TINT_COUNT}` : '',
-            clue !== null ? 'sr-cell-clue' : '',
             edgeTop ? 'sr-edge-t' : '',
             edgeLeft ? 'sr-edge-l' : '',
             edgeRight ? 'sr-edge-r' : '',

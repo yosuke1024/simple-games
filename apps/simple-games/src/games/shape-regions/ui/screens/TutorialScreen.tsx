@@ -46,7 +46,6 @@ function MiniBoard({ cells, clues }: { cells: string; clues: readonly FigureClue
             const classes = [
               'sr-cell',
               assigned ? `sr-tint-${r % TINT_COUNT}` : '',
-              clue ? 'sr-cell-clue' : '',
               (assigned || above !== -1) && r !== above ? 'sr-edge-t' : '',
               (assigned || left !== -1) && r !== left ? 'sr-edge-l' : '',
               col === size - 1 && assigned ? 'sr-edge-r' : '',

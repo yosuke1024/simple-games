@@ -11,10 +11,19 @@
  */
 import { describe, expect, it } from 'vitest';
 import { addDays, dailySeed, DAILY_DIFFICULTY } from './daily';
-import { initialAssignment, isSolved } from './engine';
+import { initialAssignment, isSolved, regionSatisfiesClue } from './engine';
 import { ATTEMPT_LIMIT, TIERS, generatePuzzle, type GeneratedPuzzle } from './generator';
+import { fixedPolyominoes } from './shapes';
 import { countSolutions, solve } from './solver';
-import { DIFFICULTIES, type Difficulty } from './types';
+import {
+  colOf,
+  DIFFICULTIES,
+  MAX_REGION_SIZE,
+  MIN_REGION_SIZE,
+  rowOf,
+  type Difficulty,
+  type Layout,
+} from './types';
 
 /**
  * Placements checked plus search nodes per board (`solverWork`, and the
@@ -128,6 +137,107 @@ describe('unique, tier-graded generation (§7, §8)', () => {
     expect(again.clues).toEqual(
       runs.find((run) => run.name === 'shape-regions-hard-g7')!.puzzle.clues,
     );
+  });
+});
+
+/**
+ * Every placement a clue's cells could satisfy, read straight from
+ * `fixedPolyominoes` and `regionSatisfiesClue` — never from
+ * `SHAPE_CATALOG`/`catalogFor`, which `countSolutions` (via
+ * `enumeratePlacements`) is itself built on. `countSolutions` re-checking the
+ * generator's own uniqueness proof with its own candidate list cannot catch a
+ * drift between the rules (engine.ts) and the catalog (shapes.ts) — that is
+ * exactly what the high-severity placements.ts finding was: a number-only
+ * clue's win condition once accepted shapes the catalog never offered
+ * `countSolutions`. This oracle is independent of both.
+ */
+function rulesBasedPlacements(layout: Layout, region: number): number[][] {
+  const clue = layout.clues[region]!;
+  const { width, height } = layout;
+  const clueCells = new Set(layout.clues.map((c) => c.index));
+  const sizes =
+    clue.size !== null
+      ? [clue.size]
+      : Array.from(
+          { length: MAX_REGION_SIZE - MIN_REGION_SIZE + 1 },
+          (_, i) => MIN_REGION_SIZE + i,
+        );
+  const seen = new Set<string>();
+  const out: number[][] = [];
+  for (const size of sizes) {
+    for (const poly of fixedPolyominoes(size)) {
+      for (const anchor of poly) {
+        const originRow = rowOf(clue.index, width) - anchor.r;
+        const originCol = colOf(clue.index, width) - anchor.c;
+        if (originRow < 0 || originCol < 0) continue;
+        const cells: number[] = [];
+        let ok = true;
+        for (const cell of poly) {
+          const r = originRow + cell.r;
+          const c = originCol + cell.c;
+          if (r >= height || c >= width) {
+            ok = false;
+            break;
+          }
+          const index = r * width + c;
+          if (index !== clue.index && clueCells.has(index)) {
+            ok = false;
+            break;
+          }
+          cells.push(index);
+        }
+        if (!ok || !regionSatisfiesClue(cells, clue, width)) continue;
+        cells.sort((a, b) => a - b);
+        const key = cells.join(',');
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(cells);
+      }
+    }
+  }
+  return out;
+}
+
+/** Exact cover over `rulesBasedPlacements`, up to `limit` — the same shape as `countSolutions`. */
+function rulesBasedSolutionCount(layout: Layout, limit: number): number {
+  const cellCount = layout.width * layout.height;
+  const perRegion = layout.clues.map((_, region) => rulesBasedPlacements(layout, region));
+  const taken = new Array<boolean>(cellCount).fill(false);
+  let found = 0;
+  const place = (region: number): void => {
+    if (found >= limit) return;
+    if (region === perRegion.length) {
+      if (taken.every(Boolean)) found++;
+      return;
+    }
+    for (const cells of perRegion[region]!) {
+      if (found >= limit) return;
+      if (cells.some((cell) => taken[cell])) continue;
+      for (const cell of cells) taken[cell] = true;
+      place(region + 1);
+      for (const cell of cells) taken[cell] = false;
+    }
+  };
+  place(0);
+  return found;
+}
+
+describe('an independent rules-only oracle agrees with countSolutions (§3, §7, §8)', () => {
+  it('finds the same uniqueness on a handful of real boards, not just the catalog', () => {
+    // A handful, not all 850 — `fixedPolyominoes` re-enumerates every shape
+    // per clue rather than reading the memoised catalog, so this is slower
+    // than `countSolutions`; a few boards are enough to catch a drift
+    // between the rules and the catalog without slowing the suite down.
+    // `easy-g38` is the exact seed the placements.ts finding reproduced a
+    // second, catalog-outside solution on before this fix.
+    const sample = [
+      runs.find((run) => run.name === 'shape-regions-easy-g1')!,
+      runs.find((run) => run.name === 'shape-regions-easy-g38')!,
+      runs.find((run) => run.name === 'shape-regions-medium-g1')!,
+    ];
+    for (const { name, puzzle } of sample) {
+      expect(rulesBasedSolutionCount(puzzle, 2), name).toBe(countSolutions(puzzle));
+    }
   });
 });
 
