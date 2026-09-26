@@ -1,5 +1,288 @@
-/**
- * CrownGrid's styles — scaffolded by scripts/new-game.mjs. The shared shell
- * classes (.screen, .home-hero, .btn, .dialog, ...) already cover this
- * placeholder; add the game's own board and chrome here as it grows.
- */
+/* Crown Grid — all of this game's styling, imported by CrownGridRoot.
+   Everything but the region tints is built from the series tokens in
+   src/ui/styles.css (--surface, --ink, --line, --accent, --warn, --paper,
+   --font-display, …), so the game reads as part of the same app and follows
+   the theme without knowing about it.
+
+   Class names are prefixed `cg-` so this file can never collide with the
+   shell or with another game. */
+
+/* ---------- region tints (§13) ----------
+
+   The one place this file is allowed colours of its own: the regions ARE the
+   game (docs/architecture/css-split.md lists the precedents — Minesweeper's
+   numbers, Water Sort's liquids, Reversi's board). Nine muted grounds per
+   theme, each chosen so the ink drawn over it (a crown, a ×) clears 4.5:1 in
+   that theme: the light set against --ink #232a33 lands between 10.3 and
+   12.2, the dark set against --ink #e9e6df between 7.9 and 9.7. They are
+   support, never the only signal — a thick border runs between regions too,
+   so a reader who cannot tell the tints apart has lost nothing. */
+
+.cg-board {
+  --cg-r0: #f3d6cf;
+  --cg-r1: #f7e3c3;
+  --cg-r2: #f1efb6;
+  --cg-r3: #d3ebc7;
+  --cg-r4: #c8e8e2;
+  --cg-r5: #cfdff6;
+  --cg-r6: #ddd5f3;
+  --cg-r7: #f0d2e5;
+  --cg-r8: #e2ded2;
+}
+
+:root[data-theme='dark'] .cg-board {
+  --cg-r0: #4a2f2d;
+  --cg-r1: #4a3c25;
+  --cg-r2: #45452a;
+  --cg-r3: #2c4130;
+  --cg-r4: #26413f;
+  --cg-r5: #2a3a52;
+  --cg-r6: #3a3352;
+  --cg-r7: #4a2f42;
+  --cg-r8: #3a3834;
+}
+
+/* ---------- board ---------- */
+
+.cg-board-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px 12px;
+}
+
+/*
+  The cell is whatever is left of the viewport once the scroll padding (24px)
+  and the board's own border (2px each side) are taken out. That works out at
+  32.4px per cell for a 9×9 on a 320px screen — the widest board on the
+  narrowest phone this app supports, and the one measurement the size table
+  had to clear (§1, §13). Anything narrower clamps at 28px and scrolls instead
+  of shrinking further, because a cell too small to hit is worse than a board
+  that moves. Cells sit flush: regions read as areas, not as tiles.
+*/
+.cg-board {
+  --cg-cell: clamp(28px, calc((100vw - 24px - 4px) / var(--cg-size)), 44px);
+  --cg-wall: var(--ink);
+  display: inline-block;
+  border: 2px solid var(--cg-wall);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* A drag writes ×s; the browser must not read it as a scroll (§4, §13). */
+.cg-cells {
+  display: grid;
+  grid-template-columns: repeat(var(--cg-size), var(--cg-cell));
+  grid-auto-rows: var(--cg-cell);
+  touch-action: none;
+}
+
+/* ---------- cells ---------- */
+
+.cg-cell {
+  position: relative;
+  width: var(--cg-cell);
+  height: var(--cg-cell);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--cg-tint, var(--surface));
+  /* A hairline on the right and bottom keeps single cells countable inside
+     one region; the region walls below draw over it on the top and left. */
+  box-shadow: inset -1px -1px 0 0 var(--line);
+  color: var(--ink);
+  transition: background-color 0.12s ease;
+}
+
+.cg-cell:active {
+  filter: brightness(0.94);
+}
+
+.cg-cell[data-region='0'] {
+  --cg-tint: var(--cg-r0);
+}
+.cg-cell[data-region='1'] {
+  --cg-tint: var(--cg-r1);
+}
+.cg-cell[data-region='2'] {
+  --cg-tint: var(--cg-r2);
+}
+.cg-cell[data-region='3'] {
+  --cg-tint: var(--cg-r3);
+}
+.cg-cell[data-region='4'] {
+  --cg-tint: var(--cg-r4);
+}
+.cg-cell[data-region='5'] {
+  --cg-tint: var(--cg-r5);
+}
+.cg-cell[data-region='6'] {
+  --cg-tint: var(--cg-r6);
+}
+.cg-cell[data-region='7'] {
+  --cg-tint: var(--cg-r7);
+}
+.cg-cell[data-region='8'] {
+  --cg-tint: var(--cg-r8);
+}
+
+/* The thick edges between regions (§13): drawn on the cell below and to the
+   right of the boundary as inset shadows, so no layout moves and no edge is
+   drawn twice. Colour is never the only signal because of these. */
+.cg-wall-t {
+  box-shadow:
+    inset -1px -1px 0 0 var(--line),
+    inset 0 2px 0 0 var(--cg-wall);
+}
+
+.cg-wall-l {
+  box-shadow:
+    inset -1px -1px 0 0 var(--line),
+    inset 2px 0 0 0 var(--cg-wall);
+}
+
+.cg-wall-t.cg-wall-l {
+  box-shadow:
+    inset -1px -1px 0 0 var(--line),
+    inset 0 2px 0 0 var(--cg-wall),
+    inset 2px 0 0 0 var(--cg-wall);
+}
+
+/* The two marks, in ink (§1, §13): the crown is the piece, the × a note. */
+.cg-glyph {
+  position: relative;
+  font-family: var(--font-display);
+  line-height: 1;
+  color: var(--ink);
+}
+
+.cg-glyph-crown {
+  font-size: clamp(15px, calc(var(--cg-cell) * 0.62), 28px);
+}
+
+.cg-glyph-cross {
+  font-size: clamp(13px, calc(var(--cg-cell) * 0.5), 22px);
+  font-weight: 600;
+}
+
+/* Always-on violation display (§5): a crown that takes part in a broken rule,
+   in the warn colour and ringed, so it is never colour alone. */
+.cg-cell-broken {
+  outline: 2px solid var(--warn);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+.cg-cell-broken .cg-glyph {
+  color: var(--warn);
+}
+
+/* Hint (§6): the houses the reasoning was read off, the candidates that carry
+   it, and the cells it settles. Drawn as translucent overlays so the region
+   tint still shows through — the hint is about the regions. */
+.cg-cell-reason::after,
+.cg-cell-support::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.cg-cell-support::after {
+  opacity: 0.28;
+}
+
+.cg-cell-hint {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  z-index: 2;
+}
+
+/* A broken rule or a crown that cannot be right outranks any deduction (§6). */
+.cg-cell-hint-broken {
+  outline: 3px solid var(--warn);
+  outline-offset: -3px;
+  z-index: 2;
+}
+
+/* Reduced Motion: marks appear at once, with nothing to wait for (§13). */
+@media (prefers-reduced-motion: reduce) {
+  .cg-cell {
+    transition: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .cg-cell {
+  transition: none;
+}
+
+/* ---------- top bar ---------- */
+
+.cg-size-tag {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- home ---------- */
+
+.cg-choose-label {
+  margin: 0 0 -4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+/* Two destinations, not three: no level list to walk (§9). */
+.cg-chips {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ---------- daily list ---------- */
+
+.cg-daily-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.cg-daily-badge-done {
+  color: var(--ink-soft);
+}
+
+/* ---------- Quick Rules figures (§12) ---------- */
+
+/* A real fragment of a real board, at a size the card can hold. */
+.cg-board.cg-figure {
+  --cg-cell: 34px;
+}
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; both tiers only raise the ceiling of the board's own clamp. */
+
+@media (min-width: 600px) {
+  .cg-board:not(.cg-figure) {
+    --cg-cell: clamp(28px, calc((100vw - 24px - 4px) / var(--cg-size)), 50px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .cg-board:not(.cg-figure) {
+    --cg-cell: clamp(28px, calc((100vw - 24px - 4px) / var(--cg-size)), 54px);
+  }
+}

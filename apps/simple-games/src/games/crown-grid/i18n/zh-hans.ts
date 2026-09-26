@@ -1,15 +1,36 @@
-/**
- * Placeholder Simplified Chinese catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real Simplified Chinese translation before release (docs/I18N_POLICY.md); the
- * title (`crownGridName`) is a proper noun and stays as-is in every locale.
- */
 import type { CrownGridMessages } from './en';
 
 export const zhHans: CrownGridMessages = {
   crownGridName: 'Crown Grid',
-  crownGridPlayPlaceholder: 'Play a sample round',
-  crownGridHowToPlayPlaceholder: 'This game does not have rules yet — add them here.',
-  crownGridResultTitle: 'Nice work',
-  crownGridResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  crownGridChooseBoard: '选择盘面',
+  crownGridDifficulty_easy: '简单',
+  crownGridDifficulty_medium: '中等',
+  crownGridDifficulty_hard: '困难',
+  crownGridBoardNote: '{size}×{size}',
+  crownGridConfirmSwitchTitle: '替换进行中的盘面？',
+  crownGridConfirmSwitchBody: '进行中的“{current}”会被新的“{next}”盘面替换。',
+  crownGridBoardLabel: 'Crown Grid 盘面，{size}×{size}',
+  crownGridCellEmpty: '空，第 {row} 行第 {col} 列，区域 {region}',
+  crownGridCellCross: '叉，第 {row} 行第 {col} 列，区域 {region}',
+  crownGridCellCrown: '王冠，第 {row} 行第 {col} 列，区域 {region}',
+  crownGridRuleBroken: '违反规则',
+  crownGridHintViolation: '高亮的王冠违反了规则。',
+  crownGridHintWrong: '标记的王冠不可能正确。',
+  crownGridHintPlace: '标记的格子必须是王冠，高亮的范围就是依据。',
+  crownGridHintEliminate: '标记的格子不能放王冠，高亮的范围就是依据。',
+  crownGridHintNone: '现在没有可确定的一步。',
+  crownGridSolvedTitle: '完成！',
+  crownGridSolvedBody: '每一行、每一列和每个区域都有一个王冠。',
+  crownGridHintsUsed: '使用的提示',
+  crownGridNewBestTime: '你的最快纪录。',
+  crownGridNewBoard: '新盘面',
+  crownGridDailySection: '每日',
+  crownGridDailiesSolved: '通关天数',
+  crownGridDailyBacklogHint: '之前的日期随时可以挑战。',
+  crownGridStep1Title: '各一个王冠',
+  crownGridStep1Body: '每一行、每一列和每种颜色都恰好有一个王冠。',
+  crownGridStep2Title: '王冠互不相邻',
+  crownGridStep2Body: '两个王冠不能挨在一起，斜着也不行。',
+  crownGridStep3Title: '点按与拖动',
+  crownGridStep3Body: '点按格子依次切换叉、王冠、空；拖动可连续标叉。卡住了？可以求提示。',
 };

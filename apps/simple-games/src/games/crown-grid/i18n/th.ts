@@ -1,15 +1,36 @@
-/**
- * Placeholder Thai catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real Thai translation before release (docs/I18N_POLICY.md); the
- * title (`crownGridName`) is a proper noun and stays as-is in every locale.
- */
 import type { CrownGridMessages } from './en';
 
 export const th: CrownGridMessages = {
   crownGridName: 'Crown Grid',
-  crownGridPlayPlaceholder: 'Play a sample round',
-  crownGridHowToPlayPlaceholder: 'This game does not have rules yet — add them here.',
-  crownGridResultTitle: 'Nice work',
-  crownGridResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  crownGridChooseBoard: 'เลือกกระดาน',
+  crownGridDifficulty_easy: 'ง่าย',
+  crownGridDifficulty_medium: 'ปานกลาง',
+  crownGridDifficulty_hard: 'ยาก',
+  crownGridBoardNote: '{size}×{size}',
+  crownGridConfirmSwitchTitle: 'แทนที่กระดานที่ค้างอยู่ไหม',
+  crownGridConfirmSwitchBody: 'เกม {current} ที่ค้างอยู่จะถูกแทนที่ด้วยกระดาน {next} ใหม่',
+  crownGridBoardLabel: 'กระดาน Crown Grid {size}×{size}',
+  crownGridCellEmpty: 'ว่าง แถว {row} คอลัมน์ {col} พื้นที่ {region}',
+  crownGridCellCross: 'กากบาท แถว {row} คอลัมน์ {col} พื้นที่ {region}',
+  crownGridCellCrown: 'มงกุฎ แถว {row} คอลัมน์ {col} พื้นที่ {region}',
+  crownGridRuleBroken: 'ผิดกติกา',
+  crownGridHintViolation: 'มงกุฎที่เน้นไว้ผิดกติกา',
+  crownGridHintWrong: 'มงกุฎที่ทำเครื่องหมายไว้ไม่ถูกต้อง',
+  crownGridHintPlace: 'ช่องที่ทำเครื่องหมายต้องเป็นมงกุฎ พื้นที่ที่เน้นคือเหตุผล',
+  crownGridHintEliminate: 'ช่องที่ทำเครื่องหมายวางมงกุฎไม่ได้ พื้นที่ที่เน้นคือเหตุผล',
+  crownGridHintNone: 'ตอนนี้ยังไม่พบตาเดินที่แน่นอน',
+  crownGridSolvedTitle: 'สำเร็จ!',
+  crownGridSolvedBody: 'ทุกแถว ทุกคอลัมน์ และทุกพื้นที่มีมงกุฎอย่างละหนึ่ง',
+  crownGridHintsUsed: 'คำใบ้ที่ใช้',
+  crownGridNewBestTime: 'เร็วที่สุดของคุณ',
+  crownGridNewBoard: 'กระดานใหม่',
+  crownGridDailySection: 'รายวัน',
+  crownGridDailiesSolved: 'จำนวนวันที่ผ่าน',
+  crownGridDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ',
+  crownGridStep1Title: 'มงกุฎอย่างละหนึ่ง',
+  crownGridStep1Body: 'ทุกแถว ทุกคอลัมน์ และทุกสีมีมงกุฎเพียงหนึ่งอันพอดี',
+  crownGridStep2Title: 'มงกุฎไม่ติดกัน',
+  crownGridStep2Body: 'มงกุฎสองอันอยู่ติดกันไม่ได้ แม้แต่ในแนวทแยง',
+  crownGridStep3Title: 'แตะและลาก',
+  crownGridStep3Body: 'แตะช่องเพื่อสลับ × มงกุฎ ว่าง ลากเพื่อใส่ × หลายช่อง ติดขัดไหม ขอคำใบ้ได้',
 };

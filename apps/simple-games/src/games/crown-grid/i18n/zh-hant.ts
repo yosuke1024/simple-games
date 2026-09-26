@@ -1,15 +1,36 @@
-/**
- * Placeholder Traditional Chinese catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real Traditional Chinese translation before release (docs/I18N_POLICY.md); the
- * title (`crownGridName`) is a proper noun and stays as-is in every locale.
- */
 import type { CrownGridMessages } from './en';
 
 export const zhHant: CrownGridMessages = {
   crownGridName: 'Crown Grid',
-  crownGridPlayPlaceholder: 'Play a sample round',
-  crownGridHowToPlayPlaceholder: 'This game does not have rules yet — add them here.',
-  crownGridResultTitle: 'Nice work',
-  crownGridResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  crownGridChooseBoard: '選擇盤面',
+  crownGridDifficulty_easy: '簡單',
+  crownGridDifficulty_medium: '中等',
+  crownGridDifficulty_hard: '困難',
+  crownGridBoardNote: '{size}×{size}',
+  crownGridConfirmSwitchTitle: '要換掉進行中的盤面嗎？',
+  crownGridConfirmSwitchBody: '進行中的「{current}」會被新的「{next}」盤面取代。',
+  crownGridBoardLabel: 'Crown Grid 盤面，{size}×{size}',
+  crownGridCellEmpty: '空白，第 {row} 列第 {col} 欄，區域 {region}',
+  crownGridCellCross: '叉，第 {row} 列第 {col} 欄，區域 {region}',
+  crownGridCellCrown: '王冠，第 {row} 列第 {col} 欄，區域 {region}',
+  crownGridRuleBroken: '違反規則',
+  crownGridHintViolation: '標示的王冠違反了規則。',
+  crownGridHintWrong: '標記的王冠不可能正確。',
+  crownGridHintPlace: '標記的方格必須是王冠，標示的範圍就是依據。',
+  crownGridHintEliminate: '標記的方格不能放王冠，標示的範圍就是依據。',
+  crownGridHintNone: '目前還推不出下一步。',
+  crownGridSolvedTitle: '完成！',
+  crownGridSolvedBody: '每一列、每一欄和每個區域都有一個王冠。',
+  crownGridHintsUsed: '使用的提示',
+  crownGridNewBestTime: '你的最快紀錄。',
+  crownGridNewBoard: '新盤面',
+  crownGridDailySection: '每日',
+  crownGridDailiesSolved: '過關天數',
+  crownGridDailyBacklogHint: '之前的日期隨時可以挑戰。',
+  crownGridStep1Title: '各一個王冠',
+  crownGridStep1Body: '每一列、每一欄和每種顏色都恰好有一個王冠。',
+  crownGridStep2Title: '王冠互不相鄰',
+  crownGridStep2Body: '兩個王冠不能相鄰，斜向也不行。',
+  crownGridStep3Title: '點按與拖曳',
+  crownGridStep3Body: '點按方格依序切換叉、王冠、空白；拖曳可連續標叉。卡住了？可以求提示。',
 };

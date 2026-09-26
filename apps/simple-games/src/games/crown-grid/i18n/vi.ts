@@ -1,15 +1,38 @@
-/**
- * Placeholder Vietnamese catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real Vietnamese translation before release (docs/I18N_POLICY.md); the
- * title (`crownGridName`) is a proper noun and stays as-is in every locale.
- */
 import type { CrownGridMessages } from './en';
 
 export const vi: CrownGridMessages = {
   crownGridName: 'Crown Grid',
-  crownGridPlayPlaceholder: 'Play a sample round',
-  crownGridHowToPlayPlaceholder: 'This game does not have rules yet — add them here.',
-  crownGridResultTitle: 'Nice work',
-  crownGridResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  crownGridChooseBoard: 'Chọn bảng',
+  crownGridDifficulty_easy: 'Dễ',
+  crownGridDifficulty_medium: 'Vừa',
+  crownGridDifficulty_hard: 'Khó',
+  crownGridBoardNote: '{size}×{size}',
+  crownGridConfirmSwitchTitle: 'Thay bảng đang chơi?',
+  crownGridConfirmSwitchBody: 'Ván {current} của bạn sẽ được thay bằng bảng {next} mới.',
+  crownGridBoardLabel: 'Bảng Crown Grid, {size}×{size}',
+  crownGridCellEmpty: 'Trống, hàng {row}, cột {col}, vùng {region}',
+  crownGridCellCross: 'Gạch chéo, hàng {row}, cột {col}, vùng {region}',
+  crownGridCellCrown: 'Vương miện, hàng {row}, cột {col}, vùng {region}',
+  crownGridRuleBroken: 'phạm luật',
+  crownGridHintViolation: 'Các vương miện được tô sáng đang phạm luật.',
+  crownGridHintWrong: 'Vương miện được đánh dấu không thể đúng.',
+  crownGridHintPlace: 'Ô được đánh dấu phải là vương miện — vùng tô sáng cho thấy lý do.',
+  crownGridHintEliminate:
+    'Không thể đặt vương miện vào các ô được đánh dấu — vùng tô sáng cho thấy lý do.',
+  crownGridHintNone: 'Hiện chưa có nước đi chắc chắn.',
+  crownGridSolvedTitle: 'Hoàn thành!',
+  crownGridSolvedBody: 'Mỗi hàng, mỗi cột và mỗi vùng đều có một vương miện.',
+  crownGridHintsUsed: 'Gợi ý đã dùng',
+  crownGridNewBestTime: 'Nhanh nhất từ trước tới nay.',
+  crownGridNewBoard: 'Bảng mới',
+  crownGridDailySection: 'Hằng ngày',
+  crownGridDailiesSolved: 'Số ngày đã giải',
+  crownGridDailyBacklogHint: 'Những ngày trước luôn mở.',
+  crownGridStep1Title: 'Mỗi nơi một vương miện',
+  crownGridStep1Body: 'Mỗi hàng, mỗi cột và mỗi màu có đúng một vương miện.',
+  crownGridStep2Title: 'Vương miện không chạm nhau',
+  crownGridStep2Body: 'Hai vương miện không bao giờ đứng cạnh nhau, kể cả theo đường chéo.',
+  crownGridStep3Title: 'Chạm và kéo',
+  crownGridStep3Body:
+    'Chạm một ô để đổi ×, vương miện, trống; kéo để đánh dấu nhiều ×. Bí? Hãy xin gợi ý.',
 };
