@@ -736,6 +736,7 @@ function patchRegistry(source, { id, prefixUpper, pascal, title, category, glyph
     `    storageKeys: Object.values(${prefixUpper}_STORAGE_KEYS),`,
     `    loadRoot: () =>`,
     `      import('../games/${id}/ui/${pascal}Root').then((m) => ({ default: m.${pascal}Root })),`,
+    `    loadStorageSchemas: () => import('../games/${id}/storage/schemas'),`,
     '  },',
   ];
   lines.splice(lastClosingArray, 0, ...entry);

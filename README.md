@@ -136,17 +136,22 @@ Reversi と Connect Four も盤面がすべて見えているため Hint を作�
 ### Web 先行公開(ベータ)
 
 Web 版は新作の先行公開チャンネルです([docs/WEB_VERSION.md](docs/WEB_VERSION.md)
-「先行公開(ベータ)」)。2026-09-26 から次の 3 本を **Web 版だけ**で公開しています
-(issue #194)。アプリには正式収録していないため上の 30 本には数えず、ストア掲載文にも
+「先行公開(ベータ)」)。2026-09-26 から 3 本(issue #194)、2026-09-27 から 5 本
+(issue #197)を **Web 版だけ**で公開しています。アプリには正式収録していないため上の 30 本には数えず、ストア掲載文にも
 載せません。タイトルカードに「BETA」バッジが付き、ベータ中はスキーマ変更で保存データが
 消えることがあります(en / ja ではその旨を表示)。正式収録は 2 週間の安定稼働と計測を
 見て人間が判断します。
 
-| ゲーム                      | フォルダ         | 進行                   | 無料・無制限の助け                 | ルール文書                                                 |
-| --------------------------- | ---------------- | ---------------------- | ---------------------------------- | ---------------------------------------------------------- |
-| Crown Grid(王冠配置パズル)  | `crown-grid/`    | 難易度 3 種 + デイリー | Hint(Undo なし)                    | [docs/CROWN_GRID_RULES.md](docs/CROWN_GRID_RULES.md)       |
-| Number Path(数字の一筆書き) | `number-path/`   | 難易度 3 種 + デイリー | Undo / Hint(証明付きの次の 1 マス) | [docs/NUMBER_PATH_RULES.md](docs/NUMBER_PATH_RULES.md)     |
-| Shape Regions(図形分割)     | `shape-regions/` | 難易度 3 種 + デイリー | Undo / Hint                        | [docs/SHAPE_REGIONS_RULES.md](docs/SHAPE_REGIONS_RULES.md) |
+| ゲーム                       | フォルダ          | 進行                   | 無料・無制限の助け                 | ルール文書                                                   |
+| ---------------------------- | ----------------- | ---------------------- | ---------------------------------- | ------------------------------------------------------------ |
+| Crown Grid(王冠配置パズル)   | `crown-grid/`     | 難易度 3 種 + デイリー | Hint(Undo なし)                    | [docs/CROWN_GRID_RULES.md](docs/CROWN_GRID_RULES.md)         |
+| Number Path(数字の一筆書き)  | `number-path/`    | 難易度 3 種 + デイリー | Undo / Hint(証明付きの次の 1 マス) | [docs/NUMBER_PATH_RULES.md](docs/NUMBER_PATH_RULES.md)       |
+| Shape Regions(図形分割)      | `shape-regions/`  | 難易度 3 種 + デイリー | Undo / Hint                        | [docs/SHAPE_REGIONS_RULES.md](docs/SHAPE_REGIONS_RULES.md)   |
+| Yacht(サイコロ)              | `yacht/`          | 1 ゲーム 12 手番       | なし(3 回まで振り直せる)           | [docs/YACHT_RULES.md](docs/YACHT_RULES.md)                   |
+| Mancala(種まき・CPU 対戦)    | `mancala/`        | CPU 3 段階             | Undo                               | [docs/MANCALA_RULES.md](docs/MANCALA_RULES.md)               |
+| Dominoes(牌つなぎ・CPU 対戦) | `dominoes/`       | CPU 1 段階             | なし                               | [docs/DOMINOES_RULES.md](docs/DOMINOES_RULES.md)             |
+| Hit & Blow(推理)             | `hit-and-blow/`   | 難易度 3 種            | なし(推測は無制限)                 | [docs/HIT_AND_BLOW_RULES.md](docs/HIT_AND_BLOW_RULES.md)     |
+| Dots and Boxes(陣取り・CPU)  | `dots-and-boxes/` | 盤 3 サイズ            | Undo                               | [docs/DOTS_AND_BOXES_RULES.md](docs/DOTS_AND_BOXES_RULES.md) |
 
 Crown Grid はタップで 空 → × → 王冠 と一巡でき(なぞると × をまとめて置く)、どの手も
 そのまま戻せるため Takuzu と同じく Undo を作りません。Number Path は道を引き直す
@@ -154,7 +159,16 @@ Crown Grid はタップで 空 → × → 王冠 と一巡でき(なぞると ×
 次の 1 マス、外れていれば戻る地点」を示します(一意解なので誠実に言えることが
 あります)。Shape Regions は領域の出し入れが非自明に不可逆なので Undo を持ちます。
 
-後続候補は上の 3 本の正式収録判断まで**ありません**。次を選ぶときは、ローカル生成で
+issue #197 の 5 本は、既存の得意分野(論理パズル)ではなく**遊びの語彙が違う**ものを
+選んでいます — サイコロ(Yacht)、種まき(Mancala)、手札のタイル(Dominoes)、仮説と
+答え合わせ(Hit & Blow)、線を引く陣取り(Dots and Boxes)。助けの形もそれぞれ違います:
+Mancala と Dots and Boxes は完全情報の CPU 対戦なので Undo を持ち Hint は作りません
+(Reversi と同じ判断)。Yacht は振った目が情報であり欄の選択が決断なので Undo も Hint も
+置かず、3 回までの振り直しがこのゲームの助けです。Dominoes は引いた牌が情報なので
+戻せば山を覗くことになり、Hit & Blow は推測そのものが情報なので消せば推理が壊れます —
+どちらも Undo を持たず、Hit & Blow は推測回数に上限を置きません。
+
+後続候補は上の 8 本の正式収録判断まで**ありません**。次を選ぶときは、ローカル生成で
 完結しコンテンツサーバーを必要としないものを優先します。
 未収録のゲームをストアやアプリ内で "Coming Soon" として見せることはしません。
 

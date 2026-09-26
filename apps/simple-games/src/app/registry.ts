@@ -58,6 +58,11 @@ import { WS_STORAGE_KEYS } from '../games/water-sort/storage/keys';
 import { CG_STORAGE_KEYS } from '../games/crown-grid/storage/keys';
 import { NP_STORAGE_KEYS } from '../games/number-path/storage/keys';
 import { SR_STORAGE_KEYS } from '../games/shape-regions/storage/keys';
+import { YT_STORAGE_KEYS } from '../games/yacht/storage/keys';
+import { MC_STORAGE_KEYS } from '../games/mancala/storage/keys';
+import { DM_STORAGE_KEYS } from '../games/dominoes/storage/keys';
+import { HB_STORAGE_KEYS } from '../games/hit-and-blow/storage/keys';
+import { DB_STORAGE_KEYS } from '../games/dots-and-boxes/storage/keys';
 
 export type GameId =
   | 'sudoku'
@@ -92,7 +97,12 @@ export type GameId =
   | 'ludo'
   | 'crown-grid'
   | 'number-path'
-  | 'shape-regions';
+  | 'shape-regions'
+  | 'yacht'
+  | 'mancala'
+  | 'dominoes'
+  | 'hit-and-blow'
+  | 'dots-and-boxes';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -694,5 +704,77 @@ export const GAMES: readonly GameDefinition[] = [
         default: m.ShapeRegionsRoot,
       })),
     loadStorageSchemas: () => import('../games/shape-regions/storage/schemas'),
+  },
+  {
+    // The five new genres of issue #197, in the order the issue names them,
+    // all in the browser early release (docs/WEB_VERSION.md「先行公開」). A
+    // die face for the collection's first game about the dice themselves:
+    // five to roll, three throws, one category (docs/YACHT_RULES.md).
+    id: 'yacht',
+    title: 'Yacht',
+    category: 'board',
+    glyph: '⚄',
+    channel: 'web-beta',
+    storageKeys: Object.values(YT_STORAGE_KEYS),
+    loadRoot: () => import('../games/yacht/ui/YachtRoot').then((m) => ({ default: m.YachtRoot })),
+    loadStorageSchemas: () => import('../games/yacht/storage/schemas'),
+  },
+  {
+    // A pit with a stone in it: sowing, one seed per pit around the board
+    // (docs/MANCALA_RULES.md). From the Mathematical Operators block, which
+    // every system font covers.
+    id: 'mancala',
+    title: 'Mancala',
+    category: 'board',
+    glyph: '⊚',
+    channel: 'web-beta',
+    storageKeys: Object.values(MC_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/mancala/ui/MancalaRoot').then((m) => ({ default: m.MancalaRoot })),
+    loadStorageSchemas: () => import('../games/mancala/storage/schemas'),
+  },
+  {
+    // A tile split in two — the domino, read end to end
+    // (docs/DOMINOES_RULES.md). Mathematical Operators again, rather than the
+    // Domino Tiles block whose glyphs low-spec Android fonts do not carry.
+    id: 'dominoes',
+    title: 'Dominoes',
+    category: 'board',
+    glyph: '⊟',
+    channel: 'web-beta',
+    storageKeys: Object.values(DM_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/dominoes/ui/DominoesRoot').then((m) => ({ default: m.DominoesRoot })),
+    loadStorageSchemas: () => import('../games/dominoes/storage/schemas'),
+  },
+  {
+    // A fisheye: the target a guess is aimed at, hits and blows counted
+    // against it (docs/HIT_AND_BLOW_RULES.md).
+    id: 'hit-and-blow',
+    title: 'Hit & Blow',
+    category: 'logic',
+    glyph: '◉',
+    channel: 'web-beta',
+    storageKeys: Object.values(HB_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/hit-and-blow/ui/HitAndBlowRoot').then((m) => ({
+        default: m.HitAndBlowRoot,
+      })),
+    loadStorageSchemas: () => import('../games/hit-and-blow/storage/schemas'),
+  },
+  {
+    // A box with a dot inside: the dots, and the box four lines make of
+    // them (docs/DOTS_AND_BOXES_RULES.md).
+    id: 'dots-and-boxes',
+    title: 'Dots and Boxes',
+    category: 'board',
+    glyph: '⊡',
+    channel: 'web-beta',
+    storageKeys: Object.values(DB_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/dots-and-boxes/ui/DotsAndBoxesRoot').then((m) => ({
+        default: m.DotsAndBoxesRoot,
+      })),
+    loadStorageSchemas: () => import('../games/dots-and-boxes/storage/schemas'),
   },
 ];

@@ -132,6 +132,17 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'crown-grid': ['cg.saveGame', 'cg.saveDaily', 'cg.stats', 'cg.flags', 'cg.prefs'],
   'number-path': ['np.saveGame', 'np.saveDaily', 'np.stats', 'np.flags', 'np.prefs'],
   'shape-regions': ['sr.saveGame', 'sr.saveDaily', 'sr.stats', 'sr.flags', 'sr.prefs'],
+  // The five web-beta genres of issue #197 (docs/plans/2026-09-27-yacht-mancala-
+  // dominoes-hit-and-blow-dots-and-boxes.md). None has a daily, so one saved
+  // game each. Yacht and Dominoes keep no setting (no prefs): Yacht has no
+  // difficulty, and Dominoes' opener is decided by the tiles. Mancala's prefs
+  // is the side to open with, Hit & Blow's the last difficulty, Dots and
+  // Boxes' the last board size.
+  yacht: ['yt.saveGame', 'yt.stats', 'yt.flags'],
+  mancala: ['mc.saveGame', 'mc.stats', 'mc.flags', 'mc.prefs'],
+  dominoes: ['dm.saveGame', 'dm.stats', 'dm.flags'],
+  'hit-and-blow': ['hb.saveGame', 'hb.stats', 'hb.flags', 'hb.prefs'],
+  'dots-and-boxes': ['db.saveGame', 'db.stats', 'db.flags', 'db.prefs'],
 };
 
 const PREFIXES: Record<string, string> = {
@@ -168,6 +179,11 @@ const PREFIXES: Record<string, string> = {
   'crown-grid': 'cg.',
   'number-path': 'np.',
   'shape-regions': 'sr.',
+  yacht: 'yt.',
+  mancala: 'mc.',
+  dominoes: 'dm.',
+  'hit-and-blow': 'hb.',
+  'dots-and-boxes': 'db.',
 };
 
 describe('registry storage keys (released data — do not edit to make green)', () => {

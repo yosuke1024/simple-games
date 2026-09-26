@@ -769,6 +769,91 @@ export const titleAccents = {
     onDark: '#140b1d',
     softDark: '#2e1f3c',
   },
+  /**
+   * Yacht — azure. Dice and cup are neutral (game content), so the accent is
+   * chrome plus the player's own score line. The tightest margin of the five
+   * of issue #197 (docs/plans/2026-09-27-yacht-mancala-dominoes-hit-and-blow-
+   * dots-and-boxes.md Phase 1, chosen together against all 33 shipped accents
+   * + `--warn`): nearest shipped is Number Match at ΔE 13.9 light /
+   * Minesweeper at 11.5 dark, over the 12.5 / 9.1 floors. White ink 4.65 clears
+   * 4.5:1 narrowly; on the paper it is 4.09 — under the 4.5:1 target but over
+   * the 3:1 floor, the trade Bunny Hop / Solitaire / 2048 / Brick Breaker carry.
+   */
+  yacht: {
+    light: '#3879ae',
+    onLight: '#ffffff',
+    softLight: '#d9e7f2',
+    dark: '#aebfcd',
+    onDark: '#101519',
+    softDark: '#262f36',
+  },
+  /**
+   * Mancala — moss. Board and seeds are neutral wood and ivory (game content),
+   * so the accent stays in the chrome and the player's own store. Nearest
+   * shipped is Crown Grid at ΔE 15.2 light / Solitaire at 13.1 dark, over the
+   * 12.5 / 9.1 floors; its shelf neighbour Checkers is 17.4 / 16.1 away.
+   * White ink 7.35, paper 6.46.
+   */
+  mancala: {
+    light: '#55592f',
+    onLight: '#ffffff',
+    softLight: '#ecedde',
+    dark: '#a6ac77',
+    onDark: '#18190f',
+    softDark: '#343626',
+  },
+  /**
+   * Dominoes — mauve. Tiles are ivory with dark pips (game content), so the
+   * accent is chrome plus the player's own tiles. Deliberately the muted half
+   * of a magenta pair shared with Hit & Blow (hue 3° apart — at 33 titles no
+   * five hue-distinct families clear ΔE 30 from each other, so two families
+   * doubled up, as the shipped blues and violets already do): it clears
+   * Reversi at ΔE 33.3 light / 30.5 dark and Gomoku at 38.3 / 35.9, where the
+   * vivid candidate at the same hue sat only 16.7 / 11.9 from Reversi. Nearest
+   * shipped overall is Block Puzzle at 21.3 light / Gin Rummy at 12.4 dark;
+   * Ludo, its shelf neighbour, is 14.0 away in dark. White ink 10.39, paper 9.13.
+   */
+  dominoes: {
+    light: '#533653',
+    onLight: '#ffffff',
+    softLight: '#ebe0eb',
+    dark: '#d55cd5',
+    onDark: '#200820',
+    softDark: '#411b41',
+  },
+  /**
+   * Hit & Blow — fuchsia. The board's own symbol palette carries up to eight
+   * colours (game content, games/hit-and-blow/ui/hit-and-blow.css), so the
+   * accent stays under the series' most saturated shipped colours (S 58% light
+   * against Hearts / Schulte Table's 67%) and lives in the chrome only, as
+   * Shape Regions' does. Nearest shipped is Gin Rummy at ΔE 16.0 light /
+   * Reversi at 11.9 dark; its logic-shelf neighbour Shape Regions is
+   * 18.0 / 20.9 away. White ink 8.97, paper 7.88.
+   */
+  hitAndBlow: {
+    light: '#7c2177',
+    onLight: '#ffffff',
+    softLight: '#f4d7f2',
+    dark: '#dd9eda',
+    onDark: '#1e0b1d',
+    softDark: '#3e1e3c',
+  },
+  /**
+   * Dots and Boxes — ultramarine. The accent draws the player's own lines and
+   * boxes, so it reads as ink on paper rather than as chrome; the CPU plays in
+   * its own second colour (game content). Nearest shipped is Hearts at ΔE 15.6
+   * light / Mahjong Solitaire at 10.6 dark, over the 12.5 / 9.1 floors. The
+   * five of this batch are 34.9–95.7 apart in light and 34.4–100.3 in dark.
+   * White ink 6.32, paper 5.56.
+   */
+  dotsAndBoxes: {
+    light: '#3855ca',
+    onLight: '#ffffff',
+    softLight: '#d7ddf4',
+    dark: '#6f84da',
+    onDark: '#080d20',
+    softDark: '#1b2241',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

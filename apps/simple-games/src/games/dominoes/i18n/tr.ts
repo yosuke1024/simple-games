@@ -1,0 +1,51 @@
+import type { DominoesMessages } from './en';
+
+export const tr: DominoesMessages = {
+  dominoesName: 'Dominoes',
+  dominoesRecordNote: '{wins} galibiyet · {losses} yenilgi',
+
+  dominoesTileLabel: 'Taş {a}–{b}',
+  dominoesLineLabel: 'Oyun sırası: {count} taş, sol uç {left}, sağ uç {right}',
+  dominoesHandLabel: 'Taşların',
+  dominoesPlayLeft: 'Sol uca oyna ({value})',
+  dominoesPlayRight: 'Sağ uca oyna ({value})',
+  dominoesCpuShort: 'CPU',
+  dominoesBoneyardShort: 'Deste',
+  dominoesCpuTiles: 'CPU {count} taş tutuyor',
+  dominoesBoneyardTiles: 'Deste: {count} taş',
+  dominoesDraw: 'Çek',
+  dominoesPass: 'Pas',
+
+  dominoesYourTurn: 'Sıra sende',
+  dominoesCpuTurn: 'CPU düşünüyor…',
+  dominoesCpuDrew: 'CPU bir taş çekti',
+  dominoesCpuPassed: 'CPU pas geçti. Sıra sende',
+  dominoesMustDraw: 'Uyan taş yok. Desteden çek',
+  dominoesNoTileFits: 'Uyan taş yok ve deste boş. Pas geç',
+  dominoesChooseEnd: 'Bu taş için bir uç seç',
+  dominoesOpenedYou: '{tile} ile açtın',
+  dominoesOpenedCpu: 'CPU {tile} ile açtı. Sıra sende',
+
+  dominoesWinTitle: 'Kazandın!',
+  dominoesWinBodyOut: 'Son taşını oynadın.',
+  dominoesWinBodyBlocked: 'Kimse oynayamadı ve puanın daha azdı.',
+  dominoesLoseTitle: 'CPU kazandı',
+  dominoesLoseBodyOut: 'CPU son taşını oynadı.',
+  dominoesLoseBodyBlocked: 'Kimse oynayamadı ve CPU’nun puanı daha azdı.',
+  dominoesDrawTitle: 'Berabere',
+  dominoesDrawBody: 'Kimse oynayamadı ve puanlar eşitti.',
+  dominoesScoreYou: '{points} puan aldın',
+  dominoesScoreCpu: 'CPU {points} puan aldı',
+  dominoesPipsLeft: 'Kalan puan: sen {you}, CPU {cpu}',
+
+  dominoesWins: 'Galibiyet',
+  dominoesLosses: 'Yenilgi',
+  dominoesDraws: 'Beraberlik',
+
+  dominoesStep1Title: 'Bir uca uydur',
+  dominoesStep1Body: 'Sırada açık olan uçlardan birine sayısı uyan bir taş oyna.',
+  dominoesStep2Title: 'Takıldın mı? Çek',
+  dominoesStep2Body: 'Uyan taş yoksa, biri uyana kadar desteden çek. Sadece deste boşken pas geç.',
+  dominoesStep3Title: 'İlk sen bitir',
+  dominoesStep3Body: 'Kazanmak için son taşını oyna. Rakipte kalan puanlar senin skorun olur.',
+};

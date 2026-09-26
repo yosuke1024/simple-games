@@ -1,0 +1,50 @@
+import type { HitAndBlowMessages } from './en';
+
+export const th: HitAndBlowMessages = {
+  hitAndBlowName: 'Hit & Blow',
+  hitAndBlowChooseDifficulty: 'เลือกระดับความยาก',
+  hitAndBlowDifficulty_easy: 'ง่าย',
+  hitAndBlowDifficulty_normal: 'ปกติ',
+  hitAndBlowDifficulty_hard: 'ยาก',
+  hitAndBlowCodeNote: '{slots} จาก {pool} สัญลักษณ์',
+  hitAndBlowBestNote: 'ดีที่สุด {count}',
+  hitAndBlowConfirmSwitchTitle: 'แทนที่เกมที่ค้างอยู่ไหม',
+  hitAndBlowConfirmSwitchBody: 'เกม {current} ที่ค้างอยู่จะถูกแทนที่ด้วยเกม {next} ใหม่',
+
+  hitAndBlowSymbol_circle: 'วงกลม',
+  hitAndBlowSymbol_triangle: 'สามเหลี่ยม',
+  hitAndBlowSymbol_square: 'สี่เหลี่ยมจัตุรัส',
+  hitAndBlowSymbol_diamond: 'เพชร',
+  hitAndBlowSymbol_star: 'ดาว',
+  hitAndBlowSymbol_cross: 'กากบาท',
+  hitAndBlowSymbol_hexagon: 'หกเหลี่ยม',
+  hitAndBlowSymbol_heart: 'หัวใจ',
+
+  hitAndBlowGuessCounter: 'การทายครั้งที่ {n}',
+  hitAndBlowHistoryLabel: 'การทายที่ผ่านมา',
+  hitAndBlowHistoryEmpty: 'การทายของคุณจะเรียงอยู่ที่นี่',
+  hitAndBlowRowLabel: 'การทายครั้งที่ {n} {symbols} ถูกที่ {hits} ผิดที่ {blows}',
+  hitAndBlowDraftLabel: 'การทายของคุณ',
+  hitAndBlowSlotEmpty: 'ช่อง {n} ว่าง',
+  hitAndBlowSlotFilled: 'ช่อง {n} {symbol}',
+  hitAndBlowPaletteLabel: 'สัญลักษณ์',
+  hitAndBlowCheck: 'ตรวจสอบ',
+  hitAndBlowHit: 'ถูกที่',
+  hitAndBlowBlow: 'ผิดที่',
+
+  hitAndBlowWinTitle: 'ไขรหัสสำเร็จ',
+  hitAndBlowWinBody: 'คุณหาแถวที่ซ่อนอยู่เจอแล้ว',
+  hitAndBlowGuessesLabel: 'จำนวนการทาย',
+  hitAndBlowNewBest: 'ทายน้อยครั้งที่สุดของคุณ',
+  hitAndBlowSolved: 'ไขได้',
+  hitAndBlowFewestGuesses: 'ทายน้อยที่สุด',
+  hitAndBlowAverageGuesses: 'ค่าเฉลี่ยการทาย',
+
+  hitAndBlowStep1Title: 'หาแถวที่ซ่อนอยู่',
+  hitAndBlowStep1Body: 'มีแถวของสัญลักษณ์ต่างกันซ่อนอยู่ ต้องหาว่าเป็นอะไรบ้างและเรียงลำดับแบบไหน',
+  hitAndBlowStep2Title: 'เรียงสัญลักษณ์ทาย',
+  hitAndBlowStep2Body: 'แตะสัญลักษณ์เพื่อเติมแถว แล้วกดตรวจสอบ',
+  hitAndBlowStep3Title: 'อ่านเครื่องหมาย',
+  hitAndBlowStep3Body:
+    '● ถูกที่ สัญลักษณ์และตำแหน่งถูกต้อง ○ ผิดที่ สัญลักษณ์ถูกแต่ตำแหน่งผิด ทายได้บ่อยเท่าที่ต้องการ',
+};

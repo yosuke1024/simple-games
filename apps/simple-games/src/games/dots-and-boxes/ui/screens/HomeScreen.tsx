@@ -1,0 +1,125 @@
+/**
+ * Home (docs/DOTS_AND_BOXES_RULES.md §1, §4): three boards, and nothing
+ * between the player and the first line. The board size is the whole choice
+ * — one CPU, the player always draws first (§11).
+ *
+ * The match slot holds one game, so picking a different board replaces it.
+ * That is the one thing here worth asking about first. The board last picked
+ * leads (§1), unless a match is already waiting.
+ */
+import { useState } from 'react';
+import { useSettings } from '@/state/SettingsContext';
+import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
+import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { IconChart } from '@/ui/components/icons';
+import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
+import { BOARD_SIZES, type BoardSize } from '../../game';
+import { useDotsAndBoxes } from '../../state/GameContext';
+import { SIZE_KEY } from '../sizeKey';
+
+export function DotsAndBoxesHomeScreen() {
+  const {
+    navigate,
+    session,
+    stats,
+    preferredSize,
+    canResume,
+    startNewGame,
+    resumeGame,
+    exitToCollection,
+  } = useDotsAndBoxes();
+  const { t } = useSettings();
+  const [pending, setPending] = useState<BoardSize | null>(null);
+
+  const current = canResume && session ? session : null;
+  /** The button that leads: the match in progress, else the board remembered (§1). */
+  const leading = current?.size ?? preferredSize;
+
+  const choose = (size: BoardSize) => {
+    if (current && current.size === size) {
+      resumeGame();
+      return;
+    }
+    // Replacing a match in progress is the one thing worth a question.
+    if (current) setPending(size);
+    else startNewGame(size);
+  };
+
+  return (
+    <div className="screen home-screen">
+      <GameHomeHeader gameId="dots-and-boxes" onBack={exitToCollection} />
+
+      <div className="home-hero">
+        {/* The same glyph the collection home puts on this title's tile
+            (app/registry.ts): a box with a dot inside. */}
+        <div className="home-logo" aria-hidden="true">
+          ⊡
+        </div>
+        <h1 className="home-title">{t('dotsAndBoxesName')}</h1>
+        <p className="home-tagline">{t('tagline')}</p>
+        <WebBetaNotice gameId="dots-and-boxes" />
+      </div>
+
+      <div className="home-actions">
+        <p className="db-choose-label">{t('dotsAndBoxesChooseBoard')}</p>
+
+        {BOARD_SIZES.map((size) => {
+          const record = stats[size];
+          const isCurrent = current?.size === size;
+          // The record so far, stated once and quietly — never a target.
+          // Absent until there is one.
+          const note = isCurrent
+            ? t('resume')
+            : record.wins + record.losses + record.draws > 0
+              ? t('dotsAndBoxesRecordNote', { wins: record.wins, losses: record.losses })
+              : null;
+          return (
+            <button
+              key={size}
+              type="button"
+              className={`btn ${size === leading ? 'btn-primary' : 'btn-secondary'} btn-big`}
+              onClick={() => choose(size)}
+            >
+              {t(SIZE_KEY[size])}
+              {note ? <span className="btn-note">{note}</span> : null}
+            </button>
+          );
+        })}
+
+        <nav className="home-chips">
+          <button type="button" className="home-chip" onClick={() => navigate('stats')}>
+            <IconChart className="home-chip-icon" />
+            <span>{t('statistics')}</span>
+          </button>
+        </nav>
+
+        <div className="home-links">
+          <button type="button" className="btn btn-ghost" onClick={() => navigate('tutorial')}>
+            {t('howToPlay')}
+          </button>
+        </div>
+      </div>
+
+      <ConfirmDialog
+        open={pending !== null}
+        title={t('dotsAndBoxesConfirmSwitchTitle')}
+        body={
+          pending === null || current === null
+            ? undefined
+            : t('dotsAndBoxesConfirmSwitchBody', {
+                current: t(SIZE_KEY[current.size]),
+                next: t(SIZE_KEY[pending]),
+              })
+        }
+        cancelLabel={t('cancel')}
+        confirmLabel={t('confirm')}
+        onCancel={() => setPending(null)}
+        onConfirm={() => {
+          const next = pending;
+          setPending(null);
+          if (next) startNewGame(next);
+        }}
+      />
+    </div>
+  );
+}

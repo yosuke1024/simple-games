@@ -1,0 +1,46 @@
+/**
+ * Japanese catalog for Dots and Boxes. The title (`dotsAndBoxesName`) is a
+ * proper noun and stays as-is in every locale (docs/I18N_POLICY.md).
+ */
+import type { DotsAndBoxesMessages } from './en';
+
+export const ja: DotsAndBoxesMessages = {
+  dotsAndBoxesName: 'Dots and Boxes',
+  dotsAndBoxesChooseBoard: '盤の大きさを選ぶ',
+  dotsAndBoxesSize_small: '3 × 3',
+  dotsAndBoxesSize_medium: '4 × 4',
+  dotsAndBoxesSize_large: '5 × 5',
+  dotsAndBoxesRecordNote: '{wins}勝 · {losses}敗',
+  dotsAndBoxesBoardLabel: 'Dots and Boxesの盤面、箱{n}×{n}',
+  dotsAndBoxesLineH: '横の線 {row}-{col}',
+  dotsAndBoxesLineV: '縦の線 {row}-{col}',
+  dotsAndBoxesLineOpen: '{line}:未使用',
+  dotsAndBoxesLineYours: '{line}:自分',
+  dotsAndBoxesLineCpu: '{line}:CPU',
+  dotsAndBoxesBoxOpen: '箱 {row}-{col}:空き',
+  dotsAndBoxesBoxYours: '箱 {row}-{col}:自分',
+  dotsAndBoxesBoxCpu: '箱 {row}-{col}:CPU',
+  dotsAndBoxesYou: 'あなた',
+  dotsAndBoxesCpu: 'CPU',
+  dotsAndBoxesScoreLabel: '箱の数:あなた{you}、CPU{cpu}',
+  dotsAndBoxesYourTurn: 'あなたの番です',
+  dotsAndBoxesAnotherTurn: 'もう1本!',
+  dotsAndBoxesCpuTurn: 'CPUが考えています…',
+  dotsAndBoxesWinTitle: 'あなたの勝ち!',
+  dotsAndBoxesWinBody: 'あなたの箱のほうが多くなりました。',
+  dotsAndBoxesLoseTitle: 'CPUの勝ち',
+  dotsAndBoxesLoseBody: '今回はCPUの箱のほうが多くなりました。',
+  dotsAndBoxesDrawTitle: '引き分け',
+  dotsAndBoxesDrawBody: '箱の数が同じになりました。',
+  dotsAndBoxesWins: '勝ち',
+  dotsAndBoxesLosses: '負け',
+  dotsAndBoxesDraws: '引き分け',
+  dotsAndBoxesStep1Title: '点と点の間をタップ',
+  dotsAndBoxesStep1Body: 'タップするたびに線が1本引けます。次はCPUが1本引きます。',
+  dotsAndBoxesStep2Title: '箱を閉じたら、もう1本',
+  dotsAndBoxesStep2Body: '箱の4辺目を引くと、その箱は自分のもの。続けてもう1本引けます。',
+  dotsAndBoxesStep3Title: '箱の多い方が勝ち',
+  dotsAndBoxesStep3Body: '線が全部引けたら、箱を多く持っている方の勝ちです。',
+  dotsAndBoxesConfirmSwitchTitle: '対局中のゲームを置き換えますか?',
+  dotsAndBoxesConfirmSwitchBody: '「{current}」の対局は、新しい「{next}」の対局に置き換わります。',
+};

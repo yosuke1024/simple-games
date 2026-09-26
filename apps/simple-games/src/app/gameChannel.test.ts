@@ -7,8 +7,20 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GAMES } from './registry';
 
-/** The titles in early release today (docs/WEB_VERSION.md「先行公開」, issue #194). */
-const WEB_BETA_IDS = ['crown-grid', 'number-path', 'shape-regions'];
+/**
+ * The titles in early release today (docs/WEB_VERSION.md「先行公開」): the three
+ * of issue #194 and the five genres of issue #197.
+ */
+const WEB_BETA_IDS = [
+  'crown-grid',
+  'number-path',
+  'shape-regions',
+  'yacht',
+  'mancala',
+  'dominoes',
+  'hit-and-blow',
+  'dots-and-boxes',
+];
 
 async function loadOn(native: boolean) {
   vi.resetModules();

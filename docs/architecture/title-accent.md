@@ -39,6 +39,11 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | Crown Grid        | ブラス(Web 先行公開)     | `#7e673e` | `#cdb87e` |
 | Number Path       | ペトロール(Web 先行公開) | `#29606a` | `#7ecdc3` |
 | Shape Regions     | 深紫(Web 先行公開)       | `#57317d` | `#a37bcc` |
+| Yacht             | アズール(Web 先行公開)   | `#3879ae` | `#aebfcd` |
+| Mancala           | 苔色(Web 先行公開)       | `#55592f` | `#a6ac77` |
+| Dominoes          | モーブ(Web 先行公開)     | `#533653` | `#d55cd5` |
+| Hit & Blow        | フューシャ(Web 先行公開) | `#7c2177` | `#dd9eda` |
+| Dots and Boxes    | 群青(Web 先行公開)       | `#3855ca` | `#6f84da` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
