@@ -1,0 +1,345 @@
+/* Yacht — all of this game's styling, imported by YachtRoot. Everything is
+   built from the series tokens in src/ui/styles.css (--surface, --ink,
+   --line, --accent, --radius, --font-display, --tap-size, …) so the game
+   reads as part of the same app and follows the theme without knowing about
+   it. No colour is written here (docs/architecture/css-split.md): the dice
+   are ink on surface, and a kept die wears the title's accent.
+
+   Class names are prefixed `yt-` so this file can never collide with the
+   shell or with another game.
+
+   The screen has to fit 360×640 without scrolling, with the web build's
+   116px anchor reservation under it (docs/YACHT_RULES.md §9): top bar 64,
+   dice 64 (56 plus the room a kept die is lifted into), Roll 48, and six
+   rows of 44 — about 480px in all, under the 524 left. */
+
+/* ---------- top bar ---------- */
+
+.yt-status {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 15px;
+}
+
+.yt-turn {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- body ---------- */
+
+.yt-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 420px;
+  min-height: 0;
+  margin: 0 auto;
+  padding: 2px 12px 10px;
+}
+
+/* ---------- dice ---------- */
+
+/* The padding on top is the height a kept die is lifted by, so lifting one
+   never pushes anything else down (§9). */
+.yt-dice {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.yt-die {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease;
+}
+
+/* Kept: lifted, framed and tinted — three cues, so the hold never rests on
+   colour alone (§9). */
+.yt-die[aria-pressed='true'] {
+  transform: translateY(-8px);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+/* The shared chrome dims a disabled button to 40% — right for an action that
+   is unavailable, wrong for dice on the table. After the third throw the dice
+   are the thing being scored and must stay fully legible. */
+.yt-die:disabled {
+  opacity: 1;
+}
+
+/* Before the first throw of a turn the dice are still in the cup (§9). */
+.yt-die-blank {
+  border-style: dashed;
+}
+
+.yt-die-face {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 34px;
+  height: 34px;
+  gap: 2px;
+}
+
+.yt-pip {
+  border-radius: 50%;
+  background: transparent;
+}
+
+.yt-pip-on {
+  background: var(--ink);
+}
+
+/* One quarter-turn, and never longer than 220ms (§9, the Ludo die's own
+   tumble). No particles, no screen shake. Reduced Motion never gets the
+   class at all (YachtDice.tsx). */
+@keyframes yt-die-tumble {
+  from {
+    transform: rotate(-90deg) scale(0.86);
+  }
+  to {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+.yt-die-tumble {
+  animation: yt-die-tumble 220ms ease-out;
+}
+
+/* ---------- roll ---------- */
+
+/* Label and rolls-left side by side, so the button costs one line. */
+.btn.yt-roll {
+  flex-direction: row;
+  gap: 10px;
+  min-height: var(--tap-size);
+  padding: 8px 16px;
+}
+
+/* ---------- score sheet ---------- */
+
+/* Two columns of six, filled column by column so the DOM keeps the sheet's
+   own order: the upper boxes on the left, the combinations on the right. */
+.yt-sheet {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(6, 44px);
+  grid-auto-flow: column;
+  gap: 6px 8px;
+}
+
+.yt-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  text-align: left;
+}
+
+/* A filled box is read, not pressed: full strength, not the disabled 40%. */
+.yt-box:disabled {
+  opacity: 1;
+}
+
+/* An open box before the turn's first throw: there is nothing to put in it
+   yet, so its name steps back rather than reading as a live button (§2). */
+.yt-box:disabled:not(.yt-box-taken) {
+  color: var(--ink-soft);
+}
+
+.yt-box:not(:disabled):active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+@media (hover: hover) {
+  .yt-box:not(:disabled):hover {
+    border-color: var(--accent);
+  }
+}
+
+.yt-box-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.yt-box-points {
+  flex-shrink: 0;
+  min-width: 2ch;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* What the dice would put in an open box: faint, because it is a preview and
+   not a score (§9). */
+.yt-box-preview {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+/* A filled box sits back into the sheet; its points stay solid. */
+.yt-box-taken {
+  background: var(--surface-recessed);
+}
+
+.yt-box-taken .yt-box-name {
+  color: var(--ink-soft);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+.yt-figure-dice {
+  display: flex;
+  gap: 6px;
+  padding-top: 6px;
+}
+
+.yt-figure-die {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+}
+
+.yt-figure-die .yt-die-face {
+  width: 24px;
+  height: 24px;
+  gap: 1px;
+}
+
+.yt-figure-die-kept {
+  transform: translateY(-6px);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* The turn's three throws, the used ones filled. */
+.yt-figure-rolls {
+  display: flex;
+  gap: 8px;
+}
+
+.yt-figure-roll {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+}
+
+.yt-figure-roll-used {
+  background: var(--accent);
+}
+
+.yt-figure-box {
+  min-width: 64px;
+  padding: 6px 14px;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  background: var(--accent-soft);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ---------- narrow and wide viewports ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Below 340px the
+   five dice would overflow a 320px screen, so they step down a size; below
+   600px of height the rows tighten; above 600px of width the dice and the
+   rows grow, and nothing else needs to. */
+
+@media (max-width: 339px) {
+  .yt-dice {
+    gap: 6px;
+  }
+
+  .yt-die {
+    width: 50px;
+    height: 50px;
+  }
+
+  .yt-box {
+    padding: 0 8px;
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 600px) {
+  .yt-body {
+    max-width: 480px;
+  }
+
+  .yt-die {
+    width: 64px;
+    height: 64px;
+  }
+
+  .yt-die-face {
+    width: 38px;
+    height: 38px;
+  }
+
+  .yt-sheet {
+    grid-template-rows: repeat(6, 50px);
+  }
+
+  .yt-box {
+    font-size: 15px;
+  }
+}
+
+/* A short phone (320×568 and the like): the rows give up a few pixels each
+   so the sheet still ends above the web build's anchor reservation. Still
+   a full box wide, so still an easy target. Last in the file on purpose: a
+   wide but short window (a phone held sideways) keeps these rows over the
+   wide tier's larger ones. */
+@media (max-height: 600px) {
+  .yt-body {
+    gap: 8px;
+  }
+
+  .yt-sheet {
+    grid-template-rows: repeat(6, 38px);
+    row-gap: 5px;
+  }
+
+  .btn.yt-roll {
+    min-height: 44px;
+    padding: 6px 16px;
+  }
+}
