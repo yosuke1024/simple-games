@@ -36,6 +36,9 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | Mahjong Solitaire | 深い青菫                 | `#3b3196` | `#7e77c0` |
 | Bubble Pop        | オックスブラッド         | `#712d2f` | `#cd6a6d` |
 | Ludo              | マゼンタ紫               | `#ad34a7` | `#cd6ac8` |
+| Crown Grid        | ブラス(Web 先行公開)     | `#7e673e` | `#cdb87e` |
+| Number Path       | ペトロール(Web 先行公開) | `#29606a` | `#7ecdc3` |
+| Shape Regions     | 深紫(Web 先行公開)       | `#57317d` | `#a37bcc` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える

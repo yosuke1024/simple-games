@@ -26,6 +26,9 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | `tm.*`         | 2048(saveGame / stats / flags。デイリーもレベル進行もない)                                                          |
 | `bp.*`         | Block Puzzle(saveGame / stats / flags。同上)                                                                        |
 | `ld.*`         | Ludo(saveGame / stats / flags / prefs。統計は難易度別。デイリーが無いので 1 枠)                                     |
+| `cg.*`         | Crown Grid(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。Web 先行公開、issue #194) |
+| `np.*`         | Number Path(同上の 5 キー。Web 先行公開)                                                                            |
+| `sr.*`         | Shape Regions(同上の 5 キー。Web 先行公開)                                                                          |
 | `ck.*`         | Checkers(saveGame / stats / flags / prefs。統計は難易度別)                                                          |
 | `rv.*`         | Reversi(saveGame / stats / flags / prefs。統計は難易度別)                                                           |
 | `c4.*`         | Connect Four(saveGame / stats / flags / prefs。同上)                                                                |

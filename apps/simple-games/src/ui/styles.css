@@ -308,6 +308,35 @@
   --accent-ring-soft: rgba(173, 52, 167, 0.12);
 }
 
+/* The three web-beta titles (issue #194), chosen together against the shipped
+   thirty per docs/plans/2026-09-26-crown-grid-number-path-shape-regions.md. */
+:root[data-game='crown-grid'],
+.accent-crown-grid {
+  --accent: #7e673e;
+  --accent-ink: #ffffff;
+  --accent-soft: #eee8dd;
+  --accent-ring: rgba(126, 103, 62, 0.38);
+  --accent-ring-soft: rgba(126, 103, 62, 0.12);
+}
+
+:root[data-game='number-path'],
+.accent-number-path {
+  --accent: #29606a;
+  --accent-ink: #ffffff;
+  --accent-soft: #dbedf0;
+  --accent-ring: rgba(41, 96, 106, 0.38);
+  --accent-ring-soft: rgba(41, 96, 106, 0.12);
+}
+
+:root[data-game='shape-regions'],
+.accent-shape-regions {
+  --accent: #57317d;
+  --accent-ink: #ffffff;
+  --accent-soft: #e6dbf0;
+  --accent-ring: rgba(87, 49, 125, 0.38);
+  --accent-ring-soft: rgba(87, 49, 125, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -589,6 +618,33 @@
   --accent-soft: #3d243c;
   --accent-ring: rgba(205, 106, 200, 0.42);
   --accent-ring-soft: rgba(205, 106, 200, 0.14);
+}
+
+:root[data-theme='dark'][data-game='crown-grid'],
+[data-theme='dark'] .accent-crown-grid {
+  --accent: #cdb87e;
+  --accent-ink: #1d190b;
+  --accent-soft: #3c3520;
+  --accent-ring: rgba(205, 184, 126, 0.42);
+  --accent-ring-soft: rgba(205, 184, 126, 0.14);
+}
+
+:root[data-theme='dark'][data-game='number-path'],
+[data-theme='dark'] .accent-number-path {
+  --accent: #7ecdc3;
+  --accent-ink: #0b1d1b;
+  --accent-soft: #203c39;
+  --accent-ring: rgba(126, 205, 195, 0.42);
+  --accent-ring-soft: rgba(126, 205, 195, 0.14);
+}
+
+:root[data-theme='dark'][data-game='shape-regions'],
+[data-theme='dark'] .accent-shape-regions {
+  --accent: #a37bcc;
+  --accent-ink: #140b1d;
+  --accent-soft: #2e1f3c;
+  --accent-ring: rgba(163, 123, 204, 0.42);
+  --accent-ring-soft: rgba(163, 123, 204, 0.14);
 }
 
 * {

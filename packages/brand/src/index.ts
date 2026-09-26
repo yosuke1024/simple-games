@@ -722,6 +722,53 @@ export const titleAccents = {
     onDark: '#1a0e19',
     softDark: '#3d243c',
   },
+  /**
+   * Crown Grid — brass. The board carries its own nine region tints (game
+   * content, games/crown-grid/ui/crown-grid.css), so the accent lives in the
+   * chrome, the hint and the selection ring; a muted old gold reads as the
+   * crown without being a fourth yellow. Chosen with the two below in one
+   * pass (docs/plans/2026-09-26-crown-grid-number-path-shape-regions.md
+   * Phase 1) against all 30 shipped accents + `--warn`: nearest is Brick
+   * Breaker at ΔE 13.0 light / 9.5 dark, over the 12.5 / 9.1 floors. White
+   * ink 5.39, and 4.74 on the paper itself.
+   */
+  crownGrid: {
+    light: '#7e673e',
+    onLight: '#ffffff',
+    softLight: '#eee8dd',
+    dark: '#cdb87e',
+    onDark: '#1d190b',
+    softDark: '#3c3520',
+  },
+  /**
+   * Number Path — petrol. The path is drawn in the accent, so it takes the
+   * largest area of the three and wants the deepest, least saturated value:
+   * a dark teal that stays a line and never a highlight. Nearest shipped is
+   * Water Sort at 12.9 light and Sudoku / Schulte Table at 10.0 dark. White
+   * ink 7.06, paper 6.20.
+   */
+  numberPath: {
+    light: '#29606a',
+    onLight: '#ffffff',
+    softLight: '#dbedf0',
+    dark: '#7ecdc3',
+    onDark: '#0b1d1b',
+    softDark: '#203c39',
+  },
+  /**
+   * Shape Regions — deep violet. Like Crown Grid the board has its own region
+   * tints, so the accent is chrome and hint only. Nearest shipped is Reversi
+   * at 13.0 light / 10.1 dark; the three beta accents are 42.5–71.7 apart in
+   * light and 43.5–77.5 in dark. White ink 9.81, paper 8.62.
+   */
+  shapeRegions: {
+    light: '#57317d',
+    onLight: '#ffffff',
+    softLight: '#e6dbf0',
+    dark: '#a37bcc',
+    onDark: '#140b1d',
+    softDark: '#2e1f3c',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

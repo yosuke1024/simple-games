@@ -14,7 +14,8 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   `spider-solitaire.css` / `freecell.css` / `hearts.css` / `gin-rummy.css` /
   `brick-breaker.css` / `sky-fighter.css` / `game-2048.css` / `block-puzzle.css` / `ludo.css` /
   `checkers.css` / `reversi.css` / `connect-four.css` / `gomoku.css` / `quick-math.css` /
-  `schulte-table.css` / `number-recall.css` / `bunny-hop.css` / `bubble-pop.css`。
+  `schulte-table.css` / `number-recall.css` / `bunny-hop.css` / `bubble-pop.css` /
+  `crown-grid.css` / `number-path.css` / `shape-regions.css`。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。
