@@ -179,7 +179,13 @@ export function ShapeRegionsGameScreen() {
         </header>
 
         <div className="sr-board-scroll">
-          <ShapeRegionsBoard session={session} hint={hint} onStroke={onStroke} onTap={onTap} />
+          <ShapeRegionsBoard
+            session={session}
+            hint={hint}
+            onStroke={onStroke}
+            onTap={onTap}
+            solved={session.status === 'solved'}
+          />
         </div>
 
         {toast ? (

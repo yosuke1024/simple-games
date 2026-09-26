@@ -10,36 +10,35 @@ import { IconClose } from '@/ui/components/icons';
 import { gameLandingUrl } from '@/ui/landing';
 import { openExternal } from '@/ui/openExternal';
 import { useCrownGrid } from '../../state/GameContext';
+import { CrownGlyph } from '../components/CrownGlyph';
+import { tileClasses } from '../tileClasses';
 
 /**
  * A small real board: `regions` as rows of letters, `marks` as rows of '.',
- * 'x' and 'q'. Drawn with the board's own cell classes — tints, region walls,
- * the two glyphs — so what the figure shows is what the board will look like.
- * Decorative; the sentence beside it carries the meaning.
+ * 'x' and 'q'. Drawn with the board's own cell classes — tiles, region
+ * boundaries, the two glyphs — so what the figure shows is what the board
+ * will look like (§13's tile rules, shared with `CrownGridBoard` through
+ * `tileClasses`). Decorative; the sentence beside it carries the meaning.
  */
 function Figure({ regions, marks }: { regions: readonly string[]; marks: readonly string[] }) {
   const size = regions.length;
-  const region = (row: number, col: number): number =>
-    (regions[row]?.charCodeAt(col) ?? 97) - 'a'.charCodeAt(0);
+  const regionAt = (index: number): number =>
+    (regions[Math.floor(index / size)]?.charCodeAt(index % size) ?? 97) - 'a'.charCodeAt(0);
   return (
     <div className="tutorial-example" aria-hidden="true">
       <div className="cg-board cg-figure" style={{ '--cg-size': size } as CSSProperties}>
         <div className="cg-cells">
           {regions.flatMap((line, row) =>
             [...line].map((_, col) => {
+              const index = row * size + col;
               const mark = marks[row]?.[col] ?? '.';
-              const own = region(row, col);
-              const classes = [
-                'cg-cell',
-                row > 0 && region(row - 1, col) !== own ? 'cg-wall-t' : '',
-                col > 0 && region(row, col - 1) !== own ? 'cg-wall-l' : '',
-              ]
-                .filter(Boolean)
-                .join(' ');
+              const classes = ['cg-cell', ...tileClasses(index, size, regionAt)].join(' ');
               return (
-                <span key={`${row}-${col}`} className={classes} data-region={own}>
+                <span key={index} className={classes} data-region={regionAt(index)}>
                   {mark === 'q' ? (
-                    <span className="cg-glyph cg-glyph-crown">♛</span>
+                    <span className="cg-glyph cg-glyph-crown">
+                      <CrownGlyph />
+                    </span>
                   ) : mark === 'x' ? (
                     <span className="cg-glyph cg-glyph-cross">×</span>
                   ) : null}

@@ -62,11 +62,40 @@
 .sr-board {
   --sr-pad: 4px;
   --sr-cell: clamp(34px, calc((100vw - 24px - 2 * var(--sr-pad) - 2px) / var(--sr-cols)), 48px);
-  --sr-edge: 3px;
+  --sr-round: 6px;
+  position: relative;
+  overflow: hidden;
   padding: var(--sr-pad);
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--paper);
+}
+
+/* Solved beat: one wash on the board, not per cell (§13). */
+.sr-board::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--accent-soft);
+  border-radius: inherit;
+  opacity: 0;
+}
+
+.sr-board-solved::after {
+  animation: sr-solved-wash 900ms ease-out;
+}
+
+@keyframes sr-solved-wash {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .sr-cells {
@@ -79,7 +108,7 @@
   -webkit-user-select: none;
 }
 
-/* ---------- cells ---------- */
+/* ---------- cells (§5) ---------- */
 
 .sr-cell {
   position: relative;
@@ -100,53 +129,102 @@
     border-color 0.12s ease;
 }
 
-.sr-cell:active {
-  filter: brightness(0.96);
+.sr-cell::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: transparent;
+  border-radius: 0;
+  pointer-events: none;
 }
 
-.sr-tint-0 {
+/* Press feedback: a tile wash, not filter (§13). */
+.sr-cell:active::before {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.06));
+}
+
+:root[data-theme='dark'] .sr-cell:active::before {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08));
+}
+
+.sr-tint-0,
+.sr-tint-1,
+.sr-tint-2,
+.sr-tint-3,
+.sr-tint-4,
+.sr-tint-5,
+.sr-tint-6,
+.sr-tint-7 {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.sr-tint-0::before {
   background: var(--sr-tint-0);
 }
-.sr-tint-1 {
+.sr-tint-1::before {
   background: var(--sr-tint-1);
 }
-.sr-tint-2 {
+.sr-tint-2::before {
   background: var(--sr-tint-2);
 }
-.sr-tint-3 {
+.sr-tint-3::before {
   background: var(--sr-tint-3);
 }
-.sr-tint-4 {
+.sr-tint-4::before {
   background: var(--sr-tint-4);
 }
-.sr-tint-5 {
+.sr-tint-5::before {
   background: var(--sr-tint-5);
 }
-.sr-tint-6 {
+.sr-tint-6::before {
   background: var(--sr-tint-6);
 }
-.sr-tint-7 {
+.sr-tint-7::before {
   background: var(--sr-tint-7);
 }
 
-/* Thick edges where the region changes (§5). Each shared edge is drawn once,
-   on the top or left of the lower / righter cell; the board's outer right and
-   bottom edges are drawn by the cells that sit on them. */
+/* A border side (§5): stop the tile short and ink that edge. */
 .sr-edge-t {
-  border-top: var(--sr-edge) solid var(--ink);
+  border-top-color: var(--ink);
 }
-.sr-edge-l {
-  border-left: var(--sr-edge) solid var(--ink);
+.sr-edge-t::before {
+  top: 0;
 }
 .sr-edge-r {
-  border-right: var(--sr-edge) solid var(--ink);
+  border-right-color: var(--ink);
+}
+.sr-edge-r::before {
+  right: 0;
 }
 .sr-edge-b {
-  border-bottom: var(--sr-edge) solid var(--ink);
+  border-bottom-color: var(--ink);
+}
+.sr-edge-b::before {
+  bottom: 0;
+}
+.sr-edge-l {
+  border-left-color: var(--ink);
+}
+.sr-edge-l::before {
+  left: 0;
 }
 
-/* The clue: symbol above count, both in ink (§2, §13). */
+.sr-corner-tl::before {
+  border-top-left-radius: var(--sr-round);
+}
+.sr-corner-tr::before {
+  border-top-right-radius: var(--sr-round);
+}
+.sr-corner-bl::before {
+  border-bottom-left-radius: var(--sr-round);
+}
+.sr-corner-br::before {
+  border-bottom-right-radius: var(--sr-round);
+}
+
+/* The clue: symbol above count, in ink (§2, §13); paints over the tile. */
 .sr-clue {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -160,6 +238,20 @@
   width: calc(var(--sr-cell) * 0.36);
   height: calc(var(--sr-cell) * 0.36);
   display: block;
+}
+
+/* Fades in only at the swap to placed, not on mount (§5, §13). */
+.sr-icon-placed {
+  animation: sr-icon-in 120ms ease-out;
+}
+
+@keyframes sr-icon-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .sr-clue-count {
@@ -180,15 +272,42 @@
   font-size: clamp(13px, calc(var(--sr-cell) * 0.42), 20px);
 }
 
-/* Always-on violation display (§5): a rule this region takes part in breaking. */
-.sr-cell.sr-cell-warn {
-  background: var(--warn-soft);
+/* Always-on violation display (§5); the ring sits on the tile. */
+.sr-cell-warn {
   color: var(--warn);
-  box-shadow: inset 0 0 0 2px var(--warn);
 }
 
-/* Hint (§6): the cells the step fixes, the placements it was read off, or the
-   region that disagrees with the answer. Nothing here writes to the board. */
+/* The warn ring follows the region's outline, not each cell's: a 2px inset
+   band on the tile, but only along the sides that are boundaries (sr-edge-*),
+   switched per side through one custom property each so a single box-shadow
+   does the work. Inside the region the tiles still run together with no seam,
+   so the frame reads as one shape gone wrong rather than a row of framed cells. */
+.sr-cell-warn::before {
+  --sr-w-t: 0px;
+  --sr-w-r: 0px;
+  --sr-w-b: 0px;
+  --sr-w-l: 0px;
+  background: var(--warn-soft);
+  box-shadow:
+    inset 0 var(--sr-w-t) 0 0 var(--warn),
+    inset calc(-1 * var(--sr-w-r)) 0 0 0 var(--warn),
+    inset 0 calc(-1 * var(--sr-w-b)) 0 0 var(--warn),
+    inset var(--sr-w-l) 0 0 0 var(--warn);
+}
+.sr-cell-warn.sr-edge-t::before {
+  --sr-w-t: 2px;
+}
+.sr-cell-warn.sr-edge-r::before {
+  --sr-w-r: 2px;
+}
+.sr-cell-warn.sr-edge-b::before {
+  --sr-w-b: 2px;
+}
+.sr-cell-warn.sr-edge-l::before {
+  --sr-w-l: 2px;
+}
+
+/* Hint (§6): rings on the tile; the reason wash is its own `::after`. */
 .sr-cell-reason::after {
   content: '';
   position: absolute;
@@ -197,12 +316,11 @@
   pointer-events: none;
 }
 
-.sr-cell-hint {
+.sr-cell-hint::before {
   box-shadow: inset 0 0 0 3px var(--accent);
-  z-index: 1;
 }
 
-.sr-cell-wrong {
+.sr-cell-wrong::before {
   box-shadow: inset 0 0 0 3px var(--warn);
 }
 

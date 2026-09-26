@@ -3,9 +3,11 @@
  *
  * One button per cell, each carrying its mark, its position and its region in
  * its label, so a screen reader can read the board rather than a wall of
- * "button". Regions are a tint AND a thick border between neighbours of
- * different regions: the colour makes a glance quicker, the border is what a
- * colour-blind reader (or a greyscale screen) reads (§13).
+ * "button". A region is one rounded tile per cell, drawn on `::before` and
+ * inset by `--cg-gap` on every side that meets another region or the board's
+ * edge, so same-region tiles run together into one shape and different
+ * regions read as a 2px ink seam whether or not their tints can be told apart
+ * (§13). The tint is support, never the only signal.
  *
  * Input follows §4. A tap cycles empty → × → crown → empty. A press that then
  * moves is a stroke: it writes × onto every empty cell it crosses — the cell
@@ -24,22 +26,32 @@
 import {
   memo,
   useCallback,
+  useEffect,
   useRef,
+  useState,
   type CSSProperties,
   type MouseEvent,
   type PointerEvent,
 } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import {
   colOf,
   CROSS,
   CROWN,
   houseIndices,
+  neighbours,
   rowOf,
   violationsOf,
   type CrownGridSession,
   type Hint,
+  type Mark,
 } from '../../game';
+import { CrownGlyph } from './CrownGlyph';
+import { tileClasses } from '../tileClasses';
+
+/** How long the row/column/region/8-neighbour flash lasts (§13, "reach"). */
+const REACH_MS = 700;
 
 /**
  * How finely one pointer move is walked, in samples per cell. A flick sends a
@@ -71,6 +83,8 @@ export interface CrownGridBoardProps {
   session: CrownGridSession;
   /** The last hint: a step with its reasons, a wrong crown, or a broken rule (§6). */
   hint: Hint | null;
+  /** True for the one beat between the winning crown and the result card. */
+  solved: boolean;
   onTap: (index: number) => void;
   /** A drag: the cells just crossed, in order. The game writes × on the empty ones (§4). */
   onStroke: (indices: readonly number[]) => void;
@@ -79,6 +93,7 @@ export interface CrownGridBoardProps {
 export const CrownGridBoard = memo(function CrownGridBoard({
   session,
   hint,
+  solved,
   onTap,
   onStroke,
 }: CrownGridBoardProps) {
@@ -88,6 +103,66 @@ export const CrownGridBoard = memo(function CrownGridBoard({
 
   const cellsRef = useRef<HTMLDivElement | null>(null);
   const strokeRef = useRef<Stroke | null>(null);
+  const reachTimeout = useTransientTimeout();
+  /** The previous render's marks, to notice a crown that was *just* placed. */
+  const previousMarksRef = useRef<readonly Mark[] | null>(null);
+  /**
+   * Cells lit for the 700ms "reach" of a crown just placed (§13), with a
+   * generation that flips parity on every placement. A cell can be lit by
+   * two placements in a row (rows, columns and regions overlap), and a bare
+   * `Set` swap leaves its `cg-cell-reach` class untouched when that happens,
+   * so the CSS animation never restarts — the cell just carries on its first
+   * flash. The generation's parity picks between two rules with identical
+   * keyframes under different names (`cg-reach` / `cg-reach-b`), and it is
+   * the animation-name change, not the class name, that forces a restart.
+   */
+  const [reach, setReach] = useState<{ cells: ReadonlySet<number>; gen: number }>(() => ({
+    cells: new Set(),
+    gen: 0,
+  }));
+
+  // A crown that appears where the previous render had none lights the house
+  // it now rules out — its row, column, region and 8 neighbours — for one
+  // beat, so placing it reads as an action with a consequence rather than a
+  // mark that quietly appeared. Exactly one new crown, never a bulk change
+  // (a fresh board, a restore): those have nothing to "just place".
+  useEffect(() => {
+    const previous = previousMarksRef.current;
+    previousMarksRef.current = marks;
+    if (previous === null || previous.length !== marks.length) return;
+    let placed = -1;
+    for (let index = 0; index < marks.length; index++) {
+      if (marks[index] === CROWN && previous[index] !== CROWN) {
+        if (placed !== -1) {
+          placed = -1;
+          break;
+        }
+        placed = index;
+      }
+    }
+    if (placed === -1) return;
+
+    const lit = new Set<number>();
+    const region = regions[placed] ?? 0;
+    for (const index of houseIndices(size, regions, { kind: 'row', index: rowOf(placed, size) })) {
+      lit.add(index);
+    }
+    for (const index of houseIndices(size, regions, { kind: 'col', index: colOf(placed, size) })) {
+      lit.add(index);
+    }
+    for (const index of houseIndices(size, regions, { kind: 'region', index: region })) {
+      lit.add(index);
+    }
+    for (const index of neighbours(placed, size)) lit.add(index);
+    lit.delete(placed);
+
+    setReach((previousReach) => ({ cells: lit, gen: previousReach.gen + 1 }));
+    reachTimeout(
+      () => setReach((previousReach) => ({ cells: new Set(), gen: previousReach.gen })),
+      REACH_MS,
+    );
+  }, [marks, regions, size, reachTimeout]);
+
   /**
    * The cell whose click a stroke has already spoken for, so the click that
    * follows the release does not tap it too. The cell rather than a bare flag:
@@ -233,9 +308,16 @@ export const CrownGridBoard = memo(function CrownGridBoard({
     }
   }
 
+  // Row-major order among crowns only, for the solved settle's stagger (§13,
+  // "--cg-i"). Never more than the board's own size, so 9 at most.
+  const crownOrder = new Map<number, number>();
+  for (let index = 0; index < marks.length; index++) {
+    if (marks[index] === CROWN) crownOrder.set(index, crownOrder.size);
+  }
+
   return (
     <div
-      className="cg-board"
+      className={solved ? 'cg-board cg-board-solved' : 'cg-board'}
       role="group"
       aria-label={t('crownGridBoardLabel', { size })}
       style={{ '--cg-size': size } as CSSProperties}
@@ -261,11 +343,10 @@ export const CrownGridBoard = memo(function CrownGridBoard({
           const isBroken = violations.cells[index] === true;
           const classes = [
             'cg-cell',
-            // A thick edge wherever the cell above or to the left is another
-            // region; the board's own border closes the outside (§13).
-            row > 0 && regions[index - size] !== region ? 'cg-wall-t' : '',
-            col > 0 && regions[index - 1] !== region ? 'cg-wall-l' : '',
+            ...tileClasses(index, size, (at) => regions[at] ?? 0),
             isBroken ? 'cg-cell-broken' : '',
+            reach.cells.has(index) ? 'cg-cell-reach' : '',
+            reach.cells.has(index) && reach.gen % 2 === 1 ? 'cg-cell-reach-odd' : '',
             targets.has(index) ? 'cg-cell-hint' : '',
             support.has(index) ? 'cg-cell-support' : '',
             reason.has(index) ? 'cg-cell-reason' : '',
@@ -285,11 +366,16 @@ export const CrownGridBoard = memo(function CrownGridBoard({
               onClick={(event) => onClick(event, index)}
             >
               {mark === CROWN ? (
-                <span className="cg-glyph cg-glyph-crown" aria-hidden="true">
-                  ♛
+                <span
+                  key={mark}
+                  className="cg-glyph cg-glyph-crown"
+                  aria-hidden="true"
+                  style={{ '--cg-i': crownOrder.get(index) ?? 0 } as CSSProperties}
+                >
+                  <CrownGlyph />
                 </span>
               ) : mark === CROSS ? (
-                <span className="cg-glyph cg-glyph-cross" aria-hidden="true">
+                <span key={mark} className="cg-glyph cg-glyph-cross" aria-hidden="true">
                   ×
                 </span>
               ) : null}

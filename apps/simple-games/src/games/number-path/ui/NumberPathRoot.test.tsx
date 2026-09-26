@@ -347,11 +347,17 @@ describe('drawing the path (§4)', () => {
     renderGame(knownSuspended);
     await resumeKnown(user);
 
-    for (const cell of KNOWN.solution.slice(1)) await user.click(cellAt(cell));
+    expect(board().className).not.toContain('np-board-solved');
+    for (const cell of KNOWN.solution.slice(1, -1)) await user.click(cellAt(cell));
+    // Still one cell short: the board's own `solved` wiring (GameScreen's
+    // `session.status === 'solved'`), not just the last click, is what marks it.
+    expect(board().className).not.toContain('np-board-solved');
+    await user.click(cellAt(KNOWN.solution.at(-1)!));
 
     expect(await screen.findByRole('alertdialog', { name: 'Solved!' })).toBeInTheDocument();
     expect(screen.getByText('Hints used')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'New board' })).toBeInTheDocument();
+    expect(board().className).toContain('np-board-solved');
   });
 });
 
