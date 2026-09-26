@@ -78,10 +78,20 @@ describe('gameLandingUrl', () => {
     // title's tutorial from ending in a 404 before its pages go up.
     expect(gameLandingUrl('some-future-game', 'en')).toBeNull();
     expect(gameLandingUrl('some-future-game', 'ja')).toBeNull();
-    // And with the real case: the three titles in the browser's early release
-    // (docs/WEB_VERSION.md「先行公開」) have no guide yet, so their tutorials
-    // end without the button rather than at a 404 inside our own site.
-    for (const id of ['crown-grid', 'number-path', 'shape-regions']) {
+    // And with the real case: the titles in the browser's early release
+    // (docs/WEB_VERSION.md「先行公開」, issues #194 and #197) have no guide yet,
+    // so their tutorials end without the button rather than at a 404 inside
+    // our own site.
+    for (const id of [
+      'crown-grid',
+      'number-path',
+      'shape-regions',
+      'yacht',
+      'mancala',
+      'dominoes',
+      'hit-and-blow',
+      'dots-and-boxes',
+    ]) {
       expect(gameLandingUrl(id, 'en')).toBeNull();
       expect(gameLandingUrl(id, 'ja')).toBeNull();
     }

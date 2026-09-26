@@ -1,6 +1,6 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-09-26
+Updated: 2026-09-27
 
 この文書は、Simple Games を変更・レビュー・説明するときの **共通の入口** である。
 ここに全仕様を複製しない。実装上の事実はコード、恒久的な原則は各 canonical document を正とし、
@@ -43,8 +43,9 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **30 games**。
-- ほかに **Web 版だけで先行公開(ベータ)中の新作が 3 本**(Crown Grid / Number Path /
-  Shape Regions、2026-09-26、issue #194)。正式収録の 30 本には数えない。チャンネルの
+- ほかに **Web 版だけで先行公開(ベータ)中の新作が 8 本**(Crown Grid / Number Path /
+  Shape Regions、2026-09-26、issue #194。Yacht / Mancala / Dominoes / Hit & Blow /
+  Dots and Boxes、2026-09-27、issue #197)。正式収録の 30 本には数えない。チャンネルの
   宣言は registry の `channel`、出し分けは `app/gameChannel.ts` の実行時ガード
   (`docs/WEB_VERSION.md`「先行公開」)。
 - 実装上のゲーム一覧・ID・並び順・カテゴリの正は `apps/simple-games/src/app/registry.ts` の `GAMES` / `GAME_CATEGORIES`。

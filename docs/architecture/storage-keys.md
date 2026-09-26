@@ -29,6 +29,11 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | `cg.*`         | Crown Grid(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。Web 先行公開、issue #194) |
 | `np.*`         | Number Path(同上の 5 キー。Web 先行公開)                                                                            |
 | `sr.*`         | Shape Regions(同上の 5 キー。Web 先行公開)                                                                          |
+| `yt.*`         | Yacht(saveGame / stats / flags。難易度もデイリーもないので prefs なし。Web 先行公開、issue #197)                    |
+| `mc.*`         | Mancala(saveGame / stats / flags / prefs — prefs は先攻の選択だけ。統計は難易度別。Web 先行公開)                    |
+| `dm.*`         | Dominoes(saveGame / stats / flags。先攻は牌で決まるので prefs なし。Web 先行公開)                                   |
+| `hb.*`         | Hit & Blow(saveGame / stats / flags / prefs — prefs は最後に選んだ難易度だけ。Web 先行公開)                         |
+| `db.*`         | Dots and Boxes(saveGame / stats / flags / prefs — prefs は最後に選んだ盤サイズだけ。統計はサイズ別。Web 先行公開)   |
 | `ck.*`         | Checkers(saveGame / stats / flags / prefs。統計は難易度別)                                                          |
 | `rv.*`         | Reversi(saveGame / stats / flags / prefs。統計は難易度別)                                                           |
 | `c4.*`         | Connect Four(saveGame / stats / flags / prefs。同上)                                                                |

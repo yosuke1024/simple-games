@@ -336,9 +336,11 @@ ADS_POLICY.md 側の項目 3 にも 実施済み の印は付いていない。*
    行い、既収録ゲームの滞在時間を参照点にする。この確認のために「計測」節の範囲を
    広げない(盤面・プレイ内容は送らない)。
 
-実装状況(2026-09-26、issue #194): **実装済み。先行公開中は 3 本** — Crown Grid /
-Number Path / Shape Regions(計画は
-[plans/2026-09-26-crown-grid-number-path-shape-regions.md](plans/2026-09-26-crown-grid-number-path-shape-regions.md))。
+実装状況(2026-09-27): **実装済み。先行公開中は 8 本** — Crown Grid / Number Path /
+Shape Regions(issue #194、計画は
+[plans/2026-09-26-crown-grid-number-path-shape-regions.md](plans/2026-09-26-crown-grid-number-path-shape-regions.md))と
+Yacht / Mancala / Dominoes / Hit & Blow / Dots and Boxes(issue #197、計画は
+[plans/2026-09-27-yacht-mancala-dominoes-hit-and-blow-dots-and-boxes.md](plans/2026-09-27-yacht-mancala-dominoes-hit-and-blow-dots-and-boxes.md))。
 
 - 宣言は registry のエントリ(`GameDefinition.channel: 'web-beta'`)、出し分けは
   `app/gameChannel.ts` の**実行時ガード**(`Capacitor.isNativePlatform()`)。
