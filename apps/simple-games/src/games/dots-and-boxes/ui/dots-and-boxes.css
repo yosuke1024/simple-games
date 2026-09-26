@@ -1,0 +1,374 @@
+/* Dots and Boxes — all of this game's styling, imported by DotsAndBoxesRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --radius, --font-display, …) so the game reads as
+   part of the same app and follows the theme without knowing about it.
+
+   Class names are prefixed `db-` so this file can never collide with the
+   shell or with another game.
+
+   The CPU's colour below is game content, not chrome — the same standing as
+   Connect Four's second disc colour (docs/BRAND.md「アクセント」). The
+   player's lines and boxes ARE the accent; the CPU needs a colour that is
+   plainly not it, in both themes, and at least 3:1 against the board's
+   --surface (docs/DOTS_AND_BOXES_RULES.md §10, measured by
+   ui/contrast.test.ts). It never works alone: the CPU's lines are dashed and
+   its boxes carry a cross, the player's are solid and carry a dot. */
+
+:root {
+  --db-cpu: #a3561b;
+  --db-cpu-soft: #f6e5d5;
+}
+
+:root[data-theme='dark'] {
+  --db-cpu: #d9955a;
+  --db-cpu-soft: #3b2b1e;
+}
+
+/* ---------- board ---------- */
+
+/* The board sits in the space between the top bar and the action bar, centred
+   so a tall phone brings it into thumb reach instead of pinning it up top. */
+.db-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 4px 0 10px;
+  min-height: 0;
+}
+
+/* Alternating tracks: a 10px one for each row / column of dots, a 1fr one for
+   the lines and boxes between them (§10). Square, and sized against its own
+   column (`100%`, not `vw` — docs/ARCHITECTURE.md): 360×640 holds the 5×5
+   board with room to spare, and the height term keeps a short landscape
+   screen from pushing the action bar off the bottom. The 24px margin keeps
+   the outer lines' widened hit areas on the screen. */
+.db-board {
+  display: grid;
+  width: min(100% - 24px, 360px, 58vh);
+  aspect-ratio: 1;
+  touch-action: manipulation;
+}
+
+.db-board-2 {
+  grid-template-columns: 10px repeat(2, 1fr 10px);
+  grid-template-rows: 10px repeat(2, 1fr 10px);
+}
+
+.db-board-3 {
+  grid-template-columns: 10px repeat(3, 1fr 10px);
+  grid-template-rows: 10px repeat(3, 1fr 10px);
+}
+
+.db-board-4 {
+  grid-template-columns: 10px repeat(4, 1fr 10px);
+  grid-template-rows: 10px repeat(4, 1fr 10px);
+}
+
+.db-board-5 {
+  grid-template-columns: 10px repeat(5, 1fr 10px);
+  grid-template-rows: 10px repeat(5, 1fr 10px);
+}
+
+.db-dot {
+  border-radius: 50%;
+  background: var(--ink);
+  pointer-events: none;
+}
+
+/* ---------- edges ---------- */
+
+/* One grid cell per edge. The drawn line is the ::after — 2px and faint while
+   open, 4px in its owner's colour once drawn — so the cell itself never shows
+   and the line never grows thicker than 4px (§10). */
+.db-edge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.db-edge::after {
+  content: '';
+  display: block;
+  background: var(--line);
+  border-radius: 2px;
+}
+
+.db-edge-h::after {
+  width: 100%;
+  height: 2px;
+}
+
+.db-edge-v::after {
+  width: 2px;
+  height: 100%;
+}
+
+/* The hit area (§10): an open line is a button the full length of its track
+   and 26px across — the 10px track plus 8px each side into the boxes — while
+   the line drawn in it stays thin. Boxes and dots take no pointer events, so
+   the widened area is what a tap near a line lands on. */
+button.db-edge::before {
+  content: '';
+  position: absolute;
+}
+
+button.db-edge-h::before {
+  left: 0;
+  right: 0;
+  top: -8px;
+  bottom: -8px;
+}
+
+button.db-edge-v::before {
+  top: 0;
+  bottom: 0;
+  left: -8px;
+  right: -8px;
+}
+
+button.db-edge:not([aria-disabled='true']):active::after {
+  background: var(--accent);
+}
+
+@media (hover: hover) {
+  button.db-edge:not([aria-disabled='true']):hover::after {
+    background: var(--accent-ring);
+  }
+}
+
+button.db-edge:not([aria-disabled='true']) {
+  cursor: pointer;
+}
+
+button.db-edge[aria-disabled='true'] {
+  cursor: default;
+}
+
+button.db-edge:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Drawn lines, by owner: the player's solid in the accent, the CPU's dashed
+   in its own colour — the dash is what tells them apart without colour
+   (§10). */
+.db-line-you.db-edge-h::after {
+  height: 4px;
+  background: var(--accent);
+}
+
+.db-line-you.db-edge-v::after {
+  width: 4px;
+  background: var(--accent);
+}
+
+.db-line-cpu.db-edge-h::after {
+  height: 4px;
+  background: repeating-linear-gradient(
+    to right,
+    var(--db-cpu) 0,
+    var(--db-cpu) 7px,
+    transparent 7px,
+    transparent 11px
+  );
+}
+
+.db-line-cpu.db-edge-v::after {
+  width: 4px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--db-cpu) 0,
+    var(--db-cpu) 7px,
+    transparent 7px,
+    transparent 11px
+  );
+}
+
+/* The line just drawn draws itself in once, from its middle out, so a run of
+   CPU lines can be followed one at a time (§4, §10). Keyed by the move that
+   drew it (DotsAndBoxesBoard), so it plays on arrival and never again. */
+.db-line-fresh.db-edge-h::after {
+  animation: db-draw-h 260ms ease-out;
+}
+
+.db-line-fresh.db-edge-v::after {
+  animation: db-draw-v 260ms ease-out;
+}
+
+@keyframes db-draw-h {
+  from {
+    transform: scaleX(0.15);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes db-draw-v {
+  from {
+    transform: scaleY(0.15);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Reduced Motion: the line is simply there (§10). Guarded by the board class
+   set from useReducedMotion, so the in-app setting counts too. */
+.db-board-still .db-line-fresh::after {
+  animation: none;
+}
+
+/* ---------- boxes ---------- */
+
+.db-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 3px;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.db-box-you {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.db-box-cpu {
+  background: var(--db-cpu-soft);
+  color: var(--db-cpu);
+}
+
+.db-mark {
+  width: 50%;
+  height: 50%;
+  max-width: 28px;
+  max-height: 28px;
+}
+
+.db-mark-you {
+  fill: currentColor;
+}
+
+.db-mark-cpu {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+/* ---------- top bar ---------- */
+
+/* The whole score: the two box counts, each beside its owner's mark (§7). */
+.db-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.db-score-side {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.db-score-side .db-mark {
+  width: 14px;
+  height: 14px;
+}
+
+.db-score-you {
+  color: var(--ink);
+}
+
+.db-score-you .db-mark {
+  color: var(--accent);
+}
+
+.db-score-cpu .db-mark {
+  color: var(--db-cpu);
+}
+
+.db-score-dot {
+  color: var(--ink-soft);
+}
+
+/* ---------- turn line ---------- */
+
+/* Reserved height whether it names a turn or says nothing: the board must
+   not jump when the text changes (§10). */
+.db-turn-line {
+  margin: 0;
+  min-height: 1.5em;
+  font-size: 14px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* ---------- action bar ---------- */
+
+/* One action, free and unlimited: Undo (§5). There is deliberately no hint
+   button — a suggested line would be the CPU playing both sides (§6). */
+.action-bar.db-actions {
+  justify-content: center;
+}
+
+/* ---------- home ---------- */
+
+.db-choose-label {
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* A 2×2 corner of a board, drawn with the board's own classes (§9). */
+.db-board.db-figure {
+  width: 150px;
+}
+
+.db-line-figure-fresh.db-edge-h::after,
+.db-line-figure-fresh.db-edge-v::after {
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; Medium and Wide only enlarge the board — lines and marks scale
+   with their tracks, so nothing besides the board's own width needs to grow
+   with it. */
+
+@media (min-width: 600px) {
+  .db-board {
+    width: min(100% - 24px, 460px, 62vh);
+    width: min(100% - 24px, 460px, 62svh);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .db-board {
+    width: min(100% - 24px, 520px, calc(100vh - 290px));
+    width: min(100% - 24px, 520px, calc(100svh - 290px));
+  }
+}
