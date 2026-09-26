@@ -7,11 +7,19 @@
  * only way to say a drag tapped *nothing*: on a real board a × that arrived
  * after a tap on the same cell would read as a crown.
  */
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { settingsSchema } from '@/storage/schemas';
-import { createDifficultySession, doTap, type CrownGridSession, type Hint } from '../../game';
+import {
+  colOf,
+  createDifficultySession,
+  CROWN,
+  doTap,
+  rowOf,
+  type CrownGridSession,
+  type Hint,
+} from '../../game';
 import { CrownGridBoard } from './CrownGridBoard';
 
 /** A fixed 6×6, the same on every machine (§8). */
@@ -21,17 +29,44 @@ const SIZE = SESSION.size;
 /** Row and column count from one, the way the labels do. */
 const indexAt = (row: number, col: number) => (row - 1) * SIZE + (col - 1);
 
-function renderBoard(session: CrownGridSession = SESSION, hint: Hint | null = null) {
+function renderBoard(
+  session: CrownGridSession = SESSION,
+  hint: Hint | null = null,
+  solved = false,
+) {
   const onTap = vi.fn();
   const onStroke = vi.fn();
-  render(
+  const view = render(
     <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
-      <CrownGridBoard session={session} hint={hint} onTap={onTap} onStroke={onStroke} />
+      <CrownGridBoard
+        session={session}
+        hint={hint}
+        solved={solved}
+        onTap={onTap}
+        onStroke={onStroke}
+      />
     </SettingsProvider>,
   );
+  /** Re-renders the same mounted board with a new session (props update, not a remount). */
+  const update = (
+    nextSession: CrownGridSession,
+    nextHint: Hint | null = null,
+    nextSolved = false,
+  ) =>
+    view.rerender(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <CrownGridBoard
+          session={nextSession}
+          hint={nextHint}
+          solved={nextSolved}
+          onTap={onTap}
+          onStroke={onStroke}
+        />
+      </SettingsProvider>,
+    );
   const board = screen.getByRole('group', { name: /^Crown Grid board/ });
   const cells = within(board).getAllByRole('button');
-  return { board, cells, onTap, onStroke };
+  return { board, cells, onTap, onStroke, update };
 }
 
 /** A pretend cell, in CSS pixels — jsdom lays nothing out on its own. */
@@ -79,6 +114,7 @@ const strokeCells = (onStroke: Mock): number[] =>
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 describe('the tap (§4)', () => {
@@ -103,13 +139,67 @@ describe('the tap (§4)', () => {
     );
   });
 
-  it('draws a thick edge wherever the neighbouring cell is another region (§13)', () => {
+  it('draws a boundary edge wherever the neighbouring cell is another region or off the board, and rounds the convex corners (§13)', () => {
     const { cells } = renderBoard();
-    const walls = cells.filter(
-      (cell) => cell.classList.contains('cg-wall-t') || cell.classList.contains('cg-wall-l'),
-    );
-    expect(walls.length).toBeGreaterThan(0);
-    for (const cell of cells) expect(cell.getAttribute('data-region')).toMatch(/^[0-5]$/);
+    const regionAt = (index: number) => Number(cells[index]!.getAttribute('data-region'));
+    let sawBoundary = false;
+    let sawInterior = false;
+    for (let index = 0; index < cells.length; index++) {
+      const row = rowOf(index, SIZE);
+      const col = colOf(index, SIZE);
+      const own = regionAt(index);
+      const top = row === 0 || regionAt(index - SIZE) !== own;
+      const right = col === SIZE - 1 || regionAt(index + 1) !== own;
+      const bottom = row === SIZE - 1 || regionAt(index + SIZE) !== own;
+      const left = col === 0 || regionAt(index - 1) !== own;
+      const classes = cells[index]!.classList;
+      expect(classes.contains('cg-b-t')).toBe(top);
+      expect(classes.contains('cg-b-r')).toBe(right);
+      expect(classes.contains('cg-b-b')).toBe(bottom);
+      expect(classes.contains('cg-b-l')).toBe(left);
+      expect(classes.contains('cg-c-tl')).toBe(top && left);
+      expect(classes.contains('cg-c-tr')).toBe(top && right);
+      expect(classes.contains('cg-c-br')).toBe(bottom && right);
+      expect(classes.contains('cg-c-bl')).toBe(bottom && left);
+      if (top || right || bottom || left) sawBoundary = true;
+      if (!top || !right || !bottom || !left) sawInterior = true;
+      expect(cells[index]!.getAttribute('data-region')).toMatch(/^[0-5]$/);
+    }
+    // The board's own edge is a boundary (every corner cell has two), and at
+    // least one pair of same-region neighbours somewhere is not.
+    expect(cells[0]!.classList.contains('cg-c-tl')).toBe(true);
+    expect(cells[SIZE - 1]!.classList.contains('cg-c-tr')).toBe(true);
+    expect(sawBoundary).toBe(true);
+    expect(sawInterior).toBe(true);
+  });
+
+  it('draws the crown as an inline, aria-hidden SVG, and keeps × as a plain character', () => {
+    const crossed = doTap(SESSION, indexAt(1, 1))!;
+    const crowned = doTap(crossed, indexAt(1, 1))!;
+    const { cells: crownCells } = renderBoard(crowned);
+    const svg = crownCells[indexAt(1, 1)]!.querySelector('svg');
+    expect(svg).not.toBeNull();
+    expect(svg!.getAttribute('aria-hidden')).toBe('true');
+    expect(svg!.getAttribute('focusable')).toBe('false');
+
+    cleanup();
+    const { cells: crossCells } = renderBoard(crossed);
+    expect(crossCells[indexAt(1, 1)]!.querySelector('svg')).toBeNull();
+    expect(crossCells[indexAt(1, 1)]!.textContent).toBe('×');
+  });
+
+  it('remounts the glyph span on every change of mark (§13, "always appears new")', () => {
+    const crossed = doTap(SESSION, indexAt(1, 1))!;
+    const { cells, update } = renderBoard(crossed);
+    const oldGlyph = cells[indexAt(1, 1)]!.querySelector('.cg-glyph');
+    expect(oldGlyph).not.toBeNull();
+
+    const crowned = doTap(crossed, indexAt(1, 1))!;
+    update(crowned);
+    const newGlyph = cells[indexAt(1, 1)]!.querySelector('.cg-glyph');
+    expect(newGlyph).not.toBeNull();
+    expect(newGlyph).not.toBe(oldGlyph);
+    expect(newGlyph!.classList.contains('cg-glyph-crown')).toBe(true);
   });
 });
 
@@ -227,5 +317,214 @@ describe('the hint on the board (§6)', () => {
   it('rings a crown that cannot be right', () => {
     const { cells } = renderBoard(SESSION, { kind: 'wrong', index: indexAt(2, 2) });
     expect(cells[indexAt(2, 2)]!.classList.contains('cg-cell-hint-broken')).toBe(true);
+  });
+});
+
+describe('the "reach" of a crown just placed (§13)', () => {
+  it('lights the row, column, region and 8 neighbours for 700ms, never the crown itself, and clears after', () => {
+    vi.useFakeTimers();
+    const { cells, update } = renderBoard();
+    const target = indexAt(3, 3);
+    const crowned = doTap(doTap(SESSION, target)!, target)!;
+    update(crowned);
+
+    const own = Number(cells[target]!.getAttribute('data-region'));
+    const expected = new Set<number>();
+    for (let col = 1; col <= SIZE; col++) expected.add(indexAt(3, col));
+    for (let row = 1; row <= SIZE; row++) expected.add(indexAt(row, 3));
+    for (let index = 0; index < cells.length; index++) {
+      if (Number(cells[index]!.getAttribute('data-region')) === own) expected.add(index);
+    }
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const row = rowOf(target, SIZE) + dr;
+        const col = colOf(target, SIZE) + dc;
+        if (row < 0 || row >= SIZE || col < 0 || col >= SIZE) continue;
+        expected.add(row * SIZE + col);
+      }
+    }
+    expected.delete(target);
+
+    for (let index = 0; index < cells.length; index++) {
+      expect(cells[index]!.classList.contains('cg-cell-reach')).toBe(expected.has(index));
+    }
+    expect(cells[target]!.classList.contains('cg-cell-reach')).toBe(false);
+
+    // Still lit a hair under 700ms — a shorter timeout would also pass the
+    // "eventually clears" assertion below, so the lower bound is its own check.
+    act(() => {
+      vi.advanceTimersByTime(699);
+    });
+    for (const index of expected) {
+      expect(cells[index]!.classList.contains('cg-cell-reach')).toBe(true);
+    }
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    for (const index of expected) {
+      expect(cells[index]!.classList.contains('cg-cell-reach')).toBe(false);
+    }
+  });
+
+  it('does not light anything when a × is placed instead', () => {
+    const { cells, update } = renderBoard();
+    const target = indexAt(4, 4);
+    update(doTap(SESSION, target)!);
+    expect(cells.some((cell) => cell.classList.contains('cg-cell-reach'))).toBe(false);
+  });
+
+  it('does not light anything on the first render, even with crowns already on the board', () => {
+    const crowned = doTap(doTap(SESSION, indexAt(1, 1))!, indexAt(1, 1))!;
+    const { cells } = renderBoard(crowned);
+    expect(cells.some((cell) => cell.classList.contains('cg-cell-reach'))).toBe(false);
+  });
+
+  it('lights nothing when two crowns appear in the same update, not just one', () => {
+    const { cells, update } = renderBoard();
+    const a = indexAt(1, 1);
+    const b = indexAt(2, 2);
+    const bulk: CrownGridSession = {
+      ...SESSION,
+      marks: SESSION.marks.map((mark, index) => (index === a || index === b ? CROWN : mark)),
+    };
+    update(bulk);
+    expect(cells.some((cell) => cell.classList.contains('cg-cell-reach'))).toBe(false);
+  });
+
+  it('does not relight on a re-render with the same crowns, such as a hint arriving', () => {
+    vi.useFakeTimers();
+    const { cells, update } = renderBoard();
+    const target = indexAt(4, 4);
+    const crowned = doTap(doTap(SESSION, target)!, target)!;
+    update(crowned);
+    expect(cells.some((cell) => cell.classList.contains('cg-cell-reach'))).toBe(true);
+
+    // Same marks, only a hint attached — nothing was just placed.
+    update(crowned, { kind: 'wrong', index: indexAt(1, 1) });
+
+    act(() => {
+      vi.advanceTimersByTime(700);
+    });
+    expect(cells.some((cell) => cell.classList.contains('cg-cell-reach'))).toBe(false);
+  });
+
+  it('restarts the flash on a cell two placements in a row both light (§13)', () => {
+    vi.useFakeTimers();
+    const { cells, update } = renderBoard();
+    const first = indexAt(3, 3);
+    const firstCrowned = doTap(doTap(SESSION, first)!, first)!;
+    update(firstCrowned);
+
+    // Row 3 and column 5 cross at (3, 5): the first placement lights it by
+    // row, and it is not the crown's own cell.
+    const shared = indexAt(3, 5);
+    expect(cells[shared]!.classList.contains('cg-cell-reach')).toBe(true);
+    expect(cells[shared]!.classList.contains('cg-cell-reach-odd')).toBe(true);
+
+    // A second crown within the first flash's 700ms, sharing column 5.
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    const second = indexAt(5, 5);
+    const secondCrowned = doTap(doTap(firstCrowned, second)!, second)!;
+    update(secondCrowned);
+
+    // Still lit — by the second placement now — but the parity class has
+    // flipped, which is what forces the CSS animation to restart rather than
+    // carry on the first flash's half-finished fade.
+    expect(cells[shared]!.classList.contains('cg-cell-reach')).toBe(true);
+    expect(cells[shared]!.classList.contains('cg-cell-reach-odd')).toBe(false);
+  });
+
+  it('re-placing the same crown three taps later still flips parity, even with an identical Set', () => {
+    vi.useFakeTimers();
+    const { cells, update } = renderBoard();
+    const target = indexAt(2, 2);
+    const crowned = doTap(doTap(SESSION, target)!, target)!;
+    update(crowned);
+    const lit = indexAt(2, 5);
+    expect(cells[lit]!.classList.contains('cg-cell-reach-odd')).toBe(true);
+
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    // crown -> empty -> × -> crown: the same cell, the same reach Set.
+    const cleared = doTap(crowned, target)!;
+    const crossed = doTap(cleared, target)!;
+    const recrowned = doTap(crossed, target)!;
+    update(cleared);
+    update(crossed);
+    update(recrowned);
+
+    expect(cells[lit]!.classList.contains('cg-cell-reach')).toBe(true);
+    expect(cells[lit]!.classList.contains('cg-cell-reach-odd')).toBe(false);
+  });
+
+  it('clears its timer on unmount mid-flash, leaving nothing pending (GAME_LIFECYCLE.md)', () => {
+    vi.useFakeTimers();
+    const view = render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <CrownGridBoard
+          session={SESSION}
+          hint={null}
+          solved={false}
+          onTap={vi.fn()}
+          onStroke={vi.fn()}
+        />
+      </SettingsProvider>,
+    );
+    const target = indexAt(2, 2);
+    const crowned = doTap(doTap(SESSION, target)!, target)!;
+    view.rerender(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <CrownGridBoard
+          session={crowned}
+          hint={null}
+          solved={false}
+          onTap={vi.fn()}
+          onStroke={vi.fn()}
+        />
+      </SettingsProvider>,
+    );
+    expect(vi.getTimerCount()).toBeGreaterThan(0);
+    view.unmount();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe('the solved beat (common mechanism)', () => {
+  it('marks the board solved when the session says so, and not otherwise', () => {
+    const { board } = renderBoard(SESSION, null, false);
+    expect(board.classList.contains('cg-board-solved')).toBe(false);
+  });
+
+  it('adds cg-board-solved once solved', () => {
+    const { board } = renderBoard(SESSION, null, true);
+    expect(board.classList.contains('cg-board-solved')).toBe(true);
+  });
+
+  it('numbers each settling crown by row-major order, from 0 (§13, "--cg-i")', () => {
+    // Three crowns in three different rows, column 1 each: their board
+    // indices already ascend in row-major order, so --cg-i should read
+    // 0, 1, 2 in that order and not, say, the cell index or a constant 0.
+    const first = indexAt(1, 1);
+    const second = indexAt(2, 1);
+    const third = indexAt(3, 1);
+    const staged: CrownGridSession = {
+      ...SESSION,
+      marks: SESSION.marks.map((mark, index) =>
+        index === first || index === second || index === third ? CROWN : mark,
+      ),
+    };
+    const { cells } = renderBoard(staged, null, true);
+    const ordinalAt = (index: number) =>
+      (cells[index]!.querySelector('.cg-glyph-crown') as HTMLElement).style.getPropertyValue(
+        '--cg-i',
+      );
+    expect(ordinalAt(first)).toBe('0');
+    expect(ordinalAt(second)).toBe('1');
+    expect(ordinalAt(third)).toBe('2');
   });
 });

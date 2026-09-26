@@ -212,7 +212,13 @@ export function NumberPathGameScreen() {
         </header>
 
         <div className="np-board-scroll">
-          <NumberPathBoard session={session} hint={hint} onTrace={onTrace} onTap={onTap} />
+          <NumberPathBoard
+            session={session}
+            hint={hint}
+            onTrace={onTrace}
+            onTap={onTap}
+            solved={session.status === 'solved'}
+          />
         </div>
 
         {toast ? (

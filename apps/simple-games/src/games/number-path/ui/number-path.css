@@ -4,6 +4,15 @@
    game reads as part of the same app and follows the theme without knowing
    about it. No colour of its own: the path is the accent, the walls are ink.
 
+   The drawing model (NUMBER_PATH_RULES.md §11): each on-path cell has a
+   joint circle under its line segments that fills the concave inside of a
+   turn so a bend reads as one smooth elbow rather than a square notch; the
+   path's end grows its incoming segment in from the edge to the centre on
+   arrival only, and its round cap (`.np-end`) pops on every mount; the next
+   number due gets a thicker ring; wall ends are rounded; and a solved board
+   plays a single overlay flash. See each rule below for the section it
+   implements.
+
    Class names are prefixed `np-` so this file can never collide with the
    shell or with another game. */
 
@@ -38,6 +47,8 @@
   --np-line: calc(var(--np-cell) * 0.3);
   --np-wall: 2px;
   --np-disc: calc(var(--np-cell) * 0.6);
+  position: relative;
+  overflow: hidden;
   padding: var(--np-pad);
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -46,6 +57,29 @@
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+}
+
+.np-board-solved::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--accent-soft);
+  border-radius: inherit;
+  opacity: 0;
+  animation: np-solved-flash 900ms ease-out;
+}
+
+@keyframes np-solved-flash {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .np-cells {
@@ -108,6 +142,19 @@
   background: var(--accent-ring-soft);
 }
 
+/* The joint under the line at every visited cell (§11). */
+.np-cell-on::before {
+  content: '';
+  position: absolute;
+  left: calc(50% - var(--np-line) / 2);
+  top: calc(50% - var(--np-line) / 2);
+  width: var(--np-line);
+  height: var(--np-line);
+  border-radius: 50%;
+  background: var(--accent);
+  pointer-events: none;
+}
+
 /* ---------- the path ---------- */
 
 /* A segment runs from the cell's centre to one edge, where it meets the
@@ -130,28 +177,78 @@
   height: var(--np-line);
 }
 
+/* Each segment reaches exactly to the cell's centre, no further — the two
+   segments of a turn leave the inside of the bend unpainted, and the joint
+   circle under them (`.np-cell-on::before`, same diameter as the line) fills
+   that gap with a curve instead of a square notch, so the turn reads as one
+   smooth elbow (§11). Overshooting past centre would paint that gap solid
+   and bury the circle under it, showing no elbow at all. */
 .np-seg-up {
   top: 0;
-  height: calc(50% + var(--np-line) / 2);
+  height: 50%;
 }
 
 .np-seg-down {
   bottom: 0;
-  height: calc(50% + var(--np-line) / 2);
+  height: 50%;
 }
 
 .np-seg-left {
   left: 0;
-  width: calc(50% + var(--np-line) / 2);
+  width: 50%;
 }
 
 .np-seg-right {
   right: 0;
-  width: calc(50% + var(--np-line) / 2);
+  width: 50%;
+}
+
+/* Grows in from the edge it arrives on, to the centre — but only on the end
+   the path was just extended onto. Backing up reuses the same DOM node
+   (`np-cell-end` moves to it, `np-seg-*` keyed by side), so the trigger is a
+   separate class (`np-cell-grow`, added by NumberPathBoard only when the
+   path just grew) that backing up never adds (§11: 戻したときは何も動かさない). */
+.np-cell-grow .np-seg-up,
+.np-cell-grow .np-seg-down {
+  animation: np-grow-y 90ms ease-out;
+}
+
+.np-cell-grow .np-seg-left,
+.np-cell-grow .np-seg-right {
+  animation: np-grow-x 90ms ease-out;
+}
+
+.np-cell-grow .np-seg-up {
+  transform-origin: top;
+}
+
+.np-cell-grow .np-seg-down {
+  transform-origin: bottom;
+}
+
+.np-cell-grow .np-seg-left {
+  transform-origin: left;
+}
+
+.np-cell-grow .np-seg-right {
+  transform-origin: right;
+}
+
+@keyframes np-grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes np-grow-x {
+  from {
+    transform: scaleX(0);
+  }
 }
 
 /* The end of the path: where the next stroke starts (§4). A round cap on the
-   line — larger than the line, ringed in paper so it reads on any ground. */
+   line — larger than the line, ringed in paper so it reads on any ground.
+   It pops wherever the end lands (§11). */
 .np-end {
   position: absolute;
   left: calc(50% - var(--np-line) * 0.75);
@@ -162,6 +259,16 @@
   background: var(--accent);
   box-shadow: 0 0 0 2px var(--paper);
   pointer-events: none;
+  animation: np-pop 90ms ease-out;
+}
+
+@keyframes np-pop {
+  from {
+    transform: scale(0.6);
+  }
+  to {
+    transform: scale(1);
+  }
 }
 
 /* ---------- numbers ---------- */
@@ -196,6 +303,11 @@
   color: var(--accent-ink);
 }
 
+/* Next number due (§11). */
+.np-cell-next .np-digit {
+  border-width: 3px;
+}
+
 /* ---------- walls ---------- */
 
 /* A wall is drawn inside both cells it separates, so the two halves meet on
@@ -203,6 +315,7 @@
 .np-wall {
   position: absolute;
   background: var(--ink);
+  border-radius: 2px;
   pointer-events: none;
 }
 
@@ -247,7 +360,8 @@
 /* The stretch that left the road, when the hint says to back up: the warning
    colour on the line, and only on the line — the ring says where to stop. */
 .np-cell-astray .np-seg,
-.np-cell-astray .np-end {
+.np-cell-astray .np-end,
+.np-cell-astray::before {
   background: var(--warn);
 }
 

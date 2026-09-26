@@ -7,10 +7,16 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { IconClose } from '@/ui/components/icons';
-import type { ShapeCategory } from '../../game';
+import {
+  normalize,
+  offsetsOf,
+  regionSatisfiesClue,
+  UNASSIGNED,
+  type ShapeCategory,
+} from '../../game';
 import { useShapeRegions } from '../../state/GameContext';
 import { ShapeIcon } from '../components/ShapeIcon';
-import { TINT_COUNT } from '../components/ShapeRegionsBoard';
+import { cellCorners, cellEdges, TINT_COUNT } from '../components/ShapeRegionsBoard';
 
 interface FigureClue {
   readonly index: number;
@@ -28,7 +34,7 @@ function MiniBoard({ cells, clues }: { cells: string; clues: readonly FigureClue
   const size = 3;
   const region = (index: number): number => {
     const letter = cells[index] ?? '.';
-    return letter === '.' ? -1 : letter.charCodeAt(0) - 97;
+    return letter === '.' ? UNASSIGNED : letter.charCodeAt(0) - 97;
   };
   const count = (r: number): number => [...cells].filter((c) => c.charCodeAt(0) - 97 === r).length;
   return (
@@ -39,17 +45,27 @@ function MiniBoard({ cells, clues }: { cells: string; clues: readonly FigureClue
             const r = region(index);
             const row = Math.floor(index / size);
             const col = index % size;
-            const above = row === 0 ? -1 : region(index - size);
-            const left = col === 0 ? -1 : region(index - 1);
-            const assigned = r !== -1;
+            const assigned = r !== UNASSIGNED;
+            const edges = cellEdges(region, index, row, col, size, size);
+            const corners = cellCorners(edges, assigned);
             const clue = clues.find((c) => c.index === index) ?? null;
+            const held = [...cells].flatMap((_, i) => (region(i) === r ? [i] : []));
+            const placed =
+              clue !== null && clue.shape !== null && regionSatisfiesClue(held, clue, size);
+            const iconCells = placed
+              ? normalize(offsetsOf(held, size)).map((offset) => [offset.r, offset.c] as const)
+              : undefined;
             const classes = [
               'sr-cell',
               assigned ? `sr-tint-${r % TINT_COUNT}` : '',
-              (assigned || above !== -1) && r !== above ? 'sr-edge-t' : '',
-              (assigned || left !== -1) && r !== left ? 'sr-edge-l' : '',
-              col === size - 1 && assigned ? 'sr-edge-r' : '',
-              row === size - 1 && assigned ? 'sr-edge-b' : '',
+              edges.top ? 'sr-edge-t' : '',
+              edges.right ? 'sr-edge-r' : '',
+              edges.bottom ? 'sr-edge-b' : '',
+              edges.left ? 'sr-edge-l' : '',
+              corners.tl ? 'sr-corner-tl' : '',
+              corners.tr ? 'sr-corner-tr' : '',
+              corners.bl ? 'sr-corner-bl' : '',
+              corners.br ? 'sr-corner-br' : '',
             ]
               .filter(Boolean)
               .join(' ');
@@ -57,7 +73,7 @@ function MiniBoard({ cells, clues }: { cells: string; clues: readonly FigureClue
               <span key={index} className={classes}>
                 {clue ? (
                   <span className="sr-clue">
-                    {clue.shape ? <ShapeIcon category={clue.shape} /> : null}
+                    {clue.shape ? <ShapeIcon category={clue.shape} cells={iconCells} /> : null}
                     {clue.size !== null ? (
                       <span className="sr-clue-count">
                         {count(r) === clue.size ? clue.size : `${count(r)}/${clue.size}`}
