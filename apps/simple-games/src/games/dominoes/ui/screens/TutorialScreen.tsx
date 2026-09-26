@@ -74,7 +74,8 @@ const SCORE = (
 );
 
 export function DominoesTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startNewGame, goHome } = useDominoes();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startNewGame, goHome } =
+    useDominoes();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('dominoes', locale);
   const [step, setStep] = useState(0);
@@ -90,7 +91,11 @@ export function DominoesTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startNewGame();
+      // Straight into play — onto the game already waiting, if one is: the
+      // flag and the save are separate records, and a lost flag write must
+      // not cost the player the game they left (Yacht's shape).
+      if (canResume) resumeGame();
+      else startNewGame();
     } else {
       goHome();
     }

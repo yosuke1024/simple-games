@@ -83,7 +83,8 @@ const CLOSED_BOX: Board = { n: 2, edges: '102002210001', boxes: 'p...' };
 const FULL_BOARD: Board = { n: 2, edges: '121122112121', boxes: 'ppcp' };
 
 export function DotsAndBoxesTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startNewGame, goHome } = useDotsAndBoxes();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startNewGame, goHome } =
+    useDotsAndBoxes();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('dots-and-boxes', locale);
   const [step, setStep] = useState(0);
@@ -111,9 +112,13 @@ export function DotsAndBoxesTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      // The first match is on the smallest board; the others are one tap
+      // Straight into play — onto the game already waiting, if one is: the
+      // flag and the save are separate records, and a lost flag write must
+      // not cost the player the game they left (Yacht's shape).
+      // Otherwise the first match is on the smallest board; the others are one tap
       // away on the home screen (§9).
-      startNewGame('small');
+      if (canResume) resumeGame();
+      else startNewGame('small');
     } else {
       goHome();
     }

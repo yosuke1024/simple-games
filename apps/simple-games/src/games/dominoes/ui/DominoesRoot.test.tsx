@@ -438,6 +438,17 @@ describe('a home-screen shortcut (issue #113)', () => {
 
     expect(await screen.findByText('Match an end')).toBeInTheDocument();
     expect(screen.queryByRole('group', { name: /Line of play/ })).not.toBeInTheDocument();
+
+    // And Quick Rules lead onto the game that was waiting, not over it: the
+    // save keeps its seed rather than being replaced by a fresh deal.
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+    expect(lineGroup()).toBeInTheDocument();
+    expect((JSON.parse(deviceStore.get(DM_STORAGE_KEYS.game)!) as { seed: string }).seed).toBe(
+      oneEnd.seed,
+    );
   });
 
   // The counterpart of §9's promise that a restored elapsedSeconds comes back

@@ -78,8 +78,8 @@ export function HitAndBlowGameScreen() {
   }, [popSymbol]);
 
   const onCheck = useCallback(() => {
-    if (!checkGuess()) return;
     // A winning guess is answered by the clear below, not by this as well.
+    if (checkGuess() !== 'playing') return;
     sounds.match();
     void haptics.match();
   }, [checkGuess]);

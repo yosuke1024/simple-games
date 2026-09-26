@@ -337,6 +337,17 @@ describe('a home-screen shortcut', () => {
     deviceStore.set(HB_STORAGE_KEYS.game, store[HB_STORAGE_KEYS.game]!);
     launchFromShortcut();
     expect(await screen.findByText('Find the hidden row')).toBeInTheDocument();
+
+    // And Quick Rules lead onto the game that was waiting, not over it: its
+    // one guess is still in the history, and the save keeps its seed.
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+    expect(within(history()).getAllByRole('listitem')).toHaveLength(1);
+    expect((JSON.parse(deviceStore.get(HB_STORAGE_KEYS.game)!) as { seed: string }).seed).toBe(
+      SEED,
+    );
   });
 });
 

@@ -543,6 +543,18 @@ describe('a home-screen shortcut', () => {
 
     expect(await screen.findByText('Tap a pit to sow')).toBeInTheDocument();
     expect(boardShown()).not.toBeInTheDocument();
+
+    // And Quick Rules lead onto the match that was waiting, not over it: the
+    // save keeps its seed, and the board is the suspended one.
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+    expect(boardShown()).toBeInTheDocument();
+    expect(announcedPits()).not.toEqual([4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0]);
+    expect((JSON.parse(deviceStore.get(MC_STORAGE_KEYS.game)!) as { seed: string }).seed).toBe(
+      SEED,
+    );
   });
 
   it('plays a CPU turn it was suspended in, on the same beat (§8)', async () => {

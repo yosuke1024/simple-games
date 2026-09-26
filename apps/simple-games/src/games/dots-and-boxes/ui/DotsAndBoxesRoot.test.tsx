@@ -376,6 +376,18 @@ describe('a home-screen shortcut', () => {
 
     expect(await screen.findByText('Tap between two dots')).toBeInTheDocument();
     expect(boardShown()).not.toBeInTheDocument();
+
+    // And Quick Rules lead onto the match that was waiting, not over it: the
+    // two lines already drawn are still there, and the save keeps its seed.
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+    expect(boardShown()).toBeInTheDocument();
+    expect(allLines()).toHaveLength(2);
+    expect((JSON.parse(deviceStore.get(DB_STORAGE_KEYS.game)!) as { seed: string }).seed).toBe(
+      'dots-and-boxes-uitest',
+    );
   });
 
   it('plays the CPU’s turn when the match was left on it', async () => {

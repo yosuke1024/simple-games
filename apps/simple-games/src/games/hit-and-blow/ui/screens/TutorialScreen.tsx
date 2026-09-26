@@ -64,7 +64,8 @@ function LegendFigure({ hit, blow }: { hit: string; blow: string }) {
 }
 
 export function HitAndBlowTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startNewGame, goHome } = useHitAndBlow();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startNewGame, goHome } =
+    useHitAndBlow();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('hit-and-blow', locale);
   const [step, setStep] = useState(0);
@@ -92,9 +93,13 @@ export function HitAndBlowTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      // The first game is the smallest one; the others are one tap away on
+      // Straight into play — onto the game already waiting, if one is: the
+      // flag and the save are separate records, and a lost flag write must
+      // not cost the player the game they left (Yacht's shape).
+      // Otherwise the first game is the smallest one; the others are one tap away on
       // the home screen (§9).
-      startNewGame('easy');
+      if (canResume) resumeGame();
+      else startNewGame('easy');
     } else {
       goHome();
     }

@@ -36,6 +36,7 @@ import {
   pushSymbol as pushDraftSymbol,
   submitGuess,
   type Difficulty,
+  type GameStatus,
   type HitAndBlowSession,
 } from '../game';
 import { clearSavedGame, saveGame } from '../storage/gamePersistence';
@@ -80,7 +81,8 @@ export interface HitAndBlowContextValue {
   /** Empties one slot. False when it was already empty (§3). */
   clearSlot: (slot: number) => boolean;
   /** Checks the composed row. False unless it is full and valid (§3, §5). */
-  checkGuess: () => boolean;
+  /** Submits the row. The status it leaves, or null when nothing was checked. */
+  checkGuess: () => GameStatus | null;
   goHome: () => void;
   exitToCollection: () => void;
   completeTutorial: () => void;
@@ -283,20 +285,20 @@ export function HitAndBlowProvider({
     [editDraft],
   );
 
-  const checkGuess = useCallback((): boolean => {
+  const checkGuess = useCallback((): GameStatus | null => {
     const current = sessionRef.current;
-    if (!current) return false;
+    if (!current) return null;
     const next = submitGuess(withElapsed(current));
-    if (!next) return false;
+    if (!next) return null;
     putSession(next);
     if (next.status === 'playing') {
       void saveGame(next);
-      return true;
+      return next.status;
     }
     void clearSavedGame();
     finalizeGame(next);
     recordGameCompleted();
-    return true;
+    return next.status;
   }, [finalizeGame, putSession, withElapsed]);
 
   /** Saves the on-screen game and books its play time so far. */

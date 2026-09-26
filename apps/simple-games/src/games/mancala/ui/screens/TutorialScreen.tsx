@@ -78,7 +78,8 @@ const CAPTURE: FigureSpec = {
 };
 
 export function MancalaTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startNewGame, goHome } = useMancala();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startNewGame, goHome } =
+    useMancala();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('mancala', locale);
   const [step, setStep] = useState(0);
@@ -106,9 +107,13 @@ export function MancalaTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      // The first match is against the gentlest opponent; the others are one
+      // Straight into play — onto the game already waiting, if one is: the
+      // flag and the save are separate records, and a lost flag write must
+      // not cost the player the game they left (Yacht's shape).
+      // Otherwise the first match is against the gentlest opponent; the others are one
       // tap away on the home screen (§4, §9).
-      startNewGame('easy');
+      if (canResume) resumeGame();
+      else startNewGame('easy');
     } else {
       goHome();
     }
