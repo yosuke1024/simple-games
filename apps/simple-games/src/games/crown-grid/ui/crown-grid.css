@@ -74,11 +74,16 @@
   narrowest phone this app supports, and the one measurement the size table
   had to clear (§1, §13). Anything narrower clamps at 28px and scrolls instead
   of shrinking further, because a cell too small to hit is worse than a board
-  that moves. Cells sit flush: regions read as areas, not as tiles.
+  that moves.
 */
 .cg-board {
   --cg-cell: clamp(28px, calc((100vw - 24px - 4px) / var(--cg-size)), 44px);
   --cg-wall: var(--ink);
+  /* The ink gap between two tiles is twice this: each side's tile gives up
+     one --cg-gap, so a boundary reads as one 2px seam (§13). */
+  --cg-gap: 1px;
+  --cg-round: 5px;
+  position: relative;
   display: inline-block;
   border: 2px solid var(--cg-wall);
   border-radius: 6px;
@@ -98,6 +103,19 @@
 
 /* ---------- cells ---------- */
 
+/*
+  A region is one rounded tile per cell (§13), not a flat background: the
+  cell itself is ink (--cg-wall) and the tint lives on ::before, inset by
+  --cg-gap on every side that meets another region or the board's edge
+  (cg-b-t/r/b/l, computed once per render in tileClasses.ts). Same-region
+  sides stay at 0 inset, so neighbouring tiles run together with no seam.
+  The ruling that lets a player count cells inside one region survives as a
+  1px line on the right/bottom, but only where that side is NOT a boundary —
+  --cg-rule-r/--cg-rule-b switch it on per side without a second box-shadow
+  layer. A convex corner (cg-c-*, both meeting sides boundaries) rounds by
+  --cg-round; a concave one is left square here because the tile that IS
+  convex there — the diagonal neighbour's — draws the rounded notch instead.
+*/
 .cg-cell {
   position: relative;
   width: var(--cg-cell);
@@ -109,16 +127,62 @@
   padding: 0;
   border: 0;
   border-radius: 0;
-  background: var(--cg-tint, var(--surface));
-  /* A hairline on the right and bottom keeps single cells countable inside
-     one region; the region walls below draw over it on the top and left. */
-  box-shadow: inset -1px -1px 0 0 var(--line);
+  background: var(--cg-wall);
   color: var(--ink);
-  transition: background-color 0.12s ease;
 }
 
-.cg-cell:active {
-  filter: brightness(0.94);
+.cg-cell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  --cg-rule-r: 0px;
+  --cg-rule-b: 0px;
+  background-color: var(--cg-tint, var(--surface));
+  box-shadow: inset calc(-1 * var(--cg-rule-r)) calc(-1 * var(--cg-rule-b)) 0 0 var(--line);
+  pointer-events: none;
+}
+
+.cg-cell:not(.cg-b-r)::before {
+  --cg-rule-r: 1px;
+}
+.cg-cell:not(.cg-b-b)::before {
+  --cg-rule-b: 1px;
+}
+
+.cg-cell.cg-b-t::before {
+  top: var(--cg-gap);
+}
+.cg-cell.cg-b-r::before {
+  right: var(--cg-gap);
+}
+.cg-cell.cg-b-b::before {
+  bottom: var(--cg-gap);
+}
+.cg-cell.cg-b-l::before {
+  left: var(--cg-gap);
+}
+
+.cg-cell.cg-c-tl::before {
+  border-top-left-radius: var(--cg-round);
+}
+.cg-cell.cg-c-tr::before {
+  border-top-right-radius: var(--cg-round);
+}
+.cg-cell.cg-c-br::before {
+  border-bottom-right-radius: var(--cg-round);
+}
+.cg-cell.cg-c-bl::before {
+  border-bottom-left-radius: var(--cg-round);
+}
+
+/* Press feedback swaps the tile's ground rather than filtering it (cheaper
+   to repaint on a low-end screen than a continuous filter would be). */
+.cg-cell:active::before {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.06));
+}
+
+:root[data-theme='dark'] .cg-cell:active::before {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08));
 }
 
 .cg-cell[data-region='0'] {
@@ -149,29 +213,46 @@
   --cg-tint: var(--cg-r8);
 }
 
-/* The thick edges between regions (§13): drawn on the cell below and to the
-   right of the boundary as inset shadows, so no layout moves and no edge is
-   drawn twice. Colour is never the only signal because of these. */
-.cg-wall-t {
-  box-shadow:
-    inset -1px -1px 0 0 var(--line),
-    inset 0 2px 0 0 var(--cg-wall);
+/* The "reach" of a crown just placed (§13): its row, column, region and 8
+   neighbours wash from --accent-soft back to the tile's own ground once,
+   700ms, so the placement reads as an action with a consequence rather than
+   a mark that quietly appeared. Not a permanent mark — nothing is left when
+   it ends, and no × is placed for the player (§4, §14). */
+.cg-cell-reach::before {
+  animation: cg-reach 700ms ease-out;
 }
 
-.cg-wall-l {
-  box-shadow:
-    inset -1px -1px 0 0 var(--line),
-    inset 2px 0 0 0 var(--cg-wall);
+/* A cell can be lit twice in a row — a second crown placed within 700ms of
+   the first can share a row, column or region with it. `cg-cell-reach-odd`
+   toggles on every placement (CrownGridBoard.tsx), so the animation-name
+   changes even when `cg-cell-reach` itself does not, and the flash restarts
+   instead of carrying on the previous one's fade. Same keyframes, a second
+   name. */
+.cg-cell-reach-odd::before {
+  animation-name: cg-reach-b;
 }
 
-.cg-wall-t.cg-wall-l {
-  box-shadow:
-    inset -1px -1px 0 0 var(--line),
-    inset 0 2px 0 0 var(--cg-wall),
-    inset 2px 0 0 0 var(--cg-wall);
+@keyframes cg-reach {
+  from {
+    background-color: var(--accent-soft);
+  }
+  to {
+    background-color: var(--cg-tint, var(--surface));
+  }
 }
 
-/* The two marks, in ink (§1, §13): the crown is the piece, the × a note. */
+@keyframes cg-reach-b {
+  from {
+    background-color: var(--accent-soft);
+  }
+  to {
+    background-color: var(--cg-tint, var(--surface));
+  }
+}
+
+/* The two marks, in ink (§1, §13): the crown is the piece, the × a note. Both
+   remount on every change of mark (`key={mark}` in CrownGridBoard) so the
+   pop always plays, including crown ↔ × swaps in place. */
 .cg-glyph {
   position: relative;
   font-family: var(--font-display);
@@ -180,12 +261,40 @@
 }
 
 .cg-glyph-crown {
-  font-size: clamp(15px, calc(var(--cg-cell) * 0.62), 28px);
+  width: clamp(15px, calc(var(--cg-cell) * 0.6), 28px);
+  height: clamp(15px, calc(var(--cg-cell) * 0.6), 28px);
+  display: inline-flex;
+  animation: cg-crown-place 90ms ease-out;
+}
+
+.cg-glyph-crown svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes cg-crown-place {
+  from {
+    transform: scale(0.6);
+  }
+  to {
+    transform: scale(1);
+  }
 }
 
 .cg-glyph-cross {
   font-size: clamp(13px, calc(var(--cg-cell) * 0.5), 22px);
   font-weight: 600;
+  animation: cg-cross-place 90ms ease-out;
+}
+
+@keyframes cg-cross-place {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Always-on violation display (§5): a crown that takes part in a broken rule,
@@ -203,8 +312,9 @@
 }
 
 /* Hint (§6): the houses the reasoning was read off, the candidates that carry
-   it, and the cells it settles. Drawn as translucent overlays so the region
-   tint still shows through — the hint is about the regions. */
+   it, and the cells it settles. Drawn as translucent overlays on ::after, so
+   they land above the tile (::before) and the glyph — the hint is about the
+   regions and the marks alike. */
 .cg-cell-reason::after,
 .cg-cell-support::after {
   content: '';
@@ -232,15 +342,56 @@
   z-index: 2;
 }
 
-/* Reduced Motion: marks appear at once, with nothing to wait for (§13). */
-@media (prefers-reduced-motion: reduce) {
-  .cg-cell {
-    transition: none;
+/* The "solved" beat shared with every early-release board (Number Path,
+   Shape Regions): one wash over the whole board, opacity 0 → 1 (at 30%) → 0
+   over 900ms, timed to fade before ui/useResultReveal.ts brings the result
+   card up. One element, opacity only — no per-cell cost. */
+.cg-board-solved::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: var(--accent-soft);
+  border-radius: inherit;
+  animation: cg-solved-wash 900ms ease-out;
+}
+
+@keyframes cg-solved-wash {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 
-:root[data-reduced-motion='true'] .cg-cell {
-  transition: none;
+/* Every crown resettles once the board is solved, in row-major order
+   (--cg-i, set inline per glyph): a small drop, 240ms, each one 40ms behind
+   the last. `backwards` holds each crown at the drop's starting position
+   (translateY(-2px)) through its delay, so it drops into place instead of
+   sitting still and then hopping when the delay ends. Listing cg-crown-place
+   alongside it means the winning crown — which mounts in the very render
+   that sets `solved` — still gets its placement pop as well as the settle.
+   Reduced Motion (src/ui/styles.css) collapses this, cg-reach and the
+   placement pops above to their end state — nothing keeps moving and
+   nothing is left over either way. */
+.cg-board-solved .cg-glyph-crown {
+  animation:
+    cg-crown-place 90ms ease-out,
+    cg-settle 240ms ease-out calc(var(--cg-i, 0) * 40ms) backwards;
+}
+
+@keyframes cg-settle {
+  from {
+    transform: translateY(-2px);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 /* ---------- top bar ---------- */

@@ -283,6 +283,30 @@ describe('first run', () => {
     expect(within(board()).getAllByRole('button')).toHaveLength(36);
     expect(screen.getByRole('button', { name: 'Hint' })).toBeEnabled();
   });
+
+  it('draws the Quick Rules figure with the board’s own tile and crown classes (§12, §13)', async () => {
+    renderGame();
+    expect(await screen.findByText('One crown each')).toBeInTheDocument();
+
+    // Step 1's figure: regions='aabb'/'abbb'/'ccdb'/'cddd', drawn cell by
+    // cell through the same `tileClasses` helper the real board uses.
+    const figureCells = document.querySelectorAll('.tutorial-example .cg-cell');
+    expect(figureCells).toHaveLength(16);
+
+    // Row 0, col 2 is 'b' in "aabb": a region edge against 'a' to its left,
+    // and the board's own top edge — a boundary on two sides, so its corner
+    // is convex and rounded, while the sides it shares with region 'b' are not.
+    const edgeCell = figureCells[2]!;
+    expect(edgeCell.classList.contains('cg-b-t')).toBe(true);
+    expect(edgeCell.classList.contains('cg-b-l')).toBe(true);
+    expect(edgeCell.classList.contains('cg-c-tl')).toBe(true);
+    expect(edgeCell.classList.contains('cg-b-r')).toBe(false);
+    expect(edgeCell.classList.contains('cg-b-b')).toBe(false);
+
+    // marks[0] = '.q..': the crown at (row 0, col 1) is the SVG CrownGlyph,
+    // the same as on a real board (§1).
+    expect(figureCells[1]!.querySelector('svg')).not.toBeNull();
+  });
 });
 
 describe('home (§9)', () => {
@@ -455,6 +479,10 @@ describe('playing (§2, §4)', () => {
       await user.click(cell);
     }
 
+    // GameScreen maps session.status === 'solved' onto the board itself
+    // (docs/plans/2026-09-27-board-richness.md「解けた」の一拍), which is what
+    // triggers the shared solved-wash animation.
+    expect(board().classList.contains('cg-board-solved')).toBe(true);
     expect(await screen.findByRole('alertdialog', { name: 'Solved!' })).toBeInTheDocument();
     expect(screen.getByText('Hints used')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'New board' })).toBeInTheDocument();

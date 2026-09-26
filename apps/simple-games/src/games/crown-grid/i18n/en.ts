@@ -3,8 +3,9 @@
  * the entry, and registered on chunk load by ./index.ts. The shell's en.ts
  * stays the source of truth for shared keys, this file for Crown Grid's.
  *
- * The board itself carries no words. Its two marks are the symbols ♛ and ×
- * — identical in every locale — and the regions are colours and borders
+ * The board itself carries no words. Its two marks are a language-independent
+ * crown SVG and the symbol × — identical in every locale — and the regions
+ * are rounded tiles in colour, with an ink seam between them
  * (docs/CROWN_GRID_RULES.md §1, §13), so everything here is chrome. The
  * difficulty names are referenced statically (ui/difficultyKey.ts), never
  * assembled at runtime.

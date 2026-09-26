@@ -159,7 +159,13 @@ export function CrownGridGameScreen() {
         </header>
 
         <div className="cg-board-scroll">
-          <CrownGridBoard session={session} hint={hint} onTap={onTap} onStroke={onStroke} />
+          <CrownGridBoard
+            session={session}
+            hint={hint}
+            solved={session.status === 'solved'}
+            onTap={onTap}
+            onStroke={onStroke}
+          />
         </div>
 
         {toast ? (
