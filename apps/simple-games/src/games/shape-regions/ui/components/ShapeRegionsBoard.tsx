@@ -3,8 +3,23 @@
  *
  * One button per cell, each carrying its position, its region and its clue
  * in its label, so a screen reader can read the board rather than a wall of
- * "button". Regions show as a muted tint AND a thick border along every edge
- * where the region changes, so colour is never the only signal (§13).
+ * "button".
+ *
+ * Every cell — assigned or not — carries a tile on its own `::before`
+ * (`shape-regions.css`). The tile holds the region's tint (or nothing, for
+ * an unassigned cell) and, on the side it shares with the same region,
+ * reaches 1px past the cell's own border to paint over it, so two tiles of
+ * one region meet without a seam. `cellEdges` below says which of a cell's
+ * four sides instead border a different region, an unassigned cell, or the
+ * board's edge — there the tile stops short and both sides' borders turn
+ * ink, drawing a line 2px wide between them (§5). `cellCorners` flags the
+ * convex corners of an assigned cell (both sides meeting there are borders)
+ * so the CSS can round the tile and fillet the outline. Colour is never the
+ * only signal: strip the tint and the border alone still reads the regions.
+ *
+ * A region that satisfies its clue's symbol (`regionSatisfiesClue`, §3 rule
+ * 4) hands `ShapeIcon` its own cells instead of the category's stock figure,
+ * so the clue becomes a small drawing of the shape actually placed (§5).
  *
  * Input follows §4. A press on a cell that belongs to a region starts a
  * stroke: every cell the finger crosses is offered to that region, in order,
@@ -29,7 +44,10 @@ import {
 import { useSettings } from '@/state/SettingsContext';
 import {
   UNASSIGNED,
+  normalize,
+  offsetsOf,
   regionCells,
+  regionSatisfiesClue,
   violationsOf,
   type Hint,
   type ShapeRegionsSession,
@@ -75,16 +93,73 @@ export interface ShapeRegionsBoardProps {
   onStroke: (region: number, cells: readonly number[], extend: boolean) => boolean;
   /** A tap on a cell (§4). */
   onTap: (index: number) => void;
+  /** True the instant the board is solved, for the one-shot wash (common mechanism). */
+  solved: boolean;
 }
 
 /** Region 0 is "A", region 1 "B", … — the same letters the save uses, read aloud. */
 export const regionName = (region: number): string => String.fromCharCode(65 + region);
+
+export interface CellEdges {
+  readonly top: boolean;
+  readonly right: boolean;
+  readonly bottom: boolean;
+  readonly left: boolean;
+}
+
+/**
+ * Which of a cell's four sides is a border (§5): the region on that side
+ * differs from this cell's own region — including "no region" standing in
+ * for an unassigned cell. A side with no neighbour (the board's own edge) is
+ * a border only when this cell is assigned; an unassigned cell pressed
+ * against the edge of the board has nothing to draw a line against.
+ * `regionAt` may be called with an in-range index only.
+ */
+export function cellEdges(
+  regionAt: (index: number) => number,
+  index: number,
+  row: number,
+  col: number,
+  width: number,
+  height: number,
+): CellEdges {
+  const self = regionAt(index);
+  const side = (deltaRow: number, deltaCol: number): boolean => {
+    const r = row + deltaRow;
+    const c = col + deltaCol;
+    if (r < 0 || r >= height || c < 0 || c >= width) return self !== UNASSIGNED;
+    return self !== regionAt(r * width + c);
+  };
+  return { top: side(-1, 0), right: side(0, 1), bottom: side(1, 0), left: side(0, -1) };
+}
+
+export interface CellCorners {
+  readonly tl: boolean;
+  readonly tr: boolean;
+  readonly bl: boolean;
+  readonly br: boolean;
+}
+
+/**
+ * A convex corner (§5): the cell is assigned, and both of the sides that
+ * meet at that corner are borders. An unassigned cell never has one — there
+ * is no tile there to round.
+ */
+export function cellCorners(edges: CellEdges, assigned: boolean): CellCorners {
+  return {
+    tl: assigned && edges.top && edges.left,
+    tr: assigned && edges.top && edges.right,
+    bl: assigned && edges.bottom && edges.left,
+    br: assigned && edges.bottom && edges.right,
+  };
+}
 
 export const ShapeRegionsBoard = memo(function ShapeRegionsBoard({
   session,
   hint,
   onStroke,
   onTap,
+  solved,
 }: ShapeRegionsBoardProps) {
   const { t } = useSettings();
   const { width, height, clues, assignment } = session;
@@ -227,11 +302,16 @@ export const ShapeRegionsBoard = memo(function ShapeRegionsBoard({
   const reasonCells = new Set<number>(hint?.kind === 'step' ? hint.step.reason : []);
   const wrongCells = new Set<number>(hint?.kind === 'wrong' ? hint.cells : []);
 
-  const counts = clues.map((_, region) => regionCells(assignment, region).length);
+  // Every region's held cells, read once: the clue count (§5) and, for a
+  // clue whose region now satisfies its symbol, the actual shape (below).
+  const heldByRegion = clues.map((_, region) => regionCells(assignment, region));
+  const counts = heldByRegion.map((held) => held.length);
+
+  const regionAt = (index: number): number => assignment[index] ?? UNASSIGNED;
 
   return (
     <div
-      className="sr-board"
+      className={`sr-board${solved ? ' sr-board-solved' : ''}`}
       role="group"
       aria-label={t('shapeRegionsBoardLabel', { width, height })}
       style={{ '--sr-cols': width, '--sr-rows': height } as CSSProperties}
@@ -251,15 +331,8 @@ export const ShapeRegionsBoard = memo(function ShapeRegionsBoard({
           const assigned = region !== UNASSIGNED;
           const position = { row: row + 1, col: col + 1 };
 
-          // Thick edges where the region changes (§5): the top and left of
-          // every cell, plus the outer right and bottom, so each shared edge
-          // is drawn once.
-          const above = row === 0 ? UNASSIGNED : assignment[index - width]!;
-          const left = col === 0 ? UNASSIGNED : assignment[index - 1]!;
-          const edgeTop = assigned || above !== UNASSIGNED ? region !== above : false;
-          const edgeLeft = assigned || left !== UNASSIGNED ? region !== left : false;
-          const edgeRight = col === width - 1 && assigned;
-          const edgeBottom = row === height - 1 && assigned;
+          const edges = cellEdges(regionAt, index, row, col, width, height);
+          const corners = cellCorners(edges, assigned);
 
           let label = assigned
             ? t('shapeRegionsCellAssigned', { ...position, region: regionName(region) })
@@ -276,10 +349,14 @@ export const ShapeRegionsBoard = memo(function ShapeRegionsBoard({
           const classes = [
             'sr-cell',
             assigned ? `sr-tint-${region % TINT_COUNT}` : '',
-            edgeTop ? 'sr-edge-t' : '',
-            edgeLeft ? 'sr-edge-l' : '',
-            edgeRight ? 'sr-edge-r' : '',
-            edgeBottom ? 'sr-edge-b' : '',
+            edges.top ? 'sr-edge-t' : '',
+            edges.right ? 'sr-edge-r' : '',
+            edges.bottom ? 'sr-edge-b' : '',
+            edges.left ? 'sr-edge-l' : '',
+            corners.tl ? 'sr-corner-tl' : '',
+            corners.tr ? 'sr-corner-tr' : '',
+            corners.bl ? 'sr-corner-bl' : '',
+            corners.br ? 'sr-corner-br' : '',
             broken ? 'sr-cell-warn' : '',
             hintCells.has(index) ? 'sr-cell-hint' : '',
             reasonCells.has(index) ? 'sr-cell-reason' : '',
@@ -289,6 +366,14 @@ export const ShapeRegionsBoard = memo(function ShapeRegionsBoard({
             .join(' ');
 
           const count = clueIndex === -1 ? 0 : counts[clueIndex]!;
+          // The clue becomes the placed shape once its region satisfies it
+          // (§3 rule 4, §5) — the true cells, not the category's stock figure.
+          const held = clueIndex === -1 ? [] : heldByRegion[clueIndex]!;
+          const placed =
+            clue !== null && clue.shape !== null && regionSatisfiesClue(held, clue, width);
+          const iconCells = placed
+            ? normalize(offsetsOf(held, width)).map((offset) => [offset.r, offset.c] as const)
+            : undefined;
 
           return (
             <button
@@ -301,7 +386,13 @@ export const ShapeRegionsBoard = memo(function ShapeRegionsBoard({
             >
               {clue !== null ? (
                 <span className="sr-clue" aria-hidden="true">
-                  {clue.shape !== null ? <ShapeIcon category={clue.shape} /> : null}
+                  {clue.shape !== null ? (
+                    <ShapeIcon
+                      key={placed ? 'placed' : 'category'}
+                      category={clue.shape}
+                      cells={iconCells}
+                    />
+                  ) : null}
                   {clue.size !== null ? (
                     <span className="sr-clue-count">
                       {count === clue.size ? clue.size : `${count}/${clue.size}`}
