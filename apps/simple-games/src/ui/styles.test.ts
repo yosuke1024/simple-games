@@ -66,8 +66,12 @@ describe('the home screens share .home-logo', () => {
 describe('the CSS-per-game list in docs/architecture/css-split.md', () => {
   const doc = readFileSync(resolve('../../docs/architecture/css-split.md'), 'utf8');
   const claim = doc.slice(doc.indexOf('**全タイトルが規約に従っている**'));
+  // The window is the one sentence that lists the files, and it grows with
+  // the collection: thirty names filled about 600 characters, and the three
+  // web-beta titles (issue #194) pushed the sentence past it — a scan cut
+  // short would have reported them as missing while they sat right there.
   const listed = new Set(
-    [...claim.slice(0, 600).matchAll(/`([a-z0-9-]+\.css)`/g)].map((m) => m[1]!),
+    [...claim.slice(0, 1200).matchAll(/`([a-z0-9-]+\.css)`/g)].map((m) => m[1]!),
   );
   // readdirSync rather than fs.globSync: the latter needs Node 22, and this
   // repository says it supports Node 20 (package.json engines).

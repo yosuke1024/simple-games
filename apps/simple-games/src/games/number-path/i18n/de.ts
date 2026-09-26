@@ -1,15 +1,41 @@
 /**
- * Placeholder German catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real German translation before release (docs/I18N_POLICY.md); the
- * title (`numberPathName`) is a proper noun and stays as-is in every locale.
+ * German catalog of Number Path (docs/I18N_POLICY.md: provenance `machine` — written
+ * with AI assistance and not yet read by a native speaker). The title is a proper
+ * noun and stays as-is.
  */
 import type { NumberPathMessages } from './en';
 
 export const de: NumberPathMessages = {
   numberPathName: 'Number Path',
-  numberPathPlayPlaceholder: 'Play a sample round',
-  numberPathHowToPlayPlaceholder: 'This game does not have rules yet — add them here.',
-  numberPathResultTitle: 'Nice work',
-  numberPathResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  numberPathChooseBoard: 'Feld wählen',
+  numberPathDifficulty_easy: 'Leicht',
+  numberPathDifficulty_medium: 'Mittel',
+  numberPathDifficulty_hard: 'Schwer',
+  numberPathBoardNote: '{width}×{height}',
+  numberPathBoardLabel: 'Number-Path-Feld, {width} mal {height}',
+  numberPathCellPlain: 'Zeile {row}, Spalte {col}',
+  numberPathCellNumber: 'Zahl {n}, Zeile {row}, Spalte {col}',
+  numberPathOnPath: 'auf dem Weg, Schritt {step}',
+  numberPathOffPath: 'nicht auf dem Weg',
+  numberPathHintNext: 'Das markierte Feld ist der nächste Schritt.',
+  numberPathHintBack: 'Der Weg ist abgekommen. Geh bis zum markierten Feld zurück.',
+  numberPathHintNone: 'Gerade kein Hinweis.',
+  numberPathSolvedTitle: 'Gelöst!',
+  numberPathSolvedBody: 'Eine Linie, jedes Feld, der Reihe nach.',
+  numberPathHintsUsed: 'Genutzte Hinweise',
+  numberPathNewBestTime: 'Deine bisher schnellste Zeit.',
+  numberPathNewBoard: 'Neues Feld',
+  numberPathSolvedCount: 'Gelöste Felder',
+  numberPathDailySection: 'Täglich',
+  numberPathDailiesSolved: 'Gelöste Tage',
+  numberPathDailyBacklogHint: 'Jeder frühere Tag bleibt offen.',
+  numberPathStep1Title: 'Den Zahlen folgen',
+  numberPathStep1Body:
+    'Zieh eine einzige Linie von der 1 aus und geh die Zahlen der Reihe nach ab.',
+  numberPathStep2Title: 'Jedes Feld abdecken',
+  numberPathStep2Body:
+    'Die Linie führt genau einmal durch jedes Feld und endet auf der letzten Zahl.',
+  numberPathStep3Title: 'Wände versperren den Weg',
+  numberPathStep3Body:
+    'Über eine dicke Kante geht es nicht; zum Zurückgehen die Linie rückwärts nachziehen oder ein Feld darauf antippen.',
 };

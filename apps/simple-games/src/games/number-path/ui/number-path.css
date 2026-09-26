@@ -1,5 +1,328 @@
-/**
- * NumberPath's styles — scaffolded by scripts/new-game.mjs. The shared shell
- * classes (.screen, .home-hero, .btn, .dialog, ...) already cover this
- * placeholder; add the game's own board and chrome here as it grows.
- */
+/* Number Path — all of this game's styling, imported by NumberPathRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --paper, --warn, --radius, --font-display, …) so the
+   game reads as part of the same app and follows the theme without knowing
+   about it. No colour of its own: the path is the accent, the walls are ink.
+
+   Class names are prefixed `np-` so this file can never collide with the
+   shell or with another game. */
+
+/* ---------- board ---------- */
+
+.np-board-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px 12px;
+}
+
+/*
+  The cell is whatever is left of the viewport once the scroll padding (24px),
+  the board's own padding (8px) and border (2px) are taken out, shared by the
+  columns. That works out at 40.9px per cell for a 7×7 on a 320px screen — the
+  widest board on the narrowest phone this app supports, and the one
+  measurement the size table had to clear (§1): a finger has to be able to
+  drag through it. Anything narrower clamps at 34px and scrolls instead.
+
+  No gap between cells: the path is drawn from each cell's centre to its
+  edges, and it has to meet the neighbour's segment on the shared edge.
+*/
+.np-board {
+  --np-pad: 4px;
+  --np-cell: clamp(34px, calc((100vw - 24px - 2 * var(--np-pad) - 2px) / var(--np-cols)), 60px);
+  /* The path's thickness, the wall's thickness, and the disc a number sits on. */
+  --np-line: calc(var(--np-cell) * 0.3);
+  --np-wall: 2px;
+  --np-disc: calc(var(--np-cell) * 0.6);
+  padding: var(--np-pad);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  /* A finger on the board is drawing, never scrolling or zooming (§4). */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.np-cells {
+  display: grid;
+  grid-template-columns: repeat(var(--np-cols), var(--np-cell));
+  grid-auto-rows: var(--np-cell);
+}
+
+/* ---------- cells ---------- */
+
+.np-cell {
+  position: relative;
+  width: var(--np-cell);
+  height: var(--np-cell);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--surface);
+  /* The grid lines, inside the cell so they cost no layout: one on the right,
+     one below. The last column and row leave them to the board's border. */
+  box-shadow:
+    inset -1px 0 0 var(--line),
+    inset 0 -1px 0 var(--line);
+  overflow: hidden;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.np-cell-edge-right {
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+
+.np-cell-edge-bottom {
+  box-shadow: inset -1px 0 0 var(--line);
+}
+
+.np-cell-edge-right.np-cell-edge-bottom {
+  box-shadow: none;
+}
+
+.np-cell:first-child {
+  border-top-left-radius: 7px;
+}
+
+.np-cell-edge-right:nth-child(-n + 7) {
+  border-top-right-radius: 7px;
+}
+
+.np-cell:active {
+  background: var(--accent-soft);
+}
+
+/* A cell the path has been through: a quiet ground under the line, so the
+   covered part of the board reads as covered even where the line is thin. */
+.np-cell-on {
+  background: var(--accent-ring-soft);
+}
+
+/* ---------- the path ---------- */
+
+/* A segment runs from the cell's centre to one edge, where it meets the
+   neighbour's. Four sides, two of them at most on any cell. */
+.np-seg {
+  position: absolute;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.np-seg-up,
+.np-seg-down {
+  left: calc(50% - var(--np-line) / 2);
+  width: var(--np-line);
+}
+
+.np-seg-left,
+.np-seg-right {
+  top: calc(50% - var(--np-line) / 2);
+  height: var(--np-line);
+}
+
+.np-seg-up {
+  top: 0;
+  height: calc(50% + var(--np-line) / 2);
+}
+
+.np-seg-down {
+  bottom: 0;
+  height: calc(50% + var(--np-line) / 2);
+}
+
+.np-seg-left {
+  left: 0;
+  width: calc(50% + var(--np-line) / 2);
+}
+
+.np-seg-right {
+  right: 0;
+  width: calc(50% + var(--np-line) / 2);
+}
+
+/* The end of the path: where the next stroke starts (§4). A round cap on the
+   line — larger than the line, ringed in paper so it reads on any ground. */
+.np-end {
+  position: absolute;
+  left: calc(50% - var(--np-line) * 0.75);
+  top: calc(50% - var(--np-line) * 0.75);
+  width: calc(var(--np-line) * 1.5);
+  height: calc(var(--np-line) * 1.5);
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--paper);
+  pointer-events: none;
+}
+
+/* ---------- numbers ---------- */
+
+/* A number sits on a disc above the line. Not yet reached: an outlined disc
+   in ink. Reached: the disc fills with the accent — state by fill, not by
+   colour alone (§11). */
+.np-digit {
+  position: absolute;
+  left: calc(50% - var(--np-disc) / 2);
+  top: calc(50% - var(--np-disc) / 2);
+  width: var(--np-disc);
+  height: var(--np-disc);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  font-family: var(--font-display);
+  font-size: clamp(13px, calc(var(--np-cell) * 0.4), 22px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--ink);
+  pointer-events: none;
+}
+
+.np-cell-visited .np-digit {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* ---------- walls ---------- */
+
+/* A wall is drawn inside both cells it separates, so the two halves meet on
+   the shared edge as one thick line the path never crosses (§1). */
+.np-wall {
+  position: absolute;
+  background: var(--ink);
+  pointer-events: none;
+}
+
+.np-wall-up {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--np-wall);
+}
+
+.np-wall-down {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--np-wall);
+}
+
+.np-wall-left {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--np-wall);
+}
+
+.np-wall-right {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: var(--np-wall);
+}
+
+/* ---------- hint (§5) ---------- */
+
+/* The cell the hint points at: the next one, or the one to back up to. */
+.np-cell-hint {
+  box-shadow:
+    inset 0 0 0 3px var(--accent),
+    inset -1px 0 0 var(--line),
+    inset 0 -1px 0 var(--line);
+}
+
+/* The stretch that left the road, when the hint says to back up: the warning
+   colour on the line, and only on the line — the ring says where to stop. */
+.np-cell-astray .np-seg,
+.np-cell-astray .np-end {
+  background: var(--warn);
+}
+
+.np-cell-astray {
+  background: var(--warn-soft);
+}
+
+/* Reduced Motion: the line appears at once, with nothing to wait for (§11). */
+@media (prefers-reduced-motion: reduce) {
+  .np-cell {
+    transition: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .np-cell {
+  transition: none;
+}
+
+/* ---------- top bar ---------- */
+
+.np-size-tag {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- home ---------- */
+
+.np-choose-label {
+  margin: 0 0 -4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.np-chips {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* A 3×3 drawn with the board's own cells, at a fixed size. */
+.np-figure {
+  --np-cols: 3;
+  --np-cell: 40px;
+  --np-line: 12px;
+  --np-wall: 2px;
+  --np-disc: 24px;
+  display: grid;
+  grid-template-columns: repeat(3, var(--np-cell));
+  grid-auto-rows: var(--np-cell);
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.np-figure .np-cell {
+  display: block;
+  cursor: default;
+}
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; both tiers only raise the ceiling of the board's own clamp, so
+   a wide screen gets bigger cells without moving the 320px floor. The line,
+   the disc and the digit are all shares of `--np-cell`, so they scale with
+   it and need no rule here. */
+
+@media (min-width: 600px) {
+  .np-board {
+    --np-cell: clamp(34px, calc((100vw - 24px - 2 * var(--np-pad) - 2px) / var(--np-cols)), 68px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .np-board {
+    --np-cell: clamp(34px, calc((100vw - 24px - 2 * var(--np-pad) - 2px) / var(--np-cols)), 76px);
+  }
+}
