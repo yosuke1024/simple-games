@@ -252,9 +252,10 @@ export const NumberPathBoard = memo(function NumberPathBoard({
             view.step >= 0
               ? t('numberPathOnPath', { step: view.step + 1 })
               : t('numberPathOffPath');
+          const hinted = hint?.cell === index;
           const classes = [
             ...cellClasses(view),
-            hint?.cell === index ? 'np-cell-hint' : '',
+            hinted ? 'np-cell-hint' : '',
             astrayFrom >= 0 && view.step > astrayFrom ? 'np-cell-astray' : '',
           ]
             .filter(Boolean)
@@ -265,7 +266,9 @@ export const NumberPathBoard = memo(function NumberPathBoard({
               key={index}
               type="button"
               className={classes}
-              aria-label={`${base}, ${state}`}
+              aria-label={
+                hinted ? `${base}, ${state}, ${t('numberPathHintMarked')}` : `${base}, ${state}`
+              }
               onPointerDown={(event) => onPointerDown(event, index)}
               onClick={(event) => onClick(event, index)}
             >

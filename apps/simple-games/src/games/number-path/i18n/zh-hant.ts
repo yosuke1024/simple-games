@@ -20,6 +20,7 @@ export const zhHant: NumberPathMessages = {
   numberPathHintNext: '標記的格子就是下一步。',
   numberPathHintBack: '路徑已偏離。請退回到標記的格子。',
   numberPathHintNone: '目前沒有提示。',
+  numberPathHintMarked: '提示',
   numberPathSolvedTitle: '完成！',
   numberPathSolvedBody: '一筆畫過每一格，依序前進。',
   numberPathHintsUsed: '使用的提示',

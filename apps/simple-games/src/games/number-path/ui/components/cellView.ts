@@ -36,6 +36,7 @@ export interface CellView {
   readonly segments: readonly string[];
   /** Walls to draw, as CSS side names. */
   readonly walls: readonly string[];
+  readonly firstRow: boolean;
   readonly lastCol: boolean;
   readonly lastRow: boolean;
 }
@@ -72,6 +73,7 @@ export function cellView(board: Board, path: Path, positions: Int16Array, index:
     isEnd: step === path.length - 1,
     segments,
     walls,
+    firstRow: Math.floor(index / width) === 0,
     lastCol: index % width === width - 1,
     lastRow: Math.floor(index / width) === height - 1,
   };
@@ -87,5 +89,9 @@ export function cellClasses(view: CellView): string[] {
     view.number !== 0 && view.step >= 0 ? 'np-cell-visited' : '',
     view.lastCol ? 'np-cell-edge-right' : '',
     view.lastRow ? 'np-cell-edge-bottom' : '',
+    // The board's own top-right corner: derived from geometry, never a fixed
+    // child count, so it lands on that one cell whatever the board's width —
+    // the live 5/6/7-wide boards and the 3-wide Quick Rules figure alike.
+    view.firstRow && view.lastCol ? 'np-cell-corner-tr' : '',
   ].filter(Boolean);
 }

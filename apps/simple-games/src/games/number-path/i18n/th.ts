@@ -20,6 +20,7 @@ export const th: NumberPathMessages = {
   numberPathHintNext: 'ช่องที่ทำเครื่องหมายคือก้าวถัดไป',
   numberPathHintBack: 'เส้นทางหลงไปแล้ว ถอยกลับไปยังช่องที่ทำเครื่องหมาย',
   numberPathHintNone: 'ตอนนี้ยังไม่มีคำใบ้',
+  numberPathHintMarked: 'คำใบ้',
   numberPathSolvedTitle: 'สำเร็จ!',
   numberPathSolvedBody: 'เส้นเดียว ครบทุกช่อง ตามลำดับ',
   numberPathHintsUsed: 'คำใบ้ที่ใช้',

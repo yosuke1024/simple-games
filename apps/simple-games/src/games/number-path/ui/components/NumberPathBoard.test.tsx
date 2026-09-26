@@ -116,11 +116,15 @@ describe('what the board says (§11)', () => {
   it('marks the hint cell, and the stretch beyond a back-up point', () => {
     const next = renderBoard(SESSION, { kind: 'next', cell: SECOND });
     expect(next.cells[SECOND]!.className).toContain('np-cell-hint');
+    // The mark reaches assistive technology too, not just the eye (§11).
+    expect(next.cells[SECOND]!.getAttribute('aria-label')).toMatch(/, hint$/);
+    expect(next.cells[START]!.getAttribute('aria-label')).not.toMatch(/, hint$/);
     cleanup();
 
     const strayed = doTap(doTap(SESSION, SECOND)!, THIRD)!;
     const back = renderBoard(strayed, { kind: 'back', cell: SECOND });
     expect(back.cells[SECOND]!.className).toContain('np-cell-hint');
+    expect(back.cells[SECOND]!.getAttribute('aria-label')).toMatch(/, hint$/);
     expect(back.cells[THIRD]!.className).toContain('np-cell-astray');
     expect(back.cells[SECOND]!.className).not.toContain('np-cell-astray');
     expect(back.cells[START]!.className).not.toContain('np-cell-astray');

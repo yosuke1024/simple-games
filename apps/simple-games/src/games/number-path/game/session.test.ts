@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { addDays, dayDifference, localDateString } from './daily';
-import { directionBetween, endCell, startCell } from './engine';
+import { buildBoard, directionBetween, endCell, startCell } from './engine';
 import {
   canUndo,
   createDailySession,
@@ -25,7 +25,7 @@ import {
   withElapsedSeconds,
   type NumberPathSession,
 } from './session';
-import { DOWN, LEFT, RIGHT, UP, type Direction } from './types';
+import { DOWN, LEFT, UP, type Direction } from './types';
 
 const SEED = 'number-path-easy-session';
 const fresh = () => createDifficultySession('easy', SEED);
@@ -44,6 +44,43 @@ function solveByTapping(session: NumberPathSession): NumberPathSession {
 function arrowTo(session: NumberPathSession, to: number): Direction {
   const end = session.path[session.path.length - 1]!;
   return directionBetween(end, to, session.board.width)!;
+}
+
+/**
+ * A tiny 3×3 with two walls that leave the road one way to go (the same board
+ * engine.test.ts reads by eye), used below to make an arrow actually refused:
+ * off the grid, into a wall, and into a number not yet due.
+ *
+ *   1 . .        road: 0 1 2 5 4 3 6 7 8
+ *   ─ 2 .        walls: below cell 1, below cell 4
+ *   . ─ 3
+ */
+const WALLED_NUMBERS = [
+  [0, 1],
+  [4, 2],
+  [8, 3],
+] as const;
+const WALLED_BOARD = buildBoard({
+  width: 3,
+  height: 3,
+  numbers: WALLED_NUMBERS,
+  walls: ['h1', 'h4'],
+})!;
+const WALLED_ROAD = [0, 1, 2, 5, 4, 3, 6, 7, 8];
+
+/** A session on that board with the given path — restored, never tapped out. */
+function walledSession(path: number[]): NumberPathSession {
+  return restoreSession({
+    mode: 'difficulty',
+    seed: 'session-walled-test',
+    difficulty: 'easy',
+    dailyDate: null,
+    board: WALLED_BOARD,
+    solution: WALLED_ROAD,
+    path,
+    elapsedSeconds: 0,
+    hintCount: 0,
+  });
 }
 
 describe('sessions (§7)', () => {
@@ -172,14 +209,17 @@ describe('traces, taps, steps (§4)', () => {
     expect(stepped.path).toEqual([a, b]);
     // The arrow back onto the cell it came from is a step back (§4).
     expect(doStep(stepped, arrowTo(stepped, a))!.path).toEqual([a]);
-    // An arrow into a wall, off the grid or into a cell not yet due changes nothing.
-    const blocked = ([UP, RIGHT, DOWN, LEFT] as Direction[]).filter(
-      (direction) => direction !== arrowTo(session, b),
-    );
-    for (const direction of blocked) {
-      const result = doStep(session, direction);
-      if (result !== null) expect(result.path.length).toBe(2);
-    }
+  });
+
+  it('refuses an arrow off the grid, into a wall, or into a cell not yet due', () => {
+    // Cell 0 is the walled board's top-left corner: both changes nothing.
+    const corner = walledSession([0]);
+    expect(doStep(corner, UP)).toBeNull();
+    expect(doStep(corner, LEFT)).toBeNull();
+    // The wall below cell 1 (h1) blocks the only other way down from it.
+    expect(doStep(walledSession([0, 1]), DOWN)).toBeNull();
+    // From 5, down reaches 8 (number 3, K) before 2 is due: refused (§3).
+    expect(doStep(walledSession([0, 1, 2, 5]), DOWN)).toBeNull();
   });
 
   /**

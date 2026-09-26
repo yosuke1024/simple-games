@@ -20,6 +20,7 @@ export const es: NumberPathMessages = {
   numberPathHintNext: 'La casilla marcada es el siguiente paso.',
   numberPathHintBack: 'El camino se ha desviado. Retrocede hasta la casilla marcada.',
   numberPathHintNone: 'No hay pista por ahora.',
+  numberPathHintMarked: 'pista',
   numberPathSolvedTitle: '¡Resuelto!',
   numberPathSolvedBody: 'Una línea, cada casilla, en orden.',
   numberPathHintsUsed: 'Pistas usadas',

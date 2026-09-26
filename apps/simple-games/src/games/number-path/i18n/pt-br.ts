@@ -20,6 +20,7 @@ export const ptBR: NumberPathMessages = {
   numberPathHintNext: 'A casa marcada é o próximo passo.',
   numberPathHintBack: 'O caminho saiu da rota. Volte até a casa marcada.',
   numberPathHintNone: 'Nenhuma dica por enquanto.',
+  numberPathHintMarked: 'dica',
   numberPathSolvedTitle: 'Resolvido!',
   numberPathSolvedBody: 'Uma linha, todas as casas, em ordem.',
   numberPathHintsUsed: 'Dicas usadas',

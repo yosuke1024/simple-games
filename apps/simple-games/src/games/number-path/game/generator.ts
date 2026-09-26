@@ -270,9 +270,12 @@ function tierDistance(candidate: Candidate, tier: Tier): number {
 }
 
 /**
- * The same seed always returns the same puzzle (§6): the retry loop derives
- * `<seed>#2`, `<seed>#3`, … deterministically, so the puzzle that ships is a
- * pure function of the seed and the difficulty alone.
+ * The same seed and tier always return the same puzzle (§6): the retry loop
+ * derives `<seed>#2`, `<seed>#3`, … deterministically, so the puzzle that
+ * ships is a pure function of the seed and the tier alone. `generatePuzzle`
+ * is this with the difficulty's own tier and generosity — the shape a test
+ * can also call with a tier of its own, to drive the fallback branch below on
+ * demand rather than waiting on a real seed to miss (§6, `guarantee.test.ts`).
  *
  * The tier is a target, not a promise about this board. When a candidate
  * lands outside it the seed is derived and a fresh road tried; when the cap
@@ -281,15 +284,14 @@ function tierDistance(candidate: Candidate, tier: Tier): number {
  * asked for, which is the one failure worth shipping. Tests watch the rate
  * (it is zero across every walked seed and daily today).
  */
-export function generatePuzzle(seed: string, difficulty: Difficulty): GeneratedPuzzle {
-  const tier = TIERS[difficulty];
+export function generateForTier(seed: string, tier: Tier, generosity: Generosity): GeneratedPuzzle {
   const before = solverWork.read();
   const backbites = BACKBITE_PER_CELL * tier.width * tier.height;
 
   let best: { candidate: Candidate; distance: number } | null = null;
   for (let attempts = 1; attempts <= ATTEMPT_LIMIT; attempts++) {
     const derived = attempts === 1 ? seed : `${seed}#${attempts}`;
-    const candidate = attemptCandidate(derived, tier, GENEROSITY[difficulty]);
+    const candidate = attemptCandidate(derived, tier, generosity);
     if (candidate === null) continue;
     if (meetsTier(candidate, tier)) {
       return {
@@ -312,9 +314,7 @@ export function generatePuzzle(seed: string, difficulty: Difficulty): GeneratedP
   // solved road with numbers every few cells — and would mean this file is
   // broken; handing the player a blank grid for it would only hide that.
   if (best === null) {
-    throw new Error(
-      `number-path: no unique ${difficulty} board after ${ATTEMPT_LIMIT} seeds from "${seed}"`,
-    );
+    throw new Error(`number-path: no unique board after ${ATTEMPT_LIMIT} seeds from "${seed}"`);
   }
   return {
     board: best.candidate.board,
@@ -324,4 +324,9 @@ export function generatePuzzle(seed: string, difficulty: Difficulty): GeneratedP
     branches: best.candidate.result.branches,
     fallback: true,
   };
+}
+
+/** `generateForTier` with the difficulty's own tier and generosity (§6). */
+export function generatePuzzle(seed: string, difficulty: Difficulty): GeneratedPuzzle {
+  return generateForTier(seed, TIERS[difficulty], GENEROSITY[difficulty]);
 }

@@ -20,6 +20,7 @@ export const tr: NumberPathMessages = {
   numberPathHintNext: 'İşaretli kare bir sonraki adım.',
   numberPathHintBack: 'Yol saptı. İşaretli kareye kadar geri dön.',
   numberPathHintNone: 'Şu an ipucu yok.',
+  numberPathHintMarked: 'ipucu',
   numberPathSolvedTitle: 'Çözüldü!',
   numberPathSolvedBody: 'Tek çizgi, her kare, sırayla.',
   numberPathHintsUsed: 'Kullanılan ipuçları',

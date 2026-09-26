@@ -87,10 +87,12 @@ export function NumberPathGameScreen() {
   /** A stroke's cells, in order. The hint mark is spent by the first move. */
   const onTrace = useCallback(
     (cells: readonly number[], newStroke: boolean): boolean => {
-      const changed = trace(cells, newStroke);
-      if (!changed) return false;
+      const change = trace(cells, newStroke);
+      if (change === null) return false;
       setHint(null);
-      sounds.select();
+      // The path grew: `select`. It shrank — however it was drawn (§4, §11).
+      if (change === 'shrank') sounds.undo();
+      else sounds.select();
       return true;
     },
     [trace],
@@ -98,9 +100,11 @@ export function NumberPathGameScreen() {
 
   const onTap = useCallback(
     (index: number) => {
-      if (!tapCell(index)) return;
+      const change = tapCell(index);
+      if (change === null) return;
       setHint(null);
-      sounds.select();
+      if (change === 'shrank') sounds.undo();
+      else sounds.select();
       void haptics.tap();
     },
     [tapCell],
@@ -108,13 +112,16 @@ export function NumberPathGameScreen() {
 
   const onStep = useCallback(
     (direction: Direction) => {
-      if (!step(direction)) return;
+      const change = step(direction);
+      if (change === null) return;
       setHint(null);
-      sounds.select();
+      if (change === 'shrank') sounds.undo();
+      else sounds.select();
     },
     [step],
   );
 
+  /** Backspace/Delete: the same truncation an arrow-back or a drag-back is (§4). */
   const onBacktrack = useCallback(() => {
     if (!backtrack()) return;
     setHint(null);

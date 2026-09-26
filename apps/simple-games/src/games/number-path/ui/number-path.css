@@ -90,7 +90,11 @@
   border-top-left-radius: 7px;
 }
 
-.np-cell-edge-right:nth-child(-n + 7) {
+/* The one cell that is both the first row and the last column — the board's
+   top-right corner on every size, including the 3×3 Quick Rules figure. Read
+   off geometry (cellView's `firstRow && lastCol`), never a fixed child count:
+   that broke on a board narrower than the live ones (issue found in review). */
+.np-cell-corner-tr {
   border-top-right-radius: 7px;
 }
 

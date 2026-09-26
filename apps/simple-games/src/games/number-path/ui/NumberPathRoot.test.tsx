@@ -11,7 +11,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { createDailySession, createDifficultySession, localDateString } from '../game';
+import { addDays, createDailySession, createDifficultySession, localDateString } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { NP_STORAGE_KEYS, type Stats } from '../storage/schemas';
 import { NumberPathRoot } from './NumberPathRoot';
@@ -71,15 +71,18 @@ const cellAt = (index: number) => {
     name: new RegExp(`row ${row}, column ${col},`, 'i'),
   });
 };
+// A hinted cell's label ends in ", hint" (§11) after its path status, so both
+// readers below tolerate that optional trailing marker.
 const stepOf = (index: number): number | null => {
-  const match = /step (\d+)$/.exec(cellAt(index).getAttribute('aria-label') ?? '');
+  const match = /step (\d+)(?:, hint)?$/.exec(cellAt(index).getAttribute('aria-label') ?? '');
   return match ? Number(match[1]) : null;
 };
 const pathLength = () =>
   within(board())
     .getAllByRole('button')
-    .filter((cell) => /, on the path, step \d+$/.test(cell.getAttribute('aria-label') ?? ''))
-    .length;
+    .filter((cell) =>
+      /, on the path, step \d+(?:, hint)?$/.test(cell.getAttribute('aria-label') ?? ''),
+    ).length;
 
 async function resumeKnown(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole('button', { name: /^Easy.*Resume/ }));
@@ -201,6 +204,35 @@ describe('home (§7)', () => {
     const truth = createDailySession(localDateString(new Date()));
     expect(pathLength()).toBe(1);
     expect(truth.board.width).toBe(6);
+  });
+});
+
+describe('daily (§7)', () => {
+  it('asks before replacing a suspended daily with a different day, and resumes the same day silently', async () => {
+    const user = userEvent.setup();
+    const today = localDateString(new Date());
+    const yesterday = addDays(today, -1);
+    const suspended = createDailySession(yesterday);
+    renderGame({
+      ...tutorialDone,
+      [NP_STORAGE_KEYS.dailyGame]: JSON.stringify(toPersisted(suspended, 1)),
+    });
+
+    await user.click(await screen.findByRole('button', { name: 'Past Dailies' }));
+    await user.click(screen.getByRole('button', { name: /^Today/ }));
+    expect(screen.getByRole('alertdialog', { name: 'Start a new game?' })).toBeInTheDocument();
+
+    // Cancel touches nothing: yesterday's suspended daily is still there.
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    const resumeRow = screen.getByRole('button', { name: /Resume/ });
+    expect(resumeRow).toBeInTheDocument();
+
+    // The day already in progress opens straight back up: no question asked.
+    await user.click(resumeRow);
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(await screen.findByText('Daily')).toBeInTheDocument();
+    expect(pathLength()).toBe(1);
   });
 });
 
@@ -366,6 +398,29 @@ describe('retry (§5)', () => {
     expect(pathLength()).toBe(1);
     // Same board: 1 is still where it was.
     expect(cellAt(KNOWN.solution[0]!).getAttribute('aria-label')).toMatch(/^Number 1/);
+  });
+
+  it('books the abandoned attempt’s seconds before the clock restarts at 0 (§8, §9)', async () => {
+    deviceStore.set(NP_STORAGE_KEYS.flags, tutorialDone[NP_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /^Easy/ }));
+
+      act(() => vi.advanceTimersByTime(5_000));
+      fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+
+      act(() => vi.advanceTimersByTime(3_000));
+      background();
+      await settle();
+      // The 5 seconds played before Retry, plus the 3 played after: neither
+      // dropped, neither counted twice.
+      expect(storedPlaySeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

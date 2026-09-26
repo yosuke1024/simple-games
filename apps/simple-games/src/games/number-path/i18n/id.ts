@@ -20,6 +20,7 @@ export const id: NumberPathMessages = {
   numberPathHintNext: 'Kotak yang ditandai adalah langkah berikutnya.',
   numberPathHintBack: 'Jalur sudah menyimpang. Mundur ke kotak yang ditandai.',
   numberPathHintNone: 'Belum ada petunjuk saat ini.',
+  numberPathHintMarked: 'petunjuk',
   numberPathSolvedTitle: 'Selesai!',
   numberPathSolvedBody: 'Satu garis, semua kotak, berurutan.',
   numberPathHintsUsed: 'Petunjuk dipakai',

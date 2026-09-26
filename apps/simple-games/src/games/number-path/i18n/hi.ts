@@ -20,6 +20,7 @@ export const hi: NumberPathMessages = {
   numberPathHintNext: 'चिह्नित खाना अगला कदम है।',
   numberPathHintBack: 'रास्ता भटक गया है। चिह्नित खाने तक पीछे लौटें।',
   numberPathHintNone: 'अभी कोई संकेत नहीं है।',
+  numberPathHintMarked: 'संकेत',
   numberPathSolvedTitle: 'हल हो गया!',
   numberPathSolvedBody: 'एक रेखा, हर खाना, क्रम में।',
   numberPathHintsUsed: 'इस्तेमाल किए संकेत',

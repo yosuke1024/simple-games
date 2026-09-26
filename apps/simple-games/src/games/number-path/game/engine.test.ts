@@ -169,9 +169,11 @@ describe('one step (§3)', () => {
   });
 
   it('never extends past K', () => {
-    // 3 reached early on the open board: the path is over, whatever is left.
-    expect(canExtend(OPEN, [0, 1, 2, 5, 4, 7, 8], 7)).toBe(false);
-    expect(canExtend(OPEN, [0, 1, 2, 5, 4, 7, 8], 5)).toBe(false);
+    // 3 reached early, with an unvisited open neighbour of it left over: still
+    // refused, so this only passes while the K guard itself refuses it (and
+    // not merely because that neighbour already sits earlier on the path).
+    expect(canExtend(OPEN, [0, 1, 4, 5, 8], 7)).toBe(false);
+    expect(canExtend(OPEN, [0, 3, 4, 7, 8], 5)).toBe(false);
   });
 });
 

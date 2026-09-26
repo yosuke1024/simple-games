@@ -20,6 +20,7 @@ export const fr: NumberPathMessages = {
   numberPathHintNext: 'La case marquée est la prochaine étape.',
   numberPathHintBack: 'Le chemin s’est écarté. Reculez jusqu’à la case marquée.',
   numberPathHintNone: 'Pas d’indice pour le moment.',
+  numberPathHintMarked: 'indice',
   numberPathSolvedTitle: 'Résolu !',
   numberPathSolvedBody: 'Une ligne, chaque case, dans l’ordre.',
   numberPathHintsUsed: 'Indices utilisés',

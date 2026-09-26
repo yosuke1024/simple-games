@@ -62,6 +62,14 @@ import { applyGameStart, applyPlayTime, applySolve, previousBestFor } from './st
 
 export type Screen = 'home' | 'tutorial' | 'daily' | 'game' | 'stats';
 
+/**
+ * What a path transition did, for the caller to sound it (§11): `'shrank'`
+ * for every truncation — a drag back, a tap on the path, an arrow back, or
+ * Backspace, all the same operation on the path (§4) — `'grew'` for every
+ * extension, and `null` when nothing changed.
+ */
+export type PathChange = 'grew' | 'shrank' | null;
+
 export interface LastResult {
   readonly seconds: number;
   readonly hints: number;
@@ -93,15 +101,14 @@ export interface NumberPathContextValue {
   /**
    * The cells a stroke passed through, in order (§4). `newStroke` is true
    * for the first change of a gesture — the one that opens its undo step.
-   * Returns false when nothing changed.
    */
-  trace: (cells: readonly number[], newStroke: boolean) => boolean;
-  /** A tap on a cell (§4). Returns false when nothing changed. */
-  tapCell: (index: number) => boolean;
-  /** An arrow key: one step from the end (§4). */
-  step: (direction: Direction) => boolean;
-  /** Backspace: one step back (§4). */
-  backtrack: () => boolean;
+  trace: (cells: readonly number[], newStroke: boolean) => PathChange;
+  /** A tap on a cell (§4): extends onto a neighbour, or cuts back to it. */
+  tapCell: (index: number) => PathChange;
+  /** An arrow key: one step from the end, or back over the previous cell (§4). */
+  step: (direction: Direction) => PathChange;
+  /** Backspace: one step back (§4) — always a `'shrank'` when it moves at all. */
+  backtrack: () => PathChange;
   applyUndo: () => boolean;
   takeHint: () => Hint | null;
   goHome: () => void;
@@ -335,47 +342,12 @@ export function NumberPathProvider({
     [beginSession, resumeGame],
   );
 
-  /** The same board again, from the start — the shared Retry (§5). */
-  const restartCurrent = useCallback(() => {
-    const current = sessionsRef.current[activeModeRef.current];
-    if (current) beginSession(restartSession(current));
-  }, [beginSession]);
-
-  /** Applies a pure session transition to the game on screen. */
-  const mutate = useCallback(
-    (apply: (s: NumberPathSession) => NumberPathSession | null): boolean => {
-      const current = sessionsRef.current[activeModeRef.current];
-      if (!current) return false;
-      const next = apply(withElapsed(current));
-      if (!next) return false;
-      commitSession(next);
-      return true;
-    },
-    [commitSession, withElapsed],
-  );
-
-  const trace = useCallback(
-    (cells: readonly number[], newStroke: boolean) => mutate((s) => doTrace(s, cells, newStroke)),
-    [mutate],
-  );
-  const tapCell = useCallback((index: number) => mutate((s) => doTap(s, index)), [mutate]);
-  const step = useCallback((direction: Direction) => mutate((s) => doStep(s, direction)), [mutate]);
-  const backtrack = useCallback(() => mutate(doBacktrack), [mutate]);
-  const applyUndo = useCallback(() => mutate(doUndo), [mutate]);
-
-  const takeHint = useCallback((): Hint | null => {
-    const mode = activeModeRef.current;
-    const current = sessionsRef.current[mode];
-    if (!current || current.status !== 'playing') return null;
-    const hint = hintFor(current);
-    if (!hint) return null;
-    const next = doHintUse(withElapsed(current));
-    putSession(mode, next);
-    void saveGame(next);
-    return hint;
-  }, [putSession, withElapsed]);
-
-  /** Saves the on-screen game and books its play time so far. */
+  /**
+   * Saves the on-screen game and books its play time so far — the same sync
+   * the background/Home path uses (§8, §9). Declared here, ahead of
+   * `restartCurrent`, so a mid-game Retry can book the abandoned attempt's
+   * seconds before it hands the clock to a fresh session.
+   */
   const syncActiveGame = useCallback(() => {
     const mode = activeModeRef.current;
     const current = sessionsRef.current[mode];
@@ -390,6 +362,60 @@ export function NumberPathProvider({
       }
     }
   }, [persistStats, putSession, withElapsed]);
+
+  /**
+   * The same board again, from the start — the shared Retry (§5). Syncs
+   * first: without it, the seconds played since the last sync would never
+   * reach `totalPlaySeconds` (§8), because `beginSession` hands the new
+   * session a clock that starts, and starts booking, from zero. On the
+   * result-card Retry `syncActiveGame` is a no-op — the solve already booked
+   * everything through `commitSession` — so nothing is ever booked twice.
+   */
+  const restartCurrent = useCallback(() => {
+    const current = sessionsRef.current[activeModeRef.current];
+    if (!current) return;
+    syncActiveGame();
+    beginSession(restartSession(current));
+  }, [beginSession, syncActiveGame]);
+
+  /**
+   * Applies a pure session transition to the game on screen, and says whether
+   * the path grew or shrank so the caller can sound a truncation the same way
+   * regardless of what drew it (§4, §11).
+   */
+  const mutate = useCallback(
+    (apply: (s: NumberPathSession) => NumberPathSession | null): PathChange => {
+      const current = sessionsRef.current[activeModeRef.current];
+      if (!current) return null;
+      const before = withElapsed(current);
+      const next = apply(before);
+      if (!next) return null;
+      commitSession(next);
+      return next.path.length < before.path.length ? 'shrank' : 'grew';
+    },
+    [commitSession, withElapsed],
+  );
+
+  const trace = useCallback(
+    (cells: readonly number[], newStroke: boolean) => mutate((s) => doTrace(s, cells, newStroke)),
+    [mutate],
+  );
+  const tapCell = useCallback((index: number) => mutate((s) => doTap(s, index)), [mutate]);
+  const step = useCallback((direction: Direction) => mutate((s) => doStep(s, direction)), [mutate]);
+  const backtrack = useCallback(() => mutate(doBacktrack), [mutate]);
+  const applyUndo = useCallback(() => mutate(doUndo) !== null, [mutate]);
+
+  const takeHint = useCallback((): Hint | null => {
+    const mode = activeModeRef.current;
+    const current = sessionsRef.current[mode];
+    if (!current || current.status !== 'playing') return null;
+    const hint = hintFor(current);
+    if (!hint) return null;
+    const next = doHintUse(withElapsed(current));
+    putSession(mode, next);
+    void saveGame(next);
+    return hint;
+  }, [putSession, withElapsed]);
 
   const goHome = useCallback(() => {
     syncActiveGame();

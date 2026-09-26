@@ -40,6 +40,21 @@ describe('saved-game slots', () => {
     expect(gameSchema.validate({ ...difficultyRecord, difficulty: 'hard' })).toBeNull();
     expect(gameSchema.validate({ ...difficultyRecord, width: 6 })).toBeNull();
   });
+
+  it('refuses a daily record claiming a board size other than medium (§7)', () => {
+    // Self-consistent as an easy board — buildable, its own valid solution and
+    // path — so only the cross-check between the mode and the difficulty can
+    // catch it: a daily is medium every day, and Retry rebuilds a daily from
+    // `DAILY_DIFFICULTY` regardless of what a record claims (session.ts), so
+    // letting this through would have it resume as one board and Retry into
+    // another (§9 fail-closed).
+    const easyDailyRecord = {
+      ...difficultyRecord,
+      mode: 'daily' as const,
+      dailyDate: '2026-09-26',
+    };
+    expect(dailyGameSchema.validate(easyDailyRecord)).toBeNull();
+  });
 });
 
 describe('a save play could not have produced (§9)', () => {

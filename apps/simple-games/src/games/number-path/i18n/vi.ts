@@ -20,6 +20,7 @@ export const vi: NumberPathMessages = {
   numberPathHintNext: 'Ô được đánh dấu là bước tiếp theo.',
   numberPathHintBack: 'Đường đi đã lệch. Hãy lùi về ô được đánh dấu.',
   numberPathHintNone: 'Hiện chưa có gợi ý.',
+  numberPathHintMarked: 'gợi ý',
   numberPathSolvedTitle: 'Xong!',
   numberPathSolvedBody: 'Một nét, mọi ô, đúng thứ tự.',
   numberPathHintsUsed: 'Gợi ý đã dùng',

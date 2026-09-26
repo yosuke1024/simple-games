@@ -14,11 +14,13 @@ import { isLegalPrefix, isSolution } from './engine';
 import {
   ATTEMPT_LIMIT,
   buildHamiltonianPath,
+  generateForTier,
   generatePuzzle,
+  GENEROSITY,
   type GeneratedPuzzle,
 } from './generator';
 import { countSolutions } from './solver';
-import { DIFFICULTIES, inRange, TIERS, type Difficulty } from './types';
+import { DIFFICULTIES, inRange, TIERS, type Difficulty, type Tier } from './types';
 
 /**
  * Solver nodes plus backbite moves one board may cost (`GeneratedPuzzle.work`,
@@ -154,6 +156,27 @@ describe('one road per board (§2, §6)', () => {
     expect(again.solution).toEqual([
       ...runs.find((run) => run.name === 'number-path-hard-n3')!.puzzle.solution,
     ]);
+  });
+});
+
+/**
+ * The escape hatch of §6 step 5, exercised on demand: no real seed has ever
+ * needed it (the walk above asserts `fallback === false` on every one of
+ * them), so an impossible tier is the only way to make an attempt miss on
+ * every one of the `ATTEMPT_LIMIT` derived seeds and drive the code that
+ * ships the nearest candidate anyway.
+ */
+describe('the fallback escape hatch (§6 step 5)', () => {
+  it('ships the nearest candidate, marked fallback, when nothing can meet the tier', () => {
+    const impossible: Tier = { ...TIERS.easy, branches: { min: 100_000, max: 100_001 } };
+    const puzzle = generateForTier('number-path-fallback-test', impossible, GENEROSITY.easy);
+
+    expect(puzzle.fallback).toBe(true);
+    expect(puzzle.attempts).toBe(ATTEMPT_LIMIT);
+    expect(puzzle.board.width).toBe(impossible.width);
+    expect(puzzle.board.height).toBe(impossible.height);
+    expect(isSolution(puzzle.board, puzzle.solution)).toBe(true);
+    expect(countSolutions(puzzle.board).solutions).toBe(1);
   });
 });
 

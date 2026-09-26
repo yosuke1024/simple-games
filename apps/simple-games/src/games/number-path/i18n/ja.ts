@@ -19,6 +19,7 @@ export const ja: NumberPathMessages = {
   numberPathHintNext: '印のマスが次の 1 マスです。',
   numberPathHintBack: '道が正解から外れています。印のマスまで戻ってください。',
   numberPathHintNone: '今はヒントがありません。',
+  numberPathHintMarked: 'ヒント',
   numberPathSolvedTitle: '完成！',
   numberPathSolvedBody: '1 本の線で、全マスを順番どおりに。',
   numberPathHintsUsed: '使ったヒント',

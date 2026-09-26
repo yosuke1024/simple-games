@@ -23,6 +23,8 @@ export const en = {
   numberPathHintNext: 'The marked square is the next step.',
   numberPathHintBack: 'The path has gone astray. Back up to the marked square.',
   numberPathHintNone: 'No hint right now.',
+  /** Appended to the hinted cell's label, after its path status (§11). */
+  numberPathHintMarked: 'hint',
   numberPathSolvedTitle: 'Solved!',
   numberPathSolvedBody: 'One line, every square, in order.',
   numberPathHintsUsed: 'Hints used',

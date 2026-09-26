@@ -10,7 +10,14 @@
  */
 import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asDateString, asInt, asString, isRecord } from '../../../storage/validate';
-import { isDifficulty, MAX_SIDE, TIERS, type Difficulty, type GameMode } from '../game';
+import {
+  DAILY_DIFFICULTY,
+  isDifficulty,
+  MAX_SIDE,
+  TIERS,
+  type Difficulty,
+  type GameMode,
+} from '../game';
 
 import { NP_STORAGE_KEYS } from './keys';
 
@@ -224,6 +231,10 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   }
   if (dailyDate === null && raw.dailyDate !== null) return null;
   if (mode === 'daily' && dailyDate === null) return null;
+  // A daily is medium every day (§7); a record claiming another difficulty is
+  // one play could not have produced, and Retry would silently rebuild it as
+  // a different board (§9 fail-closed).
+  if (mode === 'daily' && difficulty !== DAILY_DIFFICULTY) return null;
 
   // The board must be the shape the difficulty promises; anything else is a
   // record from another world, and decoding it would only fail later.
