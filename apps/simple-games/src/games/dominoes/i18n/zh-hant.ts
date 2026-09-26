@@ -1,0 +1,51 @@
+import type { DominoesMessages } from './en';
+
+export const zhHant: DominoesMessages = {
+  dominoesName: 'Dominoes',
+  dominoesRecordNote: '{wins} 勝 · {losses} 敗',
+
+  dominoesTileLabel: '骨牌 {a}–{b}',
+  dominoesLineLabel: '牌線：{count} 張，左端 {left}，右端 {right}',
+  dominoesHandLabel: '你的骨牌',
+  dominoesPlayLeft: '打到左端（{value}）',
+  dominoesPlayRight: '打到右端（{value}）',
+  dominoesCpuShort: 'CPU',
+  dominoesBoneyardShort: '牌庫',
+  dominoesCpuTiles: 'CPU 有 {count} 張骨牌',
+  dominoesBoneyardTiles: '牌庫：{count} 張',
+  dominoesDraw: '摸牌',
+  dominoesPass: '過',
+
+  dominoesYourTurn: '輪到你了',
+  dominoesCpuTurn: 'CPU 思考中…',
+  dominoesCpuDrew: 'CPU 摸了一張骨牌',
+  dominoesCpuPassed: 'CPU 選擇了過。輪到你了',
+  dominoesMustDraw: '沒有能打的骨牌，去牌庫摸一張',
+  dominoesNoTileFits: '沒有能打的骨牌，牌庫也空了，只能過',
+  dominoesChooseEnd: '為這張骨牌選一個端',
+  dominoesOpenedYou: '你用 {tile} 開局',
+  dominoesOpenedCpu: 'CPU 用 {tile} 開局。輪到你了',
+
+  dominoesWinTitle: '你贏了！',
+  dominoesWinBodyOut: '你打出了最後一張骨牌。',
+  dominoesWinBodyBlocked: '雙方都打不出了，你的點數較少。',
+  dominoesLoseTitle: 'CPU 獲勝',
+  dominoesLoseBodyOut: 'CPU 打出了最後一張骨牌。',
+  dominoesLoseBodyBlocked: '雙方都打不出了，CPU 的點數較少。',
+  dominoesDrawTitle: '平手',
+  dominoesDrawBody: '雙方都打不出了，點數相同。',
+  dominoesScoreYou: '你得 {points} 分',
+  dominoesScoreCpu: 'CPU 得 {points} 分',
+  dominoesPipsLeft: '剩餘點數：你 {you}，CPU {cpu}',
+
+  dominoesWins: '勝',
+  dominoesLosses: '敗',
+  dominoesDraws: '和',
+
+  dominoesStep1Title: '對上一端',
+  dominoesStep1Body: '打出數字與牌線任一端相同的骨牌。',
+  dominoesStep2Title: '打不出？摸牌',
+  dominoesStep2Body: '沒有能打的骨牌時，就去牌庫摸，直到摸到能打的為止。牌庫空了才能過。',
+  dominoesStep3Title: '先出完為勝',
+  dominoesStep3Body: '打出最後一張骨牌即可獲勝。對方手裡剩下的點數就是你的得分。',
+};
