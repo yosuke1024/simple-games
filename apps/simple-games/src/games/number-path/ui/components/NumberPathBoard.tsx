@@ -4,9 +4,16 @@
  * One button per cell, each carrying its position, its number and where it
  * stands on the path in its label, so a screen reader can read the board
  * rather than a wall of "button". The path is drawn as thick segments from
- * each cell's centre towards the cells before and after it; walls as thick
- * edges; numbers as ASCII digits on a disc that fills once the path has been
- * through them. DOM and CSS only — nothing here is a canvas.
+ * each cell's centre towards the cells before and after it, with a small
+ * joint (a `::before` circle, `number-path.css`) under them at every cell the
+ * path has been through so a turn reads as one bent line rather than two
+ * segments meeting at a corner; walls as thick, rounded edges; numbers as
+ * ASCII digits on a disc that fills once the path has been through them, with
+ * a thicker ring on the one number the path is next due to reach
+ * (`cellView`'s `isNext`). DOM and CSS only — nothing here is a canvas. Once
+ * the board is solved, `np-board-solved` plays a single overlay flash
+ * (`number-path.css`'s `::after`, the "solved" beat every board shares) and
+ * nothing else changes.
  *
  * Input is §4. A press that then moves is a stroke: every cell it passes is
  * handed to the game in order (`onTrace`), and the game reads each one the
@@ -26,13 +33,14 @@
 import {
   memo,
   useCallback,
+  useEffect,
   useRef,
   type CSSProperties,
   type MouseEvent,
   type PointerEvent,
 } from 'react';
 import { useSettings } from '@/state/SettingsContext';
-import { colOf, rowOf, type Hint, type NumberPathSession } from '../../game';
+import { colOf, rowOf, type Hint, type NumberPathSession, type Path } from '../../game';
 import { cellClasses, cellView, pathPositions } from './cellView';
 
 /**
@@ -74,6 +82,8 @@ export interface NumberPathBoardProps {
   onTrace: (cells: readonly number[], newStroke: boolean) => boolean;
   /** A tap: a press that did not move (§4). */
   onTap: (index: number) => void;
+  /** The board just finished (§11's "solved" beat) — one overlay flash, once. */
+  solved: boolean;
 }
 
 export const NumberPathBoard = memo(function NumberPathBoard({
@@ -81,10 +91,25 @@ export const NumberPathBoard = memo(function NumberPathBoard({
   hint,
   onTrace,
   onTap,
+  solved,
 }: NumberPathBoardProps) {
   const { t } = useSettings();
   const { board, path } = session;
   const { width, height } = board;
+
+  /**
+   * The path as it stood at the end of the previous render, so the end cell
+   * can grow in only when it was just reached by an extension — never when
+   * backing up hands the same class to a cell that lost a segment (§11: 「戻
+   * したとき(切り詰め)は何も動かさない」). Read during render, written after
+   * it commits, the usual "previous props" shape.
+   */
+  const previousPathRef = useRef<Path>(path);
+  const previousPath = previousPathRef.current;
+  useEffect(() => {
+    previousPathRef.current = path;
+  }, [path]);
+  const grew = path.length > previousPath.length && previousPath.every((c, i) => path[i] === c);
 
   const cellsRef = useRef<HTMLDivElement | null>(null);
   const strokeRef = useRef<Stroke | null>(null);
@@ -228,7 +253,7 @@ export const NumberPathBoard = memo(function NumberPathBoard({
 
   return (
     <div
-      className="np-board"
+      className={`np-board${solved ? ' np-board-solved' : ''}`}
       role="group"
       aria-label={t('numberPathBoardLabel', { width, height })}
       style={{ '--np-cols': width, '--np-rows': height } as CSSProperties}
@@ -255,6 +280,7 @@ export const NumberPathBoard = memo(function NumberPathBoard({
           const hinted = hint?.cell === index;
           const classes = [
             ...cellClasses(view),
+            view.isEnd && grew ? 'np-cell-grow' : '',
             hinted ? 'np-cell-hint' : '',
             astrayFrom >= 0 && view.step > astrayFrom ? 'np-cell-astray' : '',
           ]

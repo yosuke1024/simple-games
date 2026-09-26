@@ -1,9 +1,10 @@
 /**
  * What one cell of the board looks like, read off the board and the path
  * (docs/NUMBER_PATH_RULES.md §11): which way the path enters and leaves it,
- * which of its edges are walls, whether it is the path's end. Shared by the
- * live board and the Quick Rules figures, so the two can never draw the same
- * situation two different ways.
+ * which of its edges are walls, whether it is the path's end, whether it
+ * carries the number the path is next due to reach. Shared by the live board
+ * and the Quick Rules figures, so the two can never draw the same situation
+ * two different ways.
  */
 import {
   DIRECTIONS,
@@ -13,6 +14,7 @@ import {
   UP,
   directionBetween,
   neighbourOf,
+  nextNumber,
   type Board,
   type Direction,
   type Path,
@@ -32,6 +34,12 @@ export interface CellView {
   readonly number: number;
   /** The path's end sits here. */
   readonly isEnd: boolean;
+  /**
+   * This is the number the path is due to reach next (`nextNumber`), and so
+   * has not been reached yet. False once past K — there is no next past the
+   * end (§11). A figure with an empty path is due for 1, never higher.
+   */
+  readonly isNext: boolean;
   /** Path segments to draw, as CSS side names. */
   readonly segments: readonly string[];
   /** Walls to draw, as CSS side names. */
@@ -67,10 +75,12 @@ export function cellView(board: Board, path: Path, positions: Int16Array, index:
     const inGrid = neighbourOf(index, direction, width, height) >= 0;
     if (inGrid && (board.open[index]! & direction) === 0) walls.push(SIDE[direction]);
   }
+  const number = board.numbers[index]!;
   return {
     step,
-    number: board.numbers[index]!,
+    number,
     isEnd: step === path.length - 1,
+    isNext: number !== 0 && number === nextNumber(board, path),
     segments,
     walls,
     firstRow: Math.floor(index / width) === 0,
@@ -87,6 +97,7 @@ export function cellClasses(view: CellView): string[] {
     view.isEnd ? 'np-cell-end' : '',
     view.number !== 0 ? 'np-cell-number' : '',
     view.number !== 0 && view.step >= 0 ? 'np-cell-visited' : '',
+    view.isNext ? 'np-cell-next' : '',
     view.lastCol ? 'np-cell-edge-right' : '',
     view.lastRow ? 'np-cell-edge-bottom' : '',
     // The board's own top-right corner: derived from geometry, never a fixed

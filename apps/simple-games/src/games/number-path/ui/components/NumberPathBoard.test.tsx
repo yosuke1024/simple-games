@@ -22,12 +22,22 @@ const SIZE = 5;
 const START = SESSION.solution[0]!;
 const [, SECOND, THIRD, FOURTH] = SESSION.solution as unknown as [number, number, number, number];
 
-function renderBoard(session: NumberPathSession = SESSION, hint: Hint | null = null) {
+function renderBoard(
+  session: NumberPathSession = SESSION,
+  hint: Hint | null = null,
+  solved = false,
+) {
   const onTrace = vi.fn(() => true);
   const onTap = vi.fn();
   render(
     <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
-      <NumberPathBoard session={session} hint={hint} onTrace={onTrace} onTap={onTap} />
+      <NumberPathBoard
+        session={session}
+        hint={hint}
+        onTrace={onTrace}
+        onTap={onTap}
+        solved={solved}
+      />
     </SettingsProvider>,
   );
   const board = screen.getByRole('group', { name: /^Number Path board/ });
@@ -128,6 +138,92 @@ describe('what the board says (§11)', () => {
     expect(back.cells[THIRD]!.className).toContain('np-cell-astray');
     expect(back.cells[SECOND]!.className).not.toContain('np-cell-astray');
     expect(back.cells[START]!.className).not.toContain('np-cell-astray');
+  });
+
+  it('marks every cell the path has been through as a joint, and no other cell', () => {
+    const played = doTap(doTap(SESSION, SECOND)!, THIRD)!;
+    const { cells } = renderBoard(played);
+    for (const cell of [START, SECOND, THIRD]) {
+      expect(cells[cell]!.className).toContain('np-cell-on');
+    }
+    expect(cells[0]!.className).not.toContain('np-cell-on');
+    // The path's end, drawn as a joint plus the round cap tested above.
+    expect(cells[THIRD]!.className).toContain('np-cell-end');
+    expect(cells[START]!.className).not.toContain('np-cell-end');
+  });
+
+  it('marks the cell carrying the number the path is next due to reach', () => {
+    // Untouched: only 1 (cell 14) is reached, so 2's cell (4) is next.
+    const untouched = renderBoard();
+    expect(untouched.cells[4]!.className).toContain('np-cell-next');
+    expect(untouched.cells[START]!.className).not.toContain('np-cell-next');
+    // No other numbered cell wears the ring too.
+    expect(untouched.cells.filter((c) => c.className.includes('np-cell-next'))).toHaveLength(1);
+    cleanup();
+
+    // 2 is reached (14 → 9 → 4): 3's cell (5) becomes next, 2's no longer is.
+    const played = doTap(doTap(SESSION, SECOND)!, THIRD)!;
+    const { cells } = renderBoard(played);
+    expect(cells[5]!.className).toContain('np-cell-next');
+    expect(cells[THIRD]!.className).not.toContain('np-cell-next');
+    expect(cells.filter((c) => c.className.includes('np-cell-next'))).toHaveLength(1);
+  });
+
+  it('marks no cell as next once the path has reached K', () => {
+    let solved = SESSION;
+    for (const cell of SESSION.solution.slice(solved.path.length)) {
+      solved = doTap(solved, cell) ?? solved;
+    }
+    expect(solved.status).toBe('solved');
+    const { cells } = renderBoard(solved);
+    for (const cell of cells) {
+      expect(cell.className).not.toContain('np-cell-next');
+    }
+  });
+});
+
+describe('growing the end (§11)', () => {
+  it('grows the new segment only on the render that just extended the path, never when backing up', () => {
+    const onTrace = vi.fn(() => true);
+    const onTap = vi.fn();
+    const wrap = (session: NumberPathSession) => (
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <NumberPathBoard
+          session={session}
+          hint={null}
+          onTrace={onTrace}
+          onTap={onTap}
+          solved={false}
+        />
+      </SettingsProvider>
+    );
+    const cellsOf = () =>
+      within(screen.getByRole('group', { name: /^Number Path board/ })).getAllByRole('button');
+
+    const { rerender } = render(wrap(SESSION));
+    expect(cellsOf()[START]!.className).not.toContain('np-cell-grow');
+
+    // Extended by one tap: the new end grows in.
+    const extended = doTap(SESSION, SECOND)!;
+    rerender(wrap(extended));
+    expect(cellsOf()[SECOND]!.className).toContain('np-cell-grow');
+
+    // Backing up to the cell before it: nothing grows (issue found in review).
+    const truncated = doTap(extended, START)!;
+    rerender(wrap(truncated));
+    expect(cellsOf()[SECOND]!.className).not.toContain('np-cell-grow');
+    expect(cellsOf()[START]!.className).not.toContain('np-cell-grow');
+  });
+});
+
+describe('the solved beat (§11)', () => {
+  it('marks the board solved only when told to', () => {
+    const playing = renderBoard(SESSION, null, false);
+    expect(playing.board.className).not.toContain('np-board-solved');
+    cleanup();
+
+    const solved = renderBoard(SESSION, null, true);
+    expect(solved.board.className).toContain('np-board-solved');
   });
 });
 
