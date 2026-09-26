@@ -1,0 +1,451 @@
+/* Mancala — all of this game's styling, imported by MancalaRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --surface-recessed, --ink, --ink-soft, --line, --accent, --radius,
+   --font-display, --tap-size, …) so the game reads as part of the same app and
+   follows the theme without knowing about it.
+
+   Class names are prefixed `mc-` so this file can never collide with the
+   shell or with another game.
+
+   The CPU's seat colour below is game content, not chrome — the same standing
+   as Connect Four's CPU disc (docs/BRAND.md, "one accent per title"). The
+   player's seat IS the accent; the CPU's is a cool slate: a colourless seat
+   opposite a coloured one reads apart whatever hue the title's accent is, in
+   both themes and under the common colour-vision deficiencies. Seats are
+   also told apart by place (bottom / top row) and by mark (circle / square),
+   so nothing here rests on hue alone (docs/MANCALA_RULES.md §1). Both values
+   clear 3:1 against --surface in their theme (ui/contrast.test.ts). */
+
+:root {
+  --mc-cpu: #66707d;
+  --mc-cpu-soft: rgba(102, 112, 125, 0.16);
+}
+
+:root[data-theme='dark'] {
+  --mc-cpu: #9aa4b1;
+  --mc-cpu-soft: rgba(154, 164, 177, 0.18);
+}
+
+/* ---------- board ---------- */
+
+/* The board sits between the top bar and the action bar, centred so a tall
+   phone brings it into thumb reach instead of pinning it up top. The side
+   padding is the narrowest in the collection on purpose: eight columns have
+   to share a 360px screen (§10). */
+.mc-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 4px 8px 10px;
+  min-height: 0;
+}
+
+/* Store | six columns | store, two rows. Width against its own column
+   (`100%`, not `vw` — docs/ARCHITECTURE.md, the board-width lesson every
+   title relearned). At 360px this leaves a pit about 37px wide and 50px
+   tall, a store about 42px wide. */
+.mc-board {
+  display: grid;
+  grid-template-columns: 1.15fr repeat(6, 1fr) 1.15fr;
+  grid-template-rows: auto auto;
+  gap: 3px;
+  width: min(100%, 460px);
+  padding: 5px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+/* A pit is a tall oval cup: the count and the seeds stack inside it. */
+.mc-pit {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  aspect-ratio: 3 / 4;
+  min-width: 0;
+  padding: 4px 0;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--surface-recessed);
+  color: var(--ink);
+  font: inherit;
+}
+
+/* The player's row is the only thing to press, and only on the player's turn
+   with seeds in the pit (§6): the ring is the legal move, drawn. */
+.mc-pit-you:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.mc-pit-you:not(:disabled):active {
+  background: var(--accent-soft);
+}
+
+/* The shared chrome dims a disabled button to 40% — right for an action that
+   is unavailable, wrong for board surface. Every pit is disabled while the
+   CPU takes its turn (§4), so without this the whole row fades out and back
+   with every move. */
+.mc-pit-you:disabled {
+  opacity: 1;
+}
+
+.mc-count {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Up to twelve seeds, four to a row, centred — a lone seed sits in the
+   middle of its pit, not in a corner. They belong to nobody (§1), so they
+   wear the ink, not a seat colour. */
+.mc-seeds {
+  --mc-seed: 5px;
+  --mc-seed-gap: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: var(--mc-seed-gap);
+  width: calc(4 * var(--mc-seed) + 3 * var(--mc-seed-gap));
+  min-height: calc(3 * var(--mc-seed) + 2 * var(--mc-seed-gap));
+}
+
+.mc-seed {
+  width: var(--mc-seed);
+  height: var(--mc-seed);
+  border-radius: 50%;
+  background: var(--ink-soft);
+}
+
+/* A store spans both rows and says its count large (§10). */
+.mc-store {
+  position: relative;
+  grid-row: 1 / span 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-recessed);
+}
+
+.mc-store-cpu {
+  grid-column: 1;
+  border-color: var(--mc-cpu);
+  background: var(--mc-cpu-soft);
+}
+
+.mc-store-you {
+  grid-column: 8;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.mc-store-count {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* ---------- seat marks ---------- */
+
+/* A circle for the player, a square for the CPU: the seat is legible without
+   its colour (§1). */
+.mc-mark {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  flex: none;
+}
+
+.mc-mark-you {
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.mc-mark-cpu {
+  border-radius: 2px;
+  background: var(--mc-cpu);
+}
+
+/* ---------- the last move ---------- */
+
+/* One short flash on every pit the last move put a seed in (and, after a
+   capture, the pits it emptied and the store it filled), in the mover's
+   colour. The element is keyed by the move counter, so the keyframe plays on
+   arrival and never again. No seed flies from pit to pit — the low-spec floor
+   (§10). Reduced Motion: the board does not render the flash at all. */
+.mc-flash {
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  animation: mc-flash 600ms ease-out;
+}
+
+.mc-flash-you {
+  box-shadow: inset 0 0 0 3px var(--accent);
+  background: var(--accent-ring-soft);
+}
+
+.mc-flash-cpu {
+  box-shadow: inset 0 0 0 3px var(--mc-cpu);
+  background: var(--mc-cpu-soft);
+}
+
+@keyframes mc-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* The pit the last move was sown from: a small still notch at its outer
+   edge, so the CPU's move can be found after looking away (§10). Still, so
+   Reduced Motion keeps it. */
+.mc-origin {
+  position: absolute;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  pointer-events: none;
+}
+
+.mc-pit-cpu .mc-origin {
+  top: -5px;
+}
+
+.mc-pit-you .mc-origin {
+  bottom: -5px;
+}
+
+.mc-origin-you {
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.mc-origin-cpu {
+  border-radius: 2px;
+  background: var(--mc-cpu);
+}
+
+/* ---------- top bar ---------- */
+
+.mc-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.mc-side {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+/* ---------- turn line ---------- */
+
+/* Reserved height whether it names a turn or says nothing: the board must
+   not jump when the text changes (§10). */
+.mc-turn-line {
+  margin: 0;
+  min-height: 1.5em;
+  font-size: 14px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* ---------- action bar ---------- */
+
+/* One action, free and unlimited: Undo (§5). There is deliberately no hint
+   button — a suggested pit would be the CPU playing both sides (§6). */
+.action-bar.mc-actions {
+  justify-content: center;
+}
+
+/* ---------- home ---------- */
+
+.mc-choose-label {
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* Which side opens the next match (§1). Two equal halves — neither is a
+   default the other departs from, so neither is drawn as one. */
+.mc-side-choice {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.mc-side-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--tap-size);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* The chosen half wears the accent softly: this is a setting the player
+   already made, not the screen's main action (the opponent buttons are). */
+.mc-side-option-on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+/* The two seat marks in the order the seats move. */
+.mc-order {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* A still, digits-only copy of the board (§9): the same eight columns, small
+   enough to sit above one sentence. */
+.mc-figure {
+  display: grid;
+  grid-template-columns: 1.15fr repeat(6, 1fr) 1.15fr;
+  grid-template-rows: auto auto;
+  gap: 3px;
+  width: 232px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.mc-fig-pit,
+.mc-fig-store {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--surface-recessed);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.mc-fig-pit {
+  aspect-ratio: 3 / 4;
+}
+
+.mc-fig-pit-cpu {
+  grid-row: 1;
+}
+
+.mc-fig-pit-you {
+  grid-row: 2;
+}
+
+.mc-fig-store {
+  grid-row: 1 / span 2;
+}
+
+.mc-fig-store-cpu {
+  grid-column: 1;
+  border-color: var(--mc-cpu);
+}
+
+.mc-fig-store-you {
+  grid-column: 8;
+  border-color: var(--accent);
+}
+
+/* The pit sown from, ringed. */
+.mc-fig-from {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+/* Where its seeds go. */
+.mc-fig-to {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+/* Where the last one lands — the square the step is about. */
+.mc-fig-last {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* What a capture takes: the pit across, ringed in ink, not in a seat colour. */
+.mc-fig-take {
+  border-color: var(--ink);
+  border-style: dashed;
+  color: var(--ink);
+}
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; Medium and Wide enlarge the board, and the seeds and counts
+   with it — they are fixed pixel sizes (no vw-scaled type), so they are the
+   one thing besides the board's width that has to grow. */
+
+@media (min-width: 600px) {
+  .mc-board {
+    width: min(100%, 560px);
+    gap: 5px;
+    padding: 8px;
+  }
+
+  .mc-seeds {
+    --mc-seed: 8px;
+    --mc-seed-gap: 3px;
+  }
+
+  .mc-count {
+    font-size: 15px;
+  }
+
+  .mc-store-count {
+    font-size: 26px;
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .mc-board {
+    width: min(100%, 620px);
+  }
+}
