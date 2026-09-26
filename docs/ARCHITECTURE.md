@@ -281,9 +281,11 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
   prettier を通し、`src/test/` の横断ゲートで受ける。スクリプトは PR に同梱する。
   レビューは 30 個の差分ではなく 1 本のスクリプトを読めばよい。
 - **新しいゲームの接続点は `scripts/new-game.mjs` が生成する**(keys の葉、i18n の
-  14 言語、registry の項目、`gameKeys.test.ts` の項目、共有の枠を置いた Root と
-  ホームの雛形、RULES 文書の雛形)。隣のゲームを丸ごと複製して名前を直す作業は
-  もう始めない。
+  14 言語、registry の項目(`loadStorageSchemas` まで)、`gameKeys.test.ts` の項目、
+  共有の枠を置いた Root・ホーム・Quick Rules・ゲーム画面の雛形と、戻るボタンの唯一の
+  持ち主になる GameContext、RULES 文書の雛形)。生成物は手を入れずに `src/test/` の
+  横断ゲートを全部通る——通らなければ直すのは生成物ではなくスクリプト。隣のゲームを
+  丸ごと複製して名前を直す作業はもう始めない。
 - 検証は `pnpm verify:changed`(差分に関係するテスト+fs を読む横断ゲート)で回し、
   CI がフルを回す(「CI / リリース」)。
 
