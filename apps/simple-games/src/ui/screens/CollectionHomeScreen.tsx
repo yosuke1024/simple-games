@@ -58,9 +58,10 @@ import { Capacitor } from '@capacitor/core';
 import { SERIES_BY_LINE, SERIES_NAME } from '@simple-games/brand';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { getFavoriteGames, toggleFavoriteGame } from '../../app/favoriteGames';
+import { availableGames, findAvailableGame } from '../../app/gameChannel';
 import { searchGames } from '../../app/gameSearch';
 import { getRecentGames } from '../../app/recentGames';
-import { GAMES, GAME_CATEGORIES, type GameId, type GameDefinition } from '../../app/registry';
+import { GAME_CATEGORIES, type GameId, type GameDefinition } from '../../app/registry';
 import {
   homeShortcutsAvailable,
   requestHomeShortcut,
@@ -69,6 +70,7 @@ import { useSettings } from '../../state/SettingsContext';
 import { GameActionSheet } from '../components/GameActionSheet';
 import { GameTile } from '../components/GameTile';
 import { IconBack, IconChevronRight, IconGear, IconSearch } from '../components/icons';
+import { GameBetaBadge } from '../components/GameBetaBadge';
 import { WebAdSlot } from '../components/WebAdSlot';
 import { WebAppStoreCard } from '../components/WebAppStoreCard';
 import { WebChromeSlot } from '../components/WebChromeSlot';
@@ -476,7 +478,11 @@ export function CollectionHomeScreen({
     target?.focus();
   }, [menuGame]);
 
-  const byId = (id: GameId) => GAMES.find((game) => game.id === id);
+  // Only what this build offers (app/gameChannel.ts): a web-beta title is on
+  // the browser's shelves and nowhere on the app's, however it got into a
+  // record — the ids in those records are already filtered the same way.
+  const games = availableGames();
+  const byId = (id: GameId) => findAvailableGame(id);
   const isDefined = (game: GameDefinition | undefined): game is GameDefinition =>
     game !== undefined;
 
@@ -609,6 +615,7 @@ export function CollectionHomeScreen({
                 >
                   <GameTile game={game} />
                   <span className="game-cell-title">{game.title}</span>
+                  <GameBetaBadge game={game} />
                 </GameButton>
               ))}
             </div>
@@ -680,6 +687,7 @@ export function CollectionHomeScreen({
                   >
                     <GameTile game={game} />
                     <span className="game-cell-title">{game.title}</span>
+                    <GameBetaBadge game={game} />
                   </GameButton>
                 ))}
               </div>
@@ -701,6 +709,7 @@ export function CollectionHomeScreen({
                 >
                   <GameTile game={game} />
                   <span className="game-row-title">{game.title}</span>
+                  <GameBetaBadge game={game} />
                   <span className="game-row-chevron" aria-hidden="true">
                     <IconChevronRight />
                   </span>
@@ -716,13 +725,13 @@ export function CollectionHomeScreen({
               category it names in the registry, in registry order. */}
           <nav className="game-sections" aria-label={t('gamesHeading')}>
             {GAME_CATEGORIES.map((category) => {
-              const games = GAMES.filter((game) => game.category === category.id);
-              if (games.length === 0) return null;
+              const shelf = games.filter((game) => game.category === category.id);
+              if (shelf.length === 0) return null;
               return (
                 <div key={category.id} className="game-category">
                   <h2 className="home-section-label">{t(category.headingKey)}</h2>
                   <div className="game-grid">
-                    {games.map((game) => (
+                    {shelf.map((game) => (
                       <GameButton
                         key={game.id}
                         game={game}
@@ -732,6 +741,7 @@ export function CollectionHomeScreen({
                       >
                         <GameTile game={game} />
                         <span className="game-cell-title">{game.title}</span>
+                        <GameBetaBadge game={game} />
                       </GameButton>
                     ))}
                   </div>

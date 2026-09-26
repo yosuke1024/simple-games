@@ -308,6 +308,35 @@
   --accent-ring-soft: rgba(173, 52, 167, 0.12);
 }
 
+/* The three web-beta titles (issue #194), chosen together against the shipped
+   thirty per docs/plans/2026-09-26-crown-grid-number-path-shape-regions.md. */
+:root[data-game='crown-grid'],
+.accent-crown-grid {
+  --accent: #7e673e;
+  --accent-ink: #ffffff;
+  --accent-soft: #eee8dd;
+  --accent-ring: rgba(126, 103, 62, 0.38);
+  --accent-ring-soft: rgba(126, 103, 62, 0.12);
+}
+
+:root[data-game='number-path'],
+.accent-number-path {
+  --accent: #29606a;
+  --accent-ink: #ffffff;
+  --accent-soft: #dbedf0;
+  --accent-ring: rgba(41, 96, 106, 0.38);
+  --accent-ring-soft: rgba(41, 96, 106, 0.12);
+}
+
+:root[data-game='shape-regions'],
+.accent-shape-regions {
+  --accent: #57317d;
+  --accent-ink: #ffffff;
+  --accent-soft: #e6dbf0;
+  --accent-ring: rgba(87, 49, 125, 0.38);
+  --accent-ring-soft: rgba(87, 49, 125, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -589,6 +618,71 @@
   --accent-soft: #3d243c;
   --accent-ring: rgba(205, 106, 200, 0.42);
   --accent-ring-soft: rgba(205, 106, 200, 0.14);
+}
+
+:root[data-theme='dark'][data-game='crown-grid'],
+[data-theme='dark'] .accent-crown-grid {
+  --accent: #cdb87e;
+  --accent-ink: #1d190b;
+  --accent-soft: #3c3520;
+  --accent-ring: rgba(205, 184, 126, 0.42);
+  --accent-ring-soft: rgba(205, 184, 126, 0.14);
+}
+
+:root[data-theme='dark'][data-game='number-path'],
+[data-theme='dark'] .accent-number-path {
+  --accent: #7ecdc3;
+  --accent-ink: #0b1d1b;
+  --accent-soft: #203c39;
+  --accent-ring: rgba(126, 205, 195, 0.42);
+  --accent-ring-soft: rgba(126, 205, 195, 0.14);
+}
+
+:root[data-theme='dark'][data-game='shape-regions'],
+[data-theme='dark'] .accent-shape-regions {
+  --accent: #a37bcc;
+  --accent-ink: #140b1d;
+  --accent-soft: #2e1f3c;
+  --accent-ring: rgba(163, 123, 204, 0.42);
+  --accent-ring-soft: rgba(163, 123, 204, 0.14);
+}
+
+/* ---------- Web early release (docs/WEB_VERSION.md「先行公開」) ----------
+   The BETA mark a title wears while it is in the browser version only. The
+   badge is text in a small capsule rather than a colour: it has to read the
+   same on a tile, on a game's home and to a screen reader, in every locale
+   and both themes. The note under it is set in the soft ink, one sentence,
+   and appears only where a native reader has checked the wording (en / ja —
+   ui/components/WebBetaNotice.tsx). */
+.beta-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid var(--ink-soft);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  vertical-align: middle;
+}
+
+.web-beta-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px auto 0;
+  max-width: 420px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  text-align: left;
+}
+
+.web-beta-notice .beta-badge {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 * {

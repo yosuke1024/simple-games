@@ -30,6 +30,7 @@ import { currentPlatform, pickBackupFile, saveBackupFile } from '../../backup/fi
 import type { BackupProblem, PreparedRestore } from '../../backup/restore';
 import { getFavoriteGames, initFavoriteGames, toggleFavoriteGame } from '../../app/favoriteGames';
 import { initRecentGames } from '../../app/recentGames';
+import { availableGames } from '../../app/gameChannel';
 import { GAMES, type GameId } from '../../app/registry';
 import { LANGUAGE_NAMES, type MessageKey } from '../../i18n';
 import {
@@ -445,7 +446,10 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         <section className="settings-group" aria-label={t('favoritesHeading')}>
           <h2 className="settings-group-title">{t('favoritesHeading')}</h2>
           <div className="favorite-picker">
-            {GAMES.map((game) => {
+            {/* What this build offers, not the whole registry: a web-beta
+                title is not on the app's home, so it is not pinnable there
+                either (app/gameChannel.ts). */}
+            {availableGames().map((game) => {
               const isFavorite = favoriteIds.includes(game.id);
               return (
                 <button
@@ -470,7 +474,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         {/* Each game's own options, contributed by the game itself. Lazy —
             the section rides in the game's chunk — behind a null fallback,
             which matches the sections' own render-null-until-loaded shape. */}
-        {GAMES.map((game) => {
+        {availableGames().map((game) => {
           const Section = getLazySettingsSection(game.id);
           return Section ? (
             <SectionBoundary key={game.id}>

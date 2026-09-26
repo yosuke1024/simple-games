@@ -124,6 +124,14 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   reversi: ['rv.saveGame', 'rv.stats', 'rv.flags', 'rv.prefs'],
   'connect-four': ['c4.saveGame', 'c4.stats', 'c4.flags', 'c4.prefs'],
   gomoku: ['gm.saveGame', 'gm.stats', 'gm.flags', 'gm.prefs'],
+  // The three web-beta titles (docs/WEB_VERSION.md「先行公開」, issue #194).
+  // Five each, Minesweeper's shape: one suspended game per mode (difficulty /
+  // daily), stats, flags, and a prefs that remembers only the last difficulty
+  // picked. Beta is the one channel whose schema may still change — but never
+  // silently: a change here is still a decision written into this file.
+  'crown-grid': ['cg.saveGame', 'cg.saveDaily', 'cg.stats', 'cg.flags', 'cg.prefs'],
+  'number-path': ['np.saveGame', 'np.saveDaily', 'np.stats', 'np.flags', 'np.prefs'],
+  'shape-regions': ['sr.saveGame', 'sr.saveDaily', 'sr.stats', 'sr.flags', 'sr.prefs'],
 };
 
 const PREFIXES: Record<string, string> = {
@@ -157,6 +165,9 @@ const PREFIXES: Record<string, string> = {
   reversi: 'rv.',
   'connect-four': 'c4.',
   gomoku: 'gm.',
+  'crown-grid': 'cg.',
+  'number-path': 'np.',
+  'shape-regions': 'sr.',
 };
 
 describe('registry storage keys (released data — do not edit to make green)', () => {

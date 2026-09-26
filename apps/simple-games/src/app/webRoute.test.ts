@@ -80,6 +80,42 @@ describe('the game a URL asks for', () => {
   });
 });
 
+/**
+ * The one place the two builds read the same address differently
+ * (docs/WEB_VERSION.md「先行公開」, app/gameChannel.ts): a web-beta title is a
+ * working address in the browser and, on the app, the collection — exactly what
+ * a retired id is — because the parser asks what this build offers, not what
+ * the registry carries. The shortcut path shares this parser (issue #110), so
+ * this is also what keeps a beta title out of a pinned shortcut on the app.
+ */
+describe('a web-beta title in the address', () => {
+  const beta = GAMES.filter((game) => game.channel === 'web-beta');
+
+  it('opens in the browser like any other', () => {
+    expect(beta.length).toBeGreaterThan(0);
+    for (const game of beta) expect(gameIdFromHref(`${PLAY}?game=${game.id}`)).toBe(game.id);
+  });
+
+  it('is the collection on the app build, while released titles still resolve', async () => {
+    vi.resetModules();
+    vi.doMock('@capacitor/core', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('@capacitor/core')>();
+      return {
+        ...actual,
+        Capacitor: {
+          ...actual.Capacitor,
+          isNativePlatform: () => true,
+          getPlatform: () => 'android',
+        },
+      };
+    });
+    const native = await import('./webRoute');
+    for (const game of beta) expect(native.gameIdFromHref(`${PLAY}?game=${game.id}`)).toBeNull();
+    expect(native.gameIdFromHref(`${PLAY}?game=sudoku`)).toBe('sudoku');
+    vi.doUnmock('@capacitor/core');
+  });
+});
+
 describe('writing the game into an address', () => {
   it('adds the parameter to a bare address', () => {
     expect(hrefWithGame(PLAY, 'sudoku')).toBe(`/simple-games/play/?${GAME_PARAM}=sudoku`);

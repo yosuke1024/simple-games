@@ -146,7 +146,11 @@ const cardsIn = (region: HTMLElement) =>
   within(region)
     .getAllByRole('button')
     .map((button) => button.textContent);
-const cardFor = (game: (typeof GAMES)[number]) => `${game.glyph}${game.title}`;
+const cardFor = (game: (typeof GAMES)[number]) =>
+  `${game.glyph}${game.title}${game.channel === 'web-beta' ? ' BETA' : ''}`;
+/** What the card is called: the title, plus the BETA mark a web-beta title wears. */
+const nameOf = (game: (typeof GAMES)[number]) =>
+  game.channel === 'web-beta' ? `${game.title} BETA` : game.title;
 
 /**
  * The list as the categories lay it out: each section's heading, then that
@@ -164,7 +168,7 @@ describe('the game list', () => {
     for (const game of GAMES) {
       // getBy* would also throw on duplicates, but spell the intent out: a
       // game must not appear under two categories.
-      expect(screen.getAllByRole('button', { name: game.title })).toHaveLength(1);
+      expect(screen.getAllByRole('button', { name: nameOf(game) })).toHaveLength(1);
     }
   });
 
@@ -178,6 +182,80 @@ describe('the game list', () => {
       (element) => element.textContent,
     );
     expect(rendered).toEqual(sectionedList);
+  });
+});
+
+/**
+ * The browser version's early-release channel (docs/WEB_VERSION.md「先行公開
+ * (ベータ)」, issue #194). A `channel: 'web-beta'` title is a real door in the
+ * browser, marked as beta, and no door at all on the app — not on a shelf, not
+ * in a section, not in the search, and not through a record that names it.
+ * One build renders both; the platform decides (app/gameChannel.ts).
+ */
+describe('web-beta titles', () => {
+  const beta = GAMES.filter((game) => game.channel === 'web-beta');
+  const released = GAMES.filter((game) => game.channel !== 'web-beta');
+
+  it('exist in this registry, so the tests below are not vacuous', () => {
+    expect(beta.length).toBeGreaterThan(0);
+    expect(released.length).toBeGreaterThan(20);
+  });
+
+  it('are listed in the browser, wearing the BETA mark, beside the released titles', () => {
+    renderHome();
+    for (const game of beta) {
+      const card = screen.getByRole('button', { name: `${game.title} BETA` });
+      expect(card.textContent).toBe(cardFor(game));
+    }
+    for (const game of released) {
+      expect(screen.getByRole('button', { name: game.title }).textContent).not.toContain('BETA');
+    }
+  });
+
+  it('are absent from the app build, whose sections hold exactly the released titles', () => {
+    capacitorMock.native = true;
+    renderHome();
+    for (const game of beta) {
+      expect(screen.queryByRole('button', { name: nameOf(game) })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: game.title })).not.toBeInTheDocument();
+    }
+    const list = screen.getByRole('navigation', { name: 'Games' });
+    expect(cardsIn(list)).toEqual(
+      GAME_CATEGORIES.flatMap((category) =>
+        released.filter((game) => game.category === category.id).map(cardFor),
+      ),
+    );
+  });
+
+  it('do not reach the app through a pinned or recent record either', async () => {
+    // A browser backup restored onto a phone, or the same device store read by
+    // both builds: the record names the beta title, the app's shelves do not.
+    await initFavoriteGames(createMemoryKV());
+    await initRecentGames(createMemoryKV());
+    const first = beta[0]!;
+    capacitorMock.native = false;
+    toggleFavoriteGame(first.id);
+    recordGameOpened(first.id);
+    capacitorMock.native = true;
+    renderHome();
+    expect(screen.queryByRole('navigation', { name: 'Favorites' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Recently played' })).not.toBeInTheDocument();
+  });
+
+  it('are searchable in the browser and not on the app', async () => {
+    const first = beta[0]!;
+    const user = userEvent.setup();
+    renderHome();
+    await user.click(screen.getByRole('button', { name: 'Search games' }));
+    await user.type(screen.getByRole('searchbox', { name: 'Search games' }), first.title);
+    expect(screen.getByRole('button', { name: `${first.title} BETA` })).toBeInTheDocument();
+    cleanup();
+
+    capacitorMock.native = true;
+    renderHome();
+    await user.click(screen.getByRole('button', { name: 'Search games' }));
+    await user.type(screen.getByRole('searchbox', { name: 'Search games' }), first.title);
+    expect(screen.getByRole('status')).toHaveTextContent('No games match.');
   });
 });
 

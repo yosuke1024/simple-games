@@ -14,7 +14,8 @@ import type { KVStore } from '../storage/kv';
 import { preferencesKV } from '../storage/kv';
 import { loadRecord, saveRecord } from '../storage/repo';
 import { RECENT_GAMES_LIMIT, recentGamesSchema, type RecentGames } from '../storage/schemas';
-import { GAMES, type GameId } from './registry';
+import { isAvailableGameId } from './gameChannel';
+import type { GameId } from './registry';
 
 let state: RecentGames = recentGamesSchema.defaultValue();
 let kvStore: KVStore = preferencesKV;
@@ -25,7 +26,9 @@ export async function initRecentGames(kv: KVStore = preferencesKV): Promise<void
   state = await loadRecord(recentGamesSchema, kv);
 }
 
-const isKnownGame = (id: string): id is GameId => GAMES.some((game) => game.id === id);
+// Offered by this build (app/gameChannel.ts), so a web-beta title opened in
+// the browser never surfaces in the app's row from a restored record.
+const isKnownGame = (id: string): id is GameId => isAvailableGameId(id);
 
 /**
  * The shortcuts to show, newest first. Ids the registry no longer carries are

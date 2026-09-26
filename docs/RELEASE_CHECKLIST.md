@@ -21,7 +21,15 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
       `storage.test.ts` と同じ形の**永続化ラウンドトリップテスト**
       (実際に保存済みペイロードを読み込み、想定どおり扱われることを検証する)を
       このリリースで作成し、以後の変更はこのテストに対する移行のみとする
-- [ ] Web 版の BETA バッジとセーブ注意文(en/ja)を外す
+- [ ] registry のエントリから `channel: 'web-beta'` を外す(Web 版の BETA バッジと
+      セーブ注意文(en/ja)はそれで消え、アプリのホーム・検索・住所にも現れる —
+      `app/gameChannel.ts`)。README の「Web 先行公開」節から正式収録の表へ移し、
+      ストア掲載文(`apps/simple-games/store/listing.md`)と landing のガイド
+      (`ui/landing.ts` の `PUBLISHED_GAME_IDS`)はガイドが出てから足す
+- [ ] landing(`pixapps-landing`)の `tests/ui.test.js` で、そのゲームの id をベータ
+      許容リストから `LANDING_GAME_IDS` へ移し、`public/simple-games/index.html` に
+      カードを足す(先行公開中はチャンクだけが配信され、カードは無い —
+      [WEB_VERSION.md](WEB_VERSION.md)「先行公開」)
 
 ## 1. コードの検証(機械が判定できるもの)
 
@@ -100,17 +108,18 @@ bash .github/scripts/check-principles.sh
 - [ ] **高リスクキーの門を通している**([I18N_POLICY.md](I18N_POLICY.md)「リリース前の門」)
 
       ```bash
-      pnpm --filter simple-games i18n:gate status        # 残りを見る
-      pnpm --filter simple-games i18n:gate pending <lang> # 逆翻訳する文字列(英語は出ない)
-      pnpm --filter simple-games i18n:gate:check          # 未承認があれば落ちる
-      ```
+          pnpm --filter simple-games i18n:gate status        # 残りを見る
+          pnpm --filter simple-games i18n:gate pending <lang> # 逆翻訳する文字列(英語は出ない)
+          pnpm --filter simple-games i18n:gate:check          # 未承認があれば落ちる
+          ```
 
-      逆翻訳は**訳を書いた実行者以外**にやらせる。承認は
-      `src/i18n/gateRecord.json` に、読んだ英語と訳文のハッシュ付きで記録される。
-      どちらかを後から編集すると失効し、通常の `pnpm test` が落ちる。
-      **「ネイティブレビュー済み」は要求しない** — 一人開発では供給できず、
-      供給できない条件をチェックリストに置くと形骸化するため
-      (自然さは `machine` 来歴の開示と読者からの報告で担保する)。
+          逆翻訳は**訳を書いた実行者以外**にやらせる。承認は
+          `src/i18n/gateRecord.json` に、読んだ英語と訳文のハッシュ付きで記録される。
+          どちらかを後から編集すると失効し、通常の `pnpm test` が落ちる。
+          **「ネイティブレビュー済み」は要求しない** — 一人開発では供給できず、
+          供給できない条件をチェックリストに置くと形骸化するため
+          (自然さは `machine` 来歴の開示と読者からの報告で担保する)。
+
 - [ ] 端末言語を切り替えてもゲーム進行が失われない
 - [ ] Backup & Restore の 4 キー(`backupRestoreConfirmTitle` /
       `backupRestoreConfirmBody` / `backupPrivacyNote` / `backupPurchaseNote`)が

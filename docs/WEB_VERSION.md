@@ -336,11 +336,33 @@ ADS_POLICY.md 側の項目 3 にも 実施済み の印は付いていない。*
    行い、既収録ゲームの滞在時間を参照点にする。この確認のために「計測」節の範囲を
    広げない(盤面・プレイ内容は送らない)。
 
-実装状況(2026-08-03): **方針のみ・未実装**。先行公開中のゲームは現在ない。
-出し分けは registry のエントリでチャンネルを宣言し、シェルの実行時ガードで行う
-予定(「実装上の約束」どおりビルドは分岐させない。native バンドルに先行公開
-ゲームのコードが含まれるのは許容 — 公開ソースで元々見える。ストア掲載文には
-正式収録まで出さない — `apps/simple-games/store/listing.md` の既存ルール)。
+実装状況(2026-09-26、issue #194): **実装済み。先行公開中は 3 本** — Crown Grid /
+Number Path / Shape Regions(計画は
+[plans/2026-09-26-crown-grid-number-path-shape-regions.md](plans/2026-09-26-crown-grid-number-path-shape-regions.md))。
+
+- 宣言は registry のエントリ(`GameDefinition.channel: 'web-beta'`)、出し分けは
+  `app/gameChannel.ts` の**実行時ガード**(`Capacitor.isNativePlatform()`)。
+  「実装上の約束」どおりビルドは分岐させず、native バンドルにもコードは入る
+  (公開ソースで元々見える)。アプリではコレクションホームの棚と節・検索・
+  お気に入りピッカー・お気に入り棚と最近の行(レコードに id が残っていても)・
+  `?game=` の住所(ショートカットと同じパーサ)・lazy root のどこからも到達しない。
+  `storageKeys`(Reset Local Data)と `loadStorageSchemas`(Backup & Restore)は
+  両ビルドで有効のまま — ブラウザで作ったバックアップをアプリに復元しても
+  ベータの保存を失わない。
+- 表示は `ui/components/WebBetaNotice.tsx`: タイトルカードの `BETA` バッジ
+  (アクセシブルネームに含める — 「Crown Grid BETA」)と、各ゲームのホームの
+  バッジ + 説明文。説明文は en / ja だけで、他 12 言語はバッジのみ。
+- ストア掲載文(`apps/simple-games/store/listing.md`)と landing のガイド
+  (`ui/landing.ts` の `PUBLISHED_GAME_IDS`)には正式収録まで出さない。
+- landing 側のガード: `pixapps-landing` の `tests/ui.test.js`
+  (`testSimpleGamesLandingCollection`)は同期後の `play/assets/game-<id>-*.js` を
+  `LANDING_GAME_IDS` と突き合わせ、一覧に無いチャンクがあれば落ちる。先行公開の
+  ゲームはカードを出さないので、同期する PR では **`LANDING_GAME_IDS` に足すのでは
+  なく**、ベータ id の許容(チャンクはあるがカードは無い)をそのテストに設ける。
+  正式収録でカードを載せるときに、許容から `LANDING_GAME_IDS` へ移す。
+- 正式収録の手順は [RELEASE_CHECKLIST.md §0](RELEASE_CHECKLIST.md): 上の基準 1・2 を
+  満たしたら、registry の `channel` を外す(バッジと説明文はそれで消える)、
+  永続化ラウンドトリップテストを作る、README / ストア掲載文 / landing に載せる。
 
 ## サイトクローム(グローバルヘッダー)
 

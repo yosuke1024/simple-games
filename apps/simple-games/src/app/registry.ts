@@ -55,6 +55,9 @@ import { SP_STORAGE_KEYS } from '../games/sliding-puzzle/storage/keys';
 import { TK_STORAGE_KEYS } from '../games/takuzu/storage/keys';
 import { TM_STORAGE_KEYS } from '../games/2048/storage/keys';
 import { WS_STORAGE_KEYS } from '../games/water-sort/storage/keys';
+import { CG_STORAGE_KEYS } from '../games/crown-grid/storage/keys';
+import { NP_STORAGE_KEYS } from '../games/number-path/storage/keys';
+import { SR_STORAGE_KEYS } from '../games/shape-regions/storage/keys';
 
 export type GameId =
   | 'sudoku'
@@ -86,7 +89,10 @@ export type GameId =
   | 'takuzu'
   | 'futoshiki'
   | 'kakuro'
-  | 'ludo';
+  | 'ludo'
+  | 'crown-grid'
+  | 'number-path'
+  | 'shape-regions';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -170,6 +176,18 @@ export interface GameDefinition {
    * and without loading the game's chunk to ask.
    */
   storageKeys: readonly string[];
+  /**
+   * Where this title ships. Absent means everywhere: the app on both stores
+   * and the browser version alike. `'web-beta'` is the early-release channel
+   * of docs/WEB_VERSION.md「先行公開(ベータ)」: the game is in the browser
+   * version only, wearing a BETA mark, while its schema may still change.
+   * The code ships in every bundle regardless (one build, no forks —
+   * 「実装上の約束」); the shell's runtime guard (app/gameChannel.ts) is what
+   * keeps a beta title off the app's home, out of its search, and out of any
+   * shortcut address it could be opened from. `storageKeys` are listed from
+   * day one, so "Reset Local Data" tells the truth in the browser too.
+   */
+  channel?: 'web-beta';
   /**
    * Loads the game's root component from its own bundled chunk. Roots are
    * named exports; the shim to `{ default }` is what React.lazy expects
@@ -631,5 +649,50 @@ export const GAMES: readonly GameDefinition[] = [
         default: m.BunnyHopRoot,
       })),
     loadStorageSchemas: () => import('../games/bunny-hop/storage/schemas'),
+  },
+  {
+    // Web early release (docs/WEB_VERSION.md「先行公開」, issue #194): the
+    // first three titles on that channel, listed after the shipped thirty and
+    // in the order the issue names them. A crown for the one object the board
+    // asks you to place — one per row, column and region (docs/CROWN_GRID_RULES.md).
+    id: 'crown-grid',
+    title: 'Crown Grid',
+    category: 'logic',
+    glyph: '♛',
+    channel: 'web-beta',
+    storageKeys: Object.values(CG_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/crown-grid/ui/CrownGridRoot').then((m) => ({ default: m.CrownGridRoot })),
+    loadStorageSchemas: () => import('../games/crown-grid/storage/schemas'),
+  },
+  {
+    // A wave arrow: one continuous line through every square, in number order
+    // (docs/NUMBER_PATH_RULES.md). From the Arrows block, which every system
+    // font covers.
+    id: 'number-path',
+    title: 'Number Path',
+    category: 'logic',
+    glyph: '↝',
+    channel: 'web-beta',
+    storageKeys: Object.values(NP_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/number-path/ui/NumberPathRoot').then((m) => ({ default: m.NumberPathRoot })),
+    loadStorageSchemas: () => import('../games/number-path/storage/schemas'),
+  },
+  {
+    // Three quadrants of four: a board being cut into shapes
+    // (docs/SHAPE_REGIONS_RULES.md). Block Elements, like Checkers' ▚, and
+    // far enough from it — three quadrants where that one has two on a diagonal.
+    id: 'shape-regions',
+    title: 'Shape Regions',
+    category: 'logic',
+    glyph: '▙',
+    channel: 'web-beta',
+    storageKeys: Object.values(SR_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/shape-regions/ui/ShapeRegionsRoot').then((m) => ({
+        default: m.ShapeRegionsRoot,
+      })),
+    loadStorageSchemas: () => import('../games/shape-regions/storage/schemas'),
   },
 ];

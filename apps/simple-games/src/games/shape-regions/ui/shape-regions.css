@@ -1,0 +1,270 @@
+/* Shape Regions — all of this game's styling, imported by ShapeRegionsRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --warn, --radius, --font-display, …) so the game
+   reads as part of the same app and follows the theme without knowing about
+   it. The one thing this file owns outright is the region palette below —
+   game content, like Minesweeper's number colours.
+
+   Class names are prefixed `sr-` so this file can never collide with the
+   shell or with another game. */
+
+/* ---------- region tints (§5, §13) ----------
+
+   Eight muted grounds, cycled by region number. They are support, never
+   meaning: every region is also outlined by the thick edges below, so a
+   reader who cannot tell two tints apart has lost nothing. Values are picked
+   so the page ink stays legible on each, in either theme, and no two
+   neighbours in the cycle are close in hue. */
+
+.sr-board {
+  --sr-tint-0: #dfe7f5;
+  --sr-tint-1: #f5e3cf;
+  --sr-tint-2: #dcefdd;
+  --sr-tint-3: #f0dde9;
+  --sr-tint-4: #e8e5cf;
+  --sr-tint-5: #d9eef1;
+  --sr-tint-6: #e6ddf3;
+  --sr-tint-7: #f2dcd6;
+}
+
+:root[data-theme='dark'] .sr-board {
+  --sr-tint-0: #2b3a52;
+  --sr-tint-1: #4a3a26;
+  --sr-tint-2: #2b4531;
+  --sr-tint-3: #4a2f41;
+  --sr-tint-4: #45412a;
+  --sr-tint-5: #274449;
+  --sr-tint-6: #3d3150;
+  --sr-tint-7: #4c322e;
+}
+
+/* ---------- board ---------- */
+
+.sr-board-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px 12px;
+}
+
+/*
+  The cell is whatever is left of the viewport once the scroll padding (24px),
+  the board's own padding and border are taken out, divided by the columns.
+  That is 40px per cell for a 7×7 on a 320px screen — the widest board on the
+  narrowest phone this app supports (§1). Anything narrower clamps at 34px and
+  scrolls instead of shrinking further: a clue cell carries a symbol and a
+  count at once, and below that they stop being readable.
+*/
+.sr-board {
+  --sr-pad: 4px;
+  --sr-cell: clamp(34px, calc((100vw - 24px - 2 * var(--sr-pad) - 2px) / var(--sr-cols)), 48px);
+  --sr-edge: 3px;
+  padding: var(--sr-pad);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.sr-cells {
+  display: grid;
+  grid-template-columns: repeat(var(--sr-cols), var(--sr-cell));
+  grid-auto-rows: var(--sr-cell);
+  /* A finger on the cells draws a region, never scrolls the page (§4). */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---------- cells ---------- */
+
+.sr-cell {
+  position: relative;
+  width: var(--sr-cell);
+  height: var(--sr-cell);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  color: var(--ink);
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.sr-cell:active {
+  filter: brightness(0.96);
+}
+
+.sr-tint-0 {
+  background: var(--sr-tint-0);
+}
+.sr-tint-1 {
+  background: var(--sr-tint-1);
+}
+.sr-tint-2 {
+  background: var(--sr-tint-2);
+}
+.sr-tint-3 {
+  background: var(--sr-tint-3);
+}
+.sr-tint-4 {
+  background: var(--sr-tint-4);
+}
+.sr-tint-5 {
+  background: var(--sr-tint-5);
+}
+.sr-tint-6 {
+  background: var(--sr-tint-6);
+}
+.sr-tint-7 {
+  background: var(--sr-tint-7);
+}
+
+/* Thick edges where the region changes (§5). Each shared edge is drawn once,
+   on the top or left of the lower / righter cell; the board's outer right and
+   bottom edges are drawn by the cells that sit on them. */
+.sr-edge-t {
+  border-top: var(--sr-edge) solid var(--ink);
+}
+.sr-edge-l {
+  border-left: var(--sr-edge) solid var(--ink);
+}
+.sr-edge-r {
+  border-right: var(--sr-edge) solid var(--ink);
+}
+.sr-edge-b {
+  border-bottom: var(--sr-edge) solid var(--ink);
+}
+
+/* The clue: symbol above count, both in ink (§2, §13). */
+.sr-clue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.sr-icon {
+  width: calc(var(--sr-cell) * 0.36);
+  height: calc(var(--sr-cell) * 0.36);
+  display: block;
+}
+
+.sr-clue-count {
+  font-family: var(--font-display);
+  font-size: clamp(10px, calc(var(--sr-cell) * 0.3), 15px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* A clue with only a count, or only a symbol, sits a touch larger. */
+.sr-clue > :only-child.sr-icon {
+  width: calc(var(--sr-cell) * 0.5);
+  height: calc(var(--sr-cell) * 0.5);
+}
+
+.sr-clue > :only-child.sr-clue-count {
+  font-size: clamp(13px, calc(var(--sr-cell) * 0.42), 20px);
+}
+
+/* Always-on violation display (§5): a rule this region takes part in breaking. */
+.sr-cell.sr-cell-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+  box-shadow: inset 0 0 0 2px var(--warn);
+}
+
+/* Hint (§6): the cells the step fixes, the placements it was read off, or the
+   region that disagrees with the answer. Nothing here writes to the board. */
+.sr-cell-reason::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent-ring-soft);
+  pointer-events: none;
+}
+
+.sr-cell-hint {
+  box-shadow: inset 0 0 0 3px var(--accent);
+  z-index: 1;
+}
+
+.sr-cell-wrong {
+  box-shadow: inset 0 0 0 3px var(--warn);
+}
+
+/* Reduced Motion: cells change at once, with nothing to wait for (§13). */
+@media (prefers-reduced-motion: reduce) {
+  .sr-cell {
+    transition: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .sr-cell {
+  transition: none;
+}
+
+/* ---------- top bar ---------- */
+
+.sr-size-tag {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- home ---------- */
+
+.sr-choose-label {
+  margin: 0 0 -4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.sr-chips {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* The board's own cells at a fixed size: the figure is the game, smaller. */
+.sr-figure {
+  --sr-cell: 36px;
+}
+
+.sr-figure .sr-cell {
+  cursor: default;
+}
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; both tiers only raise the ceiling of the board's own clamp, so a
+   wide screen gets bigger cells without moving the 320px floor. The icon and
+   the count are shares of `--sr-cell`, so they scale with it. */
+
+@media (min-width: 600px) {
+  .sr-board {
+    --sr-cell: clamp(34px, calc((100vw - 24px - 2 * var(--sr-pad) - 2px) / var(--sr-cols)), 54px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .sr-board {
+    --sr-cell: clamp(34px, calc((100vw - 24px - 2 * var(--sr-pad) - 2px) / var(--sr-cols)), 60px);
+  }
+}

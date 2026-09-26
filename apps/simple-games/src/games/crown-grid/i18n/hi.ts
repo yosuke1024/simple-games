@@ -1,0 +1,38 @@
+import type { CrownGridMessages } from './en';
+
+export const hi: CrownGridMessages = {
+  crownGridName: 'Crown Grid',
+  crownGridChooseBoard: 'बोर्ड चुनें',
+  crownGridDifficulty_easy: 'आसान',
+  crownGridDifficulty_medium: 'मध्यम',
+  crownGridDifficulty_hard: 'कठिन',
+  crownGridBoardNote: '{size}×{size}',
+  crownGridConfirmSwitchTitle: 'चालू बोर्ड बदलें?',
+  crownGridConfirmSwitchBody: 'आपका {current} खेल नए {next} बोर्ड से बदल जाएगा।',
+  crownGridBoardLabel: 'Crown Grid बोर्ड, {size}×{size}',
+  crownGridCellEmpty: 'खाली, पंक्ति {row}, स्तंभ {col}, क्षेत्र {region}',
+  crownGridCellCross: 'काटा हुआ, पंक्ति {row}, स्तंभ {col}, क्षेत्र {region}',
+  crownGridCellCrown: 'ताज, पंक्ति {row}, स्तंभ {col}, क्षेत्र {region}',
+  crownGridRuleBroken: 'नियम टूटा',
+  crownGridHintViolation: 'हाइलाइट किए गए ताज एक नियम तोड़ रहे हैं।',
+  crownGridHintWrong: 'चिह्नित ताज सही नहीं हो सकता।',
+  crownGridHintPlace: 'चिह्नित खाने में ताज होना चाहिए — हाइलाइट किया गया हिस्सा कारण दिखाता है।',
+  crownGridHintEliminate:
+    'चिह्नित खानों में ताज नहीं आ सकता — हाइलाइट किया गया हिस्सा कारण दिखाता है।',
+  crownGridHintNone: 'अभी कोई निश्चित चाल नहीं मिली।',
+  crownGridSolvedTitle: 'हल हो गया!',
+  crownGridSolvedBody: 'हर पंक्ति, हर स्तंभ और हर क्षेत्र में एक ताज है।',
+  crownGridHintsUsed: 'इस्तेमाल हुए संकेत',
+  crownGridNewBestTime: 'आपका अब तक का सबसे तेज़ समय।',
+  crownGridNewBoard: 'नया बोर्ड',
+  crownGridDailySection: 'दैनिक',
+  crownGridDailiesSolved: 'हल किए दिन',
+  crownGridDailyBacklogHint: 'पिछले दिन हमेशा खुले रहते हैं।',
+  crownGridStep1Title: 'हर एक में एक ताज',
+  crownGridStep1Body: 'हर पंक्ति, हर स्तंभ और हर रंग में ठीक एक ताज होता है।',
+  crownGridStep2Title: 'ताज कभी छूते नहीं',
+  crownGridStep2Body: 'दो ताज कभी अगल-बगल नहीं होते, तिरछे भी नहीं।',
+  crownGridStep3Title: 'टैप और ड्रैग',
+  crownGridStep3Body:
+    'खाने को टैप करें: ×, ताज, खाली बदलता है; कई × लगाने के लिए ड्रैग करें। अटक गए? संकेत माँगें।',
+};
