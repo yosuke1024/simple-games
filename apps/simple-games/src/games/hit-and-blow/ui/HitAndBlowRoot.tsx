@@ -1,0 +1,104 @@
+/**
+ * Hit & Blow's root: loads the game's own records (local, fast, offline),
+ * then mounts the provider and screens. The shell knows nothing beyond this
+ * component and the storage keys; unmounting stops all of the game's work
+ * (docs/GAME_LIFECYCLE.md).
+ *
+ * The game's stylesheet is imported here rather than from the shell, so the
+ * whole title — logic, screens, and looks — lives inside this one folder.
+ */
+// Register this game's 14-locale catalog the moment the chunk loads, before
+// anything below renders (issue #38, src/i18n/registry.ts).
+import '../i18n';
+import type { KVStore } from '../../../storage/kv';
+import { preferencesKV } from '../../../storage/kv';
+import { loadRecord } from '../../../storage/repo';
+import { useLoadedRecords } from '../../../ui/useLoadedRecords';
+import type { HitAndBlowSession } from '../game';
+import { HitAndBlowProvider, useHitAndBlow } from '../state/GameContext';
+import { loadSavedGame } from '../storage/gamePersistence';
+import {
+  flagsSchema,
+  prefsSchema,
+  statsSchema,
+  type Flags,
+  type Prefs,
+  type Stats,
+} from '../storage/schemas';
+import './hit-and-blow.css';
+import { HitAndBlowGameScreen } from './screens/GameScreen';
+import { HitAndBlowHomeScreen } from './screens/HomeScreen';
+import { HitAndBlowStatsScreen } from './screens/StatsScreen';
+import { HitAndBlowTutorialScreen } from './screens/TutorialScreen';
+
+export function HitAndBlowScreens() {
+  const { screen } = useHitAndBlow();
+  switch (screen) {
+    case 'tutorial':
+      return <HitAndBlowTutorialScreen />;
+    case 'game':
+      return <HitAndBlowGameScreen />;
+    case 'stats':
+      return <HitAndBlowStatsScreen />;
+    case 'home':
+    default:
+      return <HitAndBlowHomeScreen />;
+  }
+}
+
+interface LoadedData {
+  stats: Stats;
+  flags: Flags;
+  prefs: Prefs;
+  session: HitAndBlowSession | null;
+}
+
+export interface HitAndBlowRootProps {
+  /** Hands control back to the collection home. */
+  onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). A fact about the launch, not an instruction: what it means is the
+   * provider's answer, taken against the one saved game loaded below (§8).
+   */
+  entry?: 'collection' | 'shortcut';
+  /** Test seam; production always uses the device store. */
+  kv?: KVStore;
+}
+
+function defaultRecords(): LoadedData {
+  return {
+    stats: statsSchema.defaultValue(),
+    flags: flagsSchema.defaultValue(),
+    prefs: prefsSchema.defaultValue(),
+    session: null,
+  };
+}
+
+async function loadRecords(kv: KVStore): Promise<LoadedData> {
+  const [stats, flags, prefs, session] = await Promise.all([
+    loadRecord(statsSchema, kv),
+    loadRecord(flagsSchema, kv),
+    loadRecord(prefsSchema, kv),
+    loadSavedGame(kv),
+  ]);
+  return { stats, flags, prefs, session };
+}
+
+export function HitAndBlowRoot({ onExit, entry, kv = preferencesKV }: HitAndBlowRootProps) {
+  const data = useLoadedRecords(kv, loadRecords, defaultRecords);
+  if (data === null) return null;
+
+  return (
+    <HitAndBlowProvider
+      initialStats={data.stats}
+      initialFlags={data.flags}
+      initialPrefs={data.prefs}
+      initialSession={data.session}
+      onExit={onExit}
+      entry={entry}
+    >
+      <HitAndBlowScreens />
+    </HitAndBlowProvider>
+  );
+}

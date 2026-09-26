@@ -1,0 +1,313 @@
+/* Hit & Blow — all of this game's styling, imported by HitAndBlowRoot.
+   Everything but the symbol fills is built from the series tokens in
+   src/ui/styles.css (--surface, --paper, --ink, --ink-soft, --line,
+   --accent, --radius, --tap-size, --font-display, …), so the game reads as
+   part of the same app and follows the theme without knowing about it.
+
+   Class names are prefixed `hb-` so this file can never collide with the
+   shell or with another game. */
+
+/* ---------- symbol fills (docs/HIT_AND_BLOW_RULES.md §1, §10) ----------
+
+   The one place this file is allowed colours of its own: the symbols ARE the
+   game (docs/architecture/css-split.md — the same standing as Memory Match's
+   symbol colours and Connect Four's second disc). Eight hues, set well apart
+   from each other, and each one is only the second signal — the eight shapes
+   are already all different, so a reader who cannot tell two hues apart has
+   lost nothing.
+
+   Every fill clears 3:1 (the WCAG non-text threshold) against the surface a
+   symbol is drawn on, and against the page behind it, in its own theme:
+   light against --surface #fffdf8 measures 4.24 (the gold star, the lowest)
+   to 6.48, dark against --surface #212730 measures 6.40 to 8.95
+   (ui/contrast.test.ts re-reads both sets and both backgrounds from the
+   stylesheets and checks every pair). */
+
+:root {
+  --hb-sym-0: #c8372d;
+  --hb-sym-1: #b55a00;
+  --hb-sym-2: #2f62c4;
+  --hb-sym-3: #1f8052;
+  --hb-sym-4: #9a7400;
+  --hb-sym-5: #7a3fb3;
+  --hb-sym-6: #566573;
+  --hb-sym-7: #c2317a;
+}
+
+:root[data-theme='dark'] {
+  --hb-sym-0: #ff8a7a;
+  --hb-sym-1: #f4a24a;
+  --hb-sym-2: #7fa8ff;
+  --hb-sym-3: #55c98b;
+  --hb-sym-4: #e8c547;
+  --hb-sym-5: #c49bff;
+  --hb-sym-6: #a9b7c6;
+  --hb-sym-7: #ff8fc8;
+}
+
+.hb-symbol {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- home ---------- */
+
+.hb-choose-label {
+  margin: 0 0 -4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+/* ---------- game screen ---------- */
+
+.hb-counter {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The history takes whatever height is left and scrolls inside itself; the
+   input below never moves (§10). `min-height: 0` is what lets a flex child
+   shrink below its content and scroll instead of pushing the input off the
+   bottom of a 640px screen. */
+.hb-body {
+  --hb-cell: clamp(24px, 8vw, 32px);
+  --hb-slot: clamp(44px, 13vw, 56px);
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 12px;
+}
+
+.hb-history {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 0 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hb-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hb-history-empty {
+  margin: auto 0;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+/* ---------- a history row (§4) ---------- */
+
+.hb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.hb-row-number {
+  min-width: 18px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.hb-row-code {
+  display: flex;
+  gap: 4px;
+}
+
+.hb-row-cell {
+  width: var(--hb-cell);
+  height: var(--hb-cell);
+  padding: 2px;
+}
+
+/* Two rows of pegs, filled before hollow: how many, never which (§4). */
+.hb-pegs {
+  display: grid;
+  grid-template-columns: repeat(var(--hb-peg-cols, 3), 9px);
+  gap: 3px;
+  margin-left: auto;
+}
+
+.hb-peg {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.hb-peg-hit {
+  background: var(--ink);
+}
+
+.hb-peg-blow {
+  border: 2px solid var(--ink);
+}
+
+.hb-peg-none {
+  background: var(--line);
+  transform: scale(0.5);
+}
+
+.hb-row-counts {
+  min-width: 34px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- the row being composed, the palette, Check (§3) ---------- */
+
+.hb-input {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 0 12px;
+  border-top: 1px solid var(--line);
+}
+
+.hb-draft {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.hb-slot {
+  width: var(--hb-slot);
+  height: var(--hb-slot);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+}
+
+.hb-slot:not(:disabled):active {
+  background: var(--accent-soft);
+}
+
+/* An empty slot is not a greyed-out control, just a place still to fill. */
+.hb-slot:disabled {
+  opacity: 1;
+}
+
+.hb-slot-empty {
+  border-style: dashed;
+}
+
+.hb-slot-hidden {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.hb-palette {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.hb-palette-6 {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+.hb-pick {
+  min-height: var(--tap-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.hb-pick .hb-symbol {
+  width: 28px;
+  height: 28px;
+}
+
+.hb-pick:not(:disabled):active {
+  background: var(--accent-soft);
+}
+
+/* A full row leaves nowhere to put a symbol: the palette rests. */
+.hb-pick:disabled {
+  opacity: 0.55;
+}
+
+/* Already in the row (§3): faded well back, and announced as pressed. */
+.hb-pick[aria-pressed='true'] {
+  opacity: 0.2;
+}
+
+.hb-check {
+  min-height: var(--tap-size);
+  width: 100%;
+}
+
+/* ---------- Quick Rules figures (§9) ---------- */
+
+.hb-figure-code {
+  --hb-slot: 48px;
+  display: flex;
+  gap: 8px;
+}
+
+.hb-figure-row {
+  --hb-cell: 30px;
+  width: min(100%, 280px);
+}
+
+.hb-legend {
+  display: flex;
+  gap: 24px;
+  font-weight: 600;
+}
+
+.hb-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The legend's pegs are the subject of the step, so they are drawn larger
+   than a history row's. */
+.hb-legend .hb-pegs {
+  grid-template-columns: 14px;
+  margin-left: 0;
+}
+
+.hb-legend .hb-peg {
+  width: 14px;
+  height: 14px;
+}
+
+.hb-legend .hb-peg-blow {
+  border-width: 3px;
+}

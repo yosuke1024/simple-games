@@ -1,0 +1,50 @@
+import type { HitAndBlowMessages } from './en';
+
+export const hi: HitAndBlowMessages = {
+  hitAndBlowName: 'Hit & Blow',
+  hitAndBlowChooseDifficulty: 'कठिनाई चुनें',
+  hitAndBlowDifficulty_easy: 'आसान',
+  hitAndBlowDifficulty_normal: 'सामान्य',
+  hitAndBlowDifficulty_hard: 'कठिन',
+  hitAndBlowCodeNote: '{pool} में से {slots} प्रतीक',
+  hitAndBlowBestNote: 'सर्वश्रेष्ठ {count}',
+  hitAndBlowConfirmSwitchTitle: 'चालू खेल बदलें?',
+  hitAndBlowConfirmSwitchBody: 'आपका {current} खेल नए {next} खेल से बदल जाएगा।',
+
+  hitAndBlowSymbol_circle: 'वृत्त',
+  hitAndBlowSymbol_triangle: 'त्रिभुज',
+  hitAndBlowSymbol_square: 'वर्ग',
+  hitAndBlowSymbol_diamond: 'हीरा',
+  hitAndBlowSymbol_star: 'तारा',
+  hitAndBlowSymbol_cross: 'क्रॉस',
+  hitAndBlowSymbol_hexagon: 'षट्भुज',
+  hitAndBlowSymbol_heart: 'दिल',
+
+  hitAndBlowGuessCounter: 'प्रयास {n}',
+  hitAndBlowHistoryLabel: 'अब तक के प्रयास',
+  hitAndBlowHistoryEmpty: 'आपके प्रयास यहाँ दिखेंगे।',
+  hitAndBlowRowLabel: 'प्रयास {n}: {symbols}। सही {hits}, मौजूद {blows}।',
+  hitAndBlowDraftLabel: 'आपका प्रयास',
+  hitAndBlowSlotEmpty: 'खाना {n}: खाली',
+  hitAndBlowSlotFilled: 'खाना {n}: {symbol}',
+  hitAndBlowPaletteLabel: 'प्रतीक',
+  hitAndBlowCheck: 'जाँचें',
+  hitAndBlowHit: 'सही',
+  hitAndBlowBlow: 'मौजूद',
+
+  hitAndBlowWinTitle: 'कोड सुलझ गया',
+  hitAndBlowWinBody: 'आपने छिपी हुई पंक्ति ढूँढ ली।',
+  hitAndBlowGuessesLabel: 'प्रयास',
+  hitAndBlowNewBest: 'आपके अब तक के सबसे कम प्रयास।',
+  hitAndBlowSolved: 'हल किए',
+  hitAndBlowFewestGuesses: 'सबसे कम प्रयास',
+  hitAndBlowAverageGuesses: 'औसत प्रयास',
+
+  hitAndBlowStep1Title: 'छिपी पंक्ति खोजें',
+  hitAndBlowStep1Body: 'अलग-अलग प्रतीकों की एक पंक्ति छिपी है। पता लगाएँ कौन-से, किस क्रम में।',
+  hitAndBlowStep2Title: 'प्रयास तैयार करें',
+  hitAndBlowStep2Body: 'पंक्ति भरने के लिए प्रतीकों पर टैप करें, फिर जाँचें दबाएँ।',
+  hitAndBlowStep3Title: 'निशान पढ़ें',
+  hitAndBlowStep3Body:
+    '● सही: प्रतीक और जगह दोनों सही। ○ मौजूद: प्रतीक सही, जगह गलत। जितनी बार चाहें उतनी बार प्रयास करें।',
+};
