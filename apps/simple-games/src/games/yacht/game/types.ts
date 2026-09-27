@@ -13,13 +13,19 @@ export const DICE_COUNT = 5;
 /** A die shows 1..6. */
 export const FACES = 6;
 
+/** The two seats at the table (§1). The player always throws first. */
+export type Seat = 'player' | 'cpu';
+
+/** How a finished match reads from the player's side (§1, §7). */
+export type Outcome = 'won' | 'lost' | 'draw';
+
 /** At most three throws in a turn (§2). */
 export const ROLLS_PER_TURN = 3;
 
 /**
  * The twelve boxes, in the sheet's own order: the upper six by face, then the
  * combinations (§3). The index in this list is the index in `scores`, so the
- * order is part of the saved format (§7) — never reorder it.
+ * order is part of the saved format (§8) — never reorder it.
  */
 export const CATEGORIES = [
   'ones',

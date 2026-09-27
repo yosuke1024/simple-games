@@ -9,20 +9,15 @@
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
 import { loadRecord, removeRecord, saveRecord } from '../../../storage/repo';
-import {
-  decodeBoard,
-  drawnEdgeCount,
-  PLAYER,
-  restoreSession,
-  type DotsAndBoxesSession,
-} from '../game';
+import { decodeBoard, drawnEdgeCount, restoreSession, type DotsAndBoxesSession } from '../game';
 import { gameSchema, type PersistedGame } from './schemas';
 
 export function toPersisted(session: DotsAndBoxesSession, savedAt: number): PersistedGame {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     size: session.size,
     seed: session.seed,
+    first: session.first,
     edges: session.board.edges,
     boxes: session.board.boxes,
     toMove: session.toMove,
@@ -43,13 +38,15 @@ export function toSession(persisted: PersistedGame | null): DotsAndBoxesSession 
   // resumed match would answer differently than the one that was saved —
   // which is the promise Undo rests on. Fail closed, like the board itself.
   if (persisted.moveCount !== drawnEdgeCount(board)) return null;
-  // The player always draws first (§1): an untouched board on the CPU's turn
-  // is a record no match produced.
-  if (persisted.moveCount === 0 && persisted.toMove !== PLAYER) return null;
+  // Before the first line there is only one position, and only one side to
+  // move in it: whoever opened the match (§1). A save claiming no lines drawn
+  // with the other side up did not come from play either.
+  if (persisted.moveCount === 0 && persisted.toMove !== persisted.first) return null;
 
   const session = restoreSession({
     seed: persisted.seed,
     size: persisted.size,
+    first: persisted.first,
     board,
     toMove: persisted.toMove,
     moveCount: persisted.moveCount,

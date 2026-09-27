@@ -31,14 +31,17 @@ export const de: MancalaMessages = {
   mancalaWins: 'Siege',
   mancalaLosses: 'Niederlagen',
   mancalaDraws: 'Unentschieden',
-  mancalaStep1Title: 'Tippe auf eine Mulde zum Säen',
+  mancalaStep1Title: 'Deine Mulden, dein Haus',
   mancalaStep1Body:
-    'Die Steine wandern einzeln gegen den Uhrzeigersinn in die folgenden Mulden; wer die meisten Steine im eigenen Haus hat, gewinnt.',
-  mancalaStep2Title: 'Im eigenen Haus enden, nochmal ziehen',
-  mancalaStep2Body: 'Landet dein letzter Stein in deinem eigenen Haus, bist du erneut am Zug.',
-  mancalaStep3Title: 'In einer leeren Mulde enden, nehmen',
-  mancalaStep3Body:
-    'Landet dein letzter Stein in einer leeren Mulde auf deiner Seite, gehen er und die Steine gegenüber in dein Haus.',
+    'Die untere Reihe Mulden gehört dir, ebenso das Haus rechts. Sind die Mulden einer Seite alle leer, endet die Partie, und das vollere Haus gewinnt.',
+  mancalaStep2Title: 'Tippe auf eine Mulde zum Säen',
+  mancalaStep2Body:
+    'Die Steine fallen einzeln gegen den Uhrzeigersinn in die folgenden Mulden – auch in dein Haus, aber nie in das der CPU.',
+  mancalaStep3Title: 'Im eigenen Haus enden, nochmal ziehen',
+  mancalaStep3Body: 'Landet dein letzter Stein in deinem eigenen Haus, bist du erneut am Zug.',
+  mancalaStep4Title: 'In einer leeren Mulde enden, nehmen',
+  mancalaStep4Body:
+    'Landet dein letzter Stein in einer leeren Mulde auf deiner Seite, gehen er und alle Steine gegenüber in dein Haus.',
   mancalaConfirmSwitchTitle: 'Laufende Partie ersetzen?',
   mancalaConfirmSwitchBody:
     'Deine Partie ({current}) wird durch eine neue Partie ({next}) ersetzt.',

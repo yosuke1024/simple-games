@@ -38,7 +38,15 @@ function sessionOn(
 ): DotsAndBoxesSession {
   let drawn = 0;
   for (const character of board.edges) if (character !== '0') drawn += 1;
-  return restoreSession({ seed, size, board, toMove, moveCount: drawn, elapsedSeconds: 0 });
+  return restoreSession({
+    seed,
+    size,
+    first: PLAYER,
+    board,
+    toMove,
+    moveCount: drawn,
+    elapsedSeconds: 0,
+  });
 }
 
 function drawAll(board: Board, side: Side, edges: readonly number[]): Board {
@@ -65,8 +73,20 @@ describe('turns (§2)', () => {
   it('starts with the player, and the CPU declines to move out of turn', () => {
     const session = createSession('small', 'dots-and-boxes-t1');
     expect(session.toMove).toBe(PLAYER);
+    expect(session.first).toBe(PLAYER);
     expect(session.board.edges).toBe('0'.repeat(24));
     expect(applyCpuMove(session)).toBeNull();
+  });
+
+  it('starts on the CPU when the player takes second (§1)', () => {
+    const session = createSession('small', 'dots-and-boxes-second', CPU);
+    expect(session.toMove).toBe(CPU);
+    expect(session.first).toBe(CPU);
+    expect(applyPlayerMove(session, 0)).toBeNull();
+
+    const opened = applyCpuMove(session)!;
+    expect(opened.toMove).toBe(PLAYER);
+    expect(opened.first).toBe(CPU);
   });
 
   it('passes the turn when a line closes nothing', () => {

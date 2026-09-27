@@ -1,3 +1,4 @@
+export * from './cpu';
 export * from './engine';
 export * from './rng';
 export * from './session';

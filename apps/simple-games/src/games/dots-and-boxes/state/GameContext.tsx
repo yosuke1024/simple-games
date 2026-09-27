@@ -36,6 +36,7 @@ import {
   applyPlayerMove,
   CPU,
   createSession,
+  PLAYER,
   undo,
   type BoardSize,
   type DotsAndBoxesSession,
@@ -65,6 +66,9 @@ export interface DotsAndBoxesContextValue {
   preferredSize: BoardSize;
   tutorialCompleted: boolean;
   canResume: boolean;
+  /** Which side the next match starts with (§1). Never changes one in play. */
+  playerGoesFirst: boolean;
+  setPlayerGoesFirst: (value: boolean) => void;
   startNewGame: (size: BoardSize) => void;
   resumeGame: () => void;
   /**
@@ -228,6 +232,17 @@ export function DotsAndBoxesProvider({
     if (current) activate(current);
   }, [activate]);
 
+  const setPlayerGoesFirst = useCallback((value: boolean) => {
+    if (prefsRef.current.playerGoesFirst === value) return;
+    const next = { ...prefsRef.current, playerGoesFirst: value };
+    // The ref is what startNewGame reads, and both can fire from one tap on
+    // the home screen — pick a side, then start. React has not re-rendered in
+    // between, so the ref is advanced here rather than in the next render.
+    prefsRef.current = next;
+    setPrefs(next);
+    void saveRecord(prefsSchema, next);
+  }, []);
+
   const startNewGame = useCallback(
     (size: BoardSize) => {
       const current = sessionRef.current;
@@ -242,7 +257,9 @@ export function DotsAndBoxesProvider({
         void saveRecord(prefsSchema, nextPrefs);
       }
 
-      const next = createSession(size);
+      // The side is taken at the start and stays with the match (§1); a
+      // later change to the preference leaves this one alone.
+      const next = createSession(size, undefined, prefsRef.current.playerGoesFirst ? PLAYER : CPU);
       finalizedRef.current = false;
       persistStats(applyGameStart(statsRef.current, size));
       putSession(next);
@@ -386,6 +403,8 @@ export function DotsAndBoxesProvider({
       preferredSize: prefs.size,
       tutorialCompleted: flags.tutorialCompleted,
       canResume: session?.status === 'playing',
+      playerGoesFirst: prefs.playerGoesFirst,
+      setPlayerGoesFirst,
       startNewGame,
       resumeGame,
       playEdge,
@@ -400,7 +419,9 @@ export function DotsAndBoxesProvider({
       session,
       stats,
       prefs.size,
+      prefs.playerGoesFirst,
       flags.tutorialCompleted,
+      setPlayerGoesFirst,
       startNewGame,
       resumeGame,
       playEdge,

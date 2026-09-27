@@ -31,14 +31,17 @@ export const fr: MancalaMessages = {
   mancalaWins: 'Victoires',
   mancalaLosses: 'Défaites',
   mancalaDraws: 'Égalités',
-  mancalaStep1Title: 'Touchez un trou pour semer',
+  mancalaStep1Title: 'Vos trous, votre grenier',
   mancalaStep1Body:
-    'Les graines se déposent une à une dans les trous suivants, dans le sens antihoraire ; celui qui a le plus de graines dans son grenier gagne.',
-  mancalaStep2Title: 'Finissez dans votre grenier, rejouez',
-  mancalaStep2Body: 'Si votre dernière graine tombe dans votre propre grenier, vous rejouez.',
-  mancalaStep3Title: 'Finissez dans un trou vide, prenez',
-  mancalaStep3Body:
-    'Si votre dernière graine tombe dans un trou vide de votre côté, elle et les graines d’en face vont dans votre grenier.',
+    'La rangée du bas est la vôtre, tout comme le grenier de droite. Quand les trous d’un côté sont tous vides, la partie se termine, et le grenier le plus rempli gagne.',
+  mancalaStep2Title: 'Touchez un trou pour semer',
+  mancalaStep2Body:
+    'Ses graines se déposent une à une dans les trous suivants, dans le sens antihoraire — y compris dans votre grenier, mais jamais dans celui du CPU.',
+  mancalaStep3Title: 'Finissez dans votre grenier, rejouez',
+  mancalaStep3Body: 'Si votre dernière graine tombe dans votre propre grenier, vous rejouez.',
+  mancalaStep4Title: 'Finissez dans un trou vide, prenez',
+  mancalaStep4Body:
+    'Si votre dernière graine tombe dans un trou vide de votre côté, elle et toutes les graines d’en face vont dans votre grenier.',
   mancalaConfirmSwitchTitle: 'Remplacer la partie en cours ?',
   mancalaConfirmSwitchBody: 'Votre partie {current} sera remplacée par une nouvelle partie {next}.',
 };

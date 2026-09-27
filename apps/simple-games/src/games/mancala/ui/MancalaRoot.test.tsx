@@ -185,6 +185,8 @@ describe('first run', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'How to Play' }),
     ).toBeInTheDocument();
+    expect(screen.getByText('Your pits, your store')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
     expect(screen.getByText('Tap a pit to sow')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Next' }));
     expect(screen.getByText('End in your store, go again')).toBeInTheDocument();
@@ -541,11 +543,12 @@ describe('a home-screen shortcut', () => {
 
     launchFromShortcut();
 
-    expect(await screen.findByText('Tap a pit to sow')).toBeInTheDocument();
+    expect(await screen.findByText('Your pits, your store')).toBeInTheDocument();
     expect(boardShown()).not.toBeInTheDocument();
 
     // And Quick Rules lead onto the match that was waiting, not over it: the
     // save keeps its seed, and the board is the suspended one.
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     fireEvent.click(screen.getByRole('button', { name: 'Start Playing' }));

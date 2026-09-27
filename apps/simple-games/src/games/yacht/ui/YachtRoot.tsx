@@ -50,7 +50,7 @@ export interface YachtRootProps {
   /**
    * Which door the shell opened this game through (app/registry.ts, issue
    * #113). A fact about the launch, not an instruction: what it means is the
-   * provider's answer, taken against the one saved sheet loaded below (§7).
+   * provider's answer, taken against the one saved sheet loaded below (§8).
    */
   entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */

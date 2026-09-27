@@ -35,13 +35,17 @@ export const ja: MancalaMessages = {
   mancalaWins: '勝ち',
   mancalaLosses: '負け',
   mancalaDraws: '引き分け',
-  mancalaStep1Title: '穴をタップしてまく',
-  mancalaStep1Body: '石を1個ずつ反時計回りに入れていき、最後に自分の店の石が多ければ勝ちです。',
-  mancalaStep2Title: '店で終わればもう1手',
-  mancalaStep2Body: '最後の1個が自分の店に入ったら、続けてもう1手指せます。',
-  mancalaStep3Title: '空の穴で終われば取れる',
-  mancalaStep3Body:
-    '最後の1個が自分側の空の穴に入ったら、その1個と向かいの石を自分の店へ入れます。',
+  mancalaStep1Title: '自分の穴と自分の店',
+  mancalaStep1Body:
+    '下の段の穴が自分の穴、右端が自分の店です。どちらかの穴が全部空になったら終わりで、店の石が多いほうの勝ちです。',
+  mancalaStep2Title: '穴をタップしてまく',
+  mancalaStep2Body:
+    '石を 1 個ずつ、反時計回りに次の穴へ入れていきます。自分の店には入り、CPU の店は飛ばします。',
+  mancalaStep3Title: '店で終わればもう 1 手',
+  mancalaStep3Body: '最後の 1 個が自分の店に入ったら、続けてもう 1 手指せます。',
+  mancalaStep4Title: '空の穴で終われば取れる',
+  mancalaStep4Body:
+    '最後の 1 個が自分側の空の穴に入ったら、その 1 個と向かいの穴の石を全部、自分の店に入れます。',
   mancalaConfirmSwitchTitle: '対局中のゲームを置き換えますか?',
   mancalaConfirmSwitchBody: '「{current}」の対局は、新しい「{next}」の対局に置き換わります。',
 };

@@ -31,14 +31,17 @@ export const tr: MancalaMessages = {
   mancalaWins: 'Galibiyet',
   mancalaLosses: 'Yenilgi',
   mancalaDraws: 'Beraberlik',
-  mancalaStep1Title: 'Dağıtmak için bir göze dokun',
+  mancalaStep1Title: 'Gözlerin senin, kalen senin',
   mancalaStep1Body:
-    'Taşlar saat yönünün tersine, sıradaki gözlere tek tek dağılır; kalesinde en çok taş olan kazanır.',
-  mancalaStep2Title: 'Kalende bitirirsen tekrar oyna',
-  mancalaStep2Body: 'Son taşın kendi kalende biterse, tekrar oynarsın.',
-  mancalaStep3Title: 'Boş bir gözde bitirirsen al',
-  mancalaStep3Body:
-    'Son taşın kendi tarafındaki boş bir gözde biterse, o taş ve karşısındaki taşlar kalene gider.',
+    'Alt sıradaki gözler senindir, sağdaki kale de öyle. Bir tarafın gözleri tamamen boşaldığında oyun biter ve daha dolu kale kazanır.',
+  mancalaStep2Title: 'Dağıtmak için bir göze dokun',
+  mancalaStep2Body:
+    'Taşları saat yönünün tersine, sıradaki gözlere tek tek dağılır — kalene de girer, ama CPU’nunkine asla.',
+  mancalaStep3Title: 'Kalende bitirirsen tekrar oyna',
+  mancalaStep3Body: 'Son taşın kendi kalende biterse, tekrar oynarsın.',
+  mancalaStep4Title: 'Boş bir gözde bitirirsen al',
+  mancalaStep4Body:
+    'Son taşın kendi tarafındaki boş bir gözde biterse, o taş ve karşısındaki tüm taşlar kalene gider.',
   mancalaConfirmSwitchTitle: 'Devam eden oyun değiştirilsin mi?',
   mancalaConfirmSwitchBody: '{current} oyunun yeni bir {next} oyunuyla değiştirilecek.',
 };

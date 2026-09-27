@@ -17,9 +17,40 @@ export const es: CrownGridMessages = {
   crownGridRuleBroken: 'incumple una regla',
   crownGridHintViolation: 'Las coronas resaltadas incumplen una regla.',
   crownGridHintWrong: 'La corona marcada no puede ser correcta.',
-  crownGridHintPlace: 'La casilla marcada debe llevar corona: la zona resaltada muestra por qué.',
-  crownGridHintEliminate:
-    'Ninguna corona puede ir en las casillas marcadas: la zona resaltada muestra por qué.',
+  crownGridHintSingle_row:
+    'La fila resaltada solo tiene una casilla libre para su corona: la recuadrada.',
+  crownGridHintSingle_col:
+    'La columna resaltada solo tiene una casilla libre para su corona: la recuadrada.',
+  crownGridHintSingle_region:
+    'La zona resaltada solo tiene una casilla libre para su corona: la recuadrada.',
+  crownGridHintConfine_regionRow:
+    'La zona resaltada solo puede tener su corona en las casillas coloreadas, todas en una misma fila — así que las demás casillas de esa fila (recuadradas) quedan descartadas.',
+  crownGridHintConfine_regionCol:
+    'La zona resaltada solo puede tener su corona en las casillas coloreadas, todas en una misma columna — así que las demás casillas de esa columna (recuadradas) quedan descartadas.',
+  crownGridHintConfine_rowRegion:
+    'La fila resaltada solo puede tener su corona en las casillas coloreadas, todas en una misma zona — así que las demás casillas de esa zona (recuadradas) quedan descartadas.',
+  crownGridHintConfine_colRegion:
+    'La columna resaltada solo puede tener su corona en las casillas coloreadas, todas en una misma zona — así que las demás casillas de esa zona (recuadradas) quedan descartadas.',
+  crownGridHintAttack_row:
+    'Una corona en la casilla recuadrada descartaría todas las casillas coloreadas, dejando a la fila resaltada sin ningún sitio para su corona.',
+  crownGridHintAttack_col:
+    'Una corona en la casilla recuadrada descartaría todas las casillas coloreadas, dejando a la columna resaltada sin ningún sitio para su corona.',
+  crownGridHintAttack_region:
+    'Una corona en la casilla recuadrada descartaría todas las casillas coloreadas, dejando a la zona resaltada sin ningún sitio para su corona.',
+  crownGridHintPair_regionsRows:
+    'Las dos zonas resaltadas solo pueden tener sus coronas en las casillas coloreadas, que caben en exactamente dos filas — así que las demás casillas de esas filas (recuadradas) quedan descartadas.',
+  crownGridHintPair_regionsCols:
+    'Las dos zonas resaltadas solo pueden tener sus coronas en las casillas coloreadas, que caben en exactamente dos columnas — así que las demás casillas de esas columnas (recuadradas) quedan descartadas.',
+  crownGridHintPair_rowsRegions:
+    'Las dos filas resaltadas solo pueden tener sus coronas en las casillas coloreadas, que caben en exactamente dos zonas — así que las demás casillas de esas zonas (recuadradas) quedan descartadas.',
+  crownGridHintPair_colsRegions:
+    'Las dos columnas resaltadas solo pueden tener sus coronas en las casillas coloreadas, que caben en exactamente dos zonas — así que las demás casillas de esas zonas (recuadradas) quedan descartadas.',
+  crownGridHintHypothesis_row:
+    'Prueba a poner una corona en la casilla recuadrada: las jugadas que eso obliga dejan a la fila resaltada sin ningún sitio para su corona, así que no puede ser esa.',
+  crownGridHintHypothesis_col:
+    'Prueba a poner una corona en la casilla recuadrada: las jugadas que eso obliga dejan a la columna resaltada sin ningún sitio para su corona, así que no puede ser esa.',
+  crownGridHintHypothesis_region:
+    'Prueba a poner una corona en la casilla recuadrada: las jugadas que eso obliga dejan a la zona resaltada sin ningún sitio para su corona, así que no puede ser esa.',
   crownGridHintNone: 'Ahora mismo no hay un movimiento seguro.',
   crownGridSolvedTitle: '¡Resuelto!',
   crownGridSolvedBody: 'Cada fila, cada columna y cada zona tiene una corona.',

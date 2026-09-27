@@ -1,15 +1,15 @@
 /**
- * The one thing this game has to say at the end: the sheet's total (§6). It
- * states the best score once, quietly — a record, not a target — and offers a
- * new sheet. There is no revival to buy and no ad to watch for one more throw
- * (docs/YACHT_RULES.md §5, ADS_POLICY.md).
+ * The one thing this game has to say at the end: who won, and the two totals
+ * that say it (§1, §7). A loss is stated, never scolded; there is no revival
+ * to buy and no ad to watch for one more throw (docs/YACHT_RULES.md §6,
+ * ADS_POLICY.md).
  */
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
-import { statusOf, totalOf, type YachtSession } from '../../game';
+import { cpuTotalOf, outcomeOf, statusOf, totalOf, type YachtSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface YachtResultOverlayProps {
@@ -26,28 +26,49 @@ export function YachtResultOverlay({
   onHome,
 }: YachtResultOverlayProps) {
   const { t } = useSettings();
-  // The full sheet gets its beat before the card covers it (§9).
+  // The full sheets get their beat before the card covers them (§10).
   const revealed = useResultReveal(statusOf(session) === 'finished');
   if (!revealed) return null;
 
   const total = totalOf(session);
+  const cpuTotal = cpuTotalOf(session);
   const best = lastResult?.bestScore ?? total;
+  // `session` is finished here, so this is never null — `lastResult` is
+  // preferred since it is the outcome booked into the statistics.
+  const outcome = lastResult?.outcome ?? outcomeOf(session)!;
+
+  const title =
+    outcome === 'won'
+      ? t('yachtWinTitle')
+      : outcome === 'lost'
+        ? t('yachtLoseTitle')
+        : t('yachtDrawTitle');
+  const body =
+    outcome === 'won'
+      ? t('yachtWinBody')
+      : outcome === 'lost'
+        ? t('yachtLoseBody')
+        : t('yachtDrawBody');
 
   return (
     <div className="overlay overlay-result">
       <div
-        className="dialog result result-clear"
+        className={`dialog result ${outcome === 'won' ? 'result-clear' : ''}`}
         role="alertdialog"
         aria-modal="true"
-        aria-label={t('yachtResultTitle')}
+        aria-label={title}
       >
-        <h2 className="dialog-title">{t('yachtResultTitle')}</h2>
-        <p className="dialog-body">{t('yachtResultBody')}</p>
+        <h2 className="dialog-title">{title}</h2>
+        <p className="dialog-body">{body}</p>
 
         <dl className="result-facts">
           <div>
-            <dt>{t('yachtTotal')}</dt>
+            <dt>{t('yachtYou')}</dt>
             <dd>{total}</dd>
+          </div>
+          <div>
+            <dt>{t('yachtCpu')}</dt>
+            <dd>{cpuTotal}</dd>
           </div>
           <div>
             <dt>{t('yachtBest')}</dt>
@@ -77,12 +98,15 @@ export function YachtResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        {/* The headline figure only: the best is a record, and a share never
-            repeats one. */}
+        {/* Both totals, exactly what the card shows — never a reward, never
+            asked twice (services/share). */}
         <ShareAction
           gameId="yacht"
-          outcome="completed"
-          details={[{ label: t('yachtTotal'), value: String(total) }]}
+          outcome={outcome === 'won' ? 'completed' : 'played'}
+          details={[
+            { label: t('yachtYou'), value: String(total) },
+            { label: t('yachtCpu'), value: String(cpuTotal) },
+          ]}
         />
       </div>
       <ResultAdSlot />

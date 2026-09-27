@@ -78,7 +78,7 @@ describe('scoring each box (§3)', () => {
 });
 
 describe('what a box can hold', () => {
-  it('knows the values some throw can score, and only those (§7)', () => {
+  it('knows the values some throw can score, and only those (§8)', () => {
     expect(isPossibleScore('fours', 12)).toBe(true);
     expect(isPossibleScore('fours', 13)).toBe(false);
     expect(isPossibleScore('fours', 24)).toBe(false);

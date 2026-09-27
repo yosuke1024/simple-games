@@ -1,9 +1,11 @@
 /**
- * Home (docs/YACHT_RULES.md §6, §7): one game, one button, and nothing
- * between the player and the dice. There is no level list and no mode — every
- * game is the same twelve boxes.
+ * Home (docs/YACHT_RULES.md §1, §7, §8): one game, one button, and nothing
+ * between the player and the dice. There is no level list and no mode, and no
+ * side to pick either — the opponent is always the one CPU, the player always
+ * throws first, and the two sheets never interact until the last box, so a
+ * choice with no difference is not offered (§1, §11).
  *
- * The slot holds one sheet, so starting a new one while a sheet is in
+ * The slot holds one match, so starting a new one while a match is in
  * progress replaces it. That is the one thing here worth asking about first;
  * resuming is the button that leads.
  */
@@ -13,7 +15,7 @@ import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
 import { IconChart } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
-import { CATEGORY_COUNT, totalOf, turnsPlayed } from '../../game';
+import { CATEGORY_COUNT, cpuTotalOf, totalOf, turnsPlayed } from '../../game';
 import { useYacht } from '../../state/GameContext';
 
 export function YachtHomeScreen() {
@@ -24,6 +26,7 @@ export function YachtHomeScreen() {
 
   const current = canResume && session ? session : null;
   const turn = current ? turnsPlayed(current) + 1 : 0;
+  const played = stats.wins + stats.losses + stats.draws;
 
   return (
     <div className="screen home-screen">
@@ -51,6 +54,7 @@ export function YachtHomeScreen() {
                   turn,
                   count: CATEGORY_COUNT,
                   total: totalOf(current),
+                  cpuTotal: cpuTotalOf(current),
                 })}
               </span>
             </button>
@@ -65,8 +69,18 @@ export function YachtHomeScreen() {
         ) : (
           <button type="button" className="btn btn-primary btn-big" onClick={startNewGame}>
             {t('newGame')}
-            {/* The best so far, stated once and quietly — never a target. */}
-            {stats.bestScore !== null ? (
+            {/* The standing record, stated once and quietly — never a target
+                or a streak (§7). A record with no result yet (migrated from
+                the solo days, before the CPU) shows only the best. */}
+            {played > 0 ? (
+              <span className="btn-note">
+                {t('yachtRecordNote', {
+                  wins: stats.wins,
+                  losses: stats.losses,
+                  best: stats.bestScore ?? 0,
+                })}
+              </span>
+            ) : stats.bestScore !== null ? (
               <span className="btn-note">{t('yachtBestNote', { score: stats.bestScore })}</span>
             ) : null}
           </button>

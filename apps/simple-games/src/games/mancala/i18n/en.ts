@@ -40,14 +40,17 @@ export const en = {
   mancalaWins: 'Wins',
   mancalaLosses: 'Losses',
   mancalaDraws: 'Draws',
-  mancalaStep1Title: 'Tap a pit to sow',
+  mancalaStep1Title: 'Your pits, your store',
   mancalaStep1Body:
-    'Its seeds go one by one into the pits after it, counter-clockwise; the most seeds in your store wins.',
-  mancalaStep2Title: 'End in your store, go again',
-  mancalaStep2Body: 'When your last seed lands in your own store, you move again.',
-  mancalaStep3Title: 'End in an empty pit, take',
-  mancalaStep3Body:
-    'When your last seed lands in an empty pit on your side, it and the seeds across go to your store.',
+    'The bottom row of pits is yours, and so is the store on the right. When one side’s pits are all empty the game ends, and the fuller store wins.',
+  mancalaStep2Title: 'Tap a pit to sow',
+  mancalaStep2Body:
+    'Its seeds drop one by one into the pits after it, counter-clockwise — into your store too, but never into the CPU’s.',
+  mancalaStep3Title: 'End in your store, go again',
+  mancalaStep3Body: 'When your last seed lands in your own store, you move again.',
+  mancalaStep4Title: 'End in an empty pit, take',
+  mancalaStep4Body:
+    'When your last seed lands in an empty pit on your side, it and every seed across from it go to your store.',
   mancalaConfirmSwitchTitle: 'Replace the match in progress?',
   mancalaConfirmSwitchBody: 'Your {current} match will be replaced by a new {next} match.',
 } as const;

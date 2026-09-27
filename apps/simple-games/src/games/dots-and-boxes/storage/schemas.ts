@@ -27,22 +27,37 @@ export { DB_STORAGE_KEYS };
 // ---------- game-specific preferences ----------
 
 /**
- * The board last picked (§1). Not a setting — nothing here changes how a
- * match plays; it only saves choosing again, and it is the button the home
- * screen leads with next time.
+ * The board last picked (§1), and which side the player takes next time
+ * (§1). Not a setting — nothing here changes how a match in progress plays;
+ * `size` only saves choosing the board again, and `playerGoesFirst` never
+ * touches a match once it has started, which keeps the side it was started
+ * with until it ends.
  */
 export interface Prefs {
-  schemaVersion: 1;
+  schemaVersion: 2;
   size: BoardSize;
+  playerGoesFirst: boolean;
 }
 
 export const prefsSchema: SchemaDef<Prefs> = {
   key: DB_STORAGE_KEYS.prefs,
-  version: 1,
-  defaultValue: () => ({ schemaVersion: 1, size: 'small' }),
+  version: 2,
+  defaultValue: () => ({ schemaVersion: 2, size: 'small', playerGoesFirst: true }),
   validate: (raw) => {
-    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
-    return isBoardSize(raw.size) ? { schemaVersion: 1, size: raw.size } : null;
+    if (!isRecord(raw)) return null;
+
+    // v1 → v2: the side choice (§1) did not exist yet, so every v1 record
+    // played the player first.
+    if (raw.schemaVersion === 1) {
+      return isBoardSize(raw.size)
+        ? { schemaVersion: 2, size: raw.size, playerGoesFirst: true }
+        : null;
+    }
+
+    if (raw.schemaVersion !== 2) return null;
+    if (!isBoardSize(raw.size)) return null;
+    const playerGoesFirst = asBool(raw.playerGoesFirst);
+    return playerGoesFirst === null ? null : { schemaVersion: 2, size: raw.size, playerGoesFirst };
   },
 };
 
@@ -132,9 +147,11 @@ export const statsSchema: SchemaDef<Stats> = {
  * game.
  */
 export interface PersistedGame {
-  schemaVersion: 1;
+  schemaVersion: 2;
   size: BoardSize;
   seed: string;
+  /** Who opened this match (§1). */
+  first: Side;
   /** One character per edge (§1). */
   edges: string;
   /** One character per box (§1). */
@@ -145,12 +162,15 @@ export interface PersistedGame {
   savedAt: number;
 }
 
+const asSide = (raw: unknown): Side | null => (raw === PLAYER || raw === CPU ? raw : null);
+
 export const gameSchema: SchemaDef<PersistedGame | null> = {
   key: DB_STORAGE_KEYS.game,
-  version: 1,
+  version: 2,
   defaultValue: () => null,
   validate: (raw) => {
-    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
+    if (!isRecord(raw)) return null;
+    if (raw.schemaVersion !== 1 && raw.schemaVersion !== 2) return null;
     if (!isBoardSize(raw.size)) return null;
     const n = BOXES_FOR[raw.size];
     const seed = asString(raw.seed);
@@ -159,7 +179,10 @@ export const gameSchema: SchemaDef<PersistedGame | null> = {
     const moveCount = asInt(raw.moveCount, 0, edgeCount(n));
     const elapsedSeconds = asInt(raw.elapsedSeconds, 0, 1e9);
     const savedAt = asInt(raw.savedAt, 0, 1e15);
-    const toMove = raw.toMove === PLAYER || raw.toMove === CPU ? raw.toMove : null;
+    const toMove = asSide(raw.toMove);
+    // v1 saves predate the side choice (§1); every one of them was a match
+    // the player opened.
+    const first = raw.schemaVersion === 1 ? PLAYER : asSide(raw.first);
 
     if (
       seed === null ||
@@ -167,6 +190,7 @@ export const gameSchema: SchemaDef<PersistedGame | null> = {
       edges === null ||
       boxes === null ||
       toMove === null ||
+      first === null ||
       moveCount === null ||
       elapsedSeconds === null ||
       savedAt === null
@@ -175,9 +199,10 @@ export const gameSchema: SchemaDef<PersistedGame | null> = {
     }
 
     return {
-      schemaVersion: 1,
+      schemaVersion: 2,
       size: raw.size,
       seed,
+      first,
       edges,
       boxes,
       toMove,

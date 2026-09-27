@@ -1,5 +1,5 @@
 /**
- * Quick Rules (docs/YACHT_RULES.md §8): three steps, one or two sentences
+ * Quick Rules (docs/YACHT_RULES.md §9): three steps, one or two sentences
  * each, shown with a figure rather than explained in prose. The figures are
  * dice and digits only — nothing in them needs translating.
  * The long-form rules live on the game's landing page behind "Learn More",
@@ -80,7 +80,7 @@ export function YachtTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      // Straight into play (§8) — onto the sheet already waiting, if one is:
+      // Straight into play (§9) — onto the sheet already waiting, if one is:
       // the flag and the save are separate records, and a lost flag write
       // must not cost the player the game they left.
       if (canResume) resumeGame();
