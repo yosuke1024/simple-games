@@ -52,6 +52,8 @@ export interface HistoryEntry {
 export interface DotsAndBoxesSession {
   readonly seed: string;
   readonly size: BoardSize;
+  /** Who opened this match — the player's choice, taken before the first line (§1). */
+  readonly first: Side;
   readonly board: Board;
   /** Whose line it is. Meaningless once the status is terminal. */
   readonly toMove: Side;
@@ -76,16 +78,23 @@ export function newSeedToken(now: number = Date.now(), random: () => number = Ma
 
 export const matchSeed = (token: string): string => `dots-and-boxes-${token}`;
 
-/** A fresh match. The player always draws first (§1). */
+/**
+ * A fresh match. `first` is the player's choice of side (§1); the CPU opening
+ * means the session starts on the CPU's turn, which the screen plays out the
+ * same way it plays out any other CPU turn. `seed` stays the second
+ * parameter, ahead of `first`, so existing callers keep working unchanged.
+ */
 export function createSession(
   size: BoardSize,
   seed: string = matchSeed(newSeedToken()),
+  first: Side = PLAYER,
 ): DotsAndBoxesSession {
   return {
     seed,
     size,
+    first,
     board: emptyBoard(BOXES_FOR[size]),
-    toMove: PLAYER,
+    toMove: first,
     status: 'playing',
     lastMove: null,
     history: [],
@@ -182,6 +191,7 @@ export function undo(session: DotsAndBoxesSession): DotsAndBoxesSession | null {
 export function restoreSession(data: {
   readonly seed: string;
   readonly size: BoardSize;
+  readonly first: Side;
   readonly board: Board;
   readonly toMove: Side;
   readonly moveCount: number;

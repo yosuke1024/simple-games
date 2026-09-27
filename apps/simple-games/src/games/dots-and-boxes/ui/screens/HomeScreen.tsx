@@ -1,7 +1,10 @@
 /**
- * Home (docs/DOTS_AND_BOXES_RULES.md §1, §4): three boards, and nothing
- * between the player and the first line. The board size is the whole choice
- * — one CPU, the player always draws first (§11).
+ * Home (docs/DOTS_AND_BOXES_RULES.md §1, §4): three boards, a choice of side,
+ * and nothing between the player and the first line.
+ *
+ * The side is a preference for the next match, not a switch on the current
+ * one: a match keeps the side it was started with until it ends (§1), so
+ * changing this while one is in progress asks nothing and breaks nothing.
  *
  * The match slot holds one game, so picking a different board replaces it.
  * That is the one thing here worth asking about first. The board last picked
@@ -15,6 +18,7 @@ import { IconChart } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { BOARD_SIZES, type BoardSize } from '../../game';
 import { useDotsAndBoxes } from '../../state/GameContext';
+import { BoxMark } from '../components/DotsAndBoxesBoard';
 import { SIZE_KEY } from '../sizeKey';
 
 export function DotsAndBoxesHomeScreen() {
@@ -24,6 +28,8 @@ export function DotsAndBoxesHomeScreen() {
     stats,
     preferredSize,
     canResume,
+    playerGoesFirst,
+    setPlayerGoesFirst,
     startNewGame,
     resumeGame,
     exitToCollection,
@@ -85,6 +91,43 @@ export function DotsAndBoxesHomeScreen() {
             </button>
           );
         })}
+
+        {/* Two buttons rather than a switch: "first" and "second" are two
+            named things, and a labelled toggle would have to say which way is
+            on. Each carries the two seat marks in the order the seats move,
+            so the choice is legible without reading it (§1). */}
+        <div
+          className="db-side-choice"
+          role="radiogroup"
+          aria-label={t('dotsAndBoxesChooseSideLabel')}
+        >
+          <button
+            type="button"
+            role="radio"
+            aria-checked={playerGoesFirst}
+            className={`db-side-option ${playerGoesFirst ? 'db-side-option-on' : ''}`}
+            onClick={() => setPlayerGoesFirst(true)}
+          >
+            <span className="db-order" aria-hidden="true">
+              <BoxMark owner="you" />
+              <BoxMark owner="cpu" />
+            </span>
+            {t('dotsAndBoxesGoFirst')}
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={!playerGoesFirst}
+            className={`db-side-option ${!playerGoesFirst ? 'db-side-option-on' : ''}`}
+            onClick={() => setPlayerGoesFirst(false)}
+          >
+            <span className="db-order" aria-hidden="true">
+              <BoxMark owner="cpu" />
+              <BoxMark owner="you" />
+            </span>
+            {t('dotsAndBoxesGoSecond')}
+          </button>
+        </div>
 
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>

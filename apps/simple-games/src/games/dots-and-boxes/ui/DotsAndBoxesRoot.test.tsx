@@ -323,6 +323,37 @@ describe('home', () => {
   });
 });
 
+describe('choosing a side (§1)', () => {
+  it('lets the CPU open when the player picks second, and keeps the choice', async () => {
+    vi.useFakeTimers();
+    try {
+      renderGame(tutorialDone);
+      await settle();
+
+      const second = screen.getByRole('radio', { name: 'CPU first' });
+      expect(screen.getByRole('radio', { name: 'You first' })).toBeChecked();
+      fireEvent.click(second);
+      expect(second).toBeChecked();
+      await settle();
+      expect(
+        (JSON.parse(deviceStore.get(DB_STORAGE_KEYS.prefs)!) as { playerGoesFirst: boolean })
+          .playerGoesFirst,
+      ).toBe(false);
+
+      fireEvent.click(screen.getByRole('button', { name: '3 × 3' }));
+      // The CPU's opening arrives on its own timer; until then the board is
+      // not the player's to touch (§4).
+      expect(screen.getByText('CPU is thinking…')).toBeInTheDocument();
+      expect(cpuLines()).toHaveLength(0);
+      await advance(CPU_DELAY_MS);
+      expect(cpuLines()).toHaveLength(1);
+      expect(screen.getByText('Your turn')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 /**
  * A pinned home-screen shortcut, and what Dots and Boxes does about it (issue
  * #113). The shell says only which door was used; the decision below is this

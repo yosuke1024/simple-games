@@ -22,7 +22,7 @@ import {
   type DotsAndBoxesSession,
 } from '../game';
 import { loadSavedGame, toPersisted } from './gamePersistence';
-import { DB_STORAGE_KEYS, gameSchema } from './schemas';
+import { DB_STORAGE_KEYS, gameSchema, prefsSchema } from './schemas';
 
 const saved = (record: unknown) =>
   createMemoryKV({ [DB_STORAGE_KEYS.game]: JSON.stringify(record) });
@@ -122,11 +122,16 @@ describe('what it refuses (§8)', () => {
     expect(await loadSavedGame(saved({ ...closed, boxes: board.boxes }))).not.toBeNull();
   });
 
-  it('refuses an untouched board on the CPU’s turn: the player always draws first', async () => {
+  it('refuses an untouched board whose turn is not the side that opened it (§1)', async () => {
     const fresh = toPersisted(createSession('small', 'db-fresh'), 1);
     expect(await loadSavedGame(saved(fresh))).not.toBeNull();
     expect(await loadSavedGame(saved({ ...fresh, toMove: CPU }))).toBeNull();
     expect(await loadSavedGame(saved({ ...fresh, toMove: 3 }))).toBeNull();
+
+    // The same check the other way round, for a match the CPU opened.
+    const cpuFresh = toPersisted(createSession('small', 'db-fresh-cpu', CPU), 1);
+    expect(await loadSavedGame(saved(cpuFresh))).not.toBeNull();
+    expect(await loadSavedGame(saved({ ...cpuFresh, toMove: PLAYER }))).toBeNull();
   });
 
   it('refuses a finished match', async () => {
@@ -144,7 +149,61 @@ describe('what it refuses (§8)', () => {
     const { seed: _seed, ...withoutSeed } = good();
     expect(await loadSavedGame(saved(withoutSeed))).toBeNull();
     expect(await loadSavedGame(saved({ ...good(), seed: '' }))).toBeNull();
-    expect(await loadSavedGame(saved({ ...good(), schemaVersion: 2 }))).toBeNull();
+    expect(await loadSavedGame(saved({ ...good(), schemaVersion: 3 }))).toBeNull();
     expect(gameSchema.validate('not a record')).toBeNull();
+
+    const { first: _first, ...withoutFirst } = good();
+    expect(await loadSavedGame(saved(withoutFirst))).toBeNull();
+  });
+});
+
+describe('the side that opened the match (§1)', () => {
+  it('loads a version-1 record with no `first`, as player-first', async () => {
+    const { first: _first, ...v1 } = { ...toPersisted(twoLinesIn(), 1), schemaVersion: 1 as const };
+    const loaded = await loadSavedGame(saved(v1));
+    expect(loaded).not.toBeNull();
+    expect(loaded!.first).toBe(PLAYER);
+    expect(loaded!.toMove).toBe(PLAYER);
+  });
+
+  it('round-trips a fresh CPU-first match, keeping `first` and the CPU to move', async () => {
+    const session = createSession('small', 'db-persist-cpu-first', CPU);
+    const loaded = await loadSavedGame(saved(toPersisted(session, 1)));
+    expect(loaded).not.toBeNull();
+    expect(loaded!.first).toBe(CPU);
+    expect(loaded!.toMove).toBe(CPU);
+  });
+
+  it('writes the current schema version', () => {
+    expect(toPersisted(createSession('small', 'db-schema'), 1).schemaVersion).toBe(2);
+  });
+});
+
+describe('the side preference (§1)', () => {
+  it('reads a version-1 record, from before the choice existed, as player-first', () => {
+    expect(prefsSchema.validate({ schemaVersion: 1, size: 'medium' })).toEqual({
+      schemaVersion: 2,
+      size: 'medium',
+      playerGoesFirst: true,
+    });
+  });
+
+  it('keeps a version-2 record as written', () => {
+    const record = { schemaVersion: 2, size: 'large', playerGoesFirst: false };
+    expect(prefsSchema.validate(record)).toEqual(record);
+  });
+
+  it('refuses a side that is not a boolean, and any other version', () => {
+    expect(
+      prefsSchema.validate({ schemaVersion: 2, size: 'small', playerGoesFirst: 'cpu' }),
+    ).toBeNull();
+    expect(
+      prefsSchema.validate({ schemaVersion: 3, size: 'small', playerGoesFirst: true }),
+    ).toBeNull();
+    expect(prefsSchema.defaultValue()).toEqual({
+      schemaVersion: 2,
+      size: 'small',
+      playerGoesFirst: true,
+    });
   });
 });

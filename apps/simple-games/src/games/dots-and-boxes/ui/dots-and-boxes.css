@@ -340,6 +340,61 @@ button.db-edge:focus-visible {
   text-align: center;
 }
 
+/* Which side opens the next match (§1, mirrors Mancala's mc-side-choice).
+   Two equal halves — neither is a default the other departs from, so neither
+   is drawn as one. */
+.db-side-choice {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.db-side-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--tap-size);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* The chosen half wears the accent softly: this is a setting the player
+   already made, not the screen's main action (the board buttons are). */
+.db-side-option-on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+/* The two seat marks in the order the seats move. Outside the board's own
+   sized cells, so the marks need their own fixed size here. */
+.db-order {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.db-order .db-mark {
+  width: 12px;
+  height: 12px;
+}
+
+.db-order .db-mark-you {
+  color: var(--accent);
+}
+
+.db-order .db-mark-cpu {
+  color: var(--db-cpu);
+}
+
 /* ---------- Quick Rules figures ---------- */
 
 /* A 2×2 corner of a board, drawn with the board's own classes (§9). */
