@@ -147,7 +147,7 @@ Web 版は新作の先行公開チャンネルです([docs/WEB_VERSION.md](docs/
 | Crown Grid(王冠配置パズル)   | `crown-grid/`     | 難易度 3 種 + デイリー | Hint(Undo なし)                    | [docs/CROWN_GRID_RULES.md](docs/CROWN_GRID_RULES.md)         |
 | Number Path(数字の一筆書き)  | `number-path/`    | 難易度 3 種 + デイリー | Undo / Hint(証明付きの次の 1 マス) | [docs/NUMBER_PATH_RULES.md](docs/NUMBER_PATH_RULES.md)       |
 | Shape Regions(図形分割)      | `shape-regions/`  | 難易度 3 種 + デイリー | Undo / Hint                        | [docs/SHAPE_REGIONS_RULES.md](docs/SHAPE_REGIONS_RULES.md)   |
-| Yacht(サイコロ)              | `yacht/`          | 1 ゲーム 12 手番       | なし(3 回まで振り直せる)           | [docs/YACHT_RULES.md](docs/YACHT_RULES.md)                   |
+| Yacht(サイコロ)              | `yacht/`          | CPU 対戦(12 手番ずつ)  | なし(3 回まで振り直せる)           | [docs/YACHT_RULES.md](docs/YACHT_RULES.md)                   |
 | Mancala(種まき・CPU 対戦)    | `mancala/`        | CPU 3 段階             | Undo                               | [docs/MANCALA_RULES.md](docs/MANCALA_RULES.md)               |
 | Dominoes(牌つなぎ・CPU 対戦) | `dominoes/`       | CPU 1 段階             | なし                               | [docs/DOMINOES_RULES.md](docs/DOMINOES_RULES.md)             |
 | Hit & Blow(推理)             | `hit-and-blow/`   | 難易度 3 種            | なし(推測は無制限)                 | [docs/HIT_AND_BLOW_RULES.md](docs/HIT_AND_BLOW_RULES.md)     |

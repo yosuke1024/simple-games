@@ -1,5 +1,5 @@
 /**
- * The dice row on its own (docs/YACHT_RULES.md §2, §9): what a press asks
+ * The dice row on its own (docs/YACHT_RULES.md §2, §10): what a press asks
  * for, what each die announces, and when the tumble plays.
  *
  * The toggle arrives as a spy, so a press is judged by what it asked the game
@@ -67,7 +67,7 @@ describe('holding a die (§2)', () => {
     expect(onToggle).toHaveBeenCalledWith(3);
   });
 
-  it('announces position, face and hold, and marks the hold as pressed (§9)', () => {
+  it('announces position, face and hold, and marks the hold as pressed (§10)', () => {
     const { dice } = renderDice({ held: [false, true, false, false, false] });
     expect(dice[0]).toHaveAccessibleName('Die 1: 2');
     expect(dice[0]).toHaveAttribute('aria-pressed', 'false');
@@ -91,7 +91,7 @@ describe('holding a die (§2)', () => {
   });
 });
 
-describe('the tumble (§9)', () => {
+describe('the tumble (§10)', () => {
   const tumbling = () => document.querySelectorAll('.yt-die-tumble').length;
 
   it('plays on the dice the throw changed, and not on the kept ones', () => {

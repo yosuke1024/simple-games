@@ -1,5 +1,5 @@
 /**
- * The five dice (docs/YACHT_RULES.md §2, §9).
+ * The five dice (docs/YACHT_RULES.md §2, §10).
  *
  * Each die is a toggle button: pressed means kept, and the next throw leaves
  * it alone. A kept die is lifted and framed as well as announced, so the hold
@@ -84,7 +84,7 @@ export const YachtDice = memo(function YachtDice({
             onClick={() => onToggle(index)}
           >
             {/* Keyed by the throw that gave this die its face, so the tumble
-                plays on arrival and never again (§9). The button itself keeps
+                plays on arrival and never again (§10). The button itself keeps
                 its identity, so focus stays where it was. */}
             <DieFace
               key={tumbled ? lastRoll.rollIndex : -1}

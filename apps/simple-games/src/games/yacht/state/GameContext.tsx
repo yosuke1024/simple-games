@@ -1,16 +1,22 @@
 /**
- * Yacht's app context: screens, the game in progress, statistics, and
+ * Yacht's app context: screens, the match in progress, statistics, and
  * persistence. Pure local state — no analytics, no ad orchestration; the only
  * ad surfaces are the shared BannerSlot and ResultAdSlot the screens render.
  *
- * One game at a time, saved as it is played (docs/YACHT_RULES.md §7): every
- * throw, every hold and every box goes through `putSession` and is saved.
- * Nothing here runs on its own — there is no CPU and no countdown — so the
- * only timer is the play clock, and it lives while the game screen does.
+ * One match at a time, saved as it is played (docs/YACHT_RULES.md §8): every
+ * throw, every hold and every box goes through `putSession` and is saved,
+ * whichever seat it belongs to. The CPU's turn is a scheduled effect, not a
+ * callback chain, exactly like Dots and Boxes's: whenever the session says
+ * the CPU is to move on the game screen, one timeout is armed (`CPU_DELAY_MS`,
+ * §2, §5); on landing it re-reads the ref, takes one step (a throw, a keep, or
+ * a box), and commits it. That commit is a new session — still the CPU's turn
+ * more often than not — so the effect simply arms again, and a CPU turn plays
+ * out one beat at a time (3–7 beats, §2) without a loop anywhere. Unmounting,
+ * a new match, or leaving the screen all disarm it through the cleanup.
  *
  * Battery note: the play clock lives in a mutable ref and does NOT set React
- * state, so nothing re-renders while a game is running. It is never shown
- * either (§9); elapsed time is merged into the session whenever it leaves
+ * state, so nothing re-renders while a match is running. It is never shown
+ * either (§10); elapsed time is merged into the session whenever it leaves
  * this module (saves, finalization, navigation).
  */
 import { App as CapacitorApp } from '@capacitor/app';
@@ -28,13 +34,18 @@ import {
 import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
 import {
+  applyCpuStep,
   createSession,
+  cpuTotalOf,
+  outcomeOf,
   roll,
   score,
   statusOf,
   toggleHold as toggleHoldIn,
+  toMove,
   totalOf,
   type Category,
+  type Outcome,
   type YachtSession,
   type YachtStatus,
 } from '../game';
@@ -44,7 +55,10 @@ import { applyGameEnd, applyGameStart, applyPlayTime } from './statsLogic';
 
 export type Screen = 'home' | 'tutorial' | 'game' | 'stats';
 
-/** The throw that just landed, for the dice's tumble (§9). */
+/** Each CPU beat lands after this delay, so its turn reads one step at a time (§2, §5). */
+export const CPU_DELAY_MS = 450;
+
+/** The throw that just landed, for the dice's tumble (§10). Either seat's. */
 export interface LastRoll {
   /** Identity: the session's `rollIndex` after this throw — one tumble each. */
   readonly rollIndex: number;
@@ -52,9 +66,11 @@ export interface LastRoll {
   readonly rolled: readonly boolean[];
 }
 
-/** What the result card says about a filled sheet (§6). */
+/** What the result card says about a finished match (§7). */
 export interface LastResult {
+  readonly outcome: Outcome;
   readonly total: number;
+  readonly cpuTotal: number;
   readonly bestScore: number;
   /** The record before this sheet, or null while there was none. */
   readonly previousBest: number | null;
@@ -72,11 +88,11 @@ export interface YachtContextValue {
   lastResult: LastResult | null;
   startNewGame: () => void;
   resumeGame: () => void;
-  /** Throws the dice. False when no throw is possible (§2). */
+  /** Throws the dice for the player. False when no throw is possible (§2). */
   rollDice: () => boolean;
-  /** Keeps a die or lets it go. False when keeping means nothing now (§2). */
+  /** Keeps a die or lets it go, for the player. False when it means nothing now (§2). */
   toggleHold: (index: number) => boolean;
-  /** Ends the turn in a box. The status it leaves, or null when refused (§2). */
+  /** Ends the player's turn in a box. The status it leaves, or null when refused (§2). */
   scoreCategory: (category: Category) => YachtStatus | null;
   goHome: () => void;
   exitToCollection: () => void;
@@ -105,14 +121,16 @@ export function YachtProvider({
   children,
 }: YachtProviderProps) {
   /**
-   * Whether this launch opens straight onto the saved sheet rather than the
+   * Whether this launch opens straight onto the saved match rather than the
    * home screen (issue #113). Decided once, from the records the provider was
    * mounted with. Only a home-screen shortcut asks; a tile on the collection,
    * and the browser, open this game's home as they always did.
    *
-   * There is one slot (§7), and `loadSavedGame` has already discarded
-   * everything that is not a live sheet, so a session at all IS the one
-   * suspended game. Quick Rules still come first (§8).
+   * There is one slot (§8), and `loadSavedGame` has already discarded
+   * everything that is not a live match, so a session at all IS the one
+   * suspended match — including one saved mid-CPU-turn, which simply resumes
+   * and the CPU beat picks up on its own (docs/GAME_LIFECYCLE.md「CPU
+   * 探索」). Quick Rules still come first (§9).
    */
   const [resumeDirectly] = useState(
     () => entry === 'shortcut' && initialFlags.tutorialCompleted && initialSession !== null,
@@ -169,8 +187,8 @@ export function YachtProvider({
 
   /**
    * Books a game's unbooked play time, and — only when the sheet is full —
-   * its total, once (§6). A game abandoned for a new one books its time and
-   * nothing else: it counted as played when it started.
+   * its result against the CPU, once (§7). A game abandoned for a new one
+   * books its time and nothing else: it counted as played when it started.
    */
   const finalizeGame = useCallback(
     (game: YachtSession) => {
@@ -184,11 +202,15 @@ export function YachtProvider({
         return;
       }
       const total = totalOf(game);
+      const cpuTotal = cpuTotalOf(game);
+      const outcome = outcomeOf(game)!;
       const previousBest = timed.bestScore;
-      const next = applyGameEnd(timed, total);
+      const next = applyGameEnd(timed, total, outcome);
       persistStats(next);
       setLastResult({
+        outcome,
         total,
+        cpuTotal,
         bestScore: next.bestScore ?? total,
         previousBest,
         isNewBest: previousBest === null || total > previousBest,
@@ -207,9 +229,17 @@ export function YachtProvider({
     setSession(next);
   }, []);
 
-  /** Handles a session transition, persisting or finalizing as needed. */
+  /**
+   * Handles a session transition, persisting or finalizing as needed. `from`
+   * is the session this step started from, so a throw — the player's or the
+   * CPU's — can be told from a keep or a box by whether `rollIndex` moved
+   * (§4, §10): every throw by either seat gets the dice's tumble.
+   */
   const commitSession = useCallback(
-    (next: YachtSession) => {
+    (from: YachtSession, next: YachtSession) => {
+      if (next.rollIndex !== from.rollIndex) {
+        setLastRoll({ rollIndex: next.rollIndex, rolled: next.held.map((kept) => !kept) });
+      }
       putSession(next);
       if (statusOf(next) === 'playing') {
         void saveGame(next);
@@ -252,10 +282,10 @@ export function YachtProvider({
   const rollDice = useCallback((): boolean => {
     const current = sessionRef.current;
     if (!current) return false;
-    const next = roll(withElapsed(current));
+    const from = withElapsed(current);
+    const next = roll(from, 'player');
     if (!next) return false;
-    setLastRoll({ rollIndex: next.rollIndex, rolled: next.held.map((kept) => !kept) });
-    commitSession(next);
+    commitSession(from, next);
     return true;
   }, [commitSession, withElapsed]);
 
@@ -263,9 +293,10 @@ export function YachtProvider({
     (index: number): boolean => {
       const current = sessionRef.current;
       if (!current) return false;
-      const next = toggleHoldIn(withElapsed(current), index);
+      const from = withElapsed(current);
+      const next = toggleHoldIn(from, 'player', index);
       if (!next) return false;
-      commitSession(next);
+      commitSession(from, next);
       return true;
     },
     [commitSession, withElapsed],
@@ -275,13 +306,35 @@ export function YachtProvider({
     (category: Category): YachtStatus | null => {
       const current = sessionRef.current;
       if (!current) return null;
-      const next = score(withElapsed(current), category);
+      const from = withElapsed(current);
+      const next = score(from, 'player', category);
       if (!next) return null;
-      commitSession(next);
+      commitSession(from, next);
       return statusOf(next);
     },
     [commitSession, withElapsed],
   );
+
+  /**
+   * The CPU's turn: one armed timeout whenever the game screen shows a live
+   * session with the CPU to move (§2, §5). Depends on the session itself, so
+   * any change (a step landing, a new match, unmount, leaving the screen)
+   * disarms a stale one via the cleanup — and a step that leaves the CPU
+   * still to move is a change too, which arms the next beat.
+   */
+  useEffect(() => {
+    if (screen !== 'game' || !session || statusOf(session) !== 'playing') return;
+    if (toMove(session) !== 'cpu') return;
+    const id = window.setTimeout(() => {
+      const current = sessionRef.current;
+      if (!current || statusOf(current) !== 'playing' || toMove(current) !== 'cpu') return;
+      const from = withElapsed(current);
+      const next = applyCpuStep(from);
+      if (!next) return;
+      commitSession(from, next);
+    }, CPU_DELAY_MS);
+    return () => window.clearTimeout(id);
+  }, [screen, session, commitSession, withElapsed]);
 
   /** Saves the on-screen game and books its play time so far. */
   const syncActiveGame = useCallback(() => {
@@ -327,7 +380,7 @@ export function YachtProvider({
     return () => window.clearInterval(id);
   }, [playing]);
 
-  // Save when the app goes to background / gets hidden (§7). The same sync as
+  // Save when the app goes to background / gets hidden (§8). The same sync as
   // leaving the screen, statistics included: the OS can kill a backgrounded
   // app without another event, and the next launch hands the restored
   // elapsedSeconds back as *already booked*.

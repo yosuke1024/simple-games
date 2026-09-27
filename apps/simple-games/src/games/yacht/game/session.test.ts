@@ -1,41 +1,61 @@
 /**
- * A turn and a game (docs/YACHT_RULES.md §2, §4): the first throw takes all
- * five, kept dice stay put, three throws is the limit, a box is used once,
- * and twelve boxes end the game.
+ * A turn and a match (docs/YACHT_RULES.md §1, §2, §4): the first throw takes
+ * all five, kept dice stay put, three throws is the limit, a box is used
+ * once, the player always throws first, and both sheets full ends the match.
  */
 import { describe, expect, it } from 'vitest';
 import { scoreFor } from './engine';
 import {
+  applyCpuStep,
   canHold,
   canRoll,
+  canScore,
   createSession,
+  cpuTotalOf,
   drawFaces,
+  filledCount,
   gameSeed,
+  outcomeOf,
   restoreSession,
   roll,
   score,
+  setHolds,
+  sheetOf,
   statusOf,
   toggleHold,
+  toMove,
   totalOf,
   turnsPlayed,
   type YachtSession,
 } from './session';
-import { CATEGORIES } from './types';
+import { CATEGORIES, type Seat } from './types';
 
 const SEED = 'yacht-session-test';
 
-/** Rolls, asserting the throw was allowed. */
-const rolled = (session: YachtSession): YachtSession => {
-  const next = roll(session);
+/** Rolls for `seat` (the player by default), asserting the throw was allowed. */
+const rolled = (session: YachtSession, seat: Seat = 'player'): YachtSession => {
+  const next = roll(session, seat);
   expect(next).not.toBeNull();
   return next!;
 };
 
-const held = (session: YachtSession, index: number): YachtSession => {
-  const next = toggleHold(session, index);
+/** Toggles a hold for `seat` (the player by default), asserting it was allowed. */
+const held = (session: YachtSession, index: number, seat: Seat = 'player'): YachtSession => {
+  const next = toggleHold(session, seat, index);
   expect(next).not.toBeNull();
   return next!;
 };
+
+/** Plays the CPU's whole turn to its end, one `applyCpuStep` beat at a time. */
+function finishCpuTurn(session: YachtSession): YachtSession {
+  let current = session;
+  while (statusOf(current) === 'playing' && toMove(current) === 'cpu') {
+    const next = applyCpuStep(current);
+    expect(next).not.toBeNull();
+    current = next!;
+  }
+  return current;
+}
 
 describe('a fresh sheet', () => {
   it('starts before the first throw, with nothing kept and nothing scored', () => {
@@ -44,10 +64,15 @@ describe('a fresh sheet', () => {
     expect(session.rollIndex).toBe(0);
     expect(session.held).toEqual([false, false, false, false, false]);
     expect(session.scores).toHaveLength(12);
+    expect(session.cpuScores).toHaveLength(12);
     expect(session.scores.every((points) => points === null)).toBe(true);
+    expect(session.cpuScores.every((points) => points === null)).toBe(true);
     expect(statusOf(session)).toBe('playing');
     expect(turnsPlayed(session)).toBe(0);
     expect(totalOf(session)).toBe(0);
+    expect(cpuTotalOf(session)).toBe(0);
+    // The player always throws first (§1).
+    expect(toMove(session)).toBe('player');
   });
 
   it('seeds every new game differently, under the game’s own prefix (§4)', () => {
@@ -57,9 +82,9 @@ describe('a fresh sheet', () => {
 
   it('cannot keep or score before the first throw (§2)', () => {
     const session = createSession(SEED);
-    expect(canHold(session)).toBe(false);
-    expect(toggleHold(session, 0)).toBeNull();
-    for (const category of CATEGORIES) expect(score(session, category)).toBeNull();
+    expect(canHold(session, 'player')).toBe(false);
+    expect(toggleHold(session, 'player', 0)).toBeNull();
+    for (const category of CATEGORIES) expect(score(session, 'player', category)).toBeNull();
   });
 });
 
@@ -113,23 +138,23 @@ describe('throwing and keeping (§2, §4)', () => {
     session = rolled(session);
     session = rolled(session);
     expect(session.rollsUsed).toBe(3);
-    expect(canRoll(session)).toBe(false);
-    expect(roll(session)).toBeNull();
+    expect(canRoll(session, 'player')).toBe(false);
+    expect(roll(session, 'player')).toBeNull();
   });
 
   it('has nothing to keep after the third throw', () => {
     const session = rolled(rolled(rolled(createSession(SEED))));
-    expect(canHold(session)).toBe(false);
-    expect(toggleHold(session, 0)).toBeNull();
+    expect(canHold(session, 'player')).toBe(false);
+    expect(toggleHold(session, 'player', 0)).toBeNull();
   });
 
   it('cannot throw with all five kept', () => {
     let session = rolled(createSession(SEED));
     for (let index = 0; index < 5; index++) session = held(session, index);
-    expect(canRoll(session)).toBe(false);
-    expect(roll(session)).toBeNull();
+    expect(canRoll(session, 'player')).toBe(false);
+    expect(roll(session, 'player')).toBeNull();
     // Letting one go makes the throw possible again.
-    expect(roll(held(session, 2))).not.toBeNull();
+    expect(roll(held(session, 2), 'player')).not.toBeNull();
   });
 
   it('ignores a stale hold on the first throw of a turn', () => {
@@ -156,9 +181,9 @@ describe('throwing and keeping (§2, §4)', () => {
 
   it('refuses a die that does not exist', () => {
     const session = rolled(createSession(SEED));
-    expect(toggleHold(session, -1)).toBeNull();
-    expect(toggleHold(session, 5)).toBeNull();
-    expect(toggleHold(session, 1.5)).toBeNull();
+    expect(toggleHold(session, 'player', -1)).toBeNull();
+    expect(toggleHold(session, 'player', 5)).toBeNull();
+    expect(toggleHold(session, 'player', 1.5)).toBeNull();
   });
 });
 
@@ -167,7 +192,7 @@ describe('scoring a box (§2, §3)', () => {
     let session = rolled(createSession(SEED));
     session = held(session, 0);
     const dice = session.dice;
-    session = score(session, 'choice')!;
+    session = score(session, 'player', 'choice')!;
 
     expect(session.scores[CATEGORIES.indexOf('choice')]).toBe(scoreFor('choice', dice));
     expect(session.rollsUsed).toBe(0);
@@ -181,40 +206,134 @@ describe('scoring a box (§2, §3)', () => {
     // Find a first throw that is not a Yacht, which nearly every seed gives.
     const session = rolled(createSession(SEED));
     expect(scoreFor('yacht', session.dice)).toBe(0);
-    expect(score(session, 'yacht')!.scores[CATEGORIES.indexOf('yacht')]).toBe(0);
+    expect(score(session, 'player', 'yacht')!.scores[CATEGORIES.indexOf('yacht')]).toBe(0);
   });
 
   it('uses each box once', () => {
     let session = rolled(createSession(SEED));
-    session = score(session, 'ones')!;
+    session = score(session, 'player', 'ones')!;
+    // It is the CPU's turn now (§1); play it out before the player throws again.
+    session = finishCpuTurn(session);
     session = rolled(session);
-    expect(score(session, 'ones')).toBeNull();
-    expect(score(session, 'twos')).not.toBeNull();
+    expect(score(session, 'player', 'ones')).toBeNull();
+    expect(score(session, 'player', 'twos')).not.toBeNull();
   });
 
-  it('ends after twelve turns with the boxes’ total, and then refuses everything', () => {
+  it('ends when both sheets are full, and then refuses everything', () => {
     let session = createSession(SEED);
-    let expected = 0;
+    let expectedPlayerTotal = 0;
     for (const category of CATEGORIES) {
       expect(statusOf(session)).toBe('playing');
       session = rolled(session);
-      expected += scoreFor(category, session.dice);
-      session = score(session, category)!;
+      expectedPlayerTotal += scoreFor(category, session.dice);
+      session = score(session, 'player', category)!;
+      session = finishCpuTurn(session);
     }
     expect(turnsPlayed(session)).toBe(12);
+    expect(filledCount(session.cpuScores)).toBe(12);
     expect(statusOf(session)).toBe('finished');
-    expect(totalOf(session)).toBe(expected);
+    expect(totalOf(session)).toBe(expectedPlayerTotal);
+    expect(outcomeOf(session)).not.toBeNull();
 
-    expect(roll(session)).toBeNull();
-    expect(canRoll(session)).toBe(false);
-    for (const category of CATEGORIES) expect(score(session, category)).toBeNull();
+    expect(roll(session, 'player')).toBeNull();
+    expect(roll(session, 'cpu')).toBeNull();
+    expect(canRoll(session, 'player')).toBe(false);
+    expect(applyCpuStep(session)).toBeNull();
+    for (const category of CATEGORIES) {
+      expect(score(session, 'player', category)).toBeNull();
+      expect(score(session, 'cpu', category)).toBeNull();
+    }
   });
 });
 
-describe('restoring a session (§7)', () => {
+describe('seats and turns (§1, §2, §5)', () => {
+  it('alternates one box at a time, the player first', () => {
+    let session = createSession(SEED);
+    expect(toMove(session)).toBe('player');
+    session = score(rolled(session), 'player', 'ones')!;
+    expect(toMove(session)).toBe('cpu');
+    session = finishCpuTurn(session);
+    expect(toMove(session)).toBe('player');
+    expect(filledCount(session.scores)).toBe(1);
+    expect(filledCount(session.cpuScores)).toBe(1);
+  });
+
+  it('refuses the CPU acting on the player’s turn', () => {
+    const session = createSession(SEED);
+    expect(canRoll(session, 'cpu')).toBe(false);
+    expect(roll(session, 'cpu')).toBeNull();
+    const thrown = rolled(session);
+    expect(canHold(thrown, 'cpu')).toBe(false);
+    expect(toggleHold(thrown, 'cpu', 0)).toBeNull();
+    expect(setHolds(thrown, 'cpu', [true, false, false, false, false])).toBeNull();
+    expect(canScore(thrown, 'cpu', 'ones')).toBe(false);
+    expect(score(thrown, 'cpu', 'ones')).toBeNull();
+    expect(applyCpuStep(thrown)).toBeNull();
+  });
+
+  it('refuses the player acting on the CPU’s turn', () => {
+    let session = rolled(createSession(SEED));
+    session = score(session, 'player', 'ones')!;
+    // It is the CPU's turn now.
+    expect(canRoll(session, 'player')).toBe(false);
+    expect(roll(session, 'player')).toBeNull();
+    expect(canScore(session, 'player', 'twos')).toBe(false);
+    expect(score(session, 'player', 'twos')).toBeNull();
+    // canHold/setHolds are false regardless of rollsUsed once it is not this
+    // seat's turn, even right after the CPU's own first throw.
+    const cpuThrew = roll(session, 'cpu')!;
+    expect(canHold(cpuThrew, 'player')).toBe(false);
+    expect(toggleHold(cpuThrew, 'player', 0)).toBeNull();
+    expect(setHolds(cpuThrew, 'player', [true, false, false, false, false])).toBeNull();
+  });
+
+  it('sets the CPU’s whole keep in one step (§5)', () => {
+    const session = rolled(createSession(SEED));
+    const mask = [true, false, true, false, true];
+    // Not the player's turn to move once a box has been scored — check the
+    // CPU can, and the player cannot, on the CPU's own turn.
+    const afterBox = score(session, 'player', 'ones')!;
+    const cpuThrew = roll(afterBox, 'cpu')!;
+    expect(setHolds(cpuThrew, 'cpu', mask)!.held).toEqual(mask);
+    expect(setHolds(cpuThrew, 'player', mask)).toBeNull();
+  });
+
+  it('refuses setHolds before a throw, and anything but five booleans', () => {
+    const session = createSession(SEED);
+    // Before the first throw of the turn.
+    expect(setHolds(session, 'player', [false, false, false, false, false])).toBeNull();
+    const thrown = rolled(session);
+    // Wrong length.
+    expect(setHolds(thrown, 'player', [true, false, false])).toBeNull();
+    // After the third throw, there is nothing left to keep from.
+    const spent = rolled(rolled(thrown));
+    expect(spent.rollsUsed).toBe(3);
+    expect(setHolds(spent, 'player', [true, true, true, true, true])).toBeNull();
+  });
+
+  it('is finished only once both sheets are full, and the outcome follows the totals', () => {
+    let session = createSession(SEED);
+    for (const category of CATEGORIES) {
+      session = score(rolled(session), 'player', category)!;
+      expect(statusOf(session)).toBe('playing');
+      expect(outcomeOf(session)).toBeNull();
+      session = finishCpuTurn(session);
+    }
+    expect(statusOf(session)).toBe('finished');
+    const player = totalOf(session);
+    const cpu = cpuTotalOf(session);
+    const outcome = outcomeOf(session);
+    expect(outcome).toBe(player > cpu ? 'won' : player < cpu ? 'lost' : 'draw');
+    expect(sheetOf(session, 'player')).toBe(session.scores);
+    expect(sheetOf(session, 'cpu')).toBe(session.cpuScores);
+  });
+});
+
+describe('restoring a session (§8)', () => {
   const midTurn = (): YachtSession => {
     let session = rolled(createSession(SEED));
-    session = score(session, 'choice')!;
+    session = score(session, 'player', 'choice')!;
+    session = finishCpuTurn(session);
     session = held(rolled(session), 1);
     return session;
   };
@@ -235,13 +354,43 @@ describe('restoring a session (§7)', () => {
     expect(restoreSession({ ...midTurn(), scores })).toBeNull();
   });
 
+  it('refuses the same on the CPU’s sheet', () => {
+    const cpuScores = [...midTurn().cpuScores];
+    cpuScores[CATEGORIES.indexOf('sixes')] = 7;
+    expect(restoreSession({ ...midTurn(), cpuScores })).toBeNull();
+  });
+
   it('refuses a throw count the sheet cannot explain', () => {
-    // One box filled (one to three throws) and two throws this turn: between
-    // 3 and 5 throws in all.
+    // Two boxes filled between the two sheets (one each) and two throws this
+    // turn: between 4 and 8 throws in all.
     const session = { ...midTurn(), rollsUsed: 2 as const };
-    expect(restoreSession({ ...session, rollIndex: 2 })).toBeNull();
-    expect(restoreSession({ ...session, rollIndex: 3 })).not.toBeNull();
-    expect(restoreSession({ ...session, rollIndex: 5 })).not.toBeNull();
-    expect(restoreSession({ ...session, rollIndex: 6 })).toBeNull();
+    expect(restoreSession({ ...session, rollIndex: 3 })).toBeNull();
+    expect(restoreSession({ ...session, rollIndex: 4 })).not.toBeNull();
+    expect(restoreSession({ ...session, rollIndex: 8 })).not.toBeNull();
+    expect(restoreSession({ ...session, rollIndex: 9 })).toBeNull();
+  });
+
+  it('refuses a CPU sheet fuller than the player’s (§1)', () => {
+    const base = createSession(SEED);
+    const scores = [...base.scores];
+    scores[CATEGORIES.indexOf('ones')] = 0;
+    const cpuScores = [...base.cpuScores];
+    cpuScores[CATEGORIES.indexOf('ones')] = 0;
+    cpuScores[CATEGORIES.indexOf('twos')] = 0;
+    // Three boxes filled in all, no throws yet this turn: 3 to 9 throws would
+    // otherwise be in bounds — it is the seat imbalance alone that refuses this.
+    const session: YachtSession = { ...base, scores, cpuScores, rollsUsed: 0, rollIndex: 3 };
+    expect(restoreSession(session)).toBeNull();
+  });
+
+  it('refuses a player sheet more than one box ahead of the CPU’s (§1)', () => {
+    const base = createSession(SEED);
+    const scores = [...base.scores];
+    scores[CATEGORIES.indexOf('ones')] = 0;
+    scores[CATEGORIES.indexOf('twos')] = 0;
+    // Two boxes filled in all, no throws yet this turn: 2 to 6 throws would
+    // otherwise be in bounds — it is the seat imbalance alone that refuses this.
+    const session: YachtSession = { ...base, scores, rollsUsed: 0, rollIndex: 2 };
+    expect(restoreSession(session)).toBeNull();
   });
 });

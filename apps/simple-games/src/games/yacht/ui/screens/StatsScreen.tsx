@@ -5,9 +5,10 @@ import { useYacht } from '../../state/GameContext';
 import { averageScore } from '../../state/statsLogic';
 
 /**
- * Statistics (docs/YACHT_RULES.md §6): one record for the whole game, and
+ * Statistics (docs/YACHT_RULES.md §7): one record for the whole match, and
  * total time. No streak — there is nothing here that punishes a day off.
- * Everything is local; there is no ranking, only your own sheets.
+ * Everything is local; there is no ranking, only your own record against the
+ * one CPU.
  */
 export function YachtStatsScreen() {
   const { goHome, stats } = useYacht();
@@ -32,8 +33,16 @@ export function YachtStatsScreen() {
               <dd>{stats.played}</dd>
             </div>
             <div className="stats-row">
-              <dt>{t('yachtCompleted')}</dt>
-              <dd>{stats.completed}</dd>
+              <dt>{t('yachtWins')}</dt>
+              <dd>{stats.wins}</dd>
+            </div>
+            <div className="stats-row">
+              <dt>{t('yachtLosses')}</dt>
+              <dd>{stats.losses}</dd>
+            </div>
+            <div className="stats-row">
+              <dt>{t('yachtDraws')}</dt>
+              <dd>{stats.draws}</dd>
             </div>
             <div className="stats-row">
               <dt>{t('yachtBestScore')}</dt>

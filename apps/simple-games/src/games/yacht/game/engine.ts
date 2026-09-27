@@ -2,7 +2,7 @@
  * Scoring (docs/YACHT_RULES.md §3): what five dice are worth in each box.
  *
  * `scoreFor` is the only place a box's points are decided. The sheet's
- * preview of an open box (§9) calls the same function the commit does, so
+ * preview of an open box (§10) calls the same function the commit does, so
  * what the player is shown is exactly what they get.
  */
 import { CATEGORIES, DICE_COUNT, FACES, type Category, type Dice } from './types';
@@ -101,7 +101,7 @@ function reachableScores(): readonly ReadonlySet<number>[] {
 
 /**
  * Whether some throw scores exactly `value` in `category` — what a saved
- * sheet has to prove about each filled box (§7). Derived from `scoreFor`
+ * sheet has to prove about each filled box (§8). Derived from `scoreFor`
  * itself, so the check can never disagree with the scoring.
  */
 export function isPossibleScore(category: Category, value: number): boolean {
