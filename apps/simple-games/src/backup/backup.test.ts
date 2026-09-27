@@ -324,6 +324,19 @@ describe('a file that is refused', () => {
     expect(await readBackup(file)).toEqual({ ok: false, problem: 'newer' });
   });
 
+  /**
+   * The same rule one level down: a record this build owns, but at a schema
+   * version it has never written, came from a newer build of that game. The
+   * owner's validator would call it unusable; the file is refused as newer
+   * instead, so the advice is "update the app", not "try another file".
+   */
+  it('carries a record at a schema version beyond this build → newer', async () => {
+    const shell = text({ data: { [STORAGE_KEYS.settings]: { ...SETTINGS, schemaVersion: 99 } } });
+    expect(await readBackup(shell)).toEqual({ ok: false, problem: 'newer' });
+    const game = text({ data: { [key.sudokuGame]: { ...SUDOKU_SUSPENDED, schemaVersion: 99 } } });
+    expect(await readBackup(game)).toEqual({ ok: false, problem: 'newer' });
+  });
+
   it('names a record the owning game refuses → damaged', async () => {
     const file = text({ data: { [key.sudokuGame]: { ...SUDOKU_SUSPENDED, mode: 'daily' } } });
     expect(await readBackup(file)).toEqual({ ok: false, problem: 'damaged' });

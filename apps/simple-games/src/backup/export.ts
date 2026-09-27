@@ -58,9 +58,9 @@ export async function createBackup(
       // Not JSON at all. Nothing in the app wrote this; skip it.
       continue;
     }
-    const validate = validators.get(key);
-    if (!validate) continue;
-    const value = validate(parsed);
+    const owner = validators.get(key);
+    if (!owner) continue;
+    const value = owner.validate(parsed);
     if (value === null || value === undefined) continue;
     data[key] = value;
   }

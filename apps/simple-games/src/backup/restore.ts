@@ -139,12 +139,27 @@ export async function readBackup(text: string): Promise<ReadBackupResult> {
 
   const records = new Map<string, string>();
   for (const key of present) {
-    const validate = validators.get(key);
+    const owner = validators.get(key);
     // No validator means the owning chunk would not load. Unverifiable is
     // refused, never waved through.
-    if (!validate) return refuse('damaged');
+    if (!owner) return refuse('damaged');
 
-    const value = validate((data as Record<string, unknown>)[key]);
+    const raw = (data as Record<string, unknown>)[key];
+    // A record whose schemaVersion is beyond what this build writes was made
+    // by a newer build (a game's save format moved on). Its validator only
+    // knows versions up to its own and would say null — which reads as
+    // damage and tells the player to try another file, when the honest
+    // advice is to update the app. Told apart here, before the validator is
+    // asked (docs/architecture/backup.md「版の互換」).
+    if (
+      isPlainObject(raw) &&
+      typeof raw.schemaVersion === 'number' &&
+      raw.schemaVersion > owner.version
+    ) {
+      return refuse('newer');
+    }
+
+    const value = owner.validate(raw);
     if (value === null || value === undefined) return refuse('damaged');
 
     let serialised: string | undefined;

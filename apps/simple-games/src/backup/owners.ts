@@ -43,6 +43,17 @@ import {
  */
 export type RecordValidator = (raw: unknown) => unknown;
 
+/**
+ * What restore needs from a record's owner: its validator, and the schema
+ * version this build writes — so a record carrying a higher `schemaVersion`
+ * can be told apart from a damaged one before the validator (which only
+ * knows versions up to its own) is asked and says null.
+ */
+export interface RecordOwner {
+  readonly version: number;
+  readonly validate: RecordValidator;
+}
+
 const SHELL_VALIDATORS: readonly SchemaDef<unknown>[] = [
   settingsSchema,
   favoriteGamesSchema,
@@ -54,6 +65,7 @@ function isSchemaDef(value: unknown): value is SchemaDef<unknown> {
   const candidate = value as Partial<SchemaDef<unknown>>;
   return (
     typeof candidate.key === 'string' &&
+    typeof candidate.version === 'number' &&
     typeof candidate.validate === 'function' &&
     typeof candidate.defaultValue === 'function'
   );
@@ -69,8 +81,14 @@ function schemasIn(module: Readonly<Record<string, unknown>>): SchemaDef<unknown
   return Object.values(module).filter(isSchemaDef);
 }
 
+const ownerOf = (schema: SchemaDef<unknown>): RecordOwner => ({
+  version: schema.version,
+  validate: schema.validate,
+});
+
 /**
- * The validators for `keys`, loading only the game chunks those keys belong to.
+ * The owners (validator + written schema version) for `keys`, loading only
+ * the game chunks those keys belong to.
  *
  * A key with no owner is simply absent from the result. Callers treat that as
  * "this build does not know this record" — which is a rejection, never a shrug
@@ -78,12 +96,12 @@ function schemasIn(module: Readonly<Record<string, unknown>>): SchemaDef<unknown
  */
 export async function loadValidators(
   keys: Iterable<string>,
-): Promise<ReadonlyMap<string, RecordValidator>> {
+): Promise<ReadonlyMap<string, RecordOwner>> {
   const wanted = new Set(keys);
-  const validators = new Map<string, RecordValidator>();
+  const validators = new Map<string, RecordOwner>();
 
   for (const schema of SHELL_VALIDATORS) {
-    if (wanted.has(schema.key)) validators.set(schema.key, schema.validate);
+    if (wanted.has(schema.key)) validators.set(schema.key, ownerOf(schema));
   }
 
   const owning = GAMES.filter((game) => game.storageKeys.some((key) => wanted.has(key)));
@@ -99,7 +117,7 @@ export async function loadValidators(
         return;
       }
       for (const schema of schemasIn(module)) {
-        if (wanted.has(schema.key)) validators.set(schema.key, schema.validate);
+        if (wanted.has(schema.key)) validators.set(schema.key, ownerOf(schema));
       }
     }),
   );
