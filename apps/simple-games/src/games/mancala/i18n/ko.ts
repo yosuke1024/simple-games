@@ -31,14 +31,17 @@ export const ko: MancalaMessages = {
   mancalaWins: '승리',
   mancalaLosses: '패배',
   mancalaDraws: '무승부',
-  mancalaStep1Title: '구멍을 눌러 씨앗 뿌리기',
+  mancalaStep1Title: '내 구멍, 내 집',
   mancalaStep1Body:
-    '씨앗이 하나씩 반시계 방향으로 다음 구멍에 놓이며, 내 집에 씨앗이 가장 많으면 승리합니다.',
-  mancalaStep2Title: '내 집에서 끝나면 한 번 더',
-  mancalaStep2Body: '마지막 씨앗이 내 집에 들어가면 이어서 한 번 더 둡니다.',
-  mancalaStep3Title: '빈 구멍에서 끝나면 가져가기',
-  mancalaStep3Body:
-    '마지막 씨앗이 내 쪽의 빈 구멍에 들어가면, 그 씨앗과 맞은편 씨앗을 내 집으로 가져갑니다.',
+    '아래쪽 줄의 구멍이 내 구멍이고, 오른쪽 집도 내 것입니다. 한쪽 구멍이 모두 비면 게임이 끝나고, 집에 씨앗이 더 많은 쪽이 이깁니다.',
+  mancalaStep2Title: '구멍을 눌러 씨앗 뿌리기',
+  mancalaStep2Body:
+    '씨앗이 하나씩 반시계 방향으로 다음 구멍에 놓입니다. 내 집에는 들어가지만 CPU의 집에는 절대 들어가지 않습니다.',
+  mancalaStep3Title: '내 집에서 끝나면 한 번 더',
+  mancalaStep3Body: '마지막 씨앗이 내 집에 들어가면 이어서 한 번 더 둡니다.',
+  mancalaStep4Title: '빈 구멍에서 끝나면 가져가기',
+  mancalaStep4Body:
+    '마지막 씨앗이 내 쪽의 빈 구멍에 들어가면, 그 씨앗과 맞은편의 씨앗을 전부 내 집으로 가져갑니다.',
   mancalaConfirmSwitchTitle: '진행 중인 대국을 바꿀까요?',
   mancalaConfirmSwitchBody: '진행 중인 {current} 대국이 새 {next} 대국으로 바뀝니다.',
 };

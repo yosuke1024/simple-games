@@ -31,14 +31,17 @@ export const id: MancalaMessages = {
   mancalaWins: 'Menang',
   mancalaLosses: 'Kalah',
   mancalaDraws: 'Seri',
-  mancalaStep1Title: 'Ketuk lubang untuk menabur',
+  mancalaStep1Title: 'Lubang Anda, rumah Anda',
   mancalaStep1Body:
-    'Biji jatuh satu per satu ke lubang berikutnya, berlawanan arah jarum jam; pemilik biji terbanyak di rumahnya menang.',
-  mancalaStep2Title: 'Berakhir di rumah sendiri, jalan lagi',
-  mancalaStep2Body: 'Saat biji terakhir Anda jatuh ke rumah Anda sendiri, Anda jalan lagi.',
-  mancalaStep3Title: 'Berakhir di lubang kosong, ambil',
-  mancalaStep3Body:
-    'Saat biji terakhir Anda jatuh ke lubang kosong di sisi Anda, biji itu dan biji di seberangnya masuk ke rumah Anda.',
+    'Baris lubang di bawah adalah milik Anda, begitu juga rumah di sebelah kanan. Saat lubang di satu sisi kosong semua, permainan berakhir, dan rumah yang lebih penuh menang.',
+  mancalaStep2Title: 'Ketuk lubang untuk menabur',
+  mancalaStep2Body:
+    'Bijinya jatuh satu per satu ke lubang berikutnya, berlawanan arah jarum jam — masuk juga ke rumah Anda, tapi tidak pernah ke rumah CPU.',
+  mancalaStep3Title: 'Berakhir di rumah sendiri, jalan lagi',
+  mancalaStep3Body: 'Saat biji terakhir Anda jatuh ke rumah Anda sendiri, Anda jalan lagi.',
+  mancalaStep4Title: 'Berakhir di lubang kosong, ambil',
+  mancalaStep4Body:
+    'Saat biji terakhir Anda jatuh ke lubang kosong di sisi Anda, biji itu dan semua biji di seberangnya masuk ke rumah Anda.',
   mancalaConfirmSwitchTitle: 'Ganti permainan yang sedang berjalan?',
   mancalaConfirmSwitchBody: 'Permainan {current} Anda akan diganti dengan permainan {next} baru.',
 };

@@ -1,9 +1,13 @@
 /**
- * Quick Rules (docs/MANCALA_RULES.md §9): three steps, one sentence each,
- * shown with a figure rather than explained in prose. Each figure is the
- * board before the move the step is about: the pit to sow ringed, the pits
- * its seeds reach tinted, the place the last seed lands filled — and, for the
- * capture, the pit across that it takes.
+ * Quick Rules (docs/MANCALA_RULES.md §9): four steps, one sentence each,
+ * shown with a figure rather than explained in prose. The first step shows
+ * the board itself, before any move — the player's pits and store marked as
+ * theirs, stating the goal and when the game ends — so a first-time player
+ * knows what they are looking at before being told to tap anything. Each of
+ * the remaining three figures is the board before the move the step is
+ * about: the pit to sow ringed, the pits its seeds reach tinted, the place
+ * the last seed lands filled — and, for the capture, the pit across that it
+ * takes.
  * The long-form rules live on the game's landing page behind "Learn More",
  * which quietly does nothing offline (docs/OFFLINE_POLICY.md).
  */
@@ -14,8 +18,8 @@ import { gameLandingUrl } from '@/ui/landing';
 import { openExternal } from '@/ui/openExternal';
 import { useMancala } from '../../state/GameContext';
 
-/** The pit sown from, pits the seeds reach, where the last lands, and what a capture takes. */
-type Mark = 'from' | 'to' | 'last' | 'take' | null;
+/** The player's own side, the pit sown from, pits the seeds reach, where the last lands, and what a capture takes. */
+type Mark = 'own' | 'from' | 'to' | 'last' | 'take' | null;
 
 interface FigureSpec {
   /** Top row as drawn, left to right (the CPU's pits 12 … 7). */
@@ -49,6 +53,15 @@ function BoardFigure({ spec }: { spec: FigureSpec }) {
     </div>
   );
 }
+
+/** The opening board: the player's six pits and their store marked as theirs. */
+const INTRO: FigureSpec = {
+  cpuRow: [4, 4, 4, 4, 4, 4],
+  playerRow: [4, 4, 4, 4, 4, 4],
+  cpuStore: 0,
+  playerStore: 0,
+  marks: { p0: 'own', p1: 'own', p2: 'own', p3: 'own', p4: 'own', p5: 'own', ps: 'last' },
+};
 
 /** Pit 2's four seeds go to the next four pits along. */
 const SOW: FigureSpec = {
@@ -88,16 +101,21 @@ export function MancalaTutorialScreen() {
     {
       title: t('mancalaStep1Title'),
       body: t('mancalaStep1Body'),
-      example: <BoardFigure spec={SOW} />,
+      example: <BoardFigure spec={INTRO} />,
     },
     {
       title: t('mancalaStep2Title'),
       body: t('mancalaStep2Body'),
-      example: <BoardFigure spec={AGAIN} />,
+      example: <BoardFigure spec={SOW} />,
     },
     {
       title: t('mancalaStep3Title'),
       body: t('mancalaStep3Body'),
+      example: <BoardFigure spec={AGAIN} />,
+    },
+    {
+      title: t('mancalaStep4Title'),
+      body: t('mancalaStep4Body'),
       example: <BoardFigure spec={CAPTURE} />,
     },
   ];

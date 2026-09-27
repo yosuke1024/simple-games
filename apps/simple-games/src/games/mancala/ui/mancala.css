@@ -391,6 +391,13 @@
   border-color: var(--accent);
 }
 
+/* The player's side, in the intro figure — theirs, not yet acted on. */
+.mc-fig-own {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
 /* The pit sown from, ringed. */
 .mc-fig-from {
   border-color: var(--accent);

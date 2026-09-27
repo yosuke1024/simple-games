@@ -31,14 +31,17 @@ export const es: MancalaMessages = {
   mancalaWins: 'Victorias',
   mancalaLosses: 'Derrotas',
   mancalaDraws: 'Empates',
-  mancalaStep1Title: 'Toca un hueco para sembrar',
+  mancalaStep1Title: 'Tus huecos, tu casa',
   mancalaStep1Body:
-    'Las semillas caen una a una en los huecos siguientes, en sentido antihorario; gana quien tenga más semillas en su casa.',
-  mancalaStep2Title: 'Termina en tu casa, juega otra vez',
-  mancalaStep2Body: 'Si tu última semilla cae en tu propia casa, vuelves a jugar.',
-  mancalaStep3Title: 'Termina en un hueco vacío, te lo llevas',
-  mancalaStep3Body:
-    'Si tu última semilla cae en un hueco vacío de tu lado, esa semilla y las de enfrente van a tu casa.',
+    'La fila inferior de huecos es tuya, igual que la casa de la derecha. Cuando los huecos de un lado quedan todos vacíos, la partida termina, y gana la casa con más semillas.',
+  mancalaStep2Title: 'Toca un hueco para sembrar',
+  mancalaStep2Body:
+    'Sus semillas caen una a una en los huecos siguientes, en sentido antihorario, incluida tu casa, pero nunca la de la CPU.',
+  mancalaStep3Title: 'Termina en tu casa, juega otra vez',
+  mancalaStep3Body: 'Si tu última semilla cae en tu propia casa, vuelves a jugar.',
+  mancalaStep4Title: 'Termina en un hueco vacío, te lo llevas',
+  mancalaStep4Body:
+    'Si tu última semilla cae en un hueco vacío de tu lado, esa semilla y todas las de enfrente van a tu casa.',
   mancalaConfirmSwitchTitle: '¿Reemplazar la partida en curso?',
   mancalaConfirmSwitchBody: 'Tu partida {current} se reemplazará por una nueva partida {next}.',
 };

@@ -31,14 +31,17 @@ export const ptBR: MancalaMessages = {
   mancalaWins: 'Vitórias',
   mancalaLosses: 'Derrotas',
   mancalaDraws: 'Empates',
-  mancalaStep1Title: 'Toque numa casa para semear',
+  mancalaStep1Title: 'Suas casas, seu celeiro',
   mancalaStep1Body:
-    'As sementes caem uma a uma nas casas seguintes, no sentido anti-horário; quem tiver mais sementes no celeiro vence.',
-  mancalaStep2Title: 'Termine no seu celeiro, jogue de novo',
-  mancalaStep2Body: 'Quando sua última semente cair no seu próprio celeiro, você joga de novo.',
-  mancalaStep3Title: 'Termine numa casa vazia, capture',
-  mancalaStep3Body:
-    'Quando sua última semente cair numa casa vazia do seu lado, ela e as sementes do lado oposto vão para o seu celeiro.',
+    'A fileira de baixo é sua, assim como o celeiro à direita. Quando as casas de um lado ficam todas vazias, a partida termina, e o celeiro mais cheio vence.',
+  mancalaStep2Title: 'Toque numa casa para semear',
+  mancalaStep2Body:
+    'As sementes caem uma a uma nas casas seguintes, no sentido anti-horário — inclusive no seu celeiro, mas nunca no da CPU.',
+  mancalaStep3Title: 'Termine no seu celeiro, jogue de novo',
+  mancalaStep3Body: 'Quando sua última semente cair no seu próprio celeiro, você joga de novo.',
+  mancalaStep4Title: 'Termine numa casa vazia, capture',
+  mancalaStep4Body:
+    'Quando sua última semente cair numa casa vazia do seu lado, ela e todas as sementes do lado oposto vão para o seu celeiro.',
   mancalaConfirmSwitchTitle: 'Substituir a partida em andamento?',
   mancalaConfirmSwitchBody: 'Sua partida {current} será substituída por uma nova partida {next}.',
 };

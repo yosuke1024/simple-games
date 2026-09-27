@@ -31,14 +31,17 @@ export const vi: MancalaMessages = {
   mancalaWins: 'Thắng',
   mancalaLosses: 'Thua',
   mancalaDraws: 'Hòa',
-  mancalaStep1Title: 'Chạm vào một ô để gieo',
+  mancalaStep1Title: 'Ô của bạn, kho của bạn',
   mancalaStep1Body:
-    'Hạt rơi lần lượt vào các ô tiếp theo, ngược chiều kim đồng hồ; ai có nhiều hạt trong kho hơn sẽ thắng.',
-  mancalaStep2Title: 'Kết thúc ở kho của mình, đi tiếp',
-  mancalaStep2Body: 'Khi hạt cuối cùng rơi vào kho của chính bạn, bạn được đi tiếp một lượt.',
-  mancalaStep3Title: 'Kết thúc ở ô trống, lấy hết',
-  mancalaStep3Body:
-    'Khi hạt cuối cùng rơi vào một ô trống bên phía bạn, hạt đó và các hạt ở ô đối diện sẽ vào kho của bạn.',
+    'Hàng ô phía dưới là của bạn, kho bên phải cũng vậy. Khi các ô của một bên đều trống, ván đấu kết thúc, và kho nào đầy hơn thì thắng.',
+  mancalaStep2Title: 'Chạm vào một ô để gieo',
+  mancalaStep2Body:
+    'Hạt của ô đó rơi lần lượt vào các ô tiếp theo, ngược chiều kim đồng hồ — kể cả vào kho của bạn, nhưng không bao giờ vào kho của CPU.',
+  mancalaStep3Title: 'Kết thúc ở kho của mình, đi tiếp',
+  mancalaStep3Body: 'Khi hạt cuối cùng rơi vào kho của chính bạn, bạn được đi tiếp một lượt.',
+  mancalaStep4Title: 'Kết thúc ở ô trống, lấy hết',
+  mancalaStep4Body:
+    'Khi hạt cuối cùng rơi vào một ô trống bên phía bạn, hạt đó và mọi hạt ở ô đối diện sẽ vào kho của bạn.',
   mancalaConfirmSwitchTitle: 'Thay ván đang chơi?',
   mancalaConfirmSwitchBody: 'Ván {current} của bạn sẽ được thay bằng ván {next} mới.',
 };
