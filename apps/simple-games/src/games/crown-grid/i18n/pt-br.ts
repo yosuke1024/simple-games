@@ -17,9 +17,40 @@ export const ptBR: CrownGridMessages = {
   crownGridRuleBroken: 'quebra uma regra',
   crownGridHintViolation: 'As coroas destacadas quebram uma regra.',
   crownGridHintWrong: 'A coroa marcada não pode estar certa.',
-  crownGridHintPlace: 'O quadrado marcado precisa de uma coroa — a área destacada mostra por quê.',
-  crownGridHintEliminate:
-    'Nenhuma coroa pode ficar nos quadrados marcados — a área destacada mostra por quê.',
+  crownGridHintSingle_row:
+    'A linha destacada tem apenas um quadrado livre para sua coroa: o contornado.',
+  crownGridHintSingle_col:
+    'A coluna destacada tem apenas um quadrado livre para sua coroa: o contornado.',
+  crownGridHintSingle_region:
+    'A região destacada tem apenas um quadrado livre para sua coroa: o contornado.',
+  crownGridHintConfine_regionRow:
+    'A região destacada só pode ter sua coroa nos quadrados coloridos, todos em uma mesma linha — então os outros quadrados dessa linha (contornados) ficam descartados.',
+  crownGridHintConfine_regionCol:
+    'A região destacada só pode ter sua coroa nos quadrados coloridos, todos em uma mesma coluna — então os outros quadrados dessa coluna (contornados) ficam descartados.',
+  crownGridHintConfine_rowRegion:
+    'A linha destacada só pode ter sua coroa nos quadrados coloridos, todos em uma mesma região — então os outros quadrados dessa região (contornados) ficam descartados.',
+  crownGridHintConfine_colRegion:
+    'A coluna destacada só pode ter sua coroa nos quadrados coloridos, todos em uma mesma região — então os outros quadrados dessa região (contornados) ficam descartados.',
+  crownGridHintAttack_row:
+    'Uma coroa no quadrado contornado descartaria todos os quadrados coloridos, deixando a linha destacada sem nenhum lugar para sua coroa.',
+  crownGridHintAttack_col:
+    'Uma coroa no quadrado contornado descartaria todos os quadrados coloridos, deixando a coluna destacada sem nenhum lugar para sua coroa.',
+  crownGridHintAttack_region:
+    'Uma coroa no quadrado contornado descartaria todos os quadrados coloridos, deixando a região destacada sem nenhum lugar para sua coroa.',
+  crownGridHintPair_regionsRows:
+    'As duas regiões destacadas só podem ter suas coroas nos quadrados coloridos, que cabem em exatamente duas linhas — então os outros quadrados dessas linhas (contornados) ficam descartados.',
+  crownGridHintPair_regionsCols:
+    'As duas regiões destacadas só podem ter suas coroas nos quadrados coloridos, que cabem em exatamente duas colunas — então os outros quadrados dessas colunas (contornados) ficam descartados.',
+  crownGridHintPair_rowsRegions:
+    'As duas linhas destacadas só podem ter suas coroas nos quadrados coloridos, que cabem em exatamente duas regiões — então os outros quadrados dessas regiões (contornados) ficam descartados.',
+  crownGridHintPair_colsRegions:
+    'As duas colunas destacadas só podem ter suas coroas nos quadrados coloridos, que cabem em exatamente duas regiões — então os outros quadrados dessas regiões (contornados) ficam descartados.',
+  crownGridHintHypothesis_row:
+    'Tente uma coroa no quadrado contornado: os lances que isso obriga não deixam nenhum lugar para a coroa da linha destacada, então não pode ser esse.',
+  crownGridHintHypothesis_col:
+    'Tente uma coroa no quadrado contornado: os lances que isso obriga não deixam nenhum lugar para a coroa da coluna destacada, então não pode ser esse.',
+  crownGridHintHypothesis_region:
+    'Tente uma coroa no quadrado contornado: os lances que isso obriga não deixam nenhum lugar para a coroa da região destacada, então não pode ser esse.',
   crownGridHintNone: 'Nenhuma jogada certa agora.',
   crownGridSolvedTitle: 'Resolvido!',
   crownGridSolvedBody: 'Cada linha, cada coluna e cada região tem uma coroa.',

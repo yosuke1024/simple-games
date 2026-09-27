@@ -16,8 +16,40 @@ export const ko: CrownGridMessages = {
   crownGridRuleBroken: '규칙 위반',
   crownGridHintViolation: '강조된 왕관이 규칙을 어겼습니다.',
   crownGridHintWrong: '표시된 왕관은 맞을 수 없습니다.',
-  crownGridHintPlace: '표시된 칸에는 왕관이 와야 합니다. 강조된 영역이 그 이유입니다.',
-  crownGridHintEliminate: '표시된 칸에는 왕관을 둘 수 없습니다. 강조된 영역이 그 이유입니다.',
+  crownGridHintSingle_row:
+    '강조된 행에는 왕관을 놓을 칸이 하나만 남았습니다. 바로 테두리가 있는 칸입니다.',
+  crownGridHintSingle_col:
+    '강조된 열에는 왕관을 놓을 칸이 하나만 남았습니다. 바로 테두리가 있는 칸입니다.',
+  crownGridHintSingle_region:
+    '강조된 영역에는 왕관을 놓을 칸이 하나만 남았습니다. 바로 테두리가 있는 칸입니다.',
+  crownGridHintConfine_regionRow:
+    '강조된 영역의 왕관은 색칠된 칸 중 하나인데, 그 칸들이 모두 한 행에 있습니다 — 그래서 그 행의 나머지 칸(테두리 표시)은 왕관이 될 수 없습니다.',
+  crownGridHintConfine_regionCol:
+    '강조된 영역의 왕관은 색칠된 칸 중 하나인데, 그 칸들이 모두 한 열에 있습니다 — 그래서 그 열의 나머지 칸(테두리 표시)은 왕관이 될 수 없습니다.',
+  crownGridHintConfine_rowRegion:
+    '강조된 행의 왕관은 색칠된 칸 중 하나인데, 그 칸들이 모두 한 영역에 있습니다 — 그래서 그 영역의 나머지 칸(테두리 표시)은 왕관이 될 수 없습니다.',
+  crownGridHintConfine_colRegion:
+    '강조된 열의 왕관은 색칠된 칸 중 하나인데, 그 칸들이 모두 한 영역에 있습니다 — 그래서 그 영역의 나머지 칸(테두리 표시)은 왕관이 될 수 없습니다.',
+  crownGridHintAttack_row:
+    '테두리가 있는 칸에 왕관을 놓으면 색칠된 칸이 모두 사라져서, 강조된 행에는 왕관을 놓을 곳이 없어집니다.',
+  crownGridHintAttack_col:
+    '테두리가 있는 칸에 왕관을 놓으면 색칠된 칸이 모두 사라져서, 강조된 열에는 왕관을 놓을 곳이 없어집니다.',
+  crownGridHintAttack_region:
+    '테두리가 있는 칸에 왕관을 놓으면 색칠된 칸이 모두 사라져서, 강조된 영역에는 왕관을 놓을 곳이 없어집니다.',
+  crownGridHintPair_regionsRows:
+    '강조된 두 영역의 왕관은 색칠된 칸 중에 있는데, 그 칸들이 정확히 두 행에 들어맞습니다 — 그래서 그 두 행의 나머지 칸(테두리 표시)은 왕관이 될 수 없습니다.',
+  crownGridHintPair_regionsCols:
+    '강조된 두 영역의 왕관은 색칠된 칸 중에 있는데, 그 칸들이 정확히 두 열에 들어맞습니다 — 그래서 그 두 열의 나머지 칸(테두리 표시)은 왕관이 될 수 없습니다.',
+  crownGridHintPair_rowsRegions:
+    '강조된 두 행의 왕관은 색칠된 칸 중에 있는데, 그 칸들이 정확히 두 영역에 들어맞습니다 — 그래서 그 두 영역의 나머지 칸(테두리 표시)은 왕관이 될 수 없습니다.',
+  crownGridHintPair_colsRegions:
+    '강조된 두 열의 왕관은 색칠된 칸 중에 있는데, 그 칸들이 정확히 두 영역에 들어맞습니다 — 그래서 그 두 영역의 나머지 칸(테두리 표시)은 왕관이 될 수 없습니다.',
+  crownGridHintHypothesis_row:
+    '테두리가 있는 칸에 왕관을 놓아보면, 그로 인해 정해지는 수들이 강조된 행에 왕관 놓을 곳을 남기지 않습니다. 그래서 그 칸에는 놓을 수 없습니다.',
+  crownGridHintHypothesis_col:
+    '테두리가 있는 칸에 왕관을 놓아보면, 그로 인해 정해지는 수들이 강조된 열에 왕관 놓을 곳을 남기지 않습니다. 그래서 그 칸에는 놓을 수 없습니다.',
+  crownGridHintHypothesis_region:
+    '테두리가 있는 칸에 왕관을 놓아보면, 그로 인해 정해지는 수들이 강조된 영역에 왕관 놓을 곳을 남기지 않습니다. 그래서 그 칸에는 놓을 수 없습니다.',
   crownGridHintNone: '지금은 확실한 수가 없습니다.',
   crownGridSolvedTitle: '완성!',
   crownGridSolvedBody: '모든 행, 열, 영역에 왕관이 하나씩 들어갔습니다.',

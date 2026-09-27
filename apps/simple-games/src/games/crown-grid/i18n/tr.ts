@@ -16,8 +16,37 @@ export const tr: CrownGridMessages = {
   crownGridRuleBroken: 'bir kuralı bozuyor',
   crownGridHintViolation: 'Vurgulanan taçlar bir kuralı bozuyor.',
   crownGridHintWrong: 'İşaretli taç doğru olamaz.',
-  crownGridHintPlace: 'İşaretli kareye taç gelmeli; vurgulanan alan nedenini gösteriyor.',
-  crownGridHintEliminate: 'İşaretli karelere taç gelemez; vurgulanan alan nedenini gösteriyor.',
+  crownGridHintSingle_row: 'Vurgulanan satırda tacı için sadece bir kare kaldı: çerçeveli olan.',
+  crownGridHintSingle_col: 'Vurgulanan sütunda tacı için sadece bir kare kaldı: çerçeveli olan.',
+  crownGridHintSingle_region: 'Vurgulanan bölgede tacı için sadece bir kare kaldı: çerçeveli olan.',
+  crownGridHintConfine_regionRow:
+    'Vurgulanan bölge, tacını yalnızca renkli karelere koyabilir; bunların hepsi tek bir satırda — bu yüzden o satırdaki diğer kareler (çerçeveli) elenir.',
+  crownGridHintConfine_regionCol:
+    'Vurgulanan bölge, tacını yalnızca renkli karelere koyabilir; bunların hepsi tek bir sütunda — bu yüzden o sütundaki diğer kareler (çerçeveli) elenir.',
+  crownGridHintConfine_rowRegion:
+    'Vurgulanan satır, tacını yalnızca renkli karelere koyabilir; bunların hepsi tek bir bölgede — bu yüzden o bölgedeki diğer kareler (çerçeveli) elenir.',
+  crownGridHintConfine_colRegion:
+    'Vurgulanan sütun, tacını yalnızca renkli karelere koyabilir; bunların hepsi tek bir bölgede — bu yüzden o bölgedeki diğer kareler (çerçeveli) elenir.',
+  crownGridHintAttack_row:
+    'Çerçeveli karedeki bir taç, renkli karelerin tümünü elerdi ve vurgulanan satırın tacı için hiçbir yer kalmazdı.',
+  crownGridHintAttack_col:
+    'Çerçeveli karedeki bir taç, renkli karelerin tümünü elerdi ve vurgulanan sütunun tacı için hiçbir yer kalmazdı.',
+  crownGridHintAttack_region:
+    'Çerçeveli karedeki bir taç, renkli karelerin tümünü elerdi ve vurgulanan bölgenin tacı için hiçbir yer kalmazdı.',
+  crownGridHintPair_regionsRows:
+    'Vurgulanan iki bölge, taçlarını yalnızca renkli karelere koyabilir; bunlar tam olarak iki satıra sığıyor — bu yüzden o satırlardaki diğer kareler (çerçeveli) elenir.',
+  crownGridHintPair_regionsCols:
+    'Vurgulanan iki bölge, taçlarını yalnızca renkli karelere koyabilir; bunlar tam olarak iki sütuna sığıyor — bu yüzden o sütunlardaki diğer kareler (çerçeveli) elenir.',
+  crownGridHintPair_rowsRegions:
+    'Vurgulanan iki satır, taçlarını yalnızca renkli karelere koyabilir; bunlar tam olarak iki bölgeye sığıyor — bu yüzden o bölgelerdeki diğer kareler (çerçeveli) elenir.',
+  crownGridHintPair_colsRegions:
+    'Vurgulanan iki sütun, taçlarını yalnızca renkli karelere koyabilir; bunlar tam olarak iki bölgeye sığıyor — bu yüzden o bölgelerdeki diğer kareler (çerçeveli) elenir.',
+  crownGridHintHypothesis_row:
+    'Çerçeveli kareye bir taç dene: bunun zorladığı hamleler, vurgulanan satırın tacı için hiçbir yer bırakmaz, yani orası olamaz.',
+  crownGridHintHypothesis_col:
+    'Çerçeveli kareye bir taç dene: bunun zorladığı hamleler, vurgulanan sütunun tacı için hiçbir yer bırakmaz, yani orası olamaz.',
+  crownGridHintHypothesis_region:
+    'Çerçeveli kareye bir taç dene: bunun zorladığı hamleler, vurgulanan bölgenin tacı için hiçbir yer bırakmaz, yani orası olamaz.',
   crownGridHintNone: 'Şu an kesin bir hamle bulunamadı.',
   crownGridSolvedTitle: 'Çözüldü!',
   crownGridSolvedBody: 'Her satır, her sütun ve her bölgede bir taç var.',

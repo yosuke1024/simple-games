@@ -24,18 +24,11 @@ import { useCrownGrid } from '../../state/GameContext';
 import { CrownGridBoard } from '../components/CrownGridBoard';
 import { CrownGridResultOverlay } from '../components/CrownGridResultOverlay';
 import { DIFFICULTY_KEY } from '../difficultyKey';
+import { hintMessageKey } from '../hintMessage';
 
-/** Long enough to read a full sentence twice, in a second language. */
-const TOAST_MS = 5000;
-
-/** The one sentence each kind of hint gets (§6) — never a technique name. */
-function hintMessage(hint: Hint) {
-  if (hint.kind === 'violation') return 'crownGridHintViolation' as const;
-  if (hint.kind === 'wrong') return 'crownGridHintWrong' as const;
-  return hint.step.kind === 'place'
-    ? ('crownGridHintPlace' as const)
-    : ('crownGridHintEliminate' as const);
-}
+/** Long enough to read a full sentence — including the longer ones that now
+    name the deduction (§6) — twice, in a second language. */
+const TOAST_MS = 8000;
 
 export function CrownGridGameScreen() {
   const {
@@ -108,14 +101,14 @@ export function CrownGridGameScreen() {
   /** The hint points; it never writes a mark for the player (§6). */
   const onHint = useCallback(() => {
     const next = takeHint();
-    if (next === null) {
+    if (next === null || session === null) {
       showToast(t('crownGridHintNone'));
       return;
     }
     setHint(next);
     sounds.select();
-    showToast(t(hintMessage(next)));
-  }, [showToast, t, takeHint]);
+    showToast(t(hintMessageKey(next, session.size)));
+  }, [session, showToast, t, takeHint]);
 
   /* Keyboard as an adapter over the tap handler above (issue #93): H asks for
      the hint, the same one-shot action the button triggers, so key repeat is

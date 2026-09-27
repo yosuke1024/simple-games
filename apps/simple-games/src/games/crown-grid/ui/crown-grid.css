@@ -137,9 +137,28 @@
   inset: 0;
   --cg-rule-r: 0px;
   --cg-rule-b: 0px;
+  /* Every ring this game draws around a cell — a broken rule (§5), the hint's
+     settled cells (§6), keyboard focus — is an inset shadow on this tile, never
+     an `outline` on the button. The tile is absolutely positioned, and Chrome
+     paints a positioned child above its parent's outline, so an outline on
+     `.cg-cell` is simply hidden under the tile (the 2026-09-27 iPad play-test
+     screenshot showed no ring on the hint's cells at all, and the violation
+     ring had the same fault). `--cg-ring` is empty until a state sets it. */
+  --cg-ring: 0 0 0 0 transparent;
   background-color: var(--cg-tint, var(--surface));
-  box-shadow: inset calc(-1 * var(--cg-rule-r)) calc(-1 * var(--cg-rule-b)) 0 0 var(--line);
+  box-shadow:
+    inset calc(-1 * var(--cg-rule-r)) calc(-1 * var(--cg-rule-b)) 0 0 var(--line),
+    inset var(--cg-ring);
   pointer-events: none;
+}
+
+/* Keyboard focus: the browser's own ring would sit under the tile too. */
+.cg-cell:focus-visible {
+  outline: none;
+}
+
+.cg-cell:focus-visible::before {
+  --cg-ring: 0 0 0 2px var(--accent);
 }
 
 .cg-cell:not(.cg-b-r)::before {
@@ -301,45 +320,55 @@
    in the warn colour and ringed, so it is never colour alone. The glyph is
    --cg-warn-ink rather than --warn so it still reads at 4.5:1 on its region's
    tint (§13; the measurements are at the top of this file). */
-.cg-cell-broken {
-  outline: 2px solid var(--warn);
-  outline-offset: -2px;
-  z-index: 1;
+.cg-cell-broken::before {
+  --cg-ring: 0 0 0 2px var(--warn);
 }
 
 .cg-cell-broken .cg-glyph {
   color: var(--cg-warn-ink);
 }
 
-/* Hint (§6): the houses the reasoning was read off, the candidates that carry
-   it, and the cells it settles. Drawn as translucent overlays on ::after, so
-   they land above the tile (::before) and the glyph — the hint is about the
-   regions and the marks alike. */
-.cg-cell-reason::after,
+/* Hint (§6, §13): a spotlight, not a wash. While a hint shows, every cell
+   the reasoning does not touch (`cg-cell-dim`, added by CrownGridBoard.tsx
+   whenever hint !== null, to every cell not in reason ∪ support ∪ targets ∪
+   broken) fades behind a paper veil — that is why `cg-cell-reason` carries no
+   overlay of its own below: the *un*-dimmed houses read at full strength
+   against the veiled rest of the board instead of competing with an accent
+   wash of their own. `cg-cell-dim` and `cg-cell-support` are the board's own
+   proof that the two sets never overlap, so their ::after rules never have
+   to. `cg-cell-reason` stays a class — the tests and this file's own logic
+   read it — even though it draws nothing here.
+
+   (2026-09-27 play-test, iPad, 8×8: the previous 12/28%-opacity overlays
+   over a pastel region tint, and a 2px ring, were not legible on a large
+   screen — "I press Hint and can't tell what it means". The veil plus a
+   3px ring is the fix; ui/hintMessage.ts's per-technique sentence is the
+   other half, §6.) */
+.cg-cell-dim::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--paper);
+  opacity: 0.62;
+  pointer-events: none;
+}
+
 .cg-cell-support::after {
   content: '';
   position: absolute;
   inset: 0;
   background: var(--accent);
-  opacity: 0.12;
+  opacity: 0.34;
   pointer-events: none;
 }
 
-.cg-cell-support::after {
-  opacity: 0.28;
-}
-
-.cg-cell-hint {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-  z-index: 2;
+.cg-cell-hint::before {
+  --cg-ring: 0 0 0 3px var(--accent);
 }
 
 /* A broken rule or a crown that cannot be right outranks any deduction (§6). */
-.cg-cell-hint-broken {
-  outline: 3px solid var(--warn);
-  outline-offset: -3px;
-  z-index: 2;
+.cg-cell-hint-broken::before {
+  --cg-ring: 0 0 0 3px var(--warn);
 }
 
 /* The "solved" beat shared with every early-release board (Number Path,

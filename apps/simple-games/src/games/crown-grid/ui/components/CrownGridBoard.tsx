@@ -307,6 +307,10 @@ export const CrownGridBoard = memo(function CrownGridBoard({
       for (const index of houseIndices(size, regions, house)) reason.add(index);
     }
   }
+  // Everything the hint's reasoning does not touch fades behind a paper veil
+  // while a hint is showing (§6, §13), so the houses and cells it does touch
+  // read at full strength instead of competing with the board's own tints.
+  const involved = new Set<number>([...reason, ...support, ...targets, ...broken]);
 
   // Row-major order among crowns only, for the solved settle's stagger (§13,
   // "--cg-i"). Never more than the board's own size, so 9 at most.
@@ -351,6 +355,7 @@ export const CrownGridBoard = memo(function CrownGridBoard({
             support.has(index) ? 'cg-cell-support' : '',
             reason.has(index) ? 'cg-cell-reason' : '',
             broken.has(index) ? 'cg-cell-hint-broken' : '',
+            hint !== null && !involved.has(index) ? 'cg-cell-dim' : '',
           ]
             .filter(Boolean)
             .join(' ');

@@ -27,8 +27,40 @@ export const en = {
   crownGridRuleBroken: 'breaks a rule',
   crownGridHintViolation: 'The highlighted crowns break a rule.',
   crownGridHintWrong: 'The marked crown cannot be right.',
-  crownGridHintPlace: 'The marked square must hold a crown — the highlighted area shows why.',
-  crownGridHintEliminate: 'No crown can go on the marked squares — the highlighted area shows why.',
+  crownGridHintSingle_row:
+    'The highlighted row has just one square left for its crown: the outlined one.',
+  crownGridHintSingle_col:
+    'The highlighted column has just one square left for its crown: the outlined one.',
+  crownGridHintSingle_region:
+    'The highlighted region has just one square left for its crown: the outlined one.',
+  crownGridHintConfine_regionRow:
+    'The highlighted region can only hold its crown on the tinted squares, all in one row — so that row’s other squares (outlined) are out.',
+  crownGridHintConfine_regionCol:
+    'The highlighted region can only hold its crown on the tinted squares, all in one column — so that column’s other squares (outlined) are out.',
+  crownGridHintConfine_rowRegion:
+    'The highlighted row can only hold its crown on the tinted squares, all in one region — so that region’s other squares (outlined) are out.',
+  crownGridHintConfine_colRegion:
+    'The highlighted column can only hold its crown on the tinted squares, all in one region — so that region’s other squares (outlined) are out.',
+  crownGridHintAttack_row:
+    'A crown on an outlined square would rule out every tinted square, leaving the highlighted row nowhere for its crown.',
+  crownGridHintAttack_col:
+    'A crown on an outlined square would rule out every tinted square, leaving the highlighted column nowhere for its crown.',
+  crownGridHintAttack_region:
+    'A crown on an outlined square would rule out every tinted square, leaving the highlighted region nowhere for its crown.',
+  crownGridHintPair_regionsRows:
+    'The two highlighted regions can only hold their crowns on the tinted squares, which fit in just two rows — so those rows’ other squares (outlined) are out.',
+  crownGridHintPair_regionsCols:
+    'The two highlighted regions can only hold their crowns on the tinted squares, which fit in just two columns — so those columns’ other squares (outlined) are out.',
+  crownGridHintPair_rowsRegions:
+    'The two highlighted rows can only hold their crowns on the tinted squares, which fit in just two regions — so those regions’ other squares (outlined) are out.',
+  crownGridHintPair_colsRegions:
+    'The two highlighted columns can only hold their crowns on the tinted squares, which fit in just two regions — so those regions’ other squares (outlined) are out.',
+  crownGridHintHypothesis_row:
+    'Try a crown on the outlined square: the moves it forces leave the highlighted row nowhere for its crown, so it cannot be one.',
+  crownGridHintHypothesis_col:
+    'Try a crown on the outlined square: the moves it forces leave the highlighted column nowhere for its crown, so it cannot be one.',
+  crownGridHintHypothesis_region:
+    'Try a crown on the outlined square: the moves it forces leave the highlighted region nowhere for its crown, so it cannot be one.',
   crownGridHintNone: 'No certain move found right now.',
   crownGridSolvedTitle: 'Solved!',
   crownGridSolvedBody: 'Every row, column and region holds one crown.',

@@ -318,6 +318,31 @@ describe('the hint on the board (§6)', () => {
     const { cells } = renderBoard(SESSION, { kind: 'wrong', index: indexAt(2, 2) });
     expect(cells[indexAt(2, 2)]!.classList.contains('cg-cell-hint-broken')).toBe(true);
   });
+
+  it('veils every cell the hint does not touch, and veils nothing without a hint', () => {
+    const hint: Hint = {
+      kind: 'step',
+      step: {
+        kind: 'eliminate',
+        cells: [indexAt(1, 3)],
+        technique: 'attack',
+        houses: [{ kind: 'row', index: 5 }],
+        support: [indexAt(6, 2)],
+      },
+    };
+    const { cells } = renderBoard(SESSION, hint);
+    // The target, the reason house and the support candidate are all "involved"
+    // (§6) — none of them gets the dim veil, whatever else they carry.
+    expect(cells[indexAt(1, 3)]!.classList.contains('cg-cell-dim')).toBe(false);
+    expect(cells[indexAt(6, 1)]!.classList.contains('cg-cell-dim')).toBe(false);
+    expect(cells[indexAt(6, 2)]!.classList.contains('cg-cell-dim')).toBe(false);
+    // A cell the step never mentions fades behind the veil.
+    expect(cells[indexAt(2, 2)]!.classList.contains('cg-cell-dim')).toBe(true);
+
+    cleanup();
+    const { cells: undimmed } = renderBoard(SESSION, null);
+    for (const cell of undimmed) expect(cell.classList.contains('cg-cell-dim')).toBe(false);
+  });
 });
 
 describe('the "reach" of a crown just placed (§13)', () => {
