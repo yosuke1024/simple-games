@@ -116,7 +116,10 @@ public class MetaInstallPlugin extends Plugin {
      * Per process, not per plugin instance: if Android recreates the activity,
      * a new bridge builds a new instance of this class in the same process,
      * and "one attempt per launch" and "the SDK is running" are facts about
-     * the process. The record in no_backup/ is re-read by each instance.
+     * the process. A launch is therefore a process start — an activity opened
+     * again in a process Android kept alive does not get a second attempt,
+     * which errs on the side of fewer requests (runbook §2). The record in
+     * no_backup/ is re-read by each instance.
      */
     private static boolean attemptedThisLaunch;
     private static boolean sdkStarted;
