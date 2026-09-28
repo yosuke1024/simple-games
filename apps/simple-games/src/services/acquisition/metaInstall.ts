@@ -75,7 +75,13 @@ function normalize(raw: MetaInstallState | null | undefined): MetaInstallState {
     : 'declined';
   const installedAt =
     typeof raw.installedAt === 'number' && Number.isFinite(raw.installedAt) ? raw.installedAt : 0;
-  return { available: true, consent, reported: raw.reported === true, installedAt };
+  return {
+    available: true,
+    consent,
+    reported: raw.reported === true,
+    stopped: raw.stopped === true,
+    installedAt,
+  };
 }
 
 function setState(next: MetaInstallState): void {
@@ -94,7 +100,13 @@ function stopWaitingForOnline(): void {
  * while waiting for the network wins.
  */
 function reportIfDue(): void {
-  if (!state.available || state.consent !== 'granted' || state.reported || reportRequested) {
+  if (
+    !state.available ||
+    state.consent !== 'granted' ||
+    state.reported ||
+    state.stopped ||
+    reportRequested
+  ) {
     return;
   }
   if (!isOnline()) {
@@ -144,7 +156,9 @@ export function subscribeMetaInstall(listener: () => void): () => void {
  */
 export function shouldAskMetaInstall(locale: string, now: number = Date.now()): boolean {
   if (askedThisLaunch) return false;
-  if (!state.available || state.consent !== 'unset' || state.reported) return false;
+  if (!state.available || state.consent !== 'unset' || state.reported || state.stopped) {
+    return false;
+  }
   if (!META_ASK_LOCALES.includes(locale)) return false;
   const installedAt = state.installedAt ?? 0;
   if (installedAt <= 0 || now < installedAt) return false;

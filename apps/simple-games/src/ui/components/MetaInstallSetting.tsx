@@ -26,10 +26,14 @@ export function MetaInstallSetting() {
 
   const copy = metaInstallCopy(locale);
   const note = !allowed
-    ? copy.settingOff
+    ? state.reported
+      ? copy.settingOffReported
+      : copy.settingOff
     : state.reported
       ? copy.settingReported
-      : copy.settingPending;
+      : state.stopped
+        ? copy.settingStopped
+        : copy.settingPending;
   return (
     <>
       <Toggle

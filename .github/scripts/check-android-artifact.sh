@@ -76,7 +76,9 @@ app = root.find('application')
 errors = []
 
 allowed = set(common) | (set(meta) if mode == 'on' else set())
-perms = sorted({p.get(A + 'name') for p in root.findall('uses-permission')})
+perms = sorted(
+    {p.get(A + 'name') for tag in ('uses-permission', 'uses-permission-sdk-23') for p in root.findall(tag)}
+)
 for p in perms:
     if p not in allowed:
         errors.append(f'許可リスト外の権限: {p}')

@@ -546,7 +546,9 @@ Solitaire / Spider / FreeCell は**タップ操作を残したまま**ドラッ�
       プライバシーポリシーの Android の節 / Meta 側の自動ログ・AAM・Codeless の無効化 /
       Secrets)。**1 つでも欠けたら変数を入れない**
 - [ ] 手動実行(`meta: on`)の APK を実機に入れ、Events Manager の Test Events で:
-      許可 → `MOBILE_APP_INSTALL` が 1 件 / 許可しない・未回答・機内モードでは 0 件
+      許可 → `MOBILE_APP_INSTALL` が 1 件、**`fb_mobile_activate_app` など他のイベントは 0 件**
+      (Meta 側の自動ログがオフである証拠 — runbook §4 の注意)/ 許可しない・未回答・
+      機内モードでは 0 件
 - [ ] 同意前・拒否後に `graph.facebook.com` への通信が 0 件(通信を観測して確かめる。
       「イベントを呼んでいない」で代えない)
 - [ ] 質問はゲームから戻ったときだけ・1 回だけ・英語と日本語だけで出る。設定の

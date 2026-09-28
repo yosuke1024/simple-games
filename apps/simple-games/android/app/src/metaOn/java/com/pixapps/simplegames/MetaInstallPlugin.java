@@ -109,6 +109,13 @@ public class MetaInstallPlugin extends Plugin {
     private boolean attemptedThisLaunch;
     private boolean sdkStarted;
 
+    /**
+     * Every field above is read and written under this lock: plugin calls
+     * arrive on Capacitor's plugin thread, the SDK is started on the main
+     * thread, and a "no" must not slip between the last check and the start.
+     */
+    private final Object lock = new Object();
+
     @Override
     public void load() {
         Context context = getContext();
@@ -120,11 +127,22 @@ public class MetaInstallPlugin extends Plugin {
             clientToken = "";
         }
         configured = APP_ID.matcher(appId).matches() && CLIENT_TOKEN.matcher(clientToken).matches();
-        readState();
-        if (!configured) return;
+        synchronized (lock) {
+            readState();
+            if (!configured) return;
+            checkLastAttempt(context);
+        }
+    }
 
+    /**
+     * Reads what the SDK recorded during an earlier launch's attempt — only if
+     * our own record (no_backup, never restored) says this install made one.
+     * Android's backup can carry the SDK's preferences to a new phone; there
+     * they describe another install and are deleted, never trusted.
+     */
+    private void checkLastAttempt(Context context) {
         try {
-            if (!reported && !blocked) {
+            if (!reported && !blocked && "granted".equals(consent) && attempts > 0) {
                 boolean changed = false;
                 if (sdkRecordedAcceptedReport(context)) {
                     reported = true;
@@ -137,7 +155,7 @@ public class MetaInstallPlugin extends Plugin {
                 }
                 if (changed) writeState();
             }
-            if (!"granted".equals(consent) || reported || blocked) {
+            if (!"granted".equals(consent) || reported || stopped() || attempts == 0) {
                 deleteSdkData(context);
             }
         } catch (Exception e) {
@@ -147,18 +165,37 @@ public class MetaInstallPlugin extends Plugin {
 
     @PluginMethod
     public void getState(PluginCall call) {
-        call.resolve(state());
+        synchronized (lock) {
+            call.resolve(state());
+        }
     }
 
     @PluginMethod
     public void setConsent(PluginCall call) {
         boolean granted = Boolean.TRUE.equals(call.getBoolean("granted", false));
+        synchronized (lock) {
+            setConsentLocked(call, granted);
+        }
+    }
+
+    private void setConsentLocked(PluginCall call, boolean granted) {
         String previous = consent;
         consent = granted ? "granted" : "declined";
         if (!writeState()) {
-            if (granted) consent = previous;
-            call.reject("could not record the answer");
-            return;
+            if (granted) {
+                // A yes we could not record is not a yes.
+                consent = previous;
+                call.reject("could not record the answer");
+                return;
+            }
+            // A no we could not record must still be a no at the next launch,
+            // where the file would otherwise read back the old yes. Without
+            // the file the next launch reads "never asked" — which sends
+            // nothing and clears the SDK's data — so remove it. This launch
+            // stays off either way (the field above).
+            if (!stateFile().delete() && stateFile().exists()) {
+                Log.w(TAG, "could not record or clear the answer; off for this launch only");
+            }
         }
         if (!granted) {
             if (sdkStarted) {
@@ -180,6 +217,12 @@ public class MetaInstallPlugin extends Plugin {
 
     @PluginMethod
     public void reportInstall(PluginCall call) {
+        synchronized (lock) {
+            reportInstallLocked(call);
+        }
+    }
+
+    private void reportInstallLocked(PluginCall call) {
         JSObject ret = new JSObject();
         boolean due =
             configured &&
@@ -187,7 +230,7 @@ public class MetaInstallPlugin extends Plugin {
             !reported &&
             !blocked &&
             !attemptedThisLaunch &&
-            attempts < MAX_ATTEMPTS &&
+            !stopped() &&
             hasNetwork();
         if (!due) {
             ret.put("started", false);
@@ -227,6 +270,17 @@ public class MetaInstallPlugin extends Plugin {
      * runbook's §4 is read against that version).
      */
     private void startSdkAndReport(Context app, String referrer) {
+        synchronized (lock) {
+            startSdkAndReportLocked(app, referrer);
+        }
+    }
+
+    /**
+     * Holding the lock across the start means a "no" is either seen here —
+     * and nothing starts — or arrives after the report was handed to the
+     * SDK, which is the one report a later "no" cannot recall (runbook §6).
+     */
+    private void startSdkAndReportLocked(Context app, String referrer) {
         if (!"granted".equals(consent) || reported || blocked) return;
         try {
             FacebookSdk.setApplicationId(appId);
@@ -308,14 +362,22 @@ public class MetaInstallPlugin extends Plugin {
         }
     }
 
+    /**
+     * No further attempt will be made on this install: Meta turned automatic
+     * logging on behind this app's back, or the attempts ran out without Meta
+     * accepting the report. The switch stays in Settings either way — the
+     * answer is still the player's to change — but nothing is tried again.
+     */
+    private boolean stopped() {
+        return blocked || (!reported && attempts >= MAX_ATTEMPTS);
+    }
+
     private JSObject state() {
         JSObject ret = new JSObject();
-        // A blocked install, or one whose attempts are spent without a report,
-        // is simply not measured any more: nothing to ask, nothing to show.
-        boolean exhausted = !reported && attempts >= MAX_ATTEMPTS;
-        ret.put("available", configured && !blocked && !exhausted);
+        ret.put("available", configured);
         ret.put("consent", consent);
         ret.put("reported", reported);
+        ret.put("stopped", !reported && stopped());
         ret.put("installedAt", installedAt());
         return ret;
     }

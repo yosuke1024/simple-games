@@ -62,7 +62,11 @@ native   metaOn/MetaInstallPlugin.java が条件を**もう一度**確かめて�
   だから「フラグで止める」ではなく「呼ばない」で止める。
 - **報告はインストールにつき 1 回。** Meta が受理したら(SDK が `{appId}ping` を記録
   したら)、次の起動でそれを読み、SDK を二度と初期化しない。送信が失敗したら次の起動で
-  もう一度だけ試す(1 起動 1 回)。
+  もう一度試す(1 起動 1 回、**合計 3 起動まで**)。3 回で受理されなければ、その端末では
+  以後試さない。Meta 側の設定が自動ログを有効にしていると分かった場合も同じく止める。
+  止めた後も設定のスイッチは残り(答えは利用者のもの)、SDK のデータは起動時に消す。
+- **撤回は必ず効く。** 撤回を記録できなかった(ストレージが一杯など)ときは記録ファイル
+  自体を消す。次の起動は「未回答」として始まり、何も送らない。
 - **ゲームからは何も届かない。** JS の窓口は「状態を読む / 答えを記録する / 報告を
   始める」の 3 つだけで、イベント名や値を渡す口は無い(`check-principles.sh` §8 d)。
   ゲームはこのモジュールを import できない(`importBoundaries.test.ts` 規則 6)。
@@ -130,9 +134,9 @@ export してから使う。debug ビルド(`assembleDebug`)には何を設定�
 | イベント | 送る? | 条件と頻度 |
 | --- | --- | --- |
 | `MOBILE_APP_INSTALL`(`POST graph.facebook.com/{app-id}/activities`) | **送る** | 同意あり・オンライン・未受理のときに 1 回。受理されたら二度と送らない |
-| `fb_mobile_activate_app` / `fb_mobile_deactivate_app`(セッション) | 送らない | `AppEventsLogger.activateApp` を呼ばず、自動ログを false にしているため `ActivityLifecycleTracker` が始まらない |
+| `fb_mobile_activate_app` / `fb_mobile_deactivate_app`(セッション) | 送らない(**§8 の 7 が前提**) | アダプタは `AppEventsLogger.activateApp` を呼ばず、自動ログを false にしている。ただし下の注意のとおり、Meta 側の設定が自動ログを有効にしていると、SDK 自身が設定取得の直後に `activateApp` を呼ぶ |
 | `fb_sdk_initialize` / `fb_sdk_settings_changed` などの SDK 内部イベント | 送らない | どれも自動ログが true のときだけ記録される(`AppEventsLoggerImpl.initializeLib` ほか) |
-| 購入(自動・手動)| 送らない | 自動購入ログは自動ログ true が前提。手動の `logPurchase` は呼ばない(CI §8 b) |
+| 購入(自動・手動)| 送らない(**§8 の 7 が前提**) | 自動購入ログは自動ログ true が前提(同上)。手動の `logPurchase` は呼ばない(CI §8 b) |
 | ゲーム・盤面・スコア・Hint/Undo・保存・設定 | 送らない | 送る口が無い(§2) |
 
 独自の `install` イベントは作らない。インストールは Meta 自身の `MOBILE_APP_INSTALL` で、
@@ -146,7 +150,7 @@ export してから使う。debug ビルド(`assembleDebug`)には何を設定�
 | `application_tracking_enabled` | **false**(`setLimitEventAndDataUsage(true)`) | SDK の説明では「分析とコンバージョン以外(この人への広告ターゲティング等)に使わない」指定。リターゲティング用に使わせないため |
 | `advertiser_id_collection_enabled` | **false** | 広告 ID を使わない(§5) |
 | `advertiser_id` / `advertiser_tracking_enabled` | **付かない** | 収集を無効にしているため SDK が値を出さない(`AttributionIdentifiers.androidAdvertiserId`) |
-| `attribution` | Facebook アプリが持つ広告計測用 ID | **Android 10 以前で Facebook アプリが入っている端末だけ**。Android 11 以降はパッケージの可視性の制限で読めない(このアプリは `<queries>` を宣言しない)。SDK 側で止める設定は無いので、同意文と公開ポリシーで開示する |
+| `attribution` | Facebook アプリが持つ広告計測用 ID | **Facebook アプリが入っている端末で**(署名を確かめた本物の Facebook アプリの ContentProvider から読む)。Android 11 以降のパッケージの可視性の制限でも防げるとは限らない —— merge 済み manifest には AdMob の `<queries>`(https の VIEW / BROWSABLE)があり、Facebook アプリはそれに該当しうる。SDK 側で止める設定は無いので、同意文と公開ポリシーで開示する(実機で読まれるかは未確認) |
 | `install_referrer` | Google Play の Install Referrer 文字列 | **Meta 広告から来たときだけ**(文字列に `fb` / `facebook` を含むとき — SDK と同じ条件をアダプタでも使う)。クリックとインストールを結ぶ唯一の経路 |
 | `installer_package` | 例: `com.android.vending` | ストア経由かどうか |
 | `extinfo` | 形式版・パッケージ名・versionCode・versionName・OS バージョン・機種・ロケール・タイムゾーン略称・通信事業者名・画面の幅/高さ/密度・CPU コア数・ストレージ総量/空き(GB)・タイムゾーン名 | SDK が常に付ける。個別に外す設定は無い |
@@ -165,13 +169,19 @@ export してから使う。debug ビルド(`assembleDebug`)には何を設定�
 
 報告が受理された後の起動では SDK を初期化しないので、これらの通信も起きない。
 
-> **注意 — Meta 側の設定が端末の設定を上書きする。** SDK 18.3.0 の
+> **注意 — Meta 側の設定が端末の設定を上書きする。端末からは防げない。** SDK 18.3.0 の
 > `UserSettingsManager.checkAutoLogAppEventsEnabled()` は、アプリ設定の応答に
 > `auto_log_app_events_enabled` があれば、manifest の `AutoLogAppEventsEnabled=false`
-> より**そちらを優先する**。Meta のアプリダッシュボードで自動ログを有効にしていると、
-> 自動購入ログやクラッシュ報告が端末の意図に反して動きうる。だから §8 の
-> ダッシュボード設定は**必須**であり、アダプタも次の起動で SDK が保存したアプリ設定を
-> 読み、自動ログが有効と返っていたら以後 SDK を起動しない。
+> より**そちらを優先する**。そして `FetchedAppSettingsManager.loadAppSettingsAsync` は
+> 設定を取得した直後に `AutomaticAnalyticsLogger.logActivateAppEvent()` を呼び、自動ログが
+> 有効なら `AppEventsLogger.activateApp` を実行する —— **報告を送るその起動の中で**、
+> セッションのイベント、(gatekeeper 次第で)自動購入ログ、クラッシュ報告が動きうる。
+> したがって上の表の「送らない」と同意文の「購入を含まない」は、**Meta のアプリダッシュ
+> ボードで自動ログがオフであること(§8 の 7)に依存する**。そこで §8 の 7 は有効化の
+> 必須条件とし、§8 の 11 で Test Events に `fb_mobile_activate_app` が**届かない**ことを
+> 確かめる。アダプタは次の起動で SDK が保存したアプリ設定を読み、自動ログが有効と
+> 返っていたら以後その端末で SDK を起動しない(報告に失敗して再試行する端末のための
+> 後ろ盾であり、最初の起動は守れない)。
 
 ### 端末に残るもの
 
@@ -218,8 +228,10 @@ Android の自動バックアップが SDK の SharedPreferences を別の端末
   ハードウェア戻る、強制終了 —— どの閉じ方でも送信は起きず、質問は戻ってこない。
   「許可する」だけが変える。2 つのボタンは同じ見た目で、キーボードの既定は「許可しない」。
 - **設定(About の節、Ad Privacy Options の隣)でいつでも変えられる。** オフにすると
-  まだの報告は取りやめ、SDK のローカルデータを次の起動で消す。報告済みのものを Meta から
-  取り消すことはできない —— 設定の文言は「一度知らせました」と事実を言う。
+  まだの報告は取りやめ、SDK のローカルデータを消す(SDK が動いた起動なら次の起動で)。
+  報告済みのものを Meta から取り消すことはできない —— 設定の文言は、オンでもオフでも
+  「一度知らせました」と事実を言う。撤回と送信の開始が重なった場合は、送信の開始前に
+  届いた撤回だけが効く(native はこの 2 つを 1 つのロックの下で判定する)。
 - 言語を切り替えても、許可した人の設定行は消えない(英語で表示する)。撤回の道を
   言語で隠さない。
 - **AdMob の同意(UMP)を Meta の許可として使わない。** UMP の `canRequestAds` は
@@ -277,9 +289,10 @@ Android の自動バックアップが SDK の SharedPreferences を別の端末
 6. Meta のアプリを作成(または既存を使用)し、Android プラットフォームにパッケージ名
    `com.pixapps.simplegames` と Google Play の掲載先を登録する。広告アカウントとの
    関連付けと権限を確認する。
-7. **自動ログを無効にする**: アプリダッシュボードの「アプリイベントの自動ログ」
-   (Automatically log app events / in-app events)を**オフ**。§4 の注意のとおり、
-   ここがオンだと端末の設定が上書きされる。
+7. **自動ログを無効にする(必須・端末からは代替できない)**: アプリダッシュボードの
+   「アプリイベントの自動ログ」(Automatically log app events / in-app events)を**オフ**。
+   §4 の注意のとおり、ここがオンだと報告を送るその起動の中で SDK が `activateApp` を呼び、
+   セッションや購入のイベントが送られうる。
 8. **Automatic Advanced Matching をオフ**、**Codeless(イベント設定ツール)を使わない**。
 9. key hash は Facebook ログイン用であり、このアプリ(ログインなし)では通常不要。
    求められた場合は **Play App Signing の配布鍵**と upload 鍵・debug 鍵を混同しない。
@@ -287,7 +300,8 @@ Android の自動バックアップが SDK の SharedPreferences を別の端末
     チャットに貼らない)。
 11. **Test Events で受信を確認する**: 手動実行(`meta: on`)の APK を実機に入れ、
     許可 → Events Manager の Test Events に `MOBILE_APP_INSTALL` が 1 件届くこと、
-    許可しない / 未回答 / オフラインでは届かないことを見る。ログ上の「SDK 初期化成功」
+    **`fb_mobile_activate_app` やその他のイベントが 1 件も届かないこと**(=7 が効いている)、
+    許可しない / 未回答 / オフラインでは何も届かないことを見る。ログ上の「SDK 初期化成功」
     だけで完了にしない。
 12. 広告マネージャで **Android アプリのインストール最適化**(アプリの宣伝 → アプリの
     インストール)が選べることを実アカウントで確認する。Web トラフィック目的のままにしない。

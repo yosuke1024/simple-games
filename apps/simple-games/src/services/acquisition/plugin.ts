@@ -31,6 +31,12 @@ export interface MetaInstallState {
   consent?: MetaConsent;
   /** Meta has acknowledged this install's one report; nothing more will ever be sent. */
   reported?: boolean;
+  /**
+   * Not reported, and never going to be tried again: the attempts ran out
+   * without Meta accepting the report, or Meta's app settings would switch on
+   * automatic logging (runbook §4). The answer can still be changed.
+   */
+  stopped?: boolean;
   /** When this app was first installed on this device (ms since epoch; Android's firstInstallTime). */
   installedAt?: number;
 }

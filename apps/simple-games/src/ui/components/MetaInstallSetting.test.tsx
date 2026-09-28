@@ -100,6 +100,12 @@ describe('what it says', () => {
     expect(screen.getByText('Off. Nothing is sent to Meta.')).toBeInTheDocument();
   });
 
+  it('says, when off, that a report already sent cannot be recalled', async () => {
+    await renderRow(state({ consent: 'declined', reported: true }));
+    expect(toggle()).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByText(/Meta was already told once/)).toBeInTheDocument();
+  });
+
   it('says the report is still to go while it has not', async () => {
     await renderRow(state({ consent: 'granted' }));
     expect(screen.getByText(/When the app is online, it tells Meta once/)).toBeInTheDocument();
@@ -111,6 +117,14 @@ describe('what it says', () => {
       screen.getByText(
         'On. Meta has been told once that the app was installed. Nothing more is sent.',
       ),
+    ).toBeInTheDocument();
+  });
+
+  it('stays, and says nothing more will be tried, once the native side has stopped', async () => {
+    await renderRow(state({ consent: 'granted', stopped: true }));
+    expect(toggle()).toHaveAttribute('aria-checked', 'true');
+    expect(
+      screen.getByText(/could not be reported to Meta, and the app will not try again/),
     ).toBeInTheDocument();
   });
 });

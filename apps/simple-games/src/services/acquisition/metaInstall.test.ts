@@ -159,6 +159,14 @@ describe('the one report', () => {
     expect(pluginMock.reportInstall).not.toHaveBeenCalled();
   });
 
+  it('is never requested once the native side has stopped trying on this install', async () => {
+    pluginMock.getState.mockResolvedValue(nativeState({ consent: 'granted', stopped: true }));
+    answerConsentLikeNative(nativeState({ stopped: true }));
+    await initMetaInstall();
+    await setMetaInstallAllowed(true);
+    expect(pluginMock.reportInstall).not.toHaveBeenCalled();
+  });
+
   it('waits offline for the way back online, then goes once — no retry loop', async () => {
     setOnlineForTesting(false);
     pluginMock.getState.mockResolvedValue(nativeState({ consent: 'granted' }));
@@ -242,11 +250,12 @@ describe('the one question', () => {
     }
   });
 
-  it('is not asked once answered either way, or once Meta has the report', async () => {
+  it('is not asked once answered either way, once Meta has the report, or once stopped', async () => {
     for (const overrides of [
       { consent: 'granted' as const },
       { consent: 'declined' as const },
       { reported: true },
+      { stopped: true },
     ]) {
       resetMetaInstallForTesting();
       pluginMock.getState.mockResolvedValue(nativeState(overrides));
