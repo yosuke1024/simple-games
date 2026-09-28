@@ -53,9 +53,11 @@ export interface MetaInstallPlugin {
   setConsent(options: { granted: boolean }): Promise<MetaInstallState>;
   /**
    * Starts the one install report, if the native side agrees it is due:
-   * consent granted, not yet reported, not already tried this launch, a
-   * network present. `started` says whether it was handed over, not whether
-   * Meta received it — that is learned at the next launch.
+   * consent granted, not yet reported, not already tried this launch. With
+   * everything but a network ready, the native side waits for Android's
+   * default network once (an OS callback, not a poll) and starts it then.
+   * `started` says whether it was handed over now, not whether Meta received
+   * it — that is learned at the next launch.
    */
   reportInstall(): Promise<{ started: boolean }>;
 }

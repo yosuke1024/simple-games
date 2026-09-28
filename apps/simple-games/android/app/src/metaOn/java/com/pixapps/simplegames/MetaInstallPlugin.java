@@ -114,6 +114,7 @@ public class MetaInstallPlugin extends Plugin {
 
     private boolean attemptedThisLaunch;
     private boolean sdkStarted;
+    private ConnectivityManager.NetworkCallback networkWait;
 
     /**
      * Every field above is read and written under this lock: plugin calls
@@ -209,6 +210,7 @@ public class MetaInstallPlugin extends Plugin {
             }
         }
         if (!granted) {
+            stopWaitingForNetworkLocked();
             if (sdkStarted) {
                 // Already running in this process: take back what can be taken
                 // back now. Its files go at the next launch, before it loads.
@@ -235,30 +237,81 @@ public class MetaInstallPlugin extends Plugin {
 
     private void reportInstallLocked(PluginCall call) {
         JSObject ret = new JSObject();
-        boolean due =
-            configured &&
-            "granted".equals(consent) &&
-            !reported &&
-            !blocked &&
-            !attemptedThisLaunch &&
-            !stopped() &&
-            hasNetwork();
-        if (!due) {
+        if (!dueExceptNetwork()) {
             ret.put("started", false);
             call.resolve(ret);
             return;
         }
+        if (!hasNetwork()) {
+            // Everything but the network is ready. JavaScript's idea of
+            // "online" and Android's default network do not change at the
+            // same instant — the moment a phone comes back, or goes away, they
+            // can disagree — so the wait for the network is held here, where
+            // the attempt is decided, rather than spent on a "no".
+            waitForNetworkLocked();
+            ret.put("started", false);
+            call.resolve(ret);
+            return;
+        }
+        ret.put("started", startAttemptLocked());
+        call.resolve(ret);
+    }
+
+    private boolean dueExceptNetwork() {
+        return configured && "granted".equals(consent) && !reported && !blocked && !attemptedThisLaunch && !stopped();
+    }
+
+    /**
+     * One wait, for the moment Android's default network can reach the
+     * internet — the callback the OS calls anyway, not a poll or a timer —
+     * then unregistered. Everything is checked again when it fires, so a "no"
+     * given meanwhile wins.
+     */
+    private void waitForNetworkLocked() {
+        if (networkWait != null) return;
+        try {
+            ConnectivityManager cm = getContext().getSystemService(ConnectivityManager.class);
+            if (cm == null) return;
+            networkWait =
+                new ConnectivityManager.NetworkCallback() {
+                    @Override
+                    public void onCapabilitiesChanged(Network network, NetworkCapabilities caps) {
+                        if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) networkBack();
+                    }
+                };
+            cm.registerDefaultNetworkCallback(networkWait);
+        } catch (Exception e) {
+            networkWait = null;
+            Log.w(TAG, "could not wait for the network", e);
+        }
+    }
+
+    private void stopWaitingForNetworkLocked() {
+        if (networkWait == null) return;
+        try {
+            ConnectivityManager cm = getContext().getSystemService(ConnectivityManager.class);
+            if (cm != null) cm.unregisterNetworkCallback(networkWait);
+        } catch (Exception e) {
+            Log.w(TAG, "could not stop waiting for the network", e);
+        }
+        networkWait = null;
+    }
+
+    private void networkBack() {
+        synchronized (lock) {
+            if (networkWait == null) return;
+            stopWaitingForNetworkLocked();
+            if (dueExceptNetwork() && hasNetwork()) startAttemptLocked();
+        }
+    }
+
+    /** Spends this launch's attempt and hands the report to the SDK. */
+    private boolean startAttemptLocked() {
         attemptedThisLaunch = true;
         attempts += 1;
         // The attempt is counted before anything goes out, so a crash midway
         // still spends it. A count that cannot be written is not an attempt.
-        if (!writeState()) {
-            ret.put("started", false);
-            call.resolve(ret);
-            return;
-        }
-        ret.put("started", true);
-        call.resolve(ret);
+        if (!writeState()) return false;
 
         final Context app = getContext().getApplicationContext();
         new Thread(
@@ -268,6 +321,7 @@ public class MetaInstallPlugin extends Plugin {
             },
             "MetaInstallReferrer"
         ).start();
+        return true;
     }
 
     /**

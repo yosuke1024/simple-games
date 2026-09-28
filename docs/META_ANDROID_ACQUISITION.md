@@ -251,8 +251,11 @@ Android の自動バックアップが SDK の SharedPreferences を別の端末
 
 - 起動・ゲーム開始・購入/復元は計測を待たない(起動後の fire-and-forget)。
 - オフラインでは SDK を初期化しない。JS がオンラインを確かめ、native も接続の有無を
-  もう一度確かめてから始める。オンライン復帰は OS のイベントを 1 回待つだけで、
-  タイマーもリトライループも作らない。**過去の行動を溜めて後送しない**(溜めるものが無い)。
+  もう一度確かめてから始める。JS の「オンライン」と Android の既定ネットワークは
+  同じ瞬間には切り替わらないので、ネットワーク以外の条件がそろっていて通信だけが無いときは、
+  native が既定ネットワークの復帰を **OS のコールバックで 1 回だけ**待ち、戻ったときに
+  条件を確かめ直して始める(撤回されたら待ちを解除する)。タイマーもリトライループも
+  作らない。**過去の行動を溜めて後送しない**(溜めるものが無い)。
 - 通信の失敗・タイムアウト・SDK の例外・Play サービスや Install Referrer が使えない
   端末でも、ゲーム・保存・課金の復元は影響を受けない(アダプタはすべてを握りつぶし、
   ログだけ残す)。
@@ -337,7 +340,8 @@ Android の自動バックアップが SDK の SharedPreferences を別の端末
 | Meta 入り release ビルド(ダミー ID): 権限・provider の差分 | **済** — 権限は `BIND_GET_INSTALL_REFERRER_SERVICE` の 1 つだけ増加、`ACCESS_ADSERVICES_CUSTOM_AUDIENCE` は外れ、`FacebookInitProvider` と 2 つの receiver は不在、増えた manifest 要素は false の meta-data 4 つだけ |
 | Meta 入り release ビルド: APK サイズ | **済** — 5,248,830 bytes(Meta なし比 +192,348 bytes、R8 後の APK。**ストアの配布サイズではない**) |
 | エミュレータ(Pixel_7 / API 37、機内モード、Meta 入り release): 起動・質問・設定 | **済**(2026-09-28)— R8 後も起動、ゲームから戻った瞬間に質問が 1 回出る、機内モードで「Allow」を押しても SDK が初期化されない(SDK のログ 0 件・接続 0 件)、設定の行が「次にオンラインになったとき」を表示、オフにすると「Nothing is sent」になり再起動後も保持、再起動後に質問は出ない |
-| 通信の観測(オンラインで: 同意前に 0 件・許可後に `graph.facebook.com` へ報告 1 件・撤回後 0 件) | **未** — エミュレータのネットワークを有効にする操作が自動モードの安全分類器に止められた。オーナーの判断待ち(§12) |
+| 通信の観測(オンライン、2026-09-28、オーナー承認のうえ) | **済** — エミュレータ(Pixel_7 / API 37、Meta 入り release、ダミー ID)の全 TCP をローカルのプロキシ経由にし、**Meta の全経路(AS32934 の公表 572 プレフィクス)とホスト名への接続は拒否して記録だけ**した(Meta には何も届いていない)。結果: 同意前・起動直後 0 件 / 「Allow」直後に Meta 宛の接続試行が始まる(SDK のログ上はアプリ設定 `GET /v16.0/app` 1 件と gatekeeper `GET /v16.0/app/mobile_sdk_gk` 4 件。インストール報告の POST は、SDK が本文を書いた後にしかログを出さないため、接続拒否の下ではログに出ない)/ 受理されないまま 2・3 回目の起動で再試行し、**4 回目以降の起動は 0 件** / 「Don't allow」後とその再起動後は 0 件、質問も再表示されない / 機内モードで許可 → 0 件、同じ起動でオンライン復帰 → 1 回分の試行、2 度目の復帰は 0 件 / オフにした後 0 件 |
+| 報告の中身(同上、一時的な診断ビルドで SDK が組み立てる JSON を出力) | **済** — `event=MOBILE_APP_INSTALL`、`anon_id`、`application_tracking_enabled=false`、`advertiser_id_collection_enabled=false`、`extinfo`(形式版 / パッケージ名 / versionCode / versionName / OS 版 / 機種 / ロケール / タイムゾーン略称 / 通信事業者 / 画面幅・高さ・密度 / CPU コア数 / ストレージ総量・空き / タイムゾーン名)、`application_package_name`。**`advertiser_id` は無い**。`attribution` はエミュレータに Facebook アプリが無いので無い。`install_referrer` / `installer_package` は adb でのインストールなので無い(Play 経由なら付く)。診断用のログ出力はコミットしていない |
 | 起動時間・メモリ(Meta 入り vs なし、release/R8) | **未** |
 | 低価格の Android 実機 | **未** |
 | Events Manager の Test Events で受信 | **未**(オーナーの Meta アプリが要る) |
@@ -403,9 +407,10 @@ Android の自動バックアップが SDK の SharedPreferences を別の端末
 
 ## 12. 未完了事項
 
-- **オンラインでの通信観測が未実施。** 依存の追加と native アダプタはオーナーの承認
-  (2026-09-28)を得て実装したが、Meta 入りビルドをオンラインで動かす操作は自動モードの
-  安全分類器に止められた。Test Events での確認(§8 の 11)で代えるか、別途観測する。
+- **実際に Meta が受理する経路は未確認。** エミュレータでの観測は Meta への接続を
+  すべて拒否した状態で行ったので、報告が受理されたとき(`{appId}ping` の記録 → 次の
+  起動で「報告済み」→ SDK のデータ削除)は動かしていない。本物の Meta アプリでの
+  Test Events(§8 の 11)で確かめる。
 - §8 の Google Play / 公開文面 / Meta 側の作業(すべてオーナー)。
 - §9 の「未」の項目(Meta 入りビルドの実測・通信観測・実機・Test Events)。
 - §10 の開始値の記録。
