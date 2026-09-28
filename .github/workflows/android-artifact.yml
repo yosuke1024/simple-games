@@ -1,0 +1,77 @@
+# Android artifact check on pull requests (issue #204).
+#
+# The root CI never builds the Android app, so until now what a dependency
+# change did to the shipped APK — a permission merged in from a library, an
+# SDK initializer registered as a ContentProvider — was first visible in the
+# tag-driven release build. This builds the release variant the way
+# android-release.yml does, unsigned, and runs the same artifact audit on it:
+#
+#   off — the build every release gets unless Meta is asked for: the Meta SDK
+#         must be absent from the dex and the manifest.
+#   on  — the Meta variant, with a placeholder App ID / Client Token that no
+#         Meta app has. It is compiled and inspected, never installed or run,
+#         so nothing is sent anywhere; it exists so a change that breaks the
+#         Meta variant (or lets it request something new) is red on the PR
+#         instead of on the day someone enables it.
+#
+# Only when something that can change the APK changed.
+name: Android artifact
+
+on:
+  pull_request:
+    paths:
+      - 'apps/simple-games/android/**'
+      - 'apps/simple-games/package.json'
+      - 'apps/simple-games/capacitor.config.ts'
+      - 'pnpm-lock.yaml'
+      - '.github/scripts/check-android-artifact.sh'
+      - '.github/workflows/android-artifact.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        meta: [off, on]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build web assets
+        run: pnpm --filter simple-games build
+
+      - name: Capacitor sync
+        working-directory: apps/simple-games
+        run: pnpm exec cap sync android
+
+      - name: Gradle release build (unsigned)
+        working-directory: apps/simple-games/android
+        run: ./gradlew assembleRelease
+        env:
+          SG_META_ANDROID_ENABLED: ${{ matrix.meta == 'on' && 'true' || '' }}
+          # Placeholders in the shape build.gradle validates. Not a Meta app:
+          # this APK is inspected, never run.
+          META_ANDROID_APP_ID: ${{ matrix.meta == 'on' && '1000000000000000' || '' }}
+          META_ANDROID_CLIENT_TOKEN: ${{ matrix.meta == 'on' && '00000000000000000000000000000000' || '' }}
+
+      - name: Audit the Android artifact
+        run: bash .github/scripts/check-android-artifact.sh ${{ matrix.meta }}

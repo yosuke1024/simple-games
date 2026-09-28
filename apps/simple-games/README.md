@@ -13,7 +13,8 @@
 - 助けは常に無料・無制限(広告視聴・課金不要)。ただし全ゲームで同じ機能を並べず、
   そのゲームの中身を空にしない形の助けを用意します(下表)
 - 広告はオンライン時の小さなバナー 1 つだけ(買い切りで永久に削除可能)
-- Progress stays on your device(クラウド同期なし。Analytics なし)
+- Progress stays on your device(クラウド同期なし。Analytics なし。Android の Meta
+  インストール計測は [docs/META_ANDROID_ACQUISITION.md](../../docs/META_ANDROID_ACQUISITION.md))
 
 ## 収録ゲーム
 
@@ -138,6 +139,13 @@ minSdk 24(Android 7.0)+ **WebView Chromium 88 相当(2021 年初)**。JS は es2
 - appId: `com.pixapps.simplegames`
 - appName: `Simple Games: Offline Games`(`capacitor.config.ts` が単一の出所)
 - 収録ゲームの追加・更新は 1 つのアプリリリースとして出す(アプリ単位で更新)
+
+Meta インストール計測(issue #204)は既定で**ビルドに含まれない**。含めるのは
+release ビルドに `SG_META_ANDROID_ENABLED=true` と `META_ANDROID_APP_ID` /
+`META_ANDROID_CLIENT_TOKEN` を渡したときだけで(debug には何を渡しても入らない)、
+ビルド後は `bash .github/scripts/check-android-artifact.sh on|off` で APK を検査する。
+手順・送信内容・本番有効化の前提は
+[docs/META_ANDROID_ACQUISITION.md](../../docs/META_ANDROID_ACQUISITION.md)。
 
 ## iOS
 

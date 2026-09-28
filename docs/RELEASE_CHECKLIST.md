@@ -68,14 +68,16 @@ grep で確定判定できる分は CI(`Brand principles` ジョブ)が毎 PR �
 bash .github/scripts/check-principles.sh
 ```
 
-- [ ] 原則ガードが緑(Core に通信 API なし — 例外は `src/club/` のみ / バナー以外の広告なし / トラッキング依存なし /
-      Android 権限は INTERNET・BILLING のみ / 本番広告 ID がソースにない)
+- [ ] 原則ガードが緑(Core に通信 API なし — 例外は `src/club/` のみ / バナー以外の広告なし / トラッキング依存なし —
+      例外は Android release 限定の `facebook-core` 1 行のみ / Android 権限は INTERNET・BILLING のみ /
+      本番広告 ID がソースにない / Meta 計測の形)
 
 ガードが見ていない分は、コードを grep して**存在しないこと**を確認する:
 
 - [ ] `interstitial` / `rewarded` / `appOpen` の広告実装が存在しない
 - [ ] analytics / トラッキング / Remote Config の実装が native ビルドに存在しない
-      (Web 版のページ解析は `--mode web` 限定 — [WEB_VERSION.md](WEB_VERSION.md)「計測」)
+      (Web 版のページ解析は `--mode web` 限定 — [WEB_VERSION.md](WEB_VERSION.md)「計測」。
+      Android の Meta インストール計測は、このリリースで有効化した場合だけ §5.15 を見る)
 - [ ] ストリーク(連続日数)の計算・表示が存在しない
 - [ ] Hint / Undo / 再挑戦が広告視聴や購入の後ろに置かれていない
 - [ ] ゲーム機能の課金ロックが存在しない(唯一の商品は広告削除)
@@ -529,13 +531,41 @@ Solitaire / Spider / FreeCell は**タップ操作を残したまま**ドラッ�
       [GAME_LIFECYCLE.md](GAME_LIFECYCLE.md))
 - [ ] キーボードを使わない端末で、これまでと何も変わっていないこと
 
+## 5.15 Android の獲得計測(Meta)([META_ANDROID_ACQUISITION.md](META_ANDROID_ACQUISITION.md), issue #204)
+
+**このリリースで Meta を有効化するか**を最初に決める(リポジトリ変数
+`SG_META_ANDROID_ENABLED`)。有効化しないリリースで見るのは 1 項目目だけ。
+
+- [ ] ワークフローのサマリーの「Meta インストール計測」が意図どおり(無効 / 有効)で、
+      「Audit the Android artifact」が緑(無効なら dex に `com/facebook` が 0 件、
+      有効なら SDK が入り自動動作が false、どちらも権限は許可リスト内)
+
+有効化するリリースだけ:
+
+- [ ] runbook §8 の前提がすべて済んでいる(対象年齢 / データ セーフティ / 公開
+      プライバシーポリシーの Android の節 / Meta 側の自動ログ・AAM・Codeless の無効化 /
+      Secrets)。**1 つでも欠けたら変数を入れない**
+- [ ] 手動実行(`meta: on`)の APK を実機に入れ、Events Manager の Test Events で:
+      許可 → `MOBILE_APP_INSTALL` が 1 件 / 許可しない・未回答・機内モードでは 0 件
+- [ ] 同意前・拒否後に `graph.facebook.com` への通信が 0 件(通信を観測して確かめる。
+      「イベントを呼んでいない」で代えない)
+- [ ] 質問はゲームから戻ったときだけ・1 回だけ・英語と日本語だけで出る。設定の
+      「Ad measurement (Meta)」でオン / オフでき、オフが再起動後も保持される
+- [ ] 機内モードの初回起動で全ゲームが動き、オンライン復帰で報告が 1 回だけ試みられる
+- [ ] 既存ユーザー相当(前の版からの更新)には質問が出ず、保存データと広告削除の
+      権利が残っている
+- [ ] Meta 入り / なしの release ビルドで、配布サイズ・起動時間・メモリの差を実測し
+      runbook §9 に書いた(低価格実機での結果は、測ったときだけ書く)
+- [ ] 広告マネージャで Android アプリのインストール最適化が選べる
+
 ## 6. ストア掲載
 
 - [ ] `apps/simple-games/store/listing.md` の文言を各言語へ反映
 - [ ] スクリーンショットを撮影(盤面中心・文字は最小限)
 - [ ] プライバシーポリシーをホスティングし、URL を Play Console に登録
 - [ ] データセーフティ欄を公開ページ <https://pixapps.ai/simple-games/privacy> と
-      一致させる(そこが正本。[PRIVACY_POLICY.md](PRIVACY_POLICY.md) はポインタ)
+      一致させる(そこが正本。[PRIVACY_POLICY.md](PRIVACY_POLICY.md) はポインタ)。
+      Meta を有効化するリリースでは SDK 経由の収集・共有も含める(§5.15)
 - [ ] 設定画面の「プライバシーポリシー」「利用規約」が実機で開くことを確認
       (アプリは文面を同梱せずリンクするだけになった)
 - [ ] 「Coming Soon」表記や未実装ゲームの名前が掲載文に含まれていない

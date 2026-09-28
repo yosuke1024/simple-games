@@ -12,8 +12,13 @@ GA4 と Search Console の読み方、判断の手順、そしてこのデータ
 
 **アプリには Analytics を入れない。** これは Simple Games の約束であり
 ([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「適用範囲」)、この文書は
-その境界を動かさない。Android / iOS へ SDK・イベント・識別子を足さずに、
-Web 版の集計と Play Console の集計だけで次の投資先を決められる状態を作る。
+その境界を動かさない。次の投資先は、Web 版の集計と Play Console の集計だけで
+決める。
+
+**唯一の例外は Android の獲得計測(Meta)で、これはこの文書の計測ではない**
+(2026-09-27、issue #204 — 下の「Android の獲得計測(Meta)との関係」)。
+許可した利用者のインストールを 1 回だけ Meta に知らせるもので、どのゲームが遊ばれたかは
+1 つも分からない。この文書の問い(どのゲームに手を入れるか)に使わない。
 
 ## 答えたい問い
 
@@ -246,6 +251,33 @@ issue #83(PR #88、2026-08-30)で実装され、`app/webRoute.ts` が
   リテンションコホートではない。
 - **低母数で断定しない。** 件数が 2 桁のゲームで率を語らない。
 
+## Android の獲得計測(Meta)との関係
+
+2026-09-27 決定(issue #204)。方針は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)
+「Android の獲得計測(Meta)」、運用は [META_ANDROID_ACQUISITION.md](META_ANDROID_ACQUISITION.md)。
+ここには、この文書の計測と混ぜないための線だけを書く。
+
+| | Web 計測(この文書) | Android の獲得計測(Meta) |
+| --- | --- | --- |
+| 答える問い | どのゲームに手を入れるか | Meta 広告からの Android インストールがいくらで何件起きたか |
+| 送り先 | GA4(`pixapps` プロパティ) | Meta(Events Manager / 広告マネージャ) |
+| 送るもの | `page_view` / `game_open` / `game_close` | インストールの報告 1 件(許可した人だけ、1 回だけ) |
+| ゲーム別の情報 | ある(`game_id`) | **無い** |
+| 期限 | なし(方針が続く限り) | 累計 1,000+ installs で停止と撤去を判断 |
+
+- **Meta の数字を「アプリの利用」として読まない。** 許可しなかった人・起動しなかった
+  インストールは Meta に現れない。Meta の成果は Meta が数えたアトリビューションで、
+  Play Console のインストール数とは別の指標として並べる(runbook §10)。
+- **1,000 installs は Play Console の累計インストールで判定する**(Meta 経由だけの
+  1,000 でも MAU でもない)。採用する指標・単位・開始値は配信前にオーナーが runbook に
+  記録する。
+- **Web のクリック単価と Android の CPI を優劣比較しない。** 目的が違う(Web は
+  遊ばれるページへの流入、Android はインストール)。
+- 上の「このデータで言えないこと」の「アプリへの送客は、この計測では 1 件も見えない」は、
+  **Web → Store の導線については今も真**である。Android の獲得計測が見るのは Meta 広告 →
+  Google Play の経路だけで、Web のアプリ案内カードからのインストールは相変わらず
+  どこにも現れない。
+
 ## 実施していない検証を成功扱いにしない
 
 [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md) の原則をこの文書にも当てる。
@@ -354,7 +386,8 @@ Network タブでは見ていない — Realtime に届いた以上、送信は�
 `screen_view` や、`PixApps App ID` ユーザープロパティ、参照元 `google-play` が
 同じ画面に並ぶ — **これらは PixApps の他のアプリ(Firebase ストリーム)のもの**
 であり、Simple Games のアプリ版は Analytics を持たない
-([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「適用範囲」)。
+([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「適用範囲」。Android の獲得計測は
+GA4 ではなく Meta へ送るので、ここには現れない)。
 
 だから**素の Realtime とイベント一覧は、この文書の対象ではない**。
 上の Exploration が `content_group = simple_games_play` で絞るのは、

@@ -5,6 +5,7 @@ import { App } from './app/App';
 import { initShellState, startAdsUnlessRemoved } from './app/boot';
 import { resolveLocale } from './i18n';
 import { initNativeStore } from './monetization/nativeStore';
+import { initMetaInstall } from './services/acquisition/metaInstall';
 import { webAnchorEnabled } from './services/ads/web/config';
 import { SettingsProvider } from './state/SettingsContext';
 // Display font (title, tiles, scores): bundled latin subsets only, ~36 KB —
@@ -93,6 +94,13 @@ async function boot(): Promise<void> {
   startAdsUnlessRemoved();
   void initNativeStore();
   void SplashScreen.hide().catch(() => undefined);
+
+  // Fire-and-forget, Android only, and inert in every build without Meta:
+  // the Meta install measurement's one report, sent only if the player said
+  // yes and it is still due (issue #204, docs/META_ANDROID_ACQUISITION.md).
+  // Independent of the ad removal — it is about how the app was found, not
+  // about whether a banner shows.
+  void initMetaInstall();
 }
 
 void boot();

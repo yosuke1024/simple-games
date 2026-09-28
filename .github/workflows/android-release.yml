@@ -23,6 +23,16 @@ on:
         type: choice
         options: [production, test]
         default: production
+      # Meta のインストール計測(issue #204、docs/META_ANDROID_ACQUISITION.md)。
+      # auto = リポジトリ変数 SG_META_ANDROID_ENABLED に従う(タグと同じ)。
+      # on   = 変数に関わらずこの手動ビルドだけ Meta 入りで作る(Test Events での
+      #        実機確認用。secrets が無ければ失敗する)。
+      # off  = 変数に関わらず Meta なし。
+      meta:
+        description: 'Meta インストール計測(auto: 変数に従う / on / off)'
+        type: choice
+        options: [auto, on, off]
+        default: auto
   push:
     tags:
       - 'v*'
@@ -183,6 +193,43 @@ jobs:
             fi
           fi
 
+      # Meta install measurement is two-way, and off unless asked for by name
+      # (issue #204, docs/META_ANDROID_ACQUISITION.md):
+      #   on  — the repository variable SG_META_ANDROID_ENABLED is 'true' (or a
+      #         manual dispatch chose `meta: on`). The App ID and Client Token
+      #         come from secrets and must both be there: a build that was told
+      #         to carry Meta and cannot is a failed build, not a quiet one.
+      #   off — everything else. The Meta SDK is then not in the build at all
+      #         (app/build.gradle), which check-android-artifact.sh proves on
+      #         the APK below.
+      # The switch is independent of the ad mode above: stopping acquisition
+      # measurement never touches the banner, and the reverse.
+      - name: Decide Meta install measurement mode
+        env:
+          META_INPUT: ${{ inputs.meta || 'auto' }}
+          META_VARIABLE: ${{ vars.SG_META_ANDROID_ENABLED }}
+          META_APP_ID: ${{ secrets.META_ANDROID_APP_ID }}
+          META_CLIENT_TOKEN: ${{ secrets.META_ANDROID_CLIENT_TOKEN }}
+        run: |
+          set -euo pipefail
+          want=off
+          case "$META_INPUT" in
+            on) want=on ;;
+            off) want=off ;;
+            *) [ "$META_VARIABLE" = "true" ] && want=on ;;
+          esac
+          if [ "$want" = on ]; then
+            if [ -z "$META_APP_ID" ] || [ -z "$META_CLIENT_TOKEN" ]; then
+              echo "::error::Meta 計測を有効にするビルドですが、META_ANDROID_APP_ID / META_ANDROID_CLIENT_TOKEN の secret が揃っていません。"
+              exit 1
+            fi
+            echo "SG_META_MODE=on" >> "$GITHUB_ENV"
+            echo "- Meta インストール計測: **有効**(facebook-core、同意後に 1 回だけ — docs/META_ANDROID_ACQUISITION.md)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "SG_META_MODE=off" >> "$GITHUB_ENV"
+            echo "- Meta インストール計測: 無効(SDK はビルドに含まれない)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Build web assets
         run: pnpm --filter simple-games build
         env:
@@ -231,11 +278,23 @@ jobs:
           # test / disabled leave this empty → build.gradle falls back to
           # Google's test application ID (docs/ADS_POLICY.md 広告 ID の管理).
           ADMOB_ANDROID_APP_ID: ${{ env.SG_ADS_MODE == 'production' && secrets.ADMOB_ANDROID_APP_ID || '' }}
+          # Empty unless the step above decided `on`; build.gradle refuses an
+          # `on` without a well-formed pair.
+          SG_META_ANDROID_ENABLED: ${{ env.SG_META_MODE == 'on' && 'true' || '' }}
+          META_ANDROID_APP_ID: ${{ env.SG_META_MODE == 'on' && secrets.META_ANDROID_APP_ID || '' }}
+          META_ANDROID_CLIENT_TOKEN: ${{ env.SG_META_MODE == 'on' && secrets.META_ANDROID_CLIENT_TOKEN || '' }}
           SG_VERSION_NAME: ${{ steps.version.outputs.name }}
           SG_VERSION_CODE: ${{ steps.version.outputs.code }}
           SG_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           SG_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           SG_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      # What the build actually contains, read from the merged manifest and the
+      # dex rather than from the source: every permission on the allow-list,
+      # no SDK initializer that runs at process start, and the Meta SDK
+      # present exactly when this build asked for it (issue #204).
+      - name: Audit the Android artifact
+        run: bash .github/scripts/check-android-artifact.sh "$SG_META_MODE"
 
       # Gradle silently produces an unsigned bundle when the signing config is
       # absent, so confirm the signature block is actually in the AAB instead of

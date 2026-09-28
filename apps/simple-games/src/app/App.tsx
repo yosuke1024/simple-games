@@ -26,10 +26,13 @@
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { bookMetaInstallAsk, shouldAskMetaInstall } from '../services/acquisition/metaInstall';
 import { markReviewPromptShown, shouldPromptReview } from '../services/review';
 import { releaseSound } from '../services/sound';
+import { useSettings } from '../state/SettingsContext';
 import { GameErrorBoundary } from '../ui/components/GameErrorBoundary';
 import { GameLoadingFallback } from '../ui/components/GameLoadingFallback';
+import { MetaInstallPrompt } from '../ui/components/MetaInstallPrompt';
 import { ReviewPrompt } from '../ui/components/ReviewPrompt';
 import { CollectionHomeScreen } from '../ui/screens/CollectionHomeScreen';
 import { SettingsScreen } from '../ui/screens/SettingsScreen';
@@ -108,6 +111,13 @@ function initialView(): View {
 export function App() {
   const [view, setView] = useState<View>(initialView);
   const [reviewPromptOpen, setReviewPromptOpen] = useState(false);
+  const [metaPromptOpen, setMetaPromptOpen] = useState(false);
+  // The language on screen, readable from `exitGame` without giving it a
+  // dependency: the Meta question is asked only in the languages its text was
+  // checked in (services/acquisition/metaInstall.ts).
+  const { locale } = useSettings();
+  const localeRef = useRef(locale);
+  localeRef.current = locale;
   // Bumped by the error screen's retry so the game subtree remounts and the
   // recreated lazy wrapper (lazyRoots.ts) gets a fresh chance to load.
   const [gameNonce, setGameNonce] = useState(0);
@@ -173,6 +183,23 @@ export function App() {
    */
   const closeReviewPrompt = useCallback(() => setReviewPromptOpen(false), []);
 
+  /**
+   * The Meta install question (issue #204) uses the review question's
+   * doorway and takes precedence over it: it is asked at most once, in the
+   * first week after install, and on Android builds that carry Meta only
+   * (services/acquisition/metaInstall.ts) — the review question waits until
+   * five wins anyway. The two never share a return: one question per pause.
+   * The showing is booked as a "no" before it opens, so every way of closing
+   * it — including back, through the collection — is an answer.
+   */
+  const offerMetaInstallIfDue = useCallback((): boolean => {
+    if (!shouldAskMetaInstall(localeRef.current)) return false;
+    bookMetaInstallAsk();
+    setMetaPromptOpen(true);
+    return true;
+  }, []);
+  const closeMetaPrompt = useCallback(() => setMetaPromptOpen(false), []);
+
   // Opening a game is also what feeds the home's shortcut row: the shell
   // records what it mounted, so no game has to report anything (recentGames.ts).
   // Recorded at the tap, not after the chunk resolves: the row reflects what
@@ -202,9 +229,9 @@ export function App() {
     if (current.kind !== 'game') return;
     leaveGame(current.gameId);
     show({ kind: 'collection' });
-    offerReviewIfDue();
+    if (!offerMetaInstallIfDue()) offerReviewIfDue();
     if (webRoutingEnabled()) popRoute();
-  }, [leaveGame, offerReviewIfDue, show]);
+  }, [leaveGame, offerMetaInstallIfDue, offerReviewIfDue, show]);
 
   /**
    * Boot: count a direct arrival on a game as an open, so the shortcut row
@@ -371,9 +398,12 @@ export function App() {
       <CollectionHomeScreen
         onOpenGame={openGame}
         onOpenSettings={openSettings}
-        dismissReviewPrompt={reviewPromptOpen ? closeReviewPrompt : null}
+        dismissDialog={
+          reviewPromptOpen ? closeReviewPrompt : metaPromptOpen ? closeMetaPrompt : null
+        }
       />
       {reviewPromptOpen && <ReviewPrompt onClose={closeReviewPrompt} />}
+      {metaPromptOpen && <MetaInstallPrompt onClose={closeMetaPrompt} />}
     </>
   );
 }
