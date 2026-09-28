@@ -236,7 +236,11 @@ jobs:
           fi
 
       - name: Build web assets
-        run: pnpm --filter simple-games build
+        # By path, not by name: the root package is also called
+        # "simple-games", and `--filter simple-games build` runs the root's
+        # `turbo run build` beside the app's own `vite build` — two builds
+        # emptying the same dist/ at once (ENOTEMPTY on dist/assets).
+        run: pnpm --filter ./apps/simple-games build
         env:
           VITE_ADMOB_ANDROID_BANNER_ID: ${{ env.SG_ADS_MODE == 'production' && secrets.ADMOB_ANDROID_BANNER_ID || '' }}
           VITE_ADMOB_USE_TEST_ADS: ${{ env.SG_ADS_MODE == 'test' && 'true' || '' }}

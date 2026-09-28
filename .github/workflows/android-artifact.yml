@@ -62,7 +62,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Build web assets
-        run: pnpm --filter simple-games build
+        # By path, not by name: the root package is also called
+        # "simple-games", and `--filter simple-games build` runs the root's
+        # `turbo run build` beside the app's own `vite build` — two builds
+        # emptying the same dist/ at once (ENOTEMPTY on dist/assets).
+        run: pnpm --filter ./apps/simple-games build
 
       - name: Capacitor sync
         working-directory: apps/simple-games
