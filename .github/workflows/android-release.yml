@@ -28,10 +28,13 @@ on:
       # on   = 変数に関わらずこの手動ビルドだけ Meta 入りで作る(Test Events での
       #        実機確認用。secrets が無ければ失敗する)。
       # off  = 変数に関わらず Meta なし。
+      # on / off は引用符が要る。無いと手動実行の API が YAML 1.1 の真偽値として
+      # 読み、`-f meta=on` を「許可された値ではない」と拒否する(PR のマトリクスは
+      # 文字列のまま読むので、CI では気づけない)。
       meta:
         description: 'Meta インストール計測(auto: 変数に従う / on / off)'
         type: choice
-        options: [auto, on, off]
+        options: [auto, 'on', 'off']
         default: auto
   push:
     tags:
