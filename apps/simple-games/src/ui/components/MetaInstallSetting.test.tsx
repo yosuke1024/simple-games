@@ -106,6 +106,12 @@ describe('what it says', () => {
     expect(screen.getByText(/Meta was already told once/)).toBeInTheDocument();
   });
 
+  it('does not claim nothing was sent, when off after a report was started but not yet confirmed', async () => {
+    await renderRow(state({ consent: 'declined', attempted: true }));
+    expect(screen.queryByText('Off. Nothing is sent to Meta.')).not.toBeInTheDocument();
+    expect(screen.getByText(/may have reached Meta once/)).toBeInTheDocument();
+  });
+
   it('says the report is still to go while it has not', async () => {
     await renderRow(state({ consent: 'granted' }));
     expect(screen.getByText(/When the app is online, it tells Meta once/)).toBeInTheDocument();
@@ -124,7 +130,9 @@ describe('what it says', () => {
     await renderRow(state({ consent: 'granted', stopped: true }));
     expect(toggle()).toHaveAttribute('aria-checked', 'true');
     expect(
-      screen.getByText(/could not be reported to Meta, and the app will not try again/),
+      screen.getByText(
+        /Meta did not confirm this install’s report, and the app will not try again/,
+      ),
     ).toBeInTheDocument();
   });
 });

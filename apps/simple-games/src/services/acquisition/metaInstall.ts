@@ -80,6 +80,7 @@ function normalize(raw: MetaInstallState | null | undefined): MetaInstallState {
     consent,
     reported: raw.reported === true,
     stopped: raw.stopped === true,
+    attempted: raw.attempted === true,
     installedAt,
   };
 }

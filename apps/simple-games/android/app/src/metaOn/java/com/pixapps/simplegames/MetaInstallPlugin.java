@@ -389,6 +389,10 @@ public class MetaInstallPlugin extends Plugin {
         ret.put("consent", consent);
         ret.put("reported", reported);
         ret.put("stopped", !reported && stopped());
+        // A report may have gone out without Meta's answer having been read
+        // yet (that happens at the next launch), so Settings must not say
+        // nothing was ever sent.
+        ret.put("attempted", attempts > 0);
         ret.put("installedAt", installedAt());
         return ret;
     }

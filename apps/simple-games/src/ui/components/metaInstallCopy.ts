@@ -37,6 +37,7 @@ export interface MetaInstallCopy {
   settingLabel: string;
   settingOff: string;
   settingOffReported: string;
+  settingOffMaybeSent: string;
   settingPending: string;
   settingReported: string;
   settingStopped: string;
@@ -55,11 +56,13 @@ const en: MetaInstallCopy = {
   settingOff: 'Off. Nothing is sent to Meta.',
   settingOffReported:
     'Off. Meta was already told once that the app was installed; that cannot be recalled. Nothing more is sent.',
+  settingOffMaybeSent:
+    'Off. Nothing more is sent to Meta. A report the app had already started may have reached Meta once; that cannot be recalled.',
   settingPending:
     'On. When the app is online, it tells Meta once that it has been installed. Turning this off before then cancels it.',
   settingReported: 'On. Meta has been told once that the app was installed. Nothing more is sent.',
   settingStopped:
-    'On, but this install could not be reported to Meta, and the app will not try again. Nothing is sent.',
+    'On, but Meta did not confirm this install’s report, and the app will not try again. Nothing more is sent.',
 };
 
 const ja: MetaInstallCopy = {
@@ -75,12 +78,14 @@ const ja: MetaInstallCopy = {
   settingOff: 'オフ。Meta には何も送りません。',
   settingOffReported:
     'オフ。インストールされたことは一度 Meta に知らせ済みで、取り消せません。これ以上は何も送りません。',
+  settingOffMaybeSent:
+    'オフ。これ以上 Meta には何も送りません。すでに始めた報告が一度 Meta に届いている可能性があり、それは取り消せません。',
   settingPending:
     'オン。オンラインのとき、インストールされたことを一度だけ Meta に知らせます。それより前にオフにすれば取りやめます。',
   settingReported:
     'オン。インストールされたことを Meta に一度知らせました。これ以上は何も送りません。',
   settingStopped:
-    'オン。ただし、このインストールは Meta に知らせられませんでした。これ以上は試さず、何も送りません。',
+    'オン。ただし Meta による報告の受理を確認できなかったため、これ以上は試さず、何も送りません。',
 };
 
 /**

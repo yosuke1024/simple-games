@@ -37,6 +37,12 @@ export interface MetaInstallState {
    * automatic logging (runbook §4). The answer can still be changed.
    */
   stopped?: boolean;
+  /**
+   * An attempt was made on this install. Meta's answer is read at the next
+   * launch, so until then a report may already have been received even though
+   * `reported` is false.
+   */
+  attempted?: boolean;
   /** When this app was first installed on this device (ms since epoch; Android's firstInstallTime). */
   installedAt?: number;
 }

@@ -28,7 +28,9 @@ export function MetaInstallSetting() {
   const note = !allowed
     ? state.reported
       ? copy.settingOffReported
-      : copy.settingOff
+      : state.attempted
+        ? copy.settingOffMaybeSent
+        : copy.settingOff
     : state.reported
       ? copy.settingReported
       : state.stopped
