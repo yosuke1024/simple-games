@@ -112,16 +112,25 @@ public class MetaInstallPlugin extends Plugin {
     private boolean blocked;
     private int attempts;
 
-    private boolean attemptedThisLaunch;
-    private boolean sdkStarted;
+    /*
+     * Per process, not per plugin instance: if Android recreates the activity,
+     * a new bridge builds a new instance of this class in the same process,
+     * and "one attempt per launch" and "the SDK is running" are facts about
+     * the process. The record in no_backup/ is re-read by each instance.
+     */
+    private static boolean attemptedThisLaunch;
+    private static boolean sdkStarted;
+
     private ConnectivityManager.NetworkCallback networkWait;
 
     /**
      * Every field above is read and written under this lock: plugin calls
      * arrive on Capacitor's plugin thread, the SDK is started on the main
-     * thread, and a "no" must not slip between the last check and the start.
+     * thread, the network callback on a system thread, and a "no" must not
+     * slip between the last check and the start. Per process, like the two
+     * flags above.
      */
-    private final Object lock = new Object();
+    private static final Object lock = new Object();
 
     @Override
     public void load() {
@@ -297,12 +306,31 @@ public class MetaInstallPlugin extends Plugin {
         networkWait = null;
     }
 
+    /**
+     * The wait ends only when the attempt starts or when something other than
+     * the network makes it no longer due. A network that flickers away again
+     * before this runs leaves the wait in place for its next return.
+     */
     private void networkBack() {
         synchronized (lock) {
             if (networkWait == null) return;
+            if (!dueExceptNetwork()) {
+                stopWaitingForNetworkLocked();
+                return;
+            }
+            if (!hasNetwork()) return;
             stopWaitingForNetworkLocked();
-            if (dueExceptNetwork() && hasNetwork()) startAttemptLocked();
+            startAttemptLocked();
         }
+    }
+
+    /** The activity is going away: this instance stops waiting, whatever for. */
+    @Override
+    protected void handleOnDestroy() {
+        synchronized (lock) {
+            stopWaitingForNetworkLocked();
+        }
+        super.handleOnDestroy();
     }
 
     /** Spends this launch's attempt and hands the report to the SDK. */
