@@ -52,7 +52,12 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      # `packages` is set because the action's default ("tools platform-tools")
+      # names the SDK package `tools`, which the sdkmanager on current runner
+      # images no longer has — the step fails before anything is built.
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
 
       - run: pnpm install --frozen-lockfile
 
