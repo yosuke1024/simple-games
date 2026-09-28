@@ -79,6 +79,12 @@ public class MetaInstallPlugin extends Plugin {
     private static final String STATE_FILE = "meta-install.properties";
 
     /**
+     * The same record, renamed when a "no" could not be written: a rename
+     * needs no free space, and its mere presence reads as "declined".
+     */
+    private static final String DECLINED_FILE = "meta-install.declined.properties";
+
+    /**
      * Launches that may try before the install is given up on. A report that
      * Meta keeps refusing (a misconfigured app, say) must not become an SDK
      * start on every launch forever.
@@ -142,7 +148,10 @@ public class MetaInstallPlugin extends Plugin {
      */
     private void checkLastAttempt(Context context) {
         try {
-            if (!reported && !blocked && "granted".equals(consent) && attempts > 0) {
+            // Whatever the answer is now: a report Meta accepted before a
+            // later "no" must still count as sent, or a later "yes" would
+            // send a second one.
+            if (!reported && !blocked && attempts > 0) {
                 boolean changed = false;
                 if (sdkRecordedAcceptedReport(context)) {
                     reported = true;
@@ -188,13 +197,15 @@ public class MetaInstallPlugin extends Plugin {
                 call.reject("could not record the answer");
                 return;
             }
-            // A no we could not record must still be a no at the next launch,
-            // where the file would otherwise read back the old yes. Without
-            // the file the next launch reads "never asked" — which sends
-            // nothing and clears the SDK's data — so remove it. This launch
-            // stays off either way (the field above).
-            if (!stateFile().delete() && stateFile().exists()) {
-                Log.w(TAG, "could not record or clear the answer; off for this launch only");
+            // A no we could not write must still be a no at the next launch,
+            // where the file would otherwise read back the old yes. Renaming
+            // needs no free space and reads as "declined"; failing that, no
+            // file reads as "never asked", which sends nothing. If neither
+            // worked, this launch stays off (the field above) but the answer
+            // is not recorded, and the caller is told so.
+            if (!persistDeclineWithoutWriting()) {
+                call.reject("could not record the answer");
+                return;
             }
         }
         if (!granted) {
@@ -397,9 +408,24 @@ public class MetaInstallPlugin extends Plugin {
         return new File(getContext().getNoBackupFilesDir(), STATE_FILE);
     }
 
-    /** A missing file is "never asked"; a file that cannot be read is a no. */
-    private void readState() {
+    private File declinedFile() {
+        return new File(getContext().getNoBackupFilesDir(), DECLINED_FILE);
+    }
+
+    private boolean persistDeclineWithoutWriting() {
         File file = stateFile();
+        if (!file.exists()) return true;
+        if (file.renameTo(declinedFile())) return true;
+        return file.delete();
+    }
+
+    /**
+     * A missing file is "never asked"; a file that cannot be read is a no, and
+     * so is the renamed record of a no that could not be written.
+     */
+    private void readState() {
+        File declined = declinedFile();
+        File file = declined.exists() ? declined : stateFile();
         if (!file.exists()) {
             consent = "unset";
             return;
@@ -408,7 +434,7 @@ public class MetaInstallPlugin extends Plugin {
         try (FileInputStream in = new FileInputStream(file)) {
             props.load(in);
             String value = props.getProperty("consent", "declined");
-            consent = "granted".equals(value) ? "granted" : "declined";
+            consent = !declined.exists() && "granted".equals(value) ? "granted" : "declined";
             reported = "true".equals(props.getProperty("reported"));
             blocked = "true".equals(props.getProperty("blocked"));
             attempts = Math.max(0, Integer.parseInt(props.getProperty("attempts", "0")));
@@ -434,7 +460,14 @@ public class MetaInstallPlugin extends Plugin {
         } catch (IOException | RuntimeException e) {
             return false;
         }
-        return tmp.renameTo(file);
+        if (!tmp.renameTo(file)) return false;
+        // The record just written is the answer now. A leftover "declined"
+        // copy that cannot be removed keeps reading as a no — the safe side.
+        File declined = declinedFile();
+        if (declined.exists() && !declined.delete()) {
+            Log.w(TAG, "an older declined record remains; it still reads as a no");
+        }
+        return true;
     }
 
     // --- the SDK's storage, handled without loading the SDK ------------------
