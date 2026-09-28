@@ -172,6 +172,24 @@ App Store の「トラッキング」の申告も「しない」で一貫する�
 同じ回で直すこと。ATT を導入する場合でも、**拒否がゲーム機能・広告削除の購入・
 オフラインプレイに影響してはならない**(拒否は正常系である)。
 
+## 獲得計測(Meta)はアプリ内広告ではない
+
+2026-09-27(issue #204)。Android 版には、Meta 広告からのインストールを測るための
+Meta の App Events SDK(`facebook-core`)が**明示的に有効化したリリースにだけ**入る。
+方針は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Android の獲得計測(Meta)」、
+運用は [META_ANDROID_ACQUISITION.md](META_ANDROID_ACQUISITION.md)。この文書との関係は次のとおり。
+
+- **広告枠は増えない。** Meta Audience Network は導入しない。アプリ内の広告は
+  上の Anchored Adaptive Banner 1 枠のまま。
+- **買い切りと独立。** 広告削除を購入しても計測の有無は変わらず、計測を許可しても
+  しなくても広告と購入は変わらない。購入・復元・価格は Meta に送らない。
+- **同意は UMP と別。** UMP の `canRequestAds` は Google の広告配信についての答えで
+  あり、Meta への送信の許可として使わない。既存の UMP の意味とフェイルセーフは変えない。
+- **スイッチも別。** 獲得計測は `SG_META_ANDROID_ENABLED`(リポジトリ変数)、
+  バナーは AdMob の secrets。どちらを止めても他方は動いたまま。
+- **iOS は対象外。** 下の「ATT を使わない」はそのまま有効で、iOS に SDK も同意 UI も
+  足さない。
+
 ## ストア表現
 
 広告が存在するため、"Ad-free" / "No ads" 等の表現を使用しない。

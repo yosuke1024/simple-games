@@ -53,6 +53,11 @@
   一致していなければならない。
 - `docs/RELEASE_CHECKLIST.md` — Play Console の「データセーフティ」欄を公開ページと
   一致させる確認(未了: 法的レビュー)。
+- `docs/META_ANDROID_ACQUISITION.md` — Android の獲得計測(Meta)が送るもの・送らない
+  ものの一覧(SDK 18.3.0 のソースから)。**公開ページは現在「アプリに Analytics・トラッキング
+  コードなし」と書いており、Meta を有効化したビルドではこれが偽になる。** 有効化するリリース
+  より前に公開ページへ Android の節を足すこと(runbook §8)。機械判定は
+  `check-principles.sh` §3b / §8 と `check-android-artifact.sh`。
 
 **公開ページと実装が食い違ったら、直すのは実装か、公開ページか、その両方である。**
 この文書を書き足して辻褄を合わせてはいけない — ここはもう文面を持っていない。

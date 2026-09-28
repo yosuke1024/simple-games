@@ -1332,13 +1332,13 @@ describe('the hardware back button on the collection', () => {
   it("closes the shell's review question ahead of everything of its own", async () => {
     capacitorMock.native = true;
     await initFavoriteGames(createMemoryKV());
-    const dismissReviewPrompt = vi.fn();
+    const dismissDialog = vi.fn();
     render(
       <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
         <CollectionHomeScreen
           onOpenGame={() => undefined}
           onOpenSettings={() => undefined}
-          dismissReviewPrompt={dismissReviewPrompt}
+          dismissDialog={dismissDialog}
         />
       </SettingsProvider>,
     );
@@ -1348,7 +1348,7 @@ describe('the hardware back button on the collection', () => {
 
     pressBack();
 
-    expect(dismissReviewPrompt).toHaveBeenCalledTimes(1);
+    expect(dismissDialog).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('dialog', { name: 'Sudoku' })).toBeInTheDocument();
     expect(appMock.App.minimizeApp).not.toHaveBeenCalled();
   });

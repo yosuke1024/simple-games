@@ -1,6 +1,6 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-09-27
+Updated: 2026-09-28
 
 この文書は、Simple Games を変更・レビュー・説明するときの **共通の入口** である。
 ここに全仕様を複製しない。実装上の事実はコード、恒久的な原則は各 canonical document を正とし、
@@ -148,6 +148,10 @@ North Star は **「通知・ストリーク等で強制せず、それでも繰
 滞在時間最大化だけを成功としない。
 
 - App: 個人追跡のための Analytics を入れない。ストア / 広告プラットフォームが提供する集計値を使う。
+  例外は **Android の獲得計測(Meta)** だけで、許可した利用者のインストールを 1 回だけ Meta に
+  知らせる期限つきの仕組み(1,000+ installs で撤去を判断。ゲームのデータは送らない。2026-09-27、
+  issue #204 — `docs/PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」、運用は
+  `docs/META_ANDROID_ACQUISITION.md`)。
 - Web: サイト側の集計計測として GA4 を利用し、`page_view`, `game_open`, `game_close` 等を見る。
 - 計測を理由にゲームデータを外部送信しない。
 - 数字は「何を改善するか」を判断する材料であり、ブランド原則を破る理由にはしない。
@@ -181,6 +185,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 | App advertising / IAP                                                                                | `docs/ADS_POLICY.md`                                |
 | Web role / differences / web measurement                                                             | `docs/WEB_VERSION.md`                               |
 | Analytics interpretation                                                                             | `docs/GROWTH_MEASUREMENT.md`                        |
+| Android acquisition measurement (Meta) — operation, data inventory, removal                          | `docs/META_ANDROID_ACQUISITION.md`                  |
 | i18n                                                                                                 | `docs/I18N_POLICY.md`                               |
 | Release gates                                                                                        | `docs/RELEASE_CHECKLIST.md`                         |
 | Review prompt                                                                                        | `docs/REVIEW_PROMPT_POLICY.md`                      |
@@ -218,6 +223,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 - backup / restore: `architecture/backup.md`(保存領域の所有と復元の安全性)
 - shared / club(`src/club/`、Private Game Club、対応ゲームの `challenge/`): `PRODUCT_PRINCIPLES.md`「Shared」+ `architecture/club.md`
 - ads / purchase: `ADS_POLICY.md`
+- Android acquisition measurement (Meta, `services/acquisition/`, `android/app/src/metaOn`): `PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」+ `META_ANDROID_ACQUISITION.md`
 - web only: `WEB_VERSION.md`
 - public copy: `BRAND.md`
 - i18n: `I18N_POLICY.md`

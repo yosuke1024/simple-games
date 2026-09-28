@@ -15,6 +15,34 @@ def sgVersionCode = (System.getenv("SG_VERSION_CODE") ?: "1") as Integer
 def sgKeystorePath = System.getenv("SG_KEYSTORE_PATH")
 def sgHasKeystore = sgKeystorePath != null && !sgKeystorePath.isEmpty() && file(sgKeystorePath).exists()
 
+// Meta install measurement (issue #204, docs/META_ANDROID_ACQUISITION.md).
+// Off unless a build asks for it by name, and then only in the release
+// variant: without SG_META_ANDROID_ENABLED=true the Meta SDK is not a
+// dependency of this app at all — not a disabled feature, an absent one — and
+// a debug build never carries it whatever the environment says, so nothing a
+// developer runs reports to the production Meta app.
+//
+// The App ID and Client Token are client-side configuration (they end up in
+// the APK and are not secrets the way an App Secret is), but they are still
+// injected rather than committed, the same way the AdMob IDs are. A build
+// that asked for Meta and did not get a well-formed pair stops here instead
+// of shipping a switch that silently does nothing.
+def sgMetaEnabled = System.getenv("SG_META_ANDROID_ENABLED") == "true"
+def sgMetaAppId = (System.getenv("META_ANDROID_APP_ID") ?: "").trim()
+def sgMetaClientToken = (System.getenv("META_ANDROID_CLIENT_TOKEN") ?: "").trim()
+// The one version this build has been audited against (the data inventory in
+// docs/META_ANDROID_ACQUISITION.md is for exactly this release). Changing it
+// means re-reading the SDK, not just bumping the number.
+def sgMetaSdkVersion = "18.3.0"
+if (sgMetaEnabled) {
+    if (!(sgMetaAppId ==~ /[0-9]{8,20}/)) {
+        throw new GradleException("SG_META_ANDROID_ENABLED=true needs META_ANDROID_APP_ID (digits only).")
+    }
+    if (!(sgMetaClientToken ==~ /[0-9a-f]{32}/)) {
+        throw new GradleException("SG_META_ANDROID_ENABLED=true needs META_ANDROID_CLIENT_TOKEN (32 lowercase hex characters).")
+    }
+}
+
 android {
     namespace = "com.pixapps.simplegames"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -62,6 +90,25 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (sgMetaEnabled) {
+                resValue "string", "sg_meta_app_id", sgMetaAppId
+                resValue "string", "sg_meta_client_token", sgMetaClientToken
+            }
+        }
+    }
+    // Exactly one MetaInstallPlugin is compiled into each variant: the real one
+    // (src/metaOn) in a release that asked for Meta, the stub that answers
+    // "unavailable" (src/metaOff) everywhere else. The manifest overlay that
+    // switches the SDK's automatic behaviour off travels with the real one.
+    sourceSets {
+        debug {
+            java.srcDirs += 'src/metaOff/java'
+        }
+        release {
+            java.srcDirs += sgMetaEnabled ? 'src/metaOn/java' : 'src/metaOff/java'
+            if (sgMetaEnabled) {
+                manifest.srcFile 'src/metaOn/AndroidManifest.xml'
+            }
         }
     }
 }
@@ -83,6 +130,15 @@ dependencies {
     // source compiles against it directly.
     implementation "androidx.core:core:$androidxCoreVersion"
     implementation project(':capacitor-android')
+    // Meta install measurement (issue #204): facebook-core only — App Events,
+    // nothing else of the SDK (no Login, Share, Messenger, Audience Network).
+    // The Install Referrer client is already one of its dependencies; it is
+    // named here because src/metaOn reads the referrer itself before the
+    // install is reported (see MetaInstallPlugin.java).
+    if (sgMetaEnabled) {
+        releaseImplementation "com.facebook.android:facebook-core:$sgMetaSdkVersion"
+        releaseImplementation "com.android.installreferrer:installreferrer:2.2"
+    }
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

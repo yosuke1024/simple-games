@@ -27,9 +27,12 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 - 全ゲーム機能が初回起動からオフラインで利用可能
 - ゲームデータは端末内にのみ保存(クラウド同期なし)
 - ストリークや人工的な緊急性なし
-- アプリに Analytics・トラッキングコードなし(公開コードで確認可能。Web 版の
-  ページ解析は [docs/WEB_VERSION.md](docs/WEB_VERSION.md)「計測」、その読み方と
-  限界は [docs/GROWTH_MEASUREMENT.md](docs/GROWTH_MEASUREMENT.md))
+- アプリに Analytics なし。ゲームのデータを送る計測コードもなし(公開コードで確認可能。
+  Web 版のページ解析は [docs/WEB_VERSION.md](docs/WEB_VERSION.md)「計測」、その読み方と
+  限界は [docs/GROWTH_MEASUREMENT.md](docs/GROWTH_MEASUREMENT.md))。例外は Android の
+  Meta インストール計測だけで、有効化したリリースビルドに限り、利用者が許可した場合に
+  インストールを 1 回だけ Meta に知らせる
+  ([docs/META_ANDROID_ACQUISITION.md](docs/META_ANDROID_ACQUISITION.md))
 - API サーバー・アプリ用 DB・コンテンツ配信サーバーなし
 
 詳細は [docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md) を参照してください。

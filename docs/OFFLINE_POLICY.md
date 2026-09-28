@@ -77,6 +77,14 @@ Undo、Hint、Add Numbers、ゲームクリア、ゲームオーバー、設定�
 約束は変えない — ポーリング・バックグラウンド同期・常時接続を持たず、サーバの障害で
 ゲームを止めない。境界は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Shared」。
 
+**Android の獲得計測(Meta)を有効化したビルドに限り**、利用者が許可した場合に、
+インストールを 1 回だけ Meta に知らせる通信が加わる(2026-09-27、issue #204 —
+[META_ANDROID_ACQUISITION.md](META_ANDROID_ACQUISITION.md))。オフラインでは SDK を
+初期化せず、オンライン復帰の OS イベントを 1 回待つだけでリトライループを作らない。
+起動・ゲーム開始・購入/復元はこの通信を待たず、通信の失敗でゲームは止まらない。
+報告が受理された後は二度と通信しない。許可しなかった端末と、Meta を含まないビルド
+(既定)では、この用途は存在せずリクエストは 0 件。
+
 **結果画面の共有はここに入らない。** 共有はアプリからの通信ではなく OS への受け渡しで
 あり、`services/share/` は fetch も送信も行わない(`.github/scripts/check-principles.sh`
 §1 が Core のソースにネットワーク API が無いことを見る — 例外は `src/club/` の
@@ -89,8 +97,9 @@ Undo、Hint、Add Numbers、ゲームクリア、ゲームオーバー、設定�
 `docs/PRIVACY_POLICY.md`)。オフラインでも読めるのは、プレイヤーに直接影響する
 2 点だけ — 削除すると何が消えるか、バナー 1 枠と任意の買い切りがあること。
 
-Analytics・Remote Config・トラッキングは存在しない。ネットワークに送信される
-ゲームデータもない。(Web 版のページ解析は本文書の範囲外 —
+Analytics・Remote Config は存在しない。ネットワークに送信されるゲームデータもない。
+例外は上の Android の獲得計測(Meta)だけで、送るのはインストールの報告 1 件であり、
+ゲームのデータは含まない。(Web 版のページ解析は本文書の範囲外 —
 [WEB_VERSION.md](WEB_VERSION.md)「計測」、その運用は
 [GROWTH_MEASUREMENT.md](GROWTH_MEASUREMENT.md)。ゲームデータを送らない点は
 版をまたいで同じ。)

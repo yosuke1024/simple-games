@@ -144,6 +144,87 @@ else
   ok "トラッキング系の依存なし"
 fi
 
+# 3b. ネイティブ側のトラッキング系依存 -------------------------------------------
+# package.json だけを見ていると、Gradle / Swift Package Manager に足した SDK は
+# 素通りする(issue #204 が名指しした穴)。ネイティブの依存宣言も同じ語彙で見る。
+#
+# 例外は 1 つだけ、場所と形まで固定して宣言する(2026-09-27、issue #204):
+# Android の Meta インストール計測 —— `apps/simple-games/android/app/build.gradle`
+# の `if (sgMetaEnabled) {` の直後の行に置いた
+#   releaseImplementation "com.facebook.android:facebook-core:$sgMetaSdkVersion"
+# だけで、版は同じファイルの `def sgMetaSdkVersion = "X.Y.Z"` に固定値で書く
+# (`+` / `latest.*` / 範囲指定は不可)。debug・iOS・Web には入らない。
+# 他の Facebook / Meta モジュール(login / share / messenger / Audience Network …)、
+# 他の analytics・MMP・クラッシュレポートはどこにも書けない。
+# 方針: docs/PRODUCT_PRINCIPLES.md「Android の獲得計測」、手順と送信内容:
+# docs/META_ANDROID_ACQUISITION.md。
+native_tracking='facebook|fbsdk|audience-?network|firebase|crashlytics|appsflyer|adjust\.sdk|com\.adjust|branch\.io|io\.branch|kochava|singular\.net|tenjin|amplitude|mixpanel|segment\.(io|analytics)|posthog|sentry|bugsnag|datadog|newrelic|flurry|onesignal'
+meta_gradle='apps/simple-games/android/app/build.gradle'
+meta_dep_line='^[[:space:]]*releaseImplementation "com\.facebook\.android:facebook-core:\$sgMetaSdkVersion"[[:space:]]*$'
+native_dep_files=()
+while IFS= read -r f; do native_dep_files+=("$f"); done < <(
+  git ls-files 'apps/*/android/*.gradle' 'apps/*/android/**/*.gradle' \
+    'apps/*/ios/**/Package.swift' 'apps/*/ios/**/Package.resolved' \
+    'apps/*/ios/**/Podfile' 'apps/*/ios/**/Podfile.lock' 'apps/*/ios/**/project.pbxproj'
+)
+hits=""
+for f in "${native_dep_files[@]}"; do
+  [ -f "$f" ] || continue
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    n="${line%%:*}"
+    text="${line#*:}"
+    if [ "$f" = "$meta_gradle" ] && printf '%s' "$text" | grep -qE "$meta_dep_line"; then
+      prev="$(sed -n "$((n - 1))p" "$f")"
+      if printf '%s' "$prev" | grep -qE '^[[:space:]]*if \(sgMetaEnabled\) \{[[:space:]]*$'; then
+        continue
+      fi
+      hits="${hits}${f}:${n}: Meta の依存が if (sgMetaEnabled) { の直下にありません:${text}"$'\n'
+      continue
+    fi
+    # Gradle のコメント行は依存宣言ではない(説明文で SDK 名を書くことはある)。
+    if printf '%s' "$text" | grep -qE '^[[:space:]]*//'; then continue; fi
+    hits="${hits}${f}:${n}:${text}"$'\n'
+  done < <(grep -niE "$native_tracking" "$f" || true)
+done
+# 版は固定値で、同じファイルに 1 回だけ。
+meta_version_lines="$(grep -cE '^def sgMetaSdkVersion = "[0-9]+\.[0-9]+\.[0-9]+"$' "$meta_gradle" || true)"
+if grep -qE 'facebook-core' "$meta_gradle" && [ "$meta_version_lines" != "1" ]; then
+  hits="${hits}${meta_gradle}: sgMetaSdkVersion が固定の X.Y.Z で 1 回だけ定義されていません"$'\n'
+fi
+if [ -n "$hits" ]; then
+  report "ネイティブにトラッキング系の依存があります(許されるのは release 限定・フラグ付きの facebook-core だけです — docs/META_ANDROID_ACQUISITION.md)" "$hits"
+else
+  ok "ネイティブのトラッキング系依存なし(例外は Android release の facebook-core 1 行のみ)"
+fi
+
+# 自己検査: 例外の形が崩れた行と、他の SDK の行を、どちらも拾えること。
+probe_native_bad=(
+  'implementation "com.facebook.android:facebook-android-sdk:18.3.0"'
+  'implementation "com.facebook.android:facebook-core:18.3.0"'
+  'releaseImplementation "com.facebook.android:facebook-login:$sgMetaSdkVersion"'
+  'implementation "com.facebook.android:audience-network-sdk:6.+"'
+  "implementation 'com.google.firebase:firebase-analytics:22.0.0'"
+  'implementation "com.appsflyer:af-android-sdk:6.14.0"'
+  '.package(url: "https://github.com/facebook/facebook-ios-sdk", from: "18.0.0")'
+)
+dead=""
+for probe in "${probe_native_bad[@]}"; do
+  if ! printf '%s' "$probe" | grep -qiE "$native_tracking"; then
+    dead="${dead}検出できません: ${probe}"$'\n'
+  elif printf '%s' "$probe" | grep -qE "$meta_dep_line"; then
+    dead="${dead}例外の形に誤って一致しています: ${probe}"$'\n'
+  fi
+done
+if ! printf '%s' '        releaseImplementation "com.facebook.android:facebook-core:$sgMetaSdkVersion"' | grep -qE "$meta_dep_line"; then
+  dead="${dead}例外の正しい形に一致しません"$'\n'
+fi
+if [ -n "$dead" ]; then
+  report "§3b の検査パターンが壊れています(ガードが no-op です)" "$dead"
+else
+  ok "ネイティブ依存パターンの自己検査(${#probe_native_bad[@]} 本の違反形を検出し、例外の形だけを通す)"
+fi
+
 # 4. Android の権限 ------------------------------------------------------------
 # 広告(INTERNET)と課金(BILLING)以外の権限は要求しない。
 # 増やすときは、なぜ必要かを PR に書いた上でこの許可リストを意図的に更新する。
@@ -160,6 +241,24 @@ if [ -n "$hits" ]; then
   report "許可リスト外の Android 権限があります" "$hits"
 else
   ok "Android 権限は INTERNET / BILLING のみ"
+fi
+
+# 4b. Meta の manifest overlay(issue #204)は権限を「足す」場所ではない。
+# `src/metaOn/AndroidManifest.xml` は Meta SDK の自動動作を止めるためだけにあり、
+# そこに書ける uses-permission は依存が持ち込む権限を外す `tools:node="remove"` だけ。
+# ビルド後の merged manifest(依存由来の権限を含む)は
+# .github/scripts/check-android-artifact.sh がリリースビルドで検査する。
+hits=""
+for m in apps/*/android/app/src/*/AndroidManifest.xml; do
+  [ -f "$m" ] || continue
+  case "$m" in */src/main/AndroidManifest.xml) continue ;; esac
+  found="$(tr '\n' ' ' < "$m" | grep -oE '<uses-permission[^>]*>' | grep -v 'tools:node="remove"' || true)"
+  [ -n "$found" ] && hits="${hits}${m}: ${found}"$'\n'
+done
+if [ -n "$hits" ]; then
+  report "main 以外の manifest が権限を要求しています(外す tools:node=\"remove\" だけが書けます)" "$hits"
+else
+  ok "main 以外の manifest は権限を足していない"
 fi
 
 # 5. 本番広告 ID ---------------------------------------------------------------
@@ -334,6 +433,67 @@ if [ -n "$dead" ]; then
   report "§7 の検査パターンが既知の効能表現を検出できません(ガードが no-op です)" "$dead"
 else
   ok "効能パターンの自己検査(${#probe_en[@]} + ${#probe_ja[@]} 本の既知違反文を検出できる)"
+fi
+
+# 8. Android の獲得計測(Meta)の形 --------------------------------------------
+# issue #204 で認めた例外は「同意のあと、インストールを 1 回だけ Meta に知らせる」
+# ことだけで、分析基盤ではない(docs/PRODUCT_PRINCIPLES.md「Android の獲得計測」)。
+# その形を grep で判定できる範囲で固定する:
+#
+# (a) Meta SDK に触れてよいのは android/app/src/metaOn/ だけ。main・debug・metaOff、
+#     そして JS のソースは com.facebook を参照しない。
+# (b) metaOn は任意のイベントを送る API・自動収集を戻す API・識別子を足す API を
+#     呼ばない。広告 ID の収集を有効にする呼び出しもここで止める(使わないと
+#     決めた — docs/META_ANDROID_ACQUISITION.md「広告 ID」。変えるなら文書・同意文・
+#     申告とこの行を同じ PR で変える)。
+# (c) metaOn の manifest overlay は SDK の自動初期化・自動ログ・広告 ID 収集を
+#     false で宣言し、起動時に SDK を初期化する ContentProvider を外す。
+# (d) JS 側の窓口(src/services/acquisition/)は任意のイベント名や値を渡す口を
+#     持たない。ゲームから届かないことは src/test/importBoundaries.test.ts の規則 6。
+meta_on='apps/simple-games/android/app/src/metaOn'
+hits="$(grep -rn 'com\.facebook' apps/simple-games/android/app/src "${src_dirs[@]}" 2>/dev/null \
+  | grep -v "^${meta_on}/" || true)"
+[ -n "$hits" ] && report "Meta SDK を metaOn 以外が参照しています(§8 a)" "$hits"
+
+meta_forbidden='\.logEvent\(|\.logPurchase\(|activateApp\(|logPushNotificationOpen\(|logProductItem\(|augmentWebView\(|setUserData\(|setUserID\(|setPushNotificationsRegistrationId\(|setDataProcessingOptions\(|setAutoLogAppEventsEnabled\(true|setAutoInitEnabled\(true|setAdvertiserIDCollectionEnabled\(true|setCodelessDebugLogEnabled\(true|setMonitorEnabled\(true|setIsDebugEnabled\(true|addLoggingBehavior\('
+if [ -d "$meta_on" ]; then
+  hits="$(grep -rnE "$meta_forbidden" "$meta_on" || true)"
+  [ -n "$hits" ] && report "Meta アダプタが許可外の SDK API を呼んでいます(§8 b)" "$hits"
+  overlay="$meta_on/AndroidManifest.xml"
+  missing=""
+  for flag in AutoInitEnabled AutoLogAppEventsEnabled AdvertiserIDCollectionEnabled; do
+    tr '\n' ' ' < "$overlay" 2>/dev/null \
+      | grep -qE "android:name=\"com\.facebook\.sdk\.${flag}\"[[:space:]]+android:value=\"false\"" \
+      || missing="${missing}com.facebook.sdk.${flag}=false がありません"$'\n'
+  done
+  tr '\n' ' ' < "$overlay" 2>/dev/null \
+    | grep -qE 'android:name="com\.facebook\.internal\.FacebookInitProvider"[^>]*tools:node="remove"' \
+    || missing="${missing}FacebookInitProvider を tools:node=\"remove\" で外していません"$'\n'
+  [ -n "$missing" ] && report "Meta の manifest overlay が SDK の自動動作を止めていません(§8 c)" "$missing"
+fi
+hits="$(grep -rnE '\b(logEvent|logPurchase|trackEvent|sendEvent)[[:space:]]*[(:]' apps/simple-games/src/services/acquisition 2>/dev/null || true)"
+[ -n "$hits" ] && report "Meta 計測の JS 窓口が任意のイベントを送る口を持っています(§8 d)" "$hits"
+
+# 自己検査: 禁止 API のパターンが生きていること。
+probe_meta_bad=(
+  'AppEventsLogger.newLogger(ctx).logEvent("fb_mobile_level_achieved");'
+  'AppEventsLogger.activateApp(getActivity().getApplication());'
+  'FacebookSdk.setAutoLogAppEventsEnabled(true);'
+  'FacebookSdk.setAdvertiserIDCollectionEnabled(true);'
+  'AppEventsLogger.setUserData(email, null, null, null, null, null, null, null, null, null);'
+)
+dead=""
+for probe in "${probe_meta_bad[@]}"; do
+  printf '%s' "$probe" | grep -qE "$meta_forbidden" || dead="${dead}検出できません: ${probe}"$'\n'
+done
+printf '%s' 'FacebookSdk.setAdvertiserIDCollectionEnabled(false);' | grep -qE "$meta_forbidden" \
+  && dead="${dead}許可された呼び出しを誤って拾っています: setAdvertiserIDCollectionEnabled(false)"$'\n'
+if [ -n "$dead" ]; then
+  report "§8 の検査パターンが壊れています(ガードが no-op です)" "$dead"
+elif [ -d "$meta_on" ]; then
+  ok "Meta 計測の形(metaOn 限定・禁止 API なし・自動動作の停止・JS に送信口なし、自己検査 ${#probe_meta_bad[@]} 本)"
+else
+  ok "Meta 計測のアダプタは未導入(JS に送信口なし、自己検査 ${#probe_meta_bad[@]} 本)"
 fi
 
 if [ "$fail" -ne 0 ]; then
