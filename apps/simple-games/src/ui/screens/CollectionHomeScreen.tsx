@@ -291,22 +291,21 @@ export interface CollectionHomeScreenProps {
   onOpenGame: (gameId: GameId) => void;
   onOpenSettings: () => void;
   /**
-   * How to close the shell's question, for as long as the shell has one on
-   * screen over this home — the review question (docs/REVIEW_PROMPT_POLICY.md)
-   * or the Meta install question (issue #204), never both (app/App.tsx);
-   * `null` the rest of the time. The dialog is not this screen's to draw — but
-   * back is this screen's to answer, and only one listener may be registered
-   * at a time, so the owner has to be told what is sitting on top of it.
-   * Without this the question stays open and the app minimizes underneath it
+   * How to close the review question, for as long as the shell has one on
+   * screen over this home (app/App.tsx, docs/REVIEW_PROMPT_POLICY.md); `null`
+   * the rest of the time. The dialog is not this screen's to draw — but back
+   * is this screen's to answer, and only one listener may be registered at a
+   * time, so the owner has to be told what is sitting on top of it. Without
+   * this the question stays open and the app minimizes underneath it
    * (issue #173).
    */
-  dismissDialog?: (() => void) | null;
+  dismissReviewPrompt?: (() => void) | null;
 }
 
 export function CollectionHomeScreen({
   onOpenGame,
   onOpenSettings,
-  dismissDialog,
+  dismissReviewPrompt,
 }: CollectionHomeScreenProps) {
   const { t } = useSettings();
 
@@ -352,8 +351,8 @@ export function CollectionHomeScreen({
    * And for the shell's review question, which is drawn above everything this
    * screen owns — so back closes that one first of all (issue #173).
    */
-  const dismissDialogRef = useRef(dismissDialog);
-  dismissDialogRef.current = dismissDialog;
+  const dismissReviewRef = useRef(dismissReviewPrompt);
+  dismissReviewRef.current = dismissReviewPrompt;
 
   /**
    * Focus follows the mode: into the field when it appears (which is also
@@ -399,8 +398,8 @@ export function CollectionHomeScreen({
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const handle = CapacitorApp.addListener('backButton', () => {
-      const dismissDialog = dismissDialogRef.current;
-      if (dismissDialog) dismissDialog();
+      const dismissReview = dismissReviewRef.current;
+      if (dismissReview) dismissReview();
       else if (menuOpenRef.current) setMenuGame(null);
       else if (searchingRef.current) closeSearch();
       else void CapacitorApp.minimizeApp().catch(() => CapacitorApp.exitApp());

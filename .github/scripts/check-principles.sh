@@ -473,26 +473,27 @@ else
 fi
 
 # 8. Android の獲得計測(Meta)の形 --------------------------------------------
-# issue #204 で認めた例外は「同意のあと、インストールを 1 回だけ Meta に知らせる」
-# ことだけで、分析基盤ではない(docs/PRODUCT_PRINCIPLES.md「Android の獲得計測」)。
+# issue #204 で認めた例外は「新しいインストールを 1 回だけ Meta に知らせる」ことだけで、
+# 分析基盤ではない(docs/PRODUCT_PRINCIPLES.md「Android の獲得計測」)。2026-09-29 の
+# オーナー判断で、同意の質問をやめ、同意が要る地域(EU 等)を除いて自動で送り、
+# 広告 ID を含める形になった(docs/META_ANDROID_ACQUISITION.md §5・§6)。
 # その形を grep で判定できる範囲で固定する:
 #
 # (a) Meta SDK に触れてよいのは android/app/src/metaOn/ だけ。main・debug・metaOff、
 #     そして JS のソースは com.facebook を参照しない。
 # (b) metaOn は任意のイベントを送る API・自動収集を戻す API・識別子を足す API を
-#     呼ばない。広告 ID の収集を有効にする呼び出しもここで止める(使わないと
-#     決めた — docs/META_ANDROID_ACQUISITION.md「広告 ID」。変えるなら文書・同意文・
-#     申告とこの行を同じ PR で変える)。
+#     呼ばない。広告 ID の収集だけは、報告の 1 回のためにコードで有効にする
+#     (docs/META_ANDROID_ACQUISITION.md §5。manifest では off のまま — (c))。
 # (c) metaOn の manifest overlay は SDK の自動初期化・自動ログ・広告 ID 収集を
 #     false で宣言し、起動時に SDK を初期化する ContentProvider を外す。
-# (d) JS 側の窓口(src/services/acquisition/)は任意のイベント名や値を渡す口を
-#     持たない。ゲームから届かないことは src/test/importBoundaries.test.ts の規則 6。
+# (d) JS には Meta への窓口が無い。metaOn のプラグインは @PluginMethod を持たず
+#     (起動時に自分で判断して動く)、JS のソースは MetaInstall を参照しない。
 meta_on='apps/simple-games/android/app/src/metaOn'
 hits="$(grep -rn 'com\.facebook' apps/simple-games/android/app/src "${src_dirs[@]}" 2>/dev/null \
   | grep -v "^${meta_on}/" || true)"
 [ -n "$hits" ] && report "Meta SDK を metaOn 以外が参照しています(§8 a)" "$hits"
 
-meta_forbidden='\.logEvent\(|\.logPurchase\(|activateApp\(|logPushNotificationOpen\(|logProductItem\(|augmentWebView\(|setUserData\(|setUserID\(|setPushNotificationsRegistrationId\(|setDataProcessingOptions\(|setAutoLogAppEventsEnabled\(true|setAutoInitEnabled\(true|setAdvertiserIDCollectionEnabled\(true|setCodelessDebugLogEnabled\(true|setMonitorEnabled\(true|setIsDebugEnabled\(true|addLoggingBehavior\('
+meta_forbidden='\.logEvent\(|\.logPurchase\(|activateApp\(|logPushNotificationOpen\(|logProductItem\(|augmentWebView\(|setUserData\(|setUserID\(|setPushNotificationsRegistrationId\(|setDataProcessingOptions\(|setAutoLogAppEventsEnabled\(true|setAutoInitEnabled\(true|setCodelessDebugLogEnabled\(true|setMonitorEnabled\(true|setIsDebugEnabled\(true|addLoggingBehavior\('
 if [ -d "$meta_on" ]; then
   hits="$(grep -rnE "$meta_forbidden" "$meta_on" || true)"
   [ -n "$hits" ] && report "Meta アダプタが許可外の SDK API を呼んでいます(§8 b)" "$hits"
@@ -508,29 +509,30 @@ if [ -d "$meta_on" ]; then
     || missing="${missing}FacebookInitProvider を tools:node=\"remove\" で外していません"$'\n'
   [ -n "$missing" ] && report "Meta の manifest overlay が SDK の自動動作を止めていません(§8 c)" "$missing"
 fi
-hits="$(grep -rnE '\b(logEvent|logPurchase|trackEvent|sendEvent)[[:space:]]*[(:]' apps/simple-games/src/services/acquisition 2>/dev/null || true)"
-[ -n "$hits" ] && report "Meta 計測の JS 窓口が任意のイベントを送る口を持っています(§8 d)" "$hits"
+hits="$(grep -rn '@PluginMethod' "$meta_on" 2>/dev/null || true)"
+hits="${hits}$(grep -rn 'MetaInstall' "${src_dirs[@]}" 2>/dev/null || true)"
+[ -n "$hits" ] && report "JS から Meta 計測に届く口があります(§8 d)" "$hits"
 
 # 自己検査: 禁止 API のパターンが生きていること。
 probe_meta_bad=(
   'AppEventsLogger.newLogger(ctx).logEvent("fb_mobile_level_achieved");'
   'AppEventsLogger.activateApp(getActivity().getApplication());'
   'FacebookSdk.setAutoLogAppEventsEnabled(true);'
-  'FacebookSdk.setAdvertiserIDCollectionEnabled(true);'
+  'FacebookSdk.setAutoInitEnabled(true);'
   'AppEventsLogger.setUserData(email, null, null, null, null, null, null, null, null, null);'
 )
 dead=""
 for probe in "${probe_meta_bad[@]}"; do
   printf '%s' "$probe" | grep -qE "$meta_forbidden" || dead="${dead}検出できません: ${probe}"$'\n'
 done
-printf '%s' 'FacebookSdk.setAdvertiserIDCollectionEnabled(false);' | grep -qE "$meta_forbidden" \
-  && dead="${dead}許可された呼び出しを誤って拾っています: setAdvertiserIDCollectionEnabled(false)"$'\n'
+printf '%s' 'FacebookSdk.setAutoLogAppEventsEnabled(false);' | grep -qE "$meta_forbidden" \
+  && dead="${dead}許可された呼び出しを誤って拾っています: setAutoLogAppEventsEnabled(false)"$'\n'
 if [ -n "$dead" ]; then
   report "§8 の検査パターンが壊れています(ガードが no-op です)" "$dead"
 elif [ -d "$meta_on" ]; then
-  ok "Meta 計測の形(metaOn 限定・禁止 API なし・自動動作の停止・JS に送信口なし、自己検査 ${#probe_meta_bad[@]} 本)"
+  ok "Meta 計測の形(metaOn 限定・禁止 API なし・自動動作の停止・JS からの口なし、自己検査 ${#probe_meta_bad[@]} 本)"
 else
-  ok "Meta 計測のアダプタは未導入(JS に送信口なし、自己検査 ${#probe_meta_bad[@]} 本)"
+  ok "Meta 計測のアダプタは未導入(JS からの口なし、自己検査 ${#probe_meta_bad[@]} 本)"
 fi
 
 if [ "$fail" -ne 0 ]; then

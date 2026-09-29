@@ -56,7 +56,6 @@ import {
 } from '../../storage/schemas';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { IconBack, IconChevronRight, IconStar } from '../components/icons';
-import { MetaInstallSetting } from '../components/MetaInstallSetting';
 import { Toggle } from '../components/Toggle';
 import { WebChromeSlot } from '../components/WebChromeSlot';
 import { openExternal } from '../openExternal';
@@ -518,10 +517,6 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               </span>
             </button>
           ) : null}
-          {/* The Meta install measurement's switch (issue #204). A privacy
-              control for the same reason as the row above, so it sits here;
-              it renders nothing in any build without Meta. */}
-          <MetaInstallSetting />
         </section>
 
         {/* Backup & Restore (issue #160). Simple Games keeps no account and
