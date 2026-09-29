@@ -232,7 +232,7 @@ jobs:
               exit 1
             fi
             echo "SG_META_MODE=on" >> "$GITHUB_ENV"
-            echo "- Meta インストール計測: **有効**(facebook-core、同意後に 1 回だけ — docs/META_ANDROID_ACQUISITION.md)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Meta インストール計測: **有効**(facebook-core。同意が要る地域を除く新規インストールを起動時に自動で 1 回報告、広告 ID を含む — docs/META_ANDROID_ACQUISITION.md)" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "SG_META_MODE=off" >> "$GITHUB_ENV"
             echo "- Meta インストール計測: 無効(SDK はビルドに含まれない)" >> "$GITHUB_STEP_SUMMARY"

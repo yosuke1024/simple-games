@@ -31,8 +31,9 @@
     ties the install report to an ad (AttributionIdentifiers). On Android 11+
     another app's provider is hidden unless it is declared here; without this,
     whether the ID could be read depended on the Facebook app happening to
-    match the https VIEW query that AdMob declares. The consent text already
-    says this ID is sent when the Facebook app is on the phone. Nothing else is
+    match the https VIEW query that AdMob declares. The public privacy policy
+    says this ID is sent when the Facebook app is on the phone (runbook §4,
+    §8). Nothing else is
     queried: no package entry, no other authority (check-principles.sh §4b,
     check-android-artifact.sh).
 -->

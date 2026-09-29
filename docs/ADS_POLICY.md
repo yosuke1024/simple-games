@@ -176,19 +176,35 @@ App Store の「トラッキング」の申告も「しない」で一貫する�
 
 2026-09-27(issue #204)。Android 版には、Meta 広告からのインストールを測るための
 Meta の App Events SDK(`facebook-core`)が**明示的に有効化したリリースにだけ**入る。
-方針は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Android の獲得計測(Meta)」、
-運用は [META_ANDROID_ACQUISITION.md](META_ANDROID_ACQUISITION.md)。この文書との関係は次のとおり。
+**2026-09-29、オーナー判断で仕様を変更した。** 同意を尋ねる質問ダイアログと設定の
+「Ad measurement (Meta)」のスイッチは廃止し、対象の新規インストールでは起動時に
+自動で送る(許可した人だけではほとんどのインストールが Meta に届かず、広告の学習が
+進まなかったため)。方針は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)
+「Android の獲得計測(Meta)」、運用は
+[META_ANDROID_ACQUISITION.md](META_ANDROID_ACQUISITION.md)。この文書との関係は次のとおり。
 
 - **広告枠は増えない。** Meta Audience Network は導入しない。アプリ内の広告は
   上の Anchored Adaptive Banner 1 枠のまま。
-- **買い切りと独立。** 広告削除を購入しても計測の有無は変わらず、計測を許可しても
-  しなくても広告と購入は変わらない。購入・復元・価格は Meta に送らない。
-- **同意は UMP と別。** UMP の `canRequestAds` は Google の広告配信についての答えで
-  あり、Meta への送信の許可として使わない。既存の UMP の意味とフェイルセーフは変えない。
+- **買い切りと独立。** 広告削除を購入しても計測は変わらず、計測されてもされなくても
+  広告と購入は変わらない。購入・復元・価格は Meta に送らない。
+- **同意 UI は無い。JS からの窓口も無い。** `MetaInstallPlugin` は `@PluginMethod` を
+  持たず、起動時(`load()`)に自分の判断だけで動く —— JS 側の Meta 計測
+  (`services/acquisition` 一式、UI、設定の行)は削除済み
+  (`.github/scripts/check-principles.sh` §8 d)。UMP の `canRequestAds` は
+  Google の広告配信についての答えのままで、Meta への送信可否には関係しない。
+- **同意の代わりに地域で分ける。** EU 加盟国・EEA 残り(アイスランド・
+  リヒテンシュタイン・ノルウェー)・英国・スイス・関連地域(フランスの海外県等・
+  ジブラルタル・王室属領)のいずれかに該当する、または SIM・ネットワーク・端末の
+  地域設定のどれも分からない端末には送らない。それ以外の新規インストール
+  (`firstInstallTime` から 7 日以内 —— 旧バージョンからの更新はインストールとして
+  数えない)だけ、起動時に Meta の `MOBILE_APP_INSTALL` を送る。受理されるまで起動ごとに
+  1 回・合計 3 回まで試し、受理されたら二度と送らない(runbook §2)。
+- **アプリ内に取り消しスイッチは無い。** 利用者の手段は Android の広告 ID の
+  リセット / 削除(設定 > Google > 広告、または 設定 > プライバシー > 広告。機種と版で
+  場所が違う — runbook §5)、Meta 自身の広告設定、アンインストール。
 - **スイッチも別。** 獲得計測は `SG_META_ANDROID_ENABLED`(リポジトリ変数)、
   バナーは AdMob の secrets。どちらを止めても他方は動いたまま。
-- **iOS は対象外。** 下の「ATT を使わない」はそのまま有効で、iOS に SDK も同意 UI も
-  足さない。
+- **iOS は対象外。** 下の「ATT を使わない」はそのまま有効で、iOS に SDK も足さない。
 
 ## ストア表現
 

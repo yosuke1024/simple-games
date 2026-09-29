@@ -14,7 +14,8 @@
   そのゲームの中身を空にしない形の助けを用意します(下表)
 - 広告はオンライン時の小さなバナー 1 つだけ(買い切りで永久に削除可能)
 - Progress stays on your device(クラウド同期なし。Analytics なし。Android の Meta
-  インストール計測は [docs/META_ANDROID_ACQUISITION.md](../../docs/META_ANDROID_ACQUISITION.md))
+  インストール計測は、対象地域(EEA/UK/CH 等を除く)の新規インストールについて同意なしに
+  自動で送る例外 — [docs/META_ANDROID_ACQUISITION.md](../../docs/META_ANDROID_ACQUISITION.md))
 
 ## 収録ゲーム
 

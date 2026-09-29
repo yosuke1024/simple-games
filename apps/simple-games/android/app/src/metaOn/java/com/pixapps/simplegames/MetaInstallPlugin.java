@@ -81,7 +81,7 @@ public class MetaInstallPlugin extends Plugin {
 
     private static final String TAG = "MetaInstall";
 
-    /** Our record, in no_backup/: reported, blocked, attempts. */
+    /** Our record, in no_backup/: reported, blocked, consentRegion, attempts. */
     private static final String STATE_FILE = "meta-install.properties";
 
     /**
@@ -105,7 +105,8 @@ public class MetaInstallPlugin extends Plugin {
      * rest of the EEA, the UK and Switzerland, plus the EU's outermost regions
      * and the territories that carry their own ISO code under the same rules.
      * A phone that looks like any of these — by SIM, by network, or by the
-     * device's region setting — sends nothing, ever (runbook §6).
+     * device's region setting — on any launch is recorded as such and sends
+     * nothing, then or later (runbook §6).
      */
     private static final Set<String> REGIONS_THAT_NEED_CONSENT = new HashSet<>(
         Arrays.asList(
@@ -141,6 +142,8 @@ public class MetaInstallPlugin extends Plugin {
 
     private boolean reported;
     private boolean blocked;
+    /** Seen in a region that needs consent on some launch: never sends. */
+    private boolean consentRegion;
     private int attempts;
 
     /*
@@ -213,12 +216,28 @@ public class MetaInstallPlugin extends Plugin {
     }
 
     private void reportIfDueLocked() {
+        if (seenInRegionThatNeedsConsentLocked()) return;
         if (!dueExceptNetwork()) return;
         if (!hasNetwork()) {
             waitForNetworkLocked();
             return;
         }
         startAttemptLocked();
+    }
+
+    /**
+     * Checks where the phone looks to be now and, if that is a region that
+     * needs consent, records it: a later launch whose signals happen to look
+     * elsewhere (a SIM swapped, a region setting changed) must not send what
+     * this one would not. True when this install is (now or already) marked.
+     */
+    private boolean seenInRegionThatNeedsConsentLocked() {
+        if (consentRegion) return true;
+        if (reported || !inRegionThatNeedsConsent()) return false;
+        consentRegion = true;
+        writeState();
+        if (!sdkStarted) deleteSdkData(getContext());
+        return true;
     }
 
     private boolean dueExceptNetwork() {
@@ -228,8 +247,7 @@ public class MetaInstallPlugin extends Plugin {
             !blocked &&
             !attemptedThisLaunch &&
             !stopped() &&
-            (attempts > 0 || isNewInstall()) &&
-            !inRegionThatNeedsConsent()
+            (attempts > 0 || isNewInstall())
         );
     }
 
@@ -276,7 +294,7 @@ public class MetaInstallPlugin extends Plugin {
     private void networkBack() {
         synchronized (lock) {
             if (networkWait == null) return;
-            if (!dueExceptNetwork()) {
+            if (seenInRegionThatNeedsConsentLocked() || !dueExceptNetwork()) {
                 stopWaitingForNetworkLocked();
                 return;
             }
@@ -454,12 +472,12 @@ public class MetaInstallPlugin extends Plugin {
     }
 
     /**
-     * No further attempt will be made on this install: Meta turned automatic
-     * logging on behind this app's back, or the attempts ran out without Meta
-     * accepting the report.
+     * No further attempt will be made on this install: it was seen in a region
+     * that needs consent, Meta turned automatic logging on behind this app's
+     * back, or the attempts ran out without Meta accepting the report.
      */
     private boolean stopped() {
-        return blocked || (!reported && attempts >= MAX_ATTEMPTS);
+        return consentRegion || blocked || (!reported && attempts >= MAX_ATTEMPTS);
     }
 
     // --- our record --------------------------------------------------------
@@ -473,6 +491,7 @@ public class MetaInstallPlugin extends Plugin {
         File file = stateFile();
         reported = false;
         blocked = false;
+        consentRegion = false;
         attempts = 0;
         if (!file.exists()) return;
         Properties props = new Properties();
@@ -480,6 +499,7 @@ public class MetaInstallPlugin extends Plugin {
             props.load(in);
             reported = "true".equals(props.getProperty("reported"));
             blocked = "true".equals(props.getProperty("blocked"));
+            consentRegion = "true".equals(props.getProperty("consentRegion"));
             attempts = Math.max(0, Integer.parseInt(props.getProperty("attempts", "0")));
         } catch (IOException | RuntimeException e) {
             attempts = MAX_ATTEMPTS;
@@ -490,6 +510,7 @@ public class MetaInstallPlugin extends Plugin {
         Properties props = new Properties();
         props.setProperty("reported", Boolean.toString(reported));
         props.setProperty("blocked", Boolean.toString(blocked));
+        props.setProperty("consentRegion", Boolean.toString(consentRegion));
         props.setProperty("attempts", Integer.toString(attempts));
         File file = stateFile();
         File tmp = new File(file.getParentFile(), STATE_FILE + ".tmp");

@@ -62,7 +62,7 @@ allowed_common=(
 )
 # Meta ビルドだけに増えてよいもの: Google Play の Install Referrer を読む権限
 # (installreferrer ライブラリが持ち込む。Meta 広告のクリックとインストールを結ぶ
-# 唯一の経路で、広告 ID の代わりに使う — docs/META_ANDROID_ACQUISITION.md)。
+# 経路の 1 つで、2026-09-29 からは広告 ID と併用 — docs/META_ANDROID_ACQUISITION.md §5)。
 # Meta SDK が宣言する ACCESS_ADSERVICES_CUSTOM_AUDIENCE(リターゲティング用)は
 # overlay で外すので、ここには無い。
 allowed_meta=(

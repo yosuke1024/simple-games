@@ -148,9 +148,11 @@ North Star は **「通知・ストリーク等で強制せず、それでも繰
 滞在時間最大化だけを成功としない。
 
 - App: 個人追跡のための Analytics を入れない。ストア / 広告プラットフォームが提供する集計値を使う。
-  例外は **Android の獲得計測(Meta)** だけで、許可した利用者のインストールを 1 回だけ Meta に
-  知らせる期限つきの仕組み(1,000+ installs で撤去を判断。ゲームのデータは送らない。2026-09-27、
-  issue #204 — `docs/PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」、運用は
+  例外は **Android の獲得計測(Meta)** だけで、EEA/UK/CH 等の同意が要る地域を除く新規
+  インストールについて、利用者の操作なしにインストールと広告 ID を 1 回だけ Meta に自動で
+  知らせる期限つきの仕組み(1,000+ installs で撤去を判断。ゲームのデータは送らない。
+  2026-09-27 導入・2026-09-29 に同意方式から自動送信へ変更、issue #204 —
+  `docs/PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」、運用は
   `docs/META_ANDROID_ACQUISITION.md`)。
 - Web: サイト側の集計計測として GA4 を利用し、`page_view`, `game_open`, `game_close` 等を見る。
 - 計測を理由にゲームデータを外部送信しない。
@@ -223,7 +225,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 - backup / restore: `architecture/backup.md`(保存領域の所有と復元の安全性)
 - shared / club(`src/club/`、Private Game Club、対応ゲームの `challenge/`): `PRODUCT_PRINCIPLES.md`「Shared」+ `architecture/club.md`
 - ads / purchase: `ADS_POLICY.md`
-- Android acquisition measurement (Meta, `services/acquisition/`, `android/app/src/metaOn`): `PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」+ `META_ANDROID_ACQUISITION.md`
+- Android acquisition measurement (Meta, `android/app/src/metaOn` / `metaOff`, `.github/scripts/check-principles.sh` §8): `PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」+ `META_ANDROID_ACQUISITION.md`
 - web only: `WEB_VERSION.md`
 - public copy: `BRAND.md`
 - i18n: `I18N_POLICY.md`
