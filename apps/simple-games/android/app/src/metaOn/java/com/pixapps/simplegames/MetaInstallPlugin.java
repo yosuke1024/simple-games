@@ -497,18 +497,30 @@ public class MetaInstallPlugin extends Plugin {
         return new File(getContext().getNoBackupFilesDir(), STATE_FILE);
     }
 
+    private File stateTmpFile() {
+        return new File(getContext().getNoBackupFilesDir(), STATE_FILE + ".tmp");
+    }
+
     private File consentRegionMarker() {
         return new File(getContext().getNoBackupFilesDir(), CONSENT_REGION_MARKER);
     }
 
-    /** Fails closed: a region that needs consent must stay recorded even with no space to write. */
+    /**
+     * Fails closed: a region that needs consent must stay recorded even with
+     * no space to write. An empty file first; failing that, any directory
+     * entry that already exists becomes the marker by a rename, which needs no
+     * free space — the temporary file a failed write left behind (a new
+     * install has nothing else), then the record itself.
+     */
     private boolean markConsentRegionWithoutWriting() {
         File marker = consentRegionMarker();
         try {
             if (marker.exists() || marker.createNewFile()) return true;
         } catch (IOException | RuntimeException e) {
-            // Try the rename.
+            // Try a rename.
         }
+        File tmp = stateTmpFile();
+        if (tmp.exists() && tmp.renameTo(marker)) return true;
         File state = stateFile();
         return state.exists() && state.renameTo(marker);
     }
@@ -543,7 +555,7 @@ public class MetaInstallPlugin extends Plugin {
         props.setProperty("consentRegion", Boolean.toString(consentRegion));
         props.setProperty("attempts", Integer.toString(attempts));
         File file = stateFile();
-        File tmp = new File(file.getParentFile(), STATE_FILE + ".tmp");
+        File tmp = stateTmpFile();
         try (FileOutputStream out = new FileOutputStream(tmp)) {
             props.store(out, null);
             out.getFD().sync();
