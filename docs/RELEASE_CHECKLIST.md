@@ -30,6 +30,10 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
       許容リストから `LANDING_GAME_IDS` へ移し、`public/simple-games/index.html` に
       カードを足す(先行公開中はチャンクだけが配信され、カードは無い —
       [WEB_VERSION.md](WEB_VERSION.md)「先行公開」)
+- [ ] そのゲームが練習セットの 5 本([PUZZLE_PRACTICE_SET.md](PUZZLE_PRACTICE_SET.md))なら、
+      landing の `public/simple-games/practice/index.html` のカードから BETA 表示と
+      セーブ注意文を外す(専用入口は各ゲームの実際のチャンネルを表示する —
+      [WEB_VERSION.md](WEB_VERSION.md)「専用ベータ入口」)。カード自体は残る
 
 ## 1. コードの検証(機械が判定できるもの)
 

@@ -1,6 +1,6 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-09-28
+Updated: 2026-09-29
 
 この文書は、Simple Games を変更・レビュー・説明するときの **共通の入口** である。
 ここに全仕様を複製しない。実装上の事実はコード、恒久的な原則は各 canonical document を正とし、
@@ -43,9 +43,11 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **30 games**。
-- ほかに **Web 版だけで先行公開(ベータ)中の新作が 8 本**(Crown Grid / Number Path /
+- ほかに **Web 版だけで先行公開(ベータ)中の新作が 11 本**(Crown Grid / Number Path /
   Shape Regions、2026-09-26、issue #194。Yacht / Mancala / Dominoes / Hit & Blow /
-  Dots and Boxes、2026-09-27、issue #197)。正式収録の 30 本には数えない。チャンネルの
+  Dots and Boxes、2026-09-27、issue #197。Binary Balance / Sudoku 6×6 / Box Regions、
+  2026-09-29、issue #210 — Crown Grid / Number Path と合わせて 5 種類の練習セット、
+  `docs/PUZZLE_PRACTICE_SET.md`)。正式収録の 30 本には数えない。チャンネルの
   宣言は registry の `channel`、出し分けは `app/gameChannel.ts` の実行時ガード
   (`docs/WEB_VERSION.md`「先行公開」)。
 - 実装上のゲーム一覧・ID・並び順・カテゴリの正は `apps/simple-games/src/app/registry.ts` の `GAMES` / `GAME_CATEGORIES`。
@@ -187,6 +189,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 | App advertising / IAP                                                                                | `docs/ADS_POLICY.md`                                |
 | Web role / differences / web measurement                                                             | `docs/WEB_VERSION.md`                               |
 | Analytics interpretation                                                                             | `docs/GROWTH_MEASUREMENT.md`                        |
+| Puzzle practice set (5 titles vs. their comparison games, dedicated web entry, promises)             | `docs/PUZZLE_PRACTICE_SET.md`                       |
 | Android acquisition measurement (Meta) — operation, data inventory, removal                          | `docs/META_ANDROID_ACQUISITION.md`                  |
 | i18n                                                                                                 | `docs/I18N_POLICY.md`                               |
 | Release gates                                                                                        | `docs/RELEASE_CHECKLIST.md`                         |
@@ -227,6 +230,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 - ads / purchase: `ADS_POLICY.md`
 - Android acquisition measurement (Meta, `android/app/src/metaOn` / `metaOff`, `.github/scripts/check-principles.sh` §8): `PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」+ `META_ANDROID_ACQUISITION.md`
 - web only: `WEB_VERSION.md`
+- 練習セットの 5 本(Crown Grid / Number Path / Binary Balance / Sudoku 6×6 / Box Regions)や専用入口: `PUZZLE_PRACTICE_SET.md` + `BRAND.md`「自社タイトルと比較対象の名前」
 - public copy: `BRAND.md`
 - i18n: `I18N_POLICY.md`
 

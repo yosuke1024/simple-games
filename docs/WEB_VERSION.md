@@ -336,11 +336,14 @@ ADS_POLICY.md 側の項目 3 にも 実施済み の印は付いていない。*
    行い、既収録ゲームの滞在時間を参照点にする。この確認のために「計測」節の範囲を
    広げない(盤面・プレイ内容は送らない)。
 
-実装状況(2026-09-27): **実装済み。先行公開中は 8 本** — Crown Grid / Number Path /
+実装状況(2026-09-29): **実装済み。先行公開中は 11 本** — Crown Grid / Number Path /
 Shape Regions(issue #194、計画は
-[plans/2026-09-26-crown-grid-number-path-shape-regions.md](plans/2026-09-26-crown-grid-number-path-shape-regions.md))と
+[plans/2026-09-26-crown-grid-number-path-shape-regions.md](plans/2026-09-26-crown-grid-number-path-shape-regions.md))、
 Yacht / Mancala / Dominoes / Hit & Blow / Dots and Boxes(issue #197、計画は
-[plans/2026-09-27-yacht-mancala-dominoes-hit-and-blow-dots-and-boxes.md](plans/2026-09-27-yacht-mancala-dominoes-hit-and-blow-dots-and-boxes.md))。
+[plans/2026-09-27-yacht-mancala-dominoes-hit-and-blow-dots-and-boxes.md](plans/2026-09-27-yacht-mancala-dominoes-hit-and-blow-dots-and-boxes.md))、
+Binary Balance / Sudoku 6×6 / Box Regions(issue #210、計画は
+[plans/2026-09-29-linkedin-practice-set.md](plans/2026-09-29-linkedin-practice-set.md)。
+Crown Grid / Number Path と合わせて 5 種類の練習セット — 下の「専用ベータ入口」)。
 
 - 宣言は registry のエントリ(`GameDefinition.channel: 'web-beta'`)、出し分けは
   `app/gameChannel.ts` の**実行時ガード**(`Capacitor.isNativePlatform()`)。
@@ -365,6 +368,43 @@ Yacht / Mancala / Dominoes / Hit & Blow / Dots and Boxes(issue #197、計画は
 - 正式収録の手順は [RELEASE_CHECKLIST.md §0](RELEASE_CHECKLIST.md): 上の基準 1・2 を
   満たしたら、registry の `channel` を外す(バッジと説明文はそれで消える)、
   永続化ラウンドトリップテストを作る、README / ストア掲載文 / landing に載せる。
+
+### 専用ベータ入口(練習セット)
+
+**公開済みの Web ベータは、専用のベータ紹介入口で案内してよい**(2026-09-29 決定、
+issue #210)。上の「ストア掲載文と landing のガイドには正式収録まで出さない」は、
+**通常 LP の正式収録一覧・ガイド・ストア掲載への昇格**の話であり、それとは別に、
+「これはベータである」と明示した専用ページから、遊べる状態のベータへ直接送ることは
+できる。先行公開はもともと「遊べるものだけを出す」チャンネルで、そこへ人を案内する
+ことと、正式収録のゲートを迂回することは別である。
+
+最初の入口は **5 種類のパズル練習セット**([PUZZLE_PRACTICE_SET.md](PUZZLE_PRACTICE_SET.md)):
+`pixapps-landing` の静的ページ `https://pixapps.ai/simple-games/practice/`(テーマ
+**More puzzles, at your own pace.**)。
+
+- **カードは 5 枚**(Crown Grid / Number Path / Binary Balance / Sudoku 6×6 / Box Regions)。
+  各カードは独自タイトル、比較対象(Queens / Zip / Tango / Mini Sudoku / Patches)との
+  対応の一文、短いルール、プレイ CTA。CTA は既存の `?game=<id>` 契約でそのゲームの
+  ホームを開く(上の「URL(ゲーム別の入口)」。variant も追加パラメータも無い)。
+- **各ゲームの実際のチャンネルに従って表示する。**`web-beta` のゲームには BETA と、
+  保存データが更新で消えることがある注意(en / ja)を出す。5 本すべてがベータの間は
+  5 枚すべてに付く。正式収録でチャンネルを外したら、そのカードの BETA も外す
+  ([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §0)。セット全体が正式リリース済みで
+  あるかのように見せない。
+- **未実装カード・Coming Soon は出さない。**「5 種類が揃った」という公開文面は、5 本すべてが
+  実際に配信されてから。
+- **5 本分のチャンクを先読みしない。**ページは静的 HTML で、ゲームのコードはカードを
+  押してから `play/` が 1 本ぶんだけ読む。
+- **非提携表示**を置く([BRAND.md](BRAND.md)「自社タイトルと比較対象の名前」の英文)。OG の
+  タイトル・説明・画像も独自ブランドで、第三者の公式ゲーム一覧と誤認させない。
+- 通常 LP(`/simple-games/`)の正式収録カード・ガイド・ストア文面には、正式収録まで
+  載せない(上のとおり)。専用ページから通常 LP と PixApps への導線は補助的に置く。
+  新作が未収録のアプリに「この 5 本が遊べる」と誘導しない。
+- landing 側のガード: `tests/ui.test.js` の `WEB_BETA_GAME_IDS` に 3 本を足す(チャンクは
+  あるがカードは無い、はそのまま)。practice ページの 5 つの `?game=<id>` が実際に配信
+  されているチャンク(`play/assets/game-<id>-*.js`)と一致することを同じテストが見る。
+- 計測は「計測」節の範囲のまま(`page_view` と `game_open` / `game_close`)。投稿からの
+  流入は URL の UTM で区別する。
 
 ## サイトクローム(グローバルヘッダー)
 

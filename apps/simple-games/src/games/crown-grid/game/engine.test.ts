@@ -127,6 +127,14 @@ describe('violations (§5)', () => {
     expect([diagonal.cells[0], diagonal.cells[5]]).toEqual([true, true]);
   });
 
+  it('does not reach along a diagonal like a chess queen (issue #210)', () => {
+    // Two crowns two steps apart on a diagonal share no row, column, region
+    // or neighbour: legal here, as in the puzzle this game is compared with.
+    // Rule 2 is the eight neighbours and nothing further (§3).
+    const apart = findViolations(marks('q...', '....', '..q.', '....'), SMALL, 4);
+    expect(apart.any).toBe(false);
+  });
+
   it('says nothing about ×s, or about a legal crown that is not the answer', () => {
     // A crown at (0,0) is not in SMALL's answer, but it breaks no rule yet.
     const quiet = findViolations(marks('qxxx', 'x.x.', '....', '....'), SMALL, 4);
