@@ -8,21 +8,23 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.os.Handler;
 import android.os.Looper;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
-import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
-import com.getcapacitor.PluginCall;
-import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,35 +39,39 @@ import org.json.JSONObject;
  * WHAT IT SENDS
  *
  * Meta's own install report, MOBILE_APP_INSTALL, once per install — with what
- * facebook-core 18.3.0 attaches to it (runbook §4) and nothing we add. No
- * event of our own, no session tracking (activateApp is never called), no
- * purchase, no advertising ID, no user data. JavaScript cannot add anything:
- * it can read the state, record the player's answer, and say "now"
- * (src/services/acquisition/plugin.ts). The calls this class may not make are
- * refused by .github/scripts/check-principles.sh §8.
+ * facebook-core 18.3.0 attaches to it (runbook §4), including the Android
+ * advertising ID, and nothing we add. No event of our own, no session
+ * tracking (activateApp is never called), no purchase, no user data.
+ * JavaScript has no way in: this plugin has no methods, and decides and acts
+ * on its own at start-up. The calls this class may not make are refused by
+ * .github/scripts/check-principles.sh §8.
  *
  * WHEN
  *
- * The SDK's own start-up hook is removed from the manifest (src/metaOn/
- * AndroidManifest.xml), so none of its code runs until {@link #reportInstall}
- * finds every condition true: the player said yes, Meta has not yet accepted
- * this install's report, this launch has not tried already, the attempt
- * budget is not spent, and there is a network. JavaScript checked the same
- * things; they are checked again here because this is where it is decided.
+ * There is no question and no switch (the owner's decision of 2026-09-29,
+ * runbook §6). The SDK's own start-up hook is removed from the manifest
+ * (src/metaOn/AndroidManifest.xml), so none of its code runs until
+ * {@link #load} finds every condition true: this is a new install (installed
+ * in the last {@link #NEW_INSTALL_WINDOW_MS}, so an update of an old install is
+ * never reported as one), the phone is not in a region where this needs
+ * consent ({@link #REGIONS_THAT_NEED_CONSENT}), Meta has not yet accepted this
+ * install's report, this launch has not tried already, the attempt budget is
+ * not spent, and there is a network — or, when only the network is missing,
+ * the moment Android's default network comes back.
  *
  * AFTER
  *
  * The SDK records an accepted report in its own preferences. At the next
  * launch {@link #load} reads that record — with Android's API, without loading
  * the SDK — marks the install reported, deletes everything the SDK kept on
- * the device, and never starts the SDK again. The same cleanup follows a "no"
- * and a Meta-side setting that would turn automatic logging on behind this
- * app's back (runbook §4, the note on UserSettingsManager).
+ * the device, and never starts the SDK again. The same cleanup follows a
+ * Meta-side setting that would turn automatic logging on behind this app's
+ * back (runbook §4, the note on UserSettingsManager).
  *
- * The player's answer lives in a file in no_backup/, apart from the WebView's
- * storage: not in the Backup & Restore file, not in Android's own backup, so
- * a yes given on one phone is never carried to another. A file that cannot be
- * read is a no.
+ * The record lives in a file in no_backup/, apart from the WebView's storage:
+ * not in the Backup & Restore file, not in Android's own backup, so a phone
+ * restored from another is a new install with a report of its own. A file
+ * that cannot be read stops the measurement on this install.
  *
  * Every failure is quiet. Nothing here may stop a game, a save, or a purchase
  * from working (docs/OFFLINE_POLICY.md).
@@ -75,14 +81,15 @@ public class MetaInstallPlugin extends Plugin {
 
     private static final String TAG = "MetaInstall";
 
-    /** Our record, in no_backup/: consent, reported, blocked, attempts. */
+    /** Our record, in no_backup/: reported, blocked, consentRegion, attempts. */
     private static final String STATE_FILE = "meta-install.properties";
 
     /**
-     * The same record, renamed when a "no" could not be written: a rename
-     * needs no free space, and its mere presence reads as "declined".
+     * "Seen in a region that needs consent", when the record above could not
+     * be written: an empty file, or the record itself renamed (a rename needs
+     * no free space). Its presence alone is the answer.
      */
-    private static final String DECLINED_FILE = "meta-install.declined.properties";
+    private static final String CONSENT_REGION_MARKER = "meta-install.consent-region";
 
     /**
      * Launches that may try before the install is given up on. A report that
@@ -90,6 +97,39 @@ public class MetaInstallPlugin extends Plugin {
      * start on every launch forever.
      */
     private static final int MAX_ATTEMPTS = 3;
+
+    /**
+     * How new an install must be for its first attempt. An update keeps the
+     * first install's time (PackageInfo.firstInstallTime), so a player who has
+     * had the app for months and updates to a version with Meta is not
+     * reported as an install — that would be a false one in Meta's numbers.
+     * Retries of an attempt already made are not held to this window.
+     */
+    private static final long NEW_INSTALL_WINDOW_MS = 7L * 24 * 60 * 60 * 1000;
+
+    /**
+     * Where sending this without asking first needs consent: the EU and the
+     * rest of the EEA, the UK and Switzerland, plus the EU's outermost regions
+     * and the territories that carry their own ISO code under the same rules.
+     * A phone that looks like any of these — by SIM, by network, or by the
+     * device's region setting — on any launch is recorded as such and sends
+     * nothing, then or later (runbook §6).
+     */
+    private static final Set<String> REGIONS_THAT_NEED_CONSENT = new HashSet<>(
+        Arrays.asList(
+            // European Union
+            "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE",
+            "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE",
+            // the rest of the EEA
+            "IS", "LI", "NO",
+            // United Kingdom and Switzerland
+            "GB", "CH",
+            // EU outermost regions and Åland, which have their own codes
+            "GF", "GP", "MQ", "RE", "YT", "MF", "AX",
+            // Gibraltar and the Crown Dependencies
+            "GI", "GG", "JE", "IM"
+        )
+    );
 
     /** How long to wait for Google Play to hand over the install referrer (a local call). */
     private static final long REFERRER_TIMEOUT_MS = 3000;
@@ -107,9 +147,10 @@ public class MetaInstallPlugin extends Plugin {
     private String clientToken = "";
     private boolean configured;
 
-    private String consent = "unset";
     private boolean reported;
     private boolean blocked;
+    /** Seen in a region that needs consent on some launch: never sends. */
+    private boolean consentRegion;
     private int attempts;
 
     /*
@@ -127,11 +168,9 @@ public class MetaInstallPlugin extends Plugin {
     private ConnectivityManager.NetworkCallback networkWait;
 
     /**
-     * Every field above is read and written under this lock: plugin calls
-     * arrive on Capacitor's plugin thread, the SDK is started on the main
-     * thread, the network callback on a system thread, and a "no" must not
-     * slip between the last check and the start. Per process, like the two
-     * flags above.
+     * Every field above is read and written under this lock: load() runs on
+     * the main thread, the network callback on a system thread, and the SDK
+     * is started from a posted task. Per process, like the two flags above.
      */
     private static final Object lock = new Object();
 
@@ -150,6 +189,7 @@ public class MetaInstallPlugin extends Plugin {
             readState();
             if (!configured) return;
             checkLastAttempt(context);
+            reportIfDueLocked();
         }
     }
 
@@ -161,9 +201,6 @@ public class MetaInstallPlugin extends Plugin {
      */
     private void checkLastAttempt(Context context) {
         try {
-            // Whatever the answer is now: a report Meta accepted before a
-            // later "no" must still count as sent, or a later "yes" would
-            // send a second one.
             if (!reported && !blocked && attempts > 0) {
                 boolean changed = false;
                 if (sdkRecordedAcceptedReport(context)) {
@@ -177,7 +214,7 @@ public class MetaInstallPlugin extends Plugin {
                 }
                 if (changed) writeState();
             }
-            if (!"granted".equals(consent) || reported || stopped() || attempts == 0) {
+            if (!sdkStarted && (reported || stopped() || attempts == 0)) {
                 deleteSdkData(context);
             }
         } catch (Exception e) {
@@ -185,99 +222,50 @@ public class MetaInstallPlugin extends Plugin {
         }
     }
 
-    @PluginMethod
-    public void getState(PluginCall call) {
-        synchronized (lock) {
-            call.resolve(state());
-        }
-    }
-
-    @PluginMethod
-    public void setConsent(PluginCall call) {
-        boolean granted = Boolean.TRUE.equals(call.getBoolean("granted", false));
-        synchronized (lock) {
-            setConsentLocked(call, granted);
-        }
-    }
-
-    private void setConsentLocked(PluginCall call, boolean granted) {
-        String previous = consent;
-        consent = granted ? "granted" : "declined";
-        if (!writeState()) {
-            if (granted) {
-                // A yes we could not record is not a yes.
-                consent = previous;
-                call.reject("could not record the answer");
-                return;
-            }
-            // A no we could not write must still be a no at the next launch,
-            // where the file would otherwise read back the old yes. Renaming
-            // needs no free space and reads as "declined"; failing that, no
-            // file reads as "never asked", which sends nothing. If neither
-            // worked, this launch stays off (the field above) but the answer
-            // is not recorded, and the caller is told so.
-            if (!persistDeclineWithoutWriting()) {
-                call.reject("could not record the answer");
-                return;
-            }
-        }
-        if (!granted) {
-            stopWaitingForNetworkLocked();
-            if (sdkStarted) {
-                // Already running in this process: take back what can be taken
-                // back now. Its files go at the next launch, before it loads.
-                try {
-                    FacebookSdk.setAdvertiserIDCollectionEnabled(false);
-                    FacebookSdk.setAutoLogAppEventsEnabled(false);
-                    FacebookSdk.setLimitEventAndDataUsage(getContext(), true);
-                } catch (Exception e) {
-                    Log.w(TAG, "could not quiet the SDK", e);
-                }
-            } else {
-                deleteSdkData(getContext());
-            }
-        }
-        call.resolve(state());
-    }
-
-    @PluginMethod
-    public void reportInstall(PluginCall call) {
-        synchronized (lock) {
-            reportInstallLocked(call);
-        }
-    }
-
-    private void reportInstallLocked(PluginCall call) {
-        JSObject ret = new JSObject();
-        if (!dueExceptNetwork()) {
-            ret.put("started", false);
-            call.resolve(ret);
-            return;
-        }
+    private void reportIfDueLocked() {
+        if (seenInRegionThatNeedsConsentLocked()) return;
+        if (!dueExceptNetwork()) return;
         if (!hasNetwork()) {
-            // Everything but the network is ready. JavaScript's idea of
-            // "online" and Android's default network do not change at the
-            // same instant — the moment a phone comes back, or goes away, they
-            // can disagree — so the wait for the network is held here, where
-            // the attempt is decided, rather than spent on a "no".
             waitForNetworkLocked();
-            ret.put("started", false);
-            call.resolve(ret);
             return;
         }
-        ret.put("started", startAttemptLocked());
-        call.resolve(ret);
+        startAttemptLocked();
+    }
+
+    /**
+     * Checks where the phone looks to be now and, if that is a region that
+     * needs consent, records it: a later launch whose signals happen to look
+     * elsewhere (a SIM swapped, a region setting changed) must not send what
+     * this one would not. True when this install is (now or already) marked.
+     */
+    private boolean seenInRegionThatNeedsConsentLocked() {
+        if (consentRegion) return true;
+        if (reported || !inRegionThatNeedsConsent()) return false;
+        consentRegion = true;
+        if (!writeState() && !markConsentRegionWithoutWriting()) {
+            // This launch stays off (the field above); a later one cannot be
+            // told, which is the case the marker exists for.
+            Log.w(TAG, "could not record the region; this launch sends nothing");
+        }
+        if (!sdkStarted) deleteSdkData(getContext());
+        return true;
     }
 
     private boolean dueExceptNetwork() {
-        return configured && "granted".equals(consent) && !reported && !blocked && !attemptedThisLaunch && !stopped();
+        return (
+            configured &&
+            !reported &&
+            !blocked &&
+            !attemptedThisLaunch &&
+            !stopped() &&
+            (attempts > 0 || isNewInstall())
+        );
     }
 
     /**
      * One wait, for the moment Android's default network can reach the
      * internet — the callback the OS calls anyway, not a poll or a timer —
-     * then unregistered. Everything is checked again when it fires, so a "no"
-     * given meanwhile wins.
+     * then unregistered. Everything is checked again when it fires.
      */
     private void waitForNetworkLocked() {
         if (networkWait != null) return;
@@ -317,7 +305,7 @@ public class MetaInstallPlugin extends Plugin {
     private void networkBack() {
         synchronized (lock) {
             if (networkWait == null) return;
-            if (!dueExceptNetwork()) {
+            if (seenInRegionThatNeedsConsentLocked() || !dueExceptNetwork()) {
                 stopWaitingForNetworkLocked();
                 return;
             }
@@ -327,7 +315,7 @@ public class MetaInstallPlugin extends Plugin {
         }
     }
 
-    /** The activity is going away: this instance stops waiting, whatever for. */
+    /** The activity is going away: this instance stops waiting. */
     @Override
     protected void handleOnDestroy() {
         synchronized (lock) {
@@ -337,12 +325,12 @@ public class MetaInstallPlugin extends Plugin {
     }
 
     /** Spends this launch's attempt and hands the report to the SDK. */
-    private boolean startAttemptLocked() {
+    private void startAttemptLocked() {
         attemptedThisLaunch = true;
         attempts += 1;
         // The attempt is counted before anything goes out, so a crash midway
         // still spends it. A count that cannot be written is not an attempt.
-        if (!writeState()) return false;
+        if (!writeState()) return;
 
         final Context app = getContext().getApplicationContext();
         new Thread(
@@ -352,19 +340,8 @@ public class MetaInstallPlugin extends Plugin {
             },
             "MetaInstallReferrer"
         ).start();
-        return true;
     }
 
-    /**
-     * The one time the SDK is started. Everything automatic is set off again
-     * before initialization (the manifest already says so), the data may be
-     * used for measurement and conversions only, and the install report —
-     * the SDK's own MOBILE_APP_INSTALL request — is the only thing asked for.
-     * `publishInstallAsync` is what `AppEventsLogger.activateApp` calls for the
-     * install; calling it directly is what leaves out the session tracking
-     * activateApp would start. It is pinned to facebook-core 18.3.0 (the
-     * runbook's §4 is read against that version).
-     */
     private void startSdkAndReport(Context app, String referrer) {
         synchronized (lock) {
             startSdkAndReportLocked(app, referrer);
@@ -372,18 +349,29 @@ public class MetaInstallPlugin extends Plugin {
     }
 
     /**
-     * Holding the lock across the start means a "no" is either seen here —
-     * and nothing starts — or arrives after the report was handed to the
-     * SDK, which is the one report a later "no" cannot recall (runbook §6).
+     * The one time the SDK is started. Automatic logging and initialization
+     * are set off again before initialization (the manifest already says so);
+     * advertising-ID collection, which the manifest leaves off so that nothing
+     * reads it before this point, is turned on for this report. The data may
+     * be used for measurement and conversions only, and the install report —
+     * the SDK's own MOBILE_APP_INSTALL request — is the only thing asked for.
+     * `publishInstallAsync` is what `AppEventsLogger.activateApp` calls for the
+     * install; calling it directly is what leaves out the session tracking
+     * activateApp would start. It is pinned to facebook-core 18.3.0 (the
+     * runbook's §4 is read against that version).
      */
     private void startSdkAndReportLocked(Context app, String referrer) {
-        if (!"granted".equals(consent) || reported || blocked) return;
+        // The referrer lookup took up to a few seconds: read the record again
+        // (another instance may have written to it) and look at the region
+        // once more, right before anything can go out.
+        readState();
+        if (reported || blocked || seenInRegionThatNeedsConsentLocked()) return;
         try {
             FacebookSdk.setApplicationId(appId);
             FacebookSdk.setClientToken(clientToken);
             FacebookSdk.setAutoInitEnabled(false);
             FacebookSdk.setAutoLogAppEventsEnabled(false);
-            FacebookSdk.setAdvertiserIDCollectionEnabled(false);
+            FacebookSdk.setAdvertiserIDCollectionEnabled(true);
             FacebookSdk.sdkInitialize(app);
             FacebookSdk.fullyInitialize();
             FacebookSdk.setLimitEventAndDataUsage(app, true);
@@ -458,37 +446,53 @@ public class MetaInstallPlugin extends Plugin {
         }
     }
 
-    /**
-     * No further attempt will be made on this install: Meta turned automatic
-     * logging on behind this app's back, or the attempts ran out without Meta
-     * accepting the report. The switch stays in Settings either way — the
-     * answer is still the player's to change — but nothing is tried again.
-     */
-    private boolean stopped() {
-        return blocked || (!reported && attempts >= MAX_ATTEMPTS);
-    }
-
-    private JSObject state() {
-        JSObject ret = new JSObject();
-        ret.put("available", configured);
-        ret.put("consent", consent);
-        ret.put("reported", reported);
-        ret.put("stopped", !reported && stopped());
-        // A report may have gone out without Meta's answer having been read
-        // yet (that happens at the next launch), so Settings must not say
-        // nothing was ever sent.
-        ret.put("attempted", attempts > 0);
-        ret.put("installedAt", installedAt());
-        return ret;
-    }
-
-    private long installedAt() {
+    /** Installed within the window, by Android's record of the first install. */
+    private boolean isNewInstall() {
         try {
             Context context = getContext();
-            return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).firstInstallTime;
+            long installedAt = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).firstInstallTime;
+            long age = System.currentTimeMillis() - installedAt;
+            return installedAt > 0 && age >= 0 && age < NEW_INSTALL_WINDOW_MS;
         } catch (PackageManager.NameNotFoundException | RuntimeException e) {
-            return 0;
+            return false;
         }
+    }
+
+    /**
+     * Whether any sign of where the phone is — the SIM's country, the mobile
+     * network's, the device's region setting — is a region that needs consent.
+     * Any one is enough; no sign at all counts as one too. None of these needs
+     * a permission.
+     */
+    private boolean inRegionThatNeedsConsent() {
+        String sim = "";
+        String network = "";
+        try {
+            TelephonyManager tm = getContext().getSystemService(TelephonyManager.class);
+            if (tm != null) {
+                sim = tm.getSimCountryIso();
+                network = tm.getNetworkCountryIso();
+            }
+        } catch (RuntimeException e) {
+            // No telephony: the region setting decides.
+        }
+        String setting = Locale.getDefault().getCountry();
+        boolean known = false;
+        for (String code : new String[] { sim, network, setting }) {
+            if (code == null || code.isEmpty()) continue;
+            known = true;
+            if (REGIONS_THAT_NEED_CONSENT.contains(code.toUpperCase(Locale.ROOT))) return true;
+        }
+        return !known;
+    }
+
+    /**
+     * No further attempt will be made on this install: it was seen in a region
+     * that needs consent, Meta turned automatic logging on behind this app's
+     * back, or the attempts ran out without Meta accepting the report.
+     */
+    private boolean stopped() {
+        return consentRegion || blocked || (!reported && attempts >= MAX_ATTEMPTS);
     }
 
     // --- our record --------------------------------------------------------
@@ -497,66 +501,72 @@ public class MetaInstallPlugin extends Plugin {
         return new File(getContext().getNoBackupFilesDir(), STATE_FILE);
     }
 
-    private File declinedFile() {
-        return new File(getContext().getNoBackupFilesDir(), DECLINED_FILE);
+    private File stateTmpFile() {
+        return new File(getContext().getNoBackupFilesDir(), STATE_FILE + ".tmp");
     }
 
-    private boolean persistDeclineWithoutWriting() {
-        File file = stateFile();
-        if (!file.exists()) return true;
-        if (file.renameTo(declinedFile())) return true;
-        return file.delete();
+    private File consentRegionMarker() {
+        return new File(getContext().getNoBackupFilesDir(), CONSENT_REGION_MARKER);
     }
 
     /**
-     * A missing file is "never asked"; a file that cannot be read is a no, and
-     * so is the renamed record of a no that could not be written.
+     * Fails closed: a region that needs consent must stay recorded even with
+     * no space to write. An empty file first; failing that, any directory
+     * entry that already exists becomes the marker by a rename, which needs no
+     * free space — the temporary file a failed write left behind (a new
+     * install has nothing else), then the record itself.
+     */
+    private boolean markConsentRegionWithoutWriting() {
+        File marker = consentRegionMarker();
+        try {
+            if (marker.exists() || marker.createNewFile()) return true;
+        } catch (IOException | RuntimeException e) {
+            // Try a rename.
+        }
+        File tmp = stateTmpFile();
+        if (tmp.exists() && tmp.renameTo(marker)) return true;
+        File state = stateFile();
+        return state.exists() && state.renameTo(marker);
+    }
+
+    /**
+     * A missing file is a new record; a file that cannot be read stops this
+     * install, and so does the consent-region marker.
      */
     private void readState() {
-        File declined = declinedFile();
-        File file = declined.exists() ? declined : stateFile();
-        if (!file.exists()) {
-            consent = "unset";
-            return;
-        }
+        File file = stateFile();
+        reported = false;
+        blocked = false;
+        consentRegion = consentRegionMarker().exists();
+        attempts = 0;
+        if (!file.exists()) return;
         Properties props = new Properties();
         try (FileInputStream in = new FileInputStream(file)) {
             props.load(in);
-            String value = props.getProperty("consent", "declined");
-            consent = !declined.exists() && "granted".equals(value) ? "granted" : "declined";
             reported = "true".equals(props.getProperty("reported"));
             blocked = "true".equals(props.getProperty("blocked"));
+            consentRegion = consentRegion || "true".equals(props.getProperty("consentRegion"));
             attempts = Math.max(0, Integer.parseInt(props.getProperty("attempts", "0")));
         } catch (IOException | RuntimeException e) {
-            consent = "declined";
-            reported = false;
-            blocked = false;
             attempts = MAX_ATTEMPTS;
         }
     }
 
     private boolean writeState() {
         Properties props = new Properties();
-        props.setProperty("consent", consent);
         props.setProperty("reported", Boolean.toString(reported));
         props.setProperty("blocked", Boolean.toString(blocked));
+        props.setProperty("consentRegion", Boolean.toString(consentRegion));
         props.setProperty("attempts", Integer.toString(attempts));
         File file = stateFile();
-        File tmp = new File(file.getParentFile(), STATE_FILE + ".tmp");
+        File tmp = stateTmpFile();
         try (FileOutputStream out = new FileOutputStream(tmp)) {
             props.store(out, null);
             out.getFD().sync();
         } catch (IOException | RuntimeException e) {
             return false;
         }
-        if (!tmp.renameTo(file)) return false;
-        // The record just written is the answer now. A leftover "declined"
-        // copy that cannot be removed keeps reading as a no — the safe side.
-        File declined = declinedFile();
-        if (declined.exists() && !declined.delete()) {
-            Log.w(TAG, "an older declined record remains; it still reads as a no");
-        }
-        return true;
+        return tmp.renameTo(file);
     }
 
     // --- the SDK's storage, handled without loading the SDK ------------------

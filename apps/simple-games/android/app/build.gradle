@@ -97,8 +97,8 @@ android {
         }
     }
     // Exactly one MetaInstallPlugin is compiled into each variant: the real one
-    // (src/metaOn) in a release that asked for Meta, the stub that answers
-    // "unavailable" (src/metaOff) everywhere else. The manifest overlay that
+    // (src/metaOn) in a release that asked for Meta, the empty stub
+    // (src/metaOff) everywhere else. The manifest overlay that
     // switches the SDK's automatic behaviour off travels with the real one.
     sourceSets {
         debug {

@@ -22,14 +22,6 @@
  *      enforces). This is what turns the one network exception of
  *      check-principles.sh §1 into code Core cannot load without asking
  *      (docs/PRODUCT_PRINCIPLES.md「Shared」).
- *   6. `src/services/acquisition/` (the Android-only Meta install
- *      measurement, issue #204) is reached only from the shell — `src/app/`,
- *      `src/ui/`, `src/main.tsx` — and from its own directory. Never from a
- *      game, and never from `storage/`, `backup/`, `monetization/`, `state/`,
- *      `i18n/`, `club/` or another service: the one report it sends is fixed
- *      in native code, and this keeps anything that knows about play, saves or
- *      purchases from even holding a handle to it
- *      (docs/META_ANDROID_ACQUISITION.md「送らないもの」).
  *
  * ESLint glob patterns cannot express rule 1 across import depths (a game
  * reaches shared code by '../../../storage' and a sibling game would be
@@ -363,35 +355,6 @@ function clubOffenders(imports: Import[]): Import[] {
   });
 }
 
-// Rule 6. The Meta install measurement may be held only by the shell. A
-// glob is judged by its literal head, as for club/: a wildcard before
-// `acquisition` could otherwise tow it in unseen.
-const acquisitionRoot = join(SRC, 'services', 'acquisition');
-const acquisitionDir = acquisitionRoot + sep;
-const uiDir = join(SRC, 'ui') + sep;
-const mainFile = join(SRC, 'main.tsx');
-const reachesAcquisition = (resolved: string): boolean =>
-  resolved === acquisitionRoot || resolved.startsWith(acquisitionDir);
-const globMayReachAcquisition = (resolved: string): boolean => {
-  const head = globHead(resolved);
-  return reachesAcquisition(head) || acquisitionDir.startsWith(head);
-};
-
-function acquisitionOffenders(imports: Import[]): Import[] {
-  return imports.filter((entry) => {
-    if (entry.resolved === null) return false;
-    const reaches =
-      entry.kind === 'glob'
-        ? globMayReachAcquisition(entry.resolved)
-        : reachesAcquisition(entry.resolved);
-    if (!reaches) return false;
-    const file = entry.file;
-    if (file.startsWith(acquisitionDir)) return false;
-    if (gameOf(file) !== null) return true;
-    return !(file.startsWith(appDir) || file.startsWith(uiDir) || file === mainFile);
-  });
-}
-
 describe('import boundaries (docs/ARCHITECTURE.md)', () => {
   it('found a believable amount of code to check', () => {
     // A refactor that breaks the scanner must fail loudly, not pass emptily.
@@ -701,88 +664,6 @@ describe('import boundaries (docs/ARCHITECTURE.md)', () => {
         'ui/screens/SettingsScreen.tsx -> ../../club/hub (import())',
         'ui/screens/SettingsScreen.tsx -> ../../club/hub (static)',
       ].sort(),
-    );
-  });
-
-  it('src/services/acquisition/ is held only by the shell (rule 6)', () => {
-    expect(listed(acquisitionOffenders(allImports))).toEqual([]);
-  });
-
-  it('the acquisition rule sees offenders (self-check on synthetic imports)', () => {
-    const probes: Probe[] = [
-      // The shell: allowed.
-      {
-        file: 'app/App.tsx',
-        specifier: '../services/acquisition/metaInstall',
-        kind: 'static',
-        verdict: 'ok',
-      },
-      {
-        file: 'main.tsx',
-        specifier: './services/acquisition/metaInstall',
-        kind: 'static',
-        verdict: 'ok',
-      },
-      {
-        file: 'ui/components/MetaInstallSetting.tsx',
-        specifier: '../../services/acquisition/metaInstall',
-        kind: 'static',
-        verdict: 'ok',
-      },
-      {
-        file: 'services/acquisition/metaInstall.ts',
-        specifier: './plugin',
-        kind: 'static',
-        verdict: 'ok',
-      },
-      // A game, by any form: offender.
-      {
-        file: 'games/sudoku/ui/SudokuRoot.tsx',
-        specifier: '../../../services/acquisition/metaInstall',
-        kind: 'static',
-        verdict: 'offender',
-      },
-      {
-        file: 'games/sudoku/ui/SudokuRoot.tsx',
-        specifier: '../../../services/acquisition/plugin',
-        kind: 'import()',
-        verdict: 'offender',
-      },
-      {
-        file: 'games/sudoku/ui/SudokuRoot.test.tsx',
-        specifier: '../../../services/acquisition',
-        kind: 'static',
-        verdict: 'offender',
-      },
-      // Anything that knows about saves, purchases or other services: offender.
-      {
-        file: 'storage/repo.ts',
-        specifier: '../services/acquisition/metaInstall',
-        kind: 'static',
-        verdict: 'offender',
-      },
-      {
-        file: 'monetization/adRemoval.ts',
-        specifier: '../services/acquisition/metaInstall',
-        kind: 'static',
-        verdict: 'offender',
-      },
-      {
-        file: 'services/review.ts',
-        specifier: './acquisition/metaInstall',
-        kind: 'static',
-        verdict: 'offender',
-      },
-      // A glob whose wildcard comes before `acquisition`, from outside the shell.
-      {
-        file: 'storage/repo.ts',
-        specifier: '../services/**/*.ts',
-        kind: 'glob',
-        verdict: 'offender',
-      },
-    ];
-    expect(listed(acquisitionOffenders(probeImports(probes))).sort()).toEqual(
-      expectedOffenders(probes).sort(),
     );
   });
 });

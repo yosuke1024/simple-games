@@ -6,15 +6,19 @@
     (docs/META_ANDROID_ACQUISITION.md §2, §4):
 
     - FacebookInitProvider is removed. It is how the SDK initializes itself at
-      process start, before any code of ours runs and before the player has
-      been asked anything. With it gone, the SDK is initialized only by
-      MetaInstallPlugin, only after a yes. AutoInitEnabled=false alone is not
-      enough: the SDK still writes a POST body to the network before it checks
-      that flag (GraphRequest.serializeToUrlConnection vs
+      process start, before any code of ours runs. With it gone, the SDK is
+      initialized only by MetaInstallPlugin, only for a new install outside
+      the regions that need consent, and only for its one report.
+      AutoInitEnabled=false alone is not enough: the SDK still writes a POST
+      body to the network before it checks that flag
+      (GraphRequest.serializeToUrlConnection vs
       GraphResponse.fromHttpConnection).
     - Automatic event logging, advertising-ID collection and the SDK's own
       monitoring are declared off, so nothing starts that we did not start.
-      The code sets the same values again before it initializes the SDK.
+      The code sets the same values again before it initializes the SDK,
+      except advertising-ID collection, which it turns on for the report
+      (runbook §5): declared off here so that nothing reads the ID before
+      that point.
     - The two access-token receivers belong to Facebook Login, which this app
       does not have.
     - ACCESS_ADSERVICES_CUSTOM_AUDIENCE is removed: it is the Protected
@@ -27,8 +31,9 @@
     ties the install report to an ad (AttributionIdentifiers). On Android 11+
     another app's provider is hidden unless it is declared here; without this,
     whether the ID could be read depended on the Facebook app happening to
-    match the https VIEW query that AdMob declares. The consent text already
-    says this ID is sent when the Facebook app is on the phone. Nothing else is
+    match the https VIEW query that AdMob declares. The public privacy policy
+    says this ID is sent when the Facebook app is on the phone (runbook §4,
+    §8). Nothing else is
     queried: no package entry, no other authority (check-principles.sh §4b,
     check-android-artifact.sh).
 -->
