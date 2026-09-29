@@ -79,19 +79,16 @@ export function BoxRegionsResultOverlay({
         ) : null}
 
         <div className="result-actions">
+          {/* Retry leads and New board follows (§9): the same board again is the
+              first offer, a fresh one the second, and the daily has no second. */}
+          <button type="button" className="btn btn-primary" onClick={onRetry} autoFocus>
+            {t('tryAgain')}
+          </button>
           {canStartNew ? (
-            <button type="button" className="btn btn-primary" onClick={onNewBoard} autoFocus>
+            <button type="button" className="btn btn-secondary" onClick={onNewBoard}>
               {t('boxRegionsNewBoard')}
             </button>
           ) : null}
-          <button
-            type="button"
-            className={`btn ${canStartNew ? 'btn-secondary' : 'btn-primary'}`}
-            onClick={onRetry}
-            autoFocus={!canStartNew}
-          >
-            {t('tryAgain')}
-          </button>
           <button type="button" className="btn btn-ghost" onClick={onHome}>
             {t('backHome')}
           </button>

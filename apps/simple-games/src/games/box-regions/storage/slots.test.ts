@@ -39,6 +39,15 @@ describe('saved-game slots', () => {
     expect(gameSchema.validate({ ...difficultyRecord, dailyDate: '2026-08-07' })).toBeNull();
     expect(dailyGameSchema.validate({ ...dailyRecord, dailyDate: null })).toBeNull();
   });
+
+  it('refuses a daily record at any difficulty but medium (§9, §11)', () => {
+    // A well-formed easy board wearing a date: every daily is medium, so this
+    // cannot have come from play, and the slot drops it rather than resuming an
+    // easy daily.
+    const easyDaily = { ...difficultyRecord, mode: 'daily' as const, dailyDate: '2026-08-07' };
+    expect(dailyGameSchema.validate(easyDaily)).toBeNull();
+    expect(dailyGameSchema.validate(dailyRecord)?.difficulty).toBe('medium');
+  });
 });
 
 describe('a save play could not have produced (§11)', () => {

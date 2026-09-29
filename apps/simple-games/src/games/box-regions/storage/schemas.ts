@@ -11,6 +11,7 @@
 import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asDateString, asInt, asString, isRecord } from '../../../storage/validate';
 import {
+  DAILY_DIFFICULTY,
   DIFFICULTIES,
   MAX_REGIONS,
   MAX_REGION_SIZE,
@@ -233,6 +234,9 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (dailyDate === null && raw.dailyDate !== null) return null;
   if (mode === 'daily' && dailyDate === null) return null;
   if (mode === 'difficulty' && dailyDate !== null) return null;
+  // Every daily is medium (§9); a dated record at another difficulty cannot
+  // have come from play, however well-formed its board is (§11).
+  if (mode === 'daily' && difficulty !== DAILY_DIFFICULTY) return null;
 
   // The board must be the shape the difficulty promises; anything else is a
   // record from another world, and decoding it would only fail later.
