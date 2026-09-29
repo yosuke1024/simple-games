@@ -104,22 +104,32 @@
 }
 
 /*
-  The two fills of §13 — game content, like Minesweeper's numbers (the one
+  The two colours of §13 — game content, like Minesweeper's numbers (the one
   place this file is allowed colours of its own; docs/architecture/css-split.md).
   Shape carries the meaning (a disc against a crescent); the hues are support.
-  Both clear 3:1 against every ground they sit on — the surface, the recessed
-  ground of a given, the paper and the warn ground — in light (sun 4.46 / 3.57
-  / 3.98 / 3.68, moon 6.45 / 5.16 / 5.76 / 5.32) and in dark (sun 7.66 / 8.44 /
-  9.15 / 6.98, moon 7.03 / 7.75 / 8.41 / 6.41), measured 2026-09-30.
+
+  In light the fills are bright and the rim carries the contrast: each mark is
+  drawn with a thin rim in a darker shade of its own hue, and it is the rim
+  that clears 3:1 against every ground it sits on — the surface, the recessed
+  ground of a given, the paper and the warn ground (sun rim #a9670f: 4.46 /
+  3.57 / 3.98 / 3.68; moon rim #3f5b9e: 6.45 / 5.16 / 5.76 / 5.32). The fills
+  themselves are lighter than that on purpose (sun #f0ad3a 1.5–1.9, moon
+  #6d8fe0 2.5–3.1): a dark fill read as mud on the paper (2026-09-30). In dark
+  the fills clear 3:1 on their own (sun #e6b054: 7.66 / 8.44 / 9.15 / 6.98;
+  moon #9db1e3: 7.03 / 7.75 / 8.41 / 6.41) and the rim is the fill, invisible.
 */
 .bn-board {
-  --bn-sun: #a9670f;
-  --bn-moon: #3f5b9e;
+  --bn-sun: #f0ad3a;
+  --bn-sun-rim: #a9670f;
+  --bn-moon: #6d8fe0;
+  --bn-moon-rim: #3f5b9e;
 }
 
 :root[data-theme='dark'] .bn-board {
   --bn-sun: #e6b054;
+  --bn-sun-rim: #e6b054;
   --bn-moon: #9db1e3;
+  --bn-moon-rim: #9db1e3;
 }
 
 /* The mark is the meaning (§13), so it sits above the ground. */
@@ -138,24 +148,30 @@
 
 .bn-sun {
   fill: var(--bn-sun);
+  stroke: var(--bn-sun-rim);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
 }
 
 .bn-moon {
   fill: var(--bn-moon);
+  stroke: var(--bn-moon-rim);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
 }
 
 /* A given wears the ink outline the player's marks do not (§13). */
 .bn-mark-fixed .bn-sun,
 .bn-mark-fixed .bn-moon {
   stroke: var(--ink);
-  stroke-width: 1.6;
-  stroke-linejoin: round;
+  stroke-width: 2;
 }
 
-/* While a mark breaks a rule, its fill is the warning colour too (§9). */
+/* While a mark breaks a rule, fill and rim are the warning colour too (§9). */
 .bn-cell-broken .bn-sun,
 .bn-cell-broken .bn-moon {
   fill: var(--warn);
+  stroke: var(--warn);
 }
 
 /* A mark arrives with one beat of pop (§13). */
