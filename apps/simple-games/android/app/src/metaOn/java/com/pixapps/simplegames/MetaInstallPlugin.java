@@ -85,6 +85,13 @@ public class MetaInstallPlugin extends Plugin {
     private static final String STATE_FILE = "meta-install.properties";
 
     /**
+     * "Seen in a region that needs consent", when the record above could not
+     * be written: an empty file, or the record itself renamed (a rename needs
+     * no free space). Its presence alone is the answer.
+     */
+    private static final String CONSENT_REGION_MARKER = "meta-install.consent-region";
+
+    /**
      * Launches that may try before the install is given up on. A report that
      * Meta keeps refusing (a misconfigured app, say) must not become an SDK
      * start on every launch forever.
@@ -235,7 +242,11 @@ public class MetaInstallPlugin extends Plugin {
         if (consentRegion) return true;
         if (reported || !inRegionThatNeedsConsent()) return false;
         consentRegion = true;
-        writeState();
+        if (!writeState() && !markConsentRegionWithoutWriting()) {
+            // This launch stays off (the field above); a later one cannot be
+            // told, which is the case the marker exists for.
+            Log.w(TAG, "could not record the region; this launch sends nothing");
+        }
         if (!sdkStarted) deleteSdkData(getContext());
         return true;
     }
@@ -486,12 +497,31 @@ public class MetaInstallPlugin extends Plugin {
         return new File(getContext().getNoBackupFilesDir(), STATE_FILE);
     }
 
-    /** A missing file is a new record; a file that cannot be read stops this install. */
+    private File consentRegionMarker() {
+        return new File(getContext().getNoBackupFilesDir(), CONSENT_REGION_MARKER);
+    }
+
+    /** Fails closed: a region that needs consent must stay recorded even with no space to write. */
+    private boolean markConsentRegionWithoutWriting() {
+        File marker = consentRegionMarker();
+        try {
+            if (marker.exists() || marker.createNewFile()) return true;
+        } catch (IOException | RuntimeException e) {
+            // Try the rename.
+        }
+        File state = stateFile();
+        return state.exists() && state.renameTo(marker);
+    }
+
+    /**
+     * A missing file is a new record; a file that cannot be read stops this
+     * install, and so does the consent-region marker.
+     */
     private void readState() {
         File file = stateFile();
         reported = false;
         blocked = false;
-        consentRegion = false;
+        consentRegion = consentRegionMarker().exists();
         attempts = 0;
         if (!file.exists()) return;
         Properties props = new Properties();
@@ -499,7 +529,7 @@ public class MetaInstallPlugin extends Plugin {
             props.load(in);
             reported = "true".equals(props.getProperty("reported"));
             blocked = "true".equals(props.getProperty("blocked"));
-            consentRegion = "true".equals(props.getProperty("consentRegion"));
+            consentRegion = consentRegion || "true".equals(props.getProperty("consentRegion"));
             attempts = Math.max(0, Integer.parseInt(props.getProperty("attempts", "0")));
         } catch (IOException | RuntimeException e) {
             attempts = MAX_ATTEMPTS;

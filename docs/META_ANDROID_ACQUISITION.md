@@ -219,7 +219,7 @@ export してから使う。debug ビルド(`assembleDebug`)には何を設定�
 
 | もの | 場所 | 扱い |
 | --- | --- | --- |
-| 報告済み・停止・同意が要る地域の判定・試行回数の記録(`meta-install.properties`) | アプリの `no_backup` 領域のファイル(アダプタ専用) | Android の自動バックアップにも、アプリのバックアップファイルにも入らない |
+| 報告済み・停止・同意が要る地域の判定・試行回数の記録(`meta-install.properties`、地域の判定を書けなかったときの目印 `meta-install.consent-region`) | アプリの `no_backup` 領域のファイル(アダプタ専用) | Android の自動バックアップにも、アプリのバックアップファイルにも入らない |
 | SDK の SharedPreferences(`com.facebook.*` — anon_id・受理記録・設定キャッシュ等) | `shared_prefs/` | 報告受理後・試行切れや停止の後の**次の起動で、SDK を読み込む前に全部削除**。一度も試していない端末にあった場合も削除する |
 | `AppEventsLogger.persistedevents` / `facebook_ml/` / キャッシュの `instrument/` | `files/` / `cache/` | 同上(このアプリはイベントを溜めないので、通常は作られない) |
 
@@ -297,7 +297,9 @@ Android の自動バックアップが SDK の SharedPreferences を別の端末
   (Wi-Fi だけの端末など)地域設定が一覧の外なら、EEA の中にあっても送りうる。
   逆に、EEA の SIM を挿したまま日本にいる端末は送らない。
 - 判定は起動ごと(と通信の復帰を待ったあと)に行い、**一度でも該当したら記録する**
-  (`meta-install.properties` の `consentRegion`)。以後その端末では、SIM の差し替えや
+  (`meta-install.properties` の `consentRegion`。容量不足などで書けないときは、空の目印
+  ファイル `meta-install.consent-region` を作るか、記録ファイルをその名前に変える ——
+  どちらも失敗すればその起動は送らない)。以後その端末では、SIM の差し替えや
   地域設定の変更で手がかりが一覧の外になっても送らない。まだ受理されていない報告に
   限る —— 受理済みの端末は、そもそも二度と送らない。
 
