@@ -386,6 +386,37 @@
   --accent-ring-soft: rgba(56, 85, 202, 0.12);
 }
 
+/* The three practice-set titles of issue #210, chosen together against the
+   shipped thirty-eight per docs/plans/2026-09-29-linkedin-practice-set.md
+   Phase 1. */
+
+:root[data-game='binary-balance'],
+.accent-binary-balance {
+  --accent: #5a8128;
+  --accent-ink: #ffffff;
+  --accent-soft: #e7f3d8;
+  --accent-ring: rgba(90, 129, 40, 0.38);
+  --accent-ring-soft: rgba(90, 129, 40, 0.12);
+}
+
+:root[data-game='sudoku-6x6'],
+.accent-sudoku-6x6 {
+  --accent: #233c76;
+  --accent-ink: #ffffff;
+  --accent-soft: #d8e0f3;
+  --accent-ring: rgba(35, 60, 118, 0.38);
+  --accent-ring-soft: rgba(35, 60, 118, 0.12);
+}
+
+:root[data-game='box-regions'],
+.accent-box-regions {
+  --accent: #ac3564;
+  --accent-ink: #ffffff;
+  --accent-soft: #f3d8e3;
+  --accent-ring: rgba(172, 53, 100, 0.38);
+  --accent-ring-soft: rgba(172, 53, 100, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -739,6 +770,33 @@
   --accent-soft: #1b2241;
   --accent-ring: rgba(111, 132, 218, 0.42);
   --accent-ring-soft: rgba(111, 132, 218, 0.14);
+}
+
+:root[data-theme='dark'][data-game='binary-balance'],
+[data-theme='dark'] .accent-binary-balance {
+  --accent: #9cce5a;
+  --accent-ink: #161f09;
+  --accent-soft: #30401c;
+  --accent-ring: rgba(156, 206, 90, 0.42);
+  --accent-ring-soft: rgba(156, 206, 90, 0.14);
+}
+
+:root[data-theme='dark'][data-game='sudoku-6x6'],
+[data-theme='dark'] .accent-sudoku-6x6 {
+  --accent: #6784c5;
+  --accent-ink: #0b111e;
+  --accent-soft: #1f283c;
+  --accent-ring: rgba(103, 132, 197, 0.42);
+  --accent-ring-soft: rgba(103, 132, 197, 0.14);
+}
+
+:root[data-theme='dark'][data-game='box-regions'],
+[data-theme='dark'] .accent-box-regions {
+  --accent: #ce5a88;
+  --accent-ink: #1f0912;
+  --accent-soft: #401c2a;
+  --accent-ring: rgba(206, 90, 136, 0.42);
+  --accent-ring-soft: rgba(206, 90, 136, 0.14);
 }
 
 /* ---------- Web early release (docs/WEB_VERSION.md「先行公開」) ----------

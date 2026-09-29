@@ -9,7 +9,8 @@ import { GAMES } from './registry';
 
 /**
  * The titles in early release today (docs/WEB_VERSION.md「先行公開」): the three
- * of issue #194 and the five genres of issue #197.
+ * of issue #194, the five genres of issue #197, and the three practice-set
+ * titles of issue #210.
  */
 const WEB_BETA_IDS = [
   'crown-grid',
@@ -20,6 +21,9 @@ const WEB_BETA_IDS = [
   'dominoes',
   'hit-and-blow',
   'dots-and-boxes',
+  'binary-balance',
+  'sudoku-6x6',
+  'box-regions',
 ];
 
 async function loadOn(native: boolean) {

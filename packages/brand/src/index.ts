@@ -854,6 +854,55 @@ export const titleAccents = {
     onDark: '#080d20',
     softDark: '#1b2241',
   },
+  /**
+   * Binary Balance — spring green. The board is neutral (two grey grounds
+   * under ink marks, like Takuzu's), so the accent is chrome, hint and
+   * selection only. Chosen with the two below in one pass against all 38
+   * shipped accents + `--warn` (docs/plans/2026-09-29-linkedin-practice-set.md
+   * Phase 1, CIE76): nearest shipped is Spider Solitaire at ΔE 14.1 light /
+   * 20.2 dark, over the 12.5 / 9.1 floors; its shelf neighbour Shape Regions
+   * is 102.3 / 111.5 away. White ink 4.56; on the paper itself 4.01 — under
+   * the 4.5:1 target but over the 3:1 floor, the trade Yacht and Bunny Hop
+   * carry. Dark on the dark paper 9.74.
+   */
+  binaryBalance: {
+    light: '#5a8128',
+    onLight: '#ffffff',
+    softLight: '#e7f3d8',
+    dark: '#9cce5a',
+    onDark: '#161f09',
+    softDark: '#30401c',
+  },
+  /**
+   * Sudoku 6×6 — deep navy. A cool colour beside its full-size sibling's
+   * teal without borrowing it: Sudoku is 53.8 light / 52.1 dark away. Nearest
+   * shipped is Number Match at ΔE 14.2 light / 12.5 dark, over the floors;
+   * its shelf neighbour Hit & Blow is 38.6 / 34.7 away. White ink 10.61,
+   * paper 9.32, dark on the dark paper 4.86.
+   */
+  sudoku6x6: {
+    light: '#233c76',
+    onLight: '#ffffff',
+    softLight: '#d8e0f3',
+    dark: '#6784c5',
+    onDark: '#0b111e',
+    softDark: '#1f283c',
+  },
+  /**
+   * Box Regions — deep rose. Like Shape Regions the board carries its own
+   * region tints, so the accent is chrome and hint only. Nearest shipped is
+   * Gomoku at ΔE 14.8 light / Takuzu at 18.0 dark; the three practice-set
+   * accents are 56.5–91.3 apart in light and 55.1–103.7 in dark. White ink
+   * 6.09, paper 5.35, dark on the dark paper 4.66.
+   */
+  boxRegions: {
+    light: '#ac3564',
+    onLight: '#ffffff',
+    softLight: '#f3d8e3',
+    dark: '#ce5a88',
+    onDark: '#1f0912',
+    softDark: '#401c2a',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

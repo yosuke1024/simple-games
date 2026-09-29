@@ -44,6 +44,9 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | Dominoes          | モーブ(Web 先行公開)     | `#533653` | `#d55cd5` |
 | Hit & Blow        | フューシャ(Web 先行公開) | `#7c2177` | `#dd9eda` |
 | Dots and Boxes    | 群青(Web 先行公開)       | `#3855ca` | `#6f84da` |
+| Binary Balance    | 若草(Web 先行公開)       | `#5a8128` | `#9cce5a` |
+| Sudoku 6×6        | 紺青(Web 先行公開)       | `#233c76` | `#6784c5` |
+| Box Regions       | 深い薔薇(Web 先行公開)   | `#ac3564` | `#ce5a88` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える

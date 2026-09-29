@@ -1178,7 +1178,9 @@ describe('what a search matches', () => {
     await openSearch(user);
     await user.type(searchField(), 'SUDO');
 
-    expect(titlesOnScreen()).toEqual(['Sudoku']);
+    // Both titles that carry the word, in registry order: the browser build
+    // also lists the early-release Sudoku 6×6 (issue #210).
+    expect(titlesOnScreen()).toEqual(['Sudoku', 'Sudoku 6×6']);
   });
 
   it('says so quietly when nothing matches, and offers nothing else', async () => {

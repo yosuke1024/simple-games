@@ -229,7 +229,7 @@ describe('arriving at a game address', () => {
     renderShell();
 
     expect(await collectionHome()).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Sudoku/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Sudoku$/ })).toBeInTheDocument();
     expect(window.location.search).toBe('');
   });
 
@@ -250,7 +250,7 @@ describe('walking in from the collection', () => {
     await collectionHome();
     const history = watchHistory();
 
-    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await user.click(screen.getByRole('button', { name: /^Sudoku$/ }));
 
     expect(await playing('sudoku')).toBeInTheDocument();
     expect(window.location.search).toBe('?game=sudoku');
@@ -264,7 +264,7 @@ describe('walking in from the collection', () => {
     arriveAt(PLAY);
     renderShell();
     await collectionHome();
-    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await user.click(screen.getByRole('button', { name: /^Sudoku$/ }));
     await playing('sudoku');
 
     await user.click(leaveGame());
@@ -290,7 +290,7 @@ describe('walking in from the collection', () => {
     arriveAt(PLAY);
     renderShell();
     await collectionHome();
-    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await user.click(screen.getByRole('button', { name: /^Sudoku$/ }));
     await playing('sudoku');
     window.history.pushState(null, '', `${PLAY}?game=sudoku#rules`);
     vi.mocked(releaseSound).mockClear();
@@ -307,7 +307,7 @@ describe('walking in from the collection', () => {
     arriveAt(PLAY);
     renderShell();
     await collectionHome();
-    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await user.click(screen.getByRole('button', { name: /^Sudoku$/ }));
     await playing('sudoku');
 
     await goBack();
@@ -332,7 +332,7 @@ describe('walking in from the collection', () => {
     arriveAt(PLAY);
     renderShell();
     await collectionHome();
-    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await user.click(screen.getByRole('button', { name: /^Sudoku$/ }));
     await playing('sudoku');
     const history = watchHistory();
 
@@ -372,7 +372,7 @@ describe('asking to leave twice', () => {
     window.history.pushState(null, '', PLAY);
     renderShell();
     await collectionHome();
-    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await user.click(screen.getByRole('button', { name: /^Sudoku$/ }));
     await playing('sudoku');
     const history = watchHistory();
 
@@ -448,7 +448,7 @@ describe('the shell the app runs', () => {
     await collectionHome();
     const history = watchHistory();
 
-    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await user.click(screen.getByRole('button', { name: /^Sudoku$/ }));
     expect(await playing('sudoku')).toBeInTheDocument();
     expect(window.location.search).toBe('');
 
@@ -493,7 +493,7 @@ describe('the settings screen and the address', () => {
     arriveAt(PLAY);
     renderShell();
     await collectionHome();
-    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await user.click(screen.getByRole('button', { name: /^Sudoku$/ }));
     await playing('sudoku');
     await user.click(leaveGame());
     await settle();
@@ -533,7 +533,7 @@ describe('a step the address cannot honour', () => {
     arriveAt(PLAY);
     renderShell();
     await collectionHome();
-    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await user.click(screen.getByRole('button', { name: /^Sudoku$/ }));
     await playing('sudoku');
 
     // Not a link somebody followed — the address is stepped onto the way a
@@ -601,7 +601,7 @@ describe('a step the address cannot honour', () => {
     arriveAt(PLAY);
     renderShell();
     await collectionHome();
-    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await user.click(screen.getByRole('button', { name: /^Sudoku$/ }));
     await playing('sudoku');
 
     // The collection's own address — carrying no game at all — is the
