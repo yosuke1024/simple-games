@@ -349,7 +349,8 @@ Android の自動バックアップが SDK の SharedPreferences を別の端末
 | 起動時間・メモリ(Meta 入り vs なし、release/R8) | **未** |
 | 低価格の Android 実機 | **未** |
 | 本物の Meta アプリへの送信(2026-09-28、オーナー承認のうえ) | **済(受理まで)** — `android-release.yml` の手動実行(`meta: on` / `ads: test`)の APK をエミュレータ(Pixel_7 / API 37、Facebook アプリなし)に新規インストールし、今度は Meta への接続も通して記録した。同意前は 0 件、「Allow」直後に Meta への接続が 3 件、再起動後は設定が「報告済み」(SDK が受理を記録したときだけ)になり、Meta への接続は 0 件。Meta 側で自動ログが有効なときの「停止」にはならなかった。3 回(20:33 / 20:39 は Meta アプリ未公開、20:45 は公開後)とも同じ。この APK は `<queries>` の修正前 |
-| Events Manager の Test Events / 概要で受信 | **未** — 上の 3 回とも、送信直後の Test Events にも概要にも出なかった。**受理(`{appId}ping`)は応答にエラーが無かったことしか示さない**(`FacebookSdk.publishInstallAndWaitForResponse`)。Test Events は、端末の Facebook アプリにログインしたアカウントで「自分のイベント」を見分けるらしい(facebook-android-sdk#1094 の利用者報告。Meta の文書では未確認)。Facebook アプリにログインした端末で確かめる |
+| Events Manager の概要で計上 | **済** — 翌朝(2026-09-29)、データセットの概要に「アプリのインストール」1 件(連携: Facebook SDK、20 時台、状態はアクティブ)が出た。**3 回送って計上は 1 回**で、Meta アプリを公開(Live)した後の 20:45 の分と見られる(未公開中の 2 回は計上されていない — 推定)。広告 ID も Facebook アプリの ID も無い報告でも計上される。標準イベントの一覧に出たのはインストールだけで、「アプリの起動」(`fb_mobile_activate_app`)は無い。送信直後(5〜15 分)の概要には出ていなかった。**受理(`{appId}ping`)は応答にエラーが無かったことしか示さない**(`FacebookSdk.publishInstallAndWaitForResponse`)ので、計上は概要で見る |
+| Events Manager の Test Events で受信 | **未** — 3 回とも送信直後の Test Events には出なかった。Test Events は、端末の Facebook アプリにログインしたアカウントで「自分のイベント」を見分けるらしい(facebook-android-sdk#1094 の利用者報告。Meta の文書では未確認)。Facebook アプリにログインした端末で確かめる(`<queries>` の修正後のビルドで) |
 | 広告マネージャのインストール最適化の選択 | **未**(同上) |
 
 ## 10. 1,000 installs の判定と運用
@@ -412,10 +413,9 @@ Android の自動バックアップが SDK の SharedPreferences を別の端末
 
 ## 12. 未完了事項
 
-- **Meta 側で計上・表示されることは未確認。** 本物の Meta アプリへの送信は受理まで
-  確かめた(§9)が、Events Manager の Test Events・概要にはまだ出ていない。Facebook
-  アプリにログインした端末での Test Events(§8 の 11)と、概要の反映(時間がかかる)で
-  確かめる。
+- **Test Events での確認と、Facebook アプリの ID が実際に読まれることは未確認。**
+  本物の Meta アプリへの送信と概要での計上は確かめた(§9)。Facebook アプリにログイン
+  した端末での Test Events(§8 の 11)で、`<queries>` の修正後のビルドを確かめる。
 - §8 の Google Play / 公開文面 / Meta 側の作業(すべてオーナー)。
 - §9 の「未」の項目(Meta 入りビルドの実測・通信観測・実機・Test Events)。
 - §10 の開始値の記録。
