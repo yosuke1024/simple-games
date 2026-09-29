@@ -21,11 +21,25 @@
       Audience (remarketing) API, and remarketing is exactly what this
       measurement is not for. This file may only ever remove permissions
       (.github/scripts/check-principles.sh §4b).
+
+    The one thing it adds is visibility of a single ContentProvider: the
+    Facebook app's AttributionIdProvider, from which the SDK reads the ID that
+    ties the install report to an ad (AttributionIdentifiers). On Android 11+
+    another app's provider is hidden unless it is declared here; without this,
+    whether the ID could be read depended on the Facebook app happening to
+    match the https VIEW query that AdMob declares. The consent text already
+    says this ID is sent when the Facebook app is on the phone. Nothing else is
+    queried: no package entry, no other authority (check-principles.sh §4b,
+    check-android-artifact.sh).
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" tools:node="remove" />
+
+    <queries>
+        <provider android:authorities="com.facebook.katana.provider.AttributionIdProvider" />
+    </queries>
 
     <application>
         <meta-data android:name="com.facebook.sdk.AutoInitEnabled" android:value="false" />

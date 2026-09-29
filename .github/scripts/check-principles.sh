@@ -261,6 +261,43 @@ else
   ok "main 以外の manifest は権限を足していない"
 fi
 
+# <queries>(他のアプリが見えるようになる宣言)も同じ考え方で、main 以外の manifest に
+# 書けるのは Meta の overlay の 1 行 —— Facebook アプリの AttributionIdProvider(SDK が
+# 広告計測用 ID を読む先。docs/META_ANDROID_ACQUISITION.md §4)—— だけ。<package> や
+# 別の authority を足すと、端末に入っているアプリを見る範囲が広がる。
+meta_overlay='apps/simple-games/android/app/src/metaOn/AndroidManifest.xml'
+meta_query='<provider android:authorities="com.facebook.katana.provider.AttributionIdProvider" />'
+# 標準入力の manifest から、<queries> の中の要素(開始タグ)を 1 行ずつ出す。コメントは除く。
+queries_entries() {
+  tr '\n' ' ' | sed -E 's/<!--([^-]|-[^-])*-->//g' | grep -oE '<queries>.*</queries>' \
+    | grep -oE '<[a-zA-Z][^>]*>' | grep -vE '^<queries>$' | sed -E 's/[[:space:]]+/ /g' || true
+}
+hits=""
+for m in apps/*/android/app/src/*/AndroidManifest.xml; do
+  [ -f "$m" ] || continue
+  case "$m" in */src/main/AndroidManifest.xml) continue ;; esac
+  while IFS= read -r e; do
+    [ -n "$e" ] || continue
+    [ "$m" = "$meta_overlay" ] && [ "$e" = "$meta_query" ] && continue
+    hits="${hits}${m}: ${e}"$'\n'
+  done < <(queries_entries < "$m")
+done
+# 自己検査: 抽出が空振りしていないこと(許可外の 2 要素を拾い、許可した 1 行だけを残す)。
+probe="<manifest><!-- <queries><package android:name=\"x\" /></queries> --><queries>
+    ${meta_query}
+    <package android:name=\"com.facebook.katana\" />
+    <intent><action android:name=\"android.intent.action.VIEW\" /></intent>
+  </queries></manifest>"
+probe_hits="$(printf '%s' "$probe" | queries_entries | grep -vxF "$meta_query" | wc -l | tr -d ' ')"
+probe_kept="$(printf '%s' "$probe" | queries_entries | grep -cxF "$meta_query" || true)"
+if [ "$probe_hits" -ne 3 ] || [ "$probe_kept" -ne 1 ]; then
+  report "§4b の <queries> 抽出が壊れています(ガードが no-op です)" "許可外の要素: ${probe_hits} 件(期待 3)、許可した行: ${probe_kept} 件(期待 1)"
+elif [ -n "$hits" ]; then
+  report "main 以外の manifest が <queries> で他のアプリを見ようとしています(Meta の AttributionIdProvider 1 行だけが書けます)" "$hits"
+else
+  ok "main 以外の manifest の <queries> は Meta の AttributionIdProvider 1 行だけ(自己検査つき)"
+fi
+
 # 5. 本番広告 ID ---------------------------------------------------------------
 # 本番の AdMob ID はビルド時に注入する(ユニット ID は環境変数、アプリ ID は
 # Gradle / Xcode のビルド設定)。ソースに出てよいのは Google 公式のテスト ID
