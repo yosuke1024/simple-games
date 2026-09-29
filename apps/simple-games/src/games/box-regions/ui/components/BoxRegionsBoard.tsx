@@ -49,7 +49,7 @@ import {
   type BoxRegionsSession,
   type Hint,
 } from '../../game';
-import { ShapeKindIcon } from './ShapeKindIcon';
+import { ClueBadge } from './ClueBadge';
 
 /** How many tints the palette in box-regions.css holds (§5). */
 export const TINT_COUNT = 8;
@@ -319,17 +319,10 @@ export const BoxRegionsBoard = memo(function BoxRegionsBoard({
               onPointerDown={(event) => onPointerDown(event, index)}
               onClick={(event) => onClick(event, index)}
             >
-              {clue !== null ? (
-                <span className="br-clue" aria-hidden="true">
-                  <ShapeKindIcon kind={clue.kind} />
-                  {clue.size !== null ? (
-                    <span className="br-clue-count">
-                      {/* No box yet: just the number. A box: its count until it is the number (§5). */}
-                      {count === 0 || count === clue.size ? clue.size : `${count}/${clue.size}`}
-                    </span>
-                  ) : null}
-                </span>
-              ) : null}
+              {/* The clue is one badge: the kind as its shape, the number inside
+                  (§2). A box is drawn whole, so there is no running count to
+                  show — a box of the wrong size is the warn ring instead (§5). */}
+              {clue !== null ? <ClueBadge kind={clue.kind} size={clue.size} /> : null}
             </button>
           );
         })}

@@ -208,36 +208,24 @@
   left: 0;
 }
 
-/* The clue: symbol above count, in ink (§2, §13); paints over the tile. */
+/* The clue: one badge, the kind as its shape and the number inside (§2,
+   §13); paints over the tile. Drawn in currentColor — the cell's ink, or the
+   warn colour while the box breaks a rule — with the digits in the paper
+   colour, so light and dark need no second palette. */
 .br-clue {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-  line-height: 1;
+  display: block;
+  width: calc(var(--br-cell) * 0.74);
+  height: calc(var(--br-cell) * 0.74);
   pointer-events: none;
 }
 
-.br-icon {
-  width: calc(var(--br-cell) * 0.36);
-  height: calc(var(--br-cell) * 0.36);
-  display: block;
-}
-
-.br-clue-count {
+.br-badge-num {
+  fill: var(--paper);
   font-family: var(--font-display);
-  font-size: clamp(10px, calc(var(--br-cell) * 0.3), 15px);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
-}
-
-/* A clue with only a symbol sits a touch larger. */
-.br-clue > :only-child.br-icon {
-  width: calc(var(--br-cell) * 0.5);
-  height: calc(var(--br-cell) * 0.5);
 }
 
 /* Always-on violation display (§5); the ring sits on the tile. */

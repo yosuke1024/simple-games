@@ -16,7 +16,7 @@ import { IconClose } from '@/ui/components/icons';
 import { UNASSIGNED, type Clue } from '../../game';
 import { useBoxRegions } from '../../state/GameContext';
 import { cellEdges, TINT_COUNT } from '../components/BoxRegionsBoard';
-import { ShapeKindIcon } from '../components/ShapeKindIcon';
+import { ClueBadge } from '../components/ClueBadge';
 
 const FIGURE_SIZE = 3;
 
@@ -40,7 +40,6 @@ function MiniBoard({
     const letter = cells[index] ?? '.';
     return letter === '.' ? UNASSIGNED : letter.charCodeAt(0) - 97;
   };
-  const count = (r: number): number => [...cells].filter((c) => c.charCodeAt(0) - 97 === r).length;
   const previewRows = preview.map((index) => Math.floor(index / size));
   const previewCols = preview.map((index) => index % size);
   return (
@@ -54,7 +53,6 @@ function MiniBoard({
             const edges = cellEdges(region, index, row, col, size, size);
             const clueIndex = clues.findIndex((c) => c.index === index);
             const clue = clueIndex === -1 ? null : clues[clueIndex]!;
-            const held = clueIndex === -1 ? 0 : count(clueIndex);
             const inPreview = preview.includes(index);
             const classes = [
               'br-cell',
@@ -73,16 +71,7 @@ function MiniBoard({
               .join(' ');
             return (
               <span key={index} className={classes}>
-                {clue ? (
-                  <span className="br-clue">
-                    <ShapeKindIcon kind={clue.kind} />
-                    {clue.size !== null ? (
-                      <span className="br-clue-count">
-                        {held === 0 || held === clue.size ? clue.size : `${held}/${clue.size}`}
-                      </span>
-                    ) : null}
-                  </span>
-                ) : null}
+                {clue ? <ClueBadge kind={clue.kind} size={clue.size} /> : null}
               </span>
             );
           })}

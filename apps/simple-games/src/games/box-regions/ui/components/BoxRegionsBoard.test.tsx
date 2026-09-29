@@ -110,18 +110,19 @@ describe('what a cell reads aloud and shows (§5, §13)', () => {
     expect(cells[7]).toHaveAccessibleName('Row 3, column 2, unassigned, Any box');
   });
 
-  it('always draws a symbol on a clue, and the number under it', () => {
+  it('always draws a badge on a clue, with the number inside it', () => {
     const { cells } = renderBoard();
     for (const index of [0, 5, 7]) expect(cells[index]!.querySelector('svg')).not.toBeNull();
     expect(cells[7]!.querySelector('svg')!.getAttribute('data-kind')).toBe('free');
     expect(cells[1]!.querySelector('svg')).toBeNull();
-    // Nothing drawn yet: the number alone.
+    // The number is part of the badge, drawn or not.
     expect(cells[0]).toHaveTextContent(/^4$/);
   });
 
-  it('shows the count against the number while a box is off, and the number once it is right', () => {
+  it('keeps the number as it is while a box is the wrong size — the warn ring says so (§5)', () => {
     const short = renderBoard(session([0, 0, _, _, _, _, _, _, _]));
-    expect(short.cells[0]).toHaveTextContent('2/4');
+    expect(short.cells[0]).toHaveTextContent(/^4$/);
+    expect(short.cells[0]!.className).toContain('br-cell-warn');
     cleanup();
     const done = renderBoard(session([0, 0, _, 0, 0, _, _, _, _]));
     expect(done.cells[0]).toHaveTextContent(/^4$/);
