@@ -14,7 +14,7 @@ import {
 } from './engine';
 import { EMPTY, type Link, type Mark } from './types';
 
-/** '0' circle, '1' square, '.' empty, row-major; spaces are ignored. */
+/** '0' sun, '1' moon, '.' empty, row-major; spaces are ignored. */
 const board = (text: string): Mark[] =>
   [...text.replace(/\s/g, '')].map((c) => (c === '0' ? 0 : c === '1' ? 1 : EMPTY));
 
@@ -45,7 +45,7 @@ describe('edges and links (§1, §11)', () => {
 });
 
 describe('the tap (§4)', () => {
-  it('cycles empty → circle → square → empty', () => {
+  it('cycles empty → sun → moon → empty', () => {
     const givens = emptyMarks(6);
     let marks: Mark[] = emptyMarks(6);
     marks = cycleCell(givens, marks, 0)!;
@@ -88,7 +88,7 @@ describe('violations (§9)', () => {
 
   it('flags more than half a line before the line is full', () => {
     const result = findViolations(board('00.0.0' + '.'.repeat(30)), [], 6);
-    // Four circles in a six-wide row: over half already, so it can never finish.
+    // Four suns in a six-wide row: over half already, so it can never finish.
     expect(result.rows[0]).toBe(true);
     expect(result.cells.slice(0, 7)).toEqual([true, true, false, true, false, true, false]);
   });

@@ -2,7 +2,8 @@
  * fr catalog for Binary Balance: a machine translation of the English
  * source, not yet reviewed by a native speaker (docs/I18N_POLICY.md). The
  * title (`binaryBalanceName`) is a proper noun and stays as-is; wording follows
- * the Takuzu catalog where the meaning is the same.
+ * the Takuzu catalog where the meaning is the same. The two marks are a sun
+ * and a moon (the ordinary words for the celestial bodies).
  */
 import type { BinaryBalanceMessages } from './en';
 
@@ -18,17 +19,17 @@ export const fr: BinaryBalanceMessages = {
     'Votre partie {current} sera remplacée par une nouvelle grille {next}.',
   binaryBalanceBoardLabel: 'Grille de Binary Balance, {size} par {size}',
   binaryBalanceCellEmpty: 'Vide, ligne {row}, colonne {col}',
-  binaryBalanceCellCircle: 'Rond, ligne {row}, colonne {col}',
-  binaryBalanceCellSquare: 'Carré, ligne {row}, colonne {col}',
-  binaryBalanceCellFixedCircle: 'Rond initial, ligne {row}, colonne {col}',
-  binaryBalanceCellFixedSquare: 'Carré initial, ligne {row}, colonne {col}',
+  binaryBalanceCellSun: 'Soleil, ligne {row}, colonne {col}',
+  binaryBalanceCellMoon: 'Lune, ligne {row}, colonne {col}',
+  binaryBalanceCellFixedSun: 'Soleil initial, ligne {row}, colonne {col}',
+  binaryBalanceCellFixedMoon: 'Lune initiale, ligne {row}, colonne {col}',
   binaryBalanceLinkSameRight: 'identique à la case de droite',
   binaryBalanceLinkDiffRight: 'différente de la case de droite',
   binaryBalanceLinkSameBelow: 'identique à la case du dessous',
   binaryBalanceLinkDiffBelow: 'différente de la case du dessous',
   binaryBalanceRuleBroken: 'enfreint une règle',
-  binaryBalanceMarkCircle: 'un rond',
-  binaryBalanceMarkSquare: 'un carré',
+  binaryBalanceMarkSun: 'un soleil',
+  binaryBalanceMarkMoon: 'une lune',
   binaryBalanceHintViolation: 'Les cases surlignées enfreignent une règle.',
   binaryBalanceHintWrong: 'La marque cerclée ne peut pas être la bonne.',
   binaryBalanceHintPairGap:
@@ -54,9 +55,9 @@ export const fr: BinaryBalanceMessages = {
   binaryBalanceDailyBacklogHint: 'Les jours précédents restent ouverts.',
   binaryBalanceStep1Title: 'Jamais trois à la suite',
   binaryBalanceStep1Body:
-    'Touchez pour passer de vide à rond, puis à carré. La même marque ne se répète jamais trois fois à la suite.',
+    'Touchez pour passer de vide à soleil, puis à lune. La même marque ne se répète jamais trois fois à la suite.',
   binaryBalanceStep2Title: 'Moitié-moitié',
-  binaryBalanceStep2Body: 'Chaque ligne et chaque colonne compte autant de ronds que de carrés.',
+  binaryBalanceStep2Body: 'Chaque ligne et chaque colonne compte autant de soleils que de lunes.',
   binaryBalanceStep3Title: 'Suivez les liens',
   binaryBalanceStep3Body:
     'Les cases reliées par = sont identiques ; celles reliées par × sont différentes. Bloqué ? Demandez un indice.',

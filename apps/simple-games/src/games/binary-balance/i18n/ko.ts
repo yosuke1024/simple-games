@@ -2,7 +2,8 @@
  * ko catalog for Binary Balance: a machine translation of the English
  * source, not yet reviewed by a native speaker (docs/I18N_POLICY.md). The
  * title (`binaryBalanceName`) is a proper noun and stays as-is; wording follows
- * the Takuzu catalog where the meaning is the same.
+ * the Takuzu catalog where the meaning is the same. The two marks are a sun
+ * and a moon (the ordinary words for the celestial bodies).
  */
 import type { BinaryBalanceMessages } from './en';
 
@@ -17,17 +18,17 @@ export const ko: BinaryBalanceMessages = {
   binaryBalanceConfirmSwitchBody: '진행 중인 {current} 게임이 새 {next} 판으로 교체됩니다.',
   binaryBalanceBoardLabel: 'Binary Balance 판, {size}×{size}',
   binaryBalanceCellEmpty: '빈칸, {row}행 {col}열',
-  binaryBalanceCellCircle: '동그라미, {row}행 {col}열',
-  binaryBalanceCellSquare: '네모, {row}행 {col}열',
-  binaryBalanceCellFixedCircle: '고정 동그라미, {row}행 {col}열',
-  binaryBalanceCellFixedSquare: '고정 네모, {row}행 {col}열',
+  binaryBalanceCellSun: '해, {row}행 {col}열',
+  binaryBalanceCellMoon: '달, {row}행 {col}열',
+  binaryBalanceCellFixedSun: '고정 해, {row}행 {col}열',
+  binaryBalanceCellFixedMoon: '고정 달, {row}행 {col}열',
   binaryBalanceLinkSameRight: '오른쪽 칸과 같음',
   binaryBalanceLinkDiffRight: '오른쪽 칸과 다름',
   binaryBalanceLinkSameBelow: '아래 칸과 같음',
   binaryBalanceLinkDiffBelow: '아래 칸과 다름',
   binaryBalanceRuleBroken: '규칙 위반',
-  binaryBalanceMarkCircle: '동그라미',
-  binaryBalanceMarkSquare: '네모',
+  binaryBalanceMarkSun: '해',
+  binaryBalanceMarkMoon: '달',
   binaryBalanceHintViolation: '강조된 칸이 규칙을 어겼습니다.',
   binaryBalanceHintWrong: '테두리가 있는 표시는 정답일 수 없습니다.',
   binaryBalanceHintPairGap:
@@ -52,10 +53,9 @@ export const ko: BinaryBalanceMessages = {
   binaryBalanceDailiesSolved: '클리어한 날',
   binaryBalanceDailyBacklogHint: '지난 날짜는 언제든 도전할 수 있습니다.',
   binaryBalanceStep1Title: '세 칸 연속 금지',
-  binaryBalanceStep1Body:
-    '탭하면 빈칸, 동그라미, 네모로 바뀝니다. 같은 표시는 세 칸 연속될 수 없습니다.',
+  binaryBalanceStep1Body: '탭하면 빈칸, 해, 달로 바뀝니다. 같은 표시는 세 칸 연속될 수 없습니다.',
   binaryBalanceStep2Title: '반반씩',
-  binaryBalanceStep2Body: '모든 행과 모든 열에 동그라미와 네모가 같은 개수로 들어갑니다.',
+  binaryBalanceStep2Body: '모든 행과 모든 열에 해와 달이 같은 개수로 들어갑니다.',
   binaryBalanceStep3Title: '연결을 따라가기',
   binaryBalanceStep3Body:
     '=로 이어진 칸은 같고, ×로 이어진 칸은 다릅니다. 막혔나요? 힌트를 요청하세요.',

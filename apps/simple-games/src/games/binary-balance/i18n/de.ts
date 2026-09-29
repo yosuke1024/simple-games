@@ -2,7 +2,8 @@
  * de catalog for Binary Balance: a machine translation of the English
  * source, not yet reviewed by a native speaker (docs/I18N_POLICY.md). The
  * title (`binaryBalanceName`) is a proper noun and stays as-is; wording follows
- * the Takuzu catalog where the meaning is the same.
+ * the Takuzu catalog where the meaning is the same. The two marks are a sun
+ * and a moon (the ordinary words for the celestial bodies).
  */
 import type { BinaryBalanceMessages } from './en';
 
@@ -17,17 +18,17 @@ export const de: BinaryBalanceMessages = {
   binaryBalanceConfirmSwitchBody: 'Dein Spiel {current} wird durch ein neues Feld {next} ersetzt.',
   binaryBalanceBoardLabel: 'Binary-Balance-Feld, {size} mal {size}',
   binaryBalanceCellEmpty: 'Leer, Zeile {row}, Spalte {col}',
-  binaryBalanceCellCircle: 'Kreis, Zeile {row}, Spalte {col}',
-  binaryBalanceCellSquare: 'Quadrat, Zeile {row}, Spalte {col}',
-  binaryBalanceCellFixedCircle: 'Kreis, vorgegeben, Zeile {row}, Spalte {col}',
-  binaryBalanceCellFixedSquare: 'Quadrat, vorgegeben, Zeile {row}, Spalte {col}',
+  binaryBalanceCellSun: 'Sonne, Zeile {row}, Spalte {col}',
+  binaryBalanceCellMoon: 'Mond, Zeile {row}, Spalte {col}',
+  binaryBalanceCellFixedSun: 'Sonne, vorgegeben, Zeile {row}, Spalte {col}',
+  binaryBalanceCellFixedMoon: 'Mond, vorgegeben, Zeile {row}, Spalte {col}',
   binaryBalanceLinkSameRight: 'gleich wie das Feld rechts',
   binaryBalanceLinkDiffRight: 'anders als das Feld rechts',
   binaryBalanceLinkSameBelow: 'gleich wie das Feld darunter',
   binaryBalanceLinkDiffBelow: 'anders als das Feld darunter',
   binaryBalanceRuleBroken: 'verstößt gegen eine Regel',
-  binaryBalanceMarkCircle: 'ein Kreis',
-  binaryBalanceMarkSquare: 'ein Quadrat',
+  binaryBalanceMarkSun: 'eine Sonne',
+  binaryBalanceMarkMoon: 'ein Mond',
   binaryBalanceHintViolation: 'Die hervorgehobenen Felder verstoßen gegen eine Regel.',
   binaryBalanceHintWrong: 'Das umrandete Zeichen kann nicht stimmen.',
   binaryBalanceHintPairGap:
@@ -53,9 +54,9 @@ export const de: BinaryBalanceMessages = {
   binaryBalanceDailyBacklogHint: 'Jeder frühere Tag bleibt offen.',
   binaryBalanceStep1Title: 'Nie drei in Folge',
   binaryBalanceStep1Body:
-    'Tippen wechselt zwischen leer, Kreis und Quadrat. Dasselbe Zeichen steht nie dreimal in Folge.',
+    'Tippen wechselt zwischen leer, Sonne und Mond. Dasselbe Zeichen steht nie dreimal in Folge.',
   binaryBalanceStep2Title: 'Halbe-halbe',
-  binaryBalanceStep2Body: 'Jede Zeile und jede Spalte enthält gleich viele Kreise wie Quadrate.',
+  binaryBalanceStep2Body: 'Jede Zeile und jede Spalte enthält gleich viele Sonnen wie Monde.',
   binaryBalanceStep3Title: 'Den Verbindungen folgen',
   binaryBalanceStep3Body:
     'Felder mit = sind gleich, Felder mit × sind verschieden. Hängst du fest? Frag nach einem Hinweis.',

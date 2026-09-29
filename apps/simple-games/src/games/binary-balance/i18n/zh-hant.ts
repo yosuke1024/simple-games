@@ -2,7 +2,8 @@
  * zh-hant catalog for Binary Balance: a machine translation of the English
  * source, not yet reviewed by a native speaker (docs/I18N_POLICY.md). The
  * title (`binaryBalanceName`) is a proper noun and stays as-is; wording follows
- * the Takuzu catalog where the meaning is the same.
+ * the Takuzu catalog where the meaning is the same. The two marks are a sun
+ * and a moon (the ordinary words for the celestial bodies).
  */
 import type { BinaryBalanceMessages } from './en';
 
@@ -17,17 +18,17 @@ export const zhHant: BinaryBalanceMessages = {
   binaryBalanceConfirmSwitchBody: '進行中的「{current}」會被新的「{next}」盤面取代。',
   binaryBalanceBoardLabel: 'Binary Balance 盤面，{size}×{size}',
   binaryBalanceCellEmpty: '空白，第 {row} 列第 {col} 欄',
-  binaryBalanceCellCircle: '圓形，第 {row} 列第 {col} 欄',
-  binaryBalanceCellSquare: '方形，第 {row} 列第 {col} 欄',
-  binaryBalanceCellFixedCircle: '題目圓形，第 {row} 列第 {col} 欄',
-  binaryBalanceCellFixedSquare: '題目方形，第 {row} 列第 {col} 欄',
+  binaryBalanceCellSun: '太陽，第 {row} 列第 {col} 欄',
+  binaryBalanceCellMoon: '月亮，第 {row} 列第 {col} 欄',
+  binaryBalanceCellFixedSun: '題目太陽，第 {row} 列第 {col} 欄',
+  binaryBalanceCellFixedMoon: '題目月亮，第 {row} 列第 {col} 欄',
   binaryBalanceLinkSameRight: '與右邊的方格相同',
   binaryBalanceLinkDiffRight: '與右邊的方格不同',
   binaryBalanceLinkSameBelow: '與下面的方格相同',
   binaryBalanceLinkDiffBelow: '與下面的方格不同',
   binaryBalanceRuleBroken: '違反規則',
-  binaryBalanceMarkCircle: '圓形',
-  binaryBalanceMarkSquare: '方形',
+  binaryBalanceMarkSun: '太陽',
+  binaryBalanceMarkMoon: '月亮',
   binaryBalanceHintViolation: '標示的方格違反了規則。',
   binaryBalanceHintWrong: '有外框的標記不可能是對的。',
   binaryBalanceHintPairGap: '上色的一對會連成三個，所以有外框的方格是{mark}。',
@@ -48,9 +49,9 @@ export const zhHant: BinaryBalanceMessages = {
   binaryBalanceDailiesSolved: '過關天數',
   binaryBalanceDailyBacklogHint: '之前的日期隨時可以挑戰。',
   binaryBalanceStep1Title: '不得連續三格',
-  binaryBalanceStep1Body: '輕點方格即可在空白、圓形、方形之間切換。同一種標記不得連續三格。',
+  binaryBalanceStep1Body: '輕點方格即可在空白、太陽、月亮之間切換。同一種標記不得連續三格。',
   binaryBalanceStep2Title: '各佔一半',
-  binaryBalanceStep2Body: '每一列、每一欄的圓形與方形個數相同。',
+  binaryBalanceStep2Body: '每一列、每一欄的太陽與月亮個數相同。',
   binaryBalanceStep3Title: '沿著連線走',
   binaryBalanceStep3Body: '用 = 相連的方格相同，用 × 相連的方格不同。卡住了？可以要個提示。',
 };

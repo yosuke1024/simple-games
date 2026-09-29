@@ -98,8 +98,8 @@ describe('golden puzzles (v1)', () => {
 describe('the saved game format (v1)', () => {
   it('writes the strings a save holds', () => {
     let session = createDifficultySession('easy', 'binary-balance-easy-golden');
-    session = doTap(session, 0)!; // a circle
-    session = doTap(doTap(session, 1)!, 1)!; // a square, two taps around
+    session = doTap(session, 0)!; // a sun
+    session = doTap(doTap(session, 1)!, 1)!; // a moon, two taps around
     expect(encodeBoard(session.marks)).toBe('01' + '.'.repeat(34));
   });
 

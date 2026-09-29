@@ -18,7 +18,7 @@ import {
 } from './solver';
 import { EMPTY, other, type Link, type Mark } from './types';
 
-/** '0' circle, '1' square, '.' empty, row-major; spaces are ignored. */
+/** '0' sun, '1' moon, '.' empty, row-major; spaces are ignored. */
 const board = (text: string): Mark[] =>
   [...text.replace(/\s/g, '')].map((c) => (c === '0' ? 0 : c === '1' ? 1 : EMPTY));
 
@@ -83,7 +83,7 @@ describe('the techniques (§7)', () => {
   });
 
   it('T4 settles what every legal completion of a line agrees on', () => {
-    // 0 _ _ _ _ 0 finishes only as 011010 or 010110: both put squares at 1 and 4.
+    // 0 _ _ _ _ 0 finishes only as 011010 or 010110: both put moons at 1 and 4.
     const cells = board('0....0' + '.'.repeat(30));
     expect(steps(cells, [], TIER_TECHNIQUES.easy)).toEqual([]);
     const found = steps(cells, [], TIER_TECHNIQUES.medium);
@@ -95,7 +95,7 @@ describe('the techniques (§7)', () => {
 
   it('T4 reads links inside the line and to decided cells off it', () => {
     // A row with nothing written: alone it settles nothing. A × between cells
-    // 2 and 3 and a = from cell 0 up to a decided circle below change that.
+    // 2 and 3 and a = from cell 0 up to a decided sun below change that.
     const cells = empty6();
     cells[6] = 0;
     const found = steps(cells, [link('h', 2, false), link('v', 0, true)], ['line-completion']);
@@ -117,7 +117,7 @@ describe('the techniques (§7)', () => {
 
 describe('solving (§5, §7)', () => {
   it('reports a board that cannot be finished', () => {
-    // T1 makes cell 1 a square; the = to the circle beside it says circle.
+    // T1 makes cell 1 a moon; the = to the sun beside it says sun.
     const cells = board('0.0...' + '.'.repeat(30));
     const result = solve(cells, buildLayout([link('h', 0, true)], 6), TIER_TECHNIQUES.hard);
     expect(result.contradiction).toBe(true);
@@ -158,7 +158,7 @@ describe('the hint (§8)', () => {
   const { givens, links, solution, size } = session;
 
   it('points at a broken rule first', () => {
-    // Row 1 of this board is '..0...': three squares on its open end break rule 1.
+    // Row 1 of this board is '..0...': three moons on its open end break rule 1.
     const marks = board('.'.repeat(36));
     marks[3] = marks[4] = marks[5] = 1;
     expect(findHint(givens, marks, links, solution, size)).toEqual({

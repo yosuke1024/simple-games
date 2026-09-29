@@ -6,7 +6,7 @@
  * hurry.
  *
  * One action, free and unlimited: Hint (§8) — the keyboard reaches it too, H
- * (§4). There is no undo button, because a cell cycles empty → circle → square
+ * (§4). There is no undo button, because a cell cycles empty → sun → moon
  * → empty under the same tap that filled it (§8, §14).
  */
 import { useCallback, useEffect, useRef, useState } from 'react';

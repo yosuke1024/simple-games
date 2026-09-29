@@ -23,8 +23,8 @@
 import { findViolations, lineOfLink } from './engine';
 import {
   EMPTY,
-  SQUARE,
-  CIRCLE,
+  MOON,
+  SUN,
   cellCount,
   halfLine,
   isWritten,
@@ -127,7 +127,7 @@ export function legalMasks(size: number): readonly number[] {
 /** The legal-line alphabet as cell arrays, for callers that read lines, not bits. */
 export function legalLines(size: Size): (readonly Cell[])[] {
   return legalMasks(size).map((bits) =>
-    Array.from({ length: size }, (_, i) => (((bits >> i) & 1) === 1 ? SQUARE : CIRCLE)),
+    Array.from({ length: size }, (_, i) => (((bits >> i) & 1) === 1 ? MOON : SUN)),
   );
 }
 
@@ -284,12 +284,12 @@ function lineCountSteps(board: readonly Mark[], layout: Layout, firstOnly: boole
     let squares = 0;
     for (let i = 0; i < size; i++) {
       const value = board[cells[i]!]!;
-      if (value === CIRCLE) circles++;
-      else if (value === SQUARE) squares++;
+      if (value === SUN) circles++;
+      else if (value === MOON) squares++;
     }
     if (circles + squares === size) continue;
     if (circles !== half && squares !== half) continue;
-    const full: Cell = circles === half ? CIRCLE : SQUARE;
+    const full: Cell = circles === half ? SUN : MOON;
     const support = cells.filter((index) => board[index] === full);
     for (let i = 0; i < size; i++) {
       const index = cells[i]!;
@@ -380,8 +380,8 @@ function readLine(board: readonly Mark[], layout: Layout, k: number): LineReadin
   let empty = 0;
   for (let i = 0; i < size; i++) {
     const value = board[cells[i]!]!;
-    if (value === SQUARE) squares |= 1 << i;
-    else if (value === CIRCLE) circles |= 1 << i;
+    if (value === MOON) squares |= 1 << i;
+    else if (value === SUN) circles |= 1 << i;
     else empty |= 1 << i;
   }
   if (empty === 0) return { settled: 0, squares: 0 };
@@ -392,7 +392,7 @@ function readLine(board: readonly Mark[], layout: Layout, k: number): LineReadin
     const value = board[outer.other]!;
     if (!isWritten(value)) continue;
     const required = outer.same ? value : other(value);
-    if (required === SQUARE) squares |= 1 << outer.pos;
+    if (required === MOON) squares |= 1 << outer.pos;
     else circles |= 1 << outer.pos;
   }
   if ((squares & circles) !== 0) return null;
@@ -443,7 +443,7 @@ function lineCompletionSteps(board: readonly Mark[], layout: Layout, firstOnly: 
       if (((reading.settled >> i) & 1) === 0) continue;
       out.push({
         index: cells[i]!,
-        value: ((reading.squares >> i) & 1) === 1 ? SQUARE : CIRCLE,
+        value: ((reading.squares >> i) & 1) === 1 ? MOON : SUN,
         technique: 'line-completion',
         line: lines[k]!,
         support,
@@ -501,7 +501,7 @@ function propagate(board: Mark[], layout: Layout, start: number): boolean {
     for (let i = 0; i < size; i++) {
       if (((reading.settled >> i) & 1) === 0) continue;
       const index = cells[i]!;
-      board[index] = ((reading.squares >> i) & 1) === 1 ? SQUARE : CIRCLE;
+      board[index] = ((reading.squares >> i) & 1) === 1 ? MOON : SUN;
       written.push(index);
     }
   }
@@ -535,7 +535,7 @@ function hypothesisSteps(board: readonly Mark[], layout: Layout): Sweep {
     for (const index of lineCells[k]!) {
       if (board[index] !== EMPTY || tried[index] === 1) continue;
       tried[index] = 1;
-      for (const guess of [CIRCLE, SQUARE] as const) {
+      for (const guess of [SUN, MOON] as const) {
         if (quiet[index * 2 + guess] === 1) continue;
         work++;
         const trial = [...board];
@@ -739,8 +739,8 @@ export function countSolutions(givens: readonly Mark[], layout: Layout, limit = 
     let circles = 0;
     for (let col = 0; col < size; col++) {
       const value = givens[row * size + col];
-      if (value === SQUARE) squares |= 1 << col;
-      else if (value === CIRCLE) circles |= 1 << col;
+      if (value === MOON) squares |= 1 << col;
+      else if (value === SUN) circles |= 1 << col;
     }
     candidates.push(
       alphabet.filter((pattern) => {

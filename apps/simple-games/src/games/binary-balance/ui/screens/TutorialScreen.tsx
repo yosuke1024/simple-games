@@ -20,7 +20,7 @@ import { useBinaryBalance } from '../../state/GameContext';
 import { MarkGlyph } from '../components/MarkGlyph';
 
 /**
- * One short run of real cells. `cells` is '0' (circle), '1' (square) or '.'
+ * One short run of real cells. `cells` is '0' (sun), '1' (moon) or '.'
  * per cell; `links` holds the character between each neighbouring pair — '='
  * or 'x', or ' ' for none. Drawn with the board's own cell classes and
  * glyphs, so what the figure shows is what the board will look like.
@@ -46,8 +46,8 @@ function LineFigure({
                   key={`c${index}`}
                   className={[
                     'bn-figure-cell',
-                    cell === '0' ? 'bn-cell-circle' : '',
-                    cell === '1' ? 'bn-cell-square' : '',
+                    cell === '0' ? 'bn-cell-sun' : '',
+                    cell === '1' ? 'bn-cell-moon' : '',
                     mark?.[0] === line && mark[1] === index ? 'bn-figure-cell-mark' : '',
                   ]
                     .filter(Boolean)
@@ -88,13 +88,13 @@ export function BinaryBalanceTutorialScreen() {
     {
       title: t('binaryBalanceStep1Title'),
       body: t('binaryBalanceStep1Body'),
-      // Two squares already sit together, so the marked cell can only be a circle.
+      // Two moons already sit together, so the marked cell can only be a sun.
       example: <LineFigure lines={[{ cells: '011001' }]} mark={[0, 3]} />,
     },
     {
       title: t('binaryBalanceStep2Title'),
       body: t('binaryBalanceStep2Body'),
-      // A finished line: three circles, three squares.
+      // A finished line: three suns, three moons.
       example: <LineFigure lines={[{ cells: '010110' }]} />,
     },
     {

@@ -13,8 +13,8 @@
  */
 import {
   EMPTY,
-  CIRCLE,
-  SQUARE,
+  SUN,
+  MOON,
   cellCount,
   halfLine,
   linkOther,
@@ -99,7 +99,7 @@ export function isValidLinks(links: readonly Link[], size: number): boolean {
 }
 
 /**
- * One tap: empty → circle → square → empty (§4). Returns null when nothing can
+ * One tap: empty → sun → moon → empty (§4). Returns null when nothing can
  * change — an index out of range, or a given, which no tap ever moves.
  */
 export function cycleCell(
@@ -111,7 +111,7 @@ export function cycleCell(
   if (givens[index] !== EMPTY) return null;
   const next = [...marks];
   const current = marks[index] ?? EMPTY;
-  next[index] = current === EMPTY ? CIRCLE : current === CIRCLE ? SQUARE : EMPTY;
+  next[index] = current === EMPTY ? SUN : current === SUN ? MOON : EMPTY;
   return next;
 }
 
@@ -170,7 +170,7 @@ export function findViolations(
 
       // Rule 2: more than half a line given over to one mark. Flagged while
       // the line is still filling, because by then it is already unfixable.
-      for (const mark of [CIRCLE, SQUARE] as const) {
+      for (const mark of [SUN, MOON] as const) {
         const held = indices.filter((_, i) => values[i] === mark);
         if (held.length > half) flag(line, held);
       }

@@ -20,12 +20,12 @@ export type HintMessageKey =
   | 'binaryBalanceHintLineCompletion'
   | 'binaryBalanceHintHypothesis';
 
-export type MarkNameKey = 'binaryBalanceMarkCircle' | 'binaryBalanceMarkSquare';
+export type MarkNameKey = 'binaryBalanceMarkSun' | 'binaryBalanceMarkMoon';
 
-/** The read-aloud name of each mark, as a sentence uses it ("a circle"). */
+/** The read-aloud name of each mark, as a sentence uses it ("a sun"). */
 export const MARK_NAME_KEY: Record<Cell, MarkNameKey> = {
-  0: 'binaryBalanceMarkCircle',
-  1: 'binaryBalanceMarkSquare',
+  0: 'binaryBalanceMarkSun',
+  1: 'binaryBalanceMarkMoon',
 };
 
 export interface HintMessage {

@@ -45,8 +45,8 @@ describe('hint sentences (§8)', () => {
 
   it('names the mark proved and the one ruled out', () => {
     expect(hintMessage(step('pair-gap', 1), links)).toMatchObject({
-      mark: 'binaryBalanceMarkSquare',
-      other: 'binaryBalanceMarkCircle',
+      mark: 'binaryBalanceMarkMoon',
+      other: 'binaryBalanceMarkSun',
     });
   });
 

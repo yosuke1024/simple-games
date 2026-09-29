@@ -31,12 +31,12 @@ export const cellCount = (size: number): number => size * size;
 export const halfLine = (size: number): number => size / 2;
 
 /**
- * A cell of a finished board. `0` is the circle and `1` the square (§1): the
+ * A cell of a finished board. `0` is the sun and `1` the moon (§1): the
  * digits are the internal representation only — the board draws two shapes.
  */
 export type Cell = 0 | 1;
-export const CIRCLE: Cell = 0;
-export const SQUARE: Cell = 1;
+export const SUN: Cell = 0;
+export const MOON: Cell = 1;
 
 /**
  * A cell of a board in play: a mark, or nothing yet. Empty is -1 so the two
@@ -47,10 +47,10 @@ export const EMPTY: Mark = -1;
 
 /** Narrows a cell to the mark written in it. Empty cells and off-board reads fail. */
 export const isWritten = (value: Mark | undefined): value is Cell =>
-  value === CIRCLE || value === SQUARE;
+  value === SUN || value === MOON;
 
 /** The other mark — the whole of what rules 1 and 2 ever conclude. */
-export const other = (value: Cell): Cell => (value === CIRCLE ? SQUARE : CIRCLE);
+export const other = (value: Cell): Cell => (value === SUN ? MOON : SUN);
 
 /**
  * A link between two neighbouring cells (§1, §3 rule 3). `index` is the upper

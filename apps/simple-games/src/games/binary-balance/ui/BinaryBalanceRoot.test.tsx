@@ -344,12 +344,12 @@ describe('home (§10)', () => {
     // Today again: a resume, which replaces nothing and asks nothing.
     await user.click(days()[0]!);
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: `Circle, ${openLabel}` })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: `Sun, ${openLabel}` })).toBeInTheDocument();
   });
 });
 
 describe('playing (§2, §4, §9)', () => {
-  it('cycles a cell empty → circle → square → empty under the same tap', async () => {
+  it('cycles a cell empty → sun → moon → empty under the same tap', async () => {
     const user = userEvent.setup();
     renderGame(tutorialDone);
     await startEasy(user);
@@ -357,11 +357,11 @@ describe('playing (§2, §4, §9)', () => {
     const cell = firstOpenCell();
     expect(labelOf(cell)).toMatch(/^Empty/);
     await user.click(cell);
-    expect(labelOf(cell)).toMatch(/^Circle/);
-    expect(cell.querySelector('svg circle')).not.toBeNull();
+    expect(labelOf(cell)).toMatch(/^Sun/);
+    expect(cell.querySelector('svg .bn-sun')).not.toBeNull();
     await user.click(cell);
-    expect(labelOf(cell)).toMatch(/^Square/);
-    expect(cell.querySelector('svg rect')).not.toBeNull();
+    expect(labelOf(cell)).toMatch(/^Moon/);
+    expect(cell.querySelector('svg .bn-moon')).not.toBeNull();
     await user.click(cell);
     expect(labelOf(cell)).toMatch(/^Empty/);
   });
@@ -374,7 +374,7 @@ describe('playing (§2, §4, §9)', () => {
 
     const fixed = cells().filter((cell) => (cell as HTMLButtonElement).disabled);
     expect(fixed.length).toBeGreaterThan(0);
-    for (const cell of fixed) expect(labelOf(cell)).toMatch(/^Fixed (circle|square)/);
+    for (const cell of fixed) expect(labelOf(cell)).toMatch(/^Fixed (sun|moon)/);
 
     const linkCount = document.querySelectorAll('.bn-link').length;
     expect(linkCount).toBeGreaterThan(0);
@@ -453,7 +453,7 @@ describe('playing (§2, §4, §9)', () => {
     launch();
     await settle();
     await user.click(await screen.findByRole('button', { name: /^Easy.*Resume/ }));
-    expect(screen.getByRole('button', { name: `Circle, ${name}` })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: `Sun, ${name}` })).toBeInTheDocument();
   });
 });
 
@@ -467,7 +467,7 @@ describe('hints (§8)', () => {
     await user.click(screen.getByRole('button', { name: 'Hint' }));
     // A fresh, randomly seeded Easy board: the first step may be any of T1–T3,
     // but every sentence names the outlined cell and the mark it proves.
-    expect(screen.getByRole('status')).toHaveTextContent(/outlined cell.*a (circle|square)/);
+    expect(screen.getByRole('status')).toHaveTextContent(/outlined cell.*a (sun|moon)/);
     expect(cells().map(labelOf)).toEqual(before);
     expect(document.querySelectorAll('.bn-cell-hint')).toHaveLength(1);
     expect(document.querySelectorAll('.bn-cell-reason').length).toBeGreaterThan(0);

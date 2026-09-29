@@ -86,8 +86,8 @@
   mark is which, and a reader who cannot separate the tints has lost nothing.
   Derived from --stone at an opacity, so light and dark both come out right.
 */
-.bn-cell-circle::before,
-.bn-cell-square::before {
+.bn-cell-sun::before,
+.bn-cell-moon::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -95,12 +95,31 @@
   background: var(--stone);
 }
 
-.bn-cell-circle::before {
+.bn-cell-sun::before {
   opacity: 0.1;
 }
 
-.bn-cell-square::before {
+.bn-cell-moon::before {
   opacity: 0.3;
+}
+
+/*
+  The two fills of §13 — game content, like Minesweeper's numbers (the one
+  place this file is allowed colours of its own; docs/architecture/css-split.md).
+  Shape carries the meaning (a disc against a crescent); the hues are support.
+  Both clear 3:1 against every ground they sit on — the surface, the recessed
+  ground of a given, the paper and the warn ground — in light (sun 4.46 / 3.57
+  / 3.98 / 3.68, moon 6.45 / 5.16 / 5.76 / 5.32) and in dark (sun 7.66 / 8.44 /
+  9.15 / 6.98, moon 7.03 / 7.75 / 8.41 / 6.41), measured 2026-09-30.
+*/
+.bn-board {
+  --bn-sun: #a9670f;
+  --bn-moon: #3f5b9e;
+}
+
+:root[data-theme='dark'] .bn-board {
+  --bn-sun: #e6b054;
+  --bn-moon: #9db1e3;
 }
 
 /* The mark is the meaning (§13), so it sits above the ground. */
@@ -115,6 +134,28 @@
 .bn-glyph svg {
   width: 100%;
   height: 100%;
+}
+
+.bn-sun {
+  fill: var(--bn-sun);
+}
+
+.bn-moon {
+  fill: var(--bn-moon);
+}
+
+/* A given wears the ink outline the player's marks do not (§13). */
+.bn-mark-fixed .bn-sun,
+.bn-mark-fixed .bn-moon {
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+/* While a mark breaks a rule, its fill is the warning colour too (§9). */
+.bn-cell-broken .bn-sun,
+.bn-cell-broken .bn-moon {
+  fill: var(--warn);
 }
 
 /* A mark arrives with one beat of pop (§13). */
@@ -132,8 +173,8 @@
 /*
   A fixed cell is pressed into the board and cannot be moved (§4). The shell
   dims disabled buttons to 0.4, which is right for a button nobody may press
-  and wrong for the one thing on this board that is certain. Its mark is the
-  heavier stroke (MarkGlyph), so "fixed" never rests on colour (§13).
+  and wrong for the one thing on this board that is certain. Its mark wears
+  the ink outline (MarkGlyph), so "fixed" never rests on colour (§13).
 */
 .bn-cell-fixed {
   background: var(--surface-recessed);
@@ -152,7 +193,7 @@
   color: var(--warn);
 }
 
-.bn-cell-broken.bn-cell-square::before {
+.bn-cell-broken.bn-cell-moon::before {
   opacity: 0.18;
 }
 

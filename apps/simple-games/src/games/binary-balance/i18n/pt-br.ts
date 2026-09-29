@@ -2,7 +2,8 @@
  * pt-br catalog for Binary Balance: a machine translation of the English
  * source, not yet reviewed by a native speaker (docs/I18N_POLICY.md). The
  * title (`binaryBalanceName`) is a proper noun and stays as-is; wording follows
- * the Takuzu catalog where the meaning is the same.
+ * the Takuzu catalog where the meaning is the same. The two marks are a sun
+ * and a moon (the ordinary words for the celestial bodies).
  */
 import type { BinaryBalanceMessages } from './en';
 
@@ -18,17 +19,17 @@ export const ptBR: BinaryBalanceMessages = {
     'Seu jogo {current} será substituído por um novo tabuleiro {next}.',
   binaryBalanceBoardLabel: 'Tabuleiro de Binary Balance, {size} por {size}',
   binaryBalanceCellEmpty: 'Vazio, linha {row}, coluna {col}',
-  binaryBalanceCellCircle: 'Círculo, linha {row}, coluna {col}',
-  binaryBalanceCellSquare: 'Quadrado, linha {row}, coluna {col}',
-  binaryBalanceCellFixedCircle: 'Círculo inicial, linha {row}, coluna {col}',
-  binaryBalanceCellFixedSquare: 'Quadrado inicial, linha {row}, coluna {col}',
+  binaryBalanceCellSun: 'Sol, linha {row}, coluna {col}',
+  binaryBalanceCellMoon: 'Lua, linha {row}, coluna {col}',
+  binaryBalanceCellFixedSun: 'Sol inicial, linha {row}, coluna {col}',
+  binaryBalanceCellFixedMoon: 'Lua inicial, linha {row}, coluna {col}',
   binaryBalanceLinkSameRight: 'igual ao quadrado da direita',
   binaryBalanceLinkDiffRight: 'diferente do quadrado da direita',
   binaryBalanceLinkSameBelow: 'igual ao quadrado de baixo',
   binaryBalanceLinkDiffBelow: 'diferente do quadrado de baixo',
   binaryBalanceRuleBroken: 'quebra uma regra',
-  binaryBalanceMarkCircle: 'um círculo',
-  binaryBalanceMarkSquare: 'um quadrado',
+  binaryBalanceMarkSun: 'um sol',
+  binaryBalanceMarkMoon: 'uma lua',
   binaryBalanceHintViolation: 'Os quadrados destacados quebram uma regra.',
   binaryBalanceHintWrong: 'A marca com contorno não pode estar certa.',
   binaryBalanceHintPairGap:
@@ -54,9 +55,9 @@ export const ptBR: BinaryBalanceMessages = {
   binaryBalanceDailyBacklogHint: 'Os dias anteriores continuam abertos.',
   binaryBalanceStep1Title: 'Nunca três seguidos',
   binaryBalanceStep1Body:
-    'Toque para alternar entre vazio, círculo e quadrado. A mesma marca nunca aparece três vezes seguidas.',
+    'Toque para alternar entre vazio, sol e lua. A mesma marca nunca aparece três vezes seguidas.',
   binaryBalanceStep2Title: 'Meio a meio',
-  binaryBalanceStep2Body: 'Cada linha e cada coluna tem tantos círculos quanto quadrados.',
+  binaryBalanceStep2Body: 'Cada linha e cada coluna tem tantos sóis quanto luas.',
   binaryBalanceStep3Title: 'Siga as ligações',
   binaryBalanceStep3Body:
     'Quadrados ligados por = são iguais; ligados por × são diferentes. Travou? Peça uma dica.',

@@ -22,9 +22,9 @@
 import { memo, type CSSProperties } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import {
-  CIRCLE,
+  SUN,
   EMPTY,
-  SQUARE,
+  MOON,
   isWritten,
   lineIndices,
   linkOther,
@@ -90,13 +90,13 @@ export const BinaryBalanceBoard = memo(function BinaryBalanceBoard({
           const position = { row: row + 1, col: col + 1 };
 
           const base = fixed
-            ? mark === CIRCLE
-              ? t('binaryBalanceCellFixedCircle', position)
-              : t('binaryBalanceCellFixedSquare', position)
-            : mark === CIRCLE
-              ? t('binaryBalanceCellCircle', position)
-              : mark === SQUARE
-                ? t('binaryBalanceCellSquare', position)
+            ? mark === SUN
+              ? t('binaryBalanceCellFixedSun', position)
+              : t('binaryBalanceCellFixedMoon', position)
+            : mark === SUN
+              ? t('binaryBalanceCellSun', position)
+              : mark === MOON
+                ? t('binaryBalanceCellMoon', position)
                 : t('binaryBalanceCellEmpty', position);
           const isBroken = violations.cells[index] === true;
           const label = [
@@ -108,8 +108,8 @@ export const BinaryBalanceBoard = memo(function BinaryBalanceBoard({
           const classes = [
             'bn-cell',
             fixed ? 'bn-cell-fixed' : '',
-            mark === CIRCLE ? 'bn-cell-circle' : '',
-            mark === SQUARE ? 'bn-cell-square' : '',
+            mark === SUN ? 'bn-cell-sun' : '',
+            mark === MOON ? 'bn-cell-moon' : '',
             isBroken ? 'bn-cell-broken' : '',
             target === index ? 'bn-cell-hint' : '',
             support.has(index) ? 'bn-cell-support' : '',

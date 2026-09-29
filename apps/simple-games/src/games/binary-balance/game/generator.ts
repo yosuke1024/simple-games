@@ -31,9 +31,9 @@ import {
   TIER_TECHNIQUES,
 } from './solver';
 import {
-  CIRCLE,
+  SUN,
   EMPTY,
-  SQUARE,
+  MOON,
   SIZE_FOR,
   TIERS,
   cellCount,
@@ -84,14 +84,14 @@ export function buildSolution(rng: () => number, size: Size): Cell[] | null {
   const half = halfLine(size);
   const alphabet = legalMasks(size);
   const rows: number[] = [];
-  const squaresInColumn = new Array<number>(size).fill(0);
+  const moonsInColumn = new Array<number>(size).fill(0);
   let placed = 0;
 
   const fits = (pattern: number): boolean => {
     const depth = rows.length;
     for (let col = 0; col < size; col++) {
       const square = (pattern >> col) & 1;
-      const squares = squaresInColumn[col]! + square;
+      const squares = moonsInColumn[col]! + square;
       if (squares > half || depth + 1 - squares > half) return false;
       if (
         depth >= 2 &&
@@ -110,10 +110,10 @@ export function buildSolution(rng: () => number, size: Size): Cell[] | null {
       if (++placed > SEARCH_LIMIT) return false;
       if (!fits(pattern)) continue;
       rows.push(pattern);
-      for (let col = 0; col < size; col++) squaresInColumn[col]! += (pattern >> col) & 1;
+      for (let col = 0; col < size; col++) moonsInColumn[col]! += (pattern >> col) & 1;
       if (place()) return true;
       rows.pop();
-      for (let col = 0; col < size; col++) squaresInColumn[col]! -= (pattern >> col) & 1;
+      for (let col = 0; col < size; col++) moonsInColumn[col]! -= (pattern >> col) & 1;
     }
     return false;
   };
@@ -121,7 +121,7 @@ export function buildSolution(rng: () => number, size: Size): Cell[] | null {
   if (!place()) return null;
   const cells: Cell[] = [];
   for (const pattern of rows) {
-    for (let col = 0; col < size; col++) cells.push(((pattern >> col) & 1) === 1 ? SQUARE : CIRCLE);
+    for (let col = 0; col < size; col++) cells.push(((pattern >> col) & 1) === 1 ? MOON : SUN);
   }
   return cells;
 }

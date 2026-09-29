@@ -2,7 +2,8 @@
  * hi catalog for Binary Balance: a machine translation of the English
  * source, not yet reviewed by a native speaker (docs/I18N_POLICY.md). The
  * title (`binaryBalanceName`) is a proper noun and stays as-is; wording follows
- * the Takuzu catalog where the meaning is the same.
+ * the Takuzu catalog where the meaning is the same. The two marks are a sun
+ * and a moon (the ordinary words for the celestial bodies).
  */
 import type { BinaryBalanceMessages } from './en';
 
@@ -17,17 +18,17 @@ export const hi: BinaryBalanceMessages = {
   binaryBalanceConfirmSwitchBody: 'आपका {current} खेल नए {next} बोर्ड से बदल जाएगा।',
   binaryBalanceBoardLabel: 'Binary Balance बोर्ड, {size}×{size}',
   binaryBalanceCellEmpty: 'खाली, पंक्ति {row}, स्तंभ {col}',
-  binaryBalanceCellCircle: 'गोला, पंक्ति {row}, स्तंभ {col}',
-  binaryBalanceCellSquare: 'चौकोर, पंक्ति {row}, स्तंभ {col}',
-  binaryBalanceCellFixedCircle: 'दिया गया गोला, पंक्ति {row}, स्तंभ {col}',
-  binaryBalanceCellFixedSquare: 'दिया गया चौकोर, पंक्ति {row}, स्तंभ {col}',
+  binaryBalanceCellSun: 'सूरज, पंक्ति {row}, स्तंभ {col}',
+  binaryBalanceCellMoon: 'चाँद, पंक्ति {row}, स्तंभ {col}',
+  binaryBalanceCellFixedSun: 'दिया गया सूरज, पंक्ति {row}, स्तंभ {col}',
+  binaryBalanceCellFixedMoon: 'दिया गया चाँद, पंक्ति {row}, स्तंभ {col}',
   binaryBalanceLinkSameRight: 'दाईं ओर के खाने जैसा',
   binaryBalanceLinkDiffRight: 'दाईं ओर के खाने से अलग',
   binaryBalanceLinkSameBelow: 'नीचे के खाने जैसा',
   binaryBalanceLinkDiffBelow: 'नीचे के खाने से अलग',
   binaryBalanceRuleBroken: 'नियम टूटा',
-  binaryBalanceMarkCircle: 'गोला',
-  binaryBalanceMarkSquare: 'चौकोर',
+  binaryBalanceMarkSun: 'सूरज',
+  binaryBalanceMarkMoon: 'चाँद',
   binaryBalanceHintViolation: 'हाइलाइट किए खाने नियम तोड़ रहे हैं।',
   binaryBalanceHintWrong: 'आउटलाइन वाला चिह्न सही नहीं हो सकता।',
   binaryBalanceHintPairGap:
@@ -53,9 +54,9 @@ export const hi: BinaryBalanceMessages = {
   binaryBalanceDailyBacklogHint: 'पिछले दिन हमेशा खुले रहते हैं।',
   binaryBalanceStep1Title: 'लगातार तीन नहीं',
   binaryBalanceStep1Body:
-    'खाने पर टैप करने से खाली, गोला, चौकोर बदलते हैं। एक ही चिह्न लगातार तीन बार नहीं आ सकता।',
+    'खाने पर टैप करने से खाली, सूरज, चाँद बदलते हैं। एक ही चिह्न लगातार तीन बार नहीं आ सकता।',
   binaryBalanceStep2Title: 'आधा-आधा',
-  binaryBalanceStep2Body: 'हर पंक्ति और हर स्तंभ में जितने गोले होते हैं उतने ही चौकोर होते हैं।',
+  binaryBalanceStep2Body: 'हर पंक्ति और हर स्तंभ में जितने सूरज होते हैं उतने ही चाँद होते हैं।',
   binaryBalanceStep3Title: 'कड़ियों का पालन करें',
   binaryBalanceStep3Body:
     '= से जुड़े खाने एक जैसे होते हैं; × से जुड़े खाने अलग होते हैं। अटक गए? संकेत माँगें।',

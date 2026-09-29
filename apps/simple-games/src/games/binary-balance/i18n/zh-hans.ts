@@ -2,7 +2,8 @@
  * zh-hans catalog for Binary Balance: a machine translation of the English
  * source, not yet reviewed by a native speaker (docs/I18N_POLICY.md). The
  * title (`binaryBalanceName`) is a proper noun and stays as-is; wording follows
- * the Takuzu catalog where the meaning is the same.
+ * the Takuzu catalog where the meaning is the same. The two marks are a sun
+ * and a moon (the ordinary words for the celestial bodies).
  */
 import type { BinaryBalanceMessages } from './en';
 
@@ -17,17 +18,17 @@ export const zhHans: BinaryBalanceMessages = {
   binaryBalanceConfirmSwitchBody: '进行中的“{current}”会被新的“{next}”盘面替换。',
   binaryBalanceBoardLabel: 'Binary Balance 盘面，{size}×{size}',
   binaryBalanceCellEmpty: '空，第 {row} 行第 {col} 列',
-  binaryBalanceCellCircle: '圆形，第 {row} 行第 {col} 列',
-  binaryBalanceCellSquare: '方形，第 {row} 行第 {col} 列',
-  binaryBalanceCellFixedCircle: '题目圆形，第 {row} 行第 {col} 列',
-  binaryBalanceCellFixedSquare: '题目方形，第 {row} 行第 {col} 列',
+  binaryBalanceCellSun: '太阳，第 {row} 行第 {col} 列',
+  binaryBalanceCellMoon: '月亮，第 {row} 行第 {col} 列',
+  binaryBalanceCellFixedSun: '题目太阳，第 {row} 行第 {col} 列',
+  binaryBalanceCellFixedMoon: '题目月亮，第 {row} 行第 {col} 列',
   binaryBalanceLinkSameRight: '与右边的格子相同',
   binaryBalanceLinkDiffRight: '与右边的格子不同',
   binaryBalanceLinkSameBelow: '与下面的格子相同',
   binaryBalanceLinkDiffBelow: '与下面的格子不同',
   binaryBalanceRuleBroken: '违反规则',
-  binaryBalanceMarkCircle: '圆形',
-  binaryBalanceMarkSquare: '方形',
+  binaryBalanceMarkSun: '太阳',
+  binaryBalanceMarkMoon: '月亮',
   binaryBalanceHintViolation: '高亮的格子违反了规则。',
   binaryBalanceHintWrong: '带边框的标记不可能是对的。',
   binaryBalanceHintPairGap: '着色的一对会连成三个，所以带边框的格子是{mark}。',
@@ -47,9 +48,9 @@ export const zhHans: BinaryBalanceMessages = {
   binaryBalanceDailiesSolved: '通关天数',
   binaryBalanceDailyBacklogHint: '之前的日期随时可以挑战。',
   binaryBalanceStep1Title: '不能连着三个',
-  binaryBalanceStep1Body: '点击格子在空、圆形、方形之间切换。同一种标记不能连续出现三次。',
+  binaryBalanceStep1Body: '点击格子在空、太阳、月亮之间切换。同一种标记不能连续出现三次。',
   binaryBalanceStep2Title: '各占一半',
-  binaryBalanceStep2Body: '每一行、每一列的圆形和方形数量相同。',
+  binaryBalanceStep2Body: '每一行、每一列的太阳和月亮数量相同。',
   binaryBalanceStep3Title: '沿着连线走',
   binaryBalanceStep3Body: '用 = 相连的格子相同，用 × 相连的格子不同。卡住了？可以要个提示。',
 };

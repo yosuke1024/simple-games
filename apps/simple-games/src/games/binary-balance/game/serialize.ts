@@ -17,8 +17,8 @@
 import { isSolved, isValidLinks } from './engine';
 import {
   EMPTY,
-  CIRCLE,
-  SQUARE,
+  SUN,
+  MOON,
   cellCount,
   compareLinks,
   type Cell,
@@ -43,8 +43,8 @@ function decodeCells(text: unknown, size: Size): Mark[] | null {
   if (typeof text !== 'string' || text.length !== cellCount(size)) return null;
   const cells: Mark[] = [];
   for (const character of text) {
-    if (character === '0') cells.push(CIRCLE);
-    else if (character === '1') cells.push(SQUARE);
+    if (character === '0') cells.push(SUN);
+    else if (character === '1') cells.push(MOON);
     else if (character === EMPTY_CHARACTER) cells.push(EMPTY);
     else return null;
   }
