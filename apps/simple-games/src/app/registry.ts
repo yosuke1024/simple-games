@@ -63,6 +63,9 @@ import { MC_STORAGE_KEYS } from '../games/mancala/storage/keys';
 import { DM_STORAGE_KEYS } from '../games/dominoes/storage/keys';
 import { HB_STORAGE_KEYS } from '../games/hit-and-blow/storage/keys';
 import { DB_STORAGE_KEYS } from '../games/dots-and-boxes/storage/keys';
+import { BN_STORAGE_KEYS } from '../games/binary-balance/storage/keys';
+import { S6_STORAGE_KEYS } from '../games/sudoku-6x6/storage/keys';
+import { BR_STORAGE_KEYS } from '../games/box-regions/storage/keys';
 
 export type GameId =
   | 'sudoku'
@@ -102,7 +105,10 @@ export type GameId =
   | 'mancala'
   | 'dominoes'
   | 'hit-and-blow'
-  | 'dots-and-boxes';
+  | 'dots-and-boxes'
+  | 'binary-balance'
+  | 'sudoku-6x6'
+  | 'box-regions';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -776,5 +782,57 @@ export const GAMES: readonly GameDefinition[] = [
         default: m.DotsAndBoxesRoot,
       })),
     loadStorageSchemas: () => import('../games/dots-and-boxes/storage/schemas'),
+  },
+  {
+    // The three practice-set titles of issue #210, in the order the issue
+    // names them, all in the browser early release (docs/WEB_VERSION.md
+    // 「先行公開」, docs/PUZZLE_PRACTICE_SET.md). A circled equals sign for
+    // the rule that sets this two-symbol puzzle apart from Takuzu: the
+    // links that say two neighbours match or differ
+    // (docs/BINARY_BALANCE_RULES.md). Mathematical Operators, the block
+    // Futoshiki's ≶ and Kakuro's ∑ already draw from.
+    id: 'binary-balance',
+    title: 'Binary Balance',
+    category: 'logic',
+    glyph: '⊜',
+    channel: 'web-beta',
+    storageKeys: Object.values(BN_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/binary-balance/ui/BinaryBalanceRoot').then((m) => ({
+        default: m.BinaryBalanceRoot,
+      })),
+    loadStorageSchemas: () => import('../games/binary-balance/storage/schemas'),
+  },
+  {
+    // The board's one number: six digits, six rows, six columns, six 2×3
+    // boxes (docs/SUDOKU_6X6_RULES.md). A bare digit, like Number Recall's
+    // ?, so the card says "the small one" beside Sudoku's ⌗ at a glance.
+    id: 'sudoku-6x6',
+    title: 'Sudoku 6×6',
+    category: 'logic',
+    glyph: '6',
+    channel: 'web-beta',
+    storageKeys: Object.values(S6_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/sudoku-6x6/ui/Sudoku6x6Root').then((m) => ({ default: m.Sudoku6x6Root })),
+    loadStorageSchemas: () => import('../games/sudoku-6x6/storage/schemas'),
+    loadSettingsSection: () =>
+      import('../games/sudoku-6x6/ui/Sudoku6x6SettingsSection').then((m) => ({
+        default: m.Sudoku6x6SettingsSection,
+      })),
+  },
+  {
+    // A wide rectangle: the grid is cut into boxes, and the clue marks say
+    // square, tall, wide or any (docs/BOX_REGIONS_RULES.md). Geometric
+    // Shapes, like Minesweeper's ◆ and Bubble Pop's ○.
+    id: 'box-regions',
+    title: 'Box Regions',
+    category: 'logic',
+    glyph: '▭',
+    channel: 'web-beta',
+    storageKeys: Object.values(BR_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/box-regions/ui/BoxRegionsRoot').then((m) => ({ default: m.BoxRegionsRoot })),
+    loadStorageSchemas: () => import('../games/box-regions/storage/schemas'),
   },
 ];

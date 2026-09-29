@@ -12,7 +12,9 @@ const titles = (query: string) => searchGames(query).map((game) => game.title);
 
 describe('searching the collection by name', () => {
   it('matches a whole title', () => {
-    expect(titles('Sudoku')).toEqual(['Sudoku']);
+    // Two titles carry the word since Sudoku 6×6 joined the browser early
+    // release (issue #210): registry order, the full-size board first.
+    expect(titles('Sudoku')).toEqual(['Sudoku', 'Sudoku 6×6']);
   });
 
   it('matches part of a title, anywhere in it', () => {

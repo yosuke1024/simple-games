@@ -141,7 +141,7 @@ Reversi と Connect Four も盤面がすべて見えているため Hint を作�
 
 Web 版は新作の先行公開チャンネルです([docs/WEB_VERSION.md](docs/WEB_VERSION.md)
 「先行公開(ベータ)」)。2026-09-26 から 3 本(issue #194)、2026-09-27 から 5 本
-(issue #197)を **Web 版だけ**で公開しています。アプリには正式収録していないため上の 30 本には数えず、ストア掲載文にも
+(issue #197)、2026-09-29 から 3 本(issue #210)を **Web 版だけ**で公開しています。アプリには正式収録していないため上の 30 本には数えず、ストア掲載文にも
 載せません。タイトルカードに「BETA」バッジが付き、ベータ中はスキーマ変更で保存データが
 消えることがあります(en / ja ではその旨を表示)。正式収録は 2 週間の安定稼働と計測を
 見て人間が判断します。
@@ -156,12 +156,24 @@ Web 版は新作の先行公開チャンネルです([docs/WEB_VERSION.md](docs/
 | Dominoes(牌つなぎ・CPU 対戦) | `dominoes/`       | CPU 1 段階             | なし                               | [docs/DOMINOES_RULES.md](docs/DOMINOES_RULES.md)             |
 | Hit & Blow(推理)             | `hit-and-blow/`   | 難易度 3 種            | なし(推測は無制限)                 | [docs/HIT_AND_BLOW_RULES.md](docs/HIT_AND_BLOW_RULES.md)     |
 | Dots and Boxes(陣取り・CPU)  | `dots-and-boxes/` | 盤 3 サイズ            | Undo                               | [docs/DOTS_AND_BOXES_RULES.md](docs/DOTS_AND_BOXES_RULES.md) |
+| Binary Balance(二値配置・リンクつき) | `binary-balance/` | 難易度 3 種 + デイリー | Hint(Undo なし)                    | [docs/BINARY_BALANCE_RULES.md](docs/BINARY_BALANCE_RULES.md) |
+| Sudoku 6×6(小さな数独)       | `sudoku-6x6/`     | 難易度 3 種 + デイリー | Undo / Hint / メモ                 | [docs/SUDOKU_6X6_RULES.md](docs/SUDOKU_6X6_RULES.md)         |
+| Box Regions(長方形分割)      | `box-regions/`    | 難易度 3 種 + デイリー | Undo / Hint                        | [docs/BOX_REGIONS_RULES.md](docs/BOX_REGIONS_RULES.md)       |
 
 Crown Grid はタップで 空 → × → 王冠 と一巡でき(なぞると × をまとめて置く)、どの手も
 そのまま戻せるため Takuzu と同じく Undo を作りません。Number Path は道を引き直す
 操作がストローク単位で不可逆なので Undo を持ち、Hint は「今の道が唯一の解の途中なら
 次の 1 マス、外れていれば戻る地点」を示します(一意解なので誠実に言えることが
 あります)。Shape Regions は領域の出し入れが非自明に不可逆なので Undo を持ちます。
+
+issue #210 の 3 本は、Crown Grid / Number Path と合わせて **5 種類のパズル練習セット**
+([docs/PUZZLE_PRACTICE_SET.md](docs/PUZZLE_PRACTICE_SET.md))です。Binary Balance は
+Takuzu と同じ二値配置ですが「同じ並びの行禁止」を持たず、代わりに `=` / `×` のリンクを
+持つ別のルール集合(Takuzu の改名ではありません)。Sudoku 6×6 は 2 行 × 3 列のボックスを
+持つ小さな数独で、9×9 の Sudoku とは別のゲーム ID です。Box Regions は盤面を長方形の箱に
+切り分けるパズルで、Shape Regions(5 種のポリオミノ)とは合法な形の集合が違います。
+比較対象の他社ゲーム名は説明にだけ使い、正式ゲーム名にはしません
+([docs/BRAND.md](docs/BRAND.md)「自社タイトルと比較対象の名前」)。
 
 issue #197 の 5 本は、既存の得意分野(論理パズル)ではなく**遊びの語彙が違う**ものを
 選んでいます — サイコロ(Yacht)、種まき(Mancala)、手札のタイル(Dominoes)、仮説と

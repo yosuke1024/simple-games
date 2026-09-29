@@ -63,7 +63,7 @@ describe('collection home', () => {
     renderShell();
     expect(screen.getByRole('heading', { name: 'Simple Games' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Number Match/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Sudoku/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Sudoku$/ })).toBeInTheDocument();
   });
 
   // The collection wears the app's own icon — an <svg class="home-mark"> — and
@@ -82,7 +82,7 @@ describe('collection home', () => {
     renderShell();
     expect(document.documentElement.dataset.game).toBeUndefined();
 
-    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await user.click(screen.getByRole('button', { name: /^Sudoku$/ }));
     expect(await screen.findByText('1-9, once each')).toBeInTheDocument();
     expect(document.documentElement.dataset.game).toBe('sudoku');
   });

@@ -74,9 +74,14 @@ function gameIds() {
     .sort();
 }
 
-/** `game-<id>-<hash>.js` を id へ引き当てる。id 自体がハイフンを含むので前方一致で。 */
+/**
+ * `game-<id>-<hash>.js` を id へ引き当てる。id 自体がハイフンを含むので前方一致で —
+ * ただし**長い id から**試す。`sudoku-6x6` のチャンクは `game-sudoku-` でも始まるので、
+ * 短い `sudoku` を先に試すと 6×6 の 23 KB が 9×9 に合算され、6×6 は「チャンクが無い」
+ * になる(2026-09-30、issue #210 で実際にそうなった)。
+ */
 function gameOfChunk(name, ids) {
-  for (const id of ids) {
+  for (const id of [...ids].sort((x, y) => y.length - x.length)) {
     if (name.startsWith(`game-${id}-`)) return id;
   }
   return null;

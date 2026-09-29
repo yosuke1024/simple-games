@@ -220,7 +220,10 @@ describe('restoring', () => {
     );
 
     await waitFor(() => expect(getFavoriteGames()).toEqual(['sudoku', 'hearts']));
-    expect(screen.getByRole('button', { name: /^Sudoku/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /^Sudoku$/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 
   it('does nothing at all when the picker is dismissed', async () => {

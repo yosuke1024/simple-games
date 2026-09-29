@@ -143,6 +143,9 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   dominoes: ['dm.saveGame', 'dm.stats', 'dm.flags'],
   'hit-and-blow': ['hb.saveGame', 'hb.stats', 'hb.flags', 'hb.prefs'],
   'dots-and-boxes': ['db.saveGame', 'db.stats', 'db.flags', 'db.prefs'],
+  'binary-balance': ['bn.saveGame', 'bn.saveDaily', 'bn.stats', 'bn.flags', 'bn.prefs'],
+  'sudoku-6x6': ['s6.saveGame', 's6.saveDaily', 's6.stats', 's6.flags', 's6.prefs'],
+  'box-regions': ['br.saveGame', 'br.saveDaily', 'br.stats', 'br.flags', 'br.prefs'],
 };
 
 const PREFIXES: Record<string, string> = {
@@ -184,6 +187,9 @@ const PREFIXES: Record<string, string> = {
   dominoes: 'dm.',
   'hit-and-blow': 'hb.',
   'dots-and-boxes': 'db.',
+  'binary-balance': 'bn.',
+  'sudoku-6x6': 's6.',
+  'box-regions': 'br.',
 };
 
 describe('registry storage keys (released data — do not edit to make green)', () => {
