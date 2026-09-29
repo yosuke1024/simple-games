@@ -1,0 +1,392 @@
+/* Box Regions — all of this game's styling, imported by BoxRegionsRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --warn, --radius, --font-display, …) so the game
+   reads as part of the same app and follows the theme without knowing about
+   it. The one thing this file owns outright is the region palette below —
+   game content, like Minesweeper's number colours.
+
+   Class names are prefixed `br-` so this file can never collide with the
+   shell or with another game. */
+
+/* ---------- region tints (§5, §13) ----------
+
+   Eight muted grounds, cycled by region number. They are support, never
+   meaning: every region is also outlined by the thick edges below, so a
+   reader who cannot tell two tints apart has lost nothing. Values are picked
+   so the page ink stays legible on each, in either theme, and no two
+   neighbours in the cycle are close in hue. */
+
+.br-board {
+  --br-tint-0: #dfe7f5;
+  --br-tint-1: #f5e3cf;
+  --br-tint-2: #dcefdd;
+  --br-tint-3: #f0dde9;
+  --br-tint-4: #e8e5cf;
+  --br-tint-5: #d9eef1;
+  --br-tint-6: #e6ddf3;
+  --br-tint-7: #f2dcd6;
+}
+
+:root[data-theme='dark'] .br-board {
+  --br-tint-0: #2b3a52;
+  --br-tint-1: #4a3a26;
+  --br-tint-2: #2b4531;
+  --br-tint-3: #4a2f41;
+  --br-tint-4: #45412a;
+  --br-tint-5: #274449;
+  --br-tint-6: #3d3150;
+  --br-tint-7: #4c322e;
+}
+
+/* ---------- board ---------- */
+
+.br-board-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px 12px;
+}
+
+/*
+  The cell is whatever is left of the viewport once the scroll padding (24px),
+  the board's own padding and border are taken out, divided by the columns.
+  That is 40px per cell for a 7×7 on a 320px screen — the widest board on the
+  narrowest phone this app supports (§1). Anything narrower clamps at 34px and
+  scrolls instead of shrinking further: a clue cell carries a symbol and a
+  count at once, and below that they stop being readable.
+*/
+.br-board {
+  --br-pad: 4px;
+  --br-cell: clamp(34px, calc((100vw - 24px - 2 * var(--br-pad) - 2px) / var(--br-cols)), 48px);
+  position: relative;
+  overflow: hidden;
+  padding: var(--br-pad);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+/* Solved beat: one wash on the board, not per cell (§13). */
+.br-board::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--accent-soft);
+  border-radius: inherit;
+  opacity: 0;
+}
+
+.br-board-solved::after {
+  animation: br-solved-wash 900ms ease-out;
+}
+
+@keyframes br-solved-wash {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.br-cells {
+  display: grid;
+  grid-template-columns: repeat(var(--br-cols), var(--br-cell));
+  grid-auto-rows: var(--br-cell);
+  /* A finger on the cells draws a box, never scrolls the page (§4). */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---------- cells (§5) ---------- */
+
+.br-cell {
+  position: relative;
+  width: var(--br-cell);
+  height: var(--br-cell);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  color: var(--ink);
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.br-cell::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: transparent;
+  border-radius: 0;
+  pointer-events: none;
+}
+
+/* Press feedback: a tile wash, not filter (§13). */
+.br-cell:active::before {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.06));
+}
+
+:root[data-theme='dark'] .br-cell:active::before {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08));
+}
+
+.br-tint-0,
+.br-tint-1,
+.br-tint-2,
+.br-tint-3,
+.br-tint-4,
+.br-tint-5,
+.br-tint-6,
+.br-tint-7 {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.br-tint-0::before {
+  background: var(--br-tint-0);
+}
+.br-tint-1::before {
+  background: var(--br-tint-1);
+}
+.br-tint-2::before {
+  background: var(--br-tint-2);
+}
+.br-tint-3::before {
+  background: var(--br-tint-3);
+}
+.br-tint-4::before {
+  background: var(--br-tint-4);
+}
+.br-tint-5::before {
+  background: var(--br-tint-5);
+}
+.br-tint-6::before {
+  background: var(--br-tint-6);
+}
+.br-tint-7::before {
+  background: var(--br-tint-7);
+}
+
+/* A border side (§5): stop the tile short and ink that edge. */
+.br-edge-t {
+  border-top-color: var(--ink);
+}
+.br-edge-t::before {
+  top: 0;
+}
+.br-edge-r {
+  border-right-color: var(--ink);
+}
+.br-edge-r::before {
+  right: 0;
+}
+.br-edge-b {
+  border-bottom-color: var(--ink);
+}
+.br-edge-b::before {
+  bottom: 0;
+}
+.br-edge-l {
+  border-left-color: var(--ink);
+}
+.br-edge-l::before {
+  left: 0;
+}
+
+/* The clue: symbol above count, in ink (§2, §13); paints over the tile. */
+.br-clue {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.br-icon {
+  width: calc(var(--br-cell) * 0.36);
+  height: calc(var(--br-cell) * 0.36);
+  display: block;
+}
+
+.br-clue-count {
+  font-family: var(--font-display);
+  font-size: clamp(10px, calc(var(--br-cell) * 0.3), 15px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* A clue with only a symbol sits a touch larger. */
+.br-clue > :only-child.br-icon {
+  width: calc(var(--br-cell) * 0.5);
+  height: calc(var(--br-cell) * 0.5);
+}
+
+/* Always-on violation display (§5); the ring sits on the tile. */
+.br-cell-warn {
+  color: var(--warn);
+}
+
+/* The warn ring follows the region's outline, not each cell's: a 2px inset
+   band on the tile, but only along the sides that are boundaries (br-edge-*),
+   switched per side through one custom property each so a single box-shadow
+   does the work. Inside the region the tiles still run together with no seam,
+   so the frame reads as one shape gone wrong rather than a row of framed cells. */
+.br-cell-warn::before {
+  --br-w-t: 0px;
+  --br-w-r: 0px;
+  --br-w-b: 0px;
+  --br-w-l: 0px;
+  background: var(--warn-soft);
+  box-shadow:
+    inset 0 var(--br-w-t) 0 0 var(--warn),
+    inset calc(-1 * var(--br-w-r)) 0 0 0 var(--warn),
+    inset 0 calc(-1 * var(--br-w-b)) 0 0 var(--warn),
+    inset var(--br-w-l) 0 0 0 var(--warn);
+}
+.br-cell-warn.br-edge-t::before {
+  --br-w-t: 2px;
+}
+.br-cell-warn.br-edge-r::before {
+  --br-w-r: 2px;
+}
+.br-cell-warn.br-edge-b::before {
+  --br-w-b: 2px;
+}
+.br-cell-warn.br-edge-l::before {
+  --br-w-l: 2px;
+}
+
+/* Hint (§6): rings on the tile; the reason wash is on `::after`, which the
+   drag preview shares below (a wash and a ring, never the same property). */
+.br-cell-reason::after,
+.br-cell-preview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.br-cell-reason::after {
+  background: var(--accent-ring-soft);
+}
+
+.br-cell-hint::before {
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
+.br-cell-wrong::before {
+  box-shadow: inset 0 0 0 3px var(--warn);
+}
+
+/* The rectangle being dragged out (§4, §13): a ring along its four sides,
+   accent when it would draw, warn when it holds no clue or two. Switched per
+   side like the warn ring, so it reads as one rectangle, not a row of cells. */
+.br-cell-preview::after {
+  --br-p-t: 0px;
+  --br-p-r: 0px;
+  --br-p-b: 0px;
+  --br-p-l: 0px;
+  --br-p-colour: var(--accent);
+  box-shadow:
+    inset 0 var(--br-p-t) 0 0 var(--br-p-colour),
+    inset calc(-1 * var(--br-p-r)) 0 0 0 var(--br-p-colour),
+    inset 0 calc(-1 * var(--br-p-b)) 0 0 var(--br-p-colour),
+    inset var(--br-p-l) 0 0 0 var(--br-p-colour);
+}
+.br-preview-bad::after {
+  --br-p-colour: var(--warn);
+}
+.br-cell-preview.br-pv-t::after {
+  --br-p-t: 3px;
+}
+.br-cell-preview.br-pv-r::after {
+  --br-p-r: 3px;
+}
+.br-cell-preview.br-pv-b::after {
+  --br-p-b: 3px;
+}
+.br-cell-preview.br-pv-l::after {
+  --br-p-l: 3px;
+}
+
+/* Reduced Motion: cells change at once, with nothing to wait for (§13). */
+@media (prefers-reduced-motion: reduce) {
+  .br-cell {
+    transition: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .br-cell {
+  transition: none;
+}
+
+/* ---------- top bar ---------- */
+
+.br-size-tag {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- home ---------- */
+
+.br-choose-label {
+  margin: 0 0 -4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.br-chips {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* The board's own cells at a fixed size: the figure is the game, smaller. */
+.br-figure {
+  --br-cell: 36px;
+}
+
+.br-figure .br-cell {
+  cursor: default;
+}
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; both tiers only raise the ceiling of the board's own clamp, so a
+   wide screen gets bigger cells without moving the 320px floor. The icon and
+   the count are shares of `--br-cell`, so they scale with it. */
+
+@media (min-width: 600px) {
+  .br-board {
+    --br-cell: clamp(34px, calc((100vw - 24px - 2 * var(--br-pad) - 2px) / var(--br-cols)), 54px);
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .br-board {
+    --br-cell: clamp(34px, calc((100vw - 24px - 2 * var(--br-pad) - 2px) / var(--br-cols)), 60px);
+  }
+}
