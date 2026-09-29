@@ -157,7 +157,7 @@ export してから使う。debug ビルド(`assembleDebug`)には何を設定�
 | `application_tracking_enabled` | **false**(`setLimitEventAndDataUsage(true)`) | SDK の説明では「分析とコンバージョン以外(この人への広告ターゲティング等)に使わない」指定。リターゲティング用に使わせないため |
 | `advertiser_id_collection_enabled` | **false** | 広告 ID を使わない(§5) |
 | `advertiser_id` / `advertiser_tracking_enabled` | **付かない** | 収集を無効にしているため SDK が値を出さない(`AttributionIdentifiers.androidAdvertiserId`) |
-| `attribution` | Facebook アプリが持つ広告計測用 ID | **Facebook アプリが入っている端末で**(署名を確かめた本物の Facebook アプリの ContentProvider から読む)。Android 11 以降のパッケージの可視性の制限でも防げるとは限らない —— merge 済み manifest には AdMob の `<queries>`(https の VIEW / BROWSABLE)があり、Facebook アプリはそれに該当しうる。SDK 側で止める設定は無いので、同意文と公開ポリシーで開示する(実機で読まれるかは未確認) |
+| `attribution` | Facebook アプリが持つ広告計測用 ID | **Facebook アプリが入っている端末で**(署名を確かめた本物の Facebook アプリの ContentProvider `com.facebook.katana.provider.AttributionIdProvider` から読む)。報告を広告と結ぶ手がかりで、広告 ID を送らないこのアプリでは Play の Install Referrer と並ぶ数少ない経路。Android 11 以降は他のアプリの provider が見えないため、overlay の `<queries>` でこの provider **1 つだけ**を宣言している(`check-principles.sh` §4b、`check-android-artifact.sh`)。宣言が無いと、読めるかどうかが「Facebook アプリが AdMob の `<queries>`(https の VIEW)に該当するか」に左右されていた(2026-09-29 に修正)。同意文と公開ポリシーで開示している。Facebook アプリのある端末で実際に読まれることは未確認(§9) |
 | `install_referrer` | Google Play の Install Referrer 文字列 | **Meta 広告から来たときだけ**(文字列に `fb` / `facebook` を含むとき — SDK と同じ条件をアダプタでも使う)。クリックとインストールを結ぶ唯一の経路 |
 | `installer_package` | 例: `com.android.vending` | ストア経由かどうか |
 | `extinfo` | 形式版・パッケージ名・versionCode・versionName・OS バージョン・機種・ロケール・タイムゾーン略称・通信事業者名・画面の幅/高さ/密度・CPU コア数・ストレージ総量/空き(GB)・タイムゾーン名 | SDK が常に付ける。個別に外す設定は無い |
@@ -215,7 +215,7 @@ Android の自動バックアップが SDK の SharedPreferences を別の端末
   警告をログに出す。
 - 得るもの: 他社のアプリ・サイトをまたいで端末を識別する ID を 1 つも送らないこと。
   同意文に「広告 ID は含みません」と書けること。
-- 広告 ID を使わないことは、**他の識別子(anon_id、古い Android での Facebook アプリの
+- 広告 ID を使わないことは、**他の識別子(anon_id、Facebook アプリがある端末ではその
   計測用 ID)や IP アドレスが送られないことを意味しない**。そう表現しない。
 - 変えるなら: 同意文(`metaInstallCopy.ts`)・公開ポリシー・データセーフティ・この節・
   `check-principles.sh` §8 b を**同じ PR で**変える。
@@ -308,7 +308,9 @@ Android の自動バックアップが SDK の SharedPreferences を別の端末
    求められた場合は **Play App Signing の配布鍵**と upload 鍵・debug 鍵を混同しない。
 10. App ID と Client Token を取得し、GitHub の Secrets に設定する(値を Issue・PR・
     チャットに貼らない)。
-11. **Test Events で受信を確認する**: 手動実行(`meta: on`)の APK を実機に入れ、
+11. **Test Events で受信を確認する**: 手動実行(`meta: on`)の APK を、**この Meta アプリで
+    役割を持つアカウントが Facebook アプリにログインしている端末**に入れる(Facebook アプリの
+    無い端末の報告は Test Events に出なかった — §9)。Meta アプリは公開(Live)にしておく。
     許可 → Events Manager の Test Events に `MOBILE_APP_INSTALL` が 1 件届くこと、
     **`fb_mobile_activate_app` やその他のイベントが 1 件も届かないこと**(=7 が効いている)、
     許可しない / 未回答 / オフラインでは何も届かないことを見る。ログ上の「SDK 初期化成功」
@@ -331,8 +333,8 @@ Android の自動バックアップが SDK の SharedPreferences を別の端末
 | `src/app/App.metaInstall.test.tsx` | 質問はゲームから戻ったときだけ・レビュー質問と同じ回に出ない・Back で閉じる(=許可しない)・12 言語では出ない |
 | `src/ui/components/MetaInstallSetting.test.tsx` | 設定行の有無と文言、スイッチの動作 |
 | `src/test/importBoundaries.test.ts` 規則 6 | ゲーム・保存・課金から Meta 計測に届かない |
-| `check-principles.sh` §3b / §4b / §8 | 追跡系依存は release 限定の facebook-core 1 行だけ・overlay は権限を足さない・禁止 API を呼ばない・SDK の自動動作を止めている |
-| `check-android-artifact.sh`(`android-artifact.yml` / `android-release.yml`) | APK と merge 済み manifest の権限・provider・SDK の有無 |
+| `check-principles.sh` §3b / §4b / §8 | 追跡系依存は release 限定の facebook-core 1 行だけ・overlay は権限を足さない・overlay の `<queries>` は Facebook アプリの AttributionIdProvider 1 行だけ・禁止 API を呼ばない・SDK の自動動作を止めている |
+| `check-android-artifact.sh`(`android-artifact.yml` / `android-release.yml`) | APK と merge 済み manifest の権限・provider・SDK の有無、`<queries>` の provider / package(Meta 入りは AttributionIdProvider がちょうど 1 つ、なしは 0) |
 
 ### 実機・通信(2026-09-27 時点)
 
@@ -346,7 +348,8 @@ Android の自動バックアップが SDK の SharedPreferences を別の端末
 | 報告の中身(同上、一時的な診断ビルドで SDK が組み立てる JSON を出力) | **済** — `event=MOBILE_APP_INSTALL`、`anon_id`、`application_tracking_enabled=false`、`advertiser_id_collection_enabled=false`、`extinfo`(形式版 / パッケージ名 / versionCode / versionName / OS 版 / 機種 / ロケール / タイムゾーン略称 / 通信事業者 / 画面幅・高さ・密度 / CPU コア数 / ストレージ総量・空き / タイムゾーン名)、`application_package_name`。**`advertiser_id` は無い**。`attribution` はエミュレータに Facebook アプリが無いので無い。`install_referrer` / `installer_package` は adb でのインストールなので無い(Play 経由なら付く)。診断用のログ出力はコミットしていない |
 | 起動時間・メモリ(Meta 入り vs なし、release/R8) | **未** |
 | 低価格の Android 実機 | **未** |
-| Events Manager の Test Events で受信 | **未**(オーナーの Meta アプリが要る) |
+| 本物の Meta アプリへの送信(2026-09-28、オーナー承認のうえ) | **済(受理まで)** — `android-release.yml` の手動実行(`meta: on` / `ads: test`)の APK をエミュレータ(Pixel_7 / API 37、Facebook アプリなし)に新規インストールし、今度は Meta への接続も通して記録した。同意前は 0 件、「Allow」直後に Meta への接続が 3 件、再起動後は設定が「報告済み」(SDK が受理を記録したときだけ)になり、Meta への接続は 0 件。Meta 側で自動ログが有効なときの「停止」にはならなかった。3 回(20:33 / 20:39 は Meta アプリ未公開、20:45 は公開後)とも同じ。この APK は `<queries>` の修正前 |
+| Events Manager の Test Events / 概要で受信 | **未** — 上の 3 回とも、送信直後の Test Events にも概要にも出なかった。**受理(`{appId}ping`)は応答にエラーが無かったことしか示さない**(`FacebookSdk.publishInstallAndWaitForResponse`)。Test Events は、端末の Facebook アプリにログインしたアカウントで「自分のイベント」を見分けるらしい(facebook-android-sdk#1094 の利用者報告。Meta の文書では未確認)。Facebook アプリにログインした端末で確かめる |
 | 広告マネージャのインストール最適化の選択 | **未**(同上) |
 
 ## 10. 1,000 installs の判定と運用
@@ -409,10 +412,10 @@ Android の自動バックアップが SDK の SharedPreferences を別の端末
 
 ## 12. 未完了事項
 
-- **実際に Meta が受理する経路は未確認。** エミュレータでの観測は Meta への接続を
-  すべて拒否した状態で行ったので、報告が受理されたとき(`{appId}ping` の記録 → 次の
-  起動で「報告済み」→ SDK のデータ削除)は動かしていない。本物の Meta アプリでの
-  Test Events(§8 の 11)で確かめる。
+- **Meta 側で計上・表示されることは未確認。** 本物の Meta アプリへの送信は受理まで
+  確かめた(§9)が、Events Manager の Test Events・概要にはまだ出ていない。Facebook
+  アプリにログインした端末での Test Events(§8 の 11)と、概要の反映(時間がかかる)で
+  確かめる。
 - §8 の Google Play / 公開文面 / Meta 側の作業(すべてオーナー)。
 - §9 の「未」の項目(Meta 入りビルドの実測・通信観測・実機・Test Events)。
 - §10 の開始値の記録。

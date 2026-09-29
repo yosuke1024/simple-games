@@ -15,6 +15,10 @@
 #      「無効化された機能」ではなく「存在しない機能」であることをここで示す。
 #   4. mode=on では SDK が入っていて、自動初期化・自動ログ・広告 ID 収集が
 #      false で宣言されている(docs/META_ANDROID_ACQUISITION.md)。
+#   5. 他のアプリが見えるようになる <queries> の provider / package は、mode=on の
+#      Facebook アプリの AttributionIdProvider 1 つだけ。mode=on でこれが欠けると、
+#      インストールの報告が広告と結べなくなる(しかもエラーにはならない)ので、
+#      「無いこと」も落とす。intent の宣言(AdMob の https など)はここでは数えない。
 #
 # 使い方(apps/simple-games/android で assembleRelease したあと、リポジトリのルートで):
 #   bash .github/scripts/check-android-artifact.sh off
@@ -100,8 +104,18 @@ else:
     if 'android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE' in perms:
         errors.append('ACCESS_ADSERVICES_CUSTOM_AUDIENCE が外れていません')
 
+queries = root.findall('queries')
+q_providers = sorted({p.get(A + 'authorities') or '' for q in queries for p in q.findall('provider')})
+q_packages = sorted({p.get(A + 'name') or '' for q in queries for p in q.findall('package')})
+want_providers = ['com.facebook.katana.provider.AttributionIdProvider'] if mode == 'on' else []
+if q_providers != want_providers:
+    errors.append(f'<queries> の provider が想定と違います(想定: {want_providers}、実際: {q_providers})')
+if q_packages:
+    errors.append(f'<queries> に package があります(他のアプリの可視範囲が広がります): {q_packages}')
+
 print(f'merged manifest: {path}')
 print('permissions: ' + ', '.join(perms))
+print('queried providers: ' + (', '.join(q_providers) or '(none)'))
 if errors:
     for e in errors:
         print(f'::error::{e}')
