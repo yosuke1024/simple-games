@@ -1,0 +1,304 @@
+/* Sudoku 6×6 — the grid, the digit pad, and the Quick Rules figures
+   (docs/SUDOKU_6X6_RULES.md §13). Everything here is drawn by this game alone,
+   under its own `s6-` prefix.
+
+   Imported by Sudoku6x6Root, so none of it is parsed until the game is
+   opened. Shared chrome (screens, buttons, dialogs, the action bar) lives in
+   src/ui/styles.css, and colours come from its custom properties, so this
+   file never repeats a palette value. */
+
+/* Centred in the space left over: on a tall phone this brings the pad down
+   within thumb reach instead of stranding it under the board. */
+.s6-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 12px 10px;
+  min-height: 0;
+}
+
+/* Six cells a side, each larger than the 9×9's (§13): 40px on a 320px phone,
+   56px at most. */
+.s6-grid {
+  --s6-cell: clamp(40px, 13vw, 56px);
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  width: calc(6 * var(--s6-cell));
+  max-width: 100%;
+  aspect-ratio: 1;
+  background: var(--surface);
+  border: 2px solid var(--ink-soft);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.s6-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: clamp(20px, 6.5vw, 28px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  background: transparent;
+  transition: background-color 0.1s ease;
+}
+
+/* Box seams (§13): after column 3, after rows 2 and 4. */
+.s6-cell[data-seam-right='true'] {
+  border-right: 2px solid var(--ink-soft);
+}
+
+.s6-cell[data-seam-bottom='true'] {
+  border-bottom: 2px solid var(--ink-soft);
+}
+
+.s6-cell:nth-child(6n) {
+  border-right: none;
+}
+
+.s6-cell:nth-child(n + 31) {
+  border-bottom: none;
+}
+
+/* A clue is the board talking; an entry is the player talking. Weight and
+   colour carry that difference, so neither needs a label. */
+.s6-cell-given {
+  color: var(--ink);
+}
+
+.s6-cell-peer,
+.s6-cell-hint-unit {
+  background: var(--accent-ring-soft);
+}
+
+.s6-cell-same {
+  background: var(--accent-soft);
+}
+
+.s6-cell-selected {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* A broken rule or a wrong digit: colour AND a ring, never colour alone (§13). */
+.s6-cell-conflict {
+  color: var(--warn);
+  background: var(--warn-soft);
+  box-shadow: inset 0 0 0 2px var(--warn);
+}
+
+.s6-cell-hint {
+  box-shadow: inset 0 0 0 2px var(--accent-ring);
+}
+
+.s6-cell-hint-target {
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
+/* A row, column or box that just came together glows once and settles
+   (§3「完成の合図」). Reduced Motion collapses the animation to nothing
+   (ui/styles.css), and the screen does not even set the class then. */
+.s6-cell-complete {
+  animation: s6-complete 0.7s ease-out;
+}
+
+@keyframes s6-complete {
+  0% {
+    box-shadow: inset 0 0 0 40px var(--accent-soft);
+  }
+  35% {
+    box-shadow: inset 0 0 0 40px var(--accent-soft);
+  }
+  100% {
+    box-shadow: inset 0 0 0 40px transparent;
+  }
+}
+
+/* Notes: a 3×2 shadow of a box inside the cell, so a digit always sits in the
+   same corner and can be found without reading. */
+.s6-notes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  width: 100%;
+  height: 100%;
+  padding: 2px;
+  font-size: clamp(9px, 2.6vw, 12px);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ink-soft);
+}
+
+.s6-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.s6-pad {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  width: calc(6 * clamp(40px, 13vw, 56px));
+  max-width: 100%;
+}
+
+.s6-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-height: 52px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: clamp(18px, 5.5vw, 24px);
+  font-weight: 700;
+}
+
+.s6-key:active {
+  background: var(--accent-soft);
+}
+
+/* A digit that is all placed sinks: the pad already refuses the tap (§3). */
+.s6-key:disabled {
+  background: var(--surface-recessed);
+  border-color: transparent;
+  color: var(--ink-soft);
+  opacity: 0.6;
+}
+
+.s6-key-notes {
+  color: var(--accent);
+}
+
+/* How many of this digit are still missing. Quiet: bookkeeping, not puzzle. */
+.s6-key-left {
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.s6-status {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.s6-mode {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.s6-choose-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.s6-daily-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.s6-daily-badge-done {
+  color: var(--ink-soft);
+}
+
+/* Quick Rules figures: a small real board, drawn like the grid so the picture
+   teaches the 2×3 box as well as the rule. */
+.s6-figure {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  width: 192px;
+  aspect-ratio: 1;
+  background: var(--surface);
+  border: 2px solid var(--ink-soft);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.s6-figure-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.s6-figure-cell[data-seam-right='true'] {
+  border-right: 2px solid var(--ink-soft);
+}
+
+.s6-figure-cell[data-seam-bottom='true'] {
+  border-bottom: 2px solid var(--ink-soft);
+}
+
+.s6-figure-cell:nth-child(6n) {
+  border-right: none;
+}
+
+.s6-figure-cell:nth-child(n + 31) {
+  border-bottom: none;
+}
+
+.s6-figure-cell-focus {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.s6-figure-note-cell {
+  display: flex;
+  width: 64px;
+  height: 64px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.s6-figure-note-cell .s6-notes {
+  font-size: 14px;
+}
+
+/* ---------- wide viewports (issue #93) ----------
+   Tiers are defined in src/ui/styles.css「wide viewports」. The stacked layout
+   simply grows; the board's cap (56px a cell) keeps it a small board. */
+
+@media (min-width: 600px) {
+  .s6-body {
+    gap: 18px;
+    padding: 8px 16px 14px;
+  }
+
+  .s6-key {
+    min-height: 56px;
+  }
+
+  .s6-key-left {
+    font-size: 11px;
+  }
+}
