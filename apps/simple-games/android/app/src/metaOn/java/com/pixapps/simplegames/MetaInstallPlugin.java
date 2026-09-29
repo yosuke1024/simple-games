@@ -361,7 +361,11 @@ public class MetaInstallPlugin extends Plugin {
      * runbook's §4 is read against that version).
      */
     private void startSdkAndReportLocked(Context app, String referrer) {
-        if (reported || blocked) return;
+        // The referrer lookup took up to a few seconds: read the record again
+        // (another instance may have written to it) and look at the region
+        // once more, right before anything can go out.
+        readState();
+        if (reported || blocked || seenInRegionThatNeedsConsentLocked()) return;
         try {
             FacebookSdk.setApplicationId(appId);
             FacebookSdk.setClientToken(clientToken);
