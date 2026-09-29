@@ -1,0 +1,106 @@
+/**
+ * Binary Balance's root: loads the game's own records (local, fast, offline),
+ * then mounts the provider and screens. The shell knows nothing beyond this
+ * component and the storage keys; unmounting stops all of the game's work
+ * (battery: an off-screen game renders nothing).
+ *
+ * The game's stylesheet is imported here rather than added to the shared one,
+ * so everything Binary Balance looks like arrives and leaves with it.
+ */
+// Register this game's 14-locale catalog the moment the chunk loads,
+// before anything below renders (issue #38, src/i18n/registry.ts).
+import '../i18n';
+import type { KVStore } from '../../../storage/kv';
+import { preferencesKV } from '../../../storage/kv';
+import { loadRecord } from '../../../storage/repo';
+import { useLoadedRecords } from '../../../ui/useLoadedRecords';
+import { BinaryBalanceProvider, useBinaryBalance } from '../state/GameContext';
+import { loadSavedGames, type SavedGames } from '../storage/gamePersistence';
+import {
+  flagsSchema,
+  prefsSchema,
+  statsSchema,
+  type Flags,
+  type Prefs,
+  type Stats,
+} from '../storage/schemas';
+import './binary-balance.css';
+import { BinaryBalanceDailyScreen } from './screens/DailyScreen';
+import { BinaryBalanceGameScreen } from './screens/GameScreen';
+import { BinaryBalanceHomeScreen } from './screens/HomeScreen';
+import { BinaryBalanceStatsScreen } from './screens/StatsScreen';
+import { BinaryBalanceTutorialScreen } from './screens/TutorialScreen';
+
+export function BinaryBalanceScreens() {
+  const { screen } = useBinaryBalance();
+  switch (screen) {
+    case 'tutorial':
+      return <BinaryBalanceTutorialScreen />;
+    case 'daily':
+      return <BinaryBalanceDailyScreen />;
+    case 'game':
+      return <BinaryBalanceGameScreen />;
+    case 'stats':
+      return <BinaryBalanceStatsScreen />;
+    case 'home':
+    default:
+      return <BinaryBalanceHomeScreen />;
+  }
+}
+
+interface LoadedData {
+  stats: Stats;
+  flags: Flags;
+  prefs: Prefs;
+  sessions: SavedGames;
+}
+
+export interface BinaryBalanceRootProps {
+  /** Hands control back to the collection home. */
+  onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: what a door means is the provider's
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
+  /** Test seam; production always uses the device store. */
+  kv?: KVStore;
+}
+
+function defaultRecords(): LoadedData {
+  return {
+    stats: statsSchema.defaultValue(),
+    flags: flagsSchema.defaultValue(),
+    prefs: prefsSchema.defaultValue(),
+    sessions: { difficulty: null, daily: null },
+  };
+}
+
+async function loadRecords(kv: KVStore): Promise<LoadedData> {
+  const [stats, flags, prefs, sessions] = await Promise.all([
+    loadRecord(statsSchema, kv),
+    loadRecord(flagsSchema, kv),
+    loadRecord(prefsSchema, kv),
+    loadSavedGames(kv),
+  ]);
+  return { stats, flags, prefs, sessions };
+}
+
+export function BinaryBalanceRoot({ onExit, entry, kv = preferencesKV }: BinaryBalanceRootProps) {
+  const data = useLoadedRecords(kv, loadRecords, defaultRecords);
+  if (data === null) return null;
+
+  return (
+    <BinaryBalanceProvider
+      initialStats={data.stats}
+      initialFlags={data.flags}
+      initialPrefs={data.prefs}
+      initialSessions={data.sessions}
+      onExit={onExit}
+      entry={entry}
+    >
+      <BinaryBalanceScreens />
+    </BinaryBalanceProvider>
+  );
+}

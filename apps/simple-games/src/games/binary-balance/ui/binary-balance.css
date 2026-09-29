@@ -1,0 +1,354 @@
+/* Binary Balance — all of this game's styling, imported by BinaryBalanceRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --stone, --warn, …) so the game reads as part of
+   the same app and follows the theme without knowing about it.
+
+   Class names are prefixed `bn-` so this file can never collide with the
+   shell or with another game. */
+
+/* ---------- board ---------- */
+
+.bn-board-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px 12px;
+}
+
+/*
+  The cell is whatever is left of the viewport once the scroll padding (24px),
+  the board's own padding and border, and the gaps between cells are taken
+  out (docs/BINARY_BALANCE_RULES.md §13). The gap is wider than Takuzu's
+  because a link (`=` / `×`) sits in it: on the 6×6 at 320px that leaves
+  (320 − 24 − 8 − 2 − 5 × 8) / 6 ≈ 41px per cell. Anything narrower clamps
+  at 24px and scrolls, because a cell too small to hit is worse than a board
+  that moves.
+*/
+.bn-board {
+  --bn-gap: 8px;
+  --bn-pad: 4px;
+  --bn-cell: clamp(
+    24px,
+    calc(
+      (100vw - 24px - 2 * var(--bn-pad) - 2px - (var(--bn-size) - 1) * var(--bn-gap)) /
+        var(--bn-size)
+    ),
+    46px
+  );
+  padding: var(--bn-pad);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  /* A tap is a mark, not a text selection or a double-tap zoom (§4). */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.bn-cells {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--bn-size), var(--bn-cell));
+  grid-auto-rows: var(--bn-cell);
+  gap: var(--bn-gap);
+}
+
+/* ---------- cells ---------- */
+
+.bn-cell {
+  position: relative;
+  width: var(--bn-cell);
+  height: var(--bn-cell);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 5px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.bn-cell:active {
+  background: var(--accent-soft);
+}
+
+/*
+  The two grounds of §13: two weights of one existing token rather than two
+  hues, which keeps them support instead of meaning — the shape says which
+  mark is which, and a reader who cannot separate the tints has lost nothing.
+  Derived from --stone at an opacity, so light and dark both come out right.
+*/
+.bn-cell-circle::before,
+.bn-cell-square::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--stone);
+}
+
+.bn-cell-circle::before {
+  opacity: 0.1;
+}
+
+.bn-cell-square::before {
+  opacity: 0.3;
+}
+
+/* The mark is the meaning (§13), so it sits above the ground. */
+.bn-glyph {
+  position: relative;
+  display: flex;
+  width: 72%;
+  height: 72%;
+  animation: bn-pop 90ms ease-out;
+}
+
+.bn-glyph svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* A mark arrives with one beat of pop (§13). */
+@keyframes bn-pop {
+  from {
+    transform: scale(0.7);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/*
+  A fixed cell is pressed into the board and cannot be moved (§4). The shell
+  dims disabled buttons to 0.4, which is right for a button nobody may press
+  and wrong for the one thing on this board that is certain. Its mark is the
+  heavier stroke (MarkGlyph), so "fixed" never rests on colour (§13).
+*/
+.bn-cell-fixed {
+  background: var(--surface-recessed);
+  border-color: var(--stone-line);
+}
+
+.bn-cell:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+/* Always-on violation display (§9): a warning ground and a warning border. */
+.bn-cell-broken {
+  background: var(--warn-soft);
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.bn-cell-broken.bn-cell-square::before {
+  opacity: 0.18;
+}
+
+/* Hint (§8, §13): the proved cell outlined, the cells that carry the proof
+   tinted, the line it was read off as a faint band. Never a mark written. */
+.bn-cell-reason:not(.bn-cell-broken) {
+  background: var(--accent-ring-soft);
+}
+
+.bn-cell-support:not(.bn-cell-broken) {
+  background: var(--accent-soft);
+}
+
+.bn-cell-hint {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+/* A broken rule or a mark that cannot be right outranks any deduction (§8). */
+.bn-cell-hint-broken {
+  border-color: var(--warn);
+  box-shadow: 0 0 0 2px var(--warn);
+}
+
+/* ---------- links ---------- */
+
+/*
+  A link sits on the middle of the edge between two cells (§13): for `h`, in
+  the gap to the right of its cell; for `v`, in the gap below it. Outside the
+  buttons and aria-hidden — the cells read the link aloud. Ink on paper, so it
+  stays legible over the cell borders it overlaps.
+*/
+.bn-link {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 13px;
+  height: 13px;
+  padding: 0 1px;
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.bn-link-h {
+  left: calc((var(--bn-col) + 1) * (var(--bn-cell) + var(--bn-gap)) - var(--bn-gap) / 2);
+  top: calc(var(--bn-row) * (var(--bn-cell) + var(--bn-gap)) + var(--bn-cell) / 2);
+}
+
+.bn-link-v {
+  left: calc(var(--bn-col) * (var(--bn-cell) + var(--bn-gap)) + var(--bn-cell) / 2);
+  top: calc((var(--bn-row) + 1) * (var(--bn-cell) + var(--bn-gap)) - var(--bn-gap) / 2);
+}
+
+/* A link its two cells disagree with (§9): warning colour and a ring. */
+.bn-link-broken {
+  color: var(--warn);
+  box-shadow: 0 0 0 1.5px var(--warn);
+}
+
+/* The link a hint reads (§8). */
+.bn-link-hint {
+  color: var(--accent);
+  box-shadow: 0 0 0 1.5px var(--accent);
+}
+
+/* Reduced Motion: marks appear at once, with nothing to wait for (§13). */
+@media (prefers-reduced-motion: reduce) {
+  .bn-cell {
+    transition: none;
+  }
+  .bn-glyph {
+    animation: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .bn-cell {
+  transition: none;
+}
+
+:root[data-reduced-motion='true'] .bn-glyph {
+  animation: none;
+}
+
+/* ---------- top bar ---------- */
+
+.bn-size-tag {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- home ---------- */
+
+.bn-choose-label {
+  margin: 0 0 -4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+/* Two destinations, not three: no level list to walk (§10). */
+.bn-chips {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ---------- daily list ---------- */
+
+.bn-daily-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.bn-daily-badge-done {
+  color: var(--ink-soft);
+}
+
+/* ---------- Quick Rules figures (§12) ---------- */
+
+/* Real cells of a real board, at a size the card can hold. */
+.bn-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.bn-figure-line {
+  display: flex;
+  align-items: center;
+}
+
+.bn-figure-cell {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--ink);
+}
+
+.bn-figure-link {
+  width: 14px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+/* The cell the step is about. */
+.bn-figure-cell-mark {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; both tiers only raise the ceiling of the board's own clamp. */
+
+@media (min-width: 600px) {
+  .bn-board {
+    --bn-cell: clamp(
+      24px,
+      calc(
+        (100vw - 24px - 2 * var(--bn-pad) - 2px - (var(--bn-size) - 1) * var(--bn-gap)) /
+          var(--bn-size)
+      ),
+      52px
+    );
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .bn-board {
+    --bn-cell: clamp(
+      24px,
+      calc(
+        (100vw - 24px - 2 * var(--bn-pad) - 2px - (var(--bn-size) - 1) * var(--bn-gap)) /
+          var(--bn-size)
+      ),
+      56px
+    );
+  }
+}
