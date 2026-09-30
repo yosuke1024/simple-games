@@ -10,6 +10,7 @@ export const ja: YachtMessages = {
   yachtCpuTurn: 'CPU の番…',
   yachtYou: 'あなた',
   yachtCpu: 'CPU',
+  yachtTotal: '合計',
   yachtCategory_ones: '1の目',
   yachtCategory_twos: '2の目',
   yachtCategory_threes: '3の目',

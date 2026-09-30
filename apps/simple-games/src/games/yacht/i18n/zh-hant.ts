@@ -10,6 +10,7 @@ export const zhHant: YachtMessages = {
   yachtCpuTurn: 'CPU 回合…',
   yachtYou: '你',
   yachtCpu: 'CPU',
+  yachtTotal: '合計',
   yachtCategory_ones: '1點',
   yachtCategory_twos: '2點',
   yachtCategory_threes: '3點',

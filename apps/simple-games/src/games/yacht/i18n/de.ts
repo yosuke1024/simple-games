@@ -10,6 +10,7 @@ export const de: YachtMessages = {
   yachtCpuTurn: 'CPU ist am Zug…',
   yachtYou: 'Du',
   yachtCpu: 'CPU',
+  yachtTotal: 'Gesamt',
   yachtCategory_ones: 'Einser',
   yachtCategory_twos: 'Zweier',
   yachtCategory_threes: 'Dreier',

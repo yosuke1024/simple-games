@@ -3,9 +3,10 @@
  * button, and the sheet, top to bottom, fitted to a 360×640 screen without
  * scrolling.
  *
- * There is no clock: the top bar says which turn this is and what both
- * sheets add up to, and nothing else. There is no Undo and no Hint (§6) —
- * three throws and the sheet's preview of every open box are the help.
+ * There is no clock: the top bar says which turn this is, and nothing else;
+ * what both sheets add up to is the sheet's own total row (§10), where the
+ * eye already is. There is no Undo and no Hint (§6) — three throws and the
+ * sheet's preview of every open box are the help.
  *
  * The Roll button doubles as the turn's announcement (§10): on the CPU's
  * turn it reads "CPU's turn…" and is disabled, in the same slot and at the
@@ -177,9 +178,6 @@ export function YachtGameScreen() {
           </button>
           <div className="yt-status">
             <span className="yt-turn">{t('yachtTurnLine', { turn, count: CATEGORY_COUNT })}</span>
-            <span className="game-score">
-              {t('yachtScoreLine', { total: totalOf(session), cpuTotal: cpuTotalOf(session) })}
-            </span>
           </div>
           <button
             type="button"
@@ -227,6 +225,8 @@ export function YachtGameScreen() {
             playing={isPlayersTurn && !confirmNewGame}
             onScore={onScore}
             flash={flash}
+            total={totalOf(session)}
+            cpuTotal={cpuTotalOf(session)}
           />
         </div>
 

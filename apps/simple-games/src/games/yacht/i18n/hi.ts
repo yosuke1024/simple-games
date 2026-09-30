@@ -10,6 +10,7 @@ export const hi: YachtMessages = {
   yachtCpuTurn: 'CPU की बारी…',
   yachtYou: 'आप',
   yachtCpu: 'CPU',
+  yachtTotal: 'कुल',
   yachtCategory_ones: '1 अंक',
   yachtCategory_twos: '2 अंक',
   yachtCategory_threes: '3 अंक',

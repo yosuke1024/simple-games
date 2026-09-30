@@ -18,6 +18,7 @@ export const en = {
   yachtCpuTurn: 'CPU’s turn…',
   yachtYou: 'You',
   yachtCpu: 'CPU',
+  yachtTotal: 'Total',
   yachtCategory_ones: 'Ones',
   yachtCategory_twos: 'Twos',
   yachtCategory_threes: 'Threes',

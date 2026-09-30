@@ -10,6 +10,7 @@ export const tr: YachtMessages = {
   yachtCpuTurn: 'CPU’nun sırası…',
   yachtYou: 'Sen',
   yachtCpu: 'CPU',
+  yachtTotal: 'Toplam',
   yachtCategory_ones: 'Birler',
   yachtCategory_twos: 'İkiler',
   yachtCategory_threes: 'Üçler',

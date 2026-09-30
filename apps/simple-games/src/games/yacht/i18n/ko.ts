@@ -10,6 +10,7 @@ export const ko: YachtMessages = {
   yachtCpuTurn: 'CPU 차례…',
   yachtYou: '나',
   yachtCpu: 'CPU',
+  yachtTotal: '합계',
   yachtCategory_ones: '1의 합',
   yachtCategory_twos: '2의 합',
   yachtCategory_threes: '3의 합',
