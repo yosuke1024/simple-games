@@ -121,7 +121,7 @@ src/
   [GROWTH_MEASUREMENT.md](GROWTH_MEASUREMENT.md))。**証明はもう
   「公開コードに追跡コードが無いこと」ではなく、成果物にそれが無いことを
   CI が示すこと**である(`check-dist-ads-separation.sh`)。
-- **Shared(Private Game Club、issue #161)は `src/club/` 1 か所に置き、Core からは
+- **Club House(Public / Private、issue #161)は `src/club/` 1 か所に置き、Core からは
   `src/app/` の動的 `import()` でしか届かない**(2026-09-09、issue #176。ディレクトリは
   まだ無い)。通信 API を書けるのはこのディレクトリだけで(`check-principles.sh` §1 の
   唯一の除外)、`club/` の外からの静的 import は `src/test/importBoundaries.test.ts` が
@@ -130,7 +130,7 @@ src/
   独立させ、初期グラフに入らないことをサイズ Gate が見る(`club/` が生まれる PR の
   受け入れ条件)。**`backup/` とは切り離す** — 接続情報(member token)はバックアップに
   入れない(`sg.iap` と同じ理由)。境界の中身は
-  [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Shared」、クライアント側の設計
+  [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Club House」、クライアント側の設計
   (入口・保存・API・挑戦と結果・受け入れ条件)は [architecture/club.md](architecture/club.md)。
 
 ## 状態と ref
@@ -211,11 +211,11 @@ Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS 
 
 → 全文: [architecture/platforms.md](architecture/platforms.md)
 
-## Shared(Private Game Club)
+## Club House(Public / Private)
 
-Core の外にある任意の層(issue #176 の境界、#161 の設計。**実装はまだ無い**、2026-09-09)。Core が受け取る変更は 3 つの入口だけ — 設定 > Advanced の行 1 つ、接続済みの端末に限るホームの入口 1 つと対応ゲームの結果画面の副次操作 1 つ、未接続の端末のホームの静かな `Play together` 1 行 — で、どれも数字・バッジ・通信を持たない。コードは `src/club/` 1 か所、到達経路は `src/app/clubGate.ts` の動的 `import()` だけ、チャンクは `club` として独立。接続は shell-owned の `sg.club`(バックアップに入れない・削除で消える)。サーバとの契約(API v1)はこちらが持ち、サーバは別リポジトリ `simple-games-club` でそれに合わせる。**Challenge は終わった 1 局から作り**(seed と `boardDigest` は遊んだ局が既に持っている)、結果は結果画面が表示した事実だけ、1 人 1 回、並べ替えは 1 軸で順位の数字を付けない。対応ゲームはレジストリに `challenge`(import ゼロの葉)を宣言し、`GameRootProps.challenge` で局を受け取り、4 つ目の中断スロットで遊ぶ。最初の 3 本は Sudoku / Minesweeper(初手が Challenge の一部)/ Water Sort。
+Core の外にある任意の層(#176 の境界、#161 の設計、`simple-games-club#1` の Public 化。**実装はまだ無い**、2026-09-30)。デプロイは 2 つ — PixApps が運用する **Public**(誰でも参加、固定費は限りなくゼロが条件)と、利用者が建てる **Private**(招待制)。**ゲーム体験は同じもの**で、差は持ち主・入り方・宣伝枠・LP への露出だけ。「同じ」とは API 契約のことで、実装は 2 つあってよい(Public は Cloudflare、Private は Node + SQLite)。Core が受け取る変更は 3 つの入口だけ — 設定 > Advanced の行 1 つ、参加済みの端末に限るホームの入口 1 つと対応ゲームの結果画面の副次操作 1 つ、未参加の端末のホームの静かな `Play together` 1 行 — で、どれも数字・バッジ・通信を持たず、**Public ができても増えない**。コードは `src/club/` 1 か所、到達経路は `src/app/clubGate.ts` の動的 `import()` だけ、チャンクは `club` として独立。接続は shell-owned の `sg.club`(バックアップに入れない・削除で消える)。**Challenge は終わった 1 局から作り**(seed と `boardDigest` は遊んだ局が既に持っている)、結果は結果画面が表示した事実だけ、1 人 1 回。**順位は同じ盤面・同じモードの中でだけ付け**、挑戦をまたいで積み上げない(デイリーは日付から seed を導くので世界中で同じ 1 盤面になり、Public の自然な順位表になる)。対応ゲームはレジストリに `challenge`(import ゼロの葉)を宣言し、`GameRootProps.challenge` で局を受け取り、4 つ目の中断スロットで遊ぶ。最初の 3 本は Sudoku / Minesweeper(初手が Challenge の一部)/ Water Sort。
 
-→ 全文: [architecture/club.md](architecture/club.md)、段取り: [plans/2026-09-09-private-game-club.md](plans/2026-09-09-private-game-club.md)
+→ 全文: [architecture/club.md](architecture/club.md)、段取り: [plans/2026-09-30-public-club-house.md](plans/2026-09-30-public-club-house.md)
 
 ## 静的 Web 版
 

@@ -43,11 +43,15 @@ done
 # 用途はオンライン判定と広告 SDK / 課金 SDK / レビュー SDK だけで、Core 自身の
 # コードが通信することはない。
 #
-# 例外は 1 つだけ、パスで宣言する。2026-09-09、issue #176 で「Shared」
-# (製品名 Private Game Club)という任意加入のレイヤーを認めた: 利用者が明示的に
+# 例外は 1 つだけ、パスで宣言する。2026-09-09、issue #176 で「Club House」
+# (2026-09-09 時点の名は Shared / Private Game Club)という任意加入のレイヤーを
+# 認めた: 利用者が明示的に
 # 接続した端末だけが、利用者または友人が自前で立てたサーバーへ挑戦の結果
 # (結果画面が表示した事実)だけを送る。PixApps 自身はサーバーを一切運用しない(詳細は
-# docs/PRODUCT_PRINCIPLES.md「Shared」)。実装は issue #161 であり、この時点では
+# docs/PRODUCT_PRINCIPLES.md「Club House」)。2026-09-30 に PixApps が運用する
+# Public デプロイを 1 つ認めたが、**この例外は 1 ディレクトリのまま**である —
+# 通信するのは端末側の `club/` だけで、相手が誰のサーバかは関係しない
+# (issue simple-games-club#1)。実装は issue #161 であり、この時点では
 # apps/simple-games/src/club/ ディレクトリはまだ存在しない —— #161 が着地する先
 # として、ゲートを先に宣言してある。
 #
@@ -74,10 +78,10 @@ else
   ok "ネットワーク API なし(Core。例外は apps/simple-games/src/club/ のみ)"
 fi
 
-# 位置情報は Shared でも使わない。除外なしの独立した検査にする。
+# 位置情報は Club House でも使わない。除外なしの独立した検査にする。
 hits="$(grep -rnE '\bnavigator\.geolocation' "${src_dirs[@]}" || true)"
 if [ -n "$hits" ]; then
-  report "位置情報 API があります(Shared を含め、いかなる経路でも使いません)" "$hits"
+  report "位置情報 API があります(Club House を含め、いかなる経路でも使いません)" "$hits"
 else
   ok "位置情報 API なし(例外なし)"
 fi

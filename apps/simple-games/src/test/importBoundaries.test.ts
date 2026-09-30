@@ -11,7 +11,7 @@
  *      whole game back into the home's initial chunk (issue #26).
  *   4. The registry's *static* imports into games are exactly the keys
  *      leaves; game code arrives only through dynamic `import()` loaders.
- *   5. `src/club/` (Shared / Private Game Club, issue #176; the directory does
+ *   5. `src/club/` (Club House, issue #176; the directory does
  *      not exist yet — issue #161 adds it) is reached from outside itself
  *      only by a real dynamic `import()` from files under `src/app/`. Never
  *      by a static import, an `import type`, an inline `import('x').T` type,
@@ -21,7 +21,7 @@
  *      freely (and reach games only via the registry, which rule 2 already
  *      enforces). This is what turns the one network exception of
  *      check-principles.sh §1 into code Core cannot load without asking
- *      (docs/PRODUCT_PRINCIPLES.md「Shared」).
+ *      (docs/PRODUCT_PRINCIPLES.md「Club House」).
  *
  * ESLint glob patterns cannot express rule 1 across import depths (a game
  * reaches shared code by '../../../storage' and a sibling game would be

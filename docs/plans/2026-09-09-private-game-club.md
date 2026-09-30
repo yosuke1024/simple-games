@@ -1,5 +1,9 @@
 # 計画: Private Game Club(Shared)— 契約から出荷までの段取り
 
+> **2026-09-30 に [2026-09-30-public-club-house.md](2026-09-30-public-club-house.md) が
+> 置き換えた。** Public Club House を認めた判断(`simple-games-club#1`)で順序が変わり、
+> Private から始める前提が無くなったため。本文書は 2026-09-09 時点の記録として残す。
+
 作成 2026-09-09。Epic #175 の段 2(#161 の設計)を
 [../architecture/club.md](../architecture/club.md) として固めた時点の段取り。
 この文書は**計画**であり、完了した段は履歴になる([../PROJECT_CONTEXT.md](../PROJECT_CONTEXT.md)
