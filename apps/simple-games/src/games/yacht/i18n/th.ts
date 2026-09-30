@@ -10,6 +10,7 @@ export const th: YachtMessages = {
   yachtCpuTurn: 'ตาของ CPU…',
   yachtYou: 'คุณ',
   yachtCpu: 'CPU',
+  yachtTotal: 'รวม',
   yachtCategory_ones: 'เลข 1',
   yachtCategory_twos: 'เลข 2',
   yachtCategory_threes: 'เลข 3',

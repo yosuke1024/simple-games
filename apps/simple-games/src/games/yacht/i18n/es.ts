@@ -10,6 +10,7 @@ export const es: YachtMessages = {
   yachtCpuTurn: 'Turno de la CPU…',
   yachtYou: 'Tú',
   yachtCpu: 'CPU',
+  yachtTotal: 'Total',
   yachtCategory_ones: 'Unos',
   yachtCategory_twos: 'Doses',
   yachtCategory_threes: 'Treses',

@@ -10,6 +10,7 @@ export const ptBR: YachtMessages = {
   yachtCpuTurn: 'Vez da CPU…',
   yachtYou: 'Você',
   yachtCpu: 'CPU',
+  yachtTotal: 'Total',
   yachtCategory_ones: 'Um',
   yachtCategory_twos: 'Dois',
   yachtCategory_threes: 'Três',

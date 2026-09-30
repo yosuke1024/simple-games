@@ -10,6 +10,7 @@ export const id: YachtMessages = {
   yachtCpuTurn: 'Giliran CPU…',
   yachtYou: 'Anda',
   yachtCpu: 'CPU',
+  yachtTotal: 'Total',
   yachtCategory_ones: 'Satu',
   yachtCategory_twos: 'Dua',
   yachtCategory_threes: 'Tiga',

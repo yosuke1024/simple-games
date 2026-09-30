@@ -11,8 +11,10 @@
    The screen has to fit 360×640 without scrolling, with the web build's
    116px anchor reservation under it (docs/YACHT_RULES.md §10): top bar 64,
    dice 64 (56 plus the room a kept die is lifted into), Roll 48, the sheet's
-   header row (~20px, naming "You" / "CPU" once above the two sheet-columns),
-   and six rows of 44 — about 500px in all, under the 524 left. */
+   header row (20px, naming "You" / "CPU" once above the two sheet-columns),
+   six rows of 42, and the total row under them (20px) — 521px in all with
+   the gaps and padding, under the 524 left. The rows went from 44 to 42 to
+   pay for the total row; measured at 360×640, not estimated. */
 
 /* ---------- top bar ---------- */
 
@@ -35,7 +37,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
   max-width: 420px;
   min-height: 0;
@@ -137,15 +139,31 @@
 
 /* ---------- score sheet ---------- */
 
+/* The CPU column's width, shared by the twelve CPU cells and the "CPU"
+   label over them: two 13px display digits (7.8px each), the 1px rule and
+   its 5px padding, rounded up. A fixed width rather than `2ch` in the cell
+   so the header can be sized to the same number without borrowing the
+   cell's font. The same 22px below 340px, where the cell's 12px digits and
+   4px padding need 19.4 and the 11px label needs 23: the label's overhang
+   into the gap stays at a pixel. */
+.yt-sheet-wrap {
+  --yt-cpu-col: 22px;
+}
+
 /* The header row above the two sheet-columns, naming what the sheet's two
    numbers are — said once rather than in every one of the twelve boxes
    (§10). Decorative (aria-hidden): each box's own aria-label already carries
-   both seats' points in words. */
+   both seats' points in words.
+
+   Each label sits right over its column of numbers: the column's inset is
+   the box's border plus padding (1 + 10 left, 1 + 8 right), the gap between
+   the two labels is the box's own, and each right-aligned label ends where
+   its right-aligned digits end. */
 .yt-sheet-head {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px 8px;
-  padding: 0 2px 2px;
+  padding: 0 0 2px;
 }
 
 .yt-sheet-head-col {
@@ -153,7 +171,7 @@
   justify-content: flex-end;
   gap: 6px;
   height: 18px;
-  padding: 0 10px;
+  padding: 0 9px 0 11px;
   font-size: 12px;
   color: var(--ink-soft);
   font-variant-numeric: tabular-nums;
@@ -164,23 +182,39 @@
   text-align: right;
 }
 
+/* The "CPU" label is exactly as wide as the CPU cells under it, so the
+   "You" label before it ends where the player's digits end. "CPU" is wider
+   than two digits: written right to left it overflows to the left, into
+   the gap, and pushes nothing. */
+.yt-sheet-head-col span:last-child {
+  flex: 0 0 auto;
+  width: var(--yt-cpu-col);
+  direction: rtl;
+}
+
 /* Two columns of six, filled column by column so the DOM keeps the sheet's
    own order: the upper boxes on the left, the combinations on the right. */
 .yt-sheet {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: repeat(6, 44px);
+  grid-template-rows: repeat(6, 42px);
   grid-auto-flow: column;
-  gap: 6px 8px;
+  gap: 5px 8px;
 }
 
+/* Name, then the two numbers pushed to the right edge as a pair — the name
+   takes every spare pixel (`.yt-box-name`), so the numbers sit in the same
+   two places in every row, under the header's two labels. The right padding
+   is 2px less than the left so the name keeps about the width it had before
+   the numbers were fixed in place. Measured at 360px: the name gets 90.8px,
+   and "Four of a Kind" is 90; the longer names of some locales ("Straight
+   Besar", "Escalera menor") were already ellipsed there. */
 .yt-box {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 6px;
   min-width: 0;
-  padding: 0 10px;
+  padding: 0 8px 0 10px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--surface);
@@ -212,6 +246,7 @@
 }
 
 .yt-box-name {
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -246,11 +281,15 @@
 
 /* The CPU's own number: always a confirmed point, never a preview, so it
    never wears the preview's faint styling — muted on its own instead, and set
-   off from the player's number by a rule rather than more gap (§10). */
+   off from the player's number by a rule rather than more gap (§10).
+
+   Two digits wide whether it holds 0, 1 or 2 of them (`--yt-cpu-col`): the
+   cell is the rightmost, so any change in its width would move the player's
+   number next to it, row by row. */
 .yt-box-cpu {
   flex-shrink: 0;
-  min-width: 2ch;
-  padding-left: 6px;
+  min-width: var(--yt-cpu-col);
+  padding-left: 5px;
   border-left: 1px solid var(--line);
   font-family: var(--font-display);
   font-size: 13px;
@@ -277,6 +316,24 @@
   to {
     background-color: transparent;
   }
+}
+
+/* The total row under the sheet (§10): what both sheets add up to, said in
+   words and numbers where the eye already is, and nowhere else. Plain text
+   like the header row, the same insets as the boxes, 20px on the height
+   budget. The numbers wear the shell's score styling (`.game-score`), as a
+   top-bar score would. */
+.yt-sheet-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  height: 20px;
+  padding: 2px 9px 0 11px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ink-soft);
+  white-space: nowrap;
 }
 
 /* ---------- Quick Rules figures ---------- */
@@ -356,15 +413,30 @@
     height: 50px;
   }
 
+  /* Measured at 320: the name gets 80px, one 13px CJK name being 78. */
   .yt-box {
-    padding: 0 8px;
+    padding: 0 6px 0 8px;
     gap: 4px;
     font-size: 13px;
+  }
+
+  .yt-box-points {
+    font-size: 15px;
   }
 
   .yt-box-cpu {
     padding-left: 4px;
     font-size: 12px;
+  }
+
+  .yt-sheet-head-col {
+    gap: 4px;
+    padding: 0 7px 0 9px;
+    font-size: 11px;
+  }
+
+  .yt-sheet-foot {
+    padding: 2px 7px 0 9px;
   }
 }
 
@@ -398,12 +470,16 @@
    wide but short window (a phone held sideways) keeps these rows over the
    wide tier's larger ones.
 
-   The header row above the sheet (§10) added about 20px to the column, so
-   `.yt-body`'s own gap tightens from 8 to 6 here to keep the whole screen
-   above the web build's anchor reservation. */
+   The header row and the total row (§10) cost the column about 40px, so
+   the rows, the row gap, `.yt-body`'s own gap and its bottom padding all
+   tighten here. Measured at 320×568: the column runs 4px into the web
+   build's 116px reservation, whose last 16px is ADS_POLICY.md's gap between
+   an ad and anything tappable — the last box ends 36px above the anchor,
+   and the total row's text 18px above it. */
 @media (max-height: 600px) {
   .yt-body {
-    gap: 6px;
+    gap: 5px;
+    padding-bottom: 6px;
   }
 
   .yt-sheet-head {
@@ -411,8 +487,13 @@
   }
 
   .yt-sheet {
-    grid-template-rows: repeat(6, 38px);
-    row-gap: 5px;
+    grid-template-rows: repeat(6, 36px);
+    row-gap: 4px;
+  }
+
+  .yt-sheet-foot {
+    height: 18px;
+    padding-top: 0;
   }
 
   .btn.yt-roll {

@@ -2,8 +2,9 @@
  * The score sheet (docs/YACHT_RULES.md §3, §10): twelve boxes as buttons, two
  * columns of six — the upper boxes on the left, the combinations on the
  * right — with a header row above naming the sheet's two numbers, "You" and
- * "CPU". The DOM keeps the sheet's own order, so a screen reader reads the
- * left column and then the right.
+ * "CPU", and a total row below saying what both sheets add up to. The DOM
+ * keeps the sheet's own order, so a screen reader reads the left column and
+ * then the right, then the totals.
  *
  * On the player's turn, an open box previews, faintly, what the dice on the
  * table would put in it — the arithmetic is the game's to do, the choice is
@@ -42,6 +43,9 @@ export interface YachtSheetProps {
   playing: boolean;
   onScore: (category: Category) => void;
   flash: SheetFlash | null;
+  /** Both sheets' sums, for the total row under the boxes (§10). */
+  total: number;
+  cpuTotal: number;
 }
 
 export const YachtSheet = memo(function YachtSheet({
@@ -52,6 +56,8 @@ export const YachtSheet = memo(function YachtSheet({
   playing,
   onScore,
   flash,
+  total,
+  cpuTotal,
 }: YachtSheetProps) {
   const { t } = useSettings();
   const reducedMotion = useReducedMotion();
@@ -123,6 +129,10 @@ export const YachtSheet = memo(function YachtSheet({
             </button>
           );
         })}
+      </div>
+      <div className="yt-sheet-foot">
+        <span>{t('yachtTotal')}</span>
+        <span className="game-score">{t('yachtScoreLine', { total, cpuTotal })}</span>
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ export const vi: YachtMessages = {
   yachtCpuTurn: 'Lượt của CPU…',
   yachtYou: 'Bạn',
   yachtCpu: 'CPU',
+  yachtTotal: 'Tổng',
   yachtCategory_ones: 'Mặt 1',
   yachtCategory_twos: 'Mặt 2',
   yachtCategory_threes: 'Mặt 3',
