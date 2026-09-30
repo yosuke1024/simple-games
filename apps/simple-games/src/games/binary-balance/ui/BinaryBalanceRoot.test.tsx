@@ -58,6 +58,18 @@ const labelOf = (cell: HTMLElement) => cell.getAttribute('aria-label') ?? '';
 /** The first cell the player may tap: givens are disabled buttons (§4). */
 const firstOpenCell = () => cells().find((cell) => !(cell as HTMLButtonElement).disabled)!;
 
+/**
+ * The cell that was `Empty, ${rest}` before a sun went into it. The board is
+ * random, so the sun may break a rule there and the name gains a trailing
+ * "breaks a rule" (BinaryBalanceBoard.tsx) — the mark and the place are what
+ * these tests pin, not whether the guess was right.
+ */
+const sunAt = (rest: string) =>
+  screen.getByRole('button', {
+    name: (accessible) =>
+      accessible === `Sun, ${rest}` || accessible === `Sun, ${rest}, breaks a rule`,
+  });
+
 /** Three open cells side by side in one row, as [row, col] of the first. */
 function openRun(size: number): [number, number] {
   const all = cells() as HTMLButtonElement[];
@@ -344,7 +356,7 @@ describe('home (§10)', () => {
     // Today again: a resume, which replaces nothing and asks nothing.
     await user.click(days()[0]!);
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: `Sun, ${openLabel}` })).toBeInTheDocument();
+    expect(sunAt(openLabel)).toBeInTheDocument();
   });
 });
 
@@ -453,7 +465,7 @@ describe('playing (§2, §4, §9)', () => {
     launch();
     await settle();
     await user.click(await screen.findByRole('button', { name: /^Easy.*Resume/ }));
-    expect(screen.getByRole('button', { name: `Sun, ${name}` })).toBeInTheDocument();
+    expect(sunAt(name)).toBeInTheDocument();
   });
 });
 
