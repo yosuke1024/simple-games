@@ -1,12 +1,20 @@
-# Shared(Private Game Club)— クライアント側の契約
+# Club House — クライアント側の契約
 
-作成 2026-09-09。issue #161(Optional Shared Server / Private Game Club)の**設計**であり、
+作成 2026-09-09、改題 2026-09-30。issue #161 の**設計**であり、
 Epic #175 の段 2(原則の境界 #176 → **#161 の設計** → #164 の発見導線)に当たる。
 境界の正本は [../PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md)「Shared」で、この文書は
 その境界の**内側で #161 と #164 をどう作るか**を固定する。索引と要約は
 [../ARCHITECTURE.md](../ARCHITECTURE.md)。
 
-**実装はまだ無い**(2026-09-09 時点。`apps/simple-games/src/club/` は存在しない)。
+**2026-09-30 の改定**: PixApps が運用する **Public Club House** を認め、同じ盤面での
+成績の順位表を作ると決めた(`simple-games-club#1`、PRODUCT_PRINCIPLES「Club House」)。
+**本文書がいま書いているのは Private デプロイの契約**である。Public 固有の設計
+(開かれた参加、デイリーを軸にした順位表、LP への読み取り専用ビュー、Cloudflare の
+構成と費用)は、費用の spike のあとに本文書へ追記する。それまでは §5 の契約が
+両デプロイの共通部分であり、Public はここに**足す**ことはあっても**変えない**。
+段取りは [../plans/2026-09-30-public-club-house.md](../plans/2026-09-30-public-club-house.md)。
+
+**実装はまだ無い**(`apps/simple-games/src/club/` は存在しない)。
 段取りは [../plans/2026-09-09-private-game-club.md](../plans/2026-09-09-private-game-club.md)。
 issue #161 / #164 の本文とコメントは提案・検討の記録であり、この文書と食い違う箇所は
 この文書を正とする([../PROJECT_CONTEXT.md](../PROJECT_CONTEXT.md)「Authority」)。
@@ -33,17 +41,17 @@ issue #161 / #164 の本文とコメントは提案・検討の記録であり�
 
 ## 1. 用語
 
-| 語               | 意味                                                                                                                                                                                                                |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Core**         | Shared を有効化していない状態のアプリと Web 版。PRODUCT_PRINCIPLES の全約束の主語                                                                                                                                   |
-| **Shared**       | 利用者が自分で建てたサーバへ明示的に接続したときだけ現れる任意の層。製品名は **Private Game Club**。UI と公開文面では **Club** と呼び、Shared / SharedHost / Server はコード・文書の語                              |
-| **サーバ**       | 利用者(または招待した知人)が建てた 1 台。**1 台 = 1 Club**(v1)。複数の Club に入る = 複数のサーバに接続する。API に Club の id を持たせるのはこの固定を将来ほどけるようにするためで、v1 のサーバは 1 つしか返さない |
-| **Host / Owner** | サーバを建てた人。`role: 'owner'` の member。建てる・払う・消すのはこの人で、PixApps は関与しない。Owner の端末は複数持てる(Owner リンクで足す。§8-3)                                                               |
-| **Member**       | 招待で参加した人。端末ごとに member token を持つ。同じ人が別の端末で入れば別の member(§4)                                                                                                                           |
-| **Challenge**    | 「このゲームを、このモードで、この seed で」を Club に置いたもの。**終わった 1 局から作る**(§6)。締切は無い                                                                                                         |
-| **Result**       | 1 つの Challenge に対する member 1 人の結果。結果画面が表示した事実だけ(§6)。**1 人 1 回**                                                                                                                          |
-| **Club 記録**    | そのゲーム・そのモードでの Club 内ベストとその持ち主。自己ベストと同じ意味の「記録」で、順位ではない(PRODUCT_PRINCIPLES「ランキングの縮め方」)                                                                      |
-| **接続**         | 端末が 1 つのサーバについて持つ endpoint + member token。`sg.club` の 1 要素(§4)                                                                                                                                    |
+| 語               | 意味                                                                                                                                                                                                                                                                       |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Core**         | Shared を有効化していない状態のアプリと Web 版。PRODUCT_PRINCIPLES の全約束の主語                                                                                                                                                                                          |
+| **Club House**   | 本人が明示的に参加したときだけ現れる任意の層。デプロイは 2 つ — **Public Club House**(PixApps が運用、誰でも参加)と **Private Club House**(利用者が建てる、招待制。2026-09-09 まで Private Game Club と呼んでいたもの)。実装側の語は `src/club/` のままで、`Shared` は旧称 |
+| **サーバ**       | 利用者(または招待した知人)が建てた 1 台。**1 台 = 1 Club**(v1)。複数の Club に入る = 複数のサーバに接続する。API に Club の id を持たせるのはこの固定を将来ほどけるようにするためで、v1 のサーバは 1 つしか返さない                                                        |
+| **Host / Owner** | サーバを建てた人。`role: 'owner'` の member。建てる・払う・消すのはこの人で、PixApps は関与しない。Owner の端末は複数持てる(Owner リンクで足す。§8-3)                                                                                                                      |
+| **Member**       | 招待で参加した人。端末ごとに member token を持つ。同じ人が別の端末で入れば別の member(§4)                                                                                                                                                                                  |
+| **Challenge**    | 「このゲームを、このモードで、この seed で」を Club に置いたもの。**終わった 1 局から作る**(§6)。締切は無い                                                                                                                                                                |
+| **Result**       | 1 つの Challenge に対する member 1 人の結果。結果画面が表示した事実だけ(§6)。**1 人 1 回**                                                                                                                                                                                 |
+| **Club 記録**    | そのゲーム・そのモードでの Club 内ベストとその持ち主。自己ベストと同じ意味の「記録」で、挑戦をまたいだ順位ではない(PRODUCT_PRINCIPLES「順位表」)                                                                                                                           |
+| **接続**         | 端末が 1 つのサーバについて持つ endpoint + member token。`sg.club` の 1 要素(§4)                                                                                                                                                                                           |
 
 ## 2. Core に現れるもの — 入口 3 つの具体形
 
@@ -53,7 +61,7 @@ PRODUCT_PRINCIPLES「Core が Shared から受け取る変更は次の 3 つま�
 ### 2-1. 設定 > Advanced の入口 1 つ(常に在る)
 
 - 設定画面に **Advanced** の節を 1 つ足し(現状この節は無い。Backup & Restore の
-  下、ローカルデータ削除の上)、行を 1 つ置く: `Private Game Club`。副題は無し。
+  下、ローカルデータ削除の上)、行を 1 つ置く: `Club House`。副題は無し。
 - 押すと `src/app/` が `club/` を動的 import し(§3)、Club の入口画面(§9「入口」)
   を開く。接続が 1 つも無ければ「参加する / 自分の Club を作る」、あれば Club 一覧。
 - Core が持つ文言はこの 2 キー(`advancedTitle` / `clubEntry`)だけ。
@@ -69,7 +77,7 @@ PRODUCT_PRINCIPLES「Core が Shared から受け取る変更は次の 3 つま�
   流れの中の 1 枚として、Web 版のアプリ案内カードと同じく「無ければ場所を取らない」
   形。あちらはヒーローの直後に置かれるので位置は重ならない —— 2026-09-11 の
   常設化で上へ移った。[WEB_VERSION.md](../WEB_VERSION.md)「アプリへの送客」)。
-  内容は見出し `Private Game Club` と、`sg.club` にキャッシュされた Club 名を
+  内容は見出し `Club House` と、`sg.club` にキャッシュされた Club 名を
   「 · 」で連結した 1 行(`Suzuki Family · Pune Office`)。
   **数字を出さない** — #161 の例にある「3 active challenges」は置かない。件数を出す
   にはホームを描くたびに通信する必要があり(PRODUCT_PRINCIPLES「通信は…本人の操作の
@@ -245,36 +253,43 @@ interface OutboxItem {
 - ベース: `<endpoint>/api/v1/`。JSON(`Content-Type: application/json; charset=utf-8`)。
 - 認証: `Authorization: Bearer <memberToken>`。`/join`・`/claim`・`/health` だけは不要。
   token は URL・クエリ・ログに出さない。
-- サーバはレスポンスに `X-Club-Api: 1` を付ける。クライアントは**この値を見て**、
-  知らない版なら「このサーバは新しすぎます」を出して何も送らない(§10)。
+- サーバはレスポンスに `X-Club-Api: 1` を付ける(4xx / 5xx にも)。クライアントは
+  **この値を見て**、知らない版なら「このサーバは新しすぎます」を出して何も送らない(§10)。
+- 一覧を返すエンドポイント(`GET /challenges` / `GET /challenges/:id/results` /
+  `GET /records`)は JSON **配列**をそのまま返す。他はオブジェクト。
 - エラーは `{ "error": { "code": "<snake_case>", "message": "<英語 1 文>" } }`。
   `message` は開発者向けで、画面には出さない(画面の文言は `code` から
   クライアントのカタログで引く。§11)。
 
-| HTTP | code                  | いつ                                                                 |
-| ---- | --------------------- | -------------------------------------------------------------------- |
-| 400  | `invalid_request`     | body が契約に合わない                                                |
-| 401  | `unauthorized`        | token が無い / 不正 / **revoke 済み**(Member 削除)                   |
-| 403  | `forbidden`           | Owner 専用の操作を Member が呼んだ                                   |
-| 404  | `not_found`           | Challenge / Member が無い                                            |
-| 409  | `already_submitted`   | その Challenge にこの member の Result が既にある(§6-3「1 人 1 回」) |
-| 409  | `board_mismatch`      | Result の `boardDigest` が Challenge のものと違う(§6-4)              |
-| 409  | `invite_expired`      | 招待 token が無効(再発行済み)                                        |
-| 409  | `setup_key_used`      | Setup Key が既に使われた / 一致しない(§8)                            |
-| 409  | `last_owner`          | 最後の Owner を外そうとした(§8-3)                                    |
-| 409  | `too_many_owners`     | Club の Owner が上限(5)に達している(§8-3)                            |
-| 409  | `too_many_members`    | Club の member が上限(100)に達している                               |
-| 413  | `too_large`           | body が 16KB を超えた                                                |
-| 429  | `rate_limited`        | 下記の上限                                                           |
-| 501  | `unsupported_version` | `contractVersion` をサーバが知らない                                 |
+| HTTP | code                  | いつ                                                                    |
+| ---- | --------------------- | ----------------------------------------------------------------------- |
+| 400  | `invalid_request`     | body が契約に合わない                                                   |
+| 401  | `unauthorized`        | token が無い / 不正 / **revoke 済み**(Member 削除)                      |
+| 403  | `forbidden`           | Owner 専用の操作を Member が呼んだ                                      |
+| 404  | `not_found`           | Challenge / Member が無い                                               |
+| 409  | `already_submitted`   | その Challenge にこの member の Result が既にある(§6-3「1 人 1 回」)    |
+| 409  | `board_mismatch`      | Result の `boardDigest` が Challenge のものと違う(§6-4)                 |
+| 409  | `invite_expired`      | 招待 token が無効(再発行済み)                                           |
+| 409  | `setup_key_used`      | Setup Key が既に使われた / 一致しない(§8)                               |
+| 409  | `last_owner`          | 最後の Owner を外そうとした(§8-3)                                       |
+| 409  | `too_many_owners`     | Club の Owner が上限(5)に達している(§8-3)                               |
+| 409  | `too_many_members`    | Club の member が上限(100)に達している                                  |
+| 413  | `too_large`           | body が 16KB を超えた(`params` / `facts` が 1KB を超えたときは 400)     |
+| 429  | `rate_limited`        | 下記の上限                                                              |
+| 500  | `internal_error`      | サーバの不具合。クライアントは他の未知の code と同じく汎用の 1 行で扱う |
+| 501  | `unsupported_version` | `contractVersion` をサーバが知らない                                    |
 
 - rate limit は最小限: `/join` と `/claim` は IP あたり 10 回 / 分、それ以外は
   member あたり 60 回 / 分。超えたら 429 で、クライアントは再試行しない(次の操作まで)。
 - CORS: サーバは自分の origin、`https://localhost`(Android の Capacitor)、
   `capacitor://localhost`(iOS)を許可する。pixapps.ai は v1 では許可しない(§7-3)。
-- token の生成と保存: invite token は 128 bit、member token と Setup Key は 256 bit の
-  乱数を base64url で。サーバ DB には **SHA-256 の hash** だけを置く(server secret を
-  pepper として連結)。平文は発行時のレスポンスにしか存在しない。
+- token の生成と保存: invite token と Owner リンクは 128 bit、member token と Setup Key
+  は 256 bit の乱数を base64url で。サーバ DB には **SHA-256 の hash** だけを置く
+  (server secret を pepper として連結。secret は環境変数 `CLUB_SECRET`、無ければ
+  volume 上に生成して保つ)。例外は **Member 招待 token だけ**で、これは平文で保存する —
+  Owner が何度でも取り出して配るものであり(`GET /invite`)、作り直せば無効になる
+  入場券であって、既存の誰かを名乗れる鍵ではない。member token・Owner リンク・
+  Setup Key の平文は発行時のレスポンスにしか存在しない。
 
 ### 5-2. 型
 
@@ -322,9 +337,9 @@ interface Hosting {
 
 | Method / Path                  | 認証   | 目的                                                                                                                                                                          |
 | ------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /health`                  | 不要   | `{ ok: true, api: 1 }`。接続画面の疎通確認とテンプレートの healthcheck                                                                                                        |
+| `GET /health`                  | 不要   | `{ ok: true, api: 1, claimed }`。接続画面の疎通確認とテンプレートの healthcheck。`claimed` は Create 導線が「deploy 済み・claim 待ち」を知るため                              |
 | `POST /join`                   | invite | 招待 token + nickname → member token                                                                                                                                          |
-| `POST /claim`                  | setup  | Setup Key + nickname → **owner** の member token(§8-3)。Setup Key が再設定されていればもう 1 回                                                                               |
+| `POST /claim`                  | setup  | `{ setupKey, nickname, clubName? }` → **owner** の member token(§8-3)。`clubName` 省略時は `<nickname>'s Club`。Setup Key が再設定されていればもう 1 回                       |
 | `GET /club`                    | member | `{ club, me, members[] }`                                                                                                                                                     |
 | `GET /challenges`              | member | 新しい順。`?after=<id>` で続き。最大 50 件                                                                                                                                    |
 | `POST /challenges`             | member | 作成 + 作成者の Result を同時に(§6-3)                                                                                                                                         |
@@ -391,8 +406,12 @@ interface Hosting {
 
 `GET /records` の `paramsKey` は §6-1 のゲームごとの規則で作る文字列(`hard` /
 `medium` / `easy` など)。**Club 記録は Result から導出する値であり、サーバは
-Result 以外の集計(通算・ポイント・回数の順位)を持たない**。持てばそれは順位表の
-材料になる(PRODUCT_PRINCIPLES「挑戦をまたいで積み上げない」)。
+Result 以外の集計(通算・ポイント・回数の順位)を持たない**。順位が付くのは 1 つの
+挑戦の中だけで、積み上げた順位は作らない(PRODUCT_PRINCIPLES「順位表」)。この導出のためだけに、
+サーバは §6-1 の表の `order`(比較軸)と `paramsKey`(モードを決める params の項目)を
+ゲーム id ごとに知る(`simple-games-club` の `src/contracts/games.ts`)。それ以外の場所で
+`params` / `facts` を読まない。表に無いゲームの Challenge と Result は普通に扱い、
+記録だけが(サーバがそのゲームを知るまで)導出されない。
 
 ### 5-5. 送らないもの(再掲、機械で見るもの)
 
@@ -467,10 +486,11 @@ interface GameChallengeContract<P, F> {
   `facts` の値は `details` の値と同じ変数から作る(`session.elapsedSeconds` /
   `session.mistakeCount` / `session.hintCount` / `session.moveCount`)。ここで数字を
   計算しない。
-- `order` は 1 軸だけ。同値は提出順のまま。**順位の数字・ポイント・称号は付けない**
-  (PRODUCT_PRINCIPLES)。2 軸目(Sudoku のミス、Water Sort の時間)は表示するが
-  並べ替えに使わない — 「時間は速いがミスが多い」をどう順位付けるかを製品が決めた
-  時点で、それは採点であり順位表である。
+- `order` は 1 軸だけ。同値は提出順のまま。**順位の数字を付けてよい**(2026-09-30 に
+  「付けない」を撤回。PRODUCT_PRINCIPLES「順位表」)。付くのは 1 つの盤面の中の順位だけで、
+  挑戦をまたいだ通算・ポイント・称号は無い。2 軸目(Sudoku のミス、Water Sort の時間)は
+  表示するが並べ替えに使わない — 「時間は速いがミスが多い」をどう順位付けるかを製品が
+  決めた時点で、それは成績の比較ではなく採点になる。
 
 ### 6-2. ゲーム側の対応 — レジストリの `challenge` と 4 つ目のスロット
 
@@ -591,11 +611,11 @@ https://<endpoint>/join#invite=<inviteToken>
 
 ### 7-3. どこで参加できるか
 
-| 経路                                                 | できること                                                                                    |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| 招待 URL をブラウザで開く(SharedHost の Web)         | nickname → `Join and Play`。**インストール不要**。同じ origin なので CORS の問題が無い        |
-| アプリの設定 > Advanced > `Private Game Club` > 参加 | 招待 URL を**貼り付ける**(`inviteFromHref` で endpoint と token を読む)→ nickname → 参加      |
-| pixapps.ai の Web 版の `Play together`               | 「招待リンクを開いてください」の説明と、Host になる導線(§8)。任意 endpoint への直接接続は無い |
+| 経路                                          | できること                                                                                    |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 招待 URL をブラウザで開く(SharedHost の Web)  | nickname → `Join and Play`。**インストール不要**。同じ origin なので CORS の問題が無い        |
+| アプリの設定 > Advanced > `Club House` > 参加 | 招待 URL を**貼り付ける**(`inviteFromHref` で endpoint と token を読む)→ nickname → 参加      |
+| pixapps.ai の Web 版の `Play together`        | 「招待リンクを開いてください」の説明と、Host になる導線(§8)。任意 endpoint への直接接続は無い |
 
 アプリが招待 URL を直接受け取る経路(App Links / Universal Links)は作らない
 ([../WEB_VERSION.md](../WEB_VERSION.md)「URL」の判断のまま)。招待された人の最短経路は
@@ -629,7 +649,7 @@ Simple Games by PixApps
 
 ### 8-1. 入口
 
-設定 > Advanced > `Private Game Club` > `Create my Club`(2-1)、`Play together` >
+設定 > Advanced > `Club House` > `Create my Club`(2-1)、`Play together` >
 `Create a Club`(2-3)、Club の画面の末尾の `Create your own Club`(§13-3)。
 3 つとも同じ説明画面へ来る。
 
@@ -782,7 +802,8 @@ Members
 Hosting                                        ← Owner だけ
 ```
 
-- **Challenges が主役**で、順位表は無い。`Played` は「自分の結果がある Challenge」。
+- **Challenges が主役**である。順位は各 Challenge の中にあり、Club の入口が順位の
+  一覧になることはない。`Played` は「自分の結果がある Challenge」。
 - `New Challenge` は対応ゲーム(§6-1)を選んでフリープレイを開くだけ(§6-3)。
 - 一覧は開いたときと明示の再読み込みで取る(§10)。件数・未読・「新着」を Core へ
   持ち出さない。
@@ -808,8 +829,8 @@ Results
 
 - `Play` → `App.tsx` の `enterGame(gameId, 'collection', challenge)` → 対応ゲームの
   Root に `challenge` が渡る(§6-2)。
-- Results は §6-1 の `order` で並ぶ。**数字の順位・メダル・称号・差分は無い**。
-  自分の行は太字で示すだけ。
+- Results は §6-1 の `order` で並び、**順位の数字が付く**(2026-09-30)。メダル・称号・
+  挑戦をまたいだ差分は無い。自分の行は `You` で示す。
 - 自分が遊んだ後にだけ他の人の結果を見せる、という隠し方は**しない**(隠すのは
   「遊ばせるための仕掛け」であり、Solo by default に反する)。見たい人は見る。
 - 自分の結果がある Challenge の `Play` は `Play again`(ローカルで同じ盤面を遊べるが、
@@ -826,8 +847,10 @@ nickname の変更(`PATCH` は v1 に無い — 変えたいときは再参加�
 #161 comment の Private Game Club 拡張のうち、v1 の契約に**入れない**もの:
 掲示板 / スレッド / リアクション / pin、投票、Club の書き出し、Group identity
 (アイコン・色)、Member プロフィール。入れるときは §5 の版を上げる(`X-Club-Api: 2`)。
-DM / リアルタイムチャット / 公開 Club / フォロー / アルゴリズムフィード / 無限フィード /
-Push は後続でも作らない(PRODUCT_PRINCIPLES「Shared」)。
+DM / リアルタイムチャット / フォロー / アルゴリズムフィード / 無限フィード /
+Push は後続でも作らない(PRODUCT_PRINCIPLES「Club House」)。**公開の Club House は
+2026-09-30 に「作らない」から外れた** — ただし作るのは PixApps が運用する 1 デプロイ
+だけで、利用者の Private を公開に切り替える機能は作らない。
 
 ## 10. 通信・オフライン・障害
 
@@ -870,11 +893,10 @@ Push は後続でも作らない(PRODUCT_PRINCIPLES「Shared」)。
   どれも誤訳が「お金の約束の反故」か「同意していない送信」になる。機械翻訳で配らない
   とは「門を通さずに配らない」の意味で、来歴は他のキーと同じ `machine` のまま
   ページと設定が開示する([../I18N_POLICY.md](../I18N_POLICY.md))。
-- Club 内の結果の表示に `leaderboard` / `ranking` /「ランキング」を使わない
-  (`Results` /「結果」。[../BRAND.md](../BRAND.md))。**14 言語ぶんの訳語にも**同じ規則
-  を当て、`check-principles.sh` §6 に英日の禁止語(`leaderboard` / `ranking` /
-  「ランキング」)を **`club/` と `i18n/` に対してだけ**足す。Core のカタログにこの語が
-  入る余地は今も無いが、Shared の文言を書く人が最初に踏む場所がここだからである。
+- **`leaderboard` は `club/` のカタログでだけ使ってよい**(2026-09-30 に全面禁止を撤回。
+  [../BRAND.md](../BRAND.md))。Core のカタログ(`src/i18n/locales/`)には引き続き
+  入れない — Core に順位は無いからで、`check-principles.sh` §6 の禁止語は
+  **Core のカタログに対してだけ**残す。
 
 ## 12. 機械で示すこと — `club/` が生まれる PR の受け入れ条件
 
@@ -977,7 +999,21 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
    選べないが、それが「同じ盤面」の定義である。
 5. ホームの入口は「最近遊んだ」の下(§2-2 / §2-3)。
 
-**外部の事実確認**(#161 Phase 0 の未完了項目。確認できるまで文言と数字を出さない):
+**2026-09-30 に製品オーナーが確認した判断**(`simple-games-club#1`):
+
+10. **PixApps が Public Club House を 1 デプロイ運用する。** 2026-09-09 の「PixApps は
+    サーバーを 1 台も運用しない」を、この 1 台に限って撤回した。
+11. **Cloudflare を使い、固定費が限りなくゼロに近いことが前提。** 前提が崩れたら機能を
+    削るかデプロイを畳む。利用者への課金・サブスク・広告の強化で埋めない
+    (PRODUCT_PRINCIPLES「費用の上限」)。**未計測なので金額を書かない。**
+12. **順位表を作る。** 同じ盤面・同じモードの中でだけ順位の数字を付ける。挑戦をまたいだ
+    通算・シーズン・ラダーと、熱心さの順位は作らない(同「順位表」)。
+13. **Public と Private は同じ体験。** Public にあって Private に無いゲーム体験を作らない。
+    「同じ」とは API 契約のことで、実装は 2 つあってよい(Public は Cloudflare、Private は
+    Node + SQLite)。同一性は共有コードではなく §5 の契約テストが示す。
+
+**外部の事実確認**(#161 Phase 0 と `simple-games-club#1` の未完了項目。確認できるまで
+文言と数字を出さない):
 
 6. 事業者は **Railway を第一候補**とする(#161 のとおり)。one-click template で
    persistent volume / healthcheck / 環境変数 `CLUB_SETUP_KEY` の入力と再設定 /
@@ -990,7 +1026,18 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
    §8-4 に置ける前提。Railway には referral program がある見込みで、PR E で確かめる)。
    リンクを template の導線へ「引き継ぐ」仕組みは**要らない** — Host のリンクを
    そのまま開くだけで、加工も追跡もしない(§8-4)。
+10. **Public を Cloudflare の無料枠で運用できるか**(判断 11 の前提そのもの)。Workers /
+    Durable Objects で §5 の契約を満たせるか、費用の driver は何か、濫用でどこまで
+    膨らみうるか。**これが確かめられるまで Public は出さない。**
+11. **表示名の安全策がどこまで要るか。** 表示名が pixapps.ai の公開ページに出る以上、
+    長さ・文字種の制約と通報・削除の手段が要る。14 言語を一人で見る前提で、どこまでが
+    現実的かを決める。
 
-**このリポジトリの外**: サーバの実装(Node + SQLite + 1 volume)と template は別
-リポジトリ。§5 の契約テストをそちらに置き、`X-Club-Api: 1` を返す最初の版が
-デプロイできた時点で、こちらの段取りの PR C に入る。
+**このリポジトリの外**: サーバの実装(Node + SQLite + 1 volume)と template は
+[yosuke1024/simple-games-club](https://github.com/yosuke1024/simple-games-club)
+(2026-09-09 作成)。§5 の契約テストをそちらに置き、`X-Club-Api: 1` を返す最初の版が
+デプロイできた時点で、こちらの段取りの PR C に入る。名前は製品語の Club に合わせた
+(§1 — Shared / SharedHost / Server は実装側の語)。**最初の版は同日に置いた**: §5 の
+全エンドポイント、§5-4 の JSON をそのまま fixture にした契約テスト、Dockerfile、
+`railway.toml`(healthcheck・app sleeping OFF)。残りは事業者の template、Web ビルドの
+同梱、事業者上での往復確認(段取りの PR B の「受け入れ」)。

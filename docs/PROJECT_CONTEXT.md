@@ -68,12 +68,14 @@ Design philosophy:
 
 以下は成長施策や一般的なゲームアプリ慣習より優先する。
 
-以下は **Core** — Shared を有効化していない状態のアプリと Web 版 — の約束である。
-Shared(Private Game Club、#161)は利用者が自分で建てたサーバへ明示的に接続したときだけ
-現れる任意の層で、Core の約束の例外ではなく **Core の外** に置く(2026-09-09、#176)。
-Shared を一度も触らない利用者にとって、以下は 1 つも変わらない。Shared の側の境界
-(PixApps はサーバーを持たない・送るのは結果画面の事実だけ・順位表ではなく結果の比較・
-Core の画面に現れる入口は 3 つまで・CI での証明)は `docs/PRODUCT_PRINCIPLES.md`「Shared」が定める。
+以下は **Core** — Club House を使っていない状態のアプリと Web 版 — の約束である。
+Club House(#161 / #164)は本人が明示的に参加したときだけ現れる任意の層で、Core の
+約束の例外ではなく **Core の外** に置く(2026-09-09 の #176、2026-09-30 の
+`simple-games-club#1`)。デプロイは PixApps が運用する **Public** と利用者が建てる
+**Private** の 2 つ。Club House を一度も触らない利用者にとって、以下は 1 つも変わらない。
+Club House の側の境界(ゲームは PixApps のサーバーを 1 つも必要としない・送るのは
+結果画面の事実だけ・順位は同じ盤面の中だけ・Core の画面に現れる入口は 3 つまで・
+公開デプロイの費用の上限・CI での証明)は `docs/PRODUCT_PRINCIPLES.md`「Club House」が定める。
 
 - ゲーム機能を課金または広告視聴で解放しない。
 - サブスクリプションを導入しない。
@@ -81,13 +83,18 @@ Core の画面に現れる入口は 3 つまで・CI での証明)は `docs/PROD
 - ゲームデータを端末外へ保存しない。クラウドセーブを作らない。
   (ユーザー自身が設定画面から書き出す 1 つのバックアップファイルはこれに当たらない。
   端末外へ出すかどうかも、出す先を選ぶのもアプリではなく利用者であり、アプリは
-  転送先を知らない。issue #160 / `docs/architecture/backup.md`。Shared が送る挑戦の結果も
-  同じ形 — 送るかどうかも送る先も利用者が選び、内容は結果画面が表示した事実だけ。同「Shared」)
-- オンラインランキング、フレンド、対人オンライン機能を作らない。
+  転送先を知らない。issue #160 / `docs/architecture/backup.md`。Club House が送る挑戦の
+  結果も同じ形 — 送るかどうかも送る先も利用者が選び、内容は結果画面が表示した事実だけ。
+  同「Club House」)
+- フレンド、対人オンライン機能を作らない。**Core の画面に順位を出さない**
+  (順位表は Club House の層にあり、参加した人がその画面へ行ったときだけ見える。
+  2026-09-30 に「オンラインランキングを採用しない」を Core だけの約束へ縮めた)。
 - ストリーク、ログインボーナス、期間限定イベント、人工的な緊急性を作らない。
 - Push / ローカル通知で再訪を促さない。
 - ゲームプレイを中断する広告を app に導入しない。
-- API サーバー、クラウド DB、認証基盤、継続固定費を必要とする構成を持たない。
+- **ゲームが** API サーバー、クラウド DB、認証基盤を必要とする構成にしない。
+  PixApps が持つ固定費は Public Club House の 1 デプロイだけで、それも限りなくゼロに
+  近い額に限る(超えたら機能を削るか畳む。同「費用の上限」)。
 - AI API / 有料問題生成 API に依存しない。
 - ローエンド端末、低通信、低消費電力を設計制約として扱う。
 - 実施していない検証を成功扱いにしない。
@@ -113,16 +120,17 @@ Core の画面に現れる入口は 3 つまで・CI での証明)は `docs/PROD
 
 これは `PRODUCT_PRINCIPLES.md` の Built by subtraction / Zero Friction を、現在の改善優先順位として明示したものである。
 
-### Shared は Friction first の後
+### Club House は Friction first の後
 
-Shared(Private Game Club、#161 / #164)は任意の層であり、上の 1〜6 より優先しない。
-順序は Epic #175 のとおり — 原則の境界(#176、本文書と `PRODUCT_PRINCIPLES.md`「Shared」。
-済)→ #161 の設計(`docs/architecture/club.md`、2026-09-09。済)→ 実装(段取りは
-`docs/plans/2026-09-09-private-game-club.md`)→ #164 の発見導線 — で、#156 の High /
-Critical は 2026-09-09 に解けている。着手しても判断基準は同じで、Shared の UI も
-「手数を削る」で評価する(招待リンクから Join and Play までを 1 画面、インストールを
-参加条件にしない)。Shared を理由に Core へ入口を足せるのは「Shared」節が数える 3 つまで
-(具体形は `club.md` §2)で、Friction first の側に Shared のための摩擦を持ち込まない。
+Club House(#161 / #164、`simple-games-club#1`)は任意の層であり、上の 1〜6 より
+優先しない。順序は — 原則の境界(#176、2026-09-09。済)→ 設計
+(`architecture/club.md`、2026-09-09。済)→ **Public を含む原則の再改定**
+(`simple-games-club#1`、2026-09-30。済)→ 費用と構成の spike → 実装 → 発見導線 —
+で、段取りは `docs/plans/2026-09-30-public-club-house.md`。着手しても判断基準は同じで、
+Club House の UI も「手数を削る」で評価する(招待リンクから Join and Play までを 1 画面、
+インストールを参加条件にしない)。Club House を理由に Core へ入口を足せるのは
+「Club House」節が数える 3 つまで(具体形は `club.md` §2)で、Friction first の側に
+Club House のための摩擦を持ち込まない。**Public ができても、この数は増えない。**
 
 ## 6. Monetization
 
@@ -179,28 +187,28 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 
 ## 9. Canonical documents map
 
-| Topic                                                                                                | Canonical source                                    |
-| ---------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| Product philosophy / prohibitions / UX principles                                                    | `docs/PRODUCT_PRINCIPLES.md`                        |
-| Brand / public wording                                                                               | `docs/BRAND.md`                                     |
-| GitHub repository metadata (description / homepage / topics)                                         | `docs/BRAND.md`「GitHub リポジトリの公開 metadata」 |
-| Architecture / dependency rules                                                                      | `docs/ARCHITECTURE.md`                              |
-| Offline behavior                                                                                     | `docs/OFFLINE_POLICY.md`                            |
-| App advertising / IAP                                                                                | `docs/ADS_POLICY.md`                                |
-| Web role / differences / web measurement                                                             | `docs/WEB_VERSION.md`                               |
-| Analytics interpretation                                                                             | `docs/GROWTH_MEASUREMENT.md`                        |
-| Puzzle practice set (5 titles vs. their comparison games, dedicated web entry, promises)             | `docs/PUZZLE_PRACTICE_SET.md`                       |
-| Android acquisition measurement (Meta) — operation, data inventory, removal                          | `docs/META_ANDROID_ACQUISITION.md`                  |
-| i18n                                                                                                 | `docs/I18N_POLICY.md`                               |
-| Release gates                                                                                        | `docs/RELEASE_CHECKLIST.md`                         |
-| Review prompt                                                                                        | `docs/REVIEW_PROMPT_POLICY.md`                      |
-| Backup / restore format and versioning                                                               | `docs/architecture/backup.md`                       |
-| Shared (Private Game Club) — Core との境界、CI での証明                                              | `docs/PRODUCT_PRINCIPLES.md`「Shared」              |
-| Shared (Private Game Club) — クライアント側の契約(入口・保存・API・挑戦と結果・招待・Host・発見導線) | `docs/architecture/club.md`                         |
-| Game-specific behavior                                                                               | `docs/<GAME>_RULES.md`                              |
-| Current game inventory                                                                               | `apps/simple-games/src/app/registry.ts`             |
-| Human-readable game inventory                                                                        | `README.md`                                         |
-| Historical implementation plans                                                                      | `docs/plans/` — not authoritative after completion  |
+| Topic                                                                                      | Canonical source                                    |
+| ------------------------------------------------------------------------------------------ | --------------------------------------------------- |
+| Product philosophy / prohibitions / UX principles                                          | `docs/PRODUCT_PRINCIPLES.md`                        |
+| Brand / public wording                                                                     | `docs/BRAND.md`                                     |
+| GitHub repository metadata (description / homepage / topics)                               | `docs/BRAND.md`「GitHub リポジトリの公開 metadata」 |
+| Architecture / dependency rules                                                            | `docs/ARCHITECTURE.md`                              |
+| Offline behavior                                                                           | `docs/OFFLINE_POLICY.md`                            |
+| App advertising / IAP                                                                      | `docs/ADS_POLICY.md`                                |
+| Web role / differences / web measurement                                                   | `docs/WEB_VERSION.md`                               |
+| Analytics interpretation                                                                   | `docs/GROWTH_MEASUREMENT.md`                        |
+| Puzzle practice set (5 titles vs. their comparison games, dedicated web entry, promises)   | `docs/PUZZLE_PRACTICE_SET.md`                       |
+| Android acquisition measurement (Meta) — operation, data inventory, removal                | `docs/META_ANDROID_ACQUISITION.md`                  |
+| i18n                                                                                       | `docs/I18N_POLICY.md`                               |
+| Release gates                                                                              | `docs/RELEASE_CHECKLIST.md`                         |
+| Review prompt                                                                              | `docs/REVIEW_PROMPT_POLICY.md`                      |
+| Backup / restore format and versioning                                                     | `docs/architecture/backup.md`                       |
+| Club House (Public / Private) — Core との境界、費用の上限、順位の線、CI での証明           | `docs/PRODUCT_PRINCIPLES.md`「Club House」          |
+| Club House — クライアント側の契約(入口・保存・API・挑戦と結果・順位・招待・Host・発見導線) | `docs/architecture/club.md`                         |
+| Game-specific behavior                                                                     | `docs/<GAME>_RULES.md`                              |
+| Current game inventory                                                                     | `apps/simple-games/src/app/registry.ts`             |
+| Human-readable game inventory                                                              | `README.md`                                         |
+| Historical implementation plans                                                            | `docs/plans/` — not authoritative after completion  |
 
 ## 10. Decision rules for proposals
 
@@ -226,7 +234,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 - game の変更: 対象 `*_RULES.md`
 - storage / migration: `ARCHITECTURE.md` + 対象 game rules
 - backup / restore: `architecture/backup.md`(保存領域の所有と復元の安全性)
-- shared / club(`src/club/`、Private Game Club、対応ゲームの `challenge/`): `PRODUCT_PRINCIPLES.md`「Shared」+ `architecture/club.md`
+- club house(`src/club/`、Public / Private、対応ゲームの `challenge/`): `PRODUCT_PRINCIPLES.md`「Club House」+ `architecture/club.md`
 - ads / purchase: `ADS_POLICY.md`
 - Android acquisition measurement (Meta, `android/app/src/metaOn` / `metaOff`, `.github/scripts/check-principles.sh` §8): `PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」+ `META_ANDROID_ACQUISITION.md`
 - web only: `WEB_VERSION.md`

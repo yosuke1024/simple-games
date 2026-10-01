@@ -655,12 +655,13 @@ I18N_POLICY.md の高リスクキー 5 番(無料・オフライン・paywall �
   ホーム画面ショートカット(issue #110)と iOS の Quick Actions(issue #114)も
   同じ理由でビルドゲートではなく実行時ガード側に置く
   (`Capacitor.getPlatform() === 'android'` / `=== 'ios'`)。
-  **Shared(Private Game Club、issue #161)も 4 つ目にしない**(2026-09-09、issue #176)。
+  **Club House(Public / Private、issue #161)も 4 つ目にしない**(2026-09-09 の issue #176、
+  2026-09-30 の `simple-games-club#1`)。
   native にも Web にも同じコードが入り、有効化した端末でだけ動く実行時ゲート側である。
   ただし通信を持つ唯一の層なので、実行時ガードだけに頼らず、到達経路で不在を示す —
   `src/club/` へは `src/app/` からの動的 `import()` だけ、チャンクは独立、初期グラフに
-  入らない([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Shared」の「機械で示すこと」)。
-  #161 の SharedHost が Web ビルドを同梱して配るのは**利用者のサーバ上**の話で、
+  入らない([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Club House」の「機械で示すこと」)。
+  Club House が Web ビルドを同梱して配るのは**そのデプロイ上**の話で、
   pixapps.ai の「配信構成」(静的配信のみ)は変わらない。そのサーバ上では同じ
   Web ビルドが `/join#invite=<token>` で招待を受け取る(`/join` は利用者のサーバだけが
   持つ住所で、`?game=` の契約は変わらない。[architecture/club.md](architecture/club.md) §7)。

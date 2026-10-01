@@ -41,8 +41,8 @@ A Simple Game by PixApps
 (2026-09-29 に同意方式をやめたため、対象地域では利用者の同意なしに送る)。言えるのは
 「ゲームのデータ・プレイの内容は送らない」と、iOS 版についての「トラッキングしない」
 (ADS_POLICY.md「ATT を使わない」)である(版ごとの差分は
-PRODUCT_PRINCIPLES.md「適用範囲」と WEB_VERSION.md、任意の Shared 層との境界は
-同「Shared」— これらの約束は Core、つまり Shared を有効化していない状態のもの)。
+PRODUCT_PRINCIPLES.md「適用範囲」と WEB_VERSION.md、任意の Club House 層との境界は
+同「Club House」— これらの約束は Core、つまり Club House を使っていない状態のもの)。
 ストア文面では OSS を最後の訴求に置く(下の「訴求の順序」)。
 
 ### 設計思想(Built by subtraction)
@@ -165,14 +165,20 @@ OSS を先頭に出さない。
   「すでにそうなっている」だけをブランドの根拠にする(未収録のゲーム名を書かない
   規則と同じ)。Zero Friction の各機能(お気に入り・検索・ショートカット・直接復帰・
   入力経路)も、実装が終わった 2026-09 以降にだけ公開文面に載せている。
-- **Shared(Private Game Club、issue #161)は出荷するまで公開文面に書かない** — 上の
-  規則そのもの(2026-09-09、issue #176)。出荷後も、この文書とストア文面の約束は
-  **Core**(Shared を有効化していない状態)の主語で言い、Shared の説明ではサーバの
-  持ち主(あなた、または招待してくれた人)を主語にする。Shared について "offline" /
-  "no server" / "no account" を言わず、Club 内の結果比較を "leaderboard" / "ranking" /
-  「ランキング」と呼ばない(Results /「結果」)。ストアの "The games never go online."
-  も Core について真のままだが、Shared を出荷する版ではその隣に置く説明を同じ PR で
-  書く。境界の本体は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Shared」。
+- **Club House(Public / Private)は出荷するまで公開文面に書かない** — 上の規則
+  そのもの(2026-09-09 の issue #176、2026-09-30 の `simple-games-club#1`)。出荷後も、
+  この文書とストア文面の約束は **Core**(Club House を使っていない状態)の主語で言い、
+  Club House の説明ではデプロイの持ち主(PixApps か、あなたか、招待してくれた人)を
+  主語にする。Club House について "offline" / "no server" を言わない。ストアの
+  "The games never go online." も Core について真のままだが、Club House を出荷する版では
+  その隣に置く説明を同じ PR で書く。**"no account" は Public でも真である** — 表示名
+  だけで、登録するものは無い。
+- **"leaderboard" は Club House の画面でだけ使う**(2026-09-30 に "leaderboard" /
+  "ranking" /「ランキング」の全面禁止を撤回)。Core の画面・ストア掲載文・アプリの
+  スクリーンショットでは引き続き使わない — **Core に順位は無い**からで、"No online
+  leaderboard" と書いた画面の隣に順位表が並ぶ状態を作らないためである。呼んでよいのは
+  同じ盤面・同じモードの**成績の**順位だけで、熱心さの順位は存在しないので名前も無い。
+  境界の本体は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Club House」。
 - **数値は公開時点の実測値だけ。** アプリの配布サイズを「約 x MB」と書くときは、
   Play Console / App Store Connect が示すその時点の配布サイズを確認してから書く。
   未確認の数値を固定コピーにしない。数字なしで「軽い」と言うほうが、古い数字を
@@ -250,6 +256,7 @@ OSS を先頭に出さない。
   **名前・ロゴ・配色・画面構成・記号のデザイン・公式の問題と解答**を複製しないことを
   実体として守る(各ルール文書の §14「比較対象との対応」に、何を同じにし何を変えたかを
   出典と確認日つきで書く)。
+
 - **公式・提携・公認と誤認させる形を作らない。**「LinkedIn Games」「公式」「認定」を
   名乗らない。「LinkedIn の全ゲーム」「全ゲームを収録」と言わない(今回選んだのは 5 種類)。
   「1 日 1 回しかできない」のように相手の仕様を断定して比較しない。
@@ -472,9 +479,9 @@ gh repo edit yosuke1024/simple-games \
 | Dominoes          | モーブ                   | `#533653` | `#d55cd5` | (Web 先行公開)牌は象牙に黒い目の内容色。Hit & Blow と色相 3° のマゼンタ対の**くすんだ側**を意図して採る — 33 色の時点で 5 つの色相族を相互 ΔE 30 で離すことはできず(最大クリークで確認)、既存の青 6 色・菫 3 色と同じく族の中で深さと彩度で離した。Reversi とライト 33.3 / ダーク 30.5、Gomoku と 38.3 / 35.9(同色相の鮮やかな候補は Reversi と 16.7 / 11.9 しか離れない)。最接近は Block Puzzle 21.3 / Gin Rummy 12.4、棚の隣 Ludo とダーク 14.0。白インク 10.39、紙 9.13                                                                                                                                                                                                                                                                                                                                                                                     |
 | Hit & Blow        | フューシャ               | `#7c2177` | `#dd9eda` | (Web 先行公開)盤面は記号 8 色を自前で持つ(`hit-and-blow.css` — ゲーム内容)ので、アクセントはクロムだけ。シリーズで最も彩度の高い Hearts / Schulte Table(S67%)より下(S58%)に収める。最接近は Gin Rummy でライト 16.0 / Reversi でダーク 11.9、論理棚の隣 Shape Regions とは 18.0 / 20.9。白インク 8.97、紙 7.88                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Dots and Boxes    | 群青                     | `#3855ca` | `#6f84da` | (Web 先行公開)アクセントが自分の線と箱を描くので、クロムではなく紙の上のインクとして読める深い青。CPU は第 2 色(ゲーム内容)。最接近は Hearts でライト 15.6 / Mahjong Solitaire でダーク 10.6。5 本の相互距離はライト 34.9〜95.7・ダーク 34.4〜100.3。白インク 6.32、紙 5.56                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Binary Balance    | 若草                     | `#5a8128` | `#9cce5a` | (Web 先行公開、issue #210)盤面は Takuzu と同じ無彩色の 2 段の地色とインクの記号なので、アクセントはクロムと Hint だけ。3 本同時選定(`docs/plans/2026-09-29-linkedin-practice-set.md` Phase 1、CIE76)。最接近は Spider Solitaire でライト 14.1 / ダーク 20.2(床 12.5 / 9.1)、棚の上の Shape Regions とは 102.3 / 111.5。白インク 4.56、紙の上は 4.01 で 4.5 に届かない(3:1 の床は満たす — Yacht・Bunny Hop 等と同じ扱い) |
-| Sudoku 6×6        | 紺青                     | `#233c76` | `#6784c5` | (Web 先行公開)9×9 の Sudoku のティールを借りずに寒色に置く(Sudoku とライト 53.8 / ダーク 52.1)。最接近は Number Match でライト 14.2 / ダーク 12.5、棚の上の Hit & Blow とは 38.6 / 34.7。白インク 10.61、紙 9.32 |
-| Box Regions       | 深い薔薇                 | `#ac3564` | `#ce5a88` | (Web 先行公開)Shape Regions と同じく領域の地色は盤面が持ち、アクセントはクロムと Hint だけ。最接近は Gomoku でライト 14.8 / Takuzu でダーク 18.0。3 本の相互距離はライト 56.5〜91.3・ダーク 55.1〜103.7。白インク 6.09、紙 5.35 |
+| Binary Balance    | 若草                     | `#5a8128` | `#9cce5a` | (Web 先行公開、issue #210)盤面は Takuzu と同じ無彩色の 2 段の地色とインクの記号なので、アクセントはクロムと Hint だけ。3 本同時選定(`docs/plans/2026-09-29-linkedin-practice-set.md` Phase 1、CIE76)。最接近は Spider Solitaire でライト 14.1 / ダーク 20.2(床 12.5 / 9.1)、棚の上の Shape Regions とは 102.3 / 111.5。白インク 4.56、紙の上は 4.01 で 4.5 に届かない(3:1 の床は満たす — Yacht・Bunny Hop 等と同じ扱い)                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Sudoku 6×6        | 紺青                     | `#233c76` | `#6784c5` | (Web 先行公開)9×9 の Sudoku のティールを借りずに寒色に置く(Sudoku とライト 53.8 / ダーク 52.1)。最接近は Number Match でライト 14.2 / ダーク 12.5、棚の上の Hit & Blow とは 38.6 / 34.7。白インク 10.61、紙 9.32                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Box Regions       | 深い薔薇                 | `#ac3564` | `#ce5a88` | (Web 先行公開)Shape Regions と同じく領域の地色は盤面が持ち、アクセントはクロムと Hint だけ。最接近は Gomoku でライト 14.8 / Takuzu でダーク 18.0。3 本の相互距離はライト 56.5〜91.3・ダーク 55.1〜103.7。白インク 6.09、紙 5.35                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 **盤面が自前の色階調を持つ場合の例外。** Minesweeper の数字スケール、Water Sort の
 9 色、Memory Match の 15 色記号、そして **2048 の値ごとのタイル色**は、クロムではなく
