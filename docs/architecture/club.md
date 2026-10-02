@@ -695,6 +695,9 @@ params(表を分けるモード)と facts(結果画面の数字)はそのゲー�
   Spider の suit 数、`NxN` → `N×N`。どれにも当たらない値は**書かれたまま**出る(未完成が見える)。
   契約に値を足したら語も足す: `titles.test.ts` は全契約(35 本)の全値の表を持ち、素の語が残る値と、
   契約の葉にある値の数と合わない表を落とす。
+  **LP(pixapps-landing の `public/simple-games/index.html`)も同じ語で表の見出しを出す**(日英。
+  `club-mode-labels:begin` / `end` の区間がこの規則と `clubTier_*` の ja / en を写して持つ)。別のリポジトリなので
+  テストではつながらない: `clubTier_*` の語・この規則・契約の値を変えたら、LP のその区間と `tests/ui.test.js` も直す。
 
 ### 6-2. ゲーム側の対応 — レジストリの `challenge` と、シェルが覚える挑戦
 
