@@ -350,14 +350,93 @@ describe('Club outbox record (docs/architecture/club.md §4-2)', () => {
       item(3),
       null,
     ]);
-    expect(loaded.items.map((i) => i.challengeId)).toEqual(['challenge-3']);
+    expect(loaded.items.map((i) => (i.kind === undefined ? i.challengeId : null))).toEqual([
+      'challenge-3',
+    ]);
   });
 
   it('caps the outbox and keeps the newest', async () => {
     const loaded = await load(Array.from({ length: CLUB_OUTBOX_MAX + 5 }, (_, i) => item(i)));
     expect(loaded.items).toHaveLength(CLUB_OUTBOX_MAX);
-    expect(loaded.items[0]?.challengeId).toBe('challenge-5');
-    expect(loaded.items.at(-1)?.challengeId).toBe(`challenge-${CLUB_OUTBOX_MAX + 4}`);
+    const idOf = (i: (typeof loaded.items)[number] | undefined) =>
+      i?.kind === undefined ? i?.challengeId : null;
+    expect(idOf(loaded.items[0])).toBe('challenge-5');
+    expect(idOf(loaded.items.at(-1))).toBe(`challenge-${CLUB_OUTBOX_MAX + 4}`);
+  });
+
+  describe('the automatic-send shapes', () => {
+    const daily = (over: Record<string, unknown> = {}) => ({
+      kind: 'daily',
+      endpoint: 'https://club.example.com',
+      createdAt: '2026-10-02T00:00:00.000Z',
+      body: {
+        gameId: 'nonogram',
+        contractVersion: 1,
+        params: { size: 10 },
+        seed: 'nonogram-daily-2026-10-02',
+        boardDigest: 'ng1:abc',
+        title: null,
+        daily: '2026-10-02',
+        result: { outcome: 'completed', facts: { elapsedSeconds: 120 } },
+      },
+      ...over,
+    });
+    const ranking = (over: Record<string, unknown> = {}) => ({
+      kind: 'ranking',
+      endpoint: 'https://club.example.com',
+      createdAt: '2026-10-02T00:00:00.000Z',
+      body: {
+        gameId: '2048',
+        contractVersion: 1,
+        paramsKey: 'classic',
+        params: {},
+        seed: '',
+        boardDigest: null,
+        outcome: 'completed',
+        facts: { score: 2048 },
+      },
+      ...over,
+    });
+    const withBody = (base: { body: object }, body: Record<string, unknown>) => ({
+      body: { ...base.body, ...body },
+    });
+
+    it('keeps the old form, a daily and a ranking side by side, in order', async () => {
+      const loaded = await load([item(1), daily(), ranking()]);
+      expect(loaded.items.map((i) => i.kind ?? 'result')).toEqual(['result', 'daily', 'ranking']);
+    });
+
+    it('keeps a ranking with an empty seed and a null digest, and a counted attempt', async () => {
+      const loaded = await load([ranking({ attempts: 3 })]);
+      expect(loaded.items).toHaveLength(1);
+      expect(loaded.items[0]?.attempts).toBe(3);
+    });
+
+    it.each([
+      ['an unknown kind', { kind: 'other' }],
+      ['a daily without a date', withBody(daily(), { daily: '2026-13-40' })],
+      ['a daily with a title', withBody(daily(), { title: 'x' })],
+      ['a daily with an empty seed', withBody(daily(), { seed: '' })],
+      ['a daily with no digest', withBody(daily(), { boardDigest: null })],
+      [
+        'a daily with a seed longer than the server takes',
+        withBody(daily(), { seed: 'x'.repeat(81) }),
+      ],
+      ['a game id the server would refuse', withBody(daily(), { gameId: 'Not A Game' })],
+      ['params that are not an object', withBody(daily(), { params: [1] })],
+      ['an unknown contract version', withBody(daily(), { contractVersion: 2 })],
+      ['a ranking without a paramsKey', withBody(ranking(), { paramsKey: 'A B' })],
+      ['a ranking with an empty digest', withBody(ranking(), { boardDigest: '' })],
+      ['a ranking with facts that are not an object', withBody(ranking(), { facts: 3 })],
+      ['a ranking with an unknown outcome', withBody(ranking(), { outcome: 'lost' })],
+      ['attempts that are not a count', { attempts: -1 }],
+      ['attempts past the cap', { attempts: 99 }],
+    ])('drops %s and keeps its neighbour', async (_what, over) => {
+      const base = String(_what).startsWith('a ranking') ? ranking() : daily();
+      const loaded = await load([{ ...base, ...over }, ranking()]);
+      expect(loaded.items).toHaveLength(1);
+      expect(loaded.items[0]?.kind).toBe('ranking');
+    });
   });
 
   it('falls back to the default for an unknown version', async () => {

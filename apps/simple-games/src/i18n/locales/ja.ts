@@ -153,9 +153,10 @@ export const ja: Messages = {
   advancedTitle: '詳細設定',
   clubEntry: 'Club House',
   playTogetherTitle: 'みんなで遊ぶ',
-  playTogetherBody: '知っている人と、同じ盤面で競う。',
-  clubSendResult: 'Club に送る',
+  playTogetherBody: 'みんなや知っている人と、自己ベストを比べる。',
   clubResultSent: '{club} に送りました',
   clubResultPending: 'Club を開いたときに送ります',
   clubResultNotSent: '{club} に送れませんでした',
+  clubResultSentMany: '{count} 件の Club に送りました',
+  clubResultPartial: '{count} 件中 {sent} 件の Club に送りました。残りは開いたときに送ります',
 };

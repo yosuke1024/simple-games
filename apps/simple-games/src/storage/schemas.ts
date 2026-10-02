@@ -8,7 +8,7 @@
  * Validators never throw: corrupt data yields null and callers fall back to
  * safe defaults.
  */
-import { asBool, asInt, asString, isRecord } from './validate';
+import { asBool, asDateString, asInt, asString, isRecord } from './validate';
 
 /** Shared records are prefixed `sg.`; game records use their own prefix. */
 export const STORAGE_KEYS = {
@@ -393,13 +393,36 @@ export const clubConnectionsSchema: SchemaDef<ClubConnections> = {
 };
 
 /**
- * Results the Club layer could not deliver yet (club.md §4-2, §10): the body
- * of a `POST /challenges/:id/results` and where it goes. Sent, oldest first,
- * the next time that Club's screen opens or the next result is sent — never
- * on a timer. Same gates as `sg.club`: not in a backup, wiped by reset.
+ * Results the Club layer has not delivered yet (club.md §4-2, §10). Every
+ * finished result is written here BEFORE it is sent and removed once the Club
+ * answers, so a result survives the app being killed mid-request, an offline
+ * moment, or a server that is down. Sent, oldest first, right after the player's
+ * own next action — the next result, or opening a Club screen — never on a
+ * timer and never at boot. Same gates as `sg.club`: not in a backup, wiped by
+ * reset.
+ *
+ * Three shapes share one list. The bodies below are Core's own copy of the
+ * request bodies in `club/api/types.ts` (Core must not import `club/`); the
+ * validator checks them structurally, so a record the Club layer would be
+ * refused on is dropped on load rather than blocking its Club's queue.
+ *
+ * - `daily`: `POST /challenges` — a daily everyone plays on the same board,
+ *   which meets in that day's challenge (the server keeps the first result of
+ *   each member).
+ * - `ranking`: `POST /rankings/results` — a result in the game × mode table
+ *   (the server keeps each member's best).
+ * - no `kind`: the original form, `POST /challenges/:id/results`. Builds before
+ *   the automatic send wrote it; it stays valid and flushable.
  */
-export interface ClubOutboxItem {
+interface ClubOutboxBase {
   endpoint: string;
+  createdAt: string;
+  /** Failed deliveries that said something about the server rather than the network (club.md §10). */
+  attempts?: number;
+}
+
+export interface ClubOutboxLegacyItem extends ClubOutboxBase {
+  kind?: undefined;
   challengeId: string;
   result: {
     contractVersion: 1;
@@ -407,8 +430,38 @@ export interface ClubOutboxItem {
     outcome: 'completed' | 'played';
     facts: Record<string, unknown>;
   };
-  createdAt: string;
 }
+
+export interface ClubOutboxDailyItem extends ClubOutboxBase {
+  kind: 'daily';
+  body: {
+    gameId: string;
+    contractVersion: 1;
+    params: Record<string, unknown>;
+    seed: string;
+    boardDigest: string;
+    title: null;
+    /** The day the board belongs to, `YYYY-MM-DD`. */
+    daily: string;
+    result: { outcome: 'completed' | 'played'; facts: Record<string, unknown> };
+  };
+}
+
+export interface ClubOutboxRankingItem extends ClubOutboxBase {
+  kind: 'ranking';
+  body: {
+    gameId: string;
+    contractVersion: 1;
+    paramsKey: string;
+    params: Record<string, unknown>;
+    seed: string;
+    boardDigest: string | null;
+    outcome: 'completed' | 'played';
+    facts: Record<string, unknown>;
+  };
+}
+
+export type ClubOutboxItem = ClubOutboxLegacyItem | ClubOutboxDailyItem | ClubOutboxRankingItem;
 
 export interface ClubOutbox {
   schemaVersion: 1;
@@ -416,25 +469,119 @@ export interface ClubOutbox {
   items: ClubOutboxItem[];
 }
 
-export const CLUB_OUTBOX_MAX = 50;
+/**
+ * One result can fan out to every joined Club (up to ten), and a day offline
+ * is a few dozen results; the queue coalesces by board / mode before this cap
+ * ever applies, so it is a backstop, not a budget.
+ */
+export const CLUB_OUTBOX_MAX = 100;
+/** A failed delivery counted this many times is given up on (club.md §10). */
+export const CLUB_OUTBOX_MAX_ATTEMPTS = 5;
 
-function asOutboxItem(raw: unknown): ClubOutboxItem | null {
+const GAME_ID = /^[a-z0-9-]{1,40}$/;
+const PARAMS_KEY = /^[a-z0-9-]{1,40}$/;
+
+const asOutcome = (v: unknown): 'completed' | 'played' | null =>
+  v === 'completed' || v === 'played' ? v : null;
+
+/** A real calendar day, `YYYY-MM-DD` — the server refuses anything else. */
+function asRealDate(v: unknown): string | null {
+  const date = asDateString(v);
+  if (date === null) return null;
+  const parsed = new Date(`${date}T00:00:00.000Z`);
+  return Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date ? null : date;
+}
+
+function asBody(raw: unknown): Record<string, unknown> | null {
+  return isRecord(raw) ? { ...raw } : null;
+}
+
+/** The item as stored, or null when it is not one of the three shapes. */
+export function validateClubOutboxItem(raw: unknown): ClubOutboxItem | null {
   if (!isRecord(raw) || !isClubEndpoint(raw.endpoint)) return null;
-  const challengeId = asString(raw.challengeId, 64);
   const createdAt = asString(raw.createdAt, 40);
-  if (challengeId === null || challengeId === '' || createdAt === null) return null;
-  const result = raw.result;
-  if (!isRecord(result) || result.contractVersion !== 1 || !isRecord(result.facts)) return null;
-  const boardDigest = asString(result.boardDigest, 64);
-  const outcome =
-    result.outcome === 'completed' || result.outcome === 'played' ? result.outcome : null;
-  if (boardDigest === null || boardDigest === '' || outcome === null) return null;
-  return {
+  if (createdAt === null) return null;
+  const attempts =
+    raw.attempts === undefined ? undefined : asInt(raw.attempts, 0, CLUB_OUTBOX_MAX_ATTEMPTS);
+  if (attempts === null) return null;
+  const base = {
     endpoint: raw.endpoint,
-    challengeId,
-    result: { contractVersion: 1, boardDigest, outcome, facts: { ...result.facts } },
     createdAt,
+    ...(attempts === undefined ? {} : { attempts }),
   };
+
+  if (raw.kind === undefined) {
+    const challengeId = asString(raw.challengeId, 64);
+    if (challengeId === null || challengeId === '') return null;
+    const result = raw.result;
+    if (!isRecord(result) || result.contractVersion !== 1 || !isRecord(result.facts)) return null;
+    const boardDigest = asString(result.boardDigest, 64);
+    const outcome = asOutcome(result.outcome);
+    if (boardDigest === null || boardDigest === '' || outcome === null) return null;
+    return {
+      ...base,
+      challengeId,
+      result: { contractVersion: 1, boardDigest, outcome, facts: { ...result.facts } },
+    };
+  }
+
+  const body = isRecord(raw.body) ? raw.body : null;
+  if (body === null || body.contractVersion !== 1) return null;
+  const gameId = asString(body.gameId, 40);
+  const seed = asString(body.seed, 80);
+  const params = asBody(body.params);
+  if (gameId === null || !GAME_ID.test(gameId) || seed === null || params === null) return null;
+
+  if (raw.kind === 'daily') {
+    const boardDigest = asString(body.boardDigest, 64);
+    const date = asRealDate(body.daily);
+    const result = isRecord(body.result) ? body.result : null;
+    if (boardDigest === null || boardDigest === '' || date === null || seed === '') return null;
+    if (body.title !== null || result === null || !isRecord(result.facts)) return null;
+    const outcome = asOutcome(result.outcome);
+    if (outcome === null) return null;
+    return {
+      ...base,
+      kind: 'daily',
+      body: {
+        gameId,
+        contractVersion: 1,
+        params,
+        seed,
+        boardDigest,
+        title: null,
+        daily: date,
+        result: { outcome, facts: { ...result.facts } },
+      },
+    };
+  }
+
+  if (raw.kind === 'ranking') {
+    const paramsKey = asString(body.paramsKey, 40);
+    let boardDigest: string | null = null;
+    if (body.boardDigest !== null) {
+      boardDigest = asString(body.boardDigest, 64);
+      if (boardDigest === null || boardDigest === '') return null;
+    }
+    const outcome = asOutcome(body.outcome);
+    if (paramsKey === null || !PARAMS_KEY.test(paramsKey)) return null;
+    if (outcome === null || !isRecord(body.facts)) return null;
+    return {
+      ...base,
+      kind: 'ranking',
+      body: {
+        gameId,
+        contractVersion: 1,
+        paramsKey,
+        params,
+        seed,
+        boardDigest,
+        outcome,
+        facts: { ...body.facts },
+      },
+    };
+  }
+  return null;
 }
 
 export const clubOutboxSchema: SchemaDef<ClubOutbox> = {
@@ -446,7 +593,7 @@ export const clubOutboxSchema: SchemaDef<ClubOutbox> = {
     if (!Array.isArray(raw.items)) return null;
     const items: ClubOutboxItem[] = [];
     for (const value of raw.items) {
-      const item = asOutboxItem(value);
+      const item = validateClubOutboxItem(value);
       if (item !== null) items.push(item);
     }
     return { schemaVersion: 1, items: items.slice(-CLUB_OUTBOX_MAX) };

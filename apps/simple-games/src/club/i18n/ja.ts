@@ -6,13 +6,15 @@ export const ja: ClubMessages = {
   clubReload: '再読み込み',
   clubDiscoverTitle: 'みんなで遊ぶ',
   clubDiscoverBody:
-    'みんなと同じ盤面で競う Public Club House と、知っている人たちとの内輪の Club。',
+    'みんなと自己ベストを比べる Public Club House と、知っている人たちとの内輪の Club。',
   clubJoinClub: 'Club に参加',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Public Club House に参加',
   clubJoinWithLink: '招待リンクで参加',
   clubPublicDisclosure:
     'ニックネームと結果は、Public Club House のみんなと pixapps.ai の公開ページに表示されます。',
+  clubAutoSendDisclosure:
+    '参加している間は、遊び終えた結果(時間・手数・スコアなど)が自動でこの Club に送られます。',
   clubToday: '今日',
   clubDaily: 'デイリー',
   clubJoinAnother: '別の Club に参加',

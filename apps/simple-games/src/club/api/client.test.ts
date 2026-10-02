@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createClient, REQUEST_TIMEOUT_MS } from './client';
-import { ClubApiError } from './errors';
+import { ClubApiError, isFinalError } from './errors';
 
 const club = { id: 'c_1', name: 'Family', createdAt: 'x' };
 const member = { id: 'm_7', nickname: 'Ken', role: 'member', joinedAt: 'x' };
@@ -148,17 +148,27 @@ describe('club client', () => {
     expect(JSON.parse(f.mock.calls[0]![1].body)).toEqual({ role: 'member' });
   });
 
-  it('refuses a server without X-Club-Api: 1, even on an error status', async () => {
-    for (const headers of [{} as Record<string, string>, { 'X-Club-Api': '2' }]) {
-      const f = vi
-        .fn()
-        .mockResolvedValue(reply(401, { error: { code: 'unauthorized', message: 'x' } }, headers));
+  it('refuses a server whose X-Club-Api is not 1, even on an error status', async () => {
+    const f = vi
+      .fn()
+      .mockResolvedValue(
+        reply(401, { error: { code: 'unauthorized', message: 'x' } }, { 'X-Club-Api': '2' }),
+      );
+    await expect(createClient(E, 't', f as unknown as typeof fetch).club()).rejects.toMatchObject({
+      code: 'unsupported_server',
+    });
+  });
+
+  it('treats a response with no X-Club-Api as unreachable, never as a verdict on the server', async () => {
+    // A platform error page (quota used up, gateway down) is not the Club server:
+    // a queued result must wait it out instead of being dropped as unsupported.
+    for (const status of [403, 429, 502]) {
+      const f = vi.fn().mockResolvedValue(reply(status, 'error page', {}));
       await expect(createClient(E, 't', f as unknown as typeof fetch).club()).rejects.toMatchObject(
-        {
-          code: 'unsupported_server',
-        },
+        { code: 'unreachable', status },
       );
     }
+    expect(isFinalError(new ClubApiError('unreachable', 502))).toBe(false);
   });
 
   it('maps the error envelope, keeping the status; unknown codes become internal_error', async () => {

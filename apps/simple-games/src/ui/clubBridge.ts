@@ -6,7 +6,9 @@
  *
  * `ClubResultAction` (ui/components) reads the context and nothing else, so a
  * result screen never learns whether the Club layer is even in the bundle: no
- * provider, or a provider with no connections, and it draws nothing.
+ * provider, or a provider with no connections, and it draws nothing. With
+ * connections it sends the finished result to every Club this device has
+ * joined, by itself (club.md §2-2), and says what happened in one line.
  */
 import { createContext, type ComponentType } from 'react';
 import type { GameId } from '../app/registry';
@@ -20,15 +22,14 @@ export interface ClubConnectionSummary {
   role: 'owner' | 'member';
 }
 
-/** The challenge whose board is on screen, kept by the shell while the game runs (club.md §6-2). */
-export interface ActiveChallenge {
+/**
+ * Which challenge to show again when a game opened from the Club's Today list
+ * is left (club.md §6-2). Only a way back: the result of that game goes out
+ * like any other, to every Club, not to this challenge in particular.
+ */
+export interface ClubFocus {
   endpoint: string;
-  clubName: string;
   challengeId: string;
-  gameId: GameId;
-  boardDigest: string;
-  /** This device already has a result here: a replay sends nothing (club.md §6-3「1 人 1 回」). */
-  submitted: boolean;
 }
 
 export type ClubOutcome = 'completed' | 'played';
@@ -37,8 +38,9 @@ export type ClubOutcome = 'completed' | 'played';
 export type ClubFacts = Readonly<Record<string, unknown>>;
 
 /**
- * A finished ordinary game, offered to the Club (club.md §2-2): a daily goes to
- * its day's challenge (§6-3), anything else to the game × mode ranking (§16).
+ * A finished game, sent to every Club this device has joined (club.md §2-2): a
+ * daily everyone plays on the same board goes to its day's challenge (§6-3),
+ * anything else to the game × mode ranking (§16).
  */
 export interface ClubResultPayload {
   gameId: GameId;
@@ -50,30 +52,39 @@ export interface ClubResultPayload {
   boardDigest: string | null;
   /**
    * The daily date of the board, set ONLY by a game whose daily is the same
-   * board for everyone (Sudoku; not Minesweeper, whose daily depends on the
-   * first tap — club.md §6-0). The server keeps one challenge per board, so
-   * everyone's daily meets in one challenge.
+   * board for everyone (not Minesweeper, whose daily depends on the first tap,
+   * nor Number Recall, whose retries deal a new layout — club.md §6-0). The
+   * server keeps one challenge per board, so everyone's daily meets in one
+   * challenge.
    */
   daily?: string | null;
 }
 
-/** A finished challenge game: the result the active challenge is owed. */
-export interface ClubChallengeResult {
-  outcome: ClubOutcome;
-  facts: ClubFacts;
-  boardDigest: string;
-}
+/**
+ * What became of the result for one Club (club.md §10). `sent` reached the
+ * server; `queued` waits in the outbox for the next time the player opens a
+ * Club or finishes another game; `rejected` will never go; `already` means the
+ * server had this member's result for that daily (the first one counts) — as
+ * delivered as it will ever be, and not worth a word on screen.
+ */
+export type ClubSendOutcome = 'sent' | 'queued' | 'rejected' | 'already';
 
-/** `sent` reached the server; `queued` waits in the outbox (club.md §10); `rejected` will never go. */
-export type ClubSendOutcome = 'sent' | 'queued' | 'rejected';
+export interface ClubSendReport {
+  endpoint: string;
+  clubName: string;
+  outcome: ClubSendOutcome;
+}
 
 export interface ClubBridge {
   connections: readonly ClubConnectionSummary[];
-  activeChallenge: ActiveChallenge | null;
-  /** `Send to Club`: this ordinary game becomes a challenge in that club, with this result as its first. */
-  sendToClub(endpoint: string, payload: ClubResultPayload): Promise<ClubSendOutcome>;
-  /** The active challenge's result, sent as the game ends; queued when the server is out of reach. */
-  submitActive(result: ClubChallengeResult): Promise<ClubSendOutcome>;
+  /**
+   * Sends one finished result to every connection, in parallel, and says what
+   * became of it for each (in connection order). Never throws. Connections are
+   * read at call time, so nothing played before joining is ever sent. A
+   * `played` result (a loss, a dead end) is sent nowhere: it would lock a
+   * daily and rankings ignore it.
+   */
+  sendResult(payload: ClubResultPayload): Promise<readonly ClubSendReport[]>;
 }
 
 export const ClubBridgeContext = createContext<ClubBridge | null>(null);
@@ -89,7 +100,8 @@ export interface ClubInvite {
 /** What the Club screen hands the shell when a Today challenge is played: the game opens onto its own daily (club.md §9, §16-3). */
 export interface ClubPlayRequest {
   gameId: GameId;
-  active: ActiveChallenge;
+  /** Where leaving the game returns to. */
+  focus: ClubFocus;
 }
 
 export interface ClubRootProps {
@@ -97,7 +109,7 @@ export interface ClubRootProps {
   /** An invite link that was opened; the Join screen comes first (club.md §7-4). */
   invite?: ClubInvite | null;
   /** The challenge to show again — the one whose game just ended. */
-  focus?: { endpoint: string; challengeId: string } | null;
+  focus?: ClubFocus | null;
   /** Back to the collection home. */
   onBack: () => void;
   onPlayChallenge: (request: ClubPlayRequest) => void;
@@ -108,10 +120,8 @@ export interface ClubRootProps {
 /** The shape `src/club/index.ts` exports and `src/app/clubGate.ts` loads. */
 export interface ClubModule {
   ClubRoot: ComponentType<ClubRootProps>;
-  /** The two bridge functions over the stored connections; `active` is read at call time. */
-  createBridge(
-    active: () => ActiveChallenge | null,
-  ): Pick<ClubBridge, 'sendToClub' | 'submitActive'>;
+  /** The bridge function over the stored connections. */
+  createBridge(): Pick<ClubBridge, 'sendResult'>;
   /** The stored connections, for the shell's entries (never the tokens). */
   loadConnections(): Promise<readonly ClubConnectionSummary[]>;
   /** Parses an invite URL (club.md §7-1); null for anything else. */

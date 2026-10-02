@@ -6,13 +6,15 @@ export const de: ClubMessages = {
   clubReload: 'Neu laden',
   clubDiscoverTitle: 'Gemeinsam spielen',
   clubDiscoverBody:
-    'Spiele dieselben Boards wie alle im Public Club House – oder privat mit Leuten, die du kennst.',
+    'Vergleiche deine Bestwerte mit allen im Public Club House oder privat mit Leuten, die du kennst.',
   clubJoinClub: 'Einem Club beitreten',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Dem Public Club House beitreten',
   clubJoinWithLink: 'Mit Einladungslink beitreten',
   clubPublicDisclosure:
     'Dein Spitzname und deine Ergebnisse sind für alle im Public Club House und auf pixapps.ai sichtbar.',
+  clubAutoSendDisclosure:
+    'Solange du in diesem Club bist, wird das Ergebnis jedes Spiels, das du beendest (Zeit, Züge, Punktzahl), automatisch hierher gesendet.',
   clubToday: 'Heute',
   clubDaily: 'Täglich',
   clubJoinAnother: 'Einem weiteren Club beitreten',

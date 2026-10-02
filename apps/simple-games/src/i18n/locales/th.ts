@@ -150,9 +150,10 @@ export const th: Messages = {
   advancedTitle: 'ขั้นสูง',
   clubEntry: 'Club House',
   playTogetherTitle: 'เล่นด้วยกัน',
-  playTogetherBody: 'ความท้าทายส่วนตัวกับคนที่คุณรู้จัก',
-  clubSendResult: 'ส่งไปยัง Club',
+  playTogetherBody: 'เทียบสถิติที่ดีที่สุดของคุณกับทุกคน หรือกับคนที่คุณรู้จัก',
   clubResultSent: 'ส่งไปยัง {club} แล้ว',
   clubResultPending: 'จะส่งเมื่อคุณเปิด Club',
   clubResultNotSent: 'ส่งไปยัง {club} ไม่ได้',
+  clubResultSentMany: 'ส่งไปยัง {count} Club แล้ว',
+  clubResultPartial: 'ส่งไปยัง {sent} จาก {count} Club แล้ว ที่เหลือจะส่งเมื่อคุณเปิด',
 };

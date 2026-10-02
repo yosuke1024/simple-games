@@ -6,13 +6,15 @@ export const id: ClubMessages = {
   clubReload: 'Muat ulang',
   clubDiscoverTitle: 'Main bersama',
   clubDiscoverBody:
-    'Mainkan papan yang sama dengan semua orang di Public Club House, atau secara pribadi dengan orang yang kamu kenal.',
+    'Bandingkan rekor terbaikmu dengan semua orang di Public Club House, atau secara pribadi dengan orang yang kamu kenal.',
   clubJoinClub: 'Gabung ke Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Gabung ke Public Club House',
   clubJoinWithLink: 'Gabung dengan tautan undangan',
   clubPublicDisclosure:
     'Nama panggilan dan hasilmu terlihat oleh semua orang di Public Club House dan di pixapps.ai.',
+  clubAutoSendDisclosure:
+    'Selama kamu ada di Club ini, hasil setiap permainan yang kamu selesaikan (waktu, langkah, skor) dikirim ke sini secara otomatis.',
   clubToday: 'Hari ini',
   clubDaily: 'Harian',
   clubJoinAnother: 'Gabung ke Club lain',

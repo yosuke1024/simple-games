@@ -5,12 +5,14 @@ export const zhHans: ClubMessages = {
   clubLoading: '加载中…',
   clubReload: '重新加载',
   clubDiscoverTitle: '一起玩',
-  clubDiscoverBody: '在 Public Club House 和所有人玩同一盘面，或者和你认识的人私下挑战。',
+  clubDiscoverBody: '在 Public Club House 与所有人比较最佳成绩，或与你认识的人私下比较。',
   clubJoinClub: '加入 Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: '加入 Public Club House',
   clubJoinWithLink: '使用邀请链接加入',
   clubPublicDisclosure: '你的昵称和成绩会向 Public Club House 中的所有人以及 pixapps.ai 公开显示。',
+  clubAutoSendDisclosure:
+    '只要你还在这个 Club 中，你完成的每局游戏的成绩（用时、步数、得分）都会自动发送到这里。',
   clubToday: '今天',
   clubDaily: '每日',
   clubJoinAnother: '加入另一个 Club',
@@ -34,10 +36,8 @@ export const zhHans: ClubMessages = {
   clubNewLinkBody: '当前链接将失效。已加入的人仍留在 Club 中。',
   clubSettings: '设置',
   clubDisconnect: '断开此设备',
-  clubDisconnectBody:
-    '让此设备不再连接 {club}。服务器会继续运行,其他人仍可游玩。',
-  clubDisconnectHostingNote:
-    '若要停止托管费用,请在托管服务商的控制台中删除服务器。',
+  clubDisconnectBody: '让此设备不再连接 {club}。服务器会继续运行,其他人仍可游玩。',
+  clubDisconnectHostingNote: '若要停止托管费用,请在托管服务商的控制台中删除服务器。',
   clubDisconnectLastOwner:
     '这是唯一的 Owner 设备。请先添加另一台 Owner 设备,或在托管服务商的控制台中重置设置密钥,以便重新认领此 Club。',
   clubDisconnectConfirm: '断开',

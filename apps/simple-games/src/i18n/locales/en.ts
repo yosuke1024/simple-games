@@ -190,11 +190,12 @@ export const en = {
   advancedTitle: 'Advanced',
   clubEntry: 'Club House',
   playTogetherTitle: 'Play together',
-  playTogetherBody: 'Private challenges with people you know.',
-  clubSendResult: 'Send to Club',
+  playTogetherBody: 'Compare your bests with everyone, or with people you know.',
   clubResultSent: 'Sent to {club}',
   clubResultPending: 'Will send when you open the Club',
   clubResultNotSent: 'Could not send to {club}',
+  clubResultSentMany: 'Sent to {count} Clubs',
+  clubResultPartial: 'Sent to {sent} of {count} Clubs. The rest will send when you open them.',
 } as const;
 
 export type Messages = Record<keyof typeof en, string>;

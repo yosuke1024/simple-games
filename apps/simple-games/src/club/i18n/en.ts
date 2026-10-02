@@ -10,13 +10,15 @@ export const en = {
   clubReload: 'Reload',
   clubDiscoverTitle: 'Play together',
   clubDiscoverBody:
-    'Play the same boards as everyone in the Public Club House, or privately with people you know.',
+    'Compare your bests with everyone in the Public Club House, or privately with people you know.',
   clubJoinClub: 'Join a Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Join the Public Club House',
   clubJoinWithLink: 'Join with an invite link',
   clubPublicDisclosure:
     'Your nickname and your results are visible to everyone in the Public Club House and on pixapps.ai.',
+  clubAutoSendDisclosure:
+    'While you’re in this Club, every game you finish sends its result (time, moves, score) here automatically.',
   clubToday: 'Today',
   clubDaily: 'Daily',
   clubJoinAnother: 'Join another Club',

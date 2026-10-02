@@ -9,13 +9,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../i18n';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { settingsSchema } from '@/storage/schemas';
+import { catalogs } from '../i18n';
 import { addClubConnection, loadClubConnections } from '../storage/connections';
+import { enqueueResult, pendingFor } from '../storage/outbox';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { todayLocal } from './common';
 import { ClubRoot } from './ClubRoot';
 
 const ENDPOINT = 'https://club.example.com';
 const CLUB = { id: 'c_1', name: 'Suzuki Family', createdAt: '2026-09-09T00:00:00.000Z' };
+/** The consent every join shows before its button. */
+const AUTO_SEND = catalogs.en.clubAutoSendDisclosure;
+
 const KEN = { id: 'm_7', nickname: 'Ken', role: 'member', joinedAt: '2026-09-09T00:00:00.000Z' };
 const CHALLENGE = {
   id: 'ch_1',
@@ -117,6 +122,15 @@ function stubServer() {
         },
       ]);
     }
+    if (path === '/rankings/results' && method === 'POST') {
+      return reply({
+        gameId: 'sudoku',
+        paramsKey: 'hard',
+        improved: true,
+        entry: null,
+        entryCount: 1,
+      });
+    }
     if (path === '/rankings') {
       return reply([{ gameId: 'sudoku', paramsKey: 'hard', entryCount: 24, leader: LEADER }]);
     }
@@ -188,6 +202,8 @@ describe('ClubRoot', () => {
     await user.click(await screen.findByRole('button', { name: 'Join the Public Club House' }));
 
     expect(screen.getByText(/visible to everyone in the Public Club House/)).toBeInTheDocument();
+    // ...and that every game finished from now on is sent here by itself.
+    expect(screen.getByText(AUTO_SEND)).toBeInTheDocument();
     expect(screen.queryByLabelText('Invite link')).not.toBeInTheDocument();
     await user.type(screen.getByLabelText('Nickname'), 'Ken');
     await user.click(screen.getByRole('button', { name: 'Join and Play' }));
@@ -198,6 +214,20 @@ describe('ClubRoot', () => {
     const body = JSON.parse(String(joinCall![1]!.body)) as Record<string, unknown>;
     expect(body).toEqual({ nickname: 'Ken' });
     expect(body).not.toHaveProperty('inviteToken');
+  });
+
+  it('discloses automatic sending on a pasted invite link too, before the link is even pasted', async () => {
+    stubServer();
+    const user = userEvent.setup();
+    renderRoot({ entry: 'discover' });
+    await user.click(await screen.findByRole('button', { name: 'Join with an invite link' }));
+
+    expect(screen.getByLabelText('Invite link')).toBeInTheDocument();
+    expect(screen.getByText(AUTO_SEND)).toBeInTheDocument();
+    // The Public Club House's own line is not part of this join.
+    expect(
+      screen.queryByText(/visible to everyone in the Public Club House/),
+    ).not.toBeInTheDocument();
   });
 
   it('hides the Public button on All Clubs once the Public Club House is joined', async () => {
@@ -278,8 +308,10 @@ describe('ClubRoot', () => {
       invite: { endpoint: ENDPOINT, token: 'a'.repeat(22) },
     });
 
-    // The paste field is hidden: the link already said where to go.
+    // The paste field is hidden: the link already said where to go. The join says,
+    // before the button, that results are sent automatically from here on.
     await screen.findByLabelText('Nickname');
+    expect(screen.getByText(AUTO_SEND)).toBeInTheDocument();
     expect(screen.queryByLabelText('Invite link')).not.toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Nickname'), '  Ken ');
@@ -313,6 +345,33 @@ describe('ClubRoot', () => {
     expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
     const paths = fetchMock.mock.calls.map(([url]) => new URL(String(url)).pathname);
     expect(paths.sort()).toEqual(['/api/v1/challenges', '/api/v1/club', '/api/v1/rankings']);
+  });
+
+  it('opening a Club sends the results that waited, before it lists anything', async () => {
+    const fetchMock = stubServer();
+    await joinedConnection();
+    await enqueueResult({
+      kind: 'ranking',
+      endpoint: ENDPOINT,
+      createdAt: '2026-10-02T00:00:00.000Z',
+      body: {
+        gameId: 'sudoku',
+        contractVersion: 1,
+        paramsKey: 'hard',
+        params: { difficulty: 'hard' },
+        seed: 's',
+        boardDigest: 'sd1:1',
+        outcome: 'completed',
+        facts: { elapsedSeconds: 200, mistakes: 0, hints: 0 },
+      },
+    });
+    renderRoot();
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    const calls = fetchMock.mock.calls.map(
+      ([url, init]) => `${init?.method ?? 'GET'} ${new URL(String(url)).pathname}`,
+    );
+    expect(calls[0]).toBe('POST /api/v1/rankings/results');
+    expect(await pendingFor(ENDPOINT)).toEqual([]);
   });
 
   it('opens a ranking: You on the viewer row, in the order the server gave', async () => {
@@ -375,16 +434,10 @@ describe('ClubRoot', () => {
 
     await user.click(screen.getByRole('button', { name: 'Play' }));
     // No board is handed over: the game opens its own daily (club.md §16-3).
+    // Only the way back is handed over: the result goes out like any other.
     expect(handlers.onPlayChallenge).toHaveBeenCalledWith({
       gameId: 'sudoku',
-      active: {
-        endpoint: ENDPOINT,
-        clubName: 'Suzuki Family',
-        challengeId: 'ch_d',
-        gameId: 'sudoku',
-        boardDigest: 'sd1:9f3a1c07',
-        submitted: false,
-      },
+      focus: { endpoint: ENDPOINT, challengeId: 'ch_d' },
     });
   });
 

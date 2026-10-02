@@ -6,7 +6,9 @@
  * - the layer loads on a press of one of the doors, at boot for a device that
  *   has joined, or for an invite link — and on nothing else;
  * - a failed load changes nothing on screen (club.md §12-2 (e));
- * - the bridge the result screens read carries the connections boot found;
+ * - the bridge the result screens read carries the connections boot found, and
+ *   sends one result to every Club (`sendResult`) — it knows nothing of which
+ *   challenge, if any, the game was opened from;
  * - Play on a challenge opens the game by the ordinary door — the game is
  *   handed no board — and leaving it returns to that challenge in the Club,
  *   not the collection, and with no review question.
@@ -58,7 +60,7 @@ vi.mock('../services/review', async (importOriginal) => ({
 }));
 
 // A stub game that shows what the shell handed it — the names of its props —
-// and what the bridge says about the connections and the active challenge.
+// and what the bridge says about the connections.
 vi.mock('./lazyRoots', () => ({
   getLazyRoot: (gameId: string) =>
     function StubGameRoot(props: { onExit: () => void; entry?: string }) {
@@ -71,8 +73,8 @@ vi.mock('./lazyRoots', () => ({
           <p data-testid="bridge">
             {bridge === null
               ? 'no bridge'
-              : `${bridge.connections.length} connections, active ${
-                  bridge.activeChallenge?.challengeId ?? 'none'
+              : `${bridge.connections.length} connections, ${
+                  typeof bridge.sendResult === 'function' ? 'can send' : 'cannot send'
                 }`}
           </p>
           <button type="button" onClick={onExit}>
@@ -95,14 +97,7 @@ const ENDPOINT = 'https://club.example';
 
 const PLAY: ClubPlayRequest = {
   gameId: 'sudoku',
-  active: {
-    endpoint: ENDPOINT,
-    clubName: 'Suzuki Family',
-    challengeId: 'ch-1',
-    gameId: 'sudoku',
-    boardDigest: 'digest-1',
-    submitted: false,
-  },
+  focus: { endpoint: ENDPOINT, challengeId: 'ch-1' },
 };
 
 function FakeClubRoot({ entry, invite, focus, onBack, onPlayChallenge }: ClubRootProps) {
@@ -123,10 +118,7 @@ function FakeClubRoot({ entry, invite, focus, onBack, onPlayChallenge }: ClubRoo
 
 const fakeModule: ClubModule = {
   ClubRoot: FakeClubRoot,
-  createBridge: () => ({
-    sendToClub: () => Promise.resolve('sent'),
-    submitActive: () => Promise.resolve('sent'),
-  }),
+  createBridge: () => ({ sendResult: () => Promise.resolve([]) }),
   loadConnections: () => Promise.resolve([]),
   inviteFromHref: () => null,
 };
@@ -259,7 +251,7 @@ describe('a device that has joined', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Sudoku$/ }));
     await settle();
 
-    expect(screen.getByTestId('bridge')).toHaveTextContent('1 connections, active none');
+    expect(screen.getByTestId('bridge')).toHaveTextContent('1 connections, can send');
     // The shell hands a game a door and a way out, and nothing else.
     expect(screen.getByTestId('props')).toHaveTextContent(/^entry,onExit$/);
   });
@@ -276,7 +268,7 @@ describe('a device that has joined', () => {
     expect(screen.getByText('playing sudoku')).toBeInTheDocument();
     // The game opens onto its own daily: no challenge board is handed over (club.md §16-3).
     expect(screen.getByTestId('props')).toHaveTextContent(/^entry,onExit$/);
-    expect(screen.getByTestId('bridge')).toHaveTextContent('1 connections, active ch-1');
+    expect(screen.getByTestId('bridge')).toHaveTextContent('1 connections, can send');
 
     fireEvent.click(screen.getByRole('button', { name: 'All games' }));
     await settle();
@@ -286,6 +278,41 @@ describe('a device that has joined', () => {
     expect(screen.getByTestId('club-focus')).toHaveTextContent(`${ENDPOINT} ch-1`);
     expect(reviewMock.markReviewPromptShown).not.toHaveBeenCalled();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+describe('the way back to a challenge', () => {
+  beforeEach(async () => {
+    await initClubGate(
+      createMemoryKV({
+        'sg.club': JSON.stringify({ schemaVersion: 1, connections: [connection] }),
+      }),
+    );
+  });
+
+  it('is only for the game that was opened from the Club: the next game from the collection leaves to the collection', async () => {
+    renderShell();
+    await settle();
+    fireEvent.click(screen.getByRole('button', { name: /Suzuki Family/ }));
+    await settle();
+    fireEvent.click(screen.getByRole('button', { name: 'Play challenge' }));
+    await settle();
+    fireEvent.click(screen.getByRole('button', { name: 'All games' }));
+    await settle();
+    expect(screen.getByTestId('club-focus')).toHaveTextContent(`${ENDPOINT} ch-1`);
+
+    // Back to the collection by the Club's own control, then an ordinary game.
+    fireEvent.click(screen.getByRole('button', { name: 'Leave club' }));
+    await settle();
+    // Sudoku is on the home twice now: the grid, and the recently played.
+    fireEvent.click(screen.getAllByRole('button', { name: /^Sudoku$/ })[0]!);
+    await settle();
+    expect(screen.getByText('playing sudoku')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'All games' }));
+    await settle();
+
+    expect(screen.queryByTestId('club-entry')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Simple Games' })).toBeInTheDocument();
   });
 });
 

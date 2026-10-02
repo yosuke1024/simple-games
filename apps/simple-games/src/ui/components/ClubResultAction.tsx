@@ -1,40 +1,38 @@
 /**
  * The Club House's one operation on a result screen (docs/architecture/
- * club.md §2-2) — placed by the games that can be a challenge, next to
- * ShareAction, and drawn only on a device that has joined a Club. Everywhere
+ * club.md §2-2) — placed by the games that can be ranked, next to
+ * ShareAction, and active only on a device that has joined a Club. Everywhere
  * else it renders nothing, and the result screen's other elements keep their
  * place either way.
  *
- * Two shapes, decided by the board on screen:
+ * There is no button. Joining a Club said, before the player agreed, that
+ * every game finished while they are in it sends its result there
+ * (docs/PRODUCT_PRINCIPLES.md, Club House); a tap here
+ * would be a step, not consent, and a good score would be lost the moment the
+ * player moved on without pressing it. So the result is sent as the screen
+ * appears — once, to every Club joined — and one status line says what
+ * happened (club.md §10): sent, waiting in the outbox for the next time a Club
+ * is opened or a game is finished, or refused for good. A result the server
+ * already held (a daily answered once) draws nothing: the first one counts.
  *
- * - An ordinary game (level, daily, free): `Send to Club`. The game becomes a
- *   challenge in the chosen Club — "I did this; you?" — with this result as
- *   its first (club.md §6-3). One tap, one request, nothing on failure but
- *   the button again.
- * - The active challenge's own board (the digests agree): no button, one
- *   status line. The result is sent as the screen appears, because the
- *   Challenge screen said so before the player pressed Play (「開示が先、
- *   送信が後」); a tap here would be a step, not consent. A replay of a
- *   challenge this device already answered draws nothing — one result per
- *   member (club.md §6-3). The line says what happened (club.md §10): sent,
- *   waiting in the outbox for the next time the Club is opened, or refused
- *   for good.
+ * Leaving the screen does not cancel the send; the outbox holds what has not
+ * gone. A loss or a dead end (`outcome: 'played'`) is sent nowhere, so a game
+ * that cannot be ranked never locks a daily by being lost.
  *
  * The figures travel exactly as the result screen shows them: `facts` is
  * built from the same session fields as `details` (the share's strings), and
  * nothing is computed here. The server stores `facts` as given and reads it
  * only to derive club records (club.md §5-4).
  */
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import type { GameId } from '../../app/registry';
 import type { ShareDetail } from '../../services/share/message';
 import { useSettings } from '../../state/SettingsContext';
 import {
   ClubBridgeContext,
-  type ClubConnectionSummary,
   type ClubFacts,
   type ClubOutcome,
-  type ClubSendOutcome,
+  type ClubSendReport,
 } from '../clubBridge';
 
 export interface ClubResultActionProps {
@@ -52,12 +50,6 @@ export interface ClubResultActionProps {
   daily?: string | null;
 }
 
-type State =
-  | { kind: 'idle' }
-  | { kind: 'choose' }
-  | { kind: 'sending' }
-  | { kind: 'done'; outcome: ClubSendOutcome; clubName: string };
-
 export function ClubResultAction({
   gameId,
   outcome,
@@ -69,7 +61,7 @@ export function ClubResultAction({
 }: ClubResultActionProps) {
   const { t } = useSettings();
   const bridge = useContext(ClubBridgeContext);
-  const [state, setState] = useState<State>({ kind: 'idle' });
+  const [reports, setReports] = useState<readonly ClubSendReport[] | null>(null);
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -78,113 +70,52 @@ export function ClubResultAction({
     };
   }, []);
 
-  const active = bridge?.activeChallenge ?? null;
-  const isChallengeBoard =
-    active !== null &&
-    active.gameId === gameId &&
-    boardDigest !== null &&
-    active.boardDigest === boardDigest;
-
-  // The active challenge's result goes out once, as the screen appears.
-  // StrictMode mounts twice in development; the ref keeps it to one request.
-  const submitted = useRef(false);
+  // The result goes out once, as the screen appears. StrictMode mounts twice in
+  // development and the facts object is new on most renders; the ref keeps it
+  // to one request, and is set only when the request is actually made — so a
+  // result screen that is open when the Club chunk finishes loading (the
+  // bridge arrives late) still sends. Nothing cancels the request on unmount.
+  const sent = useRef(false);
   useEffect(() => {
-    if (!isChallengeBoard || active.submitted || submitted.current || bridge === null) return;
-    submitted.current = true;
-    void bridge.submitActive({ outcome, facts, boardDigest: boardDigest! }).then((result) => {
-      if (mounted.current) setState({ kind: 'done', outcome: result, clubName: active.clubName });
-    });
-  }, [isChallengeBoard, active, bridge, outcome, facts, boardDigest]);
-
-  const send = useCallback(
-    (club: ClubConnectionSummary) => {
-      if (bridge === null) return;
-      setState({ kind: 'sending' });
-      void bridge
-        .sendToClub(club.endpoint, {
-          gameId,
-          outcome,
-          facts,
-          seed,
-          params,
-          boardDigest,
-          daily: daily ?? null,
-        })
-        .then((result) => {
-          if (!mounted.current) return;
-          // A new challenge is not queued (club.md §4-2 queues results only):
-          // what did not go simply offers the button again.
-          setState(
-            result === 'sent'
-              ? { kind: 'done', outcome: result, clubName: club.clubName }
-              : { kind: 'idle' },
-          );
-        });
-    },
-    [bridge, gameId, outcome, facts, seed, params, boardDigest, daily],
-  );
+    if (sent.current || bridge === null || bridge.connections.length === 0) return;
+    sent.current = true;
+    if (outcome !== 'completed') return;
+    void bridge
+      .sendResult({ gameId, outcome, facts, seed, params, boardDigest, daily: daily ?? null })
+      .then((result) => {
+        if (mounted.current) setReports(result);
+      });
+  }, [bridge, gameId, outcome, facts, seed, params, boardDigest, daily]);
 
   if (bridge === null || bridge.connections.length === 0) return null;
 
-  if (isChallengeBoard) {
-    if (active.submitted) return null;
-    return (
-      <div className="result-share">
-        <span className="result-share-note" role="status">
-          {state.kind !== 'done'
-            ? ''
-            : state.outcome === 'sent'
-              ? t('clubResultSent', { club: state.clubName })
-              : state.outcome === 'queued'
-                ? t('clubResultPending')
-                : t('clubResultNotSent', { club: state.clubName })}
-        </span>
-      </div>
-    );
+  // What counts is every Club the server did not already have this result for.
+  const counted = (reports ?? []).filter((r) => r.outcome !== 'already');
+  const rejected = counted.filter((r) => r.outcome === 'rejected');
+  const delivered = counted.filter((r) => r.outcome === 'sent').length;
+  let text = '';
+  if (counted.length > 0) {
+    if (rejected.length > 0) {
+      text = t('clubResultNotSent', { club: rejected.map((r) => r.clubName).join(', ') });
+    } else if (counted.length === 1) {
+      text =
+        delivered === 1
+          ? t('clubResultSent', { club: counted[0]!.clubName })
+          : t('clubResultPending');
+    } else if (delivered === counted.length) {
+      text = t('clubResultSentMany', { count: delivered });
+    } else if (delivered === 0) {
+      text = t('clubResultPending');
+    } else {
+      text = t('clubResultPartial', { sent: delivered, count: counted.length });
+    }
   }
 
-  if (state.kind === 'done') {
-    return (
-      <div className="result-share">
-        <span className="result-share-note" role="status">
-          {t('clubResultSent', { club: state.clubName })}
-        </span>
-      </div>
-    );
-  }
-
-  if (state.kind === 'choose') {
-    return (
-      <div className="result-share result-club-choose">
-        {bridge.connections.map((club) => (
-          <button
-            type="button"
-            key={club.endpoint}
-            className="result-share-btn"
-            onClick={() => send(club)}
-          >
-            {club.clubName}
-          </button>
-        ))}
-      </div>
-    );
-  }
-
-  const connections = bridge.connections;
   return (
     <div className="result-share">
-      <button
-        type="button"
-        className="result-share-btn"
-        disabled={state.kind === 'sending'}
-        onClick={() => {
-          if (connections.length === 1) send(connections[0]!);
-          else setState({ kind: 'choose' });
-        }}
-      >
-        {t('clubSendResult')}
-      </button>
-      <span className="result-share-note" role="status" />
+      <span className="result-share-note" role="status">
+        {text}
+      </span>
     </div>
   );
 }

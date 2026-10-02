@@ -1,4 +1,9 @@
-/** Join a Club (club.md §7-3, §7-4): an invite link, a nickname, one request. */
+/**
+ * Join a Club (club.md §7-3, §7-4): an invite link, a nickname, one request.
+ * Whatever the way in, the screen first says that every game finished from now on
+ * is sent to this Club by itself (`clubAutoSendDisclosure`) — the consent the
+ * automatic send rests on (club.md §2-2).
+ */
 import { useState } from 'react';
 import { createClient } from '../api/client';
 import { inviteFromHref } from '../invite';
@@ -78,6 +83,8 @@ export function JoinScreen({
         }}
       >
         {publicClub ? <p className="club-disclosure">{t('clubPublicDisclosure')}</p> : null}
+        {/* Every way in says it, before the button: results are sent by themselves from here on. */}
+        <p className="club-disclosure">{t('clubAutoSendDisclosure')}</p>
         {invite === null && !publicClub ? (
           <label className="club-field">
             <span className="club-field-label">{t('clubInviteLink')}</span>

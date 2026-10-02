@@ -39,10 +39,10 @@ import { markReviewPromptShown, shouldPromptReview } from '../services/review';
 import { releaseSound } from '../services/sound';
 import {
   ClubBridgeContext,
-  type ActiveChallenge,
   type ClubBridge,
   type ClubConnectionSummary,
   type ClubEntry,
+  type ClubFocus,
   type ClubInvite,
   type ClubModule,
   type ClubPlayRequest,
@@ -88,7 +88,7 @@ type View =
       kind: 'club';
       entry: ClubEntry;
       invite?: ClubInvite | null;
-      focus?: { endpoint: string; challengeId: string } | null;
+      focus?: ClubFocus | null;
     };
 
 // Measurement must never disturb a player, so a chunk that never arrives is
@@ -170,17 +170,12 @@ export function App() {
   const [clubModule, setClubModule] = useState<ClubModule | null>(null);
   const [connections, setConnections] = useState<readonly ClubConnectionSummary[]>(clubConnections);
   /**
-   * The challenge whose board is on screen, if any (club.md §6-2). The ref is
-   * what the bridge reads at call time, so a result screen that sends late
-   * still sends to the challenge it was played for.
+   * Where leaving a game opened from a Club's Today list returns to (club.md
+   * §6-2): the challenge to show again. Only a way back — the game's result goes
+   * out through the bridge like any other, to every Club. A ref, because
+   * `exitGame` reads it from a callback that never changes.
    */
-  const [activeChallenge, setActiveChallengeState] = useState<ActiveChallenge | null>(null);
-  const activeChallengeRef = useRef<ActiveChallenge | null>(null);
-  const setActiveChallenge = useCallback((next: ActiveChallenge | null) => {
-    activeChallengeRef.current = next;
-    setActiveChallengeState(next);
-  }, []);
-
+  const clubFocusRef = useRef<ClubFocus | null>(null);
   /**
    * The screen the shell has decided on, readable from a listener that
    * outlives a render — and updated at the decision rather than at the commit
@@ -207,18 +202,15 @@ export function App() {
    * is shown next is the caller's decision, and so is whether this is a
    * moment to ask them anything (`offerReviewIfDue`).
    */
-  const leaveGame = useCallback(
-    (gameId: GameId) => {
-      trackWebGameClosed(gameId);
-      // The game's audio must not outlive it: suspend the shared context now
-      // instead of waiting out its idle timer (docs/GAME_LIFECYCLE.md).
-      releaseSound();
-      // A challenge belongs to the board it was opened onto; whichever way
-      // that board left the screen, no later result is owed to it.
-      setActiveChallenge(null);
-    },
-    [setActiveChallenge],
-  );
+  const leaveGame = useCallback((gameId: GameId) => {
+    trackWebGameClosed(gameId);
+    // The game's audio must not outlive it: suspend the shared context now
+    // instead of waiting out its idle timer (docs/GAME_LIFECYCLE.md).
+    releaseSound();
+    // The way back belongs to the board it was opened for; whichever way
+    // that board left the screen, the next game starts without one.
+    clubFocusRef.current = null;
+  }, []);
 
   /**
    * The review question's only doorway (docs/REVIEW_PROMPT_POLICY.md):
@@ -280,13 +272,13 @@ export function App() {
   const exitGame = useCallback(() => {
     const current = viewRef.current;
     if (current.kind !== 'game') return;
-    const active = activeChallengeRef.current;
+    const focus = clubFocusRef.current;
     leaveGame(current.gameId);
     if (current.from === 'club') {
       show({
         kind: 'club',
         entry: 'home',
-        focus: active ? { endpoint: active.endpoint, challengeId: active.challengeId } : null,
+        focus,
       });
       return;
     }
@@ -317,8 +309,8 @@ export function App() {
 
   /**
    * `Play` on a Club challenge. The game opens by the ordinary door, recorded
-   * as opened like any other; the shell keeps the challenge (the game is
-   * handed nothing) and a note to come back to the Club.
+   * as opened like any other; the shell keeps the challenge to come back to (the
+   * game is handed nothing).
    *
    * No `?game=` is pushed in the browser. Back from a challenge returns to
    * the Club, not the collection, so a history entry for the game would be a
@@ -326,11 +318,11 @@ export function App() {
    * never pointed at the game in the first place: it stays the Club's page.
    */
   const playChallenge = useCallback(
-    ({ gameId, active }: ClubPlayRequest) => {
-      setActiveChallenge(active);
+    ({ gameId, focus }: ClubPlayRequest) => {
+      clubFocusRef.current = focus;
       enterGame(gameId, 'collection', { from: 'club' });
     },
-    [enterGame, setActiveChallenge],
+    [enterGame],
   );
 
   const onClubConnectionsChanged = useCallback((next: readonly ClubConnectionSummary[]) => {
@@ -338,15 +330,15 @@ export function App() {
     setConnections(next);
   }, []);
 
-  // The two functions are the layer's; they read the active challenge at
-  // call time, so they are made once per module rather than per challenge.
+  // The send function is the layer's, made once per module; it reads the
+  // joined Clubs at call time, so a Club joined or left since needs no new one.
   const clubFunctions = useMemo(
-    () => (clubModule ? clubModule.createBridge(() => activeChallengeRef.current) : null),
+    () => (clubModule ? clubModule.createBridge() : null),
     [clubModule],
   );
   const bridge = useMemo<ClubBridge | null>(
-    () => (clubFunctions ? { connections, activeChallenge, ...clubFunctions } : null),
-    [clubFunctions, connections, activeChallenge],
+    () => (clubFunctions ? { connections, ...clubFunctions } : null),
+    [clubFunctions, connections],
   );
 
   /**

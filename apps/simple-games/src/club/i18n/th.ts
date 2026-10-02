@@ -5,13 +5,16 @@ export const th: ClubMessages = {
   clubLoading: 'กำลังโหลด…',
   clubReload: 'โหลดใหม่',
   clubDiscoverTitle: 'เล่นด้วยกัน',
-  clubDiscoverBody: 'เล่นกระดานเดียวกับทุกคนใน Public Club House หรือเล่นส่วนตัวกับคนที่คุณรู้จัก',
+  clubDiscoverBody:
+    'เทียบสถิติที่ดีที่สุดกับทุกคนใน Public Club House หรือเทียบกันเองกับคนที่คุณรู้จัก',
   clubJoinClub: 'เข้าร่วม Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'เข้าร่วม Public Club House',
   clubJoinWithLink: 'เข้าร่วมด้วยลิงก์เชิญ',
   clubPublicDisclosure:
     'ชื่อเล่นและผลของคุณจะแสดงให้ทุกคนใน Public Club House และบน pixapps.ai เห็น',
+  clubAutoSendDisclosure:
+    'ในระหว่างที่คุณอยู่ใน Club นี้ ผลของทุกเกมที่คุณเล่นจบ (เวลา จำนวนการเดิน คะแนน) จะถูกส่งมาที่นี่โดยอัตโนมัติ',
   clubToday: 'วันนี้',
   clubDaily: 'รายวัน',
   clubJoinAnother: 'เข้าร่วม Club อื่น',

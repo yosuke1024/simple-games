@@ -154,9 +154,10 @@ export const fr: Messages = {
   advancedTitle: 'Avancé',
   clubEntry: 'Club House',
   playTogetherTitle: 'Jouer ensemble',
-  playTogetherBody: 'Des défis privés avec des gens que vous connaissez.',
-  clubSendResult: 'Envoyer au Club',
+  playTogetherBody: 'Comparez vos meilleurs scores avec tout le monde, ou avec vos proches.',
   clubResultSent: 'Envoyé à {club}',
   clubResultPending: 'Sera envoyé à l’ouverture du Club',
   clubResultNotSent: 'Impossible d’envoyer à {club}',
+  clubResultSentMany: 'Envoyé à {count} Clubs',
+  clubResultPartial: 'Envoyé à {sent} Clubs sur {count}. Le reste sera envoyé à leur ouverture',
 };

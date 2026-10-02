@@ -5,12 +5,14 @@ export const zhHant: ClubMessages = {
   clubLoading: '載入中…',
   clubReload: '重新載入',
   clubDiscoverTitle: '一起玩',
-  clubDiscoverBody: '在 Public Club House 和所有人玩同一盤面，或者和你認識的人私下挑戰。',
+  clubDiscoverBody: '在 Public Club House 與所有人比較最佳成績，或與你認識的人私下比較。',
   clubJoinClub: '加入 Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: '加入 Public Club House',
   clubJoinWithLink: '使用邀請連結加入',
   clubPublicDisclosure: '你的暱稱和成績會向 Public Club House 中的所有人以及 pixapps.ai 公開顯示。',
+  clubAutoSendDisclosure:
+    '只要你還在這個 Club 中，你完成的每局遊戲的成績（用時、步數、得分）都會自動傳送到這裡。',
   clubToday: '今天',
   clubDaily: '每日',
   clubJoinAnother: '加入另一個 Club',
@@ -34,10 +36,8 @@ export const zhHant: ClubMessages = {
   clubNewLinkBody: '目前的連結將失效。已加入的人仍留在 Club 中。',
   clubSettings: '設定',
   clubDisconnect: '中斷此裝置',
-  clubDisconnectBody:
-    '讓此裝置不再連線到 {club}。伺服器會繼續運作,其他人仍可遊玩。',
-  clubDisconnectHostingNote:
-    '若要停止代管費用,請在代管服務商的控制台中刪除伺服器。',
+  clubDisconnectBody: '讓此裝置不再連線到 {club}。伺服器會繼續運作,其他人仍可遊玩。',
+  clubDisconnectHostingNote: '若要停止代管費用,請在代管服務商的控制台中刪除伺服器。',
   clubDisconnectLastOwner:
     '這是唯一的 Owner 裝置。請先新增另一台 Owner 裝置,或在代管服務商的控制台中重設設定金鑰,以便重新認領此 Club。',
   clubDisconnectConfirm: '中斷連線',

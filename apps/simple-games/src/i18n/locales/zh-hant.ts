@@ -148,9 +148,10 @@ export const zhHant: Messages = {
   advancedTitle: '進階',
   clubEntry: 'Club House',
   playTogetherTitle: '一起玩',
-  playTogetherBody: '和認識的人進行私密挑戰。',
-  clubSendResult: '傳送到 Club',
+  playTogetherBody: '與所有人或你認識的人比較最佳成績。',
   clubResultSent: '已傳送到 {club}',
   clubResultPending: '開啟 Club 時傳送',
   clubResultNotSent: '無法傳送到 {club}',
+  clubResultSentMany: '已傳送到 {count} 個 Club',
+  clubResultPartial: '已傳送到 {count} 個 Club 中的 {sent} 個。其餘的會在開啟時傳送',
 };

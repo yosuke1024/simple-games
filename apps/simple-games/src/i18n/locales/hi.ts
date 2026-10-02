@@ -153,9 +153,10 @@ export const hi: Messages = {
   advancedTitle: 'उन्नत',
   clubEntry: 'Club House',
   playTogetherTitle: 'साथ खेलें',
-  playTogetherBody: 'जानने वालों के साथ निजी चुनौतियाँ।',
-  clubSendResult: 'Club को भेजें',
+  playTogetherBody: 'अपने सर्वश्रेष्ठ रिकॉर्ड सबके साथ, या जान-पहचान वालों के साथ मिलाएँ।',
   clubResultSent: '{club} को भेजा गया',
   clubResultPending: 'Club खोलने पर भेजा जाएगा',
   clubResultNotSent: '{club} को नहीं भेजा जा सका',
+  clubResultSentMany: '{count} Club को भेजा गया',
+  clubResultPartial: '{count} में से {sent} Club को भेजा गया। बाकी खोलने पर भेजे जाएँगे',
 };

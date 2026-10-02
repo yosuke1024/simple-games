@@ -6,13 +6,15 @@ export const hi: ClubMessages = {
   clubReload: 'फिर से लोड करें',
   clubDiscoverTitle: 'साथ खेलें',
   clubDiscoverBody:
-    'Public Club House में सबके साथ वही बोर्ड खेलें, या जिन्हें आप जानते हैं उनके साथ निजी तौर पर।',
+    'Public Club House में सबके साथ, या जान-पहचान वालों के साथ निजी तौर पर अपने सर्वश्रेष्ठ रिकॉर्ड मिलाएँ।',
   clubJoinClub: 'Club से जुड़ें',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Public Club House से जुड़ें',
   clubJoinWithLink: 'आमंत्रण लिंक से जुड़ें',
   clubPublicDisclosure:
     'आपका उपनाम और आपके नतीजे Public Club House में सभी को और pixapps.ai पर दिखाई देंगे।',
+  clubAutoSendDisclosure:
+    'जब तक आप इस Club में हैं, आपके खत्म किए हर गेम का नतीजा (समय, चालें, स्कोर) अपने-आप यहाँ भेजा जाएगा।',
   clubToday: 'आज',
   clubDaily: 'रोज़ाना',
   clubJoinAnother: 'दूसरे Club से जुड़ें',

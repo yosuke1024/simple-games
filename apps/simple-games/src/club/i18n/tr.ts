@@ -6,13 +6,15 @@ export const tr: ClubMessages = {
   clubReload: 'Yeniden yükle',
   clubDiscoverTitle: 'Birlikte oyna',
   clubDiscoverBody:
-    "Public Club House'ta herkesle aynı tahtaları oyna ya da tanıdığın insanlarla özel olarak oyna.",
+    'En iyi sonuçlarını Public Club House’taki herkesle ya da tanıdığın kişilerle kendi aranızda karşılaştır.',
   clubJoinClub: 'Bir Club’a katıl',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Public Club House’a katıl',
   clubJoinWithLink: 'Davet bağlantısıyla katıl',
   clubPublicDisclosure:
     'Takma adın ve sonuçların, Public Club House’taki herkes tarafından ve pixapps.ai’de görülebilir.',
+  clubAutoSendDisclosure:
+    'Bu Club’dayken, bitirdiğin her oyunun sonucu (süre, hamle, skor) otomatik olarak buraya gönderilir.',
   clubToday: 'Bugün',
   clubDaily: 'Günlük',
   clubJoinAnother: 'Başka bir Club’a katıl',

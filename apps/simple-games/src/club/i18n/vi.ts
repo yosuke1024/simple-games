@@ -6,13 +6,15 @@ export const vi: ClubMessages = {
   clubReload: 'Tải lại',
   clubDiscoverTitle: 'Chơi cùng nhau',
   clubDiscoverBody:
-    'Chơi cùng bàn với mọi người trong Public Club House, hoặc riêng tư với những người bạn quen.',
+    'So kỷ lục tốt nhất với mọi người trong Public Club House, hoặc riêng với người quen.',
   clubJoinClub: 'Tham gia Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Tham gia Public Club House',
   clubJoinWithLink: 'Tham gia bằng liên kết mời',
   clubPublicDisclosure:
     'Biệt danh và kết quả của bạn hiển thị với mọi người trong Public Club House và trên pixapps.ai.',
+  clubAutoSendDisclosure:
+    'Khi bạn ở trong Club này, kết quả của mọi ván bạn hoàn thành (thời gian, số nước đi, điểm) sẽ được tự động gửi đến đây.',
   clubToday: 'Hôm nay',
   clubDaily: 'Hằng ngày',
   clubJoinAnother: 'Tham gia Club khác',

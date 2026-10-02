@@ -67,18 +67,9 @@ export function ChallengeScreen({
 
   const play = () => {
     if (!challenge || gameId === null) return;
-    onPlay({
-      gameId,
-      active: {
-        endpoint: connection.endpoint,
-        clubName: connection.clubName,
-        challengeId: challenge.id,
-        gameId,
-        boardDigest: challenge.boardDigest,
-        // A replay of a challenge that already has our result sends nothing (club.md §6-3).
-        submitted: challenge.mine,
-      },
-    });
+    // The game opens onto its own daily and its result goes out like any other;
+    // what the shell keeps is only the way back to this challenge.
+    onPlay({ gameId, focus: { endpoint: connection.endpoint, challengeId: challenge.id } });
   };
 
   return (

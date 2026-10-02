@@ -83,6 +83,12 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   // 公開の約束の反故になる。
   'clubPublicDisclosure',
 
+  // Club の結果の自動送信への同意 — 参加するどの経路(Public・リンク貼り付け・
+  // 招待 URL)でも、参加の前に「遊び終えた結果が自動で送られる」と言う
+  // (docs/PRODUCT_PRINCIPLES.md「Club House」, docs/architecture/club.md §2-2)。
+  // 「自動で」「参加している間」を落とした訳は同意の約束の反故になる。
+  'clubAutoSendDisclosure',
+
   // Club の結果の自動送信 — 開示が先、送信が後(docs/architecture/club.md §2-2, §11)。
   // 「終わると結果が送られる」を落とした訳は同意の約束の反故になる。
   'clubDailyDisclosure',
