@@ -256,6 +256,123 @@ describe('club client', () => {
     await assertion;
   });
 
+  describe('a request settles within the timeout even when the platform never settles it (club.md §10)', () => {
+    // A WKWebView with no network can leave a fetch pending after the abort, and
+    // a body that never finishes. The 10 s limit must not depend on either.
+    it('a fetch that ignores the abort signal and never answers is unreachable at the deadline', async () => {
+      vi.useFakeTimers();
+      let signal: AbortSignal | undefined;
+      const f = vi.fn((_url: string, init: RequestInit) => {
+        signal = init.signal ?? undefined;
+        return new Promise<Response>(() => {});
+      });
+      let outcome: unknown = 'pending';
+      createClient(E, 't', f as unknown as typeof fetch)
+        .club()
+        .then(
+          () => (outcome = 'resolved'),
+          (e: unknown) => (outcome = e),
+        );
+      await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS - 1);
+      expect(outcome).toBe('pending');
+      await vi.advanceTimersByTimeAsync(1);
+      expect(outcome).toBeInstanceOf(ClubApiError);
+      expect(outcome).toMatchObject({ code: 'unreachable', status: null });
+      // It still asks the platform to drop the request.
+      expect(signal?.aborted).toBe(true);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('a response whose body never finishes is unreachable at the deadline too', async () => {
+      vi.useFakeTimers();
+      const stalled = {
+        status: 200,
+        ok: true,
+        headers: new Headers({ 'X-Club-Api': '1' }),
+        json: () => new Promise<unknown>(() => {}),
+      } as unknown as Response;
+      const f = vi.fn().mockResolvedValue(stalled);
+      let outcome: unknown = 'pending';
+      createClient(E, 't', f as unknown as typeof fetch)
+        .club()
+        .then(
+          () => (outcome = 'resolved'),
+          (e: unknown) => (outcome = e),
+        );
+      await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS - 1);
+      expect(outcome).toBe('pending');
+      await vi.advanceTimersByTimeAsync(1);
+      expect(outcome).toMatchObject({ code: 'unreachable', status: null });
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('an error answer whose body never finishes is unreachable (not the 500) at the deadline', async () => {
+      vi.useFakeTimers();
+      const stalled = {
+        status: 500,
+        ok: false,
+        headers: new Headers({ 'X-Club-Api': '1' }),
+        json: () => new Promise<unknown>(() => {}),
+      } as unknown as Response;
+      const f = vi.fn().mockResolvedValue(stalled);
+      let outcome: unknown = 'pending';
+      createClient(E, 't', f as unknown as typeof fetch)
+        .club()
+        .then(
+          () => (outcome = 'resolved'),
+          (e: unknown) => (outcome = e),
+        );
+      await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS - 1);
+      expect(outcome).toBe('pending');
+      await vi.advanceTimersByTimeAsync(1);
+      // The status is the network's trouble to the caller (null), not the 500 it half-read.
+      expect(outcome).toBeInstanceOf(ClubApiError);
+      expect(outcome).toMatchObject({ code: 'unreachable', status: null });
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('a device that knows it is offline is unreachable at once, without a request or a timer', async () => {
+      vi.useFakeTimers();
+      const online = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+      try {
+        const f = vi.fn().mockResolvedValue(reply(200, { club }));
+        // No timer is advanced: the answer is already there.
+        await expect(
+          createClient(E, 't', f as unknown as typeof fetch).club(),
+        ).rejects.toMatchObject({ code: 'unreachable', status: null });
+        expect(f).not.toHaveBeenCalled();
+        expect(vi.getTimerCount()).toBe(0);
+      } finally {
+        online.mockRestore();
+      }
+    });
+
+    it('a normal answer is unaffected and leaves no timer behind', async () => {
+      vi.useFakeTimers();
+      const f = vi.fn().mockResolvedValue(reply(200, { ok: true, api: 1, claimed: false }));
+      await expect(
+        createClient(E, null, f as unknown as typeof fetch).health(),
+      ).resolves.toMatchObject({ ok: true, api: 1 });
+      expect(f).toHaveBeenCalledTimes(1);
+      // The deadline was cancelled: nothing fires later and aborts a finished request.
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('an error answer leaves no timer behind either', async () => {
+      vi.useFakeTimers();
+      const f = vi
+        .fn()
+        .mockResolvedValue(reply(401, { error: { code: 'unauthorized', message: 'x' } }));
+      await expect(createClient(E, 't', f as unknown as typeof fetch).club()).rejects.toMatchObject(
+        {
+          code: 'unauthorized',
+          status: 401,
+        },
+      );
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
+
   it('malformed JSON shapes are malformed_response', async () => {
     const f = vi
       .fn()

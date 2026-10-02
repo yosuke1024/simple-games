@@ -6,12 +6,12 @@
  * as panels over the same data. Invite is hidden while Private Clubs are off.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createClient, type ClubClient } from '../api/client';
+import { createClient, REQUEST_TIMEOUT_MS, type ClubClient } from '../api/client';
 import { ClubApiError } from '../api/errors';
 import type { Challenge, Member, RankingSummary, ReportedMember } from '../api/types';
 import { contractFor, gameTitle } from '../contract/challenge';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
-import { flushOutbox } from '../storage/outbox';
+import { flushOutbox, type FlushReport } from '../storage/outbox';
 import { shareGame } from '@/services/share/share';
 import type { ClubConnection } from '@/storage/schemas';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
@@ -43,6 +43,13 @@ interface ClubData {
   /** The club's name as the server has it now. */
   clubName: string;
 }
+
+/**
+ * How long a Club screen waits for its own flush before reading the lists: one
+ * request's timeout and a beat, so a flush that could not reach the Club reports
+ * it first (and the screen says so without asking again).
+ */
+const FLUSH_WAIT_MS = REQUEST_TIMEOUT_MS + 1_000;
 
 export type ClubPanel = 'none' | 'invite' | 'settings';
 
@@ -100,7 +107,6 @@ export function ClubScreen({
   const [renaming, setRenaming] = useState<{ key: string; member: Member } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const clientRef = useRef<ClubClient | null>(null);
-  const flushed = useRef(false);
   const alive = useRef(true);
 
   const clubName = data?.clubName ?? connection.clubName;
@@ -116,15 +122,30 @@ export function ClubScreen({
     setLoading(true);
     setError(null);
     try {
-      if (!flushed.current) {
-        flushed.current = true;
-        // Best effort, oldest first (club.md §10): a result that waited gets its turn now.
-        try {
-          await flushOutbox(connection.endpoint, api);
-        } catch {
-          /* the list below says whether the club is reachable */
-        }
+      // Best effort, oldest first (club.md §10): results that waited get their turn
+      // now — when the screen opens and when the person presses Reload, both their
+      // own actions (判断 38). The flush queues behind one a result screen may still
+      // be running for this Club (outbox.ts `flushing`), so the screen waits for it
+      // at most one request's time and a beat — long enough for a flush whose request
+      // times out to say so — and then the flush carries on by itself.
+      let wait: ReturnType<typeof setTimeout> | undefined;
+      let flush: FlushReport | undefined;
+      try {
+        flush = await Promise.race([
+          flushOutbox(connection.endpoint, api),
+          new Promise<undefined>((resolve) => {
+            wait = setTimeout(() => resolve(undefined), FLUSH_WAIT_MS);
+          }),
+        ]);
+      } catch {
+        /* the lists below say whether the club is reachable */
+      } finally {
+        clearTimeout(wait);
       }
+      if (!alive.current) return;
+      // The flush has just failed to reach the Club: asking for the lists would only
+      // wait out the same timeout again before saying the same thing.
+      if (flush?.unreachable) throw new ClubApiError('unreachable', null, 'Club not reachable');
       const todayDate = todayLocal();
       // Three requests, and a fourth for the owner alone (club.md §10).
       const [club, today, rankings, reported] = await Promise.all([

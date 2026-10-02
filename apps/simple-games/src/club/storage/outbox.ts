@@ -200,6 +200,12 @@ export interface FlushReport {
   sent: number;
   /** The flush stopped at a failure that a later try may get past; the items behind it were not attempted. */
   blocked: boolean;
+  /**
+   * It stopped because the Club could not be reached at all (no answer within the
+   * timeout, or a platform page without `X-Club-Api`) — a screen that flushed first
+   * need not ask the Club anything else just now.
+   */
+  unreachable: boolean;
   /** Every item this flush attempted, in order. */
   outcomes: { item: ClubOutboxItem; fate: ItemFate }[];
 }
@@ -277,7 +283,7 @@ export function flushOutbox(
 }
 
 async function flushNow(endpoint: string, client: ClubClient, kv?: KVStore): Promise<FlushReport> {
-  const report: FlushReport = { sent: 0, blocked: false, outcomes: [] };
+  const report: FlushReport = { sent: 0, blocked: false, unreachable: false, outcomes: [] };
   for (const item of await pendingFor(endpoint, kv)) {
     let fate: ItemFate = 'sent';
     try {
@@ -297,6 +303,7 @@ async function flushNow(endpoint: string, client: ClubClient, kv?: KVStore): Pro
           continue;
         }
         report.blocked = true;
+        report.unreachable = error instanceof ClubApiError && error.code === 'unreachable';
         break;
       }
     }

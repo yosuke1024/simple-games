@@ -103,25 +103,56 @@ export function createClient(
 ): ClubClient {
   const base = `${endpoint}/api/v1`;
 
+  /**
+   * One request, settled within {@link REQUEST_TIMEOUT_MS} whatever the platform
+   * does with an abort. Aborting is not enough on its own: a WebView can keep a
+   * fetch pending while the device has no network, and a request that never
+   * settles holds everything queued behind it — the Club's outbox, and a Club
+   * screen that waits for that outbox — until the app restarts. The deadline
+   * covers the body as well as the headers.
+   */
   async function request(method: string, path: string, body?: unknown): Promise<unknown> {
+    // A device that knows it is offline is answered at once: no request, and the
+    // screen says it could not reach the Club (club.md §10), instead of waiting
+    // out the timeout.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      throw new ClubApiError('unreachable', null, 'Offline');
+    }
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        controller.abort();
+        reject(new ClubApiError('unreachable', null, 'Timed out'));
+      }, REQUEST_TIMEOUT_MS);
+    });
+    try {
+      return await Promise.race([exchange(method, path, body, controller.signal), deadline]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function exchange(
+    method: string,
+    path: string,
+    body: unknown,
+    signal: AbortSignal,
+  ): Promise<unknown> {
     const doFetch = fetchImpl ?? globalThis.fetch.bind(globalThis);
     const headers: Record<string, string> = {};
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (memberToken) headers.Authorization = `Bearer ${memberToken}`;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     let response: Response;
     try {
       response = await doFetch(`${base}${path}`, {
         method,
         headers,
         body: body === undefined ? undefined : JSON.stringify(body),
-        signal: controller.signal,
+        signal,
       });
     } catch {
       throw new ClubApiError('unreachable', null, 'No response');
-    } finally {
-      clearTimeout(timer);
     }
     const api = response.headers.get('X-Club-Api');
     if (api === null) {
