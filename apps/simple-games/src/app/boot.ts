@@ -17,6 +17,7 @@ import { initNetwork } from '../services/network';
 import { initReview } from '../services/review';
 import { loadRecord } from '../storage/repo';
 import { settingsSchema, type Settings } from '../storage/schemas';
+import { initClubGate } from './clubGate';
 import { initFavoriteGames } from './favoriteGames';
 import { initRecentGames } from './recentGames';
 import { initShortcutLaunch } from './shortcutLaunch';
@@ -43,6 +44,11 @@ async function bootStep(step: () => Promise<void>): Promise<void> {
  * the Android launcher takes pin requests at all, and, on iOS, the mirroring
  * of the favourites shelf onto the app icon's quick actions, which is why that
  * step follows `initFavoriteGames`. Off its platform each answers at once.
+ *
+ * `initClubGate` reads `sg.club` — only whether this device has joined a Club
+ * House, and the cached names (docs/architecture/club.md §3). It loads none of
+ * the Club layer and sends nothing; the shell decides from its answer whether
+ * the layer is wanted at all (app/clubGate.ts).
  */
 export async function initShellState(): Promise<Settings> {
   await bootStep(initNetwork);
@@ -53,6 +59,7 @@ export async function initShellState(): Promise<Settings> {
   await bootStep(initShortcutLaunch);
   await bootStep(initHomeShortcuts);
   await bootStep(initQuickActions);
+  await bootStep(initClubGate);
 
   let settings = settingsSchema.defaultValue();
   await bootStep(async () => {

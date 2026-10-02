@@ -49,7 +49,7 @@ import { SettingsScreen } from './SettingsScreen';
 function renderSettings() {
   return render(
     <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
-      <SettingsScreen onBack={() => undefined} />
+      <SettingsScreen onBack={() => undefined} onOpenClub={() => undefined} />
     </SettingsProvider>,
   );
 }

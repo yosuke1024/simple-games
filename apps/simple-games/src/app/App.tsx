@@ -22,20 +22,48 @@
  * a game that keeps a suspended game of its own may open straight onto it
  * for a shortcut, and the shell never learns how it decided — or that it
  * decided anything.
+ *
+ * The Club House (docs/architecture/club.md) reaches the shell through three
+ * doors — Settings › Advanced, the home's one Club slot, and on the web an
+ * invite link — and through nothing else. The layer itself is a chunk the
+ * shell asks app/clubGate.ts for only on one of those doors, or at boot when
+ * this device has already joined; what it hands back is put on screen as one
+ * more view and, for the result screens, behind `ClubBridgeContext`. A game
+ * opened from a Club challenge remembers that it was (`from: 'club'`), so
+ * leaving it returns to that challenge rather than to the collection.
  */
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { markReviewPromptShown, shouldPromptReview } from '../services/review';
 import { releaseSound } from '../services/sound';
+import {
+  ClubBridgeContext,
+  type ActiveChallenge,
+  type ClubBridge,
+  type ClubConnectionSummary,
+  type ClubEntry,
+  type ClubInvite,
+  type ClubModule,
+  type ClubPlayRequest,
+} from '../ui/clubBridge';
 import { GameErrorBoundary } from '../ui/components/GameErrorBoundary';
 import { GameLoadingFallback } from '../ui/components/GameLoadingFallback';
 import { ReviewPrompt } from '../ui/components/ReviewPrompt';
 import { CollectionHomeScreen } from '../ui/screens/CollectionHomeScreen';
 import { SettingsScreen } from '../ui/screens/SettingsScreen';
+import {
+  clubConnections,
+  isConnected,
+  loadClubAtBoot,
+  loadClubForEntry,
+  loadClubForInvite,
+  noteClubConnections,
+  takeInviteFromLocation,
+} from './clubGate';
 import { getLazyRoot, resetLazyRoot } from './lazyRoots';
 import { recordGameOpened } from './recentGames';
-import { type GameEntry, type GameId } from './registry';
+import { type ChallengeStart, type GameEntry, type GameId } from './registry';
 import { gameIdFromShortcutUrl, shortcutLaunchGame } from './shortcutLaunch';
 import {
   currentRouteGame,
@@ -49,7 +77,21 @@ import {
 type View =
   | { kind: 'collection' }
   | { kind: 'settings' }
-  | { kind: 'game'; gameId: GameId; entry: GameEntry };
+  | {
+      kind: 'game';
+      gameId: GameId;
+      entry: GameEntry;
+      /** The Club challenge this game opens onto (club.md §6-2). */
+      challenge?: ChallengeStart;
+      /** Opened from a Club challenge: leaving goes back to the Club, not the collection. */
+      from?: 'club';
+    }
+  | {
+      kind: 'club';
+      entry: ClubEntry;
+      invite?: ClubInvite | null;
+      focus?: { endpoint: string; challengeId: string } | null;
+    };
 
 // Measurement must never disturb a player, so a chunk that never arrives is
 // swallowed — but not silently: an unheard failure is how the browser build
@@ -94,6 +136,15 @@ function trackWebGameClosed(gameId: GameId): void {
  * ordinary door.
  */
 function initialView(): View {
+  // An invite link (club.md §7-1), browser only: the Join screen is the page
+  // that was asked for. The token leaves the address here, before anything
+  // else runs (app/clubGate.ts). Under StrictMode React calls this twice and
+  // keeps the first answer, so the second call finding the fragment already
+  // gone changes nothing.
+  if (webRoutingEnabled()) {
+    const invite = takeInviteFromLocation();
+    if (invite) return { kind: 'club', entry: 'invite', invite };
+  }
   if (!webRoutingEnabled()) {
     const shortcutGame = shortcutLaunchGame();
     return shortcutGame
@@ -111,6 +162,26 @@ export function App() {
   // Bumped by the error screen's retry so the game subtree remounts and the
   // recreated lazy wrapper (lazyRoots.ts) gets a fresh chance to load.
   const [gameNonce, setGameNonce] = useState(0);
+
+  /**
+   * The Club House layer, once something asked for it (app/clubGate.ts) —
+   * null on every device that has not joined and has not pressed a Club
+   * door. `connections` starts from what boot read out of `sg.club`, so the
+   * home's slot is right before the layer has loaded at all.
+   */
+  const [clubModule, setClubModule] = useState<ClubModule | null>(null);
+  const [connections, setConnections] = useState<readonly ClubConnectionSummary[]>(clubConnections);
+  /**
+   * The challenge whose board is on screen, if any (club.md §6-2). The ref is
+   * what the bridge reads at call time, so a result screen that sends late
+   * still sends to the challenge it was played for.
+   */
+  const [activeChallenge, setActiveChallengeState] = useState<ActiveChallenge | null>(null);
+  const activeChallengeRef = useRef<ActiveChallenge | null>(null);
+  const setActiveChallenge = useCallback((next: ActiveChallenge | null) => {
+    activeChallengeRef.current = next;
+    setActiveChallengeState(next);
+  }, []);
 
   /**
    * The screen the shell has decided on, readable from a listener that
@@ -138,12 +209,18 @@ export function App() {
    * is shown next is the caller's decision, and so is whether this is a
    * moment to ask them anything (`offerReviewIfDue`).
    */
-  const leaveGame = useCallback((gameId: GameId) => {
-    trackWebGameClosed(gameId);
-    // The game's audio must not outlive it: suspend the shared context now
-    // instead of waiting out its idle timer (docs/GAME_LIFECYCLE.md).
-    releaseSound();
-  }, []);
+  const leaveGame = useCallback(
+    (gameId: GameId) => {
+      trackWebGameClosed(gameId);
+      // The game's audio must not outlive it: suspend the shared context now
+      // instead of waiting out its idle timer (docs/GAME_LIFECYCLE.md).
+      releaseSound();
+      // A challenge belongs to the board it was opened onto; whichever way
+      // that board left the screen, no later result is owed to it.
+      setActiveChallenge(null);
+    },
+    [setActiveChallenge],
+  );
 
   /**
    * The review question's only doorway (docs/REVIEW_PROMPT_POLICY.md):
@@ -178,10 +255,10 @@ export function App() {
   // Recorded at the tap, not after the chunk resolves: the row reflects what
   // the player chose, and a load failure is rare enough not to complicate it.
   const enterGame = useCallback(
-    (gameId: GameId, entry: GameEntry) => {
+    (gameId: GameId, entry: GameEntry, club?: { challenge: ChallengeStart; from: 'club' }) => {
       recordGameOpened(gameId);
       trackWebGameOpened(gameId);
-      show({ kind: 'game', gameId, entry });
+      show({ kind: 'game', gameId, entry, ...club });
     },
     [show],
   );
@@ -197,14 +274,82 @@ export function App() {
   // Only a game can be left, and only once: a second call from a subtree that
   // has not unmounted yet would otherwise close the same session twice and
   // take a second step back through the browser's history.
+  //
+  // A challenge game goes back where it came from — the Club, showing that
+  // challenge again — and is not a doorway for the review question: the
+  // player is in the middle of something with other people, not pausing. Nor
+  // is there a route to pop, because playChallenge never pushed one.
   const exitGame = useCallback(() => {
     const current = viewRef.current;
     if (current.kind !== 'game') return;
+    const active = activeChallengeRef.current;
     leaveGame(current.gameId);
+    if (current.from === 'club') {
+      show({
+        kind: 'club',
+        entry: 'home',
+        focus: active ? { endpoint: active.endpoint, challengeId: active.challengeId } : null,
+      });
+      return;
+    }
     show({ kind: 'collection' });
     offerReviewIfDue();
     if (webRoutingEnabled()) popRoute();
   }, [leaveGame, offerReviewIfDue, show]);
+
+  /**
+   * A Club door was pressed (club.md §2-1, §2-3). The layer is loaded on the
+   * press and on nothing else; a load that fails changes nothing on screen
+   * (club.md §12-2 (e)) — the player is still where they pressed. So is a
+   * player who moved on while it loaded: the Club opens only over the screen
+   * the press came from.
+   */
+  const openClub = useCallback(
+    (entry: 'settings' | 'home' | 'discover') => {
+      const pressedOn = viewRef.current;
+      void loadClubForEntry().then((module) => {
+        if (!module || viewRef.current !== pressedOn) return;
+        setClubModule(module);
+        show({ kind: 'club', entry });
+      });
+    },
+    [show],
+  );
+  const openClubFromSettings = useCallback(() => openClub('settings'), [openClub]);
+
+  /**
+   * `Play` on a Club challenge. The game opens by the ordinary door, recorded
+   * as opened like any other, with the challenge in hand and a note to come
+   * back to the Club.
+   *
+   * No `?game=` is pushed in the browser. Back from a challenge returns to
+   * the Club, not the collection, so a history entry for the game would be a
+   * step that leads somewhere the shell does not go — and the address bar
+   * never pointed at the game in the first place: it stays the Club's page.
+   */
+  const playChallenge = useCallback(
+    ({ gameId, challenge, active }: ClubPlayRequest) => {
+      setActiveChallenge(active);
+      enterGame(gameId, 'collection', { challenge, from: 'club' });
+    },
+    [enterGame, setActiveChallenge],
+  );
+
+  const onClubConnectionsChanged = useCallback((next: readonly ClubConnectionSummary[]) => {
+    noteClubConnections(next);
+    setConnections(next);
+  }, []);
+
+  // The two functions are the layer's; they read the active challenge at
+  // call time, so they are made once per module rather than per challenge.
+  const clubFunctions = useMemo(
+    () => (clubModule ? clubModule.createBridge(() => activeChallengeRef.current) : null),
+    [clubModule],
+  );
+  const bridge = useMemo<ClubBridge | null>(
+    () => (clubFunctions ? { connections, activeChallenge, ...clubFunctions } : null),
+    [clubFunctions, connections, activeChallenge],
+  );
 
   /**
    * Boot: count a direct arrival on a game as an open, so the shortcut row
@@ -229,7 +374,22 @@ export function App() {
       recordGameOpened(gameId);
       trackWebGameOpened(gameId);
     }
-  }, []);
+    // The Club layer at boot, in exactly the two cases app/clubGate.ts allows:
+    // the page is an invite link (initialView already chose the Join screen),
+    // or this device has joined a Club, whose home slot and result-screen
+    // action need the layer. An invite that cannot load its layer falls back
+    // to the collection rather than leaving a loading screen up for good.
+    if (arrived.kind === 'club') {
+      void loadClubForInvite().then((module) => {
+        if (module) setClubModule(module);
+        else if (viewRef.current === arrived) show({ kind: 'collection' });
+      });
+    } else if (isConnected()) {
+      void loadClubAtBoot()?.then((module) => {
+        if (module) setClubModule(module);
+      });
+    }
+  }, [show]);
 
   /**
    * A home-screen shortcut tapped while the app is already running. On
@@ -337,43 +497,69 @@ export function App() {
     };
   }, [goCollection, view.kind]);
 
-  if (view.kind === 'game') {
-    const gameId = view.gameId;
-    const LazyRoot = getLazyRoot(gameId);
-    if (LazyRoot) {
+  return <ClubBridgeContext.Provider value={bridge}>{renderView()}</ClubBridgeContext.Provider>;
+
+  function renderView() {
+    if (view.kind === 'game') {
+      const gameId = view.gameId;
+      const from = view.from;
+      const LazyRoot = getLazyRoot(gameId);
+      if (LazyRoot) {
+        return (
+          <GameErrorBoundary
+            key={gameNonce}
+            onExit={exitGame}
+            onRetry={() => {
+              resetLazyRoot(gameId);
+              // A second attempt goes in by the ordinary door. Whatever threw
+              // is unknown from here, and one of the things it could have been
+              // is the game opening straight onto a suspended board it could
+              // not draw (issue #113) — a retry that repeats that lands on the
+              // same screen twice. A Club challenge is dropped for the same
+              // reason (its board is just as much a suspect), but not the way
+              // back: a game opened from the Club still returns to the Club.
+              show({ kind: 'game', gameId, entry: 'collection', from });
+              setGameNonce((n) => n + 1);
+            }}
+          >
+            <Suspense fallback={<GameLoadingFallback onExit={exitGame} />}>
+              <LazyRoot onExit={exitGame} entry={view.entry} challenge={view.challenge} />
+            </Suspense>
+          </GameErrorBoundary>
+        );
+      }
+    }
+    if (view.kind === 'settings') {
+      return <SettingsScreen onBack={goCollection} onOpenClub={openClubFromSettings} />;
+    }
+    // The Club view. Its hardware back is the Club screen's own (it registers
+    // the listener while mounted), so the shell adds none here — compare the
+    // settings effect above. Until the layer arrives, the same quiet waiting
+    // screen a game chunk gets, which owns back for that moment itself.
+    if (view.kind === 'club') {
+      if (!clubModule) return <GameLoadingFallback onExit={goCollection} />;
       return (
-        <GameErrorBoundary
-          key={gameNonce}
-          onExit={exitGame}
-          onRetry={() => {
-            resetLazyRoot(gameId);
-            // A second attempt goes in by the ordinary door. Whatever threw
-            // is unknown from here, and one of the things it could have been
-            // is the game opening straight onto a suspended board it could
-            // not draw (issue #113) — a retry that repeats that lands on the
-            // same screen twice.
-            show({ kind: 'game', gameId, entry: 'collection' });
-            setGameNonce((n) => n + 1);
-          }}
-        >
-          <Suspense fallback={<GameLoadingFallback onExit={exitGame} />}>
-            <LazyRoot onExit={exitGame} entry={view.entry} />
-          </Suspense>
-        </GameErrorBoundary>
+        <clubModule.ClubRoot
+          entry={view.entry}
+          invite={view.invite}
+          focus={view.focus}
+          onBack={goCollection}
+          onPlayChallenge={playChallenge}
+          onConnectionsChanged={onClubConnectionsChanged}
+        />
       );
     }
+    return (
+      <>
+        <CollectionHomeScreen
+          onOpenGame={openGame}
+          onOpenSettings={openSettings}
+          dismissReviewPrompt={reviewPromptOpen ? closeReviewPrompt : null}
+          onOpenClub={openClub}
+          clubConnections={connections}
+        />
+        {reviewPromptOpen && <ReviewPrompt onClose={closeReviewPrompt} />}
+      </>
+    );
   }
-  if (view.kind === 'settings') {
-    return <SettingsScreen onBack={goCollection} />;
-  }
-  return (
-    <>
-      <CollectionHomeScreen
-        onOpenGame={openGame}
-        onOpenSettings={openSettings}
-        dismissReviewPrompt={reviewPromptOpen ? closeReviewPrompt : null}
-      />
-      {reviewPromptOpen && <ReviewPrompt onClose={closeReviewPrompt} />}
-    </>
-  );
 }

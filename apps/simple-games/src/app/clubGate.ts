@@ -58,7 +58,13 @@ let loaded: Promise<ClubModule | null> | null = null;
 
 /** Loads the layer once; null when it could not be loaded. Never throws. */
 function loadClub(): Promise<ClubModule | null> {
-  loaded ??= loader().catch(() => null);
+  // Through a resolved promise, so even a loader that throws synchronously
+  // ends up as the same quiet null. A failure is remembered for the session:
+  // the next door press does not try again (no retry loop, club.md §10);
+  // reopening the app is the retry.
+  loaded ??= Promise.resolve()
+    .then(loader)
+    .catch(() => null);
   return loaded;
 }
 
