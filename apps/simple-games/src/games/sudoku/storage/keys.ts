@@ -12,4 +12,6 @@ export const SD_STORAGE_KEYS = {
   progress: 'sd.progress',
   flags: 'sd.flags',
   prefs: 'sd.prefs',
+  /** A Club House challenge in progress (§15) — its own slot, appended last. */
+  clubGame: 'sd.saveClub',
 } as const;

@@ -35,4 +35,5 @@ export const vi: SudokuMessages = {
   sudokuStep2Body: 'Nhấn Ghi chú để ghi các số ứng viên trong khi thu hẹp dần một ô.',
   sudokuStep3Title: 'Bí? Lấy gợi ý',
   sudokuStep3Body: 'Gợi ý cho biết ô nào đã xác định và vì sao. Gợi ý và hoàn tác luôn miễn phí.',
+  sudokuChallengeMismatch: 'Thử thách này được tạo bằng một phiên bản khác của trò chơi.',
 };

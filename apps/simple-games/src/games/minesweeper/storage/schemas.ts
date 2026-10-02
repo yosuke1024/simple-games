@@ -167,7 +167,8 @@ export interface PersistedGame {
 
 const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
-  const mode = raw.mode === 'difficulty' || raw.mode === 'daily' ? raw.mode : null;
+  const mode =
+    raw.mode === 'difficulty' || raw.mode === 'daily' || raw.mode === 'club' ? raw.mode : null;
   const seed = asString(raw.seed);
   const difficulty = asDifficulty(raw.difficulty);
   const dailyDate = raw.dailyDate === null ? null : asDateString(raw.dailyDate);
@@ -202,6 +203,9 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (firstIndex === null && raw.firstIndex !== null) return null;
   if (exploded === null && raw.exploded !== null) return null;
   if (mode === 'daily' && dailyDate === null) return null;
+  // A Club House challenge (§14) has no date, and is always opened on its
+  // first cell: one without that cell is not the challenge's board.
+  if (mode === 'club' && (dailyDate !== null || firstIndex === null)) return null;
 
   // The board must be the shape the difficulty promises; anything else is a
   // record from another world, and decoding it would only fail later.
@@ -253,3 +257,9 @@ function gameSlotSchema(key: string, expectedMode: GameMode): SchemaDef<Persiste
 export const gameSchema = gameSlotSchema(MS_STORAGE_KEYS.game, 'difficulty');
 /** Suspended daily game, kept separately so neither mode evicts the other. */
 export const dailyGameSchema = gameSlotSchema(MS_STORAGE_KEYS.dailyGame, 'daily');
+/**
+ * Suspended Club House challenge (§14): a third slot, so a challenge never
+ * replaces a difficulty board in progress, and a difficulty board never a
+ * challenge.
+ */
+export const clubGameSchema = gameSlotSchema(MS_STORAGE_KEYS.clubGame, 'club');

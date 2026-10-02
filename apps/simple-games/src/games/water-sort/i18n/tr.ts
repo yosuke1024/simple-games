@@ -25,4 +25,5 @@ export const tr: WaterSortMessages = {
   waterStep2Body: 'Boş tüpler çalışma alanın. Geri almak her zaman ücretsiz.',
   waterStep3Title: 'Her tüpe tek renk',
   waterStep3Body: 'Her tüp tek renk kaldığında tahta sıralanmış demektir.',
+  waterChallengeMismatch: 'Bu meydan okuma oyunun farklı bir sürümüyle oluşturuldu.',
 };

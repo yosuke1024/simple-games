@@ -42,6 +42,7 @@ export const en = {
   minesStep2Body: 'Long-press a square to flag it. Flag mode makes a plain tap do it instead.',
   minesStep3Title: 'Open the rest to win',
   minesStep3Body: 'Your first tap is always safe, and no board ever needs a guess.',
+  minesChallengeMismatch: 'This challenge was made with a different version of the game.',
 } as const;
 
 /** Every locale of this game must provide exactly these keys. */

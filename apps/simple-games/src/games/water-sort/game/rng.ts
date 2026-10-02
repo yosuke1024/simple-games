@@ -38,6 +38,11 @@ export function createRng(seed: string): () => number {
   return mulberry32(xmur3(seed)());
 }
 
+/** A stable 32-bit hash of a string — the board digest's (challenge.ts). */
+export function hashSeed(seed: string): number {
+  return xmur3(seed)();
+}
+
 /** Fisher-Yates using the given rng. Returns a new array. */
 export function shuffled<T>(items: readonly T[], rng: () => number): T[] {
   const out = [...items];

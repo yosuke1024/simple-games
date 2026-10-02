@@ -38,4 +38,5 @@ export const hi: MinesweeperMessages = {
   minesStep2Body: 'खाने को देर तक दबाकर झंडा लगाएँ। झंडा मोड में एक बार दबाना ही काफी है।',
   minesStep3Title: 'बाकी खोलें और जीतें',
   minesStep3Body: 'पहली चाल हमेशा सुरक्षित है, और किसी बोर्ड में अनुमान लगाने की ज़रूरत नहीं।',
+  minesChallengeMismatch: 'यह चुनौती गेम के किसी दूसरे संस्करण में बनाई गई थी।',
 };

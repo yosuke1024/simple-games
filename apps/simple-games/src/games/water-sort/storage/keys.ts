@@ -12,4 +12,6 @@ export const WS_STORAGE_KEYS = {
   progress: 'ws.progress',
   flags: 'ws.flags',
   prefs: 'ws.prefs',
+  /** A Club House challenge in progress (§14) — its own slot, appended last. */
+  clubGame: 'ws.saveClub',
 } as const;

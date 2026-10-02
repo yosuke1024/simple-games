@@ -5,11 +5,12 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import { MAX_LEVEL, type SudokuSession } from '../../game';
+import { boardDigestOf, MAX_LEVEL, type SudokuSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface SudokuResultOverlayProps {
@@ -40,6 +41,18 @@ export function SudokuResultOverlay({
   // A free board's "next" is another board at the same tier; a level's is the
   // next level; a daily has neither, and the retry leads.
   const hasNext = hasNextLevel || session.mode === 'free';
+  // The run's facts, once: the share's strings and the Club's figures are
+  // read from the same session fields (docs/architecture/club.md §6-1).
+  const details = [
+    { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+    { label: t('sudokuMistakes'), value: String(session.mistakeCount) },
+    { label: t('hint'), value: String(session.hintCount) },
+  ];
+  const facts = {
+    elapsedSeconds: session.elapsedSeconds,
+    mistakes: session.mistakeCount,
+    hints: session.hintCount,
+  };
 
   return (
     <div className="overlay overlay-result">
@@ -109,14 +122,15 @@ export function SudokuResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction
+        <ShareAction gameId="sudoku" outcome="completed" details={details} />
+        <ClubResultAction
           gameId="sudoku"
           outcome="completed"
-          details={[
-            { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
-            { label: t('sudokuMistakes'), value: String(session.mistakeCount) },
-            { label: t('hint'), value: String(session.hintCount) },
-          ]}
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          boardDigest={boardDigestOf(session)}
         />
       </div>
       <ResultAdSlot />

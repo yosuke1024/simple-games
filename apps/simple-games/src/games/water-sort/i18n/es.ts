@@ -25,4 +25,5 @@ export const es: WaterSortMessages = {
   waterStep2Body: 'Los tubos vacíos son tu espacio de trabajo. Deshacer siempre es gratis.',
   waterStep3Title: 'Un color por tubo',
   waterStep3Body: 'Cuando cada tubo tiene un solo color, el tablero está ordenado.',
+  waterChallengeMismatch: 'Este desafío se creó con otra versión del juego.',
 };

@@ -49,7 +49,16 @@ function NotesExample() {
 }
 
 export function SudokuTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startLevel, progress, goHome } = useSudoku();
+  const {
+    tutorialCompleted,
+    completeTutorial,
+    startLevel,
+    progress,
+    goHome,
+    openedOnChallenge,
+    canResume,
+    resumeGame,
+  } = useSudoku();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('sudoku', locale);
   const [step, setStep] = useState(0);
@@ -79,7 +88,9 @@ export function SudokuTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startLevel(progress.highestUnlocked);
+      // Opened onto a Club House challenge: the rules lead to its board (§15).
+      if (openedOnChallenge && canResume('club')) resumeGame('club');
+      else startLevel(progress.highestUnlocked);
     } else {
       goHome();
     }

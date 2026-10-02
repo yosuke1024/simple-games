@@ -8,12 +8,13 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import type { ShareDetail } from '@/services/share/message';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import type { MinesweeperSession } from '../../game';
+import { boardDigestOf, type MinesweeperSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface MinesResultOverlayProps {
@@ -48,6 +49,9 @@ export function MinesResultOverlay({
         { label: t('minesHintsUsed'), value: String(session.hintCount) },
       ]
     : [];
+  // The Club's figures, read from the same session fields as `details`: a
+  // clear's time and hints, and a loss's nothing (docs/architecture/club.md §6-1).
+  const facts = won ? { elapsedSeconds: session.elapsedSeconds, hints: session.hintCount } : {};
 
   return (
     <div className="overlay overlay-result">
@@ -109,6 +113,17 @@ export function MinesResultOverlay({
           outcome={won ? 'completed' : 'played'}
           details={details}
         />
+        {session.firstIndex !== null ? (
+          <ClubResultAction
+            gameId="minesweeper"
+            outcome={won ? 'completed' : 'played'}
+            details={details}
+            facts={facts}
+            seed={session.seed}
+            params={{ difficulty: session.difficulty, firstIndex: session.firstIndex }}
+            boardDigest={boardDigestOf(session)}
+          />
+        ) : null}
       </div>
       <ResultAdSlot />
     </div>

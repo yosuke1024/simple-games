@@ -25,4 +25,5 @@ export const fr: WaterSortMessages = {
   waterStep2Body: 'Les tubes vides sont votre espace de travail. Annuler est toujours gratuit.',
   waterStep3Title: 'Une couleur par tube',
   waterStep3Body: "Quand chaque tube ne contient qu'une couleur, c'est gagné.",
+  waterChallengeMismatch: 'Ce défi a été créé avec une autre version du jeu.',
 };

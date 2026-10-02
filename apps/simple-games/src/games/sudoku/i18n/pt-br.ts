@@ -37,4 +37,5 @@ export const ptBR: SudokuMessages = {
   sudokuStep3Title: 'Travou? Peça uma dica',
   sudokuStep3Body:
     'A dica mostra qual casa já está decidida e por quê. Dicas e desfazer são sempre grátis.',
+  sudokuChallengeMismatch: 'Este desafio foi criado com outra versão do jogo.',
 };

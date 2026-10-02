@@ -17,16 +17,30 @@ import {
   type GameMode,
   type SudokuSession,
 } from '../game';
-import { dailyGameSchema, freeGameSchema, gameSchema, type PersistedGame } from './schemas';
+import {
+  clubGameSchema,
+  dailyGameSchema,
+  freeGameSchema,
+  gameSchema,
+  type PersistedGame,
+} from './schemas';
 
 export interface SavedGames {
   level: SudokuSession | null;
   daily: SudokuSession | null;
   free: SudokuSession | null;
+  /** A Club House challenge in progress (§15). */
+  club: SudokuSession | null;
 }
 
 const schemaFor = (mode: GameMode) =>
-  mode === 'daily' ? dailyGameSchema : mode === 'free' ? freeGameSchema : gameSchema;
+  mode === 'daily'
+    ? dailyGameSchema
+    : mode === 'free'
+      ? freeGameSchema
+      : mode === 'club'
+        ? clubGameSchema
+        : gameSchema;
 
 export function toPersisted(session: SudokuSession, savedAt: number): PersistedGame {
   const board = encodeBoard(session.board);
@@ -85,6 +99,9 @@ function toSession(persisted: PersistedGame | null): SudokuSession | null {
  * not ask for, mid-puzzle. None and two both mean the home screen, which is
  * where every other door leads anyway.
  *
+ * A suspended Club House challenge is never the answer (§15): a challenge is
+ * opened from the Club, which says which one, and a shortcut does not.
+ *
  * Reads the game's own saves and nothing else: the shell hands over which
  * door was used and never learns what this decided
  * (docs/ARCHITECTURE.md「ゲームレジストリの契約」).
@@ -97,12 +114,18 @@ export function soleSuspendedMode(saved: SavedGames): GameMode | null {
 }
 
 export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
-  const [level, daily, free] = await Promise.all([
+  const [level, daily, free, club] = await Promise.all([
     loadRecord(gameSchema, kv),
     loadRecord(dailyGameSchema, kv),
     loadRecord(freeGameSchema, kv),
+    loadRecord(clubGameSchema, kv),
   ]);
-  return { level: toSession(level), daily: toSession(daily), free: toSession(free) };
+  return {
+    level: toSession(level),
+    daily: toSession(daily),
+    free: toSession(free),
+    club: toSession(club),
+  };
 }
 
 export async function saveGame(session: SudokuSession, kv: KVStore = preferencesKV): Promise<void> {

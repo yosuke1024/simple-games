@@ -38,4 +38,5 @@ export const vi: MinesweeperMessages = {
   minesStep2Body: 'Nhấn giữ một ô để cắm cờ. Ở chế độ cắm cờ, chỉ cần chạm là được.',
   minesStep3Title: 'Mở hết phần còn lại để thắng',
   minesStep3Body: 'Lần chạm đầu luôn an toàn, và không bảng nào bắt bạn phải đoán.',
+  minesChallengeMismatch: 'Thử thách này được tạo bằng một phiên bản khác của trò chơi.',
 };
