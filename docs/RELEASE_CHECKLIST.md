@@ -10,7 +10,8 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
 ([WEB_VERSION.md](WEB_VERSION.md)「先行公開」):
 
 > **2026-10-02 の実施記録(v1.3.2 を Play の内部テストと TestFlight に出して確かめ、問題が
-> なければ v1.4.0 として公開する — 製品オーナーの段取り)。** Crown Grid / Number Path /
+> なければ v1.4.0 として公開する — 製品オーナーの段取り。その後に入った Club House の作り直し(自動送信・記録の
+> 1 件ずつの削除・同じメンバーへの復帰・題の語)は **v1.3.3** で同じように内部テストと TestFlight に出して確かめる)。** Crown Grid / Number Path /
 > Shape Regions / Yacht / Mancala / Dominoes / Hit & Blow / Dots and Boxes /
 > Binary Balance / Sudoku 6×6 / Box Regions の 11 本を一度に正式収録する。各項目の
 > 「この版」の行が、その項目をどうしたかの記録。チェックを入れるのは実際に終えた
