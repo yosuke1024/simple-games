@@ -179,7 +179,7 @@ bash .github/scripts/check-principles.sh
   (自然さは `machine` 来歴の開示と読者からの報告で担保する)。
 
 - [ ] 端末言語を切り替えてもゲーム進行が失われない
-- [ ] Backup & Restore の 4 キー(`backupRestoreConfirmTitle` /
+- [x] Backup & Restore の 4 キー(`backupRestoreConfirmTitle` /
       `backupRestoreConfirmBody` / `backupPrivacyNote` / `backupPurchaseNote`)と
       Club House の 13 キー(`clubRemoveEraseBody` / `clubDisconnectBody` /
       `clubDisconnectHostingNote` / `clubDisconnectLastOwner` / `clubPublicDisclosure` /
@@ -195,10 +195,10 @@ bash .github/scripts/check-principles.sh
       `clubDeleteConfirm`(自分の記録を **1 件ずつ**消す確認。ランキングの行は「次の局でまた入る」、
       デイリーの結果は「その挑戦へはもう結果を送れない」。どちらも取り消せないこと。§9。全部を消す
       キーは無い)。
-      **`clubAutoSendDisclosure` の 12 件は 2026-10-02 に通した**(盲検の逆翻訳 + 作者の読み)。
-      **残る 6 キー(`clubAutoSendAccept` と削除の 5 キー)の 12 言語ぶん(72 件)は未承認**で、リリース前に同じ手順を通す
-      (`I18N_GATE_STRICT=1` の `i18n:gate:check` が緑になるまで)。既存の高リスクキーの英語の
-      原文を直したら、そのキーの承認は失効するので通し直す。
+      **2026-10-02 にすべて通した**(`clubAutoSendDisclosure` の 12 件、続いて `clubAutoSendAccept` と
+      削除の 5 キーの 72 件。盲検の逆翻訳 + 作者の読み)。`i18n:gate status` は Gate complete、
+      `I18N_GATE_STRICT=1` の `i18n:gate:check` は緑。リリースまでに既存の高リスクキーの英語の
+      原文か訳文を直したら、そのキーの承認は失効するので通し直す。
       切断の文を全員向けの本文と、自分で建てた Club の Owner にだけ出す費用の 1 文に
       分けたので 9 → 10 キー(issue #160 / #161)。**以前の 120 件は 2026-10-02 に
       通した**(自動送信の前。結果は下に残す): 手順 1 の
