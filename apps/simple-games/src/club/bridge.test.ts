@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createMemoryKV, type KVStore } from '@/storage/kv';
 import type { ClubConnection } from '@/storage/schemas';
+import type { GameId } from '@/app/registry';
 import type { ActiveChallenge, ClubResultPayload } from '@/ui/clubBridge';
 import { createBridge, loadConnections } from './bridge';
 import { addClubConnection } from './storage/connections';
@@ -69,37 +70,80 @@ async function setup(fetchImpl: ReturnType<typeof vi.fn>, act: ActiveChallenge |
   return { kv, bridge: createBridge(() => act, kv, fetchImpl as unknown as typeof fetch) };
 }
 
+const rankingJson = {
+  gameId: 'sudoku',
+  paramsKey: 'hard',
+  improved: false,
+  rank: 4,
+  entry: null,
+  entryCount: 9,
+};
+
 describe('sendToClub', () => {
-  it('sent: posts the validated challenge with a null title', async () => {
+  it('a daily with a digest creates the day challenge with a null title', async () => {
     const f = vi.fn().mockResolvedValue(ok(201, challengeJson));
     const { bridge } = await setup(f);
-    expect(await bridge.sendToClub(E, payload)).toBe('sent');
+    expect(await bridge.sendToClub(E, { ...payload, daily: '2026-10-02' })).toBe('sent');
+    expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/challenges`);
     const body = JSON.parse(f.mock.calls[0]![1].body);
     expect(body.title).toBeNull();
+    expect(body.daily).toBe('2026-10-02');
     expect(body.result.facts).toEqual({ elapsedSeconds: 271, mistakes: 0, hints: 1 });
     expect(f.mock.calls[0]![1].headers.Authorization).toBe('Bearer secret-token');
   });
 
-  it('carries the daily date when given and null when not', async () => {
-    const f = vi.fn().mockResolvedValue(ok(201, challengeJson));
+  it('anything else goes to the ranking with its paramsKey', async () => {
+    const f = vi.fn().mockResolvedValue(ok(200, rankingJson));
     const { bridge } = await setup(f);
-    await bridge.sendToClub(E, { ...payload, daily: '2026-10-02' });
-    await bridge.sendToClub(E, payload);
-    expect(JSON.parse(f.mock.calls[0]![1].body).daily).toBe('2026-10-02');
-    expect(JSON.parse(f.mock.calls[1]![1].body).daily).toBeNull();
+    // `improved: false` is still sent.
+    expect(await bridge.sendToClub(E, payload)).toBe('sent');
+    expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/rankings/results`);
+    expect(JSON.parse(f.mock.calls[0]![1].body)).toEqual({
+      gameId: 'sudoku',
+      contractVersion: 1,
+      paramsKey: 'hard',
+      params: { difficulty: 'hard' },
+      seed: 'sudoku-club-1',
+      boardDigest: 'sd1:1',
+      outcome: 'completed',
+      facts: { elapsedSeconds: 271, mistakes: 0, hints: 1 },
+    });
+  });
+
+  it('a result with no digest goes to the ranking with boardDigest null', async () => {
+    const f = vi.fn().mockResolvedValue(ok(201, rankingJson));
+    const { bridge } = await setup(f);
+    expect(await bridge.sendToClub(E, { ...payload, boardDigest: null })).toBe('sent');
+    expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/rankings/results`);
+    expect(JSON.parse(f.mock.calls[0]![1].body).boardDigest).toBeNull();
+  });
+
+  it('a daily without a digest is an ordinary ranking result', async () => {
+    const f = vi.fn().mockResolvedValue(ok(201, rankingJson));
+    const { bridge } = await setup(f);
+    await bridge.sendToClub(E, { ...payload, boardDigest: null, daily: '2026-10-02' });
+    expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/rankings/results`);
+    expect(JSON.parse(f.mock.calls[0]![1].body)).not.toHaveProperty('daily');
   });
 
   it('rejected: unknown endpoint, unknown game, bad facts, server failure; never queued', async () => {
     const f = vi.fn().mockRejectedValue(new TypeError('offline'));
     const { bridge, kv } = await setup(f);
     expect(await bridge.sendToClub('https://other.example.com', payload)).toBe('rejected');
-    expect(await bridge.sendToClub(E, { ...payload, gameId: 'solitaire' })).toBe('rejected');
+    expect(await bridge.sendToClub(E, { ...payload, gameId: 'nope' as GameId })).toBe('rejected');
     expect(await bridge.sendToClub(E, { ...payload, facts: { elapsedSeconds: 1 } })).toBe(
       'rejected',
     );
     expect(f).not.toHaveBeenCalled();
     expect(await bridge.sendToClub(E, payload)).toBe('rejected');
+    expect(await bridge.sendToClub(E, { ...payload, daily: '2026-10-02' })).toBe('rejected');
     expect(await pendingFor(E, kv)).toEqual([]);
+  });
+
+  it('rejected when the server refuses the ranking (400)', async () => {
+    const f = vi.fn().mockResolvedValue(err(400, 'invalid_request'));
+    const { bridge } = await setup(f);
+    expect(await bridge.sendToClub(E, payload)).toBe('rejected');
   });
 });
 

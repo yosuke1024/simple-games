@@ -242,3 +242,13 @@ level から (出題の帯, seed) を決定的に導出する。seed は `qmath-
 - 「OK」ボタンによる確定(採用しない。§3 — テンポを取り、代償を明記した)
 - 負の数・小数・分数(採用しない。キーパッドが 0–9 だけであることと対になる)
 - `chain` への `×` `÷` の混入(採用しない。§5-4)
+
+## 14. Club House
+
+正典は [architecture/club.md](architecture/club.md) §6 と §16。ここにはこのゲームの側で決まることだけを書く。
+
+- **順位表の名前(`params`)** は `{ track }`(`addSub` / `multiply` / `divide` / `missing` / `mixed` と、デイリーの `daily`。順位表の名前は `addsub` など小文字)。トラックは統計の区分(§10)と同じで、レベルが属するトラックから決まる。デイリーは 20 問で別の長さなので独立した表になる。レベル番号ごとの表は作らない。
+- **結果画面が送る事実(`facts`)** は `{ elapsedSeconds, mistakes }`(`mistakes` は誤答数 `missCount`)。共有(`ShareAction`)の `details` と同じセッションの値(`elapsedSeconds` / `missCount`)から作り、ここで計算しない。
+- **順位の軸は時間**で、短いほうが上(`order: 'elapsedSeconds'`、`direction: 'asc'`)。表示するだけの値は順位に使わない。
+- **盤面は揃わなくてよい**(club.md §16)。`boardDigest` は `null` で、挑戦用の盤面も seed の接頭辞も持たない。ふつうに遊んだ局のクリア画面から送るだけである。
+- ゲーム自体は変わらない。統計・自己ベスト・レベル進行・保存データ・結果画面の既存の表示には触れない。

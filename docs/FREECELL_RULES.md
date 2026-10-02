@@ -291,3 +291,14 @@ Quick Rules はドラッグ(§3、issue #119)を教えない。3 ステップと
 - **他ソリティア**。このタイトルは FreeCell のみを扱う。クロンダイクは
   [SOLITAIRE_RULES.md](SOLITAIRE_RULES.md)、Spider は
   [SPIDER_SOLITAIRE_RULES.md](SPIDER_SOLITAIRE_RULES.md)。
+
+## 14. Club House(順位表)
+
+正典は [architecture/club.md](architecture/club.md) §6・§16。ここにはこのゲームの側で決まることだけを書く。
+
+- **表を分けるのはゲーム全体で 1 つの表。**`params` は`{}`(表は 1 つで `standard`)、`paramsKey` はそこから決まる。レベルや配札ごとには分けない。
+- **結果画面が送る事実**は `{ moves, elapsedSeconds }`。共有の `details` と同じセッションの値から作り、数字は計算し直さない。
+- **並べる軸は手数(`moves`)で、少ないほど上**(`direction: 'asc'`)。結果画面に出る他の数字は見せるだけで、順位には使わない。
+- **盤面(配札)は揃わなくてよい**(club.md §16)。`boardDigest` は null、`seed` は局の `session.seed` をそのまま渡す。
+- 結果画面の `ClubResultAction` は `ShareAction` の次に置く。Club に参加していない端末では何も描かない。
+- 統計・自己ベスト・中断と再開・保存データには触れない。

@@ -170,3 +170,14 @@ seed は `slide-level-<n>`。
 
 - Hint(作らない。§8)
 - 6×6 以上のサイズ(初期リリースでは 5×5 まで)
+
+## 14. Club House(順位表)
+
+正典は [architecture/club.md](architecture/club.md) §6・§16。ここにはこのゲームの側で決まることだけを書く。
+
+- **表を分けるのは盤面のサイズ。**`params` は`{ size: 3 | 4 | 5 }`、`paramsKey` はそこから決まる。レベルや配札ごとには分けない。
+- **結果画面が送る事実**は `{ moves, elapsedSeconds }`。共有の `details` と同じセッションの値から作り、数字は計算し直さない。
+- **並べる軸は手数(`moves`)で、少ないほど上**(`direction: 'asc'`)。結果画面に出る他の数字は見せるだけで、順位には使わない。
+- **盤面(配札)は揃わなくてよい**(club.md §16)。`boardDigest` は null、`seed` は局の `session.seed` をそのまま渡す。
+- 結果画面の `ClubResultAction` は `ShareAction` の次に置く。Club に参加していない端末では何も描かない。
+- 統計・自己ベスト・中断と再開・保存データには触れない。

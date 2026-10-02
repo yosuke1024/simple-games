@@ -188,6 +188,79 @@ describe('club client', () => {
     expect(f.mock.calls[1]![0]).toBe(`${E}/api/v1/challenges?after=ch%200&daily=2026-10-02`);
   });
 
+  it('submitRanking posts the body and reads the answer', async () => {
+    const entry = {
+      memberId: 'm_7',
+      nickname: 'Ken',
+      submittedAt: 'x',
+      facts: {},
+      seed: 's',
+      boardDigest: null,
+    };
+    const f = vi
+      .fn()
+      .mockResolvedValue(
+        reply(201, {
+          gameId: '2048',
+          paramsKey: 'standard',
+          improved: false,
+          rank: 3,
+          entry,
+          entryCount: 9,
+        }),
+      );
+    const body = {
+      gameId: '2048',
+      contractVersion: 1 as const,
+      paramsKey: 'standard',
+      params: {},
+      seed: 's',
+      boardDigest: null,
+      outcome: 'completed' as const,
+      facts: { score: 10 },
+    };
+    const res = await createClient(E, 't', f as unknown as typeof fetch).submitRanking(body);
+    expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/rankings/results`);
+    expect(f.mock.calls[0]![1].method).toBe('POST');
+    expect(JSON.parse(f.mock.calls[0]![1].body)).toEqual(body);
+    expect(res).toMatchObject({ improved: false, rank: 3, entryCount: 9 });
+  });
+
+  it('rankings and ranking read the tables', async () => {
+    const entry = {
+      memberId: 'm_7',
+      nickname: 'Ken',
+      submittedAt: 'x',
+      facts: {},
+      seed: 's',
+      boardDigest: 'd',
+    };
+    const f = vi
+      .fn()
+      .mockResolvedValueOnce(
+        reply(200, [{ gameId: 'sudoku', paramsKey: 'hard', entryCount: 2, leader: entry }]),
+      )
+      .mockResolvedValueOnce(
+        reply(200, {
+          gameId: 'sudoku',
+          paramsKey: 'hard',
+          entryCount: 2,
+          entries: [entry],
+          me: { rank: 1, entry },
+        }),
+      )
+      .mockResolvedValueOnce(reply(200, { gameId: 'sudoku' }));
+    const client = createClient(E, 't', f as unknown as typeof fetch);
+    expect((await client.rankings())[0]!.leader.nickname).toBe('Ken');
+    expect((await client.ranking('sudoku', 'hard', 50)).me?.rank).toBe(1);
+    expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/rankings`);
+    expect(f.mock.calls[1]![0]).toBe(`${E}/api/v1/rankings/sudoku/hard?top=50`);
+    await expect(client.ranking('sudoku', 'hard')).rejects.toMatchObject({
+      code: 'malformed_response',
+    });
+    expect(f.mock.calls[2]![0]).toBe(`${E}/api/v1/rankings/sudoku/hard`);
+  });
+
   it('health needs no token', async () => {
     const f = vi.fn().mockResolvedValue(reply(200, { ok: true, api: 1, claimed: false }));
     expect(await createClient(E, null, f as unknown as typeof fetch).health()).toEqual({

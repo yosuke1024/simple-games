@@ -238,3 +238,13 @@ Schulte Table / Number Recall / Quick Math の 3 本すべてに適用する。
 - 色で 2 系列を分ける Gorbov 型変形(作らない。§5)
 - 途中保存(作らない。§11)
 - 6×6 以上のサイズ(採用しない。5×5 でタップ目標が下限に近い)
+
+## 16. Club House
+
+正典は [architecture/club.md](architecture/club.md) §6 と §16。ここにはこのゲームの側で決まることだけを書く。
+
+- **順位表の名前(`params`)** は `{ size, order }`(`size` は `3` / `4` / `5`、`order` は `ascending` / `descending` / `oddThenEven`。順位表の名前は `5x5-odd-then-even` の形)。レベルとデイリーは、その盤の大きさと順番の表に載る(レベル番号ごとの表は作らない)。
+- **結果画面が送る事実(`facts`)** は `{ elapsedSeconds, mistakes }`(`mistakes` は誤タップ数 `missCount`)。共有(`ShareAction`)の `details` と同じセッションの値(`elapsedSeconds` / `missCount`)から作り、ここで計算しない。
+- **順位の軸は時間**で、短いほうが上(`order: 'elapsedSeconds'`、`direction: 'asc'`)。表示するだけの値は順位に使わない。
+- **盤面は揃わなくてよい**(club.md §16)。`boardDigest` は `null` で、挑戦用の盤面も seed の接頭辞も持たない。ふつうに遊んだ局のクリア画面から送るだけである。
+- ゲーム自体は変わらない。統計・自己ベスト・レベル進行・保存データ・結果画面の既存の表示には触れない。

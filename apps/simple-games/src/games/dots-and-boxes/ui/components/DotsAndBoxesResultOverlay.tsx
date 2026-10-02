@@ -5,7 +5,9 @@
  * revival to buy and no ad to watch for one more line
  * (docs/DOTS_AND_BOXES_RULES.md §7, ADS_POLICY.md).
  */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -28,6 +30,10 @@ export function DotsAndBoxesResultOverlay({
   const { t } = useSettings();
   // The final board gets its beat before the card covers it (§10).
   const revealed = useResultReveal(session.status !== 'playing');
+  const { player, cpu } = countBoxes(session.board);
+  // The match's facts, once: the share's strings and the Club's figures are
+  // read from the same fields (docs/architecture/club.md §6-1).
+  const facts = useMemo(() => ({ score: player, cpuScore: cpu }), [player, cpu]);
   if (!revealed) return null;
 
   const title =
@@ -42,7 +48,10 @@ export function DotsAndBoxesResultOverlay({
       : session.status === 'lost'
         ? t('dotsAndBoxesLoseBody')
         : t('dotsAndBoxesDrawBody');
-  const { player, cpu } = countBoxes(session.board);
+  const details = [
+    { label: t('dotsAndBoxesYou'), value: String(player) },
+    { label: t('dotsAndBoxesCpu'), value: String(cpu) },
+  ];
   const record = stats[session.size];
 
   return (
@@ -85,10 +94,16 @@ export function DotsAndBoxesResultOverlay({
           outcome={session.status === 'won' ? 'completed' : 'played'}
           // The final count, as the card shows it — the one honest summary
           // of a finished match, win or lose or draw.
-          details={[
-            { label: t('dotsAndBoxesYou'), value: String(player) },
-            { label: t('dotsAndBoxesCpu'), value: String(cpu) },
-          ]}
+          details={details}
+        />
+        <ClubResultAction
+          gameId="dots-and-boxes"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ size: session.size }}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

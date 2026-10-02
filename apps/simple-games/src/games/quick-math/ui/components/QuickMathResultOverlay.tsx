@@ -12,11 +12,12 @@
 import type { ShareDetail } from '@/services/share/message';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import { MAX_LEVEL, type QuickMathSession } from '../../game';
+import { MAX_LEVEL, trackForLevel, type QuickMathSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface QuickMathResultOverlayProps {
@@ -49,6 +50,17 @@ export function QuickMathResultOverlay({
     { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
     { label: t('qmathMisses'), value: String(session.missCount) },
   ];
+
+  // The table is the track the level belongs to, or the daily's own (its set is
+  // twice as long); the statistics read the same bucket (§10).
+  const track =
+    session.mode === 'daily' || session.level === null ? 'daily' : trackForLevel(session.level);
+  // The same session fields as `details`: the Club's figures and the share's strings
+  // never disagree (docs/architecture/club.md §6-1).
+  const facts = {
+    elapsedSeconds: session.elapsedSeconds,
+    mistakes: session.missCount,
+  };
 
   return (
     <div className="overlay overlay-result">
@@ -111,6 +123,15 @@ export function QuickMathResultOverlay({
           </button>
         </div>
         <ShareAction gameId="quick-math" outcome="completed" details={details} />
+        <ClubResultAction
+          gameId="quick-math"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ track }}
+          boardDigest={null}
+        />
       </div>
       <ResultAdSlot />
     </div>

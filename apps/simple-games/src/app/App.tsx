@@ -255,7 +255,7 @@ export function App() {
   // Recorded at the tap, not after the chunk resolves: the row reflects what
   // the player chose, and a load failure is rare enough not to complicate it.
   const enterGame = useCallback(
-    (gameId: GameId, entry: GameEntry, club?: { challenge: ChallengeStart; from: 'club' }) => {
+    (gameId: GameId, entry: GameEntry, club?: { challenge?: ChallengeStart; from: 'club' }) => {
       recordGameOpened(gameId);
       trackWebGameOpened(gameId);
       show({ kind: 'game', gameId, entry, ...club });
@@ -328,9 +328,9 @@ export function App() {
    * never pointed at the game in the first place: it stays the Club's page.
    */
   const playChallenge = useCallback(
-    ({ gameId, challenge, active }: ClubPlayRequest) => {
+    ({ gameId, active }: ClubPlayRequest) => {
       setActiveChallenge(active);
-      enterGame(gameId, 'collection', { challenge, from: 'club' });
+      enterGame(gameId, 'collection', { from: 'club' });
     },
     [enterGame, setActiveChallenge],
   );

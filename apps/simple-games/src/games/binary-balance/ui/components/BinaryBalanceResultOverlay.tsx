@@ -10,6 +10,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
@@ -38,6 +39,17 @@ export function BinaryBalanceResultOverlay({
   if (!revealed) return null;
 
   const canStartNew = session.mode === 'difficulty';
+
+  const details = [
+    { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+    { label: t('binaryBalanceHintsUsed'), value: String(session.hintCount) },
+  ];
+  // The same session fields as `details`: the Club's figures and the share's strings
+  // never disagree (docs/architecture/club.md §6-1).
+  const facts = {
+    elapsedSeconds: session.elapsedSeconds,
+    hints: session.hintCount,
+  };
 
   return (
     <div className="overlay overlay-result">
@@ -94,13 +106,15 @@ export function BinaryBalanceResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction
+        <ShareAction gameId="binary-balance" outcome="completed" details={details} />
+        <ClubResultAction
           gameId="binary-balance"
           outcome="completed"
-          details={[
-            { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
-            { label: t('binaryBalanceHintsUsed'), value: String(session.hintCount) },
-          ]}
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

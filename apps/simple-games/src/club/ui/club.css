@@ -141,3 +141,22 @@
 .club-join-another {
   margin-top: 8px;
 }
+
+.club-ranking-title {
+  flex: 1 1 auto;
+}
+
+.club-ranking-count {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.club-separator {
+  text-align: center;
+  color: var(--ink-soft);
+  letter-spacing: 0.2em;
+}
+
+.club-footer {
+  margin-top: 8px;
+}

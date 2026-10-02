@@ -3,8 +3,10 @@
  * lead with the same free choices, and both show the score and the stage the
  * run reached — the points were scored whether or not the last stage fell.
  */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -20,10 +22,21 @@ export function SkyResultOverlay({ result, onRetry, onHome }: SkyResultOverlayPr
   const { t } = useSettings();
   // The settled sky gets its beat before the card covers it (§12).
   const revealed = useResultReveal(result !== null);
+  const score = result?.score ?? 0;
+  const stage = result?.stage ?? 0;
+  // The run's facts, once: the share's strings and the Club's figures are
+  // read from the same fields (docs/architecture/club.md §6-1).
+  const facts = useMemo(() => ({ score, stage }), [score, stage]);
   if (!revealed || result === null) return null;
 
   const cleared = result.outcome === 'cleared';
   const title = cleared ? t('sfClearedTitle') : t('sfFailedTitle');
+  // Stage and score are earned whether or not the run cleared, so a failed
+  // run shares the same two facts as a cleared one.
+  const details = [
+    { label: t('sfStageReached'), value: String(stage) },
+    { label: t('score'), value: String(score) },
+  ];
 
   return (
     <div className="overlay overlay-result">
@@ -80,12 +93,16 @@ export function SkyResultOverlay({ result, onRetry, onHome }: SkyResultOverlayPr
         <ShareAction
           gameId="sky-fighter"
           outcome={cleared ? 'completed' : 'played'}
-          // Stage and score are earned whether or not the run cleared, so a
-          // failed run shares the same two facts as a cleared one.
-          details={[
-            { label: t('sfStageReached'), value: String(result.stage) },
-            { label: t('score'), value: String(result.score) },
-          ]}
+          details={details}
+        />
+        <ClubResultAction
+          gameId="sky-fighter"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed=""
+          params={{}}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

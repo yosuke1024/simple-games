@@ -90,6 +90,51 @@ export interface ChallengeCreate {
   result: { outcome: 'completed' | 'played'; facts: Record<string, unknown> };
 }
 
+/** One member's best result in a game × mode table (club.md §5-3, §16). */
+export interface RankingEntry {
+  memberId: string;
+  nickname: string;
+  submittedAt: string;
+  facts: unknown;
+  seed: string;
+  boardDigest: string | null;
+}
+/** One row of `GET /rankings`: a table, its size and its leader. */
+export interface RankingSummary {
+  gameId: string;
+  paramsKey: string;
+  entryCount: number;
+  leader: RankingEntry;
+}
+/** `GET /rankings/:gameId/:paramsKey`: the top rows and the caller's own row. */
+export interface RankingTable {
+  gameId: string;
+  paramsKey: string;
+  entryCount: number;
+  entries: RankingEntry[];
+  me: { rank: number; entry: RankingEntry } | null;
+}
+/** The answer to `POST /rankings/results`. */
+export interface RankingSubmitResponse {
+  gameId: string;
+  paramsKey: string;
+  improved: boolean;
+  rank: number | null;
+  entry: RankingEntry | null;
+  entryCount: number;
+}
+/** The body of `POST /rankings/results` (club.md §16-1). */
+export interface RankingSubmit {
+  gameId: string;
+  contractVersion: 1;
+  paramsKey: string;
+  params: Record<string, unknown>;
+  seed: string;
+  boardDigest: string | null;
+  outcome: 'completed' | 'played';
+  facts: Record<string, unknown>;
+}
+
 type Rec = Record<string, unknown>;
 
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -175,6 +220,73 @@ export function validateClubRecord(raw: unknown): ClubRecord | null {
     memberId: raw.memberId,
     nickname: raw.nickname,
     challengeId: raw.challengeId,
+  };
+}
+
+const count = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0;
+
+export function validateRankingEntry(raw: unknown): RankingEntry | null {
+  if (
+    !isRec(raw) ||
+    !str(raw.memberId) ||
+    !str(raw.nickname) ||
+    !str(raw.submittedAt) ||
+    !str(raw.seed) ||
+    !nullableStr(raw.boardDigest)
+  ) {
+    return null;
+  }
+  return {
+    memberId: raw.memberId,
+    nickname: raw.nickname,
+    submittedAt: raw.submittedAt,
+    facts: raw.facts,
+    seed: raw.seed,
+    boardDigest: raw.boardDigest,
+  };
+}
+
+export function validateRankingSummary(raw: unknown): RankingSummary | null {
+  if (!isRec(raw) || !str(raw.gameId) || !str(raw.paramsKey) || !count(raw.entryCount)) return null;
+  const leader = validateRankingEntry(raw.leader);
+  if (leader === null) return null;
+  return { gameId: raw.gameId, paramsKey: raw.paramsKey, entryCount: raw.entryCount, leader };
+}
+
+export function validateRankingTable(raw: unknown): RankingTable | null {
+  if (!isRec(raw) || !str(raw.gameId) || !str(raw.paramsKey) || !count(raw.entryCount)) return null;
+  const entries = validateList(raw.entries, validateRankingEntry);
+  if (entries === null) return null;
+  let me: RankingTable['me'] = null;
+  if (raw.me !== null && raw.me !== undefined) {
+    if (!isRec(raw.me) || !count(raw.me.rank) || raw.me.rank < 1) return null;
+    const entry = validateRankingEntry(raw.me.entry);
+    if (entry === null) return null;
+    me = { rank: raw.me.rank, entry };
+  }
+  return { gameId: raw.gameId, paramsKey: raw.paramsKey, entryCount: raw.entryCount, entries, me };
+}
+
+export function validateRankingSubmitResponse(raw: unknown): RankingSubmitResponse | null {
+  if (
+    !isRec(raw) ||
+    !str(raw.gameId) ||
+    !str(raw.paramsKey) ||
+    typeof raw.improved !== 'boolean' ||
+    !count(raw.entryCount) ||
+    !(raw.rank === null || count(raw.rank))
+  ) {
+    return null;
+  }
+  const entry = raw.entry === null ? null : validateRankingEntry(raw.entry);
+  if (raw.entry !== null && entry === null) return null;
+  return {
+    gameId: raw.gameId,
+    paramsKey: raw.paramsKey,
+    improved: raw.improved,
+    rank: raw.rank,
+    entry,
+    entryCount: raw.entryCount,
   };
 }
 

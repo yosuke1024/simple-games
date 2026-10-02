@@ -78,4 +78,8 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   // (docs/PRODUCT_PRINCIPLES.md「公開されることを、参加の前に言う」)。弱めた訳は
   // 公開の約束の反故になる。
   'clubPublicDisclosure',
+
+  // Club の結果の自動送信 — 開示が先、送信が後(docs/architecture/club.md §2-2, §11)。
+  // 「終わると結果が送られる」を落とした訳は同意の約束の反故になる。
+  'clubDailyDisclosure',
 ];

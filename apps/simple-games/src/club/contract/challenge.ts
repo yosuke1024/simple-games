@@ -3,8 +3,8 @@
  * §6-2). The Club layer never imports a game: it reaches each contract leaf
  * only through `GAMES`.
  */
-import { GAMES, type ChallengeStart, type GameChallengeContract } from '@/app/registry';
-import type { Challenge, Result } from '../api/types';
+import { GAMES, type GameChallengeContract } from '@/app/registry';
+import type { Result } from '../api/types';
 
 export function contractFor(gameId: string): GameChallengeContract | null {
   return GAMES.find((g) => g.id === gameId)?.challenge ?? null;
@@ -51,12 +51,4 @@ export function rankResults(
   const played = rest.filter((r) => r.result.outcome === 'played');
   const other = rest.filter((r) => r.result.outcome !== 'played');
   return [...top, ...played, ...other];
-}
-
-export function challengeStartOf(challenge: Challenge): ChallengeStart | null {
-  const contract = contractFor(challenge.gameId);
-  if (contract === null) return null;
-  const params = contract.validateParams(challenge.params);
-  if (params === null) return null;
-  return { seed: challenge.seed, params, boardDigest: challenge.boardDigest };
 }

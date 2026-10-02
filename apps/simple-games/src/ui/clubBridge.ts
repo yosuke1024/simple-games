@@ -9,7 +9,7 @@
  * provider, or a provider with no connections, and it draws nothing.
  */
 import { createContext, type ComponentType } from 'react';
-import type { ChallengeStart, GameId } from '../app/registry';
+import type { GameId } from '../app/registry';
 
 /** A connection as the shell needs it for its two entries — never the token. */
 export interface ClubConnectionSummary {
@@ -86,10 +86,9 @@ export interface ClubInvite {
   token: string;
 }
 
-/** What the Club screen hands the shell when a challenge is played. */
+/** What the Club screen hands the shell when a Today challenge is played: the game opens onto its own daily (club.md §9, §16-3). */
 export interface ClubPlayRequest {
   gameId: GameId;
-  challenge: ChallengeStart;
   active: ActiveChallenge;
 }
 

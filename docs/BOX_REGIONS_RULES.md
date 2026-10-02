@@ -422,3 +422,13 @@ patchesgame.com)がいずれも「shape は長方形だけ」「freeform = ど�
 合わせたもの: 長方形の分割、手がかり 1 つにつき箱 1 つ、4 種類の形の手がかりと「どちらも
 無し」、一意解、なぞって描く操作、常時の違反表示、Undo + Hint。
 公式の問題・解答・アセットは取得も転載もしない(すべて端末上で生成する — §8)。
+
+## 15. Club House
+
+正典は [architecture/club.md](architecture/club.md) §6 と §16。ここにはこのゲームの側で決まることだけを書く。
+
+- **順位表の名前(`params`)** は `{ difficulty }`(`easy` / `medium` / `hard`)。デイリーも同じ形で載る。
+- **結果画面が送る事実(`facts`)** は `{ elapsedSeconds, hints }`。共有(`ShareAction`)の `details` と同じセッションの値(`elapsedSeconds` / `hintCount`)から作り、ここで計算しない。
+- **順位の軸は時間**で、短いほうが上(`order: 'elapsedSeconds'`、`direction: 'asc'`)。表示するだけの値は順位に使わない。
+- **盤面は揃わなくてよい**(club.md §16)。`boardDigest` は `null` で、挑戦用の盤面も seed の接頭辞も持たない。ふつうに遊んだ局のクリア画面から送るだけである。
+- ゲーム自体は変わらない。統計・自己ベスト・レベル進行・保存データ・結果画面の既存の表示には触れない。

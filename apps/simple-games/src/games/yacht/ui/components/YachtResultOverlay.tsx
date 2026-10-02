@@ -4,8 +4,10 @@
  * to buy and no ad to watch for one more throw (docs/YACHT_RULES.md §6,
  * ADS_POLICY.md).
  */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -28,14 +30,21 @@ export function YachtResultOverlay({
   const { t } = useSettings();
   // The full sheets get their beat before the card covers them (§10).
   const revealed = useResultReveal(statusOf(session) === 'finished');
-  if (!revealed) return null;
-
   const total = totalOf(session);
   const cpuTotal = cpuTotalOf(session);
+  // The match's facts, once: the share's strings and the Club's figures are
+  // read from the same fields (docs/architecture/club.md §6-1).
+  const facts = useMemo(() => ({ score: total, cpuScore: cpuTotal }), [total, cpuTotal]);
+  if (!revealed) return null;
   const best = lastResult?.bestScore ?? total;
   // `session` is finished here, so this is never null — `lastResult` is
   // preferred since it is the outcome booked into the statistics.
   const outcome = lastResult?.outcome ?? outcomeOf(session)!;
+
+  const details = [
+    { label: t('yachtYou'), value: String(total) },
+    { label: t('yachtCpu'), value: String(cpuTotal) },
+  ];
 
   const title =
     outcome === 'won'
@@ -103,10 +112,16 @@ export function YachtResultOverlay({
         <ShareAction
           gameId="yacht"
           outcome={outcome === 'won' ? 'completed' : 'played'}
-          details={[
-            { label: t('yachtYou'), value: String(total) },
-            { label: t('yachtCpu'), value: String(cpuTotal) },
-          ]}
+          details={details}
+        />
+        <ClubResultAction
+          gameId="yacht"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{}}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

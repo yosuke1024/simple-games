@@ -5,7 +5,9 @@
  * scolded; there is no revival to buy and no ad to watch for one more move
  * (docs/REVERSI_RULES.md §8, ADS_POLICY.md).
  */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -31,7 +33,16 @@ export function ReversiResultOverlay({
   const { t } = useSettings();
   // The final position gets its beat before the card covers it (§11).
   const revealed = useResultReveal(session.status !== 'playing' && lastResult !== null);
+  const mine = lastResult?.mine ?? 0;
+  const theirs = lastResult?.theirs ?? 0;
+  // The match's facts, once: the share's strings and the Club's figures are
+  // read from the same fields (docs/architecture/club.md §6-1).
+  const facts = useMemo(() => ({ score: mine, cpuScore: theirs }), [mine, theirs]);
   if (!revealed || !lastResult) return null;
+  const details = [
+    { label: t('reversiYou'), value: String(mine) },
+    { label: t('reversiCpu'), value: String(theirs) },
+  ];
 
   const title =
     session.status === 'won'
@@ -87,10 +98,16 @@ export function ReversiResultOverlay({
           outcome={session.status === 'won' ? 'completed' : 'played'}
           // The final count, win or lose or draw — it is the one honest
           // summary of a finished game, never a streak.
-          details={[
-            { label: t('reversiYou'), value: String(lastResult.mine) },
-            { label: t('reversiCpu'), value: String(lastResult.theirs) },
-          ]}
+          details={details}
+        />
+        <ClubResultAction
+          gameId="reversi"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

@@ -4,8 +4,10 @@
  * the identical wall on the next attempt. The clear shows the run's time; a
  * clock never appears during play (§6).
  */
+import { useMemo } from 'react';
 import type { ShareDetail } from '@/services/share/message';
 import { useSettings } from '@/state/SettingsContext';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
@@ -30,7 +32,12 @@ export function BrickResultOverlay({
   // The emptied wall — or the lost last ball — gets its beat before the card
   // covers it (§12).
   const revealed = useResultReveal(result !== null);
+  // No score is shown on this card, so the level reached is the score
+  // (docs/BRICK_BREAKER_RULES.md §14); the Club's figure and its details repeat it.
+  const score = result?.level ?? 0;
+  const facts = useMemo(() => ({ score }), [score]);
   if (!revealed || result === null) return null;
+  const clubDetails: ShareDetail[] = [{ label: t('reachedLevel'), value: String(score) }];
 
   const cleared = result.outcome === 'cleared';
   const hasNextLevel = cleared && result.level < LEVEL_COUNT;
@@ -83,6 +90,15 @@ export function BrickResultOverlay({
           gameId="brick-breaker"
           outcome={cleared ? 'completed' : 'played'}
           details={details}
+        />
+        <ClubResultAction
+          gameId="brick-breaker"
+          outcome="completed"
+          details={clubDetails}
+          facts={facts}
+          seed=""
+          params={{}}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

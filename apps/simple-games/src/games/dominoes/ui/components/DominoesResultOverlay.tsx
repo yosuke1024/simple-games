@@ -5,7 +5,9 @@
  * loss is stated, never scolded; there is no revival to buy and no ad to
  * watch for one more draw (ADS_POLICY.md).
  */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -28,6 +30,14 @@ export function DominoesResultOverlay({
   const { t } = useSettings();
   // The final line gets its beat before the card covers it (§11).
   const revealed = useResultReveal(session.status !== 'playing');
+  // The player's own points: the winner's score when they won, nothing when
+  // the CPU's score is the one on the card or the game was a draw (§4).
+  const score = session.status === 'won' ? session.score : 0;
+  const playerPips = session.playerPips;
+  const cpuPips = session.cpuPips;
+  // The match's facts, once: the share's strings and the Club's figures are
+  // read from the same fields (docs/architecture/club.md §6-1).
+  const facts = useMemo(() => ({ score, playerPips, cpuPips }), [score, playerPips, cpuPips]);
   if (!revealed) return null;
 
   const blocked = session.ending === 'blocked';
@@ -52,7 +62,8 @@ export function DominoesResultOverlay({
       : session.status === 'lost'
         ? t('dominoesScoreCpu', { points: session.score })
         : null;
-  const pipsLine = t('dominoesPipsLeft', { you: session.playerPips, cpu: session.cpuPips });
+  const pipsLine = t('dominoesPipsLeft', { you: playerPips, cpu: cpuPips });
+  const details = [{ value: scoreLine ?? pipsLine }];
 
   return (
     <div className="overlay overlay-result">
@@ -84,10 +95,15 @@ export function DominoesResultOverlay({
         {/* The score line exactly as shown above — or, for a draw, the pip
             totals, which are then the whole result. The record note is not a
             fact of this game and is never repeated in a share. */}
-        <ShareAction
+        <ShareAction gameId="dominoes" outcome={won ? 'completed' : 'played'} details={details} />
+        <ClubResultAction
           gameId="dominoes"
-          outcome={won ? 'completed' : 'played'}
-          details={[{ value: scoreLine ?? pipsLine }]}
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{}}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

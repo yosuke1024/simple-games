@@ -99,7 +99,6 @@ const ENDPOINT = 'https://club.example';
 
 const PLAY: ClubPlayRequest = {
   gameId: 'sudoku',
-  challenge: { seed: 'club-seed-1', params: { difficulty: 'easy' }, boardDigest: 'digest-1' },
   active: {
     endpoint: ENDPOINT,
     clubName: 'Suzuki Family',
@@ -278,7 +277,8 @@ describe('a device that has joined', () => {
     await settle();
 
     expect(screen.getByText('playing sudoku')).toBeInTheDocument();
-    expect(screen.getByTestId('challenge')).toHaveTextContent('club-seed-1');
+    // The game opens onto its own daily: no challenge board is handed over (club.md §16-3).
+    expect(screen.getByTestId('challenge')).toHaveTextContent('none');
     expect(screen.getByTestId('bridge')).toHaveTextContent('1 connections, active ch-1');
 
     fireEvent.click(screen.getByRole('button', { name: 'All games' }));

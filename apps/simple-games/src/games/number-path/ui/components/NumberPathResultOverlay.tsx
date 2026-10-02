@@ -9,6 +9,7 @@
 import { useSettings } from '@/state/SettingsContext';
 import type { ShareDetail } from '@/services/share/message';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
@@ -44,6 +45,13 @@ export function NumberPathResultOverlay({
     { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
     { label: t('numberPathHintsUsed'), value: String(session.hintCount) },
   ];
+
+  // The same session fields as `details`: the Club's figures and the share's strings
+  // never disagree (docs/architecture/club.md §6-1).
+  const facts = {
+    elapsedSeconds: session.elapsedSeconds,
+    hints: session.hintCount,
+  };
 
   return (
     <div className="overlay overlay-result">
@@ -101,6 +109,15 @@ export function NumberPathResultOverlay({
           </button>
         </div>
         <ShareAction gameId="number-path" outcome="completed" details={details} />
+        <ClubResultAction
+          gameId="number-path"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          boardDigest={null}
+        />
       </div>
       <ResultAdSlot />
     </div>
