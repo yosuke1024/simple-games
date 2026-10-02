@@ -4,6 +4,7 @@
  * rows the server sent, it follows after a separator with its own rank.
  */
 import { useEffect, useRef, useState } from 'react';
+import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { createClient } from '../api/client';
 import type { RankingEntry, RankingTable } from '../api/types';
 import { useSettings } from '@/state/SettingsContext';
@@ -29,6 +30,8 @@ export function RankingScreen({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const alive = useRef(true);
+  const [confirmReport, setConfirmReport] = useState<RankingEntry | null>(null);
+  const [reportedIds, setReportedIds] = useState<readonly string[]>([]);
 
   const load = async () => {
     const client = createClient(connection.endpoint, connection.memberToken);
@@ -54,6 +57,17 @@ export function RankingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId, paramsKey, connection.endpoint]);
 
+  const report = async (entry: RankingEntry) => {
+    setConfirmReport(null);
+    setError(null);
+    try {
+      await createClient(connection.endpoint, connection.memberToken).reportMember(entry.memberId);
+      setReportedIds((ids) => [...ids, entry.memberId]);
+    } catch (e) {
+      if (alive.current) setError(errorText(e, t, connection.clubName));
+    }
+  };
+
   const row = (entry: RankingEntry, rank: number | null) => {
     const own = entry.memberId === connection.memberId;
     return (
@@ -67,6 +81,18 @@ export function RankingScreen({
           {own ? t('clubYou') : entry.nickname}
         </span>
         <span className="settings-row-value">{factsLine(gameId, entry.facts, t)}</span>
+        {own ? null : reportedIds.includes(entry.memberId) ? (
+          <span className="club-quiet">{t('clubReported')}</span>
+        ) : (
+          <button
+            type="button"
+            className="club-text-btn club-quiet-btn"
+            aria-label={`${t('clubReport')} ${entry.nickname}`}
+            onClick={() => setConfirmReport(entry)}
+          >
+            {t('clubReport')}
+          </button>
+        )}
       </div>
     );
   };
@@ -109,6 +135,17 @@ export function RankingScreen({
           <p className="club-quiet club-footer">{t('clubEntries', { n: table.entryCount })}</p>
         </>
       ) : null}
+      <ConfirmDialog
+        open={confirmReport !== null}
+        title={t('clubReportTitle')}
+        body={t('clubReportBody')}
+        cancelLabel={t('cancel')}
+        confirmLabel={t('clubReport')}
+        onCancel={() => setConfirmReport(null)}
+        onConfirm={() => {
+          if (confirmReport) void report(confirmReport);
+        }}
+      />
     </ScreenFrame>
   );
 }

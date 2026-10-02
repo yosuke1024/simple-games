@@ -6,7 +6,8 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient, type ClubClient } from '../api/client';
-import type { Challenge, Member, RankingSummary } from '../api/types';
+import { ClubApiError } from '../api/errors';
+import type { Challenge, Member, RankingSummary, ReportedMember } from '../api/types';
 import { contractFor, gameTitle } from '../contract/challenge';
 import { flushOutbox } from '../storage/outbox';
 import { shareGame } from '@/services/share/share';
@@ -31,6 +32,10 @@ interface ClubData {
   todayDate: string;
   rankings: RankingSummary[];
   members: Member[];
+  /** All members, of whom `members` is the newest page. */
+  memberCount: number;
+  /** Owner only: members others reported, most reported first. */
+  reported: ReportedMember[];
   /** The club's name as the server has it now. */
   clubName: string;
 }
@@ -60,6 +65,7 @@ export function ClubScreen({
   onOpenRanking,
   onDisconnect,
   onRenamed,
+  onRenamedMe,
 }: {
   connection: ClubConnection;
   panel: ClubPanel;
@@ -70,12 +76,18 @@ export function ClubScreen({
   onDisconnect: () => Promise<void>;
   /** The server's name for the club differs from the cached one. */
   onRenamed: (clubName: string) => void;
+  /** The owner renamed this member: the server's nickname differs from the stored one. */
+  onRenamedMe: (nickname: string) => void;
 }) {
   const { t, locale } = useSettings();
   const [data, setData] = useState<ClubData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmRemove, setConfirmRemove] = useState<Member | null>(null);
+  const [confirmReport, setConfirmReport] = useState<Member | null>(null);
+  /** Members this device reported on this screen; local only. */
+  const [reportedIds, setReportedIds] = useState<readonly string[]>([]);
+  const [renaming, setRenaming] = useState<{ key: string; member: Member } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const clientRef = useRef<ClubClient | null>(null);
   const flushed = useRef(false);
@@ -104,21 +116,33 @@ export function ClubScreen({
         }
       }
       const todayDate = todayLocal();
-      // Three requests, no more (club.md §10).
-      const [club, today, rankings] = await Promise.all([
+      // Three requests, and a fourth for the owner alone (club.md §10).
+      const [club, today, rankings, reported] = await Promise.all([
         api.club(),
         api.challenges({ daily: todayDate }),
         api.rankings(),
+        isOwner
+          ? // A server from before §17 has no such route: an empty list, not an error.
+            // Anything else is a failure the owner must see (club.md §10).
+            api.reportedMembers().catch((e: unknown) => {
+              if (e instanceof ClubApiError && e.code === 'not_found')
+                return [] as ReportedMember[];
+              throw e;
+            })
+          : Promise.resolve([] as ReportedMember[]),
       ]);
       if (!alive.current) return;
       setData({
         clubName: club.club.name,
         members: club.members,
+        memberCount: club.memberCount,
+        reported,
         today,
         todayDate,
         rankings,
       });
       if (club.club.name !== connection.clubName) onRenamed(club.club.name);
+      if (club.me.nickname !== connection.nickname) onRenamedMe(club.me.nickname);
     } catch (e) {
       if (alive.current) setError(errorText(e, t, connection.clubName));
     } finally {
@@ -126,7 +150,7 @@ export function ClubScreen({
     }
     // `t` and `onRenamed` change identity without changing what is fetched.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connection.endpoint, connection.memberToken, connection.clubName]);
+  }, [connection.endpoint, connection.memberToken, connection.clubName, connection.nickname]);
 
   useEffect(() => {
     alive.current = true;
@@ -145,15 +169,114 @@ export function ClubScreen({
   );
   const rankings = (data?.rankings ?? []).filter((r) => contractFor(r.gameId) !== null);
 
-  const remove = async (member: Member) => {
+  const remove = async (member: Member, purge: boolean) => {
     setConfirmRemove(null);
     setActionError(null);
     try {
-      await client().removeMember(member.id);
-      setData((d) => (d ? { ...d, members: d.members.filter((m) => m.id !== member.id) } : d));
+      await client().removeMember(member.id, { purge });
+      if (purge) {
+        // Their results and ranking rows are gone server-side (club.md §17-3): the
+        // tables and the Today results on screen are stale, so read them again.
+        await load();
+        return;
+      }
+      setData((d) =>
+        d
+          ? {
+              ...d,
+              members: d.members.filter((m) => m.id !== member.id),
+              reported: d.reported.filter((r) => r.member.id !== member.id),
+              memberCount: Math.max(0, d.memberCount - 1),
+            }
+          : d,
+      );
     } catch (e) {
       setActionError(errorText(e, t, clubName));
     }
+  };
+
+  const report = async (member: Member) => {
+    setConfirmReport(null);
+    setActionError(null);
+    try {
+      await client().reportMember(member.id);
+      setReportedIds((ids) => [...ids, member.id]);
+    } catch (e) {
+      setActionError(errorText(e, t, clubName));
+    }
+  };
+
+  const rename = async (member: Member, nickname: string) => {
+    setActionError(null);
+    try {
+      const renamed = await client().renameMember(member.id, nickname);
+      const apply = (m: Member): Member => (m.id === renamed.id ? { ...m, ...renamed } : m);
+      setData((d) =>
+        d
+          ? {
+              ...d,
+              members: d.members.map(apply),
+              reported: d.reported.map((r) => ({ ...r, member: apply(r.member) })),
+            }
+          : d,
+      );
+      setRenaming(null);
+    } catch (e) {
+      setActionError(errorText(e, t, clubName));
+    }
+  };
+
+  /** One member line: the owner gets Rename / Remove, everyone else Report (never on oneself). */
+  const memberLine = (section: string, m: Member, value: string) => {
+    if (renaming?.key === `${section}:${m.id}`) {
+      return (
+        <RenamePanel
+          key={`${section}:${m.id}`}
+          member={m}
+          t={t}
+          onCancel={() => setRenaming(null)}
+          onSave={(nickname) => rename(m, nickname)}
+        />
+      );
+    }
+    const other = m.id !== connection.memberId;
+    return (
+      <div className="settings-row settings-row-static club-line" key={`${section}:${m.id}`}>
+        <span className="settings-row-label">{m.nickname}</span>
+        <span className="settings-row-value">{value}</span>
+        {other && isOwner ? (
+          <>
+            <button
+              type="button"
+              className="club-text-btn"
+              onClick={() => setRenaming({ key: `${section}:${m.id}`, member: m })}
+            >
+              {t('clubRename')}
+            </button>
+            <button
+              type="button"
+              className="club-text-btn club-danger"
+              onClick={() => setConfirmRemove(m)}
+            >
+              {t('clubRemove')}
+            </button>
+          </>
+        ) : null}
+        {other && !isOwner ? (
+          reportedIds.includes(m.id) ? (
+            <span className="club-quiet">{t('clubReported')}</span>
+          ) : (
+            <button
+              type="button"
+              className="club-text-btn club-quiet-btn"
+              onClick={() => setConfirmReport(m)}
+            >
+              {t('clubReport')}
+            </button>
+          )
+        ) : null}
+      </div>
+    );
   };
 
   if (panel === 'invite') {
@@ -245,45 +368,142 @@ export function ClubScreen({
             );
           })}
 
-          <h2 className="home-section-label club-section">{t('clubMembers')}</h2>
+          {isOwner && data.reported.length > 0 ? (
+            <>
+              <h2 className="home-section-label club-section">{t('clubReported')}</h2>
+              {data.reported
+                .filter((r) => r.member.id !== connection.memberId)
+                .map((r) =>
+                  memberLine('reported', r.member, t('clubReportCount', { n: r.reportCount })),
+                )}
+            </>
+          ) : null}
+
+          <h2 className="home-section-label club-section">
+            {t('clubMembersCount', { n: data.memberCount })}
+          </h2>
           {actionError ? (
             <p className="club-note club-note-error" role="alert">
               {actionError}
             </p>
           ) : null}
-          {data.members.map((m) => (
-            <div className="settings-row settings-row-static club-line" key={m.id}>
-              <span className="settings-row-label">{m.nickname}</span>
-              <span className="settings-row-value">
-                {t('clubJoinedOn', { date: dateLabel(m.joinedAt, locale) })}
-              </span>
-              {isOwner && m.id !== connection.memberId ? (
-                <button
-                  type="button"
-                  className="club-text-btn club-danger"
-                  onClick={() => setConfirmRemove(m)}
-                >
-                  {t('clubRemove')}
-                </button>
-              ) : null}
-            </div>
-          ))}
+          {data.members.map((m) =>
+            memberLine('members', m, t('clubJoinedOn', { date: dateLabel(m.joinedAt, locale) })),
+          )}
         </>
       ) : null}
 
+      {confirmRemove ? (
+        <RemoveDialog
+          member={confirmRemove}
+          t={t}
+          onCancel={() => setConfirmRemove(null)}
+          onRemove={(purge) => void remove(confirmRemove, purge)}
+        />
+      ) : null}
       <ConfirmDialog
-        open={confirmRemove !== null}
-        title={t('clubRemoveTitle', { name: confirmRemove?.nickname ?? '' })}
-        body={t('clubRemoveBody')}
+        open={confirmReport !== null}
+        title={t('clubReportTitle')}
+        body={t('clubReportBody')}
         cancelLabel={t('cancel')}
-        confirmLabel={t('clubRemove')}
-        danger
-        onCancel={() => setConfirmRemove(null)}
+        confirmLabel={t('clubReport')}
+        onCancel={() => setConfirmReport(null)}
         onConfirm={() => {
-          if (confirmRemove) void remove(confirmRemove);
+          if (confirmReport) void report(confirmReport);
         }}
       />
     </ScreenFrame>
+  );
+}
+
+/**
+ * Remove has two ends (club.md §17-3), so it is its own dialog on the shell's
+ * dialog classes: keep their results, or erase them with them.
+ */
+function RemoveDialog({
+  member,
+  t,
+  onCancel,
+  onRemove,
+}: {
+  member: Member;
+  t: T;
+  onCancel: () => void;
+  onRemove: (purge: boolean) => void;
+}) {
+  const title = t('clubRemoveTitle', { name: member.nickname });
+  return (
+    <div className="overlay" onClick={onCancel}>
+      <div
+        className="dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-label={title}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h2 className="dialog-title">{title}</h2>
+        <p className="dialog-body">{t('clubRemoveBody')}</p>
+        <p className="dialog-body">{t('clubRemoveEraseBody')}</p>
+        <div className="dialog-actions club-dialog-actions">
+          <button type="button" className="btn btn-ghost" onClick={onCancel} autoFocus>
+            {t('cancel')}
+          </button>
+          <button type="button" className="btn btn-danger" onClick={() => onRemove(false)}>
+            {t('clubRemove')}
+          </button>
+          <button type="button" className="btn btn-danger" onClick={() => onRemove(true)}>
+            {t('clubRemoveErase')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Owner only: a new nickname for a member, saved in place (club.md §17-3). */
+function RenamePanel({
+  member,
+  t,
+  onCancel,
+  onSave,
+}: {
+  member: Member;
+  t: T;
+  onCancel: () => void;
+  onSave: (nickname: string) => Promise<void>;
+}) {
+  const [text, setText] = useState(member.nickname);
+  const [busy, setBusy] = useState(false);
+  const trimmed = text.trim();
+  const save = async () => {
+    setBusy(true);
+    await onSave(trimmed);
+    setBusy(false);
+  };
+  return (
+    <div className="club-rename">
+      <input
+        className="club-input"
+        type="text"
+        maxLength={24}
+        value={text}
+        aria-label={t('clubRenameTitle')}
+        onChange={(event) => setText(event.target.value)}
+      />
+      <div className="club-actions">
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={busy || trimmed === '' || trimmed === member.nickname}
+          onClick={() => void save()}
+        >
+          {t('clubSave')}
+        </button>
+        <button type="button" className="btn btn-ghost" onClick={onCancel}>
+          {t('cancel')}
+        </button>
+      </div>
+    </div>
   );
 }
 

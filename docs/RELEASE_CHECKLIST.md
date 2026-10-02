@@ -114,17 +114,17 @@ bash .github/scripts/check-principles.sh
 - [ ] **高リスクキーの門を通している**([I18N_POLICY.md](I18N_POLICY.md)「リリース前の門」)
 
       ```bash
-              pnpm --filter simple-games i18n:gate status        # 残りを見る
-              pnpm --filter simple-games i18n:gate pending <lang> # 逆翻訳する文字列(英語は出ない)
-              pnpm --filter simple-games i18n:gate:check          # 未承認があれば落ちる
-              ```
+                  pnpm --filter simple-games i18n:gate status        # 残りを見る
+                  pnpm --filter simple-games i18n:gate pending <lang> # 逆翻訳する文字列(英語は出ない)
+                  pnpm --filter simple-games i18n:gate:check          # 未承認があれば落ちる
+                  ```
 
-              逆翻訳は**訳を書いた実行者以外**にやらせる。承認は
-              `src/i18n/gateRecord.json` に、読んだ英語と訳文のハッシュ付きで記録される。
-              どちらかを後から編集すると失効し、通常の `pnpm test` が落ちる。
-              **「ネイティブレビュー済み」は要求しない** — 一人開発では供給できず、
-              供給できない条件をチェックリストに置くと形骸化するため
-              (自然さは `machine` 来歴の開示と読者からの報告で担保する)。
+                  逆翻訳は**訳を書いた実行者以外**にやらせる。承認は
+                  `src/i18n/gateRecord.json` に、読んだ英語と訳文のハッシュ付きで記録される。
+                  どちらかを後から編集すると失効し、通常の `pnpm test` が落ちる。
+                  **「ネイティブレビュー済み」は要求しない** — 一人開発では供給できず、
+                  供給できない条件をチェックリストに置くと形骸化するため
+                  (自然さは `machine` 来歴の開示と読者からの報告で担保する)。
 
 - [ ] 端末言語を切り替えてもゲーム進行が失われない
 - [ ] Backup & Restore の 4 キー(`backupRestoreConfirmTitle` /
@@ -584,7 +584,18 @@ Solitaire / Spider / FreeCell は**タップ操作を残したまま**ドラッ�
 
 ## 5.16 Club House は未接続の端末では存在しない([architecture/club.md](architecture/club.md) §12-8, issue #161)
 
-**まだ実行していない。** Club House を出荷するリリースの前に、ここを実機で通す。
+**2026-10-02 にエミュレータで実施**(Pixel_7、Android 17 相当のシステムイメージ、ブランチ
+`claude/club-public-f` のデバッグビルド)。新規インストール → 起動 → ホームをスクロール → ゲームを
+1 つ開いて操作 → 戻る → ヘッダのメニュー、の 70 秒間、WebView の DevTools プロトコル
+(`Network.requestWillBeSent`)で記録した通信は **0 件**。対照として同じ接続から `fetch` を 1 本
+打つと記録に出るので、監視は機能している。バナー広告はネイティブ SDK の通信で WebView には
+出ないため、この 0 件は「Club House のコードが 1 件も通信していない」の実測である。実機
+(端末)での再確認は出荷前のリリース作業で行う。
+
+- [x] 未参加の端末で、Club House 宛ての通信が 0 件(2026-10-02、エミュレータ)
+- [ ] 実機で同じ手順(リリース作業で)
+
+元の文: Club House を出荷するリリースの前に、ここを実機で通す。
 「接続していない端末は club/ を 1 バイトも読まず、1 件も通信しない」は、
 `importBoundaries.test.ts` 規則 5・サイズゲート・`check-principles.sh` §1 / §1b が
 **到達できない**ことを示しているだけで、実際に**起きない**ことは実機でしか見えない。

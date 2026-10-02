@@ -7,6 +7,7 @@ import {
   removeClubConnection,
   summarize,
   updateClubName,
+  updateNickname,
 } from './connections';
 
 const conn = (n: number, extra: Partial<ClubConnection> = {}): ClubConnection => ({
@@ -32,6 +33,15 @@ describe('connections', () => {
     expect((await updateClubName(conn(2).endpoint, 'Renamed', kv))[1]!.clubName).toBe('Renamed');
     expect(await removeClubConnection(conn(1).endpoint, kv)).toHaveLength(1);
     expect(await loadClubConnections(kv)).toHaveLength(1);
+  });
+
+  it('updates the nickname of one connection only', async () => {
+    const kv = createMemoryKV();
+    await addClubConnection(conn(1), kv);
+    await addClubConnection(conn(2), kv);
+    const next = await updateNickname(conn(2).endpoint, 'Kenji', kv);
+    expect(next.map((c) => c.nickname)).toEqual(['Ken', 'Kenji']);
+    expect((await loadClubConnections(kv))[1]!.nickname).toBe('Kenji');
   });
 
   it('refuses an eleventh connection but still replaces an existing one', async () => {

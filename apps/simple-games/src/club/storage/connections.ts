@@ -60,6 +60,19 @@ export async function updateClubName(
   );
 }
 
+/** The server's name for this member differs from the cached one (the owner renamed them). */
+export async function updateNickname(
+  endpoint: string,
+  nickname: string,
+  kv?: KVStore,
+): Promise<ClubConnection[]> {
+  const current = await load(kv);
+  return save(
+    current.map((c) => (c.endpoint === endpoint ? { ...c, nickname } : c)),
+    kv,
+  );
+}
+
 export function summarize(connection: ClubConnection): ClubConnectionSummary {
   return {
     endpoint: connection.endpoint,

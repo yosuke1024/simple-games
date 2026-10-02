@@ -106,6 +106,42 @@ describe('club client', () => {
     expect(f.mock.calls[0]![1].method).toBe('DELETE');
   });
 
+  it('removeMember with purge adds ?purge=1', async () => {
+    const f = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 204, headers: { 'X-Club-Api': '1' } }));
+    await createClient(E, 't', f as unknown as typeof fetch).removeMember('m_1', { purge: true });
+    expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/members/m_1?purge=1`);
+    expect(f.mock.calls[0]![1].method).toBe('DELETE');
+  });
+
+  it('reportMember posts without a body; reportedMembers and renameMember validate', async () => {
+    const member = {
+      id: 'm_2',
+      nickname: 'Mika',
+      role: 'member',
+      joinedAt: '2026-09-09T00:00:00Z',
+    };
+    const f = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 204, headers: { 'X-Club-Api': '1' } }))
+      .mockResolvedValueOnce(reply(200, [{ member, reportCount: 3 }]))
+      .mockResolvedValueOnce(reply(200, { ...member, nickname: 'Mi' }))
+      .mockResolvedValueOnce(reply(200, [{ member, reportCount: 'x' }]));
+    const client = createClient(E, 't', f as unknown as typeof fetch);
+    await expect(client.reportMember('m_2')).resolves.toBeUndefined();
+    expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/members/m_2/report`);
+    expect(f.mock.calls[0]![1].method).toBe('POST');
+    expect(f.mock.calls[0]![1].body).toBeUndefined();
+    expect(await client.reportedMembers()).toEqual([{ member, reportCount: 3 }]);
+    expect(f.mock.calls[1]![0]).toBe(`${E}/api/v1/members/reported`);
+    expect((await client.renameMember('m_2', 'Mi')).nickname).toBe('Mi');
+    expect(f.mock.calls[2]![0]).toBe(`${E}/api/v1/members/m_2`);
+    expect(f.mock.calls[2]![1].method).toBe('PATCH');
+    expect(JSON.parse(f.mock.calls[2]![1].body)).toEqual({ nickname: 'Mi' });
+    await expect(client.reportedMembers()).rejects.toMatchObject({ code: 'malformed_response' });
+  });
+
   it('rotateInvite posts the member role', async () => {
     const f = vi.fn().mockResolvedValue(reply(200, { token: 't', url: 'u' }));
     await createClient(E, 't', f as unknown as typeof fetch).rotateInvite();
@@ -197,17 +233,15 @@ describe('club client', () => {
       seed: 's',
       boardDigest: null,
     };
-    const f = vi
-      .fn()
-      .mockResolvedValue(
-        reply(201, {
-          gameId: '2048',
-          paramsKey: 'standard',
-          improved: false,
-          entry,
-          entryCount: 9,
-        }),
-      );
+    const f = vi.fn().mockResolvedValue(
+      reply(201, {
+        gameId: '2048',
+        paramsKey: 'standard',
+        improved: false,
+        entry,
+        entryCount: 9,
+      }),
+    );
     const body = {
       gameId: '2048',
       contractVersion: 1 as const,

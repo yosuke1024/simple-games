@@ -3,13 +3,13 @@
  * storage functions run on the real Preferences plugin, which is localStorage
  * under jsdom, so the test clears it between cases.
  */
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../i18n';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { settingsSchema } from '@/storage/schemas';
-import { addClubConnection } from '../storage/connections';
+import { addClubConnection, loadClubConnections } from '../storage/connections';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { todayLocal } from './common';
 import { ClubRoot } from './ClubRoot';
@@ -52,6 +52,12 @@ const MINE = {
   nickname: 'Ken B',
   facts: { elapsedSeconds: 600, mistakes: 3, hints: 0 },
 };
+const MIKA = { id: 'm_2', nickname: 'Mika', role: 'member', joinedAt: '2026-09-10T00:00:00.000Z' };
+/** What `GET /club` answers for the viewer and the member list. */
+let clubMe: Record<string, unknown> = KEN;
+let clubMembers: Record<string, unknown>[] = [KEN];
+let clubMemberCount: number | undefined;
+let reportedList: { member: Record<string, unknown>; reportCount: number }[] = [];
 let meBelowTop = false;
 let dailyChallenges = false;
 /** A server from before `?daily=` existed: it ignores the parameter and answers with its ordinary list. */
@@ -72,7 +78,28 @@ function stubServer() {
     if (path === '/join' && method === 'POST') {
       return reply({ club: CLUB, member: KEN, memberToken: 'member-token-1' }, 201);
     }
-    if (path === '/club') return reply({ club: CLUB, me: KEN, members: [KEN] });
+    if (path === '/club') {
+      return reply({
+        club: CLUB,
+        me: clubMe,
+        members: clubMembers,
+        ...(clubMemberCount === undefined ? {} : { memberCount: clubMemberCount }),
+      });
+    }
+    if (path === '/members/reported') return reply(reportedList);
+    if (path.startsWith('/members/') && path.endsWith('/report') && method === 'POST') {
+      return new Response(null, { status: 204, headers: { 'X-Club-Api': '1' } });
+    }
+    if (path === '/members/m_2' && method === 'PATCH') {
+      const body = JSON.parse(String(init?.body)) as { nickname: string };
+      return reply({ ...MIKA, nickname: body.nickname });
+    }
+    if (path === '/members/m_2' && method === 'DELETE') {
+      // The server forgot them; the reload after a purge must not see them again.
+      clubMembers = clubMembers.filter((m) => m.id !== 'm_2');
+      clubMemberCount = Math.max(0, clubMembers.length);
+      return new Response(null, { status: 204, headers: { 'X-Club-Api': '1' } });
+    }
     if (path === '/challenges') {
       const daily = url.searchParams.get('daily');
       if (daily === null || ignoresDaily) return reply([CHALLENGE]);
@@ -130,6 +157,10 @@ function renderRoot(props: Partial<React.ComponentProps<typeof ClubRoot>> = {}) 
 
 beforeEach(() => {
   dailyChallenges = false;
+  clubMe = KEN;
+  clubMembers = [KEN];
+  clubMemberCount = undefined;
+  reportedList = [];
   meBelowTop = false;
   ignoresDaily = false;
   localStorage.clear();
@@ -356,9 +387,139 @@ describe('ClubRoot', () => {
       },
     });
   });
+
+  it('heads the members with the total, not the page, and a member can Report', async () => {
+    const fetchMock = stubServer();
+    clubMembers = [KEN, MIKA];
+    clubMemberCount = 1200;
+    const user = userEvent.setup();
+    await joinedConnection();
+    renderRoot();
+
+    expect(await screen.findByRole('heading', { name: '1200 members' })).toBeInTheDocument();
+    // A member never sees Rename / Remove, nor a Reported section.
+    expect(screen.queryByRole('button', { name: 'Remove' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Reported' })).not.toBeInTheDocument();
+    // Only the other member's row has Report.
+    await user.click(screen.getByRole('button', { name: 'Report' }));
+    expect(screen.getByRole('alertdialog', { name: 'Report this nickname?' })).toBeInTheDocument();
+    await user.click(screen.getAllByRole('button', { name: 'Report' }).at(-1)!);
+    expect(await screen.findByText('Reported')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Report' })).not.toBeInTheDocument();
+    const posted = fetchMock.mock.calls.find(([url]) =>
+      String(url).endsWith('/members/m_2/report'),
+    );
+    expect(posted?.[1]?.method).toBe('POST');
+    // No fourth request for a member.
+    expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith('/members/reported'))).toBe(
+      false,
+    );
+  });
+
+  it('falls back to the list length when the server sends no memberCount', async () => {
+    stubServer();
+    clubMembers = [KEN, MIKA];
+    await joinedConnection();
+    renderRoot();
+    expect(await screen.findByRole('heading', { name: '2 members' })).toBeInTheDocument();
+  });
+
+  it('shows the owner the reported members and lets them rename', async () => {
+    const fetchMock = stubServer();
+    clubMe = { ...KEN, role: 'owner' };
+    clubMembers = [clubMe, MIKA];
+    reportedList = [{ member: MIKA, reportCount: 3 }];
+    const user = userEvent.setup();
+    await joinedConnection({ role: 'owner' });
+    renderRoot();
+
+    expect(await screen.findByRole('heading', { name: 'Reported' })).toBeInTheDocument();
+    expect(screen.getByText('3 reports')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Report' })).not.toBeInTheDocument();
+
+    // Both Mika lines (Reported and Members) offer Rename; use the first.
+    await user.click(screen.getAllByRole('button', { name: 'Rename' })[0]!);
+    const field = screen.getByLabelText('New nickname');
+    await user.clear(field);
+    await user.type(field, 'Mi');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(screen.getAllByText('Mi').length).toBe(2));
+    const patch = fetchMock.mock.calls.find(([, init]) => init?.method === 'PATCH');
+    expect(new URL(String(patch![0])).pathname).toBe('/api/v1/members/m_2');
+    expect(JSON.parse(String(patch![1]!.body))).toEqual({ nickname: 'Mi' });
+  });
+
+  it('lets the owner remove and erase results with ?purge=1, or remove alone', async () => {
+    const fetchMock = stubServer();
+    clubMe = { ...KEN, role: 'owner' };
+    clubMembers = [clubMe, MIKA];
+    clubMemberCount = 2;
+    const user = userEvent.setup();
+    await joinedConnection({ role: 'owner' });
+    renderRoot();
+
+    await user.click(await screen.findByRole('button', { name: 'Remove' }));
+    const dialog = screen.getByRole('alertdialog', { name: 'Remove Mika?' });
+    expect(dialog).toHaveTextContent('every result and ranking row of theirs is erased');
+    await user.click(screen.getByRole('button', { name: 'Remove and erase results' }));
+
+    expect(await screen.findByRole('heading', { name: '1 members' })).toBeInTheDocument();
+    const del = fetchMock.mock.calls.find(([, init]) => init?.method === 'DELETE');
+    expect(String(del![0])).toBe(`${ENDPOINT}/api/v1/members/m_2?purge=1`);
+  });
+
+  it('removes without ?purge when only Remove is chosen', async () => {
+    const fetchMock = stubServer();
+    clubMe = { ...KEN, role: 'owner' };
+    clubMembers = [clubMe, MIKA];
+    const user = userEvent.setup();
+    await joinedConnection({ role: 'owner' });
+    renderRoot();
+
+    await user.click(await screen.findByRole('button', { name: 'Remove' }));
+    const dialog = screen.getByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Remove' }));
+    await waitFor(() =>
+      expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'DELETE')).toBe(true),
+    );
+    const del = fetchMock.mock.calls.find(([, init]) => init?.method === 'DELETE');
+    expect(String(del![0])).toBe(`${ENDPOINT}/api/v1/members/m_2`);
+  });
+
+  it('reports a ranking row that is not the viewer’s', async () => {
+    const fetchMock = stubServer();
+    const user = userEvent.setup();
+    await joinedConnection({ memberId: 'm_7' });
+    renderRoot();
+
+    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · 1\. Ken 3:58/ }));
+    await screen.findByText('24 entries');
+    // The leader (m_1) is someone else; the viewer's own row has no Report.
+    expect(screen.getAllByRole('button', { name: /^Report/ })).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: 'Report Ken' }));
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Report' }),
+    );
+    expect(await screen.findByText('Reported')).toBeInTheDocument();
+    const posted = fetchMock.mock.calls.find(([url]) =>
+      String(url).endsWith('/members/m_1/report'),
+    );
+    expect(posted?.[1]?.method).toBe('POST');
+  });
+
+  it('stores the nickname the owner gave when the server says it changed', async () => {
+    stubServer();
+    clubMe = { ...KEN, nickname: 'Kenji' };
+    clubMembers = [clubMe];
+    await joinedConnection();
+    renderRoot();
+    expect(await screen.findByRole('heading', { name: '1 members' })).toBeInTheDocument();
+    await waitFor(async () => expect((await loadClubConnections())[0]!.nickname).toBe('Kenji'));
+  });
 });
 
-async function joinedConnection() {
+async function joinedConnection(extra: Record<string, unknown> = {}) {
   await addClubConnection({
     endpoint: ENDPOINT,
     clubId: 'c_1',
@@ -368,5 +529,6 @@ async function joinedConnection() {
     nickname: 'Ken',
     role: 'member',
     joinedAt: '2026-09-09T00:00:00.000Z',
+    ...extra,
   });
 }

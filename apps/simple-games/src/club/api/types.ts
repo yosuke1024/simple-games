@@ -59,7 +59,14 @@ export interface JoinResponse {
 export interface ClubResponse {
   club: Club;
   me: Member;
+  /** The newest members only (50); `memberCount` is the total. */
   members: Member[];
+  memberCount: number;
+}
+/** One row of `GET /members/reported` (club.md §17-3). */
+export interface ReportedMember {
+  member: Member;
+  reportCount: number;
 }
 export interface InviteResponse {
   token: string;
@@ -327,7 +334,17 @@ export function validateClubResponse(raw: unknown): ClubResponse | null {
     if (member === null) return null;
     members.push(member);
   }
-  return { club, me, members };
+  // Older servers omit the total: the list is then the whole club.
+  if (raw.memberCount !== undefined && !count(raw.memberCount)) return null;
+  const memberCount = typeof raw.memberCount === 'number' ? raw.memberCount : members.length;
+  return { club, me, members, memberCount };
+}
+
+export function validateReportedMember(raw: unknown): ReportedMember | null {
+  if (!isRec(raw) || !count(raw.reportCount)) return null;
+  const member = validateMember(raw.member);
+  if (member === null) return null;
+  return { member, reportCount: raw.reportCount };
 }
 
 export function validateInviteResponse(raw: unknown): InviteResponse | null {
