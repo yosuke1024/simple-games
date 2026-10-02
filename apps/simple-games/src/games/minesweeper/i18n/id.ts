@@ -38,4 +38,5 @@ export const id: MinesweeperMessages = {
   minesStep2Body: 'Tekan lama sebuah kotak untuk menandainya. Dengan mode tanda, cukup diketuk.',
   minesStep3Title: 'Buka sisanya untuk menang',
   minesStep3Body: 'Ketukan pertama selalu aman, dan tidak ada papan yang perlu ditebak.',
+  minesChallengeMismatch: 'Tantangan ini dibuat dengan versi game yang berbeda.',
 };

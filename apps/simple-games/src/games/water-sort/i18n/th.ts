@@ -23,4 +23,5 @@ export const th: WaterSortMessages = {
   waterStep2Body: 'หลอดว่างคือพื้นที่ทำงานของคุณ ย้อนกลับได้ฟรีเสมอ',
   waterStep3Title: 'หลอดละหนึ่งสี',
   waterStep3Body: 'เมื่อทุกหลอดเหลือสีเดียว กระดานก็เสร็จสมบูรณ์',
+  waterChallengeMismatch: 'ความท้าทายนี้สร้างด้วยเกมเวอร์ชันอื่น',
 };

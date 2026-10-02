@@ -149,4 +149,13 @@ export const id: Messages = {
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Nyawa: {n}',
   levelsCleared: 'Level selesai',
+  // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
+  advancedTitle: 'Lanjutan',
+  clubEntry: 'Club House',
+  playTogetherTitle: 'Main bersama',
+  playTogetherBody: 'Tantangan privat dengan orang yang Anda kenal.',
+  clubSendResult: 'Kirim ke Club',
+  clubResultSent: 'Terkirim ke {club}',
+  clubResultPending: 'Akan dikirim saat Anda membuka Club',
+  clubResultNotSent: 'Tidak dapat mengirim ke {club}',
 };

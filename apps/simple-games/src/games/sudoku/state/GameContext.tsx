@@ -3,8 +3,10 @@
  * persistence. Pure local state — no analytics, no ad orchestration; the only
  * ad surface is the shared BannerSlot the game screen renders.
  *
- * Three games are suspended independently — one level, one daily, one free
- * board (§11) — so switching modes never costs the player any of them.
+ * Four games are suspended independently — one level, one daily, one free
+ * board (§11), one Club House challenge (§15) — so switching modes never
+ * costs the player any of them. A challenge never touches the statistics,
+ * the level list, the daily calendar or the review prompt's count (§15).
  *
  * Battery note: the play clock lives in a mutable ref and does NOT set React
  * state, so nothing re-renders while a game is running. It is never shown
@@ -93,6 +95,8 @@ export interface SudokuContextValue {
   lastResult: LastResult | null;
   /** Changes whenever a new game begins. */
   sessionEpoch: number;
+  /** This mount opened onto a Club House challenge (§15): Quick Rules lead to it. */
+  openedOnChallenge: boolean;
   canResume: (mode: GameMode) => boolean;
   startLevel: (level: number) => void;
   startNextLevel: () => void;
@@ -126,6 +130,12 @@ export interface SudokuProviderProps {
   onExit: () => void;
   /** Provided by the shell: which door this launch came through (issue #113). */
   entry?: 'collection' | 'shortcut';
+  /**
+   * Open onto the Club House challenge in `initialSessions.club` (§15) — the
+   * Root has already built it from the challenge and checked its digest.
+   * Quick Rules still come first on a launch that has never seen them.
+   */
+  openOnChallenge?: boolean;
   children: ReactNode;
 }
 
@@ -143,8 +153,12 @@ export function SudokuProvider({
   prefs,
   onExit,
   entry,
+  openOnChallenge = false,
   children,
 }: SudokuProviderProps) {
+  const [openedOnChallenge] = useState(
+    () => openOnChallenge && initialSessions.club?.status === 'playing',
+  );
   /**
    * The suspended game this launch opens straight onto, or null for the home
    * screen (issue #113). Decided once, from the records the provider was
@@ -156,9 +170,11 @@ export function SudokuProvider({
    * and that order does not have an exception.
    */
   const [resumeMode] = useState<GameMode | null>(() =>
-    entry === 'shortcut' && initialFlags.tutorialCompleted
-      ? soleSuspendedMode(initialSessions)
-      : null,
+    openedOnChallenge
+      ? 'club'
+      : entry === 'shortcut' && initialFlags.tutorialCompleted
+        ? soleSuspendedMode(initialSessions)
+        : null,
   );
   /**
    * The slot this mount is pointed at: the one a shortcut opened straight
@@ -171,8 +187,14 @@ export function SudokuProvider({
   // answers null until Quick Rules are behind the player, so the gate is in
   // one place rather than two — two would each cover for the other, and a
   // guard nothing can observe failing is not a guard.
+  // A challenge is a door like a shortcut: `resumeMode` is 'club', and the
+  // board waits behind Quick Rules on a first launch.
   const [screen, setScreen] = useState<Screen>(
-    resumeMode ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
+    resumeMode !== null && initialFlags.tutorialCompleted
+      ? 'game'
+      : initialFlags.tutorialCompleted
+        ? 'home'
+        : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
   const [activeMode, setActiveMode] = useState<GameMode>(mountedMode);
@@ -268,6 +290,14 @@ export function SudokuProvider({
       // Solved: finalize once. Only the seconds not yet booked are added, so
       // leaving and returning cannot count the same time twice.
       void clearSavedGame(next.mode);
+      if (next.mode === 'club') {
+        // A Club House challenge is the Club's record, not this device's
+        // (§15): no statistics, no best, no level, no review count — and so
+        // no personal best for the clear screen to announce.
+        bookedRef.current = next.elapsedSeconds;
+        setLastResult(null);
+        return;
+      }
       const unbooked = Math.max(0, next.elapsedSeconds - bookedRef.current);
       bookedRef.current = next.elapsedSeconds;
       // Read before any record moves: what this run is measured against. A
@@ -315,7 +345,7 @@ export function SudokuProvider({
 
   const beginSession = useCallback(
     (next: SudokuSession) => {
-      persistStats(applyGameStart(statsRef.current, next.difficulty));
+      if (next.mode !== 'club') persistStats(applyGameStart(statsRef.current, next.difficulty));
       setLastResult(null);
       putSession(next.mode, next);
       activate(next);
@@ -439,7 +469,8 @@ export function SudokuProvider({
       putSession(mode, synced);
       void saveGame(synced);
       const unbooked = Math.max(0, synced.elapsedSeconds - bookedRef.current);
-      if (unbooked > 0) {
+      // A challenge's seconds are the Club's, never the statistics' (§15).
+      if (unbooked > 0 && mode !== 'club') {
         bookedRef.current = synced.elapsedSeconds;
         persistStats(applyPlayTime(statsRef.current, synced.difficulty, unbooked));
       }
@@ -499,7 +530,8 @@ export function SudokuProvider({
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const backHandle = CapacitorApp.addListener('backButton', () => {
-      if (screen === 'home') {
+      // A challenge's board goes back where it came from — the Club (§15).
+      if (screen === 'home' || (screen === 'game' && activeModeRef.current === 'club')) {
         exitToCollection();
       } else {
         // Leaving Quick Rules by Back counts as having seen them (issue #142):
@@ -530,6 +562,7 @@ export function SudokuProvider({
       dailyDoneToday: progress.dailyTimes[today] !== undefined,
       lastResult,
       sessionEpoch,
+      openedOnChallenge,
       canResume,
       startLevel,
       startNextLevel,
@@ -560,6 +593,7 @@ export function SudokuProvider({
       today,
       lastResult,
       sessionEpoch,
+      openedOnChallenge,
       canResume,
       startLevel,
       startNextLevel,

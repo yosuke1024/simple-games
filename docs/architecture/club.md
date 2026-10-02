@@ -14,8 +14,11 @@ Epic #175 の段 2(原則の境界 #176 → **#161 の設計** → #164 の発�
 両デプロイの共通部分であり、Public はここに**足す**ことはあっても**変えない**。
 段取りは [../plans/2026-09-30-public-club-house.md](../plans/2026-09-30-public-club-house.md)。
 
-**実装はまだ無い**(`apps/simple-games/src/club/` は存在しない)。
-段取りは [../plans/2026-09-09-private-game-club.md](../plans/2026-09-09-private-game-club.md)。
+**クライアント実装は 2026-10-02 の PR で入る**(`apps/simple-games/src/club/`。段取りは
+[../plans/2026-10-02-club-client.md](../plans/2026-10-02-club-client.md) — 段取りの PR D と E)。
+サーバは [yosuke1024/simple-games-club](https://github.com/yosuke1024/simple-games-club) にあり、
+Node + SQLite と Cloudflare Workers + Durable Object の 2 実装が同じ契約テストを通す
+(`simple-games-club#2`、2026-10-02)。
 issue #161 / #164 の本文とコメントは提案・検討の記録であり、この文書と食い違う箇所は
 この文書を正とする([../PROJECT_CONTEXT.md](../PROJECT_CONTEXT.md)「Authority」)。
 
@@ -590,7 +593,7 @@ https://<endpoint>/join#invite=<inviteToken>
 - サーバは `/join`(末尾スラッシュ無し)で Web ビルドの `index.html` を返す。
   `/join/` は `/join` へ redirect する — Web ビルドは `base: './'` なので、
   `/join/` で開くと `./assets/` が `/join/assets/` に解決して壊れる。
-- Web ビルド側(`club/invite.ts`)は `location.pathname` が `/join` で終わり、hash に
+- Web ビルド側(`app/clubGate.ts` の `takeInviteFromLocation`)は `location.pathname` が `/join` で終わり、hash に
   `invite=` があれば招待と読む。読んだら `history.replaceState` で fragment を
   **即座に消す**(参加の前でも)。token が住所欄・履歴・ブックマークに残らないため。
 - pixapps.ai の Web 版(`/simple-games/play/`)にはこの経路は存在しない
@@ -692,7 +695,7 @@ Simple Games                                  SharedHost(事業者上)
                                               deploy → 公開 URL
   ← 「デプロイが終わったらサーバの URL を貼る」
   endpoint 入力 → GET /health(疎通)
-  → POST /claim { setupKey, nickname }
+  → POST /claim { setupKey, nickname, clubName? }
                                               hash 照合 → owner member 作成 → Setup Key 失効
   ← memberToken(role: 'owner')→ sg.club へ
 ```
@@ -868,7 +871,13 @@ Push は後続でも作らない(PRODUCT_PRINCIPLES「Club House」)。**公開�
 - **未送信キュー**(§4-2): 結果の POST が失敗したら `sg.clubOutbox` へ。次に
   その Club の画面を開いたとき、または次の結果を送るときに、古い順に送る
   (タイマー無し)。`already_submitted` / `board_mismatch` / `not_found` /
-  `unauthorized` が返ったら**捨てる**(再送しても通らない)。
+  `unauthorized` が返ったら**捨てる**(再送しても通らない)。body そのものが拒まれた
+  `invalid_request` / `forbidden` / `too_large` / `unsupported_version` も同じ(先頭で
+  詰まると、その Club の後続が一つも送れないため)。`X-Club-Api` が知らない版のサーバも
+  同じ(次項: その Club へは何も送らない。残せば開くたびに送ってしまう)。応答が無い・
+  429・5xx・形の崩れた応答は再送の対象。結果画面の 1 行は、送れたら `Sent to <club>`、キューに入ったら
+  `Will send when you open the Club`、捨てたら `Could not send to <club>`。Club との接続を
+  切ったら、その Club 宛てのキューも捨てる(§4-2)。
 - **Club ごとに独立**: 1 つのサーバの障害・401 は、その接続の画面にだけ現れる。
   All Clubs の一覧は `sg.club` のキャッシュから描くので、落ちているサーバの名前も出る。
 - **`X-Club-Api` が知らない版**: 画面に 1 行出して、その Club へは何も送らない。
@@ -1012,6 +1021,28 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
     「同じ」とは API 契約のことで、実装は 2 つあってよい(Public は Cloudflare、Private は
     Node + SQLite)。同一性は共有コードではなく §5 の契約テストが示す。
 
+**2026-10-02 に製品オーナーが確認した判断**:
+
+14. **入る前の局の記録は要らない。** 結果画面で `Send to Club` を押し忘れた局を後から
+    送る仕組み(デイリーの後送り、直近の局の保持)は作らない。Club から入った挑戦の局が
+    自動送信であれば足りる(§2-2)。
+15. **Public の Durable Object は作られた場所(EU)のまま。** 法的に動かす理由は無く、
+    EU 内に置くのは GDPR 上むしろ保守的。利用者の分布を見て作り直すかは出荷前(PR F)に
+    決める(`simple-games-club` の docs/cloudflare.md §1)。
+16. **本番 `club.pixapps.ai` のクラブ名は「PixApps Club」。** claim 時は既定の
+    「Yoh's Club」で、2026-10-02 に `PATCH /club` で変えた。クラブ名は claim の `clubName`
+    で付け、Owner が `PATCH /club` で変える(§5-3)。Private の Owner 画面(名前の入力と
+    変更)は段取りの PR H。
+17. **本番の計測用データは Public 公開前に消す。** 費用の spike(`simple-games-club#2`)
+    が作ったメンバー 10 人と挑戦は、PR F で Durable Object を作り直してから公開する。
+18. **紹介は §8-4 の形で確定。** Simple Games が招待コードを発行する形にはしない。Host が
+    自分の事業者 referral リンクを置き、メンバーが `Create your own Club` を選んだときに
+    そのリンクで事業者を 1 回開くだけ。親の Club を使うだけの子は事業者アカウントを
+    持たないので還元は起きず、子が自分の Club を建てたときに限る。
+19. **Public を先に届け、Private は次の版。** 次のアプリの版に Public Club House と、
+    いまベータのアプリの公開リリースを同梱する。Private の Owner 導線(段取りの PR H:
+    `Create my Club` / Hosting / クラブ名 / Railway での実証)はその次の版。
+
 **外部の事実確認**(#161 Phase 0 と `simple-games-club#1` の未完了項目。確認できるまで
 文言と数字を出さない):
 
@@ -1026,9 +1057,15 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
    §8-4 に置ける前提。Railway には referral program がある見込みで、PR E で確かめる)。
    リンクを template の導線へ「引き継ぐ」仕組みは**要らない** — Host のリンクを
    そのまま開くだけで、加工も追跡もしない(§8-4)。
-10. **Public を Cloudflare の無料枠で運用できるか**(判断 11 の前提そのもの)。Workers /
-    Durable Objects で §5 の契約を満たせるか、費用の driver は何か、濫用でどこまで
-    膨らみうるか。**これが確かめられるまで Public は出さない。**
+10. **Public を Cloudflare の無料枠で運用できるか**(判断 11 の前提そのもの)。
+    **2026-10-02 に前半が確かめられた**: Workers + SQLite-backed Durable Object の実装が
+    Node 版と同じ契約テスト 56 本を通し、本番 `club.pixapps.ai` への往復 114 リクエストが
+    すべて契約どおりに返った(サーバエラー 0、中央値 184 ms。`simple-games-club#2`、
+    同リポジトリの docs/cloudflare.md §7)。費用の driver は同 §2〜§5 に一次資料付きで
+    書いた — 無料枠の上限は「止まる」であって課金ではなく、1 日 10 万リクエストが天井。
+    **後半 — ダッシュボードの実測値(rows read / written、duration、保存量、請求 0)— は
+    未読で、金額は書いていない。** 一覧(`GET /challenges`)と記録(`GET /records`)の
+    読み量が Club の大きさに比例することが分かり、Public の前に直す(段取りの PR C)。
 11. **表示名の安全策がどこまで要るか。** 表示名が pixapps.ai の公開ページに出る以上、
     長さ・文字種の制約と通報・削除の手段が要る。14 言語を一人で見る前提で、どこまでが
     現実的かを決める。

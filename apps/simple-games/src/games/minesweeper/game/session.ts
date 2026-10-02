@@ -77,6 +77,22 @@ export function createDifficultySession(
   return baseSession('difficulty', seed, difficulty, null);
 }
 
+/**
+ * A Club House challenge's board (§14). The first tap is part of the
+ * challenge — the same seed opened on another cell is another minefield — so
+ * the board arrives already opened on the challenge's first cell, with the
+ * clock at zero: the position the player who made it started from.
+ */
+export function createClubSession(
+  params: { difficulty: Difficulty; firstIndex: number },
+  seed: string,
+): MinesweeperSession {
+  const fresh = baseSession('club', seed, params.difficulty, null);
+  const opened = tapCell(fresh, params.firstIndex);
+  if (opened === null) throw new Error('A challenge must open on a cell of its board');
+  return opened;
+}
+
 /** A fresh daily game for a local YYYY-MM-DD date — medium every day (§8). */
 export function createDailySession(dateString: string): MinesweeperSession {
   return baseSession('daily', dailySeed(dateString), DAILY_DIFFICULTY, dateString);
@@ -92,6 +108,12 @@ function withBoard(session: MinesweeperSession, board: Board): MinesweeperSessio
  * player already knows — this is a retry, not a new game.
  */
 export function restartSession(session: MinesweeperSession): MinesweeperSession {
+  if (session.mode === 'club' && session.firstIndex !== null) {
+    return createClubSession(
+      { difficulty: session.difficulty, firstIndex: session.firstIndex },
+      session.seed,
+    );
+  }
   const fresh =
     session.mode === 'daily' && session.dailyDate !== null
       ? createDailySession(session.dailyDate)

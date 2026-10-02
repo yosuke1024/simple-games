@@ -62,6 +62,7 @@ export function SudokuGameScreen() {
     applyUndo,
     takeHint,
     goHome,
+    exitToCollection,
     restartCurrent,
     startNextLevel,
     startFree,
@@ -219,12 +220,14 @@ export function SudokuGameScreen() {
   if (!session) return null;
 
   const solved = session.status === 'solved';
+  // A Club House challenge's board goes back where it came from — the Club (§15).
+  const leave = session.mode === 'club' ? exitToCollection : goHome;
 
   return (
     <div className="screen game-screen">
       <div className="game-content" inert={solved || confirmRestart}>
         <header className="game-topbar">
-          <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
+          <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={leave}>
             <IconBack />
           </button>
           <div className="sudoku-status">
@@ -233,7 +236,9 @@ export function SudokuGameScreen() {
                 ? t('modeDaily')
                 : session.mode === 'free'
                   ? t('freePlay')
-                  : t('modeLevel', { n: session.level ?? 1 })}
+                  : session.mode === 'club'
+                    ? t('clubEntry')
+                    : t('modeLevel', { n: session.level ?? 1 })}
             </span>
             <span>{t(`sudokuTier_${session.difficulty}`)}</span>
           </div>
@@ -317,7 +322,7 @@ export function SudokuGameScreen() {
         onRetry={restartCurrent}
         onNextLevel={startNextLevel}
         onNewFree={() => startFree(session.difficulty)}
-        onHome={goHome}
+        onHome={leave}
       />
 
       <RestartDialog

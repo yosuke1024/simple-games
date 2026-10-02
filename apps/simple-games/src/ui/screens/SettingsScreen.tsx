@@ -154,9 +154,11 @@ function backupDate(iso: string, locale: string): string {
 
 export interface SettingsScreenProps {
   onBack: () => void;
+  /** Settings › Advanced › Club House: the shell loads the Club layer and opens it (club.md §2-1). */
+  onOpenClub: () => void;
 }
 
-export function SettingsScreen({ onBack }: SettingsScreenProps) {
+export function SettingsScreen({ onBack, onOpenClub }: SettingsScreenProps) {
   const { settings, updateSettings, replaceSettings, locale, t } = useSettings();
   const purchased = useAdRemovalPurchased();
   const purchasable = usePurchaseAvailable() && !purchased;
@@ -548,6 +550,20 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               {t(backupNotice)}
             </p>
           ) : null}
+        </section>
+
+        {/* Advanced (docs/architecture/club.md §2-1): the one door to the
+            Club House that is always there. One row, no subtitle, no badge —
+            what it opens is the Club layer's to say, and nothing here knows
+            whether this device has joined anything. */}
+        <section className="settings-group" aria-label={t('advancedTitle')}>
+          <h2 className="settings-group-title">{t('advancedTitle')}</h2>
+          <button type="button" className="settings-row" onClick={onOpenClub}>
+            <span className="settings-row-label">{t('clubEntry')}</span>
+            <span className="settings-row-chevron" aria-hidden="true">
+              <IconChevronRight />
+            </span>
+          </button>
         </section>
 
         <button

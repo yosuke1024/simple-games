@@ -13,6 +13,9 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // saveFree is the third suspended-game slot, added with Free Play
   // (2026-09-03, docs/SUDOKU_RULES.md §9「フリープレイ」). Purely additive: no
   // released key changed meaning or moved, so nothing is stranded.
+  // saveClub is the fourth, a Club House challenge in progress (2026-10-02,
+  // docs/architecture/club.md §6-2, docs/SUDOKU_RULES.md §15). Appended at
+  // the end, purely additive, for the same reason.
   sudoku: [
     'sd.saveGame',
     'sd.saveDaily',
@@ -21,13 +24,16 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
     'sd.progress',
     'sd.flags',
     'sd.prefs',
+    'sd.saveClub',
   ],
   solitaire: ['so.saveGame', 'so.saveDaily', 'so.stats', 'so.flags', 'so.prefs'],
   'spider-solitaire': ['ss.saveGame', 'ss.saveDaily', 'ss.stats', 'ss.flags', 'ss.prefs'],
   freecell: ['fc.saveGame', 'fc.saveDaily', 'fc.stats', 'fc.flags'],
   hearts: ['ht.saveGame', 'ht.stats', 'ht.flags', 'ht.prefs'],
   'gin-rummy': ['gr.saveGame', 'gr.stats', 'gr.flags', 'gr.prefs'],
-  minesweeper: ['ms.saveGame', 'ms.saveDaily', 'ms.stats', 'ms.flags', 'ms.prefs'],
+  // saveClub: a Club House challenge in progress, appended (2026-10-02,
+  // docs/architecture/club.md §6-2, docs/MINESWEEPER_RULES.md §14). Additive.
+  minesweeper: ['ms.saveGame', 'ms.saveDaily', 'ms.stats', 'ms.flags', 'ms.prefs', 'ms.saveClub'],
   'bubble-pop': ['bu.stats', 'bu.progress', 'bu.flags'],
   'brick-breaker': ['bb.stats', 'bb.progress', 'bb.flags'],
   nonogram: [
@@ -108,6 +114,9 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
     'ws.progress',
     'ws.flags',
     'ws.prefs',
+    // A Club House challenge in progress, appended (2026-10-02,
+    // docs/architecture/club.md §6-2, docs/WATER_SORT_RULES.md §14). Additive.
+    'ws.saveClub',
   ],
   'sliding-puzzle': ['sp.saveGame', 'sp.saveDaily', 'sp.stats', 'sp.progress', 'sp.flags'],
   'memory-match': ['mm.saveGame', 'mm.saveDaily', 'mm.stats', 'mm.flags'],

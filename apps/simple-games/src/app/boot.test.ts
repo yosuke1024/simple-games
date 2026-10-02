@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   initShortcutLaunch: vi.fn<() => Promise<void>>(),
   initHomeShortcuts: vi.fn<() => Promise<void>>(),
   initQuickActions: vi.fn<() => Promise<void>>(),
+  initClubGate: vi.fn<() => Promise<void>>(),
   loadRecord: vi.fn<() => Promise<Settings>>(),
   isAdRemovalActive: vi.fn<() => boolean>(),
   initAds: vi.fn<() => Promise<void>>(),
@@ -42,6 +43,7 @@ vi.mock('../services/homeShortcut/homeShortcut', () => ({
 vi.mock('../services/homeShortcut/quickActions', () => ({
   initQuickActions: mocks.initQuickActions,
 }));
+vi.mock('./clubGate', () => ({ initClubGate: mocks.initClubGate }));
 
 const storedSettings: Settings = { ...settingsSchema.defaultValue(), theme: 'dark' };
 
@@ -56,6 +58,7 @@ beforeEach(() => {
   mocks.initShortcutLaunch.mockReset().mockResolvedValue(undefined);
   mocks.initHomeShortcuts.mockReset().mockResolvedValue(undefined);
   mocks.initQuickActions.mockReset().mockResolvedValue(undefined);
+  mocks.initClubGate.mockReset().mockResolvedValue(undefined);
   mocks.loadRecord.mockReset().mockResolvedValue(storedSettings);
   mocks.isAdRemovalActive.mockReset().mockReturnValue(false);
   mocks.initAds.mockReset().mockResolvedValue(undefined);
@@ -75,6 +78,8 @@ describe('initShellState (issue #96)', () => {
     expect(mocks.initShortcutLaunch).toHaveBeenCalledTimes(1);
     expect(mocks.initHomeShortcuts).toHaveBeenCalledTimes(1);
     expect(mocks.initQuickActions).toHaveBeenCalledTimes(1);
+    // Whether this device has joined a Club House (docs/architecture/club.md §3).
+    expect(mocks.initClubGate).toHaveBeenCalledTimes(1);
   });
 
   // The mirror's first write is the stored shelf, which means the shelf has
@@ -123,6 +128,7 @@ describe('initShellState (issue #96)', () => {
     mocks.initShortcutLaunch.mockImplementation(failing);
     mocks.initHomeShortcuts.mockImplementation(failing);
     mocks.initQuickActions.mockImplementation(failing);
+    mocks.initClubGate.mockImplementation(failing);
     mocks.loadRecord.mockImplementation(failing);
     await expect(initShellState()).resolves.toEqual(settingsSchema.defaultValue());
   });

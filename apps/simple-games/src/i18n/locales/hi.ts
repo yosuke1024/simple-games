@@ -149,4 +149,13 @@ export const hi: Messages = {
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'जीवन: {n}',
   levelsCleared: 'पूरे किए स्तर',
+  // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
+  advancedTitle: 'उन्नत',
+  clubEntry: 'Club House',
+  playTogetherTitle: 'साथ खेलें',
+  playTogetherBody: 'जानने वालों के साथ निजी चुनौतियाँ।',
+  clubSendResult: 'Club को भेजें',
+  clubResultSent: '{club} को भेजा गया',
+  clubResultPending: 'Club खोलने पर भेजा जाएगा',
+  clubResultNotSent: '{club} को नहीं भेजा जा सका',
 };

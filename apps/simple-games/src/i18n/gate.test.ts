@@ -48,6 +48,12 @@ const gameModules = import.meta.glob<{ catalogs: Record<Locale, Record<string, s
   '../games/*/i18n/index.ts',
   { eager: true },
 );
+// The Club House catalog (src/club/i18n) is a catalog like any game's: test
+// infrastructure may glob it (importBoundaries rule 5 names this exact path).
+const clubModules = import.meta.glob<{ catalogs: Record<Locale, Record<string, string>> }>(
+  '../club/i18n/index.ts',
+  { eager: true },
+);
 const full: Record<Locale, Record<string, string>> = Object.fromEntries(
   (Object.keys(catalogs) as Locale[]).map((locale) => [
     locale,
@@ -55,6 +61,7 @@ const full: Record<Locale, Record<string, string>> = Object.fromEntries(
       {},
       catalogs[locale],
       ...Object.values(gameModules).map((m) => m.catalogs[locale]),
+      ...Object.values(clubModules).map((m) => m.catalogs[locale]),
     ) as Record<string, string>,
   ]),
 ) as Record<Locale, Record<string, string>>;

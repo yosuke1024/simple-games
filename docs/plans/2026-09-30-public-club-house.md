@@ -40,7 +40,7 @@
 | **E** | このリポジトリ      | 3 本の対応(Sudoku / Minesweeper / Water Sort)と結果画面の操作、順位表の画面                                                                                                                      | club.md §12 の 3・5                                                                  |
 | **F** | Public のデプロイ   | Public Club House を実際に公開。表示名の安全策、通報と削除、開示文                                                                                                                               | 未参加の端末でリクエストが 0 件(実機)                                                |
 | **G** | このリポジトリ + LP | 出荷: 公開文面、プライバシーページ、LP の順位抜粋                                                                                                                                                | BRAND.md「表現ルール」                                                               |
-| **H** | このリポジトリ      | Private の招待と Host 導線(2026-09-09 の設計のまま)                                                                                                                                              | club.md §7 / §8                                                                      |
+| **H** | このリポジトリ      | Private の Host 導線(`Create my Club` / Hosting / クラブ名の入力と変更 / Railway で実際に 1 台建てる確認。2026-09-09 の設計のまま)。**Public の次の版**(club.md §14 判断 19)                     | club.md §7 / §8                                                                      |
 
 **B が終わるまで C 以降に進まない。** 費用が前提条件だからで、これは順序の都合ではなく
 採否そのものである(PRODUCT_PRINCIPLES「費用の上限」)。

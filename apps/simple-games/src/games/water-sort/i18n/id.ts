@@ -24,4 +24,5 @@ export const id: WaterSortMessages = {
   waterStep2Body: 'Tabung kosong adalah ruang kerjamu. Urungkan selalu gratis.',
   waterStep3Title: 'Satu warna per tabung',
   waterStep3Body: 'Saat setiap tabung berisi satu warna saja, papan selesai.',
+  waterChallengeMismatch: 'Tantangan ini dibuat dengan versi game yang berbeda.',
 };

@@ -38,4 +38,5 @@ export const fr: SudokuMessages = {
   sudokuStep3Title: 'Vous bloquez ? Prenez un indice',
   sudokuStep3Body:
     "Un indice montre quelle case est décidée et pourquoi. Les indices et l'annulation sont toujours gratuits.",
+  sudokuChallengeMismatch: 'Ce défi a été créé avec une autre version du jeu.',
 };

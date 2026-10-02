@@ -114,17 +114,17 @@ bash .github/scripts/check-principles.sh
 - [ ] **高リスクキーの門を通している**([I18N_POLICY.md](I18N_POLICY.md)「リリース前の門」)
 
       ```bash
-          pnpm --filter simple-games i18n:gate status        # 残りを見る
-          pnpm --filter simple-games i18n:gate pending <lang> # 逆翻訳する文字列(英語は出ない)
-          pnpm --filter simple-games i18n:gate:check          # 未承認があれば落ちる
-          ```
+              pnpm --filter simple-games i18n:gate status        # 残りを見る
+              pnpm --filter simple-games i18n:gate pending <lang> # 逆翻訳する文字列(英語は出ない)
+              pnpm --filter simple-games i18n:gate:check          # 未承認があれば落ちる
+              ```
 
-          逆翻訳は**訳を書いた実行者以外**にやらせる。承認は
-          `src/i18n/gateRecord.json` に、読んだ英語と訳文のハッシュ付きで記録される。
-          どちらかを後から編集すると失効し、通常の `pnpm test` が落ちる。
-          **「ネイティブレビュー済み」は要求しない** — 一人開発では供給できず、
-          供給できない条件をチェックリストに置くと形骸化するため
-          (自然さは `machine` 来歴の開示と読者からの報告で担保する)。
+              逆翻訳は**訳を書いた実行者以外**にやらせる。承認は
+              `src/i18n/gateRecord.json` に、読んだ英語と訳文のハッシュ付きで記録される。
+              どちらかを後から編集すると失効し、通常の `pnpm test` が落ちる。
+              **「ネイティブレビュー済み」は要求しない** — 一人開発では供給できず、
+              供給できない条件をチェックリストに置くと形骸化するため
+              (自然さは `machine` 来歴の開示と読者からの報告で担保する)。
 
 - [ ] 端末言語を切り替えてもゲーム進行が失われない
 - [ ] Backup & Restore の 4 キー(`backupRestoreConfirmTitle` /
@@ -581,6 +581,40 @@ Solitaire / Spider / FreeCell は**タップ操作を残したまま**ドラッ�
 - [ ] データ セーフティ欄と公開プライバシーポリシーが、この自動送信の仕様と
       一致している ――「任意」ではなく自動収集であること、Device or other IDs に
       広告 ID(Meta と共有)が含まれること(詳細は下の §6)
+
+## 5.16 Club House は未接続の端末では存在しない([architecture/club.md](architecture/club.md) §12-8, issue #161)
+
+**まだ実行していない。** Club House を出荷するリリースの前に、ここを実機で通す。
+「接続していない端末は club/ を 1 バイトも読まず、1 件も通信しない」は、
+`importBoundaries.test.ts` 規則 5・サイズゲート・`check-principles.sh` §1 / §1b が
+**到達できない**ことを示しているだけで、実際に**起きない**ことは実機でしか見えない。
+
+確認用の端末は、**Club に一度も参加しておらず、招待リンクも開いていない**もの
+(アプリを入れ直す。または「ローカルデータ削除」を押した直後)。接続済みの端末での
+確認は何も証明しない。
+
+- [ ] **未接続の端末で機内モードにして**、ホーム → 設定 → Sudoku / Minesweeper /
+      Water Sort の結果画面まで一通り遊ぶ。ホーム・設定・結果画面に
+      **Club に関する変化がなく**(「一緒に遊ぶ」の入口が余計な場所に出ない、
+      待ち表示も失敗表示も出ない)、遊び心地がこれまでと同じであること
+- [ ] **その間のリクエストが 0 件**であること。見方:
+      Android は Android Studio の Network Inspector(`com.pixapps.simplegames` を
+      選び、操作の間ずっと録る)、iOS は Safari の Web Inspector の Network タブ
+      (端末を Mac に繋いで開く)、Web は DevTools の Network タブ。
+      広告の SDK のリクエストはここでは無関係なので、機内モードにして切り分ける
+      (機内モードでは広告も出ないので、**残るのは Core 自身の通信だけ**)。
+      0 件でなければ、そのリクエストの宛先を書き残してから止める
+- [ ] 機内モードを**解除**して同じ操作を繰り返しても、未接続の端末は
+      Club の宛先へ**何も送らない**こと(解除した瞬間に送られるものがない)
+- [ ] ホームの表示から `club-*.js` が読まれていないこと(Web なら Network タブで
+      `club-` を検索して 0 件。設定の Club House を**押す前**に見る)
+- [ ] 設定 › Advanced › Club House を押して初めて `club-*.js` が読まれること、
+      そして**ここで初めて**接続の画面が出ること
+
+**未確認は未確認として書く。** 機内モードの確認を端末の一部でしかしなかったとき、
+Network Inspector が使えなかったとき、通信の宛先を特定できなかったときは、
+チェックを入れずに「何を確認できなかったか」をこの節の下に残す。「たぶん出ていない」は
+確認ではない。
 
 ## 6. ストア掲載
 

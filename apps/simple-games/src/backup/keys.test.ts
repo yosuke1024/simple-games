@@ -47,6 +47,18 @@ describe('backup key ownership', () => {
     expect(backupKeys()).not.toContain(STORAGE_KEYS.iap);
   });
 
+  /**
+   * The member token in `sg.club` is the device's secret and the outbox holds
+   * results bound for a particular Club (docs/architecture/club.md §4). Both
+   * are what a copied file must not carry, so they are named here as well.
+   */
+  it('never carries the Club connections or the Club outbox', () => {
+    expect(SHELL_KEYS_LEFT_BEHIND).toHaveProperty(STORAGE_KEYS.club);
+    expect(SHELL_KEYS_LEFT_BEHIND).toHaveProperty(STORAGE_KEYS.clubOutbox);
+    expect(backupKeys()).not.toContain(STORAGE_KEYS.club);
+    expect(backupKeys()).not.toContain(STORAGE_KEYS.clubOutbox);
+  });
+
   it('gives a reason for every record it leaves behind', () => {
     for (const [key, reason] of Object.entries(SHELL_KEYS_LEFT_BEHIND)) {
       expect(reason.length, `${key} has no reason`).toBeGreaterThan(0);

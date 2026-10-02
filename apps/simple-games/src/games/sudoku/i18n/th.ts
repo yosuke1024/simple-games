@@ -35,4 +35,5 @@ export const th: SudokuMessages = {
   sudokuStep2Body: 'กด โน้ต เพื่อจดตัวเลขที่เป็นไปได้ระหว่างค่อย ๆ ตัดตัวเลือก',
   sudokuStep3Title: 'ติดขัด? ใช้คำใบ้',
   sudokuStep3Body: 'คำใบ้จะบอกว่าช่องไหนแน่นอนแล้วและเพราะอะไร คำใบ้และย้อนกลับฟรีตลอด',
+  sudokuChallengeMismatch: 'ความท้าทายนี้สร้างด้วยเกมเวอร์ชันอื่น',
 };

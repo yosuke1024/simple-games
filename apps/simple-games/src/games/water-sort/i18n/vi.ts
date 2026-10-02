@@ -24,4 +24,5 @@ export const vi: WaterSortMessages = {
   waterStep2Body: 'Ống trống là chỗ xoay xở của bạn. Hoàn tác luôn miễn phí.',
   waterStep3Title: 'Mỗi ống một màu',
   waterStep3Body: 'Khi mỗi ống chỉ còn một màu, bàn chơi hoàn thành.',
+  waterChallengeMismatch: 'Thử thách này được tạo bằng một phiên bản khác của trò chơi.',
 };

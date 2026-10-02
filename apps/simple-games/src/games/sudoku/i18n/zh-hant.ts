@@ -35,4 +35,5 @@ export const zhHant: SudokuMessages = {
   sudokuStep2Body: '點「筆記」，在縮小範圍時把候選數寫進格子裡。',
   sudokuStep3Title: '卡住了？看提示',
   sudokuStep3Body: '提示會指出哪一格能確定，以及為什麼。提示和復原永遠免費。',
+  sudokuChallengeMismatch: '這個挑戰是用另一個版本的遊戲建立的。',
 };

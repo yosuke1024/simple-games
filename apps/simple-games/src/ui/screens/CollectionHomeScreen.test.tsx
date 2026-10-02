@@ -92,7 +92,12 @@ import {
 function renderHome(onOpenGame: (gameId: GameId) => void = () => undefined) {
   return render(
     <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
-      <CollectionHomeScreen onOpenGame={onOpenGame} onOpenSettings={() => undefined} />
+      <CollectionHomeScreen
+        onOpenGame={onOpenGame}
+        onOpenSettings={() => undefined}
+        onOpenClub={() => undefined}
+        clubConnections={[]}
+      />
     </SettingsProvider>,
   );
 }
@@ -1341,6 +1346,8 @@ describe('the hardware back button on the collection', () => {
           onOpenGame={() => undefined}
           onOpenSettings={() => undefined}
           dismissReviewPrompt={dismissReviewPrompt}
+          onOpenClub={() => undefined}
+          clubConnections={[]}
         />
       </SettingsProvider>,
     );

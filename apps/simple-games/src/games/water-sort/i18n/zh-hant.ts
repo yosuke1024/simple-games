@@ -23,4 +23,5 @@ export const zhHant: WaterSortMessages = {
   waterStep2Body: '空試管就是你的工作區。復原永遠免費。',
   waterStep3Title: '每支試管一種顏色',
   waterStep3Body: '當每支試管都只剩一種顏色，就完成了。',
+  waterChallengeMismatch: '這個挑戰是用另一個版本的遊戲建立的。',
 };

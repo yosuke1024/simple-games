@@ -17,6 +17,8 @@ export const STORAGE_KEYS = {
   review: 'sg.review',
   recent: 'sg.recent',
   favorites: 'sg.favorites',
+  club: 'sg.club',
+  clubOutbox: 'sg.clubOutbox',
 } as const;
 
 export interface SchemaDef<T> {
@@ -276,5 +278,177 @@ export const reviewSchema: SchemaDef<ReviewState> = {
       return null;
     }
     return { schemaVersion: 1, gamesCompleted, promptsShown, nextPromptAt, resolved };
+  },
+};
+
+// ---------- Club House: connections and the outbox ----------
+
+/**
+ * The Clubs this device has joined (docs/architecture/club.md §4-1). Owned by
+ * the shell like `sg.iap` — the Club layer reads and writes it, but the boot
+ * check "is this device connected?" and the backup / reset gates must read it
+ * without loading that layer. One element per server; the member token is the
+ * device's secret and the reason the record never travels in a backup
+ * (src/backup/keys.ts).
+ *
+ * Validation is per element: a broken connection is dropped and the others
+ * stay. Nothing of Core's depends on this record, so the worst a corrupt one
+ * can do is make the device look unconnected (PRODUCT_PRINCIPLES「Club House」).
+ */
+export interface ClubConnection {
+  /** Origin only — `https://club.example.com`. No path, query or trailing slash. */
+  endpoint: string;
+  clubId: string;
+  /** The club's name as last read from the server; a display cache. */
+  clubName: string;
+  memberId: string;
+  /** Secret. This device only; never in a backup. */
+  memberToken: string;
+  nickname: string;
+  role: 'owner' | 'member';
+  joinedAt: string;
+}
+
+export interface ClubConnections {
+  schemaVersion: 1;
+  /** Join order. Empty means not connected. */
+  connections: ClubConnection[];
+}
+
+/** Connections per device, owner or member alike (club.md §4-1). */
+export const CLUB_CONNECTIONS_MAX = 10;
+
+/**
+ * An endpoint the record accepts: https, or http to the loopback for
+ * development. http to a private network is refused outright (club.md §4-1).
+ * The value must be exactly an origin — a path, query or fragment is a
+ * different address and is not quietly trimmed.
+ */
+export function isClubEndpoint(value: unknown): value is string {
+  if (typeof value !== 'string' || value.length > 200) return false;
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return false;
+  }
+  if (url.origin !== value) return false;
+  if (url.protocol === 'https:') return true;
+  return url.protocol === 'http:' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1');
+}
+
+function asClubConnection(raw: unknown): ClubConnection | null {
+  if (!isRecord(raw)) return null;
+  if (!isClubEndpoint(raw.endpoint)) return null;
+  const clubId = asString(raw.clubId, 64);
+  const clubName = asString(raw.clubName, 40);
+  const memberId = asString(raw.memberId, 64);
+  const memberToken = asString(raw.memberToken, 128);
+  const nickname = asString(raw.nickname, 24);
+  const joinedAt = asString(raw.joinedAt, 40);
+  const role = raw.role === 'owner' || raw.role === 'member' ? raw.role : null;
+  if (
+    clubId === null ||
+    clubId === '' ||
+    clubName === null ||
+    memberId === null ||
+    memberId === '' ||
+    memberToken === null ||
+    memberToken === '' ||
+    nickname === null ||
+    joinedAt === null ||
+    role === null
+  ) {
+    return null;
+  }
+  return {
+    endpoint: raw.endpoint,
+    clubId,
+    clubName,
+    memberId,
+    memberToken,
+    nickname,
+    role,
+    joinedAt,
+  };
+}
+
+export const clubConnectionsSchema: SchemaDef<ClubConnections> = {
+  key: STORAGE_KEYS.club,
+  version: 1,
+  defaultValue: () => ({ schemaVersion: 1, connections: [] }),
+  validate: (raw) => {
+    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
+    if (!Array.isArray(raw.connections)) return null;
+    const connections: ClubConnection[] = [];
+    for (const value of raw.connections) {
+      const connection = asClubConnection(value);
+      if (connection === null) continue;
+      // One connection per server: a second nickname on the same Club is not a second Club.
+      if (connections.some((c) => c.endpoint === connection.endpoint)) continue;
+      connections.push(connection);
+    }
+    return { schemaVersion: 1, connections: connections.slice(0, CLUB_CONNECTIONS_MAX) };
+  },
+};
+
+/**
+ * Results the Club layer could not deliver yet (club.md §4-2, §10): the body
+ * of a `POST /challenges/:id/results` and where it goes. Sent, oldest first,
+ * the next time that Club's screen opens or the next result is sent — never
+ * on a timer. Same gates as `sg.club`: not in a backup, wiped by reset.
+ */
+export interface ClubOutboxItem {
+  endpoint: string;
+  challengeId: string;
+  result: {
+    contractVersion: 1;
+    boardDigest: string;
+    outcome: 'completed' | 'played';
+    facts: Record<string, unknown>;
+  };
+  createdAt: string;
+}
+
+export interface ClubOutbox {
+  schemaVersion: 1;
+  /** Send order. Past the cap the oldest are dropped. */
+  items: ClubOutboxItem[];
+}
+
+export const CLUB_OUTBOX_MAX = 50;
+
+function asOutboxItem(raw: unknown): ClubOutboxItem | null {
+  if (!isRecord(raw) || !isClubEndpoint(raw.endpoint)) return null;
+  const challengeId = asString(raw.challengeId, 64);
+  const createdAt = asString(raw.createdAt, 40);
+  if (challengeId === null || challengeId === '' || createdAt === null) return null;
+  const result = raw.result;
+  if (!isRecord(result) || result.contractVersion !== 1 || !isRecord(result.facts)) return null;
+  const boardDigest = asString(result.boardDigest, 64);
+  const outcome =
+    result.outcome === 'completed' || result.outcome === 'played' ? result.outcome : null;
+  if (boardDigest === null || boardDigest === '' || outcome === null) return null;
+  return {
+    endpoint: raw.endpoint,
+    challengeId,
+    result: { contractVersion: 1, boardDigest, outcome, facts: { ...result.facts } },
+    createdAt,
+  };
+}
+
+export const clubOutboxSchema: SchemaDef<ClubOutbox> = {
+  key: STORAGE_KEYS.clubOutbox,
+  version: 1,
+  defaultValue: () => ({ schemaVersion: 1, items: [] }),
+  validate: (raw) => {
+    if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
+    if (!Array.isArray(raw.items)) return null;
+    const items: ClubOutboxItem[] = [];
+    for (const value of raw.items) {
+      const item = asOutboxItem(value);
+      if (item !== null) items.push(item);
+    }
+    return { schemaVersion: 1, items: items.slice(-CLUB_OUTBOX_MAX) };
   },
 };

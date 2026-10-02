@@ -61,7 +61,7 @@ function pickedFile(text: string): File {
 function renderSettings() {
   return render(
     <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
-      <SettingsScreen onBack={() => undefined} />
+      <SettingsScreen onBack={() => undefined} onOpenClub={() => undefined} />
     </SettingsProvider>,
   );
 }

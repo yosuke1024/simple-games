@@ -1345,6 +1345,51 @@ button:disabled {
   color: var(--ink-soft);
 }
 
+/* The Club House's one slot on the home (docs/architecture/club.md §2-2,
+   §2-3). Quieter than every shelf around it: no card, no tile, no accent —
+   soft ink on the paper, the size of a caption. Joined, a heading over one
+   line of club names; not joined, a two-line text row. */
+.home-club {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto 20px;
+  padding: 0 24px;
+}
+
+.home-club-open {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: var(--tap-size);
+  text-align: start;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.home-club-names {
+  flex: 1;
+  min-width: 0;
+}
+
+.home-play-together {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  max-width: 420px;
+  min-height: var(--tap-size);
+  margin: 0 auto 20px;
+  padding: 4px 24px;
+  text-align: start;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.home-play-together-title {
+  font-weight: 700;
+}
+
 /* Favourites: the same grid as the category sections below, because it is the
    same kind of thing — a shelf of titles somebody arranged. Only its position
    is special (CollectionHomeScreen.tsx). */
@@ -2534,7 +2579,9 @@ button:disabled {
      stretching cards — a .game-cell keeps roughly its phone size. */
   .game-favorites,
   .game-recent,
-  .game-sections {
+  .game-sections,
+  .home-club,
+  .home-play-together {
     max-width: 700px;
   }
 

@@ -148,4 +148,13 @@ export const tr: Messages = {
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Can: {n}',
   levelsCleared: 'Tamamlanan seviye',
+  // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
+  advancedTitle: 'Gelişmiş',
+  clubEntry: 'Club House',
+  playTogetherTitle: 'Birlikte oyna',
+  playTogetherBody: 'Tanıdığın kişilerle özel meydan okumalar.',
+  clubSendResult: "Club'a gönder",
+  clubResultSent: "{club}'a gönderildi",
+  clubResultPending: "Club'u açınca gönderilir",
+  clubResultNotSent: '{club} adlı kulübe gönderilemedi',
 };

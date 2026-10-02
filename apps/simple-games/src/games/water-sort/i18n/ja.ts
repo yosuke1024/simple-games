@@ -23,4 +23,5 @@ export const ja: WaterSortMessages = {
   waterStep2Body: '空のチューブを使って並べ替えます。Undo はいつでも無料です。',
   waterStep3Title: '全部を1色ずつに',
   waterStep3Body: 'すべてのチューブが単色になれば完成です。',
+  waterChallengeMismatch: 'この挑戦は、別のバージョンのゲームで作られています。',
 };

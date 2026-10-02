@@ -144,4 +144,13 @@ export const zhHans: Messages = {
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: '生命：{n}',
   levelsCleared: '已通过关卡',
+  // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
+  advancedTitle: '高级',
+  clubEntry: 'Club House',
+  playTogetherTitle: '一起玩',
+  playTogetherBody: '和认识的人进行私密挑战。',
+  clubSendResult: '发送到 Club',
+  clubResultSent: '已发送到 {club}',
+  clubResultPending: '打开 Club 时发送',
+  clubResultNotSent: '无法发送到 {club}',
 };

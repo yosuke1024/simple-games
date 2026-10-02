@@ -146,4 +146,13 @@ export const ko: Messages = {
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: '라이프: {n}',
   levelsCleared: '클리어한 레벨',
+  // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
+  advancedTitle: '고급',
+  clubEntry: 'Club House',
+  playTogetherTitle: '함께 플레이',
+  playTogetherBody: '아는 사람들과 같은 판으로 겨루기.',
+  clubSendResult: 'Club에 보내기',
+  clubResultSent: '{club}에 보냈습니다',
+  clubResultPending: 'Club을 열 때 보냅니다',
+  clubResultNotSent: '{club}에 보내지 못했습니다',
 };

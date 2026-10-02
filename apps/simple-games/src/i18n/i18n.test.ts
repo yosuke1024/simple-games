@@ -133,12 +133,19 @@ describe('catalog consistency', () => {
     '../games/*/i18n/index.ts',
     { eager: true },
   );
+  // The Club House catalog, globbed beside the games' (importBoundaries rule 5
+  // exempts exactly this path for test infrastructure).
+  const clubModules = import.meta.glob<{ catalogs: Record<Locale, Record<string, string>> }>(
+    '../club/i18n/index.ts',
+    { eager: true },
+  );
   const sets: { name: string; catalogs: Record<Locale, Record<string, string>> }[] = [
     { name: 'shell', catalogs: catalogs as Record<Locale, Record<string, string>> },
     ...Object.entries(gameModules).map(([path, module]) => ({
       name: path.replace('../games/', '').replace('/i18n/index.ts', ''),
       catalogs: module.catalogs,
     })),
+    ...Object.values(clubModules).map((module) => ({ name: 'club', catalogs: module.catalogs })),
   ];
   const locales = Object.keys(catalogs) as Locale[];
   const placeholdersOf = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();

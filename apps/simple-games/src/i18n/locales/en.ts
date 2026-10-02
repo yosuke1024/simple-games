@@ -186,6 +186,15 @@ export const en = {
   // ---- Arcade (shared by Brick Breaker and Sky Fighter) ----
   livesLeft: 'Lives: {n}',
   levelsCleared: 'Levels cleared',
+  // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
+  advancedTitle: 'Advanced',
+  clubEntry: 'Club House',
+  playTogetherTitle: 'Play together',
+  playTogetherBody: 'Private challenges with people you know.',
+  clubSendResult: 'Send to Club',
+  clubResultSent: 'Sent to {club}',
+  clubResultPending: 'Will send when you open the Club',
+  clubResultNotSent: 'Could not send to {club}',
 } as const;
 
 export type Messages = Record<keyof typeof en, string>;

@@ -10,3 +10,6 @@ import '@testing-library/jest-dom/vitest';
  * by test/gameI18nWiring.test.ts.
  */
 import.meta.glob('../games/*/i18n/index.ts', { eager: true });
+// The Club House catalog, for the same reason (importBoundaries rule 5 exempts
+// exactly this path for test infrastructure).
+import.meta.glob('../club/i18n/index.ts', { eager: true });

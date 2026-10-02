@@ -24,4 +24,5 @@ export const hi: WaterSortMessages = {
   waterStep2Body: 'खाली नलियाँ आपका कार्यक्षेत्र हैं। वापस लेना हमेशा मुफ़्त है।',
   waterStep3Title: 'हर नली में एक रंग',
   waterStep3Body: 'जब हर नली में एक ही रंग रह जाए, तो बोर्ड पूरा हुआ।',
+  waterChallengeMismatch: 'यह चुनौती गेम के किसी दूसरे संस्करण में बनाई गई थी।',
 };

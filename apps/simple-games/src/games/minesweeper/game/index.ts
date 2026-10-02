@@ -1,4 +1,5 @@
 export * from './board';
+export * from './challenge';
 export * from './daily';
 export * from './engine';
 export * from './generator';

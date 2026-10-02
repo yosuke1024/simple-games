@@ -13,6 +13,10 @@
  *   3. ホームの初期グラフ(エントリからの静的 import 連鎖)にゲームチャンクが
  *      混入していたら FAIL(.vite/manifest.json を辿る)
  *   4. ベースラインからの増減は常に表示する(どのチャンクが原因かまで)
+ *   5. Club House のチャンク(club-*.js / club-*.css。docs/architecture/club.md §12-1)は
+ *      `games` とは別に計測し、src/club/index.ts があるのにチャンクが無ければ FAIL、
+ *      gzip が予算を超えても FAIL、エントリからの静的 import 連鎖に届いていても FAIL
+ *      (「接続しない端末は club/ を 1 バイトも読まない」の構造的な根拠)
  *
  * しきい値を超えるのが正しいこともある。そのときは `pnpm size:update` で
  * ベースラインを意図的に更新し、理由を PR に書く。黙って通る道はない。
@@ -36,11 +40,14 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const APP = join(HERE, '..');
 const BASELINE_PATH = join(APP, 'size-baseline.json');
 const GAMES_DIR = join(APP, 'src/games');
+const CLUB_ENTRY = join(APP, 'src/club/index.ts');
 
 // ---------- 予算(変えるときは docs/ARCHITECTURE.md のサイズ Gate 節も更新) ----------
 
 /** ゲーム 1 本のチャンク合計(JS+CSS, gzip)の上限。issue #26 の初期ガードレール。 */
 const GAME_CHUNK_GZIP_BUDGET = 500 * 1024;
+/** Club House のチャンク合計(JS+CSS, gzip)の上限(docs/architecture/club.md §12-1)。 */
+const CLUB_CHUNK_GZIP_BUDGET = 200 * 1024;
 /** エントリチャンク(gzip)がベースラインからこれ以上育ったら意図確認を求める。 */
 const ENTRY_GROWTH_RATIO = 1.1;
 
@@ -87,6 +94,9 @@ function gameOfChunk(name, ids) {
   return null;
 }
 
+/** `club-<hash>.js` / `club-<hash>.css`(vite.config.ts の club グループ)。 */
+const isClubChunk = (name) => /^club-/.test(name);
+
 function measureDist(distDir, ids) {
   const files = [];
   for (const path of listFiles(distDir)) {
@@ -118,9 +128,19 @@ function measureDist(distDir, ids) {
     games[id].gzip += f.gzip;
   }
 
+  // Club House は別枠。`game-club-…` という名のゲームは無いので games とは交わらない。
+  const club = { raw: 0, gzip: 0, files: 0 };
+  for (const f of files) {
+    if (!isClubChunk(f.name)) continue;
+    club.raw += f.raw;
+    club.gzip += f.gzip;
+    club.files += 1;
+  }
+
   return {
     files,
     total,
+    club,
     byType,
     entryGzip: entry.reduce((sum, f) => sum + f.gzip, 0),
     games,
@@ -134,7 +154,7 @@ function measureDist(distDir, ids) {
  * 届いたら失敗として返す。動的 import(dynamicImports)は辿らない — それが
  * 「選んだときだけ読む」の定義そのもの。
  */
-function staticallyReachableGameChunks(distDir, ids) {
+function staticallyReachableOffenders(distDir, ids) {
   const manifestPath = join(distDir, '.vite/manifest.json');
   if (!existsSync(manifestPath)) return null; // 分割前のビルド、または manifest 無効
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
@@ -150,6 +170,7 @@ function staticallyReachableGameChunks(distDir, ids) {
     if (!chunk) continue;
     const id = gameOfChunk(basename(chunk.file), ids);
     if (id !== null) offenders.add(id);
+    if (isClubChunk(basename(chunk.file))) offenders.add('club');
     for (const dep of chunk.imports ?? []) queue.push(dep);
   }
   return [...offenders].sort();
@@ -180,6 +201,13 @@ function summarize(label, m, base, ids) {
     );
   }
   lines.push(`エントリ (gzip): ${kb(m.entryGzip)} ${diffLabel(m.entryGzip, base?.entryGzip)}`);
+  if (m.club.files > 0) {
+    lines.push(
+      `Club House (gzip): ${kb(m.club.gzip)} (${m.club.files} ファイル) ${diffLabel(m.club.gzip, base?.club)}`,
+    );
+  } else {
+    lines.push('Club House: チャンクなし');
+  }
   const knownGames = ids.filter((id) => m.games[id]);
   if (knownGames.length > 0) {
     lines.push('ゲームチャンク (gzip):');
@@ -233,6 +261,7 @@ for (const target of targets) {
   next[target.key] = {
     totalGzip: m.total.gzip,
     entryGzip: m.entryGzip,
+    club: m.club.gzip,
     games: Object.fromEntries(ids.filter((id) => m.games[id]).map((id) => [id, m.games[id].gzip])),
   };
 
@@ -255,15 +284,33 @@ for (const target of targets) {
         );
       }
     }
-    // 3. 初期グラフ
-    const offenders = staticallyReachableGameChunks(target.dir, ids);
+  }
+
+  // Club House(split の有無とは独立。club/ のソースがあるビルドは必ずチャンクを持つ)
+  const clubSourceExists = existsSync(CLUB_ENTRY);
+  if (clubSourceExists && m.club.files === 0) {
+    problems.push(
+      `${target.label}: club-*.js のチャンクがありません。src/club/index.ts があるのに出ていません` +
+        '(vite.config.ts の club グループ、または静的 import へ畳まれていないか確認)。',
+    );
+  }
+  if (m.club.gzip > CLUB_CHUNK_GZIP_BUDGET) {
+    problems.push(
+      `${target.label}: club が gzip ${kb(m.club.gzip)} で予算 ${kb(CLUB_CHUNK_GZIP_BUDGET)} を超過。` +
+        ' 軽量化できない根拠を PR に書いた上で予算を見直すこと(docs/architecture/club.md §12-1)。',
+    );
+  }
+
+  // 3. 初期グラフ(ゲームと club。どちらかが存在するビルドで見る)
+  if (split || m.club.files > 0) {
+    const offenders = staticallyReachableOffenders(target.dir, ids);
     if (offenders === null) {
       problems.push(
         `${target.label}: .vite/manifest.json がなく初期グラフを検証できません(vite.config.ts の build.manifest)。`,
       );
     } else if (offenders.length > 0) {
       problems.push(
-        `${target.label}: ホームの初期グラフにゲームチャンクが静的に届いています: ${offenders.join(', ')}`,
+        `${target.label}: ホームの初期グラフにゲーム / Club House のチャンクが静的に届いています: ${offenders.join(', ')}`,
       );
     }
   }

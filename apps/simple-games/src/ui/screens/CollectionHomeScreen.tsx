@@ -301,12 +301,22 @@ export interface CollectionHomeScreenProps {
    * (issue #173).
    */
   dismissReviewPrompt?: (() => void) | null;
+  /**
+   * The Club House's one place on the home (docs/architecture/club.md §2-2,
+   * §2-3): `'home'` from the connected row, `'discover'` from `Play together`.
+   * The shell loads the Club layer on the press, never on the paint.
+   */
+  onOpenClub: (entry: 'home' | 'discover') => void;
+  /** The clubs this device has joined, as `sg.club` last cached them — names only. */
+  clubConnections: readonly { clubName: string }[];
 }
 
 export function CollectionHomeScreen({
   onOpenGame,
   onOpenSettings,
   dismissReviewPrompt,
+  onOpenClub,
+  clubConnections,
 }: CollectionHomeScreenProps) {
   const { t } = useSettings();
 
@@ -718,6 +728,40 @@ export function CollectionHomeScreen({
               ))}
             </nav>
           ) : null}
+
+          {/* The Club House's single slot (docs/architecture/club.md §2-2,
+              §2-3): under the shelves, above the categories, and the same one
+              slot whether this device has joined a Club or not — so nothing
+              else on the home moves with it. Joined: the heading and the club
+              names, as cached, on one line. Not joined: one low-contrast text
+              row. Neither carries a number or a badge — a count would need a
+              request on every paint, and it would be a lure even if it did
+              not — and drawing either one loads nothing: only the press does
+              (app/clubGate.ts). */}
+          {clubConnections.length > 0 ? (
+            <section className="home-club" aria-labelledby="home-club-heading">
+              <h2 className="home-section-label" id="home-club-heading">
+                {t('clubEntry')}
+              </h2>
+              <button type="button" className="home-club-open" onClick={() => onOpenClub('home')}>
+                <span className="home-club-names">
+                  {clubConnections.map((c) => c.clubName).join(' · ')}
+                </span>
+                <span className="game-row-chevron" aria-hidden="true">
+                  <IconChevronRight />
+                </span>
+              </button>
+            </section>
+          ) : (
+            <button
+              type="button"
+              className="home-play-together"
+              onClick={() => onOpenClub('discover')}
+            >
+              <span className="home-play-together-title">{t('playTogetherTitle')}</span>
+              <span className="home-play-together-body">{t('playTogetherBody')}</span>
+            </button>
+          )}
 
           {/* One landmark for the whole list, headed sections inside: six category
               navs would drown the landmark list, while the headings still let a

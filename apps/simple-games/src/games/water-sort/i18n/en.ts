@@ -29,6 +29,7 @@ export const en = {
   waterStep2Body: 'The empty tubes are your workspace. Undo is always free.',
   waterStep3Title: 'One color per tube',
   waterStep3Body: 'When every tube holds a single color, the board is sorted.',
+  waterChallengeMismatch: 'This challenge was made with a different version of the game.',
 } as const;
 
 /** Every locale of this game must provide exactly these keys. */

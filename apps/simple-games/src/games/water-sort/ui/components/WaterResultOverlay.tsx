@@ -4,14 +4,16 @@
  * it while playing would be a clock counting up at someone thinking. Hints
  * are a fact, never a deduction: they were free (§8).
  */
+import { useMemo } from 'react';
 import type { ShareDetail } from '@/services/share/message';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import { MAX_LEVEL, type WaterSession } from '../../game';
+import { boardDigestOf, challengeTierOf, MAX_LEVEL, type WaterSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface WaterResultOverlayProps {
@@ -34,7 +36,19 @@ export function WaterResultOverlay({
 }: WaterResultOverlayProps) {
   const { t } = useSettings();
   // The sorted tubes get their beat before the card covers them (§12).
-  const revealed = useResultReveal(session.status === 'solved');
+  const solved = session.status === 'solved';
+  const revealed = useResultReveal(solved);
+  // The board's identity for the Club (§14): the tier that deals it and the
+  // digest of its starting tubes. Rebuilding the deal is a generation, so it
+  // is done once per finished board rather than on every render. A level or
+  // daily board no tier deals carries no challenge (challengeTierOf).
+  const { mode, seed, level, dailyDate, freeTier } = session;
+  const club = useMemo(() => {
+    if (!solved) return null;
+    const board = { mode, seed, level, dailyDate, freeTier };
+    const tier = challengeTierOf(board);
+    return tier === null ? null : { tier, boardDigest: boardDigestOf(board) };
+  }, [solved, mode, seed, level, dailyDate, freeTier]);
   if (!revealed) return null;
 
   const hasNextLevel =
@@ -55,6 +69,13 @@ export function WaterResultOverlay({
   if (session.hintCount > 0) {
     details.push({ label: t('waterHintsUsed'), value: String(session.hintCount) });
   }
+  // The Club's figures, read from the same session fields as `details`
+  // (docs/architecture/club.md §6-1). Hints always travel — a zero is a fact.
+  const facts = {
+    moves: session.moveCount,
+    elapsedSeconds: session.elapsedSeconds,
+    hints: session.hintCount,
+  };
 
   return (
     <div className="overlay overlay-result">
@@ -131,6 +152,17 @@ export function WaterResultOverlay({
           </button>
         </div>
         <ShareAction gameId="water-sort" outcome="completed" details={details} />
+        {club !== null ? (
+          <ClubResultAction
+            gameId="water-sort"
+            outcome="completed"
+            details={details}
+            facts={facts}
+            seed={session.seed}
+            params={{ tier: club.tier }}
+            boardDigest={club.boardDigest}
+          />
+        ) : null}
       </div>
       <ResultAdSlot />
     </div>
