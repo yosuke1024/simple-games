@@ -6,6 +6,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient, type ClubClient } from '../api/client';
+import { ClubApiError } from '../api/errors';
 import type { Challenge, Member, RankingSummary, ReportedMember } from '../api/types';
 import { contractFor, gameTitle } from '../contract/challenge';
 import { flushOutbox } from '../storage/outbox';
@@ -121,7 +122,13 @@ export function ClubScreen({
         api.challenges({ daily: todayDate }),
         api.rankings(),
         isOwner
-          ? api.reportedMembers().catch(() => [] as ReportedMember[])
+          ? // A server from before §17 has no such route: an empty list, not an error.
+            // Anything else is a failure the owner must see (club.md §10).
+            api.reportedMembers().catch((e: unknown) => {
+              if (e instanceof ClubApiError && e.code === 'not_found')
+                return [] as ReportedMember[];
+              throw e;
+            })
           : Promise.resolve([] as ReportedMember[]),
       ]);
       if (!alive.current) return;
@@ -167,6 +174,12 @@ export function ClubScreen({
     setActionError(null);
     try {
       await client().removeMember(member.id, { purge });
+      if (purge) {
+        // Their results and ranking rows are gone server-side (club.md §17-3): the
+        // tables and the Today results on screen are stale, so read them again.
+        await load();
+        return;
+      }
       setData((d) =>
         d
           ? {

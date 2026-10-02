@@ -95,6 +95,9 @@ function stubServer() {
       return reply({ ...MIKA, nickname: body.nickname });
     }
     if (path === '/members/m_2' && method === 'DELETE') {
+      // The server forgot them; the reload after a purge must not see them again.
+      clubMembers = clubMembers.filter((m) => m.id !== 'm_2');
+      clubMemberCount = Math.max(0, clubMembers.length);
       return new Response(null, { status: 204, headers: { 'X-Club-Api': '1' } });
     }
     if (path === '/challenges') {

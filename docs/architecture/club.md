@@ -911,7 +911,7 @@ you finish, your result is sent to Suzuki Family.`。club モードの `challeng
 
 ### Settings(Club ごと)
 
-nickname の変更(`PATCH` は v1 に無い — 変えたいときは再参加。v1 の制約)、
+nickname の変更(本人による変更は v1 に無い — 変えたいときは再参加。持ち主が通報への対処として変える `PATCH /members/:id` は別、§17-3)、
 `Disconnect this device`(§8-5)、Owner: Club 名の変更、招待の作り直し、Owner 端末の
 追加(§8-3)。
 
