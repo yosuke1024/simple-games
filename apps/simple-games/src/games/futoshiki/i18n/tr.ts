@@ -30,7 +30,6 @@ export const tr: FutoshikiMessages = {
   futoshikiNewBestTime: 'En hızlı süren.',
   futoshikiLevelsSolved: 'Çözülen seviyeler',
   futoshikiDailiesSolved: 'Çözülen günlükler',
-  futoshikiDailyBacklogHint: 'Önceki günler açık kalır.',
   futoshikiHighlightMistakes: 'Hataları göster',
   futoshikiHighlightMistakesNote:
     'Çözüme uymayan rakamı işaretler. Kural ihlalleri her zaman işaretlenir.',

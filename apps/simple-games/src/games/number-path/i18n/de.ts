@@ -29,7 +29,6 @@ export const de: NumberPathMessages = {
   numberPathSolvedCount: 'Gelöste Rätsel',
   numberPathDailySection: 'Täglich',
   numberPathDailiesSolved: 'Gelöste Tage',
-  numberPathDailyBacklogHint: 'Jeder frühere Tag bleibt offen.',
   numberPathStep1Title: 'Den Zahlen folgen',
   numberPathStep1Body:
     'Zieh eine einzige Linie von der 1 aus und geh die Zahlen der Reihe nach ab.',

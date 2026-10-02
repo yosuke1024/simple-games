@@ -21,7 +21,6 @@ export const zhHans: TakuzuMessages = {
   takuzuTier_hard: '困难',
   takuzuLevelsSolved: '已完成的关卡',
   takuzuDailiesSolved: '已完成的每日挑战',
-  takuzuDailyBacklogHint: '之前的日期随时可以挑战。',
   takuzuStep1Title: '不能连着三个',
   takuzuStep1Body: '点击格子在 0、1、空之间切换。同一个数字不能连续出现三次。',
   takuzuStep2Title: '0 和 1 各占一半',

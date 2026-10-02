@@ -70,7 +70,7 @@ import {
   previousBestsFor,
 } from './statsLogic';
 
-export type Screen = 'home' | 'tutorial' | 'daily' | 'game' | 'stats';
+export type Screen = 'home' | 'tutorial' | 'game' | 'stats';
 
 export interface LastResult {
   readonly isNewBestMoves: boolean;
@@ -107,7 +107,7 @@ export interface SpiderContextValue {
   lastResult: LastResult | null;
   canResume: (mode: GameMode) => boolean;
   startFree: () => void;
-  startDaily: (date?: string) => void;
+  startDaily: () => void;
   restartCurrent: () => void;
   resumeGame: (mode: GameMode) => void;
   /** Board actions. Each returns false when the move was not legal (§3). */
@@ -330,18 +330,15 @@ export function SpiderProvider({
     beginSession(createFreeSession(prefsRef.current.suitCount));
   }, [beginSession]);
 
-  const startDaily = useCallback(
-    (date?: string) => {
-      const target = date ?? localDateString(new Date());
-      const current = sessionsRef.current.daily;
-      if (current && current.dailyDate === target && current.status === 'playing') {
-        resumeGame('daily');
-        return;
-      }
-      beginSession(createDailySession(target, prefsRef.current.suitCount));
-    },
-    [beginSession, resumeGame],
-  );
+  const startDaily = useCallback(() => {
+    const target = localDateString(new Date());
+    const current = sessionsRef.current.daily;
+    if (current && current.dailyDate === target && current.status === 'playing') {
+      resumeGame('daily');
+      return;
+    }
+    beginSession(createDailySession(target, prefsRef.current.suitCount));
+  }, [beginSession, resumeGame]);
 
   const restartCurrent = useCallback(() => {
     const current = sessionsRef.current[activeModeRef.current];

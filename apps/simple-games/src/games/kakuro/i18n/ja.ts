@@ -29,7 +29,6 @@ export const ja: KakuroMessages = {
   kakuroNewBestTime: '自己最速です。',
   kakuroLevelsSolved: 'クリアしたレベル',
   kakuroDailiesSolved: 'クリアしたデイリー',
-  kakuroDailyBacklogHint: '過去の日はいつでも挑戦できます。',
   kakuroHighlightMistakes: 'ミスを表示',
   kakuroHighlightMistakesNote: '解と違う数字に印を付けます。ルール違反は常に表示します。',
   kakuroStep1Title: '合計を手がかりに合わせる',

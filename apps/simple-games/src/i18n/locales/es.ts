@@ -18,10 +18,6 @@ export const es: Messages = {
   reachedLevel: 'Nivel alcanzado',
 
   score: 'Puntos',
-
-  dailyPast: 'Retos anteriores',
-  dailyToday: 'Hoy',
-  dailyBacklogHint: 'Completa un día para desbloquear el anterior.',
   modeDaily: 'Diario',
   freePlay: 'Juego libre',
   freePlayNote: 'Un tablero nuevo, cuando quieras.',

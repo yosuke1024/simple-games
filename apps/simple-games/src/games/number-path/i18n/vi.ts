@@ -29,7 +29,6 @@ export const vi: NumberPathMessages = {
   numberPathSolvedCount: 'Bảng đã giải',
   numberPathDailySection: 'Hằng ngày',
   numberPathDailiesSolved: 'Ngày đã giải',
-  numberPathDailyBacklogHint: 'Mọi ngày trước đó vẫn mở.',
   numberPathStep1Title: 'Đi theo các số',
   numberPathStep1Body: 'Vẽ một đường từ 1, đi qua các số theo thứ tự.',
   numberPathStep2Title: 'Phủ kín mọi ô',

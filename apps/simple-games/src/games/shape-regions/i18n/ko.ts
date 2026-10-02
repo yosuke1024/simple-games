@@ -37,7 +37,6 @@ export const ko: ShapeRegionsMessages = {
   shapeRegionsSolvedCount: '푼 퍼즐',
   shapeRegionsDailySection: '데일리',
   shapeRegionsDailiesCleared: '달성한 날',
-  shapeRegionsDailyBacklogHint: '이전 날짜는 언제든 열려 있습니다.',
   shapeRegionsStep1Title: '숫자와 기호',
   shapeRegionsStep1Body: '숫자는 그 모양의 칸 수, 기호는 그 형태입니다.',
   shapeRegionsStep2Title: '힌트에서 키우기',

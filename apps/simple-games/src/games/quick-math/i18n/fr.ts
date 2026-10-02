@@ -11,8 +11,6 @@ export const fr: QuickMathMessages = {
   qmathMisses: 'Mauvaises réponses',
   qmathNewBestTime: 'Votre meilleur temps.',
   qmathConfirmRestartBody: 'Cette manche recommence à la première question.',
-
-  qmathDailyBacklogHint: 'Les jours précédents restent toujours accessibles.',
   qmathLevelsDone: 'Niveaux terminés',
   qmathDailiesDone: 'Défis terminés',
   qmathTotalMisses: 'Mauvaises réponses au total',

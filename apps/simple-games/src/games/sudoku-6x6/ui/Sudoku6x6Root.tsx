@@ -25,7 +25,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './sudoku-6x6.css';
-import { Sudoku6x6DailyScreen } from './screens/DailyScreen';
 import { Sudoku6x6GameScreen } from './screens/GameScreen';
 import { Sudoku6x6HomeScreen } from './screens/HomeScreen';
 import { Sudoku6x6StatsScreen } from './screens/StatsScreen';
@@ -36,8 +35,6 @@ export function Sudoku6x6Screens() {
   switch (screen) {
     case 'tutorial':
       return <Sudoku6x6TutorialScreen />;
-    case 'daily':
-      return <Sudoku6x6DailyScreen />;
     case 'game':
       return <Sudoku6x6GameScreen />;
     case 'stats':

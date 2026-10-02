@@ -37,7 +37,6 @@ export const zhHans: ShapeRegionsMessages = {
   shapeRegionsSolvedCount: '已解谜题',
   shapeRegionsDailySection: '每日',
   shapeRegionsDailiesCleared: '完成天数',
-  shapeRegionsDailyBacklogHint: '之前的每一天都可以打开。',
   shapeRegionsStep1Title: '数字与符号',
   shapeRegionsStep1Body: '数字是该形状的格数，符号是它的形态。',
   shapeRegionsStep2Title: '从线索开始生长',

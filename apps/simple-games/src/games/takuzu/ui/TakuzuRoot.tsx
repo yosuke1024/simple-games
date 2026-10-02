@@ -27,7 +27,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './takuzu.css';
-import { TakuzuDailyScreen } from './screens/DailyScreen';
 import { TakuzuGameScreen } from './screens/GameScreen';
 import { TakuzuHomeScreen } from './screens/HomeScreen';
 import { TakuzuLevelSelectScreen } from './screens/LevelSelectScreen';
@@ -41,8 +40,6 @@ export function TakuzuScreens() {
       return <TakuzuTutorialScreen />;
     case 'levels':
       return <TakuzuLevelSelectScreen />;
-    case 'daily':
-      return <TakuzuDailyScreen />;
     case 'game':
       return <TakuzuGameScreen />;
     case 'stats':

@@ -31,7 +31,6 @@ export const en = {
   fcGamesWon: 'Games won',
   fcWinRate: 'Win rate',
   fcDailiesWon: 'Daily deals won',
-  fcDailyBacklogHint: 'Every earlier day stays open. Take your time.',
   fcStep1Title: 'Down by one, colors alternate',
   fcStep1Body: 'Stack cards downward, red on black on red. Tap a card, then tap where it goes.',
   fcStep2Title: 'Four cells, one card each',

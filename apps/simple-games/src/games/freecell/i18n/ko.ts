@@ -28,7 +28,6 @@ export const ko: FreeCellMessages = {
   fcGamesWon: '이긴 게임',
   fcWinRate: '승률',
   fcDailiesWon: '데일리 승리',
-  fcDailyBacklogHint: '지난 날짜는 언제든 열려 있습니다. 천천히 하세요.',
   fcStep1Title: '하나 낮게, 색은 번갈아',
   fcStep1Body: '빨강과 검정을 번갈아 내림차순으로 쌓으세요. 카드를 탭하고, 놓을 곳을 탭합니다.',
   fcStep2Title: '셀은 네 개, 한 장씩',

@@ -29,7 +29,6 @@ export const es: FreeCellMessages = {
   fcGamesWon: 'Partidas ganadas',
   fcWinRate: 'Tasa de victorias',
   fcDailiesWon: 'Retos diarios ganados',
-  fcDailyBacklogHint: 'Los días anteriores siguen abiertos. Tómate tu tiempo.',
   fcStep1Title: 'Uno menos, colores alternos',
   fcStep1Body: 'Apila hacia abajo alternando rojo y negro. Toca una carta y luego su destino.',
   fcStep2Title: 'Cuatro celdas, una carta cada una',

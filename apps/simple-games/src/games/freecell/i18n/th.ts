@@ -28,7 +28,6 @@ export const th: FreeCellMessages = {
   fcGamesWon: 'เกมที่ชนะ',
   fcWinRate: 'อัตราชนะ',
   fcDailiesWon: 'เดลีที่ชนะ',
-  fcDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ ค่อย ๆ คิดได้',
   fcStep1Title: 'ลดทีละหนึ่ง สลับสี',
   fcStep1Body: 'ซ้อนไพ่จากมากไปน้อย แดงสลับดำ แตะไพ่ แล้วแตะที่ที่จะวาง',
   fcStep2Title: 'สี่ช่องพัก ช่องละหนึ่งใบ',

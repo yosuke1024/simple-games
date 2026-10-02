@@ -36,7 +36,6 @@ export const hi: SpiderMessages = {
   spiderGamesWon: 'जीते खेल',
   spiderWinRate: 'जीत दर',
   spiderDailiesWon: 'जीते दैनिक',
-  spiderDailyBacklogHint: 'पिछले सभी दिन हमेशा खुले रहते हैं। हर बाज़ी जीती नहीं जा सकती।',
   spiderStep1Title: 'घटते क्रम में जमाएँ',
   spiderStep1Body:
     'कोई भी रंग एक बड़े पत्ते पर रखा जा सकता है। पहले पत्ते पर टैप करें, फिर जगह पर।',

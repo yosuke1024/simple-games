@@ -21,7 +21,6 @@ export const zhHant: TakuzuMessages = {
   takuzuTier_hard: '困難',
   takuzuLevelsSolved: '已完成的關卡',
   takuzuDailiesSolved: '已完成的每日挑戰',
-  takuzuDailyBacklogHint: '之前的日期隨時可以挑戰。',
   takuzuStep1Title: '不得連續三格',
   takuzuStep1Body: '輕點方格即可在 0、1、空白之間切換。同一個數字不得連續三格。',
   takuzuStep2Title: '0 與 1 各半',

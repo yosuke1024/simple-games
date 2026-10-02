@@ -24,7 +24,6 @@ export const en = {
   memoryNewBestTime: 'Your fastest yet.',
   memoryBestMoves: 'Fewest moves',
   memoryDailiesCleared: 'Days cleared',
-  memoryDailyBacklogHint: 'Every earlier day stays open.',
   memoryStep1Title: 'Flip two cards',
   memoryStep1Body: 'Tap one card, then another. A matching pair stays face up.',
   memoryStep2Title: 'No rush to remember',

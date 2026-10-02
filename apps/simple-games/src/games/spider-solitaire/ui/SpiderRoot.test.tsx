@@ -636,8 +636,8 @@ describe('home', () => {
     const user = userEvent.setup();
     const { onExit } = renderGame(tutorialDone);
 
-    await user.click(await screen.findByRole('button', { name: /Past Dailies/i }));
-    expect(screen.getByRole('heading', { name: /Daily Challenge/i })).toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
+    expect(table()).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Home' }));
 
     await user.click(screen.getByRole('button', { name: /Statistics/i }));

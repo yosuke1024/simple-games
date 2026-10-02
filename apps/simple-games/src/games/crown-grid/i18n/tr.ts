@@ -55,7 +55,6 @@ export const tr: CrownGridMessages = {
   crownGridNewBoard: 'Yeni tahta',
   crownGridDailySection: 'Günlük',
   crownGridDailiesSolved: 'Çözülen gün',
-  crownGridDailyBacklogHint: 'Önceki günler açık kalır.',
   crownGridStep1Title: 'Her birine bir taç',
   crownGridStep1Body: 'Her satırda, her sütunda ve her renkte tam olarak bir taç bulunur.',
   crownGridStep2Title: 'Taçlar birbirine değmez',

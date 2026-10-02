@@ -13,8 +13,6 @@ export const ptBR: SchulteMessages = {
   schulteMisses: 'Toques errados',
   schulteNewBestTime: 'Seu tempo mais rápido.',
   schulteConfirmRestartBody: 'Esta rodada recomeça do primeiro número.',
-
-  schulteDailyBacklogHint: 'Os dias anteriores ficam sempre abertos.',
   schulteSizeLabel: '{n}x{n}',
   schulteLevelsDone: 'Níveis concluídos',
   schulteDailiesDone: 'Diários concluídos',

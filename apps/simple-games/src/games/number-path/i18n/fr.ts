@@ -29,7 +29,6 @@ export const fr: NumberPathMessages = {
   numberPathSolvedCount: 'Grilles résolues',
   numberPathDailySection: 'Quotidien',
   numberPathDailiesSolved: 'Jours résolus',
-  numberPathDailyBacklogHint: 'Les jours précédents restent ouverts.',
   numberPathStep1Title: 'Suivez les numéros',
   numberPathStep1Body:
     'Tracez une seule ligne depuis le 1 en passant par les numéros dans l’ordre.',

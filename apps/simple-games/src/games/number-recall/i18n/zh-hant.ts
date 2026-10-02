@@ -16,8 +16,6 @@ export const zhHant: RecallMessages = {
   recallTiles: '方塊數',
   recallNewBestTime: '你的最快紀錄。',
   recallNewLayout: '新排列',
-
-  recallDailyBacklogHint: '過去的每一天都能隨時挑戰。',
   recallSizeLabel: '{n}×{n}',
   recallLevelsDone: '完成的關卡',
   recallDailiesDone: '完成的每日',

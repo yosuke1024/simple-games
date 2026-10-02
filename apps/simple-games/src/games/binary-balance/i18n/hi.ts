@@ -51,7 +51,6 @@ export const hi: BinaryBalanceMessages = {
   binaryBalanceNewBoard: 'नया बोर्ड',
   binaryBalanceDailySection: 'डेली',
   binaryBalanceDailiesSolved: 'हल किए दिन',
-  binaryBalanceDailyBacklogHint: 'पिछले दिन हमेशा खुले रहते हैं।',
   binaryBalanceStep1Title: 'लगातार तीन नहीं',
   binaryBalanceStep1Body:
     'खाने पर टैप करने से खाली, सूरज, चाँद बदलते हैं। एक ही चिह्न लगातार तीन बार नहीं आ सकता।',

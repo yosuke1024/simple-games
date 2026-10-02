@@ -25,7 +25,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './spider-solitaire.css';
-import { SpiderDailyScreen } from './screens/DailyScreen';
 import { SpiderGameScreen } from './screens/GameScreen';
 import { SpiderHomeScreen } from './screens/HomeScreen';
 import { SpiderStatsScreen } from './screens/StatsScreen';
@@ -36,8 +35,6 @@ export function SpiderScreens() {
   switch (screen) {
     case 'tutorial':
       return <SpiderTutorialScreen />;
-    case 'daily':
-      return <SpiderDailyScreen />;
     case 'game':
       return <SpiderGameScreen />;
     case 'stats':

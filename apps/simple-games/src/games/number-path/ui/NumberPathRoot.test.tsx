@@ -208,29 +208,23 @@ describe('home (§7)', () => {
 });
 
 describe('daily (§7)', () => {
-  it('asks before replacing a suspended daily with a different day, and resumes the same day silently', async () => {
+  it("drops a daily left over from another day, and the button starts today's", async () => {
     const user = userEvent.setup();
     const today = localDateString(new Date());
-    const yesterday = addDays(today, -1);
-    const suspended = createDailySession(yesterday);
-    renderGame({
+    const suspended = createDailySession(addDays(today, -1));
+    const { kv } = renderGame({
       ...tutorialDone,
       [NP_STORAGE_KEYS.dailyGame]: JSON.stringify(toPersisted(suspended, 1)),
     });
 
-    await user.click(await screen.findByRole('button', { name: 'Past Dailies' }));
-    await user.click(screen.getByRole('button', { name: /^Today/ }));
-    expect(screen.getByRole('alertdialog', { name: 'Start a new game?' })).toBeInTheDocument();
+    const button = await screen.findByRole('button', { name: /Daily Challenge/ });
+    expect(
+      screen.queryByRole('button', { name: /Daily Challenge.*Resume/ }),
+    ).not.toBeInTheDocument();
+    // The load threw yesterday's record away; it is not kept around.
+    expect(await kv.get(NP_STORAGE_KEYS.dailyGame)).toBeNull();
 
-    // Cancel touches nothing: yesterday's suspended daily is still there.
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
-    const resumeRow = screen.getByRole('button', { name: /Resume/ });
-    expect(resumeRow).toBeInTheDocument();
-
-    // The day already in progress opens straight back up: no question asked.
-    await user.click(resumeRow);
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    await user.click(button);
     expect(await screen.findByText('Daily')).toBeInTheDocument();
     expect(pathLength()).toBe(1);
   });
@@ -596,7 +590,7 @@ describe('a home-screen shortcut', () => {
 
   it('opens a suspended daily just as readily', async () => {
     taughtAlready();
-    const daily = createDailySession('2026-09-26');
+    const daily = createDailySession(localDateString(new Date()));
     deviceStore.set(NP_STORAGE_KEYS.dailyGame, JSON.stringify(toPersisted(daily, 1)));
     launchFromShortcut();
     await settle();
@@ -607,7 +601,7 @@ describe('a home-screen shortcut', () => {
   it('opens the home screen when two games are suspended, rather than guessing', async () => {
     taughtAlready();
     deviceStore.set(NP_STORAGE_KEYS.game, knownSuspended[NP_STORAGE_KEYS.game]!);
-    const daily = createDailySession('2026-09-26');
+    const daily = createDailySession(localDateString(new Date()));
     deviceStore.set(NP_STORAGE_KEYS.dailyGame, JSON.stringify(toPersisted(daily, 1)));
     launchFromShortcut();
     await settle();

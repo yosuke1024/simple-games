@@ -20,7 +20,6 @@ export const es: MemoryMatchMessages = {
   memoryNewBestTime: 'Tu mejor tiempo hasta ahora.',
   memoryBestMoves: 'Mínimo de jugadas',
   memoryDailiesCleared: 'Días completados',
-  memoryDailyBacklogHint: 'Los días anteriores siguen abiertos.',
   memoryStep1Title: 'Da la vuelta a dos cartas',
   memoryStep1Body: 'Toca una carta y luego otra. Una pareja igual queda boca arriba.',
   memoryStep2Title: 'Sin prisa por recordar',

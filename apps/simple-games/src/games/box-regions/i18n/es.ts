@@ -38,7 +38,6 @@ export const es: BoxRegionsMessages = {
   boxRegionsSolvedCount: 'Puzles resueltos',
   boxRegionsDailySection: 'Diario',
   boxRegionsDailiesCleared: 'Días completados',
-  boxRegionsDailyBacklogHint: 'Todos los días anteriores siguen abiertos.',
   boxRegionsStep1Title: 'Divide en cajas',
   boxRegionsStep1Body: 'Divide el tablero en rectángulos, cada uno con exactamente una pista.',
   boxRegionsStep2Title: 'Lee las pistas',

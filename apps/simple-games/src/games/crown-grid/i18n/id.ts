@@ -59,7 +59,6 @@ export const id: CrownGridMessages = {
   crownGridNewBoard: 'Papan baru',
   crownGridDailySection: 'Harian',
   crownGridDailiesSolved: 'Hari terselesaikan',
-  crownGridDailyBacklogHint: 'Hari-hari sebelumnya tetap terbuka.',
   crownGridStep1Title: 'Satu mahkota masing-masing',
   crownGridStep1Body: 'Setiap baris, setiap kolom, dan setiap warna berisi tepat satu mahkota.',
   crownGridStep2Title: 'Mahkota tidak bersentuhan',

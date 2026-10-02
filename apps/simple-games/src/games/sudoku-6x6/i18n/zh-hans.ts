@@ -37,7 +37,6 @@ export const zhHans: Sudoku6x6Messages = {
   sudoku6x6NewBoard: '新盘面',
   sudoku6x6DailySection: '每日',
   sudoku6x6DailiesSolved: '完成的天数',
-  sudoku6x6DailyBacklogHint: '之前的每一天都可以补做。',
   sudoku6x6HighlightMistakes: '标出错误',
   sudoku6x6HighlightMistakesNote: '填入错误数字时立即标出。重复的数字始终会标出。',
   sudoku6x6Step1Title: '1-6 各一次',

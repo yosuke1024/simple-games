@@ -20,7 +20,6 @@ export const vi: MemoryMatchMessages = {
   memoryNewBestTime: 'Thời gian nhanh nhất của bạn.',
   memoryBestMoves: 'Ít nước nhất',
   memoryDailiesCleared: 'Ngày đã hoàn thành',
-  memoryDailyBacklogHint: 'Những ngày trước luôn mở.',
   memoryStep1Title: 'Lật hai lá bài',
   memoryStep1Body: 'Chạm một lá, rồi chạm lá khác. Cặp trùng nhau sẽ nằm ngửa luôn.',
   memoryStep2Title: 'Không cần vội nhớ',

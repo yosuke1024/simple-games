@@ -32,7 +32,6 @@ export const tr: SolitaireMessages = {
   solGamesWon: 'Kazanılan oyunlar',
   solWinRate: 'Kazanma oranı',
   solDailiesWon: 'Kazanılan günlükler',
-  solDailyBacklogHint: 'Önceki günler her zaman açık. Her el kazanılamayabilir.',
   solStep1Title: 'Bir küçük, renkler dönüşümlü',
   solStep1Body:
     'Kartları kırmızı-siyah dönüşümlü, azalan sırayla diz. Bir karta, sonra gideceği yere dokun.',

@@ -20,7 +20,6 @@ export const zhHans: MemoryMatchMessages = {
   memoryNewBestTime: '你的最快纪录。',
   memoryBestMoves: '最少步数',
   memoryDailiesCleared: '完成天数',
-  memoryDailyBacklogHint: '之前的日期随时可以玩。',
   memoryStep1Title: '翻开两张牌',
   memoryStep1Body: '先点一张，再点另一张。图案相同就保持翻开。',
   memoryStep2Title: '不用急着记',

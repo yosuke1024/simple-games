@@ -37,8 +37,6 @@ export const id: SpiderMessages = {
   spiderGamesWon: 'Permainan dimenangkan',
   spiderWinRate: 'Tingkat kemenangan',
   spiderDailiesWon: 'Harian dimenangkan',
-  spiderDailyBacklogHint:
-    'Hari-hari sebelumnya selalu terbuka. Tidak semua pembagian bisa dimenangkan.',
   spiderStep1Title: 'Tumpuk menurun',
   spiderStep1Body:
     'Jenis apa pun boleh naik ke kartu satu tingkat lebih tinggi. Ketuk kartu, lalu ketuk tujuannya.',

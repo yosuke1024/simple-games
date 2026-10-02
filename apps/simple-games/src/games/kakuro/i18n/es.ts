@@ -29,7 +29,6 @@ export const es: KakuroMessages = {
   kakuroNewBestTime: 'Tu mejor tiempo.',
   kakuroLevelsSolved: 'Niveles resueltos',
   kakuroDailiesSolved: 'Diarios resueltos',
-  kakuroDailyBacklogHint: 'Los días anteriores siguen abiertos.',
   kakuroHighlightMistakes: 'Mostrar errores',
   kakuroHighlightMistakesNote:
     'Marca una cifra que no coincide con la solución. Las reglas rotas siempre se marcan.',

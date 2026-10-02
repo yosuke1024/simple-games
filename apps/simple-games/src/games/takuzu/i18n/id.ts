@@ -21,7 +21,6 @@ export const id: TakuzuMessages = {
   takuzuTier_hard: 'Sulit',
   takuzuLevelsSolved: 'Level selesai',
   takuzuDailiesSolved: 'Harian selesai',
-  takuzuDailyBacklogHint: 'Hari-hari sebelumnya tetap terbuka.',
   takuzuStep1Title: 'Jangan tiga berturut-turut',
   takuzuStep1Body:
     'Ketuk kotak untuk berganti 0, 1, kosong. Angka yang sama tak boleh tiga berturut-turut.',

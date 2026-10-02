@@ -29,7 +29,6 @@ export const zhHans: KakuroMessages = {
   kakuroNewBestTime: '个人最快纪录。',
   kakuroLevelsSolved: '已完成的关卡',
   kakuroDailiesSolved: '已完成的每日挑战',
-  kakuroDailyBacklogHint: '之前的日期随时可以挑战。',
   kakuroHighlightMistakes: '标出错误',
   kakuroHighlightMistakesNote: '标出与答案不符的数字。违反规则始终会标出。',
   kakuroStep1Title: '合计要等于提示',

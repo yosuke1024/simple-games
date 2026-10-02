@@ -33,7 +33,6 @@ export const en = {
   recallNewLayout: 'New layout',
 
   // Lists & statistics
-  recallDailyBacklogHint: 'Every past day stays open.',
   recallSizeLabel: '{n}x{n}',
   recallLevelsDone: 'Levels finished',
   recallDailiesDone: 'Dailies finished',

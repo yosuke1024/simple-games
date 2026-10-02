@@ -37,7 +37,6 @@ export const de: Sudoku6x6Messages = {
   sudoku6x6NewBoard: 'Neues Brett',
   sudoku6x6DailySection: 'Täglich',
   sudoku6x6DailiesSolved: 'Gelöste Tage',
-  sudoku6x6DailyBacklogHint: 'Alle früheren Tage bleiben offen.',
   sudoku6x6HighlightMistakes: 'Fehler anzeigen',
   sudoku6x6HighlightMistakesNote:
     'Markiert eine falsche Ziffer, sobald sie gesetzt wird. Doppelte werden immer markiert.',

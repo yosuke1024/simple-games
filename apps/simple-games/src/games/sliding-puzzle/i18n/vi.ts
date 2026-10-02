@@ -14,7 +14,6 @@ export const vi: SlidingPuzzleMessages = {
   slideNewBestTime: 'Nhanh nhất từ trước tới nay.',
   slideLevelsSolved: 'Cấp đã giải',
   slideDailiesSolved: 'Ngày đã giải',
-  slideDailyBacklogHint: 'Mọi ngày trước đó luôn mở.',
   slideStep1Title: 'Chạm ô cạnh chỗ trống',
   slideStep1Body: 'Chạm một ô nằm cạnh ô trống, nó sẽ trượt vào đó.',
   slideStep2Title: 'Cả hàng cùng trượt',

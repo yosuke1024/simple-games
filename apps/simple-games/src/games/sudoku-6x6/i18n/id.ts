@@ -38,7 +38,6 @@ export const id: Sudoku6x6Messages = {
   sudoku6x6NewBoard: 'Papan baru',
   sudoku6x6DailySection: 'Harian',
   sudoku6x6DailiesSolved: 'Hari selesai',
-  sudoku6x6DailyBacklogHint: 'Semua hari sebelumnya tetap terbuka.',
   sudoku6x6HighlightMistakes: 'Tandai kesalahan',
   sudoku6x6HighlightMistakesNote:
     'Menandai angka yang salah begitu diletakkan. Angka ganda selalu ditandai.',

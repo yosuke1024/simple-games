@@ -18,7 +18,6 @@ import { FreeCellProvider, useFreeCell } from '../state/GameContext';
 import { loadSavedGames, type SavedGames } from '../storage/gamePersistence';
 import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
 import './freecell.css';
-import { FreeCellDailyScreen } from './screens/DailyScreen';
 import { FreeCellGameScreen } from './screens/GameScreen';
 import { FreeCellHomeScreen } from './screens/HomeScreen';
 import { FreeCellStatsScreen } from './screens/StatsScreen';
@@ -29,8 +28,6 @@ export function FreeCellScreens() {
   switch (screen) {
     case 'tutorial':
       return <FreeCellTutorialScreen />;
-    case 'daily':
-      return <FreeCellDailyScreen />;
     case 'game':
       return <FreeCellGameScreen />;
     case 'stats':

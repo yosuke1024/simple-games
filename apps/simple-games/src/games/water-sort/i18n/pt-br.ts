@@ -14,7 +14,6 @@ export const ptBR: WaterSortMessages = {
   waterBestMoves: 'Menos despejos',
   waterLevelsSolved: 'Níveis resolvidos',
   waterDailiesSolved: 'Diários resolvidos',
-  waterDailyBacklogHint: 'Os dias anteriores continuam abertos.',
   waterTier_easy: 'Fácil',
   waterTier_medium: 'Médio',
   waterTier_hard: 'Difícil',

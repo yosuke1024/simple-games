@@ -6,8 +6,9 @@
  * other game, or a blank screen where the other game isn't.
  */
 import { describe, expect, it } from 'vitest';
+import { createMemoryKV } from '@/storage/kv';
 import { createDailySession, createFreeSession, createLevelSession } from '../game';
-import { toPersisted } from './gamePersistence';
+import { loadSavedGames, toPersisted } from './gamePersistence';
 import { dailyGameSchema, freeGameSchema, gameSchema, strandedDailySchema } from './schemas';
 
 const SAVED_AT = 1_754_000_000_000;
@@ -64,5 +65,19 @@ describe('the pre-split level key', () => {
     expect(gameSchema.validate(dailyRecord)).toBeNull();
     expect(strandedDailySchema.validate(dailyRecord)?.mode).toBe('daily');
     expect(strandedDailySchema.validate(levelRecord)).toBeNull();
+  });
+});
+
+describe('a daily left over from another day (docs/PRODUCT_PRINCIPLES.md「デイリーは今日の 1 問」)', () => {
+  it('is dropped at load, record and all, while the same day still resumes', async () => {
+    const stored = () => createMemoryKV({ [dailyGameSchema.key]: JSON.stringify(dailyRecord) });
+
+    const sameDay = stored();
+    expect((await loadSavedGames(sameDay, '2026-08-07')).daily?.dailyDate).toBe('2026-08-07');
+    expect(await sameDay.get(dailyGameSchema.key)).not.toBeNull();
+
+    const nextDay = stored();
+    expect((await loadSavedGames(nextDay, '2026-08-08')).daily).toBeNull();
+    expect(await nextDay.get(dailyGameSchema.key)).toBeNull();
   });
 });

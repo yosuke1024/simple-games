@@ -20,7 +20,6 @@ export const ptBR: MemoryMatchMessages = {
   memoryNewBestTime: 'Seu tempo mais rápido até agora.',
   memoryBestMoves: 'Menos jogadas',
   memoryDailiesCleared: 'Dias concluídos',
-  memoryDailyBacklogHint: 'Os dias anteriores continuam abertos.',
   memoryStep1Title: 'Vire duas cartas',
   memoryStep1Body: 'Toque em uma carta e depois em outra. Um par igual fica virado para cima.',
   memoryStep2Title: 'Sem pressa para memorizar',

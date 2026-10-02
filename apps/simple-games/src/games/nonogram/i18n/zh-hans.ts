@@ -23,7 +23,6 @@ export const zhHans: NonogramMessages = {
   nonoNewBestTime: '个人最快纪录。',
   nonoLevelsSolved: '已完成的关卡',
   nonoDailiesSolved: '已完成的每日挑战',
-  nonoDailyBacklogHint: '之前的日期随时可以挑战。',
   nonoStep1Title: '数字表示连续涂色数',
   nonoStep1Body: '数字是该行或该列连续涂色的格数，多个数字之间至少空一格。',
   nonoStep2Title: '排除时画×',

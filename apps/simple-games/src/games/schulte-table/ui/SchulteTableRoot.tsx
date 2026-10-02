@@ -22,7 +22,6 @@ import {
   type Progress,
   type Stats,
 } from '../storage/schemas';
-import { SchulteDailyScreen } from './screens/DailyScreen';
 import { SchulteGameScreen } from './screens/GameScreen';
 import { SchulteHomeScreen } from './screens/HomeScreen';
 import { SchulteLevelSelectScreen } from './screens/LevelSelectScreen';
@@ -37,8 +36,6 @@ export function SchulteTableScreens() {
       return <SchulteTutorialScreen />;
     case 'levels':
       return <SchulteLevelSelectScreen />;
-    case 'daily':
-      return <SchulteDailyScreen />;
     case 'game':
       return <SchulteGameScreen />;
     case 'stats':

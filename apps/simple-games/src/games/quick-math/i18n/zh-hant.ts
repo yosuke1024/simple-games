@@ -11,8 +11,6 @@ export const zhHant: QuickMathMessages = {
   qmathMisses: '答錯次數',
   qmathNewBestTime: '你的最快紀錄。',
   qmathConfirmRestartBody: '這一局會從第一題重新開始。',
-
-  qmathDailyBacklogHint: '過去的每一天都能隨時挑戰。',
   qmathLevelsDone: '完成的關卡',
   qmathDailiesDone: '完成的每日',
   qmathTotalMisses: '答錯總次數',

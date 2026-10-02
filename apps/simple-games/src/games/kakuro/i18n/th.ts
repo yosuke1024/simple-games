@@ -29,7 +29,6 @@ export const th: KakuroMessages = {
   kakuroNewBestTime: 'เร็วที่สุดของคุณ',
   kakuroLevelsSolved: 'ด่านที่ผ่านแล้ว',
   kakuroDailiesSolved: 'เดลี่ที่ผ่านแล้ว',
-  kakuroDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ',
   kakuroHighlightMistakes: 'แสดงที่ผิด',
   kakuroHighlightMistakesNote: 'ทำเครื่องหมายเลขที่ไม่ตรงกับเฉลย ส่วนที่ผิดกติกาจะแสดงเสมอ',
   kakuroStep1Title: 'รวมให้ได้ตามโจทย์',

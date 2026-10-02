@@ -11,8 +11,6 @@ export const ja: QuickMathMessages = {
   qmathMisses: '誤答',
   qmathNewBestTime: '自己ベスト更新。',
   qmathConfirmRestartBody: '1 問目からやり直します。',
-
-  qmathDailyBacklogHint: '過去の日はいつでも開きます。',
   qmathLevelsDone: 'クリアしたレベル',
   qmathDailiesDone: '達成したデイリー',
   qmathTotalMisses: '誤答合計',

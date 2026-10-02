@@ -20,7 +20,6 @@ export const zhHant: MemoryMatchMessages = {
   memoryNewBestTime: '你的最快紀錄。',
   memoryBestMoves: '最少步數',
   memoryDailiesCleared: '完成天數',
-  memoryDailyBacklogHint: '之前的日期隨時都能玩。',
   memoryStep1Title: '翻開兩張牌',
   memoryStep1Body: '先點一張，再點另一張。圖案相同就會保持翻開。',
   memoryStep2Title: '不用急著記',

@@ -14,7 +14,6 @@ export const ptBR: SlidingPuzzleMessages = {
   slideNewBestTime: 'Seu tempo mais rápido.',
   slideLevelsSolved: 'Níveis resolvidos',
   slideDailiesSolved: 'Diários resolvidos',
-  slideDailyBacklogHint: 'Os dias anteriores ficam sempre abertos.',
   slideStep1Title: 'Toque ao lado do vazio',
   slideStep1Body: 'Toque em uma peça ao lado do espaço vazio e ela desliza para lá.',
   slideStep2Title: 'A linha inteira anda',

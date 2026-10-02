@@ -27,7 +27,6 @@ export const en = {
   schulteConfirmRestartBody: 'This round starts over from the first number.',
 
   // Lists & statistics
-  schulteDailyBacklogHint: 'Every past day stays open.',
   schulteSizeLabel: '{n}x{n}',
   schulteLevelsDone: 'Levels finished',
   schulteDailiesDone: 'Dailies finished',

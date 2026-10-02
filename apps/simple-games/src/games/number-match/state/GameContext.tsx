@@ -61,7 +61,7 @@ import {
 import { applyClearToProgress, previousBestFor } from './progressLogic';
 import { applyGameEnd, applyGameStart } from './statsLogic';
 
-export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats';
+export type Screen = 'home' | 'tutorial' | 'levels' | 'game' | 'stats';
 
 export interface LastResult {
   isNewBest: boolean;
@@ -88,7 +88,7 @@ export interface AppContextValue {
   canResume: (mode: GameMode) => boolean;
   startLevel: (level: number) => void;
   startNextLevel: () => void;
-  startDaily: (date?: string) => void;
+  startDaily: () => void;
   /** A fresh free board at the picker's tier — or the one given (§11). */
   startFree: (tier?: FreeTier) => void;
   /** Where the Free Play picker stands; remembered across launches. */
@@ -331,18 +331,15 @@ export function AppProvider({
     beginSession(createLevelSession(Math.min(nextLevel, progressRef.current.highestUnlocked)));
   }, [beginSession]);
 
-  const startDaily = useCallback(
-    (date?: string) => {
-      const target = date ?? localDateString(new Date());
-      const current = sessionsRef.current.daily;
-      if (current && current.dailyDate === target && current.status === 'playing') {
-        resumeGame('daily');
-        return;
-      }
-      beginSession(createDailySession(target));
-    },
-    [beginSession, resumeGame],
-  );
+  const startDaily = useCallback(() => {
+    const target = localDateString(new Date());
+    const current = sessionsRef.current.daily;
+    if (current && current.dailyDate === target && current.status === 'playing') {
+      resumeGame('daily');
+      return;
+    }
+    beginSession(createDailySession(target));
+  }, [beginSession, resumeGame]);
 
   const startFree = useCallback(
     (tier: FreeTier = freeTierRef.current) => {

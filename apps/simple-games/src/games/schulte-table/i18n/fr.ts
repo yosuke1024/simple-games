@@ -13,8 +13,6 @@ export const fr: SchulteMessages = {
   schulteMisses: 'Mauvais appuis',
   schulteNewBestTime: 'Votre meilleur temps.',
   schulteConfirmRestartBody: 'Cette manche recommence au premier nombre.',
-
-  schulteDailyBacklogHint: 'Les jours précédents restent toujours accessibles.',
   schulteSizeLabel: '{n}x{n}',
   schulteLevelsDone: 'Niveaux terminés',
   schulteDailiesDone: 'Défis terminés',

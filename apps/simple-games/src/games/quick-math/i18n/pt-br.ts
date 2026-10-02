@@ -11,8 +11,6 @@ export const ptBR: QuickMathMessages = {
   qmathMisses: 'Respostas erradas',
   qmathNewBestTime: 'Seu tempo mais rápido.',
   qmathConfirmRestartBody: 'Esta rodada recomeça da primeira pergunta.',
-
-  qmathDailyBacklogHint: 'Os dias anteriores ficam sempre abertos.',
   qmathLevelsDone: 'Níveis concluídos',
   qmathDailiesDone: 'Diários concluídos',
   qmathTotalMisses: 'Total de respostas erradas',

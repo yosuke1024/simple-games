@@ -30,7 +30,6 @@ export const th: FutoshikiMessages = {
   futoshikiNewBestTime: 'เร็วที่สุดของคุณ',
   futoshikiLevelsSolved: 'ด่านที่ผ่านแล้ว',
   futoshikiDailiesSolved: 'เดลี่ที่ผ่านแล้ว',
-  futoshikiDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ',
   futoshikiHighlightMistakes: 'แสดงที่ผิด',
   futoshikiHighlightMistakesNote: 'ทำเครื่องหมายเลขที่ไม่ตรงกับเฉลย ส่วนที่ผิดกติกาจะแสดงเสมอ',
   futoshikiStep1Title: 'เลขละหนึ่งครั้ง',

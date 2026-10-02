@@ -18,7 +18,6 @@ export const en = {
   waterBestMoves: 'Fewest pours',
   waterLevelsSolved: 'Levels solved',
   waterDailiesSolved: 'Dailies solved',
-  waterDailyBacklogHint: 'Every earlier day stays open.',
   // Free Play's tier picker (docs/WATER_SORT_RULES.md §6「フリープレイ」).
   waterTier_easy: 'Easy',
   waterTier_medium: 'Medium',

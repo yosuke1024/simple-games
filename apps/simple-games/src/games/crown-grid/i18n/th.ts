@@ -55,7 +55,6 @@ export const th: CrownGridMessages = {
   crownGridNewBoard: 'กระดานใหม่',
   crownGridDailySection: 'รายวัน',
   crownGridDailiesSolved: 'จำนวนวันที่ผ่าน',
-  crownGridDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ',
   crownGridStep1Title: 'มงกุฎอย่างละหนึ่ง',
   crownGridStep1Body: 'ทุกแถว ทุกคอลัมน์ และทุกสีมีมงกุฎเพียงหนึ่งอันพอดี',
   crownGridStep2Title: 'มงกุฎไม่ติดกัน',

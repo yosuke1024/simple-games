@@ -16,8 +16,6 @@ export const th: RecallMessages = {
   recallTiles: 'ไทล์',
   recallNewBestTime: 'เร็วที่สุดของคุณ',
   recallNewLayout: 'ตำแหน่งใหม่',
-
-  recallDailyBacklogHint: 'ย้อนไปเล่นวันก่อน ๆ ได้เสมอ',
   recallSizeLabel: '{n}x{n}',
   recallLevelsDone: 'เลเวลที่ผ่าน',
   recallDailiesDone: 'รายวันที่ผ่าน',

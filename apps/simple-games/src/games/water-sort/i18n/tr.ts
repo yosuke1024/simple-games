@@ -14,7 +14,6 @@ export const tr: WaterSortMessages = {
   waterBestMoves: 'En az hamle',
   waterLevelsSolved: 'Çözülen seviyeler',
   waterDailiesSolved: 'Çözülen günlükler',
-  waterDailyBacklogHint: 'Önceki günler her zaman açık.',
   waterTier_easy: 'Kolay',
   waterTier_medium: 'Orta',
   waterTier_hard: 'Zor',

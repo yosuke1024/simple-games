@@ -28,7 +28,6 @@ export const hi: FreeCellMessages = {
   fcGamesWon: 'जीते खेल',
   fcWinRate: 'जीत दर',
   fcDailiesWon: 'जीते दैनिक',
-  fcDailyBacklogHint: 'पिछले सभी दिन हमेशा खुले रहते हैं। जल्दी कुछ नहीं है।',
   fcStep1Title: 'एक कम, रंग बारी-बारी',
   fcStep1Body: 'लाल-काला बारी-बारी, घटते क्रम में पत्ते जमाएँ। पहले पत्ते पर टैप करें, फिर जगह पर।',
   fcStep2Title: 'चार सेल, हर एक में एक पत्ता',

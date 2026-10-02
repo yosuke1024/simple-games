@@ -16,8 +16,6 @@ export const ptBR: RecallMessages = {
   recallTiles: 'Peças',
   recallNewBestTime: 'Seu tempo mais rápido.',
   recallNewLayout: 'Nova disposição',
-
-  recallDailyBacklogHint: 'Os dias anteriores ficam sempre abertos.',
   recallSizeLabel: '{n}x{n}',
   recallLevelsDone: 'Níveis concluídos',
   recallDailiesDone: 'Diários concluídos',

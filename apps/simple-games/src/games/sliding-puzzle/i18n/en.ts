@@ -18,7 +18,6 @@ export const en = {
   slideNewBestTime: 'Your fastest yet.',
   slideLevelsSolved: 'Levels solved',
   slideDailiesSolved: 'Dailies solved',
-  slideDailyBacklogHint: 'Every earlier day stays open.',
   slideStep1Title: 'Tap next to the gap',
   slideStep1Body: 'Tap a tile beside the empty square and it slides into it.',
   slideStep2Title: 'A whole row moves',

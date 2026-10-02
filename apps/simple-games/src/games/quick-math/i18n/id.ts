@@ -11,8 +11,6 @@ export const id: QuickMathMessages = {
   qmathMisses: 'Jawaban salah',
   qmathNewBestTime: 'Tercepat sejauh ini.',
   qmathConfirmRestartBody: 'Ronde ini dimulai lagi dari soal pertama.',
-
-  qmathDailyBacklogHint: 'Setiap hari sebelumnya selalu terbuka.',
   qmathLevelsDone: 'Level selesai',
   qmathDailiesDone: 'Harian selesai',
   qmathTotalMisses: 'Total jawaban salah',

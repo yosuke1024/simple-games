@@ -30,7 +30,6 @@ export const ko: FutoshikiMessages = {
   futoshikiNewBestTime: '자기 최고 기록입니다.',
   futoshikiLevelsSolved: '클리어한 레벨',
   futoshikiDailiesSolved: '클리어한 데일리',
-  futoshikiDailyBacklogHint: '지난 날짜는 언제든 도전할 수 있습니다.',
   futoshikiHighlightMistakes: '실수 표시',
   futoshikiHighlightMistakesNote: '정답과 다른 숫자를 표시합니다. 규칙 위반은 항상 표시됩니다.',
   futoshikiStep1Title: '숫자마다 한 번씩',

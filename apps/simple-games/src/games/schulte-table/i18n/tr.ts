@@ -13,8 +13,6 @@ export const tr: SchulteMessages = {
   schulteMisses: 'Yanlış dokunuş',
   schulteNewBestTime: 'En hızlı zamanın.',
   schulteConfirmRestartBody: 'Bu tur ilk sayıdan yeniden başlar.',
-
-  schulteDailyBacklogHint: 'Geçmiş günlerin hepsi açık kalır.',
   schulteSizeLabel: '{n}x{n}',
   schulteLevelsDone: 'Tamamlanan seviyeler',
   schulteDailiesDone: 'Tamamlanan günlükler',

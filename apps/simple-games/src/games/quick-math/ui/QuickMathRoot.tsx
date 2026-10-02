@@ -21,7 +21,6 @@ import {
   type Progress,
   type Stats,
 } from '../storage/schemas';
-import { QuickMathDailyScreen } from './screens/DailyScreen';
 import { QuickMathGameScreen } from './screens/GameScreen';
 import { QuickMathHomeScreen } from './screens/HomeScreen';
 import { QuickMathLevelSelectScreen } from './screens/LevelSelectScreen';
@@ -36,8 +35,6 @@ export function QuickMathScreens() {
       return <QuickMathTutorialScreen />;
     case 'levels':
       return <QuickMathLevelSelectScreen />;
-    case 'daily':
-      return <QuickMathDailyScreen />;
     case 'game':
       return <QuickMathGameScreen />;
     case 'stats':

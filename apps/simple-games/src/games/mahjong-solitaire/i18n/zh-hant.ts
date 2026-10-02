@@ -34,7 +34,6 @@ export const zhHant: MahjongMessages = {
 
   mahjongLevelsCleared: '通關的關卡',
   mahjongDailiesCleared: '完成的每日挑戰',
-  mahjongDailyBacklogHint: '之前的每一天都可以隨時挑戰。',
 
   mahjongStep1Title: '拿取相同的一對',
   mahjongStep1Body: '點選兩張相同的牌將它們移除。只有上面沒有牌、且左右至少一側空著的牌才能拿取。',

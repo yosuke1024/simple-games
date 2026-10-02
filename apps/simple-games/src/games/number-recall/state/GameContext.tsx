@@ -52,7 +52,7 @@ import {
   previousBestFor,
 } from './statsLogic';
 
-export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats';
+export type Screen = 'home' | 'tutorial' | 'levels' | 'game' | 'stats';
 
 export interface LastResult {
   readonly isNewBest: boolean;
@@ -82,7 +82,7 @@ export interface RecallContextValue {
   lastResult: LastResult | null;
   startLevel: (level: number) => void;
   startNextLevel: () => void;
-  startDaily: (date?: string) => void;
+  startDaily: () => void;
   /** Same difficulty, new layout — never the layout just revealed (§8). */
   retryRound: () => void;
   /** Taps a cell. Returns true when the tap was part of the question. */
@@ -234,7 +234,7 @@ export function RecallProvider({
   }, [beginSession]);
 
   const startDaily = useCallback(
-    (date?: string) => beginSession(createDailySession(date ?? localDateString(new Date()))),
+    () => beginSession(createDailySession(localDateString(new Date()))),
     [beginSession],
   );
 

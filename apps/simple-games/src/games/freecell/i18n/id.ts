@@ -28,7 +28,6 @@ export const id: FreeCellMessages = {
   fcGamesWon: 'Permainan dimenangkan',
   fcWinRate: 'Tingkat kemenangan',
   fcDailiesWon: 'Harian dimenangkan',
-  fcDailyBacklogHint: 'Hari-hari sebelumnya selalu terbuka. Santai saja.',
   fcStep1Title: 'Turun satu, warna berselang',
   fcStep1Body: 'Tumpuk menurun, merah-hitam bergantian. Ketuk kartu, lalu ketuk tujuannya.',
   fcStep2Title: 'Empat sel, satu kartu tiap sel',

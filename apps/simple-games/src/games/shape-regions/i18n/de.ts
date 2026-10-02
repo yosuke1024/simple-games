@@ -38,7 +38,6 @@ export const de: ShapeRegionsMessages = {
   shapeRegionsSolvedCount: 'Gelöste Rätsel',
   shapeRegionsDailySection: 'Täglich',
   shapeRegionsDailiesCleared: 'Geschaffte Tage',
-  shapeRegionsDailyBacklogHint: 'Jeder frühere Tag bleibt offen.',
   shapeRegionsStep1Title: 'Zahl und Symbol',
   shapeRegionsStep1Body:
     'Die Zahl sagt, wie viele Felder die Form hat; das Symbol zeigt ihre Gestalt.',

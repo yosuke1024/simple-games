@@ -38,7 +38,6 @@ export const fr: Sudoku6x6Messages = {
   sudoku6x6NewBoard: 'Nouvelle grille',
   sudoku6x6DailySection: 'Quotidien',
   sudoku6x6DailiesSolved: 'Jours résolus',
-  sudoku6x6DailyBacklogHint: 'Tous les jours précédents restent ouverts.',
   sudoku6x6HighlightMistakes: 'Afficher les erreurs',
   sudoku6x6HighlightMistakesNote:
     'Marque un chiffre faux dès qu’il est placé. Les doublons sont toujours marqués.',

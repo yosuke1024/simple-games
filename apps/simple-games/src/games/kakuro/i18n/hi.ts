@@ -29,7 +29,6 @@ export const hi: KakuroMessages = {
   kakuroNewBestTime: 'आपका सबसे तेज़ समय।',
   kakuroLevelsSolved: 'हल किए गए स्तर',
   kakuroDailiesSolved: 'हल की गई दैनिक पहेलियाँ',
-  kakuroDailyBacklogHint: 'पिछले दिन हमेशा खुले रहते हैं।',
   kakuroHighlightMistakes: 'गलतियाँ दिखाएँ',
   kakuroHighlightMistakesNote: 'हल से अलग अंक को चिह्नित करता है। टूटे नियम हमेशा दिखाए जाते हैं।',
   kakuroStep1Title: 'संकेत जितना योग',

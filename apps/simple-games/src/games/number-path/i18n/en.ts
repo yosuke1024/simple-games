@@ -33,7 +33,6 @@ export const en = {
   numberPathSolvedCount: 'Boards solved',
   numberPathDailySection: 'Daily',
   numberPathDailiesSolved: 'Days solved',
-  numberPathDailyBacklogHint: 'Every earlier day stays open.',
   numberPathStep1Title: 'Follow the numbers',
   numberPathStep1Body: 'Draw one line from 1, visiting the numbers in order.',
   numberPathStep2Title: 'Cover every square',

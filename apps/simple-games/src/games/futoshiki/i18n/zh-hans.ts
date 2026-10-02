@@ -30,7 +30,6 @@ export const zhHans: FutoshikiMessages = {
   futoshikiNewBestTime: '个人最快纪录。',
   futoshikiLevelsSolved: '已完成的关卡',
   futoshikiDailiesSolved: '已完成的每日挑战',
-  futoshikiDailyBacklogHint: '之前的日期随时可以挑战。',
   futoshikiHighlightMistakes: '标出错误',
   futoshikiHighlightMistakesNote: '标出与答案不符的数字。违反规则始终会标出。',
   futoshikiStep1Title: '每个数字各一次',

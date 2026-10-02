@@ -20,7 +20,6 @@ export const hi: MemoryMatchMessages = {
   memoryNewBestTime: 'अब तक का सबसे तेज़ समय।',
   memoryBestMoves: 'सबसे कम चालें',
   memoryDailiesCleared: 'पूरे किए दिन',
-  memoryDailyBacklogHint: 'पिछले सभी दिन हमेशा खुले रहते हैं।',
   memoryStep1Title: 'दो कार्ड पलटें',
   memoryStep1Body: 'एक कार्ड पर टैप करें, फिर दूसरे पर। मिलती जोड़ी खुली रहती है।',
   memoryStep2Title: 'याद करने की जल्दी नहीं',

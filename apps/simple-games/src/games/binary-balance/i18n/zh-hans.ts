@@ -46,7 +46,6 @@ export const zhHans: BinaryBalanceMessages = {
   binaryBalanceNewBoard: '新盘面',
   binaryBalanceDailySection: '每日挑战',
   binaryBalanceDailiesSolved: '通关天数',
-  binaryBalanceDailyBacklogHint: '之前的日期随时可以挑战。',
   binaryBalanceStep1Title: '不能连着三个',
   binaryBalanceStep1Body: '点击格子在空、太阳、月亮之间切换。同一种标记不能连续出现三次。',
   binaryBalanceStep2Title: '各占一半',

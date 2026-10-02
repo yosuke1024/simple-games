@@ -18,10 +18,6 @@ export const hi: Messages = {
   reachedLevel: 'पहुँचा लेवल',
 
   score: 'स्कोर',
-
-  dailyPast: 'पिछली डेली',
-  dailyToday: 'आज',
-  dailyBacklogHint: 'किसी दिन को पूरा करें, तो उससे पिछला दिन खुल जाता है।',
   modeDaily: 'डेली',
   // 'फ़्री' reads first as "free of charge" in Hindi, which this mode is not
   // about — every game feature is free with or without it. मुक्त खेल is the

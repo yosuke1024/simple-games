@@ -39,7 +39,6 @@ export const fr: ShapeRegionsMessages = {
   shapeRegionsSolvedCount: 'Grilles résolues',
   shapeRegionsDailySection: 'Quotidien',
   shapeRegionsDailiesCleared: 'Jours réussis',
-  shapeRegionsDailyBacklogHint: 'Chaque jour précédent reste ouvert.',
   shapeRegionsStep1Title: 'Nombre et symbole',
   shapeRegionsStep1Body: 'Le nombre indique combien de cases a la forme ; le symbole, son aspect.',
   shapeRegionsStep2Title: 'Étendre depuis l’indice',

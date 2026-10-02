@@ -32,7 +32,6 @@ export const de: SolitaireMessages = {
   solGamesWon: 'Gewonnene Spiele',
   solWinRate: 'Siegquote',
   solDailiesWon: 'Gewonnene Tagesblätter',
-  solDailyBacklogHint: 'Alle früheren Tage bleiben offen. Nicht jedes Blatt ist gewinnbar.',
   solStep1Title: 'Absteigend, Farben im Wechsel',
   solStep1Body: 'Lege abwärts, Rot auf Schwarz auf Rot. Tippe eine Karte an, dann ihr Ziel.',
   solStep2Title: 'Verdeckte Karten befreien',

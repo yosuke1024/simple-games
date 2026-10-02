@@ -55,7 +55,6 @@ export const ja: CrownGridMessages = {
   crownGridNewBoard: '新しい盤面',
   crownGridDailySection: 'デイリー',
   crownGridDailiesSolved: '達成日数',
-  crownGridDailyBacklogHint: '過去の日はいつでも挑戦できます。',
   crownGridStep1Title: '王冠は 1 つずつ',
   crownGridStep1Body: 'どの行・どの列・どの色にも、王冠がちょうど 1 つ入ります。',
   crownGridStep2Title: '王冠は隣り合わない',

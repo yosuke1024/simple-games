@@ -37,7 +37,6 @@ export const zhHant: ShapeRegionsMessages = {
   shapeRegionsSolvedCount: '已解謎題',
   shapeRegionsDailySection: '每日',
   shapeRegionsDailiesCleared: '完成天數',
-  shapeRegionsDailyBacklogHint: '之前的每一天都可以開啟。',
   shapeRegionsStep1Title: '數字與符號',
   shapeRegionsStep1Body: '數字是該形狀的格數，符號是它的形態。',
   shapeRegionsStep2Title: '從線索開始生長',

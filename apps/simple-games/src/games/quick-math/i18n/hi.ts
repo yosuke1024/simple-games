@@ -11,8 +11,6 @@ export const hi: QuickMathMessages = {
   qmathMisses: 'गलत जवाब',
   qmathNewBestTime: 'आपका सबसे तेज़ समय।',
   qmathConfirmRestartBody: 'यह दौर पहले सवाल से फिर शुरू होगा।',
-
-  qmathDailyBacklogHint: 'पिछला हर दिन हमेशा खुला रहता है।',
   qmathLevelsDone: 'पूरे किए लेवल',
   qmathDailiesDone: 'पूरी की गई डेली',
   qmathTotalMisses: 'कुल गलत जवाब',

@@ -23,7 +23,6 @@ export const id: NonogramMessages = {
   nonoNewBestTime: 'Waktu tercepatmu.',
   nonoLevelsSolved: 'Level selesai',
   nonoDailiesSolved: 'Harian selesai',
-  nonoDailyBacklogHint: 'Hari-hari sebelumnya tetap terbuka.',
   nonoStep1Title: 'Angka adalah blok',
   nonoStep1Body:
     'Setiap angka adalah blok kotak terwarnai berurutan, dengan minimal satu celah di antaranya.',

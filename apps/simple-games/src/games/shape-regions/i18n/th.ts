@@ -37,7 +37,6 @@ export const th: ShapeRegionsMessages = {
   shapeRegionsSolvedCount: 'ปริศนาที่แก้ได้',
   shapeRegionsDailySection: 'รายวัน',
   shapeRegionsDailiesCleared: 'วันที่ทำสำเร็จ',
-  shapeRegionsDailyBacklogHint: 'วันก่อนหน้าทุกวันยังเปิดอยู่',
   shapeRegionsStep1Title: 'ตัวเลขและสัญลักษณ์',
   shapeRegionsStep1Body: 'ตัวเลขคือจำนวนช่องของรูปทรง สัญลักษณ์คือรูปร่างของมัน',
   shapeRegionsStep2Title: 'ขยายจากคำใบ้',

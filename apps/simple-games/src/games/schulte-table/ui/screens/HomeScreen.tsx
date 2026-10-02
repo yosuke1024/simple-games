@@ -1,6 +1,6 @@
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
-import { IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
+import { IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
 import { localDateString, MAX_LEVEL } from '../../game';
 import { useSchulte } from '../../state/GameContext';
@@ -66,10 +66,6 @@ export function SchulteHomeScreen() {
             <span className="home-chip-count">
               {clearedLevelCount(progress)}/{MAX_LEVEL}
             </span>
-          </button>
-          <button type="button" className="home-chip" onClick={() => navigate('daily')}>
-            <IconCalendar className="home-chip-icon" />
-            <span>{t('dailyPast')}</span>
           </button>
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>
             <IconChart className="home-chip-icon" />

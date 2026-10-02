@@ -29,7 +29,6 @@ export const id: KakuroMessages = {
   kakuroNewBestTime: 'Waktu tercepatmu.',
   kakuroLevelsSolved: 'Level selesai',
   kakuroDailiesSolved: 'Harian selesai',
-  kakuroDailyBacklogHint: 'Hari-hari sebelumnya tetap terbuka.',
   kakuroHighlightMistakes: 'Tandai kesalahan',
   kakuroHighlightMistakesNote:
     'Menandai angka yang tidak cocok dengan jawaban. Pelanggaran aturan selalu ditandai.',

@@ -21,7 +21,6 @@ export const de: TakuzuMessages = {
   takuzuTier_hard: 'Schwer',
   takuzuLevelsSolved: 'Gelöste Level',
   takuzuDailiesSolved: 'Gelöste Tagesrätsel',
-  takuzuDailyBacklogHint: 'Jeder frühere Tag bleibt offen.',
   takuzuStep1Title: 'Nie drei in Folge',
   takuzuStep1Body:
     'Tippe ein Feld an, um zwischen 0, 1 und leer zu wechseln. Dieselbe Ziffer darf nicht dreimal in Folge stehen.',

@@ -14,7 +14,6 @@ export const fr: SlidingPuzzleMessages = {
   slideNewBestTime: 'Votre meilleur temps.',
   slideLevelsSolved: 'Niveaux résolus',
   slideDailiesSolved: 'Défis résolus',
-  slideDailyBacklogHint: 'Les jours précédents restent toujours accessibles.',
   slideStep1Title: 'Touchez près du vide',
   slideStep1Body: 'Touchez une tuile voisine de la case vide et elle glisse dedans.',
   slideStep2Title: 'Toute une ligne bouge',

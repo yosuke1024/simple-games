@@ -23,7 +23,6 @@ import {
   type Progress,
   type Stats,
 } from '../storage/schemas';
-import { SudokuDailyScreen } from './screens/DailyScreen';
 import { SudokuGameScreen } from './screens/GameScreen';
 import { SudokuHomeScreen } from './screens/HomeScreen';
 import { SudokuLevelSelectScreen } from './screens/LevelSelectScreen';
@@ -38,8 +37,6 @@ export function SudokuScreens() {
       return <SudokuTutorialScreen />;
     case 'levels':
       return <SudokuLevelSelectScreen />;
-    case 'daily':
-      return <SudokuDailyScreen />;
     case 'game':
       return <SudokuGameScreen />;
     case 'stats':

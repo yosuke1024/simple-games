@@ -55,7 +55,6 @@ export const zhHans: CrownGridMessages = {
   crownGridNewBoard: '新盘面',
   crownGridDailySection: '每日',
   crownGridDailiesSolved: '通关天数',
-  crownGridDailyBacklogHint: '之前的日期随时可以挑战。',
   crownGridStep1Title: '各一个王冠',
   crownGridStep1Body: '每一行、每一列和每种颜色都恰好有一个王冠。',
   crownGridStep2Title: '王冠互不相邻',

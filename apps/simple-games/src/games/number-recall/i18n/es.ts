@@ -16,8 +16,6 @@ export const es: RecallMessages = {
   recallTiles: 'Fichas',
   recallNewBestTime: 'Tu tiempo más rápido.',
   recallNewLayout: 'Nueva disposición',
-
-  recallDailyBacklogHint: 'Los días anteriores siempre están disponibles.',
   recallSizeLabel: '{n}x{n}',
   recallLevelsDone: 'Niveles completados',
   recallDailiesDone: 'Retos completados',

@@ -21,7 +21,6 @@ export const tr: TakuzuMessages = {
   takuzuTier_hard: 'Zor',
   takuzuLevelsSolved: 'Çözülen seviyeler',
   takuzuDailiesSolved: 'Çözülen günlükler',
-  takuzuDailyBacklogHint: 'Önceki günler açık kalır.',
   takuzuStep1Title: 'Asla üç yan yana',
   takuzuStep1Body: 'Kareye dokununca 0, 1, boş arasında geçer. Aynı rakam üç kez yan yana gelemez.',
   takuzuStep2Title: 'Yarı yarıya',

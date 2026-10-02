@@ -13,8 +13,6 @@ export const hi: SchulteMessages = {
   schulteMisses: 'गलत टैप',
   schulteNewBestTime: 'आपका सबसे तेज़ समय।',
   schulteConfirmRestartBody: 'यह दौर पहली संख्या से फिर शुरू होगा।',
-
-  schulteDailyBacklogHint: 'पिछला हर दिन हमेशा खुला रहता है।',
   schulteSizeLabel: '{n}x{n}',
   schulteLevelsDone: 'पूरे किए लेवल',
   schulteDailiesDone: 'पूरी की गई डेली',

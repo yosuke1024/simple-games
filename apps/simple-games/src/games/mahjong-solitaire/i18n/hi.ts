@@ -35,7 +35,6 @@ export const hi: MahjongMessages = {
 
   mahjongLevelsCleared: 'पूरे किए गए स्तर',
   mahjongDailiesCleared: 'पूरे किए गए दैनिक',
-  mahjongDailyBacklogHint: 'पिछले सभी दिन खुले रहते हैं।',
 
   mahjongStep1Title: 'एक जैसे जोड़े उठाएँ',
   mahjongStep1Body:

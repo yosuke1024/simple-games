@@ -14,7 +14,6 @@ export const id: WaterSortMessages = {
   waterBestMoves: 'Langkah paling sedikit',
   waterLevelsSolved: 'Level selesai',
   waterDailiesSolved: 'Harian selesai',
-  waterDailyBacklogHint: 'Hari-hari sebelumnya selalu terbuka.',
   waterTier_easy: 'Mudah',
   waterTier_medium: 'Sedang',
   waterTier_hard: 'Sulit',

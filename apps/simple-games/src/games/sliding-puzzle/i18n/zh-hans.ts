@@ -14,7 +14,6 @@ export const zhHans: SlidingPuzzleMessages = {
   slideNewBestTime: '你的最快纪录。',
   slideLevelsSolved: '完成的关卡',
   slideDailiesSolved: '完成的每日',
-  slideDailyBacklogHint: '过去的每一天都可以随时挑战。',
   slideStep1Title: '点空格旁边的方块',
   slideStep1Body: '点空格旁边的方块，它就会滑进去。',
   slideStep2Title: '一整排一起动',

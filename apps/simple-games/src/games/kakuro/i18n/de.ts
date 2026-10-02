@@ -29,7 +29,6 @@ export const de: KakuroMessages = {
   kakuroNewBestTime: 'Deine schnellste Zeit.',
   kakuroLevelsSolved: 'Gelöste Level',
   kakuroDailiesSolved: 'Gelöste Tagesrätsel',
-  kakuroDailyBacklogHint: 'Frühere Tage bleiben offen.',
   kakuroHighlightMistakes: 'Fehler anzeigen',
   kakuroHighlightMistakesNote:
     'Markiert eine Ziffer, die nicht zur Lösung passt. Regelverstöße werden immer markiert.',

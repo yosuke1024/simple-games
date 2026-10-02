@@ -42,7 +42,6 @@ export const en = {
   boxRegionsSolvedCount: 'Puzzles solved',
   boxRegionsDailySection: 'Daily',
   boxRegionsDailiesCleared: 'Days cleared',
-  boxRegionsDailyBacklogHint: 'Every earlier day stays open.',
   boxRegionsStep1Title: 'Cut into boxes',
   boxRegionsStep1Body: 'Cut the board into rectangles, each holding exactly one clue.',
   boxRegionsStep2Title: 'Read the clues',

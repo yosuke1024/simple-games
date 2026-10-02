@@ -49,7 +49,6 @@ export const vi: BinaryBalanceMessages = {
   binaryBalanceNewBoard: 'Bảng mới',
   binaryBalanceDailySection: 'Thử thách ngày',
   binaryBalanceDailiesSolved: 'Số ngày đã giải',
-  binaryBalanceDailyBacklogHint: 'Những ngày trước luôn mở.',
   binaryBalanceStep1Title: 'Không ba ô liền nhau',
   binaryBalanceStep1Body:
     'Chạm để đổi giữa trống, mặt trời, mặt trăng. Cùng một ký hiệu không được nằm ba ô liền nhau.',

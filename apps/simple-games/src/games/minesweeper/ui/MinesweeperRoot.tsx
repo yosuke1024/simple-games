@@ -24,7 +24,6 @@ import {
   type Prefs,
   type Stats,
 } from '../storage/schemas';
-import { MinesDailyScreen } from './screens/DailyScreen';
 import { MinesGameScreen } from './screens/GameScreen';
 import { MinesHomeScreen } from './screens/HomeScreen';
 import { MinesStatsScreen } from './screens/StatsScreen';
@@ -36,8 +35,6 @@ export function MinesweeperScreens() {
   switch (screen) {
     case 'tutorial':
       return <MinesTutorialScreen />;
-    case 'daily':
-      return <MinesDailyScreen />;
     case 'game':
       return <MinesGameScreen />;
     case 'stats':

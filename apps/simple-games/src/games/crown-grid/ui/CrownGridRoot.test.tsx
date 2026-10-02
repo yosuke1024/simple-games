@@ -345,40 +345,6 @@ describe('home (§9)', () => {
     expect(screen.getByText('Daily')).toBeInTheDocument();
     expect(within(board()).getAllByRole('button')).toHaveLength(64);
   });
-
-  it('asks before another day replaces a suspended daily, and resumes the same day (§11)', async () => {
-    const user = userEvent.setup();
-    renderGame(tutorialDone);
-    // Today's daily, one × in, then home: the daily slot is suspended.
-    await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
-    await user.click(cellAt(1, 1));
-    await user.click(screen.getByRole('button', { name: 'Home' }));
-
-    await user.click(screen.getByRole('button', { name: /Past Dailies/ }));
-    const days = () =>
-      within(document.querySelector('.daily-list') as HTMLElement).getAllByRole('button');
-    expect(days()[0]).toHaveTextContent(/Today.*Resume/);
-
-    // Yesterday: a different day, so the suspended board is at stake.
-    await user.click(days()[1]!);
-    expect(screen.getByRole('alertdialog', { name: 'Start a new game?' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
-    expect(days()[0]).toHaveTextContent(/Today.*Resume/);
-
-    // Today again: that is a resume, which replaces nothing and asks nothing.
-    await user.click(days()[0]!);
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
-    expect(labelAt(1, 1)).toMatch(/^Crossed out/);
-
-    // And confirming another day does replace it, with a clean board.
-    await user.click(screen.getByRole('button', { name: 'Home' }));
-    await user.click(screen.getByRole('button', { name: /Past Dailies/ }));
-    await user.click(days()[1]!);
-    await user.click(screen.getByRole('button', { name: 'Start' }));
-    expect(screen.getByText('Daily')).toBeInTheDocument();
-    expect(labelAt(1, 1)).toMatch(/^Empty/);
-  });
 });
 
 describe('playing (§2, §4)', () => {
