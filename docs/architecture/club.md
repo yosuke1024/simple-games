@@ -1282,8 +1282,8 @@ Rankings
 
 Sudoku / Minesweeper / Water Sort の 3 本が持っていた `mode: 'club'` と 4 つ目の保存枠
 (`sd.saveClub` / `ms.saveClub` / `ws.saveClub`)は、デイリー以外の局を Challenge にしていた v1
-の名残である。`Today` の `Play` はゲームのデイリーを開く(§9「Challenge」)ので、**2026-10-02 に
-出荷前に取り除いた**。`saveClub` は一度も出荷されていない(v1.3.1 に無い)ので、
+の名残である。`Today` の `Play` はゲームを普通の入口で開き、プレイヤーがデイリーを遊ぶ
+(§9「Challenge」)ので、**2026-10-02 に出荷前に取り除いた**。`saveClub` は一度も出荷されていない(v1.3.1 に無い)ので、
 `gameKeys.test.ts` の golden から外した — 出荷後なら外せなかった。
 
 取り除いたもの: `GameMode` の `'club'`、`createClubSession`、4 つ目の保存スロット(キー・スキーマ・
@@ -1291,6 +1291,16 @@ Sudoku / Minesweeper / Water Sort の 3 本が持っていた `mode: 'club'` と
 digest 不一致の 1 行画面と、その `*ChallengeMismatch` の 14 言語)、`seedPrefix`。
 残したもの: 各ゲームの `challenge/contract.ts`、`boardDigest`(Today の digest 照合とランキングの
 `boardDigest`)、結果画面の `ClubResultAction`、Water Sort のランキングのティア(`challengeTierOf`)。
+
+**既知の制限(2026-10-02、未解決)**: `Today` の `Play` が渡すのは「Club から開いた」という印だけで、
+「デイリーを開け」という意図はゲームへ渡らない。Quick Rules を終えていない人が `Play` から
+ゲームを開くと、チュートリアルを終えた時点でそのゲームの普通の最初の局(Sudoku なら現在の
+レベル)が始まり、デイリーではないので挑戦へは自動送信されない(結果画面には普通の
+`Send to Club` が出て、ランキングへ送れる)。ホームへ戻って Daily を選べば挑戦になる。
+spike には「挑戦から開いた局はチュートリアルの後にその盤面へ進む」分岐があったが、挑戦の盤面が
+渡されたときにしか働かず、今の流れでは一度も通っていなかった。直すなら、シェルが「デイリーを
+開く」入口(`GameEntry` の 1 値)を渡し、対応する 35 本がそれを受ける形になる(全ゲームに触れる
+変更なので codemod)。v1.4.0 までに直すかは製品オーナーの判断。
 
 ## 17. Public の運用 — 表示名・通報・削除・作り直し(2026-10-02、段取りの PR F)
 
