@@ -12,6 +12,10 @@ Simple Games
 by PixApps
 ```
 
+アプリの画面下のフッターでは、この by-line の **PixApps がリンク**で、pixapps.ai の
+トップを端末のブラウザで開く(2026-10-02、`ui/components/BrandFooter.tsx`)。見た目は
+下線だけで、アイコンや色は足さない。オフラインでは何も起きない(`docs/OFFLINE_POLICY.md`)。
+
 補助表記:
 
 ```text

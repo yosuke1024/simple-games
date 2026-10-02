@@ -55,7 +55,7 @@
  */
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
-import { SERIES_BY_LINE, SERIES_NAME } from '@simple-games/brand';
+import { SERIES_NAME } from '@simple-games/brand';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { getFavoriteGames, toggleFavoriteGame } from '../../app/favoriteGames';
 import { availableGames, findAvailableGame } from '../../app/gameChannel';
@@ -67,6 +67,7 @@ import {
   requestHomeShortcut,
 } from '../../services/homeShortcut/homeShortcut';
 import { useSettings } from '../../state/SettingsContext';
+import { BrandFooter } from '../components/BrandFooter';
 import { GameActionSheet } from '../components/GameActionSheet';
 import { GameTile } from '../components/GameTile';
 import { IconBack, IconChevronRight, IconGear, IconSearch } from '../components/icons';
@@ -763,10 +764,7 @@ export function CollectionHomeScreen({
           up. The slot stays put and the results appear above it. */}
       <WebAdSlot />
 
-      <footer className="brand-footer">
-        <span className="brand-name">{SERIES_NAME}</span>
-        <span className="brand-by">{SERIES_BY_LINE}</span>
-      </footer>
+      <BrandFooter />
 
       <GameActionSheet
         game={menuGame}

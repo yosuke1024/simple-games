@@ -1207,6 +1207,17 @@ button:disabled {
   font-size: 12px;
 }
 
+/* The publisher name in the by-line (BrandFooter). A 12px word is too small to
+   tap, so the hit area is grown with padding and the layout kept with matching
+   negative margins (the box the line sees stays the text itself). The look is
+   a plain underline: no icon, no colour, nothing louder than the by-line was. */
+.brand-link {
+  padding: 14px 8px;
+  margin: -14px -8px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* Web-build display ad (docs/ADS_POLICY.md「Web 版」— WebAdSlot renders null
    on the native app). Fixed height from mount so a loading, failing, or
    offline ad never moves the game list — the .banner-slot rule, applied to
@@ -1217,6 +1228,10 @@ button:disabled {
   justify-content: center;
   height: 100px;
   margin-top: 12px;
+  /* Below it sits the brand footer, whose publisher link is tappable: the gap
+     keeps that hit area clear of the unit (AdSense: no clickable element
+     crowding an ad). */
+  margin-bottom: 12px;
 }
 
 /* The measuring host: fills the slot's usable width so AdUnit can pick a unit

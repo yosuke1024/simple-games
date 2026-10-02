@@ -14,7 +14,16 @@
  */
 
 export const SERIES_NAME = 'Simple Games';
-export const SERIES_BY_LINE = 'by PixApps';
+/**
+ * The publisher. Its name is the one tappable thing in the brand footer
+ * (apps/simple-games/src/ui/components/BrandFooter.tsx): it opens the PixApps
+ * site's top page in the system browser — the way from an installed app to the
+ * rest of what PixApps makes. The trailing slash is the canonical form of the
+ * origin.
+ */
+export const PUBLISHER_NAME = 'PixApps';
+export const PUBLISHER_URL = 'https://pixapps.ai/';
+export const SERIES_BY_LINE = `by ${PUBLISHER_NAME}`;
 export const SERIES_ATTRIBUTION = 'A Simple Game by PixApps';
 export const SERIES_CREDIT = 'Simple Games by PixApps';
 
