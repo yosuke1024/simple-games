@@ -3,7 +3,7 @@
  * storage functions run on the real Preferences plugin, which is localStorage
  * under jsdom, so the test clears it between cases.
  */
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../i18n';
@@ -16,7 +16,9 @@ import {
   findDeparted,
   loadClubConnections,
 } from '../storage/connections';
-import { enqueueResult, pendingFor } from '../storage/outbox';
+import { enqueueResult, flushOutbox, pendingFor } from '../storage/outbox';
+import { REQUEST_TIMEOUT_MS, type ClubClient } from '../api/client';
+import { ClubApiError } from '../api/errors';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { todayLocal } from './common';
 import { ClubRoot } from './ClubRoot';
@@ -1370,5 +1372,325 @@ describe('Today challenge: deleting your own result (decision 42)', () => {
       within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
     );
     expect(await screen.findByRole('alert')).toHaveTextContent('no longer a member');
+  });
+});
+
+describe('Opening a Club with no network (club.md §10)', () => {
+  // A WKWebView with no network can leave a fetch pending after the abort; the
+  // screen must still end in one line, with Reload working once the network is
+  // back. RTL's waitFor/findBy wait on a real `setTimeout(0)` that fake timers
+  // swallow, so these cases move the clock by hand and use plain queries.
+  const UNREACHABLE = 'Could not reach Suzuki Family';
+
+  /** A fetch the platform never settles, abort or not. */
+  const hangingFetch = () =>
+    vi.fn((..._args: Parameters<typeof fetch>) => new Promise<Response>(() => {}));
+
+  async function advance(ms: number) {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(ms);
+    });
+  }
+
+  /**
+   * Timers still pending once the zero-delay ones are run (jsdom fires a
+   * `storage` event from a `setTimeout(0)` after every localStorage write).
+   * Anything left is a deadline that was never cancelled.
+   */
+  async function pendingTimers() {
+    await advance(0);
+    return vi.getTimerCount();
+  }
+
+  const reloadButton = () => screen.getByRole('button', { name: 'Reload' });
+
+  /**
+   * How long a Club screen waits for its own flush before it reads the lists. The
+   * constant is not exported: this mirrors FLUSH_WAIT_MS in ClubScreen.tsx (one
+   * request's timeout and a beat), and the timing tests below fail if they drift.
+   */
+  const FLUSH_WAIT_MS = REQUEST_TIMEOUT_MS + 1_000;
+
+  /**
+   * A flush for this Club that is still running and never settles on its own (a
+   * result screen's, outbox.ts `flushing`): whatever flushes after it queues behind it.
+   */
+  function holdFlush() {
+    let release!: () => void;
+    const gate = new Promise<never>((_, reject) => {
+      release = () => reject(new ClubApiError('unreachable', null, 'released'));
+    });
+    const stuck = { submitRanking: () => gate } as unknown as ClubClient;
+    return { release, earlier: flushOutbox(ENDPOINT, stuck) };
+  }
+
+  /**
+   * Let the held flush finish, and the Club screen's own flush queued behind it
+   * (it asks the hanging server and gives up at its deadline), so the next test
+   * finds this Club's queue free.
+   */
+  async function drainHeld(release: () => void, earlier: Promise<unknown>) {
+    release();
+    await earlier;
+    await advance(REQUEST_TIMEOUT_MS);
+  }
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('ends in "Could not reach" with Reload enabled, and Reload loads once the network is back', async () => {
+    await joinedConnection();
+    const hang = hangingFetch();
+    vi.stubGlobal('fetch', hang);
+    vi.useFakeTimers();
+    renderRoot();
+    await advance(0);
+
+    // Waiting: the three requests are out, Reload is off, nothing says it failed yet.
+    expect(hang.mock.calls).toHaveLength(3);
+    expect(screen.getByText('Loading…')).toBeInTheDocument();
+    expect(reloadButton()).toBeDisabled();
+    await advance(REQUEST_TIMEOUT_MS - 1);
+    expect(screen.getByText('Loading…')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    // The limit passes: one line, Reload enabled, no "Loading…".
+    await advance(1);
+    expect(screen.getByRole('alert')).toHaveTextContent(UNREACHABLE);
+    expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
+    expect(reloadButton()).toBeEnabled();
+    // Nothing is left running behind the settled screen.
+    expect(await pendingTimers()).toBe(0);
+
+    // The network is back: Reload reads the Club again, in the same open screen.
+    const fetchMock = stubServer();
+    fireEvent.click(reloadButton());
+    await advance(0);
+    expect(screen.getByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    expect(screen.getByText('1. Ken 3:58')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
+    expect(reloadButton()).toBeEnabled();
+    expect(fetchMock.mock.calls.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('with a result queued for the Club, the flush it starts with cannot keep the screen on "Loading…"', async () => {
+    await joinedConnection();
+    await enqueueResult(rankingItem(ENDPOINT));
+    const hang = hangingFetch();
+    vi.stubGlobal('fetch', hang);
+    vi.useFakeTimers();
+    renderRoot();
+    await advance(0);
+
+    // The queued result goes first, and its request hangs: still just loading.
+    expect(hang.mock.calls).toHaveLength(1);
+    expect(String(hang.mock.calls[0]![0])).toContain('/rankings/results');
+    expect(screen.getByText('Loading…')).toBeInTheDocument();
+    await advance(REQUEST_TIMEOUT_MS - 1);
+    expect(screen.getByText('Loading…')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    // The send's own limit passes: the flush says the Club is unreachable, and the
+    // screen says so right then — about 10 s in, not 20 — instead of asking for the
+    // three lists and waiting out the same limit again.
+    await advance(1);
+    expect(screen.getByRole('alert')).toHaveTextContent(UNREACHABLE);
+    expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
+    expect(reloadButton()).toBeEnabled();
+    // The only request that ever went out is the queued result's POST: no list GETs.
+    expect(hang.mock.calls).toHaveLength(1);
+    // A send that never got through costs the result nothing: it waits for the next try.
+    expect(await pendingFor(ENDPOINT)).toHaveLength(1);
+    expect(await pendingTimers()).toBe(0);
+    // ...and nothing follows later: a further limit's time passes with no new request.
+    await advance(REQUEST_TIMEOUT_MS);
+    expect(hang.mock.calls).toHaveLength(1);
+    expect(screen.getByRole('alert')).toHaveTextContent(UNREACHABLE);
+  });
+
+  it('a flush that never settles holds the screen for one request time and a beat at most, then the Club is read', async () => {
+    // A result screen's own flush for this Club is still running (outbox.ts
+    // `flushing`), and it never settles; the Club screen queues behind it.
+    await joinedConnection();
+    await enqueueResult(rankingItem(ENDPOINT));
+    const { release, earlier } = holdFlush();
+    const hang = hangingFetch();
+    vi.stubGlobal('fetch', hang);
+    vi.useFakeTimers();
+    try {
+      renderRoot();
+      await advance(0);
+
+      // Waiting on the queue: nothing was asked of the server yet.
+      expect(hang.mock.calls).toHaveLength(0);
+      expect(screen.getByText('Loading…')).toBeInTheDocument();
+      await advance(FLUSH_WAIT_MS - 1);
+      expect(hang.mock.calls).toHaveLength(0);
+      expect(screen.getByText('Loading…')).toBeInTheDocument();
+
+      // The wait is over: the screen stops waiting and reads the Club...
+      await advance(1);
+      expect(hang.mock.calls).toHaveLength(3);
+      expect(screen.getByText('Loading…')).toBeInTheDocument();
+      // ...which, with every request hanging, ends in the one line a request time later.
+      await advance(REQUEST_TIMEOUT_MS - 1);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      await advance(1);
+      expect(screen.getByRole('alert')).toHaveTextContent(UNREACHABLE);
+      expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
+      expect(reloadButton()).toBeEnabled();
+    } finally {
+      await drainHeld(release, earlier);
+    }
+  });
+
+  it('a screen that is gone by the time the wait ends sends no list request', async () => {
+    await joinedConnection();
+    await enqueueResult(rankingItem(ENDPOINT));
+    const { release, earlier } = holdFlush();
+    const hang = hangingFetch();
+    vi.stubGlobal('fetch', hang);
+    vi.useFakeTimers();
+    try {
+      renderRoot();
+      await advance(0);
+      expect(hang.mock.calls).toHaveLength(0);
+      expect(screen.getByText('Loading…')).toBeInTheDocument();
+
+      // The person leaves the Club screen a moment before its wait for the queue ends.
+      await advance(FLUSH_WAIT_MS - 1);
+      cleanup();
+      expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
+
+      // The wait ends, and a request's time more: nothing asks the server for a list
+      // on behalf of a screen that no longer exists.
+      await advance(1);
+      await advance(REQUEST_TIMEOUT_MS);
+      expect(hang.mock.calls).toHaveLength(0);
+    } finally {
+      await drainHeld(release, earlier);
+    }
+  });
+
+  it('a normal open leaves no timer behind', async () => {
+    await joinedConnection();
+    await enqueueResult(rankingItem(ENDPOINT));
+    stubServer();
+    vi.useFakeTimers();
+    renderRoot();
+    await advance(0);
+    expect(screen.getByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    expect(await pendingFor(ENDPOINT)).toEqual([]);
+    // The wait that guards the queued send was cancelled with the send.
+    expect(await pendingTimers()).toBe(0);
+  });
+
+  it('Reload sends what waited: a result queued while offline goes out when the person presses Reload', async () => {
+    await joinedConnection();
+    await enqueueResult(rankingItem(ENDPOINT));
+    const fetchMock = stubServer();
+    const online = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    try {
+      renderRoot();
+      // Offline: the one line at once, and the result stays queued.
+      expect(await screen.findByRole('alert')).toHaveTextContent(UNREACHABLE);
+      expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
+      expect(reloadButton()).toBeEnabled();
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(await pendingFor(ENDPOINT)).toHaveLength(1);
+
+      // The network is back. Reload is the person's own action: it flushes the
+      // queue (the open screen already used its one flush), then reads the Club.
+      online.mockReturnValue(true);
+      fireEvent.click(reloadButton());
+      expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+      const posts = fetchMock.mock.calls.filter(
+        ([url, init]) =>
+          String(url).endsWith('/rankings/results') && (init as RequestInit).method === 'POST',
+      );
+      expect(posts).toHaveLength(1);
+      // The result goes before the lists are read, oldest first (club.md §10).
+      expect(fetchMock.mock.calls[0]![0]).toBe(`${ENDPOINT}/api/v1/rankings/results`);
+      expect(await pendingFor(ENDPOINT)).toEqual([]);
+    } finally {
+      online.mockRestore();
+    }
+  });
+
+  it('a device that reports itself offline gets the one line at once, and Reload works when it is back', async () => {
+    await joinedConnection();
+    const fetchMock = stubServer();
+    const online = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    try {
+      renderRoot();
+      expect(await screen.findByRole('alert')).toHaveTextContent(UNREACHABLE);
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
+      expect(reloadButton()).toBeEnabled();
+
+      online.mockReturnValue(true);
+      fireEvent.click(reloadButton());
+      expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    } finally {
+      online.mockRestore();
+    }
+  });
+});
+
+describe('Resending the queue is the person’s own action (club.md §10)', () => {
+  const reload = () => screen.getByRole('button', { name: 'Reload' });
+
+  it('the refresh after changing your name reads the lists but does not resend; Reload does', async () => {
+    await joinedConnection();
+    await enqueueResult(rankingItem(ENDPOINT));
+    // The server answers the queued result, every time, with a failure that is not
+    // final and not "unreachable": the item stays queued and the flush is "blocked".
+    const server = stubServer();
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) =>
+      String(input).endsWith('/api/v1/rankings/results') && init?.method === 'POST'
+        ? reply({ error: { code: 'rate_limited', message: 'slow down' } }, 429)
+        : server(input, init),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const posts = () => callsTo(fetchMock, 'POST', '/rankings/results');
+    const user = userEvent.setup();
+    renderRoot();
+
+    // Opening the screen is the person's action: the queued result is sent once,
+    // refused for now, and the lists load all the same.
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    expect(posts()).toHaveLength(1);
+    expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(1);
+    expect(await pendingFor(ENDPOINT)).toHaveLength(1);
+
+    // Changing your own name: the PATCH goes out and the screen reads the lists again...
+    await user.click(screen.getByRole('button', { name: 'Settings' }));
+    const field = screen.getByLabelText('Change your name');
+    await user.clear(field);
+    await user.type(field, 'Kenji');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Name saved');
+    expect(callsTo(fetchMock, 'PATCH', '/me')).toHaveLength(1);
+    await waitFor(() => expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(2));
+    await waitFor(() => expect(callsTo(fetchMock, 'GET', '/rankings')).toHaveLength(2));
+    // ...but that refresh is the screen's own, not the person's asking: nothing is resent.
+    expect(posts()).toHaveLength(1);
+
+    // Back on the Club screen, Reload is the person's action again: one more send.
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    await waitFor(() => expect(reload()).toBeEnabled());
+    await user.click(reload());
+    await waitFor(() => expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(3));
+    await waitFor(() => expect(reload()).toBeEnabled());
+    expect(posts()).toHaveLength(2);
+    // Still refused, so still queued; the lists are on screen and no error is.
+    expect(await pendingFor(ENDPOINT)).toHaveLength(1);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
   });
 });
