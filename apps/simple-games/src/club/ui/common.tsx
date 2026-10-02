@@ -81,11 +81,83 @@ export function todayLocal(now: Date = new Date()): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-/** `easy` / `medium` / `hard` are translated; anything else is shown as the contract named it. */
-export function tierLabel(key: string, t: T): string {
+/** Games whose `easy` / `normal` / `hard` name a CPU opponent's strength, in the words their own screens use. */
+const CPU_GAMES: ReadonlySet<string> = new Set(['gin-rummy', 'hearts', 'mancala', 'reversi']);
+
+/** Dots and Boxes' `paramsKey` is the board size's name; the game's own buttons write the boxes per side. */
+const DOTS_AND_BOXES_SIZES: Readonly<Record<string, string>> = {
+  small: '3×3',
+  medium: '4×4',
+  large: '5×5',
+};
+
+/** Quick Math's tracks (its `paramsKey` is the track, lower-cased), in the words of the game's own bands. */
+const QUICK_MATH_TRACKS: Readonly<Record<string, Parameters<T>[0]>> = {
+  addsub: 'clubTier_qmAddSub',
+  multiply: 'clubTier_qmMultiply',
+  divide: 'clubTier_qmDivide',
+  missing: 'clubTier_qmMissing',
+  mixed: 'clubTier_qmMixed',
+};
+
+const SCHULTE_ORDERS: Readonly<Record<string, Parameters<T>[0]>> = {
+  ascending: 'clubTier_ascending',
+  descending: 'clubTier_descending',
+  'odd-then-even': 'clubTier_oddThenEven',
+};
+
+/**
+ * The mode words of a title (`Sudoku · Hard`), or null when the title is the
+ * game alone (club.md §6-1「タイトルのモード語」). The `paramsKey` is the contract's table name and is
+ * never shown as it stands: each game's keys are read in that game's own
+ * words, and a key this function has no word for still shows as written (so a
+ * new value is visibly unfinished, and `titles.test.ts` lists every value of
+ * every contract to fail loudly instead).
+ *
+ * `daily` says the title already carries the Daily label.
+ */
+export function modeLabel(gameId: string, key: string, t: T, daily = false): string | null {
+  // A game with one table, or a daily board, has nothing a title needs to add.
+  if (key === 'standard' || key === 'daily') return null;
+
+  // A level band says nothing about a daily board (Mahjong Solitaire deals its
+  // flagship layout for the daily), and the title's Daily label names it.
+  const contract = contractFor(gameId);
+  if (contract?.levelRange !== undefined) {
+    if (daily) return null;
+    const range = contract.levelRange(key);
+    if (range !== null) return t('clubTier_levels', { from: range[0], to: range[1] });
+  }
+
+  if (CPU_GAMES.has(gameId)) {
+    if (key === 'easy') return t('clubTier_cpuEasy');
+    if (key === 'normal') return t('clubTier_cpuNormal');
+    if (key === 'hard') return t('clubTier_cpuHard');
+  }
+
+  if (gameId === 'dots-and-boxes') {
+    const size = DOTS_AND_BOXES_SIZES[key];
+    if (size !== undefined) return size;
+  }
+
+  if (gameId === 'quick-math') {
+    const track = QUICK_MATH_TRACKS[key];
+    if (track !== undefined) return t(track);
+  }
+
+  if (gameId === 'schulte-table') {
+    const match = /^(\d+)x(\d+)-(ascending|descending|odd-then-even)$/.exec(key);
+    if (match) {
+      const order = SCHULTE_ORDERS[match[3]!];
+      if (order !== undefined) return `${match[1]}×${match[2]} · ${t(order)}`;
+    }
+  }
+
   if (key === 'easy') return t('clubTier_easy');
   if (key === 'medium') return t('clubTier_medium');
   if (key === 'hard') return t('clubTier_hard');
+  // Hit and Blow's middle difficulty is `normal`.
+  if (key === 'normal') return t('clubTier_normal');
   // Solitaire's draw and Spider's suit count (their contracts' paramsKey).
   if (key === 'draw-1') return t('clubTier_draw1');
   if (key === 'draw-3') return t('clubTier_draw3');
@@ -95,13 +167,6 @@ export function tierLabel(key: string, t: T): string {
   // A board size reads as the game's own screens write it: 8×8, not 8x8.
   return key.replace(/^(\d+)x(\d+)/, '$1×$2');
 }
-
-/**
- * The paramsKey of a game with one table (`standard`) or of a daily board
- * (Water Sort's `daily`) says nothing a title needs: the title is the game,
- * and a daily already carries the Daily label.
- */
-export const isSilentTier = (key: string): boolean => key === 'standard' || key === 'daily';
 
 export function dateLabel(iso: string, locale: string): string {
   const time = Date.parse(iso);

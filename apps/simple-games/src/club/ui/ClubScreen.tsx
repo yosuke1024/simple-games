@@ -22,10 +22,9 @@ import {
   axisText,
   dateLabel,
   errorText,
-  isSilentTier,
+  modeLabel,
   NICKNAME_MAX,
   ScreenFrame,
-  tierLabel,
   todayLocal,
   type T,
 } from './common';
@@ -50,7 +49,8 @@ export type ClubPanel = 'none' | 'invite' | 'settings';
 /** `Sudoku · Hard`; a game with one table (`standard`) is its title alone. */
 export function rankingTitle(gameId: string, paramsKey: string, t: T): string {
   const game = gameTitle(gameId) ?? gameId;
-  return isSilentTier(paramsKey) ? game : `${game} · ${tierLabel(paramsKey, t)}`;
+  const mode = modeLabel(gameId, paramsKey, t);
+  return mode === null ? game : `${game} · ${mode}`;
 }
 
 export function challengeTitle(challenge: Challenge, t: T): string {
@@ -58,7 +58,8 @@ export function challengeTitle(challenge: Challenge, t: T): string {
   const contract = contractFor(challenge.gameId);
   const params = contract?.validateParams(challenge.params);
   const key = params && contract ? contract.paramsKey(params) : null;
-  const title = key !== null && !isSilentTier(key) ? `${game} · ${tierLabel(key, t)}` : game;
+  const mode = key !== null ? modeLabel(challenge.gameId, key, t, challenge.daily !== null) : null;
+  const title = mode !== null ? `${game} · ${mode}` : game;
   return challenge.daily !== null ? `${title} · ${t('clubDaily')}` : title;
 }
 

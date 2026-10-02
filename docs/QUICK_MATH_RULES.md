@@ -247,7 +247,7 @@ level から (出題の帯, seed) を決定的に導出する。seed は `qmath-
 
 正典は [architecture/club.md](architecture/club.md) §6 と §16。ここにはこのゲームの側で決まることだけを書く。
 
-- **順位表の名前(`params`)** は `{ track }`(`addSub` / `multiply` / `divide` / `missing` / `mixed` と、デイリーの `daily`。順位表の名前は `addsub` など小文字)。トラックは統計の区分(§10)と同じで、レベルが属するトラックから決まる。レベル番号ごとの表は作らない。デイリー(`daily`)は Today の挑戦へ送るので `daily` の表は使わない(下記)。
+- **順位表の名前(`params`)** は `{ track }`(`addSub` / `multiply` / `divide` / `missing` / `mixed` と、デイリーの `daily`。表を分ける鍵(`paramsKey`)は `addsub` など小文字)。Club House のタイトルはその鍵を見せず、ゲーム自身の帯の語(`qmathBand*`。「Quick Math · Adding and subtracting」など)で呼び、デイリーは「Daily」だけにする。トラックは統計の区分(§10)と同じで、レベルが属するトラックから決まる。レベル番号ごとの表は作らない。デイリー(`daily`)は Today の挑戦へ送るので `daily` の表は使わない(下記)。
 - **結果画面が送る事実(`facts`)** は `{ elapsedSeconds, mistakes }`(`mistakes` は誤答数 `missCount`)。共有(`ShareAction`)の `details` と同じセッションの値(`elapsedSeconds` / `missCount`)から作り、ここで計算しない。
 - **順位の軸は時間**で、短いほうが上(`order: 'elapsedSeconds'`、`direction: 'asc'`)。表示するだけの値は順位に使わない。
 - **デイリーは Today の挑戦へ、それ以外はランキングの表へ。** デイリーの局だけ `daily`(その日付)と `boardDigest` を付けて送り、その日の挑戦(全員が同じ盤面)に結果が集まる。デイリーの順位は Today の挑戦の中だけで、同じデイリーの 2 度目以降は数えない(club.md §6-3)。その日の 20 問は日付だけから決まり、Retry も同じ 20 問になる。それ以外の局は、クリアしたものだけがランキングの表へ送られる(`boardDigest` は `null`)。Today の `Play` はこのゲームを普通の入口で開くだけで、盤面は渡されない。

@@ -34,6 +34,24 @@ const LAYOUTS = [
 type Layout = (typeof LAYOUTS)[number];
 const isLayout = (value: unknown): value is Layout => LAYOUTS.includes(value as Layout);
 
+/**
+ * The levels each layout is dealt for — `BANDS` in game/layouts.ts and §6 of
+ * the rules, copied here because this leaf imports nothing. The contract test
+ * holds the two in step.
+ */
+const LEVEL_BANDS: Readonly<Record<Layout, readonly [number, number]>> = {
+  sprout: [1, 8],
+  steps: [9, 16],
+  terrace: [17, 25],
+  courtyard: [26, 35],
+  pagoda: [36, 45],
+  lantern: [46, 56],
+  bridge: [57, 67],
+  keep: [68, 78],
+  garden: [79, 89],
+  turtle: [90, 100],
+};
+
 export const MAHJONG_SOLITAIRE_CHALLENGE = {
   contractVersion: 1 as const,
   /** Time is the axis; hints is shown, never ranked (club.md §6-1). */
@@ -52,5 +70,9 @@ export const MAHJONG_SOLITAIRE_CHALLENGE = {
   },
   paramsKey(params: Record<string, unknown>): string {
     return String(params.layout);
+  },
+  /** The Club House names a table by its levels, not by the layout's id. */
+  levelRange(paramsKey: string): readonly [number, number] | null {
+    return isLayout(paramsKey) ? LEVEL_BANDS[paramsKey] : null;
   },
 };

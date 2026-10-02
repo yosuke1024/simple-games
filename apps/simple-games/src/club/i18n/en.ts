@@ -95,6 +95,24 @@ export const en = {
   clubTier_suit1: '1 suit',
   clubTier_suits2: '2 suits',
   clubTier_suits4: '4 suits',
+  // Copied word for word from the games' own catalogs, so a Club title never
+  // names a mode differently from the game's screen: clubTier_cpu* from
+  // ginDifficulty_* (Hearts, Mancala and Reversi say the same), clubTier_normal
+  // from hitAndBlowDifficulty_normal, clubTier_qm* from qmathBand*.
+  // src/i18n/i18n.test.ts holds every locale's copy to its source.
+  clubTier_cpuEasy: 'Easy',
+  clubTier_cpuNormal: 'Normal',
+  clubTier_cpuHard: 'Hard',
+  clubTier_normal: 'Normal',
+  clubTier_qmAddSub: 'Adding and subtracting',
+  clubTier_qmMultiply: 'Times tables',
+  clubTier_qmDivide: 'Dividing',
+  clubTier_qmMissing: 'Missing number',
+  clubTier_qmMixed: 'Mixed',
+  clubTier_levels: 'Levels {from}–{to}',
+  clubTier_ascending: 'Ascending',
+  clubTier_descending: 'Descending',
+  clubTier_oddThenEven: 'Odds, then evens',
   clubFact_mistakes: 'Mistakes',
   clubFact_hints: 'Hints',
   clubFact_moves: 'Moves',

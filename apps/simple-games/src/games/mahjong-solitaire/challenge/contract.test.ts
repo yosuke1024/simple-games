@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { LAYOUT_IDS, MAX_LEVEL, levelParams } from '../game/layouts';
 import { MAHJONG_SOLITAIRE_CHALLENGE as contract } from './contract';
 
 describe('mahjong-solitaire challenge contract', () => {
@@ -43,6 +44,42 @@ describe('mahjong-solitaire challenge contract', () => {
       const key = contract.paramsKey({ layout: value });
       expect(key).toMatch(/^[a-z0-9-]{1,40}$/);
     }
+  });
+
+  describe('levelRange', () => {
+    it('contains every level the game deals on that layout, and nothing more', () => {
+      // The contract leaf copies the band table (it may not import the game);
+      // the game's own levelParams is what decides which layout a level gets.
+      const dealt = new Map<string, number[]>();
+      for (let level = 1; level <= MAX_LEVEL; level += 1) {
+        const id = levelParams(level).layoutId;
+        const range = contract.levelRange(id);
+        expect(range, `level ${level} (${id})`).not.toBeNull();
+        expect(level, `level ${level} is inside ${id}'s range`).toBeGreaterThanOrEqual(range![0]);
+        expect(level, `level ${level} is inside ${id}'s range`).toBeLessThanOrEqual(range![1]);
+        dealt.set(id, [...(dealt.get(id) ?? []), level]);
+      }
+      // Bounds equal the game's band exactly: the first and last level dealt on it.
+      for (const id of LAYOUT_IDS) {
+        const levels = dealt.get(id);
+        expect(levels, `${id} is dealt for some level`).toBeDefined();
+        expect(contract.levelRange(id)).toEqual([levels![0], levels![levels!.length - 1]]);
+      }
+    });
+
+    it('covers levels 1 to 100 with ten bands that meet end to start', () => {
+      const ranges = LAYOUT_IDS.map((id) => contract.levelRange(id)!);
+      expect(ranges[0]![0]).toBe(1);
+      expect(ranges[ranges.length - 1]![1]).toBe(MAX_LEVEL);
+      ranges.slice(1).forEach((range, i) => expect(range[0]).toBe(ranges[i]![1] + 1));
+    });
+
+    it('is null for a key that is not a layout', () => {
+      expect(contract.levelRange('unknown')).toBeNull();
+      expect(contract.levelRange('')).toBeNull();
+      expect(contract.levelRange('Turtle')).toBeNull();
+      expect(contract.levelRange('toString')).toBeNull();
+    });
   });
 
   it('reads the figures the result screen shows', () => {

@@ -636,6 +636,12 @@ interface GameChallengeContract<P, F> {
   validateFacts(raw: unknown): F | null;
   /** Club 記録の単位(§5-4 の paramsKey)。同じ文字列 = 同じ「モード」 */
   paramsKey(params: P): string;
+  /**
+   * 任意。表がレベルの帯のゲームだけが持つ(Mahjong Solitaire のレイアウト 10 種):
+   * その `paramsKey` が受け持つレベル `[from, to]`、知らない鍵なら null。
+   * タイトルが id でなく「Levels 90–100」と呼ぶために使う(下記「タイトルのモード語」)。
+   */
+  levelRange?(paramsKey: string): readonly [number, number] | null;
   /** 並べ替え: 比較軸 1 つ。`played` は末尾に提出順 */
   order: keyof F;
   /** `asc` = 小さいほど上(時間・手数)、`desc` = 大きいほど上(スコア)。2026-10-02 */
@@ -672,6 +678,23 @@ params(表を分けるモード)と facts(結果画面の数字)はそのゲー�
   挑戦をまたいだ通算・ポイント・称号は無い。2 軸目(Sudoku のミス、Water Sort の時間)は
   表示するが並べ替えに使わない — 「時間は速いがミスが多い」をどう順位付けるかを製品が
   決めた時点で、それは成績の比較ではなく採点になる。
+- **タイトルのモード語**(2026-10-02。`Sudoku · Hard` の `Hard`)。`paramsKey` は表を分ける鍵であって
+  画面の言葉ではないので、そのまま見せない。ランキングの表(§16-2)・Today の挑戦(§9)・
+  Challenge の題は、`club/ui/common.tsx` の `modeLabel(gameId, key, t, daily)` が**ゲームごとに**
+  読む。返り値 `null` は「モード語なし」(題はゲーム名だけ)。規則は上から:
+  (a) `standard` / `daily` → `null`。
+  (b) 契約が `levelRange` を持つゲーム(Mahjong Solitaire)→ デイリーなら `null`(帯はデイリーの盤面に
+  ついて何も言わず、題の `Daily` が呼ぶ)、そうでなければ `Levels 90–100`(`clubTier_levels`)。
+  (c) CPU 対戦の Gin Rummy / Hearts / Mancala / Reversi の `easy` / `normal` / `hard` → そのゲームの
+  難易度の語(`clubTier_cpuEasy` / `clubTier_cpuNormal` / `clubTier_cpuHard`)。
+  (d) Dots and Boxes の `small` / `medium` / `large` → `3×3` / `4×4` / `5×5`(盤の大きさで、難易度ではない)。
+  (e) Quick Math のトラック → ゲームの帯の語(`clubTier_qm*`)。
+  (f) Schulte Table の `5x5-odd-then-even` → `5×5 · Odds, then evens`(大きさ + 順序、`clubTier_ascending` /
+  `clubTier_descending` / `clubTier_oddThenEven`)。
+  (g) それ以外: `easy` / `medium` / `hard`、Hit and Blow の `normal`(`clubTier_normal`)、Solitaire の draw、
+  Spider の suit 数、`NxN` → `N×N`。どれにも当たらない値は**書かれたまま**出る(未完成が見える)。
+  契約に値を足したら語も足す: `titles.test.ts` は全契約(35 本)の全値の表を持ち、素の語が残る値と、
+  契約の葉にある値の数と合わない表を落とす。
 
 ### 6-2. ゲーム側の対応 — レジストリの `challenge` と、シェルが覚える挑戦
 
@@ -1207,6 +1230,18 @@ Push は後続でも作らない(PRODUCT_PRINCIPLES「Club House」)。**公開�
   `import './i18n'` で呼ぶ(`registerGameMessages` は id で登録するだけなので
   ゲーム以外にも使える)。`src/test/gameI18nWiring.test.ts` の対象に `club/index.ts` を
   足す。Shared を触らない人は、この文言を一度もパースしない。
+- **モード語のキー**(`clubTier_*`。§6-1「タイトルのモード語」)は 2 種類。ゲーム自身のカタログの語を
+  **そのまま写した**もの — `clubTier_cpuEasy` / `clubTier_cpuNormal` / `clubTier_cpuHard`(CPU 対戦 4 本は
+  14 言語とも同じ語。Gin Rummy の `ginDifficulty_*` から)、`clubTier_normal`(`hitAndBlowDifficulty_normal`)、
+  `clubTier_qmAddSub` / `clubTier_qmMultiply` / `clubTier_qmDivide` / `clubTier_qmMissing` / `clubTier_qmMixed`
+  (Quick Math の `qmathBand*`)— と、ゲームの語を持たない新しい語(`clubTier_levels`(`{from}` `{to}`。
+  レベルの語は Core の `levelsTitle` / `modeLevel` に揃える)・`clubTier_ascending` / `clubTier_descending` /
+  `clubTier_oddThenEven`)。写すのは、プレイヤーがゲームの画面で見た語と Club の題が食い違わないため
+  (言い直した訳を新しく作らない)。写しが元の語からずれたら `src/i18n/i18n.test.ts` が 14 言語で落とす
+  (Dots and Boxes の盤の大きさは `titles.test.ts` がゲームのカタログと突き合わせる)。どれも高リスクキーではない
+  (題の語で、お金・同意・公開の約束ではない)。既知: 汎用の `clubTier_easy` / `clubTier_medium` は、ゲーム自身の
+  語と 5 か所で違う(th の `medium` が Sudoku・Sudoku 6x6・Water Sort では `ปกติ`、vi の Box Regions の `medium`
+  が `Trung bình`、ja の Sudoku 6x6 の `easy` が `やさしい`)。同じ意味の言い換えで、ゲーム側の語の揃え方は別の判断。
 - Core に入るキーは §2 の 4 つ(`advancedTitle` / `clubEntry` / `playTogetherTitle` /
   `playTogetherBody`)と、`ClubResultAction` の**状態の 5 つ**(`clubResultSent`(`{club}`)/
   `clubResultPending` / `clubResultNotSent`(`{club}`)/ `clubResultSentMany`(`{count}`)/
@@ -1661,6 +1696,8 @@ Rankings
 ```
 
 - Club の画面(§9)の `Rankings` が一覧、1 行を開くとこの画面。`Reload` 以外に通信は無い(§10)。
+- 表の題は `Sudoku · Hard` の形で、モード語は `modeLabel` が読む(§6-1「タイトルのモード語」)。
+  `paramsKey` を素のまま見せない(`Hearts · normal` や `Mahjong Solitaire · turtle` は出ない)。
 - 数字は結果画面の `facts` を `club/ui/common.tsx` の `axisText` / `factsLine` で描く(§11)。
 - 行数(`entryCount`)は表の中に出す。Core の画面には出ない(§2-2「数字を出さない」)。
 - **自分の行にだけ削除ボタン**(`clubDeleteRecord`、`Delete my record`。上位の行にも、末尾に足した自分の行にも。

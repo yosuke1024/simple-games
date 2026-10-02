@@ -176,6 +176,48 @@ describe('catalog consistency', () => {
     }
   });
 
+  it('the Club House mode words copied from a game stay that game’s words, in every locale', () => {
+    // club.md §6-1「タイトルのモード語」: a Club title names a mode in the
+    // game's own words. The club catalog cannot read a game's (the game's
+    // chunk may not be loaded), so it holds copies — held here to the source.
+    const set = (name: string) => sets.find((s) => s.name === name)!.catalogs;
+    const copies: [string, string, string[]][] = [
+      ['clubTier_cpuEasy', 'easy', ['gin-rummy', 'hearts', 'mancala', 'reversi']],
+      ['clubTier_cpuNormal', 'normal', ['gin-rummy', 'hearts', 'mancala', 'reversi']],
+      ['clubTier_cpuHard', 'hard', ['gin-rummy', 'hearts', 'mancala', 'reversi']],
+    ];
+    const sourceKey: Record<string, string> = {
+      'gin-rummy': 'ginDifficulty_',
+      hearts: 'heartsDifficulty_',
+      mancala: 'mancalaDifficulty_',
+      reversi: 'reversiDifficulty_',
+    };
+    const direct: [string, string, string][] = [
+      ['clubTier_normal', 'hit-and-blow', 'hitAndBlowDifficulty_normal'],
+      ['clubTier_qmAddSub', 'quick-math', 'qmathBandAddSub'],
+      ['clubTier_qmMultiply', 'quick-math', 'qmathBandMultiply'],
+      ['clubTier_qmDivide', 'quick-math', 'qmathBandDivide'],
+      ['clubTier_qmMissing', 'quick-math', 'qmathBandMissing'],
+      ['clubTier_qmMixed', 'quick-math', 'qmathBandMixed'],
+    ];
+    const club = set('club');
+    for (const locale of locales) {
+      for (const [clubKey, level, games] of copies) {
+        for (const game of games) {
+          const source = `${sourceKey[game]}${level}`;
+          expect(club[locale][clubKey], `${locale}.${clubKey} vs ${game} ${source}`).toBe(
+            set(game)[locale][source],
+          );
+        }
+      }
+      for (const [clubKey, game, source] of direct) {
+        expect(club[locale][clubKey], `${locale}.${clubKey} vs ${game} ${source}`).toBe(
+          set(game)[locale][source],
+        );
+      }
+    }
+  });
+
   it('no key lives in more than one catalog', () => {
     // Disjoint key sets are what make the shell-then-games lookup order in
     // `translate` a non-choice. A duplicate would mean one catalog silently
