@@ -873,8 +873,9 @@ Push は後続でも作らない(PRODUCT_PRINCIPLES「Club House」)。**公開�
   (タイマー無し)。`already_submitted` / `board_mismatch` / `not_found` /
   `unauthorized` が返ったら**捨てる**(再送しても通らない)。body そのものが拒まれた
   `invalid_request` / `forbidden` / `too_large` / `unsupported_version` も同じ(先頭で
-  詰まると、その Club の後続が一つも送れないため)。応答が無い・429・5xx・形の崩れた
-  応答は再送の対象。結果画面の 1 行は、送れたら `Sent to <club>`、キューに入ったら
+  詰まると、その Club の後続が一つも送れないため)。`X-Club-Api` が知らない版のサーバも
+  同じ(次項: その Club へは何も送らない。残せば開くたびに送ってしまう)。応答が無い・
+  429・5xx・形の崩れた応答は再送の対象。結果画面の 1 行は、送れたら `Sent to <club>`、キューに入ったら
   `Will send when you open the Club`、捨てたら `Could not send to <club>`。Club との接続を
   切ったら、その Club 宛てのキューも捨てる(§4-2)。
 - **Club ごとに独立**: 1 つのサーバの障害・401 は、その接続の画面にだけ現れる。

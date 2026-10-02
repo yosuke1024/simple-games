@@ -44,7 +44,9 @@ export const SERVER_ERROR_CODES: readonly ClubErrorCode[] = [
  * Codes a retry can never turn into success (club.md §10): a result answered
  * with one of these is dropped, not queued. The first four are §10's list;
  * the rest refuse the body itself, and a queued item answered that way would
- * sit at the head of its Club's queue and block everything behind it.
+ * sit at the head of its Club's queue and block everything behind it. A server
+ * whose `X-Club-Api` this client does not know is final too: §10 says nothing
+ * more is sent to it, and a queued result would be re-sent on every opening.
  */
 export const FINAL_CODES: ReadonlySet<ClubErrorCode> = new Set<ClubErrorCode>([
   'already_submitted',
@@ -55,6 +57,7 @@ export const FINAL_CODES: ReadonlySet<ClubErrorCode> = new Set<ClubErrorCode>([
   'forbidden',
   'too_large',
   'unsupported_version',
+  'unsupported_server',
 ]);
 
 export const isFinalError = (error: unknown): boolean =>

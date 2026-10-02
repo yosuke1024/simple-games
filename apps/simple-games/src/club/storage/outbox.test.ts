@@ -50,6 +50,7 @@ describe('outbox', () => {
     'forbidden',
     'too_large',
     'unsupported_version',
+    'unsupported_server',
   ] as ClubErrorCode[])('drops an item answered %s, and goes on to the next', async (code) => {
     const kv = createMemoryKV();
     await enqueueResult(item(A, 1), kv);

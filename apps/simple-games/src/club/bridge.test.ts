@@ -139,6 +139,13 @@ describe('submitActive', () => {
     expect(await pendingFor(E, kv)).toEqual([]);
   });
 
+  it('rejected, never queued, by a server whose X-Club-Api this client does not know', async () => {
+    const f = vi.fn().mockResolvedValue(new Response(JSON.stringify(resultJson), { status: 201 }));
+    const { bridge, kv } = await setup(f);
+    expect(await bridge.submitActive(challengeResult)).toBe('rejected');
+    expect(await pendingFor(E, kv)).toEqual([]);
+  });
+
   it('rejected without an active challenge or with bad facts', async () => {
     const f = vi.fn();
     const none = await setup(f, null);
