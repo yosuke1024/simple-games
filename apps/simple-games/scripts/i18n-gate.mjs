@@ -26,6 +26,7 @@ import { dirname, join } from 'node:path';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const I18N = join(HERE, '../src/i18n');
 const GAMES = join(HERE, '../src/games');
+const CLUB = join(HERE, '../src/club/i18n');
 const RECORD_PATH = join(I18N, 'gateRecord.json');
 
 const digest = (value) => `sha256:${createHash('sha256').update(value, 'utf8').digest('hex')}`;
@@ -42,6 +43,10 @@ const digest = (value) => `sha256:${createHash('sha256').update(value, 'utf8').d
  * games — are only visible in the merged view. Key sets are disjoint
  * (i18n.test.ts), and a collision here is a hard stop rather than a silent
  * "last file wins".
+ *
+ * The Club House catalog (src/club/i18n/<locale>.ts) is one more owner, read
+ * the same way gate.test.ts globs it: five of its keys are high-risk, and a
+ * script that cannot see them cannot print them for back-translation.
  */
 function catalogFiles(locale) {
   const files = [join(I18N, `locales/${locale}.ts`)];
@@ -49,6 +54,8 @@ function catalogFiles(locale) {
     const path = join(GAMES, game, 'i18n', `${locale}.ts`);
     if (existsSync(path)) files.push(path);
   }
+  const club = join(CLUB, `${locale}.ts`);
+  if (existsSync(club)) files.push(club);
   return files;
 }
 
