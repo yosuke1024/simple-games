@@ -100,6 +100,9 @@ No login bonuses, no day-streak counters, no limited-time events. No clock runs 
 The games never go online.
 All of them run offline. Your progress stays on your device and nowhere else. No account, no cloud sync, and no server behind the app — nothing to go down, and nothing you would ever have to pay to keep running. To keep the app usable far from a charger, I left out anything power-hungry.
 
+Club House is the one optional exception, and only if you choose it.
+Join a Club with a nickname — there is no account — and the daily puzzles become one board for everyone, so you can see how others did on the very same board; in every other game, your personal bests sit next to theirs, game by game. PixApps runs the Public Club House, and anyone can run a private one for their own group. A device that never joins never connects to it.
+
 INCLUDED GAMES
 • Sudoku
 • Solitaire
@@ -186,6 +189,14 @@ Hint / Undo の詳細を 5 本ぶん並べていた。**それをやめた。**
   「通信しない」を**アプリ全体の無条件の主張として書かない**。主語をゲームに
   寄せる(`The games never go online.`)か、「通信を必要としない」と書く。
   とくに短い説明は検索結果に単独で出るため、打ち消す文脈がないことに注意。
+- **Club House の書き方**(2026-10-02、[BRAND.md](../../../docs/BRAND.md)「表現ルール」):
+  `The games never go online.` は Core(Club House を使っていない状態)について真のまま
+  残し、その直後の段落で Club House を**任意・選んだときだけ**と言い、主語をデプロイの
+  持ち主(PixApps か、あなた)にする。Club House について `offline` / `no server` を
+  言わない。`no account` は Public でも真(ニックネームだけ)。"leaderboard" / "ranking"
+  はストア文面では使わず、「同じ盤面で他の人がどうだったかが見える」「自己ベストが並ぶ」
+  と書く。「参加しない端末は接続しない」は実機で確かめた事実としてだけ書く
+  ([RELEASE_CHECKLIST.md](../../../docs/RELEASE_CHECKLIST.md) 5.16)。
 - **広告視聴の書き方**: 「広告を見る必要がない」はヒント・Undo の利用に限定して
   書く。アプリにバナー広告は存在するため、無条件の否定にしない。
 - **文字数を削るときに限定語を落とさない**。短い説明は 80 字上限があり、削る圧力が
