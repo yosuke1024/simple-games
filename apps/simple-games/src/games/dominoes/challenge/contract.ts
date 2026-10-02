@@ -26,11 +26,12 @@ export const DOMINOES_CHALLENGE = {
   },
   validateFacts(raw: unknown): Record<string, unknown> | null {
     if (!isRecord(raw)) return null;
-    const score = count(raw.score, MAX_SCORE);
+    // A lost or drawn match (`played`) carries the pips but no score of the player's.
+    const score = raw.score === undefined ? undefined : count(raw.score, MAX_SCORE);
     const playerPips = count(raw.playerPips, MAX_COUNT);
     const cpuPips = count(raw.cpuPips, MAX_COUNT);
     if (score === null || playerPips === null || cpuPips === null) return null;
-    return { score, playerPips, cpuPips };
+    return score === undefined ? { playerPips, cpuPips } : { score, playerPips, cpuPips };
   },
   paramsKey(_params: Record<string, unknown>): string {
     return 'standard';

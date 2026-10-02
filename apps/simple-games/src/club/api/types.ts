@@ -112,14 +112,14 @@ export interface RankingTable {
   paramsKey: string;
   entryCount: number;
   entries: RankingEntry[];
-  me: { rank: number; entry: RankingEntry } | null;
+  /** `rank` is null when the server stopped counting (below its scan ceiling, club.md §16-1). */
+  me: { rank: number | null; entry: RankingEntry } | null;
 }
 /** The answer to `POST /rankings/results`. */
 export interface RankingSubmitResponse {
   gameId: string;
   paramsKey: string;
   improved: boolean;
-  rank: number | null;
   entry: RankingEntry | null;
   entryCount: number;
 }
@@ -259,10 +259,12 @@ export function validateRankingTable(raw: unknown): RankingTable | null {
   if (entries === null) return null;
   let me: RankingTable['me'] = null;
   if (raw.me !== null && raw.me !== undefined) {
-    if (!isRec(raw.me) || !count(raw.me.rank) || raw.me.rank < 1) return null;
+    if (!isRec(raw.me)) return null;
+    const rank = raw.me.rank === null || raw.me.rank === undefined ? null : raw.me.rank;
+    if (rank !== null && (!count(rank) || rank < 1)) return null;
     const entry = validateRankingEntry(raw.me.entry);
     if (entry === null) return null;
-    me = { rank: raw.me.rank, entry };
+    me = { rank: rank as number | null, entry };
   }
   return { gameId: raw.gameId, paramsKey: raw.paramsKey, entryCount: raw.entryCount, entries, me };
 }
@@ -273,8 +275,7 @@ export function validateRankingSubmitResponse(raw: unknown): RankingSubmitRespon
     !str(raw.gameId) ||
     !str(raw.paramsKey) ||
     typeof raw.improved !== 'boolean' ||
-    !count(raw.entryCount) ||
-    !(raw.rank === null || count(raw.rank))
+    !count(raw.entryCount)
   ) {
     return null;
   }
@@ -284,7 +285,6 @@ export function validateRankingSubmitResponse(raw: unknown): RankingSubmitRespon
     gameId: raw.gameId,
     paramsKey: raw.paramsKey,
     improved: raw.improved,
-    rank: raw.rank,
     entry,
     entryCount: raw.entryCount,
   };

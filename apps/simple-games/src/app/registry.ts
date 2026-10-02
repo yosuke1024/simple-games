@@ -73,8 +73,6 @@ import { GAME_2048_CHALLENGE } from '../games/2048/challenge/contract';
 import { BINARY_BALANCE_CHALLENGE } from '../games/binary-balance/challenge/contract';
 import { BLOCK_PUZZLE_CHALLENGE } from '../games/block-puzzle/challenge/contract';
 import { BOX_REGIONS_CHALLENGE } from '../games/box-regions/challenge/contract';
-import { BRICK_BREAKER_CHALLENGE } from '../games/brick-breaker/challenge/contract';
-import { BUBBLE_POP_CHALLENGE } from '../games/bubble-pop/challenge/contract';
 import { BUNNY_HOP_CHALLENGE } from '../games/bunny-hop/challenge/contract';
 import { CROWN_GRID_CHALLENGE } from '../games/crown-grid/challenge/contract';
 import { DOMINOES_CHALLENGE } from '../games/dominoes/challenge/contract';
@@ -558,7 +556,6 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'arcade',
     glyph: '○',
     storageKeys: Object.values(BU_STORAGE_KEYS),
-    challenge: BUBBLE_POP_CHALLENGE,
     loadRoot: () =>
       import('../games/bubble-pop/ui/BubblePopRoot').then((m) => ({
         default: m.BubblePopRoot,
@@ -571,7 +568,6 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'arcade',
     glyph: '≡',
     storageKeys: Object.values(BB_STORAGE_KEYS),
-    challenge: BRICK_BREAKER_CHALLENGE,
     loadRoot: () =>
       import('../games/brick-breaker/ui/BrickBreakerRoot').then((m) => ({
         default: m.BrickBreakerRoot,

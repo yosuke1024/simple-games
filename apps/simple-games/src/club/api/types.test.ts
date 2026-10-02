@@ -160,12 +160,13 @@ describe('validators', () => {
     expect(validateRankingTable(table)).toEqual(table);
     expect(validateRankingTable({ ...table, me: { rank: 87, entry } })?.me?.rank).toBe(87);
     expect(validateRankingTable({ ...table, me: { rank: 0, entry } })).toBeNull();
+    // Below the server's scan ceiling the rank is unknown, not wrong (club.md §16-1).
+    expect(validateRankingTable({ ...table, me: { rank: null, entry } })?.me?.rank).toBeNull();
     expect(validateRankingTable({ ...table, entries: [{}] })).toBeNull();
     const sent = {
       gameId: 'g',
       paramsKey: 'k',
       improved: false,
-      rank: null,
       entry: null,
       entryCount: 0,
     };

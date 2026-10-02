@@ -204,7 +204,6 @@ describe('club client', () => {
           gameId: '2048',
           paramsKey: 'standard',
           improved: false,
-          rank: 3,
           entry,
           entryCount: 9,
         }),

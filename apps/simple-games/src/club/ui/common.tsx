@@ -99,21 +99,27 @@ export function dateLabel(iso: string, locale: string): string {
 /** One fact as the result screen would show it; null for a fact this layer has no word for. */
 export function factText(name: string, value: unknown, t: T): string | null {
   if (typeof value !== 'number' || !Number.isFinite(value)) return null;
-  switch (name) {
-    case 'elapsedSeconds':
-      return formatDuration(value);
-    case 'moves':
-      return `${t('clubFact_moves')} ${value}`;
-    case 'mistakes':
-      return `${t('clubFact_mistakes')} ${value}`;
-    case 'hints':
-      return `${t('clubFact_hints')} ${value}`;
-    default:
-      return null;
-  }
+  if (name === 'elapsedSeconds') return formatDuration(value);
+  const label = FACT_LABELS[name];
+  return label === undefined ? null : `${t(label)} ${value}`;
 }
 
-const FACT_ORDER = ['elapsedSeconds', 'moves', 'mistakes', 'hints'];
+/** The facts the contracts send (club.md §6-1), each with its word; a fact not here is not drawn. */
+const FACT_LABELS: Readonly<Record<string, Parameters<T>[0]>> = {
+  moves: 'clubFact_moves',
+  attempts: 'clubFact_attempts',
+  score: 'clubFact_score',
+  mistakes: 'clubFact_mistakes',
+  hints: 'clubFact_hints',
+  cpuScore: 'clubFact_cpuScore',
+  level: 'clubFact_level',
+  bestTile: 'clubFact_bestTile',
+  lines: 'clubFact_lines',
+  stage: 'clubFact_stage',
+  obstaclesPassed: 'clubFact_obstacles',
+};
+
+const FACT_ORDER = ['elapsedSeconds', ...Object.keys(FACT_LABELS)];
 
 /** A result's facts as one line, the comparison axis first. */
 export function factsLine(gameId: string, raw: unknown, t: T): string {

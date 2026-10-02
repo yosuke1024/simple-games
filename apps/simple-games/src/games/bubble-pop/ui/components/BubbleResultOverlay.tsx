@@ -4,10 +4,8 @@
  * nothing and rebuilds the identical board (same seed, same level) — and a
  * clear shows the run's elapsed time; a clock never appears during play.
  */
-import { useMemo } from 'react';
 import type { ShareDetail } from '@/services/share/message';
 import { useSettings } from '@/state/SettingsContext';
-import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
@@ -32,12 +30,7 @@ export function BubbleResultOverlay({
   // The emptied board — or the one that crossed the line — gets its beat
   // before the card covers it (docs/BUBBLE_POP_RULES.md §12).
   const revealed = useResultReveal(result !== null);
-  // No score is shown on this card, so the level reached is the score
-  // (docs/BUBBLE_POP_RULES.md §14); the Club's figure and its details repeat it.
-  const score = result?.level ?? 0;
-  const facts = useMemo(() => ({ score }), [score]);
   if (!revealed || result === null) return null;
-  const clubDetails: ShareDetail[] = [{ label: t('reachedLevel'), value: String(score) }];
 
   const cleared = result.outcome === 'cleared';
   const hasNextLevel = cleared && result.level < LEVEL_COUNT;
@@ -90,15 +83,6 @@ export function BubbleResultOverlay({
           gameId="bubble-pop"
           outcome={cleared ? 'completed' : 'played'}
           details={details}
-        />
-        <ClubResultAction
-          gameId="bubble-pop"
-          outcome="completed"
-          details={clubDetails}
-          facts={facts}
-          seed=""
-          params={{}}
-          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

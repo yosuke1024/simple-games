@@ -30,14 +30,18 @@ export function DominoesResultOverlay({
   const { t } = useSettings();
   // The final line gets its beat before the card covers it (§11).
   const revealed = useResultReveal(session.status !== 'playing');
-  // The player's own points: the winner's score when they won, nothing when
-  // the CPU's score is the one on the card or the game was a draw (§4).
-  const score = session.status === 'won' ? session.score : 0;
+  // The player's own points exist only when they won: the card shows the
+  // winner's score, or the pips of a loss / draw (§4). A lost match is sent as
+  // `played` — a figure the card never showed is not sent (club.md §5-5).
+  const score = session.status === 'won' ? session.score : null;
   const playerPips = session.playerPips;
   const cpuPips = session.cpuPips;
   // The match's facts, once: the share's strings and the Club's figures are
   // read from the same fields (docs/architecture/club.md §6-1).
-  const facts = useMemo(() => ({ score, playerPips, cpuPips }), [score, playerPips, cpuPips]);
+  const facts = useMemo(
+    () => (score === null ? { playerPips, cpuPips } : { score, playerPips, cpuPips }),
+    [score, playerPips, cpuPips],
+  );
   if (!revealed) return null;
 
   const blocked = session.ending === 'blocked';
@@ -98,7 +102,7 @@ export function DominoesResultOverlay({
         <ShareAction gameId="dominoes" outcome={won ? 'completed' : 'played'} details={details} />
         <ClubResultAction
           gameId="dominoes"
-          outcome="completed"
+          outcome={won ? 'completed' : 'played'}
           details={details}
           facts={facts}
           seed={session.seed}

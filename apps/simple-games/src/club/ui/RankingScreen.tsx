@@ -54,7 +54,7 @@ export function RankingScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId, paramsKey, connection.endpoint]);
 
-  const row = (entry: RankingEntry, rank: number) => {
+  const row = (entry: RankingEntry, rank: number | null) => {
     const own = entry.memberId === connection.memberId;
     return (
       <div
@@ -62,7 +62,8 @@ export function RankingScreen({
         key={`${rank}:${entry.memberId}`}
       >
         <span className="settings-row-label">
-          <span className="club-rank">{t('clubRank', { n: rank })}</span>
+          {/* No number when the server stopped counting below its ceiling (club.md §16-1). */}
+          <span className="club-rank">{rank === null ? '' : t('clubRank', { n: rank })}</span>
           {own ? t('clubYou') : entry.nickname}
         </span>
         <span className="settings-row-value">{factsLine(gameId, entry.facts, t)}</span>
