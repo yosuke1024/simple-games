@@ -5,8 +5,16 @@ export const ko: ClubMessages = {
   clubLoading: '불러오는 중…',
   clubReload: '다시 불러오기',
   clubDiscoverTitle: '함께 하기',
-  clubDiscoverBody: '아는 사람들과 하는 비공개 챌린지.',
+  clubDiscoverBody:
+    'Public Club House에서 모두와 같은 보드를 플레이하거나, 아는 사람들과만 비공개로 플레이하세요.',
   clubJoinClub: 'Club 참여',
+  clubPublicTitle: 'Public Club House',
+  clubJoinPublic: 'Public Club House 참여',
+  clubJoinWithLink: '초대 링크로 참여',
+  clubPublicDisclosure:
+    '닉네임과 결과는 Public Club House의 모든 사람에게, 그리고 pixapps.ai에 공개됩니다.',
+  clubToday: '오늘',
+  clubDaily: '데일리',
   clubJoinAnother: '다른 Club 참여',
   clubAllClubs: '모든 Club',
   clubInviteLink: '초대 링크',

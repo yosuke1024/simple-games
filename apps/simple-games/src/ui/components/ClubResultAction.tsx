@@ -48,6 +48,8 @@ export interface ClubResultActionProps {
   seed: string;
   params: unknown;
   boardDigest: string;
+  /** The daily date, for a game whose daily is one board for everyone (see ClubResultPayload.daily). */
+  daily?: string | null;
 }
 
 type State =
@@ -63,6 +65,7 @@ export function ClubResultAction({
   seed,
   params,
   boardDigest,
+  daily,
 }: ClubResultActionProps) {
   const { t } = useSettings();
   const bridge = useContext(ClubBridgeContext);
@@ -95,7 +98,15 @@ export function ClubResultAction({
       if (bridge === null) return;
       setState({ kind: 'sending' });
       void bridge
-        .sendToClub(club.endpoint, { gameId, outcome, facts, seed, params, boardDigest })
+        .sendToClub(club.endpoint, {
+          gameId,
+          outcome,
+          facts,
+          seed,
+          params,
+          boardDigest,
+          daily: daily ?? null,
+        })
         .then((result) => {
           if (!mounted.current) return;
           // A new challenge is not queued (club.md §4-2 queues results only):
@@ -107,7 +118,7 @@ export function ClubResultAction({
           );
         });
     },
-    [bridge, gameId, outcome, facts, seed, params, boardDigest],
+    [bridge, gameId, outcome, facts, seed, params, boardDigest, daily],
   );
 
   if (bridge === null || bridge.connections.length === 0) return null;

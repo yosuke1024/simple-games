@@ -14,10 +14,22 @@ import type { ClubConnection } from '@/storage/schemas';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconChevronRight } from '@/ui/components/icons';
 import { useSettings } from '@/state/SettingsContext';
-import { axisText, dateLabel, errorText, ScreenFrame, tierLabel, type T } from './common';
+import {
+  axisText,
+  dateLabel,
+  errorText,
+  ScreenFrame,
+  tierLabel,
+  todayLocal,
+  type T,
+} from './common';
 
 interface ClubData {
   challenges: Challenge[];
+  /** Challenges tagged with today's daily date (everyone's daily meets here). */
+  today: Challenge[];
+  /** The local date `today` was asked for, so the answer can be held to it. */
+  todayDate: string;
   records: ClubRecord[];
   members: Member[];
   /** The club's name as the server has it now. */
@@ -30,7 +42,8 @@ export function challengeTitle(challenge: Challenge, t: T): string {
   const game = gameTitle(challenge.gameId) ?? challenge.gameId;
   const contract = contractFor(challenge.gameId);
   const params = contract?.validateParams(challenge.params);
-  return params && contract ? `${game} · ${tierLabel(contract.paramsKey(params), t)}` : game;
+  const title = params && contract ? `${game} · ${tierLabel(contract.paramsKey(params), t)}` : game;
+  return challenge.daily !== null ? `${title} · ${t('clubDaily')}` : title;
 }
 
 export function ClubScreen({
@@ -83,13 +96,22 @@ export function ClubScreen({
           /* the list below says whether the club is reachable */
         }
       }
-      const [club, challenges, records] = await Promise.all([
+      const todayDate = todayLocal();
+      const [club, challenges, today, records] = await Promise.all([
         api.club(),
         api.challenges(),
+        api.challenges({ daily: todayDate }),
         api.records(),
       ]);
       if (!alive.current) return;
-      setData({ clubName: club.club.name, members: club.members, challenges, records });
+      setData({
+        clubName: club.club.name,
+        members: club.members,
+        challenges,
+        today,
+        todayDate,
+        records,
+      });
       if (club.club.name !== connection.clubName) onRenamed(club.club.name);
     } catch (e) {
       if (alive.current) setError(errorText(e, t, connection.clubName));
@@ -111,8 +133,15 @@ export function ClubScreen({
   }, [connection.endpoint]);
 
   const known = (data?.challenges ?? []).filter((c) => contractFor(c.gameId) !== null);
-  const open = known.filter((c) => !c.mine);
-  const played = known.filter((c) => c.mine);
+  // Held to the date asked for: a server that predates `?daily=` ignores the
+  // parameter and answers with its ordinary list, which is not today's.
+  const todays = (data?.today ?? []).filter(
+    (c) => contractFor(c.gameId) !== null && c.daily === data?.todayDate,
+  );
+  const todayIds = new Set(todays.map((c) => c.id));
+  const rest = known.filter((c) => !todayIds.has(c.id));
+  const open = rest.filter((c) => !c.mine);
+  const played = rest.filter((c) => c.mine);
   const records = (data?.records ?? []).filter((r) => contractFor(r.gameId) !== null);
 
   const remove = async (member: Member) => {
@@ -182,6 +211,14 @@ export function ClubScreen({
 
       {data ? (
         <>
+          {todays.length > 0 ? (
+            <>
+              <h2 className="home-section-label club-section">{t('clubToday')}</h2>
+              {todays.map((c) => (
+                <ChallengeRow key={c.id} challenge={c} t={t} onOpen={onOpenChallenge} />
+              ))}
+            </>
+          ) : null}
           <h2 className="home-section-label club-section">{t('clubChallenges')}</h2>
           {open.length === 0 ? <p className="club-quiet">{t('clubNothingYet')}</p> : null}
           {open.map((c) => (

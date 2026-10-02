@@ -9,8 +9,16 @@ export const en = {
   clubLoading: 'Loading…',
   clubReload: 'Reload',
   clubDiscoverTitle: 'Play together',
-  clubDiscoverBody: 'Private challenges with people you know.',
+  clubDiscoverBody:
+    'Play the same boards as everyone in the Public Club House, or privately with people you know.',
   clubJoinClub: 'Join a Club',
+  clubPublicTitle: 'Public Club House',
+  clubJoinPublic: 'Join the Public Club House',
+  clubJoinWithLink: 'Join with an invite link',
+  clubPublicDisclosure:
+    'Your nickname and your results are visible to everyone in the Public Club House and on pixapps.ai.',
+  clubToday: 'Today',
+  clubDaily: 'Daily',
   clubJoinAnother: 'Join another Club',
   clubAllClubs: 'All Clubs',
   clubInviteLink: 'Invite link',

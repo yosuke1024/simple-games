@@ -5,8 +5,16 @@ export const id: ClubMessages = {
   clubLoading: 'Memuat…',
   clubReload: 'Muat ulang',
   clubDiscoverTitle: 'Main bersama',
-  clubDiscoverBody: 'Tantangan pribadi dengan orang yang kamu kenal.',
+  clubDiscoverBody:
+    'Mainkan papan yang sama dengan semua orang di Public Club House, atau secara pribadi dengan orang yang kamu kenal.',
   clubJoinClub: 'Gabung ke Club',
+  clubPublicTitle: 'Public Club House',
+  clubJoinPublic: 'Gabung ke Public Club House',
+  clubJoinWithLink: 'Gabung dengan tautan undangan',
+  clubPublicDisclosure:
+    'Nama panggilan dan hasilmu terlihat oleh semua orang di Public Club House dan di pixapps.ai.',
+  clubToday: 'Hari ini',
+  clubDaily: 'Harian',
   clubJoinAnother: 'Gabung ke Club lain',
   clubAllClubs: 'Semua Club',
   clubInviteLink: 'Tautan undangan',

@@ -8,10 +8,10 @@ Epic #175 の段 2(原則の境界 #176 → **#161 の設計** → #164 の発�
 
 **2026-09-30 の改定**: PixApps が運用する **Public Club House** を認め、同じ盤面での
 成績の順位表を作ると決めた(`simple-games-club#1`、PRODUCT_PRINCIPLES「Club House」)。
-**本文書がいま書いているのは Private デプロイの契約**である。Public 固有の設計
-(開かれた参加、デイリーを軸にした順位表、LP への読み取り専用ビュー、Cloudflare の
-構成と費用)は、費用の spike のあとに本文書へ追記する。それまでは §5 の契約が
-両デプロイの共通部分であり、Public はここに**足す**ことはあっても**変えない**。
+**本文書は両デプロイの契約**である。§5 が共通部分で、Public はここに**足す**ことは
+あっても**変えない**。Public 固有のもの(開かれた参加、デイリーの順位表、読み量、設定)は
+**§15** に 2026-10-02 に追記した(段取りの PR C)。Cloudflare の構成と費用は
+`simple-games-club` の docs/cloudflare.md に、LP への読み取り専用ビューは PR G で決める。
 段取りは [../plans/2026-09-30-public-club-house.md](../plans/2026-09-30-public-club-house.md)。
 
 **クライアント実装は 2026-10-02 の PR で入る**(`apps/simple-games/src/club/`。段取りは
@@ -316,6 +316,7 @@ interface Challenge {
   seed: string; // 1..80 文字
   boardDigest: string; // §6-4
   title: string | null; // 0..60 文字。無ければクライアントが「Sudoku · Hard」を組む
+  daily: string | null; // その局がデイリーだった日(YYYY-MM-DD)。全員同じ盤面のデイリーだけ(§6-3)。無ければ null
   createdBy: Pick<Member, 'id' | 'nickname'>;
   createdAt: string;
   resultCount: number; // 一覧の「誰かが遊んだか」のため。順位ではない
@@ -338,25 +339,25 @@ interface Hosting {
 
 ### 5-3. エンドポイント
 
-| Method / Path                  | 認証   | 目的                                                                                                                                                                          |
-| ------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /health`                  | 不要   | `{ ok: true, api: 1, claimed }`。接続画面の疎通確認とテンプレートの healthcheck。`claimed` は Create 導線が「deploy 済み・claim 待ち」を知るため                              |
-| `POST /join`                   | invite | 招待 token + nickname → member token                                                                                                                                          |
-| `POST /claim`                  | setup  | `{ setupKey, nickname, clubName? }` → **owner** の member token(§8-3)。`clubName` 省略時は `<nickname>'s Club`。Setup Key が再設定されていればもう 1 回                       |
-| `GET /club`                    | member | `{ club, me, members[] }`                                                                                                                                                     |
-| `GET /challenges`              | member | 新しい順。`?after=<id>` で続き。最大 50 件                                                                                                                                    |
-| `POST /challenges`             | member | 作成 + 作成者の Result を同時に(§6-3)                                                                                                                                         |
-| `DELETE /challenges/:id`       | member | 作成者本人か Owner だけ。Result ごと消える                                                                                                                                    |
-| `GET /challenges/:id`          | member | 1 件                                                                                                                                                                          |
-| `GET /challenges/:id/results`  | member | 提出順。**並べ替えはクライアント**(§6-1 の `order`)。最大 200 件                                                                                                              |
-| `POST /challenges/:id/results` | member | 自分の Result を 1 回だけ                                                                                                                                                     |
-| `GET /records`                 | member | `{ gameId, paramsKey, facts, memberId, nickname, challengeId }[]`。導出値                                                                                                     |
-| `GET /hosting`                 | member | `Hosting`。`manageUrl` は **Owner にだけ**返す(Member には null)                                                                                                              |
-| `PATCH /hosting`               | owner  | `{ referralUrl }` の設定 / 解除(`null`)                                                                                                                                       |
-| `GET /invite`                  | owner  | 現在の Member 招待 `{ token, url }`                                                                                                                                           |
-| `POST /invite`                 | owner  | `{ role: 'member' }` は Member 招待を**作り直す**(前のものは即無効)。`{ role: 'owner' }` は **Owner リンク** `{ token, url, expiresAt }` を 1 本発行(1 回限り・24 時間。§8-3) |
-| `DELETE /members/:id`          | owner  | member を外す(Owner も外せる)。その token は即 401。Result は残る(nickname 付き)。最後の Owner は外せない(`409 last_owner`)                                                   |
-| `PATCH /club`                  | owner  | `{ name }`                                                                                                                                                                    |
+| Method / Path                  | 認証   | 目的                                                                                                                                                                                                                                            |
+| ------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /health`                  | 不要   | `{ ok: true, api: 1, claimed, open }`。接続画面の疎通確認とテンプレートの healthcheck。`claimed` は Create 導線が「deploy 済み・claim 待ち」を知るため。`open` は nickname だけで `POST /join` できるデプロイか(Public。§15-1)                  |
+| `POST /join`                   | invite | `{ nickname, inviteToken? }` → member token。`inviteToken` は `open` でないサーバでは必須(無ければ `400 invalid_request`)。`open` なサーバでは nickname だけで member として参加でき、招待 token / Owner リンクも今までどおり効く(§15-1)        |
+| `POST /claim`                  | setup  | `{ setupKey, nickname, clubName? }` → **owner** の member token(§8-3)。`clubName` 省略時は `<nickname>'s Club`。Setup Key が再設定されていればもう 1 回                                                                                         |
+| `GET /club`                    | member | `{ club, me, members[] }`                                                                                                                                                                                                                       |
+| `GET /challenges`              | member | 新しい順。`?after=<id>` で続き。最大 50 件。`?daily=YYYY-MM-DD` でその日の印が付いた挑戦だけ(§6-3、§9 の `Today`)                                                                                                                               |
+| `POST /challenges`             | member | 作成 + 作成者の Result を同時に(§6-3)。任意の `daily`。**同じ盤面(gameId + seed + boardDigest)の挑戦が生きていれば作らず、送った人の Result をそこへ足して `200`**(§6-3「盤面ごとに 1 つ」)。既に自分の Result があれば `409 already_submitted` |
+| `DELETE /challenges/:id`       | member | 作成者本人か Owner だけ。Result ごと消える                                                                                                                                                                                                      |
+| `GET /challenges/:id`          | member | 1 件                                                                                                                                                                                                                                            |
+| `GET /challenges/:id/results`  | member | 提出順。**並べ替えはクライアント**(§6-1 の `order`)。最大 200 件                                                                                                                                                                                |
+| `POST /challenges/:id/results` | member | 自分の Result を 1 回だけ                                                                                                                                                                                                                       |
+| `GET /records`                 | member | `{ gameId, paramsKey, facts, memberId, nickname, challengeId }[]`。導出値。サーバは結果が届いたときに更新した行を読むだけで、一覧のたびに導出しない(§15-3)                                                                                      |
+| `GET /hosting`                 | member | `Hosting`。`manageUrl` は **Owner にだけ**返す(Member には null)                                                                                                                                                                                |
+| `PATCH /hosting`               | owner  | `{ referralUrl }` の設定 / 解除(`null`)                                                                                                                                                                                                         |
+| `GET /invite`                  | owner  | 現在の Member 招待 `{ token, url }`                                                                                                                                                                                                             |
+| `POST /invite`                 | owner  | `{ role: 'member' }` は Member 招待を**作り直す**(前のものは即無効)。`{ role: 'owner' }` は **Owner リンク** `{ token, url, expiresAt }` を 1 本発行(1 回限り・24 時間。§8-3)                                                                   |
+| `DELETE /members/:id`          | owner  | member を外す(Owner も外せる)。その token は即 401。Result は残る(nickname 付き)。最後の Owner は外せない(`409 last_owner`)                                                                                                                     |
+| `PATCH /club`                  | owner  | `{ name }`                                                                                                                                                                                                                                      |
 
 ### 5-4. 主な request / response
 
@@ -365,6 +366,9 @@ interface Hosting {
 ```json
 { "inviteToken": "…", "nickname": "Ken" }
 ```
+
+`open` なサーバ(`GET /health` の `open: true`。Public、§15-1)では `{ "nickname": "Ken" }` だけで
+よい。そうでないサーバで `inviteToken` を省くと `400 invalid_request`。
 
 ```json
 {
@@ -392,6 +396,12 @@ interface Hosting {
 ```
 
 → `201` with `Challenge`(`mine: true`, `resultCount: 1`)。
+
+任意の `"daily": "2026-10-02"` を付けると、その局がその日のデイリーだったという印になる
+(§6-3。全員同じ盤面のデイリーだけ)。**同じ盤面(gameId + seed + boardDigest)の挑戦が
+生きていれば**、サーバは新しく作らず、送った人の Result をそこへ足して `200` with その
+`Challenge`(`mine: true`)を返す。既に自分の Result があれば `409 already_submitted`
+(何も保存しない)。最初に送った人の `daily` と `title` が残る。
 
 `POST /challenges/:id/results`
 
@@ -567,6 +577,19 @@ interface GameChallengeContract<P, F> {
   `mode: 'club'` の 4 つ目のスロットで遊ぶ(自分のレベル進行・デイリー履歴には
   触れない)。
 
+- **盤面ごとに挑戦は 1 つ**(2026-10-02、§15-2)。同じ `gameId` + `seed` + `boardDigest` の
+  挑戦が生きていれば、`POST /challenges` は新しく作らず、送った人の結果をそこへ足す
+  (`200`。§5-4)。理由: デイリーは日付から seed を導くので世界中で同じ 1 盤面になり、
+  送った人全員が 1 つの挑戦に集まる — それが Public の順位表である
+  (PRODUCT_PRINCIPLES「順位表」)。新しいモードも、サーバ側の盤面生成も要らない。レベルの局も
+  同じ seed なら同じ挑戦に集まる。Private でも同じ(友人 2 人が同じデイリーを送れば 1 つ)。
+- **`daily` の印**は、結果画面の `Send to Club` が、その局がデイリーで、かつ**そのゲームの
+  デイリーが全員同じ盤面**のときだけ付ける(`ClubResultAction` の `daily`、`POST /challenges`
+  の `daily`)。Sudoku は付く。Minesweeper のデイリーは初手で地雷が変わる(§6-0)ので付けない
+  — 送れるが、普通の挑戦になる。Water Sort のデイリー(6 色・均等な混ぜ)はティアに一致せず、
+  そもそも送れない(`challengeTierOf`)。Club の画面は端末のローカル日付で
+  `GET /challenges?daily=` を引き、`Today` に並べる(§9)。
+
 ### 6-4. `boardDigest`
 
 - 形: `<ゲーム接頭辞><契約版>:<8 桁 hex>`(`sd1:9f3a1c07` / `ms1:…` / `ws1:…`)。
@@ -614,11 +637,12 @@ https://<endpoint>/join#invite=<inviteToken>
 
 ### 7-3. どこで参加できるか
 
-| 経路                                          | できること                                                                                    |
-| --------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| 招待 URL をブラウザで開く(SharedHost の Web)  | nickname → `Join and Play`。**インストール不要**。同じ origin なので CORS の問題が無い        |
-| アプリの設定 > Advanced > `Club House` > 参加 | 招待 URL を**貼り付ける**(`inviteFromHref` で endpoint と token を読む)→ nickname → 参加      |
-| pixapps.ai の Web 版の `Play together`        | 「招待リンクを開いてください」の説明と、Host になる導線(§8)。任意 endpoint への直接接続は無い |
+| 経路                                                             | できること                                                                                                                                                             |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 招待 URL をブラウザで開く(SharedHost の Web)                     | nickname → `Join and Play`。**インストール不要**。同じ origin なので CORS の問題が無い                                                                                 |
+| アプリの設定 > Advanced > `Club House` > 参加                    | 招待 URL を**貼り付ける**(`inviteFromHref` で endpoint と token を読む)→ nickname → 参加                                                                               |
+| アプリ / Web 版の `Play together` > `Join the Public Club House` | 開示(ニックネームと結果が公開される)→ nickname → `POST /join { nickname }`。endpoint はアプリが名前で知る唯一のもの(`club/public.ts` の `PUBLIC_CLUB_ENDPOINT`。§15-1) |
+| pixapps.ai の Web 版の `Play together`                           | Public への参加(上の行)と、「招待リンクを開いてください」の説明、Host になる導線(§8)。任意 endpoint への直接接続は無い                                                 |
 
 アプリが招待 URL を直接受け取る経路(App Links / Universal Links)は作らない
 ([../WEB_VERSION.md](../WEB_VERSION.md)「URL」の判断のまま)。招待された人の最短経路は
@@ -784,17 +808,21 @@ claim the Club again.`(§8-3)。確認すれば切断できる — 端末を手�
 
 `entry: 'settings' | 'home' | 'discover' | 'invite'` で最初の画面が決まる。
 
-- 接続 0 件: `Join a Club`(招待 URL を貼る)/ `Create my Club`(§8)。
+- 接続 0 件: `Join the Public Club House`(§15-1)/ `Join with an invite link`(招待 URL を
+  貼る)/ `Create my Club`(§8)。
   `entry: 'invite'` なら §7-4 の Join 画面。
 - 接続 1 件: その Club。
 - 接続 2 件以上: **All Clubs** — Club 名の一覧だけ(件数・未読・バッジ無し)、末尾に
-  `Join another Club` と `Create your own Club`(§13-3)。
+  `Join the Public Club House`(Public に未接続のときだけ)、`Join another Club`、
+  `Create your own Club`(§13-3)。
 
 ### Club
 
 ```text
 Suzuki Family                                  [Invite] [Settings]
 
+Today                                          ← その日のデイリー(§6-3)。無い日は節ごと出ない
+  Sudoku · Hard · Daily · by Yoh
 Challenges                                     [ New Challenge ]
   Sudoku · Hard · by Yoh                       ← まだ遊んでいない(mine: false)
   Water Sort · Medium · by Ken
@@ -807,6 +835,9 @@ Hosting                                        ← Owner だけ
 
 - **Challenges が主役**である。順位は各 Challenge の中にあり、Club の入口が順位の
   一覧になることはない。`Played` は「自分の結果がある Challenge」。
+- **Today** はその日(端末のローカル日付)の `daily` の印が付いた挑戦(`GET /challenges?daily=`、
+  §6-3)。他の節と同じ行で、順位はやはり Challenge の中にある。Public ではこれが順位表の
+  入口になる(PRODUCT_PRINCIPLES「順位表」)。
 - `New Challenge` は対応ゲーム(§6-1)を選んでフリープレイを開くだけ(§6-3)。
 - 一覧は開いたときと明示の再読み込みで取る(§10)。件数・未読・「新着」を Core へ
   持ち出さない。
@@ -858,7 +889,8 @@ Push は後続でも作らない(PRODUCT_PRINCIPLES「Club House」)。**公開�
 ## 10. 通信・オフライン・障害
 
 - **通信が起きる契機**(すべて本人の操作の直後、1 操作 1 リクエスト):
-  Club / Challenge の画面を開く・明示の再読み込み(GET)、参加 / claim(POST)、
+  Club / Challenge の画面を開く・明示の再読み込み(GET。Club の画面は club / challenges /
+  challenges?daily=今日 / records の 4 本)、参加 / claim(POST)、
   結果画面の `Send to Club`(POST)、Challenge の局の終了(POST、§2-2)、Owner の操作。
   ホームを描く・ゲームを開く・盤面を遊ぶ・設定を開く、では**通信しない**。
 - **ポーリング・バックグラウンド同期・常時接続・Push は無い**。`setInterval` /
@@ -894,12 +926,13 @@ Push は後続でも作らない(PRODUCT_PRINCIPLES「Club House」)。**公開�
   ゲーム以外にも使える)。`src/test/gameI18nWiring.test.ts` の対象に `club/index.ts` を
   足す。Shared を触らない人は、この文言を一度もパースしない。
 - Core に入るキーは §2 の 4 つ(`advancedTitle` / `clubEntry` / `playTogetherTitle` /
-  `playTogetherBody`)と、`ClubResultAction` の 3 つ(`clubSendResult` /
-  `clubResultSent`(`{club}`)/ `clubResultPending`)だけ。
+  `playTogetherBody`)と、`ClubResultAction` の 4 つ(`clubSendResult` /
+  `clubResultSent`(`{club}`)/ `clubResultPending` / `clubResultNotSent`(`{club}`))だけ。
 - **高リスクキー**(`src/i18n/highRiskKeys.ts` に足す。門は `gateRecord.json`):
   §8-2 の説明画面の 4 箇条、§8-5 の Disconnect の本文、§9 Challenge の
-  「終えたら結果を {club} へ送る」の 1 文、§8-4 の「削除は事業者側で」の 2 文。
-  どれも誤訳が「お金の約束の反故」か「同意していない送信」になる。機械翻訳で配らない
+  「終えたら結果を {club} へ送る」の 1 文、§8-4 の「削除は事業者側で」の 2 文、§15-1 の
+  Public の開示(`clubPublicDisclosure`: ニックネームと結果が公開される)。
+  どれも誤訳が「お金の約束の反故」か「同意していない送信・公開」になる。機械翻訳で配らない
   とは「門を通さずに配らない」の意味で、来歴は他のキーと同じ `machine` のまま
   ページと設定が開示する([../I18N_POLICY.md](../I18N_POLICY.md))。
 - **`leaderboard` は `club/` のカタログでだけ使ってよい**(2026-09-30 に全面禁止を撤回。
@@ -1043,6 +1076,28 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
     いまベータのアプリの公開リリースを同梱する。Private の Owner 導線(段取りの PR H:
     `Create my Club` / Hosting / クラブ名 / Railway での実証)はその次の版。
 
+**2026-10-02 に製品オーナーが確認した判断(段取りの PR C)**:
+
+20. **Public への参加はニックネームだけ。** 招待 token の代わりにサーバの設定
+    (`CLUB_OPEN_JOIN`)で `POST /join` を開く。アプリは Public の endpoint を定数で 1 つだけ
+    知り、参加の前に「ニックネームと結果が公開される」を開示する(§15-1)。
+21. **盤面ごとに挑戦は 1 つ。** 同じ gameId + seed + boardDigest の挑戦が生きていれば
+    `POST /challenges` はそこへ結果を足す(`200`)。デイリーはこれで世界中が 1 つの挑戦に
+    集まり、新しいモードもサーバ側の盤面生成も要らない(§6-3、§15-2)。Private でも同じ。
+22. **`daily` の印は、全員同じ盤面のデイリーだけに付ける。** Sudoku は付く。Minesweeper は
+    初手で盤面が変わるので付けない(送れるが普通の挑戦)。Water Sort のデイリーはティアに
+    無く送れない(§6-3)。
+23. **読み量は行で持つ。** `result_count` と `records` を結果の到着時に更新し、一覧と記録は
+    読むだけ(§15-3)。契約は変えない。
+24. **LP 向けの読み取り専用ビューは PR G へ**(§15-4)。
+25. **Web 版(pixapps.ai)からも Public に参加できる。** Public のサーバの CORS に
+    `https://pixapps.ai` を足す(§15-1)。
+26. **Public の `maxMembers` は 10,000。** `wrangler.toml` の `CLUB_LIMITS` で上げる。超えたら
+    `This Club is full`(無料枠の天井とは別の、濫用の上限)。
+27. **対応ゲームは 3 本に留めない。** Sudoku / Minesweeper / Water Sort は配線を通すための
+    spike の 3 本(§6-0)。§6-0 の 3 条件を満たすゲームは順次 `challenge` を宣言する
+    (段取りの PR E2。盤面が揃わないゲームの扱いは別の判断)。
+
 **外部の事実確認**(#161 Phase 0 と `simple-games-club#1` の未完了項目。確認できるまで
 文言と数字を出さない):
 
@@ -1065,7 +1120,8 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
     書いた — 無料枠の上限は「止まる」であって課金ではなく、1 日 10 万リクエストが天井。
     **後半 — ダッシュボードの実測値(rows read / written、duration、保存量、請求 0)— は
     未読で、金額は書いていない。** 一覧(`GET /challenges`)と記録(`GET /records`)の
-    読み量が Club の大きさに比例することが分かり、Public の前に直す(段取りの PR C)。
+    読み量が Club の大きさに比例することが分かり、PR C で件数と記録を行で持つ形に直した
+    (§15-3)。本番での再計測は PR F。
 11. **表示名の安全策がどこまで要るか。** 表示名が pixapps.ai の公開ページに出る以上、
     長さ・文字種の制約と通報・削除の手段が要る。14 言語を一人で見る前提で、どこまでが
     現実的かを決める。
@@ -1078,3 +1134,49 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
 全エンドポイント、§5-4 の JSON をそのまま fixture にした契約テスト、Dockerfile、
 `railway.toml`(healthcheck・app sleeping OFF)。残りは事業者の template、Web ビルドの
 同梱、事業者上での往復確認(段取りの PR B の「受け入れ」)。
+
+## 15. Public Club House 固有のもの(2026-10-02、段取りの PR C)
+
+Public は PixApps が運用する 1 デプロイ(§14 判断 10)で、`simple-games-club` の `wrangler.toml`
+がその設定である。契約(§5)は Private と同じで、違いは**サーバの設定と、アプリが名前で知る
+endpoint 1 つ**だけ。Public にあって Private に無いエンドポイントは作らない
+(PRODUCT_PRINCIPLES「2 つのデプロイ」)。
+
+### 15-1. 開かれた参加
+
+- サーバ: 環境変数 `CLUB_OPEN_JOIN=1` で `POST /join` が `{ nickname }` だけを受け付ける
+  (role は member)。`GET /health` が `open: true` を返す。招待 token と Owner リンクは
+  今までどおり効く。Private は未設定(= 招待制)。
+- アプリ: `club/public.ts` の `PUBLIC_CLUB_ENDPOINT`(`https://club.pixapps.ai`)が、アプリが
+  名前で知る唯一のサーバ。入口は Discover 画面(接続 0 件)の `Join the Public Club House` と、
+  All Clubs の末尾(Public に未接続のとき)。参加画面は**開示が先**: 「ニックネームと結果は
+  Public Club House のみんなと pixapps.ai の公開ページに表示されます」
+  (`clubPublicDisclosure`、高リスクキー §11)→ nickname → `Join and Play`。
+- Web 版(pixapps.ai)からも同じ画面で参加できる。そのために Public のサーバは
+  `CLUB_CORS_ORIGINS` に `https://pixapps.ai` を持つ(アプリの origin 2 つは常に許可。
+  `src/http/cors.ts`)。
+- 1 端末 1 ニックネームで、アカウントは無い(PRODUCT_PRINCIPLES)。表示名の制約・通報・
+  削除は PR F(§14 外部確認 11)。
+
+### 15-2. デイリーの順位表 — 盤面ごとに 1 つの挑戦
+
+§6-3 のとおり。新しいモードもサーバ側の盤面生成も無く、`POST /challenges` が同じ盤面を
+1 つにまとめ、`daily` の印で Club 画面の `Today` に集まる(§9)。いま `daily` が付くのは
+Sudoku のデイリーだけ(Minesweeper は初手で盤面が変わる、Water Sort のデイリーはティアに
+無い。§6-3)。対応ゲームが増えれば、全員同じ盤面のデイリーを持つゲームはそのまま `Today`
+に加わる。
+
+### 15-3. 読み量
+
+`GET /challenges` の `resultCount` と `GET /records` は、結果が届いたときにサーバが行として
+持つ(`challenges.result_count`、`records` テーブル。schema v2、v1 からは起動時に移行)。
+一覧と記録の読み量が Club の大きさに比例しなくなる(§14 外部確認 10)。応答の形は変わらない
+— 実装の選択であって契約ではない(§0)。
+
+### 15-4. PR C に入れなかったもの
+
+- **LP 向けの読み取り専用ビュー** → PR G。LP に何を出すか(BRAND「表現ルール」)が決まって
+  から形を決める。認証無し・キャッシュ付きの公開 API になる見込みで、Public の設定で
+  有効化する(Private にも同じコードがあり、設定で閉じている)。
+- **表示名の安全策、通報と削除、本番の計測データの作り直し** → PR F(§14 判断 17、外部確認 11)。
+- **Public の `maxMembers`** は 10,000(§14 判断 26。`wrangler.toml` の `CLUB_LIMITS`)。

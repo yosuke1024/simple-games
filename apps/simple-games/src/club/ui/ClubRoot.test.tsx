@@ -10,6 +10,8 @@ import '../i18n';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { settingsSchema } from '@/storage/schemas';
 import { addClubConnection } from '../storage/connections';
+import { PUBLIC_CLUB_ENDPOINT } from '../public';
+import { todayLocal } from './common';
 import { ClubRoot } from './ClubRoot';
 
 const ENDPOINT = 'https://club.example.com';
@@ -36,6 +38,16 @@ function reply(body: unknown, status = 200): Response {
   });
 }
 
+let dailyChallenges = false;
+/** A server from before `?daily=` existed: it ignores the parameter and answers with its ordinary list. */
+let ignoresDaily = false;
+const DAILY_CHALLENGE = {
+  ...CHALLENGE,
+  id: 'ch_d',
+  seed: 'sudoku-daily-today',
+  daily: todayLocal(),
+};
+
 function stubServer() {
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(String(input));
@@ -46,7 +58,11 @@ function stubServer() {
       return reply({ club: CLUB, member: KEN, memberToken: 'member-token-1' }, 201);
     }
     if (path === '/club') return reply({ club: CLUB, me: KEN, members: [KEN] });
-    if (path === '/challenges') return reply([CHALLENGE]);
+    if (path === '/challenges') {
+      const daily = url.searchParams.get('daily');
+      if (daily === null || ignoresDaily) return reply([CHALLENGE]);
+      return reply(daily === todayLocal() && dailyChallenges ? [DAILY_CHALLENGE] : []);
+    }
     if (path === '/challenges/ch_1') return reply(CHALLENGE);
     if (path === '/challenges/ch_1/results') {
       return reply([
@@ -81,6 +97,8 @@ function renderRoot(props: Partial<React.ComponentProps<typeof ClubRoot>> = {}) 
 }
 
 beforeEach(() => {
+  dailyChallenges = false;
+  ignoresDaily = false;
   localStorage.clear();
 });
 
@@ -94,8 +112,94 @@ describe('ClubRoot', () => {
     stubServer();
     renderRoot({ entry: 'discover' });
     expect(await screen.findByRole('heading', { name: 'Play together' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Join a Club' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Join the Public Club House' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Join with an invite link' })).toBeInTheDocument();
     expect(screen.queryByText(/Create my Club/)).not.toBeInTheDocument();
+  });
+
+  it('discloses before joining the Public Club House, then joins with a nickname alone', async () => {
+    const fetchMock = stubServer();
+    const user = userEvent.setup();
+    renderRoot({ entry: 'discover' });
+    await user.click(await screen.findByRole('button', { name: 'Join the Public Club House' }));
+
+    expect(screen.getByText(/visible to everyone in the Public Club House/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('Invite link')).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText('Nickname'), 'Ken');
+    await user.click(screen.getByRole('button', { name: 'Join and Play' }));
+
+    expect(await screen.findByText(/Sudoku · Hard · by Yoh/)).toBeInTheDocument();
+    const joinCall = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/join'));
+    expect(String(joinCall![0])).toBe(`${PUBLIC_CLUB_ENDPOINT}/api/v1/join`);
+    const body = JSON.parse(String(joinCall![1]!.body)) as Record<string, unknown>;
+    expect(body).toEqual({ nickname: 'Ken' });
+    expect(body).not.toHaveProperty('inviteToken');
+  });
+
+  it('hides the Public button on All Clubs once the Public Club House is joined', async () => {
+    stubServer();
+    const base = {
+      clubId: 'c_1',
+      clubName: 'A',
+      memberId: 'm_1',
+      memberToken: 't',
+      nickname: 'Ken',
+      role: 'member' as const,
+      joinedAt: 'x',
+    };
+    await addClubConnection({ ...base, endpoint: ENDPOINT });
+    await addClubConnection({ ...base, endpoint: 'https://other.example.com', clubName: 'B' });
+    const { unmount } = render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <ClubRoot
+          entry="settings"
+          onBack={vi.fn()}
+          onPlayChallenge={vi.fn()}
+          onConnectionsChanged={vi.fn()}
+        />
+      </SettingsProvider>,
+    );
+    expect(
+      await screen.findByRole('button', { name: 'Join the Public Club House' }),
+    ).toBeInTheDocument();
+    unmount();
+    cleanup();
+    localStorage.clear();
+    await addClubConnection({ ...base, endpoint: ENDPOINT });
+    await addClubConnection({ ...base, endpoint: PUBLIC_CLUB_ENDPOINT, clubName: 'Public' });
+    renderRoot();
+    expect(await screen.findByRole('button', { name: 'Join another Club' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Join the Public Club House' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('lists a challenge tagged with today under Today, with the Daily label', async () => {
+    stubServer();
+    dailyChallenges = true;
+    const user = userEvent.setup();
+    renderRoot({ entry: 'invite', invite: { endpoint: ENDPOINT, token: 'a'.repeat(22) } });
+    await user.type(await screen.findByLabelText('Nickname'), 'Ken');
+    await user.click(screen.getByRole('button', { name: 'Join and Play' }));
+    expect(await screen.findByRole('heading', { name: 'Today' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Sudoku · Hard · Daily · by Yoh/ }),
+    ).toBeInTheDocument();
+    // The same challenge is not listed again under Challenges.
+    expect(screen.getAllByRole('button', { name: /Sudoku · Hard/ })).toHaveLength(2);
+  });
+
+  it('keeps Today empty when a server from before ?daily= answers with its ordinary list', async () => {
+    stubServer();
+    ignoresDaily = true;
+    const user = userEvent.setup();
+    renderRoot({ entry: 'invite', invite: { endpoint: ENDPOINT, token: 'a'.repeat(22) } });
+    await user.type(await screen.findByLabelText('Nickname'), 'Ken');
+    await user.click(screen.getByRole('button', { name: 'Join and Play' }));
+    expect(await screen.findByRole('heading', { name: 'Challenges' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Today' })).not.toBeInTheDocument();
+    // The ordinary list is listed once, under Challenges, not again as today's.
+    expect(screen.getAllByRole('button', { name: /Sudoku · Hard/ })).toHaveLength(1);
   });
 
   it('joins from an invite link and hands the new connection to the shell', async () => {

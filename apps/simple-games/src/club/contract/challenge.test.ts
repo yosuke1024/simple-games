@@ -64,6 +64,7 @@ describe('challengeStartOf', () => {
     createdAt: 'x',
     resultCount: 0,
     mine: false,
+    daily: null,
   };
   it('validates params through the contract', () => {
     expect(challengeStartOf(base)).toEqual({

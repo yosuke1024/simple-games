@@ -80,6 +80,15 @@ describe('sendToClub', () => {
     expect(f.mock.calls[0]![1].headers.Authorization).toBe('Bearer secret-token');
   });
 
+  it('carries the daily date when given and null when not', async () => {
+    const f = vi.fn().mockResolvedValue(ok(201, challengeJson));
+    const { bridge } = await setup(f);
+    await bridge.sendToClub(E, { ...payload, daily: '2026-10-02' });
+    await bridge.sendToClub(E, payload);
+    expect(JSON.parse(f.mock.calls[0]![1].body).daily).toBe('2026-10-02');
+    expect(JSON.parse(f.mock.calls[1]![1].body).daily).toBeNull();
+  });
+
   it('rejected: unknown endpoint, unknown game, bad facts, server failure; never queued', async () => {
     const f = vi.fn().mockRejectedValue(new TypeError('offline'));
     const { bridge, kv } = await setup(f);

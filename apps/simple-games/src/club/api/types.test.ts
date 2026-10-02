@@ -85,7 +85,10 @@ describe('validators', () => {
   it('accept the documented shapes', () => {
     expect(validateClub(club)).toEqual(club);
     expect(validateMember(member)).toEqual(member);
-    expect(validateChallenge(challenge)).toEqual(challenge);
+    expect(validateChallenge(challenge)).toEqual({ ...challenge, daily: null });
+    expect(validateChallenge({ ...challenge, daily: '2026-10-02' })?.daily).toBe('2026-10-02');
+    expect(validateChallenge({ ...challenge, daily: null })?.daily).toBeNull();
+    expect(validateChallenge({ ...challenge, daily: 5 })).toBeNull();
     expect(
       validateResult({
         memberId: 'm_7',
