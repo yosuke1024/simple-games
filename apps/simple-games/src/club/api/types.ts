@@ -27,6 +27,8 @@ export interface Challenge {
   createdAt: string;
   resultCount: number;
   mine: boolean;
+  /** The local date (YYYY-MM-DD) this board is the daily of; null for any other board. Older servers omit it. */
+  daily: string | null;
 }
 export interface Result {
   memberId: string;
@@ -83,6 +85,8 @@ export interface ChallengeCreate {
   seed: string;
   boardDigest: string;
   title: string | null;
+  /** Set only for a daily that is one board for everyone; the server keeps one challenge per board. */
+  daily?: string | null;
   result: { outcome: 'completed' | 'played'; facts: Record<string, unknown> };
 }
 
@@ -120,7 +124,8 @@ export function validateChallenge(raw: unknown): Challenge | null {
     !str(raw.createdAt) ||
     typeof raw.resultCount !== 'number' ||
     !Number.isInteger(raw.resultCount) ||
-    typeof raw.mine !== 'boolean'
+    typeof raw.mine !== 'boolean' ||
+    (raw.daily !== undefined && !nullableStr(raw.daily))
   ) {
     return null;
   }
@@ -136,6 +141,7 @@ export function validateChallenge(raw: unknown): Challenge | null {
     createdAt: raw.createdAt,
     resultCount: raw.resultCount,
     mine: raw.mine,
+    daily: typeof raw.daily === 'string' ? raw.daily : null,
   };
 }
 

@@ -19,6 +19,7 @@ import {
   summarize,
   updateClubName,
 } from '../storage/connections';
+import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { dropOutboxFor } from '../storage/outbox';
 import { ChallengeScreen } from './ChallengeScreen';
 import { ClubScreen, type ClubPanel } from './ClubScreen';
@@ -29,7 +30,7 @@ import './club.css';
 type Screen =
   | { kind: 'discover' }
   | { kind: 'all' }
-  | { kind: 'join'; invite: ClubInvite | null }
+  | { kind: 'join'; invite: ClubInvite | null; publicClub?: boolean }
   | { kind: 'club'; endpoint: string; panel: ClubPanel }
   | { kind: 'challenge'; endpoint: string; challengeId: string };
 
@@ -150,9 +151,16 @@ export function ClubRoot({
           <button
             type="button"
             className="btn btn-primary"
+            onClick={() => push({ kind: 'join', invite: null, publicClub: true })}
+          >
+            {t('clubJoinPublic')}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost"
             onClick={() => push({ kind: 'join', invite: null })}
           >
-            {t('clubJoinClub')}
+            {t('clubJoinWithLink')}
           </button>
         </ScreenFrame>
       );
@@ -173,6 +181,15 @@ export function ClubRoot({
               </span>
             </button>
           ))}
+          {connections.some((c) => c.endpoint === PUBLIC_CLUB_ENDPOINT) ? null : (
+            <button
+              type="button"
+              className="btn btn-ghost club-join-another"
+              onClick={() => push({ kind: 'join', invite: null, publicClub: true })}
+            >
+              {t('clubJoinPublic')}
+            </button>
+          )}
           <button
             type="button"
             className="btn btn-ghost club-join-another"
@@ -187,6 +204,7 @@ export function ClubRoot({
       return (
         <JoinScreen
           invite={top.invite}
+          publicClub={top.publicClub === true}
           connectionCount={connections.length}
           t={t}
           onBack={stepBack}

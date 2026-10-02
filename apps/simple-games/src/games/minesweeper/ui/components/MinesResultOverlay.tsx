@@ -114,6 +114,7 @@ export function MinesResultOverlay({
           details={details}
         />
         {session.firstIndex !== null ? (
+          // No `daily`: the daily board depends on the first tap, so it is not one board for everyone (club.md §6-0).
           <ClubResultAction
             gameId="minesweeper"
             outcome={won ? 'completed' : 'played'}

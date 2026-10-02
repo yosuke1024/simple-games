@@ -7,6 +7,13 @@ export const ptBR: ClubMessages = {
   clubDiscoverTitle: 'Jogar juntos',
   clubDiscoverBody: 'Desafios privados com pessoas que você conhece.',
   clubJoinClub: 'Entrar em um Club',
+  clubPublicTitle: 'Public Club House',
+  clubJoinPublic: 'Entrar no Public Club House',
+  clubJoinWithLink: 'Entrar com um link de convite',
+  clubPublicDisclosure:
+    'Seu apelido e seus resultados ficam visíveis para todos no Public Club House e em pixapps.ai.',
+  clubToday: 'Hoje',
+  clubDaily: 'Diário',
   clubJoinAnother: 'Entrar em outro Club',
   clubAllClubs: 'Todos os Clubs',
   clubInviteLink: 'Link de convite',

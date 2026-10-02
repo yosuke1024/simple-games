@@ -49,7 +49,7 @@ describe('club client', () => {
   it('uses the global fetch by default and sends the bearer token', async () => {
     const f = vi.fn().mockResolvedValue(reply(200, [challenge]));
     vi.stubGlobal('fetch', f);
-    const list = await createClient(E, 'secret').challenges('ch_0');
+    const list = await createClient(E, 'secret').challenges({ after: 'ch_0' });
     expect(list).toHaveLength(1);
     const [url, init] = f.mock.calls[0]!;
     expect(url).toBe(`${E}/api/v1/challenges?after=ch_0`);
@@ -173,12 +173,35 @@ describe('club client', () => {
     await expect(client.records()).rejects.toMatchObject({ code: 'malformed_response' });
   });
 
+  it('joins an open server with a nickname alone', async () => {
+    const f = vi.fn().mockResolvedValue(reply(201, { club, member, memberToken: 'tok' }));
+    await createClient(E, null, f as unknown as typeof fetch).join(null, 'Ken');
+    expect(JSON.parse(f.mock.calls[0]![1].body)).toEqual({ nickname: 'Ken' });
+  });
+
+  it('builds the challenges query from after and daily', async () => {
+    const f = vi.fn().mockImplementation(async () => reply(200, [challenge]));
+    const client = createClient(E, 't', f as unknown as typeof fetch);
+    await client.challenges({ daily: '2026-10-02' });
+    await client.challenges({ after: 'ch 0', daily: '2026-10-02' });
+    expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/challenges?daily=2026-10-02`);
+    expect(f.mock.calls[1]![0]).toBe(`${E}/api/v1/challenges?after=ch%200&daily=2026-10-02`);
+  });
+
   it('health needs no token', async () => {
     const f = vi.fn().mockResolvedValue(reply(200, { ok: true, api: 1, claimed: false }));
     expect(await createClient(E, null, f as unknown as typeof fetch).health()).toEqual({
       ok: true,
       api: 1,
       claimed: false,
+      open: false,
     });
+  });
+
+  it('health reports an open server', async () => {
+    const f = vi
+      .fn()
+      .mockResolvedValue(reply(200, { ok: true, api: 1, claimed: true, open: true }));
+    expect((await createClient(E, null, f as unknown as typeof fetch).health()).open).toBe(true);
   });
 });

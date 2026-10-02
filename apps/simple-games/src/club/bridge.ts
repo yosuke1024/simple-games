@@ -41,6 +41,7 @@ export function createBridge(
           seed: payload.seed,
           boardDigest: payload.boardDigest,
           title: null,
+          daily: payload.daily ?? null,
           result: { outcome: payload.outcome, facts },
         });
         return 'sent';

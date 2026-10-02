@@ -29,10 +29,12 @@ import {
 
 export interface ClubClient {
   readonly endpoint: string;
-  health(): Promise<{ ok: boolean; api: number; claimed: boolean }>;
-  join(inviteToken: string, nickname: string): Promise<JoinResponse>;
+  /** `open`: the deployment accepts a join with a nickname alone (the Public Club House). */
+  health(): Promise<{ ok: boolean; api: number; claimed: boolean; open: boolean }>;
+  /** A null token joins an open server (the Public Club House). */
+  join(inviteToken: string | null, nickname: string): Promise<JoinResponse>;
   club(): Promise<ClubResponse>;
-  challenges(after?: string): Promise<Challenge[]>;
+  challenges(options?: { after?: string; daily?: string }): Promise<Challenge[]>;
   challenge(id: string): Promise<Challenge>;
   createChallenge(body: ChallengeCreate): Promise<Challenge>;
   results(id: string): Promise<Result[]>;
@@ -120,16 +122,27 @@ export function createClient(
       if (typeof raw !== 'object' || raw === null) throw malformed(0);
       const r = raw as Record<string, unknown>;
       if (typeof r.ok !== 'boolean' || typeof r.api !== 'number') throw malformed(0);
-      return { ok: r.ok, api: r.api, claimed: r.claimed === true };
+      return { ok: r.ok, api: r.api, claimed: r.claimed === true, open: r.open === true };
     },
     async join(inviteToken, nickname) {
-      return check(validateJoinResponse(await request('POST', '/join', { inviteToken, nickname })));
+      return check(
+        validateJoinResponse(
+          await request(
+            'POST',
+            '/join',
+            inviteToken === null ? { nickname } : { inviteToken, nickname },
+          ),
+        ),
+      );
     },
     async club() {
       return check(validateClubResponse(await request('GET', '/club')));
     },
-    async challenges(after) {
-      const query = after === undefined ? '' : `?after=${encodeURIComponent(after)}`;
+    async challenges(options) {
+      const parts: string[] = [];
+      if (options?.after !== undefined) parts.push(`after=${encodeURIComponent(options.after)}`);
+      if (options?.daily !== undefined) parts.push(`daily=${encodeURIComponent(options.daily)}`);
+      const query = parts.length === 0 ? '' : `?${parts.join('&')}`;
       return check(validateList(await request('GET', `/challenges${query}`), validateChallenge));
     },
     async challenge(id) {

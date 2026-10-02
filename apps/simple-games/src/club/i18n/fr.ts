@@ -7,6 +7,13 @@ export const fr: ClubMessages = {
   clubDiscoverTitle: 'Jouer ensemble',
   clubDiscoverBody: 'Des défis privés avec des gens que vous connaissez.',
   clubJoinClub: 'Rejoindre un Club',
+  clubPublicTitle: 'Public Club House',
+  clubJoinPublic: 'Rejoindre le Public Club House',
+  clubJoinWithLink: 'Rejoindre avec un lien d’invitation',
+  clubPublicDisclosure:
+    'Votre pseudo et vos résultats sont visibles par tous dans le Public Club House et sur pixapps.ai.',
+  clubToday: 'Aujourd’hui',
+  clubDaily: 'Quotidien',
   clubJoinAnother: 'Rejoindre un autre Club',
   clubAllClubs: 'Tous les Clubs',
   clubInviteLink: 'Lien d’invitation',

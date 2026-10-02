@@ -44,6 +44,13 @@ export interface ClubResultPayload {
   seed: string;
   params: unknown;
   boardDigest: string;
+  /**
+   * The daily date of the board, set ONLY by a game whose daily is the same
+   * board for everyone (Sudoku; not Minesweeper, whose daily depends on the
+   * first tap — club.md §6-0). The server keeps one challenge per board, so
+   * everyone's daily meets in one challenge.
+   */
+  daily?: string | null;
 }
 
 /** A finished challenge game: the result the active challenge is owed. */

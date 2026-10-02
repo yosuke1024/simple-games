@@ -73,4 +73,9 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   // 最後の Owner の 1 文は、Club を引き取れなくなる可能性を伝える文。
   'clubDisconnectBody',
   'clubDisconnectLastOwner',
+
+  // Public Club House — 参加の前に「ニックネームと結果が公開される」と言う
+  // (docs/PRODUCT_PRINCIPLES.md「公開されることを、参加の前に言う」)。弱めた訳は
+  // 公開の約束の反故になる。
+  'clubPublicDisclosure',
 ];

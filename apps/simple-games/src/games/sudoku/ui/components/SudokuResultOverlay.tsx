@@ -131,6 +131,7 @@ export function SudokuResultOverlay({
           seed={session.seed}
           params={{ difficulty: session.difficulty }}
           boardDigest={boardDigestOf(session)}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
         />
       </div>
       <ResultAdSlot />

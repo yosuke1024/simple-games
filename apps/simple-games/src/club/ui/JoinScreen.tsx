@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { createClient } from '../api/client';
 import { inviteFromHref } from '../invite';
+import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { CLUB_CONNECTIONS_MAX, type ClubConnection } from '@/storage/schemas';
 import type { ClubInvite } from '@/ui/clubBridge';
 import { errorText, ScreenFrame, type T } from './common';
@@ -10,6 +11,7 @@ export const NICKNAME_MAX = 24;
 
 export function JoinScreen({
   invite,
+  publicClub = false,
   connectionCount,
   t,
   onBack,
@@ -17,6 +19,8 @@ export function JoinScreen({
 }: {
   /** Opened from an invite link: the paste field stays hidden. */
   invite: ClubInvite | null;
+  /** The Public Club House: no link, a nickname alone — and the disclosure comes first (PRODUCT_PRINCIPLES「公開されることを、参加の前に言う」). */
+  publicClub?: boolean;
   connectionCount: number;
   t: T;
   onBack: () => void;
@@ -28,13 +32,13 @@ export function JoinScreen({
   const [error, setError] = useState<string | null>(null);
 
   const parsed = invite ?? (link.trim() === '' ? null : inviteFromHref(link));
-  const linkProblem = invite === null && link.trim() !== '' && parsed === null;
+  const linkProblem = !publicClub && invite === null && link.trim() !== '' && parsed === null;
   const name = nickname.trim();
   const nicknameOk = name.length >= 1 && name.length <= NICKNAME_MAX;
-  const ready = parsed !== null && nicknameOk && !busy;
+  const ready = (publicClub || parsed !== null) && nicknameOk && !busy;
 
   const submit = async () => {
-    if (parsed === null || !nicknameOk) return;
+    if ((!publicClub && parsed === null) || !nicknameOk) return;
     if (connectionCount >= CLUB_CONNECTIONS_MAX) {
       setError(t('clubErr_too_many_connections'));
       return;
@@ -42,9 +46,10 @@ export function JoinScreen({
     setBusy(true);
     setError(null);
     try {
-      const joined = await createClient(parsed.endpoint).join(parsed.token, name);
+      const endpoint = publicClub ? PUBLIC_CLUB_ENDPOINT : parsed!.endpoint;
+      const joined = await createClient(endpoint).join(publicClub ? null : parsed!.token, name);
       await onJoined({
-        endpoint: parsed.endpoint,
+        endpoint,
         clubId: joined.club.id,
         clubName: joined.club.name,
         memberId: joined.member.id,
@@ -60,7 +65,11 @@ export function JoinScreen({
   };
 
   return (
-    <ScreenFrame title={t('clubJoinClub')} onBack={onBack} t={t}>
+    <ScreenFrame
+      title={publicClub ? t('clubPublicTitle') : t('clubJoinClub')}
+      onBack={onBack}
+      t={t}
+    >
       <form
         className="club-form"
         onSubmit={(event) => {
@@ -68,7 +77,8 @@ export function JoinScreen({
           void submit();
         }}
       >
-        {invite === null ? (
+        {publicClub ? <p className="club-disclosure">{t('clubPublicDisclosure')}</p> : null}
+        {invite === null && !publicClub ? (
           <label className="club-field">
             <span className="club-field-label">{t('clubInviteLink')}</span>
             <input

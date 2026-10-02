@@ -72,6 +72,12 @@ export function errorText(error: unknown, t: T, clubName?: string): string {
   return t('clubErr_generic');
 }
 
+/** Today as YYYY-MM-DD in LOCAL time — the reading the games' own daily dates use. */
+export function todayLocal(now: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
 /** `easy` / `medium` / `hard` are translated; anything else is shown as the contract named it. */
 export function tierLabel(key: string, t: T): string {
   if (key === 'easy') return t('clubTier_easy');

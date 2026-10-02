@@ -7,6 +7,13 @@ export const tr: ClubMessages = {
   clubDiscoverTitle: 'Birlikte oyna',
   clubDiscoverBody: 'Tanıdığın insanlarla özel meydan okumalar.',
   clubJoinClub: 'Bir Club’a katıl',
+  clubPublicTitle: 'Public Club House',
+  clubJoinPublic: 'Public Club House’a katıl',
+  clubJoinWithLink: 'Davet bağlantısıyla katıl',
+  clubPublicDisclosure:
+    'Takma adın ve sonuçların, Public Club House’taki herkes tarafından ve pixapps.ai’de görülebilir.',
+  clubToday: 'Bugün',
+  clubDaily: 'Günlük',
   clubJoinAnother: 'Başka bir Club’a katıl',
   clubAllClubs: 'Tüm Club’lar',
   clubInviteLink: 'Davet bağlantısı',

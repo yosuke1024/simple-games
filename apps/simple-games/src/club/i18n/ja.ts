@@ -7,6 +7,13 @@ export const ja: ClubMessages = {
   clubDiscoverTitle: 'みんなで遊ぶ',
   clubDiscoverBody: '知っている人たちとの、内輪のチャレンジ。',
   clubJoinClub: 'Club に参加',
+  clubPublicTitle: 'Public Club House',
+  clubJoinPublic: 'Public Club House に参加',
+  clubJoinWithLink: '招待リンクで参加',
+  clubPublicDisclosure:
+    'ニックネームと結果は、Public Club House のみんなと pixapps.ai の公開ページに表示されます。',
+  clubToday: '今日',
+  clubDaily: 'デイリー',
   clubJoinAnother: '別の Club に参加',
   clubAllClubs: 'すべての Club',
   clubInviteLink: '招待リンク',
