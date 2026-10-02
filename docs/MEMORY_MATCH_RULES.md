@@ -162,3 +162,13 @@
 - Undo / Hint(作らない。§8)
 - 写真・イラストパズル(採用しない。翻訳・容量・可読性の理由。§1)
 - 2 人対戦(このアプリは一人で静かに遊ぶものとして設計する)
+
+## 14. Club House
+
+正典は [architecture/club.md](architecture/club.md) §6 と §16。ここにはこのゲームの側で決まることだけを書く。
+
+- **順位表の名前(`params`)** は `{ difficulty }`(`easy` / `medium` / `hard`。盤面のレイアウトを決める)。手数は表示するだけで順位には使わない。デイリー(Medium 盤)も同じ形で載る。
+- **結果画面が送る事実(`facts`)** は `{ elapsedSeconds, moves }`。共有(`ShareAction`)の `details` と同じセッションの値(`elapsedSeconds` / `moveCount`)から作り、ここで計算しない。
+- **順位の軸は時間**で、短いほうが上(`order: 'elapsedSeconds'`、`direction: 'asc'`)。表示するだけの値は順位に使わない。
+- **盤面は揃わなくてよい**(club.md §16)。`boardDigest` は `null` で、挑戦用の盤面も seed の接頭辞も持たない。ふつうに遊んだ局のクリア画面から送るだけである。
+- ゲーム自体は変わらない。統計・自己ベスト・レベル進行・保存データ・結果画面の既存の表示には触れない。

@@ -5,7 +5,9 @@
  * scolded; there is no revival to buy and no ad to watch for one more move
  * (docs/MANCALA_RULES.md §7, ADS_POLICY.md).
  */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -28,6 +30,12 @@ export function MancalaResultOverlay({
   const { t } = useSettings();
   // The swept board gets its beat before the card covers it (§10).
   const revealed = useResultReveal(session.status !== 'playing');
+  const stores = storeCounts(session.pits);
+  const you = stores.player;
+  const cpu = stores.cpu;
+  // The match's facts, once: the share's strings and the Club's figures are
+  // read from the same fields (docs/architecture/club.md §6-1).
+  const facts = useMemo(() => ({ score: you, cpuScore: cpu }), [you, cpu]);
   if (!revealed) return null;
 
   const title =
@@ -43,7 +51,10 @@ export function MancalaResultOverlay({
         ? t('mancalaLoseBody')
         : t('mancalaDrawBody');
   const record = stats[session.difficulty];
-  const stores = storeCounts(session.pits);
+  const details = [
+    { label: t('mancalaYou'), value: String(you) },
+    { label: t('mancalaCpu'), value: String(cpu) },
+  ];
 
   return (
     <div className="overlay overlay-result">
@@ -85,10 +96,16 @@ export function MancalaResultOverlay({
           outcome={session.status === 'won' ? 'completed' : 'played'}
           // The final stores, win or lose or draw — the score line this card
           // shows, and the one honest summary of a finished game.
-          details={[
-            { label: t('mancalaYou'), value: String(stores.player) },
-            { label: t('mancalaCpu'), value: String(stores.cpu) },
-          ]}
+          details={details}
+        />
+        <ClubResultAction
+          gameId="mancala"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

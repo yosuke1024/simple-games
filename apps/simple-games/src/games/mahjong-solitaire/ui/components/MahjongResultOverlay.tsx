@@ -7,12 +7,13 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import type { ShareDetail } from '@/services/share/message';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import { MAX_LEVEL, type MahjongSession } from '../../game';
+import { MAX_LEVEL, seedFor, type MahjongSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface MahjongResultOverlayProps {
@@ -42,6 +43,13 @@ export function MahjongResultOverlay({
     { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
     { label: t('mahjongHintsUsed'), value: String(session.hintCount) },
   ];
+
+  // The same session fields as `details`: the Club's figures and the share's strings
+  // never disagree (docs/architecture/club.md §6-1).
+  const facts = {
+    elapsedSeconds: session.elapsedSeconds,
+    hints: session.hintCount,
+  };
 
   return (
     <div className="overlay overlay-result">
@@ -104,6 +112,15 @@ export function MahjongResultOverlay({
           </button>
         </div>
         <ShareAction gameId="mahjong-solitaire" outcome="completed" details={details} />
+        <ClubResultAction
+          gameId="mahjong-solitaire"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={seedFor(session.mode, session.level, session.dailyDate)}
+          params={{ layout: session.layout.id }}
+          boardDigest={null}
+        />
       </div>
       <ResultAdSlot />
     </div>

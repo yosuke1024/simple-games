@@ -8,6 +8,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
@@ -34,6 +35,14 @@ export function FreeCellResultOverlay({
   // The completed foundations get their beat before the card covers them (§12).
   const revealed = useResultReveal(session.status === 'won');
   if (!revealed) return null;
+
+  // The run's facts, once: the share's strings and the Club's figures are
+  // read from the same session fields (docs/architecture/club.md §6-1).
+  const details = [
+    { label: t('movesLabel'), value: String(session.moveCount) },
+    { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+  ];
+  const facts = { moves: session.moveCount, elapsedSeconds: session.elapsedSeconds };
 
   return (
     <div className="overlay overlay-result">
@@ -115,13 +124,15 @@ export function FreeCellResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction
+        <ShareAction gameId="freecell" outcome="completed" details={details} />
+        <ClubResultAction
           gameId="freecell"
           outcome="completed"
-          details={[
-            { label: t('movesLabel'), value: String(session.moveCount) },
-            { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
-          ]}
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{}}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

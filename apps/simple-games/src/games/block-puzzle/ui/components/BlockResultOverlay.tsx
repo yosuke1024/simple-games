@@ -9,8 +9,10 @@
  * §13). Undo is still behind this dialog, and a run that ended one placement
  * too early can be taken back for nothing.
  */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -33,6 +35,15 @@ export function BlockResultOverlay({
   const { t } = useSettings();
   // The full board gets its beat before the card covers it (§12).
   const revealed = useResultReveal(session.status === 'over');
+  const score = session.score;
+  const lines = session.linesCleared;
+  // The run's facts, once: the share's strings and the Club's figures are
+  // read from the same session fields (docs/architecture/club.md §6-1).
+  const details = [
+    { label: t('score'), value: String(score) },
+    { label: t('blockLines'), value: String(lines) },
+  ];
+  const facts = useMemo(() => ({ score, lines }), [score, lines]);
   if (!revealed) return null;
 
   return (
@@ -87,13 +98,15 @@ export function BlockResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction
+        <ShareAction gameId="block-puzzle" outcome="played" details={details} />
+        <ClubResultAction
           gameId="block-puzzle"
-          outcome="played"
-          details={[
-            { label: t('score'), value: String(session.score) },
-            { label: t('blockLines'), value: String(session.linesCleared) },
-          ]}
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{}}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

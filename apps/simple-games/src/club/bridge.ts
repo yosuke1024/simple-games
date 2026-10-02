@@ -1,6 +1,6 @@
 /**
- * The two functions Core calls through the bridge (ui/clubBridge.ts): a new
- * challenge from a finished game, and the active challenge's result. A new
+ * The two functions Core calls through the bridge (ui/clubBridge.ts): a
+ * finished game's result (today's challenge or a ranking), and the active challenge's result. A new
  * challenge is never queued; a result that cannot be delivered waits in the
  * outbox (club.md §4-2, §10).
  */
@@ -34,19 +34,36 @@ export function createBridge(
       if (params === null || facts === null) return 'rejected';
       const client = createClient(endpoint, connection.memberToken, fetchImpl);
       try {
-        await client.createChallenge({
-          gameId: payload.gameId,
-          contractVersion: 1,
-          params,
-          seed: payload.seed,
-          boardDigest: payload.boardDigest,
-          title: null,
-          daily: payload.daily ?? null,
-          result: { outcome: payload.outcome, facts },
-        });
+        if (typeof payload.daily === 'string' && payload.boardDigest !== null) {
+          // A daily whose board everyone shares meets in that day's challenge (club.md §6-3).
+          await client.createChallenge({
+            gameId: payload.gameId,
+            contractVersion: 1,
+            params,
+            seed: payload.seed,
+            boardDigest: payload.boardDigest,
+            title: null,
+            daily: payload.daily,
+            result: { outcome: payload.outcome, facts },
+          });
+        } else {
+          // Everything else is a result in the game × mode table (club.md §16); a daily
+          // whose game has no digest comes here too (§2-2).
+          await client.submitRanking({
+            gameId: payload.gameId,
+            contractVersion: 1,
+            paramsKey: contract.paramsKey(params),
+            params,
+            seed: payload.seed,
+            boardDigest: payload.boardDigest,
+            outcome: payload.outcome,
+            facts,
+          });
+        }
+        // `improved: false` is still a success: the button must not come back.
         return 'sent';
       } catch {
-        // A new challenge is never queued (club.md §4-2).
+        // Neither is queued (club.md §4-2, §2-2): the button simply comes back.
         return 'rejected';
       }
     },

@@ -12,6 +12,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
@@ -41,6 +42,17 @@ export function SchulteResultOverlay({
 
   const hasNextLevel =
     session.mode === 'level' && session.level !== null && session.level < MAX_LEVEL;
+
+  const details = [
+    { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+    { label: t('schulteMisses'), value: String(session.missCount) },
+  ];
+  // The same session fields as `details`: the Club's figures and the share's strings
+  // never disagree (docs/architecture/club.md §6-1).
+  const facts = {
+    elapsedSeconds: session.elapsedSeconds,
+    mistakes: session.missCount,
+  };
 
   return (
     <div className="overlay overlay-result">
@@ -102,13 +114,15 @@ export function SchulteResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction
+        <ShareAction gameId="schulte-table" outcome="completed" details={details} />
+        <ClubResultAction
           gameId="schulte-table"
           outcome="completed"
-          details={[
-            { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
-            { label: t('schulteMisses'), value: String(session.missCount) },
-          ]}
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ size: session.size, order: session.order }}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

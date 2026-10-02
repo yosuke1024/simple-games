@@ -11,8 +11,10 @@
  * everything at the start: replaying the same layout would be reading back
  * what was just on screen.
  */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import type { ShareDetail } from '@/services/share/message';
@@ -39,6 +41,11 @@ export function RecallResultOverlay({
   const { t } = useSettings();
   // The last tile turned gets its beat before the card covers the board (§14).
   const revealed = useResultReveal(session.status === 'cleared');
+  const score = session.tileCount;
+  const elapsedSeconds = session.elapsedSeconds;
+  // The run's facts, once: the share's strings and the Club's figures are
+  // read from the same fields (docs/architecture/club.md §6-1).
+  const facts = useMemo(() => ({ score, elapsedSeconds }), [score, elapsedSeconds]);
   if (!revealed) return null;
 
   const hasNextLevel =
@@ -110,6 +117,15 @@ export function RecallResultOverlay({
           </button>
         </div>
         <ShareAction gameId="number-recall" outcome="completed" details={details} />
+        <ClubResultAction
+          gameId="number-recall"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{}}
+          boardDigest={null}
+        />
       </div>
       <ResultAdSlot />
     </div>

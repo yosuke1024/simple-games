@@ -7,6 +7,7 @@ import { MAX_LEVEL, type GameSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import type { ShareDetail } from '@/services/share/message';
@@ -54,6 +55,8 @@ export function ResultOverlay({
     { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
     { label: t('movesLabel'), value: String(session.moveCount) },
   ];
+
+  const facts = { moves: session.moveCount, elapsedSeconds: session.elapsedSeconds };
 
   return (
     <div className="overlay overlay-result">
@@ -160,6 +163,15 @@ export function ResultOverlay({
           gameId="number-match"
           outcome={cleared ? 'completed' : 'played'}
           details={details}
+        />
+        <ClubResultAction
+          gameId="number-match"
+          outcome={cleared ? 'completed' : 'played'}
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{}}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

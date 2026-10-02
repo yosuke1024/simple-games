@@ -9,8 +9,10 @@
  * a personal best quietly, and offers a free new board. There is no revival to
  * buy and no ad to watch for one more move (§8, ADS_POLICY.md).
  */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -39,12 +41,21 @@ export function MergeResultOverlay({
   // Either card waits the beat after the last slide (§12) — one wait for
   // both, since the two arrive on the same move when they coincide.
   const revealed = useResultReveal(over || announceReached);
+  const bestTile = largestTile(session.board);
+  const score = session.score;
+  // The ending's facts, once: the share's strings and the Club's figures are
+  // read from the same fields (docs/architecture/club.md §6-1).
+  const facts = useMemo(() => ({ score, bestTile }), [score, bestTile]);
   if (!revealed) return null;
 
   // Both at once is possible — the move that makes 2048 can also fill the
   // board. The ending wins: "Keep Going" would be an offer the board cannot
   // honour, and the reach is on the statistics screen either way (§9).
   if (over) {
+    const details = [
+      { label: t('score'), value: String(score) },
+      { label: t('mergeBestTile'), value: String(bestTile) },
+    ];
     return (
       <div className="overlay overlay-result">
         <div
@@ -97,13 +108,15 @@ export function MergeResultOverlay({
               {t('backHome')}
             </button>
           </div>
-          <ShareAction
+          <ShareAction gameId="2048" outcome="played" details={details} />
+          <ClubResultAction
             gameId="2048"
-            outcome="played"
-            details={[
-              { label: t('score'), value: String(session.score) },
-              { label: t('mergeBestTile'), value: String(largestTile(session.board)) },
-            ]}
+            outcome="completed"
+            details={details}
+            facts={facts}
+            seed={session.seed}
+            params={{}}
+            boardDigest={null}
           />
         </div>
         <ResultAdSlot />

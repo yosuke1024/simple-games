@@ -7,8 +7,10 @@
  * one more jump (§13). A personal best is mentioned quietly rather than made
  * into an event.
  */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -24,7 +26,16 @@ export function BunnyResultOverlay({ result, onRunAgain, onHome }: BunnyResultOv
   const { t } = useSettings();
   // The stopped track gets its beat before the card covers it (§12).
   const revealed = useResultReveal(result !== null);
+  const score = result?.score ?? 0;
+  const obstaclesPassed = result?.obstaclesPassed ?? 0;
+  // The run's facts, once: the share's strings and the Club's figures are
+  // read from the same fields (docs/architecture/club.md §6-1).
+  const facts = useMemo(() => ({ score, obstaclesPassed }), [score, obstaclesPassed]);
   if (!revealed || result === null) return null;
+  const details = [
+    { label: t('score'), value: String(score) },
+    { label: t('bunnyObstaclesPassed'), value: String(obstaclesPassed) },
+  ];
 
   return (
     <div className="overlay overlay-result">
@@ -78,13 +89,15 @@ export function BunnyResultOverlay({ result, onRunAgain, onHome }: BunnyResultOv
             {t('backHome')}
           </button>
         </div>
-        <ShareAction
+        <ShareAction gameId="bunny-hop" outcome="played" details={details} />
+        <ClubResultAction
           gameId="bunny-hop"
-          outcome="played"
-          details={[
-            { label: t('score'), value: String(result.score) },
-            { label: t('bunnyObstaclesPassed'), value: String(result.obstaclesPassed) },
-          ]}
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed=""
+          params={{}}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

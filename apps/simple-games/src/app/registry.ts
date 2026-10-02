@@ -69,6 +69,38 @@ import { BR_STORAGE_KEYS } from '../games/box-regions/storage/keys';
 import { SUDOKU_CHALLENGE } from '../games/sudoku/challenge/contract';
 import { MINESWEEPER_CHALLENGE } from '../games/minesweeper/challenge/contract';
 import { WATER_SORT_CHALLENGE } from '../games/water-sort/challenge/contract';
+import { GAME_2048_CHALLENGE } from '../games/2048/challenge/contract';
+import { BINARY_BALANCE_CHALLENGE } from '../games/binary-balance/challenge/contract';
+import { BLOCK_PUZZLE_CHALLENGE } from '../games/block-puzzle/challenge/contract';
+import { BOX_REGIONS_CHALLENGE } from '../games/box-regions/challenge/contract';
+import { BUNNY_HOP_CHALLENGE } from '../games/bunny-hop/challenge/contract';
+import { CROWN_GRID_CHALLENGE } from '../games/crown-grid/challenge/contract';
+import { DOMINOES_CHALLENGE } from '../games/dominoes/challenge/contract';
+import { DOTS_AND_BOXES_CHALLENGE } from '../games/dots-and-boxes/challenge/contract';
+import { FREECELL_CHALLENGE } from '../games/freecell/challenge/contract';
+import { FUTOSHIKI_CHALLENGE } from '../games/futoshiki/challenge/contract';
+import { GIN_RUMMY_CHALLENGE } from '../games/gin-rummy/challenge/contract';
+import { HEARTS_CHALLENGE } from '../games/hearts/challenge/contract';
+import { HIT_AND_BLOW_CHALLENGE } from '../games/hit-and-blow/challenge/contract';
+import { KAKURO_CHALLENGE } from '../games/kakuro/challenge/contract';
+import { MAHJONG_SOLITAIRE_CHALLENGE } from '../games/mahjong-solitaire/challenge/contract';
+import { MANCALA_CHALLENGE } from '../games/mancala/challenge/contract';
+import { MEMORY_MATCH_CHALLENGE } from '../games/memory-match/challenge/contract';
+import { NONOGRAM_CHALLENGE } from '../games/nonogram/challenge/contract';
+import { NUMBER_MATCH_CHALLENGE } from '../games/number-match/challenge/contract';
+import { NUMBER_PATH_CHALLENGE } from '../games/number-path/challenge/contract';
+import { NUMBER_RECALL_CHALLENGE } from '../games/number-recall/challenge/contract';
+import { QUICK_MATH_CHALLENGE } from '../games/quick-math/challenge/contract';
+import { REVERSI_CHALLENGE } from '../games/reversi/challenge/contract';
+import { SCHULTE_TABLE_CHALLENGE } from '../games/schulte-table/challenge/contract';
+import { SHAPE_REGIONS_CHALLENGE } from '../games/shape-regions/challenge/contract';
+import { SKY_FIGHTER_CHALLENGE } from '../games/sky-fighter/challenge/contract';
+import { SLIDING_PUZZLE_CHALLENGE } from '../games/sliding-puzzle/challenge/contract';
+import { SOLITAIRE_CHALLENGE } from '../games/solitaire/challenge/contract';
+import { SPIDER_SOLITAIRE_CHALLENGE } from '../games/spider-solitaire/challenge/contract';
+import { SUDOKU_6X6_CHALLENGE } from '../games/sudoku-6x6/challenge/contract';
+import { TAKUZU_CHALLENGE } from '../games/takuzu/challenge/contract';
+import { YACHT_CHALLENGE } from '../games/yacht/challenge/contract';
 
 export type GameId =
   | 'sudoku'
@@ -197,7 +229,13 @@ export interface GameChallengeContract {
   /** The one fact results are ordered by, ascending. */
   order: string;
   /** Seeds of challenge boards start with this (club.md §6-2). */
-  seedPrefix: string;
+  /**
+   * Which way the axis points (club.md §6-1): `asc` = lower is better (time,
+   * moves), `desc` = higher is better (score).
+   */
+  direction: 'asc' | 'desc';
+  /** The seed prefix of a club-mode board (club.md §6-2) — only the three games that have that mode. */
+  seedPrefix?: string;
 }
 
 /**
@@ -317,6 +355,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'cards',
     glyph: '♠',
     storageKeys: Object.values(SO_STORAGE_KEYS),
+    challenge: SOLITAIRE_CHALLENGE,
     loadRoot: () =>
       import('../games/solitaire/ui/SolitaireRoot').then((m) => ({ default: m.SolitaireRoot })),
     loadStorageSchemas: () => import('../games/solitaire/storage/schemas'),
@@ -327,6 +366,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'cards',
     glyph: '♣',
     storageKeys: Object.values(SS_STORAGE_KEYS),
+    challenge: SPIDER_SOLITAIRE_CHALLENGE,
     loadRoot: () =>
       import('../games/spider-solitaire/ui/SpiderRoot').then((m) => ({ default: m.SpiderRoot })),
     loadStorageSchemas: () => import('../games/spider-solitaire/storage/schemas'),
@@ -337,6 +377,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'cards',
     glyph: '♥',
     storageKeys: Object.values(FC_STORAGE_KEYS),
+    challenge: FREECELL_CHALLENGE,
     loadRoot: () =>
       import('../games/freecell/ui/FreeCellRoot').then((m) => ({ default: m.FreeCellRoot })),
     loadStorageSchemas: () => import('../games/freecell/storage/schemas'),
@@ -352,6 +393,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'cards',
     glyph: '♡',
     storageKeys: Object.values(HT_STORAGE_KEYS),
+    challenge: HEARTS_CHALLENGE,
     loadRoot: () =>
       import('../games/hearts/ui/HeartsRoot').then((m) => ({ default: m.HeartsRoot })),
     loadStorageSchemas: () => import('../games/hearts/storage/schemas'),
@@ -365,6 +407,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'cards',
     glyph: '♢',
     storageKeys: Object.values(GR_STORAGE_KEYS),
+    challenge: GIN_RUMMY_CHALLENGE,
     loadRoot: () =>
       import('../games/gin-rummy/ui/GinRummyRoot').then((m) => ({ default: m.GinRummyRoot })),
     loadStorageSchemas: () => import('../games/gin-rummy/storage/schemas'),
@@ -397,6 +440,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'puzzle',
     glyph: '◎',
     storageKeys: Object.values(MJ_STORAGE_KEYS),
+    challenge: MAHJONG_SOLITAIRE_CHALLENGE,
     loadRoot: () =>
       import('../games/mahjong-solitaire/ui/MahjongRoot').then((m) => ({
         default: m.MahjongRoot,
@@ -409,6 +453,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'puzzle',
     glyph: '⊞',
     storageKeys: Object.values(TM_STORAGE_KEYS),
+    challenge: GAME_2048_CHALLENGE,
     loadRoot: () =>
       import('../games/2048/ui/Game2048Root').then((m) => ({ default: m.Game2048Root })),
     loadStorageSchemas: () => import('../games/2048/storage/schemas'),
@@ -419,6 +464,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'puzzle',
     glyph: '▣',
     storageKeys: Object.values(BP_STORAGE_KEYS),
+    challenge: BLOCK_PUZZLE_CHALLENGE,
     loadRoot: () =>
       import('../games/block-puzzle/ui/BlockPuzzleRoot').then((m) => ({
         default: m.BlockPuzzleRoot,
@@ -473,6 +519,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'board',
     glyph: '◐',
     storageKeys: Object.values(RV_STORAGE_KEYS),
+    challenge: REVERSI_CHALLENGE,
     loadRoot: () =>
       import('../games/reversi/ui/ReversiRoot').then((m) => ({ default: m.ReversiRoot })),
     loadStorageSchemas: () => import('../games/reversi/storage/schemas'),
@@ -533,6 +580,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'logic',
     glyph: '▦',
     storageKeys: Object.values(NG_STORAGE_KEYS),
+    challenge: NONOGRAM_CHALLENGE,
     loadRoot: () =>
       import('../games/nonogram/ui/NonogramRoot').then((m) => ({ default: m.NonogramRoot })),
     loadStorageSchemas: () => import('../games/nonogram/storage/schemas'),
@@ -552,6 +600,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'logic',
     glyph: '01',
     storageKeys: Object.values(TK_STORAGE_KEYS),
+    challenge: TAKUZU_CHALLENGE,
     loadRoot: () =>
       import('../games/takuzu/ui/TakuzuRoot').then((m) => ({ default: m.TakuzuRoot })),
     loadStorageSchemas: () => import('../games/takuzu/storage/schemas'),
@@ -579,6 +628,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'logic',
     glyph: '≶',
     storageKeys: Object.values(FT_STORAGE_KEYS),
+    challenge: FUTOSHIKI_CHALLENGE,
     loadRoot: () =>
       import('../games/futoshiki/ui/FutoshikiRoot').then((m) => ({ default: m.FutoshikiRoot })),
     loadStorageSchemas: () => import('../games/futoshiki/storage/schemas'),
@@ -610,6 +660,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'logic',
     glyph: '∑',
     storageKeys: Object.values(KK_STORAGE_KEYS),
+    challenge: KAKURO_CHALLENGE,
     loadRoot: () =>
       import('../games/kakuro/ui/KakuroRoot').then((m) => ({ default: m.KakuroRoot })),
     loadStorageSchemas: () => import('../games/kakuro/storage/schemas'),
@@ -624,6 +675,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'puzzle',
     glyph: '10',
     storageKeys: Object.values(NM_STORAGE_KEYS),
+    challenge: NUMBER_MATCH_CHALLENGE,
     loadRoot: () =>
       import('../games/number-match/ui/NumberMatchRoot').then((m) => ({
         default: m.NumberMatchRoot,
@@ -638,6 +690,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'drills',
     glyph: '÷',
     storageKeys: Object.values(QM_STORAGE_KEYS),
+    challenge: QUICK_MATH_CHALLENGE,
     loadRoot: () =>
       import('../games/quick-math/ui/QuickMathRoot').then((m) => ({ default: m.QuickMathRoot })),
     loadStorageSchemas: () => import('../games/quick-math/storage/schemas'),
@@ -648,6 +701,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'drills',
     glyph: '⌖',
     storageKeys: Object.values(ST_STORAGE_KEYS),
+    challenge: SCHULTE_TABLE_CHALLENGE,
     loadRoot: () =>
       import('../games/schulte-table/ui/SchulteTableRoot').then((m) => ({
         default: m.SchulteTableRoot,
@@ -660,6 +714,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'drills',
     glyph: '?',
     storageKeys: Object.values(NR_STORAGE_KEYS),
+    challenge: NUMBER_RECALL_CHALLENGE,
     loadRoot: () =>
       import('../games/number-recall/ui/NumberRecallRoot').then((m) => ({
         default: m.NumberRecallRoot,
@@ -683,6 +738,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'puzzle',
     glyph: '⇄',
     storageKeys: Object.values(SP_STORAGE_KEYS),
+    challenge: SLIDING_PUZZLE_CHALLENGE,
     loadRoot: () =>
       import('../games/sliding-puzzle/ui/SlidingPuzzleRoot').then((m) => ({
         default: m.SlidingPuzzleRoot,
@@ -695,6 +751,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'drills',
     glyph: '⧉',
     storageKeys: Object.values(MM_STORAGE_KEYS),
+    challenge: MEMORY_MATCH_CHALLENGE,
     loadRoot: () =>
       import('../games/memory-match/ui/MemoryMatchRoot').then((m) => ({
         default: m.MemoryMatchRoot,
@@ -707,6 +764,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'arcade',
     glyph: '▲',
     storageKeys: Object.values(SF_STORAGE_KEYS),
+    challenge: SKY_FIGHTER_CHALLENGE,
     loadRoot: () =>
       import('../games/sky-fighter/ui/SkyFighterRoot').then((m) => ({
         default: m.SkyFighterRoot,
@@ -719,6 +777,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'arcade',
     glyph: '⌃',
     storageKeys: Object.values(BH_STORAGE_KEYS),
+    challenge: BUNNY_HOP_CHALLENGE,
     loadRoot: () =>
       import('../games/bunny-hop/ui/BunnyHopRoot').then((m) => ({
         default: m.BunnyHopRoot,
@@ -736,6 +795,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '♛',
     channel: 'web-beta',
     storageKeys: Object.values(CG_STORAGE_KEYS),
+    challenge: CROWN_GRID_CHALLENGE,
     loadRoot: () =>
       import('../games/crown-grid/ui/CrownGridRoot').then((m) => ({ default: m.CrownGridRoot })),
     loadStorageSchemas: () => import('../games/crown-grid/storage/schemas'),
@@ -750,6 +810,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '↝',
     channel: 'web-beta',
     storageKeys: Object.values(NP_STORAGE_KEYS),
+    challenge: NUMBER_PATH_CHALLENGE,
     loadRoot: () =>
       import('../games/number-path/ui/NumberPathRoot').then((m) => ({ default: m.NumberPathRoot })),
     loadStorageSchemas: () => import('../games/number-path/storage/schemas'),
@@ -764,6 +825,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '▙',
     channel: 'web-beta',
     storageKeys: Object.values(SR_STORAGE_KEYS),
+    challenge: SHAPE_REGIONS_CHALLENGE,
     loadRoot: () =>
       import('../games/shape-regions/ui/ShapeRegionsRoot').then((m) => ({
         default: m.ShapeRegionsRoot,
@@ -781,6 +843,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '⚄',
     channel: 'web-beta',
     storageKeys: Object.values(YT_STORAGE_KEYS),
+    challenge: YACHT_CHALLENGE,
     loadRoot: () => import('../games/yacht/ui/YachtRoot').then((m) => ({ default: m.YachtRoot })),
     loadStorageSchemas: () => import('../games/yacht/storage/schemas'),
   },
@@ -794,6 +857,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '⊚',
     channel: 'web-beta',
     storageKeys: Object.values(MC_STORAGE_KEYS),
+    challenge: MANCALA_CHALLENGE,
     loadRoot: () =>
       import('../games/mancala/ui/MancalaRoot').then((m) => ({ default: m.MancalaRoot })),
     loadStorageSchemas: () => import('../games/mancala/storage/schemas'),
@@ -808,6 +872,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '⊟',
     channel: 'web-beta',
     storageKeys: Object.values(DM_STORAGE_KEYS),
+    challenge: DOMINOES_CHALLENGE,
     loadRoot: () =>
       import('../games/dominoes/ui/DominoesRoot').then((m) => ({ default: m.DominoesRoot })),
     loadStorageSchemas: () => import('../games/dominoes/storage/schemas'),
@@ -821,6 +886,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '◉',
     channel: 'web-beta',
     storageKeys: Object.values(HB_STORAGE_KEYS),
+    challenge: HIT_AND_BLOW_CHALLENGE,
     loadRoot: () =>
       import('../games/hit-and-blow/ui/HitAndBlowRoot').then((m) => ({
         default: m.HitAndBlowRoot,
@@ -836,6 +902,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '⊡',
     channel: 'web-beta',
     storageKeys: Object.values(DB_STORAGE_KEYS),
+    challenge: DOTS_AND_BOXES_CHALLENGE,
     loadRoot: () =>
       import('../games/dots-and-boxes/ui/DotsAndBoxesRoot').then((m) => ({
         default: m.DotsAndBoxesRoot,
@@ -856,6 +923,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '⊜',
     channel: 'web-beta',
     storageKeys: Object.values(BN_STORAGE_KEYS),
+    challenge: BINARY_BALANCE_CHALLENGE,
     loadRoot: () =>
       import('../games/binary-balance/ui/BinaryBalanceRoot').then((m) => ({
         default: m.BinaryBalanceRoot,
@@ -872,6 +940,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '6',
     channel: 'web-beta',
     storageKeys: Object.values(S6_STORAGE_KEYS),
+    challenge: SUDOKU_6X6_CHALLENGE,
     loadRoot: () =>
       import('../games/sudoku-6x6/ui/Sudoku6x6Root').then((m) => ({ default: m.Sudoku6x6Root })),
     loadStorageSchemas: () => import('../games/sudoku-6x6/storage/schemas'),
@@ -890,6 +959,7 @@ export const GAMES: readonly GameDefinition[] = [
     glyph: '▭',
     channel: 'web-beta',
     storageKeys: Object.values(BR_STORAGE_KEYS),
+    challenge: BOX_REGIONS_CHALLENGE,
     loadRoot: () =>
       import('../games/box-regions/ui/BoxRegionsRoot').then((m) => ({ default: m.BoxRegionsRoot })),
     loadStorageSchemas: () => import('../games/box-regions/storage/schemas'),

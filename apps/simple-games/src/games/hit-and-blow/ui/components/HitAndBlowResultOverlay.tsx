@@ -8,6 +8,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -32,7 +33,12 @@ export function HitAndBlowResultOverlay({
   const revealed = useResultReveal(session.status === 'won');
   if (!revealed) return null;
 
-  const guesses = String(guessCount(session));
+  // The run's facts, once: the share's strings and the Club's figures are
+  // read from the same session fields (docs/architecture/club.md §6-1).
+  const attempts = guessCount(session);
+  const guesses = String(attempts);
+  const details = [{ label: t('hitAndBlowGuessesLabel'), value: guesses }];
+  const facts = { attempts };
 
   return (
     <div className="overlay overlay-result">
@@ -73,10 +79,15 @@ export function HitAndBlowResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction
+        <ShareAction gameId="hit-and-blow" outcome="completed" details={details} />
+        <ClubResultAction
           gameId="hit-and-blow"
           outcome="completed"
-          details={[{ label: t('hitAndBlowGuessesLabel'), value: guesses }]}
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

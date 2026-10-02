@@ -10,7 +10,9 @@
  * stated. A loss is stated too; there is no revival to buy and no ad to watch
  * for one more hand (docs/ADS_POLICY.md).
  */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import type { ShareDetail } from '@/services/share/message';
@@ -38,6 +40,10 @@ export function HeartsResultOverlay({
   const { t } = useSettings();
   // The last settled hand gets its beat before the card covers it (§11.2).
   const revealed = useResultReveal(session.status !== 'playing' && lastResult !== null);
+  const score = lastResult?.scores[YOU] ?? 0;
+  // The match's facts, once: the share's strings and the Club's figures are
+  // read from the same fields (docs/architecture/club.md §6-1).
+  const facts = useMemo(() => ({ score }), [score]);
   if (!revealed || !lastResult) return null;
 
   const { status, scores } = lastResult;
@@ -62,7 +68,7 @@ export function HeartsResultOverlay({
   // The player's own line from the standings table, won or lost or drawn —
   // the seats are a placement, not a difference, so there is no other single
   // figure that summarises the hand.
-  const details: ShareDetail[] = [{ label: seatLabel(t, YOU), value: String(scores[YOU]) }];
+  const details: ShareDetail[] = [{ label: seatLabel(t, YOU), value: String(score) }];
 
   return (
     <div className="overlay overlay-result">
@@ -111,6 +117,15 @@ export function HeartsResultOverlay({
           gameId="hearts"
           outcome={status === 'won' ? 'completed' : 'played'}
           details={details}
+        />
+        <ClubResultAction
+          gameId="hearts"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

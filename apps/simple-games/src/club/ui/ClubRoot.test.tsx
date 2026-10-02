@@ -38,6 +38,21 @@ function reply(body: unknown, status = 200): Response {
   });
 }
 
+const LEADER = {
+  memberId: 'm_1',
+  nickname: 'Ken',
+  submittedAt: '2026-09-10T00:00:00.000Z',
+  facts: { elapsedSeconds: 238, mistakes: 0, hints: 1 },
+  seed: 's',
+  boardDigest: 'sd1:1',
+};
+const MINE = {
+  ...LEADER,
+  memberId: 'm_7',
+  nickname: 'Ken B',
+  facts: { elapsedSeconds: 600, mistakes: 3, hints: 0 },
+};
+let meBelowTop = false;
 let dailyChallenges = false;
 /** A server from before `?daily=` existed: it ignores the parameter and answers with its ordinary list. */
 let ignoresDaily = false;
@@ -63,8 +78,8 @@ function stubServer() {
       if (daily === null || ignoresDaily) return reply([CHALLENGE]);
       return reply(daily === todayLocal() && dailyChallenges ? [DAILY_CHALLENGE] : []);
     }
-    if (path === '/challenges/ch_1') return reply(CHALLENGE);
-    if (path === '/challenges/ch_1/results') {
+    if (path === '/challenges/ch_d') return reply(DAILY_CHALLENGE);
+    if (path === '/challenges/ch_d/results') {
       return reply([
         {
           memberId: 'm_1',
@@ -75,7 +90,24 @@ function stubServer() {
         },
       ]);
     }
-    if (path === '/records') return reply([]);
+    if (path === '/rankings') {
+      return reply([{ gameId: 'sudoku', paramsKey: 'hard', entryCount: 24, leader: LEADER }]);
+    }
+    if (path === '/rankings/sudoku/hard') {
+      const second = {
+        ...LEADER,
+        memberId: 'm_2',
+        nickname: 'Mika',
+        facts: { elapsedSeconds: 300, mistakes: 1, hints: 0 },
+      };
+      return reply({
+        gameId: 'sudoku',
+        paramsKey: 'hard',
+        entryCount: 24,
+        entries: meBelowTop ? [LEADER, second] : [LEADER, { ...MINE, facts: second.facts }],
+        me: { rank: meBelowTop ? 87 : 2, entry: MINE },
+      });
+    }
     return reply({ error: { code: 'not_found', message: 'no' } }, 404);
   });
   vi.stubGlobal('fetch', fetchMock);
@@ -98,6 +130,7 @@ function renderRoot(props: Partial<React.ComponentProps<typeof ClubRoot>> = {}) 
 
 beforeEach(() => {
   dailyChallenges = false;
+  meBelowTop = false;
   ignoresDaily = false;
   localStorage.clear();
 });
@@ -128,7 +161,7 @@ describe('ClubRoot', () => {
     await user.type(screen.getByLabelText('Nickname'), 'Ken');
     await user.click(screen.getByRole('button', { name: 'Join and Play' }));
 
-    expect(await screen.findByText(/Sudoku · Hard · by Yoh/)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
     const joinCall = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/join'));
     expect(String(joinCall![0])).toBe(`${PUBLIC_CLUB_ENDPOINT}/api/v1/join`);
     const body = JSON.parse(String(joinCall![1]!.body)) as Record<string, unknown>;
@@ -185,8 +218,12 @@ describe('ClubRoot', () => {
     expect(
       screen.getByRole('button', { name: /Sudoku · Hard · Daily · by Yoh/ }),
     ).toBeInTheDocument();
-    // The same challenge is not listed again under Challenges.
-    expect(screen.getAllByRole('button', { name: /Sudoku · Hard/ })).toHaveLength(2);
+    expect(screen.getByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    // The old per-board lists are gone.
+    for (const name of ['Challenges', 'Played', 'Records']) {
+      expect(screen.queryByRole('heading', { name })).not.toBeInTheDocument();
+    }
+    expect(screen.queryByRole('button', { name: /New Challenge/ })).not.toBeInTheDocument();
   });
 
   it('keeps Today empty when a server from before ?daily= answers with its ordinary list', async () => {
@@ -196,10 +233,10 @@ describe('ClubRoot', () => {
     renderRoot({ entry: 'invite', invite: { endpoint: ENDPOINT, token: 'a'.repeat(22) } });
     await user.type(await screen.findByLabelText('Nickname'), 'Ken');
     await user.click(screen.getByRole('button', { name: 'Join and Play' }));
-    expect(await screen.findByRole('heading', { name: 'Challenges' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Today' })).not.toBeInTheDocument();
-    // The ordinary list is listed once, under Challenges, not again as today's.
-    expect(screen.getAllByRole('button', { name: /Sudoku · Hard/ })).toHaveLength(1);
+    // The ordinary list is not mistaken for today's.
+    expect(screen.queryByRole('button', { name: /by Yoh/ })).not.toBeInTheDocument();
   });
 
   it('joins from an invite link and hands the new connection to the shell', async () => {
@@ -232,44 +269,87 @@ describe('ClubRoot', () => {
       inviteToken: 'a'.repeat(22),
       nickname: 'Ken',
     });
-    // Straight into the Club: its challenge is listed.
-    expect(await screen.findByText(/Sudoku · Hard · by Yoh/)).toBeInTheDocument();
+    // Straight into the Club: its rankings are listed, with the leader and the size.
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    expect(screen.getByText('1. Ken 3:58')).toBeInTheDocument();
+    expect(screen.getByText('24 entries')).toBeInTheDocument();
   });
 
-  it('shows a challenge, discloses before Play, and plays it with the digest', async () => {
+  it('loads the club, today and the rankings: three requests', async () => {
+    const fetchMock = stubServer();
+    await joinedConnection();
+    renderRoot();
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    const paths = fetchMock.mock.calls.map(([url]) => new URL(String(url)).pathname);
+    expect(paths.sort()).toEqual(['/api/v1/challenges', '/api/v1/club', '/api/v1/rankings']);
+  });
+
+  it('opens a ranking: You on the viewer row, in the order the server gave', async () => {
     stubServer();
     const user = userEvent.setup();
-    await addClubConnection({
-      endpoint: ENDPOINT,
-      clubId: 'c_1',
-      clubName: 'Suzuki Family',
-      memberId: 'm_7',
-      memberToken: 'member-token-1',
-      nickname: 'Ken',
-      role: 'member',
-      joinedAt: '2026-09-09T00:00:00.000Z',
-    });
+    await joinedConnection();
+    renderRoot();
+
+    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · 1\. Ken 3:58/ }));
+    expect(await screen.findByRole('heading', { name: 'Sudoku · Hard' })).toBeInTheDocument();
+    expect(await screen.findByText('Ken')).toBeInTheDocument();
+    expect(screen.getByText('You')).toBeInTheDocument();
+    expect(screen.queryByText('Ken B')).not.toBeInTheDocument();
+    expect(screen.getByText('#1')).toBeInTheDocument();
+    expect(screen.getByText('#2')).toBeInTheDocument();
+    expect(screen.getByText('24 entries')).toBeInTheDocument();
+    expect(screen.queryByText('#87')).not.toBeInTheDocument();
+  });
+
+  it('appends the viewer row with its rank when it is outside the rows sent', async () => {
+    stubServer();
+    meBelowTop = true;
+    const user = userEvent.setup();
+    await joinedConnection();
+    renderRoot();
+
+    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · 1\. Ken 3:58/ }));
+    expect(await screen.findByText('#87')).toBeInTheDocument();
+    expect(screen.getByText('You')).toBeInTheDocument();
+    expect(screen.getByText('10:00 Mistakes 3 Hints 0')).toBeInTheDocument();
+    expect(screen.getByText('24 entries')).toBeInTheDocument();
+  });
+
+  it('Back from a ranking returns to the Club', async () => {
+    stubServer();
+    const user = userEvent.setup();
+    await joinedConnection();
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · 1\. Ken 3:58/ }));
+    await screen.findByRole('heading', { name: 'Sudoku · Hard' });
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+  });
+
+  it('shows a Today challenge, discloses before Play, and plays the game daily', async () => {
+    stubServer();
+    dailyChallenges = true;
+    const user = userEvent.setup();
+    await joinedConnection();
     const handlers = renderRoot();
 
-    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · by Yoh/ }));
+    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · Daily · by Yoh/ }));
     expect(
-      await screen.findByText('When you finish, your result is sent to Suzuki Family.'),
+      await screen.findByText(
+        'Open Sudoku and play today’s Daily. When you finish, your result is sent to Suzuki Family.',
+      ),
     ).toBeInTheDocument();
     // Ranked, with the facts the contract names.
     expect(await screen.findByText('4:31 Mistakes 0 Hints 1')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Play' }));
+    // No board is handed over: the game opens its own daily (club.md §16-3).
     expect(handlers.onPlayChallenge).toHaveBeenCalledWith({
       gameId: 'sudoku',
-      challenge: {
-        seed: 'sudoku-free-abc',
-        params: { difficulty: 'hard' },
-        boardDigest: 'sd1:9f3a1c07',
-      },
       active: {
         endpoint: ENDPOINT,
         clubName: 'Suzuki Family',
-        challengeId: 'ch_1',
+        challengeId: 'ch_d',
         gameId: 'sudoku',
         boardDigest: 'sd1:9f3a1c07',
         submitted: false,
@@ -277,3 +357,16 @@ describe('ClubRoot', () => {
     });
   });
 });
+
+async function joinedConnection() {
+  await addClubConnection({
+    endpoint: ENDPOINT,
+    clubId: 'c_1',
+    clubName: 'Suzuki Family',
+    memberId: 'm_7',
+    memberToken: 'member-token-1',
+    nickname: 'Ken',
+    role: 'member',
+    joinedAt: '2026-09-09T00:00:00.000Z',
+  });
+}

@@ -1,12 +1,12 @@
 /**
- * One Club (club.md §9「Club」): its challenges, records and members, read
+ * One Club (club.md §9「Club」): today's dailies, the rankings and the members, read
  * when the screen opens and again only on `Reload`. No timer, no polling, no
  * counts. The Owner's two extras (Invite, Remove) and the Settings panel
  * (Disconnect, §8-5) live here too, as panels over the same data.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient, type ClubClient } from '../api/client';
-import type { Challenge, ClubRecord, Member } from '../api/types';
+import type { Challenge, Member, RankingSummary } from '../api/types';
 import { contractFor, gameTitle } from '../contract/challenge';
 import { flushOutbox } from '../storage/outbox';
 import { shareGame } from '@/services/share/share';
@@ -25,18 +25,23 @@ import {
 } from './common';
 
 interface ClubData {
-  challenges: Challenge[];
   /** Challenges tagged with today's daily date (everyone's daily meets here). */
   today: Challenge[];
   /** The local date `today` was asked for, so the answer can be held to it. */
   todayDate: string;
-  records: ClubRecord[];
+  rankings: RankingSummary[];
   members: Member[];
   /** The club's name as the server has it now. */
   clubName: string;
 }
 
 export type ClubPanel = 'none' | 'invite' | 'settings';
+
+/** `Sudoku · Hard`; a game with one table (`standard`) is its title alone. */
+export function rankingTitle(gameId: string, paramsKey: string, t: T): string {
+  const game = gameTitle(gameId) ?? gameId;
+  return paramsKey === 'standard' ? game : `${game} · ${tierLabel(paramsKey, t)}`;
+}
 
 export function challengeTitle(challenge: Challenge, t: T): string {
   const game = gameTitle(challenge.gameId) ?? challenge.gameId;
@@ -52,6 +57,7 @@ export function ClubScreen({
   onPanel,
   onBack,
   onOpenChallenge,
+  onOpenRanking,
   onDisconnect,
   onRenamed,
 }: {
@@ -60,6 +66,7 @@ export function ClubScreen({
   onPanel: (panel: ClubPanel) => void;
   onBack: () => void;
   onOpenChallenge: (challengeId: string) => void;
+  onOpenRanking: (gameId: string, paramsKey: string) => void;
   onDisconnect: () => Promise<void>;
   /** The server's name for the club differs from the cached one. */
   onRenamed: (clubName: string) => void;
@@ -97,20 +104,19 @@ export function ClubScreen({
         }
       }
       const todayDate = todayLocal();
-      const [club, challenges, today, records] = await Promise.all([
+      // Three requests, no more (club.md §10).
+      const [club, today, rankings] = await Promise.all([
         api.club(),
-        api.challenges(),
         api.challenges({ daily: todayDate }),
-        api.records(),
+        api.rankings(),
       ]);
       if (!alive.current) return;
       setData({
         clubName: club.club.name,
         members: club.members,
-        challenges,
         today,
         todayDate,
-        records,
+        rankings,
       });
       if (club.club.name !== connection.clubName) onRenamed(club.club.name);
     } catch (e) {
@@ -132,17 +138,12 @@ export function ClubScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connection.endpoint]);
 
-  const known = (data?.challenges ?? []).filter((c) => contractFor(c.gameId) !== null);
   // Held to the date asked for: a server that predates `?daily=` ignores the
   // parameter and answers with its ordinary list, which is not today's.
   const todays = (data?.today ?? []).filter(
     (c) => contractFor(c.gameId) !== null && c.daily === data?.todayDate,
   );
-  const todayIds = new Set(todays.map((c) => c.id));
-  const rest = known.filter((c) => !todayIds.has(c.id));
-  const open = rest.filter((c) => !c.mine);
-  const played = rest.filter((c) => c.mine);
-  const records = (data?.records ?? []).filter((r) => contractFor(r.gameId) !== null);
+  const rankings = (data?.rankings ?? []).filter((r) => contractFor(r.gameId) !== null);
 
   const remove = async (member: Member) => {
     setConfirmRemove(null);
@@ -219,39 +220,30 @@ export function ClubScreen({
               ))}
             </>
           ) : null}
-          <h2 className="home-section-label club-section">{t('clubChallenges')}</h2>
-          {open.length === 0 ? <p className="club-quiet">{t('clubNothingYet')}</p> : null}
-          {open.map((c) => (
-            <ChallengeRow key={c.id} challenge={c} t={t} onOpen={onOpenChallenge} />
-          ))}
-
-          {played.length > 0 ? (
-            <>
-              <h2 className="home-section-label club-section">{t('clubPlayed')}</h2>
-              {played.map((c) => (
-                <ChallengeRow key={c.id} challenge={c} t={t} onOpen={onOpenChallenge} />
-              ))}
-            </>
-          ) : null}
-
-          {records.length > 0 ? (
-            <>
-              <h2 className="home-section-label club-section">{t('clubRecords')}</h2>
-              {records.map((r) => (
-                <div
-                  className="settings-row settings-row-static club-line"
-                  key={`${r.gameId}:${r.paramsKey}`}
-                >
-                  <span className="settings-row-label">
-                    {`${gameTitle(r.gameId) ?? r.gameId} · ${tierLabel(r.paramsKey, t)}`}
-                  </span>
-                  <span className="settings-row-value">
-                    {`${axisText(r.gameId, r.facts, t)}  ${r.nickname}`.trim()}
-                  </span>
-                </div>
-              ))}
-            </>
-          ) : null}
+          <h2 className="home-section-label club-section">{t('clubRankings')}</h2>
+          {rankings.length === 0 ? <p className="club-quiet">{t('clubNothingYet')}</p> : null}
+          {rankings.map((r) => {
+            const title = rankingTitle(r.gameId, r.paramsKey, t);
+            const leader =
+              `1. ${r.leader.nickname} ${axisText(r.gameId, r.leader.facts, t)}`.trim();
+            const entries = t('clubEntries', { n: r.entryCount });
+            return (
+              <button
+                type="button"
+                className="settings-row club-line"
+                key={`${r.gameId}:${r.paramsKey}`}
+                aria-label={`${title} · ${leader} · ${entries}`}
+                onClick={() => onOpenRanking(r.gameId, r.paramsKey)}
+              >
+                <span className="settings-row-label club-ranking-title">{title}</span>
+                <span className="settings-row-value club-ranking-leader">{leader}</span>
+                <span className="settings-row-value club-ranking-count">{entries}</span>
+                <span className="settings-row-chevron" aria-hidden="true">
+                  <IconChevronRight />
+                </span>
+              </button>
+            );
+          })}
 
           <h2 className="home-section-label club-section">{t('clubMembers')}</h2>
           {actionError ? (

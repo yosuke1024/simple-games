@@ -5,7 +5,9 @@
  * rematch. A loss is stated, never scolded; there is no revival to buy and no
  * ad to watch for one more hand (docs/ADS_POLICY.md).
  */
+import { useMemo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { useResultReveal } from '@/ui/useResultReveal';
@@ -31,9 +33,18 @@ export function GinRummyResultOverlay({
   const { t } = useSettings();
   // The last settled hand gets its beat before the card covers it (§11.2).
   const revealed = useResultReveal(session.status !== 'playing' && lastResult !== null);
+  const mine = lastResult?.mine ?? 0;
+  const theirs = lastResult?.theirs ?? 0;
+  // The match's facts, once: the share's strings and the Club's figures are
+  // read from the same fields (docs/architecture/club.md §6-1).
+  const facts = useMemo(() => ({ score: mine, cpuScore: theirs }), [mine, theirs]);
   if (!revealed || !lastResult) return null;
 
   const won = session.status === 'won';
+  const details = [
+    { label: t('ginYou'), value: String(mine) },
+    { label: t('ginCpu'), value: String(theirs) },
+  ];
   const title = won ? t('ginWinTitle') : t('ginLoseTitle');
   const record = stats[session.difficulty];
   // The hand that carried the match past a hundred, said in one line so the
@@ -85,13 +96,15 @@ export function GinRummyResultOverlay({
         </div>
         {/* The final scores only — the per-hand decider line above is history
             for this match, not a fact the share line may repeat. */}
-        <ShareAction
+        <ShareAction gameId="gin-rummy" outcome={won ? 'completed' : 'played'} details={details} />
+        <ClubResultAction
           gameId="gin-rummy"
-          outcome={won ? 'completed' : 'played'}
-          details={[
-            { label: t('ginYou'), value: String(lastResult.mine) },
-            { label: t('ginCpu'), value: String(lastResult.theirs) },
-          ]}
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />

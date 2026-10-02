@@ -6,6 +6,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import type { ShareDetail } from '@/services/share/message';
@@ -47,6 +48,13 @@ export function NonoResultOverlay({
     { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
     { label: t('nonoHintsUsed'), value: String(session.hintCount) },
   ];
+
+  // The same session fields as `details`: the Club's figures and the share's strings
+  // never disagree (docs/architecture/club.md §6-1).
+  const facts = {
+    elapsedSeconds: session.elapsedSeconds,
+    hints: session.hintCount,
+  };
 
   return (
     <div className="overlay overlay-result">
@@ -113,6 +121,15 @@ export function NonoResultOverlay({
           </button>
         </div>
         <ShareAction gameId="nonogram" outcome="completed" details={details} />
+        <ClubResultAction
+          gameId="nonogram"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ size: session.size }}
+          boardDigest={null}
+        />
       </div>
       <ResultAdSlot />
     </div>

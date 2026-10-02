@@ -1,6 +1,6 @@
 /**
  * The Club House screens (docs/architecture/club.md §9). One component owns
- * the small stack of screens — Discover / All Clubs / Join / Club / Challenge
+ * the small stack of screens — Discover / All Clubs / Join / Club / Challenge / Ranking
  * — and the hardware back button, so Core sees a single mounted thing that
  * calls `onBack` at the root. Nothing here polls; every request starts from
  * something the person did (club.md §10).
@@ -25,6 +25,7 @@ import { ChallengeScreen } from './ChallengeScreen';
 import { ClubScreen, type ClubPanel } from './ClubScreen';
 import { ScreenFrame } from './common';
 import { JoinScreen } from './JoinScreen';
+import { RankingScreen } from './RankingScreen';
 import './club.css';
 
 type Screen =
@@ -32,7 +33,8 @@ type Screen =
   | { kind: 'all' }
   | { kind: 'join'; invite: ClubInvite | null; publicClub?: boolean }
   | { kind: 'club'; endpoint: string; panel: ClubPanel }
-  | { kind: 'challenge'; endpoint: string; challengeId: string };
+  | { kind: 'challenge'; endpoint: string; challengeId: string }
+  | { kind: 'ranking'; endpoint: string; gameId: string; paramsKey: string };
 
 /** What the first screen is, given who this device has joined (club.md §9「入口」). */
 function rootFor(connections: readonly ClubConnection[]): Screen[] {
@@ -225,6 +227,9 @@ export function ClubRoot({
           onOpenChallenge={(challengeId) =>
             push({ kind: 'challenge', endpoint: connection.endpoint, challengeId })
           }
+          onOpenRanking={(gameId, paramsKey) =>
+            push({ kind: 'ranking', endpoint: connection.endpoint, gameId, paramsKey })
+          }
           onDisconnect={() => disconnect(connection.endpoint)}
           onRenamed={(clubName) => {
             void updateClubName(connection.endpoint, clubName)
@@ -247,6 +252,20 @@ export function ClubRoot({
           challengeId={top.challengeId}
           onBack={stepBack}
           onPlay={onPlayChallenge}
+        />
+      );
+    }
+
+    case 'ranking': {
+      const connection = connectionOf(top.endpoint);
+      if (!connection) return null;
+      return (
+        <RankingScreen
+          key={`${connection.endpoint}:${top.gameId}:${top.paramsKey}`}
+          connection={connection}
+          gameId={top.gameId}
+          paramsKey={top.paramsKey}
+          onBack={stepBack}
         />
       );
     }

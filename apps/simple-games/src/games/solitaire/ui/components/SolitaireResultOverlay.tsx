@@ -7,6 +7,7 @@
 import type { ShareDetail } from '@/services/share/message';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
@@ -42,6 +43,12 @@ export function SolitaireResultOverlay({
   if (session.hintCount > 0) {
     details.push({ label: t('solHintsUsed'), value: String(session.hintCount) });
   }
+
+  const facts = {
+    moves: session.moveCount,
+    elapsedSeconds: session.elapsedSeconds,
+    hints: session.hintCount,
+  };
 
   return (
     <div className="overlay overlay-result">
@@ -130,6 +137,15 @@ export function SolitaireResultOverlay({
           </button>
         </div>
         <ShareAction gameId="solitaire" outcome="completed" details={details} />
+        <ClubResultAction
+          gameId="solitaire"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ drawThree: session.drawThree }}
+          boardDigest={null}
+        />
       </div>
       <ResultAdSlot />
     </div>

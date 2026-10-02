@@ -14,6 +14,9 @@ import {
   validateInviteResponse,
   validateJoinResponse,
   validateList,
+  validateRankingSubmitResponse,
+  validateRankingSummary,
+  validateRankingTable,
   validateResult,
   type Challenge,
   type ChallengeCreate,
@@ -23,6 +26,10 @@ import {
   type Hosting,
   type InviteResponse,
   type JoinResponse,
+  type RankingSubmit,
+  type RankingSubmitResponse,
+  type RankingSummary,
+  type RankingTable,
   type Result,
   type ResultSubmission,
 } from './types';
@@ -40,6 +47,12 @@ export interface ClubClient {
   results(id: string): Promise<Result[]>;
   submitResult(id: string, body: ResultSubmission): Promise<Result>;
   records(): Promise<ClubRecord[]>;
+  /** The caller's best result into a game × mode table (club.md §16). */
+  submitRanking(body: RankingSubmit): Promise<RankingSubmitResponse>;
+  /** Every table of the Club: its size and its leader. */
+  rankings(): Promise<RankingSummary[]>;
+  /** One table: the top rows and the caller's own row. */
+  ranking(gameId: string, paramsKey: string, top?: number): Promise<RankingTable>;
   hosting(): Promise<Hosting>;
   invite(): Promise<InviteResponse>;
   rotateInvite(): Promise<InviteResponse>;
@@ -170,6 +183,23 @@ export function createClient(
     },
     async records() {
       return check(validateList(await request('GET', '/records'), validateClubRecord));
+    },
+    async submitRanking(body) {
+      return check(validateRankingSubmitResponse(await request('POST', '/rankings/results', body)));
+    },
+    async rankings() {
+      return check(validateList(await request('GET', '/rankings'), validateRankingSummary));
+    },
+    async ranking(gameId, paramsKey, top) {
+      const query = top === undefined ? '' : `?top=${encodeURIComponent(String(top))}`;
+      return check(
+        validateRankingTable(
+          await request(
+            'GET',
+            `/rankings/${encodeURIComponent(gameId)}/${encodeURIComponent(paramsKey)}${query}`,
+          ),
+        ),
+      );
     },
     async hosting() {
       return check(validateHosting(await request('GET', '/hosting')));

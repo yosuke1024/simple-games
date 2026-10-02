@@ -10,6 +10,10 @@ import {
   validateJoinResponse,
   validateList,
   validateMember,
+  validateRankingEntry,
+  validateRankingSubmitResponse,
+  validateRankingSummary,
+  validateRankingTable,
   validateResult,
   type ResultSubmission,
 } from './types';
@@ -134,6 +138,46 @@ describe('validators', () => {
     expect(
       validateResult({ memberId: 'a', nickname: 'b', submittedAt: 'c', outcome: 'won' }),
     ).toBeNull();
+  });
+
+  it('ranking validators accept the documented shapes and reject the rest', () => {
+    const entry = {
+      memberId: 'm',
+      nickname: 'Ken',
+      submittedAt: 'x',
+      facts: { score: 1 },
+      seed: 's',
+      boardDigest: null,
+    };
+    expect(validateRankingEntry(entry)).toEqual(entry);
+    expect(validateRankingEntry({ ...entry, boardDigest: 5 })).toBeNull();
+    expect(validateRankingEntry({ ...entry, seed: undefined })).toBeNull();
+    const summary = { gameId: 'g', paramsKey: 'standard', entryCount: 3, leader: entry };
+    expect(validateRankingSummary(summary)).toEqual(summary);
+    expect(validateRankingSummary({ ...summary, entryCount: -1 })).toBeNull();
+    expect(validateRankingSummary({ ...summary, leader: {} })).toBeNull();
+    const table = { gameId: 'g', paramsKey: 'k', entryCount: 3, entries: [entry], me: null };
+    expect(validateRankingTable(table)).toEqual(table);
+    expect(validateRankingTable({ ...table, me: { rank: 87, entry } })?.me?.rank).toBe(87);
+    expect(validateRankingTable({ ...table, me: { rank: 0, entry } })).toBeNull();
+    // Below the server's scan ceiling the rank is unknown, not wrong (club.md §16-1).
+    expect(validateRankingTable({ ...table, me: { rank: null, entry } })?.me?.rank).toBeNull();
+    expect(validateRankingTable({ ...table, entries: [{}] })).toBeNull();
+    const sent = {
+      gameId: 'g',
+      paramsKey: 'k',
+      improved: false,
+      entry: null,
+      entryCount: 0,
+    };
+    expect(validateRankingSubmitResponse(sent)).toEqual(sent);
+    expect(validateRankingSubmitResponse({ ...sent, improved: 'no' })).toBeNull();
+    expect(validateRankingSubmitResponse({ ...sent, entry: {} })).toBeNull();
+    for (const bad of [null, undefined, 1, 'x', [], {}]) {
+      expect(validateRankingSummary(bad)).toBeNull();
+      expect(validateRankingTable(bad)).toBeNull();
+      expect(validateRankingSubmitResponse(bad)).toBeNull();
+    }
   });
 
   it('validateList rejects non-arrays and any bad element', () => {

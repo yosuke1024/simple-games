@@ -7,6 +7,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import type { ShareDetail } from '@/services/share/message';
@@ -37,6 +38,13 @@ export function MemoryResultOverlay({
     { label: t('movesLabel'), value: String(session.moveCount) },
     { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
   ];
+
+  // The same session fields as `details`: the Club's figures and the share's strings
+  // never disagree (docs/architecture/club.md §6-1).
+  const facts = {
+    elapsedSeconds: session.elapsedSeconds,
+    moves: session.moveCount,
+  };
 
   return (
     <div className="overlay overlay-result">
@@ -109,6 +117,15 @@ export function MemoryResultOverlay({
           </button>
         </div>
         <ShareAction gameId="memory-match" outcome="completed" details={details} />
+        <ClubResultAction
+          gameId="memory-match"
+          outcome="completed"
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          boardDigest={null}
+        />
       </div>
       <ResultAdSlot />
     </div>

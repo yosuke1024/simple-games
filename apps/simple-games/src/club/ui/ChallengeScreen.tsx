@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '../api/client';
 import type { Challenge, Result } from '../api/types';
-import { challengeStartOf, contractFor, rankResults } from '../contract/challenge';
+import { contractFor, gameTitle, rankResults } from '../contract/challenge';
 import { GAMES } from '@/app/registry';
 import { useSettings } from '@/state/SettingsContext';
 import type { ClubConnection } from '@/storage/schemas';
@@ -61,16 +61,14 @@ export function ChallengeScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [challengeId, connection.endpoint]);
 
-  const start = challenge ? challengeStartOf(challenge) : null;
   const ranked = challenge && results ? rankResults(contractFor(challenge.gameId), results) : [];
 
   const gameId = challenge ? (GAMES.find((g) => g.id === challenge.gameId)?.id ?? null) : null;
 
   const play = () => {
-    if (!challenge || !start || gameId === null) return;
+    if (!challenge || gameId === null) return;
     onPlay({
       gameId,
-      challenge: start,
       active: {
         endpoint: connection.endpoint,
         clubName: connection.clubName,
@@ -114,12 +112,15 @@ export function ChallengeScreen({
               date: dateLabel(challenge.createdAt, locale),
             })}
           </p>
-          {start ? (
+          {gameId !== null && contractFor(challenge.gameId) !== null ? (
             <>
               {/* A replay sends nothing (club.md §6-3), so it promises nothing. */}
               {!challenge.mine && (
                 <p className="club-disclosure">
-                  {t('clubDisclosure', { club: connection.clubName })}
+                  {t('clubDailyDisclosure', {
+                    game: gameTitle(challenge.gameId) ?? challenge.gameId,
+                    club: connection.clubName,
+                  })}
                 </p>
               )}
               <button type="button" className="btn btn-primary" onClick={play}>

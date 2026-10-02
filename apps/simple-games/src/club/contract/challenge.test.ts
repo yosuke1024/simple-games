@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Challenge, Result } from '../api/types';
-import { challengeStartOf, contractFor, gameTitle, rankResults } from './challenge';
+import type { Result } from '../api/types';
+import { contractFor, gameTitle, rankResults } from './challenge';
 
 const res = (memberId: string, outcome: Result['outcome'], facts: unknown): Result => ({
   memberId,
@@ -14,7 +14,7 @@ const sd = (elapsedSeconds: number) => ({ elapsedSeconds, mistakes: 0, hints: 0 
 describe('contractFor / gameTitle', () => {
   it('reads the registry', () => {
     expect(contractFor('sudoku')?.order).toBe('elapsedSeconds');
-    expect(contractFor('solitaire')).toBeNull();
+    expect(contractFor('checkers')).toBeNull(); // win/lose only: no table (club.md §16)
     expect(contractFor('nope')).toBeNull();
     expect(gameTitle('sudoku')).toBe('Sudoku');
     expect(gameTitle('nope')).toBeNull();
@@ -48,34 +48,5 @@ describe('rankResults', () => {
     const out = rankResults(null, [res('a', 'completed', sd(1)), res('b', 'completed', sd(2))]);
     expect(out.map((r) => r.rank)).toEqual([null, null]);
     expect(out.map((r) => r.result.memberId)).toEqual(['a', 'b']);
-  });
-});
-
-describe('challengeStartOf', () => {
-  const base: Challenge = {
-    id: 'c',
-    gameId: 'sudoku',
-    contractVersion: 1,
-    params: { difficulty: 'easy', junk: 1 },
-    seed: 'sudoku-club-1',
-    boardDigest: 'sd1:00000000',
-    title: null,
-    createdBy: { id: 'm', nickname: 'n' },
-    createdAt: 'x',
-    resultCount: 0,
-    mine: false,
-    daily: null,
-  };
-  it('validates params through the contract', () => {
-    expect(challengeStartOf(base)).toEqual({
-      seed: 'sudoku-club-1',
-      params: { difficulty: 'easy' },
-      boardDigest: 'sd1:00000000',
-    });
-  });
-  it('is null for an unknown game or bad params', () => {
-    expect(challengeStartOf({ ...base, gameId: 'nope' })).toBeNull();
-    expect(challengeStartOf({ ...base, gameId: 'solitaire' })).toBeNull();
-    expect(challengeStartOf({ ...base, params: { difficulty: 'x' } })).toBeNull();
   });
 });

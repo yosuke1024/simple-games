@@ -6,6 +6,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
+import { ClubResultAction } from '@/ui/components/ClubResultAction';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
@@ -35,6 +36,19 @@ export function Sudoku6x6ResultOverlay({
 
   // A daily is one board a day: there is no other board to offer (§9).
   const canStartNew = session.mode === 'difficulty';
+
+  const details = [
+    { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
+    { label: t('sudoku6x6Mistakes'), value: String(session.mistakeCount) },
+    { label: t('sudoku6x6HintsUsed'), value: String(session.hintCount) },
+  ];
+  // The same session fields as `details`: the Club's figures and the share's strings
+  // never disagree (docs/architecture/club.md §6-1).
+  const facts = {
+    elapsedSeconds: session.elapsedSeconds,
+    mistakes: session.mistakeCount,
+    hints: session.hintCount,
+  };
 
   return (
     <div className="overlay overlay-result">
@@ -100,14 +114,15 @@ export function Sudoku6x6ResultOverlay({
             {t('backHome')}
           </button>
         </div>
-        <ShareAction
+        <ShareAction gameId="sudoku-6x6" outcome="completed" details={details} />
+        <ClubResultAction
           gameId="sudoku-6x6"
           outcome="completed"
-          details={[
-            { label: t('timeLabel'), value: formatDuration(session.elapsedSeconds) },
-            { label: t('sudoku6x6Mistakes'), value: String(session.mistakeCount) },
-            { label: t('sudoku6x6HintsUsed'), value: String(session.hintCount) },
-          ]}
+          details={details}
+          facts={facts}
+          seed={session.seed}
+          params={{ difficulty: session.difficulty }}
+          boardDigest={null}
         />
       </div>
       <ResultAdSlot />
