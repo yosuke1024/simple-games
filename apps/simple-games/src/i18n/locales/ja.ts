@@ -160,4 +160,5 @@ export const ja: Messages = {
   clubSendResult: 'Club に送る',
   clubResultSent: '{club} に送りました',
   clubResultPending: 'Club を開いたときに送ります',
+  clubResultNotSent: '{club} に送れませんでした',
 };

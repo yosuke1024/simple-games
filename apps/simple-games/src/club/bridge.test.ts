@@ -108,13 +108,19 @@ describe('submitActive', () => {
     ]);
   });
 
-  it('queued when unreachable', async () => {
-    const f = vi.fn().mockRejectedValue(new TypeError('offline'));
+  it.each([
+    ['no response', () => Promise.reject(new TypeError('offline'))],
+    ['429 rate_limited', () => Promise.resolve(err(429, 'rate_limited'))],
+    ['500 internal_error', () => Promise.resolve(err(500, 'internal_error'))],
+    ['a 201 whose body is not a result', () => Promise.resolve(ok(201, { nope: true }))],
+  ])('queued on %s: the result waits for the next chance', async (_what, answer) => {
+    const f = vi.fn().mockImplementation(answer);
     const { bridge, kv } = await setup(f);
     expect(await bridge.submitActive(challengeResult)).toBe('queued');
     const pending = await pendingFor(E, kv);
     expect(pending).toHaveLength(1);
     expect(pending[0]!.challengeId).toBe('ch_1');
+    expect(pending[0]!.result.facts).toEqual(challengeResult.facts);
   });
 
   it.each([
@@ -122,7 +128,11 @@ describe('submitActive', () => {
     [409, 'board_mismatch'],
     [404, 'not_found'],
     [401, 'unauthorized'],
-  ])('rejected on %i %s', async (status, code) => {
+    [400, 'invalid_request'],
+    [403, 'forbidden'],
+    [413, 'too_large'],
+    [400, 'unsupported_version'],
+  ])('rejected on %i %s: final, so never queued', async (status, code) => {
     const f = vi.fn().mockResolvedValue(err(status, code));
     const { bridge, kv } = await setup(f);
     expect(await bridge.submitActive(challengeResult)).toBe('rejected');

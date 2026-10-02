@@ -295,14 +295,14 @@ describe('a device that has joined', () => {
 describe('an invite link in the browser', () => {
   it('opens the Join entry at boot and takes the token out of the address', async () => {
     capacitorMock.platform = 'web';
-    window.history.replaceState(null, '', '/join#invite=abc_DEF-123');
+    window.history.replaceState(null, '', '/join#invite=abc_DEF-123_ghi-456');
 
     renderShell();
     await settle();
 
     expect(loader).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('club-entry')).toHaveTextContent('invite');
-    expect(screen.getByTestId('club-invite')).toHaveTextContent('abc_DEF-123');
+    expect(screen.getByTestId('club-invite')).toHaveTextContent('abc_DEF-123_ghi-456');
     expect(window.location.hash).toBe('');
     expect(window.location.pathname).toBe('/join');
   });

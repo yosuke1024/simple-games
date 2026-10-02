@@ -160,4 +160,5 @@ export const id: Messages = {
   clubSendResult: 'Kirim ke Club',
   clubResultSent: 'Terkirim ke {club}',
   clubResultPending: 'Akan dikirim saat Anda membuka Club',
+  clubResultNotSent: 'Tidak dapat mengirim ke {club}',
 };

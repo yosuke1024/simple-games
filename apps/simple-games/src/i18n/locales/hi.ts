@@ -160,4 +160,5 @@ export const hi: Messages = {
   clubSendResult: 'Club को भेजें',
   clubResultSent: '{club} को भेजा गया',
   clubResultPending: 'Club खोलने पर भेजा जाएगा',
+  clubResultNotSent: '{club} को नहीं भेजा जा सका',
 };

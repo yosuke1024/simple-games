@@ -13,17 +13,10 @@ import type {
   ClubSendOutcome,
 } from '@/ui/clubBridge';
 import { createClient } from './api/client';
-import { ClubApiError } from './api/errors';
+import { isFinalError } from './api/errors';
 import { contractFor } from './contract/challenge';
 import { loadClubConnections, summarize } from './storage/connections';
 import { enqueueResult, flushOutbox } from './storage/outbox';
-
-const REJECTED_CODES = new Set([
-  'already_submitted',
-  'board_mismatch',
-  'not_found',
-  'unauthorized',
-]);
 
 export function createBridge(
   active: () => ActiveChallenge | null,
@@ -84,20 +77,18 @@ export function createBridge(
         await client.submitResult(challenge.challengeId, body);
         return 'sent';
       } catch (error) {
-        if (error instanceof ClubApiError) {
-          if (error.code === 'unreachable') {
-            const item: ClubOutboxItem = {
-              endpoint: challenge.endpoint,
-              challengeId: challenge.challengeId,
-              result: body,
-              createdAt: new Date().toISOString(),
-            };
-            await enqueueResult(item, kv);
-            return 'queued';
-          }
-          if (REJECTED_CODES.has(error.code)) return 'rejected';
-        }
-        return 'rejected';
+        // club.md §10: a final answer is dropped; everything else — no
+        // response, 429, 5xx, a body that did not parse — waits in the outbox
+        // for the next time this Club is opened or a result is sent.
+        if (isFinalError(error)) return 'rejected';
+        const item: ClubOutboxItem = {
+          endpoint: challenge.endpoint,
+          challengeId: challenge.challengeId,
+          result: body,
+          createdAt: new Date().toISOString(),
+        };
+        await enqueueResult(item, kv);
+        return 'queued';
       }
     },
   };

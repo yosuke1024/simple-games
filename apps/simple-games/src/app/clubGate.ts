@@ -19,7 +19,7 @@
 import type { KVStore } from '../storage/kv';
 import { preferencesKV } from '../storage/kv';
 import { loadRecord } from '../storage/repo';
-import { clubConnectionsSchema } from '../storage/schemas';
+import { clubConnectionsSchema, isClubEndpoint } from '../storage/schemas';
 import type { ClubConnectionSummary, ClubInvite, ClubModule } from '../ui/clubBridge';
 
 let connections: readonly ClubConnectionSummary[] = [];
@@ -86,17 +86,22 @@ export function loadClubForEntry(): Promise<ClubModule | null> {
 /**
  * The invite in the address, if the page was opened from one (club.md §7-1):
  * a path ending in `/join` and `#invite=<token>`. The fragment is removed at
- * once — before anyone joins — so the token stays out of the address bar,
- * history and bookmarks. Only the shape is read here; the Club layer checks
- * the endpoint and the token when it joins.
+ * once — before anyone joins, and whether or not the invite is accepted — so
+ * the token stays out of the address bar, history and bookmarks. The endpoint
+ * (the page's origin) and the token pass the same rule as `club/invite.ts`:
+ * https, or http to the loopback for development (§4-1), and a token of the
+ * shape the server issues. The join screen trusts what it is handed, so the
+ * check happens here.
  */
+const INVITE_TOKEN = /^[A-Za-z0-9_-]{16,128}$/;
+
 export function takeInviteFromLocation(
   loc: Pick<Location, 'href' | 'pathname' | 'hash'> = window.location,
   replaceState: (href: string) => void = (href) =>
     window.history.replaceState(history.state, '', href),
 ): ClubInvite | null {
-  if (!/\/join$/.test(loc.pathname)) return null;
-  const match = /(?:^#|&)invite=([A-Za-z0-9_-]+)(?:&|$)/.exec(loc.hash);
+  if (!/\/join\/?$/.test(loc.pathname)) return null;
+  const match = /(?:^#|&)invite=([^&]*)(?:&|$)/.exec(loc.hash);
   if (match === null) return null;
   let endpoint: string;
   try {
@@ -105,7 +110,9 @@ export function takeInviteFromLocation(
     return null;
   }
   replaceState(loc.href.replace(/#.*$/, ''));
-  return { endpoint, token: match[1]! };
+  const token = match[1]!;
+  if (!INVITE_TOKEN.test(token) || !isClubEndpoint(endpoint)) return null;
+  return { endpoint, token };
 }
 
 /** Test seam: swap the dynamic import and forget what was loaded. */

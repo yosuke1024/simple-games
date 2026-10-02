@@ -2,7 +2,7 @@
 import { loadRecord, saveRecord } from '@/storage/repo';
 import { CLUB_OUTBOX_MAX, clubOutboxSchema, type ClubOutboxItem } from '@/storage/schemas';
 import type { KVStore } from '@/storage/kv';
-import { ClubApiError } from '../api/errors';
+import { isFinalError } from '../api/errors';
 import type { ClubClient } from '../api/client';
 
 async function load(kv?: KVStore): Promise<ClubOutboxItem[]> {
@@ -25,9 +25,18 @@ export async function pendingFor(endpoint: string, kv?: KVStore): Promise<ClubOu
   return (await load(kv)).filter((i) => i.endpoint === endpoint);
 }
 
-const DROP_CODES = new Set(['already_submitted', 'board_mismatch', 'not_found', 'unauthorized']);
+/**
+ * Forgets every result queued for an endpoint — when the connection goes
+ * (club.md §4-2: an item whose connection is gone is dropped), since nothing
+ * could ever send it and it would only crowd out the others at the cap.
+ */
+export async function dropOutboxFor(endpoint: string, kv?: KVStore): Promise<void> {
+  const current = await load(kv);
+  const kept = current.filter((i) => i.endpoint !== endpoint);
+  if (kept.length !== current.length) await save(kept, kv);
+}
 
-/** Oldest first. Dropped on a code that can never succeed; stops (keeping the rest) on any other failure. */
+/** Oldest first. Dropped on a code that can never succeed (api/errors.ts); stops (keeping the rest) on any other failure. */
 export async function flushOutbox(
   endpoint: string,
   client: ClubClient,
@@ -40,7 +49,7 @@ export async function flushOutbox(
       await client.submitResult(item.challengeId, item.result);
       sent += 1;
     } catch (error) {
-      if (!(error instanceof ClubApiError && DROP_CODES.has(error.code))) break;
+      if (!isFinalError(error)) break;
     }
     // Re-read: another writer may have appended meanwhile.
     const current = await load(kv);

@@ -157,4 +157,5 @@ export const th: Messages = {
   clubSendResult: 'ส่งไปยัง Club',
   clubResultSent: 'ส่งไปยัง {club} แล้ว',
   clubResultPending: 'จะส่งเมื่อคุณเปิด Club',
+  clubResultNotSent: 'ส่งไปยัง {club} ไม่ได้',
 };

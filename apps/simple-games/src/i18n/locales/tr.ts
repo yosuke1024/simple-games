@@ -159,4 +159,5 @@ export const tr: Messages = {
   clubSendResult: "Club'a gönder",
   clubResultSent: "{club}'a gönderildi",
   clubResultPending: "Club'u açınca gönderilir",
+  clubResultNotSent: '{club} adlı kulübe gönderilemedi',
 };

@@ -16,7 +16,9 @@
  *   Challenge screen said so before the player pressed Play (「開示が先、
  *   送信が後」); a tap here would be a step, not consent. A replay of a
  *   challenge this device already answered draws nothing — one result per
- *   member (club.md §6-3).
+ *   member (club.md §6-3). The line says what happened (club.md §10): sent,
+ *   waiting in the outbox for the next time the Club is opened, or refused
+ *   for good.
  *
  * The figures travel exactly as the result screen shows them: `facts` is
  * built from the same session fields as `details` (the share's strings), and
@@ -115,11 +117,13 @@ export function ClubResultAction({
     return (
       <div className="result-share">
         <span className="result-share-note" role="status">
-          {state.kind === 'done' && state.outcome === 'sent'
-            ? t('clubResultSent', { club: state.clubName })
-            : state.kind === 'done'
-              ? t('clubResultPending')
-              : ''}
+          {state.kind !== 'done'
+            ? ''
+            : state.outcome === 'sent'
+              ? t('clubResultSent', { club: state.clubName })
+              : state.outcome === 'queued'
+                ? t('clubResultPending')
+                : t('clubResultNotSent', { club: state.clubName })}
         </span>
       </div>
     );

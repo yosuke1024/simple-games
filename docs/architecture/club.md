@@ -593,7 +593,7 @@ https://<endpoint>/join#invite=<inviteToken>
 - サーバは `/join`(末尾スラッシュ無し)で Web ビルドの `index.html` を返す。
   `/join/` は `/join` へ redirect する — Web ビルドは `base: './'` なので、
   `/join/` で開くと `./assets/` が `/join/assets/` に解決して壊れる。
-- Web ビルド側(`club/invite.ts`)は `location.pathname` が `/join` で終わり、hash に
+- Web ビルド側(`app/clubGate.ts` の `takeInviteFromLocation`)は `location.pathname` が `/join` で終わり、hash に
   `invite=` があれば招待と読む。読んだら `history.replaceState` で fragment を
   **即座に消す**(参加の前でも)。token が住所欄・履歴・ブックマークに残らないため。
 - pixapps.ai の Web 版(`/simple-games/play/`)にはこの経路は存在しない
@@ -871,7 +871,12 @@ Push は後続でも作らない(PRODUCT_PRINCIPLES「Club House」)。**公開�
 - **未送信キュー**(§4-2): 結果の POST が失敗したら `sg.clubOutbox` へ。次に
   その Club の画面を開いたとき、または次の結果を送るときに、古い順に送る
   (タイマー無し)。`already_submitted` / `board_mismatch` / `not_found` /
-  `unauthorized` が返ったら**捨てる**(再送しても通らない)。
+  `unauthorized` が返ったら**捨てる**(再送しても通らない)。body そのものが拒まれた
+  `invalid_request` / `forbidden` / `too_large` / `unsupported_version` も同じ(先頭で
+  詰まると、その Club の後続が一つも送れないため)。応答が無い・429・5xx・形の崩れた
+  応答は再送の対象。結果画面の 1 行は、送れたら `Sent to <club>`、キューに入ったら
+  `Will send when you open the Club`、捨てたら `Could not send to <club>`。Club との接続を
+  切ったら、その Club 宛てのキューも捨てる(§4-2)。
 - **Club ごとに独立**: 1 つのサーバの障害・401 は、その接続の画面にだけ現れる。
   All Clubs の一覧は `sg.club` のキャッシュから描くので、落ちているサーバの名前も出る。
 - **`X-Club-Api` が知らない版**: 画面に 1 行出して、その Club へは何も送らない。

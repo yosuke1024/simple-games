@@ -94,10 +94,10 @@ describe('(c) an invite link', () => {
   it('reads the endpoint and the token, and strips the fragment at once', () => {
     const replaceState = vi.fn();
     const invite = takeInviteFromLocation(
-      at('https://club.example.com/join#invite=abcDEF123_-xyz'),
+      at('https://club.example.com/join#invite=abcDEF123_-xyz01'),
       replaceState,
     );
-    expect(invite).toEqual({ endpoint: 'https://club.example.com', token: 'abcDEF123_-xyz' });
+    expect(invite).toEqual({ endpoint: 'https://club.example.com', token: 'abcDEF123_-xyz01' });
     expect(replaceState).toHaveBeenCalledTimes(1);
     expect(replaceState).toHaveBeenCalledWith('https://club.example.com/join');
   });
@@ -117,6 +117,28 @@ describe('(c) an invite link', () => {
       takeInviteFromLocation(at('https://club.example.com/join#other=1'), replaceState),
     ).toBeNull();
     expect(replaceState).not.toHaveBeenCalled();
+  });
+
+  it('refuses an endpoint that is not https or the loopback, and still strips the fragment', () => {
+    const replaceState = vi.fn();
+    expect(
+      takeInviteFromLocation(
+        at('http://192.168.1.20:8787/join#invite=abcDEF123_-xyz01'),
+        replaceState,
+      ),
+    ).toBeNull();
+    expect(replaceState).toHaveBeenCalledWith('http://192.168.1.20:8787/join');
+    expect(
+      takeInviteFromLocation(at('http://localhost:8787/join#invite=abcDEF123_-xyz01'), vi.fn()),
+    ).toEqual({ endpoint: 'http://localhost:8787', token: 'abcDEF123_-xyz01' });
+  });
+
+  it('refuses a token that is not the shape the server issues, and still strips the fragment', () => {
+    const replaceState = vi.fn();
+    expect(
+      takeInviteFromLocation(at('https://club.example.com/join#invite=short'), replaceState),
+    ).toBeNull();
+    expect(replaceState).toHaveBeenCalledWith('https://club.example.com/join');
   });
 
   it('ignores an invite on a path that is not /join', () => {

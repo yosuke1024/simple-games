@@ -161,4 +161,5 @@ export const de: Messages = {
   clubSendResult: 'An den Club senden',
   clubResultSent: 'An {club} gesendet',
   clubResultPending: 'Wird gesendet, wenn du den Club öffnest',
+  clubResultNotSent: 'Konnte nicht an {club} senden',
 };

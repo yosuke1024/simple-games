@@ -3,7 +3,7 @@ import { createMemoryKV } from '@/storage/kv';
 import { CLUB_OUTBOX_MAX, type ClubOutboxItem } from '@/storage/schemas';
 import type { ClubClient } from '../api/client';
 import { ClubApiError, type ClubErrorCode } from '../api/errors';
-import { enqueueResult, flushOutbox, pendingFor } from './outbox';
+import { dropOutboxFor, enqueueResult, flushOutbox, pendingFor } from './outbox';
 
 const A = 'https://a.example.com';
 const B = 'https://b.example.com';
@@ -41,18 +41,34 @@ describe('outbox', () => {
     expect(await pendingFor(B, kv)).toHaveLength(1);
   });
 
-  it.each(['already_submitted', 'board_mismatch', 'not_found', 'unauthorized'] as ClubErrorCode[])(
-    'drops an item answered %s',
-    async (code) => {
-      const kv = createMemoryKV();
-      await enqueueResult(item(A, 1), kv);
-      const client = clientWith(async () => {
-        throw new ClubApiError(code, 409);
-      });
-      expect(await flushOutbox(A, client, kv)).toBe(0);
-      expect(await pendingFor(A, kv)).toEqual([]);
-    },
-  );
+  it.each([
+    'already_submitted',
+    'board_mismatch',
+    'not_found',
+    'unauthorized',
+    'invalid_request',
+    'forbidden',
+    'too_large',
+    'unsupported_version',
+  ] as ClubErrorCode[])('drops an item answered %s, and goes on to the next', async (code) => {
+    const kv = createMemoryKV();
+    await enqueueResult(item(A, 1), kv);
+    const client = clientWith(async () => {
+      throw new ClubApiError(code, 409);
+    });
+    expect(await flushOutbox(A, client, kv)).toBe(0);
+    expect(await pendingFor(A, kv)).toEqual([]);
+  });
+
+  it('dropOutboxFor forgets one endpoint and leaves the others', async () => {
+    const kv = createMemoryKV();
+    await enqueueResult(item(A, 1), kv);
+    await enqueueResult(item(B, 2), kv);
+    await enqueueResult(item(A, 3), kv);
+    await dropOutboxFor(A, kv);
+    expect(await pendingFor(A, kv)).toEqual([]);
+    expect(await pendingFor(B, kv)).toHaveLength(1);
+  });
 
   it('stops on unreachable and keeps the rest', async () => {
     const kv = createMemoryKV();

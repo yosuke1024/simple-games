@@ -40,6 +40,26 @@ export const SERVER_ERROR_CODES: readonly ClubErrorCode[] = [
   'unsupported_version',
 ];
 
+/**
+ * Codes a retry can never turn into success (club.md §10): a result answered
+ * with one of these is dropped, not queued. The first four are §10's list;
+ * the rest refuse the body itself, and a queued item answered that way would
+ * sit at the head of its Club's queue and block everything behind it.
+ */
+export const FINAL_CODES: ReadonlySet<ClubErrorCode> = new Set<ClubErrorCode>([
+  'already_submitted',
+  'board_mismatch',
+  'not_found',
+  'unauthorized',
+  'invalid_request',
+  'forbidden',
+  'too_large',
+  'unsupported_version',
+]);
+
+export const isFinalError = (error: unknown): boolean =>
+  error instanceof ClubApiError && FINAL_CODES.has(error.code);
+
 export class ClubApiError extends Error {
   readonly code: ClubErrorCode;
   readonly status: number | null;

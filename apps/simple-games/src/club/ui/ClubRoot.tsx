@@ -19,6 +19,7 @@ import {
   summarize,
   updateClubName,
 } from '../storage/connections';
+import { dropOutboxFor } from '../storage/outbox';
 import { ChallengeScreen } from './ChallengeScreen';
 import { ClubScreen, type ClubPanel } from './ClubScreen';
 import { ScreenFrame } from './common';
@@ -123,6 +124,8 @@ export function ClubRoot({
 
   const disconnect = async (endpoint: string) => {
     const next = await removeClubConnection(endpoint);
+    // Nothing could send them any more (club.md §4-2).
+    await dropOutboxFor(endpoint);
     apply(next);
     setStack(rootFor(next));
   };

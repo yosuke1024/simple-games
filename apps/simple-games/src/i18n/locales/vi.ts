@@ -160,4 +160,5 @@ export const vi: Messages = {
   clubSendResult: 'Gửi đến Club',
   clubResultSent: 'Đã gửi đến {club}',
   clubResultPending: 'Sẽ gửi khi bạn mở Club',
+  clubResultNotSent: 'Không thể gửi đến {club}',
 };

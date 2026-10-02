@@ -155,4 +155,5 @@ export const zhHans: Messages = {
   clubSendResult: '发送到 Club',
   clubResultSent: '已发送到 {club}',
   clubResultPending: '打开 Club 时发送',
+  clubResultNotSent: '无法发送到 {club}',
 };

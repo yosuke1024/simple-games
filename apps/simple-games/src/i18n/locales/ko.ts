@@ -157,4 +157,5 @@ export const ko: Messages = {
   clubSendResult: 'Club에 보내기',
   clubResultSent: '{club}에 보냈습니다',
   clubResultPending: 'Club을 열 때 보냅니다',
+  clubResultNotSent: '{club}에 보내지 못했습니다',
 };

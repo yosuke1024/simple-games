@@ -193,6 +193,7 @@ export const en = {
   clubSendResult: 'Send to Club',
   clubResultSent: 'Sent to {club}',
   clubResultPending: 'Will send when you open the Club',
+  clubResultNotSent: 'Could not send to {club}',
 } as const;
 
 export type Messages = Record<keyof typeof en, string>;

@@ -155,4 +155,5 @@ export const zhHant: Messages = {
   clubSendResult: '傳送到 Club',
   clubResultSent: '已傳送到 {club}',
   clubResultPending: '開啟 Club 時傳送',
+  clubResultNotSent: '無法傳送到 {club}',
 };

@@ -159,4 +159,5 @@ export const ptBR: Messages = {
   clubSendResult: 'Enviar para o Club',
   clubResultSent: 'Enviado para {club}',
   clubResultPending: 'Será enviado ao abrir o Club',
+  clubResultNotSent: 'Não foi possível enviar para {club}',
 };
