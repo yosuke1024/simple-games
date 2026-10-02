@@ -31,7 +31,7 @@ export function createBridge(
       if (contract === null) return 'rejected';
       const params = contract.validateParams(payload.params);
       const facts = contract.validateFacts(payload.facts);
-      if (params === null || facts === null) return 'rejected';
+      if (params === null || facts === null || payload.boardDigest === null) return 'rejected';
       const client = createClient(endpoint, connection.memberToken, fetchImpl);
       try {
         await client.createChallenge({

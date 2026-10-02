@@ -25,6 +25,7 @@ export const WATER_SORT_CHALLENGE = {
   seedPrefix: 'water-club-',
   /** Moves are the axis; time and hints are shown, never ranked (club.md §6-1). */
   order: 'moves',
+  direction: 'asc' as const,
   validateParams(raw: unknown): Record<string, unknown> | null {
     if (!isRecord(raw) || !isTier(raw.tier)) return null;
     return { tier: raw.tier };

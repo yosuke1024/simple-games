@@ -197,7 +197,13 @@ export interface GameChallengeContract {
   /** The one fact results are ordered by, ascending. */
   order: string;
   /** Seeds of challenge boards start with this (club.md §6-2). */
-  seedPrefix: string;
+  /**
+   * Which way the axis points (club.md §6-1): `asc` = lower is better (time,
+   * moves), `desc` = higher is better (score).
+   */
+  direction: 'asc' | 'desc';
+  /** The seed prefix of a club-mode board (club.md §6-2) — only the three games that have that mode. */
+  seedPrefix?: string;
 }
 
 /**

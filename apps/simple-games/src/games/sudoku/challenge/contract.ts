@@ -26,6 +26,7 @@ export const SUDOKU_CHALLENGE = {
   seedPrefix: 'sudoku-club-',
   /** Time is the axis; mistakes and hints are shown, never ranked (club.md §6-1). */
   order: 'elapsedSeconds',
+  direction: 'asc' as const,
   validateParams(raw: unknown): Record<string, unknown> | null {
     if (!isRecord(raw) || !isDifficulty(raw.difficulty)) return null;
     return { difficulty: raw.difficulty };

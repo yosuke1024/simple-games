@@ -27,6 +27,7 @@ export const MINESWEEPER_CHALLENGE = {
   contractVersion: 1 as const,
   seedPrefix: 'mines-club-',
   order: 'elapsedSeconds',
+  direction: 'asc' as const,
   /**
    * The first tap is part of the challenge: the same seed with a different
    * first cell is a different minefield (club.md §6-0), so every player's

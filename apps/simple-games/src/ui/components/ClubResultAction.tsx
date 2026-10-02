@@ -44,10 +44,10 @@ export interface ClubResultActionProps {
   details: readonly ShareDetail[];
   /** The same figures, structured as the game's challenge contract names them (club.md §6-1). */
   facts: ClubFacts;
-  /** The board's identity (club.md §6-4): what a challenge made from this game carries. */
+  /** The board's identity (club.md §6-4), or null for a game without one (a ranking needs none, §16). */
   seed: string;
   params: unknown;
-  boardDigest: string;
+  boardDigest: string | null;
   /** The daily date, for a game whose daily is one board for everyone (see ClubResultPayload.daily). */
   daily?: string | null;
 }
@@ -80,7 +80,10 @@ export function ClubResultAction({
 
   const active = bridge?.activeChallenge ?? null;
   const isChallengeBoard =
-    active !== null && active.gameId === gameId && active.boardDigest === boardDigest;
+    active !== null &&
+    active.gameId === gameId &&
+    boardDigest !== null &&
+    active.boardDigest === boardDigest;
 
   // The active challenge's result goes out once, as the screen appears.
   // StrictMode mounts twice in development; the ref keeps it to one request.
@@ -88,7 +91,7 @@ export function ClubResultAction({
   useEffect(() => {
     if (!isChallengeBoard || active.submitted || submitted.current || bridge === null) return;
     submitted.current = true;
-    void bridge.submitActive({ outcome, facts, boardDigest }).then((result) => {
+    void bridge.submitActive({ outcome, facts, boardDigest: boardDigest! }).then((result) => {
       if (mounted.current) setState({ kind: 'done', outcome: result, clubName: active.clubName });
     });
   }, [isChallengeBoard, active, bridge, outcome, facts, boardDigest]);

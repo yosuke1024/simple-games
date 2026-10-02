@@ -36,14 +36,18 @@ export type ClubOutcome = 'completed' | 'played';
 /** The result screen's figures, as the game's challenge contract names them (club.md §6-1). */
 export type ClubFacts = Readonly<Record<string, unknown>>;
 
-/** A finished ordinary game, offered as a new challenge (club.md §6-3). */
+/**
+ * A finished ordinary game, offered to the Club (club.md §2-2): a daily goes to
+ * its day's challenge (§6-3), anything else to the game × mode ranking (§16).
+ */
 export interface ClubResultPayload {
   gameId: GameId;
   outcome: ClubOutcome;
   facts: ClubFacts;
   seed: string;
   params: unknown;
-  boardDigest: string;
+  /** The board's identity (club.md §6-4), or null for a game that has none — a ranking needs none. */
+  boardDigest: string | null;
   /**
    * The daily date of the board, set ONLY by a game whose daily is the same
    * board for everyone (Sudoku; not Minesweeper, whose daily depends on the
