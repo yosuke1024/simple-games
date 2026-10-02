@@ -242,9 +242,13 @@ Club House の 88 キーは別カタログ)。`MessageKey` 型の強制に
 **供給できる門なので、書いたからには通す。**(168 件だったのは 2026-08-30 まで。
 上の 5 に `webAppPromptTitle` / `webAppPromptBody` が加わって 24 件、
 2026-09-08 に Backup & Restore の 4 キー(上の 1・3・4)が加わって 48 件増えた —
+2026-10-02 に Club House の 6 キー(`clubRemoveEraseBody` / `clubDisconnectBody` /
+`clubDisconnectHostingNote` / `clubDisconnectLastOwner` / `clubPublicDisclosure` /
+`clubDailyDisclosure`)が加わって 72 件増えた —
 `pnpm --filter simple-games i18n:gate status` が未承認の残りを数える。
-**この 48 件は現時点で未承認である**: 実装した本人は原文を見ているので独立逆翻訳の
-担当になれない。やっていない検証を通ったことにしないため、件数のまま残してある。)
+**この 120 件(Backup 48 + Club 72)は 2026-10-02 に門を通った**: 手順 1 は原文を見せない別の
+実行者(1 言語 1 体、ファイルもツールも使わない)、手順 2 は作者が逆翻訳の表を読んだ。
+実装した本人は原文を見ているので、手順 1 には入っていない。)
 
 #### 門は文書ではなくコードで強制する
 
