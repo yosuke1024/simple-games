@@ -169,14 +169,28 @@ describe('unique, tier-graded generation (§7, §8)', () => {
  * could not catch a drift between the rules (engine.ts) and the list
  * (placements.ts), such as a size bound applied in one and not the other.
  */
-function rulesBasedPlacements(layout: Layout, region: number): number[][] {
+function rulesBasedPlacements(
+  layout: Layout,
+  rects: readonly number[][],
+  region: number,
+): number[][] {
+  return rects.filter((cells) => regionSatisfiesClue(cells, layout, region));
+}
+
+/**
+ * Every rectangle the board holds, as its cells, unfiltered — which of them a
+ * clue may take is `regionSatisfiesClue`'s call alone. The list depends only
+ * on the board's size, so it is built once per board and every clue reads the
+ * same one; rebuilt per clue it was 3,625,623 cell lists over the walk where
+ * 379,930 describe every rectangle of every board.
+ */
+function boardRects(layout: Layout): number[][] {
   const out: number[][] = [];
   for (let top = 0; top < layout.height; top++) {
     for (let left = 0; left < layout.width; left++) {
       for (let height = 1; top + height <= layout.height; height++) {
         for (let width = 1; left + width <= layout.width; width++) {
-          const cells = rectCells({ top, left, width, height }, layout.width);
-          if (regionSatisfiesClue(cells, layout, region)) out.push(cells);
+          out.push(rectCells({ top, left, width, height }, layout.width));
         }
       }
     }
@@ -187,7 +201,8 @@ function rulesBasedPlacements(layout: Layout, region: number): number[][] {
 /** Exact cover over `rulesBasedPlacements`, driven by the first uncovered cell, up to `limit`. */
 function rulesBasedSolutionCount(layout: Layout, limit: number): number {
   const cellCount = layout.width * layout.height;
-  const perRegion = layout.clues.map((_, region) => rulesBasedPlacements(layout, region));
+  const rects = boardRects(layout);
+  const perRegion = layout.clues.map((_, region) => rulesBasedPlacements(layout, rects, region));
   const taken = new Array<boolean>(cellCount).fill(false);
   const placed = new Array<boolean>(layout.clues.length).fill(false);
   let found = 0;
@@ -215,9 +230,21 @@ function rulesBasedSolutionCount(layout: Layout, limit: number): number {
   return found;
 }
 
+/**
+ * One case per walked board. The oracle is the heaviest check in this file —
+ * 3,625,623 (rectangle, clue) questions to `regionSatisfiesClue` and 105,270
+ * search nodes over the 850 boards, about 2.2 s alone, nearly all of it the
+ * questions — and as one `it()` it crossed vitest's 5 s per-test timeout
+ * beside the rest of `pnpm test` (2026-10-02, twice in a row). Each board is
+ * independent, so each gets its own case and its own budget, which is what
+ * docs/ARCHITECTURE.md「CI / リリース」asks of one-second-class deterministic
+ * work in place of a wider timeout (issue #158). Every board, every question
+ * and the oracle's own reading of the rules are unchanged.
+ */
 describe('an independent rules-only oracle agrees with countSolutions (§3, §7, §8)', () => {
-  it('finds the same uniqueness on every walked board, from its own reading of the rules', () => {
-    for (const { name, puzzle } of runs) {
+  it.each(runs)(
+    'finds the same uniqueness on $name, from its own reading of the rules',
+    ({ name, puzzle }) => {
       expect(rulesBasedSolutionCount(puzzle, 2), name).toBe(1);
       // Every answer box is one rectangle, read without the engine.
       const boxes = puzzle.clues.map((_, r) =>
@@ -227,8 +254,8 @@ describe('an independent rules-only oracle agrees with countSolutions (§3, §7,
         boxes.every((box) => box !== null),
         name,
       ).toBe(true);
-    }
-  });
+    },
+  );
 });
 
 /**
