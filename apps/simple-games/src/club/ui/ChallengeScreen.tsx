@@ -116,9 +116,12 @@ export function ChallengeScreen({
           </p>
           {start ? (
             <>
-              <p className="club-disclosure">
-                {t('clubDisclosure', { club: connection.clubName })}
-              </p>
+              {/* A replay sends nothing (club.md §6-3), so it promises nothing. */}
+              {!challenge.mine && (
+                <p className="club-disclosure">
+                  {t('clubDisclosure', { club: connection.clubName })}
+                </p>
+              )}
               <button type="button" className="btn btn-primary" onClick={play}>
                 {challenge.mine ? t('clubPlayAgain') : t('clubPlay')}
               </button>

@@ -267,11 +267,15 @@ function ChallengeRow({
   t: T;
   onOpen: (id: string) => void;
 }) {
+  const label = `${challengeTitle(challenge, t)} · ${t('clubBy', { name: challenge.createdBy.nickname })}`;
   return (
-    <button type="button" className="settings-row club-line" onClick={() => onOpen(challenge.id)}>
-      <span className="settings-row-label">
-        {`${challengeTitle(challenge, t)} · ${t('clubBy', { name: challenge.createdBy.nickname })}`}
-      </span>
+    <button
+      type="button"
+      className="settings-row club-line"
+      aria-label={label}
+      onClick={() => onOpen(challenge.id)}
+    >
+      <span className="settings-row-label">{label}</span>
       <span className="settings-row-chevron" aria-hidden="true">
         <IconChevronRight />
       </span>
