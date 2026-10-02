@@ -9,8 +9,8 @@ Hint と Undo は無制限・無料、広告視聴で解放しない、ストリ
 プレイ中に時計を見せない。
 
 ゲーム ID は `shape-regions`、i18n キーの接頭辞は `shapeRegions`、保存キーの接頭辞は
-`sr.` である。配信チャンネルは **Web 先行公開(`web-beta`)**で、アプリには正式収録
-しない([WEB_VERSION.md](WEB_VERSION.md)「先行公開」、
+`sr.` である。**2026-10-02 に Web 先行公開から正式収録した**(アプリにも収録。保存
+スキーマはこの収録で凍結。[WEB_VERSION.md](WEB_VERSION.md)「先行公開」、
 [plans/2026-09-26-crown-grid-number-path-shape-regions.md](plans/2026-09-26-crown-grid-number-path-shape-regions.md))。
 古典的な「多角形分割(領域分割)」系のメカニクスを Simple Games の名前と表現で作る。
 他社の商品名・アセット・画面デザインは複製しない。
@@ -377,8 +377,9 @@ Easy と Medium は削減の**各段**で T1〜T3 solvable も一意性と一緒
   **5 つ**。`sr.flags` はチュートリアル完了。`sr.prefs` は**最後に選んだ難易度**だけを持つ
   (ホームの既定の位置。盤面の遊び方を変える設定は 1 つもない)。
 - 保存の失敗でゲームを止めない。バリデータは例外を投げない。
-- Web 先行公開中はスキーマを変えることがある(`WebBetaNotice` が伝える)。黙って変えない
-  ために golden(`compatibility.test.ts`)は最初から敷く。
+- スキーマは 2026-10-02 の正式収録で凍結した。以後は移行だけで変える
+  (`storage/releasedRecords.test.ts` が公開済みの Web 版の payload で固定する)。黙って
+  変えないために golden(`compatibility.test.ts`)は最初から敷く。
 
 ## 12. Quick Rules(アプリ内チュートリアル)
 
@@ -388,7 +389,7 @@ Easy と Medium は削減の**各段**で T1〜T3 solvable も一意性と一緒
 2. 手がかりからなぞって形を育てる。
 3. 全マスがどれかの形に属したら完成。タップで外す。
 
-Learn More は出ない(ガイド未公開 — `ui/landing.ts` の `PUBLISHED_GAME_IDS` に入れない)。
+Learn More は出ない(ガイドがまだ無い — `ui/landing.ts` の `PUBLISHED_GAME_IDS` に入れない)。
 
 ## 13. 演出とアクセシビリティ
 
@@ -415,7 +416,8 @@ Learn More は出ない(ガイド未公開 — `ui/landing.ts` の `PUBLISHED_GA
   Reduced Motion では即時。
 - **7×7 の 320px でのドラッグ精度は、まだ実機で確認していない。**
   [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §2 の門で確認し、通らなければ Hard を
-  6×6 に落として**この文書を先に直す**。
+  6×6 に落として**この文書を先に直す**(スキーマは凍結済みなので、盤の大きさを変える
+  場合は保存の移行を伴う)。
 
 ## 14. 意図的な差分
 
@@ -440,7 +442,6 @@ Learn More は出ない(ガイド未公開 — `ui/landing.ts` の `PUBLISHED_GA
   違反表示(§5)は引き続き規則だけを見る。
 - **推測が必要な盤面・複数解の盤面**(出さない。§7、§8)
 - **問題データの同梱・配信**(すべて端末上で生成する。§8)
-- **アプリへの正式収録**(Web 先行公開のみ。反応を見て決める — WEB_VERSION.md)
 
 設計ブリーフ(`docs/plans/2026-09-26-…`)からの差分:
 

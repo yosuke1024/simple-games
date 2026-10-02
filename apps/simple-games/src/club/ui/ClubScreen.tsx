@@ -9,6 +9,7 @@ import { createClient, type ClubClient } from '../api/client';
 import { ClubApiError } from '../api/errors';
 import type { Challenge, Member, RankingSummary, ReportedMember } from '../api/types';
 import { contractFor, gameTitle } from '../contract/challenge';
+import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { flushOutbox } from '../storage/outbox';
 import { shareGame } from '@/services/share/share';
 import type { ClubConnection } from '@/storage/schemas';
@@ -289,6 +290,7 @@ export function ClubScreen({
       <SettingsPanel
         clubName={clubName}
         isOwner={isOwner}
+        isPublic={connection.endpoint === PUBLIC_CLUB_ENDPOINT}
         members={data?.members ?? null}
         selfId={connection.memberId}
         t={t}
@@ -628,10 +630,15 @@ function InvitePanel({
   );
 }
 
-/** Disconnect this device (club.md §8-5): this device only; the server and the others carry on. */
+/**
+ * Disconnect this device (club.md §8-5): this device only; the server and the
+ * others carry on. How to stop paying for the server is said only to an owner
+ * of a Club someone hosts themselves — a Public member has no server to delete.
+ */
 function SettingsPanel({
   clubName,
   isOwner,
+  isPublic,
   members,
   selfId,
   t,
@@ -640,6 +647,7 @@ function SettingsPanel({
 }: {
   clubName: string;
   isOwner: boolean;
+  isPublic: boolean;
   members: Member[] | null;
   selfId: string;
   t: T;
@@ -665,11 +673,13 @@ function SettingsPanel({
       <ConfirmDialog
         open={confirm}
         title={t('clubDisconnect')}
-        body={
-          onlyOwner
-            ? `${t('clubDisconnectBody', { club: clubName })} ${t('clubDisconnectLastOwner')}`
-            : t('clubDisconnectBody', { club: clubName })
-        }
+        body={[
+          t('clubDisconnectBody', { club: clubName }),
+          isOwner && !isPublic ? t('clubDisconnectHostingNote') : null,
+          onlyOwner ? t('clubDisconnectLastOwner') : null,
+        ]
+          .filter((part): part is string => part !== null)
+          .join(' ')}
         cancelLabel={t('cancel')}
         confirmLabel={t('clubDisconnectConfirm')}
         danger

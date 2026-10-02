@@ -9,7 +9,7 @@
  * How the shell follows these addresses is App.route.test.tsx's subject.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { GAMES } from './registry';
+import { GAMES, type GameDefinition } from './registry';
 import {
   GAME_PARAM,
   currentRouteGame,
@@ -87,16 +87,19 @@ describe('the game a URL asks for', () => {
  * a retired id is — because the parser asks what this build offers, not what
  * the registry carries. The shortcut path shares this parser (issue #110), so
  * this is also what keeps a beta title out of a pinned shortcut on the app.
+ *
+ * No registry title is on the channel today (all graduated 2026-10-02), so the
+ * mechanism is exercised with a synthetic beta entry spliced into the registry.
  */
 describe('a web-beta title in the address', () => {
-  const beta = GAMES.filter((game) => game.channel === 'web-beta');
+  const beta = {
+    ...GAMES.find((game) => game.id === 'sudoku')!,
+    id: 'synthetic-beta' as GameDefinition['id'],
+    title: 'Synthetic Beta',
+    channel: 'web-beta' as const,
+  } satisfies GameDefinition;
 
-  it('opens in the browser like any other', () => {
-    expect(beta.length).toBeGreaterThan(0);
-    for (const game of beta) expect(gameIdFromHref(`${PLAY}?game=${game.id}`)).toBe(game.id);
-  });
-
-  it('is the collection on the app build, while released titles still resolve', async () => {
+  async function loadWithBeta(native: boolean) {
     vi.resetModules();
     vi.doMock('@capacitor/core', async (importOriginal) => {
       const actual = await importOriginal<typeof import('@capacitor/core')>();
@@ -104,15 +107,37 @@ describe('a web-beta title in the address', () => {
         ...actual,
         Capacitor: {
           ...actual.Capacitor,
-          isNativePlatform: () => true,
-          getPlatform: () => 'android',
+          isNativePlatform: () => native,
+          getPlatform: () => (native ? 'android' : 'web'),
         },
       };
     });
-    const native = await import('./webRoute');
-    for (const game of beta) expect(native.gameIdFromHref(`${PLAY}?game=${game.id}`)).toBeNull();
-    expect(native.gameIdFromHref(`${PLAY}?game=sudoku`)).toBe('sudoku');
+    vi.doMock('./registry', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('./registry')>();
+      return { ...actual, GAMES: [...actual.GAMES, beta] };
+    });
+    return import('./webRoute');
+  }
+
+  afterEach(() => {
     vi.doUnmock('@capacitor/core');
+    vi.doUnmock('./registry');
+  });
+
+  it('opens in the browser like any other', async () => {
+    const web = await loadWithBeta(false);
+    expect(web.gameIdFromHref(`${PLAY}?game=${beta.id}`)).toBe(beta.id);
+  });
+
+  it('is the collection on the app build, while released titles still resolve', async () => {
+    const native = await loadWithBeta(true);
+    expect(native.gameIdFromHref(`${PLAY}?game=${beta.id}`)).toBeNull();
+    expect(native.gameIdFromHref(`${PLAY}?game=sudoku`)).toBe('sudoku');
+  });
+
+  it('is the collection when no title is on the channel and the id is simply unknown', () => {
+    expect(GAMES.some((game) => game.channel === 'web-beta')).toBe(false);
+    expect(gameIdFromHref(`${PLAY}?game=${beta.id}`)).toBeNull();
   });
 });
 

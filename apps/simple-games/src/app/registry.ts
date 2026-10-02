@@ -194,28 +194,13 @@ export const GAME_CATEGORIES: readonly GameCategory[] = [
 export type GameEntry = 'collection' | 'shortcut';
 
 /**
- * A Club House challenge, as a game receives it (docs/architecture/club.md
- * §6-2): the seed and mode parameters another device played, and the digest
- * of the board they produced there. The game generates the same board from
- * the same inputs, compares digests, and refuses to play a board that no
- * longer matches — a generator that changed between versions, not a cheat.
- * Like `entry`, a fact rather than an instruction: the Club's id is never in it.
- */
-export interface ChallengeStart {
-  seed: string;
-  params: unknown;
-  boardDigest: string;
-}
-
-/**
  * What the shell and the Club layer know about a game's challenges without
  * loading the game (club.md §6-1): how to validate the `params` a challenge
  * carries and the `facts` a result carries, which param names the mode a
- * club record is kept for, which fact is the comparison axis, and the seed
- * prefix a challenge board is generated under. Declared by the game in its
- * zero-import `challenge/contract.ts` leaf — the same arrangement as
- * `storage/keys.ts`, for the same reason: the registry imports it eagerly,
- * so it must tow nothing. The game writes the shape out itself rather than
+ * club record is kept for, and which fact is the comparison axis. Declared by
+ * the game in its zero-import `challenge/contract.ts` leaf — the same
+ * arrangement as `storage/keys.ts`, for the same reason: the registry imports
+ * it eagerly, so it must tow nothing. The game writes the shape out itself rather than
  * importing this type; the assignment below is what checks the two agree.
  */
 export interface GameChallengeContract {
@@ -228,14 +213,11 @@ export interface GameChallengeContract {
   paramsKey(params: Record<string, unknown>): string;
   /** The one fact results are ordered by, ascending. */
   order: string;
-  /** Seeds of challenge boards start with this (club.md §6-2). */
   /**
    * Which way the axis points (club.md §6-1): `asc` = lower is better (time,
    * moves), `desc` = higher is better (score).
    */
   direction: 'asc' | 'desc';
-  /** The seed prefix of a club-mode board (club.md §6-2) — only the three games that have that mode. */
-  seedPrefix?: string;
 }
 
 /**
@@ -248,12 +230,6 @@ export interface GameRootProps {
   onExit: () => void;
   /** Which door this launch came through. Absent means the ordinary one. */
   entry?: GameEntry;
-  /**
-   * A Club House challenge to open onto (club.md §6-2). Only the games that
-   * declare a `challenge` contract below ever receive one; they play it in
-   * their own `club` save slot and keep it out of their statistics.
-   */
-  challenge?: ChallengeStart;
 }
 
 export interface GameDefinition {
@@ -785,15 +761,15 @@ export const GAMES: readonly GameDefinition[] = [
     loadStorageSchemas: () => import('../games/bunny-hop/storage/schemas'),
   },
   {
-    // Web early release (docs/WEB_VERSION.md「先行公開」, issue #194): the
-    // first three titles on that channel, listed after the shipped thirty and
-    // in the order the issue names them. A crown for the one object the board
+    // The three board puzzles of issue #194, first in the browser's early
+    // release (docs/WEB_VERSION.md「先行公開」) and in the app from the
+    // release after it (2026-10-02). Listed after the first thirty, in the
+    // order the issue names them. A crown for the one object the board
     // asks you to place — one per row, column and region (docs/CROWN_GRID_RULES.md).
     id: 'crown-grid',
     title: 'Crown Grid',
     category: 'logic',
     glyph: '♛',
-    channel: 'web-beta',
     storageKeys: Object.values(CG_STORAGE_KEYS),
     challenge: CROWN_GRID_CHALLENGE,
     loadRoot: () =>
@@ -808,7 +784,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Number Path',
     category: 'logic',
     glyph: '↝',
-    channel: 'web-beta',
     storageKeys: Object.values(NP_STORAGE_KEYS),
     challenge: NUMBER_PATH_CHALLENGE,
     loadRoot: () =>
@@ -823,7 +798,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Shape Regions',
     category: 'logic',
     glyph: '▙',
-    channel: 'web-beta',
     storageKeys: Object.values(SR_STORAGE_KEYS),
     challenge: SHAPE_REGIONS_CHALLENGE,
     loadRoot: () =>
@@ -834,14 +808,13 @@ export const GAMES: readonly GameDefinition[] = [
   },
   {
     // The five new genres of issue #197, in the order the issue names them,
-    // all in the browser early release (docs/WEB_VERSION.md「先行公開」). A
+    // first in the browser's early release (docs/WEB_VERSION.md「先行公開」). A
     // die face for the collection's first game about the dice themselves:
     // five to roll, three throws, one category (docs/YACHT_RULES.md).
     id: 'yacht',
     title: 'Yacht',
     category: 'board',
     glyph: '⚄',
-    channel: 'web-beta',
     storageKeys: Object.values(YT_STORAGE_KEYS),
     challenge: YACHT_CHALLENGE,
     loadRoot: () => import('../games/yacht/ui/YachtRoot').then((m) => ({ default: m.YachtRoot })),
@@ -855,7 +828,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Mancala',
     category: 'board',
     glyph: '⊚',
-    channel: 'web-beta',
     storageKeys: Object.values(MC_STORAGE_KEYS),
     challenge: MANCALA_CHALLENGE,
     loadRoot: () =>
@@ -870,7 +842,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Dominoes',
     category: 'board',
     glyph: '⊟',
-    channel: 'web-beta',
     storageKeys: Object.values(DM_STORAGE_KEYS),
     challenge: DOMINOES_CHALLENGE,
     loadRoot: () =>
@@ -884,7 +855,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Hit & Blow',
     category: 'logic',
     glyph: '◉',
-    channel: 'web-beta',
     storageKeys: Object.values(HB_STORAGE_KEYS),
     challenge: HIT_AND_BLOW_CHALLENGE,
     loadRoot: () =>
@@ -900,7 +870,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Dots and Boxes',
     category: 'board',
     glyph: '⊡',
-    channel: 'web-beta',
     storageKeys: Object.values(DB_STORAGE_KEYS),
     challenge: DOTS_AND_BOXES_CHALLENGE,
     loadRoot: () =>
@@ -911,7 +880,7 @@ export const GAMES: readonly GameDefinition[] = [
   },
   {
     // The three practice-set titles of issue #210, in the order the issue
-    // names them, all in the browser early release (docs/WEB_VERSION.md
+    // names them, first in the browser's early release (docs/WEB_VERSION.md
     // 「先行公開」, docs/PUZZLE_PRACTICE_SET.md). A circled equals sign for
     // the rule that sets this two-symbol puzzle apart from Takuzu: the
     // links that say two neighbours match or differ
@@ -921,7 +890,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Binary Balance',
     category: 'logic',
     glyph: '⊜',
-    channel: 'web-beta',
     storageKeys: Object.values(BN_STORAGE_KEYS),
     challenge: BINARY_BALANCE_CHALLENGE,
     loadRoot: () =>
@@ -938,7 +906,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Sudoku 6×6',
     category: 'logic',
     glyph: '6',
-    channel: 'web-beta',
     storageKeys: Object.values(S6_STORAGE_KEYS),
     challenge: SUDOKU_6X6_CHALLENGE,
     loadRoot: () =>
@@ -957,7 +924,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Box Regions',
     category: 'logic',
     glyph: '▭',
-    channel: 'web-beta',
     storageKeys: Object.values(BR_STORAGE_KEYS),
     challenge: BOX_REGIONS_CHALLENGE,
     loadRoot: () =>

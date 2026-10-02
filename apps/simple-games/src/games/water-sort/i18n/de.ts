@@ -24,6 +24,4 @@ export const de: WaterSortMessages = {
   waterStep2Body: 'Die leeren Röhrchen sind dein Arbeitsplatz. Rückgängig ist immer kostenlos.',
   waterStep3Title: 'Eine Farbe pro Röhrchen',
   waterStep3Body: 'Hält jedes Röhrchen nur noch eine Farbe, ist das Brett sortiert.',
-  waterChallengeMismatch:
-    'Diese Herausforderung wurde mit einer anderen Version des Spiels erstellt.',
 };

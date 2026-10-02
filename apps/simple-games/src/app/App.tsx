@@ -63,7 +63,7 @@ import {
 } from './clubGate';
 import { getLazyRoot, resetLazyRoot } from './lazyRoots';
 import { recordGameOpened } from './recentGames';
-import { type ChallengeStart, type GameEntry, type GameId } from './registry';
+import { type GameEntry, type GameId } from './registry';
 import { gameIdFromShortcutUrl, shortcutLaunchGame } from './shortcutLaunch';
 import {
   currentRouteGame,
@@ -81,8 +81,6 @@ type View =
       kind: 'game';
       gameId: GameId;
       entry: GameEntry;
-      /** The Club challenge this game opens onto (club.md §6-2). */
-      challenge?: ChallengeStart;
       /** Opened from a Club challenge: leaving goes back to the Club, not the collection. */
       from?: 'club';
     }
@@ -255,7 +253,7 @@ export function App() {
   // Recorded at the tap, not after the chunk resolves: the row reflects what
   // the player chose, and a load failure is rare enough not to complicate it.
   const enterGame = useCallback(
-    (gameId: GameId, entry: GameEntry, club?: { challenge?: ChallengeStart; from: 'club' }) => {
+    (gameId: GameId, entry: GameEntry, club?: { from: 'club' }) => {
       recordGameOpened(gameId);
       trackWebGameOpened(gameId);
       show({ kind: 'game', gameId, entry, ...club });
@@ -319,8 +317,8 @@ export function App() {
 
   /**
    * `Play` on a Club challenge. The game opens by the ordinary door, recorded
-   * as opened like any other, with the challenge in hand and a note to come
-   * back to the Club.
+   * as opened like any other; the shell keeps the challenge (the game is
+   * handed nothing) and a note to come back to the Club.
    *
    * No `?game=` is pushed in the browser. Back from a challenge returns to
    * the Club, not the collection, so a history entry for the game would be a
@@ -515,15 +513,14 @@ export function App() {
               // is unknown from here, and one of the things it could have been
               // is the game opening straight onto a suspended board it could
               // not draw (issue #113) — a retry that repeats that lands on the
-              // same screen twice. A Club challenge is dropped for the same
-              // reason (its board is just as much a suspect), but not the way
-              // back: a game opened from the Club still returns to the Club.
+              // same screen twice. The way back is kept, though: a game opened
+              // from the Club still returns to the Club.
               show({ kind: 'game', gameId, entry: 'collection', from });
               setGameNonce((n) => n + 1);
             }}
           >
             <Suspense fallback={<GameLoadingFallback onExit={exitGame} />}>
-              <LazyRoot onExit={exitGame} entry={view.entry} challenge={view.challenge} />
+              <LazyRoot onExit={exitGame} entry={view.entry} />
             </Suspense>
           </GameErrorBoundary>
         );

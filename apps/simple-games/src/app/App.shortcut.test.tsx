@@ -240,7 +240,7 @@ describe('a cold start from a home-screen shortcut', () => {
   it('lands on the collection for a game this build no longer carries', async () => {
     await launchFrom(RETIRED);
     expect(await collectionHome()).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Sudoku/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sudoku' })).toBeInTheDocument();
     expect(getRecentGames()).toEqual([]);
   });
 
@@ -412,7 +412,7 @@ describe('the ordinary way in', () => {
     await launchFrom(undefined);
     await collectionHome();
 
-    await user.click(screen.getByRole('button', { name: /Sudoku/ }));
+    await user.click(screen.getByRole('button', { name: 'Sudoku' }));
 
     expect(playing('sudoku')).toBeInTheDocument();
     expect(enteredBy()).toBe('collection');
@@ -427,7 +427,7 @@ describe('the ordinary way in', () => {
     await collectionHome();
     // Two tiles carry the title now — the shortcut row remembers the game
     // that was just played, and the grid always had it (app/recentGames.ts).
-    await user.click(screen.getAllByRole('button', { name: /Sudoku/ })[0]!);
+    await user.click(screen.getAllByRole('button', { name: 'Sudoku' })[0]!);
 
     // The launch is over. Coming back by hand is coming back by hand, and a
     // game that resumed on the way in must not resume again on the way back.

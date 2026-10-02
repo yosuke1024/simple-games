@@ -35,7 +35,9 @@ export const zhHans: ClubMessages = {
   clubSettings: '设置',
   clubDisconnect: '断开此设备',
   clubDisconnectBody:
-    '让此设备不再连接 {club}。服务器会继续运行,其他人仍可游玩。若要停止托管费用,请在托管服务商的控制台中删除服务器。',
+    '让此设备不再连接 {club}。服务器会继续运行,其他人仍可游玩。',
+  clubDisconnectHostingNote:
+    '若要停止托管费用,请在托管服务商的控制台中删除服务器。',
   clubDisconnectLastOwner:
     '这是唯一的 Owner 设备。请先添加另一台 Owner 设备,或在托管服务商的控制台中重置设置密钥,以便重新认领此 Club。',
   clubDisconnectConfirm: '断开',

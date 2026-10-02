@@ -35,7 +35,9 @@ export const zhHant: ClubMessages = {
   clubSettings: '設定',
   clubDisconnect: '中斷此裝置',
   clubDisconnectBody:
-    '讓此裝置不再連線到 {club}。伺服器會繼續運作,其他人仍可遊玩。若要停止代管費用,請在代管服務商的控制台中刪除伺服器。',
+    '讓此裝置不再連線到 {club}。伺服器會繼續運作,其他人仍可遊玩。',
+  clubDisconnectHostingNote:
+    '若要停止代管費用,請在代管服務商的控制台中刪除伺服器。',
   clubDisconnectLastOwner:
     '這是唯一的 Owner 裝置。請先新增另一台 Owner 裝置,或在代管服務商的控制台中重設設定金鑰,以便重新認領此 Club。',
   clubDisconnectConfirm: '中斷連線',

@@ -7,8 +7,8 @@
 ブランド原則([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))はこの文書より上位にある。
 
 ゲーム ID は `hit-and-blow`、i18n キーの接頭辞は `hitAndBlow`、保存キーの接頭辞は `hb.` である。
-配信チャンネルは **Web 先行公開(`web-beta`)** で、アプリには正式収録していない
-([WEB_VERSION.md](WEB_VERSION.md)「先行公開」、issue #197)。古典的な数当て
+**2026-10-02 に Web 先行公開から正式収録した**(アプリにも収録。保存スキーマはこの収録で
+凍結。[WEB_VERSION.md](WEB_VERSION.md)「先行公開」、issue #197)。古典的な数当て
 (Bulls and Cows / Hit & Blow)系の推理を、Simple Games の名前と表現で作る。
 他社の商品名・盤面・ペグの配色は複製しない(§11)。
 
@@ -153,7 +153,7 @@
 3. ● は記号も位置も合っている、○ は記号だけ合っている。何回でも推測できる。
 
 初回に最後まで進むと Easy のゲームが始まる。ハードウェアの戻るボタンで離れた場合も
-「見た」ことにする(issue #142)。ゲーム別 Landing Page はまだ無い(先行公開中)ので、
+「見た」ことにする(issue #142)。ゲーム別 Landing Page はまだ無いので、
 「詳しく見る」は出ない。
 
 ## 10. 演出とアクセシビリティ

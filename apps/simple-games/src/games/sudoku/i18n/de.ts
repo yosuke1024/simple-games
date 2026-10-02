@@ -37,6 +37,4 @@ export const de: SudokuMessages = {
   sudokuStep3Title: 'Fest? Hol dir einen Tipp',
   sudokuStep3Body:
     'Ein Tipp zeigt, welches Feld feststeht und warum. Tipps und Rückgängig sind immer gratis.',
-  sudokuChallengeMismatch:
-    'Diese Herausforderung wurde mit einer anderen Version des Spiels erstellt.',
 };

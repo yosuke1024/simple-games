@@ -11,8 +11,9 @@
 
 ゲーム ID は `dominoes`、i18n キーの接頭辞は `dominoes`、保存キーの接頭辞は `dm.` である。
 タイトルは全言語で `Dominoes`(固有名詞は訳さない — [I18N_POLICY.md](I18N_POLICY.md))。
-現在は **Web 版の先行公開(ベータ)**で、アプリには収録していない(registry の
-`channel: 'web-beta'`、[WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。
+Web 版で先行公開(ベータ)していたが、**2026-10-02 にアプリへ正式収録した**(registry の
+`channel: 'web-beta'` は外した。保存スキーマはこの収録で凍結。
+[WEB_VERSION.md](WEB_VERSION.md)「先行公開」)。
 
 **採ったルールの出典**: 標準的な 2 人制のドロー・ドミノ(ダブル 6 の 28 枚、7 枚配り、
 山から引く、出し切った側が相手の残りの目を得る)。採らなかった変種は §12 に列挙する。

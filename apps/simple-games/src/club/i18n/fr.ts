@@ -38,7 +38,9 @@ export const fr: ClubMessages = {
   clubSettings: 'Réglages',
   clubDisconnect: 'Déconnecter cet appareil',
   clubDisconnectBody:
-    'Empêche cet appareil de se connecter à {club}. Le serveur continue de tourner et les autres peuvent toujours jouer. Pour arrêter les frais d’hébergement, supprimez le serveur dans le tableau de bord de votre hébergeur.',
+    'Empêche cet appareil de se connecter à {club}. Le serveur continue de tourner et les autres peuvent toujours jouer.',
+  clubDisconnectHostingNote:
+    'Pour arrêter les frais d’hébergement, supprimez le serveur dans le tableau de bord de votre hébergeur.',
   clubDisconnectLastOwner:
     'Cet appareil est le seul appareil Owner. Ajoutez d’abord un autre appareil Owner, ou réinitialisez la clé de configuration dans le tableau de bord de votre hébergeur pour reprendre le Club.',
   clubDisconnectConfirm: 'Déconnecter',

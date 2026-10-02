@@ -38,5 +38,4 @@ export const th: MinesweeperMessages = {
   minesStep2Body: 'กดค้างที่ช่องเพื่อปักธง หรือเปิดโหมดปักธงแล้วแตะครั้งเดียว',
   minesStep3Title: 'เปิดที่เหลือให้ครบก็ชนะ',
   minesStep3Body: 'ตาแรกปลอดภัยเสมอ และไม่มีกระดานใดที่ต้องเดา',
-  minesChallengeMismatch: 'ความท้าทายนี้สร้างด้วยเกมเวอร์ชันอื่น',
 };

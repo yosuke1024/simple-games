@@ -38,5 +38,4 @@ export const ja: MinesweeperMessages = {
   minesStep2Body: '長押しで旗を立てます。旗モードならタップで立てられます。',
   minesStep3Title: '残りを開けば勝ち',
   minesStep3Body: '最初の一手は必ず安全で、推測が必要な盤面は出題されません。',
-  minesChallengeMismatch: 'この挑戦は、別のバージョンのゲームで作られています。',
 };

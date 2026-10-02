@@ -7,8 +7,9 @@
  *   has joined, or for an invite link — and on nothing else;
  * - a failed load changes nothing on screen (club.md §12-2 (e));
  * - the bridge the result screens read carries the connections boot found;
- * - a challenge game receives its challenge, and leaving it returns to that
- *   challenge in the Club — not the collection, and with no review question.
+ * - Play on a challenge opens the game by the ordinary door — the game is
+ *   handed no board — and leaving it returns to that challenge in the Club,
+ *   not the collection, and with no review question.
  *
  * The Club layer is a stand-in (`setClubLoaderForTesting`): the real
  * `ClubRoot` is src/club's to test. The games are stubbed the way
@@ -56,22 +57,17 @@ vi.mock('../services/review', async (importOriginal) => ({
   markReviewPromptShown: reviewMock.markReviewPromptShown,
 }));
 
-// A stub game that shows what the shell handed it: the challenge's seed and
-// what the bridge says about the connections and the active challenge.
+// A stub game that shows what the shell handed it — the names of its props —
+// and what the bridge says about the connections and the active challenge.
 vi.mock('./lazyRoots', () => ({
   getLazyRoot: (gameId: string) =>
-    function StubGameRoot({
-      onExit,
-      challenge,
-    }: {
-      onExit: () => void;
-      challenge?: { seed: string };
-    }) {
+    function StubGameRoot(props: { onExit: () => void; entry?: string }) {
+      const { onExit } = props;
       const bridge = useContext(ClubBridgeContext);
       return (
         <div>
           <p>{`playing ${gameId}`}</p>
-          <p data-testid="challenge">{challenge?.seed ?? 'none'}</p>
+          <p data-testid="props">{Object.keys(props).sort().join(',')}</p>
           <p data-testid="bridge">
             {bridge === null
               ? 'no bridge'
@@ -264,7 +260,8 @@ describe('a device that has joined', () => {
     await settle();
 
     expect(screen.getByTestId('bridge')).toHaveTextContent('1 connections, active none');
-    expect(screen.getByTestId('challenge')).toHaveTextContent('none');
+    // The shell hands a game a door and a way out, and nothing else.
+    expect(screen.getByTestId('props')).toHaveTextContent(/^entry,onExit$/);
   });
 
   it('plays a challenge and returns to it in the Club, with no review question', async () => {
@@ -278,7 +275,7 @@ describe('a device that has joined', () => {
 
     expect(screen.getByText('playing sudoku')).toBeInTheDocument();
     // The game opens onto its own daily: no challenge board is handed over (club.md §16-3).
-    expect(screen.getByTestId('challenge')).toHaveTextContent('none');
+    expect(screen.getByTestId('props')).toHaveTextContent(/^entry,onExit$/);
     expect(screen.getByTestId('bridge')).toHaveTextContent('1 connections, active ch-1');
 
     fireEvent.click(screen.getByRole('button', { name: 'All games' }));

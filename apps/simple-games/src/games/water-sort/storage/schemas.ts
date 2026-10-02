@@ -198,9 +198,7 @@ export interface PersistedGame {
 const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
   const mode =
-    raw.mode === 'level' || raw.mode === 'daily' || raw.mode === 'free' || raw.mode === 'club'
-      ? raw.mode
-      : null;
+    raw.mode === 'level' || raw.mode === 'daily' || raw.mode === 'free' ? raw.mode : null;
   const seed = asString(raw.seed);
   const colors = asInt(raw.colors, MIN_COLORS, MAX_COLORS);
   const dailyDate = raw.dailyDate === null ? null : asDateString(raw.dailyDate);
@@ -234,11 +232,9 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (mode === 'daily' && dailyDate === null) return null;
   if (mode === 'level' && level === null) return null;
   // A free board has neither a level number nor a date to be about, and only
-  // a free board — or a Club House challenge, dealt the same way (§14) — has
-  // a tier.
-  const dealtByTier = mode === 'free' || mode === 'club';
-  if (dealtByTier && (level !== null || dailyDate !== null || freeTier === null)) return null;
-  if (!dealtByTier && freeTier !== null) return null;
+  // a free board has a tier.
+  if (mode === 'free' && (level !== null || dailyDate !== null || freeTier === null)) return null;
+  if (mode !== 'free' && freeTier !== null) return null;
 
   return {
     schemaVersion: 1,
@@ -284,8 +280,3 @@ export const gameSchema = gameSlotSchema(WS_STORAGE_KEYS.game, 'level');
 export const dailyGameSchema = gameSlotSchema(WS_STORAGE_KEYS.dailyGame, 'daily');
 /** Suspended free board (§6「フリープレイ」): its own slot, for the same reason. */
 export const freeGameSchema = gameSlotSchema(WS_STORAGE_KEYS.freeGame, 'free');
-/**
- * Suspended Club House challenge (§14): a fourth slot, so a challenge never
- * replaces a free board in progress, and a free board never a challenge.
- */
-export const clubGameSchema = gameSlotSchema(WS_STORAGE_KEYS.clubGame, 'club');

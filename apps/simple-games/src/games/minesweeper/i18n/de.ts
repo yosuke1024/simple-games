@@ -38,6 +38,4 @@ export const de: MinesweeperMessages = {
   minesStep2Body: 'Langes Drücken setzt eine Flagge. Im Flaggenmodus genügt ein Tippen.',
   minesStep3Title: 'Öffne den Rest zum Sieg',
   minesStep3Body: 'Der erste Zug ist immer sicher, und kein Feld verlangt Raten.',
-  minesChallengeMismatch:
-    'Diese Herausforderung wurde mit einer anderen Version des Spiels erstellt.',
 };

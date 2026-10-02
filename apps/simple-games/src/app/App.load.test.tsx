@@ -146,7 +146,7 @@ function renderShell() {
   );
 }
 
-const openSudoku = () => fireEvent.click(screen.getByRole('button', { name: /Sudoku/ }));
+const openSudoku = () => fireEvent.click(screen.getByRole('button', { name: 'Sudoku' }));
 const collectionHeading = () => screen.getByRole('heading', { name: 'Simple Games' });
 
 /**
@@ -228,7 +228,7 @@ describe('the loading indicator (no flash while a chunk loads)', () => {
     vi.useFakeTimers();
     renderShell();
 
-    fireEvent.click(screen.getByRole('button', { name: /Sudoku/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sudoku' }));
 
     act(() => {
       vi.advanceTimersByTime(199);

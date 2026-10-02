@@ -35,16 +35,7 @@ function TubesFigure({ tubes, marked = [] }: { tubes: number[][]; marked?: numbe
 }
 
 export function WaterTutorialScreen() {
-  const {
-    tutorialCompleted,
-    completeTutorial,
-    startLevel,
-    progress,
-    goHome,
-    openedOnChallenge,
-    canResume,
-    resumeGame,
-  } = useWaterSort();
+  const { tutorialCompleted, completeTutorial, startLevel, progress, goHome } = useWaterSort();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('water-sort', locale);
   const [step, setStep] = useState(0);
@@ -75,9 +66,7 @@ export function WaterTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      // Opened onto a Club House challenge: the rules lead to its board (§14).
-      if (openedOnChallenge && canResume('club')) resumeGame('club');
-      else startLevel(progress.highestUnlocked);
+      startLevel(progress.highestUnlocked);
     } else {
       goHome();
     }

@@ -37,7 +37,9 @@ export const ja: ClubMessages = {
   clubSettings: '設定',
   clubDisconnect: 'この端末を切断',
   clubDisconnectBody:
-    'この端末から {club} への接続を止めます。サーバーは動き続け、ほかの人はそのまま遊べます。サーバーの利用料を止めるには、ホスティング事業者の管理画面でサーバーを削除してください。',
+    'この端末から {club} への接続を止めます。サーバーは動き続け、ほかの人はそのまま遊べます。',
+  clubDisconnectHostingNote:
+    'サーバーの利用料を止めるには、ホスティング事業者の管理画面でサーバーを削除してください。',
   clubDisconnectLastOwner:
     'この端末は唯一のオーナー端末です。先に別のオーナー端末を追加するか、ホスティング事業者の管理画面でセットアップキーをリセットして、Club をもう一度引き受けられるようにしてください。',
   clubDisconnectConfirm: '切断する',

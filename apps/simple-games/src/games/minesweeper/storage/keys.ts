@@ -10,6 +10,4 @@ export const MS_STORAGE_KEYS = {
   stats: 'ms.stats',
   flags: 'ms.flags',
   prefs: 'ms.prefs',
-  /** A Club House challenge in progress (§14) — its own slot, appended last. */
-  clubGame: 'ms.saveClub',
 } as const;

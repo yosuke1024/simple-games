@@ -35,5 +35,4 @@ export const ja: SudokuMessages = {
   sudokuStep2Body: '「メモ」を押すと、候補の数字を小さく書き込めます。',
   sudokuStep3Title: '詰まったらヒント',
   sudokuStep3Body: 'ヒントは「どこが決まるか」と理由を教えます。ヒントも戻すも、ずっと無料です。',
-  sudokuChallengeMismatch: 'この挑戦は、別のバージョンのゲームで作られています。',
 };

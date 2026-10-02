@@ -38,5 +38,4 @@ export const tr: MinesweeperMessages = {
   minesStep2Body: 'Bir kareye uzun bas ve bayrak dik. Bayrak modunda tek dokunuş yeter.',
   minesStep3Title: 'Kalanı aç ve kazan',
   minesStep3Body: 'İlk dokunuşun her zaman güvenli, hiçbir tahta tahmin gerektirmez.',
-  minesChallengeMismatch: 'Bu meydan okuma oyunun farklı bir sürümüyle oluşturuldu.',
 };

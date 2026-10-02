@@ -17,7 +17,7 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   `schulte-table.css` / `number-recall.css` / `bunny-hop.css` / `bubble-pop.css` /
   `crown-grid.css` / `number-path.css` / `shape-regions.css` / `yacht.css` / `mancala.css` /
   `dominoes.css` / `hit-and-blow.css` / `dots-and-boxes.css` / `binary-balance.css` /
-  `sudoku-6x6.css` / `box-regions.css`(Web 先行公開の 11 本)。
+  `sudoku-6x6.css` / `box-regions.css`(2026-10-02 に収録した 11 本)。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。

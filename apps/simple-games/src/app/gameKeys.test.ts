@@ -13,9 +13,6 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // saveFree is the third suspended-game slot, added with Free Play
   // (2026-09-03, docs/SUDOKU_RULES.md §9「フリープレイ」). Purely additive: no
   // released key changed meaning or moved, so nothing is stranded.
-  // saveClub is the fourth, a Club House challenge in progress (2026-10-02,
-  // docs/architecture/club.md §6-2, docs/SUDOKU_RULES.md §15). Appended at
-  // the end, purely additive, for the same reason.
   sudoku: [
     'sd.saveGame',
     'sd.saveDaily',
@@ -24,16 +21,13 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
     'sd.progress',
     'sd.flags',
     'sd.prefs',
-    'sd.saveClub',
   ],
   solitaire: ['so.saveGame', 'so.saveDaily', 'so.stats', 'so.flags', 'so.prefs'],
   'spider-solitaire': ['ss.saveGame', 'ss.saveDaily', 'ss.stats', 'ss.flags', 'ss.prefs'],
   freecell: ['fc.saveGame', 'fc.saveDaily', 'fc.stats', 'fc.flags'],
   hearts: ['ht.saveGame', 'ht.stats', 'ht.flags', 'ht.prefs'],
   'gin-rummy': ['gr.saveGame', 'gr.stats', 'gr.flags', 'gr.prefs'],
-  // saveClub: a Club House challenge in progress, appended (2026-10-02,
-  // docs/architecture/club.md §6-2, docs/MINESWEEPER_RULES.md §14). Additive.
-  minesweeper: ['ms.saveGame', 'ms.saveDaily', 'ms.stats', 'ms.flags', 'ms.prefs', 'ms.saveClub'],
+  minesweeper: ['ms.saveGame', 'ms.saveDaily', 'ms.stats', 'ms.flags', 'ms.prefs'],
   'bubble-pop': ['bu.stats', 'bu.progress', 'bu.flags'],
   'brick-breaker': ['bb.stats', 'bb.progress', 'bb.flags'],
   nonogram: [
@@ -114,9 +108,6 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
     'ws.progress',
     'ws.flags',
     'ws.prefs',
-    // A Club House challenge in progress, appended (2026-10-02,
-    // docs/architecture/club.md §6-2, docs/WATER_SORT_RULES.md §14). Additive.
-    'ws.saveClub',
   ],
   'sliding-puzzle': ['sp.saveGame', 'sp.saveDaily', 'sp.stats', 'sp.progress', 'sp.flags'],
   'memory-match': ['mm.saveGame', 'mm.saveDaily', 'mm.stats', 'mm.flags'],
@@ -133,15 +124,16 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   reversi: ['rv.saveGame', 'rv.stats', 'rv.flags', 'rv.prefs'],
   'connect-four': ['c4.saveGame', 'c4.stats', 'c4.flags', 'c4.prefs'],
   gomoku: ['gm.saveGame', 'gm.stats', 'gm.flags', 'gm.prefs'],
-  // The three web-beta titles (docs/WEB_VERSION.md「先行公開」, issue #194).
+  // The three board puzzles of issue #194, first in the browser's early
+  // release (docs/WEB_VERSION.md「先行公開」) and in the app since 2026-10-02.
   // Five each, Minesweeper's shape: one suspended game per mode (difficulty /
   // daily), stats, flags, and a prefs that remembers only the last difficulty
-  // picked. Beta is the one channel whose schema may still change — but never
-  // silently: a change here is still a decision written into this file.
+  // picked. Since graduating they are released keys like every other line
+  // here (their payloads are pinned in storage/releasedRecords.test.ts).
   'crown-grid': ['cg.saveGame', 'cg.saveDaily', 'cg.stats', 'cg.flags', 'cg.prefs'],
   'number-path': ['np.saveGame', 'np.saveDaily', 'np.stats', 'np.flags', 'np.prefs'],
   'shape-regions': ['sr.saveGame', 'sr.saveDaily', 'sr.stats', 'sr.flags', 'sr.prefs'],
-  // The five web-beta genres of issue #197 (docs/plans/2026-09-27-yacht-mancala-
+  // The five genres of issue #197, in the app since 2026-10-02 (docs/plans/2026-09-27-yacht-mancala-
   // dominoes-hit-and-blow-dots-and-boxes.md). None has a daily, so one saved
   // game each. Yacht and Dominoes keep no setting (no prefs): Yacht has no
   // difficulty, and Dominoes' opener is decided by the tiles. Mancala's prefs

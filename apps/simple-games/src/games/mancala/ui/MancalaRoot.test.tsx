@@ -202,12 +202,12 @@ describe('first run', () => {
 });
 
 describe('home', () => {
-  it('wears the early-release notice, and exits to the collection', async () => {
+  it('wears no early-release notice since it joined the app (2026-10-02), and exits to the collection', async () => {
     const user = userEvent.setup();
     const { onExit } = renderGame(tutorialDone);
 
     expect(await screen.findByRole('button', { name: /Easy/ })).toBeInTheDocument();
-    expect(screen.getByText(/Early release/)).toBeInTheDocument();
+    expect(screen.queryByText(/Early release/)).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'All games' }));
     expect(onExit).toHaveBeenCalledTimes(1);
   });

@@ -38,12 +38,8 @@ export interface Puzzle {
   readonly solverNodes: number;
 }
 
-/**
- * The level list, the daily, a free board at a chosen tier (§6), or a Club
- * House challenge (§14) — a board another player sent, kept out of the
- * statistics.
- */
-export type GameMode = 'level' | 'daily' | 'free' | 'club';
+/** The level list, the daily, or a free board at a chosen tier (§6). */
+export type GameMode = 'level' | 'daily' | 'free';
 export type GameStatus = 'playing' | 'solved';
 
 /** One pour: source tube index → destination tube index. */

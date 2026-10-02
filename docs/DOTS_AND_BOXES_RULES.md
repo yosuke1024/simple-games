@@ -7,8 +7,8 @@
 ブランド原則([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))はこの文書より上位にある。
 
 ゲーム ID は `dots-and-boxes`、i18n キーの接頭辞は `dotsAndBoxes`、保存キーの接頭辞は
-`db.` である。Web 版の先行公開(ベータ)タイトルであり、アプリには正式収録していない
-([WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」、issue #197)。
+`db.` である。Web 版で先行公開(ベータ)したタイトルで、**2026-10-02 にアプリへ正式収録した**
+(保存スキーマはこの収録で凍結。[WEB_VERSION.md](WEB_VERSION.md)「先行公開」、issue #197)。
 
 ## 1. 盤面と対局者
 

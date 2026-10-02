@@ -36,5 +36,4 @@ export const ko: SudokuMessages = {
   sudokuStep3Title: '막히면 힌트',
   sudokuStep3Body:
     '힌트는 어느 칸이 확정되는지와 그 이유를 알려 줍니다. 힌트와 되돌리기는 언제나 무료입니다.',
-  sudokuChallengeMismatch: '이 도전은 다른 버전의 게임에서 만들어졌습니다.',
 };

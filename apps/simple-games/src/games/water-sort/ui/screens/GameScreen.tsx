@@ -42,7 +42,6 @@ export function WaterGameScreen() {
     applyUndo,
     requestHint,
     goHome,
-    exitToCollection,
     restartCurrent,
     startNextLevel,
     startFree,
@@ -184,14 +183,12 @@ export function WaterGameScreen() {
   useGameKeys(onKey, session !== null && session.status === 'playing' && !confirmRestart);
 
   if (!session) return null;
-  // A Club House challenge's board goes back where it came from — the Club (§14).
-  const leave = session.mode === 'club' ? exitToCollection : goHome;
 
   return (
     <div className="screen game-screen">
       <div className="game-content" inert={solved || confirmRestart}>
         <header className="game-topbar">
-          <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={leave}>
+          <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
             <IconBack />
           </button>
           <div className="ws-status">
@@ -200,9 +197,7 @@ export function WaterGameScreen() {
                 ? t('modeDaily')
                 : session.mode === 'free'
                   ? t('freePlay')
-                  : session.mode === 'club'
-                    ? t('clubEntry')
-                    : t('modeLevel', { n: session.level ?? 1 })}
+                  : t('modeLevel', { n: session.level ?? 1 })}
             </span>
             <span className="ws-move-count">
               {t('movesLabel')} {session.moveCount}
@@ -263,7 +258,7 @@ export function WaterGameScreen() {
         onRetry={restartCurrent}
         onNextLevel={startNextLevel}
         onNewFree={() => startFree(session.freeTier ?? freeTier)}
-        onHome={leave}
+        onHome={goHome}
       />
 
       <RestartDialog

@@ -38,5 +38,4 @@ export const ko: MinesweeperMessages = {
   minesStep2Body: '칸을 길게 누르면 깃발이 꽂힙니다. 깃발 모드에서는 그냥 탭해도 됩니다.',
   minesStep3Title: '나머지를 열면 승리',
   minesStep3Body: '첫 탭은 언제나 안전하고, 어떤 판도 찍을 필요가 없습니다.',
-  minesChallengeMismatch: '이 도전은 다른 버전의 게임에서 만들어졌습니다.',
 };

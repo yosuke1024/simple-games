@@ -22,7 +22,6 @@ const isTier = (value: unknown): value is FreeTier => TIERS.includes(value as Fr
 
 export const WATER_SORT_CHALLENGE = {
   contractVersion: 1 as const,
-  seedPrefix: 'water-club-',
   /** Moves are the axis; time and hints are shown, never ranked (club.md §6-1). */
   order: 'moves',
   direction: 'asc' as const,

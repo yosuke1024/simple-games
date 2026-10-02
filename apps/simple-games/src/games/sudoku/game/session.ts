@@ -106,21 +106,10 @@ export function createFreeSession(
   return baseSession('free', seed, difficulty, null, null, puzzle.givens, puzzle.solution);
 }
 
-/**
- * A Club House challenge's board (§15): the same generator a free board uses,
- * fed the challenge's seed and tier, so every member who plays it solves the
- * same grid. Its own mode, because its own slot and no statistics.
- */
-export function createClubSession(params: { difficulty: Difficulty }, seed: string): SudokuSession {
-  const puzzle = generatePuzzle(seed, params.difficulty);
-  return baseSession('club', seed, params.difficulty, null, null, puzzle.givens, puzzle.solution);
-}
-
 /** Rebuilds the same puzzle from scratch (Restart). */
 export function restartSession(session: SudokuSession): SudokuSession {
   if (session.mode === 'level' && session.level !== null) return createLevelSession(session.level);
   if (session.mode === 'daily') return createDailySession(session.dailyDate ?? '');
-  if (session.mode === 'club') return createClubSession(session, session.seed);
   return createFreeSession(session.difficulty, session.seed);
 }
 

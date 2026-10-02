@@ -38,7 +38,9 @@ export const vi: ClubMessages = {
   clubSettings: 'Cài đặt',
   clubDisconnect: 'Ngắt kết nối thiết bị này',
   clubDisconnectBody:
-    'Ngăn thiết bị này kết nối với {club}. Máy chủ vẫn chạy và những người khác vẫn chơi được. Để dừng chi phí lưu trữ, hãy xóa máy chủ trong trang quản trị của nhà cung cấp lưu trữ.',
+    'Ngăn thiết bị này kết nối với {club}. Máy chủ vẫn chạy và những người khác vẫn chơi được.',
+  clubDisconnectHostingNote:
+    'Để dừng chi phí lưu trữ, hãy xóa máy chủ trong trang quản trị của nhà cung cấp lưu trữ.',
   clubDisconnectLastOwner:
     'Đây là thiết bị Owner duy nhất. Hãy thêm một thiết bị Owner khác trước, hoặc đặt lại khóa thiết lập trong trang quản trị của nhà cung cấp lưu trữ để nhận lại Club.',
   clubDisconnectConfirm: 'Ngắt kết nối',

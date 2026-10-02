@@ -1,10 +1,9 @@
 /**
- * The board's identity for a Club House challenge (docs/architecture/club.md
- * §6-4, docs/MINESWEEPER_RULES.md §14): the mine bits after the first tap, as
- * the golden tests write them, through this game's own xmur3. Not a guard
- * against tampering — a check that two devices laid the same mines from the
- * same seed and first cell, so a generator that changed between versions
- * cannot pair two different minefields under one challenge.
+ * The board's identity for the Club House (docs/architecture/club.md §6-4,
+ * docs/MINESWEEPER_RULES.md §14): the mine bits after the first tap, as the
+ * golden tests write them, through this game's own xmur3. Not a guard against
+ * tampering — it travels with a ranking result as the optional `boardDigest`,
+ * so a generator that changed between versions is visible to the Club.
  */
 import type { Board } from './engine';
 import { hashSeed } from './rng';
@@ -18,7 +17,7 @@ export function boardDigest(board: Board): string {
 }
 
 /**
- * Any session's digest — difficulty, daily or club. The mines never move once
+ * Any session's digest — difficulty or daily. The mines never move once
  * the first tap has laid them; a board that has not been tapped yet has none,
  * and no result screen ever shows one.
  */

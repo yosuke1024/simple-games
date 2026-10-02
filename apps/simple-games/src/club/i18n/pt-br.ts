@@ -37,7 +37,9 @@ export const ptBR: ClubMessages = {
   clubSettings: 'Configurações',
   clubDisconnect: 'Desconectar este dispositivo',
   clubDisconnectBody:
-    'Impede que este dispositivo se conecte a {club}. O servidor continua funcionando e os outros ainda podem jogar. Para parar o custo de hospedagem, exclua o servidor no painel do seu provedor de hospedagem.',
+    'Impede que este dispositivo se conecte a {club}. O servidor continua funcionando e os outros ainda podem jogar.',
+  clubDisconnectHostingNote:
+    'Para parar o custo de hospedagem, exclua o servidor no painel do seu provedor de hospedagem.',
   clubDisconnectLastOwner:
     'Este é o único dispositivo Owner. Adicione outro dispositivo Owner primeiro, ou redefina a chave de configuração no painel do seu provedor de hospedagem para reivindicar o Club novamente.',
   clubDisconnectConfirm: 'Desconectar',

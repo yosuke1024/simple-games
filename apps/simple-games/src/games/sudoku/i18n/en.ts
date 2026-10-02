@@ -40,7 +40,6 @@ export const en = {
   sudokuStep2Body: 'Tap Notes to pencil in candidates while you narrow a cell down.',
   sudokuStep3Title: 'Stuck? Take a hint',
   sudokuStep3Body: 'A hint shows which cell is decided and why. Hints and undo are always free.',
-  sudokuChallengeMismatch: 'This challenge was made with a different version of the game.',
 } as const;
 
 /** Every locale of this game must provide exactly these keys. */

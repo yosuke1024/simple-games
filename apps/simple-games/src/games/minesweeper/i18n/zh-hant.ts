@@ -38,5 +38,4 @@ export const zhHant: MinesweeperMessages = {
   minesStep2Body: '長按格子就能插旗。開啟插旗模式後，輕點就能插旗。',
   minesStep3Title: '翻開其餘的就贏了',
   minesStep3Body: '第一次點一定安全，而且任何盤面都不需要猜。',
-  minesChallengeMismatch: '這個挑戰是用另一個版本的遊戲建立的。',
 };

@@ -35,5 +35,4 @@ export const hi: SudokuMessages = {
   sudokuStep2Body: 'खाना तय करते समय उम्मीदवार लिखने के लिए नोट्स दबाएँ।',
   sudokuStep3Title: 'अटक गए? संकेत लें',
   sudokuStep3Body: 'संकेत बताता है कौन-सा खाना तय है और क्यों। संकेत और अनडू हमेशा मुफ़्त हैं।',
-  sudokuChallengeMismatch: 'यह चुनौती गेम के किसी दूसरे संस्करण में बनाई गई थी।',
 };

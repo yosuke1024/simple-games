@@ -4,6 +4,10 @@
  * languages a native reader has checked and in no other; the badge is there
  * for every locale; nothing at all renders for a released title or on the app,
  * where a beta title is never shown in the first place.
+ *
+ * No registry title is on the channel today (all graduated 2026-10-02), so the
+ * registry this file sees carries one synthetic beta entry: the mechanism is
+ * kept and tested for the next beta.
  */
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -20,6 +24,19 @@ vi.mock('@capacitor/core', async (importOriginal) => {
       getPlatform: () => (capacitorMock.native ? 'android' : 'web'),
     },
   };
+});
+
+// The registry plus one synthetic web-beta title, a released game's shape under
+// an id and title of its own. Every importer in this file sees the same list.
+vi.mock('../../app/registry', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../app/registry')>();
+  const synthetic = {
+    ...actual.GAMES.find((game) => game.id === 'sudoku')!,
+    id: 'synthetic-beta',
+    title: 'Synthetic Beta',
+    channel: 'web-beta',
+  } as unknown as (typeof actual.GAMES)[number];
+  return { ...actual, GAMES: [...actual.GAMES, synthetic] };
 });
 
 import { GAMES, type GameId } from '../../app/registry';
@@ -46,8 +63,10 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('WebBetaNotice', () => {
-  it('has a beta title to speak about', () => {
+  it('has a beta title to speak about — the synthetic one, since none ships', () => {
     expect(beta).toBeDefined();
+    expect(beta.id).toBe('synthetic-beta');
+    expect(released).toBeDefined();
   });
 
   it('shows the badge and the save caveat in English', () => {

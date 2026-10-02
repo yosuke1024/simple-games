@@ -37,7 +37,9 @@ export const ko: ClubMessages = {
   clubSettings: '설정',
   clubDisconnect: '이 기기 연결 해제',
   clubDisconnectBody:
-    '이 기기가 {club}에 연결되지 않게 합니다. 서버는 계속 실행되며 다른 사람들은 계속 플레이할 수 있습니다. 호스팅 사용을 멈추려면 호스팅 제공업체의 대시보드에서 서버를 삭제하세요.',
+    '이 기기가 {club}에 연결되지 않게 합니다. 서버는 계속 실행되며 다른 사람들은 계속 플레이할 수 있습니다.',
+  clubDisconnectHostingNote:
+    '호스팅 사용을 멈추려면 호스팅 제공업체의 대시보드에서 서버를 삭제하세요.',
   clubDisconnectLastOwner:
     '이 기기는 유일한 Owner 기기입니다. 먼저 다른 Owner 기기를 추가하거나, 호스팅 제공업체의 대시보드에서 설정 키를 재설정하여 Club을 다시 가져오세요.',
   clubDisconnectConfirm: '연결 해제',

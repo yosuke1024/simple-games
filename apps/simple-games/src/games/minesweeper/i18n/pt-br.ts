@@ -38,5 +38,4 @@ export const ptBR: MinesweeperMessages = {
   minesStep2Body: 'Toque e segure uma casa para marcá-la. No modo bandeira, basta um toque.',
   minesStep3Title: 'Abra o resto para vencer',
   minesStep3Body: 'O primeiro toque é sempre seguro e nenhum tabuleiro exige adivinhação.',
-  minesChallengeMismatch: 'Este desafio foi criado com outra versão do jogo.',
 };

@@ -37,7 +37,9 @@ export const tr: ClubMessages = {
   clubSettings: 'Ayarlar',
   clubDisconnect: 'Bu cihazın bağlantısını kes',
   clubDisconnectBody:
-    'Bu cihazın {club} Club’ına bağlanmasını durdurur. Sunucu çalışmaya devam eder ve diğerleri oynamayı sürdürebilir. Barındırma masrafını durdurmak için sunucuyu barındırma sağlayıcının panelinden sil.',
+    'Bu cihazın {club} Club’ına bağlanmasını durdurur. Sunucu çalışmaya devam eder ve diğerleri oynamayı sürdürebilir.',
+  clubDisconnectHostingNote:
+    'Barındırma masrafını durdurmak için sunucuyu barındırma sağlayıcının panelinden sil.',
   clubDisconnectLastOwner:
     'Bu, tek Owner cihazı. Önce başka bir Owner cihazı ekle ya da Club’ı yeniden sahiplenmek için barındırma sağlayıcının panelinde kurulum anahtarını sıfırla.',
   clubDisconnectConfirm: 'Bağlantıyı kes',

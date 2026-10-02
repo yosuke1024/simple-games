@@ -35,12 +35,13 @@ const PAGE_LOCALES = ['en', 'ja', 'es', 'pt-br', 'fr', 'id', 'de', 'th', 'vi', '
 
 /**
  * The titles whose guides are live at `${LANDING_BASE_URL}/games/<id>/<locale>/`
- * in every PAGE_LOCALES language. All thirty shipped titles have one. The
- * mechanism stays: a future title ships without an entry until its guides are
- * deployed, and until then the tutorial simply ends without a "Learn More" —
- * which is honest, where a dead link would not be. The three titles in the
- * browser's early release (docs/WEB_VERSION.md「先行公開」, issue #194) are
- * exactly that case today: no guide, so no entry, so no button.
+ * in every PAGE_LOCALES language. Thirty of the forty-one shipped titles have
+ * one. The mechanism stays: a title ships without an entry until its guides
+ * are deployed, and until then the tutorial simply ends without a "Learn More"
+ * — which is honest, where a dead link would not be. The eleven titles that
+ * graduated from the browser's early release on 2026-10-02
+ * (docs/WEB_VERSION.md「先行公開」) are exactly that case today: no guide, so
+ * no entry, so no button.
  */
 const PUBLISHED_GAME_IDS: readonly string[] = [
   'sudoku',
