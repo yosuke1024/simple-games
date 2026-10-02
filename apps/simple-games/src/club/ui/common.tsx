@@ -83,8 +83,22 @@ export function tierLabel(key: string, t: T): string {
   if (key === 'easy') return t('clubTier_easy');
   if (key === 'medium') return t('clubTier_medium');
   if (key === 'hard') return t('clubTier_hard');
-  return key;
+  // Solitaire's draw and Spider's suit count (their contracts' paramsKey).
+  if (key === 'draw-1') return t('clubTier_draw1');
+  if (key === 'draw-3') return t('clubTier_draw3');
+  if (key === '1-suit') return t('clubTier_suit1');
+  if (key === '2-suits') return t('clubTier_suits2');
+  if (key === '4-suits') return t('clubTier_suits4');
+  // A board size reads as the game's own screens write it: 8×8, not 8x8.
+  return key.replace(/^(\d+)x(\d+)/, '$1×$2');
 }
+
+/**
+ * The paramsKey of a game with one table (`standard`) or of a daily board
+ * (Water Sort's `daily`) says nothing a title needs: the title is the game,
+ * and a daily already carries the Daily label.
+ */
+export const isSilentTier = (key: string): boolean => key === 'standard' || key === 'daily';
 
 export function dateLabel(iso: string, locale: string): string {
   const time = Date.parse(iso);

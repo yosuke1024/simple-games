@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Result } from '../api/types';
-import { contractFor, gameTitle, rankResults } from './challenge';
+import { contractFor, gameTitle, rankResults, RESULTS_PAGE } from './challenge';
 
 const res = (memberId: string, outcome: Result['outcome'], facts: unknown): Result => ({
   memberId,
@@ -42,6 +42,28 @@ describe('rankResults', () => {
     ]);
     expect(out.map((r) => r.result.memberId)).toEqual(['ok', 'bad']);
     expect(out[1]!.rank).toBeNull();
+  });
+
+  it('ranks a higher-is-better game from the top (the contract direction)', () => {
+    const out = rankResults(contractFor('reversi'), [
+      res('a', 'completed', { score: 20, cpuScore: 44 }),
+      res('b', 'completed', { score: 40, cpuScore: 24 }),
+      res('c', 'completed', { score: 30, cpuScore: 34 }),
+    ]);
+    expect(contractFor('reversi')?.direction).toBe('desc');
+    expect(out.map((r) => r.result.memberId)).toEqual(['b', 'c', 'a']);
+    expect(out.map((r) => r.rank)).toEqual([1, 2, 3]);
+  });
+
+  it('leaves the asker’s own row unnumbered when the server appends it after the best page', () => {
+    const page = Array.from({ length: RESULTS_PAGE }, (_, i) =>
+      res(`m${i}`, 'completed', sd(i + 1)),
+    );
+    const out = rankResults(contractFor('sudoku'), [...page, res('me', 'completed', sd(9999))]);
+    expect(out).toHaveLength(RESULTS_PAGE + 1);
+    expect(out[RESULTS_PAGE - 1]!.rank).toBe(RESULTS_PAGE);
+    expect(out[RESULTS_PAGE]!.result.memberId).toBe('me');
+    expect(out[RESULTS_PAGE]!.rank).toBeNull();
   });
 
   it('with no contract nothing is ranked', () => {
