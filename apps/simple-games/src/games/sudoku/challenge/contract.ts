@@ -23,7 +23,6 @@ const isDifficulty = (value: unknown): value is Difficulty =>
 
 export const SUDOKU_CHALLENGE = {
   contractVersion: 1 as const,
-  seedPrefix: 'sudoku-club-',
   /** Time is the axis; mistakes and hints are shown, never ranked (club.md §6-1). */
   order: 'elapsedSeconds',
   direction: 'asc' as const,

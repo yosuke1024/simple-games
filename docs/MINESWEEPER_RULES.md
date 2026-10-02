@@ -175,7 +175,6 @@ Sliding Puzzle(Undo のみ)と異なる。**ゲームごとに、その game の
 
 - 保存対象: 地雷配置、開閉状態、旗、経過秒数、seed、難易度または日付、
   初手が済んでいるか。
-- Club House の挑戦は 3 つ目のスロット `ms.saveClub` に置く(§14)。
 - 保存の失敗でゲームを止めない。壊れた保存データは読み捨てて既定値に戻す。
 
 ## 11. Quick Rules(アプリ内チュートリアル)
@@ -213,30 +212,25 @@ Sliding Puzzle(Undo のみ)と異なる。**ゲームごとに、その game の
 - 運で負ける盤面(推測なしを保証する。§4)
 - レベル 1〜100(段階が存在しないので作らない。§8)
 
-## 14. Club House の挑戦
+## 14. Club House への送信
 
-正典は [architecture/club.md](architecture/club.md) §6。ここにはこのゲームの側で決まることだけを書く。
+正典は [architecture/club.md](architecture/club.md) §6・§16。ここにはこのゲームの側で決まることだけを書く。
+Club House 用の別モードも保存スロットもない(2026-10-02 に出荷前に取り除いた。club.md §16-3)。
+Club に参加している端末では、結果画面の `Send to Club`(`ClubResultAction`)が、初手を済ませた局の
+結果を送る。
 
-- **3 つ目の中断スロット `ms.saveClub`(mode `club`)。** 挑戦の局は難易度・デイリーの
-  スロットを使わない。進行中の盤面が挑戦で置き換わることはなく、その逆もない。`club` の
-  レコードは日付を持たず、初手のマス(`firstIndex`)を必ず持つ。キーと `mode` が食い違えば
-  壊れたデータとして読み捨てる(§10)。
-- **初手は挑戦の一部である。** 同じ seed でも初手が違えば地雷が違う(§4)。挑戦は
-  `{ difficulty, firstIndex }` を持ち、盤面は `createDifficultySession(difficulty, seed)` に
-  `firstIndex` の 1 手を適用した状態で**開いて始まる**(`createClubSession`)。時計は 0 から。
-  作った人が見た開始局面と同じ局面から始まる。中断した挑戦を再開するのは、保存の seed と
-  初手が挑戦と同じときだけ。
-- **digest の照合。** `boardDigest` は初手適用後の地雷 bit 列(golden テストと同じ文字列)を
-  `game/rng.ts` の `hashSeed` に通した `ms1:` + 8 桁 hex(`game/challenge.ts`)。端末で並べた
-  地雷の digest が挑戦の digest と違えば、**遊ばせず送らせない**。画面には 1 行
-  (`minesChallengeMismatch`)と戻る操作だけを出す。params が契約に合わない(盤面の外の
-  初手を含む)ときも同じ。
-- **統計・自己ベスト・レビュー計数に触れない。** 勝っても負けても数えない。結果画面に
-  自己ベストの行は出ない。比べる相手は Club の順位表(club.md)で、その Club の中だけの表で
-  ある(§13 の「オンラインランキング」とは別)。
-- 挑戦から入った局は、戻る操作で Club へ戻る。Quick Rules を見ていない端末では
-  Quick Rules が先で、終えると挑戦の盤面に入る。
+- **送り先はランキングの表。** デイリーには `daily` の印を付けない — デイリーの盤面は初手で地雷が
+  決まる(§4)ので、全員が同じ盤面にはならず、Today の挑戦にならない。難易度の局もデイリーの局も、
+  難易度ごとの表に載る。
+- **初手は盤面の一部である。** 同じ seed でも初手が違えば地雷が違う(§4)。結果は
+  `{ difficulty, firstIndex }`(最初に開いたマス)を params に持つ。局を「その初手を開いた状態で
+  始める」ことはしない。
+- **`boardDigest`。** 初手適用後の地雷 bit 列(golden テストと同じ文字列)を `game/rng.ts` の
+  `hashSeed` に通した `ms1:` + 8 桁 hex(`game/challenge.ts`)。デイリーは印が無いので Today の
+  挑戦と照合されず、digest はランキングへの送信に任意の `boardDigest` として添うだけである。
 - **結果画面が送る事実**は、勝ちなら `{ elapsedSeconds, hints }`(outcome `completed`)、
   負けなら `{}`(outcome `played` — 敗北も 1 回に数える)。共有の `details` と同じセッションの
-  値から作る。params は `{ difficulty, firstIndex }`。難易度・デイリーの局も同じ形で
-  `Send to Club` に載る。
+  値から作る。
+- **送信はゲームの局を変えない。** 統計・自己ベスト・レビュー計数は、Club に参加していても
+  いなくても同じに数える。比べる相手は Club の表で、その Club の中だけの表である(§13 の
+  「オンラインランキング」とは別)。

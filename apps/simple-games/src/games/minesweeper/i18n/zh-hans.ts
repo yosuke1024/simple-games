@@ -38,5 +38,4 @@ export const zhHans: MinesweeperMessages = {
   minesStep2Body: '长按格子插旗。开启插旗模式后，轻点就能插旗。',
   minesStep3Title: '翻开其余格子就赢',
   minesStep3Body: '第一次点击一定安全，任何盘面都不需要猜。',
-  minesChallengeMismatch: '这个挑战是用另一个版本的游戏创建的。',
 };

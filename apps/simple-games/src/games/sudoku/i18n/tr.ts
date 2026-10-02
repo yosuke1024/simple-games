@@ -37,5 +37,4 @@ export const tr: SudokuMessages = {
   sudokuStep3Title: 'Sıkıştın mı? İpucu al',
   sudokuStep3Body:
     'İpucu hangi karenin belli olduğunu ve nedenini gösterir. İpuçları ve geri alma her zaman ücretsiz.',
-  sudokuChallengeMismatch: 'Bu meydan okuma oyunun farklı bir sürümüyle oluşturuldu.',
 };

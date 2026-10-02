@@ -17,17 +17,14 @@ import {
   type GameMode,
   type MinesweeperSession,
 } from '../game';
-import { clubGameSchema, dailyGameSchema, gameSchema, type PersistedGame } from './schemas';
+import { dailyGameSchema, gameSchema, type PersistedGame } from './schemas';
 
 export interface SavedGames {
   difficulty: MinesweeperSession | null;
   daily: MinesweeperSession | null;
-  /** A Club House challenge in progress (§14). */
-  club: MinesweeperSession | null;
 }
 
-const schemaFor = (mode: GameMode) =>
-  mode === 'daily' ? dailyGameSchema : mode === 'club' ? clubGameSchema : gameSchema;
+const schemaFor = (mode: GameMode) => (mode === 'daily' ? dailyGameSchema : gameSchema);
 
 export function toPersisted(session: MinesweeperSession, savedAt: number): PersistedGame {
   const board = encodeBoard(session.board);
@@ -98,9 +95,6 @@ function toSession(persisted: PersistedGame | null): MinesweeperSession | null {
  * finished or unreadable record cannot reach here; repeating it keeps this
  * readable on its own and matches how the home screen re-derives the same fact.
  *
- * A suspended Club House challenge is never the answer (§14): a challenge is
- * opened from the Club, which says which one, and a shortcut does not.
- *
  * Reads the game's own saves and nothing else: the shell hands over which door
  * was used and never learns what this decided
  * (docs/ARCHITECTURE.md「ゲームレジストリの契約」).
@@ -113,12 +107,11 @@ export function soleSuspendedMode(saved: SavedGames): GameMode | null {
 }
 
 async function loadSlots(kv: KVStore): Promise<SavedGames> {
-  const [difficulty, daily, club] = await Promise.all([
+  const [difficulty, daily] = await Promise.all([
     loadRecord(gameSchema, kv),
     loadRecord(dailyGameSchema, kv),
-    loadRecord(clubGameSchema, kv),
   ]);
-  return { difficulty: toSession(difficulty), daily: toSession(daily), club: toSession(club) };
+  return { difficulty: toSession(difficulty), daily: toSession(daily) };
 }
 
 /**

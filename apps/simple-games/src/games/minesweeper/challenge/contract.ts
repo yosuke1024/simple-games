@@ -25,13 +25,12 @@ const MAX_FIRST_INDEX = 14 * 18 - 1;
 
 export const MINESWEEPER_CHALLENGE = {
   contractVersion: 1 as const,
-  seedPrefix: 'mines-club-',
   order: 'elapsedSeconds',
   direction: 'asc' as const,
   /**
-   * The first tap is part of the challenge: the same seed with a different
-   * first cell is a different minefield (club.md §6-0), so every player's
-   * board opens on this cell with the clock at zero.
+   * The first tap is part of the board: the same seed with a different first
+   * cell is a different minefield (club.md §6-0), so a result carries the
+   * cell it was opened on.
    */
   validateParams(raw: unknown): Record<string, unknown> | null {
     if (!isRecord(raw) || !isDifficulty(raw.difficulty)) return null;

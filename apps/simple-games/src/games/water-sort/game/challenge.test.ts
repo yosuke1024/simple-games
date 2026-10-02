@@ -1,8 +1,8 @@
 /**
- * A Club House challenge's board (docs/WATER_SORT_RULES.md §14,
- * docs/architecture/club.md §6-4). The digest is what two devices compare to
- * know they are about to pour the same tubes, so it is pinned like the boards
- * themselves: a digest that moves is every open challenge refusing to play.
+ * The board digest and ranking tier the Club House sends (docs/WATER_SORT_RULES.md
+ * §14, docs/architecture/club.md §6-4). The digest is how two results are known
+ * to be about the same tubes, so it is pinned like the boards themselves: a
+ * digest that moves is every older result no longer matching.
  * Level 1 and the daily of 2026-08-01 are the boards compatibility.test.ts
  * already pins; these lines pin what they hash to.
  */
@@ -11,12 +11,10 @@ import { boardDigest, boardDigestOf, challengeTierOf } from './challenge';
 import { tubesToString } from './generator';
 import { levelSeed } from './levels';
 import {
-  createClubSession,
   createDailySession,
   createFreeSession,
   createLevelSession,
   pour,
-  restartSession,
   type WaterSession,
 } from './session';
 
@@ -51,38 +49,14 @@ describe('board digest', () => {
   });
 });
 
-describe('a club session', () => {
-  it('is the free deal on the challenge’s seed and tier, in its own mode', () => {
-    const seed = 'water-club-golden';
-    const club = createClubSession({ tier: 'hard' }, seed);
-    const free = createFreeSession('hard', seed);
-    expect(club.mode).toBe('club');
-    expect(club.seed).toBe(seed);
-    expect(club.freeTier).toBe('hard');
-    expect(club.level).toBeNull();
-    expect(club.dailyDate).toBeNull();
-    expect(club.elapsedSeconds).toBe(0);
-    expect(tubesToString(club.tubes)).toBe(tubesToString(free.tubes));
-    expect(boardDigestOf(club)).toBe(boardDigestOf(free));
-  });
-
-  it('restarts onto the same challenge, still a club game', () => {
-    const club = createClubSession({ tier: 'easy' }, 'water-club-restart');
-    const again = restartSession(onePour(club));
-    expect(again.mode).toBe('club');
-    expect(again.freeTier).toBe('easy');
-    expect(tubesToString(again.tubes)).toBe(tubesToString(club.tubes));
-  });
-});
-
-describe('the tier a challenge carries', () => {
+describe('the ranking tier of a board', () => {
   it('is a free board’s own tier', () => {
     expect(challengeTierOf(createFreeSession('medium', 'water-free-x'))).toBe('medium');
   });
 
   it('exists for a level only when a tier deals exactly that board', () => {
     // A tier is one level's colours and mix (levels.ts FREE_TIER_LEVEL): that
-    // level, and no other, can be replayed as a challenge under its own seed.
+    // level, and no other, is dealt exactly by its tier under its own seed.
     expect(challengeTierOf(createLevelSession(10))).toBe('easy');
     expect(challengeTierOf(createLevelSession(50))).toBe('medium');
     expect(challengeTierOf(createLevelSession(95))).toBe('hard');
@@ -91,7 +65,7 @@ describe('the tier a challenge carries', () => {
     for (const level of [10, 50, 95]) {
       const board = createLevelSession(level);
       const tier = challengeTierOf(board)!;
-      const replay = createClubSession({ tier }, levelSeed(level));
+      const replay = createFreeSession(tier, levelSeed(level));
       expect(boardDigestOf(replay)).toBe(boardDigestOf(board));
     }
   });

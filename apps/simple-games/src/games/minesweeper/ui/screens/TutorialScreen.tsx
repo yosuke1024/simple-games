@@ -52,15 +52,7 @@ function MiniBoard({ cells, focus }: { cells: readonly string[]; focus?: number 
 }
 
 export function MinesTutorialScreen() {
-  const {
-    tutorialCompleted,
-    completeTutorial,
-    startDifficulty,
-    goHome,
-    openedOnChallenge,
-    canResume,
-    resumeGame,
-  } = useMinesweeper();
+  const { tutorialCompleted, completeTutorial, startDifficulty, goHome } = useMinesweeper();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('minesweeper', locale);
   const [step, setStep] = useState(0);
@@ -91,9 +83,7 @@ export function MinesTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      // Opened onto a Club House challenge: the rules lead to its board (§14).
-      if (openedOnChallenge && canResume('club')) resumeGame('club');
-      else startDifficulty('easy');
+      startDifficulty('easy');
     } else {
       goHome();
     }

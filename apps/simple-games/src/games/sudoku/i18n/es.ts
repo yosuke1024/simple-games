@@ -38,5 +38,4 @@ export const es: SudokuMessages = {
   sudokuStep3Title: '¿Sin ideas? Pide una pista',
   sudokuStep3Body:
     'Una pista muestra qué casilla queda decidida y por qué. Las pistas y deshacer siempre son gratis.',
-  sudokuChallengeMismatch: 'Este desafío se creó con otra versión del juego.',
 };

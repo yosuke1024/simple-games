@@ -40,7 +40,6 @@ export function MinesGameScreen() {
     takeHint,
     setFlagMode,
     goHome,
-    exitToCollection,
     restartCurrent,
     startDifficulty,
     startNewBoard,
@@ -138,23 +137,19 @@ export function MinesGameScreen() {
   if (!session) return null;
 
   const finished = session.status !== 'playing';
-  // A Club House challenge's board goes back where it came from — the Club (§14).
-  const leave = session.mode === 'club' ? exitToCollection : goHome;
 
   return (
     <div className="screen game-screen">
       <div className="game-content" inert={finished || confirmRestart}>
         <header className="game-topbar">
-          <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={leave}>
+          <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
             <IconBack />
           </button>
           <div className="game-status">
             <span className="game-mode">
               {session.mode === 'daily'
                 ? t('modeDaily')
-                : session.mode === 'club'
-                  ? `${t('clubEntry')} · ${t(`minesDifficulty_${session.difficulty}`)}`
-                  : t(`minesDifficulty_${session.difficulty}`)}
+                : t(`minesDifficulty_${session.difficulty}`)}
             </span>
             <span className="mines-counter">
               <span className="mines-counter-glyph" aria-hidden="true">
@@ -220,7 +215,7 @@ export function MinesGameScreen() {
         lastResult={lastResult}
         onRetry={restartCurrent}
         onNewBoard={() => startDifficulty(session.difficulty)}
-        onHome={leave}
+        onHome={goHome}
       />
 
       <RestartDialog

@@ -16,30 +16,16 @@ import {
   type GameMode,
   type WaterSession,
 } from '../game';
-import {
-  clubGameSchema,
-  dailyGameSchema,
-  freeGameSchema,
-  gameSchema,
-  type PersistedGame,
-} from './schemas';
+import { dailyGameSchema, freeGameSchema, gameSchema, type PersistedGame } from './schemas';
 
 export interface SavedGames {
   level: WaterSession | null;
   daily: WaterSession | null;
   free: WaterSession | null;
-  /** A Club House challenge in progress (§14). */
-  club: WaterSession | null;
 }
 
 const schemaFor = (mode: GameMode) =>
-  mode === 'daily'
-    ? dailyGameSchema
-    : mode === 'free'
-      ? freeGameSchema
-      : mode === 'club'
-        ? clubGameSchema
-        : gameSchema;
+  mode === 'daily' ? dailyGameSchema : mode === 'free' ? freeGameSchema : gameSchema;
 
 export function toPersisted(session: WaterSession, savedAt: number): PersistedGame {
   return {
@@ -96,8 +82,6 @@ function toSession(persisted: PersistedGame | null): WaterSession | null {
  * (docs/ARCHITECTURE.md「ゲームレジストリの契約」).
  */
 export function soleSuspendedMode(saved: SavedGames): GameMode | null {
-  // Never the Club House slot (§14): a challenge is opened from the Club,
-  // which says which one, and a shortcut does not.
   const suspended = (['level', 'daily', 'free'] as const).filter(
     (mode) => saved[mode]?.status === 'playing',
   );
@@ -105,18 +89,12 @@ export function soleSuspendedMode(saved: SavedGames): GameMode | null {
 }
 
 async function loadSlots(kv: KVStore): Promise<SavedGames> {
-  const [level, daily, free, club] = await Promise.all([
+  const [level, daily, free] = await Promise.all([
     loadRecord(gameSchema, kv),
     loadRecord(dailyGameSchema, kv),
     loadRecord(freeGameSchema, kv),
-    loadRecord(clubGameSchema, kv),
   ]);
-  return {
-    level: toSession(level),
-    daily: toSession(daily),
-    free: toSession(free),
-    club: toSession(club),
-  };
+  return { level: toSession(level), daily: toSession(daily), free: toSession(free) };
 }
 
 /**

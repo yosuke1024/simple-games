@@ -41,7 +41,7 @@ export function WaterResultOverlay({
   // The board's identity for the Club (§14): the tier that deals it and the
   // digest of its starting tubes. Rebuilding the deal is a generation, so it
   // is done once per finished board rather than on every render. A level or
-  // daily board no tier deals carries no challenge (challengeTierOf).
+  // daily board no tier deals has no ranking (challengeTierOf).
   const { mode, seed, level, dailyDate, freeTier } = session;
   const club = useMemo(() => {
     if (!solved) return null;

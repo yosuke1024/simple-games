@@ -37,5 +37,4 @@ export const id: SudokuMessages = {
   sudokuStep3Title: 'Bingung? Ambil petunjuk',
   sudokuStep3Body:
     'Petunjuk menunjukkan sel mana yang sudah pasti dan alasannya. Petunjuk dan undo selalu gratis.',
-  sudokuChallengeMismatch: 'Tantangan ini dibuat dengan versi game yang berbeda.',
 };

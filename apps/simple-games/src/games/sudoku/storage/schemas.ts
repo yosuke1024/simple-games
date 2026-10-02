@@ -231,9 +231,7 @@ export interface PersistedGame {
 const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
   const mode =
-    raw.mode === 'level' || raw.mode === 'daily' || raw.mode === 'free' || raw.mode === 'club'
-      ? raw.mode
-      : null;
+    raw.mode === 'level' || raw.mode === 'daily' || raw.mode === 'free' ? raw.mode : null;
   const seed = asString(raw.seed);
   const difficulty = asDifficulty(raw.difficulty);
   const dailyDate = raw.dailyDate === null ? null : asDateString(raw.dailyDate);
@@ -270,8 +268,6 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (mode === 'level' && level === null) return null;
   // A free board has neither a level number nor a date to be about.
   if (mode === 'free' && (level !== null || dailyDate !== null)) return null;
-  // Nor does a Club House challenge's (§15): its seed and tier are the board.
-  if (mode === 'club' && (level !== null || dailyDate !== null)) return null;
 
   return {
     schemaVersion: 1,
@@ -319,8 +315,3 @@ export const gameSchema = gameSlotSchema(SD_STORAGE_KEYS.game, 'level');
 export const dailyGameSchema = gameSlotSchema(SD_STORAGE_KEYS.dailyGame, 'daily');
 /** Suspended free board (§9「フリープレイ」): its own slot, for the same reason. */
 export const freeGameSchema = gameSlotSchema(SD_STORAGE_KEYS.freeGame, 'free');
-/**
- * Suspended Club House challenge (§15): a fourth slot, so a challenge never
- * replaces a free board in progress, and a free board never a challenge.
- */
-export const clubGameSchema = gameSlotSchema(SD_STORAGE_KEYS.clubGame, 'club');

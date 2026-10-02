@@ -34,7 +34,7 @@ export interface WaterSession {
   readonly dailyDate: string | null;
   /** 1..100 for level mode, null for the daily and for free play. */
   readonly level: number | null;
-  /** The tier a free or Club House board was dealt at (§6「フリープレイ」, §14), null otherwise. */
+  /** The tier a free board was dealt at (§6「フリープレイ」), null otherwise. */
   readonly freeTier: FreeTier | null;
   readonly tubes: Tubes;
   /** Board snapshots before each pour, oldest first. */
@@ -113,25 +113,10 @@ export function createFreeSession(
   return baseSession('free', seed, colors, null, null, tier, puzzle.tubes);
 }
 
-/**
- * A Club House challenge's board (§14): a free board's deal at the
- * challenge's tier under the challenge's seed, so every member who plays it
- * pours the same tubes. Its own mode, because its own slot and no statistics;
- * the tier stays on the session, because it is what rebuilds the board.
- */
-export function createClubSession(params: { tier: FreeTier }, seed: string): WaterSession {
-  const level = FREE_TIER_LEVEL[params.tier];
-  const colors = colorsForLevel(level);
-  const puzzle = generatePuzzle(seed, colors, mixForLevel(level));
-  return baseSession('club', seed, colors, null, null, params.tier, puzzle.tubes);
-}
-
 /** Rebuilds the same board from scratch (Restart). */
 export function restartSession(session: WaterSession): WaterSession {
   if (session.mode === 'level' && session.level !== null) return createLevelSession(session.level);
   if (session.mode === 'daily') return createDailySession(session.dailyDate ?? '');
-  if (session.mode === 'club')
-    return createClubSession({ tier: session.freeTier ?? 'medium' }, session.seed);
   return createFreeSession(session.freeTier ?? 'medium', session.seed);
 }
 

@@ -39,5 +39,4 @@ export const fr: MinesweeperMessages = {
     'Appui long sur une case pour la marquer. En mode drapeau, un simple appui suffit.',
   minesStep3Title: 'Ouvrez le reste pour gagner',
   minesStep3Body: "Le premier appui est toujours sûr, et aucune grille n'oblige à deviner.",
-  minesChallengeMismatch: 'Ce défi a été créé avec une autre version du jeu.',
 };

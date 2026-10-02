@@ -1,21 +1,14 @@
 /**
- * A Club House challenge's board (docs/SUDOKU_RULES.md §15,
- * docs/architecture/club.md §6-4). The digest is what two devices compare to
- * know they are about to play the same grid, so it is pinned like the boards
- * themselves: a digest that moves is every open challenge refusing to play.
+ * The board digest the Club House compares (docs/SUDOKU_RULES.md §15,
+ * docs/architecture/club.md §6-4). It is what tells Today's daily challenge
+ * that a device played the same grid, so it is pinned like the boards
+ * themselves: a digest that moves is every device's daily no longer matching.
  * Level 1 and the daily of 2026-08-01 are the boards compatibility.test.ts
  * already pins; these lines pin what they hash to.
  */
 import { describe, expect, it } from 'vitest';
 import { boardDigest, boardDigestOf } from './challenge';
-import { gridToString } from './generator';
-import {
-  createClubSession,
-  createDailySession,
-  createFreeSession,
-  createLevelSession,
-  restartSession,
-} from './session';
+import { createDailySession, createLevelSession } from './session';
 
 describe('board digest', () => {
   it('level 1 and the 2026-08-01 daily hash to their pinned digests', () => {
@@ -40,28 +33,5 @@ describe('board digest', () => {
       },
     };
     expect(boardDigestOf(played)).toBe(boardDigestOf(session));
-  });
-});
-
-describe('a club session', () => {
-  it('is the free generator on the challenge’s seed, in its own mode', () => {
-    const seed = 'sudoku-club-golden';
-    const club = createClubSession({ difficulty: 'hard' }, seed);
-    const free = createFreeSession('hard', seed);
-    expect(club.mode).toBe('club');
-    expect(club.seed).toBe(seed);
-    expect(club.difficulty).toBe('hard');
-    expect(club.level).toBeNull();
-    expect(club.dailyDate).toBeNull();
-    expect(club.elapsedSeconds).toBe(0);
-    expect(gridToString(club.board.givens)).toBe(gridToString(free.board.givens));
-    expect(boardDigestOf(club)).toBe(boardDigestOf(free));
-  });
-
-  it('restarts onto the same challenge, still a club game', () => {
-    const club = createClubSession({ difficulty: 'easy' }, 'sudoku-club-restart');
-    const again = restartSession(club);
-    expect(again.mode).toBe('club');
-    expect(boardDigestOf(again)).toBe(boardDigestOf(club));
   });
 });

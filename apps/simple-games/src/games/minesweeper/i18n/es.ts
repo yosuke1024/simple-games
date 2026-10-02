@@ -39,5 +39,4 @@ export const es: MinesweeperMessages = {
     'Mantén presionada una casilla para ponerle bandera. Con el modo bandera basta un toque.',
   minesStep3Title: 'Abre el resto para ganar',
   minesStep3Body: 'El primer toque siempre es seguro y ningún tablero exige adivinar.',
-  minesChallengeMismatch: 'Este desafío se creó con otra versión del juego.',
 };

@@ -39,12 +39,7 @@ export const cellCount = (preset: Preset): number => preset.width * preset.heigh
 /** Mine density, for the tests that pin the table of §1. */
 export const mineDensity = (preset: Preset): number => preset.mines / cellCount(preset);
 
-/**
- * A difficulty board, the daily, or a Club House challenge (§14) — a board
- * another player sent, opened on their first cell and kept out of the
- * statistics.
- */
-export type GameMode = 'difficulty' | 'daily' | 'club';
+export type GameMode = 'difficulty' | 'daily';
 
 /**
  * A game ends when a mine is opened; that is the game, not a punishment (§2).

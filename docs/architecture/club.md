@@ -31,7 +31,7 @@ issue #161 / #164 の本文とコメントは提案・検討の記録であり�
 - 端末側に保存する接続情報と未送信キュー(§4)
 - サーバとの API 契約(§5)。サーバ実装は別リポジトリだが、**契約はこちらが持つ** —
   クライアントを出荷するのはこのリポジトリであり、サーバはこの契約に合わせて作る
-- 挑戦(Challenge)と結果(Result)の型と、最初の 3 ゲームでの spike(§6)
+- 挑戦(Challenge)と結果(Result)の型と、ゲームごとの契約・盤面の同一性(§6)
 - 招待 URL の形と Web からの参加(§7)、Host になる導線(§8)、Club の画面(§9)
 - 通信の条件と障害の境界(§10)、i18n(§11)、発見の導線(§13)
 
@@ -454,14 +454,14 @@ Result の body に入るのは `contractVersion` / `boardDigest` / `outcome` / 
 時刻以外のメタデータは無い)。クライアント側の `api/types.ts` の型と、それを固定する
 ユニットテスト(§12)がこれを守る。
 
-## 6. 挑戦と結果の契約 — 3 本の spike
+## 6. 挑戦と結果の契約
 
 ### 6-0. 何が「挑戦が自然に成立する」か
 
 条件は 3 つ。(1) 盤面が seed から決定的に生まれる、(2) その決定性を golden テストが
 既に固定している(挑戦の同一性は、既存プレイヤーの自己ベストの土台と同じものに
 乗る)、(3) 結果画面が比較軸になる事実を表示している。
-Phase 0 の spike として 3 本を実装事実で確かめた(2026-09-09、`main` のコード):
+Phase 0 で Sudoku / Minesweeper / Water Sort の 3 本を実装事実で確かめた(2026-09-09、`main` のコード):
 
 | ゲーム      | seed → 盤面                                                                                                          | golden                                        | 結果画面の事実(= 共有の `details`) | 比較軸 |
 | ----------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ---------------------------------- | ------ |
@@ -476,18 +476,32 @@ Phase 0 の spike として 3 本を実装事実で確かめた(2026-09-09、`ma
 勝ち負けしか無い対 CPU のボードゲーム(Checkers / Connect Four / Gomoku / Ludo)と、結果画面に
 数字を出さない Brick Breaker / Bubble Pop(出すようになれば入る)。
 
-**Minesweeper の初手は Challenge の一部である**(spike の発見 1)。同じ seed でも初手が
-違えば地雷が違う(`generateField(seed, difficulty, firstIndex)`)。デイリーはこれを
-許している(比べないから)が、Challenge では許せないので `params.firstIndex` を持ち、
-参加者の局は**そのマスを開いた状態で始まる**(時計は 0 から)。作成者が見た開始局面と
-同じ局面から始めることになり、これは「同じ盤面」の定義そのものである。
+**Minesweeper の初手は盤面の一部である**(Phase 0 の発見 1)。同じ seed でも初手が
+違えば地雷が違う(`generateField(seed, difficulty, firstIndex)`)。そのためデイリーは
+全員同じ盤面にならず、Today の挑戦にならない(§6-3「`daily` の印」)。結果は `params.firstIndex`
+(最初に開いたマス)と `boardDigest` を添えてランキングへ送る(§16)。局を「その初手を
+開いた状態で始める」ことはしない — 挑戦の盤面を別の端末で作り直す経路(下記)は 2026-10-02 に
+出荷前に取り除いた。
 
-**seed は生成器の版に依存する**(spike の発見 2)。golden が守っている限り版が変わって
+**seed は生成器の版に依存する**(Phase 0 の発見 2)。golden が守っている限り版が変わって
 も同じ盤面だが、golden を意図して更新した版(自己ベストの土台を変える判断をした版)と
 古い版の間では同じ seed が違う盤面になる。Challenge は `boardDigest`(§6-4)を持ち、
-参加者の端末で生成した盤面の digest が違えば**遊ばせず送らせない**
-(`This challenge was made with a different version of the game`)。比較の同一性は
-文書ではなく digest で守る。
+比較の同一性は文書ではなく digest で守る。現在の挙動は次のとおり(`ui/components/ClubResultAction.tsx`、
+`club/bridge.ts`):
+
+- Today の `Play` はそのゲームを**普通の入口で開く**だけで(プレイヤーがデイリーを遊ぶ)、挑戦の盤面は渡さない(§16-3)。
+  シェルが `ActiveChallenge`(挑戦の id と `boardDigest`)を覚えておく。
+- 結果画面の `ClubResultAction` は、遊んだ局の digest が `ActiveChallenge` のものと**一致した
+  ときだけ**、その挑戦の結果として自動送信する(`isChallengeBoard`)。サーバも一致しない
+  digest を `409 board_mismatch` で受けない(§5-4)。
+- 一致しなければ(生成器が変わった版の端末など)、その局は挑戦の盤面ではなく、画面は通常の
+  `Send to Club` に戻る。デイリーなら、押せばその端末の digest で `POST /challenges` され、同じ `gameId` +
+  `seed` + `boardDigest` の別の挑戦になる(§6-3「盤面ごとに挑戦は 1 つ」)— 元の挑戦の
+  結果にはならない。
+- **局を拒む画面は無い。** 以前(spike)は、ゲームが挑戦の盤面を受け取って digest を照合し、
+  不一致なら遊ばせず `This challenge was made with a different version of the game` を出していた。
+  この経路(`challenge` prop・per-game の club モード・4 つ目の保存枠)は 2026-10-02 に
+  出荷前に取り除いた(§16-3)。
 
 ### 6-1. ゲームごとの契約(v1)
 
@@ -504,8 +518,6 @@ interface GameChallengeContract<P, F> {
   order: keyof F;
   /** `asc` = 小さいほど上(時間・手数)、`desc` = 大きいほど上(スコア)。2026-10-02 */
   direction: 'asc' | 'desc';
-  /** Challenge の局に使う seed の接頭辞(§6-2)。club モードを持つ 3 本だけ */
-  seedPrefix?: string;
 }
 ```
 
@@ -520,11 +532,11 @@ params(表を分けるモード)と facts(結果画面の数字)はそのゲー�
 | スコア         | `desc`      | 2048 / Block Puzzle / Bunny Hop / Sky Fighter / Number Recall / Yacht / Gin Rummy / Dominoes / Mancala / Reversi(石数)/ Dots and Boxes(箱数)                                                                         |
 | 低いほど良い点 | `asc`       | Hearts                                                                                                                                                                                                               |
 
-| ゲーム      | `params`                                                        | `facts`(`completed`)                                 | `facts`(`played`) | `order`          | `paramsKey`  | `seedPrefix`   |
-| ----------- | --------------------------------------------------------------- | ---------------------------------------------------- | ----------------- | ---------------- | ------------ | -------------- |
-| sudoku      | `{ difficulty: 'easy' \| 'medium' \| 'hard' }`                  | `{ elapsedSeconds: int, mistakes: int, hints: int }` | (起きない)        | `elapsedSeconds` | `difficulty` | `sudoku-club-` |
-| minesweeper | `{ difficulty: 'easy' \| 'medium' \| 'hard', firstIndex: int }` | `{ elapsedSeconds: int, hints: int }`                | `{}`              | `elapsedSeconds` | `difficulty` | `mines-club-`  |
-| water-sort  | `{ tier: 'easy' \| 'medium' \| 'hard' }`                        | `{ moves: int, elapsedSeconds: int, hints: int }`    | (起きない)        | `moves`          | `tier`       | `water-club-`  |
+| ゲーム      | `params`                                                        | `facts`(`completed`)                                 | `facts`(`played`) | `order`          | `paramsKey`  |
+| ----------- | --------------------------------------------------------------- | ---------------------------------------------------- | ----------------- | ---------------- | ------------ |
+| sudoku      | `{ difficulty: 'easy' \| 'medium' \| 'hard' }`                  | `{ elapsedSeconds: int, mistakes: int, hints: int }` | (起きない)        | `elapsedSeconds` | `difficulty` |
+| minesweeper | `{ difficulty: 'easy' \| 'medium' \| 'hard', firstIndex: int }` | `{ elapsedSeconds: int, hints: int }`                | `{}`              | `elapsedSeconds` | `difficulty` |
+| water-sort  | `{ tier: 'easy' \| 'medium' \| 'hard' }`                        | `{ moves: int, elapsedSeconds: int, hints: int }`    | (起きない)        | `moves`          | `tier`       |
 
 - `int` は 0 以上の整数。`elapsedSeconds` は 0..86400、`moves` / `mistakes` / `hints` は
   0..100000。範囲外は validate が落とす。
@@ -539,10 +551,10 @@ params(表を分けるモード)と facts(結果画面の数字)はそのゲー�
   表示するが並べ替えに使わない — 「時間は速いがミスが多い」をどう順位付けるかを製品が
   決めた時点で、それは成績の比較ではなく採点になる。
 
-### 6-2. ゲーム側の対応 — レジストリの `challenge` と 4 つ目のスロット
+### 6-2. ゲーム側の対応 — レジストリの `challenge` と、シェルが覚える挑戦
 
-対応ゲームは 2 つのものを持つ。どちらも**そのゲームの中**に置き、シェルはレジストリ
-経由でしか触らない。
+対応ゲームが持つのは 1 つだけ。**そのゲームの中**に置き、シェルはレジストリ経由でしか触らない。
+ゲームは挑戦を受け取らない(`GameRootProps` は `onExit` と `entry` のまま。2026-10-02、§16-3)。
 
 1. **`games/<id>/challenge/contract.ts`** — §6-1 の `GameChallengeContract` の実装。
    `storage/keys.ts` と同じ **import ゼロの葉**で、レジストリが同期 import して
@@ -550,43 +562,15 @@ params(表を分けるモード)と facts(結果画面の数字)はそのゲー�
    葉にする理由も同じ — `club/` が Challenge 一覧を描くときに params の妥当性と
    `paramsKey` が要り、そのためにゲームのチャンクをロードしたくない。
    `src/test/importBoundaries.test.ts` 規則 3 と同じ「import ゼロ」の検査を足す。
-2. **Challenge の局を受け取る口** — `GameRootProps` に任意の `challenge` を足す:
-
-   ```ts
-   interface ChallengeStart {
-     seed: string; // §6-1 の seedPrefix で始まる
-     params: unknown; // そのゲームの contract で validate 済み
-     boardDigest: string; // 参加者側で生成した盤面と照合する(§6-4)
-   }
-   interface GameRootProps {
-     onExit: () => void;
-     entry?: GameEntry;
-     challenge?: ChallengeStart;
-   }
-   ```
-
-   `entry` と同じで、**指示ではなく事実**である。対応ゲームは `challenge` があれば
-   その seed / params で局を作り(Sudoku: `createFreeSession(difficulty, seed)`、
-   Minesweeper: `createDifficultySession(difficulty, seed)` → `tapCell(firstIndex)`、
-   Water Sort: `createFreeSession(tier, seed)`)、digest を照合してから盤面へ入る。
-   チュートリアル未了なら Quick Rules が先(ショートカットと同じ)。非対応ゲームは
-   この prop を受け取らない(レジストリに `challenge` が無いゲームへ `club/` は
-   渡さない)。
-
-3. **4 つ目の中断スロット**(spike の 3 本だけ。2026-10-02 以降、`Today` の `Play` はゲームの
-   デイリーを開くので新しいゲームには足さない。§16-3)— Challenge の局は `mode: 'club'` として、そのゲームの
-   新しいキー(`sd.saveClub` / `ms.saveClub` / `ws.saveClub`)に中断・再開する。
-   フリーのスロットを使い回すと、進行中のフリー局が Challenge で置き換わる(データ
-   損失)。新しいキーは `storage/keys.ts` に足し、`gameKeys.test.ts` の golden・
-   `storageKeys`・バックアップ(**運ぶ** — ゲームの中断局であり、鍵ではない)に
-   自動的に載る。Challenge の局の結果は**そのゲームの統計に入れない**(自己ベスト・
-   クリア数・レベル進行に触れない。#161 comment「personal stats と Club records を
-   分離する」)。局の識別は他のスロットと同じくキーで決め、レコード内の `mode` が
-   食い違えば破損として落とす(`savedGameSlots.test.ts` の規則)。
-4. **Challenge から入った局の結果画面**は、`ClubResultAction` に `challengeRef`
-   (どの Club のどの Challenge か)を渡す。それがあれば §2-2 の「状態 1 行」になり、
-   結果は自動送信される。`challengeRef` は `ChallengeStart` に含めず、`club/` →
-   `App.tsx` → `ClubBridge` の側で持つ(ゲームに Club の id を教えない)。
+2. **シェルが覚える `ActiveChallenge`** — Today の `Play` を押すと、シェルは `ActiveChallenge`
+   (どの Club のどの挑戦か、その `boardDigest`、送信済みか)を持ち、ゲームは
+   ふつうの入口で開かれ、プレイヤーがそのデイリーを遊ぶ。ゲームは Club の id を知らない。
+   `ClubBridge`(`ui/clubBridge.ts`)がそれを結果画面へ運び、`ClubResultAction` が遊んだ局の
+   digest と突き合わせる(§6-0「seed は生成器の版に依存する」)。
+3. **Challenge から入った局の結果画面**: digest が一致すれば `ClubResultAction` は §2-2 の
+   「状態 1 行」になり、結果は自動送信される。`ActiveChallenge` はゲームに渡らず、
+   `club/` → `App.tsx` → `ClubBridge` の側で持つ。局はそのゲームの普通の局なので、統計・
+   自己ベスト・レベル進行・レビュー計数は普通の局と同じに扱われる(Challenge 用の別扱いは無い)。
 
 ### 6-3. Challenge は終わった 1 局から作る — 2026-10-02 以降はデイリーだけ
 
@@ -602,28 +586,26 @@ params(表を分けるモード)と facts(結果画面の数字)はそのゲー�
   既に持っている。(b) 「自分がまだ遊んでいない盤面を人に出す」形が無くなり、
   Challenge は常に「私はこうだった、あなたは?」になる。(c) #164 の
   `Challenge a friend` と #161 の Create Challenge が同じ 1 操作になる。
-- Club の画面にある `New Challenge`(§9)は、対応ゲームを選んでフリープレイの局を
-  始めるだけ(ゲームの通常のフリープレイ)。終えた結果画面に `Send to Club` がある。
+- (2026-10-02 まで Club の画面に在った `New Challenge` は無くなった — §9。フリープレイの局は
+  ランキングへ送る。)
 - **1 人 1 回**: 1 つの Challenge に対する Result は member あたり 1 つで、最初に
   **終わった**局(勝ちでも負けでも)が数える。同じ盤面を解答を見た後に遊び直しても
   同じ挑戦ではない。2 回目は端末側で送らず(`sg.club` 側に「送った Challenge の id」を
   持たない — サーバの `mine` を見る)、送ってもサーバが 409。Minesweeper の敗北も
-  1 回に数える — 地雷の位置を知った 2 回目は同じ挑戦ではないから。デイリーの
-  「過去日へ遡れる」とは別の話で、Challenge に締切が無いのは変わらない。
-- **レベルの局・デイリーの局も送れる**。seed がそのままレコードに乗り、参加者は
-  `mode: 'club'` の 4 つ目のスロットで遊ぶ(自分のレベル進行・デイリー履歴には
-  触れない)。
+  1 回に数える — 地雷の位置を知った 2 回目は同じ挑戦ではないから。デイリーは今日の 1 問
+  だけ(2026-10-02)で、`Today` も端末の今日の挑戦だけを並べる。
+- **レベルの局・デイリーの局も送れる**。デイリー(全員同じ盤面のもの)は Today の挑戦へ、
+  それ以外はランキングへ送る(§16)。どちらも、局そのものは普通のゲームの局である。
 
 - **盤面ごとに挑戦は 1 つ**(2026-10-02、§15-2)。同じ `gameId` + `seed` + `boardDigest` の
   挑戦が生きていれば、`POST /challenges` は新しく作らず、送った人の結果をそこへ足す
   (`200`。§5-4)。理由: デイリーは日付から seed を導くので世界中で同じ 1 盤面になり、
   送った人全員が 1 つの挑戦に集まる — それが Public の順位表である
-  (PRODUCT_PRINCIPLES「順位表」)。新しいモードも、サーバ側の盤面生成も要らない。レベルの局も
-  同じ seed なら同じ挑戦に集まる。Private でも同じ(友人 2 人が同じデイリーを送れば 1 つ)。
+  (PRODUCT_PRINCIPLES「順位表」)。新しいモードも、サーバ側の盤面生成も要らない。Private でも同じ(友人 2 人が同じデイリーを送れば 1 つ)。
 - **`daily` の印**は、結果画面の `Send to Club` が、その局がデイリーで、かつ**そのゲームの
   デイリーが全員同じ盤面**のときだけ付ける(`ClubResultAction` の `daily`、`POST /challenges`
   の `daily`)。Sudoku は付く。Minesweeper のデイリーは初手で地雷が変わる(§6-0)ので付けない
-  — 送れるが、普通の挑戦になる。Water Sort のデイリー(6 色・均等な混ぜ)はティアに一致せず、
+  — 送れるが、Challenge にはならず難易度の表(ランキング、§16)に入る。Water Sort のデイリー(6 色・均等な混ぜ)はティアに一致せず、
   そもそも送れない(`challengeTierOf`)。Club の画面は端末のローカル日付で
   `GET /challenges?daily=` を引き、`Today` に並べる(§9)。
 
@@ -702,7 +684,7 @@ Simple Games by PixApps
 - Club 名は `GET /health` では返さない(招待 token の妥当性を確かめる前に名前を
   出さない)。`POST /join` の応答で初めて表示する。画面は最初「Join a Club」と出し、
   参加後に名前が入る。
-- 参加後はそのまま Club の画面(§9)。Web 版の Core(30 ゲーム)は同じページに
+- 参加後はそのまま Club の画面(§9)。Web 版の Core(全ゲーム)は同じページに
   全部入っているので、Challenge を押せばそのまま遊べる。
 - brand の一行(`Simple Games by PixApps`)は残し、インストールの壁は作らない
   (#164「install wall にしない」)。アプリの案内は Web 版の既存のカード
@@ -900,8 +882,7 @@ Results
 'collection')` でそのゲームを開き、シェルが挑戦を `ActiveChallenge` として覚える。プレイヤーが
   そのゲームのデイリーを遊んで終えると、結果画面の `ClubResultAction` が盤面の digest を
   突き合わせて自動送信する(§2-2)。開く前の 1 行は `Open Sudoku and play today's Daily. When
-you finish, your result is sent to Suzuki Family.`。club モードの `challenge` prop(§6-2)は
-  spike の 3 本に残っているが、この経路では使わない(§16-3)。
+you finish, your result is sent to Suzuki Family.`。ゲームへ挑戦の盤面は渡さない(§6-2、§16-3)。
 - Results は §6-1 の `order` で並び、**順位の数字が付く**(2026-09-30)。メダル・称号・
   挑戦をまたいだ差分は無い。自分の行は `You` で示す。
 - 自分が遊んだ後にだけ他の人の結果を見せる、という隠し方は**しない**(隠すのは
@@ -1134,7 +1115,7 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
 26. **Public の `maxMembers` は 10,000。** `wrangler.toml` の `CLUB_LIMITS` で上げる。超えたら
     `This Club is full`(無料枠の天井とは別の、濫用の上限)。
 27. **対応ゲームは 3 本に留めない。** Sudoku / Minesweeper / Water Sort は配線を通すための
-    spike の 3 本(§6-0)。§6-0 の 3 条件を満たすゲームは順次 `challenge` を宣言する
+    最初の 3 本(§6-0)。§6-0 の 3 条件を満たすゲームは順次 `challenge` を宣言する
     (段取りの PR E2。盤面が揃わないゲームの扱いは別の判断)。
 
 **2026-10-02 に製品オーナーが確認した判断(ランキング。段取りの PR R)**:
@@ -1292,12 +1273,19 @@ Rankings
 - 数字は結果画面の `facts` を `club/ui/common.tsx` の `axisText` / `factsLine` で描く(§11)。
 - 行数(`entryCount`)は表の中に出す。Core の画面には出ない(§2-2「数字を出さない」)。
 
-### 16-3. 3 本の club モードと `Today` の `Play`
+### 16-3. 3 本の club モードの撤去と `Today` の `Play`
 
-spike の 3 本(§6-2)が持つ `mode: 'club'` と 4 つ目の保存枠は、デイリー以外の局を Challenge
-にしていた v1 の名残である。`Today` の `Play` はゲームのデイリーを開く(§9「Challenge」)ので、
-新しいゲームには足さず、3 本からも**出荷前に取り除く**(段取りの PR R の後。`saveClub` キーは
-未出荷なので golden から外せる — 出荷後なら外せない)。
+Sudoku / Minesweeper / Water Sort の 3 本が持っていた `mode: 'club'` と 4 つ目の保存枠
+(`sd.saveClub` / `ms.saveClub` / `ws.saveClub`)は、デイリー以外の局を Challenge にしていた v1
+の名残である。`Today` の `Play` はゲームのデイリーを開く(§9「Challenge」)ので、**2026-10-02 に
+出荷前に取り除いた**。`saveClub` は一度も出荷されていない(v1.3.1 に無い)ので、
+`gameKeys.test.ts` の golden から外した — 出荷後なら外せなかった。
+
+取り除いたもの: `GameMode` の `'club'`、`createClubSession`、4 つ目の保存スロット(キー・スキーマ・
+読み書き)、Root の `challenge` prop(`ChallengeStart`・`GameRootProps.challenge`・`openChallenge`・
+digest 不一致の 1 行画面と、その `*ChallengeMismatch` の 14 言語)、`seedPrefix`。
+残したもの: 各ゲームの `challenge/contract.ts`、`boardDigest`(Today の digest 照合とランキングの
+`boardDigest`)、結果画面の `ClubResultAction`、Water Sort のランキングのティア(`challengeTierOf`)。
 
 ## 17. Public の運用 — 表示名・通報・削除・作り直し(2026-10-02、段取りの PR F)
 

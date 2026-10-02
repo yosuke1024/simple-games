@@ -24,5 +24,4 @@ export const ko: WaterSortMessages = {
   waterStep2Body: '빈 시험관이 작업 공간입니다. 되돌리기는 언제나 무료입니다.',
   waterStep3Title: '시험관마다 한 색으로',
   waterStep3Body: '모든 시험관이 한 가지 색이 되면 완성입니다.',
-  waterChallengeMismatch: '이 도전은 다른 버전의 게임에서 만들어졌습니다.',
 };

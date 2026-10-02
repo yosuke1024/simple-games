@@ -4,10 +4,8 @@
  * orchestration; the only ad surface is the shared BannerSlot the game screen
  * renders.
  *
- * Four games are suspended independently — one level, one daily, one free
- * board (§10), one Club House challenge (§14) — so switching modes never
- * costs the player any of them. A challenge never touches the statistics,
- * the level list, the daily calendar or the review prompt's count (§14).
+ * Three games are suspended independently — one level, one daily, one free
+ * board (§10) — so switching modes never costs the player any of them.
  *
  * The Hint runs the solver on the main thread; benched worst cases are a few
  * milliseconds (§5), and it only ever runs on an explicit tap — no polling,
@@ -97,8 +95,6 @@ export interface WaterContextValue {
   tutorialCompleted: boolean;
   dailyDoneToday: boolean;
   lastResult: LastResult | null;
-  /** This mount opened onto a Club House challenge (§14): Quick Rules lead to it. */
-  openedOnChallenge: boolean;
   canResume: (mode: GameMode) => boolean;
   startLevel: (level: number) => void;
   startNextLevel: () => void;
@@ -135,12 +131,6 @@ export interface WaterProviderProps {
   onExit: () => void;
   /** Provided by the shell: which door this launch came through (issue #113). */
   entry?: 'collection' | 'shortcut';
-  /**
-   * Open onto the Club House challenge in `initialSessions.club` (§14) — the
-   * Root has already built it from the challenge and checked its digest.
-   * Quick Rules still come first on a launch that has never seen them.
-   */
-  openOnChallenge?: boolean;
   children: ReactNode;
 }
 
@@ -158,12 +148,8 @@ export function WaterProvider({
   initialSessions,
   onExit,
   entry,
-  openOnChallenge = false,
   children,
 }: WaterProviderProps) {
-  const [openedOnChallenge] = useState(
-    () => openOnChallenge && initialSessions.club?.status === 'playing',
-  );
   /**
    * The suspended game this launch opens straight onto, or null for the home
    * screen (issue #113). Decided once, from the three slots the provider was
@@ -176,11 +162,9 @@ export function WaterProvider({
    * that order has no exception to make.
    */
   const [resumeMode] = useState<GameMode | null>(() =>
-    openedOnChallenge
-      ? 'club'
-      : entry === 'shortcut' && initialFlags.tutorialCompleted
-        ? soleSuspendedMode(initialSessions)
-        : null,
+    entry === 'shortcut' && initialFlags.tutorialCompleted
+      ? soleSuspendedMode(initialSessions)
+      : null,
   );
   /**
    * The slot this mount is pointed at: the one a shortcut opened straight
@@ -193,14 +177,8 @@ export function WaterProvider({
   // answers null until Quick Rules are behind the player, so the gate lives in
   // one place rather than two — two would each cover for the other, and a
   // guard nothing can observe failing is not a guard.
-  // A challenge is a door like a shortcut: `resumeMode` is 'club', and the
-  // board waits behind Quick Rules on a first launch.
   const [screen, setScreen] = useState<Screen>(
-    resumeMode !== null && initialFlags.tutorialCompleted
-      ? 'game'
-      : initialFlags.tutorialCompleted
-        ? 'home'
-        : 'tutorial',
+    resumeMode ? 'game' : initialFlags.tutorialCompleted ? 'home' : 'tutorial',
   );
   const [sessions, setSessions] = useState<SavedGames>(initialSessions);
   // The mode has to be seeded with the screen, not after it: the game on
@@ -299,14 +277,6 @@ export function WaterProvider({
       // Solved: finalize once. Only the seconds not yet booked are added, so
       // leaving and returning cannot count the same time twice.
       void clearSavedGame(next.mode);
-      if (next.mode === 'club') {
-        // A Club House challenge is the Club's record, not this device's
-        // (§14): no statistics, no best, no level, no review count — and so
-        // no personal best for the clear screen to announce.
-        bookedRef.current = next.elapsedSeconds;
-        setLastResult(null);
-        return;
-      }
       const unbooked = Math.max(0, next.elapsedSeconds - bookedRef.current);
       bookedRef.current = next.elapsedSeconds;
       persistStats(applySolved(applyPlayTime(statsRef.current, unbooked)));
@@ -341,7 +311,7 @@ export function WaterProvider({
 
   const beginSession = useCallback(
     (next: WaterSession) => {
-      if (next.mode !== 'club') persistStats(applyGameStart(statsRef.current));
+      persistStats(applyGameStart(statsRef.current));
       setLastResult(null);
       putSession(next.mode, next);
       activate(next);
@@ -453,8 +423,7 @@ export function WaterProvider({
       putSession(mode, synced);
       void saveGame(synced);
       const unbooked = Math.max(0, synced.elapsedSeconds - bookedRef.current);
-      // A challenge's seconds are the Club's, never the statistics' (§14).
-      if (unbooked > 0 && mode !== 'club') {
+      if (unbooked > 0) {
         bookedRef.current = synced.elapsedSeconds;
         persistStats(applyPlayTime(statsRef.current, unbooked));
       }
@@ -514,8 +483,7 @@ export function WaterProvider({
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const backHandle = CapacitorApp.addListener('backButton', () => {
-      // A challenge's board goes back where it came from — the Club (§14).
-      if (screen === 'home' || (screen === 'game' && activeModeRef.current === 'club')) {
+      if (screen === 'home') {
         exitToCollection();
       } else {
         // Leaving Quick Rules by Back counts as having seen them (issue #142):
@@ -542,7 +510,6 @@ export function WaterProvider({
       tutorialCompleted: flags.tutorialCompleted,
       dailyDoneToday: progress.dailyMoves[today] !== undefined,
       lastResult,
-      openedOnChallenge,
       canResume,
       startLevel,
       startNextLevel,
@@ -569,7 +536,6 @@ export function WaterProvider({
       flags.tutorialCompleted,
       today,
       lastResult,
-      openedOnChallenge,
       canResume,
       startLevel,
       startNextLevel,
