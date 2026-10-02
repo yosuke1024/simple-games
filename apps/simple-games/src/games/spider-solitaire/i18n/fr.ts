@@ -37,8 +37,6 @@ export const fr: SpiderMessages = {
   spiderGamesWon: 'Parties gagnées',
   spiderWinRate: 'Taux de victoire',
   spiderDailiesWon: 'Défis quotidiens gagnés',
-  spiderDailyBacklogHint:
-    'Les jours précédents restent ouverts. Toutes les donnes ne sont pas gagnables.',
   spiderStep1Title: 'Empilez en descendant',
   spiderStep1Body:
     'N’importe quelle famille se pose sur une carte d’un rang au-dessus. Touchez une carte, puis sa destination.',

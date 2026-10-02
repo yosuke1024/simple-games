@@ -36,7 +36,6 @@ export const ko: SpiderMessages = {
   spiderGamesWon: '이긴 게임',
   spiderWinRate: '승률',
   spiderDailiesWon: '데일리 승리',
-  spiderDailyBacklogHint: '지난 날짜는 언제든 열려 있습니다. 모든 패를 이길 수 있는 것은 아닙니다.',
   spiderStep1Title: '숫자를 낮춰가며 쌓기',
   spiderStep1Body:
     '무늬와 상관없이 한 끗 높은 카드 위에 놓을 수 있습니다. 카드를 탭하고, 놓을 곳을 탭합니다.',

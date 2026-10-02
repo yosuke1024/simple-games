@@ -37,7 +37,6 @@ export const zhHans: BoxRegionsMessages = {
   boxRegionsSolvedCount: '已解谜题',
   boxRegionsDailySection: '每日',
   boxRegionsDailiesCleared: '已完成天数',
-  boxRegionsDailyBacklogHint: '之前的每一天都保持开放。',
   boxRegionsStep1Title: '划分成方框',
   boxRegionsStep1Body: '把棋盘划分成矩形，每个矩形恰好包含一条线索。',
   boxRegionsStep2Title: '读懂线索',

@@ -40,7 +40,6 @@ export const fr: BoxRegionsMessages = {
   boxRegionsSolvedCount: 'Grilles résolues',
   boxRegionsDailySection: 'Quotidien',
   boxRegionsDailiesCleared: 'Jours réussis',
-  boxRegionsDailyBacklogHint: 'Tous les jours précédents restent ouverts.',
   boxRegionsStep1Title: 'Découpez en boîtes',
   boxRegionsStep1Body: 'Découpez la grille en rectangles, chacun contenant exactement un indice.',
   boxRegionsStep2Title: 'Lisez les indices',

@@ -36,7 +36,6 @@ export const en = {
   solGamesWon: 'Games won',
   solWinRate: 'Win rate',
   solDailiesWon: 'Daily deals won',
-  solDailyBacklogHint: 'Every earlier day stays open. Not every deal can be won.',
   solStep1Title: 'Down by one, colors alternate',
   solStep1Body: 'Stack cards downward, red on black on red. Tap a card, then tap where it goes.',
   solStep2Title: 'Free the hidden cards',

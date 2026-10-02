@@ -13,8 +13,6 @@ export const th: SchulteMessages = {
   schulteMisses: 'แตะผิด',
   schulteNewBestTime: 'เร็วที่สุดของคุณ',
   schulteConfirmRestartBody: 'รอบนี้จะเริ่มใหม่จากตัวเลขแรก',
-
-  schulteDailyBacklogHint: 'ย้อนไปเล่นวันก่อน ๆ ได้เสมอ',
   schulteSizeLabel: '{n}x{n}',
   schulteLevelsDone: 'เลเวลที่ผ่าน',
   schulteDailiesDone: 'รายวันที่ผ่าน',

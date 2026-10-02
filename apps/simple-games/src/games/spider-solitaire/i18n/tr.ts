@@ -36,7 +36,6 @@ export const tr: SpiderMessages = {
   spiderGamesWon: 'Kazanılan oyunlar',
   spiderWinRate: 'Kazanma oranı',
   spiderDailiesWon: 'Kazanılan günlükler',
-  spiderDailyBacklogHint: 'Önceki günler her zaman açık. Her el kazanılamayabilir.',
   spiderStep1Title: 'Azalan sırayla diz',
   spiderStep1Body:
     'Her tür, bir üst değerdeki kartın üstüne konabilir. Bir karta, sonra gideceği yere dokun.',

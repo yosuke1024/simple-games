@@ -44,7 +44,7 @@ import {
 import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
 import { applyGameStart, applyPlayTime, applySolved, previousBestsFor } from './statsLogic';
 
-export type Screen = 'home' | 'tutorial' | 'daily' | 'game' | 'stats';
+export type Screen = 'home' | 'tutorial' | 'game' | 'stats';
 
 /** What a flip did — so the screen can pick a sound without re-deriving it. */
 export type FlipOutcome = 'none' | 'flip' | 'match' | 'mismatch' | 'solved';
@@ -72,7 +72,7 @@ export interface MemoryContextValue {
   lastResult: LastResult | null;
   canResume: (mode: GameMode) => boolean;
   startDifficulty: (difficulty: Difficulty) => void;
-  startDaily: (date?: string) => void;
+  startDaily: () => void;
   restartCurrent: () => void;
   resumeGame: (mode: GameMode) => void;
   /** Flips a card. Returns 'none' when the tap was not a legal move (§3). */
@@ -288,18 +288,15 @@ export function MemoryProvider({
     [beginSession, resumeGame],
   );
 
-  const startDaily = useCallback(
-    (date?: string) => {
-      const target = date ?? localDateString(new Date());
-      const current = sessionsRef.current.daily;
-      if (current && current.dailyDate === target && current.status === 'playing') {
-        resumeGame('daily');
-        return;
-      }
-      beginSession(createDailySession(target));
-    },
-    [beginSession, resumeGame],
-  );
+  const startDaily = useCallback(() => {
+    const target = localDateString(new Date());
+    const current = sessionsRef.current.daily;
+    if (current && current.dailyDate === target && current.status === 'playing') {
+      resumeGame('daily');
+      return;
+    }
+    beginSession(createDailySession(target));
+  }, [beginSession, resumeGame]);
 
   const restartCurrent = useCallback(() => {
     const current = sessionsRef.current[activeModeRef.current];

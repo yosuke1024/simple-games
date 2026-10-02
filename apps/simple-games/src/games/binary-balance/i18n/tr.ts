@@ -50,7 +50,6 @@ export const tr: BinaryBalanceMessages = {
   binaryBalanceNewBoard: 'Yeni tahta',
   binaryBalanceDailySection: 'Günlük',
   binaryBalanceDailiesSolved: 'Çözülen gün',
-  binaryBalanceDailyBacklogHint: 'Önceki günler açık kalır.',
   binaryBalanceStep1Title: 'Asla üç yan yana',
   binaryBalanceStep1Body:
     'Dokununca boş, güneş, ay arasında geçer. Aynı işaret üç kez yan yana gelemez.',

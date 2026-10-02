@@ -11,8 +11,9 @@
  * not a road would leave the player with a board that cannot be finished.
  */
 import { describe, expect, it } from 'vitest';
+import { createMemoryKV } from '@/storage/kv';
 import { createDailySession, createDifficultySession, doTap } from '../game';
-import { toPersisted, toSession } from './gamePersistence';
+import { loadSavedGames, toPersisted, toSession } from './gamePersistence';
 import { dailyGameSchema, gameSchema } from './schemas';
 
 const SAVED_AT = 1_754_000_000_000;
@@ -90,5 +91,19 @@ describe('a save play could not have produced (§9)', () => {
 
   it('does not resume a board that is already solved', () => {
     expect(toSession({ ...difficultyRecord, path: [...difficultyRecord.solution] })).toBeNull();
+  });
+});
+
+describe('a daily left over from another day (docs/PRODUCT_PRINCIPLES.md「デイリーは今日の 1 問」)', () => {
+  it('is dropped at load, record and all, while the same day still resumes', async () => {
+    const stored = () => createMemoryKV({ [dailyGameSchema.key]: JSON.stringify(dailyRecord) });
+
+    const sameDay = stored();
+    expect((await loadSavedGames(sameDay, '2026-09-26')).daily?.dailyDate).toBe('2026-09-26');
+    expect(await sameDay.get(dailyGameSchema.key)).not.toBeNull();
+
+    const nextDay = stored();
+    expect((await loadSavedGames(nextDay, '2026-09-27')).daily).toBeNull();
+    expect(await nextDay.get(dailyGameSchema.key)).toBeNull();
   });
 });

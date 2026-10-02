@@ -39,7 +39,6 @@ export const en = {
   spiderGamesWon: 'Games won',
   spiderWinRate: 'Win rate',
   spiderDailiesWon: 'Daily deals won',
-  spiderDailyBacklogHint: 'Every earlier day stays open. Not every deal can be won.',
   spiderStep1Title: 'Stack down by rank',
   spiderStep1Body:
     'Any suit can sit on a card one rank higher. Tap a card, then tap where it goes.',

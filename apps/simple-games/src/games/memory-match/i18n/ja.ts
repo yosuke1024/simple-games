@@ -20,7 +20,6 @@ export const ja: MemoryMatchMessages = {
   memoryNewBestTime: '自己最速です。',
   memoryBestMoves: '最少手数',
   memoryDailiesCleared: '達成日数',
-  memoryDailyBacklogHint: '過去の日付はいつでも遊べます。',
   memoryStep1Title: 'カードを2枚めくる',
   memoryStep1Body: '1枚ずつタップします。同じ記号なら表のまま残ります。',
   memoryStep2Title: '覚えるのを急がない',

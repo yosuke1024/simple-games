@@ -40,7 +40,6 @@ export const en = {
   sudoku6x6NewBoard: 'New board',
   sudoku6x6DailySection: 'Daily',
   sudoku6x6DailiesSolved: 'Days solved',
-  sudoku6x6DailyBacklogHint: 'Every earlier day stays open.',
   sudoku6x6HighlightMistakes: 'Show mistakes',
   sudoku6x6HighlightMistakesNote:
     'Marks a wrong digit as soon as it is placed. Repeated digits are always marked.',

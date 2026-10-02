@@ -43,7 +43,6 @@ export const en = {
   shapeRegionsSolvedCount: 'Puzzles solved',
   shapeRegionsDailySection: 'Daily',
   shapeRegionsDailiesCleared: 'Days cleared',
-  shapeRegionsDailyBacklogHint: 'Every earlier day stays open.',
   shapeRegionsStep1Title: 'Number and symbol',
   shapeRegionsStep1Body: 'The number is how many cells the shape has; the symbol is its form.',
   shapeRegionsStep2Title: 'Grow from the clue',

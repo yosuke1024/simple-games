@@ -13,8 +13,6 @@ export const id: SchulteMessages = {
   schulteMisses: 'Ketukan salah',
   schulteNewBestTime: 'Tercepat sejauh ini.',
   schulteConfirmRestartBody: 'Ronde ini dimulai lagi dari angka pertama.',
-
-  schulteDailyBacklogHint: 'Setiap hari sebelumnya selalu terbuka.',
   schulteSizeLabel: '{n}x{n}',
   schulteLevelsDone: 'Level selesai',
   schulteDailiesDone: 'Harian selesai',

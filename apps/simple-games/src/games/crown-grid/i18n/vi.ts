@@ -55,7 +55,6 @@ export const vi: CrownGridMessages = {
   crownGridNewBoard: 'Bảng mới',
   crownGridDailySection: 'Hằng ngày',
   crownGridDailiesSolved: 'Số ngày đã giải',
-  crownGridDailyBacklogHint: 'Những ngày trước luôn mở.',
   crownGridStep1Title: 'Mỗi nơi một vương miện',
   crownGridStep1Body: 'Mỗi hàng, mỗi cột và mỗi màu có đúng một vương miện.',
   crownGridStep2Title: 'Vương miện không chạm nhau',

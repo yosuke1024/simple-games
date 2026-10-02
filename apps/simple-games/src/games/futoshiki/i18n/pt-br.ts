@@ -30,7 +30,6 @@ export const ptBR: FutoshikiMessages = {
   futoshikiNewBestTime: 'Seu tempo mais rápido.',
   futoshikiLevelsSolved: 'Níveis resolvidos',
   futoshikiDailiesSolved: 'Diários resolvidos',
-  futoshikiDailyBacklogHint: 'Os dias anteriores continuam abertos.',
   futoshikiHighlightMistakes: 'Mostrar erros',
   futoshikiHighlightMistakesNote:
     'Marca um dígito que não bate com a solução. Regras quebradas são sempre marcadas.',

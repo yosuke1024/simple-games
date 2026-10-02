@@ -37,7 +37,6 @@ export const th: Sudoku6x6Messages = {
   sudoku6x6NewBoard: 'กระดานใหม่',
   sudoku6x6DailySection: 'รายวัน',
   sudoku6x6DailiesSolved: 'วันที่ผ่าน',
-  sudoku6x6DailyBacklogHint: 'ทุกวันที่ผ่านมายังเล่นได้',
   sudoku6x6HighlightMistakes: 'แสดงที่ผิด',
   sudoku6x6HighlightMistakesNote: 'ทำเครื่องหมายเลขที่ผิดทันทีที่ใส่ ส่วนเลขซ้ำจะแสดงเสมอ',
   sudoku6x6Step1Title: '1-6 อย่างละหนึ่ง',

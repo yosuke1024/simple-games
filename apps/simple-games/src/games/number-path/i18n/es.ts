@@ -29,7 +29,6 @@ export const es: NumberPathMessages = {
   numberPathSolvedCount: 'Tableros resueltos',
   numberPathDailySection: 'Diario',
   numberPathDailiesSolved: 'Días resueltos',
-  numberPathDailyBacklogHint: 'Los días anteriores siguen abiertos.',
   numberPathStep1Title: 'Sigue los números',
   numberPathStep1Body: 'Traza una sola línea desde el 1, pasando por los números en orden.',
   numberPathStep2Title: 'Cubre cada casilla',

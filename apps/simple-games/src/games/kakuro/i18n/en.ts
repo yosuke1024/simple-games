@@ -71,7 +71,6 @@ export const en = {
   kakuroNewBestTime: 'Your fastest yet.',
   kakuroLevelsSolved: 'Levels solved',
   kakuroDailiesSolved: 'Dailies solved',
-  kakuroDailyBacklogHint: 'Every earlier day stays open.',
   kakuroHighlightMistakes: 'Show mistakes',
   kakuroHighlightMistakesNote:
     'Marks a digit that does not match the solution. Broken rules are always marked.',

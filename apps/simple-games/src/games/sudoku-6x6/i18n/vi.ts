@@ -37,7 +37,6 @@ export const vi: Sudoku6x6Messages = {
   sudoku6x6NewBoard: 'Bảng mới',
   sudoku6x6DailySection: 'Hằng ngày',
   sudoku6x6DailiesSolved: 'Ngày đã giải',
-  sudoku6x6DailyBacklogHint: 'Mọi ngày trước đó vẫn mở.',
   sudoku6x6HighlightMistakes: 'Hiện lỗi sai',
   sudoku6x6HighlightMistakesNote:
     'Đánh dấu chữ số sai ngay khi đặt vào. Số trùng luôn được đánh dấu.',

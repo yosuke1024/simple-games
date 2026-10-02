@@ -23,7 +23,6 @@ export const hi: NonogramMessages = {
   nonoNewBestTime: 'आपका सबसे तेज़ समय।',
   nonoLevelsSolved: 'हल किए गए स्तर',
   nonoDailiesSolved: 'हल की गई दैनिक पहेलियाँ',
-  nonoDailyBacklogHint: 'पिछले दिन हमेशा खुले रहते हैं।',
   nonoStep1Title: 'संख्याएँ लगातार खाने हैं',
   nonoStep1Body:
     'हर संख्या उस पंक्ति में लगातार रंगे खानों का समूह है; समूहों के बीच कम से कम एक खाली खाना रहता है।',

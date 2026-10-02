@@ -5,7 +5,7 @@ import { solvedLevelCount } from '../../state/progressLogic';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
-import { IconCalendar, IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
+import { IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
 
 /**
@@ -31,10 +31,14 @@ export function HomeScreen() {
   const [confirmNewFree, setConfirmNewFree] = useState(false);
 
   const levelGame = sessions.level?.status === 'playing' ? sessions.level : null;
-  const dailyGame = sessions.daily?.status === 'playing' ? sessions.daily : null;
-  const freeGame = sessions.free?.status === 'playing' ? sessions.free : null;
   const today = localDateString(new Date());
-  const dailyIsToday = dailyGame?.dailyDate === today;
+  // Today's board or nothing: a daily left from another day is not the one
+  // this button names (docs/PRODUCT_PRINCIPLES.md「デイリーは今日の 1 問」).
+  const dailyGame =
+    sessions.daily?.status === 'playing' && sessions.daily.dailyDate === today
+      ? sessions.daily
+      : null;
+  const freeGame = sessions.free?.status === 'playing' ? sessions.free : null;
 
   return (
     <div className="screen home-screen">
@@ -75,7 +79,7 @@ export function HomeScreen() {
           {dailyGame ? (
             <span className="btn-note">
               {t('resume')}
-              {dailyIsToday ? '' : ` · ${dailyGame.dailyDate}`} ·{' '}
+              {' · '}
               {formatDuration(dailyGame.elapsedSeconds)}
             </span>
           ) : dailyDoneToday ? (
@@ -129,10 +133,6 @@ export function HomeScreen() {
             <span className="home-chip-count">
               {solvedLevelCount(progress)}/{MAX_LEVEL}
             </span>
-          </button>
-          <button type="button" className="home-chip" onClick={() => navigate('daily')}>
-            <IconCalendar className="home-chip-icon" />
-            <span>{t('dailyPast')}</span>
           </button>
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>
             <IconChart className="home-chip-icon" />

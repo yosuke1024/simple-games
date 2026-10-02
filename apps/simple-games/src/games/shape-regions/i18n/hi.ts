@@ -37,7 +37,6 @@ export const hi: ShapeRegionsMessages = {
   shapeRegionsSolvedCount: 'हल की गई पहेलियाँ',
   shapeRegionsDailySection: 'दैनिक',
   shapeRegionsDailiesCleared: 'पूरे किए दिन',
-  shapeRegionsDailyBacklogHint: 'हर पिछला दिन खुला रहता है।',
   shapeRegionsStep1Title: 'संख्या और प्रतीक',
   shapeRegionsStep1Body: 'संख्या बताती है आकृति में कितने खाने हैं; प्रतीक उसका रूप है।',
   shapeRegionsStep2Title: 'संकेत से बढ़ाएँ',

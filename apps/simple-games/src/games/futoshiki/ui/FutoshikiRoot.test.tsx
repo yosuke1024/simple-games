@@ -656,23 +656,6 @@ describe('solving (§2)', () => {
 });
 
 describe('the pickers ask before replacing a suspended game (§9)', () => {
-  it('asks before the daily backlog replaces a daily in progress', async () => {
-    const user = userEvent.setup();
-    renderGame(tutorialDone);
-
-    await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
-    expect(board()).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Home' }));
-    await user.click(screen.getByRole('button', { name: 'Past Dailies' }));
-
-    // There is one daily slot, so an earlier day would take this one's place.
-    const rows = screen.getAllByRole('button');
-    const anotherDay = rows.find((row) => row.textContent?.includes('/'));
-    expect(anotherDay).toBeDefined();
-    await user.click(anotherDay!);
-    expect(screen.getByRole('alertdialog', { name: 'Start a new game?' })).toBeInTheDocument();
-  });
-
   it('asks before the level picker replaces a level in progress', async () => {
     const user = userEvent.setup();
     renderGame({

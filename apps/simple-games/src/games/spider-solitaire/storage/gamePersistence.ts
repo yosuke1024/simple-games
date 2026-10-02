@@ -8,7 +8,7 @@
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
 import { loadRecord, removeRecord, saveRecord } from '../../../storage/repo';
-import { restoreSession, type GameMode, type SpiderSession } from '../game';
+import { localDateString, restoreSession, type GameMode, type SpiderSession } from '../game';
 import { dailyGameSchema, gameSchema, type PersistedGame } from './schemas';
 
 export interface SavedGames {
@@ -82,12 +82,30 @@ export function soleSuspendedMode(saved: SavedGames): GameMode | null {
   return suspended.length === 1 ? suspended[0]! : null;
 }
 
-export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
+async function loadSlots(kv: KVStore): Promise<SavedGames> {
   const [free, daily] = await Promise.all([
     loadRecord(gameSchema, kv),
     loadRecord(dailyGameSchema, kv),
   ]);
   return { free: toSession(free), daily: toSession(daily) };
+}
+
+/**
+ * The daily slot holds today's board or nothing (docs/PRODUCT_PRINCIPLES.md
+ * 「デイリーは今日の 1 問」). A board left over from another day is dropped here,
+ * record and all, so no door — the home button, a shortcut — can reopen it.
+ * `today` is a seam for the tests; production reads the device clock.
+ */
+export async function loadSavedGames(
+  kv: KVStore = preferencesKV,
+  today: string = localDateString(new Date()),
+): Promise<SavedGames> {
+  const saved = await loadSlots(kv);
+  if (saved.daily !== null && saved.daily.dailyDate !== today) {
+    await removeRecord(dailyGameSchema.key, kv);
+    return { ...saved, daily: null };
+  }
+  return saved;
 }
 
 export async function saveGame(session: SpiderSession, kv: KVStore = preferencesKV): Promise<void> {

@@ -29,7 +29,6 @@ export const en = {
   nonoNewBestTime: 'Your fastest yet.',
   nonoLevelsSolved: 'Levels solved',
   nonoDailiesSolved: 'Dailies solved',
-  nonoDailyBacklogHint: 'Every earlier day stays open.',
   nonoStep1Title: 'Numbers are runs',
   nonoStep1Body:
     'Each number is a run of painted squares in order, with at least one gap between runs.',

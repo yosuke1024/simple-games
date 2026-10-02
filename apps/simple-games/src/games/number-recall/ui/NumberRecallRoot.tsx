@@ -22,7 +22,6 @@ import {
   type Progress,
   type Stats,
 } from '../storage/schemas';
-import { RecallDailyScreen } from './screens/DailyScreen';
 import { RecallGameScreen } from './screens/GameScreen';
 import { RecallHomeScreen } from './screens/HomeScreen';
 import { RecallLevelSelectScreen } from './screens/LevelSelectScreen';
@@ -37,8 +36,6 @@ export function NumberRecallScreens() {
       return <RecallTutorialScreen />;
     case 'levels':
       return <RecallLevelSelectScreen />;
-    case 'daily':
-      return <RecallDailyScreen />;
     case 'game':
       return <RecallGameScreen />;
     case 'stats':

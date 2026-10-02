@@ -34,7 +34,6 @@ export const th: MahjongMessages = {
 
   mahjongLevelsCleared: 'ด่านที่ผ่านแล้ว',
   mahjongDailiesCleared: 'รายวันที่ผ่านแล้ว',
-  mahjongDailyBacklogHint: 'วันก่อนหน้าทั้งหมดยังเปิดอยู่เสมอ',
 
   mahjongStep1Title: 'หยิบคู่ที่เหมือนกัน',
   mahjongStep1Body:

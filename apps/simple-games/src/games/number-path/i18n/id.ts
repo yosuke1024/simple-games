@@ -29,7 +29,6 @@ export const id: NumberPathMessages = {
   numberPathSolvedCount: 'Papan selesai',
   numberPathDailySection: 'Harian',
   numberPathDailiesSolved: 'Hari selesai',
-  numberPathDailyBacklogHint: 'Semua hari sebelumnya tetap terbuka.',
   numberPathStep1Title: 'Ikuti angkanya',
   numberPathStep1Body: 'Tarik satu garis dari 1 dan lewati angka secara berurutan.',
   numberPathStep2Title: 'Isi semua kotak',

@@ -14,7 +14,6 @@ export const de: WaterSortMessages = {
   waterBestMoves: 'Wenigste Züge',
   waterLevelsSolved: 'Gelöste Level',
   waterDailiesSolved: 'Gelöste Tagesrätsel',
-  waterDailyBacklogHint: 'Alle früheren Tage bleiben offen.',
   waterTier_easy: 'Leicht',
   waterTier_medium: 'Mittel',
   waterTier_hard: 'Schwer',

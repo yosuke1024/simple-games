@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
-import { IconCalendar, IconChart, IconCheck } from '@/ui/components/icons';
+import { IconChart, IconCheck } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { formatDuration } from '@/ui/format';
 import { DIFFICULTIES, localDateString, PRESETS, type Difficulty } from '../../game';
@@ -32,9 +32,13 @@ export function ShapeRegionsHomeScreen() {
   const [pending, setPending] = useState<Difficulty | null>(null);
 
   const current = sessions.difficulty?.status === 'playing' ? sessions.difficulty : null;
-  const dailyGame = sessions.daily?.status === 'playing' ? sessions.daily : null;
   const today = localDateString(new Date());
-  const dailyIsToday = dailyGame?.dailyDate === today;
+  // Today's board or nothing: a daily left from another day is not the one
+  // this button names (docs/PRODUCT_PRINCIPLES.md「デイリーは今日の 1 問」).
+  const dailyGame =
+    sessions.daily?.status === 'playing' && sessions.daily.dailyDate === today
+      ? sessions.daily
+      : null;
   // The board the home leads with: the one in progress, else the last chosen (§11).
   const leading: Difficulty = current?.difficulty ?? prefs.difficulty;
 
@@ -95,10 +99,7 @@ export function ShapeRegionsHomeScreen() {
         >
           {t('dailyChallenge')}
           {dailyGame ? (
-            <span className="btn-note">
-              {t('resume')}
-              {dailyIsToday ? '' : ` · ${dailyGame.dailyDate}`}
-            </span>
+            <span className="btn-note">{t('resume')}</span>
           ) : dailyDoneToday ? (
             <span className="btn-note">
               <IconCheck className="badge-icon" /> {t('dailyDoneBadge')}
@@ -107,10 +108,6 @@ export function ShapeRegionsHomeScreen() {
         </button>
 
         <nav className="home-chips sr-chips">
-          <button type="button" className="home-chip" onClick={() => navigate('daily')}>
-            <IconCalendar className="home-chip-icon" />
-            <span>{t('dailyPast')}</span>
-          </button>
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>
             <IconChart className="home-chip-icon" />
             <span>{t('statistics')}</span>

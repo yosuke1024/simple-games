@@ -23,7 +23,6 @@ import {
   type Progress,
   type Stats,
 } from '../storage/schemas';
-import { DailyScreen } from './screens/DailyScreen';
 import { GameScreen } from './screens/GameScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { LevelSelectScreen } from './screens/LevelSelectScreen';
@@ -38,8 +37,6 @@ export function NumberMatchScreens() {
       return <TutorialScreen />;
     case 'levels':
       return <LevelSelectScreen />;
-    case 'daily':
-      return <DailyScreen />;
     case 'game':
       return <GameScreen />;
     case 'stats':

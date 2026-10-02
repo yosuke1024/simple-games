@@ -25,7 +25,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './binary-balance.css';
-import { BinaryBalanceDailyScreen } from './screens/DailyScreen';
 import { BinaryBalanceGameScreen } from './screens/GameScreen';
 import { BinaryBalanceHomeScreen } from './screens/HomeScreen';
 import { BinaryBalanceStatsScreen } from './screens/StatsScreen';
@@ -36,8 +35,6 @@ export function BinaryBalanceScreens() {
   switch (screen) {
     case 'tutorial':
       return <BinaryBalanceTutorialScreen />;
-    case 'daily':
-      return <BinaryBalanceDailyScreen />;
     case 'game':
       return <BinaryBalanceGameScreen />;
     case 'stats':

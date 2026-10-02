@@ -16,8 +16,6 @@ export const hi: RecallMessages = {
   recallTiles: 'टाइलें',
   recallNewBestTime: 'आपका सबसे तेज़ समय।',
   recallNewLayout: 'नया बोर्ड',
-
-  recallDailyBacklogHint: 'पिछला हर दिन हमेशा खुला रहता है।',
   recallSizeLabel: '{n}x{n}',
   recallLevelsDone: 'पूरे किए लेवल',
   recallDailiesDone: 'पूरी की गई डेली',

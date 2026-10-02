@@ -144,7 +144,7 @@ describe('a saved set (docs/QUICK_MATH_RULES.md §9)', () => {
     await saveGame(createLevelSession(3), kv);
     await saveGame({ ...createLevelSession(3), mode: 'daily', dailyDate: '2026-08-07' }, kv);
 
-    const loaded = await loadSavedGames(kv);
+    const loaded = await loadSavedGames(kv, '2026-08-07');
     expect(loaded.level?.level).toBe(3);
     expect(loaded.daily?.dailyDate).toBe('2026-08-07');
   });

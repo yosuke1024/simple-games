@@ -23,7 +23,6 @@ export const ja: NonogramMessages = {
   nonoNewBestTime: '自己最速です。',
   nonoLevelsSolved: 'クリアしたレベル',
   nonoDailiesSolved: 'クリアしたデイリー',
-  nonoDailyBacklogHint: '過去の日はいつでも挑戦できます。',
   nonoStep1Title: '数字は連続して塗る数',
   nonoStep1Body: '数字はその行・列で連続して塗るマスの数。複数あるときは間を1マス以上あけます。',
   nonoStep2Title: '塗らないマスに×',

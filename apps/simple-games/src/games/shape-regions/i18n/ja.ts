@@ -38,7 +38,6 @@ export const ja: ShapeRegionsMessages = {
   shapeRegionsSolvedCount: 'クリア数',
   shapeRegionsDailySection: 'デイリー',
   shapeRegionsDailiesCleared: '達成日数',
-  shapeRegionsDailyBacklogHint: '過去の日はいつでも開けます。',
   shapeRegionsStep1Title: '数字と記号',
   shapeRegionsStep1Body: '数字はその形のマス数、記号はその形。',
   shapeRegionsStep2Title: '手がかりから育てる',

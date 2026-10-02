@@ -32,7 +32,6 @@ export const vi: SolitaireMessages = {
   solGamesWon: 'Ván thắng',
   solWinRate: 'Tỷ lệ thắng',
   solDailiesWon: 'Thử thách ngày đã thắng',
-  solDailyBacklogHint: 'Những ngày trước luôn mở. Không phải ván nào cũng thắng được.',
   solStep1Title: 'Giảm một, đổi màu xen kẽ',
   solStep1Body: 'Xếp bài giảm dần, đỏ đen xen kẽ. Chạm một lá, rồi chạm nơi muốn đặt.',
   solStep2Title: 'Giải phóng lá bài úp',

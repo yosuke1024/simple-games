@@ -23,7 +23,6 @@ export const ko: NonogramMessages = {
   nonoNewBestTime: '자기 최고 기록입니다.',
   nonoLevelsSolved: '클리어한 레벨',
   nonoDailiesSolved: '클리어한 데일리',
-  nonoDailyBacklogHint: '지난 날짜는 언제든 도전할 수 있습니다.',
   nonoStep1Title: '숫자는 연속으로 칠하는 수',
   nonoStep1Body:
     '숫자는 그 줄에서 연속으로 칠하는 칸 수입니다. 여러 개면 사이를 한 칸 이상 띄웁니다.',

@@ -25,7 +25,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './mahjong-solitaire.css';
-import { MahjongDailyScreen } from './screens/DailyScreen';
 import { MahjongGameScreen } from './screens/GameScreen';
 import { MahjongHomeScreen } from './screens/HomeScreen';
 import { MahjongLevelSelectScreen } from './screens/LevelSelectScreen';
@@ -39,8 +38,6 @@ export function MahjongScreens() {
       return <MahjongTutorialScreen />;
     case 'levels':
       return <MahjongLevelSelectScreen />;
-    case 'daily':
-      return <MahjongDailyScreen />;
     case 'game':
       return <MahjongGameScreen />;
     case 'stats':

@@ -37,7 +37,6 @@ export const tr: Sudoku6x6Messages = {
   sudoku6x6NewBoard: 'Yeni tahta',
   sudoku6x6DailySection: 'Günlük',
   sudoku6x6DailiesSolved: 'Çözülen günler',
-  sudoku6x6DailyBacklogHint: 'Önceki tüm günler açık kalır.',
   sudoku6x6HighlightMistakes: 'Hataları göster',
   sudoku6x6HighlightMistakesNote:
     'Yanlış bir rakamı yerleştirir yerleştirmez işaretler. Tekrar eden rakamlar her zaman işaretlenir.',

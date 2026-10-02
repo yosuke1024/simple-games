@@ -30,7 +30,6 @@ export const hi: FutoshikiMessages = {
   futoshikiNewBestTime: 'आपका सबसे तेज़ समय।',
   futoshikiLevelsSolved: 'हल किए गए स्तर',
   futoshikiDailiesSolved: 'हल की गई दैनिक पहेलियाँ',
-  futoshikiDailyBacklogHint: 'पिछले दिन हमेशा खुले रहते हैं।',
   futoshikiHighlightMistakes: 'गलतियाँ दिखाएँ',
   futoshikiHighlightMistakesNote:
     'हल से अलग अंक को चिह्नित करता है। टूटे नियम हमेशा दिखाए जाते हैं।',

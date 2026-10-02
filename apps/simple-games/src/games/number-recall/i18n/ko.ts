@@ -16,8 +16,6 @@ export const ko: RecallMessages = {
   recallTiles: '타일',
   recallNewBestTime: '지금까지 중 가장 빠릅니다.',
   recallNewLayout: '새 배치',
-
-  recallDailyBacklogHint: '지난 날짜는 언제나 열려 있습니다.',
   recallSizeLabel: '{n}×{n}',
   recallLevelsDone: '완료한 레벨',
   recallDailiesDone: '완료한 데일리',

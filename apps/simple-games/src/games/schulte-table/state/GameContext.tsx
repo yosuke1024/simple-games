@@ -55,7 +55,7 @@ import {
   previousBestFor,
 } from './statsLogic';
 
-export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats';
+export type Screen = 'home' | 'tutorial' | 'levels' | 'game' | 'stats';
 
 export interface LastResult {
   readonly isNewBest: boolean;
@@ -84,7 +84,7 @@ export interface SchulteContextValue {
   lastResult: LastResult | null;
   startLevel: (level: number) => void;
   startNextLevel: () => void;
-  startDaily: (date?: string) => void;
+  startDaily: () => void;
   restartCurrent: () => void;
   /** Taps a cell. Returns true only when it was the number being waited for. */
   tap: (index: number) => boolean;
@@ -265,7 +265,7 @@ export function SchulteProvider({
   }, [beginSession]);
 
   const startDaily = useCallback(
-    (date?: string) => beginSession(createDailySession(date ?? localDateString(new Date()))),
+    () => beginSession(createDailySession(localDateString(new Date()))),
     [beginSession],
   );
 

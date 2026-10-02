@@ -37,7 +37,6 @@ export const vi: ShapeRegionsMessages = {
   shapeRegionsSolvedCount: 'Câu đố đã giải',
   shapeRegionsDailySection: 'Hằng ngày',
   shapeRegionsDailiesCleared: 'Ngày đã hoàn thành',
-  shapeRegionsDailyBacklogHint: 'Mọi ngày trước đó vẫn mở.',
   shapeRegionsStep1Title: 'Số và ký hiệu',
   shapeRegionsStep1Body: 'Số là số ô của hình; ký hiệu là dạng của nó.',
   shapeRegionsStep2Title: 'Mở rộng từ gợi ý',

@@ -4,7 +4,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createMemoryKV } from '@/storage/kv';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { settingsSchema } from '@/storage/schemas';
-import { CELLS, createLevelSession, encodeBoard, encodeSolution, type Board } from '../game';
+import {
+  addDays,
+  CELLS,
+  createDailySession,
+  createLevelSession,
+  encodeBoard,
+  encodeSolution,
+  localDateString,
+  type Board,
+} from '../game';
+import { toPersisted } from '../storage/gamePersistence';
 import { SD_STORAGE_KEYS, type Stats } from '../storage/schemas';
 import { SudokuRoot } from './SudokuRoot';
 
@@ -139,6 +149,31 @@ describe('home', () => {
     expect(screen.getByRole('button', { name: /Daily Challenge/ })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'All games' }));
     expect(onExit).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops a daily left over from another day, and the button starts today's", async () => {
+    // docs/PRODUCT_PRINCIPLES.md「デイリーは今日の 1 問」: the daily is today's board,
+    // so a board suspended on another day is not the one this button names.
+    const user = userEvent.setup();
+    const today = localDateString(new Date());
+    const yesterday = createDailySession(addDays(today, -1));
+    const { kv } = renderSudoku({
+      ...tutorialDone,
+      [SD_STORAGE_KEYS.dailyGame]: JSON.stringify(toPersisted(yesterday, 1)),
+    });
+
+    expect(await screen.findByRole('button', { name: /Daily Challenge/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Daily Challenge.*Resume/ }),
+    ).not.toBeInTheDocument();
+    // The record went with it, so no later door can reopen the stale board.
+    expect(await kv.get(SD_STORAGE_KEYS.dailyGame)).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: /Daily Challenge/ }));
+    expect(screen.getByText('Daily')).toBeInTheDocument();
+    await settle();
+    const saved = JSON.parse(deviceStore.get(SD_STORAGE_KEYS.dailyGame)!) as { dailyDate: string };
+    expect(saved.dailyDate).toBe(today);
   });
 
   it('never shows a clock or a streak anywhere (§10, §12)', async () => {

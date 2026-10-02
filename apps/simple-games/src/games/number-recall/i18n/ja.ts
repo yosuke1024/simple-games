@@ -16,8 +16,6 @@ export const ja: RecallMessages = {
   recallTiles: 'タイル',
   recallNewBestTime: '自己ベスト更新。',
   recallNewLayout: '新しい配置',
-
-  recallDailyBacklogHint: '過去の日はいつでも開きます。',
   recallSizeLabel: '{n}×{n}',
   recallLevelsDone: 'クリアしたレベル',
   recallDailiesDone: '達成したデイリー',

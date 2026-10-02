@@ -16,8 +16,6 @@ export const id: RecallMessages = {
   recallTiles: 'Ubin',
   recallNewBestTime: 'Tercepat sejauh ini.',
   recallNewLayout: 'Susunan baru',
-
-  recallDailyBacklogHint: 'Setiap hari sebelumnya selalu terbuka.',
   recallSizeLabel: '{n}x{n}',
   recallLevelsDone: 'Level selesai',
   recallDailiesDone: 'Harian selesai',

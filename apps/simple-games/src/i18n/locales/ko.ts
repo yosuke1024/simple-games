@@ -18,10 +18,6 @@ export const ko: Messages = {
   reachedLevel: '도달 레벨',
 
   score: '점수',
-
-  dailyPast: '지난 데일리',
-  dailyToday: '오늘',
-  dailyBacklogHint: '하루를 클리어하면 그 전날이 열립니다.',
   modeDaily: '데일리',
   freePlay: '자유 플레이',
   freePlayNote: '원할 때 언제든 새 판을.',

@@ -29,7 +29,6 @@ export const vi: KakuroMessages = {
   kakuroNewBestTime: 'Thời gian nhanh nhất của bạn.',
   kakuroLevelsSolved: 'Màn đã giải',
   kakuroDailiesSolved: 'Thử thách ngày đã giải',
-  kakuroDailyBacklogHint: 'Những ngày trước luôn mở.',
   kakuroHighlightMistakes: 'Hiện lỗi sai',
   kakuroHighlightMistakesNote: 'Đánh dấu chữ số khác với đáp án. Vi phạm luật luôn được đánh dấu.',
   kakuroStep1Title: 'Cộng đúng tổng đề bài',

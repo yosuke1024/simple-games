@@ -21,7 +21,6 @@ export const fr: TakuzuMessages = {
   takuzuTier_hard: 'Difficile',
   takuzuLevelsSolved: 'Niveaux résolus',
   takuzuDailiesSolved: 'Défis quotidiens résolus',
-  takuzuDailyBacklogHint: 'Les jours précédents restent ouverts.',
   takuzuStep1Title: 'Jamais trois à la suite',
   takuzuStep1Body:
     'Appuyez sur une case pour alterner 0, 1 et vide. Le même chiffre ne peut pas se suivre trois fois.',

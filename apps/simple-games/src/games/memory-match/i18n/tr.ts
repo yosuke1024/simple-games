@@ -20,7 +20,6 @@ export const tr: MemoryMatchMessages = {
   memoryNewBestTime: 'Şimdiye kadarki en hızlı süren.',
   memoryBestMoves: 'En az hamle',
   memoryDailiesCleared: 'Tamamlanan günler',
-  memoryDailyBacklogHint: 'Önceki günler her zaman açık.',
   memoryStep1Title: 'İki kart çevir',
   memoryStep1Body: 'Bir karta, sonra bir başkasına dokun. Eşleşen çift açık kalır.',
   memoryStep2Title: 'Ezberlemek için acele yok',

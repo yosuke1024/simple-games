@@ -37,7 +37,6 @@ export const ptBR: Sudoku6x6Messages = {
   sudoku6x6NewBoard: 'Novo tabuleiro',
   sudoku6x6DailySection: 'Diário',
   sudoku6x6DailiesSolved: 'Dias resolvidos',
-  sudoku6x6DailyBacklogHint: 'Todos os dias anteriores continuam abertos.',
   sudoku6x6HighlightMistakes: 'Mostrar erros',
   sudoku6x6HighlightMistakesNote:
     'Marca um número errado assim que ele é colocado. Repetidos são sempre marcados.',

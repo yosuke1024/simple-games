@@ -29,7 +29,6 @@ export const fr: FreeCellMessages = {
   fcGamesWon: 'Parties gagnées',
   fcWinRate: 'Taux de victoire',
   fcDailiesWon: 'Défis quotidiens gagnés',
-  fcDailyBacklogHint: 'Les jours précédents restent ouverts. Prenez votre temps.',
   fcStep1Title: 'Un de moins, couleurs alternées',
   fcStep1Body:
     'Empilez en descendant, rouge sur noir sur rouge. Touchez une carte, puis sa destination.',

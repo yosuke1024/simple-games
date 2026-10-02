@@ -37,7 +37,6 @@ export const es: Sudoku6x6Messages = {
   sudoku6x6NewBoard: 'Tablero nuevo',
   sudoku6x6DailySection: 'Diario',
   sudoku6x6DailiesSolved: 'Días resueltos',
-  sudoku6x6DailyBacklogHint: 'Todos los días anteriores siguen abiertos.',
   sudoku6x6HighlightMistakes: 'Mostrar errores',
   sudoku6x6HighlightMistakesNote:
     'Marca una cifra incorrecta en cuanto se coloca. Las repetidas siempre se marcan.',

@@ -58,7 +58,6 @@ export const hi: CrownGridMessages = {
   crownGridNewBoard: 'नया बोर्ड',
   crownGridDailySection: 'दैनिक',
   crownGridDailiesSolved: 'हल किए दिन',
-  crownGridDailyBacklogHint: 'पिछले दिन हमेशा खुले रहते हैं।',
   crownGridStep1Title: 'हर एक में एक ताज',
   crownGridStep1Body: 'हर पंक्ति, हर स्तंभ और हर रंग में ठीक एक ताज होता है।',
   crownGridStep2Title: 'ताज कभी छूते नहीं',

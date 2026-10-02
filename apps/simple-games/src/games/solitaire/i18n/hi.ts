@@ -32,7 +32,6 @@ export const hi: SolitaireMessages = {
   solGamesWon: 'जीते खेल',
   solWinRate: 'जीत दर',
   solDailiesWon: 'जीते दैनिक',
-  solDailyBacklogHint: 'पिछले सभी दिन हमेशा खुले रहते हैं। हर बाज़ी जीती नहीं जा सकती।',
   solStep1Title: 'एक कम, रंग बारी-बारी',
   solStep1Body:
     'लाल-काला बारी-बारी, घटते क्रम में पत्ते जमाएँ। पहले पत्ते पर टैप करें, फिर जगह पर।',

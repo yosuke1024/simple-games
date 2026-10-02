@@ -29,7 +29,6 @@ export const tr: KakuroMessages = {
   kakuroNewBestTime: 'En hızlı süren.',
   kakuroLevelsSolved: 'Çözülen seviyeler',
   kakuroDailiesSolved: 'Çözülen günlükler',
-  kakuroDailyBacklogHint: 'Önceki günler açık kalır.',
   kakuroHighlightMistakes: 'Hataları göster',
   kakuroHighlightMistakesNote:
     'Çözüme uymayan rakamı işaretler. Kural ihlalleri her zaman işaretlenir.',

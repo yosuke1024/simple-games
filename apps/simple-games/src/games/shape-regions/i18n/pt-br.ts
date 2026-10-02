@@ -39,7 +39,6 @@ export const ptBR: ShapeRegionsMessages = {
   shapeRegionsSolvedCount: 'Quebra-cabeças resolvidos',
   shapeRegionsDailySection: 'Diário',
   shapeRegionsDailiesCleared: 'Dias concluídos',
-  shapeRegionsDailyBacklogHint: 'Todos os dias anteriores continuam abertos.',
   shapeRegionsStep1Title: 'Número e símbolo',
   shapeRegionsStep1Body: 'O número diz quantas células a forma tem; o símbolo, o seu formato.',
   shapeRegionsStep2Title: 'Cresça a partir da pista',

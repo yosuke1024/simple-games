@@ -11,8 +11,6 @@ export const tr: QuickMathMessages = {
   qmathMisses: 'Yanlış cevap',
   qmathNewBestTime: 'En hızlı zamanın.',
   qmathConfirmRestartBody: 'Bu tur ilk sorudan yeniden başlar.',
-
-  qmathDailyBacklogHint: 'Geçmiş günlerin hepsi açık kalır.',
   qmathLevelsDone: 'Tamamlanan seviyeler',
   qmathDailiesDone: 'Tamamlanan günlükler',
   qmathTotalMisses: 'Toplam yanlış cevap',

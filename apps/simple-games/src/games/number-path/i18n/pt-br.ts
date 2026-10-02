@@ -29,7 +29,6 @@ export const ptBR: NumberPathMessages = {
   numberPathSolvedCount: 'Tabuleiros resolvidos',
   numberPathDailySection: 'Diário',
   numberPathDailiesSolved: 'Dias resolvidos',
-  numberPathDailyBacklogHint: 'Todos os dias anteriores continuam abertos.',
   numberPathStep1Title: 'Siga os números',
   numberPathStep1Body: 'Trace uma única linha a partir do 1, passando pelos números em ordem.',
   numberPathStep2Title: 'Cubra todas as casas',

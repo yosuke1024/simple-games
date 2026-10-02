@@ -37,7 +37,6 @@ export const ko: BoxRegionsMessages = {
   boxRegionsSolvedCount: '해결한 퍼즐',
   boxRegionsDailySection: '데일리',
   boxRegionsDailiesCleared: '완료한 날',
-  boxRegionsDailyBacklogHint: '이전 날짜는 모두 열려 있습니다.',
   boxRegionsStep1Title: '상자로 나누기',
   boxRegionsStep1Body: '보드를 직사각형으로 나누세요. 각 상자에는 단서가 정확히 하나씩 들어갑니다.',
   boxRegionsStep2Title: '단서 읽기',

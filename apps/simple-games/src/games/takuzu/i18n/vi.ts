@@ -21,7 +21,6 @@ export const vi: TakuzuMessages = {
   takuzuTier_hard: 'Khó',
   takuzuLevelsSolved: 'Màn đã giải',
   takuzuDailiesSolved: 'Thử thách ngày đã giải',
-  takuzuDailyBacklogHint: 'Những ngày trước luôn mở.',
   takuzuStep1Title: 'Không ba ô liền nhau',
   takuzuStep1Body: 'Chạm vào ô để đổi 0, 1, trống. Cùng một chữ số không được nằm ba ô liền nhau.',
   takuzuStep2Title: 'Chia đều',

@@ -35,7 +35,6 @@ export const ko: MahjongMessages = {
 
   mahjongLevelsCleared: '클리어한 레벨',
   mahjongDailiesCleared: '클리어한 데일리',
-  mahjongDailyBacklogHint: '지난 날짜는 언제든 도전할 수 있습니다.',
 
   mahjongStep1Title: '같은 패 두 장을 가져오기',
   mahjongStep1Body:

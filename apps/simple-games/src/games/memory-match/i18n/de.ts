@@ -20,7 +20,6 @@ export const de: MemoryMatchMessages = {
   memoryNewBestTime: 'Deine schnellste Zeit bisher.',
   memoryBestMoves: 'Wenigste Züge',
   memoryDailiesCleared: 'Geschaffte Tage',
-  memoryDailyBacklogHint: 'Alle früheren Tage bleiben offen.',
   memoryStep1Title: 'Zwei Karten aufdecken',
   memoryStep1Body: 'Tippe eine Karte an, dann eine zweite. Ein passendes Paar bleibt offen liegen.',
   memoryStep2Title: 'Kein Zeitdruck beim Merken',

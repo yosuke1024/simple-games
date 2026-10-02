@@ -23,7 +23,6 @@ export const th: NonogramMessages = {
   nonoNewBestTime: 'เร็วที่สุดของคุณ',
   nonoLevelsSolved: 'ด่านที่ผ่านแล้ว',
   nonoDailiesSolved: 'เดลี่ที่ผ่านแล้ว',
-  nonoDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ',
   nonoStep1Title: 'ตัวเลขคือช่วงติดกัน',
   nonoStep1Body:
     'ตัวเลขแต่ละตัวคือจำนวนช่องที่ระบายติดกันตามลำดับ โดยเว้นอย่างน้อยหนึ่งช่องระหว่างช่วง',

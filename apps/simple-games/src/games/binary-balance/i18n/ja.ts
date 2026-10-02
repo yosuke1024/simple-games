@@ -49,7 +49,6 @@ export const ja: BinaryBalanceMessages = {
   binaryBalanceNewBoard: '新しい盤面',
   binaryBalanceDailySection: 'デイリー',
   binaryBalanceDailiesSolved: '達成日数',
-  binaryBalanceDailyBacklogHint: '過去の日はいつでも挑戦できます。',
   binaryBalanceStep1Title: '3 つ続けない',
   binaryBalanceStep1Body:
     'タップで 空、太陽、月 と切り替わります。同じ記号は縦にも横にも 3 つ続けられません。',

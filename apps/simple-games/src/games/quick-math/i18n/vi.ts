@@ -11,8 +11,6 @@ export const vi: QuickMathMessages = {
   qmathMisses: 'Trả lời sai',
   qmathNewBestTime: 'Nhanh nhất từ trước tới nay.',
   qmathConfirmRestartBody: 'Ván này bắt đầu lại từ câu đầu tiên.',
-
-  qmathDailyBacklogHint: 'Mọi ngày trước đó luôn mở.',
   qmathLevelsDone: 'Cấp đã xong',
   qmathDailiesDone: 'Ngày đã xong',
   qmathTotalMisses: 'Tổng lần trả lời sai',

@@ -37,7 +37,6 @@ export const hi: BoxRegionsMessages = {
   boxRegionsSolvedCount: 'हल की गई पहेलियाँ',
   boxRegionsDailySection: 'दैनिक',
   boxRegionsDailiesCleared: 'पूरे किए गए दिन',
-  boxRegionsDailyBacklogHint: 'पिछले सभी दिन खुले रहते हैं।',
   boxRegionsStep1Title: 'बॉक्स में बाँटें',
   boxRegionsStep1Body: 'बोर्ड को आयतों में बाँटें, हर आयत में ठीक एक सुराग़ हो।',
   boxRegionsStep2Title: 'सुराग़ पढ़ें',

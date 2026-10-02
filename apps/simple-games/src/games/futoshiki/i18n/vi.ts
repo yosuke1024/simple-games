@@ -30,7 +30,6 @@ export const vi: FutoshikiMessages = {
   futoshikiNewBestTime: 'Thời gian nhanh nhất của bạn.',
   futoshikiLevelsSolved: 'Màn đã giải',
   futoshikiDailiesSolved: 'Thử thách ngày đã giải',
-  futoshikiDailyBacklogHint: 'Những ngày trước luôn mở.',
   futoshikiHighlightMistakes: 'Hiện lỗi sai',
   futoshikiHighlightMistakesNote:
     'Đánh dấu chữ số khác với đáp án. Vi phạm luật luôn được đánh dấu.',

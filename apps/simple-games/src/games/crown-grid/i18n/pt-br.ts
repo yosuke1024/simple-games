@@ -59,7 +59,6 @@ export const ptBR: CrownGridMessages = {
   crownGridNewBoard: 'Novo tabuleiro',
   crownGridDailySection: 'Diário',
   crownGridDailiesSolved: 'Dias resolvidos',
-  crownGridDailyBacklogHint: 'Os dias anteriores continuam abertos.',
   crownGridStep1Title: 'Uma coroa em cada',
   crownGridStep1Body: 'Cada linha, cada coluna e cada cor tem exatamente uma coroa.',
   crownGridStep2Title: 'Coroas nunca se tocam',

@@ -35,7 +35,6 @@ export const tr: MahjongMessages = {
 
   mahjongLevelsCleared: 'Tamamlanan seviyeler',
   mahjongDailiesCleared: 'Tamamlanan günlükler',
-  mahjongDailyBacklogHint: 'Önceki günler her zaman açık kalır.',
 
   mahjongStep1Title: 'Aynı çifti al',
   mahjongStep1Body:

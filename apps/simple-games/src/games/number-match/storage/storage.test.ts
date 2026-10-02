@@ -157,7 +157,7 @@ describe('three save slots', () => {
     await saveGame(createDailySession('2026-07-28'), kv);
     const free = createFreeSession('hard');
     await saveGame(free, kv);
-    const games = await loadSavedGames(kv);
+    const games = await loadSavedGames(kv, '2026-07-28');
     expect(games.level?.level).toBe(4);
     expect(games.daily?.dailyDate).toBe('2026-07-28');
     expect(games.free?.freeTier).toBe('hard');
@@ -171,7 +171,7 @@ describe('three save slots', () => {
     await saveGame(createDailySession('2026-07-28'), kv);
     await saveGame(createFreeSession('easy'), kv);
     await clearSavedGame('free', kv);
-    const games = await loadSavedGames(kv);
+    const games = await loadSavedGames(kv, '2026-07-28');
     expect(games.level?.level).toBe(4);
     expect(games.daily?.dailyDate).toBe('2026-07-28');
     expect(games.free).toBeNull();
@@ -182,7 +182,7 @@ describe('three save slots', () => {
     await saveGame(createLevelSession(4), kv);
     await saveGame(createDailySession('2026-07-28'), kv);
     await clearSavedGame('daily', kv);
-    const games = await loadSavedGames(kv);
+    const games = await loadSavedGames(kv, '2026-07-28');
     expect(games.level?.level).toBe(4);
     expect(games.daily).toBeNull();
   });
@@ -192,7 +192,7 @@ describe('three save slots', () => {
     await saveGame(createLevelSession(4), kv);
     await saveGame(createDailySession('2026-07-27'), kv);
     await saveGame(createDailySession('2026-07-28'), kv);
-    const games = await loadSavedGames(kv);
+    const games = await loadSavedGames(kv, '2026-07-28');
     expect(games.level?.level).toBe(4);
     expect(games.daily?.dailyDate).toBe('2026-07-28');
   });
@@ -214,7 +214,7 @@ describe('schema migrations', () => {
       savedAt: 123,
     };
     const kv = createMemoryKV({ [NM_STORAGE_KEYS.game]: JSON.stringify(v1) });
-    const games = await loadSavedGames(kv);
+    const games = await loadSavedGames(kv, '2026-07-26');
     expect(games.level).toBeNull();
     expect(games.daily).not.toBeNull();
     expect(games.daily!.mode).toBe('daily');

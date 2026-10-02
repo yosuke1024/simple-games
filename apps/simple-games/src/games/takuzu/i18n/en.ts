@@ -30,7 +30,6 @@ export const en = {
   takuzuTier_hard: 'Hard',
   takuzuLevelsSolved: 'Levels solved',
   takuzuDailiesSolved: 'Dailies solved',
-  takuzuDailyBacklogHint: 'Every earlier day stays open.',
   takuzuStep1Title: 'Never three in a row',
   takuzuStep1Body: 'Tap a square to cycle 0, 1, empty. The same digit may not sit three in a row.',
   takuzuStep2Title: 'Half and half',

@@ -16,8 +16,6 @@ export const tr: RecallMessages = {
   recallTiles: 'Karolar',
   recallNewBestTime: 'En hızlı zamanın.',
   recallNewLayout: 'Yeni diziliş',
-
-  recallDailyBacklogHint: 'Geçmiş günlerin hepsi açık kalır.',
   recallSizeLabel: '{n}x{n}',
   recallLevelsDone: 'Tamamlanan seviyeler',
   recallDailiesDone: 'Tamamlanan günlükler',

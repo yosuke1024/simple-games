@@ -52,7 +52,6 @@ export const id: BinaryBalanceMessages = {
   binaryBalanceNewBoard: 'Papan baru',
   binaryBalanceDailySection: 'Harian',
   binaryBalanceDailiesSolved: 'Hari terselesaikan',
-  binaryBalanceDailyBacklogHint: 'Hari-hari sebelumnya tetap terbuka.',
   binaryBalanceStep1Title: 'Jangan tiga berturut-turut',
   binaryBalanceStep1Body:
     'Ketuk untuk berganti antara kosong, matahari, bulan. Tanda yang sama tidak boleh tiga berturut-turut.',

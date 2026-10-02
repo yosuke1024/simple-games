@@ -32,8 +32,6 @@ export const es: SolitaireMessages = {
   solGamesWon: 'Partidas ganadas',
   solWinRate: 'Tasa de victorias',
   solDailiesWon: 'Retos diarios ganados',
-  solDailyBacklogHint:
-    'Los días anteriores siguen abiertos. No todos los repartos se pueden ganar.',
   solStep1Title: 'Uno menos, colores alternos',
   solStep1Body: 'Apila hacia abajo alternando rojo y negro. Toca una carta y luego su destino.',
   solStep2Title: 'Libera las cartas ocultas',

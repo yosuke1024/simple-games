@@ -18,10 +18,6 @@ export const zhHans: Messages = {
   reachedLevel: '已达关卡',
 
   score: '得分',
-
-  dailyPast: '往期每日',
-  dailyToday: '今天',
-  dailyBacklogHint: '通关后可解锁前一天。',
   modeDaily: '每日',
   freePlay: '自由模式',
   freePlayNote: '随时开始新棋盘。',

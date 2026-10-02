@@ -29,7 +29,6 @@ export const ptBR: FreeCellMessages = {
   fcGamesWon: 'Jogos vencidos',
   fcWinRate: 'Taxa de vitórias',
   fcDailiesWon: 'Diários vencidos',
-  fcDailyBacklogHint: 'Os dias anteriores continuam abertos. Vá com calma.',
   fcStep1Title: 'Um a menos, cores alternadas',
   fcStep1Body:
     'Empilhe em ordem decrescente alternando vermelho e preto. Toque na carta e depois no destino.',

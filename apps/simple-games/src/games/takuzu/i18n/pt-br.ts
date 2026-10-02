@@ -21,7 +21,6 @@ export const ptBR: TakuzuMessages = {
   takuzuTier_hard: 'Difícil',
   takuzuLevelsSolved: 'Níveis resolvidos',
   takuzuDailiesSolved: 'Diários resolvidos',
-  takuzuDailyBacklogHint: 'Os dias anteriores continuam abertos.',
   takuzuStep1Title: 'Nunca três seguidos',
   takuzuStep1Body:
     'Toque em um quadrado para alternar 0, 1 e vazio. O mesmo dígito não pode aparecer três vezes seguidas.',

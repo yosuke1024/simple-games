@@ -30,7 +30,6 @@ export const ja: FutoshikiMessages = {
   futoshikiNewBestTime: '自己最速です。',
   futoshikiLevelsSolved: 'クリアしたレベル',
   futoshikiDailiesSolved: 'クリアしたデイリー',
-  futoshikiDailyBacklogHint: '過去の日はいつでも挑戦できます。',
   futoshikiHighlightMistakes: 'ミスを表示',
   futoshikiHighlightMistakesNote: '解と違う数字に印を付けます。ルール違反は常に表示します。',
   futoshikiStep1Title: '各数字を 1 つずつ',

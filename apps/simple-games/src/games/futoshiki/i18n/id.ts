@@ -30,7 +30,6 @@ export const id: FutoshikiMessages = {
   futoshikiNewBestTime: 'Waktu tercepatmu.',
   futoshikiLevelsSolved: 'Level selesai',
   futoshikiDailiesSolved: 'Harian selesai',
-  futoshikiDailyBacklogHint: 'Hari-hari sebelumnya tetap terbuka.',
   futoshikiHighlightMistakes: 'Tandai kesalahan',
   futoshikiHighlightMistakesNote:
     'Menandai angka yang tidak cocok dengan jawaban. Pelanggaran aturan selalu ditandai.',

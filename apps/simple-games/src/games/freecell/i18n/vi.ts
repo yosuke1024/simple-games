@@ -28,7 +28,6 @@ export const vi: FreeCellMessages = {
   fcGamesWon: 'Ván thắng',
   fcWinRate: 'Tỷ lệ thắng',
   fcDailiesWon: 'Thử thách ngày đã thắng',
-  fcDailyBacklogHint: 'Những ngày trước luôn mở. Cứ thong thả.',
   fcStep1Title: 'Giảm một, đổi màu xen kẽ',
   fcStep1Body: 'Xếp bài giảm dần, đỏ đen xen kẽ. Chạm một lá, rồi chạm nơi muốn đặt.',
   fcStep2Title: 'Bốn ô, mỗi ô một lá',

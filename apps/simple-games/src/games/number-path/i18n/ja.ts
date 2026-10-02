@@ -28,7 +28,6 @@ export const ja: NumberPathMessages = {
   numberPathSolvedCount: 'クリアした盤面',
   numberPathDailySection: 'デイリー',
   numberPathDailiesSolved: 'クリアした日数',
-  numberPathDailyBacklogHint: '過去の日はいつでも挑戦できます。',
   numberPathStep1Title: '数字を順にたどる',
   numberPathStep1Body: '1 から 1 本の線を引き、数字を順に通ります。',
   numberPathStep2Title: '全部のマスを 1 回ずつ',

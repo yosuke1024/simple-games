@@ -35,7 +35,6 @@ export const fr: MahjongMessages = {
 
   mahjongLevelsCleared: 'Niveaux terminés',
   mahjongDailiesCleared: 'Défis quotidiens terminés',
-  mahjongDailyBacklogHint: 'Les jours précédents restent ouverts.',
 
   mahjongStep1Title: 'Prenez des paires identiques',
   mahjongStep1Body:

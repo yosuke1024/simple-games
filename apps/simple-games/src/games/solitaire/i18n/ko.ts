@@ -32,7 +32,6 @@ export const ko: SolitaireMessages = {
   solGamesWon: '이긴 게임',
   solWinRate: '승률',
   solDailiesWon: '데일리 승리',
-  solDailyBacklogHint: '지난 날짜는 언제든 열려 있습니다. 모든 패를 이길 수 있는 것은 아닙니다.',
   solStep1Title: '하나 낮게, 색은 번갈아',
   solStep1Body: '빨강과 검정을 번갈아 내림차순으로 쌓으세요. 카드를 탭하고, 놓을 곳을 탭합니다.',
   solStep2Title: '숨은 카드를 꺼내세요',

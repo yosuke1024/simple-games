@@ -69,7 +69,6 @@ export const en = {
   crownGridNewBoard: 'New board',
   crownGridDailySection: 'Daily',
   crownGridDailiesSolved: 'Days solved',
-  crownGridDailyBacklogHint: 'Every earlier day stays open.',
   crownGridStep1Title: 'One crown each',
   crownGridStep1Body: 'Every row, every column and every colour holds exactly one crown.',
   crownGridStep2Title: 'Crowns never touch',

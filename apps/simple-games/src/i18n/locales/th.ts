@@ -18,10 +18,6 @@ export const th: Messages = {
   reachedLevel: 'เลเวลที่ไปถึง',
 
   score: 'คะแนน',
-
-  dailyPast: 'ชาเลนจ์ย้อนหลัง',
-  dailyToday: 'วันนี้',
-  dailyBacklogHint: 'เคลียร์วันหนึ่งได้ จะปลดล็อกวันก่อนหน้า',
   modeDaily: 'รายวัน',
   freePlay: 'เล่นอิสระ',
   freePlayNote: 'กระดานใหม่ เมื่อไหร่ก็ได้',

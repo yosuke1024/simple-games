@@ -51,7 +51,6 @@ export const de: BinaryBalanceMessages = {
   binaryBalanceNewBoard: 'Neues Feld',
   binaryBalanceDailySection: 'Tagesrätsel',
   binaryBalanceDailiesSolved: 'Gelöste Tage',
-  binaryBalanceDailyBacklogHint: 'Jeder frühere Tag bleibt offen.',
   binaryBalanceStep1Title: 'Nie drei in Folge',
   binaryBalanceStep1Body:
     'Tippen wechselt zwischen leer, Sonne und Mond. Dasselbe Zeichen steht nie dreimal in Folge.',

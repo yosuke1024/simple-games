@@ -38,7 +38,6 @@ export const vi: BoxRegionsMessages = {
   boxRegionsSolvedCount: 'Câu đố đã giải',
   boxRegionsDailySection: 'Hằng ngày',
   boxRegionsDailiesCleared: 'Số ngày đã hoàn thành',
-  boxRegionsDailyBacklogHint: 'Mọi ngày trước đó vẫn mở.',
   boxRegionsStep1Title: 'Chia thành các hộp',
   boxRegionsStep1Body: 'Chia bảng thành các hình chữ nhật, mỗi hình chứa đúng một manh mối.',
   boxRegionsStep2Title: 'Đọc manh mối',

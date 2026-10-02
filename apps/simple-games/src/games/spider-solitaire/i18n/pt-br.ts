@@ -36,8 +36,6 @@ export const ptBR: SpiderMessages = {
   spiderGamesWon: 'Jogos vencidos',
   spiderWinRate: 'Taxa de vitórias',
   spiderDailiesWon: 'Diários vencidos',
-  spiderDailyBacklogHint:
-    'Os dias anteriores continuam abertos. Nem toda distribuição pode ser vencida.',
   spiderStep1Title: 'Empilhe em ordem decrescente',
   spiderStep1Body:
     'Qualquer naipe pode ir sobre uma carta um valor acima. Toque na carta e depois no destino.',

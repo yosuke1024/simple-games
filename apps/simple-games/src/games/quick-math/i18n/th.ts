@@ -11,8 +11,6 @@ export const th: QuickMathMessages = {
   qmathMisses: 'ตอบผิด',
   qmathNewBestTime: 'เร็วที่สุดของคุณ',
   qmathConfirmRestartBody: 'รอบนี้จะเริ่มใหม่จากข้อแรก',
-
-  qmathDailyBacklogHint: 'ย้อนไปเล่นวันก่อน ๆ ได้เสมอ',
   qmathLevelsDone: 'เลเวลที่ผ่าน',
   qmathDailiesDone: 'รายวันที่ผ่าน',
   qmathTotalMisses: 'ตอบผิดทั้งหมด',

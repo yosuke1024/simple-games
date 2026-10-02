@@ -16,8 +16,6 @@ export const vi: RecallMessages = {
   recallTiles: 'Số ô',
   recallNewBestTime: 'Nhanh nhất từ trước tới nay.',
   recallNewLayout: 'Cách xếp mới',
-
-  recallDailyBacklogHint: 'Mọi ngày trước đó luôn mở.',
   recallSizeLabel: '{n}x{n}',
   recallLevelsDone: 'Cấp đã xong',
   recallDailiesDone: 'Ngày đã xong',

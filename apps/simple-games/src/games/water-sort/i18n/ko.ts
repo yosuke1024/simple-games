@@ -14,7 +14,6 @@ export const ko: WaterSortMessages = {
   waterBestMoves: '최소 이동 수',
   waterLevelsSolved: '완료한 레벨',
   waterDailiesSolved: '완료한 데일리',
-  waterDailyBacklogHint: '지난 날짜는 언제든 열려 있습니다.',
   waterTier_easy: '쉬움',
   waterTier_medium: '보통',
   waterTier_hard: '어려움',

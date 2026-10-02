@@ -14,7 +14,6 @@ export const ko: SlidingPuzzleMessages = {
   slideNewBestTime: '지금까지 중 가장 빠릅니다.',
   slideLevelsSolved: '완성한 레벨',
   slideDailiesSolved: '완성한 데일리',
-  slideDailyBacklogHint: '지난 날짜는 언제나 열려 있습니다.',
   slideStep1Title: '빈칸 옆을 누르세요',
   slideStep1Body: '빈칸 옆의 타일을 누르면 그 자리로 밀려 들어갑니다.',
   slideStep2Title: '한 줄이 함께 움직여요',

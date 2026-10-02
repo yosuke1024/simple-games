@@ -18,10 +18,6 @@ export const ptBR: Messages = {
   reachedLevel: 'Nível alcançado',
 
   score: 'Pontos',
-
-  dailyPast: 'Diários anteriores',
-  dailyToday: 'Hoje',
-  dailyBacklogHint: 'Conclua um dia para desbloquear o anterior.',
   modeDaily: 'Diário',
   freePlay: 'Jogo livre',
   freePlayNote: 'Um tabuleiro novo, quando você quiser.',

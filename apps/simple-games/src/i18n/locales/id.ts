@@ -18,10 +18,6 @@ export const id: Messages = {
   reachedLevel: 'Level tercapai',
 
   score: 'Skor',
-
-  dailyPast: 'Harian Lampau',
-  dailyToday: 'Hari ini',
-  dailyBacklogHint: 'Selesaikan satu hari untuk membuka hari sebelumnya.',
   modeDaily: 'Harian',
   freePlay: 'Main Bebas',
   freePlayNote: 'Papan baru, kapan pun Anda mau.',

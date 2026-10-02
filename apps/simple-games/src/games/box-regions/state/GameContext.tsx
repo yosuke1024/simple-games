@@ -58,7 +58,7 @@ import {
 } from '../storage/schemas';
 import { applyGameStart, applyPlayTime, applySolved, previousBestFor } from './statsLogic';
 
-export type Screen = 'home' | 'tutorial' | 'daily' | 'game' | 'stats';
+export type Screen = 'home' | 'tutorial' | 'game' | 'stats';
 
 export interface LastResult {
   readonly seconds: number;
@@ -85,7 +85,7 @@ export interface BoxRegionsContextValue {
   sessionEpoch: number;
   canResume: (mode: GameMode) => boolean;
   startDifficulty: (difficulty: Difficulty) => void;
-  startDaily: (date?: string) => void;
+  startDaily: () => void;
   restartCurrent: () => void;
   resumeGame: (mode: GameMode) => void;
   /** A stroke from one corner cell to the other (§4). False when nothing was drawn. */
@@ -320,18 +320,15 @@ export function BoxRegionsProvider({
     [beginSession, rememberDifficulty, resumeGame],
   );
 
-  const startDaily = useCallback(
-    (date?: string) => {
-      const target = date ?? localDateString(new Date());
-      const current = sessionsRef.current.daily;
-      if (current && current.dailyDate === target && current.status === 'playing') {
-        resumeGame('daily');
-        return;
-      }
-      beginSession(createDailySession(target));
-    },
-    [beginSession, resumeGame],
-  );
+  const startDaily = useCallback(() => {
+    const target = localDateString(new Date());
+    const current = sessionsRef.current.daily;
+    if (current && current.dailyDate === target && current.status === 'playing') {
+      resumeGame('daily');
+      return;
+    }
+    beginSession(createDailySession(target));
+  }, [beginSession, resumeGame]);
 
   /** The same board again, free and immediate — same seed, clean board (§9). */
   const restartCurrent = useCallback(() => {

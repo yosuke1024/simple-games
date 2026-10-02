@@ -56,7 +56,6 @@ export const en = {
   binaryBalanceNewBoard: 'New board',
   binaryBalanceDailySection: 'Daily',
   binaryBalanceDailiesSolved: 'Days solved',
-  binaryBalanceDailyBacklogHint: 'Every earlier day stays open.',
   binaryBalanceStep1Title: 'Never three in a row',
   binaryBalanceStep1Body: 'Tap to cycle empty, sun, moon. The same mark never runs three in a row.',
   binaryBalanceStep2Title: 'Half and half',

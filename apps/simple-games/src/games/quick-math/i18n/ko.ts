@@ -11,8 +11,6 @@ export const ko: QuickMathMessages = {
   qmathMisses: '오답',
   qmathNewBestTime: '지금까지 중 가장 빠릅니다.',
   qmathConfirmRestartBody: '이번 판을 첫 문제부터 다시 시작합니다.',
-
-  qmathDailyBacklogHint: '지난 날짜는 언제나 열려 있습니다.',
   qmathLevelsDone: '완료한 레벨',
   qmathDailiesDone: '완료한 데일리',
   qmathTotalMisses: '오답 합계',

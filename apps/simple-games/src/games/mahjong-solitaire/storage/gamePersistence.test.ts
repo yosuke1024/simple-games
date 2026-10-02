@@ -51,6 +51,7 @@ describe('v1 payloads keep loading (schema freeze)', () => {
   it('restores the daily save on the turtle', async () => {
     const { daily } = await loadSavedGames(
       storeWith({ [MJ_STORAGE_KEYS.dailyGame]: DAILY_PAYLOAD }),
+      '2026-08-05',
     );
     expect(daily).not.toBeNull();
     expect(daily!.mode).toBe('daily');
