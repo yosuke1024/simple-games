@@ -179,15 +179,16 @@ bash .github/scripts/check-principles.sh
   (自然さは `machine` 来歴の開示と読者からの報告で担保する)。
 
 - [ ] 端末言語を切り替えてもゲーム進行が失われない
-- [ ] Backup & Restore の 4 キー(`backupRestoreConfirmTitle` /
+- [x] Backup & Restore の 4 キー(`backupRestoreConfirmTitle` /
       `backupRestoreConfirmBody` / `backupPrivacyNote` / `backupPurchaseNote`)と
       Club House の 6 キー(`clubRemoveEraseBody` / `clubDisconnectBody` /
       `clubDisconnectHostingNote` / `clubDisconnectLastOwner` / `clubPublicDisclosure` /
-      `clubDailyDisclosure`)が門を通っていること。**2026-10-02 時点で 12 言語 × 10 キー =
-      120 件が未承認**(`i18n:gate status` の実測。切断の文を全員向けの本文と、自分で建てた
-      Club の Owner にだけ出す費用の 1 文に分けたので 9 → 10 キー。issue #160 / #161)。
-      手順 1 の独立逆翻訳(原文を見せない別の実行者、1 言語 1 体)は 2026-10-02 に済み、
-      手順 2 の作者の読みを待っている。`i18n:gate:check` が緑になるまで、この版は出せない
+      `clubDailyDisclosure`)が門を通っていること。12 言語 × 10 キー = 120 件
+      (切断の文を全員向けの本文と、自分で建てた Club の Owner にだけ出す費用の 1 文に
+      分けたので 9 → 10 キー。issue #160 / #161)。**2026-10-02 に通した**: 手順 1 の
+      独立逆翻訳は原文を見せない別の実行者(1 言語 1 体)、手順 2 は作者が逆翻訳の表を
+      読んだ(es / tr の `clubRemoveEraseBody` は主語が省略されているが、題名に相手の名前が
+      出るので、そのまま承認)。`i18n:gate status` は Gate complete、`i18n:gate:check` は緑
 
 ## 4. Android
 
