@@ -19,10 +19,12 @@ import { dateLabel, errorText, factsLine, ScreenFrame } from './common';
 import { challengeTitle } from './ClubScreen';
 
 /**
- * Challenges this session withdrew from (endpoint + challenge id). A withdrawn
- * member's `mine` reads false again, yet the server refuses any further result
- * (`already_submitted`): such a challenge reads as "already in" — no send
- * promise, `Play again` — like a challenge with a result of one's own (§6-3).
+ * Challenges this session withdrew from (endpoint + challenge id). The server
+ * reports a withdrawn challenge as `mine` (it refuses any further result with
+ * `already_submitted`, club.md §5-4), so after a reload it reads as "already
+ * in" — no send promise, `Play again` — like a challenge with a result of one's
+ * own (§6-3). This set covers the moment between the DELETE and that reload,
+ * and a server from before withdrawals were reported.
  */
 const withdrawn = new Set<string>();
 
