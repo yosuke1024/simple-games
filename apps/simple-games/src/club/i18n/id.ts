@@ -38,7 +38,9 @@ export const id: ClubMessages = {
   clubSettings: 'Pengaturan',
   clubDisconnect: 'Putuskan perangkat ini',
   clubDisconnectBody:
-    'Menghentikan perangkat ini terhubung ke {club}. Server tetap berjalan, dan yang lain masih bisa bermain. Untuk menghentikan biaya hosting, hapus server di dasbor penyedia hosting kamu.',
+    'Menghentikan perangkat ini terhubung ke {club}. Server tetap berjalan, dan yang lain masih bisa bermain.',
+  clubDisconnectHostingNote:
+    'Untuk menghentikan biaya hosting, hapus server di dasbor penyedia hosting kamu.',
   clubDisconnectLastOwner:
     'Ini satu-satunya perangkat Owner. Tambahkan perangkat Owner lain terlebih dahulu, atau setel ulang kunci penyiapan di dasbor penyedia hosting kamu untuk mengklaim Club lagi.',
   clubDisconnectConfirm: 'Putuskan',

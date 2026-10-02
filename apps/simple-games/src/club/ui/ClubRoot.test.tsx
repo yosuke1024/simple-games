@@ -532,3 +532,43 @@ async function joinedConnection(extra: Record<string, unknown> = {}) {
     ...extra,
   });
 }
+
+describe('Disconnect this device', () => {
+  const HOSTING = 'delete the server in your hosting provider’s dashboard';
+  const LAST_OWNER = 'This is the only Owner device.';
+
+  async function openDisconnect() {
+    const user = userEvent.setup();
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'Settings' }));
+    await user.click(screen.getByRole('button', { name: 'Disconnect this device' }));
+    return screen.getByRole('alertdialog', { name: 'Disconnect this device' });
+  }
+
+  it('tells a member only that the server and the others carry on', async () => {
+    stubServer();
+    await joinedConnection();
+    const dialog = await openDisconnect();
+    expect(dialog).toHaveTextContent('The server keeps running');
+    expect(dialog).not.toHaveTextContent(HOSTING);
+    expect(dialog).not.toHaveTextContent(LAST_OWNER);
+  });
+
+  it('tells the owner of a self-hosted Club how to stop paying, and that they are the last owner', async () => {
+    stubServer();
+    clubMe = { ...KEN, role: 'owner' };
+    clubMembers = [clubMe, MIKA];
+    await joinedConnection({ role: 'owner' });
+    const dialog = await openDisconnect();
+    await waitFor(() => expect(dialog).toHaveTextContent(LAST_OWNER));
+    expect(dialog).toHaveTextContent(HOSTING);
+  });
+
+  it('never sends a Public Club House member to a hosting dashboard', async () => {
+    stubServer();
+    await joinedConnection({ endpoint: PUBLIC_CLUB_ENDPOINT, clubName: 'PixApps Club' });
+    const dialog = await openDisconnect();
+    expect(dialog).toHaveTextContent('The server keeps running');
+    expect(dialog).not.toHaveTextContent(HOSTING);
+  });
+});

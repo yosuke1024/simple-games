@@ -37,7 +37,9 @@ export const es: ClubMessages = {
   clubSettings: 'Ajustes',
   clubDisconnect: 'Desconectar este dispositivo',
   clubDisconnectBody:
-    'Impide que este dispositivo se conecte a {club}. El servidor sigue funcionando y los demás pueden seguir jugando. Para detener el gasto de alojamiento, elimina el servidor en el panel de tu proveedor de alojamiento.',
+    'Impide que este dispositivo se conecte a {club}. El servidor sigue funcionando y los demás pueden seguir jugando.',
+  clubDisconnectHostingNote:
+    'Para detener el gasto de alojamiento, elimina el servidor en el panel de tu proveedor de alojamiento.',
   clubDisconnectLastOwner:
     'Este es el único dispositivo Owner. Añade primero otro dispositivo Owner, o restablece la clave de configuración en el panel de tu proveedor de alojamiento para reclamar el Club de nuevo.',
   clubDisconnectConfirm: 'Desconectar',

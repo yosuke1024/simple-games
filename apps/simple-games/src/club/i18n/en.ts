@@ -41,7 +41,9 @@ export const en = {
   clubSettings: 'Settings',
   clubDisconnect: 'Disconnect this device',
   clubDisconnectBody:
-    'Stops this device from connecting to {club}. The server keeps running, and the others can still play. To stop hosting usage, delete the server in your hosting provider’s dashboard.',
+    'Stops this device from connecting to {club}. The server keeps running, and the others can still play.',
+  clubDisconnectHostingNote:
+    'To stop hosting usage, delete the server in your hosting provider’s dashboard.',
   clubDisconnectLastOwner:
     'This is the only Owner device. Add another Owner device first, or reset the setup key in your hosting provider’s dashboard to claim the Club again.',
   clubDisconnectConfirm: 'Disconnect',

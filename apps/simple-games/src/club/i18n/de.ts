@@ -38,7 +38,9 @@ export const de: ClubMessages = {
   clubSettings: 'Einstellungen',
   clubDisconnect: 'Dieses Gerät trennen',
   clubDisconnectBody:
-    'Verhindert, dass sich dieses Gerät mit {club} verbindet. Der Server läuft weiter, und die anderen können weiterspielen. Um die Hosting-Kosten zu stoppen, lösche den Server im Dashboard deines Hosting-Anbieters.',
+    'Verhindert, dass sich dieses Gerät mit {club} verbindet. Der Server läuft weiter, und die anderen können weiterspielen.',
+  clubDisconnectHostingNote:
+    'Um die Hosting-Kosten zu stoppen, lösche den Server im Dashboard deines Hosting-Anbieters.',
   clubDisconnectLastOwner:
     'Dies ist das einzige Owner-Gerät. Füge zuerst ein weiteres Owner-Gerät hinzu oder setze den Setup-Schlüssel im Dashboard deines Hosting-Anbieters zurück, um den Club erneut zu übernehmen.',
   clubDisconnectConfirm: 'Trennen',

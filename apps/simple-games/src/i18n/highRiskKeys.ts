@@ -72,8 +72,10 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
 
   // Club House(docs/architecture/club.md §8-5, §11) — 切断は端末だけの操作で、
   // サーバは動き続け課金も続く。「止まる」と読める誤訳は費用の約束の反故になる。
+  // 費用を止める手順の 1 文(HostingNote)は自分で建てた Club の Owner にだけ出す。
   // 最後の Owner の 1 文は、Club を引き取れなくなる可能性を伝える文。
   'clubDisconnectBody',
+  'clubDisconnectHostingNote',
   'clubDisconnectLastOwner',
 
   // Public Club House — 参加の前に「ニックネームと結果が公開される」と言う

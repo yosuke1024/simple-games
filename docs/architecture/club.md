@@ -812,6 +812,11 @@ and the others can still play. To stop hosting usage, delete the server in your
 hosting provider's dashboard.
 ```
 
+最後の 1 文(`clubDisconnectHostingNote`)は、**自分で建てた Club の Owner にだけ**出す
+(2026-10-02)。メンバーにも、Public Club House の参加者にも、削除するサーバも費用も無い —
+以前は 1 つのキーで全員に出しており、Public のメンバーに「ホスティング事業者の管理画面で
+サーバを削除」と言っていた。
+
 Owner が Disconnect しても、サーバは動き続ける。切断は端末側だけの操作で(`sg.club`
 から接続を消す)、サーバの member は残る — Members の一覧に居続け、他の Owner が
 外せる。Owner の端末が切断するときは、直前に `GET /club` で他の Owner が居るかを見て、
