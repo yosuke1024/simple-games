@@ -695,7 +695,7 @@ Simple Games                                  SharedHost(事業者上)
                                               deploy → 公開 URL
   ← 「デプロイが終わったらサーバの URL を貼る」
   endpoint 入力 → GET /health(疎通)
-  → POST /claim { setupKey, nickname }
+  → POST /claim { setupKey, nickname, clubName? }
                                               hash 照合 → owner member 作成 → Setup Key 失効
   ← memberToken(role: 'owner')→ sg.club へ
 ```
@@ -1023,6 +1023,19 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
 15. **Public の Durable Object は作られた場所(EU)のまま。** 法的に動かす理由は無く、
     EU 内に置くのは GDPR 上むしろ保守的。利用者の分布を見て作り直すかは出荷前(PR F)に
     決める(`simple-games-club` の docs/cloudflare.md §1)。
+16. **本番 `club.pixapps.ai` のクラブ名は「PixApps Club」。** claim 時は既定の
+    「Yoh's Club」で、2026-10-02 に `PATCH /club` で変えた。クラブ名は claim の `clubName`
+    で付け、Owner が `PATCH /club` で変える(§5-3)。Private の Owner 画面(名前の入力と
+    変更)は段取りの PR H。
+17. **本番の計測用データは Public 公開前に消す。** 費用の spike(`simple-games-club#2`)
+    が作ったメンバー 10 人と挑戦は、PR F で Durable Object を作り直してから公開する。
+18. **紹介は §8-4 の形で確定。** Simple Games が招待コードを発行する形にはしない。Host が
+    自分の事業者 referral リンクを置き、メンバーが `Create your own Club` を選んだときに
+    そのリンクで事業者を 1 回開くだけ。親の Club を使うだけの子は事業者アカウントを
+    持たないので還元は起きず、子が自分の Club を建てたときに限る。
+19. **Public を先に届け、Private は次の版。** 次のアプリの版に Public Club House と、
+    いまベータのアプリの公開リリースを同梱する。Private の Owner 導線(段取りの PR H:
+    `Create my Club` / Hosting / クラブ名 / Railway での実証)はその次の版。
 
 **外部の事実確認**(#161 Phase 0 と `simple-games-club#1` の未完了項目。確認できるまで
 文言と数字を出さない):
