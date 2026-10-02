@@ -366,6 +366,12 @@ interface Hosting {
 | `POST /rankings/results`           | member | `{ gameId, contractVersion, paramsKey, params, seed, boardDigest, outcome, facts }` → その結果を**ゲーム × モードのランキング**へ(§16)。自己ベストなら差し替え、そうでなければ何も変えない。`{ gameId, paramsKey, improved, entry, entryCount }`。サーバが知らないゲーム / 軸の無い facts は `400 invalid_request` |
 | `GET /rankings`                    | member | 表の一覧 `{ gameId, paramsKey, entryCount, leader: Entry }[]`(ゲーム・モード順)。`GET /records` はこの `leader` を旧い形で返すだけになった(2026-10-02)                                                                                                                                                             |
 | `GET /rankings/:gameId/:paramsKey` | member | 1 つの表 `{ gameId, paramsKey, entryCount, entries: Entry[], me }`。`?top=` で上位 N(既定 50、最大 100)。`me` は自分の順位と行(表に無ければ null。順位は数える上限より下なら null)                                                                                                                                 |
+| `GET /club`(改定)                  | member | `{ club, me, memberCount, members }`。`members` は新しい順に最大 `membersPage`(50)件。Public の 1 万人を毎回は読まない(§17-2)                                                                                                                                                                                      |
+| `PATCH /members/:id`               | owner  | `{ nickname }` — 表示名を変える(通報への対処)。Result とランキングの行の名前も変わる(§17-3)                                                                                                                                                                                                                        |
+| `DELETE /members/:id?purge=1`      | owner  | 外すと同時に、その人の Result とランキングの行を消す(`purge` 無しは今までどおり名前つきで残す)(§17-3)                                                                                                                                                                                                              |
+| `POST /members/:id/report`         | member | 表示名を Club の持ち主に通報する。1 人 1 回。本文なし(§17-3)                                                                                                                                                                                                                                                       |
+| `GET /members/reported`            | owner  | 通報された人 `[{ member, reportCount }]`、多い順(§17-3)                                                                                                                                                                                                                                                            |
+| `GET /public`                      | 不要   | LP 向けの読み取り専用ビュー(§18)。`open` なデプロイだけ。`?date=YYYY-MM-DD`                                                                                                                                                                                                                                        |
 | `GET /hosting`                     | member | `Hosting`。`manageUrl` は **Owner にだけ**返す(Member には null)                                                                                                                                                                                                                                                   |
 | `PATCH /hosting`                   | owner  | `{ referralUrl }` の設定 / 解除(`null`)                                                                                                                                                                                                                                                                            |
 | `GET /invite`                      | owner  | 現在の Member 招待 `{ token, url }`                                                                                                                                                                                                                                                                                |
@@ -1141,6 +1147,20 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
     Dots and Boxes)。勝ち負けしか無い 4 本(Checkers / Connect Four / Gomoku / Ludo)は入れない。
 31. **表は上位 50 + 自分の行**。
 
+**2026-10-02 の設計判断(段取りの PR F / G。製品オーナーの確認待ち)**:
+
+32. **表示名の規則**(§17-1): NFC 正規化、前後の空白を落とし、連続する空白は 1 つに。制御・書式・
+    私用・未割り当ての文字は拒否。文字か数字を 1 つ以上含む。1〜24 文字。14 言語を一人で見る
+    前提なので、語の禁止表は持たない — 代わりに通報と持ち主の対処(§17-3)。
+33. **通報と対処**(§17-3): メンバーは表示名を通報できる(1 人 1 回、本文なし)。持ち主は名前を
+    変える(`PATCH /members/:id`)か、結果ごと消す(`DELETE …?purge=1`)。Public の持ち主は PixApps。
+34. **本番の作り直し**(§17-4): Durable Object の名前を設定(`CLUB_OBJECT_NAME`)で変えて新しい
+    object から始める。古い object は消さずに残る(保存量は僅か)。claim は同じ setup key で
+    できる(使用済みの記録は古い object の中)。
+35. **LP に出すのは今日のデイリーの上位 3 人と表の 1 位、メンバー数**(§18)。認証なしの
+    `GET /public` を 5 分キャッシュ。Private にも同じコードがあり、`open` でないデプロイでは 404。
+36. **`GET /club` のメンバー一覧は新しい順に 50 件 + 総数**(§17-2)。Public の 1 万人を毎回読まない。
+
 **外部の事実確認**(#161 Phase 0 と `simple-games-club#1` の未完了項目。確認できるまで
 文言と数字を出さない):
 
@@ -1278,3 +1298,56 @@ spike の 3 本(§6-2)が持つ `mode: 'club'` と 4 つ目の保存枠は、デ
 にしていた v1 の名残である。`Today` の `Play` はゲームのデイリーを開く(§9「Challenge」)ので、
 新しいゲームには足さず、3 本からも**出荷前に取り除く**(段取りの PR R の後。`saveClub` キーは
 未出荷なので golden から外せる — 出荷後なら外せない)。
+
+## 17. Public の運用 — 表示名・通報・削除・作り直し(2026-10-02、段取りの PR F)
+
+§14 判断 32〜34・36。PRODUCT_PRINCIPLES「Public Club House だけの規則」の「表示名には長さと文字種の
+制約を置き、通報と削除の手段を持つ。汎用のモデレーション基盤は作らない」を実装する。
+
+### 17-1. 表示名の規則(サーバ、両デプロイ)
+
+`POST /join` / `POST /claim` / `PATCH /members/:id` の `nickname`: NFC 正規化 → 前後の空白を落とす →
+連続する空白を 1 つに → 制御(Cc)・書式(Cf)・私用(Co)・サロゲート(Cs)・未割り当て(Cn)を含めば
+`400` → 文字(L)か数字(N)を 1 つ以上含む → 1〜24 文字。語の禁止表は持たない(14 言語を一人で
+保てないし、回避もされる)。
+
+### 17-2. メンバー一覧は読み切らない
+
+`GET /club` の `members` は新しい順に `membersPage`(50)件、`memberCount` に総数。Private
+(≤ 100 人)では実質いままでどおり。Club の画面の `Members` は総数と、その 50 件を出す。
+
+### 17-3. 通報と持ち主の対処
+
+- メンバーは、他のメンバーの行(Members、ランキングの表)から `Report` → 確認 → `POST
+/members/:id/report`。1 人 1 回(2 回目は `204` で何も変えない)。本文は無い — 名前そのものが
+  通報の対象で、自由入力をもう 1 つ作らない。
+- 持ち主は `GET /members/reported` で通報の多い順に見る(Club の画面の Members の上に `Reported`)。
+  対処は 2 つ: `PATCH /members/:id { nickname }` で名前を変える(Result とランキングの行の名前も
+  変わる。本人の端末は次に Club を開いたとき `me.nickname` から新しい名前を知る)、
+  `DELETE /members/:id?purge=1` で外して結果ごと消す(ランキングの集計行と挑戦の `resultCount`
+  も直す)。`purge` 無しの `DELETE` は今までどおり(名前つきで Result が残る)。
+- 通知・自動判定・凍結は無い。持ち主が Club を開いたときに見る、だけ。
+
+### 17-4. 本番の作り直し(判断 17)
+
+計測用データの入った Durable Object は消さず、`wrangler.toml` の `CLUB_OBJECT_NAME` を新しい値に
+して新しい object から始める(`idFromName`)。デプロイ後、持ち主が `scripts/claim-public.mjs` で
+claim し(同じ setup key でよい。使用済みの記録は古い object の中)、クラブ名を `PixApps Club` に。
+古い object は参照されないまま残る(保存量は僅か。消すには class の削除 migration が要るので、
+別の判断)。
+
+## 18. LP の読み取り専用ビュー(2026-10-02、段取りの PR G)
+
+§14 判断 35。PRODUCT_PRINCIPLES「LP へ出すのは読み取り専用の抜粋だけ…2 つ目の順位表データベースを
+持たない…リアルタイム更新は要らない」。
+
+- `GET /api/v1/public?date=YYYY-MM-DD`(認証なし。`open` でないデプロイは `404`):
+  `{ club: { name }, memberCount, today: [{ gameId, daily, resultCount, top: [{ nickname, facts }] }],
+rankings: [{ gameId, paramsKey, entryCount, leader: { nickname, facts } }] }`。`today` はその日付の
+  `daily` 付き挑戦ごとに完了結果の上位 3 人(サーバが §6-1 の軸で並べる。唯一、サーバが Result を
+  順位付けする場所)。`date` 省略時は UTC の今日。
+- Worker は `caches.default` で 5 分キャッシュし(`Cache-Control: public, max-age=300`)、Node は
+  ヘッダだけ。CORS は `CLUB_CORS_ORIGINS`(pixapps.ai)。
+- pixapps.ai の Simple Games ページは、この JSON を取り、今日のデイリーの上位(名前と記録)と
+  メンバー数を小さな 1 節に出す。取れなければ節ごと出さない。Club House の UI は複製しない。
+- プライバシーページに Club House の節(何を、どこへ、誰の管理下で、消し方)を足す(§13-6)。
