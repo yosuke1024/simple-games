@@ -181,23 +181,24 @@ bash .github/scripts/check-principles.sh
 - [ ] 端末言語を切り替えてもゲーム進行が失われない
 - [ ] Backup & Restore の 4 キー(`backupRestoreConfirmTitle` /
       `backupRestoreConfirmBody` / `backupPrivacyNote` / `backupPurchaseNote`)と
-      Club House の 8 キー(`clubRemoveEraseBody` / `clubDisconnectBody` /
+      Club House の 13 キー(`clubRemoveEraseBody` / `clubDisconnectBody` /
       `clubDisconnectHostingNote` / `clubDisconnectLastOwner` / `clubPublicDisclosure` /
-      `clubDailyDisclosure` / **`clubAutoSendDisclosure`** / **`clubAutoSendAccept`**)が
-      門を通っていること。12 言語 × 12 キー = 144 件。**`clubAutoSendDisclosure` は 2026-10-02 の
-      自動送信で足した新しい高リスクキー
-      で、結果ごとのボタンに代わる同意の文言(「参加している間は、遊び終えた結果が自動で
-      送られます」。[architecture/club.md](architecture/club.md) §7-4)なので、誤訳は「同意して
-      いない送信」になる。** `clubAutoSendAccept` は同じ日に足した 2 つ目で、自動送信より前に
-      参加した接続の持ち主が Club の画面で同じ開示を受け入れるボタン(「結果を自動で送る」。
-      [architecture/club.md](architecture/club.md) §4-1)。押すことが同意のすべてなので、
-      「送る」を弱めた訳は押していない送信を許してしまう。**この 2 キーの 12 言語ぶん
-      (24 件)は未承認のまま**(`i18n:gate status` は未完了)で、
-      **リリース前に盲検の逆翻訳(原文を見せない別の実行者、1 言語 1 体)と、作者が逆翻訳の表を
-      読む手順を通す**(`I18N_GATE_STRICT=1` の `i18n:gate:check` が緑になるまで)。
-      リリースまでに既存の高リスクキー(`clubDisconnectBody` / `clubDailyDisclosure` など)の
-      英語の原文を直したら、そのキーの承認は失効するので通し直す(2026-10-02 の時点では
-      `clubAutoSendDisclosure` と `clubAutoSendAccept` だけが未承認)。
+      `clubDailyDisclosure` / `clubAutoSendDisclosure` / `clubAutoSendAccept` /
+      `clubDeleteRankingTitle` / `clubDeleteRankingBody` / `clubDeleteResultTitle` /
+      `clubDeleteResultBody` / `clubDeleteConfirm`)が門を通っていること。
+      12 言語 × 17 キー = 204 件。2026-10-02 に足した高リスクキー:
+      `clubAutoSendDisclosure`(参加の画面の「参加している間は、遊び終えた結果が自動で送られます」。
+      結果ごとのボタンに代わる同意の文言で、誤訳は同意していない送信になる。
+      [architecture/club.md](architecture/club.md) §7-4)、`clubAutoSendAccept`(自動送信より前に参加した
+      接続の持ち主が Club の画面で同じ開示を受け入れるボタン。§4-1)、`clubDeleteRankingTitle` /
+      `clubDeleteRankingBody` / `clubDeleteResultTitle` / `clubDeleteResultBody` /
+      `clubDeleteConfirm`(自分の記録を **1 件ずつ**消す確認。ランキングの行は「次の局でまた入る」、
+      デイリーの結果は「その挑戦へはもう結果を送れない」。どちらも取り消せないこと。§9。全部を消す
+      キーは無い)。
+      **`clubAutoSendDisclosure` の 12 件は 2026-10-02 に通した**(盲検の逆翻訳 + 作者の読み)。
+      **残る 6 キー(`clubAutoSendAccept` と削除の 5 キー)の 12 言語ぶん(72 件)は未承認**で、リリース前に同じ手順を通す
+      (`I18N_GATE_STRICT=1` の `i18n:gate:check` が緑になるまで)。既存の高リスクキーの英語の
+      原文を直したら、そのキーの承認は失効するので通し直す。
       切断の文を全員向けの本文と、自分で建てた Club の Owner にだけ出す費用の 1 文に
       分けたので 9 → 10 キー(issue #160 / #161)。**以前の 120 件は 2026-10-02 に
       通した**(自動送信の前。結果は下に残す): 手順 1 の
@@ -733,8 +734,9 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
       House に参加**できること。表示名を入れて参加し、**参加前に「参加している間は、遊び終えた
       結果(時間・手数・スコアなど)が自動で送られる」旨(`clubAutoSendDisclosure`)と
       「表示名と結果が参加者と pixapps.ai に公開される」旨(`clubPublicDisclosure`)の
-      説明が出ている**こと。**招待リンクを貼って参加する画面と、招待 URL を開いて参加する画面にも、
-      自動送信の説明が出る**こと(Public 以外の参加にも同意の場所がある)。Android・iPhone それぞれで
+      説明が出ている**こと。Android・iPhone それぞれで。(招待リンクを貼って参加する画面と招待 URL を
+      開いて参加する画面にも同じ説明があるが、v1.4.0 ではその入口を隠す — 下の「招待リンクの入口が
+      無い」。次の版で入口を戻すときに、そこの説明をこの項目で確かめ直す)
 - [ ] **1.3.2 から更新した端末は、受け入れるまで送らない**こと(自動送信より前に参加した接続。
       [architecture/club.md](architecture/club.md) §4-1)。1.3.2 でどれかの Club に参加した
       端末を、この版へ**上書き更新**する(Android は `adb install -r`、iPhone は TestFlight の更新)。
@@ -772,12 +774,40 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
       こと(Public の持ち主は PixApps。[club.md](architecture/club.md) §17-3)
 - [ ] **Disconnect**: 接続を切ると、端末が Club の宛先へ以後 1 件も通信しないこと
       (§5.16 と同じ見方で確認。切断のあとに遊び終えた結果も送られない)。切断後もゲームの進行・
-      統計は何も変わらないこと
-- [ ] **招待リンク**: 招待 URL(`https://<endpoint>/join#invite=…`)をブラウザで開くと
-      Web で `Join and Play` へ進めること。アプリでは設定 › Advanced › Club House に
-      URL を**貼り付けて**参加できること(アプリが招待 URL を直接受け取る経路は無い —
-      [club.md](architecture/club.md) §7-3)。リンクを開いただけでは参加せず、本人が
-      操作して初めて接続すること
+      統計は何も変わらないこと。**切断では記録が消えない**こと(Public の Rankings に自分の行が
+      残っている — 別の端末か Web 版から見る)。切断した端末は、起動しても Club を開かなくても
+      通信しないこと(切断した Club の資格 `departed` は何も起こさない。
+      [club.md](architecture/club.md) §4-1)
+- [ ] **同じ端末で入り直すと同じメンバーに戻る**こと(判断 43。[club.md](architecture/club.md) §7-4):
+      Public に参加して 1 局遊び、`Disconnect this device` → もう一度 `Join the Public Club House`。
+      表示名を**変えて**入り直すと、新しい行が増えずに**同じ行が新しい名前になり**、前の記録が残って
+      いる(Rankings の件数が増えない)。切断前に Owner だった端末は Owner のまま。**同じ名前で入り
+      直しても同じ行**であること。Android・iPhone それぞれで。**`Reset Local Data` のあとに入り直すと
+      新しいメンバーになる**こと(古い行は残る)。これは仕様であり、不具合として扱わない
+- [ ] **自分の名前を変えられる**こと(Club の Settings › `Change your name`): 変えた名前が Rankings と
+      Today の自分の行・Members に反映される。参加と同じ表示名の規則(空・25 文字以上・制御文字など)が
+      はたらき、拒まれても画面が壊れない。**通報された名前を自分で変えても、持ち主の `Reported` の
+      数は消えない**こと(持ち主が変えたときだけ消える。[club.md](architecture/club.md) §17-3)
+- [ ] **自分のランキングの行を 1 件消せる**こと(Rankings › 表の画面の自分の行の横の削除ボタン。
+      [club.md](architecture/club.md) §9・§16-2): 確認(危険色のダイアログ。この表の自分の記録が消える・
+      次に終えた局はまた入る・元に戻せない)→ 確認するとその行だけが消え、件数と 1 位が直る(ほかの表・
+      ほかの人の行・Today は変わらない)。**メンバーのまま Club に居る**こと(Members に残る)。**消したあとに
+      その表のゲームを 1 局遊び終えると、また送られて表へ入る**こと。50 位より下で末尾に足された自分の行
+      にもボタンがあり、**ほかの人の行にボタンが無い**こと。**機内モードで遊んだ未送信(同じ表)があるとき
+      に消すと、そのあと Club を開いても消したはずの行が復活しない**こと(同じ表の未送信は先に捨てられる)。
+      Owner の端末でもできること
+- [ ] **自分のデイリーの結果を消すと、その挑戦へは送れない**こと(Today › 挑戦の画面の自分の行の横の
+      削除ボタン。[club.md](architecture/club.md) §9・§5-4): 確認(この挑戦から自分の結果が消える・
+      この挑戦へはもう結果を送れない・元に戻せない)→ 確認すると自分の結果が消え、挑戦の人数が減る。
+      **同じ日のデイリーをもう一度遊び終えても結果は載らない**こと(サーバが `409 already_submitted` で
+      断り、アプリは何も言わずに「届いた」と同じに扱う。エラーも再試行も出ない)。**ランキングの行は
+      デイリーの結果とは別で、消していなければそのまま残る**こと。全部の記録を一度に消すボタンが
+      **どこにも無い**こと(Settings にも)。ダイアログの 3 つの文は、en と ja で内容が合っていること
+- [ ] **招待リンクの入口が無い**こと(v1.4.0 は隠す。判断 44。[club.md](architecture/club.md) §7-3):
+      設定 › Advanced › Club House(接続 0 件・1 件・2 件以上のそれぞれ)に `Join with an invite link` が
+      無く、`Coming Soon` の予告も無いこと。持ち主の Club の画面に `Invite`(招待 URL・QR)が無いこと。
+      **招待 URL(`https://<endpoint>/join#invite=…`)をブラウザで開いても参加画面が出ない**こと
+      (fragment は住所欄から消える)。Public への参加は今までどおりできること
 - [ ] §5.14 のバックアップに、メンバートークン(`sg.club` / `sg.clubOutbox`)が
       入らないこと
 
