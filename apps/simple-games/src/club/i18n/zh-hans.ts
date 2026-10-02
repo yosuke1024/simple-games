@@ -5,7 +5,7 @@ export const zhHans: ClubMessages = {
   clubLoading: '加载中…',
   clubReload: '重新加载',
   clubDiscoverTitle: '一起玩',
-  clubDiscoverBody: '和你认识的人进行私人挑战。',
+  clubDiscoverBody: '在 Public Club House 和所有人玩同一盘面，或者和你认识的人私下挑战。',
   clubJoinClub: '加入 Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: '加入 Public Club House',

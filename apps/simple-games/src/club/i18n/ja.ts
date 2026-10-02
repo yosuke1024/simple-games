@@ -5,7 +5,8 @@ export const ja: ClubMessages = {
   clubLoading: '読み込み中…',
   clubReload: '再読み込み',
   clubDiscoverTitle: 'みんなで遊ぶ',
-  clubDiscoverBody: '知っている人たちとの、内輪のチャレンジ。',
+  clubDiscoverBody:
+    'みんなと同じ盤面で競う Public Club House と、知っている人たちとの内輪の Club。',
   clubJoinClub: 'Club に参加',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Public Club House に参加',

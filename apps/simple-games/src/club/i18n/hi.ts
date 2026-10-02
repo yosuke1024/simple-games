@@ -5,7 +5,8 @@ export const hi: ClubMessages = {
   clubLoading: 'लोड हो रहा है…',
   clubReload: 'फिर से लोड करें',
   clubDiscoverTitle: 'साथ खेलें',
-  clubDiscoverBody: 'जिन्हें आप जानते हैं उनके साथ निजी चैलेंज।',
+  clubDiscoverBody:
+    'Public Club House में सबके साथ वही बोर्ड खेलें, या जिन्हें आप जानते हैं उनके साथ निजी तौर पर।',
   clubJoinClub: 'Club से जुड़ें',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Public Club House से जुड़ें',

@@ -39,6 +39,8 @@ function reply(body: unknown, status = 200): Response {
 }
 
 let dailyChallenges = false;
+/** A server from before `?daily=` existed: it ignores the parameter and answers with its ordinary list. */
+let ignoresDaily = false;
 const DAILY_CHALLENGE = {
   ...CHALLENGE,
   id: 'ch_d',
@@ -58,7 +60,7 @@ function stubServer() {
     if (path === '/club') return reply({ club: CLUB, me: KEN, members: [KEN] });
     if (path === '/challenges') {
       const daily = url.searchParams.get('daily');
-      if (daily === null) return reply([CHALLENGE]);
+      if (daily === null || ignoresDaily) return reply([CHALLENGE]);
       return reply(daily === todayLocal() && dailyChallenges ? [DAILY_CHALLENGE] : []);
     }
     if (path === '/challenges/ch_1') return reply(CHALLENGE);
@@ -96,6 +98,7 @@ function renderRoot(props: Partial<React.ComponentProps<typeof ClubRoot>> = {}) 
 
 beforeEach(() => {
   dailyChallenges = false;
+  ignoresDaily = false;
   localStorage.clear();
 });
 
@@ -184,6 +187,19 @@ describe('ClubRoot', () => {
     ).toBeInTheDocument();
     // The same challenge is not listed again under Challenges.
     expect(screen.getAllByRole('button', { name: /Sudoku · Hard/ })).toHaveLength(2);
+  });
+
+  it('keeps Today empty when a server from before ?daily= answers with its ordinary list', async () => {
+    stubServer();
+    ignoresDaily = true;
+    const user = userEvent.setup();
+    renderRoot({ entry: 'invite', invite: { endpoint: ENDPOINT, token: 'a'.repeat(22) } });
+    await user.type(await screen.findByLabelText('Nickname'), 'Ken');
+    await user.click(screen.getByRole('button', { name: 'Join and Play' }));
+    expect(await screen.findByRole('heading', { name: 'Challenges' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Today' })).not.toBeInTheDocument();
+    // The ordinary list is listed once, under Challenges, not again as today's.
+    expect(screen.getAllByRole('button', { name: /Sudoku · Hard/ })).toHaveLength(1);
   });
 
   it('joins from an invite link and hands the new connection to the shell', async () => {

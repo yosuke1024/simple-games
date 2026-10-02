@@ -5,7 +5,7 @@ export const th: ClubMessages = {
   clubLoading: 'กำลังโหลด…',
   clubReload: 'โหลดใหม่',
   clubDiscoverTitle: 'เล่นด้วยกัน',
-  clubDiscoverBody: 'ความท้าทายส่วนตัวกับคนที่คุณรู้จัก',
+  clubDiscoverBody: 'เล่นกระดานเดียวกับทุกคนใน Public Club House หรือเล่นส่วนตัวกับคนที่คุณรู้จัก',
   clubJoinClub: 'เข้าร่วม Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'เข้าร่วม Public Club House',

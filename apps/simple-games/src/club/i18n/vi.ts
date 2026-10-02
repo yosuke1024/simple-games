@@ -5,7 +5,8 @@ export const vi: ClubMessages = {
   clubLoading: 'Đang tải…',
   clubReload: 'Tải lại',
   clubDiscoverTitle: 'Chơi cùng nhau',
-  clubDiscoverBody: 'Thử thách riêng tư với những người bạn quen.',
+  clubDiscoverBody:
+    'Chơi cùng bàn với mọi người trong Public Club House, hoặc riêng tư với những người bạn quen.',
   clubJoinClub: 'Tham gia Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Tham gia Public Club House',

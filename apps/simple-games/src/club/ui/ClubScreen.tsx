@@ -28,6 +28,8 @@ interface ClubData {
   challenges: Challenge[];
   /** Challenges tagged with today's daily date (everyone's daily meets here). */
   today: Challenge[];
+  /** The local date `today` was asked for, so the answer can be held to it. */
+  todayDate: string;
   records: ClubRecord[];
   members: Member[];
   /** The club's name as the server has it now. */
@@ -94,14 +96,22 @@ export function ClubScreen({
           /* the list below says whether the club is reachable */
         }
       }
+      const todayDate = todayLocal();
       const [club, challenges, today, records] = await Promise.all([
         api.club(),
         api.challenges(),
-        api.challenges({ daily: todayLocal() }),
+        api.challenges({ daily: todayDate }),
         api.records(),
       ]);
       if (!alive.current) return;
-      setData({ clubName: club.club.name, members: club.members, challenges, today, records });
+      setData({
+        clubName: club.club.name,
+        members: club.members,
+        challenges,
+        today,
+        todayDate,
+        records,
+      });
       if (club.club.name !== connection.clubName) onRenamed(club.club.name);
     } catch (e) {
       if (alive.current) setError(errorText(e, t, connection.clubName));
@@ -123,7 +133,11 @@ export function ClubScreen({
   }, [connection.endpoint]);
 
   const known = (data?.challenges ?? []).filter((c) => contractFor(c.gameId) !== null);
-  const todays = (data?.today ?? []).filter((c) => contractFor(c.gameId) !== null);
+  // Held to the date asked for: a server that predates `?daily=` ignores the
+  // parameter and answers with its ordinary list, which is not today's.
+  const todays = (data?.today ?? []).filter(
+    (c) => contractFor(c.gameId) !== null && c.daily === data?.todayDate,
+  );
   const todayIds = new Set(todays.map((c) => c.id));
   const rest = known.filter((c) => !todayIds.has(c.id));
   const open = rest.filter((c) => !c.mine);

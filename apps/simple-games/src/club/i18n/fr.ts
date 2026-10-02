@@ -5,7 +5,8 @@ export const fr: ClubMessages = {
   clubLoading: 'Chargement…',
   clubReload: 'Recharger',
   clubDiscoverTitle: 'Jouer ensemble',
-  clubDiscoverBody: 'Des défis privés avec des gens que vous connaissez.',
+  clubDiscoverBody:
+    'Jouez les mêmes grilles que tout le monde dans le Public Club House, ou en privé avec des gens que vous connaissez.',
   clubJoinClub: 'Rejoindre un Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Rejoindre le Public Club House',
