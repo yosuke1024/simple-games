@@ -1641,3 +1641,56 @@ describe('Opening a Club with no network (club.md §10)', () => {
     }
   });
 });
+
+describe('Resending the queue is the person’s own action (club.md §10)', () => {
+  const reload = () => screen.getByRole('button', { name: 'Reload' });
+
+  it('the refresh after changing your name reads the lists but does not resend; Reload does', async () => {
+    await joinedConnection();
+    await enqueueResult(rankingItem(ENDPOINT));
+    // The server answers the queued result, every time, with a failure that is not
+    // final and not "unreachable": the item stays queued and the flush is "blocked".
+    const server = stubServer();
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) =>
+      String(input).endsWith('/api/v1/rankings/results') && init?.method === 'POST'
+        ? reply({ error: { code: 'rate_limited', message: 'slow down' } }, 429)
+        : server(input, init),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const posts = () => callsTo(fetchMock, 'POST', '/rankings/results');
+    const user = userEvent.setup();
+    renderRoot();
+
+    // Opening the screen is the person's action: the queued result is sent once,
+    // refused for now, and the lists load all the same.
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    expect(posts()).toHaveLength(1);
+    expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(1);
+    expect(await pendingFor(ENDPOINT)).toHaveLength(1);
+
+    // Changing your own name: the PATCH goes out and the screen reads the lists again...
+    await user.click(screen.getByRole('button', { name: 'Settings' }));
+    const field = screen.getByLabelText('Change your name');
+    await user.clear(field);
+    await user.type(field, 'Kenji');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Name saved');
+    expect(callsTo(fetchMock, 'PATCH', '/me')).toHaveLength(1);
+    await waitFor(() => expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(2));
+    await waitFor(() => expect(callsTo(fetchMock, 'GET', '/rankings')).toHaveLength(2));
+    // ...but that refresh is the screen's own, not the person's asking: nothing is resent.
+    expect(posts()).toHaveLength(1);
+
+    // Back on the Club screen, Reload is the person's action again: one more send.
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    await waitFor(() => expect(reload()).toBeEnabled());
+    await user.click(reload());
+    await waitFor(() => expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(3));
+    await waitFor(() => expect(reload()).toBeEnabled());
+    expect(posts()).toHaveLength(2);
+    // Still refused, so still queued; the lists are on screen and no error is.
+    expect(await pendingFor(ENDPOINT)).toHaveLength(1);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+  });
+});

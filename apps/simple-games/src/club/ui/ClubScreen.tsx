@@ -117,75 +117,83 @@ export function ClubScreen({
     return clientRef.current;
   };
 
-  const load = useCallback(async () => {
-    const api = client();
-    setLoading(true);
-    setError(null);
-    try {
-      // Best effort, oldest first (club.md §10): results that waited get their turn
-      // now — when the screen opens and when the person presses Reload, both their
-      // own actions (判断 38). The flush queues behind one a result screen may still
-      // be running for this Club (outbox.ts `flushing`), so the screen waits for it
-      // at most one request's time and a beat — long enough for a flush whose request
-      // times out to say so — and then the flush carries on by itself.
-      let wait: ReturnType<typeof setTimeout> | undefined;
-      let flush: FlushReport | undefined;
+  /** `resend`: the person opened the screen or pressed Reload (the only times it resends). */
+  const load = useCallback(
+    async (resend = false) => {
+      const api = client();
+      setLoading(true);
+      setError(null);
       try {
-        flush = await Promise.race([
-          flushOutbox(connection.endpoint, api),
-          new Promise<undefined>((resolve) => {
-            wait = setTimeout(() => resolve(undefined), FLUSH_WAIT_MS);
-          }),
+        if (resend) {
+          // Best effort, oldest first (club.md §10): results that waited get their
+          // turn when the screen opens and when the person presses Reload, both their
+          // own actions (判断 38) — not when the screen reads the lists again after one
+          // of its own actions (a rename, removing a member). The flush queues behind
+          // one a result screen may still be running for this Club (outbox.ts
+          // `flushing`), so the screen waits for it at most one request's time and a
+          // beat — long enough for a flush whose request times out to say so — and
+          // then the flush carries on by itself.
+          let wait: ReturnType<typeof setTimeout> | undefined;
+          let flush: FlushReport | undefined;
+          try {
+            flush = await Promise.race([
+              flushOutbox(connection.endpoint, api),
+              new Promise<undefined>((resolve) => {
+                wait = setTimeout(() => resolve(undefined), FLUSH_WAIT_MS);
+              }),
+            ]);
+          } catch {
+            /* the lists below say whether the club is reachable */
+          } finally {
+            clearTimeout(wait);
+          }
+          if (!alive.current) return;
+          // The flush has just failed to reach the Club: asking for the lists would only
+          // wait out the same timeout again before saying the same thing.
+          if (flush?.unreachable) throw new ClubApiError('unreachable', null, 'Club not reachable');
+        }
+        const todayDate = todayLocal();
+        // Three requests, and a fourth for the owner alone (club.md §10).
+        const [club, today, rankings, reported] = await Promise.all([
+          api.club(),
+          api.challenges({ daily: todayDate }),
+          api.rankings(),
+          isOwner
+            ? // A server from before §17 has no such route: an empty list, not an error.
+              // Anything else is a failure the owner must see (club.md §10).
+              api.reportedMembers().catch((e: unknown) => {
+                if (e instanceof ClubApiError && e.code === 'not_found')
+                  return [] as ReportedMember[];
+                throw e;
+              })
+            : Promise.resolve([] as ReportedMember[]),
         ]);
-      } catch {
-        /* the lists below say whether the club is reachable */
+        if (!alive.current) return;
+        setData({
+          clubName: club.club.name,
+          members: club.members,
+          memberCount: club.memberCount,
+          reported,
+          today,
+          todayDate,
+          rankings,
+        });
+        if (club.club.name !== connection.clubName) onRenamed(club.club.name);
+        if (club.me.nickname !== connection.nickname) onRenamedMe(club.me.nickname);
+      } catch (e) {
+        if (alive.current) setError(errorText(e, t, connection.clubName));
       } finally {
-        clearTimeout(wait);
+        if (alive.current) setLoading(false);
       }
-      if (!alive.current) return;
-      // The flush has just failed to reach the Club: asking for the lists would only
-      // wait out the same timeout again before saying the same thing.
-      if (flush?.unreachable) throw new ClubApiError('unreachable', null, 'Club not reachable');
-      const todayDate = todayLocal();
-      // Three requests, and a fourth for the owner alone (club.md §10).
-      const [club, today, rankings, reported] = await Promise.all([
-        api.club(),
-        api.challenges({ daily: todayDate }),
-        api.rankings(),
-        isOwner
-          ? // A server from before §17 has no such route: an empty list, not an error.
-            // Anything else is a failure the owner must see (club.md §10).
-            api.reportedMembers().catch((e: unknown) => {
-              if (e instanceof ClubApiError && e.code === 'not_found')
-                return [] as ReportedMember[];
-              throw e;
-            })
-          : Promise.resolve([] as ReportedMember[]),
-      ]);
-      if (!alive.current) return;
-      setData({
-        clubName: club.club.name,
-        members: club.members,
-        memberCount: club.memberCount,
-        reported,
-        today,
-        todayDate,
-        rankings,
-      });
-      if (club.club.name !== connection.clubName) onRenamed(club.club.name);
-      if (club.me.nickname !== connection.nickname) onRenamedMe(club.me.nickname);
-    } catch (e) {
-      if (alive.current) setError(errorText(e, t, connection.clubName));
-    } finally {
-      if (alive.current) setLoading(false);
-    }
+    },
     // `t` and `onRenamed` change identity without changing what is fetched.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connection.endpoint, connection.memberToken, connection.clubName, connection.nickname]);
+    [connection.endpoint, connection.memberToken, connection.clubName, connection.nickname],
+  );
 
   useEffect(() => {
     alive.current = true;
-    void load();
+    void load(true);
     return () => {
       alive.current = false;
     };
@@ -378,7 +386,7 @@ export function ClubScreen({
           type="button"
           className="club-text-btn"
           disabled={loading}
-          onClick={() => void load()}
+          onClick={() => void load(true)}
         >
           {t('clubReload')}
         </button>
