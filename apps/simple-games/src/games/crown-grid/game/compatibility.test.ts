@@ -6,13 +6,14 @@
  * on still exists. Any change to the rng, to the crown search, to the region
  * growth, to the repair, or to the technique set that moves a board will fail
  * here, which is the point: changing these strings is a decision, not a side
- * effect. The beta channel allows a schema change — never a silent one
+ * effect. Since 2026-10-02 the game is out of the web-beta channel and its
+ * save schema is frozen: a stored shape changes only by migration
  * (docs/WEB_VERSION.md「先行公開」).
  *
  * v1 → v2 was such a decision (§8, MIN_REGION_SIZE). Most v1 boards had a
  * region of a single cell — a crown handed over before the player read
  * anything — so growth now starts every region at two cells and repair never
- * thins one below that, and every board moved on purpose while the game is in
+ * thins one below that, and every board moved on purpose while the game was in
  * beta. What it costs: a game suspended on a v1 board still restores, because
  * the save holds its regions verbatim and a v1 board is still unique (§11), but
  * Retry and every daily now build the v2 board for the same seed, so a daily

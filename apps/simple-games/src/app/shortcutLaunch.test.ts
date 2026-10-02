@@ -23,7 +23,7 @@ vi.mock('@capacitor/core', () => ({
 vi.mock('@capacitor/app', () => ({ App: appMock }));
 
 import { WEB_PLAY_URL } from '@simple-games/brand';
-import { GAMES } from './registry';
+import { GAMES, type GameDefinition } from './registry';
 import {
   gameIdFromShortcutUrl,
   initShortcutLaunch,
@@ -46,7 +46,6 @@ describe('the address a shortcut carries', () => {
 
   it('reads back to the same game for every title the app offers', () => {
     for (const game of GAMES) {
-      if (game.channel === 'web-beta') continue;
       expect(gameIdFromShortcutUrl(shortcutUrlFor(game.id)), game.id).toBe(game.id);
     }
   });
@@ -54,12 +53,29 @@ describe('the address a shortcut carries', () => {
   // A title in the browser's early release (docs/WEB_VERSION.md「先行公開」)
   // is not on the app, so its address — which a browser bookmark or a pinned
   // shortcut from a future release could still carry — lands on the
-  // collection, exactly as a retired id does (app/gameChannel.ts).
-  it('means the collection for a web-beta title, which the app does not offer', () => {
-    const beta = GAMES.filter((game) => game.channel === 'web-beta');
-    expect(beta.length).toBeGreaterThan(0);
-    for (const game of beta) {
-      expect(gameIdFromShortcutUrl(shortcutUrlFor(game.id)), game.id).toBeNull();
+  // collection, exactly as a retired id does (app/gameChannel.ts). No registry
+  // title is on the channel today (all graduated 2026-10-02), so a synthetic
+  // beta entry is spliced into the registry the parser sees.
+  it('means the collection for a web-beta title, which the app does not offer', async () => {
+    const beta: GameDefinition = {
+      ...GAMES.find((game) => game.id === 'sudoku')!,
+      id: 'synthetic-beta' as GameDefinition['id'],
+      title: 'Synthetic Beta',
+      channel: 'web-beta',
+    };
+    vi.resetModules();
+    vi.doMock('./registry', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('./registry')>();
+      return { ...actual, GAMES: [...actual.GAMES, beta] };
+    });
+    try {
+      const withBeta = await import('./shortcutLaunch');
+      expect(withBeta.gameIdFromShortcutUrl(withBeta.shortcutUrlFor(beta.id)), beta.id).toBeNull();
+      // The same registry still resolves a released title.
+      expect(withBeta.gameIdFromShortcutUrl(withBeta.shortcutUrlFor('sudoku'))).toBe('sudoku');
+    } finally {
+      vi.doUnmock('./registry');
+      vi.resetModules();
     }
   });
 

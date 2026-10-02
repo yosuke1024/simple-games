@@ -124,15 +124,16 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   reversi: ['rv.saveGame', 'rv.stats', 'rv.flags', 'rv.prefs'],
   'connect-four': ['c4.saveGame', 'c4.stats', 'c4.flags', 'c4.prefs'],
   gomoku: ['gm.saveGame', 'gm.stats', 'gm.flags', 'gm.prefs'],
-  // The three web-beta titles (docs/WEB_VERSION.md「先行公開」, issue #194).
+  // The three board puzzles of issue #194, first in the browser's early
+  // release (docs/WEB_VERSION.md「先行公開」) and in the app since 2026-10-02.
   // Five each, Minesweeper's shape: one suspended game per mode (difficulty /
   // daily), stats, flags, and a prefs that remembers only the last difficulty
-  // picked. Beta is the one channel whose schema may still change — but never
-  // silently: a change here is still a decision written into this file.
+  // picked. Since graduating they are released keys like every other line
+  // here (their payloads are pinned in storage/releasedRecords.test.ts).
   'crown-grid': ['cg.saveGame', 'cg.saveDaily', 'cg.stats', 'cg.flags', 'cg.prefs'],
   'number-path': ['np.saveGame', 'np.saveDaily', 'np.stats', 'np.flags', 'np.prefs'],
   'shape-regions': ['sr.saveGame', 'sr.saveDaily', 'sr.stats', 'sr.flags', 'sr.prefs'],
-  // The five web-beta genres of issue #197 (docs/plans/2026-09-27-yacht-mancala-
+  // The five genres of issue #197, in the app since 2026-10-02 (docs/plans/2026-09-27-yacht-mancala-
   // dominoes-hit-and-blow-dots-and-boxes.md). None has a daily, so one saved
   // game each. Yacht and Dominoes keep no setting (no prefs): Yacht has no
   // difficulty, and Dominoes' opener is decided by the tiles. Mancala's prefs

@@ -66,6 +66,21 @@ vi.mock('../../services/homeShortcut/homeShortcut', () => ({
   requestHomeShortcut,
 }));
 
+// No registry title is on the web-beta channel today (all graduated
+// 2026-10-02), but the mechanism stays for the next beta, so the registry this
+// file sees carries one synthetic beta title: a released game's shape under an
+// id and title of its own, appended last. Every importer here shares the list.
+vi.mock('../../app/registry', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../app/registry')>();
+  const synthetic = {
+    ...actual.GAMES.find((game) => game.id === 'sudoku')!,
+    id: 'synthetic-beta',
+    title: 'Synthetic Beta',
+    channel: 'web-beta',
+  } as unknown as (typeof actual.GAMES)[number];
+  return { ...actual, GAMES: [...actual.GAMES, synthetic] };
+});
+
 import {
   getFavoriteGames,
   initFavoriteGames,
@@ -201,8 +216,8 @@ describe('web-beta titles', () => {
   const beta = GAMES.filter((game) => game.channel === 'web-beta');
   const released = GAMES.filter((game) => game.channel !== 'web-beta');
 
-  it('exist in this registry, so the tests below are not vacuous', () => {
-    expect(beta.length).toBeGreaterThan(0);
+  it('exist in this registry (a synthetic one), so the tests below are not vacuous', () => {
+    expect(beta.map((game) => game.id)).toEqual(['synthetic-beta']);
     expect(released.length).toBeGreaterThan(20);
   });
 

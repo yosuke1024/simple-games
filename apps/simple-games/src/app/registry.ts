@@ -761,15 +761,15 @@ export const GAMES: readonly GameDefinition[] = [
     loadStorageSchemas: () => import('../games/bunny-hop/storage/schemas'),
   },
   {
-    // Web early release (docs/WEB_VERSION.md「先行公開」, issue #194): the
-    // first three titles on that channel, listed after the shipped thirty and
-    // in the order the issue names them. A crown for the one object the board
+    // The three board puzzles of issue #194, first in the browser's early
+    // release (docs/WEB_VERSION.md「先行公開」) and in the app from the
+    // release after it (2026-10-02). Listed after the first thirty, in the
+    // order the issue names them. A crown for the one object the board
     // asks you to place — one per row, column and region (docs/CROWN_GRID_RULES.md).
     id: 'crown-grid',
     title: 'Crown Grid',
     category: 'logic',
     glyph: '♛',
-    channel: 'web-beta',
     storageKeys: Object.values(CG_STORAGE_KEYS),
     challenge: CROWN_GRID_CHALLENGE,
     loadRoot: () =>
@@ -784,7 +784,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Number Path',
     category: 'logic',
     glyph: '↝',
-    channel: 'web-beta',
     storageKeys: Object.values(NP_STORAGE_KEYS),
     challenge: NUMBER_PATH_CHALLENGE,
     loadRoot: () =>
@@ -799,7 +798,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Shape Regions',
     category: 'logic',
     glyph: '▙',
-    channel: 'web-beta',
     storageKeys: Object.values(SR_STORAGE_KEYS),
     challenge: SHAPE_REGIONS_CHALLENGE,
     loadRoot: () =>
@@ -810,14 +808,13 @@ export const GAMES: readonly GameDefinition[] = [
   },
   {
     // The five new genres of issue #197, in the order the issue names them,
-    // all in the browser early release (docs/WEB_VERSION.md「先行公開」). A
+    // first in the browser's early release (docs/WEB_VERSION.md「先行公開」). A
     // die face for the collection's first game about the dice themselves:
     // five to roll, three throws, one category (docs/YACHT_RULES.md).
     id: 'yacht',
     title: 'Yacht',
     category: 'board',
     glyph: '⚄',
-    channel: 'web-beta',
     storageKeys: Object.values(YT_STORAGE_KEYS),
     challenge: YACHT_CHALLENGE,
     loadRoot: () => import('../games/yacht/ui/YachtRoot').then((m) => ({ default: m.YachtRoot })),
@@ -831,7 +828,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Mancala',
     category: 'board',
     glyph: '⊚',
-    channel: 'web-beta',
     storageKeys: Object.values(MC_STORAGE_KEYS),
     challenge: MANCALA_CHALLENGE,
     loadRoot: () =>
@@ -846,7 +842,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Dominoes',
     category: 'board',
     glyph: '⊟',
-    channel: 'web-beta',
     storageKeys: Object.values(DM_STORAGE_KEYS),
     challenge: DOMINOES_CHALLENGE,
     loadRoot: () =>
@@ -860,7 +855,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Hit & Blow',
     category: 'logic',
     glyph: '◉',
-    channel: 'web-beta',
     storageKeys: Object.values(HB_STORAGE_KEYS),
     challenge: HIT_AND_BLOW_CHALLENGE,
     loadRoot: () =>
@@ -876,7 +870,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Dots and Boxes',
     category: 'board',
     glyph: '⊡',
-    channel: 'web-beta',
     storageKeys: Object.values(DB_STORAGE_KEYS),
     challenge: DOTS_AND_BOXES_CHALLENGE,
     loadRoot: () =>
@@ -887,7 +880,7 @@ export const GAMES: readonly GameDefinition[] = [
   },
   {
     // The three practice-set titles of issue #210, in the order the issue
-    // names them, all in the browser early release (docs/WEB_VERSION.md
+    // names them, first in the browser's early release (docs/WEB_VERSION.md
     // 「先行公開」, docs/PUZZLE_PRACTICE_SET.md). A circled equals sign for
     // the rule that sets this two-symbol puzzle apart from Takuzu: the
     // links that say two neighbours match or differ
@@ -897,7 +890,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Binary Balance',
     category: 'logic',
     glyph: '⊜',
-    channel: 'web-beta',
     storageKeys: Object.values(BN_STORAGE_KEYS),
     challenge: BINARY_BALANCE_CHALLENGE,
     loadRoot: () =>
@@ -914,7 +906,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Sudoku 6×6',
     category: 'logic',
     glyph: '6',
-    channel: 'web-beta',
     storageKeys: Object.values(S6_STORAGE_KEYS),
     challenge: SUDOKU_6X6_CHALLENGE,
     loadRoot: () =>
@@ -933,7 +924,6 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Box Regions',
     category: 'logic',
     glyph: '▭',
-    channel: 'web-beta',
     storageKeys: Object.values(BR_STORAGE_KEYS),
     challenge: BOX_REGIONS_CHALLENGE,
     loadRoot: () =>

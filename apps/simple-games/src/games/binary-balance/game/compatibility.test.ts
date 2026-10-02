@@ -11,8 +11,9 @@
  * on still exists. Any change to the rng, to the solution search, to the link
  * draw, to the dig or the prune, or to the technique set that moves a board
  * will fail here, which is the point: changing these strings is a decision,
- * not a side effect. The beta channel allows a schema change — never a silent
- * one (docs/WEB_VERSION.md「先行公開」, docs/BINARY_BALANCE_RULES.md §6).
+ * not a side effect. Since 2026-10-02 the game is out of the web-beta channel
+ * and its save schema is frozen: a stored shape changes only by migration
+ * (docs/WEB_VERSION.md「先行公開」, docs/BINARY_BALANCE_RULES.md §6).
  *
  * **Fix the implementation, not the test.** A saved game holds the solution,
  * givens, marks and link strings verbatim (§11), so a change to the encoding

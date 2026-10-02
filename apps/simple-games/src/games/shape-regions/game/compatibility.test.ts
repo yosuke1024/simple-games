@@ -10,9 +10,10 @@
  * **Fix the implementation, not the test.** A saved game holds these strings
  * verbatim (§11), so a change to the encoding strands every game in progress;
  * a change to the boards retires the daily record of every day already
- * played. Shape Regions is on the web-beta channel, where a schema change is
- * allowed (docs/WEB_VERSION.md) — but allowed is not the same as silent. If a
- * change here is intended, regenerate the strings and say so in the commit
+ * played. Shape Regions left the web-beta channel on 2026-10-02
+ * (docs/WEB_VERSION.md): its save schema is frozen since, and a stored shape
+ * changes only by migration. If a change here is intended, regenerate the
+ * strings and say so in the commit
  * message, along with what it costs existing players.
  */
 import { describe, expect, it } from 'vitest';
