@@ -4,6 +4,7 @@ import { createMemoryKV } from './kv';
 import { clearLocalData, loadRecord, loadRecordWithStatus, saveRecord } from './repo';
 import {
   CLUB_CONNECTIONS_MAX,
+  CLUB_DEPARTED_MAX,
   CLUB_OUTBOX_MAX,
   clubConnectionsSchema,
   clubOutboxSchema,
@@ -282,6 +283,109 @@ describe('Club connections record (docs/architecture/club.md §4-1)', () => {
     ]);
   });
 
+  it('keeps autoSend only when it is the literal true: consent is never inferred', async () => {
+    const loaded = await load([
+      connection({ endpoint: 'https://a.example.com', autoSend: true }),
+      connection({ endpoint: 'https://b.example.com', autoSend: false }),
+      connection({ endpoint: 'https://c.example.com', autoSend: 'true' }),
+      connection({ endpoint: 'https://d.example.com', autoSend: 1 }),
+      connection({ endpoint: 'https://e.example.com', autoSend: null }),
+      connection({ endpoint: 'https://f.example.com' }),
+    ]);
+    expect(loaded.connections.map((c) => c.autoSend)).toEqual([
+      true,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
+    // Dropped, not stored as false: the record from before the field and a refused value look alike.
+    for (const c of loaded.connections.slice(1)) expect(c).not.toHaveProperty('autoSend');
+  });
+
+  it('a connection from before autoSend existed stays valid, with no autoSend and the same schemaVersion', async () => {
+    const legacy = connection();
+    const loaded = await load([legacy]);
+    expect(loaded).toEqual({ schemaVersion: 1, connections: [legacy] });
+    expect(loaded.connections[0]).not.toHaveProperty('autoSend');
+  });
+
+  describe('departed (additive, schemaVersion stays 1)', () => {
+    const loadRecordWith = (extra: Record<string, unknown>) =>
+      loadRecord(
+        clubConnectionsSchema,
+        createMemoryKV({
+          [STORAGE_KEYS.club]: JSON.stringify({ schemaVersion: 1, connections: [], ...extra }),
+        }),
+      );
+
+    it('a record without the list is unchanged: no departed key appears', async () => {
+      const loaded = await load([connection()]);
+      expect(loaded).toEqual({ schemaVersion: 1, connections: [connection()] });
+      expect(loaded).not.toHaveProperty('departed');
+    });
+
+    it('keeps valid entries, validated like connections, and drops the broken ones', async () => {
+      const good = connection({ endpoint: 'https://gone.example.com', autoSend: true });
+      const loaded = await loadRecordWith({
+        departed: [
+          { endpoint: 'https://broken.example.com' },
+          'not an object',
+          good,
+          connection({ endpoint: 'http://192.168.1.2' }),
+          connection({ endpoint: 'https://b.example.com', memberToken: '' }),
+          // One per server, the first wins.
+          connection({ endpoint: 'https://gone.example.com', nickname: 'Second' }),
+        ],
+      });
+      expect(loaded.departed).toEqual([good]);
+    });
+
+    it('a Club that is connected is not also departed', async () => {
+      const loaded = await loadRecord(
+        clubConnectionsSchema,
+        createMemoryKV({
+          [STORAGE_KEYS.club]: JSON.stringify({
+            schemaVersion: 1,
+            connections: [connection()],
+            departed: [connection({ nickname: 'Old' })],
+          }),
+        }),
+      );
+      expect(loaded).not.toHaveProperty('departed');
+    });
+
+    it('caps the list, keeping the newest, and ignores a list that is not an array', async () => {
+      const many = Array.from({ length: CLUB_DEPARTED_MAX + 3 }, (_, i) =>
+        connection({ endpoint: `https://gone${i}.example.com` }),
+      );
+      const loaded = await loadRecordWith({ departed: many });
+      expect(loaded.departed).toHaveLength(CLUB_DEPARTED_MAX);
+      expect(loaded.departed![CLUB_DEPARTED_MAX - 1]!.endpoint).toBe(
+        `https://gone${CLUB_DEPARTED_MAX + 2}.example.com`,
+      );
+      expect(await loadRecordWith({ departed: 'x' })).toEqual({
+        schemaVersion: 1,
+        connections: [],
+      });
+    });
+
+    it('a broken list never costs the connections', async () => {
+      const loaded = await loadRecord(
+        clubConnectionsSchema,
+        createMemoryKV({
+          [STORAGE_KEYS.club]: JSON.stringify({
+            schemaVersion: 1,
+            connections: [connection()],
+            departed: { not: 'a list' },
+          }),
+        }),
+      );
+      expect(loaded.connections).toEqual([connection()]);
+    });
+  });
+
   it('caps the connections per device', async () => {
     const many = Array.from({ length: CLUB_CONNECTIONS_MAX + 3 }, (_, i) =>
       connection({ endpoint: `https://club${i}.example.com` }),
@@ -350,14 +454,93 @@ describe('Club outbox record (docs/architecture/club.md §4-2)', () => {
       item(3),
       null,
     ]);
-    expect(loaded.items.map((i) => i.challengeId)).toEqual(['challenge-3']);
+    expect(loaded.items.map((i) => (i.kind === undefined ? i.challengeId : null))).toEqual([
+      'challenge-3',
+    ]);
   });
 
   it('caps the outbox and keeps the newest', async () => {
     const loaded = await load(Array.from({ length: CLUB_OUTBOX_MAX + 5 }, (_, i) => item(i)));
     expect(loaded.items).toHaveLength(CLUB_OUTBOX_MAX);
-    expect(loaded.items[0]?.challengeId).toBe('challenge-5');
-    expect(loaded.items.at(-1)?.challengeId).toBe(`challenge-${CLUB_OUTBOX_MAX + 4}`);
+    const idOf = (i: (typeof loaded.items)[number] | undefined) =>
+      i?.kind === undefined ? i?.challengeId : null;
+    expect(idOf(loaded.items[0])).toBe('challenge-5');
+    expect(idOf(loaded.items.at(-1))).toBe(`challenge-${CLUB_OUTBOX_MAX + 4}`);
+  });
+
+  describe('the automatic-send shapes', () => {
+    const daily = (over: Record<string, unknown> = {}) => ({
+      kind: 'daily',
+      endpoint: 'https://club.example.com',
+      createdAt: '2026-10-02T00:00:00.000Z',
+      body: {
+        gameId: 'nonogram',
+        contractVersion: 1,
+        params: { size: 10 },
+        seed: 'nonogram-daily-2026-10-02',
+        boardDigest: 'ng1:abc',
+        title: null,
+        daily: '2026-10-02',
+        result: { outcome: 'completed', facts: { elapsedSeconds: 120 } },
+      },
+      ...over,
+    });
+    const ranking = (over: Record<string, unknown> = {}) => ({
+      kind: 'ranking',
+      endpoint: 'https://club.example.com',
+      createdAt: '2026-10-02T00:00:00.000Z',
+      body: {
+        gameId: '2048',
+        contractVersion: 1,
+        paramsKey: 'classic',
+        params: {},
+        seed: '',
+        boardDigest: null,
+        outcome: 'completed',
+        facts: { score: 2048 },
+      },
+      ...over,
+    });
+    const withBody = (base: { body: object }, body: Record<string, unknown>) => ({
+      body: { ...base.body, ...body },
+    });
+
+    it('keeps the old form, a daily and a ranking side by side, in order', async () => {
+      const loaded = await load([item(1), daily(), ranking()]);
+      expect(loaded.items.map((i) => i.kind ?? 'result')).toEqual(['result', 'daily', 'ranking']);
+    });
+
+    it('keeps a ranking with an empty seed and a null digest, and a counted attempt', async () => {
+      const loaded = await load([ranking({ attempts: 3 })]);
+      expect(loaded.items).toHaveLength(1);
+      expect(loaded.items[0]?.attempts).toBe(3);
+    });
+
+    it.each([
+      ['an unknown kind', { kind: 'other' }],
+      ['a daily without a date', withBody(daily(), { daily: '2026-13-40' })],
+      ['a daily with a title', withBody(daily(), { title: 'x' })],
+      ['a daily with an empty seed', withBody(daily(), { seed: '' })],
+      ['a daily with no digest', withBody(daily(), { boardDigest: null })],
+      [
+        'a daily with a seed longer than the server takes',
+        withBody(daily(), { seed: 'x'.repeat(81) }),
+      ],
+      ['a game id the server would refuse', withBody(daily(), { gameId: 'Not A Game' })],
+      ['params that are not an object', withBody(daily(), { params: [1] })],
+      ['an unknown contract version', withBody(daily(), { contractVersion: 2 })],
+      ['a ranking without a paramsKey', withBody(ranking(), { paramsKey: 'A B' })],
+      ['a ranking with an empty digest', withBody(ranking(), { boardDigest: '' })],
+      ['a ranking with facts that are not an object', withBody(ranking(), { facts: 3 })],
+      ['a ranking with an unknown outcome', withBody(ranking(), { outcome: 'lost' })],
+      ['attempts that are not a count', { attempts: -1 }],
+      ['attempts past the cap', { attempts: 99 }],
+    ])('drops %s and keeps its neighbour', async (_what, over) => {
+      const base = String(_what).startsWith('a ranking') ? ranking() : daily();
+      const loaded = await load([{ ...base, ...over }, ranking()]);
+      expect(loaded.items).toHaveLength(1);
+      expect(loaded.items[0]?.kind).toBe('ranking');
+    });
   });
 
   it('falls back to the default for an unknown version', async () => {

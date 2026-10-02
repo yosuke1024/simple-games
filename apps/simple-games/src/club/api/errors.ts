@@ -15,9 +15,12 @@ export type ClubErrorCode =
   | 'rate_limited'
   | 'internal_error'
   | 'unsupported_version'
-  /** Network failure or timeout: no response. */
+  /**
+   * Network failure or timeout: no response — or a response that is not the
+   * Club server's (no `X-Club-Api`, e.g. a platform error page). Never final.
+   */
   | 'unreachable'
-  /** `X-Club-Api` missing or not '1' (club.md §10). */
+  /** `X-Club-Api` present and not '1' (club.md §10). */
   | 'unsupported_server'
   /** JSON not in the §5-2 shape. */
   | 'malformed_response';
@@ -47,6 +50,8 @@ export const SERVER_ERROR_CODES: readonly ClubErrorCode[] = [
  * sit at the head of its Club's queue and block everything behind it. A server
  * whose `X-Club-Api` this client does not know is final too: §10 says nothing
  * more is sent to it, and a queued result would be re-sent on every opening.
+ * A response with no `X-Club-Api` at all is not that: it is a platform error
+ * page, surfaced as `unreachable`, and waits.
  */
 export const FINAL_CODES: ReadonlySet<ClubErrorCode> = new Set<ClubErrorCode>([
   'already_submitted',

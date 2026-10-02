@@ -176,6 +176,48 @@
         "target": "sha256:51dde955c882470af31500eef3dfba9a1ad431d02c9c00b5c8f597e96a89a6a0",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
+      },
+      "clubAutoSendDisclosure": {
+        "source": "sha256:1e7802bc1e95d972c47321a1c9e27eaf8176856db66bab73865b6f8b69ef733b",
+        "target": "sha256:7df4c8a3c47b9774a8ca44804dc4ac0b2ade46afd391928674d979b8c06a16f5",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendAccept": {
+        "source": "sha256:6be8165e7e7c8c867aae06112d4b10e7a43f97d44680470381344e00c9e9c06b",
+        "target": "sha256:729542af2e90aaf7f6d63e64e93896d186e24fa0b44597a327daa1979b0c297a",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingTitle": {
+        "source": "sha256:d16021ef5576b8febf1631056eb5fb394ca032657c3d77146f4f3c9009df3001",
+        "target": "sha256:48dd2ecc4e2dc8bc78272ac948d1d47a7e0479c4ebfabee41a71962627a8d926",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingBody": {
+        "source": "sha256:34e161cc559907d8ebdff46d9b1095a24e9a72f66e0729a925d5490ec00e0ba8",
+        "target": "sha256:95a5d457da2077d1d8218ff84a4884cae85654fdd0c7d17d8ab0f25b7fe8c18d",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultTitle": {
+        "source": "sha256:ddd82858dd77edc26eb71aaed5eaaa2809049dcd337a8d4283a3387403374073",
+        "target": "sha256:ce529a2e560dde6cc1d3f461a08efbc2bc08c161785ea8d119e5e24ea15d8e83",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultBody": {
+        "source": "sha256:3d212134a461d55b1683dac95ec6a01f532ea0f99c172d76eee21c01f08ef466",
+        "target": "sha256:0b8d9eb401ac1bbab405e8ac1eeb639ba6aa08202b733e28c9f1b14000d53585",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteConfirm": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:d78cc7c34c3189d713f17223c146d7716390b1dc8f6256a54d072f31b29d218f",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
       }
     },
     "th": {
@@ -332,6 +374,48 @@
       "clubDailyDisclosure": {
         "source": "sha256:82a67b4490030b43518f7561b9b701e11677429542b25a3b1c27985b0381d5b3",
         "target": "sha256:f21e1a8ca55d3c0316f05d9e1a275804bcf028a2b1d1f7b1a481358c66545754",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendDisclosure": {
+        "source": "sha256:1e7802bc1e95d972c47321a1c9e27eaf8176856db66bab73865b6f8b69ef733b",
+        "target": "sha256:1eedb76ecf1baa3606827d9af557155860cc7d5f0474ee670136e56c1edc4e69",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendAccept": {
+        "source": "sha256:6be8165e7e7c8c867aae06112d4b10e7a43f97d44680470381344e00c9e9c06b",
+        "target": "sha256:43e22b8484b427f8909f634d19091562c144aaf588e5359fe8c63441739f1fcd",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingTitle": {
+        "source": "sha256:d16021ef5576b8febf1631056eb5fb394ca032657c3d77146f4f3c9009df3001",
+        "target": "sha256:25e4f09244fe0b42ff98b3455482c829c6ff9a3797c7181106afb45047cb8aa5",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingBody": {
+        "source": "sha256:34e161cc559907d8ebdff46d9b1095a24e9a72f66e0729a925d5490ec00e0ba8",
+        "target": "sha256:68dbd8f08ec54477294d144b8307ba4e7dcf39932117d94cee40c98ee29e63fd",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultTitle": {
+        "source": "sha256:ddd82858dd77edc26eb71aaed5eaaa2809049dcd337a8d4283a3387403374073",
+        "target": "sha256:bee7bd576b0f8860cf709bba495026709da1ff8d677c19ab100d4a5d91013a79",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultBody": {
+        "source": "sha256:3d212134a461d55b1683dac95ec6a01f532ea0f99c172d76eee21c01f08ef466",
+        "target": "sha256:85dd525b77a19511c762dc52f552b63baa6705bc9f677b106ab9267f603c933c",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteConfirm": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:4c6e6f3bb187780f1f73c8898bbf3d29919067d237c35a39ef64e859299cd4af",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
       }
@@ -492,6 +576,48 @@
         "target": "sha256:2b3754fe3f6b782ce9fb3d602778bad2ec44f4151b03219ee93c5d73e7d6c86b",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
+      },
+      "clubAutoSendDisclosure": {
+        "source": "sha256:1e7802bc1e95d972c47321a1c9e27eaf8176856db66bab73865b6f8b69ef733b",
+        "target": "sha256:703026e51c076b4ed0fb43cf491c3eeed79513fb0b09c1d156985511ae9a2265",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendAccept": {
+        "source": "sha256:6be8165e7e7c8c867aae06112d4b10e7a43f97d44680470381344e00c9e9c06b",
+        "target": "sha256:aab83a3cb2bb8783c2ed5b4c340f173827291f1d08181c5453740208d106d5a7",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingTitle": {
+        "source": "sha256:d16021ef5576b8febf1631056eb5fb394ca032657c3d77146f4f3c9009df3001",
+        "target": "sha256:b5aef14f0e9aa65881547aabd15c33376292fa964732b4df850ff84aee51e6bf",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingBody": {
+        "source": "sha256:34e161cc559907d8ebdff46d9b1095a24e9a72f66e0729a925d5490ec00e0ba8",
+        "target": "sha256:a2a06c87a435d54178c718f24d136814097a09b005e8815e53f07062433022ea",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultTitle": {
+        "source": "sha256:ddd82858dd77edc26eb71aaed5eaaa2809049dcd337a8d4283a3387403374073",
+        "target": "sha256:3773cc8805e0299ff6278a44758f3224657de52c0e207df8b6ce387e75e21987",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultBody": {
+        "source": "sha256:3d212134a461d55b1683dac95ec6a01f532ea0f99c172d76eee21c01f08ef466",
+        "target": "sha256:f33fa4034bc3c597e788494ca15ac18b12d02a0546ede0ef2e26977b742d8474",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteConfirm": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:10725a56892ea5b3d4f16bb911d065f492ade739a907673fcd2772143170b2c4",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
       }
     },
     "vi": {
@@ -648,6 +774,48 @@
       "clubDailyDisclosure": {
         "source": "sha256:82a67b4490030b43518f7561b9b701e11677429542b25a3b1c27985b0381d5b3",
         "target": "sha256:10291513443fdf5e1f73821290b7892be7ae1f31fc24213f2005ab80305c987a",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendDisclosure": {
+        "source": "sha256:1e7802bc1e95d972c47321a1c9e27eaf8176856db66bab73865b6f8b69ef733b",
+        "target": "sha256:319c987ed027d6341c5bb151d6857a89efae88b48e4bb3f667d27b8668bfc2f1",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendAccept": {
+        "source": "sha256:6be8165e7e7c8c867aae06112d4b10e7a43f97d44680470381344e00c9e9c06b",
+        "target": "sha256:dab9268ff94459b457c7f9443e548465bae127be58f0d5fbef83ef2c59936639",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingTitle": {
+        "source": "sha256:d16021ef5576b8febf1631056eb5fb394ca032657c3d77146f4f3c9009df3001",
+        "target": "sha256:c1deef54c6a2a2dfdcf8e48af09df30f6f37b65a9f9f5252b3d25bda74b68cae",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingBody": {
+        "source": "sha256:34e161cc559907d8ebdff46d9b1095a24e9a72f66e0729a925d5490ec00e0ba8",
+        "target": "sha256:60f0a193ae3d9f1f854ba52c89c2e317e6f3edf9b1fe28d95ed426144808dd65",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultTitle": {
+        "source": "sha256:ddd82858dd77edc26eb71aaed5eaaa2809049dcd337a8d4283a3387403374073",
+        "target": "sha256:430779dc8e02e7d25d5f4bf3d9fece163af2cee743f1e29817dc181efd217766",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultBody": {
+        "source": "sha256:3d212134a461d55b1683dac95ec6a01f532ea0f99c172d76eee21c01f08ef466",
+        "target": "sha256:edacd6e9fd5f6596bc0178133df1fcbd39f25d37dea92198f79358d042ebe38f",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteConfirm": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:57435a5c84449ce3565abef7db178ea496803089b880d765fd379fa926312437",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
       }
@@ -808,6 +976,48 @@
         "target": "sha256:cda2c1857369461b982e5fb2772f73728193acf5b0917154906beee60bd85a60",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
+      },
+      "clubAutoSendDisclosure": {
+        "source": "sha256:1e7802bc1e95d972c47321a1c9e27eaf8176856db66bab73865b6f8b69ef733b",
+        "target": "sha256:2ed8b764ea68c78d914ac90f3f9b165a390a2c85c6c75e802c6edc7011764ccd",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendAccept": {
+        "source": "sha256:6be8165e7e7c8c867aae06112d4b10e7a43f97d44680470381344e00c9e9c06b",
+        "target": "sha256:84bc4f21aed032a15e9b0beb67ff8167903db93f200d9067a7703cad92b845bb",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingTitle": {
+        "source": "sha256:d16021ef5576b8febf1631056eb5fb394ca032657c3d77146f4f3c9009df3001",
+        "target": "sha256:98bd80e0faa5040c6b880c68e7a4bf6203471ce492c77ee9bbf4e7209e0bfd76",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingBody": {
+        "source": "sha256:34e161cc559907d8ebdff46d9b1095a24e9a72f66e0729a925d5490ec00e0ba8",
+        "target": "sha256:a39b6989207f034745ff089affc3ac999c13a4cf1a12d994582f129596f8ba67",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultTitle": {
+        "source": "sha256:ddd82858dd77edc26eb71aaed5eaaa2809049dcd337a8d4283a3387403374073",
+        "target": "sha256:b4aa1a7769e748dbd6b61dfaa5027da5b9b7dd115ba1f74ecf964c07b130794f",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultBody": {
+        "source": "sha256:3d212134a461d55b1683dac95ec6a01f532ea0f99c172d76eee21c01f08ef466",
+        "target": "sha256:d727b41c3bd7a0e0af27426bb07227e828f3a28185ef2c77f9707b87a4d6ec61",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteConfirm": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:6139b6c3ed73cd4aa3849fcf25698abce9b6d870ddb9fcb0565ad1372a97c06c",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
       }
     },
     "zh-hans": {
@@ -964,6 +1174,48 @@
       "clubDailyDisclosure": {
         "source": "sha256:82a67b4490030b43518f7561b9b701e11677429542b25a3b1c27985b0381d5b3",
         "target": "sha256:433554709a410c74ecdb414894efe276f8e735f0c2fad91d6d8a483bfdba5c01",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendDisclosure": {
+        "source": "sha256:1e7802bc1e95d972c47321a1c9e27eaf8176856db66bab73865b6f8b69ef733b",
+        "target": "sha256:bc39bdc32920cccba8850505545ad92cd5f9f11fd5bd493ad6ab3809c76b83a9",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendAccept": {
+        "source": "sha256:6be8165e7e7c8c867aae06112d4b10e7a43f97d44680470381344e00c9e9c06b",
+        "target": "sha256:1d2afb8f02992c635a1d027be3873602f2f5fd0bfa2366424dc8cf5e36c28195",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingTitle": {
+        "source": "sha256:d16021ef5576b8febf1631056eb5fb394ca032657c3d77146f4f3c9009df3001",
+        "target": "sha256:f47bc470d91b5705ad0fd825ce6e7f29a10811e92f7e6e5c7c1b53f22174cfe2",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingBody": {
+        "source": "sha256:34e161cc559907d8ebdff46d9b1095a24e9a72f66e0729a925d5490ec00e0ba8",
+        "target": "sha256:7dbb74c32df5a4e2b3038c635d138b668892d166c824e58f21a9cef882792ff3",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultTitle": {
+        "source": "sha256:ddd82858dd77edc26eb71aaed5eaaa2809049dcd337a8d4283a3387403374073",
+        "target": "sha256:e63ee0a92f79ac644f01be829d8009f4051802e1bfd49a5d341cca54d8547fff",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultBody": {
+        "source": "sha256:3d212134a461d55b1683dac95ec6a01f532ea0f99c172d76eee21c01f08ef466",
+        "target": "sha256:d4d283711ccebeb88410a2d910e694aa32561ac7dfa92157206dd81f03c6994f",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteConfirm": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:2f9daa828907b93ff8a00d41a16828e0c6388bf3a95dadf816c8ee9c3bdac37d",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
       }
@@ -1124,6 +1376,48 @@
         "target": "sha256:10d47f816136a47cd9962d470174cf413a4c6fa5042cc268a5e736c7fdfd5257",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
+      },
+      "clubAutoSendDisclosure": {
+        "source": "sha256:1e7802bc1e95d972c47321a1c9e27eaf8176856db66bab73865b6f8b69ef733b",
+        "target": "sha256:e43e8eecfbb3374d5044e6566efc86ecbb9afd3db706d560244b9b0a8098a3c4",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendAccept": {
+        "source": "sha256:6be8165e7e7c8c867aae06112d4b10e7a43f97d44680470381344e00c9e9c06b",
+        "target": "sha256:a1deb8634bfb80d82851e6271d578b4e0daf7b41d2bdc83e1c0e171f5cb50423",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingTitle": {
+        "source": "sha256:d16021ef5576b8febf1631056eb5fb394ca032657c3d77146f4f3c9009df3001",
+        "target": "sha256:8e8ffedb78d9a07ae8140f5fe167fee81427aaad5fb482b0081216ab5a8a4f44",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingBody": {
+        "source": "sha256:34e161cc559907d8ebdff46d9b1095a24e9a72f66e0729a925d5490ec00e0ba8",
+        "target": "sha256:b9ff4b1ff9307969d8454ebc9c38b802606330b278370b694dd69a85bd915026",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultTitle": {
+        "source": "sha256:ddd82858dd77edc26eb71aaed5eaaa2809049dcd337a8d4283a3387403374073",
+        "target": "sha256:179e20b289e13ecb4d0b200163a2c6dbf900302043d4950f3a51bfef23485304",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultBody": {
+        "source": "sha256:3d212134a461d55b1683dac95ec6a01f532ea0f99c172d76eee21c01f08ef466",
+        "target": "sha256:a3d6428b11b3ce59eeb2e2ee6cbbe1d929ec10fc9b536a87c26663a5ec92b26e",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteConfirm": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:3c8f5b363ab3ab0b8d12844c62e605bb0b847f51d7a21ca2b32bcb6c36ce67d1",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
       }
     },
     "es": {
@@ -1280,6 +1574,48 @@
       "clubDailyDisclosure": {
         "source": "sha256:82a67b4490030b43518f7561b9b701e11677429542b25a3b1c27985b0381d5b3",
         "target": "sha256:2367f3f0f2ddd99c66201a039c987e80c23e68a461f17d7348907206e38ff7a3",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendDisclosure": {
+        "source": "sha256:1e7802bc1e95d972c47321a1c9e27eaf8176856db66bab73865b6f8b69ef733b",
+        "target": "sha256:52e5c0ffa0e5a62a0a6fcfab31a6a758ad35cc4bd1984b269f97463165710fbb",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendAccept": {
+        "source": "sha256:6be8165e7e7c8c867aae06112d4b10e7a43f97d44680470381344e00c9e9c06b",
+        "target": "sha256:1fb96d19936bbfcfb77702fb895d610a76565147cb7221c4c9cc36641258ad64",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingTitle": {
+        "source": "sha256:d16021ef5576b8febf1631056eb5fb394ca032657c3d77146f4f3c9009df3001",
+        "target": "sha256:a1102d0b6a533ecedaba84021ab3542aa807b4211289b81a96b09d4c2dd5fdff",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingBody": {
+        "source": "sha256:34e161cc559907d8ebdff46d9b1095a24e9a72f66e0729a925d5490ec00e0ba8",
+        "target": "sha256:3435ca9d9f707873ce35d19c7d21dd2694d5030250d05a3a05cda5d18a3c770c",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultTitle": {
+        "source": "sha256:ddd82858dd77edc26eb71aaed5eaaa2809049dcd337a8d4283a3387403374073",
+        "target": "sha256:83c8fd1b34991077bf5fef76e5a28b2570ff1c70cdcf677a70cfb61a609ca481",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultBody": {
+        "source": "sha256:3d212134a461d55b1683dac95ec6a01f532ea0f99c172d76eee21c01f08ef466",
+        "target": "sha256:138072277377111b487b37a6d5428553bdf7e1fc05a463d6305ae035c8199bb5",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteConfirm": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:d50a3d44683561324c2660615dd0594643d68e8f383842a78f94aaebe0a3d666",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
       }
@@ -1440,6 +1776,48 @@
         "target": "sha256:3f5e6c9e7562a543eeaf5391420d482937672a5934d8951fba4f2afd3ef4c63f",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
+      },
+      "clubAutoSendDisclosure": {
+        "source": "sha256:1e7802bc1e95d972c47321a1c9e27eaf8176856db66bab73865b6f8b69ef733b",
+        "target": "sha256:98f8e4f027c3b5eaf2ee1da1deca521dbf70c0a81908fe3f326d42ade0dfa557",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendAccept": {
+        "source": "sha256:6be8165e7e7c8c867aae06112d4b10e7a43f97d44680470381344e00c9e9c06b",
+        "target": "sha256:98214361685454be4588431e101e170b488713f86492426e8395357cb6c15cea",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingTitle": {
+        "source": "sha256:d16021ef5576b8febf1631056eb5fb394ca032657c3d77146f4f3c9009df3001",
+        "target": "sha256:91755930d4adefd782880199d773afb72c3e14d0890f8f56b8680c823ccecca7",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingBody": {
+        "source": "sha256:34e161cc559907d8ebdff46d9b1095a24e9a72f66e0729a925d5490ec00e0ba8",
+        "target": "sha256:fa9d6aaf105b385d5a648347c8e6819d8b4ac3aee93dd3426d994af4bae46e5a",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultTitle": {
+        "source": "sha256:ddd82858dd77edc26eb71aaed5eaaa2809049dcd337a8d4283a3387403374073",
+        "target": "sha256:a7804a109c40c9cfdc7bf0427c8f61da58a551eb9bdd30de321d5a41f081c83b",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultBody": {
+        "source": "sha256:3d212134a461d55b1683dac95ec6a01f532ea0f99c172d76eee21c01f08ef466",
+        "target": "sha256:8b5e4c8b974359ddf318cec74cc27d47e490a98c24d8ad38c37146bc29537c7e",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteConfirm": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:7d2434081ba522652b53b332ce91731594a6a4217998eea2844aaee6c8c5b3e6",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
       }
     },
     "fr": {
@@ -1596,6 +1974,48 @@
       "clubDailyDisclosure": {
         "source": "sha256:82a67b4490030b43518f7561b9b701e11677429542b25a3b1c27985b0381d5b3",
         "target": "sha256:d5de1db7ad73f21849b68986cd711f53863554ee310b18f1a135bc0451b2ddb4",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendDisclosure": {
+        "source": "sha256:1e7802bc1e95d972c47321a1c9e27eaf8176856db66bab73865b6f8b69ef733b",
+        "target": "sha256:c51703c6713b5ea91542a386789506cb32addeeb2579e1af53597f9c2d9b8a25",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendAccept": {
+        "source": "sha256:6be8165e7e7c8c867aae06112d4b10e7a43f97d44680470381344e00c9e9c06b",
+        "target": "sha256:40c8dcbcc77eb4c519eb107f811649f18a94c8036ded06cc508e43356c3fc14a",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingTitle": {
+        "source": "sha256:d16021ef5576b8febf1631056eb5fb394ca032657c3d77146f4f3c9009df3001",
+        "target": "sha256:bbd6edc1c4c14750f02fef1c87b713d6167127fe71e886455d9be34d8dba79f1",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingBody": {
+        "source": "sha256:34e161cc559907d8ebdff46d9b1095a24e9a72f66e0729a925d5490ec00e0ba8",
+        "target": "sha256:1f37f9b5bc606386dbec1d9a91e98ee30065a91b1e9f7d6c17828ddcdcd2c894",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultTitle": {
+        "source": "sha256:ddd82858dd77edc26eb71aaed5eaaa2809049dcd337a8d4283a3387403374073",
+        "target": "sha256:ff31003c242882f6fb9af7ada73e22acb3e6feabd96750a7c9eba22e355a8636",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultBody": {
+        "source": "sha256:3d212134a461d55b1683dac95ec6a01f532ea0f99c172d76eee21c01f08ef466",
+        "target": "sha256:46f43a9fdcce56c10eaa14763557f9f7f2992aa9bdbd7f6040622e64786040bf",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteConfirm": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:e4750da99f0f76658fcee437906b07386629bd6bd17f5821b94b8327086f399c",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
       }
@@ -1756,6 +2176,48 @@
         "target": "sha256:2c4eae2e62379d1ca9a42c77cbdcfb67b3d4a3d0bc89e7444f0619670e4abb3b",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
+      },
+      "clubAutoSendDisclosure": {
+        "source": "sha256:1e7802bc1e95d972c47321a1c9e27eaf8176856db66bab73865b6f8b69ef733b",
+        "target": "sha256:436b3169d6150e0539ef3147b0bb031da75101c6304184802fae3cf4343af35d",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendAccept": {
+        "source": "sha256:6be8165e7e7c8c867aae06112d4b10e7a43f97d44680470381344e00c9e9c06b",
+        "target": "sha256:6a1200f0013f7792fa111eb9dd86308430052e19e1ae2d25e3d9b541c18d9958",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingTitle": {
+        "source": "sha256:d16021ef5576b8febf1631056eb5fb394ca032657c3d77146f4f3c9009df3001",
+        "target": "sha256:e33501ab5646d568d102b08b8021cd0f4b9f9238469d29ea6cbf79021611cb84",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingBody": {
+        "source": "sha256:34e161cc559907d8ebdff46d9b1095a24e9a72f66e0729a925d5490ec00e0ba8",
+        "target": "sha256:f13b7c71bec7456779dbc677b9fd2aa225de21e856956cdcae63e001006fe13a",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultTitle": {
+        "source": "sha256:ddd82858dd77edc26eb71aaed5eaaa2809049dcd337a8d4283a3387403374073",
+        "target": "sha256:fa0a8cc54a26c8ee21ff9dd38b8b3ab8774e2ab0563bfc92e63a6a01d36357ea",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultBody": {
+        "source": "sha256:3d212134a461d55b1683dac95ec6a01f532ea0f99c172d76eee21c01f08ef466",
+        "target": "sha256:b5d0e1377611eb74af64f302e104818ac729af11fcdee56fb18b1d9fcd5cadc4",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteConfirm": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:6c2d352161df580922a184a99f8f0900612154aaa4c8f7fd03df2fbec0e24f06",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
       }
     },
     "tr": {
@@ -1912,6 +2374,48 @@
       "clubDailyDisclosure": {
         "source": "sha256:82a67b4490030b43518f7561b9b701e11677429542b25a3b1c27985b0381d5b3",
         "target": "sha256:20022316a008afb92d2462d9e16b73b4851fd1b73ac5e7657ab594ccbcec438d",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendDisclosure": {
+        "source": "sha256:1e7802bc1e95d972c47321a1c9e27eaf8176856db66bab73865b6f8b69ef733b",
+        "target": "sha256:b742e8f6007c7f11b7cbd745e266c628776efa34e91ec9f9eea4196454836c91",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubAutoSendAccept": {
+        "source": "sha256:6be8165e7e7c8c867aae06112d4b10e7a43f97d44680470381344e00c9e9c06b",
+        "target": "sha256:f40d761579c7b4dcc5b12628e9027534bd8fd87767ad049ab27ff097f5890b5a",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingTitle": {
+        "source": "sha256:d16021ef5576b8febf1631056eb5fb394ca032657c3d77146f4f3c9009df3001",
+        "target": "sha256:1ecb2b874d509865469508ff427acb68a93a9afa88012d2c887afddfc98ebaa2",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteRankingBody": {
+        "source": "sha256:34e161cc559907d8ebdff46d9b1095a24e9a72f66e0729a925d5490ec00e0ba8",
+        "target": "sha256:f95c418b5dc2d64b4253d5db6f1ef38901dd54613e96009581b4e1f3a4aaba0f",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultTitle": {
+        "source": "sha256:ddd82858dd77edc26eb71aaed5eaaa2809049dcd337a8d4283a3387403374073",
+        "target": "sha256:896678f2214833ce8962a47c1c13463246be0701d0a930044bf30e235f52b546",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteResultBody": {
+        "source": "sha256:3d212134a461d55b1683dac95ec6a01f532ea0f99c172d76eee21c01f08ef466",
+        "target": "sha256:4028d54ff15164923f566dc00eff4e58f376a31a6fdf5d5f728662ad873a93a0",
+        "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteConfirm": {
+        "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
+        "target": "sha256:f698e9b40f9f0d1cf85a796e7c3e407b4bd0d4dd5a8a68607997d27f664516b9",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
       }

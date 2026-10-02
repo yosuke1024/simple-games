@@ -16,9 +16,15 @@ const count = (value: unknown, max: number): number | null =>
 const MAX_SECONDS = 86_400;
 const MAX_COUNT = 100_000;
 
-const TIERS = ['easy', 'medium', 'hard'] as const;
-type FreeTier = (typeof TIERS)[number];
-const isTier = (value: unknown): value is FreeTier => TIERS.includes(value as FreeTier);
+/**
+ * A ranking table is a free tier (club.md §6-1). `daily` is not a table: the
+ * daily's six colours at an even mix match no tier, and its results meet in
+ * the day's Today challenge, whose params name that board kind
+ * (docs/WATER_SORT_RULES.md §14). The overlay never sends `daily` to a ranking.
+ */
+const TIERS = ['easy', 'medium', 'hard', 'daily'] as const;
+type ChallengeTier = (typeof TIERS)[number];
+const isTier = (value: unknown): value is ChallengeTier => TIERS.includes(value as ChallengeTier);
 
 export const WATER_SORT_CHALLENGE = {
   contractVersion: 1 as const,

@@ -192,7 +192,7 @@
 正典は [architecture/club.md](architecture/club.md) §6・§16。ここにはこのゲームの側で決まることだけを書く。
 
 - **順位の軸は点数。** `challenge/contract.ts` は `order: 'score'`、高いほどよい。軸にする値は終局時の自分の箱の数。
-- **表を分けるもの。** `{ size }`(`small` / `medium` / `large`)。表は盤の大きさごと。
+- **表を分けるもの。** `{ size }`(`small` / `medium` / `large`)。表は盤の大きさごと。Club House のタイトルは難易度の語でなく、このゲーム自身の画面と同じ盤の大きさで呼ぶ(`small` / `medium` / `large` = 「Dots and Boxes · 3×3」 / 「4×4」 / 「5×5」。`BOXES_FOR` と一致)。
 - **結果画面が送る事実**は `{ score, cpuScore }`。共有(`ShareAction`)の `details` と同じ変数から作り、ここで計算しない。
 - **CPU の手は seed で決まるが、順位表は盤面を揃えないが、それでよい**(club.md §16)。順位表は同じ盤面で競わせるものではない。勝利数の表は作らない。
 - CPU に負けた局も自分の箱の数で順位が付く。`outcome` は常に `completed`

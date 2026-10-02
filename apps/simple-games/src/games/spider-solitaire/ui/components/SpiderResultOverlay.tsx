@@ -12,7 +12,7 @@ import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import type { SpiderSession } from '../../game';
+import { boardDigestOf, type SpiderSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface SpiderResultOverlayProps {
@@ -144,7 +144,8 @@ export function SpiderResultOverlay({
           facts={facts}
           seed={session.seed}
           params={{ suitCount: session.suitCount }}
-          boardDigest={null}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
         />
       </div>
       <ResultAdSlot />

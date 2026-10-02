@@ -15,7 +15,7 @@ import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import type { BinaryBalanceSession } from '../../game';
+import { boardDigestOf, type BinaryBalanceSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface BinaryBalanceResultOverlayProps {
@@ -114,7 +114,8 @@ export function BinaryBalanceResultOverlay({
           facts={facts}
           seed={session.seed}
           params={{ difficulty: session.difficulty }}
-          boardDigest={null}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
         />
       </div>
       <ResultAdSlot />

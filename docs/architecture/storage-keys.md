@@ -10,7 +10,7 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | `sg.recent`     | 「最近遊んだ」のゲーム id(新しい順・最大 2 件)                                                                                                             |
 | `sg.favorites`  | 「お気に入り」に固定したゲーム id(**留めた順**・上限は実質なし)                                                                                            |
 | `sg.club`       | Club House の接続(Club ごとの endpoint / メンバートークン / ニックネーム。**バックアップに運ばない**・ローカルデータ削除で消える。[club.md](club.md) §4-1) |
-| `sg.clubOutbox` | Club House の未送信の結果(最大 50 件・古い順に捨てる。**バックアップに運ばない**・ローカルデータ削除で消える。club.md §4-2)                                |
+| `sg.clubOutbox` | Club House の未送信の結果(約 100 件・統合のあと古い順に捨てる。ランキング・デイリー・旧形式の 3 種の要素。**バックアップに運ばない**・ローカルデータ削除で消える。club.md §4-2)                                |
 | `sd.*`          | Sudoku(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                                                                                 |
 | `so.*`          | Solitaire(saveGame / saveDaily / stats / flags / prefs)                                                                                                    |
 | `ms.*`          | Minesweeper(saveGame / saveDaily / stats / flags / prefs)                                                                                                  |

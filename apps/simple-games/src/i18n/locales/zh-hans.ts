@@ -148,9 +148,10 @@ export const zhHans: Messages = {
   advancedTitle: '高级',
   clubEntry: 'Club House',
   playTogetherTitle: '一起玩',
-  playTogetherBody: '和认识的人进行私密挑战。',
-  clubSendResult: '发送到 Club',
+  playTogetherBody: '和大家分享你的成绩。',
   clubResultSent: '已发送到 {club}',
   clubResultPending: '打开 Club 时发送',
   clubResultNotSent: '无法发送到 {club}',
+  clubResultSentMany: '已发送到 {count} 个 Club',
+  clubResultPartial: '已发送到 {count} 个 Club 中的 {sent} 个。其余的将在打开时发送',
 };

@@ -1,3 +1,4 @@
+export * from './challenge';
 export * from './board';
 export * from './daily';
 export * from './levels';

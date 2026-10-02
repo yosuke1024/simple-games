@@ -1,11 +1,15 @@
 /**
  * One game × mode table (club.md §16-2): the server's order is the rank, so
  * nothing is sorted here. The viewer's row says `You`; when it is below the
- * rows the server sent, it follows after a separator with its own rank.
+ * rows the server sent, it follows after a separator with its own rank. Only
+ * the viewer's own row carries a delete button (club.md §9, decision 42).
  */
 import { useEffect, useRef, useState } from 'react';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { createClient } from '../api/client';
+import { ClubApiError } from '../api/errors';
+import { forgetDeliveredFor } from '../bridge';
+import { dropOutboxMatching } from '../storage/outbox';
 import type { RankingEntry, RankingTable } from '../api/types';
 import { useSettings } from '@/state/SettingsContext';
 import type { ClubConnection } from '@/storage/schemas';
@@ -32,6 +36,8 @@ export function RankingScreen({
   const alive = useRef(true);
   const [confirmReport, setConfirmReport] = useState<RankingEntry | null>(null);
   const [reportedIds, setReportedIds] = useState<readonly string[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = async () => {
     const client = createClient(connection.endpoint, connection.memberToken);
@@ -68,6 +74,35 @@ export function RankingScreen({
     }
   };
 
+  /**
+   * Deletes the viewer's own row in this table. What this device has queued for
+   * the table goes first (and the session's memo of what was sent), or a queued
+   * result would write the row straight back. A 404 means the row is already
+   * gone — the table is simply read again.
+   */
+  const deleteMine = async () => {
+    setConfirmDelete(false);
+    setDeleting(true);
+    setError(null);
+    try {
+      await dropOutboxMatching(connection.endpoint, { kind: 'ranking', gameId, paramsKey });
+      forgetDeliveredFor(connection.endpoint, connection.memberId, gameId);
+      try {
+        await createClient(connection.endpoint, connection.memberToken).deleteMyRanking(
+          gameId,
+          paramsKey,
+        );
+      } catch (e) {
+        if (!(e instanceof ClubApiError && e.code === 'not_found')) throw e;
+      }
+      if (alive.current) await load();
+    } catch (e) {
+      if (alive.current) setError(errorText(e, t, connection.clubName));
+    } finally {
+      if (alive.current) setDeleting(false);
+    }
+  };
+
   const row = (entry: RankingEntry, rank: number | null) => {
     const own = entry.memberId === connection.memberId;
     return (
@@ -81,7 +116,16 @@ export function RankingScreen({
           {own ? t('clubYou') : entry.nickname}
         </span>
         <span className="settings-row-value">{factsLine(gameId, entry.facts, t)}</span>
-        {own ? null : reportedIds.includes(entry.memberId) ? (
+        {own ? (
+          <button
+            type="button"
+            className="club-text-btn club-quiet-btn club-danger"
+            disabled={deleting}
+            onClick={() => setConfirmDelete(true)}
+          >
+            {t('clubDeleteRecord')}
+          </button>
+        ) : reportedIds.includes(entry.memberId) ? (
           <span className="club-quiet">{t('clubReported')}</span>
         ) : (
           <button
@@ -135,6 +179,16 @@ export function RankingScreen({
           <p className="club-quiet club-footer">{t('clubEntries', { n: table.entryCount })}</p>
         </>
       ) : null}
+      <ConfirmDialog
+        open={confirmDelete}
+        title={t('clubDeleteRankingTitle')}
+        body={t('clubDeleteRankingBody')}
+        cancelLabel={t('cancel')}
+        confirmLabel={t('clubDeleteConfirm')}
+        danger
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={() => void deleteMine()}
+      />
       <ConfirmDialog
         open={confirmReport !== null}
         title={t('clubReportTitle')}

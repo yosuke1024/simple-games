@@ -12,7 +12,7 @@ import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import type { SolitaireSession } from '../../game';
+import { boardDigestOf, type SolitaireSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface SolitaireResultOverlayProps {
@@ -144,7 +144,8 @@ export function SolitaireResultOverlay({
           facts={facts}
           seed={session.seed}
           params={{ drawThree: session.drawThree }}
-          boardDigest={null}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
         />
       </div>
       <ResultAdSlot />

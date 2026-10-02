@@ -13,7 +13,7 @@ import { ShareAction } from '@/ui/components/ShareAction';
 import type { ShareDetail } from '@/services/share/message';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import type { MemorySession } from '../../game';
+import { boardDigestOf, type MemorySession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface MemoryResultOverlayProps {
@@ -124,7 +124,8 @@ export function MemoryResultOverlay({
           facts={facts}
           seed={session.seed}
           params={{ difficulty: session.difficulty }}
-          boardDigest={null}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
         />
       </div>
       <ResultAdSlot />

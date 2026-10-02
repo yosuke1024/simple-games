@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createClient, REQUEST_TIMEOUT_MS } from './client';
-import { ClubApiError } from './errors';
+import { ClubApiError, isFinalError } from './errors';
 
 const club = { id: 'c_1', name: 'Family', createdAt: 'x' };
 const member = { id: 'm_7', nickname: 'Ken', role: 'member', joinedAt: 'x' };
@@ -142,23 +142,82 @@ describe('club client', () => {
     await expect(client.reportedMembers()).rejects.toMatchObject({ code: 'malformed_response' });
   });
 
+  it('renameSelf PATCHes /me and validates the member', async () => {
+    const member = {
+      id: 'm_1',
+      nickname: 'Kenji',
+      role: 'member',
+      joinedAt: '2026-09-09T00:00:00Z',
+    };
+    const f = vi
+      .fn()
+      .mockResolvedValueOnce(reply(200, member))
+      .mockResolvedValueOnce(reply(200, { nickname: 1 }));
+    const client = createClient(E, 't', f as unknown as typeof fetch);
+    expect((await client.renameSelf('Kenji')).nickname).toBe('Kenji');
+    expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/me`);
+    expect(f.mock.calls[0]![1].method).toBe('PATCH');
+    expect(JSON.parse(f.mock.calls[0]![1].body)).toEqual({ nickname: 'Kenji' });
+    await expect(client.renameSelf('x')).rejects.toMatchObject({ code: 'malformed_response' });
+  });
+
+  it('deleteMyRanking and deleteMyResult DELETE the caller’s own row, encoded, with no body', async () => {
+    const f = vi
+      .fn()
+      .mockImplementation(() =>
+        Promise.resolve(new Response(null, { status: 204, headers: { 'X-Club-Api': '1' } })),
+      );
+    const client = createClient(E, 't', f as unknown as typeof fetch);
+    await expect(client.deleteMyRanking('sudoku', 'hard/x')).resolves.toBeUndefined();
+    expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/rankings/sudoku/hard%2Fx/me`);
+    expect(f.mock.calls[0]![1].method).toBe('DELETE');
+    expect(f.mock.calls[0]![1].body).toBeUndefined();
+    await expect(client.deleteMyResult('ch_1')).resolves.toBeUndefined();
+    expect(f.mock.calls[1]![0]).toBe(`${E}/api/v1/challenges/ch_1/results/me`);
+    expect(f.mock.calls[1]![1].method).toBe('DELETE');
+    expect(f.mock.calls[1]![1].body).toBeUndefined();
+  });
+
+  it('a 404 on a delete is the not_found error the screens tolerate', async () => {
+    const f = vi
+      .fn()
+      .mockImplementation(() =>
+        Promise.resolve(reply(404, { error: { code: 'not_found', message: 'no' } })),
+      );
+    const client = createClient(E, 't', f as unknown as typeof fetch);
+    await expect(client.deleteMyRanking('sudoku', 'hard')).rejects.toMatchObject({
+      code: 'not_found',
+    });
+    await expect(client.deleteMyResult('ch_1')).rejects.toMatchObject({ code: 'not_found' });
+  });
+
   it('rotateInvite posts the member role', async () => {
     const f = vi.fn().mockResolvedValue(reply(200, { token: 't', url: 'u' }));
     await createClient(E, 't', f as unknown as typeof fetch).rotateInvite();
     expect(JSON.parse(f.mock.calls[0]![1].body)).toEqual({ role: 'member' });
   });
 
-  it('refuses a server without X-Club-Api: 1, even on an error status', async () => {
-    for (const headers of [{} as Record<string, string>, { 'X-Club-Api': '2' }]) {
-      const f = vi
-        .fn()
-        .mockResolvedValue(reply(401, { error: { code: 'unauthorized', message: 'x' } }, headers));
+  it('refuses a server whose X-Club-Api is not 1, even on an error status', async () => {
+    const f = vi
+      .fn()
+      .mockResolvedValue(
+        reply(401, { error: { code: 'unauthorized', message: 'x' } }, { 'X-Club-Api': '2' }),
+      );
+    await expect(createClient(E, 't', f as unknown as typeof fetch).club()).rejects.toMatchObject({
+      code: 'unsupported_server',
+    });
+  });
+
+  it('treats a response with no X-Club-Api as unreachable, never as a verdict on the server', async () => {
+    // A platform error page (quota used up, gateway down) is not the Club server:
+    // a queued result must wait it out instead of being dropped as unsupported.
+    for (const status of [403, 429, 502]) {
+      const f = vi.fn().mockResolvedValue(reply(status, 'error page', {}));
       await expect(createClient(E, 't', f as unknown as typeof fetch).club()).rejects.toMatchObject(
-        {
-          code: 'unsupported_server',
-        },
+        { code: 'unreachable', status },
       );
     }
+    expect(isFinalError(new ClubApiError('unreachable', 502))).toBe(false);
   });
 
   it('maps the error envelope, keeping the status; unknown codes become internal_error', async () => {

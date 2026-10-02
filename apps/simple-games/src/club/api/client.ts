@@ -68,6 +68,12 @@ export interface ClubClient {
   reportedMembers(): Promise<ReportedMember[]>;
   /** Owner only: changes a member's nickname everywhere. */
   renameMember(id: string, nickname: string): Promise<Member>;
+  /** The caller changes their own nickname; reports against them stay (club.md §5-3, §17-3). */
+  renameSelf(nickname: string): Promise<Member>;
+  /** Deletes the caller's own row in one ranking table (club.md §5-3); 404 when there is none. */
+  deleteMyRanking(gameId: string, paramsKey: string): Promise<void>;
+  /** Deletes the caller's own result in one challenge and withdraws them from it (club.md §5-3). */
+  deleteMyResult(challengeId: string): Promise<void>;
   deleteChallenge(id: string): Promise<void>;
   renameClub(name: string): Promise<Club>;
 }
@@ -117,7 +123,14 @@ export function createClient(
     } finally {
       clearTimeout(timer);
     }
-    if (response.headers.get('X-Club-Api') !== '1') {
+    const api = response.headers.get('X-Club-Api');
+    if (api === null) {
+      // Not the Club server at all — a platform error page (a free quota used
+      // up, a gateway down) answers without the header. That is the network's
+      // trouble, not a verdict on the server: a queued result must wait it out.
+      throw new ClubApiError('unreachable', response.status, 'No Club response');
+    }
+    if (api !== '1') {
       throw new ClubApiError('unsupported_server', response.status, 'Unsupported server');
     }
     if (response.status === 204) return undefined;
@@ -235,6 +248,18 @@ export function createClient(
       return check(
         validateMember(await request('PATCH', `/members/${encodeURIComponent(id)}`, { nickname })),
       );
+    },
+    async renameSelf(nickname) {
+      return check(validateMember(await request('PATCH', '/me', { nickname })));
+    },
+    async deleteMyRanking(gameId, paramsKey) {
+      await request(
+        'DELETE',
+        `/rankings/${encodeURIComponent(gameId)}/${encodeURIComponent(paramsKey)}/me`,
+      );
+    },
+    async deleteMyResult(challengeId) {
+      await request('DELETE', `/challenges/${encodeURIComponent(challengeId)}/results/me`);
     },
     async deleteChallenge(id) {
       await request('DELETE', `/challenges/${encodeURIComponent(id)}`);

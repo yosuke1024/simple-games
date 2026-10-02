@@ -10,13 +10,17 @@ export const en = {
   clubReload: 'Reload',
   clubDiscoverTitle: 'Play together',
   clubDiscoverBody:
-    'Play the same boards as everyone in the Public Club House, or privately with people you know.',
+    'Compare your bests with everyone in the Public Club House, or privately with people you know.',
+  clubDiscoverBodyPublic: 'Share your scores with everyone.',
   clubJoinClub: 'Join a Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Join the Public Club House',
   clubJoinWithLink: 'Join with an invite link',
   clubPublicDisclosure:
     'Your nickname and your results are visible to everyone in the Public Club House and on pixapps.ai.',
+  clubAutoSendDisclosure:
+    'While you’re in this Club, every game you finish sends its result (time, moves, score) here automatically.',
+  clubAutoSendAccept: 'Send my results automatically',
   clubToday: 'Today',
   clubDaily: 'Daily',
   clubJoinAnother: 'Join another Club',
@@ -62,6 +66,16 @@ export const en = {
   clubRemoveErase: 'Remove and erase results',
   clubRemoveEraseBody:
     'They can no longer open this Club, and every result and ranking row of theirs is erased. This cannot be undone.',
+  clubChangeName: 'Change your name',
+  clubNameSaved: 'Name saved',
+  clubDeleteRecord: 'Delete my record',
+  clubDeleteRankingTitle: 'Delete your record in this ranking?',
+  clubDeleteRankingBody: 'Your next finished game enters it again. This cannot be undone.',
+  clubDeleteResultTitle: 'Remove your result from this challenge?',
+  clubDeleteResultBody: 'You cannot send another result to this challenge. This cannot be undone.',
+  clubDeleteConfirm: 'Delete',
+  clubRejoinNote:
+    'You have been in this Club before. If the Club still knows this device, joining again brings you back as the same member, with your results.',
   clubJoinedOn: 'Joined {date}',
   clubPlay: 'Play',
   clubPlayAgain: 'Play again',
@@ -76,6 +90,29 @@ export const en = {
   clubTier_easy: 'Easy',
   clubTier_medium: 'Medium',
   clubTier_hard: 'Hard',
+  clubTier_draw1: 'Draw 1',
+  clubTier_draw3: 'Draw 3',
+  clubTier_suit1: '1 suit',
+  clubTier_suits2: '2 suits',
+  clubTier_suits4: '4 suits',
+  // Copied word for word from the games' own catalogs, so a Club title never
+  // names a mode differently from the game's screen: clubTier_cpu* from
+  // ginDifficulty_* (Hearts, Mancala and Reversi say the same), clubTier_normal
+  // from hitAndBlowDifficulty_normal, clubTier_qm* from qmathBand*.
+  // src/i18n/i18n.test.ts holds every locale's copy to its source.
+  clubTier_cpuEasy: 'Easy',
+  clubTier_cpuNormal: 'Normal',
+  clubTier_cpuHard: 'Hard',
+  clubTier_normal: 'Normal',
+  clubTier_qmAddSub: 'Adding and subtracting',
+  clubTier_qmMultiply: 'Times tables',
+  clubTier_qmDivide: 'Dividing',
+  clubTier_qmMissing: 'Missing number',
+  clubTier_qmMixed: 'Mixed',
+  clubTier_levels: 'Levels {from}–{to}',
+  clubTier_ascending: 'Ascending',
+  clubTier_descending: 'Descending',
+  clubTier_oddThenEven: 'Odds, then evens',
   clubFact_mistakes: 'Mistakes',
   clubFact_hints: 'Hints',
   clubFact_moves: 'Moves',

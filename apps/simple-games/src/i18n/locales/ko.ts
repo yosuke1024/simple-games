@@ -150,9 +150,10 @@ export const ko: Messages = {
   advancedTitle: '고급',
   clubEntry: 'Club House',
   playTogetherTitle: '함께 플레이',
-  playTogetherBody: '아는 사람들과 같은 판으로 겨루기.',
-  clubSendResult: 'Club에 보내기',
+  playTogetherBody: '모두와 점수를 공유해 보세요.',
   clubResultSent: '{club}에 보냈습니다',
   clubResultPending: 'Club을 열 때 보냅니다',
   clubResultNotSent: '{club}에 보내지 못했습니다',
+  clubResultSentMany: '{count}개 Club에 보냈습니다',
+  clubResultPartial: '{count}개 중 {sent}개 Club에 보냈습니다. 나머지는 열 때 보냅니다',
 };

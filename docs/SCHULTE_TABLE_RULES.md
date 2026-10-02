@@ -243,8 +243,9 @@ Schulte Table / Number Recall / Quick Math の 3 本すべてに適用する。
 
 正典は [architecture/club.md](architecture/club.md) §6 と §16。ここにはこのゲームの側で決まることだけを書く。
 
-- **順位表の名前(`params`)** は `{ size, order }`(`size` は `3` / `4` / `5`、`order` は `ascending` / `descending` / `oddThenEven`。順位表の名前は `5x5-odd-then-even` の形)。レベルとデイリーは、その盤の大きさと順番の表に載る(レベル番号ごとの表は作らない)。
+- **順位表の名前(`params`)** は `{ size, order }`(`size` は `3` / `4` / `5`、`order` は `ascending` / `descending` / `oddThenEven`。表を分ける鍵(`paramsKey`)は `5x5-odd-then-even` の形)。Club House のタイトルはその鍵を見せず、大きさと順序で呼ぶ(「Schulte Table · 5×5 · Odds, then evens」)。レベルは、その盤の大きさと順番の表に載る(レベル番号ごとの表は作らない)。デイリーは Today の挑戦へ送るので表には載らない(下記)。
 - **結果画面が送る事実(`facts`)** は `{ elapsedSeconds, mistakes }`(`mistakes` は誤タップ数 `missCount`)。共有(`ShareAction`)の `details` と同じセッションの値(`elapsedSeconds` / `missCount`)から作り、ここで計算しない。
 - **順位の軸は時間**で、短いほうが上(`order: 'elapsedSeconds'`、`direction: 'asc'`)。表示するだけの値は順位に使わない。
-- **盤面は揃わなくてよい**(club.md §16)。`boardDigest` は `null` で、挑戦用の盤面も seed の接頭辞も持たない。ふつうに遊んだ局のクリア画面から送るだけである。
+- **デイリーは Today の挑戦へ、それ以外はランキングの表へ。** デイリーの局だけ `daily`(その日付)と `boardDigest` を付けて送り、その日の挑戦(全員が同じ盤面)に結果が集まる。デイリーの順位は Today の挑戦の中だけで、同じデイリーの 2 度目以降は数えない(club.md §6-3)。デイリーは 5×5・昇順の 1 種類で、Retry も同じ盤面になる。それ以外の局は、クリアしたものだけがランキングの表へ送られる(`boardDigest` は `null`)。Today の `Play` はこのゲームを普通の入口で開くだけで、盤面は渡されない。
+- **`boardDigest`。** 盤の大きさ・順番・数字の行優先並び(`5|ascending|8,16,1,…`。compatibility テストが 100 レベルで使うのと同じ形)を `game/rng.ts` の `hashSeed` に通した `st1:` + 8 桁 hex(`game/challenge.ts`、`game/challenge.test.ts` が 3 日分の値を固定する)。盤面が遊んでいる間に変わらないものから作るので、途中でも終局後でも同じ値になる。生成器が版の間で変わっても、別の盤面が同じ挑戦に混ざらないための照合で、改ざん防止ではない。デイリーの `params` は `{ size: 5, order: 'ascending' }` で、契約(`challenge/contract.ts`)のまま受け付けられる。
 - ゲーム自体は変わらない。統計・自己ベスト・レベル進行・保存データ・結果画面の既存の表示には触れない。

@@ -2,7 +2,8 @@
  * One Club (club.md §9「Club」): today's dailies, the rankings and the members, read
  * when the screen opens and again only on `Reload`. No timer, no polling, no
  * counts. The Owner's two extras (Invite, Remove) and the Settings panel
- * (Disconnect, §8-5) live here too, as panels over the same data.
+ * (change your name, Disconnect — §8-5, §9) live here too,
+ * as panels over the same data. Invite is hidden while Private Clubs are off.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient, type ClubClient } from '../api/client';
@@ -16,12 +17,14 @@ import type { ClubConnection } from '@/storage/schemas';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconChevronRight } from '@/ui/components/icons';
 import { useSettings } from '@/state/SettingsContext';
+import { PRIVATE_CLUBS_ENABLED } from '@/ui/clubFeatures';
 import {
   axisText,
   dateLabel,
   errorText,
+  modeLabel,
+  NICKNAME_MAX,
   ScreenFrame,
-  tierLabel,
   todayLocal,
   type T,
 } from './common';
@@ -46,14 +49,17 @@ export type ClubPanel = 'none' | 'invite' | 'settings';
 /** `Sudoku · Hard`; a game with one table (`standard`) is its title alone. */
 export function rankingTitle(gameId: string, paramsKey: string, t: T): string {
   const game = gameTitle(gameId) ?? gameId;
-  return paramsKey === 'standard' ? game : `${game} · ${tierLabel(paramsKey, t)}`;
+  const mode = modeLabel(gameId, paramsKey, t);
+  return mode === null ? game : `${game} · ${mode}`;
 }
 
 export function challengeTitle(challenge: Challenge, t: T): string {
   const game = gameTitle(challenge.gameId) ?? challenge.gameId;
   const contract = contractFor(challenge.gameId);
   const params = contract?.validateParams(challenge.params);
-  const title = params && contract ? `${game} · ${tierLabel(contract.paramsKey(params), t)}` : game;
+  const key = params && contract ? contract.paramsKey(params) : null;
+  const mode = key !== null ? modeLabel(challenge.gameId, key, t, challenge.daily !== null) : null;
+  const title = mode !== null ? `${game} · ${mode}` : game;
   return challenge.daily !== null ? `${title} · ${t('clubDaily')}` : title;
 }
 
@@ -67,6 +73,7 @@ export function ClubScreen({
   onDisconnect,
   onRenamed,
   onRenamedMe,
+  onAcceptAutoSend,
 }: {
   connection: ClubConnection;
   panel: ClubPanel;
@@ -79,6 +86,8 @@ export function ClubScreen({
   onRenamed: (clubName: string) => void;
   /** The owner renamed this member: the server's nickname differs from the stored one. */
   onRenamedMe: (nickname: string) => void;
+  /** The player accepted the automatic-send disclosure shown for a connection that never saw it. */
+  onAcceptAutoSend: () => void;
 }) {
   const { t, locale } = useSettings();
   const [data, setData] = useState<ClubData | null>(null);
@@ -227,6 +236,17 @@ export function ClubScreen({
     }
   };
 
+  /**
+   * Your own name (club.md §5-3, §9): the server renames the member and the
+   * name on their results; reports against them stay. Throws for the panel to show.
+   */
+  const changeName = async (nickname: string) => {
+    const member = await client().renameSelf(nickname);
+    onRenamedMe(member.nickname);
+    // Your row in the lists carries the new name.
+    void load();
+  };
+
   /** One member line: the owner gets Rename / Remove, everyone else Report (never on oneself). */
   const memberLine = (section: string, m: Member, value: string) => {
     if (renaming?.key === `${section}:${m.id}`) {
@@ -280,7 +300,8 @@ export function ClubScreen({
     );
   };
 
-  if (panel === 'invite') {
+  // The owner's invite panel exists only while Private Clubs are on (club.md §14, decision 44).
+  if (panel === 'invite' && PRIVATE_CLUBS_ENABLED) {
     return (
       <InvitePanel clubName={clubName} client={client()} t={t} onBack={() => onPanel('none')} />
     );
@@ -293,9 +314,11 @@ export function ClubScreen({
         isPublic={connection.endpoint === PUBLIC_CLUB_ENDPOINT}
         members={data?.members ?? null}
         selfId={connection.memberId}
+        nickname={connection.nickname}
         t={t}
         onBack={() => onPanel('none')}
         onDisconnect={onDisconnect}
+        onChangeName={changeName}
       />
     );
   }
@@ -307,7 +330,7 @@ export function ClubScreen({
       t={t}
       right={
         <span className="club-header-actions">
-          {isOwner ? (
+          {isOwner && PRIVATE_CLUBS_ENABLED ? (
             <button type="button" className="club-text-btn" onClick={() => onPanel('invite')}>
               {t('clubInvite')}
             </button>
@@ -318,6 +341,17 @@ export function ClubScreen({
         </span>
       }
     >
+      {connection.autoSend === true ? null : (
+        // A connection from before results were sent by themselves never saw the
+        // disclosure, so nothing is sent until its owner accepts it here (club.md §4-1).
+        // Not pressing it changes nothing else: the Club stays fully usable.
+        <div className="club-consent">
+          <p className="club-disclosure">{t('clubAutoSendDisclosure')}</p>
+          <button type="button" className="btn btn-primary" onClick={onAcceptAutoSend}>
+            {t('clubAutoSendAccept')}
+          </button>
+        </div>
+      )}
       <div className="club-toolbar">
         <button
           type="button"
@@ -631,8 +665,10 @@ function InvitePanel({
 }
 
 /**
- * Disconnect this device (club.md §8-5): this device only; the server and the
- * others carry on. How to stop paying for the server is said only to an owner
+ * Settings (club.md §9): change your name, Disconnect. Leaving and deleting
+ * one's records are independent (decision 42): Disconnect keeps your records
+ * on the server. Disconnect is this device only; the server and
+ * the others carry on. How to stop paying for the server is said only to an owner
  * of a Club someone hosts themselves — a Public member has no server to delete.
  */
 function SettingsPanel({
@@ -641,25 +677,94 @@ function SettingsPanel({
   isPublic,
   members,
   selfId,
+  nickname,
   t,
   onBack,
   onDisconnect,
+  onChangeName,
 }: {
   clubName: string;
   isOwner: boolean;
   isPublic: boolean;
   members: Member[] | null;
   selfId: string;
+  /** This member's name as the device has it. */
+  nickname: string;
   t: T;
   onBack: () => void;
   onDisconnect: () => Promise<void>;
+  onChangeName: (nickname: string) => Promise<void>;
 }) {
   const [confirm, setConfirm] = useState(false);
+  const [text, setText] = useState(nickname);
+  // An owner rename learned after load: follow it while the field is still the name it showed.
+  const shown = useRef(nickname);
+  useEffect(() => {
+    setText((typed) => (typed === shown.current ? nickname : typed));
+    shown.current = nickname;
+  }, [nickname]);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<{ kind: 'saved' | 'error'; text: string } | null>(null);
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
   // Known from the list this screen already read; no extra request.
   const onlyOwner =
     isOwner && members !== null && !members.some((m) => m.role === 'owner' && m.id !== selfId);
+
+  const trimmed = text.trim();
+  const nameOk = trimmed.length >= 1 && trimmed.length <= NICKNAME_MAX && trimmed !== nickname;
+
+  const run = async (work: () => Promise<void>) => {
+    setBusy(true);
+    setNote(null);
+    try {
+      await work();
+      if (alive.current) setNote({ kind: 'saved', text: t('clubNameSaved') });
+    } catch (e) {
+      if (alive.current) setNote({ kind: 'error', text: errorText(e, t, clubName) });
+    } finally {
+      if (alive.current) setBusy(false);
+    }
+  };
+
   return (
     <ScreenFrame title={t('clubSettings')} onBack={onBack} t={t}>
+      <h2 className="home-section-label club-section">{t('clubChangeName')}</h2>
+      <form
+        className="club-rename"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (nameOk && !busy) void run(() => onChangeName(trimmed));
+        }}
+      >
+        <input
+          className="club-input"
+          type="text"
+          maxLength={NICKNAME_MAX}
+          autoComplete="off"
+          value={text}
+          aria-label={t('clubChangeName')}
+          onChange={(event) => setText(event.target.value)}
+        />
+        <div className="club-actions">
+          <button type="submit" className="btn btn-primary" disabled={busy || !nameOk}>
+            {t('clubSave')}
+          </button>
+        </div>
+      </form>
+      {note ? (
+        <p
+          className={note.kind === 'error' ? 'club-note club-note-error' : 'club-quiet'}
+          role={note.kind === 'error' ? 'alert' : 'status'}
+        >
+          {note.text}
+        </p>
+      ) : null}
       <button
         type="button"
         className="settings-row settings-row-danger"

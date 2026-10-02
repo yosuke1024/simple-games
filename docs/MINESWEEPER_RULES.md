@@ -216,8 +216,8 @@ Sliding Puzzle(Undo のみ)と異なる。**ゲームごとに、その game の
 
 正典は [architecture/club.md](architecture/club.md) §6・§16。ここにはこのゲームの側で決まることだけを書く。
 Club House 用の別モードも保存スロットもない(2026-10-02 に出荷前に取り除いた。club.md §16-3)。
-Club に参加している端末では、結果画面の `Send to Club`(`ClubResultAction`)が、初手を済ませた局の
-結果を送る。
+Club に参加している端末では、結果画面が現れたとき、初手を済ませた局の結果が**自動で**参加している全 Club
+へ送られる(ボタンは無い。結果画面の `ClubResultAction` が状態を 1 行出すだけ。club.md §2-2)。
 
 - **送り先はランキングの表。** デイリーには `daily` の印を付けない — デイリーの盤面は初手で地雷が
   決まる(§4)ので、全員が同じ盤面にはならず、Today の挑戦にならない。難易度の局もデイリーの局も、
@@ -228,9 +228,9 @@ Club に参加している端末では、結果画面の `Send to Club`(`ClubRes
 - **`boardDigest`。** 初手適用後の地雷 bit 列(golden テストと同じ文字列)を `game/rng.ts` の
   `hashSeed` に通した `ms1:` + 8 桁 hex(`game/challenge.ts`)。デイリーは印が無いので Today の
   挑戦と照合されず、digest はランキングへの送信に任意の `boardDigest` として添うだけである。
-- **結果画面が送る事実**は、勝ちなら `{ elapsedSeconds, hints }`(outcome `completed`)、
-  負けなら `{}`(outcome `played` — 敗北も 1 回に数える)。共有の `details` と同じセッションの
-  値から作る。
+- **結果画面が送る事実**は、勝ちなら `{ elapsedSeconds, hints }`(outcome `completed`)。共有の `details` と
+  同じセッションの値から作る。**負けた局(outcome `played`)はどこへも送らない**(club.md §6-3。
+  ランキングは `played` を見ず、送っても何も載らない)。
 - **送信はゲームの局を変えない。** 統計・自己ベスト・レビュー計数は、Club に参加していても
   いなくても同じに数える。比べる相手は Club の表で、その Club の中だけの表である(§13 の
   「オンラインランキング」とは別)。

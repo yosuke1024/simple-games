@@ -152,9 +152,10 @@ export const tr: Messages = {
   advancedTitle: 'Gelişmiş',
   clubEntry: 'Club House',
   playTogetherTitle: 'Birlikte oyna',
-  playTogetherBody: 'Tanıdığın kişilerle özel meydan okumalar.',
-  clubSendResult: "Club'a gönder",
+  playTogetherBody: 'Skorlarını herkesle paylaş.',
   clubResultSent: "{club}'a gönderildi",
   clubResultPending: "Club'u açınca gönderilir",
   clubResultNotSent: '{club} adlı kulübe gönderilemedi',
+  clubResultSentMany: "{count} Club'a gönderildi",
+  clubResultPartial: "{count} Club'un {sent} tanesine gönderildi. Kalanlar açtığınızda gönderilir",
 };

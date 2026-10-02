@@ -2,17 +2,36 @@
  * One challenge (club.md §9「Challenge」): the disclosure comes before `Play`
  * (§2-2「開示が先、送信が後」), the ranked results come after. Results are
  * ordered by the game's contract on this device; the server only stores them.
+ * Only the viewer's own result carries a delete button (club.md §9, decision 42).
  */
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '../api/client';
+import { ClubApiError } from '../api/errors';
+import { dropOutboxMatching } from '../storage/outbox';
 import type { Challenge, Result } from '../api/types';
 import { contractFor, gameTitle, rankResults } from '../contract/challenge';
 import { GAMES } from '@/app/registry';
 import { useSettings } from '@/state/SettingsContext';
+import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import type { ClubConnection } from '@/storage/schemas';
 import type { ClubPlayRequest } from '@/ui/clubBridge';
 import { dateLabel, errorText, factsLine, ScreenFrame } from './common';
 import { challengeTitle } from './ClubScreen';
+
+/**
+ * Challenges this session withdrew from (endpoint + challenge id). The server
+ * reports a withdrawn challenge as `mine` (it refuses any further result with
+ * `already_submitted`, club.md §5-4), so after a reload it reads as "already
+ * in" — no send promise, `Play again` — like a challenge with a result of one's
+ * own (§6-3). This set covers the moment between the DELETE and that reload,
+ * and a server from before withdrawals were reported.
+ */
+const withdrawn = new Set<string>();
+
+/** Forgets every withdrawal; the session's memory only, kept apart for tests. */
+export function clearWithdrawnChallenges(): void {
+  withdrawn.clear();
+}
 
 export function ChallengeScreen({
   connection,
@@ -31,6 +50,8 @@ export function ChallengeScreen({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const alive = useRef(true);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = async () => {
     const client = createClient(connection.endpoint, connection.memberToken);
@@ -61,24 +82,54 @@ export function ChallengeScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [challengeId, connection.endpoint]);
 
+  const joined =
+    challenge !== null &&
+    (challenge.mine || withdrawn.has(`${connection.endpoint}|${challenge.id}`));
+
   const ranked = challenge && results ? rankResults(contractFor(challenge.gameId), results) : [];
 
   const gameId = challenge ? (GAMES.find((g) => g.id === challenge.gameId)?.id ?? null) : null;
 
   const play = () => {
     if (!challenge || gameId === null) return;
-    onPlay({
-      gameId,
-      active: {
-        endpoint: connection.endpoint,
-        clubName: connection.clubName,
+    // The game opens onto its own daily and its result goes out like any other;
+    // what the shell keeps is only the way back to this challenge.
+    onPlay({ gameId, focus: { endpoint: connection.endpoint, challengeId: challenge.id } });
+  };
+
+  /**
+   * Deletes the viewer's own result and withdraws them from this challenge. What
+   * this device has queued for it goes first, or a queued result would be sent
+   * (and refused) right after. A 404 means the result is already gone — the
+   * challenge is simply read again.
+   */
+  const deleteMine = async () => {
+    if (!challenge) return;
+    setConfirmDelete(false);
+    setDeleting(true);
+    setError(null);
+    try {
+      await dropOutboxMatching(connection.endpoint, {
+        kind: 'daily',
         challengeId: challenge.id,
-        gameId,
+        gameId: challenge.gameId,
+        seed: challenge.seed,
         boardDigest: challenge.boardDigest,
-        // A replay of a challenge that already has our result sends nothing (club.md §6-3).
-        submitted: challenge.mine,
-      },
-    });
+      });
+      try {
+        await createClient(connection.endpoint, connection.memberToken).deleteMyResult(
+          challenge.id,
+        );
+      } catch (e) {
+        if (!(e instanceof ClubApiError && e.code === 'not_found')) throw e;
+      }
+      withdrawn.add(`${connection.endpoint}|${challenge.id}`);
+      if (alive.current) await load();
+    } catch (e) {
+      if (alive.current) setError(errorText(e, t, connection.clubName));
+    } finally {
+      if (alive.current) setDeleting(false);
+    }
   };
 
   return (
@@ -114,8 +165,9 @@ export function ChallengeScreen({
           </p>
           {gameId !== null && contractFor(challenge.gameId) !== null ? (
             <>
-              {/* A replay sends nothing (club.md §6-3), so it promises nothing. */}
-              {!challenge.mine && (
+              {/* A replay sends nothing (club.md §6-3), and neither does a connection that has not
+                  accepted automatic sending (§4-1): neither promises anything. */}
+              {!joined && connection.autoSend === true && (
                 <p className="club-disclosure">
                   {t('clubDailyDisclosure', {
                     game: gameTitle(challenge.gameId) ?? challenge.gameId,
@@ -124,7 +176,7 @@ export function ChallengeScreen({
                 </p>
               )}
               <button type="button" className="btn btn-primary" onClick={play}>
-                {challenge.mine ? t('clubPlayAgain') : t('clubPlay')}
+                {joined ? t('clubPlayAgain') : t('clubPlay')}
               </button>
             </>
           ) : (
@@ -151,11 +203,31 @@ export function ChallengeScreen({
                   {own ? <span className="club-you">{t('clubYou')}</span> : null}
                 </span>
                 <span className="settings-row-value">{facts}</span>
+                {own ? (
+                  <button
+                    type="button"
+                    className="club-text-btn club-quiet-btn club-danger"
+                    disabled={deleting}
+                    onClick={() => setConfirmDelete(true)}
+                  >
+                    {t('clubDeleteRecord')}
+                  </button>
+                ) : null}
               </div>
             );
           })}
         </>
       ) : null}
+      <ConfirmDialog
+        open={confirmDelete}
+        title={t('clubDeleteResultTitle')}
+        body={t('clubDeleteResultBody')}
+        cancelLabel={t('cancel')}
+        confirmLabel={t('clubDeleteConfirm')}
+        danger
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={() => void deleteMine()}
+      />
     </ScreenFrame>
   );
 }

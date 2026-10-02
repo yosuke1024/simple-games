@@ -19,7 +19,11 @@
 > リポジトリの中だけの更新である。Console にはまだ反映していない。** 反映は上と
 > 同じく人間の明示的な承認の後に、手動で行う。**時期は、この 11 本と Public Club House を
 > 載せた版(v1.4.0)が公開されるのと同時** — それより前に出すと、未収録のゲームと未出荷の
-> Club House を掲載文に書くことになる(BRAND.md「表現ルール」)。v1.3.2 は内部テストと
+> Club House を掲載文に書くことになる(BRAND.md「表現ルール」)。
+> **Club House の段落は 2026-10-02 に自動送信の設計へ直した**(参加している間は遊び終えた結果が自動で
+> 送られる。「同じ盤面」の言い方も直した — ランキングは自己ベストの並びで盤面は人ごとに違い、
+> 同じ盤面になるのはデイリーだけ)。**この段落もリリース時(v1.4.0)の文面**で、それまで
+> Console には載せない。v1.3.2 は内部テストと
 > TestFlight だけなので、掲載文は変えない。
 
 > 掲載は収録ゲーム 41 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
@@ -132,8 +136,8 @@ No login bonuses, no day-streak counters, no limited-time events. No clock runs 
 The games never go online.
 All of them run offline, from the very first launch. Your progress stays on your device and nowhere else. No account and no cloud sync, and no game ever waits on a server — so there is nothing that can go down in the middle of a game. To keep the app usable far from a charger, I left out anything power-hungry.
 
-Club House is the one optional exception, and only if you choose it.
-Join a Club with a nickname — there is no account — and the daily puzzles become one board for everyone, so you can see how others did on the very same board; in every other game, your personal bests sit next to theirs, game by game. PixApps runs the Public Club House, and anyone can run a private one for their own group. A device that never joins never connects to it.
+Club House is the one optional exception, and only if you join one.
+Join a Club with a nickname — there is no account. From then on, each game you finish sends its result (time, moves or score) to the Clubs you joined, automatically — in the games that support Clubs, and nothing you played before joining. In each game and mode your personal bests sit next to theirs; everyone plays different boards, luck included. In most games the daily puzzle is one board for everyone, so you can see how others did on the very same one. You can disconnect, delete your own records one by one, or change your name at any time. PixApps runs the Public Club House. A device that never joins never connects to it.
 
 INCLUDED GAMES
 • Sudoku
@@ -237,8 +241,11 @@ Hint / Undo の詳細を 5 本ぶん並べていた。**それをやめた。**
   残し、その直後の段落で Club House を**任意・選んだときだけ**と言い、主語をデプロイの
   持ち主(PixApps か、あなた)にする。Club House について `offline` / `no server` を
   言わない。`no account` は Public でも真(ニックネームだけ)。"leaderboard" / "ranking"
-  はストア文面では使わず、「同じ盤面で他の人がどうだったかが見える」「自己ベストが並ぶ」
-  と書く。「参加しない端末は接続しない」は実機で確かめた事実としてだけ書く
+  はストア文面では使わず、「自己ベストが並ぶ」「デイリーは全員同じ盤面で、他の人がどうだったかが
+  見える」と書く。**参加している間は結果が自動で送られる**ことを書き(結果ごとの任意の操作として書か
+  ない)、対象は「Club に対応しているゲーム」で、参加の前の局は送られない、と限定する。
+  **「同じ盤面」は、デイリーについてだけ言う**(自己ベストの並びは盤面が人ごとに違う。Minesweeper と
+  Number Recall のデイリーは全員同じ盤面ではないので「ほとんどのゲームで」と書く)。「参加しない端末は接続しない」は実機で確かめた事実としてだけ書く
   ([RELEASE_CHECKLIST.md](../../../docs/RELEASE_CHECKLIST.md) 5.16)。
 - **広告視聴の書き方**: 「広告を見る必要がない」はヒント・Undo の利用に限定して
   書く。アプリにバナー広告は存在するため、無条件の否定にしない。

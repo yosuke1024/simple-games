@@ -33,6 +33,11 @@ export function createRng(seed: string): () => number {
   return mulberry32(xmur3(seed)());
 }
 
+/** A stable 32-bit hash of a seed string — for deterministic choices. */
+export function hashSeed(seed: string): number {
+  return xmur3(seed)();
+}
+
 /** Generates a fresh random seed string for Classic games. */
 export function randomSeed(): string {
   const alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';

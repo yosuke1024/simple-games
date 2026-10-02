@@ -153,9 +153,10 @@ export const vi: Messages = {
   advancedTitle: 'Nâng cao',
   clubEntry: 'Club House',
   playTogetherTitle: 'Chơi cùng nhau',
-  playTogetherBody: 'Thử thách riêng với những người bạn biết.',
-  clubSendResult: 'Gửi đến Club',
+  playTogetherBody: 'Chia sẻ điểm số của bạn với mọi người.',
   clubResultSent: 'Đã gửi đến {club}',
   clubResultPending: 'Sẽ gửi khi bạn mở Club',
   clubResultNotSent: 'Không thể gửi đến {club}',
+  clubResultSentMany: 'Đã gửi đến {count} Club',
+  clubResultPartial: 'Đã gửi đến {sent} trong số {count} Club. Phần còn lại sẽ gửi khi bạn mở',
 };

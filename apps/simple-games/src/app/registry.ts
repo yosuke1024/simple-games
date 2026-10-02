@@ -211,6 +211,12 @@ export interface GameChallengeContract {
   validateFacts(raw: unknown): Record<string, unknown> | null;
   /** The mode a club record is kept for (`hard`, `medium`, …), from validated params. */
   paramsKey(params: Record<string, unknown>): string;
+  /**
+   * For a game whose tables are level bands (Mahjong Solitaire's layouts): the
+   * levels a paramsKey covers, or null. The Club House names such a table by
+   * its levels ("Levels 90–100") rather than by the key.
+   */
+  levelRange?(paramsKey: string): readonly [number, number] | null;
   /** The one fact results are ordered by, ascending. */
   order: string;
   /**

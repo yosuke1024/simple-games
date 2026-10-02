@@ -14,7 +14,7 @@ import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import type { NumberPathSession } from '../../game';
+import { boardDigestOf, type NumberPathSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface NumberPathResultOverlayProps {
@@ -116,7 +116,8 @@ export function NumberPathResultOverlay({
           facts={facts}
           seed={session.seed}
           params={{ difficulty: session.difficulty }}
-          boardDigest={null}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
         />
       </div>
       <ResultAdSlot />

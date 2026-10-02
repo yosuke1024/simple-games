@@ -38,8 +38,14 @@ Simple Games は PixApps が提供するクラシックゲーム集のモノレ�
 - ゲーム本体は API サーバー・アプリ用 DB・コンテンツ配信サーバーを使わない
 
 上の約束は **Core**(Club House に参加していない状態)の約束です。アプリには任意の
-**Club House**(今日のデイリーの成績と、ゲームごとの自己ベストを見せ合う場)があり、本人が参加を選んだときだけ、表示名と
-結果をそのデプロイの持ち主のサーバーへ送ります。PixApps が運用する Public Club House は
+**Club House**(ゲームごとの自己ベストと、デイリーの成績を見せ合う場)があり、本人が参加を選んだときだけ、表示名と
+結果をそのデプロイの持ち主のサーバーへ送ります。**参加している間は、Club に対応するゲームで遊び終えた
+結果が自動で送られます**(結果ごとの確認はなく、参加する前に遊んだ局は送られません。参加の画面で先に
+言い、切断すれば止まります。切断しても送った記録は消えませんが、自分の記録は Club の画面で 1 件ずつ(ランキングの自分の行、
+デイリーの自分の結果)いつでも消せ、名前も Club の設定で変えられます。同じ端末で入り直すと同じメンバーに戻ります。届かなかった結果は端末に残り、次の結果を送るときか
+Club を開いたときに送り直します)。
+自己ベストの並びは盤面が人ごとに違い、同じ盤面で比べるのは全員が同じ盤面になるデイリー(Minesweeper と Number Recall を除く)だけです。
+PixApps が運用する Public Club House は
 参加が誰にでも開かれ、表示名と結果が参加者と pixapps.ai の公開ページに出ます(アカウント
 登録はありません)。入口(設定の Advanced かホームの Play together)を押すまで Club House の
 コードは読み込まれず、参加(Join)を押すまでどのサーバーにも通信しません
@@ -289,7 +295,7 @@ Android / iOS のビルド手順は [apps/simple-games/README.md](apps/simple-ga
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 14 言語・1,517 キー(シェル 124 + 41 ゲームの 1,393。Club House の 88 キーは別カタログ)
+**One app. Many games. Many languages.** 現在は 14 言語・1,518 キー(シェル 125 + 41 ゲームの 1,393。Club House の 89 キーは別カタログ)
 (en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
 中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。
@@ -346,8 +352,8 @@ Cloudflare Pages の静的アセットのみで動き、サーバー機能は使
 - 計測は Web 版だけ。何を見て次のゲームを選ぶか、そのデータで何が言えないかを
   文書に残す([docs/GROWTH_MEASUREMENT.md](docs/GROWTH_MEASUREMENT.md))
 - 共有は任意の二次アクション。共有報酬・招待ボーナス・紹介コード・熱心さの順位は
-  作らない。Core に順位は無く、同じ盤面・同じモードの成績の順位表は参加した人だけが
-  見る Club House の画面にだけある([docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md))
+  作らない。Core に順位は無く、ゲーム × モードごとの自己ベストの順位表(デイリーは同じ盤面の順位)は
+  参加した人だけが見る Club House の画面にだけある([docs/PRODUCT_PRINCIPLES.md](docs/PRODUCT_PRINCIPLES.md))
 - 巨大な共通ゲームフレームワークを作らない
 - 一度しか使われていないコードを共通化しない(重複が確認されてから抽出)
 - 収録ゲームの追加・更新はアプリのリリースとして一体で行う。ただしゲーム追加が

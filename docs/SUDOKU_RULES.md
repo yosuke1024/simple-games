@@ -416,15 +416,17 @@ Hard を遊びたい人が 70 レベル登る必要があるのは坂の設計�
 
 正典は [architecture/club.md](architecture/club.md) §6・§16。ここにはこのゲームの側で決まることだけを書く。
 Club House 用の別モードも保存スロットもない(2026-10-02 に出荷前に取り除いた。club.md §16-3)。
-Club に参加している端末では、結果画面の `Send to Club`(`ClubResultAction`)が、遊んだ局の結果を送る。
+Club に参加している端末では、結果画面が現れたとき、遊び終えた結果が**自動で**参加している全 Club へ送られる
+(ボタンは無い。結果画面の `ClubResultAction` が状態を 1 行出すだけ。club.md §2-2)。
 
 - **デイリーは Today の挑戦へ、それ以外はランキングの表へ。** デイリーの局だけ `daily`(その日付)
   を付けて送り、その日の挑戦(全員が同じ盤面)に結果が集まる。レベル・フリーの局は難易度ごとの
   ランキングへ送る。Today の `Play` はこのゲームを普通の入口で開くだけで(プレイヤーがデイリーを遊ぶ)、盤面は渡されない。
 - **`boardDigest`。** 初期数字の行優先 81 文字(golden テストと同じ文字列)を `game/rng.ts` の
   `hashSeed` に通した `sd1:` + 8 桁 hex(`game/challenge.ts`)。Today の挑戦の digest と
-  遊んだ局の digest が一致したときだけ、結果はその挑戦へ自動送信される。一致しなければ
-  その局は挑戦の盤面ではなく、通常の `Send to Club` に戻る(club.md §6-0)。
+  遊んだ局の digest は、結果画面が `daily`(デイリーの局だけ)とともに渡す。送り先は 1 度だけ、
+  `daily` と `boardDigest` で決まる(club.md §6-3): デイリーの局は Today の挑戦へ、それ以外はランキングの表へ。
+  送るのは `completed` だけで、Today の挑戦に結果を足すのは**最初に完了した 1 回**である。
 - **結果画面が送る事実**は `{ elapsedSeconds, mistakes, hints }`。共有(`ShareAction`)の
   `details` と同じセッションの値(`elapsedSeconds` / `mistakeCount` / `hintCount`)から作り、
   ここで計算しない。params は `{ difficulty }`(難易度は常にある)。

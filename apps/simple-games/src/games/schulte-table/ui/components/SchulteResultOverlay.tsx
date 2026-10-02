@@ -17,7 +17,7 @@ import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import { MAX_LEVEL, type SchulteSession } from '../../game';
+import { boardDigestOf, MAX_LEVEL, type SchulteSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface SchulteResultOverlayProps {
@@ -122,7 +122,8 @@ export function SchulteResultOverlay({
           facts={facts}
           seed={session.seed}
           params={{ size: session.size, order: session.order }}
-          boardDigest={null}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
         />
       </div>
       <ResultAdSlot />

@@ -275,8 +275,9 @@ seed から決定的に選ぶ。
 
 正典は [architecture/club.md](architecture/club.md) §6 と §16。ここにはこのゲームの側で決まることだけを書く。
 
-- **順位表の名前(`params`)** は `{ layout }`(§4 のレイアウト 10 種の id。順位表の名前もその id)。レベルは帯ごとにレイアウトを配る(§6)ので、帯が表になり、レベル番号ごとの表は作らない。デイリーは縦タートルなので `turtle` の表に載る。`seed` はレベル・デイリーの正準 seed(§10)を送る。
+- **順位表の名前(`params`)** は `{ layout }`(§4 のレイアウト 10 種の id)で、表を分ける鍵(`paramsKey`)もその id のまま。レベルは帯ごとにレイアウトを配る(§6)ので、帯が表になり、レベル番号ごとの表は作らない。**Club House のタイトルは id を見せず、その表が受け持つレベルの帯で呼ぶ**(例: 「Mahjong Solitaire · Levels 90–100」)。帯の表はこのゲームの契約(`challenge/contract.ts` の `levelRange`)が §6 の表を写して持ち、`contract.test.ts` が 1〜100 の全レベルでゲームの配り方(`levelParams`)と突き合わせる。デイリーは縦タートルだが、表には載らず Today の挑戦へ送る(下記)。その挑戦のタイトルは帯を付けず「Mahjong Solitaire · Daily」だけ(帯はデイリーの盤面について何も言わない)。`seed` はレベル・デイリーの正準 seed(§10)を送る。
 - **結果画面が送る事実(`facts`)** は `{ elapsedSeconds, hints }`。共有(`ShareAction`)の `details` と同じセッションの値(`elapsedSeconds` / `hintCount`)から作り、ここで計算しない。
 - **順位の軸は時間**で、短いほうが上(`order: 'elapsedSeconds'`、`direction: 'asc'`)。表示するだけの値は順位に使わない。
-- **盤面は揃わなくてよい**(club.md §16)。`boardDigest` は `null` で、挑戦用の盤面も seed の接頭辞も持たない。ふつうに遊んだ局のクリア画面から送るだけである。
+- **デイリーは Today の挑戦へ、レベルはランキングの表へ。** デイリーの局だけ `daily`(その日付 = `session.dailyDate`)と `boardDigest` を付けて送り、その日の挑戦(全員が同じ盤面)に結果が集まる。レベルの局は `daily` も `boardDigest` も null で、盤面は揃わなくてよい(club.md §16)。勝てなかった局(詰み)は送らない(中央で扱う)。
+- **`boardDigest`。** レイアウト id と全牌の表(`session.faces` を牌 index 順に `,` でつないだ、golden テストと同じ文字列)を `<id>:<faces>` として `game/rng.ts` の `hashSeed` に通した `mj1:` + 8 桁 hex(`game/challenge.ts`)。レイアウトが変わっても同じ牌表に紛れないよう id を含める。`faces` はプレイ中に変わらない(取った牌は `removed` に積む)ので、作り直さずセッションから求める。
 - ゲーム自体は変わらない。統計・自己ベスト・レベル進行・保存データ・結果画面の既存の表示には触れない。

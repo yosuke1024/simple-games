@@ -31,6 +31,11 @@ function mulberry32(a: number): () => number {
   };
 }
 
+/** The seed string's 32-bit hash — the first xmur3 draw, as the Club House's board digest reads it. */
+export function hashSeed(seed: string): number {
+  return xmur3(seed)();
+}
+
 /** Returns a function producing floats in [0, 1), deterministic per seed. */
 export function createRng(seed: string): () => number {
   return mulberry32(xmur3(seed)());

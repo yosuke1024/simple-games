@@ -13,7 +13,7 @@ import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import type { FreeCellSession } from '../../game';
+import { boardDigestOf, type FreeCellSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface FreeCellResultOverlayProps {
@@ -132,7 +132,8 @@ export function FreeCellResultOverlay({
           facts={facts}
           seed={session.seed}
           params={{}}
-          boardDigest={null}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
         />
       </div>
       <ResultAdSlot />

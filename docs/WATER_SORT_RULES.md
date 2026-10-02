@@ -232,20 +232,29 @@ seed は `water-level-<n>`。空チューブは全帯域で 2 本(§1)。
 
 正典は [architecture/club.md](architecture/club.md) §6・§16。ここにはこのゲームの側で決まることだけを書く。
 Club House 用の別モードも保存スロットもない(2026-10-02 に出荷前に取り除いた。club.md §16-3)。
-Club に参加している端末では、クリアした局の結果画面の `Send to Club`(`ClubResultAction`)が結果を送る。
+Club に参加している端末では、クリアした局の結果画面の `ClubResultAction` が結果を送る。
 
-- **送り先はランキングの表で、ティアが表を分ける。** 表はティア(Easy / Medium / Hard)ごと
+- **デイリーは全員が同じ盤面なので、その日の Today に送る**(club.md 決定 29)。結果画面は、デイリーの局だけ
+  `daily`(局の `dailyDate`)・`boardDigest`・`params: { tier: 'daily' }` を渡す。Club のブリッジは `daily` が
+  文字列で `boardDigest` が null でないときだけ Today の挑戦に回す。デイリーは `challengeTierOf` が null
+  (次の項)でも送る — 門を通るのはランキングへ行く局だけである。契約(`challenge/contract.ts`)の
+  `validateParams` は `tier` に `easy` / `medium` / `hard` に加えて `daily` を許し、`paramsKey` は `daily` を返す。
+  `daily` は表の名前ではなく Today の挑戦に付く盤面の種類で、ランキングへは送らない(その経路に出すのは
+  `challengeTierOf` が答えた 3 つのティアだけ)。Today の「最初に完了した結果が 1 人 1 件」はここでも同じで、
+  もう一度同じ盤面を遊んでも先に送った結果が残る。
+- **ランキングの表はティアが分ける。** 表はティア(Easy / Medium / Hard)ごと
   (club.md §6-1)。`challengeTierOf` がその局のティアを答え、答えが null の局は
-  `Send to Club` を出さない。これがランキングの門である。
+  ランキングへ送らない。これがランキングの門である(デイリーは上の項のとおり別の経路)。
 - **ティアが決まる局。** フリープレイの局は常にティアを持つ(§6「フリープレイ」)。レベルの局は、
   その色数と混ぜ具合がティアの代表レベルと**完全に一致する**ときだけ — つまりレベル 10(Easy)・
   50(Medium)・95(Hard)だけである。デイリー(6 色・混ぜ具合 0.5)はどのティアとも一致しない。
   いちばん近いティアに入れると、そのティアの表に別の色数・混ぜ具合(別の難しさ)の盤面の結果が
-  混ざる。だから**一致しない盤面は送らない**。
+  混ざる。だから**一致しない盤面はランキングへ送らない**(デイリーは Today へ送る)。
 - **`boardDigest`。** **初期チューブ**の文字列形(golden テストと同じ `tubesToString`)を
   `game/rng.ts` の `hashSeed` に通した `ws1:` + 8 桁 hex(`game/challenge.ts`)。チューブは注ぐたびに
   変わるので、digest は局の seed・モード・レベル・日付・ティアから配り直した盤面から取る
-  (Restart と同じ配り)。ランキングへの送信に任意の `boardDigest` として添う。
+  (Restart と同じ配り)。デイリーでは Today の挑戦を決める値(同じ日・同じ digest の局が同じ挑戦に集まる)で、
+  ランキングへの送信には任意の `boardDigest` として添う。`game/challenge.test.ts` が 2026-08-01 のデイリーとレベル 1 の値を固定する。
 - **結果画面が送る事実**は `{ moves, elapsedSeconds, hints }`。共有の `details` と同じ
   セッションの値(`moveCount` / `elapsedSeconds` / `hintCount`)から作る。共有の `details` は
   Hint が 0 のとき Hint の行を省くが、`facts` は 0 も事実として送る。params は `{ tier }`。

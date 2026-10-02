@@ -11,7 +11,7 @@ import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import type { BoxRegionsSession } from '../../game';
+import { boardDigestOf, type BoxRegionsSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface BoxRegionsResultOverlayProps {
@@ -113,7 +113,8 @@ export function BoxRegionsResultOverlay({
           facts={facts}
           seed={session.seed}
           params={{ difficulty: session.difficulty }}
-          boardDigest={null}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
         />
       </div>
       <ResultAdSlot />

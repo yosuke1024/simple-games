@@ -153,9 +153,11 @@ export const id: Messages = {
   advancedTitle: 'Lanjutan',
   clubEntry: 'Club House',
   playTogetherTitle: 'Main bersama',
-  playTogetherBody: 'Tantangan privat dengan orang yang Anda kenal.',
-  clubSendResult: 'Kirim ke Club',
+  playTogetherBody: 'Bagikan skormu dengan semua orang.',
   clubResultSent: 'Terkirim ke {club}',
   clubResultPending: 'Akan dikirim saat Anda membuka Club',
   clubResultNotSent: 'Tidak dapat mengirim ke {club}',
+  clubResultSentMany: 'Terkirim ke {count} Club',
+  clubResultPartial:
+    'Terkirim ke {sent} dari {count} Club. Sisanya akan dikirim saat Anda membukanya',
 };

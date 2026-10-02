@@ -83,7 +83,26 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   // 公開の約束の反故になる。
   'clubPublicDisclosure',
 
+  // Club の結果の自動送信への同意 — 参加するどの経路(Public・リンク貼り付け・
+  // 招待 URL)でも、参加の前に「遊び終えた結果が自動で送られる」と言う
+  // (docs/PRODUCT_PRINCIPLES.md「Club House」, docs/architecture/club.md §2-2)。
+  // 「自動で」「参加している間」を落とした訳は同意の約束の反故になる。
+  'clubAutoSendDisclosure',
+  // 同じ開示を、自動送信より前に参加した接続の持ち主が Club の画面で受け入れるボタン
+  // (docs/architecture/club.md §4-1)。押すことが同意のすべてなので、「結果を自動で送る」
+  // を弱めた訳(「送ることができる」「送る準備」など)は、押していない送信を許してしまう。
+  'clubAutoSendAccept',
+
   // Club の結果の自動送信 — 開示が先、送信が後(docs/architecture/club.md §2-2, §11)。
   // 「終わると結果が送られる」を落とした訳は同意の約束の反故になる。
   'clubDailyDisclosure',
+
+  // 自分の記録を 1 件ずつ消す(docs/architecture/club.md §9, §14 判断 42) — ランキングの自分の行は
+  // 「次に遊び終えた結果がまた入る」、デイリーの自分の結果は「その挑戦にはもう結果を送れない」、
+  // どちらも元に戻せない。どれかを落とした訳は、消えるものと戻らないものを誤らせる。
+  'clubDeleteRankingTitle',
+  'clubDeleteRankingBody',
+  'clubDeleteResultTitle',
+  'clubDeleteResultBody',
+  'clubDeleteConfirm',
 ];

@@ -9,13 +9,32 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../i18n';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { settingsSchema } from '@/storage/schemas';
-import { addClubConnection, loadClubConnections } from '../storage/connections';
+import { catalogs } from '../i18n';
+import {
+  addClubConnection,
+  departClubConnection,
+  findDeparted,
+  loadClubConnections,
+} from '../storage/connections';
+import { enqueueResult, pendingFor } from '../storage/outbox';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { todayLocal } from './common';
 import { ClubRoot } from './ClubRoot';
+import { clearWithdrawnChallenges } from './ChallengeScreen';
+
+/** Private Clubs ship switched off (ui/clubFeatures.ts); every path below is tested under both values. */
+const flags = vi.hoisted(() => ({ privateClubs: true }));
+vi.mock('@/ui/clubFeatures', () => ({
+  get PRIVATE_CLUBS_ENABLED() {
+    return flags.privateClubs;
+  },
+}));
 
 const ENDPOINT = 'https://club.example.com';
 const CLUB = { id: 'c_1', name: 'Suzuki Family', createdAt: '2026-09-09T00:00:00.000Z' };
+/** The consent every join shows before its button. */
+const AUTO_SEND = catalogs.en.clubAutoSendDisclosure;
+
 const KEN = { id: 'm_7', nickname: 'Ken', role: 'member', joinedAt: '2026-09-09T00:00:00.000Z' };
 const CHALLENGE = {
   id: 'ch_1',
@@ -60,6 +79,18 @@ let clubMemberCount: number | undefined;
 let reportedList: { member: Record<string, unknown>; reportCount: number }[] = [];
 let meBelowTop = false;
 let dailyChallenges = false;
+/** A token the server no longer accepts (the owner removed that member, or the Club was rebuilt). */
+let rejectedToken: string | null = null;
+/** The token a fresh `POST /join` hands out. */
+let joinedToken = 'member-token-1';
+/** What the device still had queued for the Club at the moment a `DELETE …/me` arrived. */
+let queuedAtDelete: unknown[] | null = null;
+/** The viewer's own ranking row / Today result, until the server is asked to delete it. */
+let rankingRowDeleted = false;
+let dailyResultDeleted = false;
+let hasDailyResult = false;
+/** What the next `DELETE …/me` answers: 204, or the 404 of a row that is already gone. */
+let deleteAnswers: 204 | 404 = 204;
 /** A server from before `?daily=` existed: it ignores the parameter and answers with its ordinary list. */
 let ignoresDaily = false;
 const DAILY_CHALLENGE = {
@@ -76,7 +107,25 @@ function stubServer() {
     const method = init?.method ?? 'GET';
     if (path === '/health') return reply({ ok: true, api: 1, claimed: true });
     if (path === '/join' && method === 'POST') {
-      return reply({ club: CLUB, member: KEN, memberToken: 'member-token-1' }, 201);
+      return reply({ club: CLUB, member: KEN, memberToken: joinedToken }, 201);
+    }
+    if (rejectedToken !== null && JSON.stringify(init?.headers ?? {}).includes(rejectedToken)) {
+      return reply({ error: { code: 'unauthorized', message: 'no' } }, 401);
+    }
+    if (path === '/me' && method === 'PATCH') {
+      const body = JSON.parse(String(init?.body)) as { nickname: string };
+      clubMe = { ...clubMe, nickname: body.nickname };
+      return reply(clubMe);
+    }
+    if (
+      method === 'DELETE' &&
+      (path === '/rankings/sudoku/hard/me' || path === '/challenges/ch_d/results/me')
+    ) {
+      queuedAtDelete = await pendingFor(ENDPOINT);
+      if (deleteAnswers === 404) return reply({ error: { code: 'not_found', message: 'no' } }, 404);
+      if (path.startsWith('/rankings')) rankingRowDeleted = true;
+      else dailyResultDeleted = true;
+      return new Response(null, { status: 204, headers: { 'X-Club-Api': '1' } });
     }
     if (path === '/club') {
       return reply({
@@ -108,6 +157,17 @@ function stubServer() {
     if (path === '/challenges/ch_d') return reply(DAILY_CHALLENGE);
     if (path === '/challenges/ch_d/results') {
       return reply([
+        ...(hasDailyResult && !dailyResultDeleted
+          ? [
+              {
+                memberId: 'm_7',
+                nickname: 'Ken',
+                submittedAt: '2026-09-10T01:00:00.000Z',
+                outcome: 'completed',
+                facts: { elapsedSeconds: 500, mistakes: 2, hints: 0 },
+              },
+            ]
+          : []),
         {
           memberId: 'm_1',
           nickname: 'Yoh',
@@ -116,6 +176,15 @@ function stubServer() {
           facts: { elapsedSeconds: 271, mistakes: 0, hints: 1 },
         },
       ]);
+    }
+    if (path === '/rankings/results' && method === 'POST') {
+      return reply({
+        gameId: 'sudoku',
+        paramsKey: 'hard',
+        improved: true,
+        entry: null,
+        entryCount: 1,
+      });
     }
     if (path === '/rankings') {
       return reply([{ gameId: 'sudoku', paramsKey: 'hard', entryCount: 24, leader: LEADER }]);
@@ -127,6 +196,15 @@ function stubServer() {
         nickname: 'Mika',
         facts: { elapsedSeconds: 300, mistakes: 1, hints: 0 },
       };
+      if (rankingRowDeleted) {
+        return reply({
+          gameId: 'sudoku',
+          paramsKey: 'hard',
+          entryCount: 23,
+          entries: [LEADER, second],
+          me: null,
+        });
+      }
       return reply({
         gameId: 'sudoku',
         paramsKey: 'hard',
@@ -156,6 +234,14 @@ function renderRoot(props: Partial<React.ComponentProps<typeof ClubRoot>> = {}) 
 }
 
 beforeEach(() => {
+  flags.privateClubs = true;
+  rejectedToken = null;
+  joinedToken = 'member-token-1';
+  queuedAtDelete = null;
+  rankingRowDeleted = false;
+  dailyResultDeleted = false;
+  hasDailyResult = false;
+  deleteAnswers = 204;
   dailyChallenges = false;
   clubMe = KEN;
   clubMembers = [KEN];
@@ -163,6 +249,7 @@ beforeEach(() => {
   reportedList = [];
   meBelowTop = false;
   ignoresDaily = false;
+  clearWithdrawnChallenges();
   localStorage.clear();
 });
 
@@ -188,6 +275,8 @@ describe('ClubRoot', () => {
     await user.click(await screen.findByRole('button', { name: 'Join the Public Club House' }));
 
     expect(screen.getByText(/visible to everyone in the Public Club House/)).toBeInTheDocument();
+    // ...and that every game finished from now on is sent here by itself.
+    expect(screen.getByText(AUTO_SEND)).toBeInTheDocument();
     expect(screen.queryByLabelText('Invite link')).not.toBeInTheDocument();
     await user.type(screen.getByLabelText('Nickname'), 'Ken');
     await user.click(screen.getByRole('button', { name: 'Join and Play' }));
@@ -198,6 +287,50 @@ describe('ClubRoot', () => {
     const body = JSON.parse(String(joinCall![1]!.body)) as Record<string, unknown>;
     expect(body).toEqual({ nickname: 'Ken' });
     expect(body).not.toHaveProperty('inviteToken');
+    // The disclosure was on the screen: the connection is stored as consented.
+    expect((await loadClubConnections())[0]).toMatchObject({
+      endpoint: PUBLIC_CLUB_ENDPOINT,
+      autoSend: true,
+    });
+  });
+
+  it('discloses automatic sending on a pasted invite link too, before the link is even pasted', async () => {
+    stubServer();
+    const user = userEvent.setup();
+    renderRoot({ entry: 'discover' });
+    await user.click(await screen.findByRole('button', { name: 'Join with an invite link' }));
+
+    expect(screen.getByLabelText('Invite link')).toBeInTheDocument();
+    expect(screen.getByText(AUTO_SEND)).toBeInTheDocument();
+    // The Public Club House's own line is not part of this join.
+    expect(
+      screen.queryByText(/visible to everyone in the Public Club House/),
+    ).not.toBeInTheDocument();
+  });
+
+  it('joins with a pasted invite link and stores the connection as consented', async () => {
+    const fetchMock = stubServer();
+    const user = userEvent.setup();
+    renderRoot({ entry: 'discover' });
+    await user.click(await screen.findByRole('button', { name: 'Join with an invite link' }));
+    expect(screen.getByText(AUTO_SEND)).toBeInTheDocument();
+
+    await user.type(
+      screen.getByLabelText('Invite link'),
+      `${ENDPOINT}/join#invite=${'a'.repeat(22)}`,
+    );
+    await user.type(screen.getByLabelText('Nickname'), 'Ken');
+    await user.click(screen.getByRole('button', { name: 'Join and Play' }));
+
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    const joinCall = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/join'));
+    expect(JSON.parse(String(joinCall![1]!.body))).toEqual({
+      inviteToken: 'a'.repeat(22),
+      nickname: 'Ken',
+    });
+    expect((await loadClubConnections())[0]).toMatchObject({ endpoint: ENDPOINT, autoSend: true });
+    // Joined consented: no box asking again.
+    expect(screen.queryByRole('button', { name: 'Send my results automatically' })).toBeNull();
   });
 
   it('hides the Public button on All Clubs once the Public Club House is joined', async () => {
@@ -210,6 +343,7 @@ describe('ClubRoot', () => {
       nickname: 'Ken',
       role: 'member' as const,
       joinedAt: 'x',
+      autoSend: true as const,
     };
     await addClubConnection({ ...base, endpoint: ENDPOINT });
     await addClubConnection({ ...base, endpoint: 'https://other.example.com', clubName: 'B' });
@@ -278,8 +412,10 @@ describe('ClubRoot', () => {
       invite: { endpoint: ENDPOINT, token: 'a'.repeat(22) },
     });
 
-    // The paste field is hidden: the link already said where to go.
+    // The paste field is hidden: the link already said where to go. The join says,
+    // before the button, that results are sent automatically from here on.
     await screen.findByLabelText('Nickname');
+    expect(screen.getByText(AUTO_SEND)).toBeInTheDocument();
     expect(screen.queryByLabelText('Invite link')).not.toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Nickname'), '  Ken ');
@@ -304,6 +440,8 @@ describe('ClubRoot', () => {
     expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
     expect(screen.getByText('1. Ken 3:58')).toBeInTheDocument();
     expect(screen.getByText('24 entries')).toBeInTheDocument();
+    // The invite-URL join showed the disclosure too: stored as consented.
+    expect((await loadClubConnections())[0]).toMatchObject({ endpoint: ENDPOINT, autoSend: true });
   });
 
   it('loads the club, today and the rankings: three requests', async () => {
@@ -313,6 +451,33 @@ describe('ClubRoot', () => {
     expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
     const paths = fetchMock.mock.calls.map(([url]) => new URL(String(url)).pathname);
     expect(paths.sort()).toEqual(['/api/v1/challenges', '/api/v1/club', '/api/v1/rankings']);
+  });
+
+  it('opening a Club sends the results that waited, before it lists anything', async () => {
+    const fetchMock = stubServer();
+    await joinedConnection();
+    await enqueueResult({
+      kind: 'ranking',
+      endpoint: ENDPOINT,
+      createdAt: '2026-10-02T00:00:00.000Z',
+      body: {
+        gameId: 'sudoku',
+        contractVersion: 1,
+        paramsKey: 'hard',
+        params: { difficulty: 'hard' },
+        seed: 's',
+        boardDigest: 'sd1:1',
+        outcome: 'completed',
+        facts: { elapsedSeconds: 200, mistakes: 0, hints: 0 },
+      },
+    });
+    renderRoot();
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    const calls = fetchMock.mock.calls.map(
+      ([url, init]) => `${init?.method ?? 'GET'} ${new URL(String(url)).pathname}`,
+    );
+    expect(calls[0]).toBe('POST /api/v1/rankings/results');
+    expect(await pendingFor(ENDPOINT)).toEqual([]);
   });
 
   it('opens a ranking: You on the viewer row, in the order the server gave', async () => {
@@ -375,16 +540,10 @@ describe('ClubRoot', () => {
 
     await user.click(screen.getByRole('button', { name: 'Play' }));
     // No board is handed over: the game opens its own daily (club.md §16-3).
+    // Only the way back is handed over: the result goes out like any other.
     expect(handlers.onPlayChallenge).toHaveBeenCalledWith({
       gameId: 'sudoku',
-      active: {
-        endpoint: ENDPOINT,
-        clubName: 'Suzuki Family',
-        challengeId: 'ch_d',
-        gameId: 'sudoku',
-        boardDigest: 'sd1:9f3a1c07',
-        submitted: false,
-      },
+      focus: { endpoint: ENDPOINT, challengeId: 'ch_d' },
     });
   });
 
@@ -529,6 +688,8 @@ async function joinedConnection(extra: Record<string, unknown> = {}) {
     nickname: 'Ken',
     role: 'member',
     joinedAt: '2026-09-09T00:00:00.000Z',
+    // Joined under this build: it saw the disclosure. A legacy test passes `autoSend: undefined`.
+    autoSend: true,
     ...extra,
   });
 }
@@ -570,5 +731,644 @@ describe('Disconnect this device', () => {
     const dialog = await openDisconnect();
     expect(dialog).toHaveTextContent('The server keeps running');
     expect(dialog).not.toHaveTextContent(HOSTING);
+  });
+});
+
+describe('a connection from before automatic sending (club.md §4-1)', () => {
+  const ACCEPT = 'Send my results automatically';
+
+  it('shows the disclosure and one button at the top of the Club, and still lists everything', async () => {
+    stubServer();
+    await joinedConnection({ autoSend: undefined });
+    renderRoot();
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+
+    expect(screen.getByText(AUTO_SEND)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ACCEPT })).toBeInTheDocument();
+    // The Club is fully usable: Reload, Settings and the Disconnect behind it are where they were.
+    expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument();
+    // Showing the box asks for nothing and stores nothing.
+    expect((await loadClubConnections())[0]).not.toHaveProperty('autoSend');
+  });
+
+  it('pressing the button stores autoSend, hides the box, and tells the shell', async () => {
+    stubServer();
+    const user = userEvent.setup();
+    await joinedConnection({ autoSend: undefined });
+    const handlers = renderRoot();
+    await user.click(await screen.findByRole('button', { name: ACCEPT }));
+
+    await waitFor(async () => expect((await loadClubConnections())[0]!.autoSend).toBe(true));
+    await waitFor(() => expect(screen.queryByText(AUTO_SEND)).not.toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: ACCEPT })).not.toBeInTheDocument();
+    expect(handlers.onConnectionsChanged).toHaveBeenCalledTimes(1);
+    // Nothing else moved: same Club, same lists.
+    expect(screen.getByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+  });
+
+  it('not pressing it changes nothing: nothing is stored, the box stays across Settings and back', async () => {
+    stubServer();
+    const user = userEvent.setup();
+    await joinedConnection({ autoSend: undefined });
+    const handlers = renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'Settings' }));
+    expect(screen.getByRole('button', { name: 'Disconnect this device' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('button', { name: ACCEPT })).toBeInTheDocument();
+    expect((await loadClubConnections())[0]).not.toHaveProperty('autoSend');
+    expect(handlers.onConnectionsChanged).not.toHaveBeenCalled();
+  });
+
+  it('accepting one Club leaves the other unconsented', async () => {
+    stubServer();
+    const user = userEvent.setup();
+    await joinedConnection({ autoSend: undefined });
+    await joinedConnection({
+      endpoint: 'https://other.example.com',
+      clubName: 'Other',
+      autoSend: undefined,
+    });
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'Suzuki Family' }));
+    await user.click(await screen.findByRole('button', { name: ACCEPT }));
+    await waitFor(async () =>
+      expect((await loadClubConnections()).map((c) => c.autoSend)).toEqual([true, undefined]),
+    );
+  });
+
+  it('a Today challenge does not promise a send the connection will not make', async () => {
+    stubServer();
+    dailyChallenges = true;
+    const user = userEvent.setup();
+    await joinedConnection({ autoSend: undefined });
+    renderRoot();
+
+    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · Daily · by Yoh/ }));
+    expect(await screen.findByText('4:31 Mistakes 0 Hints 1')).toBeInTheDocument();
+    // Play is still there; only the sentence "your result is sent to ..." is not.
+    expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
+    expect(screen.queryByText(/your result is sent to/)).not.toBeInTheDocument();
+  });
+
+  it('a consented connection shows no box', async () => {
+    stubServer();
+    await joinedConnection();
+    renderRoot();
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    expect(screen.queryByText(AUTO_SEND)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: ACCEPT })).not.toBeInTheDocument();
+  });
+});
+
+const callsTo = (fetchMock: ReturnType<typeof stubServer>, method: string, suffix: string) =>
+  fetchMock.mock.calls.filter(
+    ([url, init]) => String(url).endsWith(`/api/v1${suffix}`) && (init?.method ?? 'GET') === method,
+  );
+
+describe('Private Clubs switched off (club.md §14, decision 44)', () => {
+  beforeEach(() => {
+    flags.privateClubs = false;
+  });
+
+  it('Discover offers the Public Club House only, with no Join with a link and no private line', async () => {
+    stubServer();
+    renderRoot({ entry: 'discover' });
+    expect(await screen.findByRole('heading', { name: 'Play together' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Join the Public Club House' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Join with an invite link' })).toBeNull();
+    expect(screen.getByText(catalogs.en.clubDiscoverBodyPublic)).toBeInTheDocument();
+    expect(screen.queryByText(/privately/i)).toBeNull();
+    // No teaser either (PRODUCT_PRINCIPLES keeps Coming Soon in "not adopted").
+    expect(screen.queryByText(/coming soon/i)).toBeNull();
+  });
+
+  it('an invite handed to the root is not acted on: it opens like any other entry', async () => {
+    stubServer();
+    renderRoot({ entry: 'invite', invite: { endpoint: ENDPOINT, token: 'a'.repeat(22) } });
+    expect(await screen.findByRole('heading', { name: 'Play together' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Invite link')).toBeNull();
+  });
+
+  it('All Clubs has no Join another Club, and the owner has no Invite button or panel', async () => {
+    stubServer();
+    clubMe = { ...KEN, role: 'owner' };
+    clubMembers = [clubMe];
+    await joinedConnection({ role: 'owner' });
+    await joinedConnection({
+      endpoint: 'https://other.example.com',
+      clubName: 'Other',
+      role: 'owner',
+    });
+    const user = userEvent.setup();
+    renderRoot();
+    expect(await screen.findByRole('heading', { name: 'All Clubs' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Join another Club' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Suzuki Family' }));
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Invite' })).toBeNull();
+  });
+});
+
+describe('Private Clubs switched on', () => {
+  it('shows Join with a link and the owner Invite button', async () => {
+    stubServer();
+    clubMe = { ...KEN, role: 'owner' };
+    clubMembers = [clubMe];
+    renderRoot({ entry: 'discover' });
+    expect(
+      await screen.findByRole('button', { name: 'Join with an invite link' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(catalogs.en.clubDiscoverBody)).toBeInTheDocument();
+    cleanup();
+    await joinedConnection({ role: 'owner' });
+    renderRoot();
+    expect(await screen.findByRole('button', { name: 'Invite' })).toBeInTheDocument();
+  });
+});
+
+describe('Disconnect keeps the way back, and joining again returns the same member (decision 43)', () => {
+  async function disconnect() {
+    const user = userEvent.setup();
+    const handlers = renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'Settings' }));
+    await user.click(screen.getByRole('button', { name: 'Disconnect this device' }));
+    await user.click(
+      within(screen.getByRole('alertdialog', { name: 'Disconnect this device' })).getByRole(
+        'button',
+        { name: 'Disconnect' },
+      ),
+    );
+    await screen.findByRole('heading', { name: 'Play together' });
+    return handlers;
+  }
+
+  it('moves the credentials to the departed list and sends nothing for them', async () => {
+    stubServer();
+    await joinedConnection({ endpoint: PUBLIC_CLUB_ENDPOINT, clubName: 'PixApps Club' });
+    await enqueueResult({
+      kind: 'ranking',
+      endpoint: PUBLIC_CLUB_ENDPOINT,
+      createdAt: '2026-10-02T00:00:00.000Z',
+      body: {
+        gameId: 'sudoku',
+        contractVersion: 1,
+        paramsKey: 'hard',
+        params: { difficulty: 'hard' },
+        seed: 's',
+        boardDigest: 'sd1:1',
+        outcome: 'completed',
+        facts: { elapsedSeconds: 200, mistakes: 0, hints: 0 },
+      },
+    });
+    await disconnect();
+
+    expect(await loadClubConnections()).toEqual([]);
+    expect(await findDeparted(PUBLIC_CLUB_ENDPOINT)).toMatchObject({
+      memberId: 'm_7',
+      memberToken: 'member-token-1',
+    });
+    // The queue for a Club that is not joined is gone, as before.
+    expect(await pendingFor(PUBLIC_CLUB_ENDPOINT)).toEqual([]);
+  });
+
+  async function rejoinPublic(typed: string) {
+    const user = userEvent.setup();
+    renderRoot({ entry: 'discover' });
+    await user.click(await screen.findByRole('button', { name: 'Join the Public Club House' }));
+    // The screen says this device was here before; the old name is not prefilled (it may be stale).
+    expect(await screen.findByText(catalogs.en.clubRejoinNote)).toBeInTheDocument();
+    expect(screen.getByLabelText('Nickname')).toHaveValue('');
+    await user.type(screen.getByLabelText('Nickname'), typed);
+    await user.click(screen.getByRole('button', { name: 'Join and Play' }));
+    return expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+  }
+
+  async function departedPublic(extra: Record<string, unknown> = {}) {
+    await joinedConnection({
+      endpoint: PUBLIC_CLUB_ENDPOINT,
+      clubName: 'PixApps Club',
+      role: 'owner',
+      ...extra,
+    });
+    await departClubConnection(PUBLIC_CLUB_ENDPOINT);
+  }
+
+  it('restores the same member: no new join, same id, token and role, owner kept', async () => {
+    const fetchMock = stubServer();
+    clubMe = { ...KEN, role: 'owner' };
+    clubMembers = [clubMe];
+    await departedPublic();
+    await rejoinPublic('Ken');
+
+    expect(callsTo(fetchMock, 'POST', '/join')).toHaveLength(0);
+    expect(callsTo(fetchMock, 'PATCH', '/me')).toHaveLength(0);
+    // Verified with the departed token, not an anonymous request.
+    const verify = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/api/v1/club'));
+    expect(JSON.stringify(verify![1]!.headers)).toContain('member-token-1');
+    expect(await loadClubConnections()).toEqual([
+      expect.objectContaining({
+        endpoint: PUBLIC_CLUB_ENDPOINT,
+        memberId: 'm_7',
+        memberToken: 'member-token-1',
+        role: 'owner',
+        nickname: 'Ken',
+        autoSend: true,
+      }),
+    ]);
+    expect(await findDeparted(PUBLIC_CLUB_ENDPOINT)).toBeNull();
+  });
+
+  it('restores as consented even when the connection had never accepted automatic sending', async () => {
+    stubServer();
+    await departedPublic({ autoSend: undefined });
+    await rejoinPublic('Ken');
+    expect((await loadClubConnections())[0]).toMatchObject({ autoSend: true });
+  });
+
+  it('renames the member when the typed nickname differs from the server’s', async () => {
+    const fetchMock = stubServer();
+    await departedPublic();
+    await rejoinPublic('Kenji');
+
+    expect(callsTo(fetchMock, 'POST', '/join')).toHaveLength(0);
+    const patch = callsTo(fetchMock, 'PATCH', '/me');
+    expect(patch).toHaveLength(1);
+    expect(JSON.parse(String(patch[0]![1]!.body))).toEqual({ nickname: 'Kenji' });
+    expect(await loadClubConnections()).toEqual([
+      expect.objectContaining({ memberId: 'm_7', nickname: 'Kenji' }),
+    ]);
+  });
+
+  it('joins afresh, and forgets the departed entry, when the server no longer knows the token', async () => {
+    const fetchMock = stubServer();
+    await departedPublic();
+    rejectedToken = 'member-token-1';
+    joinedToken = 'member-token-2';
+    const user = userEvent.setup();
+    renderRoot({ entry: 'discover' });
+    await user.click(await screen.findByRole('button', { name: 'Join the Public Club House' }));
+    await user.type(screen.getByLabelText('Nickname'), 'Ken');
+    await user.click(screen.getByRole('button', { name: 'Join and Play' }));
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+
+    expect(callsTo(fetchMock, 'POST', '/join')).toHaveLength(1);
+    expect(await findDeparted(PUBLIC_CLUB_ENDPOINT)).toBeNull();
+    expect((await loadClubConnections())[0]).toMatchObject({ memberToken: 'member-token-2' });
+  });
+
+  it('on a network failure shows the error and changes nothing', async () => {
+    stubServer();
+    await departedPublic();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new TypeError('offline');
+      }),
+    );
+    const user = userEvent.setup();
+    renderRoot({ entry: 'discover' });
+    await user.click(await screen.findByRole('button', { name: 'Join the Public Club House' }));
+    await user.type(screen.getByLabelText('Nickname'), 'Ken');
+    await user.click(screen.getByRole('button', { name: 'Join and Play' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not reach');
+    expect(await loadClubConnections()).toEqual([]);
+    expect(await findDeparted(PUBLIC_CLUB_ENDPOINT)).not.toBeNull();
+  });
+
+  it('a Club never left shows no rejoin note and no prefilled name', async () => {
+    stubServer();
+    const user = userEvent.setup();
+    renderRoot({ entry: 'discover' });
+    await user.click(await screen.findByRole('button', { name: 'Join the Public Club House' }));
+    expect(screen.getByLabelText('Nickname')).toHaveValue('');
+    expect(screen.queryByText(catalogs.en.clubRejoinNote)).toBeNull();
+  });
+});
+
+describe('Settings: change your name', () => {
+  async function openSettings() {
+    const user = userEvent.setup();
+    const handlers = renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'Settings' }));
+    return { user, handlers };
+  }
+
+  it('saves through PATCH /me, updates the cached nickname and tells the shell', async () => {
+    const fetchMock = stubServer();
+    await joinedConnection();
+    const { user, handlers } = await openSettings();
+    const field = screen.getByLabelText('Change your name');
+    expect(field).toHaveValue('Ken');
+    // Nothing to save until the name differs.
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    await user.clear(field);
+    await user.type(field, '  Kenji ');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Name saved');
+    const patch = callsTo(fetchMock, 'PATCH', '/me');
+    expect(patch).toHaveLength(1);
+    expect(JSON.parse(String(patch[0]![1]!.body))).toEqual({ nickname: 'Kenji' });
+    await waitFor(async () => expect((await loadClubConnections())[0]!.nickname).toBe('Kenji'));
+    await waitFor(() => expect(handlers.onConnectionsChanged).toHaveBeenCalled());
+    expect(handlers.onConnectionsChanged.mock.calls.at(-1)![0]).toEqual([
+      expect.objectContaining({ nickname: 'Kenji' }),
+    ]);
+  });
+
+  it('applies the join nickname rules: empty and over 24 characters cannot be saved', async () => {
+    stubServer();
+    await joinedConnection();
+    const { user } = await openSettings();
+    const field = screen.getByLabelText('Change your name');
+    await user.clear(field);
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    await user.type(field, '   ');
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(field).toHaveAttribute('maxlength', '24');
+  });
+
+  it('shows the server’s refusal and keeps the stored name', async () => {
+    stubServer();
+    await joinedConnection();
+    const { user } = await openSettings();
+    // The server no longer knows this member.
+    rejectedToken = 'member-token-1';
+    const field = screen.getByLabelText('Change your name');
+    await user.clear(field);
+    await user.type(field, 'Kenji');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('no longer a member');
+    expect((await loadClubConnections())[0]!.nickname).toBe('Ken');
+  });
+});
+
+const rankingItem = (endpoint: string, paramsKey = 'hard') =>
+  ({
+    kind: 'ranking',
+    endpoint,
+    createdAt: '2026-10-02T00:00:00.000Z',
+    body: {
+      gameId: 'sudoku',
+      contractVersion: 1,
+      paramsKey,
+      params: { difficulty: paramsKey },
+      seed: 's',
+      boardDigest: 'sd1:1',
+      outcome: 'completed',
+      facts: { elapsedSeconds: 200, mistakes: 0, hints: 0 },
+    },
+  }) as const;
+
+const dailyItem = (seed: string, endpoint = ENDPOINT) =>
+  ({
+    kind: 'daily',
+    endpoint,
+    createdAt: '2026-10-02T00:00:00.000Z',
+    body: {
+      gameId: 'sudoku',
+      contractVersion: 1,
+      params: { difficulty: 'hard' },
+      seed,
+      boardDigest: 'sd1:9f3a1c07',
+      title: null,
+      daily: todayLocal(),
+      result: { outcome: 'completed', facts: { elapsedSeconds: 500, mistakes: 2, hints: 0 } },
+    },
+  }) as const;
+
+describe('Settings has no way to erase everything (decision 42)', () => {
+  it('offers rename and Disconnect only: no erase-all row', async () => {
+    stubServer();
+    await joinedConnection();
+    const user = userEvent.setup();
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'Settings' }));
+    expect(screen.getByRole('button', { name: 'Disconnect this device' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /erase|delete/i })).not.toBeInTheDocument();
+  });
+});
+
+/** The table is read with `?top=`, which `callsTo` does not match. */
+const rankingReads = (fetchMock: ReturnType<typeof stubServer>) =>
+  fetchMock.mock.calls.filter(([url]) => String(url).includes('/api/v1/rankings/sudoku/hard?'))
+    .length;
+
+describe('Ranking: deleting your own row (decision 42)', () => {
+  async function openRanking() {
+    const user = userEvent.setup();
+    await joinedConnection();
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · 1\. Ken 3:58/ }));
+    await screen.findByRole('heading', { name: 'Sudoku · Hard' });
+    await screen.findByText('You');
+    return user;
+  }
+  const deleteButtons = () => screen.queryAllByRole('button', { name: 'Delete my record' });
+
+  it('puts the button on your own row only', async () => {
+    stubServer();
+    await openRanking();
+    expect(deleteButtons()).toHaveLength(1);
+    // Leader and the second row are other members': Report, never Delete.
+    const own = screen.getByText('You').closest('.club-line') as HTMLElement;
+    expect(within(own).getByRole('button', { name: 'Delete my record' })).toBeInTheDocument();
+    const other = screen
+      .getByText('Ken', { selector: '.settings-row-label' })
+      .closest('.club-line') as HTMLElement;
+    expect(
+      within(other).queryByRole('button', { name: 'Delete my record' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('puts the button on the appended row when you are below the rows sent', async () => {
+    stubServer();
+    meBelowTop = true;
+    await openRanking();
+    const own = screen.getByText('You').closest('.club-line') as HTMLElement;
+    expect(within(own).getByText('#87')).toBeInTheDocument();
+    expect(deleteButtons()).toHaveLength(1);
+    expect(own).toContainElement(deleteButtons()[0]!);
+  });
+
+  it('says what happens; Cancel changes nothing', async () => {
+    const fetchMock = stubServer();
+    const user = await openRanking();
+    await user.click(deleteButtons()[0]!);
+    const dialog = screen.getByRole('alertdialog', { name: 'Delete your record in this ranking?' });
+    expect(dialog).toHaveTextContent('Your next finished game enters it again.');
+    expect(dialog).toHaveTextContent('This cannot be undone.');
+    await enqueueResult(rankingItem(ENDPOINT));
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(callsTo(fetchMock, 'DELETE', '/rankings/sudoku/hard/me')).toHaveLength(0);
+    expect(await pendingFor(ENDPOINT)).toHaveLength(1);
+    expect(deleteButtons()).toHaveLength(1);
+  });
+
+  it('drops the queued items that would recreate it, deletes, and reads the table again', async () => {
+    const fetchMock = stubServer();
+    const user = await openRanking();
+    // Same table, another table, another Club: only the first goes.
+    await enqueueResult(rankingItem(ENDPOINT));
+    await enqueueResult(rankingItem(ENDPOINT, 'easy'));
+    await enqueueResult(rankingItem('https://other.example.com'));
+    const reads = rankingReads(fetchMock);
+
+    await user.click(deleteButtons()[0]!);
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
+    );
+
+    await waitFor(() =>
+      expect(callsTo(fetchMock, 'DELETE', '/rankings/sudoku/hard/me')).toHaveLength(1),
+    );
+    // The queue was already clean when the request arrived.
+    expect(queuedAtDelete).toHaveLength(1);
+    expect((queuedAtDelete as { body: { paramsKey: string } }[])[0]!.body.paramsKey).toBe('easy');
+    expect(await pendingFor('https://other.example.com')).toHaveLength(1);
+    await waitFor(() => expect(rankingReads(fetchMock)).toBeGreaterThan(reads));
+    // Reloaded: the row is gone, and so is the button.
+    await waitFor(() => expect(screen.getByText('23 entries')).toBeInTheDocument());
+    expect(screen.queryByText('You')).not.toBeInTheDocument();
+    expect(deleteButtons()).toHaveLength(0);
+    // Still a member of the Club.
+    expect(await loadClubConnections()).toHaveLength(1);
+  });
+
+  it('treats a 404 (already gone) as done and reads the table again', async () => {
+    const fetchMock = stubServer();
+    const user = await openRanking();
+    deleteAnswers = 404;
+    const reads = rankingReads(fetchMock);
+    await user.click(deleteButtons()[0]!);
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
+    );
+    await waitFor(() => expect(rankingReads(fetchMock)).toBeGreaterThan(reads));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('shows the error when the server refuses', async () => {
+    stubServer();
+    const user = await openRanking();
+    rejectedToken = 'member-token-1';
+    await user.click(deleteButtons()[0]!);
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent('no longer a member');
+  });
+});
+
+describe('Today challenge: deleting your own result (decision 42)', () => {
+  async function openChallenge() {
+    dailyChallenges = true;
+    hasDailyResult = true;
+    const user = userEvent.setup();
+    await joinedConnection();
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · Daily · by Yoh/ }));
+    await screen.findByText('8:20 Mistakes 2 Hints 0');
+    return user;
+  }
+  const deleteButtons = () => screen.queryAllByRole('button', { name: 'Delete my record' });
+
+  it('puts the button on your own result only', async () => {
+    stubServer();
+    await openChallenge();
+    expect(deleteButtons()).toHaveLength(1);
+    const own = screen.getByText('You').closest('.club-line') as HTMLElement;
+    expect(own).toContainElement(deleteButtons()[0]!);
+  });
+
+  it('says what happens; Cancel changes nothing', async () => {
+    const fetchMock = stubServer();
+    const user = await openChallenge();
+    await user.click(deleteButtons()[0]!);
+    const dialog = screen.getByRole('alertdialog', {
+      name: 'Remove your result from this challenge?',
+    });
+    expect(dialog).toHaveTextContent('You cannot send another result to this challenge.');
+    expect(dialog).toHaveTextContent('This cannot be undone.');
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(callsTo(fetchMock, 'DELETE', '/challenges/ch_d/results/me')).toHaveLength(0);
+    expect(deleteButtons()).toHaveLength(1);
+  });
+
+  it('drops the queued daily items for this challenge, deletes, and reads it again', async () => {
+    const fetchMock = stubServer();
+    const user = await openChallenge();
+    // This challenge's daily goes; another board's daily and another Club's stay.
+    await enqueueResult(dailyItem('sudoku-daily-today'));
+    await enqueueResult(dailyItem('sudoku-daily-other'));
+    await enqueueResult(dailyItem('sudoku-daily-today', 'https://other.example.com'));
+    const reads = callsTo(fetchMock, 'GET', '/challenges/ch_d/results').length;
+
+    await user.click(deleteButtons()[0]!);
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
+    );
+
+    await waitFor(() =>
+      expect(callsTo(fetchMock, 'DELETE', '/challenges/ch_d/results/me')).toHaveLength(1),
+    );
+    expect(queuedAtDelete).toHaveLength(1);
+    expect((queuedAtDelete as { body: { seed: string } }[])[0]!.body.seed).toBe(
+      'sudoku-daily-other',
+    );
+    await waitFor(() =>
+      expect(callsTo(fetchMock, 'GET', '/challenges/ch_d/results').length).toBeGreaterThan(reads),
+    );
+    await waitFor(() => expect(screen.queryByText('You')).not.toBeInTheDocument());
+    expect(deleteButtons()).toHaveLength(0);
+    expect(await loadClubConnections()).toHaveLength(1);
+    expect(await pendingFor('https://other.example.com')).toHaveLength(1);
+  });
+
+  it('after withdrawing, the screen promises no send and offers Play again', async () => {
+    stubServer();
+    const user = await openChallenge();
+    // Before: the server's `mine` is false here, so the disclosure and `Play` show.
+    expect(screen.getByText(/your result is sent to/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
+
+    await user.click(deleteButtons()[0]!);
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
+    );
+
+    // The server refuses any later result (already_submitted), so nothing is promised.
+    await waitFor(() => expect(deleteButtons()).toHaveLength(0));
+    expect(screen.queryByText(/your result is sent to/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Play again' })).toBeInTheDocument();
+  });
+
+  it('treats a 404 (already gone) as done and reads the challenge again', async () => {
+    const fetchMock = stubServer();
+    const user = await openChallenge();
+    deleteAnswers = 404;
+    const reads = callsTo(fetchMock, 'GET', '/challenges/ch_d/results').length;
+    await user.click(deleteButtons()[0]!);
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
+    );
+    await waitFor(() =>
+      expect(callsTo(fetchMock, 'GET', '/challenges/ch_d/results').length).toBeGreaterThan(reads),
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('shows the error when the server refuses', async () => {
+    stubServer();
+    const user = await openChallenge();
+    rejectedToken = 'member-token-1';
+    await user.click(deleteButtons()[0]!);
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent('no longer a member');
   });
 });

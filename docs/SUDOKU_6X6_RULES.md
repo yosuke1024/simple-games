@@ -328,8 +328,9 @@ Learn More は出ない(ゲーム別ガイドがまだ無いため)。
 
 正典は [architecture/club.md](architecture/club.md) §6 と §16。ここにはこのゲームの側で決まることだけを書く。
 
-- **順位表の名前(`params`)** は `{ difficulty }`(`easy` / `medium` / `hard`)。レベルはないので難易度モードもデイリーも同じ形で載る(難易度は常にある)。
+- **順位表の名前(`params`)** は `{ difficulty }`(`easy` / `medium` / `hard`)。レベルはないので難易度モードの表の名前はこの形(難易度は常にある)。デイリーは Today の挑戦へ送るので表には載らない(下記)。
 - **結果画面が送る事実(`facts`)** は `{ elapsedSeconds, mistakes, hints }`。共有(`ShareAction`)の `details` と同じセッションの値(`elapsedSeconds` / `mistakeCount` / `hintCount`)から作り、ここで計算しない。
 - **順位の軸は時間**で、短いほうが上(`order: 'elapsedSeconds'`、`direction: 'asc'`)。表示するだけの値は順位に使わない。
-- **盤面は揃わなくてよい**(club.md §16)。`boardDigest` は `null` で、挑戦用の盤面も seed の接頭辞も持たない。ふつうに遊んだ局のクリア画面から送るだけである。
+- **デイリーは Today の挑戦へ、それ以外はランキングの表へ。** デイリーの局だけ `daily`(その日付)と `boardDigest` を付けて送り、その日の挑戦(全員が同じ盤面)に結果が集まる。デイリーは難易度 `medium` 固定(§9)。デイリーの順位は Today の挑戦の中だけで、同じデイリーの 2 度目以降は数えない(club.md §6-3)。それ以外の局は、クリアしたものだけがランキングの表へ送られる(`boardDigest` は `null`)。Today の `Play` はこのゲームを普通の入口で開くだけで、盤面は渡されない。
+- **`boardDigest`。** 初期数字の行優先 36 文字(`.` が空欄。golden テストと同じ文字列)を `game/rng.ts` の `hashSeed` に通した `s61:` + 8 桁 hex(`game/challenge.ts`、`game/challenge.test.ts` が 3 日分の値を固定する)。盤面が遊んでいる間に変わらないものから作るので、途中でも終局後でも同じ値になる。生成器が版の間で変わっても、別の盤面が同じ挑戦に混ざらないための照合で、改ざん防止ではない。デイリーの `params` は `{ difficulty: 'medium' }` で、契約(`challenge/contract.ts`)のまま受け付けられる。
 - ゲーム自体は変わらない。統計・自己ベスト・レベル進行・保存データ・結果画面の既存の表示には触れない。

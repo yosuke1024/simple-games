@@ -26,6 +26,9 @@ export interface RankedResult {
  * submission order with no rank (club.md §6-1). A result whose facts fail the
  * contract goes to the end, unranked.
  */
+/** `GET /challenges/:id/results` sends at most this many best rows (server limits.resultsPage). */
+export const RESULTS_PAGE = 200;
+
 export function rankResults(
   contract: GameChallengeContract | null,
   results: readonly Result[],
@@ -45,8 +48,17 @@ export function rankResults(
       ranked.push({ result, value, index });
     }
   });
-  ranked.sort((a, b) => a.value - b.value || a.index - b.index);
-  const top = ranked.map((r, i) => ({ result: r.result, rank: i + 1, value: r.value }));
+  // The contract's direction decides which end is best; ties stay in arrival order.
+  const sign = contract?.direction === 'desc' ? -1 : 1;
+  ranked.sort((a, b) => sign * (a.value - b.value) || a.index - b.index);
+  // The server sends the best RESULTS_PAGE and then the asker's own row when
+  // it is not among them; that row's place is somewhere below, not right
+  // after, so it carries no number.
+  const top = ranked.map((r, i) => ({
+    result: r.result,
+    rank: i < RESULTS_PAGE ? i + 1 : null,
+    value: r.value,
+  }));
   // `played` results, then unreadable completed ones, each in submission order.
   const played = rest.filter((r) => r.result.outcome === 'played');
   const other = rest.filter((r) => r.result.outcome !== 'played');

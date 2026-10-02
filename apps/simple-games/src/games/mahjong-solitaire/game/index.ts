@@ -1,3 +1,4 @@
+export * from './challenge';
 export * from './daily';
 export * from './freeState';
 export * from './generator';
