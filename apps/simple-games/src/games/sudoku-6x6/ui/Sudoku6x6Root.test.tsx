@@ -324,7 +324,9 @@ describe('playing (§3, §4)', () => {
     fireEvent.click(padKey(answer));
 
     await user.click(screen.getByRole('button', { name: 'Retry same board' }));
-    await user.click(screen.getByRole('button', { name: 'Start' }));
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Retry same board' }),
+    );
     await settle();
     expect(savedBoard().givens).toBe(before);
     expect(cellAt(index)).toHaveAccessibleName(/^Empty/);

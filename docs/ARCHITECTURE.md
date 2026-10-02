@@ -254,6 +254,23 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
   揃え、`src/test/modalIsolationWiring.test.ts` が新しいゲームにも同じ配線を要求する(issue #120)。
   Chromium 102 未満の WebView 向けフォールバックは `styles.css` の `.game-content[inert]`
   (`pointer-events: none`)。
+- **ヘッダの ↻ は結果カードと同じ 2 択。** プレイ中の ↻ は「同じ盤面で再挑戦」の確認
+  (`ConfirmDialog`)だったので、盤面そのものを替えたい人は Home → モードのボタン → もう一度
+  確認、と遠回りしていた(2026-10-02)。いまは `ui/components/RestartDialog.tsx` が 1 つの問い
+  「やり直しますか？」に、同じ盤面での再挑戦と、**そのモードに別の盤面があるときだけ**
+  「新しい盤面 / 新しい配札 / 新しいゲーム」を並べる(縦積み。キャンセルが自動フォーカス。
+  本文は `confirmNewGameBody` のままなので i18n の門は動かない)。第二の選択肢を持つか・
+  その名前・その動作はゲームの持ち物で、結果カードの第二ボタン(`onNewBoard` / `onNewDeal` /
+  `onNewFree`)と**同じ条件・同じラベル・同じ結果(新しい seed の盤面)**を `newBoard` に渡す。
+  デイリーと番号付きレベル(別の盤面とは Home で選ぶ別のレベルのこと)は渡さず、再挑戦だけの
+  2 択になる。シェルはセッションを読まず、渡されたものを言うだけ。**関数まで同じとは
+  限らない**: 難易度モードの 7 本の `startDifficulty` は同じ難易度で進行中の盤面を再開する
+  (ホームの入口の都合。結果カードの時点では盤面は終わっているので新しくなる)ので、
+  プレイ中の ↻ から呼ぶと何も起きない。この 7 本は進行中でも必ず新しい seed を引く
+  `startNewBoard(difficulty)` を GameContext に持ち、↻ の第二の選択肢はそれを呼ぶ。横断変更は
+  `scripts/codemods/2026-10-02-restart-dialog-new-board.mjs`、ゲートは
+  `src/test/restartDialogWiring.test.ts`(tryAgain ヘッダの後ろに旧 ConfirmDialog を残さない・
+  結果カードが新しい盤面を出すなら ↻ も出す・その逆も)。
 - **指を取り上げられたときの契約。** `pointercancel` は「この指の `pointerup` はもう来ない」
   という OS からの通告(通知シェードが降りる・着信・パーム・ペンの離脱・ブラウザが自分の
   ものにしたスクロール)で、これを聞かない盤面は押下が確保したもの——持ち上げた札・仕掛けた

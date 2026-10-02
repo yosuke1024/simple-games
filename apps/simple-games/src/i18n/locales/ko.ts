@@ -31,6 +31,7 @@ export const ko: Messages = {
   newGame: '새 게임',
   backHome: '홈',
 
+  restartTitle: '다시 시작할까요?',
   confirmNewGameTitle: '새 게임을 시작할까요?',
   confirmNewGameBody: '진행 중인 게임이 사라집니다.',
   cancel: '취소',

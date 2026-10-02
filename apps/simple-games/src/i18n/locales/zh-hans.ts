@@ -31,6 +31,7 @@ export const zhHans: Messages = {
   newGame: '新游戏',
   backHome: '首页',
 
+  restartTitle: '重新开始？',
   confirmNewGameTitle: '开始新游戏？',
   confirmNewGameBody: '当前进度将会丢失。',
   cancel: '取消',

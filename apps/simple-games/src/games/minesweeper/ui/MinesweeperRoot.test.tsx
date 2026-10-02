@@ -1026,3 +1026,43 @@ describe('opening a suspended game without resuming (#109)', () => {
     }
   });
 });
+
+describe('the ↻ in the top bar (docs/ARCHITECTURE.md「ヘッダの ↻ は結果カードと同じ 2 択」)', () => {
+  const dialog = () => screen.getByRole('alertdialog', { name: 'Start over?' });
+  const choices = () =>
+    within(dialog())
+      .getAllByRole('button')
+      .map((button) => button.textContent);
+  const storedSeed = () =>
+    (JSON.parse(deviceStore.get(MS_STORAGE_KEYS.game)!) as { seed: string }).seed;
+
+  it('offers a new board beside the retry on a difficulty board, and deals one at the same difficulty', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await startEasy(user);
+    await user.click(cellAt(5, 5));
+    await settle();
+    const before = storedSeed();
+
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+    expect(choices()).toEqual(['Retry same board', 'New board', 'Cancel']);
+
+    await user.click(within(dialog()).getByRole('button', { name: 'New board' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    // A fresh minefield at the same difficulty — every square shut again…
+    expect(screen.getByText('Easy')).toBeInTheDocument();
+    expect(shutCells()).toHaveLength(cells().length);
+    // …and not the same one: the next first tap is a different board's.
+    await user.click(cellAt(5, 5));
+    await settle();
+    expect(storedSeed()).not.toBe(before);
+  });
+
+  it('offers only the same board on the daily: there is no other board today (§8)', async () => {
+    const user = userEvent.setup();
+    renderMinesweeper(tutorialDone);
+    await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+    expect(choices()).toEqual(['Retry same board', 'Cancel']);
+  });
+});

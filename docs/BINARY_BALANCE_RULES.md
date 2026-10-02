@@ -294,6 +294,7 @@ fallback で Easy が上のティアへ落ちた盤面だけで、発生は監�
   `binary-balance-<difficulty>-<token>`(token = 起動時刻 + 乱数、Takuzu の `newSeedToken`)。
   **同じ seed なら同じ盤面**なので、「同じ盤面で再挑戦」も中断からの復帰も正確に成立する。
   クリア画面の第一ボタンは同じ盤面での再挑戦、第二が「新しい盤面」(同じ難易度・新しい seed)。
+  プレイ中のヘッダの ↻ も同じ 2 択(再挑戦 / 新しい盤面)を出す(`ui/components/RestartDialog.tsx`、2026-10-02)。デイリーは再挑戦だけ。
 - **デイリー**: 1 日 1 問。seed は `binary-balance-daily-<YYYY-MM-DD>`(端末のローカル
   日付のみ。サーバー時刻もネットワークも使わない)。**毎日 Medium(6×6)固定。**
   曜日で難易度を変えると「当たり日 / 外れ日」という圧を生むため採らない(Sudoku §10)。

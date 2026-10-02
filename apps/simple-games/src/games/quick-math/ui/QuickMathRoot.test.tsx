@@ -651,7 +651,9 @@ describe('throwing a set away (§10)', () => {
       act(() => vi.advanceTimersByTime(7_000));
 
       fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
-      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+      fireEvent.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Retry same board' }),
+      );
       await settle();
 
       const stats = storedStats();

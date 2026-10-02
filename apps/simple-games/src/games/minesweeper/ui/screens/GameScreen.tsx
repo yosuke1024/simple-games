@@ -16,7 +16,7 @@ import { haptics } from '@/services/haptics';
 import { sounds } from '@/services/sound';
 import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
-import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
+import { RestartDialog } from '@/ui/components/RestartDialog';
 import { IconBack, IconHint, IconRetry } from '@/ui/components/icons';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import { useGameKeys } from '@/ui/useGameKeys';
@@ -42,6 +42,7 @@ export function MinesGameScreen() {
     goHome,
     restartCurrent,
     startDifficulty,
+    startNewBoard,
   } = useMinesweeper();
   const { t } = useSettings();
 
@@ -217,17 +218,15 @@ export function MinesGameScreen() {
         onHome={goHome}
       />
 
-      <ConfirmDialog
+      <RestartDialog
         open={confirmRestart}
-        title={t('tryAgain')}
-        body={t('confirmNewGameBody')}
-        cancelLabel={t('cancel')}
-        confirmLabel={t('confirm')}
-        onCancel={() => setConfirmRestart(false)}
-        onConfirm={() => {
-          setConfirmRestart(false);
-          restartCurrent();
-        }}
+        onClose={() => setConfirmRestart(false)}
+        onRetry={restartCurrent}
+        newBoard={
+          session.mode === 'difficulty'
+            ? { label: t('minesNewBoard'), start: () => startNewBoard(session.difficulty) }
+            : undefined
+        }
       />
     </div>
   );

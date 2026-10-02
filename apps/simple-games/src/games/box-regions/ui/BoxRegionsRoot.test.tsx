@@ -304,8 +304,10 @@ describe('retry and the home (§9, §11)', () => {
     drawAnswerBox(truth, region);
 
     await user.click(screen.getByRole('button', { name: 'Retry same board' }));
-    expect(screen.getByRole('alertdialog', { name: 'Retry same board' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Start' }));
+    expect(screen.getByRole('alertdialog', { name: 'Start over?' })).toBeInTheDocument();
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Retry same board' }),
+    );
     expect(cells()[regionCells(truth.solution, region)[0]!]).toHaveAccessibleName(/unassigned/);
     expect(cells()).toHaveLength(truth.width * truth.height);
   });

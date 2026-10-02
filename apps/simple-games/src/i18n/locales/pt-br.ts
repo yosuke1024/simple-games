@@ -31,6 +31,7 @@ export const ptBR: Messages = {
   newGame: 'Novo jogo',
   backHome: 'Início',
 
+  restartTitle: 'Recomeçar?',
   confirmNewGameTitle: 'Começar um novo jogo?',
   confirmNewGameBody: 'Seu jogo atual será perdido.',
   cancel: 'Cancelar',

@@ -11,8 +11,8 @@
  * from the last focusable control on the board, so a screen reader user or
  * anyone tabbing can reach it without a mouse ever leaving the dialog. The
  * fix for both is the same one attribute: `.game-content` must be `inert`
- * while a `ConfirmDialog` is open, using the same flag the dialog's own
- * `open` prop reads (docs/ARCHITECTURE.md「モーダルの間、盤面は inert」).
+ * while a `ConfirmDialog` (or the ↻'s `RestartDialog`) is open, using the
+ * same flag the dialog's own `open` prop reads (docs/ARCHITECTURE.md「モーダルの間、盤面は inert」).
  *
  * That was not the state of the code. Measured 2026-09-05: of the 25 games
  * with a `ConfirmDialog`, only 7 already included its flag in the
@@ -39,8 +39,15 @@ import { GAMES } from '../app/registry';
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const GAMES_DIR = join(SRC, 'games');
 
-/** How far past `<ConfirmDialog` the matching `open={FLAG}` line may sit. */
+/** How far past the dialog's opening tag the matching `open={FLAG}` line may sit. */
 const OPEN_PROP_WINDOW = 12;
+
+/**
+ * The two dialogs a game screen opens over its board: the generic confirmation
+ * and the restart question behind ↻ (`RestartDialog`, 2026-10-02 — the same
+ * `.overlay` card, so the same contract). Both take `open={FLAG}`.
+ */
+const DIALOG_TAG = /<(?:ConfirmDialog|RestartDialog)\b/;
 
 /**
  * The index in `text` matching the bracket at `openIndex` (`(` with `)`, or
@@ -91,7 +98,7 @@ interface DialogWiring {
   inertExpr: string | null;
   /** True once the `.game-content` block's matching `</div>` was located. */
   contentCloseFound: boolean;
-  /** True when `<ConfirmDialog` sits after that closing `</div>`. */
+  /** True when the dialog's opening tag sits after that closing `</div>`. */
   dialogAfterContent: boolean;
 }
 
@@ -105,7 +112,7 @@ interface KeysWiring {
   shapeDirect: boolean;
   /** A `const blocked = …FLAG…` feeds the flag, and the handler tests it. */
   shapeBlocked: boolean;
-  /** For a game with no ConfirmDialog: the guard still reads game-over state. */
+  /** For a game with no dialog: the guard still reads game-over state. */
   mentionsOutcome: boolean;
 }
 
@@ -120,8 +127,8 @@ for (const { id: game } of GAMES) {
   const lines = text.split('\n');
 
   let flag: string | null = null;
-  if (text.includes('<ConfirmDialog')) {
-    const dialogLineIndex = lines.findIndex((line) => line.includes('<ConfirmDialog'));
+  if (DIALOG_TAG.test(text)) {
+    const dialogLineIndex = lines.findIndex((line) => DIALOG_TAG.test(line));
     for (
       let i = dialogLineIndex;
       i < Math.min(lines.length, dialogLineIndex + OPEN_PROP_WINDOW);
@@ -203,11 +210,11 @@ for (const { id: game } of GAMES) {
 }
 
 describe('a modal keeps the board behind it from answering the keyboard (issue #120)', () => {
-  it("finds the flag a ConfirmDialog's open prop reads, in every game that renders one", () => {
+  it("finds the flag a dialog's open prop reads, in every game that renders one", () => {
     const missing = dialogWirings.filter((w) => w.flag === null).map((w) => w.game);
     expect(
       missing,
-      `no \`open={…}\` found within ${OPEN_PROP_WINDOW} lines of <ConfirmDialog> in: ${missing.join(', ')}`,
+      `no \`open={…}\` found within ${OPEN_PROP_WINDOW} lines of <ConfirmDialog> / <RestartDialog> in: ${missing.join(', ')}`,
     ).toEqual([]);
   });
 
@@ -227,7 +234,7 @@ describe('a modal keeps the board behind it from answering the keyboard (issue #
     ).toEqual([]);
   });
 
-  it('renders ConfirmDialog outside .game-content, never as one of its inerted children', () => {
+  it('renders the dialog outside .game-content, never as one of its inerted children', () => {
     // inert on an ancestor would take the dialog itself down with the board —
     // the two must be siblings, dialog after the content block closes.
     const offenders = dialogWirings
@@ -235,7 +242,7 @@ describe('a modal keeps the board behind it from answering the keyboard (issue #
       .map((w) => w.game);
     expect(
       offenders,
-      `<ConfirmDialog> must come after .game-content's closing </div> in: ${offenders.join(', ')}`,
+      `<ConfirmDialog> / <RestartDialog> must come after .game-content's closing </div> in: ${offenders.join(', ')}`,
     ).toEqual([]);
   });
 
@@ -248,7 +255,7 @@ describe('a modal keeps the board behind it from answering the keyboard (issue #
     ).toEqual([]);
   });
 
-  it('disables useGameKeys while its ConfirmDialog is open, directly or through a tested `blocked`', () => {
+  it('disables useGameKeys while its dialog is open, directly or through a tested `blocked`', () => {
     const offenders = keysWirings
       .filter((w) => w.flag !== null)
       .filter((w) => !w.shapeDirect && !w.shapeBlocked)

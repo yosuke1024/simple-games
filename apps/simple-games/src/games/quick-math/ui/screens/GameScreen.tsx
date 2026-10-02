@@ -19,7 +19,7 @@ import { haptics } from '@/services/haptics';
 import { sounds } from '@/services/sound';
 import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
-import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
+import { RestartDialog } from '@/ui/components/RestartDialog';
 import { IconBack, IconRetry } from '@/ui/components/icons';
 import { useGameKeys } from '@/ui/useGameKeys';
 import { answerDigits, currentQuestion } from '../../game';
@@ -144,17 +144,11 @@ export function QuickMathGameScreen() {
         onHome={goHome}
       />
 
-      <ConfirmDialog
+      <RestartDialog
         open={confirmRestart}
-        title={t('tryAgain')}
+        onClose={() => setConfirmRestart(false)}
+        onRetry={restartCurrent}
         body={t('qmathConfirmRestartBody')}
-        cancelLabel={t('cancel')}
-        confirmLabel={t('confirm')}
-        onCancel={() => setConfirmRestart(false)}
-        onConfirm={() => {
-          setConfirmRestart(false);
-          restartCurrent();
-        }}
       />
     </div>
   );

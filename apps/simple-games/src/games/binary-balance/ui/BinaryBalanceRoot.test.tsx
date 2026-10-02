@@ -420,7 +420,9 @@ describe('playing (§2, §4, §9)', () => {
     await user.click(cell);
 
     await user.click(screen.getByRole('button', { name: 'Retry same board' }));
-    await user.click(screen.getByRole('button', { name: 'Start' }));
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Retry same board' }),
+    );
     expect(screen.getByRole('button', { name: `Empty, ${name}` })).toBeInTheDocument();
   });
 
@@ -483,7 +485,7 @@ describe('hints (§8)', () => {
     renderGame(tutorialDone);
     await startEasy(user);
     await user.click(screen.getByRole('button', { name: 'Retry same board' }));
-    expect(screen.getByRole('alertdialog', { name: 'Retry same board' })).toBeInTheDocument();
+    expect(screen.getByRole('alertdialog', { name: 'Start over?' })).toBeInTheDocument();
 
     fireEvent.keyDown(window, { key: 'h' });
     expect(document.querySelector('.toast')).toBeNull();

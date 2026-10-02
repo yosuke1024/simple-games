@@ -31,6 +31,7 @@ export const ja: Messages = {
   newGame: '新しいゲーム',
   backHome: 'ホームへ',
 
+  restartTitle: 'やり直しますか？',
   confirmNewGameTitle: '新しいゲームを始めますか？',
   confirmNewGameBody: '進行中のゲームは失われます。',
   cancel: 'キャンセル',

@@ -42,6 +42,10 @@ export const en = {
   backHome: 'Home',
 
   // Confirmations
+  // The ↻ in a game's top bar (ui/components/RestartDialog.tsx): the title of the
+  // question whose answers are `tryAgain`, the game's own fresh-board label, and
+  // `cancel`. The body stays `confirmNewGameBody`.
+  restartTitle: 'Start over?',
   confirmNewGameTitle: 'Start a new game?',
   confirmNewGameBody: 'Your current game will be lost.',
   cancel: 'Cancel',

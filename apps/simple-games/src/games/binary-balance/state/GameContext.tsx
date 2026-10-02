@@ -83,6 +83,7 @@ export interface BinaryBalanceContextValue {
   sessionEpoch: number;
   canResume: (mode: GameMode) => boolean;
   startDifficulty: (difficulty: Difficulty) => void;
+  startNewBoard: (difficulty: Difficulty) => void;
   startDaily: () => void;
   restartCurrent: () => void;
   resumeGame: (mode: GameMode) => void;
@@ -302,6 +303,19 @@ export function BinaryBalanceProvider({
     [beginSession, persistPrefs, resumeGame],
   );
 
+  /**
+   * A fresh board at this difficulty even while one is in progress — the
+   * second answer of the ↻ dialog (ui/components/RestartDialog.tsx).
+   * `startDifficulty` above resumes a board in progress, which is right for
+   * the home; here replacing it is the point.
+   */
+  const startNewBoard = useCallback(
+    (difficulty: Difficulty) => {
+      beginSession(createDifficultySession(difficulty));
+    },
+    [beginSession],
+  );
+
   const startDaily = useCallback(() => {
     const target = localDateString(new Date());
     const current = sessionsRef.current.daily;
@@ -443,6 +457,7 @@ export function BinaryBalanceProvider({
       sessionEpoch,
       canResume,
       startDifficulty,
+      startNewBoard,
       startDaily,
       restartCurrent,
       resumeGame,
@@ -465,6 +480,7 @@ export function BinaryBalanceProvider({
       sessionEpoch,
       canResume,
       startDifficulty,
+      startNewBoard,
       startDaily,
       restartCurrent,
       resumeGame,

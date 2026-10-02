@@ -31,6 +31,7 @@ export const th: Messages = {
   newGame: 'เกมใหม่',
   backHome: 'หน้าแรก',
 
+  restartTitle: 'เริ่มใหม่หรือไม่?',
   confirmNewGameTitle: 'เริ่มเกมใหม่หรือไม่?',
   confirmNewGameBody: 'เกมที่ค้างอยู่จะหายไป',
   cancel: 'ยกเลิก',
