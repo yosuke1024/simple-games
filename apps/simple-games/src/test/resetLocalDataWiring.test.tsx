@@ -46,6 +46,8 @@ import { resetReviewForTesting } from '../services/review';
 import { SettingsProvider } from '../state/SettingsContext';
 import { loadRaw, loadRecord, saveRaw } from '../storage/repo';
 import {
+  clubConnectionsSchema,
+  clubOutboxSchema,
   favoriteGamesSchema,
   iapSchema,
   recentGamesSchema,
@@ -63,6 +65,8 @@ const SHELL_SCHEMAS: readonly SchemaDef<unknown>[] = [
   reviewSchema,
   recentGamesSchema,
   favoriteGamesSchema,
+  clubConnectionsSchema,
+  clubOutboxSchema,
 ];
 
 const isRecordValue = (value: unknown): value is Record<string, unknown> =>
@@ -143,7 +147,49 @@ interface Fixture {
   readonly real: boolean;
 }
 
+/**
+ * Records whose default is an empty list: `played` cannot move them off the
+ * default, so each gets one explicit element its own validator accepts. The
+ * member token is the point — it is the one secret on the device, and the
+ * delete must reach it.
+ */
+const CLUB_FIXTURES: Readonly<Record<string, unknown>> = {
+  [clubConnectionsSchema.key]: {
+    schemaVersion: 1,
+    connections: [
+      {
+        endpoint: 'https://club.example.com',
+        clubId: 'club-1',
+        clubName: 'Friday Club',
+        memberId: 'member-1',
+        memberToken: 'secret-token',
+        nickname: 'Ada',
+        role: 'member',
+        joinedAt: '2026-10-02T00:00:00.000Z',
+      },
+    ],
+  },
+  [clubOutboxSchema.key]: {
+    schemaVersion: 1,
+    items: [
+      {
+        endpoint: 'https://club.example.com',
+        challengeId: 'challenge-1',
+        result: { contractVersion: 1, boardDigest: 'abc123', outcome: 'completed', facts: {} },
+        createdAt: '2026-10-02T00:00:00.000Z',
+      },
+    ],
+  },
+};
+
 function fixtureFor(key: string, def: SchemaDef<unknown> | undefined): Fixture {
+  const explicit = CLUB_FIXTURES[key];
+  if (explicit !== undefined && def !== undefined) {
+    const text = JSON.stringify(explicit);
+    const accepted = def.validate(JSON.parse(text) as unknown);
+    if (accepted !== null && JSON.stringify(accepted) !== JSON.stringify(def.defaultValue()))
+      return { text, real: true };
+  }
   const value = def?.defaultValue();
   if (def === undefined || value === null || value === undefined)
     return { text: standIn(key), real: false };
@@ -168,7 +214,7 @@ async function playedDevice(): Promise<{
 function renderSettings() {
   return render(
     <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
-      <SettingsScreen onBack={() => undefined} />
+      <SettingsScreen onBack={() => undefined} onOpenClub={() => undefined} />
     </SettingsProvider>,
   );
 }

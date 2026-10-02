@@ -51,9 +51,11 @@ done
 # docs/PRODUCT_PRINCIPLES.md「Club House」)。2026-09-30 に PixApps が運用する
 # Public デプロイを 1 つ認めたが、**この例外は 1 ディレクトリのまま**である —
 # 通信するのは端末側の `club/` だけで、相手が誰のサーバかは関係しない
-# (issue simple-games-club#1)。実装は issue #161 であり、この時点では
-# apps/simple-games/src/club/ ディレクトリはまだ存在しない —— #161 が着地する先
-# として、ゲートを先に宣言してある。
+# (issue simple-games-club#1)。実装は issue #161 で apps/simple-games/src/club/
+# に着地した(ゲートは先に宣言してあり、docs/architecture/club.md §12 が機械で
+# 示す項目の一覧)。club/ の中で許すのは `fetch(` / XMLHttpRequest だけで、
+# WebSocket / EventSource / sendBeacon と `setInterval(` は club/ でも禁止する
+# (下の §1b)。
 #
 # 「有効化しない限り送信しない」は grep では示せない性質なので、reachability で
 # 示す: src/test/importBoundaries.test.ts のルール 5 が、club/ の外から届くのは
@@ -127,6 +129,56 @@ if [ -n "$dead" ]; then
   report "§1 の検査パターンまたは除外が壊れています(ガードが no-op です)" "$dead"
 else
   ok "通信 / 位置情報の検査パターンと club/ 例外の自己検査(トークン別 ${#probe_net_lines[@]} 本 + 除外境界 2 本 + 位置情報 1 本)"
+fi
+
+# 1b. club/ の中でも使わない通信手段と、タイマー ---------------------------------
+# §1 の例外は「club/ は `fetch(` で、人が押したときに 1 回だけ訊く」ためのものであって、
+# 常時接続や裏での送信を認めるものではない(docs/architecture/club.md §12、
+# docs/PRODUCT_PRINCIPLES.md「機械で示すこと」)。
+#   - WebSocket / EventSource / sendBeacon: club/ を含む**全ソース**で禁止。
+#     push・常時接続・ページを閉じる瞬間の送信は、この製品が約束していない通信である。
+#   - setInterval(: club/ の中で禁止。順位表の更新は画面を開いたとき・押したときだけで、
+#     時計で回さない(ポーリングは「接続していない端末は 0 件」の次に破れやすい約束)。
+persistent_net='\bWebSocket\b|EventSource|sendBeacon'
+club_dir='apps/simple-games/src/club/'
+club_timer='\bsetInterval\('
+hits="$(grep -rnE "$persistent_net" "${src_dirs[@]}" || true)"
+if [ -n "$hits" ]; then
+  report "WebSocket / EventSource / sendBeacon があります(club/ を含め、いかなる経路でも使いません — docs/architecture/club.md §12)" "$hits"
+else
+  ok "WebSocket / EventSource / sendBeacon なし(club/ にも例外なし)"
+fi
+if [ -d "$club_dir" ]; then
+  hits="$(grep -rnE "$club_timer" "$club_dir" || true)"
+else
+  hits=""
+fi
+if [ -n "$hits" ]; then
+  report "club/ に setInterval( があります(順位表は人が開いたとき・押したときにだけ取りに行きます — docs/architecture/club.md §12)" "$hits"
+else
+  ok "club/ に setInterval( なし"
+fi
+
+# 自己検査(§1 と同じ理由): トークンごとに既知の違反行を 1 本ずつ当てる。
+probe_persistent_lines=(
+  'apps/simple-games/src/club/live.ts:4:  const ws = new WebSocket(url)'
+  'apps/simple-games/src/club/live.ts:4:  const es = new EventSource(url)'
+  'apps/simple-games/src/club/live.ts:4:  navigator.sendBeacon(url, body)'
+)
+probe_timer_line='apps/simple-games/src/club/poll.ts:9:  const id = setInterval(refresh, 30000)'
+dead=""
+for probe in "${probe_persistent_lines[@]}"; do
+  printf '%s' "$probe" | grep -qE "$persistent_net" ||
+    dead="${dead}persistent_net がトークンを検出できません: ${probe}"$'\n'
+done
+printf '%s' "$probe_timer_line" | grep -qE "$club_timer" ||
+  dead="${dead}club_timer が setInterval( を検出できません: ${probe_timer_line}"$'\n'
+printf '%s' 'apps/simple-games/src/club/poll.ts:9:  setTimeout(refresh, 30000)' | grep -qE "$club_timer" &&
+  dead="${dead}club_timer が setTimeout( まで拾っています(過剰検出)"$'\n'
+if [ -n "$dead" ]; then
+  report "§1b の検査パターンが壊れています(ガードが no-op です)" "$dead"
+else
+  ok "§1b の自己検査(通信トークン ${#probe_persistent_lines[@]} 本 + setInterval( 1 本 + setTimeout( を拾わないこと)"
 fi
 
 # 2. 広告フォーマット ----------------------------------------------------------
@@ -390,6 +442,29 @@ if [ -n "$dead" ]; then
   report "§6 の検査パターンまたは除外マーカーが壊れています(ガードが no-op です)" "$dead"
 else
   ok "禁止表現パターンの自己検査(${#probe_banned[@]} 本の既知違反文を検出し、無印の行は除外しない)"
+fi
+
+# 6b. Core のカタログに順位の語を入れない ---------------------------------------
+# docs/architecture/club.md §11: 「leaderboard」は Club House の語で、club/ の中でだけ
+# 使ってよい。Core(apps/simple-games/src/i18n/locales/ の 14 言語カタログ)に
+# 入れると、接続していない端末の画面に「順位表」があるように読める文面が出る。
+# 英語の単語だけを見る(他言語は別の字面になる — §6 と同じ限界)。
+leaderboard_pattern='leaderboard'
+hits="$(grep -rniE "$leaderboard_pattern" apps/simple-games/src/i18n/locales/ || true)"
+if [ -n "$hits" ]; then
+  report "Core のカタログに leaderboard があります(club/ の中でだけ使えます — docs/architecture/club.md §11)" "$hits"
+else
+  ok "Core のカタログに leaderboard なし(club/ の語は club/ に)"
+fi
+dead=""
+for probe in 'leaderboard: "Leaderboard"' "  'Open the LEADERBOARD'" 'weeklyLeaderboardTitle'; do
+  printf '%s' "$probe" | grep -qiE "$leaderboard_pattern" ||
+    dead="${dead}検出できません: ${probe}"$'\n'
+done
+if [ -n "$dead" ]; then
+  report "§6b の検査パターンが壊れています(ガードが no-op です)" "$dead"
+else
+  ok "§6b の自己検査(大小文字・語中の leaderboard を検出)"
 fi
 
 # 7. 効能の主張 ---------------------------------------------------------------

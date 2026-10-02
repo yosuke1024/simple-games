@@ -2,50 +2,52 @@
 
 docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約は [../ARCHITECTURE.md](../ARCHITECTURE.md)。
 
-| キー           | 内容                                                                                                                |
-| -------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `sg.settings`  | 共有設定(言語 / テーマ / 音 / 振動 / Reduced Motion)                                                                |
-| `sg.iap`       | 広告削除購入状態のローカルキャッシュ                                                                                |
-| `sg.review`    | ストアレビュー導線の状態(完了数 / 表示回数 / 解決済みフラグ)                                                        |
-| `sg.recent`    | 「最近遊んだ」のゲーム id(新しい順・最大 2 件)                                                                      |
-| `sg.favorites` | 「お気に入り」に固定したゲーム id(**留めた順**・上限は実質なし)                                                     |
-| `sd.*`         | Sudoku(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                                          |
-| `so.*`         | Solitaire(saveGame / saveDaily / stats / flags / prefs)                                                             |
-| `ms.*`         | Minesweeper(saveGame / saveDaily / stats / flags / prefs)                                                           |
-| `ng.*`         | Nonogram(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                                        |
-| `mj.*`         | Mahjong Solitaire(saveGame / saveDaily / stats / progress / flags。**prefs なし**)                                  |
-| `tk.*`         | Takuzu(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ)       |
-| `ft.*`         | Futoshiki(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                                       |
-| `kk.*`         | Kakuro(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                                          |
-| `nm.*`         | Number Match(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ) |
-| `ws.*`         | Water Sort(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ)   |
-| `sp.*`         | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags)                                                     |
-| `mm.*`         | Memory Match(saveGame / saveDaily / stats / flags)                                                                  |
-| `bb.*`         | Brick Breaker(stats / progress / flags。**saveGame なし** — 下記)                                                   |
-| `sf.*`         | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)                                                     |
-| `tm.*`         | 2048(saveGame / stats / flags。デイリーもレベル進行もない)                                                          |
-| `bp.*`         | Block Puzzle(saveGame / stats / flags。同上)                                                                        |
-| `ld.*`         | Ludo(saveGame / stats / flags / prefs。統計は難易度別。デイリーが無いので 1 枠)                                     |
-| `cg.*`         | Crown Grid(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。Web 先行公開、issue #194) |
-| `np.*`         | Number Path(同上の 5 キー。Web 先行公開)                                                                            |
-| `sr.*`         | Shape Regions(同上の 5 キー。Web 先行公開)                                                                          |
-| `yt.*`         | Yacht(saveGame / stats / flags。難易度もデイリーもないので prefs なし。Web 先行公開、issue #197)                    |
-| `mc.*`         | Mancala(saveGame / stats / flags / prefs — prefs は先攻の選択だけ。統計は難易度別。Web 先行公開)                    |
-| `dm.*`         | Dominoes(saveGame / stats / flags。先攻は牌で決まるので prefs なし。Web 先行公開)                                   |
-| `hb.*`         | Hit & Blow(saveGame / stats / flags / prefs — prefs は最後に選んだ難易度だけ。Web 先行公開)                         |
-| `db.*`         | Dots and Boxes(saveGame / stats / flags / prefs — prefs は最後に選んだ盤サイズだけ。統計はサイズ別。Web 先行公開)   |
-| `bn.*`         | Binary Balance(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。Web 先行公開、issue #210)                   |
-| `s6.*`         | Sudoku 6×6(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度とミスの即時表示。Web 先行公開)                 |
-| `br.*`         | Box Regions(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。Web 先行公開)                           |
-| `ck.*`         | Checkers(saveGame / stats / flags / prefs。統計は難易度別)                                                          |
-| `rv.*`         | Reversi(saveGame / stats / flags / prefs。統計は難易度別)                                                           |
-| `c4.*`         | Connect Four(saveGame / stats / flags / prefs。同上)                                                                |
-| `gm.*`         | Gomoku(saveGame / stats / flags / prefs。同上)                                                                      |
-| `ss.*`         | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)                                                      |
-| `fc.*`         | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)                                                      |
-| `ht.*`         | Hearts(saveGame / stats / flags / prefs。統計は難易度別)                                                            |
-| `gr.*`         | Gin Rummy(saveGame / stats / flags / prefs。同上)                                                                   |
-| `bh.*`         | Bunny Hop(stats / flags。**saveGame なし** — 下記)                                                                  |
+| キー            | 内容                                                                                                                                                       |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sg.settings`   | 共有設定(言語 / テーマ / 音 / 振動 / Reduced Motion)                                                                                                       |
+| `sg.iap`        | 広告削除購入状態のローカルキャッシュ                                                                                                                       |
+| `sg.review`     | ストアレビュー導線の状態(完了数 / 表示回数 / 解決済みフラグ)                                                                                               |
+| `sg.recent`     | 「最近遊んだ」のゲーム id(新しい順・最大 2 件)                                                                                                             |
+| `sg.favorites`  | 「お気に入り」に固定したゲーム id(**留めた順**・上限は実質なし)                                                                                            |
+| `sg.club`       | Club House の接続(Club ごとの endpoint / メンバートークン / ニックネーム。**バックアップに運ばない**・ローカルデータ削除で消える。[club.md](club.md) §4-1) |
+| `sg.clubOutbox` | Club House の未送信の結果(最大 50 件・古い順に捨てる。**バックアップに運ばない**・ローカルデータ削除で消える。club.md §4-2)                                |
+| `sd.*`          | Sudoku(saveGame / saveClub / saveDaily / saveFree / stats / progress / flags / prefs)                                                                      |
+| `so.*`          | Solitaire(saveGame / saveDaily / stats / flags / prefs)                                                                                                    |
+| `ms.*`          | Minesweeper(saveGame / saveClub / saveDaily / stats / flags / prefs)                                                                                       |
+| `ng.*`          | Nonogram(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                                                                               |
+| `mj.*`          | Mahjong Solitaire(saveGame / saveDaily / stats / progress / flags。**prefs なし**)                                                                         |
+| `tk.*`          | Takuzu(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ)                                              |
+| `ft.*`          | Futoshiki(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                                                                              |
+| `kk.*`          | Kakuro(saveGame / saveDaily / saveFree / stats / progress / flags / prefs)                                                                                 |
+| `nm.*`          | Number Match(saveGame / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ)                                        |
+| `ws.*`          | Water Sort(saveGame / saveClub / saveDaily / saveFree / stats / progress / flags / prefs — prefs はフリープレイのティアだけ)                               |
+| `sp.*`          | Sliding Puzzle(saveGame / saveDaily / stats / progress / flags)                                                                                            |
+| `mm.*`          | Memory Match(saveGame / saveDaily / stats / flags)                                                                                                         |
+| `bb.*`          | Brick Breaker(stats / progress / flags。**saveGame なし** — 下記)                                                                                          |
+| `sf.*`          | Sky Fighter(stats / progress / flags。**saveGame なし** — 下記)                                                                                            |
+| `tm.*`          | 2048(saveGame / stats / flags。デイリーもレベル進行もない)                                                                                                 |
+| `bp.*`          | Block Puzzle(saveGame / stats / flags。同上)                                                                                                               |
+| `ld.*`          | Ludo(saveGame / stats / flags / prefs。統計は難易度別。デイリーが無いので 1 枠)                                                                            |
+| `cg.*`          | Crown Grid(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。Web 先行公開、issue #194)                                        |
+| `np.*`          | Number Path(同上の 5 キー。Web 先行公開)                                                                                                                   |
+| `sr.*`          | Shape Regions(同上の 5 キー。Web 先行公開)                                                                                                                 |
+| `yt.*`          | Yacht(saveGame / stats / flags。難易度もデイリーもないので prefs なし。Web 先行公開、issue #197)                                                           |
+| `mc.*`          | Mancala(saveGame / stats / flags / prefs — prefs は先攻の選択だけ。統計は難易度別。Web 先行公開)                                                           |
+| `dm.*`          | Dominoes(saveGame / stats / flags。先攻は牌で決まるので prefs なし。Web 先行公開)                                                                          |
+| `hb.*`          | Hit & Blow(saveGame / stats / flags / prefs — prefs は最後に選んだ難易度だけ。Web 先行公開)                                                                |
+| `db.*`          | Dots and Boxes(saveGame / stats / flags / prefs — prefs は最後に選んだ盤サイズだけ。統計はサイズ別。Web 先行公開)                                          |
+| `bn.*`          | Binary Balance(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。Web 先行公開、issue #210)                                    |
+| `s6.*`          | Sudoku 6×6(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度とミスの即時表示。Web 先行公開)                                        |
+| `br.*`          | Box Regions(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。Web 先行公開)                                                   |
+| `ck.*`          | Checkers(saveGame / stats / flags / prefs。統計は難易度別)                                                                                                 |
+| `rv.*`          | Reversi(saveGame / stats / flags / prefs。統計は難易度別)                                                                                                  |
+| `c4.*`          | Connect Four(saveGame / stats / flags / prefs。同上)                                                                                                       |
+| `gm.*`          | Gomoku(saveGame / stats / flags / prefs。同上)                                                                                                             |
+| `ss.*`          | Spider Solitaire(saveGame / saveDaily / stats / flags / prefs)                                                                                             |
+| `fc.*`          | FreeCell(saveGame / saveDaily / stats / flags。**prefs なし**)                                                                                             |
+| `ht.*`          | Hearts(saveGame / stats / flags / prefs。統計は難易度別)                                                                                                   |
+| `gr.*`          | Gin Rummy(saveGame / stats / flags / prefs。同上)                                                                                                          |
+| `bh.*`          | Bunny Hop(stats / flags。**saveGame なし** — 下記)                                                                                                         |
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/
@@ -112,8 +114,10 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
 - **バックアップが運ぶ / 運ばないの線引きは、このキー表の上に引かれている**
   (issue #160、全文は [backup.md](backup.md))。運ぶのは全ゲームのキーと
   `sg.settings` / `sg.favorites` / `sg.recent`。運ばないのは `sg.iap`
-  (platform-owned な entitlement。ファイルはコピーできる)と `sg.review`
-  (このインストールでの導線の間隔)。
+  (platform-owned な entitlement。ファイルはコピーできる)、`sg.review`
+  (このインストールでの導線の間隔)、`sg.club` / `sg.clubOutbox`
+  (メンバートークンは端末の秘密で、未送信の結果は特定の Club 宛て。
+  `src/backup/keys.test.ts` が名指しで確かめる)。
   **どちらかに載っていない共有キーがあると `src/backup/keys.test.ts` が落ちる** ——
   新しい `sg.*` を足すときは、運ぶかどうかを決めるまで通らない。
 - **バックアップ層はレコードの中身を解釈しない。** 復元は各レコードの `SchemaDef`

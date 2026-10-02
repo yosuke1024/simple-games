@@ -6,18 +6,23 @@
  *   1. `games/A/` never imports from `games/B/`. Games do not know each other.
  *   2. Only `app/registry.ts` and code inside `src/games/` may import from
  *      `src/games/` at all — the shell reaches no deeper than the registry.
- *   3. Each game's `storage/keys.ts` imports nothing. It is the one game file
- *      the registry pulls eagerly, and a single import here could tow the
- *      whole game back into the home's initial chunk (issue #26).
+ *   3. Each game's `storage/keys.ts` and `challenge/contract.ts` import
+ *      nothing. They are the game files the registry pulls eagerly, and a
+ *      single import here could tow the whole game back into the home's
+ *      initial chunk (issue #26; docs/architecture/club.md §3).
  *   4. The registry's *static* imports into games are exactly the keys
- *      leaves; game code arrives only through dynamic `import()` loaders.
- *   5. `src/club/` (Club House, issue #176; the directory does
- *      not exist yet — issue #161 adds it) is reached from outside itself
- *      only by a real dynamic `import()` from files under `src/app/`. Never
- *      by a static import, an `import type`, an inline `import('x').T` type,
- *      or `import.meta.glob`; never from `games/`, `ui/`, `services/`,
+ *      leaves and the challenge-contract leaves; game code arrives only
+ *      through dynamic `import()` loaders.
+ *   5. `src/club/` (Club House, issue #176 / #161) is reached from outside
+ *      itself only by a real dynamic `import()` from files under `src/app/`.
+ *      Never by a static import, an `import type`, an inline `import('x').T`
+ *      type, or `import.meta.glob`; never from `games/`, `ui/`, `services/`,
  *      `storage/`, `i18n/`, `backup/`, `state/`, `monetization/`, or test
- *      files outside `club/`. Files inside `club/` may import each other
+ *      files outside `club/` — with one exception: test infrastructure
+ *      (`*.test.ts(x)`, `src/test/setup.ts`) may `import.meta.glob` the club
+ *      catalog `club/i18n/index.ts` and nothing else (CLUB_I18N_GLOB), so the
+ *      catalog-consistency tests and render tests cover club keys. Files
+ *      inside `club/` may import each other
  *      freely (and reach games only via the registry, which rule 2 already
  *      enforces). This is what turns the one network exception of
  *      check-principles.sh §1 into code Core cannot load without asking
@@ -202,6 +207,13 @@ const registryFile = join(SRC, 'app', 'registry.ts');
  * and is judged by `globMayReachGames` like any other glob.
  */
 const GAME_I18N_GLOB = join(SRC, 'games', '*', 'i18n', 'index.ts');
+/**
+ * The one glob shape that may reach `club/` from outside it: test
+ * infrastructure aggregating the club catalog (mirror of GAME_I18N_GLOB).
+ * Matched on the resolved path, so it is exempt from any depth, and only this
+ * exact pattern.
+ */
+const CLUB_I18N_GLOB = join(SRC, 'club', 'i18n', 'index.ts');
 const isTestInfra = (file: string): boolean =>
   /\.test\.tsx?$/.test(file) || file === join(SRC, 'test', 'setup.ts');
 
@@ -306,8 +318,8 @@ const probeImports = (probes: Probe[]): Import[] =>
 const expectedOffenders = (probes: Probe[]): string[] =>
   probes.filter((p) => p.verdict === 'offender').map((p) => `${p.file} -> ${p.specifier}`);
 
-// Rule 5. `src/club/` does not exist yet (issue #161 adds it), but the gate
-// is declared now so #161 lands against it. It is what turns the single
+// Rule 5. `src/club/` is issue #161's directory; the gate was declared before
+// it landed. It is what turns the single
 // network exception `check-principles.sh` §1 grants to `apps/simple-games/
 // src/club/` into something Core cannot reach without going through a real
 // dynamic `import()` from `src/app/` — everywhere else, including `games/`,
@@ -331,8 +343,8 @@ const reachesClub = (resolved: string): boolean =>
 // club/ whenever that head is club/ itself, something under it, or an
 // ancestor club/ hangs beneath (`src/`, `src/cl`). A head naming some other
 // directory (`src/games/`) provably cannot. Deliberately conservative for the
-// same reason, and doubly so here: expanding the glob against the filesystem
-// would go quiet exactly while club/ does not exist yet.
+// same reason: expanding the glob against the filesystem would make the
+// verdict depend on whatever is on disk.
 const globMayReachClub = (resolved: string): boolean => {
   const head = globHead(resolved);
   return reachesClub(head) || clubDir.startsWith(head);
@@ -351,7 +363,13 @@ function clubOffenders(imports: Import[]): Import[] {
     // import, an `import type`, an inline `import('x').T`, or
     // `import.meta.glob` — all of those are `kind: 'static' | 'glob'`), and
     // only from a file under src/app/.
-    return !(entry.kind === 'import()' && entry.file.startsWith(appDir));
+    if (entry.kind === 'import()' && entry.file.startsWith(appDir)) return false;
+    // Test infrastructure aggregating the club catalog: exempt only this
+    // exact resolved target, from recognised test files, as a glob.
+    if (isTestInfra(entry.file) && entry.kind === 'glob' && entry.resolved === CLUB_I18N_GLOB) {
+      return false;
+    }
+    return true;
   });
 }
 
@@ -380,14 +398,24 @@ describe('import boundaries (docs/ARCHITECTURE.md)', () => {
     expect(withImports.map(rel)).toEqual([]);
   });
 
-  it('the registry statically imports only the keys leaves from games', () => {
+  it('every challenge/contract.ts is a zero-import leaf', () => {
+    const contractFiles = files.filter((file) =>
+      /games[\\/][^\\/]+[\\/]challenge[\\/]contract\.ts$/.test(file),
+    );
+    // Sudoku, Minesweeper and Water Sort ship one (docs/architecture/club.md §3).
+    expect(contractFiles.length).toBeGreaterThanOrEqual(3);
+    const withImports = contractFiles.filter((file) => importsOf(file).length > 0);
+    expect(withImports.map(rel)).toEqual([]);
+  });
+
+  it('the registry statically imports only the keys and challenge-contract leaves from games', () => {
     const offenders = allImports.filter(
       (entry) =>
         entry.file === registryFile &&
         !entry.dynamic &&
         entry.resolved !== null &&
         gameOf(entry.resolved) !== null &&
-        !/[\\/]storage[\\/]keys$/.test(entry.resolved),
+        !/[\\/](storage[\\/]keys|challenge[\\/]contract)$/.test(entry.resolved),
     );
     expect(offenders.map((o) => o.specifier)).toEqual([]);
   });
@@ -526,12 +554,12 @@ describe('import boundaries (docs/ARCHITECTURE.md)', () => {
     expect(offenders.map((o) => `${rel(o.file)} -> ${o.specifier}`)).toEqual([]);
   });
 
-  it('the club rule sees offenders (self-check, because the directory may not exist yet)', () => {
-    // club/ does not exist in this checkout yet (issue #161 adds it), so the
-    // rule above passes vacuously — the same "no-op while green" failure mode
-    // every fs-reading gate in this repo has to guard against. These entries
-    // are synthetic, built the same shape importsOf() produces, to prove the
-    // rule actually rejects what it claims to reject.
+  it('the club rule sees offenders (self-check on synthetic imports)', () => {
+    // The real graph is green, so the rule above can only be seen accepting —
+    // the same "no-op while green" failure mode every fs-reading gate in this
+    // repo has to guard against. These entries are synthetic, built the same
+    // shape importsOf() produces, to prove the rule actually rejects what it
+    // claims to reject.
     const settingsFile = join(SRC, 'ui', 'screens', 'SettingsScreen.tsx');
     const settingsTestFile = join(SRC, 'ui', 'screens', 'SettingsScreen.test.tsx');
     const appFile = join(SRC, 'app', 'App.tsx');
@@ -648,6 +676,52 @@ describe('import boundaries (docs/ARCHITECTURE.md)', () => {
         dynamic: true,
         kind: 'glob',
       },
+      // test infrastructure globbing exactly the club catalog: the exemption.
+      {
+        file: join(SRC, 'i18n', 'i18n.test.ts'),
+        specifier: '../club/i18n/index.ts',
+        resolved: CLUB_I18N_GLOB,
+        dynamic: true,
+        kind: 'glob',
+      },
+      {
+        file: join(SRC, 'test', 'setup.ts'),
+        specifier: '../club/i18n/index.ts',
+        resolved: CLUB_I18N_GLOB,
+        dynamic: true,
+        kind: 'glob',
+      },
+      // ...but the same glob from a shell file is not exempt,
+      {
+        file: settingsFile,
+        specifier: '../../club/i18n/index.ts (glob)',
+        resolved: CLUB_I18N_GLOB,
+        dynamic: true,
+        kind: 'glob',
+      },
+      // a wider glob from a test file is not exempt,
+      {
+        file: join(SRC, 'i18n', 'i18n.test.ts'),
+        specifier: '../club/**/*.ts',
+        resolved: join(SRC, 'club', '**', '*.ts'),
+        dynamic: true,
+        kind: 'glob',
+      },
+      {
+        file: join(SRC, 'i18n', 'gate.test.ts'),
+        specifier: '../club/i18n/*.ts',
+        resolved: join(SRC, 'club', 'i18n', '*.ts'),
+        dynamic: true,
+        kind: 'glob',
+      },
+      // and a static import of the catalog from a test file is not exempt.
+      {
+        file: join(SRC, 'i18n', 'i18n.test.ts'),
+        specifier: '../club/i18n/index.ts (static)',
+        resolved: CLUB_I18N_GLOB,
+        dynamic: false,
+        kind: 'static',
+      },
     ];
 
     const offenders = clubOffenders(synthetic)
@@ -658,6 +732,10 @@ describe('import boundaries (docs/ARCHITECTURE.md)', () => {
         'app/App.tsx -> ../**/api/*.ts',
         'app/App.tsx -> ../club/*',
         'app/App.tsx -> ../club/hub (static)',
+        'i18n/gate.test.ts -> ../club/i18n/*.ts',
+        'i18n/i18n.test.ts -> ../club/**/*.ts',
+        'i18n/i18n.test.ts -> ../club/i18n/index.ts (static)',
+        'ui/screens/SettingsScreen.tsx -> ../../club/i18n/index.ts (glob)',
         'games/sudoku/ui/SudokuRoot.tsx -> ../../../club/hub',
         'ui/screens/SettingsScreen.test.tsx -> ../../club/hub',
         'ui/screens/SettingsScreen.tsx -> ../../club',

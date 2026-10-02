@@ -2,7 +2,17 @@ import { describe, expect, it } from 'vitest';
 import type { KVStore } from './kv';
 import { createMemoryKV } from './kv';
 import { clearLocalData, loadRecord, loadRecordWithStatus, saveRecord } from './repo';
-import { iapSchema, settingsSchema, STORAGE_KEYS, type SchemaDef } from './schemas';
+import {
+  CLUB_CONNECTIONS_MAX,
+  CLUB_OUTBOX_MAX,
+  clubConnectionsSchema,
+  clubOutboxSchema,
+  iapSchema,
+  isClubEndpoint,
+  settingsSchema,
+  STORAGE_KEYS,
+  type SchemaDef,
+} from './schemas';
 
 describe('loadRecord (shared records)', () => {
   it('returns defaults when nothing is stored', async () => {
@@ -225,5 +235,135 @@ describe('a value that cannot be serialised', () => {
       saveRecord(iapSchema, circular as unknown as ReturnType<typeof iapSchema.defaultValue>, kv),
     ).resolves.toBeUndefined();
     expect(await kv.get(STORAGE_KEYS.iap)).toBeNull();
+  });
+});
+
+describe('Club connections record (docs/architecture/club.md §4-1)', () => {
+  const connection = (over: Record<string, unknown> = {}) => ({
+    endpoint: 'https://club.example.com',
+    clubId: 'club-1',
+    clubName: 'Friday Club',
+    memberId: 'member-1',
+    memberToken: 'secret-token',
+    nickname: 'Ada',
+    role: 'member',
+    joinedAt: '2026-10-02T00:00:00.000Z',
+    ...over,
+  });
+  const load = (connections: unknown[]) =>
+    loadRecord(
+      clubConnectionsSchema,
+      createMemoryKV({
+        [STORAGE_KEYS.club]: JSON.stringify({ schemaVersion: 1, connections }),
+      }),
+    );
+
+  it('keeps the valid element when a neighbour is broken', async () => {
+    const good = connection();
+    const loaded = await load([
+      { endpoint: 'https://broken.example.com' },
+      'not an object',
+      good,
+      connection({ endpoint: 'https://b.example.com', memberToken: '' }),
+    ]);
+    expect(loaded.connections).toEqual([good]);
+  });
+
+  it('collapses a second connection to the same endpoint, keeping the first', async () => {
+    const loaded = await load([
+      connection({ nickname: 'First' }),
+      connection({ nickname: 'Second', clubId: 'club-2' }),
+      connection({ endpoint: 'https://other.example.com', clubId: 'club-3' }),
+    ]);
+    expect(loaded.connections.map((c) => c.nickname)).toEqual(['First', 'Ada']);
+    expect(loaded.connections.map((c) => c.endpoint)).toEqual([
+      'https://club.example.com',
+      'https://other.example.com',
+    ]);
+  });
+
+  it('caps the connections per device', async () => {
+    const many = Array.from({ length: CLUB_CONNECTIONS_MAX + 3 }, (_, i) =>
+      connection({ endpoint: `https://club${i}.example.com` }),
+    );
+    expect((await load(many)).connections).toHaveLength(CLUB_CONNECTIONS_MAX);
+  });
+
+  it('falls back to the default for corrupt JSON and an unknown version', async () => {
+    const corrupt = createMemoryKV({ [STORAGE_KEYS.club]: '{nope' });
+    expect(await loadRecord(clubConnectionsSchema, corrupt)).toEqual(
+      clubConnectionsSchema.defaultValue(),
+    );
+    const future = createMemoryKV({
+      [STORAGE_KEYS.club]: JSON.stringify({ schemaVersion: 2, connections: [connection()] }),
+    });
+    expect(await loadRecord(clubConnectionsSchema, future)).toEqual(
+      clubConnectionsSchema.defaultValue(),
+    );
+  });
+
+  it('accepts https and http to the loopback, and refuses a private-network http endpoint', () => {
+    expect(isClubEndpoint('https://club.pixapps.ai')).toBe(true);
+    expect(isClubEndpoint('http://localhost:5173')).toBe(true);
+    expect(isClubEndpoint('http://127.0.0.1:8787')).toBe(true);
+    expect(isClubEndpoint('http://192.168.1.2')).toBe(false);
+    expect(isClubEndpoint('http://club.example.com')).toBe(false);
+    expect(isClubEndpoint('ftp://club.example.com')).toBe(false);
+    expect(isClubEndpoint(42)).toBe(false);
+  });
+
+  it('refuses an endpoint that is not exactly an origin', () => {
+    expect(isClubEndpoint('https://club.pixapps.ai/')).toBe(false);
+    expect(isClubEndpoint('https://club.pixapps.ai/join')).toBe(false);
+    expect(isClubEndpoint('https://club.pixapps.ai?x=1')).toBe(false);
+    expect(isClubEndpoint('https://club.pixapps.ai#invite=abc')).toBe(false);
+  });
+
+  it('drops a connection whose endpoint is refused', async () => {
+    const loaded = await load([
+      connection({ endpoint: 'http://192.168.1.2' }),
+      connection({ endpoint: 'https://club.pixapps.ai/' }),
+      connection({ endpoint: 'http://localhost:5173' }),
+    ]);
+    expect(loaded.connections.map((c) => c.endpoint)).toEqual(['http://localhost:5173']);
+  });
+});
+
+describe('Club outbox record (docs/architecture/club.md §4-2)', () => {
+  const item = (n: number, over: Record<string, unknown> = {}) => ({
+    endpoint: 'https://club.example.com',
+    challengeId: `challenge-${n}`,
+    result: { contractVersion: 1, boardDigest: 'abc123', outcome: 'completed', facts: { n } },
+    createdAt: '2026-10-02T00:00:00.000Z',
+    ...over,
+  });
+  const load = (items: unknown[]) =>
+    loadRecord(
+      clubOutboxSchema,
+      createMemoryKV({ [STORAGE_KEYS.clubOutbox]: JSON.stringify({ schemaVersion: 1, items }) }),
+    );
+
+  it('keeps the valid item when a neighbour is broken', async () => {
+    const loaded = await load([
+      item(1, { endpoint: 'http://192.168.1.2' }),
+      item(2, { result: { contractVersion: 2 } }),
+      item(3),
+      null,
+    ]);
+    expect(loaded.items.map((i) => i.challengeId)).toEqual(['challenge-3']);
+  });
+
+  it('caps the outbox and keeps the newest', async () => {
+    const loaded = await load(Array.from({ length: CLUB_OUTBOX_MAX + 5 }, (_, i) => item(i)));
+    expect(loaded.items).toHaveLength(CLUB_OUTBOX_MAX);
+    expect(loaded.items[0]?.challengeId).toBe('challenge-5');
+    expect(loaded.items.at(-1)?.challengeId).toBe(`challenge-${CLUB_OUTBOX_MAX + 4}`);
+  });
+
+  it('falls back to the default for an unknown version', async () => {
+    const kv = createMemoryKV({
+      [STORAGE_KEYS.clubOutbox]: JSON.stringify({ schemaVersion: 9, items: [item(1)] }),
+    });
+    expect(await loadRecord(clubOutboxSchema, kv)).toEqual(clubOutboxSchema.defaultValue());
   });
 });

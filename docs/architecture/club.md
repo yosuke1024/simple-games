@@ -14,8 +14,11 @@ Epic #175 の段 2(原則の境界 #176 → **#161 の設計** → #164 の発�
 両デプロイの共通部分であり、Public はここに**足す**ことはあっても**変えない**。
 段取りは [../plans/2026-09-30-public-club-house.md](../plans/2026-09-30-public-club-house.md)。
 
-**実装はまだ無い**(`apps/simple-games/src/club/` は存在しない)。
-段取りは [../plans/2026-09-09-private-game-club.md](../plans/2026-09-09-private-game-club.md)。
+**クライアント実装は 2026-10-02 の PR で入る**(`apps/simple-games/src/club/`。段取りは
+[../plans/2026-10-02-club-client.md](../plans/2026-10-02-club-client.md) — 段取りの PR D と E)。
+サーバは [yosuke1024/simple-games-club](https://github.com/yosuke1024/simple-games-club) にあり、
+Node + SQLite と Cloudflare Workers + Durable Object の 2 実装が同じ契約テストを通す
+(`simple-games-club#2`、2026-10-02)。
 issue #161 / #164 の本文とコメントは提案・検討の記録であり、この文書と食い違う箇所は
 この文書を正とする([../PROJECT_CONTEXT.md](../PROJECT_CONTEXT.md)「Authority」)。
 
@@ -1012,6 +1015,15 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
     「同じ」とは API 契約のことで、実装は 2 つあってよい(Public は Cloudflare、Private は
     Node + SQLite)。同一性は共有コードではなく §5 の契約テストが示す。
 
+**2026-10-02 に製品オーナーが確認した判断**:
+
+14. **入る前の局の記録は要らない。** 結果画面で `Send to Club` を押し忘れた局を後から
+    送る仕組み(デイリーの後送り、直近の局の保持)は作らない。Club から入った挑戦の局が
+    自動送信であれば足りる(§2-2)。
+15. **Public の Durable Object は作られた場所(EU)のまま。** 法的に動かす理由は無く、
+    EU 内に置くのは GDPR 上むしろ保守的。利用者の分布を見て作り直すかは出荷前(PR F)に
+    決める(`simple-games-club` の docs/cloudflare.md §1)。
+
 **外部の事実確認**(#161 Phase 0 と `simple-games-club#1` の未完了項目。確認できるまで
 文言と数字を出さない):
 
@@ -1026,9 +1038,15 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
    §8-4 に置ける前提。Railway には referral program がある見込みで、PR E で確かめる)。
    リンクを template の導線へ「引き継ぐ」仕組みは**要らない** — Host のリンクを
    そのまま開くだけで、加工も追跡もしない(§8-4)。
-10. **Public を Cloudflare の無料枠で運用できるか**(判断 11 の前提そのもの)。Workers /
-    Durable Objects で §5 の契約を満たせるか、費用の driver は何か、濫用でどこまで
-    膨らみうるか。**これが確かめられるまで Public は出さない。**
+10. **Public を Cloudflare の無料枠で運用できるか**(判断 11 の前提そのもの)。
+    **2026-10-02 に前半が確かめられた**: Workers + SQLite-backed Durable Object の実装が
+    Node 版と同じ契約テスト 56 本を通し、本番 `club.pixapps.ai` への往復 114 リクエストが
+    すべて契約どおりに返った(サーバエラー 0、中央値 184 ms。`simple-games-club#2`、
+    同リポジトリの docs/cloudflare.md §7)。費用の driver は同 §2〜§5 に一次資料付きで
+    書いた — 無料枠の上限は「止まる」であって課金ではなく、1 日 10 万リクエストが天井。
+    **後半 — ダッシュボードの実測値(rows read / written、duration、保存量、請求 0)— は
+    未読で、金額は書いていない。** 一覧(`GET /challenges`)と記録(`GET /records`)の
+    読み量が Club の大きさに比例することが分かり、Public の前に直す(段取りの PR C)。
 11. **表示名の安全策がどこまで要るか。** 表示名が pixapps.ai の公開ページに出る以上、
     長さ・文字種の制約と通報・削除の手段が要る。14 言語を一人で見る前提で、どこまでが
     現実的かを決める。
