@@ -3,7 +3,7 @@ import { createMemoryKV, type KVStore } from '@/storage/kv';
 import { CLUB_OUTBOX_MAX_ATTEMPTS, type ClubConnection } from '@/storage/schemas';
 import type { GameId } from '@/app/registry';
 import type { ClubResultPayload } from '@/ui/clubBridge';
-import { createBridge, loadConnections } from './bridge';
+import { createBridge, forgetDeliveredFor, loadConnections } from './bridge';
 import { acceptAutoSend, addClubConnection, removeClubConnection } from './storage/connections';
 import { enqueueResult, pendingFor } from './storage/outbox';
 
@@ -568,5 +568,50 @@ describe('loadConnections', () => {
     const list = await loadConnections(kv);
     expect(list).toHaveLength(1);
     expect(JSON.stringify(list)).not.toContain('secret-Family');
+  });
+});
+
+describe('forgetDeliveredFor (deleting one’s own ranking row)', () => {
+  it('lets a result that was settled this session go again, for that member only', async () => {
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    const { bridge } = await setup(f);
+    await bridge.sendResult(payload);
+    await bridge.sendResult(payload);
+    // The memo: an overlay that mounts twice sends once.
+    expect(paths(f)).toEqual(['/rankings/results']);
+
+    // Another member of the same Club is not this one.
+    forgetDeliveredFor(E, 'm_other', 'sudoku');
+    await bridge.sendResult(payload);
+    expect(paths(f)).toEqual(['/rankings/results']);
+
+    forgetDeliveredFor(E, 'm_1', 'sudoku');
+    await bridge.sendResult(payload);
+    expect(paths(f)).toEqual(['/rankings/results', '/rankings/results']);
+  });
+
+  it('forgets the deleted table’s game only', async () => {
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    const { bridge } = await setup(f);
+    await bridge.sendResult(payload);
+    expect(paths(f)).toEqual(['/rankings/results']);
+    forgetDeliveredFor(E, 'm_1', 'minesweeper');
+    await bridge.sendResult(payload);
+    expect(paths(f)).toEqual(['/rankings/results']);
+    forgetDeliveredFor(E, 'm_1', 'sudoku');
+    await bridge.sendResult(payload);
+    expect(paths(f)).toEqual(['/rankings/results', '/rankings/results']);
+  });
+
+  it('reaches a memo wherever the bridge was made, and leaves other Clubs alone', async () => {
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    const { bridge } = await setup(f, [FAMILY, WORK]);
+    await bridge.sendResult(payload);
+    expect(paths(f)).toHaveLength(2);
+    forgetDeliveredFor(E, 'm_1', 'sudoku');
+    await bridge.sendResult(payload);
+    // Only the Club whose ranking row was deleted sends again.
+    expect(hosts(f).filter((h) => h === 'club.example.com')).toHaveLength(2);
+    expect(hosts(f).filter((h) => h === 'second.example.com')).toHaveLength(1);
   });
 });

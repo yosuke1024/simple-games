@@ -7,6 +7,7 @@ export const ptBR: ClubMessages = {
   clubDiscoverTitle: 'Jogar juntos',
   clubDiscoverBody:
     'Compare seus melhores resultados com todo mundo no Public Club House ou, em particular, com quem você conhece.',
+  clubDiscoverBodyPublic: 'Compartilhe suas pontuações com todo mundo.',
   clubJoinClub: 'Entrar em um Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Entrar no Public Club House',
@@ -61,6 +62,18 @@ export const ptBR: ClubMessages = {
   clubRemoveErase: 'Remover e apagar resultados',
   clubRemoveEraseBody:
     'A pessoa não poderá mais abrir este Club, e todos os resultados e linhas de ranking dela serão apagados. Isso não pode ser desfeito.',
+  clubChangeName: 'Alterar seu nome',
+  clubNameSaved: 'Nome salvo',
+  clubDeleteRecord: 'Apagar meu resultado',
+  clubDeleteRankingTitle: 'Apagar seu resultado neste ranking?',
+  clubDeleteRankingBody:
+    'O próximo jogo que você terminar entra de novo. Isso não pode ser desfeito.',
+  clubDeleteResultTitle: 'Remover seu resultado deste desafio?',
+  clubDeleteResultBody:
+    'Você não poderá enviar outro resultado a este desafio. Isso não pode ser desfeito.',
+  clubDeleteConfirm: 'Apagar',
+  clubRejoinNote:
+    'Você já esteve neste Club. Se o Club ainda reconhecer este dispositivo, entrar de novo traz você de volta como o mesmo membro, com seus resultados.',
   clubJoinedOn: 'Entrou em {date}',
   clubPlay: 'Jogar',
   clubPlayAgain: 'Jogar de novo',

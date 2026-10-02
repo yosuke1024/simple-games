@@ -7,6 +7,7 @@ export const tr: ClubMessages = {
   clubDiscoverTitle: 'Birlikte oyna',
   clubDiscoverBody:
     'En iyi sonuçlarını Public Club House’taki herkesle ya da tanıdığın kişilerle kendi aranızda karşılaştır.',
+  clubDiscoverBodyPublic: 'Skorlarını herkesle paylaş.',
   clubJoinClub: 'Bir Club’a katıl',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Public Club House’a katıl',
@@ -61,6 +62,16 @@ export const tr: ClubMessages = {
   clubRemoveErase: 'Çıkar ve sonuçları sil',
   clubRemoveEraseBody:
     'Bu Club’ı artık açamaz; tüm sonuçları ve sıralama satırları silinir. Bu geri alınamaz.',
+  clubChangeName: 'Adını değiştir',
+  clubNameSaved: 'Ad kaydedildi',
+  clubDeleteRecord: 'Sonucumu sil',
+  clubDeleteRankingTitle: 'Bu sıralamadaki sonucun silinsin mi?',
+  clubDeleteRankingBody: 'Bitirdiğin bir sonraki oyun yine buraya girer. Bu geri alınamaz.',
+  clubDeleteResultTitle: 'Sonucun bu meydan okumadan kaldırılsın mı?',
+  clubDeleteResultBody: 'Bu meydan okumaya artık sonuç gönderemezsin. Bu geri alınamaz.',
+  clubDeleteConfirm: 'Sil',
+  clubRejoinNote:
+    'Daha önce bu Club’daydın. Club bu cihazı hâlâ tanıyorsa, yeniden katıldığında aynı üye olarak sonuçlarınla birlikte geri dönersin.',
   clubJoinedOn: '{date} tarihinde katıldı',
   clubPlay: 'Oyna',
   clubPlayAgain: 'Tekrar oyna',

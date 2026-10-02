@@ -7,6 +7,7 @@ export const th: ClubMessages = {
   clubDiscoverTitle: 'เล่นด้วยกัน',
   clubDiscoverBody:
     'เทียบสถิติที่ดีที่สุดกับทุกคนใน Public Club House หรือเทียบกันเองกับคนที่คุณรู้จัก',
+  clubDiscoverBodyPublic: 'แชร์คะแนนของคุณกับทุกคน',
   clubJoinClub: 'เข้าร่วม Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'เข้าร่วม Public Club House',
@@ -61,6 +62,16 @@ export const th: ClubMessages = {
   clubRemoveErase: 'นำออกและลบผลทั้งหมด',
   clubRemoveEraseBody:
     'เขาจะเปิด Club นี้ไม่ได้อีก และผลทั้งหมดกับแถวอันดับของเขาจะถูกลบ ย้อนกลับไม่ได้',
+  clubChangeName: 'เปลี่ยนชื่อของคุณ',
+  clubNameSaved: 'บันทึกชื่อแล้ว',
+  clubDeleteRecord: 'ลบผลของฉัน',
+  clubDeleteRankingTitle: 'ลบผลของคุณในอันดับนี้ไหม?',
+  clubDeleteRankingBody: 'เกมที่เล่นจบครั้งต่อไปจะเข้าสู่อันดับนี้อีกครั้ง ย้อนกลับไม่ได้',
+  clubDeleteResultTitle: 'ลบผลของคุณออกจากชาเลนจ์นี้ไหม?',
+  clubDeleteResultBody: 'คุณจะส่งผลไปยังชาเลนจ์นี้อีกไม่ได้ ย้อนกลับไม่ได้',
+  clubDeleteConfirm: 'ลบ',
+  clubRejoinNote:
+    'คุณเคยอยู่ใน Club นี้มาก่อน ถ้า Club ยังจำอุปกรณ์นี้ได้ การเข้าร่วมอีกครั้งจะพาคุณกลับมาเป็นสมาชิกคนเดิมพร้อมผลของคุณ',
   clubJoinedOn: 'เข้าร่วมเมื่อ {date}',
   clubPlay: 'เล่น',
   clubPlayAgain: 'เล่นอีกครั้ง',

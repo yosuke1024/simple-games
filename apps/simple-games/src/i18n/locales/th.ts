@@ -150,7 +150,7 @@ export const th: Messages = {
   advancedTitle: 'ขั้นสูง',
   clubEntry: 'Club House',
   playTogetherTitle: 'เล่นด้วยกัน',
-  playTogetherBody: 'เทียบสถิติที่ดีที่สุดของคุณกับทุกคน หรือกับคนที่คุณรู้จัก',
+  playTogetherBody: 'แชร์คะแนนของคุณกับทุกคน',
   clubResultSent: 'ส่งไปยัง {club} แล้ว',
   clubResultPending: 'จะส่งเมื่อคุณเปิด Club',
   clubResultNotSent: 'ส่งไปยัง {club} ไม่ได้',

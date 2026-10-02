@@ -321,10 +321,22 @@ export interface ClubConnections {
   schemaVersion: 1;
   /** Join order. Empty means not connected. */
   connections: ClubConnection[];
+  /**
+   * Clubs this device disconnected from, kept so joining the same Club again
+   * returns the same member instead of making a new one (club.md §4-1,
+   * decision 43). Same shape and secret as a connection, so the record's
+   * rules apply (never in a backup, wiped by Reset Local Data). Never sends,
+   * never queues and never loads the Club layer at boot: the shell reads only
+   * `connections`. Additive: absent means none, schemaVersion stays 1.
+   */
+  departed?: ClubConnection[];
 }
 
 /** Connections per device, owner or member alike (club.md §4-1). */
 export const CLUB_CONNECTIONS_MAX = 10;
+
+/** Departed Clubs kept for a way back; the oldest goes first (club.md §4-1). */
+export const CLUB_DEPARTED_MAX = 10;
 
 /**
  * An endpoint the record accepts: https, or http to the loopback for
@@ -398,7 +410,24 @@ export const clubConnectionsSchema: SchemaDef<ClubConnections> = {
       if (connections.some((c) => c.endpoint === connection.endpoint)) continue;
       connections.push(connection);
     }
-    return { schemaVersion: 1, connections: connections.slice(0, CLUB_CONNECTIONS_MAX) };
+    const kept = connections.slice(0, CLUB_CONNECTIONS_MAX);
+    // Validated like connections, one per server; a Club that is connected again
+    // is not also "departed". A broken list never costs the connections.
+    const departed: ClubConnection[] = [];
+    if (Array.isArray(raw.departed)) {
+      for (const value of raw.departed) {
+        const connection = asClubConnection(value);
+        if (connection === null) continue;
+        if (departed.some((c) => c.endpoint === connection.endpoint)) continue;
+        if (kept.some((c) => c.endpoint === connection.endpoint)) continue;
+        departed.push(connection);
+      }
+    }
+    return {
+      schemaVersion: 1,
+      connections: kept,
+      ...(departed.length > 0 ? { departed: departed.slice(-CLUB_DEPARTED_MAX) } : {}),
+    };
   },
 };
 

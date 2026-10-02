@@ -7,6 +7,7 @@ export const ko: ClubMessages = {
   clubDiscoverTitle: '함께 하기',
   clubDiscoverBody:
     'Public Club House에서 모두와, 또는 아는 사람들끼리 따로 최고 기록을 비교해 보세요.',
+  clubDiscoverBodyPublic: '모두와 점수를 공유해 보세요.',
   clubJoinClub: 'Club 참여',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Public Club House 참여',
@@ -62,6 +63,16 @@ export const ko: ClubMessages = {
   clubRemoveErase: '내보내고 결과 삭제',
   clubRemoveEraseBody:
     '더 이상 이 Club을 열 수 없으며, 이 사람의 모든 결과와 랭킹 행이 삭제됩니다. 되돌릴 수 없습니다.',
+  clubChangeName: '이름 바꾸기',
+  clubNameSaved: '이름을 저장했습니다',
+  clubDeleteRecord: '내 기록 삭제',
+  clubDeleteRankingTitle: '이 랭킹에서 내 기록을 삭제할까요?',
+  clubDeleteRankingBody: '다음에 끝낸 게임은 다시 들어갑니다. 되돌릴 수 없습니다.',
+  clubDeleteResultTitle: '이 챌린지에서 내 결과를 삭제할까요?',
+  clubDeleteResultBody: '이 챌린지에는 더 이상 결과를 보낼 수 없습니다. 되돌릴 수 없습니다.',
+  clubDeleteConfirm: '삭제',
+  clubRejoinNote:
+    '이전에 이 Club에 참여한 적이 있습니다. Club이 이 기기를 아직 기억한다면, 다시 참여할 때 같은 멤버로 결과와 함께 돌아옵니다.',
   clubJoinedOn: '{date} 참여',
   clubPlay: '플레이',
   clubPlayAgain: '다시 플레이',

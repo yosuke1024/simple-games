@@ -23,6 +23,14 @@ import {
   takeInviteFromLocation,
 } from './clubGate';
 
+/** Private Clubs ship switched off (ui/clubFeatures.ts); the invite paths are tested under both values. */
+const flags = vi.hoisted(() => ({ privateClubs: true }));
+vi.mock('../ui/clubFeatures', () => ({
+  get PRIVATE_CLUBS_ENABLED() {
+    return flags.privateClubs;
+  },
+}));
+
 const fakeModule = { fake: true } as unknown as ClubModule;
 
 const connection = (over: Record<string, unknown> = {}) => ({
@@ -86,6 +94,9 @@ describe('(b) a stored connection', () => {
 });
 
 describe('(c) an invite link', () => {
+  beforeEach(() => {
+    flags.privateClubs = true;
+  });
   const at = (href: string) => {
     const url = new URL(href);
     return { href: url.href, pathname: url.pathname, hash: url.hash };
@@ -151,6 +162,38 @@ describe('(c) an invite link', () => {
     expect(await loadClubForInvite()).toBe(fakeModule);
     expect(await loadClubForInvite()).toBe(fakeModule);
     expect(loader).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('(c2) an invite link while Private Clubs are switched off', () => {
+  const at = (href: string) => {
+    const url = new URL(href);
+    return { href: url.href, pathname: url.pathname, hash: url.hash };
+  };
+  beforeEach(() => {
+    flags.privateClubs = false;
+  });
+  afterEach(() => {
+    flags.privateClubs = true;
+  });
+
+  it('is not acted on, but the token still leaves the address', () => {
+    const replaceState = vi.fn();
+    expect(
+      takeInviteFromLocation(
+        at('https://club.example.com/join#invite=abcDEF123_-xyz01'),
+        replaceState,
+      ),
+    ).toBeNull();
+    expect(replaceState).toHaveBeenCalledWith('https://club.example.com/join');
+  });
+
+  it('leaves an ordinary game link alone, as before', () => {
+    const replaceState = vi.fn();
+    expect(takeInviteFromLocation(at('https://pixapps.ai/play/?game=sudoku'), replaceState)).toBe(
+      null,
+    );
+    expect(replaceState).not.toHaveBeenCalled();
   });
 });
 

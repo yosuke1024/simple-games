@@ -4,6 +4,7 @@ import { createMemoryKV } from './kv';
 import { clearLocalData, loadRecord, loadRecordWithStatus, saveRecord } from './repo';
 import {
   CLUB_CONNECTIONS_MAX,
+  CLUB_DEPARTED_MAX,
   CLUB_OUTBOX_MAX,
   clubConnectionsSchema,
   clubOutboxSchema,
@@ -308,6 +309,81 @@ describe('Club connections record (docs/architecture/club.md §4-1)', () => {
     const loaded = await load([legacy]);
     expect(loaded).toEqual({ schemaVersion: 1, connections: [legacy] });
     expect(loaded.connections[0]).not.toHaveProperty('autoSend');
+  });
+
+  describe('departed (additive, schemaVersion stays 1)', () => {
+    const loadRecordWith = (extra: Record<string, unknown>) =>
+      loadRecord(
+        clubConnectionsSchema,
+        createMemoryKV({
+          [STORAGE_KEYS.club]: JSON.stringify({ schemaVersion: 1, connections: [], ...extra }),
+        }),
+      );
+
+    it('a record without the list is unchanged: no departed key appears', async () => {
+      const loaded = await load([connection()]);
+      expect(loaded).toEqual({ schemaVersion: 1, connections: [connection()] });
+      expect(loaded).not.toHaveProperty('departed');
+    });
+
+    it('keeps valid entries, validated like connections, and drops the broken ones', async () => {
+      const good = connection({ endpoint: 'https://gone.example.com', autoSend: true });
+      const loaded = await loadRecordWith({
+        departed: [
+          { endpoint: 'https://broken.example.com' },
+          'not an object',
+          good,
+          connection({ endpoint: 'http://192.168.1.2' }),
+          connection({ endpoint: 'https://b.example.com', memberToken: '' }),
+          // One per server, the first wins.
+          connection({ endpoint: 'https://gone.example.com', nickname: 'Second' }),
+        ],
+      });
+      expect(loaded.departed).toEqual([good]);
+    });
+
+    it('a Club that is connected is not also departed', async () => {
+      const loaded = await loadRecord(
+        clubConnectionsSchema,
+        createMemoryKV({
+          [STORAGE_KEYS.club]: JSON.stringify({
+            schemaVersion: 1,
+            connections: [connection()],
+            departed: [connection({ nickname: 'Old' })],
+          }),
+        }),
+      );
+      expect(loaded).not.toHaveProperty('departed');
+    });
+
+    it('caps the list, keeping the newest, and ignores a list that is not an array', async () => {
+      const many = Array.from({ length: CLUB_DEPARTED_MAX + 3 }, (_, i) =>
+        connection({ endpoint: `https://gone${i}.example.com` }),
+      );
+      const loaded = await loadRecordWith({ departed: many });
+      expect(loaded.departed).toHaveLength(CLUB_DEPARTED_MAX);
+      expect(loaded.departed![CLUB_DEPARTED_MAX - 1]!.endpoint).toBe(
+        `https://gone${CLUB_DEPARTED_MAX + 2}.example.com`,
+      );
+      expect(await loadRecordWith({ departed: 'x' })).toEqual({
+        schemaVersion: 1,
+        connections: [],
+      });
+    });
+
+    it('a broken list never costs the connections', async () => {
+      const loaded = await loadRecord(
+        clubConnectionsSchema,
+        createMemoryKV({
+          [STORAGE_KEYS.club]: JSON.stringify({
+            schemaVersion: 1,
+            connections: [connection()],
+            departed: { not: 'a list' },
+          }),
+        }),
+      );
+      expect(loaded.connections).toEqual([connection()]);
+    });
   });
 
   it('caps the connections per device', async () => {

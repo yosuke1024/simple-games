@@ -7,6 +7,7 @@ export const vi: ClubMessages = {
   clubDiscoverTitle: 'Chơi cùng nhau',
   clubDiscoverBody:
     'So kỷ lục tốt nhất với mọi người trong Public Club House, hoặc riêng với người quen.',
+  clubDiscoverBodyPublic: 'Chia sẻ điểm số của bạn với mọi người.',
   clubJoinClub: 'Tham gia Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Tham gia Public Club House',
@@ -62,6 +63,16 @@ export const vi: ClubMessages = {
   clubRemoveErase: 'Xóa và xóa kết quả',
   clubRemoveEraseBody:
     'Họ sẽ không mở được Club này nữa, và mọi kết quả cùng dòng xếp hạng của họ sẽ bị xóa. Không thể hoàn tác.',
+  clubChangeName: 'Đổi tên của bạn',
+  clubNameSaved: 'Đã lưu tên',
+  clubDeleteRecord: 'Xóa kết quả của tôi',
+  clubDeleteRankingTitle: 'Xóa kết quả của bạn trong bảng xếp hạng này?',
+  clubDeleteRankingBody: 'Ván tiếp theo bạn hoàn thành sẽ vào lại bảng. Không thể hoàn tác.',
+  clubDeleteResultTitle: 'Gỡ kết quả của bạn khỏi thử thách này?',
+  clubDeleteResultBody: 'Bạn sẽ không thể gửi thêm kết quả cho thử thách này. Không thể hoàn tác.',
+  clubDeleteConfirm: 'Xóa',
+  clubRejoinNote:
+    'Bạn từng ở trong Club này. Nếu Club vẫn nhận ra thiết bị này, tham gia lại sẽ đưa bạn trở về với tư cách cùng một thành viên, cùng kết quả của bạn.',
   clubJoinedOn: 'Tham gia {date}',
   clubPlay: 'Chơi',
   clubPlayAgain: 'Chơi lại',

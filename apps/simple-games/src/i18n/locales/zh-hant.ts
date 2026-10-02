@@ -148,7 +148,7 @@ export const zhHant: Messages = {
   advancedTitle: '進階',
   clubEntry: 'Club House',
   playTogetherTitle: '一起玩',
-  playTogetherBody: '與所有人或你認識的人比較最佳成績。',
+  playTogetherBody: '和大家分享你的成績。',
   clubResultSent: '已傳送到 {club}',
   clubResultPending: '開啟 Club 時傳送',
   clubResultNotSent: '無法傳送到 {club}',

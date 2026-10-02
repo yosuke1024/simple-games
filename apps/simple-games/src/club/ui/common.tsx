@@ -10,6 +10,9 @@ import { formatDuration } from '@/ui/format';
 import { IconBack } from '@/ui/components/icons';
 import type { MessageKey, TranslateVars } from '@/i18n';
 
+/** The nickname rule joining and renaming share (club.md §17-1): 1 to 24 characters once trimmed. */
+export const NICKNAME_MAX = 24;
+
 export type T = (key: MessageKey, vars?: TranslateVars) => string;
 
 export function ScreenFrame({

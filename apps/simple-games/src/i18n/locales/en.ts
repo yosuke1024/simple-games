@@ -190,7 +190,7 @@ export const en = {
   advancedTitle: 'Advanced',
   clubEntry: 'Club House',
   playTogetherTitle: 'Play together',
-  playTogetherBody: 'Compare your bests with everyone, or with people you know.',
+  playTogetherBody: 'Share your scores with everyone.',
   clubResultSent: 'Sent to {club}',
   clubResultPending: 'Will send when you open the Club',
   clubResultNotSent: 'Could not send to {club}',

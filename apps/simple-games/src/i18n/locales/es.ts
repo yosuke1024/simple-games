@@ -154,7 +154,7 @@ export const es: Messages = {
   advancedTitle: 'Avanzado',
   clubEntry: 'Club House',
   playTogetherTitle: 'Jugar juntos',
-  playTogetherBody: 'Compara tus mejores marcas con todos, o con gente que conoces.',
+  playTogetherBody: 'Comparte tus puntuaciones con todos.',
   clubResultSent: 'Enviado a {club}',
   clubResultPending: 'Se enviará al abrir el Club',
   clubResultNotSent: 'No se pudo enviar a {club}',

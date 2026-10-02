@@ -150,7 +150,7 @@ export const ko: Messages = {
   advancedTitle: '고급',
   clubEntry: 'Club House',
   playTogetherTitle: '함께 플레이',
-  playTogetherBody: '모두와, 또는 아는 사람들과 최고 기록을 비교해 보세요.',
+  playTogetherBody: '모두와 점수를 공유해 보세요.',
   clubResultSent: '{club}에 보냈습니다',
   clubResultPending: 'Club을 열 때 보냅니다',
   clubResultNotSent: '{club}에 보내지 못했습니다',

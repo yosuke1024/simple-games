@@ -7,6 +7,7 @@ export const fr: ClubMessages = {
   clubDiscoverTitle: 'Jouer ensemble',
   clubDiscoverBody:
     'Comparez vos meilleurs scores avec tout le monde dans le Public Club House, ou en privé avec vos proches.',
+  clubDiscoverBodyPublic: 'Partagez vos scores avec tout le monde.',
   clubJoinClub: 'Rejoindre un Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Rejoindre le Public Club House',
@@ -63,6 +64,18 @@ export const fr: ClubMessages = {
   clubRemoveErase: 'Retirer et effacer les résultats',
   clubRemoveEraseBody:
     'Cette personne ne pourra plus ouvrir ce Club, et tous ses résultats et lignes de classement seront effacés. Cette action est irréversible.',
+  clubChangeName: 'Changer votre nom',
+  clubNameSaved: 'Nom enregistré',
+  clubDeleteRecord: 'Effacer mon résultat',
+  clubDeleteRankingTitle: 'Effacer votre résultat dans ce classement ?',
+  clubDeleteRankingBody:
+    'La prochaine partie terminée y entrera de nouveau. Cette action est irréversible.',
+  clubDeleteResultTitle: 'Retirer votre résultat de ce défi ?',
+  clubDeleteResultBody:
+    'Vous ne pourrez plus envoyer de résultat pour ce défi. Cette action est irréversible.',
+  clubDeleteConfirm: 'Effacer',
+  clubRejoinNote:
+    'Vous avez déjà été dans ce Club. Si le Club reconnaît encore cet appareil, le rejoindre à nouveau vous ramène comme le même membre, avec vos résultats.',
   clubJoinedOn: 'Inscrit le {date}',
   clubPlay: 'Jouer',
   clubPlayAgain: 'Rejouer',

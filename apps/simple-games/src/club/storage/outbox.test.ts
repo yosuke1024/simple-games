@@ -3,7 +3,15 @@ import { createMemoryKV } from '@/storage/kv';
 import { CLUB_OUTBOX_MAX, CLUB_OUTBOX_MAX_ATTEMPTS, type ClubOutboxItem } from '@/storage/schemas';
 import type { ClubClient } from '../api/client';
 import { ClubApiError, type ClubErrorCode } from '../api/errors';
-import { dropOutboxFor, enqueueResult, fateOf, flushOutbox, itemKey, pendingFor } from './outbox';
+import {
+  dropOutboxFor,
+  dropOutboxMatching,
+  enqueueResult,
+  fateOf,
+  flushOutbox,
+  itemKey,
+  pendingFor,
+} from './outbox';
 
 const A = 'https://a.example.com';
 const B = 'https://b.example.com';
@@ -331,5 +339,88 @@ describe('outbox', () => {
     await dropOutboxFor(A, kv);
     expect(await pendingFor(A, kv)).toEqual([]);
     expect(await pendingFor(B, kv)).toHaveLength(1);
+  });
+
+  describe('dropOutboxMatching (deleting one record)', () => {
+    const rank = (endpoint: string, gameId: string, paramsKey: string): ClubOutboxItem => ({
+      kind: 'ranking',
+      endpoint,
+      createdAt: '2026-10-02T00:00:00.000Z',
+      body: {
+        gameId,
+        contractVersion: 1,
+        paramsKey,
+        params: {},
+        seed: 's',
+        boardDigest: 'sd1:1',
+        outcome: 'completed',
+        facts: { elapsedSeconds: 100 },
+      },
+    });
+
+    it('drops the ranking items of one table in one Club and nothing else', async () => {
+      const kv = createMemoryKV();
+      await enqueueResult(rank(A, 'sudoku', 'hard'), kv);
+      await enqueueResult(rank(A, 'sudoku', 'easy'), kv);
+      await enqueueResult(rank(A, 'nonogram', 'hard'), kv);
+      await enqueueResult(rank(B, 'sudoku', 'hard'), kv);
+      await enqueueResult(daily(A, 'sudoku-daily-1'), kv);
+      await dropOutboxMatching(A, { kind: 'ranking', gameId: 'sudoku', paramsKey: 'hard' }, kv);
+      const left = [...(await pendingFor(A, kv)), ...(await pendingFor(B, kv))];
+      expect(left.map(itemKey).sort()).toEqual([
+        `daily|${A}|sudoku|sudoku-daily-1|sd1:1`,
+        `ranking|${A}|nonogram|hard`,
+        `ranking|${A}|sudoku|easy`,
+        `ranking|${B}|sudoku|hard`,
+      ]);
+    });
+
+    it('drops the daily items of one challenge, and an old-form result addressed to it', async () => {
+      const kv = createMemoryKV();
+      await enqueueResult(daily(A, 'sudoku-daily-1'), kv);
+      await enqueueResult(daily(A, 'sudoku-daily-2'), kv);
+      await enqueueResult(daily(B, 'sudoku-daily-1'), kv);
+      await enqueueResult(legacy(A, 1), kv);
+      await enqueueResult(legacy(A, 2), kv);
+      await enqueueResult(rank(A, 'sudoku', 'hard'), kv);
+      await dropOutboxMatching(
+        A,
+        {
+          kind: 'daily',
+          challengeId: 'ch_1',
+          gameId: 'sudoku',
+          seed: 'sudoku-daily-1',
+          boardDigest: 'sd1:1',
+        },
+        kv,
+      );
+      expect((await pendingFor(A, kv)).map(itemKey).sort()).toEqual([
+        `daily|${A}|sudoku|sudoku-daily-2|sd1:1`,
+        `ranking|${A}|sudoku|hard`,
+        `result|${A}|ch_2`,
+      ]);
+      expect(await pendingFor(B, kv)).toHaveLength(1);
+    });
+
+    it('writes nothing when nothing matches', async () => {
+      const kv = createMemoryKV();
+      await enqueueResult(rank(A, 'sudoku', 'hard'), kv);
+      const set = vi.spyOn(kv, 'set');
+      await dropOutboxMatching(A, { kind: 'ranking', gameId: 'sudoku', paramsKey: 'easy' }, kv);
+      expect(set).not.toHaveBeenCalled();
+      expect(await pendingFor(A, kv)).toHaveLength(1);
+    });
+
+    it('runs through the same chain as the other changes: a concurrent enqueue is not lost', async () => {
+      const kv = createMemoryKV();
+      await enqueueResult(rank(A, 'sudoku', 'hard'), kv);
+      await Promise.all([
+        dropOutboxMatching(A, { kind: 'ranking', gameId: 'sudoku', paramsKey: 'hard' }, kv),
+        enqueueResult(rank(A, 'sudoku', 'easy'), kv),
+        enqueueResult(rank(B, 'sudoku', 'easy'), kv),
+      ]);
+      expect((await pendingFor(A, kv)).map(itemKey)).toEqual([`ranking|${A}|sudoku|easy`]);
+      expect(await pendingFor(B, kv)).toHaveLength(1);
+    });
   });
 });

@@ -12,11 +12,12 @@ import { useSettings } from '@/state/SettingsContext';
 import type { ClubConnection } from '@/storage/schemas';
 import type { ClubInvite, ClubRootProps } from '@/ui/clubBridge';
 import { IconChevronRight } from '@/ui/components/icons';
+import { PRIVATE_CLUBS_ENABLED } from '@/ui/clubFeatures';
 import {
   acceptAutoSend,
   addClubConnection,
+  departClubConnection,
   loadClubConnections,
-  removeClubConnection,
   summarize,
   updateClubName,
   updateNickname,
@@ -68,7 +69,8 @@ export function ClubRoot({
         if (!alive.current) return;
         setConnections(loaded);
         const root = rootFor(loaded);
-        if (entry === 'invite' && invite) {
+        // An invite link is acted on only while Private Clubs are on (club.md §14, decision 44).
+        if (entry === 'invite' && invite && PRIVATE_CLUBS_ENABLED) {
           setStack([{ kind: 'join', invite }]);
           return;
         }
@@ -128,7 +130,8 @@ export function ClubRoot({
   };
 
   const disconnect = async (endpoint: string) => {
-    const next = await removeClubConnection(endpoint);
+    // The credentials stay as a departed entry: joining again returns the same member (§4-1).
+    const next = await departClubConnection(endpoint);
     // Nothing could send them any more (club.md §4-2).
     await dropOutboxFor(endpoint);
     apply(next);
@@ -151,7 +154,9 @@ export function ClubRoot({
     case 'discover':
       return (
         <ScreenFrame title={t('clubDiscoverTitle')} onBack={onBack} t={t}>
-          <p className="club-quiet">{t('clubDiscoverBody')}</p>
+          <p className="club-quiet">
+            {t(PRIVATE_CLUBS_ENABLED ? 'clubDiscoverBody' : 'clubDiscoverBodyPublic')}
+          </p>
           <button
             type="button"
             className="btn btn-primary"
@@ -159,13 +164,15 @@ export function ClubRoot({
           >
             {t('clubJoinPublic')}
           </button>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={() => push({ kind: 'join', invite: null })}
-          >
-            {t('clubJoinWithLink')}
-          </button>
+          {PRIVATE_CLUBS_ENABLED ? (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => push({ kind: 'join', invite: null })}
+            >
+              {t('clubJoinWithLink')}
+            </button>
+          ) : null}
         </ScreenFrame>
       );
 
@@ -194,13 +201,15 @@ export function ClubRoot({
               {t('clubJoinPublic')}
             </button>
           )}
-          <button
-            type="button"
-            className="btn btn-ghost club-join-another"
-            onClick={() => push({ kind: 'join', invite: null })}
-          >
-            {t('clubJoinAnother')}
-          </button>
+          {PRIVATE_CLUBS_ENABLED ? (
+            <button
+              type="button"
+              className="btn btn-ghost club-join-another"
+              onClick={() => push({ kind: 'join', invite: null })}
+            >
+              {t('clubJoinAnother')}
+            </button>
+          ) : null}
         </ScreenFrame>
       );
 

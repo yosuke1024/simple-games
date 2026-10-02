@@ -96,4 +96,13 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   // Club の結果の自動送信 — 開示が先、送信が後(docs/architecture/club.md §2-2, §11)。
   // 「終わると結果が送られる」を落とした訳は同意の約束の反故になる。
   'clubDailyDisclosure',
+
+  // 自分の記録を 1 件ずつ消す(docs/architecture/club.md §9, §14 判断 42) — ランキングの自分の行は
+  // 「次に遊び終えた結果がまた入る」、デイリーの自分の結果は「その挑戦にはもう結果を送れない」、
+  // どちらも元に戻せない。どれかを落とした訳は、消えるものと戻らないものを誤らせる。
+  'clubDeleteRankingTitle',
+  'clubDeleteRankingBody',
+  'clubDeleteResultTitle',
+  'clubDeleteResultBody',
+  'clubDeleteConfirm',
 ];

@@ -118,6 +118,45 @@ export function dropOutboxFor(endpoint: string, kv?: KVStore): Promise<void> {
   });
 }
 
+/**
+ * Forgets the queued items of one Club that would recreate a record the player
+ * just deleted (club.md §9): the ranking items of one table, or the daily (and
+ * old-form) items of one challenge. Without it a queued result would write the record straight
+ * back. Items of other tables, challenges and Clubs stay.
+ */
+export function dropOutboxMatching(
+  endpoint: string,
+  target:
+    | { kind: 'ranking'; gameId: string; paramsKey: string }
+    | { kind: 'daily'; challengeId: string; gameId: string; seed: string; boardDigest: string },
+  kv?: KVStore,
+): Promise<void> {
+  const matches = (item: ClubOutboxItem): boolean => {
+    if (item.endpoint !== endpoint) return false;
+    if (target.kind === 'ranking') {
+      return (
+        item.kind === 'ranking' &&
+        item.body.gameId === target.gameId &&
+        item.body.paramsKey === target.paramsKey
+      );
+    }
+    // An old-form item (no `kind`) is a result addressed to the challenge by id.
+    if (item.kind === undefined) return item.challengeId === target.challengeId;
+    return (
+      item.kind === 'daily' &&
+      item.body.gameId === target.gameId &&
+      item.body.seed === target.seed &&
+      item.body.boardDigest === target.boardDigest
+    );
+  };
+  return mutate(async () => {
+    const { items, readable } = await loadAll(kv);
+    if (!readable) return;
+    const kept = items.filter((i) => !matches(i));
+    if (kept.length !== items.length) await save(kept, kv);
+  });
+}
+
 /** Takes out the exact item that was sent; one that was replaced meanwhile stays. */
 function remove(item: ClubOutboxItem, kv?: KVStore): Promise<void> {
   return mutate(async () => {

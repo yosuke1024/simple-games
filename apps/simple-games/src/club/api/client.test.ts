@@ -142,6 +142,55 @@ describe('club client', () => {
     await expect(client.reportedMembers()).rejects.toMatchObject({ code: 'malformed_response' });
   });
 
+  it('renameSelf PATCHes /me and validates the member', async () => {
+    const member = {
+      id: 'm_1',
+      nickname: 'Kenji',
+      role: 'member',
+      joinedAt: '2026-09-09T00:00:00Z',
+    };
+    const f = vi
+      .fn()
+      .mockResolvedValueOnce(reply(200, member))
+      .mockResolvedValueOnce(reply(200, { nickname: 1 }));
+    const client = createClient(E, 't', f as unknown as typeof fetch);
+    expect((await client.renameSelf('Kenji')).nickname).toBe('Kenji');
+    expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/me`);
+    expect(f.mock.calls[0]![1].method).toBe('PATCH');
+    expect(JSON.parse(f.mock.calls[0]![1].body)).toEqual({ nickname: 'Kenji' });
+    await expect(client.renameSelf('x')).rejects.toMatchObject({ code: 'malformed_response' });
+  });
+
+  it('deleteMyRanking and deleteMyResult DELETE the caller’s own row, encoded, with no body', async () => {
+    const f = vi
+      .fn()
+      .mockImplementation(() =>
+        Promise.resolve(new Response(null, { status: 204, headers: { 'X-Club-Api': '1' } })),
+      );
+    const client = createClient(E, 't', f as unknown as typeof fetch);
+    await expect(client.deleteMyRanking('sudoku', 'hard/x')).resolves.toBeUndefined();
+    expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/rankings/sudoku/hard%2Fx/me`);
+    expect(f.mock.calls[0]![1].method).toBe('DELETE');
+    expect(f.mock.calls[0]![1].body).toBeUndefined();
+    await expect(client.deleteMyResult('ch_1')).resolves.toBeUndefined();
+    expect(f.mock.calls[1]![0]).toBe(`${E}/api/v1/challenges/ch_1/results/me`);
+    expect(f.mock.calls[1]![1].method).toBe('DELETE');
+    expect(f.mock.calls[1]![1].body).toBeUndefined();
+  });
+
+  it('a 404 on a delete is the not_found error the screens tolerate', async () => {
+    const f = vi
+      .fn()
+      .mockImplementation(() =>
+        Promise.resolve(reply(404, { error: { code: 'not_found', message: 'no' } })),
+      );
+    const client = createClient(E, 't', f as unknown as typeof fetch);
+    await expect(client.deleteMyRanking('sudoku', 'hard')).rejects.toMatchObject({
+      code: 'not_found',
+    });
+    await expect(client.deleteMyResult('ch_1')).rejects.toMatchObject({ code: 'not_found' });
+  });
+
   it('rotateInvite posts the member role', async () => {
     const f = vi.fn().mockResolvedValue(reply(200, { token: 't', url: 'u' }));
     await createClient(E, 't', f as unknown as typeof fetch).rotateInvite();

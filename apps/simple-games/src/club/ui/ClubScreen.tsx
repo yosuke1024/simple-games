@@ -2,7 +2,8 @@
  * One Club (club.md §9「Club」): today's dailies, the rankings and the members, read
  * when the screen opens and again only on `Reload`. No timer, no polling, no
  * counts. The Owner's two extras (Invite, Remove) and the Settings panel
- * (Disconnect, §8-5) live here too, as panels over the same data.
+ * (change your name, Disconnect — §8-5, §9) live here too,
+ * as panels over the same data. Invite is hidden while Private Clubs are off.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient, type ClubClient } from '../api/client';
@@ -16,11 +17,13 @@ import type { ClubConnection } from '@/storage/schemas';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconChevronRight } from '@/ui/components/icons';
 import { useSettings } from '@/state/SettingsContext';
+import { PRIVATE_CLUBS_ENABLED } from '@/ui/clubFeatures';
 import {
   axisText,
   dateLabel,
   errorText,
   isSilentTier,
+  NICKNAME_MAX,
   ScreenFrame,
   tierLabel,
   todayLocal,
@@ -232,6 +235,17 @@ export function ClubScreen({
     }
   };
 
+  /**
+   * Your own name (club.md §5-3, §9): the server renames the member and the
+   * name on their results; reports against them stay. Throws for the panel to show.
+   */
+  const changeName = async (nickname: string) => {
+    const member = await client().renameSelf(nickname);
+    onRenamedMe(member.nickname);
+    // Your row in the lists carries the new name.
+    void load();
+  };
+
   /** One member line: the owner gets Rename / Remove, everyone else Report (never on oneself). */
   const memberLine = (section: string, m: Member, value: string) => {
     if (renaming?.key === `${section}:${m.id}`) {
@@ -285,7 +299,8 @@ export function ClubScreen({
     );
   };
 
-  if (panel === 'invite') {
+  // The owner's invite panel exists only while Private Clubs are on (club.md §14, decision 44).
+  if (panel === 'invite' && PRIVATE_CLUBS_ENABLED) {
     return (
       <InvitePanel clubName={clubName} client={client()} t={t} onBack={() => onPanel('none')} />
     );
@@ -298,9 +313,11 @@ export function ClubScreen({
         isPublic={connection.endpoint === PUBLIC_CLUB_ENDPOINT}
         members={data?.members ?? null}
         selfId={connection.memberId}
+        nickname={connection.nickname}
         t={t}
         onBack={() => onPanel('none')}
         onDisconnect={onDisconnect}
+        onChangeName={changeName}
       />
     );
   }
@@ -312,7 +329,7 @@ export function ClubScreen({
       t={t}
       right={
         <span className="club-header-actions">
-          {isOwner ? (
+          {isOwner && PRIVATE_CLUBS_ENABLED ? (
             <button type="button" className="club-text-btn" onClick={() => onPanel('invite')}>
               {t('clubInvite')}
             </button>
@@ -647,8 +664,10 @@ function InvitePanel({
 }
 
 /**
- * Disconnect this device (club.md §8-5): this device only; the server and the
- * others carry on. How to stop paying for the server is said only to an owner
+ * Settings (club.md §9): change your name, Disconnect. Leaving and deleting
+ * one's records are independent (decision 42): Disconnect keeps your records
+ * on the server. Disconnect is this device only; the server and
+ * the others carry on. How to stop paying for the server is said only to an owner
  * of a Club someone hosts themselves — a Public member has no server to delete.
  */
 function SettingsPanel({
@@ -657,25 +676,94 @@ function SettingsPanel({
   isPublic,
   members,
   selfId,
+  nickname,
   t,
   onBack,
   onDisconnect,
+  onChangeName,
 }: {
   clubName: string;
   isOwner: boolean;
   isPublic: boolean;
   members: Member[] | null;
   selfId: string;
+  /** This member's name as the device has it. */
+  nickname: string;
   t: T;
   onBack: () => void;
   onDisconnect: () => Promise<void>;
+  onChangeName: (nickname: string) => Promise<void>;
 }) {
   const [confirm, setConfirm] = useState(false);
+  const [text, setText] = useState(nickname);
+  // An owner rename learned after load: follow it while the field is still the name it showed.
+  const shown = useRef(nickname);
+  useEffect(() => {
+    setText((typed) => (typed === shown.current ? nickname : typed));
+    shown.current = nickname;
+  }, [nickname]);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<{ kind: 'saved' | 'error'; text: string } | null>(null);
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
   // Known from the list this screen already read; no extra request.
   const onlyOwner =
     isOwner && members !== null && !members.some((m) => m.role === 'owner' && m.id !== selfId);
+
+  const trimmed = text.trim();
+  const nameOk = trimmed.length >= 1 && trimmed.length <= NICKNAME_MAX && trimmed !== nickname;
+
+  const run = async (work: () => Promise<void>) => {
+    setBusy(true);
+    setNote(null);
+    try {
+      await work();
+      if (alive.current) setNote({ kind: 'saved', text: t('clubNameSaved') });
+    } catch (e) {
+      if (alive.current) setNote({ kind: 'error', text: errorText(e, t, clubName) });
+    } finally {
+      if (alive.current) setBusy(false);
+    }
+  };
+
   return (
     <ScreenFrame title={t('clubSettings')} onBack={onBack} t={t}>
+      <h2 className="home-section-label club-section">{t('clubChangeName')}</h2>
+      <form
+        className="club-rename"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (nameOk && !busy) void run(() => onChangeName(trimmed));
+        }}
+      >
+        <input
+          className="club-input"
+          type="text"
+          maxLength={NICKNAME_MAX}
+          autoComplete="off"
+          value={text}
+          aria-label={t('clubChangeName')}
+          onChange={(event) => setText(event.target.value)}
+        />
+        <div className="club-actions">
+          <button type="submit" className="btn btn-primary" disabled={busy || !nameOk}>
+            {t('clubSave')}
+          </button>
+        </div>
+      </form>
+      {note ? (
+        <p
+          className={note.kind === 'error' ? 'club-note club-note-error' : 'club-quiet'}
+          role={note.kind === 'error' ? 'alert' : 'status'}
+        >
+          {note.text}
+        </p>
+      ) : null}
       <button
         type="button"
         className="settings-row settings-row-danger"

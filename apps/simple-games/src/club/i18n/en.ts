@@ -11,6 +11,7 @@ export const en = {
   clubDiscoverTitle: 'Play together',
   clubDiscoverBody:
     'Compare your bests with everyone in the Public Club House, or privately with people you know.',
+  clubDiscoverBodyPublic: 'Share your scores with everyone.',
   clubJoinClub: 'Join a Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Join the Public Club House',
@@ -65,6 +66,16 @@ export const en = {
   clubRemoveErase: 'Remove and erase results',
   clubRemoveEraseBody:
     'They can no longer open this Club, and every result and ranking row of theirs is erased. This cannot be undone.',
+  clubChangeName: 'Change your name',
+  clubNameSaved: 'Name saved',
+  clubDeleteRecord: 'Delete my record',
+  clubDeleteRankingTitle: 'Delete your record in this ranking?',
+  clubDeleteRankingBody: 'Your next finished game enters it again. This cannot be undone.',
+  clubDeleteResultTitle: 'Remove your result from this challenge?',
+  clubDeleteResultBody: 'You cannot send another result to this challenge. This cannot be undone.',
+  clubDeleteConfirm: 'Delete',
+  clubRejoinNote:
+    'You have been in this Club before. If the Club still knows this device, joining again brings you back as the same member, with your results.',
   clubJoinedOn: 'Joined {date}',
   clubPlay: 'Play',
   clubPlayAgain: 'Play again',

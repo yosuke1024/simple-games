@@ -7,6 +7,7 @@ export const id: ClubMessages = {
   clubDiscoverTitle: 'Main bersama',
   clubDiscoverBody:
     'Bandingkan rekor terbaikmu dengan semua orang di Public Club House, atau secara pribadi dengan orang yang kamu kenal.',
+  clubDiscoverBodyPublic: 'Bagikan skormu dengan semua orang.',
   clubJoinClub: 'Gabung ke Club',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Gabung ke Public Club House',
@@ -63,6 +64,18 @@ export const id: ClubMessages = {
   clubRemoveErase: 'Keluarkan dan hapus hasil',
   clubRemoveEraseBody:
     'Mereka tidak bisa membuka Club ini lagi, dan semua hasil serta baris peringkat mereka dihapus. Tindakan ini tidak bisa dibatalkan.',
+  clubChangeName: 'Ganti namamu',
+  clubNameSaved: 'Nama disimpan',
+  clubDeleteRecord: 'Hapus hasilku',
+  clubDeleteRankingTitle: 'Hapus hasilmu di peringkat ini?',
+  clubDeleteRankingBody:
+    'Permainan yang kamu selesaikan berikutnya akan masuk lagi. Tindakan ini tidak bisa dibatalkan.',
+  clubDeleteResultTitle: 'Hapus hasilmu dari tantangan ini?',
+  clubDeleteResultBody:
+    'Kamu tidak bisa mengirim hasil lagi ke tantangan ini. Tindakan ini tidak bisa dibatalkan.',
+  clubDeleteConfirm: 'Hapus',
+  clubRejoinNote:
+    'Kamu pernah ada di Club ini. Jika Club masih mengenali perangkat ini, bergabung lagi akan mengembalikanmu sebagai anggota yang sama, beserta hasilmu.',
   clubJoinedOn: 'Bergabung {date}',
   clubPlay: 'Main',
   clubPlayAgain: 'Main lagi',

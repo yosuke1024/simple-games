@@ -20,6 +20,7 @@ import type { KVStore } from '../storage/kv';
 import { preferencesKV } from '../storage/kv';
 import { loadRecord } from '../storage/repo';
 import { clubConnectionsSchema, isClubEndpoint } from '../storage/schemas';
+import { PRIVATE_CLUBS_ENABLED } from '../ui/clubFeatures';
 import type { ClubConnectionSummary, ClubInvite, ClubModule } from '../ui/clubBridge';
 
 let connections: readonly ClubConnectionSummary[] = [];
@@ -92,6 +93,10 @@ export function loadClubForEntry(): Promise<ClubModule | null> {
  * https, or http to the loopback for development (§4-1), and a token of the
  * shape the server issues. The join screen trusts what it is handed, so the
  * check happens here.
+ *
+ * While Private Clubs are switched off (`PRIVATE_CLUBS_ENABLED`, club.md §14
+ * decision 44) the invite is still taken out of the address, but never acted
+ * on: the page opens like any other, and no Club layer is loaded for it.
  */
 const INVITE_TOKEN = /^[A-Za-z0-9_-]{16,128}$/;
 
@@ -110,6 +115,7 @@ export function takeInviteFromLocation(
     return null;
   }
   replaceState(loc.href.replace(/#.*$/, ''));
+  if (!PRIVATE_CLUBS_ENABLED) return null;
   const token = match[1]!;
   if (!INVITE_TOKEN.test(token) || !isClubEndpoint(endpoint)) return null;
   return { endpoint, token };

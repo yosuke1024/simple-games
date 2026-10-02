@@ -7,6 +7,7 @@ export const hi: ClubMessages = {
   clubDiscoverTitle: 'साथ खेलें',
   clubDiscoverBody:
     'Public Club House में सबके साथ, या जान-पहचान वालों के साथ निजी तौर पर अपने सर्वश्रेष्ठ रिकॉर्ड मिलाएँ।',
+  clubDiscoverBodyPublic: 'अपने स्कोर सबके साथ साझा करें।',
   clubJoinClub: 'Club से जुड़ें',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Public Club House से जुड़ें',
@@ -62,6 +63,18 @@ export const hi: ClubMessages = {
   clubRemoveErase: 'हटाएँ और नतीजे मिटाएँ',
   clubRemoveEraseBody:
     'वे इस Club को फिर नहीं खोल पाएँगे, और उनके सभी नतीजे व रैंकिंग की पंक्तियाँ मिटा दी जाएँगी। इसे वापस नहीं किया जा सकता।',
+  clubChangeName: 'अपना नाम बदलें',
+  clubNameSaved: 'नाम सहेजा गया',
+  clubDeleteRecord: 'मेरा नतीजा मिटाएँ',
+  clubDeleteRankingTitle: 'इस रैंकिंग में आपका नतीजा मिटाएँ?',
+  clubDeleteRankingBody:
+    'अगला खत्म किया गया गेम इसमें फिर से दर्ज होगा। इसे वापस नहीं किया जा सकता।',
+  clubDeleteResultTitle: 'इस चैलेंज से आपका नतीजा हटाएँ?',
+  clubDeleteResultBody:
+    'आप इस चैलेंज के लिए दोबारा नतीजा नहीं भेज सकेंगे। इसे वापस नहीं किया जा सकता।',
+  clubDeleteConfirm: 'मिटाएँ',
+  clubRejoinNote:
+    'आप पहले इस Club में थे। अगर Club अब भी इस डिवाइस को पहचानता है, तो दोबारा जुड़ने पर आप उसी सदस्य के रूप में अपने नतीजों के साथ लौट आते हैं।',
   clubJoinedOn: '{date} को जुड़े',
   clubPlay: 'खेलें',
   clubPlayAgain: 'फिर से खेलें',

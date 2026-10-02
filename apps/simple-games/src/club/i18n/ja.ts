@@ -7,6 +7,7 @@ export const ja: ClubMessages = {
   clubDiscoverTitle: 'みんなで遊ぶ',
   clubDiscoverBody:
     'みんなと自己ベストを比べる Public Club House と、知っている人たちとの内輪の Club。',
+  clubDiscoverBodyPublic: 'みんなとスコアを共有しよう。',
   clubJoinClub: 'Club に参加',
   clubPublicTitle: 'Public Club House',
   clubJoinPublic: 'Public Club House に参加',
@@ -62,6 +63,16 @@ export const ja: ClubMessages = {
   clubRemoveErase: '外して結果も消す',
   clubRemoveEraseBody:
     'この Club を開けなくなり、この人の結果とランキングの行はすべて消えます。元に戻せません。',
+  clubChangeName: 'あなたの名前を変える',
+  clubNameSaved: '名前を保存しました',
+  clubDeleteRecord: '自分の記録を消す',
+  clubDeleteRankingTitle: 'このランキングの自分の記録を消しますか?',
+  clubDeleteRankingBody: '次に遊び終えた結果が、また入ります。元に戻せません。',
+  clubDeleteResultTitle: 'このデイリーから自分の結果を消しますか?',
+  clubDeleteResultBody: 'このデイリーには、もう結果を送れません。元に戻せません。',
+  clubDeleteConfirm: '削除',
+  clubRejoinNote:
+    'この Club には以前参加していました。Club がこの端末をまだ覚えていれば、参加し直すと同じメンバーとして結果ごと戻れます。',
   clubJoinedOn: '{date} に参加',
   clubPlay: 'プレイ',
   clubPlayAgain: 'もう一度プレイ',

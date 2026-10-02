@@ -89,6 +89,37 @@ function plan(payload: ClubResultPayload): Plan | 'rejected' | null {
   };
 }
 
+/**
+ * Every bridge's "already settled" memo, so the Club screen can make one
+ * session forget a member (`forgetDeliveredFor`) without holding a bridge.
+ */
+const memos = new Set<Map<string, ClubSendOutcome>>();
+
+/**
+ * Deleting one of one's own ranking rows (club.md §9, decision 42) also forgets
+ * this session's memo of the ranking results sent for that game: what the server
+ * held is gone, so a result screen that mounts again must be allowed to send it
+ * again. Other games, daily results and other members stay remembered.
+ */
+export function forgetDeliveredFor(endpoint: string, memberId: string, gameId: string): void {
+  const prefix = `${JSON.stringify([endpoint, memberId]).slice(0, -1)},`;
+  const fingerprintStart = `ranking|${JSON.stringify([gameId]).slice(0, -1)},`;
+  for (const memo of memos) {
+    for (const key of [...memo.keys()]) {
+      if (!key.startsWith(prefix)) continue;
+      let fingerprint: unknown;
+      try {
+        fingerprint = (JSON.parse(key) as unknown[])[2];
+      } catch {
+        continue;
+      }
+      if (typeof fingerprint === 'string' && fingerprint.startsWith(fingerprintStart)) {
+        memo.delete(key);
+      }
+    }
+  }
+}
+
 export function createBridge(
   kv?: KVStore,
   fetchImpl?: typeof fetch,
@@ -97,10 +128,12 @@ export function createBridge(
    * Results this session has already settled with a Club (sent, or answered
    * `already`), so a result screen that mounts twice sends once. Per
    * membership (endpoint + member): a Club joined later in the session is not
-   * skipped, and neither is the same Club rejoined after a disconnect — that is
-   * a new member, and the server has none of its results.
+   * skipped, and neither is a different member of the same Club (a Club the
+   * owner removed this device from and that was joined afresh). The same member
+   * rejoined keeps its memo: the server still has what it sent.
    */
   const delivered = new Map<string, ClubSendOutcome>();
+  memos.add(delivered);
 
   async function sendTo(
     connection: ClubConnection,

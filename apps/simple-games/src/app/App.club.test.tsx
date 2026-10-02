@@ -23,11 +23,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ClubModule, ClubPlayRequest, ClubRootProps } from '../ui/clubBridge';
 import { ClubBridgeContext } from '../ui/clubBridge';
 
-const { capacitorMock, reviewMock } = vi.hoisted(() => ({
+const { capacitorMock, reviewMock, flags } = vi.hoisted(() => ({
   capacitorMock: { platform: 'android' },
+  // Private Clubs ship switched off (ui/clubFeatures.ts); the invite path is tested under both values.
+  flags: { privateClubs: true },
   reviewMock: {
     shouldPromptReview: vi.fn<() => boolean>(() => false),
     markReviewPromptShown: vi.fn(),
+  },
+}));
+
+vi.mock('../ui/clubFeatures', () => ({
+  get PRIVATE_CLUBS_ENABLED() {
+    return flags.privateClubs;
   },
 }));
 
@@ -153,6 +161,7 @@ const settle = () =>
 
 beforeEach(() => {
   capacitorMock.platform = 'android';
+  flags.privateClubs = true;
   loader.mockReset().mockImplementation(() => Promise.resolve(fakeModule));
   // Also forgets the connections a previous test's boot read.
   setClubLoaderForTesting(loader);
@@ -329,5 +338,18 @@ describe('an invite link in the browser', () => {
     expect(screen.getByTestId('club-invite')).toHaveTextContent('abc_DEF-123_ghi-456');
     expect(window.location.hash).toBe('');
     expect(window.location.pathname).toBe('/join');
+  });
+
+  it('is not acted on while Private Clubs are switched off: the collection opens, no layer loads, the token still leaves', async () => {
+    capacitorMock.platform = 'web';
+    flags.privateClubs = false;
+    window.history.replaceState(null, '', '/join#invite=abc_DEF-123_ghi-456');
+
+    renderShell();
+    await settle();
+
+    expect(loader).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('club-entry')).not.toBeInTheDocument();
+    expect(window.location.hash).toBe('');
   });
 });

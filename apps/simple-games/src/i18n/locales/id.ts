@@ -153,8 +153,7 @@ export const id: Messages = {
   advancedTitle: 'Lanjutan',
   clubEntry: 'Club House',
   playTogetherTitle: 'Main bersama',
-  playTogetherBody:
-    'Bandingkan rekor terbaikmu dengan semua orang, atau dengan orang yang kamu kenal.',
+  playTogetherBody: 'Bagikan skormu dengan semua orang.',
   clubResultSent: 'Terkirim ke {club}',
   clubResultPending: 'Akan dikirim saat Anda membuka Club',
   clubResultNotSent: 'Tidak dapat mengirim ke {club}',
