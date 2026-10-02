@@ -22,7 +22,7 @@ import { haptics } from '@/services/haptics';
 import { sounds } from '@/services/sound';
 import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
-import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
+import { RestartDialog } from '@/ui/components/RestartDialog';
 import { IconBack, IconCheck, IconHint, IconRetry, IconUndo } from '@/ui/components/icons';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
@@ -503,17 +503,13 @@ export function SolitaireGameScreen() {
         onHome={goHome}
       />
 
-      <ConfirmDialog
+      <RestartDialog
         open={confirmRestart}
-        title={t('tryAgain')}
-        body={t('confirmNewGameBody')}
-        cancelLabel={t('cancel')}
-        confirmLabel={t('confirm')}
-        onCancel={() => setConfirmRestart(false)}
-        onConfirm={() => {
-          setConfirmRestart(false);
-          restartCurrent();
-        }}
+        onClose={() => setConfirmRestart(false)}
+        onRetry={restartCurrent}
+        newBoard={
+          session.mode === 'free' ? { label: t('solNewDeal'), start: startFree } : undefined
+        }
       />
     </div>
   );

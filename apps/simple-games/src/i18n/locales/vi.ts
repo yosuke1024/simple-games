@@ -31,6 +31,7 @@ export const vi: Messages = {
   newGame: 'Ván mới',
   backHome: 'Trang chính',
 
+  restartTitle: 'Bắt đầu lại?',
   confirmNewGameTitle: 'Bắt đầu ván mới?',
   confirmNewGameBody: 'Ván đang chơi sẽ mất.',
   cancel: 'Hủy',

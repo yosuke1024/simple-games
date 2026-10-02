@@ -31,6 +31,7 @@ export const zhHant: Messages = {
   newGame: '新遊戲',
   backHome: '首頁',
 
+  restartTitle: '重新開始？',
   confirmNewGameTitle: '開始新遊戲？',
   confirmNewGameBody: '目前的進度會消失。',
   cancel: '取消',

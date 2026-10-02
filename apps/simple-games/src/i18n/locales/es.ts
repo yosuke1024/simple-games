@@ -31,6 +31,7 @@ export const es: Messages = {
   newGame: 'Partida nueva',
   backHome: 'Inicio',
 
+  restartTitle: '¿Empezar de nuevo?',
   confirmNewGameTitle: '¿Empezar una partida nueva?',
   confirmNewGameBody: 'Se perderá la partida actual.',
   cancel: 'Cancelar',

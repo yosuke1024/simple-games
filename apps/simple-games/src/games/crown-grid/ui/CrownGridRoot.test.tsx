@@ -462,7 +462,9 @@ describe('playing (§2, §4)', () => {
     expect(labelAt(1, 1)).toMatch(/^Crossed out/);
 
     await user.click(screen.getByRole('button', { name: 'Retry same board' }));
-    await user.click(screen.getByRole('button', { name: 'Start' }));
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Retry same board' }),
+    );
     expect(labelAt(1, 1)).toMatch(/^Empty/);
   });
 
@@ -531,7 +533,7 @@ describe('hints (§6)', () => {
     renderGame(tutorialDone);
     await startEasy(user);
     await user.click(screen.getByRole('button', { name: 'Retry same board' }));
-    expect(screen.getByRole('alertdialog', { name: 'Retry same board' })).toBeInTheDocument();
+    expect(screen.getByRole('alertdialog', { name: 'Start over?' })).toBeInTheDocument();
 
     fireEvent.keyDown(window, { key: 'h' });
     // No hint behind the dialog: no message, nothing highlighted, nothing counted.

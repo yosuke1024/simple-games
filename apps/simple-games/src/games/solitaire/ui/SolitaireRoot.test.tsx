@@ -1021,3 +1021,37 @@ describe('drag (issue #116)', () => {
     expect(table().querySelectorAll('.sol-destination')).toHaveLength(0);
   });
 });
+
+describe('the ↻ in the top bar (docs/ARCHITECTURE.md「ヘッダの ↻ は結果カードと同じ 2 択」)', () => {
+  const dialog = () => screen.getByRole('alertdialog', { name: 'Start over?' });
+  const choices = () =>
+    within(dialog())
+      .getAllByRole('button')
+      .map((button) => button.textContent);
+  const storedGame = () =>
+    JSON.parse(deviceStore.get(SO_STORAGE_KEYS.game)!) as { mode: string; seed: string };
+
+  it('offers a new deal beside the retry on a free deal, and deals one (§5)', async () => {
+    const user = userEvent.setup();
+    renderGame(savedGoldenGame);
+    await resumeGoldenGame(user);
+    const before = (JSON.parse(savedGoldenGame[SO_STORAGE_KEYS.game]!) as { seed: string }).seed;
+
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+    expect(choices()).toEqual(['Retry same board', 'New deal', 'Cancel']);
+
+    await user.click(within(dialog()).getByRole('button', { name: 'New deal' }));
+    await settle();
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(storedGame().mode).toBe('free');
+    expect(storedGame().seed).not.toBe(before);
+  });
+
+  it('offers only the same deal on the daily: one deal a day (§6)', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+    expect(choices()).toEqual(['Retry same board', 'Cancel']);
+  });
+});

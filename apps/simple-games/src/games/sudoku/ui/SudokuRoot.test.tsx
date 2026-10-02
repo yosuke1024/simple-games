@@ -822,3 +822,48 @@ describe('keyboard (issue #93)', () => {
     expect(dialog).toBeInTheDocument();
   });
 });
+
+describe('the ↻ in the top bar (docs/ARCHITECTURE.md「ヘッダの ↻ は結果カードと同じ 2 択」)', () => {
+  const dialog = () => screen.getByRole('alertdialog', { name: 'Start over?' });
+  const choices = () =>
+    within(dialog())
+      .getAllByRole('button')
+      .map((button) => button.textContent);
+  const storedFreeSeed = () =>
+    (JSON.parse(deviceStore.get(SD_STORAGE_KEYS.freeGame)!) as { seed: string }).seed;
+
+  it('offers a new game beside the retry on a free board, at the same tier (§9)', async () => {
+    const user = userEvent.setup();
+    renderSudoku(tutorialDone);
+    await user.click(await screen.findByRole('button', { name: /Free Play/ }));
+    await settle();
+    const before = storedFreeSeed();
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+    expect(choices()).toEqual(['Retry same board', 'New Game', 'Cancel']);
+
+    await user.click(within(dialog()).getByRole('button', { name: 'New Game' }));
+    await settle();
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.getByText('Free Play')).toBeInTheDocument();
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(storedFreeSeed()).not.toBe(before);
+  });
+
+  it('offers only the same board on a level — another board is another level, chosen from the home', async () => {
+    const user = userEvent.setup();
+    renderSudoku(tutorialDone);
+    await user.click(await screen.findByRole('button', { name: /Level 1/ }));
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+    expect(choices()).toEqual(['Retry same board', 'Cancel']);
+  });
+
+  it('offers only the same board on the daily', async () => {
+    const user = userEvent.setup();
+    renderSudoku(tutorialDone);
+    await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
+    await user.click(screen.getByRole('button', { name: 'Retry same board' }));
+    expect(choices()).toEqual(['Retry same board', 'Cancel']);
+  });
+});

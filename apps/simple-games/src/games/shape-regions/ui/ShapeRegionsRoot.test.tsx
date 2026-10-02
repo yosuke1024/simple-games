@@ -354,8 +354,10 @@ describe('retry and the home (§9, §11)', () => {
     if (n1 >= 0) strokeFrom(truth.clues[region]!.index, n1, truth.width);
 
     await user.click(screen.getByRole('button', { name: 'Retry same board' }));
-    expect(screen.getByRole('alertdialog', { name: 'Retry same board' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Start' }));
+    expect(screen.getByRole('alertdialog', { name: 'Start over?' })).toBeInTheDocument();
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Retry same board' }),
+    );
     if (n1 >= 0) expect(cells()[n1]).toHaveAccessibleName(/unassigned/);
     expect(cells()).toHaveLength(truth.width * truth.height);
   });

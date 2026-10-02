@@ -17,7 +17,7 @@ import { useSettings } from '@/state/SettingsContext';
 import { AnimatedNumber } from '@/ui/components/AnimatedNumber';
 import { BannerSlot } from '@/ui/components/BannerSlot';
 import { BoardView, type MatchAnim } from '../components/BoardView';
-import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
+import { RestartDialog } from '@/ui/components/RestartDialog';
 import { IconAdd, IconBack, IconHint, IconRetry, IconUndo } from '@/ui/components/icons';
 import { useTransientTimeout } from '@/ui/useTransientTimeout';
 import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
@@ -371,17 +371,15 @@ export function GameScreen() {
         onHome={goHome}
       />
 
-      <ConfirmDialog
+      <RestartDialog
         open={confirmRestart}
-        title={t('tryAgain')}
-        body={t('confirmNewGameBody')}
-        cancelLabel={t('cancel')}
-        confirmLabel={t('confirm')}
-        onCancel={() => setConfirmRestart(false)}
-        onConfirm={() => {
-          setConfirmRestart(false);
-          restartCurrent();
-        }}
+        onClose={() => setConfirmRestart(false)}
+        onRetry={restartCurrent}
+        newBoard={
+          session.mode === 'free'
+            ? { label: t('newGame'), start: () => startFree(session.freeTier ?? undefined) }
+            : undefined
+        }
       />
     </div>
   );

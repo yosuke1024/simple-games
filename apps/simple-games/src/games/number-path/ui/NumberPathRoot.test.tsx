@@ -394,7 +394,9 @@ describe('retry (§5)', () => {
     expect(pathLength()).toBe(2);
 
     await user.click(screen.getByRole('button', { name: 'Retry same board' }));
-    await user.click(screen.getByRole('button', { name: 'Start' }));
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Retry same board' }),
+    );
     expect(pathLength()).toBe(1);
     // Same board: 1 is still where it was.
     expect(cellAt(KNOWN.solution[0]!).getAttribute('aria-label')).toMatch(/^Number 1/);
@@ -410,7 +412,9 @@ describe('retry (§5)', () => {
 
       act(() => vi.advanceTimersByTime(5_000));
       fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
-      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+      fireEvent.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Retry same board' }),
+      );
 
       act(() => vi.advanceTimersByTime(3_000));
       background();

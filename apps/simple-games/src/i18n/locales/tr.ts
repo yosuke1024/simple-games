@@ -31,6 +31,7 @@ export const tr: Messages = {
   newGame: 'Yeni oyun',
   backHome: 'Ana sayfa',
 
+  restartTitle: 'Baştan başlansın mı?',
   confirmNewGameTitle: 'Yeni oyun başlasın mı?',
   confirmNewGameBody: 'Devam eden oyunun kaybolacak.',
   cancel: 'Vazgeç',

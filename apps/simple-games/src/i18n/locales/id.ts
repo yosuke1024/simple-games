@@ -31,6 +31,7 @@ export const id: Messages = {
   newGame: 'Permainan Baru',
   backHome: 'Beranda',
 
+  restartTitle: 'Mulai ulang?',
   confirmNewGameTitle: 'Mulai permainan baru?',
   confirmNewGameBody: 'Permainan yang sedang berjalan akan hilang.',
   cancel: 'Batal',

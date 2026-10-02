@@ -35,6 +35,7 @@ export const hi: Messages = {
   newGame: 'नया गेम',
   backHome: 'होम',
 
+  restartTitle: 'फिर से शुरू करें?',
   confirmNewGameTitle: 'नया गेम शुरू करें?',
   confirmNewGameBody: 'अभी चल रहा गेम खो जाएगा।',
   cancel: 'रद्द करें',

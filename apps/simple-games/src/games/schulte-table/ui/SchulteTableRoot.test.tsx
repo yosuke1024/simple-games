@@ -284,7 +284,9 @@ describe('throwing a round away (§10, §11)', () => {
       act(() => vi.advanceTimersByTime(6_000));
 
       fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
-      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+      fireEvent.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Retry same board' }),
+      );
       await settle();
 
       const stats = storedStats();
@@ -399,7 +401,9 @@ describe('backgrounding', () => {
       // Retry and Home both discard the round; neither may re-book what
       // backgrounding already counted.
       fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
-      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+      fireEvent.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Retry same board' }),
+      );
       await settle();
       expect(storedStats()?.size3.totalMisses).toBe(1);
 

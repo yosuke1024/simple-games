@@ -288,6 +288,7 @@ Easy と Medium は削減の各段で T1〜T3 solvable も一意性と一緒に�
   `box-regions-<difficulty>-<token>`(token = 起動時刻 + 乱数、Takuzu の `newSeedToken`)。
   同じ seed なら同じ盤面なので「同じ盤面で再挑戦」も中断からの復帰も正確に成立する。
   レベル 1〜100 は作らない。クリア画面の第一ボタンは同じ盤面での再挑戦、第二が「新しい盤面」。
+  プレイ中のヘッダの ↻ も同じ 2 択(再挑戦 / 新しい盤面)を出す(`ui/components/RestartDialog.tsx`、2026-10-02)。デイリーは再挑戦だけ。
 - **デイリー**: 1 日 1 問。seed は `box-regions-daily-<YYYY-MM-DD>`(端末のローカル日付のみ)。
   **毎日 Medium 固定**(曜日で当たり外れを作らない — Sudoku §10)。
 - **デイリーは今日の 1 問だけ。** 過去の日付には遡れず、一覧も入口も持たない。日付が過ぎた

@@ -31,6 +31,7 @@ export const de: Messages = {
   newGame: 'Neues Spiel',
   backHome: 'Start',
 
+  restartTitle: 'Neu anfangen?',
   confirmNewGameTitle: 'Neues Spiel starten?',
   confirmNewGameBody: 'Dein aktuelles Spiel geht verloren.',
   cancel: 'Abbrechen',
