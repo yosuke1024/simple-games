@@ -36,17 +36,17 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | Mahjong Solitaire | 深い青菫                 | `#3b3196` | `#7e77c0` |
 | Bubble Pop        | オックスブラッド         | `#712d2f` | `#cd6a6d` |
 | Ludo              | マゼンタ紫               | `#ad34a7` | `#cd6ac8` |
-| Crown Grid        | ブラス(Web 先行公開)     | `#7e673e` | `#cdb87e` |
-| Number Path       | ペトロール(Web 先行公開) | `#29606a` | `#7ecdc3` |
-| Shape Regions     | 深紫(Web 先行公開)       | `#57317d` | `#a37bcc` |
-| Yacht             | アズール(Web 先行公開)   | `#3879ae` | `#aebfcd` |
-| Mancala           | 苔色(Web 先行公開)       | `#55592f` | `#a6ac77` |
-| Dominoes          | モーブ(Web 先行公開)     | `#533653` | `#d55cd5` |
-| Hit & Blow        | フューシャ(Web 先行公開) | `#7c2177` | `#dd9eda` |
-| Dots and Boxes    | 群青(Web 先行公開)       | `#3855ca` | `#6f84da` |
-| Binary Balance    | 若草(Web 先行公開)       | `#5a8128` | `#9cce5a` |
-| Sudoku 6×6        | 紺青(Web 先行公開)       | `#233c76` | `#6784c5` |
-| Box Regions       | 深い薔薇(Web 先行公開)   | `#ac3564` | `#ce5a88` |
+| Crown Grid        | ブラス                   | `#7e673e` | `#cdb87e` |
+| Number Path       | ペトロール               | `#29606a` | `#7ecdc3` |
+| Shape Regions     | 深紫                     | `#57317d` | `#a37bcc` |
+| Yacht             | アズール                 | `#3879ae` | `#aebfcd` |
+| Mancala           | 苔色                     | `#55592f` | `#a6ac77` |
+| Dominoes          | モーブ                   | `#533653` | `#d55cd5` |
+| Hit & Blow        | フューシャ               | `#7c2177` | `#dd9eda` |
+| Dots and Boxes    | 群青                     | `#3855ca` | `#6f84da` |
+| Binary Balance    | 若草                     | `#5a8128` | `#9cce5a` |
+| Sudoku 6×6        | 紺青                     | `#233c76` | `#6784c5` |
+| Box Regions       | 深い薔薇                 | `#ac3564` | `#ce5a88` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える

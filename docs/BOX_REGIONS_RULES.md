@@ -9,8 +9,8 @@ Hint と Undo は無制限・無料、広告視聴で解放しない、ストリ
 プレイ中に時計を見せない。
 
 ゲーム ID は `box-regions`、i18n キーの接頭辞は `boxRegions`、保存キーの接頭辞は `br.`
-である。配信チャンネルは **Web 先行公開(`web-beta`)**で、アプリには正式収録しない
-([WEB_VERSION.md](WEB_VERSION.md)「先行公開」、issue #210)。古典的な**長方形分割**
+である。**2026-10-02 に Web 先行公開から正式収録した**(アプリにも収録。保存スキーマは
+この収録で凍結。[WEB_VERSION.md](WEB_VERSION.md)「先行公開」、issue #210)。古典的な**長方形分割**
 (四角に切る)系のメカニクスに、形の種類(正方形 / 縦長 / 横長 / 自由)の手がかりと
 「数字も形も無い手がかり」を足したものを、Simple Games の名前と表現で作る。
 [Shape Regions](SHAPE_REGIONS_RULES.md) とは**別のゲーム**である — あちらは 5 種類の
@@ -330,8 +330,9 @@ Easy と Medium は削減の各段で T1〜T3 solvable も一意性と一緒に�
 - 保存キーは `br.saveGame` / `br.saveDaily` / `br.stats` / `br.flags` / `br.prefs` の
   **5 つ**。`br.flags` はチュートリアル完了。`br.prefs` は**最後に選んだ難易度**だけを持つ。
 - 保存の失敗でゲームを止めない。バリデータは例外を投げない。
-- Web 先行公開中はスキーマを変えることがある(`WebBetaNotice` が伝える)。黙って変えない
-  ために golden(`compatibility.test.ts`)は最初から敷く。
+- スキーマは 2026-10-02 の正式収録で凍結した。以後は移行だけで変える
+  (`storage/releasedRecords.test.ts` が公開済みの Web 版の payload で固定する)。黙って
+  変えないために golden(`compatibility.test.ts`)は最初から敷く。
 
 ## 12. Quick Rules(アプリ内チュートリアル)
 
@@ -341,7 +342,7 @@ Easy と Medium は削減の各段で T1〜T3 solvable も一意性と一緒に�
 2. 数字は箱のマス数、記号は形(正方形 / 縦長 / 横長 / 自由)。
 3. 角から角へなぞって箱を描く。タップで箱を消す。詰まったら Hint。
 
-Learn More は出ない(ガイド未公開 — `ui/landing.ts` の `PUBLISHED_GAME_IDS` に入れない)。
+Learn More は出ない(ガイドがまだ無い — `ui/landing.ts` の `PUBLISHED_GAME_IDS` に入れない)。
 
 ## 13. 演出とアクセシビリティ
 
@@ -368,7 +369,8 @@ Learn More は出ない(ガイド未公開 — `ui/landing.ts` の `PUBLISHED_GA
   900ms だけ重ねて消す。**盤面が埋まってから結果カードが出るまでに約 1 秒置く**
   (`ui/useResultReveal.ts`)。Reduced Motion では即時。
 - **7×7 の 320px でのドラッグ精度は、まだ実機で確認していない。**通らなければ Hard を
-  6×6 に落として**この文書を先に直す**。
+  6×6 に落として**この文書を先に直す**(スキーマは凍結済みなので、盤の大きさを変える
+  場合は保存の移行を伴う)。[RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §2 の門で確認する。
 
 ## 14. 意図的な差分
 

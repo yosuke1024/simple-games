@@ -9,31 +9,66 @@ Google Play への公開前に、この順で確認する。
 Web 版で先行公開(ベータ)していたゲームをこのリリースで正式収録する場合
 ([WEB_VERSION.md](WEB_VERSION.md)「先行公開」):
 
+> **2026-10-02 の実施記録(v1.3.2 を Play の内部テストと TestFlight に出して確かめ、問題が
+> なければ v1.4.0 として公開する — 製品オーナーの段取り)。** Crown Grid / Number Path /
+> Shape Regions / Yacht / Mancala / Dominoes / Hit & Blow / Dots and Boxes /
+> Binary Balance / Sudoku 6×6 / Box Regions の 11 本を一度に正式収録する。各項目の
+> 「この版」の行が、その項目をどうしたかの記録。チェックを入れるのは実際に終えた
+> ものだけで、未了は未了と書く。
+
 - [ ] 直近 2 週間、スキーマ変更(セーブを消す変更)・既知のクラッシュ・進行不能がない
       (壊す変更を入れたら 2 週間を数え直す)
+      **この版: 未達 — 2026-10-02 に製品オーナーが明示的に免除した。** 公開は
+      2026-09-26(3 本)/ 09-27(5 本)/ 09-29(3 本)で、経過は 6 / 5 / 2 日。
+      基準を満たしたのではなく、オーナーの判断で収録する(経緯は
+      [WEB_VERSION.md](WEB_VERSION.md)「先行公開」)
 - [ ] 計測の滞在時間が十分(シェル層イベントで確認。既収録ゲームを参照点に
       人間が判断する。読み方と限界は
       [GROWTH_MEASUREMENT.md](GROWTH_MEASUREMENT.md))
-- [ ] 正式収録 = スキーマ凍結。**`game/compatibility.test.ts`(盤面/配札/ウェーブの
+      **この版: 確認した記録は無い。** 収録の根拠は上のオーナーの判断であり、
+      滞在時間の確認ではない
+- [x] 正式収録 = スキーマ凍結。**`game/compatibility.test.ts`(盤面/配札/ウェーブの
       golden テスト)だけでは足りない** — これは生成の決定性を守るもので、保存データが
       生き残ることは検証しない(Minesweeper / Nonogram にはこのテスト自体が無い)。
-      このゲームの保存スキーマに対して、`progressMigration.test.ts` /
-      `storage.test.ts` と同じ形の**永続化ラウンドトリップテスト**
-      (実際に保存済みペイロードを読み込み、想定どおり扱われることを検証する)を
-      このリリースで作成し、以後の変更はこのテストに対する移行のみとする
-- [ ] registry のエントリから `channel: 'web-beta'` を外す(Web 版の BETA バッジと
+      このゲームの保存スキーマに対して、`games/<id>/storage/releasedRecords.test.ts` の形の
+      **永続化ラウンドトリップテスト**(公開済みのビルドで実際に保存された payload の
+      **リテラル**を、実際の読み込み経路へ通し、想定どおり扱われることを検証する。
+      見本は `games/2048/storage/releasedRecords.test.ts`)を
+      このリリースで作成し、以後の変更はこのテストに対する移行のみとする。
+      現行コードでレコードを組み立てる形のテスト(`storage.test.ts` /
+      `gamePersistence.test.ts` / `slots.test.ts` が作るペイロード)は、スキーマを
+      変えるとテストも一緒に変わるので、これの代わりにならない
+      **この版: 11 本ぶん(`games/<id>/storage/releasedRecords.test.ts`)を作成した。
+      ペイロードは Web 版で実際に遊んで採取したもの。
+      `ls apps/simple-games/src/games/*/storage/releasedRecords.test.ts` で 15 本
+      (既存 4 本 + この 11 本)あることと、15 ファイルが通ること(303 テスト)を
+      2026-10-02 に確認した**
+- [x] registry のエントリから `channel: 'web-beta'` を外す(Web 版の BETA バッジと
       セーブ注意文(en/ja)はそれで消え、アプリのホーム・検索・住所にも現れる —
       `app/gameChannel.ts`)。README の「Web 先行公開」節から正式収録の表へ移し、
-      ストア掲載文(`apps/simple-games/store/listing.md`)と landing のガイド
-      (`ui/landing.ts` の `PUBLISHED_GAME_IDS`)はガイドが出てから足す
+      ストア掲載文(`apps/simple-games/store/listing.md`)はゲームの収録と同時に足す。
+      landing のガイド(`ui/landing.ts` の `PUBLISHED_GAME_IDS`)だけはガイドが出てから足す
+      **この版: 11 本とも `channel` を外した(registry は 41 エントリ)。README は
+      正式収録の表へ移した。ストア掲載文(store/listing.md)も 41 本ぶんに更新した —
+      Console / App Store Connect への反映は v1.4.0 の公開と同時で、人間の作業。
+      ガイドはまだ無いので `PUBLISHED_GAME_IDS` は 30 のまま — この 11 本は
+      「詳しく見る」を出さない**
 - [ ] landing(`pixapps-landing`)の `tests/ui.test.js` で、そのゲームの id をベータ
       許容リストから `LANDING_GAME_IDS` へ移し、`public/simple-games/index.html` に
       カードを足す(先行公開中はチャンクだけが配信され、カードは無い —
       [WEB_VERSION.md](WEB_VERSION.md)「先行公開」)
+      **この版: landing の PR で対応する(このリポジトリの外)。マージされるまで
+      チェックを入れない**
 - [ ] そのゲームが練習セットの 5 本([PUZZLE_PRACTICE_SET.md](PUZZLE_PRACTICE_SET.md))なら、
       landing の `public/simple-games/practice/index.html` のカードから BETA 表示と
       セーブ注意文を外す(専用入口は各ゲームの実際のチャンネルを表示する —
       [WEB_VERSION.md](WEB_VERSION.md)「専用ベータ入口」)。カード自体は残る
+      **この版: 5 本(Crown Grid / Number Path / Binary Balance / Sudoku 6×6 /
+      Box Regions)とも対象。landing の PR で対応する**
+- [ ] この版の 11 本は**アプリでまだ一度も実機・エミュレータで動かしていない**
+      (jsdom と Web ビルドでしか動いていない)。§2 の「全ゲームを 1 本ずつ開ける」と
+      生成・探索の待ち、§4 の低スペック端末での 1 局を、この 11 本を含めて通すまで
+      「アプリで確認済み」と書かない
 
 ## 1. コードの検証(機械が判定できるもの)
 
@@ -46,8 +81,12 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 - [ ] golden テスト(`compatibility.test.ts`)が通っている
       = 既存プレイヤーの盤面と自己ベストの土台が変わっていない
 - [ ] 生成コスト・探索コストのテストが通っている(生成: Sudoku / Minesweeper /
-      Nonogram / Kakuro / Futoshiki / Takuzu / Water Sort、CPU 探索: Checkers /
-      Gomoku / Connect Four)
+      Nonogram / Kakuro / Futoshiki / Takuzu / Water Sort / Crown Grid / Number Path /
+      Shape Regions / Binary Balance / Sudoku 6×6 / Box Regions(後ろの 6 本は
+      `game/guarantee.test.ts`)、CPU 探索: Checkers / Gomoku / Connect Four /
+      Mancala / Dots and Boxes / Yacht(後ろの 3 本は `game/cpu.test.ts` の仕事量の
+      予算。Dominoes の `cpu.test.ts` は CPU が見える情報と選び方を固めるもので、
+      探索の仕事量は数えない))
       = 生成・探索の仕事量(探索した配置数・ノード数・試行回数。Sudoku は配置数と
       技法走査数の 2 つ)が上限内。これは決定的な指標なので、落ちたら再実行せずに
       原因を読むこと。**壁時計は判定していない**
@@ -104,7 +143,20 @@ bash .github/scripts/check-principles.sh
       72 は従来から名指ししているレベル。開発環境では全レベルが 100ms 予算に
       収まっているが、端末の予算を満たしたと言えるのはここで確かめたときだけ。
       [SUDOKU_RULES.md](SUDOKU_RULES.md) §7)、Minesweeper Hard の初手、
-      Nonogram の level 100。押してから盤面が出るまでに間があってはいけない
+      Nonogram の level 100、そして 2026-10-02 に収録した 6 本の生成(Crown Grid /
+      Number Path / Shape Regions / Binary Balance / Sudoku 6×6 / Box Regions)の
+      最も大きい盤・最も難しい難度とデイリー(各ルール文書は「低スペック実機での
+      測定はまだ」と書いている)。押してから盤面が出るまでに間があってはいけない
+- [ ] **CPU の手番の待ちが体感されない** — Mancala(強い方)/ Dots and Boxes(最大盤)/
+      Yacht / Dominoes の CPU 対戦で、CPU の手が返るまでの「間」が意図した長さに
+      収まっていること(探索の仕事量は §1 のテストが見る。端末での待ちはここでしか
+      分からない)
+- [ ] **7×7 盤の 320px 幅でのなぞり・ドラッグの精度** — Number Path(なぞり)/
+      Shape Regions / Box Regions(ドラッグ)の Hard を実機で確かめる。通らなければ
+      Hard を 6×6 に落とすが、スキーマは凍結済みなので保存の移行を伴う
+      ([NUMBER_PATH_RULES.md](NUMBER_PATH_RULES.md) /
+      [SHAPE_REGIONS_RULES.md](SHAPE_REGIONS_RULES.md) §13 /
+      [BOX_REGIONS_RULES.md](BOX_REGIONS_RULES.md))
 
 ## 3. 多言語
 
@@ -113,24 +165,29 @@ bash .github/scripts/check-principles.sh
       (特にドイツ語の長さ、CJK の折り返し、Devanagari / Thai の行高)
 - [ ] **高リスクキーの門を通している**([I18N_POLICY.md](I18N_POLICY.md)「リリース前の門」)
 
-      ```bash
-                  pnpm --filter simple-games i18n:gate status        # 残りを見る
-                  pnpm --filter simple-games i18n:gate pending <lang> # 逆翻訳する文字列(英語は出ない)
-                  pnpm --filter simple-games i18n:gate:check          # 未承認があれば落ちる
-                  ```
+  ```bash
+  pnpm --filter simple-games i18n:gate status        # 残りを見る
+  pnpm --filter simple-games i18n:gate pending <lang> # 逆翻訳する文字列(英語は出ない)
+  pnpm --filter simple-games i18n:gate:check          # 未承認があれば落ちる
+  ```
 
-                  逆翻訳は**訳を書いた実行者以外**にやらせる。承認は
-                  `src/i18n/gateRecord.json` に、読んだ英語と訳文のハッシュ付きで記録される。
-                  どちらかを後から編集すると失効し、通常の `pnpm test` が落ちる。
-                  **「ネイティブレビュー済み」は要求しない** — 一人開発では供給できず、
-                  供給できない条件をチェックリストに置くと形骸化するため
-                  (自然さは `machine` 来歴の開示と読者からの報告で担保する)。
+  逆翻訳は**訳を書いた実行者以外**にやらせる。承認は
+  `src/i18n/gateRecord.json` に、読んだ英語と訳文のハッシュ付きで記録される。
+  どちらかを後から編集すると失効し、通常の `pnpm test` が落ちる。
+  **「ネイティブレビュー済み」は要求しない** — 一人開発では供給できず、
+  供給できない条件をチェックリストに置くと形骸化するため
+  (自然さは `machine` 来歴の開示と読者からの報告で担保する)。
 
 - [ ] 端末言語を切り替えてもゲーム進行が失われない
 - [ ] Backup & Restore の 4 キー(`backupRestoreConfirmTitle` /
-      `backupRestoreConfirmBody` / `backupPrivacyNote` / `backupPurchaseNote`)が
-      門を通っていること。**2026-09-08 時点で 12 言語 × 4 = 48 件が未承認**
-      (実装者は原文を見ているため独立逆翻訳の担当になれない。issue #160)
+      `backupRestoreConfirmBody` / `backupPrivacyNote` / `backupPurchaseNote`)と
+      Club House の 6 キー(`clubRemoveEraseBody` / `clubDisconnectBody` /
+      `clubDisconnectHostingNote` / `clubDisconnectLastOwner` / `clubPublicDisclosure` /
+      `clubDailyDisclosure`)が門を通っていること。**2026-10-02 時点で 12 言語 × 10 キー =
+      120 件が未承認**(`i18n:gate status` の実測。切断の文を全員向けの本文と、自分で建てた
+      Club の Owner にだけ出す費用の 1 文に分けたので 9 → 10 キー。issue #160 / #161)。
+      手順 1 の独立逆翻訳(原文を見せない別の実行者、1 言語 1 体)は 2026-10-02 に済み、
+      手順 2 の作者の読みを待っている。`i18n:gate:check` が緑になるまで、この版は出せない
 
 ## 4. Android
 
@@ -288,7 +345,7 @@ Web 版だけの導線なので、アプリのリリースではなく **Web の
 
 ## 5.7 結果画面の共有([ARCHITECTURE.md](ARCHITECTURE.md)「レイヤー規則」, issue #86)
 
-自動テストは文面・リンク・全 30 ゲームへの設置までしか見られない。**共有シートが
+自動テストは文面・リンク・全ゲーム(registry の全エントリ)への設置までしか見られない。**共有シートが
 実際に開くかは実機でしか分からない。**
 
 2026-09-04 に決着した: **Android の WebView に `navigator.share` は無い**(WebView 148
@@ -334,7 +391,7 @@ Web 版だけの導線なので、アプリのリリースではなく **Web の
 出さないことがあり、iOS の WKWebView は選択キャレットを出しうる。シートが
 開いた瞬間に指を離す動作は、実機でしか確かめられない。
 
-- [ ] 全 30 ゲームのホームのヘッダー右に星があり、押すと塗りつぶしと
+- [ ] 全ゲーム(registry の全エントリ)のホームのヘッダー右に星があり、押すと塗りつぶしと
       読み上げ文言(追加 ⇄ 削除)が入れ替わること。コレクションへ戻ると
       その節に載っていること
 - [ ] 星がヘッダーの形を変えていないこと(戻るボタンと左右で釣り合う)
@@ -480,7 +537,7 @@ Solitaire / Spider / FreeCell は**タップ操作を残したまま**ドラッ�
 形式・検証・ロールバックは自動テストが持っている(`src/backup/`)。**実機にしか
 無いのはファイルそのものの行き来**である —— OS の共有シート、ドキュメント
 ピッカー、そして「別の端末で開けるか」。ここで失敗すると、失うのは機能ではなく
-**その人の 30 本ぶんの進行**なので、1 台で完結させずに必ず 2 台で確かめる。
+**その人の全ゲームぶんの進行**なので、1 台で完結させずに必ず 2 台で確かめる。
 
 確認用に、**中断中の局・レベル進行・デイリー履歴・お気に入り・ゲーム固有設定が
 実際に入った端末**を用意すること(まっさらな端末での往復は何も証明しない)。
@@ -508,6 +565,13 @@ Solitaire / Spider / FreeCell は**タップ操作を残したまま**ドラッ�
       消えないこと**([ADS_POLICY.md](ADS_POLICY.md))。書き出したファイルを
       テキストエディタで開き、`sg.iap` / `adRemovalPurchased` が
       **1 文字も入っていない**ことも目で見る
+- [ ] **Club House に参加した端末で Export したファイルに、メンバートークンが
+      入っていないこと。**書き出したファイルをテキストエディタで開き、
+      `sg.club` / `sg.clubOutbox` のキーも、参加時に発行された値も
+      **1 文字も入っていない**ことを目で見る(この 2 つは端末の鍵と、その接続に紐づく
+      未送信の結果なので、書き出さず端末に残す — `src/backup/keys.ts`)。復元は
+      この接続を足しも消しもしない。参加済みの端末で復元しても参加したまま残ること、
+      未参加の端末で復元しても参加状態にならないことを確かめる
 - [ ] 復元した端末で、購入済みだった側の「購入を復元」がこれまでどおり効くこと
 - [ ] 14 言語 × 狭い画面(360px 以下)で、説明文とボタンが崩れないこと
       (長い言語: ドイツ語 `Sicherung wiederherstellen`)
@@ -627,6 +691,49 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
 チェックを入れずに「何を確認できなかったか」をこの節の下に残す。「たぶん出ていない」は
 確認ではない。
 
+## 5.17 Club House の接続後の経路([architecture/club.md](architecture/club.md), issue #161)
+
+§5.16 は「参加していない端末は何も送らない」を見た。ここは**参加した端末**で、
+実際に通ることを実機で確かめる。エミュレータと jsdom では通らない部分
+(ネイティブの WebView からの通信、オリジン、機内モード)が目的。**実機の Android と
+実機の iPhone の両方**で行う。
+
+前提: サーバ(<https://club.pixapps.ai>)が、出荷するビルドと同じ契約でデプロイ済みで
+あること(通報・持ち主の対処・`GET /public` を含む)。サーバの CORS は、ネイティブの
+オリジン `https://localhost`(Android)と `capacitor://localhost`(iOS)を許している
+(サーバ側 `src/http/cors.ts` の `APP_ORIGINS`)。**これが効いているかは、実機から
+実際に通信して初めて分かる**ので、下の最初の項目がその確認を兼ねる。
+
+- [ ] 設定 › Advanced › Club House(またはホームの Play together)から **Public Club
+      House に参加**できること。表示名を入れて参加し、**参加前に「表示名と結果が
+      参加者と pixapps.ai に公開される」旨の説明が出ている**こと。Android・iPhone
+      それぞれで
+- [ ] **Today → 今日のデイリーを遊ぶ → 結果が自動で送られる → Rankings に自分の
+      成績が載る**こと。対象ゲームは契約を持つデイリーのうち複数(Sudoku /
+      Minesweeper / Water Sort に加え、この版で収録した 11 本のうちデイリーのある
+      ゲームを少なくとも 1 つ)。同じ盤面・同じモードの成績の順位だけが並び、
+      熱心さの順位・ストリーク・カウントダウンが出ていないこと
+- [ ] 送信の失敗が遊びを止めない: **機内モードのまま**デイリーを最後まで遊べ、
+      結果画面が普通に出ること(未送信の結果は端末に残り、機内モードを解除したあとに
+      送られる。失敗表示で操作がふさがれない)
+- [ ] **Report**: Rankings の他人の名前を通報でき(1 人 1 回)、通報後に画面が
+      壊れないこと。持ち主の側で、通報された名前を**変更**(`PATCH /members/:id`)・
+      **結果ごと削除**(`DELETE /members/:id?purge=1`)でき、ランキングの行に反映される
+      こと(Public の持ち主は PixApps。[club.md](architecture/club.md) §17-3)
+- [ ] **Disconnect**: 接続を切ると、端末が Club の宛先へ以後 1 件も通信しないこと
+      (§5.16 と同じ見方で確認)。切断後もゲームの進行・統計は何も変わらないこと
+- [ ] **招待リンク**: 招待 URL(`https://<endpoint>/join#invite=…`)をブラウザで開くと
+      Web で `Join and Play` へ進めること。アプリでは設定 › Advanced › Club House に
+      URL を**貼り付けて**参加できること(アプリが招待 URL を直接受け取る経路は無い —
+      [club.md](architecture/club.md) §7-3)。リンクを開いただけでは参加せず、本人が
+      操作して初めて接続すること
+- [ ] §5.14 のバックアップに、メンバートークン(`sg.club` / `sg.clubOutbox`)が
+      入らないこと
+
+**未確認は未確認として書く。**実機が片方しか無い、サーバが未デプロイ、通報や持ち主の
+対処をまだ通せていない、といったときは、チェックを入れずに「何を確認できなかったか」を
+この節の下に残す。この節はまだ誰も実機で通していない。
+
 ## 6. ストア掲載
 
 - [ ] `apps/simple-games/store/listing.md` の文言を各言語へ反映
@@ -640,6 +747,19 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
       Device or other IDs に広告 ID(Advertising ID、Meta と共有)を追加する。
       公開プライバシーポリシーも同じ内容へ更新し、**v1.3.1(新仕様)が利用者に
       届く前に公開**する
+- [ ] **Club House(Public)の分も、データセーフティ欄と App Store のプライバシー
+      ラベルに入れる。** 参加した人についてだけ発生する収集で、内容は表示名、結果の
+      数値(時間・手数・スコア)、シード / 盤面の識別子、端末に結びつくメンバー
+      トークン、そしてレート制限のために処理される IP アドレス。Public では表示名と
+      結果が参加者に見え、pixapps.ai の公開ページにも出る。参加しない端末では
+      一切発生しない(§5.16)。公開ページのプライバシーポリシーの Club House 節と
+      同じ内容にそろえ、**この版が利用者に届く前に公開**する。Meta を有効化する
+      リリースでは、その分も別に足す(上と §5.15)
+- [ ] **ユーザー生成コンテンツの審査の期待を確認する**(Apple Guideline 1.2 /
+      Google Play の UGC ポリシー)。Public には他人の表示名が並ぶので、報告
+      (Report)と持ち主による名前の変更・削除の仕組みが、審査が求める水準に
+      足りているかを人が読んで判断する。このアプリにブロックの機能は無い。
+      **足りているとは書かない — 審査の結果が出るまで未確認**
 - [ ] 設定画面の「プライバシーポリシー」「利用規約」が実機で開くことを確認
       (アプリは文面を同梱せずリンクするだけになった)
 - [ ] 「Coming Soon」表記や未実装ゲームの名前が掲載文に含まれていない
