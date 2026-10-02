@@ -1,0 +1,143 @@
+/* The Club House screens (club.md §9). Shell classes carry the look; these
+   only add what the shell has no word for. Phone width first. */
+
+.club-screen {
+  min-width: 0;
+}
+
+.club-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.club-body {
+  gap: 8px;
+  padding-bottom: 24px;
+}
+
+.club-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.club-text-btn {
+  min-height: var(--tap-size);
+  padding: 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: 0;
+}
+
+.club-text-btn:disabled {
+  color: var(--ink-soft);
+}
+
+.club-danger {
+  color: var(--warn);
+}
+
+.club-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.club-section {
+  margin: 16px 0 0;
+}
+
+.club-quiet {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+
+.club-note {
+  margin: 0;
+  font-size: 15px;
+}
+
+.club-note-error {
+  color: var(--warn);
+}
+
+.club-disclosure {
+  margin: 8px 0 0;
+  font-size: 15px;
+}
+
+.club-line {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.club-line .settings-row-label {
+  min-width: 0;
+}
+
+.club-own {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+.club-rank {
+  display: inline-block;
+  min-width: 2.2em;
+  margin-right: 6px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.club-you {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.club-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.club-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.club-field-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.club-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 12px;
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.club-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.club-join-another {
+  margin-top: 8px;
+}
