@@ -11,7 +11,7 @@ import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import type { Sudoku6x6Session } from '../../game';
+import { boardDigestOf, type Sudoku6x6Session } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface Sudoku6x6ResultOverlayProps {
@@ -122,7 +122,8 @@ export function Sudoku6x6ResultOverlay({
           facts={facts}
           seed={session.seed}
           params={{ difficulty: session.difficulty }}
-          boardDigest={null}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
         />
       </div>
       <ResultAdSlot />

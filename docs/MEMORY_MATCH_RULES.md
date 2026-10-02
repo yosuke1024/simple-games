@@ -167,8 +167,10 @@
 
 正典は [architecture/club.md](architecture/club.md) §6 と §16。ここにはこのゲームの側で決まることだけを書く。
 
-- **順位表の名前(`params`)** は `{ difficulty }`(`easy` / `medium` / `hard`。盤面のレイアウトを決める)。手数は表示するだけで順位には使わない。デイリー(Medium 盤)も同じ形で載る。
+- **順位表の名前(`params`)** は `{ difficulty }`(`easy` / `medium` / `hard`。盤面のレイアウトを決める)。手数は表示するだけで順位には使わない。デイリー(Medium 盤)も同じ `params` を持つが、順位表には載らない(次の項)。
 - **結果画面が送る事実(`facts`)** は `{ elapsedSeconds, moves }`。共有(`ShareAction`)の `details` と同じセッションの値(`elapsedSeconds` / `moveCount`)から作り、ここで計算しない。
 - **順位の軸は時間**で、短いほうが上(`order: 'elapsedSeconds'`、`direction: 'asc'`)。表示するだけの値は順位に使わない。
-- **盤面は揃わなくてよい**(club.md §16)。`boardDigest` は `null` で、挑戦用の盤面も seed の接頭辞も持たない。ふつうに遊んだ局のクリア画面から送るだけである。
+- **デイリーは全員が同じ盤面なので、その日の Today に送る。**結果画面は、デイリーの局だけ `daily`(局の `dailyDate`)と `boardDigest` を渡す。Club のブリッジは `daily` が文字列で `boardDigest` が null でないときだけ Today の挑戦に回すので、この 2 つは必ず対で渡す。デイリーの結果は順位表(`medium`)には入らない(club.md 決定 29)。Today の「最初に完了した結果が 1 人 1 件」はここでも同じで、もう一度同じ盤面を遊んでも先に送った結果が残る。
+- **`boardDigest`(`game/challenge.ts`)。**`mm1:` + 8 桁 hex。`` `${difficulty}:${deckToString(deck)}` ``(`compatibility.test.ts` が固定している配札の文字列にレイアウトを前置したもの)を `game/rng.ts` の `hashSeed` に通す。`deck` は配られたあと動かない(一致・表向きは別のフィールド)ので、進行中・再開後・クリア後のどれでも同じ値になる。`game/challenge.test.ts` が 2026-08-01・2026-10-02 のデイリーと seed 固定の Easy 盤の値を固定する。
+- **ふつうの局(難易度モード)は盤面が揃わなくてよい**(club.md §16)。`daily` も `boardDigest` も `null` で、順位表(`params` の `difficulty` ごと)に送るだけである。
 - ゲーム自体は変わらない。統計・自己ベスト・レベル進行・保存データ・結果画面の既存の表示には触れない。

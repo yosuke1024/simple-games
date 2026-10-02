@@ -3,7 +3,7 @@
  * It states the score and its parts, the time and the moves, and mentions a
  * personal best quietly rather than celebrating it at length.
  */
-import { MAX_LEVEL, type GameSession } from '../../game';
+import { boardDigestOf, MAX_LEVEL, type GameSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
@@ -171,7 +171,8 @@ export function ResultOverlay({
           facts={facts}
           seed={session.seed}
           params={{}}
-          boardDigest={null}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
         />
       </div>
       <ResultAdSlot />

@@ -178,6 +178,8 @@ seed は `slide-level-<n>`。
 - **表を分けるのは盤面のサイズ。**`params` は`{ size: 3 | 4 | 5 }`、`paramsKey` はそこから決まる。レベルや配札ごとには分けない。
 - **結果画面が送る事実**は `{ moves, elapsedSeconds }`。共有の `details` と同じセッションの値から作り、数字は計算し直さない。
 - **並べる軸は手数(`moves`)で、少ないほど上**(`direction: 'asc'`)。結果画面に出る他の数字は見せるだけで、順位には使わない。
-- **盤面(配札)は揃わなくてよい**(club.md §16)。`boardDigest` は null、`seed` は局の `session.seed` をそのまま渡す。
+- **デイリーは全員が同じ盤面なので、その日の Today に送る。**結果画面は、デイリーの局だけ `daily`(局の `dailyDate`)と `boardDigest` を渡す。Club のブリッジは `daily` が文字列で `boardDigest` が null でないときだけ Today の挑戦に回すので、この 2 つは必ず対で渡す。デイリーの結果は順位表(`4x4`)には入らない(club.md 決定 29)。Today の「最初に完了した結果が 1 人 1 件」はここでも同じで、もう一度同じ盤面を遊んでも先に送った結果が残る。`seed` は局の `session.seed` をそのまま渡す。
+- **`boardDigest`(`game/challenge.ts`)。**`sg1:` + 8 桁 hex。`` `${size}:${tilesToString(開始時のタイル)}` ``(`compatibility.test.ts` が固定している文字列にサイズを前置したもの)を `game/rng.ts` の `hashSeed` に通す。タイルは動かすたびに変わるので、digest は局の入力から配り直した盤面(`restartSession` の盤面)から取る。進行中・再開後・クリア後のどれでも同じ値になる。`game/challenge.test.ts` が 2026-08-01・2026-10-02 のデイリーとレベル 1 の値を固定する。
+- **レベルの局は盤面が揃わなくてよい**(club.md §16)。`daily` も `boardDigest` も `null` で、サイズの表に送るだけである。
 - 結果画面の `ClubResultAction` は `ShareAction` の次に置く。Club に参加していない端末では何も描かない。
 - 統計・自己ベスト・中断と再開・保存データには触れない。

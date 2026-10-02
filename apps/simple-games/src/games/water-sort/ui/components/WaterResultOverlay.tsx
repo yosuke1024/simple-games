@@ -38,16 +38,23 @@ export function WaterResultOverlay({
   // The sorted tubes get their beat before the card covers them (§12).
   const solved = session.status === 'solved';
   const revealed = useResultReveal(solved);
-  // The board's identity for the Club (§14): the tier that deals it and the
-  // digest of its starting tubes. Rebuilding the deal is a generation, so it
-  // is done once per finished board rather than on every render. A level or
-  // daily board no tier deals has no ranking (challengeTierOf).
+  // The board's identity for the Club (§14). A daily is one board for
+  // everyone that day and goes to Today: its date, its digest, and the
+  // contract's `daily` params (its six colours at an even mix match no tier).
+  // Any other board goes to its tier's ranking, and one no tier deals has no
+  // ranking (challengeTierOf). Rebuilding the deal is a generation, so it is
+  // done once per finished board rather than on every render.
   const { mode, seed, level, dailyDate, freeTier } = session;
   const club = useMemo(() => {
     if (!solved) return null;
     const board = { mode, seed, level, dailyDate, freeTier };
+    if (mode === 'daily') {
+      return dailyDate === null
+        ? null
+        : { tier: 'daily' as const, boardDigest: boardDigestOf(board), daily: dailyDate };
+    }
     const tier = challengeTierOf(board);
-    return tier === null ? null : { tier, boardDigest: boardDigestOf(board) };
+    return tier === null ? null : { tier, boardDigest: boardDigestOf(board), daily: null };
   }, [solved, mode, seed, level, dailyDate, freeTier]);
   if (!revealed) return null;
 
@@ -161,6 +168,7 @@ export function WaterResultOverlay({
             seed={session.seed}
             params={{ tier: club.tier }}
             boardDigest={club.boardDigest}
+            daily={club.daily}
           />
         ) : null}
       </div>

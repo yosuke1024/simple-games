@@ -36,3 +36,8 @@ function mulberry32(a: number): () => number {
 export function createRng(seed: string): () => number {
   return mulberry32(xmur3(seed)());
 }
+
+/** A stable 32-bit hash of a seed string — for deterministic choices and board digests. */
+export function hashSeed(seed: string): number {
+  return xmur3(seed)();
+}

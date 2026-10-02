@@ -17,7 +17,7 @@ import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
 import { formatDuration } from '@/ui/format';
 import { useResultReveal } from '@/ui/useResultReveal';
-import { MAX_LEVEL, trackForLevel, type QuickMathSession } from '../../game';
+import { boardDigestOf, MAX_LEVEL, trackForLevel, type QuickMathSession } from '../../game';
 import type { LastResult } from '../../state/GameContext';
 
 export interface QuickMathResultOverlayProps {
@@ -130,7 +130,8 @@ export function QuickMathResultOverlay({
           facts={facts}
           seed={session.seed}
           params={{ track }}
-          boardDigest={null}
+          boardDigest={session.mode === 'daily' ? boardDigestOf(session) : null}
+          daily={session.mode === 'daily' ? session.dailyDate : null}
         />
       </div>
       <ResultAdSlot />

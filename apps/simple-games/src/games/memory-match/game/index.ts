@@ -1,3 +1,4 @@
+export * from './challenge';
 export * from './daily';
 export * from './deck';
 export * from './rng';

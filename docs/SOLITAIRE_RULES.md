@@ -258,6 +258,7 @@ Quick Rules が教える操作はタップのままにする(ドラッグは説�
 - **表を分けるのはDraw 1 / Draw 3 の設定。**`params` は`{ drawThree: boolean }`、`paramsKey` はそこから決まる。レベルや配札ごとには分けない。
 - **結果画面が送る事実**は `{ moves, elapsedSeconds, hints }`。共有の `details` と同じセッションの値から作り、数字は計算し直さない。Hint の数は 0 も事実として送る(結果画面は 0 のとき行を省く)。
 - **並べる軸は手数(`moves`)で、少ないほど上**(`direction: 'asc'`)。結果画面に出る他の数字は見せるだけで、順位には使わない。
-- **盤面(配札)は揃わなくてよい**(club.md §16)。`boardDigest` は null、`seed` は局の `session.seed` をそのまま渡す。
+- **デイリーは Today の挑戦へ、フリーはランキングの表へ。** デイリーの局だけ `daily`(その日付 = `session.dailyDate`)と `boardDigest` を付けて送り、その日の挑戦(全員が同じ配札)に結果が集まる。フリーの局は `daily` も `boardDigest` も null で、配札は揃わなくてよい(club.md §16)。`seed` は局の `session.seed` をそのまま渡す。勝てなかった局は送らない(中央で扱う)。
+- **`boardDigest`。** 配札直後の盤面文字列(`game/deal.ts` の `boardToString(dealBoard(seed))`、golden テストと同じ文字列)に `|draw-1` または `|draw-3` を足して `game/rng.ts` の `hashSeed` に通した `sl1:` + 8 桁 hex(`game/challenge.ts`)。同じ配札でも Draw 1 と Draw 3 は手数が比べられないので、別々の Today の挑戦になる。プレイ中の盤面は動くので、seed から配札を作り直して求める。
 - 結果画面の `ClubResultAction` は `ShareAction` の次に置く。Club に参加していない端末では何も描かない。
 - 統計・自己ベスト・中断と再開・保存データには触れない。
