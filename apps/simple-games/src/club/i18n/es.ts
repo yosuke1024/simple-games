@@ -15,6 +15,7 @@ export const es: ClubMessages = {
     'Tu apodo y tus resultados son visibles para todos en el Public Club House y en pixapps.ai.',
   clubAutoSendDisclosure:
     'Mientras estés en este Club, el resultado de cada partida que termines (tiempo, movimientos, puntuación) se envía aquí automáticamente.',
+  clubAutoSendAccept: 'Enviar mis resultados automáticamente',
   clubToday: 'Hoy',
   clubDaily: 'Diario',
   clubJoinAnother: 'Unirse a otro Club',

@@ -19,6 +19,7 @@ export const en = {
     'Your nickname and your results are visible to everyone in the Public Club House and on pixapps.ai.',
   clubAutoSendDisclosure:
     'While you’re in this Club, every game you finish sends its result (time, moves, score) here automatically.',
+  clubAutoSendAccept: 'Send my results automatically',
   clubToday: 'Today',
   clubDaily: 'Daily',
   clubJoinAnother: 'Join another Club',

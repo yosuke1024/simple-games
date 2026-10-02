@@ -88,6 +88,10 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   // (docs/PRODUCT_PRINCIPLES.md「Club House」, docs/architecture/club.md §2-2)。
   // 「自動で」「参加している間」を落とした訳は同意の約束の反故になる。
   'clubAutoSendDisclosure',
+  // 同じ開示を、自動送信より前に参加した接続の持ち主が Club の画面で受け入れるボタン
+  // (docs/architecture/club.md §4-1)。押すことが同意のすべてなので、「結果を自動で送る」
+  // を弱めた訳(「送ることができる」「送る準備」など)は、押していない送信を許してしまう。
+  'clubAutoSendAccept',
 
   // Club の結果の自動送信 — 開示が先、送信が後(docs/architecture/club.md §2-2, §11)。
   // 「終わると結果が送られる」を落とした訳は同意の約束の反故になる。

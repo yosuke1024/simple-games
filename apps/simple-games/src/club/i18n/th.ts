@@ -15,6 +15,7 @@ export const th: ClubMessages = {
     'ชื่อเล่นและผลของคุณจะแสดงให้ทุกคนใน Public Club House และบน pixapps.ai เห็น',
   clubAutoSendDisclosure:
     'ในระหว่างที่คุณอยู่ใน Club นี้ ผลของทุกเกมที่คุณเล่นจบ (เวลา จำนวนการเดิน คะแนน) จะถูกส่งมาที่นี่โดยอัตโนมัติ',
+  clubAutoSendAccept: 'ส่งผลของฉันโดยอัตโนมัติ',
   clubToday: 'วันนี้',
   clubDaily: 'รายวัน',
   clubJoinAnother: 'เข้าร่วม Club อื่น',

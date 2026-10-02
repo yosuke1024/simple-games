@@ -307,6 +307,14 @@ export interface ClubConnection {
   nickname: string;
   role: 'owner' | 'member';
   joinedAt: string;
+  /**
+   * The device saw `clubAutoSendDisclosure` and joined, or accepted it on the
+   * Club screen: finished games are sent to this Club by themselves. A
+   * connection made before 2026-10-02 (the manual "Send to Club" build) has
+   * none and sends nothing until its owner accepts there (club.md §4-1).
+   * Additive: a record without it stays valid, schemaVersion stays 1.
+   */
+  autoSend?: true;
 }
 
 export interface ClubConnections {
@@ -370,6 +378,8 @@ function asClubConnection(raw: unknown): ClubConnection | null {
     nickname,
     role,
     joinedAt,
+    // Anything but a literal `true` is "has not accepted": consent is never inferred.
+    ...(raw.autoSend === true ? { autoSend: true as const } : {}),
   };
 }
 

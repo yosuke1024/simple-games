@@ -4,11 +4,12 @@ import { CLUB_OUTBOX_MAX_ATTEMPTS, type ClubConnection } from '@/storage/schemas
 import type { GameId } from '@/app/registry';
 import type { ClubResultPayload } from '@/ui/clubBridge';
 import { createBridge, loadConnections } from './bridge';
-import { addClubConnection, removeClubConnection } from './storage/connections';
+import { acceptAutoSend, addClubConnection, removeClubConnection } from './storage/connections';
 import { enqueueResult, pendingFor } from './storage/outbox';
 
 const E = 'https://club.example.com';
 const F = 'https://second.example.com';
+/** A connection whose owner accepted the automatic-send disclosure (joined, or accepted on the Club screen). */
 const connection = (endpoint: string, name: string): ClubConnection => ({
   endpoint,
   clubId: `c_${name}`,
@@ -18,7 +19,13 @@ const connection = (endpoint: string, name: string): ClubConnection => ({
   nickname: 'Ken',
   role: 'member',
   joinedAt: 'x',
+  autoSend: true,
 });
+/** One from before automatic sending existed: it never saw the disclosure. */
+const unconsented = (endpoint: string, name: string): ClubConnection => {
+  const { autoSend: _accepted, ...legacy } = connection(endpoint, name);
+  return legacy;
+};
 const FAMILY = connection(E, 'Family');
 const WORK = connection(F, 'Work');
 
@@ -171,6 +178,71 @@ describe('sendResult: routing', () => {
     expect(await bridge.sendResult(payload)).toEqual([]);
     expect(f).not.toHaveBeenCalled();
     expect(await pendingFor(E, kv)).toEqual([]);
+  });
+});
+
+describe('sendResult: consent (club.md §4-1)', () => {
+  it('a connection that never accepted the disclosure gets nothing: not sent, not queued, not reported', async () => {
+    const f = vi.fn();
+    const { bridge, kv } = await setup(f, [unconsented(E, 'Family')]);
+    expect(await bridge.sendResult(payload)).toEqual([]);
+    expect(await bridge.sendResult(dailyPayload)).toEqual([]);
+    expect(f).not.toHaveBeenCalled();
+    expect(await pendingFor(E, kv)).toEqual([]);
+  });
+
+  it('a result the contract rejects is not reported for an unconsented connection either', async () => {
+    const f = vi.fn();
+    const { bridge } = await setup(f, [unconsented(E, 'Family')]);
+    expect(await bridge.sendResult({ ...payload, gameId: 'nope' as GameId })).toEqual([]);
+    expect(await bridge.sendResult({ ...payload, facts: { elapsedSeconds: 1 } })).toEqual([]);
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it('with one Club consented and one not, only the consented one is sent to and reported', async () => {
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    const { bridge, kv } = await setup(f, [FAMILY, unconsented(F, 'Work')]);
+    const reports = await bridge.sendResult(payload);
+    expect(reports).toEqual([{ endpoint: E, clubName: 'Family', outcome: 'sent' }]);
+    expect(hosts(f)).toEqual(['club.example.com']);
+    expect(await pendingFor(F, kv)).toEqual([]);
+
+    // A rejected result still names only the consented one.
+    const rejected = await bridge.sendResult({ ...payload, gameId: 'nope' as GameId });
+    expect(rejected).toEqual([{ endpoint: E, clubName: 'Family', outcome: 'rejected' }]);
+  });
+
+  it('a played result (a loss) says nothing for an unconsented connection, as for any other', async () => {
+    const f = vi.fn();
+    const { bridge } = await setup(f, [unconsented(E, 'Family')]);
+    expect(await bridge.sendResult({ ...payload, outcome: 'played' })).toEqual([]);
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it('accepting later starts the sending, from the next result: what was finished before is never offered', async () => {
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    const { bridge, kv } = await setup(f, [unconsented(E, 'Family')]);
+    expect(await bridge.sendResult(payload)).toEqual([]);
+    expect(f).not.toHaveBeenCalled();
+
+    await acceptAutoSend(E, kv);
+    expect(await pendingFor(E, kv)).toEqual([]);
+    // The same board played again is a new result now, and goes out once.
+    expect((await bridge.sendResult(payload))[0]?.outcome).toBe('sent');
+    expect(f).toHaveBeenCalledTimes(1);
+  });
+
+  it('reads the consent when it is called, not when the screen opened: leaving and rejoining consented sends again', async () => {
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    const { bridge, kv } = await setup(f, [FAMILY]);
+    await bridge.sendResult(payload);
+    expect(f).toHaveBeenCalledTimes(1);
+    await removeClubConnection(E, kv);
+    await addClubConnection(unconsented(E, 'Family'), kv);
+    expect(
+      await bridge.sendResult({ ...payload, facts: { ...payload.facts, mistakes: 2 } }),
+    ).toEqual([]);
+    expect(f).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -450,6 +522,27 @@ describe('sendResult: the same result twice', () => {
     const reports = await bridge.sendResult(payload);
     expect(reports.map((r) => r.outcome)).toEqual(['sent', 'sent']);
     expect(hosts(f)).toEqual(['club.example.com', 'second.example.com']);
+  });
+
+  it('the same Club rejoined in one session is a new member: it still gets its copy', async () => {
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    const { bridge, kv } = await setup(f);
+    expect((await bridge.sendResult(payload))[0]?.outcome).toBe('sent');
+    expect(f).toHaveBeenCalledTimes(1);
+
+    // Disconnect, then join the same server again: the server issues a new member.
+    await removeClubConnection(E, kv);
+    await addClubConnection({ ...FAMILY, memberId: 'm_2', memberToken: 'secret-Family-2' }, kv);
+    const reports = await bridge.sendResult(payload);
+    expect(reports).toEqual([{ endpoint: E, clubName: 'Family', outcome: 'sent' }]);
+    expect(f).toHaveBeenCalledTimes(2);
+    expect((f.mock.calls[1]![1] as { headers: Record<string, string> }).headers.Authorization).toBe(
+      'Bearer secret-Family-2',
+    );
+
+    // ...and that membership is settled like any other: a second mount sends nothing.
+    await bridge.sendResult(payload);
+    expect(f).toHaveBeenCalledTimes(2);
   });
 
   it('a result that failed is tried again by the next mount', async () => {

@@ -15,6 +15,7 @@ export const id: ClubMessages = {
     'Nama panggilan dan hasilmu terlihat oleh semua orang di Public Club House dan di pixapps.ai.',
   clubAutoSendDisclosure:
     'Selama kamu ada di Club ini, hasil setiap permainan yang kamu selesaikan (waktu, langkah, skor) dikirim ke sini secara otomatis.',
+  clubAutoSendAccept: 'Kirim hasilku secara otomatis',
   clubToday: 'Hari ini',
   clubDaily: 'Harian',
   clubJoinAnother: 'Gabung ke Club lain',

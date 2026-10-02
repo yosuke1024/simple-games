@@ -13,6 +13,7 @@ export const zhHans: ClubMessages = {
   clubPublicDisclosure: '你的昵称和成绩会向 Public Club House 中的所有人以及 pixapps.ai 公开显示。',
   clubAutoSendDisclosure:
     '只要你还在这个 Club 中，你完成的每局游戏的成绩（用时、步数、得分）都会自动发送到这里。',
+  clubAutoSendAccept: '自动发送我的成绩',
   clubToday: '今天',
   clubDaily: '每日',
   clubJoinAnother: '加入另一个 Club',

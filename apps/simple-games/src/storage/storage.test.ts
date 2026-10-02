@@ -282,6 +282,34 @@ describe('Club connections record (docs/architecture/club.md §4-1)', () => {
     ]);
   });
 
+  it('keeps autoSend only when it is the literal true: consent is never inferred', async () => {
+    const loaded = await load([
+      connection({ endpoint: 'https://a.example.com', autoSend: true }),
+      connection({ endpoint: 'https://b.example.com', autoSend: false }),
+      connection({ endpoint: 'https://c.example.com', autoSend: 'true' }),
+      connection({ endpoint: 'https://d.example.com', autoSend: 1 }),
+      connection({ endpoint: 'https://e.example.com', autoSend: null }),
+      connection({ endpoint: 'https://f.example.com' }),
+    ]);
+    expect(loaded.connections.map((c) => c.autoSend)).toEqual([
+      true,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
+    // Dropped, not stored as false: the record from before the field and a refused value look alike.
+    for (const c of loaded.connections.slice(1)) expect(c).not.toHaveProperty('autoSend');
+  });
+
+  it('a connection from before autoSend existed stays valid, with no autoSend and the same schemaVersion', async () => {
+    const legacy = connection();
+    const loaded = await load([legacy]);
+    expect(loaded).toEqual({ schemaVersion: 1, connections: [legacy] });
+    expect(loaded.connections[0]).not.toHaveProperty('autoSend');
+  });
+
   it('caps the connections per device', async () => {
     const many = Array.from({ length: CLUB_CONNECTIONS_MAX + 3 }, (_, i) =>
       connection({ endpoint: `https://club${i}.example.com` }),

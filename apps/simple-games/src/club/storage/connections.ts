@@ -73,6 +73,18 @@ export async function updateNickname(
   );
 }
 
+/**
+ * The player accepted `clubAutoSendDisclosure` on the Club screen: a connection
+ * from before automatic sending existed starts sending from here on (club.md §4-1).
+ */
+export async function acceptAutoSend(endpoint: string, kv?: KVStore): Promise<ClubConnection[]> {
+  const current = await load(kv);
+  return save(
+    current.map((c) => (c.endpoint === endpoint ? { ...c, autoSend: true as const } : c)),
+    kv,
+  );
+}
+
 export function summarize(connection: ClubConnection): ClubConnectionSummary {
   return {
     endpoint: connection.endpoint,

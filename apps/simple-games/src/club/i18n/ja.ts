@@ -15,6 +15,7 @@ export const ja: ClubMessages = {
     'ニックネームと結果は、Public Club House のみんなと pixapps.ai の公開ページに表示されます。',
   clubAutoSendDisclosure:
     '参加している間は、遊び終えた結果(時間・手数・スコアなど)が自動でこの Club に送られます。',
+  clubAutoSendAccept: '結果を自動で送る',
   clubToday: '今日',
   clubDaily: 'デイリー',
   clubJoinAnother: '別の Club に参加',

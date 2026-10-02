@@ -78,11 +78,13 @@ export interface ClubSendReport {
 export interface ClubBridge {
   connections: readonly ClubConnectionSummary[];
   /**
-   * Sends one finished result to every connection, in parallel, and says what
-   * became of it for each (in connection order). Never throws. Connections are
-   * read at call time, so nothing played before joining is ever sent. A
-   * `played` result (a loss, a dead end) is sent nowhere: it would lock a
-   * daily and rankings ignore it.
+   * Sends one finished result to every connection that accepted automatic
+   * sending, in parallel, and says what became of it for each (in connection
+   * order). A connection that never did — one made before results were sent by
+   * themselves — gets nothing and is not reported (club.md §4-1). Never throws.
+   * Connections are read at call time, so nothing played before joining or
+   * accepting is ever sent. A `played` result (a loss, a dead end) is sent
+   * nowhere: it would lock a daily and rankings ignore it.
    */
   sendResult(payload: ClubResultPayload): Promise<readonly ClubSendReport[]>;
 }

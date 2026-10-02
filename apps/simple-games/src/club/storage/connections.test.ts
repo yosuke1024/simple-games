@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createMemoryKV } from '@/storage/kv';
 import { CLUB_CONNECTIONS_MAX, type ClubConnection } from '@/storage/schemas';
 import {
+  acceptAutoSend,
   addClubConnection,
   loadClubConnections,
   removeClubConnection,
@@ -42,6 +43,39 @@ describe('connections', () => {
     const next = await updateNickname(conn(2).endpoint, 'Kenji', kv);
     expect(next.map((c) => c.nickname)).toEqual(['Ken', 'Kenji']);
     expect((await loadClubConnections(kv))[1]!.nickname).toBe('Kenji');
+  });
+
+  it('acceptAutoSend marks one connection, keeps it through renames, and touches no other', async () => {
+    const kv = createMemoryKV();
+    await addClubConnection(conn(1), kv);
+    await addClubConnection(conn(2), kv);
+    // A connection from before automatic sending has no autoSend.
+    expect((await loadClubConnections(kv)).map((c) => c.autoSend)).toEqual([undefined, undefined]);
+
+    const next = await acceptAutoSend(conn(2).endpoint, kv);
+    expect(next.map((c) => c.autoSend)).toEqual([undefined, true]);
+    expect((await loadClubConnections(kv)).map((c) => c.autoSend)).toEqual([undefined, true]);
+
+    // The consent survives the other writers of the record.
+    await updateClubName(conn(2).endpoint, 'Renamed', kv);
+    await updateNickname(conn(2).endpoint, 'Kenji', kv);
+    const after = (await loadClubConnections(kv))[1]!;
+    expect(after).toMatchObject({ clubName: 'Renamed', nickname: 'Kenji', autoSend: true });
+
+    // Idempotent, and an endpoint that is not connected changes nothing.
+    await acceptAutoSend(conn(2).endpoint, kv);
+    await acceptAutoSend('https://nobody.example.com', kv);
+    expect((await loadClubConnections(kv)).map((c) => c.autoSend)).toEqual([undefined, true]);
+  });
+
+  it('summarize does not carry the consent flag: the shell needs only names', () => {
+    expect(Object.keys(summarize(conn(1, { autoSend: true }))).sort()).toEqual([
+      'clubId',
+      'clubName',
+      'endpoint',
+      'nickname',
+      'role',
+    ]);
   });
 
   it('refuses an eleventh connection but still replaces an existing one', async () => {

@@ -214,6 +214,11 @@ describe('ClubRoot', () => {
     const body = JSON.parse(String(joinCall![1]!.body)) as Record<string, unknown>;
     expect(body).toEqual({ nickname: 'Ken' });
     expect(body).not.toHaveProperty('inviteToken');
+    // The disclosure was on the screen: the connection is stored as consented.
+    expect((await loadClubConnections())[0]).toMatchObject({
+      endpoint: PUBLIC_CLUB_ENDPOINT,
+      autoSend: true,
+    });
   });
 
   it('discloses automatic sending on a pasted invite link too, before the link is even pasted', async () => {
@@ -230,6 +235,31 @@ describe('ClubRoot', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('joins with a pasted invite link and stores the connection as consented', async () => {
+    const fetchMock = stubServer();
+    const user = userEvent.setup();
+    renderRoot({ entry: 'discover' });
+    await user.click(await screen.findByRole('button', { name: 'Join with an invite link' }));
+    expect(screen.getByText(AUTO_SEND)).toBeInTheDocument();
+
+    await user.type(
+      screen.getByLabelText('Invite link'),
+      `${ENDPOINT}/join#invite=${'a'.repeat(22)}`,
+    );
+    await user.type(screen.getByLabelText('Nickname'), 'Ken');
+    await user.click(screen.getByRole('button', { name: 'Join and Play' }));
+
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    const joinCall = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/join'));
+    expect(JSON.parse(String(joinCall![1]!.body))).toEqual({
+      inviteToken: 'a'.repeat(22),
+      nickname: 'Ken',
+    });
+    expect((await loadClubConnections())[0]).toMatchObject({ endpoint: ENDPOINT, autoSend: true });
+    // Joined consented: no box asking again.
+    expect(screen.queryByRole('button', { name: 'Send my results automatically' })).toBeNull();
+  });
+
   it('hides the Public button on All Clubs once the Public Club House is joined', async () => {
     stubServer();
     const base = {
@@ -240,6 +270,7 @@ describe('ClubRoot', () => {
       nickname: 'Ken',
       role: 'member' as const,
       joinedAt: 'x',
+      autoSend: true as const,
     };
     await addClubConnection({ ...base, endpoint: ENDPOINT });
     await addClubConnection({ ...base, endpoint: 'https://other.example.com', clubName: 'B' });
@@ -336,6 +367,8 @@ describe('ClubRoot', () => {
     expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
     expect(screen.getByText('1. Ken 3:58')).toBeInTheDocument();
     expect(screen.getByText('24 entries')).toBeInTheDocument();
+    // The invite-URL join showed the disclosure too: stored as consented.
+    expect((await loadClubConnections())[0]).toMatchObject({ endpoint: ENDPOINT, autoSend: true });
   });
 
   it('loads the club, today and the rankings: three requests', async () => {
@@ -582,6 +615,8 @@ async function joinedConnection(extra: Record<string, unknown> = {}) {
     nickname: 'Ken',
     role: 'member',
     joinedAt: '2026-09-09T00:00:00.000Z',
+    // Joined under this build: it saw the disclosure. A legacy test passes `autoSend: undefined`.
+    autoSend: true,
     ...extra,
   });
 }
@@ -623,5 +658,92 @@ describe('Disconnect this device', () => {
     const dialog = await openDisconnect();
     expect(dialog).toHaveTextContent('The server keeps running');
     expect(dialog).not.toHaveTextContent(HOSTING);
+  });
+});
+
+describe('a connection from before automatic sending (club.md §4-1)', () => {
+  const ACCEPT = 'Send my results automatically';
+
+  it('shows the disclosure and one button at the top of the Club, and still lists everything', async () => {
+    stubServer();
+    await joinedConnection({ autoSend: undefined });
+    renderRoot();
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+
+    expect(screen.getByText(AUTO_SEND)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ACCEPT })).toBeInTheDocument();
+    // The Club is fully usable: Reload, Settings and the Disconnect behind it are where they were.
+    expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument();
+    // Showing the box asks for nothing and stores nothing.
+    expect((await loadClubConnections())[0]).not.toHaveProperty('autoSend');
+  });
+
+  it('pressing the button stores autoSend, hides the box, and tells the shell', async () => {
+    stubServer();
+    const user = userEvent.setup();
+    await joinedConnection({ autoSend: undefined });
+    const handlers = renderRoot();
+    await user.click(await screen.findByRole('button', { name: ACCEPT }));
+
+    await waitFor(async () => expect((await loadClubConnections())[0]!.autoSend).toBe(true));
+    await waitFor(() => expect(screen.queryByText(AUTO_SEND)).not.toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: ACCEPT })).not.toBeInTheDocument();
+    expect(handlers.onConnectionsChanged).toHaveBeenCalledTimes(1);
+    // Nothing else moved: same Club, same lists.
+    expect(screen.getByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+  });
+
+  it('not pressing it changes nothing: nothing is stored, the box stays across Settings and back', async () => {
+    stubServer();
+    const user = userEvent.setup();
+    await joinedConnection({ autoSend: undefined });
+    const handlers = renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'Settings' }));
+    expect(screen.getByRole('button', { name: 'Disconnect this device' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('button', { name: ACCEPT })).toBeInTheDocument();
+    expect((await loadClubConnections())[0]).not.toHaveProperty('autoSend');
+    expect(handlers.onConnectionsChanged).not.toHaveBeenCalled();
+  });
+
+  it('accepting one Club leaves the other unconsented', async () => {
+    stubServer();
+    const user = userEvent.setup();
+    await joinedConnection({ autoSend: undefined });
+    await joinedConnection({
+      endpoint: 'https://other.example.com',
+      clubName: 'Other',
+      autoSend: undefined,
+    });
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'Suzuki Family' }));
+    await user.click(await screen.findByRole('button', { name: ACCEPT }));
+    await waitFor(async () =>
+      expect((await loadClubConnections()).map((c) => c.autoSend)).toEqual([true, undefined]),
+    );
+  });
+
+  it('a Today challenge does not promise a send the connection will not make', async () => {
+    stubServer();
+    dailyChallenges = true;
+    const user = userEvent.setup();
+    await joinedConnection({ autoSend: undefined });
+    renderRoot();
+
+    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · Daily · by Yoh/ }));
+    expect(await screen.findByText('4:31 Mistakes 0 Hints 1')).toBeInTheDocument();
+    // Play is still there; only the sentence "your result is sent to ..." is not.
+    expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
+    expect(screen.queryByText(/your result is sent to/)).not.toBeInTheDocument();
+  });
+
+  it('a consented connection shows no box', async () => {
+    stubServer();
+    await joinedConnection();
+    renderRoot();
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    expect(screen.queryByText(AUTO_SEND)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: ACCEPT })).not.toBeInTheDocument();
   });
 });

@@ -15,6 +15,7 @@ export const ko: ClubMessages = {
     '닉네임과 결과는 Public Club House의 모든 사람에게, 그리고 pixapps.ai에 공개됩니다.',
   clubAutoSendDisclosure:
     '이 Club에 참여하는 동안, 끝낸 모든 게임의 결과(시간, 이동 횟수, 점수)가 자동으로 이곳에 전송됩니다.',
+  clubAutoSendAccept: '내 결과를 자동으로 전송',
   clubToday: '오늘',
   clubDaily: '데일리',
   clubJoinAnother: '다른 Club 참여',

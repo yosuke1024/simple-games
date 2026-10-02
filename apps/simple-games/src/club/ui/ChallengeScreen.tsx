@@ -105,8 +105,9 @@ export function ChallengeScreen({
           </p>
           {gameId !== null && contractFor(challenge.gameId) !== null ? (
             <>
-              {/* A replay sends nothing (club.md §6-3), so it promises nothing. */}
-              {!challenge.mine && (
+              {/* A replay sends nothing (club.md §6-3), and neither does a connection that has not
+                  accepted automatic sending (§4-1): neither promises anything. */}
+              {!challenge.mine && connection.autoSend === true && (
                 <p className="club-disclosure">
                   {t('clubDailyDisclosure', {
                     game: gameTitle(challenge.gameId) ?? challenge.gameId,

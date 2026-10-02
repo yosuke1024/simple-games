@@ -181,18 +181,23 @@ bash .github/scripts/check-principles.sh
 - [ ] 端末言語を切り替えてもゲーム進行が失われない
 - [ ] Backup & Restore の 4 キー(`backupRestoreConfirmTitle` /
       `backupRestoreConfirmBody` / `backupPrivacyNote` / `backupPurchaseNote`)と
-      Club House の 7 キー(`clubRemoveEraseBody` / `clubDisconnectBody` /
+      Club House の 8 キー(`clubRemoveEraseBody` / `clubDisconnectBody` /
       `clubDisconnectHostingNote` / `clubDisconnectLastOwner` / `clubPublicDisclosure` /
-      `clubDailyDisclosure` / **`clubAutoSendDisclosure`**)が門を通っていること。12 言語 × 11 キー =
-      132 件。**`clubAutoSendDisclosure` は 2026-10-02 の自動送信で足した新しい高リスクキー
+      `clubDailyDisclosure` / **`clubAutoSendDisclosure`** / **`clubAutoSendAccept`**)が
+      門を通っていること。12 言語 × 12 キー = 144 件。**`clubAutoSendDisclosure` は 2026-10-02 の
+      自動送信で足した新しい高リスクキー
       で、結果ごとのボタンに代わる同意の文言(「参加している間は、遊び終えた結果が自動で
       送られます」。[architecture/club.md](architecture/club.md) §7-4)なので、誤訳は「同意して
-      いない送信」になる。12 言語ぶんは未承認のまま**(`i18n:gate status` は未完了)で、
+      いない送信」になる。** `clubAutoSendAccept` は同じ日に足した 2 つ目で、自動送信より前に
+      参加した接続の持ち主が Club の画面で同じ開示を受け入れるボタン(「結果を自動で送る」。
+      [architecture/club.md](architecture/club.md) §4-1)。押すことが同意のすべてなので、
+      「送る」を弱めた訳は押していない送信を許してしまう。**この 2 キーの 12 言語ぶん
+      (24 件)は未承認のまま**(`i18n:gate status` は未完了)で、
       **リリース前に盲検の逆翻訳(原文を見せない別の実行者、1 言語 1 体)と、作者が逆翻訳の表を
       読む手順を通す**(`I18N_GATE_STRICT=1` の `i18n:gate:check` が緑になるまで)。
       リリースまでに既存の高リスクキー(`clubDisconnectBody` / `clubDailyDisclosure` など)の
       英語の原文を直したら、そのキーの承認は失効するので通し直す(2026-10-02 の時点では
-      `clubAutoSendDisclosure` だけが未承認)。
+      `clubAutoSendDisclosure` と `clubAutoSendAccept` だけが未承認)。
       切断の文を全員向けの本文と、自分で建てた Club の Owner にだけ出す費用の 1 文に
       分けたので 9 → 10 キー(issue #160 / #161)。**以前の 120 件は 2026-10-02 に
       通した**(自動送信の前。結果は下に残す): 手順 1 の
@@ -730,6 +735,14 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
       「表示名と結果が参加者と pixapps.ai に公開される」旨(`clubPublicDisclosure`)の
       説明が出ている**こと。**招待リンクを貼って参加する画面と、招待 URL を開いて参加する画面にも、
       自動送信の説明が出る**こと(Public 以外の参加にも同意の場所がある)。Android・iPhone それぞれで
+- [ ] **1.3.2 から更新した端末は、受け入れるまで送らない**こと(自動送信より前に参加した接続。
+      [architecture/club.md](architecture/club.md) §4-1)。1.3.2 でどれかの Club に参加した
+      端末を、この版へ**上書き更新**する(Android は `adb install -r`、iPhone は TestFlight の更新)。
+      Club を開くと、画面の一番上に開示(「参加している間は…自動で送られます」)と
+      `Send my results automatically` のボタンの箱が出る。**ボタンを押す前に 1 局遊び終えても、結果画面の
+      状態の行は空のままで、Rankings に載らない**(通信も出ない)。ボタンを押すと箱が消え、
+      次に遊び終えた局から `Sent to <Club>` が出て Rankings に載る(押す前に遊んだ局は載らない)。
+      押さずに Club を使い続けても、一覧・Reload・Disconnect は普通に動く。Android・iPhone それぞれで
 - [ ] **参加する前に遊んだ局が送られない**こと: 参加の前に 1 局遊んでおき、参加したあとに
       Rankings を開いても、その局の成績が無い
 - [ ] **ボタンを押さずに、遊び終えた結果が自動で送られ、Rankings に自分の成績が載る**こと。

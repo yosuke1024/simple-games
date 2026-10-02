@@ -13,6 +13,7 @@ import type { ClubConnection } from '@/storage/schemas';
 import type { ClubInvite, ClubRootProps } from '@/ui/clubBridge';
 import { IconChevronRight } from '@/ui/components/icons';
 import {
+  acceptAutoSend,
   addClubConnection,
   loadClubConnections,
   removeClubConnection,
@@ -234,6 +235,13 @@ export function ClubRoot({
           onDisconnect={() => disconnect(connection.endpoint)}
           onRenamedMe={(nickname) => {
             void updateNickname(connection.endpoint, nickname)
+              .then((next) => {
+                if (alive.current) apply(next);
+              })
+              .catch(() => undefined);
+          }}
+          onAcceptAutoSend={() => {
+            void acceptAutoSend(connection.endpoint)
               .then((next) => {
                 if (alive.current) apply(next);
               })

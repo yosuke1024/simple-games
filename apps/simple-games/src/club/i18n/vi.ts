@@ -15,6 +15,7 @@ export const vi: ClubMessages = {
     'Biệt danh và kết quả của bạn hiển thị với mọi người trong Public Club House và trên pixapps.ai.',
   clubAutoSendDisclosure:
     'Khi bạn ở trong Club này, kết quả của mọi ván bạn hoàn thành (thời gian, số nước đi, điểm) sẽ được tự động gửi đến đây.',
+  clubAutoSendAccept: 'Tự động gửi kết quả của tôi',
   clubToday: 'Hôm nay',
   clubDaily: 'Hằng ngày',
   clubJoinAnother: 'Tham gia Club khác',

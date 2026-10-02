@@ -69,6 +69,7 @@ export function ClubScreen({
   onDisconnect,
   onRenamed,
   onRenamedMe,
+  onAcceptAutoSend,
 }: {
   connection: ClubConnection;
   panel: ClubPanel;
@@ -81,6 +82,8 @@ export function ClubScreen({
   onRenamed: (clubName: string) => void;
   /** The owner renamed this member: the server's nickname differs from the stored one. */
   onRenamedMe: (nickname: string) => void;
+  /** The player accepted the automatic-send disclosure shown for a connection that never saw it. */
+  onAcceptAutoSend: () => void;
 }) {
   const { t, locale } = useSettings();
   const [data, setData] = useState<ClubData | null>(null);
@@ -320,6 +323,17 @@ export function ClubScreen({
         </span>
       }
     >
+      {connection.autoSend === true ? null : (
+        // A connection from before results were sent by themselves never saw the
+        // disclosure, so nothing is sent until its owner accepts it here (club.md §4-1).
+        // Not pressing it changes nothing else: the Club stays fully usable.
+        <div className="club-consent">
+          <p className="club-disclosure">{t('clubAutoSendDisclosure')}</p>
+          <button type="button" className="btn btn-primary" onClick={onAcceptAutoSend}>
+            {t('clubAutoSendAccept')}
+          </button>
+        </div>
+      )}
       <div className="club-toolbar">
         <button
           type="button"

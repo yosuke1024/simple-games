@@ -62,6 +62,8 @@ export function JoinScreen({
         nickname: joined.member.nickname,
         role: joined.member.role,
         joinedAt: joined.member.joinedAt,
+        // The disclosure above was on this screen, whichever way in: that is the consent.
+        autoSend: true,
       });
     } catch (e) {
       setError(errorText(e, t));

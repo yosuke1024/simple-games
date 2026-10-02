@@ -15,6 +15,7 @@ export const hi: ClubMessages = {
     'आपका उपनाम और आपके नतीजे Public Club House में सभी को और pixapps.ai पर दिखाई देंगे।',
   clubAutoSendDisclosure:
     'जब तक आप इस Club में हैं, आपके खत्म किए हर गेम का नतीजा (समय, चालें, स्कोर) अपने-आप यहाँ भेजा जाएगा।',
+  clubAutoSendAccept: 'मेरे नतीजे अपने-आप भेजें',
   clubToday: 'आज',
   clubDaily: 'रोज़ाना',
   clubJoinAnother: 'दूसरे Club से जुड़ें',

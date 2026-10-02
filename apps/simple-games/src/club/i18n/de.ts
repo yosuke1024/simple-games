@@ -15,6 +15,7 @@ export const de: ClubMessages = {
     'Dein Spitzname und deine Ergebnisse sind für alle im Public Club House und auf pixapps.ai sichtbar.',
   clubAutoSendDisclosure:
     'Solange du in diesem Club bist, wird das Ergebnis jedes Spiels, das du beendest (Zeit, Züge, Punktzahl), automatisch hierher gesendet.',
+  clubAutoSendAccept: 'Meine Ergebnisse automatisch senden',
   clubToday: 'Heute',
   clubDaily: 'Täglich',
   clubJoinAnother: 'Einem weiteren Club beitreten',

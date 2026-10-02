@@ -1,9 +1,12 @@
 /**
  * The one function Core calls through the bridge (ui/clubBridge.ts): a
- * finished game's result goes to every Club this device has joined
- * (club.md §2-2, §10). Each Club's copy is written to the outbox first and
- * then flushed, so a result that cannot be delivered right now — offline, a
- * server that is down — simply stays queued for the player's next action.
+ * finished game's result goes to every Club this device has joined and has
+ * accepted automatic sending for (club.md §2-2, §10). Each Club's copy is
+ * written to the outbox first and then flushed, so a result that cannot be
+ * delivered right now — offline, a server that is down — simply stays queued
+ * for the player's next action. A connection that never accepted the
+ * disclosure (one from before automatic sending existed) gets nothing: not
+ * sent, not queued, not reported.
  */
 import type { KVStore } from '@/storage/kv';
 import {
@@ -92,8 +95,10 @@ export function createBridge(
 ): Pick<ClubBridge, 'sendResult'> {
   /**
    * Results this session has already settled with a Club (sent, or answered
-   * `already`), so a result screen that mounts twice sends once. Per Club: one
-   * joined later in the session is not skipped.
+   * `already`), so a result screen that mounts twice sends once. Per
+   * membership (endpoint + member): a Club joined later in the session is not
+   * skipped, and neither is the same Club rejoined after a disconnect — that is
+   * a new member, and the server has none of its results.
    */
   const delivered = new Map<string, ClubSendOutcome>();
 
@@ -107,7 +112,7 @@ export function createBridge(
       clubName: connection.clubName,
       outcome,
     });
-    const memo = `${connection.endpoint}|${fingerprint}`;
+    const memo = JSON.stringify([connection.endpoint, connection.memberId, fingerprint]);
     const earlier = delivered.get(memo);
     if (earlier !== undefined) return report(earlier);
     try {
@@ -132,8 +137,9 @@ export function createBridge(
       try {
         // Read now, not when the screen opened: a Club joined this session is
         // included, one just left is not, and nothing played before joining
-        // was ever offered to it.
-        const connections = await loadClubConnections(kv);
+        // was ever offered to it. Only a connection whose owner accepted the
+        // disclosure counts (club.md §4-1): the rest are not this result's business.
+        const connections = (await loadClubConnections(kv)).filter((c) => c.autoSend === true);
         if (connections.length === 0) return [];
         const planned = plan(payload);
         if (planned === null) return [];
