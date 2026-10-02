@@ -285,7 +285,7 @@ describe('sendResult: every Club', () => {
     const f = vi
       .fn()
       .mockImplementation((url: string) =>
-        url.startsWith(E)
+        new URL(url).origin === E
           ? Promise.reject(new TypeError('offline'))
           : Promise.resolve(ok(200, rankingJson)),
       );
