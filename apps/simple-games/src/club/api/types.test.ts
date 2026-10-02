@@ -5,6 +5,7 @@ import {
   validateClub,
   validateClubRecord,
   validateClubResponse,
+  validateReportedMember,
   validateHosting,
   validateInviteResponse,
   validateJoinResponse,
@@ -117,6 +118,16 @@ describe('validators', () => {
     ).not.toBeNull();
     expect(validateJoinResponse({ club, member, memberToken: 't' })).not.toBeNull();
     expect(validateClubResponse({ club, me: member, members: [member] })).not.toBeNull();
+    // memberCount: the total when sent, the list's length from an older server.
+    expect(validateClubResponse({ club, me: member, members: [member] })!.memberCount).toBe(1);
+    expect(
+      validateClubResponse({ club, me: member, members: [member], memberCount: 1200 })!.memberCount,
+    ).toBe(1200);
+    expect(
+      validateClubResponse({ club, me: member, members: [member], memberCount: 'x' }),
+    ).toBeNull();
+    expect(validateReportedMember({ member, reportCount: 2 })).toEqual({ member, reportCount: 2 });
+    expect(validateReportedMember({ member, reportCount: -1 })).toBeNull();
     expect(validateInviteResponse({ token: 't', url: 'u' })).toEqual({ token: 't', url: 'u' });
   });
 

@@ -14,9 +14,11 @@ import {
   validateInviteResponse,
   validateJoinResponse,
   validateList,
+  validateMember,
   validateRankingSubmitResponse,
   validateRankingSummary,
   validateRankingTable,
+  validateReportedMember,
   validateResult,
   type Challenge,
   type ChallengeCreate,
@@ -26,6 +28,8 @@ import {
   type Hosting,
   type InviteResponse,
   type JoinResponse,
+  type Member,
+  type ReportedMember,
   type RankingSubmit,
   type RankingSubmitResponse,
   type RankingSummary,
@@ -56,7 +60,14 @@ export interface ClubClient {
   hosting(): Promise<Hosting>;
   invite(): Promise<InviteResponse>;
   rotateInvite(): Promise<InviteResponse>;
-  removeMember(id: string): Promise<void>;
+  /** `purge` also erases the member's results and ranking rows (club.md §17-3). */
+  removeMember(id: string, options?: { purge?: boolean }): Promise<void>;
+  /** Tells the Club's owner this member's nickname was reported; once per reporter. */
+  reportMember(id: string): Promise<void>;
+  /** Owner only: reported members, most reported first. */
+  reportedMembers(): Promise<ReportedMember[]>;
+  /** Owner only: changes a member's nickname everywhere. */
+  renameMember(id: string, nickname: string): Promise<Member>;
   deleteChallenge(id: string): Promise<void>;
   renameClub(name: string): Promise<Club>;
 }
@@ -210,8 +221,20 @@ export function createClient(
     async rotateInvite() {
       return check(validateInviteResponse(await request('POST', '/invite', { role: 'member' })));
     },
-    async removeMember(id) {
-      await request('DELETE', `/members/${encodeURIComponent(id)}`);
+    async removeMember(id, options) {
+      const query = options?.purge === true ? '?purge=1' : '';
+      await request('DELETE', `/members/${encodeURIComponent(id)}${query}`);
+    },
+    async reportMember(id) {
+      await request('POST', `/members/${encodeURIComponent(id)}/report`);
+    },
+    async reportedMembers() {
+      return check(validateList(await request('GET', '/members/reported'), validateReportedMember));
+    },
+    async renameMember(id, nickname) {
+      return check(
+        validateMember(await request('PATCH', `/members/${encodeURIComponent(id)}`, { nickname })),
+      );
     },
     async deleteChallenge(id) {
       await request('DELETE', `/challenges/${encodeURIComponent(id)}`);

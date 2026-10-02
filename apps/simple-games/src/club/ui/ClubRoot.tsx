@@ -18,6 +18,7 @@ import {
   removeClubConnection,
   summarize,
   updateClubName,
+  updateNickname,
 } from '../storage/connections';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { dropOutboxFor } from '../storage/outbox';
@@ -231,6 +232,13 @@ export function ClubRoot({
             push({ kind: 'ranking', endpoint: connection.endpoint, gameId, paramsKey })
           }
           onDisconnect={() => disconnect(connection.endpoint)}
+          onRenamedMe={(nickname) => {
+            void updateNickname(connection.endpoint, nickname)
+              .then((next) => {
+                if (alive.current) apply(next);
+              })
+              .catch(() => undefined);
+          }}
           onRenamed={(clubName) => {
             void updateClubName(connection.endpoint, clubName)
               .then((next) => {

@@ -39,6 +39,22 @@
   color: var(--ink-soft);
 }
 
+.club-quiet-btn {
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.club-rename {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.club-dialog-actions {
+  flex-wrap: wrap;
+}
+
 .club-danger {
   color: var(--warn);
 }

@@ -43,6 +43,8 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
 
   // 破壊的操作の確認 — 誤訳がそのままデータ損失になる
   'confirmNewGameBody',
+  // Club の持ち主が人を外して結果も消す — 「全部消える・元に戻せない」が弱まっていないこと
+  'clubRemoveEraseBody',
   'minesConfirmSwitchBody',
   // Restore は「この端末のデータを置き換える」操作(issue #160)。誤訳で
   // 「取り込む」「統合する」に読めた時点で、実際に起きるのは全置換なので
