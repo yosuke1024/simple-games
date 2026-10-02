@@ -1076,7 +1076,7 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
     いまベータのアプリの公開リリースを同梱する。Private の Owner 導線(段取りの PR H:
     `Create my Club` / Hosting / クラブ名 / Railway での実証)はその次の版。
 
-**2026-10-02 の設計判断(段取りの PR C。製品オーナーの確認待ち)**:
+**2026-10-02 に製品オーナーが確認した判断(段取りの PR C)**:
 
 20. **Public への参加はニックネームだけ。** 招待 token の代わりにサーバの設定
     (`CLUB_OPEN_JOIN`)で `POST /join` を開く。アプリは Public の endpoint を定数で 1 つだけ
@@ -1092,6 +1092,11 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
 24. **LP 向けの読み取り専用ビューは PR G へ**(§15-4)。
 25. **Web 版(pixapps.ai)からも Public に参加できる。** Public のサーバの CORS に
     `https://pixapps.ai` を足す(§15-1)。
+26. **Public の `maxMembers` は 10,000。** `wrangler.toml` の `CLUB_LIMITS` で上げる。超えたら
+    `This Club is full`(無料枠の天井とは別の、濫用の上限)。
+27. **対応ゲームは 3 本に留めない。** Sudoku / Minesweeper / Water Sort は配線を通すための
+    spike の 3 本(§6-0)。§6-0 の 3 条件を満たすゲームは順次 `challenge` を宣言する
+    (段取りの PR E2。盤面が揃わないゲームの扱いは別の判断)。
 
 **外部の事実確認**(#161 Phase 0 と `simple-games-club#1` の未完了項目。確認できるまで
 文言と数字を出さない):
@@ -1174,5 +1179,4 @@ Sudoku のデイリーだけ(Minesweeper は初手で盤面が変わる、Water 
   から形を決める。認証無し・キャッシュ付きの公開 API になる見込みで、Public の設定で
   有効化する(Private にも同じコードがあり、設定で閉じている)。
 - **表示名の安全策、通報と削除、本番の計測データの作り直し** → PR F(§14 判断 17、外部確認 11)。
-- **Public の `maxMembers`**: 既定の 100 は Public には小さい。`CLUB_LIMITS` で上げる値は
-  製品オーナーの判断(§14)。
+- **Public の `maxMembers`** は 10,000(§14 判断 26。`wrangler.toml` の `CLUB_LIMITS`)。
