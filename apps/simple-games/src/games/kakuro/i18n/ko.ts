@@ -29,7 +29,6 @@ export const ko: KakuroMessages = {
   kakuroNewBestTime: '자기 최고 기록입니다.',
   kakuroLevelsSolved: '클리어한 레벨',
   kakuroDailiesSolved: '클리어한 데일리',
-  kakuroDailyBacklogHint: '지난 날짜는 언제든 도전할 수 있습니다.',
   kakuroHighlightMistakes: '실수 표시',
   kakuroHighlightMistakesNote: '정답과 다른 숫자를 표시합니다. 규칙 위반은 항상 표시됩니다.',
   kakuroStep1Title: '단서에 맞게 더하기',

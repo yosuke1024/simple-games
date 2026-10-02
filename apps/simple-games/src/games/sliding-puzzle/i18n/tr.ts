@@ -14,7 +14,6 @@ export const tr: SlidingPuzzleMessages = {
   slideNewBestTime: 'En hızlı zamanın.',
   slideLevelsSolved: 'Çözülen seviyeler',
   slideDailiesSolved: 'Çözülen günlükler',
-  slideDailyBacklogHint: 'Geçmiş günlerin hepsi açık kalır.',
   slideStep1Title: 'Boşluğun yanına dokun',
   slideStep1Body: 'Boş karenin yanındaki taşa dokun, taş boşluğa kayar.',
   slideStep2Title: 'Sıranın tamamı kayar',

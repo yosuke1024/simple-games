@@ -36,7 +36,6 @@ export const zhHans: SpiderMessages = {
   spiderGamesWon: '获胜局数',
   spiderWinRate: '胜率',
   spiderDailiesWon: '每日挑战获胜',
-  spiderDailyBacklogHint: '之前的日期随时可以玩。并非每局发牌都能赢。',
   spiderStep1Title: '按点数递减叠放',
   spiderStep1Body: '任何花色都能放到大一点的牌上。先点一张牌，再点要放的位置。',
   spiderStep2Title: '同花色一起搬',

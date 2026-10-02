@@ -36,7 +36,6 @@ export const th: SpiderMessages = {
   spiderGamesWon: 'เกมที่ชนะ',
   spiderWinRate: 'อัตราชนะ',
   spiderDailiesWon: 'เดลีที่ชนะ',
-  spiderDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ ไพ่บางสำรับก็ชนะไม่ได้',
   spiderStep1Title: 'ซ้อนจากมากไปน้อย',
   spiderStep1Body: 'ไพ่ดอกใดก็วางบนไพ่ที่ใหญ่กว่าหนึ่งแต้มได้ แตะไพ่ แล้วแตะที่ที่จะวาง',
   spiderStep2Title: 'ดอกเดียวกันย้ายไปด้วยกัน',

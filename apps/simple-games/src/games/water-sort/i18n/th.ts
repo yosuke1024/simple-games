@@ -14,7 +14,6 @@ export const th: WaterSortMessages = {
   waterBestMoves: 'ตาน้อยที่สุด',
   waterLevelsSolved: 'ด่านที่ผ่าน',
   waterDailiesSolved: 'เดลีที่สำเร็จ',
-  waterDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ',
   waterTier_easy: 'ง่าย',
   waterTier_medium: 'ปกติ',
   waterTier_hard: 'ยาก',

@@ -36,8 +36,6 @@ export const es: SpiderMessages = {
   spiderGamesWon: 'Partidas ganadas',
   spiderWinRate: 'Tasa de victorias',
   spiderDailiesWon: 'Retos diarios ganados',
-  spiderDailyBacklogHint:
-    'Los días anteriores siguen abiertos. No todos los repartos se pueden ganar.',
   spiderStep1Title: 'Apila en orden descendente',
   spiderStep1Body:
     'Cualquier palo puede ir sobre una carta un rango mayor. Toca una carta y luego su destino.',

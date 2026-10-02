@@ -13,8 +13,6 @@ export const vi: SchulteMessages = {
   schulteMisses: 'Chạm sai',
   schulteNewBestTime: 'Nhanh nhất từ trước tới nay.',
   schulteConfirmRestartBody: 'Ván này bắt đầu lại từ số đầu tiên.',
-
-  schulteDailyBacklogHint: 'Mọi ngày trước đó luôn mở.',
   schulteSizeLabel: '{n}x{n}',
   schulteLevelsDone: 'Cấp đã xong',
   schulteDailiesDone: 'Ngày đã xong',

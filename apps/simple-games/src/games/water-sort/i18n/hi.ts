@@ -14,7 +14,6 @@ export const hi: WaterSortMessages = {
   waterBestMoves: 'सबसे कम चालें',
   waterLevelsSolved: 'हल किए स्तर',
   waterDailiesSolved: 'पूरे किए दैनिक',
-  waterDailyBacklogHint: 'पिछले सभी दिन हमेशा खुले रहते हैं।',
   waterTier_easy: 'आसान',
   waterTier_medium: 'मध्यम',
   waterTier_hard: 'कठिन',

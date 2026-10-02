@@ -60,7 +60,7 @@ import {
 } from '../storage/schemas';
 import { applyGameStart, applyPlayTime, applySolve, previousBestFor } from './statsLogic';
 
-export type Screen = 'home' | 'tutorial' | 'daily' | 'game' | 'stats';
+export type Screen = 'home' | 'tutorial' | 'game' | 'stats';
 
 /**
  * What a path transition did, for the caller to sound it (§11): `'shrank'`
@@ -95,7 +95,7 @@ export interface NumberPathContextValue {
   sessionEpoch: number;
   canResume: (mode: GameMode) => boolean;
   startDifficulty: (difficulty: Difficulty) => void;
-  startDaily: (date?: string) => void;
+  startDaily: () => void;
   restartCurrent: () => void;
   resumeGame: (mode: GameMode) => void;
   /**
@@ -329,18 +329,15 @@ export function NumberPathProvider({
     [beginSession, rememberDifficulty, resumeGame],
   );
 
-  const startDaily = useCallback(
-    (date?: string) => {
-      const target = date ?? localDateString(new Date());
-      const current = sessionsRef.current.daily;
-      if (current && current.dailyDate === target && current.status === 'playing') {
-        resumeGame('daily');
-        return;
-      }
-      beginSession(createDailySession(target));
-    },
-    [beginSession, resumeGame],
-  );
+  const startDaily = useCallback(() => {
+    const target = localDateString(new Date());
+    const current = sessionsRef.current.daily;
+    if (current && current.dailyDate === target && current.status === 'playing') {
+      resumeGame('daily');
+      return;
+    }
+    beginSession(createDailySession(target));
+  }, [beginSession, resumeGame]);
 
   /**
    * Saves the on-screen game and books its play time so far — the same sync

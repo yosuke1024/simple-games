@@ -60,7 +60,7 @@ import {
 } from '../storage/schemas';
 import { applyGameStart, applyPlayTime, applyWin, previousBestFor } from './statsLogic';
 
-export type Screen = 'home' | 'tutorial' | 'daily' | 'game' | 'stats';
+export type Screen = 'home' | 'tutorial' | 'game' | 'stats';
 
 export interface LastResult {
   readonly won: boolean;
@@ -90,7 +90,7 @@ export interface MinesweeperContextValue {
   openedOnChallenge: boolean;
   canResume: (mode: GameMode) => boolean;
   startDifficulty: (difficulty: Difficulty) => void;
-  startDaily: (date?: string) => void;
+  startDaily: () => void;
   restartCurrent: () => void;
   resumeGame: (mode: GameMode) => void;
   tap: (index: number) => boolean;
@@ -368,18 +368,15 @@ export function MinesweeperProvider({
     [beginSession, resumeGame],
   );
 
-  const startDaily = useCallback(
-    (date?: string) => {
-      const target = date ?? localDateString(new Date());
-      const current = sessionsRef.current.daily;
-      if (current && current.dailyDate === target && current.status === 'playing') {
-        resumeGame('daily');
-        return;
-      }
-      beginSession(createDailySession(target));
-    },
-    [beginSession, resumeGame],
-  );
+  const startDaily = useCallback(() => {
+    const target = localDateString(new Date());
+    const current = sessionsRef.current.daily;
+    if (current && current.dailyDate === target && current.status === 'playing') {
+      resumeGame('daily');
+      return;
+    }
+    beginSession(createDailySession(target));
+  }, [beginSession, resumeGame]);
 
   /** The same board again, free and immediate (§2, §7 — this is instead of undo). */
   const restartCurrent = useCallback(() => {

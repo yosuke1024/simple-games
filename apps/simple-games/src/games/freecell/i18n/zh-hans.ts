@@ -28,7 +28,6 @@ export const zhHans: FreeCellMessages = {
   fcGamesWon: '获胜局数',
   fcWinRate: '胜率',
   fcDailiesWon: '每日挑战获胜',
-  fcDailyBacklogHint: '之前的日期随时可以玩。慢慢来。',
   fcStep1Title: '依次递减，红黑交替',
   fcStep1Body: '把牌按红黑交替向下叠。先点一张牌，再点要放的位置。',
   fcStep2Title: '四个暂存位，每位一张',

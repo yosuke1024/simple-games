@@ -14,7 +14,6 @@ export const id: SlidingPuzzleMessages = {
   slideNewBestTime: 'Tercepat sejauh ini.',
   slideLevelsSolved: 'Level selesai',
   slideDailiesSolved: 'Harian selesai',
-  slideDailyBacklogHint: 'Setiap hari sebelumnya selalu terbuka.',
   slideStep1Title: 'Ketuk ubin di sebelah kosong',
   slideStep1Body: 'Ketuk ubin yang bersebelahan dengan kotak kosong, ubin itu meluncur ke sana.',
   slideStep2Title: 'Beberapa ubin sekaligus',

@@ -5,7 +5,6 @@ import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
 import { createDailySession, localDateString, regionCells, type BoxRegionsSession } from '../game';
-import { availableDailyDates } from '../state/progressLogic';
 import { BR_STORAGE_KEYS, type Stats } from '../storage/schemas';
 import { BoxRegionsRoot } from './BoxRegionsRoot';
 
@@ -151,15 +150,9 @@ const bigBox = (truth: BoxRegionsSession): number =>
 
 const today = () => localDateString(new Date());
 
-/** Opens a daily from the backlog by its row, so the board is a known one. */
-async function openDaily(user: ReturnType<typeof userEvent.setup>, row: number) {
-  if (row === 0) {
-    await user.click(screen.getByRole('button', { name: /Daily Challenge/ }));
-    return;
-  }
-  await user.click(screen.getByRole('button', { name: 'Past Dailies' }));
-  const list = document.querySelector('.daily-list') as HTMLElement;
-  await user.click(within(list).getAllByRole('button')[row]!);
+/** Opens today's daily. */
+async function openDaily(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: /Daily Challenge/ }));
 }
 
 afterEach(() => {
@@ -191,7 +184,7 @@ describe('playing (§3, §4, §6)', () => {
     renderGame(tutorialDone);
     await screen.findByRole('button', { name: /Daily Challenge/ });
     const truth = createDailySession(today());
-    await openDaily(user, 0);
+    await openDaily(user);
     giveCellsALayout(truth.width, truth.height);
 
     const region = bigBox(truth);
@@ -210,7 +203,7 @@ describe('playing (§3, §4, §6)', () => {
     renderGame(tutorialDone);
     await screen.findByRole('button', { name: /Daily Challenge/ });
     const truth = createDailySession(today());
-    await openDaily(user, 0);
+    await openDaily(user);
     giveCellsALayout(truth.width, truth.height);
     const region = bigBox(truth);
     const box = regionCells(truth.solution, region);
@@ -337,12 +330,11 @@ describe('retry and the home (§9, §11)', () => {
     deviceStore.set(BR_STORAGE_KEYS.flags, tutorialDone[BR_STORAGE_KEYS.flags]!);
     launch();
     await settle();
-    const row = 1;
-    const truth = createDailySession(availableDailyDates(today())[row]!);
+    const truth = createDailySession(today());
     const region = bigBox(truth);
     const cell = regionCells(truth.solution, region)[0]!;
     const letter = new RegExp(`box ${String.fromCharCode(65 + region)}`);
-    await openDaily(user, row);
+    await openDaily(user);
     giveCellsALayout(truth.width, truth.height);
     drawAnswerBox(truth, region);
 

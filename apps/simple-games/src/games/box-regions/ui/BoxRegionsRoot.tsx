@@ -25,7 +25,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './box-regions.css';
-import { BoxRegionsDailyScreen } from './screens/DailyScreen';
 import { BoxRegionsGameScreen } from './screens/GameScreen';
 import { BoxRegionsHomeScreen } from './screens/HomeScreen';
 import { BoxRegionsStatsScreen } from './screens/StatsScreen';
@@ -36,8 +35,6 @@ export function BoxRegionsScreens() {
   switch (screen) {
     case 'tutorial':
       return <BoxRegionsTutorialScreen />;
-    case 'daily':
-      return <BoxRegionsDailyScreen />;
     case 'game':
       return <BoxRegionsGameScreen />;
     case 'stats':

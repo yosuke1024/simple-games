@@ -35,7 +35,6 @@ export const ja: Sudoku6x6Messages = {
   sudoku6x6NewBoard: '新しい盤面',
   sudoku6x6DailySection: 'デイリー',
   sudoku6x6DailiesSolved: 'クリアした日',
-  sudoku6x6DailyBacklogHint: '過去の日もすべて遊べます。',
   sudoku6x6HighlightMistakes: 'ミスを表示',
   sudoku6x6HighlightMistakesNote:
     '間違った数字を入れたとき、すぐに印をつけます。重複した数字はいつでも表示されます。',

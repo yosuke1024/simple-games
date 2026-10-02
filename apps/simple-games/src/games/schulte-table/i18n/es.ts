@@ -13,8 +13,6 @@ export const es: SchulteMessages = {
   schulteMisses: 'Toques erróneos',
   schulteNewBestTime: 'Tu tiempo más rápido.',
   schulteConfirmRestartBody: 'Esta partida vuelve a empezar desde el primer número.',
-
-  schulteDailyBacklogHint: 'Los días anteriores siempre están disponibles.',
   schulteSizeLabel: '{n}x{n}',
   schulteLevelsDone: 'Niveles completados',
   schulteDailiesDone: 'Retos completados',

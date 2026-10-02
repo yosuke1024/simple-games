@@ -14,7 +14,6 @@ export const ja: WaterSortMessages = {
   waterBestMoves: '最少手数',
   waterLevelsSolved: 'クリア済みレベル',
   waterDailiesSolved: 'デイリー達成',
-  waterDailyBacklogHint: '過去の日付はいつでも遊べます。',
   waterTier_easy: 'かんたん',
   waterTier_medium: 'ふつう',
   waterTier_hard: 'むずかしい',

@@ -28,7 +28,6 @@ export const ja: FreeCellMessages = {
   fcGamesWon: '勝った回数',
   fcWinRate: '勝率',
   fcDailiesWon: 'デイリー達成数',
-  fcDailyBacklogHint: '過去の日付はいつでも開いています。ゆっくりどうぞ。',
   fcStep1Title: '1 つ小さく、色を交互に',
   fcStep1Body: '赤・黒・赤と交互に、1 つ小さいカードを重ねます。カードを選び、置き先をタップ。',
   fcStep2Title: 'フリーセルは 4 枚だけ',

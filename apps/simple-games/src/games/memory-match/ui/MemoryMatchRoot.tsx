@@ -18,7 +18,6 @@ import { MemoryProvider, useMemoryMatch } from '../state/GameContext';
 import { loadSavedGames, type SavedGames } from '../storage/gamePersistence';
 import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
 import './memory-match.css';
-import { MemoryDailyScreen } from './screens/DailyScreen';
 import { MemoryGameScreen } from './screens/GameScreen';
 import { MemoryHomeScreen } from './screens/HomeScreen';
 import { MemoryStatsScreen } from './screens/StatsScreen';
@@ -29,8 +28,6 @@ export function MemoryScreens() {
   switch (screen) {
     case 'tutorial':
       return <MemoryTutorialScreen />;
-    case 'daily':
-      return <MemoryDailyScreen />;
     case 'game':
       return <MemoryGameScreen />;
     case 'stats':

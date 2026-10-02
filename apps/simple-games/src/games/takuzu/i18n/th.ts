@@ -21,7 +21,6 @@ export const th: TakuzuMessages = {
   takuzuTier_hard: 'ยาก',
   takuzuLevelsSolved: 'ด่านที่ผ่านแล้ว',
   takuzuDailiesSolved: 'เดลี่ที่ผ่านแล้ว',
-  takuzuDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ',
   takuzuStep1Title: 'ห้ามซ้ำสามช่องติด',
   takuzuStep1Body: 'แตะช่องเพื่อสลับ 0, 1, ว่าง เลขเดียวกันห้ามติดกันสามช่อง',
   takuzuStep2Title: 'ครึ่งต่อครึ่ง',

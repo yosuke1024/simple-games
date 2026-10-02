@@ -32,7 +32,6 @@ export const zhHans: SolitaireMessages = {
   solGamesWon: '获胜局数',
   solWinRate: '胜率',
   solDailiesWon: '每日挑战获胜',
-  solDailyBacklogHint: '之前的日期随时可以玩。并非每局发牌都能赢。',
   solStep1Title: '依次递减，红黑交替',
   solStep1Body: '把牌按红黑交替向下叠。先点一张牌，再点要放的位置。',
   solStep2Title: '翻出盖住的牌',

@@ -39,7 +39,6 @@ export const ptBR: BoxRegionsMessages = {
   boxRegionsSolvedCount: 'Quebra-cabeças resolvidos',
   boxRegionsDailySection: 'Diário',
   boxRegionsDailiesCleared: 'Dias concluídos',
-  boxRegionsDailyBacklogHint: 'Todos os dias anteriores continuam abertos.',
   boxRegionsStep1Title: 'Divida em caixas',
   boxRegionsStep1Body: 'Divida o tabuleiro em retângulos, cada um com exatamente uma pista.',
   boxRegionsStep2Title: 'Leia as pistas',

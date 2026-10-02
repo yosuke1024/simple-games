@@ -52,7 +52,6 @@ export const fr: BinaryBalanceMessages = {
   binaryBalanceNewBoard: 'Nouvelle grille',
   binaryBalanceDailySection: 'Quotidien',
   binaryBalanceDailiesSolved: 'Jours résolus',
-  binaryBalanceDailyBacklogHint: 'Les jours précédents restent ouverts.',
   binaryBalanceStep1Title: 'Jamais trois à la suite',
   binaryBalanceStep1Body:
     'Touchez pour passer de vide à soleil, puis à lune. La même marque ne se répète jamais trois fois à la suite.',

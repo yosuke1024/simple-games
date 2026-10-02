@@ -36,7 +36,6 @@ export const ja: SpiderMessages = {
   spiderGamesWon: '勝った回数',
   spiderWinRate: '勝率',
   spiderDailiesWon: 'デイリー達成数',
-  spiderDailyBacklogHint: '過去の日付はいつでも開いています。勝てない配札もあります。',
   spiderStep1Title: '数字を下げて重ねる',
   spiderStep1Body:
     'スートは問わず、1 つ大きいカードの上に置けます。タップで選び、タップで置きます。',

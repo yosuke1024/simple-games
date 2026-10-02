@@ -31,7 +31,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './water-sort.css';
-import { WaterDailyScreen } from './screens/DailyScreen';
 import { WaterGameScreen } from './screens/GameScreen';
 import { WaterHomeScreen } from './screens/HomeScreen';
 import { WaterLevelSelectScreen } from './screens/LevelSelectScreen';
@@ -45,8 +44,6 @@ export function WaterScreens() {
       return <WaterTutorialScreen />;
     case 'levels':
       return <WaterLevelSelectScreen />;
-    case 'daily':
-      return <WaterDailyScreen />;
     case 'game':
       return <WaterGameScreen />;
     case 'stats':

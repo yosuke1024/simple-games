@@ -25,9 +25,6 @@ export const en = {
   score: 'Score',
 
   // Game
-  dailyPast: 'Past Dailies',
-  dailyToday: 'Today',
-  dailyBacklogHint: 'Clear a day to unlock the one before it.',
   modeDaily: 'Daily',
   // Free Play — a fresh board on demand, beside the level list and the
   // daily (docs/SUDOKU_RULES.md §9「フリープレイ」). Shared by every

@@ -32,8 +32,6 @@ export const id: SolitaireMessages = {
   solGamesWon: 'Permainan dimenangkan',
   solWinRate: 'Tingkat kemenangan',
   solDailiesWon: 'Harian dimenangkan',
-  solDailyBacklogHint:
-    'Hari-hari sebelumnya selalu terbuka. Tidak semua pembagian bisa dimenangkan.',
   solStep1Title: 'Turun satu, warna berselang',
   solStep1Body: 'Tumpuk menurun, merah-hitam bergantian. Ketuk kartu, lalu ketuk tujuannya.',
   solStep2Title: 'Bebaskan kartu tersembunyi',

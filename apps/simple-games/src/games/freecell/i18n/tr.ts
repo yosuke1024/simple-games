@@ -29,7 +29,6 @@ export const tr: FreeCellMessages = {
   fcGamesWon: 'Kazanılan oyunlar',
   fcWinRate: 'Kazanma oranı',
   fcDailiesWon: 'Kazanılan günlükler',
-  fcDailyBacklogHint: 'Önceki günler her zaman açık. Acelesi yok.',
   fcStep1Title: 'Bir küçük, renkler dönüşümlü',
   fcStep1Body:
     'Kartları kırmızı-siyah dönüşümlü, azalan sırayla diz. Bir karta, sonra gideceği yere dokun.',

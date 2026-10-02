@@ -37,7 +37,6 @@ export const de: SpiderMessages = {
   spiderGamesWon: 'Gewonnene Spiele',
   spiderWinRate: 'Siegquote',
   spiderDailiesWon: 'Gewonnene Tagesblätter',
-  spiderDailyBacklogHint: 'Alle früheren Tage bleiben offen. Nicht jedes Blatt ist gewinnbar.',
   spiderStep1Title: 'Absteigend stapeln',
   spiderStep1Body:
     'Jede Farbe darf auf eine Karte einen Rang höher. Tippe eine Karte an, dann ihr Ziel.',

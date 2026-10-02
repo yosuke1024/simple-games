@@ -37,7 +37,6 @@ export const tr: BoxRegionsMessages = {
   boxRegionsSolvedCount: 'Çözülen bulmacalar',
   boxRegionsDailySection: 'Günlük',
   boxRegionsDailiesCleared: 'Tamamlanan günler',
-  boxRegionsDailyBacklogHint: 'Önceki tüm günler açık kalır.',
   boxRegionsStep1Title: 'Kutulara böl',
   boxRegionsStep1Body: 'Tahtayı dikdörtgenlere böl; her birinde tam olarak bir yönerge olsun.',
   boxRegionsStep2Title: 'Yönergeleri oku',

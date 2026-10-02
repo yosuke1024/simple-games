@@ -29,7 +29,6 @@ export const ptBR: KakuroMessages = {
   kakuroNewBestTime: 'Seu tempo mais rápido.',
   kakuroLevelsSolved: 'Níveis resolvidos',
   kakuroDailiesSolved: 'Diários resolvidos',
-  kakuroDailyBacklogHint: 'Os dias anteriores continuam abertos.',
   kakuroHighlightMistakes: 'Mostrar erros',
   kakuroHighlightMistakesNote:
     'Marca um dígito que não bate com a solução. Regras quebradas são sempre marcadas.',

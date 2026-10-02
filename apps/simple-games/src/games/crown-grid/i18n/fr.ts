@@ -59,7 +59,6 @@ export const fr: CrownGridMessages = {
   crownGridNewBoard: 'Nouvelle grille',
   crownGridDailySection: 'Quotidien',
   crownGridDailiesSolved: 'Jours résolus',
-  crownGridDailyBacklogHint: 'Les jours précédents restent ouverts.',
   crownGridStep1Title: 'Une couronne chacun',
   crownGridStep1Body:
     'Chaque ligne, chaque colonne et chaque couleur contient exactement une couronne.',

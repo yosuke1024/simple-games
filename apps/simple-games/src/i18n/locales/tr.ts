@@ -18,10 +18,6 @@ export const tr: Messages = {
   reachedLevel: 'Ulaşılan seviye',
 
   score: 'Puan',
-
-  dailyPast: 'Geçmiş Günler',
-  dailyToday: 'Bugün',
-  dailyBacklogHint: 'Bir günü bitir, bir önceki gün açılsın.',
   modeDaily: 'Günlük',
   freePlay: 'Serbest Oyun',
   freePlayNote: 'İstediğin zaman yeni bir tahta.',

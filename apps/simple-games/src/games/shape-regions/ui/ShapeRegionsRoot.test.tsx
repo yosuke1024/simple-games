@@ -4,8 +4,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { createDailySession, localDateString, neighbors, type ShapeRegionsSession } from '../game';
-import { availableDailyDates } from '../state/progressLogic';
+import {
+  createDailySession,
+  createDifficultySession,
+  localDateString,
+  neighbors,
+  type ShapeRegionsSession,
+} from '../game';
+import { toPersisted } from '../storage/gamePersistence';
 import { SR_STORAGE_KEYS, type Stats } from '../storage/schemas';
 import { ShapeRegionsRoot } from './ShapeRegionsRoot';
 
@@ -148,25 +154,29 @@ function chainIn(truth: ShapeRegionsSession): { region: number; n1: number; n2: 
   return null;
 }
 
-/** The newest open daily whose board has such a chain, and how far down the list it sits. */
-function dailyWithChain(): { date: string; row: number; truth: ShapeRegionsSession } {
-  const dates = availableDailyDates(today());
-  for (let row = 0; row < dates.length; row++) {
-    const truth = createDailySession(dates[row]!);
-    if (chainIn(truth) !== null) return { date: dates[row]!, row, truth };
+/** The first easy board (by seed) with such a chain — a known board to resume from. */
+function boardWithChain(): ShapeRegionsSession {
+  for (let i = 0; i < 200; i++) {
+    const truth = createDifficultySession('easy', `shape-regions-easy-chain-${i}`);
+    if (chainIn(truth) !== null) return truth;
   }
-  throw new Error('no daily in the backlog has a two-cell chain');
+  throw new Error('no easy board in the first 200 seeds has a two-cell chain');
 }
 
-/** Opens a daily from the backlog by its row, so the board is a known one. */
-async function openDaily(user: ReturnType<typeof userEvent.setup>, row: number) {
-  if (row === 0) {
-    await user.click(screen.getByRole('button', { name: /Daily Challenge/ }));
-    return;
+/** The saved-game slot a suspended board sits in, ready for the device store or a kv. */
+const savedBoard = (truth: ShapeRegionsSession) => ({
+  [SR_STORAGE_KEYS.game]: JSON.stringify(toPersisted(truth, 1)),
+});
+
+/** A region and one cell beside its clue that belongs to it — one stroke away. */
+function stepIn(truth: ShapeRegionsSession): { region: number; n1: number } {
+  for (let region = 0; region < truth.clues.length; region++) {
+    const clue = truth.clues[region]!.index;
+    for (const n1 of neighbors(clue, truth.width, truth.height)) {
+      if (truth.solution[n1] === region) return { region, n1 };
+    }
   }
-  await user.click(screen.getByRole('button', { name: 'Past Dailies' }));
-  const list = document.querySelector('.daily-list') as HTMLElement;
-  await user.click(within(list).getAllByRole('button')[row]!);
+  throw new Error('no region has a second cell');
 }
 
 afterEach(() => {
@@ -195,11 +205,10 @@ describe('first run', () => {
 describe('playing (§3, §4, §6)', () => {
   it('grows a region by dragging from its clue, and reads the board aloud', async () => {
     const user = userEvent.setup();
-    renderGame(tutorialDone);
-    await screen.findByRole('button', { name: /Daily Challenge/ });
-    const { truth } = dailyWithChain();
+    const truth = boardWithChain();
+    renderGame({ ...tutorialDone, ...savedBoard(truth) });
     const { region, n1 } = chainIn(truth)!;
-    await openDaily(user, dailyWithChain().row);
+    await user.click(await screen.findByRole('button', { name: /^Easy.*Resume/ }));
     giveCellsALayout(truth.width, truth.height);
 
     const letter = String.fromCharCode(65 + region);
@@ -213,11 +222,10 @@ describe('playing (§3, §4, §6)', () => {
 
   it('takes a cell back with a tap, cascade included, and undoes one step at a time', async () => {
     const user = userEvent.setup();
-    renderGame(tutorialDone);
-    await screen.findByRole('button', { name: /Daily Challenge/ });
-    const { row, truth } = dailyWithChain();
+    const truth = boardWithChain();
+    renderGame({ ...tutorialDone, ...savedBoard(truth) });
     const { region, n1, n2 } = chainIn(truth)!;
-    await openDaily(user, row);
+    await user.click(await screen.findByRole('button', { name: /^Easy.*Resume/ }));
     giveCellsALayout(truth.width, truth.height);
     const letter = new RegExp(`shape ${String.fromCharCode(65 + region)}`);
 
@@ -372,10 +380,10 @@ describe('retry and the home (§9, §11)', () => {
     deviceStore.set(SR_STORAGE_KEYS.flags, tutorialDone[SR_STORAGE_KEYS.flags]!);
     launch();
     await settle();
-    const { row, truth } = dailyWithChain();
-    const { region, n1 } = chainIn(truth)!;
+    const truth = createDailySession(today());
+    const { region, n1 } = stepIn(truth);
     const letter = new RegExp(`shape ${String.fromCharCode(65 + region)}`);
-    await openDaily(user, row);
+    await user.click(screen.getByRole('button', { name: /Daily Challenge/ }));
     giveCellsALayout(truth.width, truth.height);
     strokeFrom(truth.clues[region]!.index, n1, truth.width);
 

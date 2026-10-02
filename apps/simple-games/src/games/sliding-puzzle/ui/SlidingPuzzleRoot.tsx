@@ -25,7 +25,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './sliding-puzzle.css';
-import { SlidingPuzzleDailyScreen } from './screens/DailyScreen';
 import { SlidingPuzzleGameScreen } from './screens/GameScreen';
 import { SlidingPuzzleHomeScreen } from './screens/HomeScreen';
 import { SlidingPuzzleLevelSelectScreen } from './screens/LevelSelectScreen';
@@ -39,8 +38,6 @@ export function SlidingPuzzleScreens() {
       return <SlidingPuzzleTutorialScreen />;
     case 'levels':
       return <SlidingPuzzleLevelSelectScreen />;
-    case 'daily':
-      return <SlidingPuzzleDailyScreen />;
     case 'game':
       return <SlidingPuzzleGameScreen />;
     case 'stats':

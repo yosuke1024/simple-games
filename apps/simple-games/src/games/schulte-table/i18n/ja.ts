@@ -13,8 +13,6 @@ export const ja: SchulteMessages = {
   schulteMisses: '誤タップ',
   schulteNewBestTime: '自己ベスト更新。',
   schulteConfirmRestartBody: '最初の数字からやり直します。',
-
-  schulteDailyBacklogHint: '過去の日はいつでも開きます。',
   schulteSizeLabel: '{n}×{n}',
   schulteLevelsDone: 'クリアしたレベル',
   schulteDailiesDone: '達成したデイリー',

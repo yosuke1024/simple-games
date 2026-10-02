@@ -16,13 +16,7 @@ import {
   type ComponentType,
   type ReactNode,
 } from 'react';
-import {
-  PRIVACY_URL,
-  SERIES_BY_LINE,
-  SERIES_NAME,
-  SOURCE_REPO_URL,
-  TERMS_URL,
-} from '@simple-games/brand';
+import { PRIVACY_URL, SOURCE_REPO_URL, TERMS_URL } from '@simple-games/brand';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import packageJson from '../../../package.json';
@@ -54,6 +48,7 @@ import {
   type LanguageSetting,
   type ThemeSetting,
 } from '../../storage/schemas';
+import { BrandFooter } from '../components/BrandFooter';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { IconBack, IconChevronRight, IconStar } from '../components/icons';
 import { Toggle } from '../components/Toggle';
@@ -588,10 +583,7 @@ export function SettingsScreen({ onBack, onOpenClub }: SettingsScreenProps) {
         </div>
       </div>
 
-      <footer className="brand-footer">
-        <span className="brand-name">{SERIES_NAME}</span>
-        <span className="brand-by">{SERIES_BY_LINE}</span>
-      </footer>
+      <BrandFooter />
 
       {/* Asked only about a file that has already been read and validated in
           full, and answered before a single byte of the device's data is

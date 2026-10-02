@@ -14,7 +14,6 @@ export const hi: SlidingPuzzleMessages = {
   slideNewBestTime: 'आपका सबसे तेज़ समय।',
   slideLevelsSolved: 'हल किए गए लेवल',
   slideDailiesSolved: 'हल की गई डेली',
-  slideDailyBacklogHint: 'पिछला हर दिन हमेशा खुला रहता है।',
   slideStep1Title: 'खाली जगह के पास दबाएँ',
   slideStep1Body: 'खाली खाने से सटी टाइल दबाएँ, वह वहीं सरक जाती है।',
   slideStep2Title: 'कई टाइलें एक साथ',

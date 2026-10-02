@@ -32,8 +32,6 @@ export const fr: SolitaireMessages = {
   solGamesWon: 'Parties gagnées',
   solWinRate: 'Taux de victoire',
   solDailiesWon: 'Défis quotidiens gagnés',
-  solDailyBacklogHint:
-    'Les jours précédents restent ouverts. Toutes les donnes ne sont pas gagnables.',
   solStep1Title: 'Un de moins, couleurs alternées',
   solStep1Body:
     'Empilez en descendant, rouge sur noir sur rouge. Touchez une carte, puis sa destination.',

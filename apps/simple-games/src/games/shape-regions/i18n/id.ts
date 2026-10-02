@@ -38,7 +38,6 @@ export const id: ShapeRegionsMessages = {
   shapeRegionsSolvedCount: 'Teka-teki selesai',
   shapeRegionsDailySection: 'Harian',
   shapeRegionsDailiesCleared: 'Hari selesai',
-  shapeRegionsDailyBacklogHint: 'Setiap hari sebelumnya tetap terbuka.',
   shapeRegionsStep1Title: 'Angka dan simbol',
   shapeRegionsStep1Body: 'Angka adalah jumlah sel bentuk itu; simbol adalah wujudnya.',
   shapeRegionsStep2Title: 'Tumbuh dari petunjuk',

@@ -11,8 +11,6 @@ export const es: QuickMathMessages = {
   qmathMisses: 'Respuestas erróneas',
   qmathNewBestTime: 'Tu tiempo más rápido.',
   qmathConfirmRestartBody: 'Esta partida vuelve a empezar desde la primera pregunta.',
-
-  qmathDailyBacklogHint: 'Los días anteriores siempre están disponibles.',
   qmathLevelsDone: 'Niveles completados',
   qmathDailiesDone: 'Retos completados',
   qmathTotalMisses: 'Total de respuestas erróneas',

@@ -29,7 +29,6 @@ export const th: NumberPathMessages = {
   numberPathSolvedCount: 'กระดานที่แก้ได้',
   numberPathDailySection: 'รายวัน',
   numberPathDailiesSolved: 'วันที่แก้ได้',
-  numberPathDailyBacklogHint: 'วันก่อนหน้าทุกวันยังเปิดอยู่',
   numberPathStep1Title: 'ไล่ตามตัวเลข',
   numberPathStep1Body: 'ลากเส้นเดียวจาก 1 ผ่านตัวเลขตามลำดับ',
   numberPathStep2Title: 'ครบทุกช่อง',

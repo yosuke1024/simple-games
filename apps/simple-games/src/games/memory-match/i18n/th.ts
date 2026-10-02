@@ -20,7 +20,6 @@ export const th: MemoryMatchMessages = {
   memoryNewBestTime: 'เวลาเร็วที่สุดของคุณ',
   memoryBestMoves: 'ตาน้อยที่สุด',
   memoryDailiesCleared: 'วันที่สำเร็จ',
-  memoryDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ',
   memoryStep1Title: 'เปิดไพ่สองใบ',
   memoryStep1Body: 'แตะไพ่ทีละใบ ถ้าสัญลักษณ์ตรงกันจะหงายค้างไว้',
   memoryStep2Title: 'ไม่ต้องรีบจำ',

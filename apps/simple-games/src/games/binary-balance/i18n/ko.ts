@@ -51,7 +51,6 @@ export const ko: BinaryBalanceMessages = {
   binaryBalanceNewBoard: '새 판',
   binaryBalanceDailySection: '데일리',
   binaryBalanceDailiesSolved: '클리어한 날',
-  binaryBalanceDailyBacklogHint: '지난 날짜는 언제든 도전할 수 있습니다.',
   binaryBalanceStep1Title: '세 칸 연속 금지',
   binaryBalanceStep1Body: '탭하면 빈칸, 해, 달로 바뀝니다. 같은 표시는 세 칸 연속될 수 없습니다.',
   binaryBalanceStep2Title: '반반씩',

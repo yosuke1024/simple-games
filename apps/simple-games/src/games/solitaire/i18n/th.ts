@@ -32,7 +32,6 @@ export const th: SolitaireMessages = {
   solGamesWon: 'เกมที่ชนะ',
   solWinRate: 'อัตราชนะ',
   solDailiesWon: 'เดลีที่ชนะ',
-  solDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ ไพ่บางสำรับก็ชนะไม่ได้',
   solStep1Title: 'ลดทีละหนึ่ง สลับสี',
   solStep1Body: 'ซ้อนไพ่จากมากไปน้อย แดงสลับดำ แตะไพ่ แล้วแตะที่ที่จะวาง',
   solStep2Title: 'เปิดไพ่ที่คว่ำอยู่',

@@ -38,7 +38,6 @@ export const es: ShapeRegionsMessages = {
   shapeRegionsSolvedCount: 'Puzles resueltos',
   shapeRegionsDailySection: 'Diario',
   shapeRegionsDailiesCleared: 'Días completados',
-  shapeRegionsDailyBacklogHint: 'Todos los días anteriores siguen abiertos.',
   shapeRegionsStep1Title: 'Número y símbolo',
   shapeRegionsStep1Body: 'El número dice cuántas celdas tiene la figura; el símbolo, su forma.',
   shapeRegionsStep2Title: 'Crece desde la pista',

@@ -18,10 +18,6 @@ export const fr: Messages = {
   reachedLevel: 'Niveau atteint',
 
   score: 'Score',
-
-  dailyPast: 'Défis passés',
-  dailyToday: "Aujourd'hui",
-  dailyBacklogHint: 'Terminez un jour pour débloquer le précédent.',
   modeDaily: 'Quotidien',
   freePlay: 'Partie libre',
   freePlayNote: 'Une nouvelle grille, quand vous voulez.',

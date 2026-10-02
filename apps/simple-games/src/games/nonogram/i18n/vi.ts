@@ -23,7 +23,6 @@ export const vi: NonogramMessages = {
   nonoNewBestTime: 'Thời gian nhanh nhất của bạn.',
   nonoLevelsSolved: 'Màn đã giải',
   nonoDailiesSolved: 'Thử thách ngày đã giải',
-  nonoDailyBacklogHint: 'Những ngày trước luôn mở.',
   nonoStep1Title: 'Số là chuỗi ô liền nhau',
   nonoStep1Body:
     'Mỗi số là một chuỗi ô được tô liền nhau theo thứ tự, giữa các chuỗi cách ít nhất một ô.',

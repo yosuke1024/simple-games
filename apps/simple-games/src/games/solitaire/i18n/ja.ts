@@ -32,7 +32,6 @@ export const ja: SolitaireMessages = {
   solGamesWon: '勝利数',
   solWinRate: '勝率',
   solDailiesWon: 'デイリー勝利',
-  solDailyBacklogHint: '過去の日付はいつでも遊べます。勝てない配札もあります。',
   solStep1Title: 'ひとつ下・色は交互',
   solStep1Body: '赤と黒を交互に、数字を下げながら重ねます。タップで選び、タップで置きます。',
   solStep2Title: '裏の札をめくり出す',

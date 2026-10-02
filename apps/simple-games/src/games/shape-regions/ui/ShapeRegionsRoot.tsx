@@ -25,7 +25,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './shape-regions.css';
-import { ShapeRegionsDailyScreen } from './screens/DailyScreen';
 import { ShapeRegionsGameScreen } from './screens/GameScreen';
 import { ShapeRegionsHomeScreen } from './screens/HomeScreen';
 import { ShapeRegionsStatsScreen } from './screens/StatsScreen';
@@ -36,8 +35,6 @@ export function ShapeRegionsScreens() {
   switch (screen) {
     case 'tutorial':
       return <ShapeRegionsTutorialScreen />;
-    case 'daily':
-      return <ShapeRegionsDailyScreen />;
     case 'game':
       return <ShapeRegionsGameScreen />;
     case 'stats':

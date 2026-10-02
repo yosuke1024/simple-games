@@ -11,6 +11,7 @@ import { loadRecord, removeRecord, saveRecord } from '../../../storage/repo';
 import {
   decodeTubes,
   encodeTubes,
+  localDateString,
   restoreSession,
   type GameMode,
   type WaterSession,
@@ -103,7 +104,7 @@ export function soleSuspendedMode(saved: SavedGames): GameMode | null {
   return suspended.length === 1 ? suspended[0]! : null;
 }
 
-export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<SavedGames> {
+async function loadSlots(kv: KVStore): Promise<SavedGames> {
   const [level, daily, free, club] = await Promise.all([
     loadRecord(gameSchema, kv),
     loadRecord(dailyGameSchema, kv),
@@ -116,6 +117,24 @@ export async function loadSavedGames(kv: KVStore = preferencesKV): Promise<Saved
     free: toSession(free),
     club: toSession(club),
   };
+}
+
+/**
+ * The daily slot holds today's board or nothing (docs/PRODUCT_PRINCIPLES.md
+ * 「デイリーは今日の 1 問」). A board left over from another day is dropped here,
+ * record and all, so no door — the home button, a shortcut — can reopen it.
+ * `today` is a seam for the tests; production reads the device clock.
+ */
+export async function loadSavedGames(
+  kv: KVStore = preferencesKV,
+  today: string = localDateString(new Date()),
+): Promise<SavedGames> {
+  const saved = await loadSlots(kv);
+  if (saved.daily !== null && saved.daily.dailyDate !== today) {
+    await removeRecord(dailyGameSchema.key, kv);
+    return { ...saved, daily: null };
+  }
+  return saved;
 }
 
 export async function saveGame(session: WaterSession, kv: KVStore = preferencesKV): Promise<void> {

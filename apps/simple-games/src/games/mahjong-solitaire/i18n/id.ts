@@ -35,7 +35,6 @@ export const id: MahjongMessages = {
 
   mahjongLevelsCleared: 'Level yang diselesaikan',
   mahjongDailiesCleared: 'Harian yang diselesaikan',
-  mahjongDailyBacklogHint: 'Semua hari sebelumnya tetap terbuka.',
 
   mahjongStep1Title: 'Ambil pasangan yang sama',
   mahjongStep1Body:

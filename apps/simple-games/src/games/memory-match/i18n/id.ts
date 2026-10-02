@@ -20,7 +20,6 @@ export const id: MemoryMatchMessages = {
   memoryNewBestTime: 'Waktu tercepat sejauh ini.',
   memoryBestMoves: 'Langkah paling sedikit',
   memoryDailiesCleared: 'Hari selesai',
-  memoryDailyBacklogHint: 'Hari-hari sebelumnya selalu terbuka.',
   memoryStep1Title: 'Balik dua kartu',
   memoryStep1Body: 'Ketuk satu kartu, lalu satu lagi. Pasangan yang sama tetap terbuka.',
   memoryStep2Title: 'Tak perlu buru-buru mengingat',

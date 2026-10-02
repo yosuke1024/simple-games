@@ -37,7 +37,6 @@ export const hi: Sudoku6x6Messages = {
   sudoku6x6NewBoard: 'नया बोर्ड',
   sudoku6x6DailySection: 'डेली',
   sudoku6x6DailiesSolved: 'हल किए गए दिन',
-  sudoku6x6DailyBacklogHint: 'पिछले सभी दिन खुले रहते हैं।',
   sudoku6x6HighlightMistakes: 'गलतियाँ दिखाएँ',
   sudoku6x6HighlightMistakesNote:
     'गलत अंक रखते ही उस पर निशान लगाता है। दोहराए अंक हमेशा दिखते हैं।',

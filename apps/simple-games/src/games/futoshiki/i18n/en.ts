@@ -61,7 +61,6 @@ export const en = {
   futoshikiNewBestTime: 'Your fastest yet.',
   futoshikiLevelsSolved: 'Levels solved',
   futoshikiDailiesSolved: 'Dailies solved',
-  futoshikiDailyBacklogHint: 'Every earlier day stays open.',
   futoshikiHighlightMistakes: 'Show mistakes',
   futoshikiHighlightMistakesNote:
     'Marks a digit that does not match the solution. Broken rules are always marked.',

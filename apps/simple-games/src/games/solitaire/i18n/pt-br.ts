@@ -32,8 +32,6 @@ export const ptBR: SolitaireMessages = {
   solGamesWon: 'Jogos vencidos',
   solWinRate: 'Taxa de vitórias',
   solDailiesWon: 'Diários vencidos',
-  solDailyBacklogHint:
-    'Os dias anteriores continuam abertos. Nem toda distribuição pode ser vencida.',
   solStep1Title: 'Um a menos, cores alternadas',
   solStep1Body:
     'Empilhe em ordem decrescente alternando vermelho e preto. Toque na carta e depois no destino.',

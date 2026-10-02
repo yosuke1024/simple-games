@@ -46,7 +46,6 @@ export const en = {
   // Statistics (§9).
   mahjongLevelsCleared: 'Levels cleared',
   mahjongDailiesCleared: 'Dailies cleared',
-  mahjongDailyBacklogHint: 'Every earlier day stays open.',
 
   // Quick Rules (§11).
   mahjongStep1Title: 'Take matching pairs',

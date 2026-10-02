@@ -21,7 +21,6 @@ export const ja: TakuzuMessages = {
   takuzuTier_hard: 'むずかしい',
   takuzuLevelsSolved: 'クリアしたレベル',
   takuzuDailiesSolved: 'クリアしたデイリー',
-  takuzuDailyBacklogHint: '過去の日はいつでも挑戦できます。',
   takuzuStep1Title: '同じ数字は3つ続けない',
   takuzuStep1Body: 'タップで 0、1、空 と切り替わります。同じ数字は3つ続けられません。',
   takuzuStep2Title: '半分ずつ',

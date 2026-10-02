@@ -25,7 +25,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './number-path.css';
-import { NumberPathDailyScreen } from './screens/DailyScreen';
 import { NumberPathGameScreen } from './screens/GameScreen';
 import { NumberPathHomeScreen } from './screens/HomeScreen';
 import { NumberPathStatsScreen } from './screens/StatsScreen';
@@ -36,8 +35,6 @@ export function NumberPathScreens() {
   switch (screen) {
     case 'tutorial':
       return <NumberPathTutorialScreen />;
-    case 'daily':
-      return <NumberPathDailyScreen />;
     case 'game':
       return <NumberPathGameScreen />;
     case 'stats':

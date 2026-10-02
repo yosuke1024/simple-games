@@ -20,7 +20,6 @@ export const fr: MemoryMatchMessages = {
   memoryNewBestTime: 'Votre meilleur temps.',
   memoryBestMoves: 'Minimum de coups',
   memoryDailiesCleared: 'Jours réussis',
-  memoryDailyBacklogHint: 'Les jours précédents restent ouverts.',
   memoryStep1Title: 'Retournez deux cartes',
   memoryStep1Body: 'Touchez une carte, puis une autre. Une paire identique reste face visible.',
   memoryStep2Title: 'Rien ne presse',

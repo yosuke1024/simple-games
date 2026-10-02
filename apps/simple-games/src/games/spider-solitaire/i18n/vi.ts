@@ -36,7 +36,6 @@ export const vi: SpiderMessages = {
   spiderGamesWon: 'Ván thắng',
   spiderWinRate: 'Tỷ lệ thắng',
   spiderDailiesWon: 'Thử thách ngày đã thắng',
-  spiderDailyBacklogHint: 'Những ngày trước luôn mở. Không phải ván nào cũng thắng được.',
   spiderStep1Title: 'Xếp giảm dần',
   spiderStep1Body:
     'Lá bất kỳ chất nào cũng đặt được lên lá lớn hơn một bậc. Chạm một lá, rồi chạm nơi muốn đặt.',

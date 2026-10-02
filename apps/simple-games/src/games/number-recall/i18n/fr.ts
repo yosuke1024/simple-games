@@ -16,8 +16,6 @@ export const fr: RecallMessages = {
   recallTiles: 'Tuiles',
   recallNewBestTime: 'Votre meilleur temps.',
   recallNewLayout: 'Nouvelle disposition',
-
-  recallDailyBacklogHint: 'Les jours précédents restent toujours accessibles.',
   recallSizeLabel: '{n}x{n}',
   recallLevelsDone: 'Niveaux terminés',
   recallDailiesDone: 'Défis terminés',

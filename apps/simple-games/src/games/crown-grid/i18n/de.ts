@@ -58,7 +58,6 @@ export const de: CrownGridMessages = {
   crownGridNewBoard: 'Neues Feld',
   crownGridDailySection: 'Täglich',
   crownGridDailiesSolved: 'Gelöste Tage',
-  crownGridDailyBacklogHint: 'Jeder frühere Tag bleibt offen.',
   crownGridStep1Title: 'Je eine Krone',
   crownGridStep1Body: 'Jede Zeile, jede Spalte und jede Farbe hält genau eine Krone.',
   crownGridStep2Title: 'Kronen berühren sich nie',

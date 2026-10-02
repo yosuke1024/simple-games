@@ -27,7 +27,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './nonogram.css';
-import { NonoDailyScreen } from './screens/DailyScreen';
 import { NonoGameScreen } from './screens/GameScreen';
 import { NonoHomeScreen } from './screens/HomeScreen';
 import { NonoLevelSelectScreen } from './screens/LevelSelectScreen';
@@ -41,8 +40,6 @@ export function NonogramScreens() {
       return <NonoTutorialScreen />;
     case 'levels':
       return <NonoLevelSelectScreen />;
-    case 'daily':
-      return <NonoDailyScreen />;
     case 'game':
       return <NonoGameScreen />;
     case 'stats':

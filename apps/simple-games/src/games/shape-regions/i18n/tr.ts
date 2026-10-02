@@ -37,7 +37,6 @@ export const tr: ShapeRegionsMessages = {
   shapeRegionsSolvedCount: 'Çözülen bulmacalar',
   shapeRegionsDailySection: 'Günlük',
   shapeRegionsDailiesCleared: 'Tamamlanan günler',
-  shapeRegionsDailyBacklogHint: 'Önceki her gün açık kalır.',
   shapeRegionsStep1Title: 'Sayı ve simge',
   shapeRegionsStep1Body: 'Sayı şeklin kaç hücreli olduğunu, simge ise biçimini söyler.',
   shapeRegionsStep2Title: 'İpucundan büyüt',

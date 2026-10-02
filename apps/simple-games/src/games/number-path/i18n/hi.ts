@@ -29,7 +29,6 @@ export const hi: NumberPathMessages = {
   numberPathSolvedCount: 'हल किए बोर्ड',
   numberPathDailySection: 'दैनिक',
   numberPathDailiesSolved: 'हल किए दिन',
-  numberPathDailyBacklogHint: 'हर पिछला दिन खुला रहता है।',
   numberPathStep1Title: 'संख्याओं का क्रम अपनाएँ',
   numberPathStep1Body: '1 से एक रेखा खींचें और संख्याओं को क्रम से पार करें।',
   numberPathStep2Title: 'हर खाना भरें',

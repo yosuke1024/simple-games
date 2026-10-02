@@ -59,7 +59,6 @@ export const es: CrownGridMessages = {
   crownGridNewBoard: 'Tablero nuevo',
   crownGridDailySection: 'Diario',
   crownGridDailiesSolved: 'Días resueltos',
-  crownGridDailyBacklogHint: 'Los días anteriores siguen abiertos.',
   crownGridStep1Title: 'Una corona en cada una',
   crownGridStep1Body: 'Cada fila, cada columna y cada color tiene exactamente una corona.',
   crownGridStep2Title: 'Las coronas no se tocan',

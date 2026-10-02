@@ -14,7 +14,6 @@ export const de: SlidingPuzzleMessages = {
   slideNewBestTime: 'Deine bisher schnellste Zeit.',
   slideLevelsSolved: 'Gelöste Level',
   slideDailiesSolved: 'Gelöste Tagesrätsel',
-  slideDailyBacklogHint: 'Jeder frühere Tag bleibt offen.',
   slideStep1Title: 'Tippe neben die Lücke',
   slideStep1Body: 'Tippe auf ein Feld neben der Lücke, und es rutscht hinein.',
   slideStep2Title: 'Eine ganze Reihe rutscht',

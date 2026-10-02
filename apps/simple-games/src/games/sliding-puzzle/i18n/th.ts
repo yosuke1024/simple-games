@@ -14,7 +14,6 @@ export const th: SlidingPuzzleMessages = {
   slideNewBestTime: 'เร็วที่สุดของคุณ',
   slideLevelsSolved: 'เลเวลที่ผ่าน',
   slideDailiesSolved: 'รายวันที่ผ่าน',
-  slideDailyBacklogHint: 'ย้อนไปเล่นวันก่อน ๆ ได้เสมอ',
   slideStep1Title: 'แตะแผ่นที่ติดช่องว่าง',
   slideStep1Body: 'แตะแผ่นที่อยู่ติดช่องว่าง แผ่นนั้นจะเลื่อนเข้าไป',
   slideStep2Title: 'เลื่อนพร้อมกันได้',

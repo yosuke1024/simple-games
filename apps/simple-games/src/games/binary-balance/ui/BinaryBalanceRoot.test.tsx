@@ -333,31 +333,6 @@ describe('home (§10)', () => {
     expect(screen.getByText('Daily')).toBeInTheDocument();
     expect(cells()).toHaveLength(36);
   });
-
-  it('asks before another day replaces a suspended daily, and resumes the same day (§11)', async () => {
-    const user = userEvent.setup();
-    renderGame(tutorialDone);
-    await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
-    const open = firstOpenCell();
-    const openLabel = labelOf(open).replace(/^Empty, /, '');
-    await user.click(open);
-    await user.click(screen.getByRole('button', { name: 'Home' }));
-
-    await user.click(screen.getByRole('button', { name: /Past Dailies/ }));
-    const days = () =>
-      within(document.querySelector('.daily-list') as HTMLElement).getAllByRole('button');
-    expect(days()[0]).toHaveTextContent(/Today.*Resume/);
-
-    await user.click(days()[1]!);
-    expect(screen.getByRole('alertdialog', { name: 'Start a new game?' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(days()[0]).toHaveTextContent(/Today.*Resume/);
-
-    // Today again: a resume, which replaces nothing and asks nothing.
-    await user.click(days()[0]!);
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
-    expect(sunAt(openLabel)).toBeInTheDocument();
-  });
 });
 
 describe('playing (§2, §4, §9)', () => {

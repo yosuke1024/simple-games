@@ -37,7 +37,6 @@ export const th: BoxRegionsMessages = {
   boxRegionsSolvedCount: 'ปริศนาที่แก้แล้ว',
   boxRegionsDailySection: 'รายวัน',
   boxRegionsDailiesCleared: 'วันที่ทำเสร็จ',
-  boxRegionsDailyBacklogHint: 'ทุกวันก่อนหน้ายังเปิดให้เล่นอยู่',
   boxRegionsStep1Title: 'แบ่งเป็นกล่อง',
   boxRegionsStep1Body: 'แบ่งกระดานเป็นสี่เหลี่ยมผืนผ้า โดยแต่ละกล่องมีเบาะแสเพียงหนึ่งเดียว',
   boxRegionsStep2Title: 'อ่านเบาะแส',

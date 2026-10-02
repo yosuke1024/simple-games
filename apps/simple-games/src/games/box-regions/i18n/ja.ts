@@ -36,7 +36,6 @@ export const ja: BoxRegionsMessages = {
   boxRegionsSolvedCount: 'クリア数',
   boxRegionsDailySection: 'デイリー',
   boxRegionsDailiesCleared: '達成日数',
-  boxRegionsDailyBacklogHint: '過去の日はいつでも開けます。',
   boxRegionsStep1Title: '箱に切り分ける',
   boxRegionsStep1Body: '盤面を長方形の箱に切り分けます。どの箱にも手がかりが 1 つ。',
   boxRegionsStep2Title: '手がかりを読む',

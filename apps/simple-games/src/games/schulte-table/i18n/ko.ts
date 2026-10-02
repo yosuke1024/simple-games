@@ -13,8 +13,6 @@ export const ko: SchulteMessages = {
   schulteMisses: '잘못된 탭',
   schulteNewBestTime: '지금까지 중 가장 빠릅니다.',
   schulteConfirmRestartBody: '이번 판을 첫 숫자부터 다시 시작합니다.',
-
-  schulteDailyBacklogHint: '지난 날짜는 언제나 열려 있습니다.',
   schulteSizeLabel: '{n}×{n}',
   schulteLevelsDone: '완료한 레벨',
   schulteDailiesDone: '완료한 데일리',

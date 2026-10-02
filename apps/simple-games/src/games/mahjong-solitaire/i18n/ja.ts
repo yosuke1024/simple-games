@@ -34,7 +34,6 @@ export const ja: MahjongMessages = {
 
   mahjongLevelsCleared: 'クリアしたレベル',
   mahjongDailiesCleared: 'クリアしたデイリー',
-  mahjongDailyBacklogHint: '過去の日はいつでも挑戦できます。',
 
   mahjongStep1Title: '同じ牌を 2 枚取る',
   mahjongStep1Body:

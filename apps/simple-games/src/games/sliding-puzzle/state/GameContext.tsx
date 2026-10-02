@@ -59,7 +59,7 @@ import {
   previousBestsFor,
 } from './statsLogic';
 
-export type Screen = 'home' | 'tutorial' | 'levels' | 'daily' | 'game' | 'stats';
+export type Screen = 'home' | 'tutorial' | 'levels' | 'game' | 'stats';
 
 export interface LastResult {
   readonly isNewBestMoves: boolean;
@@ -86,7 +86,7 @@ export interface SlidingPuzzleContextValue {
   canResume: (mode: GameMode) => boolean;
   startLevel: (level: number) => void;
   startNextLevel: () => void;
-  startDaily: (date?: string) => void;
+  startDaily: () => void;
   restartCurrent: () => void;
   resumeGame: (mode: GameMode) => void;
   /** Taps a cell. Returns false when the tap was not a legal move (§3). */
@@ -327,18 +327,15 @@ export function SlidingPuzzleProvider({
     beginSession(createLevelSession(Math.min(next, progressRef.current.highestUnlocked)));
   }, [beginSession]);
 
-  const startDaily = useCallback(
-    (date?: string) => {
-      const target = date ?? localDateString(new Date());
-      const current = sessionsRef.current.daily;
-      if (current && current.dailyDate === target && current.status === 'playing') {
-        resumeGame('daily');
-        return;
-      }
-      beginSession(createDailySession(target));
-    },
-    [beginSession, resumeGame],
-  );
+  const startDaily = useCallback(() => {
+    const target = localDateString(new Date());
+    const current = sessionsRef.current.daily;
+    if (current && current.dailyDate === target && current.status === 'playing') {
+      resumeGame('daily');
+      return;
+    }
+    beginSession(createDailySession(target));
+  }, [beginSession, resumeGame]);
 
   const restartCurrent = useCallback(() => {
     const current = sessionsRef.current[activeModeRef.current];

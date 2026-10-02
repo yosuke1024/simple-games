@@ -18,10 +18,6 @@ export const vi: Messages = {
   reachedLevel: 'Cấp đã đạt',
 
   score: 'Điểm',
-
-  dailyPast: 'Ngày trước',
-  dailyToday: 'Hôm nay',
-  dailyBacklogHint: 'Hoàn thành một ngày để mở ngày trước đó.',
   modeDaily: 'Hằng ngày',
   freePlay: 'Chơi tự do',
   freePlayNote: 'Một bàn mới, bất cứ lúc nào bạn muốn.',

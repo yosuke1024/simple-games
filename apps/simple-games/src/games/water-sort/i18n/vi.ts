@@ -14,7 +14,6 @@ export const vi: WaterSortMessages = {
   waterBestMoves: 'Ít nước nhất',
   waterLevelsSolved: 'Màn đã xong',
   waterDailiesSolved: 'Thử thách ngày đã xong',
-  waterDailyBacklogHint: 'Những ngày trước luôn mở.',
   waterTier_easy: 'Dễ',
   waterTier_medium: 'Vừa',
   waterTier_hard: 'Khó',

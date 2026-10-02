@@ -23,7 +23,6 @@ export const ptBR: NonogramMessages = {
   nonoNewBestTime: 'Seu melhor tempo.',
   nonoLevelsSolved: 'Níveis resolvidos',
   nonoDailiesSolved: 'Diários resolvidos',
-  nonoDailyBacklogHint: 'Os dias anteriores continuam abertos.',
   nonoStep1Title: 'Números são blocos',
   nonoStep1Body:
     'Cada número é um bloco de quadrados pintados, em ordem, com pelo menos um espaço entre eles.',

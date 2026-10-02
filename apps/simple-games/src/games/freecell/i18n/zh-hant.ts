@@ -28,7 +28,6 @@ export const zhHant: FreeCellMessages = {
   fcGamesWon: '獲勝局數',
   fcWinRate: '勝率',
   fcDailiesWon: '每日挑戰獲勝',
-  fcDailyBacklogHint: '之前的日期隨時都能玩。慢慢來。',
   fcStep1Title: '依序遞減，紅黑交替',
   fcStep1Body: '把牌依紅黑交替往下疊。先點一張牌，再點要放的位置。',
   fcStep2Title: '四個暫存位，每位一張',

@@ -13,8 +13,6 @@ export const zhHant: SchulteMessages = {
   schulteMisses: '點錯次數',
   schulteNewBestTime: '你的最快紀錄。',
   schulteConfirmRestartBody: '這一局會從第一個數字重新開始。',
-
-  schulteDailyBacklogHint: '過去的每一天都能隨時挑戰。',
   schulteSizeLabel: '{n}×{n}',
   schulteLevelsDone: '完成的關卡',
   schulteDailiesDone: '完成的每日',

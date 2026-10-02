@@ -25,7 +25,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './solitaire.css';
-import { SolitaireDailyScreen } from './screens/DailyScreen';
 import { SolitaireGameScreen } from './screens/GameScreen';
 import { SolitaireHomeScreen } from './screens/HomeScreen';
 import { SolitaireStatsScreen } from './screens/StatsScreen';
@@ -36,8 +35,6 @@ export function SolitaireScreens() {
   switch (screen) {
     case 'tutorial':
       return <SolitaireTutorialScreen />;
-    case 'daily':
-      return <SolitaireDailyScreen />;
     case 'game':
       return <SolitaireGameScreen />;
     case 'stats':

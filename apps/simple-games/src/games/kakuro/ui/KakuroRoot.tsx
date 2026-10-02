@@ -27,7 +27,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './kakuro.css';
-import { KakuroDailyScreen } from './screens/DailyScreen';
 import { KakuroGameScreen } from './screens/GameScreen';
 import { KakuroHomeScreen } from './screens/HomeScreen';
 import { KakuroLevelSelectScreen } from './screens/LevelSelectScreen';
@@ -41,8 +40,6 @@ export function KakuroScreens() {
       return <KakuroTutorialScreen />;
     case 'levels':
       return <KakuroLevelSelectScreen />;
-    case 'daily':
-      return <KakuroDailyScreen />;
     case 'game':
       return <KakuroGameScreen />;
     case 'stats':

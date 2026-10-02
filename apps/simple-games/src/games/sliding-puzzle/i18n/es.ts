@@ -14,7 +14,6 @@ export const es: SlidingPuzzleMessages = {
   slideNewBestTime: 'Tu tiempo más rápido.',
   slideLevelsSolved: 'Niveles resueltos',
   slideDailiesSolved: 'Retos resueltos',
-  slideDailyBacklogHint: 'Los días anteriores siempre están disponibles.',
   slideStep1Title: 'Toca junto al hueco',
   slideStep1Body: 'Toca una ficha junto al hueco y se desliza hasta él.',
   slideStep2Title: 'Se mueve toda la fila',

@@ -39,7 +39,6 @@ export const de: BoxRegionsMessages = {
   boxRegionsSolvedCount: 'Gelöste Rätsel',
   boxRegionsDailySection: 'Täglich',
   boxRegionsDailiesCleared: 'Abgeschlossene Tage',
-  boxRegionsDailyBacklogHint: 'Alle früheren Tage bleiben offen.',
   boxRegionsStep1Title: 'In Kästen teilen',
   boxRegionsStep1Body: 'Teile das Feld in Rechtecke, die jeweils genau eine Vorgabe enthalten.',
   boxRegionsStep2Title: 'Vorgaben lesen',

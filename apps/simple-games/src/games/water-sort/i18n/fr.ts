@@ -14,7 +14,6 @@ export const fr: WaterSortMessages = {
   waterBestMoves: 'Minimum de versements',
   waterLevelsSolved: 'Niveaux résolus',
   waterDailiesSolved: 'Défis quotidiens résolus',
-  waterDailyBacklogHint: 'Les jours précédents restent ouverts.',
   waterTier_easy: 'Facile',
   waterTier_medium: 'Moyen',
   waterTier_hard: 'Difficile',

@@ -14,7 +14,6 @@ export const ja: SlidingPuzzleMessages = {
   slideNewBestTime: '自己最速です。',
   slideLevelsSolved: 'クリアしたレベル',
   slideDailiesSolved: 'クリアしたデイリー',
-  slideDailyBacklogHint: '過去の日はいつでも挑戦できます。',
   slideStep1Title: '空きの隣をタップ',
   slideStep1Body: '空きマスの隣のタイルをタップすると、そこへ滑ります。',
   slideStep2Title: 'まとめて動かせる',

@@ -8,7 +8,6 @@ import { describe, expect, it } from 'vitest';
 import { createMemoryKV } from '../../../storage/kv';
 import { loadRecord, saveRecord } from '../../../storage/repo';
 import { createDailySession, createDifficultySession, doTap, EMPTY } from '../game';
-import { availableDailyDates } from '../state/progressLogic';
 import {
   applyGameStart,
   applyPlayTime,
@@ -94,15 +93,6 @@ describe('statistics (§10)', () => {
   });
 });
 
-describe('the daily backlog (§10)', () => {
-  it('opens today and the 29 days before it, unconditionally', () => {
-    const dates = availableDailyDates('2026-08-05');
-    expect(dates[0]).toBe('2026-08-05');
-    expect(dates).toHaveLength(30);
-    expect(dates.every((date) => date <= '2026-08-05')).toBe(true);
-  });
-});
-
 describe('saved games (§11)', () => {
   it('keeps a difficulty game and a daily in slots that cannot evict each other', async () => {
     const kv = createMemoryKV();
@@ -113,14 +103,14 @@ describe('saved games (§11)', () => {
     await saveGame(game, kv);
     await saveGame(daily, kv);
 
-    const loaded = await loadSavedGames(kv);
+    const loaded = await loadSavedGames(kv, '2026-08-03');
     expect(loaded.difficulty?.seed).toBe(game.seed);
     expect(loaded.difficulty?.links).toEqual(game.links);
     expect(loaded.difficulty?.marks).toEqual(game.marks);
     expect(loaded.daily?.dailyDate).toBe('2026-08-03');
 
     await clearSavedGame('daily', kv);
-    const after = await loadSavedGames(kv);
+    const after = await loadSavedGames(kv, '2026-08-03');
     expect(after.daily).toBeNull();
     expect(after.difficulty).not.toBeNull();
   });

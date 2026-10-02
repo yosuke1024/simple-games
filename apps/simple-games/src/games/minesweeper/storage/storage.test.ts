@@ -8,7 +8,6 @@ import { describe, expect, it } from 'vitest';
 import { createMemoryKV } from '../../../storage/kv';
 import { loadRecord, saveRecord } from '../../../storage/repo';
 import { createDailySession, createDifficultySession, tapCell } from '../game';
-import { availableDailyDates, canPlayDaily } from '../state/progressLogic';
 import {
   applyGameStart,
   applyPlayTime,
@@ -95,24 +94,6 @@ describe('statistics (§9)', () => {
   });
 });
 
-describe('the daily backlog (§8)', () => {
-  it('opens today always, and one older day per day cleared', () => {
-    const stats = statsSchema.defaultValue();
-    expect(canPlayDaily(stats, '2026-08-05', '2026-08-05')).toBe(true);
-    expect(canPlayDaily(stats, '2026-08-04', '2026-08-05')).toBe(false);
-    expect(canPlayDaily(stats, '2026-08-06', '2026-08-05')).toBe(false);
-    expect(availableDailyDates(stats, '2026-08-05')).toEqual(['2026-08-05']);
-
-    const cleared = { ...stats, dailyTimes: { '2026-08-05': 30, '2026-08-04': 30 } };
-    expect(canPlayDaily(cleared, '2026-08-04', '2026-08-05')).toBe(true);
-    expect(availableDailyDates(cleared, '2026-08-05')).toEqual([
-      '2026-08-05',
-      '2026-08-04',
-      '2026-08-03',
-    ]);
-  });
-});
-
 describe('saved games (§10)', () => {
   it('keeps a difficulty game and a daily in slots that cannot evict each other', async () => {
     const kv = createMemoryKV();
@@ -121,14 +102,14 @@ describe('saved games (§10)', () => {
     await saveGame(level, kv);
     await saveGame(daily, kv);
 
-    const loaded = await loadSavedGames(kv);
+    const loaded = await loadSavedGames(kv, '2026-08-03');
     expect(loaded.difficulty?.seed).toBe(level.seed);
     expect(loaded.difficulty?.board.field.mines).toEqual(level.board.field.mines);
     expect(loaded.difficulty?.board.opened).toEqual(level.board.opened);
     expect(loaded.daily?.dailyDate).toBe('2026-08-03');
 
     await clearSavedGame('daily', kv);
-    const after = await loadSavedGames(kv);
+    const after = await loadSavedGames(kv, '2026-08-03');
     expect(after.daily).toBeNull();
     expect(after.difficulty).not.toBeNull();
   });

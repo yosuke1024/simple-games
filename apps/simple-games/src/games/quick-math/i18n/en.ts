@@ -28,7 +28,6 @@ export const en = {
   qmathConfirmRestartBody: 'This set starts over from the first question.',
 
   // Lists & statistics
-  qmathDailyBacklogHint: 'Every past day stays open.',
   qmathLevelsDone: 'Levels finished',
   qmathDailiesDone: 'Dailies finished',
   qmathTotalMisses: 'Wrong answers in total',

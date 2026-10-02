@@ -40,7 +40,6 @@ export const id: BoxRegionsMessages = {
   boxRegionsSolvedCount: 'Teka-teki selesai',
   boxRegionsDailySection: 'Harian',
   boxRegionsDailiesCleared: 'Hari terselesaikan',
-  boxRegionsDailyBacklogHint: 'Semua hari sebelumnya tetap terbuka.',
   boxRegionsStep1Title: 'Bagi menjadi kotak',
   boxRegionsStep1Body:
     'Bagi papan menjadi persegi panjang, masing-masing berisi tepat satu petunjuk.',

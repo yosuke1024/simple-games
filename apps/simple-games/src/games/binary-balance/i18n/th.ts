@@ -50,7 +50,6 @@ export const th: BinaryBalanceMessages = {
   binaryBalanceNewBoard: 'กระดานใหม่',
   binaryBalanceDailySection: 'เดลี่',
   binaryBalanceDailiesSolved: 'จำนวนวันที่ผ่าน',
-  binaryBalanceDailyBacklogHint: 'วันก่อนหน้าเปิดให้เล่นเสมอ',
   binaryBalanceStep1Title: 'ห้ามซ้ำสามช่องติด',
   binaryBalanceStep1Body:
     'แตะเพื่อสลับระหว่างว่าง ดวงอาทิตย์ ดวงจันทร์ เครื่องหมายเดียวกันห้ามติดกันสามช่อง',

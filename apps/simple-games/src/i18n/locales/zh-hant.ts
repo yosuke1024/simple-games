@@ -18,10 +18,6 @@ export const zhHant: Messages = {
   reachedLevel: '已達關卡',
 
   score: '分數',
-
-  dailyPast: '過往每日',
-  dailyToday: '今天',
-  dailyBacklogHint: '過關後就能解鎖前一天。',
   modeDaily: '每日',
   freePlay: '自由模式',
   freePlayNote: '隨時開始新棋盤。',

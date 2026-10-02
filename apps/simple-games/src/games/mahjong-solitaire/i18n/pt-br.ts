@@ -35,7 +35,6 @@ export const ptBR: MahjongMessages = {
 
   mahjongLevelsCleared: 'Níveis concluídos',
   mahjongDailiesCleared: 'Diários concluídos',
-  mahjongDailyBacklogHint: 'Os dias anteriores continuam abertos.',
 
   mahjongStep1Title: 'Pegue pares iguais',
   mahjongStep1Body:

@@ -18,10 +18,6 @@ export const ja: Messages = {
   reachedLevel: '到達レベル',
 
   score: 'スコア',
-
-  dailyPast: '過去のデイリー',
-  dailyToday: '今日',
-  dailyBacklogHint: 'クリアすると、その前の日に挑戦できます。',
   modeDaily: 'デイリー',
   freePlay: 'フリープレイ',
   freePlayNote: '好きなときに、新しい盤面を。',

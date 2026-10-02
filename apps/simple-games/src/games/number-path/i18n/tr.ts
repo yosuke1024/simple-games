@@ -29,7 +29,6 @@ export const tr: NumberPathMessages = {
   numberPathSolvedCount: 'Çözülen tahtalar',
   numberPathDailySection: 'Günlük',
   numberPathDailiesSolved: 'Çözülen günler',
-  numberPathDailyBacklogHint: 'Önceki her gün açık kalır.',
   numberPathStep1Title: 'Sayıları izle',
   numberPathStep1Body: '1’den başlayarak tek bir çizgi çiz ve sayılardan sırayla geç.',
   numberPathStep2Title: 'Her kareyi kapla',

@@ -25,7 +25,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './crown-grid.css';
-import { CrownGridDailyScreen } from './screens/DailyScreen';
 import { CrownGridGameScreen } from './screens/GameScreen';
 import { CrownGridHomeScreen } from './screens/HomeScreen';
 import { CrownGridStatsScreen } from './screens/StatsScreen';
@@ -36,8 +35,6 @@ export function CrownGridScreens() {
   switch (screen) {
     case 'tutorial':
       return <CrownGridTutorialScreen />;
-    case 'daily':
-      return <CrownGridDailyScreen />;
     case 'game':
       return <CrownGridGameScreen />;
     case 'stats':

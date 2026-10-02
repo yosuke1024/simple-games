@@ -37,7 +37,6 @@ export const ko: Sudoku6x6Messages = {
   sudoku6x6NewBoard: '새 판',
   sudoku6x6DailySection: '데일리',
   sudoku6x6DailiesSolved: '완성한 날',
-  sudoku6x6DailyBacklogHint: '지난 날짜도 모두 열려 있습니다.',
   sudoku6x6HighlightMistakes: '실수 표시',
   sudoku6x6HighlightMistakesNote: '틀린 숫자를 넣는 즉시 표시합니다. 중복은 항상 표시됩니다.',
   sudoku6x6Step1Title: '1-6을 한 번씩',

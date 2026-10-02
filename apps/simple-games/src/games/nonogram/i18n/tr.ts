@@ -23,7 +23,6 @@ export const tr: NonogramMessages = {
   nonoNewBestTime: 'En hızlı süren.',
   nonoLevelsSolved: 'Çözülen seviyeler',
   nonoDailiesSolved: 'Çözülen günlükler',
-  nonoDailyBacklogHint: 'Önceki günler açık kalır.',
   nonoStep1Title: 'Sayılar bloklardır',
   nonoStep1Body:
     'Her sayı, sırayla boyanan bir blok karedir; bloklar arasında en az bir boşluk olur.',

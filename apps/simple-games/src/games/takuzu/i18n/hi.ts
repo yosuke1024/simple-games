@@ -21,7 +21,6 @@ export const hi: TakuzuMessages = {
   takuzuTier_hard: 'कठिन',
   takuzuLevelsSolved: 'हल किए गए स्तर',
   takuzuDailiesSolved: 'हल की गई दैनिक पहेलियाँ',
-  takuzuDailyBacklogHint: 'पिछले दिन हमेशा खुले रहते हैं।',
   takuzuStep1Title: 'लगातार तीन नहीं',
   takuzuStep1Body:
     'टैप करने पर खाना 0, 1, खाली में बदलता है। एक ही अंक लगातार तीन बार नहीं आ सकता।',

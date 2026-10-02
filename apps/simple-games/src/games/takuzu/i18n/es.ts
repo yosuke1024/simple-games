@@ -21,7 +21,6 @@ export const es: TakuzuMessages = {
   takuzuTier_hard: 'Difícil',
   takuzuLevelsSolved: 'Niveles resueltos',
   takuzuDailiesSolved: 'Diarios resueltos',
-  takuzuDailyBacklogHint: 'Los días anteriores siguen abiertos.',
   takuzuStep1Title: 'Nunca tres seguidas',
   takuzuStep1Body:
     'Toca una casilla para pasar por 0, 1 y vacía. La misma cifra no puede ir tres veces seguidas.',

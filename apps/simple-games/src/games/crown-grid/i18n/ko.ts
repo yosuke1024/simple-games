@@ -58,7 +58,6 @@ export const ko: CrownGridMessages = {
   crownGridNewBoard: '새 판',
   crownGridDailySection: '데일리',
   crownGridDailiesSolved: '클리어한 날',
-  crownGridDailyBacklogHint: '지난 날짜는 언제든 도전할 수 있습니다.',
   crownGridStep1Title: '왕관은 하나씩',
   crownGridStep1Body: '모든 행, 모든 열, 모든 색에 왕관이 정확히 하나씩 들어갑니다.',
   crownGridStep2Title: '왕관은 맞닿지 않아요',

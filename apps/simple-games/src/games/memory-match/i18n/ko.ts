@@ -20,7 +20,6 @@ export const ko: MemoryMatchMessages = {
   memoryNewBestTime: '최단 기록입니다.',
   memoryBestMoves: '최소 이동 수',
   memoryDailiesCleared: '완료한 날',
-  memoryDailyBacklogHint: '지난 날짜는 언제든 열려 있습니다.',
   memoryStep1Title: '카드 두 장 뒤집기',
   memoryStep1Body: '한 장씩 탭하세요. 같은 기호면 앞면으로 남습니다.',
   memoryStep2Title: '서두르지 않아도 됩니다',

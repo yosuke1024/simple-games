@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
-import { IconCalendar, IconChart, IconCheck } from '@/ui/components/icons';
+import { IconChart, IconCheck } from '@/ui/components/icons';
 import { localDateString } from '../../game';
 import { useSolitaire } from '../../state/GameContext';
 
@@ -29,9 +29,13 @@ export function SolitaireHomeScreen() {
   const [confirmNew, setConfirmNew] = useState(false);
 
   const freeGame = sessions.free?.status === 'playing' ? sessions.free : null;
-  const dailyGame = sessions.daily?.status === 'playing' ? sessions.daily : null;
   const today = localDateString(new Date());
-  const dailyIsToday = dailyGame?.dailyDate === today;
+  // Today's board or nothing: a daily left from another day is not the one
+  // this button names (docs/PRODUCT_PRINCIPLES.md「デイリーは今日の 1 問」).
+  const dailyGame =
+    sessions.daily?.status === 'playing' && sessions.daily.dailyDate === today
+      ? sessions.daily
+      : null;
 
   return (
     <div className="screen home-screen">
@@ -78,10 +82,7 @@ export function SolitaireHomeScreen() {
         >
           {t('dailyChallenge')}
           {dailyGame ? (
-            <span className="btn-note">
-              {t('resume')}
-              {dailyIsToday ? '' : ` · ${dailyGame.dailyDate}`}
-            </span>
+            <span className="btn-note">{t('resume')}</span>
           ) : dailyDoneToday ? (
             <span className="btn-note">
               <IconCheck className="badge-icon" /> {t('dailyDoneBadge')}
@@ -111,10 +112,6 @@ export function SolitaireHomeScreen() {
         <p className="sol-draw-note">{t('solDrawNote')}</p>
 
         <nav className="home-chips sol-chips">
-          <button type="button" className="home-chip" onClick={() => navigate('daily')}>
-            <IconCalendar className="home-chip-icon" />
-            <span>{t('dailyPast')}</span>
-          </button>
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>
             <IconChart className="home-chip-icon" />
             <span>{t('statistics')}</span>

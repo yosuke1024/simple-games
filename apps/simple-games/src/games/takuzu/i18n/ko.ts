@@ -21,7 +21,6 @@ export const ko: TakuzuMessages = {
   takuzuTier_hard: '어려움',
   takuzuLevelsSolved: '클리어한 레벨',
   takuzuDailiesSolved: '클리어한 데일리',
-  takuzuDailyBacklogHint: '지난 날짜는 언제든 도전할 수 있습니다.',
   takuzuStep1Title: '세 칸 연속 금지',
   takuzuStep1Body: '칸을 탭하면 0, 1, 빈칸으로 바뀝니다. 같은 숫자는 세 칸 연속될 수 없습니다.',
   takuzuStep2Title: '반반씩',

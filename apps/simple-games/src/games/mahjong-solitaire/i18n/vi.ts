@@ -35,7 +35,6 @@ export const vi: MahjongMessages = {
 
   mahjongLevelsCleared: 'Cấp độ đã hoàn thành',
   mahjongDailiesCleared: 'Thử thách ngày đã hoàn thành',
-  mahjongDailyBacklogHint: 'Những ngày trước vẫn luôn mở.',
 
   mahjongStep1Title: 'Lấy các cặp giống nhau',
   mahjongStep1Body:

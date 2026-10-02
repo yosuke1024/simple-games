@@ -30,7 +30,6 @@ export const fr: FutoshikiMessages = {
   futoshikiNewBestTime: 'Votre meilleur temps.',
   futoshikiLevelsSolved: 'Niveaux résolus',
   futoshikiDailiesSolved: 'Défis du jour résolus',
-  futoshikiDailyBacklogHint: 'Les jours précédents restent ouverts.',
   futoshikiHighlightMistakes: 'Afficher les erreurs',
   futoshikiHighlightMistakesNote:
     'Marque un chiffre qui ne correspond pas à la solution. Les règles enfreintes sont toujours marquées.',

@@ -47,7 +47,6 @@ export const zhHant: BinaryBalanceMessages = {
   binaryBalanceNewBoard: '新盤面',
   binaryBalanceDailySection: '每日挑戰',
   binaryBalanceDailiesSolved: '過關天數',
-  binaryBalanceDailyBacklogHint: '之前的日期隨時可以挑戰。',
   binaryBalanceStep1Title: '不得連續三格',
   binaryBalanceStep1Body: '輕點方格即可在空白、太陽、月亮之間切換。同一種標記不得連續三格。',
   binaryBalanceStep2Title: '各佔一半',

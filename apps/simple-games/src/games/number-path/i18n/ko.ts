@@ -29,7 +29,6 @@ export const ko: NumberPathMessages = {
   numberPathSolvedCount: '푼 보드',
   numberPathDailySection: '데일리',
   numberPathDailiesSolved: '푼 날',
-  numberPathDailyBacklogHint: '지난 날은 언제든 도전할 수 있습니다.',
   numberPathStep1Title: '숫자를 순서대로',
   numberPathStep1Body: '1에서 한 줄을 그어 숫자를 순서대로 지나갑니다.',
   numberPathStep2Title: '모든 칸을 한 번씩',

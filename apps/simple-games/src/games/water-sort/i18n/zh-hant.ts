@@ -14,7 +14,6 @@ export const zhHant: WaterSortMessages = {
   waterBestMoves: '最少步數',
   waterLevelsSolved: '完成的關卡',
   waterDailiesSolved: '完成的每日挑戰',
-  waterDailyBacklogHint: '之前的日期隨時都能玩。',
   waterTier_easy: '簡單',
   waterTier_medium: '中等',
   waterTier_hard: '困難',

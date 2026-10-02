@@ -27,7 +27,6 @@ import {
   type Stats,
 } from '../storage/schemas';
 import './futoshiki.css';
-import { FutoshikiDailyScreen } from './screens/DailyScreen';
 import { FutoshikiGameScreen } from './screens/GameScreen';
 import { FutoshikiHomeScreen } from './screens/HomeScreen';
 import { FutoshikiLevelSelectScreen } from './screens/LevelSelectScreen';
@@ -41,8 +40,6 @@ export function FutoshikiScreens() {
       return <FutoshikiTutorialScreen />;
     case 'levels':
       return <FutoshikiLevelSelectScreen />;
-    case 'daily':
-      return <FutoshikiDailyScreen />;
     case 'game':
       return <FutoshikiGameScreen />;
     case 'stats':

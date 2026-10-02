@@ -29,7 +29,6 @@ export const zhHans: NumberPathMessages = {
   numberPathSolvedCount: '完成的棋盘',
   numberPathDailySection: '每日',
   numberPathDailiesSolved: '完成的天数',
-  numberPathDailyBacklogHint: '之前的每一天都可以挑战。',
   numberPathStep1Title: '按顺序经过数字',
   numberPathStep1Body: '从 1 出发画一条线，按顺序经过各个数字。',
   numberPathStep2Title: '走遍每一格',
