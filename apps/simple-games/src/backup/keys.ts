@@ -63,6 +63,20 @@ export const SHELL_KEYS_LEFT_BEHIND: Readonly<Record<string, string>> = {
    * progress the player built, so neither is theirs to move.
    */
   [STORAGE_KEYS.review]: 'per-install prompt pacing — not progress',
+  /**
+   * The Club House connections (docs/architecture/club.md §4-1). Each one
+   * holds this device's member token — a secret the server keeps only as a
+   * hash. The same reasoning as the entitlement above: a file that can be
+   * copied must not carry a key that lets its holder act as somebody. A new
+   * device joins again through an invite; nothing a player built is lost,
+   * because the Club's challenges and results live on the server.
+   */
+  [STORAGE_KEYS.club]: 'device secret — the member token; rejoin through an invite instead',
+  /**
+   * Results waiting to be sent to a Club (club.md §4-2). They belong to the
+   * connection above and are meaningless without it.
+   */
+  [STORAGE_KEYS.clubOutbox]: "unsent results bound to this device's connection — not progress",
 };
 
 /**

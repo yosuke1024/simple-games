@@ -111,9 +111,16 @@ export default defineConfig(({ mode }) => ({
               // chunk into the home's initial graph) and everything else,
               // which keeps Rolldown's default splitting.
               name: (id: string) => {
+                // The Club House layer is one chunk too (docs/architecture/
+                // club.md §3): loaded by src/app/clubGate.ts alone, and never
+                // part of the entry's static graph (scripts/bundle-size.mjs).
+                if (/[\\/]src[\\/]club[\\/]/.test(id)) return 'club';
                 const match = id.match(/[\\/]src[\\/]games[\\/]([^\\/]+)[\\/]/);
                 if (!match) return null;
                 if (/[\\/]storage[\\/]keys\.ts$/.test(id)) return null;
+                // The challenge contract is the second zero-import leaf the
+                // registry imports eagerly (club.md §6-2); same exemption.
+                if (/[\\/]challenge[\\/]contract\.ts$/.test(id)) return null;
                 return `game-${match[1]}`;
               },
               // Never pull a captured module's dependencies (react, shared

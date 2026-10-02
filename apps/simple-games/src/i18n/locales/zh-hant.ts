@@ -147,4 +147,12 @@ export const zhHant: Messages = {
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: '生命：{n}',
   levelsCleared: '已通過關卡',
+  // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
+  advancedTitle: '進階',
+  clubEntry: 'Club House',
+  playTogetherTitle: '一起玩',
+  playTogetherBody: '和認識的人進行私密挑戰。',
+  clubSendResult: '傳送到 Club',
+  clubResultSent: '已傳送到 {club}',
+  clubResultPending: '開啟 Club 時傳送',
 };

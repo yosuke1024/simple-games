@@ -152,4 +152,12 @@ export const vi: Messages = {
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Mạng: {n}',
   levelsCleared: 'Màn đã qua',
+  // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
+  advancedTitle: 'Nâng cao',
+  clubEntry: 'Club House',
+  playTogetherTitle: 'Chơi cùng nhau',
+  playTogetherBody: 'Thử thách riêng với những người bạn biết.',
+  clubSendResult: 'Gửi đến Club',
+  clubResultSent: 'Đã gửi đến {club}',
+  clubResultPending: 'Sẽ gửi khi bạn mở Club',
 };

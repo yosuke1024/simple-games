@@ -66,6 +66,9 @@ import { DB_STORAGE_KEYS } from '../games/dots-and-boxes/storage/keys';
 import { BN_STORAGE_KEYS } from '../games/binary-balance/storage/keys';
 import { S6_STORAGE_KEYS } from '../games/sudoku-6x6/storage/keys';
 import { BR_STORAGE_KEYS } from '../games/box-regions/storage/keys';
+import { SUDOKU_CHALLENGE } from '../games/sudoku/challenge/contract';
+import { MINESWEEPER_CHALLENGE } from '../games/minesweeper/challenge/contract';
+import { WATER_SORT_CHALLENGE } from '../games/water-sort/challenge/contract';
 
 export type GameId =
   | 'sudoku'
@@ -159,6 +162,45 @@ export const GAME_CATEGORIES: readonly GameCategory[] = [
 export type GameEntry = 'collection' | 'shortcut';
 
 /**
+ * A Club House challenge, as a game receives it (docs/architecture/club.md
+ * §6-2): the seed and mode parameters another device played, and the digest
+ * of the board they produced there. The game generates the same board from
+ * the same inputs, compares digests, and refuses to play a board that no
+ * longer matches — a generator that changed between versions, not a cheat.
+ * Like `entry`, a fact rather than an instruction: the Club's id is never in it.
+ */
+export interface ChallengeStart {
+  seed: string;
+  params: unknown;
+  boardDigest: string;
+}
+
+/**
+ * What the shell and the Club layer know about a game's challenges without
+ * loading the game (club.md §6-1): how to validate the `params` a challenge
+ * carries and the `facts` a result carries, which param names the mode a
+ * club record is kept for, which fact is the comparison axis, and the seed
+ * prefix a challenge board is generated under. Declared by the game in its
+ * zero-import `challenge/contract.ts` leaf — the same arrangement as
+ * `storage/keys.ts`, for the same reason: the registry imports it eagerly,
+ * so it must tow nothing. The game writes the shape out itself rather than
+ * importing this type; the assignment below is what checks the two agree.
+ */
+export interface GameChallengeContract {
+  contractVersion: 1;
+  /** The params a challenge may carry, or null when the shape is not this game's. Never throws. */
+  validateParams(raw: unknown): Record<string, unknown> | null;
+  /** The facts a result may carry — the result screen's own figures, nothing else. Never throws. */
+  validateFacts(raw: unknown): Record<string, unknown> | null;
+  /** The mode a club record is kept for (`hard`, `medium`, …), from validated params. */
+  paramsKey(params: Record<string, unknown>): string;
+  /** The one fact results are ordered by, ascending. */
+  order: string;
+  /** Seeds of challenge boards start with this (club.md §6-2). */
+  seedPrefix: string;
+}
+
+/**
  * Everything the shell hands a game. Games declare these props themselves
  * rather than importing this type — `onExit` has always been duplicated that
  * way, and the assignment in `loadRoot` is what checks the two agree.
@@ -168,6 +210,12 @@ export interface GameRootProps {
   onExit: () => void;
   /** Which door this launch came through. Absent means the ordinary one. */
   entry?: GameEntry;
+  /**
+   * A Club House challenge to open onto (club.md §6-2). Only the games that
+   * declare a `challenge` contract below ever receive one; they play it in
+   * their own `club` save slot and keep it out of their statistics.
+   */
+  challenge?: ChallengeStart;
 }
 
 export interface GameDefinition {
@@ -237,6 +285,14 @@ export interface GameDefinition {
    * the settings screen, never on the home.
    */
   loadSettingsSection?: () => Promise<{ default: ComponentType }>;
+  /**
+   * Optional: this game can be a Club House challenge (club.md §6). The
+   * contract is a zero-import leaf like `storageKeys`, so the Club layer can
+   * list and validate challenges without loading a single game chunk. A game
+   * without one is simply not offered there — nothing is added mechanically
+   * to all thirty (PRODUCT_PRINCIPLES「Club House」).
+   */
+  challenge?: GameChallengeContract;
 }
 
 export const GAMES: readonly GameDefinition[] = [
@@ -246,6 +302,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'logic',
     glyph: '⌗',
     storageKeys: Object.values(SD_STORAGE_KEYS),
+    challenge: SUDOKU_CHALLENGE,
     loadRoot: () =>
       import('../games/sudoku/ui/SudokuRoot').then((m) => ({ default: m.SudokuRoot })),
     loadStorageSchemas: () => import('../games/sudoku/storage/schemas'),
@@ -318,6 +375,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'logic',
     glyph: '◆',
     storageKeys: Object.values(MS_STORAGE_KEYS),
+    challenge: MINESWEEPER_CHALLENGE,
     loadRoot: () =>
       import('../games/minesweeper/ui/MinesweeperRoot').then((m) => ({
         default: m.MinesweeperRoot,
@@ -614,6 +672,7 @@ export const GAMES: readonly GameDefinition[] = [
     category: 'puzzle',
     glyph: '≋',
     storageKeys: Object.values(WS_STORAGE_KEYS),
+    challenge: WATER_SORT_CHALLENGE,
     loadRoot: () =>
       import('../games/water-sort/ui/WaterSortRoot').then((m) => ({ default: m.WaterSortRoot })),
     loadStorageSchemas: () => import('../games/water-sort/storage/schemas'),

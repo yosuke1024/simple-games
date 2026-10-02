@@ -152,4 +152,12 @@ export const ja: Messages = {
   // ---- Arcade (shared by Brick Breaker and Sky Fighter) ----
   livesLeft: 'ライフ: {n}',
   levelsCleared: 'クリアしたレベル',
+  // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
+  advancedTitle: '詳細設定',
+  clubEntry: 'Club House',
+  playTogetherTitle: 'みんなで遊ぶ',
+  playTogetherBody: '知っている人と、同じ盤面で競う。',
+  clubSendResult: 'Club に送る',
+  clubResultSent: '{club} に送りました',
+  clubResultPending: 'Club を開いたときに送ります',
 };

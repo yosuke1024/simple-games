@@ -149,4 +149,12 @@ export const th: Messages = {
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'ชีวิต: {n}',
   levelsCleared: 'ด่านที่ผ่านแล้ว',
+  // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
+  advancedTitle: 'ขั้นสูง',
+  clubEntry: 'Club House',
+  playTogetherTitle: 'เล่นด้วยกัน',
+  playTogetherBody: 'ความท้าทายส่วนตัวกับคนที่คุณรู้จัก',
+  clubSendResult: 'ส่งไปยัง Club',
+  clubResultSent: 'ส่งไปยัง {club} แล้ว',
+  clubResultPending: 'จะส่งเมื่อคุณเปิด Club',
 };

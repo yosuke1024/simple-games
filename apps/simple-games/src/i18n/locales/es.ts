@@ -153,4 +153,12 @@ export const es: Messages = {
   // ---- Arcade (Brick Breaker / Sky Fighter) ----
   livesLeft: 'Vidas: {n}',
   levelsCleared: 'Niveles superados',
+  // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
+  advancedTitle: 'Avanzado',
+  clubEntry: 'Club House',
+  playTogetherTitle: 'Jugar juntos',
+  playTogetherBody: 'Retos privados con gente que conoces.',
+  clubSendResult: 'Enviar al Club',
+  clubResultSent: 'Enviado a {club}',
+  clubResultPending: 'Se enviará al abrir el Club',
 };
