@@ -103,8 +103,11 @@ PRODUCT_PRINCIPLES「Core が Shared から受け取る変更は次の 3 つま�
   良い記録が失われる。
   - **行き先は結果の種類で決まる**(1 回の判定、§6-3 / §16): デイリーの印(`daily`)と `boardDigest` が
     ある局(全員同じ盤面のデイリー)は、その日の挑戦(`Today`)へ。それ以外の `completed` は、
-    そのゲーム × モードのランキングへ。`outcome: 'played'`(負け・行き止まり)は**どこへも送らない**
-    (デイリーを黙って確定させてしまううえ、ランキングは見ないので)。
+    そのゲーム × モードのランキングへ。`outcome: 'played'` は**どこへも送らない**
+    (デイリーを黙って確定させてしまううえ、ランキングは見ないので)。`played` を渡すのは Minesweeper(地雷)・
+    Number Match(行き止まり)・Dominoes(勝てなかった局)の 3 本だけ。点数を競うほかのゲーム(2048・
+    Block Puzzle・Bunny Hop・Sky Fighter・Number Recall と、対 CPU の Yacht・Hearts・Gin Rummy・Mancala・
+    Reversi・Dots and Boxes)は、ゲームオーバーや負けの局も `completed` として点数を送る(判断 30)。
   - **1 つの Club のとき**: `Sent to Suzuki Family` / `Will send when you open the Club`(端末のキューに
     残った。§4-2、§10)/ `Could not send to Suzuki Family`(最終的に拒まれた)。
     **2 つ以上のとき**: 全部届けば `Sent to 2 Clubs`、一部だけなら `Sent to 1 of 2 Clubs. The rest will
