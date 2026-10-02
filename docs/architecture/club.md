@@ -19,6 +19,10 @@ Epic #175 の段 2(原則の境界 #176 → **#161 の設計** → #164 の発�
 サーバは [yosuke1024/simple-games-club](https://github.com/yosuke1024/simple-games-club) にあり、
 Node + SQLite と Cloudflare Workers + Durable Object の 2 実装が同じ契約テストを通す
 (`simple-games-club#2`、2026-10-02)。
+**2026-10-02 の改定(自動送信)**: 結果の送信を「結果画面のボタン」から「参加したあとは遊び終えた
+結果が自動で送られる」へ改めた(製品オーナー確認、§14 判断 37〜41)。同意の場所は結果ごとの
+ボタンから**参加の画面**(「参加の前に、参加中は結果が自動で送られると言う」)へ移る。§2-2・§4-2・
+§6-3・§9・§10・§11・§12・§16・§18 はこの前提で書き換えた。
 issue #161 / #164 の本文とコメントは提案・検討の記録であり、この文書と食い違う箇所は
 この文書を正とする([../PROJECT_CONTEXT.md](../PROJECT_CONTEXT.md)「Authority」)。
 
@@ -71,7 +75,7 @@ PRODUCT_PRINCIPLES「Core が Shared から受け取る変更は次の 3 つま�
 - 設定画面はコレクションホームからしか到達しないので、ゲームが起動中にこの行が
   描かれることはない(既存の `SettingsSection` と同じ性質)。
 
-### 2-2. 接続済みの端末だけ — ホームの入口 1 つ + 結果画面の操作 1 つ
+### 2-2. 接続済みの端末だけ — ホームの入口 1 つ + 結果画面の状態 1 行
 
 **接続済み** = 起動時に `sg.club` の接続が 1 つ以上ある(§4)。判定は Core の
 `src/app/` が保存の有無だけで行い、通信しない。
@@ -86,23 +90,37 @@ PRODUCT_PRINCIPLES「Core が Shared から受け取る変更は次の 3 つま�
   にはホームを描くたびに通信する必要があり(PRODUCT_PRINCIPLES「通信は…本人の操作の
   直後にだけ」に反する)、出せたとしてもそれはバッジであり「まだ手に入れていないもの
   を見せて呼び戻す」仕掛けになる。押すと `club/` の Club 一覧(1 つなら直接その Club)。
-- **結果画面の操作**: 契約(§6-1)を持つゲームの結果画面に、`ShareAction` と同じ位置・
-  同じ格の副次操作を 1 つ。実体は Core の 1 コンポーネント
-  `ui/components/ClubResultAction.tsx` で、`ShareAction` と同じくゲームが自分の結果
-  カードに置く。描くものは局の種類で 1 つに決まる:
-  - **通常の局**(レベル / フリー / 対 CPU など、デイリー以外): `Send to Club`。押すと Club を
-    選び(1 つなら選ばない)、この結果を**そのゲーム × モードのランキング**へ送る(§16)。
-    自己ベストでなければ表は変わらないが、送信は押した直後に 1 回で、画面は `Sent to
-Suzuki Family` と言うだけ(順位の数字は Club の画面で見る)。
-  - **デイリーの局**(全員同じ盤面のデイリー): `Send to Club`。押すと、その日の挑戦
-    (§6-3「盤面ごとに 1 つ」)に自分の結果が入る。Club の `Today` から開いて遊んだ局
-    (§9)は、開くときに「終えたら結果を Suzuki Family へ送る」と**先に**書いてあるので
-    自動送信し、画面は**状態 1 行** — `Sent to Suzuki Family` / `Will send when you open
-the Club` / `Could not send to Suzuki Family`(§10)。「開示が先、送信が後」。
-  - デイリーが全員同じ盤面にならないゲーム(Minesweeper は初手で地雷が変わる)のデイリーは、
-    通常の局として扱う(ランキングへ)。
+- **結果画面の状態 1 行**(2026-10-02 まで在った `Send to Club` のボタンは無い): 契約(§6-1)を
+  持つゲームの結果画面に、`ShareAction` と同じ位置に**操作ではない 1 行**。実体は Core の 1 コンポーネント
+  `ui/components/ClubResultAction.tsx` で、`ShareAction` と同じくゲームが自分の結果カードに置く。
+  結果画面が現れたときに結果を **1 回**、参加している**すべての Club** へ送り(`ClubBridge.sendResult`)、
+  何が起きたかを `role="status"` の 1 行で言う。押すものは無い — 同意はボタンではなく**参加の画面**
+  にあり(§7-4、§15-1。「開示が先、送信が後」)、結果ごとにボタンを置くと、押さずに次の盤面へ進んだ
+  良い記録が失われる。
+  - **行き先は結果の種類で決まる**(1 回の判定、§6-3 / §16): デイリーの印(`daily`)と `boardDigest` が
+    ある局(全員同じ盤面のデイリー)は、その日の挑戦(`Today`)へ。それ以外の `completed` は、
+    そのゲーム × モードのランキングへ。`outcome: 'played'`(負け・行き止まり)は**どこへも送らない**
+    (デイリーを黙って確定させてしまううえ、ランキングは見ないので)。
+  - **1 つの Club のとき**: `Sent to Suzuki Family` / `Will send when you open the Club`(端末のキューに
+    残った。§4-2、§10)/ `Could not send to Suzuki Family`(最終的に拒まれた)。
+    **2 つ以上のとき**: 全部届けば `Sent to 2 Clubs`、一部だけなら `Sent to 1 of 2 Clubs. The rest will
+    send when you open them.`。サーバがその結果を既に持っていた Club(デイリーを 2 度目に送った)は
+    数えず、全部がそうなら何も言わない — 先に送ったものが数える(§6-3)。
+  - **接続していない端末では描かない**(下)。結果画面の他の要素の位置は、接続の有無でも状態の
+    文言の長さでも変わらない(行は常に 1 行で、`aria-live` の `status`)。
+  - **何も送られない局**: 契約を持たない 6 本(Brick Breaker / Bubble Pop / Checkers / Connect Four /
+    Gomoku / Ludo)は `ClubResultAction` が無く、何も送らず何も言わない。Water Sort は、ティアに一致しない
+    レベルの局(デイリーでもフリープレイでもない)で `ClubResultAction` を描かず、送らない(§6-3、
+    [../WATER_SORT_RULES.md](../WATER_SORT_RULES.md) §14)。結果画面はそれを理由つきで言わない
+    (「送られなかった」の通知を、対象外のゲームの全プレイに出さないため。ランキングの画面に
+    そのゲームの表が無いことで分かる)。
+  - **既知の制限**: 結果カードは 0.9 秒の間(`useResultReveal`)のあとに現れ、送信はカードが現れたときに
+    始まる。その間に盤面を離れる(Back / ↻)と何も送られない。§10。
 - 接続していない端末では、このコンポーネントは **null を描き、何も知らない**。
   結果画面の他の要素(主要操作・共有・広告枠)の位置は接続の有無で変わらない。
+- Core が Club から受け取る結果画面の変更は、この**状態 1 行だけ**(PRODUCT_PRINCIPLES「Core が Club House
+  から受け取る変更」の 2 番目の「結果画面の副次操作」は、ボタンから状態表示へ読み替えた)。順位・件数・
+  「新しい記録」は出さない。
 - 機械的に足さない。置くのは §6-1 の契約を持つゲームだけで(2026-10-02 に 35 本へ広げた。
   勝ち負けしか無い対 CPU のボードゲームには置かない)、`src/test/shareWiring.test.ts` と
   同型の静的テストが「契約のあるゲームにだけ在り、自分の id を名乗る」ことを見る。
@@ -159,7 +177,10 @@ apps/simple-games/src/club/
 - **Core が club/ に渡すもの、club/ から受け取るもの**は、`src/app/` が仲介する
   React context 1 つ(`ui/clubBridge.ts` の `ClubBridge` 型)にまとめる。型は Core に
   置く(import ではない)。`ClubResultAction` はこの context を読むだけで、`club/` を
-  知らない。context の値は `club/` がロードされた後に `App.tsx` が差し込む。
+  知らない。context の値(`{ connections, sendResult(payload) }`)は `club/` がロードされた後に
+  `App.tsx` が差し込む。`sendResult` は投げず、接続ごとに `sent` / `queued` / `rejected` / `already`
+  の報告を返す。`App.tsx` が覚えるのは、Today の `Play` から開いたゲームを離れたときに Club の
+  その挑戦へ戻るための印(`ClubFocus`)だけである。
 - **`club/` がゲームへ触るのはレジストリ経由だけ**: 対応ゲームは `GameDefinition` に
   `challenge` を宣言し(§6-2)、`club/` はそれしか読まない。
 - **チャンク**: `vite.config.ts` の `codeSplitting` に `src/club/` → `club` の 1 グループ
@@ -231,23 +252,40 @@ interface ClubConnection {
 
 ### 4-2. `sg.clubOutbox` — 未送信の結果
 
+2026-10-02 の自動送信で、キューは「Challenge の結果だけ」から**すべての送信**を持つ形に広がった
+(`schemaVersion` は 1 のまま、足すだけの変更)。
+
 ```ts
 interface ClubOutbox {
   schemaVersion: 1;
-  items: OutboxItem[]; // 送信順。上限 50 件、超えたら古いものから落とす
+  items: OutboxItem[]; // 古い順。上限は約 100 件(超えたら統合したうえで古いものから落とす)
 }
 
-interface OutboxItem {
-  endpoint: string; // どのサーバへ(接続が消えていたら捨てる)
-  challengeId: string;
-  result: ResultSubmission; // §6-3 と同じ body
-  createdAt: string;
-}
+type OutboxItem =
+  | { endpoint; challengeId; result: ResultSubmission; createdAt } // 旧形式。そのまま読め、送れる
+  | { kind: 'daily'; endpoint; body; createdAt; attempts? } //   POST /challenges の本文(`daily` 付き)
+  | { kind: 'ranking'; endpoint; body; createdAt; attempts? }; // POST /rankings/results の本文
 ```
 
-ゲームの保存とは混ぜない(#161「Shared 専用の小さな local queue」)。送るのは §10 の
-契機のときだけで、タイマーもバックグラウンドも無い。バックアップに入れない・
-削除で消える、は `sg.club` と同じ。
+- **本文は Core が再宣言する**(Core は `club/` を import しない。構造の検査は厳格で、壊れた要素だけが落ちる)。
+- **書いてから送る**(write-ahead): 結果はまずキューへ入れ、その Club 宛てを古い順に送り、この結果の
+  行き先を報告する。送れれば取り除く。アプリが落ちても失われない。
+- **統合**(同じ表・同じ盤面の重複で肥らせない): ランキングは `endpoint|gameId|paramsKey` を鍵に、契約の
+  `order` / `direction`(§6-1)で**良いほう 1 件**だけを残す(サーバも自己ベストしか持たない)。
+  デイリーは `endpoint|gameId|seed|boardDigest` を鍵に**最初の 1 件**を残す(§6-3)。
+- **上限は約 100 件。** 統合した**あとで**だけ古いものから落とす。以前の 50 件は、すべてのゲーム × すべての
+  Club を持つと良い記録を捨てうるので広げた。
+- **キューの変更はすべて直列化する**(モジュールの Promise 連鎖。ネットワーク待ちの間は握らない)。
+  並列に失敗した 2 つの結果が互いの書き込みを消さないため(lost update)。
+- **捨てる条件**: §10 の「再送しても通らない」応答。ネットワークの失敗・429 は何回でも残る。それ以外の
+  失敗(5xx、形の崩れた応答)は `attempts` を数え、**5 回で捨てる**(詰まった 1 件が後続を止め続けない)。
+  各 Club の送信は、**最初の再送対象の失敗で止める**。
+- 同じセッションでオーバーレイが描き直されても同じ結果を二度送らない(ブリッジのクロージャに指紋を持つ。
+  メモリだけで、保存しない)。
+
+ゲームの保存とは混ぜない(#161「Shared 専用の小さな local queue」)。送るのは §10 の契機のときだけで、
+タイマーもバックグラウンドも無い。**起動時には送らない。** バックアップに入れない・削除で消える、は
+`sg.club` と同じ。
 
 ## 5. サーバとの契約 — API v1
 
@@ -360,7 +398,7 @@ interface Hosting {
 | `POST /challenges`                 | member | 作成 + 作成者の Result を同時に(§6-3)。任意の `daily`。**同じ盤面(gameId + seed + boardDigest)の挑戦が生きていれば作らず、送った人の Result をそこへ足して `200`**(§6-3「盤面ごとに 1 つ」)。既に自分の Result があれば `409 already_submitted`                                                                    |
 | `DELETE /challenges/:id`           | member | 作成者本人か Owner だけ。Result ごと消える                                                                                                                                                                                                                                                                         |
 | `GET /challenges/:id`              | member | 1 件                                                                                                                                                                                                                                                                                                               |
-| `GET /challenges/:id/results`      | member | 提出順。**並べ替えはクライアント**(§6-1 の `order`)。最大 200 件                                                                                                                                                                                                                                                   |
+| `GET /challenges/:id/results`      | member | **ゲームの軸で上位 N 件**(§6-1 の `order`。完了が先、同値は到着順)。要求した本人の行は常に含める(§15-2)。応答の形は変わらない                                                                                                                                                                                                                                                   |
 | `POST /challenges/:id/results`     | member | 自分の Result を 1 回だけ                                                                                                                                                                                                                                                                                          |
 | `GET /records`                     | member | `{ gameId, paramsKey, facts, memberId, nickname, challengeId }[]`。導出値。サーバは結果が届いたときに更新した行を読むだけで、一覧のたびに導出しない(§15-3)                                                                                                                                                         |
 | `POST /rankings/results`           | member | `{ gameId, contractVersion, paramsKey, params, seed, boardDigest, outcome, facts }` → その結果を**ゲーム × モードのランキング**へ(§16)。自己ベストなら差し替え、そうでなければ何も変えない。`{ gameId, paramsKey, improved, entry, entryCount }`。サーバが知らないゲーム / 軸の無い facts は `400 invalid_request` |
@@ -490,14 +528,13 @@ Phase 0 で Sudoku / Minesweeper / Water Sort の 3 本を実装事実で確か�
 `club/bridge.ts`):
 
 - Today の `Play` はそのゲームを**普通の入口で開く**だけで(プレイヤーがデイリーを遊ぶ)、挑戦の盤面は渡さない(§16-3)。
-  シェルが `ActiveChallenge`(挑戦の id と `boardDigest`)を覚えておく。
-- 結果画面の `ClubResultAction` は、遊んだ局の digest が `ActiveChallenge` のものと**一致した
-  ときだけ**、その挑戦の結果として自動送信する(`isChallengeBoard`)。サーバも一致しない
-  digest を `409 board_mismatch` で受けない(§5-4)。
-- 一致しなければ(生成器が変わった版の端末など)、その局は挑戦の盤面ではなく、画面は通常の
-  `Send to Club` に戻る。デイリーなら、押せばその端末の digest で `POST /challenges` され、同じ `gameId` +
-  `seed` + `boardDigest` の別の挑戦になる(§6-3「盤面ごとに挑戦は 1 つ」)— 元の挑戦の
-  結果にはならない。
+  シェルが覚えるのは、離れたときに Club の挑戦へ戻るための印(`ClubFocus`)だけで、**結果の送り先は決めない**。
+- 結果画面の `ClubResultAction` は、デイリーの局なら**自分の局の** `daily` と `boardDigest` を添えて送る
+  (§2-2)。サーバは同じ `gameId` + `seed` + `boardDigest` の挑戦に結果を足すので、別の端末の同じ日の局が
+  同じ挑戦に集まる。生成器が変わった版の端末のように digest が違えば、その端末の局は**別の挑戦**になる
+  (元の挑戦の結果にはならない。§6-3「盤面ごとに挑戦は 1 つ」)。以前の `ActiveChallenge` /
+  `isChallengeBoard`(Today から開いた局の digest だけを照合して自動送信し、それ以外は押すボタンに戻す
+  分岐)は、ボタンと一緒に 2026-10-02 に無くなった。
 - **局を拒む画面は無い。** 以前(spike)は、ゲームが挑戦の盤面を受け取って digest を照合し、
   不一致なら遊ばせず `This challenge was made with a different version of the game` を出していた。
   この経路(`challenge` prop・per-game の club モード・4 つ目の保存枠)は 2026-10-02 に
@@ -536,7 +573,7 @@ params(表を分けるモード)と facts(結果画面の数字)はそのゲー�
 | ----------- | --------------------------------------------------------------- | ---------------------------------------------------- | ----------------- | ---------------- | ------------ |
 | sudoku      | `{ difficulty: 'easy' \| 'medium' \| 'hard' }`                  | `{ elapsedSeconds: int, mistakes: int, hints: int }` | (起きない)        | `elapsedSeconds` | `difficulty` |
 | minesweeper | `{ difficulty: 'easy' \| 'medium' \| 'hard', firstIndex: int }` | `{ elapsedSeconds: int, hints: int }`                | `{}`              | `elapsedSeconds` | `difficulty` |
-| water-sort  | `{ tier: 'easy' \| 'medium' \| 'hard' }`                        | `{ moves: int, elapsedSeconds: int, hints: int }`    | (起きない)        | `moves`          | `tier`       |
+| water-sort  | `{ tier: 'easy' \| 'medium' \| 'hard' \| 'daily' }`              | `{ moves: int, elapsedSeconds: int, hints: int }`    | (起きない)        | `moves`          | `tier`       |
 
 - `int` は 0 以上の整数。`elapsedSeconds` は 0..86400、`moves` / `mistakes` / `hints` は
   0..100000。範囲外は validate が落とす。
@@ -562,51 +599,62 @@ params(表を分けるモード)と facts(結果画面の数字)はそのゲー�
    葉にする理由も同じ — `club/` が Challenge 一覧を描くときに params の妥当性と
    `paramsKey` が要り、そのためにゲームのチャンクをロードしたくない。
    `src/test/importBoundaries.test.ts` 規則 3 と同じ「import ゼロ」の検査を足す。
-2. **シェルが覚える `ActiveChallenge`** — Today の `Play` を押すと、シェルは `ActiveChallenge`
-   (どの Club のどの挑戦か、その `boardDigest`、送信済みか)を持ち、ゲームは
-   ふつうの入口で開かれ、プレイヤーがそのデイリーを遊ぶ。ゲームは Club の id を知らない。
-   `ClubBridge`(`ui/clubBridge.ts`)がそれを結果画面へ運び、`ClubResultAction` が遊んだ局の
-   digest と突き合わせる(§6-0「seed は生成器の版に依存する」)。
-3. **Challenge から入った局の結果画面**: digest が一致すれば `ClubResultAction` は §2-2 の
-   「状態 1 行」になり、結果は自動送信される。`ActiveChallenge` はゲームに渡らず、
-   `club/` → `App.tsx` → `ClubBridge` の側で持つ。局はそのゲームの普通の局なので、統計・
+2. **シェルが覚える挑戦への戻り道** — Today の `Play` を押すと、シェルはどの Club のどの挑戦かを
+   `ClubFocus` として持ち、ゲームはふつうの入口で開かれ、プレイヤーがそのデイリーを遊ぶ。ゲームは
+   Club の id を知らない。`ClubFocus` は、そのゲームを離れたときに Club のその挑戦の画面へ戻るためだけにある
+   (結果の送り先には関わらない。§2-2)。
+3. **結果画面**: どの局の結果画面でも、`ClubResultAction` は結果を自動で送り、状態 1 行を出す(§2-2)。
+   Today から開いた局も、ホームから開いたデイリーも同じ扱いである。局はそのゲームの普通の局なので、統計・
    自己ベスト・レベル進行・レビュー計数は普通の局と同じに扱われる(Challenge 用の別扱いは無い)。
 
-### 6-3. Challenge は終わった 1 局から作る — 2026-10-02 以降はデイリーだけ
+### 6-3. Challenge は終わった 1 局から作る — 2026-10-02 以降はデイリーだけ、自動で
 
-#161 の「誰かが Challenge を作る」を、**フォームではなく結果画面**に置く。**2026-10-02 に、
-デイリー以外の局は Challenge にせずランキング(§16)へ送ることにした** — 以下の「通常の局」
-の記述は、全員同じ盤面のデイリーの局についてだけ生きている。
+#161 の「誰かが Challenge を作る」を、**フォームでもボタンでもなく、終わった 1 局の自動送信**に置く。
+**2026-10-02 に、全員同じ盤面のデイリー以外の局は Challenge にせずランキング(§16)へ送ることにし、
+同じ日に送信を自動にした**(判断 37〜41)。
 
-- 通常の局(レベル / デイリー / フリー)の結果画面で `Send to Club` を押す →
-  その局の `seed` / `params` / `boardDigest` と、自分の結果を **`POST /challenges` に
-  1 回**で送る。作成者の結果が最初の Result になる。
-- 理由: (a) 盤面を生成せずに Challenge を作る経路(seed だけ決めて digest を計算する
-  ためにゲームのロジックを `club/` から呼ぶ)が要らなくなる — digest は遊んだ局が
-  既に持っている。(b) 「自分がまだ遊んでいない盤面を人に出す」形が無くなり、
-  Challenge は常に「私はこうだった、あなたは?」になる。(c) #164 の
-  `Challenge a friend` と #161 の Create Challenge が同じ 1 操作になる。
+- 結果が現れると、`ClubBridge.sendResult` が行き先を **1 回だけ**決める(§2-2): `daily` が文字列で
+  `boardDigest` が null でなければ **デイリー**(`POST /challenges` に `daily` を付けて 1 回)、そうでなければ
+  `outcome: 'completed'` を**ランキング**へ(`POST /rankings/results`、§16)。`played` はどこへも送らない。
+  作成者の結果が最初の Result になる。
+- 理由: (a) 盤面を生成せずに Challenge を作る経路(seed だけ決めて digest を計算するためにゲームの
+  ロジックを `club/` から呼ぶ)が要らなくなる — digest は遊んだ局が既に持っている。(b) 「自分がまだ
+  遊んでいない盤面を人に出す」形が無くなり、Challenge は常に「私はこうだった、あなたは?」になる。
 - (2026-10-02 まで Club の画面に在った `New Challenge` は無くなった — §9。フリープレイの局は
   ランキングへ送る。)
-- **1 人 1 回**: 1 つの Challenge に対する Result は member あたり 1 つで、最初に
-  **終わった**局(勝ちでも負けでも)が数える。同じ盤面を解答を見た後に遊び直しても
-  同じ挑戦ではない。2 回目は端末側で送らず(`sg.club` 側に「送った Challenge の id」を
-  持たない — サーバの `mine` を見る)、送ってもサーバが 409。Minesweeper の敗北も
-  1 回に数える — 地雷の位置を知った 2 回目は同じ挑戦ではないから。デイリーは今日の 1 問
-  だけ(2026-10-02)で、`Today` も端末の今日の挑戦だけを並べる。
-- **レベルの局・デイリーの局も送れる**。デイリー(全員同じ盤面のもの)は Today の挑戦へ、
-  それ以外はランキングへ送る(§16)。どちらも、局そのものは普通のゲームの局である。
-
+- **1 人 1 回、最初に完了した結果が数える**: 1 つの Challenge に対する Result は member あたり 1 つで、
+  最初に**完了した**(`completed`)結果が数える。解答を見たあとに同じ盤面を遊び直しても同じ挑戦ではない。
+  `played`(負け・行き止まり)は**送らない**ので、失敗した 1 回が挑戦を黙って確定させることは無い
+  (リードの設計注記。§14 末尾)。2 回目の完了はクライアントが送っても(キューは書いてから送る。§4-2)サーバが
+  `409 already_submitted` を返し、クライアントはこれを**届いたのと同じ**(`already`)に数える。同じセッションの
+  再描画では指紋で二度送らない。デイリーは今日の 1 問だけ(2026-10-02)で、`Today` も端末の今日の挑戦だけを並べる。
+  - 帰結: 参加している間は、**最初に遊び終えたデイリーの結果がそのまま確定する**。良い結果になるまで
+    取っておいて送り直すことはできない。**この点は、参加の画面ではまだ言っていない**(§7-4。参加の
+    画面の文言 `clubAutoSendDisclosure` は「遊び終えた結果が自動で送られる」までで、デイリーの確定には
+    触れない)。言うなら新しい(または広げた)高リスクの文言になり、オーナーの文言確認と門が要る
+    (§14 末尾の「未決」)。
+- **全員同じ盤面のデイリーは、すべて Today へ**(2026-10-02、判断 40)。次の **21 本**: Sudoku / Nonogram /
+  Takuzu / Futoshiki / Kakuro / Crown Grid / Number Path / Shape Regions / Binary Balance / Sudoku 6×6 /
+  Box Regions / Solitaire / Spider Solitaire / FreeCell / Mahjong Solitaire / Memory Match / Sliding Puzzle /
+  Number Match / Quick Math / Schulte Table / Water Sort。各ゲームは `game/challenge.ts` に
+  `boardDigest` / `boardDigestOf(session)`(接頭辞 + 契約版 + `:` + 8 桁 hex。§6-4)を持ち、結果画面が
+  `daily` と `boardDigest` を渡す。Solitaire(1 枚 / 3 枚めくり)と Spider(1 / 2 / 4 スート)は
+  **版が digest に入る**ので、版ごとに別の挑戦になる。Water Sort のデイリー(6 色・均等な混ぜ)はティアに
+  一致しないので、契約の `validateParams` が `{ tier: 'daily' }` を受け入れ、Today へ送る。ティアの門
+  (`challengeTierOf`)はランキングのためだけに残る。
+- **例外 — Minesweeper と Number Recall のデイリーはランキングの表に残る**(リードの設計注記。§14 末尾。
+  オーナーの確認はまだ無い。判断 29「デイリーの結果はランキングに入れない」への**例外**)。この 2 本の「デイリー」は全員同じ盤面ではない: Minesweeper は初手で
+  地雷が変わり(§6-0)、Number Recall はやり直すたびに別の配置が配られる。同じ盤面でないものを `Today` の
+  「同じ盤面の順位」に載せると、その約束が嘘になる。だから `daily` を付けず、その難易度の通常の局として
+  ランキングへ送る(§16)。
 - **盤面ごとに挑戦は 1 つ**(2026-10-02、§15-2)。同じ `gameId` + `seed` + `boardDigest` の
   挑戦が生きていれば、`POST /challenges` は新しく作らず、送った人の結果をそこへ足す
   (`200`。§5-4)。理由: デイリーは日付から seed を導くので世界中で同じ 1 盤面になり、
   送った人全員が 1 つの挑戦に集まる — それが Public の順位表である
   (PRODUCT_PRINCIPLES「順位表」)。新しいモードも、サーバ側の盤面生成も要らない。Private でも同じ(友人 2 人が同じデイリーを送れば 1 つ)。
-- **`daily` の印**は、結果画面の `Send to Club` が、その局がデイリーで、かつ**そのゲームの
-  デイリーが全員同じ盤面**のときだけ付ける(`ClubResultAction` の `daily`、`POST /challenges`
-  の `daily`)。Sudoku は付く。Minesweeper のデイリーは初手で地雷が変わる(§6-0)ので付けない
-  — 送れるが、Challenge にはならず難易度の表(ランキング、§16)に入る。Water Sort のデイリー(6 色・均等な混ぜ)はティアに一致せず、
-  そもそも送れない(`challengeTierOf`)。Club の画面は端末のローカル日付で
+- **`daily` の印**は、結果画面が、その局がデイリーで、かつ**そのゲームのデイリーが全員同じ盤面**のとき
+  だけ付ける(`ClubResultAction` の `daily`、`POST /challenges` の `daily`)。上の 21 本が付け、
+  Minesweeper と Number Recall は付けない。Club の画面は端末のローカル日付で
   `GET /challenges?daily=` を引き、`Today` に並べる(§9)。
 
 ### 6-4. `boardDigest`
@@ -616,7 +664,8 @@ params(表を分けるモード)と facts(結果画面の数字)はそのゲー�
   の行優先 81 文字。Minesweeper: 初手適用後の地雷 bit 列。Water Sort: 初期チューブの
   文字列形 — いずれも golden テストが既に使っている文字列形)を、そのゲームの
   `game/rng.ts` にある xmur3(32 bit。Sudoku / Minesweeper は `hashSeed` として export
-  済み、Water Sort は同じ 1 行の export を足す)に通す。新しい依存も共通ユーティリティも
+  済み、Water Sort は同じ 1 行の export を足す。2026-10-02 に `Today` へ加わった他の 19 本も
+  同じ 1 行を足した。export は列を変えない)に通す。新しい依存も共通ユーティリティも
   要らず、`games/*/game/` の import ゼロの規則を破らない。
 - 32 bit で足りる — これは改竄対策ではなく**版ずれの検出**であり、偶然の一致は
   比較の意味を損なわない。
@@ -673,6 +722,9 @@ https://<endpoint>/join#invite=<inviteToken>
 ```text
 Join Suzuki Family
 
+While you're in this Club, every game you finish sends its result
+(time, moves, score) here automatically.          ← 開示が先(下)
+
 Nickname
 [ Ken ]
 
@@ -680,6 +732,14 @@ Nickname
 
 Simple Games by PixApps
 ```
+
+- **開示は参加の 3 経路すべてに出す**(Public、貼った招待リンク、招待 URL を開いた参加)。文言は
+  `clubAutoSendDisclosure`(高リスクキー。§11): 「参加している間は、遊び終えた結果(時間・手数・スコア
+  など)がこの Club に自動で送られます」。ボタンを無くした(§2-2)ので、**結果が送られることへの同意は
+  この画面だけにある** — Private の招待参加にも置く(以前は Public の `clubPublicDisclosure` だけだった)。
+  Public はこれに加えて `clubPublicDisclosure`(ニックネームと結果が公開される)を出す。
+- 約束の範囲: 送られるのは**参加したあとに遊び終えた**結果だけ(参加前の局は決して送られない)、
+  対応するゲームのものだけ(§6-1)、結果画面が表示した事実だけ(§5-5)。`Disconnect this device`(§8-5)で以後の送信が止まる。
 
 - Club 名は `GET /health` では返さない(招待 token の妥当性を確かめる前に名前を
   出さない)。`POST /join` の応答で初めて表示する。画面は最初「Join a Club」と出し、
@@ -817,6 +877,11 @@ hosting provider's dashboard.
 以前は 1 つのキーで全員に出しており、Public のメンバーに「ホスティング事業者の管理画面で
 サーバを削除」と言っていた。
 
+切断は**以後の自動送信を止める**(接続を消すので、次の結果は送られない)。その Club 宛ての未送信の結果は
+捨てる(§4-2、§10)。すでに送られたものはサーバに残るが、**アプリは今それを言っていない**(`clubDisconnectBody` は「この端末の
+接続を止める。サーバは動き続け、他の人は遊べる」までで、送った結果が残ることには触れない)。言うなら
+`clubDisconnectBody`(高リスクキー)の原文を直すことになり、14 言語の承認が失効して門を通し直す。
+
 Owner が Disconnect しても、サーバは動き続ける。切断は端末側だけの操作で(`sg.club`
 から接続を消す)、サーバの member は残る — Members の一覧に居続け、他の Owner が
 外せる。Owner の端末が切断するときは、直前に `GET /club` で他の Owner が居るかを見て、
@@ -845,7 +910,7 @@ claim the Club again.`(§8-3)。確認すれば切断できる — 端末を手�
 ```text
 Suzuki Family                                  [Invite] [Settings]
 
-Today                                          ← その日のデイリー(§6-3)。無い日は節ごと出ない
+Today                                          ← その日のデイリー(§6-3、21 本)。無い日は節ごと出ない
   Sudoku · Hard · Daily                        12 played
 Rankings                                       ← ゲーム × モードの表(§16)。1 位の名前と記録
   Sudoku · Hard          1. Ken 3:58           24 entries
@@ -873,27 +938,29 @@ Hosting                                        ← Owner だけ
 Sudoku · Hard
 by Yoh · Sep 7
 
-When you finish, your result is sent to Suzuki Family.   ← 開示が先(§2-2)
+When you finish, your result is sent to Suzuki Family.   ← 開示が先(§7-4。ここでも繰り返す)
 
 [ Play ]
 
 Results
   Ken    4:31   Mistakes 0   Hints 1
   Yoh    5:05   Mistakes 2   Hints 0
-  Mika   played                              ← Minesweeper の敗北など
 ```
 
+(`played`(負け・行き止まり)は 2026-10-02 から送られないので、Results に `played` の行は新しくは並ばない。
+それ以前にサーバへ届いた行は、今までどおり末尾に提出順で出る。)
+
 - `Play`(2026-10-02 以降、Today のデイリーの挑戦)→ `App.tsx` の `enterGame(gameId,
-'collection')` でそのゲームを開き、シェルが挑戦を `ActiveChallenge` として覚える。プレイヤーが
-  そのゲームのデイリーを遊んで終えると、結果画面の `ClubResultAction` が盤面の digest を
-  突き合わせて自動送信する(§2-2)。開く前の 1 行は `Open Sudoku and play today's Daily. When
+'collection')` でそのゲームを開き、シェルが戻り道(`ClubFocus`)を覚える。プレイヤーが
+  そのゲームのデイリーを遊んで終えると、結果画面の `ClubResultAction` が結果を自動で送る
+  (ホームから開いたデイリーも同じ。§2-2、§6-3)。開く前の 1 行は `Open Sudoku and play today's Daily. When
 you finish, your result is sent to Suzuki Family.`。ゲームへ挑戦の盤面は渡さない(§6-2、§16-3)。
 - Results は §6-1 の `order` で並び、**順位の数字が付く**(2026-09-30)。メダル・称号・
   挑戦をまたいだ差分は無い。自分の行は `You` で示す。
 - 自分が遊んだ後にだけ他の人の結果を見せる、という隠し方は**しない**(隠すのは
   「遊ばせるための仕掛け」であり、Solo by default に反する)。見たい人は見る。
-- 自分の結果がある Challenge の `Play` は `Play again`(ローカルで同じ盤面を遊べるが、
-  結果は送られない。§6-3「1 人 1 回」)。
+- 自分の結果がある Challenge の `Play` は `Play again`(ローカルで同じ盤面を遊べる。2 度目の
+  結果は送っても先のものが残り、画面は何も言わない。§6-3「1 人 1 回」)。
 
 ### Settings(Club ごと)
 
@@ -913,28 +980,46 @@ Push は後続でも作らない(PRODUCT_PRINCIPLES「Club House」)。**公開�
 
 ## 10. 通信・オフライン・障害
 
-- **通信が起きる契機**(すべて本人の操作の直後、1 操作 1 リクエスト):
+- **通信が起きる契機**(すべて本人の操作の直後):
   Club / Challenge / Ranking の画面を開く・明示の再読み込み(GET。Club の画面は club /
   challenges?daily=今日 / rankings の 3 本)、参加 / claim(POST)、
-  結果画面の `Send to Club`(POST)、Challenge の局の終了(POST、§2-2)、Owner の操作。
-  ホームを描く・ゲームを開く・盤面を遊ぶ・設定を開く、では**通信しない**。
+  **遊び終えた結果が現れたとき**(自動送信の POST。参加している Club ごとに 1 リクエスト、§2-2)、
+  Owner の操作、そして**未送信キューの再送**(下)。
+  ホームを描く・ゲームを開く・盤面を遊ぶ・設定を開く・**アプリを起動する**、では**通信しない**。
 - **ポーリング・バックグラウンド同期・常時接続・Push は無い**。`setInterval` /
   `WebSocket` / `EventSource` は `club/` にも書かない(`check-principles.sh` §1 は
   `club/` を除外しているので、これは文書とレビューの約束。§12 で `WebSocket` /
   `EventSource` / `sendBeacon` については `club/` を含めた不在検査を足す)。
-- タイムアウト 10 秒。失敗はその画面の 1 行(`Could not reach Suzuki Family`)で、
-  ダイアログ・トースト・再試行ループは無い。**ゲームは止まらない** — Challenge の局は
-  端末内で完結しており、サーバが落ちていても遊べる。
-- **未送信キュー**(§4-2): 結果の POST が失敗したら `sg.clubOutbox` へ。次に
-  その Club の画面を開いたとき、または次の結果を送るときに、古い順に送る
-  (タイマー無し)。`already_submitted` / `board_mismatch` / `not_found` /
-  `unauthorized` が返ったら**捨てる**(再送しても通らない)。body そのものが拒まれた
+  自動送信は「本人が遊び終えた」という本人の行為の直後にだけ起き、タイマーでは起きない。
+- **参加の前は何も送らない**: 接続は送る瞬間に読む。参加前に遊んだ局は、あとで参加しても送られない
+  (判断 39。「入る前の局の記録は要らない」判断 14 のまま)。
+- タイムアウト 10 秒。失敗は結果画面の 1 行(`Will send when you open the Club`)と、Club の画面の 1 行
+  (`Could not reach Suzuki Family`)で、ダイアログ・トースト・再試行ループは無い。**ゲームは止まらない**
+  — 送信は結果画面が現れたあとの非同期で、サーバが落ちていても・機内モードでも遊べる。
+  オフラインを知らせる表示を毎回出さない([../OFFLINE_POLICY.md](../OFFLINE_POLICY.md))。
+- **未送信キュー**(§4-2)— 結果の POST が失敗したら(オフライン、応答なし)`sg.clubOutbox` に残る
+  (結果はまずキューに書いてから送る)。**再送は本人の行為の直後だけ**(判断 38):
+  (1) **次の結果を送るとき**(その Club 宛てを古い順に、そのあとで今回の結果)、
+  (2) **その Club の画面を開いたとき**。**起動時には再送しない**し、タイマー・`online` イベント・
+  フォアグラウンド復帰でも再送しない。古い順に送り、**最初の再送対象の失敗で止める**。
+  `already_submitted` / `board_mismatch` / `not_found` /
+  `unauthorized` が返ったら**捨てる**(再送しても通らない。`already_submitted` は届いたのと同じ扱い)。
+  body そのものが拒まれた
   `invalid_request` / `forbidden` / `too_large` / `unsupported_version` も同じ(先頭で
-  詰まると、その Club の後続が一つも送れないため)。`X-Club-Api` が知らない版のサーバも
+  詰まると、その Club の後続が一つも送れないため)。`X-Club-Api` が**知らない版を名乗る**サーバも
   同じ(次項: その Club へは何も送らない。残せば開くたびに送ってしまう)。応答が無い・
-  429・5xx・形の崩れた応答は再送の対象。結果画面の 1 行は、送れたら `Sent to <club>`、キューに入ったら
-  `Will send when you open the Club`、捨てたら `Could not send to <club>`。Club との接続を
+  429・形の崩れた応答・5xx は再送の対象だが、ネットワークの失敗と 429 以外は 5 回で捨てる(§4-2)。
+  - **Cloudflare 自体のエラーは非最終**(リードの設計注記。§14 末尾): 応答に `X-Club-Api` が無い(無料枠の使い切りなど、
+    プラットフォームが返したページ)は、`unsupported_server` として**捨てず**、キューに残す。最終扱いに
+    するのは、`X-Club-Api` が**ある**のに知らない版のときだけ。
+  結果画面の 1 行は §2-2 のとおり(送れたら `Sent to <club>`、キューに入ったら
+  `Will send when you open the Club`、最終的に拒まれたら `Could not send to <club>`)。Club との接続を
   切ったら、その Club 宛てのキューも捨てる(§4-2)。
+- **既知の制限 — 結果カードの 0.9 秒**(リードの設計注記。§14 末尾): 結果カードは、局が終わってから約 0.9 秒の「間」
+  (`useResultReveal`)のあとに現れ、送信はそのカードが現れたときに始まる。**その間に盤面を離れる**
+  (Back / ↻)と、その結果は**何も送られず、キューにも入らない**。気づきにくい失敗だが、塞ぐには
+  ゲームごとの変更(局が終わった時点で送る)が要り、全ゲームに触れるので今回は入れない。既知のまま出す
+  (§14 末尾の設計注記)。
 - **Club ごとに独立**: 1 つのサーバの障害・401 は、その接続の画面にだけ現れる。
   All Clubs の一覧は `sg.club` のキャッシュから描くので、落ちているサーバの名前も出る。
 - **`X-Club-Api` が知らない版**: 画面に 1 行出して、その Club へは何も送らない。
@@ -951,12 +1036,18 @@ Push は後続でも作らない(PRODUCT_PRINCIPLES「Club House」)。**公開�
   ゲーム以外にも使える)。`src/test/gameI18nWiring.test.ts` の対象に `club/index.ts` を
   足す。Shared を触らない人は、この文言を一度もパースしない。
 - Core に入るキーは §2 の 4 つ(`advancedTitle` / `clubEntry` / `playTogetherTitle` /
-  `playTogetherBody`)と、`ClubResultAction` の 4 つ(`clubSendResult` /
-  `clubResultSent`(`{club}`)/ `clubResultPending` / `clubResultNotSent`(`{club}`))だけ。
+  `playTogetherBody`)と、`ClubResultAction` の**状態の 5 つ**(`clubResultSent`(`{club}`)/
+  `clubResultPending` / `clubResultNotSent`(`{club}`)/ `clubResultSentMany`(`{count}`)/
+  `clubResultPartial`(`{sent}` `{count}`))だけ。ボタンの `clubSendResult` は 2026-10-02 に 14 言語から
+  削除した(§2-2)。状態の 5 つは高リスクキーではない(Core の短い状態表示で、同意の場所ではない)。
 - **高リスクキー**(`src/i18n/highRiskKeys.ts` に足す。門は `gateRecord.json`):
   §8-2 の説明画面の 4 箇条、§8-5 の Disconnect の本文、§9 Challenge の
   「終えたら結果を {club} へ送る」の 1 文、§8-4 の「削除は事業者側で」の 2 文、§15-1 の
-  Public の開示(`clubPublicDisclosure`: ニックネームと結果が公開される)。
+  Public の開示(`clubPublicDisclosure`: ニックネームと結果が公開される)、そして 2026-10-02 に足した
+  **`clubAutoSendDisclosure`**(§7-4: 参加している間は遊び終えた結果が自動で送られる。**参加の全経路に
+  出る、結果ごとのボタンに代わる同意の文言**で、誤訳すると「同意していない送信」になる最も重いキー)。
+  英語の原文を変えた高リスクキーは、`gateRecord.json` の承認が古くなるので**門を通し直す**
+  (盲検の逆翻訳と著者の読み。[../RELEASE_CHECKLIST.md](../RELEASE_CHECKLIST.md) §3)。
   どれも誤訳が「お金の約束の反故」か「同意していない送信・公開」になる。機械翻訳で配らない
   とは「門を通さずに配らない」の意味で、来歴は他のキーと同じ `machine` のまま
   ページと設定が開示する([../I18N_POLICY.md](../I18N_POLICY.md))。
@@ -994,6 +1085,17 @@ PRODUCT_PRINCIPLES「機械で示すこと」の 3 と 4 を、実装の名前�
    同型): `ClubResultAction` が §6-1 の対応ゲームの結果画面に**だけ**あり、自分の id を
    名乗り、`facts` と `details` を両方渡していること。レジストリで `challenge` を
    宣言したゲームの集合と一致すること。
+   **自動送信の受け入れ**(2026-10-02): (a) `ClubResultAction.test.tsx` — 結果が現れたとき 1 回だけ送る
+   (StrictMode でも 1 回)、遅れて届いたブリッジでも送る、アンマウントしても送信は取り消されない、
+   状態の行(1 Club の 3 状態 / 2 Club の全部 / 一部 / 全部 `already` は無言)、`played` は何も送らない、
+   接続が無ければ何も描かない。(b) ブリッジ — 行き先は 1 回の判定(`daily` + `boardDigest` なら
+   デイリー、`completed` ならランキング)、接続は送るとき読む(参加前の局は送られない)、書いてから送る、
+   409 `already_submitted` は `already`。(c) キュー — 統合(ランキングは良いほう、デイリーは最初)、
+   上限、並列に失敗した結果が互いを消さない(lost update)、`attempts` の上限、旧形式の要素も読めて送れる。
+   (d) 参加 — 3 経路(Public / 貼った招待リンク / 招待 URL)すべてで `clubAutoSendDisclosure` が出る。
+   (e) 各ゲームの `challenge.test.ts` が `boardDigest` を新しい golden として固定し、結果画面が
+   デイリーのときだけ `daily` / `boardDigest` を渡す(§6-3 の 21 本)。(f) `X-Club-Api` の無い応答が
+   非最終であること(§10)。
 6. **保存の門** — `src/backup/keys.test.ts`(`sg.club` / `sg.clubOutbox` が
    `SHELL_KEYS_LEFT_BEHIND` に理由付きで在る)、`src/test/resetLocalDataWiring.test.tsx`
    (削除で消える。この test の `SHELL_SCHEMAS` はシェルの schema を名指しで列挙して
@@ -1021,8 +1123,10 @@ PRODUCT_PRINCIPLES「機械で示すこと」の 3 と 4 を、実装の名前�
 
 ### 13-2. 文脈上の入口 — 結果画面(§2-2、§2-4)
 
-接続済みの端末の対応ゲームだけ。`Send to Club` が #164 の `Challenge a friend` である。
-未接続の端末には**置かない**(#176)。毎回強調しない・点滅しない・バッジを付けない。
+接続済みの端末の対応ゲームだけ。結果が自動で送られたことを言う状態 1 行(§2-2)が置かれる
+(2026-10-02 まではここに `Send to Club` のボタンがあり、#164 の `Challenge a friend` の位置だった。
+自動送信で、操作ではなく状態になった)。未接続の端末には**置かない**(#176)。毎回強調しない・
+点滅しない・バッジを付けない。
 
 ### 13-3. Club を体験した後 — `Create your own Club`
 
@@ -1081,9 +1185,10 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
 
 **2026-10-02 に製品オーナーが確認した判断**:
 
-14. **入る前の局の記録は要らない。** 結果画面で `Send to Club` を押し忘れた局を後から
-    送る仕組み(デイリーの後送り、直近の局の保持)は作らない。Club から入った挑戦の局が
-    自動送信であれば足りる(§2-2)。
+14. **入る前の局の記録は要らない。** 参加する前に遊んだ局を、参加したあとに送る仕組み(デイリーの
+    後送り、直近の局の保持)は作らない。(当初は「結果画面で `Send to Club` を押し忘れた局」を
+    後から送る仕組みを指していた。ボタンは 2026-10-02 に判断 37 で無くなり、参加後の結果は
+    すべて自動で送られる。「参加前の局は送らない」は判断 39 として残る。)
 15. **Public の Durable Object は作られた場所(EU)のまま。** 法的に動かす理由は無く、
     EU 内に置くのは GDPR 上むしろ保守的。利用者の分布を見て作り直すかは出荷前(PR F)に
     決める(`simple-games-club` の docs/cloudflare.md §1)。
@@ -1129,6 +1234,8 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
     自己ベスト 1 行(§16、PRODUCT_PRINCIPLES「順位表」の改定)。ランダム性はゲームの一部で、
     何度も遊んで自己ベストを更新するのが競い方。Private も同じ。
 29. **デイリーの結果はランキングに入れない。** デイリーは `Today` の挑戦の中で順位(同じ盤面)。
+    (**例外**: 全員同じ盤面にならない Minesweeper と Number Recall のデイリーはランキングの表へ送る。
+    リードの設計注記・オーナー確認待ち。§14 末尾。)
 30. **対 CPU のスコア系も入れる**(Yacht / Hearts / Gin Rummy / Dominoes / Mancala / Reversi /
     Dots and Boxes)。勝ち負けしか無い 4 本(Checkers / Connect Four / Gomoku / Ludo)は入れない。
 31. **表は上位 50 + 自分の行**。
@@ -1146,6 +1253,41 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
 35. **LP に出すのは今日のデイリーの上位 3 人と表の 1 位、メンバー数**(§18)。認証なしの
     `GET /public` を 5 分キャッシュ。Private にも同じコードがあり、`open` でないデプロイでは 404。
 36. **`GET /club` のメンバー一覧は新しい順に 50 件 + 総数**(§17-2)。Public の 1 万人を毎回読まない。
+
+**2026-10-02 に製品オーナーが確認した判断(自動送信)**:
+
+37. **参加している Club すべてへ、結果は自動で送る。ボタンは無い。** 一度 Club に参加した端末は、
+    遊び終えた結果(対応ゲームの `completed`)を、参加している**すべての Club** へ自動で送る。
+    `Send to Club` は無くなる(§2-2)。理由: 良い記録が、ボタンを押さずに次の盤面へ進んだだけで
+    失われてはならない。同意は参加の画面で取る(§7-4。PRODUCT_PRINCIPLES「Club House」の
+    「開示が先、送信が後」を参加の時点に置く)。
+38. **未送信の結果は端末に残し、本人の行為のあとにだけ送る。** オフラインや失敗の結果はキュー
+    (`sg.clubOutbox`、§4-2)に残る。再送は**次の結果を送るとき**と**Club の画面を開いたとき**だけで、
+    **起動時には送らない**。ポーリング・バックグラウンド同期・常時接続は引き続き無い(§10)。
+39. **参加の前の局は送らない。** 接続は送る瞬間に読む(§10)。
+40. **全員同じ盤面のデイリーは、すべて `Today` へ。** 21 本(Sudoku、Water Sort を含む。一覧は §6-3)。
+    デイリーは `Today` の挑戦の中だけで順位が付く(判断 29)。
+41. **LP は各表の上位 3 人を出す**(最大 8 表、プレイの多い順)。今日のデイリーの上位 3 人とメンバー数に
+    加えて(§18。判断 35 を広げる)。
+
+同日に、判断 37〜40 の実装についてリードが決めた設計上の注記(オーナー確認ではなく、実装の都合で
+決めたこと。変えるときはこの文書を直す):
+
+- **例外 — Minesweeper と Number Recall のデイリーは `Today` に載せず、ランキングの表へ送る**
+  (判断 29 への例外。**オーナーはまだ確認していない**)。前者は初手で地雷が変わり、後者はやり直すたびに
+  別の配置が配られるので、「全員同じ盤面」ではない。同じ盤面でないものを `Today` に載せると、その約束が
+  嘘になる(§6-3)。オーナーが「この 2 本も `Today` へ」と決めるなら、判断 40 の一覧に足す。
+- **デイリーは最初に完了した結果が数える**(§6-3)。失敗(`outcome: 'played'`)は**どこへも送らない** —
+  送ればデイリーを黙って確定させてしまい、ランキングは `played` を見ない。数えるのは `completed` だけ。
+- **未決 — デイリーの確定を参加の画面で言うか**: 参加している間は最初に完了したデイリーの結果が確定する
+  (上)。参加の画面の `clubAutoSendDisclosure` はそれを言わない。言うなら新しい(または広げた)高リスクの
+  文言で、オーナーの文言確認と 14 言語の門が要る。決まるまでは「言っていない」が現状(§6-3、§7-4)。
+- **既知の制限 — 結果カードの 0.9 秒**: `useResultReveal` の「間」の間に盤面を離れると何も送られない
+  (§10)。塞ぐにはゲームごとの変更が要り、v1.4.0 には入れない。
+- **Cloudflare のプラットフォームエラーは非最終**: `X-Club-Api` の無い応答(無料枠の使い切りなど)は
+  キューに残し、`X-Club-Api` が有って版が違うときだけ最終(§10)。
+- Solitaire / Spider は版(めくり枚数・スート数)が digest に入るので、版ごとに別の `Today` の挑戦。
+  Water Sort のデイリーは `{ tier: 'daily' }`(§6-3)。
 
 **外部の事実確認**(#161 Phase 0 と `simple-games-club#1` の未完了項目。確認できるまで
 文言と数字を出さない):
@@ -1200,7 +1342,8 @@ endpoint 1 つ**だけ。Public にあって Private に無いエンドポイン
   名前で知る唯一のサーバ。入口は Discover 画面(接続 0 件)の `Join the Public Club House` と、
   All Clubs の末尾(Public に未接続のとき)。参加画面は**開示が先**: 「ニックネームと結果は
   Public Club House のみんなと pixapps.ai の公開ページに表示されます」
-  (`clubPublicDisclosure`、高リスクキー §11)→ nickname → `Join and Play`。
+  (`clubPublicDisclosure`、高リスクキー §11)と、「参加している間は、遊び終えた結果が自動で送られます」
+  (`clubAutoSendDisclosure`、§7-4。Public でも Private でも同じ)→ nickname → `Join and Play`。
 - Web 版(pixapps.ai)からも同じ画面で参加できる。そのために Public のサーバは
   `CLUB_CORS_ORIGINS` に `https://pixapps.ai` を持つ(アプリの origin 2 つは常に許可。
   `src/http/cors.ts`)。
@@ -1210,10 +1353,12 @@ endpoint 1 つ**だけ。Public にあって Private に無いエンドポイン
 ### 15-2. デイリーの順位表 — 盤面ごとに 1 つの挑戦
 
 §6-3 のとおり。新しいモードもサーバ側の盤面生成も無く、`POST /challenges` が同じ盤面を
-1 つにまとめ、`daily` の印で Club 画面の `Today` に集まる(§9)。いま `daily` が付くのは
-Sudoku のデイリーだけ(Minesweeper は初手で盤面が変わる、Water Sort のデイリーはティアに
-無い。§6-3)。対応ゲームが増えれば、全員同じ盤面のデイリーを持つゲームはそのまま `Today`
-に加わる。
+1 つにまとめ、`daily` の印で Club 画面の `Today` に集まる(§9)。`daily` が付くのは、全員同じ盤面の
+デイリーを持つ **21 本**(§6-3、判断 40)。Minesweeper(初手で盤面が変わる)と Number Recall(やり直すたびに
+配置が変わる)のデイリーは、全員同じ盤面ではないので付かず、ランキングへ行く(リードの設計注記)。サーバは
+結果を**ゲームの軸で上位 N 人**に並べて返し(`GET /challenges/:id/results`)、要求した本人の行は
+常に含める — 1 日に多くの人が集まる `Today` で、到着順の先頭 200 件だけでは良い記録が見えなくなる
+ため。
 
 ### 15-3. 読み量
 
@@ -1235,6 +1380,9 @@ Sudoku のデイリーだけ(Minesweeper は初手で盤面が変わる、Water 
 
 §14 判断 28〜31。「同じ盤面でだけ比べる」はデイリー(§6-3、`Today`)に限り、それ以外の局は
 **ゲーム × モードの表**に各メンバーの自己ベスト 1 行として入る。Public も Private も同じ。
+**表は、遊び終えた結果が自動で送られて育つ**(§2-2。2026-10-02 まではボタンを押した結果だけだった)。
+表に並ぶのは各人の自己ベストで、盤面は人ごとに違う — 運も含めて比べる(判断 28)。Minesweeper と
+Number Recall のデイリーもここに入る(リードの設計注記。§14 末尾)。
 
 ### 16-1. 契約
 
@@ -1243,7 +1391,8 @@ Sudoku のデイリーだけ(Minesweeper は初手で盤面が変わる、Water 
   サーバは形だけ検査し、`params` も形(小さな JSON)だけ見て保存しない。並べる軸は `order`、
   向きは `direction`(§6-1 の表)。同値は先に出した人が上。
 - 送るのは結果画面が表示した事実だけ(§5-5)。`outcome: 'played'`(負け・ギブアップ)は表に
-  入らないが、送ってよい(サーバは何も変えずに現状の行を返す)。
+  入らない。サーバは `played` を受けても何も変えずに現状の行を返すが、2026-10-02 からクライアントは
+  `played` を**そもそも送らない**(§6-3)。
 - `POST /rankings/results` の本文は `POST /challenges` と同じ形(§5-4)から `title` と
   `daily` を除いたもの。`boardDigest` は §6-4 を持つゲームだけ(無ければ null)。`seed` は
   **空でもよい**(アーケードは盤面を名乗らない)。応答は `{ gameId, paramsKey, improved, entry,
@@ -1290,13 +1439,14 @@ Sudoku / Minesweeper / Water Sort の 3 本が持っていた `mode: 'club'` と
 読み書き)、Root の `challenge` prop(`ChallengeStart`・`GameRootProps.challenge`・`openChallenge`・
 digest 不一致の 1 行画面と、その `*ChallengeMismatch` の 14 言語)、`seedPrefix`。
 残したもの: 各ゲームの `challenge/contract.ts`、`boardDigest`(Today の digest 照合とランキングの
-`boardDigest`)、結果画面の `ClubResultAction`、Water Sort のランキングのティア(`challengeTierOf`)。
+`boardDigest`)、結果画面の `ClubResultAction`(2026-10-02 からは状態 1 行)、Water Sort のランキングの
+ティア(`challengeTierOf`)。
 
 **既知の制限(2026-10-02、未解決)**: `Today` の `Play` が渡すのは「Club から開いた」という印だけで、
 「デイリーを開け」という意図はゲームへ渡らない。Quick Rules を終えていない人が `Play` から
 ゲームを開くと、チュートリアルを終えた時点でそのゲームの普通の最初の局(Sudoku なら現在の
-レベル)が始まり、デイリーではないので挑戦へは自動送信されない(結果画面には普通の
-`Send to Club` が出て、ランキングへ送れる)。ホームへ戻って Daily を選べば挑戦になる。
+レベル)が始まり、デイリーではないので挑戦には入らない(結果は自動送信でランキングへ送られる)。
+ホームへ戻って Daily を選べば挑戦になる。
 spike には「挑戦から開いた局はチュートリアルの後にその盤面へ進む」分岐があったが、挑戦の盤面が
 渡されたときにしか働かず、今の流れでは一度も通っていなかった。直すなら、シェルが「デイリーを
 開く」入口(`GameEntry` の 1 値)を渡し、対応する 35 本がそれを受ける形になる(全ゲームに触れる
@@ -1347,10 +1497,16 @@ claim し(同じ setup key でよい。使用済みの記録は古い object の
 - `GET /api/v1/public?date=YYYY-MM-DD`(認証なし。`open` でないデプロイは `404`):
   `{ club: { name }, memberCount, today: [{ gameId, daily, resultCount, top: [{ nickname, facts }] }],
 rankings: [{ gameId, paramsKey, entryCount, leader: { nickname, facts } }] }`。`today` はその日付の
-  `daily` 付き挑戦ごとに完了結果の上位 3 人(サーバが §6-1 の軸で並べる。唯一、サーバが Result を
-  順位付けする場所)。`date` 省略時は UTC の今日。
+  `daily` 付き挑戦ごとに完了結果の上位 3 人(サーバが §6-1 の軸で並べる。サーバが Result を
+  順位付けする場所の 1 つ)。`date` 省略時は UTC の今日。
+  **2026-10-02 の改定(判断 41)**: `rankings` は**最大 8 表**(件数の多い順、同数なら `gameId` / `paramsKey`)で、
+  各表に `entryCount` と `top: [{ nickname, facts }]`(その表の軸で上位 3 人、同値は到着順)を持つ。
+  `leader` は互換のため残す。読みは境界つきで(全走査しない)、5 分キャッシュはそのまま。
 - Worker は `caches.default` で 5 分キャッシュし(`Cache-Control: public, max-age=300`)、Node は
   ヘッダだけ。CORS は `CLUB_CORS_ORIGINS`(pixapps.ai)。
-- pixapps.ai の Simple Games ページは、この JSON を取り、今日のデイリーの上位(名前と記録)と
-  メンバー数を小さな 1 節に出す。取れなければ節ごと出さない。Club House の UI は複製しない。
+- pixapps.ai の Simple Games ページは、この JSON を取り、今日のデイリーの上位 3 人(名前と記録)と、
+  **各ランキング表の上位 3 人**(最大 8 表。ゲーム名 + モード + 行)と、メンバー数を小さな 1 節に出す。
+  `top` が無い応答は `[leader]` で描く。取れなければ節ごと出さない。Club House の UI は複製しない。
+  文面は、ランキングが**自己ベストの並び(盤面は人ごとに違う)**であり、デイリーだけが全員同じ盤面で
+  あることを正しく言う(「同じ盤面」を一般の約束として書かない)。
 - プライバシーページに Club House の節(何を、どこへ、誰の管理下で、消し方)を足す(§13-6)。

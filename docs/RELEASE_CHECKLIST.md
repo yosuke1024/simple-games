@@ -179,13 +179,23 @@ bash .github/scripts/check-principles.sh
   (自然さは `machine` 来歴の開示と読者からの報告で担保する)。
 
 - [ ] 端末言語を切り替えてもゲーム進行が失われない
-- [x] Backup & Restore の 4 キー(`backupRestoreConfirmTitle` /
+- [ ] Backup & Restore の 4 キー(`backupRestoreConfirmTitle` /
       `backupRestoreConfirmBody` / `backupPrivacyNote` / `backupPurchaseNote`)と
-      Club House の 6 キー(`clubRemoveEraseBody` / `clubDisconnectBody` /
+      Club House の 7 キー(`clubRemoveEraseBody` / `clubDisconnectBody` /
       `clubDisconnectHostingNote` / `clubDisconnectLastOwner` / `clubPublicDisclosure` /
-      `clubDailyDisclosure`)が門を通っていること。12 言語 × 10 キー = 120 件
-      (切断の文を全員向けの本文と、自分で建てた Club の Owner にだけ出す費用の 1 文に
-      分けたので 9 → 10 キー。issue #160 / #161)。**2026-10-02 に通した**: 手順 1 の
+      `clubDailyDisclosure` / **`clubAutoSendDisclosure`**)が門を通っていること。12 言語 × 11 キー =
+      132 件。**`clubAutoSendDisclosure` は 2026-10-02 の自動送信で足した新しい高リスクキー
+      で、結果ごとのボタンに代わる同意の文言(「参加している間は、遊び終えた結果が自動で
+      送られます」。[architecture/club.md](architecture/club.md) §7-4)なので、誤訳は「同意して
+      いない送信」になる。12 言語ぶんは未承認のまま**(`i18n:gate status` は未完了)で、
+      **リリース前に盲検の逆翻訳(原文を見せない別の実行者、1 言語 1 体)と、作者が逆翻訳の表を
+      読む手順を通す**(`I18N_GATE_STRICT=1` の `i18n:gate:check` が緑になるまで)。
+      リリースまでに既存の高リスクキー(`clubDisconnectBody` / `clubDailyDisclosure` など)の
+      英語の原文を直したら、そのキーの承認は失効するので通し直す(2026-10-02 の時点では
+      `clubAutoSendDisclosure` だけが未承認)。
+      切断の文を全員向けの本文と、自分で建てた Club の Owner にだけ出す費用の 1 文に
+      分けたので 9 → 10 キー(issue #160 / #161)。**以前の 120 件は 2026-10-02 に
+      通した**(自動送信の前。結果は下に残す): 手順 1 の
       独立逆翻訳は原文を見せない別の実行者(1 言語 1 体)、手順 2 は作者が逆翻訳の表を
       読んだ(es / tr の `clubRemoveEraseBody` は主語が省略されているが、題名に相手の名前が
       出るので、そのまま承認)。`i18n:gate status` は Gate complete、`i18n:gate:check` は緑
@@ -705,24 +715,51 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
 (サーバ側 `src/http/cors.ts` の `APP_ORIGINS`)。**これが効いているかは、実機から
 実際に通信して初めて分かる**ので、下の最初の項目がその確認を兼ねる。
 
+自動送信でサーバへの書き込みは「ボタンを押した数」から「参加している Club の数 × 遊び終えた局の数」に
+変わった。**Public の費用の上限(1 日 10 万リクエスト、1 メンバー 1 分 60 リクエスト。
+[PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「費用の上限」、[club.md](architecture/club.md) §15-3)が
+この量で足りることを、v1.4.0 を出す前に Public のデプロイで再確認する**(未実施)。
+
+**結果の送信は自動である**(2026-10-02。結果画面にボタンは無く、状態 1 行だけが出る。
+[club.md](architecture/club.md) §2-2)ので、この節は「ボタンを押す」ではなく
+**「参加 → 開示を読む → 遊び終える → 状態の行 → Rankings に載る」**を実機で通す。
+
 - [ ] 設定 › Advanced › Club House(またはホームの Play together)から **Public Club
-      House に参加**できること。表示名を入れて参加し、**参加前に「表示名と結果が
-      参加者と pixapps.ai に公開される」旨の説明が出ている**こと。Android・iPhone
-      それぞれで
-- [ ] **Today → 今日のデイリーを遊ぶ → 結果が自動で送られる → Rankings に自分の
-      成績が載る**こと。対象ゲームは契約を持つデイリーのうち複数(Sudoku /
-      Minesweeper / Water Sort に加え、この版で収録した 11 本のうちデイリーのある
-      ゲームを少なくとも 1 つ)。同じ盤面・同じモードの成績の順位だけが並び、
-      熱心さの順位・ストリーク・カウントダウンが出ていないこと
-- [ ] 送信の失敗が遊びを止めない: **機内モードのまま**デイリーを最後まで遊べ、
-      結果画面が普通に出ること(未送信の結果は端末に残り、機内モードを解除したあとに
-      送られる。失敗表示で操作がふさがれない)
+      House に参加**できること。表示名を入れて参加し、**参加前に「参加している間は、遊び終えた
+      結果(時間・手数・スコアなど)が自動で送られる」旨(`clubAutoSendDisclosure`)と
+      「表示名と結果が参加者と pixapps.ai に公開される」旨(`clubPublicDisclosure`)の
+      説明が出ている**こと。**招待リンクを貼って参加する画面と、招待 URL を開いて参加する画面にも、
+      自動送信の説明が出る**こと(Public 以外の参加にも同意の場所がある)。Android・iPhone それぞれで
+- [ ] **参加する前に遊んだ局が送られない**こと: 参加の前に 1 局遊んでおき、参加したあとに
+      Rankings を開いても、その局の成績が無い
+- [ ] **ボタンを押さずに、遊び終えた結果が自動で送られ、Rankings に自分の成績が載る**こと。
+      **ホームのゲームのデイリー / レベル / フリーを、Today や Club の画面を開かずに遊ぶ**
+      (Today からでなく、ゲームの普通の入口から)。結果画面に **`Sent to <Club>` の状態 1 行**が
+      出て、ボタンが無いこと。Club を開くと、全員同じ盤面のデイリーは `Today` に、それ以外は
+      そのゲーム × モードの `Rankings` に自分の成績が載る。対象ゲームは複数(Sudoku /
+      Minesweeper / Water Sort に加え、この版で収録した 11 本のうちデイリーのあるゲームを少なくとも
+      1 つ)。**Minesweeper(または Number Recall)のデイリーは `Today` ではなくランキングの表に載る**
+      こと。ランキングは各人の自己ベストの並びで、盤面は人ごとに違ってよい。熱心さの順位・
+      ストリーク・カウントダウンが出ていないこと
+- [ ] **負けた局・行き止まりの局は何も送られない**こと(Minesweeper で地雷を踏む、など)。
+      そのデイリーをあとで完了すると、その結果が `Today` / ランキングに載る(失敗が挑戦を確定させない)
+- [ ] 送信の失敗が遊びを止めない: **機内モードのまま**局を最後まで遊べ、結果画面が普通に出ること。
+      状態の行は `Will send when you open the Club`。**未送信の結果は端末に残り、機内モードを解除して
+      Club を開き直す(または次の局を遊び終える)と送られる**こと。**アプリを起動しただけでは
+      送られない**こと(起動時の再送は無い)。失敗表示で操作がふさがれない
+- [ ] **2 つの Club に参加した端末**で、結果が**両方**へ送られ、状態の行が
+      `Sent to 2 Clubs`(片方に届かなければ `Sent to 1 of 2 Clubs. …`)になること。
+      同じデイリーの 2 度目の完了は何も言わず、先に送った結果が残ること
+- [ ] **対象外のゲームは何も送らない**こと: Brick Breaker / Bubble Pop / Checkers /
+      Connect Four / Gomoku / Ludo と、ティアに一致しない Water Sort のレベルの結果画面に、
+      Club の状態の行が出ず、リクエストも出ない
 - [ ] **Report**: Rankings の他人の名前を通報でき(1 人 1 回)、通報後に画面が
       壊れないこと。持ち主の側で、通報された名前を**変更**(`PATCH /members/:id`)・
       **結果ごと削除**(`DELETE /members/:id?purge=1`)でき、ランキングの行に反映される
       こと(Public の持ち主は PixApps。[club.md](architecture/club.md) §17-3)
 - [ ] **Disconnect**: 接続を切ると、端末が Club の宛先へ以後 1 件も通信しないこと
-      (§5.16 と同じ見方で確認)。切断後もゲームの進行・統計は何も変わらないこと
+      (§5.16 と同じ見方で確認。切断のあとに遊び終えた結果も送られない)。切断後もゲームの進行・
+      統計は何も変わらないこと
 - [ ] **招待リンク**: 招待 URL(`https://<endpoint>/join#invite=…`)をブラウザで開くと
       Web で `Join and Play` へ進めること。アプリでは設定 › Advanced › Club House に
       URL を**貼り付けて**参加できること(アプリが招待 URL を直接受け取る経路は無い —
@@ -751,7 +788,10 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
 - [ ] **Club House(Public)の分も、データセーフティ欄と App Store のプライバシー
       ラベルに入れる。** 参加した人についてだけ発生する収集で、内容は表示名、結果の
       数値(時間・手数・スコア)、シード / 盤面の識別子、端末に結びつくメンバー
-      トークン、そしてレート制限のために処理される IP アドレス。Public では表示名と
+      トークン、そしてレート制限のために処理される IP アドレス。**参加している間は、遊び終えた
+      結果が自動で送られる**(結果ごとの選択ではない。参加が選択で、参加の前に開示する。
+      [club.md](architecture/club.md) §7-4)ので、「利用者が送信を選ぶ」ではなく、参加した人については
+      自動の収集として申告する。Public では表示名と
       結果が参加者に見え、pixapps.ai の公開ページにも出る。参加しない端末では
       一切発生しない(§5.16)。公開ページのプライバシーポリシーの Club House 節と
       同じ内容にそろえ、**この版が利用者に届く前に公開**する。Meta を有効化する
