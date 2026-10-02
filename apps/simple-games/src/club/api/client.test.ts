@@ -222,7 +222,8 @@ describe('club client', () => {
     expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/rankings/results`);
     expect(f.mock.calls[0]![1].method).toBe('POST');
     expect(JSON.parse(f.mock.calls[0]![1].body)).toEqual(body);
-    expect(res).toMatchObject({ improved: false, rank: 3, entryCount: 9 });
+    expect(res).toMatchObject({ improved: false, entryCount: 9 });
+    expect('rank' in res).toBe(false); // the result screen shows no rank (club.md §2-2)
   });
 
   it('rankings and ranking read the tables', async () => {
