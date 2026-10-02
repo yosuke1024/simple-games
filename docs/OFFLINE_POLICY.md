@@ -73,8 +73,11 @@ Undo、Hint、Add Numbers、ゲームクリア、ゲームオーバー、設定�
 
 **Club House に参加した端末に限り**、本人が選んだデプロイ(PixApps の Public か、
 誰かが建てた Private)との通信が加わる(2026-09-09 の issue #176、2026-09-30 の
-`simple-games-club#1`。実装はまだ無い)。参加していない端末ではこの用途は存在せず、
-リクエストは 0 件 — **Public ができても既定の接続先は持たない**。加わるときも、この
+`simple-games-club#1`。実装は 2026-10-02、[architecture/club.md](architecture/club.md))。
+参加していない端末ではこの用途は存在せず、リクエストは 0 件(未参加の端末での 0 件は
+[RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) 5.16 でエミュレータ実測、実機は未)—
+**Public があっても既定の接続はしない**(Public の住所は `club/` のチャンクにだけあり、
+本人が参加を押すまで使われない)。加わるときも、この
 一覧の他の項目とオフラインの約束は変えない — ポーリング・バックグラウンド同期・
 常時接続を持たず、サーバの障害でゲームを止めない。境界は
 [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Club House」。
