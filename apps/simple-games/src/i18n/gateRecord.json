@@ -206,6 +206,18 @@
         "target": "sha256:d78cc7c34c3189d713f17223c146d7716390b1dc8f6256a54d072f31b29d218f",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryTitle": {
+        "source": "sha256:c356f8805e6ee91a72dd9c531403f9f5f75b9e7760263961f02f1c81a9c4fec3",
+        "target": "sha256:7a8e2fe867bbfb916094b09312fc4aa73486f2f2ebed93ab3265d4c6b1eeb5cf",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryBody": {
+        "source": "sha256:1703464d00a85607f063638764cecd65b05a27c534f52ca7b0bff013a29f880c",
+        "target": "sha256:1ecebe726cbfe0bb7faaf624f9b7dda862ad6abf9d2a879a79bf14735f6b9436",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
       }
     },
     "th": {
@@ -393,6 +405,18 @@
         "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
         "target": "sha256:4c6e6f3bb187780f1f73c8898bbf3d29919067d237c35a39ef64e859299cd4af",
         "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryTitle": {
+        "source": "sha256:c356f8805e6ee91a72dd9c531403f9f5f75b9e7760263961f02f1c81a9c4fec3",
+        "target": "sha256:622c0b63b589ad91546df2a5e044895524c0b8e8e3b963a23c604910b5953a26",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryBody": {
+        "source": "sha256:1703464d00a85607f063638764cecd65b05a27c534f52ca7b0bff013a29f880c",
+        "target": "sha256:b688f458f4b22c1d2cb6c4a799ef07975bb0b65be9a3db0c62386a4e2e250af4",
+        "reviewedOn": "2026-10-09",
         "by": "claude-blind-agent"
       }
     },
@@ -582,6 +606,18 @@
         "target": "sha256:10725a56892ea5b3d4f16bb911d065f492ade739a907673fcd2772143170b2c4",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryTitle": {
+        "source": "sha256:c356f8805e6ee91a72dd9c531403f9f5f75b9e7760263961f02f1c81a9c4fec3",
+        "target": "sha256:bf9066d44a4c3891b69583cb89dccacf66d0fed216bf8d7d2b8130a6a786978a",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryBody": {
+        "source": "sha256:1703464d00a85607f063638764cecd65b05a27c534f52ca7b0bff013a29f880c",
+        "target": "sha256:00feab7c5bdd9683a3a75c22ab8094a24788d3c64b9103dd2676a99a35c532fb",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
       }
     },
     "vi": {
@@ -769,6 +805,18 @@
         "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
         "target": "sha256:57435a5c84449ce3565abef7db178ea496803089b880d765fd379fa926312437",
         "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryTitle": {
+        "source": "sha256:c356f8805e6ee91a72dd9c531403f9f5f75b9e7760263961f02f1c81a9c4fec3",
+        "target": "sha256:8ad0f71591a521855a01a9b882a7bee9d4e9299c91c5fe9528d228d40fe07662",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryBody": {
+        "source": "sha256:1703464d00a85607f063638764cecd65b05a27c534f52ca7b0bff013a29f880c",
+        "target": "sha256:684e689d566dd5078c53469d6bd336ae04b916b51b672f0626917da5befb6f3e",
+        "reviewedOn": "2026-10-09",
         "by": "claude-blind-agent"
       }
     },
@@ -958,6 +1006,18 @@
         "target": "sha256:6139b6c3ed73cd4aa3849fcf25698abce9b6d870ddb9fcb0565ad1372a97c06c",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryTitle": {
+        "source": "sha256:c356f8805e6ee91a72dd9c531403f9f5f75b9e7760263961f02f1c81a9c4fec3",
+        "target": "sha256:6d816fc3ae951fde667a0d3c6394338b835b241ecbfa43e453288a70ed54dd1a",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryBody": {
+        "source": "sha256:1703464d00a85607f063638764cecd65b05a27c534f52ca7b0bff013a29f880c",
+        "target": "sha256:0c24a9cec1b6f759a16a69b336aa0d4ac00a3605ad7bfb78c8b54b5ef7533810",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
       }
     },
     "zh-hans": {
@@ -1145,6 +1205,18 @@
         "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
         "target": "sha256:2f9daa828907b93ff8a00d41a16828e0c6388bf3a95dadf816c8ee9c3bdac37d",
         "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryTitle": {
+        "source": "sha256:c356f8805e6ee91a72dd9c531403f9f5f75b9e7760263961f02f1c81a9c4fec3",
+        "target": "sha256:29debec9859929a316924f2ce287b03e4df77d9a72b6e43c817b0dd416cc11f6",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryBody": {
+        "source": "sha256:1703464d00a85607f063638764cecd65b05a27c534f52ca7b0bff013a29f880c",
+        "target": "sha256:d20aa12b94d7546e3df66cb18948c362f0a9bd1eebb47a1bc039089f335abc53",
+        "reviewedOn": "2026-10-09",
         "by": "claude-blind-agent"
       }
     },
@@ -1334,6 +1406,18 @@
         "target": "sha256:3c8f5b363ab3ab0b8d12844c62e605bb0b847f51d7a21ca2b32bcb6c36ce67d1",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryTitle": {
+        "source": "sha256:c356f8805e6ee91a72dd9c531403f9f5f75b9e7760263961f02f1c81a9c4fec3",
+        "target": "sha256:be14ce2f644fc98ccafb64769c187c3a919317b9b3e07aa883e76b1144c1c8e5",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryBody": {
+        "source": "sha256:1703464d00a85607f063638764cecd65b05a27c534f52ca7b0bff013a29f880c",
+        "target": "sha256:842e994b72e011ca764e8bcd98d0e800c056c48494b5738d0a7f50d6ab8bfad5",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
       }
     },
     "es": {
@@ -1521,6 +1605,18 @@
         "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
         "target": "sha256:d50a3d44683561324c2660615dd0594643d68e8f383842a78f94aaebe0a3d666",
         "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryTitle": {
+        "source": "sha256:c356f8805e6ee91a72dd9c531403f9f5f75b9e7760263961f02f1c81a9c4fec3",
+        "target": "sha256:a44964177d0bec1dfd654da2dafcd8360a8fcf58932e71d73fd2a77a33049480",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryBody": {
+        "source": "sha256:1703464d00a85607f063638764cecd65b05a27c534f52ca7b0bff013a29f880c",
+        "target": "sha256:1a85f6f21396c54255342f5f05a9a1321b3853f4cbc6db1fc55a2420be469ea9",
+        "reviewedOn": "2026-10-09",
         "by": "claude-blind-agent"
       }
     },
@@ -1710,6 +1806,18 @@
         "target": "sha256:7d2434081ba522652b53b332ce91731594a6a4217998eea2844aaee6c8c5b3e6",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryTitle": {
+        "source": "sha256:c356f8805e6ee91a72dd9c531403f9f5f75b9e7760263961f02f1c81a9c4fec3",
+        "target": "sha256:88c5308527b404eacf07abf87af47ceefdfdd44f4607089c6e2f0c42634e6680",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryBody": {
+        "source": "sha256:1703464d00a85607f063638764cecd65b05a27c534f52ca7b0bff013a29f880c",
+        "target": "sha256:ebde228b0e8124d1e2141c4546eaa4d9e06239f22092b5bcefeaf01f1bbfb6ce",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
       }
     },
     "fr": {
@@ -1897,6 +2005,18 @@
         "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
         "target": "sha256:e4750da99f0f76658fcee437906b07386629bd6bd17f5821b94b8327086f399c",
         "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryTitle": {
+        "source": "sha256:c356f8805e6ee91a72dd9c531403f9f5f75b9e7760263961f02f1c81a9c4fec3",
+        "target": "sha256:998d6abe179199bca5a0fefec6a42f0c8d713f6ce8bddb97f8a2e639146eab65",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryBody": {
+        "source": "sha256:1703464d00a85607f063638764cecd65b05a27c534f52ca7b0bff013a29f880c",
+        "target": "sha256:e3e52a42d450376597c95b67ade8998777b88f5ffa3b208512b89ca0a4d598d8",
+        "reviewedOn": "2026-10-09",
         "by": "claude-blind-agent"
       }
     },
@@ -2086,6 +2206,18 @@
         "target": "sha256:6c2d352161df580922a184a99f8f0900612154aaa4c8f7fd03df2fbec0e24f06",
         "reviewedOn": "2026-10-02",
         "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryTitle": {
+        "source": "sha256:c356f8805e6ee91a72dd9c531403f9f5f75b9e7760263961f02f1c81a9c4fec3",
+        "target": "sha256:b6c7479ba52de909db893cb9ebb774e183aa661b42ce68e7789ee9c17f41969e",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryBody": {
+        "source": "sha256:1703464d00a85607f063638764cecd65b05a27c534f52ca7b0bff013a29f880c",
+        "target": "sha256:9db394fced483672c0a14d962d4340d6507c5dfe887171d97cb5613037ab435f",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
       }
     },
     "tr": {
@@ -2273,6 +2405,18 @@
         "source": "sha256:e2d0a54968ead24efc0dffa6ac78fc606dceec34a0f586177a74a54cc2272cf8",
         "target": "sha256:f698e9b40f9f0d1cf85a796e7c3e407b4bd0d4dd5a8a68607997d27f664516b9",
         "reviewedOn": "2026-10-02",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryTitle": {
+        "source": "sha256:c356f8805e6ee91a72dd9c531403f9f5f75b9e7760263961f02f1c81a9c4fec3",
+        "target": "sha256:84905bda5e3c34d2fdc4ab356a4c50f3ee89f63e2fad3c43c8bab550acc81916",
+        "reviewedOn": "2026-10-09",
+        "by": "claude-blind-agent"
+      },
+      "clubDeleteEntryBody": {
+        "source": "sha256:1703464d00a85607f063638764cecd65b05a27c534f52ca7b0bff013a29f880c",
+        "target": "sha256:f3f8147c5e4fe2edcafe8e167935cf55fc2170d620d5382e7a48919f0b29f7b3",
+        "reviewedOn": "2026-10-09",
         "by": "claude-blind-agent"
       }
     }

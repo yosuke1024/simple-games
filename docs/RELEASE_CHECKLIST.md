@@ -180,7 +180,7 @@ bash .github/scripts/check-principles.sh
   (自然さは `machine` 来歴の開示と読者からの報告で担保する)。
 
 - [ ] 端末言語を切り替えてもゲーム進行が失われない
-- [ ] Backup & Restore の 4 キー(`backupRestoreConfirmTitle` /
+- [x] Backup & Restore の 4 キー(`backupRestoreConfirmTitle` /
       `backupRestoreConfirmBody` / `backupPrivacyNote` / `backupPurchaseNote`)と
       Club House の 13 キー(`clubRemoveEraseBody` / `clubDisconnectBody` /
       `clubDisconnectHostingNote` / `clubDisconnectLastOwner` / `clubPublicDisclosure` /
@@ -188,8 +188,9 @@ bash .github/scripts/check-principles.sh
       `clubDeleteResultTitle` / `clubDeleteResultBody` / `clubDeleteConfirm` / `clubDeleteEntryTitle` /
       `clubDeleteEntryBody`)が門を通っていること。12 言語 × 17 キー = 204 件。
       **2026-10-10 に `clubDeleteRankingTitle` / `clubDeleteRankingBody`(1 人 1 行の文言)を削除し、行ごとの
-      削除の確認 `clubDeleteEntryTitle` / `clubDeleteEntryBody` に替えた。この 2 キー × 12 言語 = 24 件は未承認**
-      (機械翻訳のまま。門を通すまでこの項目は [x] にしない)。2026-10-02 に足した高リスクキー:
+      削除の確認 `clubDeleteEntryTitle` / `clubDeleteEntryBody` に替えた。この 2 キー × 12 言語 = 24 件は同日に
+      門を通した**(手順 1 は原文を見せない実行者 1 言語 1 体、ツールなし。手順 2 は作者が逆翻訳の表を読み、
+      12 言語とも 3 文が保たれていた)。`i18n:gate status` は Gate complete、strict の check は緑。2026-10-02 に足した高リスクキー:
       `clubAutoSendDisclosure`(参加の画面の「参加している間は、遊び終えた結果が自動で送られます」。
       結果ごとのボタンに代わる同意の文言で、誤訳は同意していない送信になる。
       [architecture/club.md](architecture/club.md) §7-4)、`clubAutoSendAccept`(自動送信より前に参加した
