@@ -27,6 +27,11 @@ Node + SQLite と Cloudflare Workers + Durable Object の 2 実装が同じ契�
 (判断 42。削除は**記録 1 件ずつ**で、全部を一度に消すボタンは無い)、同じ端末で同じ Club に入り直すと**同じメンバー**に戻り、名前はいつでも変えられる(判断 43)。
 招待リンクでの参加は v1.4.0 では**隠す**(判断 44)。§4-1・§5-3 / §5-4・§7・§8-5・§9・§10・§11・§14・§15-1・
 §17-3 はこの前提で書き換えた。
+**2026-10-10 の改定(結果ごとに 1 行)**: ランキングの表を「各メンバーの自己ベスト 1 行」から**結果ごとに
+1 行**へ改め(判断 45)、Club の画面をゲーム単位の棚と「あなたの順位」の節にし(判断 46・47)、1〜3 位の印と
+1 つ上との差を認め(判断 48)、通報の入口を行から名前のシートへ移した(判断 49)。§5-3 / §5-4・§9・§11・§14・
+§16・§17-3・§18 はこの前提で書き換えた。段取りは
+[../plans/2026-10-10-club-ranking-rows.md](../plans/2026-10-10-club-ranking-rows.md)。
 issue #161 / #164 の本文とコメントは提案・検討の記録であり、この文書と食い違う箇所は
 この文書を正とする([../PROJECT_CONTEXT.md](../PROJECT_CONTEXT.md)「Authority」)。
 
@@ -309,15 +314,17 @@ interface ClubOutbox {
 type OutboxItem =
   | { endpoint; challengeId; result: ResultSubmission; createdAt } // 旧形式。そのまま読め、送れる
   | { kind: 'daily'; endpoint; body; createdAt; attempts? } //   POST /challenges の本文(`daily` 付き)
-  | { kind: 'ranking'; endpoint; body; createdAt; attempts? }; // POST /rankings/results の本文
+  | { kind: 'ranking'; endpoint; body; createdAt; attempts?; clientId? }; // POST /rankings/results の本文。clientId は 2026-10-10 から(無い項目は旧版が残したもの)
 ```
 
 - **本文は Core が再宣言する**(Core は `club/` を import しない。構造の検査は厳格で、壊れた要素だけが落ちる)。
 - **書いてから送る**(write-ahead): 結果はまずキューへ入れ、その Club 宛てを古い順に送り、この結果の
   行き先を報告する。送れれば取り除く。アプリが落ちても失われない。
-- **統合**(同じ表・同じ盤面の重複で肥らせない): ランキングは `endpoint|gameId|paramsKey` を鍵に、契約の
-  `order` / `direction`(§6-1)で**良いほう 1 件**だけを残す(サーバも自己ベストしか持たない)。
-  デイリーは `endpoint|gameId|seed|boardDigest` を鍵に**最初の 1 件**を残す(§6-3)。
+- **統合**: デイリーは `endpoint|gameId|seed|boardDigest` を鍵に**最初の 1 件**を残す(§6-3)。**ランキングは
+  統合しない**(2026-10-10、判断 45): 遊び終えた結果の 1 件 1 件が表の行になるので、項目は結果ごとに 1 つで、
+  鍵は `endpoint|clientId`。`clientId` はキューへ入れるときに端末が作る乱数(`^[A-Za-z0-9_-]{8,64}$`)で、
+  サーバはこれで**再送の重複を弾く**(§5-4)。2026-10-10 より前の版が残した `clientId` の無い項目は、今までどおり
+  `endpoint|gameId|paramsKey` を鍵に良いほうだけを残す。
 - **上限は約 100 件。** 統合した**あとで**だけ古いものから落とす。以前の 50 件は、すべてのゲーム × すべての
   Club を持つと良い記録を捨てうるので広げた。
 - **キューの変更はすべて直列化する**(モジュールの Promise 連鎖。ネットワーク待ちの間は握らない)。
@@ -326,12 +333,16 @@ type OutboxItem =
   失敗(5xx、形の崩れた応答)は `attempts` を数え、**5 回で捨てる**(詰まった 1 件が後続を止め続けない)。
   各 Club の送信は、**最初の再送対象の失敗で止める**。
 - 同じセッションでオーバーレイが描き直されても同じ結果を二度送らない(ブリッジのクロージャに指紋を持つ。
-  メモリだけで、保存しない)。
-- **自分の記録の削除は、その記録を作り直すキューの要素だけを捨てる**(§9 の記録ごとの削除ボタン、判断 42):
-  削除の前に、その Club 宛ての未送信のうち**消す記録を作り直すもの**だけを捨て(ランキングの行なら
-  同じ endpoint + `gameId` + `paramsKey`、デイリーの結果なら同じ endpoint + `gameId` + `seed` +
-  `boardDigest`)、同じ記録の「送った」の記憶(上の指紋)も忘れる。削除の直後にキューの結果が記録を
-  作り直さないため。ほかの記録の未送信には触れない。
+  メモリだけで、保存しない)。まだ送り終えていない結果が描き直されたときは**同じ `clientId` の同じ項目**を
+  キューへ渡す(キューはそれを 1 つに保つ)— 新しい `clientId` を作れば 2 行になるため。
+  指紋には**局の識別子 `playId`** が入る(2026-10-10。`ClubResultAction` がマウントごとに 1 つ作り、描き直しでは
+  変わらない): 同じ seed(アーケードは空)に同じ facts で終えた 2 局目も別の結果として行になり、同じ局の
+  描き直しや遅れて届いたブリッジは 1 回しか送らない。ゲーム側には何も渡させない(Core の 1 コンポーネントで閉じる)。
+- **自分の記録の削除**(§9 の記録ごとの削除ボタン、判断 42): デイリーの結果を消すときは、削除の前に、その Club
+  宛ての未送信のうち同じ挑戦(同じ endpoint + `gameId` + `seed` + `boardDigest`)のものを捨てる — 削除の直後に
+  キューの結果が記録を作り直さないため。ほかの記録の未送信には触れない。**ランキングの行を消すときは何も
+  捨てない**(2026-10-10): 未送信は別の局の結果で、消した行とは別の行になる。「送った」の記憶(上の指紋)も
+  忘れない — 忘れると、描き直された結果画面が同じ結果をもう 1 行送ってしまう。
 
 ゲームの保存とは混ぜない(#161「Shared 専用の小さな local queue」)。送るのは §10 の契機のときだけで、
 タイマーもバックグラウンドも無い。**起動時には送らない。** バックアップに入れない・削除で消える、は
@@ -451,9 +462,9 @@ interface Hosting {
 | `GET /challenges/:id/results`      | member | **ゲームの軸で上位 N 件**(§6-1 の `order`。完了が先、同値は到着順)。要求した本人の行は常に含める(§15-2)。応答の形は変わらない                                                                                                                                                                                                                                                   |
 | `POST /challenges/:id/results`     | member | 自分の Result を 1 回だけ                                                                                                                                                                                                                                                                                          |
 | `GET /records`                     | member | `{ gameId, paramsKey, facts, memberId, nickname, challengeId }[]`。導出値。サーバは結果が届いたときに更新した行を読むだけで、一覧のたびに導出しない(§15-3)                                                                                                                                                         |
-| `POST /rankings/results`           | member | `{ gameId, contractVersion, paramsKey, params, seed, boardDigest, outcome, facts }` → その結果を**ゲーム × モードのランキング**へ(§16)。自己ベストなら差し替え、そうでなければ何も変えない。`{ gameId, paramsKey, improved, entry, entryCount }`。サーバが知らないゲーム / 軸の無い facts は `400 invalid_request` |
-| `GET /rankings`                    | member | 表の一覧 `{ gameId, paramsKey, entryCount, leader: Entry }[]`(ゲーム・モード順)。`GET /records` はこの `leader` を旧い形で返すだけになった(2026-10-02)                                                                                                                                                             |
-| `GET /rankings/:gameId/:paramsKey` | member | 1 つの表 `{ gameId, paramsKey, entryCount, entries: Entry[], me }`。`?top=` で上位 N(既定 50、最大 100)。`me` は自分の順位と行(表に無ければ null。順位は数える上限より下なら null)                                                                                                                                 |
+| `POST /rankings/results`           | member | `{ gameId, contractVersion, paramsKey, params, seed, boardDigest, outcome, facts }` → その結果を**ゲーム × モードのランキング**へ(§16)。`completed` は**必ず 1 行として入り** `201`(2026-10-10。`played` は何も変えず `200`)。`{ gameId, paramsKey, improved, entry, entryCount }` — `improved` はこの行がその表での自分の最良か、`entry` は入った行。1 人が 1 つの表に持てる行は `rankingRowsPerMember`(50)まで(§16-1)。任意の `clientId`(結果ごとの乱数。同じメンバーの同じ `clientId` は 2 回目以降挿入せず最初の行を `200` で返す。§16-1)サーバが知らないゲーム / 軸の無い facts は `400 invalid_request` |
+| `GET /rankings`                    | member | 表の一覧 `{ gameId, paramsKey, entryCount, leader: Entry }[]`(サーバは `gameId` / `paramsKey` の文字列順で返し、表示順はクライアントが決める。§16-2)。`entryCount` は結果の行数(2026-10-10)。`GET /records` はこの `leader` を旧い形で返すだけになった(2026-10-02)                                                                                                                                                             |
+| `GET /rankings/:gameId/:paramsKey` | member | 1 つの表 `{ gameId, paramsKey, entryCount, entries: Entry[], me }`。`?top=` で上位 N(既定 50、最大 100)。`me` は `{ rank, entry, nextValue }` — 自分の**最良の**行とその順位(表に無ければ null。順位は数える上限より下なら null)と、それより厳密に良い最も近い値 `nextValue`(無ければ null。2026-10-10)                                                                                                                                 |
 | `GET /club`(改定)                  | member | `{ club, me, memberCount, members }`。`members` は新しい順に最大 `membersPage`(50)件。Public の 1 万人を毎回は読まない(§17-2)                                                                                                                                                                                      |
 | `PATCH /members/:id`               | owner  | `{ nickname }` — 表示名を変える(通報への対処)。Result とランキングの行の名前も変わる(§17-3)                                                                                                                                                                                                                        |
 | `DELETE /members/:id?purge=1`      | owner  | 外すと同時に、その人の Result とランキングの行を消す(`purge` 無しは今までどおり名前つきで残す)(§17-3)                                                                                                                                                                                                              |
@@ -467,7 +478,9 @@ interface Hosting {
 | `DELETE /members/:id`              | owner  | member を外す(Owner も外せる)。その token は即 401。Result は残る(nickname 付き)。最後の Owner は外せない(`409 last_owner`)                                                                                                                                                                                        |
 | `PATCH /club`                      | owner  | `{ name }`                                                                                                                                                                                                                                                                                                         |
 | `PATCH /me`                        | member | `{ nickname }` — **自分の**表示名を変える(§5-4。Owner も使える)。Result とランキングの行の名前も変わる。**通報は消えない**(§17-3)                                                                                                                                                                                  |
-| `DELETE /rankings/:gameId/:paramsKey/me` | member | **自分の**ランキングの行を 1 つ消す(§5-4。Owner も使える)。行が無ければ `404`。`204` |
+| `DELETE /rankings/:gameId/:paramsKey/me` | member | **互換**(2026-10-10): その表の**自分の全部の行**を消す(v1.4.0 のクライアントの「自分の記録を消す」)。新しいクライアントは `entries/:id` を使う。行が無ければ `404`。`204` |
+| `DELETE /rankings/:gameId/:paramsKey/entries/:id` | member | **自分の**結果を **1 件**消す(§5-4。Owner も使える。2026-10-10)。自分の行でなければ / 無ければ `404`。`204` |
+| `GET /rankings/mine` | member | 自分が入っている表だけ `[{ gameId, paramsKey, entryCount, leader, best: { rank, entry, nextValue } }]`(§5-4、§16-1。2026-10-10)。無いサーバは `404` |
 | `DELETE /challenges/:id/results/me` | member | **自分の** Result を 1 つ消し、**その挑戦への以後の送信を断る**(`409 already_submitted`。§5-4)。Result が無ければ `404`。`204` |
 
 ### 5-4. 主な request / response
@@ -540,11 +553,25 @@ interface Hosting {
 `nickname` も変わる**(持ち主の `PATCH /members/:id` と同じ)が、**自分で変えたときは通報を消さない**
 (消せば、通報された人が名前を変えるだけで数を戻せる。持ち主が変えたときは消える。§17-3)。
 
-`DELETE /rankings/:gameId/:paramsKey/me`(自分のランキングの行を 1 つ消す。Owner も使える)
+`DELETE /rankings/:gameId/:paramsKey/entries/:id`(自分の結果を 1 件消す。Owner も使える。2026-10-10)
 
-本文なし → `204`。**その表の自分の行だけ**を消し、表の件数と 1 位も直す(表が空になったら集計行も消す)。
-**メンバーのまま Club に残り、token も生きている**。**以後の局はまたその表へ入る**(普通の自己ベストの
-差し替え。§16-1)。その表に自分の行が無ければ `404 not_found`。ほかの表・Result・通報には触れない。
+本文なし → `204`。**その行だけ**を消し、表の件数と 1 位も直す(表が空になったら集計行も消す)。ほかの自分の行は
+残る。**メンバーのまま Club に残り、token も生きている**。**以後の局はまたその表へ入る**(§16-1)。その行が
+無いか自分のものでなければ `404 not_found`。ほかの表・Result・通報には触れない。
+
+`DELETE /rankings/:gameId/:paramsKey/me`(互換。その表の自分の全部の行を消す)
+
+本文なし → `204`。v1.4.0 のクライアントの「自分の記録を消す」がこれを押す — 1 人 1 行だった頃の意味
+(その表の自分の記録が消える)を、行が複数になっても保つ。新しいクライアントは使わない。行が無ければ
+`404 not_found`。
+
+`GET /rankings/mine`(自分が入っている表だけ。2026-10-10)
+
+→ `200` with `[{ gameId, paramsKey, entryCount, leader: Entry, best: { rank, entry, nextValue } }]`。`best` は
+その表での自分の最良の行(`GET /rankings/:gameId/:paramsKey` の `me` と同じ形)。`rank` を数える上限は
+`rankingMineScan`(50)で、それより下は `null`。読みは自分の行の索引 1 回と、表ごとに 1 位 1 行・順位の数え・
+1 つ上 1 行で、Club の人数にも表の人数にも比例しない(§16-1)。`X-Club-Api: 1` のまま足した任意の
+ルートで、無いサーバは `404` → クライアントは節を出さない。
 
 `DELETE /challenges/:id/results/me`(デイリーの自分の Result を 1 つ消す。Owner も使える)
 
@@ -571,7 +598,8 @@ Result 以外の集計(通算・ポイント・回数の順位)を持たない**
 
 ### 5-5. 送らないもの(再掲、機械で見るもの)
 
-Result の body に入るのは `contractVersion` / `boardDigest` / `outcome` / `facts` だけ。
+Result の body に入るのは `contractVersion` / `boardDigest` / `outcome` / `facts` だけ。ランキングの本文の
+`clientId`(2026-10-10)は結果 1 件を識別する乱数で、端末・人・時刻を表さない。
 `facts` の各ゲームの型は §6-1 が閉じており、**結果画面が表示する事実以外の
 フィールドを持たない**(アプリ版、端末名、OS、locale、統計、自己ベスト、進行、
 時刻以外のメタデータは無い)。クライアント側の `api/types.ts` の型と、それを固定する
@@ -1070,11 +1098,15 @@ claim the Club again.`(§8-3)。確認すれば切断できる — 端末を手�
 ```text
 Suzuki Family                                  [Invite] [Settings]
 
+Your rankings                                  ← 自分が入っている表だけ(§16-1 `GET /rankings/mine`)。無ければ節ごと出ない
+  [▦] Sudoku · Hard      #3 · 24 entries  4:31   0:33 to the next rank
 Today                                          ← その日のデイリー(§6-3、21 本)。無い日は節ごと出ない
   Sudoku · Hard · Daily                        12 played
-Rankings                                       ← ゲーム × モードの表(§16)。1 位の名前と記録
-  Sudoku · Hard          1. Ken 3:58           24 entries
-  2048                   1. Mika 18,432        9 entries
+Rankings                                       ← ゲーム単位の棚(§16。2026-10-10)。ホームと同じカテゴリ見出しとタイル
+  Logic
+  [▦ Sudoku] [▦ Crown Grid]                    ← 押すとそのゲームの表(全モード、§16-2)
+  Cards
+  [♠ Solitaire] [♠ FreeCell]
 Members
 Hosting                                        ← Owner だけ
 ```
@@ -1084,12 +1116,18 @@ Hosting                                        ← Owner だけ
 
 - **Today** はその日(端末のローカル日付)の `daily` の印が付いた挑戦(`GET /challenges?daily=`、
   §6-3)。順位は Challenge の中にある。
-- **Rankings** は `GET /rankings` の表の一覧。1 行 = 1 表(ゲーム · モード、1 位の名前と記録、
-  行数)。開くと §16-2 の画面。
+- **Your rankings**(`clubMyRankings`。2026-10-10、判断 47)は `GET /rankings/mine`: 自分が入っている表だけ、
+  1 行 = 1 表(タイル・ゲーム · モード・`{m} 位 · {n} 件`・自分の最良の値・`1 つ上まで {gap}`)。並びは Rankings の
+  棚と同じで固定(順位順・最近順にしない)。1 件も無ければ節ごと出ない。「N 表に参加」の数は出さない。押すと
+  その表の画面(そのモードを選んだ状態)。古いサーバ(`404`)では節が出ないだけ。
+- **Rankings** は `GET /rankings` の一覧を**ゲーム単位にたたんだ棚**(2026-10-10、判断 46): ホームと同じ
+  `GAME_CATEGORIES` の見出しの下に、表が実在するゲームのタイル(`game-cell`。タイル + 題だけで、1 位の名前や
+  件数は載せない)。棚の中は registry の順。空のカテゴリは出さない。この端末で遊べないゲーム(アプリでの
+  web-beta)は出さない。押すと §16-2 の画面(そのゲームの全モード)。
 - 一覧は開いたときと明示の再読み込みで取る(§10)。件数・未読・「新着」を Core へ
-  持ち出さない。
-- Members: nickname と参加日。Owner には各行に `Remove`。プロフィール・アバター・
-  通算は無い。
+  持ち出さない。表やデイリーを見て戻ったときは読み直さない(`ClubRoot` が最後の一覧を保つ。2026-10-10)。
+- Members: nickname と参加日。Owner には各行に `Rename` / `Remove`。ほかの人の行にボタンは無く、**名前を
+  押すとシート**(§17-3)。プロフィール・アバター・通算は無い。
 - 記録(ゲーム・モードの 1 位)は `Rankings` の各行に居る。別の節は持たない。
 - **自動送信を受け入れていない接続**(自動送信より前に参加した端末。§4-1)では、画面の一番上に
   小さな箱が 1 つ出る: 参加の画面と同じ開示(`clubAutoSendDisclosure`)と、ボタン 1 つ
@@ -1123,8 +1161,8 @@ Results
   そのゲームのデイリーを遊んで終えると、結果画面の `ClubResultAction` が結果を自動で送る
   (ホームから開いたデイリーも同じ。§2-2、§6-3)。開く前の 1 行は `Open Sudoku and play today's Daily. When
 you finish, your result is sent to Suzuki Family.`。ゲームへ挑戦の盤面は渡さない(§6-2、§16-3)。
-- Results は §6-1 の `order` で並び、**順位の数字が付く**(2026-09-30)。メダル・称号・
-  挑戦をまたいだ差分は無い。自分の行は `You` で示す。
+- Results は §6-1 の `order` で並び、**順位の数字が付く**(2026-09-30)。1〜3 位の行には表と同じ印
+  (§16-2。2026-10-10)。称号・挑戦をまたいだ差分は無い。自分の行は `You` で示す。
 - 自分が遊んだ後にだけ他の人の結果を見せる、という隠し方は**しない**(隠すのは
   「遊ばせるための仕掛け」であり、Solo by default に反する)。見たい人は見る。
 - **自分の行にだけ削除ボタン**(`clubDeleteRecord`、`Delete my record`。アクセシブルな名前。2026-10-02、判断 42):
@@ -1132,7 +1170,7 @@ you finish, your result is sent to Suzuki Family.`。ゲームへ挑戦の盤面
   確認ボタンは `clubDeleteConfirm`)。本文が言うのは「この挑戦から自分の結果が消える / この挑戦へはもう
   結果を送れない / 元に戻せない」。確認したら、この端末の同じ挑戦(同じ endpoint + `gameId` + `seed` +
   `boardDigest`)の未送信を捨て、`DELETE /challenges/:id/results/me`(§5-4)→ この画面を読み直す。
-  **ほかの人の行にボタンは無い**。Owner のメンバー削除(§17-3)は別。
+  **ほかの人の行にボタンは無い** — 名前を押すとシート(§17-3。2026-10-10)。Owner のメンバー削除(§17-3)は別。
 - 自分の結果がある Challenge の `Play` は `Play again`(ローカルで同じ盤面を遊べる。2 度目の
   結果は送っても先のものが残り、画面は何も言わない。§6-3「1 人 1 回」)。
 
@@ -1283,6 +1321,11 @@ Push は後続でも作らない(PRODUCT_PRINCIPLES「Club House」)。**公開�
   `clubErased` は作らない。判断 42。)
   `Change your name`(欄・ボタン・エラー)と、`departed` の入り直しの文言は高リスクキーにしない
   (取り消せる操作で、お金・同意・公開の約束ではない)。
+  2026-10-10(判断 45・51)に**行ごとの削除の確認**を高リスクキーとして足す: `clubDeleteEntryTitle` /
+  `clubDeleteEntryBody`(「この結果だけが消える・ほかの結果は残る・元に戻せない」。**2 文目を落とした訳は、
+  全部消えると思わせる**)。`clubDeleteRankingTitle` / `clubDeleteRankingBody`(1 人 1 行の文言)は削除する。
+  普通のキーとして `clubMyRankings`(あなたの順位)・`clubToNext`(`{gap}`。1 つ上まで)・`clubRowsNote`
+  (結果ごとに 1 行)を足す。`clubReport` 系は **ja の値だけ**「報告」に変える(en は 12 言語の原文なので触らない)。
   英語の原文を変えた高リスクキーは、`gateRecord.json` の承認が古くなるので**門を通し直す**
   (盲検の逆翻訳と著者の読み。[../RELEASE_CHECKLIST.md](../RELEASE_CHECKLIST.md) §3)。
   どれも誤訳が「お金の約束の反故」か「同意していない送信・公開」になる。機械翻訳で配らない
@@ -1526,6 +1569,32 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
     置かない**(PRODUCT_PRINCIPLES が採らない)。コードは残し、次の版で戻す(§7-3)。
     判断 42〜44 はすべて **v1.4.0 に入る**。
 
+**2026-10-10 の判断**(製品オーナー確認。段取りは
+[../plans/2026-10-10-club-ranking-rows.md](../plans/2026-10-10-club-ranking-rows.md)):
+
+45. **順位表は結果ごとに 1 行。** 「各メンバーの自己ベスト 1 行」を撤回し、遊び終えた結果の 1 件 1 件が表に入る
+    (同じ人が何度も並ぶ)。履歴の別画面は作らない。1 人が 1 つの表に持てる行は `rankingRowsPerMember`(50)
+    までで、超えたらその人の最も悪い行から落ちる(リードの設計注記: 保存量と荒らしの上限。到着順で落とさない
+    のは、上位に居る行を残すため)。デイリーは 1 人 1 結果のまま(§6-3)。LP の上位 3 行は同じ人が占めてよい
+    (人で重複を除く表示は作らない — 2 つ目の順位の定義を持たない)。退けた案: 自己ベスト 1 行 + 本人だけの
+    履歴 / 別節「最近の結果」。
+46. **Club 画面のランキングはゲーム単位の棚。** ホームと同じカテゴリ見出しとタイル。表の画面でモードをチップで
+    切り替える。モードは難易度順(クライアントで並べる)。表やデイリーから戻ったときは読み直さない。
+47. **「あなたの順位」の節。** Club 画面の先頭に、自分が入っている表だけ(順位・件数・自分の値・1 つ上との差)。
+    `GET /rankings/mine`。並びは棚と同じで固定。
+48. **1〜3 位の印と、1 つ上との差を出す。** 「このぐらいなら原則に触れない」(製品オーナー)。印はその表の中の
+    色分け・メダルで、持ち越す称号ではない。差は自分の最良の行にだけ、期限・通知・後ろとの差は無い。
+    PRODUCT_PRINCIPLES「順位表」に同日追記。
+49. **通報は行から消し、名前のシートの中に 1 つ。** 他人の行には何も置かない。日本語は「通報」→「報告」。
+    持ち主の端末には出さない。完全に外す案は、PRODUCT_PRINCIPLES「通報と削除の手段を持つ」とストア規約
+    (Apple 1.2「報告の仕組み」、Google Play UGC「アプリ内の報告システム」)と、1.4.0 の App Review メモ
+    (Report を UGC の対応として書いた)に反するので退けた。
+50. **Web 版のアンカー広告は Club 画面でもそのまま。** 「順位や結果の行に広告を混ぜない」は行の中の話で、Web 版の
+    シェルの広告枠(ADS_POLICY「Web 版」)には及ばない。**ブロック機能は今は作らない**(Google Play は公開 UGC に
+    ブロックも求めるが、1.4.0 は通った。審査で名指しされたときの予備案は下の未決)。
+51. **自分の記録の削除は結果 1 件ずつ**(`DELETE /rankings/:gameId/:paramsKey/entries/:id`)。互換の
+    `DELETE …/me` はその表の自分の全部の行を消す(v1.4.0 のクライアントのため)。
+
 同日に、判断 42〜44 の実装についてリードが決めた設計上の注記(オーナー確認ではなく、実装の都合で決めた
 こと。変えるときはこの文書を直す):
 
@@ -1564,6 +1633,9 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
 - **未決 — デイリーの確定を参加の画面で言うか**: 参加している間は最初に完了したデイリーの結果が確定する
   (上)。参加の画面の `clubAutoSendDisclosure` はそれを言わない。言うなら新しい(または広げた)高リスクの
   文言で、オーナーの文言確認と 14 言語の門が要る。決まるまでは「言っていない」が現状(§6-3、§7-4)。
+- **未決 — ブロック**(Apple 1.2「abusive users をブロックする手段」、Google Play UGC): 今は無い(判断 50)。
+  審査で求められたら、端末内だけで「この名前を隠す」(サーバに送らず、`club` の保存キーが 1 つ増える)を予備案と
+  する。
 - **既知の制限 — 結果カードの 0.9 秒**: `useResultReveal` の「間」の間に盤面を離れると何も送られない
   (§10)。塞ぐにはゲームごとの変更が要り、v1.4.0 には入れない。
 - **Cloudflare のプラットフォームエラーは非最終**: `X-Club-Api` の無い応答(無料枠の使い切りなど)は
@@ -1664,7 +1736,8 @@ endpoint 1 つ**だけ。Public にあって Private に無いエンドポイン
 §14 判断 28〜31。「同じ盤面でだけ比べる」はデイリー(§6-3、`Today`)に限り、それ以外の局は
 **ゲーム × モードの表**に各メンバーの自己ベスト 1 行として入る。Public も Private も同じ。
 **表は、遊び終えた結果が自動で送られて育つ**(§2-2。2026-10-02 まではボタンを押した結果だけだった)。
-表に並ぶのは各人の自己ベストで、盤面は人ごとに違う — 運も含めて比べる(判断 28)。Minesweeper と
+表に並ぶのは**遊び終えた結果の 1 件 1 件**(2026-10-10、判断 45。それまでは各人の自己ベスト 1 行)で、
+盤面は人ごとに違う — 運も含めて比べる(判断 28)。Minesweeper と
 Number Recall のデイリーもここに入る(リードの設計注記。§14 末尾)。
 
 ### 16-1. 契約
@@ -1677,48 +1750,75 @@ Number Recall のデイリーもここに入る(リードの設計注記。§14 
   入らない。サーバは `played` を受けても何も変えずに現状の行を返すが、2026-10-02 からクライアントは
   `played` を**そもそも送らない**(§6-3)。
 - `POST /rankings/results` の本文は `POST /challenges` と同じ形(§5-4)から `title` と
-  `daily` を除いたもの。`boardDigest` は §6-4 を持つゲームだけ(無ければ null)。`seed` は
+  `daily` を除いたもの。加えて任意の **`clientId`**(2026-10-10。`^[A-Za-z0-9_-]{8,64}$`。端末がキューへ入れる
+  ときに作る乱数で、人や端末を識別しない。§4-2)。サーバは同じメンバーの同じ `clientId` を 2 回目以降は
+  **挿入せず**、最初の行を `200` で返す(`improved: false`)— 応答が失われて再送されても行が重複しないため。
+  無ければ(v1.4.0 のクライアント)重複は防げない。`boardDigest` は §6-4 を持つゲームだけ(無ければ null)。`seed` は
   **空でもよい**(アーケードは盤面を名乗らない)。応答は `{ gameId, paramsKey, improved, entry,
-entryCount }` — `improved` は自己ベストを更新したか。順位は返さない(結果画面は数字を
+entryCount }` — `entry` は入った行、`improved` はこの行がその表での自分の最良か。上限(下)で今入れた行自身が
+  落ちたときだけ `entry: null`・`improved: false` で、件数は変わらない。順位は返さない(結果画面は数字を
   **出さない**、§2-2)。
 - サーバは `src/contracts/games.ts` に 35 本の `{ order, direction }` を持ち、ここでだけ
   `facts` を読む(§5-4)。知らないゲーム、形の悪い `paramsKey`、軸の無い `completed` の
   facts は `400`。軸の名前は群ごとに固定: 時間は `elapsedSeconds`、手数は `moves`、
   Hit and Blow は `attempts`、スコアは `score`。
-- 保存: `ranking_entries(game_id, params_key, member_id)` が主キーで 1 人 1 行。差し替えは
-  `direction` で厳密に良いときだけ。`rank` は「自分より良い行 + 同値で先の行」の数 + 1。
-  表の読みは上位 N 行 + 自分の 1 行 + 順位を数える走査(上限 `rankingRankScan`、既定 1,000 行。
-  それより下なら `rank: null`)で、Club の大きさに比例しない(§15-3 と同じ考え)。表の一覧
-  (`GET /rankings`)は書き込み時に維持する集計行(件数と 1 位)を読むだけ。
+- 保存(2026-10-10、schema v6): `ranking_entries` は **1 結果 1 行**で、主キーは到着順の `seq`(`Entry.id`)。
+  `completed` は必ず入る。**1 人が 1 つの表に持てる行は `rankingRowsPerMember`(50)まで**で、超えた分はその人の
+  最も悪い行から落とす(保存量と荒らしの上限。挿入のたびに自分の行数を member 索引で数える — 普段は上限 + 1 行。
+  上限を下げたあとの最初の書き込みでは超えた分をまとめて落とし、設定した上限が次の書き込みから保たれる)。`rank` は
+  「自分の最良より良い行 + 同値で先の行」の数 + 1(範囲検索 2 本。OR では索引の範囲が効かず全走査になる)。
+  表の読みは上位 N 行 + 自分の最良の 1 行 + 順位を数える走査(上限 `rankingRankScan`、既定 1,000 行。
+  それより下なら `rank: null`)+ 1 つ上の値 1 行で、Club の大きさに比例しない(§15-3 と同じ考え)。表の一覧
+  (`GET /rankings`)は書き込み時に維持する集計行(結果の件数 `entry_count` と 1 位の行 `leader_seq`)を
+  読むだけ。`GET /rankings/mine` は自分の行の索引 `(member_id, game_id, params_key, value)` から表ごとの最良を
+  取り、表ごとに 1 位・順位(上限 `rankingMineScan`、50)・1 つ上を読む。
   `GET /records` は各表の 1 位を旧い形で返すだけ(PR C の `records` テーブルは v3 で捨てる)。
-- **自分の行は消せる**(2026-10-02、判断 42): `DELETE /rankings/:gameId/:paramsKey/me`(§5-4)が自分の
-  行を消し、件数と 1 位を直す(表が空なら集計行も消す)。消したあとの局は、普通の初回としてまた表へ入る
-  (取り下げた印は作らない)。
+- **自分の結果は 1 件ずつ消せる**(2026-10-02 判断 42、2026-10-10 判断 51): `DELETE /rankings/:gameId/:paramsKey/entries/:id`
+  (§5-4)がその行を消し、件数と 1 位を直す(表が空なら集計行も消す)。ほかの自分の行は残り、消したあとの局も
+  また表へ入る(取り下げた印は作らない)。互換の `DELETE …/me` はその表の自分の全部の行を消す。
 
 ### 16-2. 画面
 
 ```text
-Sudoku · Hard                                   ← 表の画面(club/ui/RankingScreen)
-Rankings
-  1  Ken     3:58   Mistakes 0  Hints 1
-  2  You     4:31   Mistakes 2  Hints 0        ← 自分の行は You
-  3  Mika    5:05   …
+← [▦] Sudoku                                    ← 表の画面(club/ui/RankingScreen)。ゲーム単位
+[Easy] [Medium] [Hard]                          ← モードのチップ。一覧に在るモードだけ、難易度順
+#3 · 24 entries · 4:31 · 0:33 to the next rank  ← 自分の最良の行(あるときだけ)
+  ①  Ken     3:58   Mistakes 0  Hints 1        ← ①②③ は金・銀・銅の印
+  ②  Ken     4:10   Mistakes 1  Hints 0        ← 同じ人が何度も並ぶ
+  ③  You     4:31   Mistakes 2  Hints 0  [Delete]  ← 自分の行は You。削除は行ごと
+  4  Mika    5:05   …
   …(上位 50)
   —
-  87 You     …                                  ← 50 位より下なら、自分の行を末尾に
-24 entries
+  87 You     …                                  ← 自分の最良が 50 位より下なら末尾に
+24 entries · One row per result
 ```
 
-- Club の画面(§9)の `Rankings` が一覧、1 行を開くとこの画面。`Reload` 以外に通信は無い(§10)。
+- Club の画面(§9)の棚のタイルを開くとこの画面(そのゲームの全モード。2026-10-10)。モードは画面上部の
+  チップ(`role="tablist"`)で切り替え、押すたびに `GET /rankings/:gameId/:paramsKey` を 1 回(本人の操作の
+  直後だけ。`ClubRoot` の stack は最上段を置き換え、戻るは常に一覧へ)。既定は自分の行がある最初のモード、
+  無ければ先頭。チップに並ぶのは一覧に在るモードだけ(誰も入っていない表は存在しない)。1 表のゲームは
+  チップ無し。`Reload` 以外に通信は無い(§10)。
 - 表の題は `Sudoku · Hard` の形で、モード語は `modeLabel` が読む(§6-1「タイトルのモード語」)。
   `paramsKey` を素のまま見せない(`Hearts · normal` や `Mahjong Solitaire · turtle` は出ない)。
+  モードの並びは `modeOrder`(`club/ui/common.tsx`。2026-10-10): easy < medium = normal < hard、N×N は N の
+  昇順、Mahjong は `levelRange` の下限、Solitaire は draw-1 < draw-3、Spider は 1 < 2 < 4 suits、Schulte は大きさ →
+  ascending < descending < odd-then-even、Dots and Boxes は small < medium < large、Quick Math は addsub <
+  multiply < divide < missing < mixed、知らないキーは最後に文字順。サーバの `gameId` / `paramsKey` の文字列順は
+  そのままで、並べるのはクライアント(`titles.test.ts` が全キーの順序を固定)。
 - 数字は結果画面の `facts` を `club/ui/common.tsx` の `axisText` / `factsLine` で描く(§11)。
-- 行数(`entryCount`)は表の中に出す。Core の画面には出ない(§2-2「数字を出さない」)。
-- **自分の行にだけ削除ボタン**(`clubDeleteRecord`、`Delete my record`。上位の行にも、末尾に足した自分の行にも。
-  2026-10-02、判断 42): 押すと確認(ConfirmDialog、danger。`clubDeleteRankingTitle` /
-  `clubDeleteRankingBody` / `clubDeleteConfirm`。「この表の自分の記録が消える・次に終えた局はまた入る・
-  元に戻せない」)。確認したら、この端末の同じ表(同じ endpoint + `gameId` + `paramsKey`)の未送信を捨て、
-  `DELETE /rankings/:gameId/:paramsKey/me` → この画面を読み直す。ほかの人の行にボタンは無い。
+- 件数(`entryCount`。結果の行数)は自分の 1 行と末尾に出す。Core の画面には出ない(§2-2「数字を出さない」)。
+- **1〜3 位の行の印**(2026-10-10、判断 48): 順位の数字を金・銀・銅の丸地に置く(CSS のトークン。絵文字・画像は
+  使わない)。その表の中の印であって、持ち越す称号ではない。
+- **自分の最良の行の 1 行**(表の先頭。2026-10-10、判断 48): `{m} 位 · {n} 件 · 値 · 1 つ上まで {gap}`。`gap` は
+  `me.nextValue` との差(時間は `formatDuration`、ほかは `{label} {n}`)。1 位(`nextValue: null`)なら差は出ない。
+  `rank: null` なら番号を出さず値だけ。
+- **自分の行にだけ削除ボタン**(2026-10-02 判断 42、2026-10-10 判断 51。自分の行は何本あってもそれぞれに。
+  上位の行にも、末尾に足した自分の行にも。表示語は既存の `clubDeleteConfirm`(「削除」)、アクセシブルな名前は
+  `clubDeleteRecord`。静かな文字ボタンで危険色ではない): 押すと確認(ConfirmDialog、danger。
+  `clubDeleteEntryTitle` / `clubDeleteEntryBody` / `clubDeleteConfirm`。「この結果だけが消える・ほかの結果は残る・
+  元に戻せない」)。確認したら `DELETE /rankings/:gameId/:paramsKey/entries/:id` → この画面を読み直す(この端末の
+  未送信は捨てない — 未送信は別の局の結果で、消した行とは別の行になる)。ほかの人の行にボタンは無く、**名前を
+  押すとシート**(§17-3)。
 
 ### 16-3. 3 本の club モードの撤去と `Today` の `Play`
 
@@ -1764,9 +1864,15 @@ spike には「挑戦から開いた局はチュートリアルの後にその�
 
 ### 17-3. 通報と持ち主の対処
 
-- メンバーは、他のメンバーの行(Members、ランキングの表)から `Report` → 確認 → `POST
+- メンバーは、他のメンバーの**名前を押して開くシート**(Members・ランキングの表・デイリーの結果。2026-10-10、
+  判断 49。それまでは各行に `Report` ボタンがあった)から `Report` → 確認 → `POST
 /members/:id/report`。1 人 1 回(2 回目は `204` で何も変えない)。本文は無い — 名前そのものが
-  通報の対象で、自由入力をもう 1 つ作らない。
+  通報の対象で、自由入力をもう 1 つ作らない。シートに載せるのは名前・その行の記録(表の行なら事実、メンバー行
+  なら参加日)・ボタン 1 つだけ(ほかの表の記録・回数は載せない — 公開プロフィールに寄せない)。終わると画面上部に
+  `role="status"` の 1 行(`clubReported`)。行の印は変えない。**持ち主の端末では名前を押しても開かない**
+  (自分への報告は意味が無く、持ち主の対処は下の 2 つ)。自分の名前も開かない。日本語の語は「報告」(`clubReport`
+  系の ja だけ。en と 12 言語は不変)。ストア規約(Apple 1.2、Google Play UGC。2026-10-10 に原文確認)は「報告の
+  仕組みがアプリ内に在る」ことを求め、行ごとのボタンも置き場所も指定しない。
 - 持ち主は `GET /members/reported` で通報の多い順に見る(Club の画面の Members の上に `Reported`)。
   対処は 2 つ: `PATCH /members/:id { nickname }` で名前を変える(Result とランキングの行の名前も
   変わる。本人の端末は次に Club を開いたとき `me.nickname` から新しい名前を知る)、
@@ -1804,11 +1910,13 @@ rankings: [{ gameId, paramsKey, entryCount, leader: { nickname, facts } }] }`。
   **2026-10-02 の改定(判断 41)**: `rankings` は**最大 8 表**(件数の多い順、同数なら `gameId` / `paramsKey`)で、
   各表に `entryCount` と `top: [{ nickname, facts }]`(その表の軸で上位 3 人、同値は到着順)を持つ。
   `leader` は互換のため残す。読みは境界つきで(全走査しない)、5 分キャッシュはそのまま。
+  **2026-10-10(判断 45)**: 表が結果ごとに 1 行になったので、`top` の 3 行を同じ人が占めることがある。人で
+  重複を除かない(2 つ目の順位の定義を持たない)。`entryCount` は結果の行数。
 - Worker は `caches.default` で 5 分キャッシュし(`Cache-Control: public, max-age=300`)、Node は
   ヘッダだけ。CORS は `CLUB_CORS_ORIGINS`(pixapps.ai)。
 - pixapps.ai の Simple Games ページは、この JSON を取り、今日のデイリーの上位 3 人(名前と記録)と、
   **各ランキング表の上位 3 人**(最大 8 表。ゲーム名 + モード + 行)と、メンバー数を小さな 1 節に出す。
   `top` が無い応答は `[leader]` で描く。取れなければ節ごと出さない。Club House の UI は複製しない。
-  文面は、ランキングが**自己ベストの並び(盤面は人ごとに違う)**であり、デイリーだけが全員同じ盤面で
+  文面は、ランキングが**遊び終えた結果の並び(2026-10-10 から結果ごとに 1 行。盤面は人ごとに違う)**であり、デイリーだけが全員同じ盤面で
   あることを正しく言う(「同じ盤面」を一般の約束として書かない)。
 - プライバシーページに Club House の節(何を、どこへ、誰の管理下で、消し方)を足す(§13-6)。

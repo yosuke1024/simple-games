@@ -97,8 +97,14 @@ export interface ChallengeCreate {
   result: { outcome: 'completed' | 'played'; facts: Record<string, unknown> };
 }
 
-/** One member's best result in a game × mode table (club.md §5-3, §16). */
+/**
+ * One result in a game × mode table (club.md §5-3, §16): since 2026-10-10 every
+ * finished game is a row of its own, so one member can have many. `id` is the
+ * row's identity (the server's arrival counter); null from a server that
+ * predates it, which then also cannot delete a row by id.
+ */
 export interface RankingEntry {
+  id: string | null;
   memberId: string;
   nickname: string;
   submittedAt: string;
@@ -113,14 +119,32 @@ export interface RankingSummary {
   entryCount: number;
   leader: RankingEntry;
 }
-/** `GET /rankings/:gameId/:paramsKey`: the top rows and the caller's own row. */
+/**
+ * The caller's standing in one table (club.md §16-1): their best row, its rank
+ * (null when the server stopped counting below its scan ceiling), and the
+ * nearest strictly better value on the table's axis (null at the top, and from
+ * a server that predates it).
+ */
+export interface RankingStanding {
+  rank: number | null;
+  entry: RankingEntry;
+  nextValue: number | null;
+}
+/** `GET /rankings/:gameId/:paramsKey`: the top rows and the caller's standing. */
 export interface RankingTable {
   gameId: string;
   paramsKey: string;
   entryCount: number;
   entries: RankingEntry[];
-  /** `rank` is null when the server stopped counting (below its scan ceiling, club.md §16-1). */
-  me: { rank: number | null; entry: RankingEntry } | null;
+  me: RankingStanding | null;
+}
+/** One row of `GET /rankings/mine`: a table the caller is in, with its leader and their standing. */
+export interface RankingMine {
+  gameId: string;
+  paramsKey: string;
+  entryCount: number;
+  leader: RankingEntry;
+  best: RankingStanding;
 }
 /** The answer to `POST /rankings/results`. */
 export interface RankingSubmitResponse {
@@ -140,6 +164,14 @@ export interface RankingSubmit {
   boardDigest: string | null;
   outcome: 'completed' | 'played';
   facts: Record<string, unknown>;
+  /**
+   * `^[A-Za-z0-9_-]{8,64}$`. A random token made when the result is queued
+   * (club.md §4-2, §16-1) so a resend after a lost answer is not a second row —
+   * the server keeps one row per (member, clientId). It names one result, not a
+   * device, a person or a time, and is made fresh per result and per Club
+   * (club.md §5-5). Absent from items an older build queued.
+   */
+  clientId?: string;
 }
 
 type Rec = Record<string, unknown>;
@@ -235,6 +267,7 @@ const count = (v: unknown): v is number => typeof v === 'number' && Number.isInt
 export function validateRankingEntry(raw: unknown): RankingEntry | null {
   if (
     !isRec(raw) ||
+    !(raw.id === undefined || raw.id === null || str(raw.id)) ||
     !str(raw.memberId) ||
     !str(raw.nickname) ||
     !str(raw.submittedAt) ||
@@ -244,6 +277,7 @@ export function validateRankingEntry(raw: unknown): RankingEntry | null {
     return null;
   }
   return {
+    id: typeof raw.id === 'string' ? raw.id : null,
     memberId: raw.memberId,
     nickname: raw.nickname,
     submittedAt: raw.submittedAt,
@@ -251,6 +285,26 @@ export function validateRankingEntry(raw: unknown): RankingEntry | null {
     seed: raw.seed,
     boardDigest: raw.boardDigest,
   };
+}
+
+/** `me` of a table, or `best` of a `GET /rankings/mine` row. */
+function validateStanding(raw: unknown): RankingStanding | null {
+  if (!isRec(raw)) return null;
+  const rank = raw.rank === null || raw.rank === undefined ? null : raw.rank;
+  if (rank !== null && (!count(rank) || rank < 1)) return null;
+  const entry = validateRankingEntry(raw.entry);
+  if (entry === null) return null;
+  const next = raw.nextValue === undefined || raw.nextValue === null ? null : raw.nextValue;
+  if (next !== null && (typeof next !== 'number' || !Number.isFinite(next))) return null;
+  return { rank: rank as number | null, entry, nextValue: next as number | null };
+}
+
+export function validateRankingMine(raw: unknown): RankingMine | null {
+  if (!isRec(raw) || !str(raw.gameId) || !str(raw.paramsKey) || !count(raw.entryCount)) return null;
+  const leader = validateRankingEntry(raw.leader);
+  const best = validateStanding(raw.best);
+  if (leader === null || best === null) return null;
+  return { gameId: raw.gameId, paramsKey: raw.paramsKey, entryCount: raw.entryCount, leader, best };
 }
 
 export function validateRankingSummary(raw: unknown): RankingSummary | null {
@@ -266,12 +320,8 @@ export function validateRankingTable(raw: unknown): RankingTable | null {
   if (entries === null) return null;
   let me: RankingTable['me'] = null;
   if (raw.me !== null && raw.me !== undefined) {
-    if (!isRec(raw.me)) return null;
-    const rank = raw.me.rank === null || raw.me.rank === undefined ? null : raw.me.rank;
-    if (rank !== null && (!count(rank) || rank < 1)) return null;
-    const entry = validateRankingEntry(raw.me.entry);
-    if (entry === null) return null;
-    me = { rank: rank as number | null, entry };
+    me = validateStanding(raw.me);
+    if (me === null) return null;
   }
   return { gameId: raw.gameId, paramsKey: raw.paramsKey, entryCount: raw.entryCount, entries, me };
 }

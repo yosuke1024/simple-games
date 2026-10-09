@@ -4,6 +4,11 @@
  * — and the hardware back button, so Core sees a single mounted thing that
  * calls `onBack` at the root. Nothing here polls; every request starts from
  * something the person did (club.md §10).
+ *
+ * A Club's step on the stack keeps the lists its screen last read, so coming
+ * back from a table or a daily shows them as they were instead of asking the
+ * server again (club.md §9, decision 46). A panel or a table's mode chip
+ * changes the top step in place: Back always goes where the person came from.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -25,19 +30,38 @@ import {
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { dropOutboxFor } from '../storage/outbox';
 import { ChallengeScreen } from './ChallengeScreen';
-import { ClubScreen, type ClubPanel } from './ClubScreen';
+import type { RankingSummary } from '../api/types';
+import { ClubScreen, type ClubData, type ClubPanel } from './ClubScreen';
 import { ScreenFrame } from './common';
 import { JoinScreen } from './JoinScreen';
 import { RankingScreen } from './RankingScreen';
 import './club.css';
 
+interface ClubStep {
+  kind: 'club';
+  endpoint: string;
+  panel: ClubPanel;
+  /** What the Club screen last read; absent until it has, and on a fresh open. */
+  data?: ClubData;
+  /** A screen above changed what the lists hold (a deleted row): read them again on return. */
+  stale?: boolean;
+}
+
 type Screen =
   | { kind: 'discover' }
   | { kind: 'all' }
   | { kind: 'join'; invite: ClubInvite | null; publicClub?: boolean }
-  | { kind: 'club'; endpoint: string; panel: ClubPanel }
+  | ClubStep
   | { kind: 'challenge'; endpoint: string; challengeId: string }
-  | { kind: 'ranking'; endpoint: string; gameId: string; paramsKey: string };
+  | {
+      kind: 'ranking';
+      endpoint: string;
+      gameId: string;
+      /** The mode on screen; null: the game's first. */
+      paramsKey: string | null;
+      /** The game's tables from the Club screen's list: its modes, known without a request. */
+      tables: RankingSummary[];
+    };
 
 /** What the first screen is, given who this device has joined (club.md §9「入口」). */
 function rootFor(connections: readonly ClubConnection[]): Screen[] {
@@ -95,16 +119,43 @@ export function ClubRoot({
 
   const top = stack[stack.length - 1];
 
+  /** The stack with its top step changed in place (a panel, a chip, the lists read): never a new step. */
+  const replaceTop = useCallback((change: (screen: Screen) => Screen) => {
+    setStack((current) => {
+      const last = current[current.length - 1];
+      if (last === undefined) return current;
+      const next = change(last);
+      return next === last ? current : [...current.slice(0, -1), next];
+    });
+  }, []);
+
+  /** The Club step under a table: its lists no longer hold (one of the viewer's rows was deleted). */
+  const markStale = (endpoint: string) => {
+    setStack((current) => {
+      for (let i = current.length - 1; i >= 0; i--) {
+        const step = current[i]!;
+        if (step.kind !== 'club' || step.endpoint !== endpoint) continue;
+        if (step.data === undefined || step.stale === true) return current;
+        const next = [...current];
+        next[i] = { ...step, stale: true };
+        return next;
+      }
+      return current;
+    });
+  };
+
   // A club's own panel (Invite / Settings) is a step back too, even at the root.
   const stepBack = useCallback(() => {
     if (top?.kind === 'club' && top.panel !== 'none') {
-      setStack((current) => [...current.slice(0, -1), { ...top, panel: 'none' as const }]);
+      replaceTop((screen) =>
+        screen.kind === 'club' ? { ...screen, panel: 'none' as const } : screen,
+      );
     } else if (stack.length <= 1) {
       onBack();
     } else {
       setStack((current) => current.slice(0, -1));
     }
-  }, [top, stack.length, onBack]);
+  }, [top, stack.length, onBack, replaceTop]);
 
   // ONE listener while mounted; it always reaches the latest stepBack.
   const backRef = useRef(stepBack);
@@ -233,13 +284,27 @@ export function ClubRoot({
           key={connection.endpoint}
           connection={connection}
           panel={top.panel}
-          onPanel={(panel) => setStack((current) => [...current.slice(0, -1), { ...top, panel }])}
+          cached={top.data}
+          refresh={top.stale === true}
+          onData={(data) =>
+            // Only lists read anew clear `stale`: the cached ones handed back on a return do not.
+            replaceTop((screen) =>
+              screen.kind === 'club' &&
+              screen.endpoint === connection.endpoint &&
+              screen.data !== data
+                ? { ...screen, data, stale: false }
+                : screen,
+            )
+          }
+          onPanel={(panel) =>
+            replaceTop((screen) => (screen.kind === 'club' ? { ...screen, panel } : screen))
+          }
           onBack={stepBack}
           onOpenChallenge={(challengeId) =>
             push({ kind: 'challenge', endpoint: connection.endpoint, challengeId })
           }
-          onOpenRanking={(gameId, paramsKey) =>
-            push({ kind: 'ranking', endpoint: connection.endpoint, gameId, paramsKey })
+          onOpenRanking={(gameId, paramsKey, tables) =>
+            push({ kind: 'ranking', endpoint: connection.endpoint, gameId, paramsKey, tables })
           }
           onDisconnect={() => disconnect(connection.endpoint)}
           onRenamedMe={(nickname) => {
@@ -285,11 +350,17 @@ export function ClubRoot({
       const connection = connectionOf(top.endpoint);
       if (!connection) return null;
       return (
+        // Keyed by the game, not the mode: a chip changes the table, and focus stays on the chip.
         <RankingScreen
-          key={`${connection.endpoint}:${top.gameId}:${top.paramsKey}`}
+          key={`${connection.endpoint}:${top.gameId}`}
           connection={connection}
           gameId={top.gameId}
           paramsKey={top.paramsKey}
+          tables={top.tables}
+          onMode={(paramsKey) =>
+            replaceTop((screen) => (screen.kind === 'ranking' ? { ...screen, paramsKey } : screen))
+          }
+          onChanged={() => markStale(connection.endpoint)}
           onBack={stepBack}
         />
       );

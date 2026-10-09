@@ -50,6 +50,10 @@ export interface ClubResultActionProps {
   daily?: string | null;
 }
 
+/** A token for one play of a game: distinct per mount, stable across renders (see ClubResultPayload.playId). */
+const newPlayId = (): string =>
+  `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+
 export function ClubResultAction({
   gameId,
   outcome,
@@ -62,6 +66,8 @@ export function ClubResultAction({
   const { t } = useSettings();
   const bridge = useContext(ClubBridgeContext);
   const [reports, setReports] = useState<readonly ClubSendReport[] | null>(null);
+  // One per mount: the same play however often this renders, a new one for the next game.
+  const [playId] = useState(newPlayId);
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -81,11 +87,20 @@ export function ClubResultAction({
     sent.current = true;
     if (outcome !== 'completed') return;
     void bridge
-      .sendResult({ gameId, outcome, facts, seed, params, boardDigest, daily: daily ?? null })
+      .sendResult({
+        gameId,
+        outcome,
+        facts,
+        seed,
+        params,
+        boardDigest,
+        daily: daily ?? null,
+        playId,
+      })
       .then((result) => {
         if (mounted.current) setReports(result);
       });
-  }, [bridge, gameId, outcome, facts, seed, params, boardDigest, daily]);
+  }, [bridge, gameId, outcome, facts, seed, params, boardDigest, daily, playId]);
 
   if (bridge === null || bridge.connections.length === 0) return null;
 

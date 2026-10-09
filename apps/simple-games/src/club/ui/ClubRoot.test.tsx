@@ -60,6 +60,7 @@ function reply(body: unknown, status = 200): Response {
 }
 
 const LEADER = {
+  id: 'r_1',
   memberId: 'm_1',
   nickname: 'Ken',
   submittedAt: '2026-09-10T00:00:00.000Z',
@@ -67,12 +68,62 @@ const LEADER = {
   seed: 's',
   boardDigest: 'sd1:1',
 };
+/** The viewer's (m_7) result that sits below the rows sent when `meBelowTop`. */
 const MINE = {
   ...LEADER,
+  id: 'r_9',
   memberId: 'm_7',
   nickname: 'Ken B',
   facts: { elapsedSeconds: 600, mistakes: 3, hints: 0 },
 };
+/**
+ * Sudoku · Hard as the server ranks it: one row per result (club.md §16-1), so
+ * the viewer (m_7) is on it twice and Ken (m_1) twice.
+ */
+const HARD_ROWS = [
+  LEADER,
+  { ...MINE, id: 'r_2', facts: { elapsedSeconds: 300, mistakes: 1, hints: 0 } },
+  {
+    ...LEADER,
+    id: 'r_3',
+    memberId: 'm_2',
+    nickname: 'Mika',
+    facts: { elapsedSeconds: 320, mistakes: 0, hints: 0 },
+  },
+  { ...MINE, id: 'r_4', facts: { elapsedSeconds: 400, mistakes: 2, hints: 2 } },
+  { ...LEADER, id: 'r_5', facts: { elapsedSeconds: 450, mistakes: 1, hints: 1 } },
+];
+/** Sudoku · Easy: Mika alone. */
+const EASY_ROW = {
+  ...LEADER,
+  id: 'e_1',
+  memberId: 'm_2',
+  nickname: 'Mika',
+  facts: { elapsedSeconds: 100, mistakes: 0, hints: 0 },
+};
+const sudokuTable = (paramsKey: string, entryCount: number) => ({
+  gameId: 'sudoku',
+  paramsKey,
+  entryCount,
+  leader: LEADER,
+});
+/** A `GET /rankings/mine` row: the viewer's standing in one table. */
+const standing = (
+  gameId: string,
+  paramsKey: string,
+  best: { rank: number | null; facts: Record<string, number>; nextValue: number | null },
+  entryCount = 24,
+) => ({
+  gameId,
+  paramsKey,
+  entryCount,
+  leader: LEADER,
+  best: {
+    rank: best.rank,
+    entry: { ...MINE, id: `${gameId}-${paramsKey}`, facts: best.facts },
+    nextValue: best.nextValue,
+  },
+});
 const MIKA = { id: 'm_2', nickname: 'Mika', role: 'member', joinedAt: '2026-09-10T00:00:00.000Z' };
 /** What `GET /club` answers for the viewer and the member list. */
 let clubMe: Record<string, unknown> = KEN;
@@ -80,18 +131,25 @@ let clubMembers: Record<string, unknown>[] = [KEN];
 let clubMemberCount: number | undefined;
 let reportedList: { member: Record<string, unknown>; reportCount: number }[] = [];
 let meBelowTop = false;
+/** What `GET /rankings` lists. */
+let rankingList: unknown[] = [sudokuTable('hard', 24)];
+/** What `GET /rankings/mine` answers; 404 is a server from before the route. */
+let mineList: unknown[] | 404 = [];
+/** Rows the viewer deleted by id; the table is read without them. */
+let deletedRows: string[] = [];
+/** A server from before row ids: rows come without `id`. */
+let rowsWithoutIds = false;
 let dailyChallenges = false;
 /** A token the server no longer accepts (the owner removed that member, or the Club was rebuilt). */
 let rejectedToken: string | null = null;
 /** The token a fresh `POST /join` hands out. */
 let joinedToken = 'member-token-1';
-/** What the device still had queued for the Club at the moment a `DELETE …/me` arrived. */
+/** What the device still had queued for the Club at the moment a DELETE arrived. */
 let queuedAtDelete: unknown[] | null = null;
-/** The viewer's own ranking row / Today result, until the server is asked to delete it. */
-let rankingRowDeleted = false;
+/** The viewer's own Today result, until the server is asked to delete it. */
 let dailyResultDeleted = false;
 let hasDailyResult = false;
-/** What the next `DELETE …/me` answers: 204, or the 404 of a row that is already gone. */
+/** What the next DELETE answers: 204, or the 404 of a row that is already gone. */
 let deleteAnswers: 204 | 404 = 204;
 /** A server from before `?daily=` existed: it ignores the parameter and answers with its ordinary list. */
 let ignoresDaily = false;
@@ -119,13 +177,11 @@ function stubServer() {
       clubMe = { ...clubMe, nickname: body.nickname };
       return reply(clubMe);
     }
-    if (
-      method === 'DELETE' &&
-      (path === '/rankings/sudoku/hard/me' || path === '/challenges/ch_d/results/me')
-    ) {
+    const entryDelete = /^\/rankings\/sudoku\/hard\/entries\/([^/]+)$/.exec(path);
+    if (method === 'DELETE' && (entryDelete || path === '/challenges/ch_d/results/me')) {
       queuedAtDelete = await pendingFor(ENDPOINT);
       if (deleteAnswers === 404) return reply({ error: { code: 'not_found', message: 'no' } }, 404);
-      if (path.startsWith('/rankings')) rankingRowDeleted = true;
+      if (entryDelete) deletedRows.push(decodeURIComponent(entryDelete[1]!));
       else dailyResultDeleted = true;
       return new Response(null, { status: 204, headers: { 'X-Club-Api': '1' } });
     }
@@ -188,32 +244,52 @@ function stubServer() {
         entryCount: 1,
       });
     }
-    if (path === '/rankings') {
-      return reply([{ gameId: 'sudoku', paramsKey: 'hard', entryCount: 24, leader: LEADER }]);
+    if (path === '/rankings') return reply(rankingList);
+    if (path === '/rankings/mine') {
+      if (mineList === 404) return reply({ error: { code: 'not_found', message: 'no' } }, 404);
+      return reply(mineList);
     }
+    const withoutIds = <R extends { id?: string }>(row: R) => {
+      if (!rowsWithoutIds) return row;
+      const { id: _id, ...rest } = row;
+      return rest;
+    };
     if (path === '/rankings/sudoku/hard') {
-      const second = {
-        ...LEADER,
-        memberId: 'm_2',
-        nickname: 'Mika',
-        facts: { elapsedSeconds: 300, mistakes: 1, hints: 0 },
-      };
-      if (rankingRowDeleted) {
-        return reply({
-          gameId: 'sudoku',
-          paramsKey: 'hard',
-          entryCount: 23,
-          entries: [LEADER, second],
-          me: null,
-        });
-      }
+      const rows = (
+        meBelowTop ? HARD_ROWS.filter((row) => row.memberId !== 'm_7') : HARD_ROWS
+      ).filter((row) => !deletedRows.includes(row.id));
+      // The viewer's best row: the first of theirs in the order, or the one below the rows sent.
+      const at = rows.findIndex((row) => row.memberId === 'm_7');
+      const me =
+        meBelowTop && !deletedRows.includes(MINE.id)
+          ? { rank: 87, entry: MINE, nextValue: 590 }
+          : at === -1
+            ? null
+            : {
+                rank: at + 1,
+                entry: rows[at]!,
+                nextValue: at === 0 ? null : rows[at - 1]!.facts.elapsedSeconds,
+              };
       return reply({
         gameId: 'sudoku',
         paramsKey: 'hard',
-        entryCount: 24,
-        entries: meBelowTop ? [LEADER, second] : [LEADER, { ...MINE, facts: second.facts }],
-        me: { rank: meBelowTop ? 87 : 2, entry: MINE },
+        entryCount: 24 - deletedRows.length,
+        entries: rows.map(withoutIds),
+        me: me === null ? null : { ...me, entry: withoutIds(me.entry) },
       });
+    }
+    if (path === '/rankings/sudoku/easy') {
+      return reply({
+        gameId: 'sudoku',
+        paramsKey: 'easy',
+        entryCount: 1,
+        entries: [withoutIds(EASY_ROW)],
+        me: null,
+      });
+    }
+    const table = /^\/rankings\/([^/]+)\/([^/]+)$/.exec(path);
+    if (table && method === 'GET') {
+      return reply({ gameId: table[1], paramsKey: table[2], entryCount: 0, entries: [], me: null });
     }
     return reply({ error: { code: 'not_found', message: 'no' } }, 404);
   });
@@ -240,7 +316,10 @@ beforeEach(() => {
   rejectedToken = null;
   joinedToken = 'member-token-1';
   queuedAtDelete = null;
-  rankingRowDeleted = false;
+  rankingList = [sudokuTable('hard', 24)];
+  mineList = [];
+  deletedRows = [];
+  rowsWithoutIds = false;
   dailyResultDeleted = false;
   hasDailyResult = false;
   deleteAnswers = 204;
@@ -438,21 +517,25 @@ describe('ClubRoot', () => {
       inviteToken: 'a'.repeat(22),
       nickname: 'Ken',
     });
-    // Straight into the Club: its rankings are listed, with the leader and the size.
+    // Straight into the Club: its rankings are on the shelves, one tile per game.
     expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
-    expect(screen.getByText('1. Ken 3:58')).toBeInTheDocument();
-    expect(screen.getByText('24 entries')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sudoku' })).toBeInTheDocument();
     // The invite-URL join showed the disclosure too: stored as consented.
     expect((await loadClubConnections())[0]).toMatchObject({ endpoint: ENDPOINT, autoSend: true });
   });
 
-  it('loads the club, today and the rankings: three requests', async () => {
+  it('loads the club, today, the rankings and your rankings: four requests', async () => {
     const fetchMock = stubServer();
     await joinedConnection();
     renderRoot();
     expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
     const paths = fetchMock.mock.calls.map(([url]) => new URL(String(url)).pathname);
-    expect(paths.sort()).toEqual(['/api/v1/challenges', '/api/v1/club', '/api/v1/rankings']);
+    expect(paths.sort()).toEqual([
+      '/api/v1/challenges',
+      '/api/v1/club',
+      '/api/v1/rankings',
+      '/api/v1/rankings/mine',
+    ]);
   });
 
   it('opening a Club sends the results that waited, before it lists anything', async () => {
@@ -482,48 +565,6 @@ describe('ClubRoot', () => {
     expect(await pendingFor(ENDPOINT)).toEqual([]);
   });
 
-  it('opens a ranking: You on the viewer row, in the order the server gave', async () => {
-    stubServer();
-    const user = userEvent.setup();
-    await joinedConnection();
-    renderRoot();
-
-    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · 1\. Ken 3:58/ }));
-    expect(await screen.findByRole('heading', { name: 'Sudoku · Hard' })).toBeInTheDocument();
-    expect(await screen.findByText('Ken')).toBeInTheDocument();
-    expect(screen.getByText('You')).toBeInTheDocument();
-    expect(screen.queryByText('Ken B')).not.toBeInTheDocument();
-    expect(screen.getByText('#1')).toBeInTheDocument();
-    expect(screen.getByText('#2')).toBeInTheDocument();
-    expect(screen.getByText('24 entries')).toBeInTheDocument();
-    expect(screen.queryByText('#87')).not.toBeInTheDocument();
-  });
-
-  it('appends the viewer row with its rank when it is outside the rows sent', async () => {
-    stubServer();
-    meBelowTop = true;
-    const user = userEvent.setup();
-    await joinedConnection();
-    renderRoot();
-
-    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · 1\. Ken 3:58/ }));
-    expect(await screen.findByText('#87')).toBeInTheDocument();
-    expect(screen.getByText('You')).toBeInTheDocument();
-    expect(screen.getByText('10:00 Mistakes 3 Hints 0')).toBeInTheDocument();
-    expect(screen.getByText('24 entries')).toBeInTheDocument();
-  });
-
-  it('Back from a ranking returns to the Club', async () => {
-    stubServer();
-    const user = userEvent.setup();
-    await joinedConnection();
-    renderRoot();
-    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · 1\. Ken 3:58/ }));
-    await screen.findByRole('heading', { name: 'Sudoku · Hard' });
-    await user.click(screen.getByRole('button', { name: 'Back' }));
-    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
-  });
-
   it('shows a Today challenge, discloses before Play, and plays the game daily', async () => {
     stubServer();
     dailyChallenges = true;
@@ -549,7 +590,7 @@ describe('ClubRoot', () => {
     });
   });
 
-  it('heads the members with the total, not the page, and a member can Report', async () => {
+  it('heads the members with the total, not the page; another member’s name opens the sheet with Report', async () => {
     const fetchMock = stubServer();
     clubMembers = [KEN, MIKA];
     clubMemberCount = 1200;
@@ -561,20 +602,69 @@ describe('ClubRoot', () => {
     // A member never sees Rename / Remove, nor a Reported section.
     expect(screen.queryByRole('button', { name: 'Remove' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Reported' })).not.toBeInTheDocument();
-    // Only the other member's row has Report.
-    await user.click(screen.getByRole('button', { name: 'Report' }));
-    expect(screen.getByRole('alertdialog', { name: 'Report this nickname?' })).toBeInTheDocument();
-    await user.click(screen.getAllByRole('button', { name: 'Report' }).at(-1)!);
-    expect(await screen.findByText('Reported')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Report' })).not.toBeInTheDocument();
+    // No row carries Report any more (decision 49); one's own name is plain text.
+    expect(screen.queryByRole('button', { name: /Report/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ken' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Mika' }));
+    const sheet = screen.getByRole('dialog', { name: 'Mika' });
+    // The name, the row's own record (the joined-on line), and one Report button.
+    expect(within(sheet).getByRole('heading', { name: 'Mika' })).toBeInTheDocument();
+    expect(sheet).toHaveTextContent('Joined');
+    expect(
+      within(sheet)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Report', 'Close']);
+    await user.click(within(sheet).getByRole('button', { name: 'Report' }));
+    const confirm = screen.getByRole('alertdialog', { name: 'Report this nickname?' });
+    await user.click(within(confirm).getByRole('button', { name: 'Report' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Reported');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     const posted = fetchMock.mock.calls.find(([url]) =>
       String(url).endsWith('/members/m_2/report'),
     );
     expect(posted?.[1]?.method).toBe('POST');
-    // No fourth request for a member.
+    // The row carries no mark: Mika's name still opens the sheet.
+    expect(screen.getByRole('button', { name: 'Mika' })).toBeInTheDocument();
+    // No owner-only request for a member.
     expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith('/members/reported'))).toBe(
       false,
     );
+  });
+
+  it('the sheet closes on Escape and on Close, and Cancel in the confirmation sends nothing', async () => {
+    const fetchMock = stubServer();
+    clubMembers = [KEN, MIKA];
+    const user = userEvent.setup();
+    await joinedConnection();
+    renderRoot();
+
+    await user.click(await screen.findByRole('button', { name: 'Mika' }));
+    expect(screen.getByRole('dialog', { name: 'Mika' })).toBeInTheDocument();
+    // Focus moved in, onto Close.
+    expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    // ...and back to the name that opened it.
+    expect(screen.getByRole('button', { name: 'Mika' })).toHaveFocus();
+
+    await user.click(screen.getByRole('button', { name: 'Mika' }));
+    // Tab stays inside the sheet.
+    await user.tab();
+    await user.tab();
+    expect(screen.getByRole('dialog', { name: 'Mika' })).toContainElement(
+      document.activeElement as HTMLElement,
+    );
+    await user.click(screen.getByRole('button', { name: 'Report' }));
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Cancel' }),
+    );
+    // Back on the sheet; Close closes it.
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith('/report'))).toBe(false);
   });
 
   it('falls back to the list length when the server sends no memberCount', async () => {
@@ -597,6 +687,8 @@ describe('ClubRoot', () => {
     expect(await screen.findByRole('heading', { name: 'Reported' })).toBeInTheDocument();
     expect(screen.getByText('3 reports')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Report' })).not.toBeInTheDocument();
+    // The owner's device opens no sheet: names are plain text, the owner acts by Rename / Remove.
+    expect(screen.queryByRole('button', { name: 'Mika' })).not.toBeInTheDocument();
 
     // Both Mika lines (Reported and Members) offer Rename; use the first.
     await user.click(screen.getAllByRole('button', { name: 'Rename' })[0]!);
@@ -646,27 +738,6 @@ describe('ClubRoot', () => {
     );
     const del = fetchMock.mock.calls.find(([, init]) => init?.method === 'DELETE');
     expect(String(del![0])).toBe(`${ENDPOINT}/api/v1/members/m_2`);
-  });
-
-  it('reports a ranking row that is not the viewer’s', async () => {
-    const fetchMock = stubServer();
-    const user = userEvent.setup();
-    await joinedConnection({ memberId: 'm_7' });
-    renderRoot();
-
-    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · 1\. Ken 3:58/ }));
-    await screen.findByText('24 entries');
-    // The leader (m_1) is someone else; the viewer's own row has no Report.
-    expect(screen.getAllByRole('button', { name: /^Report/ })).toHaveLength(1);
-    await user.click(screen.getByRole('button', { name: 'Report Ken' }));
-    await user.click(
-      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Report' }),
-    );
-    expect(await screen.findByText('Reported')).toBeInTheDocument();
-    const posted = fetchMock.mock.calls.find(([url]) =>
-      String(url).endsWith('/members/m_1/report'),
-    );
-    expect(posted?.[1]?.method).toBe('POST');
   });
 
   it('stores the nickname the owner gave when the server says it changed', async () => {
@@ -1159,83 +1230,84 @@ const rankingReads = (fetchMock: ReturnType<typeof stubServer>) =>
   fetchMock.mock.calls.filter(([url]) => String(url).includes('/api/v1/rankings/sudoku/hard?'))
     .length;
 
-describe('Ranking: deleting your own row (decision 42)', () => {
+describe('Ranking: deleting one of your results (decisions 42, 51)', () => {
   async function openRanking() {
     const user = userEvent.setup();
     await joinedConnection();
     renderRoot();
-    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · 1\. Ken 3:58/ }));
-    await screen.findByRole('heading', { name: 'Sudoku · Hard' });
-    await screen.findByText('You');
+    await user.click(await screen.findByRole('button', { name: 'Sudoku' }));
+    await screen.findByRole('heading', { name: 'Sudoku' });
+    await screen.findAllByText('You');
     return user;
   }
   const deleteButtons = () => screen.queryAllByRole('button', { name: 'Delete my record' });
+  const rowOf = (text: string) => screen.getByText(text).closest('.club-line') as HTMLElement;
 
-  it('puts the button on your own row only', async () => {
+  it('puts a quiet Delete on each of your rows, and on no one else’s', async () => {
     stubServer();
     await openRanking();
-    expect(deleteButtons()).toHaveLength(1);
-    // Leader and the second row are other members': Report, never Delete.
-    const own = screen.getByText('You').closest('.club-line') as HTMLElement;
-    expect(within(own).getByRole('button', { name: 'Delete my record' })).toBeInTheDocument();
-    const other = screen
-      .getByText('Ken', { selector: '.settings-row-label' })
-      .closest('.club-line') as HTMLElement;
-    expect(
-      within(other).queryByRole('button', { name: 'Delete my record' }),
-    ).not.toBeInTheDocument();
+    // Two results of the viewer's on the table: two rows saying You, each with its own button.
+    expect(screen.getAllByText('You')).toHaveLength(2);
+    expect(deleteButtons()).toHaveLength(2);
+    for (const button of deleteButtons()) {
+      // The visible word is Delete; the accessible name says whose; not the danger colour.
+      expect(button).toHaveTextContent(/^Delete$/);
+      expect(button).not.toHaveClass('club-danger');
+      expect(button.closest('.club-line')).toHaveClass('club-own');
+    }
+    const other = rowOf('7:30 Mistakes 1 Hints 1');
+    expect(within(other).queryByRole('button', { name: 'Delete my record' })).toBeNull();
   });
 
-  it('puts the button on the appended row when you are below the rows sent', async () => {
+  it('puts the button on the appended row when your best is below the rows sent', async () => {
     stubServer();
     meBelowTop = true;
     await openRanking();
-    const own = screen.getByText('You').closest('.club-line') as HTMLElement;
+    const own = rowOf('10:00 Mistakes 3 Hints 0');
     expect(within(own).getByText('#87')).toBeInTheDocument();
     expect(deleteButtons()).toHaveLength(1);
     expect(own).toContainElement(deleteButtons()[0]!);
   });
 
-  it('says what happens; Cancel changes nothing', async () => {
+  it('says only this result goes; Cancel changes nothing', async () => {
     const fetchMock = stubServer();
     const user = await openRanking();
     await user.click(deleteButtons()[0]!);
-    const dialog = screen.getByRole('alertdialog', { name: 'Delete your record in this ranking?' });
-    expect(dialog).toHaveTextContent('Your next finished game enters it again.');
+    const dialog = screen.getByRole('alertdialog', { name: 'Delete this result?' });
+    expect(dialog).toHaveTextContent('Only this result is deleted.');
+    expect(dialog).toHaveTextContent('Your other results stay.');
     expect(dialog).toHaveTextContent('This cannot be undone.');
-    await enqueueResult(rankingItem(ENDPOINT));
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
-    expect(callsTo(fetchMock, 'DELETE', '/rankings/sudoku/hard/me')).toHaveLength(0);
-    expect(await pendingFor(ENDPOINT)).toHaveLength(1);
-    expect(deleteButtons()).toHaveLength(1);
+    expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'DELETE')).toHaveLength(0);
+    expect(deleteButtons()).toHaveLength(2);
   });
 
-  it('drops the queued items that would recreate it, deletes, and reads the table again', async () => {
+  it('deletes that one row by its id, keeps the queue, and reads the table again', async () => {
     const fetchMock = stubServer();
     const user = await openRanking();
-    // Same table, another table, another Club: only the first goes.
+    // A queued result is another game's: it becomes another row, so nothing is dropped.
     await enqueueResult(rankingItem(ENDPOINT));
-    await enqueueResult(rankingItem(ENDPOINT, 'easy'));
-    await enqueueResult(rankingItem('https://other.example.com'));
     const reads = rankingReads(fetchMock);
 
-    await user.click(deleteButtons()[0]!);
+    // The second of the viewer's rows (6:40, #4).
+    await user.click(within(rowOf('6:40 Mistakes 2 Hints 2')).getByRole('button'));
     await user.click(
       within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
     );
 
     await waitFor(() =>
-      expect(callsTo(fetchMock, 'DELETE', '/rankings/sudoku/hard/me')).toHaveLength(1),
+      expect(callsTo(fetchMock, 'DELETE', '/rankings/sudoku/hard/entries/r_4')).toHaveLength(1),
     );
-    // The queue was already clean when the request arrived.
+    // Never the compatibility route that deletes every row of the viewer's.
+    expect(callsTo(fetchMock, 'DELETE', '/rankings/sudoku/hard/me')).toHaveLength(0);
     expect(queuedAtDelete).toHaveLength(1);
-    expect((queuedAtDelete as { body: { paramsKey: string } }[])[0]!.body.paramsKey).toBe('easy');
-    expect(await pendingFor('https://other.example.com')).toHaveLength(1);
+    expect(await pendingFor(ENDPOINT)).toHaveLength(1);
     await waitFor(() => expect(rankingReads(fetchMock)).toBeGreaterThan(reads));
-    // Reloaded: the row is gone, and so is the button.
-    await waitFor(() => expect(screen.getByText('23 entries')).toBeInTheDocument());
-    expect(screen.queryByText('You')).not.toBeInTheDocument();
-    expect(deleteButtons()).toHaveLength(0);
+    // Reloaded: that row is gone, the other one of the viewer's stays.
+    await waitFor(() => expect(screen.queryByText('6:40 Mistakes 2 Hints 2')).toBeNull());
+    expect(screen.getAllByText('You')).toHaveLength(1);
+    expect(deleteButtons()).toHaveLength(1);
+    expect(screen.getByText('23 entries')).toBeInTheDocument();
     // Still a member of the Club.
     expect(await loadClubConnections()).toHaveLength(1);
   });
@@ -1262,6 +1334,42 @@ describe('Ranking: deleting your own row (decision 42)', () => {
       within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
     );
     expect(await screen.findByRole('alert')).toHaveTextContent('no longer a member');
+  });
+
+  it('deletes through the compatibility route on a server whose rows have no id', async () => {
+    const fetchMock = stubServer();
+    rowsWithoutIds = true;
+    const user = await openRanking();
+    expect(screen.getAllByText('You')).toHaveLength(2);
+    // One row per member there, so the route that deletes all of the viewer's rows deletes that one.
+    await user.click(deleteButtons()[0]!);
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
+    );
+    await waitFor(() =>
+      expect(callsTo(fetchMock, 'DELETE', '/rankings/sudoku/hard/me')).toHaveLength(1),
+    );
+    expect(deletedRows).toEqual([]);
+  });
+
+  it('a delete makes the Club read its lists again on the way back, without resending', async () => {
+    const fetchMock = stubServer();
+    const user = await openRanking();
+    await enqueueResult(rankingItem(ENDPOINT));
+    const lists = callsTo(fetchMock, 'GET', '/rankings').length;
+    await user.click(deleteButtons()[0]!);
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }),
+    );
+    await waitFor(() => expect(deletedRows).toEqual(['r_2']));
+    await waitFor(() => expect(deleteButtons()).toHaveLength(1));
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    await waitFor(() => expect(callsTo(fetchMock, 'GET', '/rankings')).toHaveLength(lists + 1));
+    // A read, not the person's Reload: what waited stays queued.
+    expect(callsTo(fetchMock, 'POST', '/rankings/results')).toHaveLength(0);
+    expect(await pendingFor(ENDPOINT)).toHaveLength(1);
   });
 });
 
@@ -1447,8 +1555,8 @@ describe('Opening a Club with no network (club.md §10)', () => {
     renderRoot();
     await advance(0);
 
-    // Waiting: the three requests are out, Reload is off, nothing says it failed yet.
-    expect(hang.mock.calls).toHaveLength(3);
+    // Waiting: the four requests are out, Reload is off, nothing says it failed yet.
+    expect(hang.mock.calls).toHaveLength(4);
     expect(screen.getByText('Loading…')).toBeInTheDocument();
     expect(reloadButton()).toBeDisabled();
     await advance(REQUEST_TIMEOUT_MS - 1);
@@ -1468,11 +1576,11 @@ describe('Opening a Club with no network (club.md §10)', () => {
     fireEvent.click(reloadButton());
     await advance(0);
     expect(screen.getByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
-    expect(screen.getByText('1. Ken 3:58')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sudoku' })).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
     expect(reloadButton()).toBeEnabled();
-    expect(fetchMock.mock.calls.length).toBeGreaterThanOrEqual(3);
+    expect(fetchMock.mock.calls.length).toBeGreaterThanOrEqual(4);
   });
 
   it('with a result queued for the Club, the flush it starts with cannot keep the screen on "Loading…"', async () => {
@@ -1494,7 +1602,7 @@ describe('Opening a Club with no network (club.md §10)', () => {
 
     // The send's own limit passes: the flush says the Club is unreachable, and the
     // screen says so right then — about 10 s in, not 20 — instead of asking for the
-    // three lists and waiting out the same limit again.
+    // four lists and waiting out the same limit again.
     await advance(1);
     expect(screen.getByRole('alert')).toHaveTextContent(UNREACHABLE);
     expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
@@ -1532,7 +1640,7 @@ describe('Opening a Club with no network (club.md §10)', () => {
 
       // The wait is over: the screen stops waiting and reads the Club...
       await advance(1);
-      expect(hang.mock.calls).toHaveLength(3);
+      expect(hang.mock.calls).toHaveLength(4);
       expect(screen.getByText('Loading…')).toBeInTheDocument();
       // ...which, with every request hanging, ends in the one line a request time later.
       await advance(REQUEST_TIMEOUT_MS - 1);
@@ -1692,5 +1800,385 @@ describe('Resending the queue is the person’s own action (club.md §10)', () =
     expect(await pendingFor(ENDPOINT)).toHaveLength(1);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+  });
+});
+
+/** The tiles on the Club's shelves, in the order drawn (their names; the glyph is hidden). */
+const tiles = () =>
+  Array.from(document.querySelectorAll('.game-cell')).map((b) => b.getAttribute('aria-label'));
+/** The "Your rankings" rows, in the order drawn. */
+const myRows = () => Array.from(document.querySelectorAll<HTMLElement>('.club-mine'));
+const tabs = () => screen.queryAllByRole('tab');
+const selectedTab = () => tabs().find((tab) => tab.getAttribute('aria-selected') === 'true');
+const tableReads = (fetchMock: ReturnType<typeof stubServer>, paramsKey: string) =>
+  fetchMock.mock.calls.filter(([url]) =>
+    String(url).includes(`/api/v1/rankings/sudoku/${paramsKey}?`),
+  ).length;
+
+describe('Club screen: your rankings, then the rankings as shelves (club.md §9, decisions 46–47)', () => {
+  it('folds the tables into one tile per game, on the home’s category shelves, in the home’s order', async () => {
+    stubServer();
+    rankingList = [
+      { gameId: 'solitaire', paramsKey: 'draw-3', entryCount: 2, leader: LEADER },
+      sudokuTable('hard', 24),
+      { gameId: 'minesweeper', paramsKey: 'easy', entryCount: 3, leader: LEADER },
+      sudokuTable('easy', 1),
+      { gameId: 'freecell', paramsKey: 'standard', entryCount: 5, leader: LEADER },
+      // A game this build does not know is not on any shelf.
+      { gameId: 'not-a-game', paramsKey: 'x', entryCount: 1, leader: LEADER },
+    ];
+    await joinedConnection();
+    renderRoot();
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+
+    // Logic, then Cards (GAME_CATEGORIES); no shelf for a category with no table.
+    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
+      'Logic',
+      'Cards',
+    ]);
+    // Sudoku's two tables are one tile; registry order within a shelf.
+    expect(tiles()).toEqual(['Sudoku', 'Minesweeper', 'Solitaire', 'FreeCell']);
+    // A tile is the game alone: no leader, no count (club.md §9).
+    expect(screen.queryByText(/entries/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Ken 3:58/)).not.toBeInTheDocument();
+  });
+
+  it('says Nothing here yet when there is no table at all', async () => {
+    stubServer();
+    rankingList = [];
+    await joinedConnection();
+    renderRoot();
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    expect(screen.getByText('Nothing here yet.')).toBeInTheDocument();
+    expect(tiles()).toEqual([]);
+  });
+
+  it('heads the Club with your rankings: rank, entries, your best and the gap, in the shelves’ order', async () => {
+    stubServer();
+    dailyChallenges = true;
+    rankingList = [
+      sudokuTable('easy', 80),
+      sudokuTable('hard', 24),
+      { gameId: 'solitaire', paramsKey: 'draw-1', entryCount: 3, leader: LEADER },
+      { gameId: '2048', paramsKey: 'standard', entryCount: 9, leader: LEADER },
+    ];
+    // In the server's order (by key spelling), not the one the screen draws.
+    mineList = [
+      standing(
+        '2048',
+        'standard',
+        { rank: 4, facts: { score: 1000, bestTile: 128 }, nextValue: 1200 },
+        9,
+      ),
+      standing(
+        'solitaire',
+        'draw-1',
+        { rank: 1, facts: { moves: 90, elapsedSeconds: 300, hints: 0 }, nextValue: null },
+        3,
+      ),
+      standing('sudoku', 'hard', {
+        rank: 2,
+        facts: { elapsedSeconds: 300, mistakes: 1, hints: 0 },
+        nextValue: 238,
+      }),
+      // Below the server's counting ceiling: no number, the rest as usual.
+      standing(
+        'sudoku',
+        'easy',
+        { rank: null, facts: { elapsedSeconds: 700, mistakes: 0, hints: 0 }, nextValue: 690 },
+        80,
+      ),
+    ];
+    await joinedConnection();
+    renderRoot();
+
+    expect(await screen.findByRole('heading', { name: 'Your rankings' })).toBeInTheDocument();
+    // First on the screen, before Today and the shelves.
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
+      'Your rankings',
+      'Today',
+      'Rankings',
+      '1 members',
+    ]);
+    // Fixed order: category, then registry, then the mode's place — never by rank.
+    expect(myRows().map((row) => row.getAttribute('aria-label'))).toEqual([
+      'Sudoku · Easy · 80 entries · 11:40 · 0:10 to the next rank',
+      'Sudoku · Hard · #2 · 24 entries · 5:00 · 1:02 to the next rank',
+      'Solitaire · Draw 1 · #1 · 3 entries · 90',
+      '2048 · #4 · 9 entries · 1000 · Score 200 to the next rank',
+    ]);
+    const [easy, hard, solitaire, game2048] = myRows();
+    // The first three wear the table's disc; the first of all has no gap to show.
+    expect(hard!.querySelector('.club-medal-2')).not.toBeNull();
+    expect(solitaire!.querySelector('.club-medal-1')).not.toBeNull();
+    expect(solitaire).not.toHaveTextContent('to the next rank');
+    expect(game2048!.querySelector('.club-medal')).toBeNull();
+    expect(game2048).toHaveTextContent('#4 · 9 entries');
+    expect(easy!.querySelector('.club-rank')).toBeNull();
+    expect(easy).toHaveTextContent('0:10 to the next rank');
+    // No count of tables joined.
+    expect(screen.queryByText(/tables/)).not.toBeInTheDocument();
+  });
+
+  it('opens the table a row names, with its mode chosen', async () => {
+    const fetchMock = stubServer();
+    rankingList = [sudokuTable('easy', 1), sudokuTable('hard', 24)];
+    mineList = [
+      standing('sudoku', 'hard', { rank: 2, facts: HARD_ROWS[1]!.facts, nextValue: 238 }),
+    ];
+    const user = userEvent.setup();
+    await joinedConnection();
+    renderRoot();
+
+    await user.click(await screen.findByRole('button', { name: /^Sudoku · Hard · #2/ }));
+    expect(await screen.findByRole('heading', { name: 'Sudoku' })).toBeInTheDocument();
+    expect(selectedTab()).toHaveTextContent('Hard');
+    await waitFor(() => expect(tableReads(fetchMock, 'hard')).toBe(1));
+    expect(tableReads(fetchMock, 'easy')).toBe(0);
+  });
+
+  it('a server without GET /rankings/mine shows no section and no error', async () => {
+    stubServer();
+    mineList = 404;
+    await joinedConnection();
+    renderRoot();
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Your rankings' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('a tile opens the first mode you have a row in, else the game’s first mode', async () => {
+    const fetchMock = stubServer();
+    rankingList = [sudokuTable('hard', 24), sudokuTable('easy', 1)];
+    mineList = [
+      standing('sudoku', 'hard', { rank: 2, facts: HARD_ROWS[1]!.facts, nextValue: 238 }),
+    ];
+    const user = userEvent.setup();
+    await joinedConnection();
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'Sudoku' }));
+    await screen.findByRole('heading', { name: 'Sudoku' });
+    expect(selectedTab()).toHaveTextContent('Hard');
+    await waitFor(() => expect(tableReads(fetchMock, 'hard')).toBe(1));
+
+    cleanup();
+    localStorage.clear();
+    const again = stubServer();
+    rankingList = [sudokuTable('hard', 24), sudokuTable('easy', 1)];
+    mineList = [];
+    await joinedConnection();
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'Sudoku' }));
+    await screen.findByRole('heading', { name: 'Sudoku' });
+    expect(selectedTab()).toHaveTextContent('Easy');
+    await waitFor(() => expect(tableReads(again, 'easy')).toBe(1));
+  });
+});
+
+describe('Ranking screen: one game, its modes as chips (club.md §16-2, decisions 45–48)', () => {
+  async function openSudoku(extra: Record<string, unknown> = {}) {
+    const user = userEvent.setup();
+    await joinedConnection(extra);
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'Sudoku' }));
+    await screen.findByRole('heading', { name: 'Sudoku' });
+    return user;
+  }
+
+  it('lists the modes the Club has, easiest first; a chip reads its table once and replaces the screen', async () => {
+    const fetchMock = stubServer();
+    rankingList = [sudokuTable('hard', 24), sudokuTable('medium', 3), sudokuTable('easy', 1)];
+    const user = await openSudoku();
+    const lists = callsTo(fetchMock, 'GET', '/rankings').length;
+
+    expect(screen.getByRole('tablist')).toBeInTheDocument();
+    expect(tabs().map((tab) => tab.textContent)).toEqual(['Easy', 'Medium', 'Hard']);
+    // No row of the viewer's anywhere: the first mode.
+    expect(selectedTab()).toHaveTextContent('Easy');
+    expect(await screen.findByText('1:40 Mistakes 0 Hints 0')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Hard' }));
+    expect(selectedTab()).toHaveTextContent('Hard');
+    expect(await screen.findByText('3:58 Mistakes 0 Hints 1')).toBeInTheDocument();
+    // Nothing of the Easy table is left under the Hard chip.
+    expect(screen.queryByText('1:40 Mistakes 0 Hints 0')).not.toBeInTheDocument();
+    expect(tableReads(fetchMock, 'hard')).toBe(1);
+    // Pressing the chip on screen reads nothing.
+    await user.click(screen.getByRole('tab', { name: 'Hard' }));
+    expect(tableReads(fetchMock, 'hard')).toBe(1);
+
+    await user.click(screen.getByRole('tab', { name: 'Medium' }));
+    expect(await screen.findByText('Nothing here yet.')).toBeInTheDocument();
+
+    // Back is the Club, not the mode before: the chips replaced the step, never stacked one.
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    // ...shown as it was, without reading the lists again.
+    expect(callsTo(fetchMock, 'GET', '/rankings')).toHaveLength(lists);
+  });
+
+  it('draws no chips for a game whose one table is its only mode', async () => {
+    stubServer();
+    rankingList = [{ gameId: 'freecell', paramsKey: 'standard', entryCount: 5, leader: LEADER }];
+    const user = userEvent.setup();
+    await joinedConnection();
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'FreeCell' }));
+    expect(await screen.findByRole('heading', { name: 'FreeCell' })).toBeInTheDocument();
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+  });
+
+  it('says where you stand, marks the first three, and calls every row of yours You', async () => {
+    stubServer();
+    await openSudoku();
+    // The viewer's best row: rank, entries, value, and the gap to the next rank.
+    expect(
+      await screen.findByText('#2 · 24 entries · 5:00 · 1:02 to the next rank'),
+    ).toBeInTheDocument();
+    const rows = Array.from(document.querySelectorAll<HTMLElement>('.club-panel .club-line'));
+    expect(rows).toHaveLength(5);
+    // Gold, silver, bronze on 1–3 only, the words kept for a screen reader.
+    expect(rows.map((row) => row.querySelector('.club-medal')?.className ?? null)).toEqual([
+      'club-medal club-medal-1',
+      'club-medal club-medal-2',
+      'club-medal club-medal-3',
+      null,
+      null,
+    ]);
+    expect(within(rows[0]!).getByText('#1')).toHaveClass('visually-hidden');
+    expect(within(rows[3]!).getByText('#4')).not.toHaveClass('visually-hidden');
+    // One row per result: the same people more than once, each of the viewer's rows is You.
+    expect(rows.map((row) => row.querySelector('.settings-row-label')!.textContent)).toEqual([
+      '1#1Ken',
+      '2#2You',
+      '3#3Mika',
+      '#4You',
+      '#5Ken',
+    ]);
+    expect(screen.queryByText('Ken B')).not.toBeInTheDocument();
+    expect(screen.queryByText('#87')).not.toBeInTheDocument();
+    expect(screen.getByText('24 entries')).toBeInTheDocument();
+    expect(
+      screen.getByText('One row per result: every game you finish is listed.'),
+    ).toBeInTheDocument();
+    // No row anywhere says Report (decision 49).
+    expect(screen.queryByText('Report')).not.toBeInTheDocument();
+  });
+
+  it('appends your best row with its rank when it is below the rows sent', async () => {
+    stubServer();
+    meBelowTop = true;
+    await openSudoku();
+    expect(
+      await screen.findByText('#87 · 24 entries · 10:00 · 0:10 to the next rank'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('…')).toBeInTheDocument();
+    const own = screen.getByText('10:00 Mistakes 3 Hints 0').closest('.club-line') as HTMLElement;
+    expect(within(own).getByText('#87')).toBeInTheDocument();
+    expect(within(own).getByText('You')).toBeInTheDocument();
+  });
+
+  it('Back shows the Club as it was, without a request; Reload reads it again', async () => {
+    const fetchMock = stubServer();
+    mineList = [
+      standing('sudoku', 'hard', { rank: 2, facts: HARD_ROWS[1]!.facts, nextValue: 238 }),
+    ];
+    const user = await openSudoku();
+    await screen.findByText('#2 · 24 entries · 5:00 · 1:02 to the next rank');
+    const before = fetchMock.mock.calls.length;
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    // At once, with the lists it had: no Loading, Your rankings and the shelves in place.
+    expect(screen.getByRole('heading', { name: 'Your rankings' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sudoku' })).toBeInTheDocument();
+    expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
+    expect(fetchMock.mock.calls.length).toBe(before);
+
+    await user.click(screen.getByRole('button', { name: 'Reload' }));
+    await waitFor(() => expect(callsTo(fetchMock, 'GET', '/rankings')).toHaveLength(2));
+    expect(callsTo(fetchMock, 'GET', '/rankings/mine')).toHaveLength(2);
+    expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(2);
+  });
+
+  it('another member’s name opens the sheet with that row’s record and Report', async () => {
+    const fetchMock = stubServer();
+    const user = await openSudoku();
+    await screen.findByText('#2 · 24 entries · 5:00 · 1:02 to the next rank');
+    // Ken is on the table twice; the first row is his 3:58.
+    await user.click(screen.getAllByRole('button', { name: 'Ken' })[0]!);
+    const sheet = screen.getByRole('dialog', { name: 'Ken' });
+    expect(sheet).toHaveTextContent('3:58 Mistakes 0 Hints 1');
+    expect(sheet).not.toHaveTextContent('7:30');
+    await user.click(within(sheet).getByRole('button', { name: 'Report' }));
+    await user.click(
+      within(screen.getByRole('alertdialog', { name: 'Report this nickname?' })).getByRole(
+        'button',
+        { name: 'Report' },
+      ),
+    );
+    expect(await screen.findByRole('status')).toHaveTextContent('Reported');
+    const posted = fetchMock.mock.calls.find(([url]) =>
+      String(url).endsWith('/members/m_1/report'),
+    );
+    expect(posted?.[1]?.method).toBe('POST');
+    // Your own rows are You, never a name to press.
+    expect(screen.queryByRole('button', { name: 'You' })).not.toBeInTheDocument();
+  });
+
+  it('opens no sheet on the owner’s device', async () => {
+    stubServer();
+    clubMe = { ...KEN, role: 'owner' };
+    clubMembers = [clubMe];
+    await openSudoku({ role: 'owner' });
+    await screen.findByText('#2 · 24 entries · 5:00 · 1:02 to the next rank');
+    expect(screen.getAllByText('Ken')).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: 'Ken' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mika' })).not.toBeInTheDocument();
+  });
+});
+
+describe('Today challenge: the tables’ marks and the name sheet (club.md §9「Challenge」)', () => {
+  async function openChallenge(extra: Record<string, unknown> = {}) {
+    dailyChallenges = true;
+    hasDailyResult = true;
+    const user = userEvent.setup();
+    await joinedConnection(extra);
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: /Sudoku · Hard · Daily · by Yoh/ }));
+    await screen.findByText('8:20 Mistakes 2 Hints 0');
+    return user;
+  }
+
+  it('marks the first three and opens the sheet on another member’s name', async () => {
+    const fetchMock = stubServer();
+    const user = await openChallenge();
+    const yoh = screen.getByText('4:31 Mistakes 0 Hints 1').closest('.club-line') as HTMLElement;
+    const own = screen.getByText('8:20 Mistakes 2 Hints 0').closest('.club-line') as HTMLElement;
+    expect(yoh.querySelector('.club-medal-1')).not.toBeNull();
+    expect(own.querySelector('.club-medal-2')).not.toBeNull();
+    // Your own name is not a button; another's is.
+    expect(within(own).queryByRole('button', { name: 'Ken' })).toBeNull();
+    await user.click(within(yoh).getByRole('button', { name: 'Yoh' }));
+    const sheet = screen.getByRole('dialog', { name: 'Yoh' });
+    expect(sheet).toHaveTextContent('4:31 Mistakes 0 Hints 1');
+    await user.click(within(sheet).getByRole('button', { name: 'Report' }));
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Report' }),
+    );
+    expect(await screen.findByRole('status')).toHaveTextContent('Reported');
+    expect(
+      fetchMock.mock.calls.some(
+        ([url, init]) => String(url).endsWith('/members/m_1/report') && init?.method === 'POST',
+      ),
+    ).toBe(true);
+  });
+
+  it('opens no sheet on the owner’s device', async () => {
+    stubServer();
+    clubMe = { ...KEN, role: 'owner' };
+    clubMembers = [clubMe];
+    await openChallenge({ role: 'owner' });
+    expect(screen.getByText('Yoh')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Yoh' })).not.toBeInTheDocument();
   });
 });

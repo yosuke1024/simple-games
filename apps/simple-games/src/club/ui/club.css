@@ -3,6 +3,22 @@
 
 .club-screen {
   min-width: 0;
+  /* The first three rows of a table (club.md §16-2, decision 48): a disc of
+     gold, silver or bronze behind the number. Muted metals, so the marks read
+     as part of the page rather than a prize on top of it. */
+  --medal-gold: #ebc867;
+  --medal-silver: #d3d7dd;
+  --medal-bronze: #e0ad86;
+  --medal-ink: #2b2a26;
+  --medal-sheen: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme='dark'] .club-screen {
+  --medal-gold: #c9a94e;
+  --medal-silver: #a9b0ba;
+  --medal-bronze: #b98a62;
+  --medal-ink: #15171b;
+  --medal-sheen: rgba(255, 255, 255, 0.22);
 }
 
 .club-title {
@@ -14,9 +30,53 @@
   text-align: center;
 }
 
+/* A game's tables: its tile before its title, as its own home wears it. */
+.club-title-lead {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.club-title-lead .game-tile {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.club-title-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .club-body {
   gap: 8px;
   padding-bottom: 24px;
+}
+
+/* The list is a column flex container that scrolls, so once it overflows every
+   row would shrink to its min-height (56px) and a row that wraps onto a third
+   line — "Your rankings" on a narrow phone — would be cut off. Rows keep the
+   height of their content. */
+.club-body > * {
+  flex-shrink: 0;
+}
+
+/* A ranking row on a narrow phone: the name keeps the first line (with its rank
+   and, for the viewer, the delete button) and the facts take a line of their
+   own, instead of three columns squeezing a name into pieces. */
+@media (max-width: 400px) {
+  .club-line.settings-row-static {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .club-line.settings-row-static .settings-row-value {
+    flex: 1 1 100%;
+    order: 3;
+  }
 }
 
 .club-header-actions {
@@ -126,6 +186,137 @@
   font-variant-numeric: tabular-nums;
 }
 
+.club-medal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  vertical-align: middle;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--medal-ink);
+  background-image: linear-gradient(160deg, var(--medal-sheen), rgba(255, 255, 255, 0) 60%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.club-medal-1 {
+  background-color: var(--medal-gold);
+}
+
+.club-medal-2 {
+  background-color: var(--medal-silver);
+}
+
+.club-medal-3 {
+  background-color: var(--medal-bronze);
+}
+
+/* Another member's name: opens the sheet with Report (club.md §17-3). Text
+   that can be pressed — a faint dotted line says so, nothing louder. The
+   padding widens the target to the row's height without moving the line. */
+.club-name-btn {
+  padding: 12px 0;
+  margin: -12px 0;
+  font-weight: inherit;
+  text-align: start;
+  text-decoration: underline dotted var(--ink-soft);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+/* The viewer's best row in a table, above the rows: rank · entries · value · gap. */
+.club-standing {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A game's modes (club.md §16-2): pills that wrap on a narrow phone. The game's
+   accent (`.accent-<id>` on the row) marks the one on screen. */
+.club-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.club-chip {
+  min-height: var(--tap-size);
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.club-chip[aria-selected='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.club-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* "Your rankings": tile, title, and a second line that wraps on a narrow phone. */
+.club-mine {
+  justify-content: flex-start;
+}
+
+.club-mine .game-tile {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+.club-mine-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.club-mine-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 12px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.club-mine-place {
+  display: inline-flex;
+  align-items: center;
+}
+
+.club-mine-place .club-rank {
+  min-width: 0;
+}
+
+.club-mine-value {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* The rankings' shelves: the home's category headings and tiles (CollectionHomeScreen). */
+.club-shelf-label {
+  margin: 4px 0 8px;
+  font-weight: 600;
+}
+
 .club-you {
   margin-left: 8px;
   font-size: 12px;
@@ -171,15 +362,6 @@
 
 .club-join-another {
   margin-top: 8px;
-}
-
-.club-ranking-title {
-  flex: 1 1 auto;
-}
-
-.club-ranking-count {
-  font-size: 13px;
-  color: var(--ink-soft);
 }
 
 .club-separator {

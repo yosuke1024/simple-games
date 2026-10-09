@@ -58,6 +58,15 @@ export interface ClubResultPayload {
    * challenge.
    */
   daily?: string | null;
+  /**
+   * This play, as distinct from another play of the same game that happens to end
+   * with the same figures (an arcade title sends no seed, and a small score
+   * repeats): a random token the result screen makes once per mount. The bridge
+   * keys its "already sent" memo on it, so two plays are two rows (club.md §16-1)
+   * while one play, re-rendered or sent late, is still sent once. Absent only in
+   * tests that stand in for the result screen.
+   */
+  playId?: string;
 }
 
 /**

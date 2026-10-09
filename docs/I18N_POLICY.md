@@ -257,6 +257,9 @@ zh-Hans / zh-Hant のスクリプト解決(zh-TW → zh-Hant 等)は中国語対
 `clubDeleteResultTitle` / `clubDeleteResultBody` / `clubDeleteConfirm` も足した(ランキングの行は「次の局でまた入る」、
 デイリーの結果は「その挑戦へはもう結果を送れない」。どちらも取り消せない。全部を消すキーは作らない)。
 **2026-10-02 にすべて門を通った**(`clubAutoSendDisclosure` の 12 件、続いて `clubAutoSendAccept` と削除の 5 キーの 72 件)。既存の高リスクキーの英語の原文を直したときは、そのキーの承認も失効する(今は直していない)。
+**2026-10-10** に `clubDeleteRankingTitle` / `clubDeleteRankingBody` を削除し(順位表が結果ごとに 1 行になり、
+「次の局でまた入る」の文言が消えた)、行ごとの削除の確認 `clubDeleteEntryTitle` / `clubDeleteEntryBody`
+(「この結果だけが消える・ほかの結果は残る・元に戻せない」)を足した。この 24 件は未承認で、リリース前に通す。
 リリース前に通し直す([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §3)。)
 
 #### 門は文書ではなくコードで強制する

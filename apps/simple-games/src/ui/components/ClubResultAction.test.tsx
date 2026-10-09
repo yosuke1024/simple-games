@@ -100,7 +100,19 @@ describe('sending', () => {
       params: { difficulty: 'hard' },
       boardDigest: 'sd1:1',
       daily: '2026-10-02',
+      playId: expect.any(String),
     });
+  });
+
+  it('names the play: one token per mount, so two games with the same figures are two results', async () => {
+    const { bridge, sendResult } = answering([FAMILY], 'sent');
+    await mount(bridge);
+    cleanup();
+    await mount(bridge);
+    expect(sendResult).toHaveBeenCalledTimes(2);
+    const ids = sendResult.mock.calls.map((c) => (c[0] as { playId?: string }).playId);
+    expect(ids[0]).toMatch(/^[a-z0-9]+-[a-z0-9]+$/);
+    expect(ids[1]).not.toBe(ids[0]);
   });
 
   it('draws no button: there is nothing to press', async () => {

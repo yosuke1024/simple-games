@@ -27,7 +27,10 @@ export const ptBR: ClubMessages = {
   clubJoinAndPlay: 'Entrar e jogar',
   clubJoining: 'Entrando…',
   clubRankings: 'Rankings',
+  clubMyRankings: 'Seus rankings',
   clubEntries: '{n} entradas',
+  clubToNext: '{gap} para a próxima posição',
+  clubRowsNote: 'Uma linha por resultado: cada jogo que você termina aparece na lista.',
   clubMembers: 'Membros',
   clubNothingYet: 'Ainda não há nada aqui.',
   clubInvite: 'Convidar',
@@ -65,9 +68,9 @@ export const ptBR: ClubMessages = {
   clubChangeName: 'Alterar seu nome',
   clubNameSaved: 'Nome salvo',
   clubDeleteRecord: 'Apagar meu resultado',
-  clubDeleteRankingTitle: 'Apagar seu resultado neste ranking?',
-  clubDeleteRankingBody:
-    'O próximo jogo que você terminar entra de novo. Isso não pode ser desfeito.',
+  clubDeleteEntryTitle: 'Apagar este resultado?',
+  clubDeleteEntryBody:
+    'Somente este resultado é apagado. Seus outros resultados permanecem. Isso não pode ser desfeito.',
   clubDeleteResultTitle: 'Remover seu resultado deste desafio?',
   clubDeleteResultBody:
     'Você não poderá enviar outro resultado a este desafio. Isso não pode ser desfeito.',

@@ -516,6 +516,100 @@ describe('Club outbox record (docs/architecture/club.md §4-2)', () => {
       expect(loaded.items[0]?.attempts).toBe(3);
     });
 
+    describe('a ranking clientId (club.md §4-2, §16-1)', () => {
+      const ID = 'res-4f9a2c7e11b8d0aa';
+      /** A ranking item carrying `clientId` on the item and in the body, as the bridge queues it. */
+      const withId = (clientId: unknown, over: Record<string, unknown> = {}) => {
+        const base = ranking();
+        return { ...base, clientId, body: { ...base.body, clientId }, ...over };
+      };
+      const item0 = async (raw: unknown) => (await load([raw])).items[0];
+
+      it('round-trips on the item and in the body, schemaVersion unchanged', async () => {
+        const kv = createMemoryKV();
+        await saveRecord(
+          clubOutboxSchema,
+          { schemaVersion: 1, items: [(await item0(withId(ID)))!] },
+          kv,
+        );
+        const loaded = await loadRecord(clubOutboxSchema, kv);
+        expect(loaded.schemaVersion).toBe(1);
+        const [stored] = loaded.items;
+        expect(stored?.kind === 'ranking' && stored.clientId).toBe(ID);
+        expect(stored?.kind === 'ranking' && stored.body.clientId).toBe(ID);
+      });
+
+      it('keeps an item from the previous version, which has none, without inventing one', async () => {
+        const stored = await item0(ranking());
+        expect(stored?.kind).toBe('ranking');
+        expect(stored).not.toHaveProperty('clientId');
+        expect(stored?.kind === 'ranking' && stored.body).not.toHaveProperty('clientId');
+      });
+
+      it.each([
+        ['8 characters', 'abcd1234'],
+        ['64 characters', 'a'.repeat(64)],
+        ['with - and _', 'ab-cd_ef-12'],
+      ])('accepts %s', async (_what, id) => {
+        const stored = await item0(withId(id));
+        expect(stored?.kind === 'ranking' && stored.clientId).toBe(id);
+      });
+
+      it.each([
+        ['too short', 'abc1234'],
+        ['too long', 'a'.repeat(65)],
+        ['empty', ''],
+        ['a space', 'abcd 1234'],
+        ['a dot', 'abcd.1234'],
+        ['a slash', 'abcd/1234'],
+        ['non-ASCII', 'abcd1234é'],
+        ['a newline at the end', 'abcd1234\n'],
+        ['a number', 12345678],
+        ['null', null],
+        ['an object', { id: ID }],
+      ])('drops a clientId that is %s, and keeps the item', async (_what, bad) => {
+        const stored = await item0(withId(bad));
+        expect(stored?.kind).toBe('ranking');
+        expect(stored).not.toHaveProperty('clientId');
+        expect(stored?.kind === 'ranking' && stored.body).not.toHaveProperty('clientId');
+        // The result itself is whole.
+        expect(stored?.kind === 'ranking' && stored.body.facts).toEqual({ score: 2048 });
+      });
+
+      it('the item’s own token decides; the body’s stands in only when the item has none', async () => {
+        const base = ranking();
+        const other = 'other-0123456789';
+        const both = await item0({
+          ...base,
+          clientId: ID,
+          body: { ...base.body, clientId: other },
+        });
+        expect(both?.kind === 'ranking' && [both.clientId, both.body.clientId]).toEqual([ID, ID]);
+        const bodyOnly = await item0({ ...base, body: { ...base.body, clientId: ID } });
+        expect(bodyOnly?.kind === 'ranking' && [bodyOnly.clientId, bodyOnly.body.clientId]).toEqual(
+          [ID, ID],
+        );
+        // A malformed item token is not rescued by the body's: both go.
+        const bad = await item0({ ...base, clientId: 'x', body: { ...base.body, clientId: ID } });
+        expect(bad).not.toHaveProperty('clientId');
+        expect(bad?.kind === 'ranking' && bad.body).not.toHaveProperty('clientId');
+      });
+
+      it('a daily or an old-form item never gets one', async () => {
+        const stored = await item0(daily({ clientId: ID }));
+        expect(stored?.kind).toBe('daily');
+        expect(stored).not.toHaveProperty('clientId');
+        const old = await item0(item(1, { clientId: ID }));
+        expect(old).not.toHaveProperty('clientId');
+      });
+
+      it('keeps a counted attempt beside it', async () => {
+        const stored = await item0(withId(ID, { attempts: 2 }));
+        expect(stored?.attempts).toBe(2);
+        expect(stored?.kind === 'ranking' && stored.clientId).toBe(ID);
+      });
+    });
+
     it.each([
       ['an unknown kind', { kind: 'other' }],
       ['a daily without a date', withBody(daily(), { daily: '2026-13-40' })],

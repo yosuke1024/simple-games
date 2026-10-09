@@ -15,6 +15,7 @@ import {
   validateJoinResponse,
   validateList,
   validateMember,
+  validateRankingMine,
   validateRankingSubmitResponse,
   validateRankingSummary,
   validateRankingTable,
@@ -30,6 +31,7 @@ import {
   type JoinResponse,
   type Member,
   type ReportedMember,
+  type RankingMine,
   type RankingSubmit,
   type RankingSubmitResponse,
   type RankingSummary,
@@ -57,6 +59,8 @@ export interface ClubClient {
   rankings(): Promise<RankingSummary[]>;
   /** One table: the top rows and the caller's own row. */
   ranking(gameId: string, paramsKey: string, top?: number): Promise<RankingTable>;
+  /** The tables the caller is in, each with their standing (club.md §16-1); a server without the route answers 404. */
+  rankingsMine(): Promise<RankingMine[]>;
   hosting(): Promise<Hosting>;
   invite(): Promise<InviteResponse>;
   rotateInvite(): Promise<InviteResponse>;
@@ -70,7 +74,9 @@ export interface ClubClient {
   renameMember(id: string, nickname: string): Promise<Member>;
   /** The caller changes their own nickname; reports against them stay (club.md §5-3, §17-3). */
   renameSelf(nickname: string): Promise<Member>;
-  /** Deletes the caller's own row in one ranking table (club.md §5-3); 404 when there is none. */
+  /** Deletes one of the caller's own rows in a table by its id (club.md §5-4); 404 when it is not theirs or gone. */
+  deleteMyEntry(gameId: string, paramsKey: string, id: string): Promise<void>;
+  /** Compatibility (club.md §5-4): deletes every row of the caller's in one table; 404 when there is none. */
   deleteMyRanking(gameId: string, paramsKey: string): Promise<void>;
   /** Deletes the caller's own result in one challenge and withdraws them from it (club.md §5-3). */
   deleteMyResult(challengeId: string): Promise<void>;
@@ -256,6 +262,9 @@ export function createClient(
         ),
       );
     },
+    async rankingsMine() {
+      return check(validateList(await request('GET', '/rankings/mine'), validateRankingMine));
+    },
     async hosting() {
       return check(validateHosting(await request('GET', '/hosting')));
     },
@@ -282,6 +291,12 @@ export function createClient(
     },
     async renameSelf(nickname) {
       return check(validateMember(await request('PATCH', '/me', { nickname })));
+    },
+    async deleteMyEntry(gameId, paramsKey, id) {
+      await request(
+        'DELETE',
+        `/rankings/${encodeURIComponent(gameId)}/${encodeURIComponent(paramsKey)}/entries/${encodeURIComponent(id)}`,
+      );
     },
     async deleteMyRanking(gameId, paramsKey) {
       await request(

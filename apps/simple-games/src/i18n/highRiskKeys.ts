@@ -98,10 +98,12 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   'clubDailyDisclosure',
 
   // 自分の記録を 1 件ずつ消す(docs/architecture/club.md §9, §14 判断 42) — ランキングの自分の行は
-  // 「次に遊び終えた結果がまた入る」、デイリーの自分の結果は「その挑戦にはもう結果を送れない」、
-  // どちらも元に戻せない。どれかを落とした訳は、消えるものと戻らないものを誤らせる。
-  'clubDeleteRankingTitle',
-  'clubDeleteRankingBody',
+  // 「この結果だけが消え、ほかの結果は残る」(2026-10-10、club.md §11・判断 45・51。結果ごとに 1 行になり、
+  // 1 人 1 行の文言 `clubDeleteRanking*` を置き換えた)、デイリーの自分の結果は「その挑戦にはもう
+  // 結果を送れない」、どちらも元に戻せない。どれかを落とした訳は、消えるものと戻らないものを誤らせる
+  // (「ほかの結果は残る」を落とした訳は、全部消えると思わせる)。
+  'clubDeleteEntryTitle',
+  'clubDeleteEntryBody',
   'clubDeleteResultTitle',
   'clubDeleteResultBody',
   'clubDeleteConfirm',

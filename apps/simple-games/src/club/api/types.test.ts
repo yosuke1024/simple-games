@@ -12,10 +12,12 @@ import {
   validateList,
   validateMember,
   validateRankingEntry,
+  validateRankingMine,
   validateRankingSubmitResponse,
   validateRankingSummary,
   validateRankingTable,
   validateResult,
+  type RankingSubmit,
   type ResultSubmission,
 } from './types';
 
@@ -52,6 +54,52 @@ describe('ResultSubmission', () => {
       device: 'pixel',
     };
     expect(extra).toBeDefined();
+  });
+});
+
+describe('RankingSubmit', () => {
+  const body: RankingSubmit = {
+    gameId: 'sudoku',
+    contractVersion: 1,
+    paramsKey: 'hard',
+    params: { difficulty: 'hard' },
+    seed: 'sudoku-club-x',
+    boardDigest: 'sd1:9f3a1c07',
+    outcome: 'completed',
+    facts: { elapsedSeconds: 305, mistakes: 2, hints: 0 },
+  };
+  const fields = [
+    'boardDigest',
+    'contractVersion',
+    'facts',
+    'gameId',
+    'outcome',
+    'params',
+    'paramsKey',
+    'seed',
+  ];
+
+  it('is the result and its table, with no field that names a device or a person (club.md §5-5, §16-1)', () => {
+    expect(Object.keys(body).sort()).toEqual(fields);
+    const extra: RankingSubmit = {
+      ...body,
+      // @ts-expect-error extra keys (a device name, say) are a type error
+      device: 'pixel',
+    };
+    expect(extra).toBeDefined();
+  });
+
+  it('may carry one more field, clientId: a random token for this result, optional and a string', () => {
+    const withToken: RankingSubmit = { ...body, clientId: 'res-4f9a2c7e11b8d0aa' };
+    expect(Object.keys(withToken).sort()).toEqual([...fields, 'clientId'].sort());
+    // Optional: a body without it is still a RankingSubmit (a build before 2026-10-10 sent none).
+    expect(body.clientId).toBeUndefined();
+    const notAToken: RankingSubmit = {
+      ...body,
+      // @ts-expect-error a token is a string
+      clientId: 12345678,
+    };
+    expect(notAToken).toBeDefined();
   });
 });
 
@@ -151,8 +199,9 @@ describe('validators', () => {
     ).toBeNull();
   });
 
-  it('ranking validators accept the documented shapes and reject the rest', () => {
+  describe('ranking validators (club.md §5-3, §16-1)', () => {
     const entry = {
+      id: '12',
       memberId: 'm',
       nickname: 'Ken',
       submittedAt: 'x',
@@ -160,35 +209,159 @@ describe('validators', () => {
       seed: 's',
       boardDigest: null,
     };
-    expect(validateRankingEntry(entry)).toEqual(entry);
-    expect(validateRankingEntry({ ...entry, boardDigest: 5 })).toBeNull();
-    expect(validateRankingEntry({ ...entry, seed: undefined })).toBeNull();
-    const summary = { gameId: 'g', paramsKey: 'standard', entryCount: 3, leader: entry };
-    expect(validateRankingSummary(summary)).toEqual(summary);
-    expect(validateRankingSummary({ ...summary, entryCount: -1 })).toBeNull();
-    expect(validateRankingSummary({ ...summary, leader: {} })).toBeNull();
-    const table = { gameId: 'g', paramsKey: 'k', entryCount: 3, entries: [entry], me: null };
-    expect(validateRankingTable(table)).toEqual(table);
-    expect(validateRankingTable({ ...table, me: { rank: 87, entry } })?.me?.rank).toBe(87);
-    expect(validateRankingTable({ ...table, me: { rank: 0, entry } })).toBeNull();
-    // Below the server's scan ceiling the rank is unknown, not wrong (club.md §16-1).
-    expect(validateRankingTable({ ...table, me: { rank: null, entry } })?.me?.rank).toBeNull();
-    expect(validateRankingTable({ ...table, entries: [{}] })).toBeNull();
-    const sent = {
-      gameId: 'g',
-      paramsKey: 'k',
-      improved: false,
-      entry: null,
-      entryCount: 0,
-    };
-    expect(validateRankingSubmitResponse(sent)).toEqual(sent);
-    expect(validateRankingSubmitResponse({ ...sent, improved: 'no' })).toBeNull();
-    expect(validateRankingSubmitResponse({ ...sent, entry: {} })).toBeNull();
-    for (const bad of [null, undefined, 1, 'x', [], {}]) {
-      expect(validateRankingSummary(bad)).toBeNull();
-      expect(validateRankingTable(bad)).toBeNull();
-      expect(validateRankingSubmitResponse(bad)).toBeNull();
-    }
+    /** What a server that predates `Entry.id` sends: the same row with no such key. */
+    const withoutId: Record<string, unknown> = { ...entry };
+    delete withoutId.id;
+
+    it('an entry carries its id as a string; a server that predates it sends none, which is null', () => {
+      expect(validateRankingEntry(entry)).toEqual(entry);
+      expect(validateRankingEntry(entry)?.id).toBe('12');
+      expect(validateRankingEntry(withoutId)).toEqual({ ...entry, id: null });
+      expect(validateRankingEntry({ ...entry, id: null })).toEqual({ ...entry, id: null });
+      // An id is the server's arrival counter as a string: a number is a different contract.
+      expect(validateRankingEntry({ ...entry, id: 12 })).toBeNull();
+      expect(validateRankingEntry({ ...entry, id: {} })).toBeNull();
+      expect(validateRankingEntry({ ...entry, boardDigest: 5 })).toBeNull();
+      expect(validateRankingEntry({ ...entry, seed: undefined })).toBeNull();
+    });
+
+    it('a summary needs a valid leader and a count', () => {
+      const summary = { gameId: 'g', paramsKey: 'standard', entryCount: 3, leader: entry };
+      expect(validateRankingSummary(summary)).toEqual(summary);
+      expect(validateRankingSummary({ ...summary, leader: withoutId })?.leader.id).toBeNull();
+      expect(validateRankingSummary({ ...summary, entryCount: -1 })).toBeNull();
+      expect(validateRankingSummary({ ...summary, leader: {} })).toBeNull();
+    });
+
+    it('a table’s me is { rank, entry, nextValue } — or null when the caller is not in it', () => {
+      const table = { gameId: 'g', paramsKey: 'k', entryCount: 3, entries: [entry], me: null };
+      expect(validateRankingTable(table)).toEqual(table);
+      // A server that predates `me`, or sends nothing for it, is the same as not being in the table.
+      const { me: _me, ...noMe } = table;
+      expect(validateRankingTable(noMe)?.me).toBeNull();
+      expect(validateRankingTable({ ...table, me: undefined })?.me).toBeNull();
+
+      const standing = { rank: 87, entry, nextValue: 123 };
+      expect(validateRankingTable({ ...table, me: standing })).toEqual({ ...table, me: standing });
+      expect(validateRankingTable({ ...table, me: standing })?.me?.rank).toBe(87);
+      // Rank 1 is a rank; below the server's scan ceiling the rank is unknown, not wrong (club.md §16-1).
+      expect(validateRankingTable({ ...table, me: { ...standing, rank: 1 } })?.me?.rank).toBe(1);
+      expect(
+        validateRankingTable({ ...table, me: { ...standing, rank: null } })?.me?.rank,
+      ).toBeNull();
+      expect(validateRankingTable({ ...table, me: { ...standing, rank: 0 } })).toBeNull();
+      expect(validateRankingTable({ ...table, me: { ...standing, rank: -2 } })).toBeNull();
+      expect(validateRankingTable({ ...table, me: { ...standing, rank: 1.5 } })).toBeNull();
+      expect(validateRankingTable({ ...table, me: { ...standing, rank: '3' } })).toBeNull();
+    });
+
+    it('nextValue is the nearest better value: a finite number, null at the top, null from an old server', () => {
+      const table = { gameId: 'g', paramsKey: 'k', entryCount: 3, entries: [entry] };
+      const me = (extra: Record<string, unknown>) =>
+        validateRankingTable({ ...table, me: { rank: 2, entry, ...extra } });
+      expect(me({ nextValue: 123 })?.me?.nextValue).toBe(123);
+      // 0 is a value like any other, not "missing".
+      expect(me({ nextValue: 0 })?.me?.nextValue).toBe(0);
+      expect(me({ nextValue: null })?.me?.nextValue).toBeNull();
+      expect(me({})?.me?.nextValue).toBeNull();
+      expect(me({ nextValue: undefined })?.me?.nextValue).toBeNull();
+      for (const bad of ['x', '123', NaN, Infinity, -Infinity, {}, true]) {
+        expect(me({ nextValue: bad })).toBeNull();
+      }
+      // An old server's me has no nextValue and its entry has no id: both fall back, neither fails.
+      const old = validateRankingTable({ ...table, me: { rank: 4, entry: withoutId } });
+      expect(old?.me).toEqual({ rank: 4, entry: { ...entry, id: null }, nextValue: null });
+    });
+
+    it('a table is malformed when any row, or the caller’s own row, is', () => {
+      const table = { gameId: 'g', paramsKey: 'k', entryCount: 3, entries: [entry], me: null };
+      expect(validateRankingTable({ ...table, entries: [{}] })).toBeNull();
+      expect(validateRankingTable({ ...table, entries: [entry, { ...entry, id: 5 }] })).toBeNull();
+      expect(validateRankingTable({ ...table, me: {} })).toBeNull();
+      expect(validateRankingTable({ ...table, me: { rank: 1, entry: {} } })).toBeNull();
+      expect(validateRankingTable({ ...table, me: { rank: 1 } })).toBeNull();
+      expect(validateRankingTable({ ...table, entryCount: 1.5 })).toBeNull();
+    });
+
+    describe('validateRankingMine (GET /rankings/mine)', () => {
+      const mine = {
+        gameId: 'sudoku',
+        paramsKey: 'hard',
+        entryCount: 9,
+        leader: entry,
+        best: { rank: 3, entry: { ...entry, id: '40', memberId: 'me' }, nextValue: 305 },
+      };
+
+      it('accepts the documented shape', () => {
+        expect(validateRankingMine(mine)).toEqual(mine);
+        // The leader and the caller's best may be one row.
+        const top = { ...mine, best: { rank: 1, entry, nextValue: null } };
+        expect(validateRankingMine(top)).toEqual(top);
+      });
+
+      it('reads rank and nextValue as a table’s me does', () => {
+        const unranked = validateRankingMine({ ...mine, best: { entry } });
+        expect(unranked?.best).toEqual({ rank: null, entry, nextValue: null });
+        expect(
+          validateRankingMine({ ...mine, best: { ...mine.best, rank: null } })?.best.rank,
+        ).toBeNull();
+        expect(validateRankingMine({ ...mine, best: { ...mine.best, rank: 0 } })).toBeNull();
+        expect(validateRankingMine({ ...mine, best: { ...mine.best, nextValue: NaN } })).toBeNull();
+        expect(validateRankingMine({ ...mine, best: { ...mine.best, nextValue: 'x' } })).toBeNull();
+        expect(validateRankingMine({ ...mine, leader: withoutId })?.leader.id).toBeNull();
+      });
+
+      it('rejects a missing leader or best, a bad count, and a bad row inside either', () => {
+        expect(validateRankingMine({ ...mine, leader: undefined })).toBeNull();
+        expect(validateRankingMine({ ...mine, leader: null })).toBeNull();
+        expect(validateRankingMine({ ...mine, leader: {} })).toBeNull();
+        expect(validateRankingMine({ ...mine, best: undefined })).toBeNull();
+        expect(validateRankingMine({ ...mine, best: null })).toBeNull();
+        expect(validateRankingMine({ ...mine, best: {} })).toBeNull();
+        expect(validateRankingMine({ ...mine, best: { rank: 1, entry: {} } })).toBeNull();
+        for (const bad of [undefined, null, -1, 1.5, '9', NaN]) {
+          expect(validateRankingMine({ ...mine, entryCount: bad })).toBeNull();
+        }
+        expect(validateRankingMine({ ...mine, gameId: undefined })).toBeNull();
+        expect(validateRankingMine({ ...mine, paramsKey: 3 })).toBeNull();
+        for (const bad of [null, undefined, 1, 'x', [], {}]) {
+          expect(validateRankingMine(bad)).toBeNull();
+        }
+      });
+
+      it('validateList over it takes every row or none', () => {
+        const other = { ...mine, gameId: 'minesweeper', paramsKey: 'easy', entryCount: 1 };
+        expect(validateList([mine, other], validateRankingMine)).toEqual([mine, other]);
+        // No table at all is an empty list, not a malformed one.
+        expect(validateList([], validateRankingMine)).toEqual([]);
+        expect(validateList([mine, { ...other, best: undefined }], validateRankingMine)).toBeNull();
+        expect(validateList({ ...mine }, validateRankingMine)).toBeNull();
+        expect(validateList(null, validateRankingMine)).toBeNull();
+      });
+    });
+
+    it('a submit answer holds the row that went in, or null when nothing was stored', () => {
+      const sent = { gameId: 'g', paramsKey: 'k', improved: false, entry: null, entryCount: 0 };
+      expect(validateRankingSubmitResponse(sent)).toEqual(sent);
+      const stored = { ...sent, improved: true, entry, entryCount: 4 };
+      expect(validateRankingSubmitResponse(stored)).toEqual(stored);
+      expect(validateRankingSubmitResponse({ ...stored, entry: withoutId })?.entry?.id).toBeNull();
+      expect(validateRankingSubmitResponse({ ...sent, improved: 'no' })).toBeNull();
+      expect(validateRankingSubmitResponse({ ...sent, entry: {} })).toBeNull();
+      expect(validateRankingSubmitResponse({ ...stored, entry: { ...entry, id: 12 } })).toBeNull();
+      // `entry` has no key of its own to be missing from: undefined is not null.
+      expect(validateRankingSubmitResponse({ ...sent, entry: undefined })).toBeNull();
+    });
+
+    it('never throw on a wrong shape', () => {
+      for (const bad of [null, undefined, 1, 'x', [], {}]) {
+        expect(validateRankingEntry(bad)).toBeNull();
+        expect(validateRankingSummary(bad)).toBeNull();
+        expect(validateRankingTable(bad)).toBeNull();
+        expect(validateRankingMine(bad)).toBeNull();
+        expect(validateRankingSubmitResponse(bad)).toBeNull();
+      }
+    });
   });
 
   it('validateList rejects non-arrays and any bad element', () => {

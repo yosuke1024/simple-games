@@ -448,8 +448,11 @@ export const clubConnectionsSchema: SchemaDef<ClubConnections> = {
  * - `daily`: `POST /challenges` — a daily everyone plays on the same board,
  *   which meets in that day's challenge (the server keeps the first result of
  *   each member).
- * - `ranking`: `POST /rankings/results` — a result in the game × mode table
- *   (the server keeps each member's best).
+ * - `ranking`: `POST /rankings/results` — a result in the game × mode table.
+ *   Every finished game is its own row there (club.md §16-1, 2026-10-10), so
+ *   nothing is merged: the item carries a random `clientId` (also in the body)
+ *   that the server dedupes a resend on. An item without one was queued by an
+ *   older build, which kept only the best per table; it stays valid.
  * - no `kind`: the original form, `POST /challenges/:id/results`. Builds before
  *   the automatic send wrote it; it stays valid and flushable.
  */
@@ -488,6 +491,12 @@ export interface ClubOutboxDailyItem extends ClubOutboxBase {
 
 export interface ClubOutboxRankingItem extends ClubOutboxBase {
   kind: 'ranking';
+  /**
+   * `^[A-Za-z0-9_-]{8,64}$` — a random token for this one result, the same as
+   * `body.clientId` (club.md §4-2, §5-5: it names no device and no person).
+   * Missing on an item an older build queued.
+   */
+  clientId?: string;
   body: {
     gameId: string;
     contractVersion: 1;
@@ -497,6 +506,7 @@ export interface ClubOutboxRankingItem extends ClubOutboxBase {
     boardDigest: string | null;
     outcome: 'completed' | 'played';
     facts: Record<string, unknown>;
+    clientId?: string;
   };
 }
 
@@ -510,8 +520,8 @@ export interface ClubOutbox {
 
 /**
  * One result can fan out to every joined Club (up to ten), and a day offline
- * is a few dozen results; the queue coalesces by board / mode before this cap
- * ever applies, so it is a backstop, not a budget.
+ * is a few dozen results. Rankings no longer coalesce (one row per result), so
+ * this cap is the only bound: past it the oldest are dropped.
  */
 export const CLUB_OUTBOX_MAX = 100;
 /** A failed delivery counted this many times is given up on (club.md §10). */
@@ -519,6 +529,11 @@ export const CLUB_OUTBOX_MAX_ATTEMPTS = 5;
 
 const GAME_ID = /^[a-z0-9-]{1,40}$/;
 const PARAMS_KEY = /^[a-z0-9-]{1,40}$/;
+/** The server's own shape for a ranking `clientId` (club.md §16-1). */
+const CLIENT_ID = /^[A-Za-z0-9_-]{8,64}$/;
+
+const asClientId = (v: unknown): string | null =>
+  typeof v === 'string' && CLIENT_ID.test(v) ? v : null;
 
 const asOutcome = (v: unknown): 'completed' | 'played' | null =>
   v === 'completed' || v === 'played' ? v : null;
@@ -605,9 +620,14 @@ export function validateClubOutboxItem(raw: unknown): ClubOutboxItem | null {
     const outcome = asOutcome(body.outcome);
     if (paramsKey === null || !PARAMS_KEY.test(paramsKey)) return null;
     if (outcome === null || !isRecord(body.facts)) return null;
+    // The item's own `clientId` decides; the body's stands in only when the item
+    // has none. A malformed one is dropped alone — the result is still worth
+    // sending, and without a token it is treated as an older build's item.
+    const clientId = asClientId(raw.clientId === undefined ? body.clientId : raw.clientId);
     return {
       ...base,
       kind: 'ranking',
+      ...(clientId === null ? {} : { clientId }),
       body: {
         gameId,
         contractVersion: 1,
@@ -617,6 +637,7 @@ export function validateClubOutboxItem(raw: unknown): ClubOutboxItem | null {
         boardDigest,
         outcome,
         facts: { ...body.facts },
+        ...(clientId === null ? {} : { clientId }),
       },
     };
   }

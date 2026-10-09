@@ -27,7 +27,10 @@ export const de: ClubMessages = {
   clubJoinAndPlay: 'Beitreten und spielen',
   clubJoining: 'Trete bei…',
   clubRankings: 'Ranglisten',
+  clubMyRankings: 'Deine Ranglisten',
   clubEntries: '{n} Einträge',
+  clubToNext: '{gap} bis zum nächsten Platz',
+  clubRowsNote: 'Eine Zeile pro Ergebnis: Jedes Spiel, das du beendest, wird aufgeführt.',
   clubMembers: 'Mitglieder',
   clubNothingYet: 'Hier ist noch nichts.',
   clubInvite: 'Einladen',
@@ -67,9 +70,9 @@ export const de: ClubMessages = {
   clubChangeName: 'Deinen Namen ändern',
   clubNameSaved: 'Name gespeichert',
   clubDeleteRecord: 'Meinen Eintrag löschen',
-  clubDeleteRankingTitle: 'Deinen Eintrag in dieser Rangliste löschen?',
-  clubDeleteRankingBody:
-    'Dein nächstes beendetes Spiel kommt wieder hinein. Das lässt sich nicht rückgängig machen.',
+  clubDeleteEntryTitle: 'Dieses Ergebnis löschen?',
+  clubDeleteEntryBody:
+    'Nur dieses Ergebnis wird gelöscht. Deine anderen Ergebnisse bleiben erhalten. Das lässt sich nicht rückgängig machen.',
   clubDeleteResultTitle: 'Dein Ergebnis aus dieser Challenge entfernen?',
   clubDeleteResultBody:
     'Du kannst kein weiteres Ergebnis an diese Challenge senden. Das lässt sich nicht rückgängig machen.',
