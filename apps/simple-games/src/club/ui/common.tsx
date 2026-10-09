@@ -17,12 +17,15 @@ export type T = (key: MessageKey, vars?: TranslateVars) => string;
 
 export function ScreenFrame({
   title,
+  lead,
   onBack,
   right,
   t,
   children,
 }: {
   title: string;
+  /** Drawn before the title inside the heading (a game's tile); hidden from the heading's name. */
+  lead?: ReactNode;
   onBack: () => void;
   right?: ReactNode;
   t: T;
@@ -34,11 +37,39 @@ export function ScreenFrame({
         <button type="button" className="icon-btn" aria-label={t('clubBack')} onClick={onBack}>
           <IconBack />
         </button>
-        <h1 className="club-title">{title}</h1>
+        {lead ? (
+          <h1 className="club-title club-title-lead">
+            {lead}
+            <span className="club-title-text">{title}</span>
+          </h1>
+        ) : (
+          <h1 className="club-title">{title}</h1>
+        )}
         {right ?? <span className="icon-btn-placeholder" />}
       </header>
       <div className="settings-list club-body">{children}</div>
     </div>
+  );
+}
+
+/**
+ * A row's rank as the tables write it (`#4`). The first three sit on a gold,
+ * silver or bronze disc (club.md §16-2, decision 48) — a mark inside this one
+ * table, not a title anyone carries elsewhere. The disc shows the bare number;
+ * the words stay for a screen reader. No number when the server stopped
+ * counting below its ceiling (§16-1).
+ */
+export function RankMark({ rank, t }: { rank: number | null; t: T }) {
+  if (rank === null) return <span className="club-rank" />;
+  const text = t('clubRank', { n: rank });
+  if (rank > 3) return <span className="club-rank">{text}</span>;
+  return (
+    <span className="club-rank">
+      <span className={`club-medal club-medal-${rank}`} aria-hidden="true">
+        {rank}
+      </span>
+      <span className="visually-hidden">{text}</span>
+    </span>
   );
 }
 
@@ -223,4 +254,114 @@ export function axisText(gameId: string, raw: unknown, t: T): string {
   const value = facts[contract.order];
   if (contract.order === 'elapsedSeconds') return factText('elapsedSeconds', value, t) ?? '';
   return typeof value === 'number' ? String(value) : '';
+}
+
+/**
+ * How far the viewer's best row is from the nearest strictly better value on
+ * the table's axis (club.md §16-2「1 つ上まで」, decision 48): a time as the
+ * time it is short by, any other axis as `{label} {n}`. Only the two numbers
+ * are read — the facts were already shown through `validateFacts`, and the
+ * gap needs nothing else from them. Empty when there is nothing to say: no
+ * better value (the top of the table), a value that is not a number, or a gap
+ * that rounds to nothing (never "0:00 to the next rank").
+ */
+export function axisGap(gameId: string, mine: unknown, nextValue: number | null, t: T): string {
+  const contract = contractFor(gameId);
+  if (contract === null || nextValue === null || !Number.isFinite(nextValue)) return '';
+  if (typeof mine !== 'object' || mine === null) return '';
+  const value = (mine as Record<string, unknown>)[contract.order];
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '';
+  if (contract.order === 'elapsedSeconds') {
+    // Each side as the rows print it (whole seconds), so the gap is their visible difference.
+    const gap = Math.abs(Math.floor(value) - Math.floor(nextValue));
+    return gap === 0 ? '' : formatDuration(gap);
+  }
+  const gap = Math.round(Math.abs(value - nextValue));
+  if (gap === 0) return '';
+  const label = FACT_LABELS[contract.order];
+  return label === undefined ? String(gap) : `${t(label)} ${gap}`;
+}
+
+/** Sort keys of the words many games share (easy < medium = normal < hard). */
+const DIFFICULTY_ORDER: ReadonlyMap<string, number> = new Map([
+  ['easy', 1],
+  ['medium', 2],
+  ['normal', 2],
+  ['hard', 3],
+]);
+const DOTS_AND_BOXES_ORDER: ReadonlyMap<string, number> = new Map([
+  ['small', 1],
+  ['medium', 2],
+  ['large', 3],
+]);
+const QUICK_MATH_ORDER: ReadonlyMap<string, number> = new Map([
+  ['addsub', 1],
+  ['multiply', 2],
+  ['divide', 3],
+  ['missing', 4],
+  ['mixed', 5],
+]);
+const SCHULTE_ORDER: ReadonlyMap<string, number> = new Map([
+  ['ascending', 0],
+  ['descending', 1],
+  ['odd-then-even', 2],
+]);
+/** Solitaire's draw and Spider's suit count, by the number they name. */
+const COUNT_ORDER: ReadonlyMap<string, number> = new Map([
+  ['draw-1', 1],
+  ['draw-3', 3],
+  ['1-suit', 1],
+  ['2-suits', 2],
+  ['4-suits', 4],
+]);
+/** A daily table comes after every mode of its game. */
+const DAILY_ORDER = 1_000_000;
+/** A key with no place here: after everything, then by its spelling (`sortModes`). */
+const UNKNOWN_ORDER = Number.POSITIVE_INFINITY;
+
+/**
+ * Where a mode stands among its game's modes (club.md §16-2): the order the
+ * chips of a table and the rows of "Your rankings" are drawn in. The server
+ * lists tables by the spelling of their keys; the order a player reads is the
+ * game's own — easier first, smaller first, Mahjong Solitaire's layouts by the
+ * first level they cover. `titles.test.ts` holds every key of every contract
+ * to it.
+ */
+export function modeOrder(gameId: string, key: string): number {
+  if (key === 'standard') return 0;
+  if (key === 'daily') return DAILY_ORDER;
+
+  const contract = contractFor(gameId);
+  if (contract?.levelRange !== undefined) {
+    const range = contract.levelRange(key);
+    return range === null ? UNKNOWN_ORDER : range[0];
+  }
+  if (gameId === 'dots-and-boxes') return DOTS_AND_BOXES_ORDER.get(key) ?? UNKNOWN_ORDER;
+  if (gameId === 'quick-math') return QUICK_MATH_ORDER.get(key) ?? UNKNOWN_ORDER;
+  if (gameId === 'schulte-table') {
+    // Size first, then the order within a size: 3×3 ascending … 5×5 odds-then-evens.
+    const match = /^(\d+)x\d+-(.+)$/.exec(key);
+    const order = match ? SCHULTE_ORDER.get(match[2]!) : undefined;
+    return match && order !== undefined ? Number(match[1]) * 10 + order : UNKNOWN_ORDER;
+  }
+
+  const known = DIFFICULTY_ORDER.get(key) ?? COUNT_ORDER.get(key);
+  if (known !== undefined) return known;
+  // A board size, by its side: 6×6 < 8×8 < 10×10.
+  const size = /^(\d+)x\d+$/.exec(key);
+  return size ? Number(size[1]) : UNKNOWN_ORDER;
+}
+
+/** Two of a game's mode keys in `modeOrder`; keys with the same place go by their spelling. */
+export function compareModes(gameId: string, a: string, b: string): number {
+  const x = modeOrder(gameId, a);
+  const y = modeOrder(gameId, b);
+  // Not `x - y`: two unknown keys are both Infinity, and Infinity - Infinity is NaN.
+  if (x !== y) return x < y ? -1 : 1;
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/** A game's mode keys in `modeOrder`, each once. */
+export function sortModes(gameId: string, keys: readonly string[]): string[] {
+  return [...new Set(keys)].sort((a, b) => compareModes(gameId, a, b));
 }

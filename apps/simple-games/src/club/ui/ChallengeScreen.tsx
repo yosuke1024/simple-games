@@ -2,7 +2,10 @@
  * One challenge (club.md §9「Challenge」): the disclosure comes before `Play`
  * (§2-2「開示が先、送信が後」), the ranked results come after. Results are
  * ordered by the game's contract on this device; the server only stores them.
- * Only the viewer's own result carries a delete button (club.md §9, decision 42).
+ * The first three wear the tables' marks (§16-2, decision 48). Only the
+ * viewer's own result carries a delete button (club.md §9, decision 42);
+ * another member's name opens the sheet with Report (§17-3) — never on the
+ * owner's device.
  */
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '../api/client';
@@ -15,8 +18,9 @@ import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import type { ClubConnection } from '@/storage/schemas';
 import type { ClubPlayRequest } from '@/ui/clubBridge';
-import { dateLabel, errorText, factsLine, ScreenFrame } from './common';
+import { dateLabel, errorText, factsLine, RankMark, ScreenFrame } from './common';
 import { challengeTitle } from './ClubScreen';
+import { NameSheet } from './NameSheet';
 
 /**
  * Challenges this session withdrew from (endpoint + challenge id). The server
@@ -52,6 +56,10 @@ export function ChallengeScreen({
   const alive = useRef(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  /** Another member's result, its name pressed: the sheet with Report. */
+  const [sheet, setSheet] = useState<{ result: Result; detail: string } | null>(null);
+  const [reportedNote, setReportedNote] = useState(false);
+  const isOwner = connection.role === 'owner';
 
   const load = async () => {
     const client = createClient(connection.endpoint, connection.memberToken);
@@ -132,6 +140,18 @@ export function ChallengeScreen({
     }
   };
 
+  /** Reporting twice is harmless (the server answers 204 and changes nothing). */
+  const report = async (result: Result) => {
+    setError(null);
+    setReportedNote(false);
+    try {
+      await createClient(connection.endpoint, connection.memberToken).reportMember(result.memberId);
+      if (alive.current) setReportedNote(true);
+    } catch (e) {
+      if (alive.current) setError(errorText(e, t, connection.clubName));
+    }
+  };
+
   return (
     <ScreenFrame
       title={challenge ? challengeTitle(challenge, t) : connection.clubName}
@@ -152,6 +172,11 @@ export function ChallengeScreen({
       {error ? (
         <p className="club-note club-note-error" role="alert">
           {error}
+        </p>
+      ) : null}
+      {reportedNote ? (
+        <p className="club-quiet" role="status">
+          {t('clubReported')}
         </p>
       ) : null}
 
@@ -196,21 +221,31 @@ export function ChallengeScreen({
                 key={result.memberId}
               >
                 <span className="settings-row-label">
-                  {rank !== null ? (
-                    <span className="club-rank">{t('clubRank', { n: rank })}</span>
-                  ) : null}
-                  {result.nickname}
+                  {rank !== null ? <RankMark rank={rank} t={t} /> : null}
+                  {own || isOwner ? (
+                    result.nickname
+                  ) : (
+                    <button
+                      type="button"
+                      className="club-name-btn"
+                      onClick={() => setSheet({ result, detail: facts })}
+                    >
+                      {result.nickname}
+                    </button>
+                  )}
                   {own ? <span className="club-you">{t('clubYou')}</span> : null}
                 </span>
                 <span className="settings-row-value">{facts}</span>
                 {own ? (
+                  // The same quiet word as a ranking row's delete (§16-2): the confirmation is the danger.
                   <button
                     type="button"
-                    className="club-text-btn club-quiet-btn club-danger"
+                    className="club-text-btn club-quiet-btn"
+                    aria-label={t('clubDeleteRecord')}
                     disabled={deleting}
                     onClick={() => setConfirmDelete(true)}
                   >
-                    {t('clubDeleteRecord')}
+                    {t('clubDeleteConfirm')}
                   </button>
                 ) : null}
               </div>
@@ -228,6 +263,15 @@ export function ChallengeScreen({
         onCancel={() => setConfirmDelete(false)}
         onConfirm={() => void deleteMine()}
       />
+      {sheet ? (
+        <NameSheet
+          nickname={sheet.result.nickname}
+          detail={sheet.detail}
+          t={t}
+          onClose={() => setSheet(null)}
+          onReport={() => report(sheet.result)}
+        />
+      ) : null}
     </ScreenFrame>
   );
 }

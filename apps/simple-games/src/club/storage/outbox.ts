@@ -3,6 +3,14 @@
  * written here first and removed once its Club answers (write-ahead), so the
  * queue is the record of what has still to go. Flushed right after the
  * player's own action and never on a timer.
+ *
+ * Rankings are not merged (club.md §4-2, 2026-10-10): a table is one row per
+ * finished game, so every ranking item is its own result, keyed by the random
+ * `clientId` made when it was queued, and a worse result queued after a better
+ * one is still sent. The same `clientId` is what lets the server drop a resend
+ * whose answer was lost. Only an item an older build queued, which has no
+ * `clientId`, still merges with its own kind and keeps the better one. A daily
+ * and an old-form result keep the first for their board / challenge.
  */
 import { loadRecordWithStatus, saveRecord } from '@/storage/repo';
 import {
@@ -50,7 +58,11 @@ export function itemKey(item: ClubOutboxItem): string {
     case 'daily':
       return `daily|${item.endpoint}|${item.body.gameId}|${item.body.seed}|${item.body.boardDigest}`;
     case 'ranking':
-      return `ranking|${item.endpoint}|${item.body.gameId}|${item.body.paramsKey}`;
+      // One result, one item. An item from before `clientId` existed has none and
+      // stands for its whole table: the older build kept only the best of it.
+      return item.clientId !== undefined
+        ? `ranking|${item.endpoint}|${item.clientId}`
+        : `ranking|${item.endpoint}|${item.body.gameId}|${item.body.paramsKey}`;
     default:
       return `result|${item.endpoint}|${item.challengeId}`;
   }
@@ -61,11 +73,14 @@ const bodyOf = (item: ClubOutboxItem): string =>
   JSON.stringify(item.kind === undefined ? item.result : item.body);
 
 /**
- * True when `candidate` beats `held` on the game's own axis (club.md §6-1) —
- * the server keeps a member's best, so a queued worse result is dead weight.
+ * True when `candidate` beats `held` on the game's own axis (club.md §6-1). Only
+ * two items from before `clientId` can meet here (same table key): the older
+ * build kept a table's best. An item with a `clientId` is a result of its own
+ * and is never replaced by, nor replaces, another.
  */
 function isBetter(candidate: ClubOutboxItem, held: ClubOutboxItem): boolean {
   if (candidate.kind !== 'ranking' || held.kind !== 'ranking') return false;
+  if (candidate.clientId !== undefined || held.clientId !== undefined) return false;
   const contract = contractFor(candidate.body.gameId);
   if (contract === null) return false;
   const a = candidate.body.facts[contract.order];
@@ -75,10 +90,13 @@ function isBetter(candidate: ClubOutboxItem, held: ClubOutboxItem): boolean {
 }
 
 /**
- * Queues one item, merging it into an equal one: a ranking keeps the better
- * value, a daily and an old-form result keep the first (the server's own
- * rules). Resolves false when storage could not be read, in which case nothing
- * was written — the caller must not claim the result is safe.
+ * Queues one item, merging it into an equal one: a daily and an old-form result
+ * keep the first (the server's own rules), an item queued again with the same
+ * `clientId` is the same result and is kept once, and only a ranking item
+ * without a `clientId` (an older build's) keeps the better value. Two ranking
+ * items with different `clientId`s never merge, however they compare. Resolves
+ * false when storage could not be read, in which case nothing was written — the
+ * caller must not claim the result is safe.
  */
 export function enqueueResult(item: ClubOutboxItem, kv?: KVStore): Promise<boolean> {
   return mutate(async () => {
@@ -119,27 +137,26 @@ export function dropOutboxFor(endpoint: string, kv?: KVStore): Promise<void> {
 }
 
 /**
- * Forgets the queued items of one Club that would recreate a record the player
- * just deleted (club.md §9): the ranking items of one table, or the daily (and
- * old-form) items of one challenge. Without it a queued result would write the record straight
- * back. Items of other tables, challenges and Clubs stay.
+ * Forgets the queued daily (and old-form) items of one challenge in one Club
+ * that would recreate a record the player just deleted (club.md §9): without it a
+ * queued result would write the record straight back. Items of other
+ * challenges and Clubs stay. Ranking items are never dropped this way: deleting
+ * a ranking row (club.md §9, 2026-10-10) leaves the queue alone, since a queued
+ * ranking item is another game's result and would become a row of its own.
  */
 export function dropOutboxMatching(
   endpoint: string,
-  target:
-    | { kind: 'ranking'; gameId: string; paramsKey: string }
-    | { kind: 'daily'; challengeId: string; gameId: string; seed: string; boardDigest: string },
+  target: {
+    kind: 'daily';
+    challengeId: string;
+    gameId: string;
+    seed: string;
+    boardDigest: string;
+  },
   kv?: KVStore,
 ): Promise<void> {
   const matches = (item: ClubOutboxItem): boolean => {
     if (item.endpoint !== endpoint) return false;
-    if (target.kind === 'ranking') {
-      return (
-        item.kind === 'ranking' &&
-        item.body.gameId === target.gameId &&
-        item.body.paramsKey === target.paramsKey
-      );
-    }
     // An old-form item (no `kind`) is a result addressed to the challenge by id.
     if (item.kind === undefined) return item.challengeId === target.challengeId;
     return (

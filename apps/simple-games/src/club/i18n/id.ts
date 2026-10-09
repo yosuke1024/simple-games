@@ -27,7 +27,10 @@ export const id: ClubMessages = {
   clubJoinAndPlay: 'Gabung dan Main',
   clubJoining: 'Bergabung…',
   clubRankings: 'Peringkat',
+  clubMyRankings: 'Peringkatmu',
   clubEntries: '{n} entri',
+  clubToNext: '{gap} ke peringkat berikutnya',
+  clubRowsNote: 'Satu baris per hasil: setiap permainan yang kamu selesaikan tercantum.',
   clubMembers: 'Anggota',
   clubNothingYet: 'Belum ada apa-apa di sini.',
   clubInvite: 'Undang',
@@ -67,9 +70,9 @@ export const id: ClubMessages = {
   clubChangeName: 'Ganti namamu',
   clubNameSaved: 'Nama disimpan',
   clubDeleteRecord: 'Hapus hasilku',
-  clubDeleteRankingTitle: 'Hapus hasilmu di peringkat ini?',
-  clubDeleteRankingBody:
-    'Permainan yang kamu selesaikan berikutnya akan masuk lagi. Tindakan ini tidak bisa dibatalkan.',
+  clubDeleteEntryTitle: 'Hapus hasil ini?',
+  clubDeleteEntryBody:
+    'Hanya hasil ini yang dihapus. Hasilmu yang lain tetap ada. Tindakan ini tidak bisa dibatalkan.',
   clubDeleteResultTitle: 'Hapus hasilmu dari tantangan ini?',
   clubDeleteResultBody:
     'Kamu tidak bisa mengirim hasil lagi ke tantangan ini. Tindakan ini tidak bisa dibatalkan.',

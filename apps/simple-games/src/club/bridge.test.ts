@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createMemoryKV, type KVStore } from '@/storage/kv';
 import { CLUB_OUTBOX_MAX_ATTEMPTS, type ClubConnection } from '@/storage/schemas';
 import type { GameId } from '@/app/registry';
 import type { ClubResultPayload } from '@/ui/clubBridge';
-import { createBridge, forgetDeliveredFor, loadConnections } from './bridge';
+import { createBridge, loadConnections } from './bridge';
 import { acceptAutoSend, addClubConnection, removeClubConnection } from './storage/connections';
 import { enqueueResult, pendingFor } from './storage/outbox';
 
@@ -71,6 +71,16 @@ const payload: ClubResultPayload = {
   boardDigest: 'sd1:1',
 };
 const dailyPayload: ClubResultPayload = { ...payload, daily: '2026-10-02' };
+/** The server's shape for a ranking `clientId` (club.md §16-1). */
+const CLIENT_ID = /^[A-Za-z0-9_-]{8,64}$/;
+/** The same ranking board with a different time: another finished game. */
+const taking = (elapsedSeconds: number): ClubResultPayload => ({
+  ...payload,
+  facts: { elapsedSeconds, mistakes: 0, hints: 0 },
+});
+/** The ranking items waiting for an endpoint, as stored. */
+const queuedRankings = async (endpoint: string, kv: KVStore) =>
+  (await pendingFor(endpoint, kv)).flatMap((i) => (i.kind === 'ranking' ? [i] : []));
 
 /** The URL path after `/api/v1` of every request a fetch mock got. */
 const paths = (f: ReturnType<typeof vi.fn>) =>
@@ -127,7 +137,20 @@ describe('sendResult: routing', () => {
       boardDigest: 'sd1:1',
       outcome: 'completed',
       facts: { elapsedSeconds: 271, mistakes: 0, hints: 1 },
+      clientId: expect.stringMatching(CLIENT_ID),
     });
+  });
+
+  it('a daily carries no clientId: the day’s challenge dedupes on the board', async () => {
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(201, challengeJson)));
+    const { bridge, kv } = await setup(f);
+    await bridge.sendResult(dailyPayload);
+    expect(bodyOf(f)).not.toHaveProperty('clientId');
+    f.mockRejectedValue(new TypeError('offline'));
+    await bridge.sendResult({ ...dailyPayload, seed: 'sudoku-club-2' });
+    const [queued] = await pendingFor(E, kv);
+    expect(queued?.kind).toBe('daily');
+    expect(queued).not.toHaveProperty('clientId');
   });
 
   it('a result with no digest goes to the ranking with boardDigest null', async () => {
@@ -465,15 +488,29 @@ describe('sendResult: the outbox', () => {
     expect(await pendingFor(E, kv)).toHaveLength(2);
   });
 
-  it('a queued result is sent by the next one, and the better of two for a table is the one that goes', async () => {
+  it('every result for one table is queued as its own item, a worse one after a better one included', async () => {
     const f = vi.fn().mockRejectedValue(new TypeError('offline'));
     const { bridge, kv } = await setup(f);
-    await bridge.sendResult({ ...payload, facts: { elapsedSeconds: 300, mistakes: 0, hints: 0 } });
-    await bridge.sendResult({ ...payload, facts: { elapsedSeconds: 200, mistakes: 0, hints: 0 } });
-    await bridge.sendResult({ ...payload, facts: { elapsedSeconds: 400, mistakes: 0, hints: 0 } });
-    const queued = await pendingFor(E, kv);
-    expect(queued).toHaveLength(1);
-    expect(queued[0]?.kind === 'ranking' && queued[0].body.facts.elapsedSeconds).toBe(200);
+    await bridge.sendResult(taking(300));
+    await bridge.sendResult(taking(200));
+    await bridge.sendResult(taking(400));
+    const queued = await queuedRankings(E, kv);
+    expect(queued.map((i) => i.body.facts.elapsedSeconds)).toEqual([300, 200, 400]);
+    // Each has its own token, the same on the item and in its body.
+    const ids = queued.map((i) => i.clientId);
+    expect(new Set(ids).size).toBe(3);
+    for (const i of queued) {
+      expect(i.clientId).toMatch(CLIENT_ID);
+      expect(i.body.clientId).toBe(i.clientId);
+    }
+  });
+
+  it('a queued result is sent by the next one: all of them, oldest first, each under its own clientId', async () => {
+    const f = vi.fn().mockRejectedValue(new TypeError('offline'));
+    const { bridge, kv } = await setup(f);
+    await bridge.sendResult(taking(300));
+    await bridge.sendResult(taking(200));
+    const waiting = (await queuedRankings(E, kv)).map((i) => i.clientId);
 
     f.mockReset().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
     const reports = await bridge.sendResult({
@@ -482,24 +519,86 @@ describe('sendResult: the outbox', () => {
       facts: { elapsedSeconds: 9, mistakes: 0, hints: 0 },
     });
     expect(reports[0]?.outcome).toBe('sent');
-    expect(f).toHaveBeenCalledTimes(2);
-    expect(bodyOf(f, 0).facts.elapsedSeconds).toBe(200);
+    expect(f).toHaveBeenCalledTimes(3);
+    expect([0, 1, 2].map((n) => bodyOf(f, n).facts.elapsedSeconds)).toEqual([300, 200, 9]);
+    expect([0, 1].map((n) => bodyOf(f, n).clientId)).toEqual(waiting);
     expect(await pendingFor(E, kv)).toEqual([]);
   });
 
-  it('a result worse than the one already queued for its table reports queued, not a second request', async () => {
+  it('a result worse than the one already queued for its table is queued behind it, not dropped', async () => {
     const f = vi.fn().mockRejectedValue(new TypeError('offline'));
-    const { bridge } = await setup(f);
-    await bridge.sendResult({ ...payload, facts: { elapsedSeconds: 100, mistakes: 0, hints: 0 } });
+    const { bridge, kv } = await setup(f);
+    await bridge.sendResult(taking(100));
     f.mockClear();
-    const reports = await bridge.sendResult({
-      ...payload,
-      facts: { elapsedSeconds: 900, mistakes: 0, hints: 0 },
-    });
+    const reports = await bridge.sendResult(taking(900));
     expect(reports[0]?.outcome).toBe('queued');
-    // The held (better) one is retried once; the worse one adds no request.
+    // The head is retried once and fails again; the flush stops there, so the
+    // worse result adds no second request (and no second timeout).
     expect(f).toHaveBeenCalledTimes(1);
     expect(bodyOf(f).facts.elapsedSeconds).toBe(100);
+    expect((await queuedRankings(E, kv)).map((i) => i.body.facts.elapsedSeconds)).toEqual([
+      100, 900,
+    ]);
+  });
+
+  it('a result carries a different clientId for each Club, and for each result', async () => {
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    const { bridge } = await setup(f, [FAMILY, WORK]);
+    await bridge.sendResult(taking(100));
+    await bridge.sendResult(taking(90));
+    const ids = f.mock.calls.map((_c, n) => bodyOf(f, n).clientId);
+    expect(ids).toHaveLength(4);
+    for (const id of ids) expect(id).toMatch(CLIENT_ID);
+    expect(new Set(ids).size).toBe(4);
+  });
+});
+
+describe('sendResult: clientId', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('is 128 random bits from getRandomValues, as hex', async () => {
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    const { bridge } = await setup(f);
+    const getRandomValues = vi.fn(<T extends ArrayBufferView | null>(array: T): T => {
+      new Uint8Array((array as Uint8Array).buffer).fill(0xab);
+      return array;
+    });
+    vi.stubGlobal('crypto', { getRandomValues });
+    await bridge.sendResult(payload);
+    expect(getRandomValues).toHaveBeenCalledTimes(1);
+    expect(bodyOf(f).clientId).toBe('ab'.repeat(16));
+  });
+
+  it('falls back to Math.random where there is no crypto, and is still a valid token', async () => {
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    const { bridge } = await setup(f);
+    vi.stubGlobal('crypto', undefined);
+    await bridge.sendResult(taking(100));
+    await bridge.sendResult(taking(90));
+    expect(bodyOf(f, 0).clientId).toMatch(CLIENT_ID);
+    expect(bodyOf(f, 1).clientId).toMatch(CLIENT_ID);
+    expect(bodyOf(f, 0).clientId).not.toBe(bodyOf(f, 1).clientId);
+  });
+
+  it('falls back too when getRandomValues throws', async () => {
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    const { bridge } = await setup(f);
+    vi.stubGlobal('crypto', {
+      getRandomValues: () => {
+        throw new Error('no entropy');
+      },
+    });
+    await bridge.sendResult(payload);
+    expect(bodyOf(f).clientId).toMatch(CLIENT_ID);
+  });
+
+  it('does not use randomUUID, which a Chromium 88 WebView on a plain page lacks', async () => {
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    const { bridge } = await setup(f);
+    const randomUUID = vi.fn(() => 'never-used-uuid');
+    vi.stubGlobal('crypto', { randomUUID, getRandomValues: crypto.getRandomValues.bind(crypto) });
+    await bridge.sendResult(payload);
+    expect(randomUUID).not.toHaveBeenCalled();
   });
 });
 
@@ -553,6 +652,44 @@ describe('sendResult: the same result twice', () => {
     expect((await bridge.sendResult(payload))[0]?.outcome).toBe('sent');
   });
 
+  it('a mount while the first try is still queued re-sends the same item under the same clientId, once', async () => {
+    const f = vi.fn().mockRejectedValue(new TypeError('offline'));
+    const { bridge, kv } = await setup(f);
+    expect((await bridge.sendResult(payload))[0]?.outcome).toBe('queued');
+    expect((await bridge.sendResult(payload))[0]?.outcome).toBe('queued');
+    // Not two rows' worth: one item in the queue, retried with the token it was born with.
+    const queued = await queuedRankings(E, kv);
+    expect(queued).toHaveLength(1);
+    expect(bodyOf(f, 0).clientId).toBe(queued[0]?.clientId);
+    expect(bodyOf(f, 1).clientId).toBe(queued[0]?.clientId);
+
+    f.mockReset().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    expect((await bridge.sendResult(payload))[0]?.outcome).toBe('sent');
+    expect(f).toHaveBeenCalledTimes(1);
+    expect(bodyOf(f).clientId).toBe(queued[0]?.clientId);
+    expect(await pendingFor(E, kv)).toEqual([]);
+  });
+
+  it('two mounts at once (a double effect) queue and send one item', async () => {
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    const { bridge, kv } = await setup(f);
+    const both = await Promise.all([bridge.sendResult(payload), bridge.sendResult(payload)]);
+    expect(both.map((r) => r[0]?.outcome)).toEqual(['sent', 'sent']);
+    expect(f).toHaveBeenCalledTimes(1);
+    expect(await pendingFor(E, kv)).toEqual([]);
+  });
+
+  it('a sent result is not sent again by a later mount, even after the player deleted its row', async () => {
+    // Deleting a row (club.md §9, 2026-10-10) does not reach the bridge: the
+    // settled memo stays, because sending it again would be a second row.
+    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+    const { bridge } = await setup(f);
+    await bridge.sendResult(payload);
+    await bridge.sendResult(payload);
+    await bridge.sendResult({ ...payload, facts: { ...payload.facts } });
+    expect(paths(f)).toEqual(['/rankings/results']);
+  });
+
   it('replaying a daily after the first result: the server says already, and so do we', async () => {
     const f = vi.fn().mockImplementation(() => Promise.resolve(err(409, 'already_submitted')));
     const { bridge } = await setup(f);
@@ -571,47 +708,17 @@ describe('loadConnections', () => {
   });
 });
 
-describe('forgetDeliveredFor (deleting one’s own ranking row)', () => {
-  it('lets a result that was settled this session go again, for that member only', async () => {
-    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
+describe('one play, one row (ClubResultPayload.playId, club.md §16-1)', () => {
+  it('two plays that end with the same figures are two results; one play sent again is one', async () => {
+    const f = vi.fn(async () => ok(201, rankingJson));
     const { bridge } = await setup(f);
-    await bridge.sendResult(payload);
-    await bridge.sendResult(payload);
-    // The memo: an overlay that mounts twice sends once.
-    expect(paths(f)).toEqual(['/rankings/results']);
-
-    // Another member of the same Club is not this one.
-    forgetDeliveredFor(E, 'm_other', 'sudoku');
-    await bridge.sendResult(payload);
-    expect(paths(f)).toEqual(['/rankings/results']);
-
-    forgetDeliveredFor(E, 'm_1', 'sudoku');
-    await bridge.sendResult(payload);
-    expect(paths(f)).toEqual(['/rankings/results', '/rankings/results']);
-  });
-
-  it('forgets the deleted table’s game only', async () => {
-    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
-    const { bridge } = await setup(f);
-    await bridge.sendResult(payload);
-    expect(paths(f)).toEqual(['/rankings/results']);
-    forgetDeliveredFor(E, 'm_1', 'minesweeper');
-    await bridge.sendResult(payload);
-    expect(paths(f)).toEqual(['/rankings/results']);
-    forgetDeliveredFor(E, 'm_1', 'sudoku');
-    await bridge.sendResult(payload);
-    expect(paths(f)).toEqual(['/rankings/results', '/rankings/results']);
-  });
-
-  it('reaches a memo wherever the bridge was made, and leaves other Clubs alone', async () => {
-    const f = vi.fn().mockImplementation(() => Promise.resolve(ok(200, rankingJson)));
-    const { bridge } = await setup(f, [FAMILY, WORK]);
-    await bridge.sendResult(payload);
-    expect(paths(f)).toHaveLength(2);
-    forgetDeliveredFor(E, 'm_1', 'sudoku');
-    await bridge.sendResult(payload);
-    // Only the Club whose ranking row was deleted sends again.
-    expect(hosts(f).filter((h) => h === 'club.example.com')).toHaveLength(2);
-    expect(hosts(f).filter((h) => h === 'second.example.com')).toHaveLength(1);
+    const first: ClubResultPayload = { ...payload, playId: 'play-1' };
+    expect((await bridge.sendResult(first))[0]?.outcome).toBe('sent');
+    // The same play again (a re-render, a late bridge): the memo answers, nothing is sent.
+    expect((await bridge.sendResult(first))[0]?.outcome).toBe('sent');
+    // Another play, the same figures: another result, its own clientId.
+    expect((await bridge.sendResult({ ...payload, playId: 'play-2' }))[0]?.outcome).toBe('sent');
+    expect(paths(f).filter((p) => p === '/rankings/results')).toHaveLength(2);
+    expect(bodyOf(f, 0).clientId).not.toBe(bodyOf(f, 1).clientId);
   });
 });

@@ -27,7 +27,10 @@ export const hi: ClubMessages = {
   clubJoinAndPlay: 'जुड़ें और खेलें',
   clubJoining: 'जुड़ रहे हैं…',
   clubRankings: 'रैंकिंग',
+  clubMyRankings: 'आपकी रैंकिंग',
   clubEntries: '{n} प्रविष्टियाँ',
+  clubToNext: 'अगली रैंक तक {gap}',
+  clubRowsNote: 'हर नतीजे की एक पंक्ति: आप जो भी गेम खत्म करते हैं, वह सूची में दिखता है।',
   clubMembers: 'सदस्य',
   clubNothingYet: 'यहाँ अभी कुछ नहीं है।',
   clubInvite: 'आमंत्रण',
@@ -66,9 +69,9 @@ export const hi: ClubMessages = {
   clubChangeName: 'अपना नाम बदलें',
   clubNameSaved: 'नाम सहेजा गया',
   clubDeleteRecord: 'मेरा नतीजा मिटाएँ',
-  clubDeleteRankingTitle: 'इस रैंकिंग में आपका नतीजा मिटाएँ?',
-  clubDeleteRankingBody:
-    'अगला खत्म किया गया गेम इसमें फिर से दर्ज होगा। इसे वापस नहीं किया जा सकता।',
+  clubDeleteEntryTitle: 'यह नतीजा मिटाएँ?',
+  clubDeleteEntryBody:
+    'सिर्फ़ यह नतीजा मिटेगा। आपके बाकी नतीजे बने रहेंगे। इसे वापस नहीं किया जा सकता।',
   clubDeleteResultTitle: 'इस चैलेंज से आपका नतीजा हटाएँ?',
   clubDeleteResultBody:
     'आप इस चैलेंज के लिए दोबारा नतीजा नहीं भेज सकेंगे। इसे वापस नहीं किया जा सकता।',

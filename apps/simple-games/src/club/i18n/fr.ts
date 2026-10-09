@@ -27,7 +27,10 @@ export const fr: ClubMessages = {
   clubJoinAndPlay: 'Rejoindre et jouer',
   clubJoining: 'Connexion…',
   clubRankings: 'Classements',
+  clubMyRankings: 'Vos classements',
   clubEntries: '{n} entrées',
+  clubToNext: '{gap} avant le rang suivant',
+  clubRowsNote: 'Une ligne par résultat : chaque partie que vous terminez figure dans la liste.',
   clubMembers: 'Membres',
   clubNothingYet: 'Rien ici pour l’instant.',
   clubInvite: 'Inviter',
@@ -67,9 +70,9 @@ export const fr: ClubMessages = {
   clubChangeName: 'Changer votre nom',
   clubNameSaved: 'Nom enregistré',
   clubDeleteRecord: 'Effacer mon résultat',
-  clubDeleteRankingTitle: 'Effacer votre résultat dans ce classement ?',
-  clubDeleteRankingBody:
-    'La prochaine partie terminée y entrera de nouveau. Cette action est irréversible.',
+  clubDeleteEntryTitle: 'Effacer ce résultat ?',
+  clubDeleteEntryBody:
+    'Seul ce résultat est effacé. Vos autres résultats restent. Cette action est irréversible.',
   clubDeleteResultTitle: 'Retirer votre résultat de ce défi ?',
   clubDeleteResultBody:
     'Vous ne pourrez plus envoyer de résultat pour ce défi. Cette action est irréversible.',

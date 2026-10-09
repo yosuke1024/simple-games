@@ -178,6 +178,23 @@ describe('club client', () => {
     expect(f.mock.calls[1]![1].body).toBeUndefined();
   });
 
+  it('deleteMyEntry DELETEs one row of the caller’s by its id, encoded, with no body', async () => {
+    const f = vi
+      .fn()
+      .mockImplementation(() =>
+        Promise.resolve(new Response(null, { status: 204, headers: { 'X-Club-Api': '1' } })),
+      );
+    const client = createClient(E, 't', f as unknown as typeof fetch);
+    await expect(client.deleteMyEntry('sudoku', 'hard/x', '12')).resolves.toBeUndefined();
+    expect(f).toHaveBeenCalledTimes(1);
+    const [url, init] = f.mock.calls[0]!;
+    expect(url).toBe(`${E}/api/v1/rankings/sudoku/hard%2Fx/entries/12`);
+    expect(init.method).toBe('DELETE');
+    expect(init.body).toBeUndefined();
+    expect(init.headers['Content-Type']).toBeUndefined();
+    expect(init.headers.Authorization).toBe('Bearer t');
+  });
+
   it('a 404 on a delete is the not_found error the screens tolerate', async () => {
     const f = vi
       .fn()
@@ -189,6 +206,10 @@ describe('club client', () => {
       code: 'not_found',
     });
     await expect(client.deleteMyResult('ch_1')).rejects.toMatchObject({ code: 'not_found' });
+    await expect(client.deleteMyEntry('sudoku', 'hard', '12')).rejects.toMatchObject({
+      code: 'not_found',
+      status: 404,
+    });
   });
 
   it('rotateInvite posts the member role', async () => {
@@ -402,6 +423,7 @@ describe('club client', () => {
 
   it('submitRanking posts the body and reads the answer', async () => {
     const entry = {
+      id: '41',
       memberId: 'm_7',
       nickname: 'Ken',
       submittedAt: 'x',
@@ -433,11 +455,13 @@ describe('club client', () => {
     expect(f.mock.calls[0]![1].method).toBe('POST');
     expect(JSON.parse(f.mock.calls[0]![1].body)).toEqual(body);
     expect(res).toMatchObject({ improved: false, entryCount: 9 });
+    expect(res.entry?.id).toBe('41');
     expect('rank' in res).toBe(false); // the result screen shows no rank (club.md §2-2)
   });
 
   it('rankings and ranking read the tables', async () => {
     const entry = {
+      id: '3',
       memberId: 'm_7',
       nickname: 'Ken',
       submittedAt: 'x',
@@ -456,19 +480,101 @@ describe('club client', () => {
           paramsKey: 'hard',
           entryCount: 2,
           entries: [entry],
-          me: { rank: 1, entry },
+          me: { rank: 1, entry, nextValue: null },
         }),
       )
       .mockResolvedValueOnce(reply(200, { gameId: 'sudoku' }));
     const client = createClient(E, 't', f as unknown as typeof fetch);
     expect((await client.rankings())[0]!.leader.nickname).toBe('Ken');
-    expect((await client.ranking('sudoku', 'hard', 50)).me?.rank).toBe(1);
+    const table = await client.ranking('sudoku', 'hard', 50);
+    expect(table.me).toEqual({ rank: 1, entry, nextValue: null });
+    expect(table.entries[0]!.id).toBe('3');
     expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/rankings`);
     expect(f.mock.calls[1]![0]).toBe(`${E}/api/v1/rankings/sudoku/hard?top=50`);
     await expect(client.ranking('sudoku', 'hard')).rejects.toMatchObject({
       code: 'malformed_response',
     });
     expect(f.mock.calls[2]![0]).toBe(`${E}/api/v1/rankings/sudoku/hard`);
+  });
+
+  describe('rankingsMine (GET /rankings/mine, club.md §5-4)', () => {
+    const entry = {
+      id: '3',
+      memberId: 'm_7',
+      nickname: 'Ken',
+      submittedAt: 'x',
+      facts: {},
+      seed: 's',
+      boardDigest: 'd',
+    };
+    const row = {
+      gameId: 'sudoku',
+      paramsKey: 'hard',
+      entryCount: 4,
+      leader: entry,
+      best: { rank: 2, entry: { ...entry, id: '9' }, nextValue: 305 },
+    };
+
+    it('GETs the route with no body and reads each table', async () => {
+      const other = { ...row, gameId: 'minesweeper', paramsKey: 'easy' };
+      const f = vi.fn().mockResolvedValue(reply(200, [row, other]));
+      const list = await createClient(E, 't', f as unknown as typeof fetch).rankingsMine();
+      expect(list).toEqual([row, other]);
+      expect(f).toHaveBeenCalledTimes(1);
+      const [url, init] = f.mock.calls[0]!;
+      expect(url).toBe(`${E}/api/v1/rankings/mine`);
+      expect(init.method).toBe('GET');
+      expect(init.body).toBeUndefined();
+      expect(init.headers.Authorization).toBe('Bearer t');
+    });
+
+    it('an empty list is a caller who is in no table, not an error', async () => {
+      const f = vi.fn().mockResolvedValue(reply(200, []));
+      await expect(
+        createClient(E, 't', f as unknown as typeof fetch).rankingsMine(),
+      ).resolves.toEqual([]);
+    });
+
+    it('fills in what an older reply leaves out: no rank, no nextValue, no entry id', async () => {
+      const { id: _id, ...oldEntry } = entry;
+      const f = vi
+        .fn()
+        .mockResolvedValue(
+          reply(200, [{ ...row, leader: oldEntry, best: { rank: null, entry: oldEntry } }]),
+        );
+      const [only] = await createClient(E, 't', f as unknown as typeof fetch).rankingsMine();
+      expect(only!.leader.id).toBeNull();
+      expect(only!.best).toEqual({ rank: null, entry: { ...entry, id: null }, nextValue: null });
+    });
+
+    it('one malformed element makes the whole answer malformed_response', async () => {
+      const f = vi
+        .fn()
+        .mockResolvedValueOnce(reply(200, [row, { ...row, best: { rank: 0, entry } }]))
+        .mockResolvedValueOnce(reply(200, [{ ...row, leader: undefined }]))
+        .mockResolvedValueOnce(reply(200, [{ ...row, entryCount: 'many' }]))
+        .mockResolvedValueOnce(reply(200, { not: 'a list' }));
+      const client = createClient(E, 't', f as unknown as typeof fetch);
+      for (let i = 0; i < 4; i++) {
+        await expect(client.rankingsMine()).rejects.toMatchObject({
+          code: 'malformed_response',
+        });
+      }
+    });
+
+    it('a server without the route answers 404, which surfaces as not_found so the screen can leave the section out', async () => {
+      const f = vi
+        .fn()
+        .mockResolvedValue(reply(404, { error: { code: 'not_found', message: 'no' } }));
+      const failure = await createClient(E, 't', f as unknown as typeof fetch)
+        .rankingsMine()
+        .then(
+          () => null,
+          (e: unknown) => e,
+        );
+      expect(failure).toBeInstanceOf(ClubApiError);
+      expect(failure).toMatchObject({ code: 'not_found', status: 404 });
+    });
   });
 
   it('health needs no token', async () => {

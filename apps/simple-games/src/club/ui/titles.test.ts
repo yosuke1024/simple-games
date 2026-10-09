@@ -6,7 +6,7 @@ import { GAMES } from '@/app/registry';
 import type { Challenge } from '../api/types';
 import { contractFor } from '../contract/challenge';
 import { challengeTitle, rankingTitle } from './ClubScreen';
-import { modeLabel, type T } from './common';
+import { axisGap, modeLabel, modeOrder, sortModes, type T } from './common';
 
 /** Answers with the key (and the variables it was given), so a test sees which word was asked for. */
 const t = ((key: string, vars?: Record<string, string | number>) =>
@@ -37,6 +37,8 @@ describe('mode words', () => {
     expect(modeLabel('water-sort', 'daily', t)).toBeNull();
     expect(modeLabel('quick-math', 'daily', t)).toBeNull();
     expect(rankingTitle('freecell', 'standard', t)).toBe('FreeCell');
+    // A daily table's own title says Daily, so "Your rankings" never shows two bare "Quick Math" rows.
+    expect(rankingTitle('quick-math', 'daily', t)).toBe('Quick Math · clubDaily');
     expect(challengeTitle(challenge('freecell', {}, '2026-10-02'), t)).toBe('FreeCell · clubDaily');
     expect(challengeTitle(challenge('water-sort', { tier: 'daily' }, '2026-10-02'), t)).toBe(
       'Water Sort · clubDaily',
@@ -298,4 +300,110 @@ describe('every mode the contracts can produce reads as a word, never as the raw
       }
     });
   }
+});
+
+/**
+ * The order a game's modes are drawn in — the table screen's chips and the
+ * rows of "Your rankings" (club.md §16-2「modeOrder」). EVERY_KEY lists each
+ * game's keys easiest / smallest first, which is the documented order; any
+ * other arrangement of them must sort back to it.
+ */
+describe('mode order: every key of every contract has its place', () => {
+  for (const [gameId, rows] of Object.entries(EVERY_KEY)) {
+    it(`${gameId}`, () => {
+      const keys = rows.map((row) => row.key);
+      for (const key of keys) {
+        // A known place for each: none falls to the "unknown, by spelling" end.
+        expect(Number.isFinite(modeOrder(gameId, key)), `${gameId} · ${key}`).toBe(true);
+        // ...and a word for each: a chip never shows the raw key (daily and standard
+        // are named by the screens themselves).
+        if (key !== 'standard' && key !== 'daily') {
+          expect(modeLabel(gameId, key, t), `${gameId} · ${key}`).not.toBeNull();
+        }
+      }
+      expect(sortModes(gameId, [...keys].reverse())).toEqual(keys);
+      const rotated = [...keys.slice(1), ...keys.slice(0, 1)];
+      expect(sortModes(gameId, rotated)).toEqual(keys);
+    });
+  }
+
+  it('difficulty words ascend: easy < medium = normal < hard, the same for CPU strengths', () => {
+    expect(sortModes('sudoku', ['hard', 'easy', 'medium'])).toEqual(['easy', 'medium', 'hard']);
+    expect(sortModes('hit-and-blow', ['hard', 'normal', 'easy'])).toEqual([
+      'easy',
+      'normal',
+      'hard',
+    ]);
+    expect(sortModes('reversi', ['normal', 'hard', 'easy'])).toEqual(['easy', 'normal', 'hard']);
+    expect(modeOrder('sudoku', 'medium')).toBe(modeOrder('hearts', 'normal'));
+  });
+
+  it('sizes ascend by their number, not their spelling', () => {
+    expect(sortModes('takuzu', ['10x10', '6x6', '8x8'])).toEqual(['6x6', '8x8', '10x10']);
+    expect(sortModes('nonogram', ['10x10', '5x5'])).toEqual(['5x5', '10x10']);
+    expect(sortModes('dots-and-boxes', ['large', 'small', 'medium'])).toEqual([
+      'small',
+      'medium',
+      'large',
+    ]);
+    expect(
+      sortModes('schulte-table', ['4x4-ascending', '3x3-odd-then-even', '3x3-ascending']),
+    ).toEqual(['3x3-ascending', '3x3-odd-then-even', '4x4-ascending']);
+  });
+
+  it('orders Mahjong Solitaire’s layouts by the first level each covers', () => {
+    const contract = contractFor('mahjong-solitaire')!;
+    const keys = EVERY_KEY['mahjong-solitaire']!.map((row) => row.key);
+    const byLevel = [...keys].sort(
+      (a, b) => contract.levelRange!(a)![0] - contract.levelRange!(b)![0],
+    );
+    expect(sortModes('mahjong-solitaire', [...keys].reverse())).toEqual(byLevel);
+    expect(modeOrder('mahjong-solitaire', 'sprout')).toBe(1);
+    expect(modeOrder('mahjong-solitaire', 'turtle')).toBe(90);
+  });
+
+  it('puts standard first, a daily table after every mode, and keys it does not know last, by spelling', () => {
+    expect(sortModes('water-sort', ['daily', 'hard', 'easy'])).toEqual(['easy', 'hard', 'daily']);
+    expect(sortModes('quick-math', ['daily', 'mixed', 'addsub'])).toEqual([
+      'addsub',
+      'mixed',
+      'daily',
+    ]);
+    expect(sortModes('sudoku', ['zeta', 'hard', 'alpha', 'easy'])).toEqual([
+      'easy',
+      'hard',
+      'alpha',
+      'zeta',
+    ]);
+    expect(sortModes('mahjong-solitaire', ['newlayout', 'turtle'])).toEqual([
+      'turtle',
+      'newlayout',
+    ]);
+    expect(modeOrder('freecell', 'standard')).toBe(0);
+    // Each key once.
+    expect(sortModes('sudoku', ['hard', 'hard', 'easy'])).toEqual(['easy', 'hard']);
+  });
+});
+
+describe('the gap to the next rank (club.md §16-2「1 つ上まで」)', () => {
+  it('writes a time as the time it is short by', () => {
+    expect(axisGap('sudoku', { elapsedSeconds: 300, mistakes: 0, hints: 0 }, 238, t)).toBe('1:02');
+    // Whole seconds, as the rows print them.
+    expect(axisGap('sudoku', { elapsedSeconds: 31.9 }, 23.2, t)).toBe('0:08');
+  });
+
+  it('writes any other axis with its word, either direction', () => {
+    expect(axisGap('2048', { score: 1000, bestTile: 128 }, 1200, t)).toBe('clubFact_score 200');
+    expect(axisGap('solitaire', { moves: 94, elapsedSeconds: 1, hints: 0 }, 90, t)).toBe(
+      'clubFact_moves 4',
+    );
+  });
+
+  it('says nothing at the top, for a gap that rounds to nothing, or for facts it cannot read', () => {
+    expect(axisGap('sudoku', { elapsedSeconds: 238 }, null, t)).toBe('');
+    expect(axisGap('sudoku', { elapsedSeconds: 31.4 }, 31.1, t)).toBe('');
+    expect(axisGap('sudoku', null, 238, t)).toBe('');
+    expect(axisGap('sudoku', { mistakes: 1 }, 238, t)).toBe('');
+    expect(axisGap('not-a-game', { elapsedSeconds: 300 }, 238, t)).toBe('');
+  });
 });
