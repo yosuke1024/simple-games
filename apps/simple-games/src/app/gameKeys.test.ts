@@ -164,7 +164,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // line, so that each game's change to its own line merges without touching
   // its neighbours'.
   // No. 42, web-beta (docs/UNBLOCK_PUZZLE_RULES.md storage): not frozen until graduation
-  'unblock-puzzle': ['ub.stats', 'ub.flags'],
+  'unblock-puzzle': ['ub.saveGame', 'ub.saveDaily', 'ub.stats', 'ub.flags', 'ub.prefs'],
   // No. 43, web-beta (docs/SNAKE_RULES.md storage): not frozen until graduation
   snake: ['sn.saveGame', 'sn.stats', 'sn.flags', 'sn.prefs'],
   // No. 44, web-beta (docs/LOOP_PUZZLE_RULES.md storage): not frozen until graduation
