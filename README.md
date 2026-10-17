@@ -169,8 +169,8 @@ Reversi と Connect Four も盤面がすべて見えているため Hint を作�
 Web 版は新作の先行公開チャンネルです([docs/WEB_VERSION.md](docs/WEB_VERSION.md)
 「先行公開(ベータ)」)。上の表の末尾 11 本(Crown Grid から Box Regions まで)は
 2026-09-26 から 2026-09-29(UTC)に Web 版だけで先行公開し、**2026-10-02 にアプリへ正式収録**
-しました。いま先行公開中のタイトルはありません(チャンネルの仕組みは次の新作のために
-残してあります)。2 週間の安定稼働という基準を満たす前に、作者の判断で収録しました
+しました(その後の新作 5 本が同じチャンネルに載っています — 下の「Web 先行公開(ベータ)」)。
+2 週間の安定稼働という基準を満たす前に、作者の判断で収録しました
 (経緯は WEB_VERSION.md に記録)。保存スキーマはこの収録で凍結し、以後は移行だけで変えます。
 この 11 本はゲーム別ガイドページがまだ無いので、「詳しく見る」のリンクはありません。
 
@@ -198,7 +198,26 @@ Mancala と Dots and Boxes は完全情報の CPU 対戦なので Undo を持ち
 戻せば山を覗くことになり、Hit & Blow は推測そのものが情報なので消せば推理が壊れます —
 どちらも Undo を持たず、Hit & Blow は推測回数に上限を置きません。
 
-後続候補は今は**ありません**。次を選ぶときは、ローカル生成で
+### Web 先行公開(ベータ)
+
+2026-10-17 から、42〜46 本目の新作 5 本を **Web 版だけの先行公開(ベータ)**として実装しています
+(計画は [docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md](docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md))。
+registry に `channel: 'web-beta'` で登録済みで、アプリには出しません。上の 41 本には数えず、
+ストア掲載文にも載せません。ゲーム本体はまだスキャフォールドで、統合と検証(計画の Phase 4)を
+終えてから Web 版へ同期します。下の表は計画書の決定事項で、各ルール文書が確定させます。
+公開後はタイトルカードに「BETA」バッジが付き、ベータ中はスキーマ変更で保存データが消えることが
+あります(en / ja ではその旨を表示)。正式収録は 2 週間の安定稼働と計測を見て人間が判断します。
+5 本とも Club House には登録しません。
+
+| ゲーム                                 | フォルダ          | 進行                                      | 無料・無制限の助け                | ルール文書                                                   |
+| -------------------------------------- | ----------------- | ----------------------------------------- | --------------------------------- | ------------------------------------------------------------ |
+| Unblock Puzzle(ブロックを抜く空間推理) | `unblock-puzzle/` | 難易度 3 種 + デイリー                    | Undo / Hint(探索で次の一手)       | [docs/UNBLOCK_PUZZLE_RULES.md](docs/UNBLOCK_PUZZLE_RULES.md) |
+| Snake(伸びるヘビ)                      | `snake/`          | エンドレス(速度 3 種、デイリーなし)       | なし(Pause / Restart)             | [docs/SNAKE_RULES.md](docs/SNAKE_RULES.md)                   |
+| Loop Puzzle(数字から閉路を引く)        | `loop-puzzle/`    | 盤 3 サイズ + デイリー                    | Undo / Hint(検証済みの解に基づく) | [docs/LOOP_PUZZLE_RULES.md](docs/LOOP_PUZZLE_RULES.md)       |
+| Bridges(島を橋で結ぶ)                  | `bridges/`        | 難易度 3 種 + デイリー                    | Undo / Hint(検証済みの解に基づく) | [docs/BRIDGES_RULES.md](docs/BRIDGES_RULES.md)               |
+| Peg Solitaire(跳んで減らす)            | `peg-solitaire/`  | 盤 2 種(English / Triangle、デイリーなし) | Undo(Hint なし)                   | [docs/PEG_SOLITAIRE_RULES.md](docs/PEG_SOLITAIRE_RULES.md)   |
+
+後続候補は上の 5 本の正式収録判断まで**ありません**。次を選ぶときは、ローカル生成で
 完結しコンテンツサーバーを必要としないものを優先します。
 未収録のゲームをストアやアプリ内で "Coming Soon" として見せることはしません。
 
@@ -295,7 +314,7 @@ Android / iOS のビルド手順は [apps/simple-games/README.md](apps/simple-ga
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 14 言語・1,518 キー(シェル 125 + 41 ゲームの 1,393。Club House の 89 キーは別カタログ)
+**One app. Many games. Many languages.** 現在は 14 言語・1,573 キー(シェル 125 + ゲーム別 1,448 — 正式収録 41 本の 1,393 と Web 先行公開 5 本のスキャフォールドの 55。Club House の 89 キーは別カタログ)
 (en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
 中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。

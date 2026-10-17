@@ -3,9 +3,13 @@
  * the hero, one demo action that opens the game screen, and the way into
  * Quick Rules. The hero and the mode buttons are this game's own to shape
  * (docs/ARCHITECTURE.md「シェルの枠とゲームの中身」); the header is the shell's.
+ * The early-release notice under the tagline is the shell's too
+ * (docs/WEB_VERSION.md「先行公開(ベータ)」): it says, before anything is
+ * saved, that this game's saves may be reset while it is in early release.
  */
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { useSnake } from '../../state/GameContext';
 
 export function SnakeHomeScreen() {
@@ -23,6 +27,7 @@ export function SnakeHomeScreen() {
         </div>
         <h1 className="home-title">{t('snakeName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
+        <WebBetaNotice gameId="snake" />
       </div>
 
       <div className="home-actions">

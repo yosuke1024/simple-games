@@ -959,15 +959,23 @@ export const GAMES: readonly GameDefinition[] = [
   // are font families in this environment's fc-list (42 in all), against the
   // shipped marks: Sudoku's ⌗ 4, Memory Match's ⧉ 5, Crown Grid's ♛ 7, Ludo's
   // ⚅ 8, Sliding Puzzle's ⇄ 11. None has yet been looked at on a low-spec
-  // handset (Chromium 88, system fonts only); each names its fallback.
+  // handset (Chromium 88, system fonts only); each names its fallback, or says
+  // it has none. Neighbours were looked at on every width the home grid has
+  // (2 columns on a phone, 3 / 4 / 5 from 600 / 900 / 1280px), not the phone
+  // alone; ΔE pairs below are light / dark accent distances (CIE76).
   {
     // A rightwards arrow to a bar: the one block that must leave, sliding out
     // through the exit at the right edge of its row (docs/UNBLOCK_PUZZLE_RULES.md).
-    // Arrows, like Sliding Puzzle's ⇄ — its diagonal neighbour on this shelf,
-    // and the near miss looked at: one shaft that stops at a wall, where that
-    // one is two shafts passing each other. The plain bar ▬ was the other
-    // candidate; it is Box Regions' ▭ filled in. 25 families, more than either
-    // arrow already shipped (⇄ 11, Number Path's ↝ 8). Fallback ▬.
+    // Arrows, like Sliding Puzzle's ⇄ — the near miss looked at: one shaft
+    // that stops at a wall, where that one is two shafts passing each other.
+    // On a phone ⇄ is only its diagonal neighbour; at 4 and 5 columns it sits
+    // right beside, and was kept there — the shapes still part (one arrow and
+    // a wall against two arrows) and so do the accents (ΔE 34.2 / 34.5, far
+    // past the 15 / 11 a shelf is held to). 25 families, more than either
+    // arrow already shipped (⇄ 11, Number Path's ↝ 8). Fallback ▬, the plain
+    // bar: set aside only because it is Box Regions' ▭ filled in, and Box
+    // Regions is on the logic shelf — the two never share a row on the home,
+    // and could meet only in search results or the favourites row.
     id: 'unblock-puzzle',
     title: 'Unblock Puzzle',
     category: 'puzzle',
@@ -985,9 +993,11 @@ export const GAMES: readonly GameDefinition[] = [
     // (docs/SNAKE_RULES.md). Mathematical Operators, the block Brick Breaker's
     // ≡ on this same shelf draws from — one curved stroke where that one is
     // three straight ones (Water Sort's three waves ≋ live on the puzzle
-    // shelf, Number Path's ↝ on the logic one). The thinnest coverage of the
-    // five: 6 families, above ⌗ / ⌖ (4) and ⧉ (5), under ♛ (7). Fallback ≀
-    // (7 families), the same wave stood on end.
+    // shelf, Number Path's ↝ on the logic one). ≡ is right above it at 3
+    // columns and Bubble Pop's ○ at 4 — a curve against bars, and against a
+    // ring; at 5 the shelf is one row, with Bunny Hop's ⌃ beside it. The
+    // thinnest coverage of the five: 6 families, above ⌗ / ⌖ (4) and ⧉ (5),
+    // under ♛ (7). Fallback ≀ (7 families), the same wave stood on end.
     id: 'snake',
     title: 'Snake',
     category: 'arcade',
@@ -1002,9 +1012,15 @@ export const GAMES: readonly GameDefinition[] = [
     // (docs/LOOP_PUZZLE_RULES.md). Geometric Shapes, like Hit & Blow's ◉ and
     // Box Regions' ▭ on this shelf. ▢ was dropped because it would sit right
     // beside ▭ — two outlined rectangles — and ∮ reads as calculus before it
-    // reads as a loop. ◉ is two rows up: a solid bullseye against a ring of
-    // dots. 14 families. The lightest mark of the five (dots, no solid stroke);
-    // if it reads too faint on a tile, the fallback is ∮.
+    // reads as a loop. The other circles here: Hit & Blow's ◉ is two rows up
+    // on a phone, diagonal at 3 and 5 columns and directly above at 4; Binary
+    // Balance's ⊜ is diagonal at 2 and 4 and directly above at 3. Both were
+    // judged fit to stack — a solid bullseye and a circled equals sign
+    // against an empty ring of dots — and the accents part too (ΔE 30.7 /
+    // 33.6 to ◉, 127 / 125 to ⊜). 14 families. The lightest mark of the five
+    // (dots, no solid stroke). If it reads too faint on a tile there is no
+    // fallback in hand: ▢ and ∮ fail for the reasons above and the plain ring
+    // ○ is Bubble Pop's, so that call has to be made again.
     id: 'loop-puzzle',
     title: 'Loop Puzzle',
     category: 'logic',
@@ -1019,9 +1035,13 @@ export const GAMES: readonly GameDefinition[] = [
     // Two islands and the bridge between them (U+22B6): the rule in one
     // figure (docs/BRIDGES_RULES.md). Mathematical Operators, the block Binary
     // Balance's ⊜ and Kakuro's ∑ on this shelf draw from; it is the only mark
-    // here made of two shapes joined by a line. 7 families, the same as
-    // Crown Grid's ♛ and Connect Four's ⁘. Fallback ⊷, its mirror image, at
-    // the same coverage.
+    // here made of two shapes joined by a line. On wider layouts it stacks
+    // under circled marks — Binary Balance's ⊜ directly above at 4 columns,
+    // Hit & Blow's ◉ at 5 (each diagonal at another width) — and was judged
+    // distinct: one ring holding a sign against a ring and a dot held apart
+    // by a line, with the accents apart too (ΔE 76.5 / 90.0 to ⊜, 43.6 / 30.2
+    // to ◉). 7 families, the same as Crown Grid's ♛ and Connect Four's ⁘.
+    // Fallback ⊷, its mirror image, at the same coverage.
     id: 'bridges',
     title: 'Bridges',
     category: 'logic',
@@ -1042,6 +1062,8 @@ export const GAMES: readonly GameDefinition[] = [
     // box, this one an open cross with dots. ⊕ was dropped for exactly that
     // reason — a circled plus beside a squared one — so if ⁜ fails to draw on
     // a handset, that call has to be made again rather than ⊕ dropped in.
+    // ⊞ is never beside it at any width, only diagonal at 5 columns (ΔE 79.9
+    // / 86.1); the mark directly above it there is Block Puzzle's framed ▣.
     id: 'peg-solitaire',
     title: 'Peg Solitaire',
     category: 'puzzle',

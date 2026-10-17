@@ -8,14 +8,14 @@
 
 ## 役割分担
 
-|            | Web 版                                                                                                  | アプリ版(Android・iOS)                                                                        |
-| ---------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| 位置づけ   | すぐ遊べる無料版。新作の先行公開。PixApps への入口                                                      | 静かに長く遊ぶための完成版                                                                    |
-| 導入       | インストール・アカウント不要                                                                            | ストアから導入、ホーム画面から起動                                                            |
-| 広告       | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効)                              | Anchored Adaptive Banner 1 枠のみ                                                             |
-| 課金       | なし(完全無料)                                                                                          | $3.99 買い切りで広告永久削除                                                                  |
-| 計測       | サイト共通のページ解析(下の「計測」節。実装済み・既定は無効)                                            | なし — Analytics を入れないことがアプリの約束([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)) |
-| ゲーム内容 | registry の全ゲーム(41 本)+先行公開中の新作(下の「先行公開」節。いまは無い)。正式収録ゲームに機能差なし | registry の全ゲーム(41 本)。新作は先行公開で検証後に収録(2026-10-02 に 11 本を収録)           |
+|            | Web 版                                                                                         | アプリ版(Android・iOS)                                                                                              |
+| ---------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 位置づけ   | すぐ遊べる無料版。新作の先行公開。PixApps への入口                                             | 静かに長く遊ぶための完成版                                                                                          |
+| 導入       | インストール・アカウント不要                                                                   | ストアから導入、ホーム画面から起動                                                                                  |
+| 広告       | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効)                     | Anchored Adaptive Banner 1 枠のみ                                                                                   |
+| 課金       | なし(完全無料)                                                                                 | $3.99 買い切りで広告永久削除                                                                                        |
+| 計測       | サイト共通のページ解析(下の「計測」節。実装済み・既定は無効)                                   | なし — Analytics を入れないことがアプリの約束([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))                       |
+| ゲーム内容 | 正式収録の 41 本+先行公開中の新作(下の「先行公開」節。いまは 5 本)。正式収録ゲームに機能差なし | 正式収録の 41 本(registry で `channel` を持たないエントリ)。新作は先行公開で検証後に収録(2026-10-02 に 11 本を収録) |
 
 **Play instantly on the web. Play quietly and offline in the app.**
 
@@ -336,9 +336,15 @@ ADS_POLICY.md 側の項目 3 にも 実施済み の印は付いていない。*
    行い、既収録ゲームの滞在時間を参照点にする。この確認のために「計測」節の範囲を
    広げない(盤面・プレイ内容は送らない)。
 
-実装状況(2026-10-02): **仕組みは実装済み。いま先行公開中のタイトルは無い。**
-2026-10-02 に、先行公開していた 11 本すべてを正式収録した — Crown Grid / Number Path /
-Shape Regions(issue #194、計画は
+実装状況(2026-10-17): **仕組みは実装済み。いま先行公開中の新作は 5 本** — Unblock Puzzle /
+Snake / Loop Puzzle / Bridges / Peg Solitaire(No. 42〜46、計画は
+[plans/2026-10-17-unblock-snake-loop-bridges-peg.md](plans/2026-10-17-unblock-snake-loop-bridges-peg.md))。
+registry に `channel: 'web-beta'` で登録した段階(Phase 1)で、ゲーム本体はまだ
+スキャフォールド — 各ゲームはルール文書から起こし、統合(Phase 4)を経てから Web 版へ
+同期する。5 本とも Club House には登録しない(registry の `challenge` を持たない)。
+
+それ以前の先行公開は、2026-10-02 に 11 本すべてを正式収録して空になった — Crown Grid /
+Number Path / Shape Regions(issue #194、計画は
 [plans/2026-09-26-crown-grid-number-path-shape-regions.md](plans/2026-09-26-crown-grid-number-path-shape-regions.md))、
 Yacht / Mancala / Dominoes / Hit & Blow / Dots and Boxes(issue #197、計画は
 [plans/2026-09-27-yacht-mancala-dominoes-hit-and-blow-dots-and-boxes.md](plans/2026-09-27-yacht-mancala-dominoes-hit-and-blow-dots-and-boxes.md))、
@@ -346,8 +352,8 @@ Binary Balance / Sudoku 6×6 / Box Regions(issue #210、計画は
 [plans/2026-09-29-linkedin-practice-set.md](plans/2026-09-29-linkedin-practice-set.md)。
 Crown Grid / Number Path と合わせて 5 種類の練習セット — 下の「専用ベータ入口」)。
 registry から 11 本の `channel: 'web-beta'` を外し、アプリのホーム・検索・お気に入り・
-ショートカットはその 11 本を含む全ゲームを出す。次の新作が来たらこの仕組みをそのまま
-使う(以下の宣言・ガード・表示の説明は、その仕組みの記述として残す)。
+ショートカットはその 11 本を含む正式収録の全ゲームを出す。上の新作 5 本はこの仕組みを
+そのまま使う(以下の宣言・ガード・表示の説明は、その仕組みの記述)。
 
 **2026-10-02 の昇格は、上の基準を満たさずに行った。**記録として正確に残す。
 
@@ -384,7 +390,10 @@ registry から 11 本の `channel: 'web-beta'` を外し、アプリのホー�
   ベータの保存を失わない。
 - 表示は `ui/components/WebBetaNotice.tsx`: タイトルカードの `BETA` バッジ
   (アクセシブルネームに含める — 「Crown Grid BETA」)と、各ゲームのホームの
-  バッジ + 説明文。説明文は en / ja だけで、他 12 言語はバッジのみ。
+  バッジ + 説明文。説明文は en / ja だけで、他 12 言語はバッジのみ。`web-beta` の
+  タイトルのホームが自分の id の `<WebBetaNotice>` を持つことは
+  `src/test/webBetaNoticeWiring.test.ts` が強制する(上の「保存データ」の先の告知)。
+  `scripts/new-game.mjs --channel web-beta` が生成時に置く。
 - 先行公開中のタイトルは、ストア掲載文(`apps/simple-games/store/listing.md`)と
   landing のガイド(`ui/landing.ts` の `PUBLISHED_GAME_IDS`)には正式収録まで出さない。
   正式収録したタイトルはストア掲載文に載せる。ガイドはページが書けてから足す —

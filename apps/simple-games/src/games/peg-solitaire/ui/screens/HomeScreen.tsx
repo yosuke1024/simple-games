@@ -3,9 +3,13 @@
  * the hero, one demo action that opens the game screen, and the way into
  * Quick Rules. The hero and the mode buttons are this game's own to shape
  * (docs/ARCHITECTURE.md「シェルの枠とゲームの中身」); the header is the shell's.
+ * The early-release notice under the tagline is the shell's too
+ * (docs/WEB_VERSION.md「先行公開(ベータ)」): it says, before anything is
+ * saved, that this game's saves may be reset while it is in early release.
  */
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { usePegSolitaire } from '../../state/GameContext';
 
 export function PegSolitaireHomeScreen() {
@@ -23,6 +27,7 @@ export function PegSolitaireHomeScreen() {
         </div>
         <h1 className="home-title">{t('pegSolitaireName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
+        <WebBetaNotice gameId="peg-solitaire" />
       </div>
 
       <div className="home-actions">

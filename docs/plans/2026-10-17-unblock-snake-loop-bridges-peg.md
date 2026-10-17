@@ -68,7 +68,8 @@ ws sp mm sf bh tm bp ld ck rv c4 gm cg np sr yt mc dm hb db bn s6 br`)。`script
   (`dailyGame` キー・`expectedMode`・`slots.test.ts`。`src/test/savedGameSlots.test.ts`)。
   日付の過ぎた中断デイリーは読み込みで捨てる(既存デイリーと同じ)。
 - **シェル統合**: registry に `channel: 'web-beta'`・`loadStorageSchemas`。`storage/keys.ts` は
-  import ゼロの葉。ホームは `GameHomeHeader` を 1 回、`WebBetaNotice` を置く。結果カードは
+  import ゼロの葉。ホームは `GameHomeHeader` を 1 回、`WebBetaNotice` を置く(スキャフォールドに
+  置いてあり、`src/test/webBetaNoticeWiring.test.ts` が外させない)。結果カードは
   `ShareAction`。ヘッダの ↻ は `RestartDialog`(結果カードと同じ 2 択)。Back ボタンの唯一の
   持ち主は GameContext。保存スロットが 1 つのゲームはショートカットで盤面へ直接入れる
   (`entry`)。検索・お気に入り・バックアップはシェルが registry から行う。
@@ -226,8 +227,14 @@ Hashiwokakero と呼ばれる形式)。
 4. **Phase 4 — 統合と検証**: 5 本を同じブランチへ統合し、
    `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm --filter simple-games build:web`、
    i18n gate、`size:check` → `size:update`、`bash .github/scripts/check-principles.sh`、
-   ブラウザ試遊(ライト / ダーク、360×640、タッチ / マウス / キーボード)。README「Web 先行公開」・
-   WEB_VERSION.md「実装状況」・PROJECT_CONTEXT.md・I18N_POLICY.md のキー数を更新。
+   ブラウザ試遊(ライト / ダーク、360×640、タッチ / マウス / キーボード)。Phase 1 で書いた
+   現状の記述 — README「Web 先行公開(ベータ)」の表と多言語のキー数・WEB_VERSION.md の役割分担表と
+   「実装状況」・PROJECT_CONTEXT.md §3・I18N_POLICY.md / architecture/i18n.md のキー数・
+   store/listing.md の注記 — を実装に合わせて直す(「スキャフォールド」「実装中」の言い方を外し、
+   `en.ts` の最上位キーを数え直す)。Web 版を pixapps-landing へ同期する PR では、
+   `tests/ui.test.js` の `WEB_BETA_GAME_IDS`(チャンクはあるがカードは無い)に
+   `unblock-puzzle` / `snake` / `loop-puzzle` / `bridges` / `peg-solitaire` を足す —
+   `LANDING_GAME_IDS` ではない(WEB_VERSION.md「先行公開」の landing 側のガード)。
 5. **Phase 5 — 正式収録の準備(この PR では行わない)**: Web ベータ公開後に
    WEB_VERSION.md の基準(2 週間の安定・滞在時間)と RELEASE_CHECKLIST.md §0 を評価する。
    正式収録時にスキーマを凍結し、公開ビルドから採取した保存 payload で
@@ -242,22 +249,45 @@ Hashiwokakero と呼ばれる形式)。
 正式収録の 41 本だけが出ることをベータ期の形で検証する(合成ベータのテストは残す)。
 ルール文書 5 本はスタブのまま(題は正式名)。
 
+独立レビューを受けて同じ Phase で足したもの: `scripts/new-game.mjs` に `--channel web-beta`
+(registry の `channel` と、ホームのヒーローの `<WebBetaNotice gameId="…" />` を生成する)を
+加え、5 本のホームをその出力に揃えた。`src/test/webBetaNoticeWiring.test.ts` が、`web-beta` の
+タイトルのホームに自分の id の注意が無ければ落とす(保存を捨ててよいのは注意を先に見せた
+ときだけ — WEB_VERSION.md「保存データ」)。Club の `ChallengeScreen` はゲームを
+`findAvailableGame` で引くようにした(アプリでベータ id のチャレンジから Play が出ないことを、
+契約の有無という偶然ではなく `app/gameChannel.ts` のガードで決める)。PROJECT_CONTEXT.md §3・
+WEB_VERSION.md・README・store/listing.md・I18N_POLICY.md・architecture/i18n.md の
+「先行公開中のタイトルは無い」「GAMES = 41」「1,518 キー」を、Phase 2 の分岐の前に現状
+(正式収録 41 + Web 先行公開 5、1,573 キー = シェル 125 + ゲーム別 1,448)へ直した。
+
 **グリフ。**5 本とも同梱の Nunito サブセット(latin-700/800、230 コードポイント)に無く、
 既存の記号グリフと同じく `--font-display` の `ui-rounded, system-ui, sans-serif` へ落ちる
 ことを確かめた(woff の cmap を読んだ)。被覆はこの環境の fc-list で 42 ファミリー中の数
 (出荷済みの最小は Sudoku の `⌗` と Schulte Table の `⌖` の 4、`⧉` 5、`♛` 7、`⚅` 8)。
 低スペック実機(Chromium 88・システムフォントのみ)ではまだ見ていない。
 
-| ゲーム         | グリフ      | 被覆 | 理由(1 行)                                                                                         | 予備 |
-| -------------- | ----------- | ---- | -------------------------------------------------------------------------------------------------- | ---- |
-| Unblock Puzzle | `⇥`(U+21E5) | 25   | 出口の壁まで滑って抜ける 1 台。パズルの棚の斜め隣 Sliding Puzzle の `⇄` とは矢の本数と壁で分かれる | `▬`  |
-| Snake          | `∿`(U+223F) | 6    | ヘビそのもの。アーケードの棚の `≡`(3 本の直線)とは曲線 1 本で分かれる。5 本で最も被覆が薄い        | `≀`  |
-| Loop Puzzle    | `◌`(U+25CC) | 14   | 点の格子を通る 1 本の閉じたループ。`▢` は横の Box Regions `▭` と同形になるので落とした             | `∮`  |
-| Bridges        | `⊶`(U+22B6) | 7    | 2 つの島とその間の橋 — 規則そのもの。論理の棚で 2 つの形を線で結んだ唯一の印                       | `⊷`  |
-| Peg Solitaire  | `⁜`(U+205C) | 7    | English 盤の十字とそこに並ぶコマ。`⊕` は 2048 の `⊞` と同じ棚で「囲んだ十字」になるので落とした    | なし |
+| ゲーム         | グリフ      | 被覆 | 理由(1 行)                                                                                                        | 予備 |
+| -------------- | ----------- | ---- | ----------------------------------------------------------------------------------------------------------------- | ---- |
+| Unblock Puzzle | `⇥`(U+21E5) | 25   | 出口の壁まで滑って抜ける 1 台。パズルの棚の Sliding Puzzle `⇄`(2 列で斜め、4・5 列で横)とは矢の本数と壁で分かれる | `▬`  |
+| Snake          | `∿`(U+223F) | 6    | ヘビそのもの。アーケードの棚の `≡`(3 本の直線)とは曲線 1 本で分かれる。5 本で最も被覆が薄い                       | `≀`  |
+| Loop Puzzle    | `◌`(U+25CC) | 14   | 点の格子を通る 1 本の閉じたループ。`▢` は横の Box Regions `▭` と同形になるので落とした                            | なし |
+| Bridges        | `⊶`(U+22B6) | 7    | 2 つの島とその間の橋 — 規則そのもの。論理の棚で 2 つの形を線で結んだ唯一の印                                      | `⊷`  |
+| Peg Solitaire  | `⁜`(U+205C) | 7    | English 盤の十字とそこに並ぶコマ。`⊕` は 2048 の `⊞` と同じ棚で「囲んだ十字」になるので落とした                   | なし |
 
 `⁜` が実機で描けなかった場合、残る候補 `⊕` は上の理由で失格なので、選び直しになる(registry の
-コメントにそう書いた)。
+コメントにそう書いた)。Loop Puzzle も同じで、`◌` がタイルで薄すぎた場合の予備は無い — `▢` と
+`∮`(微積分の記号に先に見える)は上の理由で落とし、ただの輪 `○` は Bubble Pop のもの。Unblock
+Puzzle の予備 `▬` は「Box Regions の `▭` を塗ったもの」として一度は外したが、Box Regions は
+論理の棚にありホームの同じ行には並ばない(並びうるのは検索結果とお気に入りの行だけ)ので、
+予備としては残す。
+
+グリフの隣人は 2 列だけでなく 3〜5 列(600 / 900 / 1280px から)でも見た。似た形が上下・左右に
+来るのは次の組で、どれも形と色の両方で分かれると判断して採った(ΔE はライト / ダーク):
+4・5 列で Sliding Puzzle `⇄` の横に Unblock Puzzle `⇥`(矢 2 本 対 矢 1 本と壁、34.2 / 34.5)、
+4 列で Hit & Blow `◉` の真下に Loop Puzzle `◌`(塗った的 対 点の輪、30.7 / 33.6)、
+3 列で Binary Balance `⊜` の真下に `◌`(127 / 125)、4 列で `⊜` の真下に Bridges `⊶`
+(記号を抱えた輪 対 線で結んだ輪と点、76.5 / 90.0)、5 列で `◉` の真下に `⊶`(43.6 / 30.2)。
+2048 の `⊞` と Peg Solitaire の `⁜` はどの幅でも横・上下には来ない(5 列で斜めだけ)。
 
 **アクセント。**BRAND.md「アクセントを選ぶ手順」を出荷済み 41 色 + `--warn` に対して実行した
 (CIE76。`styles.css` の 41 + 41 色は `titleAccents` と全一致を確認。スクリプトは選定時の作業
@@ -283,11 +313,13 @@ S24〜59% / L57〜74%(中央値 S44 / L64)。候補は白インク 4.5:1・紙 3
 53.5 / 57.2、Snake × Sky Fighter(上)56.1 / 48.8、Loop Puzzle × Sudoku 6×6(上)43.1 / 30.6、
 × Box Regions(横)59.8 / 49.3、Bridges × Box Regions(上)52.9 / 47.6 — いずれも慣例の
 15 / 11 を大きく超える。色とタイトルの対応は、この 7 組の最小を最大にする割り当て(120 通り)で、
-盤面での役割の見込み(下)とも合う。3〜5 列の幅(タブレット・PC)の隣人も測った: 最小は
-Bridges × Sudoku 6×6(3 列)15.5 / 12.6、Peg Solitaire × Block Puzzle(5 列)15.6 / 23.4。
-この 2 組のために、最適化の出した値から 2 つをずらした — Peg Solitaire のライトを `#6a2962`
-から `#68275f` へ(5 列で Block Puzzle と 14.98 だった)、Bridges のダークを `#7b82b2` から
-`#7d83b0` へ(3 列で Sudoku 6×6 とダーク 10.98 だった)。どちらも最弱余裕は下げない。soft / ring / onDark は既存の回帰(softLight = S×0.97 /
+盤面での役割の見込み(下)とも合う。3〜5 列の幅(タブレット・PC)の上下・左右の隣人も測った:
+最小は Snake × Bubble Pop(4 列で上下)14.99 / 23.2 で、慣例の 15 を 0.01 下回る(下の「満たせ
+なかった基準」)。次が Bridges × Sudoku 6×6(3 列)15.5 / 12.6 と Peg Solitaire × Block Puzzle
+(5 列)15.6 / 23.4 で、この 2 組のために最適化の出した値から 2 つをずらした — Peg Solitaire の
+ライトを `#6a2962` から `#68275f` へ(5 列で Block Puzzle と 14.98 だった)、Bridges のダークを
+`#7b82b2` から `#7d83b0` へ(3 列で Sudoku 6×6 とダーク 10.98 だった)。どちらも最弱余裕は
+下げない。soft / ring / onDark は既存の回帰(softLight = S×0.97 /
 L90%、softDark = S×0.71 / L18%、onDark = 同じ色相と彩度で L8%、ring 0.38 / 0.12・ダーク
 0.42 / 0.14)で出し、Crown Grid から Box Regions までの 11 本の出荷値を誤差 0 で再現する
 ことを確かめてから当てた。
@@ -306,8 +338,9 @@ L90%、softDark = S×0.71 / L18%、onDark = 同じ色相と彩度で L8%、ring 
   菫・葡萄)も相互 30 は満たすが最弱余裕 1.155 で、橙が S59・白インク 4.61・紙 4.05(紙の上で
   4.5 に届かない)と最も薄い位置に来る。採った組は紅と小豆色が赤の族を分け合い、深さと彩度で
   離す(#197 の Dominoes / Hit & Blow と同じ判断)。代わりに 5 色とも紙の上で 4.5 を超える。
-- **4 列以上の幅(PC)では Snake が Bubble Pop の真下に来て、ライト 14.99 — 慣例の 15 を
-  0.01 下回る**(床 12.5 は越える。ダークは 23.2)。Snake の最接近がそもそも Bubble Pop で、
+- **4 列の幅(900〜1279px)では Snake が Bubble Pop の真下に来て、ライト 14.99 — 慣例の 15 を
+  0.01 下回る**(床 12.5 は越える。ダークは 23.2)。3 列では斜め、5 列ではアーケードの 5 本が
+  1 行に並び Snake の隣は Bunny Hop(45.9 / 43.0)。Snake の最接近がそもそも Bubble Pop で、
   紅との相互 30 を保ったまま離す値は帯の中に無かった。2 列(スマートフォン)では隣ではない。
   慣例の 15 / 11 は前例どおり 2 列で見る基準で、ここは記録として書く。
 - **盤面がアクセントをどこに出すか(手順 4)は見込みで判断した。**ゲームはまだ無い:

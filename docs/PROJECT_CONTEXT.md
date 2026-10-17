@@ -1,6 +1,6 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-10-02
+Updated: 2026-10-17
 
 この文書は、Simple Games を変更・レビュー・説明するときの **共通の入口** である。
 ここに全仕様を複製しない。実装上の事実はコード、恒久的な原則は各 canonical document を正とし、
@@ -42,7 +42,8 @@ Design philosophy:
 ### Collection
 
 - 1つの `Simple Games: Offline Games` として提供する。
-- 現在の正式収録は **41 games**(`registry.ts` の `GAMES` の全エントリ。本数はここで数える)。
+- 現在の正式収録は **41 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
+  本数はここで数える)。`GAMES` の全 46 エントリには、下の Web 先行公開 5 本も含まれる。
 - 2026-10-02 に、Web 版で先行公開していた新作 11 本(Crown Grid / Number Path /
   Shape Regions、2026-09-26、issue #194。Yacht / Mancala / Dominoes / Hit & Blow /
   Dots and Boxes、2026-09-27、issue #197。Binary Balance / Sudoku 6×6 / Box Regions、
@@ -50,7 +51,11 @@ Design philosophy:
   `docs/PUZZLE_PRACTICE_SET.md`)を正式収録した。2 週間の安定稼働という基準は
   満たしておらず、製品オーナーの明示的な判断による(経緯は `docs/WEB_VERSION.md`
   「先行公開」)。保存スキーマはこの収録で凍結。ゲーム別ガイドはまだ無い。
-- Web 版は新作の先行公開チャンネルとして残る。いま先行公開中のタイトルは無い。
+- Web 版は新作の先行公開チャンネルとして残る。2026-10-17 から **Web 先行公開(ベータ)の
+  新作 5 本**(Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、No. 42〜46)を
+  registry に `channel: 'web-beta'` で登録し、実装中(計画は
+  `docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md`。いまはスキャフォールドで、
+  ゲーム本体は各ルール文書から起こす)。正式収録の 41 本には数えず、アプリには出ない。
   チャンネルの宣言は registry の `channel`、出し分けは `app/gameChannel.ts` の
   実行時ガード(`docs/WEB_VERSION.md`「先行公開」)。
 - 実装上のゲーム一覧・ID・並び順・カテゴリの正は `apps/simple-games/src/app/registry.ts` の `GAMES` / `GAME_CATEGORIES`。
