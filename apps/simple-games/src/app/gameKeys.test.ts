@@ -172,7 +172,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // No. 45, web-beta (docs/BRIDGES_RULES.md storage): not frozen until graduation
   bridges: ['bg.saveGame', 'bg.saveDaily', 'bg.stats', 'bg.flags', 'bg.prefs'],
   // No. 46, web-beta (docs/PEG_SOLITAIRE_RULES.md storage): not frozen until graduation
-  'peg-solitaire': ['pg.stats', 'pg.flags'],
+  'peg-solitaire': ['pg.saveGame', 'pg.stats', 'pg.flags', 'pg.prefs'],
 };
 
 const PREFIXES: Record<string, string> = {
