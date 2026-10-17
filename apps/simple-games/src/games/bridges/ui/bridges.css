@@ -1,15 +1,357 @@
-/**
- * Bridges's styles — scaffolded by scripts/new-game.mjs. The shared shell
- * classes (.screen, .home-hero, .game-content, .game-topbar, .tutorial-card,
- * .btn, .dialog, ...) already cover the frame; the board and everything else
- * the game itself draws go here, under the game's own `bridges-` prefix.
- */
+/* Bridges — all of this game's styling, imported by BridgesRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --line, --accent, --warn, --radius, --font-display, …) so the game
+   reads as part of the same app and follows the theme without knowing about
+   it. No colour of its own: the bridges are the accent — the most ink on the
+   board — and so are the selection ring and a finished island (§13).
 
-/* Placeholder board area — replace with the real board's layout. */
-.bridges-board {
-  display: flex;
+   Class names are prefixed `bg-` so this file can never collide with the
+   shell or with another game. */
+
+/* ---------- board ---------- */
+
+.bg-board-scroll {
   flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 8px 12px 4px;
+}
+
+/*
+  One cell is the smaller of two shares (§13): the width left once the scroll
+  padding (24px) and the border (2px) are taken out, over the columns plus the
+  board's own padding (0.2 cell a side); and the height left once the game
+  chrome and the bottom safe area are taken out, over the rows plus the same
+  padding. The 320px of chrome is the top bar (64), the action bar (77), the
+  two reserved note lines (38), the scroll padding (12) and the web build's
+  anchor-ad reservation (116), with a little to spare — measured, not guessed.
+  The safe area is the home indicator's strip, which the web build's
+  reservation adds on top of its 116px (ui/styles.css).
+
+  The height is the small viewport (`svh`) where the browser has it: a mobile
+  browser's `vh` is the height with its toolbar hidden, so a board sized by it
+  pushes Undo / Hint under the anchor ad while the toolbar shows. Where `svh`
+  is unknown (before Chromium 108 — the Chromium 88 floor) `vh` stays. The
+  `@supports` block, not a second declaration, makes that choice: a custom
+  property takes any value at parse time, so an `svh` line after the `vh` one
+  would replace it even where `svh` means nothing, and every size built on
+  `--bg-cell` would then be invalid there.
+
+  On a 360×640 phone that gives the 10×10 a 30.8px cell (the height share
+  wins), so an island's tap circle is 1.3 cells ≈ 40px and the board, the note
+  and Undo / Hint all fit with no scrolling; from about 360×660 the width share wins
+  and the circle is ≈ 42px. The floor is 28px — a 320px-wide phone lands near
+  it — and the ceiling 72px, which a tablet reaches by width. `min()` inside
+  `clamp()` is Chromium 79+, `env()` 69+, both inside the Chromium 88 floor.
+*/
+.bg-board {
+  --bg-cell: clamp(
+    28px,
+    min(
+      calc((100vw - 26px) / (var(--bg-cols) + 0.4)),
+      calc((100vh - 320px - env(safe-area-inset-bottom, 0px)) / (var(--bg-rows) + 0.4))
+    ),
+    72px
+  );
+  position: relative;
+  flex-shrink: 0;
+  padding: calc(var(--bg-cell) * 0.2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@supports (height: 100svh) {
+  .bg-board {
+    --bg-cell: clamp(
+      28px,
+      min(
+        calc((100vw - 26px) / (var(--bg-cols) + 0.4)),
+        calc((100svh - 320px - env(safe-area-inset-bottom, 0px)) / (var(--bg-rows) + 0.4))
+      ),
+      72px
+    );
+  }
+}
+
+/* Solved beat: one wash on the board, not per island (§13). */
+.bg-board::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--accent-soft);
+  border-radius: inherit;
+  opacity: 0;
+}
+
+.bg-board-solved::after {
+  animation: bg-solved-wash 900ms ease-out;
+}
+
+@keyframes bg-solved-wash {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.bg-field {
+  position: relative;
+  width: calc(var(--bg-cols) * var(--bg-cell));
+  height: calc(var(--bg-rows) * var(--bg-cell));
+  -webkit-touch-callout: none;
+}
+
+/* The lines, in one SVG whose unit is one cell (BridgeStrokes.tsx). */
+.bg-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.bg-dot {
+  fill: var(--line);
+}
+
+/* A bridge: one line, or two side by side (§5). */
+.bg-bridge {
+  stroke: var(--accent);
+  stroke-width: 0.09;
+}
+
+/* From the selected island to a partner with no bridge yet: dashed, so it
+   never reads as a bridge (§5). */
+.bg-candidate {
+  stroke: var(--accent);
+  stroke-width: 0.05;
+  stroke-dasharray: 0.14 0.12;
+  opacity: 0.75;
+}
+
+/* The partner a drag is over: the line it would build (§4). */
+.bg-candidate-target {
+  stroke-width: 0.08;
+  opacity: 1;
+}
+
+/* The pair a hint means (§9): a soft band under its bridges. */
+.bg-hint-band {
+  stroke: var(--accent-ring);
+  stroke-width: 0.5;
+  stroke-linecap: round;
+}
+
+.bg-hint-band-wrong {
+  stroke: var(--warn);
+  opacity: 0.35;
+}
+
+/* Quick Rules only: a bridge that would cross, struck through where it would. */
+.bg-blocked line {
+  stroke: var(--warn);
+  stroke-width: 0.05;
+  stroke-dasharray: 0.1 0.1;
+}
+
+.bg-blocked .bg-blocked-mark {
+  stroke-width: 0.09;
+  stroke-dasharray: none;
+  stroke-linecap: round;
+}
+
+/* ---------- islands ---------- */
+
+/* The tap target: a circle 1.3 cells across, centred on the island's cell
+   (§13). Transparent — the disc inside is what is drawn. Hit testing follows
+   the rounded corners, so two diagonal islands' circles never overlap. */
+.bg-island {
+  position: absolute;
+  left: calc((var(--bg-c) - 0.15) * var(--bg-cell));
+  top: calc((var(--bg-r) - 0.15) * var(--bg-cell));
+  width: calc(var(--bg-cell) * 1.3);
+  height: calc(var(--bg-cell) * 1.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  /* A press on an island may become a drag (§4): never a scroll or a zoom. */
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+span.bg-island {
+  cursor: default;
+}
+
+.bg-island:focus {
+  outline: none;
+}
+
+/* Keyboard focus: the whole tap circle, ringed — apart from the selection's
+   ring so the two never read as one. */
+.bg-island:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--ink-soft);
+}
+
+.bg-disc {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  width: calc(var(--bg-cell) * 0.84);
+  height: calc(var(--bg-cell) * 0.84);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: calc(var(--bg-cell) * 0.46);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+/* Short of its number: the outline alone (above). On it: filled (§5). */
+.bg-island-complete .bg-disc {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Past it: a double ring in the warn colour — the shape says it, not the hue. */
+.bg-island-over .bg-disc {
+  border-color: var(--warn);
+  background: var(--warn-soft);
+  color: var(--ink);
+  box-shadow:
+    inset 0 0 0 2px var(--warn-soft),
+    inset 0 0 0 3.5px var(--warn);
+}
+
+/* The selection's ring and a partner's, just outside the disc (§5). */
+.bg-ring {
+  position: absolute;
+  box-sizing: border-box;
+  width: calc(var(--bg-cell) * 1.1);
+  height: calc(var(--bg-cell) * 1.1);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.bg-island-selected .bg-ring,
+.bg-island-target .bg-ring {
+  border: 3px solid var(--accent);
+}
+
+.bg-island-partner:not(.bg-island-target) .bg-ring {
+  border: 2px dashed var(--accent);
+}
+
+/* The hint (§9): the pair it means sits in a soft halo the size of the tap
+   circle; the island whose count gives the step away is ringed with dots. */
+.bg-island-hint {
+  background: var(--accent-ring-soft);
+}
+
+.bg-island-wrong {
+  background: var(--warn-soft);
+}
+
+.bg-island-reason::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px dotted var(--accent);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Reduced Motion: islands change at once, and the solved wash does not play
+   (§13). The shell's global rule already shortens both; this says it here. */
+@media (prefers-reduced-motion: reduce) {
+  .bg-disc {
+    transition: none;
+  }
+  .bg-board-solved::after {
+    animation: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .bg-disc {
+  transition: none;
+}
+
+:root[data-reduced-motion='true'] .bg-board-solved::after {
+  animation: none;
+}
+
+/* The line under the board (§5, §9): what the hint said, or the note that
+   the islands are still apart. Two lines are always reserved — the board's
+   height share above counts them — so the board never jumps when it fills. */
+.bg-note {
+  box-sizing: content-box;
+  min-height: 2.6em;
+  max-width: 30em;
+  margin: 4px 0 0;
+  padding: 0 4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* ---------- top bar ---------- */
+
+.bg-size-tag {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- home ---------- */
+
+.bg-choose-label {
+  margin: 0 0 -4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.bg-chips {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* The board's own drawing at a fixed size: the figure is the game, smaller. */
+.bg-figure {
+  --bg-cell: 34px;
 }

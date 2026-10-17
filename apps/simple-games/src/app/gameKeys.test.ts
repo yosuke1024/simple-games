@@ -170,7 +170,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // No. 44, web-beta (docs/LOOP_PUZZLE_RULES.md storage): not frozen until graduation
   'loop-puzzle': ['lp.stats', 'lp.flags'],
   // No. 45, web-beta (docs/BRIDGES_RULES.md storage): not frozen until graduation
-  bridges: ['bg.stats', 'bg.flags'],
+  bridges: ['bg.saveGame', 'bg.saveDaily', 'bg.stats', 'bg.flags', 'bg.prefs'],
   // No. 46, web-beta (docs/PEG_SOLITAIRE_RULES.md storage): not frozen until graduation
   'peg-solitaire': ['pg.stats', 'pg.flags'],
 };
