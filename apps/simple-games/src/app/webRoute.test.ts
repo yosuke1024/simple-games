@@ -88,10 +88,15 @@ describe('the game a URL asks for', () => {
  * the registry carries. The shortcut path shares this parser (issue #110), so
  * this is also what keeps a beta title out of a pinned shortcut on the app.
  *
- * No registry title is on the channel today (all graduated 2026-10-02), so the
- * mechanism is exercised with a synthetic beta entry spliced into the registry.
+ * Exercised twice: with the real beta titles the registry declares today (the
+ * five of docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md), and with a
+ * synthetic beta entry spliced into the registry, which keeps the mechanism
+ * tested on any day no registry title is on the channel (as from 2026-10-02
+ * until those five arrived).
  */
 describe('a web-beta title in the address', () => {
+  const realBeta = GAMES.filter((game) => game.channel === 'web-beta');
+
   const beta = {
     ...GAMES.find((game) => game.id === 'sudoku')!,
     id: 'synthetic-beta' as GameDefinition['id'],
@@ -124,6 +129,19 @@ describe('a web-beta title in the address', () => {
     vi.doUnmock('./registry');
   });
 
+  it('opens in the browser like any other — every real beta title', () => {
+    expect(realBeta.length).toBeGreaterThan(0);
+    for (const game of realBeta) expect(gameIdFromHref(`${PLAY}?game=${game.id}`)).toBe(game.id);
+  });
+
+  it('is the collection on the app build for every real beta title, while released titles still resolve', async () => {
+    const native = await loadWithBeta(true);
+    for (const game of realBeta) {
+      expect(native.gameIdFromHref(`${PLAY}?game=${game.id}`), game.id).toBeNull();
+    }
+    expect(native.gameIdFromHref(`${PLAY}?game=sudoku`)).toBe('sudoku');
+  });
+
   it('opens in the browser like any other', async () => {
     const web = await loadWithBeta(false);
     expect(web.gameIdFromHref(`${PLAY}?game=${beta.id}`)).toBe(beta.id);
@@ -135,8 +153,9 @@ describe('a web-beta title in the address', () => {
     expect(native.gameIdFromHref(`${PLAY}?game=sudoku`)).toBe('sudoku');
   });
 
-  it('is the collection when no title is on the channel and the id is simply unknown', () => {
-    expect(GAMES.some((game) => game.channel === 'web-beta')).toBe(false);
+  it('is the collection when the id is simply unknown to the registry', () => {
+    // Without the splice the synthetic id names no title at all, beta or not.
+    expect(GAMES.some((game) => game.id === beta.id)).toBe(false);
     expect(gameIdFromHref(`${PLAY}?game=${beta.id}`)).toBeNull();
   });
 });

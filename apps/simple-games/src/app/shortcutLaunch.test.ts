@@ -46,6 +46,7 @@ describe('the address a shortcut carries', () => {
 
   it('reads back to the same game for every title the app offers', () => {
     for (const game of GAMES) {
+      if (game.channel === 'web-beta') continue;
       expect(gameIdFromShortcutUrl(shortcutUrlFor(game.id)), game.id).toBe(game.id);
     }
   });
@@ -53,9 +54,20 @@ describe('the address a shortcut carries', () => {
   // A title in the browser's early release (docs/WEB_VERSION.md「先行公開」)
   // is not on the app, so its address — which a browser bookmark or a pinned
   // shortcut from a future release could still carry — lands on the
-  // collection, exactly as a retired id does (app/gameChannel.ts). No registry
-  // title is on the channel today (all graduated 2026-10-02), so a synthetic
-  // beta entry is spliced into the registry the parser sees.
+  // collection, exactly as a retired id does (app/gameChannel.ts). The five of
+  // docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md are on the channel
+  // today.
+  it('means the collection for every web-beta title in the registry today', () => {
+    const beta = GAMES.filter((game) => game.channel === 'web-beta');
+    expect(beta.length).toBeGreaterThan(0);
+    for (const game of beta) {
+      expect(gameIdFromShortcutUrl(shortcutUrlFor(game.id)), game.id).toBeNull();
+    }
+  });
+
+  // The same, for a synthetic beta entry spliced into the registry the parser
+  // sees: the mechanism stays tested on the day no registry title is on the
+  // channel (as from 2026-10-02 until the five above arrived).
   it('means the collection for a web-beta title, which the app does not offer', async () => {
     const beta: GameDefinition = {
       ...GAMES.find((game) => game.id === 'sudoku')!,

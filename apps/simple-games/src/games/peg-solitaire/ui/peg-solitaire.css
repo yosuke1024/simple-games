@@ -1,0 +1,15 @@
+/**
+ * PegSolitaire's styles — scaffolded by scripts/new-game.mjs. The shared shell
+ * classes (.screen, .home-hero, .game-content, .game-topbar, .tutorial-card,
+ * .btn, .dialog, ...) already cover the frame; the board and everything else
+ * the game itself draws go here, under the game's own `peg-solitaire-` prefix.
+ */
+
+/* Placeholder board area — replace with the real board's layout. */
+.peg-solitaire-board {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}

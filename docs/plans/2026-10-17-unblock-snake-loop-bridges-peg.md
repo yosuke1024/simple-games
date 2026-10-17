@@ -19,24 +19,25 @@ UI・画像は複製しない — 盤面はすべて自前の生成器が作る�
 
 ## 決定事項
 
-| 項目        | Unblock Puzzle                        | Snake                            | Loop Puzzle                        | Bridges                            | Peg Solitaire                    |
-| ----------- | ------------------------------------- | -------------------------------- | ---------------------------------- | ---------------------------------- | -------------------------------- |
-| No.         | 42                                    | 43                                   | 44                                     | 45                                     | 46                                   |
-| id          | `unblock-puzzle`                      | `snake`                          | `loop-puzzle`                      | `bridges`                          | `peg-solitaire`                  |
-| 保存接頭辞  | `ub.`                                 | `sn.`                            | `lp.`                              | `bg.`                              | `pg.`                            |
-| i18n 接頭辞 | `unblockPuzzle*`                      | `snake*`                         | `loopPuzzle*`                      | `bridges*`                         | `pegSolitaire*`                  |
-| カテゴリ    | `puzzle`                              | `arcade`                         | `logic`                            | `logic`                            | `puzzle`                         |
-| モード      | Easy / Medium / Hard + Daily          | Endless(速度 Slow / Normal / Fast) | Easy 4×4 / Medium 5×5 / Hard 6×6 + Daily | Easy / Medium / Hard + Daily       | English(33 穴)/ Triangle(15 穴) |
-| デイリー    | あり(Medium 固定)                     | なし                             | あり(Medium 固定)                  | あり(Medium 固定)                  | なし                             |
-| 助け        | Undo(無制限)+ Hint(探索で次の一手)  | Pause / Restart のみ             | Undo + Hint(検証済みの解に基づく) | Undo + Hint(検証済みの解に基づく) | Undo + Restart(Hint なし)       |
-| 保存キー    | saveGame / saveDaily / stats / flags / prefs | saveGame / stats / flags / prefs | saveGame / saveDaily / stats / flags / prefs | saveGame / saveDaily / stats / flags / prefs | saveGame / stats / flags / prefs |
-| チャンネル  | `web-beta`                            | `web-beta`                       | `web-beta`                         | `web-beta`                         | `web-beta`                       |
+| 項目        | Unblock Puzzle                               | Snake                              | Loop Puzzle                                  | Bridges                                      | Peg Solitaire                    |
+| ----------- | -------------------------------------------- | ---------------------------------- | -------------------------------------------- | -------------------------------------------- | -------------------------------- |
+| No.         | 42                                           | 43                                 | 44                                           | 45                                           | 46                               |
+| id          | `unblock-puzzle`                             | `snake`                            | `loop-puzzle`                                | `bridges`                                    | `peg-solitaire`                  |
+| 保存接頭辞  | `ub.`                                        | `sn.`                              | `lp.`                                        | `bg.`                                        | `pg.`                            |
+| i18n 接頭辞 | `unblockPuzzle*`                             | `snake*`                           | `loopPuzzle*`                                | `bridges*`                                   | `pegSolitaire*`                  |
+| カテゴリ    | `puzzle`                                     | `arcade`                           | `logic`                                      | `logic`                                      | `puzzle`                         |
+| グリフ      | `⇥`(U+21E5)                                  | `∿`(U+223F)                        | `◌`(U+25CC)                                  | `⊶`(U+22B6)                                  | `⁜`(U+205C)                      |
+| モード      | Easy / Medium / Hard + Daily                 | Endless(速度 Slow / Normal / Fast) | Easy 4×4 / Medium 5×5 / Hard 6×6 + Daily     | Easy / Medium / Hard + Daily                 | English(33 穴)/ Triangle(15 穴)  |
+| デイリー    | あり(Medium 固定)                            | なし                               | あり(Medium 固定)                            | あり(Medium 固定)                            | なし                             |
+| 助け        | Undo(無制限)+ Hint(探索で次の一手)           | Pause / Restart のみ               | Undo + Hint(検証済みの解に基づく)            | Undo + Hint(検証済みの解に基づく)            | Undo + Restart(Hint なし)        |
+| 保存キー    | saveGame / saveDaily / stats / flags / prefs | saveGame / stats / flags / prefs   | saveGame / saveDaily / stats / flags / prefs | saveGame / saveDaily / stats / flags / prefs | saveGame / stats / flags / prefs |
+| チャンネル  | `web-beta`                                   | `web-beta`                         | `web-beta`                                   | `web-beta`                                   | `web-beta`                       |
 
 - **接頭辞の空きは確認済み**(既存 41: `sd so ss fc ht gr ms bu bb ng mj tk ft kk nm qm st nr
 ws sp mm sf bh tm bp ld ck rv c4 gm cg np sr yt mc dm hb db bn s6 br`)。`scripts/new-game.mjs` が
-衝突を拒否する。id も既存と衝突しない(`sliding-puzzle` と `unblock-puzzle`、`solitaire` と
-`peg-solitaire` は別 id・別接頭辞・別ルール文書で、互いのコードも保存も参照しない)。
-- **グリフとアクセント 5 色は Phase 1 で決める**(グリフは registry のコメントに理由、
+  衝突を拒否する。id も既存と衝突しない(`sliding-puzzle` と `unblock-puzzle`、`solitaire` と
+  `peg-solitaire` は別 id・別接頭辞・別ルール文書で、互いのコードも保存も参照しない)。
+- **グリフとアクセント 5 色は Phase 1 で決めた**(グリフは registry のコメントに理由、
   アクセントは [BRAND.md](../BRAND.md)「アクセントを選ぶ手順」で 41 色に対して機械選定し、
   下の「Phase 1 の実施結果」に実測値)。
 - **ストア掲載文・landing のガイド・`PUBLISHED_GAME_IDS` には入れない**(正式収録まで)。
@@ -231,3 +232,89 @@ Hashiwokakero と呼ばれる形式)。
    WEB_VERSION.md の基準(2 週間の安定・滞在時間)と RELEASE_CHECKLIST.md §0 を評価する。
    正式収録時にスキーマを凍結し、公開ビルドから採取した保存 payload で
    `releasedRecords.test.ts` を作る。ストア公開・本番配信は明示的な承認を要し、自動では行わない。
+
+### Phase 1 の実施結果(2026-10-17)
+
+`scripts/new-game.mjs` で 5 本をスキャフォールドし(No. 順、box-regions の後ろ)、registry に
+`channel: 'web-beta'` と各グリフの理由を書いた。`gameKeys.test.ts` の 5 行はベータのキーとして
+注記し、各行の上に 1 行ずつコメントを置いた(Phase 2 の 5 ブランチが自分の行だけを直しても
+互いに衝突しない)。`gameChannel.test.ts` の `WEB_BETA_IDS` は 5 本、アプリには
+正式収録の 41 本だけが出ることをベータ期の形で検証する(合成ベータのテストは残す)。
+ルール文書 5 本はスタブのまま(題は正式名)。
+
+**グリフ。**5 本とも同梱の Nunito サブセット(latin-700/800、230 コードポイント)に無く、
+既存の記号グリフと同じく `--font-display` の `ui-rounded, system-ui, sans-serif` へ落ちる
+ことを確かめた(woff の cmap を読んだ)。被覆はこの環境の fc-list で 42 ファミリー中の数
+(出荷済みの最小は Sudoku の `⌗` と Schulte Table の `⌖` の 4、`⧉` 5、`♛` 7、`⚅` 8)。
+低スペック実機(Chromium 88・システムフォントのみ)ではまだ見ていない。
+
+| ゲーム         | グリフ      | 被覆 | 理由(1 行)                                                                                         | 予備 |
+| -------------- | ----------- | ---- | -------------------------------------------------------------------------------------------------- | ---- |
+| Unblock Puzzle | `⇥`(U+21E5) | 25   | 出口の壁まで滑って抜ける 1 台。パズルの棚の斜め隣 Sliding Puzzle の `⇄` とは矢の本数と壁で分かれる | `▬`  |
+| Snake          | `∿`(U+223F) | 6    | ヘビそのもの。アーケードの棚の `≡`(3 本の直線)とは曲線 1 本で分かれる。5 本で最も被覆が薄い        | `≀`  |
+| Loop Puzzle    | `◌`(U+25CC) | 14   | 点の格子を通る 1 本の閉じたループ。`▢` は横の Box Regions `▭` と同形になるので落とした             | `∮`  |
+| Bridges        | `⊶`(U+22B6) | 7    | 2 つの島とその間の橋 — 規則そのもの。論理の棚で 2 つの形を線で結んだ唯一の印                       | `⊷`  |
+| Peg Solitaire  | `⁜`(U+205C) | 7    | English 盤の十字とそこに並ぶコマ。`⊕` は 2048 の `⊞` と同じ棚で「囲んだ十字」になるので落とした    | なし |
+
+`⁜` が実機で描けなかった場合、残る候補 `⊕` は上の理由で失格なので、選び直しになる(registry の
+コメントにそう書いた)。
+
+**アクセント。**BRAND.md「アクセントを選ぶ手順」を出荷済み 41 色 + `--warn` に対して実行した
+(CIE76。`styles.css` の 41 + 41 色は `titleAccents` と全一致を確認。スクリプトは選定時の作業
+ディレクトリに置き、リポジトリには入れていない)。既存の最接近ペアはライト 10.88
+(Sudoku × Schulte Table)/ ダーク 7.91(Nonogram × Sky Fighter)で変わらず、床は 1.15 倍の
+**12.5 / 9.1**。41 色の実測範囲はライト S21〜67% / L27〜51%(中央値 S44 / L37)、ダーク
+S24〜59% / L57〜74%(中央値 S44 / L64)。候補は白インク 4.5:1・紙 3:1(ライト)、ダーク紙
+4.5:1・自分の `--accent-ink`(L8%)に 4.5:1(ダーク)、色相差 6° 以内のライト / ダークの組。
+5 本の相互距離ΔE 30 以上(ライトとダークの両方)を条件に、全床に対する最弱余裕を最大化した。
+
+| ゲーム         | 色     | ライト    | ダーク    | 最接近(ライト / ダーク)                | 白文字 / 紙  | ダーク紙 |
+| -------------- | ------ | --------- | --------- | -------------------------------------- | ------------ | -------- |
+| Unblock Puzzle | 紅     | `#b5304d` | `#d6667e` | Box Regions 15.4 / Bubble Pop 11.0     | 6.01 / 5.28  | 5.18     |
+| Snake          | 小豆色 | `#8f534d` | `#c69286` | Bubble Pop 15.0 / Kakuro 11.2          | 5.98 / 5.25  | 6.72     |
+| Loop Puzzle    | 桔梗   | `#6035b1` | `#9171da` | Mahjong Solitaire 15.0 / FreeCell 10.9 | 7.95 / 6.99  | 4.77     |
+| Bridges        | 鉄紺   | `#323b5d` | `#7d83b0` | Minesweeper 14.9 / Number Match 11.3   | 10.94 / 9.61 | 4.91     |
+| Peg Solitaire  | 葡萄色 | `#68275f` | `#d477c0` | Takuzu 15.6 / Ludo 11.5                | 10.27 / 9.03 | 6.16     |
+
+最弱余裕 1.19(Bridges のライト 14.9 / 12.51)。5 色の相互距離はライト 30.3〜77.3・ダーク
+30.1〜66.8(最接近は Unblock Puzzle × Snake — 棚は別)。5 色とも既存と互いに床を越えるので、
+コレクションの最接近ペアは 10.88 / 7.91 のまま。棚(2 列)の隣人: Unblock Puzzle × Water Sort
+(上)74.8 / 64.5、× Peg Solitaire(横)41.6 / 30.9、Peg Solitaire × Sliding Puzzle(上)
+53.5 / 57.2、Snake × Sky Fighter(上)56.1 / 48.8、Loop Puzzle × Sudoku 6×6(上)43.1 / 30.6、
+× Box Regions(横)59.8 / 49.3、Bridges × Box Regions(上)52.9 / 47.6 — いずれも慣例の
+15 / 11 を大きく超える。色とタイトルの対応は、この 7 組の最小を最大にする割り当て(120 通り)で、
+盤面での役割の見込み(下)とも合う。3〜5 列の幅(タブレット・PC)の隣人も測った: 最小は
+Bridges × Sudoku 6×6(3 列)15.5 / 12.6、Peg Solitaire × Block Puzzle(5 列)15.6 / 23.4。
+この 2 組のために、最適化の出した値から 2 つをずらした — Peg Solitaire のライトを `#6a2962`
+から `#68275f` へ(5 列で Block Puzzle と 14.98 だった)、Bridges のダークを `#7b82b2` から
+`#7d83b0` へ(3 列で Sudoku 6×6 とダーク 10.98 だった)。どちらも最弱余裕は下げない。soft / ring / onDark は既存の回帰(softLight = S×0.97 /
+L90%、softDark = S×0.71 / L18%、onDark = 同じ色相と彩度で L8%、ring 0.38 / 0.12・ダーク
+0.42 / 0.14)で出し、Crown Grid から Box Regions までの 11 本の出荷値を誤差 0 で再現する
+ことを確かめてから当てた。
+
+満たせなかった基準・判断した点(正直に):
+
+- **中央値帯は保てなかった。**#210 と同じ帯(ライト |S−44| ≤ 10 / |L−37| ≤ 7、ダーク
+  |L−65| ≤ 7)では、相互 30 を満たす 5 本の最弱余裕は **1.004** — 5 本中 4 本がライト 12.6
+  (床 12.51)に張り付き、並行ブランチ 1 本のマージで失格しうる(手順 5)。帯をライト
+  |S−44| ≤ 15 / |L−37| ≤ 9(S29〜59 / L28〜46。Hit & Blow の S58 を上限の目安)に広げて
+  1.19 にした(#210 の 1.13 より厚い)。実測範囲いっぱい(S67 / L50 の端)まで広げれば 1.47 に
+  なるが、4 色が収録済みの外れ値と同じ端に張り付くので採らなかった。
+- **5 つの別々の色相族にはしていない。**41 色の時点で、広げた帯でも床を越えるライトの候補は
+  赤〜橙(H0〜39)と青〜菫〜マゼンタ(H200〜359)にしか無い(H40〜199 の黄・緑・ティールは
+  H90 台の 3 候補を除いて床か白インクで全滅)。色相を 25° 以上離した 5 族の組(紅・橙・紺・
+  菫・葡萄)も相互 30 は満たすが最弱余裕 1.155 で、橙が S59・白インク 4.61・紙 4.05(紙の上で
+  4.5 に届かない)と最も薄い位置に来る。採った組は紅と小豆色が赤の族を分け合い、深さと彩度で
+  離す(#197 の Dominoes / Hit & Blow と同じ判断)。代わりに 5 色とも紙の上で 4.5 を超える。
+- **4 列以上の幅(PC)では Snake が Bubble Pop の真下に来て、ライト 14.99 — 慣例の 15 を
+  0.01 下回る**(床 12.5 は越える。ダークは 23.2)。Snake の最接近がそもそも Bubble Pop で、
+  紅との相互 30 を保ったまま離す値は帯の中に無かった。2 列(スマートフォン)では隣ではない。
+  慣例の 15 / 11 は前例どおり 2 列で見る基準で、ここは記録として書く。
+- **盤面がアクセントをどこに出すか(手順 4)は見込みで判断した。**ゲームはまだ無い:
+  Unblock Puzzle は抜くべき 1 台とクロム(面積最小 → 彩度最大)、Snake は伸びるヘビ(面積最大 →
+  中明度で最も彩度が低い)、Loop Puzzle はループの線、Bridges は橋の線(インク)、Peg Solitaire は最大 32 個の
+  コマ(深い値)。ルール文書がアクセントの置き場所を決めた時点で、この対応が崩れていないかを
+  見直す。
+- **ダークの Loop Puzzle はダーク面(`--surface`)の上で 3.99**(面の 3:1 は満たす。既存の最小は
+  FreeCell 3.43)。
+- 選定は main(7c098cf)の 41 色に対して行った。**マージの直前にもう一度測り直すこと**(手順 5)。

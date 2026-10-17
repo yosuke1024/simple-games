@@ -5,6 +5,11 @@
  * released behaviour: if this test is red, either a migration plan exists and
  * this file changes in the same commit, or somebody is about to strand or
  * delete players' data. Do not "fix" the expectation to make it pass.
+ *
+ * The one exception is marked where it sits: the titles still in the browser's
+ * early release (registry `channel: 'web-beta'`) have keys that may change
+ * before they graduate (docs/WEB_VERSION.md「先行公開」). That is a licence to
+ * change them on purpose, not to edit a line until the test goes green.
  */
 import { describe, expect, it } from 'vitest';
 import { GAMES } from './registry';
@@ -147,6 +152,27 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'binary-balance': ['bn.saveGame', 'bn.saveDaily', 'bn.stats', 'bn.flags', 'bn.prefs'],
   'sudoku-6x6': ['s6.saveGame', 's6.saveDaily', 's6.stats', 's6.flags', 's6.prefs'],
   'box-regions': ['br.saveGame', 'br.saveDaily', 'br.stats', 'br.flags', 'br.prefs'],
+  // The five web-beta titles of docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md.
+  // Unlike every line above, these are beta keys, not released ones: while a
+  // title is in the browser's early release its schema may still change
+  // (docs/WEB_VERSION.md「先行公開」) — never silently, though: a change here
+  // is a decision written into this file in the same commit as the code, and
+  // the save it drops was announced by the BETA notice first. They freeze the
+  // day a title graduates (docs/RELEASE_CHECKLIST.md §0), as the eleven from
+  // cg. to br. did on 2026-10-02. Each starts at the scaffold's two keys and
+  // grows to what its rules document's storage section lists; one comment per
+  // line, so that each game's change to its own line merges without touching
+  // its neighbours'.
+  // No. 42, web-beta (docs/UNBLOCK_PUZZLE_RULES.md storage): not frozen until graduation
+  'unblock-puzzle': ['ub.stats', 'ub.flags'],
+  // No. 43, web-beta (docs/SNAKE_RULES.md storage): not frozen until graduation
+  snake: ['sn.stats', 'sn.flags'],
+  // No. 44, web-beta (docs/LOOP_PUZZLE_RULES.md storage): not frozen until graduation
+  'loop-puzzle': ['lp.stats', 'lp.flags'],
+  // No. 45, web-beta (docs/BRIDGES_RULES.md storage): not frozen until graduation
+  bridges: ['bg.stats', 'bg.flags'],
+  // No. 46, web-beta (docs/PEG_SOLITAIRE_RULES.md storage): not frozen until graduation
+  'peg-solitaire': ['pg.stats', 'pg.flags'],
 };
 
 const PREFIXES: Record<string, string> = {
@@ -191,6 +217,11 @@ const PREFIXES: Record<string, string> = {
   'binary-balance': 'bn.',
   'sudoku-6x6': 's6.',
   'box-regions': 'br.',
+  'unblock-puzzle': 'ub.',
+  snake: 'sn.',
+  'loop-puzzle': 'lp.',
+  bridges: 'bg.',
+  'peg-solitaire': 'pg.',
 };
 
 describe('registry storage keys (released data — do not edit to make green)', () => {
