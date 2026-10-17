@@ -290,6 +290,33 @@ describe('playing (§4, §5)', () => {
     expect(encodeBoard(boardOf(UB_STORAGE_KEYS.game))).toBe(encodeBoard(board));
   });
 
+  it('a held Enter or Space presses a button once, not once per repeat (§5)', async () => {
+    const user = userEvent.setup();
+    await launchTutorialDone();
+    await user.click(screen.getByRole('button', { name: /^Easy/ }));
+    await settle();
+    const board = boardOf(UB_STORAGE_KEYS.game);
+    const move = oneStep(board);
+    const arrows = arrowsFor(board, move);
+    fireEvent.click(blockButton(move.block), { detail: 1 });
+    const forward = screen.getByRole('button', { name: arrows.button });
+    act(() => forward.focus());
+
+    // `fireEvent` answers false when the default — the button's own click,
+    // which a held Enter fires on every repeat — was stopped.
+    expect(fireEvent.keyDown(forward, { key: 'Enter', repeat: true })).toBe(false);
+    expect(fireEvent.keyDown(forward, { key: ' ', repeat: true })).toBe(false);
+    expect(fireEvent.keyDown(forward, { key: 'Enter' })).toBe(true);
+    // The same on a block and on Undo / Hint.
+    expect(fireEvent.keyDown(blockButton(move.block), { key: 'Enter', repeat: true })).toBe(false);
+    const hint = screen.getByRole('button', { name: 'Hint' });
+    expect(fireEvent.keyDown(hint, { key: 'Enter', repeat: true })).toBe(false);
+    expect(fireEvent.keyDown(hint, { key: 'Enter' })).toBe(true);
+    // Other repeats pass: a held Tab still walks the buttons.
+    expect(fireEvent.keyDown(forward, { key: 'Tab', repeat: true })).toBe(true);
+    expect(screen.getByText(/^Moves 0 ·/)).toBeInTheDocument();
+  });
+
   it('plays from the keyboard: arrows along the lane, nothing across it, no repeats', async () => {
     const user = userEvent.setup();
     await launchTutorialDone();
@@ -320,6 +347,15 @@ describe('playing (§4, §5)', () => {
     await settle();
     expect(screen.getByText(/^Moves 0 ·/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+
+    // With the focus off the board and nothing selected, the first arrow only
+    // brings the focus onto the target block, and moves nothing.
+    act(() => (document.activeElement as HTMLElement).blur());
+    expect(document.activeElement).toBe(document.body);
+    expect(fireEvent.keyDown(window, { key: 'ArrowUp' })).toBe(false);
+    expect(document.activeElement).toBe(blockButton(0));
+    expect(blockButton(0)).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByText(/^Moves 0 ·/)).toBeInTheDocument();
   });
 
   it('undoes one move at a time, and the button is off with nothing to undo (§6)', async () => {
@@ -450,7 +486,14 @@ describe('clearing a board (§3, §10)', () => {
     expect(within(card).getByText('Net cells moved')).toBeInTheDocument();
     expect(within(card).getByText('Hints used')).toBeInTheDocument();
     expect(within(card).getByRole('button', { name: 'Share' })).toBeInTheDocument();
-    expect(within(card).getByRole('button', { name: 'New board' })).toHaveFocus();
+    const newBoard = within(card).getByRole('button', { name: 'New board' });
+    expect(newBoard).toHaveFocus();
+    // An Enter held from the last move reaches the focused New board as
+    // repeats: they press nothing (§5 — `fireEvent` answers false when the
+    // default, the button's click, was stopped). A new press still does.
+    expect(fireEvent.keyDown(newBoard, { key: 'Enter', repeat: true })).toBe(false);
+    expect(fireEvent.keyDown(newBoard, { key: ' ', repeat: true })).toBe(false);
+    expect(fireEvent.keyDown(newBoard, { key: 'Enter' })).toBe(true);
     expect(screen.queryByText(/streak/i)).not.toBeInTheDocument();
     // The board behind the card is out of reach.
     expect(document.querySelector('.game-content')).toHaveAttribute('inert');

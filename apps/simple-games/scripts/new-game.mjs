@@ -5,10 +5,11 @@
  *   node scripts/new-game.mjs <id> <PREFIX> --title "<Title>" --category <logic|cards|puzzle|board|arcade|drills> [--glyph <char>] [--channel web-beta] [--dry-run]
  *
  * `--channel web-beta` は Web 版だけの先行公開(docs/WEB_VERSION.md「先行公開(ベータ)」)
- * として生成する: registry の要素に `channel: 'web-beta'` を書き、ホームのヒーローに
- * `<WebBetaNotice gameId="…" />`(BETA バッジと、en / ja の保存データの注意)を置く。
- * 注意を先に見せてあることが、ベータ中に保存を捨ててよい条件なので(同節「保存データ」)、
- * 後から足し忘れないよう生成時に入れる。正式収録で `channel` を外せば注意は何も描かなく
+ * として生成する: registry の要素に `channel: 'web-beta'` を書き、ホームのヒーローと
+ * Quick Rules の見出しの下の両方に `<WebBetaNotice gameId="…" />`(BETA バッジと、
+ * en / ja の保存データの注意)を置く。初回はホームより先に Quick Rules が開き、その最後の
+ * ボタンが最初の保存を書くので、両方に要る。注意を先に見せてあることが、ベータ中に保存を
+ * 捨ててよい条件なので(同節「保存データ」)、後から足し忘れないよう生成時に入れる。正式収録で `channel` を外せば注意は何も描かなく
  * なるので、要素はそのまま残してよい(2026-10-02 に収録した 11 本と同じ)。
  *
  * 新しいゲームを足すたびに 4,000 行あるどれかの兄弟ゲームを丸ごとコピーして
@@ -41,8 +42,9 @@
  *   - gameI18nWiring.test.ts ─ Root の先頭で `import '../i18n';`
  *   - homeActionsWiring.test.ts ─ HomeScreen が `<GameHomeHeader gameId="…" .../>` を
  *     ちょうど 1 回だけ描く
- *   - webBetaNoticeWiring.test.ts ─ `channel: 'web-beta'` のゲームは HomeScreen が
- *     `<WebBetaNotice gameId="…" />` を自分の id で持つ(`--channel web-beta` で担保)
+ *   - webBetaNoticeWiring.test.ts ─ `channel: 'web-beta'` のゲームは HomeScreen と
+ *     TutorialScreen の両方が `<WebBetaNotice gameId="…" />` を自分の id で持つ
+ *     (`--channel web-beta` で担保)
  *   - shareWiring.test.ts ─ 結果オーバーレイが `<ShareAction gameId="…" .../>` を持つ
  *   - refLeading.test.ts ─ GameContext の statsRef / sessionRef が
  *     「setState の直前で ref を進める」形になっている(下記 GameContext 生成部を参照)
@@ -814,7 +816,20 @@ export function ${pascal}GameScreen() {
 `;
 }
 
-function tutorialScreenFile({ id, pascal, camel, idUpper }) {
+function tutorialScreenFile({ id, pascal, camel, idUpper, channel }) {
+  const beta = channel === 'web-beta';
+  // The early-release notice (--channel web-beta) on every step: a first visit
+  // opens here, not on the home, and the last step's button writes the first
+  // save (docs/WEB_VERSION.md「保存データ」; src/test/webBetaNoticeWiring.test.ts).
+  const betaDoc = beta
+    ? `\n *
+ * The early-release notice under the header is the shell's too
+ * (docs/WEB_VERSION.md「先行公開(ベータ)」): a first visit opens here rather
+ * than on the home, and the last step's button writes the first save, so the
+ * notice is read before anything is saved — on every step, in one place.`
+    : '';
+  const betaImport = beta ? `\nimport { WebBetaNotice } from '@/ui/components/WebBetaNotice';` : '';
+  const betaNotice = beta ? `\n\n      <WebBetaNotice gameId="${id}" />` : '';
   return `/**
  * Quick Rules (docs/${idUpper}_RULES.md): at most three steps, one sentence
  * each, leading straight into play (docs/PRODUCT_PRINCIPLES.md「初回体験の原則」).
@@ -829,11 +844,11 @@ function tutorialScreenFile({ id, pascal, camel, idUpper }) {
  * hardware Back marks it seen on the way out (state/GameContext.tsx). The
  * long-form rules live on the game's landing page behind "Learn More", which
  * is absent until the page exists (ui/landing.ts) and quietly does nothing
- * offline (docs/OFFLINE_POLICY.md).
+ * offline (docs/OFFLINE_POLICY.md).${betaDoc}
  */
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
-import { IconClose } from '@/ui/components/icons';
+import { IconClose } from '@/ui/components/icons';${betaImport}
 import { gameLandingUrl } from '@/ui/landing';
 import { openExternal } from '@/ui/openExternal';
 import { use${pascal} } from '../../state/GameContext';
@@ -870,7 +885,7 @@ export function ${pascal}TutorialScreen() {
             <IconClose />
           </button>
         ) : null}
-      </header>
+      </header>${betaNotice}
 
       <div className="tutorial-card">
         <div className="tutorial-step-count" aria-hidden="true">

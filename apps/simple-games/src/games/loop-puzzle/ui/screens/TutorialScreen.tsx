@@ -11,10 +11,16 @@
  * shared `howToPlay` string, and the close button exists only once the
  * tutorial has been completed — the first pass ends by starting a game, and
  * hardware Back marks it seen on the way out (state/GameContext.tsx).
+ *
+ * "The first pass" is read from `lp.flags`, and a lost flags record brings it
+ * back over a player who may have a board suspended — of any difficulty, since
+ * `lp.prefs` may be lost with it. That board is resumed rather than replaced
+ * by a new one at the remembered difficulty without a word (§11, §12).
  */
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { IconClose } from '@/ui/components/icons';
+import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { useLoopPuzzle } from '../../state/GameContext';
 
 /** The figures' lattice: 3×3 cells, a 24-unit pitch, an 8-unit margin. */
@@ -162,7 +168,15 @@ function TapFigure() {
 }
 
 export function LoopPuzzleTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startDifficulty, goHome, prefs } = useLoopPuzzle();
+  const {
+    tutorialCompleted,
+    completeTutorial,
+    startDifficulty,
+    canResume,
+    resumeGame,
+    goHome,
+    prefs,
+  } = useLoopPuzzle();
   const { t } = useSettings();
   const [step, setStep] = useState(0);
 
@@ -189,15 +203,17 @@ export function LoopPuzzleTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      // Straight into a board (§11): the difficulty last chosen, Easy at first.
-      startDifficulty(prefs.difficulty);
+      // Straight into a board (§11): the one waiting, if any — never replaced
+      // silently — else the difficulty last chosen, Easy at first.
+      if (canResume('difficulty')) resumeGame('difficulty');
+      else startDifficulty(prefs.difficulty);
     } else {
       goHome();
     }
   };
 
   return (
-    <div className="screen tutorial-screen">
+    <div className="screen tutorial-screen lp-tutorial">
       <header className="screen-header">
         <h1>{t('howToPlay')}</h1>
         {tutorialCompleted ? (
@@ -206,6 +222,13 @@ export function LoopPuzzleTutorialScreen() {
           </button>
         ) : null}
       </header>
+
+      {/* The early-release note (docs/WEB_VERSION.md「保存データ」). A first
+          visit opens here rather than on the home, and the last step's button
+          writes the first save, so the note is read before any step — and it
+          is on every step, in one place, so the steps keep their layout.
+          Nothing on the app, or once the title is released. */}
+      <WebBetaNotice gameId="loop-puzzle" />
 
       <div className="tutorial-card">
         <div className="tutorial-step-count" aria-hidden="true">

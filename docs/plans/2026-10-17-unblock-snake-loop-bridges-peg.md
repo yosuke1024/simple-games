@@ -463,3 +463,178 @@ Reversi / Gin Rummy / Sky Fighter / Nonogram / Shape Regions で詰まってい�
 (14.92 / 12.51)から Loop Puzzle のライトの 1.187(14.85 / 12.51)へわずかに下がる(丸めれば
 どちらも Phase 1 の 1.19)。コレクションの最接近ペアは 10.88 / 7.91 で変わらない。手順 5 のとおり、Unblock Puzzle を含む 5 本がそろった時点でマージの直前にもう一度
 測り直すこと(同じ全精度の変換で。文書とコメントの値が最後の桁までそろう)。
+
+### Phase 4 の実施結果(2026-10-17)
+
+**統合の順序とコミット**(`git log 7c098cf..HEAD --oneline` を古い順に。基点は main の 7c098cf)。
+各ゲームは 1 コミットとして、次の順で同じブランチへ統合した:
+
+| コミット  | 内容                                                                                                             |
+| --------- | ---------------------------------------------------------------------------------------------------------------- |
+| `75d5d34` | 計画(この文書)                                                                                                   |
+| `c560439` | Phase 1 の接続点(registry・golden・アクセント 5 色・文書)                                                        |
+| `1cadc57` | 接続点の独立レビューの指摘                                                                                       |
+| `256c332` | Bridges(No. 45)                                                                                                  |
+| `2917a64` | Snake(No. 43)                                                                                                    |
+| `58e68cf` | Peg Solitaire(No. 46)                                                                                            |
+| `d0c102e` | Loop Puzzle(No. 44)                                                                                              |
+| `352ede9` | 4 本の統合レビューの指摘(Loop Puzzle のグリフ・アクセント 2 色・保存の検証の置き場所 — 上の「Phase 4 の見直し」) |
+| `91c68e9` | Unblock Puzzle(No. 42)                                                                                           |
+
+`91c68e9` が触れたのは自分のフォルダ・自分のルール文書・`gameKeys.test.ts` の自分の行だけで、
+`styles.css` / `packages/brand` には触れていないので、上の「Phase 4 の見直し」で測った 46 色は
+いまの値と同じ。
+このあと、Phase 1 で書いた現状の記述(README「Web 先行公開(ベータ)」と多言語のキー数・
+PROJECT_CONTEXT.md §3・WEB_VERSION.md の役割分担表と実装状況・I18N_POLICY.md と
+architecture/i18n.md のキー数と来歴・architecture/storage-keys.md・GAME_LIFECYCLE.md
+「CPU 探索」・RELEASE_CHECKLIST.md §0・store/listing.md の注記)を実装に合わせて直した。
+キーは 14 言語・**1,748**(シェル 125 + 正式収録 41 本 1,393 + Web 先行公開 5 本 230 — Unblock
+Puzzle 43 / Snake 50 / Loop Puzzle 55 / Bridges 43 / Peg Solitaire 39。Club House は別に 122)。
+各 `en.ts` を Node で読み込んで `en` の最上位キーを数え、正規表現での数え上げと一致を確かめた。
+
+**ゲームの作業がオーナーの判断に残した点 — 統合で暫定的に決めた(どれも製品オーナーの確認待ち)。**
+オーナーが覆せば、ルール文書を先に直してから変える(ベータの間なので保存の形も変えうる)。
+
+- **Peg Solitaire**: 完全クリアの後も Undo できる(結果カードに Undo を出す。「Undo は無料・
+  無制限」に例外を置かない)。完全クリアは 1 局に 1 回だけ数える(Undo して再び完全クリアしても
+  `perfect` は増えない — セッションの `cleared`)。**製品オーナーの確認待ち**。
+  PEG_SOLITAIRE_RULES.md §6・§10・§16(同じ文書は、終局後の Undo がアプリを閉じると失われる
+  ことも確認待ちとしている)。
+- **Unblock Puzzle**: ターゲットの行に横向きのブロックを置かない(仕様の意図的な絞り込み)。
+  同じブロックを続けて滑らせる間は 1 手にまとめる(別々のドラッグやタップでも)。移動マス数は
+  手ごとの差し引きの距離の合計として、手数とは別に示す。統計は難易度ごとの最少手数ではなく
+  「最短手数ちょうどでクリアした数」(とデイリーの日ごとの最少手数)。**製品オーナーの確認待ち**。
+  UNBLOCK_PUZZLE_RULES.md §1・§4・§10・§16(同じ文書は、Hard とデイリーを同梱の一覧から
+  配ること — §8 — も確認待ちとしている)。
+- **Snake**: Restart(ヘッダの ↻ と結果カード)は、同じ seed での再挑戦と新しいゲームの両方を
+  出す。**製品オーナーの確認待ち**(どちらを第一にするかも含めて。SNAKE_RULES.md §6)。
+- **Bridges**: 島の数字を超える橋も置け、その島を「超過」として示す(拒まない)。
+  **製品オーナーの確認待ち**(BRIDGES_RULES.md §4・§5・§15)。
+- **Peg Solitaire の盤の名前**: `en` は「English」「Triangle」のまま(ほかの 13 言語は盤の
+  呼び名に訳した)。**製品オーナーの確認待ち**(PEG_SOLITAIRE_RULES.md §15)。
+- **ゲームを開くときの再証明(「探索はタップのときだけ」への 2 つ目の例外)**: Bridges と
+  Loop Puzzle は中断中の盤面を読み込むとき、解がちょうど 1 つであることを計数探索で証明し
+  直す(Bridges 500 ノード / Loop Puzzle 5,000 ノード。証明できなければ保存を読み捨てる)。
+  Unblock Puzzle も Easy / Medium で配りのときに変えた盤面の保存に限り、開くときに最短手数を
+  1 回測り直す(6,000 盤面)。実装と統合のレビューで受け入れたが、原則への例外を決めるのは
+  製品オーナーで、判断の記録はまだ無い。**製品オーナーの確認待ち**(GAME_LIFECYCLE.md
+  「CPU 探索」に暫定の例外として書いた)。
+- **デイリーの統計の数え方(3 本で揃っていない)**: Unblock Puzzle と Loop Puzzle はデイリーを
+  Medium の行に数え(Box Regions の前例。UNBLOCK_PUZZLE_RULES.md §10・LOOP_PUZZLE_RULES.md
+  §10)、Bridges は自分の `daily` の枠に分けて Medium に混ぜない(BRIDGES_RULES.md §11)。
+  そのため「Medium の最速」「プレイ回数」の意味が 3 本で違い、統計画面の節の形も 3 通り。
+  正式収録で `releasedRecords.test.ts` が保存の形を凍結する前に、1 つの規則を選んで 3 本に
+  当てる(統計画面の節と見出しもそろえる)。**製品オーナーの確認待ち**。
+- **結果カードの第一ボタン(5 本で揃っていない)**: Unblock Puzzle の Free Play は「新しい
+  盤面」が第一(UNBLOCK_PUZZLE_RULES.md §9)、Loop Puzzle と Bridges は「同じ盤面で再挑戦」が
+  第一(LOOP_PUZZLE_RULES.md §9・BRIDGES_RULES.md §8)、Snake は再挑戦が第一、Peg Solitaire は
+  詰まった終局で Undo、完全クリアで Triangle は新しい盤面・English は再挑戦が第一。Enter と
+  第一ボタンのタップの意味がゲームごとに違う(正式収録の論理パズルも Crown Grid / Shape
+  Regions / Sudoku 6×6 は新しい盤面、Box Regions / Binary Balance / Number Path は再挑戦で
+  分かれている)。解き終えた論理・パズルの盤面(Unblock・Loop・Bridges・Peg の Triangle)の
+  規則を 1 つ決め、各ルール文書に書いてからカードをそろえる。**製品オーナーの確認待ち**。
+- **統計と結果の文言(5 本で揃っていない)**: クリア数が「Boards cleared」(Unblock)/
+  「Puzzles solved」(Loop)/「Boards solved」(Bridges)、日数が「Daily Challenges cleared」
+  (Unblock)/「Days cleared」(Loop・Bridges)、合計の見出しが「Overall」/「All boards」/
+  「All modes」で、Peg Solitaire の合計時間の節には見出しが無い。記録の見せ方も、Loop と
+  Bridges は更新しなかったクリアにも今の最速と差を出し Unblock は出さない。上のデイリーの
+  統計の判断と一緒に en の言い方を 1 つに決め、5 本の 14 言語にそろえて当てる
+  (**製品オーナーの確認待ち** — 統計の形が決まる前に 70 カタログを書き換えない)。
+- **Unblock Puzzle の題**: 説明的な一般名称として採ったが、同じ形式のアプリ Unblock Me
+  (Kiragames)と語「Unblock」を共有する。比較した製品と理由は UNBLOCK_PUZZLE_RULES.md の
+  冒頭「題の確認」。商標の状況は調べていない。**製品オーナーの確認待ち**(正式収録と
+  ストア掲載の前に)。
+
+**性能 — CPU 6 倍のスロットルでの計測と、正式収録ゲームでの較正**(2026-10-17、開発機 —
+4 CPU をほかの作業と共用。**実機ではない**)。統合ブランチの本番 Web ビルド
+(`vite build --mode web` → `vite preview`)をデスクトップ Chromium で開き、Playwright で
+360×640・DPR 2・CDP のタッチ、CDP の `Emulation.setCPUThrottlingRate` で 1 倍 / 6 倍にした。
+数えたのは Event Timing の `duration`(タップから次の描画)と、その間の最も長い Long Task。
+Loop Puzzle / Bridges / Snake / Peg Solitaire は `d0c102e` の段(4 本を統合し、`352ede9` の
+直しの前)のビルドで測った。Unblock Puzzle は統合の前に自分のブランチで、同じ機械・同じ方法の
+別のハーネスで測った(UNBLOCK_PUZZLE_RULES.md §8)。目安にしたしきい値は 6 倍で新しい盤面
+p95 ≤ 150 ms・最大 ≤ 250 ms、Hint 最大 ≤ 120 ms、ゲームを開く・再開 最大 ≤ 150 ms。
+スクリプトと結果は作業ディレクトリに置き、リポジトリには入れていない。
+
+6 倍の p95 / 最大(ms。2 回目は別の時刻に同じ手順で測り直したもの。ページの最初の Hint は各回 1 回):
+
+| 操作(6 倍)                           | Loop Puzzle 1 回目 | 2 回目    | Bridges 1 回目 | 2 回目    |
+| ------------------------------------ | ------------------ | --------- | -------------- | --------- |
+| 新しい盤面 Easy                      | 182 / 188          | 136 / 138 | 149 / 156      | 142 / 164 |
+| 新しい盤面 Medium                    | 224 / 246          | 162 / 173 | 145 / 150      | 221 / 272 |
+| 新しい盤面 Hard                      | 324 / 449          | 311 / 500 | 174 / 189      | 283 / 306 |
+| Hard の最も重い seed(各ルール文書の) | 446 / 446          | —         | 415 / 415      | —         |
+| 冷えたページの最初の盤面(Hard)       | 470 / 470          | —         | 344 / 344      | —         |
+| Hint(配った盤面)                     | 101 / 112          | 83 / 93   | 63 / 80        | 61 / 72   |
+| ページの最初の Hint(最初の音を含む)  | 174                | 164       | 403            | 131       |
+| 盤のタップ(辺 / 島)                  | 85 / 116           | 83 / 137  | 83 / 226       | 90 / 165  |
+| 再開(Hard の途中)                    | 165 / 165          | 157 / 157 | 128 / 128      | 141 / 141 |
+
+しきい値を超えたもの(ハーネスの記録の全件): **Loop Puzzle** — 新しい盤面(どの難易度も。
+ホームの難易度ボタンから・最も重い seed・冷えたページも)、デイリーを開く(2 回目 159)、
+途中盤面の Hard の Hint(2 回目の最大 126)、再開(難易度 165 / 157、デイリーの 2 回目 154)。
+**Bridges** — 新しい盤面の Medium(2 回目)・Hard・ホームの難易度ボタンから・最も重い seed・
+冷えたページ、デイリーを開く(161 / 168)。2 本ともページの最初の Hint(最初の効果音で
+`AudioContext` を作る分を含む。Bridges の 1 回目の 403 は 1 回だけの値で、2 回目は 131)。
+
+- **Snake**(1 回): ゲームを開く(長いヘビの保存)85 / 87、Pause / Resume のタップ 49 / 49、
+  ホームへ戻る(保存を書く)63 / 63。**ホームからの再開は 213 / 213 で、しきい値 150 を超える**
+  (同じ方法で測った正式収録の再開の最大 — Crown Grid の 2 回目の 201 — もわずかに超える。
+  1 回の計測の値として記録する)。
+- **Peg Solitaire**(1 回): ゲームを開く(保存あり)84 / 84、再開 73 / 73、コマを選ぶ 45 / 55、
+  ジャンプ 71 / 75、Undo 56 / 72、新しい盤面(Triangle)68 / 90 — しきい値の対象の操作は
+  すべて内側(ページの最初のジャンプは、最初の効果音を含めて 152)。
+- **Unblock Puzzle**(UNBLOCK_PUZZLE_RULES.md §8 の 2 回): Hard とデイリーの配りを同梱の
+  一覧からにして(探索 0)、**Hard の新しい盤面は p95 160〜184 / 最大 184〜200**(前の版
+  696 / 792)。最大のしきい値は満たし、p95 は 150 に届かない(静かな時間に測った 3 回では
+  p95 88〜104 / 最大 112〜120)。デイリーを初めて配るのは p95 192〜256 / 最大 208〜336。
+  Easy / Medium は配りの仕事量を 20 万で止めて p95 160〜272 / 最大 184〜296(前の版 Easy
+  328 / 368、Medium 496 / 592)で、最悪の seed では Medium の最大が 520(新しいページの最初の
+  1 回)。
+
+**較正**: しきい値が正式収録のゲームでどう出るかを、同じハーネス・同じ機械・同じ 6 倍で
+正式収録の 8 本について 2 回ずつ測った。新しい盤面(Hard、Sliding Puzzle は 5×5)の
+p95 / 最大(1 回目 · 2 回目): Box Regions 347 / 613 · 496 / 739、Shape Regions 494 / 1,134 ·
+398 / 475、Crown Grid 667 / 693 · 771 / 779、Number Path 509 / 1,061 · 536 / 612、Minesweeper
+379 / 460 · 388 / 401、Sudoku(Free Play)216 / 217 · 224 / 234、Water Sort(Free Play)
+101 / 115 · 92 / 94、Sliding Puzzle 97 / 111 · 83 / 85。**しきい値の p95 ≤ 150 は、正式収録の
+論理パズルの Hard でも満たされていない**(この 8 本で満たすのは Water Sort と Sliding Puzzle
+だけ)ので、しきい値は端末の約束ではなく目安として読む。**Loop Puzzle(Hard p95 311〜324 /
+最大 449〜500)と Bridges(Hard p95 174〜283 / 最大 189〜306)は、正式収録の範囲の中にある** —
+論理パズルの Box Regions・Shape Regions・Crown Grid・Number Path と Minesweeper より軽く、
+Water Sort より重い(Sudoku と比べると、Loop Puzzle は重く、Bridges は同じくらい)。Medium も
+正式収録の範囲の中(正式収録の Medium は p95 99〜337)。ページの最初の Hint も、正式収録の
+5 本(Box Regions / Shape Regions / Crown Grid / Number Path / Sudoku)の 2 回で 130〜199 と、
+どれも 120 を超える(最初の効果音の初期化は共有の `services/sound.ts` の分)。Unblock Puzzle は上のとおり、
+作り直しで Hard を p95 160〜184 / 最大 184〜200 まで下げた。
+
+**残っていること**(どれも未了):
+
+- **Web への配信**: pixapps-landing への同期 PR は作っておらず、製品オーナーの明示的な承認が
+  要る。その PR で、同期するチャンクと同じ PR で `tests/ui.test.js` の `WEB_BETA_GAME_IDS` に
+  5 本の id を足す(WEB_VERSION.md「先行公開」)。正式収録の基準(2 週間の安定稼働と計測)は
+  配信してから始まる。
+- **実機での確認**: 低スペックの Android(古い Chromium WebView)と iOS での生成・探索の待ち、
+  グリフの描画(Chromium 88・システムフォントだけの端末ではどれもまだ見ていない)、端末の
+  フォントでの各言語の表示、OS の文字サイズ拡大。上の数字は 6 倍のスロットルで、実機の
+  代わりではない。
+- **翻訳**: 12 言語のネイティブのレビュー(供給できない — I18N_POLICY.md。読者からの報告に
+  委ねる)と、**5 本の `ja` を作者が読むこと**(まだ誰も読んでいない)。
+- **製品オーナーの確認**: 上の暫定判断と、各ルール文書が確認待ちとしている点。
+- **main へのマージの直前に、46 色をもう一度測り直す**(BRAND.md「アクセントを選ぶ手順」の 5)。
+- **PR の説明に書くこと**:
+  - `size-baseline.json` の更新は、5 本の新しい行のほかに、前回の基準の commit `fcd0c46`
+    から main(7c098cf)までの 74 commit 分のずれも含む — Club のチャンク 22,106 → 41,357
+    (gzip。main で `src/club` のソースが 114 KB → 261 KB に増えた分)、入口 79,113 → 82,649、
+    正式収録のチャンクの再分割による ±0.3〜1.5 KB(water-sort −1.5 KB、minesweeper −1.2 KB
+    など)。このブランチが `src/club` で変えたのは下の 1 か所の import だけで、Club の増分は
+    5 本のものではない。5 本自身の分は `unblock-puzzle` / `snake` / `loop-puzzle` /
+    `bridges` / `peg-solitaire` の 5 行。
+  - `src/club/` への変更は `ui/ChallengeScreen.tsx` の 1 か所(`GAMES.find` →
+    `findAvailableGame`、3 行)だけ。製品オーナーの要件は「Club House は変えない」なので、
+    これを名指しで伝える。正式収録の 41 本では両方のプラットフォームで同じ結果を返し、
+    5 本はどれもチャレンジの契約を持たないので、今は起こりえない経路の守り(Phase 1 の独立
+    レビューで足した)。
+- 5 本がそろった状態での全体のゲート(`pnpm lint` / `typecheck` / `test` / `build` /
+  `build:web`・i18n gate・`size:check`・`check-principles.sh`)の最終の結果は、この節には
+  書いていない(書いた時点で、その記録を確かめていない)。

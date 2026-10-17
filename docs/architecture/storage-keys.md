@@ -39,11 +39,11 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | `bn.*`          | Binary Balance(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。issue #210)                                                                       |
 | `s6.*`          | Sudoku 6×6(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度とミスの即時表示)                                                                           |
 | `br.*`          | Box Regions(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ)                                                                                      |
-| `ub.*`          | Unblock Puzzle(計画: saveGame / saveDaily / stats / flags / prefs。Web 先行公開、2026-10-17 — 下記)                                                                             |
-| `sn.*`          | Snake(計画: saveGame / stats / flags / prefs — prefs は速度だけ。デイリーなし。Web 先行公開)                                                                                    |
-| `lp.*`          | Loop Puzzle(計画: saveGame / saveDaily / stats / flags / prefs。Web 先行公開)                                                                                                   |
-| `bg.*`          | Bridges(計画: saveGame / saveDaily / stats / flags / prefs。Web 先行公開)                                                                                                       |
-| `pg.*`          | Peg Solitaire(計画: saveGame / stats / flags / prefs。デイリーなし。Web 先行公開)                                                                                               |
+| `ub.*`          | Unblock Puzzle(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。Web 先行公開のベータのキー — 下記)                                                |
+| `sn.*`          | Snake(saveGame / stats / flags / prefs — prefs は最後に選んだ速度だけ。デイリーなし。同上)                                                                                      |
+| `lp.*`          | Loop Puzzle(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。同上)                                                                                |
+| `bg.*`          | Bridges(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。同上)                                                                                    |
+| `pg.*`          | Peg Solitaire(saveGame / stats / flags / prefs — prefs は最後に選んだ盤だけ。デイリーなし。同上)                                                                                |
 | `ck.*`          | Checkers(saveGame / stats / flags / prefs。統計は難易度別)                                                                                                                      |
 | `rv.*`          | Reversi(saveGame / stats / flags / prefs。統計は難易度別)                                                                                                                       |
 | `c4.*`          | Connect Four(saveGame / stats / flags / prefs。同上)                                                                                                                            |
@@ -59,11 +59,14 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 `src/app/gameKeys.test.ts` が固定し、保存 payload の形は各ゲームの
 `storage/releasedRecords.test.ts` が固定する。以後は移行だけで変える。
 
-`ub.*` から `pg.*` までの 5 本は **Web 先行公開中**(2026-10-17〜、
-`docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md`)で、スキーマはまだ凍結していない
-(正式収録が凍結点。それまでの変更も黙っては行わず、`gameKeys.test.ts` の行と理由を同じ
-コミットで直す)。表のキーは計画書の決定事項の値で、いまの registry はスキャフォールドの
-`stats` / `flags` の 2 つだけを持つ。各ゲームのルール文書の保存節が確定させる。
+`ub.*` から `pg.*` までの 5 本は **Web 先行公開(ベータ)のキー**(2026-10-17 に実装。
+Web 版への配信はまだ — `docs/WEB_VERSION.md`「先行公開」)。表は各ゲームの `storage/keys.ts`
+(import ゼロの葉)が宣言する実際のキーで、registry の `storageKeys` はその `Object.values`、
+`src/app/gameKeys.test.ts` の行が同じ並びで固定する。中身は各ゲームのルール文書の保存の節が
+定める。**ベータのキーなので、スキーマは正式収録まで凍結しない**(正式収録が凍結点。それまでの
+変更も黙っては行わず、ホームの告知を先に出し、`gameKeys.test.ts` の行と理由を同じコミットで
+直す)。保存 payload の形を固定する `storage/releasedRecords.test.ts` は、正式収録のときに
+配信した Web ビルドから採取した payload で作る(`docs/RELEASE_CHECKLIST.md` §0)。
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/

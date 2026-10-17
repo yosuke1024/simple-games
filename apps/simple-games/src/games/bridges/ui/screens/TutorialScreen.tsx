@@ -19,6 +19,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { IconClose } from '@/ui/components/icons';
+import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { useBridges } from '../../state/GameContext';
 import { BridgesFigure } from '../components/BridgesFigure';
 
@@ -111,7 +112,7 @@ export function BridgesTutorialScreen() {
   };
 
   return (
-    <div className="screen tutorial-screen">
+    <div className="screen tutorial-screen bg-tutorial">
       <header className="screen-header">
         <h1>{t('howToPlay')}</h1>
         {tutorialCompleted ? (
@@ -120,6 +121,13 @@ export function BridgesTutorialScreen() {
           </button>
         ) : null}
       </header>
+
+      {/* The early-release note (docs/WEB_VERSION.md「保存データ」). A first
+          visit opens here rather than on the home, and the last step's button
+          writes the first save, so the note is read before any step — and it
+          is on every step, in one place, so the steps keep their layout.
+          Nothing on the app, or once the title is released. */}
+      <WebBetaNotice gameId="bridges" />
 
       <div className="tutorial-card">
         <div className="tutorial-step-count" aria-hidden="true">

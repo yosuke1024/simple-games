@@ -14,14 +14,41 @@
  * each, so the work spreads across workers. Provenance — that these are the
  * generator's own boards — is catalogueBuild.test.ts.
  */
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { RUN, bucketCode, catalogueEntry, catalogueSize, type CatalogueEntry } from './catalogue';
+import {
+  BIT_ALPHABET,
+  RUN,
+  bucketCode,
+  catalogueEntry,
+  catalogueSize,
+  type CatalogueEntry,
+} from './catalogue';
 import { CATALOGUE_DATA } from './catalogueData';
 import { checkSlice, holdsBoard } from './catalogueVerify';
 import { COMPONENT_LIMIT, DAILY_STRIDE, TIERS, componentKey } from './generator';
 import { exploreComponent } from './search';
 import { encodeBoard } from './serialize';
 import { DIFFICULTIES } from './types';
+
+/**
+ * The build-output guard greps every built file, this game's chunk and so the
+ * bundled text included, for ad, analytics and site-chrome markers; a match
+ * fails CI on both builds. Its patterns are read from the script itself, so
+ * this check moves with the guard (catalogue.ts `BIT_ALPHABET`).
+ */
+const GUARD = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../../../../../.github/scripts/check-dist-ads-separation.sh',
+);
+const GUARD_PATTERNS = [
+  'ads_pattern',
+  'analytics_pattern',
+  'measurement_id_pattern',
+  'chrome_pattern',
+] as const;
 
 const all = (difficulty: (typeof DIFFICULTIES)[number]): CatalogueEntry[] =>
   Array.from({ length: catalogueSize(difficulty) }, (_, index) =>
@@ -93,6 +120,31 @@ describe('the bundled catalogue (§8)', () => {
   it('lets the daily step through the whole Medium list before it repeats a board', () => {
     const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
     expect(gcd(DAILY_STRIDE, catalogueSize('medium'))).toBe(1);
+  });
+
+  it('spells nothing the build-output guard reads as ad, analytics or site-chrome code', () => {
+    expect(BIT_ALPHABET).toHaveLength(64);
+    expect(new Set(BIT_ALPHABET).size).toBe(64);
+    expect(BIT_ALPHABET).not.toContain('-');
+    const script = readFileSync(GUARD, 'utf8');
+    const patterns = GUARD_PATTERNS.map((name) => {
+      const source = new RegExp(`^${name}='([^']+)'$`, 'm').exec(script)?.[1];
+      expect(source, `${name} in check-dist-ads-separation.sh`).toBeDefined();
+      return [name, new RegExp(source ?? '(?!)')] as const;
+    });
+    let buckets = 0;
+    for (const difficulty of DIFFICULTIES) {
+      for (const bucket of CATALOGUE_DATA[difficulty]) {
+        buckets++;
+        for (const [name, pattern] of patterns) {
+          expect(
+            pattern.exec(bucket.bits)?.[0],
+            `${difficulty} ${bucket.minMoves} ${name}`,
+          ).toBeUndefined();
+        }
+      }
+    }
+    expect(buckets).toBeGreaterThan(0);
   });
 });
 

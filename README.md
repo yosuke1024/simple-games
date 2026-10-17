@@ -169,7 +169,8 @@ Reversi と Connect Four も盤面がすべて見えているため Hint を作�
 Web 版は新作の先行公開チャンネルです([docs/WEB_VERSION.md](docs/WEB_VERSION.md)
 「先行公開(ベータ)」)。上の表の末尾 11 本(Crown Grid から Box Regions まで)は
 2026-09-26 から 2026-09-29(UTC)に Web 版だけで先行公開し、**2026-10-02 にアプリへ正式収録**
-しました(その後の新作 5 本が同じチャンネルに載っています — 下の「Web 先行公開(ベータ)」)。
+しました(その後の新作 5 本も同じチャンネル向けに実装しましたが、Web 版にはまだ出ていません —
+下の「Web 先行公開(ベータ)」)。
 2 週間の安定稼働という基準を満たす前に、作者の判断で収録しました
 (経緯は WEB_VERSION.md に記録)。保存スキーマはこの収録で凍結し、以後は移行だけで変えます。
 この 11 本はゲーム別ガイドページがまだ無いので、「詳しく見る」のリンクはありません。
@@ -200,22 +201,24 @@ Mancala と Dots and Boxes は完全情報の CPU 対戦なので Undo を持ち
 
 ### Web 先行公開(ベータ)
 
-2026-10-17 から、42〜46 本目の新作 5 本を **Web 版だけの先行公開(ベータ)**として実装しています
-(計画は [docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md](docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md))。
-registry に `channel: 'web-beta'` で登録済みで、アプリには出しません。上の 41 本には数えず、
-ストア掲載文にも載せません。ゲーム本体はまだスキャフォールドで、統合と検証(計画の Phase 4)を
-終えてから Web 版へ同期します。下の表は計画書の決定事項で、各ルール文書が確定させます。
-公開後はタイトルカードに「BETA」バッジが付き、ベータ中はスキーマ変更で保存データが消えることが
-あります(en / ja ではその旨を表示)。正式収録は 2 週間の安定稼働と計測を見て人間が判断します。
+42〜46 本目の新作 5 本は、**Web 版だけの先行公開(ベータ)**向けにこのリポジトリで実装しました
+(2026-10-17。仕様の正は各ルール文書、経緯は
+[docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md](docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md))。
+registry に `channel: 'web-beta'` で登録してあり、**アプリには出ません**。上の 41 本には数えず、
+ストア掲載文にも載せません。**Web 版にもまだ出ていません** — Web 版を配信する pixapps-landing への
+同期(ビルドしたチャンクを送る PR)はまだ作っておらず、製品オーナーの明示的な承認を得てから
+行います。公開後はタイトルカードに「BETA」バッジが付き、ベータ中はスキーマ変更で保存データが
+消えることがあります(en / ja ではその旨を表示)。正式収録は Web で公開してからの 2 週間の
+安定稼働と計測を見て人間が判断します([docs/WEB_VERSION.md](docs/WEB_VERSION.md)「先行公開(ベータ)」)。
 5 本とも Club House には登録しません。
 
-| ゲーム                                 | フォルダ          | 進行                                      | 無料・無制限の助け                | ルール文書                                                   |
-| -------------------------------------- | ----------------- | ----------------------------------------- | --------------------------------- | ------------------------------------------------------------ |
-| Unblock Puzzle(ブロックを抜く空間推理) | `unblock-puzzle/` | 難易度 3 種 + デイリー                    | Undo / Hint(探索で次の一手)       | [docs/UNBLOCK_PUZZLE_RULES.md](docs/UNBLOCK_PUZZLE_RULES.md) |
-| Snake(伸びるヘビ)                      | `snake/`          | エンドレス(速度 3 種、デイリーなし)       | なし(Pause / Restart)             | [docs/SNAKE_RULES.md](docs/SNAKE_RULES.md)                   |
-| Loop Puzzle(数字から閉路を引く)        | `loop-puzzle/`    | 盤 3 サイズ + デイリー                    | Undo / Hint(検証済みの解に基づく) | [docs/LOOP_PUZZLE_RULES.md](docs/LOOP_PUZZLE_RULES.md)       |
-| Bridges(島を橋で結ぶ)                  | `bridges/`        | 難易度 3 種 + デイリー                    | Undo / Hint(検証済みの解に基づく) | [docs/BRIDGES_RULES.md](docs/BRIDGES_RULES.md)               |
-| Peg Solitaire(跳んで減らす)            | `peg-solitaire/`  | 盤 2 種(English / Triangle、デイリーなし) | Undo(Hint なし)                   | [docs/PEG_SOLITAIRE_RULES.md](docs/PEG_SOLITAIRE_RULES.md)   |
+| ゲーム         | カテゴリ   | 内容                                                                    | フォルダ          | 進行                                                         | 無料・無制限の助け                                | ルール文書                                                   |
+| -------------- | ---------- | ----------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------ | ------------------------------------------------- | ------------------------------------------------------------ |
+| Unblock Puzzle | パズル     | 6×6 の盤でブロックを滑らせ、ターゲットを右の出口から出す空間推理        | `unblock-puzzle/` | 難易度 3 種 + デイリー                                       | Undo / Reset / Hint(最短解の次の一手。探索に上限) | [docs/UNBLOCK_PUZZLE_RULES.md](docs/UNBLOCK_PUZZLE_RULES.md) |
+| Snake          | アーケード | 14×14 の盤でヘビを操り、食べて伸びる。壁か自分に当たれば終わり          | `snake/`          | エンドレス(速度 3 種、デイリーなし)                          | なし(Pause と、同じ盤面での再挑戦 / 新しいゲーム) | [docs/SNAKE_RULES.md](docs/SNAKE_RULES.md)                   |
+| Loop Puzzle    | ロジック   | 数字を手がかりに点を結び、1 本の閉じたループを引く                      | `loop-puzzle/`    | 盤 3 サイズ(4×4 / 5×5 / 6×6)+ デイリー                       | Undo / Hint(唯一解と違う印か、次に決まる 1 辺)    | [docs/LOOP_PUZZLE_RULES.md](docs/LOOP_PUZZLE_RULES.md)       |
+| Bridges        | ロジック   | 数字の島を縦横の橋(2 島の間は 2 本まで)で結び、全島を 1 つにつなぐ      | `bridges/`        | 難易度 3 種(7×7 / 9×9 / 10×10)+ デイリー                     | Undo / Hint(答えとの矛盾か、盤面から証明できる橋) | [docs/BRIDGES_RULES.md](docs/BRIDGES_RULES.md)               |
+| Peg Solitaire  | パズル     | コマを縦横(Triangle は 6 方向)に跳び越えて取り除き、最後の 1 個を目指す | `peg-solitaire/`  | 盤 2 種(English 33 穴 / Triangle 15 穴・54 問、デイリーなし) | Undo / Restart(Hint なし)                         | [docs/PEG_SOLITAIRE_RULES.md](docs/PEG_SOLITAIRE_RULES.md)   |
 
 後続候補は上の 5 本の正式収録判断まで**ありません**。次を選ぶときは、ローカル生成で
 完結しコンテンツサーバーを必要としないものを優先します。
@@ -271,7 +274,12 @@ simple-games/
 │           │   ├── dots-and-boxes/
 │           │   ├── binary-balance/
 │           │   ├── sudoku-6x6/
-│           │   └── box-regions/
+│           │   ├── box-regions/
+│           │   ├── unblock-puzzle/  # ここから 5 本は Web 先行公開(ベータ)。アプリには出ない
+│           │   ├── snake/
+│           │   ├── loop-puzzle/
+│           │   ├── bridges/
+│           │   └── peg-solitaire/
 │           ├── backup/        # 共有: ローカルバックアップの書き出しと復元
 │           ├── club/           # 共有: 任意の Club House(参加した人だけが通信する唯一のディレクトリ)
 │           ├── monetization/   # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
@@ -314,13 +322,15 @@ Android / iOS のビルド手順は [apps/simple-games/README.md](apps/simple-ga
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 14 言語・1,573 キー(シェル 125 + ゲーム別 1,448 — 正式収録 41 本の 1,393 と Web 先行公開 5 本のスキャフォールドの 55。Club House の 89 キーは別カタログ)
+**One app. Many games. Many languages.** 現在は 14 言語・1,748 キー(シェル 125 + ゲーム別 1,623 — 正式収録 41 本の 1,393 と Web 先行公開 5 本の 230。Club House の 122 キーは別カタログ。2026-10-17 に各 `en.ts` の最上位キーを数えた)
 (en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
 中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。
 カタログは全言語同梱で、言語追加は「locale ファイル 1 つ + 登録」で完結します。
 **en と ja 以外は来歴 `machine` です — AI の助けを借りて書いており、その言語の
-ネイティブは一人も読んでいません。**この製品は一人でつくっているため、14 言語の
+ネイティブは一人も読んでいません。**Web 先行公開 5 本のゲーム別の文言は、ja も AI の
+下書きで、作者はまだ読んでいません(5 本の文言に高リスクキーはありません)。
+この製品は一人でつくっているため、14 言語の
 ネイティブレビューは供給できません。代わりに、約束を背負う高リスクキーだけは
 リリース前に逆翻訳を作者が読む門を通し、自然さは来歴の開示と読者からの報告に
 委ねています。

@@ -17,6 +17,8 @@
  * keyboard reaches both — Ctrl/Cmd+Z and H (issue #93) — as adapters over the
  * same handlers the buttons call; the board's own edges take Enter / Space,
  * the arrow keys and L / X / Delete (ui/components/LoopPuzzleBoard.tsx).
+ * With the focus off the board, the first arrow key only brings it back onto
+ * the board's tab stop.
  *
  * While anything modal is up — the result card or the ↻ dialog —
  * `.game-content` is `inert` and the key listener is off
@@ -35,6 +37,14 @@ import { useLoopPuzzle } from '../../state/GameContext';
 import { LoopPuzzleBoard } from '../components/LoopPuzzleBoard';
 import { LoopPuzzleResultOverlay } from '../components/LoopPuzzleResultOverlay';
 import { conflictMessageKey, edgeLabel, hintMessageKey } from '../feedback';
+
+/** The keys that walk the board's edges once the focus is on it (§4). */
+const ARROW_KEYS: ReadonlySet<string> = new Set([
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+]);
 
 /** What the last Hint tap gave: a hint, or nothing to say (null). Absent until asked. */
 interface HintView {
@@ -66,6 +76,7 @@ export function LoopPuzzleGameScreen() {
 
   // Result feedback (sound / vibration) exactly once per transition.
   const previousStatus = useRef(session?.status ?? 'playing');
+  const boardAreaRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const status = session?.status ?? 'playing';
     if (status === 'solved' && previousStatus.current === 'playing') {
@@ -123,6 +134,14 @@ export function LoopPuzzleGameScreen() {
       if (!event.repeat) onHint();
       return true;
     }
+    // From outside the board — after the result card or the ↻ question closed,
+    // say — the first arrow only brings the focus onto the board's tab stop
+    // (§4). On the board, the board answers the arrows itself and this never
+    // hears them (useGameKeys skips a key already handled).
+    if (ARROW_KEYS.has(event.key) && !event.shiftKey) {
+      boardAreaRef.current?.querySelector<HTMLElement>('button[data-edge][tabindex="0"]')?.focus();
+      return true;
+    }
     return false;
   };
   useGameKeys(onKey, session !== null && session.status === 'playing' && !confirmRestart);
@@ -178,7 +197,11 @@ export function LoopPuzzleGameScreen() {
         </header>
 
         {/* `--lp-n` sizes the board's floor (loop-puzzle.css). */}
-        <div className="lp-board-area" style={{ '--lp-n': session.width } as CSSProperties}>
+        <div
+          className="lp-board-area"
+          ref={boardAreaRef}
+          style={{ '--lp-n': session.width } as CSSProperties}
+        >
           <LoopPuzzleBoard
             session={session}
             hint={hint}

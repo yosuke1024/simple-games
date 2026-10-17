@@ -14,8 +14,11 @@
  *
  * The stopped board — the × on the head — gets its beat before the card
  * covers it (`useResultReveal`); under Reduced Motion the card is there at
- * once (§13).
+ * once (§13). A key held through the crash — Space for Pause, or Enter on a
+ * focused button — reaches the focused Retry as repeats the moment the card
+ * is up, and a repeat is not a new press, so it starts nothing (§13).
  */
+import type { KeyboardEvent } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
@@ -29,6 +32,11 @@ export interface SnakeResultOverlayProps {
   /** A fresh seed at the preferred speed — the home's New Game (§6). */
   onNewBoard: () => void;
   onHome: () => void;
+}
+
+/** A held Enter or Space presses a button once, not once per repeat (§13). */
+function swallowRepeatedPress(event: KeyboardEvent<HTMLDivElement>) {
+  if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
 }
 
 export function SnakeResultOverlay({
@@ -56,7 +64,13 @@ export function SnakeResultOverlay({
 
   return (
     <div className="overlay overlay-result">
-      <div className="dialog result" role="alertdialog" aria-modal="true" aria-label={title}>
+      <div
+        className="dialog result"
+        role="alertdialog"
+        aria-modal="true"
+        aria-label={title}
+        onKeyDownCapture={swallowRepeatedPress}
+      >
         <h2 className="dialog-title">{title}</h2>
         <p className="dialog-body">{body}</p>
 

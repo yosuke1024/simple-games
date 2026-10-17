@@ -351,7 +351,27 @@ span.bg-island {
 
 /* ---------- Quick Rules figures ---------- */
 
+/* The early-release note (the shell's WebBetaNotice, in its own styling)
+   under the heading on every step (ui/screens/TutorialScreen.tsx): the
+   heading's gutter, the header's padding for the space above it, and the
+   full width, so the badge alone (the twelve languages without the sentence)
+   sits where the sentence's badge does rather than centred over the step. */
+.bg-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
+}
+
 /* The board's own drawing at a fixed size: the figure is the game, smaller. */
 .bg-figure {
   --bg-cell: 34px;
+}
+
+/* A short screen takes the figures a size down, for the note above them: at
+   360×640, under the web build's ad reserve and with the close button of a
+   replay, step 2 (en, five rows) had 50px to spare and the note takes 57. */
+@media (max-height: 700px) {
+  .bg-figure {
+    --bg-cell: 30px;
+  }
 }

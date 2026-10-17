@@ -926,6 +926,16 @@ describe('the end of a run (§4, §10)', () => {
     fireEvent.keyDown(window, { key: 'ArrowUp' });
     expect(boardState()).toMatch(/game over$/);
 
+    // A key held through the crash reaches the focused Retry as repeats: they
+    // press nothing (`fireEvent` answers false when the default — the
+    // button's click — was stopped). A new press still does.
+    const retry = within(card).getByRole('button', { name: 'Retry same board' });
+    expect(retry).toHaveFocus();
+    expect(fireEvent.keyDown(retry, { key: 'Enter', repeat: true })).toBe(false);
+    expect(fireEvent.keyDown(retry, { key: ' ', repeat: true })).toBe(false);
+    expect(fireEvent.keyDown(retry, { key: 'Enter' })).toBe(true);
+    expect(screen.getByRole('alertdialog', { name: 'Game over' })).toBe(card);
+
     fireEvent.click(within(card).getByRole('button', { name: 'Retry same board' }));
     expect(boardState()).toMatch(/ready to start$/);
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();

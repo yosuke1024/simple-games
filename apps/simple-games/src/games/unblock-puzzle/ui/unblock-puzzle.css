@@ -487,6 +487,17 @@
 
 /* ---------- Quick Rules figures ---------- */
 
+/* The early-release note (the shell's WebBetaNotice, in its own styling)
+   under the heading on every step (ui/screens/TutorialScreen.tsx): the
+   heading's gutter, the header's padding for the space above it, and the
+   full width, so the badge alone (the twelve languages without the sentence)
+   sits where the sentence's badge does rather than centred over the step. */
+.ub-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
+}
+
 /* The board's own blocks and frame at a fixed small size: the figure is the
    game, smaller. */
 .ub-figure {

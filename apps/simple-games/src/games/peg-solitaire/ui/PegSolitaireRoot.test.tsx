@@ -426,6 +426,28 @@ describe('the keyboard (§4)', () => {
     expect(hole(next.target)).toHaveAttribute('tabindex', '0');
   });
 
+  it('carries no held Enter into the card: its repeats press nothing there (§4)', async () => {
+    taughtAlready();
+    suspend(APEX, TRIANGLE_APEX_STUCK.slice(0, -1));
+    await resume();
+    const [from, to] = TRIANGLE_APEX_STUCK[TRIANGLE_APEX_STUCK.length - 1]!;
+    tap(from);
+    tap(to);
+    const card = screen.getByRole('alertdialog', { name: 'No jumps left' });
+    const undo = within(card).getByRole('button', { name: 'Undo' });
+    // The first offer has the focus, so the repeats of an Enter held from the
+    // last jump land on it — and would undo that jump. `fireEvent` answers
+    // false when the default (the button's click) was stopped.
+    expect(undo).toHaveFocus();
+    expect(fireEvent.keyDown(undo, { key: 'Enter', repeat: true })).toBe(false);
+    expect(fireEvent.keyDown(undo, { key: ' ', repeat: true })).toBe(false);
+    const retry = within(card).getByRole('button', { name: 'Retry same board' });
+    expect(fireEvent.keyDown(retry, { key: 'Enter', repeat: true })).toBe(false);
+    // A new press is a press.
+    expect(fireEvent.keyDown(undo, { key: 'Enter' })).toBe(true);
+    expect(screen.getByRole('alertdialog', { name: 'No jumps left' })).toBe(card);
+  });
+
   it('answers nothing while the ↻ dialog is up', async () => {
     taughtAlready();
     suspend(ENGLISH_PROBLEM, SOLUTION.slice(0, 2));

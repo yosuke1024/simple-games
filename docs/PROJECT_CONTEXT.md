@@ -51,11 +51,16 @@ Design philosophy:
   `docs/PUZZLE_PRACTICE_SET.md`)を正式収録した。2 週間の安定稼働という基準は
   満たしておらず、製品オーナーの明示的な判断による(経緯は `docs/WEB_VERSION.md`
   「先行公開」)。保存スキーマはこの収録で凍結。ゲーム別ガイドはまだ無い。
-- Web 版は新作の先行公開チャンネルとして残る。2026-10-17 から **Web 先行公開(ベータ)の
+- Web 版は新作の先行公開チャンネルとして残る。2026-10-17 に **Web 先行公開(ベータ)の
   新作 5 本**(Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、No. 42〜46)を
-  registry に `channel: 'web-beta'` で登録し、実装中(計画は
-  `docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md`。いまはスキャフォールドで、
-  ゲーム本体は各ルール文書から起こす)。正式収録の 41 本には数えず、アプリには出ない。
+  このリポジトリに実装し、registry に `channel: 'web-beta'` で登録した(仕様の正は各
+  `docs/*_RULES.md`、経緯は `docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md`)。
+  **Web 版へはまだ出していない** — pixapps-landing へ同期する PR は作っておらず、作るには
+  製品オーナーの明示的な承認が要る。その PR では landing の `tests/ui.test.js` の
+  `WEB_BETA_GAME_IDS` に 5 本の id を**同期するチャンクと同じ PR で**足す(このテストは
+  チャンクの無い id でも落ちる。`docs/WEB_VERSION.md`「先行公開」)。正式収録の 41 本には
+  数えず、アプリには出ない。正式収録の基準(Web での 2 週間の安定稼働と計測、
+  `docs/RELEASE_CHECKLIST.md` §0)は変えず、Web で公開するまで始まらない。
   チャンネルの宣言は registry の `channel`、出し分けは `app/gameChannel.ts` の
   実行時ガード(`docs/WEB_VERSION.md`「先行公開」)。
 - 実装上のゲーム一覧・ID・並び順・カテゴリの正は `apps/simple-games/src/app/registry.ts` の `GAMES` / `GAME_CATEGORIES`。

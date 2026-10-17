@@ -8,6 +8,8 @@ import {
   CROSS,
   LINE,
   createDailySession,
+  createDifficultySession,
+  doCycle,
   gridFor,
   horizontalEdge,
   localDateString,
@@ -176,6 +178,33 @@ describe('first run (§11)', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended board (§11, §12)', () => {
+  it('resumes that board on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone (and the remembered difficulty with it, so the
+    // first-run board would be Easy); a Medium board is suspended, one line in.
+    const session = createDifficultySession('medium', 'loop-medium-flags-lost');
+    const line = loopEdges(session)[0]!;
+    const played = doCycle(session, line)!;
+    renderGame({ [LP_STORAGE_KEYS.game]: JSON.stringify(toPersisted(played, 1)) });
+
+    expect(await screen.findByText('One closed loop')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+
+    // The Medium board, with its line — not a new Easy one.
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(within(board()).getAllByRole('button')).toHaveLength(gridFor(5, 5).edgeCount);
+    expect(edgeButton(line)).toHaveAccessibleName(/line$/);
+    await settle();
+    // Resumed, not started: no play counted, and no new board written over the slot.
+    expect(storedStats()?.easy.played ?? 0).toBe(0);
+    expect(storedStats()?.medium.played ?? 0).toBe(0);
+    expect(deviceStore.get(LP_STORAGE_KEYS.game)).toBeUndefined();
+  });
+});
+
 describe('playing (§3, §4, §6)', () => {
   it('cycles an edge through line, × and empty with taps', async () => {
     const user = userEvent.setup();
@@ -217,6 +246,14 @@ describe('playing (§3, §4, §6)', () => {
     await user.keyboard('{ArrowDown}x');
     expect(edgeButton(verticalEdge(grid, 0, 2))).toHaveAccessibleName(/crossed out$/);
     await user.keyboard('{Delete}');
+    expect(edgeButton(verticalEdge(grid, 0, 2))).toHaveAccessibleName(/empty$/);
+
+    // From outside the board, the first arrow only brings the focus back onto
+    // the board's tab stop — the edge last focused — and moves nothing.
+    act(() => (document.activeElement as HTMLElement).blur());
+    expect(document.activeElement).toBe(document.body);
+    expect(fireEvent.keyDown(window, { key: 'ArrowUp' })).toBe(false);
+    expect(document.activeElement).toBe(edgeButton(verticalEdge(grid, 0, 2)));
     expect(edgeButton(verticalEdge(grid, 0, 2))).toHaveAccessibleName(/empty$/);
   });
 

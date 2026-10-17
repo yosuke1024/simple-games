@@ -16,7 +16,14 @@
  *
  * The card waits the shared beat after the last jump (ui/useResultReveal.ts),
  * so the finished board is seen before it is covered.
+ *
+ * A held key's repeats press nothing on the card (§4). The last jump is often
+ * an Enter on the focused landing hole; under Reduced Motion the card is up
+ * the instant it lands, and a held Enter's repeats would reach the focused
+ * first offer — undoing the jump just made, or starting the next game over a
+ * result not yet seen. A repeat is not a new press.
  */
+import type { KeyboardEvent } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
 import { ShareAction } from '@/ui/components/ShareAction';
@@ -32,6 +39,11 @@ export interface PegResultOverlayProps {
   /** Another problem on the same board — absent on English (§8). */
   onNewBoard?: () => void;
   onHome: () => void;
+}
+
+/** A held Enter or Space presses a button once, not once per repeat (§4). */
+function swallowRepeatedPress(event: KeyboardEvent<HTMLDivElement>) {
+  if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
 }
 
 export function PegResultOverlay({
@@ -75,6 +87,7 @@ export function PegResultOverlay({
         role="alertdialog"
         aria-modal="true"
         aria-label={title}
+        onKeyDownCapture={swallowRepeatedPress}
       >
         <h2 className="dialog-title">{title}</h2>
         <p className="dialog-body">{body}</p>

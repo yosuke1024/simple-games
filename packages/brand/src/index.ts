@@ -914,10 +914,11 @@ export const titleAccents = {
   },
   /**
    * Unblock Puzzle — crimson (web-beta). Picked for the smallest accent area
-   * of the five — the chrome and, if the rules document gives it one, the
-   * single block that has to leave — so it can carry the most saturated value
-   * of the batch (S 58%, under the series' 67% outliers). The game does not
-   * exist yet; this is the colour it starts with. Chosen with the four below
+   * of the five — the chrome, the target block that has to leave and the exit
+   * mark (UNBLOCK_PUZZLE_RULES.md §14; every other block is neutral) — so it
+   * can carry the most saturated value of the batch (S 58%, under the series'
+   * 67% outliers). The shipped placement matches the Phase 1 estimate, so the
+   * mapping still holds. Chosen with the four below
    * in one pass against all 41 shipped accents + `--warn`
    * (docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md Phase 1, CIE76):
    * nearest shipped is Box Regions at ΔE 15.4 light / Bubble Pop at 11.0

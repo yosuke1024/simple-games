@@ -15,7 +15,14 @@
  *
  * Free Play leads with a new board and offers the same one again second (§9);
  * the daily is one board a day, so there is no other board to offer.
+ *
+ * A held key's repeats press nothing on the card (§5). The last move is often
+ * an Enter on the focused arrow button; under Reduced Motion the card is up
+ * the instant the target leaves, and a held Enter's repeats would reach the
+ * focused first offer and deal a new board over a result not yet seen. A
+ * repeat is not a new press.
  */
+import type { KeyboardEvent } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BestDelta } from '@/ui/components/BestDelta';
 import { ResultAdSlot } from '@/ui/components/ResultAdSlot';
@@ -31,6 +38,11 @@ export interface UnblockPuzzleResultOverlayProps {
   onRetry: () => void;
   onNewBoard: () => void;
   onHome: () => void;
+}
+
+/** A held Enter or Space presses a button once, not once per repeat (§5). */
+function swallowRepeatedPress(event: KeyboardEvent<HTMLDivElement>) {
+  if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
 }
 
 export function UnblockPuzzleResultOverlay({
@@ -62,6 +74,7 @@ export function UnblockPuzzleResultOverlay({
         role="alertdialog"
         aria-modal="true"
         aria-label={t('unblockPuzzleSolvedTitle')}
+        onKeyDownCapture={swallowRepeatedPress}
       >
         <h2 className="dialog-title">{t('unblockPuzzleSolvedTitle')}</h2>
         <p className="dialog-body">

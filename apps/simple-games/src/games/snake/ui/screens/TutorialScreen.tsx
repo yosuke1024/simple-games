@@ -1,6 +1,7 @@
 /**
- * Quick Rules (docs/SNAKE_RULES.md §12): three steps, one sentence each, a
- * picture first — leading straight into play
+ * Quick Rules (docs/SNAKE_RULES.md §12): three steps, one sentence each,
+ * each a title, a picture and its sentence in the collection's order — leading
+ * straight into play
  * (docs/PRODUCT_PRINCIPLES.md「初回体験の原則」). The pictures are drawn by the
  * board itself (SnakeBoard, through a window onto part of the grid), so what
  * they show is what the game shows: the turn arrow, the food, the × of a
@@ -18,6 +19,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { IconClose } from '@/ui/components/icons';
+import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { gameLandingUrl } from '@/ui/landing';
 import { openExternal } from '@/ui/openExternal';
 import { cellAt } from '../../game';
@@ -105,7 +107,7 @@ export function SnakeTutorialScreen() {
   };
 
   return (
-    <div className="screen tutorial-screen">
+    <div className="screen tutorial-screen sn-tutorial">
       <header className="screen-header">
         <h1>{t('howToPlay')}</h1>
         {tutorialCompleted ? (
@@ -115,16 +117,23 @@ export function SnakeTutorialScreen() {
         ) : null}
       </header>
 
+      {/* The early-release note (docs/WEB_VERSION.md「保存データ」). A first
+          visit opens here rather than on the home, and the last step's button
+          writes the first save, so the note is read before any step — and it
+          is on every step, in one place, so the steps keep their layout.
+          Nothing on the app, or once the title is released. */}
+      <WebBetaNotice gameId="snake" />
+
       <div className="tutorial-card">
         <div className="tutorial-step-count" aria-hidden="true">
           {steps.map((_, index) => (
             <span key={index} className={`dot ${index === step ? 'dot-active' : ''}`} />
           ))}
         </div>
+        <h2 className="tutorial-title">{current.title}</h2>
         <div className="sn-figure" role="img" aria-label={current.alt}>
           <SnakeBoard {...current.figure} />
         </div>
-        <h2 className="tutorial-title">{current.title}</h2>
         <p className="tutorial-body">{current.body}</p>
       </div>
 

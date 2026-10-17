@@ -14,13 +14,24 @@
  * - Tab reaches each block; Enter / Space selects or lets go (the button's
  *   own click); an arrow along a block's lane moves the focused block — or,
  *   with focus elsewhere, the selected one — one cell, and an arrow across
- *   its lane does nothing; Esc lets go. A held key's repeats move nothing.
+ *   its lane does nothing; Esc lets go. With focus off the board and no
+ *   block selected, the first arrow only puts the focus on the target block.
+ *   A held key's repeats move nothing — on the board, the arrow buttons and
+ *   the Undo / Hint buttons too: an Enter or Space repeat on any of them is
+ *   swallowed, so a held Enter on ▶ moves one cell, not the block out of the
+ *   exit and on into the result card.
  * - Ctrl/Cmd+Z is Undo and H is the Hint, like the two buttons.
  *
  * While anything modal is up — the result card, the ↻ question — the board
  * behind it is `inert` and the keys are off (src/test/modalIsolationWiring.test.ts).
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react';
 import { haptics } from '@/services/haptics';
 import { sounds } from '@/services/sound';
 import { useSettings } from '@/state/SettingsContext';
@@ -42,6 +53,15 @@ const ARROWS: Readonly<Record<string, { orientation: 'h' | 'v'; step: -1 | 1 }>>
   ArrowUp: { orientation: 'v', step: -1 },
   ArrowDown: { orientation: 'v', step: 1 },
 };
+
+/**
+ * A held Enter or Space presses a button once, not once per repeat (§5): the
+ * blocks, the arrow buttons and Undo / Hint are buttons, whose own click a
+ * held Enter would otherwise fire again on every repeat.
+ */
+function swallowRepeatedPress(event: ReactKeyboardEvent<HTMLDivElement>) {
+  if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
+}
 
 /** The Hint read aloud and shown (§6): which block, from where, to where — never a guess. */
 function hintMessage(t: Translate, board: Board, hint: BoardHint): string {
@@ -250,7 +270,14 @@ export function UnblockPuzzleGameScreen() {
     const arrow = ARROWS[event.key];
     if (arrow === undefined) return false;
     const block = focusedBlock() ?? selected;
-    if (block === null) return false;
+    if (block === null) {
+      // From outside the board with nothing selected — after the result card
+      // or the ↻ question closed, say — the first arrow only brings the focus
+      // onto the board, on the target block, the way back in without Tab.
+      if (event.shiftKey) return false;
+      document.querySelector<HTMLElement>(`[data-block="${TARGET_INDEX}"]`)?.focus();
+      return true;
+    }
     // Swallowed either way, so the page does not scroll under the board.
     if (event.repeat) return true;
     if (session.board.blocks[block]?.orientation === arrow.orientation) {
@@ -321,7 +348,7 @@ export function UnblockPuzzleGameScreen() {
           </button>
         </header>
 
-        <div className="ub-play">
+        <div className="ub-play" onKeyDownCapture={swallowRepeatedPress}>
           <div className="ub-board-area">
             <UnblockBoard
               board={session.board}

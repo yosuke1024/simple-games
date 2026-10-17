@@ -71,8 +71,19 @@ export type CatalogueData = Readonly<Record<Difficulty, readonly CatalogueBucket
 /** Boards per written-out code: reading one board decodes at most RUN − 1 gaps. */
 export const RUN = 64;
 
-/** Six bits per character, URL-safe base64 order. */
-export const BIT_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+/**
+ * Six bits per character, URL-safe base64 order with `~` where base64 has `-`.
+ *
+ * No hyphen, because this text ships in the game's chunk and the build-output
+ * guard (.github/scripts/check-dist-ads-separation.sh) fails a build whose
+ * files hold anything shaped like a GA4 measurement ID — `G-` and six capitals
+ * or digits — or another hyphenated ad or site-chrome marker. Some 62,000
+ * random base64 characters hold such a run with odds of about two in five,
+ * and with `-` in the alphabet these did (`…HY-G-0AUCZ8f…`, 2026-10-17);
+ * changing the character moves no board. catalogue.test.ts checks every
+ * bucket against the guard's patterns.
+ */
+export const BIT_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~_';
 
 /**
  * What can start at a free cell in the walk (§1): nothing, the target (row 3
