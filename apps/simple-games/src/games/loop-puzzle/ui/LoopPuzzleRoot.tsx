@@ -1,13 +1,15 @@
 /**
- * LoopPuzzle's root: loads the game's own records (local, fast, offline), then
- * mounts the provider and routes its screens. The shell knows nothing beyond
- * this component and the storage keys; unmounting stops all of the game's
- * work (docs/GAME_LIFECYCLE.md).
+ * Loop Puzzle's root: loads the game's own records (local, fast, offline),
+ * then mounts the provider and screens. The shell knows nothing beyond this
+ * component and the storage keys; unmounting stops all of the game's work
+ * (docs/GAME_LIFECYCLE.md — an off-screen game renders nothing).
+ *
+ * The saved boards are checked here, once, as they load: each slot's clues
+ * are proven to have exactly one loop before the session exists
+ * (storage/gamePersistence.ts, docs/LOOP_PUZZLE_RULES.md §12).
  *
  * The game's stylesheet is imported here rather than from the shell, so the
  * whole title — logic, screens, and looks — lives inside this one folder.
- *
- * Scaffolded by scripts/new-game.mjs.
  */
 // Register this game's 14-locale catalog the moment the chunk loads, before
 // anything below renders (issue #38, src/i18n/registry.ts).
@@ -17,10 +19,19 @@ import { preferencesKV } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
 import { useLoadedRecords } from '../../../ui/useLoadedRecords';
 import { LoopPuzzleProvider, useLoopPuzzle } from '../state/GameContext';
-import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
+import { loadSavedGames, type SavedGames } from '../storage/gamePersistence';
+import {
+  flagsSchema,
+  prefsSchema,
+  statsSchema,
+  type Flags,
+  type Prefs,
+  type Stats,
+} from '../storage/schemas';
 import './loop-puzzle.css';
 import { LoopPuzzleGameScreen } from './screens/GameScreen';
 import { LoopPuzzleHomeScreen } from './screens/HomeScreen';
+import { LoopPuzzleStatsScreen } from './screens/StatsScreen';
 import { LoopPuzzleTutorialScreen } from './screens/TutorialScreen';
 
 export function LoopPuzzleScreens() {
@@ -30,6 +41,8 @@ export function LoopPuzzleScreens() {
       return <LoopPuzzleTutorialScreen />;
     case 'game':
       return <LoopPuzzleGameScreen />;
+    case 'stats':
+      return <LoopPuzzleStatsScreen />;
     case 'home':
     default:
       return <LoopPuzzleHomeScreen />;
@@ -39,41 +52,55 @@ export function LoopPuzzleScreens() {
 interface LoadedData {
   stats: Stats;
   flags: Flags;
+  prefs: Prefs;
+  sessions: SavedGames;
 }
 
-/**
- * What the shell hands a root (app/registry.ts `GameRootProps`). No `entry`
- * prop, deliberately: there is no saved game for a home-screen shortcut to
- * open onto, and src/test/shortcutResumeWiring.test.ts holds a save-less game
- * to that (issue #113). When a `lp.save…` slot arrives, declare it
- * here, hand it to the provider as `entry={entry}`, and let the provider
- * decide (state/GameContext.tsx).
- */
 export interface LoopPuzzleRootProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
+  /**
+   * Which door the shell opened this game through (app/registry.ts, issue
+   * #113). Passed straight through: what a door means is the provider's
+   * answer, taken once from the records loaded below.
+   */
+  entry?: 'collection' | 'shortcut';
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
 
 function defaultRecords(): LoadedData {
-  return { stats: statsSchema.defaultValue(), flags: flagsSchema.defaultValue() };
+  return {
+    stats: statsSchema.defaultValue(),
+    flags: flagsSchema.defaultValue(),
+    prefs: prefsSchema.defaultValue(),
+    sessions: { difficulty: null, daily: null },
+  };
 }
 
 async function loadRecords(kv: KVStore): Promise<LoadedData> {
-  const [stats, flags] = await Promise.all([
+  const [stats, flags, prefs, sessions] = await Promise.all([
     loadRecord(statsSchema, kv),
     loadRecord(flagsSchema, kv),
+    loadRecord(prefsSchema, kv),
+    loadSavedGames(kv),
   ]);
-  return { stats, flags };
+  return { stats, flags, prefs, sessions };
 }
 
-export function LoopPuzzleRoot({ onExit, kv = preferencesKV }: LoopPuzzleRootProps) {
+export function LoopPuzzleRoot({ onExit, entry, kv = preferencesKV }: LoopPuzzleRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
   return (
-    <LoopPuzzleProvider initialStats={data.stats} initialFlags={data.flags} onExit={onExit}>
+    <LoopPuzzleProvider
+      initialStats={data.stats}
+      initialFlags={data.flags}
+      initialPrefs={data.prefs}
+      initialSessions={data.sessions}
+      onExit={onExit}
+      entry={entry}
+    >
       <LoopPuzzleScreens />
     </LoopPuzzleProvider>
   );

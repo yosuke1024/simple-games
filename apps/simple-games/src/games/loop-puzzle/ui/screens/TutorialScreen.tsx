@@ -1,36 +1,187 @@
 /**
- * Quick Rules (docs/LOOP_PUZZLE_RULES.md): at most three steps, one sentence
- * each, leading straight into play (docs/PRODUCT_PRINCIPLES.md「初回体験の原則」).
- * Scaffolded by scripts/new-game.mjs with three placeholder steps: write the
- * real ones from the rule doc, and give each a figure that shows a position
- * the game could actually be in.
+ * Quick Rules (docs/LOOP_PUZZLE_RULES.md §11): three steps, one sentence
+ * each, shown with a figure rather than explained in prose. The first pass
+ * ends by starting a board at once — the difficulty in `lp.prefs`, Easy on a
+ * fresh install — so finishing the rules is one tap from playing. There is no
+ * "Learn More": the game's guide page is not published while it is in early
+ * release (ui/landing.ts).
  *
  * Two things here are the shell's contract rather than this game's taste
  * (src/test/tutorialBackWiring.test.tsx, issue #142): the heading is the
  * shared `howToPlay` string, and the close button exists only once the
  * tutorial has been completed — the first pass ends by starting a game, and
- * hardware Back marks it seen on the way out (state/GameContext.tsx). The
- * long-form rules live on the game's landing page behind "Learn More", which
- * is absent until the page exists (ui/landing.ts) and quietly does nothing
- * offline (docs/OFFLINE_POLICY.md).
+ * hardware Back marks it seen on the way out (state/GameContext.tsx).
  */
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { IconClose } from '@/ui/components/icons';
-import { gameLandingUrl } from '@/ui/landing';
-import { openExternal } from '@/ui/openExternal';
 import { useLoopPuzzle } from '../../state/GameContext';
 
+/** The figures' lattice: 3×3 cells, a 24-unit pitch, an 8-unit margin. */
+const SIZE = 3;
+const PITCH = 24;
+const MARGIN = 8;
+const EXTENT = 2 * MARGIN + SIZE * PITCH;
+
+/**
+ * The figures' loop: the outline of five cells (row-major, 3×3) — one region
+ * with no hole, so its outline is one closed loop, the way every board's
+ * answer is made (§8).
+ */
+const REGION = new Set([0, 1, 4, 5, 7]);
+const inRegion = (r: number, c: number): boolean =>
+  r >= 0 && r < SIZE && c >= 0 && c < SIZE && REGION.has(r * SIZE + c);
+
+/** The sides of the outline, as segments between dot coordinates [r1, c1, r2, c2]. */
+function outline(): [number, number, number, number][] {
+  const segments: [number, number, number, number][] = [];
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      if (!inRegion(r, c)) continue;
+      if (!inRegion(r - 1, c)) segments.push([r, c, r, c + 1]);
+      if (!inRegion(r + 1, c)) segments.push([r + 1, c, r + 1, c + 1]);
+      if (!inRegion(r, c - 1)) segments.push([r, c, r + 1, c]);
+      if (!inRegion(r, c + 1)) segments.push([r, c + 1, r + 1, c + 1]);
+    }
+  }
+  return segments;
+}
+
+/** How many of a cell's sides the outline uses — the number that cell would show (§2). */
+function sidesOnLoop(r: number, c: number): number {
+  const self = inRegion(r, c);
+  return [
+    [r - 1, c],
+    [r + 1, c],
+    [r, c - 1],
+    [r, c + 1],
+  ].filter(([nr, nc]) => inRegion(nr!, nc!) !== self).length;
+}
+
+const at = (index: number): number => MARGIN + index * PITCH;
+
+/**
+ * A 3×3 figure: the dots, the loop, and (step 2) the numbers of five cells,
+ * one of them — the 3 in the corner — tinted to show which sides it counts.
+ * Decorative: the sentence beside it carries the meaning.
+ */
+function LoopFigure({ numbers }: { numbers: boolean }) {
+  const shown = [0, 2, 4, 6, 8];
+  return (
+    <div className="tutorial-example" aria-hidden="true">
+      <svg className="lp-figure" viewBox={`0 0 ${EXTENT} ${EXTENT}`} focusable="false">
+        {numbers ? (
+          <rect
+            className="lp-fig-focus"
+            x={at(0) + 3}
+            y={at(0) + 3}
+            width={PITCH - 6}
+            height={PITCH - 6}
+            rx={3}
+          />
+        ) : null}
+        {outline().map(([r1, c1, r2, c2]) => (
+          <line
+            key={`${r1}-${c1}-${r2}-${c2}`}
+            className="lp-fig-line"
+            x1={at(c1)}
+            y1={at(r1)}
+            x2={at(c2)}
+            y2={at(r2)}
+          />
+        ))}
+        {Array.from({ length: (SIZE + 1) * (SIZE + 1) }, (_, index) => (
+          <circle
+            key={index}
+            className="lp-fig-dot"
+            cx={at(index % (SIZE + 1))}
+            cy={at(Math.floor(index / (SIZE + 1)))}
+            r={2.4}
+          />
+        ))}
+        {numbers
+          ? shown.map((cell) => {
+              const r = Math.floor(cell / SIZE);
+              const c = cell % SIZE;
+              return (
+                <text
+                  key={cell}
+                  className="lp-fig-num"
+                  x={at(c) + PITCH / 2}
+                  y={at(r) + PITCH / 2}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                >
+                  {String(sidesOnLoop(r, c))}
+                </text>
+              );
+            })
+          : null}
+      </svg>
+    </div>
+  );
+}
+
+/** One edge in its three states, in tap order: empty → line → × → (empty again). */
+function TapFigure() {
+  const panel = (x: number, state: 'empty' | 'line' | 'cross') => (
+    <g key={x}>
+      {state === 'line' ? (
+        <line className="lp-fig-line" x1={x + 6} y1={20} x2={x + 38} y2={20} />
+      ) : null}
+      {state === 'cross' ? (
+        <path
+          className="lp-fig-cross"
+          d={`M${x + 18} 16 ${x + 26} 24 M${x + 26} 16 ${x + 18} 24`}
+        />
+      ) : null}
+      <circle className="lp-fig-dot" cx={x + 6} cy={20} r={2.4} />
+      <circle className="lp-fig-dot" cx={x + 38} cy={20} r={2.4} />
+    </g>
+  );
+  const arrow = (x: number) => (
+    <path
+      key={`a${x}`}
+      className="lp-fig-arrow"
+      d={`M${x} 20 H${x + 14} M${x + 9} 15 ${x + 14} 20 ${x + 9} 25`}
+    />
+  );
+  return (
+    <div className="tutorial-example" aria-hidden="true">
+      <svg className="lp-figure lp-figure-wide" viewBox="0 0 176 52" focusable="false">
+        {panel(0, 'empty')}
+        {arrow(48)}
+        {panel(66, 'line')}
+        {arrow(114)}
+        {panel(132, 'cross')}
+        {/* …and the next tap clears it again. */}
+        <path className="lp-fig-arrow" d="M154 30 C154 48 22 48 22 30 M17 35 22 30 27 35" />
+      </svg>
+    </div>
+  );
+}
+
 export function LoopPuzzleTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startPlaceholderRound, goHome } = useLoopPuzzle();
-  const { t, locale } = useSettings();
-  const learnMoreUrl = gameLandingUrl('loop-puzzle', locale);
+  const { tutorialCompleted, completeTutorial, startDifficulty, goHome, prefs } = useLoopPuzzle();
+  const { t } = useSettings();
   const [step, setStep] = useState(0);
 
   const steps = [
-    { title: t('loopPuzzleStep1Title'), body: t('loopPuzzleStep1Body') },
-    { title: t('loopPuzzleStep2Title'), body: t('loopPuzzleStep2Body') },
-    { title: t('loopPuzzleStep3Title'), body: t('loopPuzzleStep3Body') },
+    {
+      title: t('loopPuzzleStep1Title'),
+      body: t('loopPuzzleStep1Body'),
+      example: <LoopFigure numbers={false} />,
+    },
+    {
+      title: t('loopPuzzleStep2Title'),
+      body: t('loopPuzzleStep2Body'),
+      example: <LoopFigure numbers />,
+    },
+    {
+      title: t('loopPuzzleStep3Title'),
+      body: t('loopPuzzleStep3Body'),
+      example: <TapFigure />,
+    },
   ];
   const current = steps[step] ?? steps[0]!;
   const lastStep = step === steps.length - 1;
@@ -38,7 +189,8 @@ export function LoopPuzzleTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startPlaceholderRound();
+      // Straight into a board (§11): the difficulty last chosen, Easy at first.
+      startDifficulty(prefs.difficulty);
     } else {
       goHome();
     }
@@ -62,6 +214,7 @@ export function LoopPuzzleTutorialScreen() {
           ))}
         </div>
         <h2 className="tutorial-title">{current.title}</h2>
+        {current.example}
         <p className="tutorial-body">{current.body}</p>
       </div>
 
@@ -83,18 +236,6 @@ export function LoopPuzzleTutorialScreen() {
           </button>
         )}
       </div>
-
-      {learnMoreUrl ? (
-        <div className="home-links">
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={() => openExternal(learnMoreUrl)}
-          >
-            {t('learnMore')}
-          </button>
-        </div>
-      ) : null}
     </div>
   );
 }
