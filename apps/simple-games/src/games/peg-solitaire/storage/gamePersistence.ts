@@ -12,6 +12,12 @@
  *
  * A finished game is never written: it is cleared the moment it ends, and a
  * record that replays to a finished board is read as "nothing saved" (§11).
+ *
+ * Every check is the schema's (storage/schemas.ts) — the replay is bounded by
+ * the board, at most 31 jumps — and Backup & Restore runs that same schema,
+ * so a backup can neither carry nor bring in a game this loader refuses.
+ * Loading adds no check of its own. A refused record is not deleted, as in
+ * every game: the slot's next write replaces it.
  */
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';

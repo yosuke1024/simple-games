@@ -2,12 +2,17 @@
  * Converts between the in-memory BridgesSession and its persisted form
  * (docs/BRIDGES_RULES.md §10).
  *
- * Loading is fail-closed, and `fromRecord` (game/session.ts) is where that
- * happens: a record only becomes a session if it is one play could have
- * produced — a legal board, an answer that wins on it and is proven again to
- * be its only one, bridges the board can hold — and is not already finished.
- * Anything else is dropped and the player lands on the game's home; nothing
- * here ever starts a new board in its place.
+ * Loading is fail-closed, in two layers. The schema (storage/schemas.ts)
+ * refuses everything it can without searching — a board, answer or bridges
+ * play could not have produced, a finished game — and Backup & Restore runs
+ * that same schema, so neither layer lets in what the other refuses. Then
+ * `fromRecord` (game/session.ts) reads the record again and adds the one
+ * check the schema leaves out: the answer, proven again to be the board's
+ * only one. Anything refused is dropped and the player lands on the game's
+ * home; nothing here ever starts a new board in its place, and nothing here
+ * deletes a refused record — like every game's loader, it is left for the
+ * slot's next write to replace (§10). The one record that is deleted on load
+ * is a daily from another day, below.
  *
  * The re-proof is the one bounded search a load runs (§6). It runs from
  * `loadSavedGames`, which only the game's root calls — when the player opens

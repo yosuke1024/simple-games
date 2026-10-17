@@ -3,11 +3,16 @@
  * (docs/SNAKE_RULES.md §11).
  *
  * The record is game/serialize.ts's snapshot plus the schema version and the
- * time it was written. What comes back has passed two checks: the schema's
- * (storage/schemas.ts — types and bounds) and the rules' (`restoreSession` —
- * a snake play could have produced). Anything else is null, and the caller
- * lands the player on the game's home with nothing to resume: the record is
- * never repaired and never replaced by a run nobody asked for.
+ * time it was written. What comes back has passed two checks, both inside the
+ * schema (storage/schemas.ts): types and bounds, then the rules'
+ * (`restoreSession` — a snake play could have produced). Loading adds no
+ * check of its own — `fromPersisted` runs `restoreSession` again only to
+ * build the run — so a record this game refuses is refused by Backup &
+ * Restore too, and never travels in a backup (§11). Anything else is null,
+ * and the caller lands the player on the game's home with nothing to resume:
+ * the record is never repaired and never replaced by a run nobody asked for.
+ * Like every game's, a refused record is not deleted either: the slot's next
+ * write — a run suspended, or a run ended — replaces or removes it.
  *
  * A restored run is always paused (§6): nothing moves until the player says
  * Resume.
@@ -43,7 +48,8 @@ export function toPersisted(session: SnakeSession, savedAt: number): PersistedGa
 
 /** Fail closed: a record play could not have produced is no run at all. */
 export function fromPersisted(persisted: PersistedGame | null): SnakeSession | null {
-  // The schema has already shaped it; this guard is for a caller that has not.
+  // The schema has already checked it, rules included; this guard is for a
+  // caller that has not.
   if (!persisted) return null;
   return restoreSession({
     seed: persisted.seed,

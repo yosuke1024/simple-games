@@ -2,9 +2,13 @@
  * The one saved-game slot, end to end (docs/PEG_SOLITAIRE_RULES.md §6, §11):
  * a game written by `saveGame` comes back as the same game — board, problem,
  * the whole Undo history and the clock — and anything that is not a game in
- * play comes back as nothing.
+ * play comes back as nothing. The replay that decides it is the schema's, and
+ * the schema is what Backup & Restore runs, so a backup can neither carry nor
+ * bring in a game this one refuses.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createBackup } from '@/backup/export';
+import { readBackup } from '@/backup/restore';
 import { createMemoryKV } from '@/storage/kv';
 import {
   applyMove,
@@ -144,5 +148,48 @@ describe('saving and resuming (§11)', () => {
     await clearSavedGame();
     expect(deviceStore.get('so.saveGame')).toBe('untouched');
     expect(deviceStore.get('mc.saveGame')).toBe('untouched');
+  });
+});
+
+describe('Backup & Restore refuses what the game refuses (§11)', () => {
+  const SOLUTION = parseEnglishJumps(ENGLISH_SOLUTION);
+  const good = toPersisted(play(createSession(ENGLISH_PROBLEM), SOLUTION.slice(0, 3)), 1);
+  const [first, second, third] = SOLUTION;
+  const outOfOrder = { ...good, jumps: [second!, first!, third!].map(([f, t]) => [f, t]) };
+  const finished = { ...good, jumps: SOLUTION.map(([f, t]) => [f, t]) };
+  const file = (record: unknown) =>
+    JSON.stringify({
+      formatVersion: 1,
+      createdAt: '2026-10-17T09:00:00.000Z',
+      appVersion: '1.0.0',
+      platform: 'web',
+      data: { [PG_STORAGE_KEYS.game]: record },
+    });
+
+  it('refuses a backup holding an illegal or finished game, whole', async () => {
+    expect((await readBackup(file(good))).ok).toBe(true);
+    expect(await readBackup(file(outOfOrder))).toEqual({ ok: false, problem: 'damaged' });
+    expect(await readBackup(file(finished))).toEqual({ ok: false, problem: 'damaged' });
+  });
+
+  it('leaves one lying on the device out of the next backup', async () => {
+    const kv = createMemoryKV({
+      [PG_STORAGE_KEYS.game]: JSON.stringify(outOfOrder),
+      [PG_STORAGE_KEYS.prefs]: JSON.stringify({ schemaVersion: 1, board: 'triangle' }),
+    });
+    const backup = await createBackup({ appVersion: '1.0.0', platform: 'web' }, kv);
+    expect(Object.keys(backup.data)).toEqual([PG_STORAGE_KEYS.prefs]);
+  });
+
+  it('does not delete one either: it never resumes, and the next save replaces it', async () => {
+    const raw = JSON.stringify(outOfOrder);
+    const kv = createMemoryKV({ [PG_STORAGE_KEYS.game]: raw });
+    expect(await loadSavedGame(kv)).toBeNull();
+    // Left as it was — the convention every game's loader follows (§11) …
+    expect(await kv.get(PG_STORAGE_KEYS.game)).toBe(raw);
+    expect(await loadSavedGame(kv)).toBeNull();
+    // … until a game is saved over it.
+    await saveGame(createSession(APEX), kv);
+    expect((await loadSavedGame(kv))?.problem).toEqual(APEX);
   });
 });

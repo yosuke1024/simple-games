@@ -8,14 +8,21 @@
  * results, a malformed entry is dropped rather than costing the player the
  * whole history.
  *
- * The saved-game validator here is STRUCTURAL only — types, ranges, the shape
- * the difficulty promises, the characters each string may hold. What those
- * strings mean (a legal board, an answer that wins on it and is its only one,
- * bridges the board can hold, a game not yet finished) is checked one layer
- * out, by `fromRecord` in gamePersistence, because one of those checks is a
- * bounded search (§6) and this validator also runs for backup export and
- * restore, where no board is being opened. Nothing that fails `fromRecord`
- * ever becomes a session; it only stays on disk until the slot is next written.
+ * The saved-game validator checks everything about a record short of the
+ * solver's search (§10): types, ranges, the shape the difficulty promises,
+ * and then what the strings mean as far as the rules can read it in one
+ * pass — a legal board, an answer that wins on it, bridges the board can
+ * hold, an island count the tier deals, a game not yet won. That is all
+ * bounded by the board (at most 10 × 10 cells), and it is all that Backup &
+ * Restore runs on a record (docs/architecture/backup.md): a backup holding an
+ * impossible board is refused whole, and an export never carries one.
+ *
+ * The one check left out is the search: whether the answer is the board's
+ * ONLY one (`countSolutions`, §6). It runs one layer out, in `fromRecord`,
+ * when the game itself loads a slot — never for a backup, where no board is
+ * being opened. A record that fails only that is never resumed, and, like any
+ * record a game refuses, is not deleted: it stays on disk until the slot is
+ * next written (§10 says what that leaves open).
  */
 import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asDateString, asInt, asString, isRecord } from '../../../storage/validate';
@@ -23,7 +30,9 @@ import {
   DAILY_DIFFICULTY,
   DIFFICULTIES,
   PRESETS,
+  decodeBoards,
   isDifficulty,
+  isSolved,
   type Difficulty,
   type GameMode,
 } from '../game';
@@ -257,6 +266,17 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (solution === null || bridges === null) return null;
   if (!EDGE_DIGITS.test(solution) || !EDGE_DIGITS.test(bridges)) return null;
   if (solution.length !== bridges.length) return null;
+
+  // What the strings mean, short of the search (§10): the same decoder and
+  // win check `fromRecord` uses, so the two layers cannot read a record
+  // differently. `fromRecord` asks all of it again, then whether the answer
+  // is the board's only one.
+  const decoded = decodeBoards({ board, solution, bridges }, width, height);
+  if (decoded === null) return null;
+  const islands = decoded.layout.islands.length;
+  if (islands < preset.minIslands || islands > preset.maxIslands) return null;
+  // A won board is history, not a game to resume (§3, §10).
+  if (isSolved(decoded.graph, decoded.bridges)) return null;
 
   return {
     schemaVersion: 1,

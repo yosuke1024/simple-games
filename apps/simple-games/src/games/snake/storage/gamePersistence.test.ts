@@ -1,12 +1,16 @@
 /**
  * What a saved run has to prove before it is handed back
  * (docs/SNAKE_RULES.md §11): a shape the schema accepts, a snake the rules
- * could have produced, and a run that is still under way. Anything else goes
- * back to the game's home — never repaired, never replaced by a new run
- * nobody asked for. And the other three records: what they accept, and that
- * one bad field throws the whole record back to its defaults.
+ * could have produced, and a run that is still under way — all three asked by
+ * the schema itself, so Backup & Restore refuses what the game refuses.
+ * Anything else goes back to the game's home — never repaired, never replaced
+ * by a new run nobody asked for. And the other three records: what they
+ * accept, and that one bad field throws the whole record back to its
+ * defaults.
  */
 import { describe, expect, it } from 'vitest';
+import { createBackup } from '../../../backup/export';
+import { readBackup } from '../../../backup/restore';
 import { createMemoryKV } from '../../../storage/kv';
 import { loadRecord, saveRecord } from '../../../storage/repo';
 import {
@@ -285,7 +289,8 @@ describe('discarding what play could not have produced (§11)', () => {
       elapsedSeconds: 0,
       savedAt: 1,
     };
-    expect(gameSchema.validate(record)).not.toBeNull();
+    // Refused by the schema itself, so a backup could not carry it either.
+    expect(gameSchema.validate(record)).toBeNull();
     expect(await loadSavedGame(saved(record))).toBeNull();
   });
 
@@ -305,6 +310,91 @@ describe('discarding what play could not have produced (§11)', () => {
       expect(gameSchema.validate(raw)).toBeNull();
       expect(() => fromPersisted(raw as unknown as PersistedGame)).not.toThrow();
     }
+  });
+});
+
+describe('the schema asks the rules, so a backup cannot carry an impossible run (§11)', () => {
+  const good = () => recordOf(midRun());
+  /** Records whose every field has the right type and range — and no play behind them. */
+  const impossible = (): [string, Record<string, unknown>][] => {
+    const record = good();
+    return [
+      ['a body over itself', { ...record, body: '2g2g2f' }],
+      ['a body with a gap', { ...record, body: '2g2e2d' }],
+      [
+        'a first move straight back over the neck',
+        { ...record, body: encodeBody([cellAt(6, 3), cellAt(6, 4), cellAt(6, 5)]), ticks: 1 },
+      ],
+      ['food under the snake', { ...record, food: INITIAL_BODY[1] }],
+      ['nothing eaten, food not the seed’s first', { ...record, food: record.food === 0 ? 1 : 0 }],
+      ['a length the score does not explain', { ...record, score: 1, ticks: 9 }],
+      ['a chosen heading turn() never keeps', { ...record, next: 'up' }],
+    ];
+  };
+
+  it('refuses each one in validate, the only check Backup & Restore runs', () => {
+    expect(gameSchema.validate(good())).toEqual(good());
+    for (const [what, record] of impossible()) {
+      expect(gameSchema.validate(record), what).toBeNull();
+      expect(gameSchema.validate(JSON.parse(JSON.stringify(record))), what).toBeNull();
+    }
+  });
+
+  it('refuses a backup holding one, whole, as damaged', async () => {
+    const file = (record: unknown) =>
+      JSON.stringify({
+        formatVersion: 1,
+        createdAt: '2026-10-17T09:00:00.000Z',
+        appVersion: '1.0.0',
+        platform: 'web',
+        data: {
+          [SN_STORAGE_KEYS.prefs]: { schemaVersion: 1, speed: 'fast' },
+          [SN_STORAGE_KEYS.game]: record,
+        },
+      });
+    // The good run restores, so the refusals below are about the run.
+    expect((await readBackup(file(good()))).ok).toBe(true);
+    for (const [what, record] of impossible()) {
+      expect(await readBackup(file(record)), what).toEqual({ ok: false, problem: 'damaged' });
+    }
+  });
+
+  it('leaves one lying on the device out of the next backup', async () => {
+    const kv = createMemoryKV({
+      [SN_STORAGE_KEYS.game]: JSON.stringify({ ...good(), body: '2g2g2f' }),
+      [SN_STORAGE_KEYS.prefs]: JSON.stringify({ schemaVersion: 1, speed: 'slow' }),
+    });
+    const backup = await createBackup({ appVersion: '1.0.0', platform: 'web' }, kv);
+    expect(Object.keys(backup.data)).toEqual([SN_STORAGE_KEYS.prefs]);
+  });
+
+  it('still accepts the record that is most work to check: one food short of full (§17)', () => {
+    // Nine thousand moves in, the history long gone from the body, so the
+    // layered walk runs — the bounded worst case of validate.
+    const pilot = cyclePilot(cycleSuccessors());
+    let session = start(createSession('snake-persist-bound'));
+    while (session.status === 'running' && session.score < MAX_SCORE - 1) {
+      session = tick(turn(session, pilot(session))).session;
+    }
+    expect(session.score).toBe(MAX_SCORE - 1);
+    const record = JSON.parse(JSON.stringify(recordOf(pause(session)))) as PersistedGame;
+    expect(record.ticks).toBeGreaterThan(record.body.length / 2);
+    expect(gameSchema.validate(record)).toEqual(record);
+  });
+});
+
+describe('a record the game refuses, on the device (§11)', () => {
+  it('is not deleted, never resumes, and the slot’s next write replaces it', async () => {
+    const bad = JSON.stringify({ ...recordOf(midRun()), body: '2g2g2f' });
+    const kv = stored(bad);
+    expect(await loadSavedGame(kv)).toBeNull();
+    // Left as it was — the convention every game's loader follows …
+    expect(await kv.get(SN_STORAGE_KEYS.game)).toBe(bad);
+    expect(await loadSavedGame(kv)).toBeNull();
+    // … until a run is suspended over it.
+    const next = midRun();
+    await saveGame(next, kv);
+    expect((await loadSavedGame(kv))?.body).toEqual(next.body);
   });
 });
 

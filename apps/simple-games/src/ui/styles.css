@@ -440,11 +440,11 @@
 
 :root[data-game='loop-puzzle'],
 .accent-loop-puzzle {
-  --accent: #6035b1;
+  --accent: #704eb7;
   --accent-ink: #ffffff;
-  --accent-soft: #e1d8f3;
-  --accent-ring: rgba(96, 53, 177, 0.38);
-  --accent-ring-soft: rgba(96, 53, 177, 0.12);
+  --accent-soft: #e2dbf0;
+  --accent-ring: rgba(112, 78, 183, 0.38);
+  --accent-ring-soft: rgba(112, 78, 183, 0.12);
 }
 
 :root[data-game='bridges'],
@@ -885,11 +885,11 @@
 
 :root[data-theme='dark'][data-game='peg-solitaire'],
 [data-theme='dark'] .accent-peg-solitaire {
-  --accent: #d477c0;
-  --accent-ink: #1f0a1a;
-  --accent-soft: #3f1d38;
-  --accent-ring: rgba(212, 119, 192, 0.42);
-  --accent-ring-soft: rgba(212, 119, 192, 0.14);
+  --accent: #b77bb2;
+  --accent-ink: #1a0e19;
+  --accent-soft: #372436;
+  --accent-ring: rgba(183, 123, 178, 0.42);
+  --accent-ring-soft: rgba(183, 123, 178, 0.14);
 }
 
 /* ---------- Web early release (docs/WEB_VERSION.md「先行公開」) ----------

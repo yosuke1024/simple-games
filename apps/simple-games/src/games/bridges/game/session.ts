@@ -287,7 +287,7 @@ const isCounter = (value: unknown): value is number =>
  * It is one of the searches §6 lists: it runs when the player opens the game
  * — which is also when a record that came in through a backup restore is
  * first read — never on a timer or ahead of time. A backup's export and
- * restore check the record's shape only (storage/schemas.ts).
+ * restore run every check above except this re-proof (storage/schemas.ts).
  *
  * History starts empty; the status is read from the board. Whether a daily's
  * date is today is the storage layer's to decide (§10).

@@ -6,11 +6,15 @@
  *
  * The second half is the fail-closed half: a record play could not have
  * produced is dropped rather than resumed, and nothing takes its place — the
- * player lands on the game's home. The schema validator checks shape (it also
- * runs for backups); `toSession` — `fromRecord` — checks meaning, including
- * the bounded re-proof that the answer is the board's only one.
+ * player lands on the game's home. The schema validator checks shape and
+ * meaning — everything but the search — and it is what Backup & Restore runs,
+ * so a backup cannot carry what the game refuses; `toSession` — `fromRecord`
+ * — asks it all again and adds the bounded re-proof that the answer is the
+ * board's only one.
  */
 import { describe, expect, it } from 'vitest';
+import { createBackup } from '@/backup/export';
+import { readBackup } from '@/backup/restore';
 import { createMemoryKV } from '@/storage/kv';
 import { loadRecord } from '@/storage/repo';
 import {
@@ -22,7 +26,13 @@ import {
   factsOf,
   type BridgesSession,
 } from '../game';
-import { loadSavedGames, soleSuspendedMode, toPersisted, toSession } from './gamePersistence';
+import {
+  loadSavedGames,
+  saveGame,
+  soleSuspendedMode,
+  toPersisted,
+  toSession,
+} from './gamePersistence';
 import { BG_STORAGE_KEYS, dailyGameSchema, gameSchema, type PersistedGame } from './schemas';
 
 const SAVED_AT = 1_790_000_000_000;
@@ -176,11 +186,11 @@ describe('a record play could not have produced (§10)', () => {
       gameSchema.validate({ ...difficultyRecord, bridges: withCharacter(bridges, 0, '3') }),
     ).toBeNull();
     expect(gameSchema.validate({ ...difficultyRecord, solution: `${solution}0` })).toBeNull();
-    // Same length as each other, but not the board's edge count: shape passes,
-    // meaning does not.
+    // Same length as each other, but not the board's edge count: the shape
+    // is right, the meaning is not — and the schema reads the meaning too.
     const longer = { ...difficultyRecord, solution: `${solution}0`, bridges: `${bridges}0` };
-    expect(gameSchema.validate(longer)).not.toBeNull();
-    expect(toSession(gameSchema.validate(longer))).toBeNull();
+    expect(gameSchema.validate(longer)).toBeNull();
+    expect(toSession(longer)).toBeNull();
   });
 
   it('drops an impossible board: islands side by side, or a number nothing could carry', () => {
@@ -188,18 +198,24 @@ describe('a record play could not have produced (§10)', () => {
     const island = board.search(/[1-8]/);
     // An island beside the first one (either side that is on the board).
     const beside = island % width === width - 1 ? island - 1 : island + 1;
-    const crowded = withCharacter(board, beside, '1');
-    expect(toSession({ ...difficultyRecord, board: crowded })).toBeNull();
+    const crowded = { ...difficultyRecord, board: withCharacter(board, beside, '1') };
+    expect(gameSchema.validate(crowded)).toBeNull();
+    expect(toSession(crowded)).toBeNull();
     // The first island asks for eight bridges: it cannot see four partners.
-    const greedy = withCharacter(board, island, '8');
-    expect(toSession({ ...difficultyRecord, board: greedy })).toBeNull();
+    const greedy = { ...difficultyRecord, board: withCharacter(board, island, '8') };
+    expect(gameSchema.validate(greedy)).toBeNull();
+    expect(toSession(greedy)).toBeNull();
   });
 
   it('drops an answer that does not win on its board', () => {
     const { solution } = difficultyRecord;
     const edge = solution.search(/[12]/);
-    const broken = withCharacter(solution, edge, solution[edge] === '1' ? '2' : '1');
-    expect(toSession({ ...difficultyRecord, solution: broken })).toBeNull();
+    const broken = {
+      ...difficultyRecord,
+      solution: withCharacter(solution, edge, solution[edge] === '1' ? '2' : '1'),
+    };
+    expect(gameSchema.validate(broken)).toBeNull();
+    expect(toSession(broken)).toBeNull();
   });
 
   it('drops bridges the board cannot hold: two crossing bridges', () => {
@@ -210,8 +226,9 @@ describe('a record play could not have produced (§10)', () => {
     }
     const digits = crossingDigits(session);
     expect(digits).not.toBeNull();
-    const record = toPersisted(session, SAVED_AT);
-    expect(toSession({ ...record, bridges: digits! })).toBeNull();
+    const record = { ...toPersisted(session, SAVED_AT), bridges: digits! };
+    expect(gameSchema.validate(record)).toBeNull();
+    expect(toSession(record)).toBeNull();
   });
 
   it('keeps a board with an island over its number — play makes those (§4)', () => {
@@ -232,8 +249,8 @@ describe('a record play could not have produced (§10)', () => {
     const done = solved(difficultySession);
     expect(done.status).toBe('solved');
     const record = toPersisted(done, SAVED_AT);
-    expect(gameSchema.validate(record)).not.toBeNull();
-    expect(toSession(gameSchema.validate(record))).toBeNull();
+    expect(gameSchema.validate(record)).toBeNull();
+    expect(toSession(record)).toBeNull();
     expect((await load(JSON.stringify(record))).difficulty).toBeNull();
   });
 
@@ -280,5 +297,90 @@ describe('a daily from any other day (docs/PRODUCT_PRINCIPLES.md「デイリー�
     expect(saved.daily).toBeNull();
     expect(saved.difficulty?.seed).toBe('bridges-easy-slots');
     expect(await kv.get(gameSchema.key)).not.toBeNull();
+  });
+});
+
+describe('Backup & Restore refuses what the game refuses (§10)', () => {
+  const file = (record: unknown) =>
+    JSON.stringify({
+      formatVersion: 1,
+      createdAt: '2026-10-17T09:00:00.000Z',
+      appVersion: '1.0.0',
+      platform: 'web',
+      data: { [BG_STORAGE_KEYS.game]: record },
+    });
+  const { board, solution } = difficultyRecord;
+  const island = board.search(/[1-8]/);
+  const edge = solution.search(/[12]/);
+  const impossible: [string, PersistedGame][] = [
+    [
+      'an island asking for eight',
+      { ...difficultyRecord, board: withCharacter(board, island, '8') },
+    ],
+    [
+      'an answer that does not win',
+      {
+        ...difficultyRecord,
+        solution: withCharacter(solution, edge, solution[edge] === '1' ? '2' : '1'),
+      },
+    ],
+    [
+      // One answer, but four islands: fewer than an easy board is dealt (§7).
+      'an island count outside the tier',
+      {
+        ...difficultyRecord,
+        board: '1.1....' + '.......' + '2.2....' + '.'.repeat(28),
+        solution: '0111',
+        bridges: '0000',
+      },
+    ],
+    ['a finished game', toPersisted(solved(difficultySession), SAVED_AT)],
+  ];
+
+  it('refuses a backup holding a board play could not have produced, whole', async () => {
+    expect((await readBackup(file(difficultyRecord))).ok).toBe(true);
+    for (const [what, record] of impossible) {
+      expect(await readBackup(file(record)), what).toEqual({ ok: false, problem: 'damaged' });
+    }
+  });
+
+  it('leaves one lying on the device out of the next backup', async () => {
+    const [, record] = impossible[0]!;
+    const kv = createMemoryKV({
+      [BG_STORAGE_KEYS.game]: JSON.stringify(record),
+      [BG_STORAGE_KEYS.dailyGame]: JSON.stringify(dailyRecord),
+    });
+    const backup = await createBackup({ appVersion: '1.0.0', platform: 'web' }, kv);
+    expect(Object.keys(backup.data)).toEqual([BG_STORAGE_KEYS.dailyGame]);
+  });
+});
+
+describe('the one refusal the schema leaves to the load: a second answer (§6, §10)', () => {
+  // A legal 7×7 board with a winning answer — and a second one
+  // (game/session.test.ts has the provenance). Nothing about it is wrong
+  // until the answers are counted, which is a search.
+  const board = '........2..5.4.....1.........3..2........2.4...3.';
+  const twoAnswers: PersistedGame = {
+    ...difficultyRecord,
+    board,
+    solution: '112221022',
+    bridges: '000000000',
+  };
+
+  it('passes the schema and is refused when the game loads it', () => {
+    expect(gameSchema.validate(twoAnswers)).toEqual(twoAnswers);
+    expect(toSession(twoAnswers)).toBeNull();
+  });
+
+  it('is not deleted: it never resumes, and the slot’s next write replaces it', async () => {
+    const raw = JSON.stringify(twoAnswers);
+    const kv = createMemoryKV({ [BG_STORAGE_KEYS.game]: raw });
+    expect((await loadSavedGames(kv, DAY)).difficulty).toBeNull();
+    // Left as it was — the convention every game's loader follows (§10) …
+    expect(await kv.get(BG_STORAGE_KEYS.game)).toBe(raw);
+    expect((await loadSavedGames(kv, DAY)).difficulty).toBeNull();
+    // … until a board is saved over it.
+    await saveGame(difficultySession, kv);
+    expect((await loadSavedGames(kv, DAY)).difficulty?.seed).toBe('bridges-easy-slots');
   });
 });

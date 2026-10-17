@@ -8,11 +8,21 @@
  * of results, a malformed entry is dropped rather than costing the player the
  * whole history.
  *
- * These validators check fields only — shapes, ranges, characters, the size
- * the difficulty promises — and never search. Whether a saved board's clues
- * have exactly one loop is proven one layer out, by `decodeBoard` in
- * gamePersistence, and only when the game actually loads a slot (§12): a
- * backup check or the shell's start-up never runs the counting search.
+ * These validators check everything about a record short of the solver's
+ * search — shapes, ranges, characters, the size the difficulty promises,
+ * and for a saved game what the strings mean as far as one pass can read
+ * it: clues that are the digest's own, marks that have not already won.
+ * That is bounded by the board, and it is all that Backup & Restore runs on
+ * a record (docs/architecture/backup.md): a backup holding a damaged or
+ * finished board is refused whole, and an export never carries one.
+ *
+ * They never run that search. Whether a saved board's clues have exactly
+ * one loop is proven one layer out, by `decodeBoard` in gamePersistence, and
+ * only when the game actually loads a slot (§12): a backup check or the
+ * shell's start-up never runs the counting search. A record that fails only
+ * that is never resumed, and, like any record a game refuses, is not
+ * deleted: it stays on disk until the slot is next written (§12 says what
+ * that leaves open).
  */
 import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asInt, asString, isRecord } from '../../../storage/validate';
@@ -22,9 +32,13 @@ import {
   ELAPSED_SECONDS_MAX,
   HINT_COUNT_MAX,
   PRESETS,
+  cluesDigest as digestOf,
+  decodeClues,
+  decodeMarks,
   gridFor,
   isDifficulty,
   isLocalDateString,
+  isSolved,
   type Difficulty,
   type GameMode,
 } from '../game';
@@ -250,7 +264,19 @@ const validatePersistedGame = (raw: unknown): PersistedGame | null => {
   if (width !== preset.width || height !== preset.height) return null;
   if (clues.length !== width * height || !CLUE_STRING.test(clues)) return null;
   if (!DIGEST_STRING.test(cluesDigest)) return null;
-  if (marks.length !== gridFor(width, height).edgeCount || !MARK_STRING.test(marks)) return null;
+  const { edgeCount } = gridFor(width, height);
+  if (marks.length !== edgeCount || !MARK_STRING.test(marks)) return null;
+
+  // What the strings mean, short of the search (§12) — the same decoders and
+  // win check `decodeBoard` uses, so the two layers cannot read a record
+  // differently. Clues that are not the ones the digest was written for are
+  // damage, even when they spell another valid board; marks that already win
+  // are a finished game, which is history, not something to resume.
+  const decodedClues = decodeClues(clues, width, height);
+  if (decodedClues === null || digestOf(decodedClues) !== cluesDigest) return null;
+  const decodedMarks = decodeMarks(marks, edgeCount);
+  if (decodedMarks === null) return null;
+  if (isSolved({ width, height, clues: decodedClues }, decodedMarks)) return null;
 
   return {
     schemaVersion: 1,

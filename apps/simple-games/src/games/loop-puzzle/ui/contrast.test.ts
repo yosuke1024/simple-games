@@ -55,7 +55,7 @@ const THEMES = [
     name: 'light',
     base: ':root',
     accent: '.accent-loop-puzzle',
-    table: { line: 7.82, ink: 14.24, soft: 5.68, warn: 4.1 },
+    table: { line: 5.97, ink: 14.24, soft: 5.68, warn: 4.1 },
   },
   {
     name: 'dark',

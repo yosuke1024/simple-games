@@ -1008,23 +1008,31 @@ export const GAMES: readonly GameDefinition[] = [
     loadStorageSchemas: () => import('../games/snake/storage/schemas'),
   },
   {
-    // A dotted circle: one closed loop drawn through a lattice of dots
-    // (docs/LOOP_PUZZLE_RULES.md). Geometric Shapes, like Hit & Blow's ◉ and
-    // Box Regions' ▭ on this shelf. ▢ was dropped because it would sit right
-    // beside ▭ — two outlined rectangles — and ∮ reads as calculus before it
-    // reads as a loop. The other circles here: Hit & Blow's ◉ is two rows up
-    // on a phone, diagonal at 3 and 5 columns and directly above at 4; Binary
-    // Balance's ⊜ is diagonal at 2 and 4 and directly above at 3. Both were
-    // judged fit to stack — a solid bullseye and a circled equals sign
-    // against an empty ring of dots — and the accents part too (ΔE 30.7 /
-    // 33.6 to ◉, 127 / 125 to ⊜). 14 families. The lightest mark of the five
-    // (dots, no solid stroke). If it reads too faint on a tile there is no
-    // fallback in hand: ▢ and ∮ fail for the reasons above and the plain ring
-    // ○ is Bubble Pop's, so that call has to be made again.
+    // A dotted square: one closed loop drawn along the dotted lattice of a
+    // square board (docs/LOOP_PUZZLE_RULES.md). Miscellaneous Symbols and
+    // Arrows; 9 families, no emoji presentation. It replaced the dotted
+    // circle ◌ in the plan's Phase 4 review: measured on the real tile, ◌
+    // was the faintest mark of all 46 — 0.5–0.7% of the tile in ink at 360 /
+    // 768 / 1024 / 1280px, both themes, DPR 1 and 2, and 0.5% in the recent
+    // row, where the next faintest is about 1.0% — while ⬚ is 2.6–2.9%, the
+    // 14th–15th faintest. ▢ (4.4%) is a second outlined rectangle beside Box
+    // Regions' ▭; ∮ reads as calculus before it reads as a loop; ⬡ (7
+    // families) is a cell of a hexagonal board this game does not have; the
+    // plain ring ○ is Bubble Pop's. ⬚ sits beside ▭ too, at every width, and
+    // above or below it when both are in the recent row — kept there because
+    // a square of dashes against a solid 2:1 bar parts at a glance, and so do
+    // the accents (ΔE 52.7 / 49.3). On wider layouts it stacks under Binary
+    // Balance's ⊜ (3 columns), Hit & Blow's ◉ (4) and Shape Regions' ▙ (5),
+    // with Bridges' ⊶ beside it from 3 columns on — an open square against a
+    // circled sign, a bullseye, a solid block and a dumbbell (ΔE 114.7 /
+    // 125.2, 26.8 / 33.6, 19.8 / 14.4, 46.1 / 37.0). Under hi the fallback is
+    // FreeSans, whose dashes all but close at tile size: there it reads as a
+    // plain square (observed; still square, not ▭'s bar). Under ko it is
+    // Unifont's finer dots. No fallback in hand.
     id: 'loop-puzzle',
     title: 'Loop Puzzle',
     category: 'logic',
-    glyph: '◌',
+    glyph: '⬚',
     channel: 'web-beta',
     storageKeys: Object.values(LP_STORAGE_KEYS),
     loadRoot: () =>
@@ -1063,7 +1071,10 @@ export const GAMES: readonly GameDefinition[] = [
     // reason — a circled plus beside a squared one — so if ⁜ fails to draw on
     // a handset, that call has to be made again rather than ⊕ dropped in.
     // ⊞ is never beside it at any width, only diagonal at 5 columns (ΔE 79.9
-    // / 86.1); the mark directly above it there is Block Puzzle's framed ▣.
+    // / 72.9); the mark directly above it there is Block Puzzle's framed ▣
+    // (15.6 / 12.4). Its proportions follow the fallback font: FreeSans under
+    // hi draws a squatter cross than DejaVu Sans elsewhere, and Unifont under
+    // ko a smaller one (observed; legible in each).
     id: 'peg-solitaire',
     title: 'Peg Solitaire',
     category: 'puzzle',

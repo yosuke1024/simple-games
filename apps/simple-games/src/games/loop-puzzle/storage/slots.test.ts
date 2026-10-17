@@ -9,9 +9,13 @@
  * fields, a board of the wrong size, damaged clues (even into another
  * one-loop board), clues with no loop or two, a search that runs out, a
  * finished game, a daily from another day. Dropping means the default (no
- * game), never a fresh board in its place.
+ * game), never a fresh board in its place. Everything but the counting
+ * search is the schema's to refuse, and the schema is what Backup & Restore
+ * runs, so a backup cannot carry what the game refuses.
  */
 import { describe, expect, it } from 'vitest';
+import { createBackup } from '@/backup/export';
+import { readBackup } from '@/backup/restore';
 import { createMemoryKV } from '@/storage/kv';
 import { loadRecord } from '@/storage/repo';
 import {
@@ -33,7 +37,7 @@ import {
   toPersisted,
   toSession,
 } from './gamePersistence';
-import { dailyGameSchema, gameSchema, LP_STORAGE_KEYS } from './schemas';
+import { dailyGameSchema, gameSchema, LP_STORAGE_KEYS, type PersistedGame } from './schemas';
 
 const SAVED_AT = 1_790_000_000_000;
 const DAY = '2026-10-17';
@@ -216,7 +220,8 @@ describe('a save play could not have produced (§12)', () => {
     // clues the digest was written for.
     const at = difficultyRecord.clues.search(/[0-3]/);
     const damaged = { ...difficultyRecord, clues: withCharacter(difficultyRecord.clues, at, '.') };
-    expect(gameSchema.validate(damaged)).not.toBeNull();
+    // A hash, not a search: the schema reads it, so a backup cannot carry it.
+    expect(gameSchema.validate(damaged)).toBeNull();
     expect(toSession(damaged)).toBeNull();
   });
 
@@ -239,19 +244,23 @@ describe('a save play could not have produced (§12)', () => {
   });
 
   it('drops a finished game: it is history, not something to resume (§12)', () => {
-    const solved = withMarks(difficultySession, difficultySession.solution);
-    expect(toSession(toPersisted(solved, SAVED_AT))).toBeNull();
+    const solved = toPersisted(withMarks(difficultySession, difficultySession.solution), SAVED_AT);
+    expect(gameSchema.validate(solved)).toBeNull();
+    expect(toSession(solved)).toBeNull();
     // X marks are notes: the answer's lines alone, crosses or not, are a win too.
     const linesOnly = difficultySession.solution.map((mark) => (mark === LINE ? LINE : UNKNOWN));
-    expect(toSession(toPersisted(withMarks(difficultySession, linesOnly), SAVED_AT))).toBeNull();
+    const won = toPersisted(withMarks(difficultySession, linesOnly), SAVED_AT);
+    expect(gameSchema.validate(won)).toBeNull();
+    expect(toSession(won)).toBeNull();
   });
 
   it('keeps marks that break a rule: every combination is reachable by tapping (§12)', () => {
     const wrong = [...difficultySession.marks];
     wrong[firstCross(difficultySession)] = LINE;
     wrong[firstLine(difficultySession)] = CROSS;
-    const restored = toSession(toPersisted(withMarks(difficultySession, wrong), SAVED_AT));
-    expect(restored?.marks).toEqual(wrong);
+    const record = toPersisted(withMarks(difficultySession, wrong), SAVED_AT);
+    expect(gameSchema.validate(record)).toEqual(record);
+    expect(toSession(record)?.marks).toEqual(wrong);
   });
 
   it('lands on nothing rather than a fresh board: the loader returns no game', async () => {
@@ -285,5 +294,70 @@ describe('a daily left over from another day (docs/PRODUCT_PRINCIPLES.md「デ�
     expect(saved.daily).toBeNull();
     expect(saved.difficulty?.seed).toBe(difficultySession.seed);
     expect(await kv.get(gameSchema.key)).not.toBeNull();
+  });
+});
+
+describe('Backup & Restore refuses what the game refuses (§12)', () => {
+  const file = (record: unknown) =>
+    JSON.stringify({
+      formatVersion: 1,
+      createdAt: '2026-10-17T09:00:00.000Z',
+      appVersion: '1.0.0',
+      platform: 'web',
+      data: { [LP_STORAGE_KEYS.game]: record },
+    });
+  const at = difficultyRecord.clues.search(/[0-3]/);
+  const impossible: [string, PersistedGame][] = [
+    [
+      'clues that are not the digest’s own',
+      { ...difficultyRecord, clues: withCharacter(difficultyRecord.clues, at, '.') },
+    ],
+    [
+      'a finished game',
+      toPersisted(withMarks(difficultySession, difficultySession.solution), SAVED_AT),
+    ],
+  ];
+
+  it('refuses a backup holding a damaged or finished board, whole', async () => {
+    expect((await readBackup(file(difficultyRecord))).ok).toBe(true);
+    for (const [what, record] of impossible) {
+      expect(await readBackup(file(record)), what).toEqual({ ok: false, problem: 'damaged' });
+    }
+  });
+
+  it('leaves one lying on the device out of the next backup', async () => {
+    const [, record] = impossible[0]!;
+    const kv = createMemoryKV({
+      [LP_STORAGE_KEYS.game]: JSON.stringify(record),
+      [LP_STORAGE_KEYS.dailyGame]: JSON.stringify(dailyRecord),
+    });
+    const backup = await createBackup({ appVersion: '1.0.0', platform: 'web' }, kv);
+    expect(Object.keys(backup.data)).toEqual([LP_STORAGE_KEYS.dailyGame]);
+  });
+});
+
+describe('the one refusal the schema leaves to the load: not exactly one loop (§12)', () => {
+  // Every clue blank, under a digest written for exactly those clues: no
+  // field is wrong until the loops are counted, which is a search.
+  const blank = toPersisted(
+    { ...difficultySession, clues: difficultySession.clues.map(() => null) },
+    SAVED_AT,
+  );
+
+  it('passes the schema and is refused when the game loads it', () => {
+    expect(gameSchema.validate(blank)).toEqual(blank);
+    expect(toSession(blank)).toBeNull();
+  });
+
+  it('is not deleted: it never resumes, and the slot’s next write replaces it', async () => {
+    const raw = JSON.stringify(blank);
+    const kv = createMemoryKV({ [LP_STORAGE_KEYS.game]: raw });
+    expect((await loadSavedGames(kv, DAY)).difficulty).toBeNull();
+    // Left as it was — the convention every game's loader follows (§12) …
+    expect(await kv.get(LP_STORAGE_KEYS.game)).toBe(raw);
+    expect((await loadSavedGames(kv, DAY)).difficulty).toBeNull();
+    // … until a board is saved over it.
+    await saveGame(difficultySession, kv);
+    expect((await loadSavedGames(kv, DAY)).difficulty?.seed).toBe(difficultySession.seed);
   });
 });

@@ -2,13 +2,19 @@
  * Converts between the in-memory LoopPuzzleSession and its persisted form
  * (docs/LOOP_PUZZLE_RULES.md §12).
  *
- * Loading is fail-closed, and `decodeBoard` is where that happens: a record
- * only becomes a session if its digest is its clues' own, its clues have
- * exactly one loop (proven within the counting search's node limit — the
- * proof also re-derives the answer, which the record never carries), and its
- * marks do not already solve the board. Anything else is dropped and the
- * player lands on the game's home — never on a fresh board nobody asked for,
- * and never on a board without an answer.
+ * Loading is fail-closed, in two layers. The schema (storage/schemas.ts)
+ * refuses everything it can without searching — fields out of shape, clues
+ * that are not the digest's own, marks that already solve the board — and
+ * Backup & Restore runs that same schema, so neither layer lets in what the
+ * other refuses. Then `decodeBoard` reads the board again and adds the one
+ * check the schema leaves out: the clues have exactly one loop (proven
+ * within the counting search's node limit — the proof also re-derives the
+ * answer, which the record never carries). Anything refused is dropped and
+ * the player lands on the game's home — never on a fresh board nobody asked
+ * for, and never on a board without an answer. Nothing here deletes a
+ * refused record: like every game's loader, it is left for the slot's next
+ * write to replace (§12). The one record that is deleted on load is a daily
+ * from another day, below.
  *
  * The search runs here, once per slot, when the game itself loads its saves
  * (opening the game) — not in the schema, so a backup check or the shell's

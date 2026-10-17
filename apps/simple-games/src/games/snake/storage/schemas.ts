@@ -5,9 +5,16 @@
  * (docs/ARCHITECTURE.md).
  *
  * Validators never throw: corrupt data yields null and callers fall back to
- * safe defaults. The saved-run schema checks a record's *shape* — types,
- * lengths, bounds; whether its snake could have come from play is the rules'
- * question, asked by `restoreSession` on load (storage/gamePersistence.ts).
+ * safe defaults. The saved-run schema checks a record's shape — types,
+ * lengths, bounds — and then asks the rules whether play could have produced
+ * it (`restoreSession`, game/serialize.ts), because the work of every check
+ * there is fixed by the board — the replay and the layered walk of
+ * game/history.ts included — and none is a solver search held back only by
+ * a node limit: about ten milliseconds at worst even without a JIT (§11,
+ * §17). The schema is also all that Backup & Restore runs on a record
+ * (docs/architecture/backup.md), so asking here is what makes a backup
+ * holding an impossible run refused whole, rather than "restored" and then
+ * dropped when the game opens.
  */
 import type { SchemaDef } from '../../../storage/schemas';
 import { asBool, asInt, asString, isRecord } from '../../../storage/validate';
@@ -19,6 +26,7 @@ import {
   MAX_RECORD_COUNT,
   MAX_SCORE,
   MAX_SEED_LENGTH,
+  restoreSession,
   SPEEDS,
   type Direction,
   type Speed,
@@ -188,10 +196,10 @@ export const gameSchema: SchemaDef<PersistedGame | null> = {
       return null;
     }
     // Absent means "no heading chosen"; present, it has to be a direction.
-    // Whether it is one `turn` could have kept is the rules' check (§11).
+    // Whether it is one `turn` could have kept is the rules' check below.
     if (raw.next !== undefined && !isDirection(raw.next)) return null;
 
-    return {
+    const record: PersistedGame = {
       schemaVersion: 1,
       seed,
       speed: raw.speed,
@@ -203,5 +211,9 @@ export const gameSchema: SchemaDef<PersistedGame | null> = {
       ...(raw.next === undefined ? {} : { next: raw.next }),
       savedAt,
     };
+    // The rules' half (§11): a snake on the board, a history its body could
+    // have had, food where the seed put it. The same function the load
+    // builds the run with, so the two can never disagree about a record.
+    return restoreSession(record) === null ? null : record;
   },
 };

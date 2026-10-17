@@ -61,9 +61,9 @@ export function LoopPuzzleHomeScreen() {
       <GameHomeHeader gameId="loop-puzzle" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* Matches the tile glyph in app/registry.ts: a ring of dots. */}
+        {/* Matches the tile glyph in app/registry.ts: a dotted square. */}
         <div className="home-logo" aria-hidden="true">
-          {'◌'}
+          {'⬚'}
         </div>
         <h1 className="home-title">{t('loopPuzzleName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
