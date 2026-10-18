@@ -88,6 +88,9 @@ interface Heard {
   readonly crash: Crash | null;
 }
 
+/** Where focus goes once the control that held it has gone (a card, a dialog). */
+type Refocus = 'toggle' | 'restart';
+
 export function SnakeGameScreen() {
   const {
     session,
@@ -104,27 +107,31 @@ export function SnakeGameScreen() {
   const [confirmRestart, setConfirmRestart] = useState(false);
   const [announcement, setAnnouncement] = useState('');
 
-  /* Focus after a new board from the result card or the ↻ dialog. The button
-     that held it is gone with them, and focus would fall to <body> — where a
-     screen reader user has lost their place and must hunt for Start. It goes
-     to the cross's middle button (Start; the ↻ is disabled on a ready board),
-     and only when focus really was lost: a press that already put it
-     somewhere keeps it.
+  /* Focus after a result card or the ↻ dialog closes. The button that held
+     it is gone with them, and focus would fall to <body> — where a screen
+     reader user has lost their place and must hunt for Start again. A new
+     board goes to the cross's middle button (Start; the ↻ is disabled on a
+     ready board); Cancel, the backdrop and Escape back to the ↻ that opened
+     the question. Only when focus really was lost: a press that already put
+     it somewhere keeps it.
 
      A layout effect, so this placement is made before the ↻ dialog's own
      focus return (ui/useDialogDismiss.ts runs as the dialog unmounts, after
      layout) — which then sees a focus put somewhere on purpose and leaves it.
-     Cancel, the backdrop and Escape are the dialog's alone: it hands the
-     focus back to the ↻ that opened it (docs/ARCHITECTURE.md「Escape は
-     Cancel」), so nothing here does that a second time (2026-10-18). */
+     On a Cancel both pick the ↻; the dialog's return alone would miss it
+     whenever the press on the ↻ did not focus it — a click or a tap in
+     WebKit (Safari, every iOS browser) focuses no button, so the dialog
+     opened with no opener to hand the focus back to (2026-10-18). */
   const toggleRef = useRef<HTMLButtonElement>(null);
-  const refocusRef = useRef(false);
+  const restartRef = useRef<HTMLButtonElement>(null);
+  const refocusRef = useRef<Refocus | null>(null);
   useLayoutEffect(() => {
-    if (!refocusRef.current) return;
-    refocusRef.current = false;
+    const target = refocusRef.current;
+    if (target === null) return;
+    refocusRef.current = null;
     const active = document.activeElement;
     if (active !== null && active !== document.body && active.isConnected) return;
-    toggleRef.current?.focus();
+    (target === 'toggle' ? toggleRef : restartRef).current?.focus();
   });
 
   const status = session?.status ?? 'ready';
@@ -198,13 +205,19 @@ export function SnakeGameScreen() {
     pauseRun();
     setConfirmRestart(true);
   };
-  const closeRestart = () => setConfirmRestart(false);
+  // The dialog calls this ahead of either answer too, and the answer then sets
+  // its own target: only a plain close (Cancel, the backdrop, Escape) is left
+  // with the ↻.
+  const closeRestart = () => {
+    refocusRef.current = 'restart';
+    setConfirmRestart(false);
+  };
   const retry = () => {
-    refocusRef.current = true;
+    refocusRef.current = 'toggle';
     retryRun();
   };
   const newRun = () => {
-    refocusRef.current = true;
+    refocusRef.current = 'toggle';
     startNewRun();
   };
 
@@ -243,6 +256,7 @@ export function SnakeGameScreen() {
             )}
           </div>
           <button
+            ref={restartRef}
             type="button"
             className="icon-btn"
             aria-label={t('tryAgain')}

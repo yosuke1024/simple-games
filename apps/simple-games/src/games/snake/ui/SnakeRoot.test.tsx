@@ -843,11 +843,11 @@ describe('Restart (§6)', () => {
     expect(screen.getByRole('button', { name: 'Retry same board' })).toBeDisabled();
     fireEvent.click(pad('Start'));
     advance(NORMAL * 2);
-    // A click focuses the ↻ it presses, as a browser's does (fireEvent alone
-    // moves no focus): that is the opener the dialog hands the focus back to.
-    const restart = screen.getByRole('button', { name: 'Retry same board' });
-    restart.focus();
-    fireEvent.click(restart);
+    // fireEvent moves no focus, and neither does a click or a tap in WebKit
+    // (Safari, every iOS browser): the dialog opens with no opener of its own
+    // to hand the focus back to, so the game's return is the one that does.
+    expect(document.activeElement).toBe(document.body);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
     const dialog = screen.getByRole('alertdialog', { name: 'Start over?' });
     expect(boardState()).toMatch(/paused$/);
     expect(board().closest('[inert]')).not.toBeNull();
@@ -863,9 +863,65 @@ describe('Restart (§6)', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     expect(board().closest('[inert]')).toBeNull();
     expect(boardState()).toMatch(/paused$/);
-    // Focus goes back to the ↻ that asked, not to <body> — the shared
-    // dialog's return (ui/useDialogDismiss.ts), the one owner of it.
+    // Focus goes back to the ↻ that asked, not to <body>.
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Retry same board' }));
+    advance(NORMAL * 4);
+    expect(head()).toEqual(stopped);
+  });
+
+  it('after a press that focused the ↻ (Chromium, Firefox): Cancel hands the focus back to it, an answer to Start', async () => {
+    taughtAlready();
+    await launch();
+    fireEvent.click(screen.getByRole('button', { name: 'New Game' }));
+    fireEvent.click(pad('Start'));
+    advance(NORMAL * 2);
+    // The ↻ holds the focus as the dialog opens, so it is the dialog's own
+    // opener (ui/useDialogDismiss.ts) as well as the game's target: both
+    // returns pick it, and neither moves it again.
+    const restart = screen.getByRole('button', { name: 'Retry same board' });
+    restart.focus();
+    fireEvent.click(restart);
+    let dialog = screen.getByRole('alertdialog', { name: 'Start over?' });
+    expect(document.activeElement).toBe(within(dialog).getByRole('button', { name: 'Cancel' }));
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(boardState()).toMatch(/paused$/);
     expect(document.activeElement).toBe(restart);
+
+    // An answer pressed with the focus on it (a real click) goes to Start on
+    // the new board, not back to the ↻ that opened the question.
+    fireEvent.click(restart);
+    dialog = screen.getByRole('alertdialog', { name: 'Start over?' });
+    const again = within(dialog).getByRole('button', { name: 'Retry same board' });
+    again.focus();
+    fireEvent.click(again);
+    await settle();
+    expect(boardState()).toMatch(/ready to start$/);
+    expect(document.activeElement).toBe(pad('Start'));
+  });
+
+  it('with no opener (a WebKit press), Escape and the backdrop also hand the focus back to the ↻', async () => {
+    taughtAlready();
+    await launch();
+    fireEvent.click(screen.getByRole('button', { name: 'New Game' }));
+    fireEvent.click(pad('Start'));
+    advance(NORMAL * 2);
+    const restart = screen.getByRole('button', { name: 'Retry same board' });
+    const stopped = head();
+
+    for (const close of ['Escape', 'backdrop'] as const) {
+      expect(document.activeElement).toBe(document.body);
+      fireEvent.click(restart);
+      const dialog = screen.getByRole('alertdialog', { name: 'Start over?' });
+      if (close === 'Escape') fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+      else fireEvent.click(dialog.parentElement!);
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(boardState()).toMatch(/paused$/);
+      expect(document.activeElement).toBe(restart);
+      // Away again, to <body>, for the next way out.
+      restart.blur();
+    }
     advance(NORMAL * 4);
     expect(head()).toEqual(stopped);
   });

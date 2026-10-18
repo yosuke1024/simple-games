@@ -667,8 +667,14 @@ Escape がキャンセルになり、閉じたらフォーカスを開いた場�
 - **フォーカスの持ち主を 1 つに**: ダイアログの共通の戻しは閉じる時の passive effect で走るので、
   Peg Solitaire が ↻ の答えのあとに盤の輪の穴へ置くはずのフォーカスが、本物のクリックでは ↻ に
   先に戻されていた(テストは `fireEvent.click` がフォーカスを動かさないので通っていた)。Peg と
-  Snake の「新しい盤でフォーカスを置く」effect を layout effect にして戻しより先に置き、Snake が
-  自前で持っていた「キャンセルで ↻ へ戻す」は共通の戻しと重なるので外した。
+  Snake の「新しい盤でフォーカスを置く」effect を layout effect にして戻しより先に置いた。Snake が
+  自前で持っていた「キャンセルで ↻ へ戻す」は、共通の戻しと重なるとして一度外したが、検証で
+  戻した: 共通の戻しが知っているのは問いが開いたときにフォーカスのあった要素だけで、WebKit
+  (macOS の Safari・iOS のブラウザ)のクリックやタップは ↻ にフォーカスを置かないので、外すと
+  キャンセルの後のフォーカスが `<body>` に落ちる(87f042f では ↻ へ戻っていた)。同じ layout
+  effect の中で、フォーカスが失われたときだけ ↻ へ置く — 共通の戻しも ↻ を選ぶので食い違わない。
+  フォーカスの動かない押下(WebKit の形)の Cancel・外側のタップ・Escape と、↻ にフォーカスの
+  あった押下の Cancel を、別々のテストにした。
 - **Reduced Motion**: 5 本に animationend / transitionend を待つ表示は無い(結果カードの時機は
   `useResultReveal`)。Loop Puzzle と Bridges の解けた一拍の `animation: none` は残した(共有の
   規則は今は 0.01ms で終わらせるが、洗いが始まりもしない方が素直)。Loop の CSS と
@@ -677,11 +683,19 @@ Escape がキャンセルになり、閉じたらフォーカスを開いた場�
 テストは 5 本の Root テストに、main が正式収録のゲームに入れた形(背景で N 秒 → さらに遊ぶ →
 アンマウントで計上 → 再マウントして離れても増えない)と、↻ の後のアンマウントが後の秒だけを
 足すこと、↻ の問いの Escape(閉じる・↻ へフォーカス・ゲームの Escape が走らない)を足した。
-どれも修正を外すと落ちることを確かめた(アンマウント: expected 5 to be 8 など。Peg のフォーカス:
-↻ に残る)。
+修正を外すと(合流のコミット 87f042f のコードで)落ちるのは、Bridges・Loop・Unblock の
+アンマウントのテスト(expected 5 to be 8 など)と、Peg の本物のクリックでのフォーカスのテスト
+(↻ に残る)。Snake のフォーカスの動かない押下の後のテストは、↻ へ戻す置き直しを外すと落ちる
+(`<body>` に落ちる。一度外した版がそうだった)。Escape のテストは 87f042f でも通る — 頼っている
+`useGameKeys` の `!confirmRestart` とダイアログの capture 段の Escape(main の #236)がもう
+あったからで、これらは #236 の規則が崩れないことを見張る回帰テストである。Snake と Peg の
+アンマウントのテストも、両方が自前のアンマウントの計上を持っていたので 87f042f でも通る。
 
 合流後のゲート(このワークツリー、2026-10-18): `pnpm lint` ok / `pnpm typecheck` ok /
 `pnpm test` 632 ファイル(631 合格・1 スキップ)・12,949 件(12,948 合格・1 スキップ)/
 `build` ok / `build:web` ok / `size:check` ok(基準の更新は不要 — どのチャンクも ±0.3% 以内)/
 `check-dist-ads-separation.sh` ok(8 項目)/ `check-principles.sh` ok(22 項目)/
 `i18n:gate:check` ok(5 件)。
+Snake のフォーカスの置き直しを戻した後(同日): `pnpm lint` ok / `pnpm typecheck` ok /
+`pnpm test` 632 ファイル(631 合格・1 スキップ)・12,951 件(12,950 合格・1 スキップ)/
+`check-principles.sh` ok。
