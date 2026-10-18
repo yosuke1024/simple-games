@@ -213,8 +213,13 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   vi.useRealTimers();
   Reflect.deleteProperty(document, 'visibilityState');
   deviceStore.clear();
@@ -284,9 +289,14 @@ describe('the CPU plays on a timer, one beat per action', () => {
   it('is disarmed by unmounting, mid-beat', async () => {
     const { api, unmount } = resumed(cpuToDraw());
     await advance(CPU_DELAY_MS - 100);
-    const onDisk = deviceStore.get(gameSchema.key);
 
     unmount();
+    // Leaving saves the board as it stands (docs/GAME_LIFECYCLE.md
+    // 「アンマウントで計上する」). That save is the record a late beat would
+    // have to change, so it is what the rest of the test holds still.
+    await advance(0);
+    const onDisk = deviceStore.get(gameSchema.key);
+    expect(onDisk).toBeDefined();
     await advance(CPU_DELAY_MS * 4);
 
     // No move landed after the tree went away — the record is where it was,

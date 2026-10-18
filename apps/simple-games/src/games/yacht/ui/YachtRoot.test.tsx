@@ -619,3 +619,44 @@ describe('a home-screen shortcut', () => {
     }
   });
 });
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the match's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    for (const [key, value] of Object.entries(savedGame())) deviceStore.set(key, value);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /^Resume/ }));
+
+      // A background books the first five, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedStats()!.totalPlaySeconds).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(storedStats()!.totalPlaySeconds).toBe(8);
+      expect(storedGame()!.elapsedSeconds).toBe(8);
+
+      // Forward again, and away again at once: the match still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedStats()!.totalPlaySeconds).toBe(8);
+      expect(storedGame()!.elapsedSeconds).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

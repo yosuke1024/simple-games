@@ -55,6 +55,9 @@
  *     生成する Root / GameContext のコメントに書いてある
  *   - playClockSeed.test.ts ─ `initialSession` を受け取る provider だけが対象。
  *     生成物は受け取らないので対象外(保存スロットを足すと対象になる)
+ *   - unmountBookingWiring.test.ts ─ GameContext が退出の同期 `syncActiveGame` を
+ *     `useOnUnmount(syncActiveGame);` でちょうど 1 回アンマウントにも結ぶ
+ *     (ブラウザの戻る・別ゲームへのショートカットは goHome を通らない)
  *   - pointerContractWiring.test.ts ─ 生成する画面は onClick しか聞かない
  *   - savedGameSlots.test.ts ─ 既定の保存キーは stats / flags のみで
  *     `dailyGame` を持たないので対象外
@@ -357,6 +360,7 @@ import {
   type ReactNode,
 } from 'react';
 import { saveRecord } from '../../../storage/repo';
+import { useOnUnmount } from '../../../ui/useOnUnmount';
 import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
 
 export type Screen = 'home' | 'tutorial' | 'game';
@@ -509,6 +513,15 @@ export function ${pascal}Provider({
       void pauseHandle?.then((handle) => handle.remove()).catch(() => undefined);
     };
   }, [syncActiveGame]);
+
+  // Unmounting is a way out too (docs/GAME_LIFECYCLE.md「アンマウントで計上する」):
+  // the browser's Back and a home-screen shortcut to another game take this
+  // provider off screen without goHome, exitToCollection or a
+  // visibilitychange. The same seam runs then, so once it saves the round and
+  // books its play clock, those doors cannot lose the seconds either
+  // (src/test/unmountBookingWiring.test.ts). Keep it idempotent when you fill
+  // it in: book only what a \`bookedRef\` says is not booked yet.
+  useOnUnmount(syncActiveGame);
 
   // Android hardware back: leave sub-screens; from the game's home, hand
   // control back to the collection. Registered once, on native only, and the

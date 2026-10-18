@@ -28,6 +28,7 @@ import {
 } from 'react';
 import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
+import { useOnUnmount } from '../../../ui/useOnUnmount';
 import {
   createDailySession,
   createLevelSession,
@@ -358,6 +359,14 @@ export function SchulteProvider({
       void pauseHandle?.then((handle) => handle.remove()).catch(() => undefined);
     };
   }, [bookMisses, persistStats]);
+
+  // Unmounting is a way out too (docs/GAME_LIFECYCLE.md「アンマウントで計上する」):
+  // the browser's Back and a home-screen shortcut to another game take this
+  // provider off screen without goHome, exitToCollection or a
+  // visibilitychange. The round is abandoned then all the same, and only
+  // what is not booked yet is added — after either exit, or a background,
+  // nothing is.
+  useOnUnmount(abandonActiveRound);
 
   // Android hardware back: leave sub-screens; from the game's home, hand
   // control back to the collection.

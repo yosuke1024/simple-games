@@ -93,6 +93,20 @@ function background() {
   Reflect.deleteProperty(document, 'visibilityState');
 }
 
+/** Total play seconds as they survive on disk (§8). */
+function storedPlaySeconds(): number {
+  const raw = deviceStore.get(DM_STORAGE_KEYS.stats);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as Stats).totalPlaySeconds;
+}
+
+/** The suspended game's own clock, as it survives on disk (§9). */
+function storedGameSeconds(): number {
+  const raw = deviceStore.get(DM_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as PersistedGame).elapsedSeconds;
+}
+
 const tutorialDone = {
   [DM_STORAGE_KEYS.flags]: JSON.stringify({ schemaVersion: 1, tutorialCompleted: true }),
 };
@@ -166,8 +180,13 @@ const lastTile = findPosition(
     hasLegalPlay(s.line, s.playerHand),
 );
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -456,11 +475,6 @@ describe('a home-screen shortcut (issue #113)', () => {
   // home screen has to seed the same two clocks `activate` does.
   it('does not book the resumed game’s play seconds a second time', async () => {
     for (const [key, value] of Object.entries(tutorialDone)) deviceStore.set(key, value);
-    const storedPlaySeconds = () =>
-      (JSON.parse(deviceStore.get(DM_STORAGE_KEYS.stats) ?? '{"totalPlaySeconds":0}') as Stats)
-        .totalPlaySeconds;
-    const storedGameSeconds = () =>
-      (JSON.parse(deviceStore.get(DM_STORAGE_KEYS.game)!) as PersistedGame).elapsedSeconds;
 
     vi.useFakeTimers();
     try {
@@ -485,6 +499,48 @@ describe('a home-screen shortcut (issue #113)', () => {
       await settle();
       expect(storedGameSeconds()).toBe(8);
       expect(storedPlaySeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the game's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(DM_STORAGE_KEYS.flags, tutorialDone[DM_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: 'New Game' }));
+      await settle();
+
+      // A background books the first five, as it always has.
+      await advance(5_000);
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      await advance(3_000);
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedGameSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the game still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedGameSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }
