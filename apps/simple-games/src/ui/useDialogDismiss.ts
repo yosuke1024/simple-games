@@ -10,11 +10,12 @@
    effect runs, Cancel's autoFocus has already moved the focus into the dialog
    (the same reading NameSheet does).
 
-   - Escape is taken on the window in the capture phase, ahead of every other
-     listener, and goes no further: a game's own Escape (clearing a
-     selection), a `useGameKeys` listener left attached behind a `blocked`
-     guard, or an arcade board's raw keydown listener never also answers the
-     key that closed the dialog.
+   - Escape is taken on the window in the capture phase, before the document
+     or anything in it sees it, and goes no further: a `useGameKeys` listener
+     left attached behind a `blocked` guard (2048's shape) or an arcade
+     board's raw keydown listener never also answers the key that closed the
+     dialog — nor would a game's own Escape (no shipped game binds one yet;
+     clearing a selection would be the likely first).
    - The focus goes back only when it would otherwise be lost (on the body, or
      on a node the dialog took away with it). If whatever ran on close put it
      somewhere on purpose, it stays there; an opener that has left the page (a

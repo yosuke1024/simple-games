@@ -256,9 +256,10 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
   (`pointer-events: none`)。
 - **Escape は Cancel、閉じたらフォーカスは開いた場所へ。** `ConfirmDialog` と `RestartDialog` は
   `ui/useDialogDismiss.ts` を通して、開いている間の Escape を Cancel(`onCancel` / `onClose`)と
-  同じに扱い、window の capture 段で受けて先へ流さない——ゲーム自身の Escape(選択の解除など)、
-  `blocked` の形で付いたままの `useGameKeys`、arcade 盤面の生のリスナーのどれも、ダイアログを閉じた
-  その Escape には答えない。閉じたらフォーカスは開いた操作(上部バーの ↻、設定の行)へ戻す。戻すのは
+  同じに扱い、window の capture 段で受けて先へ流さない——`blocked` の形で付いたままの `useGameKeys`
+  (2048 の形)も、arcade 盤面の生の keydown リスナーも、ダイアログを閉じたその Escape には答えない
+  (2026-10-18 時点で Escape を自分で受けるゲームは無い。選択の解除などで受けるようになっても同じ)。
+  閉じたらフォーカスは開いた操作(上部バーの ↻、設定の行)へ戻す。戻すのは
   フォーカスが失われるとき(body か、ダイアログと一緒に消えた要素)だけで、閉じた側が意図して置いた
   先は動かさず、もうページに無い opener は追わない。リスナーは閉じた時点とアンマウントで外す
   ([GAME_LIFECYCLE.md](GAME_LIFECYCLE.md))。確定・取消で各ゲームがすることは変えない
