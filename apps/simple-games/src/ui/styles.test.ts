@@ -143,3 +143,67 @@ describe('the reserved ad strips never yield their space (issue #120)', () => {
     expect(cells).toMatch(/touch-action:\s*none/);
   });
 });
+
+/**
+ * Reduced Motion is applied by styles.css for two routes — the OS preference
+ * and the app's own setting. Many boards also branch on useReducedMotion, but
+ * Crown Grid, Number Path, Shape Regions and Box Regions lean on these rules
+ * alone for their pseudo-element washes, and a bare `*` never matches
+ * ::before / ::after: until each route had a rule naming them, those washes
+ * ran their full 700–900ms with Reduced Motion on. That rule ends transitions
+ * instead of shortening them — a 0.01ms duration there gave every
+ * pseudo-element a transition it never declared, and each change painted a
+ * frame late. With `css: false` in the test setup, nothing rendered can
+ * notice either mistake; only this can.
+ */
+describe('Reduced Motion reaches pseudo-elements', () => {
+  type Rule = { selectors: string[]; body: string };
+  const source = css.replace(/\/\*[\s\S]*?\*\//g, '');
+
+  /** Every innermost rule in `text`, as its selector list and declarations. */
+  function rulesIn(text: string): Rule[] {
+    return [...text.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((match) => ({
+      selectors: match[1]!.split(',').map((selector) => selector.trim()),
+      body: match[2]!,
+    }));
+  }
+
+  /** The rule whose selector list is exactly `selectors`. */
+  function rule(rules: Rule[], selectors: string[]): string {
+    const found = rules.find((candidate) => candidate.selectors.join() === selectors.join());
+    expect(found, `no rule for ${selectors.join(', ')}`).toBeDefined();
+    return found!.body;
+  }
+
+  function expectRoute(rules: Rule[], prefix: string): void {
+    const elements = rule(rules, [`${prefix}*`]);
+    expect(elements).toMatch(/animation-duration:\s*0\.01ms !important/);
+    expect(elements).toMatch(/animation-iteration-count:\s*1 !important/);
+    expect(elements).toMatch(/transition-duration:\s*0\.01ms !important/);
+
+    const pseudo = rule(rules, [`${prefix}*::before`, `${prefix}*::after`]);
+    expect(pseudo).toMatch(/animation-duration:\s*0\.01ms !important/);
+    expect(pseudo).toMatch(/animation-iteration-count:\s*1 !important/);
+    expect(pseudo).toMatch(/transition:\s*none !important/);
+    expect(pseudo).not.toMatch(/transition-duration/);
+  }
+
+  it('covers ::before and ::after under the OS preference', () => {
+    const media = '@media (prefers-reduced-motion: reduce) {';
+    const open = source.indexOf(media);
+    expect(open, `${media} is missing from the stylesheet`).toBeGreaterThan(-1);
+    // The block ends at the first `}` that closes nothing inside it.
+    let depth = 1;
+    let close = open + media.length;
+    while (depth > 0 && close < source.length) {
+      const char = source[close++];
+      if (char === '{') depth++;
+      if (char === '}') depth--;
+    }
+    expectRoute(rulesIn(source.slice(open + media.length, close - 1)), '');
+  });
+
+  it('covers ::before and ::after under the app setting', () => {
+    expectRoute(rulesIn(source), ":root[data-reduced-motion='true'] ");
+  });
+});
