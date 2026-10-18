@@ -117,10 +117,14 @@
 }
 
 /* Solved beat (§13): one soft wash on the board's ground, under the lines
-   and numbers, then gone. Reduced Motion (OS or app) drops it — here, not
-   in src/ui/styles.css: the shared reduced-motion rules select `*`, which
-   matches no ::before / ::after, so they never reach this wash (measured in
-   Chromium, 2026-10-17 review). */
+   and numbers, then gone. Reduced Motion (OS or app) drops it here, with
+   `animation: none`. This was written when the shared reduced-motion rules
+   in src/ui/styles.css selected `*` alone, which matches no ::before /
+   ::after, so the wash ran its full 900ms (measured in Chromium, 2026-10-17
+   review). Since 2026-10-18 those rules name the pseudo-elements too and
+   would end it at 0.01ms; this rule stays, so the wash does not start at all
+   (Bridges says the same). Nothing waits for it to end: the result card is
+   timed by `useResultReveal`, never by an animationend. */
 .lp-board::after {
   content: '';
   position: absolute;

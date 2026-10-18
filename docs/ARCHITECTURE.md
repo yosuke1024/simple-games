@@ -258,12 +258,20 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
   `ui/useDialogDismiss.ts` を通して、開いている間の Escape を Cancel(`onCancel` / `onClose`)と
   同じに扱い、window の capture 段で受けて先へ流さない——`blocked` の形で付いたままの `useGameKeys`
   (2048 の形)も、arcade 盤面の生の keydown リスナーも、ダイアログを閉じたその Escape には答えない
-  (2026-10-18 時点で Escape を自分で受けるゲームは無い。選択の解除などで受けるようになっても同じ)。
+  ゲーム自身の Escape も同じで、受けるのは Web 先行公開(ベータ)の 3 本 — Bridges(島の選択を
+  外す)、Unblock Puzzle(ブロックの選択を外す)、Peg Solitaire(持ち上げたペグを置く)。3 本とも
+  `useGameKeys` をダイアログのフラグで外し(`enabled` に `!confirmRestart`)、そのうえで
+  ダイアログの capture に譲る: ダイアログを閉じたその Escape では選択は残り、閉じた後の次の
+  Escape からゲームのものに戻る(各 Root テスト。製品版のゲームに Escape を受けるものは無い)。
   閉じたらフォーカスは開いた操作(上部バーの ↻、設定の行)へ戻す。戻すのは
   フォーカスが失われるとき(body か、ダイアログと一緒に消えた要素)だけで、閉じた側が意図して置いた
-  先は動かさず、もうページに無い opener は追わない。リスナーは閉じた時点とアンマウントで外す
-  ([GAME_LIFECYCLE.md](GAME_LIFECYCLE.md))。確定・取消で各ゲームがすることは変えない
-  (2026-10-18。テストは `ui/components/ConfirmDialog.test.tsx` / `RestartDialog.test.tsx`)。
+  先は動かさず、もうページに無い opener は追わない。戻しはダイアログのアンマウント(passive
+  effect の cleanup)で走るので、確定の後にゲームが自分でフォーカスを置くなら **layout effect** で
+  先に置く——passive effect で後から置こうとすると、戻しが先に ↻ へ持っていき、ゲームの側は
+  「フォーカスがある」と見て何もしない(Peg Solitaire の新しい局 → 盤の輪の穴、Snake の新しい盤 →
+  十字の中央。どちらも Cancel / Escape の戻し先は共通の ↻ だけ)。リスナーは閉じた時点と
+  アンマウントで外す([GAME_LIFECYCLE.md](GAME_LIFECYCLE.md))。確定・取消で各ゲームがすることは
+  変えない(2026-10-18。テストは `ui/components/ConfirmDialog.test.tsx` / `RestartDialog.test.tsx`)。
 - **ヘッダの ↻ は結果カードと同じ 2 択。** プレイ中の ↻ は「同じ盤面で再挑戦」の確認
   (`ConfirmDialog`)だったので、盤面そのものを替えたい人は Home → モードのボタン → もう一度
   確認、と遠回りしていた(2026-10-02)。いまは `ui/components/RestartDialog.tsx` が 1 つの問い

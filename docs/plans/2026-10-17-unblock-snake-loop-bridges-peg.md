@@ -638,3 +638,50 @@ Water Sort より重い(Sudoku と比べると、Loop Puzzle は重く、Bridges
 - 5 本がそろった状態での全体のゲート(`pnpm lint` / `typecheck` / `test` / `build` /
   `build:web`・i18n gate・`size:check`・`check-principles.sh`)の最終の結果は、この節には
   書いていない(書いた時点で、その記録を確かめていない)。
+
+### main との合流(2026-10-18)
+
+PR を開いた後に main へ入った 3 本(#233 Reduced Motion の全体の規則が `::before` /
+`::after` にも届く、#235 プロバイダのアンマウントで退出の同期を走らせる、#236 確認ダイアログの
+Escape がキャンセルになり、閉じたらフォーカスを開いた場所へ戻す)を取り込んだ。合流そのものは
+衝突なし(`new-game.mjs`・`styles.css`・`ARCHITECTURE.md`・`GAME_LIFECYCLE.md`・
+`WEB_VERSION.md` は両側の変更が別の箇所)。そのうえで 5 本を新しい規則に合わせた。
+
+- **アンマウントで計上する**(#235。PR の CI が `unmountBookingWiring.test.ts` の
+  「expected 0 to be 1」で 5 本とも落ちていた): 5 本の `GameContext.tsx` に
+  `useOnUnmount(syncActiveGame);` を 1 つずつ(main の codemod
+  `scripts/codemods/2026-10-18-book-play-seconds-on-unmount.mjs` で入れ、テストの `afterEach` の
+  保存の着地も同じ codemod)。計上の経路を 2 本にしないため、先に自前で持っていた
+  アンマウント専用の計上を外した — Peg Solitaire の `useEffect(() => () => syncActiveGame(), …)`
+  (門が禁じる形)と Snake の `saveOnUnmount`(ref だけで書く別の保存と計上)。Snake の退出の
+  同期は `syncActiveGame`(走っているランを止めて `paused` で書く)なので、門の
+  「盤面が計上する」形ではなくこちらに従う。
+- **↻ でも 1 回だけ**: 「どの出口でも 1 回だけ計上する」を確かめる途中で、Bridges の ↻
+  (再挑戦 / 新しい盤面)が置き換える盤面の未計上の秒を落としていたのを見つけ、Loop Puzzle と
+  同じ `bookReplacedBoard` を足した(BRIDGES_RULES §11)。Unblock(`bookActivePlayTime`)・
+  Loop・Peg(`beginGame`)・Snake(↻ を開くときの Pause と `discardSuspended`)は元から計上していた。
+- **Escape**: 自分で Escape を受けるのは Bridges・Unblock Puzzle・Peg Solitaire の 3 本
+  (選択を外す・ペグを置く)。3 本とも `useGameKeys` をダイアログのフラグで外しており、
+  ダイアログの capture にも譲るので、問いを閉じたその Escape では選択は残る(各 Root テスト)。
+  ARCHITECTURE.md の「Escape を自分で受けるゲームは無い」を書き直した。
+- **フォーカスの持ち主を 1 つに**: ダイアログの共通の戻しは閉じる時の passive effect で走るので、
+  Peg Solitaire が ↻ の答えのあとに盤の輪の穴へ置くはずのフォーカスが、本物のクリックでは ↻ に
+  先に戻されていた(テストは `fireEvent.click` がフォーカスを動かさないので通っていた)。Peg と
+  Snake の「新しい盤でフォーカスを置く」effect を layout effect にして戻しより先に置き、Snake が
+  自前で持っていた「キャンセルで ↻ へ戻す」は共通の戻しと重なるので外した。
+- **Reduced Motion**: 5 本に animationend / transitionend を待つ表示は無い(結果カードの時機は
+  `useResultReveal`)。Loop Puzzle と Bridges の解けた一拍の `animation: none` は残した(共有の
+  規則は今は 0.01ms で終わらせるが、洗いが始まりもしない方が素直)。Loop の CSS と
+  LOOP_PUZZLE_RULES §13 の「共有の規則は疑似要素に届かない」は過去形に直した。
+
+テストは 5 本の Root テストに、main が正式収録のゲームに入れた形(背景で N 秒 → さらに遊ぶ →
+アンマウントで計上 → 再マウントして離れても増えない)と、↻ の後のアンマウントが後の秒だけを
+足すこと、↻ の問いの Escape(閉じる・↻ へフォーカス・ゲームの Escape が走らない)を足した。
+どれも修正を外すと落ちることを確かめた(アンマウント: expected 5 to be 8 など。Peg のフォーカス:
+↻ に残る)。
+
+合流後のゲート(このワークツリー、2026-10-18): `pnpm lint` ok / `pnpm typecheck` ok /
+`pnpm test` 632 ファイル(631 合格・1 スキップ)・12,949 件(12,948 合格・1 スキップ)/
+`build` ok / `build:web` ok / `size:check` ok(基準の更新は不要 — どのチャンクも ±0.3% 以内)/
+`check-dist-ads-separation.sh` ok(8 項目)/ `check-principles.sh` ok(22 項目)/
+`i18n:gate:check` ok(5 件)。

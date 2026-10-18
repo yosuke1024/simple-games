@@ -448,6 +448,66 @@ describe('the keyboard (§4)', () => {
     expect(screen.getByRole('alertdialog', { name: 'No jumps left' })).toBe(card);
   });
 
+  it('takes Escape as the ↻ question’s Cancel: focus back on the ↻, the peg still picked up', async () => {
+    const user = userEvent.setup();
+    taughtAlready();
+    suspend(ENGLISH_PROBLEM, SOLUTION.slice(0, 2));
+    await resume();
+    const peg = Number(board().querySelector<HTMLElement>('.pg-hole-peg')!.dataset.hole);
+    tap(peg);
+    expect(hole(peg)).toHaveAttribute('aria-pressed', 'true');
+
+    const restart = screen.getByRole('button', { name: 'Retry same board' });
+    await user.click(restart);
+    expect(screen.getByRole('alertdialog', { name: 'Start over?' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    // The dialog took that Escape (ui/useDialogDismiss.ts): it closed as
+    // Cancel does, nothing started over, and the game's own Escape — put the
+    // peg down — did not also run.
+    expect(resultCard()).toBeNull();
+    expect(restart).toHaveFocus();
+    expect(pegsOnBoard()).toBe(30);
+    expect(hole(peg)).toHaveAttribute('aria-pressed', 'true');
+
+    // With the dialog gone, Escape is the game's again.
+    await user.keyboard('{Escape}');
+    expect(hole(peg)).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('puts the focus on the new board’s ringed hole after a ↻ answer, though the ↻ had it (§4)', async () => {
+    // A real click focuses the ↻, so the dialog has an opener to hand the
+    // focus back to. A new game is the one place this screen puts the focus
+    // itself — on the board — and the dialog leaves a focus put on purpose
+    // where it is; Cancel and Escape go back to the ↻.
+    const user = userEvent.setup();
+    taughtAlready();
+    suspend(APEX, TRIANGLE_APEX_PREFIX.slice(0, 2));
+    await resume();
+    const restart = screen.getByRole('button', { name: 'Retry same board' });
+
+    await user.click(restart);
+    expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'New board' }),
+    );
+    await settle();
+    const next = savedGame()!;
+    expect(document.activeElement).toBe(hole(next.target));
+
+    await user.click(restart);
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Retry same board' }),
+    );
+    expect(document.activeElement).toBe(hole(next.target));
+
+    await user.click(restart);
+    await user.keyboard('{Escape}');
+    expect(restart).toHaveFocus();
+    await user.click(restart);
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(restart).toHaveFocus();
+  });
+
   it('answers nothing while the ↻ dialog is up', async () => {
     taughtAlready();
     suspend(ENGLISH_PROBLEM, SOLUTION.slice(0, 2));
@@ -1040,40 +1100,6 @@ describe('the saved game (§11)', () => {
     }
   });
 
-  it('books the clock when the game is unmounted mid-play — the web’s Back — and only once', async () => {
-    taughtAlready();
-    suspend(ENGLISH_PROBLEM, SOLUTION.slice(0, 2), 4);
-    put(PG_STORAGE_KEYS.stats, {
-      schemaVersion: 1,
-      english: { played: 1, best: null, perfect: 0 },
-      triangle: { played: 0, best: null, perfect: 0 },
-      totalPlaySeconds: 4,
-    });
-    vi.useFakeTimers();
-    try {
-      await resume();
-      act(() => vi.advanceTimersByTime(6_000));
-      // The shell unmounts the game without a word to it.
-      cleanup();
-      await settle();
-      expect(savedGame()).toMatchObject({ jumps: SOLUTION.slice(0, 2), elapsedSeconds: 10 });
-      expect(savedStats()!.totalPlaySeconds).toBe(10);
-
-      // A way out that synced already leaves the unmount nothing to book.
-      await resume();
-      act(() => vi.advanceTimersByTime(3_000));
-      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
-      await settle();
-      expect(savedStats()!.totalPlaySeconds).toBe(13);
-      cleanup();
-      await settle();
-      expect(savedGame()!.elapsedSeconds).toBe(13);
-      expect(savedStats()!.totalPlaySeconds).toBe(13);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
   it("keeps a suspended game's clock when backgrounded from the game's home (#109)", async () => {
     taughtAlready();
     suspend(ENGLISH_PROBLEM, SOLUTION.slice(0, 2), 9);
@@ -1085,6 +1111,91 @@ describe('the saved game (§11)', () => {
     // Already booked when it was saved: not booked again.
     await settle();
     expect(savedStats()).toBeNull();
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. The provider runs the same leave
+  // sync on its own unmount (it used to have an unmount-only effect of its
+  // own; one path books now), so the seconds since the last sync reach the
+  // suspended game and the total play time — once (§10, §11).
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    taughtAlready();
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /English/ }));
+      tap(D2);
+      tap(D4);
+
+      // A background books the first five, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(savedStats()!.totalPlaySeconds).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(savedGame()).toMatchObject({ jumps: [[D2, D4]], elapsedSeconds: 8 });
+      expect(savedStats()!.totalPlaySeconds).toBe(8);
+
+      // Forward again, and away again at once: the game still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(savedGame()!.elapsedSeconds).toBe(8);
+      expect(savedStats()!.totalPlaySeconds).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('leaves the unmount nothing to book after a way out that synced, or a ↻ that booked', async () => {
+    taughtAlready();
+    suspend(ENGLISH_PROBLEM, SOLUTION.slice(0, 2), 4);
+    put(PG_STORAGE_KEYS.stats, {
+      schemaVersion: 1,
+      english: { played: 1, best: null, perfect: 0 },
+      triangle: { played: 0, best: null, perfect: 0 },
+      totalPlaySeconds: 4,
+    });
+    vi.useFakeTimers();
+    try {
+      // Home syncs on the way out; the unmount after it adds nothing.
+      await resume();
+      act(() => vi.advanceTimersByTime(3_000));
+      fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+      await settle();
+      expect(savedStats()!.totalPlaySeconds).toBe(7);
+      cleanup();
+      await settle();
+      expect(savedGame()!.elapsedSeconds).toBe(7);
+      expect(savedStats()!.totalPlaySeconds).toBe(7);
+
+      // The ↻ books the game it leaves behind; the unmount, only what came after.
+      await resume();
+      act(() => vi.advanceTimersByTime(2_000));
+      fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
+      fireEvent.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Retry same board' }),
+      );
+      await settle();
+      expect(savedStats()!.totalPlaySeconds).toBe(9);
+      act(() => vi.advanceTimersByTime(1_000));
+      cleanup();
+      await settle();
+      expect(savedGame()).toMatchObject({ jumps: [], elapsedSeconds: 1 });
+      expect(savedStats()!.totalPlaySeconds).toBe(10);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

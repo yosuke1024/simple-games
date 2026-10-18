@@ -153,7 +153,8 @@ describe('the rules the board rests on (loop-puzzle.css)', () => {
   });
 
   it('drops the solved wash under Reduced Motion, the OS’s and the app’s (§13)', () => {
-    // The shared reduced-motion rules select `*`, which no ::after matches.
+    // Not only shortened by the shared rules (src/ui/styles.css, which reach
+    // ::before / ::after since 2026-10-18): this game's own rule stops it.
     expect(block('@media (prefers-reduced-motion: reduce)')).toMatch(
       /\.lp-board-solved::after\s*\{\s*animation:\s*none;/,
     );

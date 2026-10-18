@@ -774,6 +774,66 @@ describe('leaving without a button (§11)', () => {
   });
 });
 
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. The provider runs the same leave
+  // sync on its own unmount (Snake had an unmount-only save of its own; one
+  // path books now), so the seconds run since the last sync reach the slot and
+  // the statistics both — once (§10, §11).
+  it('books the seconds run since the last sync, once, and not again on remount', async () => {
+    taughtAlready();
+    await launch();
+    fireEvent.click(screen.getByRole('button', { name: 'New Game' }));
+    fireEvent.click(pad('Start'));
+
+    // A second moving right (the wall is nine cells away); a background books it.
+    advance(1_000);
+    setVisibility('hidden');
+    await settle();
+    expect(storedStats()!.normal.totalPlaySeconds).toBe(1);
+
+    // Down for another second (seven cells to the wall), then Back: the Root
+    // is simply unmounted.
+    fireEvent.keyDown(window, { key: 'ArrowDown' });
+    fireEvent.click(pad('Resume'));
+    advance(1_000);
+    cleanup();
+    await settle();
+    expect(storedRun()).toMatchObject({ elapsedSeconds: 2 });
+    expect(storedStats()!.normal.totalPlaySeconds).toBe(2);
+
+    // Forward again, and away again at once: the run still says two, and
+    // neither second is booked again.
+    await launch();
+    cleanup();
+    await settle();
+    expect(storedRun()!.elapsedSeconds).toBe(2);
+    expect(storedStats()!.normal.totalPlaySeconds).toBe(2);
+  });
+
+  it('after a ↻ has booked the run it threw away, the unmount books only the next run', async () => {
+    taughtAlready();
+    await launch();
+    fireEvent.click(screen.getByRole('button', { name: 'New Game' }));
+    fireEvent.click(pad('Start'));
+    advance(1_000);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
+    fireEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Retry same board' }),
+    );
+    await settle();
+    expect(storedStats()!.normal.totalPlaySeconds).toBe(1);
+
+    fireEvent.click(pad('Start'));
+    advance(1_000);
+    cleanup();
+    await settle();
+    expect(storedRun()!.elapsedSeconds).toBe(1);
+    expect(storedStats()!.normal.totalPlaySeconds).toBe(2);
+  });
+});
+
 describe('Restart (§6)', () => {
   it('pauses the run while the question is open, and Cancel leaves it paused', async () => {
     taughtAlready();
@@ -783,7 +843,11 @@ describe('Restart (§6)', () => {
     expect(screen.getByRole('button', { name: 'Retry same board' })).toBeDisabled();
     fireEvent.click(pad('Start'));
     advance(NORMAL * 2);
-    fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
+    // A click focuses the ↻ it presses, as a browser's does (fireEvent alone
+    // moves no focus): that is the opener the dialog hands the focus back to.
+    const restart = screen.getByRole('button', { name: 'Retry same board' });
+    restart.focus();
+    fireEvent.click(restart);
     const dialog = screen.getByRole('alertdialog', { name: 'Start over?' });
     expect(boardState()).toMatch(/paused$/);
     expect(board().closest('[inert]')).not.toBeNull();
@@ -799,10 +863,32 @@ describe('Restart (§6)', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     expect(board().closest('[inert]')).toBeNull();
     expect(boardState()).toMatch(/paused$/);
-    // Focus goes back to the ↻ that asked, not to <body>.
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Retry same board' }));
+    // Focus goes back to the ↻ that asked, not to <body> — the shared
+    // dialog's return (ui/useDialogDismiss.ts), the one owner of it.
+    expect(document.activeElement).toBe(restart);
     advance(NORMAL * 4);
     expect(head()).toEqual(stopped);
+  });
+
+  it('takes Escape as Cancel: the question closes, the run stays paused, the focus is on the ↻', async () => {
+    taughtAlready();
+    await launch();
+    fireEvent.click(screen.getByRole('button', { name: 'New Game' }));
+    fireEvent.click(pad('Start'));
+    advance(NORMAL * 2);
+    const restart = screen.getByRole('button', { name: 'Retry same board' });
+    restart.focus();
+    fireEvent.click(restart);
+    expect(screen.getByRole('alertdialog', { name: 'Start over?' })).toBeInTheDocument();
+    const stopped = head();
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(boardState()).toMatch(/paused$/);
+    expect(document.activeElement).toBe(restart);
+    advance(NORMAL * 4);
+    expect(head()).toEqual(stopped);
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('Retry same board: the same opening, ready, and the thrown-away run does not come back', async () => {

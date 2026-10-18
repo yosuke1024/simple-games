@@ -39,6 +39,7 @@ import {
 import { recordGameCompleted } from '../../../services/review';
 import { sounds } from '../../../services/sound';
 import { saveRecord } from '../../../storage/repo';
+import { useOnUnmount } from '../../../ui/useOnUnmount';
 import {
   createSession,
   isFinished,
@@ -507,19 +508,16 @@ export function SnakeProvider({
     };
   }, [syncActiveGame]);
 
-  // Unmount (§11): the shell can take the game down without passing through
-  // a button here — the browser's own Back on the web build is one way. The
-  // run is written as the paused run it becomes, from refs alone: nothing
-  // here may set state on a tree that is going away.
-  const saveOnUnmount = useCallback(() => {
-    const current = sessionRef.current;
-    if (!current || !isSuspendable(current)) return;
-    const run = { ...pause(current), elapsedSeconds: Math.floor(readClock()) };
-    void saveGame(run);
-    const booked = bookTime(run, statsRef.current);
-    if (booked !== statsRef.current) void saveRecord(statsSchema, booked);
-  }, [bookTime, readClock]);
-  useEffect(() => saveOnUnmount, [saveOnUnmount]);
+  // Unmounting is a way out too (docs/GAME_LIFECYCLE.md「アンマウントで計上する」):
+  // the browser's Back and a home-screen shortcut to another game take this
+  // provider off screen without goHome, exitToCollection or a
+  // visibilitychange, so the seconds since the last sync would be lost. The
+  // same sync runs then, and it books only what `bookedRef` has not — after
+  // either exit, or a background, it adds nothing. Like every sync it stops a
+  // moving run first, so the slot holds the paused run it becomes (§11). It
+  // replaced an unmount-only save of Snake's own (2026-10-18): a second path
+  // that books is how a second count gets in.
+  useOnUnmount(syncActiveGame);
 
   // Android hardware back: leave sub-screens; from the game's home, hand
   // control back to the collection. Registered once, on native only, and the

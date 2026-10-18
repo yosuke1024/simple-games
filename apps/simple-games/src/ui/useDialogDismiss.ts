@@ -14,12 +14,15 @@
      or anything in it sees it, and goes no further: a `useGameKeys` listener
      left attached behind a `blocked` guard (2048's shape) or an arcade
      board's raw keydown listener never also answers the key that closed the
-     dialog — nor would a game's own Escape (no shipped game binds one yet;
-     clearing a selection would be the likely first).
+     dialog — nor does a game's own Escape (the web-beta Bridges, Unblock
+     Puzzle and Peg Solitaire clear a selection with one; no released game
+     binds one).
    - The focus goes back only when it would otherwise be lost (on the body, or
      on a node the dialog took away with it). If whatever ran on close put it
      somewhere on purpose, it stays there; an opener that has left the page (a
-     confirm that navigated away, a sheet that re-rendered) is skipped.
+     confirm that navigated away, a sheet that re-rendered) is skipped. This
+     runs in the card's passive cleanup, so "on purpose" means before it: an
+     autoFocus, or a layout effect (Peg Solitaire's and Snake's new board).
    - The listener is released when the dialog closes or unmounts
      (docs/GAME_LIFECYCLE.md). */
 

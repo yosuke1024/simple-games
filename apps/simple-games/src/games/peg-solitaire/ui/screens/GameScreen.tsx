@@ -25,7 +25,7 @@
  * offers exactly what the result card offers — the same board again, and on
  * Triangle a new one (src/test/restartDialogWiring.test.ts).
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { haptics } from '@/services/haptics';
 import { sounds } from '@/services/sound';
 import { useSettings } from '@/state/SettingsContext';
@@ -62,12 +62,17 @@ export function PegSolitaireGameScreen() {
   const refocus = useRef(true);
 
   // After the render that took the focused control away. Runs after every
-  // render, but renders come only from the player's own taps and keys.
-  useEffect(() => {
+  // render, but renders come only from the player's own taps and keys. A
+  // layout effect, so that after a ↻ answer the board has the focus before
+  // the dialog's own focus return runs (ui/useDialogDismiss.ts, as the dialog
+  // unmounts): that return sees a focus put somewhere on purpose and leaves
+  // it, rather than taking it back to the ↻ (2026-10-18). Cancel and Escape
+  // set nothing here, so they are the dialog's alone — back to the ↻.
+  useLayoutEffect(() => {
     if (!refocus.current) return;
     refocus.current = false;
     const active = document.activeElement;
-    if (active !== null && active !== document.body) return;
+    if (active !== null && active !== document.body && active.isConnected) return;
     boardElement.current
       ?.querySelector<HTMLButtonElement>('button[tabindex="0"]')
       ?.focus({ preventScroll: true });

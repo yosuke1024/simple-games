@@ -250,8 +250,13 @@ async function openDaily(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
 }
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
   vi.restoreAllMocks();
 });
@@ -760,6 +765,32 @@ describe('retry, new board and the home (§8, §10)', () => {
     expect(JSON.parse(deviceStore.get(BG_STORAGE_KEYS.dailyGame)!).hintCount).toBe(0);
   });
 
+  it('takes Escape as the ↻ question’s Cancel: focus back on the ↻, the selection left alone', async () => {
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    const truth = createDailySession(today());
+    await openDaily(user);
+    const { a, b } = answerPairOpenAfterOne(truth);
+    await tapPair(user, a, b);
+    expect(island(a)).toHaveAccessibleName(/Selected$/);
+
+    const restart = screen.getByRole('button', { name: 'Retry same board' });
+    await user.click(restart);
+    expect(screen.getByRole('alertdialog', { name: 'Start over?' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    // The dialog took that Escape (ui/useDialogDismiss.ts): it closed as
+    // Cancel does, nothing started over, and the game's own Escape — clear
+    // the selection — did not also run.
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(restart).toHaveFocus();
+    expect(island(b)).toHaveAccessibleName(/1 of \d bridges$/);
+    expect(island(a)).toHaveAccessibleName(/Selected$/);
+
+    // With the dialog gone, Escape is the game's again.
+    await user.keyboard('{Escape}');
+    expect(island(a)).not.toHaveAccessibleName(/Selected$/);
+  });
+
   it('counts a new board and a retry as plays, and a resume as none (§11)', async () => {
     const user = userEvent.setup();
     renderGame(tutorialDone);
@@ -933,6 +964,97 @@ describe('backgrounding (§10)', () => {
       // Hidden minutes are not play; coming back moved nothing.
       expect(storedPlaySeconds()).toBe(2);
       expect(islands().map((button) => button.getAttribute('aria-label'))).toEqual(labels);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+/** The play clock the suspended difficulty game carries on disk. */
+const storedBoardSeconds = () =>
+  (JSON.parse(deviceStore.get(BG_STORAGE_KEYS.game) ?? 'null') as { elapsedSeconds: number } | null)
+    ?.elapsedSeconds ?? null;
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. The provider runs its leave sync
+  // on its own unmount, so the seconds since the last sync reach the board's
+  // clock and the statistics both — once.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(BG_STORAGE_KEYS.flags, tutorialDone[BG_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /^Easy/ }));
+
+      // A background books the first five, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedBoardSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the board still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedBoardSeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // The ↻ hands the clock to a new board and starts it from zero, so the
+  // board it replaces books its unbooked seconds first — and the unmount
+  // that follows books only what came after (main との合流, 2026-10-18).
+  it('books the board a ↻ replaces once, and the unmount after it only what came later', async () => {
+    deviceStore.set(BG_STORAGE_KEYS.flags, tutorialDone[BG_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /^Easy/ }));
+
+      act(() => vi.advanceTimersByTime(4_000));
+      fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
+      fireEvent.click(
+        within(screen.getByRole('alertdialog', { name: 'Start over?' })).getByRole('button', {
+          name: 'Retry same board',
+        }),
+      );
+      await settle();
+      expect(storedPlaySeconds()).toBe(4);
+      expect(storedBoardSeconds()).toBe(0);
+
+      act(() => vi.advanceTimersByTime(2_000));
+      fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
+      fireEvent.click(
+        within(screen.getByRole('alertdialog', { name: 'Start over?' })).getByRole('button', {
+          name: 'New board',
+        }),
+      );
+      await settle();
+      expect(storedPlaySeconds()).toBe(6);
+
+      act(() => vi.advanceTimersByTime(1_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(7);
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(7);
+      expect(storedBoardSeconds()).toBe(1);
     } finally {
       vi.useRealTimers();
     }

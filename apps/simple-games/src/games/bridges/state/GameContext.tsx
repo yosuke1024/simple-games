@@ -30,6 +30,7 @@ import {
 } from 'react';
 import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
+import { useOnUnmount } from '../../../ui/useOnUnmount';
 import {
   createDailySession,
   createDifficultySession,
@@ -295,6 +296,34 @@ export function BridgesProvider({
     setScreen('game');
   }, []);
 
+  /**
+   * Books a session's play seconds not yet in the statistics (§11) — once:
+   * the booked mark moves with them, so a later sync adds only what came after.
+   */
+  const bookPlayTime = useCallback(
+    (played: BridgesSession) => {
+      const unbooked = Math.max(0, played.elapsedSeconds - bookedRef.current);
+      if (unbooked === 0) return;
+      bookedRef.current = played.elapsedSeconds;
+      persistStats(applyPlayTime(statsRef.current, bucketOf(played), unbooked));
+    },
+    [persistStats],
+  );
+
+  /**
+   * The board on screen is about to be replaced mid-game (↻ Retry or New
+   * board): its seconds since the last sync go into the statistics first.
+   * `activate` hands the clock to the new board and starts it from zero, so
+   * without this those seconds would simply be lost — Loop Puzzle's
+   * `bookReplacedBoard`, found by its 2026-10-17 review, and the same here
+   * (main との合流, 2026-10-18). A solved board was booked as it finished, so
+   * this adds nothing then.
+   */
+  const bookReplacedBoard = useCallback(() => {
+    const current = sessionsRef.current[activeModeRef.current];
+    if (current && current.status === 'playing') bookPlayTime(withElapsed(current));
+  }, [bookPlayTime, withElapsed]);
+
   const beginSession = useCallback(
     (next: BridgesSession) => {
       persistStats(applyGameStart(statsRef.current, bucketOf(next)));
@@ -356,9 +385,10 @@ export function BridgesProvider({
   const startNewBoard = useCallback(
     (difficulty: Difficulty) => {
       rememberDifficulty(difficulty);
+      bookReplacedBoard();
       beginSession(createDifficultySession(difficulty));
     },
-    [beginSession, rememberDifficulty],
+    [beginSession, bookReplacedBoard, rememberDifficulty],
   );
 
   const startDaily = useCallback(() => {
@@ -377,8 +407,10 @@ export function BridgesProvider({
    */
   const restartCurrent = useCallback(() => {
     const current = sessionsRef.current[activeModeRef.current];
-    if (current) beginSession(restartSession(current));
-  }, [beginSession]);
+    if (!current) return;
+    bookReplacedBoard();
+    beginSession(restartSession(current));
+  }, [beginSession, bookReplacedBoard]);
 
   /**
    * Applies a pure session transition to the game on screen. Hands back the
@@ -445,13 +477,9 @@ export function BridgesProvider({
       const synced = withElapsed(current);
       putSession(mode, synced);
       void saveGame(synced);
-      const unbooked = Math.max(0, synced.elapsedSeconds - bookedRef.current);
-      if (unbooked > 0) {
-        bookedRef.current = synced.elapsedSeconds;
-        persistStats(applyPlayTime(statsRef.current, bucketOf(synced), unbooked));
-      }
+      bookPlayTime(synced);
     }
-  }, [persistStats, putSession, withElapsed]);
+  }, [bookPlayTime, putSession, withElapsed]);
 
   const goHome = useCallback(() => {
     syncActiveGame();
@@ -502,6 +530,14 @@ export function BridgesProvider({
       void pauseHandle?.then((handle) => handle.remove()).catch(() => undefined);
     };
   }, [syncActiveGame]);
+
+  // Unmounting is a way out too (docs/GAME_LIFECYCLE.md「アンマウントで計上する」):
+  // the browser's Back and a home-screen shortcut to another game take this
+  // provider off screen without goHome, exitToCollection or a
+  // visibilitychange, so the seconds since the last sync would be lost. The
+  // same sync runs then, and it books only what `bookedRef` has not — after
+  // either exit, or a background, it adds nothing.
+  useOnUnmount(syncActiveGame);
 
   // Android hardware back: leave sub-screens; from the game's home, hand
   // control back to the collection. Registered once, on native only, and the

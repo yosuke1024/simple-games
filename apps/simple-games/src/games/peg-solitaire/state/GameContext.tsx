@@ -33,6 +33,7 @@ import {
 } from 'react';
 import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
+import { useOnUnmount } from '../../../ui/useOnUnmount';
 import {
   applyMove,
   createSession,
@@ -402,14 +403,13 @@ export function PegSolitaireProvider({
     };
   }, [syncActiveGame]);
 
-  // Leaving through a door this provider never hears about — on the web the
-  // browser's Back takes the shell straight back to the collection and
-  // unmounts the game — still books the seconds since the last save, into
-  // the suspended game and the statistics' total play time (§10, §11). The
-  // board itself is already saved after every jump; this adds the clock. A
-  // way out that already synced (Home, All games, hidden) has nothing left
-  // to book, so the second sync saves the same game and books nothing.
-  useEffect(() => () => syncActiveGame(), [syncActiveGame]);
+  // Unmounting is a way out too (docs/GAME_LIFECYCLE.md「アンマウントで計上する」):
+  // the browser's Back and a home-screen shortcut to another game take this
+  // provider off screen without goHome, exitToCollection or a
+  // visibilitychange, so the seconds since the last sync would be lost. The
+  // same sync runs then, and it books only what `bookedRef` has not — after
+  // either exit, or a background, it adds nothing.
+  useOnUnmount(syncActiveGame);
 
   // Android hardware back: leave sub-screens; from the game's home, hand
   // control back to the collection. Registered once, on native only, and the

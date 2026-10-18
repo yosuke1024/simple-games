@@ -98,8 +98,13 @@ beforeEach(() => {
   );
 });
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
   appMock.listeners.clear();
   vi.clearAllMocks();

@@ -168,8 +168,13 @@ function storedPlaySeconds(): number {
   return stats.easy.totalPlaySeconds + stats.medium.totalPlaySeconds + stats.hard.totalPlaySeconds;
 }
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
   vi.restoreAllMocks();
 });
@@ -497,6 +502,24 @@ describe('retry and the home (§9, §12)', () => {
     expect(numbers()).toEqual(fresh);
   });
 
+  it('takes Escape as the ↻ question’s Cancel, and hands the focus back to the ↻', async () => {
+    // Loop Puzzle binds no Escape of its own: the dialog's is the only one.
+    const user = userEvent.setup();
+    renderGame(tutorialDone);
+    await openDaily(user);
+    const edge = loopEdges(todaysDaily())[0]!;
+    tap(edge);
+    const drawn = edgeButton(edge).getAttribute('aria-label');
+
+    const restart = screen.getByRole('button', { name: 'Retry same board' });
+    await user.click(restart);
+    expect(screen.getByRole('alertdialog', { name: 'Start over?' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(restart).toHaveFocus();
+    expect(edgeButton(edge)).toHaveAccessibleName(drawn!);
+  });
+
   it('lets a key held from the last tap start nothing on the result card (§4)', async () => {
     const user = userEvent.setup();
     renderGame(tutorialDone);
@@ -751,6 +774,77 @@ describe('backgrounding (§12)', () => {
       }
     });
   }
+});
+
+/** The play clock the suspended difficulty game carries on disk. */
+const storedBoardSeconds = () =>
+  (JSON.parse(deviceStore.get(LP_STORAGE_KEYS.game) ?? 'null') as PersistedGame | null)
+    ?.elapsedSeconds ?? null;
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. The provider runs its leave sync
+  // on its own unmount, so the seconds since the last sync reach the board's
+  // clock and the statistics both — once.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(LP_STORAGE_KEYS.flags, tutorialDone[LP_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /^Easy/ }));
+
+      // A background books the first five, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedBoardSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the board still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedBoardSeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('after a ↻ has booked the board it replaced, the unmount books only what came later', async () => {
+    deviceStore.set(LP_STORAGE_KEYS.flags, tutorialDone[LP_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /^Easy/ }));
+      act(() => vi.advanceTimersByTime(4_000));
+      fireEvent.click(screen.getByRole('button', { name: 'Retry same board' }));
+      fireEvent.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Retry same board' }),
+      );
+      await settle();
+      expect(storedPlaySeconds()).toBe(4);
+
+      act(() => vi.advanceTimersByTime(2_000));
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(6);
+      expect(storedBoardSeconds()).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 /**
