@@ -2424,15 +2424,23 @@ button:disabled {
 
 /* ---------- reduced motion ---------- */
 
+/* `*` alone does not match pseudo-elements, and the boards' one-off washes
+   (the solved beat in Crown Grid / Number Path / Shape Regions / Box Regions,
+   Crown Grid's reach flash) live on ::before / ::after — so both rules name
+   them too, or those ran at full length under Reduced Motion. */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
 
-:root[data-reduced-motion='true'] * {
+:root[data-reduced-motion='true'] *,
+:root[data-reduced-motion='true'] *::before,
+:root[data-reduced-motion='true'] *::after {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;

@@ -143,3 +143,50 @@ describe('the reserved ad strips never yield their space (issue #120)', () => {
     expect(cells).toMatch(/touch-action:\s*none/);
   });
 });
+
+/**
+ * Reduced Motion is one pair of rules in styles.css — the OS preference and
+ * the app's own setting — and the games lean on it rather than branching in
+ * script (the rules docs for Crown Grid, Number Path and Shape Regions say so
+ * outright). A bare `*` never matches ::before / ::after, though, and the
+ * solved-board washes in Crown Grid / Number Path / Shape Regions / Box Regions
+ * and Crown Grid's reach flash all animate a pseudo-element: until the rules
+ * named them, those ran their full 700–900ms with Reduced Motion on. With
+ * `css: false` in the test setup, nothing rendered can notice; only this can.
+ */
+describe('Reduced Motion reaches pseudo-elements', () => {
+  /** The selector list and declarations of the rule whose selectors begin at `start`. */
+  function ruleFrom(start: number): { selectors: string[]; body: string } {
+    const open = css.indexOf('{', start);
+    const close = css.indexOf('}', open);
+    const selectors = css
+      .slice(start, open)
+      .split(',')
+      .map((selector) => selector.trim());
+    return { selectors, body: css.slice(open + 1, close) };
+  }
+
+  function expectStill(body: string): void {
+    expect(body).toMatch(/animation-duration:\s*0\.01ms !important/);
+    expect(body).toMatch(/animation-iteration-count:\s*1 !important/);
+    expect(body).toMatch(/transition-duration:\s*0\.01ms !important/);
+  }
+
+  it('covers ::before and ::after under the OS preference', () => {
+    const media = '@media (prefers-reduced-motion: reduce) {';
+    const at = css.indexOf(media);
+    expect(at, `${media} is missing from the stylesheet`).toBeGreaterThan(-1);
+    const rule = ruleFrom(at + media.length);
+    expect(rule.selectors).toEqual(['*', '*::before', '*::after']);
+    expectStill(rule.body);
+  });
+
+  it('covers ::before and ::after under the app setting', () => {
+    const root = ":root[data-reduced-motion='true']";
+    const at = css.indexOf(`\n${root} *`);
+    expect(at, `${root} is missing from the stylesheet`).toBeGreaterThan(-1);
+    const rule = ruleFrom(at);
+    expect(rule.selectors).toEqual([`${root} *`, `${root} *::before`, `${root} *::after`]);
+    expectStill(rule.body);
+  });
+});
