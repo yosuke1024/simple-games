@@ -334,9 +334,10 @@ describe('what the marks break (§5)', () => {
   it('says so when a dot has three lines, and only says so', async () => {
     const user = userEvent.setup();
     renderGame(tutorialDone);
+    // Read the day's board before the game opens it, like the other daily tests.
+    const branch = branchBreakingNothingElse(todaysDaily());
     await openDaily(user);
     expect(feedback().textContent).toBe('');
-    const branch = branchBreakingNothingElse(todaysDaily());
     for (const edge of branch) tap(edge);
     expect(feedback()).toHaveTextContent('A dot has more than two lines.');
     // The dot is the one thing broken: no number beside the lines has too many.

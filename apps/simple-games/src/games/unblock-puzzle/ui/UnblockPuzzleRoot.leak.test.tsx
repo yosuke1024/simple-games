@@ -103,6 +103,7 @@ async function closeMidDrag() {
     const range = slideRange(start, i);
     return range.max > range.min;
   });
+  expect(index, 'no block on the daily can move').toBeGreaterThanOrEqual(0);
   const shape = start.blocks[index]!;
   const horizontal = shape.orientation === 'h';
   const pull = slideRange(start, index).max > start.positions[index]! ? 35 : -35;
