@@ -2426,24 +2426,39 @@ button:disabled {
 
 /* `*` alone does not match pseudo-elements, and the boards' one-off washes
    (the solved beat in Crown Grid / Number Path / Shape Regions / Box Regions,
-   Crown Grid's reach flash) live on ::before / ::after — so both rules name
-   them too, or those ran at full length under Reduced Motion. */
+   Crown Grid's reach flash) live on ::before / ::after — so each route has a
+   second rule for them, or those ran at full length under Reduced Motion.
+   That rule ends transitions rather than shortening them: no pseudo-element
+   declares one, and transition-property defaults to `all`, so a 0.01ms
+   duration would create transitions where there were none and every tile,
+   ring and outline drawn on a pseudo-element would paint a frame late (a
+   freshly drawn Box Regions region showed a frame of ink before its tint). */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition: none !important;
+  }
 }
 
-:root[data-reduced-motion='true'] *,
+:root[data-reduced-motion='true'] * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
 :root[data-reduced-motion='true'] *::before,
 :root[data-reduced-motion='true'] *::after {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
+  transition: none !important;
 }
 
 /* ---------- daily backlog ---------- */
