@@ -50,7 +50,8 @@ function CardsFigure({ items }: { items: readonly FigureItem[] }) {
 }
 
 export function GinRummyTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startNewGame, goHome } = useGinRummy();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startNewGame, goHome } =
+    useGinRummy();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('gin-rummy', locale);
   const [step, setStep] = useState(0);
@@ -95,9 +96,13 @@ export function GinRummyTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      // The first match is against the gentlest opponent; the others are one
-      // tap away on the home screen.
-      startNewGame('easy');
+      // Onto the match already waiting, if one is: the flag and the save are
+      // separate records, and a lost or unreadable flags record must not cost
+      // the player the match they left (§9). Otherwise the first match is
+      // against the gentlest opponent; the others are one tap away on the home
+      // screen.
+      if (canResume) resumeGame();
+      else startNewGame('easy');
     } else {
       goHome();
     }

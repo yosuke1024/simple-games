@@ -45,7 +45,8 @@ const LINE = [0, 0, 0, 3, 0, 0, 0, 1, 2, 0, 0, 1, 2, 2, 0, 1, 2, 1, 2, 0];
 const BLOCK = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 2, 2, 2, 1, 0];
 
 export function ConnectFourTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startNewGame, goHome } = useConnectFour();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startNewGame, goHome } =
+    useConnectFour();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('connect-four', locale);
   const [step, setStep] = useState(0);
@@ -73,9 +74,13 @@ export function ConnectFourTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      // The first match is against the gentlest opponent; the others are one
-      // tap away on the home screen (§4).
-      startNewGame('easy');
+      // Onto the match already waiting, if one is: the flag and the save are
+      // separate records, and a lost or unreadable flags record must not cost
+      // the player the match they left (§8). Otherwise the first match is
+      // against the gentlest opponent; the others are one tap away on the home
+      // screen (§4).
+      if (canResume) resumeGame();
+      else startNewGame('easy');
     } else {
       goHome();
     }

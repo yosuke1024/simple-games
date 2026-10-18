@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { createSession, PLAYER } from '../game';
+import { applyCpuMove, applyPlayerMove, createSession, PLAYER } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { C4_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { CPU_DELAY_MS } from '../state/GameContext';
@@ -141,6 +141,34 @@ describe('first run', () => {
     // Seven columns, each announced as one control, and an empty grid (§1).
     expect(within(board()).getAllByRole('button')).toHaveLength(7);
     expect(board().querySelectorAll('.c4-disc')).toHaveLength(0);
+  });
+});
+
+describe('Quick Rules shown again over a suspended match (§8)', () => {
+  it('resumes that match on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a match is suspended in the one slot: the
+    // two are separate records (§8), so Quick Rules show again over a match one
+    // drop each in — the player's in column 4, and the CPU's reply.
+    const opened = createSession('easy', PLAYER, 'connect-four-uitest');
+    const dropped = applyPlayerMove(opened, 3)!.session;
+    const replied = applyCpuMove(dropped)!.session;
+    renderGame({ [C4_STORAGE_KEYS.game]: JSON.stringify(toPersisted(replied, 1)) });
+
+    expect(await screen.findByText('Tap a column to drop')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    // The match that was left: both discs still down, and the player to move.
+    expect(board().querySelectorAll('.c4-disc')).toHaveLength(2);
+    expect(board().querySelectorAll('.c4-disc-cpu')).toHaveLength(1);
+    expect(screen.getByText('Your turn')).toBeInTheDocument();
+    // Resumed, not started: no new match over the slot, and the old one not
+    // finalized — nothing booked, no new match counted as played (§7).
+    expect(deviceStore.get(C4_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(C4_STORAGE_KEYS.stats)).toBeUndefined();
   });
 });
 

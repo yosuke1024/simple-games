@@ -48,7 +48,8 @@ const NO_MOVES = [1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0];
 const COUNTING = [1, 1, 2, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1];
 
 export function ReversiTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startNewGame, goHome } = useReversi();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startNewGame, goHome } =
+    useReversi();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('reversi', locale);
   const [step, setStep] = useState(0);
@@ -76,9 +77,13 @@ export function ReversiTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      // The first match is against the gentlest opponent; the others are one
-      // tap away on the home screen (§5).
-      startNewGame('easy');
+      // Onto the match already waiting, if one is: the flag and the save are
+      // separate records, and a lost or unreadable flags record must not cost
+      // the player the match they left (§9). Otherwise the first match is
+      // against the gentlest opponent; the others are one tap away on the home
+      // screen (§5).
+      if (canResume) resumeGame();
+      else startNewGame('easy');
     } else {
       goHome();
     }

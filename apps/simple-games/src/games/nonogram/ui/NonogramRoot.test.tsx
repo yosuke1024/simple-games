@@ -444,6 +444,45 @@ describe('first run', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended level (§10)', () => {
+  it('resumes that level on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // Level 3 is unlocked and level 1 is replayed, a cell painted and left.
+    // Then the flags record is lost — the flag and the save are separate
+    // records (§10) — so Quick Rules come back, and the first-run start would
+    // open level 3.
+    deviceStore.set(NG_STORAGE_KEYS.flags, tutorialDone[NG_STORAGE_KEYS.flags]!);
+    deviceStore.set(
+      NG_STORAGE_KEYS.progress,
+      JSON.stringify({ schemaVersion: 2, highestUnlocked: 3, bestSeconds: {}, dailySeconds: {} }),
+    );
+    launch();
+    await settle();
+    await user.click(await screen.findByRole('button', { name: /^Levels/ }));
+    await user.click(screen.getByRole('button', { name: 'Level 1' }));
+    await user.click(cellAt(1, 1));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    const suspended = deviceStore.get(NG_STORAGE_KEYS.game);
+    cleanup();
+    deviceStore.delete(NG_STORAGE_KEYS.flags);
+
+    launch();
+    expect(await screen.findByText('Numbers are runs')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(markAt(1, 1)).toMatch(/^Painted/);
+    // Resumed, not started: the slot still holds that board, and no second
+    // game was counted.
+    expect(deviceStore.get(NG_STORAGE_KEYS.game)).toBe(suspended);
+    expect((JSON.parse(deviceStore.get(NG_STORAGE_KEYS.stats)!) as Stats).size5.played).toBe(1);
+  });
+});
+
 describe('playing (§2, §3)', () => {
   it('paints on tap, and the same tap takes it back', async () => {
     const user = userEvent.setup();

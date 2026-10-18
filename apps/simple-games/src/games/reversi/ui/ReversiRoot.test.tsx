@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { BLACK, createSession } from '../game';
+import { applyCpuMove, applyPlayerMove, BLACK, createSession } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { RV_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { CPU_DELAY_MS } from '../state/GameContext';
@@ -154,6 +154,34 @@ describe('first run', () => {
     expect(board().querySelectorAll('.rv-disc')).toHaveLength(4);
     expect(screen.getByText(/You\s*2/)).toBeInTheDocument();
     expect(screen.getByText(/CPU\s*2/)).toBeInTheDocument();
+  });
+});
+
+describe('Quick Rules shown again over a suspended match (§9)', () => {
+  it('resumes that match on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a match is suspended in `rv.saveGame`:
+    // the two are separate records, and an unreadable flag fails closed to
+    // "not taught yet" (§9). The match has a move each in it, and the turn
+    // back with the player.
+    const opening = createSession('easy', BLACK, 'reversi-uitest');
+    const mine = applyPlayerMove(opening, 2 * 8 + 3)!.session; // row 3, column 4
+    const played = applyCpuMove(mine)!.session;
+    renderGame({ [RV_STORAGE_KEYS.game]: JSON.stringify(toPersisted(played, 1)) });
+
+    expect(await screen.findByText('Trap discs to turn them')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    // The position that was left: six discs, and the player to move.
+    expect(board().querySelectorAll('.rv-disc')).toHaveLength(6);
+    expect(screen.getByText('Your turn')).toBeInTheDocument();
+    // Resumed, not started: no new board over the slot, no play counted, and
+    // the suspended match not finalized (§8).
+    expect(deviceStore.get(RV_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(RV_STORAGE_KEYS.stats)).toBeUndefined();
   });
 });
 

@@ -309,6 +309,42 @@ describe('first run', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended board (§11)', () => {
+  it('resumes that board on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    const savedSeed = () =>
+      (JSON.parse(deviceStore.get(CG_STORAGE_KEYS.game)!) as { seed: string }).seed;
+    deviceStore.set(CG_STORAGE_KEYS.flags, tutorialDone[CG_STORAGE_KEYS.flags]!);
+    launch();
+    await settle();
+    await user.click(await screen.findByRole('button', { name: /^Medium/ }));
+    await user.click(cellAt(4, 4));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+    // The flags record is gone while that Medium board is suspended (and the
+    // remembered difficulty with it, so the first-run board would be Easy).
+    deviceStore.delete(CG_STORAGE_KEYS.flags);
+    deviceStore.delete(CG_STORAGE_KEYS.prefs);
+    const seed = savedSeed();
+
+    launch();
+    expect(await screen.findByText('One crown each')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(within(board()).getAllByRole('button')).toHaveLength(64);
+    expect(labelAt(4, 4)).toMatch(/^Crossed out/);
+    // Resumed, not started: the slot keeps its board, and no new play is counted.
+    expect(savedSeed()).toBe(seed);
+    const stats = JSON.parse(deviceStore.get(CG_STORAGE_KEYS.stats)!) as Stats;
+    expect([stats.easy.played, stats.medium.played]).toEqual([0, 1]);
+  });
+});
+
 describe('home (§9)', () => {
   it('offers three boards and the daily, no level list, and hands control back', async () => {
     const user = userEvent.setup();

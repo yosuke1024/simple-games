@@ -51,7 +51,8 @@ function CardsFigure({ items }: { items: readonly FigureItem[] }) {
 }
 
 export function HeartsTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startNewGame, goHome } = useHearts();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startNewGame, goHome } =
+    useHearts();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('hearts', locale);
   const [step, setStep] = useState(0);
@@ -98,9 +99,13 @@ export function HeartsTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      // The first match is against the gentlest opponents; the others are one
-      // tap away on the home screen.
-      startNewGame('easy');
+      // Onto the match already waiting, if one is: the flag and the save are
+      // separate records, and a lost or unreadable flags record must not cost
+      // the player the match they left (§9). Otherwise the first match is
+      // against the gentlest opponents; the others are one tap away on the home
+      // screen.
+      if (canResume) resumeGame();
+      else startNewGame('easy');
     } else {
       goHome();
     }

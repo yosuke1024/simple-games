@@ -7,8 +7,9 @@
  * Two things here are the shell's contract rather than this game's taste
  * (src/test/tutorialBackWiring.test.tsx, issue #142): the heading is the
  * shared `howToPlay` string, and the close button exists only once the
- * tutorial has been completed — the first pass ends by starting a game, and
- * hardware Back marks it seen on the way out (state/GameContext.tsx).
+ * tutorial has been completed — the first pass ends in play (on the board
+ * already waiting, if there is one), and hardware Back marks it seen on the way
+ * out (state/GameContext.tsx).
  */
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
@@ -82,7 +83,8 @@ function MiniBoard({
 }
 
 export function BoxRegionsTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startDifficulty, goHome } = useBoxRegions();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startDifficulty, goHome } =
+    useBoxRegions();
   const { t } = useSettings();
   const [step, setStep] = useState(0);
 
@@ -140,7 +142,11 @@ export function BoxRegionsTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startDifficulty('easy');
+      // Onto the board already waiting, if one is, whatever its difficulty: the
+      // flag and the save are separate records, and a lost or unreadable flags
+      // record must not cost the player the board they left (§11).
+      if (canResume('difficulty')) resumeGame('difficulty');
+      else startDifficulty('easy');
     } else {
       goHome();
     }

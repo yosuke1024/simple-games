@@ -152,6 +152,42 @@ describe('first run (§12)', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended board (§11)', () => {
+  it('resumes that board on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    deviceStore.set(S6_STORAGE_KEYS.flags, TUTORIAL_DONE);
+    launch();
+    await settle();
+    fireEvent.click(screen.getByRole('button', { name: /^Medium/ }));
+    await settle();
+    const { index, answer } = firstEmpty();
+    fireEvent.click(cellAt(index));
+    fireEvent.click(padKey(answer));
+    fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+    const { givens } = savedBoard();
+    // The flags record is gone while a Medium board is suspended — and the
+    // remembered difficulty with it, so the first-run board would be Easy.
+    deviceStore.delete(S6_STORAGE_KEYS.flags);
+    deviceStore.delete(S6_STORAGE_KEYS.prefs);
+
+    launch();
+    expect(await screen.findByText('1-6, once each')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(cellAt(index)).toHaveAccessibleName(new RegExp(`^${answer}, row`));
+    // Resumed, not started: the same board in the slot, and no second play counted.
+    expect(savedBoard().givens).toBe(givens);
+    const stats = JSON.parse(deviceStore.get(S6_STORAGE_KEYS.stats)!) as Stats;
+    expect(stats).toMatchObject({ easy: { played: 0 }, medium: { played: 1 } });
+  });
+});
+
 describe('home (§9)', () => {
   it('offers three boards and the daily, no level list, and hands control back', async () => {
     const user = userEvent.setup();

@@ -349,6 +349,47 @@ describe('first run', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended level (§10)', () => {
+  it('resumes that level on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // Level 3 is unlocked and level 1 is replayed, a pair taken and left. Then
+    // the flags record is lost — `mj.flags` is a key apart from `mj.saveGame`
+    // (§10) — so Quick Rules come back, and the first-run start would open
+    // level 3.
+    deviceStore.set(MJ_STORAGE_KEYS.flags, tutorialDone[MJ_STORAGE_KEYS.flags]!);
+    deviceStore.set(
+      MJ_STORAGE_KEYS.progress,
+      JSON.stringify({ schemaVersion: 1, highestUnlocked: 3, bestSeconds: {}, dailySeconds: {} }),
+    );
+    launch();
+    await settle();
+    await user.click(await screen.findByRole('button', { name: /^Levels/ }));
+    await user.click(screen.getByRole('button', { name: 'Level 1' }));
+    const pair = within(board()).getAllByRole('button', { name: 'Bamboo 2, can be taken' });
+    await user.click(pair[0]!);
+    await user.click(pair[1]!);
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    const suspended = deviceStore.get(MJ_STORAGE_KEYS.game);
+    cleanup();
+    deviceStore.delete(MJ_STORAGE_KEYS.flags);
+
+    launch();
+    expect(await screen.findByText('Take matching pairs')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(screen.getByText('22 tiles left')).toBeInTheDocument();
+    // Resumed, not started: the slot still holds that board, and no second
+    // game was counted.
+    expect(deviceStore.get(MJ_STORAGE_KEYS.game)).toBe(suspended);
+    expect((JSON.parse(deviceStore.get(MJ_STORAGE_KEYS.stats)!) as Stats).played).toBe(1);
+  });
+});
+
 describe('taking pairs (§2, §3)', () => {
   it('removes a matching free pair on two taps', async () => {
     const user = userEvent.setup();

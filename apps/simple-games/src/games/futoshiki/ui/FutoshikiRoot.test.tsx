@@ -425,6 +425,49 @@ describe('first run', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended level (§11)', () => {
+  it('resumes that level on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // Level 3 is unlocked and level 1 is replayed, a digit in and left. Then
+    // the flags record is lost — a key of its own, apart from the save (§11) —
+    // so Quick Rules come back, and the first-run start would open level 3.
+    deviceStore.set(FT_STORAGE_KEYS.flags, tutorialDone[FT_STORAGE_KEYS.flags]!);
+    deviceStore.set(
+      FT_STORAGE_KEYS.progress,
+      JSON.stringify({ schemaVersion: 1, highestUnlocked: 3, bestSeconds: {}, dailySeconds: {} }),
+    );
+    launch();
+    await settle();
+    await user.click(await screen.findByRole('button', { name: /^Levels/ }));
+    await user.click(screen.getByRole('button', { name: 'Level 1' }));
+    const index = openCells[0]!;
+    const { row, col } = positionOf(index);
+    await user.click(cellAt(row, col));
+    await user.click(padKey(truth.solution[index]!));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    const suspended = deviceStore.get(FT_STORAGE_KEYS.game);
+    cleanup();
+    deviceStore.delete(FT_STORAGE_KEYS.flags);
+
+    launch();
+    expect(await screen.findByText('Each digit once')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(
+      new RegExp(`^${truth.solution[index]!},`),
+    );
+    // Resumed, not started: the slot still holds that board, and no second
+    // game was counted.
+    expect(deviceStore.get(FT_STORAGE_KEYS.game)).toBe(suspended);
+    expect((JSON.parse(deviceStore.get(FT_STORAGE_KEYS.stats)!) as Stats).size4.played).toBe(1);
+  });
+});
+
 describe('the signs are on the board, in words (§13)', () => {
   it('draws every sign as text, not as decoration', async () => {
     const user = userEvent.setup();

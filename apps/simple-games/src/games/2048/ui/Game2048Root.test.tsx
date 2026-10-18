@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { createSession, type Board } from '../game';
+import { applyMove, createSession, type Board } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { TM_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { Game2048Root } from './Game2048Root';
@@ -137,6 +137,35 @@ describe('first run', () => {
     expect(within(gameBoard()).getAllByRole('img')).toHaveLength(16);
     expect(tiles()).toHaveLength(2);
     expect(screen.getByText(/Score\s*0/)).toBeInTheDocument();
+  });
+});
+
+describe('Quick Rules shown again over a suspended game (§10)', () => {
+  it('resumes that game on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a game is suspended in `tm.saveGame`: the
+    // two are separate records (§10), so Quick Rules show again over a board
+    // already slid once — its pair merged into a 4 that scored.
+    const pinned = { ...createSession('2048-uitest'), board: PAIR_ON_TOP };
+    const played = applyMove(pinned, 'left')!.session;
+    renderGame({ [TM_STORAGE_KEYS.game]: JSON.stringify(toPersisted(played, 1)) });
+
+    expect(await screen.findByText('Swipe to slide')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    // The board that was left, tile for tile, with the score it had.
+    const left = played.board.flatMap((value, cell) =>
+      value === 0 ? [] : [`${Math.floor(cell / 4)},${cell % 4}=${value}`],
+    );
+    expect(tileLayout()).toEqual(left.sort());
+    expect(topScore()).toMatch(/Score\s*4/);
+    // Resumed, not started: no new board over the slot, and no run booked as
+    // ended nor a new one counted as played (§9).
+    expect(deviceStore.get(TM_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(TM_STORAGE_KEYS.stats)).toBeUndefined();
   });
 });
 

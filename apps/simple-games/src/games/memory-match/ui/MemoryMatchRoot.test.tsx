@@ -364,6 +364,32 @@ describe('first run', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended board (§10)', () => {
+  it('resumes that board on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a Medium board is suspended, one pair
+    // found — and the first-run board is always Easy.
+    const fresh = createDifficultySession('medium', 'memory-medium-flags-lost');
+    const partner = fresh.deck.findIndex((symbol, i) => symbol === fresh.deck[0] && i !== 0);
+    const found = tapCard(tapCard(fresh, 0)!, partner)!;
+    renderGame({ [MM_STORAGE_KEYS.game]: JSON.stringify(toPersisted(found, 1)) });
+
+    expect(await screen.findByText('Flip two cards')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(within(board()).getAllByRole('img')).toHaveLength(2);
+    expect(within(board()).getAllByRole('button')).toHaveLength(18);
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    await settle();
+    // Resumed, not started: no play counted, and no new board written over the slot.
+    expect(deviceStore.get(MM_STORAGE_KEYS.stats)).toBeUndefined();
+    expect(deviceStore.get(MM_STORAGE_KEYS.game)).toBeUndefined();
+  });
+});
+
 describe('playing', () => {
   it('locks a found pair face up and counts the move (§3, §4)', async () => {
     const user = userEvent.setup();

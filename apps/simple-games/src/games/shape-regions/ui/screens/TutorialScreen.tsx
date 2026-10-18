@@ -91,7 +91,8 @@ function MiniBoard({ cells, clues }: { cells: string; clues: readonly FigureClue
 }
 
 export function ShapeRegionsTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startDifficulty, goHome } = useShapeRegions();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startDifficulty, goHome } =
+    useShapeRegions();
   const { t } = useSettings();
   const [step, setStep] = useState(0);
 
@@ -130,7 +131,11 @@ export function ShapeRegionsTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startDifficulty('easy');
+      // Onto the board already waiting, if one is, whatever its difficulty: the
+      // flag and the save are separate records, and a lost or unreadable flags
+      // record must not cost the player the board they left (§11).
+      if (canResume('difficulty')) resumeGame('difficulty');
+      else startDifficulty('easy');
     } else {
       goHome();
     }

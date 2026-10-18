@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { createFreeSession } from '../game';
+import { createFreeSession, doMoveTableauRun } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { SO_STORAGE_KEYS, type Stats } from '../storage/schemas';
 import { SolitaireRoot } from './SolitaireRoot';
@@ -443,6 +443,30 @@ describe('first run', () => {
     ).toBeInTheDocument();
     expect(within(table()).getAllByRole('img', { name: 'Face down' })).toHaveLength(21);
     expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+  });
+});
+
+describe('Quick Rules shown again over a suspended deal (§10)', () => {
+  it('resumes that deal on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a free deal is suspended: the golden
+    // deal, one move in — the J♣ onto the Q♦, emptying pile 1.
+    const played = doMoveTableauRun(createFreeSession(false, 'sol-free-golden'), 0, 0, 1)!;
+    renderGame({ [SO_STORAGE_KEYS.game]: JSON.stringify(toPersisted(played, 1)) });
+
+    expect(await screen.findByText('Down by one, colors alternate')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(
+      within(table()).getByRole('button', { name: 'Column 1, empty — a king can move here' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    // Resumed, not dealt: no deal counted, and no new deal written over the slot.
+    expect(deviceStore.get(SO_STORAGE_KEYS.stats)).toBeUndefined();
+    expect(deviceStore.get(SO_STORAGE_KEYS.game)).toBeUndefined();
   });
 });
 

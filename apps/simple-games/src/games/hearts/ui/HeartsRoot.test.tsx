@@ -332,6 +332,34 @@ describe('first run', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended match (§9)', () => {
+  it('resumes that match on Start Playing, rather than replace it unasked', async () => {
+    // The flags record is gone while a match is suspended in `ht.saveGame`: the
+    // two are separate records, so Quick Rules show again (§10) over a hand
+    // past its pass and a trick in, with the player on lead.
+    const session = playersLead('hearts-ui-lead');
+    renderGame({ [HT_STORAGE_KEYS.game]: JSON.stringify(toPersisted(session, 1)) });
+    await settle();
+
+    expect(screen.getByText('Pass three')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    // The hand that was put down, card for card, and no pass to make.
+    const held = within(hand())
+      .getAllByRole('button')
+      .map((card) => Number(card.getAttribute('data-card')));
+    expect(held).toEqual(session.hand.hands[YOU]);
+    expect(screen.queryByText('Passing left')).not.toBeInTheDocument();
+    // Resumed, not dealt: no new match over the slot, no play counted for Easy,
+    // and the Normal match not finalized (§8).
+    expect(deviceStore.get(HT_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(HT_STORAGE_KEYS.stats)).toBeUndefined();
+  });
+});
+
 // ---------- the table ----------
 
 describe('the table', () => {

@@ -359,6 +359,39 @@ describe('first run', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended board (§10)', () => {
+  it('resumes that board on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    deviceStore.set(MS_STORAGE_KEYS.flags, tutorialDone[MS_STORAGE_KEYS.flags]!);
+    launch();
+    await user.click(await screen.findByRole('button', { name: /^Medium/ }));
+    await user.click(cellAt(6, 6));
+    const stillShut = shutCells().length;
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+    const { seed } = JSON.parse(deviceStore.get(MS_STORAGE_KEYS.game)!) as { seed: string };
+    // The flags record is gone while a Medium board is suspended, its first
+    // tap made — and the first-run board is always Easy.
+    deviceStore.delete(MS_STORAGE_KEYS.flags);
+
+    launch();
+    expect(await screen.findByText('A number counts mines')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(cells()).toHaveLength(cellCount(PRESETS.medium));
+    expect(shutCells()).toHaveLength(stillShut);
+    // Resumed, not started: the same board in the slot, and no second play counted.
+    expect(JSON.parse(deviceStore.get(MS_STORAGE_KEYS.game)!)).toMatchObject({ seed });
+    const stats = JSON.parse(deviceStore.get(MS_STORAGE_KEYS.stats)!) as Stats;
+    expect(stats).toMatchObject({ easy: { played: 0 }, medium: { played: 1 } });
+  });
+});
+
 describe('home (§8)', () => {
   it('offers three boards and the daily, and no level list', async () => {
     const user = userEvent.setup();

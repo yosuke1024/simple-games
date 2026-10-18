@@ -216,6 +216,34 @@ describe('first run', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended match (§9)', () => {
+  it('resumes that match on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a match is suspended in `gr.saveGame`: the
+    // two are separate records, so Quick Rules show again (§10) over a hand
+    // already three actions in, against Normal.
+    renderGame({
+      [GR_STORAGE_KEYS.game]: JSON.stringify(
+        toPersisted(sessionWith(craft(LIMIT_HAND, TIGHT_HAND, YOU)), 1),
+      ),
+    });
+
+    expect(await screen.findByText('Draw one, throw one')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    // The position that was put down: eleven cards in hand, ten of deadwood.
+    expect(within(hand()).getAllByRole('button')).toHaveLength(11);
+    expect(screen.getByText(/Deadwood\s*10/)).toBeInTheDocument();
+    // Resumed, not dealt: no new match over the slot, no play counted for Easy,
+    // and the Normal match not finalized (§8).
+    expect(deviceStore.get(GR_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(GR_STORAGE_KEYS.stats)).toBeUndefined();
+  });
+});
+
 // ---------- the table ----------
 
 describe('the table', () => {

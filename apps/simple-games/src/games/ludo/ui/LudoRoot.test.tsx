@@ -313,6 +313,37 @@ describe('first run', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended match (§10)', () => {
+  it('resumes that match on Start Playing, rather than replace it unasked', async () => {
+    // The flags record is gone while a match is suspended in `ld.saveGame`: the
+    // two are separate records, so Quick Rules show again (§11) over a match
+    // played a little way in — a pawn out, and the CPU lap after it.
+    let expected = doRoll(createSession('normal', SEED_OPENS_WITH_A_SIX))!;
+    expected = doMovePawn(expected, movablePawns(expected)[0]!)!;
+    while (cpuBeatOwed(expected) !== null) {
+      const owed = cpuBeatOwed(expected)!;
+      expected = (owed.kind === 'roll' ? applyCpuRoll(expected) : applyCpuMove(expected))!;
+    }
+    renderGame({ [LD_STORAGE_KEYS.game]: JSON.stringify(canonicalRecordOf(expected, 1)) });
+    await settle();
+
+    expect(screen.getByText('A six lets a pawn out')).toBeInTheDocument();
+    for (let step = 0; step < 4; step++) {
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    // That board, pawn for pawn, with the die still to be thrown (§10.2).
+    expectBoardMatches(expected);
+    expect(dieButton()).toBeInTheDocument();
+    // Resumed, not started: no new match over the slot, no play counted for
+    // Easy, and the Normal match not finalized (§9).
+    expect(deviceStore.get(LD_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(LD_STORAGE_KEYS.stats)).toBeUndefined();
+  });
+});
+
 // ---------- the board ----------
 
 describe('the board', () => {

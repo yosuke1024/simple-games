@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { BLACK, createSession } from '../game';
+import { BLACK, applyCpuMove, applyPlayerMove, createSession } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { GM_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { CPU_DELAY_MS } from '../state/GameContext';
@@ -140,6 +140,34 @@ describe('first run', () => {
     // Two hundred and twenty-five crossings, and an empty board (§1).
     expect(within(board()).getAllByRole('button')).toHaveLength(225);
     expect(stones()).toHaveLength(0);
+  });
+});
+
+describe('Quick Rules shown again over a suspended match (§8)', () => {
+  it('resumes that match on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a match is suspended in the one slot: the
+    // two are separate records (§8), so Quick Rules show again over a match one
+    // stone each in — the player's on the centre point, and the CPU's reply.
+    const opened = createSession('easy', BLACK, 'gomoku-uitest');
+    const placed = applyPlayerMove(opened, 7 * 15 + 7)!.session;
+    const replied = applyCpuMove(placed)!.session;
+    renderGame({ [GM_STORAGE_KEYS.game]: JSON.stringify(toPersisted(replied, 1)) });
+
+    expect(await screen.findByText('Tap once to aim, again to place')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    // The match that was left: both stones still down, and the player to move.
+    expect(stones()).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Row 8, column 8: your stone' })).toBeVisible();
+    expect(screen.getByText(/Your turn/)).toBeInTheDocument();
+    // Resumed, not started: no new match over the slot, and the old one not
+    // finalized — nothing booked, no new match counted as played (§7).
+    expect(deviceStore.get(GM_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(GM_STORAGE_KEYS.stats)).toBeUndefined();
   });
 });
 
@@ -394,8 +422,8 @@ describe('a home-screen shortcut', () => {
     // The flag and the match are separate records (§8), so the two states can
     // disagree: a flags record that does not validate leaves the game with its
     // defaults — Quick Rules unfinished — while the saved match still loads.
-    // A shortcut is not a way past them; the tutorial's only exit starts a new
-    // match, which would finalize this one away.
+    // A shortcut is not a way past them; finishing them leads onto this match
+    // rather than over it ('Quick Rules shown again over a suspended match').
     deviceStore.set(GM_STORAGE_KEYS.flags, JSON.stringify({ schemaVersion: 9 }));
 
     launchFromShortcut();

@@ -178,6 +178,45 @@ describe('first run', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended board (§11)', () => {
+  it('resumes that board on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    const saved = () =>
+      JSON.parse(deviceStore.get(BR_STORAGE_KEYS.game)!) as {
+        seed: string;
+        clues: { index: number }[];
+      };
+    deviceStore.set(BR_STORAGE_KEYS.flags, tutorialDone[BR_STORAGE_KEYS.flags]!);
+    launch();
+    await settle();
+    await user.click(await screen.findByRole('button', { name: /^Medium/ }));
+    await settle();
+    const { seed, clues } = saved();
+    await user.click(cells()[clues[0]!.index]!);
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+    // The flags record is gone while that Medium board is suspended; the
+    // first-run board is always an Easy one (§12).
+    deviceStore.delete(BR_STORAGE_KEYS.flags);
+
+    launch();
+    expect(await screen.findByText('Cut into boxes')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(cells()).toHaveLength(36);
+    expect(cells()[clues[0]!.index]).toHaveAccessibleName(/box A/);
+    // Resumed, not started: the slot keeps its board, and no new play is counted.
+    expect(saved().seed).toBe(seed);
+    const stats = JSON.parse(deviceStore.get(BR_STORAGE_KEYS.stats)!) as Stats;
+    expect([stats.easy.played, stats.medium.played]).toEqual([0, 1]);
+  });
+});
+
 describe('playing (§3, §4, §6)', () => {
   it('draws a box corner to corner, and reads the board aloud', async () => {
     const user = userEvent.setup();

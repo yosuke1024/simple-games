@@ -362,6 +362,52 @@ describe('first run', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended level (§10)', () => {
+  it('resumes that level on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    deviceStore.set(WS_STORAGE_KEYS.flags, tutorialDone[WS_STORAGE_KEYS.flags]!);
+    launch();
+    await startLevelOne(user);
+    await user.click(screen.getByRole('button', { name: 'Tube 1, bottom to top: 1 1 1 2' }));
+    await user.click(screen.getByRole('button', { name: 'Tube 4, bottom to top: empty' }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    const { seed, tubes: left } = JSON.parse(
+      deviceStore.get(WS_STORAGE_KEYS.game)!,
+    ) as PersistedGame;
+    cleanup();
+    // Level 1 is suspended one pour in, the list is open to level 3 — where a
+    // first run starts — and the flags record is gone.
+    deviceStore.set(
+      WS_STORAGE_KEYS.progress,
+      JSON.stringify({
+        schemaVersion: 1,
+        highestUnlocked: 3,
+        bestMoves: {},
+        bestSeconds: {},
+        dailyMoves: {},
+        dailySeconds: {},
+      }),
+    );
+    deviceStore.delete(WS_STORAGE_KEYS.flags);
+
+    launch();
+    expect(await screen.findByText('Pour same onto same')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tube 4, bottom to top: 2' })).toBeInTheDocument();
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    // Resumed, not started: the same board in the slot, and no second play booked.
+    const stored = JSON.parse(deviceStore.get(WS_STORAGE_KEYS.game)!) as PersistedGame;
+    expect(stored).toMatchObject({ seed, level: 1, tubes: left, moveCount: 1 });
+    expect((JSON.parse(deviceStore.get(WS_STORAGE_KEYS.stats)!) as Stats).played).toBe(1);
+  });
+});
+
 describe('playing', () => {
   it('pours with two taps and counts the move (§3, §4)', async () => {
     const user = userEvent.setup();

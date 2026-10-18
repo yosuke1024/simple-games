@@ -141,6 +141,40 @@ describe('first run', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended level (§9)', () => {
+  it('resumes that level on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    deviceStore.set(QM_STORAGE_KEYS.flags, tutorialDone[QM_STORAGE_KEYS.flags]!);
+    launch();
+    await startLevelOne(user);
+    await type(user, levelOneAnswers[0]!);
+    const second = equation();
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    const { seed } = JSON.parse(deviceStore.get(QM_STORAGE_KEYS.game)!) as PersistedGame;
+    cleanup();
+    // Level 1 is suspended one question in, the ladder is open to level 3 —
+    // where a first run starts — and the flags record is gone.
+    deviceStore.set(QM_STORAGE_KEYS.progress, unlockedTo(3)[QM_STORAGE_KEYS.progress]!);
+    deviceStore.delete(QM_STORAGE_KEYS.flags);
+
+    launch();
+    expect(await screen.findByText('Answer with the keypad')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(screen.getByText('1 / 10')).toBeInTheDocument();
+    expect(equation()).toBe(second);
+    // Resumed, not started: the same set in the slot, and no second play booked.
+    const stored = JSON.parse(deviceStore.get(QM_STORAGE_KEYS.game)!) as PersistedGame;
+    expect(stored).toMatchObject({ seed, level: 1, solvedCount: 1 });
+    expect(storedStats()?.addSub.played).toBe(1);
+  });
+});
+
 describe('answering (docs/QUICK_MATH_RULES.md §3)', () => {
   it('moves on once the answer is typed in full', async () => {
     const user = userEvent.setup();
