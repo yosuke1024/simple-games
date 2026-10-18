@@ -1,11 +1,11 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
 import { en } from '../i18n/en';
-import { NR_STORAGE_KEYS } from '../storage/schemas';
+import { NR_STORAGE_KEYS, type Stats } from '../storage/schemas';
 import { NumberRecallRoot } from './NumberRecallRoot';
 
 const { deviceStore } = vi.hoisted(() => ({ deviceStore: new Map<string, string>() }));
@@ -55,8 +55,43 @@ async function startLevelOne(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole('button', { name: /Level 1/ }));
 }
 
-afterEach(() => {
+/** Launches the app against the device store, the way a player's phone does. */
+function launch() {
+  render(
+    <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+      <NumberRecallRoot onExit={vi.fn()} />
+    </SettingsProvider>,
+  );
+}
+
+/** Lets the local reads and the saves they trigger resolve (they are promises,
+ * not timers, so this works under fake timers too). */
+const settle = () => act(async () => undefined);
+
+/** The app goes to background. Android may kill it without another event. */
+function background() {
+  Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+  act(() => {
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  Reflect.deleteProperty(document, 'visibilityState');
+}
+
+/** Total play seconds as they survive on disk, across every grid size. */
+function storedPlaySeconds(): number {
+  const raw = deviceStore.get(NR_STORAGE_KEYS.stats);
+  if (raw === undefined) return 0;
+  const stats = JSON.parse(raw) as Stats;
+  return stats.size3.totalPlaySeconds + stats.size4.totalPlaySeconds + stats.size5.totalPlaySeconds;
+}
+
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -281,5 +316,46 @@ describe('home', () => {
     expect(screen.getByRole('button', { name: /Daily Challenge/ })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'All games' }));
     expect(onExit).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. A round is never saved, so leaving
+  // abandons it and books its seconds (§12). Before the provider abandoned the
+  // round on its own unmount, every second since the last background was lost
+  // from the statistics there.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(NR_STORAGE_KEYS.flags, tutorialDone[NR_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      // The clock runs through the memorise phase too (§3): no tap is needed.
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      // A background books the first five, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+
+      // Forward again, and away again at once: there is no round to come back
+      // to, and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

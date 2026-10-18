@@ -53,6 +53,7 @@ import {
 } from 'react';
 import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
+import { useOnUnmount } from '../../../ui/useOnUnmount';
 import {
   applyCpuMove,
   applyCpuRoll,
@@ -480,6 +481,14 @@ export function LudoProvider({
       void pauseHandle?.then((handle) => handle.remove()).catch(() => undefined);
     };
   }, [syncActiveGame]);
+
+  // Unmounting is a way out too (docs/GAME_LIFECYCLE.md「アンマウントで計上する」):
+  // the browser's Back and a home-screen shortcut to another game take this
+  // provider off screen without goHome, exitToCollection or a
+  // visibilitychange, so the seconds since the last sync would be lost. The
+  // same sync runs then, and it books only what `bookedRef` has not — after
+  // either exit, or a background, it adds nothing.
+  useOnUnmount(syncActiveGame);
 
   // Android hardware back: leave sub-screens; from the game's home, hand
   // control back to the collection.

@@ -110,6 +110,13 @@ function storedDailySeconds(): number {
   return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
 }
 
+/** The suspended level board's own clock, as it survives on disk (§11). */
+function storedLevelSeconds(): number {
+  const raw = deviceStore.get(KK_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+}
+
 /** Level 1 is deterministic (§9), so a test knows its answer the same way a
  * player's device does. */
 const truth = createLevelSession(1);
@@ -122,8 +129,13 @@ const openCells = [...truth.table.white];
 /** The first horizontal run, and its two ends. */
 const firstRow = truth.table.runs.find((run) => run.axis === 'row')!;
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -974,3 +986,44 @@ function wrongButLegal(): { cell: number; digit: number } {
   }
   throw new Error('level 1 has no legal-but-wrong first move');
 }
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the board's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(KK_STORAGE_KEYS.flags, tutorialDone[KK_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      // A background books the first five, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedLevelSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the board still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedLevelSeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

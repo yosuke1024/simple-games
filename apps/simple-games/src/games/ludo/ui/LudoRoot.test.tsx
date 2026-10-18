@@ -142,6 +142,13 @@ function storedBoardSeconds(): number {
   return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
 }
 
+/** Total play seconds as they survive on disk. */
+function storedPlaySeconds(): number {
+  const raw = deviceStore.get(LD_STORAGE_KEYS.stats);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as Stats).totalPlaySeconds;
+}
+
 const tutorialDone = {
   [LD_STORAGE_KEYS.flags]: JSON.stringify({ schemaVersion: 1, tutorialCompleted: true }),
 };
@@ -269,8 +276,13 @@ beforeEach(() => {
   vi.useFakeTimers();
 });
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   vi.unstubAllGlobals();
   vi.useRealTimers();
   deviceStore.clear();
@@ -601,12 +613,6 @@ describe('a home-screen shortcut', () => {
     Reflect.deleteProperty(document, 'visibilityState');
   }
 
-  /** Play seconds as they survive on disk, booked into the statistics. */
-  function storedPlaySeconds(): number {
-    const raw = deviceStore.get(LD_STORAGE_KEYS.stats);
-    return raw === undefined ? 0 : (JSON.parse(raw) as Stats).totalPlaySeconds;
-  }
-
   /** The suspended match's own clock, as it survives on disk. */
   function storedMatchSeconds(): number | null {
     const raw = deviceStore.get(LD_STORAGE_KEYS.game);
@@ -867,5 +873,41 @@ describe('opening a suspended game without resuming (#109)', () => {
     background();
     await settle();
     expect(storedBoardSeconds()).toBe(9);
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the match's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(LD_STORAGE_KEYS.flags, tutorialDone[LD_STORAGE_KEYS.flags]!);
+    launch();
+    await settle();
+    fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+
+    // A background books the first five, as it always has.
+    await advance(5_000);
+    background();
+    await settle();
+    expect(storedPlaySeconds()).toBe(5);
+
+    // Three more, then Back: the Root is simply unmounted.
+    await advance(3_000);
+    cleanup();
+    await settle();
+    expect(storedPlaySeconds()).toBe(8);
+    expect(storedBoardSeconds()).toBe(8);
+
+    // Forward again, and away again at once: the match still says eight, and
+    // none of the eight is booked a second time.
+    launch();
+    await settle();
+    cleanup();
+    await settle();
+    expect(storedPlaySeconds()).toBe(8);
+    expect(storedBoardSeconds()).toBe(8);
   });
 });

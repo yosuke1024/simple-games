@@ -135,7 +135,7 @@ src/
 
 ## 状態と ref
 
-各ゲームの `GameContext.tsx` は状態を `useState` に持ち、render 本体で ref へ写す。**落とし穴は ref が進むのが render のときだけだという点**——同じタスクの中で 2 回ミューテーションが起きると、2 回目は 1 回目が置き換える前の値を読み、1 回目が消える(連続 pointer イベント、1 ハンドラが同じ状態を 2 回書く、の 2 パターンで実際に踏んだ)。規約は、セッション・統計・進捗は各コンテキストにつき 1 か所からしか書かないこと、その 1 か所で **setState より先に ref を進める**ことの 2 つで、`src/test/refLeading.test.ts` が機械的に見る。再生時間の `elapsedRef` / `bookedRef` は state の写しではない独立した ref なので**マウント時の種**が要り、**そのマウントが指しているスロット**(ショートカットが直接入った局か、ホームが最初に指す局)の `elapsedSeconds` を 2 本とも同じ値で積む——片方だけ直すと時計が 0 で上書きされるか統計へ二重計上される(issue #109・#113)。`src/test/playClockSeed.test.ts` が機械的に見る。
+各ゲームの `GameContext.tsx` は状態を `useState` に持ち、render 本体で ref へ写す。**落とし穴は ref が進むのが render のときだけだという点**——同じタスクの中で 2 回ミューテーションが起きると、2 回目は 1 回目が置き換える前の値を読み、1 回目が消える(連続 pointer イベント、1 ハンドラが同じ状態を 2 回書く、の 2 パターンで実際に踏んだ)。規約は、セッション・統計・進捗は各コンテキストにつき 1 か所からしか書かないこと、その 1 か所で **setState より先に ref を進める**ことの 2 つで、`src/test/refLeading.test.ts` が機械的に見る。再生時間の `elapsedRef` / `bookedRef` は state の写しではない独立した ref なので**マウント時の種**が要り、**そのマウントが指しているスロット**(ショートカットが直接入った局か、ホームが最初に指す局)の `elapsedSeconds` を 2 本とも同じ値で積む——片方だけ直すと時計が 0 で上書きされるか統計へ二重計上される(issue #109・#113)。`src/test/playClockSeed.test.ts` が機械的に見る。時計の秒を確定させる同期(`syncActiveGame`)はゲーム自身の退出とバックグラウンドに加えて**アンマウントでも走る**(`useOnUnmount`)——ブラウザの戻ると別ゲームへのショートカットは goHome を通らずに Root を外すからで、二重計上は `bookedRef` が防ぐ([GAME_LIFECYCLE.md](GAME_LIFECYCLE.md)「アンマウントで計上する」、`src/test/unmountBookingWiring.test.ts`)。
 
 → 全文: [architecture/state-and-refs.md](architecture/state-and-refs.md)
 

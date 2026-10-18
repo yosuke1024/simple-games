@@ -26,6 +26,7 @@ import {
 } from 'react';
 import { recordGameCompleted } from '../../../services/review';
 import { saveRecord } from '../../../storage/repo';
+import { useOnUnmount } from '../../../ui/useOnUnmount';
 import {
   countHintUse,
   createDailySession,
@@ -471,6 +472,14 @@ export function AppProvider({
       void pauseHandle?.then((handle) => handle.remove()).catch(() => undefined);
     };
   }, [withElapsed]);
+
+  // Unmounting is a way out too (docs/GAME_LIFECYCLE.md「アンマウントで計上する」):
+  // the browser's Back and a home-screen shortcut to another game take this
+  // provider off screen without goHome, exitToCollection or a
+  // visibilitychange. The same sync runs then, so the board keeps the
+  // seconds played since its last save; they are booked once, when the
+  // game ends.
+  useOnUnmount(syncActiveGame);
 
   // Android hardware back button: leave sub-screens; from the game's home,
   // hand control back to the collection (the shell decides what "back" means
