@@ -118,6 +118,13 @@ https://pixapps.ai/simple-games/play/?game=sudoku → Sudoku
   (タブを閉じたときと同じ。直接アクセスしたゲームからブラウザの戻るを押すと
   この経路になる)。これは以前からの計測の穴で、この変更で広がってはいない —
   以前は戻る操作が常にこの経路だった。
+- **戻る / 進むでゲームを離れても、遊んだ秒は落とさない**(2026-10-18)。このとき
+  シェルはゲームの Root をアンマウントするだけで、ゲーム自身の退出も
+  visibilitychange も通らない。だから各ゲームの provider が自分のアンマウントで、
+  退出とバックグラウンドと同じ同期を走らせる(盤面の時計を保存し、まだ計上して
+  いない秒だけを `totalPlaySeconds` に足す)。契約は
+  [GAME_LIFECYCLE.md](GAME_LIFECYCLE.md)「アンマウントで計上する」。タブを閉じる・
+  サイトの外へ戻るときは、これまでどおり visibilitychange の同期が受け持つ。
 
 **native では動かない。** 実装は `app/webRoute.ts` と `app/App.tsx` にあり、
 `Capacitor.isNativePlatform()` の**実行時ガード**で切る(下の「実装上の約束」の

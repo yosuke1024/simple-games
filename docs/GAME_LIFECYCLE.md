@@ -26,6 +26,59 @@
 `window.setTimeout` にハンドルを持たせず放置しない — アンマウント後に発火して
 存在しないツリーへ setState する。
 
+アンマウントで走らせる同期には `src/ui/useOnUnmount.ts` を使う(下の
+「アンマウントで計上する」)。
+
+## アンマウントで計上する(プレイ時間)
+
+リソースを残さないことと対になる約束: **アンマウントされたゲームは、最後の同期以降に
+遊ばれた秒を落とさない。**
+
+- **ゲームが聞かない扉がある。** ゲームが画面から外れるのは、ゲーム自身の戻る・ホーム
+  (`goHome` / `exitToCollection`)だけではない。Web 版のブラウザの戻る・進む
+  (`app/App.tsx` の `popstate`、`app/webRoute.ts`)と、Android / iOS で別のゲームへの
+  ホーム画面ショートカット(`appUrlOpen`)では、シェルが view を替えるだけで Root は
+  そのままアンマウントされ、visibilitychange も来ない。2026-10-18 まで、アーケード 4 本
+  以外はこの経路で最後の同期以降の秒を盤面の時計からも `totalPlaySeconds` からも
+  失っていた(Web 版のレビューで複数のゲームについて観察された)。
+- **決定: シェルの hook ではなく、ゲームが自分のアンマウントで計上する。** シェルは
+  ゲームの state に踏み込まない(`PROJECT_CONTEXT.md` §8)ので、シェル側に置けるのは
+  「ゲームに同期を頼む」新しい契約(Root の props やレジストリへの登録)だけになる。
+  それはシェルが知っている扉しか覆えず、扉が増えるたびに配線が要る。React の
+  アンマウントはどの扉でも必ず起きる(エラー境界の作り直しも含む)ので、ゲームは
+  そこで、自分の退出とバックグラウンドで既に走らせている同期をもう一度走らせるだけでよい。
+- **形は 1 行。** provider のバックグラウンドの effect の直後に
+  `useOnUnmount(syncActiveGame);`。ラウンドを保存しない Number Recall(§12)と
+  Schulte Table(§11)は離脱と同じ `useOnUnmount(abandonActiveRound);`。
+  `useOnUnmount` は最新の関数を ref に持ち、cleanup をアンマウントだけに結びつける。
+  `useEffect(() => () => sync(), [sync])` と書かないのは、sync の identity が変わる
+  たびにプレイ中にも cleanup が走るからで、state を書いてその state に依存する sync なら
+  書く → 再描画 → また書く、のループになる。
+- **二重計上しない。** 同期は冪等である: `bookedRef` との差(まだ計上していない秒)
+  だけを足し、足した分だけ `bookedRef` を進める。だから自分の退出やバックグラウンドの
+  直後に来たアンマウントは何も足さない。アンマウントの同期は盤面も(時計ごと)保存し、
+  次のマウントは `elapsedRef` と `bookedRef` を同じ `elapsedSeconds` で積む
+  (docs/ARCHITECTURE.md「状態と ref」、`src/test/playClockSeed.test.ts`)ので、同じ秒を
+  もう一度数えない。保存は fire-and-forget だが `storage/repo.ts` がキーごとに直列化する
+  ので、すぐ戻ってきた次のマウントの読み込みはこの保存の後ろに並ぶ。
+- **計上の経路を増やさない。** 足すのは既存の同期の「呼び出し」だけで、アンマウント
+  専用の計上を書かない — 2 本目の経路は 2 度目の計上の入口になる。
+- Number Match は統計への計上が終局時の 1 回だけ(盤面の `elapsedSeconds` から)なので、
+  アンマウントで守るのは盤面の時計である。
+- アーケード 4 本(Brick Breaker / Sky Fighter / Bubble Pop / Bunny Hop)はランを盤面
+  コンポーネントの ref に持ち、ループの effect の cleanup で `flushSeconds()` を呼ぶ。
+  以前からこの形で、変えていない。
+- 門: `src/test/unmountBookingWiring.test.ts`(provider ごとに `useOnUnmount(<退出の同期>)`
+  がちょうど 1 回、無ければ盤面の cleanup の `flushSeconds()`)。挙動は各ゲームの Root
+  テストが「N 秒遊ぶ → アンマウント → 統計が N 増える → 再マウントしても増えない」で見る。
+  変換は `scripts/codemods/2026-10-18-book-play-seconds-on-unmount.mjs`。
+- **テストの `cleanup()` もアンマウントである。** 遊んでいる最中の盤面を残したまま
+  `cleanup()` すれば、いまは盤面と統計の保存が起きる。保存は fire-and-forget なので、
+  store を消す `afterEach` は `cleanup()` の後に `await act(async () => undefined);` で
+  保存を着地させてから消す(消してから着地すると、次のテストは遊んでいない盤面の上に
+  起動する)。「プロセスが死ぬ」を `cleanup()` で表しているテストは、死の前に何が保存
+  されていたかを `cleanup()` より前に読む — 本物のプロセス死はアンマウントを通らない。
+
 ### 音はシェルの持ち物、静けさはゲームの責任
 
 `services/sound.ts` の AudioContext はプロセス共有のシングルトンで、ゲームが
@@ -116,6 +169,8 @@ close することはない。代わりにシェルがゲーム退出時に `rel
   ループを実際に走らせ、プレイ中のアンマウントで RAF・リスナー・DEV シームが
   消えることを検査する(jsdom の canvas は 2D コンテキストを返さないため、
   掃引テストではループが始まらない)。
+- `src/test/unmountBookingWiring.test.ts` — 全 provider がアンマウントでも退出の同期を
+  走らせること(「アンマウントで計上する」)。
 - ループを dev シーム(`__buFrame` 等)から手で回すテストは、`lifecycle.ts` の
   `stubAnimationFrames()` で jsdom の実 RAF を止めてから盤面を mount する。
   実フレームと手回しが同じ `lastTime` を共有すると dt が負になり、飛翔が巻き戻る
@@ -136,3 +191,5 @@ web shim)は「シェルの寿命」であり、テストは計測前に一度�
 5. CPU の手番を持つゲームは、タイマーをセッション依存の effect にする
    (上記「CPU 探索」)。`setTimeout` を着手ハンドラの中から直接張ると、
    Undo や退出で取り消す相手を見失う。
+6. プレイ時計を持つなら、退出の同期を `useOnUnmount` にも渡す(上記「アンマウントで
+   計上する」)。`scripts/new-game.mjs` の雛形は最初から渡している。

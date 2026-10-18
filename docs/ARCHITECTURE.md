@@ -135,7 +135,7 @@ src/
 
 ## 状態と ref
 
-各ゲームの `GameContext.tsx` は状態を `useState` に持ち、render 本体で ref へ写す。**落とし穴は ref が進むのが render のときだけだという点**——同じタスクの中で 2 回ミューテーションが起きると、2 回目は 1 回目が置き換える前の値を読み、1 回目が消える(連続 pointer イベント、1 ハンドラが同じ状態を 2 回書く、の 2 パターンで実際に踏んだ)。規約は、セッション・統計・進捗は各コンテキストにつき 1 か所からしか書かないこと、その 1 か所で **setState より先に ref を進める**ことの 2 つで、`src/test/refLeading.test.ts` が機械的に見る。再生時間の `elapsedRef` / `bookedRef` は state の写しではない独立した ref なので**マウント時の種**が要り、**そのマウントが指しているスロット**(ショートカットが直接入った局か、ホームが最初に指す局)の `elapsedSeconds` を 2 本とも同じ値で積む——片方だけ直すと時計が 0 で上書きされるか統計へ二重計上される(issue #109・#113)。`src/test/playClockSeed.test.ts` が機械的に見る。
+各ゲームの `GameContext.tsx` は状態を `useState` に持ち、render 本体で ref へ写す。**落とし穴は ref が進むのが render のときだけだという点**——同じタスクの中で 2 回ミューテーションが起きると、2 回目は 1 回目が置き換える前の値を読み、1 回目が消える(連続 pointer イベント、1 ハンドラが同じ状態を 2 回書く、の 2 パターンで実際に踏んだ)。規約は、セッション・統計・進捗は各コンテキストにつき 1 か所からしか書かないこと、その 1 か所で **setState より先に ref を進める**ことの 2 つで、`src/test/refLeading.test.ts` が機械的に見る。再生時間の `elapsedRef` / `bookedRef` は state の写しではない独立した ref なので**マウント時の種**が要り、**そのマウントが指しているスロット**(ショートカットが直接入った局か、ホームが最初に指す局)の `elapsedSeconds` を 2 本とも同じ値で積む——片方だけ直すと時計が 0 で上書きされるか統計へ二重計上される(issue #109・#113)。`src/test/playClockSeed.test.ts` が機械的に見る。時計の秒を確定させる同期(`syncActiveGame`)はゲーム自身の退出とバックグラウンドに加えて**アンマウントでも走る**(`useOnUnmount`)——ブラウザの戻ると別ゲームへのショートカットは goHome を通らずに Root を外すからで、二重計上は `bookedRef` が防ぐ([GAME_LIFECYCLE.md](GAME_LIFECYCLE.md)「アンマウントで計上する」、`src/test/unmountBookingWiring.test.ts`)。
 
 → 全文: [architecture/state-and-refs.md](architecture/state-and-refs.md)
 
@@ -254,6 +254,16 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
   揃え、`src/test/modalIsolationWiring.test.ts` が新しいゲームにも同じ配線を要求する(issue #120)。
   Chromium 102 未満の WebView 向けフォールバックは `styles.css` の `.game-content[inert]`
   (`pointer-events: none`)。
+- **Escape は Cancel、閉じたらフォーカスは開いた場所へ。** `ConfirmDialog` と `RestartDialog` は
+  `ui/useDialogDismiss.ts` を通して、開いている間の Escape を Cancel(`onCancel` / `onClose`)と
+  同じに扱い、window の capture 段で受けて先へ流さない——`blocked` の形で付いたままの `useGameKeys`
+  (2048 の形)も、arcade 盤面の生の keydown リスナーも、ダイアログを閉じたその Escape には答えない
+  (2026-10-18 時点で Escape を自分で受けるゲームは無い。選択の解除などで受けるようになっても同じ)。
+  閉じたらフォーカスは開いた操作(上部バーの ↻、設定の行)へ戻す。戻すのは
+  フォーカスが失われるとき(body か、ダイアログと一緒に消えた要素)だけで、閉じた側が意図して置いた
+  先は動かさず、もうページに無い opener は追わない。リスナーは閉じた時点とアンマウントで外す
+  ([GAME_LIFECYCLE.md](GAME_LIFECYCLE.md))。確定・取消で各ゲームがすることは変えない
+  (2026-10-18。テストは `ui/components/ConfirmDialog.test.tsx` / `RestartDialog.test.tsx`)。
 - **ヘッダの ↻ は結果カードと同じ 2 択。** プレイ中の ↻ は「同じ盤面で再挑戦」の確認
   (`ConfirmDialog`)だったので、盤面そのものを替えたい人は Home → モードのボタン → もう一度
   確認、と遠回りしていた(2026-10-02)。いまは `ui/components/RestartDialog.tsx` が 1 つの問い

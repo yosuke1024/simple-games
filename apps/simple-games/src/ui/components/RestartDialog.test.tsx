@@ -1,12 +1,14 @@
 /**
  * The question behind a game's ↻ (RestartDialog.tsx): the same board again,
  * the game's own fresh board when the mode has one, and a way out that keeps
- * the focus. The game decides whether the second option exists; this only
- * checks that the dialog says exactly what it was given, and nothing when it
- * was given nothing.
+ * the focus — Escape included, and the focus goes back to the ↻ afterwards
+ * (the shared half is in ConfirmDialog.test.tsx). The game decides whether
+ * the second option exists; this only checks that the dialog says exactly
+ * what it was given, and nothing when it was given nothing.
  */
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '../../state/SettingsContext';
 import { settingsSchema } from '../../storage/schemas';
@@ -82,6 +84,48 @@ describe('the restart question behind ↻', () => {
     expect(onClose).toHaveBeenCalledTimes(2);
     expect(onRetry).not.toHaveBeenCalled();
     expect(start).not.toHaveBeenCalled();
+  });
+
+  it('takes Escape as Cancel: it only closes', async () => {
+    const user = userEvent.setup();
+    const start = vi.fn();
+    const { onRetry, onClose } = renderDialog({ newBoard: { label: 'New board', start } });
+    await user.keyboard('{Escape}');
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onRetry).not.toHaveBeenCalled();
+    expect(start).not.toHaveBeenCalled();
+  });
+
+  it('gives the focus back to the ↻ once it closes, whichever way', async () => {
+    // A top bar in miniature: the ↻ sits on the board the dialog inerts.
+    function TopBar() {
+      const [open, setOpen] = useState(false);
+      return (
+        <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+          <div className="game-content" inert={open}>
+            <button type="button" aria-label="↻" onClick={() => setOpen(true)} />
+          </div>
+          <RestartDialog
+            open={open}
+            onRetry={vi.fn()}
+            newBoard={{ label: 'New board', start: vi.fn() }}
+            onClose={() => setOpen(false)}
+          />
+        </SettingsProvider>
+      );
+    }
+    const user = userEvent.setup();
+    render(<TopBar />);
+    const restart = screen.getByRole('button', { name: '↻' });
+
+    for (const answer of ['{Escape}', 'Cancel', 'Retry same board', 'New board']) {
+      await user.click(restart);
+      expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+      if (answer === '{Escape}') await user.keyboard(answer);
+      else await user.click(screen.getByRole('button', { name: answer }));
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(restart, `after ${answer}`).toHaveFocus();
+    }
   });
 
   it('speaks the catalogue, not English, in another language', () => {
