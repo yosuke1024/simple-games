@@ -117,6 +117,37 @@ const loopEdges = (truth: LoopPuzzleSession) =>
 const offLoopEdges = (truth: LoopPuzzleSession) =>
   truth.solution.flatMap((mark, edge) => (mark === CROSS ? [edge] : []));
 
+/**
+ * Three edges meeting at one dot whose lines break that dot and nothing else
+ * (§5): every number beside them keeps no more lines than it shows — with all
+ * three drawn, and so with the two an Undo leaves. Read from the board, not
+ * fixed in place: the daily's numbers move with the date, and on some days a
+ * fixed dot sits beside a 0 or a 1 (on 2026-10-18's, two of its lines touch a
+ * 0, so the board says a number has too many lines once the branch is undone).
+ */
+function branchBreakingNothingElse(truth: LoopPuzzleSession): number[] {
+  const grid = gridFor(truth.width, truth.height);
+  const breaksNoNumber = (lines: readonly number[]) =>
+    truth.clues.every((clue, cell) => {
+      if (clue === null) return true;
+      let around = 0;
+      for (let side = 0; side < 4; side++) {
+        if (lines.includes(grid.cellEdges[4 * cell + side]!)) around++;
+      }
+      return around <= clue;
+    });
+  for (let dot = 0; dot < grid.dotCount; dot++) {
+    const edges = [0, 1, 2, 3].map((k) => grid.dotEdges[4 * dot + k]!).filter((edge) => edge >= 0);
+    if (edges.length < 3) continue;
+    // A dot inside the board has four edges, so four ways to draw three.
+    const choices =
+      edges.length === 3 ? [edges] : edges.map((out) => edges.filter((e) => e !== out));
+    const branch = choices.find(breaksNoNumber);
+    if (branch !== undefined) return branch;
+  }
+  throw new Error('no dot on this board takes three lines without breaking a number');
+}
+
 /** One tap per call, as a finger would. */
 const tap = (edge: number, times = 1) => {
   for (let i = 0; i < times; i++) fireEvent.click(edgeButton(edge));
@@ -276,7 +307,9 @@ describe('playing (§3, §4, §6)', () => {
     expect(screen.queryByRole('button', { name: 'New board' })).not.toBeInTheDocument();
     await settle();
     expect(storedStats()?.medium.solved).toBe(1);
-    expect(storedStats()?.dailyTimes[today()]).toBeDefined();
+    // Booked on the day of the board played — not the clock read again after
+    // the play, which would name the next day on a run across midnight.
+    expect(storedStats()?.dailyTimes[truth.dailyDate!]).toBeDefined();
     // A finished game is not kept for resuming (§12).
     expect(deviceStore.has(LP_STORAGE_KEYS.dailyGame)).toBe(false);
   });
@@ -297,19 +330,16 @@ describe('what the marks break (§5)', () => {
     const user = userEvent.setup();
     renderGame(tutorialDone);
     await openDaily(user);
-    const grid = gridFor(5, 5);
-    expect(feedback()).toHaveTextContent('');
-    const branch = [
-      verticalEdge(grid, 1, 2),
-      horizontalEdge(grid, 2, 1),
-      horizontalEdge(grid, 2, 2),
-    ];
+    expect(feedback().textContent).toBe('');
+    const branch = branchBreakingNothingElse(todaysDaily());
     for (const edge of branch) tap(edge);
     expect(feedback()).toHaveTextContent('A dot has more than two lines.');
+    // The dot is the one thing broken: no number beside the lines has too many.
+    expect(screen.queryByRole('img', { name: /too many lines$/ })).not.toBeInTheDocument();
     // Nothing was rewritten: all three lines still stand.
     for (const edge of branch) expect(edgeButton(edge)).toHaveAccessibleName(/line$/);
     await user.click(screen.getByRole('button', { name: 'Undo' }));
-    expect(feedback()).toHaveTextContent('');
+    expect(feedback().textContent).toBe('');
   });
 
   it('says so when a closed loop leaves other lines out', async () => {
@@ -549,6 +579,9 @@ describe('retry and the home (§9, §12)', () => {
     await user.click(await screen.findByRole('button', { name: /^Easy/ }));
     tap(0);
     await user.click(screen.getByRole('button', { name: 'Home' }));
+    // The day the daily opens on, read as it opens — not again later, when a
+    // run across midnight would read the next day.
+    const day = today();
     await openDaily(user);
     tap(1, 2);
     await user.click(screen.getByRole('button', { name: 'Home' }));
@@ -560,7 +593,7 @@ describe('retry and the home (§9, §12)', () => {
     expect([daily.mode, daily.difficulty, daily.dailyDate, daily.marks[1]]).toEqual([
       'daily',
       'medium',
-      today(),
+      day,
       'X',
     ]);
 

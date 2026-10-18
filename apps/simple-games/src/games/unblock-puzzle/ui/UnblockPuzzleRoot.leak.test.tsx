@@ -90,11 +90,17 @@ async function closeMidDrag() {
     toJSON: () => ({}),
   } as DOMRect);
   fireEvent.click(screen.getByRole('button', { name: 'Hint' }));
-  // A block with room to move forward, pressed in its first cell and pulled 35px.
+  // A block with room to move, pressed in its first cell and pulled 35px the
+  // way it has room. Which way that is belongs to the day's board: on some
+  // days' dailies (2027-10-31's) no block has room forward at the start.
   const start = createDailySession(localDateString(new Date())).start;
-  const index = start.blocks.findIndex((_, i) => slideRange(start, i).max > start.positions[i]!);
+  const index = start.blocks.findIndex((_, i) => {
+    const range = slideRange(start, i);
+    return range.max > range.min;
+  });
   const shape = start.blocks[index]!;
   const horizontal = shape.orientation === 'h';
+  const pull = slideRange(start, index).max > start.positions[index]! ? 35 : -35;
   const x = ((horizontal ? start.positions[index]! : shape.lane) + 0.5) * 50;
   const y = ((horizontal ? shape.lane : start.positions[index]!) + 0.5) * 50;
   const block = document.querySelector(`[data-block="${index}"]`) as HTMLElement;
@@ -107,8 +113,8 @@ async function closeMidDrag() {
   });
   fireEvent.pointerMove(block, {
     pointerId: 1,
-    clientX: horizontal ? x + 35 : x,
-    clientY: horizontal ? y : y + 35,
+    clientX: horizontal ? x + pull : x,
+    clientY: horizontal ? y : y + pull,
   });
   expect(block).toHaveClass('ub-block-dragging');
   view.unmount();

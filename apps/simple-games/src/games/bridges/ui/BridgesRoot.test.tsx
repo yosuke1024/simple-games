@@ -201,6 +201,38 @@ function touchDrag(from: HTMLElement, path: readonly { clientX: number; clientY:
 const answerPair = (truth: BridgesSession) =>
   truth.graph.edges.find((e) => truth.solution[e.id]! > 0)!;
 
+/**
+ * A pair the answer joins whose island `b` needs more than one bridge, so one
+ * bridge leaves it open — named "1 of N bridges" rather than "complete". Read
+ * from the board: on some days' dailies the first answer pair ends at a 1
+ * (2026-11-30's does). Every answer has such a pair: two 1s joined to each
+ * other are a group of their own.
+ */
+function answerPairOpenAfterOne(truth: BridgesSession): { a: number; b: number } {
+  for (const edge of truth.graph.edges) {
+    if (truth.solution[edge.id]! === 0) continue;
+    if (truth.islands[edge.b]!.value > 1) return { a: edge.a, b: edge.b };
+    if (truth.islands[edge.a]!.value > 1) return { a: edge.b, b: edge.a };
+  }
+  throw new Error('every pair of the answer joins two 1s');
+}
+
+/**
+ * A pair to build past the answer, and the taps that take it there: one the
+ * answer leaves empty, built once — or, on a board whose answer uses every
+ * pair (2029-03-31's daily), one it joins with a single bridge, built twice.
+ * Which pairs those are moves with the date (on 2027-02-28's daily every pair
+ * the answer leaves empty is crossed by another), so they are read from the
+ * board.
+ */
+function pairOverTheAnswer(truth: BridgesSession): { a: number; b: number; taps: number } {
+  for (const answer of [0, 1]) {
+    const edge = truth.graph.edges.find((e) => truth.solution[e.id] === answer);
+    if (edge !== undefined) return { a: edge.a, b: edge.b, taps: answer + 1 };
+  }
+  throw new Error('the answer joins every pair with two bridges');
+}
+
 /** Total play seconds as they survive on disk, across every bucket. */
 function storedPlaySeconds(): number {
   const raw = deviceStore.get(BG_STORAGE_KEYS.stats);
@@ -550,11 +582,11 @@ describe('hints (§9)', () => {
     renderGame(tutorialDone);
     const truth = createDailySession(today());
     await openDaily(user);
-    // A pair the answer leaves empty, open on an empty board.
-    const extra = truth.graph.edges.find(
-      (edge) => truth.solution[edge.id] === 0 && truth.graph.crossings[edge.id]!.length === 0,
-    )!;
-    await tapPair(user, extra.a, extra.b);
+    // A pair built past the answer, open on an empty board: nothing is built
+    // yet that could cross it.
+    const extra = pairOverTheAnswer(truth);
+    expect(candidatesFor(truth, extra.a).map((c) => c.island)).toContain(extra.b);
+    await tapPair(user, extra.a, extra.b, extra.taps);
     await user.click(screen.getByRole('button', { name: 'Hint' }));
     expect(screen.getByRole('status')).toHaveTextContent(
       'Too many bridges between the highlighted islands.',
@@ -600,10 +632,12 @@ describe('the win (§3)', () => {
     expect(within(dialog).queryByRole('button', { name: 'New board' })).not.toBeInTheDocument();
     expect(screen.queryByText(/streak/i)).not.toBeInTheDocument();
     await settle();
-    // The finished game is not saved for resuming, and the day is recorded.
+    // The finished game is not saved for resuming, and the day is recorded —
+    // the board's day, not the clock read again after the play (which names
+    // the next day on a run across midnight).
     expect(deviceStore.get(BG_STORAGE_KEYS.dailyGame)).toBeUndefined();
     const stats = JSON.parse(deviceStore.get(BG_STORAGE_KEYS.stats)!) as Stats;
-    expect(Object.keys(stats.dailyTimes)).toEqual([today()]);
+    expect(Object.keys(stats.dailyTimes)).toEqual([truth.dailyDate]);
   });
 
   it('keeps the card up through a quick second tap and a held Enter meant for the board (§13)', async () => {
@@ -636,9 +670,11 @@ describe('the win (§3)', () => {
     await settle();
     expect(screen.getByRole('alertdialog', { name: 'All connected!' })).toBeInTheDocument();
     expect(storedPlays('daily')).toBe(1);
+    // The board's day, not the clock read again: on a run across midnight
+    // that names the next day.
     expect(
       Object.keys((JSON.parse(deviceStore.get(BG_STORAGE_KEYS.stats)!) as Stats).dailyTimes),
-    ).toEqual([today()]);
+    ).toEqual([truth.dailyDate]);
 
     // Once it is up a moment, the card answers as any card does — but a held
     // key's repeats still press nothing.
@@ -709,7 +745,7 @@ describe('retry, new board and the home (§8, §10)', () => {
     renderGame(tutorialDone);
     const truth = createDailySession(today());
     await openDaily(user);
-    const { a, b } = answerPair(truth);
+    const { a, b } = answerPairOpenAfterOne(truth);
     await tapPair(user, a, b);
     escape();
     await user.click(screen.getByRole('button', { name: 'Retry same board' }));

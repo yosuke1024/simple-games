@@ -557,10 +557,13 @@ describe('clearing a board (§3, §10)', () => {
 describe('the daily (§9, §10)', () => {
   it('says the day is done, and a fewer-moves record on the day’s board', async () => {
     const user = userEvent.setup();
-    const daily = createDailySession(today());
+    // The day read once: read again after the play, a run across midnight
+    // would look for the record under the next day.
+    const day = today();
+    const daily = createDailySession(day);
     const record: Stats = {
       ...statsSchema.defaultValue(),
-      dailyMoves: { [today()]: daily.minMoves + 3 },
+      dailyMoves: { [day]: daily.minMoves + 3 },
     };
     deviceStore.set(UB_STORAGE_KEYS.stats, JSON.stringify(record));
     await launchTutorialDone();
@@ -577,7 +580,7 @@ describe('the daily (§9, §10)', () => {
     const card = await screen.findByRole('alertdialog', { name: 'Cleared!' });
     expect(within(card).getByText('Your fewest moves on today’s board yet.')).toBeInTheDocument();
     expect(card.querySelector('.result-delta')?.textContent).toBe('−3');
-    expect(storedStats()?.dailyMoves[today()]).toBe(daily.minMoves);
+    expect(storedStats()?.dailyMoves[day]).toBe(daily.minMoves);
   });
 
   it('does not take a daily in progress away when the date changes under it', async () => {
