@@ -254,6 +254,15 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
   揃え、`src/test/modalIsolationWiring.test.ts` が新しいゲームにも同じ配線を要求する(issue #120)。
   Chromium 102 未満の WebView 向けフォールバックは `styles.css` の `.game-content[inert]`
   (`pointer-events: none`)。
+- **Escape は Cancel、閉じたらフォーカスは開いた場所へ。** `ConfirmDialog` と `RestartDialog` は
+  `ui/useDialogDismiss.ts` を通して、開いている間の Escape を Cancel(`onCancel` / `onClose`)と
+  同じに扱い、window の capture 段で受けて先へ流さない——ゲーム自身の Escape(選択の解除など)、
+  `blocked` の形で付いたままの `useGameKeys`、arcade 盤面の生のリスナーのどれも、ダイアログを閉じた
+  その Escape には答えない。閉じたらフォーカスは開いた操作(上部バーの ↻、設定の行)へ戻す。戻すのは
+  フォーカスが失われるとき(body か、ダイアログと一緒に消えた要素)だけで、閉じた側が意図して置いた
+  先は動かさず、もうページに無い opener は追わない。リスナーは閉じた時点とアンマウントで外す
+  ([GAME_LIFECYCLE.md](GAME_LIFECYCLE.md))。確定・取消で各ゲームがすることは変えない
+  (2026-10-18。テストは `ui/components/ConfirmDialog.test.tsx` / `RestartDialog.test.tsx`)。
 - **ヘッダの ↻ は結果カードと同じ 2 択。** プレイ中の ↻ は「同じ盤面で再挑戦」の確認
   (`ConfirmDialog`)だったので、盤面そのものを替えたい人は Home → モードのボタン → もう一度
   確認、と遠回りしていた(2026-10-02)。いまは `ui/components/RestartDialog.tsx` が 1 つの問い

@@ -759,6 +759,25 @@ describe('keyboard (issue #93)', () => {
     expect(empty.getAttribute('aria-label')!.startsWith('5,')).toBe(true);
   });
 
+  it('Escape closes the restart dialog as Cancel does, and hands the focus back to the ↻', async () => {
+    const user = userEvent.setup();
+    const { cells } = await startLevel(user);
+    const empty = cells.find((cell) => cell.getAttribute('aria-label')?.startsWith('Empty'))!;
+    await user.click(empty);
+    fireEvent.keyDown(window, { key: '5' });
+    expect(empty.getAttribute('aria-label')!.startsWith('5,')).toBe(true);
+
+    const restart = screen.getByRole('button', { name: 'Retry same board' });
+    await user.click(restart);
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    // Nothing started over, and the keyboard is back on the ↻ with the board answering it.
+    expect(empty.getAttribute('aria-label')!.startsWith('5,')).toBe(true);
+    expect(restart).toHaveFocus();
+    fireEvent.keyDown(window, { key: 'n' });
+    expect(screen.getByRole('button', { name: 'Notes' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
   it('goes quiet once the board is solved', async () => {
     const user = userEvent.setup();
     // Level 1 is deterministic (§9), so the test can compute the same

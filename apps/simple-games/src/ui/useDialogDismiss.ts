@@ -1,0 +1,57 @@
+/* The keyboard half of the shell's two dialogs, ConfirmDialog and the ↻'s
+   RestartDialog (docs/ARCHITECTURE.md「モーダルの間、盤面は inert」): Escape
+   answers exactly as Cancel does, and closing hands the focus back to the
+   control that opened the dialog — the ↻ in a game's top bar, a row in
+   Settings — so a keyboard or screen-reader user keeps their place instead of
+   starting again from the top of the page.
+
+   Call it from a component that exists only while the dialog is open. The
+   opener is read on that component's first render, because by the time any
+   effect runs, Cancel's autoFocus has already moved the focus into the dialog
+   (the same reading NameSheet does).
+
+   - Escape is taken on the window in the capture phase, ahead of every other
+     listener, and goes no further: a game's own Escape (clearing a
+     selection), a `useGameKeys` listener left attached behind a `blocked`
+     guard, or an arcade board's raw keydown listener never also answers the
+     key that closed the dialog.
+   - The focus goes back only when it would otherwise be lost (on the body, or
+     on a node the dialog took away with it). If whatever ran on close put it
+     somewhere on purpose, it stays there; an opener that has left the page (a
+     confirm that navigated away, a sheet that re-rendered) is skipped.
+   - The listener is released when the dialog closes or unmounts
+     (docs/GAME_LIFECYCLE.md). */
+
+import { useEffect, useRef, useState } from 'react';
+
+export function useDialogDismiss(onCancel: () => void): void {
+  const [opener] = useState(() => {
+    const active = document.activeElement;
+    return active instanceof HTMLElement && active !== document.body ? active : null;
+  });
+  const cancelRef = useRef(onCancel);
+
+  useEffect(() => {
+    cancelRef.current = onCancel;
+  });
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      cancelRef.current();
+    };
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, []);
+
+  useEffect(
+    () => () => {
+      const active = document.activeElement;
+      const lost = active === null || active === document.body || !active.isConnected;
+      if (lost && opener?.isConnected) opener.focus();
+    },
+    [opener],
+  );
+}
