@@ -610,10 +610,9 @@ Water Sort より重い(Sudoku と比べると、Loop Puzzle は重く、Bridges
 
 **残っていること**(どれも未了):
 
-- **Web への配信**: pixapps-landing への同期 PR は作っておらず、製品オーナーの明示的な承認が
-  要る。その PR で、同期するチャンクと同じ PR で `tests/ui.test.js` の `WEB_BETA_GAME_IDS` に
-  5 本の id を足す(WEB_VERSION.md「先行公開」)。正式収録の基準(2 週間の安定稼働と計測)は
-  配信してから始まる。
+- ~~**Web への配信**~~ — 2026-10-19 に済んだ: pixapps-landing #201 で `a1c6a27` の web ビルドを
+  同期し、同じ PR で `tests/ui.test.js` の `WEB_BETA_GAME_IDS` に 5 本の id を足した
+  (WEB_VERSION.md「先行公開」)。正式収録の基準(2 週間の安定稼働と計測)はこの日から始まる。
 - **実機での確認**: 低スペックの Android(古い Chromium WebView)と iOS での生成・探索の待ち、
   グリフの描画(Chromium 88・システムフォントだけの端末ではどれもまだ見ていない)、端末の
   フォントでの各言語の表示、OS の文字サイズ拡大。上の数字は 6 倍のスロットルで、実機の
@@ -641,13 +640,13 @@ Water Sort より重い(Sudoku と比べると、Loop Puzzle は重く、Bridges
 
 ### main との合流(2026-10-18)
 
-PR を開いた後に main へ入った 3 本(#233 Reduced Motion の全体の規則が `::before` /
-`::after` にも届く、#235 プロバイダのアンマウントで退出の同期を走らせる、#236 確認ダイアログの
+PR を開いた後に main へ入った 3 本(#233 プロバイダのアンマウントで退出の同期を走らせる、
+#235 Reduced Motion の全体の規則が `::before` / `::after` にも届く、#236 確認ダイアログの
 Escape がキャンセルになり、閉じたらフォーカスを開いた場所へ戻す)を取り込んだ。合流そのものは
 衝突なし(`new-game.mjs`・`styles.css`・`ARCHITECTURE.md`・`GAME_LIFECYCLE.md`・
 `WEB_VERSION.md` は両側の変更が別の箇所)。そのうえで 5 本を新しい規則に合わせた。
 
-- **アンマウントで計上する**(#235。PR の CI が `unmountBookingWiring.test.ts` の
+- **アンマウントで計上する**(#233。PR の CI が `unmountBookingWiring.test.ts` の
   「expected 0 to be 1」で 5 本とも落ちていた): 5 本の `GameContext.tsx` に
   `useOnUnmount(syncActiveGame);` を 1 つずつ(main の codemod
   `scripts/codemods/2026-10-18-book-play-seconds-on-unmount.mjs` で入れ、テストの `afterEach` の

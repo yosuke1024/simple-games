@@ -205,9 +205,8 @@ Mancala と Dots and Boxes は完全情報の CPU 対戦なので Undo を持ち
 (2026-10-17。仕様の正は各ルール文書、経緯は
 [docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md](docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md))。
 registry に `channel: 'web-beta'` で登録してあり、**アプリには出ません**。上の 41 本には数えず、
-ストア掲載文にも載せません。**Web 版にもまだ出ていません** — Web 版を配信する pixapps-landing への
-同期(ビルドしたチャンクを送る PR)はまだ作っておらず、製品オーナーの明示的な承認を得てから
-行います。公開後はタイトルカードに「BETA」バッジが付き、ベータ中はスキーマ変更で保存データが
+ストア掲載文にも載せません。**Web 版では 2026-10-19 から先行公開しています**(Web 版を配信する
+pixapps-landing の #201 で同期)。タイトルカードに「BETA」バッジが付き、ベータ中はスキーマ変更で保存データが
 消えることがあります(en / ja ではその旨を表示)。正式収録は Web で公開してからの 2 週間の
 安定稼働と計測を見て人間が判断します([docs/WEB_VERSION.md](docs/WEB_VERSION.md)「先行公開(ベータ)」)。
 5 本とも Club House には登録しません。
