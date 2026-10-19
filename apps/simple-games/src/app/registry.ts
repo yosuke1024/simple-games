@@ -1159,9 +1159,9 @@ export const GAMES: readonly GameDefinition[] = [
     // and from Sky Fighter's ▲ above it at 3 columns, with Snake's ∿ beside it from 2 to 4 columns.
     // Neither Emoji nor Extended_Pictographic. 9 families. Tile ink 1.9% (10th of the 51 measured,
     // from the thinnest). No fallback in hand: ◠ is the one ruled out above. Not yet seen on a
-    // low-spec handset. Provisional: the owner's spec kept ◠ unless it was thin, and it is not; the
-    // switch is for the Bunny Hop neighbour and waits on the owner's word
-    // (docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md).
+    // low-spec handset. The owner's spec kept ◠ unless it was thin, and it is not; the switch is for
+    // the Bunny Hop neighbour, and the owner approved it on 2026-10-20
+    // (docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md, decision 7).
     id: 'bounce-up',
     title: 'Bounce Up',
     category: 'arcade',
