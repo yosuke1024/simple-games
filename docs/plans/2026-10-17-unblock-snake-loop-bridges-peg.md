@@ -641,13 +641,13 @@ Water Sort より重い(Sudoku と比べると、Loop Puzzle は重く、Bridges
 
 ### main との合流(2026-10-18)
 
-PR を開いた後に main へ入った 3 本(#233 Reduced Motion の全体の規則が `::before` /
-`::after` にも届く、#235 プロバイダのアンマウントで退出の同期を走らせる、#236 確認ダイアログの
+PR を開いた後に main へ入った 3 本(#233 プロバイダのアンマウントで退出の同期を走らせる、
+#235 Reduced Motion の全体の規則が `::before` / `::after` にも届く、#236 確認ダイアログの
 Escape がキャンセルになり、閉じたらフォーカスを開いた場所へ戻す)を取り込んだ。合流そのものは
 衝突なし(`new-game.mjs`・`styles.css`・`ARCHITECTURE.md`・`GAME_LIFECYCLE.md`・
 `WEB_VERSION.md` は両側の変更が別の箇所)。そのうえで 5 本を新しい規則に合わせた。
 
-- **アンマウントで計上する**(#235。PR の CI が `unmountBookingWiring.test.ts` の
+- **アンマウントで計上する**(#233。PR の CI が `unmountBookingWiring.test.ts` の
   「expected 0 to be 1」で 5 本とも落ちていた): 5 本の `GameContext.tsx` に
   `useOnUnmount(syncActiveGame);` を 1 つずつ(main の codemod
   `scripts/codemods/2026-10-18-book-play-seconds-on-unmount.mjs` で入れ、テストの `afterEach` の
