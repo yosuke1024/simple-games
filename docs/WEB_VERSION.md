@@ -233,12 +233,18 @@ play だけをサイト計測の空白にしない。計測の第一の用途は
 
 有効化の前提(人間作業 — AdSense 本番有効化と同じ束で行う):
 
-1. 公開ページ <https://pixapps.ai/simple-games/privacy> の改定(**2026-08-03 実施済み**)。
-   旧文面は「ゲームのページは意図的に Google Analytics の対象外にしている」と明言して
-   おり(2026-08-02 公開)、この決定はその**撤回**にあたる。黙って差し替えず、
-   改定として明記した — 日英とも当該段落に「2026-08-03 の改定までは対象外にしていた」
-   と残してある。**開示が先、収集が後**の順序をとる(逆は許されない)。同ページの
-   AdSense の説明も、実際の掲載より先に現在形で書いてある既存の前例に揃えた。
+1. 公開ページ <https://pixapps.ai/simple-games/privacy> の改定。旧文面は「ゲームのページは
+   意図的に Google Analytics の対象外にしている」と明言しており(2026-08-02 公開)、この決定は
+   その**撤回**にあたる。**開示が先、収集が後**の順序をとる(逆は許されない)。
+   **この順序は守れなかった。** 2026-08-03 の改定は「今後対象になる予定・現時点では計測コードを
+   一切読み込んでいない」という**将来形**で(landing cbffbb7)、計測入りのビルドは同じ日の
+   17:32 UTC(landing 824c8c8)から配信された。ページはその後も将来形のまま、計測データが
+   届き始めた 2026-08-30 を過ぎても直されず、**2026-10-19 の landing #202 で現在形に改めた**
+   (GA4 を使っていること・送るもの・同意メッセージが無いこと・この経緯を日英で明記)。
+   以後は landing の `tests/simple-games-play-analytics.test.js` が、公開ビルドが Google タグと
+   サイトの測定 ID を持つのにページが「計測コードを読み込んでいない」と書いていれば落とす。
+   (かつてここは「日英とも当該段落に『2026-08-03 の改定までは対象外にしていた』と残してある」と
+   書いていたが、その文面は公開前に将来形へ差し替えられており、公開ページには無かった。)
 2. GDPR 同意は AdSense と共通の CMP(Privacy & messaging / consent mode)で扱う。
    同意処理の失敗でゲームを止めない・遅らせない。
 3. **landing 側のテストガードを同じ PR で更新する。** `pixapps-landing` の
@@ -527,9 +533,12 @@ SPA 側で中和する(`.sg-web-chrome` スコープで `position: relative`、
 **native には不在。** `--mode web` のビルド時ゲートに置き、native 成果物への
 不在は `check-dist-ads-separation.sh` が広告・計測と同列に検査する。
 
-計測を本番有効化すると、ヘッダーのクリックは landing の `trackClick` が
-`navigation_click` として送る(`window.gtag` があるときだけ動く実装なので、
-こちら側の追加実装は不要)。
+**ヘッダーのクリックは play では計測されない。** landing の `trackClick` は
+`window.PixAppsAnalytics`(`/analytics.js` が定義する)があるときだけ動き、
+`/simple-games/play/` では `/analytics.js` を読み込まない(landing
+`docs/current/analytics-spec.md`「Ownership」— GA4 の初期化はこちらのビルドが持つ)。
+(かつてここは「`window.gtag` があるときだけ動くので `navigation_click` として送る」と
+書いていたが、`global-header.js` の実装は `window.gtag` ではなく `PixAppsAnalytics` を見る。)
 
 ## 保存
 
