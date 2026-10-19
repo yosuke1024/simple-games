@@ -56,7 +56,8 @@ describe('the address a shortcut carries', () => {
   // shortcut from a future release could still carry — lands on the
   // collection, exactly as a retired id does (app/gameChannel.ts). The five of
   // docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md are on the channel
-  // today.
+  // today, with the scaffolds of the next plan
+  // (docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md).
   it('means the collection for every web-beta title in the registry today', () => {
     const beta = GAMES.filter((game) => game.channel === 'web-beta');
     expect(beta.length).toBeGreaterThan(0);
@@ -67,7 +68,7 @@ describe('the address a shortcut carries', () => {
 
   // The same, for a synthetic beta entry spliced into the registry the parser
   // sees: the mechanism stays tested on the day no registry title is on the
-  // channel (as from 2026-10-02 until the five above arrived).
+  // channel (as from 2026-10-02 until the 2026-10-17 five arrived).
   it('means the collection for a web-beta title, which the app does not offer', async () => {
     const beta: GameDefinition = {
       ...GAMES.find((game) => game.id === 'sudoku')!,

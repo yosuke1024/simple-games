@@ -7,10 +7,11 @@
  *
  * The registry this file sees carries one synthetic beta entry besides the
  * real ones (today the five of docs/plans/2026-10-17-unblock-snake-loop-
- * bridges-peg.md): the tests below speak about the synthetic one, so they keep
- * testing the mechanism on any day no registry title is on the channel (as
- * from 2026-10-02 until those five arrived), and the real ones are checked
- * on top.
+ * bridges-peg.md and the scaffolds of docs/plans/2026-10-19-chess-gem-swap-
+ * pipe-link-bounce-up-echo-pads.md): the tests below speak about the
+ * synthetic one, so they keep testing the mechanism on any day no registry
+ * title is on the channel (as from 2026-10-02 until the 2026-10-17 five
+ * arrived), and the real ones are checked on top.
  */
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

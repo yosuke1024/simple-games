@@ -169,8 +169,8 @@ Reversi と Connect Four も盤面がすべて見えているため Hint を作�
 Web 版は新作の先行公開チャンネルです([docs/WEB_VERSION.md](docs/WEB_VERSION.md)
 「先行公開(ベータ)」)。上の表の末尾 11 本(Crown Grid から Box Regions まで)は
 2026-09-26 から 2026-09-29(UTC)に Web 版だけで先行公開し、**2026-10-02 にアプリへ正式収録**
-しました(その後の新作 5 本も同じチャンネル向けに実装しましたが、Web 版にはまだ出ていません —
-下の「Web 先行公開(ベータ)」)。
+しました(その後の新作 5 本は同じチャンネルで 2026-10-19 から Web 版に出ており、さらに次の
+5 本を実装中です — 下の「Web 先行公開(ベータ)」)。
 2 週間の安定稼働という基準を満たす前に、作者の判断で収録しました
 (経緯は WEB_VERSION.md に記録)。保存スキーマはこの収録で凍結し、以後は移行だけで変えます。
 この 11 本はゲーム別ガイドページがまだ無いので、「詳しく見る」のリンクはありません。
@@ -219,8 +219,26 @@ pixapps-landing の #201 で同期)。タイトルカードに「BETA」バッ�
 | Bridges        | ロジック   | 数字の島を縦横の橋(2 島の間は 2 本まで)で結び、全島を 1 つにつなぐ      | `bridges/`        | 難易度 3 種(7×7 / 9×9 / 10×10)+ デイリー                     | Undo / Hint(答えとの矛盾か、盤面から証明できる橋) | [docs/BRIDGES_RULES.md](docs/BRIDGES_RULES.md)               |
 | Peg Solitaire  | パズル     | コマを縦横(Triangle は 6 方向)に跳び越えて取り除き、最後の 1 個を目指す | `peg-solitaire/`  | 盤 2 種(English 33 穴 / Triangle 15 穴・54 問、デイリーなし) | Undo / Restart(Hint なし)                         | [docs/PEG_SOLITAIRE_RULES.md](docs/PEG_SOLITAIRE_RULES.md)   |
 
-後続候補は上の 5 本の正式収録判断まで**ありません**。次を選ぶときは、ローカル生成で
-完結しコンテンツサーバーを必要としないものを優先します。
+47〜51 本目の新作 5 本(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads)も、同じ
+**Web 版だけの先行公開(ベータ)**向けに 2026-10-19 から実装しています(計画は
+[docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md)、
+仕様の正は各ルール文書)。いまは下の 4 本を registry に `channel: 'web-beta'` で登録した
+スキャフォールドの段階で、**ゲーム本体はまだ無く、Web 版にもアプリにも出ていません**。
+統合と検証を終えてから Web 版へ同期します。Chess は工数が最も大きいので別のフェーズ・別の PR で
+進め、**まだ registry にありません**。残り 4 本を Chess で待たせません。上の 41 本には数えず、
+ストア掲載文にも載せず、Club House にも登録しません。
+遊び方・進行・助けはまだ実装していないので、ここには書きません(計画と各ルール文書にあります)。
+
+| ゲーム    | カテゴリ   | フォルダ     | ルール文書(いまはスタブ)                           |
+| --------- | ---------- | ------------ | -------------------------------------------------- |
+| Gem Swap  | パズル     | `gem-swap/`  | [docs/GEM_SWAP_RULES.md](docs/GEM_SWAP_RULES.md)   |
+| Pipe Link | ロジック   | `pipe-link/` | [docs/PIPE_LINK_RULES.md](docs/PIPE_LINK_RULES.md) |
+| Bounce Up | アーケード | `bounce-up/` | [docs/BOUNCE_UP_RULES.md](docs/BOUNCE_UP_RULES.md) |
+| Echo Pads | ドリル     | `echo-pads/` | [docs/ECHO_PADS_RULES.md](docs/ECHO_PADS_RULES.md) |
+
+後続候補は上の 9 本と計画済みの Chess の正式収録判断まで**ありません**(以前は 42〜46 の 5 本の
+判断までと書いていましたが、2026-10-19 に作者の判断で、その判断の前に 47〜51 の 5 本に着手しました)。
+次を選ぶときは、ローカル生成で完結しコンテンツサーバーを必要としないものを優先します。
 未収録のゲームをストアやアプリ内で "Coming Soon" として見せることはしません。
 
 収録ゲームはワークスペースパッケージではなくフォルダで分割します。共通のゲームフレームワークは意図的に作りません。
@@ -278,7 +296,11 @@ simple-games/
 │           │   ├── snake/
 │           │   ├── loop-puzzle/
 │           │   ├── bridges/
-│           │   └── peg-solitaire/
+│           │   ├── peg-solitaire/
+│           │   ├── gem-swap/    # ここから 4 本は実装中の Web 先行公開(ベータ)。まだスキャフォールド
+│           │   ├── pipe-link/
+│           │   ├── bounce-up/
+│           │   └── echo-pads/
 │           ├── backup/        # 共有: ローカルバックアップの書き出しと復元
 │           ├── club/           # 共有: 任意の Club House(参加した人だけが通信する唯一のディレクトリ)
 │           ├── monetization/   # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
@@ -321,14 +343,15 @@ Android / iOS のビルド手順は [apps/simple-games/README.md](apps/simple-ga
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 14 言語・1,748 キー(シェル 125 + ゲーム別 1,623 — 正式収録 41 本の 1,393 と Web 先行公開 5 本の 230。Club House の 122 キーは別カタログ。2026-10-17 に各 `en.ts` の最上位キーを数えた)
+**One app. Many games. Many languages.** 現在は 14 言語・1,792 キー(シェル 125 + ゲーム別 1,667 — 正式収録 41 本の 1,393、Web 先行公開 5 本の 230、実装中の 4 本のスキャフォールドの 44。Club House の 122 キーは別カタログ。2026-10-19 に各 `en.ts` の最上位キーを数えた)
 (en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
 中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。
 カタログは全言語同梱で、言語追加は「locale ファイル 1 つ + 登録」で完結します。
 **en と ja 以外は来歴 `machine` です — AI の助けを借りて書いており、その言語の
 ネイティブは一人も読んでいません。**Web 先行公開 5 本のゲーム別の文言は、ja も AI の
-下書きで、作者はまだ読んでいません(5 本の文言に高リスクキーはありません)。
+下書きで、作者はまだ読んでいません(5 本の文言に高リスクキーはありません)。実装中の 4 本
+(Gem Swap から Echo Pads まで)のカタログは、まだ 14 言語すべてがスキャフォールドの英語の仮文です。
 この製品は一人でつくっているため、14 言語の
 ネイティブレビューは供給できません。代わりに、約束を背負う高リスクキーだけは
 リリース前に逆翻訳を作者が読む門を通し、自然さは来歴の開示と読者からの報告に

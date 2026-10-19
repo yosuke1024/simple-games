@@ -80,6 +80,13 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
 > から作る(現行コードで組み立てた payload では代わりにならない — 上の「スキーマ凍結」の項目)。
 > 上のほかの項目(registry の `channel` を外す・README とストア掲載文・landing の許容リストから
 > `LANDING_GAME_IDS` へ・アプリでの実機確認)も、この 5 本についてはすべて未了。
+>
+> その次の 5 本(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads、No. 47〜51。2026-10-19 に
+> 着手 — [plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md))は
+> 4 本(Gem Swap / Pipe Link / Bounce Up / Echo Pads)を registry に `channel: 'web-beta'` で登録した
+> スキャフォールドの段階で、**Web 版ではまだ始まっていない**(ゲーム本体が無く、配信もしていない。
+> Chess は計画済みで、まだ registry に無い)。2 週間の時計は Web で公開した日から数えるので、まだ動いていない。
+> この節の項目はすべて未着手。
 
 ## 1. コードの検証(機械が判定できるもの)
 

@@ -1,6 +1,6 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-10-17
+Updated: 2026-10-19
 
 この文書は、Simple Games を変更・レビュー・説明するときの **共通の入口** である。
 ここに全仕様を複製しない。実装上の事実はコード、恒久的な原則は各 canonical document を正とし、
@@ -43,7 +43,8 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **41 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
-  本数はここで数える)。`GAMES` の全 46 エントリには、下の Web 先行公開 5 本も含まれる。
+  本数はここで数える)。`GAMES` の全 50 エントリには、下の Web 先行公開中の 5 本(No. 42〜46)と、
+  実装中で Web 版にも出していない 4 本(No. 48〜51)も含まれる。
 - 2026-10-02 に、Web 版で先行公開していた新作 11 本(Crown Grid / Number Path /
   Shape Regions、2026-09-26、issue #194。Yacht / Mancala / Dominoes / Hit & Blow /
   Dots and Boxes、2026-09-27、issue #197。Binary Balance / Sudoku 6×6 / Box Regions、
@@ -55,12 +56,20 @@ Design philosophy:
   新作 5 本**(Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、No. 42〜46)を
   このリポジトリに実装し、registry に `channel: 'web-beta'` で登録した(仕様の正は各
   `docs/*_RULES.md`、経緯は `docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md`)。
-  **Web 版へはまだ出していない** — pixapps-landing へ同期する PR は作っておらず、作るには
-  製品オーナーの明示的な承認が要る。その PR では landing の `tests/ui.test.js` の
-  `WEB_BETA_GAME_IDS` に 5 本の id を**同期するチャンクと同じ PR で**足す(このテストは
-  チャンクの無い id でも落ちる。`docs/WEB_VERSION.md`「先行公開」)。正式収録の 41 本には
-  数えず、アプリには出ない。正式収録の基準(Web での 2 週間の安定稼働と計測、
-  `docs/RELEASE_CHECKLIST.md` §0)は変えず、Web で公開するまで始まらない。
+  **Web 版では 2026-10-19 から先行公開している**(pixapps-landing #201 で同期し、同じ PR で
+  landing の `tests/ui.test.js` の `WEB_BETA_GAME_IDS` に 5 本の id を足した。
+  `docs/WEB_VERSION.md`「先行公開」)。正式収録の 41 本には数えず、アプリには出ない。
+  正式収録の基準(Web での 2 週間の安定稼働と計測、`docs/RELEASE_CHECKLIST.md` §0)は
+  変えず、2 週間の時計は 2026-10-19 から数える。
+- 2026-10-19 から、さらに **Web 先行公開(ベータ)向けの新作 5 本**(Chess / Gem Swap /
+  Pipe Link / Bounce Up / Echo Pads、No. 47〜51)に着手した(計画は
+  `docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md`、仕様の正は各
+  `docs/*_RULES.md`)。Phase 1 として Gem Swap / Pipe Link / Bounce Up / Echo Pads の 4 本を
+  `scripts/new-game.mjs --channel web-beta` でスキャフォールドし、registry に
+  `channel: 'web-beta'` で登録した段階で、**ゲーム本体はまだ無い**(画面と文言は
+  スキャフォールドの仮のもの)。**Web 版にも出していない** — 統合と検証を終えてから同期する。
+  Chess は計画済みで、別フェーズ・別 PR で進める。**まだ registry に無い**(接続点は自分の
+  コミットで足す)。残り 4 本の完了を Chess で待たせない。正式収録の 41 本には数えず、アプリには出ない。
   チャンネルの宣言は registry の `channel`、出し分けは `app/gameChannel.ts` の
   実行時ガード(`docs/WEB_VERSION.md`「先行公開」)。
 - 実装上のゲーム一覧・ID・並び順・カテゴリの正は `apps/simple-games/src/app/registry.ts` の `GAMES` / `GAME_CATEGORIES`。

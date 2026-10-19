@@ -465,6 +465,46 @@
   --accent-ring-soft: rgba(104, 39, 95, 0.12);
 }
 
+/* The web-beta titles of docs/plans/2026-10-19-chess-gem-swap-pipe-link-
+   bounce-up-echo-pads.md. All five accents were chosen together against the
+   shipped forty-six per its Phase 1; Chess's come in a commit of its own. */
+
+:root[data-game='gem-swap'],
+.accent-gem-swap {
+  --accent: #67283f;
+  --accent-ink: #ffffff;
+  --accent-soft: #f0dbe3;
+  --accent-ring: rgba(103, 40, 63, 0.38);
+  --accent-ring-soft: rgba(103, 40, 63, 0.12);
+}
+
+:root[data-game='pipe-link'],
+.accent-pipe-link {
+  --accent: #a5672c;
+  --accent-ink: #ffffff;
+  --accent-soft: #f4e5d7;
+  --accent-ring: rgba(165, 103, 44, 0.38);
+  --accent-ring-soft: rgba(165, 103, 44, 0.12);
+}
+
+:root[data-game='bounce-up'],
+.accent-bounce-up {
+  --accent: #9e4892;
+  --accent-ink: #ffffff;
+  --accent-soft: #efdcec;
+  --accent-ring: rgba(158, 72, 146, 0.38);
+  --accent-ring-soft: rgba(158, 72, 146, 0.12);
+}
+
+:root[data-game='echo-pads'],
+.accent-echo-pads {
+  --accent: #306cb6;
+  --accent-ink: #ffffff;
+  --accent-soft: #d7e4f4;
+  --accent-ring: rgba(48, 108, 182, 0.38);
+  --accent-ring-soft: rgba(48, 108, 182, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -890,6 +930,42 @@
   --accent-soft: #372436;
   --accent-ring: rgba(183, 123, 178, 0.42);
   --accent-ring-soft: rgba(183, 123, 178, 0.14);
+}
+
+:root[data-theme='dark'][data-game='gem-swap'],
+[data-theme='dark'] .accent-gem-swap {
+  --accent: #bf97a3;
+  --accent-ink: #191012;
+  --accent-soft: #36262b;
+  --accent-ring: rgba(191, 151, 163, 0.42);
+  --accent-ring-soft: rgba(191, 151, 163, 0.14);
+}
+
+:root[data-theme='dark'][data-game='pipe-link'],
+[data-theme='dark'] .accent-pipe-link {
+  --accent: #dba775;
+  --accent-ink: #201408;
+  --accent-soft: #412e1b;
+  --accent-ring: rgba(219, 167, 117, 0.42);
+  --accent-ring-soft: rgba(219, 167, 117, 0.14);
+}
+
+:root[data-theme='dark'][data-game='bounce-up'],
+[data-theme='dark'] .accent-bounce-up {
+  --accent: #cf7dc2;
+  --accent-ink: #1e0b1b;
+  --accent-soft: #3d1f38;
+  --accent-ring: rgba(207, 125, 194, 0.42);
+  --accent-ring-soft: rgba(207, 125, 194, 0.14);
+}
+
+:root[data-theme='dark'][data-game='echo-pads'],
+[data-theme='dark'] .accent-echo-pads {
+  --accent: #709abd;
+  --accent-ink: #0d151c;
+  --accent-soft: #222f3a;
+  --accent-ring: rgba(112, 154, 189, 0.42);
+  --accent-ring-soft: rgba(112, 154, 189, 0.14);
 }
 
 /* ---------- Web early release (docs/WEB_VERSION.md「先行公開」) ----------

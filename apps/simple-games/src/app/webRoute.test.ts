@@ -89,10 +89,12 @@ describe('the game a URL asks for', () => {
  * this is also what keeps a beta title out of a pinned shortcut on the app.
  *
  * Exercised twice: with the real beta titles the registry declares today (the
- * five of docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md), and with a
- * synthetic beta entry spliced into the registry, which keeps the mechanism
- * tested on any day no registry title is on the channel (as from 2026-10-02
- * until those five arrived).
+ * five of docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md and the
+ * scaffolds of
+ * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md), and
+ * with a synthetic beta entry spliced into the registry, which keeps the
+ * mechanism tested on any day no registry title is on the channel (as from
+ * 2026-10-02 until the 2026-10-17 five arrived).
  */
 describe('a web-beta title in the address', () => {
   const realBeta = GAMES.filter((game) => game.channel === 'web-beta');

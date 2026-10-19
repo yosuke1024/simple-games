@@ -67,11 +67,13 @@ vi.mock('../../services/homeShortcut/homeShortcut', () => ({
 }));
 
 // Besides the real web-beta titles (today the five of
-// docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md), the registry this
-// file sees carries one synthetic beta title: a released game's shape under an
-// id and title of its own, appended last. It keeps the tests below from going
-// vacuous on any day no registry title is on the channel (as from 2026-10-02
-// until those five arrived). Every importer here shares the list.
+// docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md and the scaffolds of
+// docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md), the
+// registry this file sees carries one synthetic beta title: a released game's
+// shape under an id and title of its own, appended last. It keeps the tests
+// below from going vacuous on any day no registry title is on the channel (as
+// from 2026-10-02 until the 2026-10-17 five arrived). Every importer here
+// shares the list.
 vi.mock('../../app/registry', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../app/registry')>();
   const synthetic = {
@@ -227,6 +229,10 @@ describe('web-beta titles', () => {
       'loop-puzzle',
       'bridges',
       'peg-solitaire',
+      'gem-swap',
+      'pipe-link',
+      'bounce-up',
+      'echo-pads',
       'synthetic-beta',
     ]);
     expect(released.length).toBeGreaterThan(20);
@@ -1227,7 +1233,7 @@ describe('what a search matches', () => {
     renderHome();
 
     await openSearch(user);
-    await user.type(searchField(), 'chess');
+    await user.type(searchField(), 'zebra');
 
     expect(screen.getByRole('status')).toHaveTextContent('No games match.');
     expect(titlesOnScreen()).toEqual([]);
@@ -1238,7 +1244,7 @@ describe('what a search matches', () => {
     renderHome();
 
     await openSearch(user);
-    await user.type(searchField(), 'chess');
+    await user.type(searchField(), 'zebra');
     await user.clear(searchField());
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
