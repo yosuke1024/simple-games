@@ -40,7 +40,15 @@ function BoardFigure({ values, moving = [] }: { values: string[]; moving?: numbe
 }
 
 export function SlidingPuzzleTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startLevel, progress, goHome } = useSlidingPuzzle();
+  const {
+    tutorialCompleted,
+    completeTutorial,
+    canResume,
+    resumeGame,
+    startLevel,
+    progress,
+    goHome,
+  } = useSlidingPuzzle();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('sliding-puzzle', locale);
   const [step, setStep] = useState(0);
@@ -73,7 +81,11 @@ export function SlidingPuzzleTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startLevel(progress.highestUnlocked);
+      // Onto the level already waiting, if one is, whichever level it is: the
+      // flag and the save are separate records, and a lost or unreadable flags
+      // record must not cost the player the level they left (§10).
+      if (canResume('level')) resumeGame('level');
+      else startLevel(progress.highestUnlocked);
     } else {
       goHome();
     }

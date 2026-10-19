@@ -11,7 +11,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { addDays, createDailySession, createDifficultySession, localDateString } from '../game';
+import {
+  addDays,
+  createDailySession,
+  createDifficultySession,
+  doTap,
+  localDateString,
+} from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { NP_STORAGE_KEYS, type Stats } from '../storage/schemas';
 import { NumberPathRoot } from './NumberPathRoot';
@@ -180,6 +186,32 @@ describe('first run', () => {
     // The difficulty last chosen — easy on a fresh install (§7): a 5×5.
     expect(screen.getByText('Easy')).toBeInTheDocument();
     expect(within(board()).getAllByRole('button')).toHaveLength(25);
+  });
+});
+
+describe('Quick Rules shown again over a suspended board (§9)', () => {
+  it('resumes that board on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone (and the remembered difficulty with it, so the
+    // first-run board would be Easy); a Medium board is suspended, one step in.
+    const medium = createDifficultySession('medium', 'number-path-medium-flags-lost');
+    const played = doTap(medium, medium.solution[1]!)!;
+    deviceStore.set(NP_STORAGE_KEYS.game, JSON.stringify(toPersisted(played, 1)));
+    launch();
+
+    expect(await screen.findByText('Follow the numbers')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(within(board()).getAllByRole('button')).toHaveLength(36);
+    expect(pathLength()).toBe(2);
+    // Resumed, not started: the slot keeps its board, and no play is counted.
+    const saved = JSON.parse(deviceStore.get(NP_STORAGE_KEYS.game)!) as { seed: string };
+    expect(saved.seed).toBe(medium.seed);
+    expect(deviceStore.get(NP_STORAGE_KEYS.stats)).toBeUndefined();
   });
 });
 

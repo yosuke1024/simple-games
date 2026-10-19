@@ -67,7 +67,15 @@ const WALLED = buildBoard({
 })!;
 
 export function NumberPathTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startDifficulty, prefs, goHome } = useNumberPath();
+  const {
+    tutorialCompleted,
+    completeTutorial,
+    canResume,
+    resumeGame,
+    startDifficulty,
+    prefs,
+    goHome,
+  } = useNumberPath();
   const { t } = useSettings();
   const [step, setStep] = useState(0);
 
@@ -97,7 +105,11 @@ export function NumberPathTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startDifficulty(prefs.difficulty);
+      // Onto the board already waiting, if one is, whatever its difficulty: the
+      // flag and the save are separate records, and a lost or unreadable flags
+      // record must not cost the player the board they left (§9).
+      if (canResume('difficulty')) resumeGame('difficulty');
+      else startDifficulty(prefs.difficulty);
     } else {
       goHome();
     }

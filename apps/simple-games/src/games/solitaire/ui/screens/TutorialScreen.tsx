@@ -52,7 +52,8 @@ function CardsFigure({ cards }: { cards: FigureCard[] }) {
 }
 
 export function SolitaireTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startFree, goHome } = useSolitaire();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startFree, goHome } =
+    useSolitaire();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('solitaire', locale);
   const [step, setStep] = useState(0);
@@ -109,7 +110,11 @@ export function SolitaireTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startFree();
+      // Onto the deal already waiting, if one is: the flag and the save are
+      // separate records, and a lost or unreadable flags record must not cost
+      // the player the deal they left (§10).
+      if (canResume('free')) resumeGame('free');
+      else startFree();
     } else {
       goHome();
     }

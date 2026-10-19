@@ -127,7 +127,13 @@ function firstEmpty(): { index: number; answer: number; wrong: number } {
   const { givens, solution } = savedBoard();
   const index = [...givens].findIndex((character) => character === '.');
   const answer = Number(solution[index]);
-  return { index, answer, wrong: (answer % 6) + 1 };
+  // A wrong digit the pad still offers: once all six of a digit are givens its
+  // key is disabled (ui/components/DigitPad.tsx), and a tap on it places
+  // nothing — about 1 Easy board in 100 for the digit after the answer.
+  const offered = (digit: number) =>
+    [...givens].filter((character) => character === String(digit)).length < 6;
+  const wrong = [1, 2, 3, 4, 5].map((step) => ((answer - 1 + step) % 6) + 1).find(offered)!;
+  return { index, answer, wrong };
 }
 
 afterEach(async () => {
@@ -161,6 +167,42 @@ describe('first run (§12)', () => {
     expect(JSON.parse(deviceStore.get(S6_STORAGE_KEYS.flags)!)).toMatchObject({
       tutorialCompleted: true,
     });
+  });
+});
+
+describe('Quick Rules shown again over a suspended board (§11)', () => {
+  it('resumes that board on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    deviceStore.set(S6_STORAGE_KEYS.flags, TUTORIAL_DONE);
+    launch();
+    await settle();
+    fireEvent.click(screen.getByRole('button', { name: /^Medium/ }));
+    await settle();
+    const { index, answer } = firstEmpty();
+    fireEvent.click(cellAt(index));
+    fireEvent.click(padKey(answer));
+    fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+    const { givens } = savedBoard();
+    // The flags record is gone while a Medium board is suspended — and the
+    // remembered difficulty with it, so the first-run board would be Easy.
+    deviceStore.delete(S6_STORAGE_KEYS.flags);
+    deviceStore.delete(S6_STORAGE_KEYS.prefs);
+
+    launch();
+    expect(await screen.findByText('1-6, once each')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(cellAt(index)).toHaveAccessibleName(new RegExp(`^${answer}, row`));
+    // Resumed, not started: the same board in the slot, and no second play counted.
+    expect(savedBoard().givens).toBe(givens);
+    const stats = JSON.parse(deviceStore.get(S6_STORAGE_KEYS.stats)!) as Stats;
+    expect(stats).toMatchObject({ easy: { played: 0 }, medium: { played: 1 } });
   });
 });
 

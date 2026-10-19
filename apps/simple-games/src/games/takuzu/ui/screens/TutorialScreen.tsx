@@ -53,7 +53,15 @@ function LineFigure({
 }
 
 export function TakuzuTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startLevel, progress, goHome } = useTakuzu();
+  const {
+    tutorialCompleted,
+    completeTutorial,
+    canResume,
+    resumeGame,
+    startLevel,
+    progress,
+    goHome,
+  } = useTakuzu();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('takuzu', locale);
   const [step, setStep] = useState(0);
@@ -85,7 +93,11 @@ export function TakuzuTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startLevel(progress.highestUnlocked);
+      // Onto the level already waiting, if one is, whichever level it is: the
+      // flag and the save are separate records, and a lost or unreadable flags
+      // record must not cost the player the level they left (§11).
+      if (canResume('level')) resumeGame('level');
+      else startLevel(progress.highestUnlocked);
     } else {
       goHome();
     }

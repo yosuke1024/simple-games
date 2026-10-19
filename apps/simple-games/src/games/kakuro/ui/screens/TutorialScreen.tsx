@@ -63,7 +63,15 @@ function RunFigure({
 }
 
 export function KakuroTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startLevel, progress, goHome } = useKakuro();
+  const {
+    tutorialCompleted,
+    completeTutorial,
+    canResume,
+    resumeGame,
+    startLevel,
+    progress,
+    goHome,
+  } = useKakuro();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('kakuro', locale);
   const [step, setStep] = useState(0);
@@ -96,7 +104,11 @@ export function KakuroTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startLevel(progress.highestUnlocked);
+      // Onto the level already waiting, if one is, whichever level it is: the
+      // flag and the save are separate records, and a lost or unreadable flags
+      // record must not cost the player the level they left (§11).
+      if (canResume('level')) resumeGame('level');
+      else startLevel(progress.highestUnlocked);
     } else {
       goHome();
     }

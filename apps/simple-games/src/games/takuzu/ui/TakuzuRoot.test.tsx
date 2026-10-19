@@ -5,7 +5,7 @@ import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
 import { EMPTY, createLevelSession } from '../game';
-import { TK_STORAGE_KEYS, type Stats } from '../storage/schemas';
+import { TK_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { TakuzuRoot } from './TakuzuRoot';
 
 /**
@@ -388,6 +388,42 @@ describe('first run', () => {
     expect(screen.getByText('Level 1')).toBeInTheDocument();
     // Level 1 is a 6×6: thirty-six squares, roughly half of them fixed.
     expect(within(board()).getAllByRole('button')).toHaveLength(36);
+  });
+});
+
+describe('Quick Rules shown again over a suspended level (§11)', () => {
+  it('resumes that level on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    deviceStore.set(TK_STORAGE_KEYS.flags, tutorialDone[TK_STORAGE_KEYS.flags]!);
+    launch();
+    await startLevelOne(user);
+    const { row, col } = firstOpenCell();
+    await user.click(cellAt(row, col));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    const { seed } = JSON.parse(deviceStore.get(TK_STORAGE_KEYS.game)!) as PersistedGame;
+    cleanup();
+    // Level 1 is suspended one square in, the list is open to level 3 — where
+    // a first run starts — and the flags record is gone.
+    deviceStore.set(
+      TK_STORAGE_KEYS.progress,
+      JSON.stringify({ schemaVersion: 1, highestUnlocked: 3, bestSeconds: {}, dailySeconds: {} }),
+    );
+    deviceStore.delete(TK_STORAGE_KEYS.flags);
+
+    launch();
+    expect(await screen.findByText('Never three in a row')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(cellAt(row, col).getAttribute('aria-label')).toMatch(/^0,/);
+    // Resumed, not started: the same board in the slot, and no second play booked.
+    const stored = JSON.parse(deviceStore.get(TK_STORAGE_KEYS.game)!) as PersistedGame;
+    expect(stored).toMatchObject({ seed, level: 1 });
+    expect((JSON.parse(deviceStore.get(TK_STORAGE_KEYS.stats)!) as Stats).size6.played).toBe(1);
   });
 });
 

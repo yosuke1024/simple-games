@@ -12,7 +12,9 @@ import {
   encodeBoard,
   encodeSolution,
   localDateString,
+  placeDigit,
   type Board,
+  type Digit,
 } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { SD_STORAGE_KEYS, type Stats } from '../storage/schemas';
@@ -119,6 +121,40 @@ describe('first run', () => {
     expect(screen.getByRole('button', { name: 'Hint' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Notes' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+});
+
+describe('Quick Rules shown again over a suspended level (§11)', () => {
+  it('resumes that level on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while level 1 sits suspended, one digit in; the
+    // list is open to level 3, which is where a first run would start.
+    const truth = createLevelSession(1);
+    const index = truth.board.givens.findIndex((given) => given === 0);
+    const digit = truth.solution[index]!;
+    const played = placeDigit(truth, index, digit as Digit)!;
+    renderSudoku({
+      [SD_STORAGE_KEYS.game]: JSON.stringify(toPersisted(played, 1)),
+      [SD_STORAGE_KEYS.progress]: JSON.stringify({
+        schemaVersion: 2,
+        highestUnlocked: 3,
+        bestTimes: {},
+        dailyTimes: {},
+      }),
+    });
+
+    expect(await screen.findByText('1-9, once each')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    const cells = within(screen.getByRole('group', { name: 'Sudoku grid' })).getAllByRole('button');
+    expect(cells[index]!.getAttribute('aria-label')!.startsWith(`${digit},`)).toBe(true);
+    // Resumed, not started: no new board written over the slot, no play counted.
+    expect(deviceStore.get(SD_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(SD_STORAGE_KEYS.stats)).toBeUndefined();
   });
 });
 

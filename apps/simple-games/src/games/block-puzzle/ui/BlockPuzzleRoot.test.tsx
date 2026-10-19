@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { createSession, pieceById } from '../game';
+import { createSession, pieceById, placePiece } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { BP_STORAGE_KEYS } from '../storage/schemas';
 import { BlockPuzzleRoot } from './BlockPuzzleRoot';
@@ -164,6 +164,32 @@ describe('first run', () => {
     expect(within(board()).getAllByRole('button')).toHaveLength(64);
     expect(within(tray()).getAllByRole('button')).toHaveLength(3);
     expect(screen.getByText(/Score\s*0/)).toBeInTheDocument();
+  });
+});
+
+describe('Quick Rules shown again over a suspended game (§10)', () => {
+  it('resumes that game on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a game is suspended in the one slot: the
+    // two are separate records (§10), so Quick Rules show again over a board
+    // with a piece already down.
+    const played = placePiece(PINNED, 0, 0, 0)!;
+    renderGame({ [BP_STORAGE_KEYS.game]: JSON.stringify(toPersisted(played, 1)) });
+
+    expect(await screen.findByText('Drag a piece in')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    // The board that was left: the piece still down, its score still scored,
+    // and its slot in the tray still spent.
+    expect(board().querySelectorAll('.bp-cell-filled')).toHaveLength(cellsInSlot(0));
+    expect(screen.getByText(new RegExp(`Score\\s*${cellsInSlot(0)}`))).toBeInTheDocument();
+    expect(within(tray()).getByRole('button', { name: 'Piece 1, already placed' })).toBeDisabled();
+    // Resumed, not started: no new board over the slot, and no play counted (§9).
+    expect(deviceStore.get(BP_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(BP_STORAGE_KEYS.stats)).toBeUndefined();
   });
 });
 

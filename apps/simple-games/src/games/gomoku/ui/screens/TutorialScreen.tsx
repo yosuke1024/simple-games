@@ -48,7 +48,8 @@ const FIVE = [0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 1, 1, 1, 1, 4, 0, 0, 2, 0, 0, 0, 0, 
 const OPEN_THREE = [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 3, 2, 2, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0];
 
 export function GomokuTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startNewGame, goHome } = useGomoku();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startNewGame, goHome } =
+    useGomoku();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('gomoku', locale);
   const [step, setStep] = useState(0);
@@ -76,9 +77,13 @@ export function GomokuTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      // The first match is against the gentlest opponent; the others are one
-      // tap away on the home screen (§4).
-      startNewGame('easy');
+      // Onto the match already waiting, if one is: the flag and the save are
+      // separate records, and a lost or unreadable flags record must not cost
+      // the player the match they left (§8). Otherwise the first match is
+      // against the gentlest opponent; the others are one tap away on the home
+      // screen (§4).
+      if (canResume) resumeGame();
+      else startNewGame('easy');
     } else {
       goHome();
     }

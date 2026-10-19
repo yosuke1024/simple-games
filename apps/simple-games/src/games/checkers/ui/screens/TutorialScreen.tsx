@@ -59,7 +59,8 @@ const KEEP_JUMPING = [3, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0];
 const CROWNED = [0, 5, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 export function CheckersTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startNewGame, goHome } = useCheckers();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startNewGame, goHome } =
+    useCheckers();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('checkers', locale);
   const [step, setStep] = useState(0);
@@ -87,9 +88,13 @@ export function CheckersTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      // The first match is against the gentlest opponent; the others are one
-      // tap away on the home screen (§4).
-      startNewGame('easy');
+      // Onto the match already waiting, if one is: the flag and the save are
+      // separate records, and a lost or unreadable flags record must not cost
+      // the player the match they left (§8). Otherwise the first match is
+      // against the gentlest opponent; the others are one tap away on the home
+      // screen (§4).
+      if (canResume) resumeGame();
+      else startNewGame('easy');
     } else {
       goHome();
     }

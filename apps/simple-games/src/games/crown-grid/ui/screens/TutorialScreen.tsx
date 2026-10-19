@@ -53,7 +53,15 @@ function Figure({ regions, marks }: { regions: readonly string[]; marks: readonl
 }
 
 export function CrownGridTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startDifficulty, prefs, goHome } = useCrownGrid();
+  const {
+    tutorialCompleted,
+    completeTutorial,
+    canResume,
+    resumeGame,
+    startDifficulty,
+    prefs,
+    goHome,
+  } = useCrownGrid();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('crown-grid', locale);
   const [step, setStep] = useState(0);
@@ -94,7 +102,11 @@ export function CrownGridTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startDifficulty(prefs.difficulty);
+      // Onto the board already waiting, if one is, whatever its difficulty: the
+      // flag and the save are separate records, and a lost or unreadable flags
+      // record must not cost the player the board they left (§11).
+      if (canResume('difficulty')) resumeGame('difficulty');
+      else startDifficulty(prefs.difficulty);
     } else {
       goHome();
     }

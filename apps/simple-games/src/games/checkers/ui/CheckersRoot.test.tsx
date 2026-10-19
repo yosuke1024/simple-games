@@ -4,7 +4,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { PLAYER, createSession, restoreSession, type Board, type Piece } from '../game';
+import {
+  PLAYER,
+  applyCpuTurn,
+  applyPlayerStep,
+  createSession,
+  restoreSession,
+  type Board,
+  type Piece,
+} from '../game';
 import { CPU_MAN, EMPTY, PLAYER_MAN, isDarkSquare } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { CK_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
@@ -219,6 +227,34 @@ describe('first run', () => {
     // Sixty-four squares, twenty-four pieces, and nothing on a light one (§1).
     expect(within(board()).getAllByRole('button')).toHaveLength(64);
     expect(pieces()).toHaveLength(24);
+  });
+});
+
+describe('Quick Rules shown again over a suspended match (§8)', () => {
+  it('resumes that match on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a match is suspended in `ck.saveGame`: the
+    // two are separate records (§8), so Quick Rules show again over a match one
+    // move each in — the player's man from (6,3) to (5,2), and the CPU's reply.
+    const opened = createSession('easy', PLAYER, 'checkers-uitest');
+    const moved = applyPlayerStep(opened, { from: 42, to: 33, captured: -1 })!.session;
+    const replied = applyCpuTurn(moved)!.session;
+    renderGame({ [CK_STORAGE_KEYS.game]: JSON.stringify(toPersisted(replied, 1)) });
+
+    expect(await screen.findByText('Move diagonally forward')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    // The match that was left: the man is still where it landed.
+    expect(screen.getByRole('button', { name: 'Row 5, column 2: your piece' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Row 6, column 3: empty' })).toBeInTheDocument();
+    expect(screen.getByText('Your turn')).toBeInTheDocument();
+    // Resumed, not started: no new match over the slot, and the old one not
+    // finalized — nothing booked, no new match counted as played (§7).
+    expect(deviceStore.get(CK_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(CK_STORAGE_KEYS.stats)).toBeUndefined();
   });
 });
 

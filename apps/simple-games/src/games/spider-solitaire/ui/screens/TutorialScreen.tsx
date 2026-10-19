@@ -56,7 +56,8 @@ function CardsFigure({ items }: { items: FigureItem[] }) {
 }
 
 export function SpiderTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startFree, goHome } = useSpider();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startFree, goHome } =
+    useSpider();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('spider-solitaire', locale);
   const [step, setStep] = useState(0);
@@ -104,7 +105,11 @@ export function SpiderTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startFree();
+      // Onto the deal already waiting, if one is: the flag and the save are
+      // separate records, and a lost or unreadable flags record must not cost
+      // the player the deal they left (§10).
+      if (canResume('free')) resumeGame('free');
+      else startFree();
     } else {
       goHome();
     }

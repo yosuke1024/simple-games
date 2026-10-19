@@ -7,6 +7,7 @@ import { settingsSchema } from '@/storage/schemas';
 import {
   createDailySession,
   createDifficultySession,
+  doStroke,
   localDateString,
   neighbors,
   type ShapeRegionsSession,
@@ -211,6 +212,32 @@ describe('first run', () => {
 
     expect(screen.getByText('Easy')).toBeInTheDocument();
     expect(cells()).toHaveLength(25);
+  });
+});
+
+describe('Quick Rules shown again over a suspended board (§11)', () => {
+  it('resumes that board on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a Medium board is suspended, one stroke
+    // in — and no remembered difficulty, so the first-run board would be Easy.
+    const truth = createDifficultySession('medium', 'shape-regions-medium-flags-lost');
+    const { region, n1 } = stepIn(truth);
+    renderGame(savedBoard(doStroke(truth, region, [n1])!));
+
+    expect(await screen.findByText('Number and symbol')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(board()).toHaveAccessibleName('Shape Regions board, 6 by 6');
+    expect(cells()[n1]).toHaveAccessibleName(
+      new RegExp(`shape ${String.fromCharCode(65 + region)}`),
+    );
+    await settle();
+    // Resumed, not started: no play counted, and no new board written over the slot.
+    expect(deviceStore.get(SR_STORAGE_KEYS.stats)).toBeUndefined();
+    expect(deviceStore.get(SR_STORAGE_KEYS.game)).toBeUndefined();
   });
 });
 

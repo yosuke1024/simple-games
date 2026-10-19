@@ -52,7 +52,8 @@ function MiniBoard({ cells, focus }: { cells: readonly string[]; focus?: number 
 }
 
 export function MinesTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startDifficulty, goHome } = useMinesweeper();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startDifficulty, goHome } =
+    useMinesweeper();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('minesweeper', locale);
   const [step, setStep] = useState(0);
@@ -83,7 +84,11 @@ export function MinesTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startDifficulty('easy');
+      // Onto the board already waiting, if one is, whatever its difficulty: the
+      // flag and the save are separate records, and a lost or unreadable flags
+      // record must not cost the player the board they left (§10).
+      if (canResume('difficulty')) resumeGame('difficulty');
+      else startDifficulty('easy');
     } else {
       goHome();
     }

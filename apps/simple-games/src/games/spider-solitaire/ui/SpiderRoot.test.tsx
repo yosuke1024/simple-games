@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { createFreeSession, isValidBoard, type SpiderBoard } from '../game';
+import { createFreeSession, doDeal, isValidBoard, type SpiderBoard } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { SS_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { SpiderRoot } from './SpiderRoot';
@@ -514,6 +514,31 @@ describe('first run', () => {
     expect(within(table()).getAllByRole('img', { name: 'Face down' })).toHaveLength(44);
     expect(table().querySelectorAll('[data-card]')).toHaveLength(10);
     expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+  });
+});
+
+describe('Quick Rules shown again over a suspended deal (§10)', () => {
+  it('resumes that deal on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a free deal is suspended: the golden
+    // deal, one row already dealt off the stock.
+    const played = doDeal(createFreeSession(1, 'ss-free-golden'))!;
+    renderGame({ [SS_STORAGE_KEYS.game]: JSON.stringify(toPersisted(played, 1)) });
+
+    expect(await screen.findByText('Stack down by rank')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(
+      within(table()).getByRole('button', { name: 'Stock, 4 deals left — tap to deal a row' }),
+    ).toBeInTheDocument();
+    expect(table().querySelectorAll('[data-card]')).toHaveLength(20);
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    // Resumed, not dealt: no deal counted, and no new deal written over the slot.
+    expect(deviceStore.get(SS_STORAGE_KEYS.stats)).toBeUndefined();
+    expect(deviceStore.get(SS_STORAGE_KEYS.game)).toBeUndefined();
   });
 });
 

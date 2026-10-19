@@ -50,7 +50,8 @@ function Figure({ items }: { items: readonly FigureItem[] }) {
 }
 
 export function LudoTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startNewGame, goHome } = useLudo();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startNewGame, goHome } =
+    useLudo();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('ludo', locale);
   const [step, setStep] = useState(0);
@@ -93,9 +94,13 @@ export function LudoTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      // The first match is against the gentlest opponents; the others are one
-      // tap away on the home screen.
-      startNewGame('easy');
+      // Onto the match already waiting, if one is: the flag and the save are
+      // separate records, and a lost or unreadable flags record must not cost
+      // the player the match they left (§10). Otherwise the first match is
+      // against the gentlest opponents; the others are one tap away on the home
+      // screen.
+      if (canResume) resumeGame();
+      else startNewGame('easy');
     } else {
       goHome();
     }

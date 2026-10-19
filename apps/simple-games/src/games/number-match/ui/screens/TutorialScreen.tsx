@@ -51,7 +51,15 @@ function ExampleTiles({
  * Revisited from Home/Settings as "How to Play" with a Close action.
  */
 export function TutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startLevel, progress, goHome } = useApp();
+  const {
+    tutorialCompleted,
+    completeTutorial,
+    canResume,
+    resumeGame,
+    startLevel,
+    progress,
+    goHome,
+  } = useApp();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('number-match', locale);
   const [step, setStep] = useState(0);
@@ -84,7 +92,11 @@ export function TutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startLevel(progress.highestUnlocked);
+      // Onto the level already waiting, if one is, whichever level it is: the
+      // flag and the save are separate records, and a lost or unreadable flags
+      // record must not cost the player the level they left (§14).
+      if (canResume('level')) resumeGame('level');
+      else startLevel(progress.highestUnlocked);
     } else {
       goHome();
     }

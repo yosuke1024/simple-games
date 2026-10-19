@@ -6,9 +6,11 @@ import { settingsSchema } from '@/storage/schemas';
 import {
   createLevelSession,
   createScore,
+  findHint,
   generateLevelBoard,
   initialCellsForLevel,
   isLive,
+  matchPair,
 } from '../game';
 import { AppProvider } from '../state/GameContext';
 import { type SavedGames } from '../storage/gamePersistence';
@@ -152,6 +154,37 @@ describe('first run flow', () => {
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Hint' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Add' })).toBeEnabled();
+  });
+});
+
+describe('Quick Rules shown again over a suspended level (§14)', () => {
+  it('resumes that level on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // Level 3 is unlocked and level 1 is suspended a match in, with no
+    // tutorial flag beside it: the flag and the save are separate records
+    // (§14), so the flags record alone can be lost — and the first-run start
+    // would open level 3 over the board.
+    const fresh = createLevelSession(1);
+    const [i, j] = findHint(fresh.board)!;
+    renderApp(
+      flagsSchema.defaultValue(),
+      { ...progressSchema.defaultValue(), highestUnlocked: 3 },
+      { level: matchPair(fresh, i, j)!, daily: null, free: null },
+    );
+
+    expect(screen.getByText('Equal, or adds up to 10')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    const board = screen.getByRole('group', { name: 'Game board' });
+    expect(within(board).getAllByRole('button').length).toBeLessThanOrEqual(LEVEL1_CELLS - 2);
+    // Resumed, not started: no new board written over the slot, and no game
+    // counted.
+    expect(deviceStore.get(NM_STORAGE_KEYS.game)).toBeUndefined();
+    expect(storedLevelStats()).toBeNull();
   });
 });
 

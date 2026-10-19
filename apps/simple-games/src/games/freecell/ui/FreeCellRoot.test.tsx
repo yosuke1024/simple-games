@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { createFreeSession, isValidBoard } from '../game';
+import { createFreeSession, doMoveCascadeToCell, isValidBoard } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { FC_STORAGE_KEYS, type Stats } from '../storage/schemas';
 import { FreeCellRoot } from './FreeCellRoot';
@@ -363,6 +363,30 @@ describe('first run', () => {
     }
     expect(table().querySelectorAll('[data-card]')).toHaveLength(52);
     expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+  });
+});
+
+describe('Quick Rules shown again over a suspended deal (§10)', () => {
+  it('resumes that deal on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a free deal is suspended: the golden
+    // deal, one move in — its 6♦ parked in the third free cell.
+    const played = doMoveCascadeToCell(createFreeSession('fc-free-golden'), 0, 2)!;
+    renderGame({ [FC_STORAGE_KEYS.game]: JSON.stringify(toPersisted(played, 1)) });
+
+    expect(await screen.findByText('Down by one, colors alternate')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(
+      within(table()).getByRole('button', { name: 'Free cell 3, 6 of diamonds' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    // Resumed, not dealt: no deal counted, and no new deal written over the slot.
+    expect(deviceStore.get(FC_STORAGE_KEYS.stats)).toBeUndefined();
+    expect(deviceStore.get(FC_STORAGE_KEYS.game)).toBeUndefined();
   });
 });
 

@@ -50,7 +50,8 @@ const AFTER = [0, 0, 0, 2, 4, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0];
 const TIGHT = [2, 4, 8, 16, 4, 2, 4, 8, 2, 8, 2, 4, 4, 2, 4, 0];
 
 export function Game2048TutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startNewGame, goHome } = useGame2048();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startNewGame, goHome } =
+    useGame2048();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('2048', locale);
   const [step, setStep] = useState(0);
@@ -78,7 +79,11 @@ export function Game2048TutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startNewGame();
+      // Onto the game already waiting, if one is: the flag and the save are
+      // separate records, and a lost or unreadable flags record must not cost
+      // the player the game they left (§10).
+      if (canResume) resumeGame();
+      else startNewGame();
     } else {
       goHome();
     }
