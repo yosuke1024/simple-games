@@ -1,0 +1,632 @@
+/* Unblock Puzzle — all of this game's styling, imported by UnblockPuzzleRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--paper,
+   --surface, --surface-recessed, --ink, --ink-soft, --line, --stone,
+   --stone-line, --accent, --accent-ink, --radius, …), so the game follows the
+   theme without knowing about it and writes no colour of its own. The one
+   accent goes on the target block and the exit, and on the marks that point
+   at a move (the hint, the destination dots' ring); every other block is the
+   neutral face with a groove along its long side (docs/UNBLOCK_PUZZLE_RULES.md
+   §14). Class names are prefixed `ub-` so this file can never collide with the
+   shell or with another game. */
+
+/* ---------- the board's size ----------
+
+   The cell is the smaller of two shares: the width left once the side gutters
+   (2 × 16px), the board's padding and border and the exit mark (16px) are
+   taken out (with 4px to spare), and the height left once everything stacked above and below the
+   board is — the top bar, the arrow row, the action bar and the banner slot
+   (`--ub-chrome`). With the web build's bottom ad reservation (116px instead
+   of the app's 64px banner, styles.css `:root[data-sg-web-ads] .screen`) the
+   chrome is taller. The safe-area insets the shell pads the screen with
+   (`.screen` on top, the banner slot or the ad reservation below) come out
+   of the height too (`--ub-safe-y`). At 360×640 that is about 48px a cell
+   either way: the board and every control fit without scrolling (§14). The
+   size never depends on the language.
+
+   The height is `100svh` where the engine has it, `100vh` where it does not
+   (the Chromium 88 floor, styles.css「wide viewports」). On a phone's
+   browser `100vh` is the height with the address bar hidden, while the page
+   is laid out with it showing — so a vh-only cell overflows by the bar's
+   height there. A custom property does not fall back to an earlier
+   declaration the way an ordinary one does (an engine without svh would
+   keep the svh value and lose the board's size), so the svh share lives in
+   an `@supports` block instead of a second declaration. */
+
+.ub-board {
+  --ub-cols: 6;
+  --ub-rows: 6;
+  --ub-exit-row: 2;
+  --ub-pad: 6px;
+  --ub-border: 2px;
+  --ub-gap: 4px;
+  --ub-exit-room: 16px;
+  --ub-chrome: 300px;
+  --ub-safe-y: calc(env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+  --ub-cell-max: 64px;
+  --ub-cell: clamp(
+    28px,
+    min(
+      calc(
+        (100vw - 36px - 2 * var(--ub-pad) - 2 * var(--ub-border) - var(--ub-exit-room)) /
+          var(--ub-cols)
+      ),
+      calc((100vh - var(--ub-chrome) - var(--ub-safe-y)) / var(--ub-rows))
+    ),
+    var(--ub-cell-max)
+  );
+  position: relative;
+  box-sizing: content-box;
+  padding: var(--ub-pad);
+  border: var(--ub-border) solid var(--stone-line);
+  border-radius: 12px;
+  background: var(--surface-recessed);
+  margin-right: var(--ub-exit-room);
+}
+
+/* Before `.ub-figure` below, whose fixed cell must keep winning. */
+@supports (height: 100svh) {
+  .ub-board {
+    --ub-cell: clamp(
+      28px,
+      min(
+        calc(
+          (100vw - 36px - 2 * var(--ub-pad) - 2 * var(--ub-border) - var(--ub-exit-room)) /
+            var(--ub-cols)
+        ),
+        calc((100svh - var(--ub-chrome) - var(--ub-safe-y)) / var(--ub-rows))
+      ),
+      var(--ub-cell-max)
+    );
+  }
+}
+
+:root[data-sg-web-ads] .ub-board {
+  --ub-chrome: 352px;
+}
+
+.ub-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--ub-cols), var(--ub-cell));
+  grid-auto-rows: var(--ub-cell);
+  /* A finger on the board slides a block; it never scrolls the page (§5). */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* ---------- cells ---------- */
+
+.ub-cell {
+  position: relative;
+}
+
+/* The slot a block can stand on: a recessed square, so an empty board reads
+   as a grid without a single line drawn across it. */
+.ub-cell::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--ub-gap) / 2);
+  border-radius: 6px;
+  background: var(--paper);
+}
+
+/* Where the selected block can be tapped to (§5): a dot, not a tint. */
+.ub-cell-dest {
+  cursor: pointer;
+}
+
+.ub-cell-dest::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: var(--ink-soft);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* ---------- blocks ---------- */
+
+.ub-block,
+.ub-ghost,
+.ub-figure-was {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+  width: calc(var(--ub-cell) * var(--ub-w) - var(--ub-gap));
+  height: calc(var(--ub-cell) * var(--ub-h) - var(--ub-gap));
+  border-radius: 8px;
+  transform: translate(
+    calc(var(--ub-cell) * var(--ub-x) + var(--ub-gap) / 2 + var(--ub-dx, 0px)),
+    calc(var(--ub-cell) * var(--ub-y) + var(--ub-gap) / 2 + var(--ub-dy, 0px))
+  );
+}
+
+.ub-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 2px solid var(--stone-line);
+  background: var(--surface);
+  color: var(--stone-line);
+  cursor: grab;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  /* A slide is a short glide; Reduced Motion makes it a jump (below). */
+  transition:
+    transform 0.12s ease-out,
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+/* Press feedback by ground, never filter (§14). */
+.ub-block:active {
+  background: var(--surface-recessed);
+}
+
+.ub-block-target {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.ub-block-target:active {
+  background: var(--accent);
+  border-color: var(--ink);
+}
+
+/* The groove along a block's long side: which way it slides, without colour. */
+.ub-groove {
+  display: block;
+  border-radius: 2px;
+  background: var(--stone);
+  pointer-events: none;
+}
+
+.ub-block-h .ub-groove {
+  width: 55%;
+  height: 4px;
+}
+
+.ub-block-v .ub-groove {
+  width: 4px;
+  height: 55%;
+}
+
+/* The target's own mark: an arrow toward the exit. */
+.ub-target-mark {
+  width: 46%;
+  max-width: 34px;
+  height: auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* Selected (§5): a thick ink frame, with aria-pressed saying the same. */
+.ub-block-selected {
+  border-color: var(--ink);
+  box-shadow:
+    0 0 0 2px var(--ink),
+    var(--shadow);
+}
+
+/* Keyboard focus: an ink ring with a gap, apart from the selected frame,
+   which touches the block. Raised, because the blocks are positioned
+   siblings 4px apart — without it, the next block in the DOM paints over
+   the ring's outer edge. */
+.ub-block:focus-visible {
+  z-index: 3;
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* Under a finger: no glide, so it stays with the finger, and lifted. */
+.ub-block-dragging {
+  z-index: 2;
+  cursor: grabbing;
+  transition: none;
+  box-shadow: var(--shadow);
+}
+
+/* The Hint (§6): a dashed ring around the block, and a dashed outline where
+   it should go. Dashes, not only the accent, so it reads without colour.
+   The outline comes after the blocks in the DOM, so it is drawn over them:
+   a slide shorter than the block ends partly on the block's own cells, and
+   the whole outline must show. Its tint is faint enough to see the block
+   through. A dragged block (z-index 2) still rides above it. */
+.ub-block-hint::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border: 2px dashed var(--accent);
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.ub-ghost {
+  border: 2px dashed var(--accent);
+  background: var(--accent-ring-soft);
+  pointer-events: none;
+}
+
+/* ---------- the exit (§1, §14) ----------
+
+   A gap in the frame at the right end of the target's row, and an arrow just
+   outside it. Both are drawn, not written. */
+
+.ub-exit {
+  position: absolute;
+  right: calc(-1 * var(--ub-border));
+  top: calc(var(--ub-pad) + var(--ub-cell) * var(--ub-exit-row) + var(--ub-gap) / 2);
+  width: calc(var(--ub-pad) + var(--ub-border));
+  height: calc(var(--ub-cell) - var(--ub-gap));
+  background: var(--surface-recessed);
+  pointer-events: none;
+}
+
+.ub-exit-mark {
+  position: absolute;
+  left: calc(100% + var(--ub-border) + 1px);
+  top: calc(var(--ub-pad) + var(--ub-cell) * var(--ub-exit-row) + var(--ub-cell) / 2 - 9px);
+  width: 16px;
+  height: 18px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* The clear's beat (§14): the frame takes the accent for the moment before
+   the card arrives. One change, no motion. */
+.ub-board-solved {
+  border-color: var(--accent);
+}
+
+/* ---------- Reduced Motion (the OS setting and the app's) ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .ub-block {
+    transition: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .ub-block {
+  transition: none;
+}
+
+/* ---------- the game screen ---------- */
+
+.ub-status {
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  text-align: center;
+}
+
+.ub-moves {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.ub-play {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.ub-board-area {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 16px 8px;
+}
+
+.ub-controls {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ub-move-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 0 16px 8px;
+}
+
+.ub-move-btn {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 48px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--accent);
+  /* Pressed again and again (§5): a quick second tap is a second step, never a zoom. */
+  touch-action: manipulation;
+}
+
+.ub-move-btn:active:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+.ub-move-btn:disabled {
+  color: var(--line);
+  background: var(--paper);
+}
+
+/* Undo is pressed in runs too. */
+.ub-action-bar .action-btn {
+  touch-action: manipulation;
+}
+
+.ub-arrow-glyph {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ub-move-prompt {
+  flex: 0 1 190px;
+  min-width: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* While a hint is shown the line says so in words, beside the marks on the
+   board (§6); it stays until the next move, with nothing to time out. */
+.ub-move-prompt-hint {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------- result card ----------
+
+   This card carries more than most in the collection — five facts, three
+   buttons, the share link and, after a record, one more line — and at 360×640
+   in the web build the room for it is 476px (the overlay's gutters and the
+   ad reservation, styles.css `:root[data-sg-web-ads] .overlay`). So its
+   spacing is a notch tighter than the shell's dialog, enough that the card
+   fits there in all 14 languages without scrolling inside itself
+   (docs/UNBLOCK_PUZZLE_RULES.md §15, measured). The buttons keep the shell's
+   own size. */
+
+.ub-result {
+  padding: 20px;
+}
+
+.ub-result .dialog-title {
+  margin-bottom: 4px;
+}
+
+.ub-result .dialog-body {
+  margin-bottom: 8px;
+}
+
+/* Five facts, one row each: the label on the left in the soft ink, the
+   number on the right (the shape of the statistics rows). Not the shell's
+   side-by-side columns: five facts make two rows of three narrow columns,
+   their labels wrap to two or three lines in most languages, and the card
+   outgrows the screen. A label too long for its row wraps inside it —
+   hyphenated where the language allows — and never pushes the number out. */
+.ub-result-facts {
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 10px;
+}
+
+.ub-result-facts div {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ub-result-facts dt {
+  min-width: 0;
+  font-size: 14px;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.ub-result-facts dd {
+  flex-shrink: 0;
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+/* The quiet share link, a little closer under the buttons. */
+.ub-result .result-share {
+  margin-top: 4px;
+}
+
+/* ---------- home ---------- */
+
+.ub-choose-label {
+  margin: 0 0 -4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.ub-chips {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* The early-release note (the shell's WebBetaNotice, in its own styling)
+   under the heading on every step (ui/screens/TutorialScreen.tsx): the
+   heading's gutter, the header's padding for the space above it, and the
+   full width, so the badge alone (the twelve languages without the sentence)
+   sits where the sentence's badge does rather than centred over the step. */
+.ub-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
+}
+
+/* The board's own blocks and frame at a fixed small size: the figure is the
+   game, smaller. */
+.ub-figure {
+  --ub-cell: 30px;
+  --ub-pad: 4px;
+  --ub-gap: 3px;
+  margin-right: var(--ub-exit-room);
+}
+
+.ub-figure-closed {
+  margin-right: 0;
+}
+
+.ub-figure .ub-block {
+  cursor: default;
+  /* A still picture: nothing glides in from the previous step's figure. */
+  transition: none;
+}
+
+/* Where a block was, in a figure only (step 3): a neutral dashed outline.
+   Not the accent dashes of `.ub-ghost` — on the board those mean where the
+   Hint says a block should go, and the picture that teaches the game must
+   not teach the opposite. */
+.ub-figure-was {
+  border: 2px dashed var(--stone-line);
+  background: transparent;
+}
+
+.ub-figure-marks {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 2.4px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ub-figure-marks path {
+  vector-effect: non-scaling-stroke;
+}
+
+.ub-figure-badge circle {
+  fill: var(--accent);
+  stroke: none;
+}
+
+.ub-figure-badge text {
+  fill: var(--accent-ink);
+  stroke: none;
+  font-family: var(--font-display);
+  font-size: 0.36px;
+  font-weight: 800;
+  text-anchor: middle;
+}
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched. Medium only raises the ceiling of the cell. Wide (landscape,
+   900px and up) puts the controls beside the board, so the board can take
+   the height the arrow row and the action bar no longer need. */
+
+@media (min-width: 600px) {
+  .ub-board {
+    --ub-cell-max: 80px;
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .ub-screen .game-content {
+    --game-shell-max: 960px;
+  }
+
+  .ub-play {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding: 0 24px;
+  }
+
+  .ub-board-area {
+    flex: 0 0 auto;
+  }
+
+  .ub-board {
+    --ub-chrome: 120px;
+    --ub-cell-max: 92px;
+    --ub-cell: clamp(
+      28px,
+      calc((100vh - var(--ub-chrome) - var(--ub-safe-y)) / var(--ub-rows)),
+      var(--ub-cell-max)
+    );
+  }
+
+  @supports (height: 100svh) {
+    .ub-board {
+      --ub-cell: clamp(
+        28px,
+        calc((100svh - var(--ub-chrome) - var(--ub-safe-y)) / var(--ub-rows)),
+        var(--ub-cell-max)
+      );
+    }
+  }
+
+  :root[data-sg-web-ads] .ub-board {
+    --ub-chrome: 236px;
+  }
+
+  .ub-figure {
+    --ub-cell: 34px;
+  }
+
+  .ub-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 300px;
+  }
+
+  .ub-screen .ub-action-bar {
+    margin: 0;
+    padding: 0;
+    border-top: none;
+    background: transparent;
+  }
+}

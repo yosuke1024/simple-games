@@ -66,6 +66,11 @@ import { DB_STORAGE_KEYS } from '../games/dots-and-boxes/storage/keys';
 import { BN_STORAGE_KEYS } from '../games/binary-balance/storage/keys';
 import { S6_STORAGE_KEYS } from '../games/sudoku-6x6/storage/keys';
 import { BR_STORAGE_KEYS } from '../games/box-regions/storage/keys';
+import { UB_STORAGE_KEYS } from '../games/unblock-puzzle/storage/keys';
+import { SN_STORAGE_KEYS } from '../games/snake/storage/keys';
+import { LP_STORAGE_KEYS } from '../games/loop-puzzle/storage/keys';
+import { BG_STORAGE_KEYS } from '../games/bridges/storage/keys';
+import { PG_STORAGE_KEYS } from '../games/peg-solitaire/storage/keys';
 import { SUDOKU_CHALLENGE } from '../games/sudoku/challenge/contract';
 import { MINESWEEPER_CHALLENGE } from '../games/minesweeper/challenge/contract';
 import { WATER_SORT_CHALLENGE } from '../games/water-sort/challenge/contract';
@@ -143,7 +148,12 @@ export type GameId =
   | 'dots-and-boxes'
   | 'binary-balance'
   | 'sudoku-6x6'
-  | 'box-regions';
+  | 'box-regions'
+  | 'unblock-puzzle'
+  | 'snake'
+  | 'loop-puzzle'
+  | 'bridges'
+  | 'peg-solitaire';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -935,5 +945,146 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/box-regions/ui/BoxRegionsRoot').then((m) => ({ default: m.BoxRegionsRoot })),
     loadStorageSchemas: () => import('../games/box-regions/storage/schemas'),
+  },
+  // The five new genres of docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md
+  // (Nos. 42–46), in the plan's order, all in the browser's early release
+  // (docs/WEB_VERSION.md「先行公開」) and not in the app until a person decides
+  // they graduate (docs/RELEASE_CHECKLIST.md §0). None is a Club House
+  // challenge (no `challenge`) while its saves and results may still change.
+  //
+  // The glyphs were checked rather than hoped at, as Futoshiki's was: the
+  // bundled Nunito subset (latin-700/800, 230 code points) carries none of
+  // the five, so each resolves through the `ui-rounded, system-ui, sans-serif`
+  // tail of --font-display like every other symbol mark here. Coverage counts
+  // are font families in this environment's fc-list (42 in all), against the
+  // shipped marks: Sudoku's ⌗ 4, Memory Match's ⧉ 5, Crown Grid's ♛ 7, Ludo's
+  // ⚅ 8, Sliding Puzzle's ⇄ 11. None has yet been looked at on a low-spec
+  // handset (Chromium 88, system fonts only); each names its fallback, or says
+  // it has none. Neighbours were looked at on every width the home grid has
+  // (2 columns on a phone, 3 / 4 / 5 from 600 / 900 / 1280px), not the phone
+  // alone; ΔE pairs below are light / dark accent distances (CIE76).
+  {
+    // A rightwards arrow to a bar: the one block that must leave, sliding out
+    // through the exit at the right edge of its row (docs/UNBLOCK_PUZZLE_RULES.md).
+    // Arrows, like Sliding Puzzle's ⇄ — the near miss looked at: one shaft
+    // that stops at a wall, where that one is two shafts passing each other.
+    // On a phone ⇄ is only its diagonal neighbour; at 4 and 5 columns it sits
+    // right beside, and was kept there — the shapes still part (one arrow and
+    // a wall against two arrows) and so do the accents (ΔE 34.2 / 34.5, far
+    // past the 15 / 11 a shelf is held to). 25 families, more than either
+    // arrow already shipped (⇄ 11, Number Path's ↝ 8). Fallback ▬, the plain
+    // bar: set aside only because it is Box Regions' ▭ filled in, and Box
+    // Regions is on the logic shelf — the two never share a row on the home,
+    // and could meet only in search results or the favourites row.
+    id: 'unblock-puzzle',
+    title: 'Unblock Puzzle',
+    category: 'puzzle',
+    glyph: '⇥',
+    channel: 'web-beta',
+    storageKeys: Object.values(UB_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/unblock-puzzle/ui/UnblockPuzzleRoot').then((m) => ({
+        default: m.UnblockPuzzleRoot,
+      })),
+    loadStorageSchemas: () => import('../games/unblock-puzzle/storage/schemas'),
+  },
+  {
+    // A sine wave: the snake itself, one body bending across the board
+    // (docs/SNAKE_RULES.md). Mathematical Operators, the block Brick Breaker's
+    // ≡ on this same shelf draws from — one curved stroke where that one is
+    // three straight ones (Water Sort's three waves ≋ live on the puzzle
+    // shelf, Number Path's ↝ on the logic one). ≡ is right above it at 3
+    // columns and Bubble Pop's ○ at 4 — a curve against bars, and against a
+    // ring; at 5 the shelf is one row, with Bunny Hop's ⌃ beside it. The
+    // thinnest coverage of the five: 6 families, above ⌗ / ⌖ (4) and ⧉ (5),
+    // under ♛ (7). Fallback ≀ (7 families), the same wave stood on end.
+    id: 'snake',
+    title: 'Snake',
+    category: 'arcade',
+    glyph: '∿',
+    channel: 'web-beta',
+    storageKeys: Object.values(SN_STORAGE_KEYS),
+    loadRoot: () => import('../games/snake/ui/SnakeRoot').then((m) => ({ default: m.SnakeRoot })),
+    loadStorageSchemas: () => import('../games/snake/storage/schemas'),
+  },
+  {
+    // A dotted square: one closed loop drawn along the dotted lattice of a
+    // square board (docs/LOOP_PUZZLE_RULES.md). Miscellaneous Symbols and
+    // Arrows; 9 families, no emoji presentation. It replaced the dotted
+    // circle ◌ in the plan's Phase 4 review: measured on the real tile, ◌
+    // was the faintest mark of all 46 — 0.5–0.7% of the tile in ink at 360 /
+    // 768 / 1024 / 1280px, both themes, DPR 1 and 2, and 0.5% in the recent
+    // row, where the next faintest is about 1.0% — while ⬚ is 2.6–2.9%, the
+    // 14th–15th faintest. ▢ (4.4%) is a second outlined rectangle beside Box
+    // Regions' ▭; ∮ reads as calculus before it reads as a loop; ⬡ (7
+    // families) is a cell of a hexagonal board this game does not have; the
+    // plain ring ○ is Bubble Pop's. ⬚ sits beside ▭ too, at every width, and
+    // above or below it when both are in the recent row — kept there because
+    // a square of dashes against a solid 2:1 bar parts at a glance, and so do
+    // the accents (ΔE 52.7 / 49.3). On wider layouts it stacks under Binary
+    // Balance's ⊜ (3 columns), Hit & Blow's ◉ (4) and Shape Regions' ▙ (5),
+    // with Bridges' ⊶ beside it from 3 columns on — an open square against a
+    // circled sign, a bullseye, a solid block and a dumbbell (ΔE 114.7 /
+    // 125.2, 26.8 / 33.6, 19.8 / 14.4, 46.1 / 37.0). Under hi the fallback is
+    // FreeSans, whose dashes all but close at tile size: there it reads as a
+    // plain square (observed; still square, not ▭'s bar). Under ko it is
+    // Unifont's finer dots. No fallback in hand.
+    id: 'loop-puzzle',
+    title: 'Loop Puzzle',
+    category: 'logic',
+    glyph: '⬚',
+    channel: 'web-beta',
+    storageKeys: Object.values(LP_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/loop-puzzle/ui/LoopPuzzleRoot').then((m) => ({ default: m.LoopPuzzleRoot })),
+    loadStorageSchemas: () => import('../games/loop-puzzle/storage/schemas'),
+  },
+  {
+    // Two islands and the bridge between them (U+22B6): the rule in one
+    // figure (docs/BRIDGES_RULES.md). Mathematical Operators, the block Binary
+    // Balance's ⊜ and Kakuro's ∑ on this shelf draw from; it is the only mark
+    // here made of two shapes joined by a line. On wider layouts it stacks
+    // under circled marks — Binary Balance's ⊜ directly above at 4 columns,
+    // Hit & Blow's ◉ at 5 (each diagonal at another width) — and was judged
+    // distinct: one ring holding a sign against a ring and a dot held apart
+    // by a line, with the accents apart too (ΔE 76.5 / 90.0 to ⊜, 43.6 / 30.2
+    // to ◉). 7 families, the same as Crown Grid's ♛ and Connect Four's ⁘.
+    // Fallback ⊷, its mirror image, at the same coverage.
+    id: 'bridges',
+    title: 'Bridges',
+    category: 'logic',
+    glyph: '⊶',
+    channel: 'web-beta',
+    storageKeys: Object.values(BG_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/bridges/ui/BridgesRoot').then((m) => ({ default: m.BridgesRoot })),
+    loadStorageSchemas: () => import('../games/bridges/storage/schemas'),
+  },
+  {
+    // A dotted cross: the English board's cross of holes, with the pegs in it
+    // (docs/PEG_SOLITAIRE_RULES.md). Not Solitaire's ♠ or anything from the
+    // card suits — this is a different game under a different id. General
+    // Punctuation, the dot family Connect Four's ⁘ and Gomoku's ⁙ come from
+    // (7 families, as theirs), and they are on the board shelf. The near miss
+    // on this shelf is 2048's ⊞, also a cross in four: that one is a framed
+    // box, this one an open cross with dots. ⊕ was dropped for exactly that
+    // reason — a circled plus beside a squared one — so if ⁜ fails to draw on
+    // a handset, that call has to be made again rather than ⊕ dropped in.
+    // ⊞ is never beside it at any width, only diagonal at 5 columns (ΔE 79.9
+    // / 72.9); the mark directly above it there is Block Puzzle's framed ▣
+    // (15.6 / 12.4). Its proportions follow the fallback font: FreeSans under
+    // hi draws a squatter cross than DejaVu Sans elsewhere, and Unifont under
+    // ko a smaller one (observed; legible in each).
+    id: 'peg-solitaire',
+    title: 'Peg Solitaire',
+    category: 'puzzle',
+    glyph: '⁜',
+    channel: 'web-beta',
+    storageKeys: Object.values(PG_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/peg-solitaire/ui/PegSolitaireRoot').then((m) => ({
+        default: m.PegSolitaireRoot,
+      })),
+    loadStorageSchemas: () => import('../games/peg-solitaire/storage/schemas'),
   },
 ];

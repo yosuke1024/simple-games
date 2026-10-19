@@ -5,9 +5,12 @@
  * for every locale; nothing at all renders for a released title or on the app,
  * where a beta title is never shown in the first place.
  *
- * No registry title is on the channel today (all graduated 2026-10-02), so the
- * registry this file sees carries one synthetic beta entry: the mechanism is
- * kept and tested for the next beta.
+ * The registry this file sees carries one synthetic beta entry besides the
+ * real ones (today the five of docs/plans/2026-10-17-unblock-snake-loop-
+ * bridges-peg.md): the tests below speak about the synthetic one, so they keep
+ * testing the mechanism on any day no registry title is on the channel (as
+ * from 2026-10-02 until those five arrived), and the real ones are checked
+ * on top.
  */
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -45,7 +48,8 @@ import { settingsSchema, type Settings } from '../../storage/schemas';
 import { GameBetaBadge } from './GameBetaBadge';
 import { WebBetaNotice } from './WebBetaNotice';
 
-const beta = GAMES.find((game) => game.channel === 'web-beta')!;
+const beta = GAMES.find((game) => game.id === ('synthetic-beta' as GameId))!;
+const realBeta = GAMES.filter((game) => game.channel === 'web-beta' && game !== beta);
 const released = GAMES.find((game) => game.channel !== 'web-beta')!;
 
 function renderNotice(gameId: GameId, language: Settings['language'] = 'en') {
@@ -63,10 +67,21 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('WebBetaNotice', () => {
-  it('has a beta title to speak about — the synthetic one, since none ships', () => {
+  it('has a beta title to speak about — the synthetic one, whatever ships', () => {
     expect(beta).toBeDefined();
     expect(beta.id).toBe('synthetic-beta');
+    expect(beta.channel).toBe('web-beta');
     expect(released).toBeDefined();
+  });
+
+  it('shows the badge and the save caveat for every real beta title too', () => {
+    expect(realBeta.length).toBeGreaterThan(0);
+    for (const game of realBeta) {
+      renderNotice(game.id, 'en');
+      expect(screen.getByText('BETA')).toBeInTheDocument();
+      expect(screen.getByText(/may be reset/)).toBeInTheDocument();
+      cleanup();
+    }
   });
 
   it('shows the badge and the save caveat in English', () => {
