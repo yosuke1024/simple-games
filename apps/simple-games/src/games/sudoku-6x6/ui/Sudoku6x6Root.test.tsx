@@ -127,7 +127,13 @@ function firstEmpty(): { index: number; answer: number; wrong: number } {
   const { givens, solution } = savedBoard();
   const index = [...givens].findIndex((character) => character === '.');
   const answer = Number(solution[index]);
-  return { index, answer, wrong: (answer % 6) + 1 };
+  // A wrong digit the pad still offers: once all six of a digit are givens its
+  // key is disabled (ui/components/DigitPad.tsx), and a tap on it places
+  // nothing — about 1 Easy board in 100 for the digit after the answer.
+  const offered = (digit: number) =>
+    [...givens].filter((character) => character === String(digit)).length < 6;
+  const wrong = [1, 2, 3, 4, 5].map((step) => ((answer - 1 + step) % 6) + 1).find(offered)!;
+  return { index, answer, wrong };
 }
 
 afterEach(async () => {
