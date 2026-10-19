@@ -73,9 +73,9 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
 
 > **次の候補(記録のみ — まだどの項目にも着手していない。チェックは入れない)。** Web 先行公開の
 > 5 本(Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、No. 42〜46。2026-10-17 に
-> このリポジトリで実装)。**Web 版にはまだ配信していない**(pixapps-landing への同期は製品
-> オーナーの承認待ち — [WEB_VERSION.md](WEB_VERSION.md)「先行公開」)ので、上の 2 週間の安定稼働も
-> 滞在時間の確認も始まっていない。収録するときは、その版で 5 本の保存スキーマを凍結し、
+> このリポジトリで実装)。**2026-10-19 に Web 版で配信を始めた**(pixapps-landing #201 —
+> [WEB_VERSION.md](WEB_VERSION.md)「先行公開」)ので、上の 2 週間の安定稼働はこの日から数える
+> (保存を消す変更を入れたら巻き戻る)。滞在時間の確認はその後。収録するときは、その版で 5 本の保存スキーマを凍結し、
 > `games/<id>/storage/releasedRecords.test.ts` を**配信した Web ビルドで実際に保存された payload**
 > から作る(現行コードで組み立てた payload では代わりにならない — 上の「スキーマ凍結」の項目)。
 > 上のほかの項目(registry の `channel` を外す・README とストア掲載文・landing の許容リストから

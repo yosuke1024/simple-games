@@ -610,10 +610,9 @@ Water Sort より重い(Sudoku と比べると、Loop Puzzle は重く、Bridges
 
 **残っていること**(どれも未了):
 
-- **Web への配信**: pixapps-landing への同期 PR は作っておらず、製品オーナーの明示的な承認が
-  要る。その PR で、同期するチャンクと同じ PR で `tests/ui.test.js` の `WEB_BETA_GAME_IDS` に
-  5 本の id を足す(WEB_VERSION.md「先行公開」)。正式収録の基準(2 週間の安定稼働と計測)は
-  配信してから始まる。
+- ~~**Web への配信**~~ — 2026-10-19 に済んだ: pixapps-landing #201 で `a1c6a27` の web ビルドを
+  同期し、同じ PR で `tests/ui.test.js` の `WEB_BETA_GAME_IDS` に 5 本の id を足した
+  (WEB_VERSION.md「先行公開」)。正式収録の基準(2 週間の安定稼働と計測)はこの日から始まる。
 - **実機での確認**: 低スペックの Android(古い Chromium WebView)と iOS での生成・探索の待ち、
   グリフの描画(Chromium 88・システムフォントだけの端末ではどれもまだ見ていない)、端末の
   フォントでの各言語の表示、OS の文字サイズ拡大。上の数字は 6 倍のスロットルで、実機の
