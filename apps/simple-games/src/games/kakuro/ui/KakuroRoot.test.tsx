@@ -449,8 +449,12 @@ describe('Quick Rules shown again over a suspended level (§11)', () => {
     await user.click(padKey(truth.solution[index]!));
     await user.click(screen.getByRole('button', { name: 'Home' }));
     await settle();
-    const suspended = deviceStore.get(KK_STORAGE_KEYS.game);
     cleanup();
+    // Read once the screen is gone: unmounting syncs the board once more
+    // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and that copy is the
+    // one the next launch reads.
+    await settle();
+    const suspended = deviceStore.get(KK_STORAGE_KEYS.game);
     deviceStore.delete(KK_STORAGE_KEYS.flags);
 
     launch();
