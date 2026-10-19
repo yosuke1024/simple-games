@@ -48,7 +48,7 @@ describe('searching the collection by name', () => {
   });
 
   it('returns nothing for a name no game has', () => {
-    expect(searchGames('chess')).toEqual([]);
+    expect(searchGames('zebra')).toEqual([]);
   });
 
   /**

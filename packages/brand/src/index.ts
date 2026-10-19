@@ -1010,6 +1010,100 @@ export const titleAccents = {
     onDark: '#1a0e19',
     softDark: '#372436',
   },
+  /**
+   * Chess — madder red (web-beta). The pieces wear their physical light and
+   * dark colours, like Reversi's and Gomoku's and unlike Checkers' and Connect
+   * Four's, whose accent is the player's pieces (CHESS_RULES), so the accent
+   * is chrome alone: the selected piece, the legal-move dots and the buttons —
+   * the smallest accent area of the five, which takes the most chromatic
+   * value of the batch (C* 62.4, 6th of 51). Chosen in the same pass as the
+   * four below (see gemSwap): nearest shipped is Connect Four at ΔE 14.3
+   * light (same board shelf, never above, below or beside it — diagonal at
+   * five columns) / Bubble Pop at 10.9 dark; `--warn` is 20.0 / 20.0 away.
+   * Dominoes above it on the shelf is 58.7 / 66.1. White ink 6.08, paper
+   * 5.34, dark paper 4.75.
+   */
+  chess: {
+    light: '#b63030',
+    onLight: '#ffffff',
+    softLight: '#f4d7d7',
+    dark: '#d55d5d',
+    onDark: '#200808',
+    softDark: '#411b1b',
+  },
+  /**
+   * Gem Swap — enji, a deep lacquer red (web-beta). All five accents of
+   * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
+   * (Chess's included, which comes in a commit of its own) were chosen in one
+   * pass against the 46 shipped accents + `--warn` (Phase 1, CIE76), each
+   * over the 12.5 / 9.1 floors and 30 apart from one another. The gems carry
+   * their own shape-and-colour set (game content), so the accent is chrome
+   * alone; it takes the deepest, least chromatic value of the five (C* 30.8
+   * light / 16.9 dark) so a selection never reads as one more gem. Nearest
+   * shipped is Takuzu at ΔE 14.3 light / Memory Match at 10.4 dark; Unblock
+   * Puzzle above it on the puzzle shelf is 32.5 / 32.0, Peg Solitaire beside
+   * it at three and five columns 20.1 / 25.5. White ink 10.76, paper 9.45,
+   * dark paper 6.99.
+   */
+  gemSwap: {
+    light: '#67283f',
+    onLight: '#ffffff',
+    softLight: '#f0dbe3',
+    dark: '#bf97a3',
+    onDark: '#191012',
+    softDark: '#36262b',
+  },
+  /**
+   * Pipe Link — amber (web-beta). The accent lights every pipe joined to the
+   * source; a solved board is lit end to end, the largest accent area of the
+   * five, so it takes a mid chroma (C* 46.7 / 35.7) and sits far from the
+   * unlit pipes' soft ink (ΔE 54.6 / 45.3). Nearest shipped is Sliding Puzzle
+   * at ΔE 14.3 light / 10.5 dark; Loop Puzzle above it is 95.3 / 87.5 and
+   * Bridges beside it 69.4 / 60.1. White ink 4.59, paper 4.03 — under 4.5 for
+   * text on the paper (4.51 on the card surface), like Binary Balance and
+   * Yacht — dark paper 8.38.
+   */
+  pipeLink: {
+    light: '#a5672c',
+    onLight: '#ffffff',
+    softLight: '#f4e5d7',
+    dark: '#dba775',
+    onDark: '#201408',
+    softDark: '#412e1b',
+  },
+  /**
+   * Bounce Up — iris (web-beta). Draws the climber and the platform
+   * highlight; a family apart from both shelf neighbours, Bunny Hop's meadow
+   * green above (ΔE 86.3 / 84.8) and Snake's azuki beside it (44.4 / 43.8).
+   * Nearest shipped is Hit & Blow at ΔE 14.1 light / Gomoku at 10.4 dark; Sky
+   * Fighter, above it only at three columns, is 29.4 / 28.6. White ink 5.53,
+   * paper 4.86, dark paper 6.30.
+   */
+  bounceUp: {
+    light: '#9e4892',
+    onLight: '#ffffff',
+    softLight: '#efdcec',
+    dark: '#cf7dc2',
+    onDark: '#1e0b1b',
+    softDark: '#3d1f38',
+  },
+  /**
+   * Echo Pads — lapis blue (web-beta). Fills the lit pad. Pads are told apart
+   * by shape and place first, and a wrong tap gets no red flash, so the
+   * accent stays out of the red family; the lit state reads by lightness
+   * rather than chroma (dark C* 23.2, 5.04 on the dark surface). Nearest
+   * shipped is Number Match at ΔE 14.4 light / 10.3 dark — the five's weakest
+   * margin, 1.127 times the floor. Number Recall above it on the drills shelf
+   * is 81.8 / 55.8. White ink 5.32, paper 4.68, dark paper 6.03.
+   */
+  echoPads: {
+    light: '#306cb6',
+    onLight: '#ffffff',
+    softLight: '#d7e4f4',
+    dark: '#709abd',
+    onDark: '#0d151c',
+    softDark: '#222f3a',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

@@ -44,6 +44,11 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | `lp.*`          | Loop Puzzle(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。同上)                                                                                |
 | `bg.*`          | Bridges(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。同上)                                                                                    |
 | `pg.*`          | Peg Solitaire(saveGame / stats / flags / prefs — prefs は最後に選んだ盤だけ。デイリーなし。同上)                                                                                |
+| `ch.*`          | Chess(**いまは stats / flags だけ**。予定は saveGame(着手リスト・1 スロット)と prefs(推奨は先後だけ — ルール文書で決める)。実装中のベータのキー — 下記)                         |
+| `gs.*`          | Gem Swap(**いまは stats / flags だけ**。予定は saveGame / stats / flags / prefs。デイリーなし。同上)                                                                            |
+| `pn.*`          | Pipe Link(**いまは stats / flags だけ**。予定は saveGame / saveDaily / stats / flags / prefs。同上)                                                                             |
+| `bo.*`          | Bounce Up(**いまは stats / flags だけ**。予定は stats / flags / prefs — prefs は足場の幅だけ。saveGame なし・デイリーなし。同上)                                                |
+| `ep.*`          | Echo Pads(**いまは stats / flags だけ**。予定は saveGame / saveDaily / progress / stats / flags / prefs — 保存は run の位置だけで列は seed から作り直す。同上)                  |
 | `ck.*`          | Checkers(saveGame / stats / flags / prefs。統計は難易度別)                                                                                                                      |
 | `rv.*`          | Reversi(saveGame / stats / flags / prefs。統計は難易度別)                                                                                                                       |
 | `c4.*`          | Connect Four(saveGame / stats / flags / prefs。同上)                                                                                                                            |
@@ -59,14 +64,22 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 `src/app/gameKeys.test.ts` が固定し、保存 payload の形は各ゲームの
 `storage/releasedRecords.test.ts` が固定する。以後は移行だけで変える。
 
-`ub.*` から `pg.*` までの 5 本は **Web 先行公開(ベータ)のキー**(2026-10-17 に実装。
-Web 版への配信はまだ — `docs/WEB_VERSION.md`「先行公開」)。表は各ゲームの `storage/keys.ts`
+`ub.*` から `pg.*` までの 5 本は **Web 先行公開(ベータ)のキー**(2026-10-17 に実装し、
+2026-10-19 から Web 版で配信中 — `docs/WEB_VERSION.md`「先行公開」)。表は各ゲームの `storage/keys.ts`
 (import ゼロの葉)が宣言する実際のキーで、registry の `storageKeys` はその `Object.values`、
 `src/app/gameKeys.test.ts` の行が同じ並びで固定する。中身は各ゲームのルール文書の保存の節が
 定める。**ベータのキーなので、スキーマは正式収録まで凍結しない**(正式収録が凍結点。それまでの
 変更も黙っては行わず、ホームの告知を先に出し、`gameKeys.test.ts` の行と理由を同じコミットで
 直す)。保存 payload の形を固定する `storage/releasedRecords.test.ts` は、正式収録のときに
 配信した Web ビルドから採取した payload で作る(`docs/RELEASE_CHECKLIST.md` §0)。
+
+`ch.*` から `ep.*` までの 5 本(No. 47〜51)も **Web 先行公開(ベータ)のキー**だが、まだ
+**実装中で、Web 版にも出ていない**(2026-10-19 にスキャフォールド。計画は
+`docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md`)。いま各ゲームの
+`storage/keys.ts` が宣言するのは `scripts/new-game.mjs` が置いた `stats` と `flags` の 2 キーだけで、
+`src/app/gameKeys.test.ts` もその 2 キーで固定している。表の「予定」は計画の決定事項で、まだ
+存在しないキーである — 各ゲームの実装でルール文書の保存の節が定め、そのとき `keys.ts` と
+`gameKeys.test.ts` の行を同じコミットで足す。条件は上の 5 本と同じ(正式収録まで凍結しない)。
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/

@@ -71,6 +71,11 @@ import { SN_STORAGE_KEYS } from '../games/snake/storage/keys';
 import { LP_STORAGE_KEYS } from '../games/loop-puzzle/storage/keys';
 import { BG_STORAGE_KEYS } from '../games/bridges/storage/keys';
 import { PG_STORAGE_KEYS } from '../games/peg-solitaire/storage/keys';
+import { CH_STORAGE_KEYS } from '../games/chess/storage/keys';
+import { GS_STORAGE_KEYS } from '../games/gem-swap/storage/keys';
+import { PN_STORAGE_KEYS } from '../games/pipe-link/storage/keys';
+import { BO_STORAGE_KEYS } from '../games/bounce-up/storage/keys';
+import { EP_STORAGE_KEYS } from '../games/echo-pads/storage/keys';
 import { SUDOKU_CHALLENGE } from '../games/sudoku/challenge/contract';
 import { MINESWEEPER_CHALLENGE } from '../games/minesweeper/challenge/contract';
 import { WATER_SORT_CHALLENGE } from '../games/water-sort/challenge/contract';
@@ -153,7 +158,12 @@ export type GameId =
   | 'snake'
   | 'loop-puzzle'
   | 'bridges'
-  | 'peg-solitaire';
+  | 'peg-solitaire'
+  | 'chess'
+  | 'gem-swap'
+  | 'pipe-link'
+  | 'bounce-up'
+  | 'echo-pads';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -1086,5 +1096,122 @@ export const GAMES: readonly GameDefinition[] = [
         default: m.PegSolitaireRoot,
       })),
     loadStorageSchemas: () => import('../games/peg-solitaire/storage/schemas'),
+  },
+  // The titles of docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
+  // (Nos. 47–51), in number order, all built for the browser's early release
+  // (docs/WEB_VERSION.md「先行公開」) and not yet on it: each is still the
+  // scaffold of scripts/new-game.mjs until its own phase of the plan lands.
+  // Chess (No. 47) comes in a commit of its own and ships in a PR of its own
+  // (the plan's decision 4), so the other four never wait on it. None is a
+  // Club House challenge (no `challenge`).
+  //
+  // The glyphs were measured as Nos. 42–46's were above: none is in the bundled
+  // Nunito subset, so each resolves through the tail of --font-display.
+  // Coverage counts are font families in this environment's fc-list (42 in
+  // all). Tile ink is the share of the tile the mark inks, measured on the
+  // built web home with all five present (51 titles), at 360 to 1280px, light
+  // and dark, before the accents existed. Neighbours were looked at on every
+  // width (2 to 5 columns). The numbers are in the plan's Phase 1 results.
+  {
+    // A knight (U+265E): the one piece that says chess at a glance (docs/CHESS_RULES.md). Not ♟,
+    // which iOS draws as an emoji. ♞ has neither Emoji nor Emoji_Presentation, only
+    // Extended_Pictographic, like Crown Grid's ♛ (checked against the Unicode 16 property data). 7
+    // families, the same as ♛ and Connect Four's ⁘. On the board shelf it sits after Dots and
+    // Boxes' ⊡, under Dominoes' ⊟ (2 columns), Mancala's ⊚ (3), Yacht's ⚄ (4) and Gomoku's ⁙ (5).
+    // None of them is a piece. Crown Grid's ♛ is on the logic shelf, and the two meet only in the
+    // favourites, recent and search rows, where a horse's head and a crown part. Tile ink 4.6-4.8%
+    // (35th of the 51 measured, from the thinnest). Fallback ♜, at the same coverage. Not yet seen
+    // on a low-spec handset.
+    id: 'chess',
+    title: 'Chess',
+    category: 'board',
+    glyph: '♞',
+    channel: 'web-beta',
+    storageKeys: Object.values(CH_STORAGE_KEYS),
+    loadRoot: () => import('../games/chess/ui/ChessRoot').then((m) => ({ default: m.ChessRoot })),
+    loadStorageSchemas: () => import('../games/chess/storage/schemas'),
+  },
+  {
+    // A gem cut into four (U+2756): the stone the board is made of (docs/GEM_SWAP_RULES.md). Not
+    // Minesweeper's ◆, which is one solid diamond. The two are drawn by the same fallback face, and
+    // four small diamonds against one solid diamond part at tile size and at row size. ◆ is on the
+    // logic shelf, so the two meet only in the favourites, recent and search rows. On the puzzle
+    // shelf the near miss is Peg Solitaire's ⁜, beside it at 3 and 5 columns and diagonal at 2: a
+    // cross of dots against four filled diamonds. The in-game gems are separate cut silhouettes and
+    // do not reuse Bubble Pop's ● ▲ ■ ◆ ✦ ☾. Neither Emoji nor Extended_Pictographic. 27 families
+    // (fc-list lists Inter's weights apart; 13 distinct). Tile ink 5.1-5.2% (38th of the 51
+    // measured). No fallback in hand: ◆ is Minesweeper's. Not yet seen on a low-spec handset.
+    id: 'gem-swap',
+    title: 'Gem Swap',
+    category: 'puzzle',
+    glyph: '❖',
+    channel: 'web-beta',
+    storageKeys: Object.values(GS_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/gem-swap/ui/GemSwapRoot').then((m) => ({ default: m.GemSwapRoot })),
+    loadStorageSchemas: () => import('../games/gem-swap/storage/schemas'),
+  },
+  {
+    // A heavy T-junction (U+2523): one pipe fitting, the tile the player turns
+    // (docs/PIPE_LINK_RULES.md). From Box Drawing, so it fills the full line height and stands
+    // taller than its neighbours (observed: 18x51 device px against about 33 for the others). It is
+    // the only box-drawing piece on the logic shelf. It sits after Bridges' ⊶ (2 and 4 columns),
+    // under Loop Puzzle's ⬚ (2), Box Regions' ▭ (3), Sudoku 6x6's 6 (4) and Binary Balance's ⊜ (5).
+    // The frames there are outlined boxes, not a solid T. Neither Emoji nor Extended_Pictographic.
+    // 14 families. Tile ink 4.2% (30th-31st of the 51 measured). Not checked on handsets whose
+    // fallback is a full-width CJK face, where the stub may sit off centre. Fallback ⊢, which is
+    // thinner (2.0%). Not ┗, its corner sibling. Not yet seen on a low-spec handset.
+    id: 'pipe-link',
+    title: 'Pipe Link',
+    category: 'logic',
+    glyph: '┣',
+    channel: 'web-beta',
+    storageKeys: Object.values(PN_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/pipe-link/ui/PipeLinkRoot').then((m) => ({ default: m.PipeLinkRoot })),
+    loadStorageSchemas: () => import('../games/pipe-link/storage/schemas'),
+  },
+  {
+    // A dashed upward arrow (U+21E1): climbing a step at a time, platform by platform
+    // (docs/BOUNCE_UP_RULES.md). ◠, the bounce arc, was first choice and is not thin (1.6% tile
+    // ink). It was set aside for its neighbours. At 2 columns it sits directly under Bunny Hop's ⌃,
+    // and the two read as one thin upward hump, rounded against pointed. At 5 columns it sits under
+    // Bubble Pop's ○, of which it is the top half. This mark's dotted shaft parts from ⌃, from ○
+    // and from Sky Fighter's ▲ above it at 3 columns, with Snake's ∿ beside it from 2 to 4 columns.
+    // Neither Emoji nor Extended_Pictographic. 9 families. Tile ink 1.9% (10th of the 51 measured,
+    // from the thinnest). No fallback in hand: ◠ is the one ruled out above. Not yet seen on a
+    // low-spec handset. The owner's spec kept ◠ unless it was thin, and it is not; the switch is for
+    // the Bunny Hop neighbour, and the owner approved it on 2026-10-20
+    // (docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md, decision 7).
+    id: 'bounce-up',
+    title: 'Bounce Up',
+    category: 'arcade',
+    glyph: '⇡',
+    channel: 'web-beta',
+    storageKeys: Object.values(BO_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/bounce-up/ui/BounceUpRoot').then((m) => ({ default: m.BounceUpRoot })),
+    loadStorageSchemas: () => import('../games/bounce-up/storage/schemas'),
+  },
+  {
+    // Two beamed notes (U+266B): the sounds the pads play back (docs/ECHO_PADS_RULES.md). The
+    // single note ♪ was first choice and was dropped because it was the thinnest mark on the home
+    // at every width and theme, at 0.75-0.77% tile ink against about 1.0% for the next. This mark
+    // has Extended_Pictographic only, neither Emoji nor Emoji_Presentation, like Crown Grid's ♛
+    // (checked against the Unicode 16 property data). 17 families. Its ink follows the fallback
+    // face: 1.2% in Liberation Sans, the face here, and 2.0% in DejaVu Sans. Its rank, 4th of the
+    // 51 measured from the thinnest, is only just clear of Quick Math's ÷. No note-like mark is on
+    // the drills shelf. It sits beside Memory Match's ⧉ (3 and 5 columns) and under Number Recall's
+    // ?, Schulte Table's ⌖ and Quick Math's ÷ (2, 3 and 4 columns). Heavier fallback ♬ (U+266C,
+    // same coverage). Not yet seen on a low-spec handset.
+    id: 'echo-pads',
+    title: 'Echo Pads',
+    category: 'drills',
+    glyph: '♫',
+    channel: 'web-beta',
+    storageKeys: Object.values(EP_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/echo-pads/ui/EchoPadsRoot').then((m) => ({ default: m.EchoPadsRoot })),
+    loadStorageSchemas: () => import('../games/echo-pads/storage/schemas'),
   },
 ];

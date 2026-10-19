@@ -16,12 +16,26 @@ import { GAMES, type GameDefinition } from './registry';
 /**
  * The titles in early release today (docs/WEB_VERSION.md「先行公開」), in
  * registry order: the five new genres of
- * docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md (Nos. 42–46). The
- * eleven before them — three of issue #194, five of issue #197, three of
- * issue #210 — all graduated into the app on 2026-10-02. Putting a title on
- * the channel, or promoting one off it, edits this list on purpose.
+ * docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md (Nos. 42–46, on the
+ * web since 2026-10-19), then the five of
+ * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
+ * (Nos. 47–51, being built). The eleven before them — three of issue #194,
+ * five of issue #197, three of issue #210 — all graduated into the app on
+ * 2026-10-02. Putting a title on the channel, or promoting one off it, edits
+ * this list on purpose.
  */
-const WEB_BETA_IDS = ['unblock-puzzle', 'snake', 'loop-puzzle', 'bridges', 'peg-solitaire'];
+const WEB_BETA_IDS = [
+  'unblock-puzzle',
+  'snake',
+  'loop-puzzle',
+  'bridges',
+  'peg-solitaire',
+  'chess',
+  'gem-swap',
+  'pipe-link',
+  'bounce-up',
+  'echo-pads',
+];
 
 /** A beta title that exists only in this file: a released game's shape, a channel of its own. */
 const SYNTHETIC_BETA: GameDefinition = {

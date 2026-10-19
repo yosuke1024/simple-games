@@ -80,8 +80,10 @@ describe('gameLandingUrl', () => {
     expect(gameLandingUrl('some-future-game', 'ja')).toBeNull();
     // And with the real case: titles that came through the browser's early
     // release (docs/WEB_VERSION.md「先行公開」) have no guide yet — the ones of
-    // issues #194 and #197, in the app since 2026-10-02, and the five still in
-    // early release (docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md),
+    // issues #194 and #197, in the app since 2026-10-02, the five still in
+    // early release (docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md)
+    // and the next ones being built for it
+    // (docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md),
     // which stay out of PUBLISHED_GAME_IDS until they graduate — so their
     // tutorials end without the button rather than at a 404 inside our own
     // site.
@@ -99,6 +101,11 @@ describe('gameLandingUrl', () => {
       'loop-puzzle',
       'bridges',
       'peg-solitaire',
+      'chess',
+      'gem-swap',
+      'pipe-link',
+      'bounce-up',
+      'echo-pads',
     ]) {
       expect(gameLandingUrl(id, 'en')).toBeNull();
       expect(gameLandingUrl(id, 'ja')).toBeNull();
