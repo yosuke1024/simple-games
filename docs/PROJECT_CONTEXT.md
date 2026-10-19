@@ -43,8 +43,8 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **41 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
-  本数はここで数える)。`GAMES` の全 50 エントリには、下の Web 先行公開中の 5 本(No. 42〜46)と、
-  実装中で Web 版にも出していない 4 本(No. 48〜51)も含まれる。
+  本数はここで数える)。`GAMES` の全 51 エントリには、下の Web 先行公開中の 5 本(No. 42〜46)と、
+  実装中で Web 版にも出していない 5 本(No. 47〜51)も含まれる。
 - 2026-10-02 に、Web 版で先行公開していた新作 11 本(Crown Grid / Number Path /
   Shape Regions、2026-09-26、issue #194。Yacht / Mancala / Dominoes / Hit & Blow /
   Dots and Boxes、2026-09-27、issue #197。Binary Balance / Sudoku 6×6 / Box Regions、
@@ -64,12 +64,11 @@ Design philosophy:
 - 2026-10-19 から、さらに **Web 先行公開(ベータ)向けの新作 5 本**(Chess / Gem Swap /
   Pipe Link / Bounce Up / Echo Pads、No. 47〜51)に着手した(計画は
   `docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md`、仕様の正は各
-  `docs/*_RULES.md`)。Phase 1 として Gem Swap / Pipe Link / Bounce Up / Echo Pads の 4 本を
-  `scripts/new-game.mjs --channel web-beta` でスキャフォールドし、registry に
-  `channel: 'web-beta'` で登録した段階で、**ゲーム本体はまだ無い**(画面と文言は
-  スキャフォールドの仮のもの)。**Web 版にも出していない** — 統合と検証を終えてから同期する。
-  Chess は計画済みで、別フェーズ・別 PR で進める。**まだ registry に無い**(接続点は自分の
-  コミットで足す)。残り 4 本の完了を Chess で待たせない。正式収録の 41 本には数えず、アプリには出ない。
+  `docs/*_RULES.md`)。Phase 1 として `scripts/new-game.mjs --channel web-beta` で
+  スキャフォールドし、registry に `channel: 'web-beta'` で登録した段階で、**ゲーム本体は
+  まだ無い**(画面と文言はスキャフォールドの仮のもの)。**Web 版にも出していない** —
+  統合と検証を終えてから同期する。Chess は別フェーズ・別 PR で進め、残り 4 本の完了を
+  Chess で待たせない。正式収録の 41 本には数えず、アプリには出ない。
   チャンネルの宣言は registry の `channel`、出し分けは `app/gameChannel.ts` の
   実行時ガード(`docs/WEB_VERSION.md`「先行公開」)。
 - 実装上のゲーム一覧・ID・並び順・カテゴリの正は `apps/simple-games/src/app/registry.ts` の `GAMES` / `GAME_CATEGORIES`。

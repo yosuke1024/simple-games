@@ -44,6 +44,7 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | `lp.*`          | Loop Puzzle(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。同上)                                                                                |
 | `bg.*`          | Bridges(saveGame / saveDaily / stats / flags / prefs — prefs は最後に選んだ難易度だけ。同上)                                                                                    |
 | `pg.*`          | Peg Solitaire(saveGame / stats / flags / prefs — prefs は最後に選んだ盤だけ。デイリーなし。同上)                                                                                |
+| `ch.*`          | Chess(**いまは stats / flags だけ**。予定は saveGame(着手リスト・1 スロット)と prefs(推奨は先後だけ — ルール文書で決める)。実装中のベータのキー — 下記)                         |
 | `gs.*`          | Gem Swap(**いまは stats / flags だけ**。予定は saveGame / stats / flags / prefs。デイリーなし。同上)                                                                            |
 | `pn.*`          | Pipe Link(**いまは stats / flags だけ**。予定は saveGame / saveDaily / stats / flags / prefs。同上)                                                                             |
 | `bo.*`          | Bounce Up(**いまは stats / flags だけ**。予定は stats / flags / prefs — prefs は足場の幅だけ。saveGame なし・デイリーなし。同上)                                                |
@@ -72,10 +73,9 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 直す)。保存 payload の形を固定する `storage/releasedRecords.test.ts` は、正式収録のときに
 配信した Web ビルドから採取した payload で作る(`docs/RELEASE_CHECKLIST.md` §0)。
 
-`gs.*` から `ep.*` までの 4 本(No. 48〜51)も **Web 先行公開(ベータ)のキー**だが、まだ
+`ch.*` から `ep.*` までの 5 本(No. 47〜51)も **Web 先行公開(ベータ)のキー**だが、まだ
 **実装中で、Web 版にも出ていない**(2026-10-19 にスキャフォールド。計画は
-`docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md`)。同じ計画の Chess
-(No. 47、接頭辞 `ch.`)は計画済みで、自分のコミットで registry と一緒に足す。いま各ゲームの
+`docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md`)。いま各ゲームの
 `storage/keys.ts` が宣言するのは `scripts/new-game.mjs` が置いた `stats` と `flags` の 2 キーだけで、
 `src/app/gameKeys.test.ts` もその 2 キーで固定している。表の「予定」は計画の決定事項で、まだ
 存在しないキーである — 各ゲームの実装でルール文書の保存の節が定め、そのとき `keys.ts` と

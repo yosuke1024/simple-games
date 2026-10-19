@@ -229,6 +229,7 @@ describe('web-beta titles', () => {
       'loop-puzzle',
       'bridges',
       'peg-solitaire',
+      'chess',
       'gem-swap',
       'pipe-link',
       'bounce-up',

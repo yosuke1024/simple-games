@@ -71,6 +71,7 @@ import { SN_STORAGE_KEYS } from '../games/snake/storage/keys';
 import { LP_STORAGE_KEYS } from '../games/loop-puzzle/storage/keys';
 import { BG_STORAGE_KEYS } from '../games/bridges/storage/keys';
 import { PG_STORAGE_KEYS } from '../games/peg-solitaire/storage/keys';
+import { CH_STORAGE_KEYS } from '../games/chess/storage/keys';
 import { GS_STORAGE_KEYS } from '../games/gem-swap/storage/keys';
 import { PN_STORAGE_KEYS } from '../games/pipe-link/storage/keys';
 import { BO_STORAGE_KEYS } from '../games/bounce-up/storage/keys';
@@ -158,6 +159,7 @@ export type GameId =
   | 'loop-puzzle'
   | 'bridges'
   | 'peg-solitaire'
+  | 'chess'
   | 'gem-swap'
   | 'pipe-link'
   | 'bounce-up'
@@ -1110,6 +1112,25 @@ export const GAMES: readonly GameDefinition[] = [
   // built web home with all five present (51 titles), at 360 to 1280px, light
   // and dark, before the accents existed. Neighbours were looked at on every
   // width (2 to 5 columns). The numbers are in the plan's Phase 1 results.
+  {
+    // A knight (U+265E): the one piece that says chess at a glance (docs/CHESS_RULES.md). Not ♟,
+    // which iOS draws as an emoji. ♞ has neither Emoji nor Emoji_Presentation, only
+    // Extended_Pictographic, like Crown Grid's ♛ (checked against the Unicode 16 property data). 7
+    // families, the same as ♛ and Connect Four's ⁘. On the board shelf it sits after Dots and
+    // Boxes' ⊡, under Dominoes' ⊟ (2 columns), Mancala's ⊚ (3), Yacht's ⚄ (4) and Gomoku's ⁙ (5).
+    // None of them is a piece. Crown Grid's ♛ is on the logic shelf, and the two meet only in the
+    // favourites, recent and search rows, where a horse's head and a crown part. Tile ink 4.6-4.8%
+    // (35th of the 51 measured, from the thinnest). Fallback ♜, at the same coverage. Not yet seen
+    // on a low-spec handset.
+    id: 'chess',
+    title: 'Chess',
+    category: 'board',
+    glyph: '♞',
+    channel: 'web-beta',
+    storageKeys: Object.values(CH_STORAGE_KEYS),
+    loadRoot: () => import('../games/chess/ui/ChessRoot').then((m) => ({ default: m.ChessRoot })),
+    loadStorageSchemas: () => import('../games/chess/storage/schemas'),
+  },
   {
     // A gem cut into four (U+2756): the stone the board is made of (docs/GEM_SWAP_RULES.md). Not
     // Minesweeper's ◆, which is one solid diamond. The two are drawn by the same fallback face, and

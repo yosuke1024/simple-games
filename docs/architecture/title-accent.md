@@ -52,6 +52,7 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | Loop Puzzle       | 桔梗(Web 先行公開)       | `#704eb7` | `#9171da` |
 | Bridges           | 鉄紺(Web 先行公開)       | `#323b5d` | `#7d83b0` |
 | Peg Solitaire     | 葡萄色(Web 先行公開)     | `#68275f` | `#b77bb2` |
+| Chess             | 茜色(ベータ・実装中)     | `#b63030` | `#d55d5d` |
 | Gem Swap          | 臙脂(ベータ・実装中)     | `#67283f` | `#bf97a3` |
 | Pipe Link         | 琥珀(ベータ・実装中)     | `#a5672c` | `#dba775` |
 | Bounce Up         | 菖蒲色(ベータ・実装中)   | `#9e4892` | `#cf7dc2` |

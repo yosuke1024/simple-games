@@ -173,11 +173,12 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   bridges: ['bg.saveGame', 'bg.saveDaily', 'bg.stats', 'bg.flags', 'bg.prefs'],
   // No. 46, web-beta (docs/PEG_SOLITAIRE_RULES.md storage): not frozen until graduation
   'peg-solitaire': ['pg.saveGame', 'pg.stats', 'pg.flags', 'pg.prefs'],
-  // The next web-beta titles, of
+  // The next five web-beta titles, of
   // docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md: beta
-  // keys on the same terms as the five above (Chess, No. 47, comes in a commit
-  // of its own). They are still the scaffold's two keys; each grows to its
-  // rules document's storage section in Phase 2/3.
+  // keys on the same terms as the five above. They are still the scaffold's two
+  // keys; each grows to its rules document's storage section in Phase 2/3.
+  // No. 47, web-beta (docs/CHESS_RULES.md storage): not frozen until graduation
+  chess: ['ch.stats', 'ch.flags'],
   // No. 48, web-beta (docs/GEM_SWAP_RULES.md storage): not frozen until graduation
   'gem-swap': ['gs.stats', 'gs.flags'],
   // No. 49, web-beta (docs/PIPE_LINK_RULES.md storage): not frozen until graduation
@@ -235,6 +236,7 @@ const PREFIXES: Record<string, string> = {
   'loop-puzzle': 'lp.',
   bridges: 'bg.',
   'peg-solitaire': 'pg.',
+  chess: 'ch.',
   'gem-swap': 'gs.',
   'pipe-link': 'pn.',
   'bounce-up': 'bo.',

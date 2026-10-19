@@ -373,13 +373,12 @@ Git 連携による(このリポジトリからは観測していない)。**正
 **次の新作 5 本 — Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads(No. 47〜51)— は
 実装中で、Web 版には出していない**(2026-10-19 に着手。計画は
 [plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md)、
-仕様の正は各ルール文書)。いまは Phase 1 — Gem Swap / Pipe Link / Bounce Up / Echo Pads の
-4 本を `scripts/new-game.mjs --channel web-beta` でスキャフォールドし、registry に
-`channel: 'web-beta'` で登録した段階で、ゲーム本体はまだ無い(画面と文言はスキャフォールドの
-仮のもの。14 言語のカタログはどれも英語の仮文)。上の 5 本と同じく、統合と検証を終えてから
-Web 版へ同期し、その同期の PR で landing の `WEB_BETA_GAME_IDS` に id を足す。**Chess は
-別フェーズ・別 PR**で進め、**まだ registry に無い**(遊べない Chess を Web 版に出さないため、
-接続点は自分のコミットで足す)。残り 4 本の完了と同期を Chess で待たせない。5 本とも Club House には登録しない。正式収録の基準(上の 1・2)は
+仕様の正は各ルール文書)。いまは Phase 1 — `scripts/new-game.mjs --channel web-beta` で
+スキャフォールドし、registry に `channel: 'web-beta'` で登録した段階で、ゲーム本体はまだ無い
+(画面と文言はスキャフォールドの仮のもの。14 言語のカタログはどれも英語の仮文)。上の 5 本と
+同じく、統合と検証を終えてから Web 版へ同期し、その同期の PR で landing の
+`WEB_BETA_GAME_IDS` に id を足す。**Chess は別フェーズ・別 PR**で進め、残り 4 本の完了と
+同期を Chess で待たせない。5 本とも Club House には登録しない。正式収録の基準(上の 1・2)は
 変えず、Web で公開するまで始まらない。
 
 それ以前の先行公開は、2026-10-02 に 11 本すべてを正式収録して空になった — Crown Grid /

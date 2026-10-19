@@ -17,9 +17,9 @@ import { GAMES, type GameDefinition } from './registry';
  * The titles in early release today (docs/WEB_VERSION.md「先行公開」), in
  * registry order: the five new genres of
  * docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md (Nos. 42–46, on the
- * web since 2026-10-19), then four of the five of
+ * web since 2026-10-19), then the five of
  * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
- * (Nos. 48–51, being built; Chess, No. 47, comes in a commit of its own). The eleven before them — three of issue #194,
+ * (Nos. 47–51, being built). The eleven before them — three of issue #194,
  * five of issue #197, three of issue #210 — all graduated into the app on
  * 2026-10-02. Putting a title on the channel, or promoting one off it, edits
  * this list on purpose.
@@ -30,6 +30,7 @@ const WEB_BETA_IDS = [
   'loop-puzzle',
   'bridges',
   'peg-solitaire',
+  'chess',
   'gem-swap',
   'pipe-link',
   'bounce-up',

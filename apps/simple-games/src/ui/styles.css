@@ -469,6 +469,15 @@
    bounce-up-echo-pads.md. All five accents were chosen together against the
    shipped forty-six per its Phase 1; Chess's come in a commit of its own. */
 
+:root[data-game='chess'],
+.accent-chess {
+  --accent: #b63030;
+  --accent-ink: #ffffff;
+  --accent-soft: #f4d7d7;
+  --accent-ring: rgba(182, 48, 48, 0.38);
+  --accent-ring-soft: rgba(182, 48, 48, 0.12);
+}
+
 :root[data-game='gem-swap'],
 .accent-gem-swap {
   --accent: #67283f;
@@ -930,6 +939,15 @@
   --accent-soft: #372436;
   --accent-ring: rgba(183, 123, 178, 0.42);
   --accent-ring-soft: rgba(183, 123, 178, 0.14);
+}
+
+:root[data-theme='dark'][data-game='chess'],
+[data-theme='dark'] .accent-chess {
+  --accent: #d55d5d;
+  --accent-ink: #200808;
+  --accent-soft: #411b1b;
+  --accent-ring: rgba(213, 93, 93, 0.42);
+  --accent-ring-soft: rgba(213, 93, 93, 0.14);
 }
 
 :root[data-theme='dark'][data-game='gem-swap'],

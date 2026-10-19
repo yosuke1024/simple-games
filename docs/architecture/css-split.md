@@ -20,8 +20,8 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   `sudoku-6x6.css` / `box-regions.css`(2026-10-02 に収録した 11 本)、
   `unblock-puzzle.css` / `snake.css` / `loop-puzzle.css` / `bridges.css` /
   `peg-solitaire.css`(Web 先行公開の 5 本、2026-10-17)、
-  `gem-swap.css` / `pipe-link.css` / `bounce-up.css` / `echo-pads.css`
-  (Web 先行公開の次の 4 本、2026-10-19 にスキャフォールド。Chess は自分のコミットで足す)。
+  `chess.css` / `gem-swap.css` / `pipe-link.css` / `bounce-up.css` / `echo-pads.css`
+  (Web 先行公開の次の 5 本、2026-10-19 にスキャフォールド)。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。

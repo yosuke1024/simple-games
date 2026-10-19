@@ -1011,6 +1011,27 @@ export const titleAccents = {
     softDark: '#372436',
   },
   /**
+   * Chess — madder red (web-beta). The pieces wear their physical light and
+   * dark colours, like Reversi's and Gomoku's and unlike Checkers' and Connect
+   * Four's, whose accent is the player's pieces (CHESS_RULES), so the accent
+   * is chrome alone: the selected piece, the legal-move dots and the buttons —
+   * the smallest accent area of the five, which takes the most chromatic
+   * value of the batch (C* 62.4, 6th of 51). Chosen in the same pass as the
+   * four below (see gemSwap): nearest shipped is Connect Four at ΔE 14.3
+   * light (same board shelf, never above, below or beside it — diagonal at
+   * five columns) / Bubble Pop at 10.9 dark; `--warn` is 20.0 / 20.0 away.
+   * Dominoes above it on the shelf is 58.7 / 66.1. White ink 6.08, paper
+   * 5.34, dark paper 4.75.
+   */
+  chess: {
+    light: '#b63030',
+    onLight: '#ffffff',
+    softLight: '#f4d7d7',
+    dark: '#d55d5d',
+    onDark: '#200808',
+    softDark: '#411b1b',
+  },
+  /**
    * Gem Swap — enji, a deep lacquer red (web-beta). All five accents of
    * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
    * (Chess's included, which comes in a commit of its own) were chosen in one
