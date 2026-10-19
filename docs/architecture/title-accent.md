@@ -47,6 +47,11 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | Binary Balance    | 若草                     | `#5a8128` | `#9cce5a` |
 | Sudoku 6×6        | 紺青                     | `#233c76` | `#6784c5` |
 | Box Regions       | 深い薔薇                 | `#ac3564` | `#ce5a88` |
+| Unblock Puzzle    | 紅(Web 先行公開)         | `#b5304d` | `#d6667e` |
+| Snake             | 小豆色(Web 先行公開)     | `#8f534d` | `#c69286` |
+| Loop Puzzle       | 桔梗(Web 先行公開)       | `#704eb7` | `#9171da` |
+| Bridges           | 鉄紺(Web 先行公開)       | `#323b5d` | `#7d83b0` |
+| Peg Solitaire     | 葡萄色(Web 先行公開)     | `#68275f` | `#b77bb2` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える

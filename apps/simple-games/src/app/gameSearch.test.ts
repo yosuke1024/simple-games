@@ -20,8 +20,15 @@ describe('searching the collection by name', () => {
   it('matches part of a title, anywhere in it', () => {
     // The three patiences are exactly why the match is not anchored at the
     // front: two of them wear the word somebody is looking for in second
-    // place.
-    expect(titles('Solitaire')).toEqual(['Solitaire', 'Spider Solitaire', 'Mahjong Solitaire']);
+    // place. A fourth has worn it since Peg Solitaire joined the browser
+    // early release (docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md):
+    // home order, so it follows Mahjong Solitaire on the puzzle shelf.
+    expect(titles('Solitaire')).toEqual([
+      'Solitaire',
+      'Spider Solitaire',
+      'Mahjong Solitaire',
+      'Peg Solitaire',
+    ]);
     expect(titles('sweep')).toEqual(['Minesweeper']);
   });
 

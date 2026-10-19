@@ -2,7 +2,15 @@
 /**
  * ゲーム 1 本ぶんの「接続点」を生成するスキャフォールド。
  *
- *   node scripts/new-game.mjs <id> <PREFIX> --title "<Title>" --category <logic|cards|puzzle|board|arcade|drills> [--glyph <char>] [--dry-run]
+ *   node scripts/new-game.mjs <id> <PREFIX> --title "<Title>" --category <logic|cards|puzzle|board|arcade|drills> [--glyph <char>] [--channel web-beta] [--dry-run]
+ *
+ * `--channel web-beta` は Web 版だけの先行公開(docs/WEB_VERSION.md「先行公開(ベータ)」)
+ * として生成する: registry の要素に `channel: 'web-beta'` を書き、ホームのヒーローと
+ * Quick Rules の見出しの下の両方に `<WebBetaNotice gameId="…" />`(BETA バッジと、
+ * en / ja の保存データの注意)を置く。初回はホームより先に Quick Rules が開き、その最後の
+ * ボタンが最初の保存を書くので、両方に要る。注意を先に見せてあることが、ベータ中に保存を
+ * 捨ててよい条件なので(同節「保存データ」)、後から足し忘れないよう生成時に入れる。正式収録で `channel` を外せば注意は何も描かなく
+ * なるので、要素はそのまま残してよい(2026-10-02 に収録した 11 本と同じ)。
  *
  * 新しいゲームを足すたびに 4,000 行あるどれかの兄弟ゲームを丸ごとコピーして
  * 削るところから始めるのは、練習台としては重い。ここで生成するのは
@@ -34,6 +42,9 @@
  *   - gameI18nWiring.test.ts ─ Root の先頭で `import '../i18n';`
  *   - homeActionsWiring.test.ts ─ HomeScreen が `<GameHomeHeader gameId="…" .../>` を
  *     ちょうど 1 回だけ描く
+ *   - webBetaNoticeWiring.test.ts ─ `channel: 'web-beta'` のゲームは HomeScreen と
+ *     TutorialScreen の両方が `<WebBetaNotice gameId="…" />` を自分の id で持つ
+ *     (`--channel web-beta` で担保)
  *   - shareWiring.test.ts ─ 結果オーバーレイが `<ShareAction gameId="…" .../>` を持つ
  *   - refLeading.test.ts ─ GameContext の statsRef / sessionRef が
  *     「setState の直前で ref を進める」形になっている(下記 GameContext 生成部を参照)
@@ -55,6 +66,9 @@
  *     生成する Root / GameContext のコメントに書いてある
  *   - playClockSeed.test.ts ─ `initialSession` を受け取る provider だけが対象。
  *     生成物は受け取らないので対象外(保存スロットを足すと対象になる)
+ *   - unmountBookingWiring.test.ts ─ GameContext が退出の同期 `syncActiveGame` を
+ *     `useOnUnmount(syncActiveGame);` でちょうど 1 回アンマウントにも結ぶ
+ *     (ブラウザの戻る・別ゲームへのショートカットは goHome を通らない)
  *   - pointerContractWiring.test.ts ─ 生成する画面は onClick しか聞かない
  *   - savedGameSlots.test.ts ─ 既定の保存キーは stats / flags のみで
  *     `dailyGame` を持たないので対象外
@@ -86,6 +100,8 @@ const GAME_KEYS_TEST_PATH = join(APP, 'src/app/gameKeys.test.ts');
 const DOCS_DIR = join(REPO_ROOT, 'docs');
 
 const CATEGORIES = ['logic', 'cards', 'puzzle', 'board', 'arcade', 'drills'];
+/** `GameDefinition.channel` values (app/registry.ts). Omitted: released everywhere. */
+const CHANNELS = ['web-beta'];
 const DEFAULT_GLYPH = '•';
 
 /** The 14 locales every game catalog must ship (src/i18n/index.ts `Locale`). */
@@ -110,7 +126,8 @@ const LOCALES = [
 function usage() {
   return (
     'usage: new-game.mjs <id> <PREFIX> --title "<Title>" ' +
-    '--category <logic|cards|puzzle|board|arcade|drills> [--glyph <char>] [--dry-run]'
+    '--category <logic|cards|puzzle|board|arcade|drills> [--glyph <char>] ' +
+    '[--channel web-beta] [--dry-run]'
   );
 }
 
@@ -132,6 +149,8 @@ function parseArgs(argv) {
       flags.category = argv[++i];
     } else if (arg === '--glyph') {
       flags.glyph = argv[++i];
+    } else if (arg === '--channel') {
+      flags.channel = argv[++i];
     } else if (arg.startsWith('--')) {
       fail(`unknown option: ${arg}\n${usage()}`);
     } else {
@@ -185,6 +204,12 @@ function validatePrefix(prefix) {
 function validateCategory(category) {
   if (!CATEGORIES.includes(category)) {
     fail(`invalid --category "${category ?? ''}": expected one of ${CATEGORIES.join(', ')}`);
+  }
+}
+
+function validateChannel(channel) {
+  if (channel !== undefined && !CHANNELS.includes(channel)) {
+    fail(`invalid --channel "${channel ?? ''}": expected one of ${CHANNELS.join(', ')}`);
   }
 }
 
@@ -357,6 +382,7 @@ import {
   type ReactNode,
 } from 'react';
 import { saveRecord } from '../../../storage/repo';
+import { useOnUnmount } from '../../../ui/useOnUnmount';
 import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
 
 export type Screen = 'home' | 'tutorial' | 'game';
@@ -509,6 +535,15 @@ export function ${pascal}Provider({
       void pauseHandle?.then((handle) => handle.remove()).catch(() => undefined);
     };
   }, [syncActiveGame]);
+
+  // Unmounting is a way out too (docs/GAME_LIFECYCLE.md「アンマウントで計上する」):
+  // the browser's Back and a home-screen shortcut to another game take this
+  // provider off screen without goHome, exitToCollection or a
+  // visibilitychange. The same seam runs then, so once it saves the round and
+  // books its play clock, those doors cannot lose the seconds either
+  // (src/test/unmountBookingWiring.test.ts). Keep it idempotent when you fill
+  // it in: book only what a \`bookedRef\` says is not booked yet.
+  useOnUnmount(syncActiveGame);
 
   // Android hardware back: leave sub-screens; from the game's home, hand
   // control back to the collection. Registered once, on native only, and the
@@ -677,15 +712,26 @@ function cssFile({ pascal, cssPrefix }) {
 `;
 }
 
-function homeScreenFile({ id, pascal, camel, glyph }) {
+function homeScreenFile({ id, pascal, camel, glyph, channel }) {
+  const beta = channel === 'web-beta';
+  // The early-release notice (--channel web-beta): shell-owned like the header,
+  // and it must be on the home before a beta save may ever be reset
+  // (docs/WEB_VERSION.md「保存データ」; src/test/webBetaNoticeWiring.test.ts).
+  const betaDoc = beta
+    ? `\n * The early-release notice under the tagline is the shell's too
+ * (docs/WEB_VERSION.md「先行公開(ベータ)」): it says, before anything is
+ * saved, that this game's saves may be reset while it is in early release.`
+    : '';
+  const betaImport = beta ? `\nimport { WebBetaNotice } from '@/ui/components/WebBetaNotice';` : '';
+  const betaNotice = beta ? `\n        <WebBetaNotice gameId="${id}" />` : '';
   return `/**
  * ${pascal}'s home (scaffolded by scripts/new-game.mjs): the shared header,
  * the hero, one demo action that opens the game screen, and the way into
  * Quick Rules. The hero and the mode buttons are this game's own to shape
- * (docs/ARCHITECTURE.md「シェルの枠とゲームの中身」); the header is the shell's.
+ * (docs/ARCHITECTURE.md「シェルの枠とゲームの中身」); the header is the shell's.${betaDoc}
  */
 import { useSettings } from '@/state/SettingsContext';
-import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameHomeHeader } from '@/ui/components/GameHomeHeader';${betaImport}
 import { use${pascal} } from '../../state/GameContext';
 
 export function ${pascal}HomeScreen() {
@@ -702,7 +748,7 @@ export function ${pascal}HomeScreen() {
           {${quote(glyph)}}
         </div>
         <h1 className="home-title">{t('${camel}Name')}</h1>
-        <p className="home-tagline">{t('tagline')}</p>
+        <p className="home-tagline">{t('tagline')}</p>${betaNotice}
       </div>
 
       <div className="home-actions">
@@ -783,7 +829,20 @@ export function ${pascal}GameScreen() {
 `;
 }
 
-function tutorialScreenFile({ id, pascal, camel, idUpper }) {
+function tutorialScreenFile({ id, pascal, camel, idUpper, channel }) {
+  const beta = channel === 'web-beta';
+  // The early-release notice (--channel web-beta) on every step: a first visit
+  // opens here, not on the home, and the last step's button writes the first
+  // save (docs/WEB_VERSION.md「保存データ」; src/test/webBetaNoticeWiring.test.ts).
+  const betaDoc = beta
+    ? `\n *
+ * The early-release notice under the header is the shell's too
+ * (docs/WEB_VERSION.md「先行公開(ベータ)」): a first visit opens here rather
+ * than on the home, and the last step's button writes the first save, so the
+ * notice is read before anything is saved — on every step, in one place.`
+    : '';
+  const betaImport = beta ? `\nimport { WebBetaNotice } from '@/ui/components/WebBetaNotice';` : '';
+  const betaNotice = beta ? `\n\n      <WebBetaNotice gameId="${id}" />` : '';
   return `/**
  * Quick Rules (docs/${idUpper}_RULES.md): at most three steps, one sentence
  * each, leading straight into play (docs/PRODUCT_PRINCIPLES.md「初回体験の原則」).
@@ -798,11 +857,11 @@ function tutorialScreenFile({ id, pascal, camel, idUpper }) {
  * hardware Back marks it seen on the way out (state/GameContext.tsx). The
  * long-form rules live on the game's landing page behind "Learn More", which
  * is absent until the page exists (ui/landing.ts) and quietly does nothing
- * offline (docs/OFFLINE_POLICY.md).
+ * offline (docs/OFFLINE_POLICY.md).${betaDoc}
  */
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
-import { IconClose } from '@/ui/components/icons';
+import { IconClose } from '@/ui/components/icons';${betaImport}
 import { gameLandingUrl } from '@/ui/landing';
 import { openExternal } from '@/ui/openExternal';
 import { use${pascal} } from '../../state/GameContext';
@@ -839,7 +898,7 @@ export function ${pascal}TutorialScreen() {
             <IconClose />
           </button>
         ) : null}
-      </header>
+      </header>${betaNotice}
 
       <div className="tutorial-card">
         <div className="tutorial-step-count" aria-hidden="true">
@@ -1055,7 +1114,7 @@ function rulesDocFile({ id, title, camel, prefix }) {
 
 // ---------- registry.ts / gameKeys.test.ts patches ----------
 
-function patchRegistry(source, { id, prefixUpper, pascal, title, category, glyph }) {
+function patchRegistry(source, { id, prefixUpper, pascal, title, category, glyph, channel }) {
   const lines = source.split('\n');
 
   const importLine = `import { ${prefixUpper}_STORAGE_KEYS } from '../games/${id}/storage/keys';`;
@@ -1085,6 +1144,7 @@ function patchRegistry(source, { id, prefixUpper, pascal, title, category, glyph
     `    title: ${quote(title)},`,
     `    category: '${category}',`,
     `    glyph: ${quote(glyph)},`,
+    ...(channel ? [`    channel: '${channel}',`] : []),
     `    storageKeys: Object.values(${prefixUpper}_STORAGE_KEYS),`,
     `    loadRoot: () =>`,
     `      import('../games/${id}/ui/${pascal}Root').then((m) => ({ default: m.${pascal}Root })),`,
@@ -1116,7 +1176,7 @@ function patchGameKeysTest(source, { id, prefix }) {
 
 // ---------- plan ----------
 
-function buildPlan({ id, prefix, title, category, glyph }) {
+function buildPlan({ id, prefix, title, category, glyph, channel }) {
   const prefixUpper = prefix.toUpperCase();
   const pascal = pascalCase(id);
   const camel = camelCase(id);
@@ -1132,6 +1192,7 @@ function buildPlan({ id, prefix, title, category, glyph }) {
     title,
     category,
     glyph,
+    channel,
     idUpper,
     cssPrefix,
   };
@@ -1202,6 +1263,7 @@ function main() {
     title,
     category,
     glyph = DEFAULT_GLYPH,
+    channel,
     dryRun,
   } = parseArgs(process.argv.slice(2));
 
@@ -1209,9 +1271,10 @@ function main() {
   validateId(id);
   validatePrefix(prefix);
   validateCategory(category);
+  validateChannel(channel);
   checkAvailable(id, prefix);
 
-  const plan = buildPlan({ id, prefix, title, category, glyph });
+  const plan = buildPlan({ id, prefix, title, category, glyph, channel });
 
   if (dryRun) {
     printPlan(plan, { dryRun: true });
@@ -1226,9 +1289,16 @@ function main() {
   console.log(`  - translate the 14 locale strings in src/games/${id}/i18n/*.ts`);
   console.log(`  - write docs/${id.toUpperCase().replace(/-/g, '_')}_RULES.md (stub generated)`);
   console.log(`  - replace the three Quick Rules placeholder steps (i18n *Step1..3Title/Body)`);
-  console.log('  - add the game to ui/landing.ts PUBLISHED_GAME_IDS once its guide is deployed');
-  console.log('  - run `pnpm size:update` before committing (size-baseline.json)');
-  console.log('  - update the game count in README.md');
+  if (channel === 'web-beta') {
+    // Not in the app, the store copy or the landing guides until it graduates
+    // (docs/WEB_VERSION.md「先行公開(ベータ)」, docs/RELEASE_CHECKLIST.md §0).
+    console.log('  - run `pnpm size:update` before committing (size-baseline.json)');
+    console.log('  - list it under README.md「Web 先行公開(ベータ)」, not in the released count');
+  } else {
+    console.log('  - add the game to ui/landing.ts PUBLISHED_GAME_IDS once its guide is deployed');
+    console.log('  - run `pnpm size:update` before committing (size-baseline.json)');
+    console.log('  - update the game count in README.md');
+  }
 }
 
 main();

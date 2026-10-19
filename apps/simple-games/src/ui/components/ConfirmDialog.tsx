@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useDialogDismiss } from '../useDialogDismiss';
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -7,12 +8,18 @@ export interface ConfirmDialogProps {
   cancelLabel: string;
   confirmLabel: string;
   danger?: boolean;
+  /** Also what Escape does. */
   onCancel: () => void;
   onConfirm: () => void;
 }
 
-export function ConfirmDialog({
-  open,
+export function ConfirmDialog(props: ConfirmDialogProps) {
+  // The card mounts and unmounts with `open`, so it reads the opener on the
+  // render that opens it (useDialogDismiss).
+  return props.open ? <ConfirmDialogCard {...props} /> : null;
+}
+
+function ConfirmDialogCard({
   title,
   body,
   cancelLabel,
@@ -21,7 +28,7 @@ export function ConfirmDialog({
   onCancel,
   onConfirm,
 }: ConfirmDialogProps) {
-  if (!open) return null;
+  useDialogDismiss(onCancel);
   return (
     <div className="overlay" onClick={onCancel}>
       <div

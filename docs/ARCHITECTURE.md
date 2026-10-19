@@ -135,13 +135,13 @@ src/
 
 ## 状態と ref
 
-各ゲームの `GameContext.tsx` は状態を `useState` に持ち、render 本体で ref へ写す。**落とし穴は ref が進むのが render のときだけだという点**——同じタスクの中で 2 回ミューテーションが起きると、2 回目は 1 回目が置き換える前の値を読み、1 回目が消える(連続 pointer イベント、1 ハンドラが同じ状態を 2 回書く、の 2 パターンで実際に踏んだ)。規約は、セッション・統計・進捗は各コンテキストにつき 1 か所からしか書かないこと、その 1 か所で **setState より先に ref を進める**ことの 2 つで、`src/test/refLeading.test.ts` が機械的に見る。再生時間の `elapsedRef` / `bookedRef` は state の写しではない独立した ref なので**マウント時の種**が要り、**そのマウントが指しているスロット**(ショートカットが直接入った局か、ホームが最初に指す局)の `elapsedSeconds` を 2 本とも同じ値で積む——片方だけ直すと時計が 0 で上書きされるか統計へ二重計上される(issue #109・#113)。`src/test/playClockSeed.test.ts` が機械的に見る。
+各ゲームの `GameContext.tsx` は状態を `useState` に持ち、render 本体で ref へ写す。**落とし穴は ref が進むのが render のときだけだという点**——同じタスクの中で 2 回ミューテーションが起きると、2 回目は 1 回目が置き換える前の値を読み、1 回目が消える(連続 pointer イベント、1 ハンドラが同じ状態を 2 回書く、の 2 パターンで実際に踏んだ)。規約は、セッション・統計・進捗は各コンテキストにつき 1 か所からしか書かないこと、その 1 か所で **setState より先に ref を進める**ことの 2 つで、`src/test/refLeading.test.ts` が機械的に見る。再生時間の `elapsedRef` / `bookedRef` は state の写しではない独立した ref なので**マウント時の種**が要り、**そのマウントが指しているスロット**(ショートカットが直接入った局か、ホームが最初に指す局)の `elapsedSeconds` を 2 本とも同じ値で積む——片方だけ直すと時計が 0 で上書きされるか統計へ二重計上される(issue #109・#113)。`src/test/playClockSeed.test.ts` が機械的に見る。時計の秒を確定させる同期(`syncActiveGame`)はゲーム自身の退出とバックグラウンドに加えて**アンマウントでも走る**(`useOnUnmount`)——ブラウザの戻ると別ゲームへのショートカットは goHome を通らずに Root を外すからで、二重計上は `bookedRef` が防ぐ([GAME_LIFECYCLE.md](GAME_LIFECYCLE.md)「アンマウントで計上する」、`src/test/unmountBookingWiring.test.ts`)。
 
 → 全文: [architecture/state-and-refs.md](architecture/state-and-refs.md)
 
 ## ゲームレジストリの契約
 
-`app/registry.ts` のエントリは「タイトルカード + そのゲームが持つキー + ゲーム本体のローダー」だけのプラグイン機構ではない薄い契約で、ゲームの追加は keys の import 1 行と配列要素 1 つで済む。ゲーム本体は静的 import せず `codeSplitting` でゲーム単位のチャンクに分かれる——例外は同期参照される import ゼロの葉 `storage/keys.ts` だけで、ここに import を足すとホームの初期チャンクへ引き戻される。`storageKeys` は「ローカルデータ削除」とバックアップがゲームのチャンクを読まずに列挙するためのもので、released 済みキーの一覧は `gameKeys.test.ts` のゴールデンとして固定され、**テストを直して通すのは禁止**(プレイヤーのデータに対する削除行為になるため)。`loadStorageSchemas` は**必須**のローダーで、Backup & Restore がそのゲームのレコードを持ち主の `SchemaDef` で検証するための唯一の口 —— 任意にすると、書き出せるのに復元できないゲームが黙って増える(issue #160)。Root が受け取る props は `GameRootProps` = `onExit` と任意の `entry`(どの扉から入ったか、issue #113)。`SettingsSection` は任意で、ゲーム固有の設定はゲームが所有しシェルは場所だけ貸す。`channel` も任意で、`'web-beta'` なら Web 版だけの先行公開(2026-10-02 に 11 本すべてを正式収録したので、いま該当するエントリは無い。仕組みは残す) —— 出し分けはビルドではなく `app/gameChannel.ts` の実行時ガードで、ホーム・検索・お気に入り・最近・`?game=` の住所・lazy root がそこに問う([WEB_VERSION.md](WEB_VERSION.md)「先行公開」、issue #194)。
+`app/registry.ts` のエントリは「タイトルカード + そのゲームが持つキー + ゲーム本体のローダー」だけのプラグイン機構ではない薄い契約で、ゲームの追加は keys の import 1 行と配列要素 1 つで済む。ゲーム本体は静的 import せず `codeSplitting` でゲーム単位のチャンクに分かれる——例外は同期参照される import ゼロの葉 `storage/keys.ts` だけで、ここに import を足すとホームの初期チャンクへ引き戻される。`storageKeys` は「ローカルデータ削除」とバックアップがゲームのチャンクを読まずに列挙するためのもので、released 済みキーの一覧は `gameKeys.test.ts` のゴールデンとして固定され、**テストを直して通すのは禁止**(プレイヤーのデータに対する削除行為になるため)。`loadStorageSchemas` は**必須**のローダーで、Backup & Restore がそのゲームのレコードを持ち主の `SchemaDef` で検証するための唯一の口 —— 任意にすると、書き出せるのに復元できないゲームが黙って増える(issue #160)。Root が受け取る props は `GameRootProps` = `onExit` と任意の `entry`(どの扉から入ったか、issue #113)。`SettingsSection` は任意で、ゲーム固有の設定はゲームが所有しシェルは場所だけ貸す。`channel` も任意で、`'web-beta'` なら Web 版だけの先行公開(いまは 2026-10-17 の計画の 5 本 — Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire — がこのチャンネルにある。前の 11 本は 2026-10-02 に正式収録した) —— 出し分けはビルドではなく `app/gameChannel.ts` の実行時ガードで、ホーム・検索・お気に入り・最近・`?game=` の住所・lazy root・Club のチャレンジの Play(`findAvailableGame`)がそこに問う([WEB_VERSION.md](WEB_VERSION.md)「先行公開」、issue #194)。
 
 小見出し: 「ゲーム単位の lazy チャンク(issue #26)」
 
@@ -254,6 +254,28 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
   揃え、`src/test/modalIsolationWiring.test.ts` が新しいゲームにも同じ配線を要求する(issue #120)。
   Chromium 102 未満の WebView 向けフォールバックは `styles.css` の `.game-content[inert]`
   (`pointer-events: none`)。
+- **Escape は Cancel、閉じたらフォーカスは開いた場所へ。** `ConfirmDialog` と `RestartDialog` は
+  `ui/useDialogDismiss.ts` を通して、開いている間の Escape を Cancel(`onCancel` / `onClose`)と
+  同じに扱い、window の capture 段で受けて先へ流さない——`blocked` の形で付いたままの `useGameKeys`
+  (2048 の形)も、arcade 盤面の生の keydown リスナーも、ダイアログを閉じたその Escape には答えない。
+  ゲーム自身の Escape も同じで、受けるのは Web 先行公開(ベータ)の 3 本 — Bridges(島の選択を
+  外す)、Unblock Puzzle(ブロックの選択を外す)、Peg Solitaire(持ち上げたペグを置く)。3 本とも
+  `useGameKeys` をダイアログのフラグで外し(`enabled` に `!confirmRestart`)、そのうえで
+  ダイアログの capture に譲る: ダイアログを閉じたその Escape では選択は残り、閉じた後の次の
+  Escape からゲームのものに戻る(各 Root テスト。製品版のゲームに Escape を受けるものは無い)。
+  閉じたらフォーカスは開いた操作(上部バーの ↻、設定の行)へ戻す。戻すのは
+  フォーカスが失われるとき(body か、ダイアログと一緒に消えた要素)だけで、閉じた側が意図して置いた
+  先は動かさず、もうページに無い opener は追わない。opener はダイアログが開いたときにフォーカスの
+  あった要素なので、開いた押下が ↻ にフォーカスを置かなければ戻し先は無い——WebKit(macOS の
+  Safari と iOS のすべてのブラウザ)のクリックやタップはボタンにフォーカスを置かず、そうして開いた
+  問いを閉じるとフォーカスは body に残る(Web 先行公開の Snake だけは自分でも ↻ へ戻す。
+  [SNAKE_RULES.md](SNAKE_RULES.md) §13)。戻しはダイアログのアンマウント(passive effect の
+  cleanup)で走るので、確定の後にゲームが自分でフォーカスを置くなら **layout effect** で先に置く
+  ——passive effect で後から置こうとすると、戻しが先に ↻ へ持っていき、ゲームの側は「フォーカスが
+  ある」と見て何もしない(Peg Solitaire の新しい局 → 盤の輪の穴、Snake の新しい盤 → 十字の中央。
+  Snake の Cancel / Escape の ↻ も同じ layout effect で、共通の戻しと同じ ↻ を選ぶ)。リスナーは
+  閉じた時点とアンマウントで外す([GAME_LIFECYCLE.md](GAME_LIFECYCLE.md))。確定・取消で各ゲームがすることは
+  変えない(2026-10-18。テストは `ui/components/ConfirmDialog.test.tsx` / `RestartDialog.test.tsx`)。
 - **ヘッダの ↻ は結果カードと同じ 2 択。** プレイ中の ↻ は「同じ盤面で再挑戦」の確認
   (`ConfirmDialog`)だったので、盤面そのものを替えたい人は Home → モードのボタン → もう一度
   確認、と遠回りしていた(2026-10-02)。いまは `ui/components/RestartDialog.tsx` が 1 つの問い

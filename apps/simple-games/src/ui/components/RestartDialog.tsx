@@ -25,6 +25,7 @@
  * "New board" on a narrow phone.
  */
 import { useSettings } from '../../state/SettingsContext';
+import { useDialogDismiss } from '../useDialogDismiss';
 
 export interface RestartDialogNewBoard {
   /** The game's own label for a fresh board — the one its result card shows. */
@@ -49,13 +50,22 @@ export interface RestartDialogProps {
    * sentence every confirmation uses, `confirmNewGameBody`.
    */
   body?: string;
-  /** Closes the dialog. Also called ahead of either action, so the caller clears one flag. */
+  /**
+   * Closes the dialog — Cancel, the backdrop and Escape. Also called ahead of
+   * either action, so the caller clears one flag.
+   */
   onClose: () => void;
 }
 
-export function RestartDialog({ open, onRetry, newBoard, body, onClose }: RestartDialogProps) {
+export function RestartDialog(props: RestartDialogProps) {
+  // The card mounts and unmounts with `open`, so it reads the opener (the ↻)
+  // on the render that opens it (useDialogDismiss).
+  return props.open ? <RestartDialogCard {...props} /> : null;
+}
+
+function RestartDialogCard({ onRetry, newBoard, body, onClose }: RestartDialogProps) {
   const { t } = useSettings();
-  if (!open) return null;
+  useDialogDismiss(onClose);
   const title = t('restartTitle');
   return (
     <div className="overlay" onClick={onClose}>

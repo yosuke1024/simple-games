@@ -13,7 +13,7 @@ import { ClubApiError } from '../api/errors';
 import { dropOutboxMatching } from '../storage/outbox';
 import type { Challenge, Result } from '../api/types';
 import { contractFor, gameTitle, rankResults } from '../contract/challenge';
-import { GAMES } from '@/app/registry';
+import { findAvailableGame } from '@/app/gameChannel';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import type { ClubConnection } from '@/storage/schemas';
@@ -96,7 +96,9 @@ export function ChallengeScreen({
 
   const ranked = challenge && results ? rankResults(contractFor(challenge.gameId), results) : [];
 
-  const gameId = challenge ? (GAMES.find((g) => g.id === challenge.gameId)?.id ?? null) : null;
+  // Only a title this build offers (app/gameChannel.ts): on the app a web-beta id resolves to
+  // nothing, so Play can never open a game the app keeps off its doors.
+  const gameId = challenge ? (findAvailableGame(challenge.gameId)?.id ?? null) : null;
 
   const play = () => {
     if (!challenge || gameId === null) return;

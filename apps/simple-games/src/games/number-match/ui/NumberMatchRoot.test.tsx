@@ -118,8 +118,21 @@ function storedLevelStats(): ModeStats | null {
   return (JSON.parse(raw) as Stats).level;
 }
 
-afterEach(() => {
+/** Total play seconds as they survive on disk, across every mode. */
+function storedPlaySeconds(): number {
+  const raw = deviceStore.get(NM_STORAGE_KEYS.stats);
+  if (raw === undefined) return 0;
+  const stats = JSON.parse(raw) as Stats;
+  return stats.level.totalPlaySeconds + stats.daily.totalPlaySeconds + stats.free.totalPlaySeconds;
+}
+
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -603,6 +616,50 @@ describe('a home-screen shortcut', () => {
         totalPlaySeconds: 8,
         bestClearSeconds: 8,
       });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the board's clock. Number Match books play time into the statistics only
+  // when a game ends (statsLogic.ts), from that clock — so it is the clock
+  // that has to keep them, and the statistics stay untouched until then.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(NM_STORAGE_KEYS.flags, JSON.stringify(done));
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      // A background saves the first five onto the board, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedElapsedSeconds(NM_STORAGE_KEYS.game)).toBe(5);
+      expect(storedPlaySeconds()).toBe(0);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(storedElapsedSeconds(NM_STORAGE_KEYS.game)).toBe(8);
+      expect(storedPlaySeconds()).toBe(0);
+
+      // Forward again, and away again at once: the board still says eight,
+      // and nothing is booked before the game ends.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedElapsedSeconds(NM_STORAGE_KEYS.game)).toBe(8);
+      expect(storedPlaySeconds()).toBe(0);
     } finally {
       vi.useRealTimers();
     }

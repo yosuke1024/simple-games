@@ -1,0 +1,581 @@
+/* Loop Puzzle — all of this game's styling, imported by LoopPuzzleRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --ink-soft, --line, --accent, --accent-soft, --accent-ring-soft,
+   --warn, --font-display, …) so the game reads as part of the same app and
+   follows the theme without knowing about it. No colour is written here
+   (docs/architecture/css-split.md): the line IS the accent, and the warn
+   rings are the shell's --warn.
+
+   Class names are prefixed `lp-` so this file can never collide with the
+   shell or with another game. */
+
+/* ---------- board area ---------- */
+
+/* The board sits in the space between the top bar and the action bar,
+   centred, with the one line of rule feedback right under it.
+
+   Its size (§4, §13): the column (the viewport less a 4px gutter each side)
+   and a 560px ceiling, and — so the board, the line and Undo / Hint share
+   one screen without scrolling — the height left by the top bar, the line
+   and the action bar (`--lp-chrome`). Never below `--lp-floor`, though: the
+   smallest board that still plays — about 3.2px per tenth of a cell, an
+   edge's hit area about 29px across and a number about 16px tall on a 6×6
+   (`--lp-n` is the board's width, set by GameScreen). A screen too short
+   for that (a phone on its side, a short browser window) scrolls instead of
+   shrinking the board into something no finger can use, as every other
+   board in the series does. `--lp-n` comes from the screen, so the floor
+   is the size's own: a 4×4 stays usable smaller than a 6×6.
+
+   The height is read from `vh`, then, where the browser knows it, from
+   `svh` — the height with the browser's own bars showing, which is what a
+   phone browser opens with (docs/architecture/wide-layout.md: `svh` only
+   after the `vh` fallback; a custom property cannot fall back by itself,
+   so `@supports` picks the line). The widths are `vw`, not `%`, because
+   the size is substituted into font sizes and pseudo-elements, where `%`
+   would mean something else. */
+.lp-board-area {
+  --lp-dot: 10px;
+  --lp-chrome: 205px;
+  --lp-floor: calc((var(--lp-n) + 1) * var(--lp-dot) + (10 * var(--lp-n) + 6) * 3.2px);
+  --lp-size: max(
+    min(100vw - 8px, var(--lp-floor)),
+    min(100vw - 8px, 100vh - var(--lp-chrome), 560px)
+  );
+  flex: 1;
+  min-height: 0;
+  /* When the floor wins, the area scrolls (the app; on the web the page
+     grows and scrolls instead). The auto margins below centre the board and
+     the line while they fit, and give way to the top edge when they do not
+     — `justify-content: center` would push the top out of reach. */
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px 4px;
+}
+
+@supports (height: 100svh) {
+  .lp-board-area {
+    --lp-size: max(
+      min(100vw - 8px, var(--lp-floor)),
+      min(100vw - 8px, 100svh - var(--lp-chrome), 560px)
+    );
+  }
+}
+
+.lp-board-area > .lp-board {
+  margin-top: auto;
+}
+
+.lp-board-area > .lp-feedback {
+  margin-bottom: auto;
+}
+
+/* ---------- board (§4, §13) ----------
+
+   Square, sized once here for both tracks and type: the smallest of the
+   column (the viewport less a 4px gutter each side — the board's own 30%
+   margin outside the outer dots is the rest of the gutter, and it is where
+   the outer edges' hit areas reach), the height left over by the top bar,
+   the feedback line and the action bar (`--lp-chrome`), and a ceiling.
+   `--lp-cell` is the width of one cell's three tracks, used to scale the
+   numbers, the × and the line with the board.
+
+   Track list (LoopPuzzleBoard.tsx `tracks`): 3fr margin, then per cell
+   dot · 3fr 4fr 3fr, then the last dot and a 3fr margin. An edge's button
+   spans its dot track and the 3fr either side; the 4fr middle of each cell is
+   nobody's. At 360 × 640 a 6×6 board measured 319px with the web build's ad
+   reservation (cells about 37px, edge hit areas about 32px across) and 352px
+   without it (about 42px and 35px) — §4. */
+.lp-board {
+  --lp-cell: calc(
+    (var(--lp-size) - (var(--lp-n) + 1) * var(--lp-dot)) * 10 / (10 * var(--lp-n) + 6)
+  );
+  --lp-line: max(4px, calc(var(--lp-cell) * 0.12));
+  position: relative;
+  display: grid;
+  flex-shrink: 0;
+  width: var(--lp-size);
+  height: var(--lp-size);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  /* A tap is a tap: no double-tap zoom stealing it (§4). Pinch still works. */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* The web build keeps the bottom of every screen clear for the anchored ad
+   (src/ui/styles.css); the board gives that height back rather than pushing
+   the action bar under it. */
+:root[data-sg-web-ads] .lp-board-area {
+  --lp-chrome: 321px;
+}
+
+/* Solved beat (§13): one soft wash on the board's ground, under the lines
+   and numbers, then gone. Reduced Motion (OS or app) drops it here, with
+   `animation: none`. This was written when the shared reduced-motion rules
+   in src/ui/styles.css selected `*` alone, which matches no ::before /
+   ::after, so the wash ran its full 900ms (measured in Chromium, 2026-10-17
+   review). Since 2026-10-18 those rules name the pseudo-elements too and
+   would end it at 0.01ms; this rule stays, so the wash does not start at all
+   (Bridges says the same). Nothing waits for it to end: the result card is
+   timed by `useResultReveal`, never by an animationend. */
+.lp-board::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: var(--accent-soft);
+  opacity: 0;
+}
+
+.lp-board-solved::after {
+  animation: lp-solved-wash 900ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-board-solved::after {
+    animation: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .lp-board-solved::after {
+  animation: none;
+}
+
+@keyframes lp-solved-wash {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---------- dots ---------- */
+
+.lp-dot {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.lp-dot::before {
+  content: '';
+  width: max(6px, calc(var(--lp-cell) * 0.1));
+  height: max(6px, calc(var(--lp-cell) * 0.1));
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+/* A dot the loop passes through takes the line's colour and width, so the
+   loop reads as one stroke. */
+.lp-dot-used::before {
+  width: var(--lp-line);
+  height: var(--lp-line);
+  background: var(--accent);
+}
+
+/* A broken dot (§5): a branch or a dead end — a ring, not just a colour. */
+.lp-dot-conflict::after,
+.lp-dot-hint::after {
+  content: '';
+  position: absolute;
+  width: calc(var(--lp-dot) + 12px);
+  height: calc(var(--lp-dot) + 12px);
+  border-radius: 50%;
+  border: 2px solid var(--warn);
+}
+
+.lp-dot-hint::after {
+  border: 2px dashed var(--accent);
+}
+
+/* ---------- edges ---------- */
+
+/* The button is the hit area (its grid area — see .lp-board); everything it
+   draws sits in .lp-edge-mark, a box from one dot's centre to the other's. */
+.lp-edge {
+  position: relative;
+  z-index: 1;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.lp-edge:focus {
+  outline: none;
+}
+
+.lp-edge-mark {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.lp-edge-h .lp-edge-mark {
+  left: calc(var(--lp-dot) / -2);
+  right: calc(var(--lp-dot) / -2);
+  top: 50%;
+  height: calc(var(--lp-dot) + 10px);
+  transform: translateY(-50%);
+}
+
+.lp-edge-v .lp-edge-mark {
+  top: calc(var(--lp-dot) / -2);
+  bottom: calc(var(--lp-dot) / -2);
+  left: 50%;
+  width: calc(var(--lp-dot) + 10px);
+  transform: translateX(-50%);
+}
+
+/* The line: a thick bar in the accent from dot centre to dot centre, its
+   round caps reaching half its width past them so corners close cleanly. */
+.lp-edge-mark::before {
+  content: '';
+  position: absolute;
+  border-radius: calc(var(--lp-line) / 2);
+  background: transparent;
+}
+
+.lp-edge-h .lp-edge-mark::before {
+  left: calc(var(--lp-line) / -2);
+  right: calc(var(--lp-line) / -2);
+  top: 50%;
+  height: var(--lp-line);
+  transform: translateY(-50%);
+}
+
+.lp-edge-v .lp-edge-mark::before {
+  top: calc(var(--lp-line) / -2);
+  bottom: calc(var(--lp-line) / -2);
+  left: 50%;
+  width: var(--lp-line);
+  transform: translateX(-50%);
+}
+
+.lp-edge-line .lp-edge-mark::before {
+  background: var(--accent);
+}
+
+/* The ×: a small drawn cross in the soft ink — a note, quieter than a line. */
+.lp-cross {
+  width: max(10px, calc(var(--lp-cell) * 0.24));
+  height: max(10px, calc(var(--lp-cell) * 0.24));
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+/* Press feedback: the ground behind the edge, not a filter (§13). */
+.lp-edge:active .lp-edge-mark {
+  background: var(--accent-ring-soft);
+}
+
+@media (hover: hover) {
+  .lp-edge-empty:hover .lp-edge-mark::before {
+    background: var(--accent-ring);
+  }
+}
+
+/* Keyboard focus: a SOLID ring around the edge itself (not the whole hit
+   area), 3px out — outside the hint's frame below, so the two never look
+   alike and both show when they meet on one edge (§13). */
+.lp-edge:focus-visible .lp-edge-mark {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* The hint's edge (§6): a DASHED frame with a light fill — a shape, not a
+   tint alone, and dashed like the rings the hint puts on its number or dot,
+   so it never reads as the focus ring. Drawn by the button itself, just
+   outside the edge's box (the conflict frame sits just inside it), under
+   the line; it takes no taps (the hit area stays the button's own box). */
+.lp-edge-hint::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  border: 2px dashed var(--accent);
+  border-radius: 8px;
+  background: var(--accent-ring-soft);
+  pointer-events: none;
+}
+
+.lp-edge-h.lp-edge-hint::before {
+  left: calc(var(--lp-dot) / -2 - 2px);
+  right: calc(var(--lp-dot) / -2 - 2px);
+  top: 50%;
+  height: calc(var(--lp-dot) + 14px);
+  transform: translateY(-50%);
+}
+
+.lp-edge-v.lp-edge-hint::before {
+  top: calc(var(--lp-dot) / -2 - 2px);
+  bottom: calc(var(--lp-dot) / -2 - 2px);
+  left: 50%;
+  width: calc(var(--lp-dot) + 14px);
+  transform: translateX(-50%);
+}
+
+/* A line of a closed loop that leaves other lines out, or ending on a broken
+   dot (§5): a dashed frame in the warn colour around the line. */
+.lp-edge-conflict .lp-edge-mark::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 2px dashed var(--warn);
+  border-radius: 6px;
+}
+
+/* ---------- the middle of a cell (§4) ----------
+
+   The middle 40% of every cell belongs to no edge. On a touch screen a tap
+   that lands on nothing interactive is moved by the browser to the nearest
+   button within the finger's reach (Chromium's touch adjustment), so a bare
+   gap would hand a tap on a number to one of its sides after all. The pad is
+   a tap target of its own instead: it answers no event, but a rule that
+   depends on :active marks it as an element that responds to a touch, and a
+   touch inside it stays on it. It draws nothing and sits under the number. */
+.lp-pad {
+  position: relative;
+  z-index: 0;
+  touch-action: manipulation;
+}
+
+.lp-pad:active {
+  opacity: 1;
+}
+
+/* ---------- numbers ---------- */
+
+.lp-clue {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.lp-clue-digit {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: calc(var(--lp-cell) * 0.52);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* Met right now (§5): lighter in weight and in colour — calm, and readable
+   without colour. Not a "correct" mark: a met number may sit on a wrong loop. */
+.lp-clue-met .lp-clue-digit {
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+/* A number that is broken (§5) keeps its ink and gains a ring. */
+.lp-clue-conflict::before,
+.lp-clue-hint::after {
+  content: '';
+  position: absolute;
+  width: calc(var(--lp-cell) * 0.7);
+  height: calc(var(--lp-cell) * 0.7);
+  border-radius: 50%;
+  border: 2px solid var(--warn);
+}
+
+/* The number a hint was read from (§6): a dashed ring in the accent. */
+.lp-clue-hint::after {
+  width: calc(var(--lp-cell) * 0.8);
+  height: calc(var(--lp-cell) * 0.8);
+  border: 2px dashed var(--accent);
+}
+
+/* ---------- rule feedback (§5) ---------- */
+
+/* Two lines tall whether or not it says anything, so the board never moves
+   when a message comes or goes; `--lp-chrome` leaves room for a third line
+   (a long language) before anything has to move. As wide as the board, and
+   never narrower than a phone's column: a small board (a 4×4 on a short
+   screen) does not squeeze its sentence into more lines. */
+.lp-feedback {
+  margin: 0;
+  width: 100%;
+  max-width: max(var(--lp-size), min(100%, 360px));
+  min-height: calc(2 * 1.3em);
+  padding: 0 12px;
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--ink);
+}
+
+.lp-feedback-conflict::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  vertical-align: 1px;
+  border: 2px solid var(--warn);
+  border-radius: 50%;
+}
+
+/* After a Hint, the line speaks for the mark on the board: a small dashed
+   accent frame, the same shape as the one around the marked edge. */
+.lp-feedback-hint::before {
+  content: '';
+  display: inline-block;
+  box-sizing: border-box;
+  width: 18px;
+  height: 10px;
+  margin-right: 6px;
+  vertical-align: 0;
+  border: 2px dashed var(--accent);
+  border-radius: 4px;
+  background: var(--accent-ring-soft);
+}
+
+/* ---------- top bar ---------- */
+
+.lp-size-tag {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- home ---------- */
+
+.lp-choose-label {
+  margin: 0 0 -4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.lp-chips {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ---------- Quick Rules figures (§11) ---------- */
+
+/* The early-release note (the shell's WebBetaNotice, in its own styling)
+   under the heading on every step (ui/screens/TutorialScreen.tsx): the
+   heading's gutter, the header's padding for the space above it, and the
+   full width, so the badge alone (the twelve languages without the sentence)
+   sits where the sentence's badge does rather than centred over the step. */
+.lp-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
+}
+
+.lp-figure {
+  width: 136px;
+  height: 136px;
+}
+
+.lp-figure-wide {
+  width: 220px;
+  height: 66px;
+}
+
+.lp-fig-line {
+  stroke: var(--accent);
+  stroke-width: 3.4;
+  stroke-linecap: round;
+}
+
+.lp-fig-dot {
+  fill: var(--ink);
+}
+
+.lp-fig-num {
+  fill: var(--ink);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.lp-fig-focus {
+  fill: var(--accent-soft);
+}
+
+.lp-fig-cross {
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.lp-fig-arrow {
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. The board only
+   gets a wider dot track and keeps its ceiling; the height term already lets
+   a tall tablet use its width. */
+
+@media (min-width: 600px) {
+  .lp-board-area {
+    --lp-dot: 12px;
+  }
+}
+
+/* ---------- forced colours (Windows High Contrast, the web build) ----------
+
+   A forced palette repaints every background with the page's own ground, so
+   the dots and lines — drawn as backgrounds — would vanish and leave only
+   the numbers and the × (2026-10-17 review). Here they take the system's
+   colours instead: dots in the text colour, the loop in the highlight. The
+   frames and rings are borders and outlines, which the browser already
+   repaints in the text colour, so they keep their shapes. */
+@media (forced-colors: active) {
+  .lp-dot::before,
+  .lp-edge-mark::before {
+    forced-color-adjust: none;
+  }
+
+  .lp-dot::before {
+    background: CanvasText;
+  }
+
+  .lp-dot-used::before,
+  .lp-edge-line .lp-edge-mark::before {
+    background: Highlight;
+  }
+
+  .lp-edge-empty:hover .lp-edge-mark::before {
+    background: GrayText;
+  }
+}

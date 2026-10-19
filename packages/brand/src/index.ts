@@ -912,6 +912,104 @@ export const titleAccents = {
     onDark: '#1f0912',
     softDark: '#401c2a',
   },
+  /**
+   * Unblock Puzzle — crimson (web-beta). Picked for the smallest accent area
+   * of the five — the chrome, the target block that has to leave and the exit
+   * mark (UNBLOCK_PUZZLE_RULES.md §14; every other block is neutral) — so it
+   * can carry the most saturated value of the batch (S 58%, under the series'
+   * 67% outliers). The shipped placement matches the Phase 1 estimate, so the
+   * mapping still holds. Chosen with the four below
+   * in one pass against all 41 shipped accents + `--warn`
+   * (docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md Phase 1, CIE76):
+   * nearest shipped is Box Regions at ΔE 15.4 light / Bubble Pop at 11.0
+   * dark, over the 12.5 / 9.1 floors. White ink 6.01, paper 5.28, dark on
+   * the dark paper 5.18.
+   */
+  unblockPuzzle: {
+    light: '#b5304d',
+    onLight: '#ffffff',
+    softLight: '#f4d7dd',
+    dark: '#d6667e',
+    onDark: '#20090e',
+    softDark: '#411b23',
+  },
+  /**
+   * Snake — azuki (web-beta). A snake grows until it can fill its board; if
+   * it is drawn in the accent, that is the largest accent area of the five,
+   * so it takes the least saturated mid-tone (S 30%): a muted red-brown that shares the red family with Unblock Puzzle's crimson
+   * and parts from it by depth and saturation (ΔE 30.3 / 30.1: the closest
+   * pair of the five in light, and in dark second only to Peg Solitaire ×
+   * Bridges at 24.7 — the two sit on different shelves). Nearest shipped is
+   * Bubble Pop at ΔE 15.0 light / Kakuro at 11.2 dark; its shelf neighbour Sky
+   * Fighter is 56.1 / 48.8 away. White ink 5.98, paper 5.25, dark paper 6.72.
+   */
+  snake: {
+    light: '#8f534d',
+    onLight: '#ffffff',
+    softLight: '#eddfde',
+    dark: '#c69286',
+    onDark: '#1c100d',
+    softDark: '#3a2722',
+  },
+  /**
+   * Loop Puzzle — bellflower violet (web-beta). Draws the loop itself, a
+   * line on paper, as Dots and Boxes' ultramarine draws its lines. The light
+   * value was calmed in the plan's Phase 4 review: the first pick, #6035b1,
+   * was the most chromatic light accent of all 46 (C* 75.5) on the primary
+   * buttons and the share card; this one is C* 63.5 (fifth), the least
+   * chromatic value whose nearest shipped neighbour still sits at the five's
+   * Phase 1 margin, 1.19 times the floor once rounded (1.187 exactly, just
+   * under Bridges' light 1.192, the five's weakest until then) — Mahjong
+   * Solitaire at ΔE 14.85 light (floor 12.5) / FreeCell at 10.9 dark (floor
+   * 9.1). Below C* 60 the violets crowd it toward the floor (1.02 times it
+   * at C* 58). Shelf neighbours Sudoku 6×6 (above) and Box Regions (beside)
+   * are 34.1 / 30.6 and 52.7 / 49.3 away. White ink 6.07, paper 5.33, dark
+   * paper 4.77.
+   */
+  loopPuzzle: {
+    light: '#704eb7',
+    onLight: '#ffffff',
+    softLight: '#e2dbf0',
+    dark: '#9171da',
+    onDark: '#100820',
+    softDark: '#261b41',
+  },
+  /**
+   * Bridges — iron navy (web-beta). Bridges are lines between islands; in
+   * this colour they read as ink, the deepest value of the five. Nearest
+   * shipped is Minesweeper at ΔE 14.9 light / Number Match at 11.3 dark; Box
+   * Regions above it on the logic shelf is 52.9 / 47.6 away, and Sudoku 6×6,
+   * above it only at three columns, 15.5 / 12.6. White ink 10.94, paper
+   * 9.61, dark paper 4.91.
+   */
+  bridges: {
+    light: '#323b5d',
+    onLight: '#ffffff',
+    softLight: '#dee1ed',
+    dark: '#7d83b0',
+    onDark: '#0f1119',
+    softDark: '#262836',
+  },
+  /**
+   * Peg Solitaire — grape (web-beta). Up to 32 pegs on one board, all in
+   * the accent from the first move: a deep value, so a full board stays
+   * quiet. The dark value was calmed in the plan's Phase 4 review — the
+   * first pick, #d477c0, was C* 51.4 (7th of 46); this one is C* 37.7, the
+   * dark median (24th). Nearest shipped is Takuzu at ΔE 15.6 light / Block
+   * Puzzle at 12.4 dark (floors 12.5 / 9.1); Sliding Puzzle above it on the
+   * puzzle shelf is 53.5 / 49.7 away and Unblock Puzzle beside it 41.6 /
+   * 31.0. Bridges is the one pair of the five under 30 (dark 24.7): a muted
+   * dark grape cannot sit 30 from Bridges' grey-violet, and the two live on
+   * different shelves. White ink 10.27, paper 9.03, dark paper 5.55.
+   */
+  pegSolitaire: {
+    light: '#68275f',
+    onLight: '#ffffff',
+    softLight: '#f1daee',
+    dark: '#b77bb2',
+    onDark: '#1a0e19',
+    softDark: '#372436',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;
