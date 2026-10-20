@@ -327,6 +327,11 @@ describe('in-development titles', () => {
       'pipe-link',
       'bounce-up',
       'echo-pads',
+      'overtake',
+      'make-the-target',
+      'nested-tic-tac-toe',
+      'scopa',
+      'tangram',
       'synthetic-in-development',
     ]);
   });

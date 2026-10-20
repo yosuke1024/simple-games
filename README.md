@@ -239,9 +239,9 @@ pixapps-landing の #201 で同期)。タイトルカードに「BETA」バッ�
 52〜56 本目の新作 5 本(Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram)も、同じ
 **Web 版だけの先行公開(ベータ)**向けに 2026-10-20 から実装しています(計画は
 [docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)、
-仕様の正は各ルール文書)。いまは registry に `channel: 'web-beta'` で登録したスキャフォールドの
-段階で、**ゲーム本体はまだ無く、Web 版にもアプリにも出ていません**。統合と検証を終えてから
-Web 版へ同期します。Overtake と Tangram は実機での試作(Phase 0)を先に行い、Tangram はそれが
+仕様の正は各ルール文書)。いまは registry に `channel: 'in-development'`(どのビルドにも出さない値)で
+登録したスキャフォールドの段階で、**ゲーム本体はまだ無く、Web 版にもアプリにも出ていません**。
+遊べるようになる変更で `'web-beta'` に変え、統合と検証を終えてから Web 版へ同期します。Overtake と Tangram は実機での試作(Phase 0)を先に行い、Tangram はそれが
 通らなければ Three Peaks に差し替えます。上の 41 本には数えず、ストア掲載文にも載せず、
 Club House にも登録しません。遊び方・進行・助けはまだ実装していないので、ここには書きません
 (計画と各ルール文書にあります)。
@@ -321,7 +321,7 @@ simple-games/
 │           │   ├── pipe-link/
 │           │   ├── bounce-up/
 │           │   ├── echo-pads/
-│           │   ├── overtake/    # ここから 5 本も実装中の Web 先行公開(ベータ)。まだスキャフォールド
+│           │   ├── overtake/    # ここから 5 本も実装中(channel: 'in-development')。どのビルドにも出ないスキャフォールド
 │           │   ├── make-the-target/
 │           │   ├── nested-tic-tac-toe/
 │           │   ├── scopa/

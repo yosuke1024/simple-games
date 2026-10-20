@@ -89,7 +89,7 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
 >
 > さらにその次の 5 本(Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram、No. 52〜56。2026-10-20 に
 > 着手 — [plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md))も
-> 同じ段階(registry に `channel: 'web-beta'` で登録したスキャフォールド。ゲーム本体が無く、配信もしていない)で、
+> 同じ段階(registry に `channel: 'in-development'` で登録したスキャフォールド — どのビルドにも出ない。ゲーム本体が無く、配信もしていない)で、
 > この節の項目はすべて未着手。
 
 ## 1. コードの検証(機械が判定できるもの)

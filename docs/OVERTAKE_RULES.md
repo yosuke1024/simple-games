@@ -14,7 +14,7 @@
 ブランド原則([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))はこの文書より上位にある。
 
 ゲーム ID は `overtake`、i18n キーの接頭辞は `overtake`、保存キーの接頭辞は `ot.`、カテゴリは
-`arcade`、No. 52。**Web 先行公開(ベータ)のタイトル**(registry の `channel: 'web-beta'`。
+`arcade`、No. 52。**Web 先行公開(ベータ)のタイトル**(registry では遊べるようになるまで `channel: 'in-development'` — どのビルドにも出ない — その後 `'web-beta'`。
 [WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)で、アプリには出ない。保存スキーマは
 正式収録まで凍結しない。Club House には登録しない(registry の `challenge` を持たない)。
 題は Overtake(製品オーナーの決定、2026-10-20)。選定時の仮題 Lane Racer は BoomBit の 2016 年の

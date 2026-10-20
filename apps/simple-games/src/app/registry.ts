@@ -1235,8 +1235,10 @@ export const GAMES: readonly GameDefinition[] = [
   // The titles of docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
   // (Nos. 52–56), in number order, all built for the browser's early release
   // (docs/WEB_VERSION.md「先行公開」) and not yet on it: each is still the
-  // scaffold of scripts/new-game.mjs until its own phase of the plan lands.
-  // None is a Club House challenge (no `challenge`).
+  // scaffold of scripts/new-game.mjs until its own phase of the plan lands, so
+  // each is `'in-development'` (offered on no build) until the change that
+  // makes it playable turns it `'web-beta'`, as Nos. 47–51 above. None is a
+  // Club House challenge (no `challenge`).
   //
   // The glyphs were measured as Nos. 42–51's were above: none is in the bundled
   // Nunito subset, so each resolves through the tail of --font-display, except
@@ -1271,7 +1273,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Overtake',
     category: 'arcade',
     glyph: '┇',
-    channel: 'web-beta',
+    channel: 'in-development',
     storageKeys: Object.values(OT_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/overtake/ui/OvertakeRoot').then((m) => ({ default: m.OvertakeRoot })),
@@ -1307,7 +1309,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Make the Target',
     category: 'puzzle',
     glyph: '=',
-    channel: 'web-beta',
+    channel: 'in-development',
     storageKeys: Object.values(TG_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/make-the-target/ui/MakeTheTargetRoot').then((m) => ({
@@ -1338,7 +1340,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Nested Tic-Tac-Toe',
     category: 'board',
     glyph: '╳',
-    channel: 'web-beta',
+    channel: 'in-development',
     storageKeys: Object.values(NT_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/nested-tic-tac-toe/ui/NestedTicTacToeRoot').then((m) => ({
@@ -1363,7 +1365,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Scopa',
     category: 'cards',
     glyph: '♧',
-    channel: 'web-beta',
+    channel: 'in-development',
     storageKeys: Object.values(SC_STORAGE_KEYS),
     loadRoot: () => import('../games/scopa/ui/ScopaRoot').then((m) => ({ default: m.ScopaRoot })),
     loadStorageSchemas: () => import('../games/scopa/storage/schemas'),
@@ -1388,7 +1390,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Tangram',
     category: 'puzzle',
     glyph: '⊿',
-    channel: 'web-beta',
+    channel: 'in-development',
     storageKeys: Object.values(TN_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/tangram/ui/TangramRoot').then((m) => ({ default: m.TangramRoot })),

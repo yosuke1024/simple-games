@@ -75,9 +75,12 @@ Design philosophy:
 - 2026-10-20 から、さらに **Web 先行公開(ベータ)向けの新作 5 本**(Overtake / Make the Target /
   Nested Tic-Tac-Toe / Scopa / Tangram、No. 52〜56)に着手した(計画は
   `docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md`、仕様の正は各
-  `docs/*_RULES.md`)。Phase 1 として `scripts/new-game.mjs --channel web-beta` でスキャフォールドし、
-  registry に `channel: 'web-beta'` で登録した段階で、**ゲーム本体はまだ無い**(画面と文言は
-  スキャフォールドの仮のもの)。**Web 版にも出していない** — 統合と検証を終えてから同期する。
+  `docs/*_RULES.md`)。Phase 1 として `scripts/new-game.mjs` でスキャフォールドし、registry に
+  `channel: 'in-development'`(どのビルドの扉からも開けない — `app/gameChannel.ts`)で登録した段階で、
+  **ゲーム本体はまだ無い**(画面と文言はスキャフォールドの仮のもの)。**Web 版にも出していない** —
+  遊べるようになる変更で `'web-beta'` に変え、統合と検証を終えてから同期する(landing の門の一覧は
+  `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移す。main を先に同期する PR では
+  `IN_DEVELOPMENT_GAME_IDS` に 5 本の id を足す)。
   Overtake と Tangram は実機での試作(Phase 0)を先に行い、Tangram はそれが通らなければ Three Peaks に
   差し替える。正式収録の 41 本には数えず、アプリには出ない。47〜51 の Phase 1(#239)が先に main に
   入ったので、この 5 本はその後ろに No. 順で並ぶ。

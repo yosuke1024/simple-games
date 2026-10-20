@@ -106,6 +106,9 @@ Overtake、クリアは 1 位、順位の 1 文は足してよい。Tangram は�
 | 統計        | played / 総プレイ秒(面ごとの着順は持たない)    | ティア別 + デイリー                          | 難易度別 played / wins / losses / draws | played / wins / losses + 総プレイ秒                      | 解いた図形数(ティア別)+ デイリー                             |
 | チャンネル  | `web-beta`                                     | `web-beta`                                   | `web-beta`                              | `web-beta`                                               | `web-beta`                                                   |
 
+- チャンネルは目標。registry では遊べるようになるまで `channel: 'in-development'`(どのビルドにも出ない —
+  2026-10-20 の #242 で足した値。47〜51 の計画の「2026-10-20 追記 — Web の帰結の対処」)で、遊べるようになる
+  変更で `'web-beta'` にする(下の「Phase 1 の実施結果」の追記)。
 - 保存キーは**予定**。いまはスキャフォールドの `stats` / `flags` だけで、各ゲームの `storage/keys.ts` と
   `gameKeys.test.ts` の自分の行は、ルール文書の保存の節と同じコミットで増やす。デイリーを持つ 2 本
   (Make the Target・Tangram)は 2 スロット規則に従い `saveDaily` を持つ
@@ -163,7 +166,7 @@ cg np sr yt mc dm hb db bn s6 br ub sn lp bg pg` と、47〜51 の `ch gs pn bo 
 作らない / `game/` は Pure TypeScript でシード付き PRNG / 生成と探索と物理には仕事量の上限、上限で正直に返し、
 同梱の検証済み盤面へフォールバック([GAME_LIFECYCLE.md](../GAME_LIFECYCLE.md)「CPU 探索」。性能の門は仕事量で、
 壁時計は出力するだけ)/ 時間で進むものはバックグラウンドと Back で止まり、復帰しても勝手に再開しない /
-保存は fail-closed、デイリーは 2 スロット規則 / registry に `channel: 'web-beta'` と `loadStorageSchemas`、
+保存は fail-closed、デイリーは 2 スロット規則 / registry に `channel`(遊べるまで `'in-development'`、その後 `'web-beta'`)と `loadStorageSchemas`、
 `storage/keys.ts` は import ゼロの葉、ホームと Quick Rules に `WebBetaNotice`(`src/test/webBetaNoticeWiring.test.ts`)、
 結果カードは `ShareAction`、Back の唯一の持ち主は GameContext、退出の同期は `useOnUnmount(syncActiveGame)` を 1 回、
 ダイアログの Escape は Cancel / Quick Rules は最大 3 ステップ / 1 ゲーム 1 アクセント、360×640 でスクロール
@@ -649,7 +652,7 @@ Connect Four / Gomoku — [GAME_LIFECYCLE.md](../GAME_LIFECYCLE.md)「CPU 探索
 
 - **位置づけ**: board の棚、No. 54。棚の並びは Chess の後ろ(registry は No. 順。rebase 後の並びは
   `⊡ ♞ ╳`)。Club House には登録しない(registry の `challenge` を
-  持たない)。Web 先行公開(`channel: 'web-beta'`)で、アプリにもストア文言にも landing のガイドにも
+  持たない)。Web 先行公開向け(遊べるようになるまで `channel: 'in-development'`、その後 `'web-beta'`)で、アプリにもストア文言にも landing のガイドにも
   出ない。
 - **盤**: 81 マス(小盤 9 × マス 9)。状態は 81 マスの印(空 / 自分 / CPU)で、小盤 9 つの状態(未決 /
   取られた / 引き分け = 満杯でライン無し)はそこから導出できる。手番は手数から導出する(パスが無く
@@ -1263,7 +1266,7 @@ Peg Solitaire / Gem Swap + Make the Target + Tangram)。既存 51 本に無い�
   PR を 1 本**出す。
   - Three Peaks: cards・id `three-peaks`・保存接頭辞 `tp.`(2026-10-20 時点で未使用 — `gameKeys.test.ts` の
     PREFIXES にも 47〜51 の `ch gs pn bo ep` にも無い。`scripts/new-game.mjs` が衝突を拒否する)・i18n 接頭辞
-    `threePeaks*`・No. 56 のまま・`channel: 'web-beta'`。規則は Classic(3 つの山に 28 枚・山札 24 枚・場の
+    `threePeaks*`・No. 56 のまま・`channel: 'in-development'`(遊べるようになるまで。その後 `'web-beta'`)。規則は Classic(3 つの山に 28 枚・山札 24 枚・場の
     札を捨て札の 1 つ上か下の数へ重ねる)に凍結し、変種(山の数・配り方)を作らない。**「全配札クリア可能」とは
     言わない**(Solitaire §5 / FreeCell §5 / Spider §5 と同じ — 可解性のスクリーニングも保証もしない)。
     デイリーは今日の 1 問だけ(seed は `three-peaks-daily-<YYYY-MM-DD>`、Free Play は `three-peaks-free-<token>`
@@ -1275,19 +1278,19 @@ Peg Solitaire / Gem Swap + Make the Target + Tangram)。既存 51 本に無い�
     検索は差し替え PR で日付つきに記録する。
   - 差し替え PR が変えるもの: registry(`GameId` と `GAMES` の `tangram` → `three-peaks`、`TN_STORAGE_KEYS` の
     import → `TP_STORAGE_KEYS`、グリフと理由)/ `src/games/tangram/` を消して
-    `node scripts/new-game.mjs three-peaks tp --title "Three Peaks" --category cards --channel web-beta` /
+    `node scripts/new-game.mjs three-peaks tp --title "Three Peaks" --category cards --channel in-development` /
     `src/app/gameKeys.test.ts` の `tangram` の 2 行(RELEASED_KEYS / PREFIXES)→ `three-peaks` / `tp.`(`tn.*` は
     Web に出ておらずプレイヤーの保存が無いので、行の削除は released data の削除ではない — 差し替えは Web
-    同期の前に限る)/ ベータ一覧(`src/app/gameChannel.test.ts` の `WEB_BETA_IDS`・`src/ui/landing.test.ts`・
+    同期の前に限る)/ チャンネルの一覧(`src/app/gameChannel.test.ts` の `IN_DEVELOPMENT_IDS`・`src/ui/landing.test.ts`・
     `src/ui/screens/CollectionHomeScreen.test.tsx`・`src/i18n/unreadCatalogs.test.ts` の `UNREAD_JA_GAME_IDS`)/
     アクセント(`ui/styles.css` の `data-game='tangram'` のライト・ダーク 2 ブロック、`packages/brand` の
     `titleAccents`、`docs/architecture/title-accent.md` と BRAND.md の表 — 棚が puzzle から cards に変わるので
     隣接(手順 3)と盤面の出し方(手順 4 — カードの裏面)が変わり、**色は測り直す**)/ 現状記述
     (`docs/TANGRAM_RULES.md` → `docs/THREE_PEAKS_RULES.md` のスタブ、この計画に差し替えの追記、README
-    「Web 先行公開」の表とツリー、WEB_VERSION.md「先行公開(ベータ)」の「次の新作 5 本」の段落(依頼文の言う
-    「実装状況」という見出しは無い)、PROJECT_CONTEXT.md §3、RELEASE_CHECKLIST.md §0 の「その次の 5 本」の
+    「Web 先行公開」の表とツリー、WEB_VERSION.md「先行公開(ベータ)」の「さらに次の 5 本」の段落(依頼文の言う
+    「実装状況」という見出しは無い)、PROJECT_CONTEXT.md §3、RELEASE_CHECKLIST.md §0 の「さらにその次の 5 本」の
     注記、storage-keys.md の `tn.*` → `tp.*`、css-split.md の `tangram.css` → `three-peaks.css`、I18N_POLICY.md
-    の 2 か所(キー数の段落と「実装中の次の 5 本」)。architecture/i18n.md は名前を書かず数(55 キー・各 11)も
+    の 2 か所(キー数の段落と「さらに次の 5 本」)。architecture/i18n.md は名前を書かず数(55 キー・各 11)も
     変わらないので不変、store/listing.md は名前を書かないので不変)/ 棚の数(puzzle はこの branch
     単体で 10 → 9、47〜51 の Gem Swap 込みで 11 → 10。cards は 6 → 7 — 47〜51 は cards を足さない)。
 
@@ -1314,13 +1317,15 @@ Peg Solitaire / Gem Swap + Make the Target + Tangram)。既存 51 本に無い�
 1. **Phase 1 — 仕様と接続点(この作業)**: この計画書、**main(`5274026`)への rebase**(書き始めにはこのブランチは
    `bda309d` から出ていて PR #239 のマージを含まなかった。registry / `gameKeys.test.ts` / ベータ一覧 / アクセント /
    css-split.md / storage-keys.md / 現状の文書を No. 順 47〜51 → 52〜56 に並べ直す — 「決定事項」の合流の
-   箇条書きと、下の「Phase 1 の実施結果」)、`scripts/new-game.mjs --channel web-beta` で 5 本を
-   スキャフォールド(No. 順、Echo Pads の後ろ)、registry に `channel: 'web-beta'` と各グリフの理由(見出しの
-   コメントに計画・チャンネル・Club House なし・グリフの測り方)、`gameChannel.test.ts` の `WEB_BETA_IDS` と
-   `CollectionHomeScreen.test.tsx` / `ui/landing.test.ts`(ガイドの無いゲーム)/ `src/i18n/unreadCatalogs.test.ts`
-   の一覧を 15 本に(配信中の 42〜46、実装中の 47〜51、接続点のみの 52〜56)、
-   `shortcutLaunch.test.ts` / `webRoute.test.ts` のベータの注記、`gameKeys.test.ts` の 5 行にベータの注記(各行の上に
-   1 行ずつコメント)、アクセント 5 色を styles.css / `titleAccents` / title-accent.md / BRAND.md に登録、
+   箇条書きと、下の「Phase 1 の実施結果」)、`scripts/new-game.mjs` で 5 本をスキャフォールド(No. 順、
+   Echo Pads の後ろ)、registry に `channel: 'in-development'`(#242 の値 — 下の「Phase 1 の実施結果」の追記)と
+   各グリフの理由(見出しのコメントに計画・チャンネル・Club House なし・グリフの測り方)、`gameChannel.test.ts` の
+   `IN_DEVELOPMENT_IDS` と `CollectionHomeScreen.test.tsx` の実装中の一覧を 10 本に(47〜51 と 52〜56。
+   `WEB_BETA_IDS` は配信中の 42〜46 の 5 本のまま)、`ui/landing.test.ts`(ガイドの無いゲーム — 2026-10-02 の
+   8 本 + 42〜56 の 15 本 = 23)/ `src/i18n/unreadCatalogs.test.ts` の一覧に 5 本を足して 42〜56 を 15 本に
+   (配信中の 42〜46、実装中の 47〜51、接続点のみの 52〜56)、
+   `shortcutLaunch.test.ts` / `webRoute.test.ts` / `WebBetaNotice.test.tsx` の注記、`gameKeys.test.ts` の 5 行に
+   実装中の注記(各行の上に 1 行ずつコメント)、アクセント 5 色を styles.css / `titleAccents` / title-accent.md / BRAND.md に登録、
    `PRODUCT_PRINCIPLES.md` に順位の 1 文(下)、css-split.md / storage-keys.md の一覧、現状の文書(README /
    WEB_VERSION / PROJECT_CONTEXT §3 / I18N_POLICY / architecture/i18n / ARCHITECTURE / architecture/registry /
    RELEASE_CHECKLIST §0 / store/listing)を「正式収録 41 + 配信中の先行公開 5 + 実装中の 47〜51 の 5 +
@@ -1330,7 +1335,7 @@ Peg Solitaire / Gem Swap + Make the Target + Tangram)。既存 51 本に無い�
 2. **Phase 0 — 実機の試作(Overtake と Tangram)**: 入力マッパーと最小の盤だけの試作を実機 2 台で触る。
    通過条件は「共通要件」。Overtake の Phase 0 は初日に始め、ほかの 4 本を待たせない。Overtake が通らなければ
    既定を「横ドラッグ + ▼ 長押し」に、Tangram が通らなければ Three Peaks に差し替える — その場合は registry /
-   `gameKeys.test.ts` / ベータ一覧 / アクセント / css-split.md / storage-keys.md / 現状の文書 / スタブを
+   `gameKeys.test.ts` / チャンネルの一覧 / アクセント / css-split.md / storage-keys.md / 現状の文書 / スタブを
    差し替える PR を先に出す(オーナーの承認を得てから)。
 3. **Phase 2 — ルール文書とゲームロジック(5 本並行)**: ルール文書 → `game/`(テスト込み、生成器とボットの門、
    品質の実測)→ 独立レビュー。各ゲームの「未決事項」はここでルール文書に決める。ロジックがテストで検証できて
@@ -1343,10 +1348,12 @@ pnpm --filter simple-games build:web`、i18n gate、`size:check` → `size:updat
    6 倍スロットルの性能)。Phase 1 で書いた「接続点のみ」「未実装」の記述を実装に合わせて直す。Phase 1 の
    rebase のあとに main が動いていれば、もう一度 rebase して No. 順と本数・キー数を確かめ、アクセント 5 色を
    測り直す(「決定事項」)。PR の作成はオーナーの明示的な承認を得てから。
-6. **Web 版への同期**: 実装が終わった本だけを landing の `tests/ui.test.js` の `WEB_BETA_GAME_IDS` に、同期する
-   チャンクと同じ PR で足す(このテストは一覧に無い id のチャンクも、チャンクの無い id も落とす —
-   [WEB_VERSION.md](../WEB_VERSION.md)「先行公開」)。**接続点だけの本のチャンクは送らない。**同期 PR も
-   オーナーの承認を得てから。
+6. **Web 版への同期**: 遊べるようになった本を `'web-beta'` に変え、landing の `tests/ui.test.js` の一覧を
+   `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ、同期するチャンクと同じ PR で移す(このテストは一覧に
+   無い id のチャンクも、チャンクの無い id も落とす — [WEB_VERSION.md](../WEB_VERSION.md)「先行公開」)。接続点
+   だけの本もチャンクは出る(ビルドは分岐しない)が、`'in-development'` なのでどの扉からも開けず、landing では
+   `IN_DEVELOPMENT_GAME_IDS` に置く — **この計画のマージ後に main を先に同期する PR では、5 本の id をそこへ
+   足す**(47〜51 の計画の「2026-10-20 追記 — Web の帰結の対処」と同じ)。同期 PR もオーナーの承認を得てから。
 7. **Phase 5 — 正式収録の準備(この計画の PR では行わない)**: Web ベータ公開後に WEB_VERSION.md の基準
    (2 週間の安定・滞在時間)と RELEASE_CHECKLIST.md §0 を評価する。正式収録時にスキーマを凍結し、公開ビルドから
    採取した保存 payload で `releasedRecords.test.ts` を作る。ストア公開・本番配信は明示的な承認を要し、自動では
@@ -1357,7 +1364,8 @@ pnpm --filter simple-games build:web`、i18n gate、`size:check` → `size:updat
 `scripts/new-game.mjs --channel web-beta` で 5 本をスキャフォールドし(ホームと Quick Rules に `WebBetaNotice`)、
 registry に見出しのコメントと各グリフの理由を書き、`gameKeys.test.ts` の 5 行はベータのキーとして注記した(各行の
 上に 1 行ずつコメント)。`gameChannel.test.ts` の `WEB_BETA_IDS`、`CollectionHomeScreen.test.tsx` /
-`ui/landing.test.ts` / `src/i18n/unreadCatalogs.test.ts` の一覧は 15 本(配信中の 42〜46・実装中の 47〜51・この 5 本)。
+`ui/landing.test.ts` / `src/i18n/unreadCatalogs.test.ts` の一覧は 42〜56 の 15 本(配信中の 42〜46・実装中の
+47〜51・この 5 本。`landing.test.ts` はガイドの無い 2026-10-02 の 8 本を含めて 23)。
 `shortcutLaunch.test.ts` / `webRoute.test.ts` / `WebBetaNotice.test.tsx` の注記も直した。この計画の書き始めには
 PR #239 は main に無く、このブランチは `bda309d` から出ていた。書いている途中(2026-10-20 08:23 JST)に #239 が
 main に入ったので、**このブランチを `5274026` に rebase した** — 衝突 20 ファイル(registry・テストの一覧・現状の
@@ -1368,7 +1376,31 @@ main に入ったので、**このブランチを `5274026` に rebase した** 
 未来形)。`PRODUCT_PRINCIPLES.md` に判断 4 の 1 文を足した(文案は下の節)。css-split.md の窓の実測は上の
 「決定事項」のとおり(`tangram.css` の終わりが 1,188 文字目、余裕 12)。
 
-**コミットと検証。**この計画のコミットは origin/main(`5274026`)の上に 2 つ — ① 計画・5 本の接続点・アクセント・
+**2026-10-20 追記 — `'in-development'` への切り替え。**PR #243 を出した後、main に #241(47〜51 の計画の
+追記)と #242(registry の `channel` に第 3 の値 `'in-development'` を足し、47〜51 をそれにした — 47〜51 の
+計画の「2026-10-20 追記 — Web の帰結の対処」)が入り、このブランチは main と衝突した。**`33562c1` に rebase
+し、5 本の `channel` を `'in-development'` に変えた**(47〜51 と同じ: どのビルドの扉からも開けず、遊べるように
+なる変更で `'web-beta'` にする)。一覧は `gameChannel.test.ts` の `IN_DEVELOPMENT_IDS` と
+`CollectionHomeScreen.test.tsx` の実装中の一覧が 10 本(47〜56)、`WEB_BETA_IDS` は配信中の 42〜46 の 5 本の
+まま。`landing.test.ts`(ガイドの無い 8 本 + 42〜56 の 15 本 = 23)/ `unreadCatalogs.test.ts`(15 本)は変わらない。上の段落の「`web-beta` 15 本」は
+rebase 前の数(下の「現状の文書の数」)。スキャフォールドは `--channel web-beta` で生成したものをそのまま
+使い、再生成はしていない — #242 後の `--channel in-development` との生成物の差は registry の `channel` の値
+だけで(`WebBetaNotice` はどちらも両画面に置き、描くのは `'web-beta'` になってから)、それは手で変えた。
+上の「フェーズ」の 1 と 6、「決定事項」の表の注記、「共通要件」、Three Peaks の差し替えの手順、現状の文書
+(README / WEB_VERSION / PROJECT_CONTEXT / RELEASE_CHECKLIST / store/listing / ARCHITECTURE /
+architecture/registry)とルール文書のスタブ 5 本の表記も `'in-development'` に合わせた。landing の門には 5 本の id がまだ無い —
+この計画のマージ後、main を次に Web 版へ同期する PR で `IN_DEVELOPMENT_GAME_IDS` に足す(「フェーズ」の 6)。
+コミットは `33562c1` の上に 3 つ(下の ①・② と、③ = この切り替え)。③ の木で取り直したゲート: typecheck・lint・
+vitest 全体(631 ファイル通過・1 スキップ、13,097 件通過・1 スキップ)・`pnpm build`・`build:web`・
+`check-principles.sh`・Prettier。`check-dist-ads-separation.sh` / `size:check` / `i18n:gate:check` /
+`ios:version check` は ①+② の木の結果のままで、③ はチャンクの中身を変えていない。③ の追従分には独立レビュー
+(3 観点、指摘ごとに 3 人が反証、9 件中 6 件が残った)を取り、6 件を ③ に含めて直した — ARCHITECTURE.md の
+チャンネルの文(47〜56 を `'web-beta'` と書いていた)、BRAND.md の Make the Target の行(「ルール文書はまだ無い」→
+スタブ)、この計画の `landing.test.ts` の数(ガイドの無い 8 本込みで 23)、Three Peaks の手順が指す段落名
+(47〜51 の段落を指していた)、下の「コミットと検証」の時点の明記。残り 3 件は反証で落ちた(styles.css の見出しの
+コメントと、この計画の rebase 前の記述 2 か所 — いずれも main の表記か、履歴として正しい)。
+
+**コミットと検証(#242 前、`5274026` の上の 2 コミットの時点の記録 — 現在の形は上の追記)。**この計画のコミットは origin/main(`5274026`)の上に 2 つ — ① 計画・5 本の接続点・アクセント・
 現状の文書・スタブ、② `PRODUCT_PRINCIPLES.md` の 1 文(正本の変更なので分けた)。作業の途中のコミット(rebase の
 前後の区切り)は残していない。ゲートは ①+② の最終の木で、CI と同じ順に実行した(2026-10-20): lint・
 typecheck・vitest(631 ファイル通過・1 スキップ、13,090 件通過・1 スキップ — スキップは main からある Unblock
@@ -1609,3 +1641,5 @@ rebase 前の数(2026-10-20、`en.ts` の最上位キーを数えた)と、rebas
   同じく 1,803 = 125 + 1,678(47〜51 も各 11 キーのスキャフォールド)。I18N_POLICY.md はこの数を書いている。
 - rebase 後(この計画のコミット)の実測: registry **56** = 41 + `web-beta` 15、i18n **1,858** = 125 + 1,733(両バッチが
   スキャフォールドのまま各 11 キー)。I18N_POLICY / architecture/i18n / README / PROJECT_CONTEXT はこの数で書いた。
+- #242 後の rebase(`33562c1`。上の「Phase 1 の実施結果」の追記): registry **56** = 41 + `web-beta` 5(配信中の
+  42〜46)+ `in-development` 10(47〜56)。i18n は 1,858 のまま。

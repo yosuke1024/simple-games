@@ -12,7 +12,7 @@ Quick Rules はここに従い、コードはここへ `§n` で言及する。�
 
 ゲーム ID は `nested-tic-tac-toe`、i18n キーの接頭辞は `nestedTicTacToe`、保存キーの接頭辞は `nt.`、
 カテゴリは `board`、No. 54。名称は説明的な一般名の「Nested Tic-Tac-Toe」を使う。**Web 先行公開
-(ベータ)のタイトル**で、アプリにはまだ収録していない(registry の `channel: 'web-beta'`。
+(ベータ)のタイトル**で、アプリにはまだ収録していない(registry では遊べるようになるまで `channel: 'in-development'` — どのビルドにも出ない — その後 `'web-beta'`。
 [WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。Club House には登録しない。
 
 ## これまでに決まったこと(2026-10-20 — オーナーが 5 本をまとめて採った提案の仕様と、計画の判断。詳細は計画)

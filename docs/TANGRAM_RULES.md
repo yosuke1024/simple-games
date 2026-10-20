@@ -20,8 +20,8 @@
 ブランド原則([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))はこの文書より上位にある。
 
 ゲーム ID は `tangram`、i18n キーの接頭辞は `tangram`、保存キーの接頭辞は `tn.`、カテゴリは `puzzle`、
-No. 56。**Web 先行公開(ベータ)のタイトル**で、アプリにはまだ収録していない(registry の
-`channel: 'web-beta'`。[WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。保存スキーマは正式収録まで
+No. 56。**Web 先行公開(ベータ)のタイトル**で、アプリにはまだ収録していない(registry では遊べるようになるまで
+`channel: 'in-development'` — どのビルドにも出ない — その後 `'web-beta'`。[WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。保存スキーマは正式収録まで
 凍結しない。Club House には登録しない(registry の `challenge` を持たない)。
 
 ## これまでに決まったこと(2026-10-20 — オーナーが 5 本をまとめて採った提案の仕様と、計画の判断。詳細は計画)

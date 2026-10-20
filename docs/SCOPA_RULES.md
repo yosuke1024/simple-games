@@ -14,7 +14,7 @@ CPU・CPU が見ているもの・Undo(作らない)・助けの形・スコア�
 ゲーム ID は `scopa`、i18n キーの接頭辞は `scopa`(名称キーは `scopaName`)、保存キーの接頭辞は `sc.`、
 カテゴリは `cards`、No. 55。名称は一般名の「Scopa」で、全言語で訳さない([I18N_POLICY.md](I18N_POLICY.md)
 「誤訳が「約束の反故」になる文言」の 6「ゲーム名」— 定訳がないため全言語で英語のまま。Hearts / Gin Rummy と
-同じ扱い)。**Web 先行公開(ベータ)のタイトル**(registry の `channel: 'web-beta'`。
+同じ扱い)。**Web 先行公開(ベータ)のタイトル**(registry では遊べるようになるまで `channel: 'in-development'` — どのビルドにも出ない — その後 `'web-beta'`。
 [WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)で、アプリには正式収録していない。ストア掲載文にも
 landing のガイドにも出さない。Club House には登録しない(registry の `challenge` を持たず、この文書に
 Club House の節は無い)。保存スキーマは正式収録まで凍結しない。

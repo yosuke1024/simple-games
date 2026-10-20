@@ -13,7 +13,7 @@
 
 ゲーム ID は `make-the-target`、i18n キーの接頭辞は `makeTheTarget`、保存キーの接頭辞は `tg.`、
 カテゴリは `puzzle`、No. 53。**Web 先行公開(ベータ)のタイトル**で、アプリにはまだ収録して
-いない(registry の `channel: 'web-beta'`。[WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。
+いない(registry では遊べるようになるまで `channel: 'in-development'` — どのビルドにも出ない — その後 `'web-beta'`。[WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。
 **Web 版への配信もまだ**で、統合と検証を終えてから landing へ同期する(計画「フェーズ」)。
 Club House には登録しない(registry の `challenge` を持たない)。保存スキーマは正式収録まで
 凍結しない。

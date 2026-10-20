@@ -1131,7 +1131,7 @@ export const titleAccents = {
   /**
    * Make the Target — kon-kikyō, an indigo bellflower (web-beta). Marks the
    * number tiles the player has picked and the target (projected from the
-   * plan; the rules are not written yet). Nearest shipped is Sky Fighter at
+   * plan; the rules document is still a stub). Nearest shipped is Sky Fighter at
    * ΔE 12.8 light / Bridges at 9.2 dark (1.015 times the floor); Mahjong
    * Solitaire on the same puzzle shelf is 12.8 / 9.4 but never above, below
    * or beside it at any width. Unblock Puzzle above it at two columns is
@@ -1152,7 +1152,7 @@ export const titleAccents = {
    * player's marks and the faint "play here" small-board highlight take the
    * accent, the CPU's marks the ink — the Connect Four / Checkers side of
    * the board shelf, not Reversi's and Gomoku's physical stones (projected;
-   * the rules are not written yet). The deepest, least chromatic value of
+   * the rules document is still a stub). The deepest, least chromatic value of
    * the five (C* 20.0 light / 12.7 dark, 53rd / 55th of 56), ΔE 27.8 / 23.8
    * from the ink. Nearest shipped is Checkers at ΔE 12.6 light — the same
    * board shelf, never above, below or beside it — / Snake at 11.3 dark;
