@@ -1,0 +1,2075 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Overtake Phase 0 入力試作</title>
+    <!--
+================================================================================
+ Overtake — Phase 0 の使い捨て試作(入力マッパー + スロットル表示だけの空コース)
+================================================================================
+ これはアプリの一部ではない。registry に無く、ビルドに入らず、翻訳も保存も通信も無い。
+ 外部リソース(CDN・フォント・画像)も使わない。1 ファイルで完結し、Chromium 88 相当の
+ WebView と iOS 14 の Safari で動くように書いてある(ES モジュール・新しい API・新しい CSS は
+ 使わない)。計画: docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
+ 「共通要件」の Phase 0 と「52. Overtake」の操作 1〜7。
+
+ 何を測るか(Phase 0 のゲート):
+   空コースを 30 秒走り、**減速するつもりなく**操舵する。スロットルが全開 (1.0) 未満だった時間の
+   割合 =「意図しない減速の時間」。3% 未満なら 2 軸 1 本指(モード A)を既定にできる。通らなければ
+   既定は「横ドラッグ + ▼ 長押し」(モード B)。比較のため両方のモードを置く。
+   「減速の確認」(15 秒)は判定なしで、わざと減速して効くことを確かめるだけ。
+
+ 画面: 360×640 CSS px の縦持ちでスクロールしない。本番は Web 広告のために下 116 px を空けるが、
+   この試作は高さを全部使う(盤の高さは本番より大きい — 操作の距離はすべて CSS px なので
+   入力マッパーの測定には影響しない)。寸法・速度はすべて CSS px(本番の論理盤面の倍率は掛けない)。
+
+ 入力マッパー(モード A: 2 軸 1 本指 — 既定):
+   1. 操舵: 盤(canvas)のどこからでも 1 本指の相対ドラッグ。pointerdown で車の x と指の x,y を
+      基準に取り、targetX = carX0 + (fingerX − baseX) × gain。車は最大 440 CSS px/s で targetX へ
+      追従する(道路の端で止まる)。targetX が端を越えたら基準をずらして端に貼り付ける
+      (REANCHOR_AT_WALL — 指を戻した瞬間に車が戻り始める)。
+   2. スロットルは片側式: 既定は全開 1.0。指が縦の基準より下へ dy = fingerY − baseY 動いたとき
+      throttle = 1 − clamp((dy − 不感帯) / (最大減速の距離 − 不感帯), 0, 1)。上へ動かしても
+      全開を超えない。
+      ラチェット式の基準(計画の「縦の基準点はラチェット式(指が上へ動けばそこへ追従し、
+      ゆっくり現在値へ戻る)」の解釈):
+        - 指が基準より上 (fingerY < baseY) なら、基準は即座に指の位置へ移る。
+        - 指が基準より下なら、基準は「戻り速度」px/s で指の位置へ下がっていく。ゆっくりした
+          親指のずれは基準が吸収して減速に積み上がらず、素早く引いた分は基準が追いつく前に効く。
+        - 帰結: 指で引いた減速は保持できず、戻り速度で全開へ戻っていく(既定 20 px/s で
+          100 px 引くと 0 のまま 0.5 秒、約 4.1 秒で全開)。続けて減速するのは第 2 指か ▼。
+          戻り速度 0 = 戻らない(基準は上へだけ動く)。
+   3. 第 2 指(操舵中の指とは別の pointerId の pointerdown)= 押している間は最大減速 (0)。
+      操舵の指は奪わない。▼ の長押しも最大減速。操舵の指の pointercancel ではドラッグを終え、
+      次の pointerdown で基準を取り直す。pointerup では車はその位置に残り、スロットルは全開へ戻る。
+ モード B(横ドラッグ + ▼ 長押し): 縦の成分は完全に無視。減速は ▼ の長押しと第 2 指だけ。
+ ボタン(◀ ▶ ▼): 本番の ot.prefs の Buttons モードに相当。ドラッグは無効。測定用ではない。
+ キー(全モード): ← → / A D で操舵(押している間 targetX が一定速度で動く)、↓ / S で最大減速、
+   Space / Enter で 30 秒の計測を開始、P / Esc で一時停止。文字は KeyboardEvent.code で読む。
+   ボタンにフォーカスがあるときの Space / Enter はボタン自身に任せる。
+
+ ポインタの契約(docs/ARCHITECTURE.md「指を取り上げられたときの契約」「押下の記録は誰のものか」):
+   pointerup を聞く要素はすべて pointercancel も聞く。記録は pointerId を持ち、別の指は無視する
+   (第 2 指の減速だけが例外)。盤ではドラッグが残す click を event.detail > 0 のときだけ使い切る。
+   ◀ ▼ ▶ では押下が残す click を捨て(押している間にもう効いている)、キーボード / 支援技術の
+   活性化(押下の無い click)だけを 1 回ぶんの操作にする。
+   pointercancel は(画面端のスワイプなど OS に指を取られた疑いとして)位置つきでログに残す。
+
+ コーン(副次): 約 2.5 秒ごとに前方のランダムな車線にコーンの対が出る。車の y に来たとき車の
+   中心 x が 2 本のあいだにあれば「通過」、なければ「逃し」。衝突も得点も無い — 30 秒のあいだ
+   実際に操舵させるための課題にすぎない。
+
+ 30 秒の計測で集計するもの: 全開未満の時間 (= 意図しない減速) と割合、減速の回数(全開未満の
+   連続区間)、最長、最低スロットル、スロットル 0 の時間、各区間の原因(指の引き / 第 2 指 / ▼ /
+   キー)、pointercancel の数、コーンの通過 / 逃し、モードとつまみの値、端末情報(UA・innerWidth/
+   innerHeight・devicePixelRatio)、フレーム間隔、指が盤に触れていた時間(モード A/B は操舵の指、
+   ボタンは ◀ ▶)と握り(操舵の指の pointerdown の数。最初の 1 回を除いた数 = 握り直し)、
+   触れていた時間だけで割った減速の割合。100 ms ごとの最低スロットルの列(trace)も 1 行で
+   ログに出す: F = 全開、0〜9 = その 100 ms の最低スロットル × 10 の切り捨て。
+   サンプルは毎フレーム(固定ではない)で、そのフレームの値をフレームの時間ぶん数える。1 フレームの
+   時間は MAX_DT_MS で頭打ち(バックグラウンドからの復帰などで大きく飛ばないため)。
+   指が離れている時間は全開として数えられるので、触れていた時間が 30 秒の MIN_TOUCH_PCT (90%) に
+   満たないゲートは「合格」ではなく「無効」(pass = null)にする — 連続ドラッグでの親指のずれを
+   測るのがこのゲートの目的(計画「40〜60 秒の連続ドラッグで…積み重ならない」)。握り直しのたびに
+   基準を取り直すのでずれは隠れる — 握り直しの数を結果と一緒に読むこと。
+
+ つまみ(画面の「設定・ログ」/ 既定値):
+   モード A | B | ボタン = A、gain 1.0 / 1.2 / 1.4 = 1.2、不感帯 18 px、最大減速の距離 90 px、
+   ラチェットの戻り速度 20 px/s(0 = 戻らない)、コーン = あり、基準線を表示 = なし。
+ 定数はスクリプト冒頭の C にまとめてある。
+
+ テスト専用の API(window.__p0 — ヘッドレスの検査 check-overtake.mjs 用。本番には無い):
+   __p0.state()        → { mode, gain, deadZone, maxBrake, ratchet, cones, throttle, carX, targetX,
+                           baselineY, running, runState, elapsed, paused, steerId, brakeFingers, ... }
+                           (座標は canvas の左上からの CSS px)
+   __p0.startRun(kind) → kind 'gate'(既定・30 秒)| 'brake'(15 秒)をすぐ開始
+   __p0.finishRun()    → 走行中なら打ち切って、要約オブジェクトを返す(走行中でなければ最後の要約)
+   __p0.lastSummary()  → 最後の要約(無ければ null)
+   __p0.setKnobs({ mode, gain, deadZone, maxBrake, ratchet, cones, showBase })
+   __p0.log()          → ログの全文(文字列)
+   __p0.manual(on)     → true の間は requestAnimationFrame がシミュレーションを進めない(描画だけ)
+   __p0.step(dtMs, n)  → シミュレーションを dtMs ずつ n 回(既定 1)進め、state() を返す
+   __p0.reset()        → 車を中央へ・押下の記録を消す・一時停止を解く(走行中の計測は止めない)
+================================================================================
+-->
+    <style>
+      :root {
+        --bg: #f4f2ee;
+        --ink: #22252a;
+        --muted: #676b72;
+        --line: #d6d2ca;
+        --track: #e3dfd7;
+        --accent: #2f6fb3;
+        --warn: #c8641e;
+        --ok: #2e7d4f;
+        --bad: #b3372f;
+        --btn: #ffffff;
+        --btn-on: #dbe6f2;
+        --panel: #faf9f6;
+        --font:
+          system-ui, -apple-system, 'Segoe UI', Roboto, 'Hiragino Sans',
+          'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Noto Sans CJK JP', sans-serif;
+        --mono: ui-monospace, Menlo, Consolas, 'Roboto Mono', 'Droid Sans Mono', monospace;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--font);
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      button,
+      select,
+      input,
+      textarea {
+        font-family: inherit;
+        font-size: inherit;
+        color: inherit;
+      }
+      button {
+        touch-action: manipulation;
+      }
+      #app {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-width: 480px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+      }
+      /* 上部バー: スロットル・タイマー・減速の表示 */
+      #top {
+        flex: 0 0 auto;
+        height: 52px;
+        box-sizing: border-box;
+        padding: 4px 8px 2px;
+        border-bottom: 1px solid var(--line);
+      }
+      .row {
+        display: flex;
+        align-items: center;
+      }
+      #top .row1 {
+        height: 28px;
+      }
+      #top .row2 {
+        height: 18px;
+        font-size: 12px;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .thr {
+        position: relative;
+        flex: 1 1 auto;
+        height: 18px;
+        background: var(--track);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      #thrFill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        background: var(--accent);
+        transform-origin: 0 50%;
+      }
+      #thrFill.low {
+        background: var(--warn);
+      }
+      .num {
+        font-variant-numeric: tabular-nums;
+        font-size: 14px;
+        text-align: right;
+      }
+      #thrText {
+        width: 46px;
+        flex: 0 0 auto;
+      }
+      #timer {
+        width: 82px;
+        flex: 0 0 auto;
+      }
+      #pauseBtn {
+        flex: 0 0 auto;
+        width: 36px;
+        height: 28px;
+        margin-left: 6px;
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--btn);
+      }
+      #pauseBtn .bar {
+        display: inline-block;
+        width: 3px;
+        height: 11px;
+        margin: 0 1.5px;
+        background: var(--ink);
+        vertical-align: middle;
+      }
+      #dipDot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--track);
+        margin-right: 5px;
+        transition: background-color 0.12s;
+      }
+      #dipDot.on {
+        background: var(--warn);
+      }
+      #status {
+        margin-right: 10px;
+      }
+      #conesTxt {
+        margin-right: 10px;
+      }
+      #modeTxt {
+        margin-left: auto;
+      }
+      /* 盤 */
+      #stage {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+      }
+      #cv {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      #msg {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        top: 12px;
+        pointer-events: none;
+        text-align: center;
+        font-size: 14px;
+        line-height: 1.4;
+        color: #fff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+        white-space: pre-line;
+      }
+      #result {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        top: 36px;
+        padding: 12px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+        animation: fadein 0.2s ease-out;
+      }
+      #resultHead {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 6px;
+      }
+      #resultHead.pass {
+        color: var(--ok);
+      }
+      #resultHead.fail {
+        color: var(--bad);
+      }
+      #resultText {
+        margin: 0 0 10px;
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      #result button {
+        height: 36px;
+        padding: 0 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--btn);
+      }
+      @keyframes fadein {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      /* 設定・ログのパネル(盤の上に重ねる。パネルの中だけスクロールする) */
+      #panel {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        box-sizing: border-box;
+        padding: 8px 12px 12px;
+        background: var(--panel);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        font-size: 14px;
+      }
+      #panel fieldset {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        margin: 0 0 8px;
+        padding: 4px 10px 6px;
+      }
+      #panel legend {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      #panel label {
+        display: block;
+        margin: 5px 0;
+      }
+      #panel input[type='number'],
+      #panel select {
+        font-size: 16px;
+        width: 72px;
+        height: 30px;
+        box-sizing: border-box;
+      }
+      #panel .note {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      #panel .prow {
+        display: flex;
+        align-items: center;
+        margin: 6px 0;
+      }
+      #panel .prow button {
+        height: 36px;
+        padding: 0 14px;
+        margin-right: 8px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--btn);
+      }
+      #copyMsg {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      #log {
+        display: block;
+        width: 100%;
+        height: 180px;
+        box-sizing: border-box;
+        resize: none;
+        font-family: var(--mono);
+        font-size: 16px;
+        line-height: 1.3; /* 16px 未満は iOS がフォーカスで拡大する */
+        -webkit-user-select: text;
+        user-select: text;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+      }
+      /* 下部: ◀ ▼ ▶ */
+      #pad {
+        flex: 0 0 auto;
+        height: 64px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 8px;
+      }
+      .padbtn {
+        height: 52px;
+        min-width: 96px;
+        margin: 0 6px;
+        padding: 0;
+        font-size: 22px;
+        line-height: 1;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--btn);
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .padbtn.on {
+        background: var(--btn-on);
+      }
+      #btnL,
+      #btnR {
+        display: none;
+      }
+      #app.btnmode #btnL,
+      #app.btnmode #btnR {
+        display: inline-block;
+      }
+      /* 下端: 計測の開始・設定 */
+      #strip {
+        flex: 0 0 auto;
+        height: 48px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        padding: 0 5px;
+        border-top: 1px solid var(--line);
+      }
+      #strip button {
+        flex: 1 1 0;
+        min-width: 0;
+        height: 36px;
+        margin: 0 3px;
+        padding: 0 4px;
+        font-size: 13px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--btn);
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      #strip button.primary {
+        flex-grow: 1.6;
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      #strip button:disabled {
+        opacity: 0.45;
+      }
+      /* 装飾の動きだけを止める(道路が流れるのは操作そのものなので止めない) */
+      @media (prefers-reduced-motion: reduce) {
+        #dipDot {
+          transition: none;
+        }
+        #result {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header id="top">
+        <div class="row row1">
+          <div class="thr" aria-hidden="true"><div id="thrFill"></div></div>
+          <span id="thrText" class="num" aria-label="スロットル">100%</span>
+          <span id="timer" class="num">—</span>
+          <button id="pauseBtn" type="button" aria-label="一時停止">
+            <span class="bar"></span><span class="bar"></span>
+          </button>
+        </div>
+        <div class="row row2">
+          <span id="dipDot" aria-hidden="true"></span><span id="status">減速 —</span>
+          <span id="conesTxt"></span>
+          <span id="modeTxt">A</span>
+        </div>
+      </header>
+
+      <div id="stage">
+        <canvas id="cv" aria-label="道路。左右にドラッグして操舵する"></canvas>
+        <div id="msg" aria-live="polite"></div>
+        <div id="result" hidden>
+          <p id="resultHead"></p>
+          <pre id="resultText"></pre>
+          <button id="resultClose" type="button">閉じる</button>
+        </div>
+        <div id="panel" hidden>
+          <fieldset id="knobs">
+            <legend>操作(計測中は変えられない)</legend>
+            <label><input type="radio" name="mode" value="A" checked /> A: 2軸1本指(既定)</label>
+            <label><input type="radio" name="mode" value="B" /> B: 横ドラッグ + ▼長押し</label>
+            <label
+              ><input type="radio" name="mode" value="BTN" /> ボタン(◀ ▶ ▼・ドラッグ無効)</label
+            >
+            <label
+              >gain
+              <select id="gain">
+                <option value="1.0">1.0</option>
+                <option value="1.2" selected>1.2</option>
+                <option value="1.4">1.4</option>
+              </select></label
+            >
+            <label
+              >不感帯
+              <input
+                id="dz"
+                type="number"
+                min="0"
+                max="200"
+                step="1"
+                value="18"
+                inputmode="numeric"
+              />
+              px</label
+            >
+            <label
+              >最大減速の距離
+              <input
+                id="mb"
+                type="number"
+                min="1"
+                max="400"
+                step="1"
+                value="90"
+                inputmode="numeric"
+              />
+              px</label
+            >
+            <label
+              >ラチェットの戻り
+              <input
+                id="rt"
+                type="number"
+                min="0"
+                max="1000"
+                step="1"
+                value="20"
+                inputmode="numeric"
+              />
+              px/s <span class="note">(0 = 戻らない)</span></label
+            >
+            <label><input type="checkbox" id="conesChk" checked /> コーン</label>
+            <label><input type="checkbox" id="baseChk" /> 基準線を表示(モード A)</label>
+          </fieldset>
+          <div class="prow">
+            <button id="copyBtn" type="button">ログをコピー</button><span id="copyMsg"></span>
+          </div>
+          <textarea id="log" readonly aria-label="ログ"></textarea>
+          <div class="prow"><button id="panelClose" type="button">閉じる</button></div>
+        </div>
+      </div>
+
+      <div id="pad">
+        <button id="btnL" class="padbtn" type="button" aria-label="左へ(長押し)">
+          &#9664;&#65038;
+        </button>
+        <button id="btnBrake" class="padbtn" type="button" aria-label="減速(長押し)">
+          &#9660;
+        </button>
+        <button id="btnR" class="padbtn" type="button" aria-label="右へ(長押し)">
+          &#9654;&#65038;
+        </button>
+      </div>
+
+      <div id="strip">
+        <button id="startGate" class="primary" type="button">30 秒の計測を開始</button>
+        <button id="startBrake" type="button">減速の確認</button>
+        <button id="panelBtn" type="button" aria-expanded="false" aria-controls="panel">
+          設定・ログ
+        </button>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        'use strict';
+
+        // ---------------------------------------------------------------- 定数(ここだけ)
+        var C = {
+          RUN_MS: 30000, // ゲートの計測時間
+          BRAKE_RUN_MS: 15000, // 「減速の確認」の時間(判定なし)
+          PASS_PCT: 3, // 意図しない減速の割合の上限(未満で合格)
+          MIN_TOUCH_PCT: 90, // ゲートで指が触れていた時間の下限(未満は「無効」)
+          CAR_MAX_SPEED: 440, // 車の横の最大追従速度 CSS px/s(計画の値)
+          KEY_TARGET_SPEED: 440, // ← → / ◀ ▶ を押している間に targetX が動く速さ px/s
+          REANCHOR_AT_WALL: true, // targetX が道路の端を越えたら基準をずらして端に貼り付ける
+          ROAD_SPEED_FULL: 360, // 全開のときの路面の流れ px/s(見た目)
+          ACCEL: 600, // 見た目の速度の上がり方 px/s²
+          DECEL: 1200, // 見た目の速度の下がり方 px/s²
+          LANES: 3,
+          ROAD_RATIO: 304 / 360, // 路幅 / 盤の幅(計画の 304 / 360)
+          CAR_W: 34,
+          CAR_H: 58, // 自車(計画の値をそのまま CSS px で)
+          CAR_Y_RATIO: 470 / 640, // 自車の中心の高さ / 盤の高さ
+          DASH: 24,
+          DASH_GAP: 20, // 車線の破線
+          CONE_INTERVAL_MS: 2500, // コーンの出る間隔
+          CONE_FIRST_MS: 1000, // 計測開始から最初のコーンまで
+          CONE_R: 7,
+          CONE_INSET: 12,
+          CLICK_SLOP: 10, // これ以上動いた押下はドラッグ(残る click を使い切る)px
+          MAX_DT_MS: 100, // 1 フレームの時間の頭打ち
+          TRACE_BUCKET_MS: 100, // trace の 1 文字の幅
+          BRAKE_PULSE_MS: 400, // キーボード / 支援技術で ▼ を押したときの減速の長さ
+          SEED: 52, // コーンの車線の乱数(計測ごとに同じ並び)
+          MAX_DIP_LOG: 40, // 1 回の計測でログに出す減速区間の上限
+        };
+        var DEFAULT_KNOBS = {
+          mode: 'A',
+          gain: 1.2,
+          deadZone: 18,
+          maxBrake: 90,
+          ratchet: 20,
+          cones: true,
+          showBase: false,
+        };
+        var COL = {
+          shoulder: '#cfc9b9',
+          road: '#62666d',
+          edge: '#e9e6df',
+          dash: '#f2f0ea',
+          car: '#2f6fb3',
+          roof: '#3d80c6',
+          glass: '#bcd3ea',
+          tyre: '#26282c',
+          head: '#f3e7b0',
+          brakeOff: '#6e2a26',
+          brakeOn: '#ff4a3d',
+          cone: '#e07b39',
+          coneRing: '#ffffff',
+          conePassed: '#8fbf9a',
+          coneMissed: '#c98a84',
+          base: 'rgba(255,255,255,0.75)',
+          dz: 'rgba(255,220,120,0.9)',
+          mb: 'rgba(255,90,70,0.9)',
+        };
+
+        // ---------------------------------------------------------------- 要素
+        function $(id) {
+          return document.getElementById(id);
+        }
+        var app = $('app'),
+          cv = $('cv'),
+          ctx = cv.getContext('2d');
+        var thrFill = $('thrFill'),
+          thrText = $('thrText'),
+          timerEl = $('timer'),
+          dipDot = $('dipDot');
+        var statusEl = $('status'),
+          conesTxt = $('conesTxt'),
+          modeTxt = $('modeTxt'),
+          msgEl = $('msg');
+        var resultEl = $('result'),
+          resultHead = $('resultHead'),
+          resultText = $('resultText');
+        var panel = $('panel'),
+          panelBtn = $('panelBtn'),
+          logEl = $('log'),
+          copyMsg = $('copyMsg');
+        var btnL = $('btnL'),
+          btnR = $('btnR'),
+          btnBrake = $('btnBrake');
+        var startGateBtn = $('startGate'),
+          startBrakeBtn = $('startBrake'),
+          knobsFs = $('knobs');
+
+        // ---------------------------------------------------------------- 状態
+        var knobs = {};
+        var key;
+        for (key in DEFAULT_KNOBS) knobs[key] = DEFAULT_KNOBS[key];
+
+        var W = 360,
+          H = 476,
+          dpr = 1;
+        var roadL = 0,
+          roadR = 0,
+          roadW = 0,
+          laneW = 0,
+          carY = 0;
+        var carX = 180,
+          targetX = 180;
+        var throttle = 1,
+          cause = { drag: false, finger2: false, button: false, key: false };
+        var speed = C.ROAD_SPEED_FULL,
+          scroll = 0,
+          simTime = 0;
+        var steer = null; // 操舵の指 { id, baseX, baseY, fx, fy, carX0, downX, downY, moved, type }
+        var brakeIds = {}; // 盤の上の第 2 指以降(pointerId → true)
+        var hold = { brake: null, left: null, right: null }; // ◀ ▼ ▶ を押している pointerId
+        var keys = { left: false, right: false, brake: false };
+        var pulseUntil = 0; // キーボード / 支援技術の ▼ の減速が終わる simTime
+        var pendingClick = { brake: false, left: false, right: false }; // ◀ ▼ ▶ を指で離した後に来る click の印
+        var paused = false,
+          manual = false;
+        var consumeClick = false,
+          tapCount = 0,
+          consumedClicks = 0,
+          cancelCount = 0;
+        var cones = [],
+          coneTimer = 0,
+          lastConeLane = -1,
+          rng = makeRng(C.SEED);
+        var sessionCones = { passed: 0, missed: 0 };
+        var runState = 'idle'; // idle | armed | running | done
+        var armedKind = null,
+          run = null,
+          lastSummary = null;
+        var panelOpen = false;
+        var logLines = [],
+          logDirty = false;
+        var t0 = performance.now();
+
+        // ---------------------------------------------------------------- 小道具
+        function clamp(v, lo, hi) {
+          return v < lo ? lo : v > hi ? hi : v;
+        }
+        function makeRng(seed) {
+          // mulberry32
+          var a = seed >>> 0;
+          return function () {
+            a = (a + 0x6d2b79f5) >>> 0;
+            var t = a;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+          };
+        }
+        function anyKey(o) {
+          for (var k in o) {
+            if (o.hasOwnProperty(k)) return true;
+          }
+          return false;
+        }
+        function countKeys(o) {
+          var n = 0;
+          for (var k in o) {
+            if (o.hasOwnProperty(k)) n++;
+          }
+          return n;
+        }
+        // 毎フレームの HUD は変わったときだけ DOM に書く(低スペック端末でスタイル再計算・レイアウトを起こさない)
+        function setText(el, s) {
+          if (el._t !== s) {
+            el.textContent = s;
+            el._t = s;
+          }
+        }
+        function setClass(el, cls, on) {
+          var k = '_c_' + cls;
+          if (el[k] !== on) {
+            if (on) el.classList.add(cls);
+            else el.classList.remove(cls);
+            el[k] = on;
+          }
+        }
+        function setDisabled(el, v) {
+          if (el._d !== v) {
+            el.disabled = v;
+            el._d = v;
+          }
+        }
+        function setTransform(el, v) {
+          if (el._tf !== v) {
+            el.style.transform = v;
+            el._tf = v;
+          }
+        }
+        function minX() {
+          return roadL + C.CAR_W / 2;
+        }
+        function maxX() {
+          return roadR - C.CAR_W / 2;
+        }
+        function mq(q) {
+          try {
+            return window.matchMedia(q).matches;
+          } catch (e) {
+            return false;
+          }
+        }
+
+        // ---------------------------------------------------------------- ログ
+        function log(s) {
+          logLines.push('[+' + ((performance.now() - t0) / 1000).toFixed(2) + 's] ' + s);
+          logDirty = true;
+          // 計測中はテキストエリアを書き換えない(低スペック端末でフレームを落とさないため)
+          if (panelOpen && runState !== 'running') flushLog();
+        }
+        function flushLog() {
+          if (!logDirty) return;
+          logEl.value = logLines.join('\n');
+          logEl.scrollTop = logEl.scrollHeight;
+          logDirty = false;
+        }
+        function knobStr() {
+          return (
+            'mode=' +
+            knobs.mode +
+            ' gain=' +
+            knobs.gain.toFixed(1) +
+            ' dz=' +
+            knobs.deadZone +
+            ' max=' +
+            knobs.maxBrake +
+            ' ratchet=' +
+            knobs.ratchet +
+            ' cones=' +
+            (knobs.cones ? 'on' : 'off')
+          );
+        }
+        function deviceInfo() {
+          return {
+            ua: navigator.userAgent,
+            innerWidth: window.innerWidth,
+            innerHeight: window.innerHeight,
+            dpr: window.devicePixelRatio || 1,
+            screen: screen.width + 'x' + screen.height,
+            coarse: mq('(any-pointer: coarse)'),
+            reducedMotion: mq('(prefers-reduced-motion: reduce)'),
+          };
+        }
+        function deviceStr(d) {
+          return (
+            '端末 UA="' +
+            d.ua +
+            '" inner=' +
+            d.innerWidth +
+            'x' +
+            d.innerHeight +
+            ' dpr=' +
+            d.dpr +
+            ' screen=' +
+            d.screen +
+            ' coarse=' +
+            (d.coarse ? 1 : 0) +
+            ' reducedMotion=' +
+            (d.reducedMotion ? 1 : 0)
+          );
+        }
+
+        // ---------------------------------------------------------------- 配置
+        function layout() {
+          var r = cv.getBoundingClientRect();
+          var oldCenter = (roadL + roadR) / 2,
+            hadRoad = roadW > 0;
+          W = Math.max(1, r.width);
+          H = Math.max(1, r.height);
+          dpr = window.devicePixelRatio || 1;
+          cv.width = Math.round(W * dpr);
+          cv.height = Math.round(H * dpr);
+          roadW = W * C.ROAD_RATIO;
+          roadL = (W - roadW) / 2;
+          roadR = roadL + roadW;
+          laneW = roadW / C.LANES;
+          carY = H * C.CAR_Y_RATIO;
+          var c = (roadL + roadR) / 2;
+          if (hadRoad) {
+            carX = clamp(carX - oldCenter + c, minX(), maxX());
+            targetX = clamp(targetX - oldCenter + c, minX(), maxX());
+          } else {
+            carX = targetX = c;
+          }
+        }
+
+        // ---------------------------------------------------------------- 入力マッパー
+        function computeThrottle() {
+          var t = 1;
+          var c = { drag: false, finger2: false, button: false, key: false };
+          if (steer && knobs.mode === 'A') {
+            var dy = steer.fy - steer.baseY;
+            var span = Math.max(1, knobs.maxBrake - knobs.deadZone);
+            var k = clamp((dy - knobs.deadZone) / span, 0, 1);
+            if (k > 0) {
+              t = 1 - k;
+              c.drag = true;
+            }
+          }
+          if (knobs.mode !== 'BTN' && anyKey(brakeIds)) {
+            t = 0;
+            c.finger2 = true;
+          }
+          if (hold.brake !== null || simTime < pulseUntil) {
+            t = 0;
+            c.button = true;
+          }
+          if (keys.brake) {
+            t = 0;
+            c.key = true;
+          }
+          throttle = t;
+          cause = c;
+        }
+        function applyDrag() {
+          var raw = steer.carX0 + (steer.fx - steer.baseX) * knobs.gain;
+          var lo = minX(),
+            hi = maxX();
+          if (C.REANCHOR_AT_WALL && (raw < lo || raw > hi)) {
+            var w = clamp(raw, lo, hi);
+            steer.carX0 = w - (steer.fx - steer.baseX) * knobs.gain;
+            raw = w;
+          }
+          targetX = clamp(raw, lo, hi);
+        }
+        function rebaseline() {
+          if (!steer) return;
+          steer.baseX = steer.fx;
+          steer.baseY = steer.fy;
+          steer.carX0 = carX;
+          targetX = carX;
+        }
+        function nudgeTarget(dx) {
+          targetX = clamp(targetX + dx, minX(), maxX());
+          if (steer) steer.carX0 += dx;
+        }
+        function localXY(e) {
+          var r = cv.getBoundingClientRect();
+          return { x: e.clientX - r.left, y: e.clientY - r.top };
+        }
+
+        cv.addEventListener('pointerdown', function (e) {
+          consumeClick = false; // 新しい押下が始まった — 前のドラッグの印はもう使わない
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          if (knobs.mode === 'BTN') return;
+          var p = localXY(e);
+          if (steer === null) {
+            steer = {
+              id: e.pointerId,
+              baseX: p.x,
+              baseY: p.y,
+              fx: p.x,
+              fy: p.y,
+              carX0: carX,
+              downX: p.x,
+              downY: p.y,
+              moved: false,
+              type: e.pointerType,
+            };
+            targetX = carX;
+            try {
+              cv.setPointerCapture(e.pointerId);
+            } catch (err) {
+              /* 無視 */
+            }
+            if (runState === 'armed')
+              beginRun(); // 握り 1 回目は beginRun が数える
+            else if (runState === 'running') run.grips++;
+          } else if (e.pointerId !== steer.id) {
+            brakeIds[e.pointerId] = true; // 第 2 指 = 最大減速。操舵の指は奪わない
+            try {
+              cv.setPointerCapture(e.pointerId);
+            } catch (err) {
+              /* 無視 */
+            }
+          }
+          computeThrottle();
+          e.preventDefault();
+        });
+        cv.addEventListener('pointermove', function (e) {
+          if (!steer || e.pointerId !== steer.id) return; // 第 2 指の移動は何もしない
+          var p = localXY(e);
+          steer.fx = p.x;
+          steer.fy = p.y;
+          if (
+            !steer.moved &&
+            (Math.abs(p.x - steer.downX) > C.CLICK_SLOP ||
+              Math.abs(p.y - steer.downY) > C.CLICK_SLOP)
+          )
+            steer.moved = true;
+          if (paused) return; // 再開時に基準を取り直す
+          if (knobs.mode === 'A' && steer.fy < steer.baseY) steer.baseY = steer.fy; // ラチェット: 上へは即追従
+          applyDrag();
+          computeThrottle();
+        });
+        function canvasPointerEnd(e) {
+          var cancelled = e.type === 'pointercancel';
+          var p = localXY(e);
+          if (steer && e.pointerId === steer.id) {
+            if (cancelled) {
+              noteCancel('操舵の指', e, p);
+            } else if (steer.moved) {
+              consumeClick = true; // ドラッグが残す click を使い切る
+            }
+            steer = null; // 車はその位置に残る。次の pointerdown で基準を取り直す
+          } else if (brakeIds[e.pointerId]) {
+            delete brakeIds[e.pointerId];
+            if (cancelled) noteCancel('第 2 指', e, p);
+          }
+          computeThrottle();
+        }
+        cv.addEventListener('pointerup', canvasPointerEnd);
+        cv.addEventListener('pointercancel', canvasPointerEnd);
+        cv.addEventListener('click', function (e) {
+          if (consumeClick && e.detail > 0) {
+            consumeClick = false;
+            consumedClicks++;
+            return;
+          }
+          tapCount++;
+          if (paused) resume('盤のタップ');
+        });
+        cv.addEventListener('contextmenu', function (e) {
+          e.preventDefault();
+        });
+
+        function noteCancel(who, e, p) {
+          cancelCount++;
+          if (run && runState === 'running') run.cancels++;
+          log(
+            'pointercancel ' +
+              who +
+              ' id=' +
+              e.pointerId +
+              ' type=' +
+              e.pointerType +
+              ' x=' +
+              Math.round(p.x) +
+              ' y=' +
+              Math.round(p.y) +
+              ' (盤の幅 ' +
+              Math.round(W) +
+              ')',
+          );
+        }
+
+        // ◀ ▼ ▶: 押している間だけ効く。押下の記録は pointerId を持つ
+        function bindHold(btn, which) {
+          btn.addEventListener('pointerdown', function (e) {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            if (hold[which] !== null) return;
+            hold[which] = e.pointerId;
+            try {
+              btn.setPointerCapture(e.pointerId);
+            } catch (err) {
+              /* 無視 */
+            }
+            btn.classList.add('on');
+            if (runState === 'armed') beginRun();
+            computeThrottle();
+            e.preventDefault();
+          });
+          function end(e) {
+            if (hold[which] !== e.pointerId) return;
+            hold[which] = null;
+            pendingClick[which] = e.type === 'pointerup'; // cancel の後には click は来ない
+            btn.classList.remove('on');
+            if (e.type === 'pointercancel') {
+              var r = btn.getBoundingClientRect();
+              noteCancel(btn.getAttribute('aria-label'), e, {
+                x: e.clientX - r.left,
+                y: e.clientY - r.top,
+              });
+            }
+            computeThrottle();
+          }
+          btn.addEventListener('pointerup', end);
+          btn.addEventListener('pointercancel', end);
+          btn.addEventListener('click', function (e) {
+            // 押下が残した click は使い切る(押している間にもう効いている)。タッチのタップの click が
+            // detail 0 で来るエンジンがある(ヘッドレス Chromium の CDP タッチで確認)ので、指で離した
+            // 印でも見分ける。印はキー押下で消す(キーボードの活性化は keydown が click より先に来る)。
+            if (e.detail > 0 || pendingClick[which]) {
+              pendingClick[which] = false;
+              return;
+            }
+            // キーボード / 支援技術からの活性化
+            if (which === 'brake') pulseUntil = simTime + C.BRAKE_PULSE_MS;
+            else nudgeTarget((which === 'left' ? -1 : 1) * laneW);
+            computeThrottle();
+          });
+          btn.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+          });
+        }
+        bindHold(btnBrake, 'brake');
+        bindHold(btnL, 'left');
+        bindHold(btnR, 'right');
+
+        // キー
+        window.addEventListener('keydown', function (e) {
+          pendingClick.brake = pendingClick.left = pendingClick.right = false;
+          var tag = e.target && e.target.tagName;
+          if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') {
+            if (e.code === 'Escape' && panelOpen) closePanel();
+            return;
+          }
+          var onButton = tag === 'BUTTON';
+          switch (e.code) {
+            case 'ArrowLeft':
+            case 'KeyA':
+              keys.left = true;
+              e.preventDefault();
+              break;
+            case 'ArrowRight':
+            case 'KeyD':
+              keys.right = true;
+              e.preventDefault();
+              break;
+            case 'ArrowDown':
+            case 'KeyS':
+              keys.brake = true;
+              computeThrottle();
+              e.preventDefault();
+              break;
+            case 'ArrowUp':
+            case 'KeyW':
+              e.preventDefault();
+              break;
+            case 'Space':
+            case 'Enter':
+            case 'NumpadEnter':
+              if (onButton) return; // ボタン自身のキー操作に任せる
+              e.preventDefault();
+              if (e.repeat) return;
+              if (paused) resume('キー');
+              else if (runState === 'armed') beginRun();
+              else if (runState !== 'running') {
+                armRun('gate');
+                beginRun();
+              }
+              break;
+            case 'KeyP':
+            case 'Escape':
+              e.preventDefault();
+              if (e.repeat) return;
+              if (panelOpen && e.code === 'Escape') {
+                closePanel();
+                return;
+              }
+              if (paused) resume('キー');
+              else pause('キー');
+              break;
+          }
+        });
+        window.addEventListener('keyup', function (e) {
+          switch (e.code) {
+            case 'ArrowLeft':
+            case 'KeyA':
+              keys.left = false;
+              break;
+            case 'ArrowRight':
+            case 'KeyD':
+              keys.right = false;
+              break;
+            case 'ArrowDown':
+            case 'KeyS':
+              keys.brake = false;
+              computeThrottle();
+              break;
+          }
+        });
+        function clearKeys() {
+          keys.left = keys.right = keys.brake = false;
+          computeThrottle();
+        }
+        window.addEventListener('blur', function () {
+          clearKeys();
+          pause('blur');
+        });
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'hidden') {
+            clearKeys();
+            pause('visibility hidden');
+          }
+        });
+        // iOS のページ全体のバウンドを止める(パネルの中のスクロールは許す)
+        document.addEventListener(
+          'touchmove',
+          function (e) {
+            if (!panel.contains(e.target)) e.preventDefault();
+          },
+          { passive: false },
+        );
+
+        // ---------------------------------------------------------------- 一時停止
+        function pause(reason) {
+          if (paused) return;
+          paused = true;
+          log(
+            '一時停止 (' +
+              reason +
+              ')' +
+              (runState === 'running' ? ' 計測 ' + (run.elapsed / 1000).toFixed(2) + 's' : ''),
+          );
+        }
+        function resume(reason) {
+          if (!paused) return;
+          paused = false;
+          rebaseline();
+          log('再開 (' + reason + ')');
+        }
+        $('pauseBtn').addEventListener('click', function () {
+          if (paused) resume('❚❚');
+          else pause('❚❚');
+        });
+
+        // ---------------------------------------------------------------- シミュレーション
+        function step(dtMs) {
+          if (paused) return;
+          dtMs = clamp(dtMs, 0, C.MAX_DT_MS);
+          var dt = dtMs / 1000;
+          simTime += dtMs;
+          // ラチェット: 上へは即追従、下へは戻り速度で追う
+          if (steer && knobs.mode === 'A') {
+            if (steer.fy < steer.baseY) steer.baseY = steer.fy;
+            else if (steer.fy > steer.baseY && knobs.ratchet > 0)
+              steer.baseY = Math.min(steer.fy, steer.baseY + knobs.ratchet * dt);
+          }
+          var dir =
+            (keys.right || hold.right !== null ? 1 : 0) - (keys.left || hold.left !== null ? 1 : 0);
+          if (dir !== 0) nudgeTarget(dir * C.KEY_TARGET_SPEED * dt);
+          var d = targetX - carX,
+            m = C.CAR_MAX_SPEED * dt;
+          carX += d > m ? m : d < -m ? -m : d;
+          computeThrottle();
+          var want = throttle * C.ROAD_SPEED_FULL;
+          speed =
+            want > speed
+              ? Math.min(want, speed + C.ACCEL * dt)
+              : Math.max(want, speed - C.DECEL * dt);
+          scroll = (scroll + speed * dt) % (C.DASH + C.DASH_GAP);
+          updateCones(dt);
+          if (runState === 'running') accumulate(dtMs);
+        }
+
+        function updateCones(dt) {
+          if (!knobs.cones) {
+            cones.length = 0;
+            return;
+          }
+          coneTimer += dt * 1000;
+          if (coneTimer >= C.CONE_INTERVAL_MS) {
+            coneTimer -= C.CONE_INTERVAL_MS;
+            spawnCone();
+          }
+          for (var i = cones.length - 1; i >= 0; i--) {
+            var c = cones[i],
+              prev = c.y;
+            c.y += speed * dt;
+            if (!c.judged && prev < carY && c.y >= carY) {
+              c.judged = true;
+              c.ok = carX > c.lx + C.CONE_R && carX < c.rx - C.CONE_R;
+              if (c.ok) sessionCones.passed++;
+              else sessionCones.missed++;
+              if (run && runState === 'running') {
+                if (c.ok) run.conesPassed++;
+                else run.conesMissed++;
+              }
+            }
+            if (c.y > H + 40) cones.splice(i, 1);
+          }
+        }
+        function spawnCone() {
+          var lane = Math.floor(rng() * (C.LANES - (lastConeLane >= 0 ? 1 : 0)));
+          if (lastConeLane >= 0 && lane >= lastConeLane) lane++;
+          lastConeLane = lane;
+          var l = roadL + laneW * lane;
+          cones.push({
+            lane: lane,
+            lx: l + C.CONE_INSET,
+            rx: l + laneW - C.CONE_INSET,
+            y: -C.CONE_R * 2,
+            judged: false,
+            ok: false,
+          });
+        }
+
+        // ---------------------------------------------------------------- 計測
+        function armRun(kind) {
+          if (runState === 'running') return;
+          runState = 'armed';
+          armedKind = kind;
+          resultEl.hidden = true;
+          closePanel();
+          if (paused) resume('計測の準備');
+        }
+        function beginRun() {
+          if (runState !== 'armed') return;
+          var kind = armedKind || 'gate';
+          var dur = kind === 'gate' ? C.RUN_MS : C.BRAKE_RUN_MS;
+          var buckets = Math.ceil(dur / C.TRACE_BUCKET_MS),
+            trace = [];
+          for (var i = 0; i < buckets; i++) trace.push(1);
+          run = {
+            kind: kind,
+            duration: dur,
+            elapsed: 0,
+            decelMs: 0,
+            zeroMs: 0,
+            dips: 0,
+            inDip: false,
+            dipStart: 0,
+            dipMin: 1,
+            dipCause: null,
+            longestDipMs: 0,
+            minThrottle: 1,
+            dipsByCause: { drag: 0, finger2: 0, button: 0, key: 0 },
+            dipLogged: 0,
+            cancels: 0,
+            conesPassed: 0,
+            conesMissed: 0,
+            frames: 0,
+            rafFrames: 0,
+            rafSum: 0,
+            rafWorst: 0,
+            touchMs: 0,
+            decelTouchMs: 0,
+            grips: steer ? 1 : 0, // 開始の時点で触れている指も 1 回と数える
+            trace: trace,
+            knobs: knobStr(),
+          };
+          runState = 'running';
+          // コーンは計測ごとに同じ並び
+          rng = makeRng(C.SEED);
+          lastConeLane = -1;
+          cones.length = 0;
+          coneTimer = C.CONE_INTERVAL_MS - C.CONE_FIRST_MS;
+          log(
+            '計測開始 ' +
+              (kind === 'gate' ? 'ゲート 30 秒(減速しないで走る)' : '減速の確認 15 秒(判定なし)') +
+              ' ' +
+              knobStr(),
+          );
+        }
+        function causeNames(c) {
+          var a = [];
+          if (c.drag) a.push('指の引き');
+          if (c.finger2) a.push('第2指');
+          if (c.button) a.push('▼');
+          if (c.key) a.push('キー');
+          return a.join('+') || '?';
+        }
+        function closeDip(atMs) {
+          var r = run,
+            dur = atMs - r.dipStart;
+          r.inDip = false;
+          if (dur > r.longestDipMs) r.longestDipMs = dur;
+          var c = r.dipCause;
+          if (c.drag) r.dipsByCause.drag++;
+          if (c.finger2) r.dipsByCause.finger2++;
+          if (c.button) r.dipsByCause.button++;
+          if (c.key) r.dipsByCause.key++;
+          if (r.dipLogged < C.MAX_DIP_LOG) {
+            r.dipLogged++;
+            log(
+              '減速 #' +
+                r.dips +
+                ' t=' +
+                (r.dipStart / 1000).toFixed(2) +
+                's 長さ=' +
+                Math.round(dur) +
+                'ms 最低=' +
+                r.dipMin.toFixed(2) +
+                ' 原因=' +
+                causeNames(c),
+            );
+          }
+        }
+        function accumulate(dtMs) {
+          var r = run,
+            start = r.elapsed;
+          var use = Math.min(dtMs, r.duration - start);
+          if (use <= 0) {
+            finishRun(true);
+            return;
+          }
+          var end = start + use;
+          var touched = isTouching();
+          if (touched) r.touchMs += use;
+          if (throttle < 1) {
+            r.decelMs += use;
+            if (touched) r.decelTouchMs += use;
+            if (!r.inDip) {
+              r.inDip = true;
+              r.dips++;
+              r.dipStart = start;
+              r.dipMin = throttle;
+              r.dipCause = { drag: false, finger2: false, button: false, key: false };
+            }
+            if (throttle < r.dipMin) r.dipMin = throttle;
+            if (cause.drag) r.dipCause.drag = true;
+            if (cause.finger2) r.dipCause.finger2 = true;
+            if (cause.button) r.dipCause.button = true;
+            if (cause.key) r.dipCause.key = true;
+          } else if (r.inDip) {
+            closeDip(start);
+          }
+          if (throttle === 0) r.zeroMs += use;
+          if (throttle < r.minThrottle) r.minThrottle = throttle;
+          var b0 = Math.floor(start / C.TRACE_BUCKET_MS),
+            b1 = Math.floor((end - 1e-6) / C.TRACE_BUCKET_MS);
+          for (var b = b0; b <= b1 && b < r.trace.length; b++) {
+            if (throttle < r.trace[b]) r.trace[b] = throttle;
+          }
+          r.elapsed = end;
+          r.frames++;
+          if (r.elapsed >= r.duration - 1e-6) finishRun(true);
+        }
+        // 指が盤に触れているか(モード A/B = 操舵の指、ボタン = ◀ ▶ のどちらか)
+        function isTouching() {
+          if (knobs.mode === 'BTN') return hold.left !== null || hold.right !== null;
+          return steer !== null;
+        }
+        function traceStr(tr) {
+          var s = '';
+          for (var i = 0; i < tr.length; i++)
+            s += tr[i] >= 1 ? 'F' : String(Math.min(9, Math.floor(tr[i] * 10)));
+          return s;
+        }
+        function finishRun(complete) {
+          if (runState === 'armed') {
+            runState = 'idle';
+            armedKind = null;
+            return lastSummary;
+          }
+          if (runState !== 'running') return lastSummary;
+          var r = run;
+          if (r.inDip) closeDip(r.elapsed);
+          var pct = r.elapsed > 0 ? (r.decelMs / r.elapsed) * 100 : 0;
+          var touchPct = r.elapsed > 0 ? (r.touchMs / r.elapsed) * 100 : 0;
+          var touchedPct = r.touchMs > 0 ? (r.decelTouchMs / r.touchMs) * 100 : null;
+          var valid = r.kind === 'gate' ? touchPct >= C.MIN_TOUCH_PCT : null; // 「減速の確認」は判定しない
+          var dev = deviceInfo();
+          var s = {
+            kind: r.kind,
+            complete: !!complete,
+            mode: knobs.mode,
+            gain: knobs.gain,
+            deadZone: knobs.deadZone,
+            maxBrake: knobs.maxBrake,
+            ratchet: knobs.ratchet,
+            cones: knobs.cones,
+            durationMs: Math.round(r.elapsed),
+            decelMs: Math.round(r.decelMs),
+            decelPct: pct,
+            touchMs: Math.round(r.touchMs),
+            touchPct: touchPct,
+            grips: r.grips,
+            regrips: Math.max(0, r.grips - 1),
+            decelTouchMs: Math.round(r.decelTouchMs),
+            decelPctTouched: touchedPct,
+            valid: valid,
+            pass: r.kind === 'gate' && complete && valid ? pct < C.PASS_PCT : null,
+            dips: r.dips,
+            longestDipMs: Math.round(r.longestDipMs),
+            minThrottle: r.minThrottle,
+            zeroMs: Math.round(r.zeroMs),
+            dipsByCause: r.dipsByCause,
+            cancels: r.cancels,
+            conesPassed: r.conesPassed,
+            conesMissed: r.conesMissed,
+            frames: r.frames,
+            avgFrameMs: r.rafFrames ? r.rafSum / r.rafFrames : null,
+            worstFrameMs: r.rafFrames ? r.rafWorst : null,
+            device: dev,
+            trace: traceStr(r.trace),
+          };
+          lastSummary = s;
+          runState = 'done';
+          armedKind = null;
+          var verdict =
+            s.kind !== 'gate'
+              ? '判定なし'
+              : !s.complete
+                ? '中断'
+                : !s.valid
+                  ? '無効'
+                  : s.pass
+                    ? '合格'
+                    : '不合格';
+          var head = (s.kind === 'gate' ? 'ゲート' : '減速の確認') + ' ' + verdict;
+          var line1 =
+            '結果 ' +
+            head +
+            ' 減速 ' +
+            pct.toFixed(2) +
+            '% (' +
+            s.decelMs +
+            '/' +
+            s.durationMs +
+            'ms' +
+            (s.kind === 'gate' ? ', 基準 <' + C.PASS_PCT + '%' : '') +
+            ')' +
+            ' 回数=' +
+            s.dips +
+            ' 最長=' +
+            s.longestDipMs +
+            'ms 最低=' +
+            s.minThrottle.toFixed(2) +
+            ' ゼロ=' +
+            s.zeroMs +
+            'ms' +
+            ' ' +
+            touchStr(s) +
+            ' 原因[指の引き=' +
+            s.dipsByCause.drag +
+            ' 第2指=' +
+            s.dipsByCause.finger2 +
+            ' ▼=' +
+            s.dipsByCause.button +
+            ' キー=' +
+            s.dipsByCause.key +
+            ']' +
+            ' cancel=' +
+            s.cancels +
+            ' コーン[通過=' +
+            s.conesPassed +
+            ' 逃し=' +
+            s.conesMissed +
+            '] ' +
+            r.knobs +
+            ' frames=' +
+            s.frames +
+            (s.avgFrameMs !== null
+              ? ' avg=' + s.avgFrameMs.toFixed(1) + 'ms worst=' + Math.round(s.worstFrameMs) + 'ms'
+              : '');
+          log(line1);
+          log(deviceStr(dev));
+          log('trace(' + C.TRACE_BUCKET_MS + 'ms毎 F=全開 0-9=最低×10) ' + s.trace);
+          showResult(s, verdict, pct);
+          return s;
+        }
+        // 「指 29.4s/30s (98%)・握り直し 2・触れていた間の減速 0.00%」
+        function touchStr(s) {
+          return (
+            '指 ' +
+            (s.touchMs / 1000).toFixed(1) +
+            's/' +
+            (s.durationMs / 1000).toFixed(1) +
+            's (' +
+            s.touchPct.toFixed(0) +
+            '%)' +
+            '・握り直し ' +
+            s.regrips +
+            '・触れていた間の減速 ' +
+            (s.decelPctTouched === null ? '—' : s.decelPctTouched.toFixed(2) + '%')
+          );
+        }
+        function showResult(s, verdict, pct) {
+          resultHead.className =
+            s.kind === 'gate' && s.complete && s.valid ? (s.pass ? 'pass' : 'fail') : '';
+          resultHead.textContent =
+            (s.kind === 'gate' ? verdict + ' — 意図しない減速 ' : verdict + ' — 減速 ') +
+            pct.toFixed(2) +
+            '%';
+          resultText.textContent =
+            (s.kind === 'gate'
+              ? '基準: ' + C.PASS_PCT + '% 未満(' + s.decelMs + ' / ' + s.durationMs + ' ms)\n'
+              : '時間: ' + s.decelMs + ' / ' + s.durationMs + ' ms\n') +
+            (s.kind === 'gate' && s.complete && !s.valid
+              ? '指が触れていた時間が ' + C.MIN_TOUCH_PCT + '% 未満 — 指を離さずに走り直す\n'
+              : '') +
+            touchStr(s) +
+            '\n' +
+            '回数 ' +
+            s.dips +
+            '・最長 ' +
+            s.longestDipMs +
+            ' ms・最低 ' +
+            s.minThrottle.toFixed(2) +
+            '\n' +
+            'スロットル 0: ' +
+            s.zeroMs +
+            ' ms・cancel ' +
+            s.cancels +
+            '\n' +
+            '原因: 指の引き ' +
+            s.dipsByCause.drag +
+            '・第2指 ' +
+            s.dipsByCause.finger2 +
+            '・▼ ' +
+            s.dipsByCause.button +
+            '・キー ' +
+            s.dipsByCause.key +
+            '\n' +
+            (s.cones ? 'コーン: 通過 ' + s.conesPassed + '・逃し ' + s.conesMissed + '\n' : '') +
+            knobStr() +
+            '\n' +
+            (s.avgFrameMs !== null
+              ? 'フレーム平均 ' +
+                s.avgFrameMs.toFixed(1) +
+                ' ms・最悪 ' +
+                Math.round(s.worstFrameMs) +
+                ' ms\n'
+              : '') +
+            '(ログにも出した)';
+          resultEl.hidden = false;
+        }
+        $('resultClose').addEventListener('click', function () {
+          resultEl.hidden = true;
+        });
+
+        function onStartButton(kind) {
+          if (runState === 'running') {
+            if (run.kind === kind) {
+              log('計測を中止');
+              finishRun(false);
+            }
+            return;
+          }
+          if (runState === 'armed' && armedKind === kind) {
+            runState = 'idle';
+            armedKind = null;
+            return;
+          }
+          armRun(kind);
+        }
+        startGateBtn.addEventListener('click', function () {
+          onStartButton('gate');
+        });
+        startBrakeBtn.addEventListener('click', function () {
+          onStartButton('brake');
+        });
+
+        // ---------------------------------------------------------------- つまみ
+        function setKnobs(o) {
+          if (runState === 'running') {
+            log('計測中はつまみを変えない');
+            syncUI();
+            return knobs;
+          }
+          o = o || {};
+          var before = knobStr(),
+            modeChanged = false,
+            v;
+          if (o.mode === 'A' || o.mode === 'B' || o.mode === 'BTN') {
+            modeChanged = o.mode !== knobs.mode;
+            knobs.mode = o.mode;
+          }
+          if (o.gain !== undefined) {
+            v = parseFloat(o.gain);
+            if (isFinite(v) && v > 0 && v <= 4) knobs.gain = v;
+          }
+          if (o.deadZone !== undefined) {
+            v = parseFloat(o.deadZone);
+            if (isFinite(v) && v >= 0 && v <= 200) knobs.deadZone = Math.round(v);
+          }
+          if (o.maxBrake !== undefined) {
+            v = parseFloat(o.maxBrake);
+            if (isFinite(v) && v >= 1 && v <= 400) knobs.maxBrake = Math.round(v);
+          }
+          if (o.ratchet !== undefined) {
+            v = parseFloat(o.ratchet);
+            if (isFinite(v) && v >= 0 && v <= 1000) knobs.ratchet = Math.round(v);
+          }
+          if (o.cones !== undefined) knobs.cones = !!o.cones;
+          if (o.showBase !== undefined) knobs.showBase = !!o.showBase;
+          if (knobs.maxBrake <= knobs.deadZone) {
+            knobs.maxBrake = knobs.deadZone + 1;
+            log('最大減速の距離は不感帯より大きくする → ' + knobs.maxBrake);
+          }
+          if (modeChanged) {
+            steer = null;
+            brakeIds = {};
+            hold.left = hold.right = null;
+            btnL.classList.remove('on');
+            btnR.classList.remove('on');
+          }
+          computeThrottle();
+          syncUI();
+          var after = knobStr();
+          if (after !== before) log('つまみ ' + after);
+          return knobs;
+        }
+        function syncUI() {
+          var radios = document.getElementsByName('mode');
+          for (var i = 0; i < radios.length; i++)
+            radios[i].checked = radios[i].value === knobs.mode;
+          var gs = $('gain'),
+            gv = knobs.gain.toFixed(1),
+            found = false;
+          for (var j = 0; j < gs.options.length; j++) {
+            if (gs.options[j].value === gv) found = true;
+          }
+          if (!found) {
+            var op = document.createElement('option');
+            op.value = gv;
+            op.textContent = gv;
+            gs.appendChild(op);
+          }
+          gs.value = gv;
+          $('dz').value = String(knobs.deadZone);
+          $('mb').value = String(knobs.maxBrake);
+          $('rt').value = String(knobs.ratchet);
+          $('conesChk').checked = knobs.cones;
+          $('baseChk').checked = knobs.showBase;
+          if (knobs.mode === 'BTN') app.classList.add('btnmode');
+          else app.classList.remove('btnmode');
+        }
+        (function bindKnobs() {
+          var radios = document.getElementsByName('mode');
+          for (var i = 0; i < radios.length; i++) {
+            radios[i].addEventListener('change', function (e) {
+              if (e.target.checked) setKnobs({ mode: e.target.value });
+            });
+          }
+          $('gain').addEventListener('change', function (e) {
+            setKnobs({ gain: e.target.value });
+          });
+          $('dz').addEventListener('change', function (e) {
+            setKnobs({ deadZone: e.target.value });
+          });
+          $('mb').addEventListener('change', function (e) {
+            setKnobs({ maxBrake: e.target.value });
+          });
+          $('rt').addEventListener('change', function (e) {
+            setKnobs({ ratchet: e.target.value });
+          });
+          $('conesChk').addEventListener('change', function (e) {
+            setKnobs({ cones: e.target.checked });
+          });
+          $('baseChk').addEventListener('change', function (e) {
+            setKnobs({ showBase: e.target.checked });
+          });
+        })();
+
+        // ---------------------------------------------------------------- パネル・コピー
+        function openPanel() {
+          if (runState === 'running') return;
+          panelOpen = true;
+          panel.hidden = false;
+          panelBtn.setAttribute('aria-expanded', 'true');
+          flushLog();
+        }
+        function closePanel() {
+          panelOpen = false;
+          panel.hidden = true;
+          panelBtn.setAttribute('aria-expanded', 'false');
+        }
+        panelBtn.addEventListener('click', function () {
+          if (panelOpen) closePanel();
+          else openPanel();
+        });
+        $('panelClose').addEventListener('click', closePanel);
+
+        function showCopyMsg(s) {
+          copyMsg.textContent = s;
+        }
+        function fallbackCopy() {
+          flushLog();
+          var ok = false;
+          // readonly のまま select() + setSelectionRange()(clipboard.js の 'select' と同じ。iOS 10 以降で効く)。
+          // readonly を外して focus() すると iOS はソフトキーボードを出し、ページを拡大する。
+          logEl.setAttribute('readonly', '');
+          logEl.select();
+          try {
+            logEl.setSelectionRange(0, logEl.value.length);
+          } catch (e) {
+            /* 無視 */
+          }
+          try {
+            ok = document.execCommand('copy');
+          } catch (e) {
+            ok = false;
+          }
+          showCopyMsg(ok ? 'コピーした' : '全文を選択した — 長押しでコピー');
+        }
+        $('copyBtn').addEventListener('click', function () {
+          flushLog();
+          var text = logLines.join('\n');
+          if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(function () {
+              showCopyMsg('コピーした');
+            }, fallbackCopy);
+          } else {
+            fallbackCopy();
+          }
+        });
+
+        // ---------------------------------------------------------------- 描画
+        function rr(x, y, w, h, r) {
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.arcTo(x + w, y, x + w, y + h, r);
+          ctx.arcTo(x + w, y + h, x, y + h, r);
+          ctx.arcTo(x, y + h, x, y, r);
+          ctx.arcTo(x, y, x + w, y, r);
+          ctx.closePath();
+        }
+        function drawCar(cx, cy) {
+          var w = C.CAR_W,
+            h = C.CAR_H,
+            x = cx - w / 2,
+            y = cy - h / 2;
+          ctx.fillStyle = COL.tyre;
+          ctx.fillRect(x - 3, y + 8, 6, 13);
+          ctx.fillRect(x + w - 3, y + 8, 6, 13);
+          ctx.fillRect(x - 3, y + h - 21, 6, 13);
+          ctx.fillRect(x + w - 3, y + h - 21, 6, 13);
+          ctx.fillStyle = COL.car;
+          rr(x, y, w, h, 9);
+          ctx.fill();
+          ctx.fillStyle = COL.glass;
+          rr(x + 5, y + 13, w - 10, 11, 4);
+          ctx.fill();
+          ctx.fillStyle = COL.roof;
+          rr(x + 6, y + 26, w - 12, 15, 4);
+          ctx.fill();
+          ctx.fillStyle = COL.glass;
+          rr(x + 6, y + h - 16, w - 12, 7, 3);
+          ctx.fill();
+          ctx.fillStyle = COL.head;
+          ctx.fillRect(x + 5, y + 2, 7, 3);
+          ctx.fillRect(x + w - 12, y + 2, 7, 3);
+          ctx.fillStyle = throttle < 1 ? COL.brakeOn : COL.brakeOff; // ブレーキランプ = 減速中
+          ctx.fillRect(x + 4, y + h - 4, 8, 3);
+          ctx.fillRect(x + w - 12, y + h - 4, 8, 3);
+        }
+        function drawCone(x, y, state) {
+          ctx.fillStyle = state === 1 ? COL.conePassed : state === 2 ? COL.coneMissed : COL.cone;
+          ctx.beginPath();
+          ctx.arc(x, y, C.CONE_R, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = COL.coneRing;
+          ctx.beginPath();
+          ctx.arc(x, y, C.CONE_R * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        function draw() {
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          ctx.fillStyle = COL.shoulder;
+          ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = COL.road;
+          ctx.fillRect(roadL, 0, roadW, H);
+          ctx.fillStyle = COL.edge;
+          ctx.fillRect(roadL + 3, 0, 3, H);
+          ctx.fillRect(roadR - 6, 0, 3, H);
+          var period = C.DASH + C.DASH_GAP;
+          ctx.fillStyle = COL.dash;
+          for (var i = 1; i < C.LANES; i++) {
+            var lx = roadL + laneW * i - 1.5;
+            for (var y = scroll - period; y < H; y += period) ctx.fillRect(lx, y, 3, C.DASH);
+          }
+          for (var j = 0; j < cones.length; j++) {
+            var c = cones[j],
+              st = c.judged ? (c.ok ? 1 : 2) : 0;
+            drawCone(c.lx, c.y, st);
+            drawCone(c.rx, c.y, st);
+          }
+          if (knobs.showBase && steer && knobs.mode === 'A') {
+            var fx = steer.fx;
+            ctx.fillStyle = COL.base;
+            ctx.fillRect(fx - 40, steer.baseY - 0.5, 80, 1);
+            ctx.fillStyle = COL.dz;
+            ctx.fillRect(fx - 24, steer.baseY + knobs.deadZone - 0.5, 48, 1);
+            ctx.fillStyle = COL.mb;
+            ctx.fillRect(fx - 24, steer.baseY + knobs.maxBrake - 0.5, 48, 1);
+            ctx.fillStyle = COL.base;
+            ctx.beginPath();
+            ctx.arc(fx, steer.fy, 4, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          drawCar(carX, carY);
+        }
+
+        function updateHud() {
+          setTransform(thrFill, 'scaleX(' + throttle.toFixed(3) + ')');
+          setClass(thrFill, 'low', throttle < 1);
+          setClass(dipDot, 'on', throttle < 1);
+          setText(thrText, Math.round(throttle * 100) + '%');
+          var tm = '—';
+          if (runState === 'running')
+            tm = (run.elapsed / 1000).toFixed(1) + ' / ' + (run.duration / 1000).toFixed(0) + 's';
+          else if (runState === 'armed') tm = '待機';
+          setText(timerEl, tm);
+          var st = '減速 —';
+          if (runState === 'running' || (runState === 'done' && run)) {
+            st =
+              '減速 ' +
+              run.dips +
+              ' 回・' +
+              (run.elapsed > 0 ? (run.decelMs / run.elapsed) * 100 : 0).toFixed(2) +
+              '%';
+          }
+          setText(statusEl, st);
+          var cc = run && runState === 'running' ? run : sessionCones;
+          var cp = run && runState === 'running' ? cc.conesPassed : cc.passed,
+            cm = run && runState === 'running' ? cc.conesMissed : cc.missed;
+          setText(conesTxt, knobs.cones ? 'コーン ' + cp + '/' + (cp + cm) : '');
+          setText(modeTxt, knobs.mode === 'A' ? 'A 2軸' : knobs.mode === 'B' ? 'B 横+▼' : 'ボタン');
+          var m = '';
+          if (paused) m = '一時停止中 — 盤をタップ / P で再開';
+          else if (runState === 'armed')
+            m =
+              armedKind === 'gate'
+                ? '盤に触れると 30 秒の計測が始まる。\n減速しないつもりで、コーンの間を左右に通る。'
+                : '盤に触れると 15 秒。指を下へ引く・第 2 指・▼ で減速を確かめる。';
+          else if (runState === 'running' && run.kind === 'gate') m = '';
+          else if ((runState === 'idle' || runState === 'done') && resultEl.hidden)
+            m =
+              knobs.mode === 'A'
+                ? '左右にドラッグ。下へ引くと減速。'
+                : knobs.mode === 'B'
+                  ? '左右にドラッグ。▼ 長押しで減速。'
+                  : '◀ ▶ で操舵、▼ で減速。';
+          setText(msgEl, m);
+          setText(
+            startGateBtn,
+            runState === 'running' && run.kind === 'gate'
+              ? '計測を中止'
+              : runState === 'armed' && armedKind === 'gate'
+                ? '開始を取り消す'
+                : '30 秒の計測を開始',
+          );
+          setText(
+            startBrakeBtn,
+            runState === 'running' && run.kind === 'brake'
+              ? '中止'
+              : runState === 'armed' && armedKind === 'brake'
+                ? '取り消す'
+                : '減速の確認',
+          );
+          var running = runState === 'running';
+          setDisabled(startGateBtn, running && run.kind !== 'gate');
+          setDisabled(startBrakeBtn, running && run.kind !== 'brake');
+          setDisabled(panelBtn, running);
+          setDisabled(knobsFs, running);
+        }
+
+        // ---------------------------------------------------------------- ループ
+        var last = performance.now();
+        function frame(now) {
+          var dtMs = now - last;
+          last = now;
+          if (dtMs < 0) dtMs = 0;
+          if (!manual) {
+            if (runState === 'running' && !paused) {
+              run.rafFrames++;
+              run.rafSum += dtMs;
+              if (dtMs > run.rafWorst) run.rafWorst = dtMs;
+            }
+            step(dtMs);
+          }
+          draw();
+          updateHud();
+          if (panelOpen && runState !== 'running') flushLog();
+          requestAnimationFrame(frame);
+        }
+
+        function resetSim() {
+          steer = null;
+          brakeIds = {};
+          hold.brake = hold.left = hold.right = null;
+          btnL.classList.remove('on');
+          btnR.classList.remove('on');
+          btnBrake.classList.remove('on');
+          keys.left = keys.right = keys.brake = false;
+          pulseUntil = 0;
+          carX = targetX = (roadL + roadR) / 2;
+          cones.length = 0;
+          coneTimer = 0;
+          speed = C.ROAD_SPEED_FULL;
+          consumeClick = false;
+          paused = false;
+          computeThrottle();
+        }
+
+        function snapshot() {
+          return {
+            mode: knobs.mode,
+            gain: knobs.gain,
+            deadZone: knobs.deadZone,
+            maxBrake: knobs.maxBrake,
+            ratchet: knobs.ratchet,
+            cones: knobs.cones,
+            throttle: throttle,
+            carX: carX,
+            targetX: targetX,
+            carY: carY,
+            baselineX: steer ? steer.baseX : null,
+            baselineY: steer ? steer.baseY : null,
+            fingerX: steer ? steer.fx : null,
+            fingerY: steer ? steer.fy : null,
+            running: runState === 'running',
+            runState: runState,
+            runKind: run ? run.kind : null,
+            elapsed: run ? run.elapsed : 0,
+            paused: paused,
+            manual: manual,
+            simTime: simTime,
+            steerId: steer ? steer.id : null,
+            steerType: steer ? steer.type : null,
+            brakeFingers: countKeys(brakeIds),
+            holdBrake: hold.brake,
+            holdLeft: hold.left,
+            holdRight: hold.right,
+            keys: { left: keys.left, right: keys.right, brake: keys.brake },
+            tapCount: tapCount,
+            consumedClicks: consumedClicks,
+            cancelCount: cancelCount,
+            conesSession: { passed: sessionCones.passed, missed: sessionCones.missed },
+            road: {
+              left: roadL,
+              right: roadR,
+              laneW: laneW,
+              minX: minX(),
+              maxX: maxX(),
+              W: W,
+              H: H,
+            },
+          };
+        }
+
+        // ---------------------------------------------------------------- テスト専用 API(本番には無い)
+        window.__p0 = {
+          state: snapshot,
+          startRun: function (kind) {
+            if (runState === 'running') return snapshot();
+            armRun(kind === 'brake' ? 'brake' : 'gate');
+            beginRun();
+            return snapshot();
+          },
+          finishRun: function () {
+            return finishRun(false);
+          },
+          lastSummary: function () {
+            return lastSummary;
+          },
+          setKnobs: function (o) {
+            setKnobs(o);
+            return snapshot();
+          },
+          log: function () {
+            return logLines.join('\n');
+          },
+          manual: function (on) {
+            manual = !!on;
+            last = performance.now();
+            return manual;
+          },
+          step: function (dtMs, n) {
+            n = n || 1;
+            for (var i = 0; i < n; i++) step(dtMs);
+            return snapshot();
+          },
+          reset: function () {
+            resetSim();
+            return snapshot();
+          },
+        };
+
+        // ---------------------------------------------------------------- 起動
+        window.addEventListener('resize', layout);
+        window.addEventListener('orientationchange', function () {
+          setTimeout(layout, 100);
+        });
+        layout();
+        syncUI();
+        computeThrottle();
+        log('Overtake Phase 0 入力試作 読み込み ' + knobStr());
+        log(deviceStr(deviceInfo()));
+        requestAnimationFrame(function (now) {
+          last = now;
+          frame(now);
+        });
+      })();
+    </script>
+  </body>
+</html>

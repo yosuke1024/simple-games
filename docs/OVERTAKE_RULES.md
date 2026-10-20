@@ -11,6 +11,11 @@
 [plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)
 の「52. Overtake」が着手時点の合意である。本文が書かれたら、この文書が計画に勝つ。
 
+(2026-10-20)Phase 0 の試作は `apps/simple-games/prototypes/phase0/overtake-input.html`(使い捨て。アプリの一部では
+ない)。**実機 2 台での試行はまだ行っていない** — 試作が測るもの・試行の前に決めた数え方・試作で選んだ解釈
+(ラチェットの基準は戻り速度で指へ下がる = 指で引いた減速は保持できない、など)と結果の表は、計画の「Phase 0 の
+試作」。
+
 ブランド原則([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))はこの文書より上位にある。
 
 ゲーム ID は `overtake`、i18n キーの接頭辞は `overtake`、保存キーの接頭辞は `ot.`、カテゴリは

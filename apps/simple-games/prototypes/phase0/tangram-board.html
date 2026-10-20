@@ -1,0 +1,2154 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>Phase 0 — Tangram board</title>
+    <!--
+================================================================================
+ Phase 0 の使い捨て試作 — Tangram の入力マッパー + 最小の盤
+ (THROWAWAY PROTOTYPE. Not part of the app: not in the registry, not bundled,
+  not translated, no persistence beyond the page lifetime, no network, no
+  external resources.)
+
+ 計画: docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
+       §56 Tangram「操作」「助け」「幾何」「UX」「Phase 0 と差し替え」、未決事項。
+
+ 何を測るか(通過条件):
+   7 枚を 45° 刻みで回し・裏返し・吸着させて、Easy の影絵 3 つ(E1 正方形 /
+   E2 大きな三角 / E3 平行四辺形)を 360 幅で「誤操作なく」埋められるか。
+   誤操作 = 意図しない回転 / 意図しない置き直し / 吸着先の取り違え。
+   → 起きた直後に下の 3 つの集計ボタン(誤回転 / 誤置き直し / 吸着取り違え)のどれかを
+     押す(手で数える)。
+   自動で数えるもの: ドラッグ数・タップ数・回転できなかった数・置けずにトレイへ
+   戻った数・cancel 数・click が来なかったタップ(lostTaps)・Undo 数・「回転の直後の Undo」「置いた直後の Undo」
+   (誤操作の疑い。参考値)。完成ごとにログへ DONE の 1 行(端末情報つき)。
+
+ 決めたこと(この試作の解釈。計画の推奨に従う):
+   - 吸着した位置にだけ置ける。吸着先が無い/重なる/はみ出す位置で離すと何も起きず、
+     駒はトレイへ戻る(盤の駒をそうした場合も、盤から抜けてトレイへ。Undo で戻せる)。
+     音は無い(この試作には音が一切無い)。
+   - 吸着: 運んでいる駒の頂点を、影絵の頂点・置いた駒の頂点に合わせる(頂点吸着)。
+     それで置ける候補が無いときだけ、頂点を辺の上へ / 辺を頂点へ寄せる(辺吸着)。
+     許容は画面上 SNAP_PX(既定 14px)。許容内で「置ける」候補のうち最も近いものを採る。
+     吸着先は計画どおり「影絵と置いた駒」だけ(Easy の薄い境界線は見せるだけで、吸着先では
+     ない — 吸着は規則の絵であって最善手の提案ではない、計画「助け」)。
+     ?guide=1 は比較用の「別の規則」: Easy の境界線(解の区切り)の頂点・辺にも吸着する。
+     解の枠へ引き込まれるので、吸着先の取り違えがほぼ起きなくなる。通過条件はこれで
+     測らない(START / DONE の行と情報行に rule=… として必ず出る)。
+   - 離したときに起きるのは、最後に画面に描いた姿(塗り = その位置に置く / 輪郭 = トレイへ)。
+     指を動かして同じフレームのうちに離しても、描いていない位置では判定しない
+     (Block Puzzle §3「画面に出ているものが、離したときに起きること」)。
+   - タップ = 45° 時計回り(トレイでも盤でも)。タップは click で受け、ドラッグの後に
+     残る click は「使った」印で食べる(ARCHITECTURE.md「指を取り上げられたときの契約」)。
+     盤の上では「支点」を中心に回す: 支点 = 駒の頂点のうち吸着先(影絵・置いた駒の頂点)と
+     重なっているもの(置いたときに吸着した点を優先し、続けて回す間は同じ支点のまま)。
+     支点は動かず、駒が横へずれることは無い(px の許容に頼らないので縮尺によらない。
+     8 回続けて回せれば元の姿に戻る)。回した姿がそのままでは置けないなら何も起きない
+     (「回転できなかった」としてログに数える。誤操作には数えない)。裏返しも同じ支点で。
+   - 裏返しは「裏返し」ボタンだけ(ダブルタップは使わない)。選んだ駒が平行四辺形の
+     ときだけ有効。押す(pointerdown)・タップで駒を選ぶ。
+   - 1 本の指: 押さえた pointerId を覚え、2 本目の指は何もしない(2 本指の回転は無い)。
+     ドラッグ中は 3 つのボタンも答えない。
+   - pointercancel: 運んでいる駒はトレイへ戻る(盤から持ち上げた駒も、元の位置には
+     戻さずトレイへ — 計画の「運んでいる駒はトレイへ戻る」をそのまま採った。Undo で戻せる)。
+   - トレイから運ぶ駒は、重心が指の TRAY_LIFT_PX 上に来る(指で隠れないように)。
+     盤の駒を運び直すときは、押さえた点と駒の相対位置を保つ。
+   - 経過秒は、その図形で最初に駒に触れた時から。図形ボタン(E1/E2/E3)をもう一度
+     押すとやり直し(未完成ならログに ABANDON の 1 行)。完成の後に Undo などで未完成に
+     戻ると「完成」の表示を消し(ログに UNDO after DONE)、時計はそのまま進む。もう一度
+     完成させると DONE の行がもう 1 行出る(最初の DONE の行は残る)。
+   - 座標は浮動小数 + 小さな EPS(本番は Z[√2] の厳密表現 — 計画「幾何」。この試作は
+     使い捨てなので浮動小数で済ませている)。
+
+ 座標の単位: 大きな正方形 = [0,4]×[0,4](「u」)。小三角の脚 = √2 u。
+   計画の「1 単位」(小三角の脚の半分)= √2/2 u ≈ 0.707 u(キーボードの矢印 1 回)。
+   情報行に px/u と「小三角の脚の px」を出す(360 幅でどこまで大きな影絵が入るかを見る)。
+
+ 画面: 360×640 の縦持ちを前提に、スクロールなしで盤・トレイ・3 ボタンが見える。
+   本番の Web 版は広告に 116px を予約するが、この試作は既定で全高を使う(?ads=1 で
+   116px の仮の広告枠を 3 ボタンの下に置き、盤をその分だけ縮める)。ログ欄は下に
+   はみ出してよい(スクロールして見る)。
+
+ つまみ(URL のクエリで変えられる。例: tangram-board.html?snap=18&lift=0):
+   snap   SNAP_PX         吸着の許容(画面 px)            既定 14
+   slop   TAP_SLOP_PX     これ以上動いたらドラッグ(px)    既定 6
+   lift   TRAY_LIFT_PX    トレイから運ぶ駒の持ち上げ(px)  既定 24
+   margin BOARD_MARGIN_PX 盤の内側の余白(px)              既定 16
+   scale  BOARD_SCALE     影絵の倍率(<1 で小さい影絵を試す) 既定 1
+   tray   TRAY_PPU        トレイの px/u                    既定 17
+   guide  GUIDE_SNAP      Easy の境界線にも吸着 (1/0)      既定 0(1 は比較用の別規則)
+   edge   EDGE_SNAP       辺吸着を使う (1/0)               既定 1
+   ads    RESERVE_ADS     116px の仮の広告枠 (1/0)         既定 0
+   (キーボードの吸着の許容は矢印 1 回分 = KBD_SNAP_STEPS × 0.707u、既定 1)
+   ログの START / DONE / ABANDON の行と情報行には、いつも
+   rule=snap14/edge1/guide0/slop6 の形で、その計測の規則が入る。
+
+ キーボード: Tab で駒を巡る / Enter・Space で持ち上げる・置く(いまの位置から最も近い
+   置ける吸着先へ)/ 矢印で 1 単位(0.707u)/ R 回転 / F 裏返し / Escape でトレイへ /
+   Ctrl(⌘)+Z で Undo。
+
+ テスト専用(window.__p0 — check-tangram.mjs が使う。実機の試しでは触らない):
+   state()        → {silhouette, medium, placed:[{id,x,y,rot,flip,fixed}], tray:[ids],
+                     trayPose:{id:{rot,flip}}, selected, counters:{...}, complete, carrying,
+                     undoDepth, done, bannerVisible, rule}
+   pieces()       → {id: 局所座標の多角形(重心が原点)}
+   solution(id)   → その図形の 7 枚の姿 [{id,x,y,rot,flip}]
+   place(id,x,y,rot,flip) → boolean(離したときと同じ判定。吸着はしない)
+   rotate(id) / flip(id) / returnToTray(id) / undo() → boolean
+   pivot(id)      → 盤の駒の支点 [x,y](u)。トレイの駒は null
+   isComplete()   → boolean
+   boardRect()    → {left,top,width,height,ppu,ox,oy,lift,snapPx,step,trayPpu}
+                     (画面 px = ox + x*ppu, oy + y*ppu)
+   selfCheck()    → 3 図形の解の幾何検査の結果
+   log()          → ログの全文
+================================================================================
+-->
+    <style>
+      :root {
+        --bg: #f4f4f1;
+        --panel: #ffffff;
+        --ink: #1d2a2e;
+        --muted: #6b7478;
+        --sil: #d6d8d6;
+        --guide: #a9b0ad;
+        --accent0: #2f7f89;
+        --accent1: #86c3c9;
+        --fixed: #b7c6c8;
+        --btn: #e8ebe9;
+        --btn-ink: #1d2a2e;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans',
+          'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Noto Sans CJK JP', Meiryo, sans-serif;
+        font-size: 14px;
+        -webkit-text-size-adjust: 100%;
+        overflow-x: hidden;
+      }
+      #app {
+        box-sizing: border-box;
+        margin: 0 auto;
+        padding: 4px 16px 0;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+      }
+      #info {
+        height: 28px;
+        line-height: 14px;
+        font-size: 11px;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      #info div {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #boardWrap {
+        position: relative;
+        margin-top: 4px;
+      }
+      #board {
+        display: block;
+        background: var(--panel);
+        border-radius: 8px;
+        touch-action: none;
+      }
+      #board .sil {
+        fill: var(--sil);
+        stroke: none;
+      }
+      #board .guide {
+        fill: none;
+        stroke: var(--guide);
+        stroke-width: 1;
+      }
+      .pc {
+        stroke: var(--ink);
+        stroke-width: 1.5;
+        stroke-linejoin: round;
+      }
+      .pc.s0 {
+        fill: var(--accent0);
+      }
+      .pc.s1 {
+        fill: var(--accent1);
+      }
+      #board .bp {
+        cursor: grab;
+        outline: none;
+      }
+      #board .bp.fixed .pc {
+        fill: var(--fixed);
+        stroke-dasharray: 4 3;
+      }
+      #board .bp.sel .pc {
+        stroke-width: 3.5;
+      }
+      #board .bp:focus .pc {
+        stroke: #c2410c;
+        stroke-width: 3;
+      }
+      #board .bp.lifted {
+        opacity: 0;
+      }
+      #banner {
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        top: 8px;
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid var(--ink);
+        border-radius: 8px;
+        padding: 6px 8px;
+        font-size: 13px;
+        text-align: center;
+        pointer-events: none;
+        animation: fadein 300ms ease-out;
+      }
+      #banner b {
+        font-size: 16px;
+      }
+      @keyframes fadein {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #banner {
+          animation: none;
+        }
+      }
+      #tray {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-auto-rows: 64px;
+        gap: 4px;
+        margin-top: 6px;
+        touch-action: none;
+      }
+      #tray .tp {
+        display: block;
+        width: 100%;
+        height: 64px;
+        padding: 0;
+        margin: 0;
+        border: 1px solid #cfd4d2;
+        border-radius: 8px;
+        background: var(--panel);
+        touch-action: none;
+        cursor: grab;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #tray .tp svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        overflow: visible;
+      }
+      #tray .tp.sel {
+        border: 2px solid var(--ink);
+      }
+      #tray .tp:focus {
+        outline: 3px solid #c2410c;
+        outline-offset: -3px;
+      }
+      #tray .tp.lifted {
+        opacity: 0.25;
+      }
+      .row {
+        display: flex;
+        margin-top: 6px;
+      }
+      .row > button {
+        flex: 1 1 0;
+        margin: 0 0 0 6px;
+        min-width: 0;
+      }
+      .row > button:first-child {
+        margin-left: 0;
+      }
+      button {
+        font: inherit;
+        color: var(--btn-ink);
+        background: var(--btn);
+        border: 1px solid #c9cfcc;
+        border-radius: 8px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+      }
+      button:disabled {
+        color: #a3aaa8;
+        background: #f0f1f0;
+      }
+      #actions > button {
+        height: 44px;
+        font-size: 15px;
+      }
+      /* Labels are short so that none wraps at 360 px (11-12 px CJK in ~55-105 px buttons). */
+      #tallies > button,
+      #controls > button {
+        height: 34px;
+        font-size: 11px;
+        padding: 0 2px;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      #tallies > button {
+        font-size: 12px;
+      }
+      #controls > #btnCopy {
+        flex-grow: 1.5;
+      }
+      #controls > button.on {
+        background: var(--ink);
+        color: #fff;
+      }
+      #ads[hidden] {
+        display: none;
+      }
+      #ads {
+        margin-top: 6px;
+        height: 116px;
+        border: 1px dashed #9aa3a0;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      #logWrap {
+        box-sizing: border-box;
+        margin: 8px auto 16px;
+        padding: 0 16px;
+      }
+      #log {
+        box-sizing: border-box;
+        width: 100%;
+        height: 180px;
+        font-size: 10px;
+        line-height: 1.35;
+        font-family: ui-monospace, Menlo, Consolas, 'Roboto Mono', monospace;
+        color: var(--ink);
+        background: var(--panel);
+        border: 1px solid #cfd4d2;
+        border-radius: 6px;
+      }
+      #overlay {
+        position: fixed;
+        left: 0;
+        top: 0;
+        pointer-events: none;
+        z-index: 10;
+        overflow: visible;
+      }
+      #overlay .carry.ok {
+        fill: var(--accent0);
+        fill-opacity: 0.9;
+        stroke: var(--ink);
+        stroke-width: 2;
+      }
+      #overlay .carry.ok.s1 {
+        fill: var(--accent1);
+      }
+      #overlay .carry.ng {
+        fill: none;
+        stroke: var(--ink);
+        stroke-width: 2;
+        stroke-dasharray: 6 4;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="info"></div>
+      <div id="boardWrap">
+        <svg id="board" role="img" aria-label="影絵"></svg>
+        <div id="banner" hidden></div>
+      </div>
+      <div id="tray" role="group" aria-label="トレイ"></div>
+      <div class="row" id="actions">
+        <button type="button" id="btnRotate">回転</button>
+        <button type="button" id="btnFlip">裏返し</button>
+        <button type="button" id="btnUndo">Undo</button>
+      </div>
+      <div id="ads" hidden>広告枠 116px(仮)</div>
+      <div class="row" id="tallies">
+        <button type="button" id="tallyRot" data-tally="misRotation" title="意図しない回転">
+          誤回転 0
+        </button>
+        <button type="button" id="tallyRep" data-tally="misReplace" title="意図しない置き直し">
+          誤置き直し 0
+        </button>
+        <button type="button" id="tallySnap" data-tally="wrongSnap" title="吸着先の取り違え">
+          吸着取り違え 0
+        </button>
+      </div>
+      <div class="row" id="controls">
+        <button type="button" data-sil="E1">E1</button>
+        <button type="button" data-sil="E2">E2</button>
+        <button type="button" data-sil="E3">E3</button>
+        <button type="button" id="btnMedium">Medium</button>
+        <button type="button" id="btnCopy">コピー</button>
+      </div>
+    </div>
+    <div id="logWrap"><textarea id="log" readonly aria-label="ログ"></textarea></div>
+    <svg id="overlay" aria-hidden="true">
+      <polygon class="carry" points="" style="display: none"></polygon>
+    </svg>
+
+    <script>
+      (function () {
+        'use strict';
+
+        // ===================================================================
+        // Knobs (constants in one place). See the top comment for the meaning.
+        // ===================================================================
+        var Q = new URLSearchParams(location.search);
+        function qn(name, def) {
+          var v = Q.get(name);
+          if (v === null || v === '') return def;
+          var n = Number(v);
+          return isFinite(n) ? n : def;
+        }
+        var K = {
+          SNAP_PX: qn('snap', 14),
+          TAP_SLOP_PX: qn('slop', 6),
+          TRAY_LIFT_PX: qn('lift', 24),
+          BOARD_MARGIN_PX: qn('margin', 16),
+          BOARD_SCALE: qn('scale', 1),
+          BOARD_MAX_PX: 480,
+          GUTTER_PX: 16, // left/right gutter: board = viewport width - 2 * 16 (328 at 360)
+          TRAY_PPU: qn('tray', 17),
+          // 0 = the plan's rule (snap to the silhouette and placed pieces only). 1 is a separate,
+          // easier rule kept only for comparison; every START / DONE line says which was used.
+          GUIDE_SNAP: qn('guide', 0) === 1,
+          EDGE_SNAP: qn('edge', 1) === 1,
+          KBD_SNAP_STEPS: 1,
+          RESERVE_ADS: qn('ads', 0) === 1,
+          ADS_PX: 116,
+          // Heights of the rows that must stay visible with the board (info + tray + actions),
+          // used only to shrink the board when ?ads=1.
+          FIXED_ROWS_PX: 4 + 28 + 4 + 6 + 132 + 6 + 44 + 6,
+          EPS: 1e-6,
+        };
+        var STEP = Math.SQRT2 / 2; // keyboard arrow step in u (= half the small-triangle leg)
+        // The snap rule this run is measured under; printed in START / DONE / ABANDON and the info line.
+        var RULE =
+          'snap' +
+          K.SNAP_PX +
+          '/edge' +
+          (K.EDGE_SNAP ? 1 : 0) +
+          '/guide' +
+          (K.GUIDE_SNAP ? 1 : 0) +
+          '/slop' +
+          K.TAP_SLOP_PX;
+        var TXT = {
+          copy: 'コピー',
+          copied: 'コピー済み',
+          copyManual: '手でコピー',
+          tally: {
+            misRotation: ['誤回転', '意図しない回転'],
+            misReplace: ['誤置き直し', '意図しない置き直し'],
+            wrongSnap: ['吸着取り違え', '吸着先の取り違え'],
+          },
+        };
+
+        // ===================================================================
+        // Pieces. Integer frame: the big square is [0,4]x[0,4] ("u"), y down.
+        // Local shapes = reference solution polygons minus their vertex average.
+        // ===================================================================
+        var REF = {
+          L1: [
+            [0, 0],
+            [4, 0],
+            [2, 2],
+          ],
+          L2: [
+            [0, 0],
+            [2, 2],
+            [0, 4],
+          ],
+          M: [
+            [4, 4],
+            [4, 2],
+            [2, 4],
+          ],
+          SQ: [
+            [2, 2],
+            [3, 1],
+            [4, 2],
+            [3, 3],
+          ],
+          S1: [
+            [3, 1],
+            [4, 0],
+            [4, 2],
+          ],
+          S2: [
+            [1, 3],
+            [2, 2],
+            [3, 3],
+          ],
+          P: [
+            [0, 4],
+            [1, 3],
+            [3, 3],
+            [2, 4],
+          ],
+        };
+        var IDS = ['L1', 'L2', 'M', 'P', 'SQ', 'S1', 'S2']; // tray order (4 + 3)
+        var KIND = {
+          L1: '大三角 1',
+          L2: '大三角 2',
+          M: '中三角',
+          P: '平行四辺形',
+          SQ: '正方形',
+          S1: '小三角 1',
+          S2: '小三角 2',
+        };
+        var SHADE = { L1: 0, L2: 1, M: 0, P: 1, SQ: 1, S1: 0, S2: 0 };
+        var R2 = Math.SQRT1_2;
+        // rot k = k * 45 deg clockwise on screen (y down).
+        var ROT = [
+          [1, 0],
+          [R2, R2],
+          [0, 1],
+          [-R2, R2],
+          [-1, 0],
+          [-R2, -R2],
+          [0, -1],
+          [R2, -R2],
+        ];
+
+        function centroidOf(poly) {
+          var x = 0,
+            y = 0;
+          for (var i = 0; i < poly.length; i++) {
+            x += poly[i][0];
+            y += poly[i][1];
+          }
+          return [x / poly.length, y / poly.length];
+        }
+        var LOCAL = {};
+        IDS.forEach(function (id) {
+          var c = centroidOf(REF[id]);
+          LOCAL[id] = REF[id].map(function (p) {
+            return [p[0] - c[0], p[1] - c[1]];
+          });
+        });
+        function canFlip(id) {
+          return id === 'P';
+        }
+
+        // World polygon of a piece at pose {x, y, rot, flip}: mirror (x -> -x) first, then rotate.
+        function xf(id, pose) {
+          var cs = ROT[((pose.rot % 8) + 8) % 8],
+            c = cs[0],
+            s = cs[1];
+          var f = canFlip(id) && pose.flip ? -1 : 1;
+          return LOCAL[id].map(function (p) {
+            var px = f * p[0],
+              py = p[1];
+            return [c * px - s * py + pose.x, s * px + c * py + pose.y];
+          });
+        }
+
+        // One point: local frame (LOCAL[id]) -> world, and back.
+        function toWorld(id, pose, v) {
+          var cs = ROT[((pose.rot % 8) + 8) % 8],
+            c = cs[0],
+            s = cs[1];
+          var px = (canFlip(id) && pose.flip ? -1 : 1) * v[0],
+            py = v[1];
+          return [c * px - s * py + pose.x, s * px + c * py + pose.y];
+        }
+        function toLocal(id, pose, w) {
+          var cs = ROT[((pose.rot % 8) + 8) % 8],
+            c = cs[0],
+            s = cs[1];
+          var dx = w[0] - pose.x,
+            dy = w[1] - pose.y;
+          return [(canFlip(id) && pose.flip ? -1 : 1) * (c * dx + s * dy), -s * dx + c * dy];
+        }
+
+        // ===================================================================
+        // Geometry (floating point + EPS; the real game uses exact Z[sqrt2]).
+        // ===================================================================
+        var EPS = K.EPS;
+        function area(poly) {
+          var a = 0;
+          for (var i = 0; i < poly.length; i++) {
+            var p = poly[i],
+              q = poly[(i + 1) % poly.length];
+            a += p[0] * q[1] - q[0] * p[1];
+          }
+          return Math.abs(a) / 2;
+        }
+        // SAT for convex polygons. Touching (zero-width overlap) is NOT overlap.
+        function overlaps(A, B) {
+          var polys = [A, B];
+          for (var k = 0; k < 2; k++) {
+            var P = polys[k];
+            for (var i = 0; i < P.length; i++) {
+              var p = P[i],
+                q = P[(i + 1) % P.length];
+              var nx = q[1] - p[1],
+                ny = p[0] - q[0],
+                len = Math.sqrt(nx * nx + ny * ny);
+              nx /= len;
+              ny /= len;
+              var a = proj(A, nx, ny),
+                b = proj(B, nx, ny);
+              if (Math.min(a[1], b[1]) - Math.max(a[0], b[0]) <= EPS) return false;
+            }
+          }
+          return true;
+        }
+        function proj(P, nx, ny) {
+          var mn = Infinity,
+            mx = -Infinity;
+          for (var i = 0; i < P.length; i++) {
+            var d = P[i][0] * nx + P[i][1] * ny;
+            if (d < mn) mn = d;
+            if (d > mx) mx = d;
+          }
+          return [mn, mx];
+        }
+        function closestOnSeg(p, a, b) {
+          var dx = b[0] - a[0],
+            dy = b[1] - a[1];
+          var t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy);
+          if (t < 0) t = 0;
+          else if (t > 1) t = 1;
+          return [a[0] + t * dx, a[1] + t * dy];
+        }
+        function dist(a, b) {
+          var dx = a[0] - b[0],
+            dy = a[1] - b[1];
+          return Math.sqrt(dx * dx + dy * dy);
+        }
+        function pointInOrOn(p, S) {
+          for (var i = 0; i < S.length; i++) {
+            if (dist(p, closestOnSeg(p, S[i], S[(i + 1) % S.length])) <= EPS) return true;
+          }
+          var inside = false;
+          for (var j = 0, k = S.length - 1; j < S.length; k = j++) {
+            var a = S[j],
+              b = S[k];
+            if (
+              a[1] > p[1] !== b[1] > p[1] &&
+              p[0] < ((b[0] - a[0]) * (p[1] - a[1])) / (b[1] - a[1]) + a[0]
+            )
+              inside = !inside;
+          }
+          return inside;
+        }
+        function orient(a, b, c) {
+          return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+        }
+        function properCross(a, b, c, d) {
+          var o1 = orient(a, b, c),
+            o2 = orient(a, b, d),
+            o3 = orient(c, d, a),
+            o4 = orient(c, d, b);
+          return (
+            Math.abs(o1) > EPS &&
+            Math.abs(o2) > EPS &&
+            Math.abs(o3) > EPS &&
+            Math.abs(o4) > EPS &&
+            o1 > 0 !== o2 > 0 &&
+            o3 > 0 !== o4 > 0
+          );
+        }
+        // Convex piece q lies inside silhouette S (touching the boundary allowed).
+        function insideSil(q, S) {
+          for (var i = 0; i < q.length; i++) if (!pointInOrOn(q[i], S)) return false;
+          if (!pointInOrOn(centroidOf(q), S)) return false;
+          for (var a = 0; a < q.length; a++) {
+            for (var b = 0; b < S.length; b++) {
+              if (properCross(q[a], q[(a + 1) % q.length], S[b], S[(b + 1) % S.length]))
+                return false;
+            }
+          }
+          return true;
+        }
+        function sameVertexSet(A, B) {
+          if (A.length !== B.length) return false;
+          for (var i = 0; i < A.length; i++) {
+            var hit = false;
+            for (var j = 0; j < B.length; j++)
+              if (dist(A[i], B[j]) <= 1e-6) {
+                hit = true;
+                break;
+              }
+            if (!hit) return false;
+          }
+          return true;
+        }
+        function poseFromPoly(id, poly) {
+          var c = centroidOf(poly);
+          var flips = canFlip(id) ? [0, 1] : [0];
+          for (var fi = 0; fi < flips.length; fi++) {
+            for (var r = 0; r < 8; r++) {
+              var pose = { x: c[0], y: c[1], rot: r, flip: flips[fi] };
+              if (sameVertexSet(xf(id, pose), poly)) return pose;
+            }
+          }
+          throw new Error('no pose matches ' + id);
+        }
+
+        // ===================================================================
+        // Silhouettes. E1 = the reference square. E2 / E3 are derived: the
+        // square's lower-left half TA (L1+L2) and upper-right half TB (M SQ S1 S2 P)
+        // are both right isosceles triangles with legs 4; each is mapped onto one
+        // half of the target by the isometry that sends (right-angle vertex, leg end,
+        // leg end) to (right-angle vertex, leg end, leg end). A reflection flips P.
+        // E2 / E3 are drawn mirrored vertically from the task text (apex up /
+        // leaning right going up) — an isometry, so nothing else changes.
+        // ===================================================================
+        var TA = [
+            [0, 0],
+            [4, 0],
+            [0, 4],
+          ],
+          TB = [
+            [4, 4],
+            [4, 0],
+            [0, 4],
+          ];
+        var GROUP_A = ['L1', 'L2'];
+        function triMap(src, dst) {
+          var r = src[0],
+            u = [src[1][0] - r[0], src[1][1] - r[1]],
+            v = [src[2][0] - r[0], src[2][1] - r[1]];
+          var uu = u[0] * u[0] + u[1] * u[1],
+            vv = v[0] * v[0] + v[1] * v[1];
+          var r2 = dst[0],
+            u2 = [dst[1][0] - r2[0], dst[1][1] - r2[1]],
+            v2 = [dst[2][0] - r2[0], dst[2][1] - r2[1]];
+          return function (p) {
+            var dx = p[0] - r[0],
+              dy = p[1] - r[1];
+            var a = (dx * u[0] + dy * u[1]) / uu,
+              b = (dx * v[0] + dy * v[1]) / vv;
+            return [r2[0] + a * u2[0] + b * v2[0], r2[1] + a * u2[1] + b * v2[1]];
+          };
+        }
+        var SIL_DEFS = [
+          {
+            id: 'E1',
+            name: '正方形',
+            poly: [
+              [0, 0],
+              [4, 0],
+              [4, 4],
+              [0, 4],
+            ],
+            a: TA,
+            b: TB,
+          },
+          // For E2 / E3 the TB group is mapped by a REFLECTION (leg order chosen so det = -1), so the
+          // parallelogram must be flipped there: the gate exercises 裏返し on 2 of the 3 Easy figures.
+          {
+            id: 'E2',
+            name: '大きな三角',
+            poly: [
+              [0, 4],
+              [8, 4],
+              [4, 0],
+            ],
+            a: [
+              [4, 4],
+              [0, 4],
+              [4, 0],
+            ],
+            b: [
+              [4, 4],
+              [4, 0],
+              [8, 4],
+            ],
+          },
+          {
+            id: 'E3',
+            name: '平行四辺形',
+            poly: [
+              [0, 4],
+              [4, 4],
+              [8, 0],
+              [4, 0],
+            ],
+            a: [
+              [4, 4],
+              [0, 4],
+              [4, 0],
+            ],
+            b: [
+              [4, 0],
+              [8, 0],
+              [4, 4],
+            ],
+          },
+        ];
+        var MEDIUM_FIXED = ['L1', 'P']; // plan recommendation: one large triangle + the parallelogram
+        var SIL = {};
+        SIL_DEFS.forEach(function (d) {
+          var mA = triMap(TA, d.a),
+            mB = triMap(TB, d.b);
+          var polys = {},
+            poses = {};
+          IDS.forEach(function (id) {
+            var m = GROUP_A.indexOf(id) >= 0 ? mA : mB;
+            polys[id] = REF[id].map(m);
+            poses[id] = poseFromPoly(id, polys[id]);
+          });
+          var xs = d.poly.map(function (p) {
+              return p[0];
+            }),
+            ys = d.poly.map(function (p) {
+              return p[1];
+            });
+          SIL[d.id] = {
+            id: d.id,
+            name: d.name,
+            poly: d.poly,
+            solPolys: polys,
+            solution: poses,
+            bbox: [
+              Math.min.apply(null, xs),
+              Math.min.apply(null, ys),
+              Math.max.apply(null, xs),
+              Math.max.apply(null, ys),
+            ],
+          };
+        });
+
+        function edgesOf(poly) {
+          var out = [];
+          for (var i = 0; i < poly.length; i++) out.push([poly[i], poly[(i + 1) % poly.length]]);
+          return out;
+        }
+        // Completion predicate: all 7 placed, pairwise non-overlapping, all inside.
+        // (Total piece area = silhouette area = 16 is a catalog invariant, so no gaps.)
+        function isCompleteWith(sil, poses) {
+          var polys = [];
+          for (var i = 0; i < IDS.length; i++) {
+            var p = poses[IDS[i]];
+            if (!p || !p.placed) return false;
+            var w = xf(IDS[i], p);
+            if (!insideSil(w, sil.poly)) return false;
+            polys.push(w);
+          }
+          for (var a = 0; a < polys.length; a++)
+            for (var b = a + 1; b < polys.length; b++)
+              if (overlaps(polys[a], polys[b])) return false;
+          return true;
+        }
+        function selfCheckOne(sil) {
+          var res = {
+            id: sil.id,
+            pieceArea: 0,
+            silArea: area(sil.poly),
+            overlaps: [],
+            outside: [],
+            poseMismatch: [],
+            complete: false,
+          };
+          var polys = IDS.map(function (id) {
+            return xf(id, sil.solution[id]);
+          });
+          IDS.forEach(function (id, i) {
+            res.pieceArea += area(polys[i]);
+            if (!sameVertexSet(polys[i], sil.solPolys[id])) res.poseMismatch.push(id);
+            if (!insideSil(polys[i], sil.poly)) res.outside.push(id);
+          });
+          for (var a = 0; a < 7; a++)
+            for (var b = a + 1; b < 7; b++)
+              if (overlaps(polys[a], polys[b])) res.overlaps.push(IDS[a] + '/' + IDS[b]);
+          var poses = {};
+          IDS.forEach(function (id) {
+            var p = sil.solution[id];
+            poses[id] = { placed: true, x: p.x, y: p.y, rot: p.rot, flip: p.flip };
+          });
+          res.complete = isCompleteWith(sil, poses);
+          res.ok =
+            Math.abs(res.pieceArea - 16) < 1e-6 &&
+            Math.abs(res.silArea - 16) < 1e-6 &&
+            !res.overlaps.length &&
+            !res.outside.length &&
+            !res.poseMismatch.length &&
+            res.complete;
+          return res;
+        }
+        function selfCheck() {
+          return SIL_DEFS.map(function (d) {
+            return selfCheckOne(SIL[d.id]);
+          });
+        }
+        selfCheck().forEach(function (r) {
+          console.assert(r.ok, 'tangram self-check failed for ' + r.id + ': ' + JSON.stringify(r));
+        });
+
+        // ===================================================================
+        // State
+        // ===================================================================
+        var st = {
+          sil: 'E1',
+          medium: false,
+          P: {}, // id -> {placed, x, y, rot, flip, fixed}
+          selected: null,
+          undo: [], // [{op, P}]
+          counters: null,
+          t0: null, // first touch of a piece in this attempt (performance.now())
+          done: false,
+          tallies: { misRotation: 0, misReplace: 0, wrongSnap: 0 },
+        };
+        var L = { W: 328, ppu: 1, ox: 0, oy: 0 }; // layout of the current silhouette
+        var press = null; // pointer press: {id, pointerId, el, source, sx, sy, dragging, gdx, gdy}
+        var carry = null; // piece being carried: {id, source, raw:{x,y,rot,flip}, snap, kbd, origin}
+        var clickEat = null; // {el} — the next click on el is eaten (after a drag / cancel / ignored press)
+        var tapOk = null; // {el, t} — set by a pointerup that was a tap; the click then rotates
+        var pageT0 = performance.now();
+
+        function newCounters() {
+          return {
+            drags: 0,
+            taps: 0,
+            rotateButton: 0,
+            flips: 0,
+            blockedRotations: 0,
+            blockedFlips: 0,
+            places: 0,
+            replaces: 0,
+            returnedToTray: 0,
+            cancels: 0,
+            undos: 0,
+            undoAfterRotate: 0,
+            undoAfterPlace: 0,
+            consumedClicks: 0,
+            ignoredPointers: 0,
+            kbdPlaces: 0,
+            fixedPresses: 0,
+            lostTaps: 0,
+          };
+        }
+        function clonePoses(P) {
+          var o = {};
+          IDS.forEach(function (id) {
+            var p = P[id];
+            o[id] = {
+              placed: p.placed,
+              x: p.x,
+              y: p.y,
+              rot: p.rot,
+              flip: p.flip,
+              fixed: p.fixed,
+              pivot: p.pivot ? p.pivot.slice() : null,
+            };
+          });
+          return o;
+        }
+        function pushUndo(op) {
+          st.undo.push({ op: op, P: clonePoses(st.P) });
+        }
+        function startClock() {
+          if (st.t0 === null) st.t0 = performance.now();
+        }
+        function elapsed() {
+          return st.t0 === null ? 0 : (performance.now() - st.t0) / 1000;
+        }
+
+        // ===================================================================
+        // Log
+        // ===================================================================
+        var logLines = [];
+        var logEl = document.getElementById('log');
+        function log(s) {
+          var t = ((performance.now() - pageT0) / 1000).toFixed(1);
+          logLines.push('[' + t + '] ' + s);
+          logEl.value = logLines.join('\n');
+          logEl.scrollTop = logEl.scrollHeight;
+        }
+        function fmtPose(p) {
+          return (
+            'x=' +
+            p.x.toFixed(3) +
+            ' y=' +
+            p.y.toFixed(3) +
+            ' rot=' +
+            p.rot * 45 +
+            ' flip=' +
+            (p.flip ? 1 : 0)
+          );
+        }
+        function deviceLine() {
+          return (
+            'UA="' +
+            navigator.userAgent +
+            '" inner=' +
+            window.innerWidth +
+            'x' +
+            window.innerHeight +
+            ' dpr=' +
+            window.devicePixelRatio
+          );
+        }
+        function summaryLine(tag) {
+          var c = st.counters;
+          return (
+            tag +
+            ' ' +
+            st.sil +
+            ' ' +
+            (st.medium ? 'medium' : 'easy') +
+            ' rule=' +
+            RULE +
+            ' t=' +
+            elapsed().toFixed(1) +
+            's' +
+            ' drags=' +
+            c.drags +
+            ' taps=' +
+            c.taps +
+            ' rotBtn=' +
+            c.rotateButton +
+            ' flips=' +
+            c.flips +
+            ' blockedRot=' +
+            c.blockedRotations +
+            ' blockedFlip=' +
+            c.blockedFlips +
+            ' returnedToTray=' +
+            c.returnedToTray +
+            ' cancels=' +
+            c.cancels +
+            ' lostTaps=' +
+            c.lostTaps +
+            ' undos=' +
+            c.undos +
+            ' (undoAfterRot=' +
+            c.undoAfterRotate +
+            ' undoAfterPlace=' +
+            c.undoAfterPlace +
+            ')' +
+            ' misRotation=' +
+            st.tallies.misRotation +
+            ' misReplace=' +
+            st.tallies.misReplace +
+            ' wrongSnap=' +
+            st.tallies.wrongSnap +
+            ' ppu=' +
+            L.ppu.toFixed(1) +
+            ' smallLeg=' +
+            Math.round(Math.SQRT2 * L.ppu) +
+            'px' +
+            ' snap=' +
+            K.SNAP_PX +
+            'px lift=' +
+            K.TRAY_LIFT_PX +
+            'px | ' +
+            deviceLine()
+          );
+        }
+
+        // ===================================================================
+        // Validity and snapping
+        // ===================================================================
+        function placedPolys(exceptId) {
+          var out = [];
+          IDS.forEach(function (id) {
+            if (id !== exceptId && st.P[id].placed) out.push(xf(id, st.P[id]));
+          });
+          return out;
+        }
+        function validPose(id, pose) {
+          var w = xf(id, pose);
+          if (!insideSil(w, SIL[st.sil].poly)) return false;
+          var others = placedPolys(id);
+          for (var i = 0; i < others.length; i++) if (overlaps(w, others[i])) return false;
+          return true;
+        }
+        function snapTargets(id) {
+          var sil = SIL[st.sil];
+          var polys = [sil.poly].concat(placedPolys(id));
+          if (!st.medium && K.GUIDE_SNAP)
+            IDS.forEach(function (g) {
+              polys.push(sil.solPolys[g]);
+            });
+          var verts = [],
+            edges = [];
+          polys.forEach(function (p) {
+            p.forEach(function (v) {
+              verts.push(v);
+            });
+            edges = edges.concat(edgesOf(p));
+          });
+          return { verts: verts, edges: edges };
+        }
+        // Nearest VALID snapped pose within tolU (u). Vertex-to-vertex first; edge snaps only if none.
+        function findSnap(id, raw, tolU) {
+          var w = xf(id, raw),
+            T = snapTargets(id);
+          var vc = [];
+          w.forEach(function (v) {
+            T.verts.forEach(function (t) {
+              var d = dist(v, t);
+              if (d <= tolU)
+                vc.push({ dx: t[0] - v[0], dy: t[1] - v[1], d: d, kind: 'vertex', anchor: t });
+            });
+          });
+          var r = firstValid(id, raw, vc);
+          if (r || !K.EDGE_SNAP) return r;
+          var ec = [];
+          w.forEach(function (v) {
+            T.edges.forEach(function (e) {
+              var q = closestOnSeg(v, e[0], e[1]),
+                d = dist(v, q);
+              if (d <= tolU)
+                ec.push({ dx: q[0] - v[0], dy: q[1] - v[1], d: d, kind: 'edge', anchor: q });
+            });
+          });
+          edgesOf(w).forEach(function (e) {
+            T.verts.forEach(function (t) {
+              var q = closestOnSeg(t, e[0], e[1]),
+                d = dist(t, q);
+              if (d <= tolU)
+                ec.push({ dx: t[0] - q[0], dy: t[1] - q[1], d: d, kind: 'edge', anchor: t });
+            });
+          });
+          return firstValid(id, raw, ec);
+        }
+        function firstValid(id, raw, cands) {
+          cands.sort(function (a, b) {
+            return a.d - b.d;
+          });
+          var seen = {};
+          for (var i = 0; i < cands.length; i++) {
+            var c = cands[i],
+              key = Math.round(c.dx * 1e5) + ',' + Math.round(c.dy * 1e5);
+            if (seen[key]) continue;
+            seen[key] = 1;
+            var pose = { x: raw.x + c.dx, y: raw.y + c.dy, rot: raw.rot, flip: raw.flip };
+            if (validPose(id, pose))
+              return { pose: pose, kind: c.kind, d: c.d, anchor: [c.anchor[0], c.anchor[1]] };
+          }
+          return null;
+        }
+
+        // ===================================================================
+        // Operations (each state change = one undo step)
+        // ===================================================================
+        // pivot = the point the piece was snapped at (world u), used as the centre of rotation on the board.
+        function setPlaced(id, pose, pivot) {
+          var p = st.P[id];
+          p.placed = true;
+          p.x = pose.x;
+          p.y = pose.y;
+          p.rot = pose.rot;
+          p.flip = canFlip(id) ? (pose.flip ? 1 : 0) : 0;
+          p.pivot = pivot ? [pivot[0], pivot[1]] : null;
+        }
+        function toTray(id) {
+          st.P[id].placed = false;
+          st.P[id].pivot = null;
+        }
+
+        // Centre of rotation / flip for a piece on the board. Sticky: the stored pivot while it is still
+        // one of the piece's vertices (so repeated taps turn about the same point and 8 of them are the
+        // identity); else the first vertex of the piece that coincides with a snap-target vertex
+        // (silhouette or placed piece); else the stored edge-snap anchor; else the first vertex.
+        function pivotOf(id) {
+          var p = st.P[id],
+            w = xf(id, p),
+            i,
+            j;
+          if (p.pivot)
+            for (i = 0; i < w.length; i++) if (dist(w[i], p.pivot) <= 1e-6) return p.pivot.slice();
+          var T = snapTargets(id).verts;
+          for (i = 0; i < w.length; i++)
+            for (j = 0; j < T.length; j++) if (dist(w[i], T[j]) <= 1e-6) return [T[j][0], T[j][1]];
+          if (p.pivot) return p.pivot.slice();
+          return [w[0][0], w[0][1]];
+        }
+        // The pose turned (rot + 1) or mirrored (flip) about pivot: the pivot point of the piece stays put.
+        function poseAbout(id, p, piv, rot, flip) {
+          var v = toLocal(id, p, piv);
+          var next = { x: 0, y: 0, rot: rot, flip: flip };
+          var w0 = toWorld(id, next, v);
+          next.x = piv[0] - w0[0];
+          next.y = piv[1] - w0[1];
+          return { pose: next, shiftPx: dist(toWorld(id, next, v), piv) * L.ppu };
+        }
+        function fmtPt(q) {
+          return '(' + q[0].toFixed(3) + ',' + q[1].toFixed(3) + ')';
+        }
+        function rotatePiece(id, via) {
+          var p = st.P[id];
+          if (!p || p.fixed) return false;
+          startClock();
+          st.selected = id;
+          var next = { x: p.x, y: p.y, rot: (p.rot + 1) % 8, flip: p.flip };
+          if (!p.placed) {
+            pushUndo('rotate');
+            p.rot = next.rot;
+            log(via + ' rotate ' + id + ' (tray) -> ' + p.rot * 45 + 'deg');
+            afterChange();
+            return true;
+          }
+          var piv = pivotOf(id),
+            r = poseAbout(id, p, piv, next.rot, p.flip);
+          if (!validPose(id, r.pose)) {
+            st.counters.blockedRotations++;
+            log(via + ' rotate ' + id + ' (board) about ' + fmtPt(piv) + ' BLOCKED');
+            render();
+            return false;
+          }
+          pushUndo('rotate');
+          setPlaced(id, r.pose, piv);
+          log(
+            via +
+              ' rotate ' +
+              id +
+              ' (board) about ' +
+              fmtPt(piv) +
+              ' -> ' +
+              fmtPose(r.pose) +
+              ' shift=' +
+              r.shiftPx.toFixed(1) +
+              'px',
+          );
+          afterChange();
+          return true;
+        }
+        function flipPiece(id, via) {
+          var p = st.P[id];
+          if (!p || p.fixed || !canFlip(id)) return false;
+          startClock();
+          st.selected = id;
+          var next = { x: p.x, y: p.y, rot: p.rot, flip: p.flip ? 0 : 1 };
+          if (!p.placed) {
+            pushUndo('flip');
+            p.flip = next.flip;
+            st.counters.flips++;
+            log(via + ' flip ' + id + ' (tray) -> flip=' + p.flip);
+            afterChange();
+            return true;
+          }
+          var piv = pivotOf(id),
+            r = poseAbout(id, p, piv, p.rot, next.flip);
+          if (!validPose(id, r.pose)) {
+            st.counters.blockedFlips++;
+            log(via + ' flip ' + id + ' (board) about ' + fmtPt(piv) + ' BLOCKED');
+            render();
+            return false;
+          }
+          pushUndo('flip');
+          setPlaced(id, r.pose, piv);
+          st.counters.flips++;
+          log(
+            via +
+              ' flip ' +
+              id +
+              ' (board) about ' +
+              fmtPt(piv) +
+              ' -> ' +
+              fmtPose(r.pose) +
+              ' shift=' +
+              r.shiftPx.toFixed(1) +
+              'px',
+          );
+          afterChange();
+          return true;
+        }
+        function returnPiece(id, via) {
+          var p = st.P[id];
+          if (!p || p.fixed || !p.placed) return false;
+          pushUndo('return');
+          toTray(id);
+          log(via + ' return ' + id + ' -> tray');
+          afterChange();
+          return true;
+        }
+        function doUndo(via) {
+          if (!st.undo.length) {
+            log(via + ' undo (empty)');
+            return false;
+          }
+          var u = st.undo.pop();
+          st.P = u.P;
+          st.counters.undos++;
+          if (u.op === 'rotate' || u.op === 'flip') st.counters.undoAfterRotate++;
+          if (u.op === 'place' || u.op === 'replace') st.counters.undoAfterPlace++;
+          log(via + ' undo (' + u.op + ')');
+          afterChange('undo');
+          return true;
+        }
+        function isComplete() {
+          return isCompleteWith(SIL[st.sil], st.P);
+        }
+        function afterChange(why) {
+          var complete = isComplete();
+          if (st.done && !complete) {
+            // Completed earlier, incomplete now (Undo, or a piece dragged off): drop the banner; the
+            // clock keeps running and a later completion logs another DONE line (the first stays).
+            st.done = false;
+            document.getElementById('banner').hidden = true;
+            log(
+              why === 'undo'
+                ? 'UNDO after DONE (banner hidden, clock keeps running)'
+                : 'INCOMPLETE after DONE (banner hidden)',
+            );
+          }
+          if (!st.done && complete) {
+            st.done = true;
+            log(summaryLine('DONE'));
+            var b = document.getElementById('banner');
+            var c = st.counters;
+            b.innerHTML =
+              '<b>完成</b> ' +
+              st.sil +
+              (st.medium ? ' Medium' : '') +
+              ' · ' +
+              elapsed().toFixed(1) +
+              ' 秒<br>' +
+              'ドラッグ ' +
+              c.drags +
+              ' · タップ ' +
+              c.taps +
+              ' · 戻り ' +
+              c.returnedToTray +
+              ' · Undo ' +
+              c.undos +
+              ' · 誤操作 ' +
+              (st.tallies.misRotation + st.tallies.misReplace + st.tallies.wrongSnap);
+            b.hidden = false;
+          }
+          render();
+        }
+
+        function startAttempt(silId, medium, why) {
+          if (st.counters && !st.done && st.t0 !== null) log(summaryLine('ABANDON'));
+          st.sil = silId;
+          st.medium = !!medium;
+          st.P = {};
+          IDS.forEach(function (id) {
+            st.P[id] = { placed: false, x: 0, y: 0, rot: 0, flip: 0, fixed: false, pivot: null };
+          });
+          if (st.medium) {
+            MEDIUM_FIXED.forEach(function (id) {
+              var s = SIL[silId].solution[id];
+              st.P[id] = {
+                placed: true,
+                x: s.x,
+                y: s.y,
+                rot: s.rot,
+                flip: s.flip,
+                fixed: true,
+                pivot: null,
+              };
+            });
+          }
+          st.selected = null;
+          st.undo = [];
+          st.counters = newCounters();
+          st.t0 = null;
+          st.done = false;
+          st.tallies = { misRotation: 0, misReplace: 0, wrongSnap: 0 };
+          press = null;
+          carry = null;
+          clickEat = null;
+          tapOk = null;
+          document.getElementById('banner').hidden = true;
+          layout();
+          log(
+            (why || 'START') +
+              ' ' +
+              silId +
+              ' ' +
+              (st.medium ? 'medium' : 'easy') +
+              ' rule=' +
+              RULE +
+              ' ppu=' +
+              L.ppu.toFixed(1) +
+              ' smallLeg=' +
+              Math.round(Math.SQRT2 * L.ppu) +
+              'px board=' +
+              L.W +
+              'px',
+          );
+          buildBoardStatic();
+          render();
+        }
+
+        // ===================================================================
+        // DOM: board, tray, overlay
+        // ===================================================================
+        var SVGNS = 'http://www.w3.org/2000/svg';
+        var boardEl = document.getElementById('board');
+        var trayEl = document.getElementById('tray');
+        var overlayEl = document.getElementById('overlay');
+        var overlayPoly = overlayEl.querySelector('polygon');
+        var silLayer = document.createElementNS(SVGNS, 'g');
+        var pieceLayer = document.createElementNS(SVGNS, 'g');
+        boardEl.appendChild(silLayer);
+        boardEl.appendChild(pieceLayer);
+        var boardG = {},
+          trayB = {};
+        var infoEl = document.getElementById('info');
+        var infoL1 = document.createElement('div'),
+          infoL2 = document.createElement('div');
+        infoEl.appendChild(infoL1);
+        infoEl.appendChild(infoL2);
+
+        function layout() {
+          var W = Math.min(window.innerWidth - 2 * K.GUTTER_PX, K.BOARD_MAX_PX);
+          if (K.RESERVE_ADS) W = Math.min(W, window.innerHeight - K.ADS_PX - K.FIXED_ROWS_PX);
+          W = Math.max(160, Math.floor(W));
+          var sil = SIL[st.sil],
+            bb = sil.bbox,
+            bw = bb[2] - bb[0],
+            bh = bb[3] - bb[1];
+          var inner = W - 2 * K.BOARD_MARGIN_PX;
+          var ppu = Math.min(inner / bw, inner / bh) * K.BOARD_SCALE;
+          L.W = W;
+          L.ppu = ppu;
+          L.ox = (W - bw * ppu) / 2 - bb[0] * ppu;
+          L.oy = (W - bh * ppu) / 2 - bb[1] * ppu;
+          document.getElementById('app').style.width = W + 2 * K.GUTTER_PX + 'px';
+          document.getElementById('logWrap').style.width = W + 2 * K.GUTTER_PX + 'px';
+          boardEl.setAttribute('width', W);
+          boardEl.setAttribute('height', W);
+          boardEl.setAttribute('viewBox', '0 0 ' + W + ' ' + W);
+          document.getElementById('ads').hidden = !K.RESERVE_ADS;
+        }
+        function toBoard(p) {
+          return [L.ox + p[0] * L.ppu, L.oy + p[1] * L.ppu];
+        }
+        function ptsAttr(poly, fn) {
+          return poly
+            .map(function (p) {
+              var q = fn(p);
+              return q[0].toFixed(2) + ',' + q[1].toFixed(2);
+            })
+            .join(' ');
+        }
+
+        function buildBoardStatic() {
+          while (silLayer.firstChild) silLayer.removeChild(silLayer.firstChild);
+          var sil = SIL[st.sil];
+          var sp = document.createElementNS(SVGNS, 'polygon');
+          sp.setAttribute('class', 'sil');
+          sp.setAttribute('points', ptsAttr(sil.poly, toBoard));
+          silLayer.appendChild(sp);
+          if (!st.medium) {
+            IDS.forEach(function (id) {
+              var g = document.createElementNS(SVGNS, 'polygon');
+              g.setAttribute('class', 'guide');
+              g.setAttribute('points', ptsAttr(sil.solPolys[id], toBoard));
+              silLayer.appendChild(g);
+            });
+          }
+          boardEl.setAttribute(
+            'aria-label',
+            '影絵 ' + st.sil + (st.medium ? '(Medium)' : '(Easy)'),
+          );
+        }
+
+        function buildPieces() {
+          IDS.forEach(function (id) {
+            // Board piece: one <g> per piece, persistent (never re-created, so pointer capture survives).
+            var g = document.createElementNS(SVGNS, 'g');
+            g.setAttribute('class', 'bp');
+            g.setAttribute('data-piece', id);
+            g.setAttribute('tabindex', '0');
+            g.setAttribute('role', 'button');
+            var poly = document.createElementNS(SVGNS, 'polygon');
+            poly.setAttribute('class', 'pc s' + SHADE[id]);
+            g.appendChild(poly);
+            pieceLayer.appendChild(g);
+            boardG[id] = g;
+            wirePointer(g, id, 'board');
+            // Tray piece: a real <button>.
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'tp';
+            b.setAttribute('data-piece', id);
+            var svg = document.createElementNS(SVGNS, 'svg');
+            svg.setAttribute('viewBox', '-40 -32 80 64');
+            svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+            var tp = document.createElementNS(SVGNS, 'polygon');
+            tp.setAttribute('class', 'pc s' + SHADE[id]);
+            svg.appendChild(tp);
+            b.appendChild(svg);
+            trayEl.appendChild(b);
+            trayB[id] = b;
+            wirePointer(b, id, 'tray');
+          });
+        }
+
+        function label(id) {
+          var p = st.P[id];
+          return (
+            KIND[id] +
+            '・向き ' +
+            p.rot +
+            '×45°' +
+            (canFlip(id) ? (p.flip ? '・裏' : '・表') : '') +
+            (p.placed ? '・盤の上' : '・トレイ') +
+            (p.fixed ? '・固定' : '')
+          );
+        }
+        function render() {
+          IDS.forEach(function (id) {
+            var p = st.P[id],
+              g = boardG[id],
+              b = trayB[id];
+            var lifted = carry && carry.id === id;
+            if (p.placed) {
+              g.style.display = '';
+              g.firstChild.setAttribute('points', ptsAttr(xf(id, p), toBoard));
+            } else if (!(lifted && carry.source === 'board')) {
+              g.style.display = 'none';
+            }
+            g.setAttribute(
+              'class',
+              'bp' +
+                (p.fixed ? ' fixed' : '') +
+                (st.selected === id ? ' sel' : '') +
+                (lifted && carry.source === 'board' ? ' lifted' : ''),
+            );
+            g.setAttribute('aria-label', label(id));
+            if (p.fixed) g.setAttribute('aria-disabled', 'true');
+            else g.removeAttribute('aria-disabled');
+            b.style.visibility = p.placed && !(lifted && carry.source === 'tray') ? 'hidden' : '';
+            b.className =
+              'tp' +
+              (st.selected === id ? ' sel' : '') +
+              (lifted && carry.source === 'tray' ? ' lifted' : '');
+            b.setAttribute('aria-label', label(id));
+            // Tray drawing: same orientation, reduced scale, centred on its bounding box.
+            var tw = xf(id, { x: 0, y: 0, rot: p.rot, flip: p.flip });
+            var tx = tw.map(function (q) {
+                return q[0];
+              }),
+              ty = tw.map(function (q) {
+                return q[1];
+              });
+            var cx = (Math.min.apply(null, tx) + Math.max.apply(null, tx)) / 2;
+            var cy = (Math.min.apply(null, ty) + Math.max.apply(null, ty)) / 2;
+            b.firstChild.firstChild.setAttribute(
+              'points',
+              ptsAttr(tw, function (q) {
+                return [(q[0] - cx) * K.TRAY_PPU, (q[1] - cy) * K.TRAY_PPU];
+              }),
+            );
+          });
+          var sel = st.selected ? st.P[st.selected] : null;
+          document.getElementById('btnFlip').disabled = !(
+            sel &&
+            canFlip(st.selected) &&
+            !sel.fixed
+          );
+          document.getElementById('btnRotate').disabled = !(sel && !sel.fixed);
+          document.getElementById('btnUndo').disabled = !st.undo.length;
+          document.getElementById('tallyRot').textContent =
+            TXT.tally.misRotation[0] + ' ' + st.tallies.misRotation;
+          document.getElementById('tallyRep').textContent =
+            TXT.tally.misReplace[0] + ' ' + st.tallies.misReplace;
+          document.getElementById('tallySnap').textContent =
+            TXT.tally.wrongSnap[0] + ' ' + st.tallies.wrongSnap;
+          Array.prototype.forEach.call(document.querySelectorAll('[data-sil]'), function (el) {
+            el.className = el.getAttribute('data-sil') === st.sil ? 'on' : '';
+          });
+          document.getElementById('btnMedium').className = st.medium ? 'on' : '';
+          infoL1.textContent =
+            st.sil +
+            ' ' +
+            SIL[st.sil].name +
+            (st.medium ? ' · Medium' : ' · Easy') +
+            ' · ' +
+            L.ppu.toFixed(1) +
+            ' px/u · 小三角の脚 ' +
+            Math.round(Math.SQRT2 * L.ppu) +
+            'px';
+          infoL2.textContent = 'rule=' + RULE + (K.GUIDE_SNAP ? ' (境界線にも吸着: 比較用)' : '');
+          drawCarry();
+        }
+        function drawCarry() {
+          if (!carry) {
+            overlayPoly.style.display = 'none';
+            overlayPoly.setAttribute('class', 'carry');
+            return;
+          }
+          var r = boardEl.getBoundingClientRect();
+          overlayEl.setAttribute('width', window.innerWidth);
+          overlayEl.setAttribute('height', window.innerHeight);
+          var pose = carry.snap ? carry.snap.pose : carry.raw;
+          overlayPoly.setAttribute(
+            'points',
+            ptsAttr(xf(carry.id, pose), function (p) {
+              var q = toBoard(p);
+              return [r.left + q[0], r.top + q[1]];
+            }),
+          );
+          overlayPoly.setAttribute(
+            'class',
+            'carry ' + (carry.snap ? 'ok' : 'ng') + ' s' + SHADE[carry.id],
+          );
+          overlayPoly.style.display = '';
+        }
+
+        // ===================================================================
+        // Pointer input (one finger). Contract: every element that listens to
+        // pointerup also listens to pointercancel; the pressed pointerId is
+        // remembered; a click left behind by a drag is eaten.
+        // ===================================================================
+        function screenToUnit(cx, cy) {
+          var r = boardEl.getBoundingClientRect();
+          return [(cx - r.left - L.ox) / L.ppu, (cy - r.top - L.oy) / L.ppu];
+        }
+        function rawFromFinger(pr, cx, cy) {
+          var p = st.P[pr.id];
+          var u =
+            pr.source === 'tray'
+              ? screenToUnit(cx, cy - K.TRAY_LIFT_PX)
+              : screenToUnit(cx + pr.gdx, cy + pr.gdy);
+          return { x: u[0], y: u[1], rot: p.rot, flip: p.flip };
+        }
+        var rafPending = false,
+          lastMove = null;
+        function scheduleCarry(cx, cy) {
+          lastMove = [cx, cy];
+          if (rafPending) return;
+          rafPending = true;
+          requestAnimationFrame(function () {
+            rafPending = false;
+            if (!carry || !press || !lastMove) return;
+            carry.raw = rawFromFinger(press, lastMove[0], lastMove[1]);
+            carry.snap = findSnap(carry.id, carry.raw, K.SNAP_PX / L.ppu);
+            carry.drawnAt = lastMove;
+            drawCarry();
+          });
+        }
+
+        function wirePointer(el, id, source) {
+          el.addEventListener('pointerdown', function (e) {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            if (press || carry) {
+              if (press && e.pointerId !== press.pointerId) {
+                st.counters.ignoredPointers++;
+                clickEat = { el: el };
+                log('second pointer ' + e.pointerId + ' on ' + id + ' ignored');
+              }
+              return;
+            }
+            clickEat = null;
+            tapOk = null;
+            if (st.P[id].fixed) {
+              st.counters.fixedPresses++;
+              log('press on fixed ' + id + ' (no-op)');
+              return;
+            }
+            startClock();
+            press = {
+              id: id,
+              pointerId: e.pointerId,
+              el: el,
+              source: st.P[id].placed ? 'board' : 'tray',
+              sx: e.clientX,
+              sy: e.clientY,
+              dragging: false,
+              gdx: 0,
+              gdy: 0,
+              t: performance.now(),
+            };
+            if (press.source === 'board') {
+              var r = boardEl.getBoundingClientRect(),
+                p = st.P[id];
+              press.gdx = r.left + L.ox + p.x * L.ppu - e.clientX;
+              press.gdy = r.top + L.oy + p.y * L.ppu - e.clientY;
+            }
+            try {
+              el.setPointerCapture(e.pointerId);
+            } catch (err) {
+              /* ignore */
+            }
+            st.selected = id;
+            render();
+          });
+          el.addEventListener('pointermove', function (e) {
+            if (!press || press.el !== el || e.pointerId !== press.pointerId) return;
+            e.preventDefault();
+            if (!press.dragging) {
+              var dx = e.clientX - press.sx,
+                dy = e.clientY - press.sy;
+              if (Math.sqrt(dx * dx + dy * dy) < K.TAP_SLOP_PX) return;
+              press.dragging = true;
+              st.counters.drags++;
+              var p = st.P[id];
+              carry = {
+                id: id,
+                source: press.source,
+                raw: rawFromFinger(press, e.clientX, e.clientY),
+                snap: null,
+                kbd: false,
+                drawnAt: [e.clientX, e.clientY],
+              };
+              carry.snap = findSnap(id, carry.raw, K.SNAP_PX / L.ppu);
+              log('drag start ' + id + ' from ' + press.source + ' (rot=' + p.rot * 45 + ')');
+              render();
+            }
+            scheduleCarry(e.clientX, e.clientY);
+          });
+          function end(e, cancelled) {
+            if (!press || press.el !== el || e.pointerId !== press.pointerId) return;
+            try {
+              if (el.hasPointerCapture && el.hasPointerCapture(e.pointerId))
+                el.releasePointerCapture(e.pointerId);
+            } catch (err) {
+              /* ignore */
+            }
+            var pr = press;
+            press = null;
+            lastMove = null;
+            if (cancelled) {
+              st.counters.cancels++;
+              clickEat = { el: el };
+              if (pr.dragging) {
+                carry = null;
+                if (pr.source === 'board') {
+                  pushUndo('return');
+                  toTray(id);
+                }
+                log('pointercancel during drag: ' + id + ' -> tray');
+                afterChange();
+              } else {
+                log('pointercancel (press) ' + id);
+                render();
+              }
+              return;
+            }
+            if (!pr.dragging) {
+              // The click that follows rotates. If the browser never sends that click (seen in
+              // headless Chromium for a tap within ~0.3 s of a drag), log it as a lost tap so the
+              // device run shows whether it happens on real phones.
+              var mark = (tapOk = { el: el, t: performance.now() });
+              setTimeout(function () {
+                if (tapOk === mark) {
+                  tapOk = null;
+                  st.counters.lostTaps++;
+                  log('tap on ' + id + ' got no click (lost tap)');
+                }
+              }, 600);
+              return;
+            }
+            clickEat = { el: el };
+            // Release: decide from the pose drawn last (carry.snap: filled = place there, null = outline
+            // = back to the tray), NOT from the pointerup point. Drawing is throttled to rAF, so a move +
+            // lift within one frame would otherwise do something the screen never showed.
+            var s = carry ? carry.snap : null;
+            var at = carry && carry.drawnAt;
+            if (at) {
+              var off = Math.sqrt(
+                (e.clientX - at[0]) * (e.clientX - at[0]) +
+                  (e.clientY - at[1]) * (e.clientY - at[1]),
+              );
+              if (off > 0.5)
+                log(
+                  'release ' +
+                    off.toFixed(1) +
+                    'px from the last drawn point: decided from the drawn pose',
+                );
+            }
+            carry = null;
+            if (s) {
+              var op = pr.source === 'board' ? 'replace' : 'place';
+              pushUndo(op);
+              setPlaced(id, s.pose, s.anchor);
+              if (op === 'place') st.counters.places++;
+              else st.counters.replaces++;
+              log(
+                op +
+                  ' ' +
+                  id +
+                  ' ' +
+                  fmtPose(s.pose) +
+                  ' snap=' +
+                  s.kind +
+                  ' d=' +
+                  (s.d * L.ppu).toFixed(1) +
+                  'px',
+              );
+            } else {
+              st.counters.returnedToTray++;
+              if (pr.source === 'board') {
+                pushUndo('return');
+                toTray(id);
+              }
+              log('invalid release ' + id + ' -> tray (from ' + pr.source + ')');
+            }
+            afterChange();
+          }
+          el.addEventListener('pointerup', function (e) {
+            end(e, false);
+          });
+          el.addEventListener('pointercancel', function (e) {
+            end(e, true);
+          });
+          el.addEventListener('lostpointercapture', function (e) {
+            // Capture lost while still pressed (should not happen: elements are never removed) -> treat as cancel.
+            if (press && press.el === el && e.pointerId === press.pointerId) end(e, true);
+          });
+          el.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (clickEat && clickEat.el === el) {
+              clickEat = null;
+              if (tapOk && tapOk.el === el) tapOk = null; // this click was delivered (and eaten): not a lost tap
+              if (e.detail > 0) {
+                st.counters.consumedClicks++;
+                log('click after drag/cancel eaten (' + id + ')');
+              }
+              return;
+            }
+            if (e.detail === 0) return; // keyboard activation is handled on keydown
+            if (press || carry) return; // a click while another finger is down does nothing
+            if (!tapOk || tapOk.el !== el || performance.now() - tapOk.t > 1000) return;
+            tapOk = null;
+            st.counters.taps++;
+            rotatePiece(id, 'tap');
+          });
+          el.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+          });
+        }
+
+        // ===================================================================
+        // Keyboard
+        // ===================================================================
+        function focusedPiece() {
+          var a = document.activeElement;
+          return a && a.getAttribute ? a.getAttribute('data-piece') : null;
+        }
+        function kbdLift(id) {
+          var p = st.P[id];
+          if (p.fixed) return;
+          startClock();
+          st.selected = id;
+          var sil = SIL[st.sil],
+            bb = sil.bbox;
+          var raw = p.placed
+            ? { x: p.x, y: p.y, rot: p.rot, flip: p.flip }
+            : { x: (bb[0] + bb[2]) / 2, y: (bb[1] + bb[3]) / 2, rot: p.rot, flip: p.flip };
+          carry = { id: id, source: p.placed ? 'board' : 'tray', raw: raw, snap: null, kbd: true };
+          kbdUpdate();
+          log('kbd lift ' + id);
+          render();
+        }
+        function kbdUpdate() {
+          carry.snap = findSnap(carry.id, carry.raw, K.KBD_SNAP_STEPS * STEP);
+        }
+        function kbdPlace() {
+          var id = carry.id,
+            s = carry.snap;
+          if (!s) {
+            log('kbd place ' + id + ': no valid snap (stays lifted)');
+            return;
+          }
+          var op = carry.source === 'board' ? 'replace' : 'place';
+          carry = null;
+          pushUndo(op);
+          setPlaced(id, s.pose, s.anchor);
+          st.counters.kbdPlaces++;
+          log('kbd ' + op + ' ' + id + ' ' + fmtPose(s.pose) + ' snap=' + s.kind);
+          afterChange();
+          boardG[id].focus();
+        }
+        document.addEventListener('keydown', function (e) {
+          var k = e.key;
+          if ((e.ctrlKey || e.metaKey) && (k === 'z' || k === 'Z')) {
+            e.preventDefault();
+            if (!press && !carry) doUndo('key');
+            return;
+          }
+          if (press) return;
+          if (carry && carry.kbd) {
+            var c = carry;
+            if (k === 'ArrowLeft' || k === 'ArrowRight' || k === 'ArrowUp' || k === 'ArrowDown') {
+              e.preventDefault();
+              if (k === 'ArrowLeft') c.raw.x -= STEP;
+              if (k === 'ArrowRight') c.raw.x += STEP;
+              if (k === 'ArrowUp') c.raw.y -= STEP;
+              if (k === 'ArrowDown') c.raw.y += STEP;
+              kbdUpdate();
+              drawCarry();
+            } else if (k === 'Enter' || k === ' ' || k === 'Spacebar') {
+              e.preventDefault();
+              kbdPlace();
+            } else if (k === 'r' || k === 'R') {
+              e.preventDefault();
+              c.raw.rot = (c.raw.rot + 1) % 8;
+              kbdUpdate();
+              drawCarry();
+            } else if ((k === 'f' || k === 'F') && canFlip(c.id)) {
+              e.preventDefault();
+              c.raw.flip = c.raw.flip ? 0 : 1;
+              kbdUpdate();
+              drawCarry();
+            } else if (k === 'Escape') {
+              e.preventDefault();
+              var id = c.id;
+              carry = null;
+              if (st.P[id].placed) {
+                returnPiece(id, 'key');
+              } else {
+                log('kbd cancel ' + id + ' -> tray');
+                render();
+              }
+              trayB[id].focus();
+            } else if (k === 'Tab') {
+              e.preventDefault();
+            }
+            return;
+          }
+          var fid = focusedPiece();
+          if (!fid || !st.P[fid]) return;
+          if (k === 'Enter' || k === ' ' || k === 'Spacebar') {
+            e.preventDefault();
+            kbdLift(fid);
+          } else if (k === 'r' || k === 'R') {
+            e.preventDefault();
+            rotatePiece(fid, 'key');
+          } else if (k === 'f' || k === 'F') {
+            e.preventDefault();
+            flipPiece(fid, 'key');
+          } else if (k === 'Escape') {
+            e.preventDefault();
+            if (returnPiece(fid, 'key')) trayB[fid].focus();
+          }
+        });
+        // Swallow keyup of Space/Enter on pieces so a <button> never self-activates.
+        document.addEventListener('keyup', function (e) {
+          if ((e.key === ' ' || e.key === 'Enter') && focusedPiece()) e.preventDefault();
+        });
+
+        // ===================================================================
+        // Buttons
+        // ===================================================================
+        function busy(what) {
+          if (press || carry) {
+            log(what + ' ignored (a piece is held)');
+            return true;
+          }
+          return false;
+        }
+        document.getElementById('btnRotate').addEventListener('click', function () {
+          if (busy('rotate button') || !st.selected) return;
+          if (rotatePiece(st.selected, 'button')) st.counters.rotateButton++;
+        });
+        document.getElementById('btnFlip').addEventListener('click', function () {
+          if (busy('flip button') || !st.selected) return;
+          flipPiece(st.selected, 'button');
+        });
+        document.getElementById('btnUndo').addEventListener('click', function () {
+          if (busy('undo button')) return;
+          doUndo('button');
+        });
+        Array.prototype.forEach.call(document.querySelectorAll('[data-tally]'), function (el) {
+          el.addEventListener('click', function () {
+            var k = el.getAttribute('data-tally');
+            st.tallies[k]++;
+            log('TALLY ' + k + ' = ' + st.tallies[k] + ' (' + TXT.tally[k][1] + ')');
+            render();
+          });
+        });
+        Array.prototype.forEach.call(document.querySelectorAll('[data-sil]'), function (el) {
+          el.addEventListener('click', function () {
+            if (busy('silhouette')) return;
+            var id = el.getAttribute('data-sil');
+            startAttempt(id, st.medium, id === st.sil ? 'RESTART' : 'START');
+          });
+        });
+        document.getElementById('btnMedium').addEventListener('click', function () {
+          if (busy('medium')) return;
+          startAttempt(st.sil, !st.medium, 'START');
+        });
+        document.getElementById('btnCopy').addEventListener('click', function () {
+          var btn = this,
+            text = logLines.join('\n');
+          function fallback() {
+            logEl.focus();
+            logEl.select();
+            var ok = false;
+            try {
+              ok = document.execCommand('copy');
+            } catch (err) {
+              ok = false;
+            }
+            // Fallback (plain http on the LAN is not a secure context): the log is left selected.
+            btn.textContent = ok ? TXT.copied : TXT.copyManual;
+          }
+          if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(function () {
+              btn.textContent = TXT.copied;
+            }, fallback);
+          } else {
+            fallback();
+          }
+          setTimeout(function () {
+            btn.textContent = TXT.copy;
+          }, 2500);
+        });
+        window.addEventListener('resize', function () {
+          if (press || carry) return;
+          layout();
+          buildBoardStatic();
+          render();
+        });
+
+        // ===================================================================
+        // Boot
+        // ===================================================================
+        buildPieces();
+        log(
+          'PHASE0 tangram-board rule=' +
+            RULE +
+            ' | ' +
+            deviceLine() +
+            ' | knobs ' +
+            JSON.stringify(K),
+        );
+        selfCheck().forEach(function (r) {
+          log('selfcheck ' + r.id + ' ' + (r.ok ? 'ok' : 'FAIL ' + JSON.stringify(r)));
+        });
+        startAttempt('E1', false, 'START');
+
+        // ===================================================================
+        // TEST-ONLY debug API (check-tangram.mjs). Not used by the tester.
+        // ===================================================================
+        function poseOut(id) {
+          var p = st.P[id];
+          return { id: id, x: p.x, y: p.y, rot: p.rot, flip: p.flip, fixed: p.fixed };
+        }
+        window.__p0 = {
+          state: function () {
+            var trayPose = {};
+            IDS.forEach(function (id) {
+              if (!st.P[id].placed) trayPose[id] = { rot: st.P[id].rot, flip: st.P[id].flip };
+            });
+            var c = {};
+            Object.keys(st.counters).forEach(function (k) {
+              c[k] = st.counters[k];
+            });
+            Object.keys(st.tallies).forEach(function (k) {
+              c[k] = st.tallies[k];
+            });
+            return {
+              silhouette: st.sil,
+              medium: st.medium,
+              placed: IDS.filter(function (id) {
+                return st.P[id].placed;
+              }).map(poseOut),
+              tray: IDS.filter(function (id) {
+                return !st.P[id].placed;
+              }),
+              trayPose: trayPose,
+              selected: st.selected,
+              counters: c,
+              complete: isComplete(),
+              carrying: carry ? { id: carry.id, valid: !!carry.snap } : null,
+              undoDepth: st.undo.length,
+              done: st.done,
+              bannerVisible: !document.getElementById('banner').hidden,
+              rule: RULE,
+            };
+          },
+          pieces: function () {
+            var o = {};
+            IDS.forEach(function (id) {
+              o[id] = LOCAL[id].map(function (p) {
+                return p.slice();
+              });
+            });
+            return o;
+          },
+          solution: function (sid) {
+            var s = SIL[sid || st.sil];
+            return IDS.map(function (id) {
+              var p = s.solution[id];
+              return { id: id, x: p.x, y: p.y, rot: p.rot, flip: p.flip };
+            });
+          },
+          place: function (id, x, y, rot, flip) {
+            var p = st.P[id];
+            if (!p || p.fixed || press || carry) return false;
+            var pose = { x: x, y: y, rot: ((rot % 8) + 8) % 8, flip: canFlip(id) && flip ? 1 : 0 };
+            if (!validPose(id, pose)) {
+              log('api place ' + id + ' invalid');
+              return false;
+            }
+            var op = p.placed ? 'replace' : 'place';
+            startClock();
+            pushUndo(op);
+            setPlaced(id, pose);
+            log('api ' + op + ' ' + id + ' ' + fmtPose(pose));
+            afterChange();
+            return true;
+          },
+          rotate: function (id) {
+            return rotatePiece(id, 'api');
+          },
+          pivot: function (id) {
+            return st.P[id] && st.P[id].placed ? pivotOf(id) : null;
+          },
+          flip: function (id) {
+            return flipPiece(id, 'api');
+          },
+          returnToTray: function (id) {
+            return returnPiece(id, 'api');
+          },
+          undo: function () {
+            return doUndo('api');
+          },
+          isComplete: isComplete,
+          boardRect: function () {
+            var r = boardEl.getBoundingClientRect();
+            return {
+              left: r.left,
+              top: r.top,
+              width: r.width,
+              height: r.height,
+              ppu: L.ppu,
+              ox: r.left + L.ox,
+              oy: r.top + L.oy,
+              lift: K.TRAY_LIFT_PX,
+              snapPx: K.SNAP_PX,
+              step: STEP,
+              trayPpu: K.TRAY_PPU,
+            };
+          },
+          selfCheck: selfCheck,
+          log: function () {
+            return logLines.join('\n');
+          },
+        };
+      })();
+    </script>
+  </body>
+</html>
