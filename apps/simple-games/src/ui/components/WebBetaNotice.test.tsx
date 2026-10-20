@@ -7,11 +7,12 @@
  *
  * The registry this file sees carries one synthetic beta entry besides the
  * real ones (today the five of docs/plans/2026-10-17-unblock-snake-loop-
- * bridges-peg.md and the scaffolds of docs/plans/2026-10-19-chess-gem-swap-
- * pipe-link-bounce-up-echo-pads.md): the tests below speak about the
- * synthetic one, so they keep testing the mechanism on any day no registry
- * title is on the channel (as from 2026-10-02 until the 2026-10-17 five
- * arrived), and the real ones are checked on top.
+ * bridges-peg.md), and one synthetic in-development entry (the scaffolds of
+ * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md are
+ * the real ones): the tests below speak about the synthetic ones, so they
+ * keep testing the mechanism on any day no registry title is on a channel (as
+ * from 2026-10-02 until the 2026-10-17 five arrived), and the real ones are
+ * checked on top.
  */
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -40,7 +41,13 @@ vi.mock('../../app/registry', async (importOriginal) => {
     title: 'Synthetic Beta',
     channel: 'web-beta',
   } as unknown as (typeof actual.GAMES)[number];
-  return { ...actual, GAMES: [...actual.GAMES, synthetic] };
+  const syntheticInDevelopment = {
+    ...actual.GAMES.find((game) => game.id === 'sudoku')!,
+    id: 'synthetic-in-development',
+    title: 'Synthetic In Development',
+    channel: 'in-development',
+  } as unknown as (typeof actual.GAMES)[number];
+  return { ...actual, GAMES: [...actual.GAMES, synthetic, syntheticInDevelopment] };
 });
 
 import { GAMES, type GameId } from '../../app/registry';
@@ -51,7 +58,11 @@ import { WebBetaNotice } from './WebBetaNotice';
 
 const beta = GAMES.find((game) => game.id === ('synthetic-beta' as GameId))!;
 const realBeta = GAMES.filter((game) => game.channel === 'web-beta' && game !== beta);
-const released = GAMES.find((game) => game.channel !== 'web-beta')!;
+const released = GAMES.find((game) => !game.channel)!;
+const inDevelopment = GAMES.find((game) => game.id === ('synthetic-in-development' as GameId))!;
+const realInDevelopment = GAMES.filter(
+  (game) => game.channel === 'in-development' && game !== inDevelopment,
+);
 
 function renderNotice(gameId: GameId, language: Settings['language'] = 'en') {
   return render(
@@ -118,6 +129,17 @@ describe('WebBetaNotice', () => {
     const { container } = renderNotice(beta.id, 'en');
     expect(container).toBeEmptyDOMElement();
   });
+
+  it('renders nothing for a title in development, in the browser too — it is no beta yet', () => {
+    // A scaffold is offered on no build (app/gameChannel.ts); the mark it
+    // carries from scripts/new-game.mjs waits for the channel to turn 'web-beta'.
+    expect(inDevelopment.channel).toBe('in-development');
+    for (const game of [inDevelopment, ...realInDevelopment]) {
+      const { container } = renderNotice(game.id, 'en');
+      expect(container, game.id).toBeEmptyDOMElement();
+      cleanup();
+    }
+  });
 });
 
 describe('GameBetaBadge', () => {
@@ -137,5 +159,18 @@ describe('GameBetaBadge', () => {
     expect(screen.getByRole('button', { name: `${beta.title} BETA` })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: released.title }).textContent).toBe(released.title);
     expect(container.querySelectorAll('.beta-badge')).toHaveLength(1);
+  });
+
+  it('leaves a card in development exactly as it was, like a released one', () => {
+    const { container } = render(
+      <button type="button">
+        {inDevelopment.title}
+        <GameBetaBadge game={inDevelopment} />
+      </button>,
+    );
+    expect(screen.getByRole('button', { name: inDevelopment.title }).textContent).toBe(
+      inDevelopment.title,
+    );
+    expect(container.querySelectorAll('.beta-badge')).toHaveLength(0);
   });
 });

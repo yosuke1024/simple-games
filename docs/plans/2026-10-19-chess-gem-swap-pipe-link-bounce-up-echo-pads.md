@@ -342,6 +342,17 @@ CPU・Undo・合法手の点・難易度別の統計・途中保存はそのま�
       自分のブランチで同じ形のスキャフォールドをさらに 5 本足すので、そちらが main に入れば遊べない
       スキャフォールドは 10 本になる。[WEB_VERSION.md](../WEB_VERSION.md)「先行公開」の「47〜51 は Web 版には
       出していない」は、誰かが公開するまでそのまま正しい。
+    - **2026-10-20 追記 — Web の帰結の対処。**同日、オーナーが main を公開する Publish Simple Games (web)
+      (pixapps-landing run 39344906628、ref: main)を実行し、`game-bounce-up-*.js` で上の門に当たって止まった。
+      対処として上の (c) を採り、足りなかった分を landing 側で補った: registry の `channel` に第 3 の値
+      `'in-development'`(どのビルドにも出さない)を足して 5 本をそれにし(`app/gameChannel.ts` が Web 版の
+      扉 — ホーム・検索・お気に入り・最近・`?game=`・lazy root — も閉じる)、lazy のチャンクは出るので
+      landing の門には `IN_DEVELOPMENT_GAME_IDS`(チャンクはあるがカードも BETA も無い)として同じ 5 本を
+      足した。「遊べないものを BETA として出す」ことなく門を通る([WEB_VERSION.md](../WEB_VERSION.md)
+      「先行公開」の「main の状態(2026-10-20)」)。以後、4 本と Chess はそれぞれ遊べるようになる変更で
+      `'web-beta'` に変え、同期の PR で landing の一覧を `WEB_BETA_GAME_IDS` へ移す。次のバッチ(52〜56)の
+      スキャフォールドも `scripts/new-game.mjs --channel in-development` で生成する(main に入っても
+      Web 版の同期を止めない)。
 
 **未決事項(Phase 2 でルール文書に決める。推奨つき)**:
 

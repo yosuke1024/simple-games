@@ -83,7 +83,7 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
 >
 > その次の 5 本(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads、No. 47〜51。2026-10-19 に
 > 着手 — [plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md))は
-> registry に `channel: 'web-beta'` で登録したスキャフォールドの段階で、**Web 版ではまだ始まっていない**
+> registry に `channel: 'in-development'`(2026-10-20 から。どのビルドにも出ない — 遊べるようになる変更で `'web-beta'` にする)で登録したスキャフォールドの段階で、**Web 版ではまだ始まっていない**
 > (ゲーム本体が無く、配信もしていない)。2 週間の時計は Web で公開した日から数えるので、まだ動いていない。
 > この節の項目はすべて未着手。
 

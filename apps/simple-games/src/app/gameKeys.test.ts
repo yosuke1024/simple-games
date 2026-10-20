@@ -173,19 +173,21 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   bridges: ['bg.saveGame', 'bg.saveDaily', 'bg.stats', 'bg.flags', 'bg.prefs'],
   // No. 46, web-beta (docs/PEG_SOLITAIRE_RULES.md storage): not frozen until graduation
   'peg-solitaire': ['pg.saveGame', 'pg.stats', 'pg.flags', 'pg.prefs'],
-  // The next five web-beta titles, of
-  // docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md: beta
-  // keys on the same terms as the five above. They are still the scaffold's two
+  // The next five titles, of
+  // docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md, in
+  // development (registry `channel: 'in-development'`: offered on no build until
+  // each is playable, when it turns 'web-beta'): beta keys on the same terms as
+  // the five above. They are still the scaffold's two
   // keys; each grows to its rules document's storage section in Phase 2/3.
-  // No. 47, web-beta (docs/CHESS_RULES.md storage): not frozen until graduation
+  // No. 47, in-development (docs/CHESS_RULES.md storage): not frozen until graduation
   chess: ['ch.stats', 'ch.flags'],
-  // No. 48, web-beta (docs/GEM_SWAP_RULES.md storage): not frozen until graduation
+  // No. 48, in-development (docs/GEM_SWAP_RULES.md storage): not frozen until graduation
   'gem-swap': ['gs.stats', 'gs.flags'],
-  // No. 49, web-beta (docs/PIPE_LINK_RULES.md storage): not frozen until graduation
+  // No. 49, in-development (docs/PIPE_LINK_RULES.md storage): not frozen until graduation
   'pipe-link': ['pn.stats', 'pn.flags'],
-  // No. 50, web-beta (docs/BOUNCE_UP_RULES.md storage): not frozen until graduation
+  // No. 50, in-development (docs/BOUNCE_UP_RULES.md storage): not frozen until graduation
   'bounce-up': ['bo.stats', 'bo.flags'],
-  // No. 51, web-beta (docs/ECHO_PADS_RULES.md storage): not frozen until graduation
+  // No. 51, in-development (docs/ECHO_PADS_RULES.md storage): not frozen until graduation
   'echo-pads': ['ep.stats', 'ep.flags'],
 };
 

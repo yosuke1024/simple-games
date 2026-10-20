@@ -52,7 +52,10 @@ describe('pinning', () => {
   it('has no limit a player can reach: every game in the collection fits', async () => {
     await initFavoriteGames(createMemoryKV());
     for (const game of GAMES) toggleFavoriteGame(game.id);
-    expect(getFavoriteGames()).toHaveLength(GAMES.length);
+    // The shelf is what this build offers (app/gameChannel.ts): jsdom is the
+    // browser, so a title in development is in the record and off the shelf.
+    const offered = GAMES.filter((game) => game.channel !== 'in-development');
+    expect(getFavoriteGames()).toHaveLength(offered.length);
     expect(GAMES.length).toBeLessThanOrEqual(FAVORITE_GAMES_MAX);
   });
 

@@ -71,10 +71,13 @@ describe('the game a URL asks for', () => {
   });
 
   // Not a list to keep in step by hand: every title in the collection has to
-  // survive the round trip, including whichever one is added next.
-  it('round-trips every game in the registry', () => {
+  // survive the round trip, including whichever one is added next. A title in
+  // development is not in the collection yet — the browser reads its address
+  // as the collection (the tests further down).
+  it('round-trips every game in the registry that this build offers', () => {
     expect(GAMES.length).toBeGreaterThan(20);
     for (const game of GAMES) {
+      if (game.channel === 'in-development') continue;
       expect(gameIdFromHref(`https://pixapps.ai${hrefWithGame(PLAY, game.id)}`)).toBe(game.id);
     }
   });
@@ -98,12 +101,22 @@ describe('the game a URL asks for', () => {
  */
 describe('a web-beta title in the address', () => {
   const realBeta = GAMES.filter((game) => game.channel === 'web-beta');
+  // And the titles still in development (`channel: 'in-development'`): a
+  // scaffold with no game behind it is offered nowhere, so its address is the
+  // collection on both builds (app/gameChannel.ts).
+  const realInDevelopment = GAMES.filter((game) => game.channel === 'in-development');
 
   const beta = {
     ...GAMES.find((game) => game.id === 'sudoku')!,
     id: 'synthetic-beta' as GameDefinition['id'],
     title: 'Synthetic Beta',
     channel: 'web-beta' as const,
+  } satisfies GameDefinition;
+  const inDevelopment = {
+    ...GAMES.find((game) => game.id === 'sudoku')!,
+    id: 'synthetic-in-development' as GameDefinition['id'],
+    title: 'Synthetic In Development',
+    channel: 'in-development' as const,
   } satisfies GameDefinition;
 
   async function loadWithBeta(native: boolean) {
@@ -121,7 +134,7 @@ describe('a web-beta title in the address', () => {
     });
     vi.doMock('./registry', async (importOriginal) => {
       const actual = await importOriginal<typeof import('./registry')>();
-      return { ...actual, GAMES: [...actual.GAMES, beta] };
+      return { ...actual, GAMES: [...actual.GAMES, beta, inDevelopment] };
     });
     return import('./webRoute');
   }
@@ -144,6 +157,16 @@ describe('a web-beta title in the address', () => {
     expect(native.gameIdFromHref(`${PLAY}?game=sudoku`)).toBe('sudoku');
   });
 
+  it('is the collection on both builds for every real in-development title', async () => {
+    for (const game of realInDevelopment) {
+      expect(gameIdFromHref(`${PLAY}?game=${game.id}`), game.id).toBeNull();
+    }
+    const native = await loadWithBeta(true);
+    for (const game of realInDevelopment) {
+      expect(native.gameIdFromHref(`${PLAY}?game=${game.id}`), game.id).toBeNull();
+    }
+  });
+
   it('opens in the browser like any other', async () => {
     const web = await loadWithBeta(false);
     expect(web.gameIdFromHref(`${PLAY}?game=${beta.id}`)).toBe(beta.id);
@@ -152,6 +175,15 @@ describe('a web-beta title in the address', () => {
   it('is the collection on the app build, while released titles still resolve', async () => {
     const native = await loadWithBeta(true);
     expect(native.gameIdFromHref(`${PLAY}?game=${beta.id}`)).toBeNull();
+    expect(native.gameIdFromHref(`${PLAY}?game=sudoku`)).toBe('sudoku');
+  });
+
+  it('is the collection on both builds for a synthetic in-development title', async () => {
+    const web = await loadWithBeta(false);
+    expect(web.gameIdFromHref(`${PLAY}?game=${inDevelopment.id}`)).toBeNull();
+    expect(web.gameIdFromHref(`${PLAY}?game=${beta.id}`)).toBe(beta.id);
+    const native = await loadWithBeta(true);
+    expect(native.gameIdFromHref(`${PLAY}?game=${inDevelopment.id}`)).toBeNull();
     expect(native.gameIdFromHref(`${PLAY}?game=sudoku`)).toBe('sudoku');
   });
 

@@ -64,10 +64,11 @@ Design philosophy:
 - 2026-10-19 から、さらに **Web 先行公開(ベータ)向けの新作 5 本**(Chess / Gem Swap /
   Pipe Link / Bounce Up / Echo Pads、No. 47〜51)に着手した(計画は
   `docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md`、仕様の正は各
-  `docs/*_RULES.md`)。Phase 1 として `scripts/new-game.mjs --channel web-beta` で
-  スキャフォールドし、registry に `channel: 'web-beta'` で登録した段階で、**ゲーム本体は
-  まだ無い**(画面と文言はスキャフォールドの仮のもの)。**Web 版にも出していない** —
-  統合と検証を終えてから同期する。Chess は別フェーズ・別 PR で進め、残り 4 本の完了を
+  `docs/*_RULES.md`)。Phase 1 として `scripts/new-game.mjs` でスキャフォールドし、registry に
+  登録した段階で、**ゲーム本体はまだ無い**(画面と文言はスキャフォールドの仮のもの)。registry では
+  2026-10-20 から `channel: 'in-development'`(どのビルドの扉からも開けない — `app/gameChannel.ts`)で、
+  **Web 版にも出していない**。遊べるようになる変更で `'web-beta'` に変え、統合と検証を終えてから
+  同期する(landing の門の一覧は `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移す)。Chess は別フェーズ・別 PR で進め、残り 4 本の完了を
   Chess で待たせない。正式収録の 41 本には数えず、アプリには出ない。
   チャンネルの宣言は registry の `channel`、出し分けは `app/gameChannel.ts` の
   実行時ガード(`docs/WEB_VERSION.md`「先行公開」)。

@@ -8,14 +8,14 @@
 
 ## 役割分担
 
-|            | Web 版                                                                                                                                                                                                                                                                      | アプリ版(Android・iOS)                                                                                              |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| 位置づけ   | すぐ遊べる無料版。新作の先行公開。PixApps への入口                                                                                                                                                                                                                          | 静かに長く遊ぶための完成版                                                                                          |
-| 導入       | インストール・アカウント不要                                                                                                                                                                                                                                                | ストアから導入、ホーム画面から起動                                                                                  |
-| 広告       | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効)                                                                                                                                                                                                  | Anchored Adaptive Banner 1 枠のみ                                                                                   |
-| 課金       | なし(完全無料)                                                                                                                                                                                                                                                              | $3.99 買い切りで広告永久削除                                                                                        |
-| 計測       | サイト共通のページ解析(下の「計測」節。実装済み・既定は無効)                                                                                                                                                                                                                | なし — Analytics を入れないことがアプリの約束([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))                       |
-| ゲーム内容 | 正式収録の 41 本+先行公開中の新作(下の「先行公開」節。いま配信中は 5 本 — Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、2026-10-19 から。次の 5 本 — Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads — は実装中で未配信)。正式収録ゲームに機能差なし | 正式収録の 41 本(registry で `channel` を持たないエントリ)。新作は先行公開で検証後に収録(2026-10-02 に 11 本を収録) |
+|            | Web 版                                                                                                                                                                                                                                                                                                                 | アプリ版(Android・iOS)                                                                                              |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 位置づけ   | すぐ遊べる無料版。新作の先行公開。PixApps への入口                                                                                                                                                                                                                                                                     | 静かに長く遊ぶための完成版                                                                                          |
+| 導入       | インストール・アカウント不要                                                                                                                                                                                                                                                                                           | ストアから導入、ホーム画面から起動                                                                                  |
+| 広告       | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効)                                                                                                                                                                                                                                             | Anchored Adaptive Banner 1 枠のみ                                                                                   |
+| 課金       | なし(完全無料)                                                                                                                                                                                                                                                                                                         | $3.99 買い切りで広告永久削除                                                                                        |
+| 計測       | サイト共通のページ解析(下の「計測」節。実装済み・既定は無効)                                                                                                                                                                                                                                                           | なし — Analytics を入れないことがアプリの約束([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))                       |
+| ゲーム内容 | 正式収録の 41 本+先行公開中の新作(下の「先行公開」節。いま配信中は 5 本 — Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、2026-10-19 から。次の 5 本 — Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads — は実装中で未配信。registry では `channel: 'in-development'`)。正式収録ゲームに機能差なし | 正式収録の 41 本(registry で `channel` を持たないエントリ)。新作は先行公開で検証後に収録(2026-10-02 に 11 本を収録) |
 
 **Play instantly on the web. Play quietly and offline in the app.**
 
@@ -373,24 +373,29 @@ Git 連携による(このリポジトリからは観測していない)。**正
 **次の新作 5 本 — Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads(No. 47〜51)— は
 実装中で、Web 版には出していない**(2026-10-19 に着手。計画は
 [plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md)、
-仕様の正は各ルール文書)。いまは Phase 1 — `scripts/new-game.mjs --channel web-beta` で
-スキャフォールドし、registry に `channel: 'web-beta'` で登録した段階で、ゲーム本体はまだ無い
-(画面と文言はスキャフォールドの仮のもの。14 言語のカタログはどれも英語の仮文)。上の 5 本と
-同じく、統合と検証を終えてから Web 版へ同期し、その同期の PR で landing の
-`WEB_BETA_GAME_IDS` に id を足す。**Chess は別フェーズ・別 PR**で進め、残り 4 本の完了と
+仕様の正は各ルール文書)。いまは Phase 1 — `scripts/new-game.mjs` でスキャフォールドし、registry に登録した段階で、
+ゲーム本体はまだ無い(画面と文言はスキャフォールドの仮のもの。14 言語のカタログはどれも英語の仮文)。
+registry では 2026-10-20 から **`channel: 'in-development'`**(下の「main の状態」)で、どのビルドの
+扉からも開けない(`app/gameChannel.ts` — Web 版のホーム・検索・`?game=`・lazy root にも出ない)。
+遊べるようになる変更で `'web-beta'` に変え、上の 5 本と同じく、統合と検証を終えてから Web 版へ
+同期し、その同期の PR で landing の一覧を `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移す。**Chess は別フェーズ・別 PR**で進め、残り 4 本の完了と
 同期を Chess で待たせない。5 本とも Club House には登録しない。正式収録の基準(上の 1・2)は
 変えず、Web で公開するまで始まらない。
 
 **main の状態(2026-10-20)**: Phase 1 の接続点は #239 で 5 本とも main に入った(計画では Chess を
 別に置くつもりだったが、オーナーがまとめてマージした — 計画の「フェーズ(判断 4)」の 2026-10-20 の
-追記)。だから **main にはいま、`channel: 'web-beta'` で登録した遊べないスキャフォールドが 5 本ある**。
-main を次に Web 版へ同期して公開すると、そのチャンク(`play/assets/game-<id>-*.js`)が出て、
-landing の `tests/ui.test.js` の `WEB_BETA_GAME_IDS` の門(下の「landing 側のガード」)に当たる —
-landing 側が 5 本の id を一覧に足す(**誤り** — 遊べないものを BETA として出すことになり、上の
-「遊べるものだけを出す」に反する)か、スキャフォールドのチャンクを除くかをするまで落ちる。
-どちらにするかはオーナーの判断で、決まるまで main からの同期(42〜46 の直しを出す同期も)は
-この門で止まる。この文書が知る最後の同期は上の `a1c6a27`(2026-10-19)で、47〜51 は入っていない —
-「Web 版には出していない」は誰かが公開するまでそのまま。
+追記)。その時点の 5 本は `channel: 'web-beta'` の遊べないスキャフォールドで、同日オーナーが main を
+公開する Publish Simple Games (web)(pixapps-landing run 39344906628、ref: main)を実行したところ、
+そのチャンク(`play/assets/game-<id>-*.js`)が landing の `tests/ui.test.js` の `WEB_BETA_GAME_IDS` の門
+(下の「landing 側のガード」)に当たって止まった — 門が無ければ、遊べない BETA のタイルが 5 枚出ていた。
+**対処(2026-10-20)**: registry の `channel` に第 3 の値 **`'in-development'`**(どのビルドにも出さない)を
+足し、5 本をそれにした。`app/gameChannel.ts` のガードは、アプリがベータに閉じるのと同じ扉を Web 版にも
+閉じる。チャンクは「実装上の約束」(1 ビルド・分岐なし)どおり出るので、landing の門には同じ 5 本を
+`IN_DEVELOPMENT_GAME_IDS`(チャンクはあるがカードも BETA も無い)として足した。「遊べるものだけを出す」は
+保たれる — 公開物に入るのは到達できないコードだけで、ネイティブ版がベータのコードを運ぶのと同じ形。
+採らなかった案: id を `WEB_BETA_GAME_IDS` に足して通す(遊べないものを BETA として出す)、チャンクを
+配信物から除く(ビルドの分岐を増やす)。この文書が知る最後の同期は上の `a1c6a27`(2026-10-19)で、
+47〜51 は入っていない — 「Web 版には出していない」は、5 本が `'web-beta'` になって同期されるまでそのまま。
 
 それ以前の先行公開は、2026-10-02 に 11 本すべてを正式収録して空になった — Crown Grid /
 Number Path / Shape Regions(issue #194、計画は
@@ -429,7 +434,10 @@ registry から 11 本の `channel: 'web-beta'` を外し、アプリのホー�
   まだ確認していない([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §1〜§5)。
 
 - 宣言は registry のエントリ(`GameDefinition.channel: 'web-beta'`)、出し分けは
-  `app/gameChannel.ts` の**実行時ガード**(`Capacitor.isNativePlatform()`)。
+  `app/gameChannel.ts` の**実行時ガード**(`Capacitor.isNativePlatform()`)。第 3 の値
+  `'in-development'`(2026-10-20 から)は「どのビルドにも出さない」— スキャフォールドの段階の
+  宣言で(`scripts/new-game.mjs --channel in-development` が生成する)、ガードは下に挙げる扉を
+  Web 版にも閉じる。遊べるようになる変更で `'web-beta'` にする。
   「実装上の約束」どおりビルドは分岐させず、native バンドルにもコードは入る
   (公開ソースで元々見える)。アプリではコレクションホームの棚と節・検索・
   お気に入りピッカー・お気に入り棚と最近の行(レコードに id が残っていても)・
@@ -445,7 +453,8 @@ registry から 11 本の `channel: 'web-beta'` を外し、アプリのホー�
   の**両方**が自分の id の `<WebBetaNotice>` を持つことは
   `src/test/webBetaNoticeWiring.test.ts` が強制する(上の「保存データ」の先の告知 —
   初回はホームより先に Quick Rules が開く)。`scripts/new-game.mjs --channel web-beta` は
-  ホームと Quick Rules の両方の分を生成時に置く。
+  ホームと Quick Rules の両方の分を生成時に置く(`--channel in-development` も同じ — 描くのは
+  `'web-beta'` になってから)。
 - 先行公開中のタイトルは、ストア掲載文(`apps/simple-games/store/listing.md`)と
   landing のガイド(`ui/landing.ts` の `PUBLISHED_GAME_IDS`)には正式収録まで出さない。
   正式収録したタイトルはストア掲載文に載せる。ガイドはページが書けてから足す —
@@ -456,6 +465,10 @@ registry から 11 本の `channel: 'web-beta'` を外し、アプリのホー�
   ゲームはカードを出さないので、同期する PR では **`LANDING_GAME_IDS` に足すのでは
   なく**、ベータ id の許容(チャンクはあるがカードは無い)をそのテストに設ける。
   正式収録でカードを載せるときに、許容から `LANDING_GAME_IDS` へ移す。
+  実装中(`channel: 'in-development'`、2026-10-20 から)のタイトルも同じく、チャンクはあるが
+  カードは無い — 同テストの `IN_DEVELOPMENT_GAME_IDS` に置く。遊べるようになって `'web-beta'` に
+  する同期の PR で `WEB_BETA_GAME_IDS` へ移す。どの一覧にも無いチャンクがあれば落ち、一覧に
+  あってチャンクの無い id があっても落ちる(両側から挟む)。
 - 正式収録の手順は [RELEASE_CHECKLIST.md §0](RELEASE_CHECKLIST.md): 上の基準 1・2 を
   満たしたら、registry の `channel` を外す(バッジと説明文はそれで消える)、
   永続化ラウンドトリップテストを作る、README / ストア掲載文 / landing に載せる。

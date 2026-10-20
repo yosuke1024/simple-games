@@ -11,7 +11,7 @@
 ブランド原則([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))はこの文書より上位にある。
 
 ゲーム ID は `bounce-up`、i18n キーの接頭辞は `bounceUp`、保存キーの接頭辞は `bo.` である。
-**Web 先行公開(ベータ)の新作**(No. 50、registry の `channel: 'web-beta'`。
+**Web 先行公開(ベータ)の新作**(No. 50、registry では遊べるようになるまで `channel: 'in-development'` — どのビルドにも出ない — その後 `'web-beta'`。
 [WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。アプリには正式収録していない。Club House には
 登録しない(registry の `challenge` を持たない)。提案時の仮名は Cloud Climb だった。「cloud」がアプリの
 「クラウド同期なし」と語で衝突し、同名の作品もあるので改名した。

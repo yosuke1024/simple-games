@@ -43,7 +43,11 @@ describe('the shortcut row', () => {
 
   it('never grows past the limit', async () => {
     await initRecentGames(createMemoryKV());
-    for (const game of GAMES) recordGameOpened(game.id);
+    // Every title this build can open (app/gameChannel.ts; jsdom is the
+    // browser): one in development has no door to be opened through.
+    for (const game of GAMES) {
+      if (game.channel !== 'in-development') recordGameOpened(game.id);
+    }
     expect(getRecentGames()).toHaveLength(RECENT_GAMES_LIMIT);
   });
 
