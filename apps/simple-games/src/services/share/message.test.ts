@@ -28,8 +28,12 @@ describe('the link', () => {
   it('round-trips through the router for every game in the collection', () => {
     // The shell reads arriving links with gameIdFromHref; a link this builder
     // makes has to be one of those, for all thirty titles and whatever comes
-    // after them.
+    // after them. A title still in development (registry
+    // `channel: 'in-development'`) is not in the collection yet: no build
+    // offers it, so nothing can share it, and its address reads as the
+    // collection (app/gameChannel.ts) — the one case this skips.
     for (const game of GAMES) {
+      if (game.channel === 'in-development') continue;
       expect(gameIdFromHref(gamePlayUrl(game.id)), game.id).toBe(game.id);
     }
   });

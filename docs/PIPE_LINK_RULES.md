@@ -13,7 +13,8 @@ Quick Rules がこの文書に従う(コードはここへ `§n` で言及し、
 
 ゲーム ID は `pipe-link`、i18n キーの接頭辞は `pipeLink`、保存キーの接頭辞は `pn.`、
 カテゴリは `logic`、No. 49。**Web 先行公開(ベータ)のタイトル**で、アプリにはまだ収録して
-いない(registry の `channel: 'web-beta'`。[WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。
+いない(registry では遊べるようになるまで `channel: 'in-development'` — どのビルドにも出ない — その後
+`'web-beta'`。[WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。
 
 ## 決まっていること(2026-10-19、製品オーナーの判断 — 詳細と理由は計画)
 

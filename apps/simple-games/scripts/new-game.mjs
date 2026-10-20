@@ -2,7 +2,7 @@
 /**
  * ゲーム 1 本ぶんの「接続点」を生成するスキャフォールド。
  *
- *   node scripts/new-game.mjs <id> <PREFIX> --title "<Title>" --category <logic|cards|puzzle|board|arcade|drills> [--glyph <char>] [--channel web-beta] [--dry-run]
+ *   node scripts/new-game.mjs <id> <PREFIX> --title "<Title>" --category <logic|cards|puzzle|board|arcade|drills> [--glyph <char>] [--channel web-beta|in-development] [--dry-run]
  *
  * `--channel web-beta` は Web 版だけの先行公開(docs/WEB_VERSION.md「先行公開(ベータ)」)
  * として生成する: registry の要素に `channel: 'web-beta'` を書き、ホームのヒーローと
@@ -11,6 +11,15 @@
  * ボタンが最初の保存を書くので、両方に要る。注意を先に見せてあることが、ベータ中に保存を
  * 捨ててよい条件なので(同節「保存データ」)、後から足し忘れないよう生成時に入れる。正式収録で `channel` を外せば注意は何も描かなく
  * なるので、要素はそのまま残してよい(2026-10-02 に収録した 11 本と同じ)。
+ *
+ * `--channel in-development` はスキャフォールドの段階の宣言で、**生成直後はこちらを使う**:
+ * registry の要素に `channel: 'in-development'` を書く。この値のタイトルはどのビルドの扉からも
+ * 開けない(`app/gameChannel.ts` — Web 版のホーム・検索・`?game=` にも出ない)ので、main に
+ * あるスキャフォールドが Web 版の次の同期で遊べない BETA のタイルとして出ることがない
+ * (docs/WEB_VERSION.md「先行公開」の「遊べるものだけを出す」)。`<WebBetaNotice>` は `web-beta` と
+ * 同じく両画面に置く(描くのは `web-beta` になってから)。遊べるようになる変更で `'web-beta'` に
+ * 変え、その同期の PR で pixapps-landing の `tests/ui.test.js` の一覧を IN_DEVELOPMENT_GAME_IDS
+ * から WEB_BETA_GAME_IDS へ移す。
  *
  * 新しいゲームを足すたびに 4,000 行あるどれかの兄弟ゲームを丸ごとコピーして
  * 削るところから始めるのは、練習台としては重い。ここで生成するのは
@@ -100,8 +109,12 @@ const GAME_KEYS_TEST_PATH = join(APP, 'src/app/gameKeys.test.ts');
 const DOCS_DIR = join(REPO_ROOT, 'docs');
 
 const CATEGORIES = ['logic', 'cards', 'puzzle', 'board', 'arcade', 'drills'];
-/** `GameDefinition.channel` values (app/registry.ts). Omitted: released everywhere. */
-const CHANNELS = ['web-beta'];
+/**
+ * `GameDefinition.channel` values (app/registry.ts). Omitted: released
+ * everywhere. `in-development` is what a scaffold should be: offered on no
+ * build until the game behind it exists (docs/WEB_VERSION.md「先行公開」).
+ */
+const CHANNELS = ['web-beta', 'in-development'];
 const DEFAULT_GLYPH = '•';
 
 /** The 14 locales every game catalog must ship (src/i18n/index.ts `Locale`). */
@@ -127,7 +140,7 @@ function usage() {
   return (
     'usage: new-game.mjs <id> <PREFIX> --title "<Title>" ' +
     '--category <logic|cards|puzzle|board|arcade|drills> [--glyph <char>] ' +
-    '[--channel web-beta] [--dry-run]'
+    '[--channel web-beta|in-development] [--dry-run]'
   );
 }
 
@@ -713,8 +726,9 @@ function cssFile({ pascal, cssPrefix }) {
 }
 
 function homeScreenFile({ id, pascal, camel, glyph, channel }) {
-  const beta = channel === 'web-beta';
-  // The early-release notice (--channel web-beta): shell-owned like the header,
+  const beta = channel !== undefined;
+  // The early-release notice (--channel web-beta, and --channel in-development
+  // for the day the scaffold turns beta): shell-owned like the header,
   // and it must be on the home before a beta save may ever be reset
   // (docs/WEB_VERSION.md「保存データ」; src/test/webBetaNoticeWiring.test.ts).
   const betaDoc = beta
@@ -830,8 +844,9 @@ export function ${pascal}GameScreen() {
 }
 
 function tutorialScreenFile({ id, pascal, camel, idUpper, channel }) {
-  const beta = channel === 'web-beta';
-  // The early-release notice (--channel web-beta) on every step: a first visit
+  const beta = channel !== undefined;
+  // The early-release notice (--channel web-beta, and --channel in-development
+  // for the day the scaffold turns beta) on every step: a first visit
   // opens here, not on the home, and the last step's button writes the first
   // save (docs/WEB_VERSION.md「保存データ」; src/test/webBetaNoticeWiring.test.ts).
   const betaDoc = beta
@@ -1289,9 +1304,20 @@ function main() {
   console.log(`  - translate the 14 locale strings in src/games/${id}/i18n/*.ts`);
   console.log(`  - write docs/${id.toUpperCase().replace(/-/g, '_')}_RULES.md (stub generated)`);
   console.log(`  - replace the three Quick Rules placeholder steps (i18n *Step1..3Title/Body)`);
-  if (channel === 'web-beta') {
+  if (channel) {
     // Not in the app, the store copy or the landing guides until it graduates
     // (docs/WEB_VERSION.md「先行公開(ベータ)」, docs/RELEASE_CHECKLIST.md §0).
+    if (channel === 'in-development') {
+      console.log(
+        "  - keep channel: 'in-development' until the game is playable; the browser offers it on no door",
+      );
+      console.log(
+        "  - turn it into channel: 'web-beta' in the change that makes it playable, and move its id",
+      );
+      console.log(
+        '    from IN_DEVELOPMENT_GAME_IDS to WEB_BETA_GAME_IDS in pixapps-landing tests/ui.test.js in the sync PR',
+      );
+    }
     console.log('  - run `pnpm size:update` before committing (size-baseline.json)');
     console.log('  - list it under README.md「Web 先行公開(ベータ)」, not in the released count');
   } else {

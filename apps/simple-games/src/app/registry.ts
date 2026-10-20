@@ -285,13 +285,21 @@ export interface GameDefinition {
    * and the browser version alike. `'web-beta'` is the early-release channel
    * of docs/WEB_VERSION.md「先行公開(ベータ)」: the game is in the browser
    * version only, wearing a BETA mark, while its schema may still change.
+   * `'in-development'` ships nowhere yet: the entry is in the registry — its
+   * keys, schemas, folder and catalogs exist, so every gate that reads the
+   * registry already covers it — but no build offers it on any door, because
+   * there is no game behind it yet (a scaffold of scripts/new-game.mjs, or one
+   * still being built; WEB_VERSION.md「遊べるものだけを出す」). It turns into
+   * `'web-beta'` in the change that makes it playable, and that is also when
+   * the landing's sync lists it as beta (WEB_VERSION.md「landing 側のガード」).
    * The code ships in every bundle regardless (one build, no forks —
    * 「実装上の約束」); the shell's runtime guard (app/gameChannel.ts) is what
    * keeps a beta title off the app's home, out of its search, and out of any
-   * shortcut address it could be opened from. `storageKeys` are listed from
-   * day one, so "Reset Local Data" tells the truth in the browser too.
+   * shortcut address it could be opened from, and an in-development title off
+   * the browser's doors too. `storageKeys` are listed from day one, so "Reset
+   * Local Data" tells the truth in the browser too.
    */
-  channel?: 'web-beta';
+  channel?: 'web-beta' | 'in-development';
   /**
    * Loads the game's root component from its own bundled chunk. Roots are
    * named exports; the shim to `{ default }` is what React.lazy expects
@@ -1126,7 +1134,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Chess',
     category: 'board',
     glyph: '♞',
-    channel: 'web-beta',
+    channel: 'in-development',
     storageKeys: Object.values(CH_STORAGE_KEYS),
     loadRoot: () => import('../games/chess/ui/ChessRoot').then((m) => ({ default: m.ChessRoot })),
     loadStorageSchemas: () => import('../games/chess/storage/schemas'),
@@ -1145,7 +1153,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Gem Swap',
     category: 'puzzle',
     glyph: '❖',
-    channel: 'web-beta',
+    channel: 'in-development',
     storageKeys: Object.values(GS_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/gem-swap/ui/GemSwapRoot').then((m) => ({ default: m.GemSwapRoot })),
@@ -1165,7 +1173,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Pipe Link',
     category: 'logic',
     glyph: '┣',
-    channel: 'web-beta',
+    channel: 'in-development',
     storageKeys: Object.values(PN_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/pipe-link/ui/PipeLinkRoot').then((m) => ({ default: m.PipeLinkRoot })),
@@ -1187,7 +1195,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Bounce Up',
     category: 'arcade',
     glyph: '⇡',
-    channel: 'web-beta',
+    channel: 'in-development',
     storageKeys: Object.values(BO_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/bounce-up/ui/BounceUpRoot').then((m) => ({ default: m.BounceUpRoot })),
@@ -1208,7 +1216,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Echo Pads',
     category: 'drills',
     glyph: '♫',
-    channel: 'web-beta',
+    channel: 'in-development',
     storageKeys: Object.values(EP_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/echo-pads/ui/EchoPadsRoot').then((m) => ({ default: m.EchoPadsRoot })),

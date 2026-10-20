@@ -9,7 +9,8 @@ Quick Rules がここに従う(コードはここへ `§n` で言及し、挙動
 上位にある。
 
 ゲーム ID は `gem-swap`、i18n キーの接頭辞は `gemSwap`、保存キーの接頭辞は `gs.` である。registry では
-`channel: 'web-beta'`([WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)で、アプリには出ない。
+遊べるようになるまで `channel: 'in-development'`(どのビルドにも出ない)、その後 `channel: 'web-beta'`
+([WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)で、アプリには出ない。
 保存スキーマは正式収録まで凍結しない。
 
 ## これまでに決まったこと(2026-10-19、製品オーナーの判断 — 詳細は計画書)

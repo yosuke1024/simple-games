@@ -10,6 +10,10 @@ import { searchGames } from './gameSearch';
 
 const titles = (query: string) => searchGames(query).map((game) => game.title);
 
+// The search is over what this build offers (app/gameChannel.ts), and jsdom is
+// the browser: every title but the ones in development, which no build offers.
+const offered = GAMES.filter((game) => game.channel !== 'in-development');
+
 describe('searching the collection by name', () => {
   it('matches a whole title', () => {
     // Two titles carry the word since Sudoku 6×6 joined the browser early
@@ -44,7 +48,7 @@ describe('searching the collection by name', () => {
 
   it('ignores the whitespace around the query, and the query that is only whitespace', () => {
     expect(titles('  hearts ')).toEqual(['Hearts']);
-    expect(searchGames('   ')).toHaveLength(GAMES.length);
+    expect(searchGames('   ')).toHaveLength(offered.length);
   });
 
   it('returns nothing for a name no game has', () => {
@@ -60,13 +64,13 @@ describe('searching the collection by name', () => {
    */
   it('returns every game, once, while nothing is typed', () => {
     const all = searchGames('');
-    expect(all).toHaveLength(GAMES.length);
-    expect(new Set(all.map((game) => game.id)).size).toBe(GAMES.length);
+    expect(all).toHaveLength(offered.length);
+    expect(new Set(all.map((game) => game.id)).size).toBe(offered.length);
   });
 
   it('keeps the order the home lists them in: categories, then registry order', () => {
     const homeOrder = GAME_CATEGORIES.flatMap((category) =>
-      GAMES.filter((game) => game.category === category.id).map((game) => game.title),
+      offered.filter((game) => game.category === category.id).map((game) => game.title),
     );
     expect(titles('')).toEqual(homeOrder);
     // And a filtered list is that same order with the misses removed — never

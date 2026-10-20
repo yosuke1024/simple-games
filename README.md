@@ -222,9 +222,9 @@ pixapps-landing の #201 で同期)。タイトルカードに「BETA」バッ�
 47〜51 本目の新作 5 本(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads)も、同じ
 **Web 版だけの先行公開(ベータ)**向けに 2026-10-19 から実装しています(計画は
 [docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md)、
-仕様の正は各ルール文書)。いまは registry に `channel: 'web-beta'` で登録したスキャフォールドの
-段階で、**ゲーム本体はまだ無く、Web 版にもアプリにも出ていません**。統合と検証を終えてから
-Web 版へ同期します。Chess は工数が最も大きいので別のフェーズで進め、残り 4 本を Chess で
+仕様の正は各ルール文書)。いまは registry に `channel: 'in-development'`(どのビルドにも出さない値。
+2026-10-20 から)で登録したスキャフォールドの段階で、**ゲーム本体はまだ無く、Web 版にもアプリにも
+出ていません**。遊べるようになる変更で `'web-beta'` に変え、統合と検証を終えてから Web 版へ同期します。Chess は工数が最も大きいので別のフェーズで進め、残り 4 本を Chess で
 待たせません。上の 41 本には数えず、ストア掲載文にも載せず、Club House にも登録しません。
 遊び方・進行・助けはまだ実装していないので、ここには書きません(計画と各ルール文書にあります)。
 
@@ -297,7 +297,7 @@ simple-games/
 │           │   ├── loop-puzzle/
 │           │   ├── bridges/
 │           │   ├── peg-solitaire/
-│           │   ├── chess/       # ここから 5 本は実装中の Web 先行公開(ベータ)。まだスキャフォールド
+│           │   ├── chess/       # ここから 5 本は実装中(channel: 'in-development')。どのビルドにも出ないスキャフォールド
 │           │   ├── gem-swap/
 │           │   ├── pipe-link/
 │           │   ├── bounce-up/

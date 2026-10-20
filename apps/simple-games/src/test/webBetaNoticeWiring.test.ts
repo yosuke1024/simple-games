@@ -19,8 +19,10 @@
  *
  * Static, like test/homeActionsWiring.test.ts, so it is a gate on the next
  * beta title rather than on the ones that exist: a game registered with
- * `channel: 'web-beta'` fails this until both screens carry the notice.
- * scripts/new-game.mjs `--channel web-beta` scaffolds both.
+ * `channel: 'web-beta'` — or `'in-development'`, the scaffold on its way
+ * there — fails this until both screens carry the notice.
+ * scripts/new-game.mjs `--channel web-beta` and `--channel in-development`
+ * scaffold both.
  *
  * Released titles may keep the element (the eleven promoted on 2026-10-02
  * keep it on their homes): with no channel it renders nothing, and dropping
@@ -76,11 +78,14 @@ for (const file of sourceFiles(GAMES_DIR)) {
   }
 }
 
-const betaIds = GAMES.filter((game) => game.channel === 'web-beta').map((game) => game.id);
+// A title in development (`channel: 'in-development'`) carries the notice from
+// its scaffold on: it draws nothing until the title turns `'web-beta'`, and
+// that turn must not be the moment both screens are found wanting.
+const betaIds = GAMES.filter((game) => game.channel).map((game) => game.id);
 
 describe('the early-release notice on a beta title', () => {
   for (const screen of SCREENS) {
-    it(`is on the ${screen.name} of every title on the web-beta channel`, () => {
+    it(`is on the ${screen.name} of every title on the web-beta or in-development channel`, () => {
       const missing = betaIds.filter(
         (id) =>
           !usages.some(

@@ -9,7 +9,8 @@
 ブランド原則([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))はこの文書より上位にある。
 
 ゲーム ID は `chess`、i18n キーの接頭辞は `chess`、保存キーの接頭辞は `ch.` である。名称は一般名の
-「Chess」を使う。Web 版だけの先行公開(`channel: 'web-beta'`。アプリには出ない)で、Club House には
+「Chess」を使う。Web 版だけの先行公開向け(遊べるようになってから `channel: 'web-beta'`。それまでは
+`'in-development'` で、どのビルドにも出ない。アプリには出ない)で、Club House には
 登録しない。
 
 ## これまでに決まったこと

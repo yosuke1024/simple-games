@@ -67,13 +67,14 @@ vi.mock('../../services/homeShortcut/homeShortcut', () => ({
 }));
 
 // Besides the real web-beta titles (today the five of
-// docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md and the scaffolds of
+// docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md) and the real
+// in-development ones (the scaffolds of
 // docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md), the
-// registry this file sees carries one synthetic beta title: a released game's
-// shape under an id and title of its own, appended last. It keeps the tests
-// below from going vacuous on any day no registry title is on the channel (as
-// from 2026-10-02 until the 2026-10-17 five arrived). Every importer here
-// shares the list.
+// registry this file sees carries one synthetic title on each channel: a
+// released game's shape under an id and title of its own, appended last. They
+// keep the tests below from going vacuous on any day no registry title is on a
+// channel (as from 2026-10-02 until the 2026-10-17 five arrived). Every
+// importer here shares the list.
 vi.mock('../../app/registry', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../app/registry')>();
   const synthetic = {
@@ -82,7 +83,13 @@ vi.mock('../../app/registry', async (importOriginal) => {
     title: 'Synthetic Beta',
     channel: 'web-beta',
   } as unknown as (typeof actual.GAMES)[number];
-  return { ...actual, GAMES: [...actual.GAMES, synthetic] };
+  const syntheticInDevelopment = {
+    ...actual.GAMES.find((game) => game.id === 'sudoku')!,
+    id: 'synthetic-in-development',
+    title: 'Synthetic In Development',
+    channel: 'in-development',
+  } as unknown as (typeof actual.GAMES)[number];
+  return { ...actual, GAMES: [...actual.GAMES, synthetic, syntheticInDevelopment] };
 });
 
 import {
@@ -166,6 +173,14 @@ describe('collection tagline', () => {
  * Every card reads as its glyph followed by its title, which is exactly what
  * a card is: the series mark plus the name.
  */
+/**
+ * What the browser's home shows: every registry title but the ones in
+ * development (`channel: 'in-development'`), which no build offers
+ * (app/gameChannel.ts). jsdom is the browser, so this is the list the tests
+ * below expect by default; the app's narrower list is spelt out where a test
+ * flips `capacitorMock.native`.
+ */
+const shown = GAMES.filter((game) => game.channel !== 'in-development');
 const cardsIn = (region: HTMLElement) =>
   within(region)
     .getAllByRole('button')
@@ -183,13 +198,13 @@ const nameOf = (game: (typeof GAMES)[number]) =>
  */
 const sectionedList = GAME_CATEGORIES.flatMap((category) => [
   en[category.headingKey],
-  ...GAMES.filter((game) => game.category === category.id).map(cardFor),
+  ...shown.filter((game) => game.category === category.id).map(cardFor),
 ]);
 
 describe('the game list', () => {
   it('shows every game exactly once on both builds', () => {
     renderHome();
-    for (const game of GAMES) {
+    for (const game of shown) {
       // getBy* would also throw on duplicates, but spell the intent out: a
       // game must not appear under two categories.
       expect(screen.getAllByRole('button', { name: nameOf(game) })).toHaveLength(1);
@@ -218,22 +233,17 @@ describe('the game list', () => {
  */
 describe('web-beta titles', () => {
   const beta = GAMES.filter((game) => game.channel === 'web-beta');
-  const released = GAMES.filter((game) => game.channel !== 'web-beta');
+  const released = GAMES.filter((game) => !game.channel);
 
   it('exist in this registry (the real ones and a synthetic one), so the tests below are not vacuous', () => {
     // The real list is app/gameChannel.test.ts's golden; the synthetic title
-    // is appended last by the mock above.
+    // is appended by the mock above.
     expect(beta.map((game) => game.id)).toEqual([
       'unblock-puzzle',
       'snake',
       'loop-puzzle',
       'bridges',
       'peg-solitaire',
-      'chess',
-      'gem-swap',
-      'pipe-link',
-      'bounce-up',
-      'echo-pads',
       'synthetic-beta',
     ]);
     expect(released.length).toBeGreaterThan(20);
@@ -298,6 +308,48 @@ describe('web-beta titles', () => {
 });
 
 /**
+ * A title still in development (`channel: 'in-development'`): a scaffold with
+ * no game behind it, offered on no build at all (app/gameChannel.ts;
+ * docs/WEB_VERSION.md「遊べるものだけを出す」). Not on a shelf, not in a section,
+ * not a search result — on the browser's home no more than on the app's — and
+ * never a BETA tile, which is what it would be on the beta channel.
+ */
+describe('in-development titles', () => {
+  const building = GAMES.filter((game) => game.channel === 'in-development');
+
+  it('exist in this registry (the real ones and a synthetic one), so the tests below are not vacuous', () => {
+    // The real list is app/gameChannel.test.ts's golden; the synthetic title
+    // is appended by the mock above.
+    expect(building.map((game) => game.id)).toEqual([
+      'chess',
+      'gem-swap',
+      'pipe-link',
+      'bounce-up',
+      'echo-pads',
+      'synthetic-in-development',
+    ]);
+  });
+
+  it.each([
+    ['the browser', false],
+    ['the app', true],
+  ])('are on no shelf, in no section and in no search result on %s', async (_build, native) => {
+    capacitorMock.native = native;
+    const user = userEvent.setup();
+    renderHome();
+    const list = screen.getByRole('navigation', { name: 'Games' });
+    for (const game of building) {
+      expect(screen.queryByRole('button', { name: game.title })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: `${game.title} BETA` })).not.toBeInTheDocument();
+      expect(cardsIn(list)).not.toContain(cardFor(game));
+    }
+    await user.click(screen.getByRole('button', { name: 'Search games' }));
+    await user.type(screen.getByRole('searchbox', { name: 'Search games' }), building[0]!.title);
+    expect(screen.getByRole('status')).toHaveTextContent('No games match.');
+  });
+});
+
+/**
  * The shortcut row is what lets the list below stay in a fixed order as the
  * collection grows. It has to earn that by staying a shortcut: absent until
  * there is something to shortcut to, and never a second copy of the list.
@@ -327,7 +379,7 @@ describe('recently played', () => {
     const all = screen.getByRole('navigation', { name: 'Games' });
     expect(cardsIn(all)).toEqual(
       GAME_CATEGORIES.flatMap((category) =>
-        GAMES.filter((game) => game.category === category.id).map(cardFor),
+        shown.filter((game) => game.category === category.id).map(cardFor),
       ),
     );
   });
@@ -396,7 +448,7 @@ describe('favorites', () => {
     const all = screen.getByRole('navigation', { name: 'Games' });
     expect(cardsIn(all)).toEqual(
       GAME_CATEGORIES.flatMap((category) =>
-        GAMES.filter((game) => game.category === category.id).map(cardFor),
+        shown.filter((game) => game.category === category.id).map(cardFor),
       ),
     );
   });
@@ -1192,7 +1244,7 @@ describe('the search action', () => {
     expect(screen.queryByText('Logic')).not.toBeInTheDocument();
     expect(cardsIn(screen.getByRole('navigation', { name: 'Games' }))).toEqual(
       GAME_CATEGORIES.flatMap((category) =>
-        GAMES.filter((game) => game.category === category.id).map(cardFor),
+        shown.filter((game) => game.category === category.id).map(cardFor),
       ),
     );
   });
@@ -1249,7 +1301,7 @@ describe('what a search matches', () => {
     await user.clear(searchField());
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    expect(titlesOnScreen()).toHaveLength(GAMES.length);
+    expect(titlesOnScreen()).toHaveLength(shown.length);
   });
 
   it('opens the game a result is tapped on', async () => {
@@ -1275,7 +1327,7 @@ describe('leaving search', () => {
     expect(screen.getByText('Logic')).toBeInTheDocument();
     expect(cardsIn(screen.getByRole('navigation', { name: 'Games' }))).toEqual(
       GAME_CATEGORIES.flatMap((category) =>
-        GAMES.filter((game) => game.category === category.id).map(cardFor),
+        shown.filter((game) => game.category === category.id).map(cardFor),
       ),
     );
   }
@@ -1322,7 +1374,7 @@ describe('leaving search', () => {
     await openSearch(user);
 
     expect(searchField()).toHaveValue('');
-    expect(titlesOnScreen()).toHaveLength(GAMES.length);
+    expect(titlesOnScreen()).toHaveLength(shown.length);
   });
 });
 

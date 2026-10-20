@@ -46,7 +46,9 @@ describe('the address a shortcut carries', () => {
 
   it('reads back to the same game for every title the app offers', () => {
     for (const game of GAMES) {
-      if (game.channel === 'web-beta') continue;
+      // Neither a beta title nor one in development is offered on the app
+      // (app/gameChannel.ts) — those are the tests below.
+      if (game.channel) continue;
       expect(gameIdFromShortcutUrl(shortcutUrlFor(game.id)), game.id).toBe(game.id);
     }
   });
@@ -56,12 +58,13 @@ describe('the address a shortcut carries', () => {
   // shortcut from a future release could still carry — lands on the
   // collection, exactly as a retired id does (app/gameChannel.ts). The five of
   // docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md are on the channel
-  // today, with the scaffolds of the next plan
-  // (docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md).
-  it('means the collection for every web-beta title in the registry today', () => {
-    const beta = GAMES.filter((game) => game.channel === 'web-beta');
-    expect(beta.length).toBeGreaterThan(0);
-    for (const game of beta) {
+  // today. A title still in development (`channel: 'in-development'`, the
+  // scaffolds of docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-
+  // echo-pads.md) is offered nowhere, so its address is the collection too.
+  it('means the collection for every web-beta or in-development title in the registry today', () => {
+    const offTheApp = GAMES.filter((game) => game.channel);
+    expect(offTheApp.length).toBeGreaterThan(0);
+    for (const game of offTheApp) {
       expect(gameIdFromShortcutUrl(shortcutUrlFor(game.id)), game.id).toBeNull();
     }
   });

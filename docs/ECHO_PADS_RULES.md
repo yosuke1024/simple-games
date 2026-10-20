@@ -10,7 +10,7 @@
 drills のジャンル原則は [SCHULTE_TABLE_RULES.md](SCHULTE_TABLE_RULES.md) §14 にある。
 
 ゲーム ID は `echo-pads`、i18n キーの接頭辞は `echoPads`、保存キーの接頭辞は `ep.`、
-カテゴリは `drills`、チャンネルは `web-beta`。
+カテゴリは `drills`、チャンネルは `web-beta`(遊べるようになるまでは registry で `in-development` — どのビルドにも出ない)。
 
 ## これまでに決まったこと(2026-10-19・20 の製品オーナーの判断。理由と詳細は計画の 51 節)
 
