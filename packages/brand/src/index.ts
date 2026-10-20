@@ -1104,6 +1104,103 @@ export const titleAccents = {
     onDark: '#0d151c',
     softDark: '#222f3a',
   },
+  /**
+   * Overtake — suō, a sappanwood crimson (web-beta). All five accents of
+   * docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-
+   * tangram.md were chosen in one pass against the 46 shipped accents, the
+   * five of 47–51 (PR #239, treated as shipped) and `--warn` (Phase 1,
+   * CIE76), each over the 12.5 / 9.1 floors and 30 apart from one another.
+   * The band is full at 51: the weakest of the five is 1.005 times its floor,
+   * next to no slack — re-measure all ten before any merge (BRAND.md step
+   * 5). Traffic and the three rivals wear the accent, the player's car the
+   * ink (the plan's §13): a large area like Snake's, so a mid chroma (C*
+   * 47.6, 20th of 56). Nearest shipped is Unblock Puzzle at ΔE 12.8 light /
+   * 10.1 dark; Snake beside it on the arcade shelf is 24.4 / 22.9, Bubble
+   * Pop above it at five columns 17.9 / 13.3 — the batch's closest shelf
+   * neighbour. `--warn` is 34.4 / 30.0 away. White ink 8.14, paper 7.15,
+   * dark paper 5.53.
+   */
+  overtake: {
+    light: '#922643',
+    onLight: '#ffffff',
+    softLight: '#f4d7df',
+    dark: '#cd748a',
+    onDark: '#1e0b10',
+    softDark: '#3d1f26',
+  },
+  /**
+   * Make the Target — kon-kikyō, an indigo bellflower (web-beta). Marks the
+   * number tiles the player has picked and the target (projected from the
+   * plan; the rules document is still a stub). Nearest shipped is Sky Fighter at
+   * ΔE 12.8 light / Bridges at 9.2 dark (1.015 times the floor); Mahjong
+   * Solitaire on the same puzzle shelf is 12.8 / 9.4 but never above, below
+   * or beside it at any width. Unblock Puzzle above it at two columns is
+   * 70.3 / 50.2, Number Match above it at five 25.3 / 13.8, Peg Solitaire
+   * beside it at three and five 30.6 / 21.1. White ink 9.11, paper 8.00,
+   * dark paper 5.27.
+   */
+  makeTheTarget: {
+    light: '#393f93',
+    onLight: '#ffffff',
+    softLight: '#dbdcf0',
+    dark: '#8785c1',
+    onDark: '#0e0e1b',
+    softDark: '#242339',
+  },
+  /**
+   * Nested Tic-Tac-Toe — ebicha, a dark shrimp brown (web-beta). The
+   * player's marks and the faint "play here" small-board highlight take the
+   * accent, the CPU's marks the ink — the Connect Four / Checkers side of
+   * the board shelf, not Reversi's and Gomoku's physical stones (projected;
+   * the rules document is still a stub). The deepest, least chromatic value of
+   * the five (C* 20.0 light / 12.7 dark, 53rd / 55th of 56), ΔE 27.8 / 23.8
+   * from the ink. Nearest shipped is Checkers at ΔE 12.6 light — the same
+   * board shelf, never above, below or beside it — / Snake at 11.3 dark;
+   * Dominoes above it at two columns is 23.1 / 73.2, Mancala above it at
+   * three 29.8 / 27.6. White ink 9.50, paper 8.35, dark paper 7.86.
+   */
+  nestedTicTacToe: {
+    light: '#633b36',
+    onLight: '#ffffff',
+    softLight: '#ede0de',
+    dark: '#c3a59d',
+    onDark: '#19120f',
+    softDark: '#362926',
+  },
+  /**
+   * Scopa — kōshi, a red-violet (web-beta). The capture highlights and the
+   * chrome alone — the smallest accent area of the five, which takes the
+   * most chromatic value of the batch (C* 66.1, 4th of 56; the Chess
+   * reasoning), a hue apart from the card red and any felt. Nearest shipped
+   * is Ludo at ΔE 12.6 light / 9.3 dark (Bounce Up 9.3 too); Gin Rummy's
+   * violet beside it on the cards shelf is 25.8 / 25.9, Hearts above it at
+   * two columns 55.6 / 56.4. White ink 5.50, paper 4.83, dark paper 6.08.
+   */
+  scopa: {
+    light: '#b53192',
+    onLight: '#ffffff',
+    softLight: '#f4d7ec',
+    dark: '#da71c0',
+    onDark: '#20081a',
+    softDark: '#411b38',
+  },
+  /**
+   * Tangram — pine-needle green (web-beta). The seven pieces may be filled
+   * with the accent over the silhouette — the largest accent area of the
+   * five, so a mid chroma (C* 43.1 / 43.9). Nearest shipped is Binary
+   * Balance at ΔE 12.6 light — the five's weakest margin, 1.005 times the
+   * floor — / Bunny Hop at 10.5 dark; Peg Solitaire above it on the puzzle
+   * shelf is 84.0 / 82.3 and Make the Target beside it 96.2 / 80.4. White
+   * ink 6.33, paper 5.56, dark paper 9.99.
+   */
+  tangram: {
+    light: '#426a25',
+    onLight: '#ffffff',
+    softLight: '#e4f1da',
+    dark: '#a7cd7e',
+    onDark: '#151d0b',
+    softDark: '#2e3c20',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

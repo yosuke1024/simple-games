@@ -76,6 +76,11 @@ import { GS_STORAGE_KEYS } from '../games/gem-swap/storage/keys';
 import { PN_STORAGE_KEYS } from '../games/pipe-link/storage/keys';
 import { BO_STORAGE_KEYS } from '../games/bounce-up/storage/keys';
 import { EP_STORAGE_KEYS } from '../games/echo-pads/storage/keys';
+import { OT_STORAGE_KEYS } from '../games/overtake/storage/keys';
+import { TG_STORAGE_KEYS } from '../games/make-the-target/storage/keys';
+import { NT_STORAGE_KEYS } from '../games/nested-tic-tac-toe/storage/keys';
+import { SC_STORAGE_KEYS } from '../games/scopa/storage/keys';
+import { TN_STORAGE_KEYS } from '../games/tangram/storage/keys';
 import { SUDOKU_CHALLENGE } from '../games/sudoku/challenge/contract';
 import { MINESWEEPER_CHALLENGE } from '../games/minesweeper/challenge/contract';
 import { WATER_SORT_CHALLENGE } from '../games/water-sort/challenge/contract';
@@ -163,7 +168,12 @@ export type GameId =
   | 'gem-swap'
   | 'pipe-link'
   | 'bounce-up'
-  | 'echo-pads';
+  | 'echo-pads'
+  | 'overtake'
+  | 'make-the-target'
+  | 'nested-tic-tac-toe'
+  | 'scopa'
+  | 'tangram';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -1221,5 +1231,169 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/echo-pads/ui/EchoPadsRoot').then((m) => ({ default: m.EchoPadsRoot })),
     loadStorageSchemas: () => import('../games/echo-pads/storage/schemas'),
+  },
+  // The titles of docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
+  // (Nos. 52–56), in number order, all built for the browser's early release
+  // (docs/WEB_VERSION.md「先行公開」) and not yet on it: each is still the
+  // scaffold of scripts/new-game.mjs until its own phase of the plan lands, so
+  // each is `'in-development'` (offered on no build) until the change that
+  // makes it playable turns it `'web-beta'`, as Nos. 47–51 above. None is a
+  // Club House challenge (no `challenge`).
+  //
+  // The glyphs were measured as Nos. 42–51's were above: none is in the bundled
+  // Nunito subset, so each resolves through the tail of --font-display, except
+  // Make the Target's =, which Nunito draws itself. Coverage counts are font
+  // families in this environment's fc-list (42 in all; the plan's brief carried
+  // higher counts from another machine). Tile ink is the share of the tile the
+  // mark inks, measured on the built web home with these five present (51
+  // titles: before Nos. 47–51 merged ahead of them), at 360 to 1280px, light
+  // and dark, before the accents existed. Neighbours were looked at on every
+  // width (2 to 5 columns) as the shelves stood then, and computed from the
+  // registry order for the shelves as they stand now with Nos. 47–51 ahead
+  // (that arrangement is not yet seen on a built home). The numbers are in the
+  // plan's Phase 1 results.
+  {
+    // A dashed centre line (U+2507): the road the player threads traffic on
+    // (docs/OVERTAKE_RULES.md). From Box Drawing, like Pipe Link's ┣, so it fills the full line
+    // height and stands taller than its neighbours (observed: 8x47 device px against about 33 for
+    // the others). Unlike ┣ it is symmetric, so a full-width CJK fallback cell leaves it on centre
+    // (observed: 0 px offset in WenQuanYi Zen Hei and Unifont, where ┣ drifts 3.6 px right); the
+    // bar stays thin there, it does not go full width. On the arcade shelf it sits after Snake's ∿
+    // (2 to 4 columns), under Bunny Hop's ⌃ (2), Sky Fighter's ▲ (3), Brick Breaker's ≡ (4) and
+    // Bubble Pop's ○ (5); with Bounce Up's ⇡ ahead of it, as it now is, after ⇡ (4 and 5 columns), under ∿
+    // (2), ⌃ (3), ▲ (4) and ≡ (5). ≡ is three short horizontal bars, 20x18 device px, against one
+    // tall vertical dashed bar: orientation and proportion both differ. ┣ is on the logic shelf and
+    // the two meet only in the favourites, recent and search rows, where a heavy T parts from a
+    // dashed bar. Neither Emoji nor Extended_Pictographic. 12 families. Tile ink 2.9% (21st of the
+    // 51 measured, from the thinnest); 1.6-2.1% in the thinner fallback faces (FreeSans, WenQuanYi,
+    // Unifont), still clear of the bottom three. Fallback ∥, which reads as a pause mark, or the
+    // same shape with one more dash, ┋. Not ⫼, ⇈, ⛐, ⛟ or ⚑ (the plan's reasons). Not yet seen on a
+    // low-spec handset.
+    id: 'overtake',
+    title: 'Overtake',
+    category: 'arcade',
+    glyph: '┇',
+    channel: 'in-development',
+    storageKeys: Object.values(OT_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/overtake/ui/OvertakeRoot').then((m) => ({ default: m.OvertakeRoot })),
+    loadStorageSchemas: () => import('../games/overtake/storage/schemas'),
+  },
+  {
+    // An equals sign (U+003D): the last number left has to equal the target
+    // (docs/MAKE_THE_TARGET_RULES.md). ∴, three dots converging on a conclusion, was first choice
+    // and was dropped because it was the thinnest mark on the home at every width and theme, at
+    // 0.97-1.01% tile ink against 1.04-1.08% for Reversi's ◐ next, and no fallback face lifts it
+    // past 1.2%; in the favourites, recent and search rows it also read as one more small cluster
+    // of dots beside Connect Four's ⁘ and Gomoku's ⁙. Not 24: it is the target that a trademarked
+    // product is named after, which docs/BRAND.md keeps out of the app, and the targets here vary
+    // by tier. ASCII is in the bundled Nunito subset, so this tile is drawn by Nunito ExtraBold
+    // like Number Match's 10, Takuzu's 01, Sudoku 6x6's 6 and Quick Math's ÷: no fallback face, no
+    // coverage question (39 families regardless), no emoji property. A small mark, two bold bars of
+    // 10.5x6.5 CSS px. Tile ink 1.5-1.6% (6th-7th of the 51 measured, from the thinnest: clear of
+    // the bottom three, level with Bunny Hop's ⌃, Gin Rummy's ♢ and Brick Breaker's ≡). On the
+    // puzzle shelf no other mark is a bar: it sits before Tangram's ⊿ (2, 4 and 5 columns), after
+    // Peg Solitaire's ⁜ (3 and 5), under Unblock Puzzle's ⇥ (2), Sliding Puzzle's ⇄ (3), Water
+    // Sort's ≋ (4) and, at 5 columns only, directly under Number Match's 10, where the two read as
+    // "10 / ="; with Gem Swap's ❖ ahead of it, as it now is, after ❖ (2, 4 and 5 columns) and 10 is
+    // diagonal instead. ≡ (arcade), Binary Balance's ⊜ (logic) and 01 (logic) meet it only in the
+    // favourites, recent and search rows: three thin bars, a circled equals and two digits against
+    // two bold bars, ≡ being the nearest (16x13 against 16x10 px at row size, accents apart).
+    // Fallback ± (U+00B1, also Nunito, 1.9-2.0%, 9th-10th), which names only two of the four
+    // operations and shares a cross with ⁜ beside it at 3 and 5 columns and with Quick Math's ÷ in
+    // the rows. Not ∗ (3.0%, 10 families: a radiating mark like ⁜, and reads as a star), +
+    // (4th-5th, and the shape of the shell's IconAdd), ⁼ (as thin as ∴), ≟ (muddy at 16px), ⁂
+    // (reads as a clover), ∵ ∷ ⋰ (as thin as ∴), nor any circled mark (◎ is on this shelf). Not yet
+    // seen on a low-spec handset.
+    id: 'make-the-target',
+    title: 'Make the Target',
+    category: 'puzzle',
+    glyph: '=',
+    channel: 'in-development',
+    storageKeys: Object.values(TG_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/make-the-target/ui/MakeTheTargetRoot').then((m) => ({
+        default: m.MakeTheTargetRoot,
+      })),
+    loadStorageSchemas: () => import('../games/make-the-target/storage/schemas'),
+  },
+  {
+    // The X of noughts and crosses in one character (U+2573): the mark the player sets in the small
+    // boards (docs/NESTED_TIC_TAC_TOE_RULES.md). From Box Drawing, so it fills the full line height
+    // and is taller than wide (observed: 31x51 device px, strokes about 2.2 CSS px). The shell's
+    // close button is not a character but IconClose in ui/components/icons.tsx, a square X of
+    // 1.75-unit strokes on a 24-unit grid (13x13 CSS px at its 22px size, in --ink-soft), shown
+    // only in a tutorial header; no × ✕ ✖ ╳ appears anywhere in the shell's copy. Beside it this
+    // mark is tall, heavier and sits in accent on an accent tile, and on the board shelf it read as
+    // a letter X. The usual close characters of the web are × and ✕, so neither is a better answer
+    // to that worry; ⌧ is an X in a box, the clear key; ⊠ would be the seventh framed mark on this
+    // shelf (⊚ ⊟ ⊡ ⊜ ⊞ ⊶), the reason ⊗ was ruled out; ✖ has the Emoji property, becomes an RGI
+    // emoji with U+FE0F and is in Noto Color Emoji here. This one has neither Emoji nor
+    // Extended_Pictographic. 12 families. On the board shelf it sits after Dots and Boxes' ⊡ (2, 4
+    // and 5 columns), under Dominoes' ⊟ (2), Mancala's ⊚ (3), Yacht's ⚄ (4) and Gomoku's ⁙ (5);
+    // with Chess's ♞ ahead of it, as it now is, after ♞ (3 and 4 columns), under ⊡ (2), ⊟ (3), ⊚ (4) and ⚄
+    // (5). No other X is on the home. In a full-width fallback face (FreeSans, WenQuanYi) it
+    // becomes a square X of 44x44 device px, still an X. Tile ink 4.3-4.5% (33rd-34th of the 51
+    // measured, from the thinnest). Fallback ✕ (U+2715, 8 families, 2.8%), with the caveat above.
+    // Not yet seen on a low-spec handset.
+    id: 'nested-tic-tac-toe',
+    title: 'Nested Tic-Tac-Toe',
+    category: 'board',
+    glyph: '╳',
+    channel: 'in-development',
+    storageKeys: Object.values(NT_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/nested-tic-tac-toe/ui/NestedTicTacToeRoot').then((m) => ({
+        default: m.NestedTicTacToeRoot,
+      })),
+    loadStorageSchemas: () => import('../games/nested-tic-tac-toe/storage/schemas'),
+  },
+  {
+    // A white club (U+2667): the third hollow suit on the cards shelf, where hollow has meant
+    // somebody sits across the table since Hearts' ♡ and Gin Rummy's ♢ (docs/SCOPA_RULES.md). Not
+    // ♣, which is Spider Solitaire's, has the Emoji property, becomes an RGI emoji with U+FE0F and
+    // is in Noto Color Emoji here; this one has Extended_Pictographic only, like ♡ ♢ ♛ (checked
+    // against the Unicode 16 property data), and is not in that emoji font. 14 families. It sits
+    // after Gin Rummy's ♢ (2 to 4 columns), under Hearts' ♡ (2), FreeCell's ♥ (3), Spider
+    // Solitaire's ♣ (4) and Solitaire's ♠ (5); ♣ is diagonal at 3 and 5. Hollow against filled is
+    // the pair ♡ and ♥ already make side by side at 2, 4 and 5 columns, and here the faces add
+    // size: DejaVu Sans draws this one 30x32 device px, Liberation Sans draws ♣ 25x25 (the size
+    // difference goes where both fall to one face). Both parted at tile size and at row size. Tile
+    // ink 2.5-2.6% (15th of the 51 measured, from the thinnest; ♣ is 3.0%). No fallback in hand: ♤
+    // is thinner (2.0%) and sits on the same shelf as ♠. Not yet seen on a low-spec handset.
+    id: 'scopa',
+    title: 'Scopa',
+    category: 'cards',
+    glyph: '♧',
+    channel: 'in-development',
+    storageKeys: Object.values(SC_STORAGE_KEYS),
+    loadRoot: () => import('../games/scopa/ui/ScopaRoot').then((m) => ({ default: m.ScopaRoot })),
+    loadStorageSchemas: () => import('../games/scopa/storage/schemas'),
+  },
+  {
+    // A right triangle (U+22BF): the piece the set has most of, and the one every silhouette is cut
+    // from (docs/TANGRAM_RULES.md). Not ◩, ⟁ or ⬠, which the plan feared were thin: measured, they
+    // are 6.9-7.1%, 4.2% and 3.3% tile ink, heavier than this mark, and only their coverage is low
+    // (9, 6 and 7 families). This one is 11 families, neither Emoji nor Extended_Pictographic. It
+    // is small, a math operator rather than a geometric shape in DejaVu Sans (26x25 device px, a
+    // quarter of the tile, and set a little low and right), but not thin: tile ink 2.7-2.9%
+    // (17th-19th of the 51 measured, from the thinnest, just above Loop Puzzle's ⬚). On the puzzle
+    // shelf it sits after Make the Target (2, 4 and 5 columns), under Peg Solitaire's ⁜ (2),
+    // Unblock Puzzle's ⇥ (3), Sliding Puzzle's ⇄ (4) and Water Sort's ≋ (5); with Gem Swap's ❖ ahead of
+    // these, as it now is, under ❖ (2), ⁜ (3), ⇥ (4) and ⇄ (5). No triangle is on this shelf. Sky
+    // Fighter's ▲ (arcade) and Shape Regions' ▙ (logic) meet it only in the favourites, recent and
+    // search rows, where a hollow right triangle parts from a solid isosceles and a solid block.
+    // Its size follows the fallback face: IPAGothic and WenQuanYi draw it at 34-37 px, Unifont at
+    // 18. Fallback ◿ (U+25FF, 9 families, 3.2-3.3%), the same orientation drawn larger. Not yet
+    // seen on a low-spec handset.
+    id: 'tangram',
+    title: 'Tangram',
+    category: 'puzzle',
+    glyph: '⊿',
+    channel: 'in-development',
+    storageKeys: Object.values(TN_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/tangram/ui/TangramRoot').then((m) => ({ default: m.TangramRoot })),
+    loadStorageSchemas: () => import('../games/tangram/storage/schemas'),
   },
 ];
