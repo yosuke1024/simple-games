@@ -43,8 +43,8 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **41 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
-  本数はここで数える)。`GAMES` の全 51 エントリには、下の Web 先行公開中の 5 本(No. 42〜46)と、
-  実装中で Web 版にも出していない 5 本(No. 47〜51)も含まれる。
+  本数はここで数える)。`GAMES` の全 56 エントリには、下の Web 先行公開中の 5 本(No. 42〜46)と、
+  実装中で Web 版にも出していない 10 本(No. 47〜56)も含まれる。
 - 2026-10-02 に、Web 版で先行公開していた新作 11 本(Crown Grid / Number Path /
   Shape Regions、2026-09-26、issue #194。Yacht / Mancala / Dominoes / Hit & Blow /
   Dots and Boxes、2026-09-27、issue #197。Binary Balance / Sudoku 6×6 / Box Regions、
@@ -72,6 +72,15 @@ Design philosophy:
   Chess で待たせない。正式収録の 41 本には数えず、アプリには出ない。
   チャンネルの宣言は registry の `channel`、出し分けは `app/gameChannel.ts` の
   実行時ガード(`docs/WEB_VERSION.md`「先行公開」)。
+- 2026-10-20 から、さらに **Web 先行公開(ベータ)向けの新作 5 本**(Overtake / Make the Target /
+  Nested Tic-Tac-Toe / Scopa / Tangram、No. 52〜56)に着手した(計画は
+  `docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md`、仕様の正は各
+  `docs/*_RULES.md`)。Phase 1 として `scripts/new-game.mjs --channel web-beta` でスキャフォールドし、
+  registry に `channel: 'web-beta'` で登録した段階で、**ゲーム本体はまだ無い**(画面と文言は
+  スキャフォールドの仮のもの)。**Web 版にも出していない** — 統合と検証を終えてから同期する。
+  Overtake と Tangram は実機での試作(Phase 0)を先に行い、Tangram はそれが通らなければ Three Peaks に
+  差し替える。正式収録の 41 本には数えず、アプリには出ない。47〜51 の Phase 1(#239)が先に main に
+  入ったので、この 5 本はその後ろに No. 順で並ぶ。
 - 実装上のゲーム一覧・ID・並び順・カテゴリの正は `apps/simple-games/src/app/registry.ts` の `GAMES` / `GAME_CATEGORIES`。
 - 人間向け一覧は root `README.md`。
 - 各ゲームの実装は `apps/simple-games/src/games/<game-id>/` に分離する。

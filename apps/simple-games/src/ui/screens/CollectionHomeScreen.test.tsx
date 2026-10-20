@@ -69,7 +69,8 @@ vi.mock('../../services/homeShortcut/homeShortcut', () => ({
 // Besides the real web-beta titles (today the five of
 // docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md) and the real
 // in-development ones (the scaffolds of
-// docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md), the
+// docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md and
+// docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md), the
 // registry this file sees carries one synthetic title on each channel: a
 // released game's shape under an id and title of its own, appended last. They
 // keep the tests below from going vacuous on any day no registry title is on a

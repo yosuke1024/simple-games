@@ -21,7 +21,9 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   `unblock-puzzle.css` / `snake.css` / `loop-puzzle.css` / `bridges.css` /
   `peg-solitaire.css`(Web 先行公開の 5 本、2026-10-17)、
   `chess.css` / `gem-swap.css` / `pipe-link.css` / `bounce-up.css` / `echo-pads.css`
-  (Web 先行公開の次の 5 本、2026-10-19 にスキャフォールド)。
+  (Web 先行公開の次の 5 本、2026-10-19 にスキャフォールド)、
+  `overtake.css` / `make-the-target.css` / `nested-tic-tac-toe.css` / `scopa.css` / `tangram.css`
+  (さらに次の 5 本、2026-10-20 にスキャフォールド)。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。

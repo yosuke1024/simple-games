@@ -83,7 +83,8 @@ describe('gameLandingUrl', () => {
     // issues #194 and #197, in the app since 2026-10-02, the five still in
     // early release (docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md)
     // and the next ones being built for it
-    // (docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md),
+    // (docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md and
+    // docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md),
     // which stay out of PUBLISHED_GAME_IDS until they graduate — so their
     // tutorials end without the button rather than at a 404 inside our own
     // site.
@@ -106,6 +107,11 @@ describe('gameLandingUrl', () => {
       'pipe-link',
       'bounce-up',
       'echo-pads',
+      'overtake',
+      'make-the-target',
+      'nested-tic-tac-toe',
+      'scopa',
+      'tangram',
     ]) {
       expect(gameLandingUrl(id, 'en')).toBeNull();
       expect(gameLandingUrl(id, 'ja')).toBeNull();

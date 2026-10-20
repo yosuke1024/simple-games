@@ -189,6 +189,21 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'bounce-up': ['bo.stats', 'bo.flags'],
   // No. 51, in-development (docs/ECHO_PADS_RULES.md storage): not frozen until graduation
   'echo-pads': ['ep.stats', 'ep.flags'],
+  // The five web-beta titles of
+  // docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
+  // (Nos. 52–56): beta keys on the same terms as the ten above. They are still
+  // the scaffold's two keys; each grows to its rules document's storage section
+  // in Phase 2/3.
+  // No. 52, web-beta (docs/OVERTAKE_RULES.md storage): not frozen until graduation
+  overtake: ['ot.stats', 'ot.flags'],
+  // No. 53, web-beta (docs/MAKE_THE_TARGET_RULES.md storage): not frozen until graduation
+  'make-the-target': ['tg.stats', 'tg.flags'],
+  // No. 54, web-beta (docs/NESTED_TIC_TAC_TOE_RULES.md storage): not frozen until graduation
+  'nested-tic-tac-toe': ['nt.stats', 'nt.flags'],
+  // No. 55, web-beta (docs/SCOPA_RULES.md storage): not frozen until graduation
+  scopa: ['sc.stats', 'sc.flags'],
+  // No. 56, web-beta (docs/TANGRAM_RULES.md storage): not frozen until graduation
+  tangram: ['tn.stats', 'tn.flags'],
 };
 
 const PREFIXES: Record<string, string> = {
@@ -243,6 +258,11 @@ const PREFIXES: Record<string, string> = {
   'pipe-link': 'pn.',
   'bounce-up': 'bo.',
   'echo-pads': 'ep.',
+  overtake: 'ot.',
+  'make-the-target': 'tg.',
+  'nested-tic-tac-toe': 'nt.',
+  scopa: 'sc.',
+  tangram: 'tn.',
 };
 
 describe('registry storage keys (released data — do not edit to make green)', () => {

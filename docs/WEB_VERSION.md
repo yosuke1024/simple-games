@@ -15,7 +15,7 @@
 | 広告       | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効)                                                                                                                                                                                                                                             | Anchored Adaptive Banner 1 枠のみ                                                                                   |
 | 課金       | なし(完全無料)                                                                                                                                                                                                                                                                                                         | $3.99 買い切りで広告永久削除                                                                                        |
 | 計測       | サイト共通のページ解析(下の「計測」節。実装済み・既定は無効)                                                                                                                                                                                                                                                           | なし — Analytics を入れないことがアプリの約束([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))                       |
-| ゲーム内容 | 正式収録の 41 本+先行公開中の新作(下の「先行公開」節。いま配信中は 5 本 — Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、2026-10-19 から。次の 5 本 — Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads — は実装中で未配信。registry では `channel: 'in-development'`)。正式収録ゲームに機能差なし | 正式収録の 41 本(registry で `channel` を持たないエントリ)。新作は先行公開で検証後に収録(2026-10-02 に 11 本を収録) |
+| ゲーム内容 | 正式収録の 41 本+先行公開中の新作(下の「先行公開」節。いま配信中は 5 本 — Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、2026-10-19 から。次の 10 本 — Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads と Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram — は実装中で未配信。registry では `channel: 'in-development'`)。正式収録ゲームに機能差なし | 正式収録の 41 本(registry で `channel` を持たないエントリ)。新作は先行公開で検証後に収録(2026-10-02 に 11 本を収録) |
 
 **Play instantly on the web. Play quietly and offline in the app.**
 
@@ -396,6 +396,18 @@ registry では 2026-10-20 から **`channel: 'in-development'`**(下の「main 
 採らなかった案: id を `WEB_BETA_GAME_IDS` に足して通す(遊べないものを BETA として出す)、チャンクを
 配信物から除く(ビルドの分岐を増やす)。この文書が知る最後の同期は上の `a1c6a27`(2026-10-19)で、
 47〜51 は入っていない — 「Web 版には出していない」は、5 本が `'web-beta'` になって同期されるまでそのまま。
+
+**さらに次の 5 本 — Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram(No. 52〜56)— も
+実装中で、Web 版には出していない**(2026-10-20 に着手。計画は
+[plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)、
+仕様の正は各ルール文書)。段階は上の 5 本と同じ(registry に `channel: 'in-development'` で登録した
+スキャフォールドで、ゲーム本体はまだ無い。14 言語のカタログはどれも英語の仮文)。どのビルドの扉からも
+開けないが、チャンクは出るので、main を次に Web 版へ同期する PR では landing の `IN_DEVELOPMENT_GAME_IDS`
+に 5 本の id を足す(上の「対処」と同じ)。遊べるようになる変更で `'web-beta'` に変え、統合と検証を
+終えてから Web 版へ同期し、その同期の PR で `WEB_BETA_GAME_IDS` へ移す。Overtake と Tangram は実機での
+試作(Phase 0)を先に行い、Tangram は
+それが通らなければ Three Peaks に差し替える。5 本とも Club House には登録しない。正式収録の基準
+(上の 1・2)は変えず、Web で公開するまで始まらない。
 
 それ以前の先行公開は、2026-10-02 に 11 本すべてを正式収録して空になった — Crown Grid /
 Number Path / Shape Regions(issue #194、計画は

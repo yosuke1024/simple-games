@@ -60,7 +60,9 @@ describe('the address a shortcut carries', () => {
   // docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md are on the channel
   // today. A title still in development (`channel: 'in-development'`, the
   // scaffolds of docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-
-  // echo-pads.md) is offered nowhere, so its address is the collection too.
+  // echo-pads.md and docs/plans/2026-10-20-overtake-make-the-target-nested-
+  // tic-tac-toe-scopa-tangram.md) is offered nowhere, so its address is the
+  // collection too.
   it('means the collection for every web-beta or in-development title in the registry today', () => {
     const offTheApp = GAMES.filter((game) => game.channel);
     expect(offTheApp.length).toBeGreaterThan(0);

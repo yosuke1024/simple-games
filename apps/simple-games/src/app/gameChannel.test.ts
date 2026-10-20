@@ -29,11 +29,24 @@ const WEB_BETA_IDS = ['unblock-puzzle', 'snake', 'loop-puzzle', 'bridges', 'peg-
 /**
  * The titles in development today, in registry order: the five of
  * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
- * (Nos. 47–51), scaffolds since 2026-10-20 with no game behind them yet. No
+ * (Nos. 47–51) and the five of
+ * docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
+ * (Nos. 52–56), scaffolds since 2026-10-20 with no game behind them yet. No
  * build offers them on any door. Each moves to WEB_BETA_IDS in the change
  * that makes it playable, and that change edits this list on purpose.
  */
-const IN_DEVELOPMENT_IDS = ['chess', 'gem-swap', 'pipe-link', 'bounce-up', 'echo-pads'];
+const IN_DEVELOPMENT_IDS = [
+  'chess',
+  'gem-swap',
+  'pipe-link',
+  'bounce-up',
+  'echo-pads',
+  'overtake',
+  'make-the-target',
+  'nested-tic-tac-toe',
+  'scopa',
+  'tangram',
+];
 
 /** A beta title that exists only in this file: a released game's shape, a channel of its own. */
 const SYNTHETIC_BETA: GameDefinition = {

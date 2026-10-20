@@ -514,6 +514,55 @@
   --accent-ring-soft: rgba(48, 108, 182, 0.12);
 }
 
+/* The web-beta titles of docs/plans/2026-10-20-overtake-make-the-target-nested-
+   tic-tac-toe-scopa-tangram.md. All five accents were chosen together against the
+   shipped fifty-one (Nos. 47–51 included) per its Phase 1. */
+
+:root[data-game='overtake'],
+.accent-overtake {
+  --accent: #922643;
+  --accent-ink: #ffffff;
+  --accent-soft: #f4d7df;
+  --accent-ring: rgba(146, 38, 67, 0.38);
+  --accent-ring-soft: rgba(146, 38, 67, 0.12);
+}
+
+:root[data-game='make-the-target'],
+.accent-make-the-target {
+  --accent: #393f93;
+  --accent-ink: #ffffff;
+  --accent-soft: #dbdcf0;
+  --accent-ring: rgba(57, 63, 147, 0.38);
+  --accent-ring-soft: rgba(57, 63, 147, 0.12);
+}
+
+:root[data-game='nested-tic-tac-toe'],
+.accent-nested-tic-tac-toe {
+  --accent: #633b36;
+  --accent-ink: #ffffff;
+  --accent-soft: #ede0de;
+  --accent-ring: rgba(99, 59, 54, 0.38);
+  --accent-ring-soft: rgba(99, 59, 54, 0.12);
+}
+
+:root[data-game='scopa'],
+.accent-scopa {
+  --accent: #b53192;
+  --accent-ink: #ffffff;
+  --accent-soft: #f4d7ec;
+  --accent-ring: rgba(181, 49, 146, 0.38);
+  --accent-ring-soft: rgba(181, 49, 146, 0.12);
+}
+
+:root[data-game='tangram'],
+.accent-tangram {
+  --accent: #426a25;
+  --accent-ink: #ffffff;
+  --accent-soft: #e4f1da;
+  --accent-ring: rgba(66, 106, 37, 0.38);
+  --accent-ring-soft: rgba(66, 106, 37, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -984,6 +1033,51 @@
   --accent-soft: #222f3a;
   --accent-ring: rgba(112, 154, 189, 0.42);
   --accent-ring-soft: rgba(112, 154, 189, 0.14);
+}
+
+:root[data-theme='dark'][data-game='overtake'],
+[data-theme='dark'] .accent-overtake {
+  --accent: #cd748a;
+  --accent-ink: #1e0b10;
+  --accent-soft: #3d1f26;
+  --accent-ring: rgba(205, 116, 138, 0.42);
+  --accent-ring-soft: rgba(205, 116, 138, 0.14);
+}
+
+:root[data-theme='dark'][data-game='make-the-target'],
+[data-theme='dark'] .accent-make-the-target {
+  --accent: #8785c1;
+  --accent-ink: #0e0e1b;
+  --accent-soft: #242339;
+  --accent-ring: rgba(135, 133, 193, 0.42);
+  --accent-ring-soft: rgba(135, 133, 193, 0.14);
+}
+
+:root[data-theme='dark'][data-game='nested-tic-tac-toe'],
+[data-theme='dark'] .accent-nested-tic-tac-toe {
+  --accent: #c3a59d;
+  --accent-ink: #19120f;
+  --accent-soft: #362926;
+  --accent-ring: rgba(195, 165, 157, 0.42);
+  --accent-ring-soft: rgba(195, 165, 157, 0.14);
+}
+
+:root[data-theme='dark'][data-game='scopa'],
+[data-theme='dark'] .accent-scopa {
+  --accent: #da71c0;
+  --accent-ink: #20081a;
+  --accent-soft: #411b38;
+  --accent-ring: rgba(218, 113, 192, 0.42);
+  --accent-ring-soft: rgba(218, 113, 192, 0.14);
+}
+
+:root[data-theme='dark'][data-game='tangram'],
+[data-theme='dark'] .accent-tangram {
+  --accent: #a7cd7e;
+  --accent-ink: #151d0b;
+  --accent-soft: #2e3c20;
+  --accent-ring: rgba(167, 205, 126, 0.42);
+  --accent-ring-soft: rgba(167, 205, 126, 0.14);
 }
 
 /* ---------- Web early release (docs/WEB_VERSION.md「先行公開」) ----------

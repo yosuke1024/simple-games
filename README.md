@@ -236,8 +236,27 @@ pixapps-landing の #201 で同期)。タイトルカードに「BETA」バッ�
 | Bounce Up | アーケード   | `bounce-up/` | [docs/BOUNCE_UP_RULES.md](docs/BOUNCE_UP_RULES.md) |
 | Echo Pads | ドリル       | `echo-pads/` | [docs/ECHO_PADS_RULES.md](docs/ECHO_PADS_RULES.md) |
 
-後続候補は上の 10 本の正式収録判断まで**ありません**(以前は 42〜46 の 5 本の判断までと
-書いていましたが、2026-10-19 に作者の判断で、その判断の前に 47〜51 の 5 本に着手しました)。
+52〜56 本目の新作 5 本(Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram)も、同じ
+**Web 版だけの先行公開(ベータ)**向けに 2026-10-20 から実装しています(計画は
+[docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)、
+仕様の正は各ルール文書)。いまは registry に `channel: 'web-beta'` で登録したスキャフォールドの
+段階で、**ゲーム本体はまだ無く、Web 版にもアプリにも出ていません**。統合と検証を終えてから
+Web 版へ同期します。Overtake と Tangram は実機での試作(Phase 0)を先に行い、Tangram はそれが
+通らなければ Three Peaks に差し替えます。上の 41 本には数えず、ストア掲載文にも載せず、
+Club House にも登録しません。遊び方・進行・助けはまだ実装していないので、ここには書きません
+(計画と各ルール文書にあります)。
+
+| ゲーム             | カテゴリ     | フォルダ              | ルール文書(いまはスタブ)                                             |
+| ------------------ | ------------ | --------------------- | -------------------------------------------------------------------- |
+| Overtake           | アーケード   | `overtake/`           | [docs/OVERTAKE_RULES.md](docs/OVERTAKE_RULES.md)                     |
+| Make the Target    | パズル       | `make-the-target/`    | [docs/MAKE_THE_TARGET_RULES.md](docs/MAKE_THE_TARGET_RULES.md)       |
+| Nested Tic-Tac-Toe | ボードゲーム | `nested-tic-tac-toe/` | [docs/NESTED_TIC_TAC_TOE_RULES.md](docs/NESTED_TIC_TAC_TOE_RULES.md) |
+| Scopa              | カード       | `scopa/`              | [docs/SCOPA_RULES.md](docs/SCOPA_RULES.md)                           |
+| Tangram            | パズル       | `tangram/`            | [docs/TANGRAM_RULES.md](docs/TANGRAM_RULES.md)                       |
+
+後続候補は上の 15 本の正式収録判断まで**ありません**(以前は 42〜46 の 5 本の判断までと
+書いていましたが、2026-10-19 と 2026-10-20 に作者の判断で、その判断の前に 47〜56 の 10 本に
+着手しました)。
 次を選ぶときは、ローカル生成で完結しコンテンツサーバーを必要としないものを優先します。
 未収録のゲームをストアやアプリ内で "Coming Soon" として見せることはしません。
 
@@ -301,7 +320,12 @@ simple-games/
 │           │   ├── gem-swap/
 │           │   ├── pipe-link/
 │           │   ├── bounce-up/
-│           │   └── echo-pads/
+│           │   ├── echo-pads/
+│           │   ├── overtake/    # ここから 5 本も実装中の Web 先行公開(ベータ)。まだスキャフォールド
+│           │   ├── make-the-target/
+│           │   ├── nested-tic-tac-toe/
+│           │   ├── scopa/
+│           │   └── tangram/
 │           ├── backup/        # 共有: ローカルバックアップの書き出しと復元
 │           ├── club/           # 共有: 任意の Club House(参加した人だけが通信する唯一のディレクトリ)
 │           ├── monetization/   # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
@@ -344,15 +368,15 @@ Android / iOS のビルド手順は [apps/simple-games/README.md](apps/simple-ga
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 14 言語・1,803 キー(シェル 125 + ゲーム別 1,678 — 正式収録 41 本の 1,393、Web 先行公開 5 本の 230、実装中の 5 本のスキャフォールドの 55。Club House の 122 キーは別カタログ。2026-10-19 に各 `en.ts` の最上位キーを数えた)
+**One app. Many games. Many languages.** 現在は 14 言語・1,858 キー(シェル 125 + ゲーム別 1,733 — 正式収録 41 本の 1,393、Web 先行公開 5 本の 230、実装中の 10 本のスキャフォールドの 110。Club House の 122 キーは別カタログ。2026-10-20 に各 `en.ts` の最上位キーを数えた)
 (en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
 中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。
 カタログは全言語同梱で、言語追加は「locale ファイル 1 つ + 登録」で完結します。
 **en と ja 以外は来歴 `machine` です — AI の助けを借りて書いており、その言語の
 ネイティブは一人も読んでいません。**Web 先行公開 5 本のゲーム別の文言は、ja も AI の
-下書きで、作者はまだ読んでいません(5 本の文言に高リスクキーはありません)。実装中の 5 本
-(Chess から Echo Pads まで)のカタログは、まだ 14 言語すべてがスキャフォールドの英語の仮文です。
+下書きで、作者はまだ読んでいません(5 本の文言に高リスクキーはありません)。実装中の 10 本
+(Chess から Tangram まで)のカタログは、まだ 14 言語すべてがスキャフォールドの英語の仮文です。
 この製品は一人でつくっているため、14 言語の
 ネイティブレビューは供給できません。代わりに、約束を背負う高リスクキーだけは
 リリース前に逆翻訳を作者が読む門を通し、自然さは来歴の開示と読者からの報告に
