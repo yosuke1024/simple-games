@@ -212,6 +212,23 @@
   color: var(--ink-soft);
 }
 
+/* The shared segmented control sets a minimum height only; in short-word
+   locales (th, vi, hi) a segment would fall below the tap size wide. Kept
+   local so Settings' segmented controls stay untouched. */
+.ot-controls .segment {
+  min-width: var(--tap-size);
+}
+
+/* The early-release note (the shell's WebBetaNotice) under the heading on
+   every Quick Rules step (ui/screens/TutorialScreen.tsx): the heading's
+   gutter, the header's padding for the space above it, and the full width —
+   the same rule as tangram.css and the other web-beta titles. */
+.ot-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
+}
+
 .ot-figure {
   display: block;
   width: min(70vw, 220px);

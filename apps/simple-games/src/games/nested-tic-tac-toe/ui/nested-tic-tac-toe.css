@@ -314,10 +314,12 @@
 
 /* ---------- Quick Rules figures ---------- */
 
+/* Capped by viewport height so long ja / pt-BR step titles still leave the
+   Back / Next buttons above the web ad reserve at 360x640. */
 .nt-figure {
   display: block;
-  width: 168px;
-  height: 168px;
+  width: min(168px, 23vh);
+  height: min(168px, 23vh);
 }
 
 .nt-figure-ground {
@@ -391,4 +393,13 @@
       );
     }
   }
+}
+
+/* The early-release note in Quick Rules gets the screen's 16px side gutter, the
+   same rule as tangram.css and the earlier web-beta titles (snake, peg-solitaire,
+   unblock-puzzle, loop-puzzle, bridges): without it the BETA pill starts at x=0. */
+.nt-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
 }

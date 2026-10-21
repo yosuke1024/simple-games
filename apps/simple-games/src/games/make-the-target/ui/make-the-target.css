@@ -346,10 +346,14 @@
   pointer-events: none;
 }
 
+/* The figure sits in a shrink-to-fit column with no definite width, so the
+   tiles flow as one row of fixed tracks — `auto-fit` would resolve to a single
+   column there and stack them (the first tile tapped must read as the left). */
 .tg-figure-board {
-  --tg-n: 3;
   width: auto;
-  grid-template-columns: repeat(auto-fit, 56px);
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: 56px;
   justify-content: center;
 }
 
@@ -362,4 +366,13 @@
 .tg-figure-ops .tg-op {
   height: 44px;
   font-size: 22px;
+}
+
+/* The early-release note in Quick Rules gets the screen's 16px side gutter, the
+   same rule as tangram.css and the earlier web-beta titles (snake, peg-solitaire,
+   unblock-puzzle, loop-puzzle, bridges): without it the BETA pill starts at x=0. */
+.tg-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
 }

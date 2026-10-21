@@ -1719,6 +1719,123 @@ pointercancel の検査、iOS でのズームを招く 11 px のログ欄、な�
 吸着の許容の検査が無かった、完成後の Undo、など)で、すべて反映した。落ちた指摘は Overtake 6 件・
 Tangram 10 件(防御的な自己回復・倍率の感触など、仕様の範囲内か使い捨てには過剰なもの)。
 
+### Phase 2〜4 の実施結果(2026-10-21)
+
+**進め方。**Phase 0 の実機の試行がまだ無い(上の「Phase 0 の試作」)まま、オーナーの指示で Phase 2 以降に進んだ。
+Overtake は操作の 2 つの結果(モード A / B)を両方実装し、既定を 1 つの定数(`DRAG_MAPPING`)に置いて
+`'in-development'` の間だけモード A を既定にした(OVERTAKE_RULES.md §3)。Tangram は Phase 0 が通る前提で進め、
+Three Peaks への差し替えは計画の退路のまま残した(TANGRAM_RULES.md 冒頭)。5 本はゲームごとの git worktree
+(`wip/<id>`、main `fe3dc36` = #245 のマージから分岐)で並列に進め、各段階をサブエージェントが書き、独立の
+レビュー(読むだけ)→ 反映 → 再検査の順で通した。触ってよい範囲は `src/games/<id>/`・自分のルール文書・
+`gameKeys.test.ts` の自分の行に限り、共有ファイルは統合でまとめて直した。
+
+**Phase 2(ルール文書 → `game/`)。**ルール文書は計画の節と「未決事項」の推奨をそのまま採り、オーナーの判断を
+要する点は「製品オーナーの確認待ち」として残した。ルール文書のレビューの指摘は Overtake 31 / Make the Target 23 /
+Nested Tic-Tac-Toe 22 / Scopa 24 / Tangram 21 で、全件を反映した。`game/`(React も DOM も持たない純粋な
+TypeScript、シード付き PRNG、仕事量の上限)のレビューの指摘は 17 / 13 / 12 / 14 / 13 で、全件を反映した。
+`game/` のテストは Overtake 15 ファイル 114 件(+ `OT_REGEN_PACE` のときだけ走る 2 件)、Make the Target 19
+ファイル 190 件(+ 同梱表を書く 1 件)、Nested Tic-Tac-Toe 7 ファイル 114 件(+ `NT_SELFPLAY=full` の 2 件)、
+Scopa 6 ファイル 105 件、Tangram 9 ファイル 473 件。実測した数(生成器と CPU の門、ペース表、カタログの不変条件など)は
+各ルール文書に「Phase 2 のテストで実測」として書き、テストが出さない数は「算術では」「未検証」のまま残した。
+商標・両ストアの検索はこの環境では行えず、5 本とも §14(または冒頭)に「未確認(2026-10-21)」と書いた。
+
+**Phase 3(`storage/` → `state/` → `ui/` → i18n)。**保存は fail-closed、デイリーを持つ Make the Target と Tangram は
+2 スロット規則、Back の持ち主は GameContext、退出の同期は `useOnUnmount` 1 回、CPU の手番はセッション依存の
+effect(Nested Tic-Tac-Toe / Scopa)、Overtake は RAF を `running` の間だけ(`OvertakeRoot.leak.test.tsx`)。
+レビューの指摘は Overtake 13 / Make the Target 13 / Nested Tic-Tac-Toe 9 / Scopa 15 / Tangram 10 で、共有ファイルに
+掛かる 3 件(統合で対応)と Nested の 1 件(見送り、理由はルール文書)を除いて反映した。13 言語のカタログは
+`en` から AI が書き、作者もネイティブもまだ読んでいない(各ルール文書の i18n の節と I18N_POLICY.md)。
+キー数は Overtake 30 / Make the Target 45 / Nested Tic-Tac-Toe 45 / Scopa 65 / Tangram 45(14 言語とも同じ)。
+各ブランチの最終の門: `vitest run src/games/<id> src/test`・`pnpm typecheck`・`pnpm lint`・Prettier・
+`check-principles.sh` がすべて通過 — Overtake 43 ファイル 998 件(+2 skipped)、Make the Target 48 ファイル
+1,095 件(+1)、Nested Tic-Tac-Toe 32 ファイル 984 件(+2)、Scopa 32 ファイル 971 件、Tangram 36 ファイル 1,355 件
+(いずれも共通の wiring テスト 19 ファイル 777 件を含む)。
+
+**Phase 4(統合)。**`ccr-5dd5a1f8-71w1q2`(main `fe3dc36`)に、各ゲームを 1 コミットに squash して No. 順に
+統合した: `37dfb17` Overtake / `a0b4e17` Make the Target / `a92ec6c` Nested Tic-Tac-Toe / `eadad0d` Scopa /
+`5c5df81` Tangram(`gameKeys.test.ts` の隣接する行の衝突は両方の行を残して解消)。続けて共有ファイルを
+`36f1d7f` で直した — registry の `channel`、`gameChannel.test.ts` / `CollectionHomeScreen.test.tsx` の一覧、
+README(表・ツリー・キー数)、WEB_VERSION、PROJECT_CONTEXT、RELEASE_CHECKLIST、I18N_POLICY、architecture/i18n、
+ARCHITECTURE、architecture/registry、storage-keys(5 本の実際のキー)、css-split、GAME_LIFECYCLE「CPU 探索」
+(5 本の形と暫定の例外)、store/listing(使用禁止表現)、BRAND / title-accent の状態ラベル。
+
+- **チャンネルの判断(統合のレビューで判明)。**遊べるようになった本を `'web-beta'` にする(「フェーズ」6)が、
+  ルール文書 2 本が切り替えを条件付きにしていた: **Overtake** は §3「Phase 0 の結果をこの節に記録するまで
+  `'web-beta'` にしない。記録の前に上げるなら `DRAG_MAPPING` を `'B'` にして出す」、**Scopa** は §4.2(復帰時の
+  拍の張り直しの読み方 — 製品オーナーの判断を得てから)と §14(規則の出典と商標・ストアの検索を公開の前に)。
+  **Make the Target / Nested Tic-Tac-Toe / Tangram の 3 本を `'web-beta'` にし、Overtake と Scopa は遊べる状態の
+  まま `'in-development'` に留めた**(registry のコメントに理由)。Nested Tic-Tac-Toe にも Scopa と同型の外れ
+  (復帰時の 450ms の張り直し、§4)があり確認待ちだが、その文書は切り替えの条件にしていないので上げた —
+  オーナーは 2 本をまとめて決めてよい。
+- **アクセントの測り直し(BRAND.md 手順 5)。**統合ブランチの `styles.css` / `titleAccents` / registry を Phase 1 と
+  同じスクリプト(CIE76、CSS Color 4 の全精度)で読み、56 本 × 6 値の一致(例外は従来からの Quick Math /
+  Bunny Hop の ring-soft 0.14)を確かめた上で、5 色の最接近は Phase 1 と全値一致 — Overtake Unblock Puzzle
+  12.82 / 10.14、Make the Target Sky Fighter 12.76 / Bridges 9.24、Nested Tic-Tac-Toe Checkers 12.60 / Snake
+  11.28、Scopa Ludo 12.61 / 9.31、Tangram Binary Balance 12.57 / Bunny Hop 10.47。相互の最小はライト 30.0
+  (Overtake × Nested Tic-Tac-Toe)/ ダーク 30.0(Overtake × Scopa)、コレクションの最接近ペアは 10.88 / 7.91 の
+  まま。最弱余裕は 1.005(Tangram のライト)で変わらない。色は 1 つも替えていない。
+- **Scopa のカード面の上のアクセント(SCOPA_RULES.md §11.2 の依頼)。**ライト `#b53192` はライトのカード面
+  `#fffdf8` の上で 5.41、紙 `#f3f0e9` の上で 4.83、ライトのフェルト `#b88a72` の上で **1.81**、カードの赤 `#b0483f`
+  との ΔE 54.6。ダーク `#da71c0` はダークのカード面 `#e6e2d9` の上で **2.29**、ダーク紙 `#14171c` の上で 6.08
+  (BRAND.md の値)、ダーク面 `#212730` の上で 5.08(計画の値 — 測った面が違うだけで、どちらも正しい)、ダークの
+  フェルト `#2c1f1b` の上で 5.39、ダークのカードの赤 `#a8382f` との ΔE 58.4。取れる札の印はリング(カードの外、
+  フェルトの上)と角の切り欠き(カード面の上)の 2 つで、弱いのはライトのフェルト上のリングとダークの面上の
+  切り欠き。扱いは下の統合レビュー。
+- **ブラウザ試遊(Playwright のヘッドレス Chromium、360×640・DPR 2・タッチ、ライト / ダーク)。**5 本を一時的に
+  すべて `'web-beta'` にした Web ビルド(`vite build --mode web` → `vite preview`)で、各ゲームの Quick Rules
+  → ホーム → 盤面を撮り、ホームの開始ボタンのタップの Event Timing を CPU 1 倍 / 6 倍で記録した。横スクロールも
+  縦スクロールも無し(scrollWidth / Height = 360 / 640)、コンソールのエラーは landing の共有ヘッダ
+  `global-header.js` の 404(landing の外で開いたため)だけ。6 倍での開始タップの p95 / 最大は Overtake 136 /
+  136 ms(ダーク 88)、Make the Target 72 / 72(ダーク 64)、Nested Tic-Tac-Toe 88 / 88(ダーク 80)、Scopa 40 /
+  40、Tangram 72 / 72(ダーク 96)— 開発機の値で、実機ではない。スクリーンショットは作業ディレクトリに置き、
+  リポジトリには入れていない。
+- **全体の門**: 統合ブランチ(`4c607c9` の時点)で CI と同じ順に実行した(2026-10-21、開発機): `pnpm lint`・`pnpm typecheck`・
+  `pnpm test`(**728 ファイル通過・2 スキップ、14,633 件通過・6 スキップ** — スキップは opt-in の生成・自己対局のテスト)・
+  `pnpm build` と `check-dist-ads-separation.sh native`・`build:web` と `check-dist-ads-separation.sh`・`size:check`
+  (新しいチャンク 5 本 — Overtake 25.0 / Make the Target 24.0 / Nested Tic-Tac-Toe 20.3 / Scopa 26.1 / Tangram 26.7 KB
+  (gzip)— と共有チャンクの再分割による既存の ±0.1 KB。合計 4,298.3 KB(gzip 1,416.2 KB)、+141.5 KB。`size:update` で
+  基準を更新)・`i18n:gate:check`・`ios:version check`・`check-principles.sh`、すべて通過。統合レビューの修正の後に
+  typecheck・lint・該当のテストと Prettier を取り直した(下)。
+- **統合レビュー(4 観点 — 原則と約束 / シェルの契約と寿命 / 文書の真実性 / 画面とレイアウト、指摘ごとに
+  2 人が反証、確定した指摘は領域ごとのエージェントが反映)**: 4 観点で 23 件の指摘、反証で 11 件が落ち(Nested Tic-Tac-Toe と Scopa の復帰時の張り直しをまとめて決める、
+  などは確認待ちとして既に記録済みのもの)、**12 件を確定して反映した**。主なもの: Make the Target の Quick Rules の
+  図が `auto-fit` で縦に積まれ、広告の予約込みでボタンが広告帯の下に落ちていた(blocking — 1 行の grid に直した)/
+  Nested Tic-Tac-Toe の Quick Rules の図を 23vh で頭打ちにして ja・pt-BR の長い見出しでも収まるように / Overtake・
+  Make the Target・Nested Tic-Tac-Toe・Scopa の Quick Rules の先行公開のお知らせに 16px の側溝が無かった(Tangram と
+  42〜46 の規則をそろえた)/ Scopa の得点帯の ♦ が 0×0 で描かれていた(寸法を与え、CSS を読むテストを足した)/
+  Scopa のカード面上のアクセントの実測を SCOPA_RULES §11.2 と BRAND.md に書き、弱い 2 組(ライトのフェルト上 1.81、
+  ダークの面上 2.29)を**確認待ち**として残した / `i18n.test.ts` の動的キーの一覧に 27 キー(Make the Target 14・
+  Nested Tic-Tac-Toe 3・Tangram 10)/ `resetLocalDataWiring.test.ts` の 1 件に 15 秒の上限(56 本のスキーマを読み込む
+  最初の呼び出しで、負荷時に 5 秒を超えた)/ ルール文書 5 本の冒頭の状態と「この環境にブラウザが無い」という
+  誤った理由の訂正、Phase 3 を未来形で書いた文の訂正、統合への引き継ぎ一覧の「対応済み」/ Overtake の Drag /
+  Buttons の切り替えの最小幅 48px。**ブラウザ試遊の証拠の不備**(広告の予約が効いていない・ホームではなく盤面を
+  撮っていた)も指摘され、予約を付けた 2 回目の試遊で撮り直した(上)。
+
+**製品オーナーの確認待ち(5 本のルール文書が残した点 — 公開の前に)。**
+
+- 共通: 商標と両ストアの検索(5 本とも未確認。各 §14 / 冒頭)/ デイリーの統計の数え方と結果カードの
+  第一ボタン(42〜46 から続く 2 点 — Make the Target §8・§9、Tangram §結果カード、Bridges の形に合わせた暫定)/
+  統計と結果の文言(Bridges の言い方に暫定で合わせた)。
+- Overtake: Phase 0 の実機の試行(§3。通らなければ `DRAG_MAPPING` を `'B'` に)/ ライバルの `planLane` を
+  ループの中で走らせる例外(§6、GAME_LIFECYCLE「CPU 探索」に暫定の例外として記載)/ ラチェットの戻り速度の
+  解釈(指で減速を保持できない — §3)/ 「1 位でクリア」の厳しさ(計画の判断待ち — 試作の人間の中央値は未測定)。
+- Make the Target: 放棄したあとに解を 1 つ見る(§暫定)/ Hard を 5 枚にした理由(§7)。
+- Nested Tic-Tac-Toe: 復帰時の 450ms の張り直し(§4、共通要件からの外れ)/ ノード上限を決めた段(Node のみ。
+  CDP 6 倍と実機の段は未実施 — §4.3・§16)。
+- Scopa: 復帰時の拍の張り直しの読み方(§4.2 — `'web-beta'` への切り替えの条件)/ 規則の出典の確認(§14)。
+- Tangram: Phase 0 の実機の試行(通らなければ Three Peaks)/ 結果カードのボタン / デイリーの統計の枠(§12)。
+
+**Web 版への同期(「フェーズ」6)の形。**この PR のマージ後、main を Web 版へ同期する landing の PR では、
+`tests/ui.test.js` の `IN_DEVELOPMENT_GAME_IDS` から **`make-the-target` / `nested-tic-tac-toe` / `tangram` の
+3 本を `WEB_BETA_GAME_IDS` へ移し**、`overtake` / `scopa` は `IN_DEVELOPMENT_GAME_IDS` に残す(47〜51 と
+同じ扱い — チャンクはあるがカードも BETA も無い)。本番への配信(landing の Publish Simple Games (web))は
+自動では行わず、オーナーの明示的な承認を要する。
+
+**現状の文書の数(統合後)。**registry 56 = 正式収録 41 + `'web-beta'` 8(配信中の 42〜46 と、実装済みで未同期の
+53・54・56)+ `'in-development'` 7(スキャフォールドの 47〜51 と、実装済みだが条件待ちの 52・55)。i18n は
+14 言語・**2,033 キー** = シェル 125 + 正式収録 1,393 + 42〜46 の 230 + 47〜51 の 55 + 52〜56 の 230
+(2026-10-21、各 `en.ts` の `en` の最上位プロパティを TypeScript の構文木で数えた)。
+
 ## PRODUCT_PRINCIPLES.md への 1 文
 
 [PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md)「必須原則」の補足、「ゲームデータは端末内に保存。クラウド
@@ -1754,3 +1871,5 @@ rebase 前の数(2026-10-20、`en.ts` の最上位キーを数えた)と、rebas
   スキャフォールドのまま各 11 キー)。I18N_POLICY / architecture/i18n / README / PROJECT_CONTEXT はこの数で書いた。
 - #242 後の rebase(`33562c1`。上の「Phase 1 の実施結果」の追記): registry **56** = 41 + `web-beta` 5(配信中の
   42〜46)+ `in-development` 10(47〜56)。i18n は 1,858 のまま。
+- Phase 4 の統合後(2026-10-21、上の「Phase 2〜4 の実施結果」): registry 56 = 41 + `web-beta` 8(42〜46 と 53・54・56)+
+  `in-development` 7(47〜51 と 52・55)。i18n は **2,033** = 125 + 1,393 + 230 + 55 + 230。

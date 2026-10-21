@@ -60,7 +60,7 @@ export function OvertakeTutorialScreen() {
   };
 
   return (
-    <div className="screen tutorial-screen">
+    <div className="screen tutorial-screen ot-tutorial">
       <header className="screen-header">
         <h1>{t('howToPlay')}</h1>
         {tutorialCompleted ? (

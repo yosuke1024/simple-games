@@ -15,7 +15,8 @@
 ゲーム ID は `overtake`、i18n キーの接頭辞は `overtake`、保存キーの接頭辞は `ot.`、カテゴリは
 `arcade`、No. 52。**Web 先行公開(ベータ)のタイトル**で、アプリには正式収録しない(registry では
 遊べるようになるまで `channel: 'in-development'` — どのビルドにも出ない — その後 `'web-beta'`
-(ただし Phase 0 の結果を §3 に記録するまで上げない)。
+(ただし Phase 0 の結果を §3 に記録するまで上げない)。**2026-10-21 の時点では遊べるが `'in-development'` のまま**
+— §3 の条件が満たされていない(Phase 0 未実施。記録の前に上げるなら `DRAG_MAPPING` を `'B'` にして出す)。
 [WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。保存スキーマは正式収録まで凍結しない。
 Club House には登録しない(registry の `challenge` を持たない。§15)。
 
@@ -1042,7 +1043,8 @@ Bump の操舵ロック(0.3 秒、§4)の間、入力の `steerX` は読まれ�
   とラベル、選ばれている側に `aria-pressed` — Snake の速度の選択と同じ形)で、ラベルは「操作 / Controls」と
   「Drag / Buttons」(`en`。他の言語は §12)。**選ばなくても始められる**(既定は Drag)。選ぶと
   `ot.prefs` に残り、次の `ready` から効く(走っている最中には変えられない — 選択はホームにしか無い)。
-  タップの的は 48px 以上。
+  タップの的は幅・高さとも 48px 以上(共有の `.segment` は高さしか揃えないので、幅は `overtake.css` の
+  `.ot-controls .segment` で揃える — th・vi・hi の短い語でも 48px を割らない。設定画面には触れない)。
 
 ### 画面の構成(上から)
 
@@ -1753,17 +1755,19 @@ i18n の段階(同じ日)で下の `i18n/catalogs.test.ts` の 6 件を足し、
 
 - `docs/GAME_LIFECYCLE.md`「CPU 探索」の一覧に、Overtake の `planLane`(1 回の仕事量は構造で決まり、出荷 100 面の
   実測で最大 93。§17)とボット・較正の仕事量の上限(`MAX_RACE_STEPS`)を並べるかどうか。
+  — **統合で対応済み**(36f1d7f。両方を並べた)。
 
 - `docs/GAME_LIFECYCLE.md`「CPU 探索」に、ライバルの `planLane` をループの中で走らせる例外の 1 行(§6)。
   **製品オーナーの確認の後で**(GAME_LIFECYCLE は例外を決めるのを製品オーナーとしている)。書くなら
   「再証明」の例外と同じく「暫定の例外(製品オーナーの確認待ち)」として。
+  — **統合で対応済み**(36f1d7f。「暫定の例外(製品オーナーの確認待ち)」として書いた。確認そのものは残っている)。
 - registry の `channel` を、Phase 0 の結果を §3 に記録するまで `'in-development'` のままにする(記録の前に
-  `'web-beta'` へ上げるなら `DRAG_MAPPING` を `'B'`)。
+  `'web-beta'` へ上げるなら `DRAG_MAPPING` を `'B'`)。 — **統合で対応済み**(36f1d7f。`'in-development'` のまま)。
 - `docs/architecture/storage-keys.md` の `ot.*` の行を実際のキーへ: `ot.progress` / `ot.stats` / `ot.flags` /
-  `ot.prefs` の 4 つ(途中保存・デイリーなし)。
-- `store/listing.md` の使用禁止表現に比較対象 3 つの名前を足す(§14)。
+  `ot.prefs` の 4 つ(途中保存・デイリーなし)。 — **統合で対応済み**(36f1d7f)。
+- `store/listing.md` の使用禁止表現に比較対象 3 つの名前を足す(§14)。 — **統合で対応済み**(36f1d7f)。
 - `src/app/gameKeys.test.ts` の No. 52〜56 の行の上の共有のコメント(「They are still the scaffold's two keys;
   each grows …」)は、Overtake の行が 4 キーになったので古い。行はルール文書ごとに増える、と書き直す
-  (自分の行の外なので、この作業では触れない — Phase 3 のレビューの指摘)。
+  (自分の行の外なので、この作業では触れない — Phase 3 のレビューの指摘)。 — **統合で対応済み**(36f1d7f)。
 - ホームが 360×640 の広告予約ありで 675〜697px になり、縦にスクロールする(§11「寸法」。Snake のホームも
   770px)。ホームの受け入れ基準をどうするか(共有のホームの枠の話)。

@@ -31,8 +31,8 @@ Phase 3 で書いた(同じく §17「Phase 3(画面・保存・状態)で決め
 カテゴリは `puzzle`、グリフは `=`(U+003D)、アクセントは紺桔梗(ライト `#393f93` / ダーク `#8785c1`。
 選定は計画「Phase 1 の実施結果」)。**Web 先行公開(ベータ)のタイトル**で、アプリ(Android / iOS)には
 収録していない。registry では遊べるようになるまで `channel: 'in-development'`(どのビルドにも出ない)、
-遊べるようになる変更で `'web-beta'` にする([WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。
-Web 版への配信もまだで、統合と検証を終えてから landing へ同期する(計画「フェーズ」)。ストア掲載文・
+遊べるようになる変更で `'web-beta'` にする([WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)— **2026-10-21 に
+`'web-beta'` にした**。Web 版への配信はまだで、次の landing の同期 PR で出る(計画「フェーズ」6)。ストア掲載文・
 landing のガイド・`PUBLISHED_GAME_IDS` には入れない。Club House には登録しない(§16)。保存スキーマは
 正式収録まで凍結しない(§10)。
 
@@ -773,6 +773,8 @@ stats・flags・prefs)は本体を `try` で包み、どこで例外が起きて
 
 **3 ステップ・各 1 文・図中心**([I18N_POLICY.md](I18N_POLICY.md)「文言設計」)。各ステップに、盤と同じ
 クラスで描く小さな静止画を置く(`ui/components/TargetFigure.tsx`。読み上げからは隠し、文が意味を運ぶ)。
+図のタイルは盤と同じく横 1 列に並べる(56px の列を枚数だけ。縦に積むと図が高くなり、web の広告の帯の下に
+ボタンが沈む — 統合のレビューで見つけて直した)。
 en は Phase 3 で下の案のとおりに書き、見出しは「Combine two」「A new number」「Match the target」とした。
 13 言語は訳の段(2026-10-21)で AI が書いた(誰も読んでいない — §13)。スタブの文案から、2 と 3 に規則を
 1 つずつ足した(途中の値の制限と、
@@ -809,8 +811,8 @@ en は Phase 3 で下の案のとおりに書き、見出しは「Combine two」
   6 桁 15px)。**並びは 1 行**(Phase 3 で決めた。v1 は最大 5 枚)。**算術では**(`ui/make-the-target.css` の
   寸法から): 360×640・Web の予約 116px 込みで、上のバー 64px と Undo のバー 77px を除いた 383px に、盤の列
   (目標 52・タイル 56・演算子の欄 100・式の行 4 × 21 と間隔・余白)が最大 338px で収まる。タイルの幅は 5 枚で
-  (360 − 32 − 4 × 8) / 5 ≈ 59px、6 枚でも 48px、演算子は 64 × 56px。**実ブラウザ・実機の実寸は測っていない**
-  (この環境にブラウザが無い — §15)。矢印キーの動きは並びに依らず、スロット番号の順に 1 本の列を進む
+  (360 − 32 − 4 × 8) / 5 ≈ 59px、6 枚でも 48px、演算子は 64 × 56px。**実機の実寸は測っていない**(Phase 3 ではブラウザで測らなかった。Phase 4 の統合でヘッドレス Chromium の
+  360×640 で Quick Rules・ホーム・盤面にスクロールが出ないことだけ見た — 計画「Phase 2〜4 の実施結果」。§15)。矢印キーの動きは並びに依らず、スロット番号の順に 1 本の列を進む
   (§3。2 行のときも ↑↓ は行の移動にしない)。盤(目標・タイル・演算子)の大きさは言語で変わらない
   (盤に文字が無い)。
 - **`missed` のパネル**(§4)は盤の外にあり、演算子の行の欄に**同じ固定の高さ**(100px)で入る(文 2 行
@@ -1101,8 +1103,8 @@ en は Phase 3 で下の案のとおりに書き、見出しは「Combine two」
   ui/・state/・storage/・i18n/ からの import、`game/` の中で誰が何を import するか — `newSession.ts` を
   import する `game/` のモジュールが無いことも、`restore.ts` と
   `session.ts` が推移的に届くもの、`tiers.ts` が葉であること)と、走査そのものが 4 つの import の形を
-  読めること。ui/・state/・storage/・i18n/ はいまスキャフォールドだけなので、Phase 3 でファイルが増えて
-  初めて意味のある門になる。
+  読めること。書いた時点では ui/・state/・storage/・i18n/ がスキャフォールドだけだったが、Phase 3 で
+  ファイルが増えたいまは、それらのファイルの import も同じ門が見ている。
 - **デイリーの日付**(`daily.test.ts` 3)と**手の文字列**(`serialize.test.ts` 4)。
 
 ### Phase 3 のテストで確かめたこと
@@ -1352,7 +1354,8 @@ en は Phase 3 で下の案のとおりに書き、見出しは「Combine two」
   Reduced Motion(OS とアプリの設定)では描かない。
 - 結果カードの事実は難易度・枚数・目標・時間の 4 行(§9)。解を見た後のカードは解の行と難易度・枚数。
 - 統計画面の「クリア数」は en「Problems solved」(Bridges の「Boards solved」の形 — §9・§17 の暫定)。
-- 13 言語のファイルは型を通すために `en` の値を写した仮文にした(§13)。
+- 13 言語のファイルは型を通すために `en` の値を写した仮文にした(§13)。これは Phase 3 の間だけの
+  つなぎで、下の訳の段で `ja` と 12 言語の訳に置き換えた。
 - ホームの難易度のボタンに最短の秒を出さない(§9。Loop Puzzle / Bridges の前例とは違える)。
 
 **統合の段への申し送り**(このゲームのフォルダの外で、統合が直すもの):
@@ -1365,6 +1368,9 @@ en は Phase 3 で下の案のとおりに書き、見出しは「Combine two」
 `makeTheTargetDifficulty_easy` / `_medium` / `_hard`、`makeTheTargetTierNote_easy` / `_medium` / `_hard`、
 `makeTheTargetOp_add` / `_subtract` / `_multiply` / `_divide`、`makeTheTargetSpokenLine_add` / `_subtract` /
 `_multiply` / `_divide`(Loop Puzzle・Bridges・Unblock Puzzle の分もそのリストに無い)。
+**統合で対応済み**: storage-keys.md の 5 キーと GAME_LIFECYCLE.md「CPU 探索」の形は 36f1d7f、`size-baseline.json`
+は 4c607c9。`i18n.test.ts` の 14 キーは Phase 4 のレビューの修正で足した(同じ修正で Nested Tic-Tac-Toe と Tangram の
+組み立てるキーも足した)。Loop Puzzle・Bridges・Unblock Puzzle など既存のゲームの分は、まだそのリストに無い。
 
 **訳の段(2026-10-21)で決めたこと**(このゲームのフォルダの中で): `ja` と 12 言語を 45 キーずつ書き、§13 の
 来歴を「書いた日・キー数・誰も読んでいない」に書き直した。§13 の旧版が置いた「訳が書けるまで `web-beta` に

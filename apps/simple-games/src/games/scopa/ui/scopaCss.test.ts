@@ -168,6 +168,15 @@ describe('colours on the dark theme', () => {
     expect(contrast(token(darkGame, '--sc-red'), token(darkShell, '--paper'))).toBeLessThan(3);
   });
 
+  it('gives the band’s ♦ a size of its own (an unsized SVG there collapses to 0×0)', () => {
+    // `.sc-suit` is sized only inside a card; without these the diamonds
+    // count in the band reads as a bare, unlabelled number.
+    const body = ruleBody('.sc-tally-diamonds .sc-suit');
+    expect(body).toMatch(/width:\s*1[0-2]px/);
+    expect(body).toMatch(/height:\s*1[0-2]px/);
+    expect(body).toMatch(/flex:\s*none/);
+  });
+
   it('frames the closed slot in a light line on the dark felt', () => {
     expect(ruleBody('.sc-slot')).toMatch(/border:\s*1\.5px dashed var\(--sc-slot-line\)/);
     expect(token(darkGame, '--sc-slot-line')).toMatch(/^rgba\(2\d\d, 2\d\d, 2\d\d,/);

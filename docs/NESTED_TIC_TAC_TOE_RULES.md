@@ -13,7 +13,8 @@
 カテゴリは `board`、No. 54。名称は説明的な一般名の「Nested Tic-Tac-Toe」を使う。市中で別の名で呼ばれる同じ
 形式があるが、その名は §14 にだけ書く([BRAND.md](BRAND.md)「自社タイトルと比較対象の名前」)。
 **Web 先行公開(ベータ)のタイトル**で、アプリにはまだ収録していない(registry では遊べるようになるまで
-`channel: 'in-development'` — どのビルドにも出ない — その後 `'web-beta'`。
+`channel: 'in-development'` — どのビルドにも出ない — その後 `'web-beta'`。**2026-10-21 に `'web-beta'` にした**が、
+Web 版へはまだ同期していない — 次の landing の同期 PR で出る。
 [WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。Club House には登録しない(§15)。
 
 3×3 の小さな盤(小盤)が 3×3 に並んだ盤(大盤)で、CPU と三目並べを打つ。**打ったマスの小盤内での位置が、
@@ -498,8 +499,8 @@ Reversi §9 と同じ理由)。デイリーが無いので 2 スロット規則�
 - 各難易度の `played`・`wins`・`losses`・`draws` は 0〜1e9 の整数、`totalPlaySeconds` は 0〜1e12 の整数
   (Reversi の統計と同じ形と範囲)。整数でない数・範囲外・欠けた難易度・型違い・未知の `schemaVersion` が 1 つでも
   あれば**レコード全体を無効**とし、既定(すべて 0)に戻す(読めた部分だけを拾わない)。
-- `schemaVersion` は **1 のまま**。スキャフォールドの `{ schemaVersion: 1, played }` を置き換えるが、どのビルドにも
-  出ていない(§8)ので移行は要らない。開発中の端末にスキャフォールドの形が残っていても、難易度のキーが無いので
+- `schemaVersion` は **1 のまま**。スキャフォールドの `{ schemaVersion: 1, played }` を置き換えるが、Web 版へ
+  まだ同期していない(§8 — 配信前)ので移行は要らない。開発中の端末にスキャフォールドの形が残っていても、難易度のキーが無いので
   無効として既定に戻る。
 
 ## 9. Quick Rules(アプリ内チュートリアル)
@@ -1146,3 +1147,9 @@ import できない(`src/test/importBoundaries.test.ts` の規則 1)ので、テ
 `nt.*` の行の「いまは stats / flags だけ」を 4 キー(`nt.saveGame` / `nt.stats` / `nt.flags` / `nt.prefs`)に
 (保存キーは Phase 3 のコミットで足した)。`app/gameKeys.test.ts` の 52〜56 の段の注記「They are still the scaffold's
 two keys」も、このゲームについては古くなった(自分の行は 4 キーにしたが、共有の注記は触っていない)。
+
+**統合で対応済み**(36f1d7f): 上の 4 つはどれも統合が書いた — GAME_LIFECYCLE.md「CPU 探索」に
+`HARD_NODE_LIMIT` = 40,000 と「復帰時の張り直し — 暫定の例外(製品オーナーの確認待ち)」(オーナーの判断はまだで、
+認めなければ上の項のとおり戻す)、storage-keys.md の `nt.*` の 4 キー、`gameKeys.test.ts` の 52〜56 の段の注記。
+動的に組み立てるキー `nestedTicTacToeDifficulty_*` は、Phase 4 のレビューの修正で `src/i18n/i18n.test.ts` の
+「動的生成キー」のテストに足した([I18N_POLICY.md](I18N_POLICY.md) の決まり)。

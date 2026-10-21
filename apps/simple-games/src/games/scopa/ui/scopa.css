@@ -103,7 +103,13 @@
   gap: 2px;
 }
 
+/* The band's ♦ needs its own size: `.sc-suit` is sized only inside a card
+   (index / middle), and an unsized SVG here collapses to 0×0, leaving the
+   diamonds count as a bare number. 11px sits on the band's 13px text. */
 .sc-tally-diamonds .sc-suit {
+  flex: none;
+  width: 11px;
+  height: 11px;
   color: var(--sc-band-red);
 }
 
@@ -622,4 +628,13 @@
 
 :root[data-sg-web-ads] .sc-hand-card {
   width: 18%;
+}
+
+/* The early-release note in Quick Rules gets the screen's 16px side gutter, the
+   same rule as tangram.css and the earlier web-beta titles (snake, peg-solitaire,
+   unblock-puzzle, loop-puzzle, bridges): without it the BETA pill starts at x=0. */
+.sc-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
 }

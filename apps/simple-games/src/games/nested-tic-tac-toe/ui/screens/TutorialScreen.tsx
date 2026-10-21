@@ -69,7 +69,7 @@ export function NestedTicTacToeTutorialScreen() {
   };
 
   return (
-    <div className="screen tutorial-screen">
+    <div className="screen tutorial-screen nt-tutorial">
       <header className="screen-header">
         <h1>{t('howToPlay')}</h1>
         {tutorialCompleted ? (
