@@ -1,42 +1,51 @@
 /**
- * Quick Rules (docs/OVERTAKE_RULES.md): at most three steps, one sentence
- * each, leading straight into play (docs/PRODUCT_PRINCIPLES.md「初回体験の原則」).
- * Scaffolded by scripts/new-game.mjs with three placeholder steps: write the
- * real ones from the rule doc, and give each a figure that shows a position
- * the game could actually be in.
+ * Quick Rules (docs/OVERTAKE_RULES.md §10): three steps, one sentence each,
+ * each with a still figure drawn by the board's own pieces
+ * (components/RaceFigure.tsx), leading straight into play
+ * (docs/PRODUCT_PRINCIPLES.md「初回体験の原則」).
  *
- * Two things here are the shell's contract rather than this game's taste
- * (src/test/tutorialBackWiring.test.tsx, issue #142): the heading is the
- * shared `howToPlay` string, and the close button exists only once the
- * tutorial has been completed — the first pass ends by starting a game, and
- * hardware Back marks it seen on the way out (state/GameContext.tsx). The
- * long-form rules live on the game's landing page behind "Learn More", which
- * is absent until the page exists (ui/landing.ts) and quietly does nothing
- * offline (docs/OFFLINE_POLICY.md).
+ * Step 2 says the control that actually works (§10): mode A's sentence only
+ * for Drag on mapping A, ▼'s sentence for mode B and for Buttons — chosen by
+ * `quickRulesVariant` from `DRAG_MAPPING` and `ot.prefs`. A first visit has
+ * chosen nothing yet, so it reads the default's.
  *
- * The early-release notice under the header is the shell's too
- * (docs/WEB_VERSION.md「先行公開(ベータ)」): a first visit opens here rather
- * than on the home, and the last step's button writes the first save, so the
- * notice is read before anything is saved — on every step, in one place.
+ * Two things here are the shell's contract (src/test/tutorialBackWiring.test.tsx,
+ * issue #142): the heading is the shared `howToPlay` string, and the close
+ * button exists only once the tutorial has been completed — the first pass
+ * ends by opening the frontier's race, and hardware Back marks it seen on
+ * the way out (state/GameContext.tsx). There is no Learn More: the game has
+ * no guide page (§10).
+ *
+ * The early-release notice is the shell's too (docs/WEB_VERSION.md
+ * 「先行公開(ベータ)」): a first visit opens here, and the last step's button
+ * writes the first save, so the notice is read before anything is saved.
  */
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { IconClose } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
-import { gameLandingUrl } from '@/ui/landing';
-import { openExternal } from '@/ui/openExternal';
+import { quickRulesVariant } from '../../game/input';
 import { useOvertake } from '../../state/GameContext';
+import { homeLevel } from '../../state/statsLogic';
+import { RaceFigure } from '../components/RaceFigure';
 
 export function OvertakeTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startPlaceholderRound, goHome } = useOvertake();
-  const { t, locale } = useSettings();
-  const learnMoreUrl = gameLandingUrl('overtake', locale);
+  const { tutorialCompleted, completeTutorial, startLevel, progress, controls, goHome } =
+    useOvertake();
+  const { t } = useSettings();
   const [step, setStep] = useState(0);
 
   const steps = [
-    { title: t('overtakeStep1Title'), body: t('overtakeStep1Body') },
-    { title: t('overtakeStep2Title'), body: t('overtakeStep2Body') },
-    { title: t('overtakeStep3Title'), body: t('overtakeStep3Body') },
+    { title: t('overtakeStep1Title'), body: t('overtakeStep1Body'), figure: 'lanes' as const },
+    {
+      title: t('overtakeStep2Title'),
+      body:
+        quickRulesVariant(controls) === 'A'
+          ? t('overtakeStep2BodyDrag')
+          : t('overtakeStep2BodyHold'),
+      figure: 'ease' as const,
+    },
+    { title: t('overtakeStep3Title'), body: t('overtakeStep3Body'), figure: 'finish' as const },
   ];
   const current = steps[step] ?? steps[0]!;
   const lastStep = step === steps.length - 1;
@@ -44,14 +53,14 @@ export function OvertakeTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startPlaceholderRound();
+      startLevel(homeLevel(progress));
     } else {
       goHome();
     }
   };
 
   return (
-    <div className="screen tutorial-screen">
+    <div className="screen tutorial-screen ot-tutorial">
       <header className="screen-header">
         <h1>{t('howToPlay')}</h1>
         {tutorialCompleted ? (
@@ -70,6 +79,7 @@ export function OvertakeTutorialScreen() {
           ))}
         </div>
         <h2 className="tutorial-title">{current.title}</h2>
+        <RaceFigure kind={current.figure} />
         <p className="tutorial-body">{current.body}</p>
       </div>
 
@@ -91,18 +101,6 @@ export function OvertakeTutorialScreen() {
           </button>
         )}
       </div>
-
-      {learnMoreUrl ? (
-        <div className="home-links">
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={() => openExternal(learnMoreUrl)}
-          >
-            {t('learnMore')}
-          </button>
-        </div>
-      ) : null}
     </div>
   );
 }

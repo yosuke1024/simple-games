@@ -1,20 +1,32 @@
 /**
- * Scopa's home (scaffolded by scripts/new-game.mjs): the shared header,
- * the hero, one demo action that opens the game screen, and the way into
- * Quick Rules. The hero and the mode buttons are this game's own to shape
- * (docs/ARCHITECTURE.md「シェルの枠とゲームの中身」); the header is the shell's.
- * The early-release notice under the tagline is the shell's too
- * (docs/WEB_VERSION.md「先行公開(ベータ)」): it says, before anything is
- * saved, that this game's saves may be reset while it is in early release.
+ * Home (docs/SCOPA_RULES.md §9.3): one opponent and nothing to choose — there
+ * is one strength (§4), and the dealer comes from the match's seed (§2.1) — so
+ * the button either deals a match or picks up the one already on the table.
+ *
+ * The slot holds one match, and a match runs to eleven across several deals,
+ * so replacing one is the one thing here worth asking about first. It asks
+ * with the shell's reviewed wording, the same as the ↻ on the table.
+ *
+ * The record so far rides on the main button as one quiet line, and only once
+ * a match has ended — a fact, never a target. The early-release notice under
+ * the tagline is the shell's (docs/WEB_VERSION.md「先行公開(ベータ)」).
  */
+import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { IconChart } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { useScopa } from '../../state/GameContext';
 
 export function ScopaHomeScreen() {
-  const { stats, navigate, startPlaceholderRound, exitToCollection } = useScopa();
+  const { navigate, stats, canResume, startNewGame, resumeGame, exitToCollection } = useScopa();
   const { t } = useSettings();
+  const [confirmReplace, setConfirmReplace] = useState(false);
+
+  const finished = stats.wins + stats.losses;
+  const note =
+    finished > 0 ? t('scopaRecordNote', { wins: stats.wins, losses: stats.losses }) : null;
 
   return (
     <div className="screen home-screen">
@@ -31,11 +43,33 @@ export function ScopaHomeScreen() {
       </div>
 
       <div className="home-actions">
-        {/* Scaffold placeholder — replace with the real game entry point(s). */}
-        <button type="button" className="btn btn-primary btn-big" onClick={startPlaceholderRound}>
-          {t('scopaPlayPlaceholder')}
-          {stats.played > 0 ? <span className="btn-note">{stats.played}</span> : null}
-        </button>
+        {canResume ? (
+          <>
+            <button type="button" className="btn btn-primary btn-big" onClick={resumeGame}>
+              {t('resume')}
+              {note ? <span className="btn-note">{note}</span> : null}
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-big"
+              onClick={() => setConfirmReplace(true)}
+            >
+              {t('newGame')}
+            </button>
+          </>
+        ) : (
+          <button type="button" className="btn btn-primary btn-big" onClick={startNewGame}>
+            {t('newGame')}
+            {note ? <span className="btn-note">{note}</span> : null}
+          </button>
+        )}
+
+        <nav className="home-chips">
+          <button type="button" className="home-chip" onClick={() => navigate('stats')}>
+            <IconChart className="home-chip-icon" />
+            <span>{t('statistics')}</span>
+          </button>
+        </nav>
 
         <div className="home-links">
           <button type="button" className="btn btn-ghost" onClick={() => navigate('tutorial')}>
@@ -43,6 +77,19 @@ export function ScopaHomeScreen() {
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmReplace}
+        title={t('confirmNewGameTitle')}
+        body={t('confirmNewGameBody')}
+        cancelLabel={t('cancel')}
+        confirmLabel={t('confirm')}
+        onCancel={() => setConfirmReplace(false)}
+        onConfirm={() => {
+          setConfirmReplace(false);
+          startNewGame();
+        }}
+      />
     </div>
   );
 }

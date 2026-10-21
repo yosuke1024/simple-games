@@ -88,9 +88,13 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
 > この節の項目はすべて未着手。
 >
 > さらにその次の 5 本(Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram、No. 52〜56。2026-10-20 に
-> 着手 — [plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md))も
-> 同じ段階(registry に `channel: 'in-development'` で登録したスキャフォールド — どのビルドにも出ない。ゲーム本体が無く、配信もしていない)で、
-> この節の項目はすべて未着手。
+> 着手 — [plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md))は
+> 2026-10-21 に遊べる形まで実装し、Make the Target / Nested Tic-Tac-Toe / Tangram の registry を `channel: 'web-beta'` にした。
+> Overtake と Scopa は各ルール文書の条件(Overtake は Phase 0 の結果の §3 への記録、Scopa は §4.2 の製品オーナーの
+> 判断と §14 の出典・検索)が満たされるまで `'in-development'` のまま。**5 本とも Web 版にはまだ配信していない**
+> (pixapps-landing への同期は製品オーナーの承認待ち — [WEB_VERSION.md](WEB_VERSION.md)「先行公開」)ので、
+> 上の 2 週間の安定稼働も滞在時間の確認も始まっていない。Overtake と Tangram は実機での試作(Phase 0)を
+> まだ行っておらず、操作の既定は暫定。この節の項目はすべて未着手。
 
 ## 1. コードの検証(機械が判定できるもの)
 

@@ -1,20 +1,58 @@
 /**
- * NestedTicTacToe's home (scaffolded by scripts/new-game.mjs): the shared header,
- * the hero, one demo action that opens the game screen, and the way into
- * Quick Rules. The hero and the mode buttons are this game's own to shape
- * (docs/ARCHITECTURE.md「シェルの枠とゲームの中身」); the header is the shell's.
- * The early-release notice under the tagline is the shell's too
+ * Home (docs/NESTED_TIC_TAC_TOE_RULES.md §1): three opponents, who moves
+ * first, and nothing between the player and the board. There is no level
+ * list — every match starts on the same empty board.
+ *
+ * A difficulty button starts its match at once. With a match in progress, the
+ * same difficulty resumes it, and a different one asks first — the slot holds
+ * one match, so starting another replaces it (Reversi's home, the same shape).
+ *
+ * Who moves first is a preference for the next match, not a switch on the
+ * current one (§1). Two buttons rather than a toggle: each draws its mark —
+ * the same shapes the board uses — beside the translated word, and its
+ * accessible name says the mark's name too, so nobody has to know that the
+ * cross moves first.
+ *
+ * The early-release notice under the tagline is the shell's
  * (docs/WEB_VERSION.md「先行公開(ベータ)」): it says, before anything is
  * saved, that this game's saves may be reset while it is in early release.
  */
+import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
+import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { IconChart } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
+import { CIRCLE, CROSS, DIFFICULTIES, type Difficulty } from '../../game';
 import { useNestedTicTacToe } from '../../state/GameContext';
+import { NestedMark } from '../components/NestedMark';
 
 export function NestedTicTacToeHomeScreen() {
-  const { stats, navigate, startPlaceholderRound, exitToCollection } = useNestedTicTacToe();
+  const {
+    navigate,
+    session,
+    stats,
+    canResume,
+    playerGoesFirst,
+    setPlayerGoesFirst,
+    startNewGame,
+    resumeGame,
+    exitToCollection,
+  } = useNestedTicTacToe();
   const { t } = useSettings();
+  const [pending, setPending] = useState<Difficulty | null>(null);
+
+  const current = canResume && session ? session : null;
+
+  const choose = (difficulty: Difficulty) => {
+    if (current && current.difficulty === difficulty) {
+      resumeGame();
+      return;
+    }
+    // Replacing a match in progress is the one thing worth a question.
+    if (current) setPending(difficulty);
+    else startNewGame(difficulty);
+  };
 
   return (
     <div className="screen home-screen">
@@ -31,11 +69,65 @@ export function NestedTicTacToeHomeScreen() {
       </div>
 
       <div className="home-actions">
-        {/* Scaffold placeholder — replace with the real game entry point(s). */}
-        <button type="button" className="btn btn-primary btn-big" onClick={startPlaceholderRound}>
-          {t('nestedTicTacToePlayPlaceholder')}
-          {stats.played > 0 ? <span className="btn-note">{stats.played}</span> : null}
-        </button>
+        <p className="nt-choose-label">{t('nestedTicTacToeChooseOpponent')}</p>
+
+        {DIFFICULTIES.map((difficulty) => {
+          const record = stats[difficulty];
+          const isCurrent = current?.difficulty === difficulty;
+          // The record so far, stated once and quietly — never a target.
+          const note = isCurrent
+            ? t('resume')
+            : record.wins + record.losses + record.draws > 0
+              ? t('nestedTicTacToeRecordNote', { wins: record.wins, losses: record.losses })
+              : null;
+          return (
+            <button
+              key={difficulty}
+              type="button"
+              className={`btn ${isCurrent ? 'btn-primary' : 'btn-secondary'} btn-big`}
+              onClick={() => choose(difficulty)}
+            >
+              {t(`nestedTicTacToeDifficulty_${difficulty}`)}
+              {note ? <span className="btn-note">{note}</span> : null}
+            </button>
+          );
+        })}
+
+        <div
+          className="nt-side-choice"
+          role="radiogroup"
+          aria-label={t('nestedTicTacToeChooseSideLabel')}
+        >
+          <button
+            type="button"
+            role="radio"
+            aria-checked={playerGoesFirst}
+            aria-label={t('nestedTicTacToePlayFirstLabel')}
+            className={`nt-side-option ${playerGoesFirst ? 'nt-side-option-on' : ''}`}
+            onClick={() => setPlayerGoesFirst(true)}
+          >
+            <NestedMark mark={CROSS} className="nt-side-mark" />
+            {t('nestedTicTacToePlayFirst')}
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={!playerGoesFirst}
+            aria-label={t('nestedTicTacToePlaySecondLabel')}
+            className={`nt-side-option ${!playerGoesFirst ? 'nt-side-option-on' : ''}`}
+            onClick={() => setPlayerGoesFirst(false)}
+          >
+            <NestedMark mark={CIRCLE} className="nt-side-mark" />
+            {t('nestedTicTacToePlaySecond')}
+          </button>
+        </div>
+
+        <nav className="home-chips">
+          <button type="button" className="home-chip" onClick={() => navigate('stats')}>
+            <IconChart className="home-chip-icon" />
+            <span>{t('statistics')}</span>
+          </button>
+        </nav>
 
         <div className="home-links">
           <button type="button" className="btn btn-ghost" onClick={() => navigate('tutorial')}>
@@ -43,6 +135,27 @@ export function NestedTicTacToeHomeScreen() {
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={pending !== null}
+        title={t('nestedTicTacToeConfirmSwitchTitle')}
+        body={
+          pending
+            ? t('nestedTicTacToeConfirmSwitchBody', {
+                current: t(`nestedTicTacToeDifficulty_${current?.difficulty ?? pending}`),
+                next: t(`nestedTicTacToeDifficulty_${pending}`),
+              })
+            : ''
+        }
+        cancelLabel={t('cancel')}
+        confirmLabel={t('confirm')}
+        onCancel={() => setPending(null)}
+        onConfirm={() => {
+          const next = pending;
+          setPending(null);
+          if (next) startNewGame(next);
+        }}
+      />
     </div>
   );
 }

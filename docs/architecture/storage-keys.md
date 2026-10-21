@@ -49,11 +49,11 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | `pn.*`          | Pipe Link(**いまは stats / flags だけ**。予定は saveGame / saveDaily / stats / flags / prefs。同上)                                                                             |
 | `bo.*`          | Bounce Up(**いまは stats / flags だけ**。予定は stats / flags / prefs — prefs は足場の幅だけ。saveGame なし・デイリーなし。同上)                                                |
 | `ep.*`          | Echo Pads(**いまは stats / flags だけ**。予定は saveGame / saveDaily / progress / stats / flags / prefs — 保存は run の位置だけで列は seed から作り直す。同上)                  |
-| `ot.*`          | Overtake(**いまは stats / flags だけ**。予定は progress(開放の最前線)/ stats / flags / prefs — 途中保存なし・デイリーなし。実装中のベータのキー — 下記)                         |
-| `tg.*`          | Make the Target(**いまは stats / flags だけ**。予定は saveGame / saveDaily / stats / flags / prefs。同上)                                                                       |
-| `nt.*`          | Nested Tic-Tac-Toe(**いまは stats / flags だけ**。予定は saveGame / stats / flags / prefs — prefs は先後。デイリーなし。同上)                                                   |
-| `sc.*`          | Scopa(**いまは stats / flags だけ**。予定は saveGame / stats / flags / prefs。デイリーなし。同上)                                                                               |
-| `tn.*`          | Tangram(**いまは stats / flags だけ**。予定は saveGame / saveDaily / progress / stats / flags / prefs。同上)                                                                    |
+| `ot.*`          | Overtake(progress / stats / flags / prefs — progress は開放の最前線、prefs は操作の形(Drag / Buttons)だけ。途中保存なし・デイリーなし。Web 先行公開のベータのキー — 下記)       |
+| `tg.*`          | Make the Target(saveGame / saveDaily / stats / flags / prefs — 中断は 2 スロット独立、prefs は最後に選んだ難易度だけ。同上)                                                     |
+| `nt.*`          | Nested Tic-Tac-Toe(saveGame / stats / flags / prefs — prefs は先後だけ。統計は難易度別。デイリーなし。同上)                                                                     |
+| `sc.*`          | Scopa(saveGame / stats / flags。**prefs なし** — 難易度は 1 段階、配り手はシードと交代で決まり、覚える設定が無い。デイリーなし。同上)                                           |
+| `tn.*`          | Tangram(saveGame / saveDaily / progress / stats / flags / prefs — 中断は 2 スロット独立、progress は図形ごとの最短秒と各ティアの最後の図形、prefs は最後のティアだけ。同上)     |
 | `ck.*`          | Checkers(saveGame / stats / flags / prefs。統計は難易度別)                                                                                                                      |
 | `rv.*`          | Reversi(saveGame / stats / flags / prefs。統計は難易度別)                                                                                                                       |
 | `c4.*`          | Connect Four(saveGame / stats / flags / prefs。同上)                                                                                                                            |
@@ -86,9 +86,15 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 存在しないキーである — 各ゲームの実装でルール文書の保存の節が定め、そのとき `keys.ts` と
 `gameKeys.test.ts` の行を同じコミットで足す。条件は上の 5 本と同じ(正式収録まで凍結しない)。
 
-`ot.*` から `tn.*` までの 5 本(No. 52〜56)も同じ段階にある(2026-10-20 にスキャフォールド。計画は
-`docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md`。`storage/keys.ts` は
-`stats` と `flags` の 2 キーだけで、表の「予定」は計画の決定事項。条件は上の 10 本と同じ)。
+`ot.*` から `tn.*` までの 5 本(No. 52〜56)は **Web 先行公開(ベータ)のキー**(2026-10-21 に実装し、
+registry は Make the Target / Nested Tic-Tac-Toe / Tangram が `channel: 'web-beta'`、Overtake と Scopa はルール文書が
+切り替えを止めている間 `'in-development'`。5 本とも Web 版へはまだ同期していない — `docs/WEB_VERSION.md`「先行公開」。計画は
+`docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md`)。表は上の `ub.*`〜`pg.*` と
+同じく各ゲームの `storage/keys.ts` が宣言する実際のキーで、`src/app/gameKeys.test.ts` の行が同じ並びで
+固定し、中身は各ゲームのルール文書の保存の節が定める。計画の決定事項の「予定」からは Scopa だけが
+変わった(`sc.prefs` を作らない — `SCOPA_RULES.md` §9)。デイリーを持つ Make the Target と Tangram は
+下の 2 スロット規則に従う(`src/test/savedGameSlots.test.ts`)。条件は `ub.*`〜`pg.*` と同じ(正式収録まで
+凍結しない)。
 
 Sudoku の 6 キー: `sd.saveGame`(中断したレベル)/ `sd.saveDaily`(中断したデイリー。
 2 スロット独立)/ `sd.stats`(難易度別)/ `sd.progress`(解放レベルとベストタイム)/

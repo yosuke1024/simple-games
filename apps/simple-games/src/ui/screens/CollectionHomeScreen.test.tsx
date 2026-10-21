@@ -67,10 +67,11 @@ vi.mock('../../services/homeShortcut/homeShortcut', () => ({
 }));
 
 // Besides the real web-beta titles (today the five of
-// docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md) and the real
-// in-development ones (the scaffolds of
-// docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md and
-// docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md), the
+// docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md and three of the five
+// of docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)
+// and the real in-development ones (the five of
+// docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md, and
+// Overtake and Scopa, which their rules documents hold back), the
 // registry this file sees carries one synthetic title on each channel: a
 // released game's shape under an id and title of its own, appended last. They
 // keep the tests below from going vacuous on any day no registry title is on a
@@ -245,6 +246,9 @@ describe('web-beta titles', () => {
       'loop-puzzle',
       'bridges',
       'peg-solitaire',
+      'make-the-target',
+      'nested-tic-tac-toe',
+      'tangram',
       'synthetic-beta',
     ]);
     expect(released.length).toBeGreaterThan(20);
@@ -310,7 +314,8 @@ describe('web-beta titles', () => {
 
 /**
  * A title still in development (`channel: 'in-development'`): a scaffold with
- * no game behind it, offered on no build at all (app/gameChannel.ts;
+ * no game behind it, or a game its rules document holds back from the beta
+ * channel, offered on no build at all (app/gameChannel.ts;
  * docs/WEB_VERSION.md「遊べるものだけを出す」). Not on a shelf, not in a section,
  * not a search result — on the browser's home no more than on the app's — and
  * never a BETA tile, which is what it would be on the beta channel.
@@ -328,10 +333,7 @@ describe('in-development titles', () => {
       'bounce-up',
       'echo-pads',
       'overtake',
-      'make-the-target',
-      'nested-tic-tac-toe',
       'scopa',
-      'tangram',
       'synthetic-in-development',
     ]);
   });

@@ -44,7 +44,8 @@ Design philosophy:
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **41 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
   本数はここで数える)。`GAMES` の全 56 エントリには、下の Web 先行公開中の 5 本(No. 42〜46)と、
-  実装中で Web 版にも出していない 10 本(No. 47〜56)も含まれる。
+  実装中で Web 版にも出していない 5 本(No. 47〜51)と、実装済みで Web 版へはまだ同期していない
+  5 本(No. 52〜56)も含まれる。
 - 2026-10-02 に、Web 版で先行公開していた新作 11 本(Crown Grid / Number Path /
   Shape Regions、2026-09-26、issue #194。Yacht / Mancala / Dominoes / Hit & Blow /
   Dots and Boxes、2026-09-27、issue #197。Binary Balance / Sudoku 6×6 / Box Regions、
@@ -73,17 +74,24 @@ Design philosophy:
   チャンネルの宣言は registry の `channel`、出し分けは `app/gameChannel.ts` の
   実行時ガード(`docs/WEB_VERSION.md`「先行公開」)。
 - 2026-10-20 から、さらに **Web 先行公開(ベータ)向けの新作 5 本**(Overtake / Make the Target /
-  Nested Tic-Tac-Toe / Scopa / Tangram、No. 52〜56)に着手した(計画は
+  Nested Tic-Tac-Toe / Scopa / Tangram、No. 52〜56)に着手し、**2026-10-21 に 5 本とも遊べる形まで
+  このリポジトリに実装した**(計画は
   `docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md`、仕様の正は各
-  `docs/*_RULES.md`)。Phase 1 として `scripts/new-game.mjs` でスキャフォールドし、registry に
-  `channel: 'in-development'`(どのビルドの扉からも開けない — `app/gameChannel.ts`)で登録した段階で、
-  **ゲーム本体はまだ無い**(画面と文言はスキャフォールドの仮のもの)。**Web 版にも出していない** —
-  遊べるようになる変更で `'web-beta'` に変え、統合と検証を終えてから同期する(landing の門の一覧は
-  `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移す。main を先に同期する PR では
-  `IN_DEVELOPMENT_GAME_IDS` に 5 本の id を足す)。
-  Overtake と Tangram は実機での試作(Phase 0)を先に行い、Tangram はそれが通らなければ Three Peaks に
-  差し替える。正式収録の 41 本には数えず、アプリには出ない。47〜51 の Phase 1(#239)が先に main に
-  入ったので、この 5 本はその後ろに No. 順で並ぶ。
+  `docs/*_RULES.md`)。registry では Make the Target / Nested Tic-Tac-Toe / Tangram の 3 本が 2026-10-21 から
+  `channel: 'web-beta'`(遊べるようになる変更で `'in-development'` から変えた)。**Overtake と Scopa は
+  遊べる形でも `'in-development'` のまま** — Overtake は Phase 0 の結果を `docs/OVERTAKE_RULES.md` §3 に
+  記録するまで(記録の前に上げるなら `DRAG_MAPPING` を `'B'` にして出す)、Scopa は復帰時の CPU の拍の
+  張り直しを製品オーナーが決め、規則の出典と商標・ストアの検索を `docs/SCOPA_RULES.md` §14 に書くまで
+  (§4.2・§14)、各ルール文書が `'web-beta'` への切り替えを止めている。**Web 版にはまだ出していない** —
+  pixapps-landing へ同期する PR は作っておらず、作るには製品オーナーの明示的な承認が要る。その PR では
+  landing の `tests/ui.test.js` の `'web-beta'` の 3 本の id を、同期するチャンクと同じ PR で
+  `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移し、Overtake と Scopa は
+  `IN_DEVELOPMENT_GAME_IDS` に置く(まだ無ければそれぞれの一覧に足す。`docs/WEB_VERSION.md`「先行公開」)。
+  Overtake と Tangram の実機での試作(Phase 0)はまだ行っておらず、操作の既定は暫定(Tangram はそれが
+  通らなければ Three Peaks に差し替える)。正式収録の 41 本には数えず、アプリには出ず、Club House にも
+  登録しない。正式収録の基準(`docs/RELEASE_CHECKLIST.md` §0)の 2 週間の時計は Web で公開した日から
+  数える — まだ動いていない。47〜51 の Phase 1(#239)が先に main に入ったので、この 5 本はその後ろに
+  No. 順で並ぶ(47〜51 はまだ `'in-development'`)。
 - 実装上のゲーム一覧・ID・並び順・カテゴリの正は `apps/simple-games/src/app/registry.ts` の `GAMES` / `GAME_CATEGORIES`。
 - 人間向け一覧は root `README.md`。
 - 各ゲームの実装は `apps/simple-games/src/games/<game-id>/` に分離する。

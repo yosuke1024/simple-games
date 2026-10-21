@@ -19,21 +19,36 @@ import { GAMES, type GameDefinition } from './registry';
  * The titles in early release today (docs/WEB_VERSION.md「先行公開」), in
  * registry order: the five new genres of
  * docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md (Nos. 42–46, on the
- * web since 2026-10-19). The eleven before them — three of issue #194, five
+ * web since 2026-10-19), and three of the five of
+ * docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
+ * (Nos. 53, 54 and 56), playable and on this channel since 2026-10-21 but not
+ * yet synced to the web. The eleven before them — three of issue #194, five
  * of issue #197, three of issue #210 — all graduated into the app on
  * 2026-10-02. Putting a title on the channel, or promoting one off it, edits
  * this list on purpose.
  */
-const WEB_BETA_IDS = ['unblock-puzzle', 'snake', 'loop-puzzle', 'bridges', 'peg-solitaire'];
+const WEB_BETA_IDS = [
+  'unblock-puzzle',
+  'snake',
+  'loop-puzzle',
+  'bridges',
+  'peg-solitaire',
+  'make-the-target',
+  'nested-tic-tac-toe',
+  'tangram',
+];
 
 /**
  * The titles in development today, in registry order: the five of
  * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
- * (Nos. 47–51) and the five of
- * docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
- * (Nos. 52–56), scaffolds since 2026-10-20 with no game behind them yet. No
- * build offers them on any door. Each moves to WEB_BETA_IDS in the change
- * that makes it playable, and that change edits this list on purpose.
+ * (Nos. 47–51), scaffolds since 2026-10-20 with no game behind them yet, and
+ * two of the 2026-10-20 plan's five (Nos. 52 and 55), playable but held back
+ * by their rules documents: Overtake until the Phase 0 device result is
+ * recorded (docs/OVERTAKE_RULES.md §3), Scopa until the product owner decides
+ * how its CPU beat resumes (docs/SCOPA_RULES.md §4.2). No build offers them on
+ * any door. Each moves to WEB_BETA_IDS in the change that makes it playable
+ * (or, for those two, that lifts the hold), and that change edits this list on
+ * purpose — as three of the 2026-10-20 plan's five did on 2026-10-21.
  */
 const IN_DEVELOPMENT_IDS = [
   'chess',
@@ -42,10 +57,7 @@ const IN_DEVELOPMENT_IDS = [
   'bounce-up',
   'echo-pads',
   'overtake',
-  'make-the-target',
-  'nested-tic-tac-toe',
   'scopa',
-  'tangram',
 ];
 
 /** A beta title that exists only in this file: a released game's shape, a channel of its own. */
@@ -159,8 +171,9 @@ describe('the channels', () => {
       const title = GAMES.find((game) => game.id === id)!.title;
       expect(web.searchGames(title).map((game) => game.id)).toEqual([id]);
     }
-    // An in-development title is a scaffold with no game behind it: the
-    // browser closes the same doors to it that the app closes to a beta title
+    // An in-development title is a scaffold with no game behind it, or a game
+    // its rules document holds back from the channel: the browser closes the
+    // same doors to it that the app closes to a beta title
     // (docs/WEB_VERSION.md「遊べるものだけを出す」).
     for (const id of IN_DEVELOPMENT_IDS) {
       expectClosed(web, id, GAMES.find((game) => game.id === id)!.title);

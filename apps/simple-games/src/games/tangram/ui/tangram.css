@@ -1,15 +1,241 @@
-/**
- * Tangram's styles — scaffolded by scripts/new-game.mjs. The shared shell
- * classes (.screen, .home-hero, .game-content, .game-topbar, .tutorial-card,
- * .btn, .dialog, ...) already cover the frame; the board and everything else
- * the game itself draws go here, under the game's own `tangram-` prefix.
- */
+/* Tangram — all of this game's styling, imported by TangramRoot. Built from
+   the series tokens in src/ui/styles.css (--surface, --surface-recessed,
+   --ink, --ink-soft, --line, --accent, --radius) and the accent the shell
+   swaps in for this title (`:root[data-game='tangram']`), so the game follows
+   the theme without knowing about it. No colour is written here.
 
-/* Placeholder board area — replace with the real board's layout. */
-.tangram-board {
-  display: flex;
+   Class names are prefixed `tn-`. What a mark means is carried by its SHAPE
+   or its line, never by colour alone (docs/TANGRAM_RULES.md §10): the pieces
+   wear the accent in two depths with an ink edge; a fixed piece has a dotted
+   edge and a sunken face; the selected piece a thick edge; the keyboard focus
+   a dashed ring; a carried piece that fits is filled, one that does not is a
+   dashed outline. ui/contrast.test.ts measures the tokens these lean on. */
+
+/* The play area: board above, tray below, laid out in pixels by ui/layout.ts
+   from this box's measured size. `touch-action: none` because pieces are
+   dragged across it (§4): without it the page would claim the finger. */
+.tn-play {
+  position: relative;
   flex: 1;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.tn-board,
+.tn-tray {
+  position: absolute;
+  border-radius: var(--radius);
+}
+
+.tn-board {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.tn-tray {
+  background: var(--surface-recessed);
+}
+
+.tn-board-svg,
+.tn-piece-svg,
+.tn-carry {
+  display: block;
+  overflow: visible;
+}
+
+.tn-board-svg {
+  position: absolute;
+  inset: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+}
+
+.tn-silhouette {
+  fill: var(--surface-recessed);
+  stroke: var(--ink-soft);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.tn-silhouette-done {
+  stroke: var(--accent);
+}
+
+/* Easy's inner lines (§3): thin, under the pieces, never a snap target. */
+.tn-guide {
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 0.75;
+}
+
+/* A piece's box is not pressable; only its polygon is (§10). */
+.tn-piece {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: none;
+  pointer-events: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tn-piece-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* An opaque face under every piece, in the ground the pieces sit on (the
+   silhouette and the tray are both --surface-recessed), so the second
+   shade's 72 % and a fixed piece's 38 % show the ground and never Easy's
+   inner lines through the piece (§3: a placed piece covers them). */
+.tn-underlay {
+  fill: var(--surface-recessed);
+  stroke: none;
+  pointer-events: none;
+}
+
+.tn-shape {
+  pointer-events: auto;
+  fill: var(--accent);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.tn-shade-b .tn-shape {
+  fill-opacity: 0.72;
+}
+
+.tn-piece-fixed .tn-shape {
+  fill-opacity: 0.38;
+  stroke-dasharray: 2 3;
+}
+
+.tn-piece-selected .tn-shape {
+  stroke-width: 3.5;
+}
+
+.tn-piece-lifted {
+  opacity: 0.35;
+}
+
+.tn-ring {
+  fill: none;
+  stroke: none;
+  pointer-events: none;
+}
+
+.tn-piece:focus-visible .tn-ring {
+  stroke: var(--surface);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+
+.tn-carry {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.tn-carry-fits {
+  fill: var(--accent);
+  fill-opacity: 0.85;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.tn-carry-open {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+
+/* A turn and a flip, for the look only: the state has already changed (§10).
+   Off under Reduced Motion (the screen adds no class, and styles.css stops
+   every animation anyway). */
+.tn-anim-turn {
+  animation: tn-turn 160ms ease-out;
+}
+
+.tn-anim-flip {
+  animation: tn-flip 200ms ease-out;
+}
+
+@keyframes tn-turn {
+  from {
+    transform: rotate(-45deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes tn-flip {
+  from {
+    transform: rotate(var(--tn-axis)) scaleX(-1) rotate(calc(var(--tn-axis) * -1));
+  }
+  to {
+    transform: rotate(var(--tn-axis)) scaleX(1) rotate(calc(var(--tn-axis) * -1));
+  }
+}
+
+.tn-actions .action-btn {
+  min-height: 48px;
+}
+
+.tn-glyph {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The early-release note (the shell's WebBetaNotice) under the heading on
+   every step (ui/screens/TutorialScreen.tsx): the heading's gutter, the
+   header's padding for the space above it, and the full width — the same
+   rule as peg-solitaire.css and the other web-beta titles. */
+.tn-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
+}
+
+/* Quick Rules pictures, drawn in units: line widths are in units too. The
+   height cap keeps the square picture of step 3 inside 360×640 with the web's
+   ad reserve and the early-release note (§13: arithmetic, not measured). */
+.tn-figure {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  max-height: 30vh;
+  margin: 0 auto;
+}
+
+.tn-figure .tn-shape,
+.tn-figure .tn-silhouette {
+  pointer-events: none;
+  stroke-width: 0.08;
+}
+
+.tn-figure .tn-carry-open {
+  stroke-width: 0.1;
+  stroke-dasharray: 0.3 0.2;
+}
+
+.tn-figure-arrow {
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 0.14;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }

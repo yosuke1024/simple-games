@@ -57,11 +57,11 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 | Pipe Link          | 琥珀(ベータ・実装中)     | `#a5672c` | `#dba775` |
 | Bounce Up          | 菖蒲色(ベータ・実装中)   | `#9e4892` | `#cf7dc2` |
 | Echo Pads          | 瑠璃色(ベータ・実装中)   | `#306cb6` | `#709abd` |
-| Overtake           | 蘇芳(ベータ・実装中)     | `#922643` | `#cd748a` |
-| Make the Target    | 紺桔梗(ベータ・実装中)   | `#393f93` | `#8785c1` |
-| Nested Tic-Tac-Toe | 海老茶(ベータ・実装中)   | `#633b36` | `#c3a59d` |
-| Scopa              | 紅紫(ベータ・実装中)     | `#b53192` | `#da71c0` |
-| Tangram            | 松葉色(ベータ・実装中)   | `#426a25` | `#a7cd7e` |
+| Overtake           | 蘇芳(ベータ・実装済み)   | `#922643` | `#cd748a` |
+| Make the Target    | 紺桔梗(Web 先行公開)     | `#393f93` | `#8785c1` |
+| Nested Tic-Tac-Toe | 海老茶(Web 先行公開)     | `#633b36` | `#c3a59d` |
+| Scopa              | 紅紫(ベータ・実装済み)   | `#b53192` | `#da71c0` |
+| Tangram            | 松葉色(Web 先行公開)     | `#426a25` | `#a7cd7e` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
