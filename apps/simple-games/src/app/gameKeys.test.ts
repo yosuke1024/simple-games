@@ -206,7 +206,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // No. 55, in-development (docs/SCOPA_RULES.md storage): not frozen until graduation
   scopa: ['sc.saveGame', 'sc.stats', 'sc.flags'],
   // No. 56, in-development (docs/TANGRAM_RULES.md storage): not frozen until graduation
-  tangram: ['tn.stats', 'tn.flags'],
+  tangram: ['tn.saveGame', 'tn.saveDaily', 'tn.progress', 'tn.stats', 'tn.flags', 'tn.prefs'],
 };
 
 const PREFIXES: Record<string, string> = {
