@@ -351,8 +351,12 @@ CPU・Undo・合法手の点・難易度別の統計・途中保存はそのま�
       足した。「遊べないものを BETA として出す」ことなく門を通る([WEB_VERSION.md](../WEB_VERSION.md)
       「先行公開」の「main の状態(2026-10-20)」)。以後、4 本と Chess はそれぞれ遊べるようになる変更で
       `'web-beta'` に変え、同期の PR で landing の一覧を `WEB_BETA_GAME_IDS` へ移す。次のバッチ(52〜56)の
-      スキャフォールドも `scripts/new-game.mjs --channel in-development` で生成する(main に入っても
-      Web 版の同期を止めない)。
+      スキャフォールドも `'in-development'` で main に入れる(main に入っても Web 版の同期を止めない。
+      52〜56 は `--channel web-beta` で生成したものを手で `'in-development'` に替えた —
+      [2026-10-20 の計画](2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)の
+      「2026-10-20 追記 — `'in-development'` への切り替え」)。2026-10-22(JST、UTC では 2026-10-21 17:38)の
+      同期で、そのうち Make the Target / Nested Tic-Tac-Toe / Tangram は `'web-beta'` として Web 版で先行公開中、
+      Overtake / Scopa は `'in-development'` のまま(チャンクは出るがどの扉からも開けない)。
 
 **未決事項(Phase 2 でルール文書に決める。推奨つき)**:
 
@@ -894,7 +898,10 @@ max-height: 100%`)は流用しない。幅を決めたまま高さだけを縮�
    含んだまま)。landing の同期 PR で足す id は 4 本のまま(`chess` は Chess の同期で)。ただし、その同期の
    ときにも main に残っている遊べないスキャフォールド(そのとき遊べるようになっていない分 — Chess、次の
    バッチの 52〜56)のチャンクに同じ門が当たるので、扱いは先にオーナーに仰ぐ(上の「47. Chess」の
-   「フェーズ(判断 4)」の追記)。
+   「フェーズ(判断 4)」の追記)。(その後: 同日の「Web の帰結の対処」で `'in-development'` と landing の
+   `IN_DEVELOPMENT_GAME_IDS` を足して解決した。52〜56 は 2026-10-22(JST)の同期で、Make the Target / Nested
+   Tic-Tac-Toe / Tangram が `WEB_BETA_GAME_IDS`、Overtake / Scopa が `IN_DEVELOPMENT_GAME_IDS` に入った —
+   [2026-10-20 の計画](2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)「Web 版への同期」。)
 5. **Chess のフェーズ(C)**: ② の上で 1 本だけ進める — ルール文書 → `game/`(perft・規則の単体・CPU の bench)→
    独立レビュー → `storage/` `state/` `ui/` i18n(用語集が先)→ 単独で全ゲート。4 本のマージの後に main の上へ
    載せ直して、自分の PR で出す。landing の同期 PR で `chess` を足す。どちらもオーナーの承認を得てから。
