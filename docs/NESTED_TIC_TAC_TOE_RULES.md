@@ -405,8 +405,8 @@ Reversi §9 と同じ理由)。デイリーが無いので 2 スロット規則�
 | `nt.flags`    | `tutorialCompleted`(スキャフォールドのまま)   |
 | `nt.prefs`    | 先後だけ(`playerGoesFirst`。難易度は持たない) |
 
-スキャフォールドの `nt.stats`(`{ schemaVersion: 1, played }`)は形を §8.5 に置き換える。どのビルドにも出て
-いない(`'in-development'`)ので、移行の要る保存は存在しない。
+スキャフォールドの `nt.stats`(`{ schemaVersion: 1, played }`)は形を §8.5 に置き換える。2026-10-21 に
+`'web-beta'` にしたが Web 版へはまだ同期していない(配信前)ので、移行の要る保存は存在しない。
 
 **キーが入る順(計画の「同じコミット」からの外れ — §16)。**この文書の保存の節が先に入り、`keys.ts` と
 `gameKeys.test.ts` の行は、この節を書いたコミットでは足さなかった(スキャフォールドの `stats` / `flags` の
