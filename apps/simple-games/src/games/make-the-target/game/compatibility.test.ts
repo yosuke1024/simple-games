@@ -10,8 +10,9 @@
  * the point: changing these values is a decision, not a side effect
  * (docs/MAKE_THE_TARGET_RULES.md §6「乱数の消費の順番」).
  *
- * Make the Target is a Web-beta title (docs/WEB_VERSION.md「先行公開」), for
- * now `in-development` in the registry: its save schema is not frozen, and a saved game carries its own numbers,
+ * Make the Target is a Web-beta title (docs/WEB_VERSION.md「先行公開」; on the
+ * channel since 2026-10-21, not yet synced to the web): its save schema is not
+ * frozen, and a saved game carries its own numbers,
  * target and solution (§10), so a generator change does not strand a game in
  * progress — but it retires every daily already played and the bundled table
  * (bundled.test.ts fails with this one). If a change here is intended,

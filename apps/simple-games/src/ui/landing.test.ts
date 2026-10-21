@@ -82,9 +82,11 @@ describe('gameLandingUrl', () => {
     // release (docs/WEB_VERSION.md「先行公開」) have no guide yet — the ones of
     // issues #194 and #197, in the app since 2026-10-02, the five still in
     // early release (docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md)
-    // and the next ones being built for it
-    // (docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md and
-    // docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md),
+    // and the next ones — the five still being built for it
+    // (docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md) and
+    // the five built on 2026-10-21, three on the channel and two held back by
+    // their rules documents
+    // (docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md) —
     // which stay out of PUBLISHED_GAME_IDS until they graduate — so their
     // tutorials end without the button rather than at a 404 inside our own
     // site.
