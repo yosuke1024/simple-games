@@ -1,0 +1,269 @@
+/**
+ * Everything the board draws, in logical px on the 360×640 board
+ * (docs/OVERTAKE_RULES.md §1, §11「見た目」). The board (components/
+ * OvertakeStage.tsx) and the Quick Rules figures (screens/TutorialScreen.tsx)
+ * draw with these same pieces, so a figure can never show a car the race
+ * does not (§10).
+ *
+ * Told apart by fill and outline, never by colour alone: the player's car is
+ * an ink fill, traffic an accent fill, the three other racers an accent
+ * outline over the surface with an ASCII digit 1–3 in ink. Works are accent
+ * hatching. The only text on the board is those digits (§11). Every colour
+ * is a shared token read from computed style — none is written here but the
+ * jsdom fallbacks.
+ *
+ * Chromium 88 is the floor: corners are built with arcTo (`roundRect` is
+ * Chromium 99), and nothing uses shadowBlur or ctx.filter (§11).
+ */
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  CAR_LENGTH,
+  CAR_WIDTH,
+  PLAYER_SCREEN_Y,
+  ROAD_LEFT,
+  ROAD_RIGHT,
+  SHOULDER_LEFT,
+  SHOULDER_RIGHT,
+  STEPS_PER_SECOND,
+  SUB,
+  TRAFFIC_SPEED,
+  BUMP_BLINK_STEPS,
+} from '../game/constants';
+import type { RaceState } from '../game/race';
+import type { CarState, Course, Obstacle } from '../game/types';
+
+export interface Palette {
+  surface: string;
+  line: string;
+  ink: string;
+  inkSoft: string;
+  accent: string;
+}
+
+/** Fallbacks are the light theme's tokens; only jsdom ever needs them. */
+export function readPalette(): Palette {
+  const style = getComputedStyle(document.documentElement);
+  const pick = (name: string, fallback: string) => style.getPropertyValue(name).trim() || fallback;
+  return {
+    surface: pick('--surface', '#fffdf8'),
+    line: pick('--line', '#ddd7ca'),
+    ink: pick('--ink', '#232a33'),
+    inkSoft: pick('--ink-soft', '#5c6772'),
+    accent: pick('--accent', '#8e3b46'),
+  };
+}
+
+export function roundRectPath(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+): void {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
+  ctx.closePath();
+}
+
+export type CarLook = 'player' | 'traffic' | 'rival';
+
+/**
+ * One car, seen from above, front up: a rounded body with a windscreen cut
+ * near the front and a rear window near the back. Its own shape, drawn here
+ * (§11) — no livery, no silhouette of anyone else's car.
+ */
+export function drawCar(
+  ctx: CanvasRenderingContext2D,
+  palette: Palette,
+  look: CarLook,
+  centreX: number,
+  frontY: number,
+  width: number,
+  length: number,
+  digit: string | null = null,
+): void {
+  const x = centreX - width / 2;
+  const radius = Math.min(7, width / 4);
+  if (look === 'rival') {
+    roundRectPath(ctx, x + 1.25, frontY + 1.25, width - 2.5, length - 2.5, radius);
+    ctx.fillStyle = palette.surface;
+    ctx.fill();
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = palette.accent;
+    ctx.stroke();
+  } else {
+    roundRectPath(ctx, x, frontY, width, length, radius);
+    ctx.fillStyle = look === 'player' ? palette.ink : palette.accent;
+    ctx.fill();
+    // The windows: the surface showing through the body.
+    ctx.fillStyle = palette.surface;
+    roundRectPath(ctx, x + 5, frontY + Math.min(12, length * 0.2), width - 10, 8, 2);
+    ctx.fill();
+    roundRectPath(ctx, x + 6, frontY + length - 13, width - 12, 5, 2);
+    ctx.fill();
+  }
+  if (digit !== null) {
+    ctx.fillStyle = palette.ink;
+    ctx.font = '700 18px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(digit, centreX, frontY + length / 2 + 1);
+  }
+}
+
+/** A closed outer lane: accent hatching inside an accent outline (§11). */
+export function drawWorks(
+  ctx: CanvasRenderingContext2D,
+  palette: Palette,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): void {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, width, height);
+  ctx.clip();
+  ctx.strokeStyle = palette.accent;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  for (let d = -width; d < height + width; d += 14) {
+    ctx.moveTo(x, y + d);
+    ctx.lineTo(x + width, y + d + width);
+  }
+  ctx.stroke();
+  ctx.restore();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = palette.accent;
+  ctx.strokeRect(x + 1, y + 1, width - 2, height - 2);
+}
+
+/** The finish: a checkered band across the road, ink and surface (§11). */
+export function drawFinish(ctx: CanvasRenderingContext2D, palette: Palette, y: number): void {
+  const left = ROAD_LEFT / SUB;
+  const right = ROAD_RIGHT / SUB;
+  const size = 8;
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0, cx = left; cx < right; col++, cx += size) {
+      ctx.fillStyle = (row + col) % 2 === 0 ? palette.ink : palette.surface;
+      ctx.fillRect(cx, y - size * (row + 1), Math.min(size, right - cx), size);
+    }
+  }
+}
+
+/** Lane dashes: 70 long, 140 apart, pitch 210 (§11). */
+export const DASH_LENGTH = 70;
+export const DASH_PITCH = 210;
+
+/**
+ * The road itself: surface, the shoulders as thin ink-soft lines with the
+ * off-road beyond them in the line colour, and the lane dashes at `ground`
+ * px of ground travelled — so they stream past at the ground speed w + vT.
+ */
+export function drawRoad(
+  ctx: CanvasRenderingContext2D,
+  palette: Palette,
+  lanes: number,
+  ground: number,
+  top = 0,
+  bottom = BOARD_HEIGHT,
+): void {
+  ctx.fillStyle = palette.surface;
+  ctx.fillRect(0, top, BOARD_WIDTH, bottom - top);
+  ctx.fillStyle = palette.line;
+  ctx.fillRect(0, top, SHOULDER_LEFT / SUB, bottom - top);
+  ctx.fillRect(SHOULDER_RIGHT / SUB, top, BOARD_WIDTH - SHOULDER_RIGHT / SUB, bottom - top);
+  ctx.fillStyle = palette.inkSoft;
+  ctx.fillRect(ROAD_LEFT / SUB - 1, top, 1.5, bottom - top);
+  ctx.fillRect(ROAD_RIGHT / SUB - 0.5, top, 1.5, bottom - top);
+
+  ctx.fillStyle = palette.line;
+  const roadLeft = ROAD_LEFT / SUB;
+  const laneWidth = (ROAD_RIGHT - ROAD_LEFT) / SUB / lanes;
+  // A dash at ground position p sits at y = PLAYER_SCREEN_Y − (p − ground).
+  const first = Math.floor((ground - (bottom - PLAYER_SCREEN_Y) - DASH_LENGTH) / DASH_PITCH);
+  const last = Math.ceil((ground + PLAYER_SCREEN_Y - top) / DASH_PITCH);
+  for (let lane = 1; lane < lanes; lane++) {
+    const x = roadLeft + laneWidth * lane - 1.5;
+    for (let k = first; k <= last; k++) {
+      const p = k * DASH_PITCH;
+      const yTop = PLAYER_SCREEN_Y - (p + DASH_LENGTH - ground);
+      if (yTop > bottom || yTop + DASH_LENGTH < top) continue;
+      ctx.fillRect(x, yTop, 3, DASH_LENGTH);
+    }
+  }
+}
+
+/** Draws one piece of traffic; `y` is the screen y of its front. */
+export function drawObstacle(
+  ctx: CanvasRenderingContext2D,
+  palette: Palette,
+  obstacle: Obstacle,
+  frontY: number,
+): void {
+  const width = (obstacle.right - obstacle.left) / SUB;
+  const length = (obstacle.front - obstacle.rear) / SUB;
+  const x = obstacle.left / SUB;
+  if (obstacle.kind === 'works') drawWorks(ctx, palette, x, frontY, width, length);
+  else drawCar(ctx, palette, 'traffic', x + width / 2, frontY, width, length);
+}
+
+/**
+ * The Bump's blink (§4, §11): opacity 1 ↔ 0.35 every 0.25 s, counted in
+ * steps, so it is the same on every device and never faster than 2 Hz. Not
+ * stopped by Reduced Motion — it says "cannot be bumped right now".
+ */
+export const BLINK_HALF_STEPS = STEPS_PER_SECOND / 4;
+
+export function blinkAlpha(car: CarState): number {
+  if (car.blink <= 0) return 1;
+  const elapsed = BUMP_BLINK_STEPS - car.blink;
+  return Math.floor(elapsed / BLINK_HALF_STEPS) % 2 === 0 ? 0.35 : 1;
+}
+
+/** The whole board for one moment of a race. */
+export function drawRace(
+  ctx: CanvasRenderingContext2D,
+  palette: Palette,
+  course: Course,
+  race: RaceState,
+): void {
+  const pr = race.player.r;
+  const toY = (r: number) => PLAYER_SCREEN_Y - (r - pr) / SUB;
+  const ground = pr / SUB + (TRAFFIC_SPEED * race.step) / STEPS_PER_SECOND;
+  drawRoad(ctx, palette, course.lanes, ground);
+
+  const goalY = toY(course.length);
+  if (goalY > -16 && goalY < BOARD_HEIGHT + 16) drawFinish(ctx, palette, goalY);
+
+  // Only what is on the board: course r from 170 px behind the player's
+  // front (the bottom edge) to 470 px ahead of it (the top edge).
+  const low = pr - (BOARD_HEIGHT - PLAYER_SCREEN_Y) * SUB;
+  const high = pr + PLAYER_SCREEN_Y * SUB;
+  for (const obstacle of course.obstacles) {
+    if (obstacle.rear > high) break;
+    if (obstacle.front < low) continue;
+    drawObstacle(ctx, palette, obstacle, toY(obstacle.front));
+  }
+
+  // The other racers pass through the player and each other (§4): drawn as
+  // outlines first, the player's car last on top.
+  const carW = CAR_WIDTH / SUB;
+  const carL = CAR_LENGTH / SUB;
+  race.rivals.forEach((rival, i) => {
+    const y = toY(rival.car.r);
+    if (y > BOARD_HEIGHT || y + carL < 0) return;
+    ctx.globalAlpha = blinkAlpha(rival.car);
+    drawCar(ctx, palette, 'rival', rival.car.x / SUB, y, carW, carL, String(i + 1));
+  });
+  ctx.globalAlpha = blinkAlpha(race.player);
+  drawCar(ctx, palette, 'player', race.player.x / SUB, PLAYER_SCREEN_Y, carW, carL);
+  ctx.globalAlpha = 1;
+}

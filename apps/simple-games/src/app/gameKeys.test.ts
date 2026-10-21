@@ -196,7 +196,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // terms as the ten above. They are still the scaffold's two keys; each grows
   // to its rules document's storage section in Phase 2/3.
   // No. 52, in-development (docs/OVERTAKE_RULES.md storage): not frozen until graduation
-  overtake: ['ot.stats', 'ot.flags'],
+  overtake: ['ot.progress', 'ot.stats', 'ot.flags', 'ot.prefs'],
   // No. 53, in-development (docs/MAKE_THE_TARGET_RULES.md storage): not frozen until graduation
   'make-the-target': ['tg.stats', 'tg.flags'],
   // No. 54, in-development (docs/NESTED_TIC_TAC_TOE_RULES.md storage): not frozen until graduation
