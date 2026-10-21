@@ -1236,12 +1236,14 @@ export const GAMES: readonly GameDefinition[] = [
   // (Nos. 52–56), in number order. Each is playable. Make the Target, Nested
   // Tic-Tac-Toe and Tangram are on the browser's early-release channel
   // (docs/WEB_VERSION.md「先行公開」): the change that made them playable turned
-  // them from `'in-development'` to `'web-beta'` on 2026-10-21. They are not
-  // yet in the browser version, which carries them once the landing's next
-  // sync lists them as beta (WEB_VERSION.md「landing 側のガード」), and not in
-  // the app until a person decides they graduate (docs/RELEASE_CHECKLIST.md
-  // §0). Overtake and Scopa stay `'in-development'` (offered on no build)
-  // although playable, because their rules documents hold the switch back:
+  // them from `'in-development'` to `'web-beta'` on 2026-10-21, and the
+  // browser version has carried them since 2026-10-22 JST (2026-10-21 17:38
+  // UTC — the landing's publish of main `11a3036`, after landing #204 listed
+  // them as beta; WEB_VERSION.md「landing 側のガード」). They are not in the
+  // app until a person decides they graduate (docs/RELEASE_CHECKLIST.md §0).
+  // Overtake and Scopa stay `'in-development'` (their chunks ship in that
+  // same build, but no door opens them — app/gameChannel.ts) although
+  // playable, because their rules documents hold the switch back:
   // Overtake until the Phase 0 device result is recorded in
   // docs/OVERTAKE_RULES.md §3 (or until it ships with `DRAG_MAPPING` `'B'`),
   // Scopa until the product owner decides how its CPU beat resumes when the
