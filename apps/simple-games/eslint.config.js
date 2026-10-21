@@ -3,7 +3,10 @@ import react from '@simple-games/eslint-config/react';
 export default [
   // The two native projects are generated and hold a copy of the built web
   // assets; neither is source this config has anything to say about.
-  { ignores: ['dist/', 'dist-web/', 'android/', 'ios/', 'node_modules/'] },
+  // prototypes/ holds throwaway Phase 0 prototypes (docs/plans — 「実機の Phase 0」):
+  // single-file HTML pages and the Playwright scripts that drive them. Not
+  // shipped, not imported by src/, written for Chromium 88, so not linted.
+  { ignores: ['dist/', 'dist-web/', 'android/', 'ios/', 'node_modules/', 'prototypes/'] },
   ...react,
   {
     // Build-time tooling, not shipped code: it runs in Node, not the WebView,
