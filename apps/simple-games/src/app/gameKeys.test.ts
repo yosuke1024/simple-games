@@ -202,7 +202,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // the difficulty last chosen. Not frozen until graduation
   'make-the-target': ['tg.saveGame', 'tg.saveDaily', 'tg.stats', 'tg.flags', 'tg.prefs'],
   // No. 54, in-development (docs/NESTED_TIC_TAC_TOE_RULES.md storage): not frozen until graduation
-  'nested-tic-tac-toe': ['nt.stats', 'nt.flags'],
+  'nested-tic-tac-toe': ['nt.saveGame', 'nt.stats', 'nt.flags', 'nt.prefs'],
   // No. 55, in-development (docs/SCOPA_RULES.md storage): not frozen until graduation
   scopa: ['sc.stats', 'sc.flags'],
   // No. 56, in-development (docs/TANGRAM_RULES.md storage): not frozen until graduation
