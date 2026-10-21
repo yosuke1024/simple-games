@@ -1,15 +1,625 @@
-/**
- * Scopa's styles — scaffolded by scripts/new-game.mjs. The shared shell
- * classes (.screen, .home-hero, .game-content, .game-topbar, .tutorial-card,
- * .btn, .dialog, ...) already cover the frame; the board and everything else
- * the game itself draws go here, under the game's own `scopa-` prefix.
- */
+/* Scopa — all of this game's styling, imported by ScopaRoot. Built from the
+   series tokens in src/ui/styles.css (--ink, --line, --accent, --tap-size, …);
+   class names are prefixed `sc-` so this file can never collide with the shell
+   or another game.
 
-/* Placeholder board area — replace with the real board's layout. */
-.scopa-board {
+   Card faces stay paper in BOTH themes (docs/SCOPA_RULES.md §11.2, the Hearts /
+   Gin Rummy exception): a dark face turns the black suits near-white, and a
+   card you cannot read is not a card. The dark theme dims the paper and the
+   felt instead of inverting them. The card red and the felt are game content,
+   not chrome — the documented exception to "game CSS does not write colours"
+   (docs/architecture/css-split.md). The felt is a dusty terracotta, chosen
+   away from Reversi's green, Gin Rummy's sand, Hearts' blue-grey and FreeCell's
+   grey; it has not yet been looked at beside them on a screen (§15.4).
+
+   The accent sits only on chrome and on the capture marks, which are drawn ON
+   the paper (an outline and a corner notch), never as a fill on the felt; every
+   mark also differs in shape, so colour is never the only channel (§11.2). */
+:root {
+  --sc-face: #fffdf8;
+  --sc-ink: #232a33;
+  --sc-red: #b0483f;
+  --sc-face-line: #ddd7ca;
+  --sc-felt: #b88a72;
+  --sc-felt-ink: #2b1f1a;
+  --sc-back: #6d5f7a;
+  /* The ♦ in the band sits on the page, not on a card face. */
+  --sc-band-red: #b0483f;
+  --sc-slot-line: rgba(0, 0, 0, 0.28);
+  --sc-slot-fill: rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme='dark'] {
+  --sc-face: #e6e2d9;
+  --sc-ink: #1d232b;
+  --sc-red: #a8382f;
+  --sc-face-line: #bfb9ac;
+  --sc-felt: #2c1f1b;
+  --sc-felt-ink: #ece6e1;
+  --sc-back: #4a4057;
+  /* #e06a5e on the dark page (#14171c) is about 4.7:1 by arithmetic; the card
+     red #a8382f there would be about 2.8:1. */
+  --sc-band-red: #e06a5e;
+  --sc-slot-line: rgba(236, 230, 225, 0.38);
+  --sc-slot-fill: rgba(236, 230, 225, 0.06);
+}
+
+/* ---------- the band: one row per side ---------- */
+
+.sc-band {
   display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 12px 4px;
+}
+
+.sc-band-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.sc-band-who {
+  min-width: 34px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.sc-band-score {
+  min-width: 22px;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+/* The dealer's mark: a filled disc with a ring, on the dealer's row only. */
+.sc-dealer {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+}
+
+.sc-dealer-off {
+  visibility: hidden;
+}
+
+.sc-band-tally {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-tally {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sc-tally-diamonds .sc-suit {
+  color: var(--sc-band-red);
+}
+
+.sc-stack-icon {
+  width: 9px;
+  height: 12px;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  box-shadow: 2px -2px 0 -0.5px currentColor;
+}
+
+.sc-not-held {
+  opacity: 0.35;
+}
+
+.sc-band-flash .sc-scopa-mark {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.sc-backs {
+  display: flex;
+  margin-left: auto;
+}
+
+.sc-back {
+  display: inline-block;
+  width: 12px;
+  height: 17px;
+  border-radius: 2px;
+  background: var(--sc-back)
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.16) 0 2px, transparent 2px 4px);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.sc-back + .sc-back {
+  margin-left: -4px;
+}
+
+/* ---------- the felt: table, line, hand, primiera ---------- */
+
+/* Width resolves against the column, never the viewport (the board-width
+   lesson in docs/ARCHITECTURE.md): every card below is a percentage of it. */
+.sc-body {
   flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 6px 8px;
+  background: var(--sc-felt);
+  color: var(--sc-felt-ink);
+}
+
+.sc-table-area {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: min(100%, 420px);
+  /* Room for the stock count above the first row, so it never sits on a card. */
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.sc-stock {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* A third row overlaps upwards; the row above keeps its printed index and its
+   marks, which all sit in the top band of the card (below). */
+.sc-table-tight .sc-table-row + .sc-table-row {
+  /* Percent margins resolve against the width A: a card is 22.4% of it tall
+     (16% × 1.4), so this hides 6.5% and leaves 15.9% of A showing — 49px at
+     A = 308, 55px at A = 348: never under the 48px tap floor (§11.1). */
+  margin-top: -6.5%;
+}
+
+.sc-table-tight {
+  gap: 0;
+}
+
+.sc-table-row {
+  display: flex;
+  justify-content: center;
+  gap: 2%;
+}
+
+/* ---------- cards ---------- */
+
+.sc-card {
+  position: relative;
+  flex: 0 0 auto;
+  aspect-ratio: 5 / 7;
+  padding: 0;
+  border: 1px solid var(--sc-face-line);
+  border-radius: 6px;
+  background: var(--sc-face);
+  color: var(--sc-ink);
+  font-family: var(--font-display);
+  box-shadow: 0 1px 2px rgba(20, 24, 30, 0.24);
+  transition: transform 140ms ease-out;
+}
+
+/* Not the player's turn, or not a card the lifted one can take: nothing here
+   is pressable, and nothing is greyed — the cards are not wrong, it simply is
+   not the time (§2.5). The shared chrome dims every disabled button to 40%;
+   a card is not an action, so it stays at full strength (Dominoes'
+   `.dm-hand-tile:disabled` is the precedent). Only `.sc-cannot`, on the
+   player's own turn, steps back (§7). */
+.sc-card:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.sc-table-card,
+.sc-slot,
+.sc-fold-card {
+  width: 16%;
+}
+
+.sc-hand-card {
+  width: 20%;
+}
+
+.sc-red {
+  color: var(--sc-red);
+}
+
+.sc-black {
+  color: var(--sc-ink);
+}
+
+.sc-card-index {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.sc-card-face {
+  font-size: clamp(13px, 4vw, 17px);
+  font-weight: 800;
+}
+
+.sc-card-index .sc-suit {
+  width: 10px;
+  height: 10px;
+}
+
+.sc-card-middle {
+  position: absolute;
+  inset: 0;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+}
+
+.sc-card-middle .sc-suit {
+  width: 40%;
+  height: 40%;
+}
+
+/* The slot at the end of the table: the one place a card is placed (§2.5).
+   Closed, it is a thin dashed frame in the felt's own ink; open, it takes the
+   accent and a fill — the shape of the frame changes, not only its colour. */
+.sc-slot {
+  background: var(--sc-slot-fill);
+  border: 1.5px dashed var(--sc-slot-line);
+  box-shadow: none;
+}
+
+.sc-slot-open {
+  border: 2px dashed var(--accent);
+  background: var(--accent-soft);
+  cursor: pointer;
+}
+
+/* A table card the lifted card can take: an accent ring standing a pixel off
+   the card, and a notch in the top corner — the ring alone is not the mark.
+   Drawn with box-shadow, not outline, so the outline stays free for focus. The
+   notch sits in the top band, with the index, so an overlapped third row
+   never hides it (§11.1). */
+.sc-takeable {
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px var(--sc-felt),
+    0 0 0 4px var(--accent);
+}
+
+.sc-takeable::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  border: 6px solid transparent;
+  border-top-color: var(--accent);
+  border-right-color: var(--accent);
+  border-radius: 0 3px 0 0;
+}
+
+/* In the group being built: raised, ringed flush to the card, and a filled
+   dot instead of the notch — a different shape from "can be taken". The dot
+   is in the top band too. */
+.sc-picked {
+  transform: translateY(-6px);
+  box-shadow:
+    0 0 0 3px var(--accent),
+    0 6px 10px rgba(20, 24, 30, 0.3);
+}
+
+.sc-picked::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--sc-face);
+}
+
+/* The hand: a card that can take carries a bar along its foot — a third
+   shape, apart from the table's notch and the group's dot; one that cannot is
+   a little paler but still pressable, because it can be placed (§7). */
+.sc-can-take::after {
+  content: '';
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.sc-hand {
+  display: flex;
+  justify-content: center;
+  gap: 4%;
+  width: min(100%, 420px);
+  padding-top: 10px;
+}
+
+.sc-cannot {
+  filter: saturate(0.45);
+}
+
+.sc-hand-card:not(:disabled) {
+  cursor: pointer;
+}
+
+.sc-lifted {
+  transform: translateY(-10px);
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 8px 12px rgba(20, 24, 30, 0.32);
+}
+
+/* Keyboard focus: the shell draws none of its own, and every mark above is a
+   box-shadow, so a focused card carries a ring in the felt's ink outside all of
+   them — a takeable card with focus looks different from one without (§2.5).
+   Declared after the marks so nothing here is overridden. */
+.sc-card:focus-visible {
+  z-index: 1;
+  outline: 3px solid var(--sc-felt-ink);
+  outline-offset: 5px;
+}
+
+/* A capture folding towards whoever took it — shorter than one beat, and not
+   drawn under Reduced Motion (the screen skips it, the shell's rule stops it). */
+.sc-fold {
+  position: absolute;
+  inset: auto 0 40% 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 2%;
+  pointer-events: none;
+  animation: sc-fold 380ms ease-in forwards;
+}
+
+.sc-fold-up {
+  --sc-fold-y: -140%;
+}
+
+.sc-fold-down {
+  --sc-fold-y: 140%;
+}
+
+@keyframes sc-fold {
+  to {
+    transform: translateY(var(--sc-fold-y)) scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* ---------- the line, the primiera, the small cards ---------- */
+
+/* The line wraps rather than cutting its words off (docs/I18N_POLICY.md: no
+   fixed-width truncation): two lines' height is held whatever it says, so a
+   short line and a long one leave the table where it was. */
+.sc-line {
+  width: min(100%, 420px);
+  min-height: 36px;
+  margin: 6px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  gap: 2px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.sc-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 1px 3px;
+  border-radius: 3px;
+  background: var(--sc-face);
+  border: 1px solid var(--sc-face-line);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.sc-mini .sc-suit {
+  width: 10px;
+  height: 10px;
+}
+
+.sc-scopa-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.sc-primiera {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-primiera-name {
+  font-weight: 700;
+}
+
+.sc-primiera-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 40px;
+  min-height: 20px;
+}
+
+.sc-primiera-missing {
+  justify-content: center;
+  border: 1px dashed currentColor;
+  border-radius: 3px;
+  opacity: 0.5;
+}
+
+.sc-primiera-missing .sc-suit {
+  width: 10px;
+  height: 10px;
+}
+
+.sc-primiera-total {
+  font-weight: 800;
+}
+
+/* ---------- settlement and result ---------- */
+
+.sc-deal-table {
+  width: 100%;
+  margin: 4px 0 10px;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-deal-table th,
+.sc-deal-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+}
+
+.sc-deal-table th[scope='row'] {
+  text-align: left;
+  font-weight: 600;
+}
+
+.sc-deal-table tfoot th,
+.sc-deal-table tfoot td {
+  border-bottom: none;
+  font-weight: 800;
+}
+
+.sc-sweep {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.sc-decider-title {
+  margin: 8px 0 2px;
+  font-size: 14px;
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+.sc-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.sc-figure-across {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.sc-figure-row {
+  display: flex;
+  gap: 8px;
+}
+
+.sc-figure-card {
+  font-size: 15px;
+  padding: 6px 7px;
+}
+
+.sc-figure-marked {
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.sc-figure-lifted {
+  box-shadow: 0 0 0 2px var(--accent);
+  transform: translateY(-4px);
+}
+
+.sc-figure-arrow {
+  color: var(--ink-soft);
+}
+
+.sc-figure-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 30px;
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+}
+
+.sc-figure-gap {
+  width: 6px;
+}
+
+/* ---------- the web ad reserve (docs/WEB_VERSION.md) ----------
+
+   With 116px held back for the anchor, 360×640 leaves 524px. By arithmetic
+   (components/ScopaTable.tsx) the worst table — three rows — still fits; the
+   cards come down a step here so the hand keeps its room. Not measured in a
+   browser (docs/SCOPA_RULES.md §15.4). */
+:root[data-sg-web-ads] .sc-table-card,
+:root[data-sg-web-ads] .sc-slot,
+:root[data-sg-web-ads] .sc-fold-card {
+  width: 15%;
+}
+
+/* A 15% card is 21% of A tall; overlapping by 5% leaves 16% showing — 49px at
+   A = 308, 56px at A = 348 (§11.1). */
+:root[data-sg-web-ads] .sc-table-tight .sc-table-row + .sc-table-row {
+  margin-top: -5%;
+}
+
+:root[data-sg-web-ads] .sc-hand-card {
+  width: 18%;
 }

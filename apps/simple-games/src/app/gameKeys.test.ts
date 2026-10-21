@@ -204,7 +204,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // No. 54, in-development (docs/NESTED_TIC_TAC_TOE_RULES.md storage): not frozen until graduation
   'nested-tic-tac-toe': ['nt.saveGame', 'nt.stats', 'nt.flags', 'nt.prefs'],
   // No. 55, in-development (docs/SCOPA_RULES.md storage): not frozen until graduation
-  scopa: ['sc.stats', 'sc.flags'],
+  scopa: ['sc.saveGame', 'sc.stats', 'sc.flags'],
   // No. 56, in-development (docs/TANGRAM_RULES.md storage): not frozen until graduation
   tangram: ['tn.stats', 'tn.flags'],
 };
