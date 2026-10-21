@@ -92,19 +92,22 @@ describe('the game a URL asks for', () => {
  * this is also what keeps a beta title out of a pinned shortcut on the app.
  *
  * Exercised twice: with the real beta titles the registry declares today (the
- * five of docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md and the
- * scaffolds of
- * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md and
- * docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md), and
- * with a synthetic beta entry spliced into the registry, which keeps the
+ * five of docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md and three
+ * of the five of
+ * docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md;
+ * the scaffolds of
+ * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md, with
+ * Overtake and Scopa, are the real in-development ones below), and with a
+ * synthetic beta entry spliced into the registry, which keeps the
  * mechanism tested on any day no registry title is on the channel (as from
  * 2026-10-02 until the 2026-10-17 five arrived).
  */
 describe('a web-beta title in the address', () => {
   const realBeta = GAMES.filter((game) => game.channel === 'web-beta');
   // And the titles still in development (`channel: 'in-development'`): a
-  // scaffold with no game behind it is offered nowhere, so its address is the
-  // collection on both builds (app/gameChannel.ts).
+  // scaffold with no game behind it, or a game its rules document holds back,
+  // is offered nowhere, so its address is the collection on both builds
+  // (app/gameChannel.ts).
   const realInDevelopment = GAMES.filter((game) => game.channel === 'in-development');
 
   const beta = {

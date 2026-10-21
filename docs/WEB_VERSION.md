@@ -8,14 +8,14 @@
 
 ## 役割分担
 
-|            | Web 版                                                                                                                                                                                                                                                                                                                                                                                       | アプリ版(Android・iOS)                                                                                              |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| 位置づけ   | すぐ遊べる無料版。新作の先行公開。PixApps への入口                                                                                                                                                                                                                                                                                                                                           | 静かに長く遊ぶための完成版                                                                                          |
-| 導入       | インストール・アカウント不要                                                                                                                                                                                                                                                                                                                                                                 | ストアから導入、ホーム画面から起動                                                                                  |
-| 広告       | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効)                                                                                                                                                                                                                                                                                                                   | Anchored Adaptive Banner 1 枠のみ                                                                                   |
-| 課金       | なし(完全無料)                                                                                                                                                                                                                                                                                                                                                                               | $3.99 買い切りで広告永久削除                                                                                        |
-| 計測       | サイト共通のページ解析(下の「計測」節。実装済み・既定は無効)                                                                                                                                                                                                                                                                                                                                 | なし — Analytics を入れないことがアプリの約束([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))                       |
-| ゲーム内容 | 正式収録の 41 本+先行公開中の新作(下の「先行公開」節。いま配信中は 5 本 — Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、2026-10-19 から。次の 10 本 — Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads と Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram — は実装中で未配信。registry では `channel: 'in-development'`)。正式収録ゲームに機能差なし | 正式収録の 41 本(registry で `channel` を持たないエントリ)。新作は先行公開で検証後に収録(2026-10-02 に 11 本を収録) |
+|            | Web 版                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | アプリ版(Android・iOS)                                                                                              |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 位置づけ   | すぐ遊べる無料版。新作の先行公開。PixApps への入口                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | 静かに長く遊ぶための完成版                                                                                          |
+| 導入       | インストール・アカウント不要                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | ストアから導入、ホーム画面から起動                                                                                  |
+| 広告       | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Anchored Adaptive Banner 1 枠のみ                                                                                   |
+| 課金       | なし(完全無料)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | $3.99 買い切りで広告永久削除                                                                                        |
+| 計測       | サイト共通のページ解析(下の「計測」節。実装済み・既定は無効)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | なし — Analytics を入れないことがアプリの約束([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))                       |
+| ゲーム内容 | 正式収録の 41 本+先行公開中の新作(下の「先行公開」節。いま配信中は 5 本 — Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、2026-10-19 から。Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads は実装中で未配信 — registry では `channel: 'in-development'`。Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram は実装済みで Web 版へはまだ同期していない — registry では Make the Target / Nested Tic-Tac-Toe / Tangram が `channel: 'web-beta'`(2026-10-21 から)、Overtake と Scopa はルール文書の条件が満たされるまで `'in-development'`)。正式収録ゲームに機能差なし | 正式収録の 41 本(registry で `channel` を持たないエントリ)。新作は先行公開で検証後に収録(2026-10-02 に 11 本を収録) |
 
 **Play instantly on the web. Play quietly and offline in the app.**
 
@@ -397,17 +397,27 @@ registry では 2026-10-20 から **`channel: 'in-development'`**(下の「main 
 配信物から除く(ビルドの分岐を増やす)。この文書が知る最後の同期は上の `a1c6a27`(2026-10-19)で、
 47〜51 は入っていない — 「Web 版には出していない」は、5 本が `'web-beta'` になって同期されるまでそのまま。
 
-**さらに次の 5 本 — Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram(No. 52〜56)— も
-実装中で、Web 版には出していない**(2026-10-20 に着手。計画は
+**さらに次の 5 本 — Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram(No. 52〜56)— は
+このリポジトリに実装した**(2026-10-20 に着手し、2026-10-21 に 5 本とも遊べる形まで。計画は
 [plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)、
-仕様の正は各ルール文書)。段階は上の 5 本と同じ(registry に `channel: 'in-development'` で登録した
-スキャフォールドで、ゲーム本体はまだ無い。14 言語のカタログはどれも英語の仮文)。どのビルドの扉からも
-開けないが、チャンクは出るので、main を次に Web 版へ同期する PR では landing の `IN_DEVELOPMENT_GAME_IDS`
-に 5 本の id を足す(上の「対処」と同じ)。遊べるようになる変更で `'web-beta'` に変え、統合と検証を
-終えてから Web 版へ同期し、その同期の PR で `WEB_BETA_GAME_IDS` へ移す。Overtake と Tangram は実機での
-試作(Phase 0)を先に行い、Tangram は
-それが通らなければ Three Peaks に差し替える。5 本とも Club House には登録しない。正式収録の基準
-(上の 1・2)は変えず、Web で公開するまで始まらない。
+仕様の正は各ルール文書)。registry の `channel` は 5 本で分かれる。Make the Target / Nested Tic-Tac-Toe /
+Tangram の 3 本は 2026-10-21 から **`channel: 'web-beta'`**(遊べるようになる変更で `'in-development'` から
+変えた)。**Overtake と Scopa の 2 本は遊べる形でも `'in-development'` のまま**で、各ルール文書が切り替えを
+止めている — Overtake は Phase 0 の結果を [OVERTAKE_RULES.md](OVERTAKE_RULES.md) §3 に記録するまで
+(記録の前に `'web-beta'` へ上げるなら、操作の既定の定数 `DRAG_MAPPING` を `'B'` にして出す。§3・§18)、
+Scopa はバックグラウンドからの復帰時に CPU の拍を 450ms で張り直す読み方を製品オーナーが決め、規則の
+出典の確認と商標・両ストアの検索を [SCOPA_RULES.md](SCOPA_RULES.md) §14 に書くまで(§4.2・§14)。
+どちらもアプリには出ない(下の実行時ガード)。14 言語のカタログは書いてある
+(`en` が原文、`ja` と 12 言語は 2026-10-21 に AI が書き、誰も読んでいない —
+[I18N_POLICY.md](I18N_POLICY.md))。**Web 版にはまだ出ていない**: pixapps-landing へ同期する PR はまだ
+作っておらず、作るには製品オーナーの明示的な承認が要る。その PR では、同期するチャンクと**同じ PR で**
+landing の `tests/ui.test.js` の `'web-beta'` の 3 本の id を `IN_DEVELOPMENT_GAME_IDS` から
+`WEB_BETA_GAME_IDS` へ移し、Overtake と Scopa の id は `IN_DEVELOPMENT_GAME_IDS` に置く
+(main を先に同期した PR で `IN_DEVELOPMENT_GAME_IDS` に足していなければ、それぞれの一覧に足す —
+どちらの一覧にも無いチャンクも、チャンクの無い id も落ちる。下の「landing 側のガード」)。Overtake と
+Tangram の実機での試作(Phase 0)はまだ行っておらず、両者の操作の既定は暫定である(各ルール文書の操作の節。
+Tangram はそれが通らなければ Three Peaks に差し替える)。5 本とも Club House には登録しない。正式収録の
+基準(上の 1・2)は変えず、2 週間の時計は Web で公開した日から動く — まだ動いていない。
 
 それ以前の先行公開は、2026-10-02 に 11 本すべてを正式収録して空になった — Crown Grid /
 Number Path / Shape Regions(issue #194、計画は

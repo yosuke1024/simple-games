@@ -40,14 +40,16 @@ zh-Hans / zh-Hant のスクリプト解決(zh-TW → zh-Hant 等)は中国語対
 
 ## 対応言語の一覧
 
-現状は **14 言語・1,858 キー**(シェル 125 + ゲーム別 1,733。2026-10-20、No. 52〜56 の 5 本を
-スキャフォールドした時点で、各 `en.ts` の `en` オブジェクトリテラルの最上位プロパティを TypeScript の
-構文木で数えた。ゲーム別の内訳は正式収録 41 ゲームの 1,393(1 ゲーム 13〜59)、Web 先行公開
-5 ゲームの 230(Unblock Puzzle 43 / Snake 50 / Loop Puzzle 55 / Bridges 43 / Peg Solitaire 39)、
-実装中の 10 ゲーム(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads と Overtake / Make the
-Target / Nested Tic-Tac-Toe / Scopa / Tangram)のスキャフォールドの 110(各 11 — 実装で増えるので
-統合時に数え直す)。シェルの 125、正式収録の 1,393、Web 先行公開
-5 本の 230 は 2026-10-17 の実測(Node で `Object.keys(en).length` を足し、正規表現での行の
+現状は **14 言語・2,033 キー**(シェル 125 + ゲーム別 1,908。2026-10-21、No. 52〜56 の 5 本を
+統合した時点で、シェルの `src/i18n/locales/en.ts` と各 `apps/simple-games/src/games/<id>/i18n/en.ts` の
+`en` オブジェクトリテラルの最上位プロパティを Node から TypeScript の構文木で数え、行頭の
+`キー:` の正規表現での数え上げと全ファイルで一致することを確かめた。ゲーム別の内訳は正式収録
+41 ゲームの 1,393(1 ゲーム 13〜59)、Web 先行公開で配信中の 5 ゲームの 230(Unblock Puzzle 43 /
+Snake 50 / Loop Puzzle 55 / Bridges 43 / Peg Solitaire 39)、Web 先行公開向けに実装済みで Web 版へは
+まだ同期していない 5 ゲームの 230(Overtake 30 / Make the Target 45 / Nested Tic-Tac-Toe 45 /
+Scopa 65 / Tangram 45)、実装中の 5 ゲーム(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads)の
+スキャフォールドの 55(各 11 — 実装で増えるので統合時に数え直す)。シェルの 125、正式収録の 1,393、
+配信中の 5 本の 230 は 2026-10-17 の実測(Node で `Object.keys(en).length` を足し、正規表現での行の
 数え上げと一致することを確かめた値)と同じ。シェルの 125 と正式収録の 1,393 は 42〜46 の統合の前(7c098cf)とも同じ。
 1,393 は 2026-10-02 の実測に、自動送信の状態キー(+2)と
 ボタンの `clubSendResult`(−1)の差を足した値と一致する。Club House のキーは別カタログ `src/club/i18n/` の 122)。`MessageKey` 型の強制に
@@ -58,7 +60,7 @@ Target / Nested Tic-Tac-Toe / Scopa / Tangram)のスキャフォールドの 110
 使う 125 キーは `src/i18n/locales/*.ts` に残り、アプリ起動時のエントリに乗る
 (コレクションホームのカテゴリ見出し `category*` 6 キーと、Backup & Restore の
 14 キーもここ)。
-1 本のゲームだけが使う残り 1,733 キーはそのゲームの `src/games/<id>/i18n/*.ts` に
+1 本のゲームだけが使う残り 1,908 キーはそのゲームの `src/games/<id>/i18n/*.ts` に
 あり、そのゲームのチャンクに同梱される — 遊ばないゲームの文言はパースされない。
 どちらの置き場所でも 14 言語すべてを型が強制する点は変わらない。
 
@@ -138,7 +140,7 @@ Target / Nested Tic-Tac-Toe / Scopa / Tangram)のスキャフォールドの 110
 | tr      | Türkçe              | machine |                                                                             |
 | ar      | العربية             | 保留    | RTL 条件を満たすまで追加しない(下記)                                        |
 
-**アプリ UI(1,858 キー、シェル + 全ゲームカタログ)側の来歴開示はまだ実装していない。** ガイドページには入っているが、
+**アプリ UI(2,033 キー、シェル + 全ゲームカタログ)側の来歴開示はまだ実装していない。** ガイドページには入っているが、
 アプリの「Acerca de」相当に同じ一文を出すには 14 言語ぶんのキー追加が要る。未着手であることを
 ここに書いておく(やっていないことを、やったように書かない)。
 
@@ -189,12 +191,15 @@ Target / Nested Tic-Tac-Toe / Scopa / Tangram)のスキャフォールドの 110
 途中で高リスクキーが入れば、そこで落ちる。画面での確認はまだ何もしていない。
 
 **さらに次の 5 本(Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram、No. 52〜56)の
-カタログも、まだ翻訳ではない**(2026-10-20。計画は
-`docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md`)。
-上の 47〜51 と同じく、`scripts/new-game.mjs` が置いたスキャフォールドの 11 キーだけで、`ja` を含む
-13 言語のファイルは英語の仮文をそのまま写したもの。訳はゲームの文言が決まってから書き、来歴の扱いも
-同じ。`src/i18n/unreadCatalogs.test.ts` の一覧にはスキャフォールドの時点で 5 本とも入れた。画面での
-確認はまだ何もしていない。
+カタログは、上の Web 先行公開の 5 本と同じ来歴で書いてある**(2026-10-21。計画は
+`docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md`、各ルール文書の
+i18n 節が正)。`en` が原文で、`ja` と残る 12 言語は 2026-10-21 に AI が英語の原文から書いた。**`ja` も
+作者は読んでおらず、12 言語もネイティブは誰も読んでいない** — 上の表の「ja = author」はこの 5 本の
+`ja` には当てはまらない。独立逆翻訳・作者の逆翻訳レビュー・別モデル監査は、どの言語にもまだ行って
+いない。キーの数は上の「対応言語の一覧」(Overtake 30 / Make the Target 45 / Nested Tic-Tac-Toe 45 /
+Scopa 65 / Tangram 45)。`src/i18n/unreadCatalogs.test.ts` の一覧にはスキャフォールドの時点から 5 本とも
+入っており、`ja` を作者が読むまでこの 5 本のカタログに高リスクキーが入れば落ちる。画面で何を見たか・
+見ていないかは各ルール文書の i18n 節と検証の節に書いてあり、実機では、どの言語もまだ見ていない。
 
 ### 誤訳が「約束の反故」になる文言
 
@@ -388,7 +393,7 @@ Target / Nested Tic-Tac-Toe / Scopa / Tangram)のスキャフォールドの 110
 |          | UI カタログ                                                                     | ゲーム別ガイド                                              |
 | -------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | 置き場所 | `apps/simple-games/src/i18n/locales/`(シェル)+ `src/games/<id>/i18n/`(ゲーム別) | 別リポジトリ `tools/game-guides-content.js` の `LOCALES`    |
-| 単位     | 短いラベル 1,858 キー(シェル 125 + ゲーム別 1,733)                              | 1 ゲームあたり数千語の長文                                  |
+| 単位     | 短いラベル 2,033 キー(シェル 125 + ゲーム別 1,908)                              | 1 ゲームあたり数千語の長文                                  |
 | 現在     | 14 言語                                                                         | 10 言語(en / ja / es / pt-br / fr / id / de / th / vi / ko) |
 | 参照元   | `i18n/index.ts`                                                                 | `apps/simple-games/src/ui/landing.ts` の `PAGE_LOCALES`     |
 

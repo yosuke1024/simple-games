@@ -1233,12 +1233,21 @@ export const GAMES: readonly GameDefinition[] = [
     loadStorageSchemas: () => import('../games/echo-pads/storage/schemas'),
   },
   // The titles of docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
-  // (Nos. 52–56), in number order, all built for the browser's early release
-  // (docs/WEB_VERSION.md「先行公開」) and not yet on it: each is still the
-  // scaffold of scripts/new-game.mjs until its own phase of the plan lands, so
-  // each is `'in-development'` (offered on no build) until the change that
-  // makes it playable turns it `'web-beta'`, as Nos. 47–51 above. None is a
-  // Club House challenge (no `challenge`).
+  // (Nos. 52–56), in number order. Each is playable. Make the Target, Nested
+  // Tic-Tac-Toe and Tangram are on the browser's early-release channel
+  // (docs/WEB_VERSION.md「先行公開」): the change that made them playable turned
+  // them from `'in-development'` to `'web-beta'` on 2026-10-21. They are not
+  // yet in the browser version, which carries them once the landing's next
+  // sync lists them as beta (WEB_VERSION.md「landing 側のガード」), and not in
+  // the app until a person decides they graduate (docs/RELEASE_CHECKLIST.md
+  // §0). Overtake and Scopa stay `'in-development'` (offered on no build)
+  // although playable, because their rules documents hold the switch back:
+  // Overtake until the Phase 0 device result is recorded in
+  // docs/OVERTAKE_RULES.md §3 (or until it ships with `DRAG_MAPPING` `'B'`),
+  // Scopa until the product owner decides how its CPU beat resumes when the
+  // app comes back to the foreground (docs/SCOPA_RULES.md §4.2). Nos. 47–51
+  // above are still `'in-development'`. None is a Club House challenge (no
+  // `challenge`) while its saves and results may still change.
   //
   // The glyphs were measured as Nos. 42–51's were above: none is in the bundled
   // Nunito subset, so each resolves through the tail of --font-display, except
@@ -1309,7 +1318,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Make the Target',
     category: 'puzzle',
     glyph: '=',
-    channel: 'in-development',
+    channel: 'web-beta',
     storageKeys: Object.values(TG_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/make-the-target/ui/MakeTheTargetRoot').then((m) => ({
@@ -1340,7 +1349,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Nested Tic-Tac-Toe',
     category: 'board',
     glyph: '╳',
-    channel: 'in-development',
+    channel: 'web-beta',
     storageKeys: Object.values(NT_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/nested-tic-tac-toe/ui/NestedTicTacToeRoot').then((m) => ({
@@ -1390,7 +1399,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Tangram',
     category: 'puzzle',
     glyph: '⊿',
-    channel: 'in-development',
+    channel: 'web-beta',
     storageKeys: Object.values(TN_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/tangram/ui/TangramRoot').then((m) => ({ default: m.TangramRoot })),

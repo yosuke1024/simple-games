@@ -57,12 +57,13 @@ describe('the address a shortcut carries', () => {
   // is not on the app, so its address — which a browser bookmark or a pinned
   // shortcut from a future release could still carry — lands on the
   // collection, exactly as a retired id does (app/gameChannel.ts). The five of
-  // docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md are on the channel
-  // today. A title still in development (`channel: 'in-development'`, the
-  // scaffolds of docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-
-  // echo-pads.md and docs/plans/2026-10-20-overtake-make-the-target-nested-
-  // tic-tac-toe-scopa-tangram.md) is offered nowhere, so its address is the
-  // collection too.
+  // docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md and three of the
+  // five of docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-
+  // scopa-tangram.md are on the channel today. A title still in development
+  // (`channel: 'in-development'`, the scaffolds of
+  // docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md, and
+  // Overtake and Scopa, which their rules documents hold back) is offered
+  // nowhere, so its address is the collection too.
   it('means the collection for every web-beta or in-development title in the registry today', () => {
     const offTheApp = GAMES.filter((game) => game.channel);
     expect(offTheApp.length).toBeGreaterThan(0);
