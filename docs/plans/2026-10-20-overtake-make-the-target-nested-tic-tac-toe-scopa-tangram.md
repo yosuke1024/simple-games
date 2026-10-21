@@ -1782,13 +1782,19 @@ ARCHITECTURE、architecture/registry、storage-keys(5 本の実際のキー)、c
   フェルトの上)と角の切り欠き(カード面の上)の 2 つで、弱いのはライトのフェルト上のリングとダークの面上の
   切り欠き。扱いは下の統合レビュー。
 - **ブラウザ試遊(Playwright のヘッドレス Chromium、360×640・DPR 2・タッチ、ライト / ダーク)。**5 本を一時的に
-  すべて `'web-beta'` にした Web ビルド(`vite build --mode web` → `vite preview`)で、各ゲームの Quick Rules
-  → ホーム → 盤面を撮り、ホームの開始ボタンのタップの Event Timing を CPU 1 倍 / 6 倍で記録した。横スクロールも
-  縦スクロールも無し(scrollWidth / Height = 360 / 640)、コンソールのエラーは landing の共有ヘッダ
-  `global-header.js` の 404(landing の外で開いたため)だけ。6 倍での開始タップの p95 / 最大は Overtake 136 /
-  136 ms(ダーク 88)、Make the Target 72 / 72(ダーク 64)、Nested Tic-Tac-Toe 88 / 88(ダーク 80)、Scopa 40 /
-  40、Tangram 72 / 72(ダーク 96)— 開発機の値で、実機ではない。スクリーンショットは作業ディレクトリに置き、
-  リポジトリには入れていない。
+  すべて `'web-beta'` にした Web ビルド(`vite build --mode web` → `vite preview`。コミットには含めない)で撮った。
+  1 回目は広告の予約が効いておらず(`data-sg-web-ads` は広告が来たときだけ付く)、ホームのつもりの絵が
+  Quick Rules だった — 統合レビューの指摘で、**2 回目は予約の属性を付けた状態(`.screen` の下 116px)で、
+  Quick Rules の 3 ステップ → 「Start Playing」→ ゲームのホーム(Home ボタンで戻る)→ Resume / 開始 → 盤面**の
+  順に撮り直した(5 本 × 2 テーマ × 5 枚 = 50 枚)。結果: **Quick Rules の 3 ステップと盤面は 5 本・2 テーマとも
+  scrollWidth / scrollHeight = 360 / 640(スクロールなし)**。ゲームのホームは 758〜989 px でスクロールするが、
+  これは収録済みの全タイトルと同じ(同じ条件で Snake 770 / Unblock Puzzle 951 / Peg Solitaire 795 / Sudoku 861 /
+  Hearts 789 — ホームは縦に並ぶボタンと統計の行で、計画の「360×640 でスクロールなし」は Quick Rules と盤面のもの)。
+  コンソールのエラーは landing の共有ヘッダ `global-header.js` の 404(landing の外で開いたため)だけ。
+  ホームからの開始 / Resume のタップの Event Timing(CPU 6 倍、`pnpm test` を同時に走らせた負荷の中の値 —
+  参考値)の p95 / 最大: Overtake 120〜152 ms、Make the Target 64〜72、Nested Tic-Tac-Toe 48〜88、Scopa 72〜120、
+  Tangram 80〜112。1 倍はすべて 32〜48 ms。開発機の値で、実機ではない。スクリーンショットは作業ディレクトリに
+  置き、リポジトリには入れていない。
 - **全体の門**: 統合ブランチ(`4c607c9` の時点)で CI と同じ順に実行した(2026-10-21、開発機): `pnpm lint`・`pnpm typecheck`・
   `pnpm test`(**728 ファイル通過・2 スキップ、14,633 件通過・6 スキップ** — スキップは opt-in の生成・自己対局のテスト)・
   `pnpm build` と `check-dist-ads-separation.sh native`・`build:web` と `check-dist-ads-separation.sh`・`size:check`
@@ -1809,7 +1815,7 @@ ARCHITECTURE、architecture/registry、storage-keys(5 本の実際のキー)、c
   最初の呼び出しで、負荷時に 5 秒を超えた)/ ルール文書 5 本の冒頭の状態と「この環境にブラウザが無い」という
   誤った理由の訂正、Phase 3 を未来形で書いた文の訂正、統合への引き継ぎ一覧の「対応済み」/ Overtake の Drag /
   Buttons の切り替えの最小幅 48px。**ブラウザ試遊の証拠の不備**(広告の予約が効いていない・ホームではなく盤面を
-  撮っていた)も指摘され、予約を付けた 2 回目の試遊で撮り直した(上)。
+  撮っていた)も指摘され、予約を付けた 2 回目の試遊で撮り直した(上の「ブラウザ試遊」)。
 
 **製品オーナーの確認待ち(5 本のルール文書が残した点 — 公開の前に)。**
 
