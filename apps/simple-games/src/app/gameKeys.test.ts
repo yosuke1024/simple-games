@@ -197,8 +197,10 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // to its rules document's storage section in Phase 2/3.
   // No. 52, in-development (docs/OVERTAKE_RULES.md storage): not frozen until graduation
   overtake: ['ot.progress', 'ot.stats', 'ot.flags', 'ot.prefs'],
-  // No. 53, in-development (docs/MAKE_THE_TARGET_RULES.md storage): not frozen until graduation
-  'make-the-target': ['tg.stats', 'tg.flags'],
+  // No. 53, in-development (docs/MAKE_THE_TARGET_RULES.md §10): the scaffold's two keys grew to
+  // the rules document's five in Phase 3 — two saved-game slots (Free Play and the daily) and
+  // the difficulty last chosen. Not frozen until graduation
+  'make-the-target': ['tg.saveGame', 'tg.saveDaily', 'tg.stats', 'tg.flags', 'tg.prefs'],
   // No. 54, in-development (docs/NESTED_TIC_TAC_TOE_RULES.md storage): not frozen until graduation
   'nested-tic-tac-toe': ['nt.stats', 'nt.flags'],
   // No. 55, in-development (docs/SCOPA_RULES.md storage): not frozen until graduation

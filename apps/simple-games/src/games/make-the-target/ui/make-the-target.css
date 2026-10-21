@@ -1,15 +1,365 @@
-/**
- * MakeTheTarget's styles — scaffolded by scripts/new-game.mjs. The shared shell
- * classes (.screen, .home-hero, .game-content, .game-topbar, .tutorial-card,
- * .btn, .dialog, ...) already cover the frame; the board and everything else
- * the game itself draws go here, under the game's own `make-the-target-` prefix.
- */
+/* Make the Target — all of this game's styling, imported by MakeTheTargetRoot
+   (docs/MAKE_THE_TARGET_RULES.md §1, §4, §12). Built from the series tokens in
+   src/ui/styles.css only (--surface, --ink, --line, --accent, --accent-ink,
+   --surface-recessed, --font-display, …), so it follows the theme without
+   knowing about it; no colour is written here (docs/architecture/css-split.md).
+   The accent (紺桔梗, registered in styles.css) is worn by the target's frame,
+   a chosen tile and the made target — nothing else on the board.
 
-/* Placeholder board area — replace with the real board's layout. */
-.make-the-target-board {
-  display: flex;
+   Class names are prefixed `tg-` so this file can never collide with the
+   shell or with another game.
+
+   Size (§12), by arithmetic from the rules below, at 360 × 640 with the web
+   build's 116px ad reservation: top bar 64 + action bar 77 leave 383px; the
+   play column takes at most 8 + 52 + 10 + 56 + 10 + 100 + 10 + 4 × 21 + 8 =
+   338px, so nothing scrolls. Tiles are (360 − 32 − 4 × 8) / 5 ≈ 59px wide
+   with five on the board, the operators 64 × 56px — every target at least
+   48px. Measured in a real browser: not yet (§15). */
+
+.tg-play {
   flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  overflow-y: auto;
+}
+
+/* Centred while there is room; the top stays reachable when there is not. */
+.tg-play > .tg-target {
+  margin-top: auto;
+}
+
+.tg-play > .tg-lines {
+  margin-bottom: auto;
+}
+
+/* ---------- the target (§1) ---------- */
+
+.tg-target {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 4px 18px;
+  border: 3px solid var(--accent);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.tg-target-mark {
+  width: 22px;
+  height: 22px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.tg-target-value {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* Made (§4): the frame's colour fills the face. No motion. */
+.tg-target-made {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.tg-target-made .tg-target-mark {
+  color: var(--accent-ink);
+}
+
+/* ---------- the tiles (§1, §3) ---------- */
+
+.tg-board {
+  display: grid;
+  grid-template-columns: repeat(var(--tg-n, 4), minmax(0, 1fr));
+  gap: 8px;
+  width: min(100%, calc(var(--tg-n, 4) * 72px + (var(--tg-n, 4) - 1) * 8px));
+}
+
+.tg-tile,
+.tg-slot-empty {
+  height: 56px;
+  min-width: 48px;
+  border-radius: 12px;
+}
+
+.tg-tile {
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  border: 2px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    background-color 120ms ease,
+    transform 120ms ease;
+}
+
+/* Six digits still fit a tile (§1, §12): the type shrinks with the count. */
+.tg-tile[data-digits='4'] {
+  font-size: 21px;
+}
+.tg-tile[data-digits='5'] {
+  font-size: 18px;
+}
+.tg-tile[data-digits='6'] {
+  font-size: 15px;
+}
+.tg-tile[data-digits='7'] {
+  font-size: 13px;
+}
+
+/* A press shows as the ground changing, never a filter (§12). */
+.tg-tile:active:not(:disabled) {
+  background: var(--surface-recessed);
+}
+
+/* Chosen first (§4): the accent face, a heavy ink frame and a lift — never
+   colour alone; `aria-pressed` says the same to a screen reader. */
+.tg-tile-selected,
+.tg-tile-selected:active:not(:disabled) {
+  border: 3px solid var(--ink);
+  background: var(--accent);
+  color: var(--accent-ink);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+
+/* Not pressable on the finished or `missed` board, and still fully legible:
+   the shared `button:disabled` fades to 0.4, but the board stays in view as
+   it is (§4) — the last tile is the number the panel is stating — and keeps
+   BRAND.md's contrast (§12). `disabled` already blocks taps and focus. */
+.tg-tile:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.tg-slot-empty {
+  border: 2px dashed var(--line);
+}
+
+/* The answer arrives from where the left term was (§12): one short slide,
+   two identical keyframes so back-to-back merges into one slot replay it. */
+.tg-tile-arrive-0 {
+  animation: tg-arrive-0 160ms ease-out;
+}
+.tg-tile-arrive-1 {
+  animation: tg-arrive-1 160ms ease-out;
+}
+
+@keyframes tg-arrive-0 {
+  from {
+    transform: translateX(calc(var(--tg-from, 0) * (100% + 8px)));
+  }
+}
+
+@keyframes tg-arrive-1 {
+  from {
+    transform: translateX(calc(var(--tg-from, 0) * (100% + 8px)));
+  }
+}
+
+/* Reduced Motion (the OS, or the app's own setting): no slide at all. */
+@media (prefers-reduced-motion: reduce) {
+  .tg-tile-arrive-0,
+  .tg-tile-arrive-1 {
+    animation: none;
+  }
+  .tg-tile,
+  .tg-op {
+    transition: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .tg-tile-arrive-0,
+:root[data-reduced-motion='true'] .tg-tile-arrive-1 {
+  animation: none;
+}
+
+/* ---------- the operators, or the `missed` panel (§3, §4) ---------- */
+
+/* One place, one height, in every state and language: nothing above or
+   below it moves when the panel takes the operators' place. */
+.tg-ops-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100px;
+  flex-shrink: 0;
+}
+
+.tg-ops {
+  display: grid;
+  grid-template-columns: repeat(4, 64px);
+  gap: 12px;
+}
+
+.tg-op {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  touch-action: manipulation;
+  transition:
+    background-color 120ms ease,
+    transform 120ms ease;
+}
+
+.tg-op:active:not(:disabled) {
+  background: var(--surface-recessed);
+}
+
+.tg-op-selected,
+.tg-op-selected:active:not(:disabled) {
+  border: 3px solid var(--ink);
+  background: var(--surface-recessed);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+
+/* Nothing to apply it to yet (§3): it looks it, and is `disabled`. */
+.tg-op:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.tg-missed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+/* At most two lines (§4, §12); the 14-language check measures it. */
+.tg-missed-text {
+  margin: 0;
+  min-height: 38px;
+  font-size: 15px;
+  line-height: 19px;
+  text-align: center;
+  color: var(--ink);
+}
+
+.tg-missed-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tg-missed-actions .btn {
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+/* Undo is pressed several times in a row (§12): no double-tap zoom on either. */
+.tg-actions .action-btn,
+.tg-missed-actions .btn {
+  touch-action: manipulation;
+}
+
+/* ---------- the moves so far (§4) ---------- */
+
+.tg-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-display);
+  font-size: 17px;
+  line-height: 21px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+/* As tall as the problem's n − 1 lines from the start, so Undo never moves. */
+.tg-lines-3 {
+  min-height: calc(3 * 21px);
+}
+.tg-lines-4 {
+  min-height: calc(4 * 21px);
+}
+.tg-lines-5 {
+  min-height: calc(5 * 21px);
+}
+
+.tg-result-lines {
+  margin: 4px 0 12px;
+  color: var(--ink);
+}
+
+/* The Undo bar keeps its height while the panel's Undo stands in (§3). */
+.tg-actions {
+  min-height: 77px;
+}
+
+/* …and the bar's own Undo is really gone meanwhile (§3): the browser's
+   `[hidden] { display: none }` loses to the shared `.action-btn { display:
+   flex }`, so without this the screen shows two buttons named Undo. Keeps the
+   button's place, and takes it out of the tab order and the a11y tree. */
+.tg-actions .action-btn[hidden] {
+  visibility: hidden;
+}
+
+/* ---------- home ---------- */
+
+.tg-choose-label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+/* ---------- Quick Rules pictures (§11) ---------- */
+
+.tg-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 12px;
+  pointer-events: none;
+}
+
+.tg-figure-board {
+  --tg-n: 3;
+  width: auto;
+  grid-template-columns: repeat(auto-fit, 56px);
+  justify-content: center;
+}
+
+.tg-figure-ops {
+  display: grid;
+  grid-template-columns: repeat(4, 48px);
+  gap: 8px;
+}
+
+.tg-figure-ops .tg-op {
+  height: 44px;
+  font-size: 22px;
 }
