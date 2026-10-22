@@ -1,11 +1,13 @@
 /**
  * One Club (club.md §9「Club」): your rankings, today's dailies, the rankings as
- * shelves of games and the members, read when the screen opens and again only
- * on `Reload`. No timer, no polling. Coming back from a table or a daily shows
- * what the screen already had (`cached`, kept by ClubRoot) instead of reading
- * it all again. The Owner's two extras (Invite, Remove) and the Settings panel
- * (change your name, Disconnect — §8-5, §9) live here too, as panels over the
- * same data. Invite is hidden while Private Clubs are off.
+ * shelves of games and one `Members` row, read when the screen opens and again
+ * only on `Reload`. No timer, no polling. Coming back from a table, a daily or
+ * the Members screen shows what the screen already had (`cached`, kept by
+ * ClubRoot) instead of reading it all again. The members themselves — the
+ * list, the Owner's Reported / Rename / Remove — are the Members screen's; it
+ * reads the lists this screen holds. The Owner's Invite and the Settings panel
+ * (change your name, Disconnect — §8-5, §9) live here, as panels over the same
+ * data. Invite is hidden while Private Clubs are off.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient, REQUEST_TIMEOUT_MS, type ClubClient } from '../api/client';
@@ -14,8 +16,7 @@ import type { Challenge, Member, RankingMine, RankingSummary, ReportedMember } f
 import { contractFor, gameTitle } from '../contract/challenge';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { flushOutbox, type FlushReport } from '../storage/outbox';
-import { availableGames } from '@/app/gameChannel';
-import { GAME_CATEGORIES, type GameDefinition } from '@/app/registry';
+import { GAME_CATEGORIES } from '@/app/registry';
 import { shareGame } from '@/services/share/share';
 import type { ClubConnection } from '@/storage/schemas';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
@@ -24,20 +25,15 @@ import { IconChevronRight } from '@/ui/components/icons';
 import { useSettings } from '@/state/SettingsContext';
 import { PRIVATE_CLUBS_ENABLED } from '@/ui/clubFeatures';
 import {
-  axisGap,
-  axisText,
-  compareModes,
-  dateLabel,
   errorText,
   modeLabel,
   NICKNAME_MAX,
-  RankMark,
   ScreenFrame,
   sortModes,
   todayLocal,
   type T,
 } from './common';
-import { NameSheet } from './NameSheet';
+import { shelfGames, sortByShelf, StandingRow } from './standings';
 
 export interface ClubData {
   /** Challenges tagged with today's daily date (everyone's daily meets here). */
@@ -47,10 +43,17 @@ export interface ClubData {
   rankings: RankingSummary[];
   /** The tables the viewer is in (`GET /rankings/mine`); empty from a server without the route. */
   mine: RankingMine[];
+  /** The newest page of members, and the older pages the Members screen has read since. */
   members: Member[];
-  /** All members, of whom `members` is the newest page. */
+  /** All members, of whom `members` is the newest page (and the older ones read). */
   memberCount: number;
-  /** Owner only: members others reported, most reported first. */
+  /**
+   * The Members screen found no older page to ask for: the last one added nobody, or the
+   * server has no `?before=` route (club.md §9「Members」). It lives with the lists it
+   * describes, so it survives a member's view and goes when the Club reads them anew.
+   */
+  olderExhausted?: boolean;
+  /** Owner only: members others reported, most reported first; the Members screen shows them. */
   reported: ReportedMember[];
   /** The club's name as the server has it now. */
   clubName: string;
@@ -65,14 +68,6 @@ const FLUSH_WAIT_MS = REQUEST_TIMEOUT_MS + 1_000;
 
 export type ClubPanel = 'none' | 'invite' | 'settings';
 
-/** `Sudoku · Hard`; a game with one table (`standard`) is its title alone, a daily table says Daily. */
-export function rankingTitle(gameId: string, paramsKey: string, t: T): string {
-  const game = gameTitle(gameId) ?? gameId;
-  if (paramsKey === 'daily') return `${game} · ${t('clubDaily')}`;
-  const mode = modeLabel(gameId, paramsKey, t);
-  return mode === null ? game : `${game} · ${mode}`;
-}
-
 export function challengeTitle(challenge: Challenge, t: T): string {
   const game = gameTitle(challenge.gameId) ?? challenge.gameId;
   const contract = contractFor(challenge.gameId);
@@ -81,19 +76,6 @@ export function challengeTitle(challenge: Challenge, t: T): string {
   const mode = key !== null ? modeLabel(challenge.gameId, key, t, challenge.daily !== null) : null;
   const title = mode !== null ? `${game} · ${mode}` : game;
   return challenge.daily !== null ? `${title} · ${t('clubDaily')}` : title;
-}
-
-/**
- * The games this device can open that have a table contract, in registry
- * order (app/gameChannel.ts: a web-beta title is not on the app's shelves, so
- * it is not on the Club's either).
- */
-function shelfGames(): Map<string, { game: GameDefinition; index: number }> {
-  return new Map(
-    availableGames()
-      .filter((game) => game.challenge !== undefined)
-      .map((game, index) => [game.id as string, { game, index }]),
-  );
 }
 
 export function ClubScreen({
@@ -106,6 +88,7 @@ export function ClubScreen({
   onBack,
   onOpenChallenge,
   onOpenRanking,
+  onOpenMembers,
   onDisconnect,
   onRenamed,
   onRenamedMe,
@@ -124,6 +107,8 @@ export function ClubScreen({
   onOpenChallenge: (challengeId: string) => void;
   /** A game's tables: `paramsKey` is the mode to show first (null: the table screen's first). */
   onOpenRanking: (gameId: string, paramsKey: string | null, tables: RankingSummary[]) => void;
+  /** The `Members` row: the list is its own screen, fed by the lists this one holds. */
+  onOpenMembers: () => void;
   onDisconnect: () => Promise<void>;
   /** The server's name for the club differs from the cached one. */
   onRenamed: (clubName: string) => void;
@@ -132,17 +117,10 @@ export function ClubScreen({
   /** The player accepted the automatic-send disclosure shown for a connection that never saw it. */
   onAcceptAutoSend: () => void;
 }) {
-  const { t, locale } = useSettings();
+  const { t } = useSettings();
   const [data, setData] = useState<ClubData | null>(cached ?? null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(cached === undefined || refresh);
-  const [confirmRemove, setConfirmRemove] = useState<Member | null>(null);
-  /** Another member's name, pressed: the sheet with the one Report button (club.md §17-3). */
-  const [sheet, setSheet] = useState<Member | null>(null);
-  /** A report went through on this screen: one quiet line, no mark on the row. */
-  const [reportedNote, setReportedNote] = useState(false);
-  const [renaming, setRenaming] = useState<{ key: string; member: Member } | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
   const clientRef = useRef<ClubClient | null>(null);
   const alive = useRef(true);
 
@@ -165,11 +143,11 @@ export function ClubScreen({
           // Best effort, oldest first (club.md §10): results that waited get their
           // turn when the screen opens and when the person presses Reload, both their
           // own actions (判断 38) — not when the screen reads the lists again after one
-          // of its own actions (a rename, removing a member). The flush queues behind
-          // one a result screen may still be running for this Club (outbox.ts
-          // `flushing`), so the screen waits for it at most one request's time and a
-          // beat — long enough for a flush whose request times out to say so — and
-          // then the flush carries on by itself.
+          // of its own actions (your own rename from Settings, or a return from a screen
+          // that changed them). The flush queues behind one a result screen may still be
+          // running for this Club (outbox.ts `flushing`), so the screen waits for it at
+          // most one request's time and a beat — long enough for a flush whose request
+          // times out to say so — and then the flush carries on by itself.
           let wait: ReturnType<typeof setTimeout> | undefined;
           let flush: FlushReport | undefined;
           try {
@@ -258,19 +236,8 @@ export function ClubScreen({
   const games = shelfGames();
   const rankings = (data?.rankings ?? []).filter((r) => games.has(r.gameId));
   const tablesOf = (gameId: string) => rankings.filter((r) => r.gameId === gameId);
-  const categoryOf = (gameId: string) => {
-    const game = games.get(gameId)?.game;
-    return game ? GAME_CATEGORIES.findIndex((c) => c.id === game.category) : -1;
-  };
   // The shelves' order, fixed (club.md §9): never by rank, never by recency.
-  const mine = (data?.mine ?? [])
-    .filter((m) => games.has(m.gameId))
-    .sort(
-      (a, b) =>
-        categoryOf(a.gameId) - categoryOf(b.gameId) ||
-        games.get(a.gameId)!.index - games.get(b.gameId)!.index ||
-        compareModes(a.gameId, a.paramsKey, b.paramsKey),
-    );
+  const mine = sortByShelf(data?.mine ?? [], games);
   const shelves = GAME_CATEGORIES.map((category) => ({
     category,
     games: [...games.values()]
@@ -291,64 +258,6 @@ export function ClubScreen({
     onOpenRanking(gameId, modes.find((key) => own.has(key)) ?? modes[0] ?? null, tables);
   };
 
-  const remove = async (member: Member, purge: boolean) => {
-    setConfirmRemove(null);
-    setActionError(null);
-    try {
-      await client().removeMember(member.id, { purge });
-      if (purge) {
-        // Their results and ranking rows are gone server-side (club.md §17-3): the
-        // tables and the Today results on screen are stale, so read them again.
-        await load();
-        return;
-      }
-      setData((d) =>
-        d
-          ? {
-              ...d,
-              members: d.members.filter((m) => m.id !== member.id),
-              reported: d.reported.filter((r) => r.member.id !== member.id),
-              memberCount: Math.max(0, d.memberCount - 1),
-            }
-          : d,
-      );
-    } catch (e) {
-      setActionError(errorText(e, t, clubName));
-    }
-  };
-
-  /** Reporting twice is harmless (the server answers 204 and changes nothing). */
-  const report = async (member: Member) => {
-    setActionError(null);
-    setReportedNote(false);
-    try {
-      await client().reportMember(member.id);
-      if (alive.current) setReportedNote(true);
-    } catch (e) {
-      if (alive.current) setActionError(errorText(e, t, clubName));
-    }
-  };
-
-  const rename = async (member: Member, nickname: string) => {
-    setActionError(null);
-    try {
-      const renamed = await client().renameMember(member.id, nickname);
-      const apply = (m: Member): Member => (m.id === renamed.id ? { ...m, ...renamed } : m);
-      setData((d) =>
-        d
-          ? {
-              ...d,
-              members: d.members.map(apply),
-              reported: d.reported.map((r) => ({ ...r, member: apply(r.member) })),
-            }
-          : d,
-      );
-      setRenaming(null);
-    } catch (e) {
-      setActionError(errorText(e, t, clubName));
-    }
-  };
-
   /**
    * Your own name (club.md §5-3, §9): the server renames the member and the
    * name on their results; reports against them stay. Throws for the panel to show.
@@ -358,58 +267,6 @@ export function ClubScreen({
     onRenamedMe(member.nickname);
     // Your row in the lists carries the new name.
     void load();
-  };
-
-  /**
-   * One member line. The owner gets Rename / Remove on everyone else; a member
-   * gets nothing on the row — another member's name opens the sheet with Report
-   * (club.md §17-3). One's own name is plain text everywhere.
-   */
-  const memberLine = (section: string, m: Member, value: string) => {
-    if (renaming?.key === `${section}:${m.id}`) {
-      return (
-        <RenamePanel
-          key={`${section}:${m.id}`}
-          member={m}
-          t={t}
-          onCancel={() => setRenaming(null)}
-          onSave={(nickname) => rename(m, nickname)}
-        />
-      );
-    }
-    const other = m.id !== connection.memberId;
-    return (
-      <div className="settings-row settings-row-static club-line" key={`${section}:${m.id}`}>
-        <span className="settings-row-label">
-          {other && !isOwner ? (
-            <button type="button" className="club-name-btn" onClick={() => setSheet(m)}>
-              {m.nickname}
-            </button>
-          ) : (
-            m.nickname
-          )}
-        </span>
-        <span className="settings-row-value">{value}</span>
-        {other && isOwner ? (
-          <>
-            <button
-              type="button"
-              className="club-text-btn"
-              onClick={() => setRenaming({ key: `${section}:${m.id}`, member: m })}
-            >
-              {t('clubRename')}
-            </button>
-            <button
-              type="button"
-              className="club-text-btn club-danger"
-              onClick={() => setConfirmRemove(m)}
-            >
-              {t('clubRemove')}
-            </button>
-          </>
-        ) : null}
-      </div>
-    );
   };
 
   // The owner's invite panel exists only while Private Clubs are on (club.md §14, decision 44).
@@ -487,7 +344,7 @@ export function ClubScreen({
             <>
               <h2 className="home-section-label club-section">{t('clubMyRankings')}</h2>
               {mine.map((row) => (
-                <MyRankingRow
+                <StandingRow
                   key={`${row.gameId}:${row.paramsKey}`}
                   row={row}
                   game={games.get(row.gameId)!.game}
@@ -531,198 +388,24 @@ export function ClubScreen({
             </div>
           ))}
 
-          {isOwner && data.reported.length > 0 ? (
-            <>
-              <h2 className="home-section-label club-section">{t('clubReported')}</h2>
-              {data.reported
-                .filter((r) => r.member.id !== connection.memberId)
-                .map((r) =>
-                  memberLine('reported', r.member, t('clubReportCount', { n: r.reportCount })),
-                )}
-            </>
-          ) : null}
-
-          <h2 className="home-section-label club-section">
-            {t('clubMembersCount', { n: data.memberCount })}
-          </h2>
-          {actionError ? (
-            <p className="club-note club-note-error" role="alert">
-              {actionError}
-            </p>
-          ) : null}
-          {reportedNote ? (
-            <p className="club-quiet" role="status">
-              {t('clubReported')}
-            </p>
-          ) : null}
-          {data.members.map((m) =>
-            memberLine('members', m, t('clubJoinedOn', { date: dateLabel(m.joinedAt, locale) })),
-          )}
+          {/* The people are their own screen (club.md §9「Members」): this row is the way in. */}
+          <button
+            type="button"
+            className="settings-row club-line"
+            aria-label={`${t('clubMembers')} · ${t('clubMembersCount', { n: data.memberCount })}`}
+            onClick={onOpenMembers}
+          >
+            <span className="settings-row-label">{t('clubMembers')}</span>
+            <span className="settings-row-value">
+              {t('clubMembersCount', { n: data.memberCount })}
+            </span>
+            <span className="settings-row-chevron" aria-hidden="true">
+              <IconChevronRight />
+            </span>
+          </button>
         </>
       ) : null}
-
-      {confirmRemove ? (
-        <RemoveDialog
-          member={confirmRemove}
-          t={t}
-          onCancel={() => setConfirmRemove(null)}
-          onRemove={(purge) => void remove(confirmRemove, purge)}
-        />
-      ) : null}
-      {sheet ? (
-        <NameSheet
-          nickname={sheet.nickname}
-          detail={t('clubJoinedOn', { date: dateLabel(sheet.joinedAt, locale) })}
-          t={t}
-          onClose={() => setSheet(null)}
-          onReport={() => report(sheet)}
-        />
-      ) : null}
     </ScreenFrame>
-  );
-}
-
-/**
- * One table the viewer is in (club.md §9「Your rankings」): the game's tile, the
- * table's title, then on a second line that wraps on a narrow phone — the rank
- * (none below the server's counting ceiling), the table's size, the viewer's
- * best value and, unless they are first, how far the next rank is.
- */
-function MyRankingRow({
-  row,
-  game,
-  t,
-  onOpen,
-}: {
-  row: RankingMine;
-  game: GameDefinition;
-  t: T;
-  onOpen: () => void;
-}) {
-  const title = rankingTitle(row.gameId, row.paramsKey, t);
-  const rank = row.best.rank;
-  const entries = t('clubEntries', { n: row.entryCount });
-  const value = axisText(row.gameId, row.best.entry.facts, t);
-  const gap = axisGap(row.gameId, row.best.entry.facts, row.best.nextValue, t);
-  const toNext = gap === '' ? '' : t('clubToNext', { gap });
-  const label = [title, rank === null ? '' : t('clubRank', { n: rank }), entries, value, toNext]
-    .filter((part) => part !== '')
-    .join(' · ');
-  return (
-    <button
-      type="button"
-      className="settings-row club-line club-mine"
-      aria-label={label}
-      onClick={onOpen}
-    >
-      <GameTile game={game} />
-      <span className="club-mine-text">
-        <span className="settings-row-label">{title}</span>
-        <span className="club-mine-facts">
-          <span className="club-mine-place">
-            {/* The first three wear the table's disc; below them the rank is words like the rest. */}
-            {rank !== null && rank <= 3 ? <RankMark rank={rank} t={t} /> : null}
-            {rank !== null && rank > 3 ? `${t('clubRank', { n: rank })} · ${entries}` : entries}
-          </span>
-          {value ? <span className="club-mine-value">{value}</span> : null}
-          {toNext ? <span>{toNext}</span> : null}
-        </span>
-      </span>
-      <span className="settings-row-chevron" aria-hidden="true">
-        <IconChevronRight />
-      </span>
-    </button>
-  );
-}
-
-/**
- * Remove has two ends (club.md §17-3), so it is its own dialog on the shell's
- * dialog classes: keep their results, or erase them with them.
- */
-function RemoveDialog({
-  member,
-  t,
-  onCancel,
-  onRemove,
-}: {
-  member: Member;
-  t: T;
-  onCancel: () => void;
-  onRemove: (purge: boolean) => void;
-}) {
-  const title = t('clubRemoveTitle', { name: member.nickname });
-  return (
-    <div className="overlay" onClick={onCancel}>
-      <div
-        className="dialog"
-        role="alertdialog"
-        aria-modal="true"
-        aria-label={title}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <h2 className="dialog-title">{title}</h2>
-        <p className="dialog-body">{t('clubRemoveBody')}</p>
-        <p className="dialog-body">{t('clubRemoveEraseBody')}</p>
-        <div className="dialog-actions club-dialog-actions">
-          <button type="button" className="btn btn-ghost" onClick={onCancel} autoFocus>
-            {t('cancel')}
-          </button>
-          <button type="button" className="btn btn-danger" onClick={() => onRemove(false)}>
-            {t('clubRemove')}
-          </button>
-          <button type="button" className="btn btn-danger" onClick={() => onRemove(true)}>
-            {t('clubRemoveErase')}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** Owner only: a new nickname for a member, saved in place (club.md §17-3). */
-function RenamePanel({
-  member,
-  t,
-  onCancel,
-  onSave,
-}: {
-  member: Member;
-  t: T;
-  onCancel: () => void;
-  onSave: (nickname: string) => Promise<void>;
-}) {
-  const [text, setText] = useState(member.nickname);
-  const [busy, setBusy] = useState(false);
-  const trimmed = text.trim();
-  const save = async () => {
-    setBusy(true);
-    await onSave(trimmed);
-    setBusy(false);
-  };
-  return (
-    <div className="club-rename">
-      <input
-        className="club-input"
-        type="text"
-        maxLength={24}
-        value={text}
-        aria-label={t('clubRenameTitle')}
-        onChange={(event) => setText(event.target.value)}
-      />
-      <div className="club-actions">
-        <button
-          type="button"
-          className="btn btn-primary"
-          disabled={busy || trimmed === '' || trimmed === member.nickname}
-          onClick={() => void save()}
-        >
-          {t('clubSave')}
-        </button>
-        <button type="button" className="btn btn-ghost" onClick={onCancel}>
-          {t('cancel')}
-        </button>
-      </div>
-    </div>
   );
 }
 

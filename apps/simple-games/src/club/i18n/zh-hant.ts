@@ -50,6 +50,7 @@ export const zhHant: ClubMessages = {
   clubRemoveTitle: '移除 {name}?',
   clubRemoveBody: '對方將無法再開啟此 Club。其成績會保留。',
   clubMembersCount: '{n} 位成員',
+  clubOlderMembers: '顯示更早的成員',
   clubReport: '檢舉',
   clubReported: '已檢舉',
   clubReportTitle: '檢舉這個暱稱嗎?',

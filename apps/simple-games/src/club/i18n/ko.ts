@@ -54,6 +54,7 @@ export const ko: ClubMessages = {
   clubRemoveTitle: '{name}님을 내보낼까요?',
   clubRemoveBody: '더 이상 이 Club을 열 수 없습니다. 결과는 남습니다.',
   clubMembersCount: '멤버 {n}명',
+  clubOlderMembers: '이전 멤버 보기',
   clubReport: '신고',
   clubReported: '신고함',
   clubReportTitle: '이 닉네임을 신고할까요?',

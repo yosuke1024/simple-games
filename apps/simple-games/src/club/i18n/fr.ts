@@ -55,6 +55,7 @@ export const fr: ClubMessages = {
   clubRemoveTitle: 'Retirer {name} ?',
   clubRemoveBody: 'Cette personne ne pourra plus ouvrir ce Club. Ses résultats restent.',
   clubMembersCount: '{n} membres',
+  clubOlderMembers: 'Afficher les membres plus anciens',
   clubReport: 'Signaler',
   clubReported: 'Signalé',
   clubReportTitle: 'Signaler ce pseudo ?',

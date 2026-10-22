@@ -55,6 +55,7 @@ export const id: ClubMessages = {
   clubRemoveTitle: 'Keluarkan {name}?',
   clubRemoveBody: 'Mereka tidak bisa membuka Club ini lagi. Hasil mereka tetap ada.',
   clubMembersCount: '{n} anggota',
+  clubOlderMembers: 'Tampilkan anggota sebelumnya',
   clubReport: 'Laporkan',
   clubReported: 'Dilaporkan',
   clubReportTitle: 'Laporkan nama panggilan ini?',

@@ -54,6 +54,7 @@ export const th: ClubMessages = {
   clubRemoveTitle: 'นำ {name} ออก?',
   clubRemoveBody: 'เขาจะเปิด Club นี้ไม่ได้อีก ผลของเขายังอยู่',
   clubMembersCount: '{n} สมาชิก',
+  clubOlderMembers: 'แสดงสมาชิกก่อนหน้า',
   clubReport: 'รายงาน',
   clubReported: 'รายงานแล้ว',
   clubReportTitle: 'รายงานชื่อเล่นนี้ไหม?',

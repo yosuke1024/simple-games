@@ -54,6 +54,7 @@ export const tr: ClubMessages = {
   clubRemoveTitle: '{name} çıkarılsın mı?',
   clubRemoveBody: 'Bu Club’ı artık açamaz. Sonuçları kalır.',
   clubMembersCount: '{n} üye',
+  clubOlderMembers: 'Önceki üyeleri göster',
   clubReport: 'Bildir',
   clubReported: 'Bildirildi',
   clubReportTitle: 'Bu takma ad bildirilsin mi?',

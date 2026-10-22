@@ -173,6 +173,12 @@
   min-width: 0;
 }
 
+/* A pressable row that names a value (the Club's Members row): label, then the
+   value up against the chevron instead of floating between them. */
+.club-line:not(.settings-row-static) > .settings-row-value {
+  margin-left: auto;
+}
+
 .club-own {
   background: var(--surface);
   border-color: var(--line);
@@ -214,7 +220,7 @@
   background-color: var(--medal-bronze);
 }
 
-/* Another member's name: opens the sheet with Report (club.md §17-3). Text
+/* Another member's name: opens that member's view (club.md §9「Member」). Text
    that can be pressed — a faint dotted line says so, nothing louder. The
    padding widens the target to the row's height without moving the line. */
 .club-name-btn {
@@ -361,6 +367,21 @@
 }
 
 .club-join-another {
+  margin-top: 8px;
+}
+
+/* The Members screen's one request: the next page, after the last row shown. */
+.club-older {
+  margin-top: 8px;
+}
+
+/* The Member screen's end: Report for a member, Rename and Remove for the Owner. They sit
+   left in a row, not stretched across the screen like the column's other children. */
+.club-member-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
   margin-top: 8px;
 }
 

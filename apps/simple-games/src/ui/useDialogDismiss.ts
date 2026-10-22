@@ -7,8 +7,8 @@
 
    Call it from a component that exists only while the dialog is open. The
    opener is read on that component's first render, because by the time any
-   effect runs, Cancel's autoFocus has already moved the focus into the dialog
-   (the same reading NameSheet does). A press that does not focus the button
+   effect runs, Cancel's autoFocus has already moved the focus into the dialog.
+   A press that does not focus the button
    it presses — a click or a tap in WebKit (Safari, every iOS browser) —
    leaves no opener, and then nothing here hands the focus back; a game that
    wants it on the ↻ even then places it itself (the web-beta Snake does).

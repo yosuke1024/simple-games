@@ -68,6 +68,22 @@ export interface ReportedMember {
   member: Member;
   reportCount: number;
 }
+/**
+ * `GET /members/:id` (club.md §5-3): a member and their standing in every table
+ * they are in — the same shape as `GET /rankings/mine`, read for one other member.
+ */
+export interface MemberView {
+  member: Member;
+  rankings: RankingMine[];
+}
+/**
+ * `GET /members?before=<id>` (club.md §5-3, §17-2): one page of the members who
+ * joined before one member, newest first; `memberCount` is the whole club's total.
+ */
+export interface MembersPage {
+  members: Member[];
+  memberCount: number;
+}
 export interface InviteResponse {
   token: string;
   url: string;
@@ -395,6 +411,22 @@ export function validateReportedMember(raw: unknown): ReportedMember | null {
   const member = validateMember(raw.member);
   if (member === null) return null;
   return { member, reportCount: raw.reportCount };
+}
+
+export function validateMemberView(raw: unknown): MemberView | null {
+  if (!isRec(raw)) return null;
+  const member = validateMember(raw.member);
+  const rankings = validateList(raw.rankings, validateRankingMine);
+  if (member === null || rankings === null) return null;
+  return { member, rankings };
+}
+
+export function validateMembersPage(raw: unknown): MembersPage | null {
+  // The route always sends the total, unlike `GET /club` on an older server, so a page without it is malformed.
+  if (!isRec(raw) || !count(raw.memberCount)) return null;
+  const members = validateList(raw.members, validateMember);
+  if (members === null) return null;
+  return { members, memberCount: raw.memberCount };
 }
 
 export function validateInviteResponse(raw: unknown): InviteResponse | null {

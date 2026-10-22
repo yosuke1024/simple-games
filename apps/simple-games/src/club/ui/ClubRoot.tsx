@@ -1,14 +1,22 @@
 /**
  * The Club House screens (docs/architecture/club.md §9). One component owns
- * the small stack of screens — Discover / All Clubs / Join / Club / Challenge / Ranking
- * — and the hardware back button, so Core sees a single mounted thing that
- * calls `onBack` at the root. Nothing here polls; every request starts from
- * something the person did (club.md §10).
+ * the small stack of screens — Discover / All Clubs / Join / Club / Members /
+ * Member / Challenge / Ranking — and the hardware back button, so Core sees a
+ * single mounted thing that calls `onBack` at the root. Nothing here polls;
+ * every request starts from something the person did (club.md §10).
  *
- * A Club's step on the stack keeps the lists its screen last read, so coming
- * back from a table or a daily shows them as they were instead of asking the
- * server again (club.md §9, decision 46). A panel or a table's mode chip
- * changes the top step in place: Back always goes where the person came from.
+ * A step on the stack keeps what its screen last read — a Club its lists, a
+ * table or a daily its rows — and where the body was scrolled to when a member's
+ * view was opened over it, so coming back shows it as it was instead of asking
+ * the server again (club.md §9, decision 46). What a screen above changed on the
+ * server (a deleted row, an erased or renamed member) marks those reads `stale`:
+ * they are shown and read again. A panel or a table's mode chip changes the top
+ * step in place: Back always goes where the person came from.
+ *
+ * The Members screen reads the lists the Club step holds and asks for nothing
+ * itself (§9「Members」); what the person does there — a page of older members,
+ * a rename, a removal — is written back into that step's lists
+ * (`patchClubData`), so the Club screen shows it as it comes back.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -29,12 +37,14 @@ import {
 } from '../storage/connections';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { dropOutboxFor } from '../storage/outbox';
-import { ChallengeScreen } from './ChallengeScreen';
-import type { RankingSummary } from '../api/types';
+import { ChallengeScreen, type ChallengeRead } from './ChallengeScreen';
+import type { Member, MembersPage, RankingSummary } from '../api/types';
 import { ClubScreen, type ClubData, type ClubPanel } from './ClubScreen';
 import { ScreenFrame } from './common';
 import { JoinScreen } from './JoinScreen';
-import { RankingScreen } from './RankingScreen';
+import { MemberScreen } from './MemberScreen';
+import { MembersScreen } from './MembersScreen';
+import { RankingScreen, type RankingRead } from './RankingScreen';
 import './club.css';
 
 interface ClubStep {
@@ -52,7 +62,25 @@ type Screen =
   | { kind: 'all' }
   | { kind: 'join'; invite: ClubInvite | null; publicClub?: boolean }
   | ClubStep
-  | { kind: 'challenge'; endpoint: string; challengeId: string }
+  /** The Club's people: the lists come from the Club step below, not from a request. */
+  | {
+      kind: 'members';
+      endpoint: string;
+      /** Where the list was scrolled to when a member's view was opened over it. */
+      scrollTop?: number;
+    }
+  /** One member (`GET /members/:id`); `nickname` is the name that was pressed. */
+  | { kind: 'member'; endpoint: string; memberId: string; nickname: string }
+  | {
+      kind: 'challenge';
+      endpoint: string;
+      challengeId: string;
+      /** What the screen last read; absent until it has. */
+      read?: ChallengeRead;
+      /** Something changed what `read` holds: show it, and read it again. */
+      stale?: boolean;
+      scrollTop?: number;
+    }
   | {
       kind: 'ranking';
       endpoint: string;
@@ -61,6 +89,11 @@ type Screen =
       paramsKey: string | null;
       /** The game's tables from the Club screen's list: its modes, known without a request. */
       tables: RankingSummary[];
+      /** The table the screen last read, for the mode it was read for; absent until it has. */
+      read?: RankingRead;
+      /** Something changed what `read` holds: show it, and read it again. */
+      stale?: boolean;
+      scrollTop?: number;
     };
 
 /** What the first screen is, given who this device has joined (club.md §9「入口」). */
@@ -129,19 +162,161 @@ export function ClubRoot({
     });
   }, []);
 
-  /** The Club step under a table: its lists no longer hold (one of the viewer's rows was deleted). */
-  const markStale = (endpoint: string) => {
+  /**
+   * What a screen above changed on the server (one of the viewer's rows deleted, a
+   * member erased or renamed): what the steps of this endpoint kept no longer holds.
+   * They stay as they are on the stack and are shown and read again when the person
+   * comes back to them. `club: false` leaves the Club's lists alone — a rename is
+   * written into them already, and only the names in a table or a daily are old.
+   */
+  const markStale = (endpoint: string, { club = true }: { club?: boolean } = {}) => {
+    setStack((current) => {
+      let changed = false;
+      const next = current.map((step): Screen => {
+        switch (step.kind) {
+          case 'club':
+            if (club && step.endpoint === endpoint && step.data !== undefined && !step.stale) {
+              changed = true;
+              return { ...step, stale: true };
+            }
+            return step;
+          case 'ranking':
+          case 'challenge':
+            if (step.endpoint === endpoint && step.read !== undefined && !step.stale) {
+              changed = true;
+              return { ...step, stale: true };
+            }
+            return step;
+          default:
+            return step;
+        }
+      });
+      return changed ? next : current;
+    });
+  };
+
+  /**
+   * The lists the Club step for this endpoint holds, changed by a screen above it
+   * (the Members screen: a page of older members, a rename, a removal). The step
+   * nearest the top is the one the person came through; a Club that never read
+   * its lists has nothing to change.
+   */
+  const patchClubData = (endpoint: string, change: (data: ClubData) => ClubData) => {
     setStack((current) => {
       for (let i = current.length - 1; i >= 0; i--) {
         const step = current[i]!;
         if (step.kind !== 'club' || step.endpoint !== endpoint) continue;
-        if (step.data === undefined || step.stale === true) return current;
+        if (step.data === undefined) return current;
+        const data = change(step.data);
+        if (data === step.data) return current;
         const next = [...current];
-        next[i] = { ...step, stale: true };
+        next[i] = { ...step, data };
         return next;
       }
       return current;
     });
+  };
+
+  /**
+   * A page of older members, read on the Members screen, joins the Club's list (no member
+   * twice). A page that adds nobody is the end of the list, whatever the total says — the
+   * total drifts as people join and leave, and the page size is the server's to set.
+   */
+  const onMembersPage = (endpoint: string, page: MembersPage) =>
+    patchClubData(endpoint, (data) => {
+      const known = new Set(data.members.map((m) => m.id));
+      const added = page.members.filter((m) => !known.has(m.id));
+      return {
+        ...data,
+        members: [...data.members, ...added],
+        memberCount: page.memberCount,
+        ...(added.length === 0 ? { olderExhausted: true } : {}),
+      };
+    });
+
+  /** The server has no older page to give (a 404): the Members screen stops offering one, for good. */
+  const onNoOlderMembers = (endpoint: string) =>
+    patchClubData(endpoint, (data) =>
+      data.olderExhausted ? data : { ...data, olderExhausted: true },
+    );
+
+  /**
+   * A name was pressed on the Members screen, a table or a daily: that member's view opens
+   * over it. Where the screen below was scrolled to is kept on its step, so the way back
+   * lands on the row it left.
+   */
+  const openMember = (endpoint: string, memberId: string, nickname: string, scrollTop: number) =>
+    setStack((current) => {
+      const last = current[current.length - 1];
+      if (last === undefined) return current;
+      const below: Screen =
+        last.kind === 'members' || last.kind === 'ranking' || last.kind === 'challenge'
+          ? { ...last, scrollTop }
+          : last;
+      return [...current.slice(0, -1), below, { kind: 'member', endpoint, memberId, nickname }];
+    });
+
+  /**
+   * The Owner renamed a member: every list, and every view of them on the stack, carries
+   * the new name; the tables and dailies that were read with the old one are read again.
+   */
+  const onMemberRenamed = (endpoint: string, renamed: Member) => {
+    const apply = (m: Member): Member => (m.id === renamed.id ? { ...m, ...renamed } : m);
+    patchClubData(endpoint, (data) => ({
+      ...data,
+      members: data.members.map(apply),
+      reported: data.reported.map((r) => ({ ...r, member: apply(r.member) })),
+    }));
+    setStack((current) =>
+      current.map((step) =>
+        step.kind === 'member' &&
+        step.endpoint === endpoint &&
+        step.memberId === renamed.id &&
+        step.nickname !== renamed.nickname
+          ? { ...step, nickname: renamed.nickname }
+          : step,
+      ),
+    );
+    markStale(endpoint, { club: false });
+  };
+
+  /**
+   * The Owner removed a member. They leave both lists and the total. `purge` also
+   * erased their results and ranking rows server-side (club.md §17-3): the tables
+   * and the Today results the Club screen holds, and the tables and dailies kept on
+   * the stack, are stale, so they are read again.
+   */
+  const onMemberRemoved = (endpoint: string, memberId: string, purge: boolean) => {
+    patchClubData(endpoint, (data) => ({
+      ...data,
+      members: data.members.filter((m) => m.id !== memberId),
+      reported: data.reported.filter((r) => r.member.id !== memberId),
+      memberCount: Math.max(0, data.memberCount - 1),
+    }));
+    if (purge) markStale(endpoint);
+  };
+
+  /**
+   * The Member screen of a member who was just removed goes, if it is still the
+   * screen on top: the person may have pressed Back while the request ran, and
+   * then the step to leave is not this one.
+   */
+  const leaveMember = (endpoint: string, memberId: string) => {
+    setStack((current) => {
+      const last = current[current.length - 1];
+      return last?.kind === 'member' && last.endpoint === endpoint && last.memberId === memberId
+        ? current.slice(0, -1)
+        : current;
+    });
+  };
+
+  /** What the Club step for this endpoint last read; the screens above it show those lists. */
+  const clubDataOf = (endpoint: string): ClubData | undefined => {
+    for (let i = stack.length - 1; i >= 0; i--) {
+      const step = stack[i]!;
+      if (step.kind === 'club' && step.endpoint === endpoint) return step.data;
+    }
+    return undefined;
   };
 
   // A club's own panel (Invite / Settings) is a step back too, even at the root.
@@ -306,6 +481,7 @@ export function ClubRoot({
           onOpenRanking={(gameId, paramsKey, tables) =>
             push({ kind: 'ranking', endpoint: connection.endpoint, gameId, paramsKey, tables })
           }
+          onOpenMembers={() => push({ kind: 'members', endpoint: connection.endpoint })}
           onDisconnect={() => disconnect(connection.endpoint)}
           onRenamedMe={(nickname) => {
             void updateNickname(connection.endpoint, nickname)
@@ -332,6 +508,55 @@ export function ClubRoot({
       );
     }
 
+    case 'members': {
+      const connection = connectionOf(top.endpoint);
+      if (!connection) return null;
+      const data = clubDataOf(connection.endpoint);
+      return (
+        <MembersScreen
+          key={connection.endpoint}
+          connection={connection}
+          members={data?.members ?? []}
+          memberCount={data?.memberCount ?? 0}
+          reported={data?.reported ?? []}
+          exhausted={data?.olderExhausted === true}
+          scrollTop={top.scrollTop}
+          onMore={(page) => onMembersPage(connection.endpoint, page)}
+          onNoOlder={() => onNoOlderMembers(connection.endpoint)}
+          onOpenMember={(memberId, nickname, scrollTop) =>
+            openMember(connection.endpoint, memberId, nickname, scrollTop)
+          }
+          onRenamed={(member) => onMemberRenamed(connection.endpoint, member)}
+          onRemoved={(memberId, purge) => onMemberRemoved(connection.endpoint, memberId, purge)}
+          onBack={stepBack}
+        />
+      );
+    }
+
+    case 'member': {
+      const connection = connectionOf(top.endpoint);
+      if (!connection) return null;
+      return (
+        <MemberScreen
+          key={`${connection.endpoint}:${top.memberId}`}
+          connection={connection}
+          memberId={top.memberId}
+          nickname={top.nickname}
+          tables={clubDataOf(connection.endpoint)?.rankings ?? []}
+          onOpenRanking={(gameId, paramsKey, tables) =>
+            push({ kind: 'ranking', endpoint: connection.endpoint, gameId, paramsKey, tables })
+          }
+          onRenamed={(member) => onMemberRenamed(connection.endpoint, member)}
+          onRemoved={(memberId, purge) => {
+            onMemberRemoved(connection.endpoint, memberId, purge);
+            // The member is gone: back to wherever the person came from.
+            leaveMember(connection.endpoint, memberId);
+          }}
+          onBack={stepBack}
+        />
+      );
+    }
+
     case 'challenge': {
       const connection = connectionOf(top.endpoint);
       if (!connection) return null;
@@ -340,6 +565,22 @@ export function ClubRoot({
           key={`${connection.endpoint}:${top.challengeId}`}
           connection={connection}
           challengeId={top.challengeId}
+          cached={top.read}
+          refresh={top.stale === true}
+          scrollTop={top.scrollTop}
+          onRead={(read) =>
+            // Only a read made anew clears `stale`; the cached one handed back never comes here.
+            replaceTop((screen) =>
+              screen.kind === 'challenge' &&
+              screen.endpoint === connection.endpoint &&
+              screen.challengeId === top.challengeId
+                ? { ...screen, read, stale: false }
+                : screen,
+            )
+          }
+          onOpenMember={(memberId, nickname, scrollTop) =>
+            openMember(connection.endpoint, memberId, nickname, scrollTop)
+          }
           onBack={stepBack}
           onPlay={onPlayChallenge}
         />
@@ -357,10 +598,26 @@ export function ClubRoot({
           gameId={top.gameId}
           paramsKey={top.paramsKey}
           tables={top.tables}
+          cached={top.read}
+          refresh={top.stale === true}
+          scrollTop={top.scrollTop}
+          onRead={(read) =>
+            // Only a read made anew clears `stale`; the cached one handed back never comes here.
+            replaceTop((screen) =>
+              screen.kind === 'ranking' &&
+              screen.endpoint === connection.endpoint &&
+              screen.gameId === top.gameId
+                ? { ...screen, read, stale: false }
+                : screen,
+            )
+          }
           onMode={(paramsKey) =>
             replaceTop((screen) => (screen.kind === 'ranking' ? { ...screen, paramsKey } : screen))
           }
           onChanged={() => markStale(connection.endpoint)}
+          onOpenMember={(memberId, nickname, scrollTop) =>
+            openMember(connection.endpoint, memberId, nickname, scrollTop)
+          }
           onBack={stepBack}
         />
       );

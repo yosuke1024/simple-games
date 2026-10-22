@@ -20,7 +20,7 @@ import { enqueueResult, flushOutbox, pendingFor } from '../storage/outbox';
 import { REQUEST_TIMEOUT_MS, type ClubClient } from '../api/client';
 import { ClubApiError } from '../api/errors';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
-import { todayLocal } from './common';
+import { dateLabel, todayLocal } from './common';
 import { ClubRoot } from './ClubRoot';
 import { clearWithdrawnChallenges } from './ChallengeScreen';
 
@@ -125,12 +125,28 @@ const standing = (
   },
 });
 const MIKA = { id: 'm_2', nickname: 'Mika', role: 'member', joinedAt: '2026-09-10T00:00:00.000Z' };
+/** The leader of the tables and the maker of the daily, as the member view answers for them (id m_1). */
+const KEN_1 = { id: 'm_1', nickname: 'Ken', role: 'member', joinedAt: '2026-09-01T00:00:00.000Z' };
+const YOH = { ...KEN_1, nickname: 'Yoh' };
 /** What `GET /club` answers for the viewer and the member list. */
 let clubMe: Record<string, unknown> = KEN;
 let clubMembers: Record<string, unknown>[] = [KEN];
 let clubMemberCount: number | undefined;
 let reportedList: { member: Record<string, unknown>; reportCount: number }[] = [];
 let meBelowTop = false;
+/**
+ * What `GET /members/<id>` answers, by member id (club.md §5-3). A member that is not here
+ * (removed, unknown) is a 404, as is every member when `memberRouteMissing`.
+ */
+let memberViews: Record<string, { member: Record<string, unknown>; rankings: unknown[] }> = {};
+/** A server from before `GET /members/<id>`: the same 404 for everyone. */
+let memberRouteMissing = false;
+/**
+ * What `GET /members?before=<id>` answers, by the id it is asked about; a cursor that is not
+ * here is an empty page. `beforeStatus` 404 is a server from before `?before=`, 500 a failure.
+ */
+let olderPages: Record<string, { members: Record<string, unknown>[]; memberCount: number }> = {};
+let beforeStatus: 200 | 404 | 500 = 200;
 /** What `GET /rankings` lists. */
 let rankingList: unknown[] = [sudokuTable('hard', 24)];
 /** What `GET /rankings/mine` answers; 404 is a server from before the route. */
@@ -201,11 +217,30 @@ function stubServer() {
       const body = JSON.parse(String(init?.body)) as { nickname: string };
       return reply({ ...MIKA, nickname: body.nickname });
     }
-    if (path === '/members/m_2' && method === 'DELETE') {
+    const memberDelete = /^\/members\/([^/]+)$/.exec(path);
+    if (memberDelete && method === 'DELETE') {
       // The server forgot them; the reload after a purge must not see them again.
-      clubMembers = clubMembers.filter((m) => m.id !== 'm_2');
+      clubMembers = clubMembers.filter((m) => m.id !== decodeURIComponent(memberDelete[1]!));
       clubMemberCount = Math.max(0, clubMembers.length);
       return new Response(null, { status: 204, headers: { 'X-Club-Api': '1' } });
+    }
+    if (path === '/members' && method === 'GET') {
+      const before = url.searchParams.get('before');
+      if (before === null) return reply({ error: { code: 'invalid_request', message: 'no' } }, 400);
+      if (beforeStatus === 404) return reply({ error: { code: 'not_found', message: 'no' } }, 404);
+      if (beforeStatus === 500)
+        return reply({ error: { code: 'internal_error', message: 'no' } }, 500);
+      return reply(
+        olderPages[before] ?? { members: [], memberCount: clubMemberCount ?? clubMembers.length },
+      );
+    }
+    const memberRoute = /^\/members\/([^/]+)$/.exec(path);
+    if (memberRoute && method === 'GET') {
+      const view = memberViews[decodeURIComponent(memberRoute[1]!)];
+      if (memberRouteMissing || view === undefined) {
+        return reply({ error: { code: 'not_found', message: 'no' } }, 404);
+      }
+      return reply(view);
     }
     if (path === '/challenges') {
       const daily = url.searchParams.get('daily');
@@ -328,6 +363,10 @@ beforeEach(() => {
   clubMembers = [KEN];
   clubMemberCount = undefined;
   reportedList = [];
+  memberViews = {};
+  memberRouteMissing = false;
+  olderPages = {};
+  beforeStatus = 200;
   meBelowTop = false;
   ignoresDaily = false;
   clearWithdrawnChallenges();
@@ -590,7 +629,7 @@ describe('ClubRoot', () => {
     });
   });
 
-  it('heads the members with the total, not the page; another member’s name opens the sheet with Report', async () => {
+  it('ends the Club screen with one Members row; the people are the next screen, opened with no request', async () => {
     const fetchMock = stubServer();
     clubMembers = [KEN, MIKA];
     clubMemberCount = 1200;
@@ -598,84 +637,56 @@ describe('ClubRoot', () => {
     await joinedConnection();
     renderRoot();
 
-    expect(await screen.findByRole('heading', { name: '1200 members' })).toBeInTheDocument();
-    // A member never sees Rename / Remove, nor a Reported section.
-    expect(screen.queryByRole('button', { name: 'Remove' })).not.toBeInTheDocument();
+    // The total is the row's value; no list, no heading and no name on the Club screen itself.
+    const row = await screen.findByRole('button', { name: 'Members · 1200 members' });
+    expect(row).toHaveTextContent('1200 members');
+    expect(screen.queryByRole('heading', { name: '1200 members' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Mika')).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Reported' })).not.toBeInTheDocument();
-    // No row carries Report any more (decision 49); one's own name is plain text.
-    expect(screen.queryByRole('button', { name: /Report/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Ken' })).not.toBeInTheDocument();
+    // It is the last thing on the screen, after the shelves.
+    const children = Array.from(document.querySelectorAll('.club-body > *'));
+    expect(children[children.length - 1]).toBe(row);
+    const before = fetchMock.mock.calls.length;
 
-    await user.click(screen.getByRole('button', { name: 'Mika' }));
-    const sheet = screen.getByRole('dialog', { name: 'Mika' });
-    // The name, the row's own record (the joined-on line), and one Report button.
-    expect(within(sheet).getByRole('heading', { name: 'Mika' })).toBeInTheDocument();
-    expect(sheet).toHaveTextContent('Joined');
-    expect(
-      within(sheet)
-        .getAllByRole('button')
-        .map((b) => b.textContent),
-    ).toEqual(['Report', 'Close']);
-    await user.click(within(sheet).getByRole('button', { name: 'Report' }));
-    const confirm = screen.getByRole('alertdialog', { name: 'Report this nickname?' });
-    await user.click(within(confirm).getByRole('button', { name: 'Report' }));
-
-    expect(await screen.findByRole('status')).toHaveTextContent('Reported');
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    const posted = fetchMock.mock.calls.find(([url]) =>
-      String(url).endsWith('/members/m_2/report'),
-    );
-    expect(posted?.[1]?.method).toBe('POST');
-    // The row carries no mark: Mika's name still opens the sheet.
+    await user.click(row);
+    expect(screen.getByRole('heading', { level: 1, name: 'Members' })).toBeInTheDocument();
+    // The total, not the page (club.md §17-2); one's own name is plain text, another's is pressable.
+    expect(screen.getByRole('heading', { name: '1200 members' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Mika' })).toBeInTheDocument();
-    // No owner-only request for a member.
+    expect(screen.getByText('Ken')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ken' })).not.toBeInTheDocument();
+    // A member sees no owner extras and no Report on the list (decision 49): a pattern, so a
+    // per-row `Report Mika` would be caught as well.
+    for (const name of [/Rename/, /Remove/, /Report/]) {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
+    }
+    expect(screen.queryByRole('heading', { name: 'Reported' })).not.toBeInTheDocument();
+    // The lists the Club screen read are all it shows: nothing was asked for.
+    expect(fetchMock.mock.calls.length).toBe(before);
     expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith('/members/reported'))).toBe(
       false,
     );
-  });
 
-  it('the sheet closes on Escape and on Close, and Cancel in the confirmation sends nothing', async () => {
-    const fetchMock = stubServer();
-    clubMembers = [KEN, MIKA];
-    const user = userEvent.setup();
-    await joinedConnection();
-    renderRoot();
-
-    await user.click(await screen.findByRole('button', { name: 'Mika' }));
-    expect(screen.getByRole('dialog', { name: 'Mika' })).toBeInTheDocument();
-    // Focus moved in, onto Close.
-    expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
-    await user.keyboard('{Escape}');
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    // ...and back to the name that opened it.
-    expect(screen.getByRole('button', { name: 'Mika' })).toHaveFocus();
-
-    await user.click(screen.getByRole('button', { name: 'Mika' }));
-    // Tab stays inside the sheet.
-    await user.tab();
-    await user.tab();
-    expect(screen.getByRole('dialog', { name: 'Mika' })).toContainElement(
-      document.activeElement as HTMLElement,
-    );
-    await user.click(screen.getByRole('button', { name: 'Report' }));
-    await user.click(
-      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Cancel' }),
-    );
-    // Back on the sheet; Close closes it.
-    await user.click(screen.getByRole('button', { name: 'Close' }));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith('/report'))).toBe(false);
+    // Back is the Club as it was, again with no request.
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('heading', { name: 'Rankings' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Members · 1200 members' })).toBeInTheDocument();
+    expect(fetchMock.mock.calls.length).toBe(before);
   });
 
   it('falls back to the list length when the server sends no memberCount', async () => {
     stubServer();
     clubMembers = [KEN, MIKA];
+    const user = userEvent.setup();
     await joinedConnection();
     renderRoot();
-    expect(await screen.findByRole('heading', { name: '2 members' })).toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: 'Members · 2 members' }));
+    expect(screen.getByRole('heading', { name: '2 members' })).toBeInTheDocument();
+    // Everyone is on the page: nothing older to offer.
+    expect(screen.queryByRole('button', { name: 'Show older members' })).not.toBeInTheDocument();
   });
 
-  it('shows the owner the reported members and lets them rename', async () => {
+  it('asks the owner for the Reported list too, as the fifth request, and the Members screen asks for nothing more', async () => {
     const fetchMock = stubServer();
     clubMe = { ...KEN, role: 'owner' };
     clubMembers = [clubMe, MIKA];
@@ -683,61 +694,27 @@ describe('ClubRoot', () => {
     const user = userEvent.setup();
     await joinedConnection({ role: 'owner' });
     renderRoot();
-
+    // The row is drawn once all five requests have answered, the Reported list among them, so
+    // what is absent below is absent from a Club that has it to show.
+    const row = await screen.findByRole('button', { name: 'Members · 2 members' });
+    expect(screen.queryByRole('heading', { name: 'Reported' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Mika')).not.toBeInTheDocument();
+    expect(screen.queryByText('3 reports')).not.toBeInTheDocument();
+    for (const name of [/Rename/, /Remove/]) {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
+    }
+    const clubChildren = Array.from(document.querySelectorAll('.club-body > *'));
+    expect(clubChildren[clubChildren.length - 1]).toBe(row);
+    await user.click(row);
     expect(await screen.findByRole('heading', { name: 'Reported' })).toBeInTheDocument();
-    expect(screen.getByText('3 reports')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Report' })).not.toBeInTheDocument();
-    // The owner's device opens no sheet: names are plain text, the owner acts by Rename / Remove.
-    expect(screen.queryByRole('button', { name: 'Mika' })).not.toBeInTheDocument();
-
-    // Both Mika lines (Reported and Members) offer Rename; use the first.
-    await user.click(screen.getAllByRole('button', { name: 'Rename' })[0]!);
-    const field = screen.getByLabelText('New nickname');
-    await user.clear(field);
-    await user.type(field, 'Mi');
-    await user.click(screen.getByRole('button', { name: 'Save' }));
-
-    await waitFor(() => expect(screen.getAllByText('Mi').length).toBe(2));
-    const patch = fetchMock.mock.calls.find(([, init]) => init?.method === 'PATCH');
-    expect(new URL(String(patch![0])).pathname).toBe('/api/v1/members/m_2');
-    expect(JSON.parse(String(patch![1]!.body))).toEqual({ nickname: 'Mi' });
-  });
-
-  it('lets the owner remove and erase results with ?purge=1, or remove alone', async () => {
-    const fetchMock = stubServer();
-    clubMe = { ...KEN, role: 'owner' };
-    clubMembers = [clubMe, MIKA];
-    clubMemberCount = 2;
-    const user = userEvent.setup();
-    await joinedConnection({ role: 'owner' });
-    renderRoot();
-
-    await user.click(await screen.findByRole('button', { name: 'Remove' }));
-    const dialog = screen.getByRole('alertdialog', { name: 'Remove Mika?' });
-    expect(dialog).toHaveTextContent('every result and ranking row of theirs is erased');
-    await user.click(screen.getByRole('button', { name: 'Remove and erase results' }));
-
-    expect(await screen.findByRole('heading', { name: '1 members' })).toBeInTheDocument();
-    const del = fetchMock.mock.calls.find(([, init]) => init?.method === 'DELETE');
-    expect(String(del![0])).toBe(`${ENDPOINT}/api/v1/members/m_2?purge=1`);
-  });
-
-  it('removes without ?purge when only Remove is chosen', async () => {
-    const fetchMock = stubServer();
-    clubMe = { ...KEN, role: 'owner' };
-    clubMembers = [clubMe, MIKA];
-    const user = userEvent.setup();
-    await joinedConnection({ role: 'owner' });
-    renderRoot();
-
-    await user.click(await screen.findByRole('button', { name: 'Remove' }));
-    const dialog = screen.getByRole('alertdialog');
-    await user.click(within(dialog).getByRole('button', { name: 'Remove' }));
-    await waitFor(() =>
-      expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'DELETE')).toBe(true),
-    );
-    const del = fetchMock.mock.calls.find(([, init]) => init?.method === 'DELETE');
-    expect(String(del![0])).toBe(`${ENDPOINT}/api/v1/members/m_2`);
+    const paths = fetchMock.mock.calls.map(([url]) => new URL(String(url)).pathname);
+    expect(paths.sort()).toEqual([
+      '/api/v1/challenges',
+      '/api/v1/club',
+      '/api/v1/members/reported',
+      '/api/v1/rankings',
+      '/api/v1/rankings/mine',
+    ]);
   });
 
   it('stores the nickname the owner gave when the server says it changed', async () => {
@@ -746,7 +723,7 @@ describe('ClubRoot', () => {
     clubMembers = [clubMe];
     await joinedConnection();
     renderRoot();
-    expect(await screen.findByRole('heading', { name: '1 members' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Members · 1 members' })).toBeInTheDocument();
     await waitFor(async () => expect((await loadClubConnections())[0]!.nickname).toBe('Kenji'));
   });
 });
@@ -1814,6 +1791,8 @@ const tableReads = (fetchMock: ReturnType<typeof stubServer>, paramsKey: string)
   fetchMock.mock.calls.filter(([url]) =>
     String(url).includes(`/api/v1/rankings/sudoku/${paramsKey}?`),
   ).length;
+/** The scrolling body of the screen on top (jsdom keeps whatever `scrollTop` is set to). */
+const bodyOf = () => document.querySelector<HTMLElement>('.club-body')!;
 
 describe('Club screen: your rankings, then the rankings as shelves (club.md §9, decisions 46–47)', () => {
   it('folds the tables into one tile per game, on the home’s category shelves, in the home’s order', async () => {
@@ -1898,7 +1877,6 @@ describe('Club screen: your rankings, then the rankings as shelves (club.md §9,
       'Your rankings',
       'Today',
       'Rankings',
-      '1 members',
     ]);
     // Fixed order: category, then registry, then the mode's place — never by rank.
     expect(myRows().map((row) => row.getAttribute('aria-label'))).toEqual([
@@ -2100,44 +2078,82 @@ describe('Ranking screen: one game, its modes as chips (club.md §16-2, decision
     expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(2);
   });
 
-  it('another member’s name opens the sheet with that row’s record and Report', async () => {
+  it('another member’s name opens that member’s view, with no sheet in between', async () => {
     const fetchMock = stubServer();
+    memberViews = { m_1: { member: KEN_1, rankings: [] } };
     const user = await openSudoku();
     await screen.findByText('#2 · 24 entries · 5:00 · 1:02 to the next rank');
-    // Ken is on the table twice; the first row is his 3:58.
-    await user.click(screen.getAllByRole('button', { name: 'Ken' })[0]!);
-    const sheet = screen.getByRole('dialog', { name: 'Ken' });
-    expect(sheet).toHaveTextContent('3:58 Mistakes 0 Hints 1');
-    expect(sheet).not.toHaveTextContent('7:30');
-    await user.click(within(sheet).getByRole('button', { name: 'Report' }));
-    await user.click(
-      within(screen.getByRole('alertdialog', { name: 'Report this nickname?' })).getByRole(
-        'button',
-        { name: 'Report' },
-      ),
-    );
-    expect(await screen.findByRole('status')).toHaveTextContent('Reported');
-    const posted = fetchMock.mock.calls.find(([url]) =>
-      String(url).endsWith('/members/m_1/report'),
-    );
-    expect(posted?.[1]?.method).toBe('POST');
-    // Your own rows are You, never a name to press.
+    // Ken is on the table twice; either row opens him. Your own rows are You, never a name to press.
     expect(screen.queryByRole('button', { name: 'You' })).not.toBeInTheDocument();
+    await user.click(screen.getAllByRole('button', { name: 'Ken' })[0]!);
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Ken' })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(callsTo(fetchMock, 'GET', '/members/m_1')).toHaveLength(1);
+    // Back is the table again, as it was: at once, with no request and no Loading.
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByRole('heading', { name: 'Sudoku' })).toBeInTheDocument();
+    expect(screen.getAllByText('You')).toHaveLength(2);
+    expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
+    expect(tableReads(fetchMock, 'hard')).toBe(1);
   });
 
-  it('opens no sheet on the owner’s device', async () => {
+  it('Back from a member’s view lands where the table was scrolled to, and Reload still reads it', async () => {
+    const fetchMock = stubServer();
+    memberViews = { m_1: { member: KEN_1, rankings: [] } };
+    const user = await openSudoku();
+    await screen.findByText('#2 · 24 entries · 5:00 · 1:02 to the next rank');
+    bodyOf().scrollTop = 321;
+    await user.click(screen.getAllByRole('button', { name: 'Ken' })[0]!);
+    await screen.findByRole('heading', { level: 1, name: 'Ken' });
+    // The view is its own screen, at the top.
+    expect(bodyOf().scrollTop).toBe(0);
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(bodyOf().scrollTop).toBe(321);
+    expect(tableReads(fetchMock, 'hard')).toBe(1);
+
+    await user.click(screen.getByRole('button', { name: 'Reload' }));
+    await waitFor(() => expect(tableReads(fetchMock, 'hard')).toBe(2));
+  });
+
+  it('Back from a member’s view shows the mode that was on screen, read once', async () => {
+    const fetchMock = stubServer();
+    rankingList = [sudokuTable('hard', 24), sudokuTable('easy', 1)];
+    memberViews = { m_2: { member: MIKA, rankings: [] } };
+    const user = await openSudoku();
+    await user.click(screen.getByRole('tab', { name: 'Easy' }));
+    await screen.findByText('1:40 Mistakes 0 Hints 0');
+    await user.click(screen.getByRole('button', { name: 'Mika' }));
+    await screen.findByRole('heading', { level: 1, name: 'Mika' });
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(selectedTab()).toHaveTextContent('Easy');
+    expect(screen.getByText('1:40 Mistakes 0 Hints 0')).toBeInTheDocument();
+    expect(tableReads(fetchMock, 'easy')).toBe(1);
+    // Another chip is still its own read.
+    await user.click(screen.getByRole('tab', { name: 'Hard' }));
+    expect(await screen.findByText('3:58 Mistakes 0 Hints 1')).toBeInTheDocument();
+  });
+
+  it('is the same on the owner’s device: another member’s name opens the view', async () => {
     stubServer();
     clubMe = { ...KEN, role: 'owner' };
     clubMembers = [clubMe];
-    await openSudoku({ role: 'owner' });
+    memberViews = { m_1: { member: KEN_1, rankings: [] } };
+    const user = await openSudoku({ role: 'owner' });
     await screen.findByText('#2 · 24 entries · 5:00 · 1:02 to the next rank');
-    expect(screen.getAllByText('Ken')).toHaveLength(2);
-    expect(screen.queryByRole('button', { name: 'Ken' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Mika' })).not.toBeInTheDocument();
+    // Ken and Mika are names to press (they were plain text here before); the viewer's rows are You.
+    expect(screen.getAllByRole('button', { name: 'Ken' })).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Mika' })).toBeInTheDocument();
+    await user.click(screen.getAllByRole('button', { name: 'Ken' })[0]!);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Ken' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Rename' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Report' })).not.toBeInTheDocument();
   });
 });
 
-describe('Today challenge: the tables’ marks and the name sheet (club.md §9「Challenge」)', () => {
+describe('Today challenge: the tables’ marks and the member view (club.md §9「Challenge」)', () => {
   async function openChallenge(extra: Record<string, unknown> = {}) {
     dailyChallenges = true;
     hasDailyResult = true;
@@ -2149,8 +2165,9 @@ describe('Today challenge: the tables’ marks and the name sheet (club.md §9�
     return user;
   }
 
-  it('marks the first three and opens the sheet on another member’s name', async () => {
+  it('marks the first three and opens the member’s view on another member’s name', async () => {
     const fetchMock = stubServer();
+    memberViews = { m_1: { member: YOH, rankings: [] } };
     const user = await openChallenge();
     const yoh = screen.getByText('4:31 Mistakes 0 Hints 1').closest('.club-line') as HTMLElement;
     const own = screen.getByText('8:20 Mistakes 2 Hints 0').closest('.club-line') as HTMLElement;
@@ -2159,26 +2176,640 @@ describe('Today challenge: the tables’ marks and the name sheet (club.md §9�
     // Your own name is not a button; another's is.
     expect(within(own).queryByRole('button', { name: 'Ken' })).toBeNull();
     await user.click(within(yoh).getByRole('button', { name: 'Yoh' }));
-    const sheet = screen.getByRole('dialog', { name: 'Yoh' });
-    expect(sheet).toHaveTextContent('4:31 Mistakes 0 Hints 1');
-    await user.click(within(sheet).getByRole('button', { name: 'Report' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Yoh' })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(callsTo(fetchMock, 'GET', '/members/m_1')).toHaveLength(1);
+    // Back is the challenge as it was: at once, with no request, no Loading, the same place.
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByText('4:31 Mistakes 0 Hints 1')).toBeInTheDocument();
+    expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
+    expect(callsTo(fetchMock, 'GET', '/challenges/ch_d')).toHaveLength(1);
+    expect(callsTo(fetchMock, 'GET', '/challenges/ch_d/results')).toHaveLength(1);
+  });
+
+  it('Back from a member’s view lands where the results were scrolled to', async () => {
+    stubServer();
+    memberViews = { m_1: { member: YOH, rankings: [] } };
+    const user = await openChallenge();
+    bodyOf().scrollTop = 123;
+    await user.click(screen.getByRole('button', { name: 'Yoh' }));
+    await screen.findByRole('heading', { level: 1, name: 'Yoh' });
+    expect(bodyOf().scrollTop).toBe(0);
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(bodyOf().scrollTop).toBe(123);
+  });
+
+  it('is the same on the owner’s device: the name opens the view', async () => {
+    stubServer();
+    clubMe = { ...KEN, role: 'owner' };
+    clubMembers = [clubMe];
+    memberViews = { m_1: { member: YOH, rankings: [] } };
+    const user = await openChallenge({ role: 'owner' });
+    await user.click(screen.getByRole('button', { name: 'Yoh' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Yoh' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove' })).toBeInTheDocument();
+  });
+});
+
+describe('Members screen (club.md §9「Members」, §17-2)', () => {
+  /** A member who joined before everyone on the first page. */
+  const older = (i: number) => ({
+    id: `o_${i}`,
+    nickname: `Old${i}`,
+    role: 'member',
+    joinedAt: '2026-08-01T00:00:00.000Z',
+  });
+  const olderPage = (from: number, count: number) =>
+    Array.from({ length: count }, (_, k) => older(from + k));
+  const beforeCalls = (fetchMock: ReturnType<typeof stubServer>) =>
+    fetchMock.mock.calls.filter(([url]) => String(url).includes('/api/v1/members?before='));
+  const openMembers = async (user: ReturnType<typeof userEvent.setup>) =>
+    user.click(await screen.findByRole('button', { name: /^Members · / }));
+  const OLDER_BUTTON = { name: 'Show older members' };
+
+  async function openFirstPage(count: number) {
+    clubMembers = [KEN, MIKA];
+    clubMemberCount = count;
+    const user = userEvent.setup();
+    await joinedConnection();
+    renderRoot();
+    await openMembers(user);
+    return user;
+  }
+
+  it('offers older members while the total says there are more, and reads them from the last one shown', async () => {
+    const fetchMock = stubServer();
+    olderPages = { m_2: { members: [older(1), older(2)], memberCount: 4 } };
+    const user = await openFirstPage(4);
+
+    // Nothing is read by itself: a press is the only request.
+    expect(beforeCalls(fetchMock)).toHaveLength(0);
+    await user.click(screen.getByRole('button', OLDER_BUTTON));
+
+    expect(await screen.findByRole('button', { name: 'Old2' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Old1' })).toBeInTheDocument();
+    const calls = beforeCalls(fetchMock);
+    expect(calls).toHaveLength(1);
+    expect(String(calls[0]![0])).toBe(`${ENDPOINT}/api/v1/members?before=m_2`);
+    // Everyone is shown now: the button goes, the total stays.
+    expect(screen.queryByRole('button', OLDER_BUTTON)).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '4 members' })).toBeInTheDocument();
+  });
+
+  it('reads one page per press, each from the last member shown, until a page adds nobody', async () => {
+    const fetchMock = stubServer();
+    olderPages = {
+      m_2: { members: olderPage(1, 50), memberCount: 200 },
+      o_50: { members: olderPage(51, 2), memberCount: 200 },
+    };
+    const user = await openFirstPage(200);
+
+    await user.click(screen.getByRole('button', OLDER_BUTTON));
+    expect(await screen.findByRole('button', { name: 'Old50' })).toBeInTheDocument();
+    // 52 of 200 shown after the next one: more to ask for.
+    expect(screen.getByRole('button', OLDER_BUTTON)).toBeEnabled();
+
+    await user.click(screen.getByRole('button', OLDER_BUTTON));
+    expect(await screen.findByRole('button', { name: 'Old52' })).toBeInTheDocument();
+    // A short page does not end it: the page size is the server's own (an operator may set it)
+    // and the total drifts, so only a page that adds nobody says there is nothing older.
+    expect(screen.getByRole('button', OLDER_BUTTON)).toBeEnabled();
+
+    await user.click(screen.getByRole('button', OLDER_BUTTON));
+    await waitFor(() => expect(screen.queryByRole('button', OLDER_BUTTON)).not.toBeInTheDocument());
+    expect(
+      beforeCalls(fetchMock).map(([url]) => new URL(String(url)).searchParams.get('before')),
+    ).toEqual(['m_2', 'o_50', 'o_52']);
+  });
+
+  it('goes quietly on a server from before ?before= (404): no error, no button', async () => {
+    stubServer();
+    beforeStatus = 404;
+    const user = await openFirstPage(5);
+    await user.click(screen.getByRole('button', OLDER_BUTTON));
+    await waitFor(() => expect(screen.queryByRole('button', OLDER_BUTTON)).not.toBeInTheDocument());
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    // The people already shown stay.
+    expect(screen.getByRole('button', { name: 'Mika' })).toBeInTheDocument();
+  });
+
+  it('stays quiet after a 404 when a member’s view is opened and closed, and the Club is left and entered; the Club read anew asks once more', async () => {
+    const fetchMock = stubServer();
+    beforeStatus = 404;
+    memberViews = { m_2: { member: MIKA, rankings: [] } };
+    const user = await openFirstPage(5);
+    await user.click(screen.getByRole('button', OLDER_BUTTON));
+    await waitFor(() => expect(screen.queryByRole('button', OLDER_BUTTON)).not.toBeInTheDocument());
+    expect(beforeCalls(fetchMock)).toHaveLength(1);
+
+    // Members → a member → Back: this screen is built again, and the button must not be.
+    await user.click(screen.getByRole('button', { name: 'Mika' }));
+    await screen.findByRole('heading', { level: 1, name: 'Mika' });
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Members' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', OLDER_BUTTON)).not.toBeInTheDocument();
+
+    // Members → Club → Members: the same.
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    await openMembers(user);
+    expect(screen.queryByRole('button', OLDER_BUTTON)).not.toBeInTheDocument();
+    expect(beforeCalls(fetchMock)).toHaveLength(1);
+
+    // The Club read anew has new lists, and the question is asked again.
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    await user.click(await screen.findByRole('button', { name: 'Reload' }));
+    await waitFor(() => expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(2));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Reload' })).toBeEnabled());
+    await openMembers(user);
+    expect(await screen.findByRole('button', OLDER_BUTTON)).toBeInTheDocument();
+  });
+
+  it('ends the list for good once a page adds nobody, though the total says more, through a member’s view and back', async () => {
+    const fetchMock = stubServer();
+    // Five were counted when the Club was read; only three can be found (someone left).
+    olderPages = { m_2: { members: [older(1)], memberCount: 5 } };
+    memberViews = { o_1: { member: older(1), rankings: [] } };
+    const user = await openFirstPage(5);
+
+    await user.click(screen.getByRole('button', OLDER_BUTTON));
+    expect(await screen.findByRole('button', { name: 'Old1' })).toBeInTheDocument();
+    // 3 of 5 shown: nothing yet says the list ends.
+    expect(screen.getByRole('button', OLDER_BUTTON)).toBeEnabled();
+    await user.click(screen.getByRole('button', OLDER_BUTTON));
+    await waitFor(() => expect(screen.queryByRole('button', OLDER_BUTTON)).not.toBeInTheDocument());
+    expect(beforeCalls(fetchMock)).toHaveLength(2);
+
+    await user.click(screen.getByRole('button', { name: 'Old1' }));
+    await screen.findByRole('heading', { level: 1, name: 'Old1' });
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Members' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', OLDER_BUTTON)).not.toBeInTheDocument();
+    expect(beforeCalls(fetchMock)).toHaveLength(2);
+  });
+
+  it('says any other failure on the screen and keeps the button for another try', async () => {
+    stubServer();
+    beforeStatus = 500;
+    const user = await openFirstPage(5);
+    await user.click(screen.getByRole('button', OLDER_BUTTON));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong.');
+    expect(screen.getByRole('button', OLDER_BUTTON)).toBeEnabled();
+  });
+
+  it('keeps the older members read when a member’s view is opened and closed', async () => {
+    const fetchMock = stubServer();
+    olderPages = { m_2: { members: [older(1), older(2)], memberCount: 4 } };
+    memberViews = { o_1: { member: older(1), rankings: [] } };
+    const user = await openFirstPage(4);
+    await user.click(screen.getByRole('button', OLDER_BUTTON));
+    await user.click(await screen.findByRole('button', { name: 'Old1' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Old1' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    // Still there, without reading them again.
+    expect(await screen.findByRole('button', { name: 'Old2' })).toBeInTheDocument();
+    expect(beforeCalls(fetchMock)).toHaveLength(1);
+  });
+
+  it('lands the list where it was scrolled to when a member’s view is closed', async () => {
+    olderPages = { m_2: { members: [older(1), older(2)], memberCount: 4 } };
+    memberViews = { o_1: { member: older(1), rankings: [] } };
+    stubServer();
+    const user = await openFirstPage(4);
+    await user.click(screen.getByRole('button', OLDER_BUTTON));
+    await user.click(await screen.findByRole('button', { name: 'Old1' }));
+    await screen.findByRole('heading', { level: 1, name: 'Old1' });
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(bodyOf().scrollTop).toBe(0);
+
+    bodyOf().scrollTop = 77;
+    await user.click(screen.getByRole('button', { name: 'Old2' }));
+    await screen.findByRole('heading', { level: 1, name: 'Old2' });
+    expect(bodyOf().scrollTop).toBe(0);
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(bodyOf().scrollTop).toBe(77);
+  });
+
+  it('shows the owner the reported members above the list and lets them rename; the Club’s lists follow without a request', async () => {
+    const fetchMock = stubServer();
+    clubMe = { ...KEN, role: 'owner' };
+    clubMembers = [clubMe, MIKA];
+    reportedList = [{ member: MIKA, reportCount: 3 }];
+    const user = userEvent.setup();
+    await joinedConnection({ role: 'owner' });
+    renderRoot();
+    await openMembers(user);
+
+    expect(
+      screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent),
+    ).toEqual(['Reported', '2 members']);
+    expect(screen.getByText('3 reports')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Report' })).not.toBeInTheDocument();
+    // Another member's name opens the view on the owner's device too; one's own does not.
+    expect(screen.getAllByRole('button', { name: 'Mika' })).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: 'Ken' })).not.toBeInTheDocument();
+
+    // Both Mika lines (Reported and Members) offer Rename; use the first.
+    await user.click(screen.getAllByRole('button', { name: 'Rename' })[0]!);
+    const field = screen.getByLabelText('New nickname');
+    await user.clear(field);
+    await user.type(field, 'Mi');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Mi' })).toHaveLength(2));
+    expect(screen.queryByLabelText('New nickname')).not.toBeInTheDocument();
+    const patch = fetchMock.mock.calls.find(([, init]) => init?.method === 'PATCH');
+    expect(new URL(String(patch![0])).pathname).toBe('/api/v1/members/m_2');
+    expect(JSON.parse(String(patch![1]!.body))).toEqual({ nickname: 'Mi' });
+
+    // The Club's lists were rewritten, not read again.
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('button', { name: 'Members · 2 members' })).toBeInTheDocument();
+    expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(1);
+  });
+
+  it('lets the owner remove and erase results with ?purge=1; the Club reads its lists again when it is back', async () => {
+    const fetchMock = stubServer();
+    clubMe = { ...KEN, role: 'owner' };
+    clubMembers = [clubMe, MIKA];
+    clubMemberCount = 2;
+    const user = userEvent.setup();
+    await joinedConnection({ role: 'owner' });
+    renderRoot();
+    await openMembers(user);
+
+    await user.click(await screen.findByRole('button', { name: 'Remove' }));
+    const dialog = screen.getByRole('alertdialog', { name: 'Remove Mika?' });
+    expect(dialog).toHaveTextContent('every result and ranking row of theirs is erased');
+    await user.click(screen.getByRole('button', { name: 'Remove and erase results' }));
+
+    expect(await screen.findByRole('heading', { name: '1 members' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mika' })).not.toBeInTheDocument();
+    const del = fetchMock.mock.calls.find(([, init]) => init?.method === 'DELETE');
+    expect(String(del![0])).toBe(`${ENDPOINT}/api/v1/members/m_2?purge=1`);
+
+    // Their rows are gone from the tables and the dailies: the Club reads them again,
+    // as a read — what waited on this device is not resent.
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    await waitFor(() => expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(2));
+    expect(await screen.findByRole('button', { name: 'Members · 1 members' })).toBeInTheDocument();
+    expect(callsTo(fetchMock, 'POST', '/rankings/results')).toHaveLength(0);
+  });
+
+  it('removes without ?purge when only Remove is chosen; the Club is not read again', async () => {
+    const fetchMock = stubServer();
+    clubMe = { ...KEN, role: 'owner' };
+    clubMembers = [clubMe, MIKA];
+    clubMemberCount = 2;
+    const user = userEvent.setup();
+    await joinedConnection({ role: 'owner' });
+    renderRoot();
+    await openMembers(user);
+
+    await user.click(await screen.findByRole('button', { name: 'Remove' }));
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }),
+    );
+    expect(await screen.findByRole('heading', { name: '1 members' })).toBeInTheDocument();
+    const del = fetchMock.mock.calls.find(([, init]) => init?.method === 'DELETE');
+    expect(String(del![0])).toBe(`${ENDPOINT}/api/v1/members/m_2`);
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('button', { name: 'Members · 1 members' })).toBeInTheDocument();
+    expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(1);
+  });
+});
+
+describe('Member screen (club.md §9「Member」)', () => {
+  /** Mika's standings in the server's order (the spelling of the keys), not the shelves'. */
+  const MIKA_STANDINGS = [
+    standing(
+      '2048',
+      'standard',
+      { rank: 4, facts: { score: 1000, bestTile: 128 }, nextValue: 1200 },
+      9,
+    ),
+    standing(
+      'solitaire',
+      'draw-1',
+      { rank: 1, facts: { moves: 90, elapsedSeconds: 300, hints: 0 }, nextValue: null },
+      3,
+    ),
+    standing('sudoku', 'hard', {
+      rank: 2,
+      facts: { elapsedSeconds: 300, mistakes: 1, hints: 0 },
+      nextValue: 238,
+    }),
+    standing(
+      'sudoku',
+      'easy',
+      { rank: null, facts: { elapsedSeconds: 700, mistakes: 0, hints: 0 }, nextValue: 690 },
+      80,
+    ),
+    // A game this build does not know has no row to draw.
+    standing('not-a-game', 'x', { rank: 1, facts: { score: 1 }, nextValue: null }),
+  ];
+
+  beforeEach(() => {
+    clubMembers = [KEN, MIKA];
+    memberViews = { m_2: { member: MIKA, rankings: MIKA_STANDINGS } };
+    rankingList = [
+      sudokuTable('easy', 80),
+      sudokuTable('hard', 24),
+      { gameId: 'solitaire', paramsKey: 'draw-1', entryCount: 3, leader: LEADER },
+      { gameId: '2048', paramsKey: 'standard', entryCount: 9, leader: LEADER },
+    ];
+  });
+
+  const asOwner = () => {
+    clubMe = { ...KEN, role: 'owner' };
+    clubMembers = [clubMe, MIKA];
+  };
+
+  /** Club → Members → Mika. */
+  async function openMika(extra: Record<string, unknown> = {}) {
+    const user = userEvent.setup();
+    await joinedConnection(extra);
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: /^Members · / }));
+    await user.click(await screen.findByRole('button', { name: 'Mika' }));
+    await screen.findByRole('heading', { level: 1, name: 'Mika' });
+    return user;
+  }
+  const posts = (fetchMock: ReturnType<typeof stubServer>) =>
+    fetchMock.mock.calls.filter(
+      ([url, init]) => String(url).endsWith('/members/m_2/report') && init?.method === 'POST',
+    );
+
+  it('reads the member once: the name, when they joined, and their tables as Your rankings draws them', async () => {
+    const fetchMock = stubServer();
+    await openMika();
+    expect(await screen.findByRole('heading', { level: 2, name: 'Rankings' })).toBeInTheDocument();
+
+    expect(callsTo(fetchMock, 'GET', '/members/m_2')).toHaveLength(1);
+    expect(screen.getByText(/^Joined /)).toBeInTheDocument();
+    // The shelves' order, the same rows as the Club's own: never by rank.
+    expect(myRows().map((row) => row.getAttribute('aria-label'))).toEqual([
+      'Sudoku · Easy · 80 entries · 11:40 · 0:10 to the next rank',
+      'Sudoku · Hard · #2 · 24 entries · 5:00 · 1:02 to the next rank',
+      'Solitaire · Draw 1 · #1 · 3 entries · 90',
+      '2048 · #4 · 9 entries · 1000 · Score 200 to the next rank',
+    ]);
+    // Nothing else of a profile, and no Reload: the view is read when it opens.
+    expect(screen.queryByRole('button', { name: 'Reload' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/played|last seen/i)).not.toBeInTheDocument();
+  });
+
+  it('takes the title and the join date from the server’s answer, not from the pressed row or the viewer', async () => {
+    stubServer();
+    // The list is old: Mika was renamed since, and joined on a day neither the row (2026-09-10)
+    // nor the viewer (2026-09-09) carries.
+    const JOINED = '2026-10-05T12:00:00.000Z';
+    memberViews = { m_2: { member: { ...MIKA, nickname: 'Mi', joinedAt: JOINED }, rankings: [] } };
+    const user = userEvent.setup();
+    await joinedConnection();
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: /^Members · / }));
+    await user.click(await screen.findByRole('button', { name: 'Mika' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Mi' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 1, name: 'Mika' })).not.toBeInTheDocument();
+    // The real formatter, so the timezone of the machine does not matter.
+    expect(screen.getByText(`Joined ${dateLabel(JOINED, 'en')}`)).toBeInTheDocument();
+  });
+
+  it('says Nothing here yet for a member who is in no table', async () => {
+    stubServer();
+    memberViews = { m_2: { member: MIKA, rankings: [] } };
+    await openMika();
+    expect(await screen.findByText('Nothing here yet.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Rankings' })).toBeInTheDocument();
+    expect(myRows()).toHaveLength(0);
+  });
+
+  it('a row opens that table with its mode chosen and the Club’s other modes as chips; Back is the view', async () => {
+    const fetchMock = stubServer();
+    const user = await openMika();
+    await user.click(await screen.findByRole('button', { name: /^Sudoku · Hard · #2/ }));
+
+    expect(await screen.findByRole('heading', { name: 'Sudoku' })).toBeInTheDocument();
+    expect(tabs().map((tab) => tab.textContent)).toEqual(['Easy', 'Hard']);
+    expect(selectedTab()).toHaveTextContent('Hard');
+    await waitFor(() => expect(tableReads(fetchMock, 'hard')).toBe(1));
+    expect(tableReads(fetchMock, 'easy')).toBe(0);
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Mika' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /^Sudoku · Hard · #2/ })).toBeInTheDocument();
+  });
+
+  it('Report asks first; Cancel and Escape send nothing, Report sends one POST and says Reported', async () => {
+    const fetchMock = stubServer();
+    const user = await openMika();
+    // A member's view has Report and none of the owner's two.
+    expect(screen.queryByRole('button', { name: 'Rename' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Remove' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Report' }));
+    const confirm = screen.getByRole('alertdialog', { name: 'Report this nickname?' });
+    expect(confirm).toHaveTextContent('Nothing else is sent.');
+    await user.click(within(confirm).getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Report' }));
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(posts(fetchMock)).toHaveLength(0);
+
+    await user.click(screen.getByRole('button', { name: 'Report' }));
     await user.click(
       within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Report' }),
     );
     expect(await screen.findByRole('status')).toHaveTextContent('Reported');
-    expect(
-      fetchMock.mock.calls.some(
-        ([url, init]) => String(url).endsWith('/members/m_1/report') && init?.method === 'POST',
-      ),
-    ).toBe(true);
+    expect(posts(fetchMock)).toHaveLength(1);
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    // The button stays: reporting twice is harmless.
+    expect(screen.getByRole('button', { name: 'Report' })).toBeInTheDocument();
   });
 
-  it('opens no sheet on the owner’s device', async () => {
+  it('a server without GET /members/:id keeps the pressed name as the title, says so, and still offers Report', async () => {
+    const fetchMock = stubServer();
+    memberRouteMissing = true;
+    const user = userEvent.setup();
+    await joinedConnection();
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: /^Members · / }));
+    await user.click(await screen.findByRole('button', { name: 'Mika' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('That no longer exists.');
+    expect(screen.getByRole('heading', { level: 1, name: 'Mika' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Rankings' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Joined /)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Report' }));
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Report' }),
+    );
+    expect(await screen.findByRole('status')).toHaveTextContent('Reported');
+    expect(posts(fetchMock)).toHaveLength(1);
+  });
+
+  it('opens on the owner’s device with Rename and Remove in place of Report', async () => {
     stubServer();
-    clubMe = { ...KEN, role: 'owner' };
-    clubMembers = [clubMe];
-    await openChallenge({ role: 'owner' });
-    expect(screen.getByText('Yoh')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Yoh' })).not.toBeInTheDocument();
+    asOwner();
+    await openMika({ role: 'owner' });
+    expect(await screen.findByRole('heading', { level: 2, name: 'Rankings' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Rename' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Report' })).not.toBeInTheDocument();
+  });
+
+  it('Rename retitles the view, and the Members list has the new name without a request', async () => {
+    const fetchMock = stubServer();
+    asOwner();
+    const user = await openMika({ role: 'owner' });
+    await user.click(screen.getByRole('button', { name: 'Rename' }));
+    const field = screen.getByLabelText('New nickname');
+    await user.clear(field);
+    await user.type(field, 'Mi');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Mi' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('New nickname')).not.toBeInTheDocument();
+    const patch = fetchMock.mock.calls.find(([, init]) => init?.method === 'PATCH');
+    expect(new URL(String(patch![0])).pathname).toBe('/api/v1/members/m_2');
+    expect(JSON.parse(String(patch![1]!.body))).toEqual({ nickname: 'Mi' });
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('button', { name: 'Mi' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mika' })).not.toBeInTheDocument();
+    expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(1);
+    expect(callsTo(fetchMock, 'GET', '/members/m_2')).toHaveLength(1);
+  });
+
+  it('Remove and erase results leaves the view for the list without them, and the Club reads again when it is back', async () => {
+    const fetchMock = stubServer();
+    asOwner();
+    const user = await openMika({ role: 'owner' });
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    await user.click(screen.getByRole('button', { name: 'Remove and erase results' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Members' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '1 members' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mika' })).not.toBeInTheDocument();
+    const del = fetchMock.mock.calls.find(([, init]) => init?.method === 'DELETE');
+    expect(String(del![0])).toBe(`${ENDPOINT}/api/v1/members/m_2?purge=1`);
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    await waitFor(() => expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(2));
+    expect(await screen.findByRole('button', { name: 'Members · 1 members' })).toBeInTheDocument();
+  });
+
+  it('Remove alone also leaves the view, and the Club keeps the lists it has', async () => {
+    const fetchMock = stubServer();
+    asOwner();
+    const user = await openMika({ role: 'owner' });
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }),
+    );
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Members' })).toBeInTheDocument();
+    const del = fetchMock.mock.calls.find(([, init]) => init?.method === 'DELETE');
+    expect(String(del![0])).toBe(`${ENDPOINT}/api/v1/members/m_2`);
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('button', { name: 'Members · 1 members' })).toBeInTheDocument();
+    expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(1);
+  });
+
+  it('a removal made from a table’s row goes back to that table, not to the Members list', async () => {
+    const fetchMock = stubServer();
+    asOwner();
+    rankingList = [sudokuTable('hard', 24)];
+    memberViews = { m_1: { member: KEN_1, rankings: [] } };
+    const user = userEvent.setup();
+    await joinedConnection({ role: 'owner' });
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'Sudoku' }));
+    await user.click((await screen.findAllByRole('button', { name: 'Ken' }))[0]!);
+    await user.click(await screen.findByRole('button', { name: 'Remove' }));
+    await user.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }),
+    );
+
+    // The table it was opened from, as it was (a removal without erasing leaves the rows);
+    // the Members list was never on the way.
+    expect(await screen.findByRole('heading', { level: 1, name: 'Sudoku' })).toBeInTheDocument();
+    const del = fetchMock.mock.calls.find(([, init]) => init?.method === 'DELETE');
+    expect(String(del![0])).toBe(`${ENDPOINT}/api/v1/members/m_1`);
+    expect(screen.queryByRole('heading', { name: 'Members' })).not.toBeInTheDocument();
+    expect(tableReads(fetchMock, 'hard')).toBe(1);
+  });
+
+  it('a removal that erases results, made from a table’s row, shows that table at once and reads it again', async () => {
+    const fetchMock = stubServer();
+    asOwner();
+    rankingList = [sudokuTable('hard', 24)];
+    memberViews = { m_1: { member: KEN_1, rankings: [] } };
+    const user = userEvent.setup();
+    await joinedConnection({ role: 'owner' });
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'Sudoku' }));
+    await user.click((await screen.findAllByRole('button', { name: 'Ken' }))[0]!);
+    await user.click(await screen.findByRole('button', { name: 'Remove' }));
+    await user.click(screen.getByRole('button', { name: 'Remove and erase results' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Sudoku' })).toBeInTheDocument();
+    const del = fetchMock.mock.calls.find(([, init]) => init?.method === 'DELETE');
+    expect(String(del![0])).toBe(`${ENDPOINT}/api/v1/members/m_1?purge=1`);
+    // Their rows are gone from the server's table: the one kept is shown while it is read again.
+    expect(screen.getAllByText('You')).toHaveLength(2);
+    await waitFor(() => expect(tableReads(fetchMock, 'hard')).toBe(2));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Reload' })).toBeEnabled());
+    // Read anew, it is the one kept: coming back to it later asks for nothing more.
+    await user.click(screen.getAllByRole('button', { name: 'Ken' })[0]!);
+    await user.click(await screen.findByRole('button', { name: 'Back' }));
+    expect(tableReads(fetchMock, 'hard')).toBe(2);
+  });
+
+  it('a rename made from a table’s row reads that table again, for the new name', async () => {
+    const fetchMock = stubServer();
+    asOwner();
+    rankingList = [sudokuTable('hard', 24)];
+    const user = userEvent.setup();
+    await joinedConnection({ role: 'owner' });
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: 'Sudoku' }));
+    await user.click(await screen.findByRole('button', { name: 'Mika' }));
+    await user.click(await screen.findByRole('button', { name: 'Rename' }));
+    const field = screen.getByLabelText('New nickname');
+    await user.clear(field);
+    await user.type(field, 'Mi');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await screen.findByRole('heading', { level: 1, name: 'Mi' });
+
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByRole('heading', { level: 1, name: 'Sudoku' })).toBeInTheDocument();
+    await waitFor(() => expect(tableReads(fetchMock, 'hard')).toBe(2));
+    // Only the tables: the Club's lists were rewritten, not read again.
+    expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(1);
+  });
+
+  it('is never opened on one’s own name: Members shows it as text, tables as You', async () => {
+    stubServer();
+    rankingList = [sudokuTable('hard', 24)];
+    memberViews = { m_1: { member: KEN_1, rankings: [] } };
+    const user = userEvent.setup();
+    await joinedConnection();
+    renderRoot();
+    await user.click(await screen.findByRole('button', { name: /^Members · / }));
+    expect(screen.getByText('Ken')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ken' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    await user.click(await screen.findByRole('button', { name: 'Sudoku' }));
+    await screen.findAllByText('You');
+    expect(screen.queryByRole('button', { name: 'You' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ken B' })).not.toBeInTheDocument();
   });
 });
