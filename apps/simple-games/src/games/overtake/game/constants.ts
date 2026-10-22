@@ -63,12 +63,14 @@ export const BUMP_BLINK_STEPS = 96;
 export const RESOLVE_PASS_LIMIT = 8;
 
 /**
- * Which drag mapping the Drag control uses (§3). Provisional: 'A' (one finger,
- * two axes) is the plan's default and stands only while the registry keeps
- * the game `in-development`; if the Phase 0 device trial fails, this becomes
- * 'B' and mode A's code goes.
+ * Which drag mapping the Drag control uses (§3). 'B' (sideways drag, ▼ held to
+ * ease off; the drag's vertical is ignored) is what ships: the owner put the
+ * game on `web-beta` on 2026-10-22 with the Phase 0 device trial waived for
+ * now (not run), and §3 says a raise before that record goes out on 'B'.
+ * Mode A (one finger, two axes) keeps its code and tests behind this constant
+ * for a trial later; it goes only if such a trial fails (§18).
  */
-export const DRAG_MAPPING: 'A' | 'B' = 'A';
+export const DRAG_MAPPING: 'A' | 'B' = 'B';
 
 /** Traffic seed (§5). Every player meets the same course on the same level. */
 export const TRAFFIC_SEED = 'overtake-v1';

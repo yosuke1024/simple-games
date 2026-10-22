@@ -159,6 +159,7 @@ describe('hardest brake, keys and buttons (§3)', () => {
     expect(quickRulesVariant('drag', 'A')).toBe('A');
     expect(quickRulesVariant('drag', 'B')).toBe('B');
     expect(quickRulesVariant('buttons', 'A')).toBe('B');
-    expect(DRAG_MAPPING).toBe('A');
+    // What ships (§3): the raise to web-beta went out on 'B'.
+    expect(DRAG_MAPPING).toBe('B');
   });
 });

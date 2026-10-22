@@ -170,7 +170,8 @@ Web 版は新作の先行公開チャンネルです([docs/WEB_VERSION.md](docs/
 「先行公開(ベータ)」)。上の表の末尾 11 本(Crown Grid から Box Regions まで)は
 2026-09-26 から 2026-09-29(UTC)に Web 版だけで先行公開し、**2026-10-02 にアプリへ正式収録**
 しました(その後の新作 5 本は同じチャンネルで 2026-10-19 から Web 版に出ており、さらに次の
-10 本のうち 5 本を実装中、5 本を実装済み(Web 版へは未同期)です — 下の「Web 先行公開(ベータ)」)。
+10 本のうち 5 本を実装中、5 本を実装済みです — 実装済みの 5 本のうち 3 本は 2026-10-22 から
+Web 版に出ています。下の「Web 先行公開(ベータ)」)。
 2 週間の安定稼働という基準を満たす前に、作者の判断で収録しました
 (経緯は WEB_VERSION.md に記録)。保存スキーマはこの収録で凍結し、以後は移行だけで変えます。
 この 11 本はゲーム別ガイドページがまだ無いので、「詳しく見る」のリンクはありません。
@@ -222,9 +223,10 @@ pixapps-landing の #201 で同期)。タイトルカードに「BETA」バッ�
 47〜51 本目の新作 5 本(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads)も、同じ
 **Web 版だけの先行公開(ベータ)**向けに 2026-10-19 から実装しています(計画は
 [docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md)、
-仕様の正は各ルール文書)。いまは registry に `channel: 'in-development'`(どのビルドにも出さない値。
-2026-10-20 から)で登録したスキャフォールドの段階で、**ゲーム本体はまだ無く、Web 版にもアプリにも
-出ていません**。遊べるようになる変更で `'web-beta'` に変え、統合と検証を終えてから Web 版へ同期します。Chess は工数が最も大きいので別のフェーズで進め、残り 4 本を Chess で
+仕様の正は各ルール文書)。いまは registry に `channel: 'in-development'`(どの扉からも開けない値。
+チャンクはビルドに入るが遊べない。2026-10-20 から)で登録したスキャフォールドの段階で、**ゲーム本体は
+まだ無く、Web 版にもアプリにも出ていません**。遊べるようになる変更で `'web-beta'` に変え、統合と検証を
+終えてから Web 版へ同期します。Chess は工数が最も大きいので別のフェーズで進め、残り 4 本を Chess で
 待たせません。上の 41 本には数えず、ストア掲載文にも載せず、Club House にも登録しません。
 遊び方・進行・助けはまだ実装していないので、ここには書きません(計画と各ルール文書にあります)。
 
@@ -240,20 +242,28 @@ pixapps-landing の #201 で同期)。タイトルカードに「BETA」バッ�
 **Web 版だけの先行公開(ベータ)**向けにこのリポジトリで実装しました(2026-10-20 に着手、2026-10-21 に
 5 本とも遊べる形まで。仕様の正は各ルール文書、経緯は
 [docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md))。
-registry の `channel` は 5 本で分かれます。Make the Target / Nested Tic-Tac-Toe / Tangram の 3 本は
-`'web-beta'`(2026-10-21 に `'in-development'` から変えた)、Overtake と Scopa の 2 本は遊べる形でも
-`'in-development'`(どのビルドにも出さない値)のままです — 各ルール文書が `'web-beta'` への切り替えを
-止めているためで、Overtake は実機での試作(Phase 0)の結果を
-[docs/OVERTAKE_RULES.md](docs/OVERTAKE_RULES.md) §3 に記録するまで(記録の前に上げるなら操作の既定
-`DRAG_MAPPING` を `'B'` にして出す)、Scopa はバックグラウンドからの復帰時に CPU の拍を張り直す読み方を
-製品オーナーが決め、規則の出典と商標・ストアの検索を [docs/SCOPA_RULES.md](docs/SCOPA_RULES.md) §14 に
-書くまで(§4.2・§14)。5 本とも**アプリには出ません**。**Web 版にもまだ出ていません** — Web 版を
-配信する pixapps-landing への同期(ビルドしたチャンクを送る PR)はまだ作っておらず、製品オーナーの
-明示的な承認を得てから行います。公開後はタイトルカードに「BETA」バッジが付き、ベータ中はスキーマ変更で
-保存データが消えることがあります(en / ja ではその旨を表示)。正式収録の判断のための 2 週間の時計は、
-Web で公開した日から動きます。Overtake と Tangram は実機での試作(Phase 0)をまだ行っておらず、操作の
-既定は暫定です(Tangram はそれが通らなければ Three Peaks に差し替えます)。上の 41 本には数えず、
-ストア掲載文にも載せず、Club House にも登録しません。
+registry では 5 本とも `channel: 'web-beta'` です。Make the Target / Nested Tic-Tac-Toe / Tangram の 3 本は
+2026-10-21 に `'in-development'` から変え、Overtake と Scopa の 2 本は 2026-10-22 に製品オーナーの指示
+(「Overtake, Scopa は Web に出したいです。計画が間違ってる。このタイミングで、実機の確認はできない。」)で
+変えました。Overtake は実機での試作(Phase 0)を行わないまま、[docs/OVERTAKE_RULES.md](docs/OVERTAKE_RULES.md)
+§3 の「記録の前に上げるなら」の道どおり操作の既定 `DRAG_MAPPING` を `'B'`(横ドラッグ + ▼ 長押し)にして
+出します(2 軸 1 本指のモード A のコードは後の試行のために残す)。Scopa はバックグラウンドからの復帰時に
+CPU の拍を張り直すいまの読み方を暫定の挙動として出し、読み方そのものは製品オーナーの確認待ちのままです
+([docs/SCOPA_RULES.md](docs/SCOPA_RULES.md) §4.2)。規則の出典と商標・ストアの検索(同 §14)は未確認で、
+正式収録の前に(できるだけ早く)行います。5 本とも**アプリには出ません**。**Web 版では Make the Target /
+Nested Tic-Tac-Toe / Tangram の 3 本を 2026-10-22(JST、UTC では 2026-10-21 17:38)から先行公開
+しています**(製品オーナーの指示で、Web 版を配信する pixapps-landing の #204 のマージ後に
+「Publish Simple Games (web)」を実行して同期した。本番への反映は Cloudflare Pages の Git 連携による
+もので、このリポジトリからは観測していない)。Overtake と Scopa のチャンクも同じビルドに入っていますが、
+そのビルドでは `'in-development'` だったので、Web 版ではまだ遊べません。2 本の Web 版への配信は、この変更の
+マージ後の landing の同期(`overtake` / `scopa` を `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ
+移す PR と、オーナーの承認後の「Publish Simple Games (web)」)で行います。タイトルカードに「BETA」
+バッジが付き、ベータ中はスキーマ変更で保存データが消えることがあります(en / ja ではその旨を表示)。
+正式収録の判断のための 2 週間の時計は、3 本は 2026-10-22 から動いており、Overtake と Scopa はまだ
+動いていません(次の同期で Web 版に出た日から動きます)。Overtake と Tangram は実機での試作(Phase 0)を
+まだ行っていません(Overtake は試行を待たずにモード B を既定にして出し、Tangram はそれが通らなければ
+Three Peaks に差し替えます)。
+上の 41 本には数えず、ストア掲載文にも載せず、Club House にも登録しません。
 
 | ゲーム             | カテゴリ     | 内容                                                                                        | フォルダ              | 進行                                                         | 無料・無制限の助け                                         | ルール文書                                                           |
 | ------------------ | ------------ | ------------------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------------------- |
@@ -325,12 +335,12 @@ simple-games/
 │           │   ├── loop-puzzle/
 │           │   ├── bridges/
 │           │   ├── peg-solitaire/
-│           │   ├── chess/       # ここから 5 本は実装中(channel: 'in-development')。どのビルドにも出ないスキャフォールド
+│           │   ├── chess/       # ここから 5 本は実装中(channel: 'in-development')。スキャフォールドで、チャンクはビルドに入るが遊べない
 │           │   ├── gem-swap/
 │           │   ├── pipe-link/
 │           │   ├── bounce-up/
 │           │   ├── echo-pads/
-│           │   ├── overtake/    # ここから 5 本は Web 先行公開(ベータ)向けに実装済み(3 本は channel: 'web-beta'、overtake と scopa は 'in-development')。Web 版へは未同期、アプリには出ない
+│           │   ├── overtake/    # ここから 5 本は Web 先行公開(ベータ。channel: 'web-beta')。3 本は 2026-10-22 から Web 版に配信中、overtake と scopa は次の Web の同期で配信。アプリには出ない
 │           │   ├── make-the-target/
 │           │   ├── nested-tic-tac-toe/
 │           │   ├── scopa/
@@ -377,14 +387,14 @@ Android / iOS のビルド手順は [apps/simple-games/README.md](apps/simple-ga
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 14 言語・2,033 キー(シェル 125 + ゲーム別 1,908 — 正式収録 41 本の 1,393、Web 先行公開の配信中 5 本の 230、実装済みで未同期の 52〜56 の 5 本の 230、実装中の 47〜51 の 5 本のスキャフォールドの 55。Club House の 122 キーは別カタログ。2026-10-21 に各 `en.ts` の最上位キーを数えた)
+**One app. Many games. Many languages.** 現在は 14 言語・2,033 キー(シェル 125 + ゲーム別 1,908 — 正式収録 41 本の 1,393、Web 先行公開で 2026-10-19 から配信中の 42〜46 の 5 本の 230、実装済みの 52〜56 の 5 本の 230(うち 3 本は 2026-10-22 から配信中)、実装中の 47〜51 の 5 本のスキャフォールドの 55。Club House の 122 キーは別カタログ。2026-10-21 に各 `en.ts` の最上位キーを数えた)
 (en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
 中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。
 カタログは全言語同梱で、言語追加は「locale ファイル 1 つ + 登録」で完結します。
 **en と ja 以外は来歴 `machine` です — AI の助けを借りて書いており、その言語の
-ネイティブは一人も読んでいません。**Web 先行公開の 10 本(配信中の 42〜46 と、実装済みで
-未同期の 52〜56)のゲーム別の文言は、ja も AI が書いたもので、作者はまだ読んでいません(10 本の
+ネイティブは一人も読んでいません。**Web 先行公開の 10 本(配信中の 42〜46 と、実装済みの 52〜56 — うち 3 本は
+2026-10-22 から配信中)のゲーム別の文言は、ja も AI が書いたもので、作者はまだ読んでいません(10 本の
 文言に高リスクキーはありません)。実装中の 5 本(Chess から Echo Pads まで)のカタログは、まだ
 14 言語すべてがスキャフォールドの英語の仮文です。
 この製品は一人でつくっているため、14 言語の

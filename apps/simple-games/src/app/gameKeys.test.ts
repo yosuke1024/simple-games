@@ -191,14 +191,13 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'echo-pads': ['ep.stats', 'ep.flags'],
   // The five titles of
   // docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
-  // (Nos. 52–56), each playable since 2026-10-21. Three are on the browser's
-  // early-release channel like Nos. 42–46 (registry `channel: 'web-beta'` since
-  // then); Overtake and Scopa stay `'in-development'` until their rules
-  // documents lift the hold (Overtake's Phase 0 device result, Scopa's owner
-  // decision on its CPU beat). Beta keys on the same terms as the ten above.
+  // (Nos. 52–56), each playable since 2026-10-21 and on the browser's
+  // early-release channel like Nos. 42–46 (registry `channel: 'web-beta'`):
+  // three since 2026-10-21, Overtake and Scopa since 2026-10-22 by the product
+  // owner's decision. Beta keys on the same terms as the ten above.
   // Each row is its rules document's storage section; none is frozen until
   // graduation.
-  // No. 52, in-development (docs/OVERTAKE_RULES.md storage): not frozen until graduation
+  // No. 52, web-beta (docs/OVERTAKE_RULES.md storage): not frozen until graduation
   overtake: ['ot.progress', 'ot.stats', 'ot.flags', 'ot.prefs'],
   // No. 53, web-beta (docs/MAKE_THE_TARGET_RULES.md §10): the scaffold's two keys grew to
   // the rules document's five in Phase 3 — two saved-game slots (Free Play and the daily) and
@@ -206,7 +205,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'make-the-target': ['tg.saveGame', 'tg.saveDaily', 'tg.stats', 'tg.flags', 'tg.prefs'],
   // No. 54, web-beta (docs/NESTED_TIC_TAC_TOE_RULES.md storage): not frozen until graduation
   'nested-tic-tac-toe': ['nt.saveGame', 'nt.stats', 'nt.flags', 'nt.prefs'],
-  // No. 55, in-development (docs/SCOPA_RULES.md storage): not frozen until graduation
+  // No. 55, web-beta (docs/SCOPA_RULES.md storage): not frozen until graduation
   scopa: ['sc.saveGame', 'sc.stats', 'sc.flags'],
   // No. 56, web-beta (docs/TANGRAM_RULES.md storage): not frozen until graduation
   tangram: ['tn.saveGame', 'tn.saveDaily', 'tn.progress', 'tn.stats', 'tn.flags', 'tn.prefs'],

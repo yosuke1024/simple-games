@@ -158,8 +158,9 @@ describe('first run: Quick Rules (§10)', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'How to Play' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Change lanes' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    // Drag on mapping A (the provisional default): the finger's pull.
-    expect(screen.getByText(/pull your finger down/)).toBeInTheDocument();
+    // Drag on mapping B (what ships, §3): ▼, not the finger's pull.
+    expect(screen.getByText(/hold ▼ to ease off/)).toBeInTheDocument();
+    expect(screen.queryByText(/pull your finger/)).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     expect(screen.getByText(/three cars running at their own pace/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Start Playing' }));
@@ -461,7 +462,7 @@ describe('pause, and the ways a race stops by itself (§2)', () => {
   });
 });
 
-describe('Drag (§3 — mode A, the provisional default)', () => {
+describe('Drag (§3 — mode B, the shipped default; mode A is OvertakeRoot.modeA.test.tsx)', () => {
   async function steering() {
     await openRace();
     const canvas = canvasEl();
@@ -480,18 +481,15 @@ describe('Drag (§3 — mode A, the provisional default)', () => {
     expect(Number.isInteger(raceState().player.target)).toBe(true);
   });
 
-  it('a pull down eases off; a lift lets the throttle back', async () => {
+  it('the drag steers but its pull eases nothing off; a second finger still does', async () => {
     const canvas = await steering();
+    fireEvent.pointerMove(canvas, { pointerId: 1, clientX: 190, clientY: 520 });
     pump(16);
+    expect(targetPx()).toBeCloseTo(PLAYER_START_X + 12, 5);
     expect(raceState().player.w).toBe(FULL_SPEED);
-    // 90 px down is the hardest brake: the car slows toward 60 px/s.
-    fireEvent.pointerMove(canvas, { pointerId: 1, clientX: 180, clientY: 490 });
-    pump(10);
-    const slowed = raceState().player.w;
-    expect(slowed).toBeLessThan(FULL_SPEED - 200);
-    fireEvent.pointerUp(canvas, { pointerId: 1, clientX: 180, clientY: 490 });
-    pump(10);
-    expect(raceState().player.w).toBeGreaterThan(slowed);
+    fireEvent.pointerDown(canvas, { pointerId: 2, clientX: 60, clientY: 200, button: 0 });
+    pump(20);
+    expect(raceState().player.w).toBe(MIN_TARGET_SPEED);
   });
 
   it('a second finger is the hardest brake and never takes the steering', async () => {

@@ -1233,20 +1233,27 @@ export const GAMES: readonly GameDefinition[] = [
     loadStorageSchemas: () => import('../games/echo-pads/storage/schemas'),
   },
   // The titles of docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
-  // (Nos. 52–56), in number order. Each is playable. Make the Target, Nested
-  // Tic-Tac-Toe and Tangram are on the browser's early-release channel
-  // (docs/WEB_VERSION.md「先行公開」): the change that made them playable turned
-  // them from `'in-development'` to `'web-beta'` on 2026-10-21. They are not
-  // yet in the browser version, which carries them once the landing's next
-  // sync lists them as beta (WEB_VERSION.md「landing 側のガード」), and not in
-  // the app until a person decides they graduate (docs/RELEASE_CHECKLIST.md
-  // §0). Overtake and Scopa stay `'in-development'` (offered on no build)
-  // although playable, because their rules documents hold the switch back:
-  // Overtake until the Phase 0 device result is recorded in
-  // docs/OVERTAKE_RULES.md §3 (or until it ships with `DRAG_MAPPING` `'B'`),
-  // Scopa until the product owner decides how its CPU beat resumes when the
-  // app comes back to the foreground (docs/SCOPA_RULES.md §4.2). Nos. 47–51
-  // above are still `'in-development'`. None is a Club House challenge (no
+  // (Nos. 52–56), in number order. Each is playable, and all five are on the
+  // browser's early-release channel (docs/WEB_VERSION.md「先行公開」). Make the
+  // Target, Nested Tic-Tac-Toe and Tangram turned from `'in-development'` to
+  // `'web-beta'` in the change that made them playable (2026-10-21), and the
+  // browser version has carried them since 2026-10-22 JST (2026-10-21 17:38
+  // UTC — the landing's publish of main `11a3036`, after landing #204 listed
+  // them as beta; WEB_VERSION.md「landing 側のガード」). Overtake and Scopa
+  // turned on 2026-10-22, by the product owner's decision to put them on the
+  // web now: no device trial can be run at this time, so the one the plan
+  // asked for first is set aside. Overtake ships with `DRAG_MAPPING` `'B'`,
+  // the path docs/OVERTAKE_RULES.md §3 gives for raising the channel before
+  // the Phase 0 record (Phase 0 is not run; mode A stays behind the constant).
+  // Scopa ships with its current reading of how the CPU beat resumes when the
+  // app comes back to the foreground as provisional — the owner's choice
+  // between the two readings is still awaited (docs/SCOPA_RULES.md §4.2) —
+  // and its §14 checks (rule sources, trademark and store search) move to
+  // before it graduates. Their chunks were already in the build the web
+  // carries, behind no door (app/gameChannel.ts); they reach the web with the
+  // next landing sync. None is in the app until a person decides it graduates
+  // (docs/RELEASE_CHECKLIST.md §0). Nos. 47–51 above are still
+  // `'in-development'`. None is a Club House challenge (no
   // `challenge`) while its saves and results may still change.
   //
   // The glyphs were measured as Nos. 42–51's were above: none is in the bundled
@@ -1282,7 +1289,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Overtake',
     category: 'arcade',
     glyph: '┇',
-    channel: 'in-development',
+    channel: 'web-beta',
     storageKeys: Object.values(OT_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/overtake/ui/OvertakeRoot').then((m) => ({ default: m.OvertakeRoot })),
@@ -1374,7 +1381,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Scopa',
     category: 'cards',
     glyph: '♧',
-    channel: 'in-development',
+    channel: 'web-beta',
     storageKeys: Object.values(SC_STORAGE_KEYS),
     loadRoot: () => import('../games/scopa/ui/ScopaRoot').then((m) => ({ default: m.ScopaRoot })),
     loadStorageSchemas: () => import('../games/scopa/storage/schemas'),

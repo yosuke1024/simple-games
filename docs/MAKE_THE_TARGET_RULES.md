@@ -32,9 +32,13 @@ Phase 3 で書いた(同じく §17「Phase 3(画面・保存・状態)で決め
 選定は計画「Phase 1 の実施結果」)。**Web 先行公開(ベータ)のタイトル**で、アプリ(Android / iOS)には
 収録していない。registry では遊べるようになるまで `channel: 'in-development'`(どのビルドにも出ない)、
 遊べるようになる変更で `'web-beta'` にする([WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)— **2026-10-21 に
-`'web-beta'` にした**。Web 版への配信はまだで、次の landing の同期 PR で出る(計画「フェーズ」6)。ストア掲載文・
-landing のガイド・`PUBLISHED_GAME_IDS` には入れない。Club House には登録しない(§16)。保存スキーマは
-正式収録まで凍結しない(§10)。
+`'web-beta'` にした**。**2026-10-22(JST、UTC では 2026-10-21 17:38)から Web 版で配信している**
+(計画「フェーズ」6 — landing の公開ワークフロー Publish Simple Games (web) が `11a3036`(#246 のマージ)の
+web ビルドを同期した。本番への反映は Cloudflare Pages の Git 連携による —
+このリポジトリからは観測していない)。正式収録の基準 1(2 週間の安定稼働 —
+[RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §0)の時計は 2026-10-22 から。ストア掲載文・landing の
+ガイド・`PUBLISHED_GAME_IDS` には入れない。Club House には登録しない(§16)。保存スキーマは正式収録まで
+凍結しない(§10)。
 
 並んだ数字から 2 つを選び、+ − × ÷ のどれかで 1 つにまとめる — これを繰り返して、最後に残る 1 つを
 目標の数にぴたりと合わせる一人用パズルである。**一般に「配られた数を四則で組み合わせて目標の数を

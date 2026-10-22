@@ -87,6 +87,15 @@ Overtake、クリアは 1 位、順位の 1 文は足してよい。Tangram は�
    各ルール文書 §14 に記録する。どちらもタスクカードの依頼文が提案した段取りで、オーナーの判断はこれに
    反していない。
 7. push・PR の作成・Issue への投稿は、オーナーの明示的な承認を得てから行う。
+8. **(2026-10-22 追記)Overtake と Scopa を、実機での確認を待たずに `'web-beta'` にする**(製品オーナーの判断、
+   2026-10-22。オーナーの指示は「Overtake, Scopa は Web に出したいです。計画が間違ってる。このタイミングで、
+   実機の確認はできない。」)。この計画が Overtake を出す前の段に置いていた実機の Phase 0 は、このタイミングでは
+   行えないので今回は求めない(Phase 0 は未実施のまま)。Overtake は OVERTAKE_RULES.md §3 の「記録の前に
+   `'web-beta'` へ上げるなら、`DRAG_MAPPING` を `'B'` にして出す」の道で出す(モード A のコードとテストは後の試行
+   のために残す — §18 の「消す」は試行が通らなかったときのもの)。Scopa は §4.2 の復帰時の張り直しのいまの読み方を
+   暫定の挙動として出す(読み方そのものはオーナーが選んでおらず、確認待ちのまま)。§14 の規則の出典と商標・
+   ストアの検索は未確認のまま、「公開の前に」から「正式収録の前に(できるだけ早く)」へ移す。Web 版への配信は
+   次の landing の同期(オーナーの承認後の Publish)で行う。
 
 ## 決定事項
 
@@ -386,7 +395,8 @@ Pass Lane も採らない)。**クリアは 1 位**(同日のオーナー決定�
 - **Quick Rules(仮。3 ステップ)**: 1. 指を横にすべらせて車線を変える。アクセルは自動で、速度は勝手に
   上がる。 2. 混んだところは指を下へ引いてゆるめる。ぶつかると止まる — ゆるめるほうが速い。 3. ペースの
   違う 3 台より先にゴールすれば、次の面が開く。**2 は Phase 0 の結果で書き直す**(通らなければ「▼ を
-  長押ししてゆるめる」)。文案はルール文書で確定する。
+  長押ししてゆるめる」)。文案はルール文書で確定する。(2026-10-22 追記: 判断 8 で `DRAG_MAPPING` を `'B'` に
+  したので、Drag モードの 2 もいまは ▼ の文を出す — `quickRulesVariant`。指を下へ引く文のキーも残す。)
 - **グリフ**: `┇`(U+2507)— Phase 1 で実測して確定した(registry のコメントに理由。「Phase 1 の実施結果」)。
   道路中央の破線が下へ流れる姿。`⫼`(`≡` を 90° 回しただけ)、`∥`(一時停止に見える)、`⇈`(上向き矢印が
   `▲` `⌃` と並ぶ)、`⛐` `⛟`(絵文字化)、`⚑`(旗)は落とした。Pipe Link の `┣` と同じ Box Drawing ブロックだが
@@ -399,6 +409,12 @@ Pass Lane も採らない)。**クリアは 1 位**(同日のオーナー決定�
   (registry・`storage/keys.ts`・i18n の各言語ファイル)— **ブリーフからの逸脱**。害が小さいのは、この
   ブランチが main にも Web にも無く、ゲーム本体も保存データも無いからで、結果が悪ければ Web へ同期する
   前にスキャフォールドを消して別の id・接頭辞で起こし直す(`new-game.mjs` は既存の id・接頭辞を拒む)。
+  (2026-10-22 追記: Overtake は main に入り、チャンクは 2026-10-22(JST、UTC では 2026-10-21 17:38)の Web
+  ビルドにも入った(そのビルドでは `'in-development'` なので開けず、遊べない)。同日、製品オーナーの指示(判断 8)で
+  `'web-beta'` にした — Web 版への配信は次の landing の同期(オーナーの承認後の Publish)で。商標・両ストアの
+  検索はまだ未確認(OVERTAKE_RULES.md §14)で、判断 8 の後は正式収録の前に行う(下の「製品オーナーの確認待ち」)
+  ので、配信より後になりうる。配信の後に id・接頭辞を替えると、配信中のタイトルと `ot.*` の保存も外すことに
+  なる(WEB_VERSION.md「黙って消さない」)。)
   検索は Phase 2(ルール文書)の前に行い、確認日つきでルール文書 §14 に記録する。一般語なので同名の
   アプリが多いと見込む — 結果が悪ければオーナーに戻す。ストア・LP の
   禁止語(§14 に写す): nitro / fastest / beat the clock / pole position / Grand Prix / street racing /
@@ -462,7 +478,7 @@ Pass Lane も採らない)。**クリアは 1 位**(同日のオーナー決定�
 
 **未決事項(Phase 2 でルール文書に決める。推奨つき)**:
 
-- 操作の既定と定数(gain・不感帯・最大減速の距離・ラチェットの戻り速度): Phase 0 の結果で決める。推奨は、実機 2 台を iOS Safari と Android Chromium の各 1 台(片方は低スペック)にし、確かめた環境と「意図しない減速時間」の測り方(スロットル表示のログ)をルール文書に書くこと。通らなければ既定は「横ドラッグ + ▼ 長押し」で、2 軸式は `ot.prefs` の選択肢にも残さない(選ばせるほど確かな形ではないため)。
+- 操作の既定と定数(gain・不感帯・最大減速の距離・ラチェットの戻り速度): Phase 0 の結果で決める。推奨は、実機 2 台を iOS Safari と Android Chromium の各 1 台(片方は低スペック)にし、確かめた環境と「意図しない減速時間」の測り方(スロットル表示のログ)をルール文書に書くこと。通らなければ既定は「横ドラッグ + ▼ 長押し」で、2 軸式は `ot.prefs` の選択肢にも残さない(選ばせるほど確かな形ではないため)。(2026-10-22 追記: 判断 8 で試行を待たずにモード B を既定にした。`ot.prefs` は Drag / Buttons の選択だけで 2 軸式は選択肢に無く、モード A は定数の裏のコードとテストとしてだけ残す — 試行は未実施。)
 - Drag モードでも ▼ を出すか: 推奨は出す(第 2 指の代替であり、名前付きのボタンは支援技術の経路でもある)。◀ ▶ ▼ のパッドは Bounce Up の未決事項の推奨と同じく CSS の `@media (any-pointer: coarse)` で出し、JS で端末を判定しない(Bounce Up 側もまだ決めていない — Phase 3)。
 - ライバル 3 台がすべてゴールした後の扱い: 提案では「4 位が確定し、短い猶予の後に結果を出す」(上の規則に提案の文のまま残した)。推奨は猶予を置かず、自分がゴールするまで走らせること(4/4 は確定していて早く終える理由が無く、ライバルのタイムで打ち切るのは「時間で打ち切らない」と食い違う)。Bumps はゴールまで数える。
 - 決勝(10 の倍数)の形: 提案では「コース 1.25 倍、1 台が後半に伸びる追い込み型」。推奨は v1 ではコース 1.25 倍だけにし、追い込み型のペース形は作らないこと(ペースの形が 2 種になると `RIVAL_PACE` の凍結と Rusher の門が 2 倍になり、ラバーバンドなしの性質テストも 2 形になる)。
@@ -1279,9 +1295,12 @@ Peg Solitaire / Gem Swap + Make the Target + Tangram)。既存 51 本に無い�
   - 差し替え PR が変えるもの: registry(`GameId` と `GAMES` の `tangram` → `three-peaks`、`TN_STORAGE_KEYS` の
     import → `TP_STORAGE_KEYS`、グリフと理由)/ `src/games/tangram/` を消して
     `node scripts/new-game.mjs three-peaks tp --title "Three Peaks" --category cards --channel in-development` /
-    `src/app/gameKeys.test.ts` の `tangram` の 2 行(RELEASED_KEYS / PREFIXES)→ `three-peaks` / `tp.`(`tn.*` は
-    Web に出ておらずプレイヤーの保存が無いので、行の削除は released data の削除ではない — 差し替えは Web
-    同期の前に限る)/ チャンネルの一覧(`src/app/gameChannel.test.ts` の `IN_DEVELOPMENT_IDS`・`src/ui/landing.test.ts`・
+    `src/app/gameKeys.test.ts` の `tangram` の 2 行(RELEASED_KEYS / PREFIXES)→ `three-peaks` / `tp.`(この手順を書いた
+    2026-10-20 の時点では `tn.*` は Web に出ておらずプレイヤーの保存が無かったので、行の削除は released data の削除
+    ではなかった — 差し替えは Web 同期の前に限る。**2026-10-22 追記: Tangram は 2026-10-22
+    (JST、UTC では 2026-10-21 17:38)から Web で先行公開中で、`tn.*` にはプレイヤーの保存がありうる。この前提はもう
+    成り立たず、差し替えるならベータの保存のリセットの扱い([WEB_VERSION.md](../WEB_VERSION.md)「黙って消さない」)
+    が要る**)/ チャンネルの一覧(`src/app/gameChannel.test.ts` の `IN_DEVELOPMENT_IDS`・`src/ui/landing.test.ts`・
     `src/ui/screens/CollectionHomeScreen.test.tsx`・`src/i18n/unreadCatalogs.test.ts` の `UNREAD_JA_GAME_IDS`)/
     アクセント(`ui/styles.css` の `data-game='tangram'` のライト・ダーク 2 ブロック、`packages/brand` の
     `titleAccents`、`docs/architecture/title-accent.md` と BRAND.md の表 — 棚が puzzle から cards に変わるので
@@ -1336,7 +1355,10 @@ Peg Solitaire / Gem Swap + Make the Target + Tangram)。既存 51 本に無い�
    通過条件は「共通要件」。試作は `apps/simple-games/prototypes/phase0/`(下の「Phase 0 の試作」)。Overtake の Phase 0 は初日に始め、ほかの 4 本を待たせない。Overtake が通らなければ
    既定を「横ドラッグ + ▼ 長押し」に、Tangram が通らなければ Three Peaks に差し替える — その場合は registry /
    `gameKeys.test.ts` / チャンネルの一覧 / アクセント / css-split.md / storage-keys.md / 現状の文書 / スタブを
-   差し替える PR を先に出す(オーナーの承認を得てから)。
+   差し替える PR を先に出す(オーナーの承認を得てから)。**2026-10-22 追記(判断 8)。**Overtake の Phase 0 は
+   実施しないまま `'web-beta'` にする(このタイミングでは実機の確認ができない)。既定は試行を待たずに
+   「横ドラッグ + ▼ 長押し」(モード B — OVERTAKE_RULES.md §3 の「記録の前に上げるなら」の道)で、2 軸 1 本指
+   (モード A)のコードとテストは後の試行のために残す。Tangram の Phase 0 も未実施のまま。
 3. **Phase 2 — ルール文書とゲームロジック(5 本並行)**: ルール文書 → `game/`(テスト込み、生成器とボットの門、
    品質の実測)→ 独立レビュー。各ゲームの「未決事項」はここでルール文書に決める。ロジックがテストで検証できて
    から UI へ進む。
@@ -1352,8 +1374,15 @@ pnpm --filter simple-games build:web`、i18n gate、`size:check` → `size:updat
    `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ、同期するチャンクと同じ PR で移す(このテストは一覧に
    無い id のチャンクも、チャンクの無い id も落とす — [WEB_VERSION.md](../WEB_VERSION.md)「先行公開」)。接続点
    だけの本もチャンクは出る(ビルドは分岐しない)が、`'in-development'` なのでどの扉からも開けず、landing では
-   `IN_DEVELOPMENT_GAME_IDS` に置く — **この計画のマージ後に main を先に同期する PR では、5 本の id をそこへ
-   足す**(47〜51 の計画の「2026-10-20 追記 — Web の帰結の対処」と同じ)。同期 PR もオーナーの承認を得てから。
+   `IN_DEVELOPMENT_GAME_IDS` に置く(47〜51 の計画の「2026-10-20 追記 — Web の帰結の対処」と同じ)。同期 PR も
+   オーナーの承認を得てから。**2026-10-22 追記 — 実施済み。**landing #204(2026-10-21 17:04 UTC にマージ)で
+   `make-the-target` / `nested-tic-tac-toe` / `tangram` を `WEB_BETA_GAME_IDS` に、`overtake` / `scopa` を
+   `IN_DEVELOPMENT_GAME_IDS` に足し、オーナーの指示で Publish Simple Games (web)(run 39640771411)が `11a3036`
+   (#246 のマージ)の web ビルドを landing main に積んだ(`af9dedc`)。3 本は 2026-10-22(JST、UTC では 2026-10-21 17:38)
+   から Web 版で先行公開中(下の「Phase 2〜4 の実施結果」の「Web 版への同期(「フェーズ」6)」)。
+   **同日の追記 — Overtake / Scopa も `'web-beta'` に。**製品オーナーの指示(判断 8)で 2 本も `'web-beta'` に
+   した(2026-10-22)。Web 版への配信は次の landing の同期(`overtake` / `scopa` を `IN_DEVELOPMENT_GAME_IDS` から
+   `WEB_BETA_GAME_IDS` へ移す PR と、オーナーの承認後の Publish)で行い、それまで Web 版では遊べない。
 7. **Phase 5 — 正式収録の準備(この計画の PR では行わない)**: Web ベータ公開後に WEB_VERSION.md の基準
    (2 週間の安定・滞在時間)と RELEASE_CHECKLIST.md §0 を評価する。正式収録時にスキーマを凍結し、公開ビルドから
    採取した保存 payload で `releasedRecords.test.ts` を作る。ストア公開・本番配信は明示的な承認を要し、自動では
@@ -1390,6 +1419,9 @@ rebase 前の数(下の「現状の文書の数」)。スキャフォールド�
 (README / WEB_VERSION / PROJECT_CONTEXT / RELEASE_CHECKLIST / store/listing / ARCHITECTURE /
 architecture/registry)とルール文書のスタブ 5 本の表記も `'in-development'` に合わせた。landing の門には 5 本の id がまだ無い —
 この計画のマージ後、main を次に Web 版へ同期する PR で `IN_DEVELOPMENT_GAME_IDS` に足す(「フェーズ」の 6)。
+(2026-10-22 追記: 実際には landing #204 で、`make-the-target` / `nested-tic-tac-toe` / `tangram` を
+`WEB_BETA_GAME_IDS` に、`overtake` / `scopa` を `IN_DEVELOPMENT_GAME_IDS` に足して同期した — 「Phase 2〜4 の
+実施結果」の「Web 版への同期(「フェーズ」6)」。)
 コミットは `33562c1` の上に 3 つ(下の ①・② と、③ = この切り替え)。③ の木で取り直したゲート: typecheck・lint・
 vitest 全体(631 ファイル通過・1 スキップ、13,097 件通過・1 スキップ)・`pnpm build`・`build:web`・
 `check-principles.sh`・Prettier。`check-dist-ads-separation.sh` / `size:check` / `i18n:gate:check` /
@@ -1710,10 +1742,17 @@ E2 / E3(幅 8u)は 37 px/u(脚 52 px)。計画の「算術では 43〜56 px」�
 操作の節(吸着 14 px・支点回転・ボタンの裏返し・置けない位置はトレイへ)を凍結して Phase 2 へ。
 不通過なら: Overtake は「横ドラッグ + ▼ 長押し」(モード B)を既定にして 2 軸式は `ot.prefs` にも残さない。
 Tangram は Three Peaks に差し替える(上の「Phase 0 と差し替え」の手順、PR はオーナーの承認を得てから)。
+ただし Tangram は 2026-10-22(JST、UTC では 2026-10-21 17:38)から Web で先行公開中なので、差し替えは配信中の
+タイトルと `tn.*` の保存を外すことになる(上の「差し替え PR が変えるもの」の 2026-10-22 追記)。
+2026-10-22 追記(判断 8): Overtake は試行を待たずにモード B を既定にして `'web-beta'` にした。上の表の試行は
+未実施のまま残し、後で試行して通過すれば「通過なら」のとおりモード A を既定にできる(モード A のコードと
+テストは定数の裏に残してある)。`ot.prefs` は Drag / Buttons の選択だけで、2 軸式はもとから選択肢に無い —
+「不通過なら」の「`ot.prefs` にも残さない」はいまも満たしていて、試行が通らなければモード A のコードを消す
+(OVERTAKE_RULES.md §18)。
 
-**この作業の出所**: 試作 2 本はサブエージェント(Opus 5.5)が書き、仕様準拠(Opus 5.5)と Chromium 88 /
-iOS 14 互換(Sonnet 5.5)の 2 観点のレビュー → 指摘ごとに 2 人の反証(Sonnet 5.5)→ 修正(Opus 5.5)→
-再検査(Sonnet 5.5)を経た。確定した指摘は Overtake 5 件(指が触れていた時間と握り直しの記録、▼ の
+**この作業の出所**: 試作 2 本はサブエージェントが書き、仕様準拠と Chromium 88 / iOS 14 互換の 2 観点の
+レビュー → 指摘ごとに 2 人の反証 → 修正 → 再検査を経た。
+確定した指摘は Overtake 5 件(指が触れていた時間と握り直しの記録、▼ の
 pointercancel の検査、iOS でのズームを招く 11 px のログ欄、など)、Tangram 9 件(Easy の境界線への吸着が
 既定で入っていた — 計画の「影絵と置いた駒」だけに直した、盤上の回転で駒が横へずれる — 支点回転に直した、
 吸着の許容の検査が無かった、完成後の Undo、など)で、すべて反映した。落ちた指摘は Overtake 6 件・
@@ -1723,7 +1762,8 @@ Tangram 10 件(防御的な自己回復・倍率の感触など、仕様の範�
 
 **進め方。**Phase 0 の実機の試行がまだ無い(上の「Phase 0 の試作」)まま、オーナーの指示で Phase 2 以降に進んだ。
 Overtake は操作の 2 つの結果(モード A / B)を両方実装し、既定を 1 つの定数(`DRAG_MAPPING`)に置いて
-`'in-development'` の間だけモード A を既定にした(OVERTAKE_RULES.md §3)。Tangram は Phase 0 が通る前提で進め、
+`'in-development'` の間だけモード A を既定にした(OVERTAKE_RULES.md §3。2026-10-22 に `'web-beta'` にしたので、
+既定はモード B — 下の「チャンネルの判断」の追記)。Tangram は Phase 0 が通る前提で進め、
 Three Peaks への差し替えは計画の退路のまま残した(TANGRAM_RULES.md 冒頭)。5 本はゲームごとの git worktree
 (`wip/<id>`、main `fe3dc36` = #245 のマージから分岐)で並列に進め、各段階をサブエージェントが書き、独立の
 レビュー(読むだけ)→ 反映 → 再検査の順で通した。触ってよい範囲は `src/games/<id>/`・自分のルール文書・
@@ -1767,6 +1807,13 @@ ARCHITECTURE、architecture/registry、storage-keys(5 本の実際のキー)、c
   まま `'in-development'` に留めた**(registry のコメントに理由)。Nested Tic-Tac-Toe にも Scopa と同型の外れ
   (復帰時の 450ms の張り直し、§4)があり確認待ちだが、その文書は切り替えの条件にしていないので上げた —
   オーナーは 2 本をまとめて決めてよい。
+  **2026-10-22 追記 — 製品オーナーの判断(判断 8)。**オーナーの指示「Overtake, Scopa は Web に出したいです。
+  計画が間違ってる。このタイミングで、実機の確認はできない。」で、Overtake と Scopa も `'web-beta'` にした
+  (5 本とも `'web-beta'`)。Overtake は §3 の「記録の前に上げるなら」の道で `DRAG_MAPPING` を `'B'` に(Phase 0 は
+  未実施のまま。モード A のコードとテストは残す)。Scopa は §4.2 のいまの読み方を暫定の挙動として出す — 読み方
+  そのものはオーナーが選んでおらず確認待ちのまま(Nested Tic-Tac-Toe と合わせて決めてよいのも同じ)。§14 の
+  出典と商標・ストアの検索は未確認のまま、「公開の前に」から「正式収録の前に(できるだけ早く)」へ移した。
+  Web 版への配信は次の landing の同期(オーナーの承認後の Publish)で。
 - **アクセントの測り直し(BRAND.md 手順 5)。**統合ブランチの `styles.css` / `titleAccents` / registry を Phase 1 と
   同じスクリプト(CIE76、CSS Color 4 の全精度)で読み、56 本 × 6 値の一致(例外は従来からの Quick Math /
   Bunny Hop の ring-soft 0.14)を確かめた上で、5 色の最接近は Phase 1 と全値一致 — Overtake Unblock Puzzle
@@ -1817,28 +1864,49 @@ ARCHITECTURE、architecture/registry、storage-keys(5 本の実際のキー)、c
   Buttons の切り替えの最小幅 48px。**ブラウザ試遊の証拠の不備**(広告の予約が効いていない・ホームではなく盤面を
   撮っていた)も指摘され、予約を付けた 2 回目の試遊で撮り直した(上の「ブラウザ試遊」)。
 
-**製品オーナーの確認待ち(5 本のルール文書が残した点 — 公開の前に)。**
+**製品オーナーの確認待ち(5 本のルール文書が残した点 — Make the Target / Nested Tic-Tac-Toe / Tangram は
+2026-10-22(JST、UTC では 2026-10-21 17:38)の Web 先行公開の後も未決のまま。Overtake / Scopa は 2026-10-22 に
+オーナーの指示で `'web-beta'` にしたので(判断 8)、下の点はチャンネルの条件ではなくなり、正式収録の前に決める)。**
 
 - 共通: 商標と両ストアの検索(5 本とも未確認。各 §14 / 冒頭)/ デイリーの統計の数え方と結果カードの
   第一ボタン(42〜46 から続く 2 点 — Make the Target §8・§9、Tangram §結果カード、Bridges の形に合わせた暫定)/
   統計と結果の文言(Bridges の言い方に暫定で合わせた)。
-- Overtake: Phase 0 の実機の試行(§3。通らなければ `DRAG_MAPPING` を `'B'` に)/ ライバルの `planLane` を
+- Overtake: Phase 0 の実機の試行(§3。2026-10-22 にオーナーの指示で試行を待たずに `DRAG_MAPPING` を `'B'` にして
+  `'web-beta'` へ — 試行は未実施のまま、モード A のコードは後の試行のために残す)/ ライバルの `planLane` を
   ループの中で走らせる例外(§6、GAME_LIFECYCLE「CPU 探索」に暫定の例外として記載)/ ラチェットの戻り速度の
   解釈(指で減速を保持できない — §3)/ 「1 位でクリア」の厳しさ(計画の判断待ち — 試作の人間の中央値は未測定)。
 - Make the Target: 放棄したあとに解を 1 つ見る(§暫定)/ Hard を 5 枚にした理由(§7)。
 - Nested Tic-Tac-Toe: 復帰時の 450ms の張り直し(§4、共通要件からの外れ)/ ノード上限を決めた段(Node のみ。
   CDP 6 倍と実機の段は未実施 — §4.3・§16)。
-- Scopa: 復帰時の拍の張り直しの読み方(§4.2 — `'web-beta'` への切り替えの条件)/ 規則の出典の確認(§14)。
-- Tangram: Phase 0 の実機の試行(通らなければ Three Peaks)/ 結果カードのボタン / デイリーの統計の枠(§12)。
+- Scopa: 復帰時の拍の張り直しの読み方(§4.2 — いまの読み方を暫定の挙動として 2026-10-22 に `'web-beta'` にした。
+  読み方は確認待ちのまま)/ 規則の出典の確認(§14 — 商標・ストアの検索と合わせて、正式収録の前に。できるだけ早く)。
+- Tangram: Phase 0 の実機の試行(通らなければ Three Peaks — ただし 2026-10-22(JST、UTC では 2026-10-21 17:38)
+  から Web で先行公開中なので、差し替えは `tn.*` の保存の扱いを含めて決める。WEB_VERSION.md「黙って消さない」)/
+  結果カードのボタン / デイリーの統計の枠(§12)。
 
-**Web 版への同期(「フェーズ」6)の形。**この PR のマージ後、main を Web 版へ同期する landing の PR では、
-`tests/ui.test.js` の `IN_DEVELOPMENT_GAME_IDS` から **`make-the-target` / `nested-tic-tac-toe` / `tangram` の
-3 本を `WEB_BETA_GAME_IDS` へ移し**、`overtake` / `scopa` は `IN_DEVELOPMENT_GAME_IDS` に残す(47〜51 と
-同じ扱い — チャンクはあるがカードも BETA も無い)。本番への配信(landing の Publish Simple Games (web))は
-自動では行わず、オーナーの明示的な承認を要する。
+**Web 版への同期(「フェーズ」6)— 2026-10-22(JST、UTC では 2026-10-21 17:38)に実施。**52〜56 の実装 PR(#246)は
+2026-10-21 17:04 UTC に main へマージした(`11a3036`)。同じ時刻に landing #204 がマージされ、`tests/ui.test.js` の `WEB_BETA_GAME_IDS` に
+**`make-the-target` / `nested-tic-tac-toe` / `tangram` の 3 本を足し**、`overtake` / `scopa` は
+`IN_DEVELOPMENT_GAME_IDS` に足した(47〜51 と同じ扱い — チャンクはあるがカードも BETA も無い。Codex のレビューの
+指摘 1 件は同じ PR で直した)。本番への配信(landing の Publish Simple Games (web))は自動では行わず、オーナーの
+指示で実行した: run 39640771411(ref: main = `11a3036`、network=admax、2026-10-21 17:06〜17:38 UTC)が成功し、
+landing main に `af9dedc`「chore: publish Simple Games web build (11a3036)」を積んだ(2026-10-21 17:38 UTC =
+2026-10-22 02:38 JST)。「Test Simple Games」は 30 分 38 秒(ジョブ上限 45 分)、「Check the synced build」
+(`npm run test:ui`)は通過。`play/assets` の `game-*.js` は 56 本で、5 本のチャンクを含む。NOW の帯の日付は
+2026-10-22。**Make the Target / Nested Tic-Tac-Toe / Tangram は 2026-10-22(JST、UTC では 2026-10-21 17:38)から
+Web 版で先行公開中**(5 本のうち初めての Web 配信)。Overtake と Scopa のチャンクも配信したビルドに入っているが、
+そのビルドでは `'in-development'` なので開けず(`app/gameChannel.ts`)、Web 版ではまだ遊べない。2 本は同日
+(2026-10-22)、製品オーナーの指示で `'web-beta'` にした(判断 8 と上の「チャンネルの判断」の追記)。Web 版への
+配信は次の landing の同期(`overtake` / `scopa` を `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移す PR と、
+オーナーの承認後の Publish Simple Games (web))で、チャンクは届いているのでその配信で開けるようになる。本番への
+反映は Cloudflare Pages の Git 連携による(このリポジトリからは観測していない)。正式収録の基準 1(2 週間の安定
+稼働 — RELEASE_CHECKLIST.md §0)の時計は、3 本は 2026-10-22(JST)から。Overtake / Scopa の時計はまだ始まって
+いない(次の同期で Web 版に出た日から)。
 
-**現状の文書の数(統合後)。**registry 56 = 正式収録 41 + `'web-beta'` 8(配信中の 42〜46 と、実装済みで未同期の
-53・54・56)+ `'in-development'` 7(スキャフォールドの 47〜51 と、実装済みだが条件待ちの 52・55)。i18n は
+**現状の文書の数(統合後、2026-10-22 の Overtake / Scopa の切り替え後)。**registry 56 = 正式収録 41 + `'web-beta'` 10
+(2026-10-19 から配信中の 42〜46、2026-10-22(JST、UTC では 2026-10-21 17:38)から配信中の 53・54・56、2026-10-22 に
+オーナーの指示で `'web-beta'` にした 52・55 — Web 版への配信は次の同期で)+ `'in-development'` 5(スキャフォールドの
+47〜51)。i18n は
 14 言語・**2,033 キー** = シェル 125 + 正式収録 1,393 + 42〜46 の 230 + 47〜51 の 55 + 52〜56 の 230
 (2026-10-21、各 `en.ts` の `en` の最上位プロパティを TypeScript の構文木で数えた)。
 
@@ -1879,3 +1947,5 @@ rebase 前の数(2026-10-20、`en.ts` の最上位キーを数えた)と、rebas
   42〜46)+ `in-development` 10(47〜56)。i18n は 1,858 のまま。
 - Phase 4 の統合後(2026-10-21、上の「Phase 2〜4 の実施結果」): registry 56 = 41 + `web-beta` 8(42〜46 と 53・54・56)+
   `in-development` 7(47〜51 と 52・55)。i18n は **2,033** = 125 + 1,393 + 230 + 55 + 230。
+- 2026-10-22 の Overtake / Scopa の切り替え後(判断 8): registry 56 = 41 + `web-beta` 10(42〜46 と 52〜56)+
+  `in-development` 5(47〜51)。i18n は **2,033** のまま。
