@@ -1,13 +1,12 @@
 /**
- * BounceUp's root: loads the game's own records (local, fast, offline), then
+ * Bounce Up's root: loads the game's own records (local, fast, offline), then
  * mounts the provider and routes its screens. The shell knows nothing beyond
  * this component and the storage keys; unmounting stops all of the game's
- * work (docs/GAME_LIFECYCLE.md).
+ * work — the loop, the listeners, the observers (docs/GAME_LIFECYCLE.md,
+ * BounceUpRoot.leak.test.tsx).
  *
  * The game's stylesheet is imported here rather than from the shell, so the
  * whole title — logic, screens, and looks — lives inside this one folder.
- *
- * Scaffolded by scripts/new-game.mjs.
  */
 // Register this game's 14-locale catalog the moment the chunk loads, before
 // anything below renders (issue #38, src/i18n/registry.ts).
@@ -17,10 +16,18 @@ import { preferencesKV } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
 import { useLoadedRecords } from '../../../ui/useLoadedRecords';
 import { BounceUpProvider, useBounceUp } from '../state/GameContext';
-import { flagsSchema, statsSchema, type Flags, type Stats } from '../storage/schemas';
+import {
+  flagsSchema,
+  prefsSchema,
+  statsSchema,
+  type Flags,
+  type Prefs,
+  type Stats,
+} from '../storage/schemas';
 import './bounce-up.css';
 import { BounceUpGameScreen } from './screens/GameScreen';
 import { BounceUpHomeScreen } from './screens/HomeScreen';
+import { BounceUpStatsScreen } from './screens/StatsScreen';
 import { BounceUpTutorialScreen } from './screens/TutorialScreen';
 
 export function BounceUpScreens() {
@@ -30,6 +37,8 @@ export function BounceUpScreens() {
       return <BounceUpTutorialScreen />;
     case 'game':
       return <BounceUpGameScreen />;
+    case 'stats':
+      return <BounceUpStatsScreen />;
     case 'home':
     default:
       return <BounceUpHomeScreen />;
@@ -39,15 +48,15 @@ export function BounceUpScreens() {
 interface LoadedData {
   stats: Stats;
   flags: Flags;
+  prefs: Prefs;
 }
 
 /**
  * What the shell hands a root (app/registry.ts `GameRootProps`). No `entry`
- * prop, deliberately: there is no saved game for a home-screen shortcut to
- * open onto, and src/test/shortcutResumeWiring.test.ts holds a save-less game
- * to that (issue #113). When a `bo.save…` slot arrives, declare it
- * here, hand it to the provider as `entry={entry}`, and let the provider
- * decide (state/GameContext.tsx).
+ * prop, deliberately: there is no saved run for a home-screen shortcut to
+ * open onto (docs/BOUNCE_UP_RULES.md §5), and
+ * src/test/shortcutResumeWiring.test.ts holds a save-less game to that
+ * (issue #113).
  */
 export interface BounceUpRootProps {
   /** Hands control back to the collection home. */
@@ -57,15 +66,20 @@ export interface BounceUpRootProps {
 }
 
 function defaultRecords(): LoadedData {
-  return { stats: statsSchema.defaultValue(), flags: flagsSchema.defaultValue() };
+  return {
+    stats: statsSchema.defaultValue(),
+    flags: flagsSchema.defaultValue(),
+    prefs: prefsSchema.defaultValue(),
+  };
 }
 
 async function loadRecords(kv: KVStore): Promise<LoadedData> {
-  const [stats, flags] = await Promise.all([
+  const [stats, flags, prefs] = await Promise.all([
     loadRecord(statsSchema, kv),
     loadRecord(flagsSchema, kv),
+    loadRecord(prefsSchema, kv),
   ]);
-  return { stats, flags };
+  return { stats, flags, prefs };
 }
 
 export function BounceUpRoot({ onExit, kv = preferencesKV }: BounceUpRootProps) {
@@ -73,7 +87,12 @@ export function BounceUpRoot({ onExit, kv = preferencesKV }: BounceUpRootProps) 
   if (data === null) return null;
 
   return (
-    <BounceUpProvider initialStats={data.stats} initialFlags={data.flags} onExit={onExit}>
+    <BounceUpProvider
+      initialStats={data.stats}
+      initialFlags={data.flags}
+      initialPrefs={data.prefs}
+      onExit={onExit}
+    >
       <BounceUpScreens />
     </BounceUpProvider>
   );

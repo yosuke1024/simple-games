@@ -187,8 +187,8 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'gem-swap': ['gs.saveGame', 'gs.stats', 'gs.flags', 'gs.prefs'],
   // No. 49, in-development (docs/PIPE_LINK_RULES.md storage): not frozen until graduation
   'pipe-link': ['pn.stats', 'pn.flags'],
-  // No. 50, in-development (docs/BOUNCE_UP_RULES.md storage): not frozen until graduation
-  'bounce-up': ['bo.stats', 'bo.flags'],
+  // No. 50, in-development (docs/BOUNCE_UP_RULES.md §5): not frozen until graduation
+  'bounce-up': ['bo.stats', 'bo.flags', 'bo.prefs'],
   // No. 51, in-development (docs/ECHO_PADS_RULES.md storage): not frozen until graduation
   'echo-pads': ['ep.stats', 'ep.flags'],
   // The five titles of
