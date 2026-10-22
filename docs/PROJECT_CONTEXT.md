@@ -71,9 +71,10 @@ Design philosophy:
   「Web 公開まで」。計画の判断 4 — Chess を別 PR にして残り 4 本を待たせない — は、5 本が同時に仕上がったので
   1 つの PR で満たす)。**Web 版にはまだ出ていない** — 次の landing の同期(landing の門の一覧の 5 本を
   `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移し、製品オーナーの承認を得てから公開ワークフローを
-  実行する)で届ける(`docs/WEB_VERSION.md`「先行公開」)。実機では何も確かめておらず、`ja` と 12 言語の
-  文言は AI が書いて誰も読んでいない。題の商標・ストアの検索は正式収録の前に(Bounce Up は題そのものを製品
-  オーナーに仰いでいる — `docs/BOUNCE_UP_RULES.md` 冒頭)。正式収録の 41 本には数えず、アプリには出ず、
+  実行する)で届ける(`docs/WEB_VERSION.md`「先行公開」)。ただし Bounce Up は、題そのもの(同名作がある)を
+  製品オーナーに仰いでおり、その判断の前には Web 版へ配信しない(`docs/BOUNCE_UP_RULES.md` 冒頭と §12)。
+  実機では何も確かめておらず、`ja` と 12 言語の文言は AI が書いて誰も読んでいない。題の商標・ストアの検索は
+  5 本とも正式収録の前に。正式収録の 41 本には数えず、アプリには出ず、
   Club House にも登録しない。2 週間の時計(`docs/RELEASE_CHECKLIST.md` §0)は Web で公開した日から数えるので、
   まだ動いていない。
   チャンネルの宣言は registry の `channel`、出し分けは `app/gameChannel.ts` の

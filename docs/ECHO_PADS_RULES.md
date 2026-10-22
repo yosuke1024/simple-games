@@ -325,7 +325,8 @@ Number Recall §12 は途中保存を持たない(短期記憶は戻らないの
 コミット(Phase 3)で `storage/keys.ts` と `gameKeys.test.ts` の自分の行に足す(Tangram §8「キー」と同じ扱い。
 キーだけを先に足すと、スキーマの無いキーが「ローカルデータを消す」の一覧と 2 スロットの門に入る)。**Phase 3 で
 6 つとも足した**(`storage/keys.ts`、`gameKeys.test.ts` の `echo-pads` の行。スキーマは `storage/schemas.ts`)。
-`docs/architecture/storage-keys.md` の `ep.*` の行を直すのは共有ファイルなので統合の段。
+`docs/architecture/storage-keys.md` の `ep.*` の行は Phase 4 の統合(2026-10-22)で 6 つのキーに合わせて
+書き直した。
 
 ### 中断レコード(`ep.saveGame` / `ep.saveDaily`、schemaVersion 1)
 
@@ -511,7 +512,10 @@ attempt 0〜499、`game/quality.test.ts` が出力し固定する。§17 に表)
   - **ホームはスクロールする**(直していない): 中断中の run が無いとき、広告の予約つきで 85〜144px(en 140px・
     ja 144px)、予約なしで 0px(en 24px・ja 28px)。中断中のレベルの run があるとき(「Resume」が 1 つ増える)、
     予約つきで 166〜225px(en 221px)、予約なしで 50〜109px(en 105px)。共通のホームの部品(`GameHomeHeader`・
-    `home-hero`・`WebBetaNotice`・`btn-big`)の高さで、このゲームの持ち分では直さない(共有の寸法 — 統合で扱う)。
+    `home-hero`・`WebBetaNotice`・`btn-big`)の高さで、このゲームの持ち分では直さない(共有の寸法)。
+    統合(2026-10-22)でも共有のホームの寸法は変えないと決めた(計画の「Phase 2〜4 の実施結果
+    (2026-10-22)」 — 「360×640 でスクロールなし」は Quick Rules と盤面のもの)。ホームの高さは、製品オーナーと
+    共有のレイアウトの課題として残す。
   - **この試行で言えないこと**(1 回目・2 回目とも): コンテナの書体は Inter・IPA ゴシック・文泉驛・Loma・Unifont
     等で、**hi(デーヴァナーガリー)・th・ko は端末の書体と違う代わりの書体**で描かれた。端末の書体・文字の
     大きさの設定・ノッチの余白は入っていない。本番の広告(AdMax)の帯ではなく試験用の帯で測った。

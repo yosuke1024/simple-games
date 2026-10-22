@@ -446,6 +446,14 @@ describe('every game is inside the backup', () => {
    * Not a spot check: a round trip through EVERY key the registry declares,
    * with a value each game's own schema accepts. If a game were reachable by
    * the key list but not by a validator, this is where it shows up.
+   *
+   * It pays for importing every game's storage schemas (56 games, several of
+   * which pull in their whole `game/` folder — an engine, a generator, a level
+   * set). That cold import came in just over the 5 s default on a loaded
+   * machine (5,014 ms) and took about 5.7 s there when allowed to finish. The
+   * explicit limit below is for that cold import, not for the assertions —
+   * the same allowance src/test/resetLocalDataWiring.test.tsx gives its own
+   * first import of every schema.
    */
   it('round-trips a record for every key of every registered game', async () => {
     const defaults = new Map<string, unknown>();
@@ -482,5 +490,5 @@ describe('every game is inside the backup', () => {
     const target = createMemoryKV();
     expect(await applyBackup(read.prepared, target)).toBe('restored');
     expect(await dump(target, backupKeys())).toEqual(await dump(source, backupKeys()));
-  });
+  }, 15_000);
 });

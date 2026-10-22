@@ -28,7 +28,7 @@ export function EchoPadsLevelsScreen() {
   };
 
   return (
-    <div className="screen levels-screen">
+    <div className="screen levels-screen ep-levels">
       <header className="screen-header">
         <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
           <IconBack />

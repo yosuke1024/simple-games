@@ -331,7 +331,7 @@ difficulty)` — 段 2 で実装。1 つの派生 seed の手順 1〜5 は `atte
 (§6)ので、手で作った複数解のレコードで食い違いうるのは Hint の最後の段の「解の 1 枚」だけで、それは出荷した
 盤では起きない。だから Bridges / Loop Puzzle の「開くときの再証明」([GAME_LIFECYCLE.md](GAME_LIFECYCLE.md)
 「CPU 探索」の暫定の例外。オーナーの確認待ち)には乗らない — Pipe Link の探索はタップのときだけ走る。
-これは統合の作業で GAME_LIFECYCLE.md「CPU 探索」に書き足す(共有ファイル)。
+これは Phase 4 の統合(2026-10-22)で GAME_LIFECYCLE.md「CPU 探索」の No. 47〜51 の項に書き足した(共有ファイル)。
 
 Hint の技法ソルバーは型だけの盤から回すので、結果は盤ごとに一定である。**セッションは 1 盤面につき 1 回だけ
 回して結果を持つ**(段 2 の決定。`PipeLinkSession.techniques` — 保存しない。Restart は同じ盤なので持ち越し、
