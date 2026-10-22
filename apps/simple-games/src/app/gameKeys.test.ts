@@ -190,7 +190,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // No. 50, in-development (docs/BOUNCE_UP_RULES.md §5): not frozen until graduation
   'bounce-up': ['bo.stats', 'bo.flags', 'bo.prefs'],
   // No. 51, in-development (docs/ECHO_PADS_RULES.md storage): not frozen until graduation
-  'echo-pads': ['ep.stats', 'ep.flags'],
+  'echo-pads': ['ep.saveGame', 'ep.saveDaily', 'ep.progress', 'ep.stats', 'ep.flags', 'ep.prefs'],
   // The five titles of
   // docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
   // (Nos. 52–56), each playable since 2026-10-21 and on the browser's

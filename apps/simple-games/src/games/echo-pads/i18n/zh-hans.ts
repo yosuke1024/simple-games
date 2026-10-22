@@ -1,21 +1,68 @@
 /**
- * Placeholder Simplified Chinese catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real Simplified Chinese translation before release (docs/I18N_POLICY.md); the
- * title (`echoPadsName`) is a proper noun and stays as-is in every locale.
+ * Echo Pads — the 简体中文 catalog. Provenance (docs/ECHO_PADS_RULES.md §14):
+ * `machine` — written by an AI from the English source on 2026-10-22; nobody
+ * has read it, native speaker or author. The title (`echoPadsName`) stays
+ * "Echo Pads".
+ *
+ * Terms (§14's glossary): 键 (pad), 序列 (sequence), 长度 (length), 播放 / 再听一遍 / 停止, 节奏: 舒缓 / 适中 / 快速.
  */
 import type { EchoPadsMessages } from './en';
 
 export const zhHans: EchoPadsMessages = {
   echoPadsName: 'Echo Pads',
-  echoPadsPlayPlaceholder: 'Play a sample round',
-  echoPadsFinishPlaceholder: 'Finish the sample round',
-  echoPadsStep1Title: 'Step 1',
-  echoPadsStep1Body: 'Placeholder. The first of at most three steps.',
-  echoPadsStep2Title: 'Step 2',
-  echoPadsStep2Body: 'Placeholder. What the player does next.',
-  echoPadsStep3Title: 'Step 3',
-  echoPadsStep3Body: 'Placeholder. How a round ends.',
-  echoPadsResultTitle: 'Nice work',
-  echoPadsResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  echoPadsTier_4: '4 键',
+  echoPadsTier_6: '6 键',
+  echoPadsLength: '长度 {n}',
+  echoPadsLevelDetail: '{tier} · 长度 {length}',
+  echoPadsPace: '节奏',
+  echoPadsPace_calm: '舒缓',
+  echoPadsPace_normal: '适中',
+  echoPadsPace_quick: '快速',
+  echoPadsPlay: '播放',
+  echoPadsListenAgain: '再听一遍',
+  echoPadsStop: '停止',
+  echoPadsRound: '长度 {k} / {target}',
+  echoPadsStatusIdle: '按播放，听 {k} 个键。',
+  echoPadsStatusPlaying: '正在播放 {k} 个键…',
+  echoPadsStatusYourTurn: '轮到你了：按相同顺序点按这 {k} 个键。',
+  echoPadsStatusAgain: '从第一个键开始，重新点按全部 {k} 个键。',
+  echoPadsStatusReview: '正在重新播放本轮的 {k} 个键…',
+  echoPadsMark_circle: '圆形',
+  echoPadsMark_triangle: '三角形',
+  echoPadsMark_square: '正方形',
+  echoPadsMark_star: '星形',
+  echoPadsMark_diamond: '菱形',
+  echoPadsMark_cross: '十字',
+  echoPadsPos_topLeft: '左上',
+  echoPadsPos_topMiddle: '上方中间',
+  echoPadsPos_topRight: '右上',
+  echoPadsPos_bottomLeft: '左下',
+  echoPadsPos_bottomMiddle: '下方中间',
+  echoPadsPos_bottomRight: '右下',
+  echoPadsPadLabel: '{mark}，{position}',
+  echoPadsPadsLabel: '键',
+  echoPadsExpectedLabel: '{pad}（接下来应按的键）',
+  echoPadsMissTitle: '本次挑战在长度 {k} 结束',
+  echoPadsMissBody: '{k} 个中的第 {index} 个是：{pad}。',
+  echoPadsResultTitle: '{n} 个全部复现',
+  echoPadsLongest: '复现的最长长度',
+  echoPadsLongestNone: '无',
+  echoPadsReplays: '再听次数',
+  echoPadsPacesHeard: '节奏',
+  echoPadsNewSequence: '新序列',
+  echoPadsLevelCell: '{level}，{detail}',
+  echoPadsLevelCellCleared: '{level}，{detail}，已通过',
+  echoPadsReplaceTitle: '替换进行中的挑战？',
+  echoPadsReplaceBody: '{current} 的挑战将被替换为 {next} 的新挑战。',
+  echoPadsStatStarted: '开始的挑战',
+  echoPadsStatCleared: '通过',
+  echoPadsStatMissed: '因按错结束',
+  echoPadsStatLevels: '通过的关卡',
+  echoPadsStatDays: '完成的天数',
+  echoPadsStep1Title: '听',
+  echoPadsStep1Body: '按 ▶，键会逐个亮起并发声——记住顺序（第一次点按之前，可以随意再听）。',
+  echoPadsStep2Title: '复现',
+  echoPadsStep2Body: '然后按相同顺序点按这些键。',
+  echoPadsStep3Title: '变长',
+  echoPadsStep3Body: '每复现一次，顺序就多一个——没有时间限制。',
 };
