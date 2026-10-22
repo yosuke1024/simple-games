@@ -1321,13 +1321,22 @@ architecture/{i18n,registry,storage-keys,css-split,title-accent}、store/listing
   形(計画の「360×640 でスクロールなし」は Quick Rules と盤面のもの)で、ここでも共有のホームの寸法には手を
   入れていない。
 
-**Web 版への配信はまだ。**registry は `'web-beta'` だが、Web 版へは次の landing の同期 — landing の
-`tests/ui.test.js` の 5 本を `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移し(移した後は `WEB_BETA_GAME_IDS`
-15 本、`IN_DEVELOPMENT_GAME_IDS` 0 本)、製品オーナーの承認を得てから Publish Simple Games (web) を実行する — で
-届ける。それまで、いまの配信物(landing main `693ac9f`)に入っている 5 本のチャンクは `'in-development'` のときの
-ビルドのもので、どの扉からも開けない。正式収録の基準 1(2 週間の安定稼働 — RELEASE_CHECKLIST.md §0)の時計は
-その配信の日から動く(**まだ動いていない**)。Bounce Up の題は、2026-10-22 に製品オーナーが「このまま出す」と
-判断した(下の「製品オーナーの確認待ち」と `BOUNCE_UP_RULES.md` 冒頭・§12)。
+**Web 版への配信 — 2026-10-23(JST、UTC では 2026-10-22 17:33)に実施。**Bounce Up の題は、2026-10-22 に製品
+オーナーが「このまま出す」と判断した(下の「製品オーナーの確認待ち」と `BOUNCE_UP_RULES.md` 冒頭・§12)。同じ日に
+製品オーナーが、マージの後に Publish を実行することを承認した。landing #206(2026-10-22 16:13 UTC にマージ、landing
+main `13e385a`)で `tests/ui.test.js` の 5 本を `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移し(landing の
+一覧は `WEB_BETA_GAME_IDS` 15 本 — 42〜46・47〜51・52〜56 — と `IN_DEVELOPMENT_GAME_IDS` 0 本)、この統合の PR(#253)を
+2026-10-22 16:55 UTC に main へマージした(`7b95a94`)。run 39818257752(ref: main = `7b95a94`、network=admax、
+2026-10-22 16:56〜17:34 UTC)が成功し、landing main に `0415eb18`「chore: publish Simple Games web build (7b95a94)」を
+積んだ(2026-10-22 17:33 UTC = 2026-10-23 02:33 JST)。ジョブは 37 分 48 秒で、「Test Simple Games」は 37 分 11 秒
+(ジョブ上限 45 分)、「Check the synced build」(`npm run test:ui`)は通過。`play/assets` の `game-*.js` は 56 本で、
+5 本のチャンクを含む。**5 本とも 2026-10-23(JST、UTC では 2026-10-22 17:33)から Web 版で先行公開中**で、先行公開の
+配信は 15 本になった。本番への反映は Cloudflare Pages の Git 連携による(このリポジトリからは観測していない)。
+それより前の同期 — landing main `693ac9f`(`9238415` の web ビルド)と、同じ日の run 39801435757 の `960ed6f6`
+(`9855421`、#251 のマージ。2026-10-22 15:37 UTC。その前の 15:01 UTC の run 39800839546 は失敗した)— のビルドにも
+5 本のチャンクは入っていたが、`'in-development'` のときのビルドのもので、どの扉からも開けなかった。正式収録の
+基準 1(2 週間の安定稼働 — RELEASE_CHECKLIST.md §0)の時計は、5 本とも 2026-10-23(JST)から(2026-10-22 17:33 UTC の
+配信から)。5 本の最初の版の保存(`ch.*`〜`ep.*`)も、いまはプレイヤーの端末にありうる。
 
 **確かめていないこと。**
 
@@ -1360,7 +1369,8 @@ Web での公開の前の判断を求め、2026-10-22 に決まった)。**
   列(またはラウンド 3)を引くのを避けるか。
 
 **現状の文書の数(この統合の後)。**registry **56** = 正式収録 41 + `'web-beta'` **15**(2026-10-19 から配信中の 42〜46、
-2026-10-22 から配信中の 52〜56、2026-10-22 に切り替えて次の同期で届ける 47〜51)+ `'in-development'` **0**。i18n は
+2026-10-22 から配信中の 52〜56、2026-10-22 に切り替えて 2026-10-23(JST、UTC では 2026-10-22 17:33)から配信中の
+47〜51)+ `'in-development'` **0**。i18n は
 14 言語・**2,207 キー** = シェル 125 + 正式収録 1,393 + 42〜46 の 230 + 47〜51 の 229 + 52〜56 の 230(2026-10-22、
 各 `en.ts` の `en` の最上位プロパティを TypeScript の構文木で数えた)。保存キーは各ゲームの `storage/keys.ts` の
 とおり — Chess `ch.saveGame / stats / flags / prefs`、Gem Swap `gs.saveGame / stats / flags / prefs`、Pipe Link

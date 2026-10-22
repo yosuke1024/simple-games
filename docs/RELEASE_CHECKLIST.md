@@ -84,12 +84,12 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
 > その次の 5 本(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads、No. 47〜51。2026-10-19 に
 > 着手 — [plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md))は
 > 2026-10-22 に遊べる形まで実装し、registry を `'in-development'` から `channel: 'web-beta'` にした(製品オーナーの依頼は
-> 「Web 公開まで」)。**Web 版ではまだ始まっていない** — いまの配信物に入っている 5 本のチャンクは `'in-development'` の
-> ときのビルドのもので、どの扉からも開けない。Web 版へは次の landing の同期(landing の一覧を `WEB_BETA_GAME_IDS` へ
-> 移し、製品オーナーの承認を得てから Publish Simple Games (web) を実行する — [WEB_VERSION.md](WEB_VERSION.md)「先行公開」)で
-> 届ける(Bounce Up の題は同名作があるが、製品オーナーが 2026-10-22 に「このまま出す」と判断した —
-> [BOUNCE_UP_RULES.md](BOUNCE_UP_RULES.md) 冒頭と §12)。上の 2 週間の時計はその配信の日から数えるので、
-> **まだ動いていない**。この節の項目はすべて未着手
+> 「Web 公開まで」)。**2026-10-23(JST、UTC では 2026-10-22 17:33)に Web 版で配信を始めた**(pixapps-landing #206 で
+> 一覧を `WEB_BETA_GAME_IDS` へ移し、製品オーナーの承認を得て Publish Simple Games (web)(run 39818257752)が
+> `7b95a94` の web ビルドを landing main に `0415eb18` として同期した — [WEB_VERSION.md](WEB_VERSION.md)「先行公開」。
+> Bounce Up の題は同名作があるが、製品オーナーが 2026-10-22 に「このまま出す」と判断した —
+> [BOUNCE_UP_RULES.md](BOUNCE_UP_RULES.md) 冒頭と §12)ので、この 5 本の上の 2 週間の安定稼働はこの配信から数える
+> (保存を消す変更を入れたら巻き戻る)。滞在時間の確認はその後。この節の項目はすべて未着手
 > (実機での確認も、5 本ともまだ何もしていない)。
 >
 > さらにその次の 5 本(Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram、No. 52〜56。2026-10-20 に

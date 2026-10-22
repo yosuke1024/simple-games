@@ -44,7 +44,7 @@ Design philosophy:
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **41 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
   本数はここで数える)。`GAMES` の全 56 エントリには、下の `channel: 'web-beta'` の 15 本(Web 先行公開中の
-  No. 42〜46 と No. 52〜56、2026-10-22 に実装して Web 版へは次の同期で届ける No. 47〜51)も含まれる。
+  No. 42〜46・No. 47〜51・No. 52〜56)も含まれる。
   `'in-development'` のエントリはいま無い。
 - 2026-10-02 に、Web 版で先行公開していた新作 11 本(Crown Grid / Number Path /
   Shape Regions、2026-09-26、issue #194。Yacht / Mancala / Dominoes / Hit & Blow /
@@ -69,14 +69,17 @@ Design philosophy:
   `docs/*_RULES.md`)。registry は 2026-10-20 から `channel: 'in-development'`(どのビルドの扉からも
   開けない — `app/gameChannel.ts`)で、**2026-10-22 に 5 本とも `'web-beta'` にした**(製品オーナーの依頼は
   「Web 公開まで」。計画の判断 4 — Chess を別 PR にして残り 4 本を待たせない — は、5 本が同時に仕上がったので
-  1 つの PR で満たす)。**Web 版にはまだ出ていない** — 次の landing の同期(landing の門の一覧の 5 本を
-  `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移し、製品オーナーの承認を得てから公開ワークフローを
-  実行する)で届ける(`docs/WEB_VERSION.md`「先行公開」)。Bounce Up の題(同名作がある)は、製品オーナーが
+  1 つの PR で満たした)。**Web 版では 2026-10-23 から先行公開している**(JST、UTC では 2026-10-22 17:33。
+  pixapps-landing #206(2026-10-22 16:13 UTC にマージ)で landing の門の一覧の 5 本を `IN_DEVELOPMENT_GAME_IDS` から
+  `WEB_BETA_GAME_IDS` へ移し、#253(2026-10-22 16:55 UTC にマージ)の後、製品オーナーの承認を得て公開ワークフローが
+  `7b95a94` の web ビルドを landing main に同期した — `0415eb18`、2026-10-22 17:33 UTC。それまでの配信物の
+  5 本のチャンクは `'in-development'` のときのビルドのもので、開けなかった。本番への反映はこのリポジトリからは
+  観測していない。`docs/WEB_VERSION.md`「先行公開」)。Bounce Up の題(同名作がある)は、製品オーナーが
   2026-10-22 に「このまま出す」と判断した(`docs/BOUNCE_UP_RULES.md` 冒頭と §12)。
   実機では何も確かめておらず、`ja` と 12 言語の文言は AI が書いて誰も読んでいない。題の商標・ストアの検索は
   5 本とも正式収録の前に。正式収録の 41 本には数えず、アプリには出ず、
-  Club House にも登録しない。2 週間の時計(`docs/RELEASE_CHECKLIST.md` §0)は Web で公開した日から数えるので、
-  まだ動いていない。
+  Club House にも登録しない。2 週間の時計(`docs/RELEASE_CHECKLIST.md` §0)は Web で公開した日から数える —
+  5 本とも 2026-10-23 から(UTC では 2026-10-22 17:33 の同期から)。
   チャンネルの宣言は registry の `channel`、出し分けは `app/gameChannel.ts` の
   実行時ガード(`docs/WEB_VERSION.md`「先行公開」)。
 - 2026-10-20 から、さらに **Web 先行公開(ベータ)向けの新作 5 本**(Overtake / Make the Target /
