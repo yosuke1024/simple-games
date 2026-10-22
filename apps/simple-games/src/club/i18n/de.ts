@@ -55,6 +55,7 @@ export const de: ClubMessages = {
   clubRemoveTitle: '{name} entfernen?',
   clubRemoveBody: 'Die Person kann diesen Club nicht mehr öffnen. Ihre Ergebnisse bleiben.',
   clubMembersCount: '{n} Mitglieder',
+  clubOlderMembers: 'Ältere Mitglieder anzeigen',
   clubReport: 'Melden',
   clubReported: 'Gemeldet',
   clubReportTitle: 'Diesen Spitznamen melden?',

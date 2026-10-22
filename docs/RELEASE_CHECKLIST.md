@@ -808,10 +808,24 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
 - [ ] **対象外のゲームは何も送らない**こと: Brick Breaker / Bubble Pop / Checkers /
       Connect Four / Gomoku / Ludo と、ティアに一致しない Water Sort のレベルの結果画面に、
       Club の状態の行が出ず、リクエストも出ない
-- [ ] **Report**: Rankings / Today / Members の他人の**名前を押したシート**から報告でき(1 人 1 回。行に
-      ボタンは無い。持ち主の端末ではシートが開かない)、報告後に画面が壊れないこと。持ち主の側で、通報された名前を**変更**(`PATCH /members/:id`)・
+- [ ] **Report**: Rankings / Today(挑戦の結果の行)/ Members の他人の**名前を押す**と Member 画面が開き、
+      報告はその**末尾**の `Report` から行う(行にボタンは無い。**自分の名前は押せない**)。確認ダイアログ
+      (`Report this nickname?`)を通り、確認すると `role="status"` の 1 行 `Reported` が出て、画面が壊れない
+      こと。**ボタンは残り、もう一度押しても無害**(サーバは 204 で何も変えない。「1 人 1 回」ではない)。
+      **持ち主の端末でも他人の名前は押せて** Member 画面が開くが、末尾には `Report` ではなく `Rename` /
+      `Remove`(`Remove` の確認は終わり方が 2 つ — 結果は残す / 結果も消す)が出て、`Report` は無い。
+      持ち主の側で、通報された名前を**変更**(`PATCH /members/:id`)・
       **結果ごと削除**(`DELETE /members/:id?purge=1`)でき、ランキングの行に反映される
       こと(Public の持ち主は PixApps。[club.md](architecture/club.md) §17-3)
+- [ ] **Members**: Club の画面に、人数つきの 1 行 `Members`(`{n} members`)があり、押すと Members 画面が
+      開く(一覧は Club の画面に出ていない)。持ち主の端末では、通報された人の `Reported` 節が Members 画面の
+      先頭にある。新しい順に 50 人が並び、**残りがあるときだけ** `Show older members` が出て、押すと
+      `GET /members?before=<id>` で次の 50 人が足される(押した分だけ。自動では読み込まれない)。
+      `GET /members?before=` に 404 を返す古いサーバでは、ボタンが黙って消えて画面は壊れない
+- [ ] **Member 画面**: 名前・参加日と、その人が入っている表が「Your rankings」と同じ行の形(ゲーム ·
+      モード、順位、件数、最良の値、1 つ上との差)で並び、**行を押すとその表(そのモード)が開く**こと。
+      通算・局数・最終プレイ日時などは載らない。`GET /members/:id` に 404 を返す古いサーバでは、題は押した
+      名前のまま `That no longer exists.` の 1 行が出て、`Report` は出る(画面が壊れない)
 - [ ] **Disconnect**: 接続を切ると、端末が Club の宛先へ以後 1 件も通信しないこと
       (§5.16 と同じ見方で確認。切断のあとに遊び終えた結果も送られない)。切断後もゲームの進行・
       統計は何も変わらないこと。**切断では記録が消えない**こと(Public の Rankings に自分の行が

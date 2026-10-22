@@ -50,6 +50,7 @@ export const zhHans: ClubMessages = {
   clubRemoveTitle: '移除 {name}?',
   clubRemoveBody: '对方将无法再打开此 Club。其成绩会保留。',
   clubMembersCount: '{n} 位成员',
+  clubOlderMembers: '显示更早的成员',
   clubReport: '举报',
   clubReported: '已举报',
   clubReportTitle: '举报这个昵称吗?',

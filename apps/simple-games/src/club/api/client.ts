@@ -15,6 +15,8 @@ import {
   validateJoinResponse,
   validateList,
   validateMember,
+  validateMemberView,
+  validateMembersPage,
   validateRankingMine,
   validateRankingSubmitResponse,
   validateRankingSummary,
@@ -30,6 +32,8 @@ import {
   type InviteResponse,
   type JoinResponse,
   type Member,
+  type MembersPage,
+  type MemberView,
   type ReportedMember,
   type RankingMine,
   type RankingSubmit,
@@ -61,6 +65,10 @@ export interface ClubClient {
   ranking(gameId: string, paramsKey: string, top?: number): Promise<RankingTable>;
   /** The tables the caller is in, each with their standing (club.md §16-1); a server without the route answers 404. */
   rankingsMine(): Promise<RankingMine[]>;
+  /** One member and their standing in every table they are in, the same shape as `rankingsMine` (club.md §5-3); 404 for a removed or unknown id. */
+  member(id: string): Promise<MemberView>;
+  /** The members older than one member, `membersPage` of them, newest first, with the club's total (club.md §5-3, §17-2). */
+  membersBefore(id: string): Promise<MembersPage>;
   hosting(): Promise<Hosting>;
   invite(): Promise<InviteResponse>;
   rotateInvite(): Promise<InviteResponse>;
@@ -264,6 +272,14 @@ export function createClient(
     },
     async rankingsMine() {
       return check(validateList(await request('GET', '/rankings/mine'), validateRankingMine));
+    },
+    async member(id) {
+      return check(validateMemberView(await request('GET', `/members/${encodeURIComponent(id)}`)));
+    },
+    async membersBefore(id) {
+      return check(
+        validateMembersPage(await request('GET', `/members?before=${encodeURIComponent(id)}`)),
+      );
     },
     async hosting() {
       return check(validateHosting(await request('GET', '/hosting')));

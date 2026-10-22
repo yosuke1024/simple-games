@@ -11,6 +11,8 @@ import {
   validateJoinResponse,
   validateList,
   validateMember,
+  validateMemberView,
+  validateMembersPage,
   validateRankingEntry,
   validateRankingMine,
   validateRankingSubmitResponse,
@@ -360,6 +362,120 @@ describe('validators', () => {
         expect(validateRankingTable(bad)).toBeNull();
         expect(validateRankingMine(bad)).toBeNull();
         expect(validateRankingSubmitResponse(bad)).toBeNull();
+      }
+    });
+  });
+
+  describe('member view validators (club.md §5-3, §17-2)', () => {
+    const entry = {
+      id: '40',
+      memberId: 'm_7',
+      nickname: 'Ken',
+      submittedAt: 'x',
+      facts: { elapsedSeconds: 271 },
+      seed: 's',
+      boardDigest: null,
+    };
+    const row = {
+      gameId: 'sudoku',
+      paramsKey: 'hard',
+      entryCount: 9,
+      leader: { ...entry, id: '3', memberId: 'm_2', nickname: 'Mika' },
+      best: { rank: 3, entry, nextValue: 238 },
+    };
+    const other = { ...row, gameId: 'minesweeper', paramsKey: 'easy', entryCount: 1 };
+
+    describe('validateMemberView (GET /members/:id)', () => {
+      it('accepts a member and the tables they are in, in the shape of /rankings/mine', () => {
+        const view = { member, rankings: [row, other] };
+        expect(validateMemberView(view)).toEqual(view);
+        expect(validateMemberView(view)?.rankings[0]?.best.rank).toBe(3);
+        // A member who has played nothing is in no table: an empty list, not a malformed answer.
+        expect(validateMemberView({ member, rankings: [] })).toEqual({ member, rankings: [] });
+      });
+
+      it('reads each row as a /rankings/mine row does, filling in what an older row leaves out', () => {
+        const { id: _id, ...oldEntry } = entry;
+        const view = validateMemberView({
+          member,
+          rankings: [{ ...row, best: { entry: oldEntry } }],
+        });
+        expect(view?.rankings[0]?.best).toEqual({
+          rank: null,
+          entry: { ...entry, id: null },
+          nextValue: null,
+        });
+      });
+
+      it('is malformed without a valid member', () => {
+        expect(validateMemberView({ rankings: [row] })).toBeNull();
+        expect(validateMemberView({ member: null, rankings: [row] })).toBeNull();
+        expect(validateMemberView({ member: {}, rankings: [row] })).toBeNull();
+        expect(
+          validateMemberView({ member: { ...member, role: 'admin' }, rankings: [] }),
+        ).toBeNull();
+      });
+
+      it('is malformed when the list is missing or any row of it is bad', () => {
+        expect(validateMemberView({ member })).toBeNull();
+        expect(validateMemberView({ member, rankings: null })).toBeNull();
+        expect(validateMemberView({ member, rankings: { ...row } })).toBeNull();
+        expect(validateMemberView({ member, rankings: [row, {}] })).toBeNull();
+        expect(
+          validateMemberView({ member, rankings: [row, { ...other, best: undefined }] }),
+        ).toBeNull();
+        expect(validateMemberView({ member, rankings: [{ ...row, entryCount: -1 }] })).toBeNull();
+        expect(
+          validateMemberView({ member, rankings: [{ ...row, best: { rank: 0, entry } }] }),
+        ).toBeNull();
+      });
+    });
+
+    describe('validateMembersPage (GET /members?before=<id>)', () => {
+      const older = {
+        id: 'm_3',
+        nickname: 'Mika',
+        role: 'member',
+        joinedAt: '2026-09-01T00:00:00Z',
+      };
+
+      it('accepts a page of members and the club’s total', () => {
+        const page = { members: [member, older], memberCount: 120 };
+        expect(validateMembersPage(page)).toEqual(page);
+        // The total counts everyone, not the page: it can exceed the list, and an empty page is valid.
+        expect(validateMembersPage({ members: [], memberCount: 0 })).toEqual({
+          members: [],
+          memberCount: 0,
+        });
+      });
+
+      it('is malformed without a total: this route always sends one, unlike an older GET /club', () => {
+        expect(validateMembersPage({ members: [member] })).toBeNull();
+        expect(validateMembersPage({ members: [member], memberCount: undefined })).toBeNull();
+        expect(validateMembersPage({ members: [member], memberCount: null })).toBeNull();
+      });
+
+      it('is malformed when the total is not a non-negative integer', () => {
+        for (const bad of [-1, 1.5, '12', NaN, Infinity, {}, true]) {
+          expect(validateMembersPage({ members: [member], memberCount: bad })).toBeNull();
+        }
+      });
+
+      it('is malformed when the list is missing or any member of it is bad', () => {
+        expect(validateMembersPage({ memberCount: 1 })).toBeNull();
+        expect(validateMembersPage({ members: null, memberCount: 1 })).toBeNull();
+        expect(validateMembersPage({ members: { ...member }, memberCount: 1 })).toBeNull();
+        expect(validateMembersPage({ members: [member, {}], memberCount: 2 })).toBeNull();
+        expect(
+          validateMembersPage({ members: [member, { ...older, role: 'admin' }], memberCount: 2 }),
+        ).toBeNull();
+      });
+    });
+
+    it('never throw on a wrong shape', () => {
+      for (const bad of [null, undefined, 1, 'x', [], {}]) {
+        expect(validateMemberView(bad)).toBeNull();
+        expect(validateMembersPage(bad)).toBeNull();
       }
     });
   });

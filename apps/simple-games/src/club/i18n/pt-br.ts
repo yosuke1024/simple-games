@@ -54,6 +54,7 @@ export const ptBR: ClubMessages = {
   clubRemoveTitle: 'Remover {name}?',
   clubRemoveBody: 'A pessoa não poderá mais abrir este Club. Os resultados dela continuam.',
   clubMembersCount: '{n} membros',
+  clubOlderMembers: 'Mostrar membros anteriores',
   clubReport: 'Denunciar',
   clubReported: 'Denunciado',
   clubReportTitle: 'Denunciar este apelido?',
