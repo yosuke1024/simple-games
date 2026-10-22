@@ -34,7 +34,7 @@ Node + SQLite と Cloudflare Workers + Durable Object の 2 実装が同じ契�
 [../plans/2026-10-10-club-ranking-rows.md](../plans/2026-10-10-club-ranking-rows.md)。
 **2026-10-22 の改定(メンバー一覧と Member 画面)**: メンバー一覧を Club の画面から別の画面へ移し(判断 52)、
 50 人ずつ押して足す形にし(判断 53)、名前を押すと名前のシートの代わりに、その人が入っている表の一覧(Member 画面)を
-開く(判断 54。製品オーナー確認待ち)。§5-3・§9・§10・§14・§16-2・§17-2・§17-3 はこの前提で書き換えた。段取りは
+開く(判断 54。同日に製品オーナーが確認)。§5-3・§9・§10・§14・§16-2・§17-2・§17-3 はこの前提で書き換えた。段取りは
 [../plans/2026-10-22-club-member-view.md](../plans/2026-10-22-club-member-view.md)。
 issue #161 / #164 の本文とコメントは提案・検討の記録であり、この文書と食い違う箇所は
 この文書を正とする([../PROJECT_CONTEXT.md](../PROJECT_CONTEXT.md)「Authority」)。
@@ -1730,7 +1730,7 @@ friends or family.`。押した先が §8-2 の説明画面で、**お金の話�
 - Solitaire / Spider は版(めくり枚数・スート数)が digest に入るので、版ごとに別の `Today` の挑戦。
   Water Sort のデイリーは `{ tier: 'daily' }`(§6-3)。
 
-**2026-10-22 の判断(製品オーナー確認待ち)**(段取りは
+**2026-10-22 に製品オーナーが確認した判断**(同日のマージの後、「これでいい」と確認。段取りは
 [../plans/2026-10-22-club-member-view.md](../plans/2026-10-22-club-member-view.md)):
 
 52. **メンバー一覧は Club の画面から別画面へ。** Club の画面には `Members` と人数の 1 行だけを残し、押すと
