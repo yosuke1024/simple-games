@@ -15,9 +15,18 @@ import {
   SUB,
   TRAFFIC_START,
 } from './constants';
-import { assembleCourse, gateTarget, generateCourse, leadFor, pickNormalShift } from './course';
+import {
+  assembleCourse,
+  coneGroup,
+  coneGroupWidth,
+  gateTarget,
+  generateCourse,
+  leadFor,
+  pickNormalShift,
+} from './course';
 import {
   carObstacle,
+  laneLeft,
   laneWidth,
   uncoveredSpans,
   wallBand,
@@ -25,12 +34,21 @@ import {
   wallGapSpan,
 } from './geometry';
 import { distance } from './intervals';
-import { levelSpec } from './levels';
+import {
+  CONE_CLEARANCE,
+  CONE_LENGTH,
+  CONE_PITCH,
+  CONE_WIDTH,
+  SAND_LENGTH_SPAN,
+  SAND_MIN_LENGTH,
+  ZONE_GAP,
+  levelSpec,
+} from './levels';
 import { advanceCar, newReport, type MutableCar } from './physics';
 import { createRng, type Rng } from './rng';
 import { fullSpeedBlockedRows, sweepRow, verifyRoute, windowEnd } from './route';
 import { LEVELS, collectNumbers, report } from './test-helpers';
-import type { CarKind, Course } from './types';
+import type { CarKind, Course, Row } from './types';
 
 const courses = new Map<number, Course>();
 function course(level: number): Course {
@@ -212,6 +230,7 @@ describe('every shipped course (§5)', () => {
             lock: 0,
             blink: 0,
             bumps: 0,
+            coneCap: 0,
           };
           let hitAt = -1;
           while (car.r < end2 && hitAt < 0) {
@@ -270,6 +289,7 @@ describe('every shipped course (§5)', () => {
       lock: 0,
       blink: 0,
       bumps: 0,
+      coneCap: 0,
     };
     let overlaps = 0;
     while (car.r < windowEnd(pair.rows[1]!)) {
@@ -321,6 +341,10 @@ describe('every shipped course (§5)', () => {
     expect(firstWith((c) => has(c, 'works'))).toBe(31);
     expect(firstWith((c) => c.rows.some((r) => r.template === 'two'))).toBe(1);
     expect(firstWith((c) => c.rows.some((r) => r.template === 'truck'))).toBe(21);
+    expect(firstWith((c) => c.zones.some((z) => z.kind === 'cone'))).toBe(6);
+    expect(firstWith((c) => c.zones.some((z) => z.kind === 'sand'))).toBe(16);
+    expect(firstWith((c) => c.rows.some((r) => r.template === 'cones'))).toBe(6);
+    expect(firstWith((c) => c.rows.some((r) => r.template === 'sand'))).toBe(16);
     for (const l of LEVELS.filter((l) => l <= 10)) {
       expect(course(l).obstacles.every((o) => o.kind === 'sedan')).toBe(true);
     }
@@ -386,6 +410,10 @@ describe('forced fallbacks (§16 "限界の経路")', () => {
     expect(c.rows.filter((r) => r.kind === 'normal').every((r) => r.obstacles.length === 0)).toBe(
       true,
     );
+    // Sand and cones go with the rest of the normal rows (§5 "ルートのみ").
+    expect(generateCourse(37).zones.length).toBeGreaterThan(0);
+    expect(c.rows.every((r) => r.zones.length === 0)).toBe(true);
+    expect(c.zones).toEqual([]);
     expect(verifyRoute(c, levelSpec(37).checkSpeed).ok).toBe(true);
   });
 
@@ -423,6 +451,8 @@ describe('forced fallbacks (§16 "限界の経路")', () => {
     );
     expect(verifyRoute(broken, levelSpec(44).checkSpeed).failedRow).toBe(victim.index);
     expect(c.rows[victim.index]!.obstacles).toEqual([]);
+    expect(plain.zones.length).toBeGreaterThan(0);
+    expect(c.zones).toEqual([]);
   });
 });
 
@@ -467,4 +497,214 @@ describe('S-curves (§5, §7)', () => {
     const low = count(levelSpec(5), 1);
     [-2, -1, 0].forEach((s, i) => expect(low(s)).toBeCloseTo([1 / 6, 3 / 6, 2 / 6][i]!, 2));
   }, 60_000);
+});
+
+/** A normal row's zones came without a template draw when the 4 normal rows before it had none (§5). */
+function zoneRowsByCause(c: Course): { drawn: Row[]; forced: Row[] } {
+  const drawn: Row[] = [];
+  const forced: Row[] = [];
+  let since = 0;
+  for (const row of c.rows) {
+    if (row.kind !== 'normal') continue;
+    if (row.zones.length > 0) {
+      (since >= ZONE_GAP && levelSpec(c.level).templates.cones > 0 ? forced : drawn).push(row);
+      since = 0;
+    } else {
+      since += 1;
+    }
+  }
+  return { drawn, forced };
+}
+
+describe('sand and cones (§1, §5, 2026-10-22)', () => {
+  it('cover W(L) = 50 / 38 / 22 px and step (W − 12) / (n − 1) inward, 16 px forward', () => {
+    expect([3, 4, 5].map((l) => coneGroupWidth(l) / SUB)).toEqual([50, 38, 22]);
+    for (const lanes of [3, 4, 5]) {
+      // At least 38 px of the lane stays open beside the group.
+      expect(laneWidth(lanes) - coneGroupWidth(lanes)).toBeGreaterThanOrEqual(CONE_CLEARANCE * SUB);
+    }
+    const pitch = (lanes: number, n: number) => {
+      const g = coneGroup(lanes, 0, 0, n, 0);
+      return g[1]!.left - g[0]!.left;
+    };
+    expect([pitch(3, 2), pitch(3, 3), pitch(4, 2), pitch(4, 3), pitch(5, 2), pitch(5, 3)]).toEqual([
+      4560, 2280, 3120, 1560, 1200, 600,
+    ]);
+    // Right side: mirrored from the lane's right edge; rears 16 px apart.
+    const right = coneGroup(3, 1, 1, 3, 1000 * SUB);
+    expect(right[0]!.right).toBe(laneLeft(3, 1) + laneWidth(3));
+    expect(right[2]!.left).toBe(laneLeft(3, 1) + laneWidth(3) - coneGroupWidth(3));
+    expect(right.map((z) => z.rear - 1000 * SUB)).toEqual([0, 16 * SUB, 32 * SUB]);
+  });
+
+  it('live only on normal rows templated sand / cones, with the §1 geometry, inside [600, U − 400]', () => {
+    let sandOnGap = 0;
+    let sandRows = 0;
+    let coneRows = 0;
+    for (const l of LEVELS) {
+      const c = course(l);
+      const lw = laneWidth(c.lanes);
+      const flat: number[] = [];
+      for (const row of c.rows) {
+        // L_k = the largest front − u_k, u_k = the smallest rear (§5).
+        const pieces = [...row.obstacles, ...row.zones];
+        if (pieces.length > 0) {
+          expect(row.u, `Lv${l} row ${row.index}`).toBe(Math.min(...pieces.map((p) => p.rear)));
+          expect(row.length, `Lv${l} row ${row.index}`).toBe(
+            Math.max(...pieces.map((p) => p.front)) - row.u,
+          );
+        }
+        if (row.template !== 'sand' && row.template !== 'cones') {
+          expect(row.zones, `Lv${l} row ${row.index}`).toEqual([]);
+          continue;
+        }
+        expect(row.kind).toBe('normal');
+        expect(row.obstacles).toEqual([]);
+        for (const z of row.zones) {
+          expect(z.rear).toBeGreaterThanOrEqual(TRAFFIC_START);
+          expect(z.front).toBeLessThanOrEqual(c.length - GOAL_CLEARANCE);
+          flat.push(z.rear);
+        }
+        if (row.template === 'sand') {
+          sandRows += 1;
+          expect(row.zones.length).toBe(1);
+          const z = row.zones[0]!;
+          expect(z.kind).toBe('sand');
+          expect(z.right - z.left).toBe(lw);
+          const lane = (z.left - laneLeft(c.lanes, 0)) / lw;
+          expect(Number.isInteger(lane) && lane >= 0 && lane < c.lanes).toBe(true);
+          if (lane === row.gap) sandOnGap += 1;
+          expect(z.rear).toBe(row.u);
+          const len = (z.front - z.rear) / SUB;
+          expect(Number.isInteger(len)).toBe(true);
+          expect(len).toBeGreaterThanOrEqual(SAND_MIN_LENGTH);
+          expect(len).toBeLessThanOrEqual(SAND_MIN_LENGTH + SAND_LENGTH_SPAN - 1);
+        } else {
+          coneRows += 1;
+          const n = row.zones.length;
+          expect([2, 3]).toContain(n);
+          row.zones.forEach((z, i) => {
+            expect(z.kind).toBe('cone');
+            expect([z.right - z.left, z.front - z.rear]).toEqual([
+              CONE_WIDTH * SUB,
+              CONE_LENGTH * SUB,
+            ]);
+            expect(z.rear).toBe(row.u + i * CONE_PITCH * SUB);
+          });
+          expect(row.length).toBe(((n - 1) * CONE_PITCH + CONE_LENGTH) * SUB);
+          // The group sits at one edge of one lane and covers exactly W(L).
+          const lo = Math.min(...row.zones.map((z) => z.left));
+          const hi = Math.max(...row.zones.map((z) => z.right));
+          expect(hi - lo).toBe(coneGroupWidth(c.lanes));
+          const lane = Math.floor((lo - laneLeft(c.lanes, 0)) / lw);
+          const edgeL = laneLeft(c.lanes, lane);
+          expect(lo === edgeL || hi === edgeL + lw, `Lv${l} row ${row.index}`).toBe(true);
+          expect(hi).toBeLessThanOrEqual(edgeL + lw);
+          // The cone at the lane's edge is the nearest (§1 diagonal).
+          const first = row.zones[0]!;
+          expect(first.left === edgeL || first.right === edgeL + lw).toBe(true);
+        }
+      }
+      // Course.zones holds every row's zones, sorted by rear.
+      expect(c.zones.map((z) => z.rear)).toEqual([...flat].sort((a, b) => a - b));
+    }
+    report('sand rows', sandRows, 'on the gap lane', sandOnGap, 'cone rows', coneRows);
+    expect(sandOnGap).toBeGreaterThan(0);
+    expect(sandOnGap).toBeLessThan(sandRows);
+  });
+
+  it('never overlap traffic or works', () => {
+    for (const l of LEVELS) {
+      const c = course(l);
+      for (const z of c.zones) {
+        for (const o of c.obstacles) {
+          const overlap =
+            z.left < o.right && z.right > o.left && z.rear < o.front && z.front > o.rear;
+          expect(overlap, `Lv${l}`).toBe(false);
+        }
+      }
+    }
+  });
+
+  it('appear from Lv6 (cones) and Lv16 (sand), never as part of a wall pair', () => {
+    for (const l of LEVELS) {
+      const c = course(l);
+      if (l < 6) expect(c.zones, `Lv${l}`).toEqual([]);
+      if (l < 16)
+        expect(
+          c.zones.some((z) => z.kind === 'sand'),
+          `Lv${l}`,
+        ).toBe(false);
+      for (const row of c.rows) if (row.kind !== 'normal') expect(row.zones).toEqual([]);
+    }
+  });
+
+  it(`keep coming: from Lv6 no ${ZONE_GAP + 1} normal rows in a row without sand or cones; targets met`, () => {
+    expect(ZONE_GAP).toBe(4);
+    const lines: string[] = [];
+    const span = {
+      zoneRows: [Infinity, 0],
+      cones: [Infinity, 0],
+      sand: [Infinity, 0],
+      forced: [Infinity, 0],
+    };
+    const track = (key: keyof typeof span, v: number) => {
+      span[key][0] = Math.min(span[key][0]!, v);
+      span[key][1] = Math.max(span[key][1]!, v);
+    };
+    for (let l = 6; l <= 100; l++) {
+      const c = course(l);
+      let run = 0;
+      for (const row of c.rows) {
+        if (row.kind !== 'normal') continue;
+        run = row.zones.length > 0 ? 0 : run + 1;
+        expect(run, `Lv${l} row ${row.index}`).toBeLessThanOrEqual(ZONE_GAP);
+      }
+      const normal = c.rows.filter((r) => r.kind === 'normal').length;
+      const walls = c.rows.length - normal;
+      const coneGroups = c.rows.filter((r) => r.template === 'cones').length;
+      const sand = c.rows.filter((r) => r.template === 'sand');
+      const sandOnGap = sand.filter(
+        (r) => (r.zones[0]!.left - laneLeft(c.lanes, 0)) / laneWidth(c.lanes) === r.gap,
+      ).length;
+      const { forced } = zoneRowsByCause(c);
+      const zoneRows = coneGroups + sand.length;
+      expect(zoneRows, `Lv${l} zone rows`).toBeGreaterThanOrEqual(3);
+      expect(coneGroups, `Lv${l} cone groups`).toBeGreaterThanOrEqual(1);
+      if (l >= 16) expect(sand.length, `Lv${l} sand`).toBeGreaterThanOrEqual(1);
+      track('zoneRows', zoneRows);
+      track('cones', coneGroups);
+      if (l >= 16) track('sand', sand.length);
+      track('forced', forced.length);
+      lines.push(
+        `Lv${l} normal ${normal} walls ${walls} cones ${coneGroups} sand ${sand.length} sand-on-gap ${sandOnGap} forced ${forced.length}`,
+      );
+    }
+    for (const line of lines) report('zones per level', line);
+    report('zone rows per level Lv6–100 (min..max)', ...span.zoneRows);
+    report('cone groups per level Lv6–100 (min..max)', ...span.cones);
+    report('sand per level Lv16–100 (min..max)', ...span.sand);
+    report('rows without a draw (ZONE_GAP) per level Lv6–100 (min..max)', ...span.forced);
+  });
+
+  it('a row without a draw is cones below Lv16, then whichever the course has fewer of (sand on a tie)', () => {
+    let checked = 0;
+    for (let l = 6; l <= 100; l++) {
+      const c = course(l);
+      const { forced } = zoneRowsByCause(c);
+      for (const row of forced) {
+        checked += 1;
+        if (l < 16) {
+          expect(row.template, `Lv${l} row ${row.index}`).toBe('cones');
+          continue;
+        }
+        const before = c.rows.slice(0, row.index);
+        const cones = before.filter((r) => r.template === 'cones').length;
+        const sand = before.filter((r) => r.template === 'sand').length;
+        expect(row.template, `Lv${l} row ${row.index}`).toBe(sand <= cones ? 'sand' : 'cones');
+      }
+    }
+    report('rows without a draw checked', checked);
+    expect(checked).toBeGreaterThan(0);
+  });
 });

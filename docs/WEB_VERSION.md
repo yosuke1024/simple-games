@@ -441,7 +441,8 @@ Games (web)、run 39640771411、ref: main、network=admax)が `11a3036`(#246 の
 — UTC でも 2026-10-22 02:32)。「Test Simple Games」は 23 分 35 秒、同期後の「Check the synced build」
 (`npm run test:ui`)も通った。`play/assets` の `game-*.js` は 56 本。これで 52〜56 の 5 本とも Web 版で
 配信中になり、先行公開の配信は 10 本(42〜46 は 2026-10-19 から、52〜56 は 2026-10-22 から)。本番への反映は Cloudflare Pages の
-Git 連携による(このリポジトリからは観測していない)。Overtake と Tangram の実機での試作(Phase 0)は
+Git 連携による(このリポジトリからは観測していない)。その後 main に入った Overtake の青いライバル・砂・三角コーン
+(#249、`29f8417`、2026-10-22)はこの配信物にはまだ入っていない — 次の Publish(オーナーの承認後)で届く。Overtake と Tangram の実機での試作(Phase 0)は
 まだ行っておらず、両者の操作の既定は暫定である(各ルール文書の操作の節。Overtake の Phase 0 は製品
 オーナーが当面見送った(2026-10-22)ので、記録の前に上げるときの形のモード B で出す。Tangram はそれが
 通らなければ Three Peaks に差し替える)。5 本とも Club House には登録しない。正式収録の

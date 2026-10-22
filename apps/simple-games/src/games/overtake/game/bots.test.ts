@@ -63,9 +63,13 @@ describe('bot gates on all 100 levels', () => {
     let maxWork = 0;
     let maxPasses = 0;
     let decisions = 0;
+    let sandSteps = 0;
+    let coneTouches = 0;
     for (const l of LEVELS) {
       const { course, finish } = level(l);
       const { won, run } = botWins(course, 'A', finish);
+      sandSteps += run.sandSteps;
+      coneTouches += run.coneTouches;
       expect(won, `Lv${l}`).toBe(true);
       expect(run.bumps, `Lv${l}`).toBe(0);
       expect(run.infeasible, `Lv${l}`).toBe(0);
@@ -84,6 +88,7 @@ describe('bot gates on all 100 levels', () => {
     );
     report('A: max planLane work of one decision', maxWork, 'max resolution passes', maxPasses);
     report('A: planLane decisions over 100 races', decisions, 'infeasible', 0);
+    report('A (100 races, printed only): steps on sand', sandSteps, 'cone touches', coneTouches);
     report(
       'A: ms per race incl. rivals-only run (dev machine)',
       ((performance.now() - started) / 100).toFixed(1),
@@ -229,6 +234,7 @@ describe('the B family (§6 "反応の遅れ")', () => {
           lock: 0,
           blink: 0,
           bumps: 0,
+          coneCap: 0,
         };
         const predicted: CarState[] = [];
         const real: CarState[] = [freeze(car)];

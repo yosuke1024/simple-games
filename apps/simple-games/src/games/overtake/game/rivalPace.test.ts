@@ -4,7 +4,7 @@
  * are pinned here, and the calibration that made it is reproducible.
  *
  * `OT_REGEN_PACE=1 pnpm exec vitest run src/games/overtake/game/rivalPace.test.ts`
- * regenerates the whole table (about a minute), prints it, and fails unless it
+ * regenerates the whole table (about a minute and a half), prints it, and fails unless it
  * equals the source; it also checks the bracketed search against the
  * exhaustive one on Lv1, 50 and 100. That run is not part of `pnpm test` (§6):
  * do it whenever the generator, the planner, the physics, the bots or the
@@ -53,7 +53,22 @@ describe('RIVAL_PACE (§6)', () => {
   });
 
   it('is the frozen table (hash pinned)', () => {
-    expect(fnv1a(JSON.stringify(RIVAL_PACE))).toBe('a0e26438');
+    expect(fnv1a(JSON.stringify(RIVAL_PACE))).toBe('cabcdabf');
+  });
+
+  it('keeps the Lv1–5 rows of the table frozen before sand and cones (§6)', () => {
+    // Lv1–5 have neither (cones from Lv6, sand from Lv16), so their courses
+    // and every planLane decision are unchanged and calibration lands on the
+    // same means (the 2026-10-22 regeneration; table hash a0e26438 before).
+    const before = [
+      [335, 321, 306],
+      [337, 322, 307],
+      [338, 323, 308],
+      [338, 324, 309],
+      [339, 325, 310],
+    ];
+    expect(RIVAL_PACE.slice(0, 5)).toEqual(before);
+    report('RIVAL_PACE Lv1–5 rows unchanged by sand and cones', 'yes');
   });
 
   it('the bracketed search agrees with the exhaustive one on Lv1, rival 1', () => {

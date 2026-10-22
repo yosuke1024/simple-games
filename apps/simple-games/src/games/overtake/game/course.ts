@@ -6,6 +6,11 @@
  * and a course that fails falls back to "route only" (walls kept, every
  * normal row emptied) rather than shipping an unfair board.
  *
+ * Sand and cones (2026-10-22) are two more normal-row templates whose rows
+ * hold one zone piece and no traffic; their weights sit at the tail of the
+ * template draw, so a level where both weigh 0 (Lv1–5) draws exactly as
+ * before. From Lv6 a row without a draw keeps them coming (ZONE_GAP, §5).
+ *
  * The order the generator draws from the rng is part of the golden courses
  * (game/compatibility.test.ts): reordering a draw is a decision, not a
  * refactor, and it would also mean regenerating RIVAL_PACE (§6).
@@ -33,11 +38,24 @@ import {
   wallCentres,
   wallGapSpan,
 } from './geometry';
+import { exactDiv } from './arith';
 import { distance } from './intervals';
-import { CAR_DIMENSIONS, WORKS_LENGTH, levelSpec, type LevelSpec } from './levels';
+import {
+  CAR_DIMENSIONS,
+  CONE_CLEARANCE,
+  CONE_LENGTH,
+  CONE_PITCH,
+  CONE_WIDTH,
+  SAND_LENGTH_SPAN,
+  SAND_MIN_LENGTH,
+  WORKS_LENGTH,
+  ZONE_GAP,
+  levelSpec,
+  type LevelSpec,
+} from './levels';
 import { createRng, pickWeighted, randInt, type Rng } from './rng';
 import { verifyRoute } from './route';
-import type { CarKind, Course, Obstacle, Row, RowKind, RowTemplate } from './types';
+import type { CarKind, Course, Obstacle, Row, RowKind, RowTemplate, Zone } from './types';
 
 export interface GenerateOptions {
   /** Work bound override (tests only): rows per course. */
@@ -80,6 +98,7 @@ interface Draft {
   sigma: number;
   move: number;
   obstacles: Obstacle[];
+  zones: Zone[];
   gapSpan: [number, number] | null;
 }
 
@@ -133,13 +152,65 @@ function buildWall(lanes: number, gap: number, kind: CarKind, u: number): Draft[
   return wallCentres(lanes, gap, kind).map((x) => carObstacle(kind, x, u));
 }
 
-/** Fills a normal row from the templates (§5 "埋める"). Returns the obstacles and the template. */
-function fillNormal(
-  rng: Rng,
-  spec: LevelSpec,
-  gap: number,
-  u: number,
-): { obstacles: Obstacle[]; template: RowTemplate } {
+/**
+ * W(L) (§1): the lateral width a cone group covers, units —
+ * min(floor(lane / 2), floor(lane − 38)) px: 50 / 38 / 22 on 3 / 4 / 5 lanes,
+ * so the group always leaves at least 38 px of its lane open.
+ */
+export function coneGroupWidth(lanes: number): number {
+  const lane = laneWidth(lanes);
+  const px = Math.min(
+    Math.floor(lane / (2 * SUB)),
+    Math.floor((lane - CONE_CLEARANCE * SUB) / SUB),
+  );
+  return px * SUB;
+}
+
+/**
+ * A group of n cones (§1): from the chosen edge of the lane (side 0 = left,
+ * 1 = right) inward, cone i at i × p from that edge (p = (W − 12) / (n − 1))
+ * with its rear at u + 16 i — the edge cone nearest, a diagonal running in.
+ */
+export function coneGroup(lanes: number, lane: number, side: number, n: number, u: number): Zone[] {
+  const width = CONE_WIDTH * SUB;
+  const pitch = exactDiv(coneGroupWidth(lanes) - width, n - 1);
+  const edgeLeft = laneLeft(lanes, lane);
+  const edgeRight = edgeLeft + laneWidth(lanes);
+  const cones: Zone[] = [];
+  for (let i = 0; i < n; i++) {
+    const left = side === 0 ? edgeLeft + i * pitch : edgeRight - i * pitch - width;
+    const rear = u + i * CONE_PITCH * SUB;
+    cones.push({ kind: 'cone', left, right: left + width, rear, front: rear + CONE_LENGTH * SUB });
+  }
+  return cones;
+}
+
+/** Sand (§1): one lane wide, `lengthPx` long. */
+export function sandZone(lanes: number, lane: number, lengthPx: number, u: number): Zone {
+  const left = laneLeft(lanes, lane);
+  return { kind: 'sand', left, right: left + laneWidth(lanes), rear: u, front: u + lengthPx * SUB };
+}
+
+interface Filled {
+  obstacles: Obstacle[];
+  zones: Zone[];
+  template: RowTemplate;
+}
+
+/** The draws after a cones / sand row is chosen (§5): lane, then side and count, or length. */
+function fillZone(rng: Rng, lanes: number, kind: 'cones' | 'sand', u: number): Filled {
+  const lane = randInt(rng, lanes);
+  if (kind === 'cones') {
+    const side = randInt(rng, 2);
+    const n = 2 + randInt(rng, 2);
+    return { template: 'cones', obstacles: [], zones: coneGroup(lanes, lane, side, n, u) };
+  }
+  const length = SAND_MIN_LENGTH + randInt(rng, SAND_LENGTH_SPAN);
+  return { template: 'sand', obstacles: [], zones: [sandZone(lanes, lane, length, u)] };
+}
+
+/** Fills a normal row from the templates (§5 "埋める"). */
+function fillNormal(rng: Rng, spec: LevelSpec, gap: number, u: number): Filled {
   const lanes = spec.lanes;
   const open: number[] = [];
   for (let lane = 0; lane < lanes; lane++) if (lane !== gap) open.push(lane);
@@ -149,18 +220,24 @@ function fillNormal(
   }
   const outer = [0, lanes - 1].filter((lane) => lane !== gap);
   const t = spec.templates;
+  // Cones and sand go last: their zero weights below Lv6 / Lv16 change nothing (§5).
   const choice = pickWeighted(rng, [
     t.single,
     pairs.length > 0 ? t.two : 0,
     t.truck,
     outer.length > 0 ? t.works : 0,
+    t.cones,
+    t.sand,
   ]);
+  if (choice === 4) return fillZone(rng, lanes, 'cones', u);
+  if (choice === 5) return fillZone(rng, lanes, 'sand', u);
   if (choice === 1) {
     const lane = pairs[randInt(rng, pairs.length)]!;
     const a = pickKind(rng, spec.smallKinds);
     const b = pickKind(rng, spec.smallKinds);
     return {
       template: 'two',
+      zones: [],
       obstacles: [
         carObstacle(a, laneCenter(lanes, lane), u),
         carObstacle(b, laneCenter(lanes, lane + 1), u),
@@ -175,13 +252,14 @@ function fillNormal(
       const other = rest[randInt(rng, rest.length)]!;
       obstacles.push(carObstacle(pickKind(rng, spec.smallKinds), laneCenter(lanes, other), u));
     }
-    return { template: 'truck', obstacles };
+    return { template: 'truck', obstacles, zones: [] };
   }
   if (choice === 3) {
     const lane = outer[randInt(rng, outer.length)]!;
     const left = laneLeft(lanes, lane);
     return {
       template: 'works',
+      zones: [],
       obstacles: [
         {
           kind: 'works',
@@ -196,13 +274,16 @@ function fillNormal(
   const lane = open[randInt(rng, open.length)]!;
   return {
     template: 'single',
+    zones: [],
     obstacles: [carObstacle(pickKind(rng, spec.smallKinds), laneCenter(lanes, lane), u)],
   };
 }
 
-function rowLength(obstacles: readonly Obstacle[]): number {
+/** L_k (§5): the largest front of the row's pieces − u_k (u_k is their smallest rear). */
+function rowLength(u: number, obstacles: readonly Obstacle[], zones: readonly Zone[]): number {
   let longest = 0;
-  for (const o of obstacles) longest = Math.max(longest, o.front - o.rear);
+  for (const o of obstacles) longest = Math.max(longest, o.front - u);
+  for (const z of zones) longest = Math.max(longest, z.front - u);
   return longest;
 }
 
@@ -213,6 +294,9 @@ export function gateTarget(spec: LevelSpec, j: number): number {
   return px * SUB;
 }
 
+/** A row as `assembleCourse` takes it: no index, and `zones` may be left out (= none). */
+export type RowInput = Omit<Row, 'index' | 'zones'> & { readonly zones?: readonly Zone[] };
+
 /**
  * A course from rows (re-indexed in order). The generator's own last step,
  * and how a test builds a synthetic stretch such as one gate pair (§16).
@@ -221,19 +305,22 @@ export function assembleCourse(
   level: number,
   lanes: number,
   length: number,
-  rows: readonly Omit<Row, 'index'>[],
+  rows: readonly RowInput[],
   gatePairs = 0,
   fallbackReason: Course['fallbackReason'] = 'none',
 ): Course {
-  const indexed: Row[] = rows.map((row, index) => ({ ...row, index }));
+  const indexed: Row[] = rows.map((row, index) => ({ ...row, zones: row.zones ?? [], index }));
   const obstacles = indexed.flatMap((row) => row.obstacles);
   obstacles.sort((a, b) => a.rear - b.rear || a.left - b.left);
+  const zones = indexed.flatMap((row) => row.zones);
+  zones.sort((a, b) => a.rear - b.rear || a.left - b.left);
   return {
     level,
     lanes,
     length,
     rows: indexed,
     obstacles,
+    zones,
     gatePairs,
     fallbackCount: fallbackReason === 'none' ? 0 : 1,
     fallbackReason,
@@ -249,10 +336,10 @@ function finish(
   return assembleCourse(spec.level, spec.lanes, spec.length * SUB, drafts, gatePairs, fallback);
 }
 
-/** "Route only" (§5): the walls stay, every normal row is emptied. */
+/** "Route only" (§5): the walls stay, every normal row is emptied — sand and cones too. */
 function routeOnly(drafts: Draft[]): Draft[] {
   return drafts.map((d) =>
-    d.kind === 'normal' ? { ...d, template: 'empty' as const, obstacles: [] } : d,
+    d.kind === 'normal' ? { ...d, template: 'empty' as const, obstacles: [], zones: [] } : d,
   );
 }
 
@@ -283,6 +370,7 @@ export function generateCourse(level: number, options: GenerateOptions = {}): Co
     sigma,
     move,
     obstacles: buildWall(lanes, gap, wallKind, u),
+    zones: [],
     gapSpan: wallGapSpan(lanes, gap, wallKind),
   });
 
@@ -308,6 +396,12 @@ export function generateCourse(level: number, options: GenerateOptions = {}): Co
 
   let gateIndex = 0;
   let gatesPlaced = 0;
+  // ZONE_GAP (§5 "1 コースの最小の数"): template-drawn normal rows since the
+  // last sand / cones row, and how many of each this course holds so far.
+  const zonesOn = spec.templates.cones > 0;
+  let sinceZone = 0;
+  let conesPlaced = 0;
+  let sandPlaced = 0;
   while (drafts.length >= 2) {
     if (drafts.length >= rowLimit) {
       hitLimit = true;
@@ -337,9 +431,21 @@ export function generateCourse(level: number, options: GenerateOptions = {}): Co
       // The pair does not fit before the goal: no more pairs, and no more rows.
       break;
     }
-    const { obstacles, template } = fillNormal(rng, spec, gap, u);
-    const length = rowLength(obstacles);
+    let filled: Filled;
+    if (zonesOn && sinceZone >= ZONE_GAP) {
+      // No template draw: Lv6–15 cones; from Lv16 whichever this course has
+      // fewer of, sand on a tie (the newer word first).
+      const kind = spec.templates.sand > 0 && sandPlaced <= conesPlaced ? 'sand' : 'cones';
+      filled = fillZone(rng, lanes, kind, u);
+    } else {
+      filled = fillNormal(rng, spec, gap, u);
+    }
+    const { obstacles, zones, template } = filled;
+    const length = rowLength(u, obstacles, zones);
     if (u + length > lastFront) break;
+    if (template === 'cones') conesPlaced += 1;
+    if (template === 'sand') sandPlaced += 1;
+    sinceZone = zones.length > 0 ? 0 : sinceZone + 1;
     drafts.push({
       kind: 'normal',
       template,
@@ -350,6 +456,7 @@ export function generateCourse(level: number, options: GenerateOptions = {}): Co
       sigma: spec.sigma,
       move,
       obstacles,
+      zones,
       gapSpan: null,
     });
   }
@@ -360,6 +467,7 @@ export function generateCourse(level: number, options: GenerateOptions = {}): Co
       drafts[options.breakRow] = {
         ...target,
         template: 'works',
+        zones: [],
         obstacles: [
           {
             kind: 'works',
