@@ -15,10 +15,18 @@ export function fnv1a(text: string): string {
   return (h >>> 0).toString(16).padStart(8, '0');
 }
 
-/** One row as text: kind, template, gap, then u, length, lead and obstacle edges in units. */
+/**
+ * One row as text: kind, template, gap, then u, length, lead and obstacle
+ * edges in units; then, only when the row has zones (so a row without them
+ * reads as before, §16), `z` and each zone's kind, left-right and rear-front.
+ */
 export function rowToString(row: Row): string {
   const obstacles = row.obstacles.map((o) => `${o.kind[0]}${o.left}-${o.right}`).join(',');
-  return `${row.kind}/${row.template}/g${row.gap}/u${row.u}/L${row.length}/D${row.lead}:${obstacles}`;
+  const zones =
+    row.zones.length === 0
+      ? ''
+      : `z${row.zones.map((z) => `${z.kind[0]}${z.left}-${z.right}/${z.rear}-${z.front}`).join(',')}`;
+  return `${row.kind}/${row.template}/g${row.gap}/u${row.u}/L${row.length}/D${row.lead}:${obstacles}${zones}`;
 }
 
 export function courseDigest(course: Course): string {

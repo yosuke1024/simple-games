@@ -93,8 +93,14 @@ describe('the rivals-only run on all 100 levels', () => {
     let maxWork = 0;
     let decisions = 0;
     let slowest = 0;
+    let sandSteps = 0;
+    let coneTouches = 0;
     for (const l of LEVELS) {
       const { run } = rivals(l);
+      // Printed, not gated: driving through is the rule when no free lane can
+      // be reached (§6 "砂とコーン").
+      sandSteps += run.sandSteps;
+      coneTouches += run.coneTouches;
       expect(run.bumps, `Lv${l}`).toEqual([0, 0, 0]);
       expect(run.infeasible, `Lv${l}`).toBe(0);
       const [t1, t2, t3] = run.finish as number[];
@@ -132,6 +138,7 @@ describe('the rivals-only run on all 100 levels', () => {
       maxWork,
     );
     report('slowest rival goal, steps', slowest);
+    report('rivals (300 runs): steps on sand', sandSteps, 'cone touches', coneTouches);
     report(
       'rivals-only runs, ms per level (3 rivals, dev machine)',
       ((performance.now() - started) / 100).toFixed(1),

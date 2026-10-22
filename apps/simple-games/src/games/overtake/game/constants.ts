@@ -59,6 +59,11 @@ export const TRAFFIC_SPEED = 200;
 export const BUMP_HOLD_STEPS = 60;
 export const BUMP_LOCK_STEPS = 36;
 export const BUMP_BLINK_STEPS = 96;
+/**
+ * A cone touch caps the target speed at SHOULDER_SPEED for this many steps
+ * after the last touching step: 0.3 s (§1, §4). Never a Bump.
+ */
+export const CONE_CAP_STEPS = 36;
 /** Candidate passes per step when resolving overlaps (§4, §17). */
 export const RESOLVE_PASS_LIMIT = 8;
 
@@ -108,9 +113,10 @@ export const DECISION_LAG = DECISION_INTERVAL - 1;
  * Work bound on one planLane decision, in interval operations (§6, §17): the
  * candidates are tried only while the work so far is below it; at the bound
  * the planner stops and returns its crawl decision (`feasible: false`,
- * `capped: true`). Far above anything measured (93) — a guard, not a tuning.
+ * `capped: true`). Above the structural bound (§17: 6,090 with the two
+ * candidate stages sand and cones bring) — a guard, not a tuning.
  */
-export const PLAN_WORK_LIMIT = 4000;
+export const PLAN_WORK_LIMIT = 8000;
 
 /** Work bound on a bot's race (§6, §17): 600 s. */
 export const MAX_RACE_STEPS = 72_000;

@@ -8,6 +8,8 @@ import { describe, expect, it } from 'vitest';
 import {
   CAR_DIMENSIONS,
   LEVEL_COUNT,
+  VOCABULARY_HEADS,
+  ZONE_GAP,
   baseLengthFor,
   checkSpeedFor,
   clampLevel,
@@ -104,10 +106,38 @@ describe('levels (§7)', () => {
     expect(first((l) => levelSpec(l).wallKinds.includes('truck'))).toBe(21);
     expect(first((l) => levelSpec(l).templates.works > 0)).toBe(31);
     expect(first((l) => levelSpec(l).lanes === 5)).toBe(51);
+    expect(first((l) => levelSpec(l).templates.cones > 0)).toBe(6);
+    expect(first((l) => levelSpec(l).templates.sand > 0)).toBe(16);
     expect(CAR_DIMENSIONS).toEqual({
       sedan: { width: 34, length: 58 },
       van: { width: 38, length: 70 },
       truck: { width: 42, length: 104 },
     });
+  });
+
+  it('weighs the templates as §7 says, cones and sand last (2026-10-22)', () => {
+    for (const l of LEVELS) {
+      const t = levelSpec(l).templates;
+      expect(Object.keys(t)).toEqual(['single', 'two', 'truck', 'works', 'cones', 'sand']);
+      expect(t).toEqual({
+        single: 5,
+        two: 3,
+        truck: l >= 21 ? 2 : 0,
+        works: l >= 31 ? 1 : 0,
+        cones: l >= 6 ? 2 : 0,
+        sand: l >= 16 ? 2 : 0,
+      });
+    }
+    expect(ZONE_GAP).toBe(4);
+  });
+
+  it('keeps the vocabulary heads at 11, 21, 31, 51 — no +40 ‰ for Lv6 (cones) or Lv16 (sand)', () => {
+    expect([...VOCABULARY_HEADS].sort((a, b) => a - b)).toEqual([11, 21, 31, 51]);
+    const base = (l: number) =>
+      Math.max(
+        80,
+        250 - Math.floor((170 * (l - 1)) / 99) - Math.floor((20 * (((l - 1) % 10) + 1 - 1)) / 9),
+      );
+    for (const l of [6, 16]) expect(slackFor(l), `Lv${l}`).toBe(base(l));
   });
 });
