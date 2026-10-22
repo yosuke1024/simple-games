@@ -95,7 +95,8 @@ Overtake、クリアは 1 位、順位の 1 文は足してよい。Tangram は�
    のために残す — §18 の「消す」は試行が通らなかったときのもの)。Scopa は §4.2 の復帰時の張り直しのいまの読み方を
    暫定の挙動として出す(読み方そのものはオーナーが選んでおらず、確認待ちのまま)。§14 の規則の出典と商標・
    ストアの検索は未確認のまま、「公開の前に」から「正式収録の前に(できるだけ早く)」へ移す。Web 版への配信は
-   次の landing の同期(オーナーの承認後の Publish)で行う。
+   次の landing の同期(オーナーの承認後の Publish)で行う(2026-10-22 追記 — 実施済み: landing #205 と Publish の
+   run 39709681126 で、2026-10-22 02:32 UTC から配信中。「Phase 2〜4 の実施結果」の「Web 版への同期(「フェーズ」6)」)。
 
 ## 決定事項
 
@@ -410,11 +411,11 @@ Pass Lane も採らない)。**クリアは 1 位**(同日のオーナー決定�
   ブランチが main にも Web にも無く、ゲーム本体も保存データも無いからで、結果が悪ければ Web へ同期する
   前にスキャフォールドを消して別の id・接頭辞で起こし直す(`new-game.mjs` は既存の id・接頭辞を拒む)。
   (2026-10-22 追記: Overtake は main に入り、チャンクは 2026-10-22(JST、UTC では 2026-10-21 17:38)の Web
-  ビルドにも入った(そのビルドでは `'in-development'` なので開けず、遊べない)。同日、製品オーナーの指示(判断 8)で
-  `'web-beta'` にした — Web 版への配信は次の landing の同期(オーナーの承認後の Publish)で。商標・両ストアの
+  ビルドにも入った(そのビルドでは `'in-development'` だったので開けなかった)。同日、製品オーナーの指示(判断 8)で
+  `'web-beta'` にし、2026-10-22 02:32 UTC の landing の同期(#205 と Publish)から Web 版で配信中。商標・両ストアの
   検索はまだ未確認(OVERTAKE_RULES.md §14)で、判断 8 の後は正式収録の前に行う(下の「製品オーナーの確認待ち」)
-  ので、配信より後になりうる。配信の後に id・接頭辞を替えると、配信中のタイトルと `ot.*` の保存も外すことに
-  なる(WEB_VERSION.md「黙って消さない」)。)
+  ので、配信より後になった。いま id・接頭辞を替えると、配信中のタイトルと、プレイヤーの端末にありうる `ot.*` の
+  保存も外すことになる(WEB_VERSION.md「黙って消さない」)。)
   検索は Phase 2(ルール文書)の前に行い、確認日つきでルール文書 §14 に記録する。一般語なので同名の
   アプリが多いと見込む — 結果が悪ければオーナーに戻す。ストア・LP の
   禁止語(§14 に写す): nitro / fastest / beat the clock / pole position / Grand Prix / street racing /
@@ -1381,8 +1382,10 @@ pnpm --filter simple-games build:web`、i18n gate、`size:check` → `size:updat
    (#246 のマージ)の web ビルドを landing main に積んだ(`af9dedc`)。3 本は 2026-10-22(JST、UTC では 2026-10-21 17:38)
    から Web 版で先行公開中(下の「Phase 2〜4 の実施結果」の「Web 版への同期(「フェーズ」6)」)。
    **同日の追記 — Overtake / Scopa も `'web-beta'` に。**製品オーナーの指示(判断 8)で 2 本も `'web-beta'` に
-   した(2026-10-22)。Web 版への配信は次の landing の同期(`overtake` / `scopa` を `IN_DEVELOPMENT_GAME_IDS` から
-   `WEB_BETA_GAME_IDS` へ移す PR と、オーナーの承認後の Publish)で行い、それまで Web 版では遊べない。
+   した(2026-10-22)。Web 版への配信は次の landing の同期で行った — landing #205(2026-10-22 02:07 UTC にマージ)で
+   `overtake` / `scopa` を `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移し、オーナーの指示で Publish Simple
+   Games (web)(run 39709681126)が `3ed2b16`(#247 のマージ)の web ビルドを landing main に積んだ(`6204b78`)。
+   2 本は 2026-10-22(JST、UTC でも 2026-10-22 02:32)から Web 版で先行公開中。
 7. **Phase 5 — 正式収録の準備(この計画の PR では行わない)**: Web ベータ公開後に WEB_VERSION.md の基準
    (2 週間の安定・滞在時間)と RELEASE_CHECKLIST.md §0 を評価する。正式収録時にスキーマを凍結し、公開ビルドから
    採取した保存 payload で `releasedRecords.test.ts` を作る。ストア公開・本番配信は明示的な承認を要し、自動では
@@ -1420,8 +1423,8 @@ rebase 前の数(下の「現状の文書の数」)。スキャフォールド�
 architecture/registry)とルール文書のスタブ 5 本の表記も `'in-development'` に合わせた。landing の門には 5 本の id がまだ無い —
 この計画のマージ後、main を次に Web 版へ同期する PR で `IN_DEVELOPMENT_GAME_IDS` に足す(「フェーズ」の 6)。
 (2026-10-22 追記: 実際には landing #204 で、`make-the-target` / `nested-tic-tac-toe` / `tangram` を
-`WEB_BETA_GAME_IDS` に、`overtake` / `scopa` を `IN_DEVELOPMENT_GAME_IDS` に足して同期した — 「Phase 2〜4 の
-実施結果」の「Web 版への同期(「フェーズ」6)」。)
+`WEB_BETA_GAME_IDS` に、`overtake` / `scopa` を `IN_DEVELOPMENT_GAME_IDS` に足して同期した。2 本は判断 8 の後、同日の
+landing #205 で `WEB_BETA_GAME_IDS` へ移した — 「Phase 2〜4 の実施結果」の「Web 版への同期(「フェーズ」6)」。)
 コミットは `33562c1` の上に 3 つ(下の ①・② と、③ = この切り替え)。③ の木で取り直したゲート: typecheck・lint・
 vitest 全体(631 ファイル通過・1 スキップ、13,097 件通過・1 スキップ)・`pnpm build`・`build:web`・
 `check-principles.sh`・Prettier。`check-dist-ads-separation.sh` / `size:check` / `i18n:gate:check` /
@@ -1813,7 +1816,8 @@ ARCHITECTURE、architecture/registry、storage-keys(5 本の実際のキー)、c
   未実施のまま。モード A のコードとテストは残す)。Scopa は §4.2 のいまの読み方を暫定の挙動として出す — 読み方
   そのものはオーナーが選んでおらず確認待ちのまま(Nested Tic-Tac-Toe と合わせて決めてよいのも同じ)。§14 の
   出典と商標・ストアの検索は未確認のまま、「公開の前に」から「正式収録の前に(できるだけ早く)」へ移した。
-  Web 版への配信は次の landing の同期(オーナーの承認後の Publish)で。
+  Web 版への配信は次の landing の同期で行った(landing #205 と、オーナーの指示での Publish — 2026-10-22 02:32 UTC から
+  配信中。下の「Web 版への同期(「フェーズ」6)」)。
 - **アクセントの測り直し(BRAND.md 手順 5)。**統合ブランチの `styles.css` / `titleAccents` / registry を Phase 1 と
   同じスクリプト(CIE76、CSS Color 4 の全精度)で読み、56 本 × 6 値の一致(例外は従来からの Quick Math /
   Bunny Hop の ring-soft 0.14)を確かめた上で、5 色の最接近は Phase 1 と全値一致 — Overtake Unblock Puzzle
@@ -1866,7 +1870,8 @@ ARCHITECTURE、architecture/registry、storage-keys(5 本の実際のキー)、c
 
 **製品オーナーの確認待ち(5 本のルール文書が残した点 — Make the Target / Nested Tic-Tac-Toe / Tangram は
 2026-10-22(JST、UTC では 2026-10-21 17:38)の Web 先行公開の後も未決のまま。Overtake / Scopa は 2026-10-22 に
-オーナーの指示で `'web-beta'` にしたので(判断 8)、下の点はチャンネルの条件ではなくなり、正式収録の前に決める)。**
+オーナーの指示で `'web-beta'` にし(判断 8)、同日(UTC でも 2026-10-22 02:32)から Web 版で配信中なので、下の点は
+チャンネルの条件ではなくなり、正式収録の前に決める)。**
 
 - 共通: 商標と両ストアの検索(5 本とも未確認。各 §14 / 冒頭)/ デイリーの統計の数え方と結果カードの
   第一ボタン(42〜46 から続く 2 点 — Make the Target §8・§9、Tangram §結果カード、Bridges の形に合わせた暫定)/
@@ -1884,7 +1889,8 @@ ARCHITECTURE、architecture/registry、storage-keys(5 本の実際のキー)、c
   から Web で先行公開中なので、差し替えは `tn.*` の保存の扱いを含めて決める。WEB_VERSION.md「黙って消さない」)/
   結果カードのボタン / デイリーの統計の枠(§12)。
 
-**Web 版への同期(「フェーズ」6)— 2026-10-22(JST、UTC では 2026-10-21 17:38)に実施。**52〜56 の実装 PR(#246)は
+**Web 版への同期(「フェーズ」6)— 2026-10-22(JST、UTC では 2026-10-21 17:38)に実施。Overtake / Scopa は同日(UTC でも
+2026-10-22 02:32)に実施。**52〜56 の実装 PR(#246)は
 2026-10-21 17:04 UTC に main へマージした(`11a3036`)。同じ時刻に landing #204 がマージされ、`tests/ui.test.js` の `WEB_BETA_GAME_IDS` に
 **`make-the-target` / `nested-tic-tac-toe` / `tangram` の 3 本を足し**、`overtake` / `scopa` は
 `IN_DEVELOPMENT_GAME_IDS` に足した(47〜51 と同じ扱い — チャンクはあるがカードも BETA も無い。Codex のレビューの
@@ -1894,18 +1900,24 @@ landing main に `af9dedc`「chore: publish Simple Games web build (11a3036)」�
 2026-10-22 02:38 JST)。「Test Simple Games」は 30 分 38 秒(ジョブ上限 45 分)、「Check the synced build」
 (`npm run test:ui`)は通過。`play/assets` の `game-*.js` は 56 本で、5 本のチャンクを含む。NOW の帯の日付は
 2026-10-22。**Make the Target / Nested Tic-Tac-Toe / Tangram は 2026-10-22(JST、UTC では 2026-10-21 17:38)から
-Web 版で先行公開中**(5 本のうち初めての Web 配信)。Overtake と Scopa のチャンクも配信したビルドに入っているが、
-そのビルドでは `'in-development'` なので開けず(`app/gameChannel.ts`)、Web 版ではまだ遊べない。2 本は同日
-(2026-10-22)、製品オーナーの指示で `'web-beta'` にした(判断 8 と上の「チャンネルの判断」の追記)。Web 版への
-配信は次の landing の同期(`overtake` / `scopa` を `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移す PR と、
-オーナーの承認後の Publish Simple Games (web))で、チャンクは届いているのでその配信で開けるようになる。本番への
-反映は Cloudflare Pages の Git 連携による(このリポジトリからは観測していない)。正式収録の基準 1(2 週間の安定
-稼働 — RELEASE_CHECKLIST.md §0)の時計は、3 本は 2026-10-22(JST)から。Overtake / Scopa の時計はまだ始まって
-いない(次の同期で Web 版に出た日から)。
+Web 版で先行公開中**(5 本のうち初めての Web 配信)。Overtake と Scopa のチャンクも配信したビルドに入っていたが、
+そのビルドでは `'in-development'` なので開けなかった(`app/gameChannel.ts`)。2 本は同日(2026-10-22)、製品
+オーナーの指示で `'web-beta'` にした(判断 8 と上の「チャンネルの判断」の追記 — #247、2026-10-22 02:07 UTC に main へ
+マージ、`3ed2b16`)。同じ時刻に landing #205 がマージされ、`overtake` / `scopa` を `IN_DEVELOPMENT_GAME_IDS` から
+`WEB_BETA_GAME_IDS` へ移した(Codex のレビューの指摘は無し。landing の一覧は `WEB_BETA_GAME_IDS` 10 本 — 42〜46 と
+52〜56 — と `IN_DEVELOPMENT_GAME_IDS` 5 本 — 47〜51)。オーナーの指示(「Publish を起動して」)で run 39709681126
+(ref: main = `3ed2b16`、network=admax、2026-10-22 02:08〜02:32 UTC)が成功し、landing main に `6204b78`「chore:
+publish Simple Games web build (3ed2b16)」を積んだ(2026-10-22 02:32 UTC = 11:32 JST)。「Test Simple Games」は
+23 分 35 秒、「Check the synced build」(`npm run test:ui`)は通過。`play/assets` の `game-*.js` は 56 本。NOW の帯の
+日付は 2026-10-22 のまま。**Overtake と Scopa も 2026-10-22(JST、UTC でも 2026-10-22 02:32)から Web 版で先行
+公開中**で、52〜56 の 5 本がすべて Web 版に出た。本番への反映は Cloudflare Pages の Git 連携による(このリポジトリ
+からは観測していない)。正式収録の基準 1(2 週間の安定稼働 — RELEASE_CHECKLIST.md §0)の時計は、5 本とも
+2026-10-22(JST)から(Overtake / Scopa は 2026-10-22 02:32 UTC の配信から)。2 本の最初の版の保存(`ot.*` /
+`sc.*`)も、いまはプレイヤーの端末にありうる。
 
 **現状の文書の数(統合後、2026-10-22 の Overtake / Scopa の切り替え後)。**registry 56 = 正式収録 41 + `'web-beta'` 10
 (2026-10-19 から配信中の 42〜46、2026-10-22(JST、UTC では 2026-10-21 17:38)から配信中の 53・54・56、2026-10-22 に
-オーナーの指示で `'web-beta'` にした 52・55 — Web 版への配信は次の同期で)+ `'in-development'` 5(スキャフォールドの
+オーナーの指示で `'web-beta'` にし、2026-10-22 02:32 UTC から配信中の 52・55)+ `'in-development'` 5(スキャフォールドの
 47〜51)。i18n は
 14 言語・**2,033 キー** = シェル 125 + 正式収録 1,393 + 42〜46 の 230 + 47〜51 の 55 + 52〜56 の 230
 (2026-10-21、各 `en.ts` の `en` の最上位プロパティを TypeScript の構文木で数えた)。
