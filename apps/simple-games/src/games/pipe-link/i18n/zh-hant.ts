@@ -1,21 +1,57 @@
 /**
- * Placeholder Traditional Chinese catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real Traditional Chinese translation before release (docs/I18N_POLICY.md); the
- * title (`pipeLinkName`) is a proper noun and stays as-is in every locale.
+ * Traditional Chinese catalog for Pipe Link. Provenance (docs/PIPE_LINK_RULES.md §11):
+ * machine-written by AI from the English source and **not read by any native
+ * speaker** — not a reviewed translation. The title (`pipeLinkName`) is a
+ * proper noun and stays as-is; placeholder names match the English source.
  */
 import type { PipeLinkMessages } from './en';
 
 export const zhHant: PipeLinkMessages = {
   pipeLinkName: 'Pipe Link',
-  pipeLinkPlayPlaceholder: 'Play a sample round',
-  pipeLinkFinishPlaceholder: 'Finish the sample round',
-  pipeLinkStep1Title: 'Step 1',
-  pipeLinkStep1Body: 'Placeholder. The first of at most three steps.',
-  pipeLinkStep2Title: 'Step 2',
-  pipeLinkStep2Body: 'Placeholder. What the player does next.',
-  pipeLinkStep3Title: 'Step 3',
-  pipeLinkStep3Body: 'Placeholder. How a round ends.',
-  pipeLinkResultTitle: 'Nice work',
-  pipeLinkResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  pipeLinkChooseBoard: '選擇盤面',
+  pipeLinkDifficulty_easy: '簡單',
+  pipeLinkDifficulty_medium: '中等',
+  pipeLinkDifficulty_hard: '困難',
+  pipeLinkBoardNote: '{width}×{height}',
+  pipeLinkConfirmSwitchTitle: '取代進行中的盤面？',
+  pipeLinkConfirmSwitchBody: '進行中的「{current}」盤面會被新的「{next}」盤面取代。',
+  pipeLinkBoardLabel: 'Pipe Link 盤面，{width} 乘 {height}',
+  pipeLinkTile: '第 {row} 列第 {col} 欄：{pipes}，{light}',
+  pipeLinkTileSource: '第 {row} 列第 {col} 欄，水源：{pipes}，{light}',
+  pipeLinkTileHinted: '{tile}。提示：轉到{pipes}',
+  pipeLinkLit: '有水',
+  pipeLinkUnlit: '無水',
+  pipeLinkPipes_end_0: '端頭，朝上',
+  pipeLinkPipes_end_1: '端頭，朝右',
+  pipeLinkPipes_end_2: '端頭，朝下',
+  pipeLinkPipes_end_3: '端頭，朝左',
+  pipeLinkPipes_straight_0: '直管，上下',
+  pipeLinkPipes_straight_1: '直管，左右',
+  pipeLinkPipes_elbow_0: '彎管，上和右',
+  pipeLinkPipes_elbow_1: '彎管，右和下',
+  pipeLinkPipes_elbow_2: '彎管，下和左',
+  pipeLinkPipes_elbow_3: '彎管，左和上',
+  pipeLinkPipes_tee_0: 'T 形管，上、右、下',
+  pipeLinkPipes_tee_1: 'T 形管，右、下、左',
+  pipeLinkPipes_tee_2: 'T 形管，下、左、上',
+  pipeLinkPipes_tee_3: 'T 形管，左、上、右',
+  pipeLinkAnnounce: '第 {row} 列第 {col} 欄：{pipes}。{total} 塊中有 {lit} 塊有水。',
+  pipeLinkHintNote: '轉動虛線圈中的方塊，直到它的管子與淺色的管子一致。',
+  pipeLinkHintWhere: '標記：第 {row} 列第 {col} 欄。轉到{pipes}。',
+  pipeLinkSolvedTitle: '所有方塊都有水了',
+  pipeLinkSolvedBody: '水源的水流到了全部 {tiles} 塊方塊。',
+  pipeLinkBoardSize: '盤面',
+  pipeLinkHintsUsed: '使用的提示',
+  pipeLinkNewBestTime: '你的最快紀錄。',
+  pipeLinkNewBoard: '新盤面',
+  pipeLinkSolvedCount: '完成的盤面',
+  pipeLinkDailySection: '每日',
+  pipeLinkDailiesCleared: '完成天數',
+  pipeLinkAllModes: '所有模式',
+  pipeLinkStep1Title: '點按旋轉',
+  pipeLinkStep1Body: '點按一塊方塊，它會順時針旋轉 90°。',
+  pipeLinkStep2Title: '水會流動',
+  pipeLinkStep2Body: '與水源相連的管子會充滿水，其餘的保持空心。',
+  pipeLinkStep3Title: '讓每根管子都充滿',
+  pipeLinkStep3Body: '所有管子都充滿水時，盤面完成。',
 };

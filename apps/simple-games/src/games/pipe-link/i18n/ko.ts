@@ -1,21 +1,57 @@
 /**
- * Placeholder Korean catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real Korean translation before release (docs/I18N_POLICY.md); the
- * title (`pipeLinkName`) is a proper noun and stays as-is in every locale.
+ * Korean catalog for Pipe Link. Provenance (docs/PIPE_LINK_RULES.md §11):
+ * machine-written by AI from the English source and **not read by any native
+ * speaker** — not a reviewed translation. The title (`pipeLinkName`) is a
+ * proper noun and stays as-is; placeholder names match the English source.
  */
 import type { PipeLinkMessages } from './en';
 
 export const ko: PipeLinkMessages = {
   pipeLinkName: 'Pipe Link',
-  pipeLinkPlayPlaceholder: 'Play a sample round',
-  pipeLinkFinishPlaceholder: 'Finish the sample round',
-  pipeLinkStep1Title: 'Step 1',
-  pipeLinkStep1Body: 'Placeholder. The first of at most three steps.',
-  pipeLinkStep2Title: 'Step 2',
-  pipeLinkStep2Body: 'Placeholder. What the player does next.',
-  pipeLinkStep3Title: 'Step 3',
-  pipeLinkStep3Body: 'Placeholder. How a round ends.',
-  pipeLinkResultTitle: 'Nice work',
-  pipeLinkResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  pipeLinkChooseBoard: '보드 선택',
+  pipeLinkDifficulty_easy: '쉬움',
+  pipeLinkDifficulty_medium: '보통',
+  pipeLinkDifficulty_hard: '어려움',
+  pipeLinkBoardNote: '{width}×{height}',
+  pipeLinkConfirmSwitchTitle: '진행 중인 보드를 바꿀까요?',
+  pipeLinkConfirmSwitchBody: '진행 중인 {current} 보드가 새 {next} 보드로 바뀝니다.',
+  pipeLinkBoardLabel: 'Pipe Link 보드, 가로 {width} 세로 {height}',
+  pipeLinkTile: '{row}행 {col}열: {pipes}, {light}',
+  pipeLinkTileSource: '{row}행 {col}열, 수원: {pipes}, {light}',
+  pipeLinkTileHinted: '{tile}. 힌트: {pipes} 방향으로 돌리기',
+  pipeLinkLit: '물이 참',
+  pipeLinkUnlit: '물이 안 참',
+  pipeLinkPipes_end_0: '끝, 위로 열림',
+  pipeLinkPipes_end_1: '끝, 오른쪽으로 열림',
+  pipeLinkPipes_end_2: '끝, 아래로 열림',
+  pipeLinkPipes_end_3: '끝, 왼쪽으로 열림',
+  pipeLinkPipes_straight_0: '직선, 위와 아래',
+  pipeLinkPipes_straight_1: '직선, 왼쪽과 오른쪽',
+  pipeLinkPipes_elbow_0: '굽은 관, 위와 오른쪽',
+  pipeLinkPipes_elbow_1: '굽은 관, 오른쪽과 아래',
+  pipeLinkPipes_elbow_2: '굽은 관, 아래와 왼쪽',
+  pipeLinkPipes_elbow_3: '굽은 관, 왼쪽과 위',
+  pipeLinkPipes_tee_0: 'T자, 위·오른쪽·아래',
+  pipeLinkPipes_tee_1: 'T자, 오른쪽·아래·왼쪽',
+  pipeLinkPipes_tee_2: 'T자, 아래·왼쪽·위',
+  pipeLinkPipes_tee_3: 'T자, 왼쪽·위·오른쪽',
+  pipeLinkAnnounce: '{row}행 {col}열: {pipes}. 타일 {total}개 중 {lit}개에 물이 찼습니다.',
+  pipeLinkHintNote: '점선 고리 안의 타일을 흐린 관과 모양이 맞을 때까지 돌리세요.',
+  pipeLinkHintWhere: '표시: {row}행 {col}열. {pipes} 방향으로 돌리세요.',
+  pipeLinkSolvedTitle: '모든 타일에 물이 찼습니다',
+  pipeLinkSolvedBody: '물이 타일 {tiles}개 모두에 닿습니다.',
+  pipeLinkBoardSize: '보드',
+  pipeLinkHintsUsed: '사용한 힌트',
+  pipeLinkNewBestTime: '지금까지 중 가장 빠릅니다.',
+  pipeLinkNewBoard: '새 보드',
+  pipeLinkSolvedCount: '푼 보드',
+  pipeLinkDailySection: '데일리',
+  pipeLinkDailiesCleared: '완료한 날',
+  pipeLinkAllModes: '모든 모드',
+  pipeLinkStep1Title: '탭해서 돌리기',
+  pipeLinkStep1Body: '타일을 탭하면 시계 방향으로 90° 돕니다.',
+  pipeLinkStep2Title: '물이 흐릅니다',
+  pipeLinkStep2Body: '수원과 이어진 관에는 물이 차고, 나머지는 비어 있습니다.',
+  pipeLinkStep3Title: '모든 관 채우기',
+  pipeLinkStep3Body: '모든 관에 물이 차면 보드가 완성됩니다.',
 };

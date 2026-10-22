@@ -185,8 +185,10 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   chess: ['ch.saveGame', 'ch.stats', 'ch.flags', 'ch.prefs'],
   // No. 48, in-development (docs/GEM_SWAP_RULES.md §7): not frozen until graduation
   'gem-swap': ['gs.saveGame', 'gs.stats', 'gs.flags', 'gs.prefs'],
-  // No. 49, in-development (docs/PIPE_LINK_RULES.md storage): not frozen until graduation
-  'pipe-link': ['pn.stats', 'pn.flags'],
+  // No. 49, in-development (docs/PIPE_LINK_RULES.md §7): the scaffold's two keys grew to the
+  // rules document's five in Phase 3 — two saved-game slots (difficulty and the daily) and the
+  // difficulty last chosen. Not frozen until graduation
+  'pipe-link': ['pn.saveGame', 'pn.saveDaily', 'pn.stats', 'pn.flags', 'pn.prefs'],
   // No. 50, in-development (docs/BOUNCE_UP_RULES.md §5): not frozen until graduation
   'bounce-up': ['bo.stats', 'bo.flags', 'bo.prefs'],
   // No. 51, in-development (docs/ECHO_PADS_RULES.md storage): not frozen until graduation
