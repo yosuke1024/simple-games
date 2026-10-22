@@ -1249,11 +1249,11 @@ export const GAMES: readonly GameDefinition[] = [
   // app comes back to the foreground as provisional — the owner's choice
   // between the two readings is still awaited (docs/SCOPA_RULES.md §4.2) —
   // and its §14 checks (rule sources, trademark and store search) move to
-  // before it graduates. Their chunks were already in the build the web
-  // carries, behind no door (app/gameChannel.ts); they reach the web with the
-  // next landing sync. None is in the app until a person decides it graduates
-  // (docs/RELEASE_CHECKLIST.md §0). Nos. 47–51 above are still
-  // `'in-development'`. None is a Club House challenge (no
+  // before it graduates. The browser version has carried them since
+  // 2026-10-22 02:32 UTC (the landing's publish of main `3ed2b16`, after
+  // landing #205 moved them to beta). None is in the app until a person
+  // decides it graduates (docs/RELEASE_CHECKLIST.md §0). Nos. 47–51 above
+  // are still `'in-development'`. None is a Club House challenge (no
   // `challenge`) while its saves and results may still change.
   //
   // The glyphs were measured as Nos. 42–51's were above: none is in the bundled

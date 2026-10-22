@@ -91,9 +91,10 @@ registry は 5 本とも `channel: 'web-beta'` — Make the Target / Nested Tic-
 Scopa は 2026-10-22 に製品オーナーの指示で。Make the Target / Nested Tic-Tac-Toe / Tangram の 3 本は
 2026-10-22(JST、UTC では 2026-10-21 17:38)から Web 版で配信中で、`tg.*` / `nt.*` / `tn.*` の初版は
 配信したビルドに入っており、ここから利用者の端末に届きうる(本番への反映はこのリポジトリからは観測していない。
-以後の変更も黙っては行わない — 上の `ub.*`〜`pg.*` の段落の条件)。Overtake と Scopa はチャンクこそ同じビルドに
-入っているが、そのビルドでは扉が閉じていて遊べない。`ot.*` / `sc.*` の初版が利用者の端末に届きうるのは、次の landing の
-同期(製品オーナーの承認後の Publish)から — `docs/WEB_VERSION.md`「先行公開」。計画は
+以後の変更も黙っては行わない — 上の `ub.*`〜`pg.*` の段落の条件)。Overtake と Scopa は
+そのビルドでは扉が閉じていたが、2026-10-22(JST、UTC でも 2026-10-22 02:32)の同期(landing main `6204b78` — `3ed2b16` の
+web ビルド)から Web 版で配信中で、`ot.*` / `sc.*` の初版もここから利用者の端末に届きうる(条件は同じ)—
+`docs/WEB_VERSION.md`「先行公開」。計画は
 `docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md`)。表は上の `ub.*`〜`pg.*` と
 同じく各ゲームの `storage/keys.ts` が宣言する実際のキーで、`src/app/gameKeys.test.ts` の行が同じ並びで
 固定し、中身は各ゲームのルール文書の保存の節が定める。計画の決定事項の「予定」からは Scopa だけが
