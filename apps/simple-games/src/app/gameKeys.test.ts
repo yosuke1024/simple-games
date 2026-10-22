@@ -183,8 +183,8 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // document's four in Phase 3 — the one saved game (a move list) and the side for the next
   // game. Not frozen until graduation
   chess: ['ch.saveGame', 'ch.stats', 'ch.flags', 'ch.prefs'],
-  // No. 48, in-development (docs/GEM_SWAP_RULES.md storage): not frozen until graduation
-  'gem-swap': ['gs.stats', 'gs.flags'],
+  // No. 48, in-development (docs/GEM_SWAP_RULES.md §7): not frozen until graduation
+  'gem-swap': ['gs.saveGame', 'gs.stats', 'gs.flags', 'gs.prefs'],
   // No. 49, in-development (docs/PIPE_LINK_RULES.md storage): not frozen until graduation
   'pipe-link': ['pn.stats', 'pn.flags'],
   // No. 50, in-development (docs/BOUNCE_UP_RULES.md storage): not frozen until graduation
