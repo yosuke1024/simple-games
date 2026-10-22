@@ -4,9 +4,11 @@
  * locales. That is true of the shell's catalogs and the released games', but
  * not of the five web-beta titles of 2026-10-17: their `ja` was drafted by AI
  * and the author has not read it yet (docs/I18N_POLICY.md「Web 先行公開の 5 本」).
- * The five of 2026-10-19 (No. 47–51) join the list from their scaffolds: their
- * catalogs are still English placeholders, and their `ja` will be the same
- * unread AI draft once it is written (docs/I18N_POLICY.md「実装中の次の 5 本」).
+ * The five of 2026-10-19 (No. 47–51) joined the list from their scaffolds and
+ * had their catalogs written when they became playable (on the beta channel
+ * since 2026-10-22): `ja` is an AI draft the author has not read, and the other
+ * twelve are machine-written with no native reader (docs/I18N_POLICY.md, the
+ * No. 47〜51 paragraph).
  * The five of 2026-10-20 (No. 52–56) had their catalogs written on 2026-10-21:
  * `ja` is an AI draft the author has not read, and the other twelve are
  * machine-written with no native reader (docs/I18N_POLICY.md「さらに次の 5 本」).

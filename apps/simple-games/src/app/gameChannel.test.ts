@@ -19,16 +19,19 @@ import { GAMES, type GameDefinition } from './registry';
  * The titles in early release today (docs/WEB_VERSION.md「先行公開」), in
  * registry order: the five new genres of
  * docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md (Nos. 42–46, on the
- * web since 2026-10-19), and the five of
+ * web since 2026-10-19); the five of
+ * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
+ * (Nos. 47–51), on this channel since 2026-10-22, the day they became
+ * playable, and not yet on the web — they reach it with the next landing
+ * sync; and the five of
  * docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
- * (Nos. 52–56): Nos. 53, 54 and 56 on this channel since 2026-10-21 and on the
- * web since 2026-10-22; Overtake and Scopa on it since 2026-10-22 by the
- * product owner's decision (docs/OVERTAKE_RULES.md §3 with `DRAG_MAPPING`
- * `'B'`; docs/SCOPA_RULES.md §4.2 on its provisional reading), reaching the
- * web with the next landing sync. The eleven before them — three of issue
- * #194, five of issue #197, three of issue #210 — all graduated into the app
- * on 2026-10-02. Putting a title on the channel, or promoting one off it,
- * edits this list on purpose.
+ * (Nos. 52–56): Nos. 53, 54 and 56 on this channel since 2026-10-21, Overtake
+ * and Scopa since 2026-10-22 by the product owner's decision
+ * (docs/OVERTAKE_RULES.md §3 with `DRAG_MAPPING` `'B'`; docs/SCOPA_RULES.md
+ * §4.2 on its provisional reading), all five on the web since 2026-10-22. The
+ * eleven before them — three of issue #194, five of issue #197, three of
+ * issue #210 — all graduated into the app on 2026-10-02. Putting a title on
+ * the channel, or promoting one off it, edits this list on purpose.
  */
 const WEB_BETA_IDS = [
   'unblock-puzzle',
@@ -36,6 +39,11 @@ const WEB_BETA_IDS = [
   'loop-puzzle',
   'bridges',
   'peg-solitaire',
+  'chess',
+  'gem-swap',
+  'pipe-link',
+  'bounce-up',
+  'echo-pads',
   'overtake',
   'make-the-target',
   'nested-tic-tac-toe',
@@ -44,15 +52,16 @@ const WEB_BETA_IDS = [
 ];
 
 /**
- * The titles in development today, in registry order: the five of
- * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
- * (Nos. 47–51), scaffolds since 2026-10-20 with no game behind them yet. No
- * build offers them on any door. Each moves to WEB_BETA_IDS in the change that
- * makes it playable, and that change edits this list on purpose — as the
- * 2026-10-20 plan's five did (three on 2026-10-21, Overtake and Scopa on
- * 2026-10-22).
+ * The titles in development today, in registry order: none. The last were the
+ * five of docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
+ * (Nos. 47–51), scaffolds from 2026-10-20 until they became playable on
+ * 2026-10-22 and moved to WEB_BETA_IDS — as the 2026-10-20 plan's five did
+ * (three on 2026-10-21, Overtake and Scopa on 2026-10-22). The next scaffold
+ * of scripts/new-game.mjs joins this list on purpose, and leaves it in the
+ * change that makes it playable. While it is empty, the synthetic
+ * in-development entry below is what keeps the guard's closed doors tested.
  */
-const IN_DEVELOPMENT_IDS = ['chess', 'gem-swap', 'pipe-link', 'bounce-up', 'echo-pads'];
+const IN_DEVELOPMENT_IDS: string[] = [];
 
 /** A beta title that exists only in this file: a released game's shape, a channel of its own. */
 const SYNTHETIC_BETA: GameDefinition = {
@@ -167,7 +176,8 @@ describe('the channels', () => {
     }
     // An in-development title is a scaffold with no game behind it: the
     // browser closes the same doors to it that the app closes to a beta title
-    // (docs/WEB_VERSION.md「遊べるものだけを出す」).
+    // (docs/WEB_VERSION.md「遊べるものだけを出す」). None is in the registry
+    // today; the synthetic one below keeps this tested.
     for (const id of IN_DEVELOPMENT_IDS) {
       expectClosed(web, id, GAMES.find((game) => game.id === id)!.title);
     }

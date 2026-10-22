@@ -1,21 +1,57 @@
 /**
- * Placeholder Vietnamese catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real Vietnamese translation before release (docs/I18N_POLICY.md); the
- * title (`pipeLinkName`) is a proper noun and stays as-is in every locale.
+ * Vietnamese catalog for Pipe Link. Provenance (docs/PIPE_LINK_RULES.md §11):
+ * machine-written by AI from the English source and **not read by any native
+ * speaker** — not a reviewed translation. The title (`pipeLinkName`) is a
+ * proper noun and stays as-is; placeholder names match the English source.
  */
 import type { PipeLinkMessages } from './en';
 
 export const vi: PipeLinkMessages = {
   pipeLinkName: 'Pipe Link',
-  pipeLinkPlayPlaceholder: 'Play a sample round',
-  pipeLinkFinishPlaceholder: 'Finish the sample round',
-  pipeLinkStep1Title: 'Step 1',
-  pipeLinkStep1Body: 'Placeholder. The first of at most three steps.',
-  pipeLinkStep2Title: 'Step 2',
-  pipeLinkStep2Body: 'Placeholder. What the player does next.',
-  pipeLinkStep3Title: 'Step 3',
-  pipeLinkStep3Body: 'Placeholder. How a round ends.',
-  pipeLinkResultTitle: 'Nice work',
-  pipeLinkResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  pipeLinkChooseBoard: 'Chọn bảng',
+  pipeLinkDifficulty_easy: 'Dễ',
+  pipeLinkDifficulty_medium: 'Trung bình',
+  pipeLinkDifficulty_hard: 'Khó',
+  pipeLinkBoardNote: '{width}×{height}',
+  pipeLinkConfirmSwitchTitle: 'Thay thế bảng đang chơi?',
+  pipeLinkConfirmSwitchBody: 'Bảng {current} của bạn sẽ bị thay bằng một bảng {next} mới.',
+  pipeLinkBoardLabel: 'Bảng Pipe Link, {width} nhân {height}',
+  pipeLinkTile: 'Hàng {row}, cột {col}: {pipes}, {light}',
+  pipeLinkTileSource: 'Hàng {row}, cột {col}, nguồn nước: {pipes}, {light}',
+  pipeLinkTileHinted: '{tile}. Gợi ý: xoay thành {pipes}',
+  pipeLinkLit: 'có nước',
+  pipeLinkUnlit: 'chưa có nước',
+  pipeLinkPipes_end_0: 'đầu cụt, mở lên trên',
+  pipeLinkPipes_end_1: 'đầu cụt, mở sang phải',
+  pipeLinkPipes_end_2: 'đầu cụt, mở xuống dưới',
+  pipeLinkPipes_end_3: 'đầu cụt, mở sang trái',
+  pipeLinkPipes_straight_0: 'ống thẳng, trên và dưới',
+  pipeLinkPipes_straight_1: 'ống thẳng, trái và phải',
+  pipeLinkPipes_elbow_0: 'ống cong, trên và phải',
+  pipeLinkPipes_elbow_1: 'ống cong, phải và dưới',
+  pipeLinkPipes_elbow_2: 'ống cong, dưới và trái',
+  pipeLinkPipes_elbow_3: 'ống cong, trái và trên',
+  pipeLinkPipes_tee_0: 'chữ T, trên, phải và dưới',
+  pipeLinkPipes_tee_1: 'chữ T, phải, dưới và trái',
+  pipeLinkPipes_tee_2: 'chữ T, dưới, trái và trên',
+  pipeLinkPipes_tee_3: 'chữ T, trái, trên và phải',
+  pipeLinkAnnounce: 'Hàng {row}, cột {col}: {pipes}. {lit} trên {total} ô có nước.',
+  pipeLinkHintNote: 'Xoay ô trong vòng chấm cho đến khi các ống khớp với ống mờ.',
+  pipeLinkHintWhere: 'Đã đánh dấu: hàng {row}, cột {col}. Xoay thành {pipes}.',
+  pipeLinkSolvedTitle: 'Mọi ô đều có nước',
+  pipeLinkSolvedBody: 'Nước từ nguồn đến được cả {tiles} ô.',
+  pipeLinkBoardSize: 'Bảng',
+  pipeLinkHintsUsed: 'Gợi ý đã dùng',
+  pipeLinkNewBestTime: 'Thời gian nhanh nhất của bạn.',
+  pipeLinkNewBoard: 'Bảng mới',
+  pipeLinkSolvedCount: 'Bảng đã giải',
+  pipeLinkDailySection: 'Hằng ngày',
+  pipeLinkDailiesCleared: 'Ngày đã hoàn thành',
+  pipeLinkAllModes: 'Tất cả chế độ',
+  pipeLinkStep1Title: 'Chạm để xoay',
+  pipeLinkStep1Body: 'Chạm vào một ô để xoay nó một phần tư vòng theo chiều kim đồng hồ.',
+  pipeLinkStep2Title: 'Nước chảy',
+  pipeLinkStep2Body: 'Các ống nối với nguồn được đổ đầy nước; các ống khác vẫn rỗng.',
+  pipeLinkStep3Title: 'Làm đầy mọi ống',
+  pipeLinkStep3Body: 'Khi mọi ống đều đầy nước, bảng hoàn thành.',
 };

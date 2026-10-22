@@ -1,21 +1,47 @@
 /**
- * Placeholder Brazilian Portuguese catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real Brazilian Portuguese translation before release (docs/I18N_POLICY.md); the
- * title (`bounceUpName`) is a proper noun and stays as-is in every locale.
+ * Brazilian Portuguese catalog for Bounce Up.
+ *
+ * Provenance (docs/BOUNCE_UP_RULES.md §8, docs/I18N_POLICY.md「来歴」): written by
+ * AI (Claude) from the English source on 2026-10-22 and **not yet read by
+ * anyone** — neither the author nor a native speaker. It is not to be
+ * treated as reviewed.
+ *
+ * The title (`bounceUpName`) is a proper noun and stays as it is in every
+ * locale. Terms follow §8's glossary: platform, score, best, total.
  */
 import type { BounceUpMessages } from './en';
 
 export const ptBR: BounceUpMessages = {
   bounceUpName: 'Bounce Up',
-  bounceUpPlayPlaceholder: 'Play a sample round',
-  bounceUpFinishPlaceholder: 'Finish the sample round',
-  bounceUpStep1Title: 'Step 1',
-  bounceUpStep1Body: 'Placeholder. The first of at most three steps.',
-  bounceUpStep2Title: 'Step 2',
-  bounceUpStep2Body: 'Placeholder. What the player does next.',
-  bounceUpStep3Title: 'Step 3',
-  bounceUpStep3Body: 'Placeholder. How a round ends.',
-  bounceUpResultTitle: 'Nice work',
-  bounceUpResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  bounceUpPlay: 'Começar a subir',
+  bounceUpBestNote: 'Melhor {score}',
+  bounceUpWidth: 'Plataformas',
+  bounceUpWidth_normal: 'Normais',
+  bounceUpWidth_wide: 'Largas',
+  bounceUpBest: 'Melhor pontuação',
+  bounceUpTotal: 'Pontuação total',
+  bounceUpBoardLabel: 'Tabuleiro do Bounce Up, {state}',
+  bounceUpState_ready: 'esperando seu primeiro movimento',
+  bounceUpState_running: 'subindo',
+  bounceUpState_paused: 'pausado',
+  bounceUpState_over: 'partida encerrada',
+  bounceUpTouchToStart: 'Deslize no tabuleiro ou aperte ← → para começar',
+  bounceUpPaused: 'Pausado',
+  bounceUpPause: 'Pausar',
+  bounceUpStart: 'Começar',
+  bounceUpClimbAgain: 'Subir de novo',
+  bounceUpPad: 'Botões de movimento',
+  bounceUpMoveLeft: 'Mover para a esquerda',
+  bounceUpMoveRight: 'Mover para a direita',
+  bounceUpResultTitle: 'Chegou a {score}',
+  bounceUpLiveResult: 'A partida acabou. Pontuação {score}.',
+  bounceUpStep1Title: 'Deslize para se mover',
+  bounceUpStep1Body:
+    'Deslize o dedo para a esquerda ou a direita no tabuleiro, ou aperte ← →, e você quica sozinho em cada plataforma onde cair.',
+  bounceUpStep2Title: 'Os lados se ligam',
+  bounceUpStep2Body:
+    'Saindo por um lado, você volta pelo outro, então use os dois para alcançar as plataformas de cima.',
+  bounceUpStep3Title: 'A altura é a pontuação',
+  bounceUpStep3Body:
+    'Se errar as plataformas e cair pela parte de baixo, a partida termina e a altura alcançada vira sua pontuação.',
 };

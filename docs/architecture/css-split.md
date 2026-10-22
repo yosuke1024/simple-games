@@ -21,7 +21,7 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   `unblock-puzzle.css` / `snake.css` / `loop-puzzle.css` / `bridges.css` /
   `peg-solitaire.css`(Web 先行公開の 5 本、2026-10-17)、
   `chess.css` / `gem-swap.css` / `pipe-link.css` / `bounce-up.css` / `echo-pads.css`
-  (Web 先行公開の次の 5 本、2026-10-19 にスキャフォールド)、
+  (Web 先行公開の次の 5 本、2026-10-22 に実装)、
   `overtake.css` / `make-the-target.css` / `nested-tic-tac-toe.css` / `scopa.css` / `tangram.css`
   (さらに次の 5 本、2026-10-21 に実装)。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
@@ -34,7 +34,11 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   書く: Minesweeper の数字、Memory Match の 15 色、Water Sort の 9 色、2048 の
   タイルランプ、Reversi の盤(フェルトと黒白の石)、Connect Four の対戦相手の
   ディスク、Ludo の 4 席の色(`--ld-seat-*`)、Overtake のライバルの青(`--ot-rival` と、
-  数字の `--ot-rival-ink` — 2026-10-22。`--ot-rival-ink` は値を書かず `var(--surface)` を指す)。いずれも「クロムは 1 タイトル 1 色、盤面はそのゲームのもの」という
+  数字の `--ot-rival-ink` — 2026-10-22。`--ot-rival-ink` は値を書かず `var(--surface)` を指す)、
+  Gem Swap の 6 つの宝石の色(`--gs-gem-0`〜`--gs-gem-5`、ライト / ダーク — `GEM_SWAP_RULES.md` §10)、
+  Chess のマスの 2 色・駒の 2 色・印の halo(`--ch-square-*` / `--ch-piece-*` / `--ch-halo`、ライト / ダーク —
+  `CHESS_RULES.md` §9。駒の色はテーマで入れ替えない)。どちらも冒頭のライト / ダークの 2 つのブロックだけに書き、
+  それ以外に色のリテラルが無いことを各ゲームの `ui/contrast.test.ts` が確かめる。いずれも「クロムは 1 タイトル 1 色、盤面はそのゲームのもの」という
   同じ線で、BRAND.md の一行を破っているわけではない。Reversi の石と Connect Four の
   相手色がテーマで反転しないのは、反転すれば盤面の意味が変わるからである
   (黒石がダークテーマの明るいインクを着たら、それはもう黒石ではない)。

@@ -83,10 +83,14 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
 >
 > その次の 5 本(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads、No. 47〜51。2026-10-19 に
 > 着手 — [plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md))は
-> registry に `channel: 'in-development'`(2026-10-20 から。どのビルドでもどの扉にも出ない — 遊べるようになる変更で `'web-beta'` にする)で登録したスキャフォールドの段階で、**Web 版ではまだ始まっていない**
-> (ゲーム本体が無く、Web 版でも開けない — チャンクは 2026-10-22 の同期で配信物に入ったが、
-> `'in-development'` のためどの扉からも到達しない)。2 週間の時計は Web で公開した日から数えるので、まだ動いていない。
-> この節の項目はすべて未着手。
+> 2026-10-22 に遊べる形まで実装し、registry を `'in-development'` から `channel: 'web-beta'` にした(製品オーナーの依頼は
+> 「Web 公開まで」)。**Web 版ではまだ始まっていない** — いまの配信物に入っている 5 本のチャンクは `'in-development'` の
+> ときのビルドのもので、どの扉からも開けない。Web 版へは次の landing の同期(landing の一覧を `WEB_BETA_GAME_IDS` へ
+> 移し、製品オーナーの承認を得てから Publish Simple Games (web) を実行する — [WEB_VERSION.md](WEB_VERSION.md)「先行公開」)で
+> 届ける(Bounce Up の題は同名作があるが、製品オーナーが 2026-10-22 に「このまま出す」と判断した —
+> [BOUNCE_UP_RULES.md](BOUNCE_UP_RULES.md) 冒頭と §12)。上の 2 週間の時計はその配信の日から数えるので、
+> **まだ動いていない**。この節の項目はすべて未着手
+> (実機での確認も、5 本ともまだ何もしていない)。
 >
 > さらにその次の 5 本(Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram、No. 52〜56。2026-10-20 に
 > 着手 — [plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md))は

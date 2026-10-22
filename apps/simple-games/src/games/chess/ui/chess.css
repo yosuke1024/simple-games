@@ -1,15 +1,473 @@
-/**
- * Chess's styles — scaffolded by scripts/new-game.mjs. The shared shell
- * classes (.screen, .home-hero, .game-content, .game-topbar, .tutorial-card,
- * .btn, .dialog, ...) already cover the frame; the board and everything else
- * the game itself draws go here, under the game's own `chess-` prefix.
- */
+/* Chess — all of this game's styling, imported by ChessRoot. Built from the
+   series tokens in src/ui/styles.css (--surface, --ink, --ink-soft, --line,
+   --accent, --accent-soft, …), so the chrome follows the theme without
+   knowing about it. Class names are prefixed `ch-`.
 
-/* Placeholder board area — replace with the real board's layout. */
-.chess-board {
-  display: flex;
+   The board and the pieces are the one exception docs/architecture/css-split.md
+   allows: their colours are game content (docs/CHESS_RULES.md §1, §9). The
+   pieces are physical — the white ones light, the black ones dark, whoever
+   plays them — so they are not the accent and do not swap with the side the
+   player took. Every value is recorded in CHESS_RULES §9, and ui/contrast.test.ts
+   checks that each piece, and each mark the board draws, clears 3:1 against
+   both squares in both themes (WCAG's floor for graphical objects). The
+   accent is the chrome's and the marks' — selection, the move dots and rings,
+   the last move, the check ring — and never a piece's or a square's. */
+
+:root {
+  --ch-square-light: #eadfc8;
+  --ch-square-dark: #a8865f;
+  --ch-piece-light: #fbf7ee;
+  --ch-piece-light-edge: #2a241e;
+  --ch-piece-dark: #2a241e;
+  --ch-piece-dark-edge: #fbf7ee;
+  /* The thin ring round every accent mark, so a mark reads on both squares:
+     the accent carries it on the light square, the halo on the dark one. */
+  --ch-halo: #fffdf8;
+}
+
+:root[data-theme='dark'] {
+  /* The same wood a step down, so the board does not glare in a dark room. */
+  --ch-square-light: #c9bda4;
+  --ch-square-dark: #8a6c4b;
+  --ch-piece-light: #fbf7ee;
+  --ch-piece-light-edge: #2a241e;
+  --ch-piece-dark: #2a241e;
+  --ch-piece-dark-edge: #fbf7ee;
+  --ch-halo: #17191d;
+}
+
+/* ---------- board area (§9) ----------
+
+   From the top: the turn line, then the board, centred in what the top bar
+   and the action bar leave. The board's side is the smallest of the column
+   (the viewport less a 16px gutter each side), the height left over
+   (`--ch-chrome`: top bar 64 + turn line 36 + gaps and padding 22 + Undo bar
+   77, rounded up to 200, + the native banner slot's 64 that BannerSlot keeps
+   inside the game content = 264 — Nested Tic-Tac-Toe's frame, the same rows)
+   and a 420px ceiling — never below the floor, though: eight 36px squares
+   (288px). A screen too short for that scrolls rather than shrinking the
+   squares under a finger (a phone on its side). */
+.ch-body {
+  --ch-chrome: 264px;
+  --ch-floor: calc(8 * 36px);
+  --ch-size: max(
+    min(100vw - 32px, var(--ch-floor)),
+    min(100vw - 32px, 100vh - var(--ch-chrome), 420px)
+  );
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 16px 12px;
+}
+
+@supports (height: 100svh) {
+  .ch-body {
+    --ch-size: max(
+      min(100vw - 32px, var(--ch-floor)),
+      min(100vw - 32px, 100svh - var(--ch-chrome), 420px)
+    );
+  }
+}
+
+/* The web build has no banner slot but keeps 116px at the bottom of every
+   screen for the anchored ad (src/ui/styles.css): 200 + 116. The board gives
+   that height back rather than pushing Undo under it. */
+:root[data-sg-web-ads] .ch-body {
+  --ch-chrome: 316px;
+}
+
+/* Fixed height, whatever it says and in whatever language: two lines' room,
+   so the board never jumps (§9). */
+.ch-turn-line {
+  flex-shrink: 0;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  height: 36px;
+  margin: auto 0 0;
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* ---------- the board ---------- */
+
+.ch-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  flex-shrink: 0;
+  width: var(--ch-size);
+  height: var(--ch-size);
+  margin-bottom: auto;
+  overflow: hidden;
+  border: 2px solid var(--ink-soft);
+  border-radius: 6px;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* A square is a button drawn as board. Only pressable squares are enabled,
+   so `disabled` means "nothing to do here", not "greyed out" — the shared
+   chrome's 40% would fade every piece on the board. */
+.ch-square {
+  position: relative;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  color: inherit;
+  font: inherit;
+}
+
+.ch-square:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.ch-square-light {
+  background: var(--ch-square-light);
+}
+
+.ch-square-dark {
+  background: var(--ch-square-dark);
+}
+
+/* Keyboard focus is a dotted ring in the ink on a halo strip — no board mark
+   is dotted or drawn in the ink, so it never reads as the held piece's solid
+   accent frame (§9). The dots carry it where the halo matches the square, the
+   strip where it does not; ui/contrast.test.ts measures the pair. */
+.ch-square:focus-visible {
+  outline: 3px dotted var(--ink);
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 3px var(--ch-halo);
+  z-index: 3;
+}
+
+/* The piece fills most of its square; marks sit above it. */
+.ch-piece-slot {
+  position: absolute;
+  inset: 6%;
+  display: block;
+  pointer-events: none;
+}
+
+/* ---------- pieces (§9) ---------- */
+
+.ch-piece {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ch-piece path,
+.ch-piece circle {
+  fill: var(--ch-fill);
+  stroke: var(--ch-edge);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.ch-piece .ch-detail {
+  fill: none;
+}
+
+.ch-piece .ch-eye {
+  fill: var(--ch-edge);
+  stroke: none;
+}
+
+.ch-piece-white {
+  --ch-fill: var(--ch-piece-light);
+  --ch-edge: var(--ch-piece-light-edge);
+}
+
+.ch-piece-black {
+  --ch-fill: var(--ch-piece-dark);
+  --ch-edge: var(--ch-piece-dark-edge);
+}
+
+/* ---------- marks (§4, §9) ----------
+
+   Shapes first, colour second: a dot for a quiet move, a ring for a capture,
+   a square frame for the piece in hand, a dashed ring for a king in check,
+   and a corner tab on the two squares of the last move. Each is the accent
+   with a halo ring round it, so it reads on both squares. */
+
+.ch-mark-move,
+.ch-mark-capture,
+.ch-check-ring {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.ch-mark-move {
+  top: 36%;
+  left: 36%;
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--ch-halo);
+}
+
+.ch-mark-capture {
+  inset: 5%;
+  border: 3px solid var(--accent);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px var(--ch-halo),
+    inset 0 0 0 2px var(--ch-halo);
+}
+
+.ch-check-ring {
+  inset: 3%;
+  border: 3px dashed var(--accent);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px var(--ch-halo),
+    inset 0 0 0 2px var(--ch-halo);
+}
+
+.ch-square[data-selected]::after,
+.ch-figure-square[data-selected]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 3px solid var(--accent);
+  box-shadow: inset 0 0 0 2px var(--ch-halo);
+  pointer-events: none;
+}
+
+/* The frame is painted above the square's own focus ring, so on the held
+   piece's square it steps in by the ring's width and both stay in sight. */
+.ch-square[data-selected]:focus-visible::after {
+  inset: 3px;
+}
+
+.ch-square[data-last]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 22%;
+  height: 22%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--ch-halo);
+  border-bottom-right-radius: 4px;
+  pointer-events: none;
+}
+
+/* ---------- movement (§9) ---------- */
+
+.ch-piece-move {
+  animation: ch-slide var(--ch-move-ms, 180ms) ease-out;
+}
+
+@keyframes ch-slide {
+  from {
+    transform: translate(var(--ch-move-x, 0), var(--ch-move-y, 0));
+  }
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+/* Reduced Motion (app setting or OS): pieces are simply where they landed. */
+.ch-board-still .ch-piece-move {
+  animation: none;
+}
+
+/* ---------- action bar ---------- */
+
+.action-bar.ch-actions {
+  justify-content: center;
+}
+
+/* ---------- result card ---------- */
+
+/* Three facts: they wrap rather than squeeze in a long language. */
+.result-facts.ch-result-facts {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 20px;
+}
+
+/* ---------- promotion picker (§4) ---------- */
+
+.ch-promotion-choices {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.ch-promotion-choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  min-height: var(--tap-size);
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--ch-square-light);
+}
+
+.ch-promotion-choice:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- home ---------- */
+
+.ch-choose-label {
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* The side for the next game: two equal halves, each with its king. */
+.ch-side-choice {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.ch-side-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--tap-size);
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.ch-side-option-on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+/* The king stands on a patch of light square, so the dark king reads in the
+   dark theme too. */
+.ch-side-piece {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 1px;
+  border-radius: 6px;
+  background: var(--ch-square-light);
+}
+
+/* ---------- Quick Rules figures (§8) ---------- */
+
+/* Capped by viewport height so long step titles still leave the Back / Next
+   buttons above the web ad reserve at 360x640. */
+.ch-figure {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  width: min(150px, 20vh);
+  height: min(150px, 20vh);
+  overflow: hidden;
+  border: 2px solid var(--ink-soft);
+  border-radius: 4px;
+}
+
+.ch-figure-square {
+  position: relative;
+  display: block;
+}
+
+/* The figure's squares are about 25px, so its marks are thinner: the board's
+   rings would cover the outer part of the piece they mark (the mated king of
+   step 3), and their outer halo would run past the figure's edge. */
+.ch-figure-square[data-selected]::after {
+  border-width: 2px;
+  box-shadow: inset 0 0 0 1px var(--ch-halo);
+}
+
+.ch-figure-square > .ch-check-ring,
+.ch-figure-square > .ch-mark-capture {
+  inset: 1px;
+  border-width: 2px;
+  box-shadow:
+    0 0 0 1px var(--ch-halo),
+    inset 0 0 0 1px var(--ch-halo);
+}
+
+.ch-figure-square > .ch-piece {
+  position: absolute;
+  inset: 6%;
+  width: 88%;
+  height: 88%;
+}
+
+.ch-figure-row {
+  display: flex;
+  gap: 2px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  background: var(--ch-square-light);
+}
+
+.ch-figure-row > .ch-piece {
+  width: 22px;
+  height: 22px;
+}
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Only the board's
+   ceiling grows: on a tablet or a desktop window the board uses the width. */
+@media (min-width: 600px) {
+  .ch-body {
+    --ch-size: max(
+      min(100vw - 32px, var(--ch-floor)),
+      min(100vw - 32px, 100vh - var(--ch-chrome), 560px)
+    );
+  }
+
+  @supports (height: 100svh) {
+    .ch-body {
+      --ch-size: max(
+        min(100vw - 32px, var(--ch-floor)),
+        min(100vw - 32px, 100svh - var(--ch-chrome), 560px)
+      );
+    }
+  }
+}
+
+/* The early-release note in Quick Rules gets the screen's 16px side gutter,
+   the same rule as the earlier web-beta titles: without it the BETA pill
+   starts at x=0. */
+.ch-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
 }

@@ -1,23 +1,20 @@
 /**
- * Quick Rules (docs/ECHO_PADS_RULES.md): at most three steps, one sentence
- * each, leading straight into play (docs/PRODUCT_PRINCIPLES.md「初回体験の原則」).
- * Scaffolded by scripts/new-game.mjs with three placeholder steps: write the
- * real ones from the rule doc, and give each a figure that shows a position
- * the game could actually be in.
+ * Quick Rules (docs/ECHO_PADS_RULES.md §10): three steps, one sentence each,
+ * each with a picture made of the game's own pads, leading straight into play
+ * (docs/PRODUCT_PRINCIPLES.md「初回体験の原則」) — the first pass ends by
+ * starting the suggested level, its ▶ one tap away; nothing plays by itself.
  *
  * Two things here are the shell's contract rather than this game's taste
  * (src/test/tutorialBackWiring.test.tsx, issue #142): the heading is the
  * shared `howToPlay` string, and the close button exists only once the
- * tutorial has been completed — the first pass ends by starting a game, and
- * hardware Back marks it seen on the way out (state/GameContext.tsx). The
- * long-form rules live on the game's landing page behind "Learn More", which
- * is absent until the page exists (ui/landing.ts) and quietly does nothing
- * offline (docs/OFFLINE_POLICY.md).
+ * tutorial has been completed — the first pass ends by starting a run, and
+ * hardware Back marks it seen on the way out (state/GameContext.tsx). There
+ * is no guide page, so "Learn More" is absent (ui/landing.ts).
  *
  * The early-release notice under the header is the shell's too
- * (docs/WEB_VERSION.md「先行公開(ベータ)」): a first visit opens here rather
- * than on the home, and the last step's button writes the first save, so the
- * notice is read before anything is saved — on every step, in one place.
+ * (docs/WEB_VERSION.md「先行公開(ベータ)」): a first visit opens here, and the
+ * last step's button writes the first save, so the notice is read before
+ * anything is saved.
  */
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
@@ -26,9 +23,10 @@ import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { gameLandingUrl } from '@/ui/landing';
 import { openExternal } from '@/ui/openExternal';
 import { useEchoPads } from '../../state/GameContext';
+import { QuickRulesFigure } from '../components/QuickRulesFigure';
 
 export function EchoPadsTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startPlaceholderRound, goHome } = useEchoPads();
+  const { tutorialCompleted, completeTutorial, startFromTutorial, goHome } = useEchoPads();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('echo-pads', locale);
   const [step, setStep] = useState(0);
@@ -44,14 +42,14 @@ export function EchoPadsTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startPlaceholderRound();
+      startFromTutorial();
     } else {
       goHome();
     }
   };
 
   return (
-    <div className="screen tutorial-screen">
+    <div className="screen tutorial-screen ep-tutorial">
       <header className="screen-header">
         <h1>{t('howToPlay')}</h1>
         {tutorialCompleted ? (
@@ -70,6 +68,9 @@ export function EchoPadsTutorialScreen() {
           ))}
         </div>
         <h2 className="tutorial-title">{current.title}</h2>
+        <div className="tutorial-example">
+          <QuickRulesFigure step={step} />
+        </div>
         <p className="tutorial-body">{current.body}</p>
       </div>
 

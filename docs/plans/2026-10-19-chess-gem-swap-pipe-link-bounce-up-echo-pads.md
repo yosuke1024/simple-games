@@ -1228,3 +1228,141 @@ Bounce Up のグリフ `⇡` は確定、Echo Pads の「入力の途中で離�
 上の「コミットの分け方」の追記と「47. Chess」の「フェーズ(判断 4)」の追記 — 4 本と Chess のブランチは main
 から切る。Chess の PR は main への普通の PR。main にある遊べない 5 本のスキャフォールドと landing の
 `WEB_BETA_GAME_IDS` の門の扱いは、公開の前にオーナーが決める(この計画は決めない)。
+
+### Phase 2〜4 の実施結果(2026-10-22)
+
+**進め方。**製品オーナーの依頼(2026-10-22、「Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads の開発を
+お願いします。Web公開までやってほしい。」)で、Phase 2・3(4 本)と Chess のフェーズ(C)を同じ日に並列で進めた。
+5 本はゲームごとの git worktree(`wip/<id>`、main `ba2c18e` = #250 のマージから分岐)で進め、各段階(ルール文書 →
+`game/` → `storage/` `state/` `ui/` → i18n)をサブエージェントが書き、独立のレビュー(読むだけ)→ 指摘ごとの検証
+(確定 / 反証)→ 反映の順で通した。触ってよい範囲は `src/games/<id>/`・自分のルール文書・`gameKeys.test.ts` の
+自分の行(Echo Pads はさらに `services/sound.ts` への追加だけ)に限り、共有ファイルは統合でまとめて直した。
+**判断 4(Chess は別フェーズ・別 PR、残り 4 本を Chess で待たせない)は、5 本が同時に仕上がったので満たされた** —
+4 本は Chess を待っておらず、5 本を 1 つの PR で出す(別 PR に分ける理由が無くなった)。上の「フェーズ」の 4・5 の
+「PR は ② を含めない」「Chess の PR」は、この統合では 1 つの PR に読み替える。
+
+**ルール文書はコードより先に書いた**(5 本とも、スタブから本文へ。以後はルール文書が計画に勝つ)。計画の
+「未決事項」は推奨を採り、オーナーの判断か実機に依るものは推奨の形で仮に決めて「確認待ち」「未検証(実機)」と
+した。計画が選択を残した点で決めたもの(理由と表は各ルール文書の未決事項の節):
+
+- **Chess**(`CHESS_RULES.md` §5・§14): Hard のノード上限 `HARD_NODE_LIMIT` = **80,000 は段 1 の Node の暫定値**
+  (Nested Tic-Tac-Toe §4.3 と同じ手順 — 同じ環境での出荷済みの Connect Four の hard の p95 を超えない候補の最大。
+  候補の列の最大で、基準が値を決めたのではない。この環境の Node で Hard の p95 は約 212ms。段 2(Web の CDP 6 倍)と
+  段 3(実機)は行っておらず、**製品オーナーの確認待ち**)。Normal は深さ 2、Easy は 1 手読み + 0〜150 センチ
+  ポーンの揺らぎ、Hard は最大深さ 6・静止探索 6。自己対局で順序が出た(Normal が Easy に 40 勝 0 敗、Hard が
+  Normal に 39 勝 0 敗 — 重複を除いた局数)。深さ 1 もノード上限の内側で走らせる(計画の「深さ 1 は必ず完了する」
+  からの外れ)。保存の手数上限 `MAX_PLIES` = 12,700(算術の上限。文献値は出典未確認で使わない)。CPU の手番で
+  バックグラウンドから戻ると、タップなしに 450ms を張り直す(Nested Tic-Tac-Toe と同じ暫定の例外)。
+- **Gem Swap**(`GEM_SWAP_RULES.md` §14・§15): 手詰まり率のしきい値を**先に**書き(30 手より前に手詰まりで終わる
+  率が 10% を超えたら既定の色数をオーナーに戻す)、自動プレイ(2 方針 × 5・6 色、各 2,000 ラウンド)で測った —
+  最大は一様・6 色の **2.10%** で、既定の 6 色はオーナーに戻していない。同じ測定を 7 色に回すと一様 25.65%・
+  貪欲 14.25% でしきい値を超えたので、7 色は v1 に入れない(入れるかは確認待ち)。連鎖の段数の上限 64・再生の
+  詰め方(1 段 160ms、1 手約 1 秒)は初期値。ライトの宝石 2 色は面の上で 3:1 に届かず暗くした。
+- **Pipe Link**(`PIPE_LINK_RULES.md` §4・§5・§15): **Hard の帯を、計画のリスク ④ の手順でルール文書を先に直して
+  定義し直した** — 計画の「Hard = L3 が要る」は、8×8 の一意な盤で L3 が要るものが census で 0.7% しか無く、
+  上限 160 回の試行でも約 3 割が同梱盤面へ落ちる(算術)ので、予算を緩める前に「L2 か L3 が要り、L1 だけでは
+  16 枚以上が決まらない(`l1Open` ≥ 16)」に変えた(通過率 11.7%)。成長の形を変える案は試したが効かなかった。
+  **上の「49. Pipe Link」の「Hard = L3 が要る」はもう正ではない**(ルール文書 §5 が正 — オーナーへの報告事項で、
+  確認待ちではない)。生成の上限は `ATTEMPT_LIMIT` 160・`GENERATION_WORK_LIMIT` 1,500,000、ソルバーは
+  `SEARCH_NODE_LIMIT` 5,000・`TECHNIQUE_WORK_LIMIT` 200,000、同梱 72 面。
+- **Bounce Up**(`BOUNCE_UP_RULES.md` §12): blur でも止める(アーケード 4 本との意図的な差分)、❚❚ を置く、点 =
+  高さ px ÷ 10、累計は各ランのスコアの和、離れたランの到達高も記録に入れる、音は `over` と消える足場の `select`
+  だけ、◀ ▶ は `@media (any-pointer: coarse)`。重力・初速・最高水平速度は初期値で、手触りは実機で決める。
+- **Echo Pads**(`ECHO_PADS_RULES.md` §3・§9・§17・§18): seed の形を Number Recall と同じ
+  `echo-level-<n>-r<attempt>` にした。**再挑戦の約束は「新しい seed」までに絞り**、直前と同じ列を避ける処理は
+  入れず、その割合を測って固定した(`game/quality.test.ts` — attempt n と n − 1 の組で、列全体が同じは 4 パッド
+  5 / 5,489・6 パッド 0・デイリー 0、ラウンド 3 が同じは 2.19% / 0.42% / 0.68%)。避けるかは確認待ち。Pace の値
+  (Calm 700 / 300・Normal 450 / 200・Quick 280 / 140 ms)と音の割り当ては初期値で、実機は未検証。
+
+**レビュー(workflow の記録に残る 2 回目と 3 回目)。**指摘の数(確定 / 反証)は、Chess 9(8 / 1)と 4(4 / 0)、
+Gem Swap 7(6 / 1)と 5(5 / 0)、Pipe Link 8(5 / 3)と 7(4 / 3)、Bounce Up 10(5 / 5)と 5(3 / 2)、
+Echo Pads 7(5 / 2)と 7(7 / 0)。確定した指摘は Chess 12 / Gem Swap 11 / Pipe Link 9 / Bounce Up 8 / Echo Pads 12 件で、
+すべて反映した(各ゲームのコミットの本文)。
+
+**テスト(統合ブランチで `pnpm exec vitest run src/games/<id> --reporter=json`、2026-10-22)。**Chess 18 ファイル
+389 件通過・2 件スキップ(`CHESS_SELFPLAY=full` のときだけ走る bench の計測の組と自己対局 Hard 対 Normal)、Gem Swap
+18 ファイル 778 件、Pipe Link 16 ファイル 261 件、Bounce Up 13 ファイル 121 件、Echo Pads 13 ファイル 137 件
+(どれも失敗 0。共通の wiring テスト `src/test` は含まない)。実測した数は各ルール文書に「テストで実測」として
+書き、テストが出さない数は「算術では」「試作では」「初期値」「未検証」のまま残した。
+
+**i18n。**キー数は Chess 59 / Gem Swap 38 / Pipe Link 47 / Bounce Up 29 / Echo Pads 56(14 言語とも同じ。各 `en.ts` の
+`en` の最上位プロパティを TypeScript の構文木で数え、行頭の正規表現の数え上げと一致)。`en` が原文で、`ja` と
+12 言語は 2026-10-22 に AI が書いた — **作者もネイティブも、どの言語もまだ読んでいない**。高リスクキーは 5 本とも
+無い(`src/i18n/unreadCatalogs.test.ts`)。Chess は勝敗を逆に伝えうる語の用語集を訳より先に置いた(§10.1 — 13 言語の
+語も未読の仮)。`ECHO_PADS_RULES.md` §14 の「55 キー」は、その後のレビューで 1 キー増えた 56 に統合で直した
+(`88bb51b`)。
+
+**統合(Phase 4)。**`ccr-5dd5a1f8-71w1q2`(main `ba2c18e`)に、各ゲームを 1 コミットに squash して載せた:
+`97e9fd1` Chess / `d11c89c` Gem Swap / `8c80cbc` Bounce Up / `dcc6f7c` Echo Pads / `a6bdb4e` Pipe Link。続けて
+registry の 5 本の `channel` を `'in-development'` から `'web-beta'` にし(一覧のテストと注記も)、共有の文書を
+実装に合わせた — README(表・ツリー・キー数)、WEB_VERSION、PROJECT_CONTEXT、RELEASE_CHECKLIST §0、
+I18N_POLICY、ARCHITECTURE、GAME_LIFECYCLE「CPU 探索」(5 本の形と、Chess の暫定の例外)、BRAND(状態の札・
+Bounce Up の最接近・「盤面が自前の色階調を持つ場合の例外」に Gem Swap の宝石 6 色と Chess のマス・駒・halo)、
+architecture/{i18n,registry,storage-keys,css-split,title-accent}、store/listing(使用禁止表現に 2026-10-19 の
+計画の比較対象の名前)、SCHULTE_TABLE_RULES §14(範囲の文に、Echo Pads が §15 で 1〜5 を自分に適用すると
+宣言していることを 1 文だけ足した — 見出しと 1〜5 は変えていない)。全体の門(`pnpm test`・build・`size:check` 等)の
+結果はこの節には書いていない。
+
+- **アクセントの測り直し(BRAND.md「アクセントを選ぶ手順」手順 5、2026-10-22 の統合ブランチで測った)。**Phase 1 と
+  同じ方法(CIE76、CSS Color 4 の全精度の sRGB → XYZ の行列と D65 の白)で `styles.css` と `packages/brand` の
+  `titleAccents` を読み、**56 本 × 6 値が一致**することを確かめた(例外は従来からの Quick Math / Bunny Hop の
+  ライトの ring-soft 0.14 — `titleAccents` に載らない値)。コレクションの最接近ペアはライト 10.88(Sudoku ×
+  Schulte Table)/ ダーク 7.91(Nonogram × Sky Fighter)のままで、床は **12.51 / 9.10**(1.15 倍)。5 色の最接近
+  (ほかの 55 色に対して):Chess Connect Four 14.26 / Bubble Pop 10.91、Gem Swap Takuzu 14.28 / Memory Match 10.44、
+  Pipe Link Sliding Puzzle 14.33 / 10.51、Bounce Up Hit & Blow 14.14 / **Scopa 9.32**、Echo Pads Number Match 14.41 /
+  10.26。**床を割った色は無い**。Phase 1 から変わったのは Bounce Up のダークの最接近だけで、後から入った 52〜56 の
+  Scopa(ダーク `#da71c0`)が Gomoku(10.41)より近い — 余裕は **1.024** で、5 本の最弱(Phase 1 の最弱は
+  Echo Pads のダークの 1.127)。色は 1 つも替えていない。5 色の相互の最小はライト 33.73(Gem Swap × Bounce Up)/
+  ダーク 31.52(Gem Swap × Echo Pads)。`--warn` との最小は Pipe Link のライト 18.08。
+- `src/ui/styles.test.ts` が読む css-split.md の窓(1,200 文字)の中で、`tangram.css` の終わりは 1,182 文字目
+  (残り 18 文字)。次に一覧を伸ばすときは窓を広げる。
+- ホームのスクロール(Bounce Up §7・Echo Pads §11 が「統合で決める」とした点): Web の広告の予約つきの 360×640 で
+  ゲームのホームがスクロールするのは、2026-10-20 の計画の「ブラウザ試遊」が収録済みのタイトルでも同じだと測った
+  形(計画の「360×640 でスクロールなし」は Quick Rules と盤面のもの)で、ここでも共有のホームの寸法には手を
+  入れていない。
+
+**Web 版への配信はまだ。**registry は `'web-beta'` だが、Web 版へは次の landing の同期 — landing の
+`tests/ui.test.js` の 5 本を `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移し(移した後は `WEB_BETA_GAME_IDS`
+15 本、`IN_DEVELOPMENT_GAME_IDS` 0 本)、製品オーナーの承認を得てから Publish Simple Games (web) を実行する — で
+届ける。それまで、いまの配信物(landing main `693ac9f`)に入っている 5 本のチャンクは `'in-development'` のときの
+ビルドのもので、どの扉からも開けない。正式収録の基準 1(2 週間の安定稼働 — RELEASE_CHECKLIST.md §0)の時計は
+その配信の日から動く(**まだ動いていない**)。Bounce Up の題は、2026-10-22 に製品オーナーが「このまま出す」と
+判断した(下の「製品オーナーの確認待ち」と `BOUNCE_UP_RULES.md` 冒頭・§12)。
+
+**確かめていないこと。**
+
+- **実機では 5 本とも何も見ていない**(手触り・音と iOS の遅れ・長押しの後の click・本物の指のタッチ・低スペックの
+  Chromium 88 での CPU の待ちと生成の時間・端末のフォント・読み上げ機能)。ヘッドレス Chromium での寸法・収まりの
+  試行は Chess・Pipe Link・Bounce Up・Echo Pads の各ルール文書にあり、実機の代わりにはならない。
+- `ja` と 12 言語のカタログ(5 本とも)は誰も読んでいない。
+- 題の商標・両ストアの検索: Gem Swap・Bounce Up・Echo Pads は検索エンジンの要約だけの軽い確認(同名・近い名の
+  作品がある)、Chess・Pipe Link は未実施。商標データベースとストアの中は 5 本とも引いていない。比較対象の
+  一次の出典(Bejeweled / Candy Crush Saga / Pipe Mania / Doodle Jump / Simon / Net など)も確かめていない。
+- Chess の perft の値は記憶による公知の値で、出典のページは読めていない(実装は 18 の値を再現した)。
+
+**製品オーナーの確認待ち(5 本のルール文書が残した点。正式収録の前に決める — Bounce Up の題だけはルール文書が
+Web での公開の前の判断を求め、2026-10-22 に決まった)。**
+
+- 共通: 題の商標・両ストアの検索(5 本とも、正式収録の前に)。
+- Chess(§14): ドラッグを足すか / 題「Chess」の検索 / ノード上限 80,000 の段 2・段 3 をいつ・どの端末で行うか /
+  難易度の手応えを Web ベータの反応で見直すか / CPU の手番で戻ったときにタップなしで 450ms で指すか(いまは指す。
+  Nested Tic-Tac-Toe・Scopa と同じ問い)。
+- Gem Swap(§15): 結果カードと ↻ の第一ボタン / 7 色を入れるか(測定は済み — しきい値を超えた)/ 題「Gem Swap」
+  (同名の作品がある — 変えるかを含む)/ ハートを残すか / Peg Solitaire の「完全クリア後の Undo」の判断に §6 を
+  合わせるか。
+- Pipe Link(§15): デイリーを Medium の行に数えるか / 結果カードの第一ボタンと統計・結果の文言(42〜46 で分かれた点)/
+  題「Pipe Link」の検索 / 実機での長押しの後の click とタッチで 1 段戻す 3 タップ /(報告)Hard の帯の定義し直し。
+- Bounce Up(冒頭・§12): 題「Bounce Up」は **2026-10-22 に製品オーナーが「このまま出す」と判断した**(同名作が複数あり、
+  うち 1 本は同じジャンル、と知ったうえで。ルール文書は「オーナーが判断するまで Web 版へ配信しない」としていた —
+  統合の前は「Phase 4 に進まない」だった — ので、この判断で配信の門は開いた)/ 横向きの電話の小さすぎる盤 /
+  ◀ ▶ の不透明度(実機)。
+- Echo Pads(§18): 題「Echo Pads」で正式収録するか / 統計でデイリーを 6 パッドの行に数えるか / 再挑戦が直前と同じ
+  列(またはラウンド 3)を引くのを避けるか。
+
+**現状の文書の数(この統合の後)。**registry **56** = 正式収録 41 + `'web-beta'` **15**(2026-10-19 から配信中の 42〜46、
+2026-10-22 から配信中の 52〜56、2026-10-22 に切り替えて次の同期で届ける 47〜51)+ `'in-development'` **0**。i18n は
+14 言語・**2,207 キー** = シェル 125 + 正式収録 1,393 + 42〜46 の 230 + 47〜51 の 229 + 52〜56 の 230(2026-10-22、
+各 `en.ts` の `en` の最上位プロパティを TypeScript の構文木で数えた)。保存キーは各ゲームの `storage/keys.ts` の
+とおり — Chess `ch.saveGame / stats / flags / prefs`、Gem Swap `gs.saveGame / stats / flags / prefs`、Pipe Link
+`pn.saveGame / saveDaily / stats / flags / prefs`、Bounce Up `bo.stats / flags / prefs`、Echo Pads
+`ep.saveGame / saveDaily / progress / stats / flags / prefs`(計画の決定事項の「予定」のとおり)。

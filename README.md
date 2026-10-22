@@ -170,8 +170,8 @@ Web 版は新作の先行公開チャンネルです([docs/WEB_VERSION.md](docs/
 「先行公開(ベータ)」)。上の表の末尾 11 本(Crown Grid から Box Regions まで)は
 2026-09-26 から 2026-09-29(UTC)に Web 版だけで先行公開し、**2026-10-02 にアプリへ正式収録**
 しました(その後の新作 5 本は同じチャンネルで 2026-10-19 から Web 版に出ており、さらに次の
-10 本のうち 5 本を実装中、5 本を実装済みです — 実装済みの 5 本も 2026-10-22 から
-Web 版に出ています。下の「Web 先行公開(ベータ)」)。
+10 本も実装済みです — 52〜56 の 5 本は 2026-10-22 から Web 版に出ており、47〜51 の 5 本は
+次の同期で Web 版に出します(Bounce Up の題は 2026-10-22 に製品オーナーが「このまま」と判断済み)。下の「Web 先行公開(ベータ)」)。
 2 週間の安定稼働という基準を満たす前に、作者の判断で収録しました
 (経緯は WEB_VERSION.md に記録)。保存スキーマはこの収録で凍結し、以後は移行だけで変えます。
 この 11 本はゲーム別ガイドページがまだ無いので、「詳しく見る」のリンクはありません。
@@ -220,23 +220,30 @@ pixapps-landing の #201 で同期)。タイトルカードに「BETA」バッ�
 | Bridges        | ロジック   | 数字の島を縦横の橋(2 島の間は 2 本まで)で結び、全島を 1 つにつなぐ      | `bridges/`        | 難易度 3 種(7×7 / 9×9 / 10×10)+ デイリー                     | Undo / Hint(答えとの矛盾か、盤面から証明できる橋) | [docs/BRIDGES_RULES.md](docs/BRIDGES_RULES.md)               |
 | Peg Solitaire  | パズル     | コマを縦横(Triangle は 6 方向)に跳び越えて取り除き、最後の 1 個を目指す | `peg-solitaire/`  | 盤 2 種(English 33 穴 / Triangle 15 穴・54 問、デイリーなし) | Undo / Restart(Hint なし)                         | [docs/PEG_SOLITAIRE_RULES.md](docs/PEG_SOLITAIRE_RULES.md)   |
 
-47〜51 本目の新作 5 本(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads)も、同じ
-**Web 版だけの先行公開(ベータ)**向けに 2026-10-19 から実装しています(計画は
-[docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md)、
-仕様の正は各ルール文書)。いまは registry に `channel: 'in-development'`(どの扉からも開けない値。
-チャンクはビルドに入るが遊べない。2026-10-20 から)で登録したスキャフォールドの段階で、**ゲーム本体は
-まだ無く、Web 版にもアプリにも出ていません**。遊べるようになる変更で `'web-beta'` に変え、統合と検証を
-終えてから Web 版へ同期します。Chess は工数が最も大きいので別のフェーズで進め、残り 4 本を Chess で
-待たせません。上の 41 本には数えず、ストア掲載文にも載せず、Club House にも登録しません。
-遊び方・進行・助けはまだ実装していないので、ここには書きません(計画と各ルール文書にあります)。
+47〜51 本目の新作 5 本(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads)は、同じ
+**Web 版だけの先行公開(ベータ)**向けにこのリポジトリで実装しました(2026-10-19 に着手、2026-10-22 に
+5 本とも遊べる形まで。仕様の正は各ルール文書、経緯は
+[docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md))。
+registry では 2026-10-22 に 5 本とも `'in-development'` から `channel: 'web-beta'` に変えました(製品オーナーの
+依頼は「Web 公開まで」。計画の判断 4 は Chess を別 PR にして残り 4 本を Chess で待たせないことでしたが、
+5 本が同時に仕上がったので 1 つの PR で出します)。5 本とも**アプリには出ません**。**Web 版にはまだ
+出ていません** — Web 版を配信する pixapps-landing への次の同期(landing の一覧を `IN_DEVELOPMENT_GAME_IDS` から
+`WEB_BETA_GAME_IDS` へ移し、製品オーナーの承認を得てから「Publish Simple Games (web)」を実行する)で届きます。
+公開後はタイトルカードに「BETA」バッジが付き、ベータ中はスキーマ変更で保存データが消えることがあります
+(en / ja ではその旨を表示)。正式収録の判断のための 2 週間の時計は、Web で公開した日から動きます(まだ
+動いていません)。実機では 5 本とも何も確かめておらず、`ja` と残る 12 言語の文言は AI が書いて誰も読んで
+いません。題の商標・ストアの検索は 5 本とも正式収録の前に行います。Bounce Up は同名作がありますが、製品オーナーが
+2026-10-22 に「この題のまま Web 版へ出す」と判断しました([docs/BOUNCE_UP_RULES.md](docs/BOUNCE_UP_RULES.md)
+冒頭と §12)。上の 41 本には数えず、
+ストア掲載文にも載せず、Club House にも登録しません。
 
-| ゲーム    | カテゴリ     | フォルダ     | ルール文書(いまはスタブ)                           |
-| --------- | ------------ | ------------ | -------------------------------------------------- |
-| Chess     | ボードゲーム | `chess/`     | [docs/CHESS_RULES.md](docs/CHESS_RULES.md)         |
-| Gem Swap  | パズル       | `gem-swap/`  | [docs/GEM_SWAP_RULES.md](docs/GEM_SWAP_RULES.md)   |
-| Pipe Link | ロジック     | `pipe-link/` | [docs/PIPE_LINK_RULES.md](docs/PIPE_LINK_RULES.md) |
-| Bounce Up | アーケード   | `bounce-up/` | [docs/BOUNCE_UP_RULES.md](docs/BOUNCE_UP_RULES.md) |
-| Echo Pads | ドリル       | `echo-pads/` | [docs/ECHO_PADS_RULES.md](docs/ECHO_PADS_RULES.md) |
+| ゲーム    | カテゴリ     | 内容                                                                                                                                | フォルダ     | 進行                                                                   | 無料・無制限の助け                                                        | ルール文書                                         |
+| --------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------- |
+| Chess     | ボードゲーム | 8×8 の盤で CPU と指す標準のチェス(駒の動き・キャスリング・アンパッサン・昇格は FIDE のとおり)。詰み・ステイルメイト・引き分けは自動 | `chess/`     | CPU 3 段階(Easy / Normal / Hard、先後を選べる。デイリーなし。途中保存) | Undo(自分と CPU の 2 手を 1 組、再開後も)/ 合法手の点(Hint なし)          | [docs/CHESS_RULES.md](docs/CHESS_RULES.md)         |
+| Gem Swap  | パズル       | 8×8 の盤で隣り合う 2 つの宝石を入れ替え、同じ種類を縦横に 3 つ以上並べて消す。1 ラウンドは成立した入れ替え 30 回                    | `gem-swap/`  | Free Play(5 色 / 6 色、デイリーなし。途中保存)                         | Undo(ラウンドの中で無制限。同じ盤面でもう一度)                            | [docs/GEM_SWAP_RULES.md](docs/GEM_SWAP_RULES.md)   |
+| Pipe Link | ロジック     | 格子のタイルを回してパイプをつなぎ、水源からすべてのタイルへ水を通す                                                                | `pipe-link/` | 難易度 3 種(5×5 / 7×7 / 8×8)+ デイリー(途中保存)                       | Undo / Hint(盤面から証明できる 1 枚)                                      | [docs/PIPE_LINK_RULES.md](docs/PIPE_LINK_RULES.md) |
+| Bounce Up | アーケード   | 足場に乗るたびに自動で跳ね、左右に動いて上の足場へ登っていく。記録は登った最大の高さ                                                | `bounce-up/` | エンドレス(足場の幅 Normal / Wide、デイリーなし。途中保存なし)         | なし(確認なしの即時リトライと、❚❚・Wide)                                  | [docs/BOUNCE_UP_RULES.md](docs/BOUNCE_UP_RULES.md) |
+| Echo Pads | ドリル       | 光って鳴るパッドの順番を覚え、同じ順番にタップして返す                                                                              | `echo-pads/` | Levels 22(4 / 6 パッド × 目標長 4〜14)+ デイリー(途中保存)             | 聞き直し(入力の前と失敗の後)/ Pace 3 段(Calm / Normal / Quick。Hint なし) | [docs/ECHO_PADS_RULES.md](docs/ECHO_PADS_RULES.md) |
 
 52〜56 本目の新作 5 本(Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram)は、同じ
 **Web 版だけの先行公開(ベータ)**向けにこのリポジトリで実装しました(2026-10-20 に着手、2026-10-21 に
@@ -336,7 +343,7 @@ simple-games/
 │           │   ├── loop-puzzle/
 │           │   ├── bridges/
 │           │   ├── peg-solitaire/
-│           │   ├── chess/       # ここから 5 本は実装中(channel: 'in-development')。スキャフォールドで、チャンクはビルドに入るが遊べない
+│           │   ├── chess/       # ここから 5 本は Web 先行公開(ベータ。channel: 'web-beta'、2026-10-22 に実装)。Web 版へは次の同期で届ける。アプリには出ない
 │           │   ├── gem-swap/
 │           │   ├── pipe-link/
 │           │   ├── bounce-up/
@@ -388,16 +395,15 @@ Android / iOS のビルド手順は [apps/simple-games/README.md](apps/simple-ga
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 14 言語・2,033 キー(シェル 125 + ゲーム別 1,908 — 正式収録 41 本の 1,393、Web 先行公開で 2026-10-19 から配信中の 42〜46 の 5 本の 230、実装済みの 52〜56 の 5 本の 230(2026-10-22 から配信中)、実装中の 47〜51 の 5 本のスキャフォールドの 55。Club House の 122 キーは別カタログ。2026-10-21 に各 `en.ts` の最上位キーを数えた)
+**One app. Many games. Many languages.** 現在は 14 言語・2,207 キー(シェル 125 + ゲーム別 2,082 — 正式収録 41 本の 1,393、Web 先行公開で 2026-10-19 から配信中の 42〜46 の 5 本の 230、47〜51 の 5 本の 229(2026-10-22 に実装、Web 版へは未同期)、52〜56 の 5 本の 230(2026-10-22 から配信中)。Club House の 122 キーは別カタログ。2026-10-22 に各 `en.ts` の最上位キーを数えた)
 (en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
 中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。
 カタログは全言語同梱で、言語追加は「locale ファイル 1 つ + 登録」で完結します。
 **en と ja 以外は来歴 `machine` です — AI の助けを借りて書いており、その言語の
-ネイティブは一人も読んでいません。**Web 先行公開の 10 本(2026-10-19 から配信中の 42〜46 と、2026-10-22 から配信中の
-52〜56)のゲーム別の文言は、ja も AI が書いたもので、作者はまだ読んでいません(10 本の
-文言に高リスクキーはありません)。実装中の 5 本(Chess から Echo Pads まで)のカタログは、まだ
-14 言語すべてがスキャフォールドの英語の仮文です。
+ネイティブは一人も読んでいません。**Web 先行公開の 15 本(2026-10-19 から配信中の 42〜46、2026-10-22 に
+実装した 47〜51、2026-10-22 から配信中の 52〜56)のゲーム別の文言は、ja も AI が書いたもので、作者は
+まだ読んでいません(15 本の文言に高リスクキーはありません)。
 この製品は一人でつくっているため、14 言語の
 ネイティブレビューは供給できません。代わりに、約束を背負う高リスクキーだけは
 リリース前に逆翻訳を作者が読む門を通し、自然さは来歴の開示と読者からの報告に

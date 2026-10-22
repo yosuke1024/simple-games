@@ -195,7 +195,9 @@ level から (盤面サイズ, order, seed) を決定的に導出する。seed �
 
 ## 14. ジャンル原則(脳トレドリル 3 本の共通事項)
 
-Schulte Table / Number Recall / Quick Math の 3 本すべてに適用する。
+Schulte Table / Number Recall / Quick Math の 3 本すべてに適用する。Web 先行公開(ベータ)の
+Echo Pads(drills の棚)も、[ECHO_PADS_RULES.md](ECHO_PADS_RULES.md) §15 で 1〜5 を自分に適用すると宣言している
+(2026-10-22。再生の点灯が急かす点滅ではない理由も同じ節)。
 
 1. **時間は計るが、プレイヤーを止めない。** 制限時間・カウントダウン・
    時間切れを作らない。時計はプレイ中に表示せず、結果と統計でだけ見せる

@@ -82,7 +82,7 @@ describe('gameLandingUrl', () => {
     // release (docs/WEB_VERSION.md「先行公開」) have no guide yet — the ones of
     // issues #194 and #197, in the app since 2026-10-02, the five still in
     // early release (docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md)
-    // and the next ones — the five still being built for it
+    // and the next ones — the five built for it on 2026-10-22
     // (docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md) and
     // the five built on 2026-10-21, on the channel since then (Overtake and
     // Scopa since 2026-10-22)

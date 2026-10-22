@@ -1,21 +1,57 @@
 /**
- * Placeholder Turkish catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real Turkish translation before release (docs/I18N_POLICY.md); the
- * title (`pipeLinkName`) is a proper noun and stays as-is in every locale.
+ * Turkish catalog for Pipe Link. Provenance (docs/PIPE_LINK_RULES.md §11):
+ * machine-written by AI from the English source and **not read by any native
+ * speaker** — not a reviewed translation. The title (`pipeLinkName`) is a
+ * proper noun and stays as-is; placeholder names match the English source.
  */
 import type { PipeLinkMessages } from './en';
 
 export const tr: PipeLinkMessages = {
   pipeLinkName: 'Pipe Link',
-  pipeLinkPlayPlaceholder: 'Play a sample round',
-  pipeLinkFinishPlaceholder: 'Finish the sample round',
-  pipeLinkStep1Title: 'Step 1',
-  pipeLinkStep1Body: 'Placeholder. The first of at most three steps.',
-  pipeLinkStep2Title: 'Step 2',
-  pipeLinkStep2Body: 'Placeholder. What the player does next.',
-  pipeLinkStep3Title: 'Step 3',
-  pipeLinkStep3Body: 'Placeholder. How a round ends.',
-  pipeLinkResultTitle: 'Nice work',
-  pipeLinkResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  pipeLinkChooseBoard: 'Tahta seç',
+  pipeLinkDifficulty_easy: 'Kolay',
+  pipeLinkDifficulty_medium: 'Orta',
+  pipeLinkDifficulty_hard: 'Zor',
+  pipeLinkBoardNote: '{width}×{height}',
+  pipeLinkConfirmSwitchTitle: 'Devam eden tahta değiştirilsin mi?',
+  pipeLinkConfirmSwitchBody: '{current} tahtanın yerine yeni bir {next} tahtası gelecek.',
+  pipeLinkBoardLabel: 'Pipe Link tahtası, {width} çarpı {height}',
+  pipeLinkTile: 'Satır {row}, sütun {col}: {pipes}, {light}',
+  pipeLinkTileSource: 'Satır {row}, sütun {col}, kaynak: {pipes}, {light}',
+  pipeLinkTileHinted: '{tile}. İpucu: {pipes} olacak şekilde çevir',
+  pipeLinkLit: 'su dolu',
+  pipeLinkUnlit: 'su yok',
+  pipeLinkPipes_end_0: 'uç, yukarı açık',
+  pipeLinkPipes_end_1: 'uç, sağa açık',
+  pipeLinkPipes_end_2: 'uç, aşağı açık',
+  pipeLinkPipes_end_3: 'uç, sola açık',
+  pipeLinkPipes_straight_0: 'düz, yukarı ve aşağı',
+  pipeLinkPipes_straight_1: 'düz, sol ve sağ',
+  pipeLinkPipes_elbow_0: 'dirsek, yukarı ve sağ',
+  pipeLinkPipes_elbow_1: 'dirsek, sağ ve aşağı',
+  pipeLinkPipes_elbow_2: 'dirsek, aşağı ve sol',
+  pipeLinkPipes_elbow_3: 'dirsek, sol ve yukarı',
+  pipeLinkPipes_tee_0: 'T, yukarı, sağ ve aşağı',
+  pipeLinkPipes_tee_1: 'T, sağ, aşağı ve sol',
+  pipeLinkPipes_tee_2: 'T, aşağı, sol ve yukarı',
+  pipeLinkPipes_tee_3: 'T, sol, yukarı ve sağ',
+  pipeLinkAnnounce: 'Satır {row}, sütun {col}: {pipes}. {total} karonun {lit} tanesinde su var.',
+  pipeLinkHintNote: 'Noktalı halkadaki karoyu, boruları soluk borularla eşleşene kadar çevir.',
+  pipeLinkHintWhere: 'İşaretli: satır {row}, sütun {col}. {pipes} olacak şekilde çevir.',
+  pipeLinkSolvedTitle: 'Tüm karolarda su var',
+  pipeLinkSolvedBody: 'Su {tiles} karonun hepsine ulaşıyor.',
+  pipeLinkBoardSize: 'Tahta',
+  pipeLinkHintsUsed: 'Kullanılan ipuçları',
+  pipeLinkNewBestTime: 'En hızlı zamanın.',
+  pipeLinkNewBoard: 'Yeni tahta',
+  pipeLinkSolvedCount: 'Çözülen tahtalar',
+  pipeLinkDailySection: 'Günlük',
+  pipeLinkDailiesCleared: 'Tamamlanan günler',
+  pipeLinkAllModes: 'Tüm modlar',
+  pipeLinkStep1Title: 'Çevirmek için dokun',
+  pipeLinkStep1Body: 'Bir karoya dokununca saat yönünde çeyrek tur döner.',
+  pipeLinkStep2Title: 'Su akar',
+  pipeLinkStep2Body: 'Kaynağa bağlı borular suyla dolar; diğerleri boş kalır.',
+  pipeLinkStep3Title: 'Tüm boruları doldur',
+  pipeLinkStep3Body: 'Tüm borular dolunca tahta tamamlanır.',
 };

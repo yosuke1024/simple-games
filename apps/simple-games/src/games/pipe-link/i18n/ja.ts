@@ -1,21 +1,57 @@
 /**
- * Placeholder Japanese catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real Japanese translation before release (docs/I18N_POLICY.md); the
- * title (`pipeLinkName`) is a proper noun and stays as-is in every locale.
+ * Japanese catalog for Pipe Link. Provenance (docs/PIPE_LINK_RULES.md §11):
+ * written by AI as a draft and **not yet read by the author** — not a reviewed
+ * translation. The title (`pipeLinkName`) is a proper noun and stays as-is in
+ * every locale; placeholder names match the English source.
  */
 import type { PipeLinkMessages } from './en';
 
 export const ja: PipeLinkMessages = {
   pipeLinkName: 'Pipe Link',
-  pipeLinkPlayPlaceholder: 'Play a sample round',
-  pipeLinkFinishPlaceholder: 'Finish the sample round',
-  pipeLinkStep1Title: 'Step 1',
-  pipeLinkStep1Body: 'Placeholder. The first of at most three steps.',
-  pipeLinkStep2Title: 'Step 2',
-  pipeLinkStep2Body: 'Placeholder. What the player does next.',
-  pipeLinkStep3Title: 'Step 3',
-  pipeLinkStep3Body: 'Placeholder. How a round ends.',
-  pipeLinkResultTitle: 'Nice work',
-  pipeLinkResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  pipeLinkChooseBoard: '盤面を選ぶ',
+  pipeLinkDifficulty_easy: 'かんたん',
+  pipeLinkDifficulty_medium: 'ふつう',
+  pipeLinkDifficulty_hard: 'むずかしい',
+  pipeLinkBoardNote: '{width}×{height}',
+  pipeLinkConfirmSwitchTitle: '進行中の盤面を置き換えますか？',
+  pipeLinkConfirmSwitchBody: '進行中の{current}の盤面は、新しい{next}の盤面に置き換わります。',
+  pipeLinkBoardLabel: 'Pipe Link の盤面、{width}×{height}',
+  pipeLinkTile: '{row}行 {col}列：{pipes}、{light}',
+  pipeLinkTileSource: '{row}行 {col}列、水源：{pipes}、{light}',
+  pipeLinkTileHinted: '{tile}。ヒント：{pipes}に回す',
+  pipeLinkLit: '光っている',
+  pipeLinkUnlit: '光っていない',
+  pipeLinkPipes_end_0: '端、上向き',
+  pipeLinkPipes_end_1: '端、右向き',
+  pipeLinkPipes_end_2: '端、下向き',
+  pipeLinkPipes_end_3: '端、左向き',
+  pipeLinkPipes_straight_0: '直線、上と下',
+  pipeLinkPipes_straight_1: '直線、左と右',
+  pipeLinkPipes_elbow_0: '曲がり、上と右',
+  pipeLinkPipes_elbow_1: '曲がり、右と下',
+  pipeLinkPipes_elbow_2: '曲がり、下と左',
+  pipeLinkPipes_elbow_3: '曲がり、左と上',
+  pipeLinkPipes_tee_0: 'T字、上と右と下',
+  pipeLinkPipes_tee_1: 'T字、右と下と左',
+  pipeLinkPipes_tee_2: 'T字、下と左と上',
+  pipeLinkPipes_tee_3: 'T字、左と上と右',
+  pipeLinkAnnounce: '{row}行 {col}列：{pipes}。{total}枚中 {lit}枚が光っています。',
+  pipeLinkHintNote: '点線の輪のタイルを、薄い図と同じ向きになるまで回してください。',
+  pipeLinkHintWhere: '印：{row}行 {col}列。{pipes}に回します。',
+  pipeLinkSolvedTitle: '全タイルが光りました',
+  pipeLinkSolvedBody: '水が {tiles} 枚すべてに届いています。',
+  pipeLinkBoardSize: '盤面',
+  pipeLinkHintsUsed: 'ヒント使用',
+  pipeLinkNewBestTime: '自己ベスト更新。',
+  pipeLinkNewBoard: '新しい盤面',
+  pipeLinkSolvedCount: 'クリア数',
+  pipeLinkDailySection: 'デイリー',
+  pipeLinkDailiesCleared: '達成日数',
+  pipeLinkAllModes: 'すべてのモード',
+  pipeLinkStep1Title: 'タップで回す',
+  pipeLinkStep1Body: 'タイルをタップすると、時計回りに 90° 回ります。',
+  pipeLinkStep2Title: '水が流れる',
+  pipeLinkStep2Body: '水源とつながったパイプには水が満ち、ほかは空のままです。',
+  pipeLinkStep3Title: 'すべてを満たす',
+  pipeLinkStep3Body: 'すべてのパイプが満ちたら、盤面の完成です。',
 };
