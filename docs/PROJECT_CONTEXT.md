@@ -43,10 +43,10 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **41 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
-  本数はここで数える)。`GAMES` の全 56 エントリには、下の Web 先行公開中の 8 本(No. 42〜46 と、
-  No. 52〜56 のうち Make the Target / Nested Tic-Tac-Toe / Tangram)と、実装中で Web 版にも出していない
-  5 本(No. 47〜51)と、実装済みでも `'in-development'` のまま Web 版で開けない 2 本(Overtake / Scopa)も
-  含まれる。
+  本数はここで数える)。`GAMES` の全 56 エントリには、下の `channel: 'web-beta'` の 10 本(Web 先行公開中の
+  8 本 — No. 42〜46 と、No. 52〜56 のうち Make the Target / Nested Tic-Tac-Toe / Tangram — と、2026-10-22 に
+  `'web-beta'` にして Web 版への配信を待つ Overtake / Scopa)と、実装中で Web 版にも出していない
+  5 本(No. 47〜51、`'in-development'`)も含まれる。
 - 2026-10-02 に、Web 版で先行公開していた新作 11 本(Crown Grid / Number Path /
   Shape Regions、2026-09-26、issue #194。Yacht / Mancala / Dominoes / Hit & Blow /
   Dots and Boxes、2026-09-27、issue #197。Binary Balance / Sudoku 6×6 / Box Regions、
@@ -79,24 +79,30 @@ Design philosophy:
   このリポジトリに実装した**(計画は
   `docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md`、仕様の正は各
   `docs/*_RULES.md`)。registry では Make the Target / Nested Tic-Tac-Toe / Tangram の 3 本が 2026-10-21 から
-  `channel: 'web-beta'`(遊べるようになる変更で `'in-development'` から変えた)。**Overtake と Scopa は
-  遊べる形でも `'in-development'` のまま** — Overtake は Phase 0 の結果を `docs/OVERTAKE_RULES.md` §3 に
-  記録するまで(記録の前に上げるなら `DRAG_MAPPING` を `'B'` にして出す)、Scopa は復帰時の CPU の拍の
-  張り直しを製品オーナーが決め、規則の出典と商標・ストアの検索を `docs/SCOPA_RULES.md` §14 に書くまで
-  (§4.2・§14)、各ルール文書が `'web-beta'` への切り替えを止めている。
+  `channel: 'web-beta'`(遊べるようになる変更で `'in-development'` から変えた)。**Overtake と Scopa も
+  2026-10-22 に `'web-beta'` にした** — 製品オーナーの指示(2026-10-22):「Overtake, Scopa は Web に
+  出したいです。計画が間違ってる。このタイミングで、実機の確認はできない。」それまでは各ルール文書が
+  切り替えを止めていた。Overtake は Phase 0 を行わないまま、`docs/OVERTAKE_RULES.md` §3 が記録の前に
+  上げるときの形として定めていたとおり `DRAG_MAPPING` を `'B'`(横ドラッグ + ▼ 長押し)にして出す
+  (モード A のコードと試験は定数の裏に残す)。Scopa は復帰時に CPU の拍を 450ms から張り直す今の
+  読み方を暫定の挙動として出し、読み方は確認待ちのまま(§4.2)。規則の出典と商標・ストアの検索も
+  未確認のままで、`docs/SCOPA_RULES.md` §14 では「正式収録の前に(できるだけ早く)」に移した。
   **Make the Target / Nested Tic-Tac-Toe / Tangram の 3 本は Web 版で 2026-10-22 から先行公開している**
   (JST、UTC では 2026-10-21 17:38。pixapps-landing #204 で landing の `tests/ui.test.js` の
   `WEB_BETA_GAME_IDS` に 3 本の id を、`IN_DEVELOPMENT_GAME_IDS` に Overtake と Scopa の id を足し、
   続けて製品オーナーの指示で公開ワークフローが `11a3036` の web ビルドを landing main に同期した —
   `af9dedc`、2026-10-21 17:38 UTC。本番への反映はこのリポジトリからは観測していない。
-  `docs/WEB_VERSION.md`「先行公開」)。Overtake と Scopa はチャンクが配信物に入っただけで、
-  `'in-development'` のためどの扉からも開けず、Web 版では遊べない。
-  Overtake と Tangram の実機での試作(Phase 0)はまだ行っておらず、操作の既定は暫定(Tangram はそれが
-  通らなければ Three Peaks に差し替える)。正式収録の 41 本には数えず、アプリには出ず、Club House にも
-  登録しない。正式収録の基準(`docs/RELEASE_CHECKLIST.md` §0)の 2 週間の時計は Web で公開した日から
-  数える — Make the Target / Nested Tic-Tac-Toe / Tangram は 2026-10-22 から、Overtake と Scopa はまだ
-  動いていない。47〜51 の Phase 1(#239)が先に main に入ったので、この 5 本はその後ろに
-  No. 順で並ぶ(47〜51 はまだ `'in-development'`)。
+  `docs/WEB_VERSION.md`「先行公開」)。Overtake と Scopa のチャンクも配信物に入っているが、そのビルドでは
+  `'in-development'` のためどの扉からも開けず、Web 版ではまだ遊べない。Web 版への配信は次の landing の
+  同期(landing の一覧で 2 本を `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移し、オーナーの
+  承認後の Publish)で。
+  Overtake と Tangram の実機での試作(Phase 0)はまだ行っておらず、操作の既定は暫定(Overtake は製品
+  オーナーが Phase 0 を当面見送ったのでモード B で出す。Tangram はそれが通らなければ Three Peaks に
+  差し替える)。正式収録の 41 本には数えず、アプリには出ず、Club House にも登録しない。
+  正式収録の基準(`docs/RELEASE_CHECKLIST.md` §0)の 2 週間の時計は Web で公開した日から数える —
+  Make the Target / Nested Tic-Tac-Toe / Tangram は 2026-10-22 から、Overtake と Scopa は次の同期で
+  Web に公開する日から(まだ動いていない)。47〜51 の Phase 1(#239)が先に main に入ったので、
+  この 5 本はその後ろに No. 順で並ぶ(47〜51 はまだ `'in-development'`)。
 - 実装上のゲーム一覧・ID・並び順・カテゴリの正は `apps/simple-games/src/app/registry.ts` の `GAMES` / `GAME_CATEGORIES`。
 - 人間向け一覧は root `README.md`。
 - 各ゲームの実装は `apps/simple-games/src/games/<game-id>/` に分離する。

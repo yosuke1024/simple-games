@@ -91,14 +91,18 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
 > さらにその次の 5 本(Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram、No. 52〜56。2026-10-20 に
 > 着手 — [plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md))は
 > 2026-10-21 に遊べる形まで実装し、Make the Target / Nested Tic-Tac-Toe / Tangram の registry を `channel: 'web-beta'` にした。
-> Overtake と Scopa は各ルール文書の条件(Overtake は Phase 0 の結果の §3 への記録、Scopa は §4.2 の製品オーナーの
-> 判断と §14 の出典・検索)が満たされるまで `'in-development'` のまま。**Make the Target / Nested Tic-Tac-Toe /
+> Overtake と Scopa も、製品オーナーの指示(2026-10-22、「Overtake, Scopa は Web に出したいです。計画が間違ってる。
+> このタイミングで、実機の確認はできない。」)で 2026-10-22 に `'web-beta'` にした — 各ルール文書の条件(Overtake は
+> Phase 0 の結果の §3 への記録、Scopa は §4.2 の製品オーナーの判断と §14 の出典・検索)は満たされないまま残り、
+> 切り替えを止めるものではなくなった(Overtake は §3 のとおり `DRAG_MAPPING` を `'B'` にして出す。Scopa の §4.2 の
+> 読み方は確認待ちのまま暫定、§14 は正式収録の前に)。**Make the Target / Nested Tic-Tac-Toe /
 > Tangram の 3 本は 2026-10-22(JST、UTC では 2026-10-21 17:38)に Web 版で配信を始めた**(landing main `af9dedc` —
 > `11a3036` の web ビルドの同期。[WEB_VERSION.md](WEB_VERSION.md)「先行公開」)ので、この 3 本の上の 2 週間の
-> 安定稼働はこの日から数える(保存を消す変更を入れたら巻き戻る)。滞在時間の確認はその後。Overtake と Scopa は
-> チャンクが配信物に入っただけで `'in-development'` のまま開けず、2 週間の安定稼働も滞在時間の確認も
-> 始まっていない。Overtake と Tangram は実機での試作(Phase 0)を
-> まだ行っておらず、操作の既定は暫定。この節の項目はすべて未着手。
+> 安定稼働はこの日から数える(保存を消す変更を入れたら巻き戻る)。滞在時間の確認はその後。Overtake と Scopa の
+> Web 版への配信は次の landing の同期(オーナーの承認後の Publish)で、いまの配信物ではチャンクが入っているだけで
+> 開けない。2 週間の安定稼働はその公開の日から数え、滞在時間の確認とともにまだ始まっていない。Overtake と Tangram は
+> 実機での試作(Phase 0)をまだ行っておらず、操作の既定は暫定(Overtake は Phase 0 を当面見送ってモード B で出す)。
+> この節の項目はすべて未着手。
 
 ## 1. コードの検証(機械が判定できるもの)
 

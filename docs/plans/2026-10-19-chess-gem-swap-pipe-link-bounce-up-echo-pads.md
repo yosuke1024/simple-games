@@ -356,7 +356,9 @@ CPU・Undo・合法手の点・難易度別の統計・途中保存はそのま�
       [2026-10-20 の計画](2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)の
       「2026-10-20 追記 — `'in-development'` への切り替え」)。2026-10-22(JST、UTC では 2026-10-21 17:38)の
       同期で、そのうち Make the Target / Nested Tic-Tac-Toe / Tangram は `'web-beta'` として Web 版で先行公開中、
-      Overtake / Scopa は `'in-development'` のまま(チャンクは出るがどの扉からも開けない)。
+      Overtake / Scopa はその同期では `'in-development'`(チャンクは出るがどの扉からも開けない)で、同日
+      (2026-10-22)に製品オーナーの指示で `'web-beta'` にした(Web 版への配信は次の landing の同期で —
+      2026-10-20 の計画の「Web 版への同期(「フェーズ」6)」)。
 
 **未決事項(Phase 2 でルール文書に決める。推奨つき)**:
 
@@ -901,7 +903,9 @@ max-height: 100%`)は流用しない。幅を決めたまま高さだけを縮�
    「フェーズ(判断 4)」の追記)。(その後: 同日の「Web の帰結の対処」で `'in-development'` と landing の
    `IN_DEVELOPMENT_GAME_IDS` を足して解決した。52〜56 は 2026-10-22(JST)の同期で、Make the Target / Nested
    Tic-Tac-Toe / Tangram が `WEB_BETA_GAME_IDS`、Overtake / Scopa が `IN_DEVELOPMENT_GAME_IDS` に入った —
-   [2026-10-20 の計画](2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)「Web 版への同期」。)
+   [2026-10-20 の計画](2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)「Web 版への同期」。
+   同日、製品オーナーの指示で Overtake / Scopa も `'web-beta'` にした — 次の landing の同期で
+   `WEB_BETA_GAME_IDS` へ移す。)
 5. **Chess のフェーズ(C)**: ② の上で 1 本だけ進める — ルール文書 → `game/`(perft・規則の単体・CPU の bench)→
    独立レビュー → `storage/` `state/` `ui/` i18n(用語集が先)→ 単独で全ゲート。4 本のマージの後に main の上へ
    載せ直して、自分の PR で出す。landing の同期 PR で `chess` を足す。どちらもオーナーの承認を得てから。
