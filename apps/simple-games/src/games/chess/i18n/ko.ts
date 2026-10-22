@@ -1,21 +1,72 @@
 /**
- * Placeholder Korean catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real Korean translation before release (docs/I18N_POLICY.md); the
- * title (`chessName`) is a proper noun and stays as-is in every locale.
+ * Chess — the Korean catalog. Provenance (docs/CHESS_RULES.md §10): `machine` —
+ * written by an AI from the English source on 2026-10-22; no native speaker
+ * has read it, and neither has the author. The title (`chessName`) is a
+ * proper noun and stays as-is.
+ *
+ * Glossary (§10.1): 체크 · 체크메이트 · 스테일메이트 (never 외통, which is checkmate's side) · 무승부 · 기물 부족 · 3회 동형 반복 · 50수 규칙; 폰 · 나이트 · 비숍 · 룩 · 퀸 · 킹; 백 · 흑.
  */
 import type { ChessMessages } from './en';
 
 export const ko: ChessMessages = {
   chessName: 'Chess',
-  chessPlayPlaceholder: 'Play a sample round',
-  chessFinishPlaceholder: 'Finish the sample round',
-  chessStep1Title: 'Step 1',
-  chessStep1Body: 'Placeholder. The first of at most three steps.',
-  chessStep2Title: 'Step 2',
-  chessStep2Body: 'Placeholder. What the player does next.',
-  chessStep3Title: 'Step 3',
-  chessStep3Body: 'Placeholder. How a round ends.',
-  chessResultTitle: 'Nice work',
-  chessResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  chessChooseOpponent: '상대를 고르세요',
+  chessDifficulty_easy: '쉬움',
+  chessDifficulty_normal: '보통',
+  chessDifficulty_hard: '어려움',
+  chessRecordNote: '승 {wins} · 무 {draws} · 패 {losses}',
+  chessChooseSideLabel: '다음 대국에서 내 색',
+  chessPlayWhite: '백 (먼저 둠)',
+  chessPlayBlack: '흑 (나중에 둠)',
+  chessConfirmSwitchTitle: '진행 중인 대국을 바꿀까요?',
+  chessConfirmSwitchBody: '{current} 대국이 새 {next} 대국으로 바뀝니다.',
+  chessYouPlayWhite: '나는 백',
+  chessYouPlayBlack: '나는 흑',
+  chessBoardLabel: '체스판',
+  chessPiece_white_pawn: '백 폰',
+  chessPiece_white_knight: '백 나이트',
+  chessPiece_white_bishop: '백 비숍',
+  chessPiece_white_rook: '백 룩',
+  chessPiece_white_queen: '백 퀸',
+  chessPiece_white_king: '백 킹',
+  chessPiece_black_pawn: '흑 폰',
+  chessPiece_black_knight: '흑 나이트',
+  chessPiece_black_bishop: '흑 비숍',
+  chessPiece_black_rook: '흑 룩',
+  chessPiece_black_queen: '흑 퀸',
+  chessPiece_black_king: '흑 킹',
+  chessSquareEmpty: '{square}, 빈 칸',
+  chessSquarePiece: '{square}, {piece}',
+  chessSquareSelected: '{square}, {piece}, 선택됨',
+  chessSquareInCheck: '{square}, {piece}, 체크 상태',
+  chessSquareMoveHere: '{square}: 여기로 이동',
+  chessSquareCaptureHere: '{square}, {piece}: 여기서 잡기',
+  chessSquareCaptureEnPassant: '{square}: 여기로 이동해 옆의 폰 잡기',
+  chessYourTurn: '내 차례',
+  chessYourTurnCheck: '체크 — 내 킹이 공격받고 있습니다',
+  chessCpuTurn: 'CPU 차례',
+  chessCpuTurnCheck: '체크 — CPU 차례',
+  chessPromoteTitle: '폰을 승격할 기물',
+  chessWinTitle: '이겼습니다',
+  chessLoseTitle: 'CPU 승리',
+  chessDrawTitle: '무승부',
+  chessReason_checkmate: '체크메이트: 킹이 체크 상태이고 둘 수 있는 수가 없습니다.',
+  chessReason_stalemate: '스테일메이트: 둘 수 있는 수가 없고, 킹은 체크 상태가 아닙니다.',
+  chessReason_insufficient: '기물 부족: 어느 쪽도 체크메이트할 수 없습니다.',
+  chessReason_repetition: '3회 동형 반복: 같은 국면이 세 번째로 나왔습니다.',
+  chessReason_fifty: '50수 규칙: 잡기도 폰의 수도 없이 양쪽이 50수씩 두었습니다.',
+  chessResultSide: '내 색',
+  chessResultMoves: '수',
+  chessSideWhite: '백',
+  chessSideBlack: '흑',
+  chessWins: '승리',
+  chessDraws: '무승부',
+  chessLosses: '패배',
+  chessStep1Title: '기물마다 움직임이 달라요',
+  chessStep1Body: '내 기물을 누르면 갈 수 있는 모든 칸에 점이 표시됩니다.',
+  chessStep2Title: '잡되, 킹은 지키기',
+  chessStep2Body:
+    '상대 기물이 있는 칸으로 가면 잡을 수 있지만(폰은 대각선으로 잡음), 내 킹이 공격받은 채로 남는 수는 둘 수 없습니다.',
+  chessStep3Title: '체크메이트로 승리',
+  chessStep3Body: '피할 곳 없는 체크를 걸면 승리, 체크가 아닌데 둘 수가 없으면 무승부입니다.',
 };

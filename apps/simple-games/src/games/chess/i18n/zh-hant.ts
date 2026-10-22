@@ -1,21 +1,72 @@
 /**
- * Placeholder Traditional Chinese catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real Traditional Chinese translation before release (docs/I18N_POLICY.md); the
- * title (`chessName`) is a proper noun and stays as-is in every locale.
+ * Chess — the Traditional Chinese catalog. Provenance (docs/CHESS_RULES.md §10): `machine` —
+ * written by an AI from the English source on 2026-10-22; no native speaker
+ * has read it, and neither has the author. The title (`chessName`) is a
+ * proper noun and stays as-is.
+ *
+ * Glossary (§10.1): 將軍 · 將死 · 逼和 (never 將死 — 逼和 carries 和, the draw) · 和棋 · 子力不足 · 三次重複局面 · 五十步規則; 兵 · 馬 · 象 · 車 · 后 · 王; 白方 · 黑方.
  */
 import type { ChessMessages } from './en';
 
 export const zhHant: ChessMessages = {
   chessName: 'Chess',
-  chessPlayPlaceholder: 'Play a sample round',
-  chessFinishPlaceholder: 'Finish the sample round',
-  chessStep1Title: 'Step 1',
-  chessStep1Body: 'Placeholder. The first of at most three steps.',
-  chessStep2Title: 'Step 2',
-  chessStep2Body: 'Placeholder. What the player does next.',
-  chessStep3Title: 'Step 3',
-  chessStep3Body: 'Placeholder. How a round ends.',
-  chessResultTitle: 'Nice work',
-  chessResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  chessChooseOpponent: '選擇對手',
+  chessDifficulty_easy: '簡單',
+  chessDifficulty_normal: '普通',
+  chessDifficulty_hard: '困難',
+  chessRecordNote: '勝 {wins} · 和 {draws} · 敗 {losses}',
+  chessChooseSideLabel: '下一局你執哪方',
+  chessPlayWhite: '白方（先走）',
+  chessPlayBlack: '黑方（後走）',
+  chessConfirmSwitchTitle: '取代進行中的對局？',
+  chessConfirmSwitchBody: '你的{current}對局將被新的{next}對局取代。',
+  chessYouPlayWhite: '你執白方',
+  chessYouPlayBlack: '你執黑方',
+  chessBoardLabel: '西洋棋棋盤',
+  chessPiece_white_pawn: '白方兵',
+  chessPiece_white_knight: '白方馬',
+  chessPiece_white_bishop: '白方象',
+  chessPiece_white_rook: '白方車',
+  chessPiece_white_queen: '白方后',
+  chessPiece_white_king: '白方王',
+  chessPiece_black_pawn: '黑方兵',
+  chessPiece_black_knight: '黑方馬',
+  chessPiece_black_bishop: '黑方象',
+  chessPiece_black_rook: '黑方車',
+  chessPiece_black_queen: '黑方后',
+  chessPiece_black_king: '黑方王',
+  chessSquareEmpty: '{square}，空',
+  chessSquarePiece: '{square}，{piece}',
+  chessSquareSelected: '{square}，{piece}，已選取',
+  chessSquareInCheck: '{square}，{piece}，被將軍',
+  chessSquareMoveHere: '{square}：走到這裡',
+  chessSquareCaptureHere: '{square}，{piece}：在這裡吃子',
+  chessSquareCaptureEnPassant: '{square}：走到這裡並吃掉旁邊的兵',
+  chessYourTurn: '輪到你',
+  chessYourTurnCheck: '將軍 — 你的王正受到攻擊',
+  chessCpuTurn: '輪到 CPU',
+  chessCpuTurnCheck: '將軍 — 輪到 CPU',
+  chessPromoteTitle: '兵升變為',
+  chessWinTitle: '你贏了',
+  chessLoseTitle: 'CPU 獲勝',
+  chessDrawTitle: '和棋',
+  chessReason_checkmate: '將死：王被將軍，且沒有合法著法。',
+  chessReason_stalemate: '逼和：沒有合法著法，且王未被將軍。',
+  chessReason_insufficient: '子力不足：雙方都無法將死對方。',
+  chessReason_repetition: '三次重複局面：同一局面第三次出現。',
+  chessReason_fifty: '五十步規則：雙方各走 50 步，既無吃子也無兵的移動。',
+  chessResultSide: '你執',
+  chessResultMoves: '回合數',
+  chessSideWhite: '白方',
+  chessSideBlack: '黑方',
+  chessWins: '勝',
+  chessDraws: '和',
+  chessLosses: '敗',
+  chessStep1Title: '每種棋子走法不同',
+  chessStep1Body: '點一下你的棋子，圓點會標出它能走到的每一格。',
+  chessStep2Title: '可以吃子，但要保護王',
+  chessStep2Body:
+    '走到對方棋子所在的格子就能吃掉它（兵斜著吃子），但任何著法都不能讓你的王仍受攻擊。',
+  chessStep3Title: '將死即勝',
+  chessStep3Body: '將軍且王無處可逃就獲勝；沒有被將軍卻無合法著法則為和棋。',
 };

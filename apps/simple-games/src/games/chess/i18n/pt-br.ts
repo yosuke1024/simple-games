@@ -1,21 +1,72 @@
 /**
- * Placeholder Brazilian Portuguese catalog, scaffolded by scripts/new-game.mjs
- * with the English text left untranslated. Replace every value below with a
- * real Brazilian Portuguese translation before release (docs/I18N_POLICY.md); the
- * title (`chessName`) is a proper noun and stays as-is in every locale.
+ * Chess — the Brazilian Portuguese catalog. Provenance (docs/CHESS_RULES.md §10): `machine` —
+ * written by an AI from the English source on 2026-10-22; no native speaker
+ * has read it, and neither has the author. The title (`chessName`) is a
+ * proper noun and stays as-is.
+ *
+ * Glossary (§10.1): xeque · xeque-mate · afogamento (never "mate") · empate · material insuficiente · tripla repetição · regra dos 50 lances; peão · cavalo · bispo · torre · dama · rei; brancas · pretas. The colour agrees with each piece in the twelve piece keys (peão branco, dama branca).
  */
 import type { ChessMessages } from './en';
 
 export const ptBR: ChessMessages = {
   chessName: 'Chess',
-  chessPlayPlaceholder: 'Play a sample round',
-  chessFinishPlaceholder: 'Finish the sample round',
-  chessStep1Title: 'Step 1',
-  chessStep1Body: 'Placeholder. The first of at most three steps.',
-  chessStep2Title: 'Step 2',
-  chessStep2Body: 'Placeholder. What the player does next.',
-  chessStep3Title: 'Step 3',
-  chessStep3Body: 'Placeholder. How a round ends.',
-  chessResultTitle: 'Nice work',
-  chessResultBody: 'This is a placeholder result. Replace it with the real outcome.',
+  chessChooseOpponent: 'Escolha seu adversário',
+  chessDifficulty_easy: 'Fácil',
+  chessDifficulty_normal: 'Normal',
+  chessDifficulty_hard: 'Difícil',
+  chessRecordNote: 'Vitórias {wins} · Empates {draws} · Derrotas {losses}',
+  chessChooseSideLabel: 'Sua cor na próxima partida',
+  chessPlayWhite: 'Brancas (jogam primeiro)',
+  chessPlayBlack: 'Pretas (jogam em segundo)',
+  chessConfirmSwitchTitle: 'Substituir a partida em andamento?',
+  chessConfirmSwitchBody: 'Sua partida ({current}) será substituída por uma nova partida ({next}).',
+  chessYouPlayWhite: 'Você joga de brancas',
+  chessYouPlayBlack: 'Você joga de pretas',
+  chessBoardLabel: 'Tabuleiro de xadrez',
+  chessPiece_white_pawn: 'peão branco',
+  chessPiece_white_knight: 'cavalo branco',
+  chessPiece_white_bishop: 'bispo branco',
+  chessPiece_white_rook: 'torre branca',
+  chessPiece_white_queen: 'dama branca',
+  chessPiece_white_king: 'rei branco',
+  chessPiece_black_pawn: 'peão preto',
+  chessPiece_black_knight: 'cavalo preto',
+  chessPiece_black_bishop: 'bispo preto',
+  chessPiece_black_rook: 'torre preta',
+  chessPiece_black_queen: 'dama preta',
+  chessPiece_black_king: 'rei preto',
+  chessSquareEmpty: '{square}, vazia',
+  chessSquarePiece: '{square}, {piece}',
+  chessSquareSelected: '{square}, {piece}, selecionado',
+  chessSquareInCheck: '{square}, {piece}, em xeque',
+  chessSquareMoveHere: '{square}: mover para cá',
+  chessSquareCaptureHere: '{square}, {piece}: capturar aqui',
+  chessSquareCaptureEnPassant: '{square}: mover para cá e capturar o peão ao lado',
+  chessYourTurn: 'Sua vez',
+  chessYourTurnCheck: 'Xeque — seu rei está sendo atacado',
+  chessCpuTurn: 'Vez da CPU',
+  chessCpuTurnCheck: 'Xeque — vez da CPU',
+  chessPromoteTitle: 'Promover o peão a',
+  chessWinTitle: 'Você venceu',
+  chessLoseTitle: 'A CPU venceu',
+  chessDrawTitle: 'Empate',
+  chessReason_checkmate: 'Xeque-mate: o rei está em xeque e não tem nenhum lance legal.',
+  chessReason_stalemate: 'Afogamento: nenhum lance legal, e o rei não está em xeque.',
+  chessReason_insufficient: 'Material insuficiente: nenhum lado consegue dar xeque-mate.',
+  chessReason_repetition: 'Tripla repetição: a mesma posição pela terceira vez.',
+  chessReason_fifty: 'Regra dos 50 lances: 50 lances de cada lado sem captura nem lance de peão.',
+  chessResultSide: 'Sua cor',
+  chessResultMoves: 'Lances',
+  chessSideWhite: 'Brancas',
+  chessSideBlack: 'Pretas',
+  chessWins: 'Vitórias',
+  chessDraws: 'Empates',
+  chessLosses: 'Derrotas',
+  chessStep1Title: 'Cada peça se move do seu jeito',
+  chessStep1Body: 'Toque em uma das suas peças e pontos mostram cada casa para onde ela pode ir.',
+  chessStep2Title: 'Capture, mas proteja seu rei',
+  chessStep2Body:
+    'Vá para a casa de uma peça adversária para capturá-la (o peão captura na diagonal), mas nenhum lance pode deixar seu rei atacado.',
+  chessStep3Title: 'O xeque-mate vence',
+  chessStep3Body: 'Dê xeque ao rei sem saída para vencer; sem lance legal e sem xeque, é empate.',
 };

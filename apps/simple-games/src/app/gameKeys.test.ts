@@ -179,8 +179,10 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // each is playable, when it turns 'web-beta'): beta keys on the same terms as
   // the five above. They are still the scaffold's two
   // keys; each grows to its rules document's storage section in Phase 2/3.
-  // No. 47, in-development (docs/CHESS_RULES.md storage): not frozen until graduation
-  chess: ['ch.stats', 'ch.flags'],
+  // No. 47, in-development (docs/CHESS_RULES.md §7): the scaffold's two keys grew to the rules
+  // document's four in Phase 3 — the one saved game (a move list) and the side for the next
+  // game. Not frozen until graduation
+  chess: ['ch.saveGame', 'ch.stats', 'ch.flags', 'ch.prefs'],
   // No. 48, in-development (docs/GEM_SWAP_RULES.md storage): not frozen until graduation
   'gem-swap': ['gs.stats', 'gs.flags'],
   // No. 49, in-development (docs/PIPE_LINK_RULES.md storage): not frozen until graduation
