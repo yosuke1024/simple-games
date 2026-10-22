@@ -1,5 +1,5 @@
 /* The keyboard half of the shell's two dialogs, ConfirmDialog and the ↻'s
-   RestartDialog (docs/ARCHITECTURE.md「モーダルの間、盤面は inert」): Escape
+   RestartDialog, and of the Club's RemoveDialog (docs/ARCHITECTURE.md「モーダルの間、盤面は inert」): Escape
    answers exactly as Cancel does, and closing hands the focus back to the
    control that opened the dialog — the ↻ in a game's top bar, a row in
    Settings — so a keyboard or screen-reader user keeps their place instead of
@@ -7,8 +7,8 @@
 
    Call it from a component that exists only while the dialog is open. The
    opener is read on that component's first render, because by the time any
-   effect runs, Cancel's autoFocus has already moved the focus into the dialog
-   (the same reading NameSheet does). A press that does not focus the button
+   effect runs, Cancel's autoFocus has already moved the focus into the dialog.
+   A press that does not focus the button
    it presses — a click or a tap in WebKit (Safari, every iOS browser) —
    leaves no opener, and then nothing here hands the focus back; a game that
    wants it on the ↻ even then places it itself (the web-beta Snake does).

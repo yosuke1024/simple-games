@@ -58,6 +58,7 @@ export const en = {
   clubRemoveTitle: 'Remove {name}?',
   clubRemoveBody: 'They can no longer open this Club. Their results stay.',
   clubMembersCount: '{n} members',
+  clubOlderMembers: 'Show older members',
   clubReport: 'Report',
   clubReported: 'Reported',
   clubReportTitle: 'Report this nickname?',

@@ -5,8 +5,10 @@
  * viewer may be on it many times: each of their rows says `You` and carries
  * its own quiet delete. The server's order is the rank, so nothing is sorted
  * here. When the viewer's best row is below the rows the server sent, it
- * follows after a separator with its own rank. Another member's name opens the
- * sheet with Report (§17-3) — never on the owner's device.
+ * follows after a separator with its own rank. Another member's name opens that
+ * member's view (§9「Member」) — on every device, the owner's too. The table it
+ * last read is handed up (`onRead`) and back (`cached`), with where it was
+ * scrolled to, so closing that view shows the table where it was left.
  */
 import { useEffect, useRef, useState } from 'react';
 import { GAMES } from '@/app/registry';
@@ -25,14 +27,21 @@ import {
   factsLine,
   modeLabel,
   RankMark,
+  rankingTitle,
   ScreenFrame,
   sortModes,
+  useRestoredScroll,
   type T,
 } from './common';
-import { rankingTitle } from './ClubScreen';
-import { NameSheet } from './NameSheet';
 
 const TOP = 50;
+
+/** The table a mode last answered with; ClubRoot keeps it on the step while a member's view is open. */
+export interface RankingRead {
+  /** The mode (`paramsKey`) the table is for. */
+  key: string;
+  table: RankingTable;
+}
 
 /** A chip's word: the mode as a title would name it; a daily table says Daily. */
 function chipLabel(gameId: string, key: string, t: T): string {
@@ -45,8 +54,13 @@ export function RankingScreen({
   gameId,
   paramsKey,
   tables,
+  cached,
+  refresh = false,
+  scrollTop,
+  onRead,
   onMode,
   onChanged,
+  onOpenMember,
   onBack,
 }: {
   connection: ClubConnection;
@@ -55,10 +69,20 @@ export function RankingScreen({
   paramsKey: string | null;
   /** The game's tables as the Club screen listed them: the chips, without a request. */
   tables: readonly RankingSummary[];
+  /** What this screen read before a member's view was opened over it; undefined on a fresh open. */
+  cached?: RankingRead;
+  /** Something done on the screen above changed what the tables hold: read it again (club.md §9). */
+  refresh?: boolean;
+  /** Where the body was scrolled to when a member's view was opened over it. */
+  scrollTop?: number;
+  /** A table was read anew (not the cached one handed back): ClubRoot keeps it for the way back. */
+  onRead: (read: RankingRead) => void;
   /** A chip was pressed: the mode to show instead (ClubRoot replaces this screen, never stacks one). */
   onMode: (paramsKey: string) => void;
   /** One of the viewer's rows was deleted: the Club screen's lists are out of date. */
   onChanged: () => void;
+  /** Another member's name was pressed: ClubRoot pushes that member's view; `scrollTop` is where the body is. */
+  onOpenMember: (memberId: string, nickname: string, scrollTop: number) => void;
   onBack: () => void;
 }) {
   const { t } = useSettings();
@@ -71,16 +95,17 @@ export function RankingScreen({
   // A game with one table and no modes (`standard`) needs no chip to say which it is.
   const chips = modes.length > 1 || (modes.length === 1 && modes[0] !== 'standard');
   const game = GAMES.find((g) => g.id === gameId);
-  const isOwner = connection.role === 'owner';
 
-  const [table, setTable] = useState<RankingTable | null>(null);
+  // The table the step kept, when it is the mode on screen: shown at once, with no request
+  // (a Back from a member's view), unless something up there changed what it holds.
+  const kept = cached !== undefined && cached.key === key ? cached.table : null;
+  const [table, setTable] = useState<RankingTable | null>(kept);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(kept === null || refresh);
   const [confirmDelete, setConfirmDelete] = useState<RankingEntry | null>(null);
   const [deleting, setDeleting] = useState(false);
-  /** Another member's row, its name pressed: the sheet with Report. */
-  const [sheet, setSheet] = useState<RankingEntry | null>(null);
-  const [reportedNote, setReportedNote] = useState(false);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useRestoredScroll(bodyRef, scrollTop);
   const alive = useRef(true);
   /** The newest read: an answer for a mode the person has already left is dropped. */
   const latest = useRef(0);
@@ -94,7 +119,10 @@ export function RankingScreen({
     setError(null);
     try {
       const next = await client().ranking(gameId, mode, TOP);
-      if (current()) setTable(next);
+      if (current()) {
+        setTable(next);
+        onRead({ key: mode, table: next });
+      }
     } catch (e) {
       if (current()) setError(errorText(e, t, connection.clubName));
     } finally {
@@ -104,10 +132,11 @@ export function RankingScreen({
 
   useEffect(() => {
     alive.current = true;
+    const held = cached !== undefined && cached.key === key;
     // A mode of its own: nothing of the last table stays on screen under the new chip.
-    setTable(null);
-    setReportedNote(false);
-    void load(key);
+    if (!held) setTable(null);
+    // A table handed back is not asked for again, unless something changed it meanwhile.
+    if (!held || refresh) void load(key);
     return () => {
       alive.current = false;
     };
@@ -127,7 +156,6 @@ export function RankingScreen({
     setConfirmDelete(null);
     setDeleting(true);
     setError(null);
-    setReportedNote(false);
     try {
       try {
         if (entry.id === null) await client().deleteMyRanking(gameId, key);
@@ -144,18 +172,6 @@ export function RankingScreen({
     }
   };
 
-  /** Reporting twice is harmless (the server answers 204 and changes nothing). */
-  const report = async (entry: RankingEntry) => {
-    setError(null);
-    setReportedNote(false);
-    try {
-      await client().reportMember(entry.memberId);
-      if (alive.current) setReportedNote(true);
-    } catch (e) {
-      if (alive.current) setError(errorText(e, t, connection.clubName));
-    }
-  };
-
   const row = (entry: RankingEntry, rank: number | null, rowKey: string) => {
     const own = entry.memberId === connection.memberId;
     return (
@@ -167,10 +183,14 @@ export function RankingScreen({
           <RankMark rank={rank} t={t} />
           {own ? (
             t('clubYou')
-          ) : isOwner ? (
-            entry.nickname
           ) : (
-            <button type="button" className="club-name-btn" onClick={() => setSheet(entry)}>
+            <button
+              type="button"
+              className="club-name-btn"
+              onClick={() =>
+                onOpenMember(entry.memberId, entry.nickname, bodyRef.current?.scrollTop ?? 0)
+              }
+            >
               {entry.nickname}
             </button>
           )}
@@ -220,6 +240,7 @@ export function RankingScreen({
       title={title}
       lead={game ? <GameTile game={game} /> : undefined}
       onBack={onBack}
+      bodyRef={bodyRef}
       t={t}
     >
       {chips ? (
@@ -265,11 +286,6 @@ export function RankingScreen({
             {error}
           </p>
         ) : null}
-        {reportedNote ? (
-          <p className="club-quiet" role="status">
-            {t('clubReported')}
-          </p>
-        ) : null}
         {table ? (
           <>
             {standing ? <p className="club-standing">{standing}</p> : null}
@@ -305,15 +321,6 @@ export function RankingScreen({
           if (confirmDelete) void deleteEntry(confirmDelete);
         }}
       />
-      {sheet ? (
-        <NameSheet
-          nickname={sheet.nickname}
-          detail={factsLine(gameId, sheet.facts, t)}
-          t={t}
-          onClose={() => setSheet(null)}
-          onReport={() => report(sheet)}
-        />
-      ) : null}
     </ScreenFrame>
   );
 }

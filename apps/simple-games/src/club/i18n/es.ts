@@ -54,6 +54,7 @@ export const es: ClubMessages = {
   clubRemoveTitle: '¿Quitar a {name}?',
   clubRemoveBody: 'Ya no podrá abrir este Club. Sus resultados se conservan.',
   clubMembersCount: '{n} miembros',
+  clubOlderMembers: 'Mostrar miembros anteriores',
   clubReport: 'Denunciar',
   clubReported: 'Denunciado',
   clubReportTitle: '¿Denunciar este apodo?',

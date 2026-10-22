@@ -54,6 +54,7 @@ export const ja: ClubMessages = {
   clubRemoveTitle: '{name} を外しますか?',
   clubRemoveBody: 'この Club を開けなくなります。結果は残ります。',
   clubMembersCount: '{n} 人',
+  clubOlderMembers: 'これより前のメンバーを見る',
   clubReport: '報告',
   clubReported: '報告済み',
   clubReportTitle: 'この名前を報告しますか?',

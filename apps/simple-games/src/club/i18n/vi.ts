@@ -55,6 +55,7 @@ export const vi: ClubMessages = {
   clubRemoveTitle: 'Xóa {name}?',
   clubRemoveBody: 'Họ sẽ không mở được Club này nữa. Kết quả của họ vẫn còn.',
   clubMembersCount: '{n} thành viên',
+  clubOlderMembers: 'Hiện các thành viên trước đó',
   clubReport: 'Báo cáo',
   clubReported: 'Đã báo cáo',
   clubReportTitle: 'Báo cáo biệt danh này?',

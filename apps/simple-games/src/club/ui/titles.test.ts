@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { GAMES } from '@/app/registry';
 import type { Challenge } from '../api/types';
 import { contractFor } from '../contract/challenge';
-import { challengeTitle, rankingTitle } from './ClubScreen';
-import { axisGap, modeLabel, modeOrder, sortModes, type T } from './common';
+import { challengeTitle } from './ClubScreen';
+import { axisGap, modeLabel, modeOrder, rankingTitle, sortModes, type T } from './common';
 
 /** Answers with the key (and the variables it was given), so a test sees which word was asked for. */
 const t = ((key: string, vars?: Record<string, string | number>) =>

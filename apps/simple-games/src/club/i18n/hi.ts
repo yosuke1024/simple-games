@@ -55,6 +55,7 @@ export const hi: ClubMessages = {
   clubRemoveTitle: '{name} को हटाएँ?',
   clubRemoveBody: 'वे इस Club को फिर नहीं खोल पाएँगे। उनके नतीजे बने रहेंगे।',
   clubMembersCount: '{n} सदस्य',
+  clubOlderMembers: 'पुराने सदस्य दिखाएँ',
   clubReport: 'रिपोर्ट करें',
   clubReported: 'रिपोर्ट किया गया',
   clubReportTitle: 'इस उपनाम की रिपोर्ट करें?',
