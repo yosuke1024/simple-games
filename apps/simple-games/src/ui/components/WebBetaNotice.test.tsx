@@ -7,12 +7,11 @@
  *
  * The registry this file sees carries one synthetic beta entry besides the
  * real ones (today the five of docs/plans/2026-10-17-unblock-snake-loop-
- * bridges-peg.md and three of the five of docs/plans/2026-10-20-overtake-
+ * bridges-peg.md and the five of docs/plans/2026-10-20-overtake-
  * make-the-target-nested-tic-tac-toe-scopa-tangram.md), and one synthetic
  * in-development entry (the scaffolds of
- * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md, and
- * Overtake and Scopa, which their rules documents hold back, are the real
- * ones): the tests below speak about the synthetic
+ * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md are
+ * the real ones): the tests below speak about the synthetic
  * ones, so they keep testing the mechanism on any day no registry title is on
  * a channel (as from 2026-10-02 until the 2026-10-17 five arrived), and the
  * real ones are checked on top.
