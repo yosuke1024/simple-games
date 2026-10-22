@@ -25,8 +25,10 @@
 
 ゲーム ID は `chess`、i18n キーの接頭辞は `chess`、保存キーの接頭辞は `ch.`、カテゴリは `board`、No. 47。名称は
 一般名の「Chess」。**Web 先行公開(ベータ)のタイトル**で、registry では遊べるようになるまで
-`channel: 'in-development'`(どのビルドの扉からも開けない — `app/gameChannel.ts`)、遊べるようになる変更で
-`'web-beta'` にする([WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。アプリには収録しない。保存スキーマは
+`channel: 'in-development'`(どのビルドの扉からも開けない — `app/gameChannel.ts`)とし、遊べるようになった
+**2026-10-22 に `'web-beta'` にした**(Phase 4 の統合 — 共有ファイル。[WEB_VERSION.md](WEB_VERSION.md)
+「先行公開(ベータ)」)。Web 版へは次の landing の同期と、製品オーナーの承認を得た Publish で届く —
+**まだ配信していない**。アプリには収録しない。保存スキーマは
 正式収録まで凍結しない。**Club House には登録しない**(前例と同じ。結果の形と比較軸がベータの間は動きうるため)。
 
 CPU と指す標準のチェス(8×8。駒の動き・キャスリング・アンパッサン・昇格は FIDE のとおり)。対局相手は CPU だけで、

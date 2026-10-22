@@ -12,8 +12,10 @@
 
 ゲーム ID は `pipe-link`、i18n キーの接頭辞は `pipeLink`、保存キーの接頭辞は `pn.`、カテゴリは `logic`、No. 49。
 **Web 先行公開(ベータ)のタイトル**で、アプリには収録しない(registry では遊べるようになるまで
-`channel: 'in-development'` — どのビルドの扉からも開けない — その後 `'web-beta'`。
-[WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。保存スキーマは正式収録まで凍結しない(§7)。
+`channel: 'in-development'` — どのビルドの扉からも開けない — で、遊べるようになった 2026-10-22 に `'web-beta'`
+にした。Phase 4 の統合 — 共有ファイル。[WEB_VERSION.md](WEB_VERSION.md)「先行公開(ベータ)」)。Web 版へは
+次の landing の同期と、製品オーナーの承認を得た Publish で届く — **まだ配信していない**。保存スキーマは
+正式収録まで凍結しない(§7)。
 **Club House には登録しない**(registry の `challenge` を持たない)。理由は前例(42〜46、52〜56)と同じで、
 ベータの間は保存の形も結果カードの形も動きうるため、順位の軸と結果画面が送る事実をまだ契約にできない。
 登録しないゲームは Club から見えないだけで、Core は Club に依存しない(計画の「決定事項」)。
