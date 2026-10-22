@@ -1,5 +1,5 @@
 /* The keyboard half of the shell's two dialogs, ConfirmDialog and the ↻'s
-   RestartDialog (docs/ARCHITECTURE.md「モーダルの間、盤面は inert」): Escape
+   RestartDialog, and of the Club's RemoveDialog (docs/ARCHITECTURE.md「モーダルの間、盤面は inert」): Escape
    answers exactly as Cancel does, and closing hands the focus back to the
    control that opened the dialog — the ↻ in a game's top bar, a row in
    Settings — so a keyboard or screen-reader user keeps their place instead of

@@ -5,6 +5,7 @@
  * the screen that opened them sends the request and says how it went.
  */
 import { useState } from 'react';
+import { useDialogDismiss } from '@/ui/useDialogDismiss';
 import type { Member } from '../api/types';
 import type { T } from './common';
 
@@ -23,6 +24,10 @@ export function RemoveDialog({
   onCancel: () => void;
   onRemove: (purge: boolean) => void;
 }) {
+  // Mounted only while open, so the opener is read on the render that opens it: Escape is
+  // Cancel, and closing hands the focus back to the Remove that was pressed (ARCHITECTURE.md
+  // 「Escape は Cancel、閉じたらフォーカスは開いた場所へ」).
+  useDialogDismiss(onCancel);
   const title = t('clubRemoveTitle', { name: member.nickname });
   return (
     <div className="overlay" onClick={onCancel}>

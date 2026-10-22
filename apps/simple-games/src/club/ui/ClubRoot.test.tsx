@@ -2723,6 +2723,20 @@ describe('Member screen (club.md §9「Member」)', () => {
     expect(callsTo(fetchMock, 'GET', '/club')).toHaveLength(1);
   });
 
+  it('the Remove dialog answers Escape as Cancel and hands the focus back to Remove (ARCHITECTURE「Escape は Cancel」)', async () => {
+    const fetchMock = stubServer();
+    asOwner();
+    const user = await openMika({ role: 'owner' });
+    const remove = screen.getByRole('button', { name: 'Remove' });
+    await user.click(remove);
+    expect(screen.getByRole('alertdialog', { name: 'Remove Mika?' })).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    // Back on the Remove that opened it, and nothing was sent.
+    expect(remove).toHaveFocus();
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'DELETE')).toBe(false);
+  });
+
   it('a removal made from a table’s row goes back to that table, not to the Members list', async () => {
     const fetchMock = stubServer();
     asOwner();
