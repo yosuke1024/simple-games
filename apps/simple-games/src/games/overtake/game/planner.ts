@@ -26,17 +26,38 @@
  * relaxes (a window ends) the car can lose up to DECISION_LAG steps before it
  * moves on; the sweep charges every such gap that lag (§6, §18).
  *
- * Work is bounded by structure (§17): segments in view × candidates ×
- * intervals per set (lanes + 1 at most). On top of that, PLAN_WORK_LIMIT is a
- * hard cap checked before each candidate: at the cap the planner returns its
- * crawl decision honestly (`feasible: false`, `capped: true`) instead of
- * going on — the node-limit pattern of docs/GAME_LIFECYCLE.md「CPU 探索」.
+ * Sand and cones (§6 "砂とコーン", 2026-10-22) are slow places, not walls. When
+ * the view holds any, a first stage tries the candidates above SHOULDER_SPEED
+ * (at most 10) with each row's zones — widened by half a car, open — taken
+ * out of its free set wherever the row is crossed faster than 231: a route
+ * that never touches them. If none passes, the second stage is the planner
+ * as it was, zones ignored: the car drives through, capped like the physics
+ * caps it. With no zones in view the first stage is skipped.
+ *
+ * Two details keep consecutive decisions agreeing with the physics: the row
+ * the car is already in counts only the pieces still beside or ahead of it
+ * (`currentRowFree`), and sand the first stage routed around holds the car
+ * one step past its window (the physics reads sand before the advance), so
+ * the segment after it pays one more step of decision lag. `currentRowFree`
+ * is a change of its own and applies to every course, zones or not: any row
+ * whose pieces differ in length (Lv6+ cone groups, Lv11+ sedan/van rows,
+ * Lv21+ trucks) can plan differently once the car's rear passes a shorter
+ * piece. Only Lv1–5 decisions are unchanged by construction (§6).
+ *
+ * Work is bounded by structure (§17): segments in view × candidates (10 + 19
+ * over the two stages) × intervals per set (lanes + 1 at most). On top of
+ * that, PLAN_WORK_LIMIT is a hard cap checked before each candidate: at the
+ * cap the planner returns its crawl decision honestly (`feasible: false`,
+ * `capped: true`) instead of going on — the node-limit pattern of
+ * docs/GAME_LIFECYCLE.md「CPU 探索」.
  */
 import {
+  CAR_HALF_WIDTH,
   CAR_LENGTH,
   DECEL_PER_STEP,
   DECISION_INTERVAL,
   DECISION_LAG,
+  CONE_CAP_STEPS,
   FULL_SPEED,
   MIN_TARGET_SPEED,
   PLAN_WORK_LIMIT,
@@ -57,17 +78,28 @@ import {
   intersect,
   nearest,
   single,
+  subtractOpen,
   type Intervals,
 } from './intervals';
-import { approachSpeed, brakeForSpeed, forEachNear, onShoulder, targetSpeed } from './physics';
+import {
+  approachSpeed,
+  brakeForSpeed,
+  forEachNear,
+  onConeAt,
+  onSandAt,
+  onShoulder,
+  targetSpeed,
+} from './physics';
 import { windowEnd, windowStart } from './route';
-import type { Course, Obstacle, Row } from './types';
+import type { Course, Obstacle, Row, Zone } from './types';
 
 export interface PlanCar {
   readonly r: number;
   readonly x: number;
   readonly w: number;
   readonly hold: number;
+  /** Steps left on the cone cap (§1): the look-ahead caps like the physics does. */
+  readonly coneCap: number;
 }
 
 export interface PlanOptions {
@@ -90,6 +122,8 @@ export interface Decision {
   readonly capped: boolean;
   /** Interval operations performed (§17). */
   readonly work: number;
+  /** 1 when the first stage (zones avoided) found it, 2 for the second, 0 for the fallback (§6). */
+  readonly stage: 0 | 1 | 2;
 }
 
 interface Segment {
@@ -190,6 +224,70 @@ function segmentsAhead(course: Course, r: number, view: number): Segment[] {
   return segments;
 }
 
+const avoidCache = new WeakMap<Row, Intervals>();
+
+/**
+ * F_k above SHOULDER_SPEED with the row's sand and cones taken out as well —
+ * each widened by half a car, open, so touching is still allowed (§6 first
+ * stage). A row without zones keeps its own set.
+ */
+export function rowFreeAvoiding(row: Row): Intervals {
+  let set = avoidCache.get(row);
+  if (set === undefined) {
+    set = rowFree(row, FULL_SPEED);
+    for (const z of row.zones) {
+      set = subtractOpen(set, z.left - CAR_HALF_WIDTH, z.right + CAR_HALF_WIDTH);
+      if (set.length === 0) break;
+    }
+    avoidCache.set(row, set);
+  }
+  return set;
+}
+
+function zonesInView(segments: readonly Segment[]): boolean {
+  for (const seg of segments) if (seg.row !== null && seg.row.zones.length > 0) return true;
+  return false;
+}
+
+/**
+ * The free set of the row the car is already in, for the rest of its window:
+ * only the pieces still beside or ahead of the car (front > r − 58) — the
+ * ones the physics can still meet (§1; sand is read before the advance, at
+ * this same r). A row's window ends with its longest piece, so once the car's
+ * rear has passed a shorter one, the physics (and the steering clamp, which
+ * reads it) lets the car where that piece was; the sweep must agree, or the
+ * car stands outside its own row's set. Rows whose pieces are all still
+ * beside the car keep their cached set — every row of Lv1–5 (sedans only,
+ * no zones: one length), so Lv1–5 decisions are unchanged by construction.
+ * From Lv6 a cone group's fronts are staggered (u + 14/30/46), so stage 1
+ * can recompute the set once the first cone is passed; Lv6–10 matching the
+ * old pace table is a measurement, not a guarantee (§6).
+ */
+function currentRowFree(row: Row, r: number, u: number, avoidZones: boolean): Intervals {
+  const zones = avoidZones && u > SHOULDER_SPEED;
+  const back = r - CAR_LENGTH;
+  let passed = false;
+  for (const o of row.obstacles) if (o.front <= back) passed = true;
+  if (zones) for (const z of row.zones) if (z.front <= back) passed = true;
+  if (!passed) return zones ? rowFreeAvoiding(row) : rowFree(row, u);
+  let set = freeAmong(
+    row.obstacles.filter((o) => o.front > back),
+    speedRange(zones ? FULL_SPEED : u),
+  );
+  if (zones) {
+    for (const z of row.zones) {
+      if (z.front > back)
+        set = subtractOpen(set, z.left - CAR_HALF_WIDTH, z.right + CAR_HALF_WIDTH);
+    }
+  }
+  return set;
+}
+
+function hasSand(row: Row): boolean {
+  for (const z of row.zones) if (z.kind === 'sand') return true;
+  return false;
+}
+
 interface Sweep {
   readonly forward: Intervals[];
   readonly free: Intervals[];
@@ -198,24 +296,43 @@ interface Sweep {
 }
 
 /** The forward sweep for candidate v, or null when the view cannot be crossed (§6 step 2). */
-function sweepAt(segments: readonly Segment[], car: PlanCar, v: number): Sweep | null {
+function sweepAt(
+  segments: readonly Segment[],
+  car: PlanCar,
+  v: number,
+  avoidZones: boolean,
+): Sweep | null {
   const w = car.w;
   let set: Intervals = single(car.x, car.x);
   const forward: Intervals[] = [];
   const free: Intervals[] = [];
   const reach: number[] = [];
   let work = 0;
+  // Sand routed around in the segment before: it holds the car one step longer.
+  let sandHeld = false;
   for (let i = 0; i < segments.length; i++) {
     const seg = segments[i]!;
     let u = w > v ? speedAt(w, v, seg.start - car.r) : v;
     if (seg.row === null && seg.limit < u && seg.start > car.r) {
       u = Math.max(seg.limit, MIN_TARGET_SPEED);
     }
-    const f = seg.row === null ? speedRange(u) : rowFree(seg.row, u);
+    const f =
+      seg.row === null
+        ? speedRange(u)
+        : seg.start === car.r
+          ? currentRowFree(seg.row, car.r, u, avoidZones)
+          : avoidZones && u > SHOULDER_SPEED
+            ? rowFreeAvoiding(seg.row)
+            : rowFree(seg.row, u);
     set = intersect(set, f);
     work += 1 + exactDiv(f.length, 2);
     if (set.length === 0) return null;
-    const lag = i > 0 && seg.row === null ? DECISION_LAG : 0;
+    // The decision lag (§6) — one step more after sand the first stage routed
+    // around: the physics reads sand before the advance (§1), so the step
+    // that carries the car past the sand row's window is still held by it,
+    // and the clamp (safeTarget) holds the whole decision.
+    const lag = (i > 0 && seg.row === null ? DECISION_LAG : 0) + (sandHeld ? 1 : 0);
+    sandHeld = seg.row !== null && avoidZones && u > SHOULDER_SPEED && hasSand(seg.row);
     const steps = Math.floor((seg.end - seg.start) / u);
     const r = STEER_PER_STEP * Math.max(0, steps - lag);
     set = expandWithin(set, r, f);
@@ -243,36 +360,111 @@ function canBrakeFor(segments: readonly Segment[], car: PlanCar, v: number): boo
   return true;
 }
 
-/** Free centres at front position r against the real traffic (what the physics sees). */
-function freeAt(course: Course, r: number): Intervals {
+const longestZoneCache = new WeakMap<Course, number>();
+
+/**
+ * Calls `visit` for every zone whose extent along the course meets the car's
+ * (r − 58, r) — the same open test as the physics' (zones sorted by rear).
+ */
+function forEachZoneNear(course: Course, r: number, visit: (z: Zone) => void): void {
+  const zones = course.zones;
+  if (zones.length === 0) return;
+  let longest = longestZoneCache.get(course);
+  if (longest === undefined) {
+    longest = 0;
+    for (const z of zones) longest = Math.max(longest, z.front - z.rear);
+    longestZoneCache.set(course, longest);
+  }
+  let lo = 0;
+  let hi = zones.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (zones[mid]!.rear < r) lo = mid + 1;
+    else hi = mid;
+  }
+  const floor = r - CAR_LENGTH - longest;
+  for (let i = lo - 1; i >= 0; i--) {
+    const z = zones[i]!;
+    if (z.rear <= floor) break;
+    if (z.front > r - CAR_LENGTH) visit(z);
+  }
+}
+
+/**
+ * Free centres at front position r against the real traffic (what the
+ * physics sees). For a first-stage decision (`before` not null), also clear
+ * of the sand and cones that stage routes around, read where the physics
+ * reads them (§1): sand at the front before the step advances (`before`),
+ * cones after it (r).
+ */
+function freeAt(course: Course, r: number, before: number | null): Intervals {
   const near: Obstacle[] = [];
   forEachNear(course, r, (o) => {
     near.push(o);
   });
-  return freeAmong(near, single(X_MIN, X_MAX));
+  let set = freeAmong(near, single(X_MIN, X_MAX));
+  if (before !== null) {
+    const avoid = (kind: Zone['kind']) => (z: Zone) => {
+      if (z.kind === kind)
+        set = subtractOpen(set, z.left - CAR_HALF_WIDTH, z.right + CAR_HALF_WIDTH);
+    };
+    forEachZoneNear(course, before, avoid('sand'));
+    forEachZoneNear(course, r, avoid('cone'));
+  }
+  return set;
 }
 
 /**
- * Clamps a lateral aim so that following it for the decision's steps never
- * puts the car into traffic (§6 step 3).
+ * The fronts r the car reaches over the decision's DECISION_INTERVAL steps
+ * holding `brake` at its present x — the physics' speed rule step for step
+ * (§1 step 2): the Bump hold, then the 231 cap for the shoulder, for sand
+ * under the car before it advances and for a running cone cap, which a
+ * cone touched after advancing restarts at CONE_CAP_STEPS (§6 "先読みも物理
+ * どおり"). Traffic is not resolved here: the caller stops at the first step
+ * that would meet it.
  */
-function safeTarget(course: Course, car: PlanCar, aim: number, brake: number): number {
-  const dir = Math.sign(aim - car.x);
-  if (dir === 0) return car.x;
-  let allowed = Math.abs(aim - car.x);
+export function lookAhead(course: Course, car: PlanCar, brake: number): number[] {
   let w = car.w;
   let r = car.r;
   let hold = car.hold;
+  let coneCap = car.coneCap;
   const goal = targetSpeed(brake);
+  const out: number[] = [];
   for (let j = 1; j <= DECISION_INTERVAL; j++) {
     if (hold > 0) {
       w = 0;
       hold -= 1;
     } else {
-      w = approachSpeed(w, onShoulder(car.x) ? Math.min(goal, SHOULDER_SPEED) : goal);
+      const capped = onShoulder(car.x) || coneCap > 0 || onSandAt(course, car.x, r);
+      w = approachSpeed(w, capped ? Math.min(goal, SHOULDER_SPEED) : goal);
     }
     r += w;
-    const comp = componentOf(freeAt(course, r), car.x);
+    if (onConeAt(course, car.x, r)) coneCap = CONE_CAP_STEPS;
+    else if (coneCap > 0) coneCap -= 1;
+    out.push(r);
+  }
+  return out;
+}
+
+/**
+ * Clamps a lateral aim so that following it for the decision's steps never
+ * puts the car into traffic (§6 step 3) — nor, on a first-stage decision,
+ * into the sand and cones that stage routes around.
+ */
+function safeTarget(
+  course: Course,
+  car: PlanCar,
+  aim: number,
+  brake: number,
+  avoidZones: boolean,
+): number {
+  const dir = Math.sign(aim - car.x);
+  if (dir === 0) return car.x;
+  let allowed = Math.abs(aim - car.x);
+  const fronts = lookAhead(course, car, brake);
+  for (let j = 1; j <= fronts.length; j++) {
+    const before = j === 1 ? car.r : fronts[j - 2]!;
+    const comp = componentOf(freeAt(course, fronts[j - 1]!, avoidZones ? before : null), car.x);
     if (comp === null) break;
     const edge = dir > 0 ? comp[1] - car.x : car.x - comp[0];
     if (j * STEER_PER_STEP > edge) allowed = Math.min(allowed, edge);
@@ -284,6 +476,15 @@ function candidates(cap: number): number[] {
   const top = Math.max(MIN_TARGET_SPEED, Math.min(FULL_SPEED, cap));
   const out: number[] = [];
   for (let v = top; v >= MIN_TARGET_SPEED; v -= SPEED_GRID_STEP) out.push(v);
+  return out;
+}
+
+/** The two stages' candidates (§6 "候補は 2 段"): the first only when zones are in view. */
+function stages(cap: number, zones: boolean): Array<{ v: number; avoid: boolean }> {
+  const all = candidates(cap);
+  const out: Array<{ v: number; avoid: boolean }> = [];
+  if (zones) for (const v of all) if (v > SHOULDER_SPEED) out.push({ v, avoid: true });
+  for (const v of all) out.push({ v, avoid: false });
   return out;
 }
 
@@ -299,7 +500,7 @@ export function planLane(
   const segments = segmentsAhead(course, car.r, Math.max(view, CAR_LENGTH));
   let work = 0;
   let capped = false;
-  for (const v of candidates(cap)) {
+  for (const { v, avoid } of stages(cap, zonesInView(segments))) {
     if (work >= workLimit) {
       capped = true;
       break;
@@ -308,7 +509,7 @@ export function planLane(
       work += 1;
       continue;
     }
-    const sweep = sweepAt(segments, car, v);
+    const sweep = sweepAt(segments, car, v, avoid);
     if (sweep === null) {
       work += segments.length;
       continue;
@@ -345,12 +546,13 @@ export function planLane(
     const aim = firstSet.length > 0 ? nearest(firstSet, goal + offset) : goal;
     const brake = brakeForSpeed(v);
     return {
-      steerX: safeTarget(course, car, aim, brake),
+      steerX: safeTarget(course, car, aim, brake, avoid),
       brake,
       speed: v,
       feasible: true,
       capped: false,
       work,
+      stage: avoid ? 1 : 2,
     };
   }
   // Nothing passes (or the work bound was reached): crawl, and head for the
@@ -366,11 +568,12 @@ export function planLane(
     }
   }
   return {
-    steerX: safeTarget(course, car, aim + offset, brake),
+    steerX: safeTarget(course, car, aim + offset, brake, false),
     brake,
     speed: MIN_TARGET_SPEED,
     feasible: false,
     capped,
     work: work + 1,
+    stage: 0,
   };
 }

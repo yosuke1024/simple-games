@@ -5,12 +5,14 @@
  * draw with these same pieces, so a figure can never show a car the race
  * does not (§10).
  *
- * Told apart by fill and outline, never by colour alone: the player's car is
- * an ink fill, traffic an accent fill, the three other racers an accent
- * outline over the surface with an ASCII digit 1–3 in ink. Works are accent
- * hatching. The only text on the board is those digits (§11). Every colour
- * is a shared token read from computed style — none is written here but the
- * jsdom fallbacks.
+ * Told apart by shape, fill and mark, never by colour alone: the player's car
+ * is an ink fill, traffic an accent fill, the three other racers a blue fill
+ * (`--ot-rival`, game content — overtake.css) with the same window cut-outs
+ * and an ASCII digit 1–3 in `--ot-rival-ink`. Works are accent hatching, sand
+ * an ink-soft stipple inside a thin ink-soft edge, a cone an accent triangle
+ * on an ink-soft base line. The only text on the board is those digits (§11).
+ * Every colour is a token read from computed style — none is written here but
+ * the jsdom fallbacks (the light theme's values).
  *
  * Chromium 88 is the floor: corners are built with arcTo (`roundRect` is
  * Chromium 99), and nothing uses shadowBlur or ctx.filter (§11).
@@ -31,7 +33,7 @@ import {
   BUMP_BLINK_STEPS,
 } from '../game/constants';
 import type { RaceState } from '../game/race';
-import type { CarState, Course, Obstacle } from '../game/types';
+import type { CarState, Course, Obstacle, Zone } from '../game/types';
 
 export interface Palette {
   surface: string;
@@ -39,6 +41,10 @@ export interface Palette {
   ink: string;
   inkSoft: string;
   accent: string;
+  /** The other racers' fill (`--ot-rival`, game content — §11). */
+  rival: string;
+  /** Their digit on that fill (`--ot-rival-ink`, which is `var(--surface)`). */
+  rivalInk: string;
 }
 
 /** Fallbacks are the light theme's tokens; only jsdom ever needs them. */
@@ -51,6 +57,8 @@ export function readPalette(): Palette {
     ink: pick('--ink', '#232a33'),
     inkSoft: pick('--ink-soft', '#5c6772'),
     accent: pick('--accent', '#8e3b46'),
+    rival: pick('--ot-rival', '#2453a8'),
+    rivalInk: pick('--ot-rival-ink', '#fffdf8'),
   };
 }
 
@@ -91,26 +99,28 @@ export function drawCar(
 ): void {
   const x = centreX - width / 2;
   const radius = Math.min(7, width / 4);
+  roundRectPath(ctx, x, frontY, width, length, radius);
+  ctx.fillStyle =
+    look === 'player' ? palette.ink : look === 'rival' ? palette.rival : palette.accent;
+  ctx.fill();
   if (look === 'rival') {
-    roundRectPath(ctx, x + 1.25, frontY + 1.25, width - 2.5, length - 2.5, radius);
-    ctx.fillStyle = palette.surface;
-    ctx.fill();
-    ctx.lineWidth = 2.5;
-    ctx.strokeStyle = palette.accent;
+    // A hairline of surface around the body: racers pass through each other
+    // (§4), so two rivals can overlap in a lane, and without an edge they read
+    // as one long blue car with two digits (§11).
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = palette.surface;
     ctx.stroke();
-  } else {
-    roundRectPath(ctx, x, frontY, width, length, radius);
-    ctx.fillStyle = look === 'player' ? palette.ink : palette.accent;
-    ctx.fill();
-    // The windows: the surface showing through the body.
-    ctx.fillStyle = palette.surface;
-    roundRectPath(ctx, x + 5, frontY + Math.min(12, length * 0.2), width - 10, 8, 2);
-    ctx.fill();
-    roundRectPath(ctx, x + 6, frontY + length - 13, width - 12, 5, 2);
-    ctx.fill();
   }
+  // The windows: the surface showing through the body.
+  ctx.fillStyle = palette.surface;
+  roundRectPath(ctx, x + 5, frontY + Math.min(12, length * 0.2), width - 10, 8, 2);
+  ctx.fill();
+  roundRectPath(ctx, x + 6, frontY + length - 13, width - 12, 5, 2);
+  ctx.fill();
+  // The digit sits between the two windows (§11): 18px tall on a 58px body
+  // whose windscreen ends at 20 and rear window starts at 45.
   if (digit !== null) {
-    ctx.fillStyle = palette.ink;
+    ctx.fillStyle = look === 'rival' ? palette.rivalInk : palette.ink;
     ctx.font = '700 18px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -201,6 +211,95 @@ export function drawRoad(
   }
 }
 
+/** The stipple's pitch, logical px: a dot every 6 along a row, rows 6 apart. */
+export const SAND_DOT_PITCH = 6;
+/** The side of one stipple dot, logical px. */
+export const SAND_DOT_SIZE = 1.5;
+
+/**
+ * Sand (§11「見た目」): ink-soft dots on a staggered 6px grid and a 1px
+ * ink-soft edge, no fill — the road's dashes show through. `x`, `y`, `width`
+ * and `height` are the patch on screen; `front` is the course position (px)
+ * of its top edge, so the rows sit at fixed course px (multiples of the
+ * pitch). Course coordinates move with traffic (§1), so the patch and its
+ * dots stream past at the player's w, like the traffic — not with the lane
+ * dashes, which go by at w + vT (`drawRoad`). Nothing moves on its own.
+ */
+export function drawSand(
+  ctx: CanvasRenderingContext2D,
+  palette: Palette,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  front: number,
+  top = 0,
+  bottom = BOARD_HEIGHT,
+): void {
+  const half = SAND_DOT_SIZE / 2;
+  ctx.fillStyle = palette.inkSoft;
+  ctx.beginPath();
+  // Row k sits at course px k × pitch, i.e. y + (front − k × pitch) on screen.
+  const firstRow = Math.ceil((front - height) / SAND_DOT_PITCH);
+  const lastRow = Math.floor(front / SAND_DOT_PITCH);
+  for (let k = firstRow; k <= lastRow; k++) {
+    const dotY = y + front - k * SAND_DOT_PITCH;
+    if (dotY < y + 1 || dotY > y + height - 1) continue;
+    if (dotY < top - half || dotY > bottom + half) continue;
+    // Odd rows step half a pitch over: the stagger.
+    const shift = Math.abs(k) % 2 === 1 ? SAND_DOT_PITCH / 2 : 0;
+    let dotX = Math.ceil((x + 1 - shift) / SAND_DOT_PITCH) * SAND_DOT_PITCH + shift;
+    for (; dotX <= x + width - 1; dotX += SAND_DOT_PITCH) {
+      ctx.rect(dotX - half, dotY - half, SAND_DOT_SIZE, SAND_DOT_SIZE);
+    }
+  }
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = palette.inkSoft;
+  ctx.strokeRect(x + 0.5, y + 0.5, width - 1, height - 1);
+}
+
+/** The cone's base line, logical px thick (§11). */
+export const CONE_BASE = 2;
+
+/**
+ * One traffic cone (§11「見た目」): an accent triangle pointing forward (up)
+ * in its box, on a 2px ink-soft base line along the box's rear edge. Static —
+ * a touched cone neither falls nor moves (§4).
+ */
+export function drawCone(
+  ctx: CanvasRenderingContext2D,
+  palette: Palette,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): void {
+  ctx.fillStyle = palette.accent;
+  ctx.beginPath();
+  ctx.moveTo(x + width / 2, y);
+  ctx.lineTo(x + width, y + height);
+  ctx.lineTo(x, y + height);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = palette.inkSoft;
+  ctx.fillRect(x, y + height - CONE_BASE, width, CONE_BASE);
+}
+
+/** Draws one sand patch or cone; `frontY` is the screen y of its front. */
+export function drawZone(
+  ctx: CanvasRenderingContext2D,
+  palette: Palette,
+  zone: Zone,
+  frontY: number,
+): void {
+  const width = (zone.right - zone.left) / SUB;
+  const length = (zone.front - zone.rear) / SUB;
+  const x = zone.left / SUB;
+  if (zone.kind === 'sand') drawSand(ctx, palette, x, frontY, width, length, zone.front / SUB);
+  else drawCone(ctx, palette, x, frontY, width, length);
+}
+
 /** Draws one piece of traffic; `y` is the screen y of its front. */
 export function drawObstacle(
   ctx: CanvasRenderingContext2D,
@@ -240,21 +339,33 @@ export function drawRace(
   const ground = pr / SUB + (TRAFFIC_SPEED * race.step) / STEPS_PER_SECOND;
   drawRoad(ctx, palette, course.lanes, ground);
 
-  const goalY = toY(course.length);
-  if (goalY > -16 && goalY < BOARD_HEIGHT + 16) drawFinish(ctx, palette, goalY);
-
   // Only what is on the board: course r from 170 px behind the player's
   // front (the bottom edge) to 470 px ahead of it (the top edge).
   const low = pr - (BOARD_HEIGHT - PLAYER_SCREEN_Y) * SUB;
   const high = pr + PLAYER_SCREEN_Y * SUB;
+
+  // Sand is part of the road: drawn straight after it, under everything
+  // else; the cones come after the sand and the finish, still under the
+  // cars (§11). course.zones is sorted by rear, like the obstacles.
+  const zonesInView = (kind: Zone['kind']) => {
+    for (const zone of course.zones) {
+      if (zone.rear > high) break;
+      if (zone.kind === kind && zone.front >= low) drawZone(ctx, palette, zone, toY(zone.front));
+    }
+  };
+  zonesInView('sand');
+  const goalY = toY(course.length);
+  if (goalY > -16 && goalY < BOARD_HEIGHT + 16) drawFinish(ctx, palette, goalY);
+  zonesInView('cone');
+
   for (const obstacle of course.obstacles) {
     if (obstacle.rear > high) break;
     if (obstacle.front < low) continue;
     drawObstacle(ctx, palette, obstacle, toY(obstacle.front));
   }
 
-  // The other racers pass through the player and each other (§4): drawn as
-  // outlines first, the player's car last on top.
+  // The other racers pass through the player and each other (§4): drawn
+  // first, 1 → 3, the player's car last on top.
   const carW = CAR_WIDTH / SUB;
   const carL = CAR_LENGTH / SUB;
   race.rivals.forEach((rival, i) => {

@@ -37,6 +37,7 @@ export function rivalStart(index: number, speed: number): MutableRival {
       lock: 0,
       blink: 0,
       bumps: 0,
+      coneCap: 0,
     },
     decision: COAST,
     finish: null,
@@ -54,6 +55,10 @@ export interface RivalStepInfo {
   /** Whether the decision made this step found a feasible candidate (§6). */
   feasible: boolean;
   bumped: boolean;
+  /** Sand under the car at this step's speed rule (§4) — printed, not gated (§6). */
+  onSand: boolean;
+  /** The car touched a cone after this step (§4). */
+  coneHit: boolean;
 }
 
 /**
@@ -80,7 +85,11 @@ export function advanceRival(
     }
   }
   const report = advanceCar(course, rival.car, rival.decision, newReport());
-  if (info !== undefined) info.bumped = report.bumped;
+  if (info !== undefined) {
+    info.bumped = report.bumped;
+    info.onSand = report.onSand;
+    info.coneHit = report.coneHit;
+  }
   if (rival.car.r >= course.length) rival.finish = step + 1;
 }
 
@@ -95,6 +104,10 @@ export interface RivalsRun {
   readonly decisions: number;
   /** Decisions with no feasible candidate (§6). */
   readonly infeasible: number;
+  /** Steps a rival spent with sand under it, all rivals (§6: printed, not gated). */
+  readonly sandSteps: number;
+  /** Cone touches — runs of touching steps — all rivals (§6: printed, not gated). */
+  readonly coneTouches: number;
 }
 
 export interface SimulateOptions {
@@ -120,6 +133,8 @@ export function simulateRivals(
   let maxWork = 0;
   let decisions = 0;
   let infeasible = 0;
+  let sandSteps = 0;
+  let coneTouches = 0;
   for (let i = 0; i < RIVAL_COUNT; i++) {
     if (options.only !== undefined && !options.only.includes(i)) {
       finish.push(null);
@@ -129,10 +144,21 @@ export function simulateRivals(
     }
     const rival = rivalStart(i, 240);
     const states: CarState[] = [];
-    const info: RivalStepInfo = { planned: false, work: 0, feasible: true, bumped: false };
+    const info: RivalStepInfo = {
+      planned: false,
+      work: 0,
+      feasible: true,
+      bumped: false,
+      onSand: false,
+      coneHit: false,
+    };
+    let touching = false;
     for (let step = 0; step < maxSteps && rival.finish === null; step++) {
       info.planned = false;
       advanceRival(course, rival, i, means[i]!, step, info);
+      if (info.onSand) sandSteps += 1;
+      if (info.coneHit && !touching) coneTouches += 1;
+      touching = info.coneHit;
       if (info.planned) {
         decisions += 1;
         if (info.work > maxWork) maxWork = info.work;
@@ -144,7 +170,8 @@ export function simulateRivals(
     bumps.push(rival.car.bumps);
     trace.push(states);
   }
+  const counts = { maxWork, decisions, infeasible, sandSteps, coneTouches };
   return options.trace === true
-    ? { finish, bumps, trace, maxWork, decisions, infeasible }
-    : { finish, bumps, maxWork, decisions, infeasible };
+    ? { finish, bumps, trace, ...counts }
+    : { finish, bumps, ...counts };
 }

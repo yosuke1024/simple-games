@@ -4,6 +4,11 @@
  * continuous x, real car widths and each row's window (u_k, u_k + L_k + 58),
  * on integer interval sets. The planner (§6) runs the same sweep over its
  * view window.
+ *
+ * Sand and cones (row.zones) are not subtracted (§5 "確かめる"): both are
+ * passable, so only traffic and works shape F_k. A path that exists at a
+ * constant v still exists when sand or a cone slows the car — slower only
+ * reaches further sideways over the same distance.
  */
 import { exactDiv } from './arith';
 import { CAR_LENGTH, FULL_SPEED, STEER_PER_STEP } from './constants';

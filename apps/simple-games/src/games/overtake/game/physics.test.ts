@@ -13,19 +13,22 @@ import {
   BUMP_LOCK_STEPS,
   CAR_HALF_WIDTH,
   CAR_LENGTH,
+  CONE_CAP_STEPS,
   FULL_SPEED,
   SHOULDER_SPEED,
   SUB,
   X_MAX,
   X_MIN,
 } from './constants';
-import { assembleCourse, generateCourse } from './course';
-import { carObstacle } from './geometry';
+import { assembleCourse, coneGroup, generateCourse, sandZone } from './course';
+import { carObstacle, laneCenter } from './geometry';
 import {
   advanceCar,
   approachSpeed,
   brakeForSpeed,
   newReport,
+  onConeAt,
+  onSandAt,
   overlapAt,
   resolveOverlaps,
   stepCar,
@@ -34,10 +37,10 @@ import {
 } from './physics';
 import { createRng, randInt } from './rng';
 import { report } from './test-helpers';
-import type { Course, Obstacle } from './types';
+import type { Course, Obstacle, Zone } from './types';
 
 function car(r: number, x: number, w: number): MutableCar {
-  return { r, x, w, target: x, hold: 0, lock: 0, blink: 0, bumps: 0 };
+  return { r, x, w, target: x, hold: 0, lock: 0, blink: 0, bumps: 0, coneCap: 0 };
 }
 
 /** A course holding just these obstacles (as one row each). */
@@ -62,6 +65,38 @@ function scene(obstacles: Obstacle[]): Course {
 }
 
 const EMPTY = scene([]);
+
+/** A course holding these zones as one 'sand' / 'cones' row, plus optional traffic rows. */
+function zoneScene(zones: Zone[], obstacles: Obstacle[] = []): Course {
+  const u = Math.min(...zones.map((z) => z.rear));
+  return assembleCourse(1, 3, 100_000 * SUB, [
+    {
+      kind: 'normal' as const,
+      template: zones[0]!.kind === 'sand' ? ('sand' as const) : ('cones' as const),
+      u,
+      length: Math.max(...zones.map((z) => z.front)) - u,
+      gap: 0,
+      lead: 0,
+      sigma: 0,
+      move: 0,
+      obstacles: [],
+      zones,
+      gapSpan: null,
+    },
+    ...obstacles.map((o) => ({
+      kind: 'normal' as const,
+      template: 'single' as const,
+      u: o.rear,
+      length: o.front - o.rear,
+      gap: 0,
+      lead: 0,
+      sigma: 0,
+      move: 0,
+      obstacles: [o],
+      gapSpan: null,
+    })),
+  ]);
+}
 
 describe('speed (§1)', () => {
   it('maps the brake to 420 − floor(360 × brake / 1000)', () => {
@@ -132,6 +167,182 @@ describe('steering and the clamp (§1)', () => {
     const road = car(0, 45 * SUB, 300);
     for (let i = 0; i < 100; i++) advanceCar(EMPTY, road, { steerX: null, brake: 0 });
     expect(road.w).toBe(FULL_SPEED);
+  });
+});
+
+describe('sand (§1 step 2, §4)', () => {
+  const sand = sandZone(3, 1, 200, 1000 * SUB);
+  const course = zoneScene([sand]);
+  const mid = laneCenter(3, 1);
+
+  it('caps the target speed at 231 while the body overlaps it, even at brake 0, and lets go after', () => {
+    // A deep copy: course.zones holds the same Zone objects as `sand`, so only
+    // a snapshot catches the physics moving or reshaping one in place.
+    const zonesBefore = JSON.parse(JSON.stringify(course.zones)) as Zone[];
+    const c = car(sand.rear - 300 * SUB, mid, FULL_SPEED);
+    let sandSteps = 0;
+    let lowest = FULL_SPEED;
+    const r0 = c.r;
+    let steps = 0;
+    while (c.r < sand.front + CAR_LENGTH + 400 * SUB) {
+      const before = { r: c.r, x: c.x, w: c.w };
+      const rep = advanceCar(course, c, { steerX: null, brake: 0 });
+      steps += 1;
+      // Never a Bump, never resolved: r moves by exactly w, x never moves.
+      expect(rep.bumped || rep.overlapped || rep.coneHit).toBe(false);
+      expect(c.r).toBe(before.r + c.w);
+      expect(c.x).toBe(mid);
+      // The cap is judged at step 2's position (before the advance), strictly.
+      const inside = before.r > sand.rear && before.r - CAR_LENGTH < sand.front;
+      expect(rep.onSand, `step ${steps}`).toBe(inside);
+      if (inside) expect(c.w).toBe(Math.max(SHOULDER_SPEED, before.w - 6));
+      else expect(c.w).toBe(Math.min(FULL_SPEED, before.w + 3));
+      if (rep.onSand) sandSteps += 1;
+      lowest = Math.min(lowest, c.w);
+    }
+    expect(lowest).toBe(SHOULDER_SPEED);
+    expect(c.w).toBe(FULL_SPEED);
+    expect([c.bumps, c.hold, c.lock, c.blink, c.coneCap]).toEqual([0, 0, 0, 0, 0]);
+    expect(course.zones).toEqual(zonesBefore);
+    expect(c.r).toBeGreaterThan(r0);
+    report('sand 200 px at full throttle, steps on sand', sandSteps);
+  });
+
+  it('does not cap a car whose edge only touches it (sideways or end on)', () => {
+    // Right edge exactly on the sand's left edge.
+    const side = car(sand.rear + 100 * SUB, sand.left - CAR_HALF_WIDTH, FULL_SPEED);
+    for (let i = 0; i < 100; i++) {
+      expect(advanceCar(course, side, { steerX: null, brake: 0 }).onSand).toBe(false);
+    }
+    expect(side.w).toBe(FULL_SPEED);
+    expect(onSandAt(course, sand.left - CAR_HALF_WIDTH, sand.rear + 100 * SUB)).toBe(false);
+    expect(onSandAt(course, sand.left - CAR_HALF_WIDTH + 1, sand.rear + 100 * SUB)).toBe(true);
+    // Front exactly on the sand's rear, back exactly on its front: no overlap.
+    expect(onSandAt(course, mid, sand.rear)).toBe(false);
+    expect(onSandAt(course, mid, sand.rear + 1)).toBe(true);
+    expect(onSandAt(course, mid, sand.front + CAR_LENGTH)).toBe(false);
+    expect(onSandAt(course, mid, sand.front + CAR_LENGTH - 1)).toBe(true);
+    // The first step that starts with the front on the sand's rear is not capped.
+    const end = car(sand.rear, mid, FULL_SPEED);
+    const first = advanceCar(course, end, { steerX: null, brake: 0 });
+    expect([first.onSand, end.w]).toEqual([false, FULL_SPEED]);
+    const second = advanceCar(course, end, { steerX: null, brake: 0 });
+    expect([second.onSand, end.w]).toEqual([true, FULL_SPEED - 6]);
+  });
+
+  it('is not traffic: overlapAt and the resolution ignore it, a Bump on it is the usual Bump', () => {
+    expect(overlapAt(course, mid, sand.rear + 100 * SUB)).toBeNull();
+    const sedan = carObstacle('sedan', mid, sand.rear + 150 * SUB);
+    const mixed = zoneScene([sand], [sedan]);
+    const c = car(sedan.rear - 300 * SUB, mid, FULL_SPEED);
+    let bumpedAt = -1;
+    for (let step = 1; step < 400 && bumpedAt < 0; step++) {
+      if (advanceCar(mixed, c, { steerX: null, brake: 0 }).bumped) bumpedAt = step;
+    }
+    expect(bumpedAt).toBeGreaterThan(0);
+    expect([c.w, c.hold, c.lock, c.blink, c.bumps]).toEqual([0, 60, 36, 96, 1]);
+    // Resolved behind the sedan — onto the sand, which is allowed (§4).
+    expect(c.r).toBe(sedan.rear);
+    expect(onSandAt(mixed, c.x, c.r)).toBe(true);
+  });
+});
+
+describe('cones (§1 steps 4–5, §4)', () => {
+  // Three lanes, the middle lane, three cones from its left edge.
+  const group = coneGroup(3, 1, 0, 3, 1000 * SUB);
+  const course = zoneScene(group);
+  const middle = group[1]!;
+  const x = (middle.left + middle.right) / 2;
+
+  it('restarts a 36-step cap on every touching step; the 37th step after the last touch is free', () => {
+    expect(CONE_CAP_STEPS).toBe(36);
+    // At 231 the cap holds w exactly, so its end shows as the first +3. Until
+    // the first touch, brake 525 ‰ holds the same 231 (420 − 189).
+    expect(targetSpeed(525)).toBe(SHOULDER_SPEED);
+    // A deep copy: course.zones holds the same Zone objects as `group`.
+    const zonesBefore = JSON.parse(JSON.stringify(course.zones)) as Zone[];
+    const c = car(middle.rear - 200 * SUB, x, SHOULDER_SPEED);
+    let lastTouch = -1;
+    let touches = 0;
+    let freedAt = -1;
+    for (let step = 1; step < 400 && freedAt < 0; step++) {
+      const before = { r: c.r, x: c.x };
+      const rep = advanceCar(course, c, { steerX: null, brake: lastTouch < 0 ? 525 : 0 });
+      expect(rep.bumped || rep.overlapped || rep.onSand).toBe(false);
+      expect([c.r, c.x]).toEqual([before.r + c.w, before.x]);
+      expect(rep.coneHit).toBe(onConeAt(course, c.x, c.r));
+      if (rep.coneHit) {
+        touches += 1;
+        lastTouch = step;
+        expect(c.coneCap).toBe(36);
+      } else if (lastTouch > 0) {
+        expect(c.coneCap, `step ${step}`).toBe(Math.max(0, 36 - (step - lastTouch)));
+      }
+      if (lastTouch > 0 && c.w > SHOULDER_SPEED) freedAt = step;
+      else expect(c.w).toBe(SHOULDER_SPEED);
+    }
+    expect(c.w).toBe(SHOULDER_SPEED + 3);
+    expect(touches).toBeGreaterThan(1);
+    expect(freedAt - lastTouch).toBe(37);
+    expect([c.bumps, c.hold, c.lock, c.blink]).toEqual([0, 0, 0, 0]);
+    // The cones stay where they were (§4: not pushed, not removed).
+    expect(course.zones).toEqual(zonesBefore);
+    report('3-cone group at 231, touching steps', touches);
+  });
+
+  it('starts from a car at a 231 speed only when the cap is up: no cone, full throttle accelerates', () => {
+    const c = car(0, x, SHOULDER_SPEED);
+    advanceCar(EMPTY, c, { steerX: null, brake: 0 });
+    expect(c.w).toBe(SHOULDER_SPEED + 3);
+    const capped = { ...car(0, x, SHOULDER_SPEED), coneCap: 5 };
+    advanceCar(EMPTY, capped, { steerX: null, brake: 0 });
+    expect([capped.w, capped.coneCap]).toEqual([SHOULDER_SPEED, 4]);
+  });
+
+  it('counts down through a Bump step and resolves only traffic', () => {
+    // A running cap counts down on the Bump's own step too (§1 step 5).
+    const lone = carObstacle('sedan', x, 3000 * SUB);
+    const plain = scene([lone]);
+    const c = { ...car(lone.rear - 20 * SUB, x, FULL_SPEED), coneCap: 36 };
+    let bumpStep = -1;
+    for (let step = 1; step < 30 && bumpStep < 0; step++) {
+      if (advanceCar(plain, c, { steerX: null, brake: 0 }).bumped) bumpStep = step;
+    }
+    expect(bumpStep).toBeGreaterThan(0);
+    expect(c.coneCap).toBe(36 - bumpStep);
+    // A sedan just past the cones: the resolution puts the car back behind it,
+    // over the cones (they are not traffic), and the cap restarts there.
+    const sedan = carObstacle('sedan', x, middle.front + 30 * SUB);
+    const mixed = zoneScene(group, [sedan]);
+    expect(overlapAt(mixed, x, middle.front)).toBeNull();
+    const d = car(middle.rear - 100 * SUB, x, FULL_SPEED);
+    let bumped = false;
+    for (let step = 1; step < 400 && !bumped; step++) {
+      const rep = advanceCar(mixed, d, { steerX: null, brake: 0 });
+      if (rep.bumped) {
+        bumped = true;
+        expect(d.r).toBe(sedan.rear);
+        expect(rep.coneHit).toBe(true);
+        expect(d.coneCap).toBe(36);
+      }
+    }
+    expect(bumped).toBe(true);
+    expect(d.bumps).toBe(1);
+  });
+
+  it('caps at 231 however many apply at once: shoulder, sand, cone timer', () => {
+    // A sand strip on the left shoulder-side lane, the car half on the shoulder, cone cap running.
+    const sand = sandZone(3, 0, 250, 1000 * SUB);
+    const c = { ...car(sand.rear + 100 * SUB, 40 * SUB, FULL_SPEED), coneCap: 30 };
+    const course2 = zoneScene([sand]);
+    for (let i = 0; i < 40; i++) {
+      const rep = advanceCar(course2, c, { steerX: null, brake: 0 });
+      expect(rep.onSand).toBe(true);
+    }
+    expect(c.w).toBe(SHOULDER_SPEED);
+    // And the brake still goes below it.
+    advanceCar(course2, c, { steerX: null, brake: 1000 });
+    expect(c.w).toBe(SHOULDER_SPEED - 6);
   });
 });
 
@@ -306,10 +517,13 @@ describe('the pure step', () => {
       lock: 0,
       blink: 0,
       bumps: 0,
+      coneCap: 7,
     };
     const frozen = { ...before };
     const { car: after } = stepCar(course, before, { steerX: 200 * SUB, brake: 250 });
     expect(before).toEqual(frozen);
+    expect(Object.keys(after)).toContain('coneCap');
+    expect(after.coneCap).toBe(6);
     for (const v of Object.values(after)) expect(Number.isInteger(v)).toBe(true);
   });
 });

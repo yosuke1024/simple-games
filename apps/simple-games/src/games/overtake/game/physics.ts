@@ -1,8 +1,10 @@
 /**
  * One fixed step of 1/120 s for one racer (docs/OVERTAKE_RULES.md §1 "1 ステップの
  * 順序", §4). The player and the rivals share it: steer → speed → advance →
- * resolve overlaps with traffic (Bump) → timers. Racers never touch each other
- * (§4), so a step only ever reads the course and the car itself.
+ * resolve overlaps with traffic (Bump) → cones → timers. Racers never touch
+ * each other (§4), so a step only ever reads the course and the car itself.
+ * Sand and cones (course.zones) only cap the target speed at SHOULDER_SPEED:
+ * they are never a Bump and never resolved (§4).
  *
  * Integers only (§1): positions in units, speeds in px/s, brake in ‰, and the
  * only division is Math.floor of two integers.
@@ -15,6 +17,7 @@ import {
   BUMP_HOLD_STEPS,
   BUMP_LOCK_STEPS,
   CAR_HALF_WIDTH,
+  CONE_CAP_STEPS,
   CAR_LENGTH,
   DECEL_PER_STEP,
   FULL_SPEED,
@@ -26,7 +29,7 @@ import {
   X_MAX,
   X_MIN,
 } from './constants';
-import type { CarState, Course, Obstacle, StepInput } from './types';
+import type { CarState, Course, Obstacle, StepInput, Zone, ZoneKind } from './types';
 
 /** The mutable twin of CarState the hot loops use; `stepCar` is the pure face. */
 export interface MutableCar {
@@ -38,6 +41,7 @@ export interface MutableCar {
   lock: number;
   blink: number;
   bumps: number;
+  coneCap: number;
 }
 
 export interface StepReport {
@@ -51,10 +55,22 @@ export interface StepReport {
   pushedBack: boolean;
   /** The steering lock ended this step: re-anchor the steering finger (§3). */
   lockReleased: boolean;
+  /** The car overlapped sand at step 2's position (set every step, §1). */
+  onSand: boolean;
+  /** The car overlapped a cone after the resolution: the cone cap restarted (set every step). */
+  coneHit: boolean;
 }
 
 export function newReport(): StepReport {
-  return { bumped: false, overlapped: false, passes: 0, pushedBack: false, lockReleased: false };
+  return {
+    bumped: false,
+    overlapped: false,
+    passes: 0,
+    pushedBack: false,
+    lockReleased: false,
+    onSand: false,
+    coneHit: false,
+  };
 }
 
 /**
@@ -94,8 +110,19 @@ function longestObstacle(course: Course): number {
   return longest;
 }
 
-/** Index of the first obstacle whose rear is ≥ r (obstacles are sorted by rear). */
-function firstRearAtOrAfter(obstacles: readonly Obstacle[], r: number): number {
+const longestZoneCache = new WeakMap<Course, number>();
+function longestZone(course: Course): number {
+  let longest = longestZoneCache.get(course);
+  if (longest === undefined) {
+    longest = 0;
+    for (const z of course.zones) longest = Math.max(longest, z.front - z.rear);
+    longestZoneCache.set(course, longest);
+  }
+  return longest;
+}
+
+/** Index of the first piece whose rear is ≥ r (pieces are sorted by rear). */
+function firstRearAtOrAfter(obstacles: readonly { readonly rear: number }[], r: number): number {
   let lo = 0;
   let hi = obstacles.length;
   while (lo < hi) {
@@ -137,6 +164,35 @@ export function overlapAt(course: Course, x: number, r: number): Obstacle | null
     return false;
   });
   return hit;
+}
+
+/**
+ * The first zone of this kind the car at (x, r) overlaps in its interior —
+ * touching edges do not overlap (§4) — or null.
+ */
+export function zoneAt(course: Course, kind: ZoneKind, x: number, r: number): Zone | null {
+  const zones = course.zones;
+  if (zones.length === 0) return null;
+  const left = x - CAR_HALF_WIDTH;
+  const right = x + CAR_HALF_WIDTH;
+  const back = r - CAR_LENGTH;
+  const floor = back - longestZone(course);
+  for (let i = firstRearAtOrAfter(zones, r) - 1; i >= 0; i--) {
+    const z = zones[i]!;
+    if (z.rear <= floor) break;
+    if (z.kind === kind && z.front > back && z.left < right && z.right > left) return z;
+  }
+  return null;
+}
+
+/** Sand under the car at (x, r) (§4): the target speed is capped while it holds. */
+export function onSandAt(course: Course, x: number, r: number): boolean {
+  return zoneAt(course, 'sand', x, r) !== null;
+}
+
+/** A cone touching the car at (x, r) (§4): restarts the cone cap. */
+export function onConeAt(course: Course, x: number, r: number): boolean {
+  return zoneAt(course, 'cone', x, r) !== null;
 }
 
 function inRange(x: number): boolean {
@@ -215,12 +271,15 @@ export function advanceCar(
   if (car.x < car.target) car.x = Math.min(car.target, car.x + STEER_PER_STEP);
   else if (car.x > car.target) car.x = Math.max(car.target, car.x - STEER_PER_STEP);
   car.x = Math.min(X_MAX, Math.max(X_MIN, car.x));
-  // 2. Speed.
+  // 2. Speed. Shoulder, sand (at this pre-advance position) and a running
+  // cone cap all cap the goal at the same 231 — they never stack (§1, §4).
+  const sand = onSandAt(course, car.x, car.r);
+  report.onSand = sand;
   if (car.hold > 0) {
     car.w = 0;
   } else {
     let goal = targetSpeed(input.brake);
-    if (onShoulder(car.x)) goal = Math.min(goal, SHOULDER_SPEED);
+    if (onShoulder(car.x) || sand || car.coneCap > 0) goal = Math.min(goal, SHOULDER_SPEED);
     car.w = approachSpeed(car.w, goal);
   }
   // 3. Advance.
@@ -242,6 +301,12 @@ export function advanceCar(
     // The steering lock holds the car where the resolution left it (§4).
     if (fresh) car.target = car.x;
   }
+  // 4b. Cones, where the resolution left the car: a touch restarts the cap
+  // at 36; otherwise it counts down (5), Bump step or not (§1).
+  const cone = onConeAt(course, car.x, car.r);
+  report.coneHit = cone;
+  if (cone) car.coneCap = CONE_CAP_STEPS;
+  else if (car.coneCap > 0) car.coneCap -= 1;
   // 5. Timers — a Bump's own step does not count against its timers.
   if (!fresh) {
     if (car.hold > 0) car.hold -= 1;
@@ -268,6 +333,7 @@ export function freeze(car: MutableCar): CarState {
     lock: car.lock,
     blink: car.blink,
     bumps: car.bumps,
+    coneCap: car.coneCap,
   };
 }
 
@@ -283,5 +349,5 @@ export function stepCar(
 }
 
 export function newCar(r: number, x: number, w: number): CarState {
-  return { r, x, w, target: x, hold: 0, lock: 0, blink: 0, bumps: 0 };
+  return { r, x, w, target: x, hold: 0, lock: 0, blink: 0, bumps: 0, coneCap: 0 };
 }

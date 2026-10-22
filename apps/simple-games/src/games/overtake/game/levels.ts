@@ -25,12 +25,35 @@ export const CAR_DIMENSIONS: Record<CarKind, { readonly width: number; readonly 
 /** A works zone closes one outer lane for this long, px (§1, §5). */
 export const WORKS_LENGTH = 500;
 
+/**
+ * Sand and cones (§1, 2026-10-22), px, all initial values. Sand is one lane
+ * wide and SAND_MIN_LENGTH + randInt(SAND_LENGTH_SPAN) long (150–250). A cone
+ * is CONE_WIDTH × CONE_LENGTH; a group of 2–3 steps CONE_PITCH forward per
+ * cone and always leaves at least CONE_CLEARANCE (car 34 + 4) of its lane open.
+ */
+export const SAND_MIN_LENGTH = 150;
+export const SAND_LENGTH_SPAN = 101;
+export const CONE_WIDTH = 12;
+export const CONE_LENGTH = 14;
+export const CONE_PITCH = 16;
+export const CONE_CLEARANCE = 38;
+
+/**
+ * Lv6 on (cones weigh > 0): after this many template-drawn normal rows in a
+ * row without sand or cones, the next normal row is one without a draw (§5
+ * "1 コースの最小の数", §7). Initial value.
+ */
+export const ZONE_GAP = 4;
+
 /** Integer weights the carver draws with (§5, §7). */
 export interface TemplateWeights {
   readonly single: number;
   readonly two: number;
   readonly truck: number;
   readonly works: number;
+  /** Appended last (§5): zero weights at the tail leave Lv1–5's draws unchanged. */
+  readonly cones: number;
+  readonly sand: number;
 }
 
 export interface LevelSpec {
@@ -60,8 +83,11 @@ export interface LevelSpec {
   readonly sCurves: boolean;
 }
 
-/** Blocks whose first level brings new vocabulary get +40 ‰ slack (§7). */
-const VOCABULARY_HEADS = new Set([11, 21, 31, 51]);
+/**
+ * Blocks whose first level brings new vocabulary get +40 ‰ slack (§7). Lv6
+ * (cones) and Lv16 (sand) are mid-block and get none (§7).
+ */
+export const VOCABULARY_HEADS: ReadonlySet<number> = new Set([11, 21, 31, 51]);
 
 export function lanesFor(level: number): number {
   const l = clampLevel(level);
@@ -148,6 +174,8 @@ export function levelSpec(level: number): LevelSpec {
       two: 3,
       truck: l >= 21 ? 2 : 0,
       works: l >= 31 ? 1 : 0,
+      cones: l >= 6 ? 2 : 0,
+      sand: l >= 16 ? 2 : 0,
     },
     sCurves: l >= 11,
   };

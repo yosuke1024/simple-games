@@ -186,6 +186,10 @@ export interface BotRun {
   readonly maxWork: number;
   /** Planner decisions with no feasible candidate (§6). */
   readonly infeasible: number;
+  /** Steps with sand under the car (§4) — printed, not gated. */
+  readonly sandSteps: number;
+  /** Cone touches — runs of touching steps (§4) — printed, not gated. */
+  readonly coneTouches: number;
 }
 
 export interface RunOptions {
@@ -211,49 +215,40 @@ export function runBot(course: Course, controller: Controller, options: RunOptio
     lock: 0,
     blink: 0,
     bumps: 0,
+    coneCap: 0,
   };
   const maxSteps = options.maxSteps ?? MAX_RACE_STEPS;
   const stopAfter = options.stopAfter ?? Infinity;
   const report = newReport();
   let maxPasses = 0;
+  let sandSteps = 0;
+  let coneTouches = 0;
+  let touching = false;
+  const tally = () => ({
+    bumps: car.bumps,
+    maxPasses,
+    maxWork: controller.maxWork,
+    infeasible: controller.infeasible,
+    sandSteps,
+    coneTouches,
+  });
   for (let step = 0; step < maxSteps; step++) {
     const input = controller.next(step, car);
     report.passes = 0;
     advanceCar(course, car, input, report);
     if (report.passes > maxPasses) maxPasses = report.passes;
+    if (report.onSand) sandSteps += 1;
+    if (report.coneHit && !touching) coneTouches += 1;
+    touching = report.coneHit;
     options.onStep?.(step + 1, car, input);
     if (car.r >= course.length) {
-      return {
-        status: 'finished',
-        finishStep: step + 1,
-        steps: step + 1,
-        bumps: car.bumps,
-        maxPasses,
-        maxWork: controller.maxWork,
-        infeasible: controller.infeasible,
-      };
+      return { status: 'finished', finishStep: step + 1, steps: step + 1, ...tally() };
     }
     if (step + 1 >= stopAfter) {
-      return {
-        status: 'decided',
-        finishStep: null,
-        steps: step + 1,
-        bumps: car.bumps,
-        maxPasses,
-        maxWork: controller.maxWork,
-        infeasible: controller.infeasible,
-      };
+      return { status: 'decided', finishStep: null, steps: step + 1, ...tally() };
     }
   }
-  return {
-    status: 'unfinished',
-    finishStep: null,
-    steps: maxSteps,
-    bumps: car.bumps,
-    maxPasses,
-    maxWork: controller.maxWork,
-    infeasible: controller.infeasible,
-  };
+  return { status: 'unfinished', finishStep: null, steps: maxSteps, ...tally() };
 }
 
 /** 1 + rivals home strictly before the player; the same step goes to the player (§2). */
