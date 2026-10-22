@@ -174,24 +174,25 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // No. 46, web-beta (docs/PEG_SOLITAIRE_RULES.md storage): not frozen until graduation
   'peg-solitaire': ['pg.saveGame', 'pg.stats', 'pg.flags', 'pg.prefs'],
   // The next five titles, of
-  // docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md, in
-  // development (registry `channel: 'in-development'`: offered on no build until
-  // each is playable, when it turns 'web-beta'): beta keys on the same terms as
-  // the five above. They are still the scaffold's two
-  // keys; each grows to its rules document's storage section in Phase 2/3.
-  // No. 47, in-development (docs/CHESS_RULES.md §7): the scaffold's two keys grew to the rules
+  // docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
+  // (Nos. 47–51), each playable since 2026-10-22 and on the browser's
+  // early-release channel like Nos. 42–46 (registry `channel: 'web-beta'`
+  // since then): beta keys on the same terms as the five above. Each row is
+  // its rules document's storage section, grown from the scaffold's two keys
+  // in Phase 2/3; none is frozen until graduation.
+  // No. 47, web-beta (docs/CHESS_RULES.md §7): the scaffold's two keys grew to the rules
   // document's four in Phase 3 — the one saved game (a move list) and the side for the next
   // game. Not frozen until graduation
   chess: ['ch.saveGame', 'ch.stats', 'ch.flags', 'ch.prefs'],
-  // No. 48, in-development (docs/GEM_SWAP_RULES.md §7): not frozen until graduation
+  // No. 48, web-beta (docs/GEM_SWAP_RULES.md §7): not frozen until graduation
   'gem-swap': ['gs.saveGame', 'gs.stats', 'gs.flags', 'gs.prefs'],
-  // No. 49, in-development (docs/PIPE_LINK_RULES.md §7): the scaffold's two keys grew to the
+  // No. 49, web-beta (docs/PIPE_LINK_RULES.md §7): the scaffold's two keys grew to the
   // rules document's five in Phase 3 — two saved-game slots (difficulty and the daily) and the
   // difficulty last chosen. Not frozen until graduation
   'pipe-link': ['pn.saveGame', 'pn.saveDaily', 'pn.stats', 'pn.flags', 'pn.prefs'],
-  // No. 50, in-development (docs/BOUNCE_UP_RULES.md §5): not frozen until graduation
+  // No. 50, web-beta (docs/BOUNCE_UP_RULES.md §5): not frozen until graduation
   'bounce-up': ['bo.stats', 'bo.flags', 'bo.prefs'],
-  // No. 51, in-development (docs/ECHO_PADS_RULES.md storage): not frozen until graduation
+  // No. 51, web-beta (docs/ECHO_PADS_RULES.md storage): not frozen until graduation
   'echo-pads': ['ep.saveGame', 'ep.saveDaily', 'ep.progress', 'ep.stats', 'ep.flags', 'ep.prefs'],
   // The five titles of
   // docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md

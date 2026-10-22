@@ -1116,12 +1116,22 @@ export const GAMES: readonly GameDefinition[] = [
     loadStorageSchemas: () => import('../games/peg-solitaire/storage/schemas'),
   },
   // The titles of docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
-  // (Nos. 47–51), in number order, all built for the browser's early release
-  // (docs/WEB_VERSION.md「先行公開」) and not yet on it: each is still the
-  // scaffold of scripts/new-game.mjs until its own phase of the plan lands.
-  // Chess (No. 47) comes in a commit of its own and ships in a PR of its own
-  // (the plan's decision 4), so the other four never wait on it. None is a
-  // Club House challenge (no `challenge`).
+  // (Nos. 47–51), in number order. Each has been playable since 2026-10-22,
+  // and all five are on the browser's early-release channel
+  // (docs/WEB_VERSION.md「先行公開」): they turned from `'in-development'` to
+  // `'web-beta'` that day, in the change that made them playable, at the
+  // product owner's request to take all five to the web. They are not on the
+  // web yet: their chunks are in every build, and the browser version carries
+  // them from the next landing sync (the landing's list moving them to beta,
+  // then the publish the owner approves — WEB_VERSION.md「landing 側のガード」).
+  // None is in the app until a person decides it graduates
+  // (docs/RELEASE_CHECKLIST.md §0). Chess (No. 47) came in a commit of its
+  // own; the plan's decision 4 (Chess in a PR of its own, so the other four
+  // never wait on it) is met because all five finished together, so the five
+  // ship in one PR and none waited. None has been tried on a real device, and
+  // each title's name and trademark check is still to come before graduation
+  // (its rules document). None is a Club House challenge (no `challenge`)
+  // while its saves and results may still change.
   //
   // The glyphs were measured as Nos. 42–46's were above: none is in the bundled
   // Nunito subset, so each resolves through the tail of --font-display.
@@ -1144,7 +1154,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Chess',
     category: 'board',
     glyph: '♞',
-    channel: 'in-development',
+    channel: 'web-beta',
     storageKeys: Object.values(CH_STORAGE_KEYS),
     loadRoot: () => import('../games/chess/ui/ChessRoot').then((m) => ({ default: m.ChessRoot })),
     loadStorageSchemas: () => import('../games/chess/storage/schemas'),
@@ -1163,7 +1173,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Gem Swap',
     category: 'puzzle',
     glyph: '❖',
-    channel: 'in-development',
+    channel: 'web-beta',
     storageKeys: Object.values(GS_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/gem-swap/ui/GemSwapRoot').then((m) => ({ default: m.GemSwapRoot })),
@@ -1183,7 +1193,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Pipe Link',
     category: 'logic',
     glyph: '┣',
-    channel: 'in-development',
+    channel: 'web-beta',
     storageKeys: Object.values(PN_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/pipe-link/ui/PipeLinkRoot').then((m) => ({ default: m.PipeLinkRoot })),
@@ -1205,7 +1215,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Bounce Up',
     category: 'arcade',
     glyph: '⇡',
-    channel: 'in-development',
+    channel: 'web-beta',
     storageKeys: Object.values(BO_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/bounce-up/ui/BounceUpRoot').then((m) => ({ default: m.BounceUpRoot })),
@@ -1226,7 +1236,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Echo Pads',
     category: 'drills',
     glyph: '♫',
-    channel: 'in-development',
+    channel: 'web-beta',
     storageKeys: Object.values(EP_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/echo-pads/ui/EchoPadsRoot').then((m) => ({ default: m.EchoPadsRoot })),
@@ -1253,8 +1263,8 @@ export const GAMES: readonly GameDefinition[] = [
   // 2026-10-22 02:32 UTC (the landing's publish of main `3ed2b16`, after
   // landing #205 moved them to beta). None is in the app until a person
   // decides it graduates (docs/RELEASE_CHECKLIST.md §0). Nos. 47–51 above
-  // are still `'in-development'`. None is a Club House challenge (no
-  // `challenge`) while its saves and results may still change.
+  // followed them onto the channel on 2026-10-22. None is a Club House
+  // challenge (no `challenge`) while its saves and results may still change.
   //
   // The glyphs were measured as Nos. 42–51's were above: none is in the bundled
   // Nunito subset, so each resolves through the tail of --font-display, except

@@ -67,15 +67,17 @@ vi.mock('../../services/homeShortcut/homeShortcut', () => ({
 }));
 
 // Besides the real web-beta titles (today the five of
-// docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md and the five of
-// docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)
-// and the real in-development ones (the five of
-// docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md), the
-// registry this file sees carries one synthetic title on each channel: a
-// released game's shape under an id and title of its own, appended last. They
-// keep the tests below from going vacuous on any day no registry title is on a
-// channel (as from 2026-10-02 until the 2026-10-17 five arrived). Every
-// importer here shares the list.
+// docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md, the five of
+// docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md and
+// the five of
+// docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md;
+// no real title is in development today, since Nos. 47–51 became playable on
+// 2026-10-22), the registry this file sees carries one synthetic title on each
+// channel: a released game's shape under an id and title of its own, appended
+// last. They keep the tests below from going vacuous on any day no registry
+// title is on a channel (as from 2026-10-02 until the 2026-10-17 five arrived,
+// and for the in-development channel from 2026-10-22). Every importer here
+// shares the list.
 vi.mock('../../app/registry', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../app/registry')>();
   const synthetic = {
@@ -245,6 +247,11 @@ describe('web-beta titles', () => {
       'loop-puzzle',
       'bridges',
       'peg-solitaire',
+      'chess',
+      'gem-swap',
+      'pipe-link',
+      'bounce-up',
+      'echo-pads',
       'overtake',
       'make-the-target',
       'nested-tic-tac-toe',
@@ -323,17 +330,11 @@ describe('web-beta titles', () => {
 describe('in-development titles', () => {
   const building = GAMES.filter((game) => game.channel === 'in-development');
 
-  it('exist in this registry (the real ones and a synthetic one), so the tests below are not vacuous', () => {
-    // The real list is app/gameChannel.test.ts's golden; the synthetic title
-    // is appended by the mock above.
-    expect(building.map((game) => game.id)).toEqual([
-      'chess',
-      'gem-swap',
-      'pipe-link',
-      'bounce-up',
-      'echo-pads',
-      'synthetic-in-development',
-    ]);
+  it('exist in this registry (a synthetic one, and the real ones whenever there are any), so the tests below are not vacuous', () => {
+    // The real list is app/gameChannel.test.ts's golden — empty since Nos.
+    // 47–51 moved to the beta channel on 2026-10-22; the synthetic title is
+    // appended by the mock above, and is what the tests below exercise today.
+    expect(building.map((game) => game.id)).toEqual(['synthetic-in-development']);
   });
 
   it.each([

@@ -43,9 +43,9 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **41 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
-  本数はここで数える)。`GAMES` の全 56 エントリには、下の `channel: 'web-beta'` の 10 本(Web 先行公開中の
-  No. 42〜46 と No. 52〜56)と、実装中で Web 版にも出していない 5 本(No. 47〜51、`'in-development'`)も
-  含まれる。
+  本数はここで数える)。`GAMES` の全 56 エントリには、下の `channel: 'web-beta'` の 15 本(Web 先行公開中の
+  No. 42〜46 と No. 52〜56、2026-10-22 に実装して Web 版へは次の同期で届ける No. 47〜51)も含まれる。
+  `'in-development'` のエントリはいま無い。
 - 2026-10-02 に、Web 版で先行公開していた新作 11 本(Crown Grid / Number Path /
   Shape Regions、2026-09-26、issue #194。Yacht / Mancala / Dominoes / Hit & Blow /
   Dots and Boxes、2026-09-27、issue #197。Binary Balance / Sudoku 6×6 / Box Regions、
@@ -63,14 +63,19 @@ Design philosophy:
   正式収録の基準(Web での 2 週間の安定稼働と計測、`docs/RELEASE_CHECKLIST.md` §0)は
   変えず、2 週間の時計は 2026-10-19 から数える。
 - 2026-10-19 から、さらに **Web 先行公開(ベータ)向けの新作 5 本**(Chess / Gem Swap /
-  Pipe Link / Bounce Up / Echo Pads、No. 47〜51)に着手した(計画は
+  Pipe Link / Bounce Up / Echo Pads、No. 47〜51)に着手し、**2026-10-22 に 5 本とも遊べる形まで
+  このリポジトリに実装した**(計画は
   `docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md`、仕様の正は各
-  `docs/*_RULES.md`)。Phase 1 として `scripts/new-game.mjs` でスキャフォールドし、registry に
-  登録した段階で、**ゲーム本体はまだ無い**(画面と文言はスキャフォールドの仮のもの)。registry では
-  2026-10-20 から `channel: 'in-development'`(どのビルドの扉からも開けない — `app/gameChannel.ts`)で、
-  **Web 版にも出していない**。遊べるようになる変更で `'web-beta'` に変え、統合と検証を終えてから
-  同期する(landing の門の一覧は `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移す)。Chess は別フェーズ・別 PR で進め、残り 4 本の完了を
-  Chess で待たせない。正式収録の 41 本には数えず、アプリには出ない。
+  `docs/*_RULES.md`)。registry は 2026-10-20 から `channel: 'in-development'`(どのビルドの扉からも
+  開けない — `app/gameChannel.ts`)で、**2026-10-22 に 5 本とも `'web-beta'` にした**(製品オーナーの依頼は
+  「Web 公開まで」。計画の判断 4 — Chess を別 PR にして残り 4 本を待たせない — は、5 本が同時に仕上がったので
+  1 つの PR で満たす)。**Web 版にはまだ出ていない** — 次の landing の同期(landing の門の一覧の 5 本を
+  `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移し、製品オーナーの承認を得てから公開ワークフローを
+  実行する)で届ける(`docs/WEB_VERSION.md`「先行公開」)。実機では何も確かめておらず、`ja` と 12 言語の
+  文言は AI が書いて誰も読んでいない。題の商標・ストアの検索は正式収録の前に(Bounce Up は題そのものを製品
+  オーナーに仰いでいる — `docs/BOUNCE_UP_RULES.md` 冒頭)。正式収録の 41 本には数えず、アプリには出ず、
+  Club House にも登録しない。2 週間の時計(`docs/RELEASE_CHECKLIST.md` §0)は Web で公開した日から数えるので、
+  まだ動いていない。
   チャンネルの宣言は registry の `channel`、出し分けは `app/gameChannel.ts` の
   実行時ガード(`docs/WEB_VERSION.md`「先行公開」)。
 - 2026-10-20 から、さらに **Web 先行公開(ベータ)向けの新作 5 本**(Overtake / Make the Target /
@@ -102,7 +107,7 @@ Design philosophy:
   正式収録の基準(`docs/RELEASE_CHECKLIST.md` §0)の 2 週間の時計は Web で公開した日から数える —
   5 本とも 2026-10-22 から(Make the Target / Nested Tic-Tac-Toe / Tangram は UTC では 2026-10-21 17:38、
   Overtake と Scopa は 2026-10-22 02:32 UTC の同期から)。47〜51 の Phase 1(#239)が先に main に入ったので、
-  この 5 本はその後ろに No. 順で並ぶ(47〜51 はまだ `'in-development'`)。
+  この 5 本はその後ろに No. 順で並ぶ。
 - 実装上のゲーム一覧・ID・並び順・カテゴリの正は `apps/simple-games/src/app/registry.ts` の `GAMES` / `GAME_CATEGORIES`。
 - 人間向け一覧は root `README.md`。
 - 各ゲームの実装は `apps/simple-games/src/games/<game-id>/` に分離する。
