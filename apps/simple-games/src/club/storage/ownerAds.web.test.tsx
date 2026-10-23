@@ -153,7 +153,7 @@ describe('web owner ad removal', () => {
     const kv = cache(true);
     await initAdRemoval(kv);
     adSenseBuild();
-    // Match main.tsx: no ad bootstrap is imported on an ad-free cold start.
+    // Match main.tsx: an active owner benefit skips ad bootstrap at startup.
     expect(scripts()).toHaveLength(0);
     expect(document.documentElement).not.toHaveAttribute('data-sg-web-ads');
     await saveVerifiedManagedOwner(owner, { ...benefit, active: false, memberCount: 49 }, kv);
