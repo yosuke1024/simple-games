@@ -183,3 +183,11 @@ Draw 1/3 の `so.prefs` を持ち、Memory Match はレベル進行も個別設�
   を通すので、古いバックアップはそのゲーム自身の migration を通って入る。
   生の文字列を読み書きする `loadRaw` / `saveRaw` も他の操作と同じ直列化キューに
   載るため、飛んでいた保存が復元の後から着地することはない。
+
+## No. 62〜66 のWeb先行公開キー
+
+`iv.*` (Invaders)、`fb.*` (Falling Blocks)、`pr.*` (Paddle Rally)、
+`hn.*` (Hanoi Towers)、`me.*` (Maze Escape)を独立した領域として追加。
+全ゲームがsaveGame / stats / flagsを持ち、Paddle Rally / Hanoi Towers / Maze Escapeはprefsも持つ。
+既存のキー・payloadは変更しない。お気に入りの受入上限だけ64から128へ広げ、
+66本すべてを登録できるようにした。旧レコードはそのまま読める。

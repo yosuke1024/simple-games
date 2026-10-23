@@ -54,6 +54,11 @@ const WEB_BETA_IDS = [
   'three-peaks',
   'nim',
   'knight-tour',
+  'invaders',
+  'falling-blocks',
+  'paddle-rally',
+  'hanoi-towers',
+  'maze-escape',
 ];
 
 /**

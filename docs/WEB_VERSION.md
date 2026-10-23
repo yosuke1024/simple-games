@@ -298,6 +298,11 @@ ADS_POLICY.md 側の項目 3 にも 実施済み の印は付いていない。*
 
 ## 先行公開(ベータ)
 
+No. 62〜66 (Invaders / Falling Blocks / Paddle Rally / Hanoi Towers / Maze Escape) を2026-10-23に追加。
+Web先行公開25本と正式収録41本、合計66本。今回の実装と本番配信の証跡は
+[追加と公開の記録](plans/2026-10-23-five-games-62-66.md)に残す。
+
+
 **No. 57〜61 — Light Grid / Color Flood / Three Peaks / Nim / Knight’s Tour**
 は2026-10-23に実装し、`web-beta`として登録した（本体[#257](https://github.com/yosuke1024/simple-games/pull/257)、
 ヒント・盤面・駒の意匠見直し[#258](https://github.com/yosuke1024/simple-games/pull/258)）。

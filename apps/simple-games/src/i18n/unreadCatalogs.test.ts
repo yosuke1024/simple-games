@@ -46,6 +46,11 @@ const UNREAD_JA_GAME_IDS = [
   'three-peaks',
   'nim',
   'knight-tour',
+  'invaders',
+  'falling-blocks',
+  'paddle-rally',
+  'hanoi-towers',
+  'maze-escape',
 ] as const;
 
 const gameModules = import.meta.glob<{ catalogs: Record<Locale, Record<string, string>> }>(

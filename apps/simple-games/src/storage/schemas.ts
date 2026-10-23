@@ -211,7 +211,7 @@ export interface FavoriteGames {
  * corrupt — or hand-edited — record cannot grow without limit. When it does
  * bite, the newest entries are the ones kept, matching `sg.recent`.
  */
-export const FAVORITE_GAMES_MAX = 64;
+export const FAVORITE_GAMES_MAX = 128;
 
 export const favoriteGamesSchema: SchemaDef<FavoriteGames> = {
   key: STORAGE_KEYS.favorites,

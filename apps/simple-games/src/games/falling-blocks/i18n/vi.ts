@@ -1,0 +1,26 @@
+import type { FallingBlocksMessages } from './en';
+export const vi: FallingBlocksMessages = {
+  fallingBlocksName: 'Khối rơi',
+  fallingBlocksGoal: 'Dọn từng hàng để tạo chỗ trống.',
+  fallingBlocksLines: 'Hàng',
+  fallingBlocksBest: 'Điểm cao nhất',
+  fallingBlocksLevel: 'Cấp độ',
+  fallingBlocksNext: 'Khối tiếp theo',
+  fallingBlocksBoard: 'Bảng: khối {piece}, cột {column}, hàng {row}.',
+  fallingBlocksReady: 'Sẵn sàng',
+  fallingBlocksRunning: 'Đang chơi',
+  fallingBlocksPaused: 'Đã tạm dừng',
+  fallingBlocksOver: 'Kết thúc',
+  fallingBlocksPause: 'Tạm dừng',
+  fallingBlocksLeft: 'Sang trái',
+  fallingBlocksRight: 'Sang phải',
+  fallingBlocksRotate: 'Xoay',
+  fallingBlocksSoftDrop: 'Xuống',
+  fallingBlocksHardDrop: 'Thả',
+  fallingBlocksKeyboard: '← → di chuyển · ↑ xoay · ↓ xuống · Space thả · P dừng',
+  fallingBlocksRule1: 'Di chuyển và xoay các khối đang rơi để lấp đầy một hàng ngang.',
+  fallingBlocksRule2: 'Hàng đầy sẽ biến mất; đường viền cho biết nơi khối sẽ đáp xuống.',
+  fallingBlocksRule3:
+    'Trò chơi kết thúc khi khối tiếp theo không vào được; có thể tạm dừng hoặc thử lại bất cứ lúc nào.',
+  fallingBlocksResultBody: 'Các khối đã chạm đỉnh. Thử lại cùng thứ tự khối hoặc bắt đầu ván mới.',
+};

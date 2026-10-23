@@ -1,0 +1,30 @@
+/** AI-authored; no human review claimed. */
+import type { PaddleRallyMessages } from './en';
+export const th: PaddleRallyMessages = {
+  paddleRallyMode_easy: 'ง่าย',
+  paddleRallyMode_normal: 'ปกติ',
+  paddleRallyMode_hard: 'ยาก',
+  paddleRallyWon: 'คุณชนะ!',
+  paddleRallyLost: 'CPU ชนะ',
+  paddleRallyWins: 'ชนะ',
+  paddleRallyLosses: 'แพ้',
+  paddleRallyName: 'Paddle Rally',
+  paddleRallyYou: 'คุณ',
+  paddleRallyScore: 'คะแนน',
+  paddleRallyGoal: 'ถึง 5 ก่อน',
+  paddleRallyBoard: 'สนาม: คุณอยู่ล่าง CPU อยู่บน',
+  paddleRallyControls: 'ลากหรือใช้ ← → / A D',
+  paddleRallyLeft: 'เลื่อนไปซ้าย',
+  paddleRallyRight: 'เลื่อนไปขวา',
+  paddleRallyServe: 'เสิร์ฟ',
+  paddleRallyPause: 'พัก',
+  paddleRallyPaused: 'พักอยู่ พร้อมแล้วค่อยเล่นต่อ',
+  paddleRallyReady: 'พร้อมแล้วค่อยเสิร์ฟ',
+  paddleRallyStep1Title: 'เลื่อนไม้ตี',
+  paddleRallyStep1Body: 'ลากซ้ายขวา หรือใช้ปุ่มและแป้นลูกศรเพื่อเลื่อนไม้ตีด้านล่าง',
+  paddleRallyStep2Title: 'เลือกมุมตี',
+  paddleRallyStep2Body: 'ตีด้วยขอบไม้เพื่อส่งลูกเฉียงผ่าน CPU',
+  paddleRallyStep3Title: 'ได้ห้าคะแนนก่อนชนะ',
+  paddleRallyStep3Body:
+    'ได้คะแนนเมื่อ CPU รับพลาด ใครถึงห้าก่อนชนะ และคุณเป็นคนเริ่มเสิร์ฟแต่ละครั้ง',
+};

@@ -262,6 +262,11 @@ describe('web-beta titles', () => {
       'three-peaks',
       'nim',
       'knight-tour',
+      'invaders',
+      'falling-blocks',
+      'paddle-rally',
+      'hanoi-towers',
+      'maze-escape',
       'synthetic-beta',
     ]);
     expect(released.length).toBeGreaterThan(20);

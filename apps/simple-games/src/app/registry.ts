@@ -85,6 +85,11 @@ import { CF_STORAGE_KEYS } from '../games/color-flood/storage/keys';
 import { TP_STORAGE_KEYS } from '../games/three-peaks/storage/keys';
 import { NIM_STORAGE_KEYS } from '../games/nim/storage/keys';
 import { KT_STORAGE_KEYS } from '../games/knight-tour/storage/keys';
+import { IV_STORAGE_KEYS } from '../games/invaders/storage/keys';
+import { FB_STORAGE_KEYS } from '../games/falling-blocks/storage/keys';
+import { PR_STORAGE_KEYS } from '../games/paddle-rally/storage/keys';
+import { HT_STORAGE_KEYS as HN_STORAGE_KEYS } from '../games/hanoi-towers/storage/keys';
+import { ME_STORAGE_KEYS } from '../games/maze-escape/storage/keys';
 import { TN_STORAGE_KEYS } from '../games/tangram/storage/keys';
 import { SUDOKU_CHALLENGE } from '../games/sudoku/challenge/contract';
 import { MINESWEEPER_CHALLENGE } from '../games/minesweeper/challenge/contract';
@@ -183,7 +188,12 @@ export type GameId =
   | 'color-flood'
   | 'three-peaks'
   | 'nim'
-  | 'knight-tour';
+  | 'knight-tour'
+  | 'invaders'
+  | 'falling-blocks'
+  | 'paddle-rally'
+  | 'hanoi-towers'
+  | 'maze-escape';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -1487,5 +1497,67 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/knight-tour/ui/KnightTourRoot').then((m) => ({ default: m.KnightTourRoot })),
     loadStorageSchemas: () => import('../games/knight-tour/storage/schemas'),
+  },
+  // Nos. 62–66: independent Web-beta games.
+  {
+    id: 'invaders',
+    title: 'Invaders',
+    category: 'arcade',
+    glyph: '⌁',
+    channel: 'web-beta',
+    storageKeys: Object.values(IV_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/invaders/ui/InvadersRoot').then((m) => ({ default: m.InvadersRoot })),
+    loadStorageSchemas: () => import('../games/invaders/storage/schemas'),
+  },
+  {
+    id: 'falling-blocks',
+    title: 'Falling Blocks',
+    category: 'arcade',
+    glyph: '▥',
+    channel: 'web-beta',
+    storageKeys: Object.values(FB_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/falling-blocks/ui/FallingBlocksRoot').then((m) => ({
+        default: m.FallingBlocksRoot,
+      })),
+    loadStorageSchemas: () => import('../games/falling-blocks/storage/schemas'),
+  },
+  {
+    id: 'paddle-rally',
+    title: 'Paddle Rally',
+    category: 'arcade',
+    glyph: '↔',
+    channel: 'web-beta',
+    storageKeys: Object.values(PR_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/paddle-rally/ui/PaddleRallyRoot').then((m) => ({
+        default: m.PaddleRallyRoot,
+      })),
+    loadStorageSchemas: () => import('../games/paddle-rally/storage/schemas'),
+  },
+  {
+    id: 'hanoi-towers',
+    title: 'Hanoi Towers',
+    category: 'puzzle',
+    glyph: '≜',
+    channel: 'web-beta',
+    storageKeys: Object.values(HN_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/hanoi-towers/ui/HanoiTowersRoot').then((m) => ({
+        default: m.HanoiTowersRoot,
+      })),
+    loadStorageSchemas: () => import('../games/hanoi-towers/storage/schemas'),
+  },
+  {
+    id: 'maze-escape',
+    title: 'Maze Escape',
+    category: 'logic',
+    glyph: '⌘',
+    channel: 'web-beta',
+    storageKeys: Object.values(ME_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/maze-escape/ui/MazeEscapeRoot').then((m) => ({ default: m.MazeEscapeRoot })),
+    loadStorageSchemas: () => import('../games/maze-escape/storage/schemas'),
   },
 ];

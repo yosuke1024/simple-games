@@ -1,0 +1,98 @@
+.paddleRally-home-mark svg {
+  width: 72px;
+  height: 72px;
+}
+.pr-play-area {
+  width: min(100%, 390px);
+  margin: auto;
+  padding: 8px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.pr-score {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+.pr-score span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pr-score strong {
+  font-size: 28px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.pr-score .pr-target {
+  text-align: center;
+  font-size: 12px;
+}
+.pr-board {
+  width: min(100%, 39.6vh, 320px);
+  height: auto;
+  touch-action: none;
+  user-select: none;
+  overflow: visible;
+}
+.pr-court {
+  fill: var(--surface);
+  stroke: var(--line);
+  stroke-width: 2;
+}
+.pr-net {
+  stroke: var(--line);
+  stroke-width: 2;
+  stroke-dasharray: 6 8;
+}
+.pr-ring {
+  fill: none;
+  stroke: var(--line);
+}
+.pr-cpu {
+  fill: var(--ink);
+}
+.pr-player,
+.pr-ball {
+  fill: var(--accent);
+}
+.pr-status {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 12px;
+  min-height: 2.5em;
+  margin: 0;
+}
+.pr-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.8fr;
+  gap: 8px;
+  width: 100%;
+}
+.pr-controls .btn {
+  min-height: 44px;
+  padding: 10px 8px;
+  touch-action: none;
+}
+.paddle-rally-screen .game-content {
+  overflow-y: auto;
+  padding-bottom: var(--banner-height, 0px);
+}
+@media (max-height: 650px) {
+  .pr-play-area {
+    gap: 6px;
+    padding: 3px 16px 12px;
+  }
+  .pr-board {
+    width: min(100%, 33.5vh, 320px);
+  }
+  .pr-score strong {
+    font-size: 22px;
+  }
+}

@@ -3043,3 +3043,85 @@ button:disabled {
     grid-template-columns: repeat(5, 1fr);
   }
 }
+
+/* Nos. 62–66: Web-beta title accents. */
+:root[data-game='invaders'],
+.accent-invaders {
+  --accent: #283b3f;
+  --accent-ink: #ffffff;
+  --accent-soft: #d9d9d4;
+  --accent-ring: rgba(40, 59, 63, 0.38);
+  --accent-ring-soft: rgba(40, 59, 63, 0.12);
+}
+:root[data-game='falling-blocks'],
+.accent-falling-blocks {
+  --accent: #5b4a12;
+  --accent-ink: #ffffff;
+  --accent-soft: #e0dbce;
+  --accent-ring: rgba(91, 74, 18, 0.38);
+  --accent-ring-soft: rgba(91, 74, 18, 0.12);
+}
+:root[data-game='paddle-rally'],
+.accent-paddle-rally {
+  --accent: #552613;
+  --accent-ink: #ffffff;
+  --accent-soft: #dfd7ce;
+  --accent-ring: rgba(85, 38, 19, 0.38);
+  --accent-ring-soft: rgba(85, 38, 19, 0.12);
+}
+:root[data-game='hanoi-towers'],
+.accent-hanoi-towers {
+  --accent: #4f1940;
+  --accent-ink: #ffffff;
+  --accent-soft: #dfd5d4;
+  --accent-ring: rgba(79, 25, 64, 0.38);
+  --accent-ring-soft: rgba(79, 25, 64, 0.12);
+}
+:root[data-game='maze-escape'],
+.accent-maze-escape {
+  --accent: #2a4620;
+  --accent-ink: #ffffff;
+  --accent-soft: #dadbd0;
+  --accent-ring: rgba(42, 70, 32, 0.38);
+  --accent-ring-soft: rgba(42, 70, 32, 0.12);
+}
+:root[data-theme='dark'][data-game='invaders'],
+[data-theme='dark'] .accent-invaders {
+  --accent: #4ea7d0;
+  --accent-ink: #14171c;
+  --accent-soft: #203440;
+  --accent-ring: rgba(78, 167, 208, 0.38);
+  --accent-ring-soft: rgba(78, 167, 208, 0.12);
+}
+:root[data-theme='dark'][data-game='falling-blocks'],
+[data-theme='dark'] .accent-falling-blocks {
+  --accent: #dbdb99;
+  --accent-ink: #14171c;
+  --accent-soft: #3c3e35;
+  --accent-ring: rgba(219, 219, 153, 0.38);
+  --accent-ring-soft: rgba(219, 219, 153, 0.12);
+}
+:root[data-theme='dark'][data-game='paddle-rally'],
+[data-theme='dark'] .accent-paddle-rally {
+  --accent: #c87255;
+  --accent-ink: #14171c;
+  --accent-soft: #382927;
+  --accent-ring: rgba(200, 114, 85, 0.38);
+  --accent-ring-soft: rgba(200, 114, 85, 0.12);
+}
+:root[data-theme='dark'][data-game='hanoi-towers'],
+[data-theme='dark'] .accent-hanoi-towers {
+  --accent: #cbaac9;
+  --accent-ink: #14171c;
+  --accent-soft: #39343f;
+  --accent-ring: rgba(203, 170, 201, 0.38);
+  --accent-ring-soft: rgba(203, 170, 201, 0.12);
+}
+:root[data-theme='dark'][data-game='maze-escape'],
+[data-theme='dark'] .accent-maze-escape {
+  --accent: #8bbd64;
+  --accent-ink: #14171c;
+  --accent-soft: #2c382a;
+  --accent-ring: rgba(139, 189, 100, 0.38);
+  --accent-ring-soft: rgba(139, 189, 100, 0.12);
+}

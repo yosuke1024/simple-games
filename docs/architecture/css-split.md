@@ -25,7 +25,9 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   `overtake.css` / `make-the-target.css` / `nested-tic-tac-toe.css` / `scopa.css` / `tangram.css`
   (さらに次の 5 本、2026-10-21 に実装)、
   `light-grid.css` / `color-flood.css` / `three-peaks.css` / `nim.css` / `knight-tour.css`
-  (No. 57〜61、2026-10-23 に実装)。
+  (No. 57〜61、2026-10-23 に実装)、
+  `invaders.css` / `falling-blocks.css` / `paddle-rally.css` / `hanoi-towers.css` / `maze-escape.css`
+  (No. 62〜66、2026-10-23 に実装)。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。

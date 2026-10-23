@@ -1,0 +1,26 @@
+import type { FallingBlocksMessages } from './en';
+export const hi: FallingBlocksMessages = {
+  fallingBlocksName: 'गिरते ब्लॉक',
+  fallingBlocksGoal: 'एक-एक पंक्ति हटाकर जगह बनाएँ।',
+  fallingBlocksLines: 'पंक्तियाँ',
+  fallingBlocksBest: 'सर्वश्रेष्ठ स्कोर',
+  fallingBlocksLevel: 'स्तर',
+  fallingBlocksNext: 'अगला टुकड़ा',
+  fallingBlocksBoard: 'बोर्ड: {piece} टुकड़ा, स्तंभ {column}, पंक्ति {row}।',
+  fallingBlocksReady: 'तैयार',
+  fallingBlocksRunning: 'खेल जारी',
+  fallingBlocksPaused: 'रुका हुआ',
+  fallingBlocksOver: 'खेल समाप्त',
+  fallingBlocksPause: 'रोकें',
+  fallingBlocksLeft: 'बाएँ जाएँ',
+  fallingBlocksRight: 'दाएँ जाएँ',
+  fallingBlocksRotate: 'घुमाएँ',
+  fallingBlocksSoftDrop: 'नीचे जाएँ',
+  fallingBlocksHardDrop: 'गिराएँ',
+  fallingBlocksKeyboard: '← → चलें · ↑ घुमाएँ · ↓ नीचे · Space गिराएँ · P रोकें',
+  fallingBlocksRule1: 'गिरते टुकड़ों को चलाकर और घुमाकर पूरी क्षैतिज पंक्ति भरें।',
+  fallingBlocksRule2: 'भरी पंक्तियाँ मिट जाती हैं; रूपरेखा टुकड़े के उतरने की जगह दिखाती है।',
+  fallingBlocksRule3: 'अगला टुकड़ा न आ सके तो खेल समाप्त; कभी भी रोकें या फिर खेलें।',
+  fallingBlocksResultBody:
+    'ब्लॉक ऊपर तक पहुँच गए। उन्हीं टुकड़ों के साथ फिर खेलें या नया खेल शुरू करें।',
+};
