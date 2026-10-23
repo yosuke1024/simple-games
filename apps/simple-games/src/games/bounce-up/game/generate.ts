@@ -4,15 +4,19 @@
  * and centre (the prefix the run state carries as `gen`). No retries: every
  * segment costs a fixed handful of draws, and every draw is an integer.
  *
- * Each segment ≥ 1 holds one static platform on the safety chain, at most
- * GAP_MAX above the last and within the chain distance of it measured
- * directly (no wrap), and at most one extra platform halfway between the two
- * chain heights — static, moving (from segment 300) or vanishing (from 600).
- * Segment 0 is the floor, the board's full width.
+ * Each segment holds one reachable-route platform. Short zigzag phrases
+ * begin at 20; from 40 their middle platform moves. Challenge gaps cannot
+ * be skipped and have no extras. Rest sections retain static route platforms.
+ * The direct distance bound includes both platforms' complete motion ranges.
  */
 import {
   BOARD_WIDTH_PX,
+  CHAIN_MOVE_SPAN_PX,
+  CHAIN_MOVE_SPEED,
   CHAIN_DISTANCE_PX,
+  CHALLENGE_FROM,
+  CHALLENGE_GAP_MIN,
+  CHALLENGE_GAP_MAX,
   EXTRA_PERMILLE,
   GAP_MAX_PX,
   GAP_MIN_PX,
@@ -20,6 +24,7 @@ import {
   MOVE_SPEED,
   MOVING_FROM,
   PLATFORM_WIDTH_PX,
+  PHRASE_SEGMENTS,
   RAMP_SEGMENTS,
   SUB,
   VANISHING_FROM,
@@ -35,10 +40,35 @@ export function ramp(a: number, b: number, segment: number): number {
 }
 
 /** The gap range of segment i, whole px, inclusive (§3). */
-export function gapRange(segment: number): { min: number; max: number } {
+export function gapRange(segment: number, challenge = false): { min: number; max: number } {
   return {
-    min: ramp(GAP_MIN_PX.start, GAP_MIN_PX.end, segment),
-    max: ramp(GAP_MAX_PX.start, GAP_MAX_PX.end, segment),
+    min: Math.max(
+      challenge ? CHALLENGE_GAP_MIN : 0,
+      ramp(GAP_MIN_PX.start, GAP_MIN_PX.end, segment),
+    ),
+    max: Math.max(
+      challenge ? CHALLENGE_GAP_MAX : 0,
+      ramp(GAP_MAX_PX.start, GAP_MAX_PX.end, segment),
+    ),
+  };
+}
+
+/** A phrase is seed-local and fixed-cost; it never depends on play or a clock. */
+export function phraseAt(
+  seed: string,
+  segment: number,
+): { challenge: boolean; moving: boolean; direction: number } {
+  if (segment < CHALLENGE_FROM) return { challenge: false, moving: false, direction: 0 };
+  const offset = segment - CHALLENGE_FROM;
+  const block = Math.floor(offset / PHRASE_SEGMENTS);
+  const slot = offset % PHRASE_SEGMENTS;
+  const rng = createRng(`${seed}:phrase:${block}`);
+  const length = 3 + randInt(rng, 3);
+  const direction = (randInt(rng, 2) === 0 ? -1 : 1) * (slot % 2 === 0 ? 1 : -1);
+  return {
+    challenge: slot < length,
+    moving: segment >= MOVING_FROM && slot === Math.floor(length / 2),
+    direction,
   };
 }
 
@@ -86,6 +116,7 @@ export const FLOOR_CURSOR: GenCursor = {
 
 export interface Segment {
   readonly segment: number;
+  readonly challenge: boolean;
   readonly gapPx: number;
   readonly chain: Platform;
   readonly extra: Platform | null;
@@ -98,29 +129,47 @@ export function generateSegment(seed: string, width: PlatformWidth, cursor: GenC
   const rng = createRng(`${seed}:seg:${i}`);
   const wPx = platformWidthPx(width);
   const half = exactDiv(wPx, 2);
+  const phrase = phraseAt(seed, i);
+  const travelHalf = phrase.moving ? exactDiv(CHAIN_MOVE_SPAN_PX, 2) : 0;
+  const previousHalf = phraseAt(seed, i - 1).moving ? exactDiv(CHAIN_MOVE_SPAN_PX, 2) : 0;
 
-  const gaps = gapRange(i);
+  const gaps = gapRange(i, phrase.challenge);
   const gapPx = gaps.min + randInt(rng, gaps.max - gaps.min + 1);
   const chainTop = cursor.chainTop + gapPx * SUB;
 
-  const d = chainDistance(i);
-  const lo = Math.max(half, cursor.chainCenterPx - d);
-  const hi = Math.min(BOARD_WIDTH_PX - half, cursor.chainCenterPx + d);
-  const centerPx = lo + randInt(rng, hi - lo + 1);
+  const bound = !phrase.challenge && i >= CHALLENGE_FROM ? 70 : chainDistance(i);
+  const d = bound - previousHalf - travelHalf;
+  const lo = Math.max(half + travelHalf, cursor.chainCenterPx - d);
+  const hi = Math.min(BOARD_WIDTH_PX - half - travelHalf, cursor.chainCenterPx + d);
+  const randomCentre = lo + randInt(rng, hi - lo + 1);
+  // Alternating sides give the phrase a readable rhythm. Rest steps have
+  // modest displacement and stay static so the player can settle or wait.
+  const desired = phrase.challenge
+    ? exactDiv(BOARD_WIDTH_PX, 2) + phrase.direction * (60 + randInt(rng, 17))
+    : randomCentre;
+  const centerPx = Math.max(lo, Math.min(hi, desired));
+  const motion: Motion | null = phrase.moving
+    ? {
+        lo: (centerPx - half - travelHalf) * SUB,
+        span: CHAIN_MOVE_SPAN_PX * SUB,
+        speed: CHAIN_MOVE_SPEED,
+        phase: randInt(rng, 2 * CHAIN_MOVE_SPAN_PX * SUB),
+      }
+    : null;
 
   const chain: Platform = {
     id: i * 2,
     segment: i,
-    kind: 'static',
+    kind: phrase.moving ? 'moving' : 'static',
     chain: true,
     top: chainTop,
-    left: (centerPx - half) * SUB,
+    left: motion?.lo ?? (centerPx - half) * SUB,
     width: wPx * SUB,
-    motion: null,
+    motion,
   };
 
   let extra: Platform | null = null;
-  if (randInt(rng, 1000) < extraPermille(i)) {
+  if (!phrase.challenge && randInt(rng, 1000) < extraPermille(i)) {
     const kind = KINDS[pickWeighted(rng, kindWeights(i))]!;
     const top = cursor.chainTop + Math.floor(gapPx / 2) * SUB;
     const room = BOARD_WIDTH_PX - wPx;
@@ -144,6 +193,7 @@ export function generateSegment(seed: string, width: PlatformWidth, cursor: GenC
 
   return {
     segment: i,
+    challenge: phrase.challenge,
     gapPx,
     chain,
     extra,

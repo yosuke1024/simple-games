@@ -6,6 +6,10 @@ import { describe, expect, it } from 'vitest';
 import {
   BOARD_WIDTH,
   CHAIN_DISTANCE_PX,
+  CHAIN_MOVE_SPAN_PX,
+  CHALLENGE_FROM,
+  PHRASE_SEGMENTS,
+  RAMP_SEGMENTS,
   CHAIN_SPEED_PERCENT,
   GAP_APEX_PERCENT,
   GAP_MAX_PX,
@@ -21,6 +25,7 @@ import {
   generateTower,
   platformLeft,
   platformWidthPx,
+  phraseAt,
   ramp,
   FLOOR_CURSOR,
 } from './generate';
@@ -36,13 +41,13 @@ const WIDTHS: readonly PlatformWidth[] = ['normal', 'wide'];
 const AIR = Array.from({ length: GAP_MAX_PX.end + 1 }, (_, g) => airSteps(g * SUB));
 
 describe('ramps (§3)', () => {
-  it('run linearly from segment 1 to 1500 and then stay', () => {
+  it('run linearly to segment 180 and then stay', () => {
     expect(gapRange(1)).toEqual({ min: 48, max: 72 });
-    expect(gapRange(750)).toEqual({ min: 72, max: 100 });
-    expect(gapRange(1500)).toEqual({ min: 96, max: 128 });
+    expect(gapRange(90)).toEqual({ min: 72, max: 100 });
+    expect(gapRange(RAMP_SEGMENTS)).toEqual({ min: 96, max: 128 });
     expect(gapRange(99_999)).toEqual({ min: 96, max: 128 });
     expect(chainDistance(1)).toBe(110);
-    expect(chainDistance(1500)).toBe(CHAIN_DISTANCE_PX.end);
+    expect(chainDistance(RAMP_SEGMENTS)).toBe(CHAIN_DISTANCE_PX.end);
     for (let i = 1; i < 2000; i++) {
       expect(ramp(48, 96, i + 1)).toBeGreaterThanOrEqual(ramp(48, 96, i));
       expect(chainDistance(i + 1)).toBeGreaterThanOrEqual(chainDistance(i));
@@ -81,16 +86,24 @@ describe(`invariants over ${SEEDS} seeds × ${WIDTHS.length} widths × ${SEGMENT
           const i = s.segment;
           segments += 1;
           // 1. The gap: inside its range, inside 82 % of the apex.
-          const range = gapRange(i);
+          const range = gapRange(i, s.challenge);
           check(s.gapPx >= range.min && s.gapPx <= range.max);
           check(s.gapPx * SUB <= gapCap);
           if (s.gapPx > maxGap) maxGap = s.gapPx;
           check(s.chain.top === cursor.chainTop + s.gapPx * SUB);
-          // 2. The chain: static, on the board, within the direct bound.
-          check(s.chain.kind === 'static');
+          // 2. The whole motion ranges, at ANY pair of phases, fit the bound.
+          check(s.chain.kind === (phraseAt(seed, i).moving ? 'moving' : 'static'));
           check(s.chain.chain);
           check(s.chain.left >= 0 && s.chain.left + w <= BOARD_WIDTH);
-          const dx = Math.abs(s.cursor.chainCenterPx - cursor.chainCenterPx);
+          const dx =
+            Math.abs(s.cursor.chainCenterPx - cursor.chainCenterPx) +
+            (s.chain.motion === null ? 0 : CHAIN_MOVE_SPAN_PX / 2) +
+            (phraseAt(seed, i - 1).moving ? CHAIN_MOVE_SPAN_PX / 2 : 0);
+          if (s.chain.motion !== null) {
+            const m = s.chain.motion;
+            check(m.lo >= 0 && m.lo + m.span + w <= BOARD_WIDTH);
+            check(m.phase >= 0 && m.phase < 2 * m.span);
+          }
           check(dx <= chainDistance(i));
           check(dx <= CHAIN_DISTANCE_PX.end);
           if (dx > maxChainDx) maxChainDx = dx;
@@ -162,22 +175,79 @@ describe(`invariants over ${SEEDS} seeds × ${WIDTHS.length} widths × ${SEGMENT
     let bad = 0;
     for (let n = 0; n < 20; n++) {
       for (const s of generateTower(`move-${n}`, 'wide', 1200)) {
-        const e = s.extra;
-        if (e === null || e.motion === null) continue;
-        const m = e.motion;
-        const period = Math.floor((2 * m.span) / m.speed) + 2;
-        for (let t = 0; t <= period; t += 1) {
-          const left = platformLeft(e, t);
-          if (left < m.lo || left > m.lo + m.span || left + e.width > BOARD_WIDTH) bad += 1;
-          // Piecewise linear: one step moves it by the speed, or less at a turn.
-          if (Math.abs(platformLeft(e, t + 1) - left) > m.speed) bad += 1;
+        for (const e of [s.chain, s.extra]) {
+          if (e === null || e.motion === null) continue;
+          const m = e.motion;
+          const period = Math.floor((2 * m.span) / m.speed) + 2;
+          for (let t = 0; t <= period; t += 1) {
+            const left = platformLeft(e, t);
+            if (left < m.lo || left > m.lo + m.span || left + e.width > BOARD_WIDTH) bad += 1;
+            // Piecewise linear: one step moves it by the speed, or less at a turn.
+            if (Math.abs(platformLeft(e, t + 1) - left) > m.speed) bad += 1;
+          }
+          checked += 1;
         }
-        checked += 1;
       }
     }
     report('moving platforms swept through a whole period', checked);
     expect(bad).toBe(0);
     expect(checked).toBeGreaterThan(100);
+  });
+});
+
+describe('short challenge phrases', () => {
+  it('introduces static zigzags first, then unavoidable moving bridges with static rests', () => {
+    let bridges = 0;
+    for (const width of WIDTHS) {
+      for (let n = 0; n < 40; n++) {
+        const seed = `phrases-${n}`;
+        const tower = generateTower(seed, width, 220);
+        expect(tower.slice(0, CHALLENGE_FROM - 1).every((s) => !s.challenge)).toBe(true);
+        for (let first = CHALLENGE_FROM; first < 200; first += PHRASE_SEGMENTS) {
+          const phrase = tower.slice(first - 1, first - 1 + PHRASE_SEGMENTS);
+          const active = phrase.filter((s) => s.challenge);
+          expect(active.length).toBeGreaterThanOrEqual(3);
+          expect(active.length).toBeLessThanOrEqual(5);
+          expect(active.every((s) => s.extra === null)).toBe(true);
+          expect(
+            phrase.slice(active.length).every((s) => !s.challenge && s.chain.kind === 'static'),
+          ).toBe(true);
+          expect(active.filter((s) => s.chain.kind === 'moving')).toHaveLength(
+            first < MOVING_FROM ? 0 : 1,
+          );
+          for (let j = 1; j < active.length; j++) {
+            const prev = active[j - 1]!;
+            const current = active[j]!;
+            expect(Math.sign(current.cursor.chainCenterPx - prev.cursor.chainCenterPx)).toBe(
+              phraseAt(seed, current.segment).direction,
+            );
+          }
+        }
+        for (let i = 1; i < tower.length - 1; i++) {
+          const bridge = tower[i]!;
+          if (bridge.chain.motion === null) continue;
+          bridges++;
+          const from = tower[i - 1]!;
+          const to = tower[i + 1]!;
+          expect(from.chain.kind).toBe('static');
+          expect(to.chain.kind).toBe('static');
+          expect(bridge.extra).toBeNull();
+          expect(to.extra).toBeNull();
+          // The immediately adjacent static surfaces are the highest possible
+          // launch and lowest possible destination. No extra at either gap,
+          // including phrase boundaries, can provide a way around the bridge.
+          expect(to.chain.top - from.chain.top).toBeGreaterThan(apexUnits());
+          expect(
+            tower
+              .flatMap((s) => (s.extra === null ? [s.chain] : [s.chain, s.extra]))
+              .filter(
+                (p) => p.id !== bridge.chain.id && p.top > from.chain.top && p.top < to.chain.top,
+              ),
+          ).toEqual([]);
+        }
+      }
+    }
+    expect(bridges).toBeGreaterThan(1000);
   });
 });
 

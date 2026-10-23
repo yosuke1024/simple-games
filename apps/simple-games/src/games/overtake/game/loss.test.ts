@@ -1,103 +1,31 @@
 // @vitest-environment node
 /**
- * The loss structure (docs/OVERTAKE_RULES.md §4 "損の構造", §16): on every
- * level from Lv11, one Bump at a required-slowdown pair costs at least twice
- * what slowing down for it costs. Measured with `step`, on a synthetic course
- * holding only that pair — the one with the longest D_k of the level — so no
- * other row leaks into either loss.
- *
- * Three runs from 1,000 px before the first wall at full speed, centred in
- * its band, all steering the same way (to the first band's edge nearest the
- * second until the first window ends, then to the second band's near edge):
- * (i) the least slowdown — brake late enough to reach v_check exactly as the
- * first window ends, hold it through D_k, full throttle once inside the
- * second window; (ii) full throttle throughout (Rusher); (iii) full throttle
- * on the same stretch with no traffic. Loss = steps to 1,000 px past the
- * second window minus run (iii)'s.
- *
- * Sand and cones (§4 "砂とコーンの損", 2026-10-22) are measured the same way on
- * a synthetic course holding one zone row (3 lanes, middle lane): full
- * throttle from 1,000 px before it to 1,000 px past its window, against the
- * same run on an empty course. The order of §4 "損の順序" is asserted: Bump
- * (the 90-level minimum) ≥ 2 × the 3-cone group run, Bump > sand 250, and
- * every zone loss > 0 with no Bump.
+ * Delayed-driver losses (§4): isolate the widest pair of every Lv11–100.
+ * Start 1,000 px before its first wall at full speed, centred in the gap.
+ * After the whole car clears the first wall, wait 250 ms, then steer to the
+ * second gap's centre. Compare a timely slowdown to 300 px/s, full throttle,
+ * and the traffic-free baseline. This uses no edge positioning or prediction.
+ * Bump loss must remain at least twice the successful slowdown's loss; sand,
+ * cones and side scrapes retain their separate, milder loss checks.
  */
 import { describe, expect, it } from 'vitest';
 import { CAR_HALF_WIDTH, FULL_SPEED, STEER_PER_STEP, STEPS_PER_SECOND, SUB } from './constants';
 import { assembleCourse, coneGroup, generateCourse, sandZone } from './course';
-import { carObstacle, laneCenter, wallBand } from './geometry';
-import { CONE_LENGTH, CONE_WIDTH, levelSpec } from './levels';
-import {
-  advanceCar,
-  approachSpeed,
-  brakeForSpeed,
-  newReport,
-  targetSpeed,
-  type MutableCar,
-} from './physics';
-import { brakingDistance } from './planner';
-import { windowEnd } from './route';
+import { carObstacle, laneCenter } from './geometry';
+import { CONE_LENGTH, CONE_WIDTH } from './levels';
+import { advanceCar, newReport, type MutableCar } from './physics';
+import { delayedPairRun } from './pair-test-helpers';
 import { report } from './test-helpers';
 import type { CarKind, Course, StepInput, Zone } from './types';
 
-type Brake = 'least' | 'none';
-
-function measure(
-  course: Course,
-  level: number,
-): { least: number; rush: number; free: number; bumpsLeast: number; bumpsRush: number } {
-  const rows = course.rows;
-  let k = -1;
-  for (const row of rows)
-    if (row.kind === 'gate2' && (k < 0 || row.lead > rows[k]!.lead)) k = row.index;
-  const first = rows[k - 1]!;
-  const second = rows[k]!;
-  const pair = assembleCourse(level, course.lanes, course.length, [first, second]);
-  const empty = assembleCourse(level, course.lanes, course.length, []);
-  const b1 = wallBand(first.gapSpan!);
-  const b2 = wallBand(second.gapSpan!);
-  const right = b2[0]! > b1[1]!;
-  const edge1 = right ? b1[1]! : b1[0]!;
-  const edge2 = right ? b2[0]! : b2[1]!;
-  const end1 = windowEnd(first);
-  const finish = windowEnd(second) + 1000 * SUB;
-  const vCheck = levelSpec(level).checkSpeed;
-
-  const run = (c: Course, brake: Brake): { steps: number; bumps: number } => {
-    const car: MutableCar = {
-      r: first.u - 1000 * SUB,
-      x: Math.floor((b1[0]! + b1[1]!) / 2),
-      w: FULL_SPEED,
-      target: 0,
-      hold: 0,
-      lock: 0,
-      blink: 0,
-      bumps: 0,
-      coneCap: 0,
-    };
-    car.target = car.x;
-    let braking = false;
-    for (let step = 1; step < 20_000; step++) {
-      let b = 0;
-      if (brake === 'least' && car.r <= second.u) {
-        if (!braking && end1 - car.r <= brakingDistance(car.w, vCheck) + 2 * car.w) braking = true;
-        if (braking) b = brakeForSpeed(vCheck);
-      }
-      const next = car.hold > 0 ? 0 : approachSpeed(car.w, targetSpeed(b));
-      const steerX = car.r + next >= end1 ? edge2 : edge1;
-      advanceCar(c, car, { steerX, brake: b }, newReport());
-      if (car.r >= finish) return { steps: step, bumps: car.bumps };
-    }
-    throw new Error('did not finish');
-  };
-
-  const least = run(pair, 'least');
-  const rush = run(pair, 'none');
-  const free = run(empty, 'none');
+function measure(course: Course) {
+  const second = course.rows.filter((r) => r.kind === 'gate2').sort((a, b) => b.lead - a.lead)[0]!;
+  const least = delayedPairRun(course, second);
+  const rush = delayedPairRun(course, second, { speed: FULL_SPEED });
+  const free = delayedPairRun(course, second, { speed: FULL_SPEED, empty: true });
   return {
     least: least.steps - free.steps,
     rush: rush.steps - free.steps,
-    free: free.steps,
     bumpsLeast: least.bumps,
     bumpsRush: rush.bumps,
   };
@@ -116,7 +44,7 @@ function allGateLosses(): GateLosses {
   if (gateLosses !== null) return gateLosses;
   const out: GateLosses = { worstRatio: Infinity, worstLevel: 0, leastMax: 0, rushMin: Infinity };
   for (let l = 11; l <= 100; l++) {
-    const m = measure(generateCourse(l), l);
+    const m = measure(generateCourse(l));
     expect(m.bumpsLeast, `Lv${l} least`).toBe(0);
     expect(m.bumpsRush, `Lv${l} rush`).toBe(1);
     expect(m.least, `Lv${l}`).toBeGreaterThan(0);

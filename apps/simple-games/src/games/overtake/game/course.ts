@@ -17,7 +17,6 @@
  */
 import {
   CAR_LENGTH,
-  EASY_SIGMA,
   FULL_SPEED,
   GATE_TAIL,
   GEN_ROW_LIMIT,
@@ -29,17 +28,8 @@ import {
   TRAFFIC_SEED,
   TRAFFIC_START,
 } from './constants';
-import {
-  carObstacle,
-  laneCenter,
-  laneLeft,
-  laneWidth,
-  wallBand,
-  wallCentres,
-  wallGapSpan,
-} from './geometry';
+import { carObstacle, laneCenter, laneLeft, laneWidth, wallCentres, wallGapSpan } from './geometry';
 import { exactDiv } from './arith';
-import { distance } from './intervals';
 import {
   CAR_DIMENSIONS,
   CONE_CLEARANCE,
@@ -49,6 +39,10 @@ import {
   SAND_LENGTH_SPAN,
   SAND_MIN_LENGTH,
   WORKS_LENGTH,
+  PAIR_SPEED,
+  PAIR_REACTION_STEPS,
+  PAIR_MARGIN_STEPS,
+  PAIR_STEER_MARGIN,
   ZONE_GAP,
   levelSpec,
   type LevelSpec,
@@ -70,12 +64,9 @@ export interface GenerateOptions {
 const SHIFTS = [-2, -1, 0, 1, 2] as const;
 const SHIFT_WEIGHTS = [1, 3, 2, 3, 1] as const;
 /**
- * A wall pair always moves the gap (§5): ±1 or ±2 lanes (3 : 1) on 3 and 4
- * lanes, exactly ±2 on 5 lanes — one 5-lane lane apart the two bands are
- * only 7.2–15.2 px apart: a jog too small to read, one the 30 Hz decision
- * lag makes far more costly than the move itself, and — for the gate pair —
- * one the step quantisation of the physics could cross at full throttle
- * (up to 2 × 440 units of extra reach, more than (1 − σ_gate) × 7.2 px).
+ * Wall pairs move ±1 or ±2 lanes (3 : 1) on 3 and 4 lanes, exactly ±2 on
+ * 5 lanes so the sideways move stays visible. Pair spacing now includes
+ * reaction room (§5), rather than forcing even a precise driver to brake.
  */
 const WALL_SHIFTS = [-2, -1, 1, 2] as const;
 const WALL_SHIFT_WEIGHTS = [1, 3, 3, 1] as const;
@@ -86,6 +77,20 @@ const S_CURVE_ODDS = 4;
 /** D = ceil(420 × m × σ‰ / (440 × 1000)), units (§5). */
 export function leadFor(move: number, sigma: number): number {
   return Math.ceil((FULL_SPEED * move * sigma) / (STEER_PER_STEP * 1000));
+}
+
+/**
+ * Pair clearance after the first car has fully cleared the first wall, units.
+ * Allow 250 ms to react, then steer centre-to-centre at 440 px/s while advancing at 300 px/s, with ±8 px
+ * steering tolerance at both ends and two physics steps of longitudinal margin.
+ * Unlike the old edge-to-edge σ < 1 rule, this permits an immediate precise
+ * driver to stay at full throttle; braking buys the delayed driver time.
+ */
+export function pairLeadFor(centreMove: number): number {
+  return (
+    PAIR_SPEED * (PAIR_REACTION_STEPS + PAIR_MARGIN_STEPS) +
+    Math.ceil((PAIR_SPEED * (centreMove + PAIR_STEER_MARGIN)) / STEER_PER_STEP)
+  );
 }
 
 interface Draft {
@@ -374,15 +379,14 @@ export function generateCourse(level: number, options: GenerateOptions = {}): Co
     gapSpan: wallGapSpan(lanes, gap, wallKind),
   });
 
-  /** The second wall of a pair, placed `sigma` behind `first` (§5 間隔 "壁の組の 2 枚目"). */
-  const secondWall = (kind: RowKind, first: Draft, sigma: number): Draft => {
+  /** The second wall leaves room for a delayed centre-to-centre move (§5). */
+  const secondWall = (kind: RowKind, first: Draft): Draft => {
     const gap = first.gap + pickShift(rng, lanes, first.gap, true);
     const wallKind = pickKind(rng, spec.wallKinds);
-    const span = wallGapSpan(lanes, gap, wallKind);
-    const move = distance(wallBand(first.gapSpan!), wallBand(span));
-    const lead = leadFor(move, sigma);
+    const move = Math.abs(gap - first.gap) * laneWidth(lanes);
+    const lead = pairLeadFor(move);
     const u = first.u + first.length + CAR_LENGTH + lead;
-    return wallDraft(kind, gap, wallKind, u, lead, sigma, move);
+    return wallDraft(kind, gap, wallKind, u, lead, 0, move);
   };
 
   // Rows 1 and 2: the easy pair (§5).
@@ -391,7 +395,7 @@ export function generateCourse(level: number, options: GenerateOptions = {}): Co
   const u1 = TRAFFIC_START + randInt(rng, 121) * SUB;
   const easy1 = wallDraft('easy1', firstGap, firstKind, u1, 0, 0, 0);
   drafts.push(easy1);
-  const easy2 = secondWall('easy2', easy1, EASY_SIGMA);
+  const easy2 = secondWall('easy2', easy1);
   if (easy2.u + easy2.length <= lastFront) drafts.push(easy2);
 
   let gateIndex = 0;
@@ -417,7 +421,7 @@ export function generateCourse(level: number, options: GenerateOptions = {}): Co
     if (gateIndex < spec.gatePairs && u >= gateTarget(spec, gateIndex)) {
       const wallKind = pickKind(rng, spec.wallKinds);
       const gate1 = wallDraft('gate1', gap, wallKind, u, lead, spec.sigma, move);
-      const gate2 = secondWall('gate2', gate1, spec.gateSigma);
+      const gate2 = secondWall('gate2', gate1);
       if (gate2.u + gate2.length <= lastFront && drafts.length + 2 <= rowLimit) {
         drafts.push(gate1, gate2);
         gateIndex += 1;

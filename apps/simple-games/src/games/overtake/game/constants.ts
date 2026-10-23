@@ -86,9 +86,6 @@ export const GOAL_CLEARANCE = 400 * SUB;
 export const GATE_TAIL = 700;
 /** Work bound on generation: rows per course (§5, §17). */
 export const GEN_ROW_LIMIT = 200;
-/** σ of the second wall of the easy pair, in ‰ (§5, §7). */
-export const EASY_SIGMA = 1100;
-
 /** The starting grid (§2): front edge r and centre x, in units. */
 export const PLAYER_START = { r: -90 * SUB, x: 152 * SUB } as const;
 /** Rivals 1 (fastest) .. 3. */

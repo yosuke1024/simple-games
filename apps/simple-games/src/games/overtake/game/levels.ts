@@ -3,7 +3,7 @@
  * integer formulas (§1). 100 levels in 10 blocks; nothing new is added to the
  * rules along the way — only what is drawn (car kinds, arrangements, lanes).
  */
-import { CAR_LENGTH, EASY_SIGMA, FULL_SPEED, SUB } from './constants';
+import { CAR_LENGTH, FULL_SPEED, SUB } from './constants';
 import type { CarKind } from './types';
 
 export const LEVEL_COUNT = 100;
@@ -67,8 +67,6 @@ export interface LevelSpec {
   readonly isFinal: boolean;
   /** σ(ℓ) of normal rows, ‰. */
   readonly sigma: number;
-  /** σ_gate(ℓ), ‰, or 0 below Lv11. */
-  readonly gateSigma: number;
   /** s(ℓ), ‰. */
   readonly slack: number;
   /** n_gate(ℓ), 0 below Lv11. */
@@ -112,12 +110,6 @@ export function sigmaFor(level: number): number {
   return 2200 - Math.floor((950 * (l - 1)) / 99);
 }
 
-export function gateSigmaFor(level: number): number {
-  const l = clampLevel(level);
-  if (l < 11) return 0;
-  return 750 - Math.floor((200 * (l - 11)) / 89);
-}
-
 export function slackFor(level: number): number {
   const l = clampLevel(level);
   const k = ((l - 1) % 10) + 1;
@@ -128,41 +120,30 @@ export function slackFor(level: number): number {
   );
 }
 
-/**
- * Seconds of slack one required-slowdown pair is counted as taking away, in
- * ‰ (§5): the plan's 0.6, lowered to 0.5 — at 0.6 the Rusher gate held with
- * only 0.6 % to spare (Lv79), measured in Phase 2.
- */
+/** Pair spacing is sized for a person who clears a wall before steering (§5). */
+export const PAIR_SPEED = 300;
+export const PAIR_REACTION_STEPS = 30; // 250 ms, including a 30 Hz input phase.
+export const PAIR_MARGIN_STEPS = 2;
+export const PAIR_STEER_MARGIN = 16 * SUB; // Centre ±8 px at either wall.
+
+/** The introducing block keeps the gentler 6 → 15 pair ramp (2026-10-23). */
+export const INTRO_GATE_PAIRS: readonly number[] = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+/** Existing density formula; the transition to four lanes is capped below. */
 export const GATE_SLACK_SHARE = 500;
 
-/**
- * Lv11–20, the block that introduces the pair (§5, §7; 2026-10-23): the
- * count is this ramp, not the slack formula — 6 pairs at Lv11, one more per
- * level, 15 at Lv20. The formula gave 20–24 here, so the first level with
- * pairs was the densest of the ladder (48 of Lv11's 61 rows were pair walls).
- * The Rusher gate (§6) begins at Lv21, so the block is free to teach the verb
- * at a pace a person can learn at; from Lv21 the formula stands. Initial values.
- */
-export const INTRO_GATE_PAIRS: readonly number[] = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
-
-/**
- * n_gate(ℓ) (§5, §7): 0 below Lv11, INTRO_GATE_PAIRS on Lv11–20, and from
- * Lv21 ceil(s‰ × U / (420 × GATE_SLACK_SHARE)) + 1.
- */
+/** From Lv21, grow by at most one pair a level until the density formula is reached. */
 export function gatePairsFor(level: number): number {
   const l = clampLevel(level);
   if (l < 11) return 0;
   if (l <= 20) return INTRO_GATE_PAIRS[l - 11]!;
   const numerator = slackFor(l) * lengthFor(l);
   const denominator = FULL_SPEED * GATE_SLACK_SHARE;
-  return Math.ceil(numerator / denominator) + 1;
+  return Math.min(15 + l - 21, Math.ceil(numerator / denominator) + 1);
 }
 
-/** v_check (§5): full speed below Lv11, else 90 % of what the gate wall needs. */
+/** A moderate speed, plus the separate delayed-human passage check (§5). */
 export function checkSpeedFor(level: number): number {
-  const l = clampLevel(level);
-  if (l < 11) return FULL_SPEED;
-  return Math.floor((9 * gateSigmaFor(l) * FULL_SPEED) / 10000);
+  return clampLevel(level) < 11 ? FULL_SPEED : PAIR_SPEED;
 }
 
 export function levelSpec(level: number): LevelSpec {
@@ -177,7 +158,6 @@ export function levelSpec(level: number): LevelSpec {
     length: lengthFor(l),
     isFinal: l % 10 === 0,
     sigma: sigmaFor(l),
-    gateSigma: gateSigmaFor(l),
     slack: slackFor(l),
     gatePairs: gatePairsFor(l),
     checkSpeed: checkSpeedFor(l),
@@ -194,9 +174,6 @@ export function levelSpec(level: number): LevelSpec {
     sCurves: l >= 11,
   };
 }
-
-/** σ of the easy pair's second wall, re-exported for the tests. */
-export const EASY_PAIR_SIGMA = EASY_SIGMA;
 
 /** A car length in units, for callers that think in kinds. */
 export function carLengthUnits(kind: CarKind): number {

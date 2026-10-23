@@ -60,15 +60,23 @@ export const FRAME_UNITS_PER_STEP = 1000;
 export const FRAME_UNITS_PER_MS = 120;
 
 /** Generation (§3). Ramps run from segment 1 to RAMP_SEGMENTS, then stay. */
-export const RAMP_SEGMENTS = 1500;
+export const RAMP_SEGMENTS = 180;
 export const GAP_MIN_PX = { start: 48, end: 96 } as const;
 export const GAP_MAX_PX = { start: 72, end: 128 } as const;
 export const CHAIN_DISTANCE_PX = { start: 110, end: 170 } as const;
 /** Chance of an extra platform in a segment, in ‰ (§3). */
 export const EXTRA_PERMILLE = { start: 600, end: 350 } as const;
 /** Kinds appear by segment index (§3, §12). */
-export const MOVING_FROM = 300;
-export const VANISHING_FROM = 600;
+export const MOVING_FROM = 40;
+export const VANISHING_FROM = 60;
+/** Short, readable phrases: 3–5 challenge steps, then 3–5 static rest steps. */
+export const CHALLENGE_FROM = 20;
+export const PHRASE_SEGMENTS = 8;
+export const CHALLENGE_GAP_MIN = 90;
+export const CHALLENGE_GAP_MAX = 110;
+/** The required moving bridge travels farther than Normal's landing width. */
+export const CHAIN_MOVE_SPAN_PX = 96;
+export const CHAIN_MOVE_SPEED = 60;
 /** Moving platforms: travel 96–224 px, speed 40–80 px/s (§3). */
 export const MOVE_SPAN_PX = { min: 96, max: 224 } as const;
 export const MOVE_SPEED = { min: 40, max: 80 } as const;

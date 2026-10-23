@@ -38,7 +38,7 @@ export interface Zone {
 
 /**
  * - `easy1` / `easy2`: the two walls every level opens with (§5 "ゆるめると楽な組").
- * - `gate1` / `gate2`: a required-slowdown pair from Lv11 (§5 "必須減速の組").
+ * - `gate1` / `gate2`: a wall pair from Lv11, with room for delayed steering (§5).
  * - `normal`: one filled from the templates (`works` is a normal row, §5).
  */
 export type RowKind = 'normal' | 'easy1' | 'easy2' | 'gate1' | 'gate2';
@@ -57,7 +57,7 @@ export interface Row {
   readonly gap: number;
   /** D_k: from the previous row's window end to this row's window start, units (0 for row 1). */
   readonly lead: number;
-  /** σ used for D_k in ‰ (0 for row 1). */
+  /** σ used for ordinary D_k in ‰ (0 for row 1 and pair second walls). */
   readonly sigma: number;
   /** m_k used for D_k, units (0 for row 1). */
   readonly move: number;
