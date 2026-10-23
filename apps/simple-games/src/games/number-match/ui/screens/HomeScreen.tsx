@@ -5,6 +5,7 @@ import { solvedLevelCount } from '../../state/progressLogic';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
 
@@ -41,13 +42,12 @@ export function HomeScreen() {
   const freeGame = sessions.free?.status === 'playing' ? sessions.free : null;
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="number-match" onBack={exitToCollection} />
       <div className="home-hero">
-        {/* The series mark: a tile holding the game's whole rule — make 10. */}
-        <div className="home-logo" aria-hidden="true">
-          10
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="number-match" />
+        </span>
         <h1 className="home-title">{t('numberMatchName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

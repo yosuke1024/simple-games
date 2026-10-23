@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { MODES, type Mode } from '../../game';
 import { useNim } from '../../state/GameContext';
@@ -16,29 +17,13 @@ export function HomeScreen() {
     else startNewGame(mode);
   };
   return (
-    <div className="screen home-screen nim-home">
+    <div className="screen home-screen nim-home illustrated-game-home">
       <div inert={pending !== null}>
         <GameHomeHeader gameId="nim" onBack={exitToCollection} />
         <div className="home-hero">
-          <div className="home-logo nim-home-mark" aria-hidden="true">
-            <svg viewBox="0 0 72 72" focusable="false">
-              {[3, 5, 4].map((stones, line) => (
-                <g key={line}>
-                  {Array.from({ length: stones }, (_, i) => (
-                    <rect
-                      key={i}
-                      x={12 + i * 10}
-                      y={13 + line * 18}
-                      width="5"
-                      height="12"
-                      rx="1.5"
-                      fill="currentColor"
-                    />
-                  ))}
-                </g>
-              ))}
-            </svg>
-          </div>
+          <span className="game-home-artwork" aria-hidden="true">
+            <GameArtwork id="nim" />
+          </span>
           <h1 className="home-title">{t('nimName')}</h1>
           <p className="home-tagline">{t('tagline')}</p>
           <WebBetaNotice gameId="nim" />

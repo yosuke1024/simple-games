@@ -18,6 +18,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { DIFFICULTIES, TIERS, localDateString, type Difficulty } from '../../game';
@@ -59,14 +60,13 @@ export function UnblockPuzzleHomeScreen() {
   };
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="unblock-puzzle" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* Matches the tile glyph in app/registry.ts. */}
-        <div className="home-logo" aria-hidden="true">
-          {'⇥'}
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="unblock-puzzle" />
+        </span>
         <h1 className="home-title">{t('unblockPuzzleName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
         <WebBetaNotice gameId="unblock-puzzle" />

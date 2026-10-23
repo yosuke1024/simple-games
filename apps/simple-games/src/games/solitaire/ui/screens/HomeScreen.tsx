@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck } from '@/ui/components/icons';
 import { localDateString } from '../../game';
 import { useSolitaire } from '../../state/GameContext';
@@ -38,14 +39,13 @@ export function SolitaireHomeScreen() {
       : null;
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="solitaire" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: the spade — the deck in one glyph. */}
-        <div className="home-logo" aria-hidden="true">
-          ♠
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="solitaire" />
+        </span>
         <h1 className="home-title">{t('solitaireName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

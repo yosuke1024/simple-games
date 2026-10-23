@@ -73,6 +73,7 @@
   border: 1px solid var(--ink-soft);
   border-radius: 4px;
   background: var(--surface);
+  box-shadow: inset 0 -1px 0 var(--surface-recessed);
 }
 
 .dm-face-upright {
@@ -111,7 +112,9 @@
    not rest on hue. It arrives with one short settle; Reduced Motion (the
    app's setting or the OS's) skips that and the ring is simply there. */
 .dm-tile-fresh .dm-face {
-  box-shadow: 0 0 0 2px var(--accent);
+  box-shadow:
+    inset 0 -1px 0 var(--surface-recessed),
+    0 0 0 2px var(--accent);
   animation: dm-settle 160ms ease-out;
 }
 
@@ -223,7 +226,9 @@
 
 .dm-hand-tile-selected .dm-face {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-ring);
+  box-shadow:
+    inset 0 -1px 0 var(--surface-recessed),
+    0 0 0 3px var(--accent-ring);
 }
 
 /* ---------- top bar ---------- */

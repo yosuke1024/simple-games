@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { useThreePeaks } from '../../state/GameContext';
@@ -9,13 +10,13 @@ export function ThreePeaksHomeScreen() {
   const { canResume, resumeGame, startGame, navigate, exitToCollection } = useThreePeaks();
   const [confirmNew, setConfirmNew] = useState(false);
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <div className="tp-home-content" inert={confirmNew || undefined}>
         <GameHomeHeader gameId="three-peaks" onBack={exitToCollection} />
         <div className="home-hero">
-          <div className="home-logo" aria-hidden="true">
-            ⋀
-          </div>
+          <span className="game-home-artwork" aria-hidden="true">
+            <GameArtwork id="three-peaks" />
+          </span>
           <h1 className="home-title">{t('threePeaksName')}</h1>
           <p className="home-tagline">{t('tagline')}</p>
           <WebBetaNotice gameId="three-peaks" />

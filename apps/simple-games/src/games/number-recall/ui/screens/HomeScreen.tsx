@@ -1,5 +1,6 @@
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
 import { localDateString, MAX_LEVEL } from '../../game';
@@ -21,15 +22,13 @@ export function RecallHomeScreen() {
   const todayBest = progress.dailySeconds[today];
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="number-recall" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: a question mark — the tile whose number you are
-            trying to remember is the one you can no longer see. */}
-        <div className="home-logo" aria-hidden="true">
-          ?
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="number-recall" />
+        </span>
         <h1 className="home-title">{t('recallName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

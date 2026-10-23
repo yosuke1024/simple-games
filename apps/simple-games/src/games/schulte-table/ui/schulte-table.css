@@ -78,6 +78,7 @@
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
+  box-shadow: inset 0 -1px 0 var(--surface-recessed);
   color: var(--ink);
   font-family: var(--font-display);
   /* Sized against the board rather than the viewport: a 5x5 cell is a fifth of

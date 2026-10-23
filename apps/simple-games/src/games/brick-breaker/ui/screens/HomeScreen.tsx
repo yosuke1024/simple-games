@@ -1,5 +1,6 @@
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconGrid } from '@/ui/components/icons';
 import { LEVEL_COUNT } from '../../game/levels';
 import { useBrickBreaker } from '../../state/GameContext';
@@ -18,14 +19,13 @@ export function BrickHomeScreen() {
   const homeLevel = Math.min(progress.highestUnlocked, LEVEL_COUNT);
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="brick-breaker" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: courses of brickwork. */}
-        <div className="home-logo" aria-hidden="true">
-          ≡
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="brick-breaker" />
+        </span>
         <h1 className="home-title">{t('brickBreakerName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

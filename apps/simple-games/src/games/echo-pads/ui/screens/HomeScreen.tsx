@@ -19,6 +19,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { isFinished, LEVEL_COUNT, levelSpec, localDateString } from '../../game';
@@ -59,14 +60,13 @@ export function EchoPadsHomeScreen() {
   };
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="echo-pads" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* Matches the tile glyph in app/registry.ts. */}
-        <div className="home-logo" aria-hidden="true">
-          {'♫'}
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="echo-pads" />
+        </span>
         <h1 className="home-title">{t('echoPadsName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
         <WebBetaNotice gameId="echo-pads" />

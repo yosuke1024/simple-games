@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck } from '@/ui/components/icons';
 import { DIFFICULTIES, LAYOUTS, localDateString, type Difficulty } from '../../game';
 import { useMemoryMatch } from '../../state/GameContext';
@@ -49,14 +50,13 @@ export function MemoryHomeScreen() {
   };
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="memory-match" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: two cards overlapping — a pair. */}
-        <div className="home-logo" aria-hidden="true">
-          ⧉
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="memory-match" />
+        </span>
         <h1 className="home-title">{t('memoryMatchName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

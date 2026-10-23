@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { useDominoes } from '../../state/GameContext';
@@ -28,15 +29,13 @@ export function DominoesHomeScreen() {
     finished > 0 ? t('dominoesRecordNote', { wins: stats.wins, losses: stats.losses }) : null;
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="dominoes" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The same glyph the collection home puts on this title's tile
-            (app/registry.ts): a tile split in two. */}
-        <div className="home-logo" aria-hidden="true">
-          ⊟
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="dominoes" />
+        </span>
         <h1 className="home-title">{t('dominoesName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
         <WebBetaNotice gameId="dominoes" />

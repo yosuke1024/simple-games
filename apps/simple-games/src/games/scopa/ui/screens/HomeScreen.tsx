@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { useScopa } from '../../state/GameContext';
@@ -29,14 +30,13 @@ export function ScopaHomeScreen() {
     finished > 0 ? t('scopaRecordNote', { wins: stats.wins, losses: stats.losses }) : null;
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="scopa" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* Matches the tile glyph in app/registry.ts. */}
-        <div className="home-logo" aria-hidden="true">
-          {'♧'}
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="scopa" />
+        </span>
         <h1 className="home-title">{t('scopaName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
         <WebBetaNotice gameId="scopa" />

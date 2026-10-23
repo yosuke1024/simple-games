@@ -16,6 +16,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart } from '@/ui/components/icons';
 import { DIFFICULTIES, type Difficulty } from '../../game';
 import { useLudo } from '../../state/GameContext';
@@ -47,19 +48,13 @@ export function LudoHomeScreen() {
   };
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="ludo" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The four seats, as the board arranges them. The same mark the
-            collection home puts on this title's tile: arriving here should
-            look like the tile that was tapped. */}
-        <div className="home-logo ld-logo" aria-hidden="true">
-          <span className="ld-chip ld-seat-1" />
-          <span className="ld-chip ld-seat-2" />
-          <span className="ld-chip ld-seat-0" />
-          <span className="ld-chip ld-seat-3" />
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="ludo" />
+        </span>
         <h1 className="home-title">{t('ludoName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

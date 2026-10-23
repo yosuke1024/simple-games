@@ -1,5 +1,6 @@
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart } from '@/ui/components/icons';
 import { useBunnyHop } from '../../state/GameContext';
 
@@ -13,16 +14,13 @@ export function BunnyHomeScreen() {
   const { t } = useSettings();
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="bunny-hop" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The same glyph the collection home puts on this title's tile
-            (app/registry.ts): arriving here should look like the tile that
-            was tapped, not like a second mark for the same game. */}
-        <div className="home-logo" aria-hidden="true">
-          ⌃
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="bunny-hop" />
+        </span>
         <h1 className="home-title">{t('bunnyName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

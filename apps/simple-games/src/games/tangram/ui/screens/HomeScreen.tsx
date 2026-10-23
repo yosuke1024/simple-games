@@ -23,6 +23,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { figureNumber, localDateString, TIERS, type Tier } from '../../game';
@@ -64,14 +65,13 @@ export function TangramHomeScreen() {
   const pendingFigure = pending === null ? null : nextFigureOf(pending);
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="tangram" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* Matches the tile glyph in app/registry.ts. */}
-        <div className="home-logo" aria-hidden="true">
-          {'⊿'}
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="tangram" />
+        </span>
         <h1 className="home-title">{t('tangramName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
         <WebBetaNotice gameId="tangram" />

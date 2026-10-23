@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { DIFFICULTIES, POOL_FOR, SLOTS_FOR, type Difficulty } from '../../game';
@@ -46,16 +47,13 @@ export function HitAndBlowHomeScreen() {
   };
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="hit-and-blow" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The same glyph the collection home puts on this title's tile
-            (app/registry.ts): arriving here should look like the tile that
-            was tapped, not like a second mark for the same game. */}
-        <div className="home-logo" aria-hidden="true">
-          ◉
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="hit-and-blow" />
+        </span>
         <h1 className="home-title">{t('hitAndBlowName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
         <WebBetaNotice gameId="hit-and-blow" />

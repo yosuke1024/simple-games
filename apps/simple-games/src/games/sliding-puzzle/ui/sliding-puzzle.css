@@ -33,6 +33,7 @@
   background: var(--surface-recessed);
   border: 2px solid var(--ink-soft);
   border-radius: var(--radius);
+  box-shadow: var(--shadow);
   /* Tiles are positioned in percentages of this box; nothing may spill out
      while one is travelling. */
   overflow: hidden;

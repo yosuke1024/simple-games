@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { FREE_TIERS, freeTierForSize, localDateString, MAX_LEVEL } from '../../game';
 import { useTakuzu } from '../../state/GameContext';
@@ -40,14 +41,13 @@ export function TakuzuHomeScreen() {
   const freeGame = sessions.free?.status === 'playing' ? sessions.free : null;
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="takuzu" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: the two digits the whole game is played with. */}
-        <div className="home-logo takuzu-logo" aria-hidden="true">
-          01
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="takuzu" />
+        </span>
         <h1 className="home-title">{t('takuzuName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

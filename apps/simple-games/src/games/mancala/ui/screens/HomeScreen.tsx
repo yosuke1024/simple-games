@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { DIFFICULTIES, type Difficulty } from '../../game';
@@ -48,15 +49,13 @@ export function MancalaHomeScreen() {
   };
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="mancala" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The same glyph the collection home puts on this title's tile
-            (app/registry.ts): a pit with a seed in it. */}
-        <div className="home-logo" aria-hidden="true">
-          ⊚
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="mancala" />
+        </span>
         <h1 className="home-title">{t('mancalaName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
         <WebBetaNotice gameId="mancala" />

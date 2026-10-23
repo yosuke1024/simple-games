@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { FREE_TIERS, localDateString, MAX_LEVEL } from '../../game';
 import { useWaterSort } from '../../state/GameContext';
@@ -41,14 +42,13 @@ export function WaterHomeScreen() {
   const frontierBest = progress.bestMoves[String(progress.highestUnlocked)];
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="water-sort" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: water at rest — the sorted end state. */}
-        <div className="home-logo" aria-hidden="true">
-          ≋
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="water-sort" />
+        </span>
         <h1 className="home-title">{t('waterSortName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { formatDuration } from '@/ui/format';
@@ -55,14 +56,13 @@ export function CrownGridHomeScreen() {
   };
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="crown-grid" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: a tile holding the game's whole shape — one crown. */}
-        <div className="home-logo" aria-hidden="true">
-          ♛
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="crown-grid" />
+        </span>
         <h1 className="home-title">{t('crownGridName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
         <WebBetaNotice gameId="crown-grid" />

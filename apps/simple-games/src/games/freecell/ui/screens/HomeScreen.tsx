@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck } from '@/ui/components/icons';
 import { localDateString } from '../../game';
 import { useFreeCell } from '../../state/GameContext';
@@ -38,15 +39,13 @@ export function FreeCellHomeScreen() {
       : null;
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="freecell" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: the heart. Klondike wears the spade, Spider the
-            club — one deck, three games, three suits. */}
-        <div className="home-logo" aria-hidden="true">
-          ♥
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="freecell" />
+        </span>
         <h1 className="home-title">{t('freecellName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

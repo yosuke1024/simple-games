@@ -61,6 +61,14 @@
   border-radius: 12px;
   background: var(--surface-recessed);
   margin-right: var(--ub-exit-room);
+
+  /* A paper edge and shallow lift on the whole board; external rings remain
+     visible around flush child cells without changing board geometry. */
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--line),
+    0 3px 0 var(--line),
+    0 8px 18px var(--accent-ring-soft);
 }
 
 /* Before `.ub-figure` below, whose fixed cell must keep winning. */
