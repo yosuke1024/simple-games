@@ -13,12 +13,24 @@ export function Tower({
   const disks = board.flatMap((location, disk) => (location === peg ? [disk] : [])).reverse();
   return (
     <svg viewBox="0 0 100 190" aria-hidden="true" className="ht-tower">
-      <path d="M50 40v130M8 171h84" className="ht-wood" />
+      <ellipse cx="50" cy="176" rx="43" ry="5" className="ht-base-shadow" />
+      <rect x="7" y="168" width="86" height="8" rx="4" className="ht-base" />
+      <path d="M12 169h76" className="ht-wood-light" />
+      <path d="M50 40v126" className="ht-wood" />
+      <path d="M48.5 42v123" className="ht-wood-light" />
       {disks.map((disk, level) => {
         const width = 34 + disk * 12;
         const y = 148 - level * 22 - (selected && disk === disks.at(-1) ? 12 : 0);
         return (
-          <g key={disk}>
+          <g key={disk} className={selected && disk === disks.at(-1) ? 'ht-lifted-disk' : ''}>
+            <rect
+              x={(100 - width) / 2}
+              y={y + 3}
+              width={width}
+              height="19"
+              rx="5"
+              className="ht-disk-shadow"
+            />
             <rect
               x={(100 - width) / 2}
               y={y}
@@ -26,6 +38,10 @@ export function Tower({
               height="19"
               rx="5"
               className={`ht-disk ht-disk-${disk}`}
+            />
+            <path
+              d={`M${(100 - width) / 2 + 5} ${y + 3}h${width - 10}`}
+              className="ht-disk-light"
             />
             <text x="50" y={y + 13}>
               {disk + 1}
@@ -82,7 +98,11 @@ export function Board({
           >
             <span className="ht-peg-number" aria-hidden="true">
               {peg + 1}
-              {peg === 2 ? ' ⚑' : ''}
+              {peg === 2 ? (
+                <svg viewBox="0 0 16 16" className="ht-goal-mark">
+                  <path d="M4 14V2h8l-2 3 2 3H4" />
+                </svg>
+              ) : null}
             </span>
             <Tower board={session.board} peg={peg} selected={selected === peg} />
             <span className="ht-destination" aria-hidden="true">

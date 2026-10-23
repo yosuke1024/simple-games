@@ -1,13 +1,19 @@
+import { useId } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { WIDTH, HEIGHT, cells, landingPiece, type Kind, type Session } from '../../game';
 export function PiecePreview({ kind }: { kind: Kind }) {
+  const shape = cells({ kind, x: 0, y: 0, rotation: 0 });
+  const left = Math.min(...shape.map(([x]) => x));
+  const top = Math.min(...shape.map(([, y]) => y));
+  const width = (Math.max(...shape.map(([x]) => x)) - left + 1) * 20;
+  const height = (Math.max(...shape.map(([, y]) => y)) - top + 1) * 20;
   return (
     <svg className="fb-preview" viewBox="0 0 100 80" role="img" aria-label={kind}>
-      {cells({ kind, x: 0, y: 0, rotation: 0 }).map(([x, y]) => (
+      {shape.map(([x, y]) => (
         <rect
           key={`${x},${y}`}
-          x={10 + x * 20}
-          y={10 + y * 20}
+          x={(100 - width) / 2 + (x - left) * 20 + 1}
+          y={(80 - height) / 2 + (y - top) * 20 + 1}
           width="18"
           height="18"
           rx="3"
@@ -19,6 +25,8 @@ export function PiecePreview({ kind }: { kind: Kind }) {
 }
 export function Board({ session }: { session: Session }) {
   const { t } = useSettings();
+  const wellId = useId();
+  const blockId = useId();
   const active = session.status === 'over' ? [] : cells(session.active);
   const ghost = session.status === 'over' ? [] : cells(landingPiece(session));
   return (
@@ -32,7 +40,23 @@ export function Board({ session }: { session: Session }) {
         row: Math.min(...cells(session.active).map(([, y]) => y)) + 1,
       })}
     >
-      <rect className="fb-board-bg" width={WIDTH * 20} height={HEIGHT * 20} rx="5" />
+      <defs>
+        <linearGradient id={wellId} x2="0" y2="1">
+          <stop stopColor="var(--surface)" />
+          <stop offset="1" stopColor="var(--paper)" />
+        </linearGradient>
+        <linearGradient id={blockId} x2="0" y2="1">
+          <stop stopColor="var(--accent)" />
+          <stop offset="1" stopColor="var(--accent)" stopOpacity=".78" />
+        </linearGradient>
+      </defs>
+      <rect
+        className="fb-board-bg"
+        width={WIDTH * 20}
+        height={HEIGHT * 20}
+        rx="5"
+        fill={`url(#${wellId})`}
+      />
       {Array.from({ length: WIDTH * HEIGHT }, (_, i) => (
         <rect
           className="fb-grid-cell"
@@ -74,15 +98,18 @@ export function Board({ session }: { session: Session }) {
         />
       ))}
       {active.map(([x, y]) => (
-        <rect
-          className="fb-active"
-          key={`${x},${y}`}
-          x={x * 20 + 1}
-          y={y * 20 + 1}
-          width="18"
-          height="18"
-          rx="3"
-        />
+        <g key={`${x},${y}`}>
+          <rect
+            className="fb-active"
+            x={x * 20 + 1}
+            y={y * 20 + 1}
+            width="18"
+            height="18"
+            rx="3"
+            fill={`url(#${blockId})`}
+          />
+          <path className="fb-block-edge" d={`M${x * 20 + 4} ${y * 20 + 4}h12`} />
+        </g>
       ))}
     </svg>
   );

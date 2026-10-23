@@ -22,11 +22,11 @@
 .iv-metrics {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
+  gap: 0;
   width: 100%;
   max-width: 360px;
   box-sizing: border-box;
-  padding: 0 18px;
+  padding: 0 16px;
   margin: 0 auto;
   font-variant-numeric: tabular-nums;
 }
@@ -34,13 +34,26 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+  padding: 5px 10px;
+  background: var(--surface);
+  border-block: 1px solid var(--line);
+}
+.iv-metrics > span:first-child {
+  border-left: 1px solid var(--line);
+  border-radius: 10px 0 0 10px;
+}
+.iv-metrics > span + span {
+  border-left: 1px solid var(--line);
 }
 .iv-metrics > span:last-child {
   text-align: right;
+  border-right: 1px solid var(--line);
+  border-radius: 0 10px 10px 0;
 }
 .iv-metrics small {
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--ink-soft);
 }
 .iv-metrics strong {
@@ -48,12 +61,33 @@
   font-weight: 700;
   line-height: 1.1;
 }
+.iv-metrics .iv-score {
+  background: linear-gradient(135deg, var(--surface), var(--accent-ring-soft));
+}
+.iv-score strong {
+  color: var(--accent);
+}
 .iv-state {
   min-height: 16px;
   font-size: 11px;
   text-align: center;
   color: var(--ink-soft);
-  margin: 9px 10px 8px;
+  margin: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.iv-state::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.iv-screen[data-state='running'] .iv-state::before {
+  background: var(--accent);
 }
 .iv-play-area {
   display: flex;
@@ -82,12 +116,29 @@
   outline-offset: 3px;
 }
 .iv-field-bg {
-  fill: var(--surface);
   stroke: var(--line);
-  stroke-width: 1;
+  stroke-width: 2;
+}
+.iv-field-inset {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 0.7;
+  opacity: 0.7;
+}
+.iv-field-scale {
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 0.8;
+  opacity: 0.22;
 }
 .iv-enemy {
   color: var(--accent);
+}
+.iv-enemy path:first-child,
+.iv-ship > path {
+  stroke: currentColor;
+  stroke-width: 0.5;
+  stroke-linejoin: round;
 }
 .iv-defense-line {
   fill: none;
@@ -148,7 +199,10 @@
   min-height: 46px;
   max-width: 74px;
   border: 1px solid var(--line);
-  background: var(--surface);
+  background: linear-gradient(var(--surface), var(--paper));
+  box-shadow:
+    0 2px 0 var(--line),
+    inset 0 1px 0 var(--surface);
   touch-action: none;
 }
 .iv-steer-left {
@@ -160,6 +214,13 @@
   min-height: 46px;
   padding-inline: 12px;
   font-size: 14px;
+  box-shadow:
+    0 2px 0 var(--accent-ring),
+    inset 0 1px 0 var(--accent-ring-soft);
+}
+.iv-controls .action-btn:active {
+  box-shadow: inset 0 1px 3px var(--line);
+  background: var(--accent-soft);
 }
 .iv-steer-right {
   order: 2;

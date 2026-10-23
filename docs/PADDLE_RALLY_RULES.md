@@ -12,6 +12,10 @@ Drag horizontally, hold the left/right buttons, or use arrow/A-D keys. Serve and
 pause have visible buttons and Space/P keyboard equivalents. All help takes the
 form of free immediate replay. No hint or undo replaces a real-time rally.
 The board uses simple original SVG shapes and the game's shared accent.
+The paper-toned court has a fine inner boundary, quiet service lines and subtle
+static depth. Paddle edges, a grouped scoreboard and tactile control surfaces
+use the same shared palette; the player's score carries the title accent.
+These details add no animation and do not change the court or hit geometry.
 
 One `pr.saveGame` slot stores a validated version-1 snapshot, including scores,
 ball and paddles. `pr.stats`, `pr.flags`, `pr.prefs` own statistics, tutorial status

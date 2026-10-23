@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
@@ -8,6 +8,7 @@ import { usePaddleRally } from '../../state/GameContext';
 import { ResultOverlay } from '../components/ResultOverlay';
 export function GameScreen() {
   const { t } = useSettings();
+  const courtId = useId();
   const {
     session,
     updatePaddle,
@@ -92,7 +93,10 @@ export function GameScreen() {
       event.currentTarget.releasePointerCapture(event.pointerId);
   };
   return (
-    <div className="screen game-screen paddle-rally-screen">
+    <div
+      className="screen game-screen paddle-rally-screen"
+      data-state={paused ? 'paused' : session.serving ? 'ready' : 'running'}
+    >
       <div className="game-content" inert={confirmNewGame || over}>
         <header className="game-topbar">
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
@@ -113,7 +117,7 @@ export function GameScreen() {
         </header>
         <div className="pr-play-area">
           <div className="pr-score" aria-live="polite">
-            <span>
+            <span className="pr-player-score">
               {t('paddleRallyYou')} <strong>{session.playerScore}</strong>
             </span>
             <span className="pr-target">{t('paddleRallyGoal')}</span>
@@ -136,10 +140,28 @@ export function GameScreen() {
             onPointerUp={releasePointer}
             onPointerCancel={releasePointer}
           >
-            <rect x="1" y="1" width="318" height="418" rx="13" className="pr-court" />
+            <defs>
+              <linearGradient id={courtId} x2="0" y2="1">
+                <stop stopColor="var(--surface)" />
+                <stop offset="1" stopColor="var(--paper)" />
+              </linearGradient>
+            </defs>
+            <rect
+              x="1"
+              y="1"
+              width="318"
+              height="418"
+              rx="13"
+              className="pr-court"
+              fill={`url(#${courtId})`}
+            />
+            <rect x="9" y="9" width="302" height="402" rx="6" className="pr-court-inset" />
+            <path d="M24 57h272M24 363h272" className="pr-service-line" />
             <path d="M12 210 H308" className="pr-net" />
             <circle cx="160" cy="210" r="38" className="pr-ring" />
+            <circle cx="160" cy="210" r="3" className="pr-center" />
             <rect x={session.cpu - 34} y="24" width="68" height="8" rx="4" className="pr-cpu" />
+            <path d={`M${session.cpu - 27} 26h54`} className="pr-paddle-edge" />
             <rect
               x={session.player - 34}
               y="388"
@@ -148,6 +170,7 @@ export function GameScreen() {
               rx="4"
               className="pr-player"
             />
+            <path d={`M${session.player - 27} 390h54`} className="pr-paddle-edge" />
             <circle cx={session.x} cy={session.y} r="6" className="pr-ball" />
           </svg>
           <p className="pr-status" role="status">
