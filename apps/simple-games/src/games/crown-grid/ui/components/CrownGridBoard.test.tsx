@@ -7,6 +7,8 @@
  * only way to say a drag tapped *nothing*: on a real board a × that arrived
  * after a tap on the same cell would read as a crown.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';

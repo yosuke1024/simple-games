@@ -25,6 +25,8 @@
  * app observes it: through the session that a save or a navigation leaves
  * behind. Time spent in the background is not play time.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../i18n';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {

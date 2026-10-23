@@ -10,6 +10,8 @@
  * rather than scrolling it. Either half going wrong is how a line of 28
  * tiles becomes a strip that runs off a 360px screen.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../i18n';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { cleanup, render } from '@testing-library/react';

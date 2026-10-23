@@ -3,6 +3,8 @@
  * (docs/FREECELL_RULES.md §9, §12): moves and time, each record mentioned
  * once, and how far this run was from it.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';

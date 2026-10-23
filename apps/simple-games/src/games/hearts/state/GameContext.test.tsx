@@ -26,6 +26,8 @@
  * it, and the scores are then set to whatever the case is about — the score is
  * the one part of a match that carries no history with it.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../i18n';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {

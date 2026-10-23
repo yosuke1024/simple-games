@@ -200,11 +200,12 @@ const registryFile = join(SRC, 'app', 'registry.ts');
 
 /**
  * The one glob shape issue #38's i18n tests use to aggregate every game's
- * catalog (`src/i18n/gate.test.ts`, `src/i18n/i18n.test.ts`,
- * `src/test/setup.ts`). Matched on the *resolved* path, so it is exempt no
- * matter which of those files' relative depths wrote it — and only this exact
- * pattern: a wildcard placed before `games` resolves to a different string
- * and is judged by `globMayReachGames` like any other glob.
+ * catalog (`src/i18n/gate.test.ts`, `src/i18n/i18n.test.ts`; `src/test/setup.ts`
+ * used it too until 2026-10-23, and stays exempt). Matched on the *resolved*
+ * path, so it is exempt no matter which of those files' relative depths wrote
+ * it — and only this exact pattern: a wildcard placed before `games` resolves
+ * to a different string and is judged by `globMayReachGames` like any other
+ * glob.
  */
 const GAME_I18N_GLOB = join(SRC, 'games', '*', 'i18n', 'index.ts');
 /**

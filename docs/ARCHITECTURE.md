@@ -375,6 +375,12 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
   `[game] src/...` と project 名を前置する(名前は必須)。`extends: true` は `setupFiles` を連結するので、
   `environment` / `setupFiles` はルートに置かず各 project に書く。`game/` のテストが DOM を必要としたら、
   それは `ui/` のテストである(除外の一覧は作らない)。
+  同じ日に `src/test/setup.ts` から全ゲームのカタログの eager glob も外した。テストが持つのはアプリが持つ
+  ものと同じで、chunk の入口(`*Root.tsx`・設定セクション)が `import '../i18n'` で自分のカタログを登録し
+  (門は `src/test/gameI18nWiring.test.ts`)、Root を通さず画面や部品を直接 render するテストは同じ 1 行で
+  自分のゲームのカタログを自分で登録する(`scripts/codemods/2026-10-23-ui-tests-register-own-catalog.mjs`、
+  56 本)。カタログが無ければ生のキーが描かれ、そのテスト自身の assertion が落ちる。シェルのテストは
+  ゲームのカタログを前提にしない。
 - **テストの門は壁時計で判定しない**(issue #158)。`pnpm test` は 337 ファイルを
   CPU 数ぶん並列に走らせるので、同じ仕事でも壁時計は run ごとに数倍〜数十倍ぶれる
   ([SUDOKU_RULES.md](SUDOKU_RULES.md) §7 の実測)。稀に落ちる門は信頼されない門であり、

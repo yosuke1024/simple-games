@@ -3,6 +3,8 @@
  * (docs/KAKURO_RULES.md §10) — no score, no streak, and a personal best
  * mentioned once, quietly, with how far it moved.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
