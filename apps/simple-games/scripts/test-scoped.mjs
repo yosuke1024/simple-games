@@ -16,7 +16,8 @@
  * 「関係するテスト」は 4 つの和集合:
  *
  *   1. import グラフで差分から届くテスト —— vitest --changed と同じ判定で、
- *      `vitest list --changed <base> --filesOnly` が列挙する。共有層(src/ui、
+ *      `vitest list --changed <base> --filesOnly` が列挙する(両 project を横断する。
+ *      行頭の project 名 `[game] ` / `[dom] ` は剥がす)。共有層(src/ui、
  *      src/storage など)を触ればそこから届くゲームが全部入る。app/registry.ts の
  *      動的 import も辿るので、ゲームを 1 本触るとレジストリを import する共有部品
  *      経由で各ゲームの Root テストと App のテストまで入る(2026-10-22 時点で
@@ -138,7 +139,10 @@ function graphRelatedTestFiles(base) {
   }
   const files = out
     .split('\n')
-    .map((line) => line.trim())
+    // vitest は project ごとに名前を前置する(`[game] src/...` / `[dom] src/...`。
+    // vite.config.ts の test.projects。名前は vitest が必須にしている)。フィルタに
+    // 渡すのはパスなので、ここで剥がす。
+    .map((line) => line.trim().replace(/^\[[^\]]+\] /, ''))
     .filter((line) => line.length > 0);
   // 列挙にファイル以外の行が混ざったら、黙って無視せず止める(フィルタとして
   // vitest に渡すので、変な行は「何も選ばれない」ではなく「別の何かが選ばれる」になる)。
