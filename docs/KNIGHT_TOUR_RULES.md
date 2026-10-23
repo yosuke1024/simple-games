@@ -56,3 +56,20 @@ adding an explicit coverage assertion: 512 seeds per board size exercise all
 6 bundled routes × 8 symmetries × 2 directions (96 combinations for each size),
 and all 1,536 resulting tours complete through the same move engine as the UI.
 These Node/jsdom checks are not a physical-device performance measurement.
+
+## Visual refinement (2026-10-23)
+
+The current knight, home mark and tutorial now use Chess's exact hand-drawn 40×40
+SVG artwork through the shared, rule-free `ui/components/KnightArtwork.tsx`.
+Chess retains its existing SVG wrapper, piece colours, classes and geometry. No
+cross-game import is introduced. On Knight’s Tour the SVG box occupies 96% of a
+cell, putting the drawn knight at about three quarters of its height. Contiguous
+squares, a thin inset board frame, solid move dots and quiet visit numbers replace
+the rounded button grid and Unicode knight. The board sizes against viewport height
+as well as width, with a scroll fallback on short screens.
+
+Measured WCAG relative-luminance contrast for the small visit numbers against the
+two board squares is 7.81:1 / 5.71:1 in light mode and 4.62:1 / 7.24:1 in dark mode.
+Dark-mode board ink is `#f8f7ee`; this changes only board marks and visit numbers,
+not Chess's shared artwork or its ivory/ink piece colours. The minimum 4.5:1 text
+contrast is checked from the actual stylesheet in `ui/contrast.test.ts`.

@@ -11,10 +11,12 @@ export const de: LightGridMessages = {
     'Tippe auf ein Feld, um es und seine Nachbarn oben, unten, links und rechts umzuschalten.',
   lightGridRule2: 'Schalte alle Lichter aus; es gibt kein Zeitlimit.',
   lightGridRule3:
-    'Nimm beliebige Züge zurück oder markiere mit einem Hinweis ein Feld einer möglichen Lösung.',
+    'Nimm beliebige Züge zurück oder tippe auf Hinweis, um den nächsten Zug zu sehen.',
   lightGridCell: 'Zeile {row}, Spalte {col}: {state}',
   lightGridOn: 'an',
   lightGridOff: 'aus',
-  lightGridHintNote: 'Das umrandete Feld gehört zu einer Lösung.',
+  lightGridHintNote: 'Tippe auf Zeile {row}, Spalte {col}.',
+  lightGridHintEffect: 'Die umrandeten Nachbarfelder wechseln ebenfalls.',
+  lightGridHintAffected: 'wechselt ebenfalls beim vorgeschlagenen Zug',
   lightGridStatus: 'Lichter an: {count}',
 };

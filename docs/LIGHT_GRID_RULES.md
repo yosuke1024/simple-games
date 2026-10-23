@@ -20,8 +20,8 @@ retry starts the same seed, new board uses a fresh seed. New board / retry durin
 play require the shared RestartDialog; replacing a suspended board also asks.
 First launch shows Quick Rules in three steps then starts immediately. Later
 launches show Home; a shortcut resumes a valid suspended game directly.
-Touch and mouse use buttons. Light Grid additionally has arrow-key roving focus;
-Color Flood has six keyboard-accessible palette buttons and 1–6 shortcuts.
+Touch and mouse use buttons. Arrow keys move the roving keyboard focus;
+Enter or Space activates the focused cell.
 Ctrl/Cmd+Z undoes. Repeated activation keys do not make repeated moves. Modals
 make the board inert and detach game keys. Result sharing reports only the
 completed board size and moves shown on the card. Shared BannerSlot and
@@ -75,9 +75,44 @@ rerun). Scoped ESLint passed. Whole-app TypeScript and structural checks belong 
 integration run. Real devices, enlarged OS text and physical screen-reader
 interaction have not been checked in this implementation session.
 
-Light faces use yellow (#f9da67) with a dark star, dark faces use navy (#233348)
-with a pale dot. These distinguish board states independently of the rose game
-accent. The hint uses a dashed outline and appends the localized Hint label to
-the marked cell’s accessible name; colour alone never identifies a hint.
+## Visual design and actionable hints (2026-10-23 revision)
 
-Calculated sRGB contrast: lit symbol against its tile 10.30:1; dark symbol 6.41:1.
+The board is a flat dark tabletop with a fine frame, 6 px cell corners, warm ivory
+lit faces (#f0dfa6) and charcoal unlit faces (#2c3c43). Small sun/ring marks show
+state without relying on colour. There are no gradients, bevels, looping effects
+or new dependencies. Tutorial diagrams reuse the board's lamp glyphs.
+
+A hint gives one explicit next action: “Tap row {row}, column {col}.” The board
+shows matching row and column coordinates. The destination has a numbered “1”
+marker and a solid white frame; its orthogonal neighbours have inner dashed
+outlines. The instruction's matching “1” badge ties it to the destination, and
+its second line explains that the outlined neighbours also switch. Only the
+numbered cell is the suggested tap: neighbouring outlines show the effect, not
+additional moves. The solver still returns a valid solution, never claims a
+minimum, never plays automatically and runs only on the Hint tap.
+
+Keyboard focus stays with the player. The destination's accessible name contains
+Hint and aria-describedby links it to the complete live instruction, including
+row and column. Affected neighbours have a localized affected-state description.
+A move or Undo clears both the suggestion and its preview. All fourteen catalogues
+contain the revised instructions; Japanese and the other translations remain AI
+drafts without a claim of human linguistic review.
+
+The board frame is at most 320 px wide. Short viewports (up to 680 px high)
+reduce it to at most 280 px with tighter spacing, leaving 5×5 cells approximately
+44 px wide on a 320 px phone. The instruction reserves space so the board does
+not jump when Hint is pressed. The player's chosen 3×3, 4×4 or 5×5 size never
+changes to fit the screen. Game content scrolls within the viewport; the web ad
+reservation stays outside that scroll area so actions remain reachable above
+the fixed ad, including at 320×568 or with enlarged text. The standard header,
+action bar and ad slot remain in place. Layout is awaiting the parent browser
+pass for this revision.
+
+Calculated sRGB contrasts: lamp marks on lit faces 6.52:1, on dark faces 5.47:1,
+numbered markers 8.04:1, and coordinate labels on the board 9.02:1.
+
+Revision verification: all 16 Light Grid tests (4 files) passed after the redesign,
+including the explicit next-tap instruction, exact affected-neighbour preview,
+focus preservation, repeated Hint without moves, and preview removal after the
+actual tap. Scoped ESLint and Prettier passed. No extra timers or animations were
+introduced; reduced-motion behavior is unchanged.

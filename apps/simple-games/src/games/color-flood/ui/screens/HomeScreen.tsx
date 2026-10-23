@@ -31,7 +31,15 @@ export function HomeScreen() {
         <GameHomeHeader gameId="color-flood" onBack={exitToCollection} />
         <div className="home-hero">
           <div className="home-logo" aria-hidden="true">
-            ▧
+            <svg className="cf-home-mark" viewBox="0 0 60 60" focusable="false">
+              <path d="M5 5h31v15H20v16H5Z" fill="currentColor" />
+              <path
+                d="M40 5h15v15H40ZM24 24h31v31H24ZM5 40h15v15H5Z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              />
+            </svg>
           </div>
           <h1 className="home-title">{t('colorFloodName')}</h1>
           <p className="home-tagline">{t('tagline')}</p>

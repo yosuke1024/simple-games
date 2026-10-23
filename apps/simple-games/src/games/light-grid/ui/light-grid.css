@@ -1,3 +1,16 @@
+.lg-screen .game-content {
+  overflow-y: auto;
+}
+/* Bound the game to the viewport so the web anchor reservation remains below
+   its scrollable content, including on short phones and with larger text. */
+:root[data-sg-web-ads] .lg-screen {
+  height: 100%;
+}
+.lg-screen .game-topbar,
+.lg-screen .lg-body,
+.lg-screen .lg-actions {
+  flex-shrink: 0;
+}
 .lg-choose {
   text-align: center;
   color: var(--ink-soft);
@@ -10,94 +23,236 @@
 }
 .lg-body {
   width: 100%;
-  max-width: 440px;
+  max-width: 360px;
   margin: auto;
-  padding: 8px 16px;
+  padding: 10px 12px 0;
   box-sizing: border-box;
 }
 .lg-metrics {
   display: flex;
   flex-wrap: wrap;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 14px;
-  font-size: 0.85rem;
+  gap: 6px;
+  max-width: 320px;
+  margin: 0 auto 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
   color: var(--ink-soft);
 }
 .lg-metrics strong {
   color: var(--ink);
-  margin-inline-start: 5px;
+  margin-inline-start: 7px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.lg-screen .game-mode {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 .lg-actions {
   justify-content: center;
-  gap: 40px;
+  gap: 34px;
+  padding-top: 0;
 }
-.lg-figure {
+.lg-board-frame {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 7px;
-  width: 180px;
-  margin: 8px auto;
-}
-.lg-figure > span {
-  aspect-ratio: 1;
+  grid-template-columns: 14px minmax(0, 1fr);
+  grid-template-rows: 14px auto;
+  gap: 5px;
+  width: 100%;
+  max-width: 320px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 10px;
+  background: #1c282e;
+  border: 1px solid #647279;
   border-radius: 10px;
+}
+.lg-column-labels,
+.lg-row-labels {
   display: grid;
-  place-items: center;
-  font-size: 25px;
+  gap: 6px;
+  color: #c0cacc;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.lg-column-labels {
+  grid-column: 2;
+  grid-row: 1;
+}
+.lg-row-labels {
+  grid-column: 1;
+  grid-row: 2;
+}
+.lg-row-labels span {
+  align-self: center;
 }
 .lg-board {
   display: grid;
-  gap: 8px;
-  max-width: 360px;
-  margin: 0 auto;
+  grid-column: 2;
+  grid-row: 2;
+  gap: 6px;
+  min-width: 0;
 }
 .lg-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
   min-width: 0;
+  padding: 0;
   aspect-ratio: 1;
-  border: 2px solid transparent;
-  border-radius: 14px;
+  border: 1px solid transparent;
+  border-radius: 6px;
   font: inherit;
-  font-size: clamp(24px, 7vw, 40px);
   cursor: pointer;
   touch-action: manipulation;
 }
 .lg-lit {
-  color: #342a07;
-  background: #f9da67;
-  box-shadow: inset 0 -4px 0 #d3ad34;
+  color: #544b30;
+  background: #f0dfa6;
+  border-color: #f8edcd;
 }
 .lg-dark {
-  color: #a8b9cf;
-  background: #233348;
-  box-shadow: inset 0 -4px 0 #172536;
+  color: #a6b6bc;
+  background: #2c3c43;
+  border-color: #53656d;
+}
+.lg-light-symbol {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.lg-dark .lg-light-symbol {
+  width: 20px;
+  height: 20px;
+}
+.lg-affected::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed currentColor;
+  border-radius: 3px;
+  pointer-events: none;
 }
 .lg-hinted {
-  outline: 3px dashed var(--ink);
-  outline-offset: 3px;
+  outline: 2px solid #ffffff;
+  outline-offset: 1px;
+  z-index: 1;
+}
+.lg-hint-marker,
+.lg-hint-step {
+  display: grid;
+  place-items: center;
+  background: #86344d;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1;
+  border-radius: 50%;
+}
+.lg-hint-marker {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 21px;
+  height: 21px;
+  border: 2px solid #ffffff;
 }
 .lg-cell:focus-visible {
-  border-color: #fff;
-  outline: 3px solid var(--accent);
-  outline-offset: 3px;
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+.lg-hinted:focus-visible {
+  outline-style: double;
+  outline-width: 4px;
 }
 .lg-hint-note {
-  min-height: 2.8em;
-  margin: 14px 0 0;
-  text-align: center;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 82px;
+  box-sizing: border-box;
+  max-width: 320px;
+  margin: 0 auto;
+  padding: 16px 1px 8px;
+  color: var(--ink);
+  font-size: 0.79rem;
+  line-height: 1.5;
+}
+.lg-hint-step {
+  width: 21px;
+  height: 21px;
+  flex: 0 0 21px;
+  margin-top: 1px;
+}
+.lg-hint-note strong {
+  font-weight: 700;
+}
+.lg-hint-effect {
+  display: block;
   color: var(--ink-soft);
-  font-size: 0.85rem;
-  line-height: 1.4;
+  margin-top: 2px;
 }
-@media (max-width: 340px) {
-  .lg-board {
-    gap: 6px;
-  }
-  .lg-cell {
-    border-radius: 10px;
-  }
+.lg-figure {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  width: 168px;
+  margin: 8px auto;
+  padding: 8px;
+  background: #1c282e;
+  border: 1px solid #647279;
+  border-radius: 8px;
 }
-
+.lg-figure > span {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+}
 .lg-home-content {
   display: contents;
+}
+@media (max-width: 340px) {
+  .lg-board-frame {
+    padding: 8px;
+  }
+  .lg-body {
+    padding-inline: 10px;
+  }
+  .lg-metrics {
+    margin-bottom: 11px;
+  }
+  .lg-hint-note {
+    min-height: 88px;
+    padding-top: 13px;
+  }
+}
+@media (max-height: 680px) {
+  .lg-body {
+    padding-top: 4px;
+  }
+  .lg-metrics {
+    max-width: 280px;
+    margin-bottom: 8px;
+  }
+  .lg-board-frame {
+    max-width: 280px;
+  }
+  .lg-hint-note {
+    max-width: 280px;
+    min-height: 66px;
+    padding-top: 10px;
+  }
 }

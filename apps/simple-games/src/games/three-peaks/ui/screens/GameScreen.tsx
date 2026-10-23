@@ -6,7 +6,7 @@ import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
 import { canTake, isExposed, POSITIONS, rankText, remaining, suit } from '../../game';
 import { useThreePeaks } from '../../state/GameContext';
 import { ThreePeaksResultOverlay } from '../components/ResultOverlay';
-const SYMBOLS = ['♠', '♥', '♦', '♣'];
+import { CardBack, CardFace } from '../components/CardArtwork';
 const SUIT_KEYS = [
   'threePeaksSpades',
   'threePeaksHearts',
@@ -43,12 +43,6 @@ export function ThreePeaksGameScreen() {
   }, !confirmNew && !finished);
   if (!session) return null;
   const suitLabel = (card: number) => t(SUIT_KEYS[suit(card)]!);
-  const face = (card: number) => (
-    <>
-      <span>{rankText(card)}</span>
-      <span aria-hidden="true">{SYMBOLS[suit(card)]}</span>
-    </>
-  );
   return (
     <div
       className="screen game-screen tp-game"
@@ -71,83 +65,104 @@ export function ThreePeaksGameScreen() {
             <IconRetry />
           </button>
         </header>
-        <div className="tp-status" aria-live="polite">
-          {t('threePeaksCardsLeft')}: {remaining(session)}
-        </div>
-        <div className="tp-tableau" role="group" aria-label={t('threePeaksBoard')}>
-          {POSITIONS.map((position, index) => {
-            if (session.removed[index]) return null;
-            const exposed = isExposed(session, index);
-            const playable = canTake(session, index);
-            const card = session.deck[index]!;
-            return (
-              <button
-                key={index}
-                ref={(element) => {
-                  buttons.current[index] = element;
-                }}
-                type="button"
-                className={`tp-card ${exposed ? 'tp-face' : 'tp-covered'} ${playable ? 'tp-playable' : ''} ${suit(card) === 1 || suit(card) === 2 ? 'tp-red' : ''}`}
-                style={{ left: `${position.x * 10}%`, top: `${position.y * 24}%` }}
-                disabled={!exposed}
-                aria-disabled={!playable}
-                aria-label={
-                  exposed
-                    ? t('threePeaksCardLabel', {
-                        position: index + 1,
-                        rank: rankText(card),
-                        suit: suitLabel(card),
-                        state: t(playable ? 'threePeaksCanMove' : 'threePeaksCannotMove'),
-                      })
-                    : t('threePeaksCovered', { position: index + 1 })
-                }
-                onClick={() => {
-                  if (playable) act({ kind: 'take', index });
-                }}
-              >
-                {exposed ? face(card) : <span aria-hidden="true">⋀</span>}
-              </button>
-            );
-          })}
-        </div>
-        <div className="tp-piles">
-          <div className="tp-pile">
-            <span>{t('threePeaksStock')}</span>
-            <button
-              type="button"
-              className="tp-stock"
-              disabled={session.stockIndex === 52}
-              aria-label={t('threePeaksDrawCount', { count: 52 - session.stockIndex })}
-              onClick={() => act({ kind: 'draw' })}
-            >
-              <span aria-hidden="true">▧</span>
-              <span>{52 - session.stockIndex}</span>
-            </button>
-            <span>{t('threePeaksDraw')}</span>
-          </div>
-          <div className="tp-pile">
-            <span>{t('threePeaksWaste')}</span>
-            <div
-              className={`tp-waste ${suit(session.waste) === 1 || suit(session.waste) === 2 ? 'tp-red' : ''}`}
-              role="img"
-              aria-label={`${rankText(session.waste)} ${suitLabel(session.waste)}`}
-            >
-              {face(session.waste)}
+        <div className="tp-body">
+          <div className="tp-playfield">
+            <div className="tp-status" aria-live="polite">
+              <span>{t('threePeaksCardsLeft')}</span>
+              <strong>
+                {remaining(session)}
+                <span aria-hidden="true"> / 28</span>
+              </strong>
+            </div>
+            <div className="tp-tableau" role="group" aria-label={t('threePeaksBoard')}>
+              {POSITIONS.map((position, index) => {
+                if (session.removed[index]) return null;
+                const exposed = isExposed(session, index);
+                const playable = canTake(session, index);
+                const card = session.deck[index]!;
+                return (
+                  <button
+                    key={index}
+                    ref={(element) => {
+                      buttons.current[index] = element;
+                    }}
+                    type="button"
+                    className={`tp-card ${exposed ? 'tp-face' : 'tp-covered'} ${playable ? 'tp-playable' : ''} ${exposed && (suit(card) === 1 || suit(card) === 2) ? 'tp-red' : ''}`}
+                    style={{ left: `${position.x * 10}%`, top: `${position.y * 24}%` }}
+                    disabled={!exposed}
+                    aria-disabled={!playable}
+                    aria-label={
+                      exposed
+                        ? t('threePeaksCardLabel', {
+                            position: index + 1,
+                            rank: rankText(card),
+                            suit: suitLabel(card),
+                            state: t(playable ? 'threePeaksCanMove' : 'threePeaksCannotMove'),
+                          })
+                        : t('threePeaksCovered', { position: index + 1 })
+                    }
+                    onClick={() => {
+                      if (playable) act({ kind: 'take', index });
+                    }}
+                  >
+                    {exposed ? <CardFace card={card} /> : <CardBack />}
+                  </button>
+                );
+              })}
             </div>
           </div>
+          <div className="tp-piles">
+            <div className="tp-pile">
+              <span className="tp-pile-label">
+                {t('threePeaksStock')}{' '}
+                <span className="tp-stock-count">{52 - session.stockIndex}</span>
+              </span>
+              <button
+                type="button"
+                className="tp-stock"
+                disabled={session.stockIndex === 52}
+                aria-label={t('threePeaksDrawCount', { count: 52 - session.stockIndex })}
+                onClick={() => act({ kind: 'draw' })}
+              >
+                {session.stockIndex < 52 ? (
+                  <CardBack />
+                ) : (
+                  <span aria-hidden="true" className="tp-empty-stock">
+                    —
+                  </span>
+                )}
+              </button>
+              <span className="tp-pile-caption">
+                {t('threePeaksDraw')} <span aria-hidden="true">↗</span>
+              </span>
+            </div>
+            <div className="tp-pile">
+              <span className="tp-pile-label">{t('threePeaksWaste')}</span>
+              <div
+                className={`tp-waste ${suit(session.waste) === 1 || suit(session.waste) === 2 ? 'tp-red' : ''}`}
+                role="img"
+                aria-label={`${rankText(session.waste)} ${suitLabel(session.waste)}`}
+              >
+                <CardFace card={session.waste} />
+              </div>
+            </div>
+            <div className="tp-controls">
+              <button
+                type="button"
+                className="tp-undo"
+                disabled={!session.actions.length}
+                onClick={applyUndo}
+              >
+                <span className="tp-undo-icon">
+                  <IconUndo />
+                </span>
+                <span>{t('undo')}</span>
+              </button>
+            </div>
+          </div>
+          <p className="tp-help">{t('threePeaksUndoHint')}</p>
+          <p className="tp-keyboard">{t('threePeaksKeyboard')}</p>
         </div>
-        <div className="tp-controls">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            disabled={!session.actions.length}
-            onClick={applyUndo}
-          >
-            <IconUndo /> {t('undo')}
-          </button>
-        </div>
-        <p className="tp-help">{t('threePeaksUndoHint')}</p>
-        <p className="tp-keyboard">{t('threePeaksKeyboard')}</p>
       </div>
       <RestartDialog
         open={confirmNew}

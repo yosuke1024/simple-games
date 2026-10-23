@@ -52,6 +52,10 @@ describe('Knight’s Tour UI', () => {
     expect(document.querySelectorAll('.kt-cell[tabindex="0"]')).toHaveLength(1);
     const first = session.path[0]!,
       next = routeFor(5, 7)[1]!;
+    // The current square uses the shared Chess artwork, never a device-font glyph.
+    expect(cell(first).querySelector('svg')).toHaveAttribute('viewBox', '0 0 40 40');
+    expect(cell(first).querySelectorAll('path')).toHaveLength(3);
+    expect(cell(first).textContent).not.toContain('♘');
     const initialPath = (await loadSavedGame(view.kv))!.path;
     fireEvent.click(cell(first));
     await settle();

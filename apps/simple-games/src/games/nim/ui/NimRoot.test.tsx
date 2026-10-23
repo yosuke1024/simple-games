@@ -71,6 +71,10 @@ describe('Nim UI', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Row 1:/ }));
     fireEvent.click(screen.getByRole('button', { name: '2' }));
     await settle();
+    expect(document.querySelectorAll('.nim-count')).toHaveLength(8);
+    expect(document.querySelector('.nim-preview')).toHaveTextContent(
+      `${original!.heaps[0]} − 2 = ${original!.heaps[0]! - 2}`,
+    );
     expect((await loadSavedGame(view.kv))?.moves).toHaveLength(0);
     fireEvent.click(screen.getByRole('button', { name: 'Take 2' }));
     await settle();

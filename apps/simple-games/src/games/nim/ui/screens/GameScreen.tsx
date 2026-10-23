@@ -54,10 +54,7 @@ export function GameScreen() {
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
             <IconBack />
           </button>
-          <div className="game-title">
-            {t('nimName')}
-            <span className="nim-mode">{t(`nimMode_${session.mode}`)}</span>
-          </div>
+          <div className="game-title">{t('nimName')}</div>
           <button
             type="button"
             className="icon-btn"
@@ -70,90 +67,102 @@ export function GameScreen() {
             <IconRetry />
           </button>
         </header>
-        <p className="nim-turn" role="status">
-          {paused ? t('nimPaused') : cpu ? t('nimCpuTurn') : t('nimYourTurn')}
-        </p>
-        <div className="nim-heaps" aria-label={t('nimName')}>
-          {session.heaps.map((stones, index) => (
-            <button
-              type="button"
-              key={index}
-              className={`nim-heap ${row === index ? 'nim-selected' : ''}`}
-              disabled={blocked || !stones}
-              aria-pressed={row === index}
-              aria-label={t('nimRow', { row: index + 1, count: stones })}
-              onClick={() => {
-                setRow(index);
-                setCount(1);
-              }}
-            >
-              <span className="nim-row-number" aria-hidden="true">
-                {index + 1}
-              </span>
-              <span className="nim-stones" aria-hidden="true">
-                {stones ? (
-                  Array.from({ length: stones }, (_, i) => (
-                    <span
-                      key={i}
-                      className={`nim-stone ${row === index && i >= stones - count ? 'nim-remove' : ''}`}
-                    />
-                  ))
-                ) : (
-                  <span className="nim-empty">—</span>
-                )}
-              </span>
-              <span className="nim-total" aria-hidden="true">
-                {stones}
-              </span>
-            </button>
-          ))}
-        </div>
-        <p className="nim-last" aria-live="polite">
-          {last ? t('nimLastMove', { row: last.row + 1, count: last.count }) : t('nimGoal')}
-        </p>
-        {paused ? (
-          <button type="button" className="btn btn-primary" onClick={resumeGame}>
-            {t('resume')}
-          </button>
-        ) : (
-          <div className="nim-controls">
-            <p className="nim-instruction">
-              {row === null ? t('nimChooseRow') : t('nimChooseCount')}
+        <div className="nim-play-area">
+          <div className="nim-meta">
+            <span className="nim-mode">{t(`nimMode_${session.mode}`)}</span>
+            <p className="nim-turn" role="status">
+              {paused ? t('nimPaused') : cpu ? t('nimCpuTurn') : t('nimYourTurn')}
             </p>
+          </div>
+          <div className="nim-heaps" aria-label={t('nimName')}>
+            {session.heaps.map((stones, index) => (
+              <button
+                type="button"
+                key={index}
+                className={`nim-heap ${row === index ? 'nim-selected' : ''}`}
+                disabled={blocked || !stones}
+                aria-pressed={row === index}
+                aria-label={t('nimRow', { row: index + 1, count: stones })}
+                onClick={() => {
+                  setRow(index);
+                  setCount(1);
+                }}
+              >
+                <span className="nim-row-number" aria-hidden="true">
+                  {index + 1}
+                </span>
+                <span className="nim-stones" aria-hidden="true">
+                  {stones ? (
+                    Array.from({ length: stones }, (_, i) => (
+                      <span
+                        key={i}
+                        className={`nim-stone ${row === index && i >= stones - count ? 'nim-remove' : ''}`}
+                      />
+                    ))
+                  ) : (
+                    <span className="nim-empty">—</span>
+                  )}
+                </span>
+                <span className="nim-total" aria-hidden="true">
+                  {stones}
+                </span>
+              </button>
+            ))}
+          </div>
+          <p className="nim-last" aria-live="polite">
+            {last ? t('nimLastMove', { row: last.row + 1, count: last.count }) : t('nimGoal')}
+          </p>
+          <div className="nim-controls">
+            <div className="nim-control-heading">
+              <p className="nim-instruction">
+                {row === null ? t('nimChooseRow') : t('nimChooseCount')}
+              </p>
+              <output className="nim-preview" aria-live="polite">
+                {row === null
+                  ? '—'
+                  : `${session.heaps[row]} − ${count} = ${session.heaps[row]! - count}`}
+              </output>
+            </div>
             <div className="nim-counts" role="group" aria-label={t('nimChooseCount')}>
-              {Array.from({ length: row === null ? 0 : session.heaps[row]! }, (_, i) => (
+              {Array.from({ length: 8 }, (_, i) => (
                 <button
                   type="button"
                   key={i}
-                  disabled={blocked}
-                  className={`nim-count ${count === i + 1 ? 'nim-count-selected' : ''}`}
-                  aria-pressed={count === i + 1}
+                  disabled={blocked || row === null || i >= session.heaps[row]!}
+                  className={`nim-count ${row !== null && count === i + 1 ? 'nim-count-selected' : ''}`}
+                  aria-pressed={row !== null && count === i + 1}
                   onClick={() => setCount(i + 1)}
                 >
                   {i + 1}
                 </button>
               ))}
             </div>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={blocked || row === null}
-              onClick={take}
-            >
-              {t('nimTake', { count })}
-            </button>
+            <div className="nim-actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={!session.moves.length}
+                onClick={onUndo}
+              >
+                <IconUndo />
+                {t('undo')}
+              </button>
+              {paused ? (
+                <button type="button" className="btn btn-primary" onClick={resumeGame}>
+                  {t('resume')}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={blocked || row === null}
+                  onClick={take}
+                >
+                  {t('nimTake', { count })}
+                </button>
+              )}
+            </div>
           </div>
-        )}
-        <div className="nim-actions">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            disabled={!session.moves.length}
-            onClick={onUndo}
-          >
-            <IconUndo />
-            {t('undo')}
-          </button>
         </div>
         <BannerSlot />
       </div>

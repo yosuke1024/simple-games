@@ -13,11 +13,8 @@
  * Decorative: the square's button carries the name a screen reader hears.
  */
 import { memo } from 'react';
+import { CHESS_PIECE_BASE_PATH, KnightArtwork } from '@/ui/components/KnightArtwork';
 import { BISHOP, KING, KNIGHT, PAWN, QUEEN, ROOK } from '../../game';
-
-/** The pedestal every piece stands on. */
-const BASE =
-  'M11 35 H29 a1.5 1.5 0 0 0 1.5 -1.5 V32.5 a1.5 1.5 0 0 0 -1.5 -1.5 H11 a1.5 1.5 0 0 0 -1.5 1.5 V33.5 a1.5 1.5 0 0 0 1.5 1.5 Z';
 
 function Shape({ kind }: { kind: number }) {
   switch (kind) {
@@ -27,14 +24,6 @@ function Shape({ kind }: { kind: number }) {
           <path d="M14.5 31 C15 24 16.5 21 18 19.5 H22 C23.5 21 25 24 25.5 31 Z" />
           <path d="M15.5 17.5 H24.5 a1.5 1.5 0 0 1 0 3 H15.5 a1.5 1.5 0 0 1 0 -3 Z" />
           <circle cx="20" cy="12.5" r="5" />
-        </>
-      );
-    case KNIGHT:
-      return (
-        <>
-          <path d="M13 31 C13 25.5 16.5 22.5 18.5 19.5 C15.5 21 12 21.5 10 19.5 C8.8 18 9.5 16.2 12.5 13.8 C15 11.8 16.5 9 18.5 7.2 L19.5 4 L22 6.8 C28.5 8.6 30.5 16 29.5 31 Z" />
-          <path className="ch-detail" d="M23 10.5 C25.8 15 26 22 25 28" />
-          <circle className="ch-eye" cx="17" cy="11.8" r="1.2" />
         </>
       );
     case BISHOP:
@@ -94,8 +83,14 @@ export const ChessPiece = memo(function ChessPiece({ kind, white, className }: C
       focusable="false"
       data-kind={kind}
     >
-      <Shape kind={kind} />
-      <path d={BASE} />
+      {kind === KNIGHT ? (
+        <KnightArtwork detailClassName="ch-detail" eyeClassName="ch-eye" />
+      ) : (
+        <>
+          <Shape kind={kind} />
+          <path d={CHESS_PIECE_BASE_PATH} />
+        </>
+      )}
     </svg>
   );
 });

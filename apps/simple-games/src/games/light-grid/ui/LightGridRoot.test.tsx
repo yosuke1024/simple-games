@@ -4,7 +4,7 @@ import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV, type KVStore } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
 import { loadRecord, saveRecord } from '@/storage/repo';
-import { createSession, move, solution } from '../game';
+import { createSession, move, solution, neighbours } from '../game';
 import { saveGame, loadSavedGame } from '../storage/gamePersistence';
 import { flagsSchema, statsSchema } from '../storage/schemas';
 import { LightGridRoot } from './LightGridRoot';
@@ -152,7 +152,7 @@ it('books visible seconds on unmount exactly once and releases its interval', as
   Reflect.deleteProperty(document, 'visibilityState');
 });
 
-it('makes the exact hint accessible and supports arrow focus without playing', async () => {
+it('explains the exact next tap, previews only its neighbours and never plays a hint automatically', async () => {
   const kv = createMemoryKV();
   await taught(kv);
   const session = createSession(3, 33);
@@ -163,10 +163,44 @@ it('makes the exact hint accessible and supports arrow focus without playing', a
   first.focus();
   fireEvent.keyDown(first, { key: 'ArrowRight' });
   expect(screen.getByRole('button', { name: /Row 1, column 2:/ })).toHaveFocus();
-  fireEvent.click(screen.getByRole('button', { name: 'Hint' }));
+  const hintButton = screen.getByRole('button', { name: 'Hint' });
+  hintButton.focus();
+  fireEvent.click(hintButton);
   const hinted = screen.getByRole('button', { name: /Row .*Hint/ });
+  const target = solution(session.board, session.size)![0]!;
   expect(hinted).toHaveClass('lg-hinted');
+  expect(hinted.querySelector('.lg-hint-marker')).toHaveTextContent('1');
+  expect(hinted).toHaveAttribute('aria-describedby', 'lg-hint-instruction');
+  expect(document.querySelector('#lg-hint-instruction')).toHaveTextContent(
+    `Tap row ${Math.floor(target / session.size) + 1}, column ${(target % session.size) + 1}.`,
+  );
+  expect(document.querySelector('#lg-hint-instruction')).toHaveTextContent(
+    'The outlined neighbours also switch.',
+  );
+  expect(hintButton).toHaveFocus();
+  const cells = [...document.querySelectorAll('.lg-cell')];
+  const preview = cells.flatMap((cell, index) =>
+    cell.classList.contains('lg-affected') ? [index] : [],
+  );
+  expect(preview.sort((a, b) => a - b)).toEqual(
+    neighbours(session.size, target).sort((a, b) => a - b),
+  );
   expect((await loadSavedGame(kv))?.history).toEqual([]);
+  fireEvent.click(hintButton);
+  expect((await loadSavedGame(kv))?.history).toEqual([]);
+  fireEvent.click(hinted);
+  await settle();
+  const expected = move(session, target)!;
+  expect(
+    cells.filter(
+      (cell, index) =>
+        (cell.getAttribute('aria-pressed') === 'true') !== Boolean(session.board[index]),
+    ),
+  ).toHaveLength(neighbours(session.size, target).length + 1);
+  if (expected.status === 'playing')
+    expect((await loadSavedGame(kv))?.board).toEqual(expected.board);
+  expect(document.querySelector('.lg-hint-marker')).toBeNull();
+  expect(document.querySelectorAll('.lg-affected')).toHaveLength(0);
 });
 
 it('isolates the Home replacement confirmation and Cancel preserves the save', async () => {

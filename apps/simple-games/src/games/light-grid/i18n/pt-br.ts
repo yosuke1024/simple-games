@@ -10,11 +10,12 @@ export const ptBR: LightGridMessages = {
   lightGridRule1:
     'Toque em uma casa para alterná-la e também suas vizinhas acima, abaixo, à esquerda e à direita.',
   lightGridRule2: 'Apague todas as luzes; não há limite de tempo.',
-  lightGridRule3:
-    'Desfaça qualquer jogada ou use uma dica para marcar uma casa de uma solução possível.',
+  lightGridRule3: 'Desfaça qualquer jogada ou toque em Dica para ver onde jogar a seguir.',
   lightGridCell: 'Linha {row}, coluna {col}: {state}',
   lightGridOn: 'acesa',
   lightGridOff: 'apagada',
-  lightGridHintNote: 'A casa contornada faz parte de uma solução.',
+  lightGridHintNote: 'Toque na linha {row}, coluna {col}.',
+  lightGridHintEffect: 'As casas vizinhas contornadas também mudam.',
+  lightGridHintAffected: 'também muda ao tocar na casa sugerida',
   lightGridStatus: 'Luzes acesas: {count}',
 };

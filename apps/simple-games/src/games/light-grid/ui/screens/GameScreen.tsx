@@ -67,7 +67,7 @@ export function GameScreen() {
   if (!session) return null;
   const over = session.status === 'over';
   return (
-    <div className="screen game-screen">
+    <div className="screen game-screen lg-screen">
       <div className="game-content" inert={over || confirmRestart}>
         <header className="game-topbar">
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
@@ -98,9 +98,24 @@ export function GameScreen() {
             </span>
           </div>
           <Board session={session} onPlay={onPlay} hint={hint} />
-          <p className="lg-hint-note" role="status">
-            {hint === null ? '·' : t('lightGridHintNote')}
-          </p>
+          <div className="lg-hint-note" id="lg-hint-instruction" role="status" aria-atomic="true">
+            {hint === null ? null : (
+              <>
+                <span className="lg-hint-step" aria-hidden="true">
+                  1
+                </span>
+                <span>
+                  <strong>
+                    {t('lightGridHintNote', {
+                      row: Math.floor(hint / session.size) + 1,
+                      col: (hint % session.size) + 1,
+                    })}
+                  </strong>
+                  <span className="lg-hint-effect">{t('lightGridHintEffect')}</span>
+                </span>
+              </>
+            )}
+          </div>
         </div>
         <div className="action-bar lg-actions">
           <button

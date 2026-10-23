@@ -8,11 +8,13 @@ export const en = {
   lightGridClearBody: 'Every light is off.',
   lightGridRule1: 'Tap a cell to switch it and its neighbours above, below, left and right.',
   lightGridRule2: 'Switch off every light; there is no time limit.',
-  lightGridRule3: 'Undo any move, or use Hint to mark a cell in one possible solution.',
+  lightGridRule3: 'Undo any move, or tap Hint to see where to play next.',
   lightGridCell: 'Row {row}, column {col}: {state}',
   lightGridOn: 'on',
   lightGridOff: 'off',
-  lightGridHintNote: 'The outlined cell belongs to a solution.',
+  lightGridHintNote: 'Tap row {row}, column {col}.',
+  lightGridHintEffect: 'The outlined neighbours also switch.',
+  lightGridHintAffected: 'also switches after the suggested tap',
   lightGridStatus: 'Lights on: {count}',
 } as const;
 export type LightGridMessages = Record<keyof typeof en, string>;

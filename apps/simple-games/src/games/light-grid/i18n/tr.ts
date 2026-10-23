@@ -10,10 +10,12 @@ export const tr: LightGridMessages = {
   lightGridRule1:
     'Bir kareye dokununca o kare ile üst, alt, sol ve sağ komşularının ışıkları değişir.',
   lightGridRule2: 'Tüm ışıkları söndür; süre sınırı yok.',
-  lightGridRule3: 'İstediğin hamleyi geri al veya İpucu ile olası bir çözümdeki kareyi işaretle.',
+  lightGridRule3: 'İstediğin hamleyi geri al veya sıradaki kareyi görmek için İpucu’na dokun.',
   lightGridCell: 'Satır {row}, sütun {col}: {state}',
   lightGridOn: 'açık',
   lightGridOff: 'kapalı',
-  lightGridHintNote: 'Çerçeveli kare bir çözümün parçasıdır.',
+  lightGridHintNote: '{row}. satır, {col}. sütuna dokun.',
+  lightGridHintEffect: 'Çerçeveli komşu kareler de değişir.',
+  lightGridHintAffected: 'önerilen kareye dokununca bu kare de değişir',
   lightGridStatus: 'Yanan ışıklar: {count}',
 };

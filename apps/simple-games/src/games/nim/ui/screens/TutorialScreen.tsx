@@ -10,11 +10,13 @@ function Figure({ step }: { step: number }) {
         [0, 1, 2].map((row) => (
           <g key={row}>
             {Array.from({ length: row + 3 }, (_, i) => (
-              <circle
+              <rect
                 key={i}
-                cx={40 + i * 36}
-                cy={24 + row * 35}
-                r="10"
+                x={33 + i * 36}
+                y={12 + row * 35}
+                width="14"
+                height="24"
+                rx="2"
                 fill={step === 1 && row === 1 && i > 1 ? 'none' : 'currentColor'}
                 stroke="currentColor"
                 strokeWidth="2"
@@ -36,7 +38,7 @@ function Figure({ step }: { step: number }) {
         ))
       ) : (
         <>
-          <circle cx="65" cy="60" r="14" fill="currentColor" />
+          <rect x="57" y="44" width="16" height="32" rx="3" fill="currentColor" />
           <path
             d="M100 60 H175 m-12 -12 12 12 -12 12"
             stroke="currentColor"

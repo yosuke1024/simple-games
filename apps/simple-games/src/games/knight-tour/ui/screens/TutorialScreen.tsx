@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { IconClose } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
+import { KnightPiece } from '../components/KnightPiece';
 import { useKnightTour } from '../../state/GameContext';
 function Figure({ step }: { step: number }) {
   return (
@@ -13,15 +14,15 @@ function Figure({ step }: { step: number }) {
           y={10 + Math.floor(i / 4) * 35}
           width="35"
           height="35"
-          fill={(Math.floor(i / 4) + (i % 4)) % 2 ? 'var(--accent-soft)' : 'var(--surface)'}
+          fill={
+            (Math.floor(i / 4) + (i % 4)) % 2 ? 'var(--kt-square-dark)' : 'var(--kt-square-light)'
+          }
           stroke="var(--line)"
         />
       ))}
       {step === 0 ? (
         <>
-          <text x="24" y="143" fontSize="34">
-            ♘
-          </text>
+          <KnightPiece x="22" y="116" width="31" height="31" />
           <path d="M37 116 V63 H72" fill="none" stroke="var(--accent)" strokeWidth="4" />
           <circle cx="72" cy="63" r="7" fill="var(--accent)" />
         </>
@@ -74,7 +75,7 @@ export function TutorialScreen() {
     }
   };
   return (
-    <div className="screen tutorial-screen">
+    <div className="screen tutorial-screen kt-tutorial">
       <header className="screen-header">
         <h1>{t('howToPlay')}</h1>
         {tutorialCompleted ? (

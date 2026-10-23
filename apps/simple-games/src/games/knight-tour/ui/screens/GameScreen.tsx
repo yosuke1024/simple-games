@@ -8,6 +8,7 @@ import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
 import { legalMoves } from '../../game';
 import { useKnightTour } from '../../state/GameContext';
 import { ResultOverlay } from '../components/ResultOverlay';
+import { KnightPiece } from '../components/KnightPiece';
 export function GameScreen() {
   const { t } = useSettings();
   const { session, playMove, applyUndo, goHome, startNewGame, paused, pauseGame, resumeGame } =
@@ -66,96 +67,108 @@ export function GameScreen() {
             <IconRetry />
           </button>
         </header>
-        <p className="kt-progress" role="status">
-          {t('knightTourVisited', { count: session.path.length, total: size * size })}
-        </p>
-        <div
-          className="kt-board"
-          style={{ gridTemplateColumns: `repeat(${size}, 1fr)` }}
-          role="group"
-          aria-label={t('knightTourBoard')}
-        >
-          {Array.from({ length: size * size }, (_, cell) => {
-            const visit = session.path.indexOf(cell),
-              allowed = legal.includes(cell);
-            const content =
-              cell === last
-                ? t('knightTourCurrent')
-                : visit >= 0
-                  ? t('knightTourVisitNumber', { count: visit + 1 })
-                  : allowed
-                    ? t('knightTourLegal')
-                    : t('knightTourEmpty');
-            return (
-              <button
-                type="button"
-                key={cell}
-                ref={(element) => {
-                  cells.current[cell] = element;
-                }}
-                tabIndex={cell === focus ? 0 : -1}
-                aria-disabled={!allowed || paused || over}
-                aria-label={t('knightTourCell', {
-                  row: Math.floor(cell / size) + 1,
-                  col: (cell % size) + 1,
-                  content,
-                })}
-                className={`kt-cell ${(Math.floor(cell / size) + (cell % size)) % 2 ? 'kt-dark' : ''} ${visit >= 0 ? 'kt-visited' : ''} ${allowed ? 'kt-legal' : ''} ${cell === last ? 'kt-current' : ''}`}
-                onFocus={() => setFocus(cell)}
-                onClick={() => {
-                  if (allowed && !paused && !over) play(cell);
-                }}
-                onKeyDown={(event) => {
-                  const offsets: Record<string, number> = {
-                    ArrowUp: -size,
-                    ArrowDown: size,
-                    ArrowLeft: -1,
-                    ArrowRight: 1,
-                  };
-                  const delta = offsets[event.key];
-                  if (delta === undefined) return;
-                  event.preventDefault();
-                  const next = cell + delta;
-                  if (
-                    next < 0 ||
-                    next >= size * size ||
-                    (Math.abs(delta) === 1 && Math.floor(next / size) !== Math.floor(cell / size))
-                  )
-                    return;
-                  setFocus(next);
-                  cells.current[next]?.focus();
-                }}
-              >
-                <span aria-hidden="true">
-                  {cell === last ? '♘' : visit >= 0 ? visit + 1 : allowed ? '•' : ''}
-                </span>
-                {cell === last ? <small aria-hidden="true">{visit + 1}</small> : null}
-              </button>
-            );
-          })}
-        </div>
-        <p className="kt-status" aria-live="polite">
-          {paused
-            ? t('knightTourPaused')
-            : !over && !legal.length
-              ? t('knightTourStuck')
-              : t('knightTourInstruction')}
-        </p>
-        <div className="kt-actions">
-          {paused ? (
-            <button type="button" className="btn btn-primary" onClick={resumeGame}>
-              {t('resume')}
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className="btn btn-secondary"
-            disabled={session.path.length <= 1}
-            onClick={onUndo}
+        <div className="kt-play-area">
+          <div className="kt-meta">
+            <span className="kt-board-size">
+              {size} × {size}
+            </span>
+            <p className="kt-progress" role="status">
+              {t('knightTourVisited', { count: session.path.length, total: size * size })}
+            </p>
+          </div>
+          <div
+            className="kt-board"
+            style={{ gridTemplateColumns: `repeat(${size}, 1fr)` }}
+            role="group"
+            aria-label={t('knightTourBoard')}
           >
-            <IconUndo />
-            {t('undo')}
-          </button>
+            {Array.from({ length: size * size }, (_, cell) => {
+              const visit = session.path.indexOf(cell),
+                allowed = legal.includes(cell);
+              const content =
+                cell === last
+                  ? t('knightTourCurrent')
+                  : visit >= 0
+                    ? t('knightTourVisitNumber', { count: visit + 1 })
+                    : allowed
+                      ? t('knightTourLegal')
+                      : t('knightTourEmpty');
+              return (
+                <button
+                  type="button"
+                  key={cell}
+                  ref={(element) => {
+                    cells.current[cell] = element;
+                  }}
+                  tabIndex={cell === focus ? 0 : -1}
+                  aria-disabled={!allowed || paused || over}
+                  aria-label={t('knightTourCell', {
+                    row: Math.floor(cell / size) + 1,
+                    col: (cell % size) + 1,
+                    content,
+                  })}
+                  className={`kt-cell ${(Math.floor(cell / size) + (cell % size)) % 2 ? 'kt-dark' : ''} ${visit >= 0 ? 'kt-visited' : ''} ${allowed ? 'kt-legal' : ''} ${cell === last ? 'kt-current' : ''}`}
+                  onFocus={() => setFocus(cell)}
+                  onClick={() => {
+                    if (allowed && !paused && !over) play(cell);
+                  }}
+                  onKeyDown={(event) => {
+                    const offsets: Record<string, number> = {
+                      ArrowUp: -size,
+                      ArrowDown: size,
+                      ArrowLeft: -1,
+                      ArrowRight: 1,
+                    };
+                    const delta = offsets[event.key];
+                    if (delta === undefined) return;
+                    event.preventDefault();
+                    const next = cell + delta;
+                    if (
+                      next < 0 ||
+                      next >= size * size ||
+                      (Math.abs(delta) === 1 && Math.floor(next / size) !== Math.floor(cell / size))
+                    )
+                      return;
+                    setFocus(next);
+                    cells.current[next]?.focus();
+                  }}
+                >
+                  {cell === last ? (
+                    <KnightPiece />
+                  ) : visit >= 0 ? (
+                    <span className="kt-visit-number" aria-hidden="true">
+                      {visit + 1}
+                    </span>
+                  ) : allowed ? (
+                    <span className="kt-move-dot" aria-hidden="true" />
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+          <p className="kt-status" aria-live="polite">
+            {paused
+              ? t('knightTourPaused')
+              : !over && !legal.length
+                ? t('knightTourStuck')
+                : t('knightTourInstruction')}
+          </p>
+          <div className="kt-actions">
+            {paused ? (
+              <button type="button" className="btn btn-primary" onClick={resumeGame}>
+                {t('resume')}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={session.path.length <= 1}
+              onClick={onUndo}
+            >
+              <IconUndo />
+              {t('undo')}
+            </button>
+          </div>
         </div>
         <BannerSlot />
       </div>

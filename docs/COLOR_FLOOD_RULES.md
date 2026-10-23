@@ -80,3 +80,15 @@ Calculated sRGB contrast for the six active symbols against their tile colours:
 red 6.05:1, blue 6.10:1, yellow 9.57:1, green 5.36:1, purple 5.79:1 and orange
 5.75:1. The symbol is repeated on its palette button; colour alone is never
 required. Disabled colours are dimmed and do not accept moves.
+
+## Visual follow-up (2026-10-23)
+
+The six symbols are now vector artwork shared by the board, palette and tutorial,
+so their appearance does not depend on the device font. A thin framed board and
+continuous boundary mark the connected region; a progress bar repeats the visible
+connected-cell count. The palette uses matching round colour swatches with the
+existing 1–6 shortcuts. Short Web viewports scroll within the game area above the
+reserved ad space. Rules, palette colours, storage and scoring are unchanged.
+The scoped 13 tests pass after this presentation change. Desktop-browser checks
+at phone widths are recorded in the implementation plan; no physical-device or
+screen-reader session is claimed.
