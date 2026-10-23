@@ -22,10 +22,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { useSettings } from '@/state/SettingsContext';
-import type { ClubConnection } from '@/storage/schemas';
+import type { ClubConnection, PendingClubJoin } from '@/storage/schemas';
 import type { ClubInvite, ClubRootProps } from '@/ui/clubBridge';
 import { IconChevronRight } from '@/ui/components/icons';
-import { PRIVATE_CLUBS_ENABLED } from '@/ui/clubFeatures';
+import { PRIVATE_CLUBS_ENABLED, MANAGED_CLUB_ORIGIN } from '@/ui/clubFeatures';
 import {
   acceptAutoSend,
   addClubConnection,
@@ -34,7 +34,16 @@ import {
   summarize,
   updateClubName,
   updateNickname,
+  loadPendingJoins,
+  savePendingJoin,
 } from '../storage/connections';
+import type { OwnerSpace } from '../api/managed';
+import { DirectoryScreen } from './DirectoryScreen';
+import { ManagedScreen } from './ManagedScreen';
+import { PendingRequestsScreen } from './PendingRequestsScreen';
+import { ClubManagementScreen } from './ClubManagementScreen';
+import { RecordBookScreen } from './RecordBookScreen';
+import { AlbumsScreen } from './AlbumsScreen';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { dropOutboxFor } from '../storage/outbox';
 import { ChallengeScreen, type ChallengeRead } from './ChallengeScreen';
@@ -60,7 +69,23 @@ interface ClubStep {
 type Screen =
   | { kind: 'discover' }
   | { kind: 'all' }
-  | { kind: 'join'; invite: ClubInvite | null; publicClub?: boolean }
+  | {
+      kind: 'join';
+      invite: ClubInvite | null;
+      publicClub?: boolean;
+      endpoint?: string;
+      clubName?: string;
+    }
+  | { kind: 'directory' }
+  | { kind: 'managed' }
+  | { kind: 'pending' }
+  | { kind: 'manage'; endpoint: string }
+  | { kind: 'albums'; connection: ClubConnection }
+  | {
+      kind: 'records';
+      connection?: ClubConnection;
+      managed?: { origin: string; owner: OwnerSpace; token: string };
+    }
   | ClubStep
   /** The Club's people: the lists come from the Club step below, not from a request. */
   | {
@@ -115,19 +140,34 @@ export function ClubRoot({
 }: ClubRootProps) {
   const { t } = useSettings();
   const [connections, setConnections] = useState<ClubConnection[] | null>(null);
+  const [pending, setPending] = useState<PendingClubJoin[]>([]);
   const [stack, setStack] = useState<Screen[]>([]);
   const alive = useRef(true);
 
   useEffect(() => {
     alive.current = true;
-    void loadClubConnections()
-      .catch(() => [] as ClubConnection[])
-      .then((loaded) => {
+    void Promise.all([loadClubConnections(), loadPendingJoins()])
+      .catch(() => [[], []] as [ClubConnection[], PendingClubJoin[]])
+      .then(([loaded, requests]) => {
         if (!alive.current) return;
         setConnections(loaded);
+        setPending(requests);
         const root = rootFor(loaded);
         // An invite link is acted on only while Private Clubs are on (club.md §14, decision 44).
-        if (entry === 'invite' && invite && PRIVATE_CLUBS_ENABLED) {
+        if (
+          entry === 'invite' &&
+          invite &&
+          (PRIVATE_CLUBS_ENABLED ||
+            (MANAGED_CLUB_ORIGIN && invite.endpoint.startsWith(`${MANAGED_CLUB_ORIGIN}/clubs/`)))
+        ) {
+          if (loaded.some((c) => c.endpoint === invite.endpoint)) {
+            setStack([{ kind: 'club', endpoint: invite.endpoint, panel: 'none' }]);
+            return;
+          }
+          if (requests.some((request) => request.endpoint === invite.endpoint)) {
+            setStack([...root, { kind: 'pending' }]);
+            return;
+          }
           setStack([{ kind: 'join', invite }]);
           return;
         }
@@ -349,10 +389,31 @@ export function ClubRoot({
   };
 
   const joined = async (connection: ClubConnection) => {
+    if (!alive.current) return;
     const next = await addClubConnection(connection);
+    if (!alive.current) return;
     apply(next);
     const club: Screen = { kind: 'club', endpoint: connection.endpoint, panel: 'none' };
     setStack(next.length >= 2 ? [{ kind: 'all' }, club] : [club]);
+  };
+
+  const refreshPending = async () => {
+    setPending(await loadPendingJoins());
+  };
+  const requested = async (request: PendingClubJoin) => {
+    if (!alive.current) return;
+    await savePendingJoin(request);
+    if (!alive.current) return;
+    await refreshPending();
+    setStack([{ kind: 'all' }, { kind: 'pending' }]);
+  };
+
+  const openManagedClub = async (connection: ClubConnection) => {
+    // Reopening the same owner membership preserves its explicit sending consent.
+    const previous = connections?.find(
+      (c) => c.endpoint === connection.endpoint && c.memberId === connection.memberId,
+    );
+    await joined(previous ? { ...previous, ...connection } : connection);
   };
 
   const disconnect = async (endpoint: string) => {
@@ -390,13 +451,28 @@ export function ClubRoot({
           >
             {t('clubJoinPublic')}
           </button>
-          {PRIVATE_CLUBS_ENABLED ? (
+          {PRIVATE_CLUBS_ENABLED || MANAGED_CLUB_ORIGIN ? (
             <button
               type="button"
               className="btn btn-ghost"
               onClick={() => push({ kind: 'join', invite: null })}
             >
               {t('clubJoinWithLink')}
+            </button>
+          ) : null}
+          {MANAGED_CLUB_ORIGIN ? (
+            <>
+              <button className="btn btn-ghost" onClick={() => push({ kind: 'directory' })}>
+                {t('clubFindClubs')}
+              </button>
+              <button className="btn btn-ghost" onClick={() => push({ kind: 'managed' })}>
+                {t('clubOwnerSpace')}
+              </button>
+            </>
+          ) : null}
+          {pending.length > 0 ? (
+            <button className="btn btn-ghost" onClick={() => push({ kind: 'pending' })}>
+              {t('clubJoinRequests')}
             </button>
           ) : null}
         </ScreenFrame>
@@ -427,13 +503,28 @@ export function ClubRoot({
               {t('clubJoinPublic')}
             </button>
           )}
-          {PRIVATE_CLUBS_ENABLED ? (
+          {PRIVATE_CLUBS_ENABLED || MANAGED_CLUB_ORIGIN ? (
             <button
               type="button"
               className="btn btn-ghost club-join-another"
               onClick={() => push({ kind: 'join', invite: null })}
             >
               {t('clubJoinAnother')}
+            </button>
+          ) : null}
+          {MANAGED_CLUB_ORIGIN ? (
+            <>
+              <button className="btn btn-ghost" onClick={() => push({ kind: 'directory' })}>
+                {t('clubFindClubs')}
+              </button>
+              <button className="btn btn-ghost" onClick={() => push({ kind: 'managed' })}>
+                {t('clubOwnerSpace')}
+              </button>
+            </>
+          ) : null}
+          {pending.length > 0 ? (
+            <button className="btn btn-ghost" onClick={() => push({ kind: 'pending' })}>
+              {t('clubJoinRequests')}
             </button>
           ) : null}
         </ScreenFrame>
@@ -444,12 +535,78 @@ export function ClubRoot({
         <JoinScreen
           invite={top.invite}
           publicClub={top.publicClub === true}
+          endpoint={top.endpoint}
+          clubName={top.clubName}
           connectionCount={connections.length}
           t={t}
           onBack={stepBack}
           onJoined={joined}
+          onPending={requested}
         />
       );
+
+    case 'directory':
+      return MANAGED_CLUB_ORIGIN ? (
+        <DirectoryScreen
+          origin={MANAGED_CLUB_ORIGIN}
+          onBack={stepBack}
+          connections={connections}
+          pending={pending}
+          onJoin={(club) => {
+            if (connections.some((c) => c.endpoint === club.endpoint))
+              push({ kind: 'club', endpoint: club.endpoint, panel: 'none' });
+            else if (pending.some((request) => request.endpoint === club.endpoint))
+              push({ kind: 'pending' });
+            else push({ kind: 'join', invite: null, endpoint: club.endpoint, clubName: club.name });
+          }}
+        />
+      ) : null;
+    case 'managed':
+      return MANAGED_CLUB_ORIGIN ? (
+        <ManagedScreen
+          origin={MANAGED_CLUB_ORIGIN}
+          onBack={stepBack}
+          onOpen={openManagedClub}
+          onRecords={(owner, token) =>
+            push({ kind: 'records', managed: { origin: MANAGED_CLUB_ORIGIN!, owner, token } })
+          }
+        />
+      ) : null;
+    case 'pending':
+      return (
+        <PendingRequestsScreen
+          requests={pending}
+          onChanged={refreshPending}
+          onJoined={joined}
+          onBack={stepBack}
+        />
+      );
+    case 'manage': {
+      const connection = connectionOf(top.endpoint);
+      return connection ? (
+        <ClubManagementScreen
+          connection={connection}
+          onBack={stepBack}
+          onChanged={() => {
+            markStale(connection.endpoint);
+            void loadClubConnections().then((next) => {
+              if (alive.current) apply(next);
+            });
+          }}
+        />
+      ) : null;
+    }
+    case 'records':
+      return (
+        <RecordBookScreen
+          connection={top.connection}
+          managed={top.managed}
+          onBack={stepBack}
+          onAlbums={(connection) => push({ kind: 'albums', connection })}
+        />
+      );
+    case 'albums':
+      return <AlbumsScreen connection={top.connection} onBack={stepBack} />;
 
     case 'club': {
       const connection = connectionOf(top.endpoint);
@@ -482,6 +639,10 @@ export function ClubRoot({
             push({ kind: 'ranking', endpoint: connection.endpoint, gameId, paramsKey, tables })
           }
           onOpenMembers={() => push({ kind: 'members', endpoint: connection.endpoint })}
+          onManage={() => push({ kind: 'manage', endpoint: connection.endpoint })}
+          onRecords={() => push({ kind: 'records', connection })}
+          onAlbums={() => push({ kind: 'albums', connection })}
+          onAllClubs={() => push({ kind: 'all' })}
           onDisconnect={() => disconnect(connection.endpoint)}
           onRenamedMe={(nickname) => {
             void updateNickname(connection.endpoint, nickname)

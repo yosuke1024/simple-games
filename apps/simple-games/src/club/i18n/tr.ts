@@ -1,6 +1,62 @@
 import type { ClubMessages } from './en';
 
 export const tr: ClubMessages = {
+  clubOwnerSpace: 'Sahip alanı',
+  clubOwnerKey: 'Sahip anahtarı',
+  clubOwnerConnect: 'Sahip alanını aç',
+  clubOwnerForget: 'Bu anahtarı unut',
+  clubOwnerKeyHelp: 'Bu anahtarı gizli tutun. Bu cihazda sahip alanınızı açar.',
+  clubOwnerUsage: '{max} Kulüpten {used} · Kulüp başına {members} üye',
+  clubCreate: 'Kulüp oluştur',
+  clubName: 'Kulüp adı',
+  clubFindClubs: 'Kulüp bul',
+  clubVisibilityPublic: 'Herkese açık',
+  clubVisibilityPrivate: 'Özel',
+  clubVisibility: 'Bu Kulübü kim bulabilir?',
+  clubVisibilityHelp:
+    'Herkese açık Kulüpler listede görünür. Özel Kulüpler davet anahtarı gerektirir. Kayıtları Kulüp üyeleri görebilir.',
+  clubApprovalRequired: 'Yeni üyeleri onayla',
+  clubGames: 'Bu Kulüpteki oyunlar',
+  clubGamesAll: 'Desteklenen tüm oyunlar',
+  clubGamesSelected: 'Oyunları seç',
+  clubSettingsSaved: 'Ayarlar kaydedildi',
+  clubJoinRequests: 'Katılma istekleri',
+  clubApprove: 'Onayla',
+  clubReject: 'Reddet',
+  clubRequestJoin: 'Katılma isteği gönder',
+  clubPendingTitle: 'Onay bekleniyor',
+  clubPendingHelp:
+    'Beklerken sonuçlarınız gönderilmez. Sahibin kararını görmek istediğinizde buradan kontrol edin.',
+  clubCheckRequest: 'İsteği kontrol et',
+  clubCancelRequest: 'İsteği iptal et',
+  clubRequestRejected: 'Sahip bu isteği reddetti.',
+  clubRequestExpired: 'Bu isteğin süresi doldu.',
+  clubRecordBook: 'Rekor defteri',
+  clubRecordBasis:
+    'Şu anda saklanan kayıtlar; her üyenin en iyi tek sonucu kullanılır. Bu, oynanan tüm oyunların sayısı değildir.',
+  clubRecordParticipants: '{n} üyenin kaydı var',
+  clubRecordMedian: 'Kişisel en iyilerin medyanı: {value}',
+  clubRecordOwnRank: 'Üyeler arasındaki sıranız: #{rank}',
+  clubAlbums: 'Rekor albümleri',
+  clubAlbumTitle: 'Albüm adı',
+  clubPublishAlbum: 'Albümü yayımla',
+  clubAlbumDisclosure:
+    'Bu Kulübün üyeleri albümü okuyabilir. Şimdi seçilen kayıtları içerir; daha sonra silinen veya kullanılamayan kayıtlar gösterilmez.',
+  clubAlbumUnavailable: '{n} kayıt artık kullanılamıyor.',
+  clubDeleteAlbum: 'Albümü sil',
+  clubDeleteAlbumBody: 'Bu albüm silinsin mi? Asıl oyun kayıtları kalır.',
+  clubManagedJoinDisclosure:
+    'Üyeyken Kulübün seçtiği oyunların sonuçları buraya otomatik gönderilir. Diğer üyeler takma adınızı ve sonuçlarınızı görebilir. Onay gerektirmeyen herkese açık Kulüplere herkes katılabilir.',
+  clubInviteApprovalBody:
+    'Bu bağlantı {club} için katılma isteği göndermeyi sağlar. Sahibin onayı gerekir.',
+  clubSubscriptionExpired:
+    'Barındırma erişiminin süresi doldu. Mevcut kayıtlar hâlâ görüntülenebilir veya silinebilir.',
+  clubOwnerLimit: 'Planınızın Kulüp sınırına ulaşıldı.',
+  clubOwnerKeyInvalid: 'Bu sahip anahtarı geçerli değil.',
+  clubOwnerExpires: 'Erişim bitişi: {date}',
+  clubNoGames: 'Oyun seçilmedi.',
+  clubMoreRecords: 'Daha fazla kayıt',
+
   clubBack: 'Geri',
   clubLoading: 'Yükleniyor…',
   clubReload: 'Yeniden yükle',

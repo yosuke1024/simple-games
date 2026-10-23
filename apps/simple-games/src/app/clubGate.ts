@@ -20,7 +20,7 @@ import type { KVStore } from '../storage/kv';
 import { preferencesKV } from '../storage/kv';
 import { loadRecord } from '../storage/repo';
 import { clubConnectionsSchema, isClubEndpoint } from '../storage/schemas';
-import { PRIVATE_CLUBS_ENABLED } from '../ui/clubFeatures';
+import { PRIVATE_CLUBS_ENABLED, MANAGED_CLUB_ORIGIN } from '../ui/clubFeatures';
 import type { ClubConnectionSummary, ClubInvite, ClubModule } from '../ui/clubBridge';
 
 let connections: readonly ClubConnectionSummary[] = [];
@@ -110,12 +110,27 @@ export function takeInviteFromLocation(
   if (match === null) return null;
   let endpoint: string;
   try {
-    endpoint = new URL(loc.href).origin;
+    const url = new URL(loc.href);
+    const params = new URLSearchParams(loc.hash.slice(1));
+    const club = params.get('club');
+    if (
+      params.getAll('club').length > 1 ||
+      params.getAll('invite').length !== 1 ||
+      (club !== null && !/^[A-Za-z0-9_-]{1,64}$/.test(club))
+    ) {
+      replaceState(loc.href.replace(/#.*$/, ''));
+      return null;
+    }
+    endpoint = club === null ? url.origin : `${url.origin}/clubs/${club}`;
   } catch {
     return null;
   }
   replaceState(loc.href.replace(/#.*$/, ''));
-  if (!PRIVATE_CLUBS_ENABLED) return null;
+  if (
+    !PRIVATE_CLUBS_ENABLED &&
+    !(MANAGED_CLUB_ORIGIN && endpoint.startsWith(`${MANAGED_CLUB_ORIGIN}/clubs/`))
+  )
+    return null;
   const token = match[1]!;
   if (!INVITE_TOKEN.test(token) || !isClubEndpoint(endpoint)) return null;
   return { endpoint, token };

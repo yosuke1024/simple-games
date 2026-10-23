@@ -6,43 +6,94 @@
  * joined by coming back as the same member (`joinOrRestore`, decision 43); the
  * typed nickname wins, and the field is never prefilled (a cached name can be stale).
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { inviteFromHref } from '../invite';
 import { joinOrRestore } from '../join';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { findDeparted } from '../storage/connections';
-import { CLUB_CONNECTIONS_MAX, type ClubConnection } from '@/storage/schemas';
+import { createClient } from '../api/client';
+import type { Admission } from '../api/managementTypes';
+import { MANAGED_CLUB_ORIGIN, PRIVATE_CLUBS_ENABLED } from '@/ui/clubFeatures';
+import { CLUB_CONNECTIONS_MAX, type ClubConnection, type PendingClubJoin } from '@/storage/schemas';
 import type { ClubInvite } from '@/ui/clubBridge';
 import { errorText, NICKNAME_MAX, ScreenFrame, type T } from './common';
 
 export function JoinScreen({
   invite,
   publicClub = false,
+  endpoint,
+  clubName,
   connectionCount,
   t,
   onBack,
   onJoined,
+  onPending,
 }: {
   /** Opened from an invite link: the paste field stays hidden. */
   invite: ClubInvite | null;
   /** The Public Club House: no link, a nickname alone — and the disclosure comes first (PRODUCT_PRINCIPLES「公開されることを、参加の前に言う」). */
   publicClub?: boolean;
+  /** A listed managed Club: joining still requires the disclosure and possibly approval. */
+  endpoint?: string;
+  clubName?: string;
   connectionCount: number;
   t: T;
   onBack: () => void;
   onJoined: (connection: ClubConnection) => Promise<void>;
+  onPending?: (request: PendingClubJoin) => Promise<void>;
 }) {
   const [link, setLink] = useState('');
   const [nickname, setNickname] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [wasHere, setWasHere] = useState(false);
+  const [admission, setAdmission] = useState<Admission | null>(null);
+  const [admissionBusy, setAdmissionBusy] = useState(false);
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
 
   const parsed = invite ?? (link.trim() === '' ? null : inviteFromHref(link));
-  const linkProblem = !publicClub && invite === null && link.trim() !== '' && parsed === null;
+  const linkProblem =
+    !publicClub &&
+    !endpoint &&
+    invite === null &&
+    link.trim() !== '' &&
+    (parsed === null ||
+      (!PRIVATE_CLUBS_ENABLED &&
+        !(MANAGED_CLUB_ORIGIN && parsed.endpoint.startsWith(`${MANAGED_CLUB_ORIGIN}/clubs/`))));
   const name = nickname.trim();
   const nicknameOk = name.length >= 1 && name.length <= NICKNAME_MAX;
-  const target = publicClub ? PUBLIC_CLUB_ENDPOINT : (parsed?.endpoint ?? null);
+  const target = endpoint ?? (publicClub ? PUBLIC_CLUB_ENDPOINT : (parsed?.endpoint ?? null));
+  const managed = target !== null && /\/clubs\/[A-Za-z0-9_-]+$/.test(target);
+
+  useEffect(() => {
+    let alive = true;
+    setAdmission(null);
+    if (!managed || !target) return;
+    setAdmissionBusy(true);
+    setError(null);
+    void createClient(target)
+      .admission(parsed?.token)
+      .then((value) => {
+        if (alive) setAdmission(value);
+      })
+      .catch((e: unknown) => {
+        if (alive) setError(errorText(e, t));
+      })
+      .finally(() => {
+        if (alive) setAdmissionBusy(false);
+      });
+    return () => {
+      alive = false;
+    };
+    // Reading admission is caused only by opening/pasting this Club, never a timer.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, parsed?.token, managed]);
 
   // A Club this device left: say so. The old name is not offered — an owner may have renamed since.
   useEffect(() => {
@@ -61,10 +112,16 @@ export function JoinScreen({
     };
   }, [target]);
 
-  const ready = (publicClub || parsed !== null) && nicknameOk && !busy;
+  const ready =
+    target !== null &&
+    !linkProblem &&
+    nicknameOk &&
+    !busy &&
+    (!managed || admission !== null) &&
+    !admissionBusy;
 
   const submit = async () => {
-    if ((!publicClub && parsed === null) || !nicknameOk) return;
+    if (!ready || target === null) return;
     if (connectionCount >= CLUB_CONNECTIONS_MAX) {
       setError(t('clubErr_too_many_connections'));
       return;
@@ -72,24 +129,38 @@ export function JoinScreen({
     setBusy(true);
     setError(null);
     try {
-      const endpoint = publicClub ? PUBLIC_CLUB_ENDPOINT : parsed!.endpoint;
       // The disclosure above was on this screen, whichever way in: that is the
       // consent (the connection is stored with `autoSend`).
-      const { connection } = await joinOrRestore({
-        endpoint,
-        inviteToken: publicClub ? null : parsed!.token,
+      const outcome = await joinOrRestore({
+        endpoint: target,
+        inviteToken: parsed?.token ?? null,
         nickname: name,
+        allowPending: true,
       });
-      await onJoined(connection);
+      // Closing this screen withdraws the local join action. In particular,
+      // a later network reply must not repopulate credentials after Reset.
+      if (!alive.current) return;
+      if ('pending' in outcome) {
+        await onPending?.(outcome.pending);
+      } else {
+        await onJoined({
+          ...outcome.connection,
+          ...(admission ? { allowedGameIds: admission.allowedGameIds } : {}),
+        });
+      }
     } catch (e) {
-      setError(errorText(e, t));
-      setBusy(false);
+      if (alive.current) {
+        setError(errorText(e, t));
+        setBusy(false);
+      }
     }
   };
 
   return (
     <ScreenFrame
-      title={publicClub ? t('clubPublicTitle') : t('clubJoinClub')}
+      title={
+        admission?.club.name ?? clubName ?? (publicClub ? t('clubPublicTitle') : t('clubJoinClub'))
+      }
       onBack={onBack}
       t={t}
     >
@@ -102,9 +173,14 @@ export function JoinScreen({
       >
         {publicClub ? <p className="club-disclosure">{t('clubPublicDisclosure')}</p> : null}
         {/* Every way in says it, before the button: results are sent by themselves from here on. */}
-        <p className="club-disclosure">{t('clubAutoSendDisclosure')}</p>
+        <p className="club-disclosure">
+          {t(managed ? 'clubManagedJoinDisclosure' : 'clubAutoSendDisclosure')}
+        </p>
+        {admission?.approvalRequired ? (
+          <p className="club-quiet">{t('clubApprovalRequired')}</p>
+        ) : null}
         {wasHere ? <p className="club-quiet">{t('clubRejoinNote')}</p> : null}
-        {invite === null && !publicClub ? (
+        {invite === null && !publicClub && !endpoint ? (
           <label className="club-field">
             <span className="club-field-label">{t('clubInviteLink')}</span>
             <input
@@ -137,7 +213,9 @@ export function JoinScreen({
           />
         </label>
         <button type="submit" className="btn btn-primary" disabled={!ready}>
-          {busy ? t('clubJoining') : t('clubJoinAndPlay')}
+          {busy || admissionBusy
+            ? t('clubJoining')
+            : t(admission?.approvalRequired ? 'clubRequestJoin' : 'clubJoinAndPlay')}
         </button>
         {error ? (
           <p className="club-note club-note-error" role="alert">

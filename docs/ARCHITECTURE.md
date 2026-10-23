@@ -1,5 +1,9 @@
 # Simple Games — アーキテクチャ
 
+Managed Club House(2026-10-23)の契約・オーナー記録・追加保存項目は
+[architecture/managed-clubs.md](architecture/managed-clubs.md)。既存 Club House の
+動的 import とゲーム・バックアップからの分離を保ち、契約キーと承認待ちの資格も `sg.club` 内に置く。
+
 この文書は索引である。見出し(`## `)は元の全文と同じ順序・同じ文言で残っており、コードやドキュメントが `docs/ARCHITECTURE.md「見出し」` で参照する先は必ずここに見つかる。長い節は要約だけをここに置き、全文は `architecture/` 配下の同名ファイルへ 2026-09-05 に分割した(各節末尾の全文リンクから読む)。たとえば `ShareAction` の結果画面の共有や `games/*/game/` のレイヤー規則は分割せずに「アプリ内レイヤー」節にそのまま残っている。
 
 ## モノレポ

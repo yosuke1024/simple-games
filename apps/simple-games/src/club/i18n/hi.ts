@@ -1,6 +1,62 @@
 import type { ClubMessages } from './en';
 
 export const hi: ClubMessages = {
+  clubOwnerSpace: 'मालिक का स्थान',
+  clubOwnerKey: 'मालिक की कुंजी',
+  clubOwnerConnect: 'मालिक का स्थान खोलें',
+  clubOwnerForget: 'यह कुंजी भूलें',
+  clubOwnerKeyHelp: 'इस कुंजी को निजी रखें। इससे इस डिवाइस पर आपका मालिक स्थान खुलता है।',
+  clubOwnerUsage: '{max} में से {used} क्लब · हर क्लब में {members} सदस्य',
+  clubCreate: 'क्लब बनाएँ',
+  clubName: 'क्लब का नाम',
+  clubFindClubs: 'क्लब खोजें',
+  clubVisibilityPublic: 'सार्वजनिक',
+  clubVisibilityPrivate: 'निजी',
+  clubVisibility: 'इस क्लब को कौन खोज सकता है?',
+  clubVisibilityHelp:
+    'सार्वजनिक क्लब सूची में दिखते हैं। निजी क्लब के लिए निमंत्रण कुंजी चाहिए। क्लब के सदस्य रिकॉर्ड देख सकते हैं।',
+  clubApprovalRequired: 'नए सदस्यों को मंज़ूरी दें',
+  clubGames: 'इस क्लब के खेल',
+  clubGamesAll: 'सभी समर्थित खेल',
+  clubGamesSelected: 'खेल चुनें',
+  clubSettingsSaved: 'सेटिंग सहेजी गई',
+  clubJoinRequests: 'जुड़ने के अनुरोध',
+  clubApprove: 'मंज़ूर करें',
+  clubReject: 'अस्वीकार करें',
+  clubRequestJoin: 'जुड़ने का अनुरोध करें',
+  clubPendingTitle: 'मंज़ूरी की प्रतीक्षा',
+  clubPendingHelp:
+    'प्रतीक्षा के दौरान आपके परिणाम नहीं भेजे जाते। मालिक का निर्णय जानना चाहें तो यहाँ जाँचें।',
+  clubCheckRequest: 'अनुरोध जाँचें',
+  clubCancelRequest: 'अनुरोध रद्द करें',
+  clubRequestRejected: 'मालिक ने यह अनुरोध अस्वीकार किया।',
+  clubRequestExpired: 'इस अनुरोध की अवधि समाप्त हो गई है।',
+  clubRecordBook: 'रिकॉर्ड पुस्तक',
+  clubRecordBasis:
+    'वर्तमान में रखे रिकॉर्ड, हर सदस्य का एक सर्वश्रेष्ठ परिणाम। यह खेले गए सभी खेलों की संख्या नहीं है।',
+  clubRecordParticipants: '{n} सदस्यों के रिकॉर्ड हैं',
+  clubRecordMedian: 'व्यक्तिगत सर्वश्रेष्ठ का माध्यिका: {value}',
+  clubRecordOwnRank: 'सदस्यों के बीच आपका स्थान: #{rank}',
+  clubAlbums: 'रिकॉर्ड एल्बम',
+  clubAlbumTitle: 'एल्बम का नाम',
+  clubPublishAlbum: 'एल्बम प्रकाशित करें',
+  clubAlbumDisclosure:
+    'इस क्लब के सदस्य एल्बम देख सकते हैं। इसमें अभी चुने गए रिकॉर्ड आते हैं; बाद में मिटाए गए या अनुपलब्ध रिकॉर्ड हटा दिए जाते हैं।',
+  clubAlbumUnavailable: '{n} रिकॉर्ड अब उपलब्ध नहीं हैं।',
+  clubDeleteAlbum: 'एल्बम मिटाएँ',
+  clubDeleteAlbumBody: 'यह एल्बम मिटाएँ? मूल खेल रिकॉर्ड रहेंगे।',
+  clubManagedJoinDisclosure:
+    'सदस्य रहते हुए इस क्लब के चुने हुए खेलों के परिणाम यहाँ अपने आप भेजे जाते हैं। दूसरे सदस्य आपका उपनाम और परिणाम देख सकते हैं। बिना मंज़ूरी वाले सार्वजनिक क्लब में कोई भी जुड़ सकता है।',
+  clubInviteApprovalBody:
+    'इस लिंक से {club} में जुड़ने का अनुरोध किया जा सकता है। मालिक की मंज़ूरी ज़रूरी है।',
+  clubSubscriptionExpired:
+    'होस्टिंग की अवधि समाप्त हो गई है। पुराने रिकॉर्ड अब भी देखे या मिटाए जा सकते हैं।',
+  clubOwnerLimit: 'आपकी योजना की क्लब सीमा पूरी हो गई है।',
+  clubOwnerKeyInvalid: 'यह मालिक कुंजी मान्य नहीं है।',
+  clubOwnerExpires: '{date} तक पहुँच',
+  clubNoGames: 'कोई खेल नहीं चुना गया।',
+  clubMoreRecords: 'और रिकॉर्ड',
+
   clubBack: 'वापस',
   clubLoading: 'लोड हो रहा है…',
   clubReload: 'फिर से लोड करें',

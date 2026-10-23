@@ -394,3 +394,71 @@
 .club-footer {
   margin-top: 8px;
 }
+
+/* Managed Club House pages keep the shell's spacing and allow translated copy to wrap. */
+.club-managed-card {
+  margin-block: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color, #d8dadd);
+  border-radius: 1rem;
+  min-width: 0;
+}
+.club-managed-card h2,
+.club-managed-card h3 {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-block: 0 0.5rem;
+  overflow-wrap: anywhere;
+}
+.club-managed-fieldset {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color, #d8dadd);
+  border-radius: 0.75rem;
+  min-width: 0;
+}
+.club-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding-block: 0.5rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.club-choice input {
+  flex-shrink: 0;
+  margin-block-start: 0.2rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--accent, #44705c);
+}
+.club-game-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: 0 0.75rem;
+}
+.club-comparison-scroll {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+.club-comparison {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: start;
+  line-height: 1.5;
+  font-size: 0.875rem;
+}
+.club-comparison th,
+.club-comparison td {
+  padding: 0.6rem;
+  vertical-align: top;
+  text-align: start;
+  min-width: 7rem;
+  border-bottom: 1px solid var(--border-color, #d8dadd);
+  overflow-wrap: anywhere;
+}
+.club-comparison small {
+  display: block;
+  margin-block-start: 0.3rem;
+  color: var(--text-secondary, #66716b);
+}

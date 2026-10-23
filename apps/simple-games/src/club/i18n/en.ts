@@ -5,6 +5,62 @@
  * collide (src/i18n/i18n.test.ts).
  */
 export const en = {
+  clubOwnerSpace: 'Owner space',
+  clubOwnerKey: 'Owner key',
+  clubOwnerConnect: 'Open owner space',
+  clubOwnerForget: 'Forget this owner key',
+  clubOwnerKeyHelp: 'Keep this key private. It opens your owner space on this device.',
+  clubOwnerUsage: '{used} of {max} Clubs · {members} members per Club',
+  clubCreate: 'Create a Club',
+  clubName: 'Club name',
+  clubFindClubs: 'Find a Club',
+  clubVisibilityPublic: 'Public',
+  clubVisibilityPrivate: 'Private',
+  clubVisibility: 'Who can find this Club?',
+  clubVisibilityHelp:
+    'Public Clubs appear in the directory. Private Clubs need an invite key. Records are visible to Club members.',
+  clubApprovalRequired: 'Approve new members',
+  clubGames: 'Games in this Club',
+  clubGamesAll: 'All supported games',
+  clubGamesSelected: 'Selected games',
+  clubSettingsSaved: 'Settings saved',
+  clubJoinRequests: 'Join requests',
+  clubApprove: 'Approve',
+  clubReject: 'Decline',
+  clubRequestJoin: 'Request to join',
+  clubPendingTitle: 'Waiting for approval',
+  clubPendingHelp:
+    'Your results are not sent while this request is waiting. Check here when you want to see the owner’s decision.',
+  clubCheckRequest: 'Check request',
+  clubCancelRequest: 'Cancel request',
+  clubRequestRejected: 'The owner declined this request.',
+  clubRequestExpired: 'This request has expired.',
+  clubRecordBook: 'Record book',
+  clubRecordBasis:
+    'Current retained records, with one best per member. This is not a count of all games played.',
+  clubRecordParticipants: '{n} members with records',
+  clubRecordMedian: 'Median personal best: {value}',
+  clubRecordOwnRank: 'Your place among members: #{rank}',
+  clubAlbums: 'Record albums',
+  clubAlbumTitle: 'Album title',
+  clubPublishAlbum: 'Publish album',
+  clubAlbumDisclosure:
+    'Members of this Club can read the album. It captures selected records now; deleted or unavailable records are omitted later.',
+  clubAlbumUnavailable: '{n} records are no longer available.',
+  clubDeleteAlbum: 'Delete album',
+  clubDeleteAlbumBody: 'Delete this album? The original game records stay.',
+  clubManagedJoinDisclosure:
+    'While you are a member, results from this Club’s selected games are sent here automatically. Your nickname and results are visible to other members. Public Clubs without approval allow anyone to join.',
+  clubInviteApprovalBody:
+    'This link lets people request to join {club}. The owner must approve them.',
+  clubSubscriptionExpired:
+    'Hosting access has expired. Existing records can still be viewed or deleted.',
+  clubOwnerLimit: 'Your plan’s Club limit has been reached.',
+  clubOwnerKeyInvalid: 'This owner key is not valid.',
+  clubOwnerExpires: 'Access until {date}',
+  clubNoGames: 'No games selected.',
+  clubMoreRecords: 'More records',
+
   clubBack: 'Back',
   clubLoading: 'Loading…',
   clubReload: 'Reload',

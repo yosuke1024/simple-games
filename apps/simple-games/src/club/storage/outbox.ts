@@ -23,6 +23,7 @@ import type { KVStore } from '@/storage/kv';
 import { ClubApiError, isFinalError } from '../api/errors';
 import type { ClubClient } from '../api/client';
 import { contractFor } from '../contract/challenge';
+import { loadClubConnections } from './connections';
 
 /**
  * Every outbox mutation — a load, a change, a save — goes through this chain,
@@ -261,12 +262,15 @@ function deliver(client: ClubClient, item: ClubOutboxItem): Promise<unknown> {
 }
 
 /**
- * Failures that say nothing about the item: no answer at all, or a server
- * that asked us to slow down. They never count against it — an hour in a
- * tunnel must not cost a good score.
+ * Failures that say nothing about the item: no answer, a request to slow
+ * down, or an expired owner subscription that may be renewed. They never
+ * count against the item; the queue still applies its usual size bound.
  */
-const isNetworkTrouble = (error: unknown): boolean =>
-  error instanceof ClubApiError && (error.code === 'unreachable' || error.code === 'rate_limited');
+const isTemporaryBlock = (error: unknown): boolean =>
+  error instanceof ClubApiError &&
+  (error.code === 'unreachable' ||
+    error.code === 'rate_limited' ||
+    error.code === 'subscription_inactive');
 
 /**
  * One flush at a time per Club: a second caller waits and then sees what the
@@ -301,7 +305,18 @@ export function flushOutbox(
 
 async function flushNow(endpoint: string, client: ClubClient, kv?: KVStore): Promise<FlushReport> {
   const report: FlushReport = { sent: 0, blocked: false, unreachable: false, outcomes: [] };
+  const allowed = (await loadClubConnections(kv)).find(
+    (c) => c.endpoint === endpoint,
+  )?.allowedGameIds;
   for (const item of await pendingFor(endpoint, kv)) {
+    // A known exclusion is settled locally. An older item without a game ID
+    // is still checked by the server, which returns terminal `game_disabled`.
+    if (allowed != null && item.kind !== undefined && !allowed.includes(item.body.gameId)) {
+      report.outcomes.push({ item, fate: 'rejected' });
+      settle(item, 'rejected');
+      await remove(item, kv);
+      continue;
+    }
     let fate: ItemFate = 'sent';
     try {
       await deliver(client, item);
@@ -313,7 +328,7 @@ async function flushNow(endpoint: string, client: ClubClient, kv?: KVStore): Pro
             ? 'already'
             : 'rejected';
       } else {
-        const gaveUp = !isNetworkTrouble(error) && (await countAttempt(item, kv));
+        const gaveUp = !isTemporaryBlock(error) && (await countAttempt(item, kv));
         report.outcomes.push({ item, fate: gaveUp ? 'rejected' : 'queued' });
         if (gaveUp) {
           settle(item, 'rejected');

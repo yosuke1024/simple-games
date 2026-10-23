@@ -1,5 +1,11 @@
 # Simple Games — Web 版
 
+**2026-10-23 の Club House 追加判断:** 本文の「無料」「静的配信のみ」は Core のゲームの
+約束である。任意の Managed Club House は別のホスティング層として、オーナーの契約枠、
+公開範囲・承認・対象ゲーム、記録帳を持つ。ゲームと通常メンバーは無料のまま。
+`VITE_MANAGED_CLUB_ORIGIN` を設定しないビルドは従来どおりで、購入・決済 UI はまだない。
+契約と出荷前の条件は [architecture/managed-clubs.md](architecture/managed-clubs.md) を正とする。
+
 `https://pixapps.ai/simple-games/play/` で配信するブラウザ版の方針。
 ネイティブアプリの約束(バナー広告 1 枠のみ・買い切りで広告削除・初回起動から
 オフライン)は**アプリのもの**であり、Web 版はここに書く別の約束を持つ。

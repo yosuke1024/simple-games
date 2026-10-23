@@ -1,6 +1,62 @@
 import type { ClubMessages } from './en';
 
 export const ja: ClubMessages = {
+  clubOwnerSpace: 'オーナースペース',
+  clubOwnerKey: 'オーナーキー',
+  clubOwnerConnect: 'オーナースペースを開く',
+  clubOwnerForget: 'このオーナーキーを端末から消す',
+  clubOwnerKeyHelp: 'このキーでオーナースペースを開けます。他の人に教えないでください。',
+  clubOwnerUsage: '{max}クラブ中{used}クラブ · 各クラブ{members}名まで',
+  clubCreate: 'クラブを作る',
+  clubName: 'クラブ名',
+  clubFindClubs: 'クラブを探す',
+  clubVisibilityPublic: '一般公開',
+  clubVisibilityPrivate: '非公開',
+  clubVisibility: 'クラブの公開範囲',
+  clubVisibilityHelp:
+    '一般公開のクラブは一覧に表示されます。非公開のクラブには招待キーが必要です。記録はクラブのメンバーが閲覧できます。',
+  clubApprovalRequired: '新しいメンバーを承認する',
+  clubGames: 'クラブ内のゲーム',
+  clubGamesAll: '対応するすべてのゲーム',
+  clubGamesSelected: 'ゲームを選ぶ',
+  clubSettingsSaved: '設定を保存しました',
+  clubJoinRequests: '参加リクエスト',
+  clubApprove: '承認',
+  clubReject: '見送る',
+  clubRequestJoin: '参加をリクエスト',
+  clubPendingTitle: '承認待ち',
+  clubPendingHelp:
+    '承認待ちの間は結果を送りません。オーナーの判断を確認したいときに、この画面で確認できます。',
+  clubCheckRequest: 'リクエストを確認',
+  clubCancelRequest: 'リクエストを取り消す',
+  clubRequestRejected: 'オーナーが参加を見送りました。',
+  clubRequestExpired: 'このリクエストは期限が切れています。',
+  clubRecordBook: '記録帳',
+  clubRecordBasis:
+    '現在残っている記録から、メンバーごとの自己ベストを集計しています。全プレイ回数ではありません。',
+  clubRecordParticipants: '記録のあるメンバー：{n}名',
+  clubRecordMedian: '自己ベストの中央値：{value}',
+  clubRecordOwnRank: 'メンバーの自己ベスト中：{rank}位',
+  clubAlbums: '記録アルバム',
+  clubAlbumTitle: 'アルバム名',
+  clubPublishAlbum: 'アルバムを公開',
+  clubAlbumDisclosure:
+    'このクラブのメンバーが閲覧できます。選んだ現在の記録をまとめます。後で削除された記録や利用できなくなった記録は表示されません。',
+  clubAlbumUnavailable: '{n}件の記録が利用できなくなっています。',
+  clubDeleteAlbum: 'アルバムを削除',
+  clubDeleteAlbumBody: 'このアルバムを削除しますか？元のゲーム記録は残ります。',
+  clubManagedJoinDisclosure:
+    '参加している間は、このクラブの対象ゲームの結果が自動で送られます。表示名と結果は他のメンバーが閲覧できます。一般公開で承認不要のクラブには誰でも参加できます。',
+  clubInviteApprovalBody:
+    'このリンクから{club}への参加をリクエストできます。オーナーの承認が必要です。',
+  clubSubscriptionExpired:
+    'ホスティングの利用期限が切れています。既存の記録は引き続き閲覧・削除できます。',
+  clubOwnerLimit: 'プランのクラブ数の上限に達しています。',
+  clubOwnerKeyInvalid: 'このオーナーキーは有効ではありません。',
+  clubOwnerExpires: '利用期限：{date}',
+  clubNoGames: 'ゲームが選ばれていません。',
+  clubMoreRecords: '記録をさらに表示',
+
   clubBack: '戻る',
   clubLoading: '読み込み中…',
   clubReload: '再読み込み',

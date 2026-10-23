@@ -1,143 +1,198 @@
-/** `sg.club` through its Core schema (club.md §4-1). Tokens never leave this file except to the client. */
-import { loadRecord, saveRecord } from '@/storage/repo';
+/** Club credentials through `sg.club`: never exported, and wiped by Reset Local Data. */
+import { loadRecord, updateRecord } from '@/storage/repo';
 import {
   CLUB_CONNECTIONS_MAX,
   CLUB_DEPARTED_MAX,
   clubConnectionsSchema,
   type ClubConnection,
+  type ClubConnections,
+  type ManagedClubOwner,
+  type PendingClubJoin,
 } from '@/storage/schemas';
-import type { KVStore } from '@/storage/kv';
+import { preferencesKV, type KVStore } from '@/storage/kv';
 import type { ClubConnectionSummary } from '@/ui/clubBridge';
 
-/** Every writer below goes through `save`, which carries the departed list along unchanged. */
-async function loadAll(
-  kv?: KVStore,
-): Promise<{ connections: ClubConnection[]; departed: ClubConnection[] }> {
-  const record = await loadRecord(clubConnectionsSchema, kv);
-  return { connections: record.connections, departed: record.departed ?? [] };
-}
-
-async function load(kv?: KVStore): Promise<ClubConnection[]> {
-  return (await loadAll(kv)).connections;
-}
-
-async function save(
-  connections: ClubConnection[],
-  kv?: KVStore,
-  departed?: ClubConnection[],
-): Promise<ClubConnection[]> {
-  const kept = departed ?? (await loadAll(kv)).departed;
-  await saveRecord(
+// The whole read/modify/write shares the repo's queue with Reset Local Data.
+// A separate queue would let a delayed credential write outlive that reset.
+function change(
+  update: (record: ClubConnections) => ClubConnections,
+  kv: KVStore = preferencesKV,
+): Promise<ClubConnections> {
+  return updateRecord(
     clubConnectionsSchema,
-    { schemaVersion: 1, connections, ...(kept.length > 0 ? { departed: kept } : {}) },
+    (record) => {
+      const updated = update(record);
+      return clubConnectionsSchema.validate(updated) ?? updated;
+    },
     kv,
   );
-  return connections;
 }
 
-export function loadClubConnections(kv?: KVStore): Promise<ClubConnection[]> {
-  return load(kv);
+export async function loadClubConnections(kv?: KVStore): Promise<ClubConnection[]> {
+  return (await loadRecord(clubConnectionsSchema, kv)).connections;
 }
 
-/**
- * Replaces a connection to the same endpoint; throws `too_many_connections` at
- * the cap. A Club that is connected is no longer "departed": its old entry goes.
- */
+/** One membership per endpoint; returning removes the departed and pending entries. */
 export async function addClubConnection(
   connection: ClubConnection,
   kv?: KVStore,
 ): Promise<ClubConnection[]> {
-  const { connections: current, departed } = await loadAll(kv);
-  const rest = departed.filter((c) => c.endpoint !== connection.endpoint);
-  const index = current.findIndex((c) => c.endpoint === connection.endpoint);
-  if (index >= 0) {
-    const next = current.slice();
-    next[index] = connection;
-    return save(next, kv, rest);
-  }
-  if (current.length >= CLUB_CONNECTIONS_MAX) throw new Error('too_many_connections');
-  return save([...current, connection], kv, rest);
+  const next = await change((record) => {
+    const connections = record.connections.slice();
+    const index = connections.findIndex((c) => c.endpoint === connection.endpoint);
+    if (index >= 0) connections[index] = connection;
+    else {
+      if (connections.length >= CLUB_CONNECTIONS_MAX) throw new Error('too_many_connections');
+      connections.push(connection);
+    }
+    return {
+      ...record,
+      connections,
+      ...(record.departed
+        ? { departed: record.departed.filter((c) => c.endpoint !== connection.endpoint) }
+        : {}),
+      ...(record.pending
+        ? { pending: record.pending.filter((p) => p.endpoint !== connection.endpoint) }
+        : {}),
+    };
+  }, kv);
+  return next.connections;
 }
 
 export async function removeClubConnection(
   endpoint: string,
   kv?: KVStore,
 ): Promise<ClubConnection[]> {
-  const current = await load(kv);
-  return save(
-    current.filter((c) => c.endpoint !== endpoint),
-    kv,
-  );
+  return (
+    await change(
+      (r) => ({ ...r, connections: r.connections.filter((c) => c.endpoint !== endpoint) }),
+      kv,
+    )
+  ).connections;
 }
 
-/**
- * Disconnect (club.md §8-5): the connection leaves the active list but its
- * credentials stay on the device as a departed entry, so joining that Club
- * again returns the same member (decision 43). The departed entry never sends.
- */
+/** Disconnect keeps the credential for returning as the same member; departed entries never send. */
 export async function departClubConnection(
   endpoint: string,
   kv?: KVStore,
 ): Promise<ClubConnection[]> {
-  const { connections, departed } = await loadAll(kv);
-  const leaving = connections.find((c) => c.endpoint === endpoint);
-  const next = connections.filter((c) => c.endpoint !== endpoint);
-  if (leaving === undefined) return save(next, kv, departed);
-  const kept = [...departed.filter((c) => c.endpoint !== endpoint), leaving];
-  return save(next, kv, kept.slice(-CLUB_DEPARTED_MAX));
+  return (
+    await change((record) => {
+      const leaving = record.connections.find((c) => c.endpoint === endpoint);
+      if (!leaving) return record;
+      return {
+        ...record,
+        connections: record.connections.filter((c) => c.endpoint !== endpoint),
+        departed: [
+          ...(record.departed ?? []).filter((c) => c.endpoint !== endpoint),
+          leaving,
+        ].slice(-CLUB_DEPARTED_MAX),
+      };
+    }, kv)
+  ).connections;
 }
 
-/** The departed entry for a Club, if this device ever left it (club.md §7-3「同じ端末で入り直す」). */
 export async function findDeparted(endpoint: string, kv?: KVStore): Promise<ClubConnection | null> {
-  return (await loadAll(kv)).departed.find((c) => c.endpoint === endpoint) ?? null;
-}
-
-/** The departed entry is no use any more (the server no longer knows that member). */
-export async function forgetDeparted(endpoint: string, kv?: KVStore): Promise<void> {
-  const { connections, departed } = await loadAll(kv);
-  if (!departed.some((c) => c.endpoint === endpoint)) return;
-  await save(
-    connections,
-    kv,
-    departed.filter((c) => c.endpoint !== endpoint),
+  return (
+    (await loadRecord(clubConnectionsSchema, kv)).departed?.find((c) => c.endpoint === endpoint) ??
+    null
   );
 }
 
-export async function updateClubName(
+export async function forgetDeparted(endpoint: string, kv?: KVStore): Promise<void> {
+  await change(
+    (r) => ({
+      ...r,
+      ...(r.departed ? { departed: r.departed.filter((c) => c.endpoint !== endpoint) } : {}),
+    }),
+    kv,
+  );
+}
+
+async function updateConnection(
+  endpoint: string,
+  update: (c: ClubConnection) => ClubConnection,
+  kv?: KVStore,
+): Promise<ClubConnection[]> {
+  return (
+    await change(
+      (r) => ({
+        ...r,
+        connections: r.connections.map((c) => (c.endpoint === endpoint ? update(c) : c)),
+      }),
+      kv,
+    )
+  ).connections;
+}
+
+export function updateClubName(
   endpoint: string,
   clubName: string,
   kv?: KVStore,
 ): Promise<ClubConnection[]> {
-  const current = await load(kv);
-  return save(
-    current.map((c) => (c.endpoint === endpoint ? { ...c, clubName } : c)),
-    kv,
-  );
+  return updateConnection(endpoint, (c) => ({ ...c, clubName }), kv);
 }
 
-/** The server's name for this member differs from the cached one (the owner renamed them). */
-export async function updateNickname(
+export function updateNickname(
   endpoint: string,
   nickname: string,
   kv?: KVStore,
 ): Promise<ClubConnection[]> {
-  const current = await load(kv);
-  return save(
-    current.map((c) => (c.endpoint === endpoint ? { ...c, nickname } : c)),
+  return updateConnection(endpoint, (c) => ({ ...c, nickname }), kv);
+}
+
+export function updateClubGames(
+  endpoint: string,
+  allowedGameIds: string[] | null,
+  kv?: KVStore,
+): Promise<ClubConnection[]> {
+  return updateConnection(endpoint, (c) => ({ ...c, allowedGameIds }), kv);
+}
+
+/** Only the explicit automatic-send disclosure can grant this consent. */
+export function acceptAutoSend(endpoint: string, kv?: KVStore): Promise<ClubConnection[]> {
+  return updateConnection(endpoint, (c) => ({ ...c, autoSend: true as const }), kv);
+}
+
+export async function loadPendingJoins(kv?: KVStore): Promise<PendingClubJoin[]> {
+  return (await loadRecord(clubConnectionsSchema, kv)).pending ?? [];
+}
+
+export async function savePendingJoin(pending: PendingClubJoin, kv?: KVStore): Promise<void> {
+  await change(
+    (r) => ({
+      ...r,
+      pending: [...(r.pending ?? []).filter((p) => p.endpoint !== pending.endpoint), pending].slice(
+        -CLUB_CONNECTIONS_MAX,
+      ),
+    }),
     kv,
   );
 }
 
-/**
- * The player accepted `clubAutoSendDisclosure` on the Club screen: a connection
- * from before automatic sending existed starts sending from here on (club.md §4-1).
- */
-export async function acceptAutoSend(endpoint: string, kv?: KVStore): Promise<ClubConnection[]> {
-  const current = await load(kv);
-  return save(
-    current.map((c) => (c.endpoint === endpoint ? { ...c, autoSend: true as const } : c)),
+export async function forgetPendingJoin(endpoint: string, kv?: KVStore): Promise<void> {
+  await change(
+    (r) => ({
+      ...r,
+      ...(r.pending ? { pending: r.pending.filter((p) => p.endpoint !== endpoint) } : {}),
+    }),
     kv,
   );
+}
+
+export async function loadManagedOwner(kv?: KVStore): Promise<ManagedClubOwner | null> {
+  return (await loadRecord(clubConnectionsSchema, kv)).managedOwner ?? null;
+}
+
+export async function saveManagedOwner(
+  owner: ManagedClubOwner | null,
+  kv?: KVStore,
+): Promise<void> {
+  await change((r) => {
+    if (owner !== null) return { ...r, managedOwner: owner };
+    const { managedOwner: _removed, ...rest } = r;
+    return rest;
+  }, kv);
 }
 
 export function summarize(connection: ClubConnection): ClubConnectionSummary {

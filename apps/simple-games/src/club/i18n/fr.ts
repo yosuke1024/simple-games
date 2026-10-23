@@ -1,6 +1,63 @@
 import type { ClubMessages } from './en';
 
 export const fr: ClubMessages = {
+  clubOwnerSpace: 'Espace propriétaire',
+  clubOwnerKey: 'Clé propriétaire',
+  clubOwnerConnect: 'Ouvrir l’espace propriétaire',
+  clubOwnerForget: 'Oublier cette clé',
+  clubOwnerKeyHelp:
+    'Gardez cette clé secrète. Elle ouvre votre espace propriétaire sur cet appareil.',
+  clubOwnerUsage: '{used} Clubs sur {max} · {members} membres par Club',
+  clubCreate: 'Créer un Club',
+  clubName: 'Nom du Club',
+  clubFindClubs: 'Trouver un Club',
+  clubVisibilityPublic: 'Public',
+  clubVisibilityPrivate: 'Privé',
+  clubVisibility: 'Qui peut trouver ce Club ?',
+  clubVisibilityHelp:
+    'Les Clubs publics figurent dans l’annuaire. Les Clubs privés nécessitent une clé d’invitation. Les membres du Club peuvent voir les résultats.',
+  clubApprovalRequired: 'Approuver les nouveaux membres',
+  clubGames: 'Jeux du Club',
+  clubGamesAll: 'Tous les jeux compatibles',
+  clubGamesSelected: 'Choisir les jeux',
+  clubSettingsSaved: 'Réglages enregistrés',
+  clubJoinRequests: 'Demandes d’adhésion',
+  clubApprove: 'Approuver',
+  clubReject: 'Refuser',
+  clubRequestJoin: 'Demander à rejoindre',
+  clubPendingTitle: 'En attente d’approbation',
+  clubPendingHelp:
+    'Vos résultats ne sont pas envoyés pendant l’attente. Consultez cet écran pour connaître la décision du propriétaire.',
+  clubCheckRequest: 'Vérifier la demande',
+  clubCancelRequest: 'Annuler la demande',
+  clubRequestRejected: 'Le propriétaire a refusé cette demande.',
+  clubRequestExpired: 'Cette demande a expiré.',
+  clubRecordBook: 'Carnet de records',
+  clubRecordBasis:
+    'Résultats actuellement conservés, avec un meilleur résultat par membre. Ce n’est pas le nombre total de parties.',
+  clubRecordParticipants: '{n} membres avec des résultats',
+  clubRecordMedian: 'Médiane des meilleurs résultats : {value}',
+  clubRecordOwnRank: 'Votre place parmi les membres : #{rank}',
+  clubAlbums: 'Albums de records',
+  clubAlbumTitle: 'Titre de l’album',
+  clubPublishAlbum: 'Publier l’album',
+  clubAlbumDisclosure:
+    'Les membres de ce Club peuvent lire l’album. Il rassemble les résultats sélectionnés maintenant ; ceux supprimés ou devenus indisponibles seront ensuite omis.',
+  clubAlbumUnavailable: '{n} résultats ne sont plus disponibles.',
+  clubDeleteAlbum: 'Supprimer l’album',
+  clubDeleteAlbumBody: 'Supprimer cet album ? Les résultats originaux sont conservés.',
+  clubManagedJoinDisclosure:
+    'Pendant votre adhésion, les résultats des jeux sélectionnés du Club sont envoyés ici automatiquement. Les autres membres voient votre pseudo et vos résultats. Un Club public sans approbation est ouvert à tous.',
+  clubInviteApprovalBody:
+    'Ce lien permet de demander à rejoindre {club}. Le propriétaire doit approuver la demande.',
+  clubSubscriptionExpired:
+    'L’accès à l’hébergement a expiré. Les résultats existants restent consultables et supprimables.',
+  clubOwnerLimit: 'La limite de Clubs de votre formule est atteinte.',
+  clubOwnerKeyInvalid: 'Cette clé propriétaire n’est pas valide.',
+  clubOwnerExpires: 'Accès jusqu’au {date}',
+  clubNoGames: 'Aucun jeu sélectionné.',
+  clubMoreRecords: 'Plus de résultats',
+
   clubBack: 'Retour',
   clubLoading: 'Chargement…',
   clubReload: 'Recharger',

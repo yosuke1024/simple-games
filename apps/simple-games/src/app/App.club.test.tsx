@@ -34,6 +34,7 @@ const { capacitorMock, reviewMock, flags } = vi.hoisted(() => ({
 }));
 
 vi.mock('../ui/clubFeatures', () => ({
+  MANAGED_CLUB_ORIGIN: null,
   get PRIVATE_CLUBS_ENABLED() {
     return flags.privateClubs;
   },

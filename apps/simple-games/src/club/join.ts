@@ -8,10 +8,15 @@
  * is an ordinary new one. A network failure changes nothing.
  */
 import type { KVStore } from '@/storage/kv';
-import type { ClubConnection } from '@/storage/schemas';
+import type { ClubConnection, PendingClubJoin } from '@/storage/schemas';
 import { createClient } from './api/client';
 import { ClubApiError } from './api/errors';
-import { findDeparted, forgetDeparted } from './storage/connections';
+import {
+  findDeparted,
+  forgetDeparted,
+  loadClubConnections,
+  loadPendingJoins,
+} from './storage/connections';
 
 /** The server no longer knows this token: the way back is closed, not merely out of reach. */
 const isGone = (e: unknown): boolean =>
@@ -22,19 +27,43 @@ export interface JoinRequest {
   /** Null joins an open server (the Public Club House). */
   inviteToken: string | null;
   nickname: string;
+  allowPending?: true;
 }
 
 export interface JoinOutcome {
   connection: ClubConnection;
-  /** True when the departed member came back instead of a new one being made. */
+  /** True when an existing membership is reused instead of a new one being made. */
   restored: boolean;
 }
 
-export async function joinOrRestore(
-  { endpoint, inviteToken, nickname }: JoinRequest,
+export interface PendingJoinOutcome {
+  pending: PendingClubJoin;
+}
+
+export function joinOrRestore(
+  request: JoinRequest & { allowPending: true },
   kv?: KVStore,
   fetchImpl?: typeof fetch,
-): Promise<JoinOutcome> {
+): Promise<JoinOutcome | PendingJoinOutcome>;
+export function joinOrRestore(
+  request: JoinRequest,
+  kv?: KVStore,
+  fetchImpl?: typeof fetch,
+): Promise<JoinOutcome>;
+export async function joinOrRestore(
+  { endpoint, inviteToken, nickname, allowPending }: JoinRequest,
+  kv?: KVStore,
+  fetchImpl?: typeof fetch,
+): Promise<JoinOutcome | PendingJoinOutcome> {
+  // An invite may be pasted again or a listed Club opened after joining.
+  // Reuse the local receipt before any unauthenticated join can create a
+  // second member and replace the credentials for the original one.
+  const existing = (await loadClubConnections(kv)).find((c) => c.endpoint === endpoint);
+  if (existing) return { connection: existing, restored: true };
+  if (allowPending) {
+    const pending = (await loadPendingJoins(kv)).find((p) => p.endpoint === endpoint);
+    if (pending) return { pending };
+  }
   const departed = await findDeparted(endpoint, kv);
   if (departed !== null) {
     const client = createClient(endpoint, departed.memberToken, fetchImpl);
@@ -66,7 +95,23 @@ export async function joinOrRestore(
       };
     }
   }
-  const joined = await createClient(endpoint, null, fetchImpl).join(inviteToken, nickname);
+  const api = createClient(endpoint, null, fetchImpl);
+  const joined = allowPending
+    ? await api.requestJoin(inviteToken, nickname)
+    : await api.join(inviteToken, nickname);
+  if ('requestToken' in joined) {
+    return {
+      pending: {
+        endpoint,
+        requestId: joined.request.id,
+        requestToken: joined.requestToken,
+        clubName: joined.club.name,
+        nickname: joined.request.nickname,
+        createdAt: joined.request.createdAt,
+        expiresAt: joined.request.expiresAt,
+      },
+    };
+  }
   return {
     restored: false,
     connection: {

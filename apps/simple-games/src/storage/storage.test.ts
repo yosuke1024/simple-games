@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { KVStore } from './kv';
 import { createMemoryKV } from './kv';
-import { clearLocalData, loadRecord, loadRecordWithStatus, saveRecord } from './repo';
+import { clearLocalData, loadRecord, loadRecordWithStatus, saveRecord, updateRecord } from './repo';
 import {
   CLUB_CONNECTIONS_MAX,
   CLUB_DEPARTED_MAX,
@@ -131,6 +131,114 @@ describe('clearLocalData', () => {
     expect(await kv.get(STORAGE_KEYS.settings)).toBeNull();
     expect(await kv.get('nm.stats')).toBeNull();
     expect(await kv.get(STORAGE_KEYS.iap)).not.toBeNull();
+  });
+});
+
+describe('atomic record updates and Reset Local Data', () => {
+  const owner = { origin: 'https://clubs.example.com', ownerToken: 'owner-secret-credential' };
+  const pending = {
+    endpoint: 'https://clubs.example.com/clubs/friday',
+    requestId: 'request-1',
+    requestToken: 'pending-secret-credential',
+    clubName: 'Friday Club',
+    nickname: 'Ada',
+    createdAt: '2026-10-23T00:00:00.000Z',
+    expiresAt: '2026-10-30T00:00:00.000Z',
+  };
+
+  it('merges concurrent updates without losing another credential', async () => {
+    const kv = createMemoryKV();
+    await Promise.all([
+      updateRecord(clubConnectionsSchema, (r) => ({ ...r, managedOwner: owner }), kv),
+      updateRecord(clubConnectionsSchema, (r) => ({ ...r, pending: [pending] }), kv),
+    ]);
+    expect(await loadRecord(clubConnectionsSchema, kv)).toEqual({
+      ...clubConnectionsSchema.defaultValue(),
+      managedOwner: owner,
+      pending: [pending],
+    });
+  });
+
+  it('does not restore secrets when reset follows an update before its read starts', async () => {
+    const kv = createMemoryKV();
+    const ownerWrite = updateRecord(
+      clubConnectionsSchema,
+      (r) => ({ ...r, managedOwner: owner }),
+      kv,
+    );
+    const pendingWrite = updateRecord(
+      clubConnectionsSchema,
+      (r) => ({ ...r, pending: [pending] }),
+      kv,
+    );
+    const wipe = clearLocalData([STORAGE_KEYS.club], kv);
+    await Promise.all([ownerWrite, pendingWrite, wipe]);
+    expect(await kv.get(STORAGE_KEYS.club)).toBeNull();
+  });
+
+  it('waits for an in-flight read and write before removing the credential', async () => {
+    const memory = createMemoryKV();
+    let release!: () => void;
+    let entered!: () => void;
+    const reading = new Promise<void>((resolve) => (entered = resolve));
+    const released = new Promise<void>((resolve) => (release = resolve));
+    const kv: KVStore = {
+      ...memory,
+      get: async (key) => {
+        const value = await memory.get(key);
+        entered();
+        await released;
+        return value;
+      },
+    };
+    const write = updateRecord(clubConnectionsSchema, (r) => ({ ...r, managedOwner: owner }), kv);
+    await reading;
+    const wipe = clearLocalData([STORAGE_KEYS.club], kv);
+    release();
+    await Promise.all([write, wipe]);
+    expect(await memory.get(STORAGE_KEYS.club)).toBeNull();
+  });
+
+  it('keeps changes requested after reset without bringing back old secrets', async () => {
+    const kv = createMemoryKV();
+    const oldWrite = updateRecord(
+      clubConnectionsSchema,
+      (r) => ({ ...r, managedOwner: owner }),
+      kv,
+    );
+    const wipe = clearLocalData([STORAGE_KEYS.club], kv);
+    const afterwards = updateRecord(
+      clubConnectionsSchema,
+      (r) => ({ ...r, pending: [pending] }),
+      kv,
+    );
+    await Promise.all([oldWrite, wipe, afterwards]);
+    expect(await loadRecord(clubConnectionsSchema, kv)).toEqual({
+      ...clubConnectionsSchema.defaultValue(),
+      pending: [pending],
+    });
+  });
+
+  it('does not let a rejected change block reset or a later update', async () => {
+    const kv = createMemoryKV();
+    await saveRecord(
+      clubConnectionsSchema,
+      { ...clubConnectionsSchema.defaultValue(), managedOwner: owner },
+      kv,
+    );
+    await expect(
+      updateRecord(
+        clubConnectionsSchema,
+        () => {
+          throw new Error('limit reached');
+        },
+        kv,
+      ),
+    ).rejects.toThrow('limit reached');
+    expect((await loadRecord(clubConnectionsSchema, kv)).managedOwner).toEqual(owner);
+    await clearLocalData([STORAGE_KEYS.club], kv);
+    await updateRecord(clubConnectionsSchema, (r) => ({ ...r, pending: [pending] }), kv);
+    expect((await loadRecord(clubConnectionsSchema, kv)).managedOwner).toBeUndefined();
   });
 });
 

@@ -1,6 +1,62 @@
 import type { ClubMessages } from './en';
 
 export const vi: ClubMessages = {
+  clubOwnerSpace: 'Không gian chủ câu lạc bộ',
+  clubOwnerKey: 'Khóa chủ câu lạc bộ',
+  clubOwnerConnect: 'Mở không gian chủ câu lạc bộ',
+  clubOwnerForget: 'Quên khóa này',
+  clubOwnerKeyHelp: 'Giữ bí mật khóa này. Khóa mở không gian chủ câu lạc bộ trên thiết bị này.',
+  clubOwnerUsage: '{used}/{max} câu lạc bộ · {members} thành viên mỗi câu lạc bộ',
+  clubCreate: 'Tạo câu lạc bộ',
+  clubName: 'Tên câu lạc bộ',
+  clubFindClubs: 'Tìm câu lạc bộ',
+  clubVisibilityPublic: 'Công khai',
+  clubVisibilityPrivate: 'Riêng tư',
+  clubVisibility: 'Ai có thể tìm thấy câu lạc bộ này?',
+  clubVisibilityHelp:
+    'Câu lạc bộ công khai xuất hiện trong danh sách. Câu lạc bộ riêng tư cần khóa mời. Thành viên có thể xem thành tích.',
+  clubApprovalRequired: 'Duyệt thành viên mới',
+  clubGames: 'Trò chơi trong câu lạc bộ',
+  clubGamesAll: 'Tất cả trò chơi được hỗ trợ',
+  clubGamesSelected: 'Chọn trò chơi',
+  clubSettingsSaved: 'Đã lưu cài đặt',
+  clubJoinRequests: 'Yêu cầu tham gia',
+  clubApprove: 'Chấp nhận',
+  clubReject: 'Từ chối',
+  clubRequestJoin: 'Yêu cầu tham gia',
+  clubPendingTitle: 'Đang chờ phê duyệt',
+  clubPendingHelp:
+    'Kết quả không được gửi trong khi chờ. Bạn có thể kiểm tra quyết định của chủ câu lạc bộ tại đây khi muốn.',
+  clubCheckRequest: 'Kiểm tra yêu cầu',
+  clubCancelRequest: 'Hủy yêu cầu',
+  clubRequestRejected: 'Chủ câu lạc bộ đã từ chối yêu cầu này.',
+  clubRequestExpired: 'Yêu cầu này đã hết hạn.',
+  clubRecordBook: 'Sổ thành tích',
+  clubRecordBasis:
+    'Thành tích hiện còn lưu, lấy một kết quả tốt nhất mỗi thành viên. Đây không phải tổng số lượt chơi.',
+  clubRecordParticipants: '{n} thành viên có thành tích',
+  clubRecordMedian: 'Trung vị thành tích tốt nhất: {value}',
+  clubRecordOwnRank: 'Thứ hạng của bạn giữa các thành viên: #{rank}',
+  clubAlbums: 'Album thành tích',
+  clubAlbumTitle: 'Tên album',
+  clubPublishAlbum: 'Đăng album',
+  clubAlbumDisclosure:
+    'Thành viên câu lạc bộ này có thể xem album. Album ghi lại thành tích đang được chọn; thành tích bị xóa hoặc không còn khả dụng sẽ được bỏ qua sau đó.',
+  clubAlbumUnavailable: '{n} thành tích không còn khả dụng.',
+  clubDeleteAlbum: 'Xóa album',
+  clubDeleteAlbumBody: 'Xóa album này? Thành tích trò chơi gốc vẫn được giữ.',
+  clubManagedJoinDisclosure:
+    'Khi là thành viên, kết quả từ các trò chơi được chọn của câu lạc bộ được tự động gửi tới đây. Thành viên khác có thể xem biệt danh và kết quả của bạn. Bất kỳ ai cũng có thể vào câu lạc bộ công khai không cần phê duyệt.',
+  clubInviteApprovalBody:
+    'Liên kết này cho phép yêu cầu tham gia {club}. Chủ câu lạc bộ phải chấp thuận.',
+  clubSubscriptionExpired:
+    'Quyền sử dụng dịch vụ lưu trữ đã hết hạn. Vẫn có thể xem hoặc xóa thành tích hiện có.',
+  clubOwnerLimit: 'Đã đạt giới hạn câu lạc bộ của gói.',
+  clubOwnerKeyInvalid: 'Khóa chủ câu lạc bộ không hợp lệ.',
+  clubOwnerExpires: 'Sử dụng đến {date}',
+  clubNoGames: 'Chưa chọn trò chơi.',
+  clubMoreRecords: 'Thành tích khác',
+
   clubBack: 'Quay lại',
   clubLoading: 'Đang tải…',
   clubReload: 'Tải lại',

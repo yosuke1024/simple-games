@@ -107,4 +107,10 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   'clubDeleteResultTitle',
   'clubDeleteResultBody',
   'clubDeleteConfirm',
+  // Managed Clubs: discovery, automatic sending and member-only album publication.
+  // Approval provenance remains unapproved until the release gate is completed.
+  'clubVisibilityHelp',
+  'clubManagedJoinDisclosure',
+  'clubAlbumDisclosure',
+  'clubDeleteAlbumBody',
 ];

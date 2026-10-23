@@ -117,6 +117,41 @@ export async function saveRecord<T>(
   });
 }
 
+/**
+ * Changes a record in one queued operation, including its read. Separate
+ * `loadRecord` / `saveRecord` calls leave a gap where Reset Local Data can
+ * delete the key before the stale value is written back, or another update
+ * can be lost. The entire change takes its place in the same queue as reset,
+ * restore, and ordinary saves at the moment it is requested.
+ *
+ * Storage failures use the same defaults / best effort as load and save.
+ * An exception from `update` is deliberately returned to its caller (for
+ * example, a limit being reached); it writes nothing and does not block the
+ * next operation. `update` must be synchronous and must not call repo helpers.
+ */
+export function updateRecord<T>(
+  def: SchemaDef<T>,
+  update: (value: T) => T,
+  kv: KVStore = preferencesKV,
+): Promise<T> {
+  return enqueue(def.key, async () => {
+    let current = def.defaultValue();
+    try {
+      const raw = await kv.get(def.key);
+      if (raw !== null) current = def.validate(JSON.parse(raw)) ?? def.defaultValue();
+    } catch {
+      // Missing, corrupt, or unreadable records have the same default as loadRecord.
+    }
+    const next = update(current);
+    try {
+      await kv.set(def.key, JSON.stringify(next));
+    } catch {
+      // The caller can still use the change when this device cannot save it.
+    }
+    return next;
+  });
+}
+
 export async function removeRecord(key: string, kv: KVStore = preferencesKV): Promise<void> {
   await enqueue(key, () => kv.remove(key));
 }
