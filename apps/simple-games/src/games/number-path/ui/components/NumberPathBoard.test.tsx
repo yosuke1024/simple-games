@@ -6,6 +6,8 @@
  * only way to say a drag's trailing click tapped *nothing*: on a real board a
  * tap that arrived after a stroke looks exactly like the stroke alone.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';

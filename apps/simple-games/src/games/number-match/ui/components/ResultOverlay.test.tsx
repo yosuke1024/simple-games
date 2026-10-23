@@ -2,6 +2,8 @@
  * The result card (§12): the score and its parts, the record it was measured
  * against and how far off it was, and the way onward — which differs by mode.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';

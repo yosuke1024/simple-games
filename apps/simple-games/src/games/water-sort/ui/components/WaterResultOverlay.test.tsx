@@ -3,6 +3,8 @@
  * (docs/WATER_SORT_RULES.md §9) — no score, no streak, and each personal
  * best mentioned once, quietly, with how far off the record it was.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';

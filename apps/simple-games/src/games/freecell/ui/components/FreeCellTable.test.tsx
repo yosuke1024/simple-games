@@ -4,6 +4,8 @@
  * into a drag, and how little the screen is told. What the screen does with a
  * drop is FreeCellRoot.test.tsx's business.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';

@@ -7,6 +7,8 @@
  * a hand-drawn 3×3 — three lines of three, clued at the left — so every cell
  * is where the test says it is.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';

@@ -3,6 +3,8 @@
  * (docs/MINESWEEPER_RULES.md §9) — no score, no streak, a best mentioned
  * once, and the margin against it only when a win set one.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';

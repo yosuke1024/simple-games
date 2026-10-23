@@ -3,6 +3,8 @@
  * (docs/BUNNY_HOP_RULES.md §9, §12): the record stated once, with how far
  * this run was from it.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';

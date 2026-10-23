@@ -5,6 +5,8 @@
  * next render, the second write would carry pre-flush stats and silently undo
  * the first (docs/BRICK_BREAKER_RULES.md §9).
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../i18n';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { statsSchema, type Stats } from '../storage/schemas';

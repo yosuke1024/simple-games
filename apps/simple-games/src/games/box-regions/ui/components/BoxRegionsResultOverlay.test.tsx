@@ -3,6 +3,8 @@
  * again comes first, a fresh board second, and the daily has no second — one
  * board a day. Pinned after a review found the two the other way round.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';

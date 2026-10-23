@@ -2,9 +2,10 @@
  * A game's catalog must load with the game (issue #38): every file the
  * registry's loaders dynamically import IN ORDER TO RENDER SOMETHING has to
  * register the game's messages first, via a side-effect `import '../i18n'`.
- * In production a missing import means raw message keys on screen; render
- * tests cannot catch it because setup.ts registers every catalog for them.
- * This static check is what does.
+ * In production a missing import means raw message keys on screen. A render
+ * test would see them too, but only on the screens it happens to assert on
+ * (and a test that renders a screen directly registers the catalog itself —
+ * src/test/setup.ts). This static check is what covers every entry point.
  *
  * `loadStorageSchemas` is the one loader that is exempt, and it is named here
  * rather than filtered by file extension so the exemption cannot quietly grow

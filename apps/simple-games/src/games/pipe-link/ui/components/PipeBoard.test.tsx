@@ -10,6 +10,8 @@
  * The board is driven directly with a hand-made 3×3 (the Quick Rules'
  * finished board), so each test knows every tile's place.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';

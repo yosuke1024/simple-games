@@ -7,6 +7,8 @@
  * SnakeBoard: the wrapper runs exactly when SnakeStage renders, so a count
  * that does not move is a stage that did not redraw.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';

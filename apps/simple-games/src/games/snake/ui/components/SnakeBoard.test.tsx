@@ -4,6 +4,8 @@
  * shape, and that no text is drawn on it. That it is redrawn only for what
  * it shows is SnakeStage.test.tsx's.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { cellAt } from '../../game';

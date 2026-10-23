@@ -22,6 +22,8 @@
  * crafted hand fails loudly here rather than quietly proving something about a
  * game nobody can play.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../i18n';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {

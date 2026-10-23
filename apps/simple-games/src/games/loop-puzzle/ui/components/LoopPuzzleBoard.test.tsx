@@ -9,6 +9,8 @@
  * out, so the hit area is checked where it is decided: the grid placement of
  * every edge button against the board's track list.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';

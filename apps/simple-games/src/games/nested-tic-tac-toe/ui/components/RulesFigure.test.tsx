@@ -2,6 +2,8 @@
  * The Quick Rules figures are positions the game can reach (§9): each is a
  * move list the engine accepts, and each shows what its step says.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
