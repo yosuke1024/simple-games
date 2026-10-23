@@ -220,6 +220,11 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'three-peaks': ['tp.saveGame', 'tp.stats', 'tp.flags'],
   nim: ['ni.saveGame', 'ni.stats', 'ni.flags', 'ni.prefs'],
   'knight-tour': ['kt.saveGame', 'kt.stats', 'kt.flags', 'kt.prefs'],
+  invaders: ['iv.saveGame', 'iv.stats', 'iv.flags'],
+  'falling-blocks': ['fb.saveGame', 'fb.stats', 'fb.flags'],
+  'paddle-rally': ['pr.saveGame', 'pr.stats', 'pr.flags', 'pr.prefs'],
+  'hanoi-towers': ['hn.saveGame', 'hn.stats', 'hn.flags', 'hn.prefs'],
+  'maze-escape': ['me.saveGame', 'me.stats', 'me.flags', 'me.prefs'],
 };
 
 const PREFIXES: Record<string, string> = {
@@ -284,6 +289,11 @@ const PREFIXES: Record<string, string> = {
   'three-peaks': 'tp.',
   nim: 'ni.',
   'knight-tour': 'kt.',
+  invaders: 'iv.',
+  'falling-blocks': 'fb.',
+  'paddle-rally': 'pr.',
+  'hanoi-towers': 'hn.',
+  'maze-escape': 'me.',
 };
 
 describe('registry storage keys (released data — do not edit to make green)', () => {

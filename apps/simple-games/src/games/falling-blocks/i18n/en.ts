@@ -1,0 +1,26 @@
+export const en = {
+  fallingBlocksName: 'Falling Blocks',
+  fallingBlocksGoal: 'Make room, one line at a time.',
+  fallingBlocksLines: 'Lines',
+  fallingBlocksBest: 'Best score',
+  fallingBlocksLevel: 'Level',
+  fallingBlocksNext: 'Next piece',
+  fallingBlocksBoard: 'Board: {piece} piece, column {column}, row {row}.',
+  fallingBlocksReady: 'Ready',
+  fallingBlocksRunning: 'Playing',
+  fallingBlocksPaused: 'Paused',
+  fallingBlocksOver: 'Game over',
+  fallingBlocksPause: 'Pause',
+  fallingBlocksLeft: 'Move left',
+  fallingBlocksRight: 'Move right',
+  fallingBlocksRotate: 'Rotate',
+  fallingBlocksSoftDrop: 'Move down',
+  fallingBlocksHardDrop: 'Drop',
+  fallingBlocksKeyboard: '← → move · ↑ rotate · ↓ down · Space drop · P pause',
+  fallingBlocksRule1: 'Move and rotate the falling pieces to fill a horizontal line.',
+  fallingBlocksRule2: 'Full lines disappear; the outline shows where your piece will land.',
+  fallingBlocksRule3: 'The game ends when the next piece cannot enter; pause or retry anytime.',
+  fallingBlocksResultBody:
+    'The stack reached the top. Try the same pieces again, or start a new game.',
+} as const;
+export type FallingBlocksMessages = { [K in keyof typeof en]: string };

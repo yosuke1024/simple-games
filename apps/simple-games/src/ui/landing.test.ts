@@ -119,6 +119,11 @@ describe('gameLandingUrl', () => {
       'three-peaks',
       'nim',
       'knight-tour',
+      'invaders',
+      'falling-blocks',
+      'paddle-rally',
+      'hanoi-towers',
+      'maze-escape',
     ]) {
       expect(gameLandingUrl(id, 'en')).toBeNull();
       expect(gameLandingUrl(id, 'ja')).toBeNull();

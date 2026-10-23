@@ -1,0 +1,26 @@
+import type { FallingBlocksMessages } from './en';
+export const ja: FallingBlocksMessages = {
+  fallingBlocksName: 'フォーリングブロック',
+  fallingBlocksGoal: '一列ずつ消して、空間をつくろう。',
+  fallingBlocksLines: 'ライン',
+  fallingBlocksBest: 'ベストスコア',
+  fallingBlocksLevel: 'レベル',
+  fallingBlocksNext: '次のピース',
+  fallingBlocksBoard: '盤面：{piece}のピース、{column}列、{row}行。',
+  fallingBlocksReady: '準備完了',
+  fallingBlocksRunning: 'プレイ中',
+  fallingBlocksPaused: '一時停止中',
+  fallingBlocksOver: 'ゲームオーバー',
+  fallingBlocksPause: '一時停止',
+  fallingBlocksLeft: '左へ',
+  fallingBlocksRight: '右へ',
+  fallingBlocksRotate: '回転',
+  fallingBlocksSoftDrop: '下へ',
+  fallingBlocksHardDrop: '落とす',
+  fallingBlocksKeyboard: '← → 移動 · ↑ 回転 · ↓ 下へ · Space 落下 · P 一時停止',
+  fallingBlocksRule1: '落ちてくるピースを動かして回転させ、横一列を埋めよう。',
+  fallingBlocksRule2: '埋まった列は消える。輪郭はピースが着地する位置を示す。',
+  fallingBlocksRule3: '次のピースが入らなくなると終了。いつでも一時停止・再挑戦できる。',
+  fallingBlocksResultBody:
+    'ブロックが上まで積み上がった。同じ順番のピースで再挑戦するか、新しく始めよう。',
+};

@@ -1,0 +1,31 @@
+// English source.
+export const en = {
+  invadersName: 'Invaders',
+  invadersStage: 'Stage',
+  invadersLives: 'Lives',
+  invadersLivesLeft: '{count} lives remaining',
+  invadersBoard: 'Invaders field: {count} invaders remaining',
+  invadersControls: 'Drag or use ← → / A D to move.',
+  invadersStart: 'Start',
+  invadersPause: 'Pause',
+  invadersPaused: 'Paused — resume when ready.',
+  invadersReady: 'Line up your ship, then start.',
+  invadersAutoFire: 'Your ship fires automatically.',
+  invadersLeft: 'Move left',
+  invadersRight: 'Move right',
+  invadersRetry: 'Play again',
+  invadersBest: 'Best score',
+  invadersBestStage: 'Furthest stage',
+  invadersStageClear: 'Formation cleared',
+  invadersStageClearBody: 'The next stage waits for you. Cover is repaired; your lives carry over.',
+  invadersNextStage: 'Next stage',
+  invadersWon: 'All clear!',
+  invadersWonBody: 'You cleared all 20 formations.',
+  invadersOver: 'Run finished',
+  invadersOverBody: 'Your score is saved. Try again whenever you like.',
+  invadersRule1: 'Move left and right to aim. Your ship fires automatically.',
+  invadersRule2: 'Dodge the zigzag shots. Cover blocks shots from both sides and wears away.',
+  invadersRule3:
+    'Clear 20 formations with 3 lives. Stop them before they reach the dotted line; pause whenever you like.',
+} as const;
+export type InvadersMessages = Record<keyof typeof en, string>;

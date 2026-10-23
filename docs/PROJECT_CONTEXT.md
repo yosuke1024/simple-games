@@ -43,8 +43,8 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **41 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
-  本数はここで数える)。`GAMES` の全 61 エントリには、下の `channel: 'web-beta'` の 20 本(Web 先行公開中の
-  No. 42〜46・No. 47〜51・No. 52〜56・No. 57〜61)も含まれる。
+  本数はここで数える)。`GAMES` の全 66 エントリには、下の `channel: 'web-beta'` の 25 本(Web 先行公開中の
+  No. 42〜46・No. 47〜51・No. 52〜56・No. 57〜61・No. 62〜66)も含まれる。
   `'in-development'` のエントリはいま無い。
 - 2026-10-02 に、Web 版で先行公開していた新作 11 本(Crown Grid / Number Path /
   Shape Regions、2026-09-26、issue #194。Yacht / Mancala / Dominoes / Hit & Blow /
@@ -121,6 +121,10 @@ Design philosophy:
   を追加。新作は従来どおり `web-beta` で、正式収録の 41 本と Club House は変更しない。
   仕様は各ルール文書、選定と検証・公開記録は
   `docs/plans/2026-10-23-five-games-57-61.md`。Web の公開完了は同文書の記録を参照する。
+
+- 2026-10-23 に No. 62〜66 (Invaders / Falling Blocks / Paddle Rally / Hanoi Towers / Maze Escape) を追加。
+  5本ともWeb先行公開で、正式収録41本とClub Houseは変更しない。規則は各ルール文書、
+  検証・公開記録は `docs/plans/2026-10-23-five-games-62-66.md`。
 
 ### Platforms
 

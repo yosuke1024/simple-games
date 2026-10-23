@@ -1242,6 +1242,47 @@ export const titleAccents = {
     onDark: '#14171c',
     softDark: '#393c4a',
   },
+  // Nos. 62–66: measured CIE76 separation and WCAG contrast (BRAND.md).
+  invaders: {
+    light: '#283b3f',
+    onLight: '#ffffff',
+    softLight: '#d9d9d4',
+    dark: '#4ea7d0',
+    onDark: '#14171c',
+    softDark: '#203440',
+  },
+  fallingBlocks: {
+    light: '#5b4a12',
+    onLight: '#ffffff',
+    softLight: '#e0dbce',
+    dark: '#dbdb99',
+    onDark: '#14171c',
+    softDark: '#3c3e35',
+  },
+  paddleRally: {
+    light: '#552613',
+    onLight: '#ffffff',
+    softLight: '#dfd7ce',
+    dark: '#c87255',
+    onDark: '#14171c',
+    softDark: '#382927',
+  },
+  hanoiTowers: {
+    light: '#4f1940',
+    onLight: '#ffffff',
+    softLight: '#dfd5d4',
+    dark: '#cbaac9',
+    onDark: '#14171c',
+    softDark: '#39343f',
+  },
+  mazeEscape: {
+    light: '#2a4620',
+    onLight: '#ffffff',
+    softLight: '#dadbd0',
+    dark: '#8bbd64',
+    onDark: '#14171c',
+    softDark: '#2c382a',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

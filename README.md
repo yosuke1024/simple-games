@@ -497,3 +497,17 @@ Copyright 2026 Yosuke Suzuki
   ください
 - 境界の説明と fork の手順は [TRADEMARKS.md](TRADEMARKS.md)(独自ライセンスでは
   なく、Apache-2.0 が引いている線の説明です)
+
+### Web先行公開 No. 62〜66 (2026-10-23)
+
+Invaders / Falling Blocks / Paddle Rally / Hanoi Towers / Maze Escape を追加。
+正式収録41本に加え、Web先行公開は25本になる。詳細と公開記録は
+[追加と公開の記録](docs/plans/2026-10-23-five-games-62-66.md)。
+
+| ゲーム | 規則 |
+| --- | --- |
+| Invaders | [INVADERS_RULES.md](docs/INVADERS_RULES.md) |
+| Falling Blocks | [FALLING_BLOCKS_RULES.md](docs/FALLING_BLOCKS_RULES.md) |
+| Paddle Rally | [PADDLE_RALLY_RULES.md](docs/PADDLE_RALLY_RULES.md) |
+| Hanoi Towers | [HANOI_TOWERS_RULES.md](docs/HANOI_TOWERS_RULES.md) |
+| Maze Escape | [MAZE_ESCAPE_RULES.md](docs/MAZE_ESCAPE_RULES.md) |

@@ -1,0 +1,30 @@
+/** AI-authored; no human review claimed. */
+import type { PaddleRallyMessages } from './en';
+export const ko: PaddleRallyMessages = {
+  paddleRallyMode_easy: '쉬움',
+  paddleRallyMode_normal: '보통',
+  paddleRallyMode_hard: '어려움',
+  paddleRallyWon: '승리!',
+  paddleRallyLost: 'CPU 승리',
+  paddleRallyWins: '승리',
+  paddleRallyLosses: '패배',
+  paddleRallyName: 'Paddle Rally',
+  paddleRallyYou: '나',
+  paddleRallyScore: '점수',
+  paddleRallyGoal: '5점 먼저',
+  paddleRallyBoard: '경기장: 아래는 나, 위는 CPU',
+  paddleRallyControls: '드래그 또는 ← → / A D로 이동.',
+  paddleRallyLeft: '왼쪽으로',
+  paddleRallyRight: '오른쪽으로',
+  paddleRallyServe: '서브',
+  paddleRallyPause: '일시 정지',
+  paddleRallyPaused: '일시 정지 중. 준비되면 재개하세요.',
+  paddleRallyReady: '준비되면 서브하세요.',
+  paddleRallyStep1Title: '패들 이동',
+  paddleRallyStep1Body: '좌우로 드래그하거나 화살표 버튼과 키로 아래 패들을 움직이세요.',
+  paddleRallyStep2Title: '각도 만들기',
+  paddleRallyStep2Body: '패들 끝으로 공을 치면 공이 비스듬히 날아가 CPU를 지나갑니다.',
+  paddleRallyStep3Title: '5점 먼저 얻기',
+  paddleRallyStep3Body:
+    'CPU가 공을 놓치면 득점하며 먼저 5점을 얻으면 승리합니다. 서브는 직접 시작하세요.',
+};

@@ -1,0 +1,26 @@
+import type { FallingBlocksMessages } from './en';
+export const ko: FallingBlocksMessages = {
+  fallingBlocksName: '폴링 블록',
+  fallingBlocksGoal: '한 줄씩 지워 공간을 만드세요.',
+  fallingBlocksLines: '줄',
+  fallingBlocksBest: '최고 점수',
+  fallingBlocksLevel: '레벨',
+  fallingBlocksNext: '다음 블록',
+  fallingBlocksBoard: '보드: {piece} 블록, {column}열, {row}행.',
+  fallingBlocksReady: '준비',
+  fallingBlocksRunning: '플레이 중',
+  fallingBlocksPaused: '일시 정지',
+  fallingBlocksOver: '게임 종료',
+  fallingBlocksPause: '일시 정지',
+  fallingBlocksLeft: '왼쪽',
+  fallingBlocksRight: '오른쪽',
+  fallingBlocksRotate: '회전',
+  fallingBlocksSoftDrop: '아래로',
+  fallingBlocksHardDrop: '떨어뜨리기',
+  fallingBlocksKeyboard: '← → 이동 · ↑ 회전 · ↓ 아래 · Space 낙하 · P 일시 정지',
+  fallingBlocksRule1: '떨어지는 블록을 움직이고 회전시켜 가로줄을 채우세요.',
+  fallingBlocksRule2: '가득 찬 줄은 사라지며 윤곽선은 블록이 놓일 위치를 보여 줍니다.',
+  fallingBlocksRule3: '다음 블록이 들어올 수 없으면 종료됩니다. 언제든 멈추거나 다시 도전하세요.',
+  fallingBlocksResultBody:
+    '블록이 맨 위까지 쌓였습니다. 같은 블록 순서로 다시 도전하거나 새 게임을 시작하세요.',
+};
