@@ -48,8 +48,8 @@ zh-Hans / zh-Hant のスクリプト解決(zh-TW → zh-Hant 等)は中国語対
 230(Unblock Puzzle 43 / Snake 50 / Loop Puzzle 55 / Bridges 43 / Peg Solitaire 39)、No. 52〜56 の
 5 ゲームの 230(Overtake 30 / Make the Target 45 / Nested Tic-Tac-Toe 45 / Scopa 65 / Tangram 45 —
 5 本とも 2026-10-22 から Web 先行公開で配信中)、No. 47〜51 の 5 ゲームの 229(Chess 59 / Gem Swap 38 /
-Pipe Link 47 / Bounce Up 29 / Echo Pads 56 — 2026-10-22 に実装して `'web-beta'` にし、Web 版へは次の同期で
-届ける。スキャフォールドの各 11 から増えた)。14 言語とも各ゲームのキーの数は同じ。
+Pipe Link 47 / Bounce Up 29 / Echo Pads 56 — 2026-10-22 に実装して `'web-beta'` にし、2026-10-23(JST、UTC では
+2026-10-22 17:33)から Web 先行公開で配信中。スキャフォールドの各 11 から増えた)。14 言語とも各ゲームのキーの数は同じ。
 シェルの 125、正式収録の 1,393、No. 42〜46 の 230、No. 52〜56 の 230 は 2026-10-21 の実測と同じで、最初の 3 つは 2026-10-17 の実測(Node で `Object.keys(en).length` を足し、正規表現での行の
 数え上げと一致することを確かめた値)と同じ。シェルの 125 と正式収録の 1,393 は 42〜46 の統合の前(7c098cf)とも同じ。
 1,393 は 2026-10-02 の実測に、自動送信の状態キー(+2)と

@@ -1120,18 +1120,19 @@ export const GAMES: readonly GameDefinition[] = [
   // and all five are on the browser's early-release channel
   // (docs/WEB_VERSION.md「先行公開」): they turned from `'in-development'` to
   // `'web-beta'` that day, in the change that made them playable, at the
-  // product owner's request to take all five to the web. They are not on the
-  // web yet: their chunks are in every build, and the browser version carries
-  // them from the next landing sync (the landing's list moving them to beta,
-  // then the publish the owner approves — WEB_VERSION.md「landing 側のガード」).
+  // product owner's request to take all five to the web. The browser version
+  // has carried them since 2026-10-23 JST (2026-10-22 17:33 UTC — the
+  // landing's publish of main `7b95a94`, approved by the owner, after landing
+  // #206 moved them to beta; WEB_VERSION.md「landing 側のガード」). Builds
+  // before that carried their chunks as `'in-development'`, on no door.
   // None is in the app until a person decides it graduates
   // (docs/RELEASE_CHECKLIST.md §0). Chess (No. 47) came in a commit of its
   // own; the plan's decision 4 (Chess in a PR of its own, so the other four
   // never wait on it) is met because all five finished together, so the five
-  // ship in one PR and none waited. None has been tried on a real device, and
-  // each title's name and trademark check is still to come before graduation
-  // (its rules document). None is a Club House challenge (no `challenge`)
-  // while its saves and results may still change.
+  // shipped in one PR (#253) and none waited. None has been tried on a real
+  // device, and each title's name and trademark check is still to come before
+  // graduation (its rules document). None is a Club House challenge (no
+  // `challenge`) while its saves and results may still change.
   //
   // The glyphs were measured as Nos. 42–46's were above: none is in the bundled
   // Nunito subset, so each resolves through the tail of --font-display.
