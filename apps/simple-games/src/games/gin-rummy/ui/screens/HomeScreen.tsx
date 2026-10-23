@@ -16,6 +16,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart } from '@/ui/components/icons';
 import { DIFFICULTIES, type Difficulty } from '../../game';
 import { useGinRummy } from '../../state/GameContext';
@@ -47,18 +48,13 @@ export function GinRummyHomeScreen() {
   };
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="gin-rummy" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The same glyph the collection home puts on this title's tile
-            (app/registry.ts): arriving here should look like the tile that was
-            tapped, not like a second mark for the same game. Outlined rather
-            than filled — the filled suits belong to the one-player patience
-            shelf, the outlined ones to the two-player card games. */}
-        <div className="home-logo" aria-hidden="true">
-          ♢
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="gin-rummy" />
+        </span>
         <h1 className="home-title">{t('ginName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

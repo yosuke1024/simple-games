@@ -1,5 +1,6 @@
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
 import { localDateString, MAX_LEVEL } from '../../game';
@@ -34,16 +35,13 @@ export function QuickMathHomeScreen() {
   const frontierBest = progress.bestSeconds[String(progress.highestUnlocked)];
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="quick-math" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: the division sign. It is the one arithmetic sign
-            that is never also a control — a plus adds, a minus collapses, a
-            cross closes — so on a tile it can only mean arithmetic. */}
-        <div className="home-logo" aria-hidden="true">
-          ÷
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="quick-math" />
+        </span>
         <h1 className="home-title">{t('qmathName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

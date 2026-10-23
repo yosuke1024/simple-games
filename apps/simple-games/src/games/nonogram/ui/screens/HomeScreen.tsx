@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { FREE_TIERS, localDateString, MAX_LEVEL } from '../../game';
 import { useNonogram } from '../../state/GameContext';
@@ -42,14 +43,13 @@ export function NonoHomeScreen() {
   const suspendedTier = freeGame?.freeTier ?? freeTier;
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="nonogram" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: a grid with some squares set — a picture in cells. */}
-        <div className="home-logo" aria-hidden="true">
-          ▦
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="nonogram" />
+        </span>
         <h1 className="home-title">{t('nonoName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

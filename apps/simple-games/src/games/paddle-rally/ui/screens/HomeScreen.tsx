@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { MODES, type Mode } from '../../game';
 import { usePaddleRally } from '../../state/GameContext';
@@ -17,18 +18,13 @@ export function HomeScreen() {
     else startNewGame(mode);
   };
   return (
-    <div className="screen home-screen paddleRally-home">
+    <div className="screen home-screen paddleRally-home illustrated-game-home">
       <div inert={pending !== null}>
         <GameHomeHeader gameId="paddle-rally" onBack={exitToCollection} />
         <div className="home-hero">
-          <div className="home-logo paddleRally-home-mark" aria-hidden="true">
-            <svg viewBox="0 0 72 72" focusable="false">
-              <path d="M6 36 H66" stroke="currentColor" strokeDasharray="4 5" opacity=".3" />
-              <rect x="30" y="12" width="28" height="5" rx="2" fill="currentColor" />
-              <rect x="10" y="55" width="28" height="5" rx="2" fill="currentColor" />
-              <circle cx="40" cy="32" r="4" fill="currentColor" />
-            </svg>
-          </div>
+          <span className="game-home-artwork" aria-hidden="true">
+            <GameArtwork id="paddle-rally" />
+          </span>
           <h1 className="home-title">{t('paddleRallyName')}</h1>
           <p className="home-tagline">{t('tagline')}</p>
           <WebBetaNotice gameId="paddle-rally" />

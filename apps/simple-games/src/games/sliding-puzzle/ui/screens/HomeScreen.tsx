@@ -1,5 +1,6 @@
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { localDateString, MAX_LEVEL } from '../../game';
 import { useSlidingPuzzle } from '../../state/GameContext';
@@ -33,14 +34,13 @@ export function SlidingPuzzleHomeScreen() {
   const frontierBest = progress.bestMoves[String(progress.highestUnlocked)];
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="sliding-puzzle" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: a tile with an arrow through it — one tile moving. */}
-        <div className="home-logo" aria-hidden="true">
-          ⇥
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="sliding-puzzle" />
+        </span>
         <h1 className="home-title">{t('slideName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

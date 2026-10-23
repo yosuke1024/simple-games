@@ -1,5 +1,6 @@
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
 import { localDateString, MAX_LEVEL } from '../../game';
@@ -21,15 +22,13 @@ export function SchulteHomeScreen() {
   const todayBest = progress.dailySeconds[today];
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="schulte-table" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: a target — the game is finding one number at a
-            time, in a grid that is showing you all of them at once. */}
-        <div className="home-logo" aria-hidden="true">
-          ⌖
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="schulte-table" />
+        </span>
         <h1 className="home-title">{t('schulteName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

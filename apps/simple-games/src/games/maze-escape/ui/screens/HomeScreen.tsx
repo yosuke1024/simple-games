@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { IconChart } from '@/ui/components/icons';
@@ -26,17 +27,13 @@ export function HomeScreen() {
     else startBoard(size);
   };
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <div className="me-home-content" inert={pending !== null}>
         <GameHomeHeader gameId="maze-escape" onBack={exitToCollection} />
         <div className="home-hero">
-          <div className="home-logo me-logo" aria-hidden="true">
-            <svg viewBox="0 0 72 72">
-              <path d="M12 20v40h48V12H28M28 12v16h16v16H28M12 44h16v16M44 60V44h16M60 28H44" />
-              <circle cx="20" cy="12" r="4" />
-              <circle cx="52" cy="52" r="4" />
-            </svg>
-          </div>
+          <span className="game-home-artwork" aria-hidden="true">
+            <GameArtwork id="maze-escape" />
+          </span>
           <h1 className="home-title">{t('mazeEscapeName')}</h1>
           <p className="home-tagline">{t('tagline')}</p>
           <WebBetaNotice gameId="maze-escape" />

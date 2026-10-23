@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { IconChart } from '@/ui/components/icons';
@@ -26,18 +27,13 @@ export function HomeScreen() {
     else startBoard(size);
   };
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <div className="ht-home-content" inert={pending !== null}>
         <GameHomeHeader gameId="hanoi-towers" onBack={exitToCollection} />
         <div className="home-hero">
-          <div className="home-logo ht-logo" aria-hidden="true">
-            <svg viewBox="0 0 72 72">
-              <path d="M36 12v44M9 61h54" className="ht-logo-stand" />
-              <rect x="12" y="46" width="48" height="10" rx="4" />
-              <rect x="20" y="34" width="32" height="10" rx="4" />
-              <rect x="28" y="22" width="16" height="10" rx="4" />
-            </svg>
-          </div>
+          <span className="game-home-artwork" aria-hidden="true">
+            <GameArtwork id="hanoi-towers" />
+          </span>
           <h1 className="home-title">{t('hanoiTowersName')}</h1>
           <p className="home-tagline">{t('tagline')}</p>
           <WebBetaNotice gameId="hanoi-towers" />

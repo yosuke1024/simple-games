@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { IconChart } from '@/ui/components/icons';
@@ -26,13 +27,13 @@ export function HomeScreen() {
     else startBoard(size);
   };
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <div className="lg-home-content" inert={pending !== null}>
         <GameHomeHeader gameId="light-grid" onBack={exitToCollection} />
         <div className="home-hero">
-          <div className="home-logo" aria-hidden="true">
-            ✚
-          </div>
+          <span className="game-home-artwork" aria-hidden="true">
+            <GameArtwork id="light-grid" />
+          </span>
           <h1 className="home-title">{t('lightGridName')}</h1>
           <p className="home-tagline">{t('tagline')}</p>
           <WebBetaNotice gameId="light-grid" />

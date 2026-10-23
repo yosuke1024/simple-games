@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { FREE_TIERS, localDateString, MAX_LEVEL } from '../../game';
 import { useKakuro } from '../../state/GameContext';
@@ -41,16 +42,13 @@ export function KakuroHomeScreen() {
   const freeGame = sessions.free?.status === 'playing' ? sessions.free : null;
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="kakuro" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: the sum itself, which is the whole of what a clue
-            square says. ASCII-adjacent and identical in every language, like
-            the board's own numbers (§1). */}
-        <div className="home-logo kakuro-logo" aria-hidden="true">
-          ∑
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="kakuro" />
+        </span>
         <h1 className="home-title">{t('kakuroName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

@@ -23,6 +23,7 @@ import type { MessageKey } from '@/i18n';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { bestFor, COLOR_COUNTS, type ColorCount } from '../../game';
 import { useGemSwap } from '../../state/GameContext';
@@ -50,14 +51,13 @@ export function GemSwapHomeScreen() {
   const best = bestFor(stats, colors);
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="gem-swap" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* Matches the tile glyph in app/registry.ts. */}
-        <div className="home-logo" aria-hidden="true">
-          {'❖'}
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="gem-swap" />
+        </span>
         <h1 className="home-title">{t('gemSwapName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
         <WebBetaNotice gameId="gem-swap" />

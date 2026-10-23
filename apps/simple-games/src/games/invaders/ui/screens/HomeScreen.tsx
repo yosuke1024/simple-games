@@ -1,27 +1,23 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { IconChart } from '@/ui/components/icons';
 import { useInvaders } from '../../state/GameContext';
-import { Invader } from '../components/Shapes';
 export function HomeScreen() {
   const { t } = useSettings();
   const { canResume, resumeRun, startNewRun, navigate, exitToCollection } = useInvaders();
   const [confirm, setConfirm] = useState(false);
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <div className="iv-home-content" inert={confirm}>
         <GameHomeHeader gameId="invaders" onBack={exitToCollection} />
         <div className="home-hero">
-          <div className="home-logo" aria-hidden="true">
-            <svg className="iv-home-mark" viewBox="-30 -30 60 60" focusable="false">
-              <g transform="scale(2)">
-                <Invader />
-              </g>
-            </svg>
-          </div>
+          <span className="game-home-artwork" aria-hidden="true">
+            <GameArtwork id="invaders" />
+          </span>
           <h1 className="home-title">{t('invadersName')}</h1>
           <p className="home-tagline">{t('tagline')}</p>
           <WebBetaNotice gameId="invaders" />

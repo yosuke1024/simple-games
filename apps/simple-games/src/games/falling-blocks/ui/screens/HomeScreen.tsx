@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { IconChart } from '@/ui/components/icons';
@@ -10,19 +11,13 @@ export function HomeScreen() {
   const { canResume, resumeGame, newGame, navigate, exitToCollection, stats } = useFallingBlocks();
   const [confirm, setConfirm] = useState(false);
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <div className="fb-home-content" inert={confirm}>
         <GameHomeHeader gameId="falling-blocks" onBack={exitToCollection} />
         <div className="home-hero">
-          <div className="home-logo" aria-hidden="true">
-            <svg viewBox="0 0 64 64" width="64" height="64" focusable="false">
-              <path
-                d="M24 6h16v16H24zM7 23h16v16H7zM24 23h16v16H24zM41 23h16v16H41z"
-                fill="currentColor"
-              />
-              <path d="M7 47h50v11H7z" fill="none" stroke="currentColor" strokeWidth="2" />
-            </svg>
-          </div>
+          <span className="game-home-artwork" aria-hidden="true">
+            <GameArtwork id="falling-blocks" />
+          </span>
           <h1 className="home-title">{t('fallingBlocksName')}</h1>
           <p className="home-tagline">{t('tagline')}</p>
           <WebBetaNotice gameId="falling-blocks" />

@@ -1,5 +1,6 @@
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconGrid } from '@/ui/components/icons';
 import { LEVEL_COUNT } from '../../game/levels';
 import { useBubblePop } from '../../state/GameContext';
@@ -19,14 +20,13 @@ export function BubbleHomeScreen() {
   const homeLevel = Math.min(progress.highestUnlocked, LEVEL_COUNT);
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="bubble-pop" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: a bubble. */}
-        <div className="home-logo" aria-hidden="true">
-          ○
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="bubble-pop" />
+        </span>
         <h1 className="home-title">{t('bubbleName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>
