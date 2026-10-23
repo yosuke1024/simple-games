@@ -135,10 +135,24 @@ export function slackFor(level: number): number {
  */
 export const GATE_SLACK_SHARE = 500;
 
-/** n_gate(ℓ) = ceil(s‰ × U / (420 × GATE_SLACK_SHARE)) + 1 from Lv11 (§5, §7). */
+/**
+ * Lv11–20, the block that introduces the pair (§5, §7; 2026-10-23): the
+ * count is this ramp, not the slack formula — 6 pairs at Lv11, one more per
+ * level, 15 at Lv20. The formula gave 20–24 here, so the first level with
+ * pairs was the densest of the ladder (48 of Lv11's 61 rows were pair walls).
+ * The Rusher gate (§6) begins at Lv21, so the block is free to teach the verb
+ * at a pace a person can learn at; from Lv21 the formula stands. Initial values.
+ */
+export const INTRO_GATE_PAIRS: readonly number[] = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+
+/**
+ * n_gate(ℓ) (§5, §7): 0 below Lv11, INTRO_GATE_PAIRS on Lv11–20, and from
+ * Lv21 ceil(s‰ × U / (420 × GATE_SLACK_SHARE)) + 1.
+ */
 export function gatePairsFor(level: number): number {
   const l = clampLevel(level);
   if (l < 11) return 0;
+  if (l <= 20) return INTRO_GATE_PAIRS[l - 11]!;
   const numerator = slackFor(l) * lengthFor(l);
   const denominator = FULL_SPEED * GATE_SLACK_SHARE;
   return Math.ceil(numerator / denominator) + 1;

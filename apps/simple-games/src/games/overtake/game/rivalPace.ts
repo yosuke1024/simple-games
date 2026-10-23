@@ -8,6 +8,9 @@
  * it is a decision like moving a golden course — needed whenever the course
  * generator, the planner, the physics, the bots or the calibration constants
  * change — and the diff goes in the same commit.
+ *
+ * Regenerated 2026-10-23 for the Lv11–20 pair ramp (§7); the scrape rule (§4)
+ * moved no row because no rival or B_ref ever touches traffic.
  */
 export type PaceRow = readonly [number, number, number];
 
@@ -16,7 +19,7 @@ export const RIVAL_PACE: readonly PaceRow[] = [
   // Lv1–10
   [335, 321, 306], [337, 322, 307], [338, 323, 308], [338, 324, 309], [339, 325, 310], [341, 327, 311], [341, 327, 312], [342, 328, 313], [343, 329, 314], [345, 332, 315],
   // Lv11–20
-  [292, 278, 263], [312, 298, 280], [314, 299, 282], [316, 302, 283], [317, 302, 284], [320, 305, 286], [322, 306, 288], [323, 307, 289], [319, 303, 285], [323, 307, 289],
+  [320, 307, 291], [331, 317, 300], [331, 317, 300], [332, 318, 300], [331, 317, 300], [332, 317, 299], [332, 317, 298], [332, 317, 298], [328, 312, 294], [333, 318, 300],
   // Lv21–30
   [297, 282, 266], [316, 300, 282], [318, 302, 283], [319, 303, 285], [322, 305, 287], [323, 307, 289], [325, 308, 290], [327, 310, 291], [331, 313, 295], [333, 316, 299],
   // Lv31–40

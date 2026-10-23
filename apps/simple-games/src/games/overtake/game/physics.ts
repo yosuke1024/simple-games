@@ -1,10 +1,10 @@
 /**
  * One fixed step of 1/120 s for one racer (docs/OVERTAKE_RULES.md §1 "1 ステップの
  * 順序", §4). The player and the rivals share it: steer → speed → advance →
- * resolve overlaps with traffic (Bump) → cones → timers. Racers never touch
- * each other (§4), so a step only ever reads the course and the car itself.
- * Sand and cones (course.zones) only cap the target speed at SHOULDER_SPEED:
- * they are never a Bump and never resolved (§4).
+ * resolve overlaps with traffic (a head-on hit is a Bump, a scrape along a
+ * side is not) → cones → timers. Racers never touch each other (§4), so a
+ * step only ever reads the course and the car itself. Sand, cones and scrapes
+ * only cap the target speed at SHOULDER_SPEED: they are never a Bump (§4).
  *
  * Integers only (§1): positions in units, speeds in px/s, brake in ‰, and the
  * only division is Math.floor of two integers.
@@ -49,6 +49,12 @@ export interface StepReport {
   bumped: boolean;
   /** The car overlapped traffic before resolution (blinking or not). */
   overlapped: boolean;
+  /**
+   * The contact was a scrape (§4, 2026-10-23): the car was already beside the
+   * piece and steered into its side — pushed out sideways and capped like a
+   * cone (4b), never a Bump. Set every step.
+   */
+  scraped: boolean;
   /** Candidate passes the resolution used (§4: at most RESOLVE_PASS_LIMIT). */
   passes: number;
   /** The resolution fell through to "back behind everything at this x". */
@@ -65,6 +71,7 @@ export function newReport(): StepReport {
   return {
     bumped: false,
     overlapped: false,
+    scraped: false,
     passes: 0,
     pushedBack: false,
     lockReleased: false,
@@ -283,29 +290,44 @@ export function advanceCar(
     car.w = approachSpeed(car.w, goal);
   }
   // 3. Advance.
+  const before = car.r;
   car.r += car.w;
-  // 4. Traffic.
+  // 4. Traffic. The first overlapping piece says what the contact is (§4,
+  // 2026-10-23): a piece the car reached from behind on this step (its front
+  // was at or behind the piece's rear before advancing), or one the
+  // resolution has to move the car back from, is a head-on hit — a Bump
+  // unless the car is blinking. Any other overlap means the car was already
+  // beside the piece and steered into its side: a scrape, resolved sideways
+  // and capped like a cone (4b), never a Bump.
   let fresh = false;
-  if (overlapAt(course, car.x, car.r) !== null) {
+  let scraped = false;
+  const hit = overlapAt(course, car.x, car.r);
+  if (hit !== null) {
     report.overlapped = true;
-    if (car.blink === 0) {
-      fresh = true;
-      report.bumped = true;
-      car.bumps += 1;
-      car.w = 0;
-      car.hold = BUMP_HOLD_STEPS;
-      car.lock = BUMP_LOCK_STEPS;
-      car.blink = BUMP_BLINK_STEPS;
-    }
     resolveOverlaps(course, car, report, passLimit);
-    // The steering lock holds the car where the resolution left it (§4).
-    if (fresh) car.target = car.x;
+    if (before <= hit.rear || car.r < before) {
+      if (car.blink === 0) {
+        fresh = true;
+        report.bumped = true;
+        car.bumps += 1;
+        car.w = 0;
+        car.hold = BUMP_HOLD_STEPS;
+        car.lock = BUMP_LOCK_STEPS;
+        car.blink = BUMP_BLINK_STEPS;
+        // The steering lock holds the car where the resolution left it (§4).
+        car.target = car.x;
+      }
+    } else {
+      scraped = true;
+    }
   }
-  // 4b. Cones, where the resolution left the car: a touch restarts the cap
-  // at 36; otherwise it counts down (5), Bump step or not (§1).
+  report.scraped = scraped;
+  // 4b. Cones and scrapes, where the resolution left the car: a cone touch
+  // or a scrape restarts the cap at 36; otherwise it counts down (5), Bump
+  // step or not (§1).
   const cone = onConeAt(course, car.x, car.r);
   report.coneHit = cone;
-  if (cone) car.coneCap = CONE_CAP_STEPS;
+  if (cone || scraped) car.coneCap = CONE_CAP_STEPS;
   else if (car.coneCap > 0) car.coneCap -= 1;
   // 5. Timers — a Bump's own step does not count against its timers.
   if (!fresh) {
