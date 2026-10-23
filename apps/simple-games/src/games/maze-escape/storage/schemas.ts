@@ -85,7 +85,6 @@ export function restore(raw: unknown): Session | null {
   const cleared = asBool(raw.cleared);
   if (seed === null || elapsedSeconds === null || cleared === null || !Array.isArray(raw.history))
     return null;
-  if (raw.history.length > 100_000) return null;
   const session = createSession(raw.size, seed);
   let position = 0;
   const history: number[] = [];

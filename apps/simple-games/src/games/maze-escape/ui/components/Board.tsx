@@ -82,8 +82,8 @@ export function Board({
       }}
       onPointerUp={(event) => {
         const start = pointerRef.current;
-        pointerRef.current = null;
         if (!start || start.id !== event.pointerId) return;
+        pointerRef.current = null;
         const dx = event.clientX - start.x,
           dy = event.clientY - start.y;
         if (Math.max(Math.abs(dx), Math.abs(dy)) > 16) {

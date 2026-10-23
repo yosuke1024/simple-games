@@ -252,6 +252,42 @@ it('cancels a captured swipe without moving, then accepts a new swipe and adjace
   expect((await loadSavedGame(kv))?.history).toHaveLength(2);
 });
 
+it('ignores a secondary finger release without losing the captured primary swipe', async () => {
+  const kv = createMemoryKV();
+  await taught(kv);
+  const session = createSession(5, 31);
+  await saveGame(session, kv);
+  launch(kv, 'shortcut');
+  await settle();
+  const board = screen.getByRole('group', { name: 'Maze' });
+  const capture = vi.fn();
+  Object.defineProperty(board, 'setPointerCapture', { configurable: true, value: capture });
+  const first = solution(session)[0]!;
+  const end = first === 1 ? { clientX: 150, clientY: 50 } : { clientX: 50, clientY: 150 };
+  fireEvent.pointerDown(board, {
+    pointerId: 1,
+    isPrimary: true,
+    button: 0,
+    clientX: 50,
+    clientY: 50,
+  });
+  fireEvent.pointerDown(board, {
+    pointerId: 2,
+    isPrimary: false,
+    button: 0,
+    clientX: 50,
+    clientY: 50,
+  });
+  fireEvent.pointerUp(board, { pointerId: 2, isPrimary: false, ...end });
+  await settle();
+  expect(capture.mock.calls).toEqual([[1]]);
+  expect((await loadSavedGame(kv))?.history).toHaveLength(0);
+  fireEvent.pointerUp(board, { pointerId: 1, isPrimary: true, ...end });
+  await settle();
+  expect((await loadSavedGame(kv))?.position).toBe(first);
+  expect((await loadSavedGame(kv))?.history).toEqual([first]);
+});
+
 it('stops its only play clock while a restart dialog is open and resumes after Cancel', async () => {
   const kv = createMemoryKV();
   await taught(kv);

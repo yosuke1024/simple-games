@@ -48,9 +48,9 @@ One suspended slot, no daily. Saved data contains size, unsigned seed, steps,
 elapsedSeconds, cleared and savedAt. Loading deterministically reconstructs the
 maze and checks every step against its passages; it does not solve the maze.
 Finished, malformed and future-version saves are rejected, unknown fields
-stripped. A defensive cap of 100,000 saved actions bounds malformed-input work;
-replay is linear in action count. Undo history survives resuming. Beta schemas
-are not yet frozen.
+stripped. Saved action count has no fixed limit, matching unlimited play and
+Undo; replay checks every action in linear time. Undo history survives resuming.
+Beta schemas are not yet frozen.
 
 Per-size statistics count starts and completed mazes, and record fewest moves in
 a completed maze of that size. This is a personal record across different mazes,
@@ -78,9 +78,12 @@ Verification on 2026-10-23: the focused suites for Hanoi Towers and Maze Escape
 passed (32 checks initially, then three added pointer/dialog-clock checks passed
 in focused reruns; 35 checks total). Scoped ESLint and the pointer-contract gate
 passed. Maze checks cover 150 seeds at each size for connected, reciprocal,
-bounded tree passages; 30 detour/solve/Undo cases per size; a 20,000-step restore;
-corrupt saves; tutorial, shortcut resume, hints, directional control, canceled
-swipes, new swipes and adjacent taps; completion bookkeeping and clock cleanup.
+bounded tree passages; 30 detour/solve/Undo cases per size; corrupt saves;
+tutorial, shortcut resume, hints, directional control, canceled swipes, new
+swipes and adjacent taps; completion bookkeeping and clock cleanup. Follow-up
+regressions cover a legal 100,001-step save/load roundtrip, Undo and another
+save/load, rejection of an illegal step after 100,000 legal steps, and a secondary
+finger's release preserving the primary swipe.
 
 Japanese browser simulation completed a 5×5 maze in 12 steps using the actual
 Hint and direction buttons at 360×740. A 9×9 board, movement, restart cancellation

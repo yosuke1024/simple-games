@@ -51,17 +51,35 @@ describe('HanoiTowers isolated persistence', () => {
     expect(prefsSchema.validate({ schemaVersion: 1, size: 'toString' })).toBeNull();
     expect(statsSchema.validate(statsSchema.defaultValue())).toEqual(statsSchema.defaultValue());
   });
-  it('validates a long reversible history with bounded input work', () => {
-    const session = createSession(3, 42);
+  it('roundtrips more than 100,000 legal moves and preserves Undo', async () => {
+    const kv = createMemoryKV();
+    const opening = createSession(3, 42);
     const next = encodeMove(0, 1);
     const back = encodeMove(1, 0);
-    const history = Array.from({ length: 20_000 }, (_, i) => (i % 2 ? back : next));
-    const record = { ...toPersisted(session, 100), history };
-    const start = performance.now();
-    const restored = restore(record);
-    expect(restored?.board).toEqual(session.board);
-    expect(restored?.history).toHaveLength(20_000);
-    expect(performance.now() - start).toBeLessThan(1500);
-    expect(restore({ ...record, history: Array<number>(100_001).fill(next) })).toBeNull();
+    // Every pair returns to the opening. Build the fixture linearly, then take
+    // the normal move that previously made a valid saved game unrestorable.
+    const history = Array.from({ length: 100_000 }, (_, i) => (i % 2 ? back : next));
+    const session = move({ ...opening, history, elapsedSeconds: 123 }, next)!;
+    expect(session.history).toHaveLength(100_001);
+    await saveGame(session, kv);
+    const restored = await loadSavedGame(kv);
+    expect(restored).toEqual(session);
+    const undone = undo(restored!)!;
+    expect(undone).toEqual({ ...opening, history, elapsedSeconds: 123 });
+    await saveGame(undone, kv);
+    expect(await loadSavedGame(kv)).toEqual(undone);
+  });
+  it('rejects an illegal action after 100,000 legal moves', async () => {
+    const kv = createMemoryKV();
+    const next = encodeMove(0, 1);
+    const back = encodeMove(1, 0);
+    const history = Array.from({ length: 100_000 }, (_, i) => (i % 2 ? back : next));
+    // Peg 1 is empty after the complete pairs, so this final action is illegal.
+    history.push(back);
+    await kv.set(
+      gameSchema.key,
+      JSON.stringify({ ...toPersisted(createSession(3, 42), 100), history }),
+    );
+    expect(await loadSavedGame(kv)).toBeNull();
   });
 });

@@ -45,9 +45,10 @@ Four version-1 independent records: `hn.saveGame`, `hn.stats`, `hn.flags`,
 `hn.prefs`. One suspended slot. Save records contain size, a reserved unsigned
 seed, action history, elapsedSeconds, cleared and savedAt. Restoring replays legal
 actions from the initial tower, rejecting impossible moves, finished saves,
-unknown versions and malformed data. A defensive cap of 100,000 saved actions
-bounds corrupt-input work; validation is linear in action count. No search runs
-on load. Unknown properties are stripped. Beta schemas are not yet frozen.
+unknown versions and malformed data. Saved action count has no fixed limit,
+matching unlimited play and Undo; validation checks every action in linear time.
+No search runs on load. Unknown properties are stripped. Beta schemas are not
+yet frozen.
 
 Statistics per disk count are games started, games completed and fewest moves.
 Resume does not count a new start; retry does. Undoing a completed game preserves
@@ -76,8 +77,9 @@ Verification on 2026-10-23: the focused suites for Hanoi Towers and Maze Escape
 passed (32 checks initially, then three added pointer/dialog-clock checks passed
 in focused reruns; 35 checks total). Scoped ESLint passed. Hanoi's engine tests
 solve and fully undo every difficulty and verify inverse legality across all
-243 five-disk arrangements. Storage checks replay 20,000 actions and reject
-malformed histories. UI checks cover tutorial, shortcut resume, legal destination
+243 five-disk arrangements. Follow-up storage regressions cover a legal
+100,001-action save/load roundtrip, Undo and another save/load, plus rejection of
+an illegal action after 100,000 legal actions. UI checks cover tutorial, shortcut resume, legal destination
 cues, invalid moves, keyboard input, modal isolation, completion/Undo/recompletion
 without double counting, hidden and dialog-paused time, and unmount bookkeeping.
 Japanese browser simulation at 360×740 completed the 3-disk puzzle in seven moves
