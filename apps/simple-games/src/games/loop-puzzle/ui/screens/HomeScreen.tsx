@@ -13,6 +13,7 @@
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
 import { IconChart, IconCheck } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
@@ -57,14 +58,13 @@ export function LoopPuzzleHomeScreen() {
   };
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="loop-puzzle" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* Matches the tile glyph in app/registry.ts: a dotted square. */}
-        <div className="home-logo" aria-hidden="true">
-          {'⬚'}
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="loop-puzzle" />
+        </span>
         <h1 className="home-title">{t('loopPuzzleName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
         <WebBetaNotice gameId="loop-puzzle" />

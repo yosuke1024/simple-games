@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
 import { DIFFICULTIES, localDateString, MAX_LEVEL } from '../../game';
@@ -42,14 +43,13 @@ export function SudokuHomeScreen() {
   const frontierBest = progress.bestTimes[String(progress.highestUnlocked)];
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="sudoku" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: a tile holding the game's whole shape — a 3x3 box. */}
-        <div className="home-logo" aria-hidden="true">
-          ⌗
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="sudoku" />
+        </span>
         <h1 className="home-title">{t('sudokuName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

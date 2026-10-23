@@ -114,7 +114,7 @@ export function Game2048GameScreen() {
   const over = session.status === 'over';
 
   return (
-    <div className="screen game-screen">
+    <div className="screen game-screen tm-game-screen">
       <div className="game-content" inert={over || announceReached || confirmNewGame}>
         <header className="game-topbar">
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
@@ -127,7 +127,7 @@ export function Game2048GameScreen() {
             <span className={`tm-score ${scoreBump ? 'tm-score-bump' : ''}`}>
               {t('score')} <AnimatedNumber value={session.score} />
             </span>
-            <span>
+            <span className="tm-best-score">
               {t('mergeBestScore')} {Math.max(stats.bestScore, session.score)}
             </span>
           </div>
