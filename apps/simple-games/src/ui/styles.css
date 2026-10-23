@@ -1414,9 +1414,7 @@ button:disabled {
   padding: 4vh 24px 20px;
 }
 
-/* The series mark: one accent-tinted tile. Swapping the glyph and accent is
-   all a future title needs to make this its own. Each game's home screen uses
-   this — the collection's own home does not; see .home-mark. */
+/* Compact glyph mark for game homes that have not adopted the collection art. */
 .home-logo {
   width: 52px;
   height: 52px;
@@ -1434,8 +1432,7 @@ button:disabled {
 
 /* The collection mark (CollectionHomeScreen.tsx) is an <svg> carrying its own
    fill and corner radius, so it only needs placing and sizing. Kept separate
-   from .home-logo above, which the five game home screens still need for a
-   glyph in an accent tile. */
+   from .home-logo above, which places a glyph in an accent tile. */
 .home-mark {
   width: 52px;
   height: 52px;
@@ -1449,6 +1446,76 @@ button:disabled {
   font-weight: 800;
   margin: 0 0 8px;
   letter-spacing: -0.3px;
+}
+
+/* Opt-in homes share the collection's existing SVG, without changing their
+   game-owned mode selection or adding an image request. Keep the artwork and
+   title side by side so the first playable action stays close to the top. */
+.illustrated-game-home .home-hero {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px 18px;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 14px 24px 20px;
+}
+
+.game-home-artwork {
+  display: block;
+  width: 104px;
+  height: 84px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 3px 0 var(--line);
+}
+
+.illustrated-game-home .home-title {
+  margin: 0;
+  font-size: clamp(26px, 7vw, 32px);
+  line-height: 1.15;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.illustrated-game-home .home-tagline,
+.illustrated-game-home .web-beta-notice {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.illustrated-game-home .home-actions {
+  gap: 10px;
+}
+
+.illustrated-game-home .btn-big {
+  border-radius: 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 2px 0 var(--line);
+}
+
+.illustrated-game-home .btn-big:active {
+  box-shadow: inset 0 1px 2px var(--line);
+}
+
+.illustrated-game-home .home-chips {
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  margin-top: 4px;
+}
+
+.illustrated-game-home .home-chip {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px;
 }
 
 /* The collection's hero is smaller than a game's. A game home screen carries
