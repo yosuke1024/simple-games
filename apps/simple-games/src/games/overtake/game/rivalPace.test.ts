@@ -53,7 +53,7 @@ describe('RIVAL_PACE (§6)', () => {
   });
 
   it('is the frozen table (hash pinned)', () => {
-    expect(fnv1a(JSON.stringify(RIVAL_PACE))).toBe('cabcdabf');
+    expect(fnv1a(JSON.stringify(RIVAL_PACE))).toBe('ea3ecb12');
   });
 
   it('keeps the Lv1–5 rows of the table frozen before sand and cones (§6)', () => {

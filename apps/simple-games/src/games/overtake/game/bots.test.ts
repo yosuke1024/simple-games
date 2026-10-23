@@ -99,10 +99,21 @@ describe('bot gates on all 100 levels', () => {
     let closest = Infinity;
     let closestLevel = 0;
     const lowWins: number[] = [];
+    const intro: string[] = [];
     for (const l of LEVELS) {
       const { course, finish } = level(l);
       if (l < 21) {
         if (botWins(course, 'rusher', finish).won) lowWins.push(l);
+        if (l >= 11) {
+          // Printed only (2026-10-23, 6–15 pairs on Lv11–20): + is behind rival 1, − is ahead.
+          const full = runBot(course, controllerFor(course, 'rusher'));
+          const rival = fastestRival(finish)!;
+          const delta =
+            full.status === 'finished'
+              ? (((full.finishStep! - rival) / rival) * 100).toFixed(1)
+              : 'unfinished';
+          intro.push(`Lv${l} ${delta}%`);
+        }
         continue;
       }
       const full = runBot(course, controllerFor(course, 'rusher'));
@@ -119,6 +130,7 @@ describe('bot gates on all 100 levels', () => {
       `${(closest * 100).toFixed(1)} % behind (Lv${closestLevel})`,
     );
     report('Rusher wins below Lv21 (allowed)', lowWins.length === 0 ? 'none' : lowWins.join(','));
+    report('Rusher Lv11–20 vs rival 1 (+ behind, − ahead)', intro.join('  '));
   }, 60_000);
 
   it('smoke: Crawler (always the hardest brake) and Idler (no steering) never win', () => {

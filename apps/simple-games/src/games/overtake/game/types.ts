@@ -117,8 +117,9 @@ export interface CarState {
   readonly blink: number;
   readonly bumps: number;
   /**
-   * Cone cap: steps left at SHOULDER_SPEED after the last cone touch, 0..36
-   * (§1 "コーンのタイマーの数え方", CONE_CAP_STEPS).
+   * Cone cap: steps left at SHOULDER_SPEED after the last cone touch or
+   * scrape along traffic, 0..36 (§1 "コーンのタイマーの数え方", §4 "擦り",
+   * CONE_CAP_STEPS). The name stays: the stored shape is a contract.
    */
   readonly coneCap: number;
 }
