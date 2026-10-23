@@ -257,6 +257,11 @@ describe('web-beta titles', () => {
       'nested-tic-tac-toe',
       'scopa',
       'tangram',
+      'light-grid',
+      'color-flood',
+      'three-peaks',
+      'nim',
+      'knight-tour',
       'synthetic-beta',
     ]);
     expect(released.length).toBeGreaterThan(20);

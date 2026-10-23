@@ -80,10 +80,12 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 
 `ch.*` から `ep.*` までの 5 本(No. 47〜51)も **Web 先行公開(ベータ)のキー**(2026-10-22 に実装し、
 registry を `'in-development'` から `channel: 'web-beta'` にした。計画は
-`docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md`)。**Web 版にはまだ出ていない** —
-次の landing の同期(製品オーナーの承認後の Publish)で届けるので、`ch.*`〜`ep.*` の初版はそこから利用者の端末に
-届きうる(いまの配信物のビルドでは 5 本とも扉が閉じていて、どの画面からも書かれない — `docs/WEB_VERSION.md`
-「先行公開」)。表は上の `ub.*`〜`pg.*` と同じく各ゲームの `storage/keys.ts` が宣言する実際のキーで、
+`docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md`)。2026-10-23(JST、UTC では
+2026-10-22 17:33)の同期(landing main `0415eb18` — `7b95a94` の web ビルド)から Web 版で配信中で、`ch.*`〜`ep.*` の
+初版は配信したビルドに入っており、ここから利用者の端末に届きうる(本番への反映はこのリポジトリからは観測していない。
+以後の変更も黙っては行わない — 上の `ub.*`〜`pg.*` の段落の条件)。それまでの配信物のビルドでは 5 本とも扉が閉じていて、
+どの画面からも書かれなかった — `docs/WEB_VERSION.md`「先行公開」。表は上の `ub.*`〜`pg.*` と同じく各ゲームの
+`storage/keys.ts` が宣言する実際のキーで、
 `src/app/gameKeys.test.ts` の行が同じ並びで固定し、中身は各ゲームのルール文書の保存の節が定める
 (Chess §7・Gem Swap §7・Pipe Link §7・Bounce Up §5・Echo Pads §9)。スキャフォールドの `stats` / `flags` に、
 スキーマと同じコミットで残りのキーを足した — 計画の決定事項の「予定」のとおりで、変わったキーは無い。

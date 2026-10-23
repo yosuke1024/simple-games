@@ -18,6 +18,11 @@
  * again: the courses on the new generator, the rival goals and bot races on
  * the two-stage planner (§6 "砂とコーン") and the RIVAL_PACE regenerated on it.
  *
+ * 2026-10-23 — the scrape rule (§4) and the Lv11–20 pair ramp (§7): Lv11
+ * (course, rival goals, A, Rusher, replay) is pinned again; Lv1–10 and Lv21+
+ * are unchanged, which the untouched digests prove. The Rusher now wins Lv11
+ * (the Rusher gate starts at Lv21, §6).
+ *
  * Rival goal steps are pinned from the rivals-only run (§6), because a race
  * stops when the player finishes and may not see every rival home.
  *
@@ -61,14 +66,14 @@ const COURSES: Record<number, [number, string, string[]]> = {
     ],
   ],
   11: [
-    61,
-    '38479872',
+    52,
+    '09fc1e43',
     [
       'easy1/wall/g0/u72960/L6960/D0:s15520-19600,s23600-27680,s27680-31760,s35760-39840',
       'easy2/wall/g1/u91164/L6960/D4284:s3360-7440,s11440-15520,s27680-31760,s35760-39840',
-      'gate1/wall/g2/u129518/L6960/D24434:s3360-7440,s11440-15520,s15520-19600,s23600-27680',
-      'gate2/wall/g1/u146359/L8400/D2921:v3360-7920,v10960-15520,v27680-32240,v35280-39840',
-      'normal/single/g2/u186153/L8400/D24434:v19320-23880',
+      'normal/single/g2/u129518/L8400/D24434:v7160-11720',
+      'normal/single/g2/u169312/L8400/D24434:v19320-23880',
+      'normal/single/g1/u209106/L8400/D24434:v31480-36040',
     ],
   ],
   21: [
@@ -154,7 +159,7 @@ describe('Lv1–5 draw exactly as before sand and cones (§5)', () => {
 /** level → the rivals-only run's goal steps [rival 1, 2, 3]. */
 const RIVAL_GOALS: Record<number, [number, number, number]> = {
   1: [5785, 6001, 6295],
-  11: [7256, 7559, 7902],
+  11: [6503, 6752, 7081],
   51: [8279, 8619, 9028],
   100: [10886, 11328, 11858],
 };
@@ -163,8 +168,8 @@ const RIVAL_GOALS: Record<number, [number, number, number]> = {
 const RACES: Array<[number, BotKind, number, number, number, string]> = [
   [1, 'A', 4621, 0, 1, 'f6c9d9da'],
   [1, 'rusher', 4740, 1, 1, '55e01e6c'],
-  [11, 'A', 5704, 0, 1, 'b1b4293c'],
-  [11, 'rusher', 8149, 25, 4, '0ed6209a'],
+  [11, 'A', 5102, 0, 1, 'b87327a4'],
+  [11, 'rusher', 5810, 7, 1, '49a72f84'],
   [51, 'A', 6879, 0, 1, '984fd2b5'],
   [51, 'rusher', 8913, 22, 3, '08668421'],
   [100, 'A', 10047, 0, 1, '4a53a187'],
@@ -229,19 +234,19 @@ const REPLAY: Array<[number, number | null, number]> = [
 /** [final car, Bumps, steps with an overlap, digest of every state]. */
 const REPLAY_RESULT: [CarState, number, number, string] = [
   {
-    r: 152521,
-    x: 17560,
-    w: 0,
+    r: 340408,
+    x: 14400,
+    w: 420,
     target: 14400,
-    hold: 9,
+    hold: 0,
     lock: 0,
-    blink: 45,
-    bumps: 17,
+    blink: 0,
+    bumps: 9,
     coneCap: 0,
   },
-  17,
-  567,
-  'dc874dae',
+  9,
+  394,
+  '1b30783a',
 ];
 
 describe('a stored input list replayed through the step (§1, §16)', () => {

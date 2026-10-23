@@ -563,6 +563,51 @@
   --accent-ring-soft: rgba(66, 106, 37, 0.12);
 }
 
+:root[data-game='light-grid'],
+.accent-light-grid {
+  --accent: #784f5f;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3dbd7;
+  --accent-ring: rgba(120, 79, 95, 0.38);
+  --accent-ring-soft: rgba(120, 79, 95, 0.12);
+}
+
+:root[data-game='color-flood'],
+.accent-color-flood {
+  --accent: #184e72;
+  --accent-ink: #ffffff;
+  --accent-soft: #d7dbda;
+  --accent-ring: rgba(24, 78, 114, 0.38);
+  --accent-ring-soft: rgba(24, 78, 114, 0.12);
+}
+
+:root[data-game='three-peaks'],
+.accent-three-peaks {
+  --accent: #7a321a;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3d7ce;
+  --accent-ring: rgba(122, 50, 26, 0.38);
+  --accent-ring-soft: rgba(122, 50, 26, 0.12);
+}
+
+:root[data-game='nim'],
+.accent-nim {
+  --accent: #36533f;
+  --accent-ink: #ffffff;
+  --accent-soft: #dadcd3;
+  --accent-ring: rgba(54, 83, 63, 0.38);
+  --accent-ring-soft: rgba(54, 83, 63, 0.12);
+}
+
+:root[data-game='knight-tour'],
+.accent-knight-tour {
+  --accent: #452b5e;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcd6d7;
+  --accent-ring: rgba(69, 43, 94, 0.38);
+  --accent-ring-soft: rgba(69, 43, 94, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -1078,6 +1123,51 @@
   --accent-soft: #2e3c20;
   --accent-ring: rgba(167, 205, 126, 0.42);
   --accent-ring-soft: rgba(167, 205, 126, 0.14);
+}
+
+:root[data-theme='dark'][data-game='light-grid'],
+[data-theme='dark'] .accent-light-grid {
+  --accent: #bd659a;
+  --accent-ink: #14171c;
+  --accent-soft: #3d3243;
+  --accent-ring: rgba(189, 101, 154, 0.42);
+  --accent-ring-soft: rgba(189, 101, 154, 0.14);
+}
+
+:root[data-theme='dark'][data-game='color-flood'],
+[data-theme='dark'] .accent-color-flood {
+  --accent: #77a4ac;
+  --accent-ink: #14171c;
+  --accent-soft: #303e46;
+  --accent-ring: rgba(119, 164, 172, 0.42);
+  --accent-ring-soft: rgba(119, 164, 172, 0.14);
+}
+
+:root[data-theme='dark'][data-game='three-peaks'],
+[data-theme='dark'] .accent-three-peaks {
+  --accent: #b07373;
+  --accent-ink: #14171c;
+  --accent-soft: #3b353c;
+  --accent-ring: rgba(176, 115, 115, 0.42);
+  --accent-ring-soft: rgba(176, 115, 115, 0.14);
+}
+
+:root[data-theme='dark'][data-game='nim'],
+[data-theme='dark'] .accent-nim {
+  --accent: #aacbab;
+  --accent-ink: #14171c;
+  --accent-soft: #3a4546;
+  --accent-ring: rgba(170, 203, 171, 0.42);
+  --accent-ring-soft: rgba(170, 203, 171, 0.14);
+}
+
+:root[data-theme='dark'][data-game='knight-tour'],
+[data-theme='dark'] .accent-knight-tour {
+  --accent: #a69dc3;
+  --accent-ink: #14171c;
+  --accent-soft: #393c4a;
+  --accent-ring: rgba(166, 157, 195, 0.42);
+  --accent-ring-soft: rgba(166, 157, 195, 0.14);
 }
 
 /* ---------- Web early release (docs/WEB_VERSION.md「先行公開」) ----------

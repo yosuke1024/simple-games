@@ -1,0 +1,33 @@
+/** AI-written draft; no human or native review. */
+import type { ThreePeaksMessages } from './en';
+export const zhHant: ThreePeaksMessages = {
+  threePeaksName: 'Three Peaks',
+  threePeaksStep1Title: '清空三個山峰',
+  threePeaksStep1Body: '移走未被覆蓋且比棄牌大或小一級的牌，清空全部三個山峰。',
+  threePeaksStep2Title: 'A連接兩端',
+  threePeaksStep2Body: 'K–A–2可以雙向連接。花色不影響出牌。',
+  threePeaksStep3Title: '抽牌或復原',
+  threePeaksStep3Body:
+    '需要時從牌堆抽一張新棄牌。牌堆只使用一輪。任何操作都能復原，遊戲結束後也可以。',
+  threePeaksDraw: '抽牌',
+  threePeaksStock: '牌堆',
+  threePeaksWaste: '棄牌',
+  threePeaksDrawCount: '抽一張牌；剩餘{count}張',
+  threePeaksCardsLeft: '剩餘牌數',
+  threePeaksWon: '已清空所有山峰！',
+  threePeaksStuck: '沒有可走的牌',
+  threePeaksStuckBody: '牌堆已空，也沒有符合條件的明牌。可以復原，嘗試其他路線。',
+  threePeaksUndoHint: '復原次數不限，抽牌和遊戲結束後都可復原。',
+  threePeaksWins: '勝局',
+  threePeaksBest: '最少剩餘牌數',
+  threePeaksBoard: '三個山峰的牌陣',
+  threePeaksCovered: '第{position}張牌，背面朝上',
+  threePeaksCardLabel: '第{position}張牌：{suit}{rank}，{state}',
+  threePeaksCanMove: '可以移動',
+  threePeaksCannotMove: '不能移動',
+  threePeaksSpades: '黑桃',
+  threePeaksHearts: '紅心',
+  threePeaksDiamonds: '方塊',
+  threePeaksClubs: '梅花',
+  threePeaksKeyboard: '方向鍵：選擇牌 · D：抽牌 · Ctrl/Cmd+Z：復原',
+};

@@ -141,7 +141,7 @@ src/
 
 ## ゲームレジストリの契約
 
-`app/registry.ts` のエントリは「タイトルカード + そのゲームが持つキー + ゲーム本体のローダー」だけのプラグイン機構ではない薄い契約で、ゲームの追加は keys の import 1 行と配列要素 1 つで済む。ゲーム本体は静的 import せず `codeSplitting` でゲーム単位のチャンクに分かれる——例外は同期参照される import ゼロの葉 `storage/keys.ts` だけで、ここに import を足すとホームの初期チャンクへ引き戻される。`storageKeys` は「ローカルデータ削除」とバックアップがゲームのチャンクを読まずに列挙するためのもので、released 済みキーの一覧は `gameKeys.test.ts` のゴールデンとして固定され、**テストを直して通すのは禁止**(プレイヤーのデータに対する削除行為になるため)。`loadStorageSchemas` は**必須**のローダーで、Backup & Restore がそのゲームのレコードを持ち主の `SchemaDef` で検証するための唯一の口 —— 任意にすると、書き出せるのに復元できないゲームが黙って増える(issue #160)。Root が受け取る props は `GameRootProps` = `onExit` と任意の `entry`(どの扉から入ったか、issue #113)。`SettingsSection` は任意で、ゲーム固有の設定はゲームが所有しシェルは場所だけ貸す。`channel` も任意で、`'web-beta'` なら Web 版だけの先行公開(いまは 2026-10-17 の計画の 5 本 — Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、Web 版で 2026-10-19 から公開中 — と、2026-10-20 の計画の 5 本 — Make the Target / Nested Tic-Tac-Toe / Tangram は 2026-10-21 に実装し、Web 版で 2026-10-22 から公開中、Overtake と Scopa は 2026-10-21 に実装し、製品オーナーの指示で 2026-10-22 に切り替え、Web 版で同日(UTC でも 2026-10-22 02:32)から公開中 — と、2026-10-19 の計画の 5 本 — Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads、2026-10-22 に実装して `'in-development'` から切り替え、Web 版へは次の landing の同期(製品オーナーの承認後の Publish)で届ける — がこのチャンネルにある。前の 11 本は 2026-10-02 に正式収録した)、`'in-development'`(2026-10-20 から)なら実装中でどのビルドにも出さない(スキャフォールドの段階の値で、遊べるようになる変更で `'web-beta'` にする。2026-10-22 の切り替えで、いまこの値のエントリは無い) —— 出し分けはビルドではなく `app/gameChannel.ts` の実行時ガードで、ホーム・検索・お気に入り・最近・`?game=` の住所・lazy root・Club のチャレンジの Play(`findAvailableGame`)がそこに問う([WEB_VERSION.md](WEB_VERSION.md)「先行公開」、issue #194)。
+`app/registry.ts` のエントリは「タイトルカード + そのゲームが持つキー + ゲーム本体のローダー」だけのプラグイン機構ではない薄い契約で、ゲームの追加は keys の import 1 行と配列要素 1 つで済む。ゲーム本体は静的 import せず `codeSplitting` でゲーム単位のチャンクに分かれる——例外は同期参照される import ゼロの葉 `storage/keys.ts` だけで、ここに import を足すとホームの初期チャンクへ引き戻される。`storageKeys` は「ローカルデータ削除」とバックアップがゲームのチャンクを読まずに列挙するためのもので、released 済みキーの一覧は `gameKeys.test.ts` のゴールデンとして固定され、**テストを直して通すのは禁止**(プレイヤーのデータに対する削除行為になるため)。`loadStorageSchemas` は**必須**のローダーで、Backup & Restore がそのゲームのレコードを持ち主の `SchemaDef` で検証するための唯一の口 —— 任意にすると、書き出せるのに復元できないゲームが黙って増える(issue #160)。Root が受け取る props は `GameRootProps` = `onExit` と任意の `entry`(どの扉から入ったか、issue #113)。`SettingsSection` は任意で、ゲーム固有の設定はゲームが所有しシェルは場所だけ貸す。`channel` も任意で、`'web-beta'` なら Web 版だけの先行公開(いまは 2026-10-17 の計画の 5 本 — Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、Web 版で 2026-10-19 から公開中 — と、2026-10-20 の計画の 5 本 — Make the Target / Nested Tic-Tac-Toe / Tangram は 2026-10-21 に実装し、Web 版で 2026-10-22 から公開中、Overtake と Scopa は 2026-10-21 に実装し、製品オーナーの指示で 2026-10-22 に切り替え、Web 版で同日(UTC でも 2026-10-22 02:32)から公開中 — と、2026-10-19 の計画の 5 本 — Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads、2026-10-22 に実装して `'in-development'` から切り替え、Web 版で 2026-10-23(JST、UTC では 2026-10-22 17:33)から公開中 — がこのチャンネルにある。前の 11 本は 2026-10-02 に正式収録した)、`'in-development'`(2026-10-20 から)なら実装中でどのビルドにも出さない(スキャフォールドの段階の値で、遊べるようになる変更で `'web-beta'` にする。2026-10-22 の切り替えで、いまこの値のエントリは無い) —— 出し分けはビルドではなく `app/gameChannel.ts` の実行時ガードで、ホーム・検索・お気に入り・最近・`?game=` の住所・lazy root・Club のチャレンジの Play(`findAvailableGame`)がそこに問う([WEB_VERSION.md](WEB_VERSION.md)「先行公開」、issue #194)。
 
 小見出し: 「ゲーム単位の lazy チャンク(issue #26)」
 
@@ -356,14 +356,18 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
 
 ## CI / リリース
 
-- `ci.yml`: push / PR で install → lint → typecheck → test → build(全ワークスペース)。
-  対象が増えたら turbo の `--filter` で影響範囲のみに絞る。両ビルドの後に
-  広告分離(`check-dist-ads-separation.sh`)とサイズ Gate
+- `ci.yml`: 3 つのジョブ。`checks` は install → lint → typecheck → build(全ワークスペース)
+  のあと、両ビルドの広告分離(`check-dist-ads-separation.sh`)とサイズ Gate
   (`pnpm --filter simple-games size:check` — ゲーム別予算・エントリ成長・
-  初期グラフへのゲームチャンク混入)を検証する。
+  初期グラフへのゲームチャンク混入)を検証する。`test` は vitest を 4 シャードに分けて
+  並列に走らせ、PR では差分に関係するテストだけ(import グラフで届くテスト + 触った
+  ゲームのテスト全部 + 常時ゲート。規則は `apps/simple-games/scripts/test-scoped.mjs`
+  冒頭)、main への push では全件を走らせる(2026-10-22、732 ファイルで 1 ジョブ 8 分半
+  になっていた。スイートはゲーム数に比例して伸びる)。`verify` は ruleset が `Brand principles`
+  と並べて要求するチェックで、他の全ジョブが緑のときだけ緑になる。
 - **vitest は 2 つの project で走る**(`apps/simple-games/vite.config.ts` の `test.projects`、
-  2026-10-23)。`game` は `src/games/*/game/**/*.test.ts`(371 本)を node 環境・setupFiles なしで、
-  `dom` は残り(439 本)を jsdom + `src/test/setup.ts` で走らせる。`games/*/game/` は純 TypeScript
+  2026-10-23)。`game` は `src/games/*/game/**/*.test.ts`(2026-10-23 時点で 371 本)を node 環境・setupFiles なしで、
+  `dom` は残り(同 439 本)を jsdom + `src/test/setup.ts` で走らせる。`games/*/game/` は純 TypeScript
   (「レイヤー」の節)なので DOM は要らない一方、jsdom の生成と setup の固定費はテストファイルごとに
   払うので、スイートの固定費はゲーム数に比例して伸びていた(2026-10-22 の集計で environment 30% +
   setup 18%)。分けた実測(2026-10-23、8 コア、同じ機械で続けて 1 回ずつ): 旧設定 585 秒・CPU 3,124 秒
@@ -381,7 +385,7 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
   自分のゲームのカタログを自分で登録する(`scripts/codemods/2026-10-23-ui-tests-register-own-catalog.mjs`、
   56 本)。カタログが無ければ生のキーが描かれ、そのテスト自身の assertion が落ちる。シェルのテストは
   ゲームのカタログを前提にしない。
-- **テストの門は壁時計で判定しない**(issue #158)。`pnpm test` は 337 ファイルを
+- **テストの門は壁時計で判定しない**(issue #158)。`pnpm test` は 700 本を超えるファイルを
   CPU 数ぶん並列に走らせるので、同じ仕事でも壁時計は run ごとに数倍〜数十倍ぶれる
   ([SUDOKU_RULES.md](SUDOKU_RULES.md) §7 の実測)。稀に落ちる門は信頼されない門であり、
   赤を「たぶん負荷」と読む運用が本物の退行を隠す。だから、

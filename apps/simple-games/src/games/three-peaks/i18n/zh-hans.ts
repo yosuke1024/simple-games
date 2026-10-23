@@ -1,0 +1,33 @@
+/** AI-written draft; no human or native review. */
+import type { ThreePeaksMessages } from './en';
+export const zhHans: ThreePeaksMessages = {
+  threePeaksName: 'Three Peaks',
+  threePeaksStep1Title: '清空三个山峰',
+  threePeaksStep1Body: '移走未被覆盖且比弃牌大或小一级的牌，清空全部三个山峰。',
+  threePeaksStep2Title: 'A连接两端',
+  threePeaksStep2Body: 'K–A–2可以双向连接。花色不影响出牌。',
+  threePeaksStep3Title: '抽牌或撤销',
+  threePeaksStep3Body:
+    '需要时从牌堆抽一张新弃牌。牌堆只使用一轮。任何操作都能撤销，游戏结束后也可以。',
+  threePeaksDraw: '抽牌',
+  threePeaksStock: '牌堆',
+  threePeaksWaste: '弃牌',
+  threePeaksDrawCount: '抽一张牌；剩余{count}张',
+  threePeaksCardsLeft: '剩余牌数',
+  threePeaksWon: '已清空所有山峰！',
+  threePeaksStuck: '没有可走的牌',
+  threePeaksStuckBody: '牌堆已空，也没有符合条件的明牌。可以撤销，尝试其他路线。',
+  threePeaksUndoHint: '撤销次数不限，抽牌和游戏结束后都可撤销。',
+  threePeaksWins: '胜局',
+  threePeaksBest: '最少剩余牌数',
+  threePeaksBoard: '三个山峰的牌阵',
+  threePeaksCovered: '第{position}张牌，背面朝上',
+  threePeaksCardLabel: '第{position}张牌：{suit}{rank}，{state}',
+  threePeaksCanMove: '可以移动',
+  threePeaksCannotMove: '不能移动',
+  threePeaksSpades: '黑桃',
+  threePeaksHearts: '红桃',
+  threePeaksDiamonds: '方块',
+  threePeaksClubs: '梅花',
+  threePeaksKeyboard: '方向键：选择牌 · D：抽牌 · Ctrl/Cmd+Z：撤销',
+};

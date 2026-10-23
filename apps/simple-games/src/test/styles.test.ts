@@ -10,6 +10,11 @@
  * The collection home has `.home-mark` for its own <svg> instead. These tests
  * pin that split: the tile keeps the properties the games rely on, and the two
  * classes stay separate.
+ *
+ * Lives in src/test rather than next to styles.css because it reads every
+ * game's stylesheet and docs/architecture/css-split.md with node:fs, which the
+ * import graph cannot see: the scoped runs (`pnpm verify:changed`, CI's
+ * pull-request job) always run src/test (scripts/always-on-tests.mjs).
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -71,7 +76,9 @@ describe('the CSS-per-game list in docs/architecture/css-split.md', () => {
   // web-beta titles (issue #194) pushed the sentence past it — a scan cut
   // short would have reported them as missing while they sat right there.
   const listed = new Set(
-    [...claim.slice(0, 1200).matchAll(/`([a-z0-9-]+\.css)`/g)].map((m) => m[1]!),
+    [...claim.slice(0, claim.indexOf('アーケード 2 本')).matchAll(/`([a-z0-9-]+\.css)`/g)].map(
+      (m) => m[1]!,
+    ),
   );
   // readdirSync rather than fs.globSync: the latter needs Node 22, and this
   // repository says it supports Node 20 (package.json engines).

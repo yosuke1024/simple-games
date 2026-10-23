@@ -25,7 +25,7 @@
 import { describe, expect, it } from 'vitest';
 import { CAR_HALF_WIDTH, FULL_SPEED, STEER_PER_STEP, STEPS_PER_SECOND, SUB } from './constants';
 import { assembleCourse, coneGroup, generateCourse, sandZone } from './course';
-import { laneCenter, wallBand } from './geometry';
+import { carObstacle, laneCenter, wallBand } from './geometry';
 import { CONE_LENGTH, CONE_WIDTH, levelSpec } from './levels';
 import {
   advanceCar,
@@ -38,7 +38,7 @@ import {
 import { brakingDistance } from './planner';
 import { windowEnd } from './route';
 import { report } from './test-helpers';
-import type { Course, StepInput, Zone } from './types';
+import type { CarKind, Course, StepInput, Zone } from './types';
 
 type Brake = 'least' | 'none';
 
@@ -288,5 +288,89 @@ describe('sand and cones cost far less than a Bump (§4 "損の順序")', () => 
       'Bump / sand 250',
       (rushMin / sand250.loss).toFixed(2),
     );
+  }, 60_000);
+});
+
+interface ScrapeRun {
+  loss: number;
+  bumps: number;
+  scrapedSteps: number;
+}
+
+/**
+ * A scrape (§4, 2026-10-23): one wall car of this kind centred in lane 1 of 3
+ * at u = 2,000 px; the car starts in lane 0, 10 px clear of the piece's left
+ * side at full throttle, and once its front is past the piece's rear steers
+ * into the piece, so it rubs along the whole side until it is clear. Loss is
+ * against the same inputs on an empty course.
+ */
+function scrapeLoss(kind: CarKind): ScrapeRun {
+  const piece = carObstacle(kind, laneCenter(3, 1), 2000 * SUB);
+  const start = piece.left - CAR_HALF_WIDTH - 10 * SUB;
+  const inside = (piece.left + piece.right) / 2;
+  const row = {
+    kind: 'normal' as const,
+    template: 'single' as const,
+    u: piece.rear,
+    length: piece.front - piece.rear,
+    gap: 0,
+    lead: 0,
+    sigma: 0,
+    move: 0,
+    obstacles: [piece],
+    gapSpan: null,
+  };
+  const withPiece = assembleCourse(16, 3, 40_000 * SUB, [row]);
+  const empty = assembleCourse(16, 3, 40_000 * SUB, []);
+  const finish = piece.front + (58 + 1000) * SUB;
+  const run = (c: Course) => {
+    const car: MutableCar = {
+      r: piece.rear - 1000 * SUB,
+      x: start,
+      w: FULL_SPEED,
+      target: start,
+      hold: 0,
+      lock: 0,
+      blink: 0,
+      bumps: 0,
+      coneCap: 0,
+    };
+    let scrapedSteps = 0;
+    for (let step = 1; step < 20_000; step++) {
+      const steerX = car.r >= piece.rear ? Math.floor(inside) : start;
+      const rep = advanceCar(c, car, { steerX, brake: 0 }, newReport());
+      if (rep.scraped) scrapedSteps += 1;
+      if (car.r >= finish) return { steps: step, bumps: car.bumps, scrapedSteps };
+    }
+    throw new Error('did not finish');
+  };
+  const a = run(withPiece);
+  const b = run(empty);
+  expect(b.scrapedSteps).toBe(0);
+  return { loss: a.steps - b.steps, bumps: a.bumps, scrapedSteps: a.scrapedSteps };
+}
+
+describe('a scrape costs less than a Bump (§4 "損の順序", 2026-10-23)', () => {
+  it('rubbing a sedan, van and truck along the whole side: no Bump, loss > 0, Bump costs more', () => {
+    const { rushMin } = allGateLosses();
+    const runs = (['sedan', 'van', 'truck'] as const).map((kind) => ({
+      kind,
+      run: scrapeLoss(kind),
+    }));
+    for (const { kind, run } of runs) {
+      expect(run.bumps, kind).toBe(0);
+      expect(run.scrapedSteps, kind).toBeGreaterThan(0);
+      expect(run.loss, kind).toBeGreaterThan(0);
+      expect(rushMin, kind).toBeGreaterThan(run.loss);
+      expect(rushMin, kind).toBeGreaterThanOrEqual(2 * run.loss);
+      report(
+        `loss: scrape along a ${kind}`,
+        `${run.loss} steps = ${s(run.loss)} s`,
+        `scraped steps ${run.scrapedSteps}`,
+        'Bump / scrape',
+        (rushMin / run.loss).toFixed(2),
+      );
+    }
+    report('loss: Bump at least (scrape comparison)', `${rushMin} steps = ${s(rushMin)} s`);
   }, 60_000);
 });

@@ -23,7 +23,9 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   `chess.css` / `gem-swap.css` / `pipe-link.css` / `bounce-up.css` / `echo-pads.css`
   (Web 先行公開の次の 5 本、2026-10-22 に実装)、
   `overtake.css` / `make-the-target.css` / `nested-tic-tac-toe.css` / `scopa.css` / `tangram.css`
-  (さらに次の 5 本、2026-10-21 に実装)。
+  (さらに次の 5 本、2026-10-21 に実装)、
+  `light-grid.css` / `color-flood.css` / `three-peaks.css` / `nim.css` / `knight-tour.css`
+  (No. 57〜61、2026-10-23 に実装)。
   アーケード 2 本が共有する実況行(レベル / 残り / ライフ)だけは `ui/styles.css` に
   `.game-status*` として置いてある — 2 本が同じものを必要とした時点で共有クロムに
   なるのであって、`games/A/` の CSS を `games/B/` が読むことはない。
@@ -35,6 +37,8 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   タイルランプ、Reversi の盤(フェルトと黒白の石)、Connect Four の対戦相手の
   ディスク、Ludo の 4 席の色(`--ld-seat-*`)、Overtake のライバルの青(`--ot-rival` と、
   数字の `--ot-rival-ink` — 2026-10-22。`--ot-rival-ink` は値を書かず `var(--surface)` を指す)、
+  Light Grid の点灯・消灯(黄と暗い青、記号でも区別する)、
+  Color Flood の 6 色(記号でも区別する)、Three Peaks の赤黒のカード、
   Gem Swap の 6 つの宝石の色(`--gs-gem-0`〜`--gs-gem-5`、ライト / ダーク — `GEM_SWAP_RULES.md` §10)、
   Chess のマスの 2 色・駒の 2 色・印の halo(`--ch-square-*` / `--ch-piece-*` / `--ch-halo`、ライト / ダーク —
   `CHESS_RULES.md` §9。駒の色はテーマで入れ替えない)。どちらも冒頭のライト / ダークの 2 つのブロックだけに書き、

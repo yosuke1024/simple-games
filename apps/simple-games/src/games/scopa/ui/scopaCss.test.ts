@@ -22,7 +22,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-// Resolved from the workspace root (src/ui/styles.test.ts explains why).
+// Resolved from the workspace root (src/test/styles.test.ts explains why).
 const css = readFileSync(resolve('src/games/scopa/ui/scopa.css'), 'utf8');
 const shell = readFileSync(resolve('src/ui/styles.css'), 'utf8');
 

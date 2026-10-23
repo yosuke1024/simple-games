@@ -15,11 +15,15 @@ import {
   CAR_LENGTH,
   CONE_CAP_STEPS,
   FULL_SPEED,
+  MAX_RACE_STEPS,
+  PLAYER_START,
+  ROLLING_START_SPEED,
   SHOULDER_SPEED,
   SUB,
   X_MAX,
   X_MIN,
 } from './constants';
+import { controllerFor } from './bots';
 import { assembleCourse, coneGroup, generateCourse, sandZone } from './course';
 import { carObstacle, laneCenter } from './geometry';
 import {
@@ -459,7 +463,7 @@ describe('overlap resolution never moves a car forward (§4)', () => {
     }
     expect(passesMax).toBe(1);
     report('random overlaps: most passes', passesMax, 'push-backs', pushedBack);
-  });
+  }, 60_000);
 
   it('(c) pushes back behind everything at this x when no candidate is clear', () => {
     // A car hard against the right clamp, overlapping A; left of it sits B,
@@ -505,6 +509,144 @@ describe('overlap resolution never moves a car forward (§4)', () => {
   });
 });
 
+describe('scrape (§4, 2026-10-23)', () => {
+  const sedan = carObstacle('sedan', 180 * SUB, 3000 * SUB);
+  const course = scene([sedan]);
+  const wallX = sedan.left - CAR_HALF_WIDTH;
+
+  it('(a) side contact while beside is a scrape, never a Bump', () => {
+    expect(CONE_CAP_STEPS).toBe(36);
+    const c = car(sedan.rear + 20 * SUB, wallX, FULL_SPEED);
+    const target = wallX + 100 * SUB;
+    let beside = 0;
+    let cleared = 0;
+    let w = c.w;
+    for (let i = 1; i <= 400 && c.coneCap + (cleared === 0 ? 1 : 0) > 0; i++) {
+      const prevR = c.r;
+      const rep = advanceCar(course, c, { steerX: target, brake: 0 });
+      expect(c.r).toBeGreaterThanOrEqual(prevR);
+      expect(c.bumps).toBe(0);
+      expect(rep.bumped).toBe(false);
+      if (c.r - CAR_LENGTH < sedan.front) {
+        beside += 1;
+        expect(rep.scraped, `step ${i}`).toBe(true);
+        expect(rep.overlapped).toBe(true);
+        expect(c.x).toBe(wallX);
+        expect(c.coneCap).toBe(36);
+        // Step 1 still has no cap (it starts at the step's end); then −6 a step to 231.
+        expect(c.w, `step ${i}`).toBe(Math.max(SHOULDER_SPEED, FULL_SPEED - 6 * (beside - 1)));
+      } else {
+        cleared += 1;
+        expect(rep.scraped).toBe(false);
+        expect(rep.overlapped).toBe(false);
+        expect(c.coneCap).toBe(Math.max(0, 36 - cleared));
+        expect(c.w).toBe(Math.max(SHOULDER_SPEED, w - 6));
+      }
+      w = c.w;
+    }
+    expect(beside).toBeGreaterThan(20);
+    expect(c.coneCap).toBe(0);
+    // The cap is over: the speed climbs back to full.
+    for (let i = 0; i < 200 && c.w < FULL_SPEED; i++) {
+      const prev = c.w;
+      advanceCar(course, c, { steerX: target, brake: 0 });
+      expect(c.w).toBe(Math.min(FULL_SPEED, prev + 3));
+    }
+    expect(c.w).toBe(FULL_SPEED);
+    report('scrape (a): steps beside the sedan', beside);
+  });
+
+  it('(b) reaching a piece from behind is a Bump even when the resolution goes sideways', () => {
+    // Front 1 px behind the sedan's rear; the 440-unit steer leaves the right edge
+    // 120 units (1 px) inside its left edge, the advance 300 units inside its rear.
+    const c = car(sedan.rear - SUB, wallX - 320, FULL_SPEED);
+    const rep = advanceCar(course, c, { steerX: wallX + 100 * SUB, brake: 0 });
+    expect(rep.bumped).toBe(true);
+    expect(rep.scraped).toBe(false);
+    expect(rep.pushedBack).toBe(false);
+    expect(c.x).toBe(wallX);
+    expect(c.bumps).toBe(1);
+    expect([c.hold, c.lock, c.blink]).toEqual([60, 36, 96]);
+    expect(c.w).toBe(0);
+    expect(overlapAt(course, c.x, c.r)).toBeNull();
+  });
+
+  it('(c) a side contact while blinking is a scrape, not a second Bump', () => {
+    // The sideways Bump of (b) leaves the car beside the sedan; once the hold is
+    // over it steers into the side again, 100 units a step, still blinking.
+    const c = car(sedan.rear - SUB, wallX - 320, FULL_SPEED);
+    advanceCar(course, c, { steerX: wallX + 100 * SUB, brake: 0 });
+    expect(c.bumps).toBe(1);
+    for (let i = 0; i < BUMP_HOLD_STEPS; i++) advanceCar(course, c, { steerX: null, brake: 0 });
+    expect(c.blink).toBe(36);
+    let scrapes = 0;
+    while (c.blink > 0) {
+      const rep = advanceCar(course, c, { steerX: c.x + 100, brake: 0 });
+      expect(rep.bumped).toBe(false);
+      expect(rep.scraped).toBe(true);
+      expect(rep.overlapped).toBe(true);
+      expect(c.bumps).toBe(1);
+      expect(c.coneCap).toBe(36);
+      scrapes += 1;
+    }
+    expect(scrapes).toBe(36);
+  });
+
+  it('(d) a push back counts as a Bump', () => {
+    // The wedged arrangement of "(c) pushes back behind everything" above.
+    const x = X_MAX;
+    const a = {
+      kind: 'sedan' as const,
+      left: x - 1000,
+      right: x + 4000,
+      rear: 5000 * SUB,
+      front: 5058 * SUB,
+    };
+    const b = {
+      kind: 'sedan' as const,
+      left: a.left - 2 * CAR_HALF_WIDTH - 4000,
+      right: a.left - 10,
+      rear: 4990 * SUB,
+      front: 5100 * SUB,
+    };
+    const cc = {
+      kind: 'sedan' as const,
+      left: x - 3000,
+      right: x + 3000,
+      rear: 4900 * SUB,
+      front: 4960 * SUB,
+    };
+    const wedge = scene([a, b, cc]);
+    const m = car(5010 * SUB, x, 0);
+    const rep = advanceCar(wedge, m, { steerX: null, brake: 0 });
+    expect(rep.pushedBack).toBe(true);
+    expect(rep.bumped).toBe(true);
+    expect(rep.scraped).toBe(false);
+    expect(m.bumps).toBe(1);
+    expect(m.r).toBe(cc.rear);
+  });
+
+  it('(e) bot A never scrapes on the shipped courses (rivals not measured)', () => {
+    const counts: string[] = [];
+    for (const l of [1, 11, 21, 51, 100]) {
+      const course2 = generateCourse(l);
+      const controller = controllerFor(course2, 'A');
+      const m = car(PLAYER_START.r, PLAYER_START.x, ROLLING_START_SPEED);
+      const rep = newReport();
+      let scrapes = 0;
+      for (let step = 0; step < MAX_RACE_STEPS && m.r < course2.length; step++) {
+        advanceCar(course2, m, controller.next(step, m), rep);
+        if (rep.scraped) scrapes += 1;
+      }
+      expect(m.r, `Lv${l}`).toBeGreaterThanOrEqual(course2.length);
+      expect(scrapes, `Lv${l}`).toBe(0);
+      expect(m.bumps, `Lv${l}`).toBe(0);
+      counts.push(`Lv${l} ${scrapes}`);
+    }
+    report('scraped steps of bot A', counts.join('  '));
+  }, 60_000);
+});
+
 describe('the pure step', () => {
   it('does not mutate its input and returns integers only', () => {
     const course = generateCourse(23);
@@ -520,10 +662,14 @@ describe('the pure step', () => {
       coneCap: 7,
     };
     const frozen = { ...before };
-    const { car: after } = stepCar(course, before, { steerX: 200 * SUB, brake: 250 });
+    const { car: after, report: rep } = stepCar(course, before, { steerX: 200 * SUB, brake: 250 });
     expect(before).toEqual(frozen);
     expect(Object.keys(after)).toContain('coneCap');
-    expect(after.coneCap).toBe(6);
+    // This car is already beside a wall car and steers into its side: a scrape
+    // (§4, 2026-10-23), so no Bump and the cap restarts at 36 instead of 7 → 6.
+    expect(rep.scraped).toBe(true);
+    expect(after.bumps).toBe(0);
+    expect(after.coneCap).toBe(36);
     for (const v of Object.values(after)) expect(Number.isInteger(v)).toBe(true);
   });
 });

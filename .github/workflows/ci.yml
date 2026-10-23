@@ -1,7 +1,15 @@
-# Root CI: install → lint → typecheck → test → build for every workspace,
-# plus the brand-principle guard.
-# With a single app this runs everything; when more games are added, narrow
-# the scope with `turbo --filter` based on changed paths (see docs/ARCHITECTURE.md).
+# Root CI, three jobs plus the brand-principle guard:
+#   checks — install → lint → typecheck → build (every workspace), then the
+#            web build, the ad-separation grep, the iOS version pair, the size
+#            gate and the measurement-ID guard.
+#   test   — vitest, split into parallel shards. A pull request runs only the
+#            tests related to its diff plus the always-on gates
+#            (apps/simple-games/scripts/test-scoped.mjs — the same scoping as
+#            `pnpm verify:changed`); a push to main runs the whole suite. The
+#            suite grows with the number of games (732 files, 8½ minutes in one
+#            job on 2026-10-22), and most PRs touch one game.
+#   verify — the check the main-branch ruleset requires next to "Brand
+#            principles": green only when every other job is.
 name: CI
 
 on:
@@ -13,7 +21,7 @@ permissions:
   contents: read
 
 jobs:
-  verify:
+  checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,7 +36,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm test
       - run: pnpm build
 
       # The web-mode build (dist-web/, docs/WEB_VERSION.md) must keep building,
@@ -66,6 +73,62 @@ jobs:
         run: pnpm build && bash .github/scripts/check-dist-ads-separation.sh native
         env:
           VITE_GA_MEASUREMENT_ID: G-CIGUARD01
+
+  test:
+    name: test ${{ matrix.shard }}/4
+    runs-on: ubuntu-latest
+    strategy:
+      # One red shard must not cancel the others: the full picture of what
+      # failed is worth the minutes, and a cancelled shard reads as "unknown".
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The pull-request scoping diffs against the base branch
+          # (git diff origin/<base>...HEAD), so the merge-base has to be in the
+          # clone. The pack is ~30 MB; a full history costs seconds.
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # On a pull request: the tests related to the diff plus the always-on
+      # gates (src/test src/app src/i18n src/club read sources with node:fs
+      # and are invisible to the import graph). On a push to main: everything.
+      # Each shard takes its slice of that set; the script prints the set.
+      - name: vitest
+        working-directory: apps/simple-games
+        run: >
+          node scripts/test-scoped.mjs
+          ${{ github.event_name == 'pull_request' && format('--base origin/{0}', github.base_ref) || '' }}
+          --shard ${{ matrix.shard }}/${{ strategy.job-total }}
+
+  verify:
+    # The main-branch ruleset requires this check by name (and "Brand
+    # principles"), so it stays `verify` and must be red whenever any other job
+    # is. A job with `needs` is skipped when a dependency fails, and a skipped
+    # check does not block a merge the way a failed one does — hence
+    # `if: always()` plus an explicit verdict on every result. `principles`
+    # is required on its own too; it is in the list so that `verify` means
+    # "everything is green" even if the ruleset changes.
+    needs: [checks, test, principles]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every other job must have succeeded
+        run: |
+          echo "checks=${{ needs.checks.result }} test=${{ needs.test.result }} principles=${{ needs.principles.result }}"
+          test "${{ needs.checks.result }}" = success
+          test "${{ needs.test.result }}" = success
+          test "${{ needs.principles.result }}" = success
 
   # Runs without installing anything: it only greps the source. Kept separate so a
   # broken promise is reported as a broken promise, not as "the build failed".
