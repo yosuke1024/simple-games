@@ -26,7 +26,9 @@ export function MazeDrawing({ session, hint = null }: { session: Session; hint?:
         />
       ))}
       <circle cx=".5" cy=".5" r=".3" className="me-start" />
+      <circle cx={size - 0.5} cy={size - 0.5} r=".38" className="me-goal-disc" />
       <path d={`M${size - 0.72} ${size - 0.2}v-.6h.46l-.13 .17.13 .17h-.46`} className="me-goal" />
+      <path d={lines.join('')} transform="translate(.025 .035)" className="me-wall-shadow" />
       <path d={lines.join('')} className="me-walls" />
       {hint !== null ? (
         <rect
@@ -39,10 +41,20 @@ export function MazeDrawing({ session, hint = null }: { session: Session; hint?:
         />
       ) : null}
       <circle
+        cx={(position % size) + 0.52}
+        cy={Math.floor(position / size) + 0.55}
+        r=".245"
+        className="me-player-shadow"
+      />
+      <circle
         cx={(position % size) + 0.5}
         cy={Math.floor(position / size) + 0.5}
         r=".23"
         className="me-player"
+      />
+      <path
+        d={`M${(position % size) + 0.37} ${Math.floor(position / size) + 0.42}a.15 .15 0 0 1 .21-.04`}
+        className="me-player-light"
       />
       <circle
         cx={(position % size) + 0.5}

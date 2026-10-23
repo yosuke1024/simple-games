@@ -57,7 +57,7 @@ export function GameScreen() {
   );
   if (!session) return null;
   return (
-    <div className="screen game-screen fb-screen">
+    <div className="screen game-screen fb-screen" data-state={session.status}>
       <div className="game-content" inert={over || restart}>
         <header className="game-topbar">
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
@@ -82,7 +82,7 @@ export function GameScreen() {
         <div className="fb-stage">
           <Board session={session} />
           <aside className="fb-sidebar">
-            <div>
+            <div className="fb-next">
               <span>{t('fallingBlocksNext')}</span>
               <PiecePreview kind={pieceAt(session.seed, session.pieceIndex + 1)} />
             </div>

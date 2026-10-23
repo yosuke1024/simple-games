@@ -1,9 +1,10 @@
-import { useRef, type PointerEvent } from 'react';
+import { useId, useRef, type PointerEvent } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { HEIGHT, PLAYER_Y, WIDTH, type Session } from '../../game';
 import { Invader, Ship } from './Shapes';
 export function Board({ session, onAim }: { session: Session; onAim: (x: number) => void }) {
   const { t } = useSettings();
+  const fieldId = useId();
   const pointerRef = useRef<number | null>(null);
   const aim = (event: PointerEvent<SVGSVGElement>) => {
     const box = event.currentTarget.getBoundingClientRect();
@@ -41,7 +42,26 @@ export function Board({ session, onAim }: { session: Session; onAim: (x: number)
       }}
     >
       <title>{t('invadersControls')}</title>
-      <rect x="1" y="1" width="358" height="478" rx="12" className="iv-field-bg" />
+      <defs>
+        <linearGradient id={fieldId} x2="0" y2="1">
+          <stop stopColor="var(--surface)" />
+          <stop offset="1" stopColor="var(--paper)" />
+        </linearGradient>
+      </defs>
+      <rect
+        x="1"
+        y="1"
+        width="358"
+        height="478"
+        rx="12"
+        className="iv-field-bg"
+        fill={`url(#${fieldId})`}
+      />
+      <rect x="7" y="7" width="346" height="466" rx="7" className="iv-field-inset" />
+      <path
+        d="M16 444h328M16 452v8m41-8v5m41-5v5m41-5v5m41-5v8m41-8v5m41-5v5m41-5v5m41-5v8"
+        className="iv-field-scale"
+      />
       <path d="M16 412h328" className="iv-defense-line" />
       <path d="M16 23h12m-6-6v12m310-6h12m-6-6v12" className="iv-corner-mark" />
       {session.enemies.map((enemy) => (

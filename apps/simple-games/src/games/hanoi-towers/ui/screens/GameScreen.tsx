@@ -92,10 +92,12 @@ export function GameScreen() {
         </header>
         <div className="ht-body">
           <div className="ht-metrics">
-            <span>
-              {t('movesLabel')} <strong>{session.history.length}</strong>
+            <span className="ht-move-count">
+              <span>{t('movesLabel')}</span> <strong>{session.history.length}</strong>
             </span>
-            <span>{t('hanoiTowersMinimum', { count: 2 ** session.size - 1 })}</span>
+            <span className="ht-reference">
+              {t('hanoiTowersMinimum', { count: 2 ** session.size - 1 })}
+            </span>
           </div>
           <Board session={session} selected={selected} onPeg={onPeg} />
           <p className="ht-instruction" role="status" aria-atomic="true">

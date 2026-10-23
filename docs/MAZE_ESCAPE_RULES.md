@@ -41,6 +41,19 @@ illustrated sentences and begins immediately. Later launches show Home; a
 shortcut resumes a valid saved game after the tutorial. Results share only the
 completed maze size and move count shown on the card.
 
+## Visual presentation
+
+The maze is drawn on warm paper with a shallow frame and subtle wall shadows.
+The player is a solid raised token, and the flag has a circular field so the goal
+stays distinct from visited dots and the dashed start ring. The title's green
+accent is reserved for the token, goal, hint, available direction controls and
+move count. Dark mode uses warm dark paper and lighter neutral walls. The home
+mark depicts a maze rather than a font glyph. Visual depth does not animate or
+change the board's viewBox, border width, tap mapping or control dimensions; the
+compact-height layout retains its four 44px direction buttons in one row.
+
+2026-10-23 sRGB contrast calculation (light / dark): walls against paper 5.46 / 7.25:1 (light wall against composited shadow 4.40:1); player 9.67 / 6.25:1; goal/hint stroke against its fill 7.53 / 5.60:1; start ring 3.59 / 3.51:1; trail 3.59 / 3.13:1; HUD text minimum 5.07 / 4.96:1 (required graphics 3:1, text 4.5:1; decorative shadows and unavailable controls excluded).
+
 ## Storage, statistics and lifecycle
 
 Four isolated version-1 records: `me.saveGame`, `me.stats`, `me.flags`, `me.prefs`.

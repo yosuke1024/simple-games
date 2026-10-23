@@ -106,10 +106,15 @@ export function GameScreen() {
         </header>
         <div className="me-body">
           <div className="me-metrics">
-            <span>
-              {t('movesLabel')} <strong>{session.history.length}</strong>
+            <span className="me-move-count">
+              <span>{t('movesLabel')}</span> <strong>{session.history.length}</strong>
             </span>
-            <span>{t('mazeEscapeGoal')}</span>
+            <span className="me-goal-label">
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M4 14V2h8l-2 3 2 3H4" />
+              </svg>
+              {t('mazeEscapeGoal')}
+            </span>
           </div>
           <Board session={session} hint={hint} onPlay={onPlay} onDirection={onDirection} />
           <p className="me-position" role="status" aria-atomic="true">

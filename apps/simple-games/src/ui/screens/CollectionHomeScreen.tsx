@@ -642,8 +642,9 @@ export function CollectionHomeScreen({
         </nav>
       ) : (
         <>
-          <div className="home-hero">
-            {/*
+          <div className="collection-intro">
+            <div className="home-hero">
+              {/*
               The collection mark, drawn to match assets/icon.svg (the launcher
               icon), public/favicon.svg and the hero on the PixApps page — same
               geometry, same colours, so the app opens on the icon that was
@@ -654,18 +655,18 @@ export function CollectionHomeScreen({
               It replaced a ▦ glyph, which registry.ts also hands to Nonogram: the
               collection and one of the games were wearing the same face.
             */}
-            <svg className="home-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-              <rect width="64" height="64" rx="14" fill="#232a33" />
-              <rect x="13" y="13" width="17" height="17" rx="4" fill="#fffdf8" />
-              <rect x="34" y="13" width="17" height="17" rx="4" fill="#fffdf8" />
-              <rect x="13" y="34" width="17" height="17" rx="4" fill="#fffdf8" />
-              <rect x="34" y="34" width="17" height="17" rx="4" fill="#8b95a3" />
-            </svg>
-            <h1 className="home-title">{SERIES_NAME}</h1>
-            {taglineIsTrue ? <p className="home-tagline">{t('tagline')}</p> : null}
-          </div>
+              <svg className="home-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                <rect width="64" height="64" rx="14" fill="#232a33" />
+                <rect x="13" y="13" width="17" height="17" rx="4" fill="#fffdf8" />
+                <rect x="34" y="13" width="17" height="17" rx="4" fill="#fffdf8" />
+                <rect x="13" y="34" width="17" height="17" rx="4" fill="#fffdf8" />
+                <rect x="34" y="34" width="17" height="17" rx="4" fill="#8b95a3" />
+              </svg>
+              <h1 className="home-title">{SERIES_NAME}</h1>
+              {taglineIsTrue ? <p className="home-tagline">{t('tagline')}</p> : null}
+            </div>
 
-          {/* Browser only, and only while there is a store to reach — the card
+            {/* Browser only, and only while there is a store to reach — the card
               answers both for itself, and renders nothing at all otherwise, so
               the app build has no gap where it would have been
               (WebAppStoreCard.tsx).
@@ -677,7 +678,8 @@ export function CollectionHomeScreen({
               been here before. Above them it is at a fixed place on every
               visit, which is also what lets it stay small: nothing has to
               compete for a first glance it already has. */}
-          <WebAppStoreCard />
+            <WebAppStoreCard />
+          </div>
 
           {/* The shelf the player arranged, above the one the shell keeps. Same
               grid as the category sections, because it is the same kind of thing:

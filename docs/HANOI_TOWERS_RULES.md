@@ -39,6 +39,19 @@ has been completed. Home, statistics, Back, banner and result slots use existing
 collection conventions. Result sharing includes only displayed disk count and
 moves, never historical statistics.
 
+## Visual presentation
+
+The board is a warm wooden tray with individually drawn peg bases, disk edges
+and restrained highlights. Disk widths and printed numbers remain the primary
+identifiers; the selected, lifted disk uses the title's plum accent. The same
+accent marks the move count, destination frame and final-peg flag. Small shadows
+give the pieces depth without movement or extra animation. Dark mode uses a
+darker wooden tray while retaining the readable physical disk colours. The home
+mark is a drawn stack of disks, matching the actual board. Compact-height layouts
+retain the existing board and control footprint and scrollable ad-safe content.
+
+2026-10-23 sRGB contrast calculation (light / dark, gradient endpoints and composited destination fill included): board text minimum 5.60 / 5.79:1; selected-disk text 13.59 / 8.67:1; disk edge against every disk fill ≥3.06:1; pegs ≥3.35 / 4.28:1; selection/goal marks ≥9.45 / 5.34:1 (text target 4.5:1, required graphics 3:1; decorative highlights/shadows excluded).
+
 ## Persistence, statistics and lifecycle
 
 Four version-1 independent records: `hn.saveGame`, `hn.stats`, `hn.flags`,

@@ -57,7 +57,7 @@ export function GameScreen() {
   const running = session.status === 'running';
   const stopped = over || session.status === 'between';
   return (
-    <div className="screen game-screen iv-screen">
+    <div className="screen game-screen iv-screen" data-state={session.status}>
       <div className="game-content" inert={stopped}>
         <header className="game-topbar">
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
@@ -74,7 +74,7 @@ export function GameScreen() {
           </button>
         </header>
         <div className="iv-metrics">
-          <span>
+          <span className="iv-score">
             <small>{t('score')}</small>
             <strong>{session.score}</strong>
           </span>

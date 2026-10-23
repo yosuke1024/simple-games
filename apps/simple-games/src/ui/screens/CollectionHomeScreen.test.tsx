@@ -173,8 +173,8 @@ describe('collection tagline', () => {
 });
 
 /**
- * Every card reads as its glyph followed by its title, which is exactly what
- * a card is: the series mark plus the name.
+ * Every card is named by its title and optional beta mark. Decorative board
+ * artwork may contain numbers, but must never enter the accessible name.
  */
 /**
  * What the browser's home shows: every registry title but the ones in
@@ -184,12 +184,14 @@ describe('collection tagline', () => {
  * flips `capacitorMock.native`.
  */
 const shown = GAMES.filter((game) => game.channel !== 'in-development');
-const cardsIn = (region: HTMLElement) =>
-  within(region)
-    .getAllByRole('button')
-    .map((button) => button.textContent);
+const cardText = (element: Element) => {
+  const copy = element.cloneNode(true) as Element;
+  copy.querySelectorAll('[aria-hidden="true"]').forEach((art) => art.remove());
+  return copy.textContent;
+};
+const cardsIn = (region: HTMLElement) => within(region).getAllByRole('button').map(cardText);
 const cardFor = (game: (typeof GAMES)[number]) =>
-  `${game.glyph}${game.title}${game.channel === 'web-beta' ? ' BETA' : ''}`;
+  `${game.title}${game.channel === 'web-beta' ? ' BETA' : ''}`;
 /** What the card is called: the title, plus the BETA mark a web-beta title wears. */
 const nameOf = (game: (typeof GAMES)[number]) =>
   game.channel === 'web-beta' ? `${game.title} BETA` : game.title;
@@ -220,9 +222,7 @@ describe('the game list', () => {
     // Headings and cards in document order. A game whose category is missing
     // from GAME_CATEGORIES would be absent here; one listed under a duplicate
     // category id would appear twice — either way this comparison fails.
-    const rendered = Array.from(list.querySelectorAll('h2, button')).map(
-      (element) => element.textContent,
-    );
+    const rendered = Array.from(list.querySelectorAll('h2, button')).map(cardText);
     expect(rendered).toEqual(sectionedList);
   });
 });
@@ -276,7 +276,7 @@ describe('web-beta titles', () => {
     renderHome();
     for (const game of beta) {
       const card = screen.getByRole('button', { name: `${game.title} BETA` });
-      expect(card.textContent).toBe(cardFor(game));
+      expect(cardText(card)).toBe(cardFor(game));
     }
     for (const game of released) {
       expect(screen.getByRole('button', { name: game.title }).textContent).not.toContain('BETA');
@@ -385,7 +385,7 @@ describe('recently played', () => {
     renderHome();
 
     const shortcuts = screen.getByRole('navigation', { name: 'Recently played' });
-    expect(cardsIn(shortcuts)).toEqual(['≋Water Sort', '⌗Sudoku']);
+    expect(cardsIn(shortcuts)).toEqual(['Water Sort', 'Sudoku']);
   });
 
   it('leaves the full list complete and in section order', async () => {
@@ -441,7 +441,7 @@ describe('favorites', () => {
     renderHome();
 
     const shelf = screen.getByRole('navigation', { name: 'Favorites' });
-    expect(cardsIn(shelf)).toEqual(['≋Water Sort', '⌗Sudoku']);
+    expect(cardsIn(shelf)).toEqual(['Water Sort', 'Sudoku']);
   });
 
   it('comes first: favorites, then recently played, then the categories', async () => {
@@ -483,9 +483,9 @@ describe('favorites', () => {
     toggleFavoriteGame('hearts');
     renderHome();
 
-    expect(cardsIn(screen.getByRole('navigation', { name: 'Favorites' }))).toEqual(['♡Hearts']);
+    expect(cardsIn(screen.getByRole('navigation', { name: 'Favorites' }))).toEqual(['Hearts']);
     expect(cardsIn(screen.getByRole('navigation', { name: 'Recently played' }))).toEqual([
-      '⌗Sudoku',
+      'Sudoku',
     ]);
   });
 
@@ -506,7 +506,7 @@ describe('favorites', () => {
       }),
     );
     renderHome();
-    expect(cardsIn(screen.getByRole('navigation', { name: 'Favorites' }))).toEqual(['⌗Sudoku']);
+    expect(cardsIn(screen.getByRole('navigation', { name: 'Favorites' }))).toEqual(['Sudoku']);
   });
 });
 
@@ -560,7 +560,7 @@ describe('the tile action sheet', () => {
     await user.click(screen.getByRole('button', { name: 'Add to Favorites' }));
 
     expect(getFavoriteGames()).toEqual(['sudoku']);
-    expect(cardsIn(screen.getByRole('navigation', { name: 'Favorites' }))).toEqual(['⌗Sudoku']);
+    expect(cardsIn(screen.getByRole('navigation', { name: 'Favorites' }))).toEqual(['Sudoku']);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
@@ -1217,7 +1217,7 @@ const searchField = () => screen.getByRole('searchbox', { name: 'Search games' }
 /** The game titles on screen, in document order, whatever section they are in. */
 const titlesOnScreen = () =>
   screen.getAllByRole('button').flatMap((button) => {
-    const game = GAMES.find((candidate) => button.textContent === cardFor(candidate));
+    const game = GAMES.find((candidate) => cardText(button) === cardFor(candidate));
     return game ? [game.title] : [];
   });
 

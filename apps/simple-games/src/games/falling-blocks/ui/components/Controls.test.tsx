@@ -1,3 +1,4 @@
+import '../../i18n';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
