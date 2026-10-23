@@ -297,8 +297,10 @@ Cloudflare は共有 Worker の後ろに契約とディレクトリの registry 
 各クラブに 1 個の SQLite Durable Object を割り当てる。任意の ID をそのまま作成先へ
 渡さず、存在するクラブと契約を確認してから転送する。公開一覧のためにすべての
 クラブを起こして走査しない。Node も共有のマネージドハンドラとクラブごとの SQLite で
-同じ契約を扱う。`wrangler.managed.toml` は明示的に使う別構成で、既存の公式 Public
-Club の `wrangler.toml` をこの変更で切り替えない。
+同じ契約を扱う。本番は公式 Public Club と同じ `wrangler.toml`(club.pixapps.ai)に
+マネージドの Durable Object を migration `v2` として足し、`v1` は書き換えない。
+`wrangler.staging.toml` は同じ Worker を workers.dev に置く検証環境で、本番と別の
+Durable Object と秘密値を持つ。
 
 オーナー画面の読み込みでは、本人の作成済みクラブだけ(Trial は最大 1、Basic は最大 3)の
 人数を各クラブから読み直し、変更操作と同じロックの下で registry の値を更新する。
@@ -498,10 +500,21 @@ Reset と同じキューに載せる。接続・申請・契約キーの更新�
 
 ### ビルドでの有効化と読み取りのきっかけ
 
-`VITE_MANAGED_CLUB_ORIGIN` に有効な origin を明示したビルドだけに、マネージドの公開一覧・
-オーナー管理の入口を出す。値はパス・末尾スラッシュ・クエリのない HTTPS origin とし、
-開発用の `localhost`・`127.0.0.1` だけ HTTP を許す。未設定・無効値なら入口を出さず、
-未参加の端末からサービスへ問い合わせない。従来の `PRIVATE_CLUBS_ENABLED = false` は
+マネージドのサービスは Public Club House と同じデプロイ・同じ origin
+`https://club.pixapps.ai` に置く(2026-10-24 判断。Club House の接続先を 2 つに分けない)。
+クラブの endpoint は `https://club.pixapps.ai/clubs/<clubId>`、Public は従来どおり origin
+そのもので、両者は endpoint の完全一致と `/clubs/` 接頭辞で区別する。
+
+`ui/clubFeatures.ts` の `MANAGED_CLUBS_ENABLED` を true にしたビルドだけに、マネージドの
+公開一覧・オーナー管理の入口を出す。origin は同ファイルの `PIXAPPS_CLUB_ORIGIN` で、
+`club/public.ts` の `PUBLIC_CLUB_ENDPOINT` と一致することをテストで固定する。ビルド変数や
+リリースワークフローの設定は要らない。false の間は入口を出さず、未参加の端末から
+サービスへ問い合わせない。サーバーがマネージドを載せてから 1 行で切り替える。
+
+検証用のビルドに限り、`VITE_MANAGED_CLUB_ORIGIN` で接続先を上書きできる(ステージングの
+workers.dev や開発サーバー)。値はパス・末尾スラッシュ・クエリのない HTTPS origin とし、
+開発用の `localhost`・`127.0.0.1` だけ HTTP を許す。無効値は無視する。リリースの
+ワークフローはこの変数を設定しない。従来の `PRIVATE_CLUBS_ENABLED = false` は
 そのままで、この origin のマネージド招待だけを別に有効化する。
 
 公開一覧、管理画面、記録帳、アルバムは、本人が画面を開く・更新する・次のページを

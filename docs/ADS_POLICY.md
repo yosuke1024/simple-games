@@ -97,7 +97,7 @@ CI の原則ガードが `apps/*/src` を走査して検証する。
   広告が参照する `isAdRemovalActive()` は購入済み・既存の読み取り失敗時の扱い・
   有効なオーナー特典をまとめた判定とする。
 - サーバーが返す人数と資格をオーナー画面で確認し、`sg.club.managedOwner` に保存する。
-  ビルドで明示した `VITE_MANAGED_CLUB_ORIGIN` と現在の契約キーに結び付ける。
+  マネージドの origin(`https://club.pixapps.ai`)と現在の契約キーに結び付ける。
   任意の self-hosted サーバーの回答を広告削除の資格にしない。API と資格の契約は
   [architecture/managed-clubs.md](architecture/managed-clubs.md) に定める。
 - 起動時はローカルの期限内キャッシュだけで SDK の起動前に判定する。Club のコードを

@@ -211,7 +211,8 @@ Plus / MAX の契約はまだ受け付けない。
 オーナー画面に人数と有効状態を表示し、確認済みの資格を端末内に保存する。起動時の確認通信や
 購入済み扱いは追加しない。今回の実装は無料 Trial と運用者による Basic の付与・移行までで、
 決済・自動更新・本番公開は含まない。
-クライアントは `VITE_MANAGED_CLUB_ORIGIN` の明示設定で有効にする。
+サービスは Public Club House と同じ `https://club.pixapps.ai` に置き、クライアントは
+`ui/clubFeatures.ts` の `MANAGED_CLUBS_ENABLED` で有効にする。
 
 Canonical: `PRODUCT_PRINCIPLES.md`「Managed Club House」、
 `architecture/managed-clubs.md`。既存 `architecture/club.md` の self-hosted API は維持する。

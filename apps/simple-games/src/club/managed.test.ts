@@ -25,6 +25,14 @@ import {
 import { enqueueResult, flushOutbox, pendingFor } from './storage/outbox';
 import { dailyComparisonKey } from './ui/RecordBookScreen';
 import type { RecordDaily } from './api/ownerRecords';
+import { PUBLIC_CLUB_ENDPOINT } from './public';
+import { PIXAPPS_CLUB_ORIGIN } from '@/ui/clubFeatures';
+
+describe('the managed service origin', () => {
+  it('is the Public Club House origin: one deployment serves both', () => {
+    expect(PIXAPPS_CLUB_ORIGIN).toBe(PUBLIC_CLUB_ENDPOINT);
+  });
+});
 
 const ORIGIN = 'https://managed.example.com';
 const E = `${ORIGIN}/clubs/c_one`;

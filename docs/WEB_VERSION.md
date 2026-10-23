@@ -8,7 +8,7 @@
 人数と資格を表示し、購入済みにはしない。人数・資格の確認は同画面の読み込み・更新時に行う。
 広告 SDK 起動後に特典が有効化された場合は、資格を保存して 1 回再読み込みし、
 オーナー画面へ戻る。適用範囲とオフラインキャッシュは [ADS_POLICY.md](ADS_POLICY.md) を参照。
-`VITE_MANAGED_CLUB_ORIGIN` を設定しないビルドは従来どおりで、購入・決済 UI はまだない。
+`MANAGED_CLUBS_ENABLED` が false のビルドは従来どおりで、購入・決済 UI はまだない。
 契約と出荷前の条件は [architecture/managed-clubs.md](architecture/managed-clubs.md) を正とする。
 
 `https://pixapps.ai/simple-games/play/` で配信するブラウザ版の方針。
