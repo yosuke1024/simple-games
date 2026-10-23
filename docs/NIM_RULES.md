@@ -53,3 +53,13 @@ Automated local check on 2026-10-23: the scoped Nim + Knight’s Tour run passed
 play against Hard, all three CPU modes over 200 seeds, storage isolation, live CPU
 cancellation/resume, terminal undo, clock booking at save/unmount, and resource cleanup.
 These Node/jsdom checks are not a physical-device performance measurement.
+
+## Visual refinement (2026-10-23)
+
+The heaps are four flat rows of uniform slim counters, without bevels or shadows.
+Selected removals become outlined, struck counters; the control tray also shows
+`before − taken = after`. Eight count choices stay in a fixed two-by-four grid;
+counts beyond the selected row are disabled. Take and Undo share one compact row.
+The title, turn/difficulty strip, board and controls fit above the Web ad reserve on
+360×740, while short screens retain scrolling. This changes presentation, not rules,
+CPU choices or the persisted schema.

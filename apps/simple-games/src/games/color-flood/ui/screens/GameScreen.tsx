@@ -15,7 +15,6 @@ export function GameScreen() {
   const { session, stats, play, applyUndo, goHome, restartCurrent, startNewBoard } =
     useColorFlood();
   const [confirmRestart, setConfirmRestart] = useState(false);
-  const [hint, setHint] = useState<number | null>(null);
   const boardElement = useRef<HTMLDivElement>(null);
   const refocus = useRef(true);
   useLayoutEffect(() => {
@@ -31,7 +30,6 @@ export function GameScreen() {
   const onPlay = useCallback(
     (action: number) => {
       if (!play(action)) return;
-      setHint(null);
       refocus.current = true;
       sounds.select();
       void haptics.tap();
@@ -41,17 +39,14 @@ export function GameScreen() {
   const onUndo = useCallback(() => {
     if (applyUndo()) {
       sounds.undo();
-      setHint(null);
       refocus.current = true;
     }
   }, [applyUndo]);
   const onRetry = () => {
-    setHint(null);
     refocus.current = true;
     restartCurrent();
   };
   const onNewBoard = () => {
-    setHint(null);
     refocus.current = true;
     startNewBoard();
   };
@@ -70,15 +65,23 @@ export function GameScreen() {
   useGameKeys(onKey, session?.status === 'playing' && !confirmRestart);
   if (!session) return null;
   const over = session.status === 'over';
+  const connectedCount = region(session.board, session.size).length;
+  const connectedLabel = t('colorFloodStatus', {
+    count: connectedCount,
+    total: session.board.length,
+  });
   return (
-    <div className="screen game-screen">
+    <div className="screen game-screen cf-screen">
       <div className="game-content" inert={over || confirmRestart}>
         <header className="game-topbar">
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
             <IconBack />
           </button>
-          <span className="game-mode">
-            {session.size} × {session.size}
+          <span className="cf-heading">
+            <strong>{t('colorFloodName')}</strong>
+            <span>
+              {session.size} × {session.size}
+            </span>
           </span>
           <button
             type="button"
@@ -91,17 +94,24 @@ export function GameScreen() {
         </header>
         <div className="cf-body" ref={boardElement}>
           <div className="cf-metrics">
-            <span>
-              {t('movesLabel')} <strong>{session.history.length}</strong>
+            <span className="cf-move-count">
+              <span>{t('movesLabel')}</span>
+              <strong>{session.history.length}</strong>
             </span>
-            <span>
-              {t('colorFloodStatus', {
-                count: region(session.board, session.size).length,
-                total: session.board.length,
-              })}
-            </span>
+            <span>{connectedLabel}</span>
           </div>
-          <Board session={session} onPlay={onPlay} hint={hint} />
+          <div
+            className="cf-progress"
+            role="progressbar"
+            aria-label={t('colorFloodBoard')}
+            aria-valuemin={0}
+            aria-valuemax={session.board.length}
+            aria-valuenow={connectedCount}
+            aria-valuetext={connectedLabel}
+          >
+            <span style={{ width: `${(connectedCount / session.board.length) * 100}%` }} />
+          </div>
+          <Board session={session} onPlay={onPlay} />
         </div>
         <div className="action-bar cf-actions">
           <button

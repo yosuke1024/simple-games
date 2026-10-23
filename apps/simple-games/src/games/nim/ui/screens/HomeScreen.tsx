@@ -16,12 +16,28 @@ export function HomeScreen() {
     else startNewGame(mode);
   };
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen nim-home">
       <div inert={pending !== null}>
         <GameHomeHeader gameId="nim" onBack={exitToCollection} />
         <div className="home-hero">
-          <div className="home-logo" aria-hidden="true">
-            ∴
+          <div className="home-logo nim-home-mark" aria-hidden="true">
+            <svg viewBox="0 0 72 72" focusable="false">
+              {[3, 5, 4].map((stones, line) => (
+                <g key={line}>
+                  {Array.from({ length: stones }, (_, i) => (
+                    <rect
+                      key={i}
+                      x={12 + i * 10}
+                      y={13 + line * 18}
+                      width="5"
+                      height="12"
+                      rx="1.5"
+                      fill="currentColor"
+                    />
+                  ))}
+                </g>
+              ))}
+            </svg>
           </div>
           <h1 className="home-title">{t('nimName')}</h1>
           <p className="home-tagline">{t('tagline')}</p>

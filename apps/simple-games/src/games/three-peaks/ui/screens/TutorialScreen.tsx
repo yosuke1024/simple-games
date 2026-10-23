@@ -3,15 +3,16 @@ import { useSettings } from '@/state/SettingsContext';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { IconClose } from '@/ui/components/icons';
 import { useThreePeaks } from '../../state/GameContext';
+import { ExampleCard } from '../components/CardArtwork';
 export function ThreePeaksTutorialScreen() {
   const { t } = useSettings();
   const { tutorialCompleted, completeTutorial, canResume, resumeGame, startGame, goHome } =
     useThreePeaks();
   const [step, setStep] = useState(0);
   const steps = [
-    { title: t('threePeaksStep1Title'), body: t('threePeaksStep1Body'), picture: '6 → 7 → 8' },
-    { title: t('threePeaksStep2Title'), body: t('threePeaksStep2Body'), picture: 'K ↔ A ↔ 2' },
-    { title: t('threePeaksStep3Title'), body: t('threePeaksStep3Body'), picture: '▧ → ♠  ↶' },
+    { title: t('threePeaksStep1Title'), body: t('threePeaksStep1Body') },
+    { title: t('threePeaksStep2Title'), body: t('threePeaksStep2Body') },
+    { title: t('threePeaksStep3Title'), body: t('threePeaksStep3Body') },
   ];
   const current = steps[step]!;
   const finish = () => {
@@ -23,7 +24,7 @@ export function ThreePeaksTutorialScreen() {
     }
   };
   return (
-    <div className="screen tutorial-screen">
+    <div className="screen tutorial-screen tp-tutorial">
       <header className="screen-header">
         <h1>{t('howToPlay')}</h1>
         {tutorialCompleted && (
@@ -41,7 +42,30 @@ export function ThreePeaksTutorialScreen() {
         </div>
         <h2 className="tutorial-title">{current.title}</h2>
         <div className="tutorial-example tp-example" aria-hidden="true">
-          {current.picture}
+          {step === 0 ? (
+            <>
+              <ExampleCard card={5} />
+              <span>→</span>
+              <ExampleCard card={19} />
+              <span>→</span>
+              <ExampleCard card={7} />
+            </>
+          ) : step === 1 ? (
+            <>
+              <ExampleCard card={12} />
+              <span>↔</span>
+              <ExampleCard card={13} />
+              <span>↔</span>
+              <ExampleCard card={1} />
+            </>
+          ) : (
+            <>
+              <ExampleCard />
+              <span>→</span>
+              <ExampleCard card={0} />
+              <span>↶</span>
+            </>
+          )}
         </div>
         <p className="tutorial-body">{current.body}</p>
       </div>

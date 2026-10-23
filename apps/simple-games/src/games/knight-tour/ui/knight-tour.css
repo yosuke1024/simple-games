@@ -1,29 +1,99 @@
+/* Physical board colours; the knight keeps Chess's original ivory and ink. */
+.kt-screen,
+.kt-home,
+.kt-tutorial {
+  --kt-square-light: #e4dfd3;
+  --kt-square-dark: #c5c0b1;
+  --kt-board-ink: #36433b;
+}
+:root[data-theme='dark'] .kt-screen,
+:root[data-theme='dark'] .kt-home,
+:root[data-theme='dark'] .kt-tutorial {
+  --kt-square-light: #677368;
+  --kt-square-dark: #46564d;
+  --kt-board-ink: #f8f7ee;
+}
 .kt-screen {
-  --game-shell-max: 650px;
+  --game-shell-max: 560px;
 }
 .kt-screen .game-content {
   width: 100%;
-  overflow-y: auto;
+  min-height: 0;
+  overflow: hidden;
+}
+/* Keep the ad reservation inside a fixed viewport. The play area scrolls
+   above it when a short screen cannot fit the board and its controls. */
+:root[data-sg-web-ads] .kt-screen {
+  height: 100%;
+}
+.kt-screen .game-topbar {
+  flex-shrink: 0;
 }
 .kt-screen .game-title {
   font-size: 15px;
   font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.kt-play-area {
+  /* Title, progress, instruction, actions and the native banner reservation. */
+  --kt-chrome: 390px;
+  --kt-size: max(min(100vw - 32px, 272px), min(100vw - 32px, 100vh - var(--kt-chrome), 460px));
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 4px 16px 14px;
+  overflow-y: auto;
+}
+:root[data-sg-web-ads] .kt-play-area {
+  /* The Web anchor reserves 116px, which replaces the native banner. */
+  --kt-chrome: 440px;
+}
+@supports (height: 100svh) {
+  .kt-play-area {
+    --kt-size: max(min(100vw - 32px, 272px), min(100vw - 32px, 100svh - var(--kt-chrome), 460px));
+  }
+}
+.kt-meta {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: var(--kt-size);
+  min-height: 28px;
+  margin-top: auto;
+}
+.kt-board-size {
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 .kt-progress {
-  text-align: center;
-  font-weight: 800;
-  margin: 1rem 0;
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 .kt-board {
   display: grid;
-  width: min(calc(100% - 24px), 520px);
+  width: var(--kt-size);
+  height: var(--kt-size);
   flex-shrink: 0;
-  margin: 0 auto;
-  padding: 5px;
-  border: 2px solid var(--line);
-  border-radius: 12px;
-  background: var(--line);
-  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--ink-soft);
+  border-radius: 5px;
+  background: var(--surface);
+  overflow: hidden;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .kt-cell {
   position: relative;
@@ -31,75 +101,130 @@
   align-items: center;
   justify-content: center;
   aspect-ratio: 1;
-  padding: 0;
   min-width: 0;
+  min-height: 0;
+  padding: 0;
   border: 0;
-  border-radius: 3px;
-  font: inherit;
-  font-size: clamp(13px, 3.5vw, 22px);
-  font-weight: 700;
-  background: var(--surface);
-  color: var(--ink-soft);
+  border-radius: 0;
+  background: var(--kt-square-light);
+  color: var(--kt-board-ink);
   cursor: default;
 }
 .kt-cell.kt-dark {
-  background: var(--accent-soft);
+  background: var(--kt-square-dark);
 }
 .kt-cell.kt-legal {
   cursor: pointer;
-  color: var(--accent);
-  font-size: clamp(24px, 6vw, 38px);
-  box-shadow: inset 0 0 0 2px var(--accent);
 }
-.kt-cell.kt-current {
-  color: var(--accent-ink);
-  background: var(--accent);
-  font-size: clamp(24px, 6vw, 40px);
-}
-.kt-current small {
+.kt-cell.kt-current::after {
+  content: '';
   position: absolute;
-  bottom: 0;
-  right: 2px;
-  font-size: 9px;
-  line-height: 1;
+  inset: 2px;
+  border: 1px solid var(--kt-board-ink);
+  pointer-events: none;
+}
+.kt-visit-number {
+  font-family: var(--font-display);
+  font-size: clamp(12px, 3.2vw, 18px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.kt-move-dot {
+  width: 16%;
+  height: 16%;
+  border-radius: 50%;
+  background: var(--kt-board-ink);
 }
 .kt-cell:focus-visible {
-  outline: 3px solid var(--ink);
-  outline-offset: -3px;
+  outline: 2px dotted var(--kt-board-ink);
+  outline-offset: -4px;
   z-index: 1;
 }
-.kt-cell.kt-visited:not(.kt-current) {
-  opacity: 0.9;
+.kt-piece {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.kt-piece path,
+.kt-piece circle {
+  fill: #fbf7ee;
+  stroke: #2a241e;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.kt-piece .knight-detail {
+  fill: none;
+}
+.kt-piece .knight-eye {
+  fill: #2a241e;
+  stroke: none;
+}
+.kt-cell > .kt-piece {
+  position: absolute;
+  inset: 2%;
+  width: 96%;
+  height: 96%;
 }
 .kt-status {
-  text-align: center;
+  width: var(--kt-size);
+  margin: 0;
+  min-height: 36px;
   color: var(--ink-soft);
-  line-height: 1.5;
-  min-height: 3em;
-  margin: 0.8rem 0.4rem;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: center;
 }
 .kt-actions {
   display: flex;
+  flex-shrink: 0;
   justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.7rem;
-  margin: 0.5rem 0 1rem;
+  gap: 8px;
+  width: var(--kt-size);
+  margin-bottom: auto;
 }
 .kt-actions .btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  min-width: 128px;
+  min-height: 44px;
+  flex-direction: row;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
 }
 .kt-actions svg {
-  width: 20px;
-  height: 20px;
+  width: 17px;
+  height: 17px;
+}
+.kt-home-mark {
+  width: 72px;
+  height: 72px;
+  padding: 4px;
+  margin-inline: auto;
+  border: 1px solid var(--ink-soft);
+  border-radius: 6px;
+  background: var(--kt-square-light);
+}
+.kt-tutorial .kt-piece {
+  width: 31px;
+  height: 31px;
 }
 @media (max-width: 360px) {
+  .kt-play-area {
+    gap: 10px;
+  }
   .kt-board {
     padding: 3px;
-    gap: 1px;
   }
-  .kt-screen .game-title {
-    font-size: 1rem;
+}
+@media (min-width: 600px) {
+  .kt-play-area {
+    --kt-size: max(min(100vw - 32px, 272px), min(100vw - 32px, 100vh - var(--kt-chrome), 540px));
+  }
+  @supports (height: 100svh) {
+    .kt-play-area {
+      --kt-size: max(min(100vw - 32px, 272px), min(100vw - 32px, 100svh - var(--kt-chrome), 540px));
+    }
   }
 }

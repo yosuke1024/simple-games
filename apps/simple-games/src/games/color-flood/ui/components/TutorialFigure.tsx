@@ -1,4 +1,4 @@
-import { SYMBOLS } from '../../game';
+import { ColourMark } from './ColourMark';
 export function TutorialFigure({ step }: { step: number }) {
   const colours =
     step === 0
@@ -10,7 +10,7 @@ export function TutorialFigure({ step }: { step: number }) {
     <div className="cf-figure" aria-hidden="true">
       {colours.map((colour, index) => (
         <span key={index} className={`cf-colour-${colour} ${index === 0 ? 'cf-origin' : ''}`}>
-          {SYMBOLS[colour]}
+          <ColourMark colour={colour} />
         </span>
       ))}
     </div>

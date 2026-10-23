@@ -43,7 +43,15 @@ describe('Three Peaks player lifecycle', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     fireEvent.click(screen.getByRole('button', { name: 'Start Playing' }));
     await settle();
-    expect(screen.getByRole('group', { name: 'Three peaks tableau' })).toBeInTheDocument();
+    const tableau = screen.getByRole('group', { name: 'Three peaks tableau' });
+    expect(tableau).toBeInTheDocument();
+    const covered = tableau.querySelectorAll('.tp-covered');
+    expect(covered).toHaveLength(18);
+    for (const card of covered) {
+      expect(card.querySelector('.tp-card-back')).toBeInTheDocument();
+      expect(card.querySelector('.tp-card-art')).toBeNull();
+      expect(card).not.toHaveClass('tp-red');
+    }
     expect(await loadSavedGame(kv)).not.toBeNull();
     expect(JSON.parse((await kv.get(TP_STORAGE_KEYS.flags))!).tutorialCompleted).toBe(true);
   });

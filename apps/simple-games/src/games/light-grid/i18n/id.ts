@@ -9,11 +9,12 @@ export const id: LightGridMessages = {
   lightGridClearBody: 'Setiap lampu sudah padam.',
   lightGridRule1: 'Ketuk petak untuk membalik lampunya serta lampu di atas, bawah, kiri dan kanan.',
   lightGridRule2: 'Padamkan semua lampu; tidak ada batas waktu.',
-  lightGridRule3:
-    'Urungkan langkah apa pun, atau gunakan Petunjuk untuk menandai petak dalam salah satu solusi.',
+  lightGridRule3: 'Urungkan langkah apa pun, atau ketuk Petunjuk untuk melihat petak berikutnya.',
   lightGridCell: 'Baris {row}, kolom {col}: {state}',
   lightGridOn: 'menyala',
   lightGridOff: 'padam',
-  lightGridHintNote: 'Petak berbingkai merupakan bagian dari salah satu solusi.',
+  lightGridHintNote: 'Ketuk baris {row}, kolom {col}.',
+  lightGridHintEffect: 'Petak tetangga yang diberi garis juga berubah.',
+  lightGridHintAffected: 'juga berubah saat petak petunjuk diketuk',
   lightGridStatus: 'Lampu menyala: {count}',
 };

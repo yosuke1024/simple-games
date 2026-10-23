@@ -10,11 +10,12 @@ export const fr: LightGridMessages = {
   lightGridRule1:
     'Touchez une case pour la basculer avec ses voisines du haut, du bas, de gauche et de droite.',
   lightGridRule2: 'Éteignez toutes les lumières, sans limite de temps.',
-  lightGridRule3:
-    'Annulez un coup ou utilisez un indice pour marquer une case dans une solution possible.',
+  lightGridRule3: 'Annulez un coup ou touchez Indice pour voir quelle case jouer ensuite.',
   lightGridCell: 'Ligne {row}, colonne {col} : {state}',
   lightGridOn: 'allumée',
   lightGridOff: 'éteinte',
-  lightGridHintNote: 'La case encadrée fait partie d’une solution.',
+  lightGridHintNote: 'Touchez la ligne {row}, colonne {col}.',
+  lightGridHintEffect: 'Les cases voisines encadrées changent aussi.',
+  lightGridHintAffected: 'change aussi lorsque vous touchez la case indiquée',
   lightGridStatus: 'Lumières allumées : {count}',
 };

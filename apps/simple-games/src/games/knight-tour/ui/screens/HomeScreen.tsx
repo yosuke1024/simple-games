@@ -4,6 +4,7 @@ import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { MODES, type Mode } from '../../game';
+import { KnightPiece } from '../components/KnightPiece';
 import { useKnightTour } from '../../state/GameContext';
 export function HomeScreen() {
   const { t } = useSettings();
@@ -17,12 +18,12 @@ export function HomeScreen() {
     else startNewGame(mode);
   };
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen kt-home">
       <div inert={pending !== null}>
         <GameHomeHeader gameId="knight-tour" onBack={exitToCollection} />
         <div className="home-hero">
-          <div className="home-logo" aria-hidden="true">
-            ♘
+          <div className="home-logo kt-home-mark" aria-hidden="true">
+            <KnightPiece />
           </div>
           <h1 className="home-title">{t('knightTourName')}</h1>
           <p className="home-tagline">{t('tagline')}</p>
