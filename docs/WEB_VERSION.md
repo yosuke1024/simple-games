@@ -15,7 +15,7 @@
 | 広告       | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効)                                                                                                                                                                                                                                                                                                                                                                                             | Anchored Adaptive Banner 1 枠のみ                                                                                   |
 | 課金       | なし(完全無料)                                                                                                                                                                                                                                                                                                                                                                                                                                                         | $3.99 買い切りで広告永久削除                                                                                        |
 | 計測       | サイト共通のページ解析(下の「計測」節。実装済み・既定は無効)                                                                                                                                                                                                                                                                                                                                                                                                           | なし — Analytics を入れないことがアプリの約束([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))                       |
-| ゲーム内容 | 正式収録の 41 本+先行公開中の新作(下の「先行公開」節。いま配信中は 15 本 — Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire(2026-10-19 から)、Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram(2026-10-22 から)、Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads(2026-10-23(JST、UTC では 2026-10-22 17:33)から。Bounce Up の題は 2026-10-22 に製品オーナーが「このまま」と判断 — 下の 47〜51 の段落))。正式収録ゲームに機能差なし | 正式収録の 41 本(registry で `channel` を持たないエントリ)。新作は先行公開で検証後に収録(2026-10-02 に 11 本を収録) |
+| ゲーム内容 | 正式収録の41本＋先行公開対象の20本（registryの合計61本）。実際の配信版・開始日は下の「先行公開」節とリンク先の公開記録を参照。正式収録ゲームに機能差なし | 正式収録の41本（registryで`channel`を持たないエントリ）。新作は先行公開で検証後に収録（2026-10-02に11本を収録） |
 
 **Play instantly on the web. Play quietly and offline in the app.**
 
@@ -298,6 +298,17 @@ ADS_POLICY.md 側の項目 3 にも 実施済み の印は付いていない。*
 
 ## 先行公開(ベータ)
 
+**No. 57〜61 — Light Grid / Color Flood / Three Peaks / Nim / Knight’s Tour**
+は2026-10-23に実装し、`web-beta`として登録した（本体[#257](https://github.com/yosuke1024/simple-games/pull/257)、
+ヒント・盤面・駒の意匠見直し[#258](https://github.com/yosuke1024/simple-games/pull/258)）。
+この5本を含めると先行公開対象は20本、正式収録41本と合わせて61本になる。
+登録だけを本番公開の証拠にはしない。配信物のソースSHA、公開ワークフロー、Cloudflare反映と
+本番URLの確認は、配信PR [pixapps-landing #207](https://github.com/yosuke1024/pixapps-landing/pull/207)
+の公開記録で追跡する。選定理由とローカル検証は
+[実装計画](plans/2026-10-23-five-games-57-61.md)、規則は各ゲームのルール文書が正本。
+正式収録とClub Houseには加えず、2週間の安定稼働は実装日ではなく実際のWeb公開日から数える。
+
+
 **Web 版は新作の先行公開チャンネルである**(2026-08-03 決定)。新しいゲームは
 アプリ収録より先に Web 版に入り、実地の反応を見てから正式収録する。ベータなのは
 **個々の新作ゲームだけ** — Web 版全体と正式収録済みのゲームはベータではない
@@ -449,7 +460,7 @@ Games (web)、run 39640771411、ref: main、network=admax)が `11a3036`(#246 の
 7 本(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads / Overtake / Scopa)。Overtake と Scopa を
 `'web-beta'` にしたので、pixapps-landing #205(2026-10-22 02:07 UTC にマージ、landing main `77e6e23`)で
 2 本を `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移した — その時点で `WEB_BETA_GAME_IDS` は
-10 本(42〜46・52〜56)、`IN_DEVELOPMENT_GAME_IDS` は 5 本(47〜51)になった(下の「landing 側のガード」。pixapps-landing #206 で 47〜51 も移したので、いまは 15 本と 0 本 — 上の 47〜51 の段落)。
+10 本(42〜46・52〜56)、`IN_DEVELOPMENT_GAME_IDS` は 5 本(47〜51)になった(下の「landing 側のガード」。pixapps-landing #206 で 47〜51 も移した時点では15本と0本 — 上の47〜51の段落。No.57〜61の追加は冒頭の#207を参照)。
 **Web 版で配信中(Overtake / Scopa の 2 本、2026-10-22 から)**: そのビルド(`11a3036`)では 2 本は
 チャンクが入っているだけで、`'in-development'` のためどの扉からも開けなかった。2026-10-22 に `'web-beta'`
 にした(上)後、#205 のマージに続けて製品オーナーの指示(「Publish を起動して」)で landing の公開
