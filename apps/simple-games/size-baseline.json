@@ -1,7 +1,7 @@
 {
   "dist": {
     "totalGzip": 1673511,
-    "entryGzip": 70778,
+    "entryGzip": 91871,
     "club": 42144,
     "games": {
       "2048": 14727,

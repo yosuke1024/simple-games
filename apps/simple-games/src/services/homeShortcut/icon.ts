@@ -1,56 +1,83 @@
 /**
- * The icon a pinned shortcut wears on the Android home screen (issue #110):
- * the game's tile — its glyph on its own accent — drawn with Canvas 2D, with
- * no dependency and no network, the way the share card is
- * (services/share/card.ts).
+ * Android's pinned shortcut uses the same original drawing as the collection
+ * tile. Render that existing React SVG once into a detached element, resolve
+ * its two palette tokens, then rasterize it locally. No game engine, network,
+ * additional font, bundled PNG, or persistent image cache is involved.
  *
- * WHY DRAWN, NOT SHIPPED
- *
- * Thirty games would be thirty sets of density-bucketed drawables to keep in
- * step with the registry and the brand palette by hand — and a glyph like `⌗`
- * or `≶` has no guaranteed shape in whatever font the native side would
- * pick. The WebView already draws every one of these marks on the collection
- * home through one font stack (`--font-display`: the bundled Nunito, then the
- * system's rounded and sans faces), so a canvas in the same WebView draws the
- * same mark the home shows.
- *
- * WHY THE ACCENT AS THE FIELD, NOT THE SOFT TILE
- *
- * On the collection home the tile is the soft tint with the glyph in the
- * accent. On a home screen the icon sits on a wallpaper nobody chose for it,
- * beside icons that are anything but soft, and a pastel square with a thin
- * glyph vanishes on a light wallpaper. So the icon inverts the tile: the
- * accent is the field and the glyph is the ink the accent is meant to carry
- * (`onLight`) — the face the share card already shows. Always the light
- * palette, for the same reason the launcher icon does not repaint per theme.
- *
- * SHAPE
- *
- * A full-bleed adaptive-icon layer: a 108dp square of which the launcher
- * shows the central 72dp through its own mask (circle, squircle, rounded
- * square — its choice, not ours). The glyph is sized to sit inside that safe
- * zone; a two-character mark (`10`, `01`) shrinks until it does. The plugin
- * hands the bitmap to `IconCompat.createWithAdaptiveBitmap`; on a pre-Oreo
- * device the compat library crops a legacy icon out of the same picture.
- *
- * Null on any failure — no `document`, no 2D context (jsdom, or a WebView
- * that lied about canvas), a `toDataURL` that throws — and the request goes
- * out without a picture, which the launcher answers with the app icon. A
- * missing icon is not a reason to withhold the door.
+ * React's client renderer is already part of the app. The temporary root is
+ * unmounted before decoding the image; the object URL, image callbacks and
+ * timeout are released on success and failure alike. A failed/slow decoder
+ * returns null so Android can use the collection's launcher icon instead.
  */
+import { seriesColors } from '@simple-games/brand';
+import { createElement } from 'react';
+import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import type { GameDefinition } from '../../app/registry';
 import { titleAccentOf } from '../../app/titleAccent';
+import { GameArtwork } from '../../ui/components/GameArtwork';
 
-/** 108dp at xxxhdpi: the whole adaptive layer, mask included. */
+/** 108dp at xxxhdpi: the launcher owns the mask over this full-bleed layer. */
 const FULL_BLEED = 432;
-/** The glyph's box: comfortably inside the 72dp (288px) every mask keeps. */
-const GLYPH_MAX_WIDTH = 200;
-const GLYPH_MAX_PX = 168;
-const GLYPH_MIN_PX = 96;
-const FONT_FAMILY = 'Nunito, ui-rounded, system-ui, sans-serif';
+/**
+ * The drawing's occupied area fits inside the central 66dp safe circle, even
+ * with a circular launcher mask. Its 120×90 viewBox includes its own margins.
+ */
+const ART_WIDTH = 288;
+const ART_HEIGHT = 216;
+const DECODE_TIMEOUT_MS = 2000;
 
-/** The PNG, base64 without the `data:` prefix — or null (see the header). */
-export function renderHomeShortcutIcon(game: GameDefinition): string | null {
+function artworkSvg(game: GameDefinition): string | null {
+  const host = document.createElement('div');
+  const root = createRoot(host);
+  try {
+    flushSync(() => root.render(createElement(GameArtwork, { id: game.id })));
+    const svg = host.querySelector('svg');
+    if (!svg) return null;
+    const accent = titleAccentOf(game.id).light;
+    // An SVG decoded as an Image has no access to the page's inherited CSS.
+    // Resolve both tokens explicitly rather than depending on its current theme.
+    for (const node of [svg, ...svg.querySelectorAll('[fill], [stroke]')]) {
+      for (const name of ['fill', 'stroke']) {
+        const value = node.getAttribute(name);
+        if (value === 'currentColor') node.setAttribute(name, accent);
+        if (value === 'var(--surface)') node.setAttribute(name, seriesColors.surface);
+      }
+    }
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svg.setAttribute('font-family', 'Nunito, ui-rounded, system-ui, sans-serif');
+    return new XMLSerializer().serializeToString(svg);
+  } finally {
+    root.unmount();
+  }
+}
+
+function decodeImage(image: HTMLImageElement, source: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (loaded: boolean) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      image.onload = null;
+      image.onerror = null;
+      resolve(loaded);
+    };
+    const timer = setTimeout(() => finish(false), DECODE_TIMEOUT_MS);
+    image.onload = () => finish(true);
+    image.onerror = () => finish(false);
+    try {
+      image.src = source;
+    } catch {
+      finish(false);
+    }
+  });
+}
+
+/** The PNG, base64 without the data: prefix, or null for the app-icon fallback. */
+export async function renderHomeShortcutIcon(game: GameDefinition): Promise<string | null> {
+  let objectUrl: string | undefined;
+  let image: HTMLImageElement | undefined;
   try {
     if (typeof document === 'undefined') return null;
     const canvas = document.createElement('canvas');
@@ -58,29 +85,41 @@ export function renderHomeShortcutIcon(game: GameDefinition): string | null {
     canvas.height = FULL_BLEED;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
+    const source = artworkSvg(game);
+    if (!source) return null;
+    objectUrl = URL.createObjectURL(new Blob([source], { type: 'image/svg+xml' }));
+    image = new Image();
+    if (!(await decodeImage(image, objectUrl))) return null;
 
-    const accent = titleAccentOf(game.id);
-    ctx.fillStyle = accent.light;
+    // Fixed light paper and title accent match the illustration on the shelf.
+    // A solid field reaches every possible launcher mask; no transparent corners.
+    ctx.fillStyle = seriesColors.paper;
     ctx.fillRect(0, 0, FULL_BLEED, FULL_BLEED);
-
-    // Largest size whose width still clears the mask, 4px steps, never below
-    // the floor: a mark that cannot fit even there prints tight rather than
-    // vanishing (the same rule card.ts's fitFont follows).
-    let px = GLYPH_MAX_PX;
-    ctx.font = `800 ${px}px ${FONT_FAMILY}`;
-    while (px > GLYPH_MIN_PX && ctx.measureText(game.glyph).width > GLYPH_MAX_WIDTH) {
-      px = Math.max(GLYPH_MIN_PX, px - 4);
-      ctx.font = `800 ${px}px ${FONT_FAMILY}`;
-    }
-    ctx.fillStyle = accent.onLight;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(game.glyph, FULL_BLEED / 2, FULL_BLEED / 2);
-
+    ctx.drawImage(
+      image,
+      (FULL_BLEED - ART_WIDTH) / 2,
+      (FULL_BLEED - ART_HEIGHT) / 2,
+      ART_WIDTH,
+      ART_HEIGHT,
+    );
     const dataUrl = canvas.toDataURL('image/png');
-    const comma = dataUrl.indexOf(',');
-    return comma === -1 ? null : dataUrl.slice(comma + 1);
+    const prefix = 'data:image/png;base64,';
+    return dataUrl.startsWith(prefix) && dataUrl.length > prefix.length
+      ? dataUrl.slice(prefix.length)
+      : null;
   } catch {
     return null;
+  } finally {
+    // Stop a timed-out image load as well as releasing a successfully drawn one.
+    try {
+      if (image) image.src = '';
+    } catch {
+      // Decoder teardown cannot prevent the app-icon fallback.
+    }
+    try {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    } catch {
+      // A WebView without working object URLs must still offer the shortcut.
+    }
   }
 }

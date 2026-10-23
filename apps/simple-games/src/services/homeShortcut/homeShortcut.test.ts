@@ -14,7 +14,7 @@ const { capacitorMock, pluginMock, iconMock } = vi.hoisted(() => ({
     isSupported: vi.fn<() => Promise<{ supported: boolean }>>(),
     requestPin: vi.fn<(request: unknown) => Promise<{ requested: boolean }>>(),
   },
-  iconMock: { render: vi.fn<() => string | null>() },
+  iconMock: { render: vi.fn<() => Promise<string | null>>() },
 }));
 
 vi.mock('@capacitor/core', () => ({
@@ -41,7 +41,7 @@ beforeEach(() => {
   capacitorMock.platform = 'android';
   pluginMock.isSupported.mockReset().mockResolvedValue({ supported: true });
   pluginMock.requestPin.mockReset().mockResolvedValue({ requested: true });
-  iconMock.render.mockReset().mockReturnValue('UE5H');
+  iconMock.render.mockReset().mockResolvedValue('UE5H');
   resetHomeShortcutsForTesting();
 });
 
@@ -89,10 +89,26 @@ describe('asking for a shortcut', () => {
     expect(iconMock.render).toHaveBeenCalledWith(sudoku);
   });
 
+  it('waits for the illustration before handing the request to Android', async () => {
+    let finish!: (icon: string | null) => void;
+    iconMock.render.mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    await initHomeShortcuts();
+    const request = requestHomeShortcut(sudoku);
+    await vi.waitFor(() => expect(iconMock.render).toHaveBeenCalledTimes(1));
+    expect(pluginMock.requestPin).not.toHaveBeenCalled();
+    finish('UE5H');
+    await expect(request).resolves.toBe(true);
+    expect(pluginMock.requestPin).toHaveBeenCalledWith(expect.objectContaining({ icon: 'UE5H' }));
+  });
+
   // The launcher then shows the app icon. A missing picture is never a
   // reason to withhold the door.
   it('leaves the icon out when it could not be drawn', async () => {
-    iconMock.render.mockReturnValue(null);
+    iconMock.render.mockResolvedValue(null);
     await initHomeShortcuts();
     await requestHomeShortcut(sudoku);
     const [request] = pluginMock.requestPin.mock.calls[0]!;
@@ -100,9 +116,21 @@ describe('asking for a shortcut', () => {
     expect(request).toMatchObject({ id: 'game-sudoku', label: 'Sudoku' });
   });
 
+  it('still asks Android with the app icon if the illustration renderer rejects', async () => {
+    iconMock.render.mockRejectedValue(new Error('Renderer unavailable'));
+    await initHomeShortcuts();
+    await expect(requestHomeShortcut(sudoku)).resolves.toBe(true);
+    expect(pluginMock.requestPin).toHaveBeenCalledWith({
+      id: 'game-sudoku',
+      label: 'Sudoku',
+      uri: 'https://pixapps.ai/simple-games/play/?game=sudoku',
+    });
+  });
+
   it('asks nothing where the door was never offered', async () => {
     await expect(requestHomeShortcut(sudoku)).resolves.toBe(false);
     expect(pluginMock.requestPin).not.toHaveBeenCalled();
+    expect(iconMock.render).not.toHaveBeenCalled();
   });
 
   it('reports a request the launcher declined as false, not as an error', async () => {
