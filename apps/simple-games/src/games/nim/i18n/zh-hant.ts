@@ -1,0 +1,28 @@
+/** AI-authored translation draft; no human review claimed. See docs/NIM_RULES.md. */
+import type { NimMessages } from './en';
+export const zhHant: NimMessages = {
+  nimName: 'Nim',
+  nimMode_easy: '簡單',
+  nimMode_normal: '普通',
+  nimMode_hard: '困難',
+  nimRow: '第 {row} 行：{count} 顆石子',
+  nimTake: '取走 {count} 顆',
+  nimYourTurn: '輪到你了',
+  nimCpuTurn: 'CPU 的回合',
+  nimPaused: '已暫停，準備好後繼續。',
+  nimLastMove: '上一步：從第 {row} 行取走 {count} 顆。',
+  nimGoal: '取走最後一顆石子即可獲勝。',
+  nimChooseRow: '選擇一行。',
+  nimChooseCount: '選擇要取走的數量。',
+  nimWon: '你贏了！',
+  nimLost: 'CPU 獲勝',
+  nimOpponent: '對手',
+  nimWins: '勝利',
+  nimLosses: '失敗',
+  nimStep1Title: '選擇一行',
+  nimStep1Body: '選擇有石子的一行，你始終先手。',
+  nimStep2Title: '取走至少一顆',
+  nimStep2Body: '選擇從該行取走的石子數量，然後確認。',
+  nimStep3Title: '取走最後一顆',
+  nimStep3Body: '你與 CPU 輪流取石子，取走最後一顆者獲勝。復原會同時撤回你的行動和 CPU 的應手。',
+};

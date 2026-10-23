@@ -1201,6 +1201,47 @@ export const titleAccents = {
     onDark: '#151d0b',
     softDark: '#2e3c20',
   },
+  // Nos. 57–61, measured against all 56 existing accents. See BRAND.md.
+  lightGrid: {
+    light: '#784f5f',
+    onLight: '#ffffff',
+    softLight: '#e3dbd7',
+    dark: '#bd659a',
+    onDark: '#14171c',
+    softDark: '#3d3243',
+  },
+  colorFlood: {
+    light: '#184e72',
+    onLight: '#ffffff',
+    softLight: '#d7dbda',
+    dark: '#77a4ac',
+    onDark: '#14171c',
+    softDark: '#303e46',
+  },
+  threePeaks: {
+    light: '#7a321a',
+    onLight: '#ffffff',
+    softLight: '#e3d7ce',
+    dark: '#b07373',
+    onDark: '#14171c',
+    softDark: '#3b353c',
+  },
+  nim: {
+    light: '#36533f',
+    onLight: '#ffffff',
+    softLight: '#dadcd3',
+    dark: '#aacbab',
+    onDark: '#14171c',
+    softDark: '#3a4546',
+  },
+  knightTour: {
+    light: '#452b5e',
+    onLight: '#ffffff',
+    softLight: '#dcd6d7',
+    dark: '#a69dc3',
+    onDark: '#14171c',
+    softDark: '#393c4a',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

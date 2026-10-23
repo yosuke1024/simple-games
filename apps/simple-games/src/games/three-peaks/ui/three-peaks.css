@@ -1,0 +1,169 @@
+/* The cards carry rank and suit independently of colour. All surfaces use shared tokens. */
+.tp-home-content {
+  display: contents;
+}
+.tp-game {
+  --tp-red: #9f2634;
+  max-width: 680px;
+  margin-inline: auto;
+  width: 100%;
+}
+:root[data-theme='dark'] .tp-game {
+  --tp-red: #ef9ba1;
+}
+.tp-status {
+  text-align: center;
+  margin: 8px 0 20px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+.tp-tableau {
+  position: relative;
+  width: 100%;
+  height: clamp(214px, 43vw, 290px);
+  margin: 0 auto;
+}
+.tp-card {
+  position: absolute;
+  width: 9.5%;
+  height: 28%;
+  min-height: 48px;
+  padding: 3px 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: clamp(13px, 2.8vw, 20px);
+  font-weight: 650;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 3px rgb(0 0 0 / 12%);
+  touch-action: manipulation;
+}
+.tp-card.tp-covered {
+  background: var(--accent);
+  color: var(--accent-ink);
+  opacity: 1;
+  justify-content: center;
+  border: 2px solid var(--surface);
+}
+.tp-face {
+  cursor: pointer;
+}
+.tp-red {
+  color: var(--tp-red);
+}
+.tp-playable {
+  border: 2px solid var(--accent);
+}
+.tp-playable::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.tp-card:focus-visible,
+.tp-stock:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+  z-index: 20;
+}
+.tp-piles {
+  display: flex;
+  justify-content: center;
+  gap: 44px;
+  padding-top: 24px;
+}
+.tp-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  text-align: center;
+  font-size: 0.85rem;
+}
+.tp-stock,
+.tp-waste {
+  width: 68px;
+  height: 88px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: 650;
+}
+.tp-stock {
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+.tp-stock:disabled {
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: default;
+}
+.tp-controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+.tp-controls .btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tp-help,
+.tp-keyboard {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin: 12px auto;
+  max-width: 34em;
+  overflow-wrap: anywhere;
+}
+.tp-keyboard {
+  display: none;
+}
+.tp-example {
+  font-size: clamp(26px, 7vw, 42px);
+  color: var(--accent);
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tp-keyboard {
+    display: block;
+  }
+  .tp-playable:hover {
+    transform: translateY(-3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tp-playable:hover {
+    transform: none;
+  }
+}
+@media (max-width: 360px) {
+  .tp-card {
+    border-radius: 4px;
+  }
+  .tp-status {
+    margin-bottom: 12px;
+  }
+  .tp-piles {
+    padding-top: 18px;
+  }
+}

@@ -214,6 +214,12 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   scopa: ['sc.saveGame', 'sc.stats', 'sc.flags'],
   // No. 56, web-beta (docs/TANGRAM_RULES.md storage): not frozen until graduation
   tangram: ['tn.saveGame', 'tn.saveDaily', 'tn.progress', 'tn.stats', 'tn.flags', 'tn.prefs'],
+  // Nos. 57–61: new Web-beta save namespaces; existing released keys unchanged.
+  'light-grid': ['lg.saveGame', 'lg.stats', 'lg.flags', 'lg.prefs'],
+  'color-flood': ['cf.saveGame', 'cf.stats', 'cf.flags', 'cf.prefs'],
+  'three-peaks': ['tp.saveGame', 'tp.stats', 'tp.flags'],
+  nim: ['ni.saveGame', 'ni.stats', 'ni.flags', 'ni.prefs'],
+  'knight-tour': ['kt.saveGame', 'kt.stats', 'kt.flags', 'kt.prefs'],
 };
 
 const PREFIXES: Record<string, string> = {
@@ -273,6 +279,11 @@ const PREFIXES: Record<string, string> = {
   'nested-tic-tac-toe': 'nt.',
   scopa: 'sc.',
   tangram: 'tn.',
+  'light-grid': 'lg.',
+  'color-flood': 'cf.',
+  'three-peaks': 'tp.',
+  nim: 'ni.',
+  'knight-tour': 'kt.',
 };
 
 describe('registry storage keys (released data — do not edit to make green)', () => {
