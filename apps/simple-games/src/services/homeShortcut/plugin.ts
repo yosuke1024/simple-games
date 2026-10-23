@@ -31,7 +31,8 @@ export interface HomeShortcutRequest {
   uri: string;
   /**
    * A PNG, base64 with no `data:` prefix, used as a full-bleed adaptive-icon
-   * layer (icon.ts). Left out, the launcher shows the app icon instead.
+   * layer (icon.ts). Left out, a new shortcut uses the app icon and an
+   * existing shortcut retains its current image.
    */
   icon?: string;
 }
