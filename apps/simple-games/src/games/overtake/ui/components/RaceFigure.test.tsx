@@ -3,6 +3,8 @@
  * teaches never runs through traffic, and the figures follow the OS's dark
  * mode as the board does (§11「描画とループ」).
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { stubCanvas2d } from '@/test/lifecycle';

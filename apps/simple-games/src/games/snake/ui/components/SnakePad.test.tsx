@@ -6,6 +6,8 @@
  * (docs/ARCHITECTURE.md「押下の記録は誰のものか」: the mark is only honoured
  * for `event.detail > 0`).
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';

@@ -7,6 +7,8 @@
  * a hand-drawn 3×3 — a 2×2 square clued at 0, a tall pair clued at 5, a wide
  * row clued at 7 — so every cell is where the test says it is.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';

@@ -3,6 +3,8 @@
  * the kind as the badge's proportion, the number inside it, and `free` as a
  * dashed wide-and-tall pair with a solid centre.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SHAPE_KINDS } from '../../game';

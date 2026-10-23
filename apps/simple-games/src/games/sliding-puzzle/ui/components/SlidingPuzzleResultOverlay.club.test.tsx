@@ -4,6 +4,8 @@
  * digest, so it meets in that day's Today challenge; a level is a result in
  * its size's ranking table and carries neither.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';

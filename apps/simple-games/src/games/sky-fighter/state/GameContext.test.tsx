@@ -8,6 +8,8 @@
  * Sky Fighter takes that second write on *every* ending, cleared or not,
  * because the score is recorded either way.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../i18n';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { statsSchema, type Stats } from '../storage/schemas';

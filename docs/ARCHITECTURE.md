@@ -365,6 +365,26 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
   冒頭)、main への push では全件を走らせる(2026-10-22、732 ファイルで 1 ジョブ 8 分半
   になっていた。スイートはゲーム数に比例して伸びる)。`verify` は ruleset が `Brand principles`
   と並べて要求するチェックで、他の全ジョブが緑のときだけ緑になる。
+- **vitest は 2 つの project で走る**(`apps/simple-games/vite.config.ts` の `test.projects`、
+  2026-10-23)。`game` は `src/games/*/game/**/*.test.ts`(2026-10-23 時点で 371 本)を node 環境・setupFiles なしで、
+  `dom` は残り(同 439 本)を jsdom + `src/test/setup.ts` で走らせる。`games/*/game/` は純 TypeScript
+  (「レイヤー」の節)なので DOM は要らない一方、jsdom の生成と setup の固定費はテストファイルごとに
+  払うので、スイートの固定費はゲーム数に比例して伸びていた(2026-10-22 の集計で environment 30% +
+  setup 18%)。分けた実測(2026-10-23、8 コア、同じ機械で続けて 1 回ずつ): 旧設定 585 秒・CPU 3,124 秒
+  (tests 48% / environment 28% / setup 15% / import 6% / transform 3%)→ 新設定 551 秒・CPU 2,592 秒
+  (tests 60% / environment 19% / setup 10% / import 7% / transform 4%)。新設定の run には他セッションの
+  負荷が乗っていたので壁時計は比べず、CPU 時間の 17% 減と内訳を根拠にする(負荷が 30 倍の壁時計を
+  生んだ run でも CPU 時間は 2,662 秒で、CPU 時間は負荷に対して頑健)。
+  `vitest run <path>`・`--changed`・`--shard` はどれも両 project を横断する。`vitest list --filesOnly` は
+  `[game] src/...` と project 名を前置する(名前は必須)。`extends: true` は `setupFiles` を連結するので、
+  `environment` / `setupFiles` はルートに置かず各 project に書く。`game/` のテストが DOM を必要としたら、
+  それは `ui/` のテストである(除外の一覧は作らない)。
+  同じ日に `src/test/setup.ts` から全ゲームのカタログの eager glob も外した。テストが持つのはアプリが持つ
+  ものと同じで、chunk の入口(`*Root.tsx`・設定セクション)が `import '../i18n'` で自分のカタログを登録し
+  (門は `src/test/gameI18nWiring.test.ts`)、Root を通さず画面や部品を直接 render するテストは同じ 1 行で
+  自分のゲームのカタログを自分で登録する(`scripts/codemods/2026-10-23-ui-tests-register-own-catalog.mjs`、
+  56 本)。カタログが無ければ生のキーが描かれ、そのテスト自身の assertion が落ちる。シェルのテストは
+  ゲームのカタログを前提にしない。
 - **テストの門は壁時計で判定しない**(issue #158)。`pnpm test` は 700 本を超えるファイルを
   CPU 数ぶん並列に走らせるので、同じ仕事でも壁時計は run ごとに数倍〜数十倍ぶれる
   ([SUDOKU_RULES.md](SUDOKU_RULES.md) §7 の実測)。稀に落ちる門は信頼されない門であり、
