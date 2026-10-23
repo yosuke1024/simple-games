@@ -54,12 +54,20 @@ const owner = {
   owner: { id: 'o_one', plan: 'basic', validUntil: '2026-11-23T00:00:00.000Z', status: 'active' },
   limits: { maxClubs: 3, maxMembersPerClub: 50 },
   clubs: [] as unknown[],
+  benefits: {
+    adRemoval: {
+      requiredMembers: 50,
+      memberCount: 0,
+      active: false,
+      validUntil: '2026-11-23T00:00:00.000Z',
+    },
+  },
 };
-function renderRoot() {
+function renderRoot(entry: 'settings' | 'managed' = 'settings') {
   const handlers = { onBack: vi.fn(), onPlayChallenge: vi.fn(), onConnectionsChanged: vi.fn() };
   render(
     <SettingsProvider initialSettings={{ ...settingsSchema.defaultValue(), language: 'en' }}>
-      <ClubRoot entry="settings" {...handlers} />
+      <ClubRoot entry={entry} {...handlers} />
     </SettingsProvider>,
   );
   return handlers;
@@ -74,6 +82,26 @@ afterEach(() => {
 });
 
 describe('managed Club flows', () => {
+  it('resumes the owner screen through the managed return entry', async () => {
+    await saveManagedOwner({ origin: ORIGIN, ownerToken: 'owner-token-is-secret' });
+    const fetcher = vi.fn().mockResolvedValue(reply(owner));
+    vi.stubGlobal('fetch', fetcher);
+    renderRoot('managed');
+    await screen.findByText('0 of 3 Clubs · 50 members per Club');
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(fetcher.mock.calls[0]![0]).toBe(`${ORIGIN}/api/v1/managed/owner`);
+  });
+
+  it('ignores a managed return entry when no service is configured', async () => {
+    flags.origin = null;
+    const fetcher = vi.fn();
+    vi.stubGlobal('fetch', fetcher);
+    renderRoot('managed');
+    await screen.findByRole('button', { name: 'Join the Public Club House' });
+    expect(screen.queryByRole('heading', { name: 'Owner space' })).toBeNull();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it('does not restore an owner key from a delayed reply after leaving the screen and resetting data', async () => {
     let resolve!: (response: Response) => void;
     const response = new Promise<Response>((done) => {
@@ -291,7 +319,13 @@ describe('managed Club flows', () => {
     let created = false;
     const fetcher = vi.fn().mockImplementation(async (url: string, options: RequestInit) => {
       if (url.endsWith('/managed/owner'))
-        return reply({ ...owner, clubs: created ? [metadata] : [] });
+        return reply({
+          ...owner,
+          clubs: created ? [metadata] : [],
+          benefits: {
+            adRemoval: { ...owner.benefits.adRemoval, memberCount: created ? 1 : 0 },
+          },
+        });
       if (url.endsWith('/managed/clubs')) {
         created = true;
         return reply(

@@ -236,6 +236,14 @@ describe('owner Club tools', () => {
               },
               limits: { maxClubs: 3, maxMembersPerClub: 50 },
               clubs,
+              benefits: {
+                adRemoval: {
+                  requiredMembers: 50,
+                  memberCount: clubs.reduce((sum, club) => sum + club.memberCount, 0),
+                  active: false,
+                  validUntil: '2026-11-23T00:00:00.000Z',
+                },
+              },
             },
           }}
           onAlbums={vi.fn()}

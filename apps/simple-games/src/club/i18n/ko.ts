@@ -1,6 +1,28 @@
 import type { ClubMessages } from './en';
 
 export const ko: ClubMessages = {
+  clubTrialPlan: '체험',
+  clubTrialStart: '무료 체험 시작',
+  clubTrialHelp:
+    '기간 제한 없이 무료로 이용할 수 있습니다. 본인을 포함해 최대 5명이 참여하는 클럽 1개를 만들 수 있습니다.',
+  clubTrialNoExpiry: '기간 제한 없음',
+  clubTrialRetry: '체험 설정 계속하기',
+  clubOwnerAdRemovalTitle: '소유자 광고 숨김 혜택',
+  clubOwnerMemberProgress: '총 {n}명 / {required}명',
+  clubOwnerAdRemovalActive: '이 기기의 광고가 숨겨져 있습니다.',
+  clubOwnerAdRemovalInactive: '현재 이 혜택은 적용되지 않습니다.',
+  clubOwnerAdRemovalHelp:
+    '전체 멤버가 {required}명 이상이고 호스팅 이용 권한이 유효한 동안 광고가 숨겨집니다. 이 화면을 새로고침하면 혜택 상태가 갱신됩니다.',
+  clubOwnerMemberCountHelp:
+    '소유한 모든 클럽의 멤버 수를 합산하며, 각 클럽의 소유자도 포함합니다. 여러 클럽에 속한 멤버는 각 클럽에서 따로 셉니다. 승인 대기 중인 요청은 제외합니다.',
+  clubOwnerRecoveryKey: '소유자 복구 키',
+  clubOwnerRecoveryHelp:
+    '데이터를 초기화하거나 기기를 변경하기 전에 이 키를 다른 사람이 볼 수 없는 곳에 보관하세요. 백업에는 포함되지 않습니다.',
+  clubOwnerShowKey: '소유자 키 표시',
+  clubOwnerHideKey: '소유자 키 숨기기',
+  clubOwnerCopyKey: '소유자 키 복사',
+  clubOwnerKeyCopied: '소유자 키를 복사했습니다',
+  clubOwnerCopyKeyManually: '이 키를 선택해서 복사하세요.',
   clubOwnerSpace: '오너 공간',
   clubOwnerKey: '오너 키',
   clubOwnerConnect: '오너 공간 열기',

@@ -1,6 +1,27 @@
 import type { ClubMessages } from './en';
 
 export const th: ClubMessages = {
+  clubTrialPlan: 'ทดลองใช้งาน',
+  clubTrialStart: 'เริ่มทดลองใช้งานฟรี',
+  clubTrialHelp: 'ใช้ฟรีโดยไม่จำกัดเวลา สร้างได้ 1 คลับสำหรับสมาชิกสูงสุด 5 คนรวมคุณด้วย',
+  clubTrialNoExpiry: 'ไม่จำกัดเวลา',
+  clubTrialRetry: 'ตั้งค่าการทดลองใช้งานต่อ',
+  clubOwnerAdRemovalTitle: 'สิทธิ์ซ่อนโฆษณาสำหรับเจ้าของ',
+  clubOwnerMemberProgress: 'สมาชิก {n} / {required} คน',
+  clubOwnerAdRemovalActive: 'โฆษณาถูกซ่อนบนอุปกรณ์นี้',
+  clubOwnerAdRemovalInactive: 'สิทธิ์นี้ยังไม่ทำงาน',
+  clubOwnerAdRemovalHelp:
+    'โฆษณาจะถูกซ่อนขณะที่คุณมีสมาชิกรวมอย่างน้อย {required} คนและสิทธิ์ใช้งานโฮสติ้งยังมีผล โหลดหน้าจอนี้ใหม่เพื่ออัปเดตสถานะสิทธิ์',
+  clubOwnerMemberCountHelp:
+    'รวมจำนวนสมาชิกจากทุกคลับของคุณ โดยนับคุณในแต่ละคลับด้วย สมาชิกที่อยู่หลายคลับจะถูกนับในแต่ละคลับ ไม่นับคำขอที่รออนุมัติ',
+  clubOwnerRecoveryKey: 'คีย์กู้คืนสิทธิ์เจ้าของ',
+  clubOwnerRecoveryHelp:
+    'เก็บคีย์นี้ไว้ในที่ส่วนตัวก่อนรีเซ็ตข้อมูลหรือเปลี่ยนอุปกรณ์ คีย์นี้ไม่รวมอยู่ในข้อมูลสำรอง',
+  clubOwnerShowKey: 'แสดงคีย์เจ้าของ',
+  clubOwnerHideKey: 'ซ่อนคีย์เจ้าของ',
+  clubOwnerCopyKey: 'คัดลอกคีย์เจ้าของ',
+  clubOwnerKeyCopied: 'คัดลอกคีย์เจ้าของแล้ว',
+  clubOwnerCopyKeyManually: 'เลือกและคัดลอกคีย์นี้',
   clubOwnerSpace: 'พื้นที่เจ้าของ',
   clubOwnerKey: 'คีย์เจ้าของ',
   clubOwnerConnect: 'เปิดพื้นที่เจ้าของ',

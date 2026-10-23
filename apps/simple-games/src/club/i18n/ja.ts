@@ -1,6 +1,27 @@
 import type { ClubMessages } from './en';
 
 export const ja: ClubMessages = {
+  clubTrialPlan: 'トライアル',
+  clubTrialStart: '無料でトライアルを始める',
+  clubTrialHelp: '期限なしで無料で使えます。オーナーを含む5名までのクラブを1つ作れます。',
+  clubTrialNoExpiry: '利用期限なし',
+  clubTrialRetry: 'トライアルの作成を続ける',
+  clubOwnerAdRemovalTitle: 'オーナーの広告非表示特典',
+  clubOwnerMemberProgress: '合計{n}名 / {required}名',
+  clubOwnerAdRemovalActive: 'この端末の広告を非表示にしています。',
+  clubOwnerAdRemovalInactive: 'この特典は現在無効です。',
+  clubOwnerAdRemovalHelp:
+    'メンバーの合計が{required}名以上で、ホスティングの利用権が有効な間は広告が非表示になります。この画面を再読み込みすると特典の状態が更新されます。',
+  clubOwnerMemberCountHelp:
+    '各クラブのオーナーを含め、所有するクラブのメンバー数を合算します。複数のクラブに所属するメンバーは、各クラブで数えます。承認待ちのリクエストは含みません。',
+  clubOwnerRecoveryKey: 'オーナー復元キー',
+  clubOwnerRecoveryHelp:
+    'データのリセットや端末の変更の前に、このキーを他の人に見られない場所に控えてください。バックアップには含まれません。',
+  clubOwnerShowKey: 'オーナーキーを表示',
+  clubOwnerHideKey: 'オーナーキーを隠す',
+  clubOwnerCopyKey: 'オーナーキーをコピー',
+  clubOwnerKeyCopied: 'オーナーキーをコピーしました',
+  clubOwnerCopyKeyManually: 'このキーを選択してコピーしてください。',
   clubOwnerSpace: 'オーナースペース',
   clubOwnerKey: 'オーナーキー',
   clubOwnerConnect: 'オーナースペースを開く',

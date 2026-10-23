@@ -13,8 +13,9 @@ export function useAdRemovalPurchased(): boolean {
 
 /**
  * Whether the ad removal takes effect on this launch — the purchase is
- * active, or the entitlement could not be read and falls to the no-banner
- * side (issue #96). What the banner area asks; the settings screen asks
+ * active, a verified owner benefit is valid, or the entitlement could not be
+ * read and falls to the no-banner side (issue #96). What the banner area asks;
+ * the settings screen asks
  * `useAdRemovalPurchased()`, which answers only for a real purchase.
  */
 export function useAdRemovalActive(): boolean {

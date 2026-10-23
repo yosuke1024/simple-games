@@ -330,10 +330,22 @@ export interface PendingClubJoin {
   expiresAt: string;
 }
 
+/** Server-verified owner benefit. This is not a store purchase. */
+export interface ManagedAdRemovalBenefit {
+  requiredMembers: 50;
+  memberCount: number;
+  active: boolean;
+  validUntil: string | null;
+}
+
 /** The hosting credential stays in the same non-exportable, resettable record as member tokens. */
 export interface ManagedClubOwner {
   origin: string;
   ownerToken: string;
+  /** Saved before a Trial request so a lost response can be recovered with the same key. */
+  pendingTrial?: true;
+  /** Bound to this credential; replacing it never carries the benefit forward. */
+  adRemoval?: ManagedAdRemovalBenefit;
 }
 
 export interface ClubConnections {
@@ -429,6 +441,29 @@ function asClubConnection(raw: unknown): ClubConnection | null {
   };
 }
 
+export function asManagedAdRemovalBenefit(raw: unknown): ManagedAdRemovalBenefit | null {
+  if (!isRecord(raw)) return null;
+  if (
+    raw.requiredMembers !== 50 ||
+    typeof raw.memberCount !== 'number' ||
+    !Number.isSafeInteger(raw.memberCount) ||
+    raw.memberCount < 0 ||
+    typeof raw.active !== 'boolean' ||
+    (raw.validUntil !== null &&
+      (typeof raw.validUntil !== 'string' ||
+        raw.validUntil.length > 40 ||
+        !Number.isFinite(Date.parse(raw.validUntil)))) ||
+    (raw.active && (raw.memberCount < 50 || raw.validUntil === null))
+  )
+    return null;
+  return {
+    requiredMembers: 50,
+    memberCount: raw.memberCount,
+    active: raw.active,
+    validUntil: raw.validUntil as string | null,
+  };
+}
+
 export const clubConnectionsSchema: SchemaDef<ClubConnections> = {
   key: STORAGE_KEYS.club,
   version: 1,
@@ -493,6 +528,7 @@ export const clubConnectionsSchema: SchemaDef<ClubConnections> = {
       }
     }
     const owner = raw.managedOwner;
+    const adRemoval = isRecord(owner) ? asManagedAdRemovalBenefit(owner.adRemoval) : null;
     const managedOwner =
       isRecord(owner) &&
       isClubEndpoint(owner.origin) &&
@@ -500,7 +536,15 @@ export const clubConnectionsSchema: SchemaDef<ClubConnections> = {
       typeof owner.ownerToken === 'string' &&
       owner.ownerToken.length >= 16 &&
       owner.ownerToken.length <= 128
-        ? { origin: owner.origin, ownerToken: owner.ownerToken }
+        ? {
+            origin: owner.origin,
+            ownerToken: owner.ownerToken,
+            ...(owner.pendingTrial === true
+              ? { pendingTrial: true as const }
+              : adRemoval === null
+                ? {}
+                : { adRemoval }),
+          }
         : undefined;
     return {
       schemaVersion: 1,

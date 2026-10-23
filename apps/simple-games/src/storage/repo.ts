@@ -25,6 +25,21 @@ import type { SchemaDef } from './schemas';
  * one slow record never holds up another.
  */
 const lastOp = new Map<string, Promise<unknown>>();
+const removalVersions = new Map<string, number>();
+
+/**
+ * A removal invalidates pending entitlement publications immediately, even
+ * while its disk operation waits behind an older save. The older write still
+ * finishes in order, but must not activate a benefit or reload the page while
+ * Reset Local Data is waiting to remove it.
+ */
+export function recordRemovalVersion(key: string): number {
+  return removalVersions.get(key) ?? 0;
+}
+
+function noteRemoval(key: string): void {
+  removalVersions.set(key, recordRemovalVersion(key) + 1);
+}
 
 /**
  * Queues `op` behind whatever is already outstanding for `key`. Reads queue
@@ -153,6 +168,7 @@ export function updateRecord<T>(
 }
 
 export async function removeRecord(key: string, kv: KVStore = preferencesKV): Promise<void> {
+  noteRemoval(key);
   await enqueue(key, () => kv.remove(key));
 }
 
@@ -190,6 +206,7 @@ export async function saveRaw(
   value: string | null,
   kv: KVStore = preferencesKV,
 ): Promise<void> {
+  if (value === null) noteRemoval(key);
   await enqueue(key, async () => {
     try {
       if (value === null) await kv.remove(key);
@@ -211,5 +228,6 @@ export async function clearLocalData(
   keys: readonly string[],
   kv: KVStore = preferencesKV,
 ): Promise<void> {
+  for (const key of keys) noteRemoval(key);
   await Promise.all(keys.map((key) => enqueue(key, () => kv.remove(key))));
 }

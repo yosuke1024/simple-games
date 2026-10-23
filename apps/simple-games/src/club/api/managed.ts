@@ -19,9 +19,22 @@ export interface ManagedClub extends ClubSettings {
   status: 'ready' | 'provisioning';
 }
 export interface OwnerSpace {
-  owner: { id: string; plan: 'basic'; validUntil: string; status: 'active' | 'expired' };
+  owner: {
+    id: string;
+    plan: 'trial' | 'basic';
+    validUntil: string | null;
+    status: 'active' | 'expired';
+  };
   limits: { maxClubs: number; maxMembersPerClub: number };
   clubs: ManagedClub[];
+  benefits: {
+    adRemoval: {
+      requiredMembers: 50;
+      memberCount: number;
+      active: boolean;
+      validUntil: string | null;
+    };
+  };
 }
 export interface ManagedMembership extends JoinResponse {
   endpoint: string;
@@ -72,6 +85,62 @@ export function createManagedClient(
     throw new ClubApiError('invalid_request', 0);
   const request = createApiRequest(origin, ownerToken, fetchImpl);
   const validateClub = clubValidator(origin);
+  const ownerSpace = (raw: unknown): OwnerSpace => {
+    if (
+      !isObject(raw) ||
+      !isObject(raw.owner) ||
+      !isObject(raw.limits) ||
+      !isObject(raw.benefits) ||
+      !isObject(raw.benefits.adRemoval)
+    )
+      throw new ClubApiError('malformed_response', 0);
+    const { owner, limits } = raw;
+    const benefit = raw.benefits.adRemoval;
+    const clubs = check(validateList(raw.clubs, validateClub));
+    const expires = owner.validUntil;
+    const validExpiry =
+      (owner.plan === 'trial' && expires === null) ||
+      (isText(expires) && Number.isFinite(Date.parse(expires)));
+    const capacity = owner.plan === 'trial' ? { clubs: 1, members: 5 } : { clubs: 3, members: 50 };
+    if (
+      !isText(owner.id) ||
+      (owner.plan !== 'trial' && owner.plan !== 'basic') ||
+      !validExpiry ||
+      (owner.status !== 'active' && owner.status !== 'expired') ||
+      (expires === null && owner.status !== 'active') ||
+      limits.maxClubs !== capacity.clubs ||
+      limits.maxMembersPerClub !== capacity.members ||
+      clubs.length > capacity.clubs ||
+      new Set(clubs.map((club) => club.id)).size !== clubs.length ||
+      clubs.some((club) => club.memberCount > capacity.members) ||
+      benefit.requiredMembers !== 50 ||
+      !isCount(benefit.memberCount) ||
+      typeof benefit.active !== 'boolean' ||
+      benefit.validUntil !== expires ||
+      benefit.memberCount !==
+        clubs.reduce((sum, club) => sum + (club.status === 'ready' ? club.memberCount : 0), 0) ||
+      benefit.active !== (owner.status === 'active' && benefit.memberCount >= 50)
+    )
+      throw new ClubApiError('malformed_response', 0);
+    return {
+      owner: {
+        id: owner.id,
+        plan: owner.plan,
+        validUntil: expires as string | null,
+        status: owner.status,
+      },
+      limits: { maxClubs: capacity.clubs, maxMembersPerClub: capacity.members },
+      clubs,
+      benefits: {
+        adRemoval: {
+          requiredMembers: 50,
+          memberCount: benefit.memberCount,
+          active: benefit.active,
+          validUntil: expires as string | null,
+        },
+      },
+    };
+  };
   const membership = (raw: unknown): ManagedMembership => {
     const joined = check(validateJoinResponse(raw));
     const endpoint = `${origin}/clubs/${joined.club.id}`;
@@ -81,25 +150,12 @@ export function createManagedClient(
   };
   return {
     async owner(): Promise<OwnerSpace> {
-      const raw = await request('GET', '/managed/owner');
-      if (!isObject(raw) || !isObject(raw.owner) || !isObject(raw.limits))
-        throw new ClubApiError('malformed_response', 0);
-      const owner = raw.owner,
-        limits = raw.limits;
-      if (
-        !isText(owner.id) ||
-        owner.plan !== 'basic' ||
-        !isText(owner.validUntil) ||
-        (owner.status !== 'active' && owner.status !== 'expired') ||
-        !isCount(limits.maxClubs) ||
-        !isCount(limits.maxMembersPerClub)
-      )
-        throw new ClubApiError('malformed_response', 0);
-      return {
-        owner: { id: owner.id, plan: 'basic', validUntil: owner.validUntil, status: owner.status },
-        limits: { maxClubs: limits.maxClubs, maxMembersPerClub: limits.maxMembersPerClub },
-        clubs: check(validateList(raw.clubs, validateClub)),
-      };
+      return ownerSpace(await request('GET', '/managed/owner'));
+    },
+    async startTrial(): Promise<OwnerSpace> {
+      if (!ownerToken || !/^[a-f0-9]{64}$/.test(ownerToken))
+        throw new ClubApiError('invalid_request', 0);
+      return ownerSpace(await request('POST', '/managed/trial', {}));
     },
     async directory(after?: string): Promise<DirectoryPage> {
       const raw = await request(
@@ -129,6 +185,13 @@ export function createManagedClient(
 /** An idempotency key names an operation, never a device. */
 export function operationId(): string {
   const bytes = new Uint8Array(16);
+  globalThis.crypto.getRandomValues(bytes);
+  return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** A private 256-bit recovery credential, generated once before an idempotent Trial signup. */
+export function newOwnerKey(): string {
+  const bytes = new Uint8Array(32);
   globalThis.crypto.getRandomValues(bytes);
   return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
 }

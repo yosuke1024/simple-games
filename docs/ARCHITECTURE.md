@@ -3,6 +3,8 @@
 Managed Club House(2026-10-23)の契約・オーナー記録・追加保存項目は
 [architecture/managed-clubs.md](architecture/managed-clubs.md)。既存 Club House の
 動的 import とゲーム・バックアップからの分離を保ち、契約キーと承認待ちの資格も `sg.club` 内に置く。
+Trial は無料の 5 名 × 1 クラブ、Basic は 50 名 × 3 クラブ。50 名のオーナー特典は
+同じ保存先の期限内キャッシュを `monetization/` が読み、広告削除 IAP と独立に判定する。
 
 この文書は索引である。見出し(`## `)は元の全文と同じ順序・同じ文言で残っており、コードやドキュメントが `docs/ARCHITECTURE.md「見出し」` で参照する先は必ずここに見つかる。長い節は要約だけをここに置き、全文は `architecture/` 配下の同名ファイルへ 2026-09-05 に分割した(各節末尾の全文リンクから読む)。たとえば `ShareAction` の結果画面の共有や `games/*/game/` のレイヤー規則は分割せずに「アプリ内レイヤー」節にそのまま残っている。
 
@@ -136,6 +138,9 @@ src/
   入れない(`sg.iap` と同じ理由)。境界の中身は
   [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Club House」、クライアント側の設計
   (入口・保存・API・挑戦と結果・受け入れ条件)は [architecture/club.md](architecture/club.md)。
+  Managed オーナーの広告特典は shell-owned の保存スキーマからローカルで読む。
+  `monetization/` から `club/` の静的 import や契約 API 呼び出しを追加せず、
+  Club の明示的な操作で確認した資格だけを広告の共通判定へ渡す。
 
 ## 状態と ref
 
@@ -177,7 +182,7 @@ src/
 
 ## 広告と課金
 
-広告は `services/ads/` のバナーのみ(Anchored Adaptive Banner)。AdMob 初期化は起動後の fire-and-forget で、UMP 同意はゲーム初期化と切り離し、オフライン時・購入済み時はリクエストしない。`BannerSlot` は高さ確保方式でレイアウトシフトを起こさない。**広告側が問うのは「この起動で広告削除が効くか」**(`isAdRemovalActive()`、購入状態が読めなかった起動も fail-closed で該当)であり、「購入したか」(`isAdRemovalPurchased()`)とは別の問いで設定画面だけが問う。`monetization/` は広告削除 IAP の基盤で、既定実装は「ストア未接続」。
+アプリ広告は `services/ads/` のバナーのみ(Anchored Adaptive Banner)。AdMob 初期化は起動後の fire-and-forget で、UMP 同意はゲーム初期化と切り離し、オフライン時・広告削除が有効なときはリクエストしない。`BannerSlot` は高さ確保方式でレイアウトシフトを起こさない。**広告側が問うのは「この起動で広告削除が効くか」**(`isAdRemovalActive()`、購入済み・有効な Managed オーナー特典・購入状態が読めなかった起動の fail-closed)であり、「購入したか」(`isAdRemovalPurchased()`)とは別の問いで設定画面だけが問う。`monetization/` は独立した購入資格とオーナー資格をまとめる。IAP の既定実装は「ストア未接続」。オーナー特典は Web 広告にも適用する([ADS_POLICY.md](ADS_POLICY.md))。
 
 → 全文: [architecture/ads-and-billing.md](architecture/ads-and-billing.md)
 

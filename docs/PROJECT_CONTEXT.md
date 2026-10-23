@@ -199,13 +199,18 @@ Club House のための摩擦を持ち込まない。**Public ができても、
 ### Managed Club House — 採用した方向
 
 2026-10-23 の製品オーナー判断。利用者に Railway などへの構築を求めず、PixApps が
-Cloudflare 上にクラブごとの領域を提供する。初期は **Basic: 50 名 / クラブ × 3 クラブ**。
+Cloudflare 上にクラブごとの領域を提供する。**Trial: 無料・期限なしで 5 名 × 1 クラブ**を
+本人が開始でき、**Basic: 50 名 / クラブ × 3 クラブ**へ同じ記録を保って移行する。
 将来の Plus は 100 名 × 5 クラブ、MAX は人数上限なし × 100 クラブ。価格は未定。
 Plus / MAX の契約はまだ受け付けない。
 
 オーナーが公開範囲、参加承認、対象ゲームを管理し、現在の記録からクラブ横断の記録帳と
 メンバー向け記録アルバムを作れる。保持データから分からない総プレイ回数や成功率は表示しない。
-今回の実装は運用者による有効期限つき枠の付与までで、決済・自動更新・本番公開は含まない。
+所有クラブの承認済み・在籍中メンバーが合計 50 名以上なら、有効なホスティング契約の
+オーナーの広告を非表示にする。オーナーをクラブごとに含む延べ人数で、申請中は含めない。
+オーナー画面に人数と有効状態を表示し、確認済みの資格を端末内に保存する。起動時の確認通信や
+購入済み扱いは追加しない。今回の実装は無料 Trial と運用者による Basic の付与・移行までで、
+決済・自動更新・本番公開は含まない。
 クライアントは `VITE_MANAGED_CLUB_ORIGIN` の明示設定で有効にする。
 
 Canonical: `PRODUCT_PRINCIPLES.md`「Managed Club House」、
@@ -218,7 +223,8 @@ Canonical: `PRODUCT_PRINCIPLES.md`「Managed Club House」、
 - 全ゲーム・全ゲーム機能を無料提供。
 - Anchored Adaptive Banner 1枠のみ。オフラインでは広告取得しない。
 - Rewarded / Interstitial / App Open / Native は採用しない。
-- 買い切りの広告削除商品のみ。ゲーム機能差は作らない。
+- ストア商品は買い切りの広告削除のみ。別に、上記の Managed オーナー特典が広告を非表示にする。
+  購入状態とは分け、ゲーム機能差は作らない。
 
 Canonical: `docs/ADS_POLICY.md`, `docs/PRODUCT_PRINCIPLES.md`
 
@@ -228,6 +234,7 @@ Canonical: `docs/ADS_POLICY.md`, `docs/PRODUCT_PRINCIPLES.md`
 - ゲーム盤面・操作を妨害しない範囲で広告を掲載する。
 - 広告視聴による機能解放を行わない。
 - Core のゲームに課金機能は提供しない。Managed のオーナー向けホスティング契約は上記の別の層。
+- Managed オーナーの広告非表示は Web のゲームにも適用する。通常メンバーや LP 全体の特典ではない。
 
 Canonical: `docs/WEB_VERSION.md`
 

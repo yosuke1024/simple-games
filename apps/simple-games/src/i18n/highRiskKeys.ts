@@ -113,4 +113,10 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   'clubManagedJoinDisclosure',
   'clubAlbumDisclosure',
   'clubDeleteAlbumBody',
+  // Free Trial, a conditional owner benefit, its counting rule, and a key absent from backups.
+  // These promises need independent back-translation and author approval before release.
+  'clubTrialHelp',
+  'clubOwnerAdRemovalHelp',
+  'clubOwnerMemberCountHelp',
+  'clubOwnerRecoveryHelp',
 ];

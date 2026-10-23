@@ -1,6 +1,27 @@
 import type { ClubMessages } from './en';
 
 export const tr: ClubMessages = {
+  clubTrialPlan: 'Deneme',
+  clubTrialStart: 'Ücretsiz denemeyi başlat',
+  clubTrialHelp: 'Süre sınırı olmadan ücretsiz. Siz dahil en fazla 5 üye için 1 Kulüp oluşturun.',
+  clubTrialNoExpiry: 'Süre sınırı yok',
+  clubTrialRetry: 'Deneme kurulumuna devam et',
+  clubOwnerAdRemovalTitle: 'Kulüp sahibine reklamsız kullanım avantajı',
+  clubOwnerMemberProgress: '{n} / {required} üye',
+  clubOwnerAdRemovalActive: 'Bu cihazda reklamlar gizleniyor.',
+  clubOwnerAdRemovalInactive: 'Bu avantaj şu anda etkin değil.',
+  clubOwnerAdRemovalHelp:
+    'En az {required} üyeniz ve etkin barındırma erişiminiz olduğu sürece reklamlar gizlenir. Avantajı güncellemek için bu ekranı yeniden yükleyin.',
+  clubOwnerMemberCountHelp:
+    'Tüm Kulüplerinizin üyeleri toplanır; siz de her Kulüpte sayılırsınız. Birden fazla Kulüpte olan bir üye her Kulüpte ayrı sayılır. Bekleyen istekler dahil edilmez.',
+  clubOwnerRecoveryKey: 'Sahip kurtarma anahtarı',
+  clubOwnerRecoveryHelp:
+    'Verileri sıfırlamadan veya cihaz değiştirmeden önce bu anahtarı özel bir yerde saklayın. Yedeklemelere dahil edilmez.',
+  clubOwnerShowKey: 'Sahip anahtarını göster',
+  clubOwnerHideKey: 'Sahip anahtarını gizle',
+  clubOwnerCopyKey: 'Sahip anahtarını kopyala',
+  clubOwnerKeyCopied: 'Sahip anahtarı kopyalandı',
+  clubOwnerCopyKeyManually: 'Bu anahtarı seçip kopyalayın.',
   clubOwnerSpace: 'Sahip alanı',
   clubOwnerKey: 'Sahip anahtarı',
   clubOwnerConnect: 'Sahip alanını aç',

@@ -1,6 +1,27 @@
 import type { ClubMessages } from './en';
 
 export const hi: ClubMessages = {
+  clubTrialPlan: 'ट्रायल',
+  clubTrialStart: 'मुफ़्त ट्रायल शुरू करें',
+  clubTrialHelp: 'बिना समय सीमा के मुफ़्त। अपने सहित अधिकतम 5 सदस्यों के लिए 1 क्लब बनाएँ।',
+  clubTrialNoExpiry: 'कोई समय सीमा नहीं',
+  clubTrialRetry: 'ट्रायल सेटअप जारी रखें',
+  clubOwnerAdRemovalTitle: 'मालिक के लिए विज्ञापन-मुक्त सुविधा',
+  clubOwnerMemberProgress: '{n} / {required} सदस्य',
+  clubOwnerAdRemovalActive: 'इस डिवाइस पर विज्ञापन छिपे हैं।',
+  clubOwnerAdRemovalInactive: 'यह सुविधा अभी सक्रिय नहीं है।',
+  clubOwnerAdRemovalHelp:
+    'कम से कम {required} सदस्य होने और होस्टिंग की सुविधा सक्रिय रहने तक विज्ञापन छिपे रहते हैं। सुविधा की स्थिति अपडेट करने के लिए इस स्क्रीन को फिर से लोड करें।',
+  clubOwnerMemberCountHelp:
+    'आपके सभी क्लबों के सदस्यों को जोड़ा जाता है, हर क्लब में आप भी गिने जाते हैं। एक से अधिक क्लबों में शामिल सदस्य हर क्लब में गिना जाता है। लंबित अनुरोध नहीं गिने जाते।',
+  clubOwnerRecoveryKey: 'मालिक की रिकवरी कुंजी',
+  clubOwnerRecoveryHelp:
+    'डेटा रीसेट करने या डिवाइस बदलने से पहले इस कुंजी को निजी और सुरक्षित जगह पर रखें। यह बैकअप में शामिल नहीं होती।',
+  clubOwnerShowKey: 'मालिक की कुंजी दिखाएँ',
+  clubOwnerHideKey: 'मालिक की कुंजी छिपाएँ',
+  clubOwnerCopyKey: 'मालिक की कुंजी कॉपी करें',
+  clubOwnerKeyCopied: 'मालिक की कुंजी कॉपी हो गई',
+  clubOwnerCopyKeyManually: 'इस कुंजी को चुनकर कॉपी करें।',
   clubOwnerSpace: 'मालिक का स्थान',
   clubOwnerKey: 'मालिक की कुंजी',
   clubOwnerConnect: 'मालिक का स्थान खोलें',

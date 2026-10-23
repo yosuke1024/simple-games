@@ -36,6 +36,20 @@ export const preferencesKV: KVStore = {
   },
 };
 
+/**
+ * Entitlement reads must distinguish "missing" from "could not read" so a
+ * storage error cannot enable ads. Ordinary record callers keep the existing
+ * failure-tolerant adapter; loadRecordWithStatus catches this one's rejection
+ * and returns readable:false without letting it escape into app boot.
+ */
+export const preferencesKVWithReadStatus: KVStore = {
+  ...preferencesKV,
+  async get(key) {
+    const { value } = await Preferences.get({ key });
+    return value ?? null;
+  },
+};
+
 /** In-memory store for tests. */
 export function createMemoryKV(initial: Record<string, string> = {}): KVStore {
   const map = new Map(Object.entries(initial));

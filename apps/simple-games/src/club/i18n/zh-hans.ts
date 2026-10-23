@@ -1,6 +1,27 @@
 import type { ClubMessages } from './en';
 
 export const zhHans: ClubMessages = {
+  clubTrialPlan: '试用',
+  clubTrialStart: '开始免费试用',
+  clubTrialHelp: '免费使用，无时间限制。可创建1个俱乐部，最多5名成员，包含你自己。',
+  clubTrialNoExpiry: '无时间限制',
+  clubTrialRetry: '继续设置试用',
+  clubOwnerAdRemovalTitle: '所有者免广告权益',
+  clubOwnerMemberProgress: '共{n}名 / {required}名成员',
+  clubOwnerAdRemovalActive: '此设备上的广告已隐藏。',
+  clubOwnerAdRemovalInactive: '此权益目前未生效。',
+  clubOwnerAdRemovalHelp:
+    '成员总数至少达到{required}名且托管服务使用权有效时，广告将被隐藏。重新加载此页面即可更新权益状态。',
+  clubOwnerMemberCountHelp:
+    '将你拥有的所有俱乐部的成员数相加，每个俱乐部都包含你自己。加入多个俱乐部的成员会在各俱乐部中分别计数。不包含待批准的申请。',
+  clubOwnerRecoveryKey: '所有者恢复密钥',
+  clubOwnerRecoveryHelp:
+    '重置数据或更换设备前，请将此密钥保存在他人无法查看的地方。备份中不包含此密钥。',
+  clubOwnerShowKey: '显示所有者密钥',
+  clubOwnerHideKey: '隐藏所有者密钥',
+  clubOwnerCopyKey: '复制所有者密钥',
+  clubOwnerKeyCopied: '已复制所有者密钥',
+  clubOwnerCopyKeyManually: '请选择并复制此密钥。',
   clubOwnerSpace: '创建者空间',
   clubOwnerKey: '创建者密钥',
   clubOwnerConnect: '打开创建者空间',

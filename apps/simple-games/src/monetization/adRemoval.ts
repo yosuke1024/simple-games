@@ -11,13 +11,23 @@
  * - The entitlement is cached on device (sg.iap) so it works offline and at
  *   boot without a store round-trip. The store remains the source of truth;
  *   a lost cache is recovered with "Restore purchase".
+ * - A configured Managed Club owner can independently qualify for temporary
+ *   ad removal. Its server answer stays with that owner key in sg.club; Core
+ *   reads only the local cache and never loads the Club layer to check ads.
  * - State lives at module level with a subscribe hook for React, mirroring
  *   the services/ pattern. Failures never affect gameplay.
  */
 import type { KVStore } from '../storage/kv';
-import { preferencesKV } from '../storage/kv';
-import { loadRecordWithStatus, saveRecord } from '../storage/repo';
-import { iapSchema, type IapState } from '../storage/schemas';
+import { preferencesKVWithReadStatus } from '../storage/kv';
+import { loadRecordWithStatus, recordRemovalVersion, saveRecord } from '../storage/repo';
+import {
+  asManagedAdRemovalBenefit,
+  clubConnectionsSchema,
+  iapSchema,
+  type IapState,
+  type ManagedClubOwner,
+} from '../storage/schemas';
+import { MANAGED_CLUB_ORIGIN } from '../ui/clubFeatures';
 
 /** Play Console managed product ID (not a secret; must exist in the console). */
 export const AD_REMOVAL_PRODUCT_ID = 'remove_ads';
@@ -52,7 +62,12 @@ let state: IapState = iapSchema.defaultValue();
  * "nothing is purchased" (see `isAdRemovalActive`).
  */
 let entitlementKnown = true;
-let kvStore: KVStore = preferencesKV;
+let kvStore: KVStore = preferencesKVWithReadStatus;
+let managedOwner: ManagedClubOwner | null = null;
+let managedCacheKnown = true;
+let managedRevision = 0;
+let managedRemovalVersion = recordRemovalVersion(clubConnectionsSchema.key);
+let expiryTimer: ReturnType<typeof setTimeout> | null = null;
 
 const listeners = new Set<() => void>();
 
@@ -76,12 +91,111 @@ export function setAdRemovalStore(next: AdRemovalStore): void {
  * escaping into the boot sequence, where nobody could tell it from "this
  * player has not bought anything".
  */
-export async function initAdRemoval(kv: KVStore = preferencesKV): Promise<void> {
+export async function initAdRemoval(kv: KVStore = preferencesKVWithReadStatus): Promise<void> {
   kvStore = kv;
-  const { value, readable } = await loadRecordWithStatus(iapSchema, kv);
-  state = value;
-  entitlementKnown = readable;
+  const revision = ++managedRevision;
+  const removalVersion = recordRemovalVersion(clubConnectionsSchema.key);
+  const [purchase, clubs] = await Promise.all([
+    loadRecordWithStatus(iapSchema, kv),
+    MANAGED_CLUB_ORIGIN ? loadRecordWithStatus(clubConnectionsSchema, kv) : null,
+  ]);
+  state = purchase.value;
+  entitlementKnown = purchase.readable;
+  // An explicit owner-screen save may have finished while the other local
+  // record was being read. Boot must not replace that newer answer.
+  if (
+    revision === managedRevision &&
+    removalVersion === recordRemovalVersion(clubConnectionsSchema.key)
+  ) {
+    managedOwner = clubs?.value.managedOwner ?? null;
+    managedCacheKnown = clubs?.readable ?? true;
+    managedRemovalVersion = removalVersion;
+    scheduleManagedExpiry();
+  }
   notify();
+}
+
+/** Local-only: no Club import or server request is reachable from ad boot. */
+export function isManagedOwnerAdRemovalActive(): boolean {
+  return (
+    managedRemovalVersion === recordRemovalVersion(clubConnectionsSchema.key) &&
+    ownerHasAdRemoval(managedOwner)
+  );
+}
+
+function ownerHasAdRemoval(owner: ManagedClubOwner | null): boolean {
+  if (!MANAGED_CLUB_ORIGIN || owner?.origin !== MANAGED_CLUB_ORIGIN || owner.pendingTrial)
+    return false;
+  const benefit = asManagedAdRemovalBenefit(owner.adRemoval);
+  return (
+    benefit?.active === true &&
+    benefit.validUntil !== null &&
+    Date.parse(benefit.validUntil) > Date.now()
+  );
+}
+
+/** A web SDK restart must not discard the answer that made ads disappear. */
+export async function isManagedOwnerAdRemovalPersisted(): Promise<boolean> {
+  if (!isManagedOwnerAdRemovalActive()) return false;
+  const owner = managedOwner!;
+  const clubs = await loadRecordWithStatus(clubConnectionsSchema, kvStore);
+  const saved = clubs.value.managedOwner ?? null;
+  return (
+    isManagedOwnerAdRemovalActive() &&
+    managedOwner?.origin === owner.origin &&
+    managedOwner.ownerToken === owner.ownerToken &&
+    clubs.readable &&
+    saved?.origin === owner.origin &&
+    saved.ownerToken === owner.ownerToken &&
+    ownerHasAdRemoval(saved)
+  );
+}
+
+function scheduleManagedExpiry(): void {
+  if (expiryTimer !== null) clearTimeout(expiryTimer);
+  expiryTimer = null;
+  if (!isManagedOwnerAdRemovalActive()) return;
+  const remaining = Date.parse(managedOwner!.adRemoval!.validUntil!) - Date.now();
+  // A hosting term can exceed setTimeout's signed 32-bit range. This timer
+  // only expires a local answer; it never refreshes it or contacts a server.
+  expiryTimer = setTimeout(
+    () => {
+      expiryTimer = null;
+      scheduleManagedExpiry();
+      notify();
+    },
+    Math.min(remaining, 2_147_483_647),
+  );
+}
+
+/**
+ * The Club storage operation grants a verified answer only after its write
+ * was read back, while still in the same queue as Reset Local Data. Revoking
+ * an answer takes effect immediately even when a device cannot save it.
+ * It is separate from sg.iap: buying/restoring remains possible and survives
+ * this benefit expiring, being revoked, or the owner key being forgotten.
+ */
+export function noteManagedOwnerAdRemoval(owner: ManagedClubOwner | null): void {
+  ++managedRevision;
+  managedOwner = owner;
+  managedCacheKnown = true;
+  managedRemovalVersion = recordRemovalVersion(clubConnectionsSchema.key);
+  scheduleManagedExpiry();
+  notify();
+}
+
+/** An authoritative denial still revokes this key when its local record cannot be read. */
+export function revokeManagedOwnerAdRemoval(
+  credential: Pick<ManagedClubOwner, 'origin' | 'ownerToken'>,
+): void {
+  if (
+    managedRemovalVersion !== recordRemovalVersion(clubConnectionsSchema.key) ||
+    managedOwner?.origin !== credential.origin ||
+    managedOwner.ownerToken !== credential.ownerToken
+  )
+    return;
+  const { adRemoval: _removed, ...owner } = managedOwner;
+  noteManagedOwnerAdRemoval(owner);
 }
 
 /**
@@ -109,7 +223,12 @@ export function isAdRemovalPurchased(): boolean {
  * (`services/ads/consent.ts`): without an answer, nothing is requested.
  */
 export function isAdRemovalActive(): boolean {
-  return state.adRemovalPurchased || !entitlementKnown;
+  return (
+    state.adRemovalPurchased ||
+    !entitlementKnown ||
+    !managedCacheKnown ||
+    isManagedOwnerAdRemovalActive()
+  );
 }
 
 export function isPurchaseAvailable(): boolean {
@@ -169,6 +288,12 @@ export function resetAdRemovalForTesting(): void {
   store = unavailableStore;
   state = iapSchema.defaultValue();
   entitlementKnown = true;
-  kvStore = preferencesKV;
+  kvStore = preferencesKVWithReadStatus;
+  managedOwner = null;
+  managedCacheKnown = true;
+  managedRemovalVersion = recordRemovalVersion(clubConnectionsSchema.key);
+  ++managedRevision;
+  if (expiryTimer !== null) clearTimeout(expiryTimer);
+  expiryTimer = null;
   listeners.clear();
 }

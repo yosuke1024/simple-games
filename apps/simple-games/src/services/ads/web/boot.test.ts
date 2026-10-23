@@ -5,7 +5,7 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { setOnlineForTesting } from '../../network';
-import { resetAdMaxLoaderForTesting, setAdMaxIdsForTesting } from './admax';
+import { requestAdMaxFrame, resetAdMaxLoaderForTesting, setAdMaxIdsForTesting } from './admax';
 import { initWebAds } from './boot';
 import { setWebAdsConfigForTesting } from './config';
 
@@ -196,6 +196,19 @@ describe('initWebAds when the anchor frame comes back empty', () => {
 
     vi.runAllTimers();
 
+    expect(admaxBar()).toBeNull();
+    expect(reservedSpace()).toBe(false);
+  });
+
+  it('does not restore an empty anchor reservation for a later AdMax display request', () => {
+    vi.useFakeTimers();
+    mountAnchor();
+    admaxScript()?.dispatchEvent(new Event('load'));
+    vi.runAllTimers();
+    expect(reservedSpace()).toBe(false);
+
+    requestAdMaxFrame('later-display-frame');
+    expect(admaxScripts()).toHaveLength(2);
     expect(admaxBar()).toBeNull();
     expect(reservedSpace()).toBe(false);
   });

@@ -20,6 +20,8 @@
  * overlay falls to on the narrowest phones, so there the slot stays empty.
  */
 import { type WebAdPlacement, adIdFromEnv } from './config';
+import { isAdRemovalActive } from '../../../monetization/adRemoval';
+import { noteWebAdRequest } from './lifecycle';
 
 export interface AdMaxIds {
   /** Home display slot, 728×90 (desktop widths). */
@@ -128,6 +130,7 @@ let loadInFlight = false;
  */
 export function requestAdMaxFrame(id: string): void {
   try {
+    if (isAdRemovalActive()) return;
     pendingFrames.push(id);
     drainAdMaxQueue();
   } catch {
@@ -136,6 +139,11 @@ export function requestAdMaxFrame(id: string): void {
 }
 
 function drainAdMaxQueue(): void {
+  if (isAdRemovalActive()) {
+    pendingFrames = [];
+    (window as AdMaxWindow).admaxads = [];
+    return;
+  }
   if (loadInFlight || pendingFrames.length === 0 || adMaxScriptFailed()) return;
 
   const batch = pendingFrames;
@@ -165,6 +173,7 @@ function drainAdMaxQueue(): void {
     script.setAttribute(ADMAX_FAILED_MARKER, '');
     document.dispatchEvent(new Event(ADMAX_ERROR_EVENT));
   });
+  noteWebAdRequest();
   document.head.appendChild(script);
 }
 

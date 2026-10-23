@@ -35,6 +35,7 @@
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { isManagedOwnerAdRemovalActive } from '../monetization/adRemoval';
 import { markReviewPromptShown, shouldPromptReview } from '../services/review';
 import { releaseSound } from '../services/sound';
 import {
@@ -50,6 +51,7 @@ import {
 import { GameErrorBoundary } from '../ui/components/GameErrorBoundary';
 import { GameLoadingFallback } from '../ui/components/GameLoadingFallback';
 import { ReviewPrompt } from '../ui/components/ReviewPrompt';
+import { consumeManagedOwnerReturn } from '../ui/managedOwnerReturn';
 import { CollectionHomeScreen } from '../ui/screens/CollectionHomeScreen';
 import { SettingsScreen } from '../ui/screens/SettingsScreen';
 import {
@@ -140,8 +142,15 @@ function initialView(): View {
   // keeps the first answer, so the second call finding the fragment already
   // gone changes nothing.
   if (webRoutingEnabled()) {
+    // The owner explicitly refreshed a benefit that stopped an already loaded
+    // Web ad SDK. Its one-shot hint contains no key; only the locally verified
+    // cache can reopen this screen. An invite still takes precedence.
+    const returnToOwner = consumeManagedOwnerReturn();
     const invite = takeInviteFromLocation();
     if (invite) return { kind: 'club', entry: 'invite', invite };
+    if (returnToOwner && isManagedOwnerAdRemovalActive()) {
+      return { kind: 'club', entry: 'managed' };
+    }
   }
   if (!webRoutingEnabled()) {
     const shortcutGame = shortcutLaunchGame();
@@ -364,13 +373,15 @@ export function App() {
       recordGameOpened(gameId);
       trackWebGameOpened(gameId);
     }
-    // The Club layer at boot, in exactly the two cases app/clubGate.ts allows:
+    // The Club layer at boot, following an explicit Club action:
     // the page is an invite link (initialView already chose the Join screen),
     // or this device has joined a Club, whose home slot and result-screen
-    // action need the layer. An invite that cannot load its layer falls back
+    // action need the layer. The owner-benefit reload resumes its prior entry.
+    // An entry that cannot load its layer falls back
     // to the collection rather than leaving a loading screen up for good.
     if (arrived.kind === 'club') {
-      void loadClubForInvite().then((module) => {
+      const pendingModule = arrived.entry === 'managed' ? loadClubForEntry() : loadClubForInvite();
+      void pendingModule.then((module) => {
         if (module) setClubModule(module);
         else if (viewRef.current === arrived) show({ kind: 'collection' });
       });

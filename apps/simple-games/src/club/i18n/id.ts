@@ -1,6 +1,27 @@
 import type { ClubMessages } from './en';
 
 export const id: ClubMessages = {
+  clubTrialPlan: 'Uji coba',
+  clubTrialStart: 'Mulai uji coba gratis',
+  clubTrialHelp: 'Gratis tanpa batas waktu. Buat 1 Klub untuk maksimal 5 anggota, termasuk Anda.',
+  clubTrialNoExpiry: 'Tanpa batas waktu',
+  clubTrialRetry: 'Lanjutkan penyiapan uji coba',
+  clubOwnerAdRemovalTitle: 'Manfaat bebas iklan untuk pemilik',
+  clubOwnerMemberProgress: '{n} / {required} anggota',
+  clubOwnerAdRemovalActive: 'Iklan disembunyikan di perangkat ini.',
+  clubOwnerAdRemovalInactive: 'Manfaat ini sedang tidak aktif.',
+  clubOwnerAdRemovalHelp:
+    'Iklan disembunyikan selama Anda memiliki setidaknya {required} anggota dan akses hosting aktif. Muat ulang layar ini untuk memperbarui status manfaat.',
+  clubOwnerMemberCountHelp:
+    'Anggota dari semua Klub Anda dijumlahkan, termasuk Anda di setiap Klub. Anggota yang ada di beberapa Klub dihitung di masing-masing Klub. Permintaan yang menunggu persetujuan tidak dihitung.',
+  clubOwnerRecoveryKey: 'Kunci pemulihan pemilik',
+  clubOwnerRecoveryHelp:
+    'Simpan kunci ini di tempat pribadi sebelum mereset data atau mengganti perangkat. Kunci ini tidak disertakan dalam cadangan.',
+  clubOwnerShowKey: 'Tampilkan kunci pemilik',
+  clubOwnerHideKey: 'Sembunyikan kunci pemilik',
+  clubOwnerCopyKey: 'Salin kunci pemilik',
+  clubOwnerKeyCopied: 'Kunci pemilik disalin',
+  clubOwnerCopyKeyManually: 'Pilih dan salin kunci ini.',
   clubOwnerSpace: 'Ruang pemilik',
   clubOwnerKey: 'Kunci pemilik',
   clubOwnerConnect: 'Buka ruang pemilik',

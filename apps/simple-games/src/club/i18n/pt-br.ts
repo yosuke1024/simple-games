@@ -1,6 +1,27 @@
 import type { ClubMessages } from './en';
 
 export const ptBR: ClubMessages = {
+  clubTrialPlan: 'Teste',
+  clubTrialStart: 'Começar teste gratuito',
+  clubTrialHelp: 'Grátis, sem limite de tempo. Crie 1 Clube para até 5 membros, incluindo você.',
+  clubTrialNoExpiry: 'Sem limite de tempo',
+  clubTrialRetry: 'Continuar a configuração do teste',
+  clubOwnerAdRemovalTitle: 'Benefício sem anúncios do proprietário',
+  clubOwnerMemberProgress: '{n} / {required} membros',
+  clubOwnerAdRemovalActive: 'Os anúncios estão ocultos neste dispositivo.',
+  clubOwnerAdRemovalInactive: 'Este benefício não está ativo.',
+  clubOwnerAdRemovalHelp:
+    'Os anúncios ficam ocultos enquanto você tiver pelo menos {required} membros e acesso ativo à hospedagem. Recarregue esta tela para atualizar o benefício.',
+  clubOwnerMemberCountHelp:
+    'Os membros de todos os seus Clubes são somados, incluindo você em cada Clube. Um membro em vários Clubes é contado em cada um. Pedidos pendentes não são incluídos.',
+  clubOwnerRecoveryKey: 'Chave de recuperação do proprietário',
+  clubOwnerRecoveryHelp:
+    'Guarde esta chave em um local privado antes de redefinir os dados ou trocar de dispositivo. Ela não é incluída nos backups.',
+  clubOwnerShowKey: 'Mostrar chave do proprietário',
+  clubOwnerHideKey: 'Ocultar chave do proprietário',
+  clubOwnerCopyKey: 'Copiar chave do proprietário',
+  clubOwnerKeyCopied: 'Chave do proprietário copiada',
+  clubOwnerCopyKeyManually: 'Selecione e copie esta chave.',
   clubOwnerSpace: 'Espaço do proprietário',
   clubOwnerKey: 'Chave do proprietário',
   clubOwnerConnect: 'Abrir espaço do proprietário',

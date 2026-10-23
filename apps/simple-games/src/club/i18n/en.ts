@@ -5,6 +5,27 @@
  * collide (src/i18n/i18n.test.ts).
  */
 export const en = {
+  clubTrialPlan: 'Trial',
+  clubTrialStart: 'Start free Trial',
+  clubTrialHelp: 'Free, with no time limit. Create 1 Club for up to 5 members, including you.',
+  clubTrialNoExpiry: 'No time limit',
+  clubTrialRetry: 'Continue Trial setup',
+  clubOwnerAdRemovalTitle: 'Owner ad removal',
+  clubOwnerMemberProgress: '{n} / {required} members',
+  clubOwnerAdRemovalActive: 'Ads are hidden on this device.',
+  clubOwnerAdRemovalInactive: 'This benefit is not active.',
+  clubOwnerAdRemovalHelp:
+    'Ads are hidden while you have at least {required} members and active hosting access. Reload this screen to update your benefit.',
+  clubOwnerMemberCountHelp:
+    'Members are added across your Clubs, including you in each Club. A member in more than one Club counts in each. Pending requests are excluded.',
+  clubOwnerRecoveryKey: 'Owner recovery key',
+  clubOwnerRecoveryHelp:
+    'Save this key somewhere private before resetting or changing devices. It is not included in backups.',
+  clubOwnerShowKey: 'Show owner key',
+  clubOwnerHideKey: 'Hide owner key',
+  clubOwnerCopyKey: 'Copy owner key',
+  clubOwnerKeyCopied: 'Owner key copied',
+  clubOwnerCopyKeyManually: 'Select and copy this key.',
   clubOwnerSpace: 'Owner space',
   clubOwnerKey: 'Owner key',
   clubOwnerConnect: 'Open owner space',

@@ -1,6 +1,28 @@
 import type { ClubMessages } from './en';
 
 export const vi: ClubMessages = {
+  clubTrialPlan: 'Dùng thử',
+  clubTrialStart: 'Bắt đầu dùng thử miễn phí',
+  clubTrialHelp:
+    'Miễn phí, không giới hạn thời gian. Tạo 1 Câu lạc bộ cho tối đa 5 thành viên, bao gồm bạn.',
+  clubTrialNoExpiry: 'Không giới hạn thời gian',
+  clubTrialRetry: 'Tiếp tục thiết lập dùng thử',
+  clubOwnerAdRemovalTitle: 'Quyền lợi ẩn quảng cáo cho chủ sở hữu',
+  clubOwnerMemberProgress: '{n} / {required} thành viên',
+  clubOwnerAdRemovalActive: 'Quảng cáo đã được ẩn trên thiết bị này.',
+  clubOwnerAdRemovalInactive: 'Quyền lợi này hiện chưa có hiệu lực.',
+  clubOwnerAdRemovalHelp:
+    'Quảng cáo được ẩn khi bạn có tổng cộng ít nhất {required} thành viên và quyền sử dụng dịch vụ lưu trữ còn hiệu lực. Tải lại màn hình này để cập nhật quyền lợi.',
+  clubOwnerMemberCountHelp:
+    'Số thành viên được cộng từ tất cả Câu lạc bộ của bạn, bao gồm bạn trong mỗi Câu lạc bộ. Người tham gia nhiều Câu lạc bộ được tính ở từng Câu lạc bộ. Không tính yêu cầu đang chờ duyệt.',
+  clubOwnerRecoveryKey: 'Khóa khôi phục của chủ sở hữu',
+  clubOwnerRecoveryHelp:
+    'Lưu khóa này ở nơi riêng tư trước khi đặt lại dữ liệu hoặc đổi thiết bị. Khóa này không có trong bản sao lưu.',
+  clubOwnerShowKey: 'Hiện khóa chủ sở hữu',
+  clubOwnerHideKey: 'Ẩn khóa chủ sở hữu',
+  clubOwnerCopyKey: 'Sao chép khóa chủ sở hữu',
+  clubOwnerKeyCopied: 'Đã sao chép khóa chủ sở hữu',
+  clubOwnerCopyKeyManually: 'Chọn và sao chép khóa này.',
   clubOwnerSpace: 'Không gian chủ câu lạc bộ',
   clubOwnerKey: 'Khóa chủ câu lạc bộ',
   clubOwnerConnect: 'Mở không gian chủ câu lạc bộ',

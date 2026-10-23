@@ -1,16 +1,20 @@
 /** Club credentials through `sg.club`: never exported, and wiped by Reset Local Data. */
-import { loadRecord, updateRecord } from '@/storage/repo';
+import { loadRecord, recordRemovalVersion, updateRecord } from '@/storage/repo';
+import { noteManagedOwnerAdRemoval, revokeManagedOwnerAdRemoval } from '@/monetization/adRemoval';
 import {
+  asManagedAdRemovalBenefit,
   CLUB_CONNECTIONS_MAX,
   CLUB_DEPARTED_MAX,
   clubConnectionsSchema,
   type ClubConnection,
   type ClubConnections,
   type ManagedClubOwner,
+  type ManagedAdRemovalBenefit,
   type PendingClubJoin,
 } from '@/storage/schemas';
-import { preferencesKV, type KVStore } from '@/storage/kv';
+import { preferencesKV, preferencesKVWithReadStatus, type KVStore } from '@/storage/kv';
 import type { ClubConnectionSummary } from '@/ui/clubBridge';
+import { MANAGED_CLUB_ORIGIN } from '@/ui/clubFeatures';
 
 // The whole read/modify/write shares the repo's queue with Reset Local Data.
 // A separate queue would let a delayed credential write outlive that reset.
@@ -185,14 +189,131 @@ export async function loadManagedOwner(kv?: KVStore): Promise<ManagedClubOwner |
 }
 
 export async function saveManagedOwner(
-  owner: ManagedClubOwner | null,
+  owner: Omit<ManagedClubOwner, 'adRemoval'> | null,
   kv?: KVStore,
 ): Promise<void> {
-  await change((r) => {
-    if (owner !== null) return { ...r, managedOwner: owner };
+  const saved = await changeManagedOwner((r) => {
+    // Never accept an entitlement on an unverified key installation, even
+    // when a structurally wider object was passed by a caller.
+    if (owner !== null)
+      return {
+        ...r,
+        managedOwner: {
+          origin: owner.origin,
+          ownerToken: owner.ownerToken,
+          ...(owner.pendingTrial ? { pendingTrial: true } : {}),
+        },
+      };
     const { managedOwner: _removed, ...rest } = r;
     return rest;
   }, kv);
+  // Trial must not POST a new credential that this device failed to retain.
+  if (!saved) throw new Error('owner_key_not_saved');
+}
+
+/**
+ * Read-back and publication stay INSIDE the repo operation: Reset cannot
+ * remove the record between the write and a stale entitlement notification.
+ * A silent Preferences write failure is detected before claiming a durable
+ * benefit (the web ad SDK must only be restarted after this cache is saved).
+ */
+async function changeManagedOwner(
+  update: (record: ClubConnections) => ClubConnections,
+  kv: KVStore = preferencesKVWithReadStatus,
+  revokedCredential?: OwnerCredential,
+): Promise<boolean> {
+  let saved = false;
+  let readable = true;
+  const removalVersion = recordRemovalVersion(clubConnectionsSchema.key);
+  const current = () => removalVersion === recordRemovalVersion(clubConnectionsSchema.key);
+  const verifiedKV: KVStore = {
+    get: async (key) => {
+      // A 401 or verified inactive answer is authoritative for this key even
+      // when disk is unreadable. Run in the queue, after older publications,
+      // and compare the runtime key so a stale denial cannot affect its replacement.
+      if (current() && revokedCredential) revokeManagedOwnerAdRemoval(revokedCredential);
+      try {
+        return await kv.get(key);
+      } catch (error) {
+        readable = false;
+        throw error;
+      }
+    },
+    remove: (key) => kv.remove(key),
+    set: async (key, payload) => {
+      // updateRecord normally permits defaults on an unreadable preference.
+      // An owner-key change must not replace unknown credentials/connections.
+      if (!readable) return;
+      await kv.set(key, payload);
+      if ((await kv.get(key)) !== payload || !current()) return;
+      const next = clubConnectionsSchema.validate(JSON.parse(payload));
+      saved = true;
+      noteManagedOwnerAdRemoval(next?.managedOwner ?? null);
+    },
+  };
+  await change((record) => {
+    if (!current() || !readable) return record;
+    const next = update(record);
+    // Revocation/replacement takes effect even if storage has stopped
+    // accepting writes. Granting waits for the verified write above.
+    if (!next.managedOwner?.adRemoval?.active || next.managedOwner.pendingTrial)
+      noteManagedOwnerAdRemoval(next.managedOwner ?? null);
+    return next;
+  }, verifiedKV);
+  return saved;
+}
+
+type OwnerCredential = Pick<ManagedClubOwner, 'origin' | 'ownerToken'>;
+
+function sameOwner(owner: ManagedClubOwner | undefined, credential: OwnerCredential): boolean {
+  return owner?.origin === credential.origin && owner.ownerToken === credential.ownerToken;
+}
+
+/** A late response cannot recreate a forgotten/reset owner or overwrite a replacement key. */
+export async function saveVerifiedManagedOwner(
+  credential: OwnerCredential,
+  benefit: ManagedAdRemovalBenefit,
+  kv?: KVStore,
+): Promise<boolean> {
+  let matched = false;
+  const adRemoval =
+    credential.origin === MANAGED_CLUB_ORIGIN ? asManagedAdRemovalBenefit(benefit) : null;
+  const saved = await changeManagedOwner(
+    (record) => {
+      if (!sameOwner(record.managedOwner, credential)) return record;
+      matched = true;
+      return {
+        ...record,
+        managedOwner: {
+          origin: credential.origin,
+          ownerToken: credential.ownerToken,
+          ...(adRemoval === null ? {} : { adRemoval }),
+        },
+      };
+    },
+    kv,
+    adRemoval?.active === false ? credential : undefined,
+  );
+  return matched && saved;
+}
+
+/** Authenticated 401 invalidates only the key whose request failed. */
+export async function clearManagedOwnerAdRemoval(
+  credential: OwnerCredential,
+  kv?: KVStore,
+): Promise<boolean> {
+  let matched = false;
+  const saved = await changeManagedOwner(
+    (record) => {
+      if (!sameOwner(record.managedOwner, credential)) return record;
+      matched = true;
+      const { adRemoval: _removed, ...owner } = record.managedOwner!;
+      return { ...record, managedOwner: owner };
+    },
+    kv,
+    credential,
+  );
+  return matched && saved;
 }
 
 export function summarize(connection: ClubConnection): ClubConnectionSummary {

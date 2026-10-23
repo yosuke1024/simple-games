@@ -1,6 +1,28 @@
 import type { ClubMessages } from './en';
 
 export const fr: ClubMessages = {
+  clubTrialPlan: 'Essai',
+  clubTrialStart: 'Commencer l’essai gratuit',
+  clubTrialHelp:
+    'Gratuit, sans limite de durée. Créez 1 Club pour 5 membres maximum, vous compris.',
+  clubTrialNoExpiry: 'Sans limite de durée',
+  clubTrialRetry: 'Continuer la configuration de l’essai',
+  clubOwnerAdRemovalTitle: 'Avantage sans publicité du propriétaire',
+  clubOwnerMemberProgress: '{n} / {required} membres',
+  clubOwnerAdRemovalActive: 'Les publicités sont masquées sur cet appareil.',
+  clubOwnerAdRemovalInactive: 'Cet avantage n’est pas actif.',
+  clubOwnerAdRemovalHelp:
+    'Les publicités sont masquées tant que vous avez au moins {required} membres et un accès actif à l’hébergement. Rechargez cet écran pour actualiser votre avantage.',
+  clubOwnerMemberCountHelp:
+    'Les membres de tous vos Clubs sont additionnés, vous compris dans chaque Club. Un membre de plusieurs Clubs est compté dans chacun. Les demandes en attente sont exclues.',
+  clubOwnerRecoveryKey: 'Clé de récupération du propriétaire',
+  clubOwnerRecoveryHelp:
+    'Conservez cette clé dans un endroit privé avant de réinitialiser les données ou de changer d’appareil. Elle n’est pas incluse dans les sauvegardes.',
+  clubOwnerShowKey: 'Afficher la clé du propriétaire',
+  clubOwnerHideKey: 'Masquer la clé du propriétaire',
+  clubOwnerCopyKey: 'Copier la clé du propriétaire',
+  clubOwnerKeyCopied: 'Clé du propriétaire copiée',
+  clubOwnerCopyKeyManually: 'Sélectionnez et copiez cette clé.',
   clubOwnerSpace: 'Espace propriétaire',
   clubOwnerKey: 'Clé propriétaire',
   clubOwnerConnect: 'Ouvrir l’espace propriétaire',

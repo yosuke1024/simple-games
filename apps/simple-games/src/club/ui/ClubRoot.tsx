@@ -153,6 +153,11 @@ export function ClubRoot({
         setConnections(loaded);
         setPending(requests);
         const root = rootFor(loaded);
+        // Only a configured Managed service may resume its explicit owner screen.
+        if (entry === 'managed' && MANAGED_CLUB_ORIGIN) {
+          setStack([...root, { kind: 'managed' }]);
+          return;
+        }
         // An invite link is acted on only while Private Clubs are on (club.md §14, decision 44).
         if (
           entry === 'invite' &&

@@ -32,6 +32,14 @@ vi.mock('@capacitor/core', () => ({
   },
 }));
 
+vi.mock('@capacitor/preferences', () => ({
+  Preferences: {
+    get: () => Promise.resolve({ value: null }),
+    set: () => Promise.resolve(),
+    remove: () => Promise.resolve(),
+  },
+}));
+
 vi.mock('@capacitor-community/admob', () => ({
   AdMob: admobMock,
   BannerAdPluginEvents: {
