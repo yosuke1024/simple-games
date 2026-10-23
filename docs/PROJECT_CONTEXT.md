@@ -1,6 +1,6 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-10-19
+Updated: 2026-10-23
 
 この文書は、Simple Games を変更・レビュー・説明するときの **共通の入口** である。
 ここに全仕様を複製しない。実装上の事実はコード、恒久的な原則は各 canonical document を正とし、
@@ -43,8 +43,8 @@ Design philosophy:
 
 - 1つの `Simple Games: Offline Games` として提供する。
 - 現在の正式収録は **41 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
-  本数はここで数える)。`GAMES` の全 56 エントリには、下の `channel: 'web-beta'` の 15 本(Web 先行公開中の
-  No. 42〜46・No. 47〜51・No. 52〜56)も含まれる。
+  本数はここで数える)。`GAMES` の全 61 エントリには、下の `channel: 'web-beta'` の 20 本(Web 先行公開中の
+  No. 42〜46・No. 47〜51・No. 52〜56・No. 57〜61)も含まれる。
   `'in-development'` のエントリはいま無い。
 - 2026-10-02 に、Web 版で先行公開していた新作 11 本(Crown Grid / Number Path /
   Shape Regions、2026-09-26、issue #194。Yacht / Mancala / Dominoes / Hit & Blow /
@@ -116,6 +116,11 @@ Design philosophy:
 - 人間向け一覧は root `README.md`。
 - 各ゲームの実装は `apps/simple-games/src/games/<game-id>/` に分離する。
 - 未実装タイトルを Coming Soon として表示しない。
+
+- 2026-10-23 に No. 57〜61 (Light Grid / Color Flood / Three Peaks / Nim / Knight’s Tour)
+  を追加。新作は従来どおり `web-beta` で、正式収録の 41 本と Club House は変更しない。
+  仕様は各ルール文書、選定と検証・公開記録は
+  `docs/plans/2026-10-23-five-games-57-61.md`。Web の公開完了は同文書の記録を参照する。
 
 ### Platforms
 

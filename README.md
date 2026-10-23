@@ -202,6 +202,18 @@ Mancala と Dots and Boxes は完全情報の CPU 対戦なので Undo を持ち
 
 ### Web 先行公開(ベータ)
 
+**現在のコードは正式収録41本＋Web先行公開20本＝61本。** No. 57〜61 は
+2026-10-23 の追加です。公開と検証の記録は
+[今回の追加記録](docs/plans/2026-10-23-five-games-57-61.md)を参照してください。
+
+| 新作          | 内容                                         | 助け                         | 仕様                                |
+| ------------- | -------------------------------------------- | ---------------------------- | ----------------------------------- |
+| Light Grid    | 自分と上下左右の点灯を反転し、すべて消す     | Undo・再挑戦・解に基づくHint | [ルール](docs/LIGHT_GRID_RULES.md)  |
+| Color Flood   | 左上から同じ色の領域を広げる。手数の上限なし | Undo・同じ盤面に再挑戦       | [ルール](docs/COLOR_FLOOD_RULES.md) |
+| Three Peaks   | 1つ違いの札を重ね、3つの山を取り除く         | Undo・同じ配札に再挑戦       | [ルール](docs/THREE_PEAKS_RULES.md) |
+| Nim           | 1つの山から石を取り、最後の石を取れば勝ち    | CPUとの1往復をUndo           | [ルール](docs/NIM_RULES.md)         |
+| Knight’s Tour | ナイトの動きで全マスを1回ずつ訪れる          | 合法手表示・Undo・再挑戦     | [ルール](docs/KNIGHT_TOUR_RULES.md) |
+
 42〜46 本目の新作 5 本は、**Web 版だけの先行公開(ベータ)**向けにこのリポジトリで実装しました
 (2026-10-17。仕様の正は各ルール文書、経緯は
 [docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md](docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md))。

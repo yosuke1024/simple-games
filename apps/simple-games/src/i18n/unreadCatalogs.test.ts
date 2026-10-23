@@ -41,6 +41,11 @@ const UNREAD_JA_GAME_IDS = [
   'nested-tic-tac-toe',
   'scopa',
   'tangram',
+  'light-grid',
+  'color-flood',
+  'three-peaks',
+  'nim',
+  'knight-tour',
 ] as const;
 
 const gameModules = import.meta.glob<{ catalogs: Record<Locale, Record<string, string>> }>(

@@ -76,7 +76,9 @@ describe('the CSS-per-game list in docs/architecture/css-split.md', () => {
   // web-beta titles (issue #194) pushed the sentence past it — a scan cut
   // short would have reported them as missing while they sat right there.
   const listed = new Set(
-    [...claim.slice(0, 1200).matchAll(/`([a-z0-9-]+\.css)`/g)].map((m) => m[1]!),
+    [...claim.slice(0, claim.indexOf('アーケード 2 本')).matchAll(/`([a-z0-9-]+\.css)`/g)].map(
+      (m) => m[1]!,
+    ),
   );
   // readdirSync rather than fs.globSync: the latter needs Node 22, and this
   // repository says it supports Node 20 (package.json engines).

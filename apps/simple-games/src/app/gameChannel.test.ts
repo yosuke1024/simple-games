@@ -49,6 +49,11 @@ const WEB_BETA_IDS = [
   'nested-tic-tac-toe',
   'scopa',
   'tangram',
+  'light-grid',
+  'color-flood',
+  'three-peaks',
+  'nim',
+  'knight-tour',
 ];
 
 /**

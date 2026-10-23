@@ -1,0 +1,152 @@
+.nim-screen {
+  --game-shell-max: 620px;
+}
+.nim-screen .game-content {
+  width: 100%;
+  overflow-y: auto;
+}
+.nim-screen .game-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+.nim-screen .game-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.nim-mode {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.nim-turn {
+  text-align: center;
+  font-weight: 800;
+  min-height: 1.6em;
+  margin: 1.2rem 0.5rem;
+}
+.nim-heaps {
+  display: grid;
+  gap: 0.65rem;
+  width: min(calc(100% - 24px), 500px);
+  margin: 0 auto;
+}
+.nim-heap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 72px;
+  width: 100%;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.nim-heap:disabled {
+  cursor: default;
+}
+.nim-heap:focus-visible,
+.nim-count:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.nim-heap.nim-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.nim-row-number {
+  width: 18px;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+.nim-total {
+  margin-left: auto;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+.nim-stones {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex: 1;
+}
+.nim-stone {
+  width: clamp(15px, 4.5vw, 32px);
+  height: clamp(21px, 6vw, 38px);
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--accent);
+  box-shadow: inset 0 -4px 0 rgb(0 0 0 / 12%);
+}
+.nim-stone.nim-remove {
+  background: transparent;
+  border-style: dashed;
+  box-shadow: none;
+}
+.nim-empty {
+  color: var(--ink-soft);
+}
+.nim-last {
+  text-align: center;
+  color: var(--ink-soft);
+  min-height: 2.5em;
+  font-size: 0.9rem;
+  margin: 0.75rem 0.4rem;
+}
+.nim-controls {
+  display: grid;
+  justify-items: center;
+  gap: 0.65rem;
+}
+.nim-instruction {
+  margin: 0;
+}
+.nim-counts {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 44px;
+}
+.nim-count {
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.nim-count-selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.nim-actions {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+.nim-actions .btn {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.nim-actions svg {
+  width: 20px;
+  height: 20px;
+}
+@media (max-width: 360px) {
+  .nim-heap {
+    padding: 9px 6px;
+    gap: 4px;
+    min-height: 62px;
+  }
+  .nim-stones {
+    gap: 4px;
+  }
+}

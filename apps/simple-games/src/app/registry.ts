@@ -80,6 +80,11 @@ import { OT_STORAGE_KEYS } from '../games/overtake/storage/keys';
 import { TG_STORAGE_KEYS } from '../games/make-the-target/storage/keys';
 import { NT_STORAGE_KEYS } from '../games/nested-tic-tac-toe/storage/keys';
 import { SC_STORAGE_KEYS } from '../games/scopa/storage/keys';
+import { LG_STORAGE_KEYS } from '../games/light-grid/storage/keys';
+import { CF_STORAGE_KEYS } from '../games/color-flood/storage/keys';
+import { TP_STORAGE_KEYS } from '../games/three-peaks/storage/keys';
+import { NIM_STORAGE_KEYS } from '../games/nim/storage/keys';
+import { KT_STORAGE_KEYS } from '../games/knight-tour/storage/keys';
 import { TN_STORAGE_KEYS } from '../games/tangram/storage/keys';
 import { SUDOKU_CHALLENGE } from '../games/sudoku/challenge/contract';
 import { MINESWEEPER_CHALLENGE } from '../games/minesweeper/challenge/contract';
@@ -173,7 +178,12 @@ export type GameId =
   | 'make-the-target'
   | 'nested-tic-tac-toe'
   | 'scopa'
-  | 'tangram';
+  | 'tangram'
+  | 'light-grid'
+  | 'color-flood'
+  | 'three-peaks'
+  | 'nim'
+  | 'knight-tour';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -1422,5 +1432,60 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/tangram/ui/TangramRoot').then((m) => ({ default: m.TangramRoot })),
     loadStorageSchemas: () => import('../games/tangram/storage/schemas'),
+  },
+  // Nos. 57–61: Web early release. Separate saves, no Club contracts.
+  {
+    id: 'light-grid',
+    title: 'Light Grid',
+    category: 'logic',
+    glyph: '✚',
+    channel: 'web-beta',
+    storageKeys: Object.values(LG_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/light-grid/ui/LightGridRoot').then((m) => ({ default: m.LightGridRoot })),
+    loadStorageSchemas: () => import('../games/light-grid/storage/schemas'),
+  },
+  {
+    id: 'color-flood',
+    title: 'Color Flood',
+    category: 'puzzle',
+    glyph: '▧',
+    channel: 'web-beta',
+    storageKeys: Object.values(CF_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/color-flood/ui/ColorFloodRoot').then((m) => ({ default: m.ColorFloodRoot })),
+    loadStorageSchemas: () => import('../games/color-flood/storage/schemas'),
+  },
+  {
+    id: 'three-peaks',
+    title: 'Three Peaks',
+    category: 'cards',
+    glyph: '⋀',
+    channel: 'web-beta',
+    storageKeys: Object.values(TP_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/three-peaks/ui/ThreePeaksRoot').then((m) => ({ default: m.ThreePeaksRoot })),
+    loadStorageSchemas: () => import('../games/three-peaks/storage/schemas'),
+  },
+  {
+    id: 'nim',
+    title: 'Nim',
+    category: 'board',
+    glyph: '∴',
+    channel: 'web-beta',
+    storageKeys: Object.values(NIM_STORAGE_KEYS),
+    loadRoot: () => import('../games/nim/ui/NimRoot').then((m) => ({ default: m.NimRoot })),
+    loadStorageSchemas: () => import('../games/nim/storage/schemas'),
+  },
+  {
+    id: 'knight-tour',
+    title: 'Knight’s Tour',
+    category: 'logic',
+    glyph: '♘',
+    channel: 'web-beta',
+    storageKeys: Object.values(KT_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/knight-tour/ui/KnightTourRoot').then((m) => ({ default: m.KnightTourRoot })),
+    loadStorageSchemas: () => import('../games/knight-tour/storage/schemas'),
   },
 ];

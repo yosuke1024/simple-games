@@ -114,6 +114,11 @@ describe('gameLandingUrl', () => {
       'nested-tic-tac-toe',
       'scopa',
       'tangram',
+      'light-grid',
+      'color-flood',
+      'three-peaks',
+      'nim',
+      'knight-tour',
     ]) {
       expect(gameLandingUrl(id, 'en')).toBeNull();
       expect(gameLandingUrl(id, 'ja')).toBeNull();
