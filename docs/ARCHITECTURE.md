@@ -361,6 +361,20 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
   広告分離(`check-dist-ads-separation.sh`)とサイズ Gate
   (`pnpm --filter simple-games size:check` — ゲーム別予算・エントリ成長・
   初期グラフへのゲームチャンク混入)を検証する。
+- **vitest は 2 つの project で走る**(`apps/simple-games/vite.config.ts` の `test.projects`、
+  2026-10-23)。`game` は `src/games/*/game/**/*.test.ts`(371 本)を node 環境・setupFiles なしで、
+  `dom` は残り(439 本)を jsdom + `src/test/setup.ts` で走らせる。`games/*/game/` は純 TypeScript
+  (「レイヤー」の節)なので DOM は要らない一方、jsdom の生成と setup の固定費はテストファイルごとに
+  払うので、スイートの固定費はゲーム数に比例して伸びていた(2026-10-22 の集計で environment 30% +
+  setup 18%)。分けた実測(2026-10-23、8 コア、同じ機械で続けて 1 回ずつ): 旧設定 585 秒・CPU 3,124 秒
+  (tests 48% / environment 28% / setup 15% / import 6% / transform 3%)→ 新設定 551 秒・CPU 2,592 秒
+  (tests 60% / environment 19% / setup 10% / import 7% / transform 4%)。新設定の run には他セッションの
+  負荷が乗っていたので壁時計は比べず、CPU 時間の 17% 減と内訳を根拠にする(負荷が 30 倍の壁時計を
+  生んだ run でも CPU 時間は 2,662 秒で、CPU 時間は負荷に対して頑健)。
+  `vitest run <path>`・`--changed`・`--shard` はどれも両 project を横断する。`vitest list --filesOnly` は
+  `[game] src/...` と project 名を前置する(名前は必須)。`extends: true` は `setupFiles` を連結するので、
+  `environment` / `setupFiles` はルートに置かず各 project に書く。`game/` のテストが DOM を必要としたら、
+  それは `ui/` のテストである(除外の一覧は作らない)。
 - **テストの門は壁時計で判定しない**(issue #158)。`pnpm test` は 337 ファイルを
   CPU 数ぶん並列に走らせるので、同じ仕事でも壁時計は run ごとに数倍〜数十倍ぶれる
   ([SUDOKU_RULES.md](SUDOKU_RULES.md) §7 の実測)。稀に落ちる門は信頼されない門であり、
