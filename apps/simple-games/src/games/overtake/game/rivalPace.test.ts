@@ -53,22 +53,7 @@ describe('RIVAL_PACE (§6)', () => {
   });
 
   it('is the frozen table (hash pinned)', () => {
-    expect(fnv1a(JSON.stringify(RIVAL_PACE))).toBe('ea3ecb12');
-  });
-
-  it('keeps the Lv1–5 rows of the table frozen before sand and cones (§6)', () => {
-    // Lv1–5 have neither (cones from Lv6, sand from Lv16), so their courses
-    // and every planLane decision are unchanged and calibration lands on the
-    // same means (the 2026-10-22 regeneration; table hash a0e26438 before).
-    const before = [
-      [335, 321, 306],
-      [337, 322, 307],
-      [338, 323, 308],
-      [338, 324, 309],
-      [339, 325, 310],
-    ];
-    expect(RIVAL_PACE.slice(0, 5)).toEqual(before);
-    report('RIVAL_PACE Lv1–5 rows unchanged by sand and cones', 'yes');
+    expect(fnv1a(JSON.stringify(RIVAL_PACE))).toBe('52c65853');
   });
 
   it('the bracketed search agrees with the exhaustive one on Lv1, rival 1', () => {

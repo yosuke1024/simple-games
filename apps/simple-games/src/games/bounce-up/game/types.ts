@@ -26,7 +26,7 @@ export interface Platform {
   readonly id: number;
   readonly segment: number;
   readonly kind: PlatformKind;
-  /** On the safety chain (§3): always static. */
+  /** On the reachable route (§3): static, or a required moving bridge. */
   readonly chain: boolean;
   /** Height of the top surface, units. */
   readonly top: number;
@@ -43,7 +43,7 @@ export interface GenCursor {
   readonly next: number;
   /** Height of the last generated chain platform's top, units. */
   readonly chainTop: number;
-  /** Centre of the last generated chain platform, whole px. */
+  /** Nominal centre of the last chain platform (mid-travel if moving), whole px. */
   readonly chainCenterPx: number;
 }
 

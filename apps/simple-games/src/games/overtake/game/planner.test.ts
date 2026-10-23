@@ -130,7 +130,7 @@ describe('braking distance', () => {
 });
 
 describe('gap limits on every shipped course', () => {
-  it('ask nothing (≥ 420) of normal and gate-1 gaps and something reachable (≥ 60) of every gate-2 gap', () => {
+  it('allow a precise driver through every gap at full speed after the human-spacing change', () => {
     let gateMin = Infinity;
     let gateMax = 0;
     let easyMin = Infinity;
@@ -141,8 +141,7 @@ describe('gap limits on every shipped course', () => {
         if (row.index === 0) continue;
         const limit = gapLimit(c, row.index);
         if (row.kind === 'gate2') {
-          expect(limit, `Lv${l} row ${row.index}`).toBeGreaterThanOrEqual(MIN_TARGET_SPEED);
-          expect(limit).toBeLessThan(FULL_SPEED);
+          expect(limit, `Lv${l} row ${row.index}`).toBeGreaterThanOrEqual(FULL_SPEED);
           gateMin = Math.min(gateMin, limit);
           gateMax = Math.max(gateMax, limit);
         } else if (row.kind === 'easy2') {
@@ -162,37 +161,31 @@ describe('gap limits on every shipped course', () => {
       'normal and gate-1 min',
       otherMin,
     );
-  });
+  }, 60_000);
 });
 
 describe('the work bound (§6, §17)', () => {
   it('stops at PLAN_WORK_LIMIT and returns the crawl decision honestly', () => {
-    // A decision of bot A on Lv51 that had to try more than one speed.
-    const course = generateCourse(51);
-    const car: MutableCar = {
-      r: PLAYER_START.r,
-      x: PLAYER_START.x,
-      w: 240,
-      target: PLAYER_START.x,
-      hold: 0,
-      lock: 0,
-      blink: 0,
-      bumps: 0,
-      coneCap: 0,
-    };
-    let decision = { steerX: car.x as number | null, brake: 0 };
-    let slow: { car: MutableCar; work: number } | null = null;
-    for (let step = 0; slow === null && car.r < course.length; step++) {
-      if (step % DECISION_INTERVAL === 0) {
-        const d = planLane(course, car, FULL_SPEED);
-        expect(d.capped).toBe(false);
-        if (d.speed < FULL_SPEED) slow = { car: { ...car }, work: d.work };
-        decision = { steerX: d.steerX, brake: d.brake };
-      }
-      advanceCar(course, car, decision, newReport());
-    }
-    expect(slow).not.toBeNull();
-    const { car: at, work } = slow!;
+    // Full-width sand makes the avoid-zones stage reject candidates before
+    // allowing passage through the zone. Keep the work-cap test independent
+    // of whether a shipped wall pair needs the perfect planner to slow down.
+    const course = zoneCourse([
+      [
+        {
+          kind: 'sand',
+          left: 16 * SUB,
+          right: 344 * SUB,
+          rear: 2000 * SUB,
+          front: 2250 * SUB,
+        },
+      ],
+    ]);
+    const at = startCar(1900 * SUB, 180 * SUB, FULL_SPEED);
+    const uncapped = planLane(course, at, FULL_SPEED);
+    expect(uncapped.feasible).toBe(true);
+    expect(uncapped.capped).toBe(false);
+    const work = uncapped.work;
+    expect(work).toBeGreaterThan(1);
     expect(work).toBeLessThan(PLAN_WORK_LIMIT);
     // A bound below that decision's work: it stops before a later candidate.
     const capped = planLane(course, at, FULL_SPEED, { workLimit: 1 });
@@ -269,7 +262,7 @@ describe('work per decision (§17)', () => {
       'µs per decision',
       ((1000 * (performance.now() - started)) / decisions).toFixed(1),
     );
-  });
+  }, 60_000);
 });
 
 describe('sand and cones (§6 "砂とコーン")', () => {

@@ -4,10 +4,19 @@
  * safety chain jumped on its own at 70 % of the top speed with no wrap.
  */
 import { describe, expect, it } from 'vitest';
-import { CHAIN_SPEED_PERCENT, GEN_PER_STEP_LIMIT, JUMP_SPEED, RUN_SPEED } from './constants';
+import {
+  CAMERA_ANCHOR,
+  CHAIN_MOVE_SPEED,
+  CHAIN_MOVE_SPAN_PX,
+  CHAIN_SPEED_PERCENT,
+  GEN_PER_STEP_LIMIT,
+  JUMP_SPEED,
+  RUN_SPEED,
+  SUB,
+} from './constants';
 import { runBot, type BotResult } from './bot';
-import { generateTower } from './generate';
-import { createRun, start, step } from './physics';
+import { generateTower, platformLeft } from './generate';
+import { apexUnits, createRun, start, step } from './physics';
 import { report } from './test-helpers';
 import type { Platform, PlatformWidth, RunState } from './types';
 
@@ -66,23 +75,41 @@ describe(`the reference bot at 3/4 speed, ${BOT_SEEDS} seeds × ${BOT_SEGMENTS} 
  * moves straight (no wrap) at `percent` of RUN_SPEED toward `to`'s centre.
  * True when it lands on `to`.
  */
-function linkLands(base: RunState, from: Platform, to: Platform, percent: number): boolean {
+function linkLands(
+  base: RunState,
+  from: Platform,
+  to: Platform,
+  percent: number,
+  tick = 0,
+  delay = 0,
+  offset = 0,
+): boolean {
   const cap = Math.floor((RUN_SPEED * percent) / 100);
-  const fromCentre = from.left + Math.floor(from.width / 2);
-  const centre = to.left + Math.floor(to.width / 2);
+  const fromCentre = platformLeft(from, tick) + Math.floor(from.width / 2) + offset;
   let s: RunState = {
     ...base,
-    platforms: [from, to],
+    platforms: from.id === to.id ? [from] : [from, to].sort((a, b) => a.top - b.top),
+    tick,
     x: fromCentre,
     target: fromCentre,
     y: from.top,
     vy: JUMP_SPEED,
-    cameraBottom: Number.MIN_SAFE_INTEGER,
+    // The highest ordinary camera position from already bouncing here.
+    // Recovery must survive the real viewport, including its pruning/over.
+    cameraBottom: Math.max(base.cameraBottom, from.top + apexUnits() - CAMERA_ANCHOR),
+    maxHeight: from.top + apexUnits(),
   };
-  for (let k = 0; k < 400; k++) {
+  for (let k = 0; k < 800; k++) {
+    const centre = platformLeft(to, s.tick + 1) + Math.floor(to.width / 2);
     const want = s.x + Math.max(-cap, Math.min(cap, centre - s.x));
-    s = step(s, { drag: want - s.target, dir: 0 });
-    if (s.event === 'bounce') return s.y === to.top;
+    s = step(s, { drag: k < delay ? 0 : want - s.target, dir: 0 });
+    if (s.event === 'bounce') {
+      if (s.y === to.top) return true;
+      // Forward and same-platform proofs require the FIRST landing. Only
+      // returning to a lower surface may wait for the moving platform to pass.
+      if (to.top >= from.top) return false;
+    }
+    if (s.status === 'over') return false;
   }
   return false;
 }
@@ -112,5 +139,86 @@ describe('every link of the safety chain, alone, at 70 % speed and no wrap (§3 
     }
     report('chain links jumped alone at 70 %', links, `misses ${misses.length}`);
     expect(misses).toEqual([]);
+  }, 60_000);
+});
+
+describe('moving-route phase and recovery evidence', () => {
+  it('enters, exits, returns and re-bounces through every movement tick, in both widths', () => {
+    const base: RunState = {
+      ...start(createRun('phases', 'normal')),
+      gen: { next: 1_000_000, chainTop: Number.MAX_SAFE_INTEGER, chainCenterPx: 180 },
+    };
+    const period = (2 * CHAIN_MOVE_SPAN_PX * SUB) / CHAIN_MOVE_SPEED;
+    let checks = 0;
+    const failures: string[] = [];
+    // Synthetic extremes cover the entire legal range, independently of
+    // generated seeds: the largest gap and full 170 px phase-wide distance.
+    for (const widthPx of [64, 96]) {
+      for (const side of [-1, 1]) {
+        for (const gap of [90, 128]) {
+          const moving: Platform = {
+            id: 4,
+            segment: 2,
+            kind: 'moving',
+            chain: true,
+            top: gap * SUB,
+            left: (180 - widthPx / 2 - 48) * SUB,
+            width: widthPx * SUB,
+            motion: {
+              lo: (180 - widthPx / 2 - 48) * SUB,
+              span: CHAIN_MOVE_SPAN_PX * SUB,
+              speed: CHAIN_MOVE_SPEED,
+              phase: 0,
+            },
+          };
+          const lower: Platform = {
+            ...moving,
+            id: 2,
+            segment: 1,
+            kind: 'static',
+            top: 0,
+            left: (180 + side * 122 - widthPx / 2) * SUB,
+            motion: null,
+          };
+          const upper: Platform = { ...lower, id: 6, segment: 3, top: 2 * gap * SUB };
+          for (let tick = 0; tick < period; tick++) {
+            // A 150 ms reaction delay is additional evidence, not the safety
+            // proof. Starting at the centre still leaves all phases reachable.
+            for (const [label, from, to] of [
+              ['enter', lower, moving],
+              ['exit', moving, upper],
+              ['return', moving, lower],
+              ['wait', moving, moving],
+            ] as const) {
+              if (!linkLands(base, from, to, CHAIN_SPEED_PERCENT, tick, 18)) {
+                failures.push(`${widthPx}/${side}/${gap}/${tick}/${label}`);
+              }
+              checks++;
+            }
+            // An edge landing must also leave a viable next jump. This uses
+            // no reaction delay, keeping the original 70 % safety guarantee.
+            for (const edge of [-1, 1]) {
+              if (
+                !linkLands(
+                  base,
+                  moving,
+                  upper,
+                  CHAIN_SPEED_PERCENT,
+                  tick,
+                  0,
+                  edge * (widthPx / 2 + 10) * SUB,
+                )
+              ) {
+                failures.push(`${widthPx}/${side}/${gap}/${tick}/edge-${edge}`);
+              }
+              checks++;
+            }
+          }
+        }
+      }
+    }
+    report('moving-route phase / recovery jumps', checks, `failures ${failures.length}`);
+    expect(failures.slice(0, 20)).toEqual([]);
+    expect(failures).toHaveLength(0);
   }, 60_000);
 });

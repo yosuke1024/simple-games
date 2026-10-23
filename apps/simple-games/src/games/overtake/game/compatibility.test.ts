@@ -10,18 +10,10 @@
  * intended, regenerate these values and RIVAL_PACE (game/rivalPace.test.ts,
  * `OT_REGEN_PACE=1`) in the same commit and say so in the message.
  *
- * Sand and cones (2026-10-22) moved every course from Lv6 on, by decision
- * (§5 "決定性"): their template weights sit at the tail of the draw, so Lv1
- * (and Lv1–5) still draws exactly as before — the Lv1 course, its rivals and
- * its bot input digests below are the pre-sand values, unchanged. The other
- * levels and the replay (whose state string now carries coneCap) are pinned
- * again: the courses on the new generator, the rival goals and bot races on
- * the two-stage planner (§6 "砂とコーン") and the RIVAL_PACE regenerated on it.
- *
- * 2026-10-23 — the scrape rule (§4) and the Lv11–20 pair ramp (§7): Lv11
- * (course, rival goals, A, Rusher, replay) is pinned again; Lv1–10 and Lv21+
- * are unchanged, which the untouched digests prove. The Rusher now wins Lv11
- * (the Rusher gate starts at Lv21, §6).
+ * 2026-10-23: every pair now allows delayed centre-to-centre steering (§5).
+ * This intentionally changes every level, including Lv1–5's opening pair.
+ * Courses, inputs, results and the replay are regenerated together with the
+ * 100-level rival pace table. Existing local progress and records stay intact.
  *
  * Rival goal steps are pinned from the rivals-only run (§6), because a race
  * stops when the player finishes and may not see every rival home.
@@ -43,111 +35,107 @@ import type { CarState } from './types';
 
 /** level → [rows, digest of every row, the first five rows]. */
 const COURSES: Record<number, [number, string, string[]]> = {
-  1: [
+  '1': [
     44,
-    '629447ab',
+    '44e58995',
     [
       'easy1/wall/g1/u83400/L6960/D0:s3360-7440,s11440-15520,s27680-31760,s35760-39840',
-      'easy2/wall/g2/u101604/L6960/D4284:s3360-7440,s11440-15520,s15520-19600,s23600-27680',
-      'normal/single/g2/u141060/L6960/D25536:s7400-11480',
-      'normal/two/g2/u180516/L6960/D25536:s7400-11480,s19560-23640',
-      'normal/single/g1/u219972/L6960/D25536:s7400-11480',
+      'easy2/wall/g2/u116520/L6960/D19200:s3360-7440,s11440-15520,s15520-19600,s23600-27680',
+      'normal/single/g2/u155976/L6960/D25536:s7400-11480',
+      'normal/two/g2/u195432/L6960/D25536:s7400-11480,s19560-23640',
+      'normal/single/g1/u234888/L6960/D25536:s7400-11480',
     ],
   ],
-  10: [
+  '10': [
     61,
-    'dce340ce',
+    '74772404',
     [
       'easy1/wall/g0/u78000/L6960/D0:s15520-19600,s23600-27680,s27680-31760,s35760-39840',
-      'easy2/wall/g1/u96204/L6960/D4284:s3360-7440,s11440-15520,s27680-31760,s35760-39840',
-      'normal/single/g1/u134662/L6960/D24538:s31720-35800',
-      'normal/two/g2/u173120/L6960/D24538:s7400-11480,s19560-23640',
-      'normal/single/g1/u211578/L6960/D24538:s7400-11480',
+      'easy2/wall/g1/u111120/L6960/D19200:s3360-7440,s11440-15520,s27680-31760,s35760-39840',
+      'normal/single/g1/u149578/L6960/D24538:s31720-35800',
+      'normal/two/g2/u188036/L6960/D24538:s7400-11480,s19560-23640',
+      'normal/single/g1/u226494/L6960/D24538:s7400-11480',
     ],
   ],
-  11: [
-    52,
-    '09fc1e43',
+  '11': [
+    48,
+    '26c4ebbb',
     [
       'easy1/wall/g0/u72960/L6960/D0:s15520-19600,s23600-27680,s27680-31760,s35760-39840',
-      'easy2/wall/g1/u91164/L6960/D4284:s3360-7440,s11440-15520,s27680-31760,s35760-39840',
-      'normal/single/g2/u129518/L8400/D24434:v7160-11720',
-      'normal/single/g2/u169312/L8400/D24434:v19320-23880',
-      'normal/single/g1/u209106/L8400/D24434:v31480-36040',
+      'easy2/wall/g1/u106080/L6960/D19200:s3360-7440,s11440-15520,s27680-31760,s35760-39840',
+      'normal/single/g2/u144434/L8400/D24434:v7160-11720',
+      'normal/single/g2/u184228/L8400/D24434:v19320-23880',
+      'normal/single/g1/u224022/L8400/D24434:v31480-36040',
     ],
   ],
-  21: [
-    65,
-    'b3d02e5e',
+  '21': [
+    57,
+    'd6b20029',
     [
       'easy1/wall/g1/u79920/L8400/D0:v3360-7920,v7920-12480,v21600-26160,v26160-30720,v30720-35280,v35280-39840',
-      'easy2/wall/g2/u99564/L12480/D4284:t3360-8400,t7440-12480,t12480-17520,t16560-21600,t30720-35760,t34800-39840',
-      'gate1/wall/g1/u136494/L8400/D17490:v3360-7920,v7920-12480,v21600-26160,v26160-30720,v30720-35280,v35280-39840',
-      'gate2/wall/g0/u154690/L12480/D2836:t12480-17520,t16560-21600,t21600-26640,t25680-30720,t30720-35760,t34800-39840',
-      'gate1/wall/g2/u209109/L6960/D34979:s3360-7440,s8400-12480,s12480-16560,s17520-21600,s30720-34800,s35760-39840',
+      'easy2/wall/g2/u112408/L12480/D17128:t3360-8400,t7440-12480,t12480-17520,t16560-21600,t30720-35760,t34800-39840',
+      'gate1/wall/g1/u149338/L8400/D17490:v3360-7920,v7920-12480,v21600-26160,v26160-30720,v30720-35280,v35280-39840',
+      'gate2/wall/g0/u181826/L12480/D17128:t12480-17520,t16560-21600,t21600-26640,t25680-30720,t30720-35760,t34800-39840',
+      'normal/single/g2/u236245/L8400/D34979:v33000-37560',
     ],
   ],
-  31: [
-    69,
-    'e8b08c80',
+  '31': [
+    62,
+    'fd099e4c',
     [
       'easy1/wall/g1/u72840/L12480/D0:t3360-8400,t7440-12480,t21600-26640,t25680-30720,t30720-35760,t34800-39840',
-      'easy2/wall/g0/u96564/L6960/D4284:s12480-16560,s17520-21600,s21600-25680,s26640-30720,s30720-34800,s35760-39840',
-      'gate1/wall/g1/u127138/L8400/D16654:v3360-7920,v7920-12480,v21600-26160,v26160-30720,v30720-35280,v35280-39840',
-      'gate2/wall/g2/u145248/L6960/D2750:s3360-7440,s8400-12480,s12480-16560,s17520-21600,s30720-34800,s35760-39840',
-      'normal/single/g2/u175822/L8400/D16654:v33000-37560',
+      'easy2/wall/g0/u109408/L6960/D17128:s12480-16560,s17520-21600,s21600-25680,s26640-30720,s30720-34800,s35760-39840',
+      'gate1/wall/g1/u139982/L8400/D16654:v3360-7920,v7920-12480,v21600-26160,v26160-30720,v30720-35280,v35280-39840',
+      'gate2/wall/g2/u172470/L6960/D17128:s3360-7440,s8400-12480,s12480-16560,s17520-21600,s30720-34800,s35760-39840',
+      'normal/single/g2/u203044/L8400/D16654:v33000-37560',
     ],
   ],
-  50: [
-    93,
-    '9f1aa379',
+  '50': [
+    88,
+    '3653c967',
     [
       'easy1/wall/g1/u81720/L6960/D0:s3360-7440,s8400-12480,s21600-25680,s26640-30720,s30720-34800,s35760-39840',
-      'easy2/wall/g0/u99924/L6960/D4284:s12480-16560,s17520-21600,s21600-25680,s26640-30720,s30720-34800,s35760-39840',
-      'normal/truck/g1/u128905/L12480/D15061:t32760-37800',
-      'gate1/wall/g0/u163406/L12480/D15061:t12480-17520,t16560-21600,t21600-26640,t25680-30720,t30720-35760,t34800-39840',
-      'gate2/wall/g1/u185429/L8400/D2583:v3360-7920,v7920-12480,v21600-26160,v26160-30720,v30720-35280,v35280-39840',
+      'easy2/wall/g0/u112768/L6960/D17128:s12480-16560,s17520-21600,s21600-25680,s26640-30720,s30720-34800,s35760-39840',
+      'normal/truck/g1/u141749/L12480/D15061:t32760-37800',
+      'gate1/wall/g0/u176250/L12480/D15061:t12480-17520,t16560-21600,t21600-26640,t25680-30720,t30720-35760,t34800-39840',
+      'gate2/wall/g1/u212818/L8400/D17128:v3360-7920,v7920-12480,v21600-26160,v26160-30720,v30720-35280,v35280-39840',
     ],
   ],
-  51: [
-    76,
-    '75c74e06',
+  '51': [
+    72,
+    'd9b7e3f0',
     [
       'easy1/wall/g1/u84840/L12480/D0:t4488-9528,t19080-24120,t26376-31416,t33672-38712',
-      'easy2/wall/g3/u113856/L12480/D9576:t4488-9528,t11784-16824,t19080-24120,t33672-38712',
-      'gate1/wall/g3/u145282/L8400/D11986:v4728-9288,v12024-16584,v19320-23880,v33912-38472',
-      'gate2/wall/g1/u166094/L8400/D5452:v4728-9288,v19320-23880,v26616-31176,v33912-38472',
-      'normal/two/g3/u205426/L6960/D23972:s4968-9048,s12264-16344',
+      'easy2/wall/g3/u125139/L12480/D20859:t4488-9528,t11784-16824,t19080-24120,t33672-38712',
+      'gate1/wall/g3/u156565/L8400/D11986:v4728-9288,v12024-16584,v19320-23880,v33912-38472',
+      'gate2/wall/g1/u192784/L8400/D20859:v4728-9288,v19320-23880,v26616-31176,v33912-38472',
+      'gate1/wall/g3/u232116/L8400/D23972:v4728-9288,v12024-16584,v19320-23880,v33912-38472',
     ],
   ],
-  100: [
-    131,
-    '38419cf3',
+  '100': [
+    123,
+    '7483e674',
     [
       'easy1/wall/g2/u84600/L6960/D0:s4968-9048,s12264-16344,s26856-30936,s34152-38232',
-      'easy2/wall/g4/u107340/L8400/D8820:v4728-9288,v12024-16584,v19320-23880,v26616-31176',
-      'normal/single/g4/u131406/L8400/D8706:v26616-31176',
-      'normal/sand/g4/u155472/L21720/D8706:zs3360-10656/155472-177192',
-      'normal/works/g3/u192858/L60000/D8706:w3360-10656',
+      'easy2/wall/g4/u119379/L8400/D20859:v4728-9288,v12024-16584,v19320-23880,v26616-31176',
+      'normal/single/g4/u143445/L8400/D8706:v26616-31176',
+      'normal/sand/g4/u167511/L21720/D8706:zs3360-10656/167511-189231',
+      'gate1/wall/g3/u204897/L12480/D8706:t4488-9528,t11784-16824,t19080-24120,t33672-38712',
     ],
   ],
 };
 
-/**
- * Lv1–5: [rows, digest] measured on the generator as it was before sand and
- * cones (HEAD 8aedecb). Cones and sand weigh 0 there and sit at the tail of
- * the template draw, so these courses must stay byte-identical (§5, §16).
- */
-const BEFORE_ZONES: Record<number, [number, string]> = {
-  1: [44, '629447ab'],
-  2: [45, '46d2aa75'],
-  3: [45, '06db4353'],
-  4: [47, 'fe89d659'],
-  5: [45, 'a249c97f'],
+/** Lv1–5 also change: their opening wall pairs now leave human reaction room. */
+const OPENING_COURSES: Record<number, [number, string]> = {
+  '1': [44, '44e58995'],
+  '2': [45, 'c9b8fb80'],
+  '3': [45, 'caec0ba1'],
+  '4': [47, '08328fa5'],
+  '5': [45, '84efa0b9'],
 };
 
-describe('Lv1–5 draw exactly as before sand and cones (§5)', () => {
-  for (const [level, [rows, digest]] of Object.entries(BEFORE_ZONES)) {
+describe('Lv1–5 opening courses remain deterministic and have no zones (§5)', () => {
+  for (const [level, [rows, digest]] of Object.entries(OPENING_COURSES)) {
     it(`Lv${level}`, () => {
       const course = generateCourse(Number(level));
       expect(course.zones).toEqual([]);
@@ -158,22 +146,22 @@ describe('Lv1–5 draw exactly as before sand and cones (§5)', () => {
 
 /** level → the rivals-only run's goal steps [rival 1, 2, 3]. */
 const RIVAL_GOALS: Record<number, [number, number, number]> = {
-  1: [5785, 6001, 6295],
-  11: [6503, 6752, 7081],
-  51: [8279, 8619, 9028],
-  100: [10886, 11328, 11858],
+  '1': [5767, 6001, 6274],
+  '11': [6228, 6477, 6799],
+  '51': [7284, 7581, 7939],
+  '100': [10108, 10495, 11021],
 };
 
 /** [level, bot] → [goal step, Bumps, place, digest of its whole input sequence]. */
 const RACES: Array<[number, BotKind, number, number, number, string]> = [
-  [1, 'A', 4621, 0, 1, 'f6c9d9da'],
-  [1, 'rusher', 4740, 1, 1, '55e01e6c'],
-  [11, 'A', 5102, 0, 1, 'b87327a4'],
-  [11, 'rusher', 5810, 7, 1, '49a72f84'],
-  [51, 'A', 6879, 0, 1, '984fd2b5'],
-  [51, 'rusher', 8913, 22, 3, '08668421'],
-  [100, 'A', 10047, 0, 1, '4a53a187'],
-  [100, 'rusher', 11145, 14, 2, '133e1eeb'],
+  [1, 'A', 4610, 0, 1, 'efe8400c'],
+  [1, 'rusher', 4610, 0, 1, 'efe8400c'],
+  [11, 'A', 4899, 0, 1, '193b0840'],
+  [11, 'rusher', 4899, 0, 1, '193b0840'],
+  [51, 'A', 6053, 0, 1, 'd10767d6'],
+  [51, 'rusher', 6053, 0, 1, 'd10767d6'],
+  [100, 'A', 9325, 0, 1, '170a6518'],
+  [100, 'rusher', 9325, 0, 1, '170a6518'],
 ];
 
 describe('courses that must never change (§5)', () => {
@@ -234,19 +222,19 @@ const REPLAY: Array<[number, number | null, number]> = [
 /** [final car, Bumps, steps with an overlap, digest of every state]. */
 const REPLAY_RESULT: [CarState, number, number, string] = [
   {
-    r: 340408,
+    r: 393506,
     x: 14400,
     w: 420,
     target: 14400,
     hold: 0,
     lock: 0,
     blink: 0,
-    bumps: 9,
+    bumps: 8,
     coneCap: 0,
   },
-  9,
-  394,
-  '1b30783a',
+  8,
+  319,
+  '5365e841',
 ];
 
 describe('a stored input list replayed through the step (§1, §16)', () => {

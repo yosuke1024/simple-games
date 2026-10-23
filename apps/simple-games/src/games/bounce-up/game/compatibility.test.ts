@@ -70,14 +70,14 @@ describe('the golden tower', () => {
       .join(' | ');
     expect(opening).toBe(
       '2:sc@7800/4920/7680 3:s@3840/22080/7680 | 4:sc@15600/11760/7680 5:s@11640/29040/7680 | ' +
-        '6:sc@21720/3360/7680 7:s@18600/30960/7680 | 8:sc@30240/240/7680 9:s@25920/3720/7680 | ' +
-        '10:sc@37080/7320/7680 | 12:sc@43200/480/7680',
+        '6:sc@21720/3360/7680 7:s@18600/30960/7680 | 8:sc@30360/240/7680 9:s@26040/3720/7680 | ' +
+        '10:sc@37320/7440/7680 | 12:sc@43560/480/7680',
     );
   });
 
   it('2,000 segments at each width are unchanged', () => {
-    expect(towerDigest('normal', 2000)).toBe('70b48d1e');
-    expect(towerDigest('wide', 2000)).toBe('221e0b49');
+    expect(towerDigest('normal', 2000)).toBe('8705732b');
+    expect(towerDigest('wide', 2000)).toBe('c9f659b6');
   });
 
   it('where each moving platform is at fixed ticks is unchanged (the triangle wave of §3)', () => {
@@ -86,12 +86,13 @@ describe('the golden tower', () => {
     const h = new Fnv();
     let moving = 0;
     for (const s of generateTower(GOLDEN, 'wide', 1000)) {
-      const e = s.extra;
-      if (e === null || e.motion === null) continue;
-      moving += 1;
-      for (const t of [0, 1, 7, 333, 1000, 12345]) h.add(`${e.id}@${t}=${platformLeft(e, t)}`);
+      for (const e of [s.chain, s.extra]) {
+        if (e === null || e.motion === null) continue;
+        moving += 1;
+        for (const t of [0, 1, 7, 333, 1000, 12345]) h.add(`${e.id}@${t}=${platformLeft(e, t)}`);
+      }
     }
-    expect(`${moving}/${h.hex()}`).toBe('84/2271f2ce');
+    expect(`${moving}/${h.hex()}`).toBe('157/9eab277d');
   });
 });
 
@@ -100,11 +101,11 @@ describe('golden runs', () => {
     const { state, trace } = runScript(GOLDEN, 'normal', expandInputs(SCRIPT));
     expect(
       `${state.status}/${state.tick}/${state.maxHeight}/${state.reachedSegment}/${trace}`,
-    ).toBe('running/1380/144035/18/6538acdf');
+    ).toBe('over/822/129755/15/07f82dea');
   });
 
   it('the reference bot on the golden tower is unchanged, landing on all three kinds', () => {
-    // To segment 1,000: past 300 (moving) and 600 (vanishing), so the run
+    // To segment 1,000: past 40 (moving) and 60 (vanishing), so the run
     // itself touches the later kinds and any change to how they move or go
     // moves this string.
     const r = runBot(GOLDEN, 'wide', { targetSegment: 1000, stepLimit: 100_000 });
@@ -114,7 +115,7 @@ describe('golden runs', () => {
     expect(l.vanishing).toBeGreaterThan(0);
     expect(
       `${r.outcome}/${r.steps}/${r.score}/${r.bounces}/${l.static}/${l.moving}/${l.vanishing}`,
-    ).toBe('reached/58609/7692/747/716/23/8');
+    ).toBe('reached/75867/10850/979/850/124/5');
   });
 });
 

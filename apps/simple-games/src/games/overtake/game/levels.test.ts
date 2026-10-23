@@ -16,7 +16,6 @@ import {
   GATE_SLACK_SHARE,
   INTRO_GATE_PAIRS,
   gatePairsFor,
-  gateSigmaFor,
   lanesFor,
   lengthFor,
   levelSpec,
@@ -59,25 +58,24 @@ describe('levels (§7)', () => {
       lanesFor(l),
       lengthFor(l),
       sigmaFor(l),
-      gateSigmaFor(l),
       checkSpeedFor(l),
       slackFor(l),
       gatePairsFor(l),
     ]);
     expect(rows).toEqual([
-      [1, 3, 16000, 2200, 0, 420, 250, 0],
-      [10, 3, 21136, 2114, 0, 420, 215, 0],
-      [11, 3, 17010, 2105, 750, 283, 273, 6],
-      [21, 4, 18020, 2009, 728, 275, 256, 23],
-      [50, 4, 26186, 1730, 663, 250, 146, 20],
-      [51, 5, 21050, 1721, 661, 249, 205, 22],
-      [100, 5, 32500, 1250, 550, 207, 80, 14],
+      [1, 3, 16000, 2200, 420, 250, 0],
+      [10, 3, 21136, 2114, 420, 215, 0],
+      [11, 3, 17010, 2105, 300, 273, 6],
+      [21, 4, 18020, 2009, 300, 256, 15],
+      [50, 4, 26186, 1730, 300, 146, 20],
+      [51, 5, 21050, 1721, 300, 205, 22],
+      [100, 5, 32500, 1250, 300, 80, 14],
     ]);
     const pairs = LEVELS.filter((l) => l >= 11).map(gatePairsFor);
     report('n_gate Lv11–100 (min..max)', Math.min(...pairs), Math.max(...pairs));
   });
 
-  it('ramps the pairs of the introducing block Lv11–20 and returns to the formula at Lv21 (2026-10-23)', () => {
+  it('ramps the pairs without a density jump when four lanes arrive (2026-10-23)', () => {
     expect([...INTRO_GATE_PAIRS]).toEqual([6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
     const formula = (l: number) =>
       Math.ceil((slackFor(l) * lengthFor(l)) / (420 * GATE_SLACK_SHARE)) + 1;
@@ -85,24 +83,22 @@ describe('levels (§7)', () => {
       expect(gatePairsFor(l), `Lv${l}`).toBe(INTRO_GATE_PAIRS[l - 11]);
       if (l > 11) expect(gatePairsFor(l), `Lv${l}`).toBeGreaterThan(gatePairsFor(l - 1));
     }
-    expect(gatePairsFor(21)).toBe(23);
+    expect(gatePairsFor(21)).toBe(15);
     expect(gatePairsFor(21)).toBeGreaterThanOrEqual(gatePairsFor(20));
-    for (let l = 21; l <= 100; l++) expect(gatePairsFor(l), `Lv${l}`).toBe(formula(l));
+    for (let l = 21; l <= 100; l++) {
+      expect(gatePairsFor(l), `Lv${l}`).toBe(Math.min(15 + l - 21, formula(l)));
+    }
     report(
       'n_gate formula Lv11–20 (not used)',
       [11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map(formula).join(' '),
     );
   });
 
-  it('keeps σ, σ_gate and the slack inside their ranges, +40 ‰ exactly on the four heads', () => {
+  it('keeps σ and the slack inside their ranges, +40 ‰ exactly on the four heads', () => {
     for (const l of LEVELS) {
       expect(sigmaFor(l)).toBeGreaterThanOrEqual(1250);
       expect(sigmaFor(l)).toBeLessThanOrEqual(2200);
       expect(slackFor(l)).toBeGreaterThanOrEqual(80);
-      if (l >= 11) {
-        expect(gateSigmaFor(l)).toBeGreaterThanOrEqual(550);
-        expect(gateSigmaFor(l)).toBeLessThanOrEqual(750);
-      }
     }
     // The +40 ‰ itself (a block start is always above the level before it —
     // the sawtooth resets — so that comparison would not see it).

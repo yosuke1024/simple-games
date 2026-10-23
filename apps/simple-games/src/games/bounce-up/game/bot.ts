@@ -10,6 +10,7 @@
  * the tower's reachability, not a person's.
  */
 import { RUN_SPEED } from './constants';
+import { platformLeft } from './generate';
 import { createRun, start, step } from './physics';
 import { scoreOf } from './score';
 import type { Platform, PlatformKind, PlatformWidth, RunState } from './types';
@@ -71,7 +72,7 @@ export function runBot(seed: string, width: PlatformWidth, opts: BotOptions): Bo
   ) {
     let drag = 0;
     if (goal !== null) {
-      const centre = goal.left + Math.floor(goal.width / 2);
+      const centre = platformLeft(goal, s.tick + 1) + Math.floor(goal.width / 2);
       const want = s.x + clamp(centre - s.x, -cap, cap);
       drag = want - s.target;
     }
