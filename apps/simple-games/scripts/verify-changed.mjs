@@ -7,19 +7,14 @@
  *   node scripts/verify-changed.mjs --full          フルスイート(typecheck・eslint src・vitest run)を実行
  *   node scripts/verify-changed.mjs --help          使い方を表示
  *
- * フルスイートは typecheck(30〜50秒)+ eslint src(60秒)+ vitest run(317 ファイル・
- * 約7分)かかり、編集のたびに待てる時間ではない。このスクリプトは変更ファイルに
- * 絞った eslint / vitest --changed と、常に必要な最小限(typecheck 全体・下記の
- * 常時ゲート)だけを実行する「速い方」のループ。CI は今までどおりフルスイートを
- * 走らせ続けるので、ここで何を省略してもリリース判定は揺らがない
- * (このスクリプトはローカル反復専用で、マージの可否を決めるものではない)。
- *
- * src/test/*.test.ts(x) の一部(gameI18nWiring / importBoundaries / refLeading /
- * homeActionsWiring / savedGameSlots / shareWiring)と src/app/*.test.ts(x)・
- * src/i18n/*.test.ts は node:fs でソースファイルを直接読むテストで、import
- * グラフを辿らない。だから vitest --changed はゲームファイルを変更しても
- * これらを「無関係」と判定して再実行しない。3 ディレクトリ(src/test src/app
- * src/i18n)は変更の有無に関わらず常時実行するのはそのため。
+ * フルスイートは typecheck(30〜50秒)+ eslint src(60秒)+ vitest run(732 ファイル・
+ * CI で 8 分半、2026-10-22)かかり、編集のたびに待てる時間ではない。このスクリプトは
+ * 変更ファイルに絞った eslint と、常に必要な typecheck 全体と、差分に関係するテスト
+ * (scripts/test-scoped.mjs —— import グラフで届くテスト + 触ったゲームのテスト全部 +
+ * node:fs でソースを読む常時ゲート。規則は同ファイル冒頭)だけを実行する「速い方」の
+ * ループ。CI は PR で同じ test-scoped.mjs を、main への push で全件を走らせるので、
+ * ここで何を省略してもリリース判定は揺らがない(このスクリプトはローカル反復専用で、
+ * マージの可否を決めるものではない)。
  *
  * typecheck は 2 つの tsconfig(アプリ用・Node 用)にまたがり意味のある形で
  * スコープできないため、スコープ済みモードでも常にフルで走らせる。
@@ -28,6 +23,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
+import { changedRepoRelFiles } from './changed-files.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const APP = join(HERE, '..');
@@ -42,8 +38,8 @@ const HELP = `usage: verify-changed.mjs [--base <git ref>] [--full] [--help]
 既定(スコープ済み)では次を順に実行し、最初の失敗で止まる:
   a. eslint <base 以降に変更された .ts/.tsx>(変更なしならスキップ)
   b. typecheck(tsconfig.json と tsconfig.node.json の両方。常にフル)
-  c. vitest run --changed <base>(apps/simple-games/src 配下に変更がなければスキップ)
-  d. vitest run src/test src/app src/i18n(常時ゲート。上の理由はファイル先頭のコメント参照)
+  c. node scripts/test-scoped.mjs --base <base>(差分に関係するテスト + 常時ゲート。
+     選び方は同ファイル冒頭。--list で集合だけ見られる)
 `;
 
 function printHelp() {
@@ -97,57 +93,18 @@ function git(gitArgs) {
 }
 
 /**
- * base と HEAD のマージベース以降に触られたファイルの和集合(git 管理下)+
- * ワーキングツリー(未追跡ファイルも含む)を、apps/simple-games/src/** の
- * .ts/.tsx/.css に絞って返す。パスはリポジトリルート相対。
+ * base 以降の変更(scripts/changed-files.mjs)を apps/simple-games/src/** の
+ * .ts/.tsx/.css に絞り、APP 相対('src/...')にして返す。
  */
-function changedRepoRelFiles(base) {
+function changedAppSrcFiles(base) {
   const repoRoot = git(['rev-parse', '--show-toplevel']).trim();
   const appRelDir = relative(repoRoot, APP).split('\\').join('/'); // 'apps/simple-games'
-
-  let mergeBase;
-  try {
-    mergeBase = git(['merge-base', base, 'HEAD']).trim();
-  } catch (err) {
-    console.error(`error: could not resolve merge-base for "${base}" and HEAD`);
-    console.error(err.message);
-    process.exit(2);
-  }
-
-  const files = new Set();
-
-  // 1. base との共通祖先以降、ワーキングツリーまでの追跡ファイルの差分
-  //    (コミット済み・未コミットの変更の両方を含む。git diff <ref> の定義どおり)。
-  const diffOut = git(['diff', '--name-only', mergeBase]);
-  for (const line of diffOut.split('\n')) {
-    const path = line.trim();
-    if (path) files.add(path);
-  }
-
-  // 2. ワーキングツリーの状態(未追跡ファイルを含む)。-z で引用符の揺れを避ける。
-  const statusOut = execFileSync(
-    'git',
-    ['status', '--porcelain=v1', '-z', '--untracked-files=all'],
-    { cwd: APP, encoding: 'utf8' },
-  );
-  const tokens = statusOut.split('\0').filter((t) => t.length > 0);
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
-    const status = token.slice(0, 2);
-    const path = token.slice(3);
-    if (path) files.add(path);
-    if (status.includes('R') || status.includes('C')) {
-      i++; // rename/copy: 次のトークンは移動元パス(現在地ではないので捨てる)
-    }
-  }
-
   const prefix = `${appRelDir}/`;
   const srcPrefix = `${prefix}src/`;
   const exts = ['.ts', '.tsx', '.css'];
-  return [...files]
+  return changedRepoRelFiles(base, { cwd: APP })
     .filter((f) => f.startsWith(srcPrefix) && exts.some((ext) => f.endsWith(ext)))
-    .map((f) => f.slice(prefix.length)) // APP 相対('src/...')にする
-    .sort();
+    .map((f) => f.slice(prefix.length)); // APP 相対('src/...')にする
 }
 
 // ---------- 実行の骨組み ----------
@@ -211,7 +168,7 @@ if (full) {
 
 // ---------- スコープ済みループ ----------
 
-const changed = changedRepoRelFiles(base);
+const changed = changedAppSrcFiles(base);
 const changedTsFiles = changed.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
 
 header(`a. eslint — changed .ts/.tsx files vs ${base}`);
@@ -231,18 +188,8 @@ header('b. typecheck — tsconfig.json && tsconfig.node.json (常にフル)');
 run('typecheck:app', bin('tsc'), ['-p', 'tsconfig.json']);
 run('typecheck:node', bin('tsc'), ['-p', 'tsconfig.node.json']);
 
-header(`c. vitest run --changed ${base}`);
-if (changed.length === 0) {
-  skip(
-    'vitest:changed',
-    `apps/simple-games/src 配下に base(${base})以降変更された .ts/.tsx/.css がない`,
-  );
-} else {
-  run('vitest:changed', bin('vitest'), ['run', '--changed', base]);
-}
-
-header('d. vitest run src/test src/app src/i18n (常時ゲート)');
-run('vitest:gates', bin('vitest'), ['run', 'src/test', 'src/app', 'src/i18n']);
+header(`c. node scripts/test-scoped.mjs --base ${base}`);
+run('vitest:scoped', process.execPath, [join(HERE, 'test-scoped.mjs'), '--base', base]);
 
 printSummary();
 process.exit(0);

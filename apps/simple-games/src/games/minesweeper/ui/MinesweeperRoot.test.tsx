@@ -972,7 +972,7 @@ describe('keyboard (issue #93)', () => {
    * (issue #120). jsdom does not itself enforce `inert` — a click still
    * reaches an element under one — so this asserts on the attribute a real
    * browser (and the CSS fallback for pre-`inert` WebViews pinned in
-   * src/ui/styles.test.ts) actually acts on, not on a click failing to land.
+   * src/test/styles.test.ts) actually acts on, not on a click failing to land.
    */
   it('puts the board out of reach of focus while the restart dialog is up (issue #120)', async () => {
     const user = userEvent.setup();

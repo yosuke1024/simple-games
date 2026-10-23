@@ -356,12 +356,16 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
 
 ## CI / リリース
 
-- `ci.yml`: push / PR で install → lint → typecheck → test → build(全ワークスペース)。
-  対象が増えたら turbo の `--filter` で影響範囲のみに絞る。両ビルドの後に
-  広告分離(`check-dist-ads-separation.sh`)とサイズ Gate
+- `ci.yml`: 3 つのジョブ。`checks` は install → lint → typecheck → build(全ワークスペース)
+  のあと、両ビルドの広告分離(`check-dist-ads-separation.sh`)とサイズ Gate
   (`pnpm --filter simple-games size:check` — ゲーム別予算・エントリ成長・
-  初期グラフへのゲームチャンク混入)を検証する。
-- **テストの門は壁時計で判定しない**(issue #158)。`pnpm test` は 337 ファイルを
+  初期グラフへのゲームチャンク混入)を検証する。`test` は vitest を 4 シャードに分けて
+  並列に走らせ、PR では差分に関係するテストだけ(import グラフで届くテスト + 触った
+  ゲームのテスト全部 + 常時ゲート。規則は `apps/simple-games/scripts/test-scoped.mjs`
+  冒頭)、main への push では全件を走らせる(2026-10-22、732 ファイルで 1 ジョブ 8 分半
+  になっていた。スイートはゲーム数に比例して伸びる)。`verify` は ruleset が `Brand principles`
+  と並べて要求するチェックで、他の全ジョブが緑のときだけ緑になる。
+- **テストの門は壁時計で判定しない**(issue #158)。`pnpm test` は 700 本を超えるファイルを
   CPU 数ぶん並列に走らせるので、同じ仕事でも壁時計は run ごとに数倍〜数十倍ぶれる
   ([SUDOKU_RULES.md](SUDOKU_RULES.md) §7 の実測)。稀に落ちる門は信頼されない門であり、
   赤を「たぶん負荷」と読む運用が本物の退行を隠す。だから、
