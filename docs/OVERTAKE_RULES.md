@@ -1868,7 +1868,7 @@ multiplayer / online(計画)。加えてこのゲームの文言では Rank / Ra
   5.34:1(数字も同じ)で §11 の表と一致した。ΔE はテストにしない(取り違えを避ける目安で、門ではない)。
 - **大きさ**(`pnpm size:check`、`apps/simple-games/scripts/bundle-size.mjs` — 1 ゲームの JS + CSS の gzip の予算
   500 KiB): CSS のトークン 2 つと描画の関数が増えるので、統合の前に通す(**この段では走らせていない** —
-  `ui/overtake.css` は 5,172 から 6,477 バイトになった)。`src/ui/styles.test.ts` の 1,200 文字
+  `ui/overtake.css` は 5,172 から 6,477 バイトになった)。`src/test/styles.test.ts` の 1,200 文字
   (UTF-16)の窓は css-split.md の「**全タイトルが規約に従っている**」のファイル名の列だけを読む検査で、
   `overtake.css` の大きさとは関係が無く、この変更は列を伸ばさない(新しい CSS のファイルを足さない)。
 - **型の変更が届く場所**(テストを書く前に typecheck が落ちる所 — 2026-10-22 の校閲で数えた。実装はこのとおりに
