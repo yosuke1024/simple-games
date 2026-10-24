@@ -34,7 +34,8 @@
  * as what was written, the snapshot goes back and the restore reports failure.
  * The player ends where they started.
  */
-import { loadRaw, saveRaw } from '../storage/repo';
+import { loadRaw, saveRaw, updateRecord } from '../storage/repo';
+import { clubConnectionsSchema, clubOutboxSchema, STORAGE_KEYS } from '../storage/schemas';
 import { preferencesKV, type KVStore } from '../storage/kv';
 import {
   BACKUP_FORMAT_VERSION,
@@ -228,7 +229,16 @@ export async function applyBackup(
 
   const written = await Promise.all(keys.map((key) => loadRaw(key, kv)));
   const landed = keys.every((key, index) => (written[index] ?? null) === wanted.get(key));
-  if (landed) return 'restored';
+  if (landed) {
+    if (wanted.has(STORAGE_KEYS.club)) {
+      await dropOutboxOfReplacedMembers(
+        snapshot.get(STORAGE_KEYS.club) ?? null,
+        wanted.get(STORAGE_KEYS.club) ?? null,
+        kv,
+      );
+    }
+    return 'restored';
+  }
 
   // Roll back to exactly what was there. This can fail too — a store that
   // could not be written a moment ago may still refuse — and there is nothing
@@ -247,4 +257,44 @@ export async function applyBackup(
 function byteLength(text: string): number {
   if (typeof TextEncoder !== 'undefined') return new TextEncoder().encode(text).length;
   return text.length;
+}
+
+/** endpoint → memberId of the joined Clubs in one `sg.club` text. */
+function membersIn(text: string | null): Map<string, string> {
+  if (text === null) return new Map();
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return new Map();
+  }
+  const record = clubConnectionsSchema.validate(parsed);
+  return new Map((record?.connections ?? []).map((c) => [c.endpoint, c.memberId]));
+}
+
+/**
+ * Results waiting to be sent (`sg.clubOutbox`, never in a backup) are queued per Club,
+ * not per member, and go out with whatever membership the device holds for that Club.
+ * Where a restore replaced or removed the membership, its queued results belonged to
+ * someone this device no longer is: they are dropped, never sent as the restored
+ * member (club.md §4-2). A Club whose membership is unchanged keeps its queue.
+ */
+async function dropOutboxOfReplacedMembers(
+  before: string | null,
+  after: string | null,
+  kv: KVStore,
+): Promise<void> {
+  const was = membersIn(before);
+  const now = membersIn(after);
+  const replaced = new Set(
+    [...was]
+      .filter(([endpoint, member]) => now.get(endpoint) !== member)
+      .map(([endpoint]) => endpoint),
+  );
+  if (replaced.size === 0) return;
+  await updateRecord(
+    clubOutboxSchema,
+    (outbox) => ({ ...outbox, items: outbox.items.filter((item) => !replaced.has(item.endpoint)) }),
+    kv,
+  );
 }

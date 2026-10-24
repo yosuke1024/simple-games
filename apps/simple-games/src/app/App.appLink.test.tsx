@@ -5,6 +5,7 @@
  * The Club layer is a stand-in that shows the door it was opened through.
  */
 import { act, cleanup, render, screen } from '@testing-library/react';
+import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ClubModule, ClubRootProps } from '../ui/clubBridge';
 
@@ -61,7 +62,12 @@ import { App } from './App';
 const TOKEN = 'invite-token-0123456789';
 const LINK = `https://club.pixapps.ai/join#club=c_family0001&invite=${TOKEN}`;
 
+let mounts = 0;
 function FakeClubRoot({ entry, invite }: ClubRootProps) {
+  // Each mount is a fresh first screen (ClubRoot decides it once per mount).
+  useEffect(() => {
+    mounts += 1;
+  }, []);
   return (
     <div>
       <p data-testid="club-entry">{entry}</p>
@@ -92,6 +98,7 @@ const settle = () =>
   });
 
 beforeEach(() => {
+  mounts = 0;
   appMock.state.launchUrl = undefined;
   appMock.listeners.clear();
   setClubLoaderForTesting(() => Promise.resolve(fakeModule));
@@ -123,6 +130,23 @@ describe('an invite link that opens the app', () => {
     await settle();
     expect(await screen.findByTestId('club-entry')).toHaveTextContent('invite');
     expect(screen.getByTestId('club-invite')).toHaveTextContent(TOKEN);
+  });
+
+  it('ignores the cold-start replay of the launch link, and reopens it afterwards', async () => {
+    appMock.state.launchUrl = LINK;
+    await initShortcutLaunch();
+    renderShell();
+    await settle();
+    await screen.findByTestId('club-entry');
+    expect(mounts).toBe(1);
+    // The plugin raises the launch link once more: nothing new.
+    act(() => appMock.fire('appUrlOpen', { url: LINK }));
+    await settle();
+    expect(mounts).toBe(1);
+    // The person taps the same link again later (an approved request, say): a fresh door.
+    act(() => appMock.fire('appUrlOpen', { url: LINK }));
+    await settle();
+    expect(mounts).toBe(2);
   });
 
   it('leaves the collection as it is for a link that is not an invite', async () => {

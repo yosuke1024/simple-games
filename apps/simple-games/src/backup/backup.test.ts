@@ -560,6 +560,58 @@ describe('the Club House in a backup (2026-10-24)', () => {
     expect(JSON.parse((await loadRaw(STORAGE_KEYS.club, device))!)).toEqual(club());
   });
 
+  it("drops the queued results of a membership the restore replaced, keeps an unchanged one's", async () => {
+    const other = {
+      ...connection,
+      endpoint: `${ORIGIN}/clubs/c_other00001`,
+      clubId: 'c_other00001',
+    };
+    const queued = (endpoint: string) => ({
+      kind: 'ranking',
+      endpoint,
+      createdAt: '2026-10-24T00:00:00.000Z',
+      clientId: 'client-0123456789',
+      body: {
+        gameId: 'sudoku',
+        contractVersion: 1,
+        paramsKey: 'easy',
+        params: {},
+        seed: 's',
+        boardDigest: null,
+        outcome: 'completed',
+        facts: { elapsedSeconds: 1 },
+        clientId: 'client-0123456789',
+      },
+    });
+    // The file: the same member in Family, someone else in Other.
+    const file = serializeBackup(
+      await createBackup(
+        META,
+        createMemoryKV({
+          [STORAGE_KEYS.club]: JSON.stringify({
+            schemaVersion: 1,
+            connections: [connection, { ...other, memberId: 'm_someone_else' }],
+          }),
+        }),
+      ),
+    );
+    const device = createMemoryKV({
+      [STORAGE_KEYS.club]: JSON.stringify({ schemaVersion: 1, connections: [connection, other] }),
+      [STORAGE_KEYS.clubOutbox]: JSON.stringify({
+        schemaVersion: 1,
+        items: [queued(connection.endpoint), queued(other.endpoint)],
+      }),
+    });
+    const read = await readBackup(file);
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(await applyBackup(read.prepared, device)).toBe('restored');
+    const outbox = JSON.parse((await loadRaw(STORAGE_KEYS.clubOutbox, device))!);
+    expect(outbox.items.map((i: { endpoint: string }) => i.endpoint)).toEqual([
+      connection.endpoint,
+    ]);
+  });
+
   it('leaves the Clubs alone when the file is from before they travelled', async () => {
     const older = serializeBackup(await createBackup(META, createMemoryKV()));
     const device = createMemoryKV({ [STORAGE_KEYS.club]: JSON.stringify(club()) });

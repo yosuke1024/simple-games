@@ -344,6 +344,40 @@ describe('managed Club flows', () => {
     expect(approve.compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it('stores an approved request without leaving the Join screen of another invite', async () => {
+    await savePendingJoin({
+      endpoint: E,
+      requestId: application.id,
+      requestToken: token,
+      clubName: CLUB.name,
+      nickname: MEMBER.nickname,
+      createdAt: application.createdAt,
+      expiresAt: application.expiresAt,
+    });
+    const other = `${ORIGIN}/clubs/c_two`;
+    const fetcher = vi.fn().mockImplementation(async (url: string) => {
+      if (url.endsWith('/join-requests/status'))
+        return reply({ status: 'approved', club: CLUB, member: MEMBER, memberToken: token });
+      if (url.endsWith('/admission'))
+        return reply({ ...SETTINGS, club: { id: 'c_two', name: 'Other' }, memberCount: 1 });
+      return reply({ error: { code: 'not_found', message: 'missing' } }, 404);
+    });
+    vi.stubGlobal('fetch', fetcher);
+    const handlers = { onBack: vi.fn(), onPlayChallenge: vi.fn(), onConnectionsChanged: vi.fn() };
+    render(
+      <SettingsProvider initialSettings={{ ...settingsSchema.defaultValue(), language: 'en' }}>
+        <ClubRoot
+          entry="invite"
+          invite={{ endpoint: other, token: 'invite-token-0123456789' }}
+          {...handlers}
+        />
+      </SettingsProvider>,
+    );
+    await waitFor(async () => expect((await loadClubConnections())[0]?.endpoint).toBe(E));
+    expect(screen.getByRole('heading', { name: 'Other' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Nickname' })).toBeInTheDocument();
+  });
+
   it('keeps a pending receipt after a failed connection', async () => {
     await savePendingJoin({
       endpoint: E,

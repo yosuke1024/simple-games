@@ -93,6 +93,8 @@ type View =
       entry: ClubEntry;
       invite?: ClubInvite | null;
       focus?: ClubFocus | null;
+      /** Bumped by each open of an invite link, so the same link opened again is a new door. */
+      opened?: number;
     };
 
 // Measurement must never disturb a player, so a chunk that never arrives is
@@ -215,7 +217,14 @@ export function App() {
   const backFromSettings = useCallback(() => {
     void initClubGate()
       .catch(() => undefined)
-      .then(() => setConnections(clubConnections()));
+      .then(() => {
+        setConnections(clubConnections());
+        // A restore can bring Clubs to a device that never loaded the layer: results
+        // are sent (or queued) only through it, as after a boot that found them.
+        void loadClubAtBoot()?.then((module) => {
+          if (module) setClubModule(module);
+        });
+      });
     show({ kind: 'collection' });
   }, [show]);
   const openSettings = useCallback(() => show({ kind: 'settings' }), [show]);
@@ -430,6 +439,7 @@ export function App() {
    * By then boot has already opened that game (`initialView`), so the
    * comparison finds nothing to do.
    */
+  const launchInviteToken = useRef(inviteFromAppLink(shortcutLaunchUrl())?.token ?? null);
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const handle = CapacitorApp.addListener('appUrlOpen', ({ url }) => {
@@ -437,16 +447,25 @@ export function App() {
       // The cold-start replay of the same link finds that screen already up.
       const invite = inviteFromAppLink(url);
       if (invite) {
+        // The launch link itself, raised once more on a cold start: boot already opened it.
+        if (launchInviteToken.current === invite.token) {
+          launchInviteToken.current = null;
+          return;
+        }
+        launchInviteToken.current = null;
         const current = viewRef.current;
-        if (current.kind === 'club' && current.invite?.token === invite.token) return;
         if (current.kind === 'game') leaveGame(current.gameId);
+        // Opened again later (after a request was approved, say), it opens afresh, so
+        // the Club House asks about the request again.
+        const opened = (current.kind === 'club' ? (current.opened ?? 0) : 0) + 1;
         void loadClubForInvite().then((module) => {
           if (!module) return;
           setClubModule(module);
-          show({ kind: 'club', entry: 'invite', invite });
+          show({ kind: 'club', entry: 'invite', invite, opened });
         });
         return;
       }
+      launchInviteToken.current = null;
       const showing = viewRef.current.kind === 'game' ? viewRef.current.gameId : null;
       const target = gameIdFromShortcutUrl(url);
       if (showing === target) return;
@@ -571,7 +590,7 @@ export function App() {
       return (
         <clubModule.ClubRoot
           // A new invite is a new door: the Club decides its first screen once per mount.
-          key={view.invite ? `invite:${view.invite.token}` : 'club'}
+          key={view.invite ? `invite:${view.invite.token}:${view.opened ?? 0}` : 'club'}
           entry={view.entry}
           invite={view.invite}
           focus={view.focus}

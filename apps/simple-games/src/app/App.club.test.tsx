@@ -100,6 +100,7 @@ vi.mock('./lazyRoots', () => ({
 import { SettingsProvider } from '../state/SettingsContext';
 import { initAdRemoval, resetAdRemovalForTesting } from '../monetization/adRemoval';
 import { createMemoryKV } from '../storage/kv';
+import { saveRaw } from '../storage/repo';
 import { settingsSchema } from '../storage/schemas';
 import { markManagedOwnerReturn, consumeManagedOwnerReturn } from '../ui/managedOwnerReturn';
 import { initClubGate, setClubLoaderForTesting } from './clubGate';
@@ -223,6 +224,20 @@ describe('a device that has not joined', () => {
 
     expect(loader).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('club-entry')).toHaveTextContent('settings');
+  });
+
+  it('reads the Clubs again on the way back from Settings, and loads the layer for them', async () => {
+    renderShell();
+    await settle();
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    // What a restore leaves in storage (backup/restore.ts).
+    await saveRaw('sg.club', JSON.stringify({ schemaVersion: 1, connections: [connection] }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    await settle();
+    await settle();
+    expect(await screen.findByRole('button', { name: /Suzuki Family/ })).toBeInTheDocument();
+    expect(loader).toHaveBeenCalledTimes(1);
+    await saveRaw('sg.club', null);
   });
 
   it('leaves the home exactly as it was when the layer cannot be loaded', async () => {

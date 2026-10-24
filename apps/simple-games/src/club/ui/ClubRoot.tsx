@@ -213,6 +213,16 @@ export function ClubRoot({
     if (!alive.current) return;
     if (changed) setPending(await loadPendingJoins());
     if (!alive.current || admitted === null) return;
+    // A door the person chose (another invite, the owner space, a challenge, joining one
+    // more Club) stays theirs: the membership is stored, and is there when they look.
+    const chosen = first[first.length - 1]?.kind;
+    if (
+      chosen === 'join' ||
+      chosen === 'managed' ||
+      chosen === 'challenge' ||
+      (chosen === 'discover' && first.length > 1)
+    )
+      return;
     const { connection, count } = admitted;
     const club: Screen = { kind: 'club', endpoint: connection.endpoint, panel: 'none' };
     setStack((current) =>
