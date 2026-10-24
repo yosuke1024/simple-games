@@ -63,7 +63,7 @@ export const id: Messages = {
   backupPurchaseNote:
     'Pembelian penghapusan iklan tidak termasuk dalam cadangan. Pulihkan lewat toko aplikasi.',
   backupClubNote:
-    'Kunci pemilik Club House dan Club yang Anda ikuti juga disertakan. Jangan berikan file ini kepada orang lain.',
+    'Juga berisi kunci pemilik Club House dan keanggotaan Club yang Anda ikuti. Jangan berikan file ini kepada orang lain.',
   backupExport: 'Ekspor Cadangan',
   backupRestore: 'Pulihkan Cadangan',
   backupExportFailed: 'Berkas cadangan tidak dapat dibuat.',

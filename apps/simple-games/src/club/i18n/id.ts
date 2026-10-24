@@ -69,7 +69,7 @@ export const id: ClubMessages = {
   clubDeleteAlbum: 'Hapus album',
   clubDeleteAlbumBody: 'Hapus album ini? Catatan game asli tetap ada.',
   clubManagedJoinDisclosure:
-    'Selama menjadi anggota, hasil game pilihan Klub dikirim ke sini secara otomatis. Anggota lain dapat melihat nama panggilan dan hasil Anda. Siapa pun dapat bergabung ke Klub publik tanpa persetujuan.',
+    'Selama menjadi anggota, hasil game pilihan Klub dikirim ke sini secara otomatis. Anggota lain dapat melihat nama panggilan dan hasil Anda. Siapa pun dapat bergabung ke Klub publik yang tidak memerlukan persetujuan pemilik.',
   clubInviteApprovalBody:
     'Tautan ini memungkinkan permintaan bergabung ke {club}. Pemilik harus menyetujuinya.',
   clubSubscriptionExpired:

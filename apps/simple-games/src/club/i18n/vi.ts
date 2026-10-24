@@ -70,7 +70,7 @@ export const vi: ClubMessages = {
   clubDeleteAlbum: 'Xóa album',
   clubDeleteAlbumBody: 'Xóa album này? Thành tích trò chơi gốc vẫn được giữ.',
   clubManagedJoinDisclosure:
-    'Khi là thành viên, kết quả từ các trò chơi được chọn của câu lạc bộ được tự động gửi tới đây. Thành viên khác có thể xem biệt danh và kết quả của bạn. Bất kỳ ai cũng có thể vào câu lạc bộ công khai không cần phê duyệt.',
+    'Khi là thành viên, kết quả từ các trò chơi được chọn của câu lạc bộ được tự động gửi tới đây. Thành viên khác có thể xem biệt danh và kết quả của bạn. Bất kỳ ai cũng có thể vào một câu lạc bộ công khai không yêu cầu phê duyệt.',
   clubInviteApprovalBody:
     'Liên kết này cho phép yêu cầu tham gia {club}. Chủ câu lạc bộ phải chấp thuận.',
   clubSubscriptionExpired:

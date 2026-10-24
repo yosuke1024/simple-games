@@ -70,7 +70,7 @@ export const ptBR: ClubMessages = {
   clubDeleteAlbum: 'Apagar álbum',
   clubDeleteAlbumBody: 'Apagar este álbum? Os registros originais dos jogos serão mantidos.',
   clubManagedJoinDisclosure:
-    'Enquanto você for membro, os resultados dos jogos selecionados do Clube serão enviados aqui automaticamente. Outros membros podem ver seu apelido e resultados. Qualquer pessoa pode entrar em Clubes públicos sem aprovação.',
+    'Enquanto você for membro, os resultados dos jogos selecionados do Clube serão enviados aqui automaticamente. Outros membros podem ver seu apelido e resultados. Qualquer pessoa pode entrar em um Clube público que não exija aprovação.',
   clubInviteApprovalBody:
     'Este link permite pedir para entrar em {club}. O proprietário precisa aprovar.',
   clubSubscriptionExpired:
