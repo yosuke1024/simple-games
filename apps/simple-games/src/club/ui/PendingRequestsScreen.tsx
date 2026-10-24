@@ -3,10 +3,14 @@ import type { ClubConnection, PendingClubJoin } from '@/storage/schemas';
 import { useSettings } from '@/state/SettingsContext';
 import { createClient } from '../api/client';
 import { ClubApiError } from '../api/errors';
+import { checkPendingJoin } from '../join';
 import { forgetPendingJoin } from '../storage/connections';
 import { errorText, ScreenFrame } from './common';
 
-/** Requests are read only on an explicit check. They never become sending memberships by a timer. */
+/**
+ * Requests are read on an explicit check here, and once when the Club House is opened
+ * (ClubRoot `settlePending`). They never become sending memberships by a timer.
+ */
 export function PendingRequestsScreen({
   requests,
   onChanged,
@@ -52,28 +56,18 @@ export function PendingRequestsScreen({
     setBusy(pending.endpoint);
     setNote(null);
     try {
-      const status = await createClient(pending.endpoint).joinRequestStatus(pending.requestToken);
+      const outcome = await checkPendingJoin(pending);
       if (!alive.current) return;
-      if (status.status === 'approved' && status.member && status.memberToken) {
-        await onJoined({
-          endpoint: pending.endpoint,
-          clubId: status.club.id,
-          clubName: status.club.name,
-          memberId: status.member.id,
-          memberToken: status.memberToken,
-          nickname: status.member.nickname,
-          role: status.member.role,
-          joinedAt: status.member.joinedAt,
-          autoSend: true,
-        });
+      if (outcome.kind === 'approved') {
+        await onJoined(outcome.connection);
         await forgetPendingJoin(pending.endpoint);
         await onChanged();
-      } else if (status.status === 'pending') {
+      } else if (outcome.kind === 'pending') {
         setNote(t('clubPendingTitle'));
       } else {
         await forgetPendingJoin(pending.endpoint);
         await onChanged();
-        setNote(t(status.status === 'rejected' ? 'clubRequestRejected' : 'clubRequestExpired'));
+        setNote(t(outcome.reason === 'rejected' ? 'clubRequestRejected' : 'clubRequestExpired'));
       }
     } catch (error) {
       await requestError(error, pending);

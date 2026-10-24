@@ -32,7 +32,21 @@ export const SHELL_BACKUP_KEYS: readonly string[] = [
   // travels for the same reason the shelf does: arriving on a new device to a
   // home that looks like the old one is the whole point of the feature.
   STORAGE_KEYS.recent,
+  // The Club House: the joined Clubs (member tokens), the Clubs left (kept to
+  // come back as the same member), the waiting join requests and the managed
+  // owner key — so a new phone or a Reset is not the end of a Club or of the
+  // owner's hold on it (owner decision 2026-10-24, docs/architecture/backup.md).
+  // The file is the player's to keep private; the export screen says so
+  // (`backupClubNote`). The owner's ad benefit never travels: `owners.ts` strips
+  // it both ways, and the owner screen verifies it again with the server.
+  STORAGE_KEYS.club,
 ];
+
+/**
+ * Carried keys a restore leaves alone when the file has none: backups written
+ * before the key travelled must not erase what this device holds (restore.ts).
+ */
+export const RESTORED_ONLY_WHEN_PRESENT: ReadonlySet<string> = new Set([STORAGE_KEYS.club]);
 
 /**
  * Shell records a backup leaves where they are, and why. These are not
@@ -64,19 +78,11 @@ export const SHELL_KEYS_LEFT_BEHIND: Readonly<Record<string, string>> = {
    */
   [STORAGE_KEYS.review]: 'per-install prompt pacing — not progress',
   /**
-   * The Club House connections (docs/architecture/club.md §4-1). Each one
-   * holds this device's member token — a secret the server keeps only as a
-   * hash. The same reasoning as the entitlement above: a file that can be
-   * copied must not carry a key that lets its holder act as somebody. A new
-   * device joins again through an invite; nothing a player built is lost,
-   * because the Club's challenges and results live on the server.
+   * Results waiting to be sent to a Club (club.md §4-2). Unsent work of THIS
+   * install, bound to its moment: replayed from a file they would send old
+   * results again, or send them after the person chose not to.
    */
-  [STORAGE_KEYS.club]: 'device secret — the member token; rejoin through an invite instead',
-  /**
-   * Results waiting to be sent to a Club (club.md §4-2). They belong to the
-   * connection above and are meaningless without it.
-   */
-  [STORAGE_KEYS.clubOutbox]: "unsent results bound to this device's connection — not progress",
+  [STORAGE_KEYS.clubOutbox]: 'unsent results of this install — not progress',
 };
 
 /**

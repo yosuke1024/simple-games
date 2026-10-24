@@ -492,3 +492,81 @@ describe('every game is inside the backup', () => {
     expect(await dump(target, backupKeys())).toEqual(await dump(source, backupKeys()));
   }, 15_000);
 });
+
+describe('the Club House in a backup (2026-10-24)', () => {
+  const ORIGIN = 'https://club.pixapps.ai';
+  const connection = {
+    endpoint: `${ORIGIN}/clubs/c_family0001`,
+    clubId: 'c_family0001',
+    clubName: 'Family',
+    memberId: 'm_one',
+    memberToken: 'member-token-0123456789',
+    nickname: 'Ken',
+    role: 'member' as const,
+    joinedAt: '2026-10-23T00:00:00.000Z',
+  };
+  const club = (extra: Record<string, unknown> = {}) => ({
+    schemaVersion: 1,
+    connections: [connection],
+    managedOwner: { origin: ORIGIN, ownerToken: 'owner-key-0123456789abcdef', ...extra },
+  });
+
+  it('carries the joined Clubs and the owner key, never the owner benefit', async () => {
+    const benefit = {
+      requiredMembers: 50,
+      memberCount: 50,
+      active: true,
+      validUntil: '2099-01-01T00:00:00.000Z',
+    };
+    const kv = createMemoryKV({
+      [STORAGE_KEYS.club]: JSON.stringify(club({ adRemoval: benefit })),
+    });
+    const backup = await createBackup(META, kv);
+    expect(backup.data[STORAGE_KEYS.club]).toEqual(club());
+  });
+
+  it('puts the Clubs back from a file that has them', async () => {
+    const file = serializeBackup(
+      await createBackup(META, createMemoryKV({ [STORAGE_KEYS.club]: JSON.stringify(club()) })),
+    );
+    const device = createMemoryKV();
+    const read = await readBackup(file);
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(await applyBackup(read.prepared, device)).toBe('restored');
+    expect(JSON.parse((await loadRaw(STORAGE_KEYS.club, device))!)).toEqual(club());
+  });
+
+  it('drops an owner benefit a file carries anyway', async () => {
+    const backup = await createBackup(META, createMemoryKV());
+    const file = serializeBackup({
+      ...backup,
+      data: {
+        [STORAGE_KEYS.club]: club({
+          adRemoval: {
+            requiredMembers: 50,
+            memberCount: 50,
+            active: true,
+            validUntil: '2099-01-01T00:00:00.000Z',
+          },
+        }),
+      },
+    });
+    const device = createMemoryKV();
+    const read = await readBackup(file);
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    await applyBackup(read.prepared, device);
+    expect(JSON.parse((await loadRaw(STORAGE_KEYS.club, device))!)).toEqual(club());
+  });
+
+  it('leaves the Clubs alone when the file is from before they travelled', async () => {
+    const older = serializeBackup(await createBackup(META, createMemoryKV()));
+    const device = createMemoryKV({ [STORAGE_KEYS.club]: JSON.stringify(club()) });
+    const read = await readBackup(older);
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(await applyBackup(read.prepared, device)).toBe('restored');
+    expect(JSON.parse((await loadRaw(STORAGE_KEYS.club, device))!)).toEqual(club());
+  });
+});

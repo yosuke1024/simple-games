@@ -1541,3 +1541,34 @@ describe('the hardware back button on the collection', () => {
     expect(appMock.listeners.get('backButton')?.size ?? 0).toBe(0);
   });
 });
+
+describe('the Club House slot', () => {
+  const renderWith = (clubConnections: { clubName: string }[]) => {
+    const onOpenClub = vi.fn();
+    render(
+      <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+        <CollectionHomeScreen
+          onOpenGame={() => undefined}
+          onOpenSettings={() => undefined}
+          onOpenClub={onOpenClub}
+          clubConnections={clubConnections}
+        />
+      </SettingsProvider>,
+    );
+    return onOpenClub;
+  };
+
+  it('offers joining one more Club under the joined ones (2026-10-24)', () => {
+    const onOpenClub = renderWith([{ clubName: 'Family' }]);
+    fireEvent.click(screen.getByRole('button', { name: 'Join a new Club House' }));
+    expect(onOpenClub).toHaveBeenCalledWith('join');
+    fireEvent.click(screen.getByRole('button', { name: /Family/ }));
+    expect(onOpenClub).toHaveBeenLastCalledWith('home');
+  });
+
+  it('keeps the one quiet Play together row on a device that has joined nothing', () => {
+    renderWith([]);
+    expect(screen.queryByRole('button', { name: 'Join a new Club House' })).toBeNull();
+    expect(screen.getByRole('button', { name: /Play together/ })).toBeInTheDocument();
+  });
+});

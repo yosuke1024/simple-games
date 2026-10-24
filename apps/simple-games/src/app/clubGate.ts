@@ -136,6 +136,27 @@ export function takeInviteFromLocation(
   return { endpoint, token };
 }
 
+/**
+ * The invite an app link carries (Android App Links / iOS Universal Links on
+ * `https://club.pixapps.ai/join`, 2026-10-24): the same address and the same rules
+ * as the browser's (`takeInviteFromLocation`), read from the URL the OS opened the
+ * app with instead of from the address bar — there is no address bar to clean.
+ * Null for anything else, a shortcut's `?game=` address included.
+ */
+export function inviteFromAppLink(url: string | null | undefined): ClubInvite | null {
+  if (!url) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  return takeInviteFromLocation(
+    { href: parsed.href, pathname: parsed.pathname, hash: parsed.hash },
+    () => undefined,
+  );
+}
+
 /** Test seam: swap the dynamic import and forget what was loaded. */
 export function setClubLoaderForTesting(next: Loader | null): void {
   loader = next ?? realLoader;

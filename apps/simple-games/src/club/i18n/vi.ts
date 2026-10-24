@@ -17,7 +17,7 @@ export const vi: ClubMessages = {
     'Số thành viên được cộng từ tất cả Câu lạc bộ của bạn, bao gồm bạn trong mỗi Câu lạc bộ. Người tham gia nhiều Câu lạc bộ được tính ở từng Câu lạc bộ. Không tính yêu cầu đang chờ duyệt.',
   clubOwnerRecoveryKey: 'Khóa khôi phục của chủ sở hữu',
   clubOwnerRecoveryHelp:
-    'Lưu khóa này ở nơi riêng tư trước khi đặt lại dữ liệu hoặc đổi thiết bị. Khóa này không có trong bản sao lưu.',
+    'Lưu khóa này ở nơi riêng tư trước khi đặt lại dữ liệu hoặc đổi thiết bị. Khóa này cũng có trong tệp sao lưu ở phần Cài đặt.',
   clubOwnerShowKey: 'Hiện khóa chủ sở hữu',
   clubOwnerHideKey: 'Ẩn khóa chủ sở hữu',
   clubOwnerCopyKey: 'Sao chép khóa chủ sở hữu',
@@ -37,7 +37,9 @@ export const vi: ClubMessages = {
   clubVisibility: 'Ai có thể tìm thấy câu lạc bộ này?',
   clubVisibilityHelp:
     'Câu lạc bộ công khai xuất hiện trong danh sách. Câu lạc bộ riêng tư cần khóa mời. Thành viên có thể xem thành tích.',
-  clubApprovalRequired: 'Duyệt thành viên mới',
+  clubApprovalRequired: 'Cần chủ sở hữu duyệt trước khi tham gia.',
+  clubAutoApprove: 'Tự động duyệt thành viên mới',
+  clubJoinRequestsWaiting: 'Yêu cầu tham gia đang chờ: {n}',
   clubGames: 'Trò chơi trong câu lạc bộ',
   clubGamesAll: 'Tất cả trò chơi được hỗ trợ',
   clubGamesSelected: 'Chọn trò chơi',

@@ -62,6 +62,8 @@ export const tr: Messages = {
     'Yedek, cihazındaki şifrelenmemiş bir dosyadır. Simple Games onu hiçbir yere yüklemez; nereye koyacağına yalnızca sen karar verirsin.',
   backupPurchaseNote:
     'Reklam kaldırma satın alımı yedeğe dahil değildir. Onu mağazadan geri yükle.',
+  backupClubNote:
+    "Club House sahip anahtarı ve katıldığınız Club'lar da dahildir. Dosyayı başkasına vermeyin.",
   backupExport: 'Yedeği Dışa Aktar',
   backupRestore: 'Yedekten Geri Yükle',
   backupExportFailed: 'Yedek dosyası oluşturulamadı.',
@@ -151,6 +153,7 @@ export const tr: Messages = {
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'Gelişmiş',
   clubEntry: 'Club House',
+  clubJoinNew: "Yeni bir Club House'a katıl",
   playTogetherTitle: 'Birlikte oyna',
   playTogetherBody: 'Skorlarını herkesle paylaş.',
   clubResultSent: "{club}'a gönderildi",

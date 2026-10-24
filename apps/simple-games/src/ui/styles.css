@@ -1847,6 +1847,15 @@ button:disabled {
   min-width: 0;
 }
 
+.home-club-join {
+  display: block;
+  min-height: var(--tap-size);
+  text-align: start;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .home-play-together {
   display: flex;
   flex-direction: column;

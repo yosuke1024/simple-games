@@ -17,7 +17,7 @@ export const ko: ClubMessages = {
     '소유한 모든 클럽의 멤버 수를 합산하며, 각 클럽의 소유자도 포함합니다. 여러 클럽에 속한 멤버는 각 클럽에서 따로 셉니다. 승인 대기 중인 요청은 제외합니다.',
   clubOwnerRecoveryKey: '소유자 복구 키',
   clubOwnerRecoveryHelp:
-    '데이터를 초기화하거나 기기를 변경하기 전에 이 키를 다른 사람이 볼 수 없는 곳에 보관하세요. 백업에는 포함되지 않습니다.',
+    '데이터를 초기화하거나 기기를 변경하기 전에 이 키를 다른 사람이 볼 수 없는 곳에 보관하세요. 설정의 백업 파일에도 포함됩니다.',
   clubOwnerShowKey: '소유자 키 표시',
   clubOwnerHideKey: '소유자 키 숨기기',
   clubOwnerCopyKey: '소유자 키 복사',
@@ -37,7 +37,9 @@ export const ko: ClubMessages = {
   clubVisibility: '누가 이 클럽을 찾을 수 있나요?',
   clubVisibilityHelp:
     '공개 클럽은 목록에 표시됩니다. 비공개 클럽은 초대 키가 필요합니다. 기록은 클럽 멤버가 볼 수 있습니다.',
-  clubApprovalRequired: '새 멤버 승인',
+  clubApprovalRequired: '참여하려면 소유자의 승인이 필요합니다.',
+  clubAutoApprove: '새 멤버 자동 승인',
+  clubJoinRequestsWaiting: '대기 중인 참여 요청: {n}건',
   clubGames: '클럽의 게임',
   clubGamesAll: '지원되는 모든 게임',
   clubGamesSelected: '게임 선택',

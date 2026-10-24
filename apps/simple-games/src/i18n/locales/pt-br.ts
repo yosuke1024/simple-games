@@ -62,6 +62,8 @@ export const ptBR: Messages = {
     'O backup é um arquivo sem criptografia no seu aparelho. O Simple Games nunca faz upload dele, e só você decide onde guardá-lo.',
   backupPurchaseNote:
     'A compra para remover os anúncios não faz parte do backup. Restaure-a pela loja.',
+  backupClubNote:
+    'A chave de proprietário do Club House e os Clubs em que você entrou também são incluídos. Não entregue o arquivo a ninguém.',
   backupExport: 'Exportar backup',
   backupRestore: 'Restaurar backup',
   backupExportFailed: 'Não foi possível criar o arquivo de backup.',
@@ -151,6 +153,7 @@ export const ptBR: Messages = {
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'Avançado',
   clubEntry: 'Club House',
+  clubJoinNew: 'Entrar em um novo Club House',
   playTogetherTitle: 'Jogar juntos',
   playTogetherBody: 'Compartilhe suas pontuações com todo mundo.',
   clubResultSent: 'Enviado para {club}',

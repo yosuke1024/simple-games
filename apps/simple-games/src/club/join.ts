@@ -127,3 +127,49 @@ export async function joinOrRestore(
     },
   };
 }
+
+/** What one stored join request has become (managed-clubs.md「参加の承認」). */
+export type PendingCheck =
+  | { kind: 'approved'; connection: ClubConnection }
+  | { kind: 'pending' }
+  | { kind: 'closed'; reason: 'rejected' | 'expired' };
+
+/**
+ * Asks the Club what became of one request, and says so; it stores nothing — the
+ * caller adds the membership or forgets the receipt. A receipt the server no longer
+ * knows (a bounded ledger forgets old decisions) is closed as expired; a network
+ * failure throws, and the receipt stays for the next check.
+ */
+export async function checkPendingJoin(
+  pending: PendingClubJoin,
+  fetchImpl?: typeof fetch,
+): Promise<PendingCheck> {
+  let status;
+  try {
+    status = await createClient(pending.endpoint, null, fetchImpl).joinRequestStatus(
+      pending.requestToken,
+    );
+  } catch (e) {
+    if (isGone(e)) return { kind: 'closed', reason: 'expired' };
+    throw e;
+  }
+  if (status.status === 'approved' && status.member && status.memberToken) {
+    return {
+      kind: 'approved',
+      connection: {
+        endpoint: pending.endpoint,
+        clubId: status.club.id,
+        clubName: status.club.name,
+        memberId: status.member.id,
+        memberToken: status.memberToken,
+        nickname: status.member.nickname,
+        role: status.member.role,
+        joinedAt: status.member.joinedAt,
+        // The request was sent from the screen that showed the disclosure.
+        autoSend: true,
+      },
+    };
+  }
+  if (status.status === 'pending') return { kind: 'pending' };
+  return { kind: 'closed', reason: status.status === 'rejected' ? 'rejected' : 'expired' };
+}

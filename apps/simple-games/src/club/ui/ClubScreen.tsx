@@ -60,6 +60,11 @@ export interface ClubData {
   /** The club's name as the server has it now. */
   clubName: string;
   settings?: ClubSettings;
+  /**
+   * Owner of a managed Club only: the requests waiting for a decision, read with the
+   * lists when the screen opens or is reloaded — never polled, never pushed (2026-10-24).
+   */
+  waitingRequests?: number;
 }
 
 /**
@@ -198,6 +203,14 @@ export function ClubScreen({
             : Promise.resolve([] as ReportedMember[]),
           isManaged ? api.settings() : Promise.resolve(undefined),
         ]);
+        // After the lists, on its own: a failure here must not hide the Club itself.
+        const waiting =
+          isOwner && isManaged
+            ? await api
+                .joinRequests()
+                .then((rows) => rows.filter((r) => r.status === 'pending').length)
+                .catch(() => undefined)
+            : undefined;
         if (!alive.current) return;
         if (settings) await updateClubGames(connection.endpoint, settings.allowedGameIds);
         if (!alive.current) return;
@@ -211,6 +224,7 @@ export function ClubScreen({
           rankings,
           mine,
           ...(settings ? { settings } : {}),
+          ...(waiting !== undefined ? { waitingRequests: waiting } : {}),
         });
         if (club.club.name !== connection.clubName) onRenamed(club.club.name);
         if (club.me.nickname !== connection.nickname) onRenamedMe(club.me.nickname);
@@ -374,6 +388,20 @@ export function ClubScreen({
 
       {data ? (
         <>
+          {isOwner && onManage && (data.waitingRequests ?? 0) > 0 ? (
+            <button
+              type="button"
+              className="settings-row club-line club-waiting"
+              onClick={onManage}
+            >
+              <span className="settings-row-label">
+                {t('clubJoinRequestsWaiting', { n: data.waitingRequests ?? 0 })}
+              </span>
+              <span className="settings-row-chevron" aria-hidden="true">
+                <IconChevronRight />
+              </span>
+            </button>
+          ) : null}
           {isManaged ? (
             <div className="club-actions">
               {isOwner && onManage ? (

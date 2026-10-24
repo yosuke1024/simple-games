@@ -62,6 +62,8 @@ export const de: Messages = {
     'Die Sicherung ist eine unverschlüsselte Datei auf deinem Gerät. Simple Games lädt sie nirgendwohin hoch, und nur du entscheidest, wo sie landet.',
   backupPurchaseNote:
     'Der Kauf zum Entfernen der Werbung gehört nicht zur Sicherung. Stelle ihn stattdessen über den Store wieder her.',
+  backupClubNote:
+    'Auch der Club House-Inhaberschlüssel und deine beigetretenen Clubs sind enthalten. Gib die Datei niemandem weiter.',
   backupExport: 'Sicherung exportieren',
   backupRestore: 'Sicherung wiederherstellen',
   backupExportFailed: 'Die Sicherungsdatei konnte nicht erstellt werden.',
@@ -153,6 +155,7 @@ export const de: Messages = {
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'Erweitert',
   clubEntry: 'Club House',
+  clubJoinNew: 'Einem neuen Club House beitreten',
   playTogetherTitle: 'Zusammen spielen',
   playTogetherBody: 'Teile deine Ergebnisse mit allen.',
   clubResultSent: 'An {club} gesendet',

@@ -20,7 +20,7 @@ export const en = {
     'Members are added across your Clubs, including you in each Club. A member in more than one Club counts in each. Pending requests are excluded.',
   clubOwnerRecoveryKey: 'Owner recovery key',
   clubOwnerRecoveryHelp:
-    'Save this key somewhere private before resetting or changing devices. It is not included in backups.',
+    'Save this key somewhere private before resetting or changing devices. A backup file from Settings also includes it.',
   clubOwnerShowKey: 'Show owner key',
   clubOwnerHideKey: 'Hide owner key',
   clubOwnerCopyKey: 'Copy owner key',
@@ -40,7 +40,9 @@ export const en = {
   clubVisibility: 'Who can find this Club?',
   clubVisibilityHelp:
     'Public Clubs appear in the directory. Private Clubs need an invite key. Records are visible to Club members.',
-  clubApprovalRequired: 'Approve new members',
+  clubApprovalRequired: 'The owner approves new members before they join.',
+  clubAutoApprove: 'Approve new members automatically',
+  clubJoinRequestsWaiting: 'Join requests waiting: {n}',
   clubGames: 'Games in this Club',
   clubGamesAll: 'All supported games',
   clubGamesSelected: 'Selected games',

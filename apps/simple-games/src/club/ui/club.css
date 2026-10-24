@@ -468,3 +468,9 @@
   margin-block-start: 0.3rem;
   color: var(--text-secondary, #66716b);
 }
+
+/* The owner's waiting join requests, at the top of the Club screen (2026-10-24). */
+.club-waiting .settings-row-label {
+  color: var(--accent);
+  font-weight: 700;
+}

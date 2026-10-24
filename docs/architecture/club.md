@@ -848,6 +848,10 @@ https://<endpoint>/join#invite=<inviteToken>
   **即座に消す**(参加の前でも)。token が住所欄・履歴・ブックマークに残らないため。
 - pixapps.ai の Web 版(`/simple-games/play/`)にはこの経路は存在しない
   (`/join` が無い)。`app/webRoute.ts` の `?game=` の契約は変わらない。
+- アプリが入っている端末では、PixApps の `https://club.pixapps.ai/join` はアプリで開く
+  (Android App Links / iOS Universal Links、2026-10-24)。アプリは起動 URL と `appUrlOpen` から
+  同じ規則で招待を読む(`app/clubGate.ts` の `inviteFromAppLink`)。詳細は
+  [managed-clubs.md](managed-clubs.md) §7。
 - 招待 URL の解析は pure function(`inviteFromHref(href): { endpoint, token } | null`)
   で、endpoint は URL の origin。§4-1 の https 規則をここでも適用する。
 

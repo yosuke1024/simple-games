@@ -42,7 +42,7 @@ import {
   BACKUP_MAX_RECORD_BYTES,
   UNSAFE_OBJECT_KEYS,
 } from './format';
-import { backupKeys } from './keys';
+import { backupKeys, RESTORED_ONLY_WHEN_PRESENT } from './keys';
 import { loadValidators } from './owners';
 
 /**
@@ -210,7 +210,10 @@ export async function applyBackup(
   prepared: PreparedRestore,
   kv: KVStore = preferencesKV,
 ): Promise<RestoreOutcome> {
-  const keys = backupKeys();
+  // A key that began travelling later is left as it is when the file predates it.
+  const keys = backupKeys().filter(
+    (key) => !RESTORED_ONLY_WHEN_PRESENT.has(key) || prepared.records.has(key),
+  );
 
   const previous = await Promise.all(keys.map((key) => loadRaw(key, kv)));
   const snapshot = new Map<string, string | null>(

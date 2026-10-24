@@ -61,6 +61,8 @@ import type { GameId } from './registry';
 import { GAME_PARAM, gameIdFromHref } from './webRoute';
 
 let launchGame: GameId | null = null;
+/** The URL the OS launched the app with, for the other door it can be: an invite link. */
+let launchUrl: string | null = null;
 
 /** The URI a shortcut to this game carries. `gameIdFromShortcutUrl` reads it back. */
 export function shortcutUrlFor(gameId: GameId): string {
@@ -85,9 +87,11 @@ export function gameIdFromShortcutUrl(url: string | null | undefined): GameId | 
  */
 export async function initShortcutLaunch(): Promise<void> {
   launchGame = null;
+  launchUrl = null;
   if (!Capacitor.isNativePlatform()) return;
   try {
     const launch = await CapacitorApp.getLaunchUrl();
+    launchUrl = launch?.url ?? null;
     launchGame = gameIdFromShortcutUrl(launch?.url);
   } catch {
     launchGame = null;
@@ -99,7 +103,13 @@ export function shortcutLaunchGame(): GameId | null {
   return launchGame;
 }
 
+/** The launch URL as the OS gave it (App.tsx reads an invite link out of it). */
+export function shortcutLaunchUrl(): string | null {
+  return launchUrl;
+}
+
 /** Test hook. */
 export function resetShortcutLaunchForTesting(): void {
   launchGame = null;
+  launchUrl = null;
 }

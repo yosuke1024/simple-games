@@ -314,11 +314,10 @@ describe('managed owner ad-removal cache', () => {
     },
   );
 
-  it('never exports the owner key or benefit in a backup', async () => {
+  it('exports the owner key in a backup, never the benefit (2026-10-24)', async () => {
     const kv = createMemoryKV(cached({ ...owner, adRemoval: benefit() }));
     const backup = await createBackup({ appVersion: 'test', platform: 'web' }, kv);
-    expect(backup.data).not.toHaveProperty(STORAGE_KEYS.club);
-    expect(JSON.stringify(backup)).not.toContain(owner.ownerToken);
+    expect(backup.data).toHaveProperty([STORAGE_KEYS.club, 'managedOwner'], owner);
     expect(JSON.stringify(backup)).not.toContain('adRemoval');
     expect(
       clubConnectionsSchema.validate(JSON.parse((await kv.get(STORAGE_KEYS.club))!)),

@@ -77,8 +77,41 @@ export function ClubManagementScreen({
       onChanged();
     });
   const games = [...shelfGames().values()].map(({ game }) => game);
+  // Waiting requests come first: they are what the owner came for (2026-10-24).
+  const requestsSection = (
+    <>
+      <h2 className="home-section-label club-section">{t('clubJoinRequests')}</h2>
+      <button className="club-text-btn" disabled={busy} onClick={() => void load()}>
+        {t('clubReload')}
+      </button>
+      {requests.length === 0 && !busy ? <p className="club-quiet">{t('clubNothingYet')}</p> : null}
+      {requests.map((request) => (
+        <section key={request.id} className="club-managed-card">
+          <h3>{request.nickname}</h3>
+          <div className="club-actions">
+            <button
+              className="btn btn-primary"
+              disabled={busy}
+              onClick={() => void decide(request.id, 'approve')}
+            >
+              {t('clubApprove')}
+            </button>
+            <button
+              className="btn btn-ghost"
+              disabled={busy}
+              onClick={() => void decide(request.id, 'reject')}
+            >
+              {t('clubReject')}
+            </button>
+          </div>
+        </section>
+      ))}
+    </>
+  );
+
   return (
     <ScreenFrame title={t('clubSettings')} onBack={onBack} t={t}>
+      {requests.length > 0 ? requestsSection : null}
       {settings ? (
         <form
           className="club-form"
@@ -119,12 +152,15 @@ export function ClubManagementScreen({
             <p className="club-quiet">{t('clubVisibilityHelp')}</p>
           </fieldset>
           <label className="club-choice">
+            {/* Said as what happens without the owner (2026-10-24): ticked, a request is a
+                member at once; unticked, it waits for the owner. The stored setting is
+                `approvalRequired`, the opposite of the box. */}
             <input
               type="checkbox"
-              checked={settings.approvalRequired}
-              onChange={(e) => setSettings({ ...settings, approvalRequired: e.target.checked })}
+              checked={!settings.approvalRequired}
+              onChange={(e) => setSettings({ ...settings, approvalRequired: !e.target.checked })}
             />
-            {t('clubApprovalRequired')}
+            {t('clubAutoApprove')}
           </label>
           <fieldset className="club-managed-fieldset">
             <legend>{t('clubGames')}</legend>
@@ -180,32 +216,7 @@ export function ClubManagementScreen({
           ) : null}
         </form>
       ) : null}
-      <h2 className="home-section-label club-section">{t('clubJoinRequests')}</h2>
-      <button className="club-text-btn" disabled={busy} onClick={() => void load()}>
-        {t('clubReload')}
-      </button>
-      {requests.length === 0 && !busy ? <p className="club-quiet">{t('clubNothingYet')}</p> : null}
-      {requests.map((request) => (
-        <section key={request.id} className="club-managed-card">
-          <h3>{request.nickname}</h3>
-          <div className="club-actions">
-            <button
-              className="btn btn-primary"
-              disabled={busy}
-              onClick={() => void decide(request.id, 'approve')}
-            >
-              {t('clubApprove')}
-            </button>
-            <button
-              className="btn btn-ghost"
-              disabled={busy}
-              onClick={() => void decide(request.id, 'reject')}
-            >
-              {t('clubReject')}
-            </button>
-          </div>
-        </section>
-      ))}
+      {requests.length > 0 ? null : requestsSection}
       {busy ? (
         <p className="club-quiet" role="status">
           {t('clubLoading')}

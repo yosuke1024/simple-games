@@ -16,7 +16,7 @@ export const ja: ClubMessages = {
     '各クラブのオーナーを含め、所有するクラブのメンバー数を合算します。複数のクラブに所属するメンバーは、各クラブで数えます。承認待ちのリクエストは含みません。',
   clubOwnerRecoveryKey: 'オーナー復元キー',
   clubOwnerRecoveryHelp:
-    'データのリセットや端末の変更の前に、このキーを他の人に見られない場所に控えてください。バックアップには含まれません。',
+    'データのリセットや端末の変更の前に、このキーを他の人に見られない場所に控えてください。設定のバックアップファイルにも含まれます。',
   clubOwnerShowKey: 'オーナーキーを表示',
   clubOwnerHideKey: 'オーナーキーを隠す',
   clubOwnerCopyKey: 'オーナーキーをコピー',
@@ -36,7 +36,9 @@ export const ja: ClubMessages = {
   clubVisibility: 'クラブの公開範囲',
   clubVisibilityHelp:
     '一般公開のクラブは一覧に表示されます。非公開のクラブには招待キーが必要です。記録はクラブのメンバーが閲覧できます。',
-  clubApprovalRequired: '新しいメンバーを承認する',
+  clubApprovalRequired: 'このクラブは、参加にオーナーの承認が必要です。',
+  clubAutoApprove: '新メンバーを自動で承認する',
+  clubJoinRequestsWaiting: '参加リクエストが {n} 件あります',
   clubGames: 'クラブ内のゲーム',
   clubGamesAll: '対応するすべてのゲーム',
   clubGamesSelected: 'ゲームを選ぶ',

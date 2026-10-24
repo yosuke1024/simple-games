@@ -16,7 +16,7 @@ export const ptBR: ClubMessages = {
     'Os membros de todos os seus Clubes são somados, incluindo você em cada Clube. Um membro em vários Clubes é contado em cada um. Pedidos pendentes não são incluídos.',
   clubOwnerRecoveryKey: 'Chave de recuperação do proprietário',
   clubOwnerRecoveryHelp:
-    'Guarde esta chave em um local privado antes de redefinir os dados ou trocar de dispositivo. Ela não é incluída nos backups.',
+    'Guarde esta chave em um local privado antes de redefinir os dados ou trocar de dispositivo. Ela também é incluída no arquivo de backup das Configurações.',
   clubOwnerShowKey: 'Mostrar chave do proprietário',
   clubOwnerHideKey: 'Ocultar chave do proprietário',
   clubOwnerCopyKey: 'Copiar chave do proprietário',
@@ -37,7 +37,9 @@ export const ptBR: ClubMessages = {
   clubVisibility: 'Quem pode encontrar este Clube?',
   clubVisibilityHelp:
     'Clubes públicos aparecem no diretório. Clubes privados exigem uma chave de convite. Os membros do Clube podem ver os registros.',
-  clubApprovalRequired: 'Aprovar novos membros',
+  clubApprovalRequired: 'O proprietário aprova os novos membros antes de entrarem.',
+  clubAutoApprove: 'Aprovar novos membros automaticamente',
+  clubJoinRequestsWaiting: 'Pedidos para entrar aguardando: {n}',
   clubGames: 'Jogos deste Clube',
   clubGamesAll: 'Todos os jogos compatíveis',
   clubGamesSelected: 'Escolher jogos',
