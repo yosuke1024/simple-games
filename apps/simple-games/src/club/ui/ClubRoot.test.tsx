@@ -475,6 +475,24 @@ describe('ClubRoot', () => {
     expect(await screen.findByRole('heading', { name: CLUB.name })).toBeInTheDocument();
   });
 
+  it("offers no Public join from the home's Join a new Club House once it is joined", async () => {
+    stubServer();
+    await addClubConnection({
+      endpoint: PUBLIC_CLUB_ENDPOINT,
+      clubId: 'c_1',
+      clubName: 'PixApps Club',
+      memberId: 'm_1',
+      memberToken: 't',
+      nickname: 'Ken',
+      role: 'member',
+      joinedAt: 'x',
+      autoSend: true,
+    });
+    renderRoot({ entry: 'join' });
+    expect(await screen.findByRole('heading', { name: 'Play together' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Join the Public Club House' })).toBeNull();
+  });
+
   it('hides the Public button on All Clubs once the Public Club House is joined', async () => {
     stubServer();
     const base = {
