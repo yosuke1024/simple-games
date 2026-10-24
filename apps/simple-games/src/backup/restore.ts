@@ -34,9 +34,9 @@
  * as what was written, the snapshot goes back and the restore reports failure.
  * The player ends where they started.
  */
-import { loadRaw, loadRecordWithStatus, saveRaw } from '../storage/repo';
+import { loadRaw, saveRaw } from '../storage/repo';
 import { clubConnectionsSchema, clubOutboxSchema, STORAGE_KEYS } from '../storage/schemas';
-import { preferencesKV, type KVStore } from '../storage/kv';
+import { preferencesKV, preferencesKVWithReadStatus, type KVStore } from '../storage/kv';
 import {
   BACKUP_FORMAT_VERSION,
   BACKUP_MAX_BYTES,
@@ -298,18 +298,33 @@ function replacedMembers(before: string | null, after: string | null): Set<strin
   );
 }
 
-/** The queue without the replaced Clubs' items: its text before and after, or null for no change. */
+/**
+ * The queue without the replaced Clubs' items: its text before and after, or null for
+ * no change. Read once, through a store that reports a failed read instead of answering
+ * "nothing stored" (`preferencesKVWithReadStatus`): an unreadable or damaged queue stops
+ * the restore, and the text rolled back is exactly the text that was read.
+ */
 async function outboxWithout(
   replaced: ReadonlySet<string>,
   kv: KVStore,
-): Promise<{ previous: string | null; next: string } | null | 'unreadable'> {
+): Promise<{ previous: string; next: string } | null | 'unreadable'> {
   if (replaced.size === 0) return null;
-  const load = await loadRecordWithStatus(clubOutboxSchema, kv);
-  if (!load.readable) return 'unreadable';
-  const items = load.value.items.filter((item) => !replaced.has(item.endpoint));
-  if (items.length === load.value.items.length) return null;
-  return {
-    previous: await loadRaw(STORAGE_KEYS.clubOutbox, kv),
-    next: JSON.stringify({ ...load.value, items }),
-  };
+  const reader = kv === preferencesKV ? preferencesKVWithReadStatus : kv;
+  let previous: string | null;
+  try {
+    previous = await reader.get(STORAGE_KEYS.clubOutbox);
+  } catch {
+    return 'unreadable';
+  }
+  if (previous === null) return null;
+  let outbox;
+  try {
+    outbox = clubOutboxSchema.validate(JSON.parse(previous));
+  } catch {
+    return 'unreadable';
+  }
+  if (outbox === null) return 'unreadable';
+  const items = outbox.items.filter((item) => !replaced.has(item.endpoint));
+  if (items.length === outbox.items.length) return null;
+  return { previous, next: JSON.stringify({ ...outbox, items }) };
 }
