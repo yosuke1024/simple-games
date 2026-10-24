@@ -47,15 +47,14 @@ export function ManagedScreen({
   const [token, setToken] = useState<string | null>(null);
   const [pendingTrial, setPendingTrial] = useState(false);
   const [space, setSpace] = useState<OwnerSpace | null>(null);
-  const [showKey, setShowKey] = useState(false);
-  const [keyNotice, setKeyNotice] = useState<string | null>(null);
+  // The saved key was refused (reissued by the operator, say): offer the key form again.
+  const [rejected, setRejected] = useState(false);
   const [expiryPassed, setExpiryPassed] = useState(false);
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const createId = useRef<string | null>(null);
-  const recoveryInput = useRef<HTMLInputElement>(null);
   const running = useRef(false);
   const alive = useRef(true);
   const showError = (e: unknown) =>
@@ -73,6 +72,7 @@ export function ManagedScreen({
     if (!saved) throw new Error('owner_state_not_saved');
     setToken(value);
     setPendingTrial(false);
+    setRejected(false);
     setSpace(data);
     return true;
   };
@@ -82,7 +82,10 @@ export function ManagedScreen({
     } catch (e) {
       if (alive.current && e instanceof ClubApiError && e.code === 'unauthorized') {
         await clearManagedOwnerAdRemoval({ origin, ownerToken: value });
-        if (alive.current) setSpace(null);
+        if (alive.current) {
+          setSpace(null);
+          setRejected(true);
+        }
       }
       throw e;
     }
@@ -193,33 +196,6 @@ export function ManagedScreen({
       );
       if (alive.current) await onOpen(membershipConnection(joined));
     });
-  const forgetOwner = () =>
-    run(async () => {
-      await saveManagedOwner(null);
-      if (alive.current) {
-        setSpace(null);
-        setToken(null);
-        setPendingTrial(false);
-        setShowKey(false);
-        setKeyNotice(null);
-        setKey('');
-        createId.current = null;
-      }
-    });
-  const copyKey = async () => {
-    if (!token) return;
-    try {
-      if (!navigator.clipboard?.writeText) throw new Error('clipboard_unavailable');
-      await navigator.clipboard.writeText(token);
-      if (alive.current) setKeyNotice(t('clubOwnerKeyCopied'));
-    } catch {
-      if (alive.current) {
-        setShowKey(true);
-        recoveryInput.current?.select();
-        setKeyNotice(t('clubOwnerCopyKeyManually'));
-      }
-    }
-  };
   const date = validUntil ? new Date(validUntil).toLocaleDateString(locale) : '';
   const expired = expiryPassed || (validUntil !== null && Date.parse(validUntil) <= Date.now());
   const canCreate =
@@ -251,7 +227,7 @@ export function ManagedScreen({
           </button>
         </section>
       ) : null}
-      {!space && token && !pendingTrial ? (
+      {!space && token && !pendingTrial && !rejected ? (
         <button
           type="button"
           className="btn btn-ghost"
@@ -265,7 +241,7 @@ export function ManagedScreen({
           {t('clubReload')}
         </button>
       ) : null}
-      {!space && !token ? (
+      {!space && (!token || rejected) ? (
         <form
           className="club-form"
           onSubmit={(e) => {
@@ -421,46 +397,6 @@ export function ManagedScreen({
             </form>
           ) : null}
         </>
-      ) : null}
-      {token ? (
-        <section className="club-managed-card club-form">
-          <label className="club-field">
-            <span>{t('clubOwnerRecoveryKey')}</span>
-            <input
-              ref={recoveryInput}
-              className="club-input"
-              type={showKey ? 'text' : 'password'}
-              autoComplete="off"
-              spellCheck={false}
-              autoCapitalize="none"
-              readOnly
-              value={token}
-            />
-          </label>
-          <p className="club-quiet">{t('clubOwnerRecoveryHelp')}</p>
-          <div className="club-actions">
-            <button
-              type="button"
-              className="btn btn-ghost"
-              aria-pressed={showKey}
-              onClick={() => setShowKey((shown) => !shown)}
-            >
-              {t(showKey ? 'clubOwnerHideKey' : 'clubOwnerShowKey')}
-            </button>
-            <button type="button" className="btn btn-ghost" onClick={() => void copyKey()}>
-              {t('clubOwnerCopyKey')}
-            </button>
-          </div>
-          {keyNotice ? <p role="status">{keyNotice}</p> : null}
-          <button
-            type="button"
-            className="btn btn-ghost"
-            disabled={busy}
-            onClick={() => void forgetOwner()}
-          >
-            {t('clubOwnerForget')}
-          </button>
-        </section>
       ) : null}
     </ScreenFrame>
   );

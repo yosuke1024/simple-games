@@ -14,18 +14,9 @@ export const tr: ClubMessages = {
     'En az {required} üyeniz ve etkin barındırma erişiminiz olduğu sürece reklamlar gizlenir. Avantajı güncellemek için bu ekranı yeniden yükleyin.',
   clubOwnerMemberCountHelp:
     'Tüm Kulüplerinizin üyeleri toplanır; siz de her Kulüpte sayılırsınız. Birden fazla Kulüpte olan bir üye her Kulüpte ayrı sayılır. Bekleyen istekler dahil edilmez.',
-  clubOwnerRecoveryKey: 'Sahip kurtarma anahtarı',
-  clubOwnerRecoveryHelp:
-    'Verileri sıfırlamadan veya cihaz değiştirmeden önce bu anahtarı özel bir yerde saklayın. Ayarlar’daki yedekleme dosyasına da dahil edilir.',
-  clubOwnerShowKey: 'Sahip anahtarını göster',
-  clubOwnerHideKey: 'Sahip anahtarını gizle',
-  clubOwnerCopyKey: 'Sahip anahtarını kopyala',
-  clubOwnerKeyCopied: 'Sahip anahtarı kopyalandı',
-  clubOwnerCopyKeyManually: 'Bu anahtarı seçip kopyalayın.',
   clubOwnerSpace: 'Sahip alanı',
   clubOwnerKey: 'Sahip anahtarı',
   clubOwnerConnect: 'Sahip alanını aç',
-  clubOwnerForget: 'Bu anahtarı unut',
   clubOwnerKeyHelp: 'Bu anahtarı gizli tutun. Bu cihazda sahip alanınızı açar.',
   clubOwnerUsage: '{max} Kulüpten {used} · Kulüp başına {members} üye',
   clubCreate: 'Kulüp oluştur',

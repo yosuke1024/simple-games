@@ -14,18 +14,9 @@ export const id: ClubMessages = {
     'Iklan disembunyikan selama Anda memiliki setidaknya {required} anggota dan akses hosting aktif. Muat ulang layar ini untuk memperbarui status manfaat.',
   clubOwnerMemberCountHelp:
     'Anggota dari semua Klub Anda dijumlahkan, termasuk Anda di setiap Klub. Anggota yang ada di beberapa Klub dihitung di masing-masing Klub. Permintaan yang menunggu persetujuan tidak dihitung.',
-  clubOwnerRecoveryKey: 'Kunci pemulihan pemilik',
-  clubOwnerRecoveryHelp:
-    'Simpan kunci ini di tempat pribadi sebelum mereset data atau mengganti perangkat. Kunci ini juga disertakan dalam file cadangan dari Pengaturan.',
-  clubOwnerShowKey: 'Tampilkan kunci pemilik',
-  clubOwnerHideKey: 'Sembunyikan kunci pemilik',
-  clubOwnerCopyKey: 'Salin kunci pemilik',
-  clubOwnerKeyCopied: 'Kunci pemilik disalin',
-  clubOwnerCopyKeyManually: 'Pilih dan salin kunci ini.',
   clubOwnerSpace: 'Ruang pemilik',
   clubOwnerKey: 'Kunci pemilik',
   clubOwnerConnect: 'Buka ruang pemilik',
-  clubOwnerForget: 'Lupakan kunci ini',
   clubOwnerKeyHelp: 'Rahasiakan kunci ini. Kunci ini membuka ruang pemilik Anda di perangkat ini.',
   clubOwnerUsage: '{used} dari {max} Klub · {members} anggota per Klub',
   clubCreate: 'Buat Klub',

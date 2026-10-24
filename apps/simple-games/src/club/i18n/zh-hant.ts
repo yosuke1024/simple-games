@@ -14,18 +14,9 @@ export const zhHant: ClubMessages = {
     '成員總數至少達到{required}名且託管服務使用權有效時，廣告將被隱藏。重新載入此頁面即可更新權益狀態。',
   clubOwnerMemberCountHelp:
     '將你擁有的所有俱樂部的成員數相加，每個俱樂部都包含你自己。加入多個俱樂部的成員會在各俱樂部中分別計數。不包含待核准的申請。',
-  clubOwnerRecoveryKey: '擁有者復原金鑰',
-  clubOwnerRecoveryHelp:
-    '重設資料或更換裝置前，請將此金鑰保存在他人無法查看的地方。設定中的備份檔案也會包含此金鑰。',
-  clubOwnerShowKey: '顯示擁有者金鑰',
-  clubOwnerHideKey: '隱藏擁有者金鑰',
-  clubOwnerCopyKey: '複製擁有者金鑰',
-  clubOwnerKeyCopied: '已複製擁有者金鑰',
-  clubOwnerCopyKeyManually: '請選取並複製此金鑰。',
   clubOwnerSpace: '建立者空間',
   clubOwnerKey: '建立者金鑰',
   clubOwnerConnect: '開啟建立者空間',
-  clubOwnerForget: '忘記此建立者金鑰',
   clubOwnerKeyHelp: '請保密此金鑰。它可在此裝置上開啟你的建立者空間。',
   clubOwnerUsage: '已使用{used}/{max}個俱樂部 · 每個最多{members}人',
   clubCreate: '建立俱樂部',

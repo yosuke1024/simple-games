@@ -261,12 +261,6 @@
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
       },
-      "clubOwnerRecoveryHelp": {
-        "source": "sha256:2d65b82f4ef3fc544a2df8b5e1968ea5028dc5014636b757f1d8e7ea41677424",
-        "target": "sha256:dc3398e09c37951b4adcc581a09befaf3732b7daa1afae67c993bbe414f04091",
-        "reviewedOn": "2026-10-24",
-        "by": "claude-blind-agent"
-      },
       "backupClubNote": {
         "source": "sha256:46eef9cbaf4df7d117f3d525e13f6580609252c6d638b598d4baef565d5b3769",
         "target": "sha256:e4de21209540313fb98e466c6ff0ff9408f7b21c38f1a01956d8209b1cd38c1b",
@@ -518,12 +512,6 @@
       "clubOwnerMemberCountHelp": {
         "source": "sha256:d89f22f4e83704ddb6dc2c8b93d5c84fd68217528d872b1eb9af0d4f4f3eedfc",
         "target": "sha256:6c792a0c2fd2cd744f4e012e92412e3c2c0fe8105e8d65c099c9c42dee584c84",
-        "reviewedOn": "2026-10-24",
-        "by": "claude-blind-agent"
-      },
-      "clubOwnerRecoveryHelp": {
-        "source": "sha256:2d65b82f4ef3fc544a2df8b5e1968ea5028dc5014636b757f1d8e7ea41677424",
-        "target": "sha256:97fc3d2f7e2433ff0b56e141c377696a246e09c3dd8f25e54ebdfbff1cf7eada",
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
       },
@@ -781,12 +769,6 @@
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
       },
-      "clubOwnerRecoveryHelp": {
-        "source": "sha256:2d65b82f4ef3fc544a2df8b5e1968ea5028dc5014636b757f1d8e7ea41677424",
-        "target": "sha256:3403d859ff46f0dd7bdaf0d2dc84a34206b559e607526f29c4af942308fc2561",
-        "reviewedOn": "2026-10-24",
-        "by": "claude-blind-agent"
-      },
       "backupClubNote": {
         "source": "sha256:46eef9cbaf4df7d117f3d525e13f6580609252c6d638b598d4baef565d5b3769",
         "target": "sha256:a5c424cd8078b51a0b46f179eee9859474c4297e93eea54a8c9a7478012a3175",
@@ -1038,12 +1020,6 @@
       "clubOwnerMemberCountHelp": {
         "source": "sha256:d89f22f4e83704ddb6dc2c8b93d5c84fd68217528d872b1eb9af0d4f4f3eedfc",
         "target": "sha256:0aea552443dca5a35013305b367d8823bad9dc5f6c1984cb3ca73ad218cb1ea3",
-        "reviewedOn": "2026-10-24",
-        "by": "claude-blind-agent"
-      },
-      "clubOwnerRecoveryHelp": {
-        "source": "sha256:2d65b82f4ef3fc544a2df8b5e1968ea5028dc5014636b757f1d8e7ea41677424",
-        "target": "sha256:7568e4805941a88d7488d0124df5c6f01b954d8c670fbd65e279778a7bc9e86c",
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
       },
@@ -1301,12 +1277,6 @@
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
       },
-      "clubOwnerRecoveryHelp": {
-        "source": "sha256:2d65b82f4ef3fc544a2df8b5e1968ea5028dc5014636b757f1d8e7ea41677424",
-        "target": "sha256:4b69feeb6710c671a704d93652ae190e14c1c39dc215412dabc202afb5b7f117",
-        "reviewedOn": "2026-10-24",
-        "by": "claude-blind-agent"
-      },
       "backupClubNote": {
         "source": "sha256:46eef9cbaf4df7d117f3d525e13f6580609252c6d638b598d4baef565d5b3769",
         "target": "sha256:2eadf36f244f70fabe671753c95056d678a3379203d877beaf1966c38914488f",
@@ -1558,12 +1528,6 @@
       "clubOwnerMemberCountHelp": {
         "source": "sha256:d89f22f4e83704ddb6dc2c8b93d5c84fd68217528d872b1eb9af0d4f4f3eedfc",
         "target": "sha256:45b2589c768cf40bb1e95186bc8623dacefc9421f47efc098f59d6d5352ca3c6",
-        "reviewedOn": "2026-10-24",
-        "by": "claude-blind-agent"
-      },
-      "clubOwnerRecoveryHelp": {
-        "source": "sha256:2d65b82f4ef3fc544a2df8b5e1968ea5028dc5014636b757f1d8e7ea41677424",
-        "target": "sha256:c3ce369b2d513275defcc2a17b74102dbba4322f0826652473470f5b689c4e6d",
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
       },
@@ -1821,12 +1785,6 @@
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
       },
-      "clubOwnerRecoveryHelp": {
-        "source": "sha256:2d65b82f4ef3fc544a2df8b5e1968ea5028dc5014636b757f1d8e7ea41677424",
-        "target": "sha256:1e61312b50e4c61d8388bce5af0b6266bcf3a5a95e6180006de39c71171ee71f",
-        "reviewedOn": "2026-10-24",
-        "by": "claude-blind-agent"
-      },
       "backupClubNote": {
         "source": "sha256:46eef9cbaf4df7d117f3d525e13f6580609252c6d638b598d4baef565d5b3769",
         "target": "sha256:76fa9cbeb7b09a24eaa11738fec86b9ae03a93fbeeaaee164e1a39f9eb815ea4",
@@ -2078,12 +2036,6 @@
       "clubOwnerMemberCountHelp": {
         "source": "sha256:d89f22f4e83704ddb6dc2c8b93d5c84fd68217528d872b1eb9af0d4f4f3eedfc",
         "target": "sha256:c7a3fb24980939b80023aeb4a245beff65b0cb386971bdef4e814e6232034452",
-        "reviewedOn": "2026-10-24",
-        "by": "claude-blind-agent"
-      },
-      "clubOwnerRecoveryHelp": {
-        "source": "sha256:2d65b82f4ef3fc544a2df8b5e1968ea5028dc5014636b757f1d8e7ea41677424",
-        "target": "sha256:81802e9c499cf980e61e73ed9b51fd4bc1c47d4b34821da2267e2631d95bc47b",
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
       },
@@ -2341,12 +2293,6 @@
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
       },
-      "clubOwnerRecoveryHelp": {
-        "source": "sha256:2d65b82f4ef3fc544a2df8b5e1968ea5028dc5014636b757f1d8e7ea41677424",
-        "target": "sha256:d8071dcba1ef0b0ac486030e5ddd1c6c327f59e15f95eb3e5153a6047337b93d",
-        "reviewedOn": "2026-10-24",
-        "by": "claude-blind-agent"
-      },
       "backupClubNote": {
         "source": "sha256:46eef9cbaf4df7d117f3d525e13f6580609252c6d638b598d4baef565d5b3769",
         "target": "sha256:195f39c94bd1045d07496460b7fc08a702049d975e4f0c31dd49c65264444cbd",
@@ -2598,12 +2544,6 @@
       "clubOwnerMemberCountHelp": {
         "source": "sha256:d89f22f4e83704ddb6dc2c8b93d5c84fd68217528d872b1eb9af0d4f4f3eedfc",
         "target": "sha256:b7fb6dd563b3ca183f89836d1c53bf91c26249059a8281a299a239fc98d5c20d",
-        "reviewedOn": "2026-10-24",
-        "by": "claude-blind-agent"
-      },
-      "clubOwnerRecoveryHelp": {
-        "source": "sha256:2d65b82f4ef3fc544a2df8b5e1968ea5028dc5014636b757f1d8e7ea41677424",
-        "target": "sha256:019acfbb1085a322d11aa7c33f11b3a090f22dff2aedfd7ffea7053df8e53509",
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
       },
@@ -2861,12 +2801,6 @@
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
       },
-      "clubOwnerRecoveryHelp": {
-        "source": "sha256:2d65b82f4ef3fc544a2df8b5e1968ea5028dc5014636b757f1d8e7ea41677424",
-        "target": "sha256:78cd9fd3f085abbb23bdc74f5cd9061fcf486fb3e940ed7d6d4e49d6c36e2207",
-        "reviewedOn": "2026-10-24",
-        "by": "claude-blind-agent"
-      },
       "backupClubNote": {
         "source": "sha256:46eef9cbaf4df7d117f3d525e13f6580609252c6d638b598d4baef565d5b3769",
         "target": "sha256:859b935adec7b3e515b3950da92663cb5a24c64672eed69d8a9179dc8d94c18c",
@@ -3118,12 +3052,6 @@
       "clubOwnerMemberCountHelp": {
         "source": "sha256:d89f22f4e83704ddb6dc2c8b93d5c84fd68217528d872b1eb9af0d4f4f3eedfc",
         "target": "sha256:585ab21cfaa9d7800f81fcde71ba9a704f07dfdc47e464302aed34e634acb3b6",
-        "reviewedOn": "2026-10-24",
-        "by": "claude-blind-agent"
-      },
-      "clubOwnerRecoveryHelp": {
-        "source": "sha256:2d65b82f4ef3fc544a2df8b5e1968ea5028dc5014636b757f1d8e7ea41677424",
-        "target": "sha256:498b5d83f0bc07f2270d9221a16e6c7f462a29ed3197c38498a78e5b5b38ba6b",
         "reviewedOn": "2026-10-24",
         "by": "claude-blind-agent"
       },

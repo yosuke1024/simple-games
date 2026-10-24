@@ -14,18 +14,9 @@ export const ja: ClubMessages = {
     'メンバーの合計が{required}名以上で、ホスティングの利用権が有効な間は広告が非表示になります。この画面を再読み込みすると特典の状態が更新されます。',
   clubOwnerMemberCountHelp:
     '各クラブのオーナーを含め、所有するクラブのメンバー数を合算します。複数のクラブに所属するメンバーは、各クラブで数えます。承認待ちのリクエストは含みません。',
-  clubOwnerRecoveryKey: 'オーナー復元キー',
-  clubOwnerRecoveryHelp:
-    'データのリセットや端末の変更の前に、このキーを他の人に見られない場所に控えてください。設定のバックアップファイルにも含まれます。',
-  clubOwnerShowKey: 'オーナーキーを表示',
-  clubOwnerHideKey: 'オーナーキーを隠す',
-  clubOwnerCopyKey: 'オーナーキーをコピー',
-  clubOwnerKeyCopied: 'オーナーキーをコピーしました',
-  clubOwnerCopyKeyManually: 'このキーを選択してコピーしてください。',
   clubOwnerSpace: 'オーナースペース',
   clubOwnerKey: 'オーナーキー',
   clubOwnerConnect: 'オーナースペースを開く',
-  clubOwnerForget: 'このオーナーキーを端末から消す',
   clubOwnerKeyHelp: 'このキーでオーナースペースを開けます。他の人に教えないでください。',
   clubOwnerUsage: '{max}クラブ中{used}クラブ · 各クラブ{members}名まで',
   clubCreate: 'クラブを作る',
