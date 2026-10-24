@@ -25,6 +25,10 @@
 > 同じ盤面になるのはデイリーだけ)。**この段落もリリース時(v1.4.0)の文面**で、それまで
 > Console には載せない。v1.3.2 と v1.3.3 は内部テストと
 > TestFlight だけなので、掲載文は変えない。
+> **2026-10-25 に Club House の段落へ「自分の Club を作り、リンクで招待できる」1 文を足した**
+> (managed Club House、v1.5.0)。運営の主語は Public と同じく PixApps。料金・人数枠・
+> 試用の言葉は書かない(Basic は未提供で、Trial の枠は運用で変わる)。**v1.5.0 の公開と同時に**、
+> 人間の承認の後で Console に反映する。v1.4.2 / v1.4.3 はテスト版なので掲載文は変えていない。
 
 > 掲載は収録ゲーム 41 本(Sudoku / Solitaire / Spider Solitaire / FreeCell /
 > Mahjong Solitaire / Hearts / Gin Rummy / Minesweeper / Ludo / 2048 /
@@ -144,7 +148,7 @@ The games never go online.
 All of them run offline, from the very first launch. Your progress stays on your device and nowhere else. No account and no cloud sync, and no game ever waits on a server — so there is nothing that can go down in the middle of a game. To keep the app usable far from a charger, I left out anything power-hungry.
 
 Club House is the one optional exception, and only if you join one.
-Join a Club with a nickname — there is no account. From then on, each game you finish sends its result (time, moves or score) to the Clubs you joined, automatically — in the games that support Clubs, and nothing you played before joining. In each game and mode your personal bests sit next to theirs; everyone plays different boards, luck included. In most games the daily puzzle is one board for everyone, so you can see how others did on the very same one. You can disconnect, delete your own records one by one, or change your name at any time. PixApps runs the Public Club House. A device that never joins never connects to it.
+Join a Club with a nickname — there is no account. From then on, each game you finish sends its result (time, moves or score) to the Clubs you joined, automatically — in the games that support Clubs, and nothing you played before joining. In each game and mode your personal bests sit next to theirs; everyone plays different boards, luck included. In most games the daily puzzle is one board for everyone, so you can see how others did on the very same one. You can disconnect, delete your own records one by one, or change your name at any time. PixApps runs the Public Club House, and you can also start your own Club and invite family or friends with a link — PixApps runs that one too. A device that never joins never connects to it.
 
 INCLUDED GAMES
 • Sudoku
