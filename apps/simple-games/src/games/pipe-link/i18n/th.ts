@@ -1,0 +1,57 @@
+/**
+ * Thai catalog for Pipe Link. Provenance (docs/PIPE_LINK_RULES.md §11):
+ * machine-written by AI from the English source and **not read by any native
+ * speaker** — not a reviewed translation. The title (`pipeLinkName`) is a
+ * proper noun and stays as-is; placeholder names match the English source.
+ */
+import type { PipeLinkMessages } from './en';
+
+export const th: PipeLinkMessages = {
+  pipeLinkName: 'Pipe Link',
+  pipeLinkChooseBoard: 'เลือกกระดาน',
+  pipeLinkDifficulty_easy: 'ง่าย',
+  pipeLinkDifficulty_medium: 'ปานกลาง',
+  pipeLinkDifficulty_hard: 'ยาก',
+  pipeLinkBoardNote: '{width}×{height}',
+  pipeLinkConfirmSwitchTitle: 'แทนที่กระดานที่กำลังเล่นอยู่หรือไม่?',
+  pipeLinkConfirmSwitchBody: 'กระดานระดับ {current} ของคุณจะถูกแทนที่ด้วยกระดานระดับ {next} ใหม่',
+  pipeLinkBoardLabel: 'กระดาน Pipe Link ขนาด {width} คูณ {height}',
+  pipeLinkTile: 'แถว {row} คอลัมน์ {col}: {pipes}, {light}',
+  pipeLinkTileSource: 'แถว {row} คอลัมน์ {col} ต้นน้ำ: {pipes}, {light}',
+  pipeLinkTileHinted: '{tile} คำใบ้: หมุนให้เป็น {pipes}',
+  pipeLinkLit: 'มีน้ำ',
+  pipeLinkUnlit: 'ไม่มีน้ำ',
+  pipeLinkPipes_end_0: 'ปลายท่อ เปิดขึ้นบน',
+  pipeLinkPipes_end_1: 'ปลายท่อ เปิดไปทางขวา',
+  pipeLinkPipes_end_2: 'ปลายท่อ เปิดลงล่าง',
+  pipeLinkPipes_end_3: 'ปลายท่อ เปิดไปทางซ้าย',
+  pipeLinkPipes_straight_0: 'ท่อตรง บนและล่าง',
+  pipeLinkPipes_straight_1: 'ท่อตรง ซ้ายและขวา',
+  pipeLinkPipes_elbow_0: 'ท่องอ บนและขวา',
+  pipeLinkPipes_elbow_1: 'ท่องอ ขวาและล่าง',
+  pipeLinkPipes_elbow_2: 'ท่องอ ล่างและซ้าย',
+  pipeLinkPipes_elbow_3: 'ท่องอ ซ้ายและบน',
+  pipeLinkPipes_tee_0: 'ท่อตัว T บน ขวา และล่าง',
+  pipeLinkPipes_tee_1: 'ท่อตัว T ขวา ล่าง และซ้าย',
+  pipeLinkPipes_tee_2: 'ท่อตัว T ล่าง ซ้าย และบน',
+  pipeLinkPipes_tee_3: 'ท่อตัว T ซ้าย บน และขวา',
+  pipeLinkAnnounce: 'แถว {row} คอลัมน์ {col}: {pipes} มีน้ำ {lit} จาก {total} แผ่น',
+  pipeLinkHintNote: 'หมุนแผ่นในวงจุดไข่ปลาจนท่อตรงกับท่อสีจาง',
+  pipeLinkHintWhere: 'ที่ทำเครื่องหมาย: แถว {row} คอลัมน์ {col} หมุนให้เป็น {pipes}',
+  pipeLinkSolvedTitle: 'ทุกแผ่นมีน้ำแล้ว',
+  pipeLinkSolvedBody: 'น้ำจากต้นน้ำไปถึงครบทั้ง {tiles} แผ่น',
+  pipeLinkBoardSize: 'กระดาน',
+  pipeLinkHintsUsed: 'คำใบ้ที่ใช้',
+  pipeLinkNewBestTime: 'เร็วที่สุดของคุณ',
+  pipeLinkNewBoard: 'กระดานใหม่',
+  pipeLinkSolvedCount: 'กระดานที่แก้ได้',
+  pipeLinkDailySection: 'รายวัน',
+  pipeLinkDailiesCleared: 'วันที่ทำสำเร็จ',
+  pipeLinkAllModes: 'ทุกโหมด',
+  pipeLinkStep1Title: 'แตะเพื่อหมุน',
+  pipeLinkStep1Body: 'แตะแผ่นเพื่อหมุนตามเข็มนาฬิกาหนึ่งในสี่รอบ',
+  pipeLinkStep2Title: 'น้ำไหล',
+  pipeLinkStep2Body: 'ท่อที่ต่อกับต้นน้ำจะมีน้ำเต็ม ส่วนท่ออื่นยังว่าง',
+  pipeLinkStep3Title: 'เติมน้ำให้ทุกท่อ',
+  pipeLinkStep3Body: 'เมื่อทุกท่อเต็มไปด้วยน้ำ กระดานก็เสร็จสมบูรณ์',
+};

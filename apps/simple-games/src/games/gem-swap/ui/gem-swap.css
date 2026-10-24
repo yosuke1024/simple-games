@@ -1,0 +1,478 @@
+/* Gem Swap — all of this game's styling, imported by GemSwapRoot. Screens,
+   buttons, dialogs and the action bar come from the shared stylesheet
+   (ui/styles.css); the accent (臙脂) arrives via the data-game tokens the
+   shell stamps, and is used for the chrome and the selection ring only.
+
+   Class names are prefixed `gs-` so this file can never collide with the
+   shell or with another game.
+
+   The six gem colours below are game content, not chrome — the same standing
+   as Bubble Pop's bubble colours or Water Sort's liquids
+   (docs/architecture/css-split.md, docs/BRAND.md「盤面が自前の色階調を持つ場合の
+   例外」; values and reasons in docs/GEM_SWAP_RULES.md §10). Ordered by kind:
+   0 hexagon, 1 octagon, 2 drop, 3 marquise, 4 shield, 5 heart. None is in the
+   accent's red–rose family, and every gem also has its own cut, so colour is
+   never the only way to tell two gems apart. Each clears 3:1 on --surface in
+   its theme (ui/contrast.test.ts). No other colour is written here. */
+
+:root {
+  --gs-gem-0: #2c64c8;
+  --gs-gem-1: #1f8a55;
+  --gs-gem-2: #b07d12;
+  --gs-gem-3: #7a4fc0;
+  --gs-gem-4: #d9682a;
+  --gs-gem-5: #1d8fa2;
+}
+
+:root[data-theme='dark'] {
+  --gs-gem-0: #6f9cf0;
+  --gs-gem-1: #4fc489;
+  --gs-gem-2: #efc04e;
+  --gs-gem-3: #a985ec;
+  --gs-gem-4: #f0904f;
+  --gs-gem-5: #56cde0;
+}
+
+/* ---------- game screen ---------- */
+
+/* Score and bar, board — centred in the room between the top bar and Undo.
+   When the board's floor is taller than the room left (a phone held
+   sideways), this column scrolls on its own, so the board never runs under
+   the top bar. Centred by auto margins rather than `justify-content`,
+   because a centred column that overflows puts its top out of reach. */
+.gs-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 8px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.gs-body > :first-child {
+  margin-top: auto;
+}
+
+.gs-body > :last-child {
+  margin-bottom: auto;
+}
+
+/* The board's width, and the status row above it at the same width. As large
+   as its column honestly allows (`100%`, not `vw`), and never taller than the
+   screen leaves: the viewport minus the top bar (about 56px), the score row
+   (about 36px), Undo (about 78px), the gaps, and the web build's 116px ad
+   reserve — about 300px in all (算術では; docs/GEM_SWAP_RULES.md §9). At
+   360×640 that is 336px, a 42px pitch. Never below 260px (or its column):
+   a board that small cannot be played, so a short window scrolls instead. */
+.gs-status,
+.gs-board {
+  width: max(min(100%, 260px), min(100%, 480px, calc(100vh - 300px)));
+}
+
+.gs-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gs-score {
+  margin: 0;
+  flex: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.gs-score-value {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.gs-actions {
+  justify-content: center;
+}
+
+/* ---------- the bar of swaps left (§9) ---------- */
+
+.gs-bar {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Thirty thin segments: a remaining swap is filled, a used one is an outline.
+   The same two looks from the first swap to the last — no colour change, no
+   blinking near the end. */
+.gs-bar-track {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+}
+
+.gs-bar-seg {
+  flex: 1;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.gs-bar-seg-left {
+  background: var(--ink-soft);
+  box-shadow: none;
+}
+
+/* ---------- the board ---------- */
+
+/* Eight by eight square cells on a recessed plate. `touch-action: none`
+   because gems are swiped (§3): without it the page would claim the finger.
+   The plate clips, so a refill falling in from above the board is seen only
+   once it is on it. */
+.gs-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  aspect-ratio: 1;
+  padding: 3px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  background: var(--surface-recessed);
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gs-cell {
+  position: relative;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Each cell's own tile, inset so neighbours read apart without a grid gap
+   (a gap would make one cell's width differ from the pitch a falling gem
+   travels by). */
+.gs-cell::before {
+  content: '';
+  position: absolute;
+  inset: 1.5px;
+  border-radius: 7px;
+  background: var(--surface);
+}
+
+/* The selected gem: a solid accent ring (§10) — a ring, so the state is a
+   shape as well as a colour, and the screen reader says "selected". */
+.gs-cell-selected::before {
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
+/* The keyboard focus: dashed, so it never reads as the selection's solid
+   ring, whatever cell it is on. */
+.gs-cell:focus-visible {
+  outline: 2px dashed var(--ink);
+  outline-offset: -3px;
+  border-radius: 8px;
+}
+
+/* The gem's own box: the whole cell, so a move by whole cells is a
+   `translate` by whole multiples of 100%. */
+.gs-slot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.gs-gem {
+  width: 78%;
+  height: 78%;
+  overflow: visible;
+}
+
+.gs-gem-body {
+  stroke-linejoin: round;
+}
+
+.gs-gem-0 .gs-gem-body {
+  fill: var(--gs-gem-0);
+}
+
+.gs-gem-1 .gs-gem-body {
+  fill: var(--gs-gem-1);
+}
+
+.gs-gem-2 .gs-gem-body {
+  fill: var(--gs-gem-2);
+}
+
+.gs-gem-3 .gs-gem-body {
+  fill: var(--gs-gem-3);
+}
+
+.gs-gem-4 .gs-gem-body {
+  fill: var(--gs-gem-4);
+}
+
+.gs-gem-5 .gs-gem-body {
+  fill: var(--gs-gem-5);
+}
+
+/* One facet line, in the surface colour, inside the outline (§10): it never
+   reaches the edge, so the cut's silhouette stays the shape that counts. */
+.gs-gem-facet {
+  fill: none;
+  stroke: var(--surface);
+  stroke-width: 4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+
+/* ---------- the replay (§10) ---------- */
+
+/* One beat each, its length set on the board (`--gs-beat`) by the replay:
+   a gem arriving slides in from where it was (`--gs-dx` / `--gs-dy`, in
+   cells), a gem clearing shrinks away. Under Reduced Motion there is no
+   replay at all — the final board is drawn at once — and the shell's rule
+   stops any animation besides. */
+/* A gem on its way is lifted above the tiles: each tile is a positioned
+   `::before` painted in board order, so a gem sliding left or up from a
+   later cell would otherwise travel under its neighbour's tile. The plate's
+   `overflow: hidden` still clips it to the board. */
+.gs-slot-arrive {
+  z-index: 1;
+  animation: gs-arrive var(--gs-beat, 160ms) ease-out both;
+}
+
+.gs-slot-clearing {
+  animation: gs-clear var(--gs-beat, 160ms) ease-in both;
+}
+
+/* A gem both arriving and clearing on the same beat lands first, then goes. */
+.gs-slot-arrive.gs-slot-clearing {
+  animation:
+    gs-arrive calc(var(--gs-beat, 160ms) * 0.5) ease-out both,
+    gs-clear calc(var(--gs-beat, 160ms) * 0.5) ease-in calc(var(--gs-beat, 160ms) * 0.5) both;
+}
+
+@keyframes gs-arrive {
+  from {
+    transform: translate(calc(var(--gs-dx, 0) * 100%), calc(var(--gs-dy, 0) * 100%));
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes gs-clear {
+  from {
+    transform: none;
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* ---------- home ---------- */
+
+.gs-kinds {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.gs-kinds-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.gs-kinds-toggle {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.gs-kinds-toggle .segment {
+  min-width: 96px;
+}
+
+/* The three numbers the statistics keep (§7), in one quiet row. */
+.gs-home-stats {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin: 0;
+}
+
+.gs-home-stats div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.gs-home-stats dt {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.gs-home-stats dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ---------- Quick Rules figures (§8) ---------- */
+
+/* The early-release note under the heading on every step: the heading's
+   gutter and the full width, as the other early-release titles do. */
+.gs-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
+}
+
+.gs-figure {
+  width: min(200px, 56vw);
+}
+
+.gs-fig {
+  position: relative;
+}
+
+.gs-fig-grid {
+  display: grid;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-recessed);
+}
+
+.gs-fig-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+}
+
+.gs-fig-cell::before {
+  content: '';
+  position: absolute;
+  inset: 1.5px;
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.gs-fig-cell .gs-gem {
+  position: relative;
+}
+
+/* A cleared cell, waiting for what falls into it. */
+.gs-fig-cell-empty::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+/* The two gems about to trade places: the selection's ring. */
+.gs-fig-cell-marked::before {
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
+/* A gem just arrived from the tape, drawn a little lighter. */
+.gs-fig-cell-arriving .gs-gem {
+  opacity: 0.6;
+}
+
+.gs-fig-arrows {
+  position: absolute;
+  inset: 3px;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  pointer-events: none;
+}
+
+.gs-fig-arrows line {
+  stroke: var(--ink);
+  stroke-width: 0.05;
+  stroke-linecap: round;
+}
+
+.gs-fig-round {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 16px 4px;
+}
+
+.gs-fig-score {
+  align-self: center;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ---------- forced colours (Windows High Contrast, the web build) ----------
+
+   A forced palette repaints every background as Canvas and drops every
+   box-shadow, which would take the selection ring, the bar's segments and
+   the figure's empty cells with them. Those few marks opt out
+   (`forced-color-adjust: none`) and are drawn in the system's own colours
+   instead: the selection a Highlight ring on Canvas, a remaining swap a
+   CanvasText fill, a used one a CanvasText outline. The gems keep their cuts
+   and are drawn in CanvasText — `svg.gs-gem` outranks the per-kind fill
+   rules above, whatever the order. */
+@media (forced-colors: active) {
+  svg.gs-gem .gs-gem-body {
+    fill: CanvasText;
+  }
+
+  svg.gs-gem .gs-gem-facet {
+    stroke: Canvas;
+  }
+
+  .gs-cell-selected::before,
+  .gs-fig-cell-marked::before,
+  .gs-fig-cell-empty::before,
+  .gs-bar-seg {
+    forced-color-adjust: none;
+  }
+
+  .gs-cell-selected::before,
+  .gs-fig-cell-marked::before {
+    background: Canvas;
+    box-shadow: inset 0 0 0 3px Highlight;
+  }
+
+  .gs-fig-cell-empty::before {
+    background: Canvas;
+    box-shadow: inset 0 0 0 1.5px CanvasText;
+  }
+
+  .gs-bar-seg {
+    box-shadow: inset 0 0 0 1px CanvasText;
+  }
+
+  .gs-bar-seg-left {
+    background: CanvasText;
+  }
+}

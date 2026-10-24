@@ -13,6 +13,7 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import java.util.Collections;
 
 /**
  * Pins one game to the home screen when the player asks for it (issue #110).
@@ -69,12 +70,26 @@ public class HomeShortcutPlugin extends Plugin {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
             intent.setClass(getContext(), getActivity().getClass());
 
+            IconCompat icon = iconFrom(call.getString("icon"));
             ShortcutInfoCompat shortcut = new ShortcutInfoCompat.Builder(getContext(), id)
                 .setShortLabel(label)
                 .setLongLabel(label)
-                .setIcon(iconFrom(call.getString("icon")))
+                .setIcon(icon != null ? icon : IconCompat.createWithResource(
+                    getContext(), getContext().getApplicationInfo().icon))
                 .setIntent(intent)
                 .build();
+
+            // Pinning an existing ID reuses its stored icon. Refresh that one
+            // record only when the player asks again; unknown IDs are ignored.
+            // A failed drawing must never replace an existing game picture
+            // with the app-icon fallback used for a new shortcut.
+            if (icon != null) {
+                try {
+                    ShortcutManagerCompat.updateShortcuts(getContext(), Collections.singletonList(shortcut));
+                } catch (Exception ignored) {
+                    // An optional refresh must not prevent the usual pin request.
+                }
+            }
 
             ret.put("requested", ShortcutManagerCompat.requestPinShortcut(getContext(), shortcut, null));
             call.resolve(ret);
@@ -85,9 +100,9 @@ public class HomeShortcutPlugin extends Plugin {
 
     /**
      * The picture the JavaScript drew (a base64 PNG, a full-bleed adaptive
-     * layer — src/services/homeShortcut/icon.ts), or the app's own launcher
-     * icon when none came or it cannot be decoded. A shortcut always has an
-     * icon; a missing picture is never a reason to refuse the request.
+     * layer — src/services/homeShortcut/icon.ts), or null when none came or
+     * it cannot be decoded. Keep failure distinct from the app-icon fallback
+     * so an existing shortcut retains its picture when drawing fails.
      */
     private IconCompat iconFrom(String base64Png) {
         if (!isBlank(base64Png)) {
@@ -98,10 +113,10 @@ public class HomeShortcutPlugin extends Plugin {
                     return IconCompat.createWithAdaptiveBitmap(bitmap);
                 }
             } catch (IllegalArgumentException ignored) {
-                // Not base64. Fall through to the app icon.
+                // Not base64. The caller keeps the existing picture, if any.
             }
         }
-        return IconCompat.createWithResource(getContext(), getContext().getApplicationInfo().icon);
+        return null;
     }
 
     private static boolean isBlank(String value) {

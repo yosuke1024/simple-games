@@ -93,8 +93,13 @@ function storedLevelSeconds(): number {
   return (JSON.parse(raw) as PersistedGame).elapsedSeconds;
 }
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -362,6 +367,52 @@ describe('first run', () => {
   });
 });
 
+describe('Quick Rules shown again over a suspended level (§10)', () => {
+  it('resumes that level on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    deviceStore.set(WS_STORAGE_KEYS.flags, tutorialDone[WS_STORAGE_KEYS.flags]!);
+    launch();
+    await startLevelOne(user);
+    await user.click(screen.getByRole('button', { name: 'Tube 1, bottom to top: 1 1 1 2' }));
+    await user.click(screen.getByRole('button', { name: 'Tube 4, bottom to top: empty' }));
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    const { seed, tubes: left } = JSON.parse(
+      deviceStore.get(WS_STORAGE_KEYS.game)!,
+    ) as PersistedGame;
+    cleanup();
+    // Level 1 is suspended one pour in, the list is open to level 3 — where a
+    // first run starts — and the flags record is gone.
+    deviceStore.set(
+      WS_STORAGE_KEYS.progress,
+      JSON.stringify({
+        schemaVersion: 1,
+        highestUnlocked: 3,
+        bestMoves: {},
+        bestSeconds: {},
+        dailyMoves: {},
+        dailySeconds: {},
+      }),
+    );
+    deviceStore.delete(WS_STORAGE_KEYS.flags);
+
+    launch();
+    expect(await screen.findByText('Pour same onto same')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tube 4, bottom to top: 2' })).toBeInTheDocument();
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    // Resumed, not started: the same board in the slot, and no second play booked.
+    const stored = JSON.parse(deviceStore.get(WS_STORAGE_KEYS.game)!) as PersistedGame;
+    expect(stored).toMatchObject({ seed, level: 1, tubes: left, moveCount: 1 });
+    expect((JSON.parse(deviceStore.get(WS_STORAGE_KEYS.stats)!) as Stats).played).toBe(1);
+  });
+});
+
 describe('playing', () => {
   it('pours with two taps and counts the move (§3, §4)', async () => {
     const user = userEvent.setup();
@@ -537,6 +588,47 @@ describe('opening a suspended game without resuming (#109)', () => {
       background();
       await settle();
       expect(storedBoardSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the board's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(WS_STORAGE_KEYS.flags, tutorialDone[WS_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      // A background books the first five, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedLevelSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the board still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedLevelSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

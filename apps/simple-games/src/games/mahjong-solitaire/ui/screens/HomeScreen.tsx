@@ -1,5 +1,6 @@
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck, IconGrid } from '@/ui/components/icons';
 import { localDateString, MAX_LEVEL } from '../../game';
 import { useMahjong } from '../../state/GameContext';
@@ -32,14 +33,13 @@ export function MahjongHomeScreen() {
       : null;
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="mahjong-solitaire" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: the one dot — the circle tile itself. */}
-        <div className="home-logo" aria-hidden="true">
-          ◎
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="mahjong-solitaire" />
+        </span>
         <h1 className="home-title">{t('mahjongName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

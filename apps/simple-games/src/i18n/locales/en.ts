@@ -77,6 +77,8 @@ export const en = {
     'The backup is an unencrypted file on your device. Simple Games never uploads it, and only you decide where it goes.',
   backupPurchaseNote:
     'Your ad-removal purchase is not part of the backup. Restore it from the store instead.',
+  backupClubNote:
+    'The Club House owner key and the Clubs you have joined are included too. Do not give the file to anyone else.',
   backupExport: 'Export Backup',
   backupRestore: 'Restore Backup',
   backupExportFailed: 'The backup file could not be created.',
@@ -189,6 +191,8 @@ export const en = {
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'Advanced',
   clubEntry: 'Club House',
+  // The home's second line under the joined Clubs: the ways in to another one.
+  clubJoinNew: 'Join a new Club House',
   playTogetherTitle: 'Play together',
   playTogetherBody: 'Share your scores with everyone.',
   clubResultSent: 'Sent to {club}',

@@ -24,6 +24,7 @@
  * (docs/OFFLINE_POLICY.md).
  */
 import './admax.css';
+import { isAdRemovalActive } from '../../../monetization/adRemoval';
 import { isOnline } from '../../network';
 import {
   adMaxAnchorChoice,
@@ -34,12 +35,14 @@ import {
 } from './admax';
 import { webAdsConfig } from './config';
 import { ensureAdSenseScript, onAdSenseScriptError } from './script';
+import { watchWebAdRemoval } from './lifecycle';
 
 const ANCHOR_TEST_CLASS = 'web-anchor-test';
 const ADMAX_ANCHOR_CLASS = 'web-admax-anchor';
 
 function mountAnchorTestPlaceholder(): void {
   try {
+    if (isAdRemovalActive()) return;
     if (document.querySelector(`.${ANCHOR_TEST_CLASS}`)) return;
     const bar = document.createElement('div');
     bar.className = ANCHOR_TEST_CLASS;
@@ -87,6 +90,7 @@ function removeAnchorBar(bar: HTMLElement): void {
 
 function mountAdMaxAnchor(): void {
   try {
+    if (isAdRemovalActive()) return;
     if (document.querySelector(`.${ADMAX_ANCHOR_CLASS}`)) return;
     if (!isOnline() || adMaxScriptFailed()) return;
     const choice = adMaxAnchorChoice(window.innerWidth);
@@ -117,6 +121,8 @@ function mountAdMaxAnchor(): void {
 }
 
 export function initWebAds(): void {
+  watchWebAdRemoval();
+  if (isAdRemovalActive()) return;
   const { testMode, client } = webAdsConfig();
   if (testMode) {
     mountAnchorTestPlaceholder();

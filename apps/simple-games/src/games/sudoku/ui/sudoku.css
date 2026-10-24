@@ -35,6 +35,15 @@
   overflow: hidden;
 }
 
+/* A paper edge and a shallow shadow lift the entire board as one object.
+   Shadows do not alter the 81 cells, seams, or board's responsive dimensions. */
+.sudoku-game-screen .sudoku-grid {
+  box-shadow:
+    0 0 0 4px var(--surface),
+    0 0 0 5px var(--line),
+    var(--shadow);
+}
+
 .sudoku-cell {
   position: relative;
   display: flex;
@@ -182,6 +191,38 @@
   color: var(--accent);
 }
 
+/* Key faces remain in their existing footprint. Notes use the same accent
+   surface as a selected cell; completed digits keep their recessed state. */
+.sudoku-game-screen .digit-key {
+  background: linear-gradient(180deg, var(--surface), var(--paper));
+  box-shadow: 0 2px 0 var(--line);
+}
+
+.sudoku-game-screen .digit-key-notes {
+  background: var(--accent-soft);
+  border-color: var(--accent-ring);
+}
+
+.sudoku-game-screen .digit-key-notes .digit-key-left,
+.sudoku-game-screen .digit-key:active:not(:disabled) .digit-key-left {
+  color: var(--accent);
+}
+
+.sudoku-game-screen .digit-key:active:not(:disabled) {
+  background: var(--accent-soft);
+  box-shadow: inset 0 1px 2px var(--accent-ring-soft);
+}
+
+.sudoku-game-screen .digit-key:disabled {
+  background: var(--surface-recessed);
+  box-shadow: none;
+}
+
+.sudoku-game-screen .digit-key:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* How many of this digit are still missing. Quiet: it is a hint about
    bookkeeping, not part of the puzzle. */
 .digit-key-left {
@@ -193,10 +234,45 @@
 
 .sudoku-status {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 8px;
+  min-width: 0;
   font-size: 13px;
   color: var(--ink-soft);
+  text-align: center;
+}
+
+.sudoku-tier {
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.sudoku-game-screen .action-btn {
+  border-radius: 12px;
+  box-shadow: 0 2px 0 var(--line);
+}
+
+.sudoku-game-screen .action-btn:not([aria-pressed='true']):not(:disabled) {
+  background: linear-gradient(180deg, var(--surface), var(--paper));
+}
+
+.sudoku-game-screen .action-btn[aria-pressed='true'] {
+  box-shadow: 0 2px 0 var(--accent-ring);
+}
+
+.sudoku-game-screen .action-btn:disabled {
+  box-shadow: none;
+}
+
+.sudoku-game-screen .action-btn:active:not(:disabled) {
+  box-shadow: inset 0 1px 2px var(--accent-ring-soft);
 }
 
 /* Quick Rules figures: one 3x3 box, drawn like the real grid so the picture

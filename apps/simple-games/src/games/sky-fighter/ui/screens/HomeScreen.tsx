@@ -1,5 +1,6 @@
 import { useSettings } from '@/state/SettingsContext';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconGrid } from '@/ui/components/icons';
 import { LEVEL_COUNT } from '../../game/levels';
 import { useSkyFighter } from '../../state/GameContext';
@@ -14,14 +15,13 @@ export function SkyHomeScreen() {
   const { t } = useSettings();
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="sky-fighter" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: the player's craft, nose up. */}
-        <div className="home-logo" aria-hidden="true">
-          ▲
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="sky-fighter" />
+        </span>
         <h1 className="home-title">{t('skyFighterName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

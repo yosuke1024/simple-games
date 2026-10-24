@@ -1,0 +1,399 @@
+/* Snake — all of this game's styling, imported by SnakeRoot
+   (docs/SNAKE_RULES.md §13). Built only from the series tokens in
+   src/ui/styles.css (--surface, --ink, --line, --accent, --radius, --tap-size,
+   --font-display, …), so the board follows the light and dark themes and the
+   title's one accent without naming a colour (docs/architecture/css-split.md).
+
+   Class names are prefixed `sn-` so this file can never collide with the
+   shell or with another game.
+
+   Nothing here animates. The snake moves cell to cell on the tick and is
+   never tweened between; there is no flash, pop, shake or particle to turn
+   off for Reduced Motion because there is none at all (§13). */
+
+/* ---------- game screen ---------- */
+
+/* The fixed rows around the board, in px: top bar 64, the gaps and padding
+   of .sn-body 32, the controls 158. What is left of the viewport's height is
+   the most the board may take, so a short screen gets a smaller board rather
+   than controls pushed off the bottom (§13「寸法」). The web build's bottom ad
+   reserve (ui/styles.css `:root[data-sg-web-ads] .screen`, its documented
+   worst case of 116px) is height the board cannot use either. */
+.sn-screen {
+  --sn-chrome: 254px;
+  --sn-reserve: 0px;
+  /* The notch and the home indicator are height the board cannot use either. */
+  --sn-insets: calc(env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+}
+
+:root[data-sg-web-ads] .sn-screen {
+  --sn-reserve: 116px;
+}
+
+.sn-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+  text-align: center;
+}
+
+.sn-score {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1.2;
+  color: var(--accent);
+}
+
+.sn-score-label {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+/* The line under the score: the best at this speed, or "❚❚ Paused". One
+   line in every state and every language (checked in all 14 at 360 wide,
+   and en / fr / th at 320, where 200px is left between the two buttons —
+   §14), so the bar keeps its height when the run stops and the board never
+   moves. */
+.sn-sub {
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Paused is the one state the player has to notice, so it is said in the
+   ink, bold, with the ❚❚ mark — not by a colour alone. */
+.sn-paused {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.sn-paused-mark {
+  width: 1em;
+  height: 1em;
+  flex: none;
+  fill: currentColor;
+}
+
+.sn-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 4px 16px 16px;
+}
+
+/* Square at every size, as large as the column and the height allow. The
+   first term is `100%`, not a share of the viewport: a board measured in vw
+   ignores its column's padding and hangs past it (game-2048.css). */
+.sn-stage-wrap {
+  position: relative;
+  flex: none;
+  width: min(100%, 560px, calc(100vh - var(--sn-chrome) - var(--sn-reserve) - var(--sn-insets)));
+  width: min(100%, 560px, calc(100svh - var(--sn-chrome) - var(--sn-reserve) - var(--sn-insets)));
+  min-width: 160px;
+  aspect-ratio: 1;
+}
+
+/* The board hears the swipe over its whole box. `touch-action: none` because
+   the board is dragged across: without it the page scrolls under the finger
+   and the swipe never arrives. */
+.sn-stage {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.sn-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- the board (SnakeBoard.tsx) ---------- */
+
+.sn-floor {
+  fill: var(--surface);
+}
+
+.sn-grid {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 0.035;
+}
+
+/* The wall is the board's edge, and it is solid: the snake cannot pass it. */
+.sn-wall {
+  fill: none;
+  stroke: var(--ink-soft);
+}
+
+.sn-body,
+.sn-head-shape {
+  fill: var(--accent);
+}
+
+.sn-eye {
+  fill: var(--accent-ink);
+}
+
+.sn-crash {
+  fill: none;
+  stroke: var(--accent-ink);
+  stroke-width: 0.13;
+  stroke-linecap: round;
+}
+
+/* The only round thing on the board, in the ink rather than the accent. */
+.sn-food {
+  fill: var(--ink);
+}
+
+/* The heading chosen while paused (§5): drawn in the ink, apart from the
+   snake, leaving the head towards the way it will turn. */
+.sn-pending {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 0.14;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- direction buttons (SnakePad.tsx) ---------- */
+
+.sn-pad {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  grid-template-rows: repeat(3, 50px);
+  grid-template-areas:
+    '. up .'
+    'left mid right'
+    '. down .';
+  gap: 4px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sn-pad-up {
+  grid-area: up;
+}
+
+.sn-pad-down {
+  grid-area: down;
+}
+
+.sn-pad-left {
+  grid-area: left;
+}
+
+.sn-pad-right {
+  grid-area: right;
+}
+
+.sn-pad-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--accent);
+  /* A quick second tap is a second turn, never a zoom. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sn-pad-btn:active {
+  background: var(--accent-soft);
+}
+
+/* The solid accent, not the translucent ring: a focus mark has to stand
+   3:1 against the page (WCAG 1.4.11), and the ring's 38% does not. The 2px
+   gap keeps it readable around the accent-filled middle button. */
+.sn-pad-btn:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sn-pad-glyph {
+  width: 26px;
+  height: 26px;
+  fill: currentColor;
+}
+
+/* Start / Pause / Resume, in the middle of the cross: filled, round, and
+   smaller than the arrows, so it reads as the one button that is not a
+   direction. */
+.sn-pad-toggle {
+  grid-area: mid;
+  justify-self: center;
+  align-self: center;
+  width: var(--tap-size);
+  height: var(--tap-size);
+  border-radius: 50%;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.sn-pad-toggle:active {
+  background: var(--accent);
+  opacity: 0.85;
+}
+
+.sn-pad-toggle .sn-pad-glyph {
+  width: 22px;
+  height: 22px;
+}
+
+/* Straight back over the neck while the run waits: it does nothing (§5),
+   and says so by its outline as well as by being fainter. */
+.sn-pad-off {
+  border-style: dashed;
+  border-color: var(--ink-soft);
+  color: var(--ink-soft);
+  background: transparent;
+  opacity: 0.6;
+}
+
+.sn-pad-off:active {
+  background: transparent;
+}
+
+/* ---------- home ---------- */
+
+.sn-speed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.sn-speed-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.sn-speed-toggle {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.sn-speed-toggle .segment {
+  min-width: 84px;
+}
+
+/* ---------- Quick Rules figure ---------- */
+
+/* The early-release note (the shell's WebBetaNotice, in its own styling)
+   under the heading on every step (ui/screens/TutorialScreen.tsx): the
+   heading's gutter, the header's padding for the space above it, and the
+   full width, so the badge alone (the twelve languages without the sentence)
+   sits where the sentence's badge does rather than centred over the step. */
+.sn-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
+}
+
+/* A window onto part of the board, so it gets a frame of its own: the grid
+   lines it cuts through would otherwise just stop. */
+.sn-figure {
+  width: min(200px, 56vw);
+  aspect-ratio: 1;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* A short screen takes the figure a size down, for the note above it: at
+   360×640, under the web build's ad reserve and with the close button of a
+   replay, the longest step (en) had 36px to spare and the note takes 57. */
+@media (max-height: 700px) {
+  .sn-figure {
+    width: min(168px, 56vw);
+  }
+}
+
+/* ---------- wider viewports ---------- */
+
+@media (min-width: 600px) {
+  .sn-screen {
+    --sn-chrome: 274px;
+  }
+
+  .sn-pad {
+    grid-template-columns: repeat(3, 64px);
+    grid-template-rows: repeat(3, 56px);
+  }
+}
+
+/* PC, landscape tablets, and a phone turned sideways: the board takes the
+   height and the controls move beside it, so the board is not shrunk to make
+   room under it. A phone on its side (740×360, 844×390) is narrower than
+   900px but far too short to stack the cross under the board — stacked, the
+   board fell to its 160px floor and the cross below the fold — so a short
+   landscape viewport gets the side layout too (§13「寸法」). The fixed height
+   the board cannot use is the top bar and .sn-body's padding
+   (`--sn-side-chrome`). */
+@media (min-width: 900px) and (orientation: landscape),
+  (orientation: landscape) and (max-height: 540px) {
+  .sn-screen {
+    --game-shell-max: 980px;
+    --sn-side-chrome: 110px;
+  }
+
+  .sn-body {
+    flex-direction: row;
+    gap: 40px;
+  }
+
+  .sn-stage-wrap {
+    width: min(
+      100% - 240px,
+      760px,
+      calc(100vh - var(--sn-side-chrome) - var(--sn-reserve) - var(--sn-insets))
+    );
+    width: min(
+      100% - 240px,
+      760px,
+      calc(100svh - var(--sn-side-chrome) - var(--sn-reserve) - var(--sn-insets))
+    );
+  }
+}
+
+/* The short landscape phone: every pixel of height is the board's. The
+   cross keeps the phone size (it sits beside the board, so it costs no
+   height there), and the body's padding is trimmed to what the top bar
+   and the page edge need. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .sn-screen {
+    --sn-side-chrome: 76px;
+  }
+
+  .sn-body {
+    padding: 4px 16px 8px;
+  }
+
+  .sn-pad {
+    grid-template-columns: repeat(3, 56px);
+    grid-template-rows: repeat(3, 50px);
+  }
+}

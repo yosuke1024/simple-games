@@ -1,0 +1,203 @@
+/* Bounce Up — the state line, the board and its ◀ ▶, the width choice on
+   the home, the Quick Rules figures (docs/BOUNCE_UP_RULES.md §7). The
+   screens, buttons, dialogs and the statistics come from the shared
+   stylesheet (ui/styles.css). Classes are prefixed `bo-`.
+
+   No colour is written here: every one is a shared token, and the accent is
+   the one the shell stamps for this game. The board's own colours are read
+   from the same tokens by ui/draw.ts. */
+
+/* ---------- the board's size (§7「寸法」) ----------
+   The board is as wide as min(100%, 540px, usable height × 9/16): 540px is
+   1.5× the logical 360 (§7). The usable height is the screen less what is
+   stacked with it: the top bar (64), the state line (24) and the body's
+   padding (16) — 104 — and on the web the 116px kept for the anchor ad.
+   ◀ ▶ sit over the board's lower corners, so they take no height of their
+   own. Not measured on a device: §7 records what was checked. */
+
+.bo-screen {
+  --bo-chrome: 104px;
+  --bo-reserve: 0px;
+}
+
+:root[data-sg-web-ads] .bo-screen {
+  --bo-reserve: 116px;
+}
+
+.bo-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+}
+
+.bo-stage {
+  position: relative;
+  width: min(100%, 540px, calc((100vh - var(--bo-chrome) - var(--bo-reserve)) * 0.5625));
+  width: min(100%, 540px, calc((100svh - var(--bo-chrome) - var(--bo-reserve)) * 0.5625));
+  line-height: 0;
+}
+
+.bo-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 9 / 16;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* ---------- the top bar and the state line ---------- */
+
+.bo-status {
+  justify-content: center;
+}
+
+.bo-score {
+  font-size: 20px;
+  min-width: 3ch;
+  text-align: right;
+}
+
+.bo-best {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.bo-topbar-actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* One line whatever it says, so the board never moves (§7). */
+.bo-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 24px;
+  margin: 0;
+  padding: 0 16px;
+  overflow: hidden;
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+/* The ready hint is the longest line (§7): on a 320px-wide screen a few
+   locales need the smaller size to stay whole (measured in headless
+   Chromium, §7「測った寸法」). */
+@media (max-width: 340px) {
+  .bo-state {
+    padding: 0 12px;
+    font-size: 12px;
+  }
+}
+
+.bo-state-mark {
+  width: 12px;
+  height: 12px;
+}
+
+/* ---------- ◀ ▶ (§4) ----------
+   Over the board's lower corners, and only where a finger is the pointer:
+   CSS decides, never a device sniff (§12). A keyboard and a mouse have
+   ← → / A D and the drag. Each button is at most half the board less its
+   10px inset and a 5px gap, so on a board narrower than 158px (a phone on
+   its side — §7) the two shrink instead of crossing over each other. */
+
+.bo-pad {
+  display: none;
+}
+
+@media (any-pointer: coarse) {
+  .bo-pad {
+    display: block;
+  }
+}
+
+.bo-pad-btn {
+  position: absolute;
+  bottom: 10px;
+  width: min(64px, calc(50% - 15px));
+  height: var(--tap-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  opacity: 0.85;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.bo-pad-left {
+  left: 10px;
+}
+
+.bo-pad-right {
+  right: 10px;
+}
+
+.bo-pad-btn:active {
+  background: var(--accent);
+  color: var(--accent-ink);
+  opacity: 1;
+}
+
+.bo-pad-glyph {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+/* ---------- the home, Quick Rules ---------- */
+
+.bo-width {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.bo-width-label {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+/* The shared segmented control sets a minimum height only; a short word
+   would fall below the tap size wide. Kept local so Settings' segmented
+   controls stay untouched. */
+.bo-width .segment {
+  min-width: var(--tap-size);
+}
+
+/* The early-release note (the shell's WebBetaNotice) under the heading on
+   every Quick Rules step: the heading's gutter and the full width — the same
+   rule as overtake.css and the other web-beta titles. */
+.bo-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
+}
+
+.bo-figure {
+  display: block;
+  width: min(70vw, 220px);
+  height: auto;
+  aspect-ratio: 360 / 220;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}

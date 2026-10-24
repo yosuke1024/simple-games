@@ -62,6 +62,8 @@ export const id: Messages = {
     'Cadangan adalah berkas tanpa enkripsi di perangkatmu. Simple Games tidak pernah mengunggahnya, dan hanya kamu yang menentukan ke mana berkas itu pergi.',
   backupPurchaseNote:
     'Pembelian penghapusan iklan tidak termasuk dalam cadangan. Pulihkan lewat toko aplikasi.',
+  backupClubNote:
+    'Juga berisi kunci pemilik Club House dan keanggotaan Club yang Anda ikuti. Jangan berikan file ini kepada orang lain.',
   backupExport: 'Ekspor Cadangan',
   backupRestore: 'Pulihkan Cadangan',
   backupExportFailed: 'Berkas cadangan tidak dapat dibuat.',
@@ -152,6 +154,7 @@ export const id: Messages = {
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'Lanjutan',
   clubEntry: 'Club House',
+  clubJoinNew: 'Gabung ke Club House baru',
   playTogetherTitle: 'Main bersama',
   playTogetherBody: 'Bagikan skormu dengan semua orang.',
   clubResultSent: 'Terkirim ke {club}',

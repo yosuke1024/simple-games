@@ -160,3 +160,41 @@ export const sounds = {
     tone(262, 180, 130, 0.03);
   },
 };
+
+/**
+ * Echo Pads (docs/ECHO_PADS_RULES.md §12): one tone per pad, read off the
+ * same pentatonic ladder from a base of its own — pad 0 on rung 0, pad 5 on
+ * rung 5, so four pads use rungs 0–3 and six use 0–5 (rung 5 is rung 0 an
+ * octave up). Nothing above changes: these are new calls beside the old ones.
+ *
+ * The game sounds each tone from its own playback timer at the moment the
+ * pad lights, never ahead of time on the audio clock, so a Stop or an unmount
+ * leaves nothing queued to ring later; a tone already started fades out on
+ * its own envelope.
+ */
+const PAD_TONE_BASE = 330;
+
+/** Pads with a tone of their own: the six-pad layout's count. */
+export const PAD_TONE_COUNT = 6;
+
+/** The frequency pad `pad` (0-based, reading order) sounds at. */
+export function padToneFrequency(pad: number): number {
+  return rung(PAD_TONE_BASE, pad);
+}
+
+/** Sounds one pad for about `durationMs`; an unknown pad sounds nothing. */
+export function padTone(pad: number, durationMs: number): void {
+  if (!Number.isInteger(pad) || pad < 0 || pad >= PAD_TONE_COUNT) return;
+  tone(padToneFrequency(pad), Math.max(60, durationMs));
+}
+
+/**
+ * Creates or resumes the audio context now, without a sound: called inside
+ * the tap that starts a playback, so a browser that only allows audio from a
+ * user gesture has it running by the first tone (§12). Sound turned off in
+ * Settings means no context at all.
+ */
+export function primeSound(): void {
+  if (!enabled) return;
+  if (getContext()) scheduleIdleSuspend();
+}

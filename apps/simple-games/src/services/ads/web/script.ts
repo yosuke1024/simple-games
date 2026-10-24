@@ -5,6 +5,8 @@
  * Like every module in this folder except config.ts, it must never reach the
  * native bundle (verified by check-dist-ads-separation.sh).
  */
+import { isAdRemovalActive } from '../../../monetization/adRemoval';
+import { noteWebAdRequest } from './lifecycle';
 
 const ADSENSE_SRC = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
 export const SCRIPT_MARKER = 'data-sg-adsense';
@@ -21,6 +23,7 @@ const ERROR_EVENT = 'sg-adsense-error';
  */
 export function ensureAdSenseScript(client: string): void {
   try {
+    if (isAdRemovalActive()) return;
     if (document.querySelector(`script[${SCRIPT_MARKER}]`)) return;
     const script = document.createElement('script');
     script.async = true;
@@ -31,6 +34,13 @@ export function ensureAdSenseScript(client: string): void {
       script.setAttribute(FAILED_MARKER, '');
       document.dispatchEvent(new Event(ERROR_EVENT));
     });
+    // A cached benefit may have skipped the entire web ad boot. If a later
+    // owner refresh/expiry allows a display unit to start this SDK, Google's
+    // automatic anchor can arrive too. Reserve its space BEFORE that request.
+    // This is only a new AdSense loader: an existing failed loader keeps its
+    // marker, and AdMax display requests must not undo an anchor's no-fill.
+    document.documentElement.dataset.sgWebAds = '';
+    noteWebAdRequest();
     document.head.appendChild(script);
   } catch {
     // Ads never block play.

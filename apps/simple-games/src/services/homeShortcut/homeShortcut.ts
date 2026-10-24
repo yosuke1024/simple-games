@@ -36,8 +36,8 @@
 import { Capacitor } from '@capacitor/core';
 import type { GameDefinition } from '../../app/registry';
 import { shortcutUrlFor } from '../../app/shortcutLaunch';
-import { renderHomeShortcutIcon } from './icon';
 import { HomeShortcut } from './plugin';
+import { renderHomeShortcutIcon } from './icon';
 
 let available = false;
 
@@ -67,13 +67,20 @@ export function homeShortcutsAvailable(): boolean {
  * handed over — the launcher takes it from there and its answer is never
  * reported back — and false for every other ending, without throwing.
  *
- * The icon is drawn synchronously first (icon.ts); a drawing that fails
- * simply leaves the picture out and the launcher shows the app icon.
+ * The shared illustration is rasterized first (icon.ts); a drawing that fails
+ * leaves the picture out: a new shortcut uses the app icon, while a shortcut
+ * that already exists retains its current image.
  */
 export async function requestHomeShortcut(game: GameDefinition): Promise<boolean> {
   if (!available) return false;
   try {
-    const icon = renderHomeShortcutIcon(game);
+    // Rasterization only runs for this explicit Android action.
+    let icon: string | null = null;
+    try {
+      icon = await renderHomeShortcutIcon(game);
+    } catch {
+      // An unavailable renderer still leaves a usable door with the app icon.
+    }
     const { requested } = await HomeShortcut.requestPin({
       id: `game-${game.id}`,
       label: game.title,

@@ -1,0 +1,72 @@
+/**
+ * Chess — the Simplified Chinese catalog. Provenance (docs/CHESS_RULES.md §10): `machine` —
+ * written by an AI from the English source on 2026-10-22; no native speaker
+ * has read it, and neither has the author. The title (`chessName`) is a
+ * proper noun and stays as-is.
+ *
+ * Glossary (§10.1): 将军 · 将死 · 逼和 (never 将死 — 逼和 carries 和, the draw) · 和棋 · 子力不足 · 三次重复局面 · 五十步规则; 兵 · 马 · 象 · 车 · 后 · 王; 白方 · 黑方.
+ */
+import type { ChessMessages } from './en';
+
+export const zhHans: ChessMessages = {
+  chessName: 'Chess',
+  chessChooseOpponent: '选择对手',
+  chessDifficulty_easy: '简单',
+  chessDifficulty_normal: '普通',
+  chessDifficulty_hard: '困难',
+  chessRecordNote: '胜 {wins} · 和 {draws} · 负 {losses}',
+  chessChooseSideLabel: '下一局你执哪方',
+  chessPlayWhite: '白方（先走）',
+  chessPlayBlack: '黑方（后走）',
+  chessConfirmSwitchTitle: '替换进行中的对局？',
+  chessConfirmSwitchBody: '你的{current}对局将被新的{next}对局替换。',
+  chessYouPlayWhite: '你执白方',
+  chessYouPlayBlack: '你执黑方',
+  chessBoardLabel: '国际象棋棋盘',
+  chessPiece_white_pawn: '白方兵',
+  chessPiece_white_knight: '白方马',
+  chessPiece_white_bishop: '白方象',
+  chessPiece_white_rook: '白方车',
+  chessPiece_white_queen: '白方后',
+  chessPiece_white_king: '白方王',
+  chessPiece_black_pawn: '黑方兵',
+  chessPiece_black_knight: '黑方马',
+  chessPiece_black_bishop: '黑方象',
+  chessPiece_black_rook: '黑方车',
+  chessPiece_black_queen: '黑方后',
+  chessPiece_black_king: '黑方王',
+  chessSquareEmpty: '{square}，空',
+  chessSquarePiece: '{square}，{piece}',
+  chessSquareSelected: '{square}，{piece}，已选中',
+  chessSquareInCheck: '{square}，{piece}，被将军',
+  chessSquareMoveHere: '{square}：走到这里',
+  chessSquareCaptureHere: '{square}，{piece}：在这里吃子',
+  chessSquareCaptureEnPassant: '{square}：走到这里并吃掉旁边的兵',
+  chessYourTurn: '轮到你',
+  chessYourTurnCheck: '将军 — 你的王正被攻击',
+  chessCpuTurn: '轮到 CPU',
+  chessCpuTurnCheck: '将军 — 轮到 CPU',
+  chessPromoteTitle: '兵升变为',
+  chessWinTitle: '你赢了',
+  chessLoseTitle: 'CPU 获胜',
+  chessDrawTitle: '和棋',
+  chessReason_checkmate: '将死：王被将军，且没有合法着法。',
+  chessReason_stalemate: '逼和：没有合法着法，且王未被将军。',
+  chessReason_insufficient: '子力不足：双方都无法将死对方。',
+  chessReason_repetition: '三次重复局面：同一局面第三次出现。',
+  chessReason_fifty: '五十步规则：双方各走 50 步，既无吃子也无兵的移动。',
+  chessResultSide: '你执',
+  chessResultMoves: '回合数',
+  chessSideWhite: '白方',
+  chessSideBlack: '黑方',
+  chessWins: '胜',
+  chessDraws: '和',
+  chessLosses: '负',
+  chessStep1Title: '每种棋子走法不同',
+  chessStep1Body: '点一下你的棋子，圆点会标出它能走到的每一格。',
+  chessStep2Title: '可以吃子，但要保护王',
+  chessStep2Body:
+    '走到对方棋子所在的格子就能吃掉它（兵斜着吃子），但任何着法都不能让你的王仍受攻击。',
+  chessStep3Title: '将死即胜',
+  chessStep3Body: '将军且王无处可逃就获胜；没有被将军却无合法着法则为和棋。',
+};

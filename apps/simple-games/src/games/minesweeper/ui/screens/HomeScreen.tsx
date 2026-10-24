@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck } from '@/ui/components/icons';
 import { formatDuration } from '@/ui/format';
 import { DIFFICULTIES, localDateString, PRESETS, type Difficulty } from '../../game';
@@ -50,14 +51,13 @@ export function MinesHomeScreen() {
   };
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="minesweeper" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: a tile holding the game's whole shape — one mine. */}
-        <div className="home-logo" aria-hidden="true">
-          ✸
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="minesweeper" />
+        </span>
         <h1 className="home-title">{t('minesName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

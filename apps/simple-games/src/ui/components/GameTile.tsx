@@ -1,5 +1,5 @@
 /**
- * A title's mark: its glyph on its own accent tile.
+ * A title's miniature game illustration on its own accent tile.
  *
  * The tile carries the title's accent by class, which `ui/styles.css` maps to
  * the same tokens `:root[data-game='…']` sets while that game is mounted —
@@ -12,11 +12,12 @@
  * Settings deliberately does not — see `.favorite-pick` in ui/styles.css.
  */
 import type { GameDefinition } from '../../app/registry';
+import { GameArtwork } from './GameArtwork';
 
 export function GameTile({ game }: { game: GameDefinition }) {
   return (
     <span className={`game-tile accent-${game.id}`} aria-hidden="true">
-      {game.glyph}
+      <GameArtwork id={game.id} />
     </span>
   );
 }

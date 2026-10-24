@@ -183,8 +183,13 @@ function storedElapsedSeconds(): number {
   return (JSON.parse(raw) as PersistedGame).elapsedSeconds;
 }
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -213,6 +218,34 @@ describe('first run', () => {
     expect(await screen.findByRole('button', { name: /Easy/ })).toBeInTheDocument();
     expect(screen.queryByText('Draw one, throw one')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Start Playing' })).not.toBeInTheDocument();
+  });
+});
+
+describe('Quick Rules shown again over a suspended match (§9)', () => {
+  it('resumes that match on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a match is suspended in `gr.saveGame`: the
+    // two are separate records, so Quick Rules show again (§10) over a hand
+    // already three actions in, against Normal.
+    renderGame({
+      [GR_STORAGE_KEYS.game]: JSON.stringify(
+        toPersisted(sessionWith(craft(LIMIT_HAND, TIGHT_HAND, YOU)), 1),
+      ),
+    });
+
+    expect(await screen.findByText('Draw one, throw one')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    // The position that was put down: eleven cards in hand, ten of deadwood.
+    expect(within(hand()).getAllByRole('button')).toHaveLength(11);
+    expect(screen.getByText(/Deadwood\s*10/)).toBeInTheDocument();
+    // Resumed, not dealt: no new match over the slot, no play counted for Easy,
+    // and the Normal match not finalized (§8).
+    expect(deviceStore.get(GR_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(GR_STORAGE_KEYS.stats)).toBeUndefined();
   });
 });
 
@@ -623,6 +656,51 @@ describe('opening a suspended game without resuming (#109)', () => {
       background();
       await settle();
       expect(storedBoardSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the match's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(GR_STORAGE_KEYS.flags, tutorialDone[GR_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+
+      // A background books the first five, as it always has.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+      });
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3_000);
+      });
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedElapsedSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the match still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedElapsedSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

@@ -1,0 +1,413 @@
+/* Nested Tic-Tac-Toe — all of this game's styling, imported by
+   NestedTicTacToeRoot. Built from the series tokens in src/ui/styles.css
+   (--surface, --ink, --ink-soft, --line, --accent, --accent-soft, …), so the
+   game follows the theme without knowing about it. No colour is written here
+   (docs/architecture/css-split.md): your marks are the accent, the CPU's the
+   ink (docs/NESTED_TIC_TAC_TOE_RULES.md §10). Class names are prefixed `nt-`. */
+
+/* ---------- board area (§10) ----------
+
+   From the top: the turn line, then the board, centred in what the top bar
+   and the action bar leave. The board's side is the smallest of the column
+   (the viewport less a 16px gutter each side), the height left over
+   (`--nt-chrome`: top bar 64 + turn line 36 + gaps and padding 22 + Undo bar
+   77, rounded up to 200, + the native banner slot's 64 that BannerSlot keeps
+   inside the game content = 264) and a 400px ceiling — never below the floor, though: nine
+   30px cells, the two 3px small-board lines, six 1px cell lines and the 3px
+   frame each side (288px). A screen too short for that scrolls rather than
+   shrinking the cells under a finger (a phone on its side). The height is
+   read from `vh`, then `svh` where the browser knows it. */
+.nt-body {
+  --nt-chrome: 264px;
+  --nt-floor: calc(9 * 30px + 18px);
+  --nt-size: max(
+    min(100vw - 32px, var(--nt-floor)),
+    min(100vw - 32px, 100vh - var(--nt-chrome), 400px)
+  );
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 16px 12px;
+}
+
+@supports (height: 100svh) {
+  .nt-body {
+    --nt-size: max(
+      min(100vw - 32px, var(--nt-floor)),
+      min(100vw - 32px, 100svh - var(--nt-chrome), 400px)
+    );
+  }
+}
+
+/* The web build has no banner slot but keeps 116px at the bottom of every
+   screen for the anchored ad (src/ui/styles.css): 200 + 116. The board gives
+   that height back rather than pushing Undo under it. */
+:root[data-sg-web-ads] .nt-body {
+  --nt-chrome: 316px;
+}
+
+/* Fixed height, whatever it says and in whatever language: two lines'
+   room, so the board never jumps (§10). The auto margins centre the line and
+   the board together while they fit, and give way to the top when not. */
+.nt-turn-line {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  margin: auto 0 0;
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* ---------- the board ---------- */
+
+/* Thick 3px lines between small boards, and the same frame round the edge. */
+.nt-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 3px;
+  flex-shrink: 0;
+  width: var(--nt-size);
+  height: var(--nt-size);
+  margin-bottom: auto;
+  border: 3px solid var(--ink-soft);
+  border-radius: 6px;
+  background: var(--ink-soft);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+
+  /* A paper edge and shallow lift on the whole board; external rings remain
+     visible around flush child cells without changing board geometry. */
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--line),
+    0 3px 0 var(--line),
+    0 8px 18px var(--accent-ring-soft);
+}
+
+/* A small board: nine cells on 1px lines. */
+.nt-small {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 1px;
+  min-width: 0;
+  min-height: 0;
+  background: var(--line);
+}
+
+/* A cell is a button drawn as board surface. Only playable cells are
+   enabled, so `disabled` means "nothing to do here", not "greyed out" — the
+   shared chrome's 40% would fade every mark on the board (§10). */
+.nt-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+}
+
+.nt-cell:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+/* The boards you may play in (§6, §10): a soft ground, and — the cue that
+   survives without colour — a second ring 2px inside the thick line, so a
+   playable board is framed twice and every other board once. */
+.nt-small[data-playable] .nt-cell:enabled {
+  background: var(--accent-soft);
+}
+
+.nt-small[data-playable]::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  z-index: 1;
+  border: 2px solid var(--accent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* Taken and drawn boards: the cells stay, faint, so how it was taken can be
+   read; a taken board carries the taker's mark across it (§10). */
+.nt-small[data-state='mine'] .nt-cell > .nt-mark,
+.nt-small[data-state='cpu'] .nt-cell > .nt-mark,
+.nt-small[data-state='drawn'] .nt-cell > .nt-mark {
+  opacity: 0.3;
+}
+
+/* Two classes, so it outranks `.nt-mark` below whatever the order. The
+   glyph is drawn to the edge of this 80% box (NestedMark's `big`), so the
+   mark spans about 80% of the board (§10). */
+.nt-mark.nt-big {
+  position: absolute;
+  inset: 10%;
+  width: 80%;
+  height: 80%;
+  z-index: 1;
+  stroke-width: 2.6;
+  pointer-events: none;
+}
+
+/* The winning line: its three boards outlined, the rest dimmed (§10). */
+.nt-small[data-win]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 3px solid currentColor;
+  pointer-events: none;
+}
+
+.nt-small[data-win='mine'] {
+  color: var(--accent);
+}
+
+.nt-small[data-win='cpu'] {
+  color: var(--ink);
+}
+
+/* The marks dim, not the board: a see-through board would let the thick
+   lines' colour through, which reads lighter — louder — in the dark theme. */
+.nt-small[data-dim] .nt-mark,
+.nt-small[data-dim] .nt-last {
+  opacity: 0.3;
+}
+
+/* ---------- marks ---------- */
+
+/* Shapes, not characters (§1): a cross of two strokes, a ring. Kept to 60% of
+   the cell so the playable frame never touches one. */
+.nt-mark {
+  width: 60%;
+  height: 60%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.nt-mark-you {
+  color: var(--accent);
+}
+
+.nt-mark-cpu {
+  color: var(--ink);
+}
+
+/* The newest mark pops in; a board's big mark fades in when it is taken. */
+.nt-mark-pop {
+  animation: nt-pop 0.12s ease-out;
+}
+
+.nt-big-fade {
+  animation: nt-fade 0.2s ease-out;
+}
+
+@keyframes nt-pop {
+  from {
+    transform: scale(0.4);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes nt-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Reduced Motion (app setting or OS): marks are simply there (§10). */
+.nt-board-still .nt-mark-pop,
+.nt-board-still .nt-big-fade {
+  animation: none;
+}
+
+/* The last move keeps a short bar under its mark, so the CPU's reply can be
+   found after looking away (§10). */
+.nt-last {
+  position: absolute;
+  left: 30%;
+  bottom: 8%;
+  width: 40%;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+/* ---------- action bar ---------- */
+
+.action-bar.nt-actions {
+  justify-content: center;
+}
+
+/* ---------- result card ---------- */
+
+/* Three facts: they wrap rather than squeeze in a long language. */
+.result-facts.nt-result-facts {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 20px;
+}
+
+/* ---------- home ---------- */
+
+.nt-choose-label {
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* Who moves first next match: two equal halves, each with its mark. */
+.nt-side-choice {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.nt-side-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--tap-size);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.nt-side-option-on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.nt-side-mark {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* Capped by viewport height so long ja / pt-BR step titles still leave the
+   Back / Next buttons above the web ad reserve at 360x640. */
+.nt-figure {
+  display: block;
+  width: min(168px, 23vh);
+  height: min(168px, 23vh);
+}
+
+.nt-figure-ground {
+  fill: var(--ink-soft);
+}
+
+.nt-figure-small {
+  fill: var(--surface);
+}
+
+.nt-figure-thin {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 0.6;
+}
+
+.nt-figure-frame {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.2;
+}
+
+.nt-figure-mark {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+}
+
+.nt-figure-faint {
+  opacity: 0.3;
+}
+
+.nt-figure-big {
+  stroke-width: 2.2;
+}
+
+.nt-figure-outline {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+}
+
+.nt-figure-arrow {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- wide viewports (issue #93) ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Only the board's
+   ceiling grows: on a tablet or a desktop window the board uses the width.
+   The height is read from `svh` here too where the browser knows it — the
+   rule above would otherwise lose to this one and fall back to `vh`. */
+@media (min-width: 600px) {
+  .nt-body {
+    --nt-size: max(
+      min(100vw - 32px, var(--nt-floor)),
+      min(100vw - 32px, 100vh - var(--nt-chrome), 520px)
+    );
+  }
+
+  @supports (height: 100svh) {
+    .nt-body {
+      --nt-size: max(
+        min(100vw - 32px, var(--nt-floor)),
+        min(100vw - 32px, 100svh - var(--nt-chrome), 520px)
+      );
+    }
+  }
+}
+
+/* The early-release note in Quick Rules gets the screen's 16px side gutter, the
+   same rule as tangram.css and the earlier web-beta titles (snake, peg-solitaire,
+   unblock-puzzle, loop-puzzle, bridges): without it the BETA pill starts at x=0. */
+.nt-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
+}

@@ -66,6 +66,31 @@ import { DB_STORAGE_KEYS } from '../games/dots-and-boxes/storage/keys';
 import { BN_STORAGE_KEYS } from '../games/binary-balance/storage/keys';
 import { S6_STORAGE_KEYS } from '../games/sudoku-6x6/storage/keys';
 import { BR_STORAGE_KEYS } from '../games/box-regions/storage/keys';
+import { UB_STORAGE_KEYS } from '../games/unblock-puzzle/storage/keys';
+import { SN_STORAGE_KEYS } from '../games/snake/storage/keys';
+import { LP_STORAGE_KEYS } from '../games/loop-puzzle/storage/keys';
+import { BG_STORAGE_KEYS } from '../games/bridges/storage/keys';
+import { PG_STORAGE_KEYS } from '../games/peg-solitaire/storage/keys';
+import { CH_STORAGE_KEYS } from '../games/chess/storage/keys';
+import { GS_STORAGE_KEYS } from '../games/gem-swap/storage/keys';
+import { PN_STORAGE_KEYS } from '../games/pipe-link/storage/keys';
+import { BO_STORAGE_KEYS } from '../games/bounce-up/storage/keys';
+import { EP_STORAGE_KEYS } from '../games/echo-pads/storage/keys';
+import { OT_STORAGE_KEYS } from '../games/overtake/storage/keys';
+import { TG_STORAGE_KEYS } from '../games/make-the-target/storage/keys';
+import { NT_STORAGE_KEYS } from '../games/nested-tic-tac-toe/storage/keys';
+import { SC_STORAGE_KEYS } from '../games/scopa/storage/keys';
+import { LG_STORAGE_KEYS } from '../games/light-grid/storage/keys';
+import { CF_STORAGE_KEYS } from '../games/color-flood/storage/keys';
+import { TP_STORAGE_KEYS } from '../games/three-peaks/storage/keys';
+import { NIM_STORAGE_KEYS } from '../games/nim/storage/keys';
+import { KT_STORAGE_KEYS } from '../games/knight-tour/storage/keys';
+import { IV_STORAGE_KEYS } from '../games/invaders/storage/keys';
+import { FB_STORAGE_KEYS } from '../games/falling-blocks/storage/keys';
+import { PR_STORAGE_KEYS } from '../games/paddle-rally/storage/keys';
+import { HT_STORAGE_KEYS as HN_STORAGE_KEYS } from '../games/hanoi-towers/storage/keys';
+import { ME_STORAGE_KEYS } from '../games/maze-escape/storage/keys';
+import { TN_STORAGE_KEYS } from '../games/tangram/storage/keys';
 import { SUDOKU_CHALLENGE } from '../games/sudoku/challenge/contract';
 import { MINESWEEPER_CHALLENGE } from '../games/minesweeper/challenge/contract';
 import { WATER_SORT_CHALLENGE } from '../games/water-sort/challenge/contract';
@@ -143,7 +168,32 @@ export type GameId =
   | 'dots-and-boxes'
   | 'binary-balance'
   | 'sudoku-6x6'
-  | 'box-regions';
+  | 'box-regions'
+  | 'unblock-puzzle'
+  | 'snake'
+  | 'loop-puzzle'
+  | 'bridges'
+  | 'peg-solitaire'
+  | 'chess'
+  | 'gem-swap'
+  | 'pipe-link'
+  | 'bounce-up'
+  | 'echo-pads'
+  | 'overtake'
+  | 'make-the-target'
+  | 'nested-tic-tac-toe'
+  | 'scopa'
+  | 'tangram'
+  | 'light-grid'
+  | 'color-flood'
+  | 'three-peaks'
+  | 'nim'
+  | 'knight-tour'
+  | 'invaders'
+  | 'falling-blocks'
+  | 'paddle-rally'
+  | 'hanoi-towers'
+  | 'maze-escape';
 
 /**
  * The genre shelves the collection home is divided into. An id is styling- and
@@ -265,13 +315,21 @@ export interface GameDefinition {
    * and the browser version alike. `'web-beta'` is the early-release channel
    * of docs/WEB_VERSION.md「先行公開(ベータ)」: the game is in the browser
    * version only, wearing a BETA mark, while its schema may still change.
+   * `'in-development'` ships nowhere yet: the entry is in the registry — its
+   * keys, schemas, folder and catalogs exist, so every gate that reads the
+   * registry already covers it — but no build offers it on any door, because
+   * there is no game behind it yet (a scaffold of scripts/new-game.mjs, or one
+   * still being built; WEB_VERSION.md「遊べるものだけを出す」). It turns into
+   * `'web-beta'` in the change that makes it playable, and that is also when
+   * the landing's sync lists it as beta (WEB_VERSION.md「landing 側のガード」).
    * The code ships in every bundle regardless (one build, no forks —
    * 「実装上の約束」); the shell's runtime guard (app/gameChannel.ts) is what
    * keeps a beta title off the app's home, out of its search, and out of any
-   * shortcut address it could be opened from. `storageKeys` are listed from
-   * day one, so "Reset Local Data" tells the truth in the browser too.
+   * shortcut address it could be opened from, and an in-development title off
+   * the browser's doors too. `storageKeys` are listed from day one, so "Reset
+   * Local Data" tells the truth in the browser too.
    */
-  channel?: 'web-beta';
+  channel?: 'web-beta' | 'in-development';
   /**
    * Loads the game's root component from its own bundled chunk. Roots are
    * named exports; the shim to `{ default }` is what React.lazy expects
@@ -935,5 +993,571 @@ export const GAMES: readonly GameDefinition[] = [
     loadRoot: () =>
       import('../games/box-regions/ui/BoxRegionsRoot').then((m) => ({ default: m.BoxRegionsRoot })),
     loadStorageSchemas: () => import('../games/box-regions/storage/schemas'),
+  },
+  // The five new genres of docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md
+  // (Nos. 42–46), in the plan's order, all in the browser's early release
+  // (docs/WEB_VERSION.md「先行公開」) and not in the app until a person decides
+  // they graduate (docs/RELEASE_CHECKLIST.md §0). None is a Club House
+  // challenge (no `challenge`) while its saves and results may still change.
+  //
+  // The glyphs were checked rather than hoped at, as Futoshiki's was: the
+  // bundled Nunito subset (latin-700/800, 230 code points) carries none of
+  // the five, so each resolves through the `ui-rounded, system-ui, sans-serif`
+  // tail of --font-display like every other symbol mark here. Coverage counts
+  // are font families in this environment's fc-list (42 in all), against the
+  // shipped marks: Sudoku's ⌗ 4, Memory Match's ⧉ 5, Crown Grid's ♛ 7, Ludo's
+  // ⚅ 8, Sliding Puzzle's ⇄ 11. None has yet been looked at on a low-spec
+  // handset (Chromium 88, system fonts only); each names its fallback, or says
+  // it has none. Neighbours were looked at on every width the home grid has
+  // (2 columns on a phone, 3 / 4 / 5 from 600 / 900 / 1280px), not the phone
+  // alone; ΔE pairs below are light / dark accent distances (CIE76).
+  {
+    // A rightwards arrow to a bar: the one block that must leave, sliding out
+    // through the exit at the right edge of its row (docs/UNBLOCK_PUZZLE_RULES.md).
+    // Arrows, like Sliding Puzzle's ⇄ — the near miss looked at: one shaft
+    // that stops at a wall, where that one is two shafts passing each other.
+    // On a phone ⇄ is only its diagonal neighbour; at 4 and 5 columns it sits
+    // right beside, and was kept there — the shapes still part (one arrow and
+    // a wall against two arrows) and so do the accents (ΔE 34.2 / 34.5, far
+    // past the 15 / 11 a shelf is held to). 25 families, more than either
+    // arrow already shipped (⇄ 11, Number Path's ↝ 8). Fallback ▬, the plain
+    // bar: set aside only because it is Box Regions' ▭ filled in, and Box
+    // Regions is on the logic shelf — the two never share a row on the home,
+    // and could meet only in search results or the favourites row.
+    id: 'unblock-puzzle',
+    title: 'Unblock Puzzle',
+    category: 'puzzle',
+    glyph: '⇥',
+    channel: 'web-beta',
+    storageKeys: Object.values(UB_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/unblock-puzzle/ui/UnblockPuzzleRoot').then((m) => ({
+        default: m.UnblockPuzzleRoot,
+      })),
+    loadStorageSchemas: () => import('../games/unblock-puzzle/storage/schemas'),
+  },
+  {
+    // A sine wave: the snake itself, one body bending across the board
+    // (docs/SNAKE_RULES.md). Mathematical Operators, the block Brick Breaker's
+    // ≡ on this same shelf draws from — one curved stroke where that one is
+    // three straight ones (Water Sort's three waves ≋ live on the puzzle
+    // shelf, Number Path's ↝ on the logic one). ≡ is right above it at 3
+    // columns and Bubble Pop's ○ at 4 — a curve against bars, and against a
+    // ring; at 5 the shelf is one row, with Bunny Hop's ⌃ beside it. The
+    // thinnest coverage of the five: 6 families, above ⌗ / ⌖ (4) and ⧉ (5),
+    // under ♛ (7). Fallback ≀ (7 families), the same wave stood on end.
+    id: 'snake',
+    title: 'Snake',
+    category: 'arcade',
+    glyph: '∿',
+    channel: 'web-beta',
+    storageKeys: Object.values(SN_STORAGE_KEYS),
+    loadRoot: () => import('../games/snake/ui/SnakeRoot').then((m) => ({ default: m.SnakeRoot })),
+    loadStorageSchemas: () => import('../games/snake/storage/schemas'),
+  },
+  {
+    // A dotted square: one closed loop drawn along the dotted lattice of a
+    // square board (docs/LOOP_PUZZLE_RULES.md). Miscellaneous Symbols and
+    // Arrows; 9 families, no emoji presentation. It replaced the dotted
+    // circle ◌ in the plan's Phase 4 review: measured on the real tile, ◌
+    // was the faintest mark of all 46 — 0.5–0.7% of the tile in ink at 360 /
+    // 768 / 1024 / 1280px, both themes, DPR 1 and 2, and 0.5% in the recent
+    // row, where the next faintest is about 1.0% — while ⬚ is 2.6–2.9%, the
+    // 14th–15th faintest. ▢ (4.4%) is a second outlined rectangle beside Box
+    // Regions' ▭; ∮ reads as calculus before it reads as a loop; ⬡ (7
+    // families) is a cell of a hexagonal board this game does not have; the
+    // plain ring ○ is Bubble Pop's. ⬚ sits beside ▭ too, at every width, and
+    // above or below it when both are in the recent row — kept there because
+    // a square of dashes against a solid 2:1 bar parts at a glance, and so do
+    // the accents (ΔE 52.7 / 49.3). On wider layouts it stacks under Binary
+    // Balance's ⊜ (3 columns), Hit & Blow's ◉ (4) and Shape Regions' ▙ (5),
+    // with Bridges' ⊶ beside it from 3 columns on — an open square against a
+    // circled sign, a bullseye, a solid block and a dumbbell (ΔE 114.7 /
+    // 125.2, 26.8 / 33.6, 19.8 / 14.4, 46.1 / 37.0). Under hi the fallback is
+    // FreeSans, whose dashes all but close at tile size: there it reads as a
+    // plain square (observed; still square, not ▭'s bar). Under ko it is
+    // Unifont's finer dots. No fallback in hand.
+    id: 'loop-puzzle',
+    title: 'Loop Puzzle',
+    category: 'logic',
+    glyph: '⬚',
+    channel: 'web-beta',
+    storageKeys: Object.values(LP_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/loop-puzzle/ui/LoopPuzzleRoot').then((m) => ({ default: m.LoopPuzzleRoot })),
+    loadStorageSchemas: () => import('../games/loop-puzzle/storage/schemas'),
+  },
+  {
+    // Two islands and the bridge between them (U+22B6): the rule in one
+    // figure (docs/BRIDGES_RULES.md). Mathematical Operators, the block Binary
+    // Balance's ⊜ and Kakuro's ∑ on this shelf draw from; it is the only mark
+    // here made of two shapes joined by a line. On wider layouts it stacks
+    // under circled marks — Binary Balance's ⊜ directly above at 4 columns,
+    // Hit & Blow's ◉ at 5 (each diagonal at another width) — and was judged
+    // distinct: one ring holding a sign against a ring and a dot held apart
+    // by a line, with the accents apart too (ΔE 76.5 / 90.0 to ⊜, 43.6 / 30.2
+    // to ◉). 7 families, the same as Crown Grid's ♛ and Connect Four's ⁘.
+    // Fallback ⊷, its mirror image, at the same coverage.
+    id: 'bridges',
+    title: 'Bridges',
+    category: 'logic',
+    glyph: '⊶',
+    channel: 'web-beta',
+    storageKeys: Object.values(BG_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/bridges/ui/BridgesRoot').then((m) => ({ default: m.BridgesRoot })),
+    loadStorageSchemas: () => import('../games/bridges/storage/schemas'),
+  },
+  {
+    // A dotted cross: the English board's cross of holes, with the pegs in it
+    // (docs/PEG_SOLITAIRE_RULES.md). Not Solitaire's ♠ or anything from the
+    // card suits — this is a different game under a different id. General
+    // Punctuation, the dot family Connect Four's ⁘ and Gomoku's ⁙ come from
+    // (7 families, as theirs), and they are on the board shelf. The near miss
+    // on this shelf is 2048's ⊞, also a cross in four: that one is a framed
+    // box, this one an open cross with dots. ⊕ was dropped for exactly that
+    // reason — a circled plus beside a squared one — so if ⁜ fails to draw on
+    // a handset, that call has to be made again rather than ⊕ dropped in.
+    // ⊞ is never beside it at any width, only diagonal at 5 columns (ΔE 79.9
+    // / 72.9); the mark directly above it there is Block Puzzle's framed ▣
+    // (15.6 / 12.4). Its proportions follow the fallback font: FreeSans under
+    // hi draws a squatter cross than DejaVu Sans elsewhere, and Unifont under
+    // ko a smaller one (observed; legible in each).
+    id: 'peg-solitaire',
+    title: 'Peg Solitaire',
+    category: 'puzzle',
+    glyph: '⁜',
+    channel: 'web-beta',
+    storageKeys: Object.values(PG_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/peg-solitaire/ui/PegSolitaireRoot').then((m) => ({
+        default: m.PegSolitaireRoot,
+      })),
+    loadStorageSchemas: () => import('../games/peg-solitaire/storage/schemas'),
+  },
+  // The titles of docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
+  // (Nos. 47–51), in number order. Each has been playable since 2026-10-22,
+  // and all five are on the browser's early-release channel
+  // (docs/WEB_VERSION.md「先行公開」): they turned from `'in-development'` to
+  // `'web-beta'` that day, in the change that made them playable, at the
+  // product owner's request to take all five to the web. The browser version
+  // has carried them since 2026-10-23 JST (2026-10-22 17:33 UTC — the
+  // landing's publish of main `7b95a94`, approved by the owner, after landing
+  // #206 moved them to beta; WEB_VERSION.md「landing 側のガード」). Builds
+  // before that carried their chunks as `'in-development'`, on no door.
+  // None is in the app until a person decides it graduates
+  // (docs/RELEASE_CHECKLIST.md §0). Chess (No. 47) came in a commit of its
+  // own; the plan's decision 4 (Chess in a PR of its own, so the other four
+  // never wait on it) is met because all five finished together, so the five
+  // shipped in one PR (#253) and none waited. None has been tried on a real
+  // device, and each title's name and trademark check is still to come before
+  // graduation (its rules document). None is a Club House challenge (no
+  // `challenge`) while its saves and results may still change.
+  //
+  // The glyphs were measured as Nos. 42–46's were above: none is in the bundled
+  // Nunito subset, so each resolves through the tail of --font-display.
+  // Coverage counts are font families in this environment's fc-list (42 in
+  // all). Tile ink is the share of the tile the mark inks, measured on the
+  // built web home with all five present (51 titles), at 360 to 1280px, light
+  // and dark, before the accents existed. Neighbours were looked at on every
+  // width (2 to 5 columns). The numbers are in the plan's Phase 1 results.
+  {
+    // A knight (U+265E): the one piece that says chess at a glance (docs/CHESS_RULES.md). Not ♟,
+    // which iOS draws as an emoji. ♞ has neither Emoji nor Emoji_Presentation, only
+    // Extended_Pictographic, like Crown Grid's ♛ (checked against the Unicode 16 property data). 7
+    // families, the same as ♛ and Connect Four's ⁘. On the board shelf it sits after Dots and
+    // Boxes' ⊡, under Dominoes' ⊟ (2 columns), Mancala's ⊚ (3), Yacht's ⚄ (4) and Gomoku's ⁙ (5).
+    // None of them is a piece. Crown Grid's ♛ is on the logic shelf, and the two meet only in the
+    // favourites, recent and search rows, where a horse's head and a crown part. Tile ink 4.6-4.8%
+    // (35th of the 51 measured, from the thinnest). Fallback ♜, at the same coverage. Not yet seen
+    // on a low-spec handset.
+    id: 'chess',
+    title: 'Chess',
+    category: 'board',
+    glyph: '♞',
+    channel: 'web-beta',
+    storageKeys: Object.values(CH_STORAGE_KEYS),
+    loadRoot: () => import('../games/chess/ui/ChessRoot').then((m) => ({ default: m.ChessRoot })),
+    loadStorageSchemas: () => import('../games/chess/storage/schemas'),
+  },
+  {
+    // A gem cut into four (U+2756): the stone the board is made of (docs/GEM_SWAP_RULES.md). Not
+    // Minesweeper's ◆, which is one solid diamond. The two are drawn by the same fallback face, and
+    // four small diamonds against one solid diamond part at tile size and at row size. ◆ is on the
+    // logic shelf, so the two meet only in the favourites, recent and search rows. On the puzzle
+    // shelf the near miss is Peg Solitaire's ⁜, beside it at 3 and 5 columns and diagonal at 2: a
+    // cross of dots against four filled diamonds. The in-game gems are separate cut silhouettes and
+    // do not reuse Bubble Pop's ● ▲ ■ ◆ ✦ ☾. Neither Emoji nor Extended_Pictographic. 27 families
+    // (fc-list lists Inter's weights apart; 13 distinct). Tile ink 5.1-5.2% (38th of the 51
+    // measured). No fallback in hand: ◆ is Minesweeper's. Not yet seen on a low-spec handset.
+    id: 'gem-swap',
+    title: 'Gem Swap',
+    category: 'puzzle',
+    glyph: '❖',
+    channel: 'web-beta',
+    storageKeys: Object.values(GS_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/gem-swap/ui/GemSwapRoot').then((m) => ({ default: m.GemSwapRoot })),
+    loadStorageSchemas: () => import('../games/gem-swap/storage/schemas'),
+  },
+  {
+    // A heavy T-junction (U+2523): one pipe fitting, the tile the player turns
+    // (docs/PIPE_LINK_RULES.md). From Box Drawing, so it fills the full line height and stands
+    // taller than its neighbours (observed: 18x51 device px against about 33 for the others). It is
+    // the only box-drawing piece on the logic shelf. It sits after Bridges' ⊶ (2 and 4 columns),
+    // under Loop Puzzle's ⬚ (2), Box Regions' ▭ (3), Sudoku 6x6's 6 (4) and Binary Balance's ⊜ (5).
+    // The frames there are outlined boxes, not a solid T. Neither Emoji nor Extended_Pictographic.
+    // 14 families. Tile ink 4.2% (30th-31st of the 51 measured). Not checked on handsets whose
+    // fallback is a full-width CJK face, where the stub may sit off centre. Fallback ⊢, which is
+    // thinner (2.0%). Not ┗, its corner sibling. Not yet seen on a low-spec handset.
+    id: 'pipe-link',
+    title: 'Pipe Link',
+    category: 'logic',
+    glyph: '┣',
+    channel: 'web-beta',
+    storageKeys: Object.values(PN_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/pipe-link/ui/PipeLinkRoot').then((m) => ({ default: m.PipeLinkRoot })),
+    loadStorageSchemas: () => import('../games/pipe-link/storage/schemas'),
+  },
+  {
+    // A dashed upward arrow (U+21E1): climbing a step at a time, platform by platform
+    // (docs/BOUNCE_UP_RULES.md). ◠, the bounce arc, was first choice and is not thin (1.6% tile
+    // ink). It was set aside for its neighbours. At 2 columns it sits directly under Bunny Hop's ⌃,
+    // and the two read as one thin upward hump, rounded against pointed. At 5 columns it sits under
+    // Bubble Pop's ○, of which it is the top half. This mark's dotted shaft parts from ⌃, from ○
+    // and from Sky Fighter's ▲ above it at 3 columns, with Snake's ∿ beside it from 2 to 4 columns.
+    // Neither Emoji nor Extended_Pictographic. 9 families. Tile ink 1.9% (10th of the 51 measured,
+    // from the thinnest). No fallback in hand: ◠ is the one ruled out above. Not yet seen on a
+    // low-spec handset. The owner's spec kept ◠ unless it was thin, and it is not; the switch is for
+    // the Bunny Hop neighbour, and the owner approved it on 2026-10-20
+    // (docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md, decision 7).
+    id: 'bounce-up',
+    title: 'Bounce Up',
+    category: 'arcade',
+    glyph: '⇡',
+    channel: 'web-beta',
+    storageKeys: Object.values(BO_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/bounce-up/ui/BounceUpRoot').then((m) => ({ default: m.BounceUpRoot })),
+    loadStorageSchemas: () => import('../games/bounce-up/storage/schemas'),
+  },
+  {
+    // Two beamed notes (U+266B): the sounds the pads play back (docs/ECHO_PADS_RULES.md). The
+    // single note ♪ was first choice and was dropped because it was the thinnest mark on the home
+    // at every width and theme, at 0.75-0.77% tile ink against about 1.0% for the next. This mark
+    // has Extended_Pictographic only, neither Emoji nor Emoji_Presentation, like Crown Grid's ♛
+    // (checked against the Unicode 16 property data). 17 families. Its ink follows the fallback
+    // face: 1.2% in Liberation Sans, the face here, and 2.0% in DejaVu Sans. Its rank, 4th of the
+    // 51 measured from the thinnest, is only just clear of Quick Math's ÷. No note-like mark is on
+    // the drills shelf. It sits beside Memory Match's ⧉ (3 and 5 columns) and under Number Recall's
+    // ?, Schulte Table's ⌖ and Quick Math's ÷ (2, 3 and 4 columns). Heavier fallback ♬ (U+266C,
+    // same coverage). Not yet seen on a low-spec handset.
+    id: 'echo-pads',
+    title: 'Echo Pads',
+    category: 'drills',
+    glyph: '♫',
+    channel: 'web-beta',
+    storageKeys: Object.values(EP_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/echo-pads/ui/EchoPadsRoot').then((m) => ({ default: m.EchoPadsRoot })),
+    loadStorageSchemas: () => import('../games/echo-pads/storage/schemas'),
+  },
+  // The titles of docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
+  // (Nos. 52–56), in number order. Each is playable, and all five are on the
+  // browser's early-release channel (docs/WEB_VERSION.md「先行公開」). Make the
+  // Target, Nested Tic-Tac-Toe and Tangram turned from `'in-development'` to
+  // `'web-beta'` in the change that made them playable (2026-10-21), and the
+  // browser version has carried them since 2026-10-22 JST (2026-10-21 17:38
+  // UTC — the landing's publish of main `11a3036`, after landing #204 listed
+  // them as beta; WEB_VERSION.md「landing 側のガード」). Overtake and Scopa
+  // turned on 2026-10-22, by the product owner's decision to put them on the
+  // web now: no device trial can be run at this time, so the one the plan
+  // asked for first is set aside. Overtake ships with `DRAG_MAPPING` `'B'`,
+  // the path docs/OVERTAKE_RULES.md §3 gives for raising the channel before
+  // the Phase 0 record (Phase 0 is not run; mode A stays behind the constant).
+  // Scopa ships with its current reading of how the CPU beat resumes when the
+  // app comes back to the foreground as provisional — the owner's choice
+  // between the two readings is still awaited (docs/SCOPA_RULES.md §4.2) —
+  // and its §14 checks (rule sources, trademark and store search) move to
+  // before it graduates. The browser version has carried them since
+  // 2026-10-22 02:32 UTC (the landing's publish of main `3ed2b16`, after
+  // landing #205 moved them to beta). None is in the app until a person
+  // decides it graduates (docs/RELEASE_CHECKLIST.md §0). Nos. 47–51 above
+  // followed them onto the channel on 2026-10-22. None is a Club House
+  // challenge (no `challenge`) while its saves and results may still change.
+  //
+  // The glyphs were measured as Nos. 42–51's were above: none is in the bundled
+  // Nunito subset, so each resolves through the tail of --font-display, except
+  // Make the Target's =, which Nunito draws itself. Coverage counts are font
+  // families in this environment's fc-list (42 in all; the plan's brief carried
+  // higher counts from another machine). Tile ink is the share of the tile the
+  // mark inks, measured on the built web home with these five present (51
+  // titles: before Nos. 47–51 merged ahead of them), at 360 to 1280px, light
+  // and dark, before the accents existed. Neighbours were looked at on every
+  // width (2 to 5 columns) as the shelves stood then, and computed from the
+  // registry order for the shelves as they stand now with Nos. 47–51 ahead
+  // (that arrangement is not yet seen on a built home). The numbers are in the
+  // plan's Phase 1 results.
+  {
+    // A dashed centre line (U+2507): the road the player threads traffic on
+    // (docs/OVERTAKE_RULES.md). From Box Drawing, like Pipe Link's ┣, so it fills the full line
+    // height and stands taller than its neighbours (observed: 8x47 device px against about 33 for
+    // the others). Unlike ┣ it is symmetric, so a full-width CJK fallback cell leaves it on centre
+    // (observed: 0 px offset in WenQuanYi Zen Hei and Unifont, where ┣ drifts 3.6 px right); the
+    // bar stays thin there, it does not go full width. On the arcade shelf it sits after Snake's ∿
+    // (2 to 4 columns), under Bunny Hop's ⌃ (2), Sky Fighter's ▲ (3), Brick Breaker's ≡ (4) and
+    // Bubble Pop's ○ (5); with Bounce Up's ⇡ ahead of it, as it now is, after ⇡ (4 and 5 columns), under ∿
+    // (2), ⌃ (3), ▲ (4) and ≡ (5). ≡ is three short horizontal bars, 20x18 device px, against one
+    // tall vertical dashed bar: orientation and proportion both differ. ┣ is on the logic shelf and
+    // the two meet only in the favourites, recent and search rows, where a heavy T parts from a
+    // dashed bar. Neither Emoji nor Extended_Pictographic. 12 families. Tile ink 2.9% (21st of the
+    // 51 measured, from the thinnest); 1.6-2.1% in the thinner fallback faces (FreeSans, WenQuanYi,
+    // Unifont), still clear of the bottom three. Fallback ∥, which reads as a pause mark, or the
+    // same shape with one more dash, ┋. Not ⫼, ⇈, ⛐, ⛟ or ⚑ (the plan's reasons). Not yet seen on a
+    // low-spec handset.
+    id: 'overtake',
+    title: 'Overtake',
+    category: 'arcade',
+    glyph: '┇',
+    channel: 'web-beta',
+    storageKeys: Object.values(OT_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/overtake/ui/OvertakeRoot').then((m) => ({ default: m.OvertakeRoot })),
+    loadStorageSchemas: () => import('../games/overtake/storage/schemas'),
+  },
+  {
+    // An equals sign (U+003D): the last number left has to equal the target
+    // (docs/MAKE_THE_TARGET_RULES.md). ∴, three dots converging on a conclusion, was first choice
+    // and was dropped because it was the thinnest mark on the home at every width and theme, at
+    // 0.97-1.01% tile ink against 1.04-1.08% for Reversi's ◐ next, and no fallback face lifts it
+    // past 1.2%; in the favourites, recent and search rows it also read as one more small cluster
+    // of dots beside Connect Four's ⁘ and Gomoku's ⁙. Not 24: it is the target that a trademarked
+    // product is named after, which docs/BRAND.md keeps out of the app, and the targets here vary
+    // by tier. ASCII is in the bundled Nunito subset, so this tile is drawn by Nunito ExtraBold
+    // like Number Match's 10, Takuzu's 01, Sudoku 6x6's 6 and Quick Math's ÷: no fallback face, no
+    // coverage question (39 families regardless), no emoji property. A small mark, two bold bars of
+    // 10.5x6.5 CSS px. Tile ink 1.5-1.6% (6th-7th of the 51 measured, from the thinnest: clear of
+    // the bottom three, level with Bunny Hop's ⌃, Gin Rummy's ♢ and Brick Breaker's ≡). On the
+    // puzzle shelf no other mark is a bar: it sits before Tangram's ⊿ (2, 4 and 5 columns), after
+    // Peg Solitaire's ⁜ (3 and 5), under Unblock Puzzle's ⇥ (2), Sliding Puzzle's ⇄ (3), Water
+    // Sort's ≋ (4) and, at 5 columns only, directly under Number Match's 10, where the two read as
+    // "10 / ="; with Gem Swap's ❖ ahead of it, as it now is, after ❖ (2, 4 and 5 columns) and 10 is
+    // diagonal instead. ≡ (arcade), Binary Balance's ⊜ (logic) and 01 (logic) meet it only in the
+    // favourites, recent and search rows: three thin bars, a circled equals and two digits against
+    // two bold bars, ≡ being the nearest (16x13 against 16x10 px at row size, accents apart).
+    // Fallback ± (U+00B1, also Nunito, 1.9-2.0%, 9th-10th), which names only two of the four
+    // operations and shares a cross with ⁜ beside it at 3 and 5 columns and with Quick Math's ÷ in
+    // the rows. Not ∗ (3.0%, 10 families: a radiating mark like ⁜, and reads as a star), +
+    // (4th-5th, and the shape of the shell's IconAdd), ⁼ (as thin as ∴), ≟ (muddy at 16px), ⁂
+    // (reads as a clover), ∵ ∷ ⋰ (as thin as ∴), nor any circled mark (◎ is on this shelf). Not yet
+    // seen on a low-spec handset.
+    id: 'make-the-target',
+    title: 'Make the Target',
+    category: 'puzzle',
+    glyph: '=',
+    channel: 'web-beta',
+    storageKeys: Object.values(TG_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/make-the-target/ui/MakeTheTargetRoot').then((m) => ({
+        default: m.MakeTheTargetRoot,
+      })),
+    loadStorageSchemas: () => import('../games/make-the-target/storage/schemas'),
+  },
+  {
+    // The X of noughts and crosses in one character (U+2573): the mark the player sets in the small
+    // boards (docs/NESTED_TIC_TAC_TOE_RULES.md). From Box Drawing, so it fills the full line height
+    // and is taller than wide (observed: 31x51 device px, strokes about 2.2 CSS px). The shell's
+    // close button is not a character but IconClose in ui/components/icons.tsx, a square X of
+    // 1.75-unit strokes on a 24-unit grid (13x13 CSS px at its 22px size, in --ink-soft), shown
+    // only in a tutorial header; no × ✕ ✖ ╳ appears anywhere in the shell's copy. Beside it this
+    // mark is tall, heavier and sits in accent on an accent tile, and on the board shelf it read as
+    // a letter X. The usual close characters of the web are × and ✕, so neither is a better answer
+    // to that worry; ⌧ is an X in a box, the clear key; ⊠ would be the seventh framed mark on this
+    // shelf (⊚ ⊟ ⊡ ⊜ ⊞ ⊶), the reason ⊗ was ruled out; ✖ has the Emoji property, becomes an RGI
+    // emoji with U+FE0F and is in Noto Color Emoji here. This one has neither Emoji nor
+    // Extended_Pictographic. 12 families. On the board shelf it sits after Dots and Boxes' ⊡ (2, 4
+    // and 5 columns), under Dominoes' ⊟ (2), Mancala's ⊚ (3), Yacht's ⚄ (4) and Gomoku's ⁙ (5);
+    // with Chess's ♞ ahead of it, as it now is, after ♞ (3 and 4 columns), under ⊡ (2), ⊟ (3), ⊚ (4) and ⚄
+    // (5). No other X is on the home. In a full-width fallback face (FreeSans, WenQuanYi) it
+    // becomes a square X of 44x44 device px, still an X. Tile ink 4.3-4.5% (33rd-34th of the 51
+    // measured, from the thinnest). Fallback ✕ (U+2715, 8 families, 2.8%), with the caveat above.
+    // Not yet seen on a low-spec handset.
+    id: 'nested-tic-tac-toe',
+    title: 'Nested Tic-Tac-Toe',
+    category: 'board',
+    glyph: '╳',
+    channel: 'web-beta',
+    storageKeys: Object.values(NT_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/nested-tic-tac-toe/ui/NestedTicTacToeRoot').then((m) => ({
+        default: m.NestedTicTacToeRoot,
+      })),
+    loadStorageSchemas: () => import('../games/nested-tic-tac-toe/storage/schemas'),
+  },
+  {
+    // A white club (U+2667): the third hollow suit on the cards shelf, where hollow has meant
+    // somebody sits across the table since Hearts' ♡ and Gin Rummy's ♢ (docs/SCOPA_RULES.md). Not
+    // ♣, which is Spider Solitaire's, has the Emoji property, becomes an RGI emoji with U+FE0F and
+    // is in Noto Color Emoji here; this one has Extended_Pictographic only, like ♡ ♢ ♛ (checked
+    // against the Unicode 16 property data), and is not in that emoji font. 14 families. It sits
+    // after Gin Rummy's ♢ (2 to 4 columns), under Hearts' ♡ (2), FreeCell's ♥ (3), Spider
+    // Solitaire's ♣ (4) and Solitaire's ♠ (5); ♣ is diagonal at 3 and 5. Hollow against filled is
+    // the pair ♡ and ♥ already make side by side at 2, 4 and 5 columns, and here the faces add
+    // size: DejaVu Sans draws this one 30x32 device px, Liberation Sans draws ♣ 25x25 (the size
+    // difference goes where both fall to one face). Both parted at tile size and at row size. Tile
+    // ink 2.5-2.6% (15th of the 51 measured, from the thinnest; ♣ is 3.0%). No fallback in hand: ♤
+    // is thinner (2.0%) and sits on the same shelf as ♠. Not yet seen on a low-spec handset.
+    id: 'scopa',
+    title: 'Scopa',
+    category: 'cards',
+    glyph: '♧',
+    channel: 'web-beta',
+    storageKeys: Object.values(SC_STORAGE_KEYS),
+    loadRoot: () => import('../games/scopa/ui/ScopaRoot').then((m) => ({ default: m.ScopaRoot })),
+    loadStorageSchemas: () => import('../games/scopa/storage/schemas'),
+  },
+  {
+    // A right triangle (U+22BF): the piece the set has most of, and the one every silhouette is cut
+    // from (docs/TANGRAM_RULES.md). Not ◩, ⟁ or ⬠, which the plan feared were thin: measured, they
+    // are 6.9-7.1%, 4.2% and 3.3% tile ink, heavier than this mark, and only their coverage is low
+    // (9, 6 and 7 families). This one is 11 families, neither Emoji nor Extended_Pictographic. It
+    // is small, a math operator rather than a geometric shape in DejaVu Sans (26x25 device px, a
+    // quarter of the tile, and set a little low and right), but not thin: tile ink 2.7-2.9%
+    // (17th-19th of the 51 measured, from the thinnest, just above Loop Puzzle's ⬚). On the puzzle
+    // shelf it sits after Make the Target (2, 4 and 5 columns), under Peg Solitaire's ⁜ (2),
+    // Unblock Puzzle's ⇥ (3), Sliding Puzzle's ⇄ (4) and Water Sort's ≋ (5); with Gem Swap's ❖ ahead of
+    // these, as it now is, under ❖ (2), ⁜ (3), ⇥ (4) and ⇄ (5). No triangle is on this shelf. Sky
+    // Fighter's ▲ (arcade) and Shape Regions' ▙ (logic) meet it only in the favourites, recent and
+    // search rows, where a hollow right triangle parts from a solid isosceles and a solid block.
+    // Its size follows the fallback face: IPAGothic and WenQuanYi draw it at 34-37 px, Unifont at
+    // 18. Fallback ◿ (U+25FF, 9 families, 3.2-3.3%), the same orientation drawn larger. Not yet
+    // seen on a low-spec handset.
+    id: 'tangram',
+    title: 'Tangram',
+    category: 'puzzle',
+    glyph: '⊿',
+    channel: 'web-beta',
+    storageKeys: Object.values(TN_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/tangram/ui/TangramRoot').then((m) => ({ default: m.TangramRoot })),
+    loadStorageSchemas: () => import('../games/tangram/storage/schemas'),
+  },
+  // Nos. 57–61: Web early release. Separate saves, no Club contracts.
+  {
+    id: 'light-grid',
+    title: 'Light Grid',
+    category: 'logic',
+    glyph: '✚',
+    channel: 'web-beta',
+    storageKeys: Object.values(LG_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/light-grid/ui/LightGridRoot').then((m) => ({ default: m.LightGridRoot })),
+    loadStorageSchemas: () => import('../games/light-grid/storage/schemas'),
+  },
+  {
+    id: 'color-flood',
+    title: 'Color Flood',
+    category: 'puzzle',
+    glyph: '▧',
+    channel: 'web-beta',
+    storageKeys: Object.values(CF_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/color-flood/ui/ColorFloodRoot').then((m) => ({ default: m.ColorFloodRoot })),
+    loadStorageSchemas: () => import('../games/color-flood/storage/schemas'),
+  },
+  {
+    id: 'three-peaks',
+    title: 'Three Peaks',
+    category: 'cards',
+    glyph: '⋀',
+    channel: 'web-beta',
+    storageKeys: Object.values(TP_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/three-peaks/ui/ThreePeaksRoot').then((m) => ({ default: m.ThreePeaksRoot })),
+    loadStorageSchemas: () => import('../games/three-peaks/storage/schemas'),
+  },
+  {
+    id: 'nim',
+    title: 'Nim',
+    category: 'board',
+    glyph: '∴',
+    channel: 'web-beta',
+    storageKeys: Object.values(NIM_STORAGE_KEYS),
+    loadRoot: () => import('../games/nim/ui/NimRoot').then((m) => ({ default: m.NimRoot })),
+    loadStorageSchemas: () => import('../games/nim/storage/schemas'),
+  },
+  {
+    id: 'knight-tour',
+    title: 'Knight’s Tour',
+    category: 'logic',
+    glyph: '♘',
+    channel: 'web-beta',
+    storageKeys: Object.values(KT_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/knight-tour/ui/KnightTourRoot').then((m) => ({ default: m.KnightTourRoot })),
+    loadStorageSchemas: () => import('../games/knight-tour/storage/schemas'),
+  },
+  // Nos. 62–66: independent Web-beta games.
+  {
+    id: 'invaders',
+    title: 'Invaders',
+    category: 'arcade',
+    glyph: '⌁',
+    channel: 'web-beta',
+    storageKeys: Object.values(IV_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/invaders/ui/InvadersRoot').then((m) => ({ default: m.InvadersRoot })),
+    loadStorageSchemas: () => import('../games/invaders/storage/schemas'),
+  },
+  {
+    id: 'falling-blocks',
+    title: 'Falling Blocks',
+    category: 'arcade',
+    glyph: '▥',
+    channel: 'web-beta',
+    storageKeys: Object.values(FB_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/falling-blocks/ui/FallingBlocksRoot').then((m) => ({
+        default: m.FallingBlocksRoot,
+      })),
+    loadStorageSchemas: () => import('../games/falling-blocks/storage/schemas'),
+  },
+  {
+    id: 'paddle-rally',
+    title: 'Paddle Rally',
+    category: 'arcade',
+    glyph: '↔',
+    channel: 'web-beta',
+    storageKeys: Object.values(PR_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/paddle-rally/ui/PaddleRallyRoot').then((m) => ({
+        default: m.PaddleRallyRoot,
+      })),
+    loadStorageSchemas: () => import('../games/paddle-rally/storage/schemas'),
+  },
+  {
+    id: 'hanoi-towers',
+    title: 'Hanoi Towers',
+    category: 'puzzle',
+    glyph: '≜',
+    channel: 'web-beta',
+    storageKeys: Object.values(HN_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/hanoi-towers/ui/HanoiTowersRoot').then((m) => ({
+        default: m.HanoiTowersRoot,
+      })),
+    loadStorageSchemas: () => import('../games/hanoi-towers/storage/schemas'),
+  },
+  {
+    id: 'maze-escape',
+    title: 'Maze Escape',
+    category: 'logic',
+    glyph: '⌘',
+    channel: 'web-beta',
+    storageKeys: Object.values(ME_STORAGE_KEYS),
+    loadRoot: () =>
+      import('../games/maze-escape/ui/MazeEscapeRoot').then((m) => ({ default: m.MazeEscapeRoot })),
+    loadStorageSchemas: () => import('../games/maze-escape/storage/schemas'),
   },
 ];

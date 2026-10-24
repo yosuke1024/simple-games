@@ -3,6 +3,8 @@
  * (docs/GAME_2048_RULES.md §9, §12): the ending states the record once, with
  * how far this run was from it; the reach states nothing but the score.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../../i18n';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';

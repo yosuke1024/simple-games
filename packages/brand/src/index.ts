@@ -912,6 +912,377 @@ export const titleAccents = {
     onDark: '#1f0912',
     softDark: '#401c2a',
   },
+  /**
+   * Unblock Puzzle — crimson (web-beta). Picked for the smallest accent area
+   * of the five — the chrome, the target block that has to leave and the exit
+   * mark (UNBLOCK_PUZZLE_RULES.md §14; every other block is neutral) — so it
+   * can carry the most saturated value of the batch (S 58%, under the series'
+   * 67% outliers). The shipped placement matches the Phase 1 estimate, so the
+   * mapping still holds. Chosen with the four below
+   * in one pass against all 41 shipped accents + `--warn`
+   * (docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md Phase 1, CIE76):
+   * nearest shipped is Box Regions at ΔE 15.4 light / Bubble Pop at 11.0
+   * dark, over the 12.5 / 9.1 floors. White ink 6.01, paper 5.28, dark on
+   * the dark paper 5.18.
+   */
+  unblockPuzzle: {
+    light: '#b5304d',
+    onLight: '#ffffff',
+    softLight: '#f4d7dd',
+    dark: '#d6667e',
+    onDark: '#20090e',
+    softDark: '#411b23',
+  },
+  /**
+   * Snake — azuki (web-beta). A snake grows until it can fill its board; if
+   * it is drawn in the accent, that is the largest accent area of the five,
+   * so it takes the least saturated mid-tone (S 30%): a muted red-brown that shares the red family with Unblock Puzzle's crimson
+   * and parts from it by depth and saturation (ΔE 30.3 / 30.1: the closest
+   * pair of the five in light, and in dark second only to Peg Solitaire ×
+   * Bridges at 24.7 — the two sit on different shelves). Nearest shipped is
+   * Bubble Pop at ΔE 15.0 light / Kakuro at 11.2 dark; its shelf neighbour Sky
+   * Fighter is 56.1 / 48.8 away. White ink 5.98, paper 5.25, dark paper 6.72.
+   */
+  snake: {
+    light: '#8f534d',
+    onLight: '#ffffff',
+    softLight: '#eddfde',
+    dark: '#c69286',
+    onDark: '#1c100d',
+    softDark: '#3a2722',
+  },
+  /**
+   * Loop Puzzle — bellflower violet (web-beta). Draws the loop itself, a
+   * line on paper, as Dots and Boxes' ultramarine draws its lines. The light
+   * value was calmed in the plan's Phase 4 review: the first pick, #6035b1,
+   * was the most chromatic light accent of all 46 (C* 75.5) on the primary
+   * buttons and the share card; this one is C* 63.5 (fifth), the least
+   * chromatic value whose nearest shipped neighbour still sits at the five's
+   * Phase 1 margin, 1.19 times the floor once rounded (1.187 exactly, just
+   * under Bridges' light 1.192, the five's weakest until then) — Mahjong
+   * Solitaire at ΔE 14.85 light (floor 12.5) / FreeCell at 10.9 dark (floor
+   * 9.1). Below C* 60 the violets crowd it toward the floor (1.02 times it
+   * at C* 58). Shelf neighbours Sudoku 6×6 (above) and Box Regions (beside)
+   * are 34.1 / 30.6 and 52.7 / 49.3 away. White ink 6.07, paper 5.33, dark
+   * paper 4.77.
+   */
+  loopPuzzle: {
+    light: '#704eb7',
+    onLight: '#ffffff',
+    softLight: '#e2dbf0',
+    dark: '#9171da',
+    onDark: '#100820',
+    softDark: '#261b41',
+  },
+  /**
+   * Bridges — iron navy (web-beta). Bridges are lines between islands; in
+   * this colour they read as ink, the deepest value of the five. Nearest
+   * shipped is Minesweeper at ΔE 14.9 light / Number Match at 11.3 dark; Box
+   * Regions above it on the logic shelf is 52.9 / 47.6 away, and Sudoku 6×6,
+   * above it only at three columns, 15.5 / 12.6. White ink 10.94, paper
+   * 9.61, dark paper 4.91.
+   */
+  bridges: {
+    light: '#323b5d',
+    onLight: '#ffffff',
+    softLight: '#dee1ed',
+    dark: '#7d83b0',
+    onDark: '#0f1119',
+    softDark: '#262836',
+  },
+  /**
+   * Peg Solitaire — grape (web-beta). Up to 32 pegs on one board, all in
+   * the accent from the first move: a deep value, so a full board stays
+   * quiet. The dark value was calmed in the plan's Phase 4 review — the
+   * first pick, #d477c0, was C* 51.4 (7th of 46); this one is C* 37.7, the
+   * dark median (24th). Nearest shipped is Takuzu at ΔE 15.6 light / Block
+   * Puzzle at 12.4 dark (floors 12.5 / 9.1); Sliding Puzzle above it on the
+   * puzzle shelf is 53.5 / 49.7 away and Unblock Puzzle beside it 41.6 /
+   * 31.0. Bridges is the one pair of the five under 30 (dark 24.7): a muted
+   * dark grape cannot sit 30 from Bridges' grey-violet, and the two live on
+   * different shelves. White ink 10.27, paper 9.03, dark paper 5.55.
+   */
+  pegSolitaire: {
+    light: '#68275f',
+    onLight: '#ffffff',
+    softLight: '#f1daee',
+    dark: '#b77bb2',
+    onDark: '#1a0e19',
+    softDark: '#372436',
+  },
+  /**
+   * Chess — madder red (web-beta). The pieces wear their physical light and
+   * dark colours, like Reversi's and Gomoku's and unlike Checkers' and Connect
+   * Four's, whose accent is the player's pieces (CHESS_RULES), so the accent
+   * is chrome alone: the selected piece, the legal-move dots and the buttons —
+   * the smallest accent area of the five, which takes the most chromatic
+   * value of the batch (C* 62.4, 6th of 51). Chosen in the same pass as the
+   * four below (see gemSwap): nearest shipped is Connect Four at ΔE 14.3
+   * light (same board shelf, never above, below or beside it — diagonal at
+   * five columns) / Bubble Pop at 10.9 dark; `--warn` is 20.0 / 20.0 away.
+   * Dominoes above it on the shelf is 58.7 / 66.1. White ink 6.08, paper
+   * 5.34, dark paper 4.75.
+   */
+  chess: {
+    light: '#b63030',
+    onLight: '#ffffff',
+    softLight: '#f4d7d7',
+    dark: '#d55d5d',
+    onDark: '#200808',
+    softDark: '#411b1b',
+  },
+  /**
+   * Gem Swap — enji, a deep lacquer red (web-beta). All five accents of
+   * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
+   * (Chess's included, which comes in a commit of its own) were chosen in one
+   * pass against the 46 shipped accents + `--warn` (Phase 1, CIE76), each
+   * over the 12.5 / 9.1 floors and 30 apart from one another. The gems carry
+   * their own shape-and-colour set (game content), so the accent is chrome
+   * alone; it takes the deepest, least chromatic value of the five (C* 30.8
+   * light / 16.9 dark) so a selection never reads as one more gem. Nearest
+   * shipped is Takuzu at ΔE 14.3 light / Memory Match at 10.4 dark; Unblock
+   * Puzzle above it on the puzzle shelf is 32.5 / 32.0, Peg Solitaire beside
+   * it at three and five columns 20.1 / 25.5. White ink 10.76, paper 9.45,
+   * dark paper 6.99.
+   */
+  gemSwap: {
+    light: '#67283f',
+    onLight: '#ffffff',
+    softLight: '#f0dbe3',
+    dark: '#bf97a3',
+    onDark: '#191012',
+    softDark: '#36262b',
+  },
+  /**
+   * Pipe Link — amber (web-beta). The accent lights every pipe joined to the
+   * source; a solved board is lit end to end, the largest accent area of the
+   * five, so it takes a mid chroma (C* 46.7 / 35.7) and sits far from the
+   * unlit pipes' soft ink (ΔE 54.6 / 45.3). Nearest shipped is Sliding Puzzle
+   * at ΔE 14.3 light / 10.5 dark; Loop Puzzle above it is 95.3 / 87.5 and
+   * Bridges beside it 69.4 / 60.1. White ink 4.59, paper 4.03 — under 4.5 for
+   * text on the paper (4.51 on the card surface), like Binary Balance and
+   * Yacht — dark paper 8.38.
+   */
+  pipeLink: {
+    light: '#a5672c',
+    onLight: '#ffffff',
+    softLight: '#f4e5d7',
+    dark: '#dba775',
+    onDark: '#201408',
+    softDark: '#412e1b',
+  },
+  /**
+   * Bounce Up — iris (web-beta). Draws the climber and the platform
+   * highlight; a family apart from both shelf neighbours, Bunny Hop's meadow
+   * green above (ΔE 86.3 / 84.8) and Snake's azuki beside it (44.4 / 43.8).
+   * Nearest shipped is Hit & Blow at ΔE 14.1 light / Gomoku at 10.4 dark; Sky
+   * Fighter, above it only at three columns, is 29.4 / 28.6. White ink 5.53,
+   * paper 4.86, dark paper 6.30.
+   */
+  bounceUp: {
+    light: '#9e4892',
+    onLight: '#ffffff',
+    softLight: '#efdcec',
+    dark: '#cf7dc2',
+    onDark: '#1e0b1b',
+    softDark: '#3d1f38',
+  },
+  /**
+   * Echo Pads — lapis blue (web-beta). Fills the lit pad. Pads are told apart
+   * by shape and place first, and a wrong tap gets no red flash, so the
+   * accent stays out of the red family; the lit state reads by lightness
+   * rather than chroma (dark C* 23.2, 5.04 on the dark surface). Nearest
+   * shipped is Number Match at ΔE 14.4 light / 10.3 dark — the five's weakest
+   * margin, 1.127 times the floor. Number Recall above it on the drills shelf
+   * is 81.8 / 55.8. White ink 5.32, paper 4.68, dark paper 6.03.
+   */
+  echoPads: {
+    light: '#306cb6',
+    onLight: '#ffffff',
+    softLight: '#d7e4f4',
+    dark: '#709abd',
+    onDark: '#0d151c',
+    softDark: '#222f3a',
+  },
+  /**
+   * Overtake — suō, a sappanwood crimson (web-beta). All five accents of
+   * docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-
+   * tangram.md were chosen in one pass against the 46 shipped accents, the
+   * five of 47–51 (PR #239, treated as shipped) and `--warn` (Phase 1,
+   * CIE76), each over the 12.5 / 9.1 floors and 30 apart from one another.
+   * The band is full at 51: the weakest of the five is 1.005 times its floor,
+   * next to no slack — re-measure all ten before any merge (BRAND.md step
+   * 5). Traffic and the three rivals wear the accent, the player's car the
+   * ink (the plan's §13): a large area like Snake's, so a mid chroma (C*
+   * 47.6, 20th of 56). Nearest shipped is Unblock Puzzle at ΔE 12.8 light /
+   * 10.1 dark; Snake beside it on the arcade shelf is 24.4 / 22.9, Bubble
+   * Pop above it at five columns 17.9 / 13.3 — the batch's closest shelf
+   * neighbour. `--warn` is 34.4 / 30.0 away. White ink 8.14, paper 7.15,
+   * dark paper 5.53.
+   */
+  overtake: {
+    light: '#922643',
+    onLight: '#ffffff',
+    softLight: '#f4d7df',
+    dark: '#cd748a',
+    onDark: '#1e0b10',
+    softDark: '#3d1f26',
+  },
+  /**
+   * Make the Target — kon-kikyō, an indigo bellflower (web-beta). Marks the
+   * number tiles the player has picked and the target (projected from the
+   * plan; the rules document is still a stub). Nearest shipped is Sky Fighter at
+   * ΔE 12.8 light / Bridges at 9.2 dark (1.015 times the floor); Mahjong
+   * Solitaire on the same puzzle shelf is 12.8 / 9.4 but never above, below
+   * or beside it at any width. Unblock Puzzle above it at two columns is
+   * 70.3 / 50.2, Number Match above it at five 25.3 / 13.8, Peg Solitaire
+   * beside it at three and five 30.6 / 21.1. White ink 9.11, paper 8.00,
+   * dark paper 5.27.
+   */
+  makeTheTarget: {
+    light: '#393f93',
+    onLight: '#ffffff',
+    softLight: '#dbdcf0',
+    dark: '#8785c1',
+    onDark: '#0e0e1b',
+    softDark: '#242339',
+  },
+  /**
+   * Nested Tic-Tac-Toe — ebicha, a dark shrimp brown (web-beta). The
+   * player's marks and the faint "play here" small-board highlight take the
+   * accent, the CPU's marks the ink — the Connect Four / Checkers side of
+   * the board shelf, not Reversi's and Gomoku's physical stones (projected;
+   * the rules document is still a stub). The deepest, least chromatic value of
+   * the five (C* 20.0 light / 12.7 dark, 53rd / 55th of 56), ΔE 27.8 / 23.8
+   * from the ink. Nearest shipped is Checkers at ΔE 12.6 light — the same
+   * board shelf, never above, below or beside it — / Snake at 11.3 dark;
+   * Dominoes above it at two columns is 23.1 / 73.2, Mancala above it at
+   * three 29.8 / 27.6. White ink 9.50, paper 8.35, dark paper 7.86.
+   */
+  nestedTicTacToe: {
+    light: '#633b36',
+    onLight: '#ffffff',
+    softLight: '#ede0de',
+    dark: '#c3a59d',
+    onDark: '#19120f',
+    softDark: '#362926',
+  },
+  /**
+   * Scopa — kōshi, a red-violet (web-beta). The capture highlights and the
+   * chrome alone — the smallest accent area of the five, which takes the
+   * most chromatic value of the batch (C* 66.1, 4th of 56; the Chess
+   * reasoning), a hue apart from the card red and any felt. Nearest shipped
+   * is Ludo at ΔE 12.6 light / 9.3 dark (Bounce Up 9.3 too); Gin Rummy's
+   * violet beside it on the cards shelf is 25.8 / 25.9, Hearts above it at
+   * two columns 55.6 / 56.4. White ink 5.50, paper 4.83, dark paper 6.08.
+   */
+  scopa: {
+    light: '#b53192',
+    onLight: '#ffffff',
+    softLight: '#f4d7ec',
+    dark: '#da71c0',
+    onDark: '#20081a',
+    softDark: '#411b38',
+  },
+  /**
+   * Tangram — pine-needle green (web-beta). The seven pieces may be filled
+   * with the accent over the silhouette — the largest accent area of the
+   * five, so a mid chroma (C* 43.1 / 43.9). Nearest shipped is Binary
+   * Balance at ΔE 12.6 light — the five's weakest margin, 1.005 times the
+   * floor — / Bunny Hop at 10.5 dark; Peg Solitaire above it on the puzzle
+   * shelf is 84.0 / 82.3 and Make the Target beside it 96.2 / 80.4. White
+   * ink 6.33, paper 5.56, dark paper 9.99.
+   */
+  tangram: {
+    light: '#426a25',
+    onLight: '#ffffff',
+    softLight: '#e4f1da',
+    dark: '#a7cd7e',
+    onDark: '#151d0b',
+    softDark: '#2e3c20',
+  },
+  // Nos. 57–61, measured against all 56 existing accents. See BRAND.md.
+  lightGrid: {
+    light: '#784f5f',
+    onLight: '#ffffff',
+    softLight: '#e3dbd7',
+    dark: '#bd659a',
+    onDark: '#14171c',
+    softDark: '#3d3243',
+  },
+  colorFlood: {
+    light: '#184e72',
+    onLight: '#ffffff',
+    softLight: '#d7dbda',
+    dark: '#77a4ac',
+    onDark: '#14171c',
+    softDark: '#303e46',
+  },
+  threePeaks: {
+    light: '#7a321a',
+    onLight: '#ffffff',
+    softLight: '#e3d7ce',
+    dark: '#b07373',
+    onDark: '#14171c',
+    softDark: '#3b353c',
+  },
+  nim: {
+    light: '#36533f',
+    onLight: '#ffffff',
+    softLight: '#dadcd3',
+    dark: '#aacbab',
+    onDark: '#14171c',
+    softDark: '#3a4546',
+  },
+  knightTour: {
+    light: '#452b5e',
+    onLight: '#ffffff',
+    softLight: '#dcd6d7',
+    dark: '#a69dc3',
+    onDark: '#14171c',
+    softDark: '#393c4a',
+  },
+  // Nos. 62–66: measured CIE76 separation and WCAG contrast (BRAND.md).
+  invaders: {
+    light: '#283b3f',
+    onLight: '#ffffff',
+    softLight: '#d9d9d4',
+    dark: '#4ea7d0',
+    onDark: '#14171c',
+    softDark: '#203440',
+  },
+  fallingBlocks: {
+    light: '#5b4a12',
+    onLight: '#ffffff',
+    softLight: '#e0dbce',
+    dark: '#dbdb99',
+    onDark: '#14171c',
+    softDark: '#3c3e35',
+  },
+  paddleRally: {
+    light: '#552613',
+    onLight: '#ffffff',
+    softLight: '#dfd7ce',
+    dark: '#c87255',
+    onDark: '#14171c',
+    softDark: '#382927',
+  },
+  hanoiTowers: {
+    light: '#4f1940',
+    onLight: '#ffffff',
+    softLight: '#dfd5d4',
+    dark: '#cbaac9',
+    onDark: '#14171c',
+    softDark: '#39343f',
+  },
+  mazeEscape: {
+    light: '#2a4620',
+    onLight: '#ffffff',
+    softLight: '#dadbd0',
+    dark: '#8bbd64',
+    onDark: '#14171c',
+    softDark: '#2c382a',
+  },
 } as const;
 
 export type SeriesColors = typeof seriesColors;

@@ -71,10 +71,13 @@ describe('the game a URL asks for', () => {
   });
 
   // Not a list to keep in step by hand: every title in the collection has to
-  // survive the round trip, including whichever one is added next.
-  it('round-trips every game in the registry', () => {
+  // survive the round trip, including whichever one is added next. A title in
+  // development is not in the collection yet — the browser reads its address
+  // as the collection (the tests further down).
+  it('round-trips every game in the registry that this build offers', () => {
     expect(GAMES.length).toBeGreaterThan(20);
     for (const game of GAMES) {
+      if (game.channel === 'in-development') continue;
       expect(gameIdFromHref(`https://pixapps.ai${hrefWithGame(PLAY, game.id)}`)).toBe(game.id);
     }
   });
@@ -88,15 +91,37 @@ describe('the game a URL asks for', () => {
  * the registry carries. The shortcut path shares this parser (issue #110), so
  * this is also what keeps a beta title out of a pinned shortcut on the app.
  *
- * No registry title is on the channel today (all graduated 2026-10-02), so the
- * mechanism is exercised with a synthetic beta entry spliced into the registry.
+ * Exercised twice: with the real beta titles the registry declares today (the
+ * five of docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md, the five of
+ * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md and
+ * the five of
+ * docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md;
+ * no real title is in development today, since Nos. 47–51 became playable on
+ * 2026-10-22, so the real in-development loop below has nothing to walk until
+ * the next scaffold), and with a synthetic beta entry and a synthetic
+ * in-development entry spliced into the registry, which keep the mechanism
+ * tested on any day no registry title is on a channel (as from 2026-10-02
+ * until the 2026-10-17 five arrived, and for the in-development channel from
+ * 2026-10-22).
  */
 describe('a web-beta title in the address', () => {
+  const realBeta = GAMES.filter((game) => game.channel === 'web-beta');
+  // And the titles still in development (`channel: 'in-development'`): a
+  // scaffold with no game behind it is offered nowhere, so its address is the
+  // collection on both builds (app/gameChannel.ts).
+  const realInDevelopment = GAMES.filter((game) => game.channel === 'in-development');
+
   const beta = {
     ...GAMES.find((game) => game.id === 'sudoku')!,
     id: 'synthetic-beta' as GameDefinition['id'],
     title: 'Synthetic Beta',
     channel: 'web-beta' as const,
+  } satisfies GameDefinition;
+  const inDevelopment = {
+    ...GAMES.find((game) => game.id === 'sudoku')!,
+    id: 'synthetic-in-development' as GameDefinition['id'],
+    title: 'Synthetic In Development',
+    channel: 'in-development' as const,
   } satisfies GameDefinition;
 
   async function loadWithBeta(native: boolean) {
@@ -114,7 +139,7 @@ describe('a web-beta title in the address', () => {
     });
     vi.doMock('./registry', async (importOriginal) => {
       const actual = await importOriginal<typeof import('./registry')>();
-      return { ...actual, GAMES: [...actual.GAMES, beta] };
+      return { ...actual, GAMES: [...actual.GAMES, beta, inDevelopment] };
     });
     return import('./webRoute');
   }
@@ -122,6 +147,29 @@ describe('a web-beta title in the address', () => {
   afterEach(() => {
     vi.doUnmock('@capacitor/core');
     vi.doUnmock('./registry');
+  });
+
+  it('opens in the browser like any other — every real beta title', () => {
+    expect(realBeta.length).toBeGreaterThan(0);
+    for (const game of realBeta) expect(gameIdFromHref(`${PLAY}?game=${game.id}`)).toBe(game.id);
+  });
+
+  it('is the collection on the app build for every real beta title, while released titles still resolve', async () => {
+    const native = await loadWithBeta(true);
+    for (const game of realBeta) {
+      expect(native.gameIdFromHref(`${PLAY}?game=${game.id}`), game.id).toBeNull();
+    }
+    expect(native.gameIdFromHref(`${PLAY}?game=sudoku`)).toBe('sudoku');
+  });
+
+  it('is the collection on both builds for every real in-development title', async () => {
+    for (const game of realInDevelopment) {
+      expect(gameIdFromHref(`${PLAY}?game=${game.id}`), game.id).toBeNull();
+    }
+    const native = await loadWithBeta(true);
+    for (const game of realInDevelopment) {
+      expect(native.gameIdFromHref(`${PLAY}?game=${game.id}`), game.id).toBeNull();
+    }
   });
 
   it('opens in the browser like any other', async () => {
@@ -135,8 +183,18 @@ describe('a web-beta title in the address', () => {
     expect(native.gameIdFromHref(`${PLAY}?game=sudoku`)).toBe('sudoku');
   });
 
-  it('is the collection when no title is on the channel and the id is simply unknown', () => {
-    expect(GAMES.some((game) => game.channel === 'web-beta')).toBe(false);
+  it('is the collection on both builds for a synthetic in-development title', async () => {
+    const web = await loadWithBeta(false);
+    expect(web.gameIdFromHref(`${PLAY}?game=${inDevelopment.id}`)).toBeNull();
+    expect(web.gameIdFromHref(`${PLAY}?game=${beta.id}`)).toBe(beta.id);
+    const native = await loadWithBeta(true);
+    expect(native.gameIdFromHref(`${PLAY}?game=${inDevelopment.id}`)).toBeNull();
+    expect(native.gameIdFromHref(`${PLAY}?game=sudoku`)).toBe('sudoku');
+  });
+
+  it('is the collection when the id is simply unknown to the registry', () => {
+    // Without the splice the synthetic id names no title at all, beta or not.
+    expect(GAMES.some((game) => game.id === beta.id)).toBe(false);
     expect(gameIdFromHref(`${PLAY}?game=${beta.id}`)).toBeNull();
   });
 });

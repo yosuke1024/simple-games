@@ -3,9 +3,9 @@
  * Club reads as a screen of the app, not a second app), the one-line error
  * text, and the formatting of a game's facts. No state lives here.
  */
-import type { ReactNode } from 'react';
+import { useLayoutEffect, type ReactNode, type RefObject } from 'react';
 import { ClubApiError } from '../api/errors';
-import { contractFor } from '../contract/challenge';
+import { contractFor, gameTitle } from '../contract/challenge';
 import { formatDuration } from '@/ui/format';
 import { IconBack } from '@/ui/components/icons';
 import type { MessageKey, TranslateVars } from '@/i18n';
@@ -20,6 +20,7 @@ export function ScreenFrame({
   lead,
   onBack,
   right,
+  bodyRef,
   t,
   children,
 }: {
@@ -28,6 +29,8 @@ export function ScreenFrame({
   lead?: ReactNode;
   onBack: () => void;
   right?: ReactNode;
+  /** The scrolling body, for a screen that keeps its place across a member's view (`useRestoredScroll`). */
+  bodyRef?: RefObject<HTMLDivElement | null>;
   t: T;
   children: ReactNode;
 }) {
@@ -47,9 +50,31 @@ export function ScreenFrame({
         )}
         {right ?? <span className="icon-btn-placeholder" />}
       </header>
-      <div className="settings-list club-body">{children}</div>
+      <div className="settings-list club-body" ref={bodyRef}>
+        {children}
+      </div>
     </div>
   );
+}
+
+/**
+ * Puts a screen's body back where the person left it, before the first paint
+ * (club.md §9「Member」: a Back from a member's view lands on the row it came
+ * from). `scrollTop` is what the screen above read when it opened the view; the
+ * content it scrolls must already be in the first render (a list or a table
+ * the step kept). Holds no state of its own.
+ */
+export function useRestoredScroll(
+  bodyRef: RefObject<HTMLDivElement | null>,
+  scrollTop: number | undefined,
+): void {
+  useLayoutEffect(() => {
+    if (scrollTop !== undefined && scrollTop > 0 && bodyRef.current) {
+      bodyRef.current.scrollTop = scrollTop;
+    }
+    // Once per open: the place is the one the screen was left at.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }
 
 /**
@@ -86,6 +111,10 @@ export function errorText(error: unknown, t: T, clubName?: string): string {
         return t('clubErr_invite_expired');
       case 'too_many_members':
         return t('clubErr_too_many_members');
+      case 'too_many_clubs':
+        return t('clubOwnerLimit');
+      case 'subscription_inactive':
+        return t('clubSubscriptionExpired');
       case 'unauthorized':
         return t('clubErr_unauthorized');
       case 'forbidden':
@@ -197,6 +226,14 @@ export function modeLabel(gameId: string, key: string, t: T, daily = false): str
   if (key === '4-suits') return t('clubTier_suits4');
   // A board size reads as the game's own screens write it: 8×8, not 8x8.
   return key.replace(/^(\d+)x(\d+)/, '$1×$2');
+}
+
+/** `Sudoku · Hard`; a game with one table (`standard`) is its title alone, a daily table says Daily. */
+export function rankingTitle(gameId: string, paramsKey: string, t: T): string {
+  const game = gameTitle(gameId) ?? gameId;
+  if (paramsKey === 'daily') return `${game} · ${t('clubDaily')}`;
+  const mode = modeLabel(gameId, paramsKey, t);
+  return mode === null ? game : `${game} · ${mode}`;
 }
 
 export function dateLabel(iso: string, locale: string): string {

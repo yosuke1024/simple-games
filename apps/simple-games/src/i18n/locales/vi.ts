@@ -62,6 +62,8 @@ export const vi: Messages = {
     'Bản sao lưu là một tệp không mã hóa nằm trên máy bạn. Simple Games không bao giờ tải nó lên, và chỉ bạn quyết định cất nó ở đâu.',
   backupPurchaseNote:
     'Giao dịch mua gỡ quảng cáo không nằm trong bản sao lưu. Hãy khôi phục nó từ cửa hàng ứng dụng.',
+  backupClubNote:
+    'Bao gồm cả khóa chủ sở hữu Club House và các Club bạn đã tham gia. Đừng đưa tệp này cho người khác.',
   backupExport: 'Xuất bản sao lưu',
   backupRestore: 'Khôi phục từ bản sao lưu',
   backupExportFailed: 'Không thể tạo tệp sao lưu.',
@@ -152,6 +154,7 @@ export const vi: Messages = {
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'Nâng cao',
   clubEntry: 'Club House',
+  clubJoinNew: 'Tham gia Club House mới',
   playTogetherTitle: 'Chơi cùng nhau',
   playTogetherBody: 'Chia sẻ điểm số của bạn với mọi người.',
   clubResultSent: 'Đã gửi đến {club}',

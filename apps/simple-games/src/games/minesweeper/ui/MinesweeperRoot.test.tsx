@@ -101,8 +101,13 @@ function storedPlaySeconds(): number {
   return stats.easy.totalPlaySeconds + stats.medium.totalPlaySeconds + stats.hard.totalPlaySeconds;
 }
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -356,6 +361,39 @@ describe('first run', () => {
     // Every free action is available from the very first move (brand promise).
     expect(screen.getByRole('button', { name: 'Hint' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Flag mode' })).toBeEnabled();
+  });
+});
+
+describe('Quick Rules shown again over a suspended board (§10)', () => {
+  it('resumes that board on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    deviceStore.set(MS_STORAGE_KEYS.flags, tutorialDone[MS_STORAGE_KEYS.flags]!);
+    launch();
+    await user.click(await screen.findByRole('button', { name: /^Medium/ }));
+    await user.click(cellAt(6, 6));
+    const stillShut = shutCells().length;
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    cleanup();
+    const { seed } = JSON.parse(deviceStore.get(MS_STORAGE_KEYS.game)!) as { seed: string };
+    // The flags record is gone while a Medium board is suspended, its first
+    // tap made — and the first-run board is always Easy.
+    deviceStore.delete(MS_STORAGE_KEYS.flags);
+
+    launch();
+    expect(await screen.findByText('A number counts mines')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(cells()).toHaveLength(cellCount(PRESETS.medium));
+    expect(shutCells()).toHaveLength(stillShut);
+    // Resumed, not started: the same board in the slot, and no second play counted.
+    expect(JSON.parse(deviceStore.get(MS_STORAGE_KEYS.game)!)).toMatchObject({ seed });
+    const stats = JSON.parse(deviceStore.get(MS_STORAGE_KEYS.stats)!) as Stats;
+    expect(stats).toMatchObject({ easy: { played: 0 }, medium: { played: 1 } });
   });
 });
 
@@ -934,7 +972,7 @@ describe('keyboard (issue #93)', () => {
    * (issue #120). jsdom does not itself enforce `inert` — a click still
    * reaches an element under one — so this asserts on the attribute a real
    * browser (and the CSS fallback for pre-`inert` WebViews pinned in
-   * src/ui/styles.test.ts) actually acts on, not on a click failing to land.
+   * src/test/styles.test.ts) actually acts on, not on a click failing to land.
    */
   it('puts the board out of reach of focus while the restart dialog is up (issue #120)', async () => {
     const user = userEvent.setup();
@@ -1064,5 +1102,48 @@ describe('the ↻ in the top bar (docs/ARCHITECTURE.md「ヘッダの ↻ は結
     await user.click(await screen.findByRole('button', { name: /Daily Challenge/ }));
     await user.click(screen.getByRole('button', { name: 'Retry same board' }));
     expect(choices()).toEqual(['Retry same board', 'Cancel']);
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the board's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(MS_STORAGE_KEYS.flags, tutorialDone[MS_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /^Easy/ }));
+      // Nothing is timed before the first tap (§4), so open a square first.
+      fireEvent.click(cellAt(5, 5));
+
+      // A background books the first five, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedBoardSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the board still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedBoardSeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -1,0 +1,42 @@
+/**
+ * Deterministic PRNG: xmur3 string hash seeding mulberry32. The same seed
+ * string always yields the same sequence, which is what pins the CPU down
+ * completely: its ties and easy's wobble are drawn from
+ * `${seed}:cpu:${moveCount}` and nothing else, so taking a move back and
+ * playing it again brings the same reply (docs/NESTED_TIC_TAC_TOE_RULES.md
+ * §4.1, §5).
+ *
+ * Copied rather than shared: games stay independent (docs/ARCHITECTURE.md).
+ * The extraction question is already on record in
+ * docs/plans/2026-07-30-collection-and-sudoku.md §6; another copy does not
+ * change that discussion, and resolving it does not belong to a new game.
+ */
+
+function xmur3(str: string): () => number {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return () => {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    h ^= h >>> 16;
+    return h >>> 0;
+  };
+}
+
+function mulberry32(a: number): () => number {
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Returns a function producing floats in [0, 1), deterministic per seed. */
+export function createRng(seed: string): () => number {
+  return mulberry32(xmur3(seed)());
+}

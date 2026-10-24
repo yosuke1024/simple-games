@@ -577,6 +577,132 @@ describe('club client', () => {
     });
   });
 
+  describe('member (GET /members/:id, club.md §5-3)', () => {
+    const entry = {
+      id: '9',
+      memberId: 'm_2',
+      nickname: 'Mika',
+      submittedAt: 'x',
+      facts: {},
+      seed: 's',
+      boardDigest: 'd',
+    };
+    const row = {
+      gameId: 'sudoku',
+      paramsKey: 'hard',
+      entryCount: 4,
+      leader: { ...entry, id: '3', memberId: 'm_7', nickname: 'Ken' },
+      best: { rank: 2, entry, nextValue: 305 },
+    };
+    const mika = { id: 'm_2', nickname: 'Mika', role: 'member', joinedAt: 'x' };
+
+    it('GETs the member’s path with the id encoded and no body, and returns the validated view', async () => {
+      const f = vi.fn().mockResolvedValue(reply(200, { member: mika, rankings: [row] }));
+      const view = await createClient(E, 't', f as unknown as typeof fetch).member('m_2');
+      expect(view).toEqual({ member: mika, rankings: [row] });
+      expect(f).toHaveBeenCalledTimes(1);
+      const [url, init] = f.mock.calls[0]!;
+      expect(url).toBe(`${E}/api/v1/members/m_2`);
+      expect(init.method).toBe('GET');
+      expect(init.body).toBeUndefined();
+      expect(init.headers.Authorization).toBe('Bearer t');
+    });
+
+    it('encodes an id that is not path-safe, so it cannot reach another route', async () => {
+      const f = vi.fn().mockResolvedValue(reply(200, { member: mika, rankings: [] }));
+      await createClient(E, 't', f as unknown as typeof fetch).member('a/b?c#d');
+      expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/members/a%2Fb%3Fc%23d`);
+    });
+
+    it('a member who is in no table has an empty list, not an error', async () => {
+      const f = vi.fn().mockResolvedValue(reply(200, { member: mika, rankings: [] }));
+      await expect(
+        createClient(E, 't', f as unknown as typeof fetch).member('m_2'),
+      ).resolves.toEqual({ member: mika, rankings: [] });
+    });
+
+    it('a bad body is malformed_response: no member, no list, or one bad row', async () => {
+      const f = vi
+        .fn()
+        .mockResolvedValueOnce(reply(200, { rankings: [row] }))
+        .mockResolvedValueOnce(reply(200, { member: mika }))
+        .mockResolvedValueOnce(reply(200, { member: mika, rankings: [row, { ...row, best: {} }] }))
+        .mockResolvedValueOnce(reply(200, [mika]));
+      const client = createClient(E, 't', f as unknown as typeof fetch);
+      for (let i = 0; i < 4; i++) {
+        await expect(client.member('m_2')).rejects.toMatchObject({ code: 'malformed_response' });
+      }
+    });
+
+    it('a removed or unknown member, or a server without the route, answers 404 as not_found', async () => {
+      const f = vi
+        .fn()
+        .mockResolvedValue(reply(404, { error: { code: 'not_found', message: 'no' } }));
+      const failure = await createClient(E, 't', f as unknown as typeof fetch)
+        .member('m_2')
+        .then(
+          () => null,
+          (e: unknown) => e,
+        );
+      expect(failure).toBeInstanceOf(ClubApiError);
+      expect(failure).toMatchObject({ code: 'not_found', status: 404 });
+    });
+  });
+
+  describe('membersBefore (GET /members?before=<id>, club.md §5-3, §17-2)', () => {
+    const mika = { id: 'm_2', nickname: 'Mika', role: 'member', joinedAt: 'x' };
+    const taro = { id: 'm_1', nickname: 'Taro', role: 'owner', joinedAt: 'x' };
+
+    it('GETs the page before one member with the id in the query, and returns the validated page', async () => {
+      const f = vi.fn().mockResolvedValue(reply(200, { members: [mika, taro], memberCount: 120 }));
+      const page = await createClient(E, 't', f as unknown as typeof fetch).membersBefore('m_3');
+      expect(page).toEqual({ members: [mika, taro], memberCount: 120 });
+      expect(f).toHaveBeenCalledTimes(1);
+      const [url, init] = f.mock.calls[0]!;
+      expect(url).toBe(`${E}/api/v1/members?before=m_3`);
+      expect(init.method).toBe('GET');
+      expect(init.body).toBeUndefined();
+      expect(init.headers.Authorization).toBe('Bearer t');
+    });
+
+    it('encodes the id in the query, so it cannot add a parameter of its own', async () => {
+      const f = vi.fn().mockResolvedValue(reply(200, { members: [], memberCount: 3 }));
+      await createClient(E, 't', f as unknown as typeof fetch).membersBefore('a&b=c d');
+      expect(f.mock.calls[0]![0]).toBe(`${E}/api/v1/members?before=a%26b%3Dc%20d`);
+    });
+
+    it('an empty page is the end of the list, not an error', async () => {
+      const f = vi.fn().mockResolvedValue(reply(200, { members: [], memberCount: 2 }));
+      await expect(
+        createClient(E, 't', f as unknown as typeof fetch).membersBefore('m_1'),
+      ).resolves.toEqual({ members: [], memberCount: 2 });
+    });
+
+    it('a bad body is malformed_response: no total, a bad total, a bad member, or a bare list', async () => {
+      const f = vi
+        .fn()
+        .mockResolvedValueOnce(reply(200, { members: [mika] }))
+        .mockResolvedValueOnce(reply(200, { members: [mika], memberCount: -1 }))
+        .mockResolvedValueOnce(reply(200, { members: [mika, { id: 1 }], memberCount: 2 }))
+        .mockResolvedValueOnce(reply(200, [mika]));
+      const client = createClient(E, 't', f as unknown as typeof fetch);
+      for (let i = 0; i < 4; i++) {
+        await expect(client.membersBefore('m_3')).rejects.toMatchObject({
+          code: 'malformed_response',
+        });
+      }
+    });
+
+    it('a cursor the server does not know answers 400 as invalid_request', async () => {
+      const f = vi
+        .fn()
+        .mockResolvedValue(reply(400, { error: { code: 'invalid_request', message: 'no' } }));
+      await expect(
+        createClient(E, 't', f as unknown as typeof fetch).membersBefore('nope'),
+      ).rejects.toMatchObject({ code: 'invalid_request', status: 400 });
+    });
+  });
+
   it('health needs no token', async () => {
     const f = vi.fn().mockResolvedValue(reply(200, { ok: true, api: 1, claimed: false }));
     expect(await createClient(E, null, f as unknown as typeof fetch).health()).toEqual({

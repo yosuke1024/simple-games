@@ -13,7 +13,12 @@
 import { describe, expect, it } from 'vitest';
 import { GAMES } from '../app/registry';
 import { STORAGE_KEYS } from '../storage/schemas';
-import { backupKeys, SHELL_BACKUP_KEYS, SHELL_KEYS_LEFT_BEHIND } from './keys';
+import {
+  backupKeys,
+  SHELL_BACKUP_KEYS,
+  SHELL_KEYS_LEFT_BEHIND,
+  RESTORED_ONLY_WHEN_PRESENT,
+} from './keys';
 import { loadValidators } from './owners';
 
 describe('backup key ownership', () => {
@@ -52,10 +57,10 @@ describe('backup key ownership', () => {
    * results bound for a particular Club (docs/architecture/club.md §4). Both
    * are what a copied file must not carry, so they are named here as well.
    */
-  it('never carries the Club connections or the Club outbox', () => {
-    expect(SHELL_KEYS_LEFT_BEHIND).toHaveProperty(STORAGE_KEYS.club);
+  it('carries the Club connections and owner key, never the Club outbox (2026-10-24)', () => {
+    expect(backupKeys()).toContain(STORAGE_KEYS.club);
+    expect(RESTORED_ONLY_WHEN_PRESENT.has(STORAGE_KEYS.club)).toBe(true);
     expect(SHELL_KEYS_LEFT_BEHIND).toHaveProperty(STORAGE_KEYS.clubOutbox);
-    expect(backupKeys()).not.toContain(STORAGE_KEYS.club);
     expect(backupKeys()).not.toContain(STORAGE_KEYS.clubOutbox);
   });
 

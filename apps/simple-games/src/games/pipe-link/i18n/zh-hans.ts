@@ -1,0 +1,57 @@
+/**
+ * Simplified Chinese catalog for Pipe Link. Provenance (docs/PIPE_LINK_RULES.md §11):
+ * machine-written by AI from the English source and **not read by any native
+ * speaker** — not a reviewed translation. The title (`pipeLinkName`) is a
+ * proper noun and stays as-is; placeholder names match the English source.
+ */
+import type { PipeLinkMessages } from './en';
+
+export const zhHans: PipeLinkMessages = {
+  pipeLinkName: 'Pipe Link',
+  pipeLinkChooseBoard: '选择盘面',
+  pipeLinkDifficulty_easy: '简单',
+  pipeLinkDifficulty_medium: '中等',
+  pipeLinkDifficulty_hard: '困难',
+  pipeLinkBoardNote: '{width}×{height}',
+  pipeLinkConfirmSwitchTitle: '替换进行中的盘面？',
+  pipeLinkConfirmSwitchBody: '进行中的“{current}”盘面会被新的“{next}”盘面替换。',
+  pipeLinkBoardLabel: 'Pipe Link 盘面，{width} 乘 {height}',
+  pipeLinkTile: '第 {row} 行第 {col} 列：{pipes}，{light}',
+  pipeLinkTileSource: '第 {row} 行第 {col} 列，水源：{pipes}，{light}',
+  pipeLinkTileHinted: '{tile}。提示：转到{pipes}',
+  pipeLinkLit: '有水',
+  pipeLinkUnlit: '无水',
+  pipeLinkPipes_end_0: '端头，朝上',
+  pipeLinkPipes_end_1: '端头，朝右',
+  pipeLinkPipes_end_2: '端头，朝下',
+  pipeLinkPipes_end_3: '端头，朝左',
+  pipeLinkPipes_straight_0: '直管，上下',
+  pipeLinkPipes_straight_1: '直管，左右',
+  pipeLinkPipes_elbow_0: '弯管，上和右',
+  pipeLinkPipes_elbow_1: '弯管，右和下',
+  pipeLinkPipes_elbow_2: '弯管，下和左',
+  pipeLinkPipes_elbow_3: '弯管，左和上',
+  pipeLinkPipes_tee_0: 'T 形管，上、右、下',
+  pipeLinkPipes_tee_1: 'T 形管，右、下、左',
+  pipeLinkPipes_tee_2: 'T 形管，下、左、上',
+  pipeLinkPipes_tee_3: 'T 形管，左、上、右',
+  pipeLinkAnnounce: '第 {row} 行第 {col} 列：{pipes}。{total} 块中有 {lit} 块有水。',
+  pipeLinkHintNote: '转动虚线圈中的方块，直到它的管子与浅色的管子一致。',
+  pipeLinkHintWhere: '标记：第 {row} 行第 {col} 列。转到{pipes}。',
+  pipeLinkSolvedTitle: '所有方块都有水了',
+  pipeLinkSolvedBody: '水源的水流到了全部 {tiles} 块方块。',
+  pipeLinkBoardSize: '盘面',
+  pipeLinkHintsUsed: '使用的提示',
+  pipeLinkNewBestTime: '你的最快纪录。',
+  pipeLinkNewBoard: '新盘面',
+  pipeLinkSolvedCount: '完成的盘面',
+  pipeLinkDailySection: '每日',
+  pipeLinkDailiesCleared: '完成天数',
+  pipeLinkAllModes: '所有模式',
+  pipeLinkStep1Title: '点按旋转',
+  pipeLinkStep1Body: '点按一块方块，它会顺时针旋转 90°。',
+  pipeLinkStep2Title: '水会流动',
+  pipeLinkStep2Body: '与水源相连的管子会充满水，其余的保持空心。',
+  pipeLinkStep3Title: '让每根管子都充满',
+  pipeLinkStep3Body: '所有管子都充满水时，盘面完成。',
+};

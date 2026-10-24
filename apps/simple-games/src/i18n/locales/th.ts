@@ -61,6 +61,8 @@ export const th: Messages = {
   backupPrivacyNote:
     'ไฟล์สำรองเป็นไฟล์ที่ไม่ได้เข้ารหัสในเครื่องของคุณ Simple Games ไม่อัปโหลดไฟล์นี้ และคุณเป็นผู้ตัดสินใจว่าจะเก็บไว้ที่ไหน',
   backupPurchaseNote: 'การซื้อเพื่อลบโฆษณาไม่รวมอยู่ในไฟล์สำรอง ให้กู้คืนจากสโตร์แทน',
+  backupClubNote:
+    'รวมคีย์เจ้าของ Club House และรายชื่อ Club ที่คุณเข้าร่วมอยู่ด้วย อย่าให้ไฟล์นี้แก่ผู้อื่น',
   backupExport: 'ส่งออกไฟล์สำรอง',
   backupRestore: 'กู้คืนจากไฟล์สำรอง',
   backupExportFailed: 'สร้างไฟล์สำรองไม่สำเร็จ',
@@ -149,6 +151,7 @@ export const th: Messages = {
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'ขั้นสูง',
   clubEntry: 'Club House',
+  clubJoinNew: 'เข้าร่วม Club House ใหม่',
   playTogetherTitle: 'เล่นด้วยกัน',
   playTogetherBody: 'แชร์คะแนนของคุณกับทุกคน',
   clubResultSent: 'ส่งไปยัง {club} แล้ว',

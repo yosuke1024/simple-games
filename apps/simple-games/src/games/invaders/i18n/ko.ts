@@ -1,0 +1,31 @@
+// AI translation draft; no human or native review claimed.
+import type { InvadersMessages } from './en';
+export const ko: InvadersMessages = {
+  invadersName: 'Invaders',
+  invadersStage: '스테이지',
+  invadersLives: '목숨',
+  invadersLivesLeft: '남은 목숨 {count}개',
+  invadersBoard: '게임 영역: 적 {count}기 남음',
+  invadersControls: '드래그 또는 ← → / A D로 이동하세요.',
+  invadersStart: '시작',
+  invadersPause: '일시 정지',
+  invadersPaused: '일시 정지 중. 준비되면 재개하세요.',
+  invadersReady: '기체 위치를 정하고 시작하세요.',
+  invadersAutoFire: '기체가 자동으로 발사합니다.',
+  invadersLeft: '왼쪽으로 이동',
+  invadersRight: '오른쪽으로 이동',
+  invadersRetry: '다시 플레이',
+  invadersBest: '최고 점수',
+  invadersBestStage: '최고 도달 스테이지',
+  invadersStageClear: '편대 격파',
+  invadersStageClearBody: '다음 스테이지는 기다립니다. 방벽은 복구되고 남은 목숨은 유지됩니다.',
+  invadersNextStage: '다음 스테이지',
+  invadersWon: '모두 클리어!',
+  invadersWonBody: '20개 편대를 모두 격파했습니다.',
+  invadersOver: '플레이 종료',
+  invadersOverBody: '점수를 저장했습니다. 언제든 다시 도전하세요.',
+  invadersRule1: '좌우로 움직여 조준하세요. 기체는 자동으로 발사합니다.',
+  invadersRule2: '지그재그 탄을 피하세요. 방벽은 양쪽 탄을 막으며 조금씩 부서집니다.',
+  invadersRule3:
+    '목숨 3개로 20개 편대를 격파하세요. 점선에 닿기 전에 막으세요. 언제든 일시 정지할 수 있습니다.',
+};

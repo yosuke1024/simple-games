@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { createSession, type Board } from '../game';
+import { applyMove, createSession, type Board } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { TM_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { Game2048Root } from './Game2048Root';
@@ -116,8 +116,13 @@ function tileLayout(): string[] {
  * on its own card too, so a plain text query would find both once it is up. */
 const topScore = () => document.querySelector('.tm-score')?.textContent ?? '';
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -137,6 +142,35 @@ describe('first run', () => {
     expect(within(gameBoard()).getAllByRole('img')).toHaveLength(16);
     expect(tiles()).toHaveLength(2);
     expect(screen.getByText(/Score\s*0/)).toBeInTheDocument();
+  });
+});
+
+describe('Quick Rules shown again over a suspended game (§10)', () => {
+  it('resumes that game on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a game is suspended in `tm.saveGame`: the
+    // two are separate records (§10), so Quick Rules show again over a board
+    // already slid once — its pair merged into a 4 that scored.
+    const pinned = { ...createSession('2048-uitest'), board: PAIR_ON_TOP };
+    const played = applyMove(pinned, 'left')!.session;
+    renderGame({ [TM_STORAGE_KEYS.game]: JSON.stringify(toPersisted(played, 1)) });
+
+    expect(await screen.findByText('Swipe to slide')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    // The board that was left, tile for tile, with the score it had.
+    const left = played.board.flatMap((value, cell) =>
+      value === 0 ? [] : [`${Math.floor(cell / 4)},${cell % 4}=${value}`],
+    );
+    expect(tileLayout()).toEqual(left.sort());
+    expect(topScore()).toMatch(/Score\s*4/);
+    // Resumed, not started: no new board over the slot, and no run booked as
+    // ended nor a new one counted as played (§9).
+    expect(deviceStore.get(TM_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(TM_STORAGE_KEYS.stats)).toBeUndefined();
   });
 });
 
@@ -658,6 +692,47 @@ describe('a home-screen shortcut', () => {
       expect(storedRunSeconds()).toBe(8);
       // ...and only the three seconds since are added to the total.
       expect(storedPlaySeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the run's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(TM_STORAGE_KEYS.flags, tutorialDone[TM_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /New Game/ }));
+
+      // A background books the first five, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedRunSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the run still says eight, and
+      // none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedRunSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

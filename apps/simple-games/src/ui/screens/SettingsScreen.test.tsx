@@ -208,7 +208,11 @@ describe('favorites', () => {
 
     const picker = screen.getByRole('region', { name: 'Favorites' });
     const picks = within(picker).getAllByRole('button');
-    expect(picks.map((button) => button.textContent)).toEqual(GAMES.map((game) => game.title));
+    // What this build offers (app/gameChannel.ts): jsdom is the browser, so
+    // the beta titles are here and the ones in development are not.
+    expect(picks.map((button) => button.textContent)).toEqual(
+      GAMES.filter((game) => game.channel !== 'in-development').map((game) => game.title),
+    );
     expect(picks.every((button) => button.getAttribute('aria-pressed') === 'false')).toBe(true);
   });
 

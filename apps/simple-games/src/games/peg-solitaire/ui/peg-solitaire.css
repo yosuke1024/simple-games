@@ -1,0 +1,468 @@
+/* Peg Solitaire — all of this game's styling, imported by PegSolitaireRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --surface-recessed, --ink, --ink-soft, --line, --accent, --radius,
+   --font-display, …) and the accent the shell swaps in for this title
+   (葡萄色, `:root[data-game='peg-solitaire']`), so the game follows the theme
+   without knowing about it. No colour is written here — the one exception
+   being the system colours (Canvas, CanvasText, Highlight) a forced-colours
+   theme hands the board at the end of this file.
+
+   Class names are prefixed `pg-` so this file can never collide with the
+   shell or with another game.
+
+   What each mark means is carried by its SHAPE, never by colour alone
+   (docs/PEG_SOLITAIRE_RULES.md §5): the target is a ring around the hole, a
+   hole the picked-up peg can land in has a dot inside it, the picked-up peg
+   wears a thick ring and is lifted. The ring, the pit's rim and the dot are
+   drawn in the ink tones, which clear 3:1 on --surface in both themes; the
+   pegs are the accent (ui/contrast.test.ts measures all three). */
+
+/* ---------- game screen ---------- */
+
+/* The board sits between the top bar and the action bar, centred so a tall
+   phone brings it into thumb reach instead of pinning it up top.
+
+   When the board's floor (below) is taller than the room left — a phone
+   held sideways, a split screen — this column scrolls on its own, so the
+   board never runs under the top bar and Undo stays where it is. It is
+   centred by auto margins rather than `justify-content`, because a centred
+   column that overflows puts its top out of the scroll's reach. In the web
+   build with ads the screen grows with its content instead (styles.css,
+   `data-sg-web-ads`), and the page scrolls. */
+.pg-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 16px 8px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.pg-body > :first-child {
+  margin-top: auto;
+}
+
+.pg-body > :last-child {
+  margin-bottom: auto;
+}
+
+/* As large as its own column honestly allows (`100%`, not `vw` — the
+   board-width lesson in 2048's stylesheet), and never taller than the screen
+   leaves for it: the height cap is the viewport minus everything else in the
+   column — the top bar, the status line, the action bar and the ad below the
+   game (the web build's 100px anchor; the app's 64px banner is smaller) —
+   turned into a width through the board's own aspect ratio. Measured in
+   Chromium (docs/PEG_SOLITAIRE_RULES.md §13): at 360×640 the cross is width-
+   bound at 328px, a pitch of 46.8px (past the 44px tap target), the triangle
+   65.6px, and nothing scrolls; at 1280×800 the cap holds the page to the
+   viewport.
+
+   The cap never takes the board below 260px (or its column, if narrower):
+   on a phone held sideways in a browser the height left over is under 100px,
+   and a board that small cannot be played. There the board scrolls instead
+   (.pg-body above), and the cross keeps a pitch of about 37px — the same as
+   a 320px-wide phone held upright.
+
+   `touch-action: none` because pegs are dragged across it (§4): without it
+   the page would claim the finger and the drag would never arrive. */
+.pg-board {
+  --pg-aspect: 1;
+  position: relative;
+  width: max(min(100%, 260px), min(100%, 460px, calc((100vh - 305px) * var(--pg-aspect))));
+  width: max(min(100%, 260px), min(100%, 460px, calc((100svh - 305px) * var(--pg-aspect))));
+  aspect-ratio: var(--pg-aspect);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pg-status {
+  margin: 0;
+  min-height: 1.5em;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.pg-actions {
+  justify-content: center;
+}
+
+/* ---------- the plate ---------- */
+
+/* The board's own shape behind the holes (components/BoardParts.tsx): a
+   one-pitch stroke with round joins along the outer hole centres, its edge a
+   slightly wider stroke underneath. */
+.pg-plate {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.pg-plate-edge,
+.pg-plate-face {
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.pg-plate-edge {
+  fill: var(--line);
+  stroke: var(--line);
+  stroke-width: 1.06;
+}
+
+.pg-plate-face {
+  fill: var(--surface);
+  stroke: var(--surface);
+  stroke-width: 1;
+}
+
+/* ---------- a hole ---------- */
+
+/* One pitch square, round: the disc is the tap target, and on the triangle
+   neighbouring discs touch without overlapping (ui/layout.ts). */
+.pg-hole {
+  position: absolute;
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+}
+
+/* The keyboard focus: a dashed accent circle at the disc's edge — dashed so
+   it never reads as the target's solid ring, whatever hole it is on. */
+.pg-hole:focus-visible {
+  outline: 3px dashed var(--accent);
+  outline-offset: -2px;
+}
+
+/* Every layer fills the hole and draws its own disc in ::before, so a layer
+   can be moved by whole pitches (the jump's slide) with `translate(%)`. */
+.pg-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pg-layer::before {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+}
+
+/* The target: a ring near the hole's edge, outside even a peg's disc. */
+.pg-ring::before {
+  left: 5%;
+  top: 5%;
+  width: 90%;
+  height: 90%;
+  box-sizing: border-box;
+  border: 2.5px solid var(--ink-soft);
+}
+
+/* The hole itself, rimmed so an empty hole reads without a peg beside it. */
+.pg-pit::before {
+  left: 26%;
+  top: 26%;
+  width: 48%;
+  height: 48%;
+  background: var(--surface-recessed);
+  box-shadow: inset 0 0 0 1.5px var(--ink-soft);
+}
+
+/* A hole the picked-up peg can land in: a dot inside it (§5). */
+.pg-dot::before {
+  left: 39%;
+  top: 39%;
+  width: 22%;
+  height: 22%;
+  background: var(--ink);
+}
+
+/* The peg: the accent disc, lit from the top so it reads as standing. */
+.pg-peg::before {
+  left: 19%;
+  top: 19%;
+  width: 62%;
+  height: 62%;
+  background: var(--accent);
+  background-image: radial-gradient(
+    circle at 35% 30%,
+    rgba(255, 255, 255, 0.32),
+    rgba(255, 255, 255, 0) 55%
+  );
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* Picked up: a thick ring and a lifted shadow — never colour alone (§5). */
+.pg-hole-selected .pg-peg {
+  transform: translateY(-5%);
+}
+
+.pg-hole-selected .pg-peg::before {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 5px var(--ink),
+    0 6px 10px rgba(0, 0, 0, 0.28);
+}
+
+/* While it is carried, the hole it came from keeps a faint copy of it. */
+.pg-hole-lifted .pg-peg {
+  opacity: 0.3;
+}
+
+/* A dotted hole under a carried peg: the dot grows and the pit takes the
+   accent rim — the landing, before it happens. */
+.pg-hole-hover .pg-dot::before {
+  left: 33%;
+  top: 33%;
+  width: 34%;
+  height: 34%;
+}
+
+.pg-hole-hover .pg-pit::before {
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
+/* The peg in the hand: drawn above the board, following the finger. It is
+   part of the operation rather than an effect, so Reduced Motion keeps it. */
+.pg-float {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.pg-peg-held {
+  transform: scale(1.12);
+}
+
+.pg-peg-held::before {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 5px var(--ink),
+    0 10px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* ---------- the jump (§13) ---------- */
+
+/* The jumper slides the two pitches from where it was; the jumped peg fades
+   where it stood. Nothing else moves — no particles, no shake. The screen
+   adds these classes only when motion is allowed (useReducedMotion), and the
+   shared reduced-motion rule would collapse them anyway. */
+/* The hole the jumper lands in sits above its neighbours for as long as
+   the board its jump made is drawn (PegBoard), so the travelling peg passes
+   over the pits and the fading peg it crosses whichever way it jumps — and
+   still below the peg in the hand (.pg-float, z-index 2). A hole draws
+   inside its own square (bar the picked-up peg's soft shadow), so the lift
+   covers nothing that carries meaning once the peg has landed. */
+.pg-hole-arriving {
+  z-index: 1;
+}
+
+.pg-peg-arrive {
+  animation: pg-arrive 160ms ease-out;
+}
+
+@keyframes pg-arrive {
+  from {
+    transform: translate(var(--pg-dx), var(--pg-dy));
+  }
+
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+.pg-peg-vanish {
+  animation: pg-vanish 200ms ease-out forwards;
+}
+
+@keyframes pg-vanish {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+/* ---------- home ---------- */
+
+.pg-choose-label {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+/* A board's button: its shape in miniature, then its name and one note. */
+.pg-choice {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 16px;
+  text-align: start;
+}
+
+.pg-choice-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pg-choice-name {
+  overflow-wrap: anywhere;
+}
+
+.pg-glyph {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  fill: currentColor;
+  opacity: 0.9;
+}
+
+/* ---------- result card ---------- */
+
+.pg-new-fewest {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ---------- Quick Rules figures ---------- */
+
+/* The early-release note (the shell's WebBetaNotice, in its own styling)
+   under the heading on every step (ui/screens/TutorialScreen.tsx): the
+   heading's gutter, the header's padding for the space above it, and the
+   full width, so the badge alone (the twelve languages without the sentence)
+   sits where the sentence's badge does rather than centred over the step. */
+.pg-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
+}
+
+.pg-figure {
+  position: relative;
+  max-width: 100%;
+}
+
+.pg-figure-hole {
+  position: absolute;
+}
+
+.pg-figure-arrows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.pg-figure-arrow path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 0.07;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- forced colours ----------
+
+   A contrast theme (Windows, forced-colors) paints every background as
+   Canvas and drops every box-shadow, which would take the pegs, the pits,
+   the dots and the picked-up ring with them — only the target's border
+   would be left. Every mark here is a shape, so the board keeps its shapes
+   and draws them in the system's own colours instead: a peg is a filled
+   disc, a pit an outlined one, a landing a Highlight dot, the picked-up peg
+   a Highlight ring. */
+
+@media (forced-colors: active) {
+  .pg-plate,
+  .pg-layer {
+    forced-color-adjust: none;
+  }
+
+  .pg-plate-edge {
+    fill: CanvasText;
+    stroke: CanvasText;
+  }
+
+  .pg-plate-face {
+    fill: Canvas;
+    stroke: Canvas;
+  }
+
+  .pg-ring::before {
+    border-color: CanvasText;
+  }
+
+  .pg-pit::before {
+    background: Canvas;
+    box-shadow: inset 0 0 0 2px CanvasText;
+  }
+
+  .pg-dot::before {
+    background: Highlight;
+  }
+
+  .pg-peg::before {
+    background: CanvasText;
+    box-shadow: none;
+  }
+
+  .pg-hole-selected .pg-peg::before,
+  .pg-peg-held::before {
+    box-shadow:
+      0 0 0 2px Canvas,
+      0 0 0 5px Highlight;
+  }
+
+  .pg-hole-hover .pg-pit::before {
+    box-shadow: inset 0 0 0 3px Highlight;
+  }
+
+  .pg-figure-arrow path {
+    stroke: CanvasText;
+  }
+}
+
+/* ---------- wide viewports ----------
+
+   Tiers are defined in src/ui/styles.css「wide viewports」. Compact above is
+   untouched; the wider tiers only let the board grow, still capped by the
+   height the screen leaves it, and the cap stays inside --game-shell-max's
+   560px default so the top bar and Undo stay beside the board. */
+
+@media (min-width: 600px) {
+  .pg-board {
+    width: max(min(100%, 260px), min(100%, 520px, calc((100vh - 305px) * var(--pg-aspect))));
+    width: max(min(100%, 260px), min(100%, 520px, calc((100svh - 305px) * var(--pg-aspect))));
+  }
+
+  .pg-status {
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .pg-board {
+    width: max(min(100%, 260px), min(100%, 560px, calc((100vh - 305px) * var(--pg-aspect))));
+    width: max(min(100%, 260px), min(100%, 560px, calc((100svh - 305px) * var(--pg-aspect))));
+  }
+}

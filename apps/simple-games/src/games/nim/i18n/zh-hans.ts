@@ -1,0 +1,28 @@
+/** AI-authored translation draft; no human review claimed. See docs/NIM_RULES.md. */
+import type { NimMessages } from './en';
+export const zhHans: NimMessages = {
+  nimName: 'Nim',
+  nimMode_easy: '简单',
+  nimMode_normal: '普通',
+  nimMode_hard: '困难',
+  nimRow: '第 {row} 行：{count} 颗石子',
+  nimTake: '取走 {count} 颗',
+  nimYourTurn: '轮到你了',
+  nimCpuTurn: 'CPU 的回合',
+  nimPaused: '已暂停，准备好后继续。',
+  nimLastMove: '上一步：从第 {row} 行取走 {count} 颗。',
+  nimGoal: '取走最后一颗石子即可获胜。',
+  nimChooseRow: '选择一行。',
+  nimChooseCount: '选择要取走的数量。',
+  nimWon: '你赢了！',
+  nimLost: 'CPU 获胜',
+  nimOpponent: '对手',
+  nimWins: '胜利',
+  nimLosses: '失败',
+  nimStep1Title: '选择一行',
+  nimStep1Body: '选择有石子的一行，你始终先手。',
+  nimStep2Title: '取走至少一颗',
+  nimStep2Body: '选择从该行取走的石子数量，然后确认。',
+  nimStep3Title: '取走最后一颗',
+  nimStep3Body: '你与 CPU 轮流取石子，取走最后一颗者获胜。撤销会同时撤回你的行动和 CPU 的应手。',
+};

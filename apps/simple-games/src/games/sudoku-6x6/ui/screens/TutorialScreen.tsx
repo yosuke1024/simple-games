@@ -7,7 +7,8 @@
  * Two things here are the shell's contract rather than this game's taste
  * (src/test/tutorialBackWiring.test.tsx, issue #142): the heading is the
  * shared `howToPlay` string, and the close button exists only once the
- * tutorial has been completed — the first pass ends by starting a game.
+ * tutorial has been completed — the first pass ends in play (on the board
+ * already waiting, if there is one).
  */
 import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
@@ -70,7 +71,15 @@ const BOX_CELLS = [0, 1, 2, 6, 7, 8];
 const BOX_MISSING = ['123...', '4.6...', '......', '......', '......', '......'];
 
 export function Sudoku6x6TutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startDifficulty, prefs, goHome } = useSudoku6x6();
+  const {
+    tutorialCompleted,
+    completeTutorial,
+    canResume,
+    resumeGame,
+    startDifficulty,
+    prefs,
+    goHome,
+  } = useSudoku6x6();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('sudoku-6x6', locale);
   const [step, setStep] = useState(0);
@@ -98,7 +107,11 @@ export function Sudoku6x6TutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startDifficulty(prefs.difficulty);
+      // Onto the board already waiting, if one is, whatever its difficulty: the
+      // flag and the save are separate records, and a lost or unreadable flags
+      // record must not cost the player the board they left (§11).
+      if (canResume('difficulty')) resumeGame('difficulty');
+      else startDifficulty(prefs.difficulty);
     } else {
       goHome();
     }

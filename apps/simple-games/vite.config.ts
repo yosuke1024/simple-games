@@ -1,7 +1,7 @@
-/// <reference types="vitest/config" />
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
+import { configDefaults } from 'vitest/config';
 
 const APP_ROOT = fileURLToPath(new URL('.', import.meta.url));
 
@@ -135,9 +135,43 @@ export default defineConfig(({ mode }) => ({
     },
   },
   test: {
-    environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
     css: false,
     execArgv: TEST_WORKER_EXEC_ARGV,
+    // Two projects, split by what a test needs from its runtime. A jsdom
+    // worker pays a fixed cost per test file — building the DOM, then running
+    // setup.ts — and the suite pays it once per file, so it grows with the
+    // number of games. `games/*/game/` is pure TypeScript (no React, no
+    // Capacitor, no DOM — docs/ARCHITECTURE.md, enforced by
+    // src/test/importBoundaries.test.ts), so its tests, close to half of the
+    // suite, run in plain Node with no setup file. Everything else keeps
+    // jsdom + setup.ts.
+    //
+    // Both projects inherit this block (`extends: true`). Vitest concatenates
+    // inherited arrays such as `setupFiles` instead of replacing them, which
+    // is why `environment` and `setupFiles` live in the projects and not
+    // here. A test file that no project includes never runs, so both
+    // `include` lists are spelled out; a `game/` test that turns out to need a
+    // DOM belongs under `ui/`, not in an exception here.
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'game',
+          environment: 'node',
+          setupFiles: [],
+          include: ['src/games/*/game/**/*.test.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'dom',
+          environment: 'jsdom',
+          setupFiles: ['./src/test/setup.ts'],
+          include: ['src/**/*.test.{ts,tsx}'],
+          exclude: [...configDefaults.exclude, 'src/games/*/game/**'],
+        },
+      },
+    ],
   },
 }));

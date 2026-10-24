@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { CATEGORY_COUNT, cpuTotalOf, totalOf, turnsPlayed } from '../../game';
@@ -29,16 +30,13 @@ export function YachtHomeScreen() {
   const played = stats.wins + stats.losses + stats.draws;
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="yacht" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The same glyph the collection home puts on this title's tile
-            (app/registry.ts): arriving here should look like the tile that
-            was tapped, not like a second mark for the same game. */}
-        <div className="home-logo" aria-hidden="true">
-          ⚄
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="yacht" />
+        </span>
         <h1 className="home-title">{t('yachtName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
         <WebBetaNotice gameId="yacht" />

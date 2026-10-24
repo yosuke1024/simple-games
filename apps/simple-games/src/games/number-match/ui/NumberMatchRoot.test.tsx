@@ -6,9 +6,11 @@ import { settingsSchema } from '@/storage/schemas';
 import {
   createLevelSession,
   createScore,
+  findHint,
   generateLevelBoard,
   initialCellsForLevel,
   isLive,
+  matchPair,
 } from '../game';
 import { AppProvider } from '../state/GameContext';
 import { type SavedGames } from '../storage/gamePersistence';
@@ -116,8 +118,21 @@ function storedLevelStats(): ModeStats | null {
   return (JSON.parse(raw) as Stats).level;
 }
 
-afterEach(() => {
+/** Total play seconds as they survive on disk, across every mode. */
+function storedPlaySeconds(): number {
+  const raw = deviceStore.get(NM_STORAGE_KEYS.stats);
+  if (raw === undefined) return 0;
+  const stats = JSON.parse(raw) as Stats;
+  return stats.level.totalPlaySeconds + stats.daily.totalPlaySeconds + stats.free.totalPlaySeconds;
+}
+
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -139,6 +154,37 @@ describe('first run flow', () => {
     expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Hint' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Add' })).toBeEnabled();
+  });
+});
+
+describe('Quick Rules shown again over a suspended level (§14)', () => {
+  it('resumes that level on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // Level 3 is unlocked and level 1 is suspended a match in, with no
+    // tutorial flag beside it: the flag and the save are separate records
+    // (§14), so the flags record alone can be lost — and the first-run start
+    // would open level 3 over the board.
+    const fresh = createLevelSession(1);
+    const [i, j] = findHint(fresh.board)!;
+    renderApp(
+      flagsSchema.defaultValue(),
+      { ...progressSchema.defaultValue(), highestUnlocked: 3 },
+      { level: matchPair(fresh, i, j)!, daily: null, free: null },
+    );
+
+    expect(screen.getByText('Equal, or adds up to 10')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    const board = screen.getByRole('group', { name: 'Game board' });
+    expect(within(board).getAllByRole('button').length).toBeLessThanOrEqual(LEVEL1_CELLS - 2);
+    // Resumed, not started: no new board written over the slot, and no game
+    // counted.
+    expect(deviceStore.get(NM_STORAGE_KEYS.game)).toBeUndefined();
+    expect(storedLevelStats()).toBeNull();
   });
 });
 
@@ -570,6 +616,50 @@ describe('a home-screen shortcut', () => {
         totalPlaySeconds: 8,
         bestClearSeconds: 8,
       });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the board's clock. Number Match books play time into the statistics only
+  // when a game ends (statsLogic.ts), from that clock — so it is the clock
+  // that has to keep them, and the statistics stay untouched until then.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(NM_STORAGE_KEYS.flags, JSON.stringify(done));
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      // A background saves the first five onto the board, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedElapsedSeconds(NM_STORAGE_KEYS.game)).toBe(5);
+      expect(storedPlaySeconds()).toBe(0);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(storedElapsedSeconds(NM_STORAGE_KEYS.game)).toBe(8);
+      expect(storedPlaySeconds()).toBe(0);
+
+      // Forward again, and away again at once: the board still says eight,
+      // and nothing is booked before the game ends.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedElapsedSeconds(NM_STORAGE_KEYS.game)).toBe(8);
+      expect(storedPlaySeconds()).toBe(0);
     } finally {
       vi.useRealTimers();
     }

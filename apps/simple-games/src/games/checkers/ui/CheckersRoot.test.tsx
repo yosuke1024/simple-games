@@ -4,7 +4,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { PLAYER, createSession, restoreSession, type Board, type Piece } from '../game';
+import {
+  PLAYER,
+  applyCpuTurn,
+  applyPlayerStep,
+  createSession,
+  restoreSession,
+  type Board,
+  type Piece,
+} from '../game';
 import { CPU_MAN, EMPTY, PLAYER_MAN, isDarkSquare } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { CK_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
@@ -70,6 +78,13 @@ function storedBoardSeconds(): number {
   const raw = deviceStore.get(CK_STORAGE_KEYS.game);
   if (raw === undefined) return 0;
   return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+}
+
+/** Total play seconds as they survive on disk. */
+function storedPlaySeconds(): number {
+  const raw = deviceStore.get(CK_STORAGE_KEYS.stats);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as Stats).totalPlaySeconds;
 }
 
 const tutorialDone = {
@@ -187,8 +202,13 @@ async function background() {
   setVisibility('visible');
 }
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -207,6 +227,34 @@ describe('first run', () => {
     // Sixty-four squares, twenty-four pieces, and nothing on a light one (§1).
     expect(within(board()).getAllByRole('button')).toHaveLength(64);
     expect(pieces()).toHaveLength(24);
+  });
+});
+
+describe('Quick Rules shown again over a suspended match (§8)', () => {
+  it('resumes that match on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a match is suspended in `ck.saveGame`: the
+    // two are separate records (§8), so Quick Rules show again over a match one
+    // move each in — the player's man from (6,3) to (5,2), and the CPU's reply.
+    const opened = createSession('easy', PLAYER, 'checkers-uitest');
+    const moved = applyPlayerStep(opened, { from: 42, to: 33, captured: -1 })!.session;
+    const replied = applyCpuTurn(moved)!.session;
+    renderGame({ [CK_STORAGE_KEYS.game]: JSON.stringify(toPersisted(replied, 1)) });
+
+    expect(await screen.findByText('Move diagonally forward')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    // The match that was left: the man is still where it landed.
+    expect(screen.getByRole('button', { name: 'Row 5, column 2: your piece' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Row 6, column 3: empty' })).toBeInTheDocument();
+    expect(screen.getByText('Your turn')).toBeInTheDocument();
+    // Resumed, not started: no new match over the slot, and the old one not
+    // finalized — nothing booked, no new match counted as played (§7).
+    expect(deviceStore.get(CK_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(CK_STORAGE_KEYS.stats)).toBeUndefined();
   });
 });
 
@@ -367,11 +415,6 @@ describe('the play clock survives a backgrounding', () => {
 describe('a home-screen shortcut', () => {
   /** Everything the game has saved so far — what the next launch loads. */
   const stored = (): Record<string, string> => Object.fromEntries(deviceStore);
-
-  const storedPlaySeconds = (): number => {
-    const raw = deviceStore.get(CK_STORAGE_KEYS.stats);
-    return raw === undefined ? 0 : (JSON.parse(raw) as Stats).totalPlaySeconds;
-  };
 
   const storedElapsedSeconds = (): number => {
     const raw = deviceStore.get(CK_STORAGE_KEYS.game);
@@ -616,6 +659,51 @@ describe('opening a suspended game without resuming (#109)', () => {
       await background();
       await settle();
       expect(storedBoardSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the match's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(CK_STORAGE_KEYS.flags, tutorialDone[CK_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+
+      // A background books the first five, as it always has.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+      });
+      await background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3_000);
+      });
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedBoardSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the match still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedBoardSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

@@ -169,8 +169,10 @@ Reversi と Connect Four も盤面がすべて見えているため Hint を作�
 Web 版は新作の先行公開チャンネルです([docs/WEB_VERSION.md](docs/WEB_VERSION.md)
 「先行公開(ベータ)」)。上の表の末尾 11 本(Crown Grid から Box Regions まで)は
 2026-09-26 から 2026-09-29(UTC)に Web 版だけで先行公開し、**2026-10-02 にアプリへ正式収録**
-しました。いま先行公開中のタイトルはありません(チャンネルの仕組みは次の新作のために
-残してあります)。2 週間の安定稼働という基準を満たす前に、作者の判断で収録しました
+しました(その後の新作 5 本は同じチャンネルで 2026-10-19 から Web 版に出ており、さらに次の
+10 本も実装済みです — 52〜56 の 5 本は 2026-10-22 から、47〜51 の 5 本は 2026-10-23(JST、UTC では
+2026-10-22 17:33)から Web 版に出ています(Bounce Up の題は 2026-10-22 に製品オーナーが「このまま」と判断済み)。下の「Web 先行公開(ベータ)」)。
+2 週間の安定稼働という基準を満たす前に、作者の判断で収録しました
 (経緯は WEB_VERSION.md に記録)。保存スキーマはこの収録で凍結し、以後は移行だけで変えます。
 この 11 本はゲーム別ガイドページがまだ無いので、「詳しく見る」のリンクはありません。
 
@@ -198,8 +200,106 @@ Mancala と Dots and Boxes は完全情報の CPU 対戦なので Undo を持ち
 戻せば山を覗くことになり、Hit & Blow は推測そのものが情報なので消せば推理が壊れます —
 どちらも Undo を持たず、Hit & Blow は推測回数に上限を置きません。
 
-後続候補は今は**ありません**。次を選ぶときは、ローカル生成で
-完結しコンテンツサーバーを必要としないものを優先します。
+### Web 先行公開(ベータ)
+
+**現在のコードは正式収録41本＋Web先行公開20本＝61本。** No. 57〜61 は
+2026-10-23 の追加です。公開と検証の記録は
+[今回の追加記録](docs/plans/2026-10-23-five-games-57-61.md)を参照してください。
+
+| 新作          | 内容                                         | 助け                         | 仕様                                |
+| ------------- | -------------------------------------------- | ---------------------------- | ----------------------------------- |
+| Light Grid    | 自分と上下左右の点灯を反転し、すべて消す     | Undo・再挑戦・解に基づくHint | [ルール](docs/LIGHT_GRID_RULES.md)  |
+| Color Flood   | 左上から同じ色の領域を広げる。手数の上限なし | Undo・同じ盤面に再挑戦       | [ルール](docs/COLOR_FLOOD_RULES.md) |
+| Three Peaks   | 1つ違いの札を重ね、3つの山を取り除く         | Undo・同じ配札に再挑戦       | [ルール](docs/THREE_PEAKS_RULES.md) |
+| Nim           | 1つの山から石を取り、最後の石を取れば勝ち    | CPUとの1往復をUndo           | [ルール](docs/NIM_RULES.md)         |
+| Knight’s Tour | ナイトの動きで全マスを1回ずつ訪れる          | 合法手表示・Undo・再挑戦     | [ルール](docs/KNIGHT_TOUR_RULES.md) |
+
+42〜46 本目の新作 5 本は、**Web 版だけの先行公開(ベータ)**向けにこのリポジトリで実装しました
+(2026-10-17。仕様の正は各ルール文書、経緯は
+[docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md](docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md))。
+registry に `channel: 'web-beta'` で登録してあり、**アプリには出ません**。上の 41 本には数えず、
+ストア掲載文にも載せません。**Web 版では 2026-10-19 から先行公開しています**(Web 版を配信する
+pixapps-landing の #201 で同期)。タイトルカードに「BETA」バッジが付き、ベータ中はスキーマ変更で保存データが
+消えることがあります(en / ja ではその旨を表示)。正式収録は Web で公開してからの 2 週間の
+安定稼働と計測を見て人間が判断します([docs/WEB_VERSION.md](docs/WEB_VERSION.md)「先行公開(ベータ)」)。
+5 本とも Club House には登録しません。
+
+| ゲーム         | カテゴリ   | 内容                                                                    | フォルダ          | 進行                                                         | 無料・無制限の助け                                | ルール文書                                                   |
+| -------------- | ---------- | ----------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------ | ------------------------------------------------- | ------------------------------------------------------------ |
+| Unblock Puzzle | パズル     | 6×6 の盤でブロックを滑らせ、ターゲットを右の出口から出す空間推理        | `unblock-puzzle/` | 難易度 3 種 + デイリー                                       | Undo / Reset / Hint(最短解の次の一手。探索に上限) | [docs/UNBLOCK_PUZZLE_RULES.md](docs/UNBLOCK_PUZZLE_RULES.md) |
+| Snake          | アーケード | 14×14 の盤でヘビを操り、食べて伸びる。壁か自分に当たれば終わり          | `snake/`          | エンドレス(速度 3 種、デイリーなし)                          | なし(Pause と、同じ盤面での再挑戦 / 新しいゲーム) | [docs/SNAKE_RULES.md](docs/SNAKE_RULES.md)                   |
+| Loop Puzzle    | ロジック   | 数字を手がかりに点を結び、1 本の閉じたループを引く                      | `loop-puzzle/`    | 盤 3 サイズ(4×4 / 5×5 / 6×6)+ デイリー                       | Undo / Hint(唯一解と違う印か、次に決まる 1 辺)    | [docs/LOOP_PUZZLE_RULES.md](docs/LOOP_PUZZLE_RULES.md)       |
+| Bridges        | ロジック   | 数字の島を縦横の橋(2 島の間は 2 本まで)で結び、全島を 1 つにつなぐ      | `bridges/`        | 難易度 3 種(7×7 / 9×9 / 10×10)+ デイリー                     | Undo / Hint(答えとの矛盾か、盤面から証明できる橋) | [docs/BRIDGES_RULES.md](docs/BRIDGES_RULES.md)               |
+| Peg Solitaire  | パズル     | コマを縦横(Triangle は 6 方向)に跳び越えて取り除き、最後の 1 個を目指す | `peg-solitaire/`  | 盤 2 種(English 33 穴 / Triangle 15 穴・54 問、デイリーなし) | Undo / Restart(Hint なし)                         | [docs/PEG_SOLITAIRE_RULES.md](docs/PEG_SOLITAIRE_RULES.md)   |
+
+47〜51 本目の新作 5 本(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads)は、同じ
+**Web 版だけの先行公開(ベータ)**向けにこのリポジトリで実装しました(2026-10-19 に着手、2026-10-22 に
+5 本とも遊べる形まで。仕様の正は各ルール文書、経緯は
+[docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md))。
+registry では 2026-10-22 に 5 本とも `'in-development'` から `channel: 'web-beta'` に変えました(製品オーナーの
+依頼は「Web 公開まで」。計画の判断 4 は Chess を別 PR にして残り 4 本を Chess で待たせないことでしたが、
+5 本が同時に仕上がったので 1 つの PR で出しました)。5 本とも**アプリには出ません**。**Web 版では
+2026-10-23(JST、UTC では 2026-10-22 17:33)から先行公開しています**(Web 版を配信する pixapps-landing の
+#206 で landing の一覧を `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移し、このリポジトリの #253 の
+マージ後に、製品オーナーの承認を得て「Publish Simple Games (web)」を実行して同期した。本番への反映は
+Cloudflare Pages の Git 連携によるもので、このリポジトリからは観測していない)。それまでの配信物にも 5 本の
+チャンクは入っていましたが、`'in-development'` のときのビルドだったので開けませんでした。
+タイトルカードに「BETA」バッジが付き、ベータ中はスキーマ変更で保存データが消えることがあります
+(en / ja ではその旨を表示)。正式収録の判断のための 2 週間の時計は、5 本とも 2026-10-23(JST)から
+動いています。実機では 5 本とも何も確かめておらず、`ja` と残る 12 言語の文言は AI が書いて誰も読んで
+いません。題の商標・ストアの検索は 5 本とも正式収録の前に行います。Bounce Up は同名作がありますが、製品オーナーが
+2026-10-22 に「この題のまま Web 版へ出す」と判断しました([docs/BOUNCE_UP_RULES.md](docs/BOUNCE_UP_RULES.md)
+冒頭と §12)。上の 41 本には数えず、
+ストア掲載文にも載せず、Club House にも登録しません。
+
+| ゲーム    | カテゴリ     | 内容                                                                                                                                | フォルダ     | 進行                                                                   | 無料・無制限の助け                                                        | ルール文書                                         |
+| --------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------- |
+| Chess     | ボードゲーム | 8×8 の盤で CPU と指す標準のチェス(駒の動き・キャスリング・アンパッサン・昇格は FIDE のとおり)。詰み・ステイルメイト・引き分けは自動 | `chess/`     | CPU 3 段階(Easy / Normal / Hard、先後を選べる。デイリーなし。途中保存) | Undo(自分と CPU の 2 手を 1 組、再開後も)/ 合法手の点(Hint なし)          | [docs/CHESS_RULES.md](docs/CHESS_RULES.md)         |
+| Gem Swap  | パズル       | 8×8 の盤で隣り合う 2 つの宝石を入れ替え、同じ種類を縦横に 3 つ以上並べて消す。1 ラウンドは成立した入れ替え 30 回                    | `gem-swap/`  | Free Play(5 色 / 6 色、デイリーなし。途中保存)                         | Undo(ラウンドの中で無制限。同じ盤面でもう一度)                            | [docs/GEM_SWAP_RULES.md](docs/GEM_SWAP_RULES.md)   |
+| Pipe Link | ロジック     | 格子のタイルを回してパイプをつなぎ、水源からすべてのタイルへ水を通す                                                                | `pipe-link/` | 難易度 3 種(5×5 / 7×7 / 8×8)+ デイリー(途中保存)                       | Undo / Hint(盤面から証明できる 1 枚)                                      | [docs/PIPE_LINK_RULES.md](docs/PIPE_LINK_RULES.md) |
+| Bounce Up | アーケード   | 足場に乗るたびに自動で跳ね、左右に動いて上の足場へ登っていく。記録は登った最大の高さ                                                | `bounce-up/` | エンドレス(足場の幅 Normal / Wide、デイリーなし。途中保存なし)         | なし(確認なしの即時リトライと、❚❚・Wide)                                  | [docs/BOUNCE_UP_RULES.md](docs/BOUNCE_UP_RULES.md) |
+| Echo Pads | ドリル       | 光って鳴るパッドの順番を覚え、同じ順番にタップして返す                                                                              | `echo-pads/` | Levels 22(4 / 6 パッド × 目標長 4〜14)+ デイリー(途中保存)             | 聞き直し(入力の前と失敗の後)/ Pace 3 段(Calm / Normal / Quick。Hint なし) | [docs/ECHO_PADS_RULES.md](docs/ECHO_PADS_RULES.md) |
+
+52〜56 本目の新作 5 本(Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram)は、同じ
+**Web 版だけの先行公開(ベータ)**向けにこのリポジトリで実装しました(2026-10-20 に着手、2026-10-21 に
+5 本とも遊べる形まで。仕様の正は各ルール文書、経緯は
+[docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md))。
+registry では 5 本とも `channel: 'web-beta'` です。Make the Target / Nested Tic-Tac-Toe / Tangram の 3 本は
+2026-10-21 に `'in-development'` から変え、Overtake と Scopa の 2 本は 2026-10-22 に製品オーナーの指示
+(「Overtake, Scopa は Web に出したいです。計画が間違ってる。このタイミングで、実機の確認はできない。」)で
+変えました。Overtake は実機での試作(Phase 0)を行わないまま、[docs/OVERTAKE_RULES.md](docs/OVERTAKE_RULES.md)
+§3 の「記録の前に上げるなら」の道どおり操作の既定 `DRAG_MAPPING` を `'B'`(横ドラッグ + ▼ 長押し)にして
+出します(2 軸 1 本指のモード A のコードは後の試行のために残す)。Scopa はバックグラウンドからの復帰時に
+CPU の拍を張り直すいまの読み方を暫定の挙動として出し、読み方そのものは製品オーナーの確認待ちのままです
+([docs/SCOPA_RULES.md](docs/SCOPA_RULES.md) §4.2)。規則の出典と商標・ストアの検索(同 §14)は未確認で、
+正式収録の前に(できるだけ早く)行います。5 本とも**アプリには出ません**。**Web 版では Make the Target /
+Nested Tic-Tac-Toe / Tangram の 3 本を 2026-10-22(JST、UTC では 2026-10-21 17:38)から先行公開
+しています**(製品オーナーの指示で、Web 版を配信する pixapps-landing の #204 のマージ後に
+「Publish Simple Games (web)」を実行して同期した。本番への反映は Cloudflare Pages の Git 連携による
+もので、このリポジトリからは観測していない)。Overtake と Scopa のチャンクも同じビルドに入っていましたが、
+そのビルドでは `'in-development'` だったので開けませんでした。2 本は #247 のマージ後、pixapps-landing の #205 で
+`overtake` / `scopa` を `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移し、製品オーナーの指示で
+「Publish Simple Games (web)」を実行して同期しました — **Overtake と Scopa も 2026-10-22(JST、UTC でも
+2026-10-22 02:32)から Web 版で先行公開しています**(本番への反映は同じく、このリポジトリからは観測していない)。
+タイトルカードに「BETA」バッジが付き、ベータ中はスキーマ変更で保存データが消えることがあります(en / ja ではその旨を表示)。
+正式収録の判断のための 2 週間の時計は、5 本とも 2026-10-22(JST)から動いています(Overtake と Scopa は
+2026-10-22 02:32 UTC の配信から)。Overtake と Tangram は実機での試作(Phase 0)を
+まだ行っていません(Overtake は試行を待たずにモード B を既定にして出し、Tangram はそれが通らなければ
+Three Peaks に差し替えます)。
+上の 41 本には数えず、ストア掲載文にも載せず、Club House にも登録しません。
+
+| ゲーム             | カテゴリ     | 内容                                                                                                                                              | フォルダ              | 進行                                                                     | 無料・無制限の助け                                         | ルール文書                                                           |
+| ------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------------------- |
+| Overtake           | アーケード   | 縦に流れる道路で車線を選び、混んだ所だけ速度をゆるめて、ペースの違う 3 台より先にゴールする。砂と三角コーンは当たっても止まらず、少し遅くなるだけ | `overtake/`           | Levels 100(1 位でクリア、デイリーなし。三角コーンは Lv6、砂は Lv16 から) | なし(確認なしの即時・同一コースの再走と、Buttons の形・▼)  | [docs/OVERTAKE_RULES.md](docs/OVERTAKE_RULES.md)                     |
+| Make the Target    | パズル       | 並んだ数字を 2 つずつ + − × ÷ でまとめ、最後の 1 つを目標の数にぴたりと合わせる                                                                   | `make-the-target/`    | 難易度 3 種(4〜5 枚)+ デイリー                                           | Undo / Restart(Hint なし。放棄後に解を 1 つ見る — 暫定)    | [docs/MAKE_THE_TARGET_RULES.md](docs/MAKE_THE_TARGET_RULES.md)       |
+| Nested Tic-Tac-Toe | ボードゲーム | 3×3 の小盤を 3×3 に並べた盤で CPU と三目並べ。打ったマスの位置が相手の次の小盤を決める                                                            | `nested-tic-tac-toe/` | CPU 3 段階(Easy / Normal / Hard、先後を選べる。デイリーなし)             | Undo / 打てる小盤の常時表示(Hint なし)                     | [docs/NESTED_TIC_TAC_TOE_RULES.md](docs/NESTED_TIC_TAC_TOE_RULES.md) |
+| Scopa              | カード       | 40 枚の札で、場の札を数で取り合う CPU との対戦カード                                                                                              | `scopa/`              | 1 局 = 11 点先取(CPU 1 段階、デイリーなし)                               | 取れる手札とプリミエラの最良札の常時表示(Undo / Hint なし) | [docs/SCOPA_RULES.md](docs/SCOPA_RULES.md)                           |
+| Tangram            | パズル       | 7 枚の駒を回し・裏返して置き、影絵を隙間なく埋める                                                                                                | `tangram/`            | 図形集 3 ティア(v1 は 34 図形)+ デイリー                                 | Undo / Easy の内側の線・Medium の固定 2 枚(Hint なし)      | [docs/TANGRAM_RULES.md](docs/TANGRAM_RULES.md)                       |
+
+後続候補は上の 15 本の正式収録判断まで**ありません**(以前は 42〜46 の 5 本の判断までと
+書いていましたが、2026-10-19 と 2026-10-20 に作者の判断で、その判断の前に 47〜56 の 10 本に
+着手しました)。
+次を選ぶときは、ローカル生成で完結しコンテンツサーバーを必要としないものを優先します。
 未収録のゲームをストアやアプリ内で "Coming Soon" として見せることはしません。
 
 収録ゲームはワークスペースパッケージではなくフォルダで分割します。共通のゲームフレームワークは意図的に作りません。
@@ -252,7 +352,22 @@ simple-games/
 │           │   ├── dots-and-boxes/
 │           │   ├── binary-balance/
 │           │   ├── sudoku-6x6/
-│           │   └── box-regions/
+│           │   ├── box-regions/
+│           │   ├── unblock-puzzle/  # ここから 5 本は Web 先行公開(ベータ)。アプリには出ない
+│           │   ├── snake/
+│           │   ├── loop-puzzle/
+│           │   ├── bridges/
+│           │   ├── peg-solitaire/
+│           │   ├── chess/       # ここから 5 本は Web 先行公開(ベータ。channel: 'web-beta'、2026-10-22 に実装)。5 本とも 2026-10-23(JST)から Web 版に配信中。アプリには出ない
+│           │   ├── gem-swap/
+│           │   ├── pipe-link/
+│           │   ├── bounce-up/
+│           │   ├── echo-pads/
+│           │   ├── overtake/    # ここから 5 本は Web 先行公開(ベータ。channel: 'web-beta')。5 本とも 2026-10-22 から Web 版に配信中。アプリには出ない
+│           │   ├── make-the-target/
+│           │   ├── nested-tic-tac-toe/
+│           │   ├── scopa/
+│           │   └── tangram/
 │           ├── backup/        # 共有: ローカルバックアップの書き出しと復元
 │           ├── club/           # 共有: 任意の Club House(参加した人だけが通信する唯一のディレクトリ)
 │           ├── monetization/   # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
@@ -295,13 +410,16 @@ Android / iOS のビルド手順は [apps/simple-games/README.md](apps/simple-ga
 
 ## 多言語
 
-**One app. Many games. Many languages.** 現在は 14 言語・1,518 キー(シェル 125 + 41 ゲームの 1,393。Club House の 89 キーは別カタログ)
+**One app. Many games. Many languages.** 現在は 14 言語・2,207 キー(シェル 125 + ゲーム別 2,082 — 正式収録 41 本の 1,393、Web 先行公開で 2026-10-19 から配信中の 42〜46 の 5 本の 230、47〜51 の 5 本の 229(2026-10-23(JST)から配信中)、52〜56 の 5 本の 230(2026-10-22 から配信中)。Club House の 122 キーは別カタログ。2026-10-22 に各 `en.ts` の最上位キーを数えた)
 (en / ja / hi / th / id / vi / ko / zh-hans / zh-hant / es / pt-br / fr / de / tr)。
 中国語は書記体系で解決し(zh-TW / zh-HK / zh-Hant → zh-hant、zh / zh-CN / zh-SG → zh-hans)、
 pt / pt-PT は pt-br へ解決します。Arabic は RTL 検証の条件を満たすまで見送っています。
 カタログは全言語同梱で、言語追加は「locale ファイル 1 つ + 登録」で完結します。
 **en と ja 以外は来歴 `machine` です — AI の助けを借りて書いており、その言語の
-ネイティブは一人も読んでいません。**この製品は一人でつくっているため、14 言語の
+ネイティブは一人も読んでいません。**Web 先行公開の 15 本(2026-10-19 から配信中の 42〜46、2026-10-23(JST)
+から配信中の 47〜51、2026-10-22 から配信中の 52〜56)のゲーム別の文言は、ja も AI が書いたもので、作者は
+まだ読んでいません(15 本の文言に高リスクキーはありません)。
+この製品は一人でつくっているため、14 言語の
 ネイティブレビューは供給できません。代わりに、約束を背負う高リスクキーだけは
 リリース前に逆翻訳を作者が読む門を通し、自然さは来歴の開示と読者からの報告に
 委ねています。
@@ -379,3 +497,17 @@ Copyright 2026 Yosuke Suzuki
   ください
 - 境界の説明と fork の手順は [TRADEMARKS.md](TRADEMARKS.md)(独自ライセンスでは
   なく、Apache-2.0 が引いている線の説明です)
+
+### Web先行公開 No. 62〜66 (2026-10-23)
+
+Invaders / Falling Blocks / Paddle Rally / Hanoi Towers / Maze Escape を追加。
+正式収録41本に加え、Web先行公開は25本になる。詳細と公開記録は
+[追加と公開の記録](docs/plans/2026-10-23-five-games-62-66.md)。
+
+| ゲーム | 規則 |
+| --- | --- |
+| Invaders | [INVADERS_RULES.md](docs/INVADERS_RULES.md) |
+| Falling Blocks | [FALLING_BLOCKS_RULES.md](docs/FALLING_BLOCKS_RULES.md) |
+| Paddle Rally | [PADDLE_RALLY_RULES.md](docs/PADDLE_RALLY_RULES.md) |
+| Hanoi Towers | [HANOI_TOWERS_RULES.md](docs/HANOI_TOWERS_RULES.md) |
+| Maze Escape | [MAZE_ESCAPE_RULES.md](docs/MAZE_ESCAPE_RULES.md) |

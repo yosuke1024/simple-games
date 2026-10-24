@@ -88,6 +88,20 @@ function background() {
   Reflect.deleteProperty(document, 'visibilityState');
 }
 
+/** The suspended match's own clock, as it survives on disk (§8). */
+function storedGameSeconds(): number {
+  const raw = deviceStore.get(DB_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as PersistedGame).elapsedSeconds;
+}
+
+/** Total play seconds as they survive on disk. */
+function storedPlaySeconds(): number {
+  const raw = deviceStore.get(DB_STORAGE_KEYS.stats);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as Stats).totalPlaySeconds;
+}
+
 const tutorialDone = {
   [DB_STORAGE_KEYS.flags]: JSON.stringify({ schemaVersion: 1, tutorialCompleted: true }),
 };
@@ -120,8 +134,13 @@ const allLines = () =>
   within(board()).queryAllByRole('img', { name: /^(Horizontal|Vertical) line / });
 const openLines = () => within(board()).getAllByRole('button');
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -468,6 +487,46 @@ describe('a home-screen shortcut', () => {
       // Eight seconds of play, counted once.
       expect(resumed.elapsedSeconds).toBe(8);
       expect(after.totalPlaySeconds).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the match's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    for (const [key, value] of Object.entries(cornerOpen)) deviceStore.set(key, value);
+    vi.useFakeTimers();
+    try {
+      launch('shortcut');
+      await settle();
+
+      // A background books the first five, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedGameSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the match still says eight,
+      // and none of the eight is booked a second time.
+      launch('shortcut');
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedGameSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

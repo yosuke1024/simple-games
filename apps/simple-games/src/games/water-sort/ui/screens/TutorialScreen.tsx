@@ -35,7 +35,15 @@ function TubesFigure({ tubes, marked = [] }: { tubes: number[][]; marked?: numbe
 }
 
 export function WaterTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startLevel, progress, goHome } = useWaterSort();
+  const {
+    tutorialCompleted,
+    completeTutorial,
+    canResume,
+    resumeGame,
+    startLevel,
+    progress,
+    goHome,
+  } = useWaterSort();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('water-sort', locale);
   const [step, setStep] = useState(0);
@@ -66,7 +74,11 @@ export function WaterTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startLevel(progress.highestUnlocked);
+      // Onto the level already waiting, if one is, whichever level it is: the
+      // flag and the save are separate records, and a lost or unreadable flags
+      // record must not cost the player the level they left (§10).
+      if (canResume('level')) resumeGame('level');
+      else startLevel(progress.highestUnlocked);
     } else {
       goHome();
     }

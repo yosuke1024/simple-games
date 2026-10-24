@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Club House invite links open the app when it is installed (Universal Links,
+	     verified by https://club.pixapps.ai/.well-known/apple-app-site-association,
+	     which lists /join only). AppDelegate hands the link to Capacitor's
+	     ApplicationDelegateProxy, and the shell reads the invite from it
+	     (app/clubGate.ts `inviteFromAppLink`). -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:club.pixapps.ai</string>
+	</array>
+</dict>
+</plist>

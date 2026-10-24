@@ -46,6 +46,7 @@
   padding: 4px;
   border-radius: var(--radius);
   background: var(--surface-recessed);
+  box-shadow: var(--shadow);
   /* A drag must not become a page scroll (§12). */
   touch-action: none;
 }

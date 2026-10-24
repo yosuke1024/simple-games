@@ -71,6 +71,44 @@ Web 版で先行公開(ベータ)していたゲームをこのリリースで�
       生成・探索の待ち、§4 の低スペック端末での 1 局を、この 11 本を含めて通すまで
       「アプリで確認済み」と書かない
 
+> **次の候補(記録のみ — まだどの項目にも着手していない。チェックは入れない)。** Web 先行公開の
+> 5 本(Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、No. 42〜46。2026-10-17 に
+> このリポジトリで実装)。**2026-10-19 に Web 版で配信を始めた**(pixapps-landing #201 —
+> [WEB_VERSION.md](WEB_VERSION.md)「先行公開」)ので、上の 2 週間の安定稼働はこの日から数える
+> (保存を消す変更を入れたら巻き戻る)。滞在時間の確認はその後。収録するときは、その版で 5 本の保存スキーマを凍結し、
+> `games/<id>/storage/releasedRecords.test.ts` を**配信した Web ビルドで実際に保存された payload**
+> から作る(現行コードで組み立てた payload では代わりにならない — 上の「スキーマ凍結」の項目)。
+> 上のほかの項目(registry の `channel` を外す・README とストア掲載文・landing の許容リストから
+> `LANDING_GAME_IDS` へ・アプリでの実機確認)も、この 5 本についてはすべて未了。
+>
+> その次の 5 本(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads、No. 47〜51。2026-10-19 に
+> 着手 — [plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md))は
+> 2026-10-22 に遊べる形まで実装し、registry を `'in-development'` から `channel: 'web-beta'` にした(製品オーナーの依頼は
+> 「Web 公開まで」)。**2026-10-23(JST、UTC では 2026-10-22 17:33)に Web 版で配信を始めた**(pixapps-landing #206 で
+> 一覧を `WEB_BETA_GAME_IDS` へ移し、製品オーナーの承認を得て Publish Simple Games (web)(run 39818257752)が
+> `7b95a94` の web ビルドを landing main に `0415eb18` として同期した — [WEB_VERSION.md](WEB_VERSION.md)「先行公開」。
+> Bounce Up の題は同名作があるが、製品オーナーが 2026-10-22 に「このまま出す」と判断した —
+> [BOUNCE_UP_RULES.md](BOUNCE_UP_RULES.md) 冒頭と §12)ので、この 5 本の上の 2 週間の安定稼働はこの配信から数える
+> (保存を消す変更を入れたら巻き戻る)。滞在時間の確認はその後。この節の項目はすべて未着手
+> (実機での確認も、5 本ともまだ何もしていない)。
+>
+> さらにその次の 5 本(Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram、No. 52〜56。2026-10-20 に
+> 着手 — [plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md))は
+> 2026-10-21 に遊べる形まで実装し、Make the Target / Nested Tic-Tac-Toe / Tangram の registry を `channel: 'web-beta'` にした。
+> Overtake と Scopa も、製品オーナーの指示(2026-10-22、「Overtake, Scopa は Web に出したいです。計画が間違ってる。
+> このタイミングで、実機の確認はできない。」)で 2026-10-22 に `'web-beta'` にした — 各ルール文書の条件(Overtake は
+> Phase 0 の結果の §3 への記録、Scopa は §4.2 の製品オーナーの判断と §14 の出典・検索)は満たされないまま残り、
+> 切り替えを止めるものではなくなった(Overtake は §3 のとおり `DRAG_MAPPING` を `'B'` にして出す。Scopa の §4.2 の
+> 読み方は確認待ちのまま暫定、§14 は正式収録の前に)。**Make the Target / Nested Tic-Tac-Toe /
+> Tangram の 3 本は 2026-10-22(JST、UTC では 2026-10-21 17:38)に Web 版で配信を始めた**(landing main `af9dedc` —
+> `11a3036` の web ビルドの同期。[WEB_VERSION.md](WEB_VERSION.md)「先行公開」)ので、この 3 本の上の 2 週間の
+> 安定稼働はこの日から数える(保存を消す変更を入れたら巻き戻る)。滞在時間の確認はその後。**Overtake と Scopa は
+> 2026-10-22(JST、UTC でも 2026-10-22 02:32)に Web 版で配信を始めた**(landing main `6204b78` — `3ed2b16` の web ビルドの
+> 同期)ので、この 2 本の上の 2 週間の安定稼働もこの日から数える(保存を消す変更を入れたら巻き戻る)。
+> 滞在時間の確認はその後。Overtake と Tangram は実機での試作(Phase 0)をまだ行っておらず、操作の既定は暫定
+> (Overtake は Phase 0 を当面見送ってモード B で出した)。
+> この節の項目はすべて未着手。
+
 ## 1. コードの検証(機械が判定できるもの)
 
 ```bash
@@ -447,8 +485,9 @@ JS 側は自動テストが見ている(`src/app/App.shortcut.test.tsx` /
       出ず、ヘッダーは星だけの従来の形であること
 - [ ] 押すと OS の確認ダイアログが出て、そこで拒否してもアプリ側は何も言わず
       静かに終わること
-- [ ] ホーム画面に追加されたアイコンが、そのゲームのグリフとアクセント色で
-      描かれ、ラベルがゲームタイトルであること
+- [ ] ホーム画面に追加されたアイコンが、一覧と同じ盤面イラストとアクセント色で
+      描かれ、ラベルがゲームタイトルであること。丸・角丸のランチャーマスクでも
+      図柄が欠けず、アプリのライト/ダーク設定に左右されないこと
 - [ ] cold start(アプリを完全終了した状態からショートカットを起動)で
       コレクションを経由せず、対象ゲームのホームが最初に出ること
 - [ ] warm start(別のゲームを開いた状態でショートカットを起動)で対象ゲームへ
@@ -462,6 +501,9 @@ JS 側は自動テストが見ている(`src/app/App.shortcut.test.tsx` /
       が、Pixel Launcher はそこで「追加」を選ぶと **2 つ目のアイコンを置く**
       (2026-09-05 エミュレータで実測)。それは Launcher の判断であり、アプリが
       迂回しない。アプリ側で確かめるのは「ダイアログが出る」ことまで
+- [ ] 旧版で作ったショートカットに対して同じゲームを明示的に再追加すると、
+      既存アイコンも新しいイラストへ更新されること。画像生成が失敗した場合は
+      既存アイコンを維持し、新規追加にはアプリアイコンを使えること
 - [ ] お気に入りに登録しただけではショートカットが作られないこと
 - [ ] 長い言語でラベルが崩れないこと(ドイツ語
       `Zum Startbildschirm hinzufügen`)
@@ -774,10 +816,24 @@ Network Inspector が使えなかったとき、通信の宛先を特定でき�
 - [ ] **対象外のゲームは何も送らない**こと: Brick Breaker / Bubble Pop / Checkers /
       Connect Four / Gomoku / Ludo と、ティアに一致しない Water Sort のレベルの結果画面に、
       Club の状態の行が出ず、リクエストも出ない
-- [ ] **Report**: Rankings / Today / Members の他人の**名前を押したシート**から報告でき(1 人 1 回。行に
-      ボタンは無い。持ち主の端末ではシートが開かない)、報告後に画面が壊れないこと。持ち主の側で、通報された名前を**変更**(`PATCH /members/:id`)・
+- [ ] **Report**: Rankings / Today(挑戦の結果の行)/ Members の他人の**名前を押す**と Member 画面が開き、
+      報告はその**末尾**の `Report` から行う(行にボタンは無い。**自分の名前は押せない**)。確認ダイアログ
+      (`Report this nickname?`)を通り、確認すると `role="status"` の 1 行 `Reported` が出て、画面が壊れない
+      こと。**ボタンは残り、もう一度押しても無害**(サーバは 204 で何も変えない。「1 人 1 回」ではない)。
+      **持ち主の端末でも他人の名前は押せて** Member 画面が開くが、末尾には `Report` ではなく `Rename` /
+      `Remove`(`Remove` の確認は終わり方が 2 つ — 結果は残す / 結果も消す)が出て、`Report` は無い。
+      持ち主の側で、通報された名前を**変更**(`PATCH /members/:id`)・
       **結果ごと削除**(`DELETE /members/:id?purge=1`)でき、ランキングの行に反映される
       こと(Public の持ち主は PixApps。[club.md](architecture/club.md) §17-3)
+- [ ] **Members**: Club の画面に、人数つきの 1 行 `Members`(`{n} members`)があり、押すと Members 画面が
+      開く(一覧は Club の画面に出ていない)。持ち主の端末では、通報された人の `Reported` 節が Members 画面の
+      先頭にある。新しい順に 50 人が並び、**残りがあるときだけ** `Show older members` が出て、押すと
+      `GET /members?before=<id>` で次の 50 人が足される(押した分だけ。自動では読み込まれない)。
+      `GET /members?before=` に 404 を返す古いサーバでは、ボタンが黙って消えて画面は壊れない
+- [ ] **Member 画面**: 名前・参加日と、その人が入っている表が「Your rankings」と同じ行の形(ゲーム ·
+      モード、順位、件数、最良の値、1 つ上との差)で並び、**行を押すとその表(そのモード)が開く**こと。
+      通算・局数・最終プレイ日時などは載らない。`GET /members/:id` に 404 を返す古いサーバでは、題は押した
+      名前のまま `That no longer exists.` の 1 行が出て、`Report` は出る(画面が壊れない)
 - [ ] **Disconnect**: 接続を切ると、端末が Club の宛先へ以後 1 件も通信しないこと
       (§5.16 と同じ見方で確認。切断のあとに遊び終えた結果も送られない)。切断後もゲームの進行・
       統計は何も変わらないこと。**切断では記録が消えない**こと(Public の Rankings に自分の行が

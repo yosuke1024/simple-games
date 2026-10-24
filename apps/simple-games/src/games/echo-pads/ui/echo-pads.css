@@ -1,0 +1,434 @@
+/* Echo Pads — all of this game's styling, imported by EchoPadsRoot
+   (docs/ECHO_PADS_RULES.md §11). Built only from the series tokens in
+   src/ui/styles.css (--surface, --ink, --line, --accent, --radius, --tap-size,
+   --font-display, …), so the pads follow the light and dark themes and the
+   title's one accent (瑠璃色) without naming a colour
+   (docs/architecture/css-split.md). Class names are prefixed `ep-`.
+
+   A pad is told apart by its mark and its place, never by colour. A lit pad
+   changes in lightness (the accent fill against the surface) AND in shape
+   (its mark turns solid and larger) — no hue of its own, never red. The one
+   transition is the fill's short fade, which Reduced Motion removes (the
+   global rule in styles.css); the light itself stays, because it is the
+   question (§11). */
+
+/* ---------- game screen ---------- */
+
+.ep-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.ep-title-name {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.ep-title-detail {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* Fixed rows around the pads: they take what is left, and give it back on a
+   short screen (360 × 640 with the web's 116 px ad reserve: §11). */
+.ep-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px 12px;
+}
+
+.ep-round {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ep-count {
+  color: var(--accent);
+}
+
+/* Two lines' room, so the pads do not jump as the line changes; none at all
+   once the run has missed and the panel below speaks instead. */
+.ep-status {
+  margin: 0;
+  min-height: 2.6em;
+  font-size: 14px;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.ep-status:empty {
+  min-height: 0;
+}
+
+/* While the miss panel is up: still a live region (hearing the round again
+   is announced), drawn nowhere — and out of the column, so it costs no gap. */
+.ep-status-quiet {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* The board grows along a column rather than taking `height: 100%`: with
+   the web's ad reserve the screen's height is a minimum, not a size, so a
+   percentage height would not resolve and the pads would shrink to their
+   marks (measured in headless Chromium: 68 px tall in a 242 px area). */
+.ep-board-area {
+  flex: 1 1 112px;
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ep-board {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: repeat(2, minmax(48px, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 440px;
+  max-height: 400px;
+}
+
+.ep-board-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.ep-board-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.ep-pad {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap-size);
+  min-height: 48px;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--accent);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 90ms ease-out;
+}
+
+.ep-pad[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* A finger's press shows at once; the light that confirms it follows. */
+.ep-pad:not([aria-disabled='true']):active {
+  background: var(--accent-soft);
+}
+
+.ep-pad:focus-visible {
+  outline: 3px solid var(--accent-ring);
+  outline-offset: 2px;
+}
+
+.ep-mark {
+  width: min(44%, 64px);
+  height: min(60%, 64px);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.ep-pad-lit {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 0 0 4px var(--accent-ring);
+}
+
+.ep-pad-lit .ep-mark {
+  fill: currentColor;
+  transform: scale(1.15);
+}
+
+/* After a miss: the pad that came next, ringed in ink (§5) — not red, not
+   blinking, and there for as long as the player looks. */
+.ep-pad-expected {
+  outline: 3px dashed var(--ink);
+  outline-offset: 3px;
+}
+
+.ep-pad-expected .ep-mark {
+  stroke-width: 3;
+}
+
+.ep-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+/* One line: the glyph beside the word, not above it (.btn stacks). */
+.ep-play {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: var(--tap-size);
+}
+
+.ep-play-glyph {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.ep-pace {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.ep-pace-option {
+  flex: 1;
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* The current pace: weight and an underline bar as well as the tint. */
+.ep-pace-current {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+
+.ep-pace-option:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/* A pace's name never breaks inside itself ("Chậm rãi"); a list of them
+   breaks between two (ResultOverlay's PacesValue). */
+.ep-pace-name {
+  white-space: nowrap;
+}
+
+/* ---------- the miss panel (in the flow, under the pads: §5) ---------- */
+
+.ep-miss {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.ep-miss-title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.ep-miss-body {
+  margin: 0;
+  font-size: 14px;
+}
+
+.ep-miss .ep-facts {
+  gap: 16px;
+  margin: 0 0 2px;
+}
+
+.ep-miss .ep-facts dt {
+  line-height: 1.2;
+}
+
+/* Two or three paces heard can take a second line ("Calmo · / Rápido" —
+   between paces only); at this line height that line costs no more than the
+   two-line headings beside it, so the panel keeps its height (§11). */
+.ep-miss .ep-facts dd {
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+/* The panel shares the screen with the pads, so the share link sits right
+   under the buttons (the shared rule spaces it for a result card). */
+.ep-miss .result-share {
+  margin-top: 0;
+}
+
+.ep-miss-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Widths follow the words, so a long "New sequence" keeps to one line
+   beside a short "Home"; the height is the tap size, not .btn's 52 px. */
+.ep-miss-actions .btn {
+  flex: 1 1 auto;
+  min-height: var(--tap-size);
+  padding: 6px 12px;
+}
+
+/* ---------- the clear card's facts ---------- */
+
+/* Three facts in a 312 px card: a value stays on one line ("Length 4"), and
+   the row wraps between facts rather than running past the card's edge (es,
+   fr and pt-BR did, at the shared 24 px gap: §11). The list of paces may
+   still break, between two paces only (`.ep-pace-name`). */
+.ep-result .ep-facts {
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.ep-result .ep-facts dd {
+  white-space: nowrap;
+}
+
+.ep-result .ep-facts dd.ep-facts-paces {
+  white-space: normal;
+}
+
+/* ---------- level list ---------- */
+
+.ep-tier + .ep-tier {
+  margin-top: 16px;
+}
+
+.ep-tier-title {
+  max-width: 440px;
+  margin: 0 auto 8px;
+  font-size: 16px;
+}
+
+.ep-levels .level-cell {
+  position: relative;
+}
+
+.ep-level-check {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+}
+
+/* ---------- Quick Rules ---------- */
+
+/* The early-release note (the shell's WebBetaNotice) under the heading on
+   every step (ui/screens/TutorialScreen.tsx): the heading's gutter, the
+   header's padding for the space above it, and the full width — the same
+   rule as tangram.css and the other web-beta titles. */
+.ep-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
+}
+
+/* Quick Rules pictures */
+
+.ep-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.ep-figure .ep-board-figure {
+  width: 150px;
+  height: 104px;
+}
+
+.ep-figure .ep-pad {
+  min-width: 0;
+  min-height: 0;
+  cursor: default;
+}
+
+.ep-figure-rounds {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.ep-strip {
+  display: flex;
+  gap: 4px;
+}
+
+.ep-strip-step {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--accent);
+}
+
+.ep-strip-step .ep-mark {
+  width: 100%;
+  height: 100%;
+}
+
+.ep-strip-done {
+  opacity: 0.55;
+}
+
+.ep-strip-current {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.ep-strip-current .ep-mark {
+  fill: currentColor;
+}
+
+.ep-figure-play {
+  display: flex;
+  width: 22px;
+  height: 22px;
+  color: var(--accent);
+}
+
+.ep-figure-play svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}

@@ -1,0 +1,72 @@
+/**
+ * Chess — the Thai catalog. Provenance (docs/CHESS_RULES.md §10): `machine` —
+ * written by an AI from the English source on 2026-10-22; no native speaker
+ * has read it, and neither has the author. The title (`chessName`) is a
+ * proper noun and stays as-is.
+ *
+ * Glossary (§10.1): รุก · รุกจน · อับ (never รุกจน; on the reason line it stands beside เสมอ) · เสมอ · หมากไม่พอ · ตำแหน่งซ้ำสามครั้ง · กฎ 50 ตา; เบี้ย · ม้า · บิชอป · เรือ · ควีน · คิง; ขาว · ดำ.
+ */
+import type { ChessMessages } from './en';
+
+export const th: ChessMessages = {
+  chessName: 'Chess',
+  chessChooseOpponent: 'เลือกคู่แข่ง',
+  chessDifficulty_easy: 'ง่าย',
+  chessDifficulty_normal: 'ปกติ',
+  chessDifficulty_hard: 'ยาก',
+  chessRecordNote: 'ชนะ {wins} · เสมอ {draws} · แพ้ {losses}',
+  chessChooseSideLabel: 'สีของคุณในเกมถัดไป',
+  chessPlayWhite: 'ขาว (เดินก่อน)',
+  chessPlayBlack: 'ดำ (เดินทีหลัง)',
+  chessConfirmSwitchTitle: 'แทนที่เกมที่เล่นอยู่ไหม',
+  chessConfirmSwitchBody: 'เกม {current} ของคุณจะถูกแทนที่ด้วยเกม {next} ใหม่',
+  chessYouPlayWhite: 'คุณเล่นฝ่ายขาว',
+  chessYouPlayBlack: 'คุณเล่นฝ่ายดำ',
+  chessBoardLabel: 'กระดานหมากรุก',
+  chessPiece_white_pawn: 'เบี้ยขาว',
+  chessPiece_white_knight: 'ม้าขาว',
+  chessPiece_white_bishop: 'บิชอปขาว',
+  chessPiece_white_rook: 'เรือขาว',
+  chessPiece_white_queen: 'ควีนขาว',
+  chessPiece_white_king: 'คิงขาว',
+  chessPiece_black_pawn: 'เบี้ยดำ',
+  chessPiece_black_knight: 'ม้าดำ',
+  chessPiece_black_bishop: 'บิชอปดำ',
+  chessPiece_black_rook: 'เรือดำ',
+  chessPiece_black_queen: 'ควีนดำ',
+  chessPiece_black_king: 'คิงดำ',
+  chessSquareEmpty: '{square} ว่าง',
+  chessSquarePiece: '{square} {piece}',
+  chessSquareSelected: '{square} {piece} เลือกอยู่',
+  chessSquareInCheck: '{square} {piece} ถูกรุก',
+  chessSquareMoveHere: '{square}: เดินมาที่นี่',
+  chessSquareCaptureHere: '{square} {piece}: กินที่นี่',
+  chessSquareCaptureEnPassant: '{square}: เดินมาที่นี่และกินเบี้ยที่อยู่ข้างๆ',
+  chessYourTurn: 'ตาของคุณ',
+  chessYourTurnCheck: 'รุก — คิงของคุณถูกโจมตี',
+  chessCpuTurn: 'ตาของ CPU',
+  chessCpuTurnCheck: 'รุก — ตาของ CPU',
+  chessPromoteTitle: 'เลื่อนขั้นเบี้ยเป็น',
+  chessWinTitle: 'คุณชนะ',
+  chessLoseTitle: 'CPU ชนะ',
+  chessDrawTitle: 'เสมอ',
+  chessReason_checkmate: 'รุกจน: คิงถูกรุกและไม่มีตาเดินที่ถูกกติกา',
+  chessReason_stalemate: 'เสมอ — อับ: ไม่มีตาเดินที่ถูกกติกา และคิงไม่ได้ถูกรุก',
+  chessReason_insufficient: 'หมากไม่พอ: ไม่มีฝ่ายใดรุกจนได้',
+  chessReason_repetition: 'ตำแหน่งซ้ำสามครั้ง: ตำแหน่งเดิมเกิดขึ้นเป็นครั้งที่สาม',
+  chessReason_fifty: 'กฎ 50 ตา: เดินฝ่ายละ 50 ตาโดยไม่มีการกินและไม่มีการเดินเบี้ย',
+  chessResultSide: 'สีของคุณ',
+  chessResultMoves: 'จำนวนตา',
+  chessSideWhite: 'ขาว',
+  chessSideBlack: 'ดำ',
+  chessWins: 'ชนะ',
+  chessDraws: 'เสมอ',
+  chessLosses: 'แพ้',
+  chessStep1Title: 'หมากแต่ละตัวเดินต่างกัน',
+  chessStep1Body: 'แตะหมากของคุณ แล้วจุดจะแสดงทุกช่องที่หมากตัวนั้นเดินไปได้',
+  chessStep2Title: 'กินได้ แต่ต้องปกป้องคิง',
+  chessStep2Body:
+    'เดินไปช่องที่มีหมากของฝ่ายตรงข้ามเพื่อกิน (เบี้ยกินในแนวทแยง) แต่ห้ามเดินตาที่ทำให้คิงของคุณยังถูกโจมตี',
+  chessStep3Title: 'รุกจนแล้วชนะ',
+  chessStep3Body: 'รุกคิงจนไม่มีทางหนีเพื่อชนะ ถ้าไม่มีตาเดินและไม่ได้ถูกรุก ถือว่าเสมอ',
+};

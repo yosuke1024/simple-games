@@ -76,6 +76,17 @@ gate すると #109 がそこに残る。逆に `INITIAL_MODE` 固定にする�
   再開に gate していた。`scripts/codemods/2026-09-05-merge-mounted-slot-clock.mjs`
   で 24 本を上の 1 形に正規化した。
 
+**種が守るのは「戻ってきたとき」、同期が守るのは「出ていくとき」。** `syncActiveGame` が
+走るのはゲーム自身の退出(`goHome` / `exitToCollection`)とバックグラウンドだけでは
+足りない:Web 版のブラウザの戻る・進むと、別のゲームへのホーム画面ショートカットは、
+どちらも Root をそのままアンマウントする。だから provider は同じ同期を
+`useOnUnmount(syncActiveGame)` でアンマウントにも結ぶ(2026-10-18)。`bookedRef` との
+差だけを足す同期なので、退出やバックグラウンドの後に来たアンマウントは何も足さず、
+アンマウントが保存した時計は次のマウントの種になって二重には数えられない —— 種と
+アンマウントの同期は同じ不変条件の両端である。契約は
+[../GAME_LIFECYCLE.md](../GAME_LIFECYCLE.md)「アンマウントで計上する」、門は
+`src/test/unmountBookingWiring.test.ts`。
+
 `flagsRef` / `prefsRef` / `activeModeRef` は同じように写しているが**対象外**。1 タスクに
 2 回書く経路が無く、書き込みも単発トグルの全置換だからである(CPU 対戦 7 本の
 `prefsRef` だけは「先後を選んでから始める」が本当に 1 タップなので先行させている ——

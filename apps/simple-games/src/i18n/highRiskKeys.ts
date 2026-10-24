@@ -107,4 +107,20 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   'clubDeleteResultTitle',
   'clubDeleteResultBody',
   'clubDeleteConfirm',
+  // Managed Clubs: discovery, automatic sending and member-only album publication.
+  // Approval provenance remains unapproved until the release gate is completed.
+  'clubVisibilityHelp',
+  'clubManagedJoinDisclosure',
+  'clubAlbumDisclosure',
+  'clubDeleteAlbumBody',
+  // Free Trial, a conditional owner benefit, its counting rule, and a key absent from backups.
+  // These promises need independent back-translation and author approval before release.
+  'clubTrialHelp',
+  'clubOwnerAdRemovalHelp',
+  'clubOwnerMemberCountHelp',
+  'clubOwnerRecoveryHelp',
+  // 2026-10-24: the backup now carries the Club House keys — the file must be kept
+  // private — and the approval box is said the other way round (ticked = no approval).
+  'backupClubNote',
+  'clubAutoApprove',
 ];

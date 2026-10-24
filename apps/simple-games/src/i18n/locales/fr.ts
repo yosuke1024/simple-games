@@ -62,6 +62,8 @@ export const fr: Messages = {
     'La sauvegarde est un fichier non chiffré sur votre appareil. Simple Games ne l’envoie jamais nulle part, et vous seul décidez où le ranger.',
   backupPurchaseNote:
     'L’achat qui retire la publicité ne fait pas partie de la sauvegarde. Restaurez-le depuis la boutique.',
+  backupClubNote:
+    'La clé de propriétaire Club House et les Clubs rejoints sont aussi inclus. Ne donnez ce fichier à personne.',
   backupExport: 'Exporter la sauvegarde',
   backupRestore: 'Restaurer une sauvegarde',
   backupExportFailed: 'Le fichier de sauvegarde n’a pas pu être créé.',
@@ -153,6 +155,7 @@ export const fr: Messages = {
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'Avancé',
   clubEntry: 'Club House',
+  clubJoinNew: 'Rejoindre un nouveau Club House',
   playTogetherTitle: 'Jouer ensemble',
   playTogetherBody: 'Partagez vos scores avec tout le monde.',
   clubResultSent: 'Envoyé à {club}',

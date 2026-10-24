@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { formatDuration } from '@/ui/format';
@@ -51,14 +52,13 @@ export function NumberPathHomeScreen() {
   };
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="number-path" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: the tile glyph of app/registry.ts — one bending road. */}
-        <div className="home-logo" aria-hidden="true">
-          ↝
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="number-path" />
+        </span>
         <h1 className="home-title">{t('numberPathName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
         <WebBetaNotice gameId="number-path" />

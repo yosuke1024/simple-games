@@ -14,6 +14,7 @@
 import { Suspense, lazy, useLayoutEffect, useRef, useState } from 'react';
 import { webAdsSlotEnabled } from '../../services/ads/web/config';
 import { recordResultView } from '../../services/ads/web/resultCadence';
+import { useAdRemovalActive } from '../../monetization/useAdRemoval';
 
 const AdUnit =
   import.meta.env.MODE === 'web' ? lazy(() => import('../../services/ads/web/AdUnit')) : null;
@@ -28,12 +29,13 @@ const AdUnit =
 const MIN_VIEWPORT_HEIGHT = 560;
 
 export function ResultAdSlot() {
+  const removed = useAdRemovalActive();
   const [show, setShow] = useState(false);
   // One count per mounted result view, even under StrictMode's double-invoked
   // effects (the ref survives the invoke-cleanup-invoke cycle).
   const counted = useRef(false);
   const tallEnough = typeof window === 'undefined' || window.innerHeight >= MIN_VIEWPORT_HEIGHT;
-  const enabled = AdUnit !== null && tallEnough && webAdsSlotEnabled('result');
+  const enabled = AdUnit !== null && !removed && tallEnough && webAdsSlotEnabled('result');
 
   // Layout effect so the reserved box is part of the overlay's first painted
   // frame — the dialog never grows after it becomes visible.
@@ -43,7 +45,7 @@ export function ResultAdSlot() {
     setShow(recordResultView());
   }, [enabled]);
 
-  if (!AdUnit || !show) return null;
+  if (!AdUnit || removed || !show) return null;
   return (
     <div className="web-ad-slot web-ad-slot-result">
       <Suspense fallback={null}>

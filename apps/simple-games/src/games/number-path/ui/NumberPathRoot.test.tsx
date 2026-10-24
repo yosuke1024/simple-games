@@ -11,7 +11,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { addDays, createDailySession, createDifficultySession, localDateString } from '../game';
+import {
+  addDays,
+  createDailySession,
+  createDifficultySession,
+  doTap,
+  localDateString,
+} from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { NP_STORAGE_KEYS, type Stats } from '../storage/schemas';
 import { NumberPathRoot } from './NumberPathRoot';
@@ -125,6 +131,13 @@ function storedPlaySeconds(): number {
   return stats.easy.totalPlaySeconds + stats.medium.totalPlaySeconds + stats.hard.totalPlaySeconds;
 }
 
+/** The suspended difficulty board's own clock, as it survives on disk (§9). */
+function storedBoardSeconds(): number {
+  const raw = deviceStore.get(NP_STORAGE_KEYS.game);
+  if (raw === undefined) return 0;
+  return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
+}
+
 /** A pretend cell, in CSS pixels — jsdom lays nothing out on its own. */
 const CELL_PX = 40;
 const pointAt = (index: number) => ({
@@ -147,8 +160,13 @@ function giveCellsALayout(): void {
   } as DOMRect);
 }
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
   vi.restoreAllMocks();
 });
@@ -168,6 +186,32 @@ describe('first run', () => {
     // The difficulty last chosen — easy on a fresh install (§7): a 5×5.
     expect(screen.getByText('Easy')).toBeInTheDocument();
     expect(within(board()).getAllByRole('button')).toHaveLength(25);
+  });
+});
+
+describe('Quick Rules shown again over a suspended board (§9)', () => {
+  it('resumes that board on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone (and the remembered difficulty with it, so the
+    // first-run board would be Easy); a Medium board is suspended, one step in.
+    const medium = createDifficultySession('medium', 'number-path-medium-flags-lost');
+    const played = doTap(medium, medium.solution[1]!)!;
+    deviceStore.set(NP_STORAGE_KEYS.game, JSON.stringify(toPersisted(played, 1)));
+    launch();
+
+    expect(await screen.findByText('Follow the numbers')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(within(board()).getAllByRole('button')).toHaveLength(36);
+    expect(pathLength()).toBe(2);
+    // Resumed, not started: the slot keeps its board, and no play is counted.
+    const saved = JSON.parse(deviceStore.get(NP_STORAGE_KEYS.game)!) as { seed: string };
+    expect(saved.seed).toBe(medium.seed);
+    expect(deviceStore.get(NP_STORAGE_KEYS.stats)).toBeUndefined();
   });
 });
 
@@ -660,6 +704,47 @@ describe('a home-screen shortcut', () => {
         elapsedSeconds: number;
       };
       expect(saved.elapsedSeconds).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the board's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(NP_STORAGE_KEYS.flags, tutorialDone[NP_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /^Easy/ }));
+
+      // A background books the first five, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedBoardSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the board still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedBoardSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

@@ -417,6 +417,197 @@
   --accent-ring-soft: rgba(172, 53, 100, 0.12);
 }
 
+/* The five web-beta titles of docs/plans/2026-10-17-unblock-snake-loop-bridges-
+   peg.md, chosen together against the shipped forty-one per its Phase 1. */
+
+:root[data-game='unblock-puzzle'],
+.accent-unblock-puzzle {
+  --accent: #b5304d;
+  --accent-ink: #ffffff;
+  --accent-soft: #f4d7dd;
+  --accent-ring: rgba(181, 48, 77, 0.38);
+  --accent-ring-soft: rgba(181, 48, 77, 0.12);
+}
+
+:root[data-game='snake'],
+.accent-snake {
+  --accent: #8f534d;
+  --accent-ink: #ffffff;
+  --accent-soft: #eddfde;
+  --accent-ring: rgba(143, 83, 77, 0.38);
+  --accent-ring-soft: rgba(143, 83, 77, 0.12);
+}
+
+:root[data-game='loop-puzzle'],
+.accent-loop-puzzle {
+  --accent: #704eb7;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2dbf0;
+  --accent-ring: rgba(112, 78, 183, 0.38);
+  --accent-ring-soft: rgba(112, 78, 183, 0.12);
+}
+
+:root[data-game='bridges'],
+.accent-bridges {
+  --accent: #323b5d;
+  --accent-ink: #ffffff;
+  --accent-soft: #dee1ed;
+  --accent-ring: rgba(50, 59, 93, 0.38);
+  --accent-ring-soft: rgba(50, 59, 93, 0.12);
+}
+
+:root[data-game='peg-solitaire'],
+.accent-peg-solitaire {
+  --accent: #68275f;
+  --accent-ink: #ffffff;
+  --accent-soft: #f1daee;
+  --accent-ring: rgba(104, 39, 95, 0.38);
+  --accent-ring-soft: rgba(104, 39, 95, 0.12);
+}
+
+/* The web-beta titles of docs/plans/2026-10-19-chess-gem-swap-pipe-link-
+   bounce-up-echo-pads.md. All five accents were chosen together against the
+   shipped forty-six per its Phase 1; Chess's come in a commit of its own. */
+
+:root[data-game='chess'],
+.accent-chess {
+  --accent: #b63030;
+  --accent-ink: #ffffff;
+  --accent-soft: #f4d7d7;
+  --accent-ring: rgba(182, 48, 48, 0.38);
+  --accent-ring-soft: rgba(182, 48, 48, 0.12);
+}
+
+:root[data-game='gem-swap'],
+.accent-gem-swap {
+  --accent: #67283f;
+  --accent-ink: #ffffff;
+  --accent-soft: #f0dbe3;
+  --accent-ring: rgba(103, 40, 63, 0.38);
+  --accent-ring-soft: rgba(103, 40, 63, 0.12);
+}
+
+:root[data-game='pipe-link'],
+.accent-pipe-link {
+  --accent: #a5672c;
+  --accent-ink: #ffffff;
+  --accent-soft: #f4e5d7;
+  --accent-ring: rgba(165, 103, 44, 0.38);
+  --accent-ring-soft: rgba(165, 103, 44, 0.12);
+}
+
+:root[data-game='bounce-up'],
+.accent-bounce-up {
+  --accent: #9e4892;
+  --accent-ink: #ffffff;
+  --accent-soft: #efdcec;
+  --accent-ring: rgba(158, 72, 146, 0.38);
+  --accent-ring-soft: rgba(158, 72, 146, 0.12);
+}
+
+:root[data-game='echo-pads'],
+.accent-echo-pads {
+  --accent: #306cb6;
+  --accent-ink: #ffffff;
+  --accent-soft: #d7e4f4;
+  --accent-ring: rgba(48, 108, 182, 0.38);
+  --accent-ring-soft: rgba(48, 108, 182, 0.12);
+}
+
+/* The web-beta titles of docs/plans/2026-10-20-overtake-make-the-target-nested-
+   tic-tac-toe-scopa-tangram.md. All five accents were chosen together against the
+   shipped fifty-one (Nos. 47–51 included) per its Phase 1. */
+
+:root[data-game='overtake'],
+.accent-overtake {
+  --accent: #922643;
+  --accent-ink: #ffffff;
+  --accent-soft: #f4d7df;
+  --accent-ring: rgba(146, 38, 67, 0.38);
+  --accent-ring-soft: rgba(146, 38, 67, 0.12);
+}
+
+:root[data-game='make-the-target'],
+.accent-make-the-target {
+  --accent: #393f93;
+  --accent-ink: #ffffff;
+  --accent-soft: #dbdcf0;
+  --accent-ring: rgba(57, 63, 147, 0.38);
+  --accent-ring-soft: rgba(57, 63, 147, 0.12);
+}
+
+:root[data-game='nested-tic-tac-toe'],
+.accent-nested-tic-tac-toe {
+  --accent: #633b36;
+  --accent-ink: #ffffff;
+  --accent-soft: #ede0de;
+  --accent-ring: rgba(99, 59, 54, 0.38);
+  --accent-ring-soft: rgba(99, 59, 54, 0.12);
+}
+
+:root[data-game='scopa'],
+.accent-scopa {
+  --accent: #b53192;
+  --accent-ink: #ffffff;
+  --accent-soft: #f4d7ec;
+  --accent-ring: rgba(181, 49, 146, 0.38);
+  --accent-ring-soft: rgba(181, 49, 146, 0.12);
+}
+
+:root[data-game='tangram'],
+.accent-tangram {
+  --accent: #426a25;
+  --accent-ink: #ffffff;
+  --accent-soft: #e4f1da;
+  --accent-ring: rgba(66, 106, 37, 0.38);
+  --accent-ring-soft: rgba(66, 106, 37, 0.12);
+}
+
+:root[data-game='light-grid'],
+.accent-light-grid {
+  --accent: #784f5f;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3dbd7;
+  --accent-ring: rgba(120, 79, 95, 0.38);
+  --accent-ring-soft: rgba(120, 79, 95, 0.12);
+}
+
+:root[data-game='color-flood'],
+.accent-color-flood {
+  --accent: #184e72;
+  --accent-ink: #ffffff;
+  --accent-soft: #d7dbda;
+  --accent-ring: rgba(24, 78, 114, 0.38);
+  --accent-ring-soft: rgba(24, 78, 114, 0.12);
+}
+
+:root[data-game='three-peaks'],
+.accent-three-peaks {
+  --accent: #7a321a;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3d7ce;
+  --accent-ring: rgba(122, 50, 26, 0.38);
+  --accent-ring-soft: rgba(122, 50, 26, 0.12);
+}
+
+:root[data-game='nim'],
+.accent-nim {
+  --accent: #36533f;
+  --accent-ink: #ffffff;
+  --accent-soft: #dadcd3;
+  --accent-ring: rgba(54, 83, 63, 0.38);
+  --accent-ring-soft: rgba(54, 83, 63, 0.12);
+}
+
+:root[data-game='knight-tour'],
+.accent-knight-tour {
+  --accent: #452b5e;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcd6d7;
+  --accent-ring: rgba(69, 43, 94, 0.38);
+  --accent-ring-soft: rgba(69, 43, 94, 0.12);
+}
+
 :root[data-theme='dark'] {
   --ink: #e9e6df;
   --ink-soft: #8b95a3;
@@ -799,6 +990,186 @@
   --accent-ring-soft: rgba(206, 90, 136, 0.14);
 }
 
+:root[data-theme='dark'][data-game='unblock-puzzle'],
+[data-theme='dark'] .accent-unblock-puzzle {
+  --accent: #d6667e;
+  --accent-ink: #20090e;
+  --accent-soft: #411b23;
+  --accent-ring: rgba(214, 102, 126, 0.42);
+  --accent-ring-soft: rgba(214, 102, 126, 0.14);
+}
+
+:root[data-theme='dark'][data-game='snake'],
+[data-theme='dark'] .accent-snake {
+  --accent: #c69286;
+  --accent-ink: #1c100d;
+  --accent-soft: #3a2722;
+  --accent-ring: rgba(198, 146, 134, 0.42);
+  --accent-ring-soft: rgba(198, 146, 134, 0.14);
+}
+
+:root[data-theme='dark'][data-game='loop-puzzle'],
+[data-theme='dark'] .accent-loop-puzzle {
+  --accent: #9171da;
+  --accent-ink: #100820;
+  --accent-soft: #261b41;
+  --accent-ring: rgba(145, 113, 218, 0.42);
+  --accent-ring-soft: rgba(145, 113, 218, 0.14);
+}
+
+:root[data-theme='dark'][data-game='bridges'],
+[data-theme='dark'] .accent-bridges {
+  --accent: #7d83b0;
+  --accent-ink: #0f1119;
+  --accent-soft: #262836;
+  --accent-ring: rgba(125, 131, 176, 0.42);
+  --accent-ring-soft: rgba(125, 131, 176, 0.14);
+}
+
+:root[data-theme='dark'][data-game='peg-solitaire'],
+[data-theme='dark'] .accent-peg-solitaire {
+  --accent: #b77bb2;
+  --accent-ink: #1a0e19;
+  --accent-soft: #372436;
+  --accent-ring: rgba(183, 123, 178, 0.42);
+  --accent-ring-soft: rgba(183, 123, 178, 0.14);
+}
+
+:root[data-theme='dark'][data-game='chess'],
+[data-theme='dark'] .accent-chess {
+  --accent: #d55d5d;
+  --accent-ink: #200808;
+  --accent-soft: #411b1b;
+  --accent-ring: rgba(213, 93, 93, 0.42);
+  --accent-ring-soft: rgba(213, 93, 93, 0.14);
+}
+
+:root[data-theme='dark'][data-game='gem-swap'],
+[data-theme='dark'] .accent-gem-swap {
+  --accent: #bf97a3;
+  --accent-ink: #191012;
+  --accent-soft: #36262b;
+  --accent-ring: rgba(191, 151, 163, 0.42);
+  --accent-ring-soft: rgba(191, 151, 163, 0.14);
+}
+
+:root[data-theme='dark'][data-game='pipe-link'],
+[data-theme='dark'] .accent-pipe-link {
+  --accent: #dba775;
+  --accent-ink: #201408;
+  --accent-soft: #412e1b;
+  --accent-ring: rgba(219, 167, 117, 0.42);
+  --accent-ring-soft: rgba(219, 167, 117, 0.14);
+}
+
+:root[data-theme='dark'][data-game='bounce-up'],
+[data-theme='dark'] .accent-bounce-up {
+  --accent: #cf7dc2;
+  --accent-ink: #1e0b1b;
+  --accent-soft: #3d1f38;
+  --accent-ring: rgba(207, 125, 194, 0.42);
+  --accent-ring-soft: rgba(207, 125, 194, 0.14);
+}
+
+:root[data-theme='dark'][data-game='echo-pads'],
+[data-theme='dark'] .accent-echo-pads {
+  --accent: #709abd;
+  --accent-ink: #0d151c;
+  --accent-soft: #222f3a;
+  --accent-ring: rgba(112, 154, 189, 0.42);
+  --accent-ring-soft: rgba(112, 154, 189, 0.14);
+}
+
+:root[data-theme='dark'][data-game='overtake'],
+[data-theme='dark'] .accent-overtake {
+  --accent: #cd748a;
+  --accent-ink: #1e0b10;
+  --accent-soft: #3d1f26;
+  --accent-ring: rgba(205, 116, 138, 0.42);
+  --accent-ring-soft: rgba(205, 116, 138, 0.14);
+}
+
+:root[data-theme='dark'][data-game='make-the-target'],
+[data-theme='dark'] .accent-make-the-target {
+  --accent: #8785c1;
+  --accent-ink: #0e0e1b;
+  --accent-soft: #242339;
+  --accent-ring: rgba(135, 133, 193, 0.42);
+  --accent-ring-soft: rgba(135, 133, 193, 0.14);
+}
+
+:root[data-theme='dark'][data-game='nested-tic-tac-toe'],
+[data-theme='dark'] .accent-nested-tic-tac-toe {
+  --accent: #c3a59d;
+  --accent-ink: #19120f;
+  --accent-soft: #362926;
+  --accent-ring: rgba(195, 165, 157, 0.42);
+  --accent-ring-soft: rgba(195, 165, 157, 0.14);
+}
+
+:root[data-theme='dark'][data-game='scopa'],
+[data-theme='dark'] .accent-scopa {
+  --accent: #da71c0;
+  --accent-ink: #20081a;
+  --accent-soft: #411b38;
+  --accent-ring: rgba(218, 113, 192, 0.42);
+  --accent-ring-soft: rgba(218, 113, 192, 0.14);
+}
+
+:root[data-theme='dark'][data-game='tangram'],
+[data-theme='dark'] .accent-tangram {
+  --accent: #a7cd7e;
+  --accent-ink: #151d0b;
+  --accent-soft: #2e3c20;
+  --accent-ring: rgba(167, 205, 126, 0.42);
+  --accent-ring-soft: rgba(167, 205, 126, 0.14);
+}
+
+:root[data-theme='dark'][data-game='light-grid'],
+[data-theme='dark'] .accent-light-grid {
+  --accent: #bd659a;
+  --accent-ink: #14171c;
+  --accent-soft: #3d3243;
+  --accent-ring: rgba(189, 101, 154, 0.42);
+  --accent-ring-soft: rgba(189, 101, 154, 0.14);
+}
+
+:root[data-theme='dark'][data-game='color-flood'],
+[data-theme='dark'] .accent-color-flood {
+  --accent: #77a4ac;
+  --accent-ink: #14171c;
+  --accent-soft: #303e46;
+  --accent-ring: rgba(119, 164, 172, 0.42);
+  --accent-ring-soft: rgba(119, 164, 172, 0.14);
+}
+
+:root[data-theme='dark'][data-game='three-peaks'],
+[data-theme='dark'] .accent-three-peaks {
+  --accent: #b07373;
+  --accent-ink: #14171c;
+  --accent-soft: #3b353c;
+  --accent-ring: rgba(176, 115, 115, 0.42);
+  --accent-ring-soft: rgba(176, 115, 115, 0.14);
+}
+
+:root[data-theme='dark'][data-game='nim'],
+[data-theme='dark'] .accent-nim {
+  --accent: #aacbab;
+  --accent-ink: #14171c;
+  --accent-soft: #3a4546;
+  --accent-ring: rgba(170, 203, 171, 0.42);
+  --accent-ring-soft: rgba(170, 203, 171, 0.14);
+}
+
+:root[data-theme='dark'][data-game='knight-tour'],
+[data-theme='dark'] .accent-knight-tour {
+  --accent: #a69dc3;
+  --accent-ink: #14171c;
+  --accent-soft: #393c4a;
+  --accent-ring: rgba(166, 157, 195, 0.42);
+  --accent-ring-soft: rgba(166, 157, 195, 0.14);
+}
+
 /* ---------- Web early release (docs/WEB_VERSION.md「先行公開」) ----------
    The BETA mark a title wears while it is in the browser version only. The
    badge is text in a small capsule rather than a colour: it has to read the
@@ -1043,9 +1414,7 @@ button:disabled {
   padding: 4vh 24px 20px;
 }
 
-/* The series mark: one accent-tinted tile. Swapping the glyph and accent is
-   all a future title needs to make this its own. Each game's home screen uses
-   this — the collection's own home does not; see .home-mark. */
+/* Compact glyph mark for game homes that have not adopted the collection art. */
 .home-logo {
   width: 52px;
   height: 52px;
@@ -1063,8 +1432,7 @@ button:disabled {
 
 /* The collection mark (CollectionHomeScreen.tsx) is an <svg> carrying its own
    fill and corner radius, so it only needs placing and sizing. Kept separate
-   from .home-logo above, which the five game home screens still need for a
-   glyph in an accent tile. */
+   from .home-logo above, which places a glyph in an accent tile. */
 .home-mark {
   width: 52px;
   height: 52px;
@@ -1080,27 +1448,119 @@ button:disabled {
   letter-spacing: -0.3px;
 }
 
+/* Opt-in homes share the collection's existing SVG, without changing their
+   game-owned mode selection or adding an image request. Keep the artwork and
+   title side by side so the first playable action stays close to the top. */
+.illustrated-game-home .home-hero {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px 18px;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 14px 24px 20px;
+}
+
+.game-home-artwork {
+  display: block;
+  width: 104px;
+  height: 84px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 3px 0 var(--line);
+}
+
+.illustrated-game-home .home-title {
+  margin: 0;
+  font-size: clamp(26px, 7vw, 32px);
+  line-height: 1.15;
+  text-align: start;
+  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.illustrated-game-home .home-tagline,
+.illustrated-game-home .web-beta-notice {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.illustrated-game-home .home-actions {
+  gap: 10px;
+}
+
+.illustrated-game-home .btn-big {
+  border-radius: 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 2px 0 var(--line);
+}
+
+.illustrated-game-home .btn-big:active {
+  box-shadow: inset 0 1px 2px var(--line);
+}
+
+.illustrated-game-home .home-chips {
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  margin-top: 4px;
+}
+
+.illustrated-game-home .home-chip {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px;
+}
+
 /* The collection's hero is smaller than a game's. A game home screen carries
    two buttons under its hero; this one carries the whole collection, and the
    games have to start above the fold. The size is constant either way — it
    must not change as the shortcut row appears. */
+.collection-intro {
+  width: 100%;
+}
+
 .collection-screen .home-hero {
-  padding: 2vh 24px 16px;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 14px;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 10px 24px 24px;
+  text-align: start;
 }
 
 .collection-screen .home-mark {
   width: 46px;
   height: 46px;
-  margin-bottom: 10px;
+  grid-column: 1;
+  grid-row: 1 / 3;
+  margin: 0;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.12));
 }
 
 .collection-screen .home-title {
-  font-size: 28px;
-  margin-bottom: 6px;
+  grid-column: 2;
+  font-size: 27px;
+  line-height: 1.15;
+  letter-spacing: -0.7px;
+  margin: 0;
 }
 
 .collection-screen .home-tagline {
-  font-size: 14px;
+  grid-column: 2;
+  margin-top: 5px;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .home-tagline {
@@ -1338,11 +1798,26 @@ button:disabled {
 }
 
 .home-section-label {
-  margin: 0 0 8px;
-  font-size: 12px;
+  margin: 0 0 12px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.04em;
   color: var(--ink-soft);
+}
+
+.game-category > .home-section-label,
+.game-favorites > .home-section-label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.game-category > .home-section-label::after,
+.game-favorites > .home-section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
 }
 
 /* The Club House's one slot on the home (docs/architecture/club.md §2-2,
@@ -1370,6 +1845,15 @@ button:disabled {
 .home-club-names {
   flex: 1;
   min-width: 0;
+}
+
+.home-club-join {
+  display: block;
+  min-height: var(--tap-size);
+  text-align: start;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .home-play-together {
@@ -1412,7 +1896,7 @@ button:disabled {
 .game-sections {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 30px;
   flex: 1;
 }
 
@@ -1558,8 +2042,13 @@ button:disabled {
 .game-cell {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  transition: transform 0.06s ease;
+  border-radius: 18px;
+  box-shadow:
+    0 2px 2px rgba(0, 0, 0, 0.025),
+    0 6px 16px rgba(0, 0, 0, 0.035);
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease;
 }
 
 .game-row:active,
@@ -1576,19 +2065,20 @@ button:disabled {
 }
 
 .game-cell {
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 9px;
-  padding: 15px 8px 13px;
-  text-align: center;
+  align-items: stretch;
+  gap: 0;
+  padding: 7px;
+  text-align: start;
   /* Long titles wrap onto a second line; both cells in the row grow together
      (grid), so a wrapped title never leaves a short cell beside a tall one. */
   min-width: 0;
 }
 
-/* The title's mark. Colour comes from `.accent-<id>` on this same element
-   (CollectionHomeScreen.tsx), so every title wears its own on this screen. */
+/* Small, original board illustrations share the title accent. The drawing is
+   decorative: the title and beta mark remain the button's accessible name. */
 .game-tile {
   flex: none;
   display: flex;
@@ -1598,20 +2088,29 @@ button:disabled {
   color: var(--accent);
   font-family: var(--font-display);
   font-weight: 800;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.game-artwork {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .game-row .game-tile {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 12px;
   font-size: 16px;
 }
 
 .game-cell .game-tile {
-  width: 54px;
-  height: 54px;
-  border-radius: 16px;
-  font-size: 21px;
+  width: 100%;
+  height: 94px;
+  border-radius: 12px;
+  background-image: radial-gradient(ellipse at 25% 0, rgba(255, 255, 255, 0.12), transparent 75%);
 }
 
 .game-row-title {
@@ -1620,9 +2119,35 @@ button:disabled {
 }
 
 .game-cell-title {
-  font-size: 15px;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 8px 5px 3px;
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+
+.game-cell > .beta-badge {
+  position: absolute;
+  top: 12px;
+  inset-inline-end: 12px;
+  background: var(--surface);
+  border-color: var(--line);
+  padding: 1px 5px;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .game-cell:hover,
+  .game-row:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 3px 5px rgba(0, 0, 0, 0.04),
+      0 10px 22px rgba(0, 0, 0, 0.09);
+  }
 }
 
 .game-row-chevron {
@@ -1818,8 +2343,19 @@ button:disabled {
   font-size: 14px;
   font-weight: 600;
   color: var(--ink);
-  background: var(--surface);
+  background: linear-gradient(var(--surface), var(--paper));
   border: 1px solid var(--line);
+  box-shadow:
+    inset 0 1px 0 var(--surface),
+    0 2px 0 var(--line);
+}
+
+.action-btn:active:not(:disabled) {
+  box-shadow: inset 0 1px 2px var(--line);
+}
+
+.action-btn:disabled {
+  box-shadow: none;
 }
 
 .action-icon {
@@ -1834,6 +2370,7 @@ button:disabled {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-ink);
+  box-shadow: 0 2px 0 var(--accent-ring);
 }
 
 .action-btn[aria-pressed='true'] .action-icon {
@@ -2424,11 +2961,27 @@ button:disabled {
 
 /* ---------- reduced motion ---------- */
 
+/* `*` alone does not match pseudo-elements, and the boards' one-off washes
+   (the solved beat in Crown Grid / Number Path / Shape Regions / Box Regions,
+   Crown Grid's reach flash) live on ::before / ::after — so each route has a
+   second rule for them, or those ran at full length under Reduced Motion.
+   That rule ends transitions rather than shortening them: no pseudo-element
+   declares one, and transition-property defaults to `all`, so a 0.01ms
+   duration would create transitions where there were none and every tile,
+   ring and outline drawn on a pseudo-element would paint a frame late (a
+   freshly drawn Box Regions region showed a frame of ink before its tint). */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition: none !important;
   }
 }
 
@@ -2436,6 +2989,13 @@ button:disabled {
   animation-duration: 0.01ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
+}
+
+:root[data-reduced-motion='true'] *::before,
+:root[data-reduced-motion='true'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition: none !important;
 }
 
 /* ---------- daily backlog ---------- */
@@ -2580,6 +3140,7 @@ button:disabled {
   .game-favorites,
   .game-recent,
   .game-sections,
+  .collection-screen .home-hero,
   .home-club,
   .home-play-together {
     max-width: 700px;
@@ -2587,6 +3148,15 @@ button:disabled {
 
   .game-grid {
     grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .game-cell .game-tile {
+    height: 112px;
+  }
+
+  .game-cell-title {
+    font-size: 15px;
   }
 
   /* The (at most two) shortcut rows share one line instead of stacking
@@ -2629,8 +3199,31 @@ button:disabled {
 @media (min-width: 900px) {
   .game-favorites,
   .game-recent,
-  .game-sections {
+  .game-sections,
+  .home-club,
+  .home-play-together,
+  .collection-screen .home-hero {
     max-width: 940px;
+  }
+
+  .collection-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(420px, 1fr);
+    align-items: center;
+    gap: 32px;
+    max-width: 940px;
+    margin: 0 auto 24px;
+    padding: 0 24px;
+  }
+
+  .collection-intro .home-hero {
+    padding: 12px 0;
+  }
+
+  .collection-intro .app-store-card {
+    width: 100%;
+    max-width: none;
+    margin: 0;
   }
 
   .game-grid {
@@ -2641,11 +3234,97 @@ button:disabled {
 @media (min-width: 1280px) {
   .game-favorites,
   .game-recent,
-  .game-sections {
+  .game-sections,
+  .home-club,
+  .home-play-together,
+  .collection-intro,
+  .collection-screen .home-hero {
     max-width: 1160px;
   }
 
   .game-grid {
     grid-template-columns: repeat(5, 1fr);
   }
+}
+
+/* Nos. 62–66: Web-beta title accents. */
+:root[data-game='invaders'],
+.accent-invaders {
+  --accent: #283b3f;
+  --accent-ink: #ffffff;
+  --accent-soft: #d9d9d4;
+  --accent-ring: rgba(40, 59, 63, 0.38);
+  --accent-ring-soft: rgba(40, 59, 63, 0.12);
+}
+:root[data-game='falling-blocks'],
+.accent-falling-blocks {
+  --accent: #5b4a12;
+  --accent-ink: #ffffff;
+  --accent-soft: #e0dbce;
+  --accent-ring: rgba(91, 74, 18, 0.38);
+  --accent-ring-soft: rgba(91, 74, 18, 0.12);
+}
+:root[data-game='paddle-rally'],
+.accent-paddle-rally {
+  --accent: #552613;
+  --accent-ink: #ffffff;
+  --accent-soft: #dfd7ce;
+  --accent-ring: rgba(85, 38, 19, 0.38);
+  --accent-ring-soft: rgba(85, 38, 19, 0.12);
+}
+:root[data-game='hanoi-towers'],
+.accent-hanoi-towers {
+  --accent: #4f1940;
+  --accent-ink: #ffffff;
+  --accent-soft: #dfd5d4;
+  --accent-ring: rgba(79, 25, 64, 0.38);
+  --accent-ring-soft: rgba(79, 25, 64, 0.12);
+}
+:root[data-game='maze-escape'],
+.accent-maze-escape {
+  --accent: #2a4620;
+  --accent-ink: #ffffff;
+  --accent-soft: #dadbd0;
+  --accent-ring: rgba(42, 70, 32, 0.38);
+  --accent-ring-soft: rgba(42, 70, 32, 0.12);
+}
+:root[data-theme='dark'][data-game='invaders'],
+[data-theme='dark'] .accent-invaders {
+  --accent: #4ea7d0;
+  --accent-ink: #14171c;
+  --accent-soft: #203440;
+  --accent-ring: rgba(78, 167, 208, 0.38);
+  --accent-ring-soft: rgba(78, 167, 208, 0.12);
+}
+:root[data-theme='dark'][data-game='falling-blocks'],
+[data-theme='dark'] .accent-falling-blocks {
+  --accent: #dbdb99;
+  --accent-ink: #14171c;
+  --accent-soft: #3c3e35;
+  --accent-ring: rgba(219, 219, 153, 0.38);
+  --accent-ring-soft: rgba(219, 219, 153, 0.12);
+}
+:root[data-theme='dark'][data-game='paddle-rally'],
+[data-theme='dark'] .accent-paddle-rally {
+  --accent: #c87255;
+  --accent-ink: #14171c;
+  --accent-soft: #382927;
+  --accent-ring: rgba(200, 114, 85, 0.38);
+  --accent-ring-soft: rgba(200, 114, 85, 0.12);
+}
+:root[data-theme='dark'][data-game='hanoi-towers'],
+[data-theme='dark'] .accent-hanoi-towers {
+  --accent: #cbaac9;
+  --accent-ink: #14171c;
+  --accent-soft: #39343f;
+  --accent-ring: rgba(203, 170, 201, 0.38);
+  --accent-ring-soft: rgba(203, 170, 201, 0.12);
+}
+:root[data-theme='dark'][data-game='maze-escape'],
+[data-theme='dark'] .accent-maze-escape {
+  --accent: #8bbd64;
+  --accent-ink: #14171c;
+  --accent-soft: #2c382a;
+  --accent-ring: rgba(139, 189, 100, 0.38);
+  --accent-ring-soft: rgba(139, 189, 100, 0.12);
 }

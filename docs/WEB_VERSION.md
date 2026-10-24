@@ -1,5 +1,16 @@
 # Simple Games — Web 版
 
+**2026-10-23 の Club House 追加判断:** 本文の「無料」「静的配信のみ」は Core のゲームの
+約束である。任意の Managed Club House は別のホスティング層として、オーナーの契約枠、
+公開範囲・承認・対象ゲーム、記録帳を持つ。ゲームと通常メンバーは無料のまま。
+無料 Trial は 5 名 × 1 クラブ。所有クラブの在籍メンバーが合計 50 名以上なら、
+有効な契約キーを接続したオーナーの Web ゲームの広告を非表示にする。オーナー画面に
+人数と資格を表示し、購入済みにはしない。人数・資格の確認は同画面の読み込み・更新時に行う。
+広告 SDK 起動後に特典が有効化された場合は、資格を保存して 1 回再読み込みし、
+オーナー画面へ戻る。適用範囲とオフラインキャッシュは [ADS_POLICY.md](ADS_POLICY.md) を参照。
+`MANAGED_CLUBS_ENABLED` が false のビルドは従来どおりで、購入・決済 UI はまだない。
+契約と出荷前の条件は [architecture/managed-clubs.md](architecture/managed-clubs.md) を正とする。
+
 `https://pixapps.ai/simple-games/play/` で配信するブラウザ版の方針。
 ネイティブアプリの約束(バナー広告 1 枠のみ・買い切りで広告削除・初回起動から
 オフライン)は**アプリのもの**であり、Web 版はここに書く別の約束を持つ。
@@ -8,14 +19,14 @@
 
 ## 役割分担
 
-|            | Web 版                                                                                                  | アプリ版(Android・iOS)                                                                        |
-| ---------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| 位置づけ   | すぐ遊べる無料版。新作の先行公開。PixApps への入口                                                      | 静かに長く遊ぶための完成版                                                                    |
-| 導入       | インストール・アカウント不要                                                                            | ストアから導入、ホーム画面から起動                                                            |
-| 広告       | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効)                              | Anchored Adaptive Banner 1 枠のみ                                                             |
-| 課金       | なし(完全無料)                                                                                          | $3.99 買い切りで広告永久削除                                                                  |
-| 計測       | サイト共通のページ解析(下の「計測」節。実装済み・既定は無効)                                            | なし — Analytics を入れないことがアプリの約束([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)) |
-| ゲーム内容 | registry の全ゲーム(41 本)+先行公開中の新作(下の「先行公開」節。いまは無い)。正式収録ゲームに機能差なし | registry の全ゲーム(41 本)。新作は先行公開で検証後に収録(2026-10-02 に 11 本を収録)           |
+|            | Web 版                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | アプリ版(Android・iOS)                                                                                              |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 位置づけ   | すぐ遊べる無料版。新作の先行公開。PixApps への入口                                                                                                                                                                                                                                                                                                                                                                                                                     | 静かに長く遊ぶための完成版                                                                                          |
+| 導入       | インストール・アカウント不要                                                                                                                                                                                                                                                                                                                                                                                                                                           | ストアから導入、ホーム画面から起動                                                                                  |
+| 広告       | ディスプレイ広告ほか([ADS_POLICY.md](ADS_POLICY.md)「Web 版」。既定は無効)                                                                                                                                                                                                                                                                                                                                                                                             | Anchored Adaptive Banner 1 枠のみ                                                                                   |
+| 課金       | なし(完全無料)                                                                                                                                                                                                                                                                                                                                                                                                                                                         | $3.99 買い切りで広告永久削除                                                                                        |
+| 計測       | サイト共通のページ解析(下の「計測」節。実装済み・既定は無効)                                                                                                                                                                                                                                                                                                                                                                                                           | なし — Analytics を入れないことがアプリの約束([PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md))                       |
+| ゲーム内容 | 正式収録の41本＋先行公開対象の20本（registryの合計61本）。実際の配信版・開始日は下の「先行公開」節とリンク先の公開記録を参照。正式収録ゲームに機能差なし | 正式収録の41本（registryで`channel`を持たないエントリ）。新作は先行公開で検証後に収録（2026-10-02に11本を収録） |
 
 **Play instantly on the web. Play quietly and offline in the app.**
 
@@ -118,6 +129,13 @@ https://pixapps.ai/simple-games/play/?game=sudoku → Sudoku
   (タブを閉じたときと同じ。直接アクセスしたゲームからブラウザの戻るを押すと
   この経路になる)。これは以前からの計測の穴で、この変更で広がってはいない —
   以前は戻る操作が常にこの経路だった。
+- **戻る / 進むでゲームを離れても、遊んだ秒は落とさない**(2026-10-18)。このとき
+  シェルはゲームの Root をアンマウントするだけで、ゲーム自身の退出も
+  visibilitychange も通らない。だから各ゲームの provider が自分のアンマウントで、
+  退出とバックグラウンドと同じ同期を走らせる(盤面の時計を保存し、まだ計上して
+  いない秒だけを `totalPlaySeconds` に足す)。契約は
+  [GAME_LIFECYCLE.md](GAME_LIFECYCLE.md)「アンマウントで計上する」。タブを閉じる・
+  サイトの外へ戻るときは、これまでどおり visibilitychange の同期が受け持つ。
 
 **native では動かない。** 実装は `app/webRoute.ts` と `app/App.tsx` にあり、
 `Capacitor.isNativePlatform()` の**実行時ガード**で切る(下の「実装上の約束」の
@@ -226,12 +244,18 @@ play だけをサイト計測の空白にしない。計測の第一の用途は
 
 有効化の前提(人間作業 — AdSense 本番有効化と同じ束で行う):
 
-1. 公開ページ <https://pixapps.ai/simple-games/privacy> の改定(**2026-08-03 実施済み**)。
-   旧文面は「ゲームのページは意図的に Google Analytics の対象外にしている」と明言して
-   おり(2026-08-02 公開)、この決定はその**撤回**にあたる。黙って差し替えず、
-   改定として明記した — 日英とも当該段落に「2026-08-03 の改定までは対象外にしていた」
-   と残してある。**開示が先、収集が後**の順序をとる(逆は許されない)。同ページの
-   AdSense の説明も、実際の掲載より先に現在形で書いてある既存の前例に揃えた。
+1. 公開ページ <https://pixapps.ai/simple-games/privacy> の改定。旧文面は「ゲームのページは
+   意図的に Google Analytics の対象外にしている」と明言しており(2026-08-02 公開)、この決定は
+   その**撤回**にあたる。**開示が先、収集が後**の順序をとる(逆は許されない)。
+   **この順序は守れなかった。** 2026-08-03 の改定は「今後対象になる予定・現時点では計測コードを
+   一切読み込んでいない」という**将来形**で(landing cbffbb7)、計測入りのビルドは同じ日の
+   17:32 UTC(landing 824c8c8)から配信された。ページはその後も将来形のまま、計測データが
+   届き始めた 2026-08-30 を過ぎても直されず、**2026-10-19 の landing #202 で現在形に改めた**
+   (GA4 を使っていること・送るもの・同意メッセージが無いこと・この経緯を日英で明記)。
+   以後は landing の `tests/simple-games-play-analytics.test.js` が、公開ビルドが Google タグと
+   サイトの測定 ID を持つのにページが「計測コードを読み込んでいない」と書いていれば落とす。
+   (かつてここは「日英とも当該段落に『2026-08-03 の改定までは対象外にしていた』と残してある」と
+   書いていたが、その文面は公開前に将来形へ差し替えられており、公開ページには無かった。)
 2. GDPR 同意は AdSense と共通の CMP(Privacy & messaging / consent mode)で扱う。
    同意処理の失敗でゲームを止めない・遅らせない。
 3. **landing 側のテストガードを同じ PR で更新する。** `pixapps-landing` の
@@ -285,6 +309,22 @@ ADS_POLICY.md 側の項目 3 にも 実施済み の印は付いていない。*
 
 ## 先行公開(ベータ)
 
+No. 62〜66 (Invaders / Falling Blocks / Paddle Rally / Hanoi Towers / Maze Escape) を2026-10-23に追加。
+Web先行公開25本と正式収録41本、合計66本。今回の実装と本番配信の証跡は
+[追加と公開の記録](plans/2026-10-23-five-games-62-66.md)に残す。
+
+
+**No. 57〜61 — Light Grid / Color Flood / Three Peaks / Nim / Knight’s Tour**
+は2026-10-23に実装し、`web-beta`として登録した（本体[#257](https://github.com/yosuke1024/simple-games/pull/257)、
+ヒント・盤面・駒の意匠見直し[#258](https://github.com/yosuke1024/simple-games/pull/258)）。
+この5本を含めると先行公開対象は20本、正式収録41本と合わせて61本になる。
+登録だけを本番公開の証拠にはしない。配信物のソースSHA、公開ワークフロー、Cloudflare反映と
+本番URLの確認は、配信PR [pixapps-landing #207](https://github.com/yosuke1024/pixapps-landing/pull/207)
+の公開記録で追跡する。選定理由とローカル検証は
+[実装計画](plans/2026-10-23-five-games-57-61.md)、規則は各ゲームのルール文書が正本。
+正式収録とClub Houseには加えず、2週間の安定稼働は実装日ではなく実際のWeb公開日から数える。
+
+
 **Web 版は新作の先行公開チャンネルである**(2026-08-03 決定)。新しいゲームは
 アプリ収録より先に Web 版に入り、実地の反応を見てから正式収録する。ベータなのは
 **個々の新作ゲームだけ** — Web 版全体と正式収録済みのゲームはベータではない
@@ -304,6 +344,10 @@ ADS_POLICY.md 側の項目 3 にも 実施済み の印は付いていない。*
 表示:
 
 - 該当ゲームのタイトルカード等に言語非依存の「BETA」バッジを付ける。
+- バッジとセーブが消える可能性の説明文は、ゲームの**ホームと Quick Rules の両方**に出す。
+  初めて開いたときはホームより先に Quick Rules が開き、その最後のボタンが盤面を始めて
+  最初の保存を書くので、ホームだけでは保存より先に告知できない(下の「保存データ」)。
+  Quick Rules では見出しの下、全ステップの同じ位置に置く(ステップの配置を動かさない)。
 - セーブが消える可能性の説明文は、削除に関わる高リスク文言なので **en / ja のみ**
   ([I18N_POLICY.md](I18N_POLICY.md))。他言語ではバッジのみ出す。
   (かつてここは「アプリへの送客ブロックと同じ扱い」と書いていた。送客のほうは
@@ -336,9 +380,128 @@ ADS_POLICY.md 側の項目 3 にも 実施済み の印は付いていない。*
    行い、既収録ゲームの滞在時間を参照点にする。この確認のために「計測」節の範囲を
    広げない(盤面・プレイ内容は送らない)。
 
-実装状況(2026-10-02): **仕組みは実装済み。いま先行公開中のタイトルは無い。**
-2026-10-02 に、先行公開していた 11 本すべてを正式収録した — Crown Grid / Number Path /
-Shape Regions(issue #194、計画は
+実装状況(2026-10-19): **仕組みは実装済み。先行公開の新作 5 本 — Unblock Puzzle /
+Snake / Loop Puzzle / Bridges / Peg Solitaire(No. 42〜46)— は 2026-10-17 にこのリポジトリに実装し、
+2026-10-19 から Web 版で配信している**
+(仕様の正は各ルール文書、経緯は
+[plans/2026-10-17-unblock-snake-loop-bridges-peg.md](plans/2026-10-17-unblock-snake-loop-bridges-peg.md))。
+registry に `channel: 'web-beta'` で登録してあり、アプリには出ない(下の実行時ガード)。
+**Web 版で配信中(2026-10-19 から)**: pixapps-landing #201(2026-10-19 14:35 UTC にマージ)で
+`a1c6a27`(#234 のマージ)の web ビルドを同期した。ビルドは landing の公開ワークフロー
+(Publish Simple Games (web)、network=admax)が本番の ID を入れて作り、同じ PR で landing の
+`tests/ui.test.js` の `WEB_BETA_GAME_IDS` に 5 本の id を足した — このテストは一覧に無い id の
+チャンクも、チャンクの無い id(「the beta list is stale」)も落とすので、両方がそろって初めて通る
+(下の「landing 側のガード」)。#201 では両方を同じ PR に入れた — 52〜56 では一覧を足した
+landing の PR(#204、Overtake / Scopa は #205)が先で、チャンクは後の公開ワークフローのコミットで入った
+(下の段落)。
+テストが増えてワークフローの「Test Simple Games」が旧上限 20 分を超えたため、同じ PR で
+ジョブ上限を 45 分にした。本番への反映は Cloudflare Pages の
+Git 連携による(このリポジトリからは観測していない)。**正式収録の基準 1(2 週間の安定稼働)の
+時計は 2026-10-19 から** — 保存を消す変更を入れたら巻き戻る。基準 2(滞在時間)の判断はその後。
+5 本とも Club House には登録しない(registry の `challenge` を持たない)。
+
+**次の新作 5 本 — Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads(No. 47〜51)— は
+このリポジトリに実装した**(2026-10-19 に着手し、2026-10-22 に 5 本とも
+遊べる形まで。計画は
+[plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md](plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md)、
+仕様の正は各ルール文書)。registry の `channel` は 2026-10-20 から `'in-development'`(下の「main の状態」)で、
+**2026-10-22 に 5 本とも `'web-beta'` にした**(製品オーナーの依頼(2026-10-22)は「Web 公開まで」。計画の
+判断 4 — Chess を別フェーズ・別 PR にして残り 4 本を Chess で待たせない — は、5 本が同時に仕上がったので
+1 つの PR(#253)で満たした)。どれもアプリには出ない(下の実行時ガード)。14 言語のカタログは書いてある(`en` が原文、
+`ja` と 12 言語は 2026-10-22 に AI が書き、誰も読んでいない — [I18N_POLICY.md](I18N_POLICY.md))。
+**Web 版で配信中(2026-10-23 から — JST、UTC では 2026-10-22 17:33)**: pixapps-landing #206(2026-10-22
+16:13 UTC にマージ、landing main `13e385a`)で landing の `tests/ui.test.js` の一覧の 5 本を
+`IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移し(いまは `WEB_BETA_GAME_IDS` 15 本 — 42〜46・
+47〜51・52〜56 — と `IN_DEVELOPMENT_GAME_IDS` 0 本)、このリポジトリの #253 のマージ(2026-10-22 16:55 UTC、
+main `7b95a94`)の後、製品オーナーの承認(2026-10-22)を得て landing の公開ワークフロー(Publish Simple
+Games (web)、run 39818257752、ref: main、network=admax)が `7b95a94` の web ビルドを作って landing main に
+`0415eb18` としてコミットした(2026-10-23 02:33 JST — UTC では 2026-10-22 17:33)。ジョブは 37 分 48 秒で、
+うち「Test Simple Games」が 37 分 11 秒(上限 45 分)。同期後の「Check the synced build」(`npm run test:ui`)も
+通った。`play/assets` の `game-*.js` は 56 本で、5 本のチャンクがすべて入っている。本番への反映は
+Cloudflare Pages の Git 連携による(このリポジトリからは観測していない)。それまでの配信物(下の
+「main の状態」の終わりに挙げた `693ac9f`・`960ed6f6` まで)に入っていた 5 本のチャンクは `'in-development'` のときのビルドのもので、どの扉からも
+開けなかった。実機では 5 本とも何も確かめていない
+(各ルール文書の検証の節)。題の商標・両ストアの検索は 5 本とも正式収録の前に行う — Bounce Up は、同名作が
+ある題でよいかを [BOUNCE_UP_RULES.md](BOUNCE_UP_RULES.md) 冒頭と §12 が Web での公開の前に製品オーナーに求め、
+2026-10-22 に「このまま出す」と判断された。5 本とも Club House には登録しない。正式収録の基準(上の 1・2)は変えず、
+**基準 1 の時計は 2026-10-23 から**(JST、UTC では 2026-10-22 17:33 の同期から。保存を消す変更を入れたら
+巻き戻る。基準 2 の判断はその後)。
+
+**main の状態(2026-10-20)**: Phase 1 の接続点は #239 で 5 本とも main に入った(計画では Chess を
+別に置くつもりだったが、オーナーがまとめてマージした — 計画の「フェーズ(判断 4)」の 2026-10-20 の
+追記)。その時点の 5 本は `channel: 'web-beta'` の遊べないスキャフォールドで、同日オーナーが main を
+公開する Publish Simple Games (web)(pixapps-landing run 39344906628、ref: main)を実行したところ、
+そのチャンク(`play/assets/game-<id>-*.js`)が landing の `tests/ui.test.js` の `WEB_BETA_GAME_IDS` の門
+(下の「landing 側のガード」)に当たって止まった — 門が無ければ、遊べない BETA のタイルが 5 枚出ていた。
+**対処(2026-10-20)**: registry の `channel` に第 3 の値 **`'in-development'`**(どのビルドにも出さない)を
+足し、5 本をそれにした。`app/gameChannel.ts` のガードは、アプリがベータに閉じるのと同じ扉を Web 版にも
+閉じる。チャンクは「実装上の約束」(1 ビルド・分岐なし)どおり出るので、landing の門には同じ 5 本を
+`IN_DEVELOPMENT_GAME_IDS`(チャンクはあるがカードも BETA も無い)として足した。「遊べるものだけを出す」は
+保たれる — 公開物に入るのは到達できないコードだけで、ネイティブ版がベータのコードを運ぶのと同じ形。
+採らなかった案: id を `WEB_BETA_GAME_IDS` に足して通す(遊べないものを BETA として出す)、チャンクを
+配信物から除く(ビルドの分岐を増やす)。下の `9238415`(2026-10-22 — landing main `693ac9f`)の同期と、
+その後の `9855421`(#251 のマージ — Club House のメンバー一覧の別画面と Member 画面)の同期(公開ワークフロー
+run 39801435757、2026-10-22 15:04〜15:37 UTC、landing main `960ed6f6`。その前の 15:01 UTC の run 39800839546 は
+失敗した)のビルドにも 47〜51 のチャンクは入っていたが、そのビルドでは `'in-development'` なのでどの扉からも
+到達しなかった。この文書が知る最後の同期は `7b95a94`(#253 のマージ — landing main `0415eb18`、2026-10-22
+17:33 UTC = 2026-10-23 02:33 JST)で、5 本はそこで初めて `'web-beta'` のビルドとして届いた(上の 47〜51 の段落)。
+
+**さらに次の 5 本 — Overtake / Make the Target / Nested Tic-Tac-Toe / Scopa / Tangram(No. 52〜56)— は
+このリポジトリに実装した**(2026-10-20 に着手し、2026-10-21 に 5 本とも遊べる形まで。計画は
+[plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md](plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md)、
+仕様の正は各ルール文書)。registry の `channel` はいま 5 本とも **`'web-beta'`**。Make the Target /
+Nested Tic-Tac-Toe / Tangram の 3 本は 2026-10-21 から(遊べるようになる変更で `'in-development'` から
+変えた)。**Overtake と Scopa の 2 本は 2026-10-22 に `'web-beta'` にした** — 製品オーナーの指示
+(2026-10-22):「Overtake, Scopa は Web に出したいです。計画が間違ってる。このタイミングで、実機の確認は
+できない。」それまでは各ルール文書が切り替えを止めていた(Overtake は Phase 0 の結果を
+[OVERTAKE_RULES.md](OVERTAKE_RULES.md) §3 に記録するまで、Scopa は §4.2 の製品オーナーの判断と §14 の
+出典の確認・商標と両ストアの検索まで)。Overtake は §3 が記録の前に上げるときの形として定めていたとおり、
+操作の既定の定数 `DRAG_MAPPING` を `'B'`(横ドラッグ + ▼ 長押し)にして出す。モード A(2 軸 1 本指)の
+コードと試験は、のちの試行のために定数の裏に残す(§3・§18)。Phase 0 は未実施のまま。Scopa は、
+バックグラウンドからの復帰時に CPU の拍を 450ms から張り直す今の読み方を暫定の挙動として出す — 読み方は
+確認待ちのまま(製品オーナーは 2 つの読み方のどちらも選んでいない。§4.2)。規則の出典の確認と商標・
+両ストアの検索も未確認のままで、[SCOPA_RULES.md](SCOPA_RULES.md) §14 では「公開の前に」から
+「正式収録の前に(できるだけ早く)」へ移した。題は Scopa(暫定)。
+どちらもアプリには出ない(下の実行時ガード)。14 言語のカタログは書いてある
+(`en` が原文、`ja` と 12 言語は 2026-10-21 に AI が書き、誰も読んでいない —
+[I18N_POLICY.md](I18N_POLICY.md))。**Web 版で配信中(Make the Target / Nested Tic-Tac-Toe / Tangram の
+3 本、2026-10-22 から)**: pixapps-landing #204(2026-10-21 17:04 UTC にマージ、landing main `3339b00`)で
+landing の `tests/ui.test.js` の `WEB_BETA_GAME_IDS` に 3 本の id を、`IN_DEVELOPMENT_GAME_IDS` に
+Overtake と Scopa の id を足し、続けて製品オーナーの指示で landing の公開ワークフロー(Publish Simple
+Games (web)、run 39640771411、ref: main、network=admax)が `11a3036`(#246 のマージ)の web ビルドを
+作って landing main に `af9dedc` としてコミットした(2026-10-22 02:38 JST — UTC では 2026-10-21 17:38)。
+「Test Simple Games」は 30 分 38 秒(上限 45 分)、同期後の「Check the synced build」(`npm run test:ui`)も
+通った。`play/assets` の `game-*.js` は 56 本で、5 本のチャンクがすべて入っている。landing の一覧は
+この同期の時点で `WEB_BETA_GAME_IDS` が 8 本(42〜46 と、この 3 本)、`IN_DEVELOPMENT_GAME_IDS` が
+7 本(Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads / Overtake / Scopa)。Overtake と Scopa を
+`'web-beta'` にしたので、pixapps-landing #205(2026-10-22 02:07 UTC にマージ、landing main `77e6e23`)で
+2 本を `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移した — その時点で `WEB_BETA_GAME_IDS` は
+10 本(42〜46・52〜56)、`IN_DEVELOPMENT_GAME_IDS` は 5 本(47〜51)になった(下の「landing 側のガード」。pixapps-landing #206 で 47〜51 も移した時点では15本と0本 — 上の47〜51の段落。No.57〜61の追加は冒頭の#207を参照)。
+**Web 版で配信中(Overtake / Scopa の 2 本、2026-10-22 から)**: そのビルド(`11a3036`)では 2 本は
+チャンクが入っているだけで、`'in-development'` のためどの扉からも開けなかった。2026-10-22 に `'web-beta'`
+にした(上)後、#205 のマージに続けて製品オーナーの指示(「Publish を起動して」)で landing の公開
+ワークフロー(Publish Simple Games (web)、run 39709681126、ref: main、network=admax)が `3ed2b16`
+(#247 のマージ)の web ビルドを作って landing main に `6204b78` としてコミットした(2026-10-22 11:32 JST
+— UTC でも 2026-10-22 02:32)。「Test Simple Games」は 23 分 35 秒、同期後の「Check the synced build」
+(`npm run test:ui`)も通った。`play/assets` の `game-*.js` は 56 本。これで 52〜56 の 5 本とも Web 版で
+配信中になり、先行公開の配信は 10 本(42〜46 は 2026-10-19 から、52〜56 は 2026-10-22 から)。本番への反映は Cloudflare Pages の
+Git 連携による(このリポジトリからは観測していない)。その後 main に入った Overtake の青いライバル・砂・三角コーン
+(#249、`29f8417`、2026-10-22)は、製品オーナーの指示(「Publish を起動して」)で公開ワークフロー(Publish Simple
+Games (web)、run 39737551690、ref: main、network=admax)が `9238415`(#248 のマージ)の web ビルドを作って
+landing main に `693ac9f` としてコミットしたことで届いた(2026-10-22 16:25 JST — UTC でも 2026-10-22 07:25。
+ジョブは約 25 分。本番への反映は同じく、このリポジトリからは観測していない)。続く 47〜51 の配信(`7b95a94` の
+web ビルド、landing main `0415eb18`、2026-10-23 02:33 JST — UTC では 2026-10-22 17:33。上の 47〜51 の段落)で、
+先行公開の配信は 15 本になった(42〜46 は 2026-10-19 から、52〜56 は 2026-10-22 から、47〜51 は 2026-10-23 から)。
+Overtake と Tangram の実機での試作(Phase 0)は
+まだ行っておらず、両者の操作の既定は暫定である(各ルール文書の操作の節。Overtake の Phase 0 は製品
+オーナーが当面見送った(2026-10-22)ので、記録の前に上げるときの形のモード B で出す。Tangram はそれが
+通らなければ Three Peaks に差し替える)。5 本とも Club House には登録しない。正式収録の
+基準(上の 1・2)は変えず、**52〜56 の 5 本とも基準 1 の時計は 2026-10-22 から**(Make the Target /
+Nested Tic-Tac-Toe / Tangram は UTC では 2026-10-21 17:38 の同期から、Overtake と Scopa は 2026-10-22 02:32 UTC
+の同期から。保存を消す変更を入れたら巻き戻る。基準 2 の判断はその後)。
+
+それ以前の先行公開は、2026-10-02 に 11 本すべてを正式収録して空になった — Crown Grid /
+Number Path / Shape Regions(issue #194、計画は
 [plans/2026-09-26-crown-grid-number-path-shape-regions.md](plans/2026-09-26-crown-grid-number-path-shape-regions.md))、
 Yacht / Mancala / Dominoes / Hit & Blow / Dots and Boxes(issue #197、計画は
 [plans/2026-09-27-yacht-mancala-dominoes-hit-and-blow-dots-and-boxes.md](plans/2026-09-27-yacht-mancala-dominoes-hit-and-blow-dots-and-boxes.md))、
@@ -346,8 +509,8 @@ Binary Balance / Sudoku 6×6 / Box Regions(issue #210、計画は
 [plans/2026-09-29-linkedin-practice-set.md](plans/2026-09-29-linkedin-practice-set.md)。
 Crown Grid / Number Path と合わせて 5 種類の練習セット — 下の「専用ベータ入口」)。
 registry から 11 本の `channel: 'web-beta'` を外し、アプリのホーム・検索・お気に入り・
-ショートカットはその 11 本を含む全ゲームを出す。次の新作が来たらこの仕組みをそのまま
-使う(以下の宣言・ガード・表示の説明は、その仕組みの記述として残す)。
+ショートカットはその 11 本を含む正式収録の全ゲームを出す。上の新作はこの仕組みを
+そのまま使う(以下の宣言・ガード・表示の説明は、その仕組みの記述)。
 
 **2026-10-02 の昇格は、上の基準を満たさずに行った。**記録として正確に残す。
 
@@ -374,17 +537,28 @@ registry から 11 本の `channel: 'web-beta'` を外し、アプリのホー�
   まだ確認していない([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) §1〜§5)。
 
 - 宣言は registry のエントリ(`GameDefinition.channel: 'web-beta'`)、出し分けは
-  `app/gameChannel.ts` の**実行時ガード**(`Capacitor.isNativePlatform()`)。
+  `app/gameChannel.ts` の**実行時ガード**(`Capacitor.isNativePlatform()`)。第 3 の値
+  `'in-development'`(2026-10-20 から)は「どのビルドにも出さない」— スキャフォールドの段階の
+  宣言で(`scripts/new-game.mjs --channel in-development` が生成する)、ガードは下に挙げる扉を
+  Web 版にも閉じる。遊べるようになる変更で `'web-beta'` にする(2026-10-22 に 47〜51 を切り替えたので、
+  いまこの値のエントリは無い)。
   「実装上の約束」どおりビルドは分岐させず、native バンドルにもコードは入る
   (公開ソースで元々見える)。アプリではコレクションホームの棚と節・検索・
   お気に入りピッカー・お気に入り棚と最近の行(レコードに id が残っていても)・
-  `?game=` の住所(ショートカットと同じパーサ)・lazy root のどこからも到達しない。
+  `?game=` の住所(ショートカットと同じパーサ)・lazy root・Club のチャレンジの Play
+  (`findAvailableGame`)のどこからも到達しない。
   `storageKeys`(Reset Local Data)と `loadStorageSchemas`(Backup & Restore)は
   両ビルドで有効のまま — ブラウザで作ったバックアップをアプリに復元しても
   ベータの保存を失わない。
 - 表示は `ui/components/WebBetaNotice.tsx`: タイトルカードの `BETA` バッジ
-  (アクセシブルネームに含める — 「Crown Grid BETA」)と、各ゲームのホームの
-  バッジ + 説明文。説明文は en / ja だけで、他 12 言語はバッジのみ。
+  (アクセシブルネームに含める — 「Crown Grid BETA」)と、各ゲームのホームと
+  Quick Rules のバッジ + 説明文。説明文は en / ja だけで、他 12 言語はバッジのみ。
+  `web-beta` のタイトルの `ui/screens/HomeScreen.tsx` と `ui/screens/TutorialScreen.tsx`
+  の**両方**が自分の id の `<WebBetaNotice>` を持つことは
+  `src/test/webBetaNoticeWiring.test.ts` が強制する(上の「保存データ」の先の告知 —
+  初回はホームより先に Quick Rules が開く)。`scripts/new-game.mjs --channel web-beta` は
+  ホームと Quick Rules の両方の分を生成時に置く(`--channel in-development` も同じ — 描くのは
+  `'web-beta'` になってから)。
 - 先行公開中のタイトルは、ストア掲載文(`apps/simple-games/store/listing.md`)と
   landing のガイド(`ui/landing.ts` の `PUBLISHED_GAME_IDS`)には正式収録まで出さない。
   正式収録したタイトルはストア掲載文に載せる。ガイドはページが書けてから足す —
@@ -395,6 +569,13 @@ registry から 11 本の `channel: 'web-beta'` を外し、アプリのホー�
   ゲームはカードを出さないので、同期する PR では **`LANDING_GAME_IDS` に足すのでは
   なく**、ベータ id の許容(チャンクはあるがカードは無い)をそのテストに設ける。
   正式収録でカードを載せるときに、許容から `LANDING_GAME_IDS` へ移す。
+  実装中(`channel: 'in-development'`、2026-10-20 から)のタイトルも同じく、チャンクはあるが
+  カードは無い — 同テストの `IN_DEVELOPMENT_GAME_IDS` に置く。遊べるようになって `'web-beta'` に
+  するとき `WEB_BETA_GAME_IDS` へ移す。どの一覧にも無いチャンクがあれば落ち、一覧に
+  あってチャンクの無い id があっても落ちる(両側から挟む)ので、テストは一覧とチャンクが
+  両方そろって初めて通る。42〜46(#201)は一覧の変更を同期の PR に入れたが、52〜56 と 47〜51 は
+  一覧を先立つ landing の PR(#204、Overtake / Scopa は #205、47〜51 は #206)で変え、同期は公開ワークフローの
+  コミット(`af9dedc`、Overtake / Scopa は `6204b78`、47〜51 は `0415eb18`)で入った。どちらの形でもよい。
 - 正式収録の手順は [RELEASE_CHECKLIST.md §0](RELEASE_CHECKLIST.md): 上の基準 1・2 を
   満たしたら、registry の `channel` を外す(バッジと説明文はそれで消える)、
   永続化ラウンドトリップテストを作る、README / ストア掲載文 / landing に載せる。
@@ -495,9 +676,12 @@ SPA 側で中和する(`.sg-web-chrome` スコープで `position: relative`、
 **native には不在。** `--mode web` のビルド時ゲートに置き、native 成果物への
 不在は `check-dist-ads-separation.sh` が広告・計測と同列に検査する。
 
-計測を本番有効化すると、ヘッダーのクリックは landing の `trackClick` が
-`navigation_click` として送る(`window.gtag` があるときだけ動く実装なので、
-こちら側の追加実装は不要)。
+**ヘッダーのクリックは play では計測されない。** landing の `trackClick` は
+`window.PixAppsAnalytics`(`/analytics.js` が定義する)があるときだけ動き、
+`/simple-games/play/` では `/analytics.js` を読み込まない(landing
+`docs/current/analytics-spec.md`「Ownership」— GA4 の初期化はこちらのビルドが持つ)。
+(かつてここは「`window.gtag` があるときだけ動くので `navigation_click` として送る」と
+書いていたが、`global-header.js` の実装は `window.gtag` ではなく `PixAppsAnalytics` を見る。)
 
 ## 保存
 

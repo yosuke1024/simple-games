@@ -1,0 +1,265 @@
+/* Overtake — the race row, the board and its buttons, the controls choice
+   on the home, the Quick Rules figures (docs/OVERTAKE_RULES.md §11). The
+   screens, buttons, dialogs and the level grid come from the shared
+   stylesheet (ui/styles.css). Classes and tokens are prefixed `ot-`.
+
+   THE RIVALS' BLUE IS GAME CONTENT, AND IT LIVES HERE (docs/OVERTAKE_RULES.md
+   §11「ライバルの青」). The three other racers are blue cars with a digit
+   1–3: which car is a racer and which is traffic is the most-read fact on
+   the road, so the blue is in the same class as Ludo's seat colours
+   (ludo.css) — the documented exception to "one accent per title"
+   (docs/BRAND.md) — and a fixed value rather than one derived from the theme
+   or the accent. The two `--ot-rival` declarations below (light, dark) are
+   the only colour values in this file (ui/overtakeCss.test.ts holds that);
+   `--ot-rival-ink`, the digit on the blue, names `var(--surface)`. Every
+   other colour is a shared token, and the accent is the one the shell
+   stamps for this game (traffic, cones, works).
+
+   Colour is never the only carrier: a racer also wears its digit and
+   window cut-outs, traffic is an accent car without a digit, and the
+   player's car is the ink fill at a fixed place on the board. */
+
+:root {
+  /* L* 36.7 — 7.18:1 against the light --surface, so the surface-coloured
+     digit reads on it and the car reads on the road. */
+  --ot-rival: #2453a8;
+  --ot-rival-ink: var(--surface);
+}
+
+:root[data-theme='dark'] {
+  /* Lifted, not re-hued (12° apart): the same racers in either theme.
+     5.34:1 against the dark --surface. */
+  --ot-rival: #5b9cf0;
+  --ot-rival-ink: var(--surface);
+}
+
+/* ---------- the board's size (§11「寸法」) ----------
+   The board is as wide as min(100%, 360px, usable height × 9/16), the usable
+   height being the screen less everything stacked with it: the top bar (64),
+   the race row (28), the gaps (24) and — when shown — the button row (56),
+   and on the web the 116px kept for the anchor ad. Not measured on a device
+   yet: §11 records what was checked. */
+
+.ot-screen {
+  --ot-chrome: 116px;
+  --ot-reserve: 0px;
+}
+
+.ot-screen.ot-buttons {
+  --ot-chrome: 172px;
+}
+
+@media (any-pointer: coarse) {
+  .ot-screen {
+    --ot-chrome: 172px;
+  }
+}
+
+:root[data-sg-web-ads] .ot-screen {
+  --ot-reserve: 116px;
+}
+
+.ot-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.ot-board {
+  width: min(100%, 360px, calc((100vh - var(--ot-chrome) - var(--ot-reserve)) * 0.5625));
+  width: min(100%, 360px, calc((100svh - var(--ot-chrome) - var(--ot-reserve)) * 0.5625));
+  line-height: 0;
+}
+
+.ot-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 9 / 16;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* ---------- the top bar and the race row ---------- */
+
+.ot-topbar-actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* One line whatever it says, so the board never moves (§11). */
+.ot-race-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 28px;
+  padding: 0 16px;
+}
+
+.ot-place {
+  min-width: 2.2em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Two lanes in the row's 28px: the others' rings above (0–16), the track
+   and the player's dot below (16–26), so the dot never covers a digit.
+   Rings that bunch up are spread along their lane by ui/progressMarks.ts. */
+.ot-progress {
+  position: relative;
+  flex: 1;
+  height: 28px;
+  margin: 0 8px;
+}
+
+.ot-progress-track {
+  position: absolute;
+  inset: 20px 0 auto;
+  height: 2px;
+  background: var(--line);
+}
+
+.ot-progress-mark {
+  position: absolute;
+  top: 0;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.ot-progress-rival {
+  border: 1.5px solid var(--ot-rival);
+  background: var(--surface);
+}
+
+.ot-progress-player {
+  top: 16px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  background: var(--ink);
+}
+
+.ot-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 7em;
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.ot-state-mark {
+  width: 12px;
+  height: 12px;
+}
+
+/* ---------- ◀ ▼ ▶ (§3) ----------
+   In Drag the row holds ▼ alone, and only where a finger is the pointer;
+   in Buttons it is always there. CSS decides, never a device sniff. */
+
+.ot-pad {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.ot-pad-drag {
+  display: none;
+}
+
+@media (any-pointer: coarse) {
+  .ot-pad-drag {
+    display: flex;
+  }
+}
+
+.ot-pad-btn {
+  width: 72px;
+  height: var(--tap-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.ot-pad-btn:active {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.ot-pad-glyph {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+/* ---------- the result card, the home, Quick Rules ---------- */
+
+.ot-result-place dd {
+  font-size: 40px;
+  line-height: 1.1;
+}
+
+.ot-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.ot-controls-label {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+/* The shared segmented control sets a minimum height only; in short-word
+   locales (th, vi, hi) a segment would fall below the tap size wide. Kept
+   local so Settings' segmented controls stay untouched. */
+.ot-controls .segment {
+  min-width: var(--tap-size);
+}
+
+/* The early-release note (the shell's WebBetaNotice) under the heading on
+   every Quick Rules step (ui/screens/TutorialScreen.tsx): the heading's
+   gutter, the header's padding for the space above it, and the full width —
+   the same rule as tangram.css and the other web-beta titles. */
+.ot-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
+}
+
+.ot-figure {
+  display: block;
+  width: min(70vw, 220px);
+  height: auto;
+  aspect-ratio: 360 / 220;
+}

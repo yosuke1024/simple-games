@@ -26,6 +26,16 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Club House invite links open the app when it is installed (App Links,
+                 verified by https://club.pixapps.ai/.well-known/assetlinks.json); without
+                 the app, the same link is the web Join page (docs/architecture/club.md §7-1).
+                 Only /join: every other address on the host stays the browser's. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="club.pixapps.ai" android:path="/join" />
+            </intent-filter>
         </activity>
 
         <provider

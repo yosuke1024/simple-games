@@ -25,6 +25,21 @@ import type { SchemaDef } from './schemas';
  * one slow record never holds up another.
  */
 const lastOp = new Map<string, Promise<unknown>>();
+const removalVersions = new Map<string, number>();
+
+/**
+ * A removal invalidates pending entitlement publications immediately, even
+ * while its disk operation waits behind an older save. The older write still
+ * finishes in order, but must not activate a benefit or reload the page while
+ * Reset Local Data is waiting to remove it.
+ */
+export function recordRemovalVersion(key: string): number {
+  return removalVersions.get(key) ?? 0;
+}
+
+function noteRemoval(key: string): void {
+  removalVersions.set(key, recordRemovalVersion(key) + 1);
+}
 
 /**
  * Queues `op` behind whatever is already outstanding for `key`. Reads queue
@@ -117,7 +132,43 @@ export async function saveRecord<T>(
   });
 }
 
+/**
+ * Changes a record in one queued operation, including its read. Separate
+ * `loadRecord` / `saveRecord` calls leave a gap where Reset Local Data can
+ * delete the key before the stale value is written back, or another update
+ * can be lost. The entire change takes its place in the same queue as reset,
+ * restore, and ordinary saves at the moment it is requested.
+ *
+ * Storage failures use the same defaults / best effort as load and save.
+ * An exception from `update` is deliberately returned to its caller (for
+ * example, a limit being reached); it writes nothing and does not block the
+ * next operation. `update` must be synchronous and must not call repo helpers.
+ */
+export function updateRecord<T>(
+  def: SchemaDef<T>,
+  update: (value: T) => T,
+  kv: KVStore = preferencesKV,
+): Promise<T> {
+  return enqueue(def.key, async () => {
+    let current = def.defaultValue();
+    try {
+      const raw = await kv.get(def.key);
+      if (raw !== null) current = def.validate(JSON.parse(raw)) ?? def.defaultValue();
+    } catch {
+      // Missing, corrupt, or unreadable records have the same default as loadRecord.
+    }
+    const next = update(current);
+    try {
+      await kv.set(def.key, JSON.stringify(next));
+    } catch {
+      // The caller can still use the change when this device cannot save it.
+    }
+    return next;
+  });
+}
+
 export async function removeRecord(key: string, kv: KVStore = preferencesKV): Promise<void> {
+  noteRemoval(key);
   await enqueue(key, () => kv.remove(key));
 }
 
@@ -133,6 +184,15 @@ export async function removeRecord(key: string, kv: KVStore = preferencesKV): Pr
  * record. Both go through `enqueue`, so a save still in flight cannot land on
  * top of a restore the way it once landed on top of "Reset Local Data".
  */
+/**
+ * `loadRaw`, in the key's queue, but a failed read rejects instead of answering "nothing
+ * stored": for a caller that must not mistake one for the other (backup/restore.ts).
+ * Pass a store that reports its failures (`preferencesKVWithReadStatus`).
+ */
+export function loadRawOrThrow(key: string, kv: KVStore): Promise<string | null> {
+  return enqueue(key, () => kv.get(key));
+}
+
 export async function loadRaw(key: string, kv: KVStore = preferencesKV): Promise<string | null> {
   try {
     return await enqueue(key, () => kv.get(key));
@@ -155,6 +215,7 @@ export async function saveRaw(
   value: string | null,
   kv: KVStore = preferencesKV,
 ): Promise<void> {
+  if (value === null) noteRemoval(key);
   await enqueue(key, async () => {
     try {
       if (value === null) await kv.remove(key);
@@ -176,5 +237,6 @@ export async function clearLocalData(
   keys: readonly string[],
   kv: KVStore = preferencesKV,
 ): Promise<void> {
+  for (const key of keys) noteRemoval(key);
   await Promise.all(keys.map((key) => enqueue(key, () => kv.remove(key))));
 }

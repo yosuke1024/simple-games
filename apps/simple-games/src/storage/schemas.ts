@@ -211,7 +211,7 @@ export interface FavoriteGames {
  * corrupt — or hand-edited — record cannot grow without limit. When it does
  * bite, the newest entries are the ones kept, matching `sg.recent`.
  */
-export const FAVORITE_GAMES_MAX = 64;
+export const FAVORITE_GAMES_MAX = 128;
 
 export const favoriteGamesSchema: SchemaDef<FavoriteGames> = {
   key: STORAGE_KEYS.favorites,
@@ -296,7 +296,7 @@ export const reviewSchema: SchemaDef<ReviewState> = {
  * can do is make the device look unconnected (PRODUCT_PRINCIPLES「Club House」).
  */
 export interface ClubConnection {
-  /** Origin only — `https://club.example.com`. No path, query or trailing slash. */
+  /** An origin, or a managed Club's `/clubs/:id` endpoint. No query or trailing slash. */
   endpoint: string;
   clubId: string;
   /** The club's name as last read from the server; a display cache. */
@@ -315,6 +315,37 @@ export interface ClubConnection {
    * Additive: a record without it stays valid, schemaVersion stays 1.
    */
   autoSend?: true;
+  /** Last-read Club selection. Omitted on older servers; null means all supported games. */
+  allowedGameIds?: string[] | null;
+}
+
+/** A request is not a membership: it never sends results or wakes the Club layer at boot. */
+export interface PendingClubJoin {
+  endpoint: string;
+  requestId: string;
+  requestToken: string;
+  clubName: string;
+  nickname: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+/** Server-verified owner benefit. This is not a store purchase. */
+export interface ManagedAdRemovalBenefit {
+  requiredMembers: 50;
+  memberCount: number;
+  active: boolean;
+  validUntil: string | null;
+}
+
+/** The hosting credential stays in the same non-exportable, resettable record as member tokens. */
+export interface ManagedClubOwner {
+  origin: string;
+  ownerToken: string;
+  /** Saved before a Trial request so a lost response can be recovered with the same key. */
+  pendingTrial?: true;
+  /** Bound to this credential; replacing it never carries the benefit forward. */
+  adRemoval?: ManagedAdRemovalBenefit;
 }
 
 export interface ClubConnections {
@@ -330,6 +361,8 @@ export interface ClubConnections {
    * `connections`. Additive: absent means none, schemaVersion stays 1.
    */
   departed?: ClubConnection[];
+  pending?: PendingClubJoin[];
+  managedOwner?: ManagedClubOwner;
 }
 
 /** Connections per device, owner or member alike (club.md §4-1). */
@@ -341,8 +374,8 @@ export const CLUB_DEPARTED_MAX = 10;
 /**
  * An endpoint the record accepts: https, or http to the loopback for
  * development. http to a private network is refused outright (club.md §4-1).
- * The value must be exactly an origin — a path, query or fragment is a
- * different address and is not quietly trimmed.
+ * The value is an exact origin or a managed Club's `/clubs/:id` endpoint.
+ * Other paths, credentials, queries and fragments are refused, never trimmed.
  */
 export function isClubEndpoint(value: unknown): value is string {
   if (typeof value !== 'string' || value.length > 200) return false;
@@ -352,7 +385,9 @@ export function isClubEndpoint(value: unknown): value is string {
   } catch {
     return false;
   }
-  if (url.origin !== value) return false;
+  const path = url.pathname === '/' ? '' : url.pathname;
+  if (path !== '' && !/^\/clubs\/[A-Za-z0-9_-]{1,64}$/.test(path)) return false;
+  if (`${url.origin}${path}` !== value) return false;
   if (url.protocol === 'https:') return true;
   return url.protocol === 'http:' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1');
 }
@@ -392,6 +427,40 @@ function asClubConnection(raw: unknown): ClubConnection | null {
     joinedAt,
     // Anything but a literal `true` is "has not accepted": consent is never inferred.
     ...(raw.autoSend === true ? { autoSend: true as const } : {}),
+    ...(raw.allowedGameIds === null
+      ? { allowedGameIds: null }
+      : Array.isArray(raw.allowedGameIds)
+        ? {
+            allowedGameIds: raw.allowedGameIds
+              .filter((id): id is string => typeof id === 'string' && /^[a-z0-9-]{1,64}$/.test(id))
+              .slice(0, 128),
+          }
+        : raw.allowedGameIds === undefined
+          ? {}
+          : { allowedGameIds: [] }),
+  };
+}
+
+export function asManagedAdRemovalBenefit(raw: unknown): ManagedAdRemovalBenefit | null {
+  if (!isRecord(raw)) return null;
+  if (
+    raw.requiredMembers !== 50 ||
+    typeof raw.memberCount !== 'number' ||
+    !Number.isSafeInteger(raw.memberCount) ||
+    raw.memberCount < 0 ||
+    typeof raw.active !== 'boolean' ||
+    (raw.validUntil !== null &&
+      (typeof raw.validUntil !== 'string' ||
+        raw.validUntil.length > 40 ||
+        !Number.isFinite(Date.parse(raw.validUntil)))) ||
+    (raw.active && (raw.memberCount < 50 || raw.validUntil === null))
+  )
+    return null;
+  return {
+    requiredMembers: 50,
+    memberCount: raw.memberCount,
+    active: raw.active,
+    validUntil: raw.validUntil as string | null,
   };
 }
 
@@ -423,10 +492,66 @@ export const clubConnectionsSchema: SchemaDef<ClubConnections> = {
         departed.push(connection);
       }
     }
+    const pending: PendingClubJoin[] = [];
+    if (Array.isArray(raw.pending)) {
+      for (const value of raw.pending) {
+        if (!isRecord(value) || !isClubEndpoint(value.endpoint)) continue;
+        if (
+          kept.some((c) => c.endpoint === value.endpoint) ||
+          pending.some((p) => p.endpoint === value.endpoint)
+        )
+          continue;
+        const fields = [
+          'requestId',
+          'requestToken',
+          'clubName',
+          'nickname',
+          'createdAt',
+          'expiresAt',
+        ] as const;
+        if (
+          fields.some(
+            (key) =>
+              typeof value[key] !== 'string' || value[key].length === 0 || value[key].length > 128,
+          )
+        )
+          continue;
+        pending.push({
+          endpoint: value.endpoint,
+          requestId: value.requestId as string,
+          requestToken: value.requestToken as string,
+          clubName: value.clubName as string,
+          nickname: value.nickname as string,
+          createdAt: value.createdAt as string,
+          expiresAt: value.expiresAt as string,
+        });
+      }
+    }
+    const owner = raw.managedOwner;
+    const adRemoval = isRecord(owner) ? asManagedAdRemovalBenefit(owner.adRemoval) : null;
+    const managedOwner =
+      isRecord(owner) &&
+      isClubEndpoint(owner.origin) &&
+      new URL(owner.origin).origin === owner.origin &&
+      typeof owner.ownerToken === 'string' &&
+      owner.ownerToken.length >= 16 &&
+      owner.ownerToken.length <= 128
+        ? {
+            origin: owner.origin,
+            ownerToken: owner.ownerToken,
+            ...(owner.pendingTrial === true
+              ? { pendingTrial: true as const }
+              : adRemoval === null
+                ? {}
+                : { adRemoval }),
+          }
+        : undefined;
     return {
       schemaVersion: 1,
       connections: kept,
       ...(departed.length > 0 ? { departed: departed.slice(-CLUB_DEPARTED_MAX) } : {}),
+      ...(pending.length > 0 ? { pending: pending.slice(0, CLUB_CONNECTIONS_MAX) } : {}),
+      ...(managedOwner === undefined ? {} : { managedOwner }),
     };
   },
 };

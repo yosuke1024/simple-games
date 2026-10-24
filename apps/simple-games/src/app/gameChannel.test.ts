@@ -1,25 +1,77 @@
 /**
- * The early-release channel's one decision, pinned from both sides: which
- * titles are on it (a golden list — adding a game to the channel, or promoting
- * one off it, is a release decision and edits this file on purpose), and that
- * the guard answers by platform and by nothing else.
+ * The registry's channels, pinned from both sides: which titles are on each
+ * (golden lists — putting a game on a channel, moving it from one to the
+ * other, or promoting it off is a release decision and edits this file on
+ * purpose), and that the guard answers by channel and platform and by nothing
+ * else.
  *
- * No registry title is on the channel any more, so the guard itself is
- * exercised with a synthetic `'web-beta'` entry spliced into the registry the
- * module under test sees. The mechanism stays for the next beta; a test that
- * needed a real beta title to run would silently stop testing it.
+ * The guard is exercised twice: with the real titles the registry declares
+ * today, and with synthetic entries spliced into the registry the module
+ * under test sees — one `'web-beta'`, one `'in-development'`. The synthetic
+ * ones stay even while real ones exist: the day the last of them graduates,
+ * a test that needed a real one to run would silently stop testing the
+ * mechanism.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GAMES, type GameDefinition } from './registry';
 
 /**
- * The titles in early release today (docs/WEB_VERSION.md「先行公開」): none.
- * The three of issue #194, the five genres of issue #197 and the three
- * practice-set titles of issue #210 all graduated into the app on 2026-10-02.
- * Putting a title back on the channel (`channel: 'web-beta'` in the registry)
- * adds its id here on purpose.
+ * The titles in early release today (docs/WEB_VERSION.md「先行公開」), in
+ * registry order: the five new genres of
+ * docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md (Nos. 42–46, on the
+ * web since 2026-10-19); the five of
+ * docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
+ * (Nos. 47–51), on this channel since 2026-10-22, the day they became
+ * playable, and not yet on the web — they reach it with the next landing
+ * sync; and the five of
+ * docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
+ * (Nos. 52–56): Nos. 53, 54 and 56 on this channel since 2026-10-21, Overtake
+ * and Scopa since 2026-10-22 by the product owner's decision
+ * (docs/OVERTAKE_RULES.md §3 with `DRAG_MAPPING` `'B'`; docs/SCOPA_RULES.md
+ * §4.2 on its provisional reading), all five on the web since 2026-10-22. The
+ * eleven before them — three of issue #194, five of issue #197, three of
+ * issue #210 — all graduated into the app on 2026-10-02. Putting a title on
+ * the channel, or promoting one off it, edits this list on purpose.
  */
-const WEB_BETA_IDS: string[] = [];
+const WEB_BETA_IDS = [
+  'unblock-puzzle',
+  'snake',
+  'loop-puzzle',
+  'bridges',
+  'peg-solitaire',
+  'chess',
+  'gem-swap',
+  'pipe-link',
+  'bounce-up',
+  'echo-pads',
+  'overtake',
+  'make-the-target',
+  'nested-tic-tac-toe',
+  'scopa',
+  'tangram',
+  'light-grid',
+  'color-flood',
+  'three-peaks',
+  'nim',
+  'knight-tour',
+  'invaders',
+  'falling-blocks',
+  'paddle-rally',
+  'hanoi-towers',
+  'maze-escape',
+];
+
+/**
+ * The titles in development today, in registry order: none. The last were the
+ * five of docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
+ * (Nos. 47–51), scaffolds from 2026-10-20 until they became playable on
+ * 2026-10-22 and moved to WEB_BETA_IDS — as the 2026-10-20 plan's five did
+ * (three on 2026-10-21, Overtake and Scopa on 2026-10-22). The next scaffold
+ * of scripts/new-game.mjs joins this list on purpose, and leaves it in the
+ * change that makes it playable. While it is empty, the synthetic
+ * in-development entry below is what keeps the guard's closed doors tested.
+ */
+const IN_DEVELOPMENT_IDS: string[] = [];
 
 /** A beta title that exists only in this file: a released game's shape, a channel of its own. */
 const SYNTHETIC_BETA: GameDefinition = {
@@ -29,7 +81,15 @@ const SYNTHETIC_BETA: GameDefinition = {
   channel: 'web-beta',
 };
 
-async function loadOn(native: boolean, withBeta = false) {
+/** An in-development title that exists only in this file, the same way. */
+const SYNTHETIC_IN_DEVELOPMENT: GameDefinition = {
+  ...GAMES.find((game) => game.id === 'sudoku')!,
+  id: 'synthetic-in-development' as GameDefinition['id'],
+  title: 'Synthetic In Development',
+  channel: 'in-development',
+};
+
+async function loadOn(native: boolean, withSynthetic = false) {
   vi.resetModules();
   vi.doMock('@capacitor/core', async (importOriginal) => {
     const actual = await importOriginal<typeof import('@capacitor/core')>();
@@ -42,10 +102,13 @@ async function loadOn(native: boolean, withBeta = false) {
       },
     };
   });
-  if (withBeta) {
+  if (withSynthetic) {
     vi.doMock('./registry', async (importOriginal) => {
       const actual = await importOriginal<typeof import('./registry')>();
-      return { ...actual, GAMES: [...actual.GAMES, SYNTHETIC_BETA] };
+      return {
+        ...actual,
+        GAMES: [...actual.GAMES, SYNTHETIC_BETA, SYNTHETIC_IN_DEVELOPMENT],
+      };
     });
   }
   const channel = await import('./gameChannel');
@@ -60,65 +123,101 @@ afterEach(() => {
   vi.resetModules();
 });
 
-describe('the web-beta channel', () => {
-  it('holds exactly the titles this file says it does', () => {
-    const declared = GAMES.filter((game) => game.channel === 'web-beta').map((game) => game.id);
-    expect(declared).toEqual(WEB_BETA_IDS);
+const released = GAMES.filter((game) => game.channel === undefined);
+const inBrowser = GAMES.filter((game) => game.channel !== 'in-development');
+
+/** Every door, closed: what "not offered" means for one id on one build. */
+function expectClosed(build: Awaited<ReturnType<typeof loadOn>>, id: string, title: string) {
+  expect(build.isAvailableGameId(id), id).toBe(false);
+  expect(build.findAvailableGame(id), id).toBeUndefined();
+  expect(build.getLazyRoot(id as never), id).toBeNull();
+  expect(build.searchGames(title), id).toEqual([]);
+}
+
+describe('the channels', () => {
+  it('hold exactly the titles this file says they do', () => {
+    const beta = GAMES.filter((game) => game.channel === 'web-beta').map((game) => game.id);
+    expect(beta).toEqual(WEB_BETA_IDS);
+    const building = GAMES.filter((game) => game.channel === 'in-development').map(
+      (game) => game.id,
+    );
+    expect(building).toEqual(IN_DEVELOPMENT_IDS);
     // And every registry entry is complete: keys for "Reset Local Data" and
-    // schemas for Backup & Restore, on every build — a beta title included,
-    // whenever there is one.
+    // schemas for Backup & Restore, on every build — a beta or in-development
+    // title included, whenever there is one.
     for (const game of GAMES) {
       expect(game.storageKeys.length).toBeGreaterThan(0);
       expect(typeof game.loadStorageSchemas).toBe('function');
     }
   });
 
-  it('offers every registry title on the app, now that none is held back', async () => {
+  it('offers exactly the released titles on the app, and keeps the others off every door', async () => {
     const app = await loadOn(true);
-    expect(app.availableGames()).toHaveLength(GAMES.length);
-    expect(app.availableGames().map((game) => game.id)).toEqual(GAMES.map((game) => game.id));
-    for (const game of GAMES) {
+    const offered = app.availableGames().map((game) => game.id);
+    expect(offered).toEqual(released.map((game) => game.id));
+    expect(app.availableGames()).toHaveLength(
+      GAMES.length - WEB_BETA_IDS.length - IN_DEVELOPMENT_IDS.length,
+    );
+    // Every released title is still behind every door it always was.
+    for (const game of released) {
       expect(app.isAvailableGameId(game.id)).toBe(true);
+      expect(app.findAvailableGame(game.id)?.id).toBe(game.id);
       expect(app.getLazyRoot(game.id)).not.toBeNull();
     }
-    expect(app.searchGames('')).toHaveLength(GAMES.length);
+    for (const id of [...WEB_BETA_IDS, ...IN_DEVELOPMENT_IDS]) {
+      expectClosed(app, id, GAMES.find((game) => game.id === id)!.title);
+    }
+    expect(app.searchGames('')).toHaveLength(released.length);
   });
 
-  it('offers every title in the browser', async () => {
+  it('offers the released and beta titles in the browser, and keeps the in-development ones off every door', async () => {
     const web = await loadOn(false);
-    expect(web.availableGames().map((game) => game.id)).toEqual(GAMES.map((game) => game.id));
-    for (const game of GAMES) {
+    expect(web.availableGames().map((game) => game.id)).toEqual(inBrowser.map((game) => game.id));
+    for (const game of inBrowser) {
       expect(web.isAvailableGameId(game.id)).toBe(true);
       expect(web.findAvailableGame(game.id)?.id).toBe(game.id);
       expect(web.getLazyRoot(game.id)).not.toBeNull();
     }
-    expect(web.searchGames('')).toHaveLength(GAMES.length);
+    // Each beta title answers to its own name in the browser's search — the
+    // door the app build closes to it in the test above.
+    for (const id of WEB_BETA_IDS) {
+      const title = GAMES.find((game) => game.id === id)!.title;
+      expect(web.searchGames(title).map((game) => game.id)).toEqual([id]);
+    }
+    // An in-development title is a scaffold with no game behind it: the
+    // browser closes the same doors to it that the app closes to a beta title
+    // (docs/WEB_VERSION.md「遊べるものだけを出す」). None is in the registry
+    // today; the synthetic one below keeps this tested.
+    for (const id of IN_DEVELOPMENT_IDS) {
+      expectClosed(web, id, GAMES.find((game) => game.id === id)!.title);
+    }
+    expect(web.searchGames('')).toHaveLength(inBrowser.length);
   });
 
-  describe('with a synthetic beta title in the registry', () => {
-    const id = SYNTHETIC_BETA.id;
+  describe('with a synthetic beta title and a synthetic in-development title in the registry', () => {
+    const betaId = SYNTHETIC_BETA.id;
+    const buildingId = SYNTHETIC_IN_DEVELOPMENT.id;
 
-    it('offers it in the browser, on every door', async () => {
+    it('offers the beta one in the browser, on every door, and never the in-development one', async () => {
       const web = await loadOn(false, true);
       expect(web.availableGames().map((game) => game.id)).toEqual([
-        ...GAMES.map((game) => game.id),
-        id,
+        ...inBrowser.map((game) => game.id),
+        betaId,
       ]);
-      expect(web.isAvailableGameId(id)).toBe(true);
-      expect(web.findAvailableGame(id)?.id).toBe(id);
-      expect(web.getLazyRoot(id)).not.toBeNull();
-      expect(web.searchGames(SYNTHETIC_BETA.title).map((game) => game.id)).toEqual([id]);
-      expect(web.searchGames('')).toHaveLength(GAMES.length + 1);
+      expect(web.isAvailableGameId(betaId)).toBe(true);
+      expect(web.findAvailableGame(betaId)?.id).toBe(betaId);
+      expect(web.getLazyRoot(betaId)).not.toBeNull();
+      expect(web.searchGames(SYNTHETIC_BETA.title).map((game) => game.id)).toEqual([betaId]);
+      expectClosed(web, buildingId, SYNTHETIC_IN_DEVELOPMENT.title);
+      expect(web.searchGames('')).toHaveLength(inBrowser.length + 1);
     });
 
-    it('keeps it off every door of the app build', async () => {
+    it('keeps both off every door of the app build', async () => {
       const app = await loadOn(true, true);
       const offered = app.availableGames().map((game) => game.id);
-      expect(offered).toEqual(GAMES.map((game) => game.id));
-      expect(app.isAvailableGameId(id)).toBe(false);
-      expect(app.findAvailableGame(id)).toBeUndefined();
-      expect(app.getLazyRoot(id)).toBeNull();
-      expect(app.searchGames(SYNTHETIC_BETA.title)).toEqual([]);
+      expect(offered).toEqual(released.map((game) => game.id));
+      expectClosed(app, betaId, SYNTHETIC_BETA.title);
+      expectClosed(app, buildingId, SYNTHETIC_IN_DEVELOPMENT.title);
       // The released titles are untouched by any of this.
       expect(app.isAvailableGameId('sudoku')).toBe(true);
       expect(app.getLazyRoot('sudoku')).not.toBeNull();

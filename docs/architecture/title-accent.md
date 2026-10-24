@@ -4,49 +4,64 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
 
 - アクセントは `packages/brand` の `titleAccents` に 1 タイトル 1 エントリ。
 
-| ゲーム            | アクセント               | ライト    | ダーク    |
-| ----------------- | ------------------------ | --------- | --------- |
-| Number Match      | 藍                       | `#3f5b8f` | `#7d9ccf` |
-| Sudoku            | くすんだティール         | `#2f6f62` | `#6fb3a3` |
-| Solitaire         | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
-| Spider Solitaire  | 深い緑                   | `#31802f` | `#7fcc7d` |
-| FreeCell          | 深い藍                   | `#25256a` | `#6e6ecf` |
-| Hearts            | スチールブルー           | `#2763c4` | `#96bde4` |
-| Gin Rummy         | 深い菫                   | `#772b97` | `#b35dd5` |
-| Minesweeper       | スレートブルー           | `#4a5a72` | `#93a4bd` |
-| Nonogram          | くすんだプラム           | `#6d5192` | `#a893cf` |
-| Water Sort        | くすんだアクア           | `#33708c` | `#7fb4c9` |
-| Sliding Puzzle    | 温かみのある陶土色       | `#9c5b3c` | `#d1926f` |
-| Memory Match      | くすんだローズ           | `#9e5468` | `#cf8fa4` |
-| Brick Breaker     | 黄土                     | `#8a6a2b` | `#c9a765` |
-| Sky Fighter       | 夕闇の青                 | `#5d5aa8` | `#9d9be0` |
-| 2048              | ジェイド                 | `#2b7d59` | `#79c39c` |
-| Block Puzzle      | オーキッド               | `#8b4f80` | `#c795bd` |
-| Bunny Hop         | 草原の緑                 | `#6e7a34` | `#b6c274` |
-| Reversi           | 菫                       | `#7f4a9c` | `#c48ad6` |
-| Connect Four      | くすんだ赤               | `#a8433d` | `#dd8f89` |
-| Quick Math        | マスタード               | `#776e18` | `#c4ba6b` |
-| Schulte Table     | ペトロール               | `#18787b` | `#6cbcc1` |
-| Number Recall     | 深いエメラルド           | `#1d6b33` | `#92dfa8` |
-| Checkers          | ウォルナット             | `#5a4632` | `#cbb08a` |
-| Gomoku            | 牡丹                     | `#a32d76` | `#e086bb` |
-| Takuzu            | ワイン                   | `#88355e` | `#cb7ea4` |
-| Futoshiki         | パイン                   | `#29603a` | `#74c88d` |
-| Kakuro            | タバコ                   | `#794e2f` | `#cb9e7e` |
-| Mahjong Solitaire | 深い青菫                 | `#3b3196` | `#7e77c0` |
-| Bubble Pop        | オックスブラッド         | `#712d2f` | `#cd6a6d` |
-| Ludo              | マゼンタ紫               | `#ad34a7` | `#cd6ac8` |
-| Crown Grid        | ブラス                   | `#7e673e` | `#cdb87e` |
-| Number Path       | ペトロール               | `#29606a` | `#7ecdc3` |
-| Shape Regions     | 深紫                     | `#57317d` | `#a37bcc` |
-| Yacht             | アズール                 | `#3879ae` | `#aebfcd` |
-| Mancala           | 苔色                     | `#55592f` | `#a6ac77` |
-| Dominoes          | モーブ                   | `#533653` | `#d55cd5` |
-| Hit & Blow        | フューシャ               | `#7c2177` | `#dd9eda` |
-| Dots and Boxes    | 群青                     | `#3855ca` | `#6f84da` |
-| Binary Balance    | 若草                     | `#5a8128` | `#9cce5a` |
-| Sudoku 6×6        | 紺青                     | `#233c76` | `#6784c5` |
-| Box Regions       | 深い薔薇                 | `#ac3564` | `#ce5a88` |
+| ゲーム             | アクセント               | ライト    | ダーク    |
+| ------------------ | ------------------------ | --------- | --------- |
+| Number Match       | 藍                       | `#3f5b8f` | `#7d9ccf` |
+| Sudoku             | くすんだティール         | `#2f6f62` | `#6fb3a3` |
+| Solitaire          | くすんだフェルトグリーン | `#557a48` | `#97bd8a` |
+| Spider Solitaire   | 深い緑                   | `#31802f` | `#7fcc7d` |
+| FreeCell           | 深い藍                   | `#25256a` | `#6e6ecf` |
+| Hearts             | スチールブルー           | `#2763c4` | `#96bde4` |
+| Gin Rummy          | 深い菫                   | `#772b97` | `#b35dd5` |
+| Minesweeper        | スレートブルー           | `#4a5a72` | `#93a4bd` |
+| Nonogram           | くすんだプラム           | `#6d5192` | `#a893cf` |
+| Water Sort         | くすんだアクア           | `#33708c` | `#7fb4c9` |
+| Sliding Puzzle     | 温かみのある陶土色       | `#9c5b3c` | `#d1926f` |
+| Memory Match       | くすんだローズ           | `#9e5468` | `#cf8fa4` |
+| Brick Breaker      | 黄土                     | `#8a6a2b` | `#c9a765` |
+| Sky Fighter        | 夕闇の青                 | `#5d5aa8` | `#9d9be0` |
+| 2048               | ジェイド                 | `#2b7d59` | `#79c39c` |
+| Block Puzzle       | オーキッド               | `#8b4f80` | `#c795bd` |
+| Bunny Hop          | 草原の緑                 | `#6e7a34` | `#b6c274` |
+| Reversi            | 菫                       | `#7f4a9c` | `#c48ad6` |
+| Connect Four       | くすんだ赤               | `#a8433d` | `#dd8f89` |
+| Quick Math         | マスタード               | `#776e18` | `#c4ba6b` |
+| Schulte Table      | ペトロール               | `#18787b` | `#6cbcc1` |
+| Number Recall      | 深いエメラルド           | `#1d6b33` | `#92dfa8` |
+| Checkers           | ウォルナット             | `#5a4632` | `#cbb08a` |
+| Gomoku             | 牡丹                     | `#a32d76` | `#e086bb` |
+| Takuzu             | ワイン                   | `#88355e` | `#cb7ea4` |
+| Futoshiki          | パイン                   | `#29603a` | `#74c88d` |
+| Kakuro             | タバコ                   | `#794e2f` | `#cb9e7e` |
+| Mahjong Solitaire  | 深い青菫                 | `#3b3196` | `#7e77c0` |
+| Bubble Pop         | オックスブラッド         | `#712d2f` | `#cd6a6d` |
+| Ludo               | マゼンタ紫               | `#ad34a7` | `#cd6ac8` |
+| Crown Grid         | ブラス                   | `#7e673e` | `#cdb87e` |
+| Number Path        | ペトロール               | `#29606a` | `#7ecdc3` |
+| Shape Regions      | 深紫                     | `#57317d` | `#a37bcc` |
+| Yacht              | アズール                 | `#3879ae` | `#aebfcd` |
+| Mancala            | 苔色                     | `#55592f` | `#a6ac77` |
+| Dominoes           | モーブ                   | `#533653` | `#d55cd5` |
+| Hit & Blow         | フューシャ               | `#7c2177` | `#dd9eda` |
+| Dots and Boxes     | 群青                     | `#3855ca` | `#6f84da` |
+| Binary Balance     | 若草                     | `#5a8128` | `#9cce5a` |
+| Sudoku 6×6         | 紺青                     | `#233c76` | `#6784c5` |
+| Box Regions        | 深い薔薇                 | `#ac3564` | `#ce5a88` |
+| Unblock Puzzle     | 紅(Web 先行公開)         | `#b5304d` | `#d6667e` |
+| Snake              | 小豆色(Web 先行公開)     | `#8f534d` | `#c69286` |
+| Loop Puzzle        | 桔梗(Web 先行公開)       | `#704eb7` | `#9171da` |
+| Bridges            | 鉄紺(Web 先行公開)       | `#323b5d` | `#7d83b0` |
+| Peg Solitaire      | 葡萄色(Web 先行公開)     | `#68275f` | `#b77bb2` |
+| Chess              | 茜色(Web 先行公開)       | `#b63030` | `#d55d5d` |
+| Gem Swap           | 臙脂(Web 先行公開)       | `#67283f` | `#bf97a3` |
+| Pipe Link          | 琥珀(Web 先行公開)       | `#a5672c` | `#dba775` |
+| Bounce Up          | 菖蒲色(Web 先行公開)     | `#9e4892` | `#cf7dc2` |
+| Echo Pads          | 瑠璃色(Web 先行公開)     | `#306cb6` | `#709abd` |
+| Overtake           | 蘇芳(Web 先行公開)       | `#922643` | `#cd748a` |
+| Make the Target    | 紺桔梗(Web 先行公開)     | `#393f93` | `#8785c1` |
+| Nested Tic-Tac-Toe | 海老茶(Web 先行公開)     | `#633b36` | `#c3a59d` |
+| Scopa              | 紅紫(Web 先行公開)       | `#b53192` | `#da71c0` |
+| Tangram            | 松葉色(Web 先行公開)     | `#426a25` | `#a7cd7e` |
 
 - シェルは `app/App.tsx` でゲームのマウント時にルート要素へ `data-game="<id>"` を付け、
   `ui/styles.css` の `:root[data-game='…']` が**アクセントトークンだけ**を差し替える
@@ -63,3 +78,10 @@ docs/ARCHITECTURE.md から 2026-09-05 に分割した全文。索引と要約�
   見えているのはこの下地であり、変わるのは 1 タイトル 1 色だけ(BRAND.md)。
 - ゲーム側に色の分岐を書かない。ゲームは `var(--accent)` を使うだけで、
   自分がどのタイトルとして塗られるかを知らない。
+- **ゲーム内容の色はこの表の外。**盤面が自前で持つ色(Minesweeper の数字・Ludo の 4 席の色など —
+  BRAND.md「盤面が自前の色階調を持つ場合の例外」)は `titleAccents` に入れず、アクセントを選ぶときの
+  距離(ΔE)の測定にも入れない。値はそのゲームの CSS が持つ。**Overtake のライバルの青**(2026-10-22、
+  製品オーナーの判断)もこの扱いで、`ui/overtake.css` の `--ot-rival`(塗り。ライト `#2453a8` /
+  ダーク `#5b9cf0`)と `--ot-rival-ink`(数字。両テーマとも `var(--surface)` を指し、比 7.18 / 5.34)が
+  持つ。Overtake のアクセント(蘇芳)は交通・三角コーン・クロムに残る
+  ([OVERTAKE_RULES.md](../OVERTAKE_RULES.md) §11)。

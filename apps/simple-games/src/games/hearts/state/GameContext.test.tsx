@@ -26,6 +26,8 @@
  * it, and the scores are then set to whatever the case is about — the score is
  * the one part of a match that carries no history with it.
  */
+// Rendered without the game's Root, so the catalog the Root registers is registered here.
+import '../i18n';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -251,8 +253,13 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   vi.useRealTimers();
   Reflect.deleteProperty(document, 'visibilityState');
   deviceStore.clear();
@@ -363,9 +370,14 @@ describe('the chain is disarmed by everything that should disarm it', () => {
   it('stops on unmount, mid-beat', async () => {
     const { api, unmount } = resumed(trickWaiting('hearts-ctx-disarm-unmount'));
     await advance(CPU_DELAY_MS - 100);
-    const onDisk = deviceStore.get(gameSchema.key);
 
     unmount();
+    // Leaving saves the board as it stands (docs/GAME_LIFECYCLE.md
+    // 「アンマウントで計上する」). That save is the record a late beat would
+    // have to change, so it is what the rest of the test holds still.
+    await advance(0);
+    const onDisk = deviceStore.get(gameSchema.key);
+    expect(onDisk).toBeDefined();
     await advanceBeats(8);
 
     // No beat landed after the tree went away — the record is where it was,

@@ -12,6 +12,7 @@
  */
 import { Suspense, lazy } from 'react';
 import { webAdsSlotEnabled } from '../../services/ads/web/config';
+import { useAdRemovalActive } from '../../monetization/useAdRemoval';
 
 // `import.meta.env.MODE` is replaced at build time, so in the default
 // (native-mode) build this whole expression folds to `null` and the dynamic
@@ -21,7 +22,8 @@ const AdUnit =
   import.meta.env.MODE === 'web' ? lazy(() => import('../../services/ads/web/AdUnit')) : null;
 
 export function WebAdSlot() {
-  if (!AdUnit || !webAdsSlotEnabled('home')) return null;
+  const removed = useAdRemovalActive();
+  if (!AdUnit || removed || !webAdsSlotEnabled('home')) return null;
   return (
     <div className="web-ad-slot">
       <Suspense fallback={null}>

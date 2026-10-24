@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { createSession, PLAYER } from '../game';
+import { applyCpuMove, applyPlayerMove, createSession, PLAYER } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { C4_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { CPU_DELAY_MS } from '../state/GameContext';
@@ -121,8 +121,13 @@ const savedGame = {
 
 const board = () => screen.getByRole('group', { name: /Connect Four board/ });
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -141,6 +146,34 @@ describe('first run', () => {
     // Seven columns, each announced as one control, and an empty grid (§1).
     expect(within(board()).getAllByRole('button')).toHaveLength(7);
     expect(board().querySelectorAll('.c4-disc')).toHaveLength(0);
+  });
+});
+
+describe('Quick Rules shown again over a suspended match (§8)', () => {
+  it('resumes that match on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a match is suspended in the one slot: the
+    // two are separate records (§8), so Quick Rules show again over a match one
+    // drop each in — the player's in column 4, and the CPU's reply.
+    const opened = createSession('easy', PLAYER, 'connect-four-uitest');
+    const dropped = applyPlayerMove(opened, 3)!.session;
+    const replied = applyCpuMove(dropped)!.session;
+    renderGame({ [C4_STORAGE_KEYS.game]: JSON.stringify(toPersisted(replied, 1)) });
+
+    expect(await screen.findByText('Tap a column to drop')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    // The match that was left: both discs still down, and the player to move.
+    expect(board().querySelectorAll('.c4-disc')).toHaveLength(2);
+    expect(board().querySelectorAll('.c4-disc-cpu')).toHaveLength(1);
+    expect(screen.getByText('Your turn')).toBeInTheDocument();
+    // Resumed, not started: no new match over the slot, and the old one not
+    // finalized — nothing booked, no new match counted as played (§7).
+    expect(deviceStore.get(C4_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(C4_STORAGE_KEYS.stats)).toBeUndefined();
   });
 });
 
@@ -473,6 +506,51 @@ describe('a home-screen shortcut', () => {
       // lost from the match nor booked into the statistics a second time.
       expect(storedMatchSeconds()).toBe(8);
       expect(storedPlaySeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the match's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(C4_STORAGE_KEYS.flags, tutorialDone[C4_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+
+      // A background books the first five, as it always has.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+      });
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3_000);
+      });
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedMatchSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the match still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedMatchSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

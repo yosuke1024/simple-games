@@ -46,6 +46,9 @@ describe('the address a shortcut carries', () => {
 
   it('reads back to the same game for every title the app offers', () => {
     for (const game of GAMES) {
+      // Neither a beta title nor one in development is offered on the app
+      // (app/gameChannel.ts) — those are the tests below.
+      if (game.channel) continue;
       expect(gameIdFromShortcutUrl(shortcutUrlFor(game.id)), game.id).toBe(game.id);
     }
   });
@@ -53,9 +56,26 @@ describe('the address a shortcut carries', () => {
   // A title in the browser's early release (docs/WEB_VERSION.md「先行公開」)
   // is not on the app, so its address — which a browser bookmark or a pinned
   // shortcut from a future release could still carry — lands on the
-  // collection, exactly as a retired id does (app/gameChannel.ts). No registry
-  // title is on the channel today (all graduated 2026-10-02), so a synthetic
-  // beta entry is spliced into the registry the parser sees.
+  // collection, exactly as a retired id does (app/gameChannel.ts). The five of
+  // docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md, the five of
+  // docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md and
+  // the five of docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-
+  // toe-scopa-tangram.md are on the channel today. A title still in
+  // development (`channel: 'in-development'`, a scaffold of
+  // scripts/new-game.mjs; none in the registry since Nos. 47–51 became
+  // playable on 2026-10-22) is offered nowhere, so its address would be the
+  // collection too.
+  it('means the collection for every web-beta or in-development title in the registry today', () => {
+    const offTheApp = GAMES.filter((game) => game.channel);
+    expect(offTheApp.length).toBeGreaterThan(0);
+    for (const game of offTheApp) {
+      expect(gameIdFromShortcutUrl(shortcutUrlFor(game.id)), game.id).toBeNull();
+    }
+  });
+
+  // The same, for a synthetic beta entry spliced into the registry the parser
+  // sees: the mechanism stays tested on the day no registry title is on the
+  // channel (as from 2026-10-02 until the 2026-10-17 five arrived).
   it('means the collection for a web-beta title, which the app does not offer', async () => {
     const beta: GameDefinition = {
       ...GAMES.find((game) => game.id === 'sudoku')!,

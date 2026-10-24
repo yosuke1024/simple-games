@@ -1,5 +1,11 @@
 # Simple Games — アーキテクチャ
 
+Managed Club House(2026-10-23)の契約・オーナー記録・追加保存項目は
+[architecture/managed-clubs.md](architecture/managed-clubs.md)。既存 Club House の
+動的 import とゲーム・バックアップからの分離を保ち、契約キーと承認待ちの資格も `sg.club` 内に置く。
+Trial は無料の 5 名 × 1 クラブ、Basic は 50 名 × 3 クラブ。50 名のオーナー特典は
+同じ保存先の期限内キャッシュを `monetization/` が読み、広告削除 IAP と独立に判定する。
+
 この文書は索引である。見出し(`## `)は元の全文と同じ順序・同じ文言で残っており、コードやドキュメントが `docs/ARCHITECTURE.md「見出し」` で参照する先は必ずここに見つかる。長い節は要約だけをここに置き、全文は `architecture/` 配下の同名ファイルへ 2026-09-05 に分割した(各節末尾の全文リンクから読む)。たとえば `ShareAction` の結果画面の共有や `games/*/game/` のレイヤー規則は分割せずに「アプリ内レイヤー」節にそのまま残っている。
 
 ## モノレポ
@@ -132,16 +138,19 @@ src/
   入れない(`sg.iap` と同じ理由)。境界の中身は
   [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Club House」、クライアント側の設計
   (入口・保存・API・挑戦と結果・受け入れ条件)は [architecture/club.md](architecture/club.md)。
+  Managed オーナーの広告特典は shell-owned の保存スキーマからローカルで読む。
+  `monetization/` から `club/` の静的 import や契約 API 呼び出しを追加せず、
+  Club の明示的な操作で確認した資格だけを広告の共通判定へ渡す。
 
 ## 状態と ref
 
-各ゲームの `GameContext.tsx` は状態を `useState` に持ち、render 本体で ref へ写す。**落とし穴は ref が進むのが render のときだけだという点**——同じタスクの中で 2 回ミューテーションが起きると、2 回目は 1 回目が置き換える前の値を読み、1 回目が消える(連続 pointer イベント、1 ハンドラが同じ状態を 2 回書く、の 2 パターンで実際に踏んだ)。規約は、セッション・統計・進捗は各コンテキストにつき 1 か所からしか書かないこと、その 1 か所で **setState より先に ref を進める**ことの 2 つで、`src/test/refLeading.test.ts` が機械的に見る。再生時間の `elapsedRef` / `bookedRef` は state の写しではない独立した ref なので**マウント時の種**が要り、**そのマウントが指しているスロット**(ショートカットが直接入った局か、ホームが最初に指す局)の `elapsedSeconds` を 2 本とも同じ値で積む——片方だけ直すと時計が 0 で上書きされるか統計へ二重計上される(issue #109・#113)。`src/test/playClockSeed.test.ts` が機械的に見る。
+各ゲームの `GameContext.tsx` は状態を `useState` に持ち、render 本体で ref へ写す。**落とし穴は ref が進むのが render のときだけだという点**——同じタスクの中で 2 回ミューテーションが起きると、2 回目は 1 回目が置き換える前の値を読み、1 回目が消える(連続 pointer イベント、1 ハンドラが同じ状態を 2 回書く、の 2 パターンで実際に踏んだ)。規約は、セッション・統計・進捗は各コンテキストにつき 1 か所からしか書かないこと、その 1 か所で **setState より先に ref を進める**ことの 2 つで、`src/test/refLeading.test.ts` が機械的に見る。再生時間の `elapsedRef` / `bookedRef` は state の写しではない独立した ref なので**マウント時の種**が要り、**そのマウントが指しているスロット**(ショートカットが直接入った局か、ホームが最初に指す局)の `elapsedSeconds` を 2 本とも同じ値で積む——片方だけ直すと時計が 0 で上書きされるか統計へ二重計上される(issue #109・#113)。`src/test/playClockSeed.test.ts` が機械的に見る。時計の秒を確定させる同期(`syncActiveGame`)はゲーム自身の退出とバックグラウンドに加えて**アンマウントでも走る**(`useOnUnmount`)——ブラウザの戻ると別ゲームへのショートカットは goHome を通らずに Root を外すからで、二重計上は `bookedRef` が防ぐ([GAME_LIFECYCLE.md](GAME_LIFECYCLE.md)「アンマウントで計上する」、`src/test/unmountBookingWiring.test.ts`)。
 
 → 全文: [architecture/state-and-refs.md](architecture/state-and-refs.md)
 
 ## ゲームレジストリの契約
 
-`app/registry.ts` のエントリは「タイトルカード + そのゲームが持つキー + ゲーム本体のローダー」だけのプラグイン機構ではない薄い契約で、ゲームの追加は keys の import 1 行と配列要素 1 つで済む。ゲーム本体は静的 import せず `codeSplitting` でゲーム単位のチャンクに分かれる——例外は同期参照される import ゼロの葉 `storage/keys.ts` だけで、ここに import を足すとホームの初期チャンクへ引き戻される。`storageKeys` は「ローカルデータ削除」とバックアップがゲームのチャンクを読まずに列挙するためのもので、released 済みキーの一覧は `gameKeys.test.ts` のゴールデンとして固定され、**テストを直して通すのは禁止**(プレイヤーのデータに対する削除行為になるため)。`loadStorageSchemas` は**必須**のローダーで、Backup & Restore がそのゲームのレコードを持ち主の `SchemaDef` で検証するための唯一の口 —— 任意にすると、書き出せるのに復元できないゲームが黙って増える(issue #160)。Root が受け取る props は `GameRootProps` = `onExit` と任意の `entry`(どの扉から入ったか、issue #113)。`SettingsSection` は任意で、ゲーム固有の設定はゲームが所有しシェルは場所だけ貸す。`channel` も任意で、`'web-beta'` なら Web 版だけの先行公開(2026-10-02 に 11 本すべてを正式収録したので、いま該当するエントリは無い。仕組みは残す) —— 出し分けはビルドではなく `app/gameChannel.ts` の実行時ガードで、ホーム・検索・お気に入り・最近・`?game=` の住所・lazy root がそこに問う([WEB_VERSION.md](WEB_VERSION.md)「先行公開」、issue #194)。
+`app/registry.ts` のエントリは「タイトルカード + そのゲームが持つキー + ゲーム本体のローダー」だけのプラグイン機構ではない薄い契約で、ゲームの追加は keys の import 1 行と配列要素 1 つで済む。ゲーム本体は静的 import せず `codeSplitting` でゲーム単位のチャンクに分かれる——例外は同期参照される import ゼロの葉 `storage/keys.ts` だけで、ここに import を足すとホームの初期チャンクへ引き戻される。`storageKeys` は「ローカルデータ削除」とバックアップがゲームのチャンクを読まずに列挙するためのもので、released 済みキーの一覧は `gameKeys.test.ts` のゴールデンとして固定され、**テストを直して通すのは禁止**(プレイヤーのデータに対する削除行為になるため)。`loadStorageSchemas` は**必須**のローダーで、Backup & Restore がそのゲームのレコードを持ち主の `SchemaDef` で検証するための唯一の口 —— 任意にすると、書き出せるのに復元できないゲームが黙って増える(issue #160)。Root が受け取る props は `GameRootProps` = `onExit` と任意の `entry`(どの扉から入ったか、issue #113)。`SettingsSection` は任意で、ゲーム固有の設定はゲームが所有しシェルは場所だけ貸す。`channel` も任意で、`'web-beta'` なら Web 版だけの先行公開(いまは 2026-10-17 の計画の 5 本 — Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、Web 版で 2026-10-19 から公開中 — と、2026-10-20 の計画の 5 本 — Make the Target / Nested Tic-Tac-Toe / Tangram は 2026-10-21 に実装し、Web 版で 2026-10-22 から公開中、Overtake と Scopa は 2026-10-21 に実装し、製品オーナーの指示で 2026-10-22 に切り替え、Web 版で同日(UTC でも 2026-10-22 02:32)から公開中 — と、2026-10-19 の計画の 5 本 — Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads、2026-10-22 に実装して `'in-development'` から切り替え、Web 版で 2026-10-23(JST、UTC では 2026-10-22 17:33)から公開中 — がこのチャンネルにある。前の 11 本は 2026-10-02 に正式収録した)、`'in-development'`(2026-10-20 から)なら実装中でどのビルドにも出さない(スキャフォールドの段階の値で、遊べるようになる変更で `'web-beta'` にする。2026-10-22 の切り替えで、いまこの値のエントリは無い) —— 出し分けはビルドではなく `app/gameChannel.ts` の実行時ガードで、ホーム・検索・お気に入り・最近・`?game=` の住所・lazy root・Club のチャレンジの Play(`findAvailableGame`)がそこに問う([WEB_VERSION.md](WEB_VERSION.md)「先行公開」、issue #194)。
 
 小見出し: 「ゲーム単位の lazy チャンク(issue #26)」
 
@@ -173,7 +182,7 @@ src/
 
 ## 広告と課金
 
-広告は `services/ads/` のバナーのみ(Anchored Adaptive Banner)。AdMob 初期化は起動後の fire-and-forget で、UMP 同意はゲーム初期化と切り離し、オフライン時・購入済み時はリクエストしない。`BannerSlot` は高さ確保方式でレイアウトシフトを起こさない。**広告側が問うのは「この起動で広告削除が効くか」**(`isAdRemovalActive()`、購入状態が読めなかった起動も fail-closed で該当)であり、「購入したか」(`isAdRemovalPurchased()`)とは別の問いで設定画面だけが問う。`monetization/` は広告削除 IAP の基盤で、既定実装は「ストア未接続」。
+アプリ広告は `services/ads/` のバナーのみ(Anchored Adaptive Banner)。AdMob 初期化は起動後の fire-and-forget で、UMP 同意はゲーム初期化と切り離し、オフライン時・広告削除が有効なときはリクエストしない。`BannerSlot` は高さ確保方式でレイアウトシフトを起こさない。**広告側が問うのは「この起動で広告削除が効くか」**(`isAdRemovalActive()`、購入済み・有効な Managed オーナー特典・購入状態が読めなかった起動の fail-closed)であり、「購入したか」(`isAdRemovalPurchased()`)とは別の問いで設定画面だけが問う。`monetization/` は独立した購入資格とオーナー資格をまとめる。IAP の既定実装は「ストア未接続」。オーナー特典は Web 広告にも適用する([ADS_POLICY.md](ADS_POLICY.md))。
 
 → 全文: [architecture/ads-and-billing.md](architecture/ads-and-billing.md)
 
@@ -254,6 +263,28 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
   揃え、`src/test/modalIsolationWiring.test.ts` が新しいゲームにも同じ配線を要求する(issue #120)。
   Chromium 102 未満の WebView 向けフォールバックは `styles.css` の `.game-content[inert]`
   (`pointer-events: none`)。
+- **Escape は Cancel、閉じたらフォーカスは開いた場所へ。** `ConfirmDialog` と `RestartDialog` は
+  `ui/useDialogDismiss.ts` を通して、開いている間の Escape を Cancel(`onCancel` / `onClose`)と
+  同じに扱い、window の capture 段で受けて先へ流さない——`blocked` の形で付いたままの `useGameKeys`
+  (2048 の形)も、arcade 盤面の生の keydown リスナーも、ダイアログを閉じたその Escape には答えない。
+  ゲーム自身の Escape も同じで、受けるのは Web 先行公開(ベータ)の 3 本 — Bridges(島の選択を
+  外す)、Unblock Puzzle(ブロックの選択を外す)、Peg Solitaire(持ち上げたペグを置く)。3 本とも
+  `useGameKeys` をダイアログのフラグで外し(`enabled` に `!confirmRestart`)、そのうえで
+  ダイアログの capture に譲る: ダイアログを閉じたその Escape では選択は残り、閉じた後の次の
+  Escape からゲームのものに戻る(各 Root テスト。製品版のゲームに Escape を受けるものは無い)。
+  閉じたらフォーカスは開いた操作(上部バーの ↻、設定の行)へ戻す。戻すのは
+  フォーカスが失われるとき(body か、ダイアログと一緒に消えた要素)だけで、閉じた側が意図して置いた
+  先は動かさず、もうページに無い opener は追わない。opener はダイアログが開いたときにフォーカスの
+  あった要素なので、開いた押下が ↻ にフォーカスを置かなければ戻し先は無い——WebKit(macOS の
+  Safari と iOS のすべてのブラウザ)のクリックやタップはボタンにフォーカスを置かず、そうして開いた
+  問いを閉じるとフォーカスは body に残る(Web 先行公開の Snake だけは自分でも ↻ へ戻す。
+  [SNAKE_RULES.md](SNAKE_RULES.md) §13)。戻しはダイアログのアンマウント(passive effect の
+  cleanup)で走るので、確定の後にゲームが自分でフォーカスを置くなら **layout effect** で先に置く
+  ——passive effect で後から置こうとすると、戻しが先に ↻ へ持っていき、ゲームの側は「フォーカスが
+  ある」と見て何もしない(Peg Solitaire の新しい局 → 盤の輪の穴、Snake の新しい盤 → 十字の中央。
+  Snake の Cancel / Escape の ↻ も同じ layout effect で、共通の戻しと同じ ↻ を選ぶ)。リスナーは
+  閉じた時点とアンマウントで外す([GAME_LIFECYCLE.md](GAME_LIFECYCLE.md))。確定・取消で各ゲームがすることは
+  変えない(2026-10-18。テストは `ui/components/ConfirmDialog.test.tsx` / `RestartDialog.test.tsx`)。
 - **ヘッダの ↻ は結果カードと同じ 2 択。** プレイ中の ↻ は「同じ盤面で再挑戦」の確認
   (`ConfirmDialog`)だったので、盤面そのものを替えたい人は Home → モードのボタン → もう一度
   確認、と遠回りしていた(2026-10-02)。いまは `ui/components/RestartDialog.tsx` が 1 つの問い
@@ -334,12 +365,36 @@ confirmRestart}`)。背景の `.overlay` はポインタを遮るがフォーカ
 
 ## CI / リリース
 
-- `ci.yml`: push / PR で install → lint → typecheck → test → build(全ワークスペース)。
-  対象が増えたら turbo の `--filter` で影響範囲のみに絞る。両ビルドの後に
-  広告分離(`check-dist-ads-separation.sh`)とサイズ Gate
+- `ci.yml`: 3 つのジョブ。`checks` は install → lint → typecheck → build(全ワークスペース)
+  のあと、両ビルドの広告分離(`check-dist-ads-separation.sh`)とサイズ Gate
   (`pnpm --filter simple-games size:check` — ゲーム別予算・エントリ成長・
-  初期グラフへのゲームチャンク混入)を検証する。
-- **テストの門は壁時計で判定しない**(issue #158)。`pnpm test` は 337 ファイルを
+  初期グラフへのゲームチャンク混入)を検証する。`test` は vitest を 4 シャードに分けて
+  並列に走らせ、PR では差分に関係するテストだけ(import グラフで届くテスト + 触った
+  ゲームのテスト全部 + 常時ゲート。規則は `apps/simple-games/scripts/test-scoped.mjs`
+  冒頭)、main への push では全件を走らせる(2026-10-22、732 ファイルで 1 ジョブ 8 分半
+  になっていた。スイートはゲーム数に比例して伸びる)。`verify` は ruleset が `Brand principles`
+  と並べて要求するチェックで、他の全ジョブが緑のときだけ緑になる。
+- **vitest は 2 つの project で走る**(`apps/simple-games/vite.config.ts` の `test.projects`、
+  2026-10-23)。`game` は `src/games/*/game/**/*.test.ts`(2026-10-23 時点で 371 本)を node 環境・setupFiles なしで、
+  `dom` は残り(同 439 本)を jsdom + `src/test/setup.ts` で走らせる。`games/*/game/` は純 TypeScript
+  (「レイヤー」の節)なので DOM は要らない一方、jsdom の生成と setup の固定費はテストファイルごとに
+  払うので、スイートの固定費はゲーム数に比例して伸びていた(2026-10-22 の集計で environment 30% +
+  setup 18%)。分けた実測(2026-10-23、8 コア、同じ機械で続けて 1 回ずつ): 旧設定 585 秒・CPU 3,124 秒
+  (tests 48% / environment 28% / setup 15% / import 6% / transform 3%)→ 新設定 551 秒・CPU 2,592 秒
+  (tests 60% / environment 19% / setup 10% / import 7% / transform 4%)。新設定の run には他セッションの
+  負荷が乗っていたので壁時計は比べず、CPU 時間の 17% 減と内訳を根拠にする(負荷が 30 倍の壁時計を
+  生んだ run でも CPU 時間は 2,662 秒で、CPU 時間は負荷に対して頑健)。
+  `vitest run <path>`・`--changed`・`--shard` はどれも両 project を横断する。`vitest list --filesOnly` は
+  `[game] src/...` と project 名を前置する(名前は必須)。`extends: true` は `setupFiles` を連結するので、
+  `environment` / `setupFiles` はルートに置かず各 project に書く。`game/` のテストが DOM を必要としたら、
+  それは `ui/` のテストである(除外の一覧は作らない)。
+  同じ日に `src/test/setup.ts` から全ゲームのカタログの eager glob も外した。テストが持つのはアプリが持つ
+  ものと同じで、chunk の入口(`*Root.tsx`・設定セクション)が `import '../i18n'` で自分のカタログを登録し
+  (門は `src/test/gameI18nWiring.test.ts`)、Root を通さず画面や部品を直接 render するテストは同じ 1 行で
+  自分のゲームのカタログを自分で登録する(`scripts/codemods/2026-10-23-ui-tests-register-own-catalog.mjs`、
+  56 本)。カタログが無ければ生のキーが描かれ、そのテスト自身の assertion が落ちる。シェルのテストは
+  ゲームのカタログを前提にしない。
+- **テストの門は壁時計で判定しない**(issue #158)。`pnpm test` は 700 本を超えるファイルを
   CPU 数ぶん並列に走らせるので、同じ仕事でも壁時計は run ごとに数倍〜数十倍ぶれる
   ([SUDOKU_RULES.md](SUDOKU_RULES.md) §7 の実測)。稀に落ちる門は信頼されない門であり、
   赤を「たぶん負荷」と読む運用が本物の退行を隠す。だから、

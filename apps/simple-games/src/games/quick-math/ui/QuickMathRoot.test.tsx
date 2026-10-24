@@ -5,7 +5,7 @@ import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
 import { answerDigits, questionsForLevel } from '../game';
-import { QM_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
+import { QM_STORAGE_KEYS, STATS_BUCKETS, type PersistedGame, type Stats } from '../storage/schemas';
 import { QuickMathRoot } from './QuickMathRoot';
 
 const { deviceStore } = vi.hoisted(() => ({ deviceStore: new Map<string, string>() }));
@@ -107,6 +107,13 @@ function storedStats(): Stats | null {
   return raw === undefined ? null : (JSON.parse(raw) as Stats);
 }
 
+/** Total play seconds as they survive on disk, across every band and the daily. */
+function storedPlaySeconds(): number {
+  const stats = storedStats();
+  if (stats === null) return 0;
+  return STATS_BUCKETS.reduce((sum, bucket) => sum + stats[bucket].totalPlaySeconds, 0);
+}
+
 /** Types digits with fireEvent, which works under fake timers. */
 function press(value: number) {
   for (const digit of String(value)) fireEvent.click(key(Number(digit)));
@@ -119,8 +126,13 @@ const wrongFor = (answer: number): number => {
   return String(other).length === digits ? other : answer - 1;
 };
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -138,6 +150,40 @@ describe('first run', () => {
 
     expect(screen.getByText('0 / 10')).toBeInTheDocument();
     expect(keypad()).toBeInTheDocument();
+  });
+});
+
+describe('Quick Rules shown again over a suspended level (§9)', () => {
+  it('resumes that level on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    deviceStore.set(QM_STORAGE_KEYS.flags, tutorialDone[QM_STORAGE_KEYS.flags]!);
+    launch();
+    await startLevelOne(user);
+    await type(user, levelOneAnswers[0]!);
+    const second = equation();
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await settle();
+    const { seed } = JSON.parse(deviceStore.get(QM_STORAGE_KEYS.game)!) as PersistedGame;
+    cleanup();
+    // Level 1 is suspended one question in, the ladder is open to level 3 —
+    // where a first run starts — and the flags record is gone.
+    deviceStore.set(QM_STORAGE_KEYS.progress, unlockedTo(3)[QM_STORAGE_KEYS.progress]!);
+    deviceStore.delete(QM_STORAGE_KEYS.flags);
+
+    launch();
+    expect(await screen.findByText('Answer with the keypad')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(screen.getByText('1 / 10')).toBeInTheDocument();
+    expect(equation()).toBe(second);
+    // Resumed, not started: the same set in the slot, and no second play booked.
+    const stored = JSON.parse(deviceStore.get(QM_STORAGE_KEYS.game)!) as PersistedGame;
+    expect(stored).toMatchObject({ seed, level: 1, solvedCount: 1 });
+    expect(storedStats()?.addSub.played).toBe(1);
   });
 });
 
@@ -767,6 +813,47 @@ describe('opening a suspended game without resuming (#109)', () => {
       background();
       await settle();
       expect(storedBoardSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the set's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(QM_STORAGE_KEYS.flags, tutorialDone[QM_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Level 1/ }));
+
+      // A background books the first five, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedBoardSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the set still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedBoardSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

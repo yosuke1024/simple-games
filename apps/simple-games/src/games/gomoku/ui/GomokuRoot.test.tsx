@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { BLACK, createSession } from '../game';
+import { BLACK, applyCpuMove, applyPlayerMove, createSession } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { GM_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
 import { CPU_DELAY_MS } from '../state/GameContext';
@@ -120,8 +120,13 @@ const savedGame = {
 const board = () => screen.getByRole('group', { name: /Gomoku board/ });
 const stones = () => board().querySelectorAll('.gm-stone');
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -140,6 +145,34 @@ describe('first run', () => {
     // Two hundred and twenty-five crossings, and an empty board (§1).
     expect(within(board()).getAllByRole('button')).toHaveLength(225);
     expect(stones()).toHaveLength(0);
+  });
+});
+
+describe('Quick Rules shown again over a suspended match (§8)', () => {
+  it('resumes that match on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a match is suspended in the one slot: the
+    // two are separate records (§8), so Quick Rules show again over a match one
+    // stone each in — the player's on the centre point, and the CPU's reply.
+    const opened = createSession('easy', BLACK, 'gomoku-uitest');
+    const placed = applyPlayerMove(opened, 7 * 15 + 7)!.session;
+    const replied = applyCpuMove(placed)!.session;
+    renderGame({ [GM_STORAGE_KEYS.game]: JSON.stringify(toPersisted(replied, 1)) });
+
+    expect(await screen.findByText('Tap once to aim, again to place')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    // The match that was left: both stones still down, and the player to move.
+    expect(stones()).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Row 8, column 8: your stone' })).toBeVisible();
+    expect(screen.getByText(/Your turn/)).toBeInTheDocument();
+    // Resumed, not started: no new match over the slot, and the old one not
+    // finalized — nothing booked, no new match counted as played (§7).
+    expect(deviceStore.get(GM_STORAGE_KEYS.game)).toBeUndefined();
+    expect(deviceStore.get(GM_STORAGE_KEYS.stats)).toBeUndefined();
   });
 });
 
@@ -394,8 +427,8 @@ describe('a home-screen shortcut', () => {
     // The flag and the match are separate records (§8), so the two states can
     // disagree: a flags record that does not validate leaves the game with its
     // defaults — Quick Rules unfinished — while the saved match still loads.
-    // A shortcut is not a way past them; the tutorial's only exit starts a new
-    // match, which would finalize this one away.
+    // A shortcut is not a way past them; finishing them leads onto this match
+    // rather than over it ('Quick Rules shown again over a suspended match').
     deviceStore.set(GM_STORAGE_KEYS.flags, JSON.stringify({ schemaVersion: 9 }));
 
     launchFromShortcut();
@@ -520,6 +553,51 @@ describe('opening a suspended game without resuming (#109)', () => {
       await background();
       await settle();
       expect(storedElapsedSeconds()).toBe(9);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the match's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(GM_STORAGE_KEYS.flags, tutorialDone[GM_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /Easy/ }));
+
+      // A background books the first five, as it always has.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+      });
+      await background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3_000);
+      });
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedElapsedSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the match still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedElapsedSeconds()).toBe(8);
     } finally {
       vi.useRealTimers();
     }

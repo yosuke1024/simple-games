@@ -1,5 +1,8 @@
-# Dependencies
-node_modules/
+# Dependencies. No trailing slash: `node_modules/` matches directories only, so a
+# `node_modules` symlink (what pnpm leaves in a git worktree) slipped past it and
+# got committed once (PR #243's branch, 2026-10-20). Without the slash the pattern
+# matches a directory, a symlink and a file of that name alike.
+node_modules
 
 # Build outputs (dist-web/ is the web-mode build — docs/WEB_VERSION.md)
 dist/

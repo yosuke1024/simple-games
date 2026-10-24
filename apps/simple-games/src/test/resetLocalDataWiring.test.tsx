@@ -252,6 +252,11 @@ describe('Reset Local Data on a played device', () => {
    * rather than a stand-in. A change to `played` that stopped producing valid
    * records would leave the delete comparing defaults with defaults, passing
    * without having removed anything.
+   *
+   * This is the first test to call `playedDevice`, so it pays for importing
+   * every game's storage schemas (56 games); run alone it took about 3.6 s,
+   * close to the 5 s default, and it timed out once on a loaded machine. The
+   * explicit limit below is for that cold import, not for the assertions.
    */
   it('has a real record ready for most of the keys the button will delete', async () => {
     const { fixtures, schemas } = await playedDevice();
@@ -264,7 +269,7 @@ describe('Reset Local Data on a played device', () => {
 
     const real = [...fixtures.values()].filter((fixture) => fixture.real);
     expect(real.length).toBeGreaterThan(80);
-  });
+  }, 15_000);
 
   /**
    * The gate. Every declared key holds a record, the player presses the

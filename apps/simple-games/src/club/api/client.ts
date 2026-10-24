@@ -6,6 +6,19 @@
  */
 import { ClubApiError, SERVER_ERROR_CODES, type ClubErrorCode } from './errors';
 import {
+  validateAdmission,
+  validateApplicationDecision,
+  validateApplications,
+  validateClubSettings,
+  validateJoinOrPending,
+  validateJoinStatus,
+  type Admission,
+  type ClubSettings,
+  type JoinApplication,
+  type JoinStatus,
+  type PendingJoinResponse,
+} from './managementTypes';
+import {
   validateChallenge,
   validateClub,
   validateClubRecord,
@@ -15,6 +28,8 @@ import {
   validateJoinResponse,
   validateList,
   validateMember,
+  validateMemberView,
+  validateMembersPage,
   validateRankingMine,
   validateRankingSubmitResponse,
   validateRankingSummary,
@@ -30,6 +45,8 @@ import {
   type InviteResponse,
   type JoinResponse,
   type Member,
+  type MembersPage,
+  type MemberView,
   type ReportedMember,
   type RankingMine,
   type RankingSubmit,
@@ -46,6 +63,17 @@ export interface ClubClient {
   health(): Promise<{ ok: boolean; api: number; claimed: boolean; open: boolean }>;
   /** A null token joins an open server (the Public Club House). */
   join(inviteToken: string | null, nickname: string): Promise<JoinResponse>;
+  requestJoin(
+    inviteToken: string | null,
+    nickname: string,
+  ): Promise<JoinResponse | PendingJoinResponse>;
+  admission(inviteToken?: string | null): Promise<Admission>;
+  settings(): Promise<ClubSettings>;
+  updateSettings(settings: Partial<ClubSettings>): Promise<ClubSettings>;
+  joinRequests(): Promise<JoinApplication[]>;
+  decideJoinRequest(id: string, decision: 'approve' | 'reject'): Promise<JoinApplication>;
+  joinRequestStatus(requestToken: string): Promise<JoinStatus>;
+  cancelJoinRequest(requestToken: string): Promise<void>;
   club(): Promise<ClubResponse>;
   challenges(options?: { after?: string; daily?: string }): Promise<Challenge[]>;
   challenge(id: string): Promise<Challenge>;
@@ -61,6 +89,10 @@ export interface ClubClient {
   ranking(gameId: string, paramsKey: string, top?: number): Promise<RankingTable>;
   /** The tables the caller is in, each with their standing (club.md §16-1); a server without the route answers 404. */
   rankingsMine(): Promise<RankingMine[]>;
+  /** One member and their standing in every table they are in, the same shape as `rankingsMine` (club.md §5-3); 404 for a removed or unknown id. */
+  member(id: string): Promise<MemberView>;
+  /** The members older than one member, `membersPage` of them, newest first, with the club's total (club.md §5-3, §17-2). */
+  membersBefore(id: string): Promise<MembersPage>;
   hosting(): Promise<Hosting>;
   invite(): Promise<InviteResponse>;
   rotateInvite(): Promise<InviteResponse>;
@@ -102,13 +134,13 @@ function errorCodeOf(body: unknown): ClubErrorCode {
   return 'internal_error';
 }
 
-export function createClient(
+/** The shared bounded transport for club and managed-owner APIs. */
+export function createApiRequest(
   endpoint: string,
   memberToken?: string | null,
   fetchImpl?: typeof fetch,
-): ClubClient {
+): (method: string, path: string, body?: unknown) => Promise<unknown> {
   const base = `${endpoint}/api/v1`;
-
   /**
    * One request, settled within {@link REQUEST_TIMEOUT_MS} whatever the platform
    * does with an abort. Aborting is not enough on its own: a WebView can keep a
@@ -184,6 +216,16 @@ export function createClient(
     return json;
   }
 
+  return request;
+}
+
+export function createClient(
+  endpoint: string,
+  memberToken?: string | null,
+  fetchImpl?: typeof fetch,
+): ClubClient {
+  const request = createApiRequest(endpoint, memberToken, fetchImpl);
+
   function check<T>(value: T | null): T {
     if (value === null) throw malformed(0);
     return value;
@@ -211,6 +253,50 @@ export function createClient(
     },
     async club() {
       return check(validateClubResponse(await request('GET', '/club')));
+    },
+    async requestJoin(inviteToken, nickname) {
+      return check(
+        validateJoinOrPending(
+          await request(
+            'POST',
+            '/join',
+            inviteToken === null ? { nickname } : { inviteToken, nickname },
+          ),
+        ),
+      );
+    },
+    async admission(inviteToken) {
+      return check(
+        validateAdmission(
+          inviteToken
+            ? await request('POST', '/admission', { inviteToken })
+            : await request('GET', '/admission'),
+        ),
+      );
+    },
+    async settings() {
+      return check(validateClubSettings(await request('GET', '/settings')));
+    },
+    async updateSettings(settings) {
+      return check(validateClubSettings(await request('PATCH', '/settings', settings)));
+    },
+    async joinRequests() {
+      return check(validateApplications(await request('GET', '/join-requests')));
+    },
+    async decideJoinRequest(id, decision) {
+      return check(
+        validateApplicationDecision(
+          await request('POST', `/join-requests/${encodeURIComponent(id)}/${decision}`, {}),
+        ),
+      );
+    },
+    async joinRequestStatus(requestToken) {
+      return check(
+        validateJoinStatus(await request('POST', '/join-requests/status', { requestToken })),
+      );
+    },
+    async cancelJoinRequest(requestToken) {
+      await request('POST', '/join-requests/cancel', { requestToken });
     },
     async challenges(options) {
       const parts: string[] = [];
@@ -264,6 +350,14 @@ export function createClient(
     },
     async rankingsMine() {
       return check(validateList(await request('GET', '/rankings/mine'), validateRankingMine));
+    },
+    async member(id) {
+      return check(validateMemberView(await request('GET', `/members/${encodeURIComponent(id)}`)));
+    },
+    async membersBefore(id) {
+      return check(
+        validateMembersPage(await request('GET', `/members?before=${encodeURIComponent(id)}`)),
+      );
     },
     async hosting() {
       return check(validateHosting(await request('GET', '/hosting')));

@@ -35,6 +35,7 @@
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { isManagedOwnerAdRemovalActive } from '../monetization/adRemoval';
 import { markReviewPromptShown, shouldPromptReview } from '../services/review';
 import { releaseSound } from '../services/sound';
 import {
@@ -50,10 +51,13 @@ import {
 import { GameErrorBoundary } from '../ui/components/GameErrorBoundary';
 import { GameLoadingFallback } from '../ui/components/GameLoadingFallback';
 import { ReviewPrompt } from '../ui/components/ReviewPrompt';
+import { consumeManagedOwnerReturn } from '../ui/managedOwnerReturn';
 import { CollectionHomeScreen } from '../ui/screens/CollectionHomeScreen';
 import { SettingsScreen } from '../ui/screens/SettingsScreen';
 import {
   clubConnections,
+  initClubGate,
+  inviteFromAppLink,
   isConnected,
   loadClubAtBoot,
   loadClubForEntry,
@@ -64,7 +68,7 @@ import {
 import { getLazyRoot, resetLazyRoot } from './lazyRoots';
 import { recordGameOpened } from './recentGames';
 import { type GameEntry, type GameId } from './registry';
-import { gameIdFromShortcutUrl, shortcutLaunchGame } from './shortcutLaunch';
+import { gameIdFromShortcutUrl, shortcutLaunchGame, shortcutLaunchUrl } from './shortcutLaunch';
 import {
   currentRouteGame,
   popRoute,
@@ -89,6 +93,8 @@ type View =
       entry: ClubEntry;
       invite?: ClubInvite | null;
       focus?: ClubFocus | null;
+      /** Bumped by each open of an invite link, so the same link opened again is a new door. */
+      opened?: number;
     };
 
 // Measurement must never disturb a player, so a chunk that never arrives is
@@ -140,10 +146,20 @@ function initialView(): View {
   // keeps the first answer, so the second call finding the fragment already
   // gone changes nothing.
   if (webRoutingEnabled()) {
+    // The owner explicitly refreshed a benefit that stopped an already loaded
+    // Web ad SDK. Its one-shot hint contains no key; only the locally verified
+    // cache can reopen this screen. An invite still takes precedence.
+    const returnToOwner = consumeManagedOwnerReturn();
     const invite = takeInviteFromLocation();
     if (invite) return { kind: 'club', entry: 'invite', invite };
+    if (returnToOwner && isManagedOwnerAdRemovalActive()) {
+      return { kind: 'club', entry: 'managed' };
+    }
   }
   if (!webRoutingEnabled()) {
+    // An invite link opened the app (App Links / Universal Links): its Join screen.
+    const invite = inviteFromAppLink(shortcutLaunchUrl());
+    if (invite) return { kind: 'club', entry: 'invite', invite };
     const shortcutGame = shortcutLaunchGame();
     return shortcutGame
       ? { kind: 'game', gameId: shortcutGame, entry: 'shortcut' }
@@ -193,6 +209,24 @@ export function App() {
   }, []);
 
   const goCollection = useCallback(() => show({ kind: 'collection' }), [show]);
+  /**
+   * Settings can change which Clubs this device holds — a restore brings them back,
+   * Reset Local Data removes them — so the home reads `sg.club` again on the way back.
+   * A local read, the same one boot makes (clubGate.ts).
+   */
+  const backFromSettings = useCallback(() => {
+    void initClubGate()
+      .catch(() => undefined)
+      .then(() => {
+        setConnections(clubConnections());
+        // A restore can bring Clubs to a device that never loaded the layer: results
+        // are sent (or queued) only through it, as after a boot that found them.
+        void loadClubAtBoot()?.then((module) => {
+          if (module) setClubModule(module);
+        });
+      });
+    show({ kind: 'collection' });
+  }, [show]);
   const openSettings = useCallback(() => show({ kind: 'settings' }), [show]);
 
   /**
@@ -295,7 +329,7 @@ export function App() {
    * the press came from.
    */
   const openClub = useCallback(
-    (entry: 'settings' | 'home' | 'discover') => {
+    (entry: 'settings' | 'home' | 'join' | 'discover') => {
       const pressedOn = viewRef.current;
       void loadClubForEntry().then((module) => {
         if (!module || viewRef.current !== pressedOn) return;
@@ -364,13 +398,15 @@ export function App() {
       recordGameOpened(gameId);
       trackWebGameOpened(gameId);
     }
-    // The Club layer at boot, in exactly the two cases app/clubGate.ts allows:
+    // The Club layer at boot, following an explicit Club action:
     // the page is an invite link (initialView already chose the Join screen),
     // or this device has joined a Club, whose home slot and result-screen
-    // action need the layer. An invite that cannot load its layer falls back
+    // action need the layer. The owner-benefit reload resumes its prior entry.
+    // An entry that cannot load its layer falls back
     // to the collection rather than leaving a loading screen up for good.
     if (arrived.kind === 'club') {
-      void loadClubForInvite().then((module) => {
+      const pendingModule = arrived.entry === 'managed' ? loadClubForEntry() : loadClubForInvite();
+      void pendingModule.then((module) => {
         if (module) setClubModule(module);
         else if (viewRef.current === arrived) show({ kind: 'collection' });
       });
@@ -403,9 +439,41 @@ export function App() {
    * By then boot has already opened that game (`initialView`), so the
    * comparison finds nothing to do.
    */
+  // Armed only while the Join screen the launch link opened is still the one showing:
+  // a replay that never comes (iOS may not raise one) must not swallow a later tap.
+  const launchInviteToken = useRef(inviteFromAppLink(shortcutLaunchUrl())?.token ?? null);
+  useEffect(() => {
+    const token = launchInviteToken.current;
+    if (token !== null && !(view.kind === 'club' && view.invite?.token === token)) {
+      launchInviteToken.current = null;
+    }
+  }, [view]);
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const handle = CapacitorApp.addListener('appUrlOpen', ({ url }) => {
+      // An invite link while the app runs: its Join screen, over whatever was showing.
+      // The cold-start replay of the same link finds that screen already up.
+      const invite = inviteFromAppLink(url);
+      if (invite) {
+        // The launch link itself, raised once more on a cold start: boot already opened it.
+        if (launchInviteToken.current === invite.token) {
+          launchInviteToken.current = null;
+          return;
+        }
+        launchInviteToken.current = null;
+        const current = viewRef.current;
+        if (current.kind === 'game') leaveGame(current.gameId);
+        // Opened again later (after a request was approved, say), it opens afresh, so
+        // the Club House asks about the request again.
+        const opened = (current.kind === 'club' ? (current.opened ?? 0) : 0) + 1;
+        void loadClubForInvite().then((module) => {
+          if (!module) return;
+          setClubModule(module);
+          show({ kind: 'club', entry: 'invite', invite, opened });
+        });
+        return;
+      }
+      launchInviteToken.current = null;
       const showing = viewRef.current.kind === 'game' ? viewRef.current.gameId : null;
       const target = gameIdFromShortcutUrl(url);
       if (showing === target) return;
@@ -519,7 +587,7 @@ export function App() {
       }
     }
     if (view.kind === 'settings') {
-      return <SettingsScreen onBack={goCollection} onOpenClub={openClubFromSettings} />;
+      return <SettingsScreen onBack={backFromSettings} onOpenClub={openClubFromSettings} />;
     }
     // The Club view. Its hardware back is the Club screen's own (it registers
     // the listener while mounted), so the shell adds none here — compare the
@@ -529,6 +597,8 @@ export function App() {
       if (!clubModule) return <GameLoadingFallback onExit={goCollection} />;
       return (
         <clubModule.ClubRoot
+          // A new invite is a new door: the Club decides its first screen once per mount.
+          key={view.invite ? `invite:${view.invite.token}:${view.opened ?? 0}` : 'club'}
           entry={view.entry}
           invite={view.invite}
           focus={view.focus}

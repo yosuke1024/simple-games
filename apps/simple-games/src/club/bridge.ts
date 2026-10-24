@@ -194,7 +194,11 @@ export function createBridge(
         // included, one just left is not, and nothing played before joining
         // was ever offered to it. Only a connection whose owner accepted the
         // disclosure counts (club.md §4-1): the rest are not this result's business.
-        const connections = (await loadClubConnections(kv)).filter((c) => c.autoSend === true);
+        const connections = (await loadClubConnections(kv)).filter(
+          (c) =>
+            c.autoSend === true &&
+            (c.allowedGameIds == null || c.allowedGameIds.includes(payload.gameId)),
+        );
         if (connections.length === 0) return [];
         const planned = plan(payload);
         if (planned === null) return [];

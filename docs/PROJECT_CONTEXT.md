@@ -1,6 +1,6 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-10-02
+Updated: 2026-10-23
 
 この文書は、Simple Games を変更・レビュー・説明するときの **共通の入口** である。
 ここに全仕様を複製しない。実装上の事実はコード、恒久的な原則は各 canonical document を正とし、
@@ -42,7 +42,10 @@ Design philosophy:
 ### Collection
 
 - 1つの `Simple Games: Offline Games` として提供する。
-- 現在の正式収録は **41 games**(`registry.ts` の `GAMES` の全エントリ。本数はここで数える)。
+- 現在の正式収録は **41 games**(`registry.ts` の `GAMES` のうち `channel` を持たないエントリ。
+  本数はここで数える)。`GAMES` の全 66 エントリには、下の `channel: 'web-beta'` の 25 本(Web 先行公開中の
+  No. 42〜46・No. 47〜51・No. 52〜56・No. 57〜61・No. 62〜66)も含まれる。
+  `'in-development'` のエントリはいま無い。
 - 2026-10-02 に、Web 版で先行公開していた新作 11 本(Crown Grid / Number Path /
   Shape Regions、2026-09-26、issue #194。Yacht / Mancala / Dominoes / Hit & Blow /
   Dots and Boxes、2026-09-27、issue #197。Binary Balance / Sudoku 6×6 / Box Regions、
@@ -50,13 +53,78 @@ Design philosophy:
   `docs/PUZZLE_PRACTICE_SET.md`)を正式収録した。2 週間の安定稼働という基準は
   満たしておらず、製品オーナーの明示的な判断による(経緯は `docs/WEB_VERSION.md`
   「先行公開」)。保存スキーマはこの収録で凍結。ゲーム別ガイドはまだ無い。
-- Web 版は新作の先行公開チャンネルとして残る。いま先行公開中のタイトルは無い。
+- Web 版は新作の先行公開チャンネルとして残る。2026-10-17 に **Web 先行公開(ベータ)の
+  新作 5 本**(Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、No. 42〜46)を
+  このリポジトリに実装し、registry に `channel: 'web-beta'` で登録した(仕様の正は各
+  `docs/*_RULES.md`、経緯は `docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md`)。
+  **Web 版では 2026-10-19 から先行公開している**(pixapps-landing #201 で同期し、同じ PR で
+  landing の `tests/ui.test.js` の `WEB_BETA_GAME_IDS` に 5 本の id を足した。
+  `docs/WEB_VERSION.md`「先行公開」)。正式収録の 41 本には数えず、アプリには出ない。
+  正式収録の基準(Web での 2 週間の安定稼働と計測、`docs/RELEASE_CHECKLIST.md` §0)は
+  変えず、2 週間の時計は 2026-10-19 から数える。
+- 2026-10-19 から、さらに **Web 先行公開(ベータ)向けの新作 5 本**(Chess / Gem Swap /
+  Pipe Link / Bounce Up / Echo Pads、No. 47〜51)に着手し、**2026-10-22 に 5 本とも遊べる形まで
+  このリポジトリに実装した**(計画は
+  `docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md`、仕様の正は各
+  `docs/*_RULES.md`)。registry は 2026-10-20 から `channel: 'in-development'`(どのビルドの扉からも
+  開けない — `app/gameChannel.ts`)で、**2026-10-22 に 5 本とも `'web-beta'` にした**(製品オーナーの依頼は
+  「Web 公開まで」。計画の判断 4 — Chess を別 PR にして残り 4 本を待たせない — は、5 本が同時に仕上がったので
+  1 つの PR で満たした)。**Web 版では 2026-10-23 から先行公開している**(JST、UTC では 2026-10-22 17:33。
+  pixapps-landing #206(2026-10-22 16:13 UTC にマージ)で landing の門の一覧の 5 本を `IN_DEVELOPMENT_GAME_IDS` から
+  `WEB_BETA_GAME_IDS` へ移し、#253(2026-10-22 16:55 UTC にマージ)の後、製品オーナーの承認を得て公開ワークフローが
+  `7b95a94` の web ビルドを landing main に同期した — `0415eb18`、2026-10-22 17:33 UTC。それまでの配信物の
+  5 本のチャンクは `'in-development'` のときのビルドのもので、開けなかった。本番への反映はこのリポジトリからは
+  観測していない。`docs/WEB_VERSION.md`「先行公開」)。Bounce Up の題(同名作がある)は、製品オーナーが
+  2026-10-22 に「このまま出す」と判断した(`docs/BOUNCE_UP_RULES.md` 冒頭と §12)。
+  実機では何も確かめておらず、`ja` と 12 言語の文言は AI が書いて誰も読んでいない。題の商標・ストアの検索は
+  5 本とも正式収録の前に。正式収録の 41 本には数えず、アプリには出ず、
+  Club House にも登録しない。2 週間の時計(`docs/RELEASE_CHECKLIST.md` §0)は Web で公開した日から数える —
+  5 本とも 2026-10-23 から(UTC では 2026-10-22 17:33 の同期から)。
   チャンネルの宣言は registry の `channel`、出し分けは `app/gameChannel.ts` の
   実行時ガード(`docs/WEB_VERSION.md`「先行公開」)。
+- 2026-10-20 から、さらに **Web 先行公開(ベータ)向けの新作 5 本**(Overtake / Make the Target /
+  Nested Tic-Tac-Toe / Scopa / Tangram、No. 52〜56)に着手し、**2026-10-21 に 5 本とも遊べる形まで
+  このリポジトリに実装した**(計画は
+  `docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md`、仕様の正は各
+  `docs/*_RULES.md`)。registry では Make the Target / Nested Tic-Tac-Toe / Tangram の 3 本が 2026-10-21 から
+  `channel: 'web-beta'`(遊べるようになる変更で `'in-development'` から変えた)。**Overtake と Scopa も
+  2026-10-22 に `'web-beta'` にした** — 製品オーナーの指示(2026-10-22):「Overtake, Scopa は Web に
+  出したいです。計画が間違ってる。このタイミングで、実機の確認はできない。」それまでは各ルール文書が
+  切り替えを止めていた。Overtake は Phase 0 を行わないまま、`docs/OVERTAKE_RULES.md` §3 が記録の前に
+  上げるときの形として定めていたとおり `DRAG_MAPPING` を `'B'`(横ドラッグ + ▼ 長押し)にして出す
+  (モード A のコードと試験は定数の裏に残す)。Scopa は復帰時に CPU の拍を 450ms から張り直す今の
+  読み方を暫定の挙動として出し、読み方は確認待ちのまま(§4.2)。規則の出典と商標・ストアの検索も
+  未確認のままで、`docs/SCOPA_RULES.md` §14 では「正式収録の前に(できるだけ早く)」に移した。
+  **Make the Target / Nested Tic-Tac-Toe / Tangram の 3 本は Web 版で 2026-10-22 から先行公開している**
+  (JST、UTC では 2026-10-21 17:38。pixapps-landing #204 で landing の `tests/ui.test.js` の
+  `WEB_BETA_GAME_IDS` に 3 本の id を、`IN_DEVELOPMENT_GAME_IDS` に Overtake と Scopa の id を足し、
+  続けて製品オーナーの指示で公開ワークフローが `11a3036` の web ビルドを landing main に同期した —
+  `af9dedc`、2026-10-21 17:38 UTC。本番への反映はこのリポジトリからは観測していない。
+  `docs/WEB_VERSION.md`「先行公開」)。そのビルドでは `'in-development'` のため開けなかった
+  **Overtake と Scopa も Web 版で 2026-10-22 から先行公開している**(JST、UTC でも 2026-10-22 02:32。
+  pixapps-landing #205 で landing の一覧の 2 本を `IN_DEVELOPMENT_GAME_IDS` から `WEB_BETA_GAME_IDS` へ移し、
+  続けて製品オーナーの指示で公開ワークフローが `3ed2b16` の web ビルドを landing main に同期した —
+  `6204b78`。本番への反映はこのリポジトリからは観測していない。`docs/WEB_VERSION.md`「先行公開」)。
+  Overtake と Tangram の実機での試作(Phase 0)はまだ行っておらず、操作の既定は暫定(Overtake は製品
+  オーナーが Phase 0 を当面見送ったのでモード B で出す。Tangram はそれが通らなければ Three Peaks に
+  差し替える)。正式収録の 41 本には数えず、アプリには出ず、Club House にも登録しない。
+  正式収録の基準(`docs/RELEASE_CHECKLIST.md` §0)の 2 週間の時計は Web で公開した日から数える —
+  5 本とも 2026-10-22 から(Make the Target / Nested Tic-Tac-Toe / Tangram は UTC では 2026-10-21 17:38、
+  Overtake と Scopa は 2026-10-22 02:32 UTC の同期から)。47〜51 の Phase 1(#239)が先に main に入ったので、
+  この 5 本はその後ろに No. 順で並ぶ。
 - 実装上のゲーム一覧・ID・並び順・カテゴリの正は `apps/simple-games/src/app/registry.ts` の `GAMES` / `GAME_CATEGORIES`。
 - 人間向け一覧は root `README.md`。
 - 各ゲームの実装は `apps/simple-games/src/games/<game-id>/` に分離する。
 - 未実装タイトルを Coming Soon として表示しない。
+
+- 2026-10-23 に No. 57〜61 (Light Grid / Color Flood / Three Peaks / Nim / Knight’s Tour)
+  を追加。新作は従来どおり `web-beta` で、正式収録の 41 本と Club House は変更しない。
+  仕様は各ルール文書、選定と検証・公開記録は
+  `docs/plans/2026-10-23-five-games-57-61.md`。Web の公開完了は同文書の記録を参照する。
+
+- 2026-10-23 に No. 62〜66 (Invaders / Falling Blocks / Paddle Rally / Hanoi Towers / Maze Escape) を追加。
+  5本ともWeb先行公開で、正式収録41本とClub Houseは変更しない。規則は各ルール文書、
+  検証・公開記録は `docs/plans/2026-10-23-five-games-62-66.md`。
 
 ### Platforms
 
@@ -74,8 +142,9 @@ Design philosophy:
 以下は **Core** — Club House を使っていない状態のアプリと Web 版 — の約束である。
 Club House(#161 / #164)は本人が明示的に参加したときだけ現れる任意の層で、Core の
 約束の例外ではなく **Core の外** に置く(2026-09-09 の #176、2026-09-30 の
-`simple-games-club#1`)。デプロイは PixApps が運用する **Public** と利用者が建てる
-**Private** の 2 つ。Club House を一度も触らない利用者にとって、以下は 1 つも変わらない。
+`simple-games-club#1`)。公式 **Public**、利用者が建てる **Self-hosted** に、
+2026-10-23 にオーナー契約で PixApps が提供する **Managed** を加える判断をした。
+Club House を一度も触らない利用者にとって、以下は 1 つも変わらない。
 Club House の側の境界(ゲームは PixApps のサーバーを 1 つも必要としない・送るのは
 結果画面の事実だけ・順位はゲーム × モードごとの自己ベスト(同じ盤面で競うのはデイリーだけ)・Core の画面に現れる入口は 3 つまで・
 公開デプロイの費用の上限・CI での証明)は `docs/PRODUCT_PRINCIPLES.md`「Club House」が定める。
@@ -97,8 +166,8 @@ Club House の側の境界(ゲームは PixApps のサーバーを 1 つも必�
 - Push / ローカル通知で再訪を促さない。
 - ゲームプレイを中断する広告を app に導入しない。
 - **ゲームが** API サーバー、クラウド DB、認証基盤を必要とする構成にしない。
-  PixApps が持つ固定費は Public Club House の 1 デプロイだけで、それも限りなくゼロに
-  近い額に限る(超えたら機能を削るか畳む。同「費用の上限」)。
+  公式 Public の費用上限と、Managed のオーナー契約で賄う費用を分ける。
+  Managed が止まっても Core はすべてのゲームを動かせる(同「Managed Club House」)。
 - AI API / 有料問題生成 API に依存しない。
 - ローエンド端末、低通信、低消費電力を設計制約として扱う。
 - 実施していない検証を成功扱いにしない。
@@ -136,6 +205,27 @@ Club House の UI も「手数を削る」で評価する(招待リンクから 
 「Club House」節が数える 3 つまで(具体形は `club.md` §2)で、Friction first の側に
 Club House のための摩擦を持ち込まない。**Public ができても、この数は増えない。**
 
+### Managed Club House — 採用した方向
+
+2026-10-23 の製品オーナー判断。利用者に Railway などへの構築を求めず、PixApps が
+Cloudflare 上にクラブごとの領域を提供する。**Trial: 無料・期限なしで 5 名 × 1 クラブ**を
+本人が開始でき、**Basic: 50 名 / クラブ × 3 クラブ**へ同じ記録を保って移行する。
+将来の Plus は 100 名 × 5 クラブ、MAX は人数上限なし × 100 クラブ。価格は未定。
+Plus / MAX の契約はまだ受け付けない。
+
+オーナーが公開範囲、参加承認、対象ゲームを管理し、現在の記録からクラブ横断の記録帳と
+メンバー向け記録アルバムを作れる。保持データから分からない総プレイ回数や成功率は表示しない。
+所有クラブの承認済み・在籍中メンバーが合計 50 名以上なら、有効なホスティング契約の
+オーナーの広告を非表示にする。オーナーをクラブごとに含む延べ人数で、申請中は含めない。
+オーナー画面に人数と有効状態を表示し、確認済みの資格を端末内に保存する。起動時の確認通信や
+購入済み扱いは追加しない。今回の実装は無料 Trial と運用者による Basic の付与・移行までで、
+決済・自動更新・本番公開は含まない。
+サービスは Public Club House と同じ `https://club.pixapps.ai` に置き、クライアントは
+`ui/clubFeatures.ts` の `MANAGED_CLUBS_ENABLED` で有効にする。
+
+Canonical: `PRODUCT_PRINCIPLES.md`「Managed Club House」、
+`architecture/managed-clubs.md`。既存 `architecture/club.md` の self-hosted API は維持する。
+
 ## 6. Monetization
 
 ### App
@@ -143,7 +233,8 @@ Club House のための摩擦を持ち込まない。**Public ができても、
 - 全ゲーム・全ゲーム機能を無料提供。
 - Anchored Adaptive Banner 1枠のみ。オフラインでは広告取得しない。
 - Rewarded / Interstitial / App Open / Native は採用しない。
-- 買い切りの広告削除商品のみ。ゲーム機能差は作らない。
+- ストア商品は買い切りの広告削除のみ。別に、上記の Managed オーナー特典が広告を非表示にする。
+  購入状態とは分け、ゲーム機能差は作らない。
 
 Canonical: `docs/ADS_POLICY.md`, `docs/PRODUCT_PRINCIPLES.md`
 
@@ -152,7 +243,8 @@ Canonical: `docs/ADS_POLICY.md`, `docs/PRODUCT_PRINCIPLES.md`
 - 全ゲームを無料提供。
 - ゲーム盤面・操作を妨害しない範囲で広告を掲載する。
 - 広告視聴による機能解放を行わない。
-- 課金機能は提供しない。
+- Core のゲームに課金機能は提供しない。Managed のオーナー向けホスティング契約は上記の別の層。
+- Managed オーナーの広告非表示は Web のゲームにも適用する。通常メンバーや LP 全体の特典ではない。
 
 Canonical: `docs/WEB_VERSION.md`
 

@@ -78,10 +78,18 @@ describe('gameLandingUrl', () => {
     // title's tutorial from ending in a 404 before its pages go up.
     expect(gameLandingUrl('some-future-game', 'en')).toBeNull();
     expect(gameLandingUrl('some-future-game', 'ja')).toBeNull();
-    // And with the real case: the titles in the browser's early release
-    // (docs/WEB_VERSION.md「先行公開」, issues #194 and #197) have no guide yet,
-    // so their tutorials end without the button rather than at a 404 inside
-    // our own site.
+    // And with the real case: titles that came through the browser's early
+    // release (docs/WEB_VERSION.md「先行公開」) have no guide yet — the ones of
+    // issues #194 and #197, in the app since 2026-10-02, the five still in
+    // early release (docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md)
+    // and the next ones — the five built for it on 2026-10-22
+    // (docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md) and
+    // the five built on 2026-10-21, on the channel since then (Overtake and
+    // Scopa since 2026-10-22)
+    // (docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md) —
+    // which stay out of PUBLISHED_GAME_IDS until they graduate — so their
+    // tutorials end without the button rather than at a 404 inside our own
+    // site.
     for (const id of [
       'crown-grid',
       'number-path',
@@ -91,6 +99,31 @@ describe('gameLandingUrl', () => {
       'dominoes',
       'hit-and-blow',
       'dots-and-boxes',
+      'unblock-puzzle',
+      'snake',
+      'loop-puzzle',
+      'bridges',
+      'peg-solitaire',
+      'chess',
+      'gem-swap',
+      'pipe-link',
+      'bounce-up',
+      'echo-pads',
+      'overtake',
+      'make-the-target',
+      'nested-tic-tac-toe',
+      'scopa',
+      'tangram',
+      'light-grid',
+      'color-flood',
+      'three-peaks',
+      'nim',
+      'knight-tour',
+      'invaders',
+      'falling-blocks',
+      'paddle-rally',
+      'hanoi-towers',
+      'maze-escape',
     ]) {
       expect(gameLandingUrl(id, 'en')).toBeNull();
       expect(gameLandingUrl(id, 'ja')).toBeNull();

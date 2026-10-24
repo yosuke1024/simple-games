@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsProvider } from '@/state/SettingsContext';
 import { createMemoryKV } from '@/storage/kv';
 import { settingsSchema } from '@/storage/schemas';
-import { createFreeSession, isValidBoard } from '../game';
+import { createFreeSession, doMoveCascadeToCell, isValidBoard } from '../game';
 import { toPersisted } from '../storage/gamePersistence';
 import { FC_STORAGE_KEYS, type Stats } from '../storage/schemas';
 import { FreeCellRoot } from './FreeCellRoot';
@@ -103,8 +103,13 @@ function storedDealSeconds(): number {
   return (JSON.parse(raw) as { elapsedSeconds: number }).elapsedSeconds;
 }
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
+  // Unmounting saves: the provider runs its leave sync on the way out
+  // (docs/GAME_LIFECYCLE.md「アンマウントで計上する」), and saves are
+  // fire-and-forget. Let them land before wiping the store, or the next test
+  // launches onto a game it never played.
+  await act(async () => undefined);
   deviceStore.clear();
 });
 
@@ -358,6 +363,30 @@ describe('first run', () => {
     }
     expect(table().querySelectorAll('[data-card]')).toHaveLength(52);
     expect(screen.getByText(/Moves\s*0/)).toBeInTheDocument();
+  });
+});
+
+describe('Quick Rules shown again over a suspended deal (§10)', () => {
+  it('resumes that deal on Start Playing, rather than replace it unasked', async () => {
+    const user = userEvent.setup();
+    // The flags record is gone while a free deal is suspended: the golden
+    // deal, one move in — its 6♦ parked in the third free cell.
+    const played = doMoveCascadeToCell(createFreeSession('fc-free-golden'), 0, 2)!;
+    renderGame({ [FC_STORAGE_KEYS.game]: JSON.stringify(toPersisted(played, 1)) });
+
+    expect(await screen.findByText('Down by one, colors alternate')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Start Playing' }));
+    await settle();
+
+    expect(
+      within(table()).getByRole('button', { name: 'Free cell 3, 6 of diamonds' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Moves\s*1/)).toBeInTheDocument();
+    // Resumed, not dealt: no deal counted, and no new deal written over the slot.
+    expect(deviceStore.get(FC_STORAGE_KEYS.stats)).toBeUndefined();
+    expect(deviceStore.get(FC_STORAGE_KEYS.game)).toBeUndefined();
   });
 });
 
@@ -1045,5 +1074,46 @@ describe('drag (issue #119)', () => {
     // Then a drag again, on a different card entirely.
     drag(card('A of spades'), overFoundation(0));
     expect(screen.getByText(/Moves\s*3/)).toBeInTheDocument();
+  });
+});
+
+describe('leaving by the browser’s Back (docs/GAME_LIFECYCLE.md「アンマウントで計上する」)', () => {
+  // Back in the browser — like a home-screen shortcut to another game — takes
+  // the game off screen by unmounting its Root: no goHome, no
+  // exitToCollection, no visibilitychange. Before the provider synced on its
+  // own unmount, every second since the last background was lost there, from
+  // the deal's clock and from the statistics both.
+  it('books the seconds played since the last sync, once, and not again on remount', async () => {
+    deviceStore.set(FC_STORAGE_KEYS.flags, tutorialDone[FC_STORAGE_KEYS.flags]!);
+    vi.useFakeTimers();
+    try {
+      launch();
+      await settle();
+      fireEvent.click(screen.getByRole('button', { name: /New deal/ }));
+
+      // A background books the first five, as it always has.
+      act(() => vi.advanceTimersByTime(5_000));
+      background();
+      await settle();
+      expect(storedPlaySeconds()).toBe(5);
+
+      // Three more, then Back: the Root is simply unmounted.
+      act(() => vi.advanceTimersByTime(3_000));
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedDealSeconds()).toBe(8);
+
+      // Forward again, and away again at once: the deal still says eight,
+      // and none of the eight is booked a second time.
+      launch();
+      await settle();
+      cleanup();
+      await settle();
+      expect(storedPlaySeconds()).toBe(8);
+      expect(storedDealSeconds()).toBe(8);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

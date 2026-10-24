@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
+import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart, IconCheck } from '@/ui/components/icons';
 import { localDateString, SUIT_COUNTS, type SuitCount } from '../../game';
 import { useSpider } from '../../state/GameContext';
@@ -45,15 +46,13 @@ export function SpiderHomeScreen() {
     n === 1 ? t('spiderOneSuit') : n === 2 ? t('spiderTwoSuits') : t('spiderFourSuits');
 
   return (
-    <div className="screen home-screen">
+    <div className="screen home-screen illustrated-game-home">
       <GameHomeHeader gameId="spider-solitaire" onBack={exitToCollection} />
 
       <div className="home-hero">
-        {/* The series mark: the club. Klondike wears the spade and FreeCell the
-            heart — one deck, three games, three suits. */}
-        <div className="home-logo" aria-hidden="true">
-          ♣
-        </div>
+        <span className="game-home-artwork" aria-hidden="true">
+          <GameArtwork id="spider-solitaire" />
+        </span>
         <h1 className="home-title">{t('spiderName')}</h1>
         <p className="home-tagline">{t('tagline')}</p>
       </div>

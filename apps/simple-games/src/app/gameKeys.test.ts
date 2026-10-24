@@ -5,6 +5,11 @@
  * released behaviour: if this test is red, either a migration plan exists and
  * this file changes in the same commit, or somebody is about to strand or
  * delete players' data. Do not "fix" the expectation to make it pass.
+ *
+ * The one exception is marked where it sits: the titles still in the browser's
+ * early release (registry `channel: 'web-beta'`) have keys that may change
+ * before they graduate (docs/WEB_VERSION.md「先行公開」). That is a licence to
+ * change them on purpose, not to edit a line until the test goes green.
  */
 import { describe, expect, it } from 'vitest';
 import { GAMES } from './registry';
@@ -147,6 +152,79 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'binary-balance': ['bn.saveGame', 'bn.saveDaily', 'bn.stats', 'bn.flags', 'bn.prefs'],
   'sudoku-6x6': ['s6.saveGame', 's6.saveDaily', 's6.stats', 's6.flags', 's6.prefs'],
   'box-regions': ['br.saveGame', 'br.saveDaily', 'br.stats', 'br.flags', 'br.prefs'],
+  // The five web-beta titles of docs/plans/2026-10-17-unblock-snake-loop-bridges-peg.md.
+  // Unlike every line above, these are beta keys, not released ones: while a
+  // title is in the browser's early release its schema may still change
+  // (docs/WEB_VERSION.md「先行公開」) — never silently, though: a change here
+  // is a decision written into this file in the same commit as the code, and
+  // the save it drops was announced by the BETA notice first. They freeze the
+  // day a title graduates (docs/RELEASE_CHECKLIST.md §0), as the eleven from
+  // cg. to br. did on 2026-10-02. Each starts at the scaffold's two keys and
+  // grows to what its rules document's storage section lists; one comment per
+  // line, so that each game's change to its own line merges without touching
+  // its neighbours'.
+  // No. 42, web-beta (docs/UNBLOCK_PUZZLE_RULES.md storage): not frozen until graduation
+  'unblock-puzzle': ['ub.saveGame', 'ub.saveDaily', 'ub.stats', 'ub.flags', 'ub.prefs'],
+  // No. 43, web-beta (docs/SNAKE_RULES.md storage): not frozen until graduation
+  snake: ['sn.saveGame', 'sn.stats', 'sn.flags', 'sn.prefs'],
+  // No. 44, web-beta (docs/LOOP_PUZZLE_RULES.md storage): not frozen until graduation
+  'loop-puzzle': ['lp.saveGame', 'lp.saveDaily', 'lp.stats', 'lp.flags', 'lp.prefs'],
+  // No. 45, web-beta (docs/BRIDGES_RULES.md storage): not frozen until graduation
+  bridges: ['bg.saveGame', 'bg.saveDaily', 'bg.stats', 'bg.flags', 'bg.prefs'],
+  // No. 46, web-beta (docs/PEG_SOLITAIRE_RULES.md storage): not frozen until graduation
+  'peg-solitaire': ['pg.saveGame', 'pg.stats', 'pg.flags', 'pg.prefs'],
+  // The next five titles, of
+  // docs/plans/2026-10-19-chess-gem-swap-pipe-link-bounce-up-echo-pads.md
+  // (Nos. 47–51), each playable since 2026-10-22 and on the browser's
+  // early-release channel like Nos. 42–46 (registry `channel: 'web-beta'`
+  // since then): beta keys on the same terms as the five above. Each row is
+  // its rules document's storage section, grown from the scaffold's two keys
+  // in Phase 2/3; none is frozen until graduation.
+  // No. 47, web-beta (docs/CHESS_RULES.md §7): the scaffold's two keys grew to the rules
+  // document's four in Phase 3 — the one saved game (a move list) and the side for the next
+  // game. Not frozen until graduation
+  chess: ['ch.saveGame', 'ch.stats', 'ch.flags', 'ch.prefs'],
+  // No. 48, web-beta (docs/GEM_SWAP_RULES.md §7): not frozen until graduation
+  'gem-swap': ['gs.saveGame', 'gs.stats', 'gs.flags', 'gs.prefs'],
+  // No. 49, web-beta (docs/PIPE_LINK_RULES.md §7): the scaffold's two keys grew to the
+  // rules document's five in Phase 3 — two saved-game slots (difficulty and the daily) and the
+  // difficulty last chosen. Not frozen until graduation
+  'pipe-link': ['pn.saveGame', 'pn.saveDaily', 'pn.stats', 'pn.flags', 'pn.prefs'],
+  // No. 50, web-beta (docs/BOUNCE_UP_RULES.md §5): not frozen until graduation
+  'bounce-up': ['bo.stats', 'bo.flags', 'bo.prefs'],
+  // No. 51, web-beta (docs/ECHO_PADS_RULES.md storage): not frozen until graduation
+  'echo-pads': ['ep.saveGame', 'ep.saveDaily', 'ep.progress', 'ep.stats', 'ep.flags', 'ep.prefs'],
+  // The five titles of
+  // docs/plans/2026-10-20-overtake-make-the-target-nested-tic-tac-toe-scopa-tangram.md
+  // (Nos. 52–56), each playable since 2026-10-21 and on the browser's
+  // early-release channel like Nos. 42–46 (registry `channel: 'web-beta'`):
+  // three since 2026-10-21, Overtake and Scopa since 2026-10-22 by the product
+  // owner's decision. Beta keys on the same terms as the ten above.
+  // Each row is its rules document's storage section; none is frozen until
+  // graduation.
+  // No. 52, web-beta (docs/OVERTAKE_RULES.md storage): not frozen until graduation
+  overtake: ['ot.progress', 'ot.stats', 'ot.flags', 'ot.prefs'],
+  // No. 53, web-beta (docs/MAKE_THE_TARGET_RULES.md §10): the scaffold's two keys grew to
+  // the rules document's five in Phase 3 — two saved-game slots (Free Play and the daily) and
+  // the difficulty last chosen. Not frozen until graduation
+  'make-the-target': ['tg.saveGame', 'tg.saveDaily', 'tg.stats', 'tg.flags', 'tg.prefs'],
+  // No. 54, web-beta (docs/NESTED_TIC_TAC_TOE_RULES.md storage): not frozen until graduation
+  'nested-tic-tac-toe': ['nt.saveGame', 'nt.stats', 'nt.flags', 'nt.prefs'],
+  // No. 55, web-beta (docs/SCOPA_RULES.md storage): not frozen until graduation
+  scopa: ['sc.saveGame', 'sc.stats', 'sc.flags'],
+  // No. 56, web-beta (docs/TANGRAM_RULES.md storage): not frozen until graduation
+  tangram: ['tn.saveGame', 'tn.saveDaily', 'tn.progress', 'tn.stats', 'tn.flags', 'tn.prefs'],
+  // Nos. 57–61: new Web-beta save namespaces; existing released keys unchanged.
+  'light-grid': ['lg.saveGame', 'lg.stats', 'lg.flags', 'lg.prefs'],
+  'color-flood': ['cf.saveGame', 'cf.stats', 'cf.flags', 'cf.prefs'],
+  'three-peaks': ['tp.saveGame', 'tp.stats', 'tp.flags'],
+  nim: ['ni.saveGame', 'ni.stats', 'ni.flags', 'ni.prefs'],
+  'knight-tour': ['kt.saveGame', 'kt.stats', 'kt.flags', 'kt.prefs'],
+  invaders: ['iv.saveGame', 'iv.stats', 'iv.flags'],
+  'falling-blocks': ['fb.saveGame', 'fb.stats', 'fb.flags'],
+  'paddle-rally': ['pr.saveGame', 'pr.stats', 'pr.flags', 'pr.prefs'],
+  'hanoi-towers': ['hn.saveGame', 'hn.stats', 'hn.flags', 'hn.prefs'],
+  'maze-escape': ['me.saveGame', 'me.stats', 'me.flags', 'me.prefs'],
 };
 
 const PREFIXES: Record<string, string> = {
@@ -191,6 +269,31 @@ const PREFIXES: Record<string, string> = {
   'binary-balance': 'bn.',
   'sudoku-6x6': 's6.',
   'box-regions': 'br.',
+  'unblock-puzzle': 'ub.',
+  snake: 'sn.',
+  'loop-puzzle': 'lp.',
+  bridges: 'bg.',
+  'peg-solitaire': 'pg.',
+  chess: 'ch.',
+  'gem-swap': 'gs.',
+  'pipe-link': 'pn.',
+  'bounce-up': 'bo.',
+  'echo-pads': 'ep.',
+  overtake: 'ot.',
+  'make-the-target': 'tg.',
+  'nested-tic-tac-toe': 'nt.',
+  scopa: 'sc.',
+  tangram: 'tn.',
+  'light-grid': 'lg.',
+  'color-flood': 'cf.',
+  'three-peaks': 'tp.',
+  nim: 'ni.',
+  'knight-tour': 'kt.',
+  invaders: 'iv.',
+  'falling-blocks': 'fb.',
+  'paddle-rally': 'pr.',
+  'hanoi-towers': 'hn.',
+  'maze-escape': 'me.',
 };
 
 describe('registry storage keys (released data — do not edit to make green)', () => {

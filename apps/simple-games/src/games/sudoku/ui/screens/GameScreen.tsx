@@ -221,7 +221,7 @@ export function SudokuGameScreen() {
   const solved = session.status === 'solved';
 
   return (
-    <div className="screen game-screen">
+    <div className="screen game-screen sudoku-game-screen">
       <div className="game-content" inert={solved || confirmRestart}>
         <header className="game-topbar">
           <button type="button" className="icon-btn" aria-label={t('backHome')} onClick={goHome}>
@@ -235,7 +235,7 @@ export function SudokuGameScreen() {
                   ? t('freePlay')
                   : t('modeLevel', { n: session.level ?? 1 })}
             </span>
-            <span>{t(`sudokuTier_${session.difficulty}`)}</span>
+            <span className="sudoku-tier">{t(`sudokuTier_${session.difficulty}`)}</span>
           </div>
           <button
             type="button"
@@ -285,7 +285,20 @@ export function SudokuGameScreen() {
             disabled={selected === null || isGiven(session.board, selected)}
           >
             <span className="action-icon" aria-hidden="true">
-              ⌫
+              <svg
+                viewBox="0 0 24 24"
+                width="1em"
+                height="1em"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                focusable="false"
+              >
+                <path d="m3 12 6-7h11v14H9Z" />
+                <path d="m11 9 6 6m0-6-6 6" />
+              </svg>
             </span>
             {t('sudokuErase')}
           </button>
@@ -296,7 +309,20 @@ export function SudokuGameScreen() {
             onClick={() => setNotesMode((current) => !current)}
           >
             <span className="action-icon" aria-hidden="true">
-              ✎
+              <svg
+                viewBox="0 0 24 24"
+                width="1em"
+                height="1em"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                focusable="false"
+              >
+                <path d="m4 20 1-5L16 4a2.1 2.1 0 0 1 3 3L8 18Z" />
+                <path d="m14 6 4 4M4 20h16" />
+              </svg>
             </span>
             {t('sudokuNotes')}
           </button>

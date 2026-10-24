@@ -342,9 +342,11 @@ interface AnimationFramePair {
  * negative and runs the simulation backwards. Silencing the real frames
  * removes the second clock rather than racing it (issue #158).
  *
- * Not for the leak tests: `trackResources()` above deliberately keeps jsdom's
- * real frames, because "was every requested frame cancelled?" is answered by
- * frames that actually fire.
+ * Not for the leak tests: `trackResources()` above wraps whatever frames are
+ * installed, because "was every requested frame cancelled?" is answered by
+ * frames that actually fire — jsdom's real ones (Snake's and Overtake's leak
+ * tests), or a queue the test runs by hand (Bounce Up's, through
+ * `queueAnimationFrames` in games/bounce-up/ui/test-driver.ts).
  */
 export function stubAnimationFrames(): () => void {
   let nextHandle = 1;

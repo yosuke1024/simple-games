@@ -1,0 +1,339 @@
+/* Pipe Link — all of this game's styling, imported by PipeLinkRoot.
+   Everything is built from the series tokens in src/ui/styles.css (--surface,
+   --ink, --ink-soft, --line, --accent, --accent-soft, --accent-ring, …) so the
+   game reads as part of the same app and follows the theme without knowing
+   about it. No colour of its own: lit pipes wear the accent — at the end, most
+   of the board — and unlit ones are hollow outlines in --ink-soft
+   (docs/PIPE_LINK_RULES.md §10). Lit and unlit differ by shape as well:
+   a full tube against a hollow one.
+
+   Class names are prefixed `pn-` so this file can never collide with the
+   shell or with another game. */
+
+/* ---------- board ---------- */
+
+.pn-board-area {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px 4px;
+}
+
+/*
+  One tile is the smaller of two shares (§10): the width left once the area's
+  padding (24px) and the border (2px) are taken out, over the columns plus the
+  board's own padding (0.2 tile a side); and the height left once the game
+  chrome and the bottom safe area are taken out, over the rows plus the same
+  padding. The 320px of chrome is Bridges' figure, for the same frame: the top
+  bar, the action bar, the two reserved note lines, the area's padding and
+  the web build's anchor-ad reservation (116px). The measured tile sizes are
+  in the rules (§1).
+
+  The height is the small viewport (`svh`) where the browser has it, chosen by
+  `@supports` rather than a second declaration (a custom property takes any
+  value at parse time, so an `svh` line would win even where `svh` means
+  nothing — Bridges §13). The floor is 34px, the cell floor of Box Regions and
+  Shape Regions: a tile is the tap target and is never smaller; a landscape
+  phone, whose height share falls below it, scrolls the board area instead.
+  `min()` inside `clamp()` is Chromium 79+, `env()` 69+.
+*/
+.pn-board {
+  --pn-cell: clamp(
+    34px,
+    min(
+      calc((100vw - 26px) / (var(--pn-cols) + 0.4)),
+      calc((100vh - 320px - env(safe-area-inset-bottom, 0px)) / (var(--pn-rows) + 0.4))
+    ),
+    76px
+  );
+  position: relative;
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: repeat(var(--pn-cols), var(--pn-cell));
+  grid-auto-rows: var(--pn-cell);
+  padding: calc(var(--pn-cell) * 0.2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  /* A tap is a tap: no double-tap zoom stealing it. */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+
+  /* A paper edge and shallow lift on the whole board; external rings remain
+     visible around flush child cells without changing board geometry. */
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 0 0 4px var(--line),
+    0 3px 0 var(--line),
+    0 8px 18px var(--accent-ring-soft);
+}
+
+@supports (height: 100svh) {
+  .pn-board {
+    --pn-cell: clamp(
+      34px,
+      min(
+        calc((100vw - 26px) / (var(--pn-cols) + 0.4)),
+        calc((100svh - 320px - env(safe-area-inset-bottom, 0px)) / (var(--pn-rows) + 0.4))
+      ),
+      76px
+    );
+  }
+}
+
+/*
+  Whole-pixel cells (§10): at a fractional cell each tile's SVG is clipped at
+  a fractional pixel, and the anti-aliased edges of two neighbouring tiles
+  blend into a hairline across the pipe. Where the browser has `round()`, the
+  cell and the padding snap down to whole CSS pixels; elsewhere (Chromium 88)
+  the rule above stays. Every browser with `round()` also has `svh`.
+*/
+@supports (width: round(down, 1px, 1px)) and (height: 100svh) {
+  .pn-board {
+    --pn-cell: round(
+      down,
+      clamp(
+        34px,
+        min(
+          calc((100vw - 26px) / (var(--pn-cols) + 0.4)),
+          calc((100svh - 320px - env(safe-area-inset-bottom, 0px)) / (var(--pn-rows) + 0.4))
+        ),
+        76px
+      ),
+      1px
+    );
+    padding: round(down, calc(var(--pn-cell) * 0.2), 1px);
+  }
+}
+
+/* Solved beat (§10): one soft wash over the board, then gone. */
+.pn-board::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: var(--accent-soft);
+  opacity: 0;
+}
+
+.pn-board-solved::after {
+  animation: pn-solved-wash 900ms ease-out;
+}
+
+@keyframes pn-solved-wash {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---------- tiles ---------- */
+
+.pn-tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  /* The edge colour of a tube, and its inside. Unlit: an outline around the
+     tile's own ground — hollow. Lit: the accent through and through — full. */
+  --pn-edge: var(--ink-soft);
+  --pn-core: var(--surface);
+}
+
+.pn-tile-lit {
+  --pn-edge: var(--accent);
+  --pn-core: var(--accent);
+}
+
+.pn-tile:focus {
+  outline: none;
+}
+
+/* Keyboard focus: a solid ring inside the tile — never the hint's dotted one. */
+.pn-tile:focus-visible {
+  box-shadow: inset 0 0 0 3px var(--ink);
+}
+
+.pn-pipes,
+.pn-ghost,
+.pn-source {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* A turn is drawn as the turn it was (§10); the state changed on the tap. */
+.pn-pipes {
+  transition: transform 0.14s ease-out;
+}
+
+.pn-board-still .pn-pipes {
+  transition: none;
+}
+
+.pn-pipe-edge > * {
+  fill: var(--pn-edge);
+  stroke: var(--pn-edge);
+  stroke-width: 10;
+}
+
+.pn-pipe-core > * {
+  fill: var(--pn-core);
+  stroke: none;
+}
+
+/* The source (§1, §10): a filled dot inside a ring, in ink, over the joint. */
+.pn-source-ring {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 5;
+}
+
+/* The dot sits on a lit pipe (the source tile is always lit): a halo in the
+   tile's ground keeps it apart from the accent in both themes. */
+.pn-source-dot {
+  fill: var(--ink);
+  stroke: var(--surface);
+  stroke-width: 4;
+  paint-order: stroke;
+}
+
+/* The hint (§6, §10): a dotted ring round the tile, and the way it should
+   face drawn faint and dashed over it. Stays until the next move. */
+.pn-tile-hint::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 3px dotted var(--accent);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.pn-ghost > * {
+  fill: var(--accent-ring-soft);
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-dasharray: 6 5;
+}
+
+/* The line under the board (§6): what the hint asks. Two lines are always
+   reserved — the board's height share counts them — so the board never jumps
+   when it fills. */
+.pn-note {
+  box-sizing: content-box;
+  min-height: 2.6em;
+  max-width: 30em;
+  margin: 4px 0 0;
+  padding: 0 4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* Reduced Motion (OS or app): turns and the solved wash happen at once (§10). */
+@media (prefers-reduced-motion: reduce) {
+  .pn-pipes {
+    transition: none;
+  }
+  .pn-board-solved::after {
+    animation: none;
+  }
+}
+
+:root[data-reduced-motion='true'] .pn-pipes {
+  transition: none;
+}
+
+:root[data-reduced-motion='true'] .pn-board-solved::after {
+  animation: none;
+}
+
+/* ---------- top bar and home ---------- */
+
+.pn-size-tag {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.pn-choose-label {
+  margin: 0 0 -4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.pn-chips {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ---------- Quick Rules figures (§9) ---------- */
+
+.pn-tutorial > .web-beta-notice {
+  width: 100%;
+  margin-top: 0;
+  padding: 0 16px;
+}
+
+.pn-figure {
+  --pn-cell: 40px;
+  display: grid;
+  grid-template-columns: repeat(var(--pn-cols, 3), var(--pn-cell));
+  grid-auto-rows: var(--pn-cell);
+  justify-content: center;
+  margin: 4px auto 8px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.pn-figure-tile {
+  cursor: default;
+}
+
+.pn-figure-turn {
+  grid-template-columns: var(--pn-cell) 40px var(--pn-cell);
+  align-items: center;
+}
+
+.pn-figure-arrow {
+  width: 40px;
+  height: 40px;
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-height: 700px) {
+  .pn-figure {
+    --pn-cell: 34px;
+  }
+}

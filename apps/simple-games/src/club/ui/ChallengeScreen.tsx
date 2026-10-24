@@ -4,8 +4,10 @@
  * ordered by the game's contract on this device; the server only stores them.
  * The first three wear the tables' marks (§16-2, decision 48). Only the
  * viewer's own result carries a delete button (club.md §9, decision 42);
- * another member's name opens the sheet with Report (§17-3) — never on the
- * owner's device.
+ * another member's name opens that member's view (§9「Member」) — on every
+ * device, the owner's too. What it last read is handed up (`onRead`) and back
+ * (`cached`), with where it was scrolled to, so closing that view shows the
+ * challenge where it was left.
  */
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '../api/client';
@@ -13,14 +15,20 @@ import { ClubApiError } from '../api/errors';
 import { dropOutboxMatching } from '../storage/outbox';
 import type { Challenge, Result } from '../api/types';
 import { contractFor, gameTitle, rankResults } from '../contract/challenge';
-import { GAMES } from '@/app/registry';
+import { findAvailableGame } from '@/app/gameChannel';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import type { ClubConnection } from '@/storage/schemas';
 import type { ClubPlayRequest } from '@/ui/clubBridge';
-import { dateLabel, errorText, factsLine, RankMark, ScreenFrame } from './common';
+import {
+  dateLabel,
+  errorText,
+  factsLine,
+  RankMark,
+  ScreenFrame,
+  useRestoredScroll,
+} from './common';
 import { challengeTitle } from './ClubScreen';
-import { NameSheet } from './NameSheet';
 
 /**
  * Challenges this session withdrew from (endpoint + challenge id). The server
@@ -37,29 +45,50 @@ export function clearWithdrawnChallenges(): void {
   withdrawn.clear();
 }
 
+/** The challenge and its results as last read; ClubRoot keeps them on the step while a member's view is open. */
+export interface ChallengeRead {
+  challenge: Challenge;
+  results: Result[];
+}
+
 export function ChallengeScreen({
   connection,
   challengeId,
+  cached,
+  refresh = false,
+  scrollTop,
+  onRead,
+  onOpenMember,
   onBack,
   onPlay,
 }: {
   connection: ClubConnection;
   challengeId: string;
+  /** What this screen read before a member's view was opened over it; undefined on a fresh open. */
+  cached?: ChallengeRead;
+  /** Something done on the screen above changed what the results hold: read them again (club.md §9). */
+  refresh?: boolean;
+  /** Where the body was scrolled to when a member's view was opened over it. */
+  scrollTop?: number;
+  /** The challenge was read anew (not the cached one handed back): ClubRoot keeps it for the way back. */
+  onRead: (read: ChallengeRead) => void;
+  /** Another member's name was pressed: ClubRoot pushes that member's view; `scrollTop` is where the body is. */
+  onOpenMember: (memberId: string, nickname: string, scrollTop: number) => void;
   onBack: () => void;
   onPlay: (request: ClubPlayRequest) => void;
 }) {
   const { t, locale } = useSettings();
-  const [challenge, setChallenge] = useState<Challenge | null>(null);
-  const [results, setResults] = useState<Result[] | null>(null);
+  // What the step kept is shown at once, with no request (a Back from a member's view),
+  // unless something up there changed what it holds.
+  const [challenge, setChallenge] = useState<Challenge | null>(cached?.challenge ?? null);
+  const [results, setResults] = useState<Result[] | null>(cached?.results ?? null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(cached === undefined || refresh);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useRestoredScroll(bodyRef, scrollTop);
   const alive = useRef(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  /** Another member's result, its name pressed: the sheet with Report. */
-  const [sheet, setSheet] = useState<{ result: Result; detail: string } | null>(null);
-  const [reportedNote, setReportedNote] = useState(false);
-  const isOwner = connection.role === 'owner';
 
   const load = async () => {
     const client = createClient(connection.endpoint, connection.memberToken);
@@ -73,6 +102,7 @@ export function ChallengeScreen({
       if (!alive.current) return;
       setChallenge(c);
       setResults(r);
+      onRead({ challenge: c, results: r });
     } catch (e) {
       if (alive.current) setError(errorText(e, t, connection.clubName));
     } finally {
@@ -82,7 +112,8 @@ export function ChallengeScreen({
 
   useEffect(() => {
     alive.current = true;
-    void load();
+    // A challenge handed back is not asked for again, unless something changed it meanwhile.
+    if (cached === undefined || refresh) void load();
     return () => {
       alive.current = false;
     };
@@ -96,7 +127,9 @@ export function ChallengeScreen({
 
   const ranked = challenge && results ? rankResults(contractFor(challenge.gameId), results) : [];
 
-  const gameId = challenge ? (GAMES.find((g) => g.id === challenge.gameId)?.id ?? null) : null;
+  // Only a title this build offers (app/gameChannel.ts): on the app a web-beta id resolves to
+  // nothing, so Play can never open a game the app keeps off its doors.
+  const gameId = challenge ? (findAvailableGame(challenge.gameId)?.id ?? null) : null;
 
   const play = () => {
     if (!challenge || gameId === null) return;
@@ -140,22 +173,11 @@ export function ChallengeScreen({
     }
   };
 
-  /** Reporting twice is harmless (the server answers 204 and changes nothing). */
-  const report = async (result: Result) => {
-    setError(null);
-    setReportedNote(false);
-    try {
-      await createClient(connection.endpoint, connection.memberToken).reportMember(result.memberId);
-      if (alive.current) setReportedNote(true);
-    } catch (e) {
-      if (alive.current) setError(errorText(e, t, connection.clubName));
-    }
-  };
-
   return (
     <ScreenFrame
       title={challenge ? challengeTitle(challenge, t) : connection.clubName}
       onBack={onBack}
+      bodyRef={bodyRef}
       t={t}
     >
       <div className="club-toolbar">
@@ -172,11 +194,6 @@ export function ChallengeScreen({
       {error ? (
         <p className="club-note club-note-error" role="alert">
           {error}
-        </p>
-      ) : null}
-      {reportedNote ? (
-        <p className="club-quiet" role="status">
-          {t('clubReported')}
         </p>
       ) : null}
 
@@ -222,13 +239,19 @@ export function ChallengeScreen({
               >
                 <span className="settings-row-label">
                   {rank !== null ? <RankMark rank={rank} t={t} /> : null}
-                  {own || isOwner ? (
+                  {own ? (
                     result.nickname
                   ) : (
                     <button
                       type="button"
                       className="club-name-btn"
-                      onClick={() => setSheet({ result, detail: facts })}
+                      onClick={() =>
+                        onOpenMember(
+                          result.memberId,
+                          result.nickname,
+                          bodyRef.current?.scrollTop ?? 0,
+                        )
+                      }
                     >
                       {result.nickname}
                     </button>
@@ -263,15 +286,6 @@ export function ChallengeScreen({
         onCancel={() => setConfirmDelete(false)}
         onConfirm={() => void deleteMine()}
       />
-      {sheet ? (
-        <NameSheet
-          nickname={sheet.result.nickname}
-          detail={sheet.detail}
-          t={t}
-          onClose={() => setSheet(null)}
-          onReport={() => report(sheet.result)}
-        />
-      ) : null}
     </ScreenFrame>
   );
 }

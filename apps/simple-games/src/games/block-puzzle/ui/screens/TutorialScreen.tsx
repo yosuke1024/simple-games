@@ -87,7 +87,8 @@ function BoardFigure({ rows }: { rows: FigureRows }) {
 }
 
 export function BlockTutorialScreen() {
-  const { tutorialCompleted, completeTutorial, startNewGame, goHome } = useBlockPuzzle();
+  const { tutorialCompleted, completeTutorial, canResume, resumeGame, startNewGame, goHome } =
+    useBlockPuzzle();
   const { t, locale } = useSettings();
   const learnMoreUrl = gameLandingUrl('block-puzzle', locale);
   const [step, setStep] = useState(0);
@@ -115,7 +116,11 @@ export function BlockTutorialScreen() {
   const finish = () => {
     if (!tutorialCompleted) {
       completeTutorial();
-      startNewGame();
+      // Onto the game already waiting, if one is: the flag and the save are
+      // separate records, and a lost or unreadable flags record must not cost
+      // the player the game they left (§10).
+      if (canResume) resumeGame();
+      else startNewGame();
     } else {
       goHome();
     }

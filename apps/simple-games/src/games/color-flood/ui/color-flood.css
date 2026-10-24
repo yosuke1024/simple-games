@@ -1,0 +1,291 @@
+/* A quiet mosaic on a framed surface. Colour remains game content; chrome uses series tokens. */
+.cf-screen .game-content {
+  min-height: 0;
+  overflow-y: auto;
+}
+:root[data-sg-web-ads] .cf-screen {
+  height: 100%;
+}
+.cf-screen .game-topbar {
+  flex-shrink: 0;
+}
+.cf-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.cf-heading strong {
+  font-size: 15px;
+  font-weight: 750;
+}
+.cf-heading > span {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.cf-choose {
+  text-align: center;
+  color: var(--ink-soft);
+  margin: 0 0 4px;
+}
+.cf-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.cf-body {
+  width: 100%;
+  max-width: 392px;
+  margin: auto;
+  padding: 10px 16px 20px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+.cf-metrics {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 0 2px 10px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.cf-move-count {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+.cf-move-count > span {
+  font-size: 11px;
+}
+.cf-move-count strong {
+  color: var(--ink);
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1;
+}
+.cf-progress {
+  height: 3px;
+  margin: 0 2px 18px;
+  background: var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.cf-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+}
+.cf-board-frame {
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 2px 0 var(--line);
+}
+.cf-board {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 5px;
+}
+.cf-row {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.cf-tile {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: inset 0 0 0 0.5px #ffffff30;
+}
+.cf-tile .cf-mark {
+  width: 55%;
+  height: 55%;
+  max-width: 28px;
+  max-height: 28px;
+}
+.cf-mark {
+  display: block;
+  fill: currentColor;
+}
+/* A continuous contour, rather than a second grid, shows the growing territory. */
+.cf-connected::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 0 solid #fff;
+  pointer-events: none;
+}
+.cf-edge-top::after {
+  border-top-width: 2px;
+}
+.cf-edge-bottom::after {
+  border-bottom-width: 2px;
+}
+.cf-edge-left::after {
+  border-left-width: 2px;
+}
+.cf-edge-right::after {
+  border-right-width: 2px;
+}
+.cf-origin::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 5px;
+  height: 5px;
+  border-top: 2px solid currentColor;
+  border-left: 2px solid currentColor;
+}
+.cf-colour-0 {
+  background: #ad394e;
+  color: #fff;
+}
+.cf-colour-1 {
+  background: #2564a5;
+  color: #fff;
+}
+.cf-colour-2 {
+  background: #edc446;
+  color: #292107;
+}
+.cf-colour-3 {
+  background: #327758;
+  color: #fff;
+}
+.cf-colour-4 {
+  background: #7954a5;
+  color: #fff;
+}
+.cf-colour-5 {
+  background: #d87d30;
+  color: #23170b;
+}
+.cf-palette-label {
+  margin: 18px 0 10px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 11px;
+  letter-spacing: 0.025em;
+}
+.cf-palette {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 7px;
+  padding: 0 2px;
+}
+.cf-paint {
+  aspect-ratio: 1;
+  min-width: 0;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  touch-action: manipulation;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+}
+.cf-paint .cf-mark {
+  width: 75%;
+  height: 75%;
+}
+.cf-paint small {
+  position: absolute;
+  bottom: -15px;
+  left: 0;
+  width: 100%;
+  color: var(--ink-soft);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+.cf-paint:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+.cf-paint.cf-current {
+  outline: 1px solid var(--ink-soft);
+  outline-offset: 3px;
+}
+.cf-paint:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-color: var(--paper);
+}
+.cf-actions {
+  justify-content: center;
+  border-top: 0;
+  padding-top: 4px;
+}
+.cf-actions .action-btn {
+  min-height: 44px;
+  max-width: 140px;
+  border-radius: 9px;
+  flex-direction: row;
+  gap: 8px;
+  background: transparent;
+}
+.cf-actions .action-icon {
+  display: flex;
+}
+.cf-figure {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  width: 168px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 8px auto;
+}
+.cf-figure > span {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+.cf-figure .cf-mark {
+  width: 55%;
+  height: 55%;
+}
+.cf-home-mark {
+  display: block;
+  width: 64px;
+  height: 64px;
+}
+.cf-home-content {
+  display: contents;
+}
+@media (max-width: 340px) {
+  .cf-palette {
+    gap: 4px;
+    padding: 0;
+  }
+  .cf-body {
+    padding-inline: 14px;
+  }
+}
+@media (max-height: 680px) {
+  .cf-body {
+    max-width: 320px;
+    padding-top: 4px;
+  }
+  .cf-progress {
+    margin-bottom: 12px;
+  }
+  .cf-palette-label {
+    margin-top: 12px;
+  }
+}

@@ -1,0 +1,31 @@
+// AI translation draft; no human or native review claimed.
+import type { InvadersMessages } from './en';
+export const ja: InvadersMessages = {
+  invadersName: 'インベーダー',
+  invadersStage: 'ステージ',
+  invadersLives: 'ライフ',
+  invadersLivesLeft: '残りライフ {count}',
+  invadersBoard: 'インベーダーの空域：残り {count} 機',
+  invadersControls: 'ドラッグ、← →、A D で移動。',
+  invadersStart: '開始',
+  invadersPause: '一時停止',
+  invadersPaused: '一時停止中。準備ができたら再開。',
+  invadersReady: '自機の位置を決めて開始。',
+  invadersAutoFire: '自機は自動で発射します。',
+  invadersLeft: '左へ移動',
+  invadersRight: '右へ移動',
+  invadersRetry: 'もう一度遊ぶ',
+  invadersBest: 'ベストスコア',
+  invadersBestStage: '最高到達ステージ',
+  invadersStageClear: '編隊を撃破',
+  invadersStageClearBody: '次のステージは好きなときに。防壁は修復され、ライフは引き継ぎます。',
+  invadersNextStage: '次のステージ',
+  invadersWon: '全ステージクリア！',
+  invadersWonBody: '20 の編隊をすべて撃破しました。',
+  invadersOver: 'プレイ終了',
+  invadersOverBody: 'スコアを保存しました。いつでも再挑戦できます。',
+  invadersRule1: '左右に動いて狙おう。自機は自動で弾を発射する。',
+  invadersRule2: 'ジグザグの弾を避けよう。防壁は敵味方の弾を防ぎ、少しずつ壊れる。',
+  invadersRule3:
+    'ライフ 3 で 20 の編隊を撃破しよう。点線に到達する前に倒す。一時停止はいつでもできる。',
+};
