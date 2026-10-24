@@ -14,18 +14,9 @@ export const ptBR: ClubMessages = {
     'Os anúncios ficam ocultos enquanto você tiver pelo menos {required} membros e acesso ativo à hospedagem. Recarregue esta tela para atualizar o benefício.',
   clubOwnerMemberCountHelp:
     'Os membros de todos os seus Clubes são somados, incluindo você em cada Clube. Um membro em vários Clubes é contado em cada um. Pedidos pendentes não são incluídos.',
-  clubOwnerRecoveryKey: 'Chave de recuperação do proprietário',
-  clubOwnerRecoveryHelp:
-    'Guarde esta chave em um local privado antes de redefinir os dados ou trocar de dispositivo. Ela também é incluída no arquivo de backup das Configurações.',
-  clubOwnerShowKey: 'Mostrar chave do proprietário',
-  clubOwnerHideKey: 'Ocultar chave do proprietário',
-  clubOwnerCopyKey: 'Copiar chave do proprietário',
-  clubOwnerKeyCopied: 'Chave do proprietário copiada',
-  clubOwnerCopyKeyManually: 'Selecione e copie esta chave.',
   clubOwnerSpace: 'Espaço do proprietário',
   clubOwnerKey: 'Chave do proprietário',
   clubOwnerConnect: 'Abrir espaço do proprietário',
-  clubOwnerForget: 'Esquecer esta chave',
   clubOwnerKeyHelp:
     'Mantenha esta chave em segredo. Ela abre seu espaço de proprietário neste dispositivo.',
   clubOwnerUsage: '{used} de {max} Clubes · {members} membros por Clube',

@@ -122,15 +122,9 @@ describe('free Trial and owner benefit screen', () => {
     expect(screen.getByText('No time limit')).toBeInTheDocument();
     expect(await loadManagedOwner()).toMatchObject({ ownerToken: bootstrapKey });
     expect((await loadManagedOwner())?.pendingTrial).toBeUndefined();
-    const recovery = screen.getByLabelText('Owner recovery key');
-    expect(recovery).toHaveAttribute('type', 'password');
-    expect(recovery).toHaveValue(bootstrapKey);
-    await user.click(screen.getByRole('button', { name: 'Show owner key' }));
-    expect(recovery).toHaveAttribute('type', 'text');
-    const copy = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
-    await user.click(screen.getByRole('button', { name: 'Copy owner key' }));
-    expect(copy).toHaveBeenCalledWith(bootstrapKey);
-    expect(await screen.findByText('Owner key copied')).toBeInTheDocument();
+    // The key travels in the device backup; the screen never shows it (2026-10-25).
+    expect(screen.queryByDisplayValue(bootstrapKey)).toBeNull();
+    expect(screen.queryByLabelText('Owner key')).toBeNull();
     fireEvent.change(screen.getByRole('textbox', { name: 'Club name' }), {
       target: { value: 'Family' },
     });
@@ -299,7 +293,30 @@ describe('free Trial and owner benefit screen', () => {
     await screen.findByText('This owner key is not valid.');
     expect((await loadManagedOwner())?.adRemoval).toBeUndefined();
     expect(screen.queryByText('Ads are hidden on this device.')).toBeNull();
-    expect(screen.getByLabelText('Owner recovery key')).toHaveValue(KEY);
+    // With no Forget button, the refused key is replaced through the key form.
+    expect(screen.getByLabelText('Owner key')).toHaveValue('');
+    expect((await loadManagedOwner())?.ownerToken).toBe(KEY);
+  });
+
+  it('replaces a refused key with a reissued one through the key form', async () => {
+    const reissued = 'c'.repeat(64);
+    await saveManagedOwner({ origin: ORIGIN, ownerToken: KEY });
+    const fetcher = vi.fn().mockImplementation(async (_url: string, options: RequestInit) => {
+      const auth = (options.headers as Record<string, string>).Authorization;
+      return auth === `Bearer ${reissued}`
+        ? reply(ownerSpace('basic', [1]))
+        : reply({ error: { code: 'unauthorized', message: 'rotated' } }, 401);
+    });
+    vi.stubGlobal('fetch', fetcher);
+    renderOwner();
+    const user = userEvent.setup();
+    await screen.findByText('This owner key is not valid.');
+    expect(screen.queryByRole('button', { name: 'Reload' })).toBeNull();
+    fireEvent.change(screen.getByLabelText('Owner key'), { target: { value: reissued } });
+    await user.click(screen.getByRole('button', { name: 'Open owner space' }));
+    await screen.findByText('1 of 3 Clubs · 50 members per Club');
+    expect(screen.queryByLabelText('Owner key')).toBeNull();
+    expect((await loadManagedOwner())?.ownerToken).toBe(reissued);
   });
 
   it('keeps a rejected Trial bootstrap credential for recovery instead of silently creating another owner', async () => {

@@ -15,18 +15,9 @@ export const ko: ClubMessages = {
     '전체 멤버가 {required}명 이상이고 호스팅 이용 권한이 유효한 동안 광고가 숨겨집니다. 이 화면을 새로고침하면 혜택 상태가 갱신됩니다.',
   clubOwnerMemberCountHelp:
     '소유한 모든 클럽의 멤버 수를 합산하며, 각 클럽의 소유자도 포함합니다. 여러 클럽에 속한 멤버는 각 클럽에서 따로 셉니다. 승인 대기 중인 요청은 제외합니다.',
-  clubOwnerRecoveryKey: '소유자 복구 키',
-  clubOwnerRecoveryHelp:
-    '데이터를 초기화하거나 기기를 변경하기 전에 이 키를 다른 사람이 볼 수 없는 곳에 보관하세요. 설정의 백업 파일에도 포함됩니다.',
-  clubOwnerShowKey: '소유자 키 표시',
-  clubOwnerHideKey: '소유자 키 숨기기',
-  clubOwnerCopyKey: '소유자 키 복사',
-  clubOwnerKeyCopied: '소유자 키를 복사했습니다',
-  clubOwnerCopyKeyManually: '이 키를 선택해서 복사하세요.',
   clubOwnerSpace: '오너 공간',
   clubOwnerKey: '오너 키',
   clubOwnerConnect: '오너 공간 열기',
-  clubOwnerForget: '이 오너 키 지우기',
   clubOwnerKeyHelp: '이 키는 이 기기에서 오너 공간을 엽니다. 다른 사람에게 공개하지 마세요.',
   clubOwnerUsage: '클럽 {max}개 중 {used}개 · 클럽당 {members}명',
   clubCreate: '클럽 만들기',

@@ -15,18 +15,9 @@ export const de: ClubMessages = {
     'Werbung wird ausgeblendet, solange du mindestens {required} Mitglieder und einen aktiven Hosting-Zugang hast. Lade diesen Bildschirm neu, um den Vorteil zu aktualisieren.',
   clubOwnerMemberCountHelp:
     'Die Mitglieder aller deiner Clubs werden addiert, dich eingeschlossen in jedem Club. Wer in mehreren Clubs ist, zählt in jedem einzeln. Ausstehende Anfragen werden nicht mitgezählt.',
-  clubOwnerRecoveryKey: 'Wiederherstellungsschlüssel des Inhabers',
-  clubOwnerRecoveryHelp:
-    'Bewahre diesen Schlüssel an einem privaten Ort auf, bevor du Daten zurücksetzt oder das Gerät wechselst. Eine Backup-Datei aus den Einstellungen enthält ihn ebenfalls.',
-  clubOwnerShowKey: 'Inhaberschlüssel anzeigen',
-  clubOwnerHideKey: 'Inhaberschlüssel ausblenden',
-  clubOwnerCopyKey: 'Inhaberschlüssel kopieren',
-  clubOwnerKeyCopied: 'Inhaberschlüssel kopiert',
-  clubOwnerCopyKeyManually: 'Wähle diesen Schlüssel aus und kopiere ihn.',
   clubOwnerSpace: 'Besitzerbereich',
   clubOwnerKey: 'Besitzerschlüssel',
   clubOwnerConnect: 'Besitzerbereich öffnen',
-  clubOwnerForget: 'Diesen Schlüssel vergessen',
   clubOwnerKeyHelp:
     'Halte diesen Schlüssel geheim. Er öffnet deinen Besitzerbereich auf diesem Gerät.',
   clubOwnerUsage: '{used} von {max} Clubs · {members} Mitglieder pro Club',

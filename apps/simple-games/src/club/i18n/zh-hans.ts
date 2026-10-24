@@ -14,18 +14,9 @@ export const zhHans: ClubMessages = {
     '成员总数至少达到{required}名且托管服务使用权有效时，广告将被隐藏。重新加载此页面即可更新权益状态。',
   clubOwnerMemberCountHelp:
     '将你拥有的所有俱乐部的成员数相加，每个俱乐部都包含你自己。加入多个俱乐部的成员会在各俱乐部中分别计数。不包含待批准的申请。',
-  clubOwnerRecoveryKey: '所有者恢复密钥',
-  clubOwnerRecoveryHelp:
-    '重置数据或更换设备前，请将此密钥保存在他人无法查看的地方。设置中的备份文件也会包含此密钥。',
-  clubOwnerShowKey: '显示所有者密钥',
-  clubOwnerHideKey: '隐藏所有者密钥',
-  clubOwnerCopyKey: '复制所有者密钥',
-  clubOwnerKeyCopied: '已复制所有者密钥',
-  clubOwnerCopyKeyManually: '请选择并复制此密钥。',
   clubOwnerSpace: '创建者空间',
   clubOwnerKey: '创建者密钥',
   clubOwnerConnect: '打开创建者空间',
-  clubOwnerForget: '忘记此创建者密钥',
   clubOwnerKeyHelp: '请保密此密钥。它可在此设备上打开你的创建者空间。',
   clubOwnerUsage: '已使用{used}/{max}个俱乐部 · 每个最多{members}人',
   clubCreate: '创建俱乐部',

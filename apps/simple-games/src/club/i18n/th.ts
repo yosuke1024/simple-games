@@ -14,18 +14,9 @@ export const th: ClubMessages = {
     'โฆษณาจะถูกซ่อนขณะที่คุณมีสมาชิกรวมอย่างน้อย {required} คนและสิทธิ์ใช้งานโฮสติ้งยังมีผล โหลดหน้าจอนี้ใหม่เพื่ออัปเดตสถานะสิทธิ์',
   clubOwnerMemberCountHelp:
     'รวมจำนวนสมาชิกจากทุกคลับของคุณ โดยนับคุณในแต่ละคลับด้วย สมาชิกที่อยู่หลายคลับจะถูกนับในแต่ละคลับ ไม่นับคำขอที่รออนุมัติ',
-  clubOwnerRecoveryKey: 'คีย์กู้คืนสิทธิ์เจ้าของ',
-  clubOwnerRecoveryHelp:
-    'เก็บคีย์นี้ไว้ในที่ส่วนตัวก่อนรีเซ็ตข้อมูลหรือเปลี่ยนอุปกรณ์ คีย์นี้รวมอยู่ในไฟล์ข้อมูลสำรองจากการตั้งค่าด้วย',
-  clubOwnerShowKey: 'แสดงคีย์เจ้าของ',
-  clubOwnerHideKey: 'ซ่อนคีย์เจ้าของ',
-  clubOwnerCopyKey: 'คัดลอกคีย์เจ้าของ',
-  clubOwnerKeyCopied: 'คัดลอกคีย์เจ้าของแล้ว',
-  clubOwnerCopyKeyManually: 'เลือกและคัดลอกคีย์นี้',
   clubOwnerSpace: 'พื้นที่เจ้าของ',
   clubOwnerKey: 'คีย์เจ้าของ',
   clubOwnerConnect: 'เปิดพื้นที่เจ้าของ',
-  clubOwnerForget: 'ลืมคีย์นี้',
   clubOwnerKeyHelp: 'เก็บคีย์นี้เป็นความลับ คีย์นี้ใช้เปิดพื้นที่เจ้าของบนอุปกรณ์นี้',
   clubOwnerUsage: '{used} จาก {max} คลับ · คลับละ {members} คน',
   clubCreate: 'สร้างคลับ',

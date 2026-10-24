@@ -18,18 +18,9 @@ export const en = {
     'Ads are hidden while you have at least {required} members and active hosting access. Reload this screen to update your benefit.',
   clubOwnerMemberCountHelp:
     'Members are added across your Clubs, including you in each Club. A member in more than one Club counts in each. Pending requests are excluded.',
-  clubOwnerRecoveryKey: 'Owner recovery key',
-  clubOwnerRecoveryHelp:
-    'Save this key somewhere private before resetting or changing devices. A backup file from Settings also includes it.',
-  clubOwnerShowKey: 'Show owner key',
-  clubOwnerHideKey: 'Hide owner key',
-  clubOwnerCopyKey: 'Copy owner key',
-  clubOwnerKeyCopied: 'Owner key copied',
-  clubOwnerCopyKeyManually: 'Select and copy this key.',
   clubOwnerSpace: 'Owner space',
   clubOwnerKey: 'Owner key',
   clubOwnerConnect: 'Open owner space',
-  clubOwnerForget: 'Forget this owner key',
   clubOwnerKeyHelp: 'Keep this key private. It opens your owner space on this device.',
   clubOwnerUsage: '{used} of {max} Clubs · {members} members per Club',
   clubCreate: 'Create a Club',
