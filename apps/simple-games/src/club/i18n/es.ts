@@ -70,7 +70,7 @@ export const es: ClubMessages = {
   clubDeleteAlbum: 'Borrar álbum',
   clubDeleteAlbumBody: '¿Borrar este álbum? Los registros originales se conservan.',
   clubManagedJoinDisclosure:
-    'Mientras seas miembro, los resultados de los juegos seleccionados del Club se envían aquí automáticamente. Otros miembros pueden ver tu nombre y resultados. Cualquiera puede entrar en un Club público sin aprobación.',
+    'Mientras seas miembro, los resultados de los juegos seleccionados del Club se envían aquí automáticamente. Otros miembros pueden ver tu nombre y resultados. Cualquiera puede entrar en un Club público que no requiera aprobación.',
   clubInviteApprovalBody:
     'Este enlace permite solicitar ingreso en {club}. El propietario debe aprobarlo.',
   clubSubscriptionExpired:
