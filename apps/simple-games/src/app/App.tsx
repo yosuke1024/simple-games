@@ -439,7 +439,15 @@ export function App() {
    * By then boot has already opened that game (`initialView`), so the
    * comparison finds nothing to do.
    */
+  // Armed only while the Join screen the launch link opened is still the one showing:
+  // a replay that never comes (iOS may not raise one) must not swallow a later tap.
   const launchInviteToken = useRef(inviteFromAppLink(shortcutLaunchUrl())?.token ?? null);
+  useEffect(() => {
+    const token = launchInviteToken.current;
+    if (token !== null && !(view.kind === 'club' && view.invite?.token === token)) {
+      launchInviteToken.current = null;
+    }
+  }, [view]);
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const handle = CapacitorApp.addListener('appUrlOpen', ({ url }) => {

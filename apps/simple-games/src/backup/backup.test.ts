@@ -612,6 +612,32 @@ describe('the Club House in a backup (2026-10-24)', () => {
     ]);
   });
 
+  it('restores nothing when the queue of a replaced membership cannot be read', async () => {
+    const file = serializeBackup(
+      await createBackup(
+        META,
+        createMemoryKV({
+          [STORAGE_KEYS.club]: JSON.stringify({
+            schemaVersion: 1,
+            connections: [{ ...connection, memberId: 'm_someone_else' }],
+          }),
+        }),
+      ),
+    );
+    const before = JSON.stringify({ schemaVersion: 1, connections: [connection] });
+    const memory = createMemoryKV({ [STORAGE_KEYS.club]: before });
+    const device: KVStore = {
+      ...memory,
+      get: (key) =>
+        key === STORAGE_KEYS.clubOutbox ? Promise.reject(new Error('unreadable')) : memory.get(key),
+    };
+    const read = await readBackup(file);
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(await applyBackup(read.prepared, device)).toBe('failed');
+    expect(await loadRaw(STORAGE_KEYS.club, memory)).toBe(before);
+  });
+
   it('leaves the Clubs alone when the file is from before they travelled', async () => {
     const older = serializeBackup(await createBackup(META, createMemoryKV()));
     const device = createMemoryKV({ [STORAGE_KEYS.club]: JSON.stringify(club()) });

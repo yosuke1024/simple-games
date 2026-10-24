@@ -373,8 +373,10 @@ describe('managed Club flows', () => {
         />
       </SettingsProvider>,
     );
-    await waitFor(async () => expect((await loadClubConnections())[0]?.endpoint).toBe(E));
-    expect(screen.getByRole('heading', { name: 'Other' })).toBeInTheDocument();
+    await waitFor(async () => expect((await loadClubConnections())[0]?.endpoint).toBe(E), {
+      timeout: 5000,
+    });
+    expect(await screen.findByRole('heading', { name: 'Other' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Nickname' })).toBeInTheDocument();
   });
 

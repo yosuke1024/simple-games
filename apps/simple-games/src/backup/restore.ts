@@ -34,7 +34,7 @@
  * as what was written, the snapshot goes back and the restore reports failure.
  * The player ends where they started.
  */
-import { loadRaw, saveRaw, updateRecord } from '../storage/repo';
+import { loadRaw, loadRecordWithStatus, saveRaw } from '../storage/repo';
 import { clubConnectionsSchema, clubOutboxSchema, STORAGE_KEYS } from '../storage/schemas';
 import { preferencesKV, type KVStore } from '../storage/kv';
 import {
@@ -225,20 +225,30 @@ export async function applyBackup(
     keys.map((key) => [key, prepared.records.get(key) ?? null]),
   );
 
-  await Promise.all([...wanted].map(([key, value]) => saveRaw(key, value, kv)));
-
-  const written = await Promise.all(keys.map((key) => loadRaw(key, kv)));
-  const landed = keys.every((key, index) => (written[index] ?? null) === wanted.get(key));
-  if (landed) {
-    if (wanted.has(STORAGE_KEYS.club)) {
-      await dropOutboxOfReplacedMembers(
+  // The queued results of a membership this restore replaces go with it, in the same
+  // write and the same rollback. A queue that cannot be read is never overwritten with
+  // a default: the restore stops before writing anything.
+  if (wanted.has(STORAGE_KEYS.club)) {
+    const outbox = await outboxWithout(
+      replacedMembers(
         snapshot.get(STORAGE_KEYS.club) ?? null,
         wanted.get(STORAGE_KEYS.club) ?? null,
-        kv,
-      );
+      ),
+      kv,
+    );
+    if (outbox === 'unreadable') return 'failed';
+    if (outbox !== null) {
+      snapshot.set(STORAGE_KEYS.clubOutbox, outbox.previous);
+      wanted.set(STORAGE_KEYS.clubOutbox, outbox.next);
     }
-    return 'restored';
   }
+
+  await Promise.all([...wanted].map(([key, value]) => saveRaw(key, value, kv)));
+
+  const touched = [...wanted.keys()];
+  const written = await Promise.all(touched.map((key) => loadRaw(key, kv)));
+  const landed = touched.every((key, index) => (written[index] ?? null) === wanted.get(key));
+  if (landed) return 'restored';
 
   // Roll back to exactly what was there. This can fail too — a store that
   // could not be written a moment ago may still refuse — and there is nothing
@@ -279,22 +289,27 @@ function membersIn(text: string | null): Map<string, string> {
  * someone this device no longer is: they are dropped, never sent as the restored
  * member (club.md §4-2). A Club whose membership is unchanged keeps its queue.
  */
-async function dropOutboxOfReplacedMembers(
-  before: string | null,
-  after: string | null,
-  kv: KVStore,
-): Promise<void> {
-  const was = membersIn(before);
+function replacedMembers(before: string | null, after: string | null): Set<string> {
   const now = membersIn(after);
-  const replaced = new Set(
-    [...was]
+  return new Set(
+    [...membersIn(before)]
       .filter(([endpoint, member]) => now.get(endpoint) !== member)
       .map(([endpoint]) => endpoint),
   );
-  if (replaced.size === 0) return;
-  await updateRecord(
-    clubOutboxSchema,
-    (outbox) => ({ ...outbox, items: outbox.items.filter((item) => !replaced.has(item.endpoint)) }),
-    kv,
-  );
+}
+
+/** The queue without the replaced Clubs' items: its text before and after, or null for no change. */
+async function outboxWithout(
+  replaced: ReadonlySet<string>,
+  kv: KVStore,
+): Promise<{ previous: string | null; next: string } | null | 'unreadable'> {
+  if (replaced.size === 0) return null;
+  const load = await loadRecordWithStatus(clubOutboxSchema, kv);
+  if (!load.readable) return 'unreadable';
+  const items = load.value.items.filter((item) => !replaced.has(item.endpoint));
+  if (items.length === load.value.items.length) return null;
+  return {
+    previous: await loadRaw(STORAGE_KEYS.clubOutbox, kv),
+    next: JSON.stringify({ ...load.value, items }),
+  };
 }

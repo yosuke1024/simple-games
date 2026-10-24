@@ -63,7 +63,7 @@ const TOKEN = 'invite-token-0123456789';
 const LINK = `https://club.pixapps.ai/join#club=c_family0001&invite=${TOKEN}`;
 
 let mounts = 0;
-function FakeClubRoot({ entry, invite }: ClubRootProps) {
+function FakeClubRoot({ entry, invite, onBack }: ClubRootProps) {
   // Each mount is a fresh first screen (ClubRoot decides it once per mount).
   useEffect(() => {
     mounts += 1;
@@ -72,6 +72,9 @@ function FakeClubRoot({ entry, invite }: ClubRootProps) {
     <div>
       <p data-testid="club-entry">{entry}</p>
       <p data-testid="club-invite">{invite ? `${invite.endpoint} ${invite.token}` : 'none'}</p>
+      <button type="button" onClick={onBack}>
+        Leave club
+      </button>
     </div>
   );
 }
@@ -147,6 +150,19 @@ describe('an invite link that opens the app', () => {
     act(() => appMock.fire('appUrlOpen', { url: LINK }));
     await settle();
     expect(mounts).toBe(2);
+  });
+
+  it('opens the launch link again after leaving it, even with no replay', async () => {
+    appMock.state.launchUrl = LINK;
+    await initShortcutLaunch();
+    renderShell();
+    await settle();
+    await screen.findByTestId('club-entry');
+    act(() => screen.getByRole('button', { name: 'Leave club' }).click());
+    await screen.findByRole('heading', { name: 'Simple Games' });
+    act(() => appMock.fire('appUrlOpen', { url: LINK }));
+    await settle();
+    expect(await screen.findByTestId('club-entry')).toHaveTextContent('invite');
   });
 
   it('leaves the collection as it is for a link that is not an invite', async () => {
