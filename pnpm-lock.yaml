@@ -64,8 +64,8 @@ importers:
         version: 19.2.8(react@19.2.8)
     devDependencies:
       '@capacitor/android':
-        specifier: ^8.4.2
-        version: 8.4.2(@capacitor/core@8.4.2)
+        specifier: ^8.4.3
+        version: 8.4.3(@capacitor/core@8.4.2)
       '@capacitor/cli':
         specifier: ^8.4.2
         version: 8.4.2
@@ -254,8 +254,8 @@ packages:
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
-  '@capacitor/android@8.4.2':
-    resolution: {integrity: sha512-bzf8XZ9C+ePgOQ+e+T0fnhHGH4aCNY494vvSQIF5w4AY07RwEmkFqZs1678DDSMH0hLSQpxEwXGFNUVcXO6bBA==}
+  '@capacitor/android@8.4.3':
+    resolution: {integrity: sha512-VICd1+E2u5uPvCb5hseoZr84u7/wi334BqayKyXvSLeqURn/iw7nCFEWK29RQNW2rxiW5l1vTVHQ2K6tAJkpTQ==}
     peerDependencies:
       '@capacitor/core': ^8.4.0
 
@@ -1907,7 +1907,7 @@ snapshots:
     dependencies:
       '@capacitor/core': 8.4.2
 
-  '@capacitor/android@8.4.2(@capacitor/core@8.4.2)':
+  '@capacitor/android@8.4.3(@capacitor/core@8.4.2)':
     dependencies:
       '@capacitor/core': 8.4.2
 
