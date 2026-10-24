@@ -20,7 +20,7 @@ export const PRIVATE_CLUBS_ENABLED = false;
  * service is advertised or contacted; turning it on is this one line, after
  * the server at that origin carries managed hosting.
  */
-export const MANAGED_CLUBS_ENABLED = false;
+export const MANAGED_CLUBS_ENABLED = true;
 
 /**
  * The origin PixApps serves managed Club Houses from: the Public Club House's
