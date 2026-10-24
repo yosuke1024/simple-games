@@ -62,6 +62,8 @@ export const es: Messages = {
     'La copia es un archivo sin cifrar en tu dispositivo. Simple Games nunca la sube a ningún sitio y solo tú decides dónde guardarla.',
   backupPurchaseNote:
     'La compra para quitar los anuncios no forma parte de la copia. Restáurala desde la tienda.',
+  backupClubNote:
+    'También incluye la clave de propietario de Club House y los Clubs a los que te has unido. No compartas el archivo con nadie.',
   backupExport: 'Exportar copia',
   backupRestore: 'Restaurar copia',
   backupExportFailed: 'No se pudo crear el archivo de copia.',
@@ -153,6 +155,7 @@ export const es: Messages = {
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'Avanzado',
   clubEntry: 'Club House',
+  clubJoinNew: 'Unirse a un nuevo Club House',
   playTogetherTitle: 'Jugar juntos',
   playTogetherBody: 'Comparte tus puntuaciones con todos.',
   clubResultSent: 'Enviado a {club}',

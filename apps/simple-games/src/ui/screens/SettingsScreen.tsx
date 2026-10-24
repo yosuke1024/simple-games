@@ -312,6 +312,9 @@ export function SettingsScreen({ onBack, onOpenClub }: SettingsScreenProps) {
       // On either outcome the store now holds what the player should see: the
       // backup's records, or — after a rollback — the ones they started with.
       await reloadSharedRecords();
+      // `sg.club` may now hold another owner key, without its benefit (backup/owners.ts):
+      // the ad decision reads it again, as after a Reset.
+      await initAdRemoval();
       setBackupNotice(outcome === 'restored' ? 'backupRestoreDone' : 'backupRestoreFailed');
     } finally {
       setBusy(false);
@@ -531,6 +534,8 @@ export function SettingsScreen({ onBack, onOpenClub }: SettingsScreenProps) {
           {/* Only where a purchase exists to be misunderstood — the web build
               sells nothing (docs/WEB_VERSION.md). */}
           {adsExist ? <p className="settings-note">{t('backupPurchaseNote')}</p> : null}
+          {/* The file carries the Club House keys (docs/architecture/backup.md). */}
+          <p className="settings-note">{t('backupClubNote')}</p>
           <button
             type="button"
             className="btn btn-secondary"

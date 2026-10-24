@@ -17,7 +17,7 @@ export const de: ClubMessages = {
     'Die Mitglieder aller deiner Clubs werden addiert, dich eingeschlossen in jedem Club. Wer in mehreren Clubs ist, zählt in jedem einzeln. Ausstehende Anfragen werden nicht mitgezählt.',
   clubOwnerRecoveryKey: 'Wiederherstellungsschlüssel des Inhabers',
   clubOwnerRecoveryHelp:
-    'Bewahre diesen Schlüssel an einem privaten Ort auf, bevor du Daten zurücksetzt oder das Gerät wechselst. Er ist nicht in Backups enthalten.',
+    'Bewahre diesen Schlüssel an einem privaten Ort auf, bevor du Daten zurücksetzt oder das Gerät wechselst. Eine Backup-Datei aus den Einstellungen enthält ihn ebenfalls.',
   clubOwnerShowKey: 'Inhaberschlüssel anzeigen',
   clubOwnerHideKey: 'Inhaberschlüssel ausblenden',
   clubOwnerCopyKey: 'Inhaberschlüssel kopieren',
@@ -38,7 +38,9 @@ export const de: ClubMessages = {
   clubVisibility: 'Wer kann diesen Club finden?',
   clubVisibilityHelp:
     'Öffentliche Clubs stehen im Verzeichnis. Private Clubs benötigen einen Einladungsschlüssel. Clubmitglieder können die Ergebnisse sehen.',
-  clubApprovalRequired: 'Neue Mitglieder genehmigen',
+  clubApprovalRequired: 'Neue Mitglieder werden vom Inhaber bestätigt, bevor sie beitreten.',
+  clubAutoApprove: 'Neue Mitglieder automatisch aufnehmen',
+  clubJoinRequestsWaiting: 'Offene Beitrittsanfragen: {n}',
   clubGames: 'Spiele in diesem Club',
   clubGamesAll: 'Alle unterstützten Spiele',
   clubGamesSelected: 'Spiele auswählen',

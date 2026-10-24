@@ -16,7 +16,7 @@ export const id: ClubMessages = {
     'Anggota dari semua Klub Anda dijumlahkan, termasuk Anda di setiap Klub. Anggota yang ada di beberapa Klub dihitung di masing-masing Klub. Permintaan yang menunggu persetujuan tidak dihitung.',
   clubOwnerRecoveryKey: 'Kunci pemulihan pemilik',
   clubOwnerRecoveryHelp:
-    'Simpan kunci ini di tempat pribadi sebelum mereset data atau mengganti perangkat. Kunci ini tidak disertakan dalam cadangan.',
+    'Simpan kunci ini di tempat pribadi sebelum mereset data atau mengganti perangkat. Kunci ini juga disertakan dalam file cadangan dari Pengaturan.',
   clubOwnerShowKey: 'Tampilkan kunci pemilik',
   clubOwnerHideKey: 'Sembunyikan kunci pemilik',
   clubOwnerCopyKey: 'Salin kunci pemilik',
@@ -36,7 +36,9 @@ export const id: ClubMessages = {
   clubVisibility: 'Siapa yang dapat menemukan Klub ini?',
   clubVisibilityHelp:
     'Klub publik muncul di direktori. Klub privat memerlukan kunci undangan. Catatan dapat dilihat anggota Klub.',
-  clubApprovalRequired: 'Setujui anggota baru',
+  clubApprovalRequired: 'Pemilik menyetujui anggota baru sebelum mereka bergabung.',
+  clubAutoApprove: 'Setujui anggota baru secara otomatis',
+  clubJoinRequestsWaiting: 'Permintaan bergabung menunggu: {n}',
   clubGames: 'Game di Klub ini',
   clubGamesAll: 'Semua game yang didukung',
   clubGamesSelected: 'Pilih game',

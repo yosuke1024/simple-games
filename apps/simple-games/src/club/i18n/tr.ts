@@ -16,7 +16,7 @@ export const tr: ClubMessages = {
     'Tüm Kulüplerinizin üyeleri toplanır; siz de her Kulüpte sayılırsınız. Birden fazla Kulüpte olan bir üye her Kulüpte ayrı sayılır. Bekleyen istekler dahil edilmez.',
   clubOwnerRecoveryKey: 'Sahip kurtarma anahtarı',
   clubOwnerRecoveryHelp:
-    'Verileri sıfırlamadan veya cihaz değiştirmeden önce bu anahtarı özel bir yerde saklayın. Yedeklemelere dahil edilmez.',
+    'Verileri sıfırlamadan veya cihaz değiştirmeden önce bu anahtarı özel bir yerde saklayın. Ayarlar’daki yedekleme dosyasına da dahil edilir.',
   clubOwnerShowKey: 'Sahip anahtarını göster',
   clubOwnerHideKey: 'Sahip anahtarını gizle',
   clubOwnerCopyKey: 'Sahip anahtarını kopyala',
@@ -36,7 +36,9 @@ export const tr: ClubMessages = {
   clubVisibility: 'Bu Kulübü kim bulabilir?',
   clubVisibilityHelp:
     'Herkese açık Kulüpler listede görünür. Özel Kulüpler davet anahtarı gerektirir. Kayıtları Kulüp üyeleri görebilir.',
-  clubApprovalRequired: 'Yeni üyeleri onayla',
+  clubApprovalRequired: 'Katılmak için sahibin onayı gerekir.',
+  clubAutoApprove: 'Yeni üyeleri otomatik onayla',
+  clubJoinRequestsWaiting: 'Bekleyen katılma istekleri: {n}',
   clubGames: 'Bu Kulüpteki oyunlar',
   clubGamesAll: 'Desteklenen tüm oyunlar',
   clubGamesSelected: 'Oyunları seç',

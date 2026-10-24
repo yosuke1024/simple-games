@@ -61,6 +61,8 @@ export const ja: Messages = {
   backupPrivacyNote:
     'バックアップは端末上の暗号化されていないファイルです。Simple Games がアップロードすることはなく、どこへ置くかはあなたが決めます。',
   backupPurchaseNote: '広告削除の購入はバックアップに含まれません。ストアから復元してください。',
+  backupClubNote:
+    'Club House のオーナーキーと参加中の Club も含まれます。ファイルを他の人に渡さないでください。',
   backupExport: 'バックアップを書き出す',
   backupRestore: 'バックアップから復元',
   backupExportFailed: 'バックアップファイルを作成できませんでした。',
@@ -152,6 +154,7 @@ export const ja: Messages = {
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: '詳細設定',
   clubEntry: 'Club House',
+  clubJoinNew: '新しい Club House に参加',
   playTogetherTitle: 'みんなで遊ぶ',
   playTogetherBody: 'みんなとスコアを共有しよう。',
   clubResultSent: '{club} に送りました',

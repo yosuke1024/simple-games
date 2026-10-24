@@ -111,7 +111,7 @@ describe('owner Club tools', () => {
     );
     const user = userEvent.setup();
     await user.click(await screen.findByRole('radio', { name: 'Public' }));
-    await user.click(screen.getByRole('checkbox', { name: 'Approve new members' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Approve new members automatically' }));
     await user.click(screen.getByRole('checkbox', { name: 'Sudoku' }));
     await user.click(screen.getByRole('checkbox', { name: 'Minesweeper' }));
     await user.click(screen.getByRole('button', { name: 'Save' }));

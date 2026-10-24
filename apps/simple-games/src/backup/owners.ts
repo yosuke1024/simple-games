@@ -30,9 +30,11 @@
  */
 import { GAMES } from '../app/registry';
 import {
+  clubConnectionsSchema,
   favoriteGamesSchema,
   recentGamesSchema,
   settingsSchema,
+  type ClubConnections,
   type SchemaDef,
 } from '../storage/schemas';
 
@@ -87,6 +89,23 @@ const ownerOf = (schema: SchemaDef<unknown>): RecordOwner => ({
 });
 
 /**
+ * `sg.club`, with the owner's ad benefit taken out on the way out and on the way in.
+ * It is a cache of the server's answer bound to this install, the same kind of thing
+ * as `sg.iap` (keys.ts): copied in a file it would make ad removal copyable. The owner
+ * screen asks the server again after a restore (docs/architecture/backup.md).
+ */
+const CLUB_OWNER: RecordOwner = {
+  version: clubConnectionsSchema.version,
+  validate: (raw) => {
+    const record: ClubConnections | null = clubConnectionsSchema.validate(raw);
+    if (record === null) return null;
+    if (record.managedOwner?.adRemoval === undefined) return record;
+    const { adRemoval: _cached, ...owner } = record.managedOwner;
+    return { ...record, managedOwner: owner };
+  },
+};
+
+/**
  * The owners (validator + written schema version) for `keys`, loading only
  * the game chunks those keys belong to.
  *
@@ -102,6 +121,9 @@ export async function loadValidators(
 
   for (const schema of SHELL_VALIDATORS) {
     if (wanted.has(schema.key)) validators.set(schema.key, ownerOf(schema));
+  }
+  if (wanted.has(clubConnectionsSchema.key)) {
+    validators.set(clubConnectionsSchema.key, CLUB_OWNER);
   }
 
   const owning = GAMES.filter((game) => game.storageKeys.some((key) => wanted.has(key)));

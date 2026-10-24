@@ -454,6 +454,27 @@ describe('ClubRoot', () => {
     expect(screen.queryByRole('button', { name: 'Send my results automatically' })).toBeNull();
   });
 
+  it("opens the ways in over the joined Club from the home's Join a new Club House", async () => {
+    stubServer();
+    await addClubConnection({
+      endpoint: ENDPOINT,
+      clubId: 'c_1',
+      clubName: 'A',
+      memberId: 'm_1',
+      memberToken: 't',
+      nickname: 'Ken',
+      role: 'member',
+      joinedAt: 'x',
+      autoSend: true,
+    });
+    renderRoot({ entry: 'join' });
+    expect(
+      await screen.findByRole('button', { name: 'Join the Public Club House' }),
+    ).toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('heading', { name: CLUB.name })).toBeInTheDocument();
+  });
+
   it('hides the Public button on All Clubs once the Public Club House is joined', async () => {
     stubServer();
     const base = {

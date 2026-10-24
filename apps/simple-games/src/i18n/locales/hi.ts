@@ -65,6 +65,8 @@ export const hi: Messages = {
   backupPrivacyNote:
     'बैकअप आपके डिवाइस पर एक बिना एन्क्रिप्शन वाली फ़ाइल है। Simple Games इसे कभी अपलोड नहीं करता, और यह कहाँ जाएगी यह सिर्फ़ आप तय करते हैं।',
   backupPurchaseNote: 'विज्ञापन हटाने की खरीद बैकअप का हिस्सा नहीं है। उसे स्टोर से रीस्टोर करें।',
+  backupClubNote:
+    'Club House की मालिक कुंजी और आपके जुड़े हुए Club भी शामिल हैं। यह फ़ाइल किसी और को न दें।',
   backupExport: 'बैकअप एक्सपोर्ट करें',
   backupRestore: 'बैकअप से रीस्टोर करें',
   backupExportFailed: 'बैकअप फ़ाइल नहीं बनाई जा सकी।',
@@ -152,6 +154,7 @@ export const hi: Messages = {
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'उन्नत',
   clubEntry: 'Club House',
+  clubJoinNew: 'नए Club House से जुड़ें',
   playTogetherTitle: 'साथ खेलें',
   playTogetherBody: 'अपने स्कोर सबके साथ साझा करें।',
   clubResultSent: '{club} को भेजा गया',

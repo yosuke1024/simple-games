@@ -184,6 +184,15 @@ export async function removeRecord(key: string, kv: KVStore = preferencesKV): Pr
  * record. Both go through `enqueue`, so a save still in flight cannot land on
  * top of a restore the way it once landed on top of "Reset Local Data".
  */
+/**
+ * `loadRaw`, in the key's queue, but a failed read rejects instead of answering "nothing
+ * stored": for a caller that must not mistake one for the other (backup/restore.ts).
+ * Pass a store that reports its failures (`preferencesKVWithReadStatus`).
+ */
+export function loadRawOrThrow(key: string, kv: KVStore): Promise<string | null> {
+  return enqueue(key, () => kv.get(key));
+}
+
 export async function loadRaw(key: string, kv: KVStore = preferencesKV): Promise<string | null> {
   try {
     return await enqueue(key, () => kv.get(key));

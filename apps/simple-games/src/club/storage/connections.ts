@@ -36,31 +36,54 @@ export async function loadClubConnections(kv?: KVStore): Promise<ClubConnection[
   return (await loadRecord(clubConnectionsSchema, kv)).connections;
 }
 
+function withConnection(record: ClubConnections, connection: ClubConnection): ClubConnections {
+  const connections = record.connections.slice();
+  const index = connections.findIndex((c) => c.endpoint === connection.endpoint);
+  if (index >= 0) connections[index] = connection;
+  else {
+    if (connections.length >= CLUB_CONNECTIONS_MAX) throw new Error('too_many_connections');
+    connections.push(connection);
+  }
+  return {
+    ...record,
+    connections,
+    ...(record.departed
+      ? { departed: record.departed.filter((c) => c.endpoint !== connection.endpoint) }
+      : {}),
+    ...(record.pending
+      ? { pending: record.pending.filter((p) => p.endpoint !== connection.endpoint) }
+      : {}),
+  };
+}
+
 /** One membership per endpoint; returning removes the departed and pending entries. */
 export async function addClubConnection(
   connection: ClubConnection,
   kv?: KVStore,
 ): Promise<ClubConnection[]> {
+  return (await change((record) => withConnection(record, connection), kv)).connections;
+}
+
+/**
+ * The membership an approved request became, stored only while this device still
+ * holds that request: a Reset or a Cancel since the check means the person let it go,
+ * and a late answer must not bring it back. Null when it was not stored.
+ */
+export async function admitPendingJoin(
+  connection: ClubConnection,
+  kv?: KVStore,
+): Promise<ClubConnection[] | null> {
+  // Read first: with no receipt there is nothing to write, not even an unchanged record
+  // after a Reset removed it.
+  const held = (await loadRecord(clubConnectionsSchema, kv)).pending ?? [];
+  if (!held.some((p) => p.endpoint === connection.endpoint)) return null;
+  let admitted = false;
   const next = await change((record) => {
-    const connections = record.connections.slice();
-    const index = connections.findIndex((c) => c.endpoint === connection.endpoint);
-    if (index >= 0) connections[index] = connection;
-    else {
-      if (connections.length >= CLUB_CONNECTIONS_MAX) throw new Error('too_many_connections');
-      connections.push(connection);
-    }
-    return {
-      ...record,
-      connections,
-      ...(record.departed
-        ? { departed: record.departed.filter((c) => c.endpoint !== connection.endpoint) }
-        : {}),
-      ...(record.pending
-        ? { pending: record.pending.filter((p) => p.endpoint !== connection.endpoint) }
-        : {}),
-    };
+    if (!(record.pending ?? []).some((p) => p.endpoint === connection.endpoint)) return record;
+    admitted = true;
+    return withConnection(record, connection);
   }, kv);
-  return next.connections;
+  return admitted ? next.connections : null;
 }
 
 export async function removeClubConnection(

@@ -34,15 +34,16 @@
  * as what was written, the snapshot goes back and the restore reports failure.
  * The player ends where they started.
  */
-import { loadRaw, saveRaw } from '../storage/repo';
-import { preferencesKV, type KVStore } from '../storage/kv';
+import { loadRaw, loadRawOrThrow, saveRaw } from '../storage/repo';
+import { clubConnectionsSchema, clubOutboxSchema, STORAGE_KEYS } from '../storage/schemas';
+import { preferencesKV, preferencesKVWithReadStatus, type KVStore } from '../storage/kv';
 import {
   BACKUP_FORMAT_VERSION,
   BACKUP_MAX_BYTES,
   BACKUP_MAX_RECORD_BYTES,
   UNSAFE_OBJECT_KEYS,
 } from './format';
-import { backupKeys } from './keys';
+import { backupKeys, RESTORED_ONLY_WHEN_PRESENT } from './keys';
 import { loadValidators } from './owners';
 
 /**
@@ -210,7 +211,10 @@ export async function applyBackup(
   prepared: PreparedRestore,
   kv: KVStore = preferencesKV,
 ): Promise<RestoreOutcome> {
-  const keys = backupKeys();
+  // A key that began travelling later is left as it is when the file predates it.
+  const keys = backupKeys().filter(
+    (key) => !RESTORED_ONLY_WHEN_PRESENT.has(key) || prepared.records.has(key),
+  );
 
   const previous = await Promise.all(keys.map((key) => loadRaw(key, kv)));
   const snapshot = new Map<string, string | null>(
@@ -221,10 +225,29 @@ export async function applyBackup(
     keys.map((key) => [key, prepared.records.get(key) ?? null]),
   );
 
+  // The queued results of a membership this restore replaces go with it, in the same
+  // write and the same rollback. A queue that cannot be read is never overwritten with
+  // a default: the restore stops before writing anything.
+  if (wanted.has(STORAGE_KEYS.club)) {
+    const outbox = await outboxWithout(
+      replacedMembers(
+        snapshot.get(STORAGE_KEYS.club) ?? null,
+        wanted.get(STORAGE_KEYS.club) ?? null,
+      ),
+      kv,
+    );
+    if (outbox === 'unreadable') return 'failed';
+    if (outbox !== null) {
+      snapshot.set(STORAGE_KEYS.clubOutbox, outbox.previous);
+      wanted.set(STORAGE_KEYS.clubOutbox, outbox.next);
+    }
+  }
+
   await Promise.all([...wanted].map(([key, value]) => saveRaw(key, value, kv)));
 
-  const written = await Promise.all(keys.map((key) => loadRaw(key, kv)));
-  const landed = keys.every((key, index) => (written[index] ?? null) === wanted.get(key));
+  const touched = [...wanted.keys()];
+  const written = await Promise.all(touched.map((key) => loadRaw(key, kv)));
+  const landed = touched.every((key, index) => (written[index] ?? null) === wanted.get(key));
   if (landed) return 'restored';
 
   // Roll back to exactly what was there. This can fail too — a store that
@@ -244,4 +267,65 @@ export async function applyBackup(
 function byteLength(text: string): number {
   if (typeof TextEncoder !== 'undefined') return new TextEncoder().encode(text).length;
   return text.length;
+}
+
+/** endpoint → memberId of the joined Clubs in one `sg.club` text. */
+function membersIn(text: string | null): Map<string, string> {
+  if (text === null) return new Map();
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return new Map();
+  }
+  const record = clubConnectionsSchema.validate(parsed);
+  return new Map((record?.connections ?? []).map((c) => [c.endpoint, c.memberId]));
+}
+
+/**
+ * Results waiting to be sent (`sg.clubOutbox`, never in a backup) are queued per Club,
+ * not per member, and go out with whatever membership the device holds for that Club.
+ * Where a restore replaced or removed the membership, its queued results belonged to
+ * someone this device no longer is: they are dropped, never sent as the restored
+ * member (club.md §4-2). A Club whose membership is unchanged keeps its queue.
+ */
+function replacedMembers(before: string | null, after: string | null): Set<string> {
+  const now = membersIn(after);
+  return new Set(
+    [...membersIn(before)]
+      .filter(([endpoint, member]) => now.get(endpoint) !== member)
+      .map(([endpoint]) => endpoint),
+  );
+}
+
+/**
+ * The queue without the replaced Clubs' items: its text before and after, or null for
+ * no change. Read once, through a store that reports a failed read instead of answering
+ * "nothing stored" (`preferencesKVWithReadStatus`): an unreadable or damaged queue stops
+ * the restore, and the text rolled back is exactly the text that was read.
+ */
+async function outboxWithout(
+  replaced: ReadonlySet<string>,
+  kv: KVStore,
+): Promise<{ previous: string; next: string } | null | 'unreadable'> {
+  if (replaced.size === 0) return null;
+  const reader = kv === preferencesKV ? preferencesKVWithReadStatus : kv;
+  let previous: string | null;
+  try {
+    // In the key's queue: an outbox save still waiting lands first and is seen here.
+    previous = await loadRawOrThrow(STORAGE_KEYS.clubOutbox, reader);
+  } catch {
+    return 'unreadable';
+  }
+  if (previous === null) return null;
+  let outbox;
+  try {
+    outbox = clubOutboxSchema.validate(JSON.parse(previous));
+  } catch {
+    return 'unreadable';
+  }
+  if (outbox === null) return 'unreadable';
+  const items = outbox.items.filter((item) => !replaced.has(item.endpoint));
+  if (items.length === outbox.items.length) return null;
+  return { previous, next: JSON.stringify({ ...outbox, items }) };
 }

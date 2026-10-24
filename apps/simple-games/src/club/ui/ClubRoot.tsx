@@ -29,7 +29,9 @@ import { PRIVATE_CLUBS_ENABLED, MANAGED_CLUB_ORIGIN } from '@/ui/clubFeatures';
 import {
   acceptAutoSend,
   addClubConnection,
+  admitPendingJoin,
   departClubConnection,
+  forgetPendingJoin,
   loadClubConnections,
   summarize,
   updateClubName,
@@ -44,6 +46,7 @@ import { PendingRequestsScreen } from './PendingRequestsScreen';
 import { ClubManagementScreen } from './ClubManagementScreen';
 import { RecordBookScreen } from './RecordBookScreen';
 import { AlbumsScreen } from './AlbumsScreen';
+import { checkPendingJoin } from '../join';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { dropOutboxFor } from '../storage/outbox';
 import { ChallengeScreen, type ChallengeRead } from './ChallengeScreen';
@@ -144,6 +147,89 @@ export function ClubRoot({
   const [stack, setStack] = useState<Screen[]>([]);
   const alive = useRef(true);
 
+  /** The door that opened the Club decides the first screen (club.md §9「入口」). */
+  const firstScreens = (loaded: ClubConnection[], requests: PendingClubJoin[]): Screen[] => {
+    const root = rootFor(loaded);
+    // Only a configured Managed service may resume its explicit owner screen.
+    if (entry === 'managed' && MANAGED_CLUB_ORIGIN) return [...root, { kind: 'managed' }];
+    // The home's "Join a new Club House": the ways in, over the Clubs already joined.
+    if (entry === 'join' && loaded.length > 0) return [...root, { kind: 'discover' }];
+    // An invite link is acted on only while Private Clubs are on (club.md §14, decision 44).
+    if (
+      entry === 'invite' &&
+      invite &&
+      (PRIVATE_CLUBS_ENABLED ||
+        (MANAGED_CLUB_ORIGIN && invite.endpoint.startsWith(`${MANAGED_CLUB_ORIGIN}/clubs/`)))
+    ) {
+      if (loaded.some((c) => c.endpoint === invite.endpoint)) {
+        return [{ kind: 'club', endpoint: invite.endpoint, panel: 'none' }];
+      }
+      if (requests.some((request) => request.endpoint === invite.endpoint)) {
+        return [...root, { kind: 'pending' }];
+      }
+      return [{ kind: 'join', invite }];
+    }
+    const target = focus ? loaded.find((c) => c.endpoint === focus.endpoint) : undefined;
+    if (focus && target) {
+      const base: Screen[] = loaded.length >= 2 ? [{ kind: 'all' }] : [];
+      return [
+        ...base,
+        { kind: 'club', endpoint: target.endpoint, panel: 'none' },
+        { kind: 'challenge', endpoint: target.endpoint, challengeId: focus.challengeId },
+      ];
+    }
+    return root;
+  };
+
+  /**
+   * Each stored request, asked about once as the Club House opens. An approved one is
+   * stored as the membership; a decided or forgotten one leaves the device; one that
+   * cannot be reached stays for the next open. If the person is still on the first
+   * screen, the Club they were let into opens — otherwise where they went is left alone.
+   */
+  const settlePending = async (requests: PendingClubJoin[], first: Screen[]) => {
+    let admitted: { connection: ClubConnection; count: number } | null = null;
+    let changed = false;
+    for (const request of requests) {
+      let outcome;
+      try {
+        outcome = await checkPendingJoin(request);
+      } catch {
+        continue;
+      }
+      if (!alive.current) return;
+      if (outcome.kind === 'approved') {
+        const next = await admitPendingJoin(outcome.connection).catch(() => null);
+        if (!alive.current) return;
+        if (next === null) continue;
+        apply(next);
+        admitted = { connection: outcome.connection, count: next.length };
+        changed = true;
+      } else if (outcome.kind === 'closed') {
+        await forgetPendingJoin(request.endpoint);
+        changed = true;
+      }
+    }
+    if (!alive.current) return;
+    if (changed) setPending(await loadPendingJoins());
+    if (!alive.current || admitted === null) return;
+    // A door the person chose (another invite, the owner space, a challenge, joining one
+    // more Club) stays theirs: the membership is stored, and is there when they look.
+    const chosen = first[first.length - 1]?.kind;
+    if (
+      chosen === 'join' ||
+      chosen === 'managed' ||
+      chosen === 'challenge' ||
+      (chosen === 'discover' && first.length > 1)
+    )
+      return;
+    const { connection, count } = admitted;
+    const club: Screen = { kind: 'club', endpoint: connection.endpoint, panel: 'none' };
+    setStack((current) =>
+      current === first ? (count >= 2 ? [{ kind: 'all' }, club] : [club]) : current,
+    );
+  };
+
   useEffect(() => {
     alive.current = true;
     void Promise.all([loadClubConnections(), loadPendingJoins()])
@@ -152,41 +238,12 @@ export function ClubRoot({
         if (!alive.current) return;
         setConnections(loaded);
         setPending(requests);
-        const root = rootFor(loaded);
-        // Only a configured Managed service may resume its explicit owner screen.
-        if (entry === 'managed' && MANAGED_CLUB_ORIGIN) {
-          setStack([...root, { kind: 'managed' }]);
-          return;
-        }
-        // An invite link is acted on only while Private Clubs are on (club.md §14, decision 44).
-        if (
-          entry === 'invite' &&
-          invite &&
-          (PRIVATE_CLUBS_ENABLED ||
-            (MANAGED_CLUB_ORIGIN && invite.endpoint.startsWith(`${MANAGED_CLUB_ORIGIN}/clubs/`)))
-        ) {
-          if (loaded.some((c) => c.endpoint === invite.endpoint)) {
-            setStack([{ kind: 'club', endpoint: invite.endpoint, panel: 'none' }]);
-            return;
-          }
-          if (requests.some((request) => request.endpoint === invite.endpoint)) {
-            setStack([...root, { kind: 'pending' }]);
-            return;
-          }
-          setStack([{ kind: 'join', invite }]);
-          return;
-        }
-        const target = focus ? loaded.find((c) => c.endpoint === focus.endpoint) : undefined;
-        if (focus && target) {
-          const base: Screen[] = loaded.length >= 2 ? [{ kind: 'all' }] : [];
-          setStack([
-            ...base,
-            { kind: 'club', endpoint: target.endpoint, panel: 'none' },
-            { kind: 'challenge', endpoint: target.endpoint, challengeId: focus.challengeId },
-          ]);
-          return;
-        }
-        setStack(root);
+        const first = firstScreens(loaded, requests);
+        setStack(first);
+        // Opening the Club House is the person's own action, so it is also when a
+        // request they sent is asked about (once — never on a timer): an approved one
+        // becomes the membership without a second press of Check request.
+        if (requests.length > 0) void settlePending(requests, first);
       });
     return () => {
       alive.current = false;
@@ -445,7 +502,12 @@ export function ClubRoot({
   switch (top.kind) {
     case 'discover':
       return (
-        <ScreenFrame title={t('clubDiscoverTitle')} onBack={onBack} t={t}>
+        // Over a joined Club (the home's "Join a new Club House"), Back returns to it.
+        <ScreenFrame
+          title={t('clubDiscoverTitle')}
+          onBack={stack.length > 1 ? stepBack : onBack}
+          t={t}
+        >
           <p className="club-quiet">
             {t(PRIVATE_CLUBS_ENABLED ? 'clubDiscoverBody' : 'clubDiscoverBodyPublic')}
           </p>

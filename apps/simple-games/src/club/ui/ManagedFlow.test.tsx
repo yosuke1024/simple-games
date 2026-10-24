@@ -147,7 +147,8 @@ describe('managed Club flows', () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'Join requests' }));
     await user.click(screen.getByRole('button', { name: 'Check request' }));
-    expect(fetcher).toHaveBeenCalledOnce();
+    // Once as the Club House opened (settlePending), once for the press.
+    expect(fetcher).toHaveBeenCalledTimes(2);
     await user.click(screen.getByRole('button', { name: 'Back' }));
     await clearLocalData([STORAGE_KEYS.club]);
     await act(async () => {
@@ -259,22 +260,125 @@ describe('managed Club flows', () => {
         createdAt: application.createdAt,
         expiresAt: application.expiresAt,
       });
-      const fetcher = vi
-        .fn()
-        .mockResolvedValue(
-          reply({ error: { code: 'unauthorized', message: 'request expired' } }, 401),
-        );
+      // Still waiting as the Club House opens; pruned by the time the person presses.
+      let opened = false;
+      const fetcher = vi.fn().mockImplementation(async () => {
+        if (!opened) {
+          opened = true;
+          return reply({ status: 'pending', club: CLUB, request: application });
+        }
+        return reply({ error: { code: 'unauthorized', message: 'request expired' } }, 401);
+      });
       vi.stubGlobal('fetch', fetcher);
       renderRoot();
       const user = userEvent.setup();
       await user.click(await screen.findByRole('button', { name: 'Join requests' }));
+      await waitFor(() => expect(fetcher).toHaveBeenCalledOnce());
       await user.click(await screen.findByRole('button', { name: action }));
       await screen.findByText('This request has expired.');
       expect(await loadPendingJoins()).toEqual([]);
       expect(await loadClubConnections()).toEqual([]);
-      expect(fetcher).toHaveBeenCalledOnce();
+      expect(fetcher).toHaveBeenCalledTimes(2);
     },
   );
+
+  it('joins an approved request as the Club House opens, without Check request', async () => {
+    await savePendingJoin({
+      endpoint: E,
+      requestId: application.id,
+      requestToken: token,
+      clubName: CLUB.name,
+      nickname: MEMBER.nickname,
+      createdAt: application.createdAt,
+      expiresAt: application.expiresAt,
+    });
+    const fetcher = vi.fn().mockImplementation(async (url: string, options: RequestInit) => {
+      if (url.endsWith('/join-requests/status'))
+        return reply({ status: 'approved', club: CLUB, member: MEMBER, memberToken: token });
+      if (url.endsWith('/club'))
+        return reply({ club: CLUB, me: MEMBER, members: [MEMBER], memberCount: 2 });
+      if (url.endsWith('/settings')) return reply(SETTINGS);
+      if (options.method === 'GET') return reply([]);
+      return reply({ error: { code: 'not_found', message: 'missing' } }, 404);
+    });
+    vi.stubGlobal('fetch', fetcher);
+    const handlers = renderRoot();
+    await screen.findByRole('heading', { name: CLUB.name });
+    expect((await loadClubConnections())[0]).toMatchObject({
+      endpoint: E,
+      memberToken: token,
+      autoSend: true,
+    });
+    expect(await loadPendingJoins()).toEqual([]);
+    expect(handlers.onConnectionsChanged).toHaveBeenCalled();
+  });
+
+  it('shows the owner the waiting join requests on the Club screen, read with the lists', async () => {
+    await addClubConnection({
+      endpoint: E,
+      clubId: CLUB.id,
+      clubName: CLUB.name,
+      memberId: 'm_owner',
+      memberToken: 'owner-member-token',
+      nickname: 'Yoh',
+      role: 'owner',
+      joinedAt: CLUB.createdAt,
+      autoSend: true,
+    });
+    const owner = { id: 'm_owner', nickname: 'Yoh', role: 'owner', joinedAt: CLUB.createdAt };
+    const fetcher = vi.fn().mockImplementation(async (url: string, options: RequestInit) => {
+      if (url.endsWith('/join-requests')) return reply([application]);
+      if (url.endsWith('/club'))
+        return reply({ club: CLUB, me: owner, members: [owner], memberCount: 1 });
+      if (url.endsWith('/settings')) return reply(SETTINGS);
+      if (options.method === 'GET') return reply([]);
+      return reply({ error: { code: 'not_found', message: 'missing' } }, 404);
+    });
+    vi.stubGlobal('fetch', fetcher);
+    renderRoot();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Join requests waiting: 1' }));
+    // The settings screen puts the waiting request before the form.
+    const approve = await screen.findByRole('button', { name: 'Approve' });
+    const save = screen.getByRole('button', { name: 'Save' });
+    expect(approve.compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('stores an approved request without leaving the Join screen of another invite', async () => {
+    await savePendingJoin({
+      endpoint: E,
+      requestId: application.id,
+      requestToken: token,
+      clubName: CLUB.name,
+      nickname: MEMBER.nickname,
+      createdAt: application.createdAt,
+      expiresAt: application.expiresAt,
+    });
+    const other = `${ORIGIN}/clubs/c_two`;
+    const fetcher = vi.fn().mockImplementation(async (url: string) => {
+      if (url.endsWith('/join-requests/status'))
+        return reply({ status: 'approved', club: CLUB, member: MEMBER, memberToken: token });
+      if (url.endsWith('/admission'))
+        return reply({ ...SETTINGS, club: { id: 'c_two', name: 'Other' }, memberCount: 1 });
+      return reply({ error: { code: 'not_found', message: 'missing' } }, 404);
+    });
+    vi.stubGlobal('fetch', fetcher);
+    const handlers = { onBack: vi.fn(), onPlayChallenge: vi.fn(), onConnectionsChanged: vi.fn() };
+    render(
+      <SettingsProvider initialSettings={{ ...settingsSchema.defaultValue(), language: 'en' }}>
+        <ClubRoot
+          entry="invite"
+          invite={{ endpoint: other, token: 'invite-token-0123456789' }}
+          {...handlers}
+        />
+      </SettingsProvider>,
+    );
+    await waitFor(async () => expect((await loadClubConnections())[0]?.endpoint).toBe(E), {
+      timeout: 5000,
+    });
+    expect(await screen.findByRole('heading', { name: 'Other' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Nickname' })).toBeInTheDocument();
+  });
 
   it('keeps a pending receipt after a failed connection', async () => {
     await savePendingJoin({

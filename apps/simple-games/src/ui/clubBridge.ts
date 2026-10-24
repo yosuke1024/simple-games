@@ -101,7 +101,7 @@ export interface ClubBridge {
 export const ClubBridgeContext = createContext<ClubBridge | null>(null);
 
 /** Which door opened the Club layer (club.md §9「入口」). */
-export type ClubEntry = 'settings' | 'home' | 'discover' | 'invite' | 'managed';
+export type ClubEntry = 'settings' | 'home' | 'discover' | 'join' | 'invite' | 'managed';
 
 export interface ClubInvite {
   endpoint: string;

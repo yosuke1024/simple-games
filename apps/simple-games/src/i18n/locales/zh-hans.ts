@@ -60,6 +60,7 @@ export const zhHans: Messages = {
   backupBody: '把你的进度转移到另一台设备，或者留一份副本。',
   backupPrivacyNote: '备份是设备上的一个未加密文件。Simple Games 不会上传它，放在哪里由你决定。',
   backupPurchaseNote: '去广告的购买不包含在备份中，请从应用商店恢复。',
+  backupClubNote: '也包含 Club House 所有者密钥和已加入的 Club。请勿将文件交给他人。',
   backupExport: '导出备份',
   backupRestore: '从备份恢复',
   backupExportFailed: '无法创建备份文件。',
@@ -147,6 +148,7 @@ export const zhHans: Messages = {
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: '高级',
   clubEntry: 'Club House',
+  clubJoinNew: '加入新的 Club House',
   playTogetherTitle: '一起玩',
   playTogetherBody: '和大家分享你的成绩。',
   clubResultSent: '已发送到 {club}',

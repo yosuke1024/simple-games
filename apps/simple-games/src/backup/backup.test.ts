@@ -17,7 +17,7 @@
 import { describe, expect, it } from 'vitest';
 import { GAMES } from '../app/registry';
 import { createMemoryKV, type KVStore } from '../storage/kv';
-import { loadRaw } from '../storage/repo';
+import { loadRaw, saveRaw } from '../storage/repo';
 import { STORAGE_KEYS } from '../storage/schemas';
 import { createBackup } from './export';
 import { BACKUP_MAX_BYTES, serializeBackup, backupFileName } from './format';
@@ -491,4 +491,236 @@ describe('every game is inside the backup', () => {
     expect(await applyBackup(read.prepared, target)).toBe('restored');
     expect(await dump(target, backupKeys())).toEqual(await dump(source, backupKeys()));
   }, 15_000);
+});
+
+describe('the Club House in a backup (2026-10-24)', () => {
+  const ORIGIN = 'https://club.pixapps.ai';
+  const connection = {
+    endpoint: `${ORIGIN}/clubs/c_family0001`,
+    clubId: 'c_family0001',
+    clubName: 'Family',
+    memberId: 'm_one',
+    memberToken: 'member-token-0123456789',
+    nickname: 'Ken',
+    role: 'member' as const,
+    joinedAt: '2026-10-23T00:00:00.000Z',
+  };
+  const club = (extra: Record<string, unknown> = {}) => ({
+    schemaVersion: 1,
+    connections: [connection],
+    managedOwner: { origin: ORIGIN, ownerToken: 'owner-key-0123456789abcdef', ...extra },
+  });
+
+  it('carries the joined Clubs and the owner key, never the owner benefit', async () => {
+    const benefit = {
+      requiredMembers: 50,
+      memberCount: 50,
+      active: true,
+      validUntil: '2099-01-01T00:00:00.000Z',
+    };
+    const kv = createMemoryKV({
+      [STORAGE_KEYS.club]: JSON.stringify(club({ adRemoval: benefit })),
+    });
+    const backup = await createBackup(META, kv);
+    expect(backup.data[STORAGE_KEYS.club]).toEqual(club());
+  });
+
+  it('puts the Clubs back from a file that has them', async () => {
+    const file = serializeBackup(
+      await createBackup(META, createMemoryKV({ [STORAGE_KEYS.club]: JSON.stringify(club()) })),
+    );
+    const device = createMemoryKV();
+    const read = await readBackup(file);
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(await applyBackup(read.prepared, device)).toBe('restored');
+    expect(JSON.parse((await loadRaw(STORAGE_KEYS.club, device))!)).toEqual(club());
+  });
+
+  it('drops an owner benefit a file carries anyway', async () => {
+    const backup = await createBackup(META, createMemoryKV());
+    const file = serializeBackup({
+      ...backup,
+      data: {
+        [STORAGE_KEYS.club]: club({
+          adRemoval: {
+            requiredMembers: 50,
+            memberCount: 50,
+            active: true,
+            validUntil: '2099-01-01T00:00:00.000Z',
+          },
+        }),
+      },
+    });
+    const device = createMemoryKV();
+    const read = await readBackup(file);
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    await applyBackup(read.prepared, device);
+    expect(JSON.parse((await loadRaw(STORAGE_KEYS.club, device))!)).toEqual(club());
+  });
+
+  it("drops the queued results of a membership the restore replaced, keeps an unchanged one's", async () => {
+    const other = {
+      ...connection,
+      endpoint: `${ORIGIN}/clubs/c_other00001`,
+      clubId: 'c_other00001',
+    };
+    const queued = (endpoint: string) => ({
+      kind: 'ranking',
+      endpoint,
+      createdAt: '2026-10-24T00:00:00.000Z',
+      clientId: 'client-0123456789',
+      body: {
+        gameId: 'sudoku',
+        contractVersion: 1,
+        paramsKey: 'easy',
+        params: {},
+        seed: 's',
+        boardDigest: null,
+        outcome: 'completed',
+        facts: { elapsedSeconds: 1 },
+        clientId: 'client-0123456789',
+      },
+    });
+    // The file: the same member in Family, someone else in Other.
+    const file = serializeBackup(
+      await createBackup(
+        META,
+        createMemoryKV({
+          [STORAGE_KEYS.club]: JSON.stringify({
+            schemaVersion: 1,
+            connections: [connection, { ...other, memberId: 'm_someone_else' }],
+          }),
+        }),
+      ),
+    );
+    const device = createMemoryKV({
+      [STORAGE_KEYS.club]: JSON.stringify({ schemaVersion: 1, connections: [connection, other] }),
+      [STORAGE_KEYS.clubOutbox]: JSON.stringify({
+        schemaVersion: 1,
+        items: [queued(connection.endpoint), queued(other.endpoint)],
+      }),
+    });
+    const read = await readBackup(file);
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(await applyBackup(read.prepared, device)).toBe('restored');
+    const outbox = JSON.parse((await loadRaw(STORAGE_KEYS.clubOutbox, device))!);
+    expect(outbox.items.map((i: { endpoint: string }) => i.endpoint)).toEqual([
+      connection.endpoint,
+    ]);
+  });
+
+  it('restores nothing when the queue of a replaced membership cannot be read', async () => {
+    const file = serializeBackup(
+      await createBackup(
+        META,
+        createMemoryKV({
+          [STORAGE_KEYS.club]: JSON.stringify({
+            schemaVersion: 1,
+            connections: [{ ...connection, memberId: 'm_someone_else' }],
+          }),
+        }),
+      ),
+    );
+    const before = JSON.stringify({ schemaVersion: 1, connections: [connection] });
+    const memory = createMemoryKV({ [STORAGE_KEYS.club]: before });
+    const device: KVStore = {
+      ...memory,
+      get: (key) =>
+        key === STORAGE_KEYS.clubOutbox ? Promise.reject(new Error('unreadable')) : memory.get(key),
+    };
+    const read = await readBackup(file);
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(await applyBackup(read.prepared, device)).toBe('failed');
+    expect(await loadRaw(STORAGE_KEYS.club, memory)).toBe(before);
+  });
+
+  it('leaves the Clubs alone when the file is from before they travelled', async () => {
+    const older = serializeBackup(await createBackup(META, createMemoryKV()));
+    const device = createMemoryKV({ [STORAGE_KEYS.club]: JSON.stringify(club()) });
+    const read = await readBackup(older);
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(await applyBackup(read.prepared, device)).toBe('restored');
+    expect(JSON.parse((await loadRaw(STORAGE_KEYS.club, device))!)).toEqual(club());
+  });
+});
+
+describe('the outbox a restore reads (2026-10-24)', () => {
+  it('waits for an outbox save still in the queue before deciding what to drop', async () => {
+    const ORIGIN = 'https://club.pixapps.ai';
+    const connection = {
+      endpoint: `${ORIGIN}/clubs/c_family0001`,
+      clubId: 'c_family0001',
+      clubName: 'Family',
+      memberId: 'm_one',
+      memberToken: 'member-token-0123456789',
+      nickname: 'Ken',
+      role: 'member' as const,
+      joinedAt: '2026-10-23T00:00:00.000Z',
+    };
+    const file = serializeBackup(
+      await createBackup(
+        META,
+        createMemoryKV({
+          [STORAGE_KEYS.club]: JSON.stringify({
+            schemaVersion: 1,
+            connections: [{ ...connection, memberId: 'm_someone_else' }],
+          }),
+        }),
+      ),
+    );
+    const memory = createMemoryKV({
+      [STORAGE_KEYS.club]: JSON.stringify({ schemaVersion: 1, connections: [connection] }),
+    });
+    // A save the store takes its time over: queued before the restore reads.
+    let release!: () => void;
+    const held = new Promise<void>((done) => {
+      release = done;
+    });
+    const device: KVStore = {
+      ...memory,
+      set: async (key, value) => {
+        if (key === STORAGE_KEYS.clubOutbox && !value.includes('"items":[]')) await held;
+        return memory.set(key, value);
+      },
+    };
+    const queued = {
+      schemaVersion: 1,
+      items: [
+        {
+          kind: 'ranking',
+          endpoint: connection.endpoint,
+          createdAt: '2026-10-24T00:00:00.000Z',
+          clientId: 'client-0123456789',
+          body: {
+            gameId: 'sudoku',
+            contractVersion: 1,
+            paramsKey: 'easy',
+            params: {},
+            seed: 's',
+            boardDigest: null,
+            outcome: 'completed',
+            facts: { elapsedSeconds: 1 },
+            clientId: 'client-0123456789',
+          },
+        },
+      ],
+    };
+    const pending = saveRaw(STORAGE_KEYS.clubOutbox, JSON.stringify(queued), device);
+    const read = await readBackup(file);
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    const restoring = applyBackup(read.prepared, device);
+    // Let the restore reach its outbox read while the save is still held.
+    await new Promise((done) => setTimeout(done, 50));
+    release();
+    await pending;
+    expect(await restoring).toBe('restored');
+    const outbox = JSON.parse((await loadRaw(STORAGE_KEYS.clubOutbox, memory))!);
+    expect(outbox.items).toEqual([]);
+  });
 });

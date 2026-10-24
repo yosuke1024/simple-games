@@ -303,10 +303,11 @@ export interface CollectionHomeScreenProps {
   dismissReviewPrompt?: (() => void) | null;
   /**
    * The Club House's one place on the home (docs/architecture/club.md §2-2,
-   * §2-3): `'home'` from the connected row, `'discover'` from `Play together`.
+   * §2-3): `'home'` from the connected row, `'join'` from the line under it,
+   * `'discover'` from `Play together`.
    * The shell loads the Club layer on the press, never on the paint.
    */
-  onOpenClub: (entry: 'home' | 'discover') => void;
+  onOpenClub: (entry: 'home' | 'join' | 'discover') => void;
   /** The clubs this device has joined, as `sg.club` last cached them — names only. */
   clubConnections: readonly { clubName: string }[];
 }
@@ -752,6 +753,11 @@ export function CollectionHomeScreen({
                 <span className="game-row-chevron" aria-hidden="true">
                   <IconChevronRight />
                 </span>
+              </button>
+              {/* The same slot's second line: joining one more Club, which otherwise
+                  sits two screens deep (PRODUCT_PRINCIPLES「Core の導線」, 2026-10-24). */}
+              <button type="button" className="home-club-join" onClick={() => onOpenClub('join')}>
+                {t('clubJoinNew')}
               </button>
             </section>
           ) : (

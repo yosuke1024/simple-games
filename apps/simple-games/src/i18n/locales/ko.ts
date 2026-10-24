@@ -61,6 +61,8 @@ export const ko: Messages = {
   backupPrivacyNote:
     '백업은 기기에 저장되는 암호화되지 않은 파일입니다. Simple Games는 이 파일을 업로드하지 않으며, 어디에 둘지는 사용자가 정합니다.',
   backupPurchaseNote: '광고 제거 구매는 백업에 포함되지 않습니다. 스토어에서 복원하세요.',
+  backupClubNote:
+    'Club House 소유자 키와 참여 중인 Club도 포함됩니다. 파일을 다른 사람에게 주지 마세요.',
   backupExport: '백업 내보내기',
   backupRestore: '백업에서 복원',
   backupExportFailed: '백업 파일을 만들지 못했습니다.',
@@ -149,6 +151,7 @@ export const ko: Messages = {
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: '고급',
   clubEntry: 'Club House',
+  clubJoinNew: '새 Club House에 참여',
   playTogetherTitle: '함께 플레이',
   playTogetherBody: '모두와 점수를 공유해 보세요.',
   clubResultSent: '{club}에 보냈습니다',

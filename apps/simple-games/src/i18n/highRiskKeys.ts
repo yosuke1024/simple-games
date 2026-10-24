@@ -119,4 +119,8 @@ export const HIGH_RISK_KEYS: readonly MessageKey[] = [
   'clubOwnerAdRemovalHelp',
   'clubOwnerMemberCountHelp',
   'clubOwnerRecoveryHelp',
+  // 2026-10-24: the backup now carries the Club House keys — the file must be kept
+  // private — and the approval box is said the other way round (ticked = no approval).
+  'backupClubNote',
+  'clubAutoApprove',
 ];
