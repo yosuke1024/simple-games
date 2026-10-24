@@ -54,6 +54,9 @@ export function JoinScreen({
   // Bumped by the Retry button: the invite's fragment is already gone from the address.
   const [admissionAttempt, setAdmissionAttempt] = useState(0);
   const alive = useRef(true);
+  // Synchronous, unlike `busy`: a second tap during the first await must not join twice
+  // (a second membership's token would be lost; club.md §7-4).
+  const submitting = useRef(false);
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -128,7 +131,16 @@ export function JoinScreen({
     !admissionBusy;
 
   const submit = async () => {
-    if (!ready || target === null) return;
+    if (!ready || target === null || submitting.current) return;
+    submitting.current = true;
+    try {
+      await submitOnce(target);
+    } finally {
+      submitting.current = false;
+    }
+  };
+
+  const submitOnce = async (target: string) => {
     // A pending request holds a secret receipt like a connection does, so it counts toward
     // the same ten: the store keeps no more, and would otherwise drop the oldest receipt.
     const waiting = managed

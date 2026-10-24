@@ -5,7 +5,7 @@
  * invite was replaced, a new request never pushes out a stored receipt, and a refused key
  * clears the ad benefit from the record book as it does from the owner screen.
  */
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../i18n';
@@ -131,6 +131,39 @@ describe('joining a managed Club after a failure', () => {
     await waitFor(() => expect(onJoined).toHaveBeenCalledOnce());
     expect((await loadClubConnections())[0]?.memberToken).toBe('member-token-secret');
     expect(fetcher.mock.calls.some(([url]) => String(url).endsWith('/join'))).toBe(false);
+  });
+
+  it('sends one request for two quick taps', async () => {
+    const fetcher = vi.fn().mockImplementation(async (url: string) => {
+      if (url.endsWith('/admission')) return reply(ADMISSION);
+      if (url.endsWith('/join'))
+        return reply(
+          {
+            status: 'pending',
+            club: CLUB,
+            request: {
+              id: 'jr_one',
+              nickname: 'Ken',
+              createdAt: DATE,
+              expiresAt: '2026-10-30T00:00:00.000Z',
+              status: 'pending',
+            },
+            requestToken: 'request-token-is-secret',
+          },
+          202,
+        );
+      return reply({ error: { code: 'not_found', message: 'missing' } }, 404);
+    });
+    vi.stubGlobal('fetch', fetcher);
+    const { onPending } = renderJoin();
+    const user = userEvent.setup();
+    await user.type(await screen.findByRole('textbox', { name: 'Nickname' }), 'Ken');
+    const button = await screen.findByRole('button', { name: 'Request to join' });
+    // Both before React re-renders, as a double tap on a slow device lands.
+    fireEvent.click(button);
+    fireEvent.click(button);
+    await waitFor(() => expect(onPending).toHaveBeenCalled());
+    expect(fetcher.mock.calls.filter(([url]) => String(url).endsWith('/join'))).toHaveLength(1);
   });
 
   it('refuses another request rather than dropping a stored receipt', async () => {
