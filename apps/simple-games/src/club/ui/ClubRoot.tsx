@@ -499,6 +499,8 @@ export function ClubRoot({
     );
   }
 
+  const joinedPublic = (connections ?? []).some((c) => c.endpoint === PUBLIC_CLUB_ENDPOINT);
+
   switch (top.kind) {
     case 'discover':
       return (
@@ -511,17 +513,22 @@ export function ClubRoot({
           <p className="club-quiet">
             {t(PRIVATE_CLUBS_ENABLED ? 'clubDiscoverBody' : 'clubDiscoverBodyPublic')}
           </p>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => push({ kind: 'join', invite: null, publicClub: true })}
-          >
-            {t('clubJoinPublic')}
-          </button>
+          {/* Already in the Public Club House (reached over it from the home's "Join a
+              new Club House"): no second offer to join it, as on All Clubs, and the
+              invite link becomes the first way in. */}
+          {joinedPublic ? null : (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => push({ kind: 'join', invite: null, publicClub: true })}
+            >
+              {t('clubJoinPublic')}
+            </button>
+          )}
           {PRIVATE_CLUBS_ENABLED || MANAGED_CLUB_ORIGIN ? (
             <button
               type="button"
-              className="btn btn-ghost"
+              className={joinedPublic ? 'btn btn-primary' : 'btn btn-ghost'}
               onClick={() => push({ kind: 'join', invite: null })}
             >
               {t('clubJoinWithLink')}
