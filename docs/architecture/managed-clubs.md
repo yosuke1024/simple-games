@@ -505,7 +505,8 @@ Reset と同じキューに載せる。接続・申請・契約キーの更新�
 クラブの endpoint は `https://club.pixapps.ai/clubs/<clubId>`、Public は従来どおり origin
 そのもので、両者は endpoint の完全一致と `/clubs/` 接頭辞で区別する。
 
-`ui/clubFeatures.ts` の `MANAGED_CLUBS_ENABLED` を true にしたビルドだけに、マネージドの
+`ui/clubFeatures.ts` の `MANAGED_CLUBS_ENABLED` を true にしたビルドだけに(2026-10-24、
+稼働確認用の v1.4.2 から true)、マネージドの
 公開一覧・オーナー管理の入口を出す。origin は同ファイルの `PIXAPPS_CLUB_ORIGIN` で、
 `club/public.ts` の `PUBLIC_CLUB_ENDPOINT` と一致することをテストで固定する。ビルド変数や
 リリースワークフローの設定は要らない。false の間は入口を出さず、未参加の端末から
