@@ -513,8 +513,14 @@ Reset と同じキューに載せる。接続・申請・契約キーの更新�
 
 検証用のビルドに限り、`VITE_MANAGED_CLUB_ORIGIN` で接続先を上書きできる(ステージングの
 workers.dev や開発サーバー)。値はパス・末尾スラッシュ・クエリのない HTTPS origin とし、
-開発用の `localhost`・`127.0.0.1` だけ HTTP を許す。無効値は無視する。リリースの
-ワークフローはこの変数を設定しない。従来の `PRIVATE_CLUBS_ENABLED = false` は
+開発用の `localhost`・`127.0.0.1` だけ HTTP を許す。無効値は無視する。アプリと
+pixapps.ai の Web 版のリリースワークフローはこの変数を設定しない。
+
+例外は、サーバーが `/join` で配る Web ビルド(club.md §7-1)。simple-games-club の
+`pnpm build:web` がこの変数に配信先の origin を入れて作るため、そのコピーは
+`MANAGED_CLUBS_ENABLED` が false の間もその origin のマネージド招待を受け付ける。
+広告と計測の変数は空にし、広告も計測も載せない。配信先と違う origin のコピーは
+`pnpm deploy:production` が拒む。従来の `PRIVATE_CLUBS_ENABLED = false` は
 そのままで、この origin のマネージド招待だけを別に有効化する。
 
 公開一覧、管理画面、記録帳、アルバムは、本人が画面を開く・更新する・次のページを
