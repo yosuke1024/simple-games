@@ -1,5 +1,14 @@
 # Club House — クライアント側の契約
 
+**2026-10-23: Managed Club House の追加。** オーナー向けホスティング契約、Basic 50 名 × 3 クラブ、
+公開範囲・参加承認・対象ゲーム、オーナー記録帳・アルバムの現在の契約は
+[managed-clubs.md](managed-clubs.md) に定める。本文の「1 デプロイ = 1 クラブ」、Railway の
+セットアップキー、origin だけの endpoint は従来の self-hosted 接続の契約として残る。
+Managed は同じ per-club API を `/clubs/:id/api/v1/` に持ち、契約キーで複数クラブを作る。
+新設定と承認の API は既存の Node / Workers にも共通実装する。
+以下の旧仕様と公開範囲・承認・料金に関する説明が食い違う場合、この改定と上記の正典を優先する。
+旧 `/public` の 5 分キャッシュは廃止し、公開範囲の変更を直後の応答に反映する。
+
 作成 2026-09-09、改題 2026-09-30。issue #161 の**設計**であり、
 Epic #175 の段 2(原則の境界 #176 → **#161 の設計** → #164 の発見導線)に当たる。
 境界の正本は [../PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md)「Shared」で、この文書は

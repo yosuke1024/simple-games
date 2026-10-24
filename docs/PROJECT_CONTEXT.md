@@ -142,8 +142,9 @@ Design philosophy:
 以下は **Core** — Club House を使っていない状態のアプリと Web 版 — の約束である。
 Club House(#161 / #164)は本人が明示的に参加したときだけ現れる任意の層で、Core の
 約束の例外ではなく **Core の外** に置く(2026-09-09 の #176、2026-09-30 の
-`simple-games-club#1`)。デプロイは PixApps が運用する **Public** と利用者が建てる
-**Private** の 2 つ。Club House を一度も触らない利用者にとって、以下は 1 つも変わらない。
+`simple-games-club#1`)。公式 **Public**、利用者が建てる **Self-hosted** に、
+2026-10-23 にオーナー契約で PixApps が提供する **Managed** を加える判断をした。
+Club House を一度も触らない利用者にとって、以下は 1 つも変わらない。
 Club House の側の境界(ゲームは PixApps のサーバーを 1 つも必要としない・送るのは
 結果画面の事実だけ・順位はゲーム × モードごとの自己ベスト(同じ盤面で競うのはデイリーだけ)・Core の画面に現れる入口は 3 つまで・
 公開デプロイの費用の上限・CI での証明)は `docs/PRODUCT_PRINCIPLES.md`「Club House」が定める。
@@ -165,8 +166,8 @@ Club House の側の境界(ゲームは PixApps のサーバーを 1 つも必�
 - Push / ローカル通知で再訪を促さない。
 - ゲームプレイを中断する広告を app に導入しない。
 - **ゲームが** API サーバー、クラウド DB、認証基盤を必要とする構成にしない。
-  PixApps が持つ固定費は Public Club House の 1 デプロイだけで、それも限りなくゼロに
-  近い額に限る(超えたら機能を削るか畳む。同「費用の上限」)。
+  公式 Public の費用上限と、Managed のオーナー契約で賄う費用を分ける。
+  Managed が止まっても Core はすべてのゲームを動かせる(同「Managed Club House」)。
 - AI API / 有料問題生成 API に依存しない。
 - ローエンド端末、低通信、低消費電力を設計制約として扱う。
 - 実施していない検証を成功扱いにしない。
@@ -204,6 +205,27 @@ Club House の UI も「手数を削る」で評価する(招待リンクから 
 「Club House」節が数える 3 つまで(具体形は `club.md` §2)で、Friction first の側に
 Club House のための摩擦を持ち込まない。**Public ができても、この数は増えない。**
 
+### Managed Club House — 採用した方向
+
+2026-10-23 の製品オーナー判断。利用者に Railway などへの構築を求めず、PixApps が
+Cloudflare 上にクラブごとの領域を提供する。**Trial: 無料・期限なしで 5 名 × 1 クラブ**を
+本人が開始でき、**Basic: 50 名 / クラブ × 3 クラブ**へ同じ記録を保って移行する。
+将来の Plus は 100 名 × 5 クラブ、MAX は人数上限なし × 100 クラブ。価格は未定。
+Plus / MAX の契約はまだ受け付けない。
+
+オーナーが公開範囲、参加承認、対象ゲームを管理し、現在の記録からクラブ横断の記録帳と
+メンバー向け記録アルバムを作れる。保持データから分からない総プレイ回数や成功率は表示しない。
+所有クラブの承認済み・在籍中メンバーが合計 50 名以上なら、有効なホスティング契約の
+オーナーの広告を非表示にする。オーナーをクラブごとに含む延べ人数で、申請中は含めない。
+オーナー画面に人数と有効状態を表示し、確認済みの資格を端末内に保存する。起動時の確認通信や
+購入済み扱いは追加しない。今回の実装は無料 Trial と運用者による Basic の付与・移行までで、
+決済・自動更新・本番公開は含まない。
+サービスは Public Club House と同じ `https://club.pixapps.ai` に置き、クライアントは
+`ui/clubFeatures.ts` の `MANAGED_CLUBS_ENABLED` で有効にする。
+
+Canonical: `PRODUCT_PRINCIPLES.md`「Managed Club House」、
+`architecture/managed-clubs.md`。既存 `architecture/club.md` の self-hosted API は維持する。
+
 ## 6. Monetization
 
 ### App
@@ -211,7 +233,8 @@ Club House のための摩擦を持ち込まない。**Public ができても、
 - 全ゲーム・全ゲーム機能を無料提供。
 - Anchored Adaptive Banner 1枠のみ。オフラインでは広告取得しない。
 - Rewarded / Interstitial / App Open / Native は採用しない。
-- 買い切りの広告削除商品のみ。ゲーム機能差は作らない。
+- ストア商品は買い切りの広告削除のみ。別に、上記の Managed オーナー特典が広告を非表示にする。
+  購入状態とは分け、ゲーム機能差は作らない。
 
 Canonical: `docs/ADS_POLICY.md`, `docs/PRODUCT_PRINCIPLES.md`
 
@@ -220,7 +243,8 @@ Canonical: `docs/ADS_POLICY.md`, `docs/PRODUCT_PRINCIPLES.md`
 - 全ゲームを無料提供。
 - ゲーム盤面・操作を妨害しない範囲で広告を掲載する。
 - 広告視聴による機能解放を行わない。
-- 課金機能は提供しない。
+- Core のゲームに課金機能は提供しない。Managed のオーナー向けホスティング契約は上記の別の層。
+- Managed オーナーの広告非表示は Web のゲームにも適用する。通常メンバーや LP 全体の特典ではない。
 
 Canonical: `docs/WEB_VERSION.md`
 

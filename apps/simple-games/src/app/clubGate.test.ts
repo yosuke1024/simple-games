@@ -26,6 +26,7 @@ import {
 /** Private Clubs ship switched off (ui/clubFeatures.ts); the invite paths are tested under both values. */
 const flags = vi.hoisted(() => ({ privateClubs: true }));
 vi.mock('../ui/clubFeatures', () => ({
+  MANAGED_CLUB_ORIGIN: null,
   get PRIVATE_CLUBS_ENABLED() {
     return flags.privateClubs;
   },

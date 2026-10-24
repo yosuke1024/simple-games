@@ -18,7 +18,7 @@
  * App.shortcut.test.tsx stubs them.
  */
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useContext } from 'react';
+import { StrictMode, useContext } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ClubModule, ClubPlayRequest, ClubRootProps } from '../ui/clubBridge';
 import { ClubBridgeContext } from '../ui/clubBridge';
@@ -26,7 +26,7 @@ import { ClubBridgeContext } from '../ui/clubBridge';
 const { capacitorMock, reviewMock, flags } = vi.hoisted(() => ({
   capacitorMock: { platform: 'android' },
   // Private Clubs ship switched off (ui/clubFeatures.ts); the invite path is tested under both values.
-  flags: { privateClubs: true },
+  flags: { privateClubs: true, managedOrigin: null as string | null },
   reviewMock: {
     shouldPromptReview: vi.fn<() => boolean>(() => false),
     markReviewPromptShown: vi.fn(),
@@ -34,6 +34,9 @@ const { capacitorMock, reviewMock, flags } = vi.hoisted(() => ({
 }));
 
 vi.mock('../ui/clubFeatures', () => ({
+  get MANAGED_CLUB_ORIGIN() {
+    return flags.managedOrigin;
+  },
   get PRIVATE_CLUBS_ENABLED() {
     return flags.privateClubs;
   },
@@ -95,8 +98,10 @@ vi.mock('./lazyRoots', () => ({
 }));
 
 import { SettingsProvider } from '../state/SettingsContext';
+import { initAdRemoval, resetAdRemovalForTesting } from '../monetization/adRemoval';
 import { createMemoryKV } from '../storage/kv';
 import { settingsSchema } from '../storage/schemas';
+import { markManagedOwnerReturn, consumeManagedOwnerReturn } from '../ui/managedOwnerReturn';
 import { initClubGate, setClubLoaderForTesting } from './clubGate';
 import { resetRecentGamesForTesting } from './recentGames';
 import { App } from './App';
@@ -162,6 +167,9 @@ const settle = () =>
 beforeEach(() => {
   capacitorMock.platform = 'android';
   flags.privateClubs = true;
+  flags.managedOrigin = null;
+  resetAdRemovalForTesting();
+  consumeManagedOwnerReturn();
   loader.mockReset().mockImplementation(() => Promise.resolve(fakeModule));
   // Also forgets the connections a previous test's boot read.
   setClubLoaderForTesting(loader);
@@ -172,6 +180,8 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  resetAdRemovalForTesting();
+  consumeManagedOwnerReturn();
   setClubLoaderForTesting(null);
   window.history.replaceState(null, '', '/');
   try {
@@ -322,6 +332,100 @@ describe('the way back to a challenge', () => {
 
     expect(screen.queryByTestId('club-entry')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Simple Games' })).toBeInTheDocument();
+  });
+});
+
+describe('returning from the Web owner-benefit reload', () => {
+  const managedOrigin = 'https://managed.example';
+  const seedOwner = (origin = managedOrigin, validUntil = '2099-01-01T00:00:00.000Z') =>
+    initAdRemoval(
+      createMemoryKV({
+        'sg.club': JSON.stringify({
+          schemaVersion: 1,
+          connections: [],
+          managedOwner: {
+            origin,
+            ownerToken: 'a'.repeat(64),
+            adRemoval: { requiredMembers: 50, memberCount: 50, active: true, validUntil },
+          },
+        }),
+      }),
+    );
+
+  it('returns once to the owner screen with a local valid benefit, including under StrictMode', async () => {
+    capacitorMock.platform = 'web';
+    flags.managedOrigin = managedOrigin;
+    await seedOwner();
+    markManagedOwnerReturn();
+    const first = render(
+      <StrictMode>
+        <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
+          <App />
+        </SettingsProvider>
+      </StrictMode>,
+    );
+    await settle();
+
+    expect(screen.getByTestId('club-entry')).toHaveTextContent('managed');
+    expect(loader).toHaveBeenCalledTimes(1);
+    expect(consumeManagedOwnerReturn()).toBe(false);
+    expect(window.location.href).not.toContain('a'.repeat(64));
+
+    first.unmount();
+    loader.mockClear();
+    setClubLoaderForTesting(loader);
+    renderShell();
+    await settle();
+    expect(screen.queryByTestId('club-entry')).not.toBeInTheDocument();
+    expect(loader).not.toHaveBeenCalled();
+  });
+
+  it.each(['disabled', 'other-origin', 'expired', 'forgotten'] as const)(
+    'discards the route hint when the owner benefit is %s',
+    async (reason) => {
+      capacitorMock.platform = 'web';
+      flags.managedOrigin = reason === 'disabled' ? null : managedOrigin;
+      if (reason !== 'forgotten') {
+        await seedOwner(
+          reason === 'other-origin' ? 'https://untrusted.example' : managedOrigin,
+          reason === 'expired' ? '2020-01-01T00:00:00.000Z' : undefined,
+        );
+      }
+      markManagedOwnerReturn();
+      renderShell();
+      await settle();
+
+      expect(screen.queryByTestId('club-entry')).not.toBeInTheDocument();
+      expect(loader).not.toHaveBeenCalled();
+      expect(consumeManagedOwnerReturn()).toBe(false);
+    },
+  );
+
+  it('honours a newly opened invite and consumes the old return hint', async () => {
+    capacitorMock.platform = 'web';
+    flags.managedOrigin = managedOrigin;
+    await seedOwner();
+    markManagedOwnerReturn();
+    window.history.replaceState(null, '', '/join#invite=abc_DEF-123_ghi-456');
+    renderShell();
+    await settle();
+
+    expect(screen.getByTestId('club-entry')).toHaveTextContent('invite');
+    expect(consumeManagedOwnerReturn()).toBe(false);
+  });
+
+  it('falls back to the collection if the resumed Club chunk cannot load', async () => {
+    capacitorMock.platform = 'web';
+    flags.managedOrigin = managedOrigin;
+    await seedOwner();
+    markManagedOwnerReturn();
+    loader.mockRejectedValueOnce(new Error('offline'));
+    renderShell();
+    await settle();
+
+    expect(screen.queryByTestId('club-entry')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Simple Games' })).toBeInTheDocument();
+    expect(consumeManagedOwnerReturn()).toBe(false);
   });
 });
 

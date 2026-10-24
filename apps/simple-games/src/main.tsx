@@ -5,6 +5,7 @@ import { App } from './app/App';
 import { initShellState, startAdsUnlessRemoved } from './app/boot';
 import { resolveLocale } from './i18n';
 import { initNativeStore } from './monetization/nativeStore';
+import { isAdRemovalActive } from './monetization/adRemoval';
 import { webAnchorEnabled } from './services/ads/web/config';
 import { SettingsProvider } from './state/SettingsContext';
 // Display font (title, tiles, scores): bundled latin subsets only, ~36 KB —
@@ -33,7 +34,7 @@ async function boot(): Promise<void> {
   // bar — can never cover game controls and nothing shifts when it appears.
   // The boot itself (services/ads/web/boot.ts) is fire-and-forget, like the
   // AdMob init below.
-  if (import.meta.env.MODE === 'web' && webAnchorEnabled()) {
+  if (import.meta.env.MODE === 'web' && webAnchorEnabled() && !isAdRemovalActive()) {
     document.documentElement.dataset.sgWebAds = '';
     void import('./services/ads/web/boot').then((m) => m.initWebAds()).catch(() => undefined);
   }

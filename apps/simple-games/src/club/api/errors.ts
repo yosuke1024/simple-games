@@ -11,6 +11,12 @@ export type ClubErrorCode =
   | 'last_owner'
   | 'too_many_owners'
   | 'too_many_members'
+  | 'game_disabled'
+  | 'too_many_requests'
+  | 'request_decided'
+  | 'too_many_clubs'
+  | 'subscription_inactive'
+  | 'plan_unavailable'
   | 'too_large'
   | 'rate_limited'
   | 'internal_error'
@@ -37,6 +43,12 @@ export const SERVER_ERROR_CODES: readonly ClubErrorCode[] = [
   'last_owner',
   'too_many_owners',
   'too_many_members',
+  'game_disabled',
+  'too_many_requests',
+  'request_decided',
+  'too_many_clubs',
+  'subscription_inactive',
+  'plan_unavailable',
   'too_large',
   'rate_limited',
   'internal_error',
@@ -60,6 +72,7 @@ export const FINAL_CODES: ReadonlySet<ClubErrorCode> = new Set<ClubErrorCode>([
   'unauthorized',
   'invalid_request',
   'forbidden',
+  'game_disabled',
   'too_large',
   'unsupported_version',
   'unsupported_server',

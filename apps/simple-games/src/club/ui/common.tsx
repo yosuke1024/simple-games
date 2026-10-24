@@ -111,6 +111,10 @@ export function errorText(error: unknown, t: T, clubName?: string): string {
         return t('clubErr_invite_expired');
       case 'too_many_members':
         return t('clubErr_too_many_members');
+      case 'too_many_clubs':
+        return t('clubOwnerLimit');
+      case 'subscription_inactive':
+        return t('clubSubscriptionExpired');
       case 'unauthorized':
         return t('clubErr_unauthorized');
       case 'forbidden':

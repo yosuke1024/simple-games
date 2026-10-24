@@ -13,6 +13,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient, REQUEST_TIMEOUT_MS, type ClubClient } from '../api/client';
 import { ClubApiError } from '../api/errors';
 import type { Challenge, Member, RankingMine, RankingSummary, ReportedMember } from '../api/types';
+import type { ClubSettings } from '../api/managementTypes';
+import { updateClubGames } from '../storage/connections';
 import { contractFor, gameTitle } from '../contract/challenge';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
 import { flushOutbox, type FlushReport } from '../storage/outbox';
@@ -23,7 +25,7 @@ import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameTile } from '@/ui/components/GameTile';
 import { IconChevronRight } from '@/ui/components/icons';
 import { useSettings } from '@/state/SettingsContext';
-import { PRIVATE_CLUBS_ENABLED } from '@/ui/clubFeatures';
+import { PRIVATE_CLUBS_ENABLED, MANAGED_CLUB_ORIGIN } from '@/ui/clubFeatures';
 import {
   errorText,
   modeLabel,
@@ -57,6 +59,7 @@ export interface ClubData {
   reported: ReportedMember[];
   /** The club's name as the server has it now. */
   clubName: string;
+  settings?: ClubSettings;
 }
 
 /**
@@ -93,6 +96,10 @@ export function ClubScreen({
   onRenamed,
   onRenamedMe,
   onAcceptAutoSend,
+  onManage,
+  onRecords,
+  onAlbums,
+  onAllClubs,
 }: {
   connection: ClubConnection;
   panel: ClubPanel;
@@ -116,6 +123,10 @@ export function ClubScreen({
   onRenamedMe: (nickname: string) => void;
   /** The player accepted the automatic-send disclosure shown for a connection that never saw it. */
   onAcceptAutoSend: () => void;
+  onManage?: () => void;
+  onRecords?: () => void;
+  onAlbums?: () => void;
+  onAllClubs?: () => void;
 }) {
   const { t } = useSettings();
   const [data, setData] = useState<ClubData | null>(cached ?? null);
@@ -126,6 +137,8 @@ export function ClubScreen({
 
   const clubName = data?.clubName ?? connection.clubName;
   const isOwner = connection.role === 'owner';
+  const isManaged = /\/clubs\/[A-Za-z0-9_-]+$/.test(connection.endpoint);
+  const inviteEnabled = PRIVATE_CLUBS_ENABLED || isManaged;
 
   const client = () => {
     clientRef.current ??= createClient(connection.endpoint, connection.memberToken);
@@ -175,7 +188,7 @@ export function ClubScreen({
           throw e;
         };
         // Four requests, and a fifth for the owner alone (club.md §10).
-        const [club, today, rankings, mine, reported] = await Promise.all([
+        const [club, today, rankings, mine, reported, settings] = await Promise.all([
           api.club(),
           api.challenges({ daily: todayDate }),
           api.rankings(),
@@ -183,7 +196,10 @@ export function ClubScreen({
           isOwner
             ? api.reportedMembers().catch((e: unknown) => orEmpty<ReportedMember>(e))
             : Promise.resolve([] as ReportedMember[]),
+          isManaged ? api.settings() : Promise.resolve(undefined),
         ]);
+        if (!alive.current) return;
+        if (settings) await updateClubGames(connection.endpoint, settings.allowedGameIds);
         if (!alive.current) return;
         setData({
           clubName: club.club.name,
@@ -194,6 +210,7 @@ export function ClubScreen({
           todayDate,
           rankings,
           mine,
+          ...(settings ? { settings } : {}),
         });
         if (club.club.name !== connection.clubName) onRenamed(club.club.name);
         if (club.me.nickname !== connection.nickname) onRenamedMe(club.me.nickname);
@@ -229,11 +246,14 @@ export function ClubScreen({
 
   // Held to the date asked for: a server that predates `?daily=` ignores the
   // parameter and answers with its ordinary list, which is not today's.
+  const allowed = (id: string) =>
+    data?.settings?.allowedGameIds == null || data.settings.allowedGameIds.includes(id);
   const todays = (data?.today ?? []).filter(
-    (c) => contractFor(c.gameId) !== null && c.daily === data?.todayDate,
+    (c) => allowed(c.gameId) && contractFor(c.gameId) !== null && c.daily === data?.todayDate,
   );
 
   const games = shelfGames();
+  for (const id of games.keys()) if (!allowed(id)) games.delete(id);
   const rankings = (data?.rankings ?? []).filter((r) => games.has(r.gameId));
   const tablesOf = (gameId: string) => rankings.filter((r) => r.gameId === gameId);
   // The shelves' order, fixed (club.md §9): never by rank, never by recency.
@@ -270,9 +290,15 @@ export function ClubScreen({
   };
 
   // The owner's invite panel exists only while Private Clubs are on (club.md §14, decision 44).
-  if (panel === 'invite' && PRIVATE_CLUBS_ENABLED) {
+  if (panel === 'invite' && inviteEnabled) {
     return (
-      <InvitePanel clubName={clubName} client={client()} t={t} onBack={() => onPanel('none')} />
+      <InvitePanel
+        clubName={clubName}
+        approvalRequired={data?.settings?.approvalRequired === true}
+        client={client()}
+        t={t}
+        onBack={() => onPanel('none')}
+      />
     );
   }
   if (panel === 'settings') {
@@ -281,6 +307,7 @@ export function ClubScreen({
         clubName={clubName}
         isOwner={isOwner}
         isPublic={connection.endpoint === PUBLIC_CLUB_ENDPOINT}
+        isManaged={isManaged}
         members={data?.members ?? null}
         selfId={connection.memberId}
         nickname={connection.nickname}
@@ -299,7 +326,7 @@ export function ClubScreen({
       t={t}
       right={
         <span className="club-header-actions">
-          {isOwner && PRIVATE_CLUBS_ENABLED ? (
+          {isOwner && inviteEnabled ? (
             <button type="button" className="club-text-btn" onClick={() => onPanel('invite')}>
               {t('clubInvite')}
             </button>
@@ -315,13 +342,20 @@ export function ClubScreen({
         // disclosure, so nothing is sent until its owner accepts it here (club.md §4-1).
         // Not pressing it changes nothing else: the Club stays fully usable.
         <div className="club-consent">
-          <p className="club-disclosure">{t('clubAutoSendDisclosure')}</p>
+          <p className="club-disclosure">
+            {t(isManaged ? 'clubManagedJoinDisclosure' : 'clubAutoSendDisclosure')}
+          </p>
           <button type="button" className="btn btn-primary" onClick={onAcceptAutoSend}>
             {t('clubAutoSendAccept')}
           </button>
         </div>
       )}
       <div className="club-toolbar">
+        {MANAGED_CLUB_ORIGIN && onAllClubs ? (
+          <button className="club-text-btn" onClick={onAllClubs}>
+            {t('clubAllClubs')}
+          </button>
+        ) : null}
         <button
           type="button"
           className="club-text-btn"
@@ -340,6 +374,25 @@ export function ClubScreen({
 
       {data ? (
         <>
+          {isManaged ? (
+            <div className="club-actions">
+              {isOwner && onManage ? (
+                <button className="btn btn-ghost" onClick={onManage}>
+                  {t('clubSettings')}
+                </button>
+              ) : null}
+              {isOwner && onRecords ? (
+                <button className="btn btn-ghost" onClick={onRecords}>
+                  {t('clubRecordBook')}
+                </button>
+              ) : null}
+              {onAlbums ? (
+                <button className="btn btn-ghost" onClick={onAlbums}>
+                  {t('clubAlbums')}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           {mine.length > 0 ? (
             <>
               <h2 className="home-section-label club-section">{t('clubMyRankings')}</h2>
@@ -437,11 +490,13 @@ function ChallengeRow({
 /** Owner only: the current invite link, to read or share; `New link` replaces it (club.md §7-2). */
 function InvitePanel({
   clubName,
+  approvalRequired,
   client,
   t,
   onBack,
 }: {
   clubName: string;
+  approvalRequired: boolean;
   client: ClubClient;
   t: T;
   onBack: () => void;
@@ -489,7 +544,9 @@ function InvitePanel({
 
   return (
     <ScreenFrame title={t('clubInvite')} onBack={onBack} t={t}>
-      <p className="club-quiet">{t('clubInviteBody', { club: clubName })}</p>
+      <p className="club-quiet">
+        {t(approvalRequired ? 'clubInviteApprovalBody' : 'clubInviteBody', { club: clubName })}
+      </p>
       {url === null && error === null ? <p className="club-quiet">{t('clubLoading')}</p> : null}
       {url !== null ? (
         <>
@@ -541,6 +598,7 @@ function SettingsPanel({
   clubName,
   isOwner,
   isPublic,
+  isManaged,
   members,
   selfId,
   nickname,
@@ -552,6 +610,7 @@ function SettingsPanel({
   clubName: string;
   isOwner: boolean;
   isPublic: boolean;
+  isManaged: boolean;
   members: Member[] | null;
   selfId: string;
   /** This member's name as the device has it. */
@@ -646,8 +705,8 @@ function SettingsPanel({
         title={t('clubDisconnect')}
         body={[
           t('clubDisconnectBody', { club: clubName }),
-          isOwner && !isPublic ? t('clubDisconnectHostingNote') : null,
-          onlyOwner ? t('clubDisconnectLastOwner') : null,
+          isOwner && !isPublic && !isManaged ? t('clubDisconnectHostingNote') : null,
+          onlyOwner && !isManaged ? t('clubDisconnectLastOwner') : null,
         ]
           .filter((part): part is string => part !== null)
           .join(' ')}

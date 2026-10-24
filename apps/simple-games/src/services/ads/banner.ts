@@ -7,8 +7,8 @@
  * - Ads never gate game features; every failure path is silent.
  * - Offline → no ad requests at all, and no retry loops (battery).
  * - No ad is requested before UMP says it may be (consent.ts).
- * - The ad-removal purchase is honored by the caller (BannerSlot): once the
- *   entitlement is active this module is simply never asked to show anything.
+ * - Ad removal (purchase or owner benefit) gates SDK startup and every
+ *   request. A newly active entitlement also destroys any live banner view.
  * - Dev builds use Google's official test ad unit. The production unit ID is
  *   injected via an environment variable at build time; when absent, ads are
  *   simply disabled.
@@ -20,6 +20,7 @@ import {
   BannerAdSize,
 } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
+import { isAdRemovalActive, subscribeAdRemoval } from '../../monetization/adRemoval';
 import { isOnline } from '../network';
 import { canRequestAds } from './consent';
 
@@ -83,6 +84,7 @@ let bannerBusy = false;
 let bannerCreatedWidth: number | null = null;
 let viewportWatched = false;
 let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+let unsubscribeAdRemoval: (() => void) | null = null;
 
 /**
  * An adaptive banner's size is fixed at request time — the plugin measures
@@ -104,10 +106,16 @@ export function isNativeAdsPlatform(): boolean {
 
 /** Fire-and-forget at app boot. Never a startup condition. */
 export async function initAds(): Promise<void> {
-  if (!isNativeAdsPlatform() || initialized) return;
+  if (!isNativeAdsPlatform() || initialized || isAdRemovalActive()) return;
+  unsubscribeAdRemoval ??= subscribeAdRemoval(() => {
+    if (!isAdRemovalActive()) return;
+    bannerWanted = false;
+    void applyBannerState();
+  });
   try {
     await AdMob.initialize({});
     initialized = true;
+    if (isAdRemovalActive()) return;
     // Fire-and-forget like the rest of init — and caught like the rest of it:
     // `void` drops the handle, not a rejection, and a plugin that refuses the
     // registration must not escape this function's own try as an unhandled
@@ -147,6 +155,10 @@ function onViewportResize(): void {
 
 async function refreshBannerForViewport(): Promise<void> {
   if (!initialized || !bannerCreated) return;
+  if (isAdRemovalActive()) {
+    await applyBannerState();
+    return;
+  }
   if (
     bannerCreatedWidth !== null &&
     Math.abs(window.innerWidth - bannerCreatedWidth) < RECREATE_MIN_DELTA_PX
@@ -194,25 +206,31 @@ export function onBannerSize(listener: (height: number) => void): () => void {
  * All failures are silent; offline is a normal skip, not a retry loop.
  */
 export async function setBannerVisible(visible: boolean): Promise<void> {
-  bannerWanted = visible;
+  bannerWanted = visible && !isAdRemovalActive();
   if (!isNativeAdsPlatform() || !initialized) return;
   await applyBannerState();
 }
 
 async function applyBannerState(): Promise<void> {
-  if (bannerBusy) return;
+  if (!initialized || bannerBusy) return;
   bannerBusy = true;
   try {
+    if (isAdRemovalActive()) {
+      await removeSuppressedBanner();
+      return;
+    }
     if (!bannerWanted) {
       if (bannerShowing) {
         bannerShowing = false;
         await AdMob.hideBanner();
+        if (isAdRemovalActive()) await removeSuppressedBanner();
       }
       return;
     }
     if (bannerCreated) {
       bannerShowing = true;
       await AdMob.resumeBanner();
+      if (isAdRemovalActive()) await removeSuppressedBanner();
       return;
     }
     if (!isOnline()) return;
@@ -222,7 +240,7 @@ async function applyBannerState(): Promise<void> {
     // let the player leave the game screen first — or the network drop — so
     // both intents are rechecked below rather than assumed.
     if (!(await canRequestAds())) return;
-    if (!bannerWanted || bannerCreated || !isOnline()) return;
+    if (!bannerWanted || bannerCreated || !isOnline() || isAdRemovalActive()) return;
     const requestedWidth = window.innerWidth;
     await AdMob.showBanner({
       adId,
@@ -234,6 +252,10 @@ async function applyBannerState(): Promise<void> {
     bannerCreated = true;
     bannerShowing = true;
     bannerCreatedWidth = requestedWidth;
+    // A benefit may have been verified while the native show was in flight.
+    // Removal destroys the view (and its refreshes), rather than merely
+    // hiding an SDK-owned ad that can continue issuing requests.
+    if (isAdRemovalActive()) await removeSuppressedBanner();
   } catch {
     // Banner failure: the reserved slot stays quietly empty.
   } finally {
@@ -241,8 +263,18 @@ async function applyBannerState(): Promise<void> {
   }
 }
 
+async function removeSuppressedBanner(): Promise<void> {
+  if (!bannerCreated && !bannerShowing) return;
+  bannerCreated = false;
+  bannerShowing = false;
+  bannerCreatedWidth = null;
+  await AdMob.removeBanner();
+}
+
 /** Test hook. */
 export function resetBannerForTesting(): void {
+  unsubscribeAdRemoval?.();
+  unsubscribeAdRemoval = null;
   initialized = false;
   bannerCreated = false;
   bannerShowing = false;

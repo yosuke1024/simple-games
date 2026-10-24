@@ -25,6 +25,7 @@
  * thing that differs, so nothing about the layout depends on the outcome.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useAdRemovalActive } from '../../../monetization/useAdRemoval';
 import { isOnline } from '../../network';
 import {
   adMaxFrameId,
@@ -99,6 +100,7 @@ function setPlacementHidden(host: HTMLDivElement | null, hidden: boolean): void 
 }
 
 export default function AdUnit({ placement, compact = false }: AdUnitProps) {
+  const removed = useAdRemovalActive();
   const { testMode, client, slotHome, slotResult } = webAdsConfig();
   const slot = placement === 'home' ? slotHome : slotResult;
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -122,6 +124,7 @@ export default function AdUnit({ placement, compact = false }: AdUnitProps) {
   // and when nothing can fill it, the box leaves the layout in this same
   // pre-paint pass rather than appearing and then collapsing.
   useLayoutEffect(() => {
+    if (removed) return;
     const measured = hostRef.current?.clientWidth ?? 0;
     // jsdom and any pre-layout render report 0; fall back to the viewport,
     // which is what this used to do everywhere.
@@ -135,12 +138,13 @@ export default function AdUnit({ placement, compact = false }: AdUnitProps) {
       picked !== null &&
       (testMode || adSenseConfigured || Boolean(adMaxFrameId(placement, picked)));
     setPlacementHidden(hostRef.current, !fillable);
-  }, [compact, placement, testMode, adSenseConfigured]);
+  }, [compact, placement, testMode, adSenseConfigured, removed]);
 
   useEffect(() => {
     // No size means nothing was rendered to fill: requesting an ad for a box
     // that does not exist would be a request the reader never sees.
-    if (!adSenseLive || !client || !size || requestedRef.current || !insRef.current) return;
+    if (removed || !adSenseLive || !client || !size || requestedRef.current || !insRef.current)
+      return;
 
     // Every AdSense failure below lands here: hand the box to the AdMax frame
     // for this exact placement×size, or — with no frame configured — collapse
@@ -192,7 +196,7 @@ export default function AdUnit({ placement, compact = false }: AdUnitProps) {
       observer.disconnect();
       unsubscribe();
     };
-  }, [adSenseLive, client, size, placement]);
+  }, [adSenseLive, client, size, placement, removed]);
 
   // The AdMax mount — this build's only network, or the fallback after an
   // AdSense failure; the code is the same either way. Render happens first
@@ -203,7 +207,7 @@ export default function AdUnit({ placement, compact = false }: AdUnitProps) {
   // AdMax's loader failing — typically an ad blocker — collapses the
   // placement like a plain unfilled: no empty shelf.
   useEffect(() => {
-    if (!frameId || frameRequestedRef.current) return;
+    if (removed || !frameId || frameRequestedRef.current) return;
     if (!isOnline() || adMaxScriptFailed()) {
       setPlacementHidden(hostRef.current, true);
       return;
@@ -225,12 +229,12 @@ export default function AdUnit({ placement, compact = false }: AdUnitProps) {
       unsubscribe();
       cancelEmptyCheck();
     };
-  }, [frameId]);
+  }, [frameId, removed]);
 
   // Nothing can ever appear here (no network configured for this placement):
   // render nothing at all rather than an empty host, so a build with no ad IDs
   // stays literally empty.
-  if (!webAdsSlotEnabled(placement)) return null;
+  if (removed || !webAdsSlotEnabled(placement)) return null;
 
   // Otherwise the host is always present so it can be measured.
   return (
