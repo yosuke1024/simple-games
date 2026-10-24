@@ -34,7 +34,7 @@
  * as what was written, the snapshot goes back and the restore reports failure.
  * The player ends where they started.
  */
-import { loadRaw, saveRaw } from '../storage/repo';
+import { loadRaw, loadRawOrThrow, saveRaw } from '../storage/repo';
 import { clubConnectionsSchema, clubOutboxSchema, STORAGE_KEYS } from '../storage/schemas';
 import { preferencesKV, preferencesKVWithReadStatus, type KVStore } from '../storage/kv';
 import {
@@ -312,7 +312,8 @@ async function outboxWithout(
   const reader = kv === preferencesKV ? preferencesKVWithReadStatus : kv;
   let previous: string | null;
   try {
-    previous = await reader.get(STORAGE_KEYS.clubOutbox);
+    // In the key's queue: an outbox save still waiting lands first and is seen here.
+    previous = await loadRawOrThrow(STORAGE_KEYS.clubOutbox, reader);
   } catch {
     return 'unreadable';
   }
