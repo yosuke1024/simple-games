@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ClubConnection } from '@/storage/schemas';
 import { useSettings } from '@/state/SettingsContext';
+import { ClubApiError } from '../api/errors';
 import { createManagedClient, type OwnerSpace } from '../api/managed';
+import { clearManagedOwnerAdRemoval } from '../storage/connections';
 import {
   createRecordsClient,
   type OwnerRecords,
@@ -73,7 +75,17 @@ export function RecordBookScreen({
           );
           for (const item of batch) {
             if (item.status === 'fulfilled') connections.push(item.value);
-            else if (alive.current) setError(errorText(item.reason, t));
+            else {
+              // A refused owner key ends the owner's ad benefit here too, as on the owner
+              // screen (managed-clubs.md §8): the cached benefit must not outlive the key.
+              if (item.reason instanceof ClubApiError && item.reason.code === 'unauthorized') {
+                await clearManagedOwnerAdRemoval({
+                  origin: managed.origin,
+                  ownerToken: managed.token,
+                });
+              }
+              if (alive.current) setError(errorText(item.reason, t));
+            }
           }
         }
       }

@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { inviteFromHref } from '../invite';
 import { joinOrRestore } from '../join';
 import { PUBLIC_CLUB_ENDPOINT } from '../public';
-import { findDeparted } from '../storage/connections';
+import { findDeparted, loadPendingJoins } from '../storage/connections';
 import { createClient } from '../api/client';
 import type { Admission } from '../api/managementTypes';
 import { MANAGED_CLUB_ORIGIN, PRIVATE_CLUBS_ENABLED } from '@/ui/clubFeatures';
@@ -49,6 +49,10 @@ export function JoinScreen({
   const [wasHere, setWasHere] = useState(false);
   const [admission, setAdmission] = useState<Admission | null>(null);
   const [admissionBusy, setAdmissionBusy] = useState(false);
+  // Kept apart from `error`: a member coming back does not need the invite to be current.
+  const [admissionError, setAdmissionError] = useState<string | null>(null);
+  // Bumped by the Retry button: the invite's fragment is already gone from the address.
+  const [admissionAttempt, setAdmissionAttempt] = useState(0);
   const alive = useRef(true);
   useEffect(() => {
     alive.current = true;
@@ -74,6 +78,7 @@ export function JoinScreen({
   useEffect(() => {
     let alive = true;
     setAdmission(null);
+    setAdmissionError(null);
     if (!managed || !target) return;
     setAdmissionBusy(true);
     setError(null);
@@ -83,7 +88,7 @@ export function JoinScreen({
         if (alive) setAdmission(value);
       })
       .catch((e: unknown) => {
-        if (alive) setError(errorText(e, t));
+        if (alive) setAdmissionError(errorText(e, t));
       })
       .finally(() => {
         if (alive) setAdmissionBusy(false);
@@ -91,9 +96,9 @@ export function JoinScreen({
     return () => {
       alive = false;
     };
-    // Reading admission is caused only by opening/pasting this Club, never a timer.
+    // Reading admission is caused only by opening/pasting this Club or Retry, never a timer.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [target, parsed?.token, managed]);
+  }, [target, parsed?.token, managed, admissionAttempt]);
 
   // A Club this device left: say so. The old name is not offered — an owner may have renamed since.
   useEffect(() => {
@@ -117,12 +122,20 @@ export function JoinScreen({
     !linkProblem &&
     nicknameOk &&
     !busy &&
-    (!managed || admission !== null) &&
+    // A departed member is restored with their own saved credential (club.md §7-4), which
+    // does not depend on the invite: an owner may have made a new link since.
+    (!managed || admission !== null || wasHere) &&
     !admissionBusy;
 
   const submit = async () => {
     if (!ready || target === null) return;
-    if (connectionCount >= CLUB_CONNECTIONS_MAX) {
+    // A pending request holds a secret receipt like a connection does, so it counts toward
+    // the same ten: the store keeps no more, and would otherwise drop the oldest receipt.
+    const waiting = managed
+      ? (await loadPendingJoins()).filter((p) => p.endpoint !== target).length
+      : 0;
+    if (!alive.current) return;
+    if (connectionCount + waiting >= CLUB_CONNECTIONS_MAX) {
       setError(t('clubErr_too_many_connections'));
       return;
     }
@@ -221,6 +234,21 @@ export function JoinScreen({
           <p className="club-note club-note-error" role="alert">
             {error}
           </p>
+        ) : null}
+        {!error && admissionError && !wasHere ? (
+          <>
+            <p className="club-note club-note-error" role="alert">
+              {admissionError}
+            </p>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              disabled={admissionBusy}
+              onClick={() => setAdmissionAttempt((n) => n + 1)}
+            >
+              {t('clubReload')}
+            </button>
+          </>
         ) : null}
       </form>
     </ScreenFrame>
