@@ -11,6 +11,9 @@ LEGACY = tuple("android.permission." + name for name in (
 NEARBY = LEGACY + tuple("android.permission." + name for name in (
     "BLUETOOTH_SCAN", "BLUETOOTH_ADVERTISE", "BLUETOOTH_CONNECT",
 ))
+CONTINUITY = tuple("android.permission." + name for name in (
+    "FOREGROUND_SERVICE", "FOREGROUND_SERVICE_CONNECTED_DEVICE", "CHANGE_NETWORK_STATE",
+))
 CORE_SOURCE = {
     "android.permission.INTERNET",
     "com.android.vending.BILLING",
@@ -26,7 +29,7 @@ def permissions(root):
 def nearby_errors(root):
     errors = []
     elements = permissions(root)
-    for name in NEARBY:
+    for name in NEARBY + CONTINUITY:
         declarations = [el for el in elements if el.get(A + "name") == name]
         if len(declarations) != 1:
             errors.append(f"Nearby 権限は一度だけ宣言する必要があります: {name}")
@@ -42,17 +45,26 @@ def nearby_errors(root):
         elif flags is not None:
             errors.append(f"Nearby 権限に予期しない usesPermissionFlags があります: {name}")
 
-    ble = [el for el in root.findall("uses-feature") if el.get(A + "name") == "android.hardware.bluetooth_le"]
-    if len(ble) != 1 or ble[0].get(A + "required") != "false":
-        errors.append("Nearby BLE hardware feature は required=false で一度だけ宣言してください")
+    for name in ("android.hardware.bluetooth_le", "android.hardware.bluetooth", "android.hardware.location"):
+        declarations = [el for el in root.findall("uses-feature") if el.get(A + "name") == name]
+        if len(declarations) != 1 or declarations[0].get(A + "required") != "false":
+            errors.append(f"Nearby hardware feature は required=false で一度だけ宣言してください: {name}")
     for feature in root.findall("uses-feature"):
-        if (feature.get(A + "name") or "").startswith("android.hardware.bluetooth") and feature.get(A + "required") != "false":
-            errors.append("Bluetooth hardware を製品全体の必須条件にできません")
+        if (feature.get(A + "name") or "").startswith(("android.hardware.bluetooth", "android.hardware.location")) and feature.get(A + "required") != "false":
+            errors.append("Bluetooth/location hardware を製品全体の必須条件にできません")
+    services = root.findall("application/service")
+    nearby = [el for el in services if el.get(A + "name") in (
+        ".nearby.NearbyConnectionService", "com.pixapps.simplegames.nearby.NearbyConnectionService",
+    )]
+    if len(nearby) != 1 or any(nearby[0].get(A + key) != value for key, value in (
+        ("exported", "false"), ("foregroundServiceType", "connectedDevice"), ("stopWithTask", "true"),
+    )):
+        errors.append("NearbyConnectionService は private / connectedDevice / stopWithTask=true の一件だけにしてください")
     return errors
 
 
 def source_errors(root, *, is_product):
-    allowed = CORE_SOURCE | (set(NEARBY) | {"android.permission.ACCESS_NETWORK_STATE"} if is_product else set())
+    allowed = CORE_SOURCE | (set(NEARBY + CONTINUITY) | {"android.permission.ACCESS_NETWORK_STATE"} if is_product else set())
     errors = [f"許可リスト外の権限: {el.get(A + 'name')}" for el in permissions(root) if el.get(A + "name") not in allowed]
     if is_product:
         errors.extend(nearby_errors(root))

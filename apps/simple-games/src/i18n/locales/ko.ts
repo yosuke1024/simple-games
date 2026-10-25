@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const ko: Messages = {
+  playTogether: '다른 사람과 플레이',
+  returnToTogether: '함께 플레이로 돌아가기',
+  playTogetherNote: '가까운 사람과 연결해 대결하세요.',
   tagline: '오프라인에서 실행. 계정 불필요. 유료 잠금 없음.',
 
   resume: '이어하기',

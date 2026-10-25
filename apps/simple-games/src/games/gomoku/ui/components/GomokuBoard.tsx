@@ -19,8 +19,16 @@
 import { memo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { useReducedMotion } from '@/ui/useReducedMotion';
-import { BLACK, CELL_COUNT, EMPTY, SIZE, colOf, rowOf, type Board, type Player } from '../../game';
-import type { LastMove } from '../../state/GameContext';
+import {
+  BLACK,
+  CELL_COUNT,
+  EMPTY,
+  SIZE,
+  colOf,
+  rowOf,
+  type Board,
+  type Player,
+} from '../../game/types';
 
 /** The five marked crossings a 15×15 board carries. */
 const STARS = new Set([3 * SIZE + 3, 3 * SIZE + 11, 7 * SIZE + 7, 11 * SIZE + 3, 11 * SIZE + 11]);
@@ -33,7 +41,8 @@ export interface GomokuBoardProps {
   pending: number | null;
   /** False while a dialog is up or the match is over: nothing is pressable. */
   playing: boolean;
-  lastMove: LastMove | null;
+  lastMove: { placed: number; moveCount: number } | null;
+  opponentName?: string;
   winningLine: readonly number[] | null;
   onPoint: (cell: number) => void;
 }
@@ -46,6 +55,7 @@ export const GomokuBoard = memo(function GomokuBoard({
   lastMove,
   winningLine,
   onPoint,
+  opponentName,
 }: GomokuBoardProps) {
   const { t } = useSettings();
   const reducedMotion = useReducedMotion();
@@ -71,7 +81,9 @@ export const GomokuBoard = memo(function GomokuBoard({
             ? t('gomokuPointEmpty', { row: row + 1, col: col + 1 })
             : piece === playerColor
               ? t('gomokuPointMine', { row: row + 1, col: col + 1 })
-              : t('gomokuPointTheirs', { row: row + 1, col: col + 1 });
+              : opponentName
+                ? t('gomokuPointNamed', { row: row + 1, col: col + 1, name: opponentName })
+                : t('gomokuPointTheirs', { row: row + 1, col: col + 1 });
 
         return (
           <button

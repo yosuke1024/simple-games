@@ -1,6 +1,8 @@
 import type { ReversiMessages } from './en';
 
 export const fr: ReversiMessages = {
+  reversiPassNamed: '{name} ne peut pas jouer — l’autre personne rejoue',
+  reversiCellNamed: 'Ligne {row}, colonne {col} : pion de {name}',
   reversiName: 'Reversi',
   reversiChooseOpponent: 'Choisissez votre adversaire',
   reversiDifficulty_easy: 'Facile',

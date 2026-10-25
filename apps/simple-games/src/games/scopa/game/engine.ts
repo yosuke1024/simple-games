@@ -422,7 +422,10 @@ export interface CaptureSummary {
   readonly scopas: number;
 }
 
-export function captureSummary(deal: DealState, seat: Seat): CaptureSummary {
+export function captureSummary(
+  deal: Pick<DealState, 'captured' | 'scopas'>,
+  seat: Seat,
+): CaptureSummary {
   const taken = deal.captured[seat];
   return {
     cards: taken.length,

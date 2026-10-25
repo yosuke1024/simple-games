@@ -6,14 +6,8 @@
  * enumeration the engine, the CPU and the saved-game replay also read (§2.2) —
  * so the screen can never offer a capture the rules would refuse.
  */
-import {
-  captureOptions,
-  sortedCards,
-  valueOf,
-  type Card,
-  type CaptureSet,
-  type Move,
-} from '../game';
+import { captureOptions, type CaptureSet, type Move } from '../game/engine';
+import { sortedCards, valueOf, type Card } from '../game/cards';
 
 /** How the lifted card can take: not at all, one same-value card, or a sum. */
 export type TakeKind = 'place' | 'same' | 'sum';

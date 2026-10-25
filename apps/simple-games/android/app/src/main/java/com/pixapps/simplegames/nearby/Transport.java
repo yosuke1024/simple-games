@@ -12,5 +12,6 @@ interface Transport {
     void start(boolean advertise, String label) throws Exception;
     void connect(String peerId) throws Exception;
     void send(byte[] frame) throws Exception;
+    void setForeground(boolean active);
     void stop();
 }

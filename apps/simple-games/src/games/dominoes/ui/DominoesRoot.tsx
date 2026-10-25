@@ -11,6 +11,7 @@
 // Register this game's 14-locale catalog the moment the chunk loads, before
 // anything below renders (issue #38, src/i18n/registry.ts).
 import '../i18n';
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
@@ -25,7 +26,7 @@ import { DominoesHomeScreen } from './screens/HomeScreen';
 import { DominoesStatsScreen } from './screens/StatsScreen';
 import { DominoesTutorialScreen } from './screens/TutorialScreen';
 
-export function DominoesScreens() {
+export function DominoesScreens(props: PlayTogetherProps) {
   const { screen } = useDominoes();
   switch (screen) {
     case 'tutorial':
@@ -36,7 +37,7 @@ export function DominoesScreens() {
       return <DominoesStatsScreen />;
     case 'home':
     default:
-      return <DominoesHomeScreen />;
+      return <DominoesHomeScreen {...props} />;
   }
 }
 
@@ -46,7 +47,7 @@ interface LoadedData {
   session: DominoesSession | null;
 }
 
-export interface DominoesRootProps {
+export interface DominoesRootProps extends PlayTogetherProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
   /**
@@ -72,7 +73,13 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, session };
 }
 
-export function DominoesRoot({ onExit, entry, kv = preferencesKV }: DominoesRootProps) {
+export function DominoesRoot({
+  onExit,
+  entry,
+  kv = preferencesKV,
+  onPlayTogether,
+  playTogetherActive,
+}: DominoesRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -84,7 +91,7 @@ export function DominoesRoot({ onExit, entry, kv = preferencesKV }: DominoesRoot
       onExit={onExit}
       entry={entry}
     >
-      <DominoesScreens />
+      <DominoesScreens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </DominoesProvider>
   );
 }

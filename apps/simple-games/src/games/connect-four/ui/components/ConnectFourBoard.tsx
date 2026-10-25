@@ -12,11 +12,11 @@
  * dimmed, so the result does not rely on colour alone (§10). Reduced Motion
  * turns the fall off and the disc is simply where it landed.
  */
+import { dropRowOf } from '../../game/engine';
 import { memo, type CSSProperties } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { useReducedMotion } from '@/ui/useReducedMotion';
-import { cellAt, COLS, dropRowOf, EMPTY, PLAYER, ROWS, rowOf, type Board } from '../../game';
-import type { LastMove } from '../../state/GameContext';
+import { cellAt, COLS, EMPTY, PLAYER, ROWS, rowOf, type Board } from '../../game/types';
 
 /** Per row travelled, capped so a six-row fall is still brisk (§10). */
 const FALL_MS_PER_ROW = 55;
@@ -38,7 +38,8 @@ export interface ConnectFourBoardProps {
   board: Board;
   /** False while a dialog is up or the match is over: nothing is droppable. */
   playing: boolean;
-  lastMove: LastMove | null;
+  lastMove: { placed: number; moveCount: number } | null;
+  discNames?: readonly [string, string];
   winningLine: readonly number[] | null;
   onDrop: (col: number) => void;
 }
@@ -49,6 +50,7 @@ export const ConnectFourBoard = memo(function ConnectFourBoard({
   lastMove,
   winningLine,
   onDrop,
+  discNames,
 }: ConnectFourBoardProps) {
   const { t } = useSettings();
   const reducedMotion = useReducedMotion();
@@ -60,7 +62,13 @@ export const ConnectFourBoard = memo(function ConnectFourBoard({
     for (let row = ROWS - 1; row >= 0; row--) {
       const piece = board[cellAt(row, col)];
       if (piece === EMPTY) break;
-      stack.push(piece === PLAYER ? t('fourDiscYou') : t('fourDiscCpu'));
+      stack.push(
+        discNames
+          ? discNames[piece === PLAYER ? 0 : 1]
+          : piece === PLAYER
+            ? t('fourDiscYou')
+            : t('fourDiscCpu'),
+      );
     }
     return stack.length === 0
       ? t('fourColumnEmpty', { col: col + 1 })

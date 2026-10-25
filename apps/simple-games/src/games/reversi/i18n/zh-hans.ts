@@ -1,6 +1,8 @@
 import type { ReversiMessages } from './en';
 
 export const zhHans: ReversiMessages = {
+  reversiPassNamed: '{name}无处落子，由对方再下一次',
+  reversiCellNamed: '第{row}行第{col}列：{name}的棋子',
   reversiName: 'Reversi',
   reversiChooseOpponent: '选择对手',
   reversiDifficulty_easy: '简单',

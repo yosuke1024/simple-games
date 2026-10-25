@@ -12,6 +12,7 @@
  * the tagline is the shell's (docs/WEB_VERSION.md「先行公開(ベータ)」).
  */
 import { useState } from 'react';
+import { PlayTogetherButton, type PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
@@ -20,7 +21,7 @@ import { IconChart } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { useScopa } from '../../state/GameContext';
 
-export function ScopaHomeScreen() {
+export function ScopaHomeScreen(props: PlayTogetherProps) {
   const { navigate, stats, canResume, startNewGame, resumeGame, exitToCollection } = useScopa();
   const { t } = useSettings();
   const [confirmReplace, setConfirmReplace] = useState(false);
@@ -63,6 +64,8 @@ export function ScopaHomeScreen() {
             {note ? <span className="btn-note">{note}</span> : null}
           </button>
         )}
+
+        <PlayTogetherButton {...props} />
 
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>

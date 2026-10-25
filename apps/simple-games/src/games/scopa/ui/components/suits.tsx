@@ -9,7 +9,7 @@
  * independent of every other (docs/ARCHITECTURE.md).
  */
 import type { ReactNode } from 'react';
-import type { Suit } from '../../game';
+import type { Suit } from '../../game/cards';
 
 const SHAPES: readonly ReactNode[] = [
   // 0 spade

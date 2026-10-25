@@ -1,6 +1,8 @@
 import type { CheckersMessages } from './en';
 
 export const tr: CheckersMessages = {
+  checkersSquareNamedKing: 'Satır {row}, sütun {col}: {name} adlı oyuncunun daması',
+  checkersSquareNamedMan: 'Satır {row}, sütun {col}: {name} adlı oyuncunun taşı',
   checkersName: 'Checkers',
   checkersChooseOpponent: 'Rakibini seç',
   checkersDifficulty_easy: 'Kolay',

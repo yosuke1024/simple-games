@@ -1,4 +1,19 @@
 import react from '@simple-games/eslint-config/react';
+const nearbyGames = [
+  'yacht',
+  'reversi',
+  'connect-four',
+  'gomoku',
+  'checkers',
+  'gin-rummy',
+  'mancala',
+  'dominoes',
+  'dots-and-boxes',
+  'chess',
+  'nested-tic-tac-toe',
+  'scopa',
+  'nim',
+];
 
 export default [
   // The two native projects are generated and hold a copy of the built web
@@ -22,7 +37,7 @@ export default [
     // src/test/importBoundaries.test.ts, which also covers what globs cannot
     // (game-to-game imports across relative depths).
     files: ['src/**/*.{ts,tsx}'],
-    ignores: ['src/games/**', 'src/app/registry.ts', 'src/nearby/yacht.ts'],
+    ignores: ['src/games/**', 'src/app/registry.ts', 'src/nearby/**'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -38,16 +53,35 @@ export default [
       ],
     },
   },
-  {
-    files: ['src/nearby/yacht.ts'],
+  ...nearbyGames.map((game) => ({
+    files: [`src/nearby/games/${game}.ts`, `src/nearby/games/${game}View.tsx`],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: [
             {
-              regex: 'games/(?!yacht/game/(?:engine|types)$)',
-              message: 'Nearby adapter may only use pure Yacht scoring and types.',
+              regex: `(?:^|/)games/(?!${game}/(?:game/(?!cpu(?:/|$)|ai(?:/|$))|ui/(?:components/|hooks/|use[A-Z][^/]*$|selection$|[^/]+\\.css$)|i18n(?:/|$)))`,
+              message:
+                'Nearby adapters may use only their own game rules and visual components; the import graph also rejects CPU/provider/storage/Club transitively.',
+            },
+          ],
+        },
+      ],
+    },
+  })),
+  {
+    files: ['src/nearby/**/*.{ts,tsx}'],
+    ignores: ['src/nearby/games/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../games/**', '@/games/**', '../../games/**'],
+              message:
+                'Only the per-game Nearby adapter may enter src/games/. Nearby-owned ./games modules are allowed.',
             },
           ],
         },

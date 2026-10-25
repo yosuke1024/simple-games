@@ -6,6 +6,7 @@ import android.net.LinkAddress;
 import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Build;
@@ -17,7 +18,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -34,6 +34,10 @@ final class LanTransport implements Transport {
     private final Context context;
     private final Events events;
     private final Handler main = new Handler(Looper.getMainLooper());
+    private final PausableDeadlines deadlines = new PausableDeadlines(new PausableDeadlines.Scheduler() {
+        public void post(Runnable callback, long delay) { main.postDelayed(callback, delay); }
+        public void remove(Runnable callback) { main.removeCallbacks(callback); }
+    });
     private final Map<String, NsdServiceInfo> peers = new LinkedHashMap<>();
     private final ArrayDeque<byte[]> frames = new ArrayDeque<>();
     private final AtomicInteger inbound = new AtomicInteger();
@@ -45,6 +49,8 @@ final class LanTransport implements Transport {
     private volatile Socket socket;
     private volatile ServerSocket listener;
     private Network wifi;
+    private ConnectivityManager connectivity;
+    private boolean observingWifi;
     private LinkProperties links;
     private NsdManager nsd;
     private boolean advertising;
@@ -59,11 +65,17 @@ final class LanTransport implements Transport {
     private final Runnable discoveryTimeout = () -> fail("discovery-timeout", "Discovery ended after 60 seconds; start again to retry");
     private final Runnable connectTimeout = () -> fail("connect-timeout", "LAN resolve or connection timed out");
     private final Runnable writeTimeout = () -> fail("write-timeout", "LAN write timed out");
+    private final Runnable receiveTimeout = () -> fail("frame-timeout", "Incomplete LAN frame timed out");
+    private final ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
+        @Override public void onLost(Network network) {
+            run(() -> { if (network.equals(wifi)) fail("wifi-lost", "The selected Wi-Fi connection was lost"); });
+        }
+    };
 
     LanTransport(Context context, Events events) { this.context = context; this.events = events; }
 
     public void start(boolean advertise, String label) throws Exception {
-        ConnectivityManager connectivity = context.getSystemService(ConnectivityManager.class);
+        connectivity = context.getSystemService(ConnectivityManager.class);
         nsd = context.getSystemService(NsdManager.class);
         if (connectivity == null || nsd == null) throw new IllegalStateException("LAN services unavailable");
         for (Network network : connectivity.getAllNetworks()) {
@@ -78,7 +90,10 @@ final class LanTransport implements Transport {
         this.advertising = advertise;
         this.label = "NP-" + label;
         active = true;
-        main.postDelayed(discoveryTimeout, 60_000);
+        connectivity.registerNetworkCallback(new NetworkRequest.Builder()
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build(), networkCallback);
+        observingWifi = true;
+        deadlines.post(discoveryTimeout, 60_000);
         if (advertise) startListener();
         else {
             discovering = true;
@@ -105,7 +120,8 @@ final class LanTransport implements Transport {
                 }
                 // Bind exactly the current Wi-Fi interface, never 0.0.0.0/cellular.
                 created.bind(new InetSocketAddress(ipv4(links), 0), 1);
-                created.setSoTimeout(60_000);
+                // The pausable discovery deadline closes this blocking accept on expiry.
+                created.setSoTimeout(0);
                 run(() -> {
                     NsdServiceInfo info = new NsdServiceInfo();
                     info.setServiceName(label); info.setServiceType(TYPE); info.setPort(created.getLocalPort());
@@ -128,9 +144,9 @@ final class LanTransport implements Transport {
         if (peer == null) throw new IllegalArgumentException("Select a discovered LAN peer");
         chosenName = peer.getServiceName();
         resolving = true;
-        main.removeCallbacks(discoveryTimeout);
+        deadlines.remove(discoveryTimeout);
         stopDiscovery();
-        main.postDelayed(connectTimeout, 15_000);
+        deadlines.post(connectTimeout, 15_000);
         nsd.resolveService(peer, resolution);
     }
 
@@ -241,7 +257,7 @@ final class LanTransport implements Transport {
         }
         run(() -> {
             ready = true;
-            main.removeCallbacks(discoveryTimeout); main.removeCallbacks(connectTimeout);
+            deadlines.remove(discoveryTimeout); deadlines.remove(connectTimeout);
             stopDiscovery(); unregister(); events.connected();
         });
         return true;
@@ -252,9 +268,7 @@ final class LanTransport implements Transport {
         InputStream input = connected.getInputStream();
         byte[] buffer = new byte[1024];
         while (active && connected == socket) {
-            int length;
-            try { length = input.read(buffer); }
-            catch (SocketTimeoutException timeout) { run(() -> fail("frame-timeout", "Incomplete LAN frame timed out")); return; }
+            int length = input.read(buffer);
             if (length == -1) { run(() -> events.disconnected("LAN peer closed the connection")); return; }
             decoder.accept(buffer, length, text -> {
                 if (inbound.incrementAndGet() > 16) throw new IllegalStateException("Incoming frame queue overflow");
@@ -263,7 +277,11 @@ final class LanTransport implements Transport {
                     finally { inbound.decrementAndGet(); }
                 });
             });
-            connected.setSoTimeout(decoder.hasPartialFrame() ? 5_000 : 0);
+            boolean partial = decoder.hasPartialFrame();
+            run(() -> {
+                deadlines.remove(receiveTimeout);
+                if (partial) deadlines.post(receiveTimeout, 5_000);
+            });
         }
     }
 
@@ -278,12 +296,12 @@ final class LanTransport implements Transport {
         writing = true;
         Socket target = socket;
         byte[] frame = frames.peek();
-        main.postDelayed(writeTimeout, 5_000);
+        deadlines.post(writeTimeout, 5_000);
         writer.execute(() -> {
             try {
                 target.getOutputStream().write(frame); target.getOutputStream().flush();
                 run(() -> {
-                    main.removeCallbacks(writeTimeout);
+                    deadlines.remove(writeTimeout);
                     frames.remove(); writing = false; pump();
                 });
             } catch (Exception e) { run(() -> fail("write-failed", "LAN write failed")); }
@@ -311,6 +329,8 @@ final class LanTransport implements Transport {
         if (registering) { try { nsd.unregisterService(registration); } catch (Exception ignored) {} }
         // Keep the flag for the late onServiceRegistered cleanup; unregister is idempotently guarded by Android.
     }
+    public void setForeground(boolean active) { deadlines.setActive(active); }
+
     public void stop() {
         synchronized (this) {
             active = false;
@@ -318,6 +338,11 @@ final class LanTransport implements Transport {
             if (socket != null) { try { socket.close(); } catch (Exception ignored) {} socket = null; }
         }
         ready = false; writing = false;
+        if (observingWifi) {
+            observingWifi = false;
+            try { connectivity.unregisterNetworkCallback(networkCallback); } catch (Exception ignored) {}
+        }
+        deadlines.clear();
         main.removeCallbacksAndMessages(null);
         stopDiscovery(); unregister();
         if (resolving && Build.VERSION.SDK_INT >= 34) { try { nsd.stopServiceResolution(resolution); } catch (Exception ignored) {} }

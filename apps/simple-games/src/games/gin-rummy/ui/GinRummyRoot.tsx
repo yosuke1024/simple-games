@@ -11,6 +11,7 @@
 // Register this game's 14-locale catalog the moment the chunk loads,
 // before anything below renders (issue #38, src/i18n/registry.ts).
 import '../i18n';
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
@@ -32,7 +33,7 @@ import { GinRummyHomeScreen } from './screens/HomeScreen';
 import { GinRummyStatsScreen } from './screens/StatsScreen';
 import { GinRummyTutorialScreen } from './screens/TutorialScreen';
 
-export function GinRummyScreens() {
+export function GinRummyScreens(props: PlayTogetherProps) {
   const { screen } = useGinRummy();
   switch (screen) {
     case 'tutorial':
@@ -43,7 +44,7 @@ export function GinRummyScreens() {
       return <GinRummyStatsScreen />;
     case 'home':
     default:
-      return <GinRummyHomeScreen />;
+      return <GinRummyHomeScreen {...props} />;
   }
 }
 
@@ -54,7 +55,7 @@ interface LoadedData {
   session: GinRummySession | null;
 }
 
-export interface GinRummyRootProps {
+export interface GinRummyRootProps extends PlayTogetherProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
   /**
@@ -86,7 +87,13 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, prefs, session };
 }
 
-export function GinRummyRoot({ onExit, entry, kv = preferencesKV }: GinRummyRootProps) {
+export function GinRummyRoot({
+  onExit,
+  entry,
+  kv = preferencesKV,
+  onPlayTogether,
+  playTogetherActive,
+}: GinRummyRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -99,7 +106,7 @@ export function GinRummyRoot({ onExit, entry, kv = preferencesKV }: GinRummyRoot
       onExit={onExit}
       entry={entry}
     >
-      <GinRummyScreens />
+      <GinRummyScreens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </GinRummyProvider>
   );
 }

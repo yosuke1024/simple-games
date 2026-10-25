@@ -1,24 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { sounds } from '@/services/sound';
 import { BannerSlot } from '@/ui/components/BannerSlot';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
-import { IconBack, IconRetry, IconUndo } from '@/ui/components/icons';
+import { IconBack, IconRetry } from '@/ui/components/icons';
 import { isUndoKey, useGameKeys } from '@/ui/useGameKeys';
 import { isCpuTurn } from '../../game';
 import { useNim } from '../../state/GameContext';
+import { NimPlaySurface } from '../components/NimPlaySurface';
 import { ResultOverlay } from '../components/ResultOverlay';
 export function GameScreen() {
   const { t } = useSettings();
   const { session, playMove, applyUndo, goHome, startNewGame, paused, pauseGame, resumeGame } =
     useNim();
   const [confirmNewGame, setConfirmNewGame] = useState(false);
-  const [row, setRow] = useState<number | null>(null);
-  const [count, setCount] = useState(1);
-  useEffect(() => {
-    setRow(null);
-    setCount(1);
-  }, [session?.moves.length, session?.seed]);
   const onUndo = () => {
     applyUndo();
     sounds.undo();
@@ -35,12 +30,6 @@ export function GameScreen() {
   const over = session.status !== 'playing',
     cpu = isCpuTurn(session),
     blocked = over || cpu || paused;
-  const take = () => {
-    if (row !== null && playMove({ row, count })) {
-      setRow(null);
-      sounds.select();
-    }
-  };
   const last = session.moves[session.moves.length - 1];
   return (
     <div
@@ -74,95 +63,19 @@ export function GameScreen() {
               {paused ? t('nimPaused') : cpu ? t('nimCpuTurn') : t('nimYourTurn')}
             </p>
           </div>
-          <div className="nim-heaps" aria-label={t('nimName')}>
-            {session.heaps.map((stones, index) => (
-              <button
-                type="button"
-                key={index}
-                className={`nim-heap ${row === index ? 'nim-selected' : ''}`}
-                disabled={blocked || !stones}
-                aria-pressed={row === index}
-                aria-label={t('nimRow', { row: index + 1, count: stones })}
-                onClick={() => {
-                  setRow(index);
-                  setCount(1);
-                }}
-              >
-                <span className="nim-row-number" aria-hidden="true">
-                  {index + 1}
-                </span>
-                <span className="nim-stones" aria-hidden="true">
-                  {stones ? (
-                    Array.from({ length: stones }, (_, i) => (
-                      <span
-                        key={i}
-                        className={`nim-stone ${row === index && i >= stones - count ? 'nim-remove' : ''}`}
-                      />
-                    ))
-                  ) : (
-                    <span className="nim-empty">—</span>
-                  )}
-                </span>
-                <span className="nim-total" aria-hidden="true">
-                  {stones}
-                </span>
-              </button>
-            ))}
-          </div>
-          <p className="nim-last" aria-live="polite">
-            {last ? t('nimLastMove', { row: last.row + 1, count: last.count }) : t('nimGoal')}
-          </p>
-          <div className="nim-controls">
-            <div className="nim-control-heading">
-              <p className="nim-instruction">
-                {row === null ? t('nimChooseRow') : t('nimChooseCount')}
-              </p>
-              <output className="nim-preview" aria-live="polite">
-                {row === null
-                  ? '—'
-                  : `${session.heaps[row]} − ${count} = ${session.heaps[row]! - count}`}
-              </output>
-            </div>
-            <div className="nim-counts" role="group" aria-label={t('nimChooseCount')}>
-              {Array.from({ length: 8 }, (_, i) => (
-                <button
-                  type="button"
-                  key={i}
-                  disabled={blocked || row === null || i >= session.heaps[row]!}
-                  className={`nim-count ${row !== null && count === i + 1 ? 'nim-count-selected' : ''}`}
-                  aria-pressed={row !== null && count === i + 1}
-                  onClick={() => setCount(i + 1)}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-            <div className="nim-actions">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                disabled={!session.moves.length}
-                onClick={onUndo}
-              >
-                <IconUndo />
-                {t('undo')}
-              </button>
-              {paused ? (
-                <button type="button" className="btn btn-primary" onClick={resumeGame}>
-                  {t('resume')}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={blocked || row === null}
-                  onClick={take}
-                >
-                  {t('nimTake', { count })}
-                </button>
-              )}
-            </div>
-          </div>
+          <NimPlaySurface
+            heaps={session.heaps}
+            last={last ?? null}
+            positionKey={`${session.seed}:${session.moves.length}`}
+            blocked={blocked}
+            onTake={(move) => {
+              if (playMove(move)) sounds.select();
+            }}
+            onUndo={onUndo}
+            canUndo={session.moves.length > 0}
+            paused={paused}
+            onResume={resumeGame}
+          />
         </div>
         <BannerSlot />
       </div>

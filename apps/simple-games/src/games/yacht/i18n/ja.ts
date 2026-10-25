@@ -2,6 +2,9 @@ import type { YachtMessages } from './en';
 
 export const ja: YachtMessages = {
   yachtName: 'Yacht',
+  yachtPlayTogether: '誰かと遊ぶ',
+  yachtReturnToTogether: '対戦に戻る',
+  yachtPlayTogetherNote: '近くの人と接続して対戦',
   yachtResumeNote: '手番 {turn} / {count} · あなた {total} · CPU {cpuTotal}',
   yachtRecordNote: '{wins}勝 · {losses}敗 · ベスト {best}',
   yachtBestNote: 'ベスト {score}',

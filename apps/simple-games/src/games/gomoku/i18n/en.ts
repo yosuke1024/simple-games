@@ -7,6 +7,7 @@
  * proper noun and is never translated (docs/I18N_POLICY.md).
  */
 export const en = {
+  gomokuPointNamed: 'Row {row}, column {col}: {name}’s stone',
   gomokuName: 'Gomoku',
   gomokuChooseOpponent: 'Choose your opponent',
   gomokuDifficulty_easy: 'Easy',

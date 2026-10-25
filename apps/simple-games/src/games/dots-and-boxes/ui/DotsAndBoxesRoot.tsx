@@ -1,3 +1,4 @@
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 /**
  * Dots and Boxes's root: loads the game's own records (local, fast, offline),
  * then mounts the provider and screens. The shell knows nothing beyond this
@@ -32,7 +33,7 @@ import { DotsAndBoxesHomeScreen } from './screens/HomeScreen';
 import { DotsAndBoxesStatsScreen } from './screens/StatsScreen';
 import { DotsAndBoxesTutorialScreen } from './screens/TutorialScreen';
 
-export function DotsAndBoxesScreens() {
+export function DotsAndBoxesScreens(together: PlayTogetherProps = {}) {
   const { screen } = useDotsAndBoxes();
   switch (screen) {
     case 'tutorial':
@@ -43,7 +44,7 @@ export function DotsAndBoxesScreens() {
       return <DotsAndBoxesStatsScreen />;
     case 'home':
     default:
-      return <DotsAndBoxesHomeScreen />;
+      return <DotsAndBoxesHomeScreen {...together} />;
   }
 }
 
@@ -54,7 +55,7 @@ interface LoadedData {
   session: DotsAndBoxesSession | null;
 }
 
-export interface DotsAndBoxesRootProps {
+export interface DotsAndBoxesRootProps extends PlayTogetherProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
   /**
@@ -86,7 +87,13 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, prefs, session };
 }
 
-export function DotsAndBoxesRoot({ onExit, entry, kv = preferencesKV }: DotsAndBoxesRootProps) {
+export function DotsAndBoxesRoot({
+  onExit,
+  entry,
+  onPlayTogether,
+  playTogetherActive,
+  kv = preferencesKV,
+}: DotsAndBoxesRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -99,7 +106,10 @@ export function DotsAndBoxesRoot({ onExit, entry, kv = preferencesKV }: DotsAndB
       onExit={onExit}
       entry={entry}
     >
-      <DotsAndBoxesScreens />
+      <DotsAndBoxesScreens
+        onPlayTogether={onPlayTogether}
+        playTogetherActive={playTogetherActive}
+      />
     </DotsAndBoxesProvider>
   );
 }

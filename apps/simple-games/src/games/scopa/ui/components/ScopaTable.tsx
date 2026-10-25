@@ -22,15 +22,9 @@
  */
 import { memo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
-import {
-  primieraOf,
-  primieraValueOf,
-  SUITS,
-  YOU,
-  type Card,
-  type DealState,
-  type Seat,
-} from '../../game';
+import { primieraOf } from '../../game/engine';
+import { primieraValueOf, SUITS, type Card } from '../../game/cards';
+import { YOU, type DealState, type Seat } from '../../game/types';
 import { CardFace, inkOf, MiniCard } from './CardFace';
 import { cardLabel, suitKeyOf } from './cardText';
 import { SuitIcon } from './suits';
@@ -55,7 +49,8 @@ export interface Fold {
 }
 
 export interface TableAreaProps {
-  deal: DealState;
+  deal?: Pick<DealState, 'table' | 'stock'>;
+  view?: { table: readonly Card[]; stockCount: number };
   /** The table cards a tap may do something with right now. */
   tappable: ReadonlySet<Card>;
   /** The cards already picked into the group being built. */
@@ -69,6 +64,7 @@ export interface TableAreaProps {
 
 export const TableArea = memo(function TableArea({
   deal,
+  view,
   tappable,
   picked,
   canPlace,
@@ -77,19 +73,17 @@ export const TableArea = memo(function TableArea({
   onPlace,
 }: TableAreaProps) {
   const { t } = useSettings();
-  const places: (Card | 'slot')[] = [...deal.table, 'slot'];
+  const shown = view ?? (deal ? { table: deal.table, stockCount: deal.stock.length } : null);
+  if (!shown) return null;
+  const places: (Card | 'slot')[] = [...shown.table, 'slot'];
   const rows: (Card | 'slot')[][] = [];
   for (let at = 0; at < places.length; at += PER_ROW) rows.push(places.slice(at, at + PER_ROW));
 
   return (
     <div className="sc-table-area">
-      <p
-        className="sc-stock"
-        role="img"
-        aria-label={t('scopaStockLabel', { n: deal.stock.length })}
-      >
+      <p className="sc-stock" role="img" aria-label={t('scopaStockLabel', { n: shown.stockCount })}>
         <span className="sc-back sc-stock-back" aria-hidden="true" />
-        <span aria-hidden="true">{deal.stock.length}</span>
+        <span aria-hidden="true">{shown.stockCount}</span>
       </p>
       <div
         className={`sc-table ${rows.length > 2 ? 'sc-table-tight' : ''}`}

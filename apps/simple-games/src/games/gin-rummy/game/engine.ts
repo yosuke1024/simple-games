@@ -58,8 +58,12 @@ const logged = (hand: HandState, event: PublicEvent): readonly PublicEvent[] => 
  * Everything comes from the seed and the hand number, so a match replays
  * exactly: the same seed deals the same fifth hand as it did the first time.
  */
-export function dealHand(seed: string, handNumber: number, dealer: Seat): HandState {
-  const rng = createRng(`${seed}:deal:${handNumber}`);
+export function dealHand(
+  seed: string,
+  handNumber: number,
+  dealer: Seat,
+  rng: () => number = createRng(`${seed}:deal:${handNumber}`),
+): HandState {
   const deck: Card[] = [];
   for (let card = 0; card < CARD_COUNT; card++) deck.push(card);
   const shuffledDeck = shuffled(deck, rng);

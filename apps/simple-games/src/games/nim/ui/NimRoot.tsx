@@ -1,3 +1,4 @@
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import '../i18n';
 import { preferencesKV, type KVStore } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
@@ -10,7 +11,7 @@ import { GameScreen } from './screens/GameScreen';
 import { StatsScreen } from './screens/StatsScreen';
 import { TutorialScreen } from './screens/TutorialScreen';
 import './nim.css';
-interface RootProps {
+interface RootProps extends PlayTogetherProps {
   onExit: () => void;
   entry?: 'collection' | 'shortcut';
   kv?: KVStore;
@@ -30,7 +31,7 @@ async function load(kv: KVStore) {
   ]);
   return { stats, flags, prefs, session };
 }
-function Screens() {
+function Screens(together: PlayTogetherProps = {}) {
   const { screen } = useNim();
   return screen === 'game' ? (
     <GameScreen />
@@ -39,10 +40,16 @@ function Screens() {
   ) : screen === 'stats' ? (
     <StatsScreen />
   ) : (
-    <HomeScreen />
+    <HomeScreen {...together} />
   );
 }
-export function NimRoot({ onExit, entry, kv = preferencesKV }: RootProps) {
+export function NimRoot({
+  onExit,
+  entry,
+  onPlayTogether,
+  playTogetherActive,
+  kv = preferencesKV,
+}: RootProps) {
   const data = useLoadedRecords(kv, load, defaults);
   if (!data) return null;
   return (
@@ -55,7 +62,7 @@ export function NimRoot({ onExit, entry, kv = preferencesKV }: RootProps) {
       entry={entry}
       kv={kv}
     >
-      <Screens />
+      <Screens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </NimProvider>
   );
 }

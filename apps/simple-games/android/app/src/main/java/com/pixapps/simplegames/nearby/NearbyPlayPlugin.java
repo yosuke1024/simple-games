@@ -17,13 +17,14 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.json.JSONObject;
 
-/** Foreground Nearby Play transport. Radio work starts only after an explicit start call. */
+/** User-started Nearby Play transport; Activity inactivity preserves a live connection. */
 @CapacitorPlugin(name = "NearbyPlay", permissions = {
     @Permission(alias = "scan", strings = { Manifest.permission.BLUETOOTH_SCAN }),
     @Permission(alias = "advertise", strings = { Manifest.permission.BLUETOOTH_ADVERTISE }),
@@ -35,6 +36,8 @@ public class NearbyPlayPlugin extends Plugin {
     private Transport transport;
     private PluginCall pendingStart;
     private long generation;
+    private long serviceLease;
+    private final BackgroundEventBuffer<JSObject> backgroundEvents = new BackgroundEventBuffer<>();
     private final ForegroundStartGate foreground = new ForegroundStartGate();
     // Shared across Activity/plugin recreation: AtomicFile itself does not serialize callers.
     // No thread starts until explicit history access; the idle worker exits after ten seconds.
@@ -90,6 +93,12 @@ public class NearbyPlayPlugin extends Plugin {
         }
         aliases.removeIf(alias -> getPermissionState(alias) == PermissionState.GRANTED);
         if (aliases.isEmpty()) begin(call);
+        else if (Boolean.TRUE.equals(call.getBoolean("resume", false))) {
+            // Logical recovery is authorized by JS, but can never trigger a new OS prompt.
+            pendingStart = null;
+            foreground.clearPending();
+            call.reject("Restore Bluetooth permission before reconnecting", "permission-denied");
+        }
         else {
             try { requestPermissionForAliases(aliases.toArray(new String[0]), call, "permissionsResult"); }
             catch (Exception e) { pendingStart = null; call.reject("Could not request Bluetooth permission"); }
@@ -114,6 +123,7 @@ public class NearbyPlayPlugin extends Plugin {
     private void begin(PluginCall call) {
         pendingStart = null;
         foreground.clearPending();
+        backgroundEvents.clear();
         long epoch = ++generation;
         Transport.Events events = new Transport.Events() {
             private void active(Runnable action) {
@@ -131,8 +141,14 @@ public class NearbyPlayPlugin extends Plugin {
         };
         try {
             transport = "ble".equals(call.getString("transport"))
-                ? new BleTransport(getContext(), events) : new LanTransport(getContext(), events);
+                ? new BleTransport(getContext().getApplicationContext(), events)
+                : new LanTransport(getContext().getApplicationContext(), events);
             transport.start("advertise".equals(call.getString("role")), call.getString("label"));
+            // Still in the foreground start call. Failed radio preflight must not flash a
+            // service notification on each retry while Bluetooth or Wi-Fi is switched off.
+            serviceLease = NearbyConnectionService.retain(getContext().getApplicationContext(), () -> {
+                if (generation == epoch) fail("background-service-stopped", "Nearby connection service stopped");
+            });
             call.resolve();
         } catch (Exception e) {
             fail("start-failed", message(e));
@@ -161,7 +177,9 @@ public class NearbyPlayPlugin extends Plugin {
         }
     }); }
 
-    @PluginMethod public void stop(PluginCall call) { main.post(() -> { end("stopped"); call.resolve(); }); }
+    @PluginMethod public void stop(PluginCall call) { main.post(() -> {
+        backgroundEvents.clear(); end("stopped"); call.resolve();
+    }); }
 
     @PluginMethod public void readHistory(PluginCall call) {
         history(call, "HISTORY_READ", store -> {
@@ -211,26 +229,50 @@ public class NearbyPlayPlugin extends Plugin {
         if (pendingStart != null) { pendingStart.reject("Start cancelled"); pendingStart = null; }
         Transport previous = transport;
         transport = null;
+        NearbyConnectionService.release(getContext().getApplicationContext(), serviceLease);
+        serviceLease = 0;
         if (previous != null) { previous.stop(); event("disconnected", "reason", reason); }
     }
     private void event(String type, String... pairs) {
         JSObject event = new JSObject(); event.put("type", type);
         for (int i = 0; i < pairs.length; i += 2) event.put(pairs[i], pairs[i + 1]);
+        if (foreground.isForeground()) notifyListeners("nearbyEvent", event);
+        else if (!backgroundEvents.offer(event, event.toString().getBytes(StandardCharsets.UTF_8).length)) {
+            // Partial replay would silently lose authenticated frames. End this physical link;
+            // JS retains the logical room and can authenticate a fresh connection on return.
+            backgroundEvents.clear();
+            end("BACKGROUND_OVERFLOW");
+            backgroundEvents.clear();
+            // Also provide both controls when the event that overflowed was already a disconnect.
+            event("error", "code", "BACKGROUND_OVERFLOW", "message", "Too many Nearby events arrived while the app was inactive");
+            event("disconnected", "reason", "BACKGROUND_OVERFLOW");
+        }
+    }
+    private void lifecycle(boolean active) {
+        JSObject event = new JSObject(); event.put("type", "lifecycle"); event.put("active", active);
         notifyListeners("nearbyEvent", event);
     }
     private static String message(Exception error) { return error.getMessage() == null ? error.getClass().getSimpleName() : error.getMessage(); }
     @Override protected void handleOnResume() { main.post(() -> {
-        if (foreground.resume() && pendingStart != null) begin(pendingStart);
+        boolean continueStart = foreground.resume();
+        JSObject event;
+        while ((event = backgroundEvents.poll()) != null) notifyListeners("nearbyEvent", event);
+        if (transport != null) transport.setForeground(true);
+        lifecycle(true); // Deliver retained ACK/data/disconnect before JS resumes its deadlines.
+        if (continueStart && pendingStart != null) begin(pendingStart);
     }); }
     @Override protected void handleOnPause() { main.post(() -> {
         foreground.pause();
-        // Stop all live I/O immediately. A pending OS permission dialog has no I/O to stop.
-        if (transport != null) end("background");
+        if (transport != null) transport.setForeground(false);
+        lifecycle(false);
     }); }
     @Override protected void handleOnStop() { main.post(() -> {
-        foreground.background(); end("background");
+        foreground.background();
+        // A real stop cancels an unfulfilled permission prompt, but never an established session.
+        if (pendingStart != null) { pendingStart.reject("Start cancelled while inactive"); pendingStart = null; }
     }); }
     @Override protected void handleOnDestroy() { main.post(() -> {
         foreground.background(); end("destroyed");
+        backgroundEvents.clear();
     }); }
 }

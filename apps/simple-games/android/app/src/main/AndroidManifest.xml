@@ -38,6 +38,13 @@
             </intent-filter>
         </activity>
 
+        <!-- Started only by an explicit Nearby session; never restarted after process death. -->
+        <service
+            android:name=".nearby.NearbyConnectionService"
+            android:exported="false"
+            android:stopWithTask="true"
+            android:foregroundServiceType="connectedDevice" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -54,6 +61,10 @@
     <uses-permission android:name="com.android.vending.BILLING" />
     <!-- Nearby Play: runtime requests happen only after explicit create/join. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- connectedDevice FGS prerequisite for LAN; no network reconfiguration is performed. -->
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
@@ -61,4 +72,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+    <!-- Legacy permissions otherwise imply mandatory features in Google Play filtering. -->
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
 </manifest>

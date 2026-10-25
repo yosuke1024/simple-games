@@ -1,6 +1,7 @@
 import type { GomokuMessages } from './en';
 
 export const vi: GomokuMessages = {
+  gomokuPointNamed: 'Hàng {row}, cột {col}: quân của {name}',
   gomokuName: 'Gomoku',
   gomokuChooseOpponent: 'Chọn đối thủ',
   gomokuDifficulty_easy: 'Dễ',

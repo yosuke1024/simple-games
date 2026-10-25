@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const tr: Messages = {
+  playTogether: 'Biriyle oyna',
+  returnToTogether: 'Birlikte oyuna dön',
+  playTogetherNote: 'Bir maç için yakındaki biriyle bağlan.',
   tagline: 'Çevrimdışı çalışır. Hesap yok. Ödeme duvarı yok.',
 
   resume: 'Devam et',

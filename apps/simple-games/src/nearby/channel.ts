@@ -24,25 +24,28 @@ export class Channel {
   private peerKey = '';
   private started = false;
   private sendKey: CryptoKey | null = null;
+  reconnectKey: CryptoKey | null = null;
+  private binding = '';
   private receiveKey: CryptoKey | null = null;
   private pendingFrame: string | null = null;
   private work = Promise.resolve();
   private sealed = false;
+  private derivation: Promise<void> | null = null;
 
   private constructor(
     private readonly host: boolean,
     private readonly key: CryptoKeyPair,
     private readonly publicKey: string,
     private readonly sendRaw: (raw: string) => Promise<void>,
-    private readonly ready: () => void,
-    private readonly message: (plain: string) => void,
+    private readonly ready: () => unknown,
+    private readonly message: (plain: string) => unknown,
   ) {}
 
   static async create(
     host: boolean,
     send: (raw: string) => Promise<void>,
-    ready: () => void,
-    message: (plain: string) => void,
+    ready: () => unknown,
+    message: (plain: string) => unknown,
   ): Promise<Channel> {
     const key = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, false, [
       'deriveBits',
@@ -53,6 +56,7 @@ export class Channel {
   close() {
     this.sealed = true;
     this.sendKey = this.receiveKey = null;
+    this.reconnectKey = null;
     this.pendingFrame = null;
   }
   async start() {
@@ -63,8 +67,12 @@ export class Channel {
     );
     if (this.peerKey) await this.derive();
   }
-  private async derive() {
-    if (this.sendKey || this.sealed || !this.started || !this.peerKey) return;
+  private derive(): Promise<void> {
+    if (this.sendKey || this.sealed || !this.started || !this.peerKey) return Promise.resolve();
+    this.derivation ??= this.deriveKeys();
+    return this.derivation;
+  }
+  private async deriveKeys() {
     const peer = await crypto.subtle.importKey(
       'raw',
       unb64(this.peerKey, 100),
@@ -90,17 +98,48 @@ export class Channel {
         false,
         ['encrypt', 'decrypt'],
       );
-    const [hostKey, guestKey] = await Promise.all([derive('host'), derive('guest')]);
+    const [hostKey, guestKey, reconnectKey] = await Promise.all([
+      derive('host'),
+      derive('guest'),
+      crypto.subtle.deriveKey(
+        { name: 'HKDF', hash: 'SHA-256', salt, info: bytes('NearbyPlay/reconnect') },
+        material,
+        { name: 'HMAC', hash: 'SHA-256', length: 256 },
+        false,
+        ['sign', 'verify'],
+      ),
+    ]);
     if (this.sealed) return;
+    this.reconnectKey = reconnectKey;
+    this.binding = b64(salt);
     this.sendKey = this.host ? hostKey : guestKey;
     this.receiveKey = this.host ? guestKey : hostKey;
     this.code = String(new DataView(salt).getUint32(0) % 1000000).padStart(6, '0');
-    this.ready();
+    await this.ready();
     if (this.pendingFrame) {
       const frame = this.pendingFrame;
       this.pendingFrame = null;
       await this.receive(frame);
     }
+  }
+  async resumeProof(key: CryptoKey): Promise<string> {
+    if (!this.binding || this.sealed) throw new Error('Channel unavailable');
+    return b64(
+      await crypto.subtle.sign(
+        'HMAC',
+        key,
+        bytes(`NearbyPlay/resume/${this.binding}/${this.host ? 'host' : 'guest'}`),
+      ),
+    );
+  }
+  async verifyResume(key: CryptoKey, proof: unknown): Promise<boolean> {
+    if (!this.binding || this.sealed) return false;
+    return crypto.subtle.verify(
+      'HMAC',
+      key,
+      unb64(proof, 44),
+      bytes(`NearbyPlay/resume/${this.binding}/${this.host ? 'guest' : 'host'}`),
+    );
   }
   async receive(raw: string) {
     if (this.sealed) return;
@@ -139,7 +178,7 @@ export class Channel {
     if (this.sealed) return;
     if (plaintext.byteLength > 2800) throw new Error('Message too large');
     this.incoming++;
-    this.message(decoder.decode(plaintext));
+    await this.message(decoder.decode(plaintext));
   }
   send(plain: string): Promise<void> {
     // Serialise encrypt + native submission, not just native submission: WebCrypto

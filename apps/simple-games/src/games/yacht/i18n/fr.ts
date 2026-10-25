@@ -2,6 +2,9 @@ import type { YachtMessages } from './en';
 
 export const fr: YachtMessages = {
   yachtName: 'Yacht',
+  yachtPlayTogether: 'Jouer à deux',
+  yachtReturnToTogether: 'Retour au multijoueur',
+  yachtPlayTogetherNote: 'Connectez-vous à une personne à proximité pour une partie.',
   yachtResumeNote: 'Tour {turn} / {count} · Vous {total} · CPU {cpuTotal}',
   yachtRecordNote: '{wins} victoires · {losses} défaites · Record {best}',
   yachtBestNote: 'Record {score}',

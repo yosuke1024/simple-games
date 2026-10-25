@@ -11,6 +11,7 @@
  * it. That is the one thing here worth asking about first.
  */
 import { useState } from 'react';
+import { PlayTogetherButton, type PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
@@ -19,7 +20,7 @@ import { IconChart } from '@/ui/components/icons';
 import { DIFFICULTIES, type Difficulty } from '../../game';
 import { useConnectFour } from '../../state/GameContext';
 
-export function ConnectFourHomeScreen() {
+export function ConnectFourHomeScreen(props: PlayTogetherProps) {
   const {
     navigate,
     session,
@@ -118,6 +119,8 @@ export function ConnectFourHomeScreen() {
             {t('fourGoSecond')}
           </button>
         </div>
+
+        <PlayTogetherButton {...props} />
 
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>

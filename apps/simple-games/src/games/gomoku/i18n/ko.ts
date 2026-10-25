@@ -1,6 +1,7 @@
 import type { GomokuMessages } from './en';
 
 export const ko: GomokuMessages = {
+  gomokuPointNamed: '{row}행 {col}열: {name}의 돌',
   gomokuName: 'Gomoku',
   gomokuChooseOpponent: '상대를 고르세요',
   gomokuDifficulty_easy: '쉬움',

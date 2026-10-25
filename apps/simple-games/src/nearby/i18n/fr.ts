@@ -2,8 +2,12 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const fr: NearbyMessages = {
+  playerTurn: 'Au tour de {name}',
+  playTogether: 'Jouer avec quelqu’un',
+  closeChat: 'Fermer le chat',
+  unreadChat: 'Chat, messages non lus',
   tagline: 'Jeux et discussions avec des personnes à proximité.',
-  create: 'Créer une rencontre',
+  create: 'Créer une partie',
   join: 'Rejoindre une rencontre',
   history: 'Historique',
   back: 'Retour',
@@ -15,14 +19,16 @@ export const fr: NearbyMessages = {
   bluetooth: 'Bluetooth',
   wifi: 'Même réseau Wi-Fi',
   connectionHint:
-    'Les deux appareils doivent choisir le même mode de connexion. Aucun accès internet ni compte requis. Gardez cet écran ouvert.',
+    'Les deux appareils doivent choisir le même type de connexion. Internet et compte ne sont pas nécessaires. Changer d’app met la partie en pause ; au retour, nous tentons de rétablir la connexion.',
   start: 'Commencer',
   search: 'Chercher des rencontres',
   searching: 'Recherche de rencontres…',
   hosting: 'En attente d’une demande…',
   noPeers: 'Aucune rencontre trouvée pour le moment.',
   label: 'Numéro de la rencontre',
-  twoPeople: '2 personnes · Yacht et discussion',
+  twoPeople: '2 personnes à proximité · Bluetooth ou même Wi-Fi',
+  opponent: 'Adv.',
+  reconnecting: 'Reconnexion… Remettez les deux apps au premier plan. La partie est en pause.',
   connecting: 'Connexion…',
   awaiting: 'En attente de l’accord de l’hôte…',
   request: '{name} souhaite rejoindre',
@@ -33,13 +39,18 @@ export const fr: NearbyMessages = {
     'Entre amis, comparez ce code sur les deux écrans avant d’accepter. Un code identique aide à vérifier la connexion ; un nom affiché ne vérifie pas l’identité.',
   room: 'Rencontre',
   chat: 'Discussion',
+  useChat: 'Utiliser le chat',
+  chatSettingHint:
+    'Ce réglage s’applique aux deux joueurs et ne peut plus être modifié après le début.',
+  chatOn: 'Chat activé',
+  chatOff: 'Chat désactivé',
   game: 'Jeu',
-  roomHint: 'Restez pour discuter ou commencez une partie ensemble.',
-  propose: 'Proposer Yacht',
-  proposed: 'Yacht peut commencer',
+  roomHint: 'Choisissez {game} pour jouer ensemble. Le chat est facultatif.',
+  propose: 'Proposer {game}',
+  proposed: '{game} peut commencer',
   ready: 'Je suis prêt',
   waitingReady: 'En attente de l’autre joueur',
-  hostSelects: 'L’hôte peut proposer Yacht quand vous le souhaitez.',
+  hostSelects: 'Chaque joueur peut proposer {game}.',
   rematch: 'Proposer une autre partie',
   returnRoom: 'Retour à la rencontre',
   message: 'Message',
@@ -65,7 +76,7 @@ export const fr: NearbyMessages = {
     'La rencontre se terminera pour les deux personnes. Votre historique local restera sur cet appareil.',
   cancel: 'Annuler',
   ended: 'La connexion est terminée.',
-  retry: 'Retour à Nearby Play',
+  retry: 'Revenir à {game}',
   timeout: 'Aucune réponse à temps. Recommencez quand les deux appareils seront prêts.',
   connectionError:
     'Connexion impossible. Vérifiez Bluetooth ou le Wi-Fi et les autorisations de l’app sur les deux appareils, puis réessayez.',
@@ -93,7 +104,7 @@ export const fr: NearbyMessages = {
   reportHint:
     'Ouvre votre application de messagerie électronique. L’historique n’est pas joint automatiquement.',
   conduct:
-    'Respectez les autres. N’envoyez ni harcèlement, ni menaces, ni contenu sexuel, ni informations personnelles. Vous pouvez masquer les messages, bloquer ou partir à tout moment.',
+    'Respectez les autres. N’envoyez ni harcèlement, ni menaces, ni contenu sexuel, ni informations personnelles. Vous pouvez bloquer ou partir à tout moment. Si le chat est activé, vous pouvez masquer les messages reçus.',
   accept: 'J’accepte et souhaite continuer',
   historyReadOnly:
     'L’historique est en lecture seule. L’ouvrir ne rétablit pas la connexion et n’envoie aucun message.',

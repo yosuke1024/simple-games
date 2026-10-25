@@ -4,7 +4,8 @@ import CoreBluetooth
 import Network
 import Capacitor
 
-/// Foreground-only nearby transport; discovery begins only after an explicit start call.
+/// User-started nearby transport. BLE may continue while the web runtime is
+/// suspended; logical-session recovery after a lost radio link belongs to JS.
 /// All state, delegates, Network callbacks and timeouts run on the main queue.
 @objc(NearbyPlayPlugin)
 public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
@@ -42,10 +43,11 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
     private var role = ""
     private var label = ""
     private var epoch = 0
-    private var backgroundObserver: NSObjectProtocol?
-    private var sessionDeadline: DispatchWorkItem?
-    private var sendDeadline: DispatchWorkItem?
-    private var receiveDeadline: DispatchWorkItem?
+    private var lifecycleObservers: [NSObjectProtocol] = []
+    private let eventBuffer = NearbyPlayEventBuffer()
+    private let sessionDeadline = NearbyPlayForegroundDeadline()
+    private let sendDeadline = NearbyPlayForegroundDeadline()
+    private let receiveDeadline = NearbyPlayForegroundDeadline()
     private var received = Data()
     private var outgoing: [Data] = []
     private var offset = 0
@@ -71,16 +73,22 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
 
     public override func load() {
         // Loading the plugin and reading capabilities perform no discovery or permission request.
-        backgroundObserver = NotificationCenter.default.addObserver(
-            forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main
-        ) { [weak self] _ in self?.stopSession(reason: "background") }
+        lifecycleObservers = [
+            NotificationCenter.default.addObserver(
+                forName: UIApplication.willResignActiveNotification, object: nil, queue: .main
+            ) { [weak self] _ in self?.setApplicationActive(false) },
+            NotificationCenter.default.addObserver(
+                forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
+            ) { [weak self] _ in self?.setApplicationActive(true) }
+        ]
+        if UIApplication.shared.applicationState != .active { setApplicationActive(false) }
     }
 
     deinit {
-        if let observer = backgroundObserver { NotificationCenter.default.removeObserver(observer) }
-        sessionDeadline?.cancel()
-        sendDeadline?.cancel()
-        receiveDeadline?.cancel()
+        for observer in lifecycleObservers { NotificationCenter.default.removeObserver(observer) }
+        sessionDeadline.cancel()
+        sendDeadline.cancel()
+        receiveDeadline.cancel()
         browser?.cancel()
         listener?.cancel()
         connection?.cancel()
@@ -92,7 +100,8 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         peripheralManager?.removeAllServices()
     }
 
-    /// Called by the bridge view controller when its bridge disappears or is destroyed.
+    /// Only actual bridge destruction ends the native transport. A temporary
+    /// view disappearance, another app, or a system dialog is not an exit.
     func shutdown() {
         if Thread.isMainThread { stopSession(reason: "view-destroyed") }
         else { DispatchQueue.main.async { [weak self] in self?.stopSession(reason: "view-destroyed") } }
@@ -125,6 +134,14 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
                 call.reject("Open Nearby Play in the foreground before starting.", "BACKGROUND")
                 return
             }
+            // Automatic recovery must never turn a revoked permission into a
+            // new system prompt. Only a fresh, explicit start may request it.
+            if call.getBool("resume") == true, transport == "ble",
+               CBManager.authorization != .allowedAlways {
+                call.reject("Bluetooth permission is required to resume this gathering.", "BLUETOOTH_PERMISSION")
+                return
+            }
+            self.eventBuffer.removeAll()
             self.stopSession(reason: "restarted")
             self.running = true
             self.transport = transport
@@ -202,7 +219,11 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func stop(_ call: CAPPluginCall) {
-        DispatchQueue.main.async { self.stopSession(reason: "stopped"); call.resolve() }
+        DispatchQueue.main.async {
+            self.eventBuffer.removeAll()
+            self.stopSession(reason: "stopped")
+            call.resolve()
+        }
     }
 
     @objc func readHistory(_ call: CAPPluginCall) {
@@ -244,7 +265,41 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         return true
     }
 
-    private func event(_ value: [String: Any]) { notifyListeners("nearbyEvent", data: value) }
+    private func setApplicationActive(_ active: Bool) {
+        if active {
+            guard !eventBuffer.active else { return }
+            // Deliver queued ACKs/data/disconnects before JS resumes its timers
+            // or authenticates a replacement connection.
+            for value in eventBuffer.resume() { notifyListeners("nearbyEvent", data: value) }
+            notifyListeners("nearbyEvent", data: ["type": "lifecycle", "active": true])
+            sessionDeadline.resume()
+            sendDeadline.resume()
+            receiveDeadline.resume()
+        } else {
+            guard eventBuffer.suspend() else { return }
+            sessionDeadline.pause()
+            sendDeadline.pause()
+            receiveDeadline.pause()
+            notifyListeners("nearbyEvent", data: ["type": "lifecycle", "active": false])
+            // CoreBluetooth may wake these delegates with the declared central /
+            // peripheral modes. No background task, keepalive, or JS loop is used.
+            // LAN is retained opportunistically; iOS can suspend its TCP work.
+        }
+    }
+
+    private func event(_ value: [String: Any]) {
+        if eventBuffer.active {
+            notifyListeners("nearbyEvent", data: value)
+        } else if !eventBuffer.append(value) {
+            // Bound memory even if a peer keeps writing while WebKit is asleep.
+            // JS replays acknowledged-session traffic after authenticated rejoin.
+            stopSession(reason: "BACKGROUND_OVERFLOW", notifyDisconnect: false)
+            eventBuffer.removeAll()
+            _ = eventBuffer.append(["type": "error", "code": "BACKGROUND_OVERFLOW",
+                "message": "Background receive buffer filled; reconnect to synchronize."])
+            _ = eventBuffer.append(["type": "disconnected", "reason": "BACKGROUND_OVERFLOW"])
+        }
+    }
     private func status(_ message: String) { event(["type": "status", "message": message]) }
 
     private func fail(_ code: String, _ message: String) {
@@ -253,14 +308,14 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         stopSession(reason: code)
     }
 
-    private func stopSession(reason: String) {
+    private func stopSession(reason: String, notifyDisconnect: Bool = true) {
         let wasRunning = running
         running = false
         connected = false
         epoch += 1
-        sessionDeadline?.cancel(); sessionDeadline = nil
-        sendDeadline?.cancel(); sendDeadline = nil
-        receiveDeadline?.cancel(); receiveDeadline = nil
+        sessionDeadline.cancel()
+        sendDeadline.cancel()
+        receiveDeadline.cancel()
         browser?.cancel(); browser = nil
         listener?.cancel(); listener = nil
         connection?.stateUpdateHandler = nil
@@ -281,43 +336,34 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         offset = 0; writeInFlight = 0; networkSending = false
         // A stopped manager's old poweredOn value cannot establish current radio availability.
         bluetoothState = nil
-        if wasRunning { event(["type": "disconnected", "reason": reason]) }
+        if wasRunning && notifyDisconnect { event(["type": "disconnected", "reason": reason]) }
     }
 
     private func armSessionDeadline(seconds: Double, message: String) {
-        sessionDeadline?.cancel()
-        let generation = epoch
-        let work = DispatchWorkItem { [weak self] in
-            guard let self, self.epoch == generation else { return }
-            self.fail("TIMEOUT", message)
+        sessionDeadline.arm(seconds: seconds) { [weak self] in
+            self?.fail("TIMEOUT", message)
         }
-        sessionDeadline = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: work)
     }
 
     private func armSendDeadline() {
-        sendDeadline?.cancel()
-        guard !outgoing.isEmpty else { sendDeadline = nil; return }
-        let generation = epoch
-        let work = DispatchWorkItem { [weak self] in
-            guard let self, self.epoch == generation else { return }
-            self.fail("SEND_TIMEOUT", "No send progress for 10 seconds.")
+        guard !outgoing.isEmpty else { sendDeadline.cancel(); return }
+        sendDeadline.arm(seconds: 10) { [weak self] in
+            self?.fail("SEND_TIMEOUT", "No send progress for 10 foreground seconds.")
         }
-        sendDeadline = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: work)
     }
 
     private func markConnected() {
         guard running, !connected else { return }
         connected = true
-        sessionDeadline?.cancel(); sessionDeadline = nil
+        sessionDeadline.cancel()
         centralManager?.stopScan()
         peripheralManager?.stopAdvertising()
         browser?.cancel(); browser = nil
         // The accepted NWConnection is independent of the listener. Withdraw Bonjour
         // and stop accepting additional sockets as soon as this one is usable.
         listener?.cancel(); listener = nil
-        // No rediscovery or reconnect occurs without another explicit start.
+        // A lost connection can be restarted by the foreground JS recovery
+        // flow; native never silently chooses or authenticates a new peer.
         blePeers.removeAll(); lanPeers.removeAll()
         event(["type": "connected"])
         // A peer may notify immediately on subscription, before our OS has
@@ -365,18 +411,17 @@ public final class NearbyPlayPlugin: CAPPlugin, CAPBridgedPlugin {
         }
         // Progress, including a fresh BLE fragment, renews the one-shot timer.
         // A valid large frame must not expire merely because the radio is slow.
-        receiveDeadline?.cancel(); receiveDeadline = nil
+        receiveDeadline.cancel()
         if !received.isEmpty {
-            let generation = epoch
-            let work = DispatchWorkItem { [weak self] in
-                guard let self, self.epoch == generation else { return }
-                self.fail("FRAME_TIMEOUT", "No progress on an incomplete peer frame for 15 seconds.")
+            receiveDeadline.arm(seconds: 15) { [weak self] in
+                self?.fail("FRAME_TIMEOUT", "No progress on an incomplete peer frame for 15 foreground seconds.")
             }
-            receiveDeadline = work
-            DispatchQueue.main.asyncAfter(deadline: .now() + 15, execute: work)
         }
         // Validate the complete bounded batch before scheduling any bridge events.
-        for text in frames { event(["type": "data", "data": text]) }
+        for text in frames {
+            guard running else { break }
+            event(["type": "data", "data": text])
+        }
     }
 
     private func advance(_ count: Int) {

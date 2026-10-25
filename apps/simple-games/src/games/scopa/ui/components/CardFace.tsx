@@ -4,7 +4,7 @@
  * what the table actually draws (docs/SCOPA_RULES.md §10). Nothing printed on
  * a card depends on the language: the face is ASCII and the suit is a shape.
  */
-import { faceOf, suitOf, type Card } from '../../game';
+import { faceOf, suitOf, type Card } from '../../game/cards';
 import { isRed } from './cardText';
 import { SuitIcon } from './suits';
 

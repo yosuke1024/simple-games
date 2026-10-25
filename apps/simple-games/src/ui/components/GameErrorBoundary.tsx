@@ -14,11 +14,19 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { useHardwareBackExit } from '../useHardwareBackExit';
 
-function GameLoadError({ onRetry, onExit }: { onRetry: () => void; onExit: () => void }) {
+function GameLoadError({
+  onRetry,
+  onExit,
+  active,
+}: {
+  onRetry: () => void;
+  onExit: () => void;
+  active: boolean;
+}) {
   const { t } = useSettings();
   // Same ownerless-back moment as during loading: the shell's listener is off
   // while the view is a game, and the failed game never registered one.
-  useHardwareBackExit(onExit);
+  useHardwareBackExit(onExit, active);
   return (
     <div className="screen game-load-screen">
       <p className="game-load-text">{t('gameLoadFailed')}</p>
@@ -35,6 +43,8 @@ function GameLoadError({ onRetry, onExit }: { onRetry: () => void; onExit: () =>
 }
 
 interface Props {
+  /** Hidden retained surfaces must not handle another screen's back button. */
+  active?: boolean;
   /** Recreates the lazy wrapper and remounts (App.tsx bumps the key). */
   onRetry: () => void;
   onExit: () => void;
@@ -55,7 +65,13 @@ export class GameErrorBoundary extends Component<Props, { failed: boolean }> {
 
   override render() {
     if (this.state.failed) {
-      return <GameLoadError onRetry={this.props.onRetry} onExit={this.props.onExit} />;
+      return (
+        <GameLoadError
+          onRetry={this.props.onRetry}
+          onExit={this.props.onExit}
+          active={this.props.active ?? true}
+        />
+      );
     }
     return this.props.children;
   }

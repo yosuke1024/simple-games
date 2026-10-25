@@ -43,18 +43,10 @@
  */
 import { memo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
-import {
-  bestMeldPlan,
-  canDiscard,
-  canKnock,
-  isRed,
-  suitOf,
-  topDiscard,
-  YOU,
-  CPU,
-  type Card,
-  type HandState,
-} from '../../game';
+import { bestMeldPlan } from '../../game/melds';
+import { isRed, suitOf, type Card } from '../../game/cards';
+import { canDiscard, canKnock } from '../../game/engine';
+import { topDiscard, YOU, CPU, type HandState } from '../../game/types';
 import { cardLabel, rankText } from './cardText';
 import { SuitIcon } from './suits';
 
@@ -134,8 +126,22 @@ function CardFace({ card }: { card: Card }) {
   );
 }
 
+export interface GinTableView {
+  cards: readonly Card[];
+  opponentCount: number;
+  stockCount: number;
+  discardTop: Card | null;
+  phase: HandState['phase'];
+  mustDrawStock: boolean;
+  discardable: readonly Card[];
+  knockable: readonly Card[];
+}
+
 export interface GinRummyTableProps {
-  hand: HandState;
+  hand?: HandState;
+  /** A seat-local projection; hidden hands and stock order never enter the table. */
+  view?: GinTableView;
+  opponentLabel?: string;
   /** Whether the player may act at all right now (their turn, hand alive). */
   active: boolean;
   /** The knock has been asked for: only cards that could declare are takeable. */
@@ -149,6 +155,8 @@ export interface GinRummyTableProps {
 
 export const GinRummyTable = memo(function GinRummyTable({
   hand,
+  view,
+  opponentLabel,
   active,
   knockMode,
   selected,
@@ -158,11 +166,26 @@ export const GinRummyTable = memo(function GinRummyTable({
 }: GinRummyTableProps) {
   const { t } = useSettings();
 
-  const top = topDiscard(hand);
-  const drawing = active && hand.phase === 'draw';
-  const discarding = active && hand.phase === 'discard';
+  const shown =
+    view ??
+    (hand
+      ? {
+          cards: hand.hands[YOU],
+          opponentCount: hand.hands[CPU].length,
+          stockCount: hand.stock.length,
+          discardTop: topDiscard(hand),
+          phase: hand.phase,
+          mustDrawStock: hand.mustDrawStock,
+          discardable: hand.hands[YOU].filter((card) => canDiscard(hand, card)),
+          knockable: hand.hands[YOU].filter((card) => canKnock(hand, card)),
+        }
+      : null);
+  if (!shown) return null;
+  const top = shown.discardTop;
+  const drawing = active && shown.phase === 'draw';
+  const discarding = active && shown.phase === 'discard';
 
-  const fan = arrangeHand(hand.hands[YOU]);
+  const fan = arrangeHand(shown.cards);
   const cut = splitIndex(fan);
   const rows = [fan.slice(0, cut), fan.slice(cut)].filter((row) => row.length > 0);
 
@@ -175,7 +198,7 @@ export const GinRummyTable = memo(function GinRummyTable({
    */
   const takeable = (card: Card): boolean => {
     if (!discarding) return false;
-    return knockMode ? canKnock(hand, card) : canDiscard(hand, card);
+    return (knockMode ? shown.knockable : shown.discardable).includes(card);
   };
 
   return (
@@ -185,9 +208,9 @@ export const GinRummyTable = memo(function GinRummyTable({
       <div
         className="gr-seat"
         role="group"
-        aria-label={t('ginOpponentLabel', { n: hand.hands[CPU].length })}
+        aria-label={opponentLabel ?? t('ginOpponentLabel', { n: shown.opponentCount })}
       >
-        {hand.hands[CPU].map((_, index) => (
+        {Array.from({ length: shown.opponentCount }, (_, index) => (
           <span key={index} className="gr-card gr-back gr-seat-card" aria-hidden="true" />
         ))}
       </div>
@@ -196,8 +219,8 @@ export const GinRummyTable = memo(function GinRummyTable({
         <button
           type="button"
           className="gr-card gr-back gr-pile-card"
-          aria-label={t('ginStockLabel', { n: hand.stock.length })}
-          disabled={!drawing || hand.stock.length === 0}
+          aria-label={t('ginStockLabel', { n: shown.stockCount })}
+          disabled={!drawing || shown.stockCount === 0}
           onClick={onDrawStock}
         />
 
@@ -209,7 +232,7 @@ export const GinRummyTable = memo(function GinRummyTable({
             aria-label={t('ginDiscardLabel', { card: cardLabel(t, top) })}
             // The forced stock draw after both players refuse the upcard is
             // the one moment the pile is on the table and untouchable.
-            disabled={!drawing || hand.mustDrawStock}
+            disabled={!drawing || shown.mustDrawStock}
             onClick={onDrawDiscard}
           >
             <CardFace card={top} />

@@ -23,10 +23,7 @@ class MainViewController: CAPBridgeViewController {
         bridge?.registerPluginInstance(nearbyPlay)
     }
 
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        nearbyPlay.shutdown()
-    }
-
+    // A modal or app switch is not a user exit from the nearby gathering.
+    // The plugin observes lifecycle changes and buffers events until return.
     deinit { nearbyPlay.shutdown() }
 }

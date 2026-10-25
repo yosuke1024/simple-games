@@ -11,7 +11,7 @@
  */
 import { useSettings } from '@/state/SettingsContext';
 import { useDialogDismiss } from '@/ui/useDialogDismiss';
-import { BLACK, PROMOTION_KINDS, makePiece, type Color } from '../../game';
+import { BLACK, PROMOTION_KINDS, makePiece, type Color } from '../../game/types';
 import { pieceKey } from './ChessBoard';
 import { ChessPiece } from './ChessPiece';
 

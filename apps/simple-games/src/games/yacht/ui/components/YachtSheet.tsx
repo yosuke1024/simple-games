@@ -22,7 +22,8 @@
 import { memo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { useReducedMotion } from '@/ui/useReducedMotion';
-import { CATEGORIES, scoreFor, type Category, type Dice, type Scores, type Seat } from '../../game';
+import { scoreFor } from '../../game/engine';
+import { CATEGORIES, type Category, type Dice, type Scores, type Seat } from '../../game/types';
 import { CATEGORY_KEY } from '../categoryKey';
 
 export interface SheetFlash {
@@ -46,6 +47,10 @@ export interface YachtSheetProps {
   /** Both sheets' sums, for the total row under the boxes (§10). */
   total: number;
   cpuTotal: number;
+  /** Optional remote names; omitting these preserves the solo You / CPU copy. */
+  names?: readonly [string, string];
+  /** Short headings that remain aligned with the two narrow number columns. */
+  columnLabels?: readonly [string, string];
 }
 
 export const YachtSheet = memo(function YachtSheet({
@@ -58,6 +63,8 @@ export const YachtSheet = memo(function YachtSheet({
   flash,
   total,
   cpuTotal,
+  names,
+  columnLabels,
 }: YachtSheetProps) {
   const { t } = useSettings();
   const reducedMotion = useReducedMotion();
@@ -66,12 +73,12 @@ export const YachtSheet = memo(function YachtSheet({
     <div className="yt-sheet-wrap">
       <div className="yt-sheet-head" aria-hidden="true">
         <span className="yt-sheet-head-col">
-          <span>{t('yachtYou')}</span>
-          <span>{t('yachtCpu')}</span>
+          <span title={names?.[0]}>{columnLabels?.[0] ?? names?.[0] ?? t('yachtYou')}</span>
+          <span title={names?.[1]}>{columnLabels?.[1] ?? names?.[1] ?? t('yachtCpu')}</span>
         </span>
         <span className="yt-sheet-head-col">
-          <span>{t('yachtYou')}</span>
-          <span>{t('yachtCpu')}</span>
+          <span title={names?.[0]}>{columnLabels?.[0] ?? names?.[0] ?? t('yachtYou')}</span>
+          <span title={names?.[1]}>{columnLabels?.[1] ?? names?.[1] ?? t('yachtCpu')}</span>
         </span>
       </div>
       <div className="yt-sheet" role="group" aria-label={t('yachtSheetLabel')}>
@@ -89,8 +96,9 @@ export const YachtSheet = memo(function YachtSheet({
               : preview !== null
                 ? t('yachtBoxPreview', { name, points: preview })
                 : t('yachtBoxOpen', { name });
-          const cpuLabel =
-            cpuTaken !== null
+          const cpuLabel = names
+            ? `${names[1]}: ${cpuTaken ?? '—'}`
+            : cpuTaken !== null
               ? t('yachtBoxCpuPart_scored', { points: cpuTaken })
               : t('yachtBoxCpuPart_open');
           const label = `${yourLabel}; ${cpuLabel}`;
@@ -132,7 +140,11 @@ export const YachtSheet = memo(function YachtSheet({
       </div>
       <div className="yt-sheet-foot">
         <span>{t('yachtTotal')}</span>
-        <span className="game-score">{t('yachtScoreLine', { total, cpuTotal })}</span>
+        <span className="game-score">
+          {names
+            ? `${names[0]} ${total} · ${names[1]} ${cpuTotal}`
+            : t('yachtScoreLine', { total, cpuTotal })}
+        </span>
       </div>
     </div>
   );

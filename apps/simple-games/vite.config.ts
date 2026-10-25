@@ -1,9 +1,20 @@
 import { fileURLToPath } from 'node:url';
+import { isAbsolute, relative } from 'node:path';
+import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 import { configDefaults } from 'vitest/config';
 
 const APP_ROOT = fileURLToPath(new URL('.', import.meta.url));
+const nearbyGames = new Set(
+  readdirSync(new URL('./src/nearby/games', import.meta.url))
+    .filter((name) => name.endsWith('View.tsx'))
+    .map((name) => name.slice(0, -'View.tsx'.length)),
+);
+const gameIdOf = (id: string) => id.match(/[\\/]src[\\/]games[\\/]([^\\/]+)[\\/]/)?.[1];
+const registryLeaf = (id: string) =>
+  /[\\/](?:storage[\\/]keys|challenge[\\/]contract)\.ts$/.test(id);
 
 /**
  * Which ad surfaces this build carries a 忍者AdMax frame for
@@ -63,7 +74,36 @@ function adFrameSurfaces(mode: string): { anchor: boolean; home: boolean; result
 const TEST_WORKER_EXEC_ARGV = 'localStorage' in globalThis ? ['--no-experimental-webstorage'] : [];
 
 export default defineConfig(({ mode }) => ({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'nearby-chunk-evidence',
+      apply: 'build',
+      // check-isolation.mjs follows emitted static chunk imports, not just the
+      // source graph: manual grouping must not smuggle solo CPU/storage into
+      // an otherwise pure shared board. This is build metadata, not app code.
+      writeBundle(_options, bundle) {
+        const chunks = Object.values(bundle)
+          .filter((item) => item.type === 'chunk')
+          .map((chunk) => ({
+            file: chunk.fileName,
+            sha256: createHash('sha256').update(chunk.code).digest('hex'),
+            imports: chunk.imports,
+            modules: Object.keys(chunk.modules).map((id) =>
+              (isAbsolute(id) ? relative(APP_ROOT, id) : id).replaceAll('\\', '/'),
+            ),
+          }));
+        // Capacitor copies dist recursively, including .vite; keep inspection
+        // data outside shipped assets and restore it with Turbo's build cache.
+        const metadata = new URL('./build-metadata/', import.meta.url);
+        mkdirSync(metadata, { recursive: true });
+        writeFileSync(
+          new URL(`nearby-${mode === 'web' ? 'web' : 'native'}.json`, metadata),
+          JSON.stringify({ version: 1, chunks }),
+        );
+      },
+    },
+  ],
   define: { __SG_AD_FRAMES__: JSON.stringify(adFrameSurfaces(mode)) },
   resolve: {
     // '@/' is the app root. Games sit three or four folders deep, so shared
@@ -103,9 +143,34 @@ export default defineConfig(({ mode }) => ({
         codeSplitting: {
           groups: [
             {
-              // One chunk per game — everything under src/games/<id>/ joins
-              // `game-<id>`, so a game is exactly one lazy load and the size
-              // gate can budget per title. Two exceptions return null: the
+              name: (id: string) => {
+                const match = id.match(/[\\/]src[\\/]nearby[\\/](.*)$/);
+                if (!match) return null;
+                const game = /^games\/([^/]+?)(?:View)?\.tsx?$/.exec(match[1]!)?.[1];
+                return game && nearbyGames.has(game) ? `nearby-game-${game}` : 'nearby-core';
+              },
+              // A rules module also used by Session's Yacht compatibility
+              // default must not pull its view along with it.
+              entriesAware: true,
+              includeDependenciesRecursively: false,
+            },
+            {
+              name: (id: string) => {
+                const game = gameIdOf(id);
+                return game && nearbyGames.has(game) && !registryLeaf(id)
+                  ? `game-${game}-part`
+                  : null;
+              },
+              // Shared rules/visuals and ordinary solo CPU/Root are different
+              // runtime dependency sets, even though they belong to one game.
+              // Keep the game-<id>- prefix so size budgets count every part.
+              entriesAware: true,
+              includeDependenciesRecursively: false,
+            },
+            {
+              // Non-Nearby games keep one chunk per game: src/games/<id>/
+              // joins `game-<id>`, so the size gate can budget per title.
+              // Two zero-import exceptions return null: the
               // zero-import storage/keys.ts leaf (the registry needs it in
               // the entry, and grouping it here would drag the whole game
               // chunk into the home's initial graph) and everything else,
@@ -115,14 +180,12 @@ export default defineConfig(({ mode }) => ({
                 // club.md §3): loaded by src/app/clubGate.ts alone, and never
                 // part of the entry's static graph (scripts/bundle-size.mjs).
                 if (/[\\/]src[\\/]club[\\/]/.test(id)) return 'club';
-                if (/[\\/]src[\\/]nearby[\\/]/.test(id)) return 'nearby';
-                const match = id.match(/[\\/]src[\\/]games[\\/]([^\\/]+)[\\/]/);
-                if (!match) return null;
-                if (/[\\/]storage[\\/]keys\.ts$/.test(id)) return null;
+                const game = gameIdOf(id);
+                if (!game || nearbyGames.has(game)) return null;
+                if (registryLeaf(id)) return null;
                 // The challenge contract is the second zero-import leaf the
                 // registry imports eagerly (club.md §6-2); same exemption.
-                if (/[\\/]challenge[\\/]contract\.ts$/.test(id)) return null;
-                return `game-${match[1]}`;
+                return `game-${game}`;
               },
               // Never pull a captured module's dependencies (react, shared
               // ui/storage/services) into the game chunk: the entry needs

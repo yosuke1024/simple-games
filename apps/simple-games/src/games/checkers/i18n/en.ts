@@ -7,6 +7,8 @@
  * a proper noun and is never translated (docs/I18N_POLICY.md).
  */
 export const en = {
+  checkersSquareNamedKing: 'Row {row}, column {col}: {name}’s king',
+  checkersSquareNamedMan: 'Row {row}, column {col}: {name}’s piece',
   checkersName: 'Checkers',
   checkersChooseOpponent: 'Choose your opponent',
   checkersDifficulty_easy: 'Easy',

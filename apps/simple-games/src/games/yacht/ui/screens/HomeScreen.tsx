@@ -1,9 +1,7 @@
 /**
- * Home (docs/YACHT_RULES.md §1, §7, §8): one game, one button, and nothing
- * between the player and the dice. There is no level list and no mode, and no
- * side to pick either — the opponent is always the one CPU, the player always
- * throws first, and the two sheets never interact until the last box, so a
- * choice with no difference is not offered (§1, §11).
+ * Home (docs/YACHT_RULES.md §1, §7, §8, §13): the primary action starts or
+ * resumes the CPU match. The optional nearby entry hands control to the shell
+ * without starting, replacing, or resuming that match.
  *
  * The slot holds one match, so starting a new one while a match is in
  * progress replaces it. That is the one thing here worth asking about first;
@@ -19,7 +17,13 @@ import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { CATEGORY_COUNT, cpuTotalOf, totalOf, turnsPlayed } from '../../game';
 import { useYacht } from '../../state/GameContext';
 
-export function YachtHomeScreen() {
+export function YachtHomeScreen({
+  onPlayTogether,
+  playTogetherActive = false,
+}: {
+  onPlayTogether?: () => void;
+  playTogetherActive?: boolean;
+} = {}) {
   const { navigate, session, stats, canResume, startNewGame, resumeGame, exitToCollection } =
     useYacht();
   const { t } = useSettings();
@@ -81,6 +85,13 @@ export function YachtHomeScreen() {
             ) : stats.bestScore !== null ? (
               <span className="btn-note">{t('yachtBestNote', { score: stats.bestScore })}</span>
             ) : null}
+          </button>
+        )}
+
+        {onPlayTogether && (
+          <button type="button" className="btn btn-secondary btn-big" onClick={onPlayTogether}>
+            {t(playTogetherActive ? 'yachtReturnToTogether' : 'yachtPlayTogether')}
+            <span className="btn-note">{t('yachtPlayTogetherNote')}</span>
           </button>
         )}
 

@@ -1,6 +1,8 @@
 import type { ReversiMessages } from './en';
 
 export const id: ReversiMessages = {
+  reversiPassNamed: '{name} tidak bisa melangkah — pemain lain bermain lagi',
+  reversiCellNamed: 'Baris {row}, kolom {col}: keping {name}',
   reversiName: 'Reversi',
   reversiChooseOpponent: 'Pilih lawan',
   reversiDifficulty_easy: 'Mudah',

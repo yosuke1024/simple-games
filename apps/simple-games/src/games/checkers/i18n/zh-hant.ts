@@ -1,6 +1,8 @@
 import type { CheckersMessages } from './en';
 
 export const zhHant: CheckersMessages = {
+  checkersSquareNamedKing: '第{row}列第{col}欄：{name}的王棋',
+  checkersSquareNamedMan: '第{row}列第{col}欄：{name}的棋子',
   checkersName: 'Checkers',
   checkersChooseOpponent: '選擇對手',
   checkersDifficulty_easy: '簡單',

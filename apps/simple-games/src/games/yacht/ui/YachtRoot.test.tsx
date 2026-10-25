@@ -17,7 +17,7 @@ import {
 import { CPU_DELAY_MS } from '../state/GameContext';
 import { toPersisted } from '../storage/gamePersistence';
 import { YT_STORAGE_KEYS, type PersistedGame, type Stats } from '../storage/schemas';
-import { YachtRoot } from './YachtRoot';
+import { YachtRoot, type YachtRootProps } from './YachtRoot';
 
 /**
  * A stand-in for the device store. The `kv` prop below is a load-side seam
@@ -39,22 +39,28 @@ vi.mock('@capacitor/preferences', () => ({
   },
 }));
 
-function renderGame(initial: Record<string, string> = {}) {
+function renderGame(
+  initial: Record<string, string> = {},
+  nearby: Pick<YachtRootProps, 'onPlayTogether' | 'playTogetherActive'> = {},
+) {
   const onExit = vi.fn();
   render(
     <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
-      <YachtRoot onExit={onExit} kv={createMemoryKV(initial)} />
+      <YachtRoot onExit={onExit} kv={createMemoryKV(initial)} {...nearby} />
     </SettingsProvider>,
   );
   return { onExit };
 }
 
 /** Launches the game against the device store, the way a player's phone does. */
-function launch(entry?: 'collection' | 'shortcut') {
+function launch(
+  entry?: 'collection' | 'shortcut',
+  nearby: Pick<YachtRootProps, 'onPlayTogether' | 'playTogetherActive'> = {},
+) {
   const onExit = vi.fn();
   render(
     <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
-      <YachtRoot onExit={onExit} entry={entry} />
+      <YachtRoot onExit={onExit} entry={entry} {...nearby} />
     </SettingsProvider>,
   );
   return { onExit };
@@ -358,6 +364,9 @@ describe('keyboard (issue #93)', () => {
 });
 
 describe('a full match (§1, §7)', () => {
+  // All twelve CPU turns run the real expectimax and UI timer beats. Like
+  // the CPU sweeps, this can exceed 5s when other suites share the machine;
+  // allow the full match to finish without timing out an active React act.
   it('ends on a result, books the outcome, and clears the save', async () => {
     vi.useFakeTimers();
     try {
@@ -399,10 +408,65 @@ describe('a full match (§1, §7)', () => {
     } finally {
       vi.useRealTimers();
     }
-  });
+  }, 30_000);
 });
 
 describe('home', () => {
+  it('keeps the nearby entry absent when the shell does not support it', async () => {
+    renderGame(tutorialDone, { playTogetherActive: true });
+    await settle();
+
+    expect(
+      screen.queryByRole('button', { name: /Play with someone|Back to multiplayer/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Connect with someone nearby for a match.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'New Game' })).toBeInTheDocument();
+  });
+
+  it('opens nearby play without starting a CPU match', async () => {
+    const onPlayTogether = vi.fn();
+    const { onExit } = renderGame(tutorialDone, { onPlayTogether });
+    await settle();
+
+    const button = screen.getByRole('button', { name: /^Play with someone/ });
+    expect(button).toHaveTextContent('Connect with someone nearby for a match.');
+    fireEvent.click(button);
+    await settle();
+
+    expect(onPlayTogether).toHaveBeenCalledTimes(1);
+    expect(onExit).not.toHaveBeenCalled();
+    expect(storedGame()).toBeNull();
+    expect(storedStats()?.played ?? 0).toBe(0);
+    expect(screen.getByRole('button', { name: 'New Game' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Statistics' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'How to Play' })).toBeInTheDocument();
+  });
+
+  it.each([false, true])(
+    'preserves the saved CPU match when opening nearby (active=%s)',
+    async (playTogetherActive) => {
+      for (const [key, value] of Object.entries(savedGame(cpuToMoveSession())))
+        deviceStore.set(key, value);
+      const onPlayTogether = vi.fn();
+      launch('collection', { onPlayTogether, playTogetherActive });
+      await settle();
+      const before = new Map(deviceStore);
+
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: playTogetherActive ? /^Back to multiplayer/ : /^Play with someone/,
+        }),
+      );
+      await settle();
+
+      expect(onPlayTogether).toHaveBeenCalledTimes(1);
+      expect(deviceStore).toEqual(before);
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Resume/ })).toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: 'Score sheet' })).not.toBeInTheDocument();
+    },
+  );
+
   it('resumes the match in progress and asks before replacing it', async () => {
     renderGame(savedGame());
     await settle();

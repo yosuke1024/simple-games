@@ -33,13 +33,18 @@ export const es: NestedTicTacToeMessages = {
   nestedTicTacToeSmallPlayable: 'Tablero pequeño {board}: abierto, juega aquí',
   nestedTicTacToeSmallMine: 'Tablero pequeño {board}: tomado por ti',
   nestedTicTacToeSmallCpu: 'Tablero pequeño {board}: tomado por la CPU',
+  nestedTicTacToeSmallOpponent: 'Tablero pequeño {board}: tomado por la {player}',
   nestedTicTacToeSmallDrawn: 'Tablero pequeño {board}: empate (cerrado)',
   nestedTicTacToeCellEmpty: 'Tablero pequeño {board}, casilla {square}: vacía',
   nestedTicTacToeCellPlayable: 'Tablero pequeño {board}, casilla {square}: juega aquí',
   nestedTicTacToeCellYourCross: 'Tablero pequeño {board}, casilla {square}: tu cruz',
   nestedTicTacToeCellYourCircle: 'Tablero pequeño {board}, casilla {square}: tu círculo',
   nestedTicTacToeCellCpuCross: 'Tablero pequeño {board}, casilla {square}: cruz de la CPU',
+  nestedTicTacToeCellOpponentCross:
+    'Tablero pequeño {board}, casilla {square}: cruz de la {player}',
   nestedTicTacToeCellCpuCircle: 'Tablero pequeño {board}, casilla {square}: círculo de la CPU',
+  nestedTicTacToeCellOpponentCircle:
+    'Tablero pequeño {board}, casilla {square}: círculo de la {player}',
   nestedTicTacToeYourTurnSent: 'Tu turno: juega en el tablero enmarcado',
   nestedTicTacToeYourTurnFree: 'Tu turno: juega en cualquier tablero abierto',
   nestedTicTacToeCpuTurn: 'Turno de la CPU',

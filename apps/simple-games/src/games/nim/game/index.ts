@@ -1,4 +1,7 @@
 /** Pure normal-play Nim. See docs/NIM_RULES.md. */
+import { initialHeaps, nimSum, random } from './position';
+export { initialHeaps, nimSum, random } from './position';
+
 export const MODES = ['easy', 'normal', 'hard'] as const;
 export type Mode = (typeof MODES)[number];
 export type Move = { row: number; count: number };
@@ -11,18 +14,6 @@ export interface Session {
   status: 'playing' | 'won' | 'lost';
   elapsedSeconds: number;
   resultRecorded: boolean;
-}
-export function random(seed: number): number {
-  let x = seed >>> 0;
-  x = Math.imul(x ^ (x >>> 16), 0x21f0aaad);
-  x = Math.imul(x ^ (x >>> 15), 0x735a2d97);
-  return (x ^ (x >>> 15)) >>> 0;
-}
-export const nimSum = (heaps: readonly number[]): number => heaps.reduce((a, b) => a ^ b, 0);
-export function initialHeaps(seed: number): number[] {
-  const heaps = Array.from({ length: 4 }, (_, i) => 2 + (random(seed + i * 997) % 7));
-  if (nimSum(heaps) === 0) heaps[3] = heaps[3]! - 1;
-  return heaps;
 }
 export function createSession(
   mode: Mode,

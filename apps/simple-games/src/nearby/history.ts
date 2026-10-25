@@ -1,4 +1,6 @@
 import { nearbyPlugin, randomId, type NearbyPlugin, type Transport } from './native';
+import { isNearbyGameId } from '../app/nearbyGameIds';
+import type { GameResult, NearbyGameId } from './gameTypes';
 
 export interface SavedMessage {
   id: string;
@@ -8,11 +10,21 @@ export interface SavedMessage {
   at: number;
 }
 export interface SavedGame {
+  gameId?: NearbyGameId; // Absent only in legacy v1 Yacht records.
   round: number;
   at: number;
   finished: boolean;
   scores: [number, number];
+  winner?: GameResult['winner'];
 }
+export const savedGameId = (game: SavedGame): NearbyGameId => game.gameId ?? 'yacht';
+export const savedGameResult = (game: SavedGame): GameResult => ({
+  scores: game.scores,
+  winner: !game.finished
+    ? null
+    : (game.winner ??
+      (game.scores[0] === game.scores[1] ? 'draw' : game.scores[0] > game.scores[1] ? 0 : 1)),
+});
 export interface Gathering {
   id: string;
   at: number;
@@ -94,7 +106,15 @@ export function validateHistory(v: unknown): HistoryData | null {
           typeof m.finished === 'boolean' &&
           Array.isArray(m.scores) &&
           m.scores.length === 2 &&
-          m.scores.every((score: unknown) => integer(score) && score <= 375),
+          m.scores.every(
+            (score: unknown) => integer(score) && score <= (m.gameId === undefined ? 375 : 1000000),
+          ) &&
+          (m.gameId === undefined
+            ? m.winner === undefined
+            : isNearbyGameId(m.gameId) &&
+              (m.finished
+                ? m.winner === 0 || m.winner === 1 || m.winner === 'draw'
+                : m.winner === null)),
       )
     )
       return null;

@@ -1,6 +1,8 @@
 import type { ReversiMessages } from './en';
 
 export const es: ReversiMessages = {
+  reversiPassNamed: '{name} no tiene jugadas — la otra persona juega de nuevo',
+  reversiCellNamed: 'Fila {row}, columna {col}: ficha de {name}',
   reversiName: 'Reversi',
   reversiChooseOpponent: 'Elige a tu rival',
   reversiDifficulty_easy: 'Fácil',

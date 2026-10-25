@@ -286,6 +286,10 @@ export interface GameRootProps {
   onExit: () => void;
   /** Which door this launch came through. Absent means the ordinary one. */
   entry?: GameEntry;
+  /** Optional native multiplayer door. Games never import the transport layer. */
+  onPlayTogether?: () => void;
+  /** The same peer session can be reopened without starting another connection. */
+  playTogetherActive?: boolean;
 }
 
 export interface GameDefinition {
@@ -1175,7 +1179,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Chess',
     category: 'board',
     glyph: '♞',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-25; nearby 1v1 scope.
     storageKeys: Object.values(CH_STORAGE_KEYS),
     loadRoot: () => import('../games/chess/ui/ChessRoot').then((m) => ({ default: m.ChessRoot })),
     loadStorageSchemas: () => import('../games/chess/storage/schemas'),
@@ -1387,7 +1391,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Nested Tic-Tac-Toe',
     category: 'board',
     glyph: '╳',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-25; nearby 1v1 scope.
     storageKeys: Object.values(NT_STORAGE_KEYS),
     loadRoot: () =>
       import('../games/nested-tic-tac-toe/ui/NestedTicTacToeRoot').then((m) => ({
@@ -1412,7 +1416,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Scopa',
     category: 'cards',
     glyph: '♧',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-25; nearby 1v1 scope.
     storageKeys: Object.values(SC_STORAGE_KEYS),
     loadRoot: () => import('../games/scopa/ui/ScopaRoot').then((m) => ({ default: m.ScopaRoot })),
     loadStorageSchemas: () => import('../games/scopa/storage/schemas'),
@@ -1482,7 +1486,7 @@ export const GAMES: readonly GameDefinition[] = [
     title: 'Nim',
     category: 'board',
     glyph: '∴',
-    channel: 'web-beta',
+    // Promoted by explicit owner decision on 2026-10-25; nearby 1v1 scope.
     storageKeys: Object.values(NIM_STORAGE_KEYS),
     loadRoot: () => import('../games/nim/ui/NimRoot').then((m) => ({ default: m.NimRoot })),
     loadStorageSchemas: () => import('../games/nim/storage/schemas'),

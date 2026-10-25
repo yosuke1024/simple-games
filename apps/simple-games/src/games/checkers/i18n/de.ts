@@ -1,6 +1,8 @@
 import type { CheckersMessages } from './en';
 
 export const de: CheckersMessages = {
+  checkersSquareNamedKing: 'Zeile {row}, Spalte {col}: Dame von {name}',
+  checkersSquareNamedMan: 'Zeile {row}, Spalte {col}: Stein von {name}',
   checkersName: 'Checkers',
   checkersChooseOpponent: 'Wähle deinen Gegner',
   checkersDifficulty_easy: 'Leicht',

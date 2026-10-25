@@ -1,3 +1,4 @@
+import { PlayTogetherButton, type PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 /**
  * Home (docs/CHESS_RULES.md §1, §7.2): three opponents, the side for the next
  * game, and nothing between the player and the board. There is no level
@@ -27,7 +28,7 @@ import { DIFFICULTIES, KING, isOver, type Difficulty } from '../../game';
 import { useChess } from '../../state/GameContext';
 import { ChessPiece } from '../components/ChessPiece';
 
-export function ChessHomeScreen() {
+export function ChessHomeScreen(together: PlayTogetherProps = {}) {
   const {
     navigate,
     session,
@@ -122,6 +123,8 @@ export function ChessHomeScreen() {
             {t('chessPlayBlack')}
           </button>
         </div>
+
+        <PlayTogetherButton {...together} />
 
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>

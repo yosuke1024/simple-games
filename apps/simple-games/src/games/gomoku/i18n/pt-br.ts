@@ -1,6 +1,7 @@
 import type { GomokuMessages } from './en';
 
 export const ptBR: GomokuMessages = {
+  gomokuPointNamed: 'Linha {row}, coluna {col}: pedra de {name}',
   gomokuName: 'Gomoku',
   gomokuChooseOpponent: 'Escolha seu adversário',
   gomokuDifficulty_easy: 'Fácil',

@@ -2,7 +2,8 @@
  * The collection shell: which surface is on screen — the game list, the
  * shared settings, or one game. Games mount exclusively (battery: an
  * off-screen game does no work) and own their internal navigation; the shell
- * only ever hears "exit".
+ * hears "exit" and an optional "play together" request. A user-started
+ * nearby peer session is retained separately until explicitly ended.
  *
  * In the browser the screen is also an address. The shell opens on whatever
  * `?game=` asks for, writes each move into history, and follows Back and
@@ -71,6 +72,7 @@ import {
   getNearbyRoot,
   nearbyAvailable,
   resetNearbyRoot,
+  type NearbyGameId,
 } from './nearbyGate';
 import { recordGameOpened } from './recentGames';
 import { type GameEntry, type GameId } from './registry';
@@ -183,6 +185,16 @@ export function App() {
   // Bumped by the error screen's retry so the game subtree remounts and the
   // recreated lazy wrapper (lazyRoots.ts) gets a fresh chance to load.
   const [gameNonce, setGameNonce] = useState(0);
+  // Mount this feature only after a supported game's explicit request. Keep
+  // that one instance across navigation so Back does not end a peer session.
+  const [nearbyGame, setNearbyGame] = useState<NearbyGameId | null>(null);
+  const [nearbyActive, setNearbyActive] = useState(false);
+  const nearbyActiveRef = useRef(false);
+  const nearbyStop = useRef<(() => Promise<void>) | null>(null);
+  const nearbyReset = useRef<Promise<void> | null>(null);
+  const [nearbyResetting, setNearbyResetting] = useState(false);
+  const nearbyOrigin = useRef<Extract<View, { kind: 'game' }> | null>(null);
+  const [nearbyNonce, setNearbyNonce] = useState(0);
 
   /**
    * The Club House layer, once something asked for it (app/clubGate.ts) —
@@ -216,6 +228,53 @@ export function App() {
   }, []);
 
   const goCollection = useCallback(() => show({ kind: 'collection' }), [show]);
+  const noteNearbyActive = useCallback((active: boolean) => {
+    nearbyActiveRef.current = active;
+    setNearbyActive(active);
+  }, []);
+  const registerNearbyStop = useCallback((stop: (() => Promise<void>) | null) => {
+    nearbyStop.current = stop;
+  }, []);
+  const openPlayTogether = useCallback(() => {
+    const current = viewRef.current;
+    if (nearbyReset.current || current.kind !== 'game' || !nearbyAvailable(current.gameId)) return;
+    // A gathering belongs to one selected game. Returning through another game's
+    // home must never replace its adapter or silently abandon the existing peer.
+    if (nearbyActiveRef.current) {
+      releaseSound();
+      show({ kind: 'nearby' });
+      return;
+    }
+    nearbyOrigin.current = { ...current, entry: 'collection' };
+    releaseSound();
+    setNearbyGame(current.gameId);
+    show({ kind: 'nearby' });
+  }, [show]);
+  const returnFromNearby = useCallback(() => {
+    releaseSound();
+    show(nearbyOrigin.current ?? { kind: 'game', gameId: 'yacht', entry: 'collection' });
+    if (!nearbyActiveRef.current) setNearbyGame(null);
+  }, [show]);
+  const resetNearbyData = useCallback(() => {
+    if (nearbyReset.current) return nearbyReset.current;
+    // Stop before the history deletion barrier; no retained session may
+    // recreate its transcript after Reset Local Data has completed. Remove
+    // its UI immediately and disallow another start until deletion settles,
+    // including when Settings is left during the bounded native stop.
+    const stop = nearbyStop.current;
+    noteNearbyActive(false);
+    setNearbyGame(null);
+    setNearbyResetting(true);
+    const task = (async () => {
+      await stop?.();
+      await clearNearbyLocalData();
+    })().finally(() => {
+      nearbyReset.current = null;
+      setNearbyResetting(false);
+    });
+    nearbyReset.current = task;
+    return task;
+  }, [noteNearbyActive]);
   /**
    * Settings can change which Clubs this device holds — a restore brings them back,
    * Reset Local Data removes them — so the home reads `sg.club` again on the way back.
@@ -324,7 +383,7 @@ export function App() {
       return;
     }
     show({ kind: 'collection' });
-    offerReviewIfDue();
+    if (!nearbyActiveRef.current) offerReviewIfDue();
     if (webRoutingEnabled()) popRoute();
   }, [leaveGame, offerReviewIfDue, show]);
 
@@ -562,27 +621,41 @@ export function App() {
     };
   }, [goCollection, view.kind]);
 
-  return <ClubBridgeContext.Provider value={bridge}>{renderView()}</ClubBridgeContext.Provider>;
-
-  function renderView() {
-    if (view.kind === 'nearby') {
-      const NearbyRoot = getNearbyRoot();
-      if (NearbyRoot)
-        return (
+  const NearbyRoot = nearbyGame ? getNearbyRoot() : null;
+  const nearbyVisible = view.kind === 'nearby';
+  return (
+    <ClubBridgeContext.Provider value={bridge}>
+      {nearbyVisible ? null : renderView()}
+      {NearbyRoot && nearbyGame && (
+        <div hidden={!nearbyVisible} inert={!nearbyVisible}>
           <GameErrorBoundary
-            key={gameNonce}
-            onExit={goCollection}
+            key={nearbyNonce}
+            active={nearbyVisible}
+            onExit={returnFromNearby}
             onRetry={() => {
+              noteNearbyActive(false);
               resetNearbyRoot();
-              setGameNonce((n) => n + 1);
+              setNearbyNonce((n) => n + 1);
             }}
           >
-            <Suspense fallback={<GameLoadingFallback onExit={goCollection} />}>
-              <NearbyRoot onExit={goCollection} />
+            <Suspense
+              fallback={<GameLoadingFallback onExit={returnFromNearby} active={nearbyVisible} />}
+            >
+              <NearbyRoot
+                gameId={nearbyGame}
+                visible={nearbyVisible}
+                onExit={returnFromNearby}
+                onActiveChange={noteNearbyActive}
+                onRegisterStop={registerNearbyStop}
+              />
             </Suspense>
           </GameErrorBoundary>
-        );
-    }
+        </div>
+      )}
+    </ClubBridgeContext.Provider>
+  );
+
+  function renderView() {
     if (view.kind === 'game') {
       const gameId = view.gameId;
       const from = view.from;
@@ -605,7 +678,16 @@ export function App() {
             }}
           >
             <Suspense fallback={<GameLoadingFallback onExit={exitGame} />}>
-              <LazyRoot onExit={exitGame} entry={view.entry} />
+              <LazyRoot
+                onExit={exitGame}
+                entry={view.entry}
+                {...(!nearbyResetting && nearbyAvailable(gameId)
+                  ? {
+                      onPlayTogether: openPlayTogether,
+                      playTogetherActive: nearbyActive,
+                    }
+                  : {})}
+              />
             </Suspense>
           </GameErrorBoundary>
         );
@@ -616,7 +698,7 @@ export function App() {
         <SettingsScreen
           onBack={backFromSettings}
           onOpenClub={openClubFromSettings}
-          onResetNearby={clearNearbyLocalData}
+          onResetNearby={resetNearbyData}
         />
       );
     }
@@ -646,7 +728,6 @@ export function App() {
           onOpenSettings={openSettings}
           dismissReviewPrompt={reviewPromptOpen ? closeReviewPrompt : null}
           onOpenClub={openClub}
-          onOpenNearby={nearbyAvailable() ? () => show({ kind: 'nearby' }) : undefined}
           clubConnections={connections}
         />
         {reviewPromptOpen && <ReviewPrompt onClose={closeReviewPrompt} />}

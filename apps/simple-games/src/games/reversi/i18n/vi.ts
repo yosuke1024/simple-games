@@ -1,6 +1,8 @@
 import type { ReversiMessages } from './en';
 
 export const vi: ReversiMessages = {
+  reversiPassNamed: '{name} không có nước đi — người kia được đi tiếp',
+  reversiCellNamed: 'Hàng {row}, cột {col}: quân của {name}',
   reversiName: 'Reversi',
   reversiChooseOpponent: 'Chọn đối thủ',
   reversiDifficulty_easy: 'Dễ',

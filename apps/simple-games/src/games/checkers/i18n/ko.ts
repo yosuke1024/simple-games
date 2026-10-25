@@ -1,6 +1,8 @@
 import type { CheckersMessages } from './en';
 
 export const ko: CheckersMessages = {
+  checkersSquareNamedKing: '{row}행 {col}열: {name}의 킹',
+  checkersSquareNamedMan: '{row}행 {col}열: {name}의 말',
   checkersName: 'Checkers',
   checkersChooseOpponent: '상대를 고르세요',
   checkersDifficulty_easy: '쉬움',

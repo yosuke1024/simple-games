@@ -1,3 +1,4 @@
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 /**
  * Chess's root: loads the game's own records (local, fast, offline), then
  * mounts the provider and routes its screens. The shell knows nothing beyond
@@ -31,7 +32,7 @@ import { ChessHomeScreen } from './screens/HomeScreen';
 import { ChessStatsScreen } from './screens/StatsScreen';
 import { ChessTutorialScreen } from './screens/TutorialScreen';
 
-export function ChessScreens() {
+export function ChessScreens(together: PlayTogetherProps = {}) {
   const { screen } = useChess();
   switch (screen) {
     case 'tutorial':
@@ -42,7 +43,7 @@ export function ChessScreens() {
       return <ChessStatsScreen />;
     case 'home':
     default:
-      return <ChessHomeScreen />;
+      return <ChessHomeScreen {...together} />;
   }
 }
 
@@ -53,7 +54,7 @@ interface LoadedData {
   session: ChessSession | null;
 }
 
-export interface ChessRootProps {
+export interface ChessRootProps extends PlayTogetherProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
   /**
@@ -85,7 +86,13 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, prefs, session };
 }
 
-export function ChessRoot({ onExit, entry, kv = preferencesKV }: ChessRootProps) {
+export function ChessRoot({
+  onExit,
+  entry,
+  onPlayTogether,
+  playTogetherActive,
+  kv = preferencesKV,
+}: ChessRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -98,7 +105,7 @@ export function ChessRoot({ onExit, entry, kv = preferencesKV }: ChessRootProps)
       onExit={onExit}
       entry={entry}
     >
-      <ChessScreens />
+      <ChessScreens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </ChessProvider>
   );
 }

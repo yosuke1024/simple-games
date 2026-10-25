@@ -1,10 +1,19 @@
 import { Capacitor } from '@capacitor/core';
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
+import { isNearbyGameId } from './nearbyGameIds';
+import type { NearbyGameId } from '../nearby/gameTypes';
 
-type Root = ComponentType<{ onExit: () => void }>;
+export type { NearbyGameId } from '../nearby/gameTypes';
+type Root = ComponentType<{
+  gameId: NearbyGameId;
+  visible?: boolean;
+  onExit: () => void;
+  onActiveChange?: (active: boolean) => void;
+  onRegisterStop?: (stop: (() => Promise<void>) | null) => void;
+}>;
 let root: LazyExoticComponent<Root> | null = null;
-export function nearbyAvailable(): boolean {
-  return import.meta.env.MODE !== 'web' && Capacitor.isNativePlatform();
+export function nearbyAvailable(gameId: string): gameId is NearbyGameId {
+  return isNearbyGameId(gameId) && import.meta.env.MODE !== 'web' && Capacitor.isNativePlatform();
 }
 export function getNearbyRoot(): LazyExoticComponent<Root> | null {
   if (import.meta.env.MODE === 'web' || !Capacitor.isNativePlatform()) return null;

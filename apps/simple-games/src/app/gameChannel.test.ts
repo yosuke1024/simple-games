@@ -33,26 +33,23 @@ import { GAMES, type GameDefinition } from './registry';
  * issue #210 — all graduated into the app on 2026-10-02. Putting a title on
  * the channel, or promoting one off it, edits this list on purpose.
  */
+// Chess, Nested Tic-Tac-Toe, Scopa and Nim graduated by owner decision on 2026-10-25.
 const WEB_BETA_IDS = [
   'unblock-puzzle',
   'snake',
   'loop-puzzle',
   'bridges',
   'peg-solitaire',
-  'chess',
   'gem-swap',
   'pipe-link',
   'bounce-up',
   'echo-pads',
   'overtake',
   'make-the-target',
-  'nested-tic-tac-toe',
-  'scopa',
   'tangram',
   'light-grid',
   'color-flood',
   'three-peaks',
-  'nim',
   'knight-tour',
   'invaders',
   'falling-blocks',
@@ -138,6 +135,8 @@ describe('the channels', () => {
   it('hold exactly the titles this file says they do', () => {
     const beta = GAMES.filter((game) => game.channel === 'web-beta').map((game) => game.id);
     expect(beta).toEqual(WEB_BETA_IDS);
+    expect(beta).toHaveLength(21);
+    expect(GAMES.filter((game) => game.channel === undefined)).toHaveLength(45);
     const building = GAMES.filter((game) => game.channel === 'in-development').map(
       (game) => game.id,
     );

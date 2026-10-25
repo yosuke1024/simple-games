@@ -180,9 +180,9 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // since then): beta keys on the same terms as the five above. Each row is
   // its rules document's storage section, grown from the scaffold's two keys
   // in Phase 2/3; none is frozen until graduation.
-  // No. 47, web-beta (docs/CHESS_RULES.md §7): the scaffold's two keys grew to the rules
+  // No. 47, frozen on 2026-10-25 by owner-approved promotion. The scaffold's two keys grew to the rules
   // document's four in Phase 3 — the one saved game (a move list) and the side for the next
-  // game. Not frozen until graduation
+  // game. These keys remain unchanged at promotion.
   chess: ['ch.saveGame', 'ch.stats', 'ch.flags', 'ch.prefs'],
   // No. 48, web-beta (docs/GEM_SWAP_RULES.md §7): not frozen until graduation
   'gem-swap': ['gs.saveGame', 'gs.stats', 'gs.flags', 'gs.prefs'],
@@ -208,9 +208,9 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   // the rules document's five in Phase 3 — two saved-game slots (Free Play and the daily) and
   // the difficulty last chosen. Not frozen until graduation
   'make-the-target': ['tg.saveGame', 'tg.saveDaily', 'tg.stats', 'tg.flags', 'tg.prefs'],
-  // No. 54, web-beta (docs/NESTED_TIC_TAC_TOE_RULES.md storage): not frozen until graduation
+  // No. 54, frozen on 2026-10-25 by owner-approved promotion; key names unchanged.
   'nested-tic-tac-toe': ['nt.saveGame', 'nt.stats', 'nt.flags', 'nt.prefs'],
-  // No. 55, web-beta (docs/SCOPA_RULES.md storage): not frozen until graduation
+  // No. 55, frozen on 2026-10-25 by owner-approved promotion; key names unchanged.
   scopa: ['sc.saveGame', 'sc.stats', 'sc.flags'],
   // No. 56, web-beta (docs/TANGRAM_RULES.md storage): not frozen until graduation
   tangram: ['tn.saveGame', 'tn.saveDaily', 'tn.progress', 'tn.stats', 'tn.flags', 'tn.prefs'],
@@ -218,6 +218,7 @@ const RELEASED_KEYS: Record<string, readonly string[]> = {
   'light-grid': ['lg.saveGame', 'lg.stats', 'lg.flags', 'lg.prefs'],
   'color-flood': ['cf.saveGame', 'cf.stats', 'cf.flags', 'cf.prefs'],
   'three-peaks': ['tp.saveGame', 'tp.stats', 'tp.flags'],
+  // Nim: frozen on 2026-10-25 by owner-approved promotion; key names unchanged.
   nim: ['ni.saveGame', 'ni.stats', 'ni.flags', 'ni.prefs'],
   'knight-tour': ['kt.saveGame', 'kt.stats', 'kt.flags', 'kt.prefs'],
   invaders: ['iv.saveGame', 'iv.stats', 'iv.flags'],

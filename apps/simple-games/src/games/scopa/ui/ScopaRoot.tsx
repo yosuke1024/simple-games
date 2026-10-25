@@ -10,6 +10,7 @@
 // Register this game's 14-locale catalog the moment the chunk loads, before
 // anything below renders (issue #38, src/i18n/registry.ts).
 import '../i18n';
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
@@ -24,7 +25,7 @@ import { ScopaHomeScreen } from './screens/HomeScreen';
 import { ScopaStatsScreen } from './screens/StatsScreen';
 import { ScopaTutorialScreen } from './screens/TutorialScreen';
 
-export function ScopaScreens() {
+export function ScopaScreens(props: PlayTogetherProps) {
   const { screen } = useScopa();
   switch (screen) {
     case 'tutorial':
@@ -35,7 +36,7 @@ export function ScopaScreens() {
       return <ScopaStatsScreen />;
     case 'home':
     default:
-      return <ScopaHomeScreen />;
+      return <ScopaHomeScreen {...props} />;
   }
 }
 
@@ -45,7 +46,7 @@ interface LoadedData {
   session: ScopaSession | null;
 }
 
-export interface ScopaRootProps {
+export interface ScopaRootProps extends PlayTogetherProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
   /**
@@ -71,7 +72,13 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, session };
 }
 
-export function ScopaRoot({ onExit, entry, kv = preferencesKV }: ScopaRootProps) {
+export function ScopaRoot({
+  onExit,
+  entry,
+  kv = preferencesKV,
+  onPlayTogether,
+  playTogetherActive,
+}: ScopaRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -83,7 +90,7 @@ export function ScopaRoot({ onExit, entry, kv = preferencesKV }: ScopaRootProps)
       onExit={onExit}
       entry={entry}
     >
-      <ScopaScreens />
+      <ScopaScreens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </ScopaProvider>
   );
 }

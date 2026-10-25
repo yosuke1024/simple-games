@@ -11,6 +11,7 @@
 // Register this game's 14-locale catalog the moment the chunk loads,
 // before anything below renders (issue #38, src/i18n/registry.ts).
 import '../i18n';
+import type { PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import type { KVStore } from '../../../storage/kv';
 import { preferencesKV } from '../../../storage/kv';
 import { loadRecord } from '../../../storage/repo';
@@ -32,7 +33,7 @@ import { CheckersHomeScreen } from './screens/HomeScreen';
 import { CheckersStatsScreen } from './screens/StatsScreen';
 import { CheckersTutorialScreen } from './screens/TutorialScreen';
 
-export function CheckersScreens() {
+export function CheckersScreens(props: PlayTogetherProps) {
   const { screen } = useCheckers();
   switch (screen) {
     case 'tutorial':
@@ -43,7 +44,7 @@ export function CheckersScreens() {
       return <CheckersStatsScreen />;
     case 'home':
     default:
-      return <CheckersHomeScreen />;
+      return <CheckersHomeScreen {...props} />;
   }
 }
 
@@ -54,7 +55,7 @@ interface LoadedData {
   session: CheckersSession | null;
 }
 
-export interface CheckersRootProps {
+export interface CheckersRootProps extends PlayTogetherProps {
   /** Hands control back to the collection home. */
   onExit: () => void;
   /**
@@ -86,7 +87,13 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, prefs, session };
 }
 
-export function CheckersRoot({ onExit, entry, kv = preferencesKV }: CheckersRootProps) {
+export function CheckersRoot({
+  onExit,
+  entry,
+  kv = preferencesKV,
+  onPlayTogether,
+  playTogetherActive,
+}: CheckersRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -99,7 +106,7 @@ export function CheckersRoot({ onExit, entry, kv = preferencesKV }: CheckersRoot
       onExit={onExit}
       entry={entry}
     >
-      <CheckersScreens />
+      <CheckersScreens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </CheckersProvider>
   );
 }

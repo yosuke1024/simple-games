@@ -2,6 +2,9 @@ import type { YachtMessages } from './en';
 
 export const tr: YachtMessages = {
   yachtName: 'Yacht',
+  yachtPlayTogether: 'Biriyle oyna',
+  yachtReturnToTogether: 'Birlikte oyuna dön',
+  yachtPlayTogetherNote: 'Bir maç için yakındaki biriyle bağlan.',
   yachtResumeNote: 'Tur {turn} / {count} · Sen {total} · CPU {cpuTotal}',
   yachtRecordNote: '{wins} galibiyet · {losses} yenilgi · En iyi {best}',
   yachtBestNote: 'En iyi {score}',

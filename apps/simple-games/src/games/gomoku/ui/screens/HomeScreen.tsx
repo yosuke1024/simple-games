@@ -10,6 +10,7 @@
  * buttons say so rather than assuming the player knows.
  */
 import { useState } from 'react';
+import { PlayTogetherButton, type PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 import { useSettings } from '@/state/SettingsContext';
 import { ConfirmDialog } from '@/ui/components/ConfirmDialog';
 import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
@@ -18,7 +19,7 @@ import { IconChart } from '@/ui/components/icons';
 import { DIFFICULTIES, type Difficulty } from '../../game';
 import { useGomoku } from '../../state/GameContext';
 
-export function GomokuHomeScreen() {
+export function GomokuHomeScreen(props: PlayTogetherProps) {
   const {
     navigate,
     session,
@@ -105,6 +106,8 @@ export function GomokuHomeScreen() {
             {t('gomokuPlayWhite')}
           </button>
         </div>
+
+        <PlayTogetherButton {...props} />
 
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>

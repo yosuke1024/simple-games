@@ -13,11 +13,11 @@
  * (§11). Reduced Motion turns the movement off and the discs are simply in
  * their new state.
  */
+import { isLegalMove } from '../../game/engine';
 import { memo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { useReducedMotion } from '@/ui/useReducedMotion';
-import { BLACK, colOf, EMPTY, isLegalMove, rowOf, type Board, type Player } from '../../game';
-import type { LastMove } from '../../state/GameContext';
+import { BLACK, colOf, EMPTY, rowOf, type Board, type Player } from '../../game/types';
 
 export interface ReversiBoardProps {
   board: Board;
@@ -27,7 +27,8 @@ export interface ReversiBoardProps {
   toMove: Player;
   /** Ignored while the match is over or a dialog is up — the screen inerts. */
   playing: boolean;
-  lastMove: LastMove | null;
+  lastMove: { placed: number; flipped: readonly number[]; moveCount: number } | null;
+  opponentName?: string;
   onPlace: (cell: number) => void;
 }
 
@@ -38,6 +39,7 @@ export const ReversiBoard = memo(function ReversiBoard({
   playing,
   lastMove,
   onPlace,
+  opponentName,
 }: ReversiBoardProps) {
   const { t } = useSettings();
   const reducedMotion = useReducedMotion();
@@ -65,7 +67,9 @@ export const ReversiBoard = memo(function ReversiBoard({
               : t('reversiCellEmpty', { row, col })
             : piece === playerColor
               ? t('reversiCellMine', { row, col })
-              : t('reversiCellTheirs', { row, col });
+              : opponentName
+                ? t('reversiCellNamed', { row, col, name: opponentName })
+                : t('reversiCellTheirs', { row, col });
         return (
           <button
             key={cell}

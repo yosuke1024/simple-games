@@ -1,3 +1,4 @@
+import { PlayTogetherButton, type PlayTogetherProps } from '@/ui/components/PlayTogetherButton';
 /**
  * Home (docs/MANCALA_RULES.md §1, §4): three opponents, a choice of side, and
  * nothing between the player and the board. There is no level list — the
@@ -21,7 +22,7 @@ import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
 import { DIFFICULTIES, type Difficulty } from '../../game';
 import { useMancala } from '../../state/GameContext';
 
-export function MancalaHomeScreen() {
+export function MancalaHomeScreen(together: PlayTogetherProps = {}) {
   const {
     navigate,
     session,
@@ -119,6 +120,8 @@ export function MancalaHomeScreen() {
             {t('mancalaGoSecond')}
           </button>
         </div>
+
+        <PlayTogetherButton {...together} />
 
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>

@@ -7,6 +7,7 @@ node_modules
 # Build outputs (dist-web/ is the web-mode build — docs/WEB_VERSION.md)
 dist/
 dist-web/
+apps/simple-games/build-metadata/
 .turbo/
 coverage/
 

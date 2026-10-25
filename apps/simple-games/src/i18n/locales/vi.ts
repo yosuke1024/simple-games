@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const vi: Messages = {
+  playTogether: 'Chơi cùng người khác',
+  returnToTogether: 'Trở lại chơi cùng nhau',
+  playTogetherNote: 'Kết nối với người ở gần để thi đấu.',
   tagline: 'Chơi được ngoại tuyến. Không tài khoản. Không khóa trả phí.',
 
   resume: 'Chơi tiếp',

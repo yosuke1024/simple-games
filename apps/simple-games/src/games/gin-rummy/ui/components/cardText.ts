@@ -5,7 +5,7 @@
  * the screen reader's mercy).
  */
 import type { MessageKey, TranslateVars } from '@/i18n';
-import { rankOf, suitOf, type Card } from '../../game';
+import { rankOf, suitOf, type Card } from '../../game/cards';
 
 const RANK_TEXT = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'] as const;
 
