@@ -377,6 +377,11 @@ session の契約は [architecture/nearby-multiplayer.md](architecture/nearby-mu
   通信方式の自動切替は行わず、§8 の `yt.saveGame` を読み書きしない。
 - `yt.stats`、自己ベスト、レビュー依頼の計数、バックアップ、Club House の送信とランキングへ
   混ぜない。§12 の `standard` は従来の CPU 戦だけである。
-- Pixel 9 Pro / iPhone 11 の Bluetooth では 24 手番完了と最終結果の一致を 1 局確認した。
+- Pixel 9 Pro / iPhone 11 の Bluetooth では iPhone を advertise に固定し、game host を
+  交替して各 1 局の 24 手番完了と最終結果一致を確認した。各局の公開 DOM 盤面も
+  121 / 121 件が一致。双方 Ready による再戦開始、Android の対局中 background による
+  両者終了と、Android 前面復帰時の自動再開なしも確認した。
+  Android advertise / iPhone browse の向きでは手番をまたぐ部分進行と iPhone の明示 End
+  による両者終了まで確認した。この向きの 24 手番完走は未実施。
   条件・範囲は [作業記録](plans/2026-10-25-nearby-multiplayer-poc.md)を参照する。
-  全更新の照合、LAN、接続中の異常系、3〜4 人、製品の多言語 UI、正式な再戦導線は検証中または今後の段階である。
+  LAN、その他の接続中の異常系、3〜4 人、製品の多言語 UI、製品用の再戦導線は検証中または今後の段階である。

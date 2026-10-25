@@ -19,8 +19,8 @@ issue: [#268](https://github.com/yosuke1024/simple-games/issues/268)
 | Epic の段階 | この対応で用意するもの | 完了と扱わないもの |
 | --- | --- | --- |
 | Phase 0 | Core の任意の近隣通信を許容する canonical の更新、公式資料、2 台の role と検証 matrix、Android / iPhone 各 1 台の機種・OS 確認 | 旧 OS・低価格・advertising 非対応端末を含む台帳の確定と実測。Phase 0 全体は一部未完了。 |
-| Phase 1 | BLE / LAN native adapter、共通 framing、相互確認。B1 の Android ↔ iOS BLE 接続 1 回と、各方向 1 回の 1 KB ping に成功 | 他の通信ロール・OS 組み合わせ、WAN なし LAN、安定性、3〜4 台、電池、Android +500 KB の達成。 |
-| Phase 2 | 既存採点を使う host 主導の 2 人 Yacht デモ。B1 の実機 24 手番を完走し、両画面の最終 28 対 35・iPhone 勝利が一致 | 全 121 公開盤面の厳密な相互照合、WAN なし LAN の完走、再戦・対局中の異常系、製品 UI、多言語・accessibility、製品導入。 |
+| Phase 1 | BLE / LAN native adapter、共通 framing、相互確認。B1 / B2 の接続と論理 host の交替、B3 の逆の無線 role による接続、B1 / B3 で各方向 1 回の 1 KB ping に成功 | 他の端末・OS 組み合わせ、WAN なし LAN、安定性、3〜4 台、電池、Android +500 KB の達成。 |
+| Phase 2 | B1 / B2 で各 24 手番を完走し、それぞれ全 121 公開 DOM 盤面と最終結果が一致。B2 後の双方 Ready による再戦開始、Android の対局中 background による両者終了と自動再開なしを確認 | WAN なし LAN の完走、その他の対局中の異常系・資源解放、製品 UI、多言語・accessibility、製品導入。 |
 | Phase 3 | 必要な release gate の文書化 | Connect Four / Reversi への展開、3〜4 人検証、正式公開。 |
 
 **Epic を close / complete にしない。** コードの自動検証と物理端末の試験結果を分ける。
@@ -32,8 +32,16 @@ issue: [#268](https://github.com/yosuke1024/simple-games/issues/268)
 署名付きビルド・署名検証・インストール・起動に成功。Start 未操作の初回画面で権限ダイアログが
 ないことも観測した。後続の B1 では iPhone advertise / game guest と Android browse /
 game host で発見・接続・相互確認と双方向 1 KB ping に成功し、Yacht の 24 手番を完走した。
-最終結果は両端末で 28 対 35、iPhone 勝利の表示が一致。全 121 公開盤面の厳密照合は
-hash で確認中であり、WAN なし LAN・電池・配布サイズは未実施。
+最終結果は両端末で 28 対 35、iPhone 勝利の表示が一致。両端末の記録を回収し、公開 DOM
+盤面 121 / 121 件の一致を比較検査で確認した。WAN なし LAN・電池・配布サイズは未実施。
+
+B2 では同じ無線 role のまま iPhone を game host、Android を guest にし、日本語の表示名と
+確認コードを双方で確認して 24 手番を完走した。全 121 公開 DOM 盤面が一致し、最終 51 対 34、
+iPhone 勝利を確認。双方 Ready による再戦開始と初回 Roll の同期後、Android を HOME で
+background に移すと両端末が session を終了し、Android の前面復帰でも自動再開しなかった。
+B3（Android advertise / game host、iPhone browse / guest）では発見・接続・双方 Confirm、
+双方向 1 KB ping、Android の採点から iPhone の Roll へ手番をまたぐ部分進行を確認した。
+iPhone の End 操作で両端末が終了した。B3 は 24 手番を完走した試験ではない。
 
 B1 の開始準備では両端末で Start を操作したが、相手の発見・接続へ進む前に 60 秒で終了した。
 その時点の iOS advertising 開始や OS の Bluetooth 許可ダイアログは直接確認できておらず、
@@ -58,7 +66,7 @@ ADB の設定値 `1 / 1 / 0` でも確認した。終局後も Android で同じ
   host 自身による改造への対策ではない。通信の切断・background は終了し、保存や再開はしない。
 - 3〜4 人、秘密手札、host 移譲、自動再接続、BLE / LAN 間移行、製品 UI は後段で判断する。
 
-## 実機台帳 — B1 の Android ↔ iOS BLE 接続を 1 回確認
+## 実機台帳 — B1 / B2 / B3 の Android ↔ iOS BLE 接続を確認
 
 2026-10-25 に下記 A2 / I2 を確認した。未確認の欄を推測で埋めず、API の capability 値や
 エミュレータ / Simulator の実行を advertising・端末間通信の実証にしない。
@@ -66,10 +74,10 @@ ADB の設定値 `1 / 1 / 0` でも確認した。終局後も Android で同じ
 | ID | 機種 | OS / build | BLE advertising の実際の結果 | 備考 |
 | --- | --- | --- | --- | --- |
 | A1 | 未確認 | 未確認 | 未確認 | API 24–30 の旧権限世代を含める。 |
-| A2 | Pixel 9 Pro | Android 17 / API 37 / CP3A.260905.009 | 明示 Start 後の advertising 開始 callback を確認。この role での相手からの発見は未実施 | `1131072b`、target 36 の PoC debug APK。browse / game host で I2 との B1 接続・双方向 ping に成功。低価格 Android の検証は別途必要。 |
+| A2 | Pixel 9 Pro | Android 17 / API 37 / CP3A.260905.009 | advertising 開始と、B3 で I2 からの発見・接続・双方向 ping を確認 | `1131072b`、target 36 の PoC debug APK。browse では B1 / B2 を完走、advertise では B3 の部分進行まで。低価格 Android の検証は別途必要。 |
 | A3 | 未確認 | 未確認 | 未確認 | advertising 非対応の実機が必要。模擬失敗だけで代用しない。 |
 | I1 | 未確認 | 未確認 | 未確認 | iOS の最小サポート付近。 |
-| I2 | iPhone 11 | iOS 26.6.2 / 23G90 | advertise / game guest で A2 からの発見・B1 接続・双方向 ping に成功 | Developer Mode 有効、USB 接続、署名付き PoC の導入・起動を確認。利用者の初回 Bluetooth 許可の回答後に明示再試行。準備中の timeout は履歴として下記に保持。 |
+| I2 | iPhone 11 | iOS 26.6.2 / 23G90 | advertise で A2 からの発見・B1 / B2 接続を確認 | Developer Mode 有効、USB 接続、署名付き PoC。advertise では B1 / B2 を完走、browse では B3 の接続・双方向 ping・部分進行を確認。初回準備の timeout は下記に保持。 |
 | AP1 | 未確認 | firmware 未確認 | 対象外 | WAN を外せる同一 LAN、AP isolation を切替できるもの。 |
 
 実施時は app commit、app ID、build variant、権限の初期状態、位置情報設定、Bluetooth /
@@ -77,16 +85,16 @@ Wi-Fi の ON/OFF、周囲の電波条件、試行数を併記する。現在の 
 targetSdk・compileSdk 36、iOS deployment target 15.0。target 37 に上げる際は Android 17 の
 `ACCESS_LOCAL_NETWORK` と NSD picker の選択を再確認する。
 
-## 接続と対局の matrix — B1 を 1 局完走、全盤面照合は進行中
+## 接続と対局の matrix — B1 / B2 を各 1 局完走、各 121 公開盤面が一致
 
 BLE 条件は **機内モード ON、Bluetooth 明示 ON、Wi-Fi OFF、インターネットなし**。
 LAN 条件は **同一 Wi-Fi、WAN / インターネットなし**。機内利用は航空会社・乗務員の指示に従う。
 
 | ID | 方式 / 組み合わせ | 通信ロールと論理 host | 必須の確認 | 結果 |
 | --- | --- | --- | --- | --- |
-| B1 | BLE Android ↔ iOS | iOS advertise / Android browse、game host は Android | 発見、両者確認、双方向、大きな message、一局 24 手番 | 接続 1 回、両者 Confirm、各方向 1 回の 1 KB ping と 24 手番完走。最終 28 対 35・iPhone 勝利が一致。全 121 盤面の厳密照合は進行中。準備中の timeout は接続失敗率に含めない。 |
-| B2 | BLE Android ↔ iOS | B1 と同じ通信ロール、game host は iOS | host と無線 role の独立 | 未実施 |
-| B3 | BLE Android ↔ iOS | Android advertise / iOS browse | Android peripheral の対応端末 | 未実施 |
+| B1 | BLE Android ↔ iOS | iOS advertise / Android browse、game host は Android | 発見、両者確認、双方向、大きな message、一局 24 手番 | 接続 1 回、両者 Confirm、各方向 1 回の 1 KB ping と 24 手番完走。全 121 公開 DOM 盤面と最終 28 対 35・iPhone 勝利が一致。準備中の timeout は接続失敗率に含めない。 |
+| B2 | BLE Android ↔ iOS | B1 と同じ通信ロール、game host は iOS | host と無線 role の独立 | 日本語表示名・コード一致、双方 Confirm / Ready、24 手番完走。全 121 公開 DOM 盤面と最終 51 対 34・iPhone 勝利が一致。再戦開始と Android の対局中 background / 復帰も確認。 |
+| B3 | BLE Android ↔ iOS | Android advertise / iOS browse、game host は Android | Android peripheral の対応端末 | 接続・双方 Confirm / Ready、各方向 1 回の 1 KB ping、rev 3 までの手番をまたぐ進行と iPhone の End による両者終了を確認。24 手番完走は未実施。 |
 | B4 | BLE Android ↔ Android | 成功する側が advertise、game host を交替 | 両方向、旧/新 OS、低価格機 | 未実施 |
 | B5 | BLE Android ↔ Android | 片方 advertising 非対応 | advertise 可能な相手を使う手動 fallback | 未実施 |
 | B6 | BLE Android ↔ Android | 両方 advertising 非対応 | BLE 不可を説明し、LAN / 終了を選べる | 未実施 |
@@ -100,7 +108,7 @@ LAN 条件は **同一 Wi-Fi、WAN / インターネットなし**。機内利�
 各成功行にも、発見時間・接続時間の分布、試行数 / 成功数、切断回数、連続動作時間、
 メモリ、電池の測定条件を記録する。平均だけで成功扱いにせず、失敗の OS / role と再現手順を残す。
 
-## 権限・異常・lifecycle の matrix — 端末単体の一部のみ確認
+## 権限・異常・lifecycle の matrix — 単体と B1 / B2 で一部確認
 
 | 条件 | 期待する結果 | 結果 |
 | --- | --- | --- |
@@ -110,13 +118,14 @@ LAN 条件は **同一 Wi-Fi、WAN / インターネットなし**。機内利�
 | iOS LAN 権限拒否 / 再許可 | 許可待ちと権限拒否・timeout を扱い、明示再試行できる | 未実施 |
 | OS 権限ダイアログ | 通常の background 終了と区別して、許可後の操作が行き詰まらない | A2: 明示 Start browse で Nearby devices ダイアログを表示し、許可後の探索開始と拒否後の終了を確認。PoC の `user-set` / `user-fixed` フラグを clear 後、通常の OS ダイアログで再許可し、再び探索開始を確認。I2: 利用者の初回許可の回答後、明示再試行で B1 接続成功。OS ダイアログ自体は直接観測していない。接続中の取り消しは未実施。 |
 | Bluetooth OFF / 相手が離れる / 相手のアプリ終了 | session 終了。古い操作を再適用しない | 未実施 |
+| 相手の明示 End | 両端末の session を終了し、対局操作を止めて明示開始へ戻る | B3: iPhone の End で iOS は Ended locally、Android は BLE peer disconnected。両者 Session ended / Start enabled / Roll disabled を確認。 |
 | Wi-Fi 切断 / ネットワーク変更 | TCP と discovery を閉じ、局を勝手に移行しない | 未実施 |
-| background / 画面ロック / 復帰 | session 終了。復帰時に自動接続・再開をしない | A2: 接続前の advertise 待受け中に HOME で background へ移し、開始可能な状態へ復帰。前面復帰時も状態・ログが変わらず自動再開なし。対局中・画面ロック・iOS・全資源解放の実証は未実施。 |
+| background / 画面ロック / 復帰 | session 終了。復帰時に自動接続・再開をしない | A2 の待受け中に加え、B2 の再戦初回 Roll 後にも HOME で background へ移し、両端末が終了・操作不可・開始可能に戻ることを確認。A2 の前面復帰後も状態・ログ末尾が変わらず自動再開なし。画面ロック・iOS を background にする試験・OS 全資源解放は未実施。 |
 | 同名の相手、別セッション、確認拒否 | 相手を確認でき、両者確認前に局を始めない | 未実施 |
 | 不正 JSON / UTF-8、4096 bytes 超過、不完全 frame | 上限を超えて蓄積せず、安全に終了 | 未実施 |
-| 日本語・分割・連結・最大長 message | BLE / TCP の read 境界によらず 1 message として復元 | 未実施 |
+| 日本語・分割・連結・最大長 message | BLE / TCP の read 境界によらず 1 message として復元 | B2 の日本語表示名を両端末で確認。1 KB payload は B1 で双方向確認。最大長・意図的な連結等の網羅試験は未実施。 |
 | 重複 / 古い revision / 順序逆転 / 手番外 command | RNG・得点・手番を誤って進めない | 未実施 |
-| 2 人で Ready / 再戦 | 両者の Ready で新 round。前 round の操作を採用しない | 未実施 |
+| 2 人で Ready / 再戦 | 両者の Ready で新 round。前 round の操作を採用しない | B2: 初回・再戦とも片方の Ready だけでは開始しない。双方 Ready 後に初期盤面へ戻り、host の初回 Roll で双方 rev 1・同じ出目を確認。前 round の古い操作を実機へ注入する試験は未実施。 |
 
 ## Android 配布サイズと性能 — 未測定
 
@@ -144,7 +153,7 @@ Web gzip、debug APK、ソースコード行数を配布サイズとして示さ
 
 - Phase 0 の実機台帳を確定する。
 - Phase 1 の BLE / LAN 実測、低価格端末、advertising 非対応の fallback、サイズを確認する。
-- Phase 2 の B1 完走記録の全盤面を照合し、WAN なし LAN でも完走する。再戦・切断・不正操作で進行が壊れないことを確認する。
+- Phase 2 の WAN なし LAN を完走する。iOS 側 background・画面ロック・無線 OFF・不正操作等の未試験条件と、OS 資源の全解放を確認する。
 - 製品向けの接続保護・プライバシー説明、権限文言、多言語、accessibility、入口を設計・検証する。
 - 通常製品・Web への混入ゼロ、ソロ / CPU 戦、保存、lazy-load / size gate を確認する。
 - Phase 3 の別ゲーム・3〜4 人を段階的に検証する。未検証の組み合わせを公開文面へ書かない。
@@ -197,12 +206,48 @@ A2 の以下の操作は、同じコード `1131072b` から作成した同じ P
 | A2 / I2 / B1 明示再試行・接続 | 利用者が iPhone の初回 Bluetooth 許可をしたと回答後、I2 advertise / game guest、A2 browse / game host で明示再試行。A2 が相手を発見し、UI で選択すると両端末が `Transport connected`。hello は A2 が TX 92 / RX 94 bytes、I2 が TX 94 / RX 92 bytes。 | 許可後の接続 1 回成功。準備中の timeout と区別し、他の role・端末・方式や長時間の安定性へ一般化しない。 |
 | A2 / I2 / B1 相互確認 | 両画面のテスト用プレイヤー名 `Pixel` / `iPhone` と確認コードの一致を確認。両方の UI で Confirm を操作し、双方 `Confirmed`。 | 利用者の相互確認が成立。平文コードによる誤接続防止の試験であり、暗号化・本人認証・MITM 耐性の実証ではない。 |
 | A2 / I2 / B1 双方向 ping | 1 KB payload（wire 1082 bytes）の ping を各方向 1 回実行。A2 起点の往復 5434 ms、I2 起点の往復 617 ms。pong は 69 bytes。 | この接続での双方向 message を確認。各方向 1 回の観測値であり、平均・分布・接続遅延・切断率・最大 4096-byte message の検証にはしない。 |
-| A2 / I2 / B1 24 手番完走 | 両端末で 121 件の公開盤面（rev 0〜119 と Finished）を記録。各端末 60 回の UI click（12 手番 × roll → 最初の die を hold → roll → roll → score）で完走し、両端末の記録は `issues: []`。最終 28 対 35、iPhone 勝利の表示が一致した。 | 1 局の完走と最終結果の一致を確認。全 121 盤面の厳密な相互一致はこの時点では未検証で、hash による照合中。 |
-| A2 / B1 記録の保存・時刻 | 全 JSON を PoC の `build/measurements/android-b1.json` に保存。helper 開始は 03:53:51.148 UTC、自動操作開始 03:54:46.061 UTC、終局 03:58:09.567 UTC。helper 開始から初期 rev 0 は 31.359 秒後、終局は 258.419 秒後。 | ローカルの試験記録。相対時刻は Android 側の時間のみで、端末間の同期や通信遅延を示さない。iOS の全 JSON は CUA / Safari timeout により Mac へ未書き出し。 |
+| A2 / I2 / B1 24 手番完走 | 両端末で 121 件の公開盤面（rev 0〜119 と Finished）を記録。各端末 60 回の UI click（12 手番 × roll → 最初の die を hold → roll → roll → score）で完走し、両端末の記録は `issues: []`。最終 28 対 35、iPhone 勝利の表示が一致した。 | 1 局の完走を確認。後続の記録回収と比較検査で、全 121 公開 DOM 盤面の一致も確認した（下記）。 |
+| A2 / B1 記録の保存・時刻 | 全 JSON を PoC の `build/measurements/android-b1.json` に保存。helper 開始は 03:53:51.148 UTC、自動操作開始 03:54:46.061 UTC、終局 03:58:09.567 UTC。helper 開始から初期 rev 0 は 31.359 秒後、終局は 258.419 秒後。 | ローカルの試験記録。相対時刻は Android 側の時間のみで、端末間の同期や通信遅延を示さない。iOS の全 JSON は一時 CUA / Safari timeout で回収できなかったが、後続の USB 回収で解消した。 |
 | A2 / B1 終局後の無操作・無線設定 | 04:01:14.935 UTC にも `Confirmed` / `Finished` / Ready enabled を確認。終局から 3 分以上の無操作で状態を維持し、log 末尾に追加 ping 等なし。Android の機内モード / Bluetooth / Wi-Fi 設定値も `1 / 1 / 0` を再確認した。 | この接続で終局後の無操作により timeout しなかったことを確認。長時間の安定性、background、全通信の capture、電池測定の証拠ではない。 |
+| I2 / B1 記録の USB 回収 | Safari の PoC Inspector だけを閉じると、loopback / USB の検証 helper が応答。iOS の全 JSON を PoC の `build/measurements/ios-b1.json` へ回収できた。 | 実機の公開 DOM 記録の回収。PoC runtime に保存・送信機能を追加したものではない。 |
+| A2 / I2 / B1 全公開盤面の比較 | `compare-ui-trials.py` が PASS、13,158 checks、errors なし。rev 0〜119 と最終盤面の 121 / 121 件が一致し、24 手番・各端末 60 actions（計 120）・最終 28 対 35 を確認。比較結果は PoC の `build/measurements/b1-comparison.json`。 | 回収した公開 DOM 盤面と記録した DOM 操作の照合。端末時刻・一方向の通信遅延・非公開の内部状態の比較は含まない。 |
 
-この記録時点では B1 を 1 局完走し、全公開盤面の hash 照合を進めている。再戦、接続中の
-background 等の異常系、他の BLE 組み合わせ、WAN なし LAN、3〜4 台、消費電力、
+両端末の正規化した公開盤面列の SHA-256 は共通で、
+`9a1d89262c0007c2497edf10714e327573689e8fba05ac7e3e05e5114fb8554f`。
+比較対象は runtime `1131072b` の実機記録であり、以後の文書更新で runtime は変えていない。
+検証用 helper で取得したローカル記録は生成物であり、PoC 本体の保存機能ではない。
+
+### B2 — game host を iPhone に交替
+
+| 操作 | 観測結果 | 証拠の範囲・未確認事項 |
+| --- | --- | --- |
+| 相互確認と初回 Ready | I2 は advertise / game host、A2 は browse / guest。日本語表示名 `iPhone 主催` / `Pixel 参加` とコードの一致を確認し、双方 Confirm。iPhone だけ Ready の時点では双方 game hidden、Android も Ready にすると開始した。 | 無線 role を保ったまま論理 host を交替でき、片方の Ready だけではゲームを始めないことを確認。 |
+| 24 手番・全公開盤面の比較 | `android-b2.json` / `ios-b2.json` を PoC の `build/measurements/` に保存。`b2-comparison.json` は PASS、13,158 checks、errors なし。各端末 60 actions（計 120）、24 手番、rev 0〜119 と最終盤面の 121 / 121 件が一致し、51 対 34・iPhone 勝利。Android の無線設定も `1 / 1 / 0` を再確認した。 | B2 の 1 局の公開 DOM 盤面と記録した DOM 操作を確認。端末時刻・通信遅延・非公開内部状態の比較ではない。 |
+| 再戦の Ready | iPhone だけ Ready 後も両端末は Finished・51 対 34 を維持。Android も Ready にすると双方 rev 0、0 対 0、結果は空、filled 0 に戻り、host だけ Roll enabled。iPhone の Roll 後、双方 rev 1・出目 `1, 6, 1, 1, 1` が一致。 | 双方の明示 Ready による新しい局の開始を確認。この再戦は 24 手番完走の件数へ加えない。 |
+| 対局中の Android background / 復帰 | 04:32:24 UTC ごろ、初回 Roll 後に Android を HOME へ移した。Android は visibility hidden / status background / Session ended / Roll disabled / Start enabled。iOS は peer-disconnected / Session ended / Roll disabled / Start enabled。Android を `am start` で前面へ戻すと visible になり、status とログ末尾の background は変わらず、自動再開なし。 | Android 側の background で両者の session が終了することを確認。iOS 側 background・画面ロック・OS 資源の全解放・電池は未実証。 |
+
+B2 の両端末の正規化した公開盤面列の SHA-256 は共通で、
+`218482b5a9283813c060018247ae0c4c1e4f1859792f57145db84212927c1dad`。
+
+### B3 — Android を advertise に交替した部分試験
+
+| 操作 | 観測結果 | 証拠の範囲・未確認事項 |
+| --- | --- | --- |
+| 発見・接続・相互確認 | A2 advertise / game host、I2 browse / guest。A2 の Start では通常の権限ダイアログは出ず、`BLE advertising started` を確認。I2 の候補 1 件の発見名は `SG-BLE` で、Android 画面の一時的な radio label とは表示が一致しなかった。候補選択後、双方 `Transport connected`。プレイヤー名 `Pixel` / `iPhone` と確認コードの一致を確認し、双方 Confirm。 | この試行では無線の発見名と画面の radio label が一致しなかった。表示名だけで確認完了とせず、接続後に双方のプレイヤー名・コードを確認した。表示差の原因はこの観測だけから断定しない。 |
+| 双方向 ping | 1 KB payload（wire 1082 bytes、pong 69 bytes）を各方向 1 回実行。Android peripheral 起点の往復 444 ms、iOS central 起点の往復 3331 ms。 | この接続での各 1 回の観測値。平均・分布・接続遅延や端末一般の性能にはしない。 |
+| Ready・手番をまたぐ進行 | 双方 Ready 後、Android Roll で双方 rev 1・出目 `2, 6, 3, 1, 3`。最初の採点欄の選択で rev 2・Pixel 1 点。iPhone guest の Roll 後、双方 rev 3・出目 `2, 3, 2, 1, 1`・合計 1 対 0 が一致。 | host と guest の手番をまたぐ部分進行を確認。B3 は 24 手番完走の件数へ加えない。 |
+| iPhone の明示 End | iOS の End ボタンで iOS は `Ended locally`、Android は `connection-lost: BLE peer disconnected`。両端末が Session ended / Start enabled / Roll disabled になった。 | 相手の明示退出で双方の session が終了し、対局操作を停止することを確認。OS 資源の全解放やアプリ強制終了の試験ではない。 |
+
+実装の確認では、iOS の探索名は best effort で、有効な label を最初の発見時に取得できないと
+`SG-BLE` に fallback する。現在は後続の発見による候補名の更新も行わない。この試行で label を
+取得できなかった理由が OS の省略か受信タイミングかは未確定。接続後のプレイヤー名・確認コードを
+双方で確認し、探索名だけを本人確認に使わない。複数 peer の識別と名前更新の UX は製品化前の課題。
+
+この記録時点では B1 / B2 を各 1 局完走し、それぞれ全 121 公開 DOM 盤面の一致を確認した。
+再戦開始と Android 側 background による終了・自動再開なしも確認。B3 は逆の無線 role で
+部分進行と iPhone の明示 End まで確認した。B3 の完走、その他の BLE 組み合わせ、
+WAN なし LAN、3〜4 台、未試験の異常系、OS 資源の全解放、消費電力、
 release 配布 / install size は未実施。利用者から通常の Wi-Fi のみ利用可能と回答があり、
-WAN を切った実機 LAN gate は満たしていない。
+現在は両端末を同じ通常 Wi-Fi へ接続する依頼への回答待ち。WAN を切った実機 LAN gate は
+満たしていない。通常 Wi-Fi での試験を実施しても、WAN なし条件の代用にはしない。
 端末所有者の個人名、serial / UDID、Wi-Fi 名、開発 Team ID、証明書 ID は記録しない。

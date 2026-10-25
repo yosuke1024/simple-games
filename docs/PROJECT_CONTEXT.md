@@ -142,8 +142,11 @@ Design philosophy:
 同一 Wi-Fi の 2 台を優先する。現在の実装対象は `apps/simple-games/prototypes/nearby/` の
 別アプリ(`com.pixapps.nearbypoc`)だけで、製品の UI・権限・依存には導入しない。
 Web は非対応。Pixel 9 Pro / iPhone 11 の BLE 発見・相互確認・1 KB の双方向通信、
-Yacht の 24 手番完走と最終結果の一致を実機で確認した（1 局）。
-全更新の照合・LAN・サイズ・3〜4 台は検証中または未実施。
+Yacht の 24 手番完走を実機で確認した（iPhone advertise のまま game host を交替し各 1 局）。
+各局の公開 DOM 盤面 121 / 121 件と最終結果が一致した。再戦開始、Android の対局中
+background による両者終了と自動再開なしも確認。逆の無線 role（Android advertise）でも
+接続・双方向 ping・手番をまたぐ部分進行・iPhone の明示 End を確認した（未完走）。
+LAN・サイズ・3〜4 台は未実施。
 Phase 0 は原則・資料調査と一部端末の確認まで、Phase 1 は上記 2 台の BLE 試験中、
 Phase 2 はデモ段階であり、Epic は未完了。
 正本: `PRODUCT_PRINCIPLES.md`「Nearby Multiplayer」、`architecture/nearby-multiplayer.md`。

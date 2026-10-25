@@ -93,8 +93,13 @@ Core の任意のオフライン対戦として、本人が開始した探索・
 現在は `apps/simple-games/prototypes/nearby/` の別アプリ(`com.pixapps.nearbypoc`)だけで、
 製品のネットワーク権限・実行経路は変更しない。PoC は盤面・手番・点数を一時的に交換し、
 保存・統計・バックアップ・Club 送信を行わない。Web へ通信コード・権限・案内を加えない。
-Pixel 9 Pro / iPhone 11 では機内モード ON・Bluetooth ON・Wi-Fi OFF で BLE 接続と
-双方向通信を確認した。条件と観測範囲は作業記録を参照する。インターネット向け通信の
+Pixel 9 Pro / iPhone 11 では機内モード ON・Bluetooth ON・Wi-Fi OFF で BLE 接続・
+双方向通信と Yacht の完走を確認した（iPhone advertise、game host を交替し各 1 局）。
+回収した公開 DOM 盤面は各局 121 件が一致。再戦開始後に Android を background へ移し、
+両端末の session 終了と Android の前面復帰時の自動再開なしも確認した。
+Android advertise / iPhone browse でも双方向通信と手番をまたぐ部分進行、iPhone の
+明示 End による両者終了を確認した。この向きの一局完走は未実施。
+条件と観測範囲は作業記録を参照する。インターネット向け通信の
 計測、LAN、他の組み合わせ、電池負担は未検証である。
 
 ## ネットワーク権限の用途(これ以外に使わない)
