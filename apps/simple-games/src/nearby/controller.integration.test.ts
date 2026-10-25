@@ -85,20 +85,44 @@ async function until(condition: () => boolean, deliver: () => void = () => {}) {
   }
 }
 
-async function pair(chatEnabled = true, adapter?: GameAdapter) {
+async function pair(chatEnabled = true, adapter?: GameAdapter, globalDiscovery = false) {
   const a = native();
   const b = native();
   const host = controller(true, a.plugin, chatEnabled, adapter);
-  const guest = controller(false, b.plugin, true, adapter);
+  const guest = globalDiscovery
+    ? new NearbyController(
+        {
+          host: false,
+          name: '',
+          public: false,
+          chatEnabled: false,
+          gameId: null,
+          transport: 'ble',
+        },
+        () => {},
+        b.plugin,
+      )
+    : controller(false, b.plugin, true, adapter);
+  if (globalDiscovery) controllers.push(guest);
   const deliver = () => {
     while (a.frames.length) b.emit({ type: 'data', data: a.frames.shift()! });
     while (b.frames.length) a.emit({ type: 'data', data: b.frames.shift()! });
   };
   const pump = (condition: () => boolean) => until(condition, deliver);
   await Promise.all([host.start(), guest.start()]);
-  b.emit({ type: 'peer', id: 'host', name: host.label });
+  b.emit({
+    type: 'peer',
+    id: 'host',
+    name: host.label,
+    listing: vi.mocked(a.plugin.start).mock.calls[0]![0].listing,
+  });
   await until(() => guest.peers.length === 1);
-  await guest.connect('host');
+  if (globalDiscovery) {
+    expect(guest.session).toBeNull();
+    expect(await guest.connectToGame('host', 'Guest', adapter!)).toBe(true);
+    expect(b.plugin.start).toHaveBeenCalledTimes(1);
+    expect(b.plugin.stop).not.toHaveBeenCalled();
+  } else await guest.connect('host');
   a.emit({ type: 'connected' });
   b.emit({ type: 'connected' });
   await pump(() => !!host.session?.peerName && !!guest.session?.peerName);
@@ -132,12 +156,12 @@ afterEach(async () => {
 });
 
 describe('nearby controller with the real encrypted channel', () => {
-  it('resumes a private-hand game after a lost guest command without redealing or replacing either projection', async () => {
+  it('selects a private-hand game from global discovery, then resumes a lost guest command without redealing or replacing either projection', async () => {
     // Dealer zero makes the guest act first; all shuffling remains host-owned.
     const create = vi.fn(() => ginAdapter.create(() => 0.25));
     const adapter: GameAdapter = { ...ginAdapter, create };
-    const { a, b, host, guest, pump, drain } = await pair(false, adapter);
-    expect(host.label).toMatch(/^P-06[A-F0-9]{4}$/);
+    const { a, b, host, guest, pump, drain } = await pair(false, adapter, true);
+    expect(host.label).toMatch(/^P-86[A-F0-9]{4}$/);
     expect(host.session!.gameId).toBe('gin-rummy');
     expect(guest.session!.gameId).toBe('gin-rummy');
     // Possessing a private game channel never implies host approval.
@@ -171,8 +195,12 @@ describe('nearby controller with the real encrypted channel', () => {
         vi.mocked(a.plugin.start).mock.calls.length === 2 &&
         vi.mocked(b.plugin.start).mock.calls.length === 2,
     );
+    expect(vi.mocked(a.plugin.start).mock.calls[0]![0].listing).toBeTypeOf('string');
+    expect(vi.mocked(a.plugin.start).mock.calls[1]![0]).toMatchObject({ resume: true });
+    expect(vi.mocked(a.plugin.start).mock.calls[1]![0].listing).toBeUndefined();
+    expect(vi.mocked(b.plugin.start).mock.calls.every(([v]) => v.listing === undefined)).toBe(true);
     // Metadata for another game's room must not start a recovery connection.
-    b.emit({ type: 'peer', id: 'wrong-game', name: host.label.replace('P-06', 'P-01') });
+    b.emit({ type: 'peer', id: 'wrong-game', name: host.label.replace('P-86', 'P-81') });
     await nextTurn();
     expect(b.plugin.connect).toHaveBeenCalledTimes(1);
     b.emit({ type: 'peer', id: 'same-room-new-address', name: host.label });

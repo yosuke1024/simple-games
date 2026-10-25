@@ -2,6 +2,13 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const ko: NearbyMessages = {
+  browseHint: '지원하는 게임을 모집 중인 사람을 찾아보세요. 호스트와 같은 연결 방법을 선택하세요.',
+  chooseConnection: '연결 방법',
+  stopSearch: '검색 중지',
+  listingUnavailable: '더 이상 참여할 수 없는 모임입니다. 돌아가서 다른 모임을 찾아보세요.',
+  hostNameHint:
+    '최대 24자. 모집 중에는 이름과 게임이 주변 사람의 목록에 표시됩니다. 친구와 플레이할 때도 같습니다.',
+
   playerTurn: '{name}의 차례',
   playTogether: '다른 사람과 플레이',
   closeChat: '채팅 닫기',

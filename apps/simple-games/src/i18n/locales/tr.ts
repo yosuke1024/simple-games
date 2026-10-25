@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const tr: Messages = {
+  findNearbyOpponents: 'Yakındaki rakipleri bul',
+  findNearbyOpponentsNote: 'Bluetooth veya aynı Wi-Fi · oyunlar arasında',
+
   playTogether: 'Biriyle oyna',
   returnToTogether: 'Birlikte oyuna dön',
   playTogetherNote: 'Bir maç için yakındaki biriyle bağlan.',

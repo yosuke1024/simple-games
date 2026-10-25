@@ -2,6 +2,13 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const zhHans: NearbyMessages = {
+  browseHint: '无需先选游戏，即可寻找正在招募玩家的人。请选择与房主相同的连接方式。',
+  chooseConnection: '连接方式',
+  stopSearch: '停止查找',
+  listingUnavailable: '目前无法加入此房间，请返回查找其他房间。',
+  hostNameHint:
+    '最多24个字符。招募期间，你的名字和游戏会显示在附近用户的列表中，选择与朋友玩时也一样。',
+
   playerTurn: '轮到 {name}',
   playTogether: '与他人同玩',
   closeChat: '关闭聊天',

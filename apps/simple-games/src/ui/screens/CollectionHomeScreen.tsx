@@ -70,6 +70,7 @@ import { useSettings } from '../../state/SettingsContext';
 import { BrandFooter } from '../components/BrandFooter';
 import { GameActionSheet } from '../components/GameActionSheet';
 import { GameTile } from '../components/GameTile';
+import { FindOpponentButton } from '../components/FindOpponentButton';
 import { IconBack, IconChevronRight, IconGear, IconSearch } from '../components/icons';
 import { GameBetaBadge } from '../components/GameBetaBadge';
 import { WebAdSlot } from '../components/WebAdSlot';
@@ -291,6 +292,8 @@ function GameButton({ game, className, onOpen, onMenu, children }: GameButtonPro
 export interface CollectionHomeScreenProps {
   onOpenGame: (gameId: GameId) => void;
   onOpenSettings: () => void;
+  onFindOpponent?: () => void;
+  nearbyActive?: boolean;
   /**
    * How to close the review question, for as long as the shell has one on
    * screen over this home (app/App.tsx, docs/REVIEW_PROMPT_POLICY.md); `null`
@@ -315,6 +318,8 @@ export interface CollectionHomeScreenProps {
 export function CollectionHomeScreen({
   onOpenGame,
   onOpenSettings,
+  onFindOpponent,
+  nearbyActive = false,
   dismissReviewPrompt,
   onOpenClub,
   clubConnections,
@@ -770,6 +775,8 @@ export function CollectionHomeScreen({
               <span className="home-play-together-body">{t('playTogetherBody')}</span>
             </button>
           )}
+
+          <FindOpponentButton onFindOpponent={onFindOpponent} active={nearbyActive} />
 
           {/* One landmark for the whole list, headed sections inside: six category
               navs would drown the landmark list, while the headings still let a

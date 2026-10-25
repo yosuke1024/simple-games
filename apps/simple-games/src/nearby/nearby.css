@@ -250,3 +250,11 @@
   gap: 16px;
   min-width: 0;
 }
+.nearby-join-form {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.nearby-listings {
+  padding: 0;
+}

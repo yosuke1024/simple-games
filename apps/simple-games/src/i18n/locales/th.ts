@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const th: Messages = {
+  findNearbyOpponents: 'ค้นหาคู่แข่งใกล้ตัว',
+  findNearbyOpponentsNote: 'Bluetooth หรือ Wi-Fi เดียวกัน · ค้นหาข้ามเกม',
+
   playTogether: 'เล่นกับคนอื่น',
   returnToTogether: 'กลับไปเล่นด้วยกัน',
   playTogetherNote: 'เชื่อมต่อกับคนที่อยู่ใกล้เพื่อแข่งขัน',

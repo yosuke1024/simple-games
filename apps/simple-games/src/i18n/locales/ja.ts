@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const ja: Messages = {
+  findNearbyOpponents: '近くの対戦相手を探す',
+  findNearbyOpponentsNote: 'Bluetooth・同じWi-Fiで対戦',
+
   playTogether: '誰かと遊ぶ',
   returnToTogether: '対戦に戻る',
   playTogetherNote: '近くの人と接続して対戦',

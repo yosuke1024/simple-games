@@ -2,7 +2,8 @@ import { registerPlugin, type PluginListenerHandle } from '@capacitor/core';
 
 export type Transport = 'ble' | 'lan';
 export type NativeEvent =
-  | { type: 'peer'; id: string; name: string }
+  | { type: 'peer'; id: string; name: string; listing?: string }
+  | { type: 'peerLost'; id: string }
   | { type: 'connected' }
   | { type: 'lifecycle'; active: boolean }
   | { type: 'data'; data: string }
@@ -16,6 +17,7 @@ export interface NearbyPlugin {
     role: 'advertise' | 'browse';
     label: string;
     resume?: boolean;
+    listing?: string;
   }): Promise<void>;
   connect(options: { peerId: string }): Promise<void>;
   send(options: { data: string }): Promise<void>;

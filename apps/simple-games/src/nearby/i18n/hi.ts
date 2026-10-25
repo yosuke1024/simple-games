@@ -2,6 +2,14 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const hi: NearbyMessages = {
+  browseHint:
+    'किसी भी समर्थित गेम की मेज़बानी कर रहे लोगों को खोजें। मेज़बान वाला कनेक्शन विकल्प चुनें।',
+  chooseConnection: 'कनेक्शन का तरीका',
+  stopSearch: 'खोजना बंद करें',
+  listingUnavailable: 'यह समूह अब उपलब्ध नहीं है। वापस जाकर दूसरा समूह खोजें।',
+  hostNameHint:
+    'अधिकतम 24 अक्षर। मेज़बानी करते समय आपका नाम और गेम आसपास के लोगों को दिखते हैं, दोस्तों के साथ खेलते समय भी।',
+
   playerTurn: '{name} की बारी',
   playTogether: 'किसी के साथ खेलें',
   closeChat: 'चैट बंद करें',

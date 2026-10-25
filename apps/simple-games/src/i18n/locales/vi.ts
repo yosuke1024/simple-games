@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const vi: Messages = {
+  findNearbyOpponents: 'Tìm đối thủ ở gần',
+  findNearbyOpponentsNote: 'Bluetooth hoặc cùng Wi-Fi · tìm qua các trò chơi',
+
   playTogether: 'Chơi cùng người khác',
   returnToTogether: 'Trở lại chơi cùng nhau',
   playTogetherNote: 'Kết nối với người ở gần để thi đấu.',

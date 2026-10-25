@@ -2,6 +2,14 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const th: NearbyMessages = {
+  browseHint:
+    'ค้นหาคนที่กำลังเปิดรับผู้เล่นในเกมที่รองรับ เลือกวิธีเชื่อมต่อแบบเดียวกับเจ้าของห้อง',
+  chooseConnection: 'วิธีเชื่อมต่อ',
+  stopSearch: 'หยุดค้นหา',
+  listingUnavailable: 'ห้องนี้ไม่พร้อมให้เข้าร่วมแล้ว กลับไปค้นหาห้องอื่น',
+  hostNameHint:
+    'สูงสุด 24 ตัวอักษร ระหว่างเปิดรับผู้เล่น ชื่อและเกมของคุณจะปรากฏแก่คนใกล้ตัว แม้เลือกเล่นกับเพื่อนก็ตาม',
+
   playerTurn: 'ตาของ {name}',
   playTogether: 'เล่นกับคนอื่น',
   closeChat: 'ปิดแชต',

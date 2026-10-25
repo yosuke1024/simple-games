@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const zhHans: Messages = {
+  findNearbyOpponents: '寻找附近的对手',
+  findNearbyOpponentsNote: '蓝牙或同一 Wi-Fi · 跨游戏查找',
+
   playTogether: '和他人一起玩',
   returnToTogether: '返回对战',
   playTogetherNote: '连接附近的人，一起对战。',

@@ -143,9 +143,12 @@ Design philosophy:
 
 2026-10-25、オーナーが製品実装を指示し、1.5.1 の実機フィードバック後に入口を改定。
 native の対応ゲームのトップに **「誰かと遊ぶ」** を置き、近くの相手と Bluetooth／同一 Wi-Fi で
-遊ぶことを短く補足する。対応は1対1ターン制の13本（Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim）。コレクションの独立した Nearby 入口は
-削除し、Club House からも開始しない。他ゲームに未実装のボタンを置かない。
+遊ぶことを短く補足する。対応は1対1ターン制の13本（Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim）。コレクションには参加専用の「近くの対戦相手を探す」を置き、ゲーム未選択のまま全13本の募集を横断して探せる。
+入口はClub House直下に、Club Houseと同程度の控えめなテキスト行として配置する。
+募集作成は各ゲームのトップから行い、Club House からは開始しない。他ゲームに未実装のボタンを置かない。
 ゲーム選択済み → 募集／参加 → host承認 → 双方Ready → 各ゲームの既存CPU戦と共通の盤面・操作で対局。
+全体探索は Bluetooth／同一Wi-Fi 選択 → 明示探索 → 募集者名＋ゲーム名の一覧 → 募集選択 →
+自分の表示名で参加 → host承認 → 双方Ready → そのゲーム、の順。募集者名は接続前の近隣一覧に公開されることを開始前に説明する。
 初回に同じゲームをもう一度提案する操作は求めない。接続を画面から分離し、ゲームトップへ
 戻っても保持する。同じ入口から進行中の対戦へ戻れ、明示的な退出／解散で接続を終える。
 終局後は結果と再戦を主にし、双方Readyで再戦する。募集時にhostがチャットの有無を選び、
@@ -157,7 +160,7 @@ native の対応ゲームのトップに **「誰かと遊ぶ」** を置き、�
 自由な参加コメントは無し。チャットと対局履歴は各参加端末だけに残し、退出で消さない。
 履歴から再接続せず、Club・アプリバックアップ・OSバックアップへ運ばない。
 製品は `src/nearby/`、PoC は引き続き `prototypes/nearby/` に分離。近隣対戦の実行は native 限定。
-Web の対応13本のトップには無効な「誰かと遊ぶ」ボタンと「アプリ専用の機能です」を表示する
+Web のコレクションには無効な「近くの対戦相手を探す」、対応13本のトップには無効な「誰かと遊ぶ」ボタンと「アプリ専用の機能です」を表示する
 （英語は “Play with someone” / “Available in the app only.”）。押して接続画面へ進む操作は無く、
 Web に Nearby の実行コード・探索・権限要求・接続・履歴読取を追加しない。ソロ / CPU 戦は従来どおり提供する。
 旧 wire v2 PoC では Pixel 9 Pro / iPhone 11 の BLE 両方向と通常 LAN の各1局を完走した。

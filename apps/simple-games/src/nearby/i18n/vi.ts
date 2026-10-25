@@ -2,6 +2,14 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const vi: NearbyMessages = {
+  browseHint:
+    'Tìm người đang mở phòng cho các trò chơi được hỗ trợ. Chọn cùng cách kết nối với chủ phòng.',
+  chooseConnection: 'Kết nối bằng',
+  stopSearch: 'Dừng tìm kiếm',
+  listingUnavailable: 'Phòng này không còn khả dụng. Quay lại để tìm phòng khác.',
+  hostNameHint:
+    'Tối đa 24 ký tự. Khi mở phòng, tên và trò chơi của bạn sẽ hiển thị cho người ở gần, kể cả khi chơi với bạn bè.',
+
   playerTurn: 'Lượt của {name}',
   playTogether: 'Chơi cùng người khác',
   closeChat: 'Đóng trò chuyện',

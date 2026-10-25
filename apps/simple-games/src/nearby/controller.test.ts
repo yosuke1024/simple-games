@@ -2,6 +2,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NativeEvent, NearbyPlugin } from './native';
 import { NearbyController } from './controller';
 import { loadHistory } from './history';
+import { serializeListing } from './discovery';
+import { adapter as nimAdapter } from './games/nim';
+import { adapter as yachtAdapter } from './games/yacht';
+import { NEARBY_GAME_CODES } from '../app/nearbyGameIds';
+import { metadataGameCode } from './discovery';
+import type { NearbyGameId } from './gameTypes';
 
 // Channel crypto is tested separately with actual WebCrypto. This synchronous
 // channel seam makes lost-ACK and lifecycle timers deterministic.
@@ -51,7 +57,7 @@ function native() {
         },
       };
     },
-    readHistory: async () => ({ data }),
+    readHistory: vi.fn(async () => ({ data })),
     writeHistory: async (v) => {
       data = v.data;
     },
@@ -98,6 +104,274 @@ afterEach(async () => {
   await Promise.all(closing);
   vi.useRealTimers();
 });
+
+function browser(p: ReturnType<typeof native>) {
+  return create(
+    { host: false, name: '', public: false, chatEnabled: false, gameId: null, transport: 'ble' },
+    () => {},
+    p.plugin,
+  );
+}
+
+function advertise(
+  p: ReturnType<typeof native>,
+  id = 'host',
+  gameId: NearbyGameId = 'nim',
+  name = 'Pixel',
+) {
+  const label = `P-${metadataGameCode(gameId)}1234`;
+  p.event({ type: 'peer', id, name: label, listing: serializeListing(label, name, gameId)! });
+}
+
+describe('nearby all-game discovery handoff', () => {
+  it('lists compatible metadata across all games without opening storage, a channel, or a session', async () => {
+    const p = native();
+    const c = browser(p);
+    await c.start();
+    for (const gameId of Object.keys(NEARBY_GAME_CODES) as NearbyGameId[])
+      advertise(p, gameId, gameId);
+    p.event({ type: 'peer', id: 'legacy', name: 'P-011234' });
+    p.event({ type: 'peer', id: 'occupied', name: 'P-811234' });
+    p.event({ type: 'peer', id: 'broken', name: 'P-811234', listing: '{' });
+    p.event({
+      type: 'peer',
+      id: 'wrong-version',
+      name: 'P-811234',
+      listing: JSON.stringify({
+        v: 1,
+        label: 'P-811234',
+        name: 'Old',
+        gameId: 'yacht',
+        protocol: 5,
+        available: true,
+      }),
+    });
+    await settle();
+    expect(c.peers.map((p) => p.gameId)).toEqual(Object.keys(NEARBY_GAME_CODES));
+    expect(c.peers.every((p) => p.hostName === 'Pixel')).toBe(true);
+    expect(c.gameId).toBeNull();
+    expect(c.session).toBeNull();
+    expect(p.plugin.readHistory).not.toHaveBeenCalled();
+    expect(p.frames).toEqual([]);
+    expect(p.plugin.start).toHaveBeenCalledExactlyOnceWith({
+      role: 'browse',
+      label: 'F-000000',
+      transport: 'ble',
+    });
+    p.event({ type: 'peerLost', id: 'nim' });
+    expect(c.peers).toHaveLength(12);
+    advertise(p, 'yacht', 'yacht', 'New name');
+    expect(c.peers.find((p) => p.id === 'yacht')?.hostName).toBe('New name');
+    p.event({ type: 'peer', id: 'yacht', name: 'P-811234', listing: '{}' });
+    expect(c.peers.some((p) => p.id === 'yacht')).toBe(false);
+  });
+
+  it('promotes the selected scan to its game, then requires host approval and both Ready', async () => {
+    const a = native(),
+      b = native();
+    const host = create(
+      {
+        host: true,
+        name: 'Pixel',
+        public: true,
+        chatEnabled: false,
+        gameId: 'nim',
+        transport: 'ble',
+      },
+      () => {},
+      a.plugin,
+      nimAdapter,
+    );
+    const guest = browser(b);
+    await Promise.all([host.start(), guest.start()]);
+    const listing = vi.mocked(a.plugin.start).mock.calls[0]![0].listing;
+    b.event({ type: 'peer', id: 'host', name: host.label, listing });
+    expect(await guest.connectToGame('host', 'iPhone', nimAdapter)).toBe(true);
+    expect(guest.setup).toMatchObject({ name: 'iPhone', gameId: 'nim', host: false });
+    expect(guest.session?.gameId).toBe('nim');
+    expect(b.plugin.start).toHaveBeenCalledTimes(1);
+    expect(b.plugin.stop).not.toHaveBeenCalled();
+    expect(b.plugin.connect).toHaveBeenCalledExactlyOnceWith({ peerId: 'host' });
+    a.event({ type: 'connected' });
+    b.event({ type: 'connected' });
+    const pump = async () => {
+      for (let i = 0; i < 10; i++) {
+        await settle();
+        while (a.frames.length) b.event({ type: 'data', data: a.frames.shift()! });
+        while (b.frames.length) a.event({ type: 'data', data: b.frames.shift()! });
+      }
+      await settle();
+    };
+    await pump();
+    expect(guest.session?.peerName).toBe('Pixel');
+    expect(guest.state).toBe('connecting');
+    expect(guest.gathering).toBeNull();
+    guest.session!.ready();
+    expect(guest.session!.match).toBeNull();
+    host.session!.approve();
+    await pump();
+    expect(guest.state).toBe('room');
+    guest.session!.proposeGame();
+    await pump();
+    guest.session!.ready();
+    await pump();
+    expect(guest.session!.match).toBeNull();
+    host.session!.ready();
+    await pump();
+    expect(guest.session!.match?.gameId).toBe('nim');
+    expect(host.session!.pending).toBe(false);
+  });
+
+  it.each(['adapter', 'lost', 'name'] as const)(
+    'rejects a stale/invalid selection before storage or connection: %s',
+    async (failure) => {
+      const p = native();
+      const c = browser(p);
+      await c.start();
+      advertise(p);
+      if (failure === 'lost') p.event({ type: 'peerLost', id: 'host' });
+      expect(
+        await c.connectToGame(
+          'host',
+          failure === 'name' ? ' invalid' : 'Guest',
+          failure === 'adapter' ? yachtAdapter : nimAdapter,
+        ),
+      ).toBe(false);
+      expect(c.state).toBe('ended');
+      expect(c.reason).toBe('connectionError');
+      expect(p.plugin.connect).not.toHaveBeenCalled();
+      expect(p.plugin.readHistory).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['lost', 'changed', 'stop'] as const)(
+    'does not connect after selection becomes invalid while storage loads: %s',
+    async (failure) => {
+      const p = native();
+      const c = browser(p);
+      await c.start();
+      advertise(p);
+      let finish!: (value: { data: null }) => void;
+      p.plugin.readHistory = vi.fn(
+        () =>
+          new Promise<{ data: null }>((resolve) => {
+            finish = resolve;
+          }),
+      );
+      const pending = c.connectToGame('host', 'Guest', nimAdapter);
+      await settle();
+      if (failure === 'lost') p.event({ type: 'peerLost', id: 'host' });
+      else if (failure === 'changed') advertise(p, 'host', 'nim', 'Someone else');
+      else await c.stop();
+      finish({ data: null });
+      expect(await pending).toBe(false);
+      expect(c.state).toBe('ended');
+      expect(c.session).toBeNull();
+      expect(p.plugin.connect).not.toHaveBeenCalled();
+    },
+  );
+
+  it('ignores disappearance of an advertisement once the selected native connection has begun', async () => {
+    const p = native();
+    const c = browser(p);
+    await c.start();
+    advertise(p);
+    let finish!: () => void;
+    p.plugin.connect = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const pending = c.connectToGame('host', 'Guest', nimAdapter);
+    await settle();
+    p.event({ type: 'peerLost', id: 'host' });
+    finish();
+    expect(await pending).toBe(true);
+    expect(c.state).toBe('connecting');
+    expect(p.plugin.stop).not.toHaveBeenCalled();
+  });
+
+  it('does not let a stopped selection close a newer scan after its history request resolves', async () => {
+    const p = native();
+    const old = browser(p);
+    await old.start();
+    advertise(p);
+    let finish!: (value: { data: null }) => void;
+    p.plugin.readHistory = vi.fn(
+      () =>
+        new Promise<{ data: null }>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const pending = old.connectToGame('host', 'Guest', nimAdapter);
+    await settle();
+    await old.stop();
+    const next = browser(p);
+    await next.start();
+    const stopped = vi.mocked(p.plugin.stop).mock.calls.length;
+    finish({ data: null });
+    expect(await pending).toBe(false);
+    expect(p.plugin.stop).toHaveBeenCalledTimes(stopped);
+    expect(next.state).toBe('discovering');
+    expect(p.plugin.connect).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])(
+    'closes a selected-name mismatch before admission/history (global=%s)',
+    async (global) => {
+      const a = native(),
+        b = native();
+      const host = create(
+        {
+          host: true,
+          name: 'Real name',
+          public: true,
+          chatEnabled: false,
+          gameId: 'yacht',
+          transport: 'ble',
+        },
+        () => {},
+        a.plugin,
+      );
+      const guest = global
+        ? browser(b)
+        : create(
+            {
+              host: false,
+              name: 'Guest',
+              public: false,
+              chatEnabled: false,
+              gameId: 'yacht',
+              transport: 'ble',
+            },
+            () => {},
+            b.plugin,
+          );
+      await Promise.all([host.start(), guest.start()]);
+      b.event({
+        type: 'peer',
+        id: 'host',
+        name: host.label,
+        listing: serializeListing(host.label, 'Other name', 'yacht')!,
+      });
+      if (global) expect(await guest.connectToGame('host', 'Guest', yachtAdapter)).toBe(true);
+      else await guest.connect('host');
+      a.event({ type: 'connected' });
+      b.event({ type: 'connected' });
+      for (let i = 0; i < 10; i++) {
+        await settle();
+        while (a.frames.length) b.event({ type: 'data', data: a.frames.shift()! });
+        while (b.frames.length) a.event({ type: 'data', data: b.frames.shift()! });
+      }
+      await settle();
+      expect(guest.state).toBe('ended');
+      expect(guest.reason).toBe('connectionError');
+      expect(guest.gathering).toBeNull();
+      expect(guest.session!.paired).toBe(false);
+    },
+  );
+});
 describe('nearby lifecycle and persistence', () => {
   it('filters discovery by the selected game and never connects an unlisted peer', async () => {
     const p = native();
@@ -117,8 +391,14 @@ describe('nearby lifecycle and persistence', () => {
     p.event({ type: 'peer', id: 'other-game', name: 'P-0A1234' });
     p.event({ type: 'peer', id: 'old-label', name: 'Nearby Play' });
     p.event({ type: 'peer', id: 'same-game', name: 'F-01ABCD' });
+    advertise(p, 'current-game', 'yacht');
+    p.event({ type: 'peer', id: 'occupied', name: 'P-811234' });
+    p.event({ type: 'peer', id: 'invalid-metadata', name: 'P-811234', listing: '{}' });
     await settle();
-    expect(controller.peers).toEqual([{ id: 'same-game', name: 'F-01ABCD' }]);
+    expect(controller.peers).toEqual([
+      { id: 'same-game', name: 'F-01ABCD', gameId: 'yacht' },
+      { id: 'current-game', name: 'P-811234', gameId: 'yacht', hostName: 'Pixel' },
+    ]);
     await controller.connect('other-game');
     expect(p.plugin.connect).not.toHaveBeenCalled();
     await controller.connect('same-game');

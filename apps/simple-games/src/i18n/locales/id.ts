@@ -1,6 +1,9 @@
 import type { Messages } from './en';
 
 export const id: Messages = {
+  findNearbyOpponents: 'Cari lawan di sekitar',
+  findNearbyOpponentsNote: 'Bluetooth atau Wi-Fi yang sama · lintas game',
+
   playTogether: 'Main bersama',
   returnToTogether: 'Kembali bermain bersama',
   playTogetherNote: 'Terhubung dengan orang di dekat Anda untuk bertanding.',

@@ -83,6 +83,15 @@ public class NearbyPlayPlugin extends Plugin {
             !DiscoveryLabel.valid(label)) {
             call.reject("transport, role and a P-/F- label with six hex digits are required"); return;
         }
+        try {
+            String listing = call.getString("listing");
+            if (call.getData().has("listing") && listing == null) throw new IllegalArgumentException("Listing must be text");
+            if (listing != null && (!"advertise".equals(role) || Boolean.TRUE.equals(call.getBoolean("resume", false))))
+                throw new IllegalArgumentException("Only an initial host can publish a listing");
+            if (listing != null && !DiscoveryLabel.metadataCapable(label))
+                throw new IllegalArgumentException("Listing requires a metadata-capable game label");
+            ListingPayload.encode(listing, "lan".equals(kind) ? ListingPayload.MAX_TXT_BYTES : ListingPayload.MAX_BYTES);
+        } catch (IllegalArgumentException error) { call.reject(error.getMessage()); return; }
         pendingStart = call;
         ArrayList<String> aliases = new ArrayList<>();
         if ("ble".equals(kind)) {
@@ -130,7 +139,11 @@ public class NearbyPlayPlugin extends Plugin {
                 Runnable guarded = () -> { if (generation == epoch && transport != null) action.run(); };
                 if (Looper.myLooper() == Looper.getMainLooper()) guarded.run(); else main.post(guarded);
             }
-            public void peer(String id, String name) { active(() -> event("peer", "id", id, "name", name)); }
+            public void peer(String id, String name, String listing) { active(() -> {
+                if (listing == null) event("peer", "id", id, "name", name);
+                else event("peer", "id", id, "name", name, "listing", listing);
+            }); }
+            public void peerLost(String id) { active(() -> event("peerLost", "id", id)); }
             public void connected() { active(() -> event("connected")); }
             public void status(String message) { active(() -> event("status", "message", message)); }
             public void data(String data) { active(() -> {
@@ -143,7 +156,9 @@ public class NearbyPlayPlugin extends Plugin {
             transport = "ble".equals(call.getString("transport"))
                 ? new BleTransport(getContext().getApplicationContext(), events)
                 : new LanTransport(getContext().getApplicationContext(), events);
-            transport.start("advertise".equals(call.getString("role")), call.getString("label"));
+            transport.start("advertise".equals(call.getString("role")), call.getString("label"),
+                ListingPayload.encode(call.getString("listing"), "lan".equals(call.getString("transport"))
+                    ? ListingPayload.MAX_TXT_BYTES : ListingPayload.MAX_BYTES));
             // Still in the foreground start call. Failed radio preflight must not flash a
             // service notification on each retry while Bluetooth or Wi-Fi is switched off.
             serviceLease = NearbyConnectionService.retain(getContext().getApplicationContext(), () -> {

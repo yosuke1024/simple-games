@@ -2,6 +2,15 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const fr: NearbyMessages = {
+  browseHint:
+    'Trouvez des personnes proposant un jeu compatible. Choisissez le même type de connexion que l’hôte.',
+  chooseConnection: 'Connexion par',
+  stopSearch: 'Arrêter la recherche',
+  listingUnavailable:
+    'Ce groupe n’est plus disponible. Revenez en arrière pour en trouver un autre.',
+  hostNameHint:
+    '24 caractères maximum. Lorsque vous proposez une partie, votre nom et le jeu sont visibles à proximité, même pour une partie entre amis.',
+
   playerTurn: 'Au tour de {name}',
   playTogether: 'Jouer avec quelqu’un',
   closeChat: 'Fermer le chat',

@@ -2,6 +2,14 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const id: NearbyMessages = {
+  browseHint:
+    'Cari orang yang menjadi tuan rumah game yang didukung. Pilih koneksi yang sama dengan tuan rumah.',
+  chooseConnection: 'Hubungkan melalui',
+  stopSearch: 'Berhenti mencari',
+  listingUnavailable: 'Pertemuan ini tidak lagi tersedia. Kembali untuk mencari yang lain.',
+  hostNameHint:
+    'Maksimal 24 karakter. Saat menjadi tuan rumah, nama dan game Anda terlihat oleh orang di sekitar, termasuk saat bermain dengan teman.',
+
   playerTurn: 'Giliran {name}',
   playTogether: 'Bermain dengan seseorang',
   closeChat: 'Tutup chat',

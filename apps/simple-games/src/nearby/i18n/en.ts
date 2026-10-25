@@ -1,4 +1,12 @@
 export const en = {
+  browseHint:
+    'Find people hosting any supported game. Choose the same connection option as the host.',
+  chooseConnection: 'Connect using',
+  stopSearch: 'Stop searching',
+  listingUnavailable: 'This gathering is no longer available. Go back to find another.',
+  hostNameHint:
+    'Up to 24 characters. While hosting, your name and game are visible to people nearby, including when playing with friends.',
+
   playerTurn: '{name}’s turn',
   playTogether: 'Play with someone',
   closeChat: 'Close chat',
