@@ -23,25 +23,19 @@ Club House への加入・結果送信とは独立する。Web は対象外。
 
 最初の範囲は **2 台の発見・相互確認・双方向メッセージと Yacht のデモ**である。
 3〜4 台、他のゲーム、秘密手札、途中復帰、host 移譲、BLE / LAN 間の自動移行は範囲外。
-Pixel 9 Pro / iPhone 11 の BLE 発見・相互確認・1 KB の双方向通信と、Yacht の
-24 手番完走を実機で確認した（iPhone advertise のまま game host を交替し各 1 局）。
-各局の公開 DOM 盤面 121 / 121 件と最終結果が一致。双方 Ready による再戦開始、Android の
-対局中 background による両者終了と自動再開なしも確認した。Android advertise / iPhone browse
-では接続・双方向 ping・手番をまたぐ部分進行と iPhone の明示 End を確認した（未完走）。
-通常 Wi-Fi の LAN でも通信 role / game host を交替して各 1 局を完走し、それぞれ全 121 公開 DOM
-盤面と結果が一致した。iOS advertise の向きは Android の NSD 正規化修正後の結果である。
-L1 では iOS background による両者終了と復帰時の自動再開なしを確認したが、
-L2 後の Android Wi-Fi OFF では Android だけが終了し、iOS host は 60 秒以上 Confirmed / Roll
-enabled のままだった。v1 の host の状態送信に受領確認がない問題を v2 で修正した。
-WAN 遮断操作は行っておらず、WAN なし LAN 動作の実証にはしない。
-他の端末・OS 組み合わせ、WAN なし LAN、電池、配布サイズ、BLE での iOS 側 background と
-OS 資源の全解放は未確認。
-上記は wire v1 の実機結果である。状態 ACK を加える wire v2（`418bda04`）は 40 テスト・
-型検査・build に成功し、Android / iOS の新アプリを両端末へ導入した。通常 Wi-Fi の L3 で
-24 手番を完走し、全 121 公開 DOM 盤面が一致。再戦開始後、Android Wi-Fi OFF に続く iOS Roll で
-state ACK 待ちへ移り、操作を止めて 15,009 ms 後に終了した。Wi-Fi 復元後も両者の自動再開なし。
-これは次操作後の ACK timeout の 1 試行であり、無操作中の即時検知や初期 / 最終 ACK 欠落の
-実機確認ではない。v1 の完走を v2 の検証結果として転用しない。
+現行 wire v2（`418bda04`）は 40 テスト・型検査・build に成功し、Pixel 9 Pro / iPhone 11 へ
+導入した。BLE の iOS advertise / game host（B8）と Android advertise / game host（B9）、
+通常 Wi-Fi の LAN（L3）を各 1 局・24 手番完走し、各 121 公開 DOM 盤面と最終結果が一致。
+B9 は 32 対 32 の引き分けと、各方向 1 回の 1 KB ping も確認した。
+B8 の iOS background / 復帰、B9 の Android Bluetooth OFF / ON で両者の session が終了し、
+自動再開しなかった。B8 の Android の切断通知は即時ではなく、正確な切断遅延は未計測。
+L3 は Wi-Fi OFF 後の次の iOS Roll で state ACK 待ちへ移り、操作を止めて 15,009 ms 後に終了。
+これは次操作後の ACK timeout の 1 試行であり、無操作中の即時検知を保証しない。
+wire v1 の B1 / B2 / L1 / L2 の完走、B3 の部分試験、NSD / 状態 ACK の修正前の不具合は
+作業記録に保持し、v2 の証拠へ転用しない。
+LAN の WAN 遮断操作は行っていない。利用可能な実機は上記 2 台だけで、WAN を切れる router も
+用意できていない。他の端末・OS、同 OS、advertising 非対応、3〜4 台、WAN なし LAN は未実施。
+初期 / 最終 ACK 欠落、画面ロック、OS 資源の全解放、電池、配布サイズも未確認。
 実施条件と結果は作業記録を参照し、コードや自動テストの成功を実機成功と読み替えない。
 Epic #268 はこの PoC だけでは完了しない。
 

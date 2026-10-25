@@ -377,20 +377,16 @@ session の契約は [architecture/nearby-multiplayer.md](architecture/nearby-mu
   通信方式の自動切替は行わず、§8 の `yt.saveGame` を読み書きしない。
 - `yt.stats`、自己ベスト、レビュー依頼の計数、バックアップ、Club House の送信とランキングへ
   混ぜない。§12 の `standard` は従来の CPU 戦だけである。
-- Pixel 9 Pro / iPhone 11 の Bluetooth では iPhone を advertise に固定し、game host を
-  交替して各 1 局の 24 手番完了と最終結果一致を確認した。各局の公開 DOM 盤面も
-  121 / 121 件が一致。双方 Ready による再戦開始、Android の対局中 background による
-  両者終了と、Android 前面復帰時の自動再開なしも確認した。
-  Android advertise / iPhone browse の向きでは手番をまたぐ部分進行と iPhone の明示 End
-  による両者終了まで確認した。この向きの 24 手番完走は未実施。
-  通常 Wi-Fi の LAN でも通信 role / game host を交替して各 1 局を完走し、それぞれ全 121 公開 DOM
-  盤面と結果が一致。iOS advertise の向きは Android の NSD 正規化修正後の結果である。
-  L1 では iOS background による両者終了と復帰時の自動再開なしも確認した。
-  上記は wire v1 の記録。v2 は初期・途中・最終 state の ACK を待ち、
+- v2 は初期・途中・最終 state の ACK を待ち、
   host の未 ACK の勝敗 / 再戦は表示しない。guest は最終 state の受信・検証で結果を確定し、
-  両端末の同時確定は保証しない。v2 の L3 でも通常 Wi-Fi で 1 局・全 121 盤面一致と再戦開始を確認。
-  Android Wi-Fi OFF 後の次の iOS Roll では操作を止め、15,009 ms 後に ACK timeout で終了した。
-  初期 / 最終 ACK 欠落は実機未試験で、周期 heartbeat による無操作中の切断検知は追加しない。
-  WAN 遮断操作は行っておらず、WAN なし条件の実証にはしない。
+  両端末の同時確定は保証しない。周期 heartbeat による無操作中の切断検知は追加しない。
+- 現行 v2 の Pixel 9 Pro / iPhone 11 では BLE の両方向（B8 / B9）と通常 Wi-Fi の LAN（L3）を
+  各 24 手番完走し、各 121 公開 DOM 盤面と結果が一致した。B8 は 32 対 47・Pixel 勝利、
+  B9 は 32 対 32・引き分け。双方 Ready による再戦開始も確認した。
+  B8 の iOS background、B9 の Android Bluetooth OFF で両者が終了し、復帰 / 無線復元後も
+  自動再開なし。L3 は Wi-Fi OFF 後の次の host 操作から 15,009 ms 後に ACK timeout で終了した。
+  wire v1 の完走・B3 の部分試験・不具合の履歴は別に保持する。初期 / 最終 ACK 欠落、画面ロック、
+  OS 資源の全解放は実機未確認。追加端末と WAN を切れる router がなく、同 OS / 3〜4 人・
+  WAN なし LAN の試験は未実施。
   条件・範囲は [作業記録](plans/2026-10-25-nearby-multiplayer-poc.md)を参照する。
   WAN なし LAN、その他の接続中の異常系、3〜4 人、製品の多言語 UI、製品用の再戦導線は検証中または今後の段階である。

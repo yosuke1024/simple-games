@@ -131,7 +131,8 @@ only the host withholds that result pending ACK, so simultaneous finalization is
 not guaranteed. A duplicate command resends an already-acknowledged state with the
 same `stateSeq`; while pending it produces no additional response. The implementation
 passed 40 tests, typechecking, and builds, and is installed on both physical devices.
-The L3 LAN game and a mid-game state-ACK timeout have been verified on the two devices.
+Two BLE games with the radio/game-host roles swapped (B8/B9), the L3 LAN game,
+and a mid-game state-ACK timeout have been verified on the two devices.
 Physical trials that drop the initial or final state/ACK are still outstanding. With no heartbeat,
 silent loss during idle time is not immediately detectable: the bound starts when
 the next state is sent. Record idle behavior separately from the next-action timeout.
@@ -155,7 +156,8 @@ host swapped; two ordinary Wi-Fi LAN trials completed one game in each direction
 Each game matched all 121 recorded public DOM boards across both devices. The first
 LAN trial also confirmed session termination when iOS entered the background and no
 automatic restart on return. WAN was not disconnected for these trials: offline LAN
-acceptance, iOS background behavior over BLE, and the remaining matrix are still open.
+acceptance and the remaining matrix are still open. These were wire v1 trials;
+their records are kept separately from current wire v2 evidence.
 
 The reverse LAN direction initially failed Android's resolved-peer validation.
 Android commit `9b007638` fixes normalization of the leading-dot service type returned
@@ -173,6 +175,17 @@ Android Wi-Fi was disabled, the next iOS Roll waited for ACK, blocked Roll/Ready
 and ended the host session after 15,009 ms on the same device clock. Both devices
 stayed ended after Wi-Fi restoration. This verifies that next-action timeout in
 one LAN trial; it does not establish immediate idle detection or all failure cases.
+
+On the same wire v2 runtime, B8/B9 completed both BLE directions with 121 matching
+boards each; B9 also verified a 32–32 draw and one 1 KB ping in each direction.
+The trials used airplane mode on, Bluetooth on, and Wi-Fi off. B8 verified session
+termination after iOS backgrounding and no restart on return; the Android disconnect
+notification was not immediate and its exact delay was not measured. B9 verified
+both sessions ended after Android Bluetooth was turned off, with no restart after
+restoring it. Only these two devices are available; same-OS, older/non-advertising
+devices, 3–4 players, and WAN-disconnected LAN remain untested. A WAN-disconnectable
+router is not available. Initial/final state-ACK loss, lock, power, and full OS resource
+release still need evidence.
 
 Android's **+500 KB remains an unmeasured target**. Before product integration is accepted,
 compare release AABs of the actual app with identical build settings and bundletool

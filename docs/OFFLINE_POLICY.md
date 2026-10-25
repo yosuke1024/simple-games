@@ -93,22 +93,15 @@ Core の任意のオフライン対戦として、本人が開始した探索・
 現在は `apps/simple-games/prototypes/nearby/` の別アプリ(`com.pixapps.nearbypoc`)だけで、
 製品のネットワーク権限・実行経路は変更しない。PoC は盤面・手番・点数を一時的に交換し、
 保存・統計・バックアップ・Club 送信を行わない。Web へ通信コード・権限・案内を加えない。
-Pixel 9 Pro / iPhone 11 では機内モード ON・Bluetooth ON・Wi-Fi OFF で BLE 接続・
-双方向通信と Yacht の完走を確認した（iPhone advertise、game host を交替し各 1 局）。
-回収した公開 DOM 盤面は各局 121 件が一致。再戦開始後に Android を background へ移し、
-両端末の session 終了と Android の前面復帰時の自動再開なしも確認した。
-Android advertise / iPhone browse でも双方向通信と手番をまたぐ部分進行、iPhone の
-明示 End による両者終了を確認した。この向きの一局完走は未実施。
-通常 Wi-Fi では LAN の通信 role / game host を交替して各 1 局完走し、それぞれ全 121 公開 DOM
-盤面が一致した。iOS advertise の向きは Android の NSD 正規化修正後の結果である。
-L1 の接続で iOS を background に移すと両者が終了し、復帰時の自動再開もなかった。
-以上は wire v1 の結果。state ACK を加えた v2 の L3 でも 1 局・全 121 盤面一致を確認した。
-Android Wi-Fi OFF 後、次の iOS host 操作から 15,009 ms で ACK timeout となり終了し、Wi-Fi 復元後も
-両者の自動再開はなかった。周期 heartbeat は追加せず、無操作中の即時切断検知を保証しない。
-初期 / 最終 ACK 欠落の実機試験など、残る異常系をこの結果で合格扱いにしない。
-ただし WAN 遮断操作は行っておらず、WAN なし LAN 動作の実証にはしない。
-条件と観測範囲は作業記録を参照する。インターネット向け通信の
-計測、WAN なし LAN、他の組み合わせ、電池負担は未検証である。
+Pixel 9 Pro / iPhone 11 の現行 wire v2 では、機内モード ON・Bluetooth ON・Wi-Fi OFF の
+BLE を両方向で各 1 局（B8 / B9）、通常 Wi-Fi の LAN を 1 局（L3）完走し、各 121 公開 DOM
+盤面が一致した。B8 の iOS background、B9 の Android Bluetooth OFF で両者が終了し、
+復帰 / 無線復元後の自動再開なしも確認。切断通知の即時性や OS 資源の全解放の証明ではない。
+L3 は Wi-Fi OFF 後の次の host 操作から 15,009 ms で state ACK timeout により終了した。
+周期 heartbeat は追加せず、無操作中の即時切断検知を保証しない。wire v1 の履歴は作業記録に保持する。
+LAN は WAN 遮断操作を行っておらず、WAN なし動作の実証にはしない。追加端末と WAN を切れる
+router は用意できていない。インターネット向け通信の計測、他の組み合わせ、電池、初期 / 最終
+ACK 欠落など残る異常系は未検証。条件と観測範囲は作業記録を参照する。
 
 ## ネットワーク権限の用途(これ以外に使わない)
 
