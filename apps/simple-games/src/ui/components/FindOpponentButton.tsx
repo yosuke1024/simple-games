@@ -14,13 +14,15 @@ export function FindOpponentButton({
   return (
     <button
       type="button"
-      className={`btn btn-secondary home-find-opponent${appOnly ? ' play-together-app-only' : ''}`}
+      className={`home-play-together${appOnly ? ' play-together-app-only' : ''}`}
       disabled={appOnly}
       onClick={appOnly ? undefined : onFindOpponent}
     >
-      {t(!appOnly && active ? 'returnToTogether' : 'findNearbyOpponents')}
+      <span className="home-play-together-title">
+        {t(!appOnly && active ? 'returnToTogether' : 'findNearbyOpponents')}
+      </span>
       {(!active || appOnly) && (
-        <span className="btn-note">
+        <span className="home-play-together-body">
           {t(appOnly ? 'playTogetherAppOnlyNote' : 'findNearbyOpponentsNote')}
         </span>
       )}

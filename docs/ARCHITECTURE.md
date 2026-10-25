@@ -60,7 +60,8 @@ src/
 - Nearby Play は対応ゲームtopの「誰かと遊ぶ」から、シェル所有のcallback経由で開く。
   native の対応13本にcallbackを渡す。ゲームからNearbyをimportせず、シェルの
   `app/nearbyGate.ts` からのdynamic importだけで `nearby/` を読み込む。
-  コレクションの参加専用入口はゲーム未選択で同じgateを開く。Club Houseからは開始しない。例外として
+  コレクションの参加専用入口「近くの対戦相手を探す」は、Club House直下に同程度の控えめなテキスト行で置き、
+  ゲーム未選択で同じgateを開く。Club Houseの内部からは開始しない。例外として
   `nearby/yacht.ts` のみが `games/yacht/game/{engine,types}` の純粋な採点／型を参照できる。
   `nearby/NearbyRoot.tsx` は `games/yacht/ui/components/YachtPlaySurface` の純粋なUIも共有する。
   この2境界以外のゲーム内部参照、通常GameContext/storage/Clubへの到達、ゲームからNearbyへの参照は許容しない。

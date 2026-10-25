@@ -20,7 +20,7 @@ it.each(['en', 'ja'] as const)('keeps collection discovery disabled on Web (%s)'
   const button = screen.getByRole('button');
   expect(button).toBeDisabled();
   expect(button).toHaveTextContent(
-    language === 'ja' ? '近くの募集を探す' : 'Find nearby opponents',
+    language === 'ja' ? '近くの対戦相手を探す' : 'Find nearby opponents',
   );
   expect(button).toHaveTextContent(
     language === 'ja' ? 'アプリ専用の機能です' : 'Available in the app only.',

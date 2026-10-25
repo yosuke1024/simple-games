@@ -685,7 +685,6 @@ export function CollectionHomeScreen({
               visit, which is also what lets it stay small: nothing has to
               compete for a first glance it already has. */}
             <WebAppStoreCard />
-            <FindOpponentButton onFindOpponent={onFindOpponent} active={nearbyActive} />
           </div>
 
           {/* The shelf the player arranged, above the one the shell keeps. Same
@@ -776,6 +775,8 @@ export function CollectionHomeScreen({
               <span className="home-play-together-body">{t('playTogetherBody')}</span>
             </button>
           )}
+
+          <FindOpponentButton onFindOpponent={onFindOpponent} active={nearbyActive} />
 
           {/* One landmark for the whole list, headed sections inside: six category
               navs would drown the landmark list, while the headings still let a

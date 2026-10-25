@@ -16,11 +16,12 @@ Updated: 2026-10-25 / issue #268
 旧PoC記録の「製品へ導入しない」「保存しない」「前面限定」は当時の状態であり、現在の製品契約ではない。
 
 - native の対応ゲームtopに「誰かと遊ぶ」を置き、近くの相手とBluetooth／同一Wi-Fiで遊ぶことを
-  短く補足する。対応は Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim の13本。コレクションには参加専用の「近くの募集を探す」を置く。Club Houseからは
-  開始しない。未対応ゲームには未実装のボタンを出さない。
+  短く補足する。対応は Yacht / Reversi / Connect Four / Gomoku / Checkers / Gin Rummy / Mancala / Dominoes / Dots and Boxes / Chess / Nested Tic-Tac-Toe / Scopa / Nim の13本。コレクションには参加専用の「近くの対戦相手を探す」を置く。
+  Club House直下に、Club Houseと同程度の控えめなテキスト行として配置する。
+  Club Houseの内部からは開始しない。未対応ゲームには未実装のボタンを出さない。
   ゲームはシェルから渡されたcallbackを呼び、`src/app/nearbyGate.ts` からだけ動的に
   `src/nearby/` を読み込む。ゲームからNearbyをimportしない。
-  Webのコレクションには無効な「近くの募集を探す」、対応13本のtopには無効な「誰かと遊ぶ」ボタンと「アプリ専用の機能です」を表示する
+  Webのコレクションには無効な「近くの対戦相手を探す」、対応13本のtopには無効な「誰かと遊ぶ」ボタンと「アプリ専用の機能です」を表示する
   （英語は “Play with someone” / “Available in the app only.”）。開始callbackは渡さず、
   接続画面へ遷移しない。Web buildには `src/nearby/` の実行コード・通信chunkを含めず、
   探索・権限要求・接続・Nearby履歴読取を行わない。nativeでも未利用時の探索・権限要求・履歴読取は無い。
@@ -150,7 +151,8 @@ session鍵・native接続先は保存しない。参加前申請は履歴化し�
 今回の導線は、アプリの両端末とWebで次を確認する。記載しただけでは完了としない。
 
 - 対応13本それぞれのtopの入口から募集／参加でき、初回の重複提案操作なしでhost承認・双方Readyを経て
-  共通画面へ進む。コレクション・Club・未対応ゲームには開始入口を残さない。
+  共通画面へ進む。コレクションにはClub House直下の参加専用入口を置き、募集作成は各ゲームtopから行う。
+  Clubの内部・未対応ゲームには開始入口を置かない。
 - Webの対応13本のtopでは無効ボタンとアプリ専用の説明だけが表示され、接続画面を開けない。
   Web成果物にNearbyの実行コード・通信chunkが無く、探索・権限要求・接続・Nearby履歴読取が発生しない。
 - ゲームtopへ戻ってから同じ入口で同じ盤面へ戻れる。会話を閉じる・結果へ進む・再戦する操作で
