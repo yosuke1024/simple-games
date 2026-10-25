@@ -1,0 +1,6 @@
+{
+  "appId": "com.pixapps.nearbypoc",
+  "appName": "Nearby PoC (unreleased)",
+  "webDir": "dist",
+  "includePlugins": []
+}

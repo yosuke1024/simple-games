@@ -129,7 +129,7 @@ src/
   CI が示すこと**である(`check-dist-ads-separation.sh`)。
 - **Club House(Public / Private、issue #161)は `src/club/` 1 か所に置き、Core からは
   `src/app/` の動的 `import()` でしか届かない**(2026-09-09、issue #176。ディレクトリは
-  まだ無い)。通信 API を書けるのはこのディレクトリだけで(`check-principles.sh` §1 の
+  まだ無い)。製品の TypeScript ソースで通信 API を書けるのはこのディレクトリだけで(`check-principles.sh` §1 の
   唯一の除外)、`club/` の外からの静的 import は `src/test/importBoundaries.test.ts` が
   禁じる。ゲーム・`ui/`・`services/`・`storage/` は `club/` を知らず、`club/` が
   ゲームへ触るのは registry 経由だけ(上の規則どおり)。チャンクは `game-<id>` と同じく
@@ -141,6 +141,27 @@ src/
   Managed オーナーの広告特典は shell-owned の保存スキーマからローカルで読む。
   `monetization/` から `club/` の静的 import や契約 API 呼び出しを追加せず、
   Club の明示的な操作で確認した資格だけを広告の共通判定へ渡す。
+
+## Nearby Multiplayer の隔離 PoC
+
+issue #268 の近隣端末間対戦は Core の任意モードとして許容するが、2026-10-25 の実装は
+`apps/simple-games/prototypes/nearby/` の独立した検証用アプリに置く。生成する Capacitor
+プロジェクトの app ID は `com.pixapps.nearbypoc`。製品の registry、ホーム、ネイティブ
+権限、SDK 依存には加えず、製品ソースから PoC への import を禁止する。PoC のブラウザ
+開発画面は検証用であり、Web 版の Nearby 対応や公開導線を意味しない。
+
+依存は PoC → 既存 Yacht の純粋な採点関数・型定義に限り、既存ゲームへ通信ロジックを入れない。
+Android の標準 BLE / NSD + TCP、iOS の CoreBluetooth / Bonjour + Network.framework を
+小さなネイティブ Plugin に閉じ込める。共通 TypeScript は transport を通して session と
+Yacht の操作を扱い、ゲーム host と BLE central / peripheral のロールを分ける。
+共有状態を確定する host は 1 台、参加者は 2 人から始める。切断・background で終了し、
+保存、復帰、host 移譲、BLE / LAN 間移行、Club 送信は行わない。
+
+製品化前にはこの隔離を解除するための明示的な設計・検証が必要であり、既存の
+`check-principles.sh` の通信例外を広げるだけでは足りない。通常起動と Web で権限要求・
+探索・接続がないこと、明示セッション終了時に全資源を閉じること、既存 lazy-load / size
+gate を維持することを門にする。技術の正本と実機検証条件は
+[architecture/nearby-multiplayer.md](architecture/nearby-multiplayer.md)。
 
 ## 状態と ref
 
@@ -207,6 +228,7 @@ src/
 ## 電池(低消費電力)
 
 - プレイ中の定期ポーリングなし。バックグラウンド処理なし。常時接続なし。
+  Nearby は本人が開始した前面セッション中だけ接続を保ち、切断・退出・background で閉じる。
 - オフライン時は広告取得をリトライしない。
 - 画面外のゲームはアンマウントする(描画しない)。**アンマウントされたゲームは
   タイマー・RAF・リスナー・音声を一切残さない** — 契約とテストは

@@ -1,6 +1,6 @@
 # Simple Games — Project Context / Source of Truth
 
-Updated: 2026-10-23
+Updated: 2026-10-25
 
 この文書は、Simple Games を変更・レビュー・説明するときの **共通の入口** である。
 ここに全仕様を複製しない。実装上の事実はコード、恒久的な原則は各 canonical document を正とし、
@@ -135,6 +135,17 @@ Design philosophy:
 - Web を意図的に不便にして app へ誘導しない。
 - platform 差分の正は `docs/WEB_VERSION.md` と platform code / config。
 
+### Nearby Multiplayer — 隔離 PoC
+
+2026-10-25 に issue #268 の近隣端末間オフライン対戦を Core の任意モードとして許容する
+判断を canonical docs に反映した。Club House とは独立し、Android / iOS、Bluetooth +
+同一 Wi-Fi の 2 台を優先する。現在の実装対象は `apps/simple-games/prototypes/nearby/` の
+別アプリ(`com.pixapps.nearbypoc`)だけで、製品の UI・権限・依存には導入しない。
+Web は非対応。Yacht のデモを含むが、実機の接続・一局完走・サイズ・3〜4 台の検証は未実施。
+Phase 0 は原則・資料調査まで、Phase 1 は実機検証前、Phase 2 はデモ段階であり、Epic は未完了。
+正本: `PRODUCT_PRINCIPLES.md`「Nearby Multiplayer」、`architecture/nearby-multiplayer.md`。
+進捗と実測欄: `plans/2026-10-25-nearby-multiplayer-poc.md`。
+
 ## 4. Non-negotiable product constraints
 
 以下は成長施策や一般的なゲームアプリ慣習より優先する。
@@ -159,7 +170,10 @@ Club House の側の境界(ゲームは PixApps のサーバーを 1 つも必�
   結果も同じ形 — 送るかどうかも送る先も利用者が(参加することで、参加の前の開示を受けて)選び、内容は結果画面が
   表示した事実だけ。参加している間は結果ごとの確認なしに自動で送られる(2026-10-02)。
   同「Club House」)
-- フレンド、対人オンライン機能を作らない。**Core の画面に順位を出さない**
+- フレンド、インターネット経由の遠隔対戦を作らない。近隣端末間のオフライン対戦だけを
+  Core の任意モードとして許容する(上記 Nearby)。本人が開始した前面セッションの進行を
+  参加端末へ渡すことは許容するが、クラウドセーブや統計の外部保存には広げない。
+  **Core の画面に継続的な順位表を出さない**(Nearby の一局の勝敗はゲームの結果)。
   (順位表は Club House の層にあり、参加した人がその画面へ行ったときだけ見える。
   2026-09-30 に「オンラインランキングを採用しない」を Core だけの約束へ縮めた)。
 - ストリーク、ログインボーナス、期間限定イベント、人工的な緊急性を作らない。
@@ -299,6 +313,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 | Release gates                                                                              | `docs/RELEASE_CHECKLIST.md`                         |
 | Review prompt                                                                              | `docs/REVIEW_PROMPT_POLICY.md`                      |
 | Backup / restore format and versioning                                                     | `docs/architecture/backup.md`                       |
+| Nearby Multiplayer — Core の近隣通信の境界、隔離 PoC、検証と製品化の門                     | `docs/architecture/nearby-multiplayer.md`           |
 | Club House (Public / Private) — Core との境界、費用の上限、順位の線、CI での証明           | `docs/PRODUCT_PRINCIPLES.md`「Club House」          |
 | Club House — クライアント側の契約(入口・保存・API・挑戦と結果・順位・招待・Host・発見導線) | `docs/architecture/club.md`                         |
 | Game-specific behavior                                                                     | `docs/<GAME>_RULES.md`                              |
@@ -330,6 +345,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 - game の変更: 対象 `*_RULES.md`
 - storage / migration: `ARCHITECTURE.md` + 対象 game rules
 - backup / restore: `architecture/backup.md`(保存領域の所有と復元の安全性)
+- nearby(`prototypes/nearby/`): `PRODUCT_PRINCIPLES.md`「Nearby Multiplayer」+ `OFFLINE_POLICY.md` + `architecture/nearby-multiplayer.md`。Yacht の変更は `YACHT_RULES.md` も読む。
 - club house(`src/club/`、Public / Private、対応ゲームの `challenge/`): `PRODUCT_PRINCIPLES.md`「Club House」+ `architecture/club.md`
 - ads / purchase: `ADS_POLICY.md`
 - Android acquisition measurement (Meta, `android/app/src/metaOn` / `metaOff`, `.github/scripts/check-principles.sh` §8): `PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」+ `META_ANDROID_ACQUISITION.md`
