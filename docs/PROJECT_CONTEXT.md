@@ -142,7 +142,8 @@ Design philosophy:
 同一 Wi-Fi の 2 台を優先する。現在の実装対象は `apps/simple-games/prototypes/nearby/` の
 別アプリ(`com.pixapps.nearbypoc`)だけで、製品の UI・権限・依存には導入しない。
 Web は非対応。Yacht のデモを含むが、実機の接続・一局完走・サイズ・3〜4 台の検証は未実施。
-Phase 0 は原則・資料調査まで、Phase 1 は実機検証前、Phase 2 はデモ段階であり、Epic は未完了。
+Phase 0 は原則・資料調査と一部端末の確認まで、Phase 1 は実機の単体確認中で相互接続は未検証、
+Phase 2 はデモ段階であり、Epic は未完了。
 正本: `PRODUCT_PRINCIPLES.md`「Nearby Multiplayer」、`architecture/nearby-multiplayer.md`。
 進捗と実測欄: `plans/2026-10-25-nearby-multiplayer-poc.md`。
 

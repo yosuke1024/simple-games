@@ -95,7 +95,8 @@ An unsigned build proves compilation, not installability or radio interoperabili
    names on both screens. Both players must Confirm, then both must Ready.
 4. Tap the 1 KB Ping button on each device and record round-trip latency. Then play
    Yacht to all 24 scored turns. Check matching dice, holds, scores, turns, final totals,
-   and the Ready-for-rematch flow on both screens. The host alone rolls and scores.
+   and the Ready-for-rematch flow on both screens. Each player acts on their own turn;
+   the host alone determines the random dice and authoritative scores.
 5. Repeat the failure/lifecycle cases in the work log: denial, radio-off, lock/background,
    peer exit, missing WAN, and an isolated AP. Wait at least a minute while thinking to
    check that normal inactivity is not treated as a disconnection.
