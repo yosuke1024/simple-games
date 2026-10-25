@@ -4,6 +4,7 @@ export const id: Messages = {
   playTogether: 'Main bersama',
   returnToTogether: 'Kembali bermain bersama',
   playTogetherNote: 'Terhubung dengan orang di dekat Anda untuk bertanding.',
+  playTogetherAppOnlyNote: 'Hanya tersedia di aplikasi.',
   tagline: 'Bisa offline. Tanpa akun. Tanpa paywall.',
 
   resume: 'Lanjutkan',

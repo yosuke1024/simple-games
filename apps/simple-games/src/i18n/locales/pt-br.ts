@@ -4,6 +4,7 @@ export const ptBR: Messages = {
   playTogether: 'Jogar com alguém',
   returnToTogether: 'Voltar ao multijogador',
   playTogetherNote: 'Conecte-se com alguém por perto para uma partida.',
+  playTogetherAppOnlyNote: 'Disponível apenas no aplicativo.',
   tagline: 'Funciona offline. Sem conta. Sem paywall.',
 
   resume: 'Continuar',

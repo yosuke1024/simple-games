@@ -4,6 +4,7 @@ export const zhHant: Messages = {
   playTogether: '與他人一起玩',
   returnToTogether: '返回對戰',
   playTogetherNote: '連接附近的人，一起對戰。',
+  playTogetherAppOnlyNote: '僅限在應用程式中使用。',
   tagline: '離線可玩。免帳號。無付費牆。',
 
   resume: '繼續',

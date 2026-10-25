@@ -14,6 +14,7 @@ import { GameHomeHeader } from '@/ui/components/GameHomeHeader';
 import { GameArtwork } from '@/ui/components/GameArtwork';
 import { IconChart } from '@/ui/components/icons';
 import { WebBetaNotice } from '@/ui/components/WebBetaNotice';
+import { PlayTogetherButton } from '@/ui/components/PlayTogetherButton';
 import { CATEGORY_COUNT, cpuTotalOf, totalOf, turnsPlayed } from '../../game';
 import { useYacht } from '../../state/GameContext';
 
@@ -88,12 +89,10 @@ export function YachtHomeScreen({
           </button>
         )}
 
-        {onPlayTogether && (
-          <button type="button" className="btn btn-secondary btn-big" onClick={onPlayTogether}>
-            {t(playTogetherActive ? 'yachtReturnToTogether' : 'yachtPlayTogether')}
-            <span className="btn-note">{t('yachtPlayTogetherNote')}</span>
-          </button>
-        )}
+        <PlayTogetherButton
+          onPlayTogether={onPlayTogether}
+          playTogetherActive={playTogetherActive}
+        />
 
         <nav className="home-chips">
           <button type="button" className="home-chip" onClick={() => navigate('stats')}>

@@ -4,6 +4,7 @@ export const es: Messages = {
   playTogether: 'Jugar con alguien',
   returnToTogether: 'Volver al multijugador',
   playTogetherNote: 'Conecta con alguien cercano para jugar una partida.',
+  playTogetherAppOnlyNote: 'Solo disponible en la app.',
   tagline: 'Funciona sin conexión. Sin cuenta. Sin muros de pago.',
 
   resume: 'Continuar',

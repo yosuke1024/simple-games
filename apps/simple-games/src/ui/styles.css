@@ -1403,6 +1403,16 @@ button:disabled {
   opacity: 0.85;
 }
 
+/* Keep the app-only explanation legible while the Web control is disabled. */
+.play-together-app-only:disabled {
+  opacity: 1;
+  color: var(--ink-soft);
+}
+
+.play-together-app-only:active {
+  transform: none;
+}
+
 /* ---------- home ---------- */
 
 .home-screen {
