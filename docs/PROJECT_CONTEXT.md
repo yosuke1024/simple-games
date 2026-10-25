@@ -146,8 +146,15 @@ Yacht の 24 手番完走を実機で確認した（iPhone advertise のまま g
 各局の公開 DOM 盤面 121 / 121 件と最終結果が一致した。再戦開始、Android の対局中
 background による両者終了と自動再開なしも確認。逆の無線 role（Android advertise）でも
 接続・双方向 ping・手番をまたぐ部分進行・iPhone の明示 End を確認した（未完走）。
-LAN・サイズ・3〜4 台は未実施。
-Phase 0 は原則・資料調査と一部端末の確認まで、Phase 1 は上記 2 台の BLE 試験中、
+通常 Wi-Fi の LAN でも通信 role / game host を交替して各 1 局を完走し、それぞれ全 121 公開 DOM
+盤面と結果が一致。iOS advertise の向きは Android の NSD 正規化修正後の結果である。
+L1 では iOS background による両者終了と復帰時の自動再開なしも確認した。
+上記は wire v1 の記録。wire v2 の L3 でも通常 Wi-Fi で 1 局を完走し、全 121 公開 DOM 盤面が一致した。
+v1 の Android Wi-Fi OFF 後に iOS host が終了しない問題に対し、v2 は次の host 操作後の state ACK
+待ちで操作を止め、15,009 ms 後に終了した。Wi-Fi 復元後も両者の自動再開なし。周期 heartbeat は
+追加せず、無操作中の即時切断検知や初期 / 最終 ACK 欠落の実機動作は未確認。
+この LAN 試験は WAN を遮断していない。WAN なし LAN・サイズ・3〜4 台は未実施。
+Phase 0 は原則・資料調査と一部端末の確認まで、Phase 1 は上記 2 台の BLE / LAN 試験中、
 Phase 2 はデモ段階であり、Epic は未完了。
 正本: `PRODUCT_PRINCIPLES.md`「Nearby Multiplayer」、`architecture/nearby-multiplayer.md`。
 進捗と実測欄: `plans/2026-10-25-nearby-multiplayer-poc.md`。

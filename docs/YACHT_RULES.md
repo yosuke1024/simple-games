@@ -383,5 +383,14 @@ session の契約は [architecture/nearby-multiplayer.md](architecture/nearby-mu
   両者終了と、Android 前面復帰時の自動再開なしも確認した。
   Android advertise / iPhone browse の向きでは手番をまたぐ部分進行と iPhone の明示 End
   による両者終了まで確認した。この向きの 24 手番完走は未実施。
+  通常 Wi-Fi の LAN でも通信 role / game host を交替して各 1 局を完走し、それぞれ全 121 公開 DOM
+  盤面と結果が一致。iOS advertise の向きは Android の NSD 正規化修正後の結果である。
+  L1 では iOS background による両者終了と復帰時の自動再開なしも確認した。
+  上記は wire v1 の記録。v2 は初期・途中・最終 state の ACK を待ち、
+  host の未 ACK の勝敗 / 再戦は表示しない。guest は最終 state の受信・検証で結果を確定し、
+  両端末の同時確定は保証しない。v2 の L3 でも通常 Wi-Fi で 1 局・全 121 盤面一致と再戦開始を確認。
+  Android Wi-Fi OFF 後の次の iOS Roll では操作を止め、15,009 ms 後に ACK timeout で終了した。
+  初期 / 最終 ACK 欠落は実機未試験で、周期 heartbeat による無操作中の切断検知は追加しない。
+  WAN 遮断操作は行っておらず、WAN なし条件の実証にはしない。
   条件・範囲は [作業記録](plans/2026-10-25-nearby-multiplayer-poc.md)を参照する。
-  LAN、その他の接続中の異常系、3〜4 人、製品の多言語 UI、製品用の再戦導線は検証中または今後の段階である。
+  WAN なし LAN、その他の接続中の異常系、3〜4 人、製品の多言語 UI、製品用の再戦導線は検証中または今後の段階である。

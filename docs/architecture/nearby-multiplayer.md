@@ -28,7 +28,20 @@ Pixel 9 Pro / iPhone 11 の BLE 発見・相互確認・1 KB の双方向通信�
 各局の公開 DOM 盤面 121 / 121 件と最終結果が一致。双方 Ready による再戦開始、Android の
 対局中 background による両者終了と自動再開なしも確認した。Android advertise / iPhone browse
 では接続・双方向 ping・手番をまたぐ部分進行と iPhone の明示 End を確認した（未完走）。
-他の端末・OS 組み合わせ、LAN、電池、配布サイズ、iOS 側の background と OS 資源の全解放は未確認。
+通常 Wi-Fi の LAN でも通信 role / game host を交替して各 1 局を完走し、それぞれ全 121 公開 DOM
+盤面と結果が一致した。iOS advertise の向きは Android の NSD 正規化修正後の結果である。
+L1 では iOS background による両者終了と復帰時の自動再開なしを確認したが、
+L2 後の Android Wi-Fi OFF では Android だけが終了し、iOS host は 60 秒以上 Confirmed / Roll
+enabled のままだった。v1 の host の状態送信に受領確認がない問題を v2 で修正した。
+WAN 遮断操作は行っておらず、WAN なし LAN 動作の実証にはしない。
+他の端末・OS 組み合わせ、WAN なし LAN、電池、配布サイズ、BLE での iOS 側 background と
+OS 資源の全解放は未確認。
+上記は wire v1 の実機結果である。状態 ACK を加える wire v2（`418bda04`）は 40 テスト・
+型検査・build に成功し、Android / iOS の新アプリを両端末へ導入した。通常 Wi-Fi の L3 で
+24 手番を完走し、全 121 公開 DOM 盤面が一致。再戦開始後、Android Wi-Fi OFF に続く iOS Roll で
+state ACK 待ちへ移り、操作を止めて 15,009 ms 後に終了した。Wi-Fi 復元後も両者の自動再開なし。
+これは次操作後の ACK timeout の 1 試行であり、無操作中の即時検知や初期 / 最終 ACK 欠落の
+実機確認ではない。v1 の完走を v2 の検証結果として転用しない。
 実施条件と結果は作業記録を参照し、コードや自動テストの成功を実機成功と読み替えない。
 Epic #268 はこの PoC だけでは完了しない。
 
@@ -86,7 +99,7 @@ advertising 非対応、使用可能な advertising instance がない、Bluetoo
 | BLE central → peripheral | `9b5d1001-7a4c-4e13-a280-75d53c01a268`、write with response。 |
 | BLE peripheral → central | `9b5d1002-7a4c-4e13-a280-75d53c01a268`、notify / indicate と送信 queue の backpressure。 |
 | BLE chunk | 最大 20 bytes。書込み応答・通知の送信可能 callback を待って順に送る。大きな MTU を成立条件にしない。 |
-| DNS-SD | `_sgnearby._tcp.`。API が要求する末尾ドットの表記差だけを adapter 内で扱う。port は OS が割り当てる。 |
+| DNS-SD | `_sgnearby._tcp.`。固定種別だけを許容し、Android の先頭 / 末尾ドットと `.local` の表記差を adapter 内で正規化する。port は OS が割り当てる。 |
 | Scope | 1 接続に 1 相手。session ごとに新しい識別子を作り、永続 ID や相手履歴を保存しない。 |
 
 最初に `hello` で version、表示名、host / guest、nonce を交換する。両端末が確認コードを
@@ -97,6 +110,30 @@ guest は操作・順序番号・round・期待する revision を送り、host 
 重複を検証する。host だけが乱数を決め、点数・共有状態・新 revision を配信する。受信側も
 型・配列長・値域・状態の順序を検証する。重複 command によって乱数や得点を再度進めない。
 host を信頼するモデルであり、改造 host の不正を検出できる保証ではない。
+
+### Wire v2 の状態 ACK — 実装・自動検証と一部の実機試験を確認
+
+v1 で観測した、相手の Wi-Fi 切断後にも host が操作可能な表示のまま残る問題に対し、各 `state` の
+受領確認を必須にした。初期盤面と最終盤面も対象とする。以下は `418bda04` の契約であり、
+実機の全異常系が解決したとの主張ではない。`hello` の version は 2 とし、v1 との混在は
+`Protocol mismatch` で終了する。
+
+- host は各 `state` に単調増加する `stateSeq` を付ける。guest は検証・適用後に
+  `state-ack { stateSeq, round, revision }` を返す。
+- host は全項目が一致する ACK まで pending にし、`act`、RNG の次の実行、新しい command、
+  `Ready`、`tryStart` を止める。通常盤面は保持し、status に相手の受領待ちを示す。
+- host の終局 state が未 ACK の間は勝敗と再戦を表示しない。古い / 重複 ACK では pending を
+  解除せず、未来の ACK や round / revision の不整合では終了する。
+- guest は最終 state を受信・検証して結果を確定する。終局表示の抑止は host 側だけであり、
+  両端末の同時確定を保証する契約ではない。
+- 重複 command には ACK 済みの state を同じ `stateSeq` で再送する。未 ACK の間は追加応答を
+  作らず、乱数・採点・手番を再実行しない。
+- 既存の 15 秒 `commandTimer` を状態 ACK にも使う。ACK が届かなければ state の送信開始から
+  15 秒で session を終了する設計とし、初期・途中・最終盤面の欠落をそれぞれ再試験する。
+
+周期 heartbeat は追加しない。state を送らない無操作中の即時切断検知は保証せず、次の操作で
+state を送った後の未達を期限付きで扱う。無操作中の状態と、切断後の次操作から ACK timeout
+までの状態を、実機記録でも区別する。
 
 確認コードは**誤接続防止の補助**である。同じ平文経路で送った値を表示しても、本人認証、
 暗号化、盗聴防止、中間者攻撃への耐性にはならない。PoC は公開盤面と試験データだけを送り、

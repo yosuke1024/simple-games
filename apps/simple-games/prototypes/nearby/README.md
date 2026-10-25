@@ -23,8 +23,10 @@ pnpm nearby:test-android
 
 `nearby:check` typechecks the experiment, runs its protocol/lifecycle tests, and builds its
 own `dist`. `nearby:test-android` uses Java 21 (`JAVA_HOME` or `javac`/`java` on PATH)
-for native UTF-8 framing, permission-start lifecycle, and early-notification buffer tests. These are deterministic
-logic tests; they cannot prove that two radios connect.
+for native UTF-8 framing, permission-start lifecycle, early-notification buffering,
+and Android NSD service-type normalization. The latest native run passed 358 checks
+(165 framing, 11 lifecycle, 128 notification buffering, 54 NSD service-type checks).
+These are deterministic logic tests; they cannot prove that two radios connect.
 
 Normal native and Web builds are independent:
 
@@ -91,8 +93,9 @@ An unsigned build proves compilation, not installability or radio interoperabili
 2. Choose **Game host on exactly one device**, independent of the radio role. Leave the
    other as guest. To verify independence, repeat with the game host swapped.
 3. Tap Start explicitly on both, grant the chosen permissions, and select the intended
-   `P-xxxxxx` / `SG-P-xxxxxx` radio label from Browse. Compare the six-digit code and player
-   names on both screens. Both players must Confirm, then both must Ready.
+   candidate from Browse. Its label may be `P-xxxxxx` / `SG-P-xxxxxx`, or `SG-BLE` on iOS.
+   After connecting, compare the six-digit code and player names on both screens.
+   Both players must Confirm, then both must Ready.
 4. Tap the 1 KB Ping button on each device and record round-trip latency. Then play
    Yacht to all 24 scored turns. Check matching dice, holds, scores, turns, final totals,
    and the Ready-for-rematch flow on both screens. Each player acts on their own turn;
@@ -101,8 +104,15 @@ An unsigned build proves compilation, not installability or radio interoperabili
    peer exit, missing WAN, and an isolated AP. Wait at least a minute while thinking to
    check that normal inactivity is not treated as a disconnection.
 
+Discovery names are best effort. iOS falls back to `SG-BLE` when the first discovery
+does not provide a usable label, and the current PoC does not update an existing
+candidate's name on later discoveries. The discovery name alone does not identify
+the intended player; use the post-connection name and code comparison above.
+Distinguishing multiple peers and refreshing names remain product UX work.
+
 BLE evidence must use **airplane mode on, Bluetooth explicitly on, Wi-Fi off**, without
-internet. LAN evidence must use a common router **with WAN disconnected**. Airplane
+internet. Offline LAN acceptance requires a common router **with WAN disconnected**;
+record ordinary Wi-Fi trials separately without treating them as offline evidence. Airplane
 use must follow the airline/crew's instructions. No claim is made about all flights.
 
 Discovery/advertising is bounded to 60 seconds, connection/hello to 15 seconds. Stop,
@@ -110,6 +120,21 @@ backgrounding, radio failure, malformed input, or command/ping timeout ends the 
 Native frame/queue progress has additional bounds documented in the adapters. There is
 no heartbeat, reconnect loop, host migration, or persistent resume. On retry start a new
 session on both devices; old commands are never replayed into a new round.
+
+Wire v2 (`418bda04`) acknowledges every host state, including the initial
+and final boards. The guest validates/applies it and returns `state-ack` with matching
+`stateSeq`, `round`, and `revision`. While awaiting that ACK, the host blocks further
+actions/RNG/commands/Ready, shows a waiting status, and hides an unacknowledged result
+and rematch. It reuses the 15-second command timer; v1 peers are rejected with a
+protocol mismatch. The guest confirms its result on receiving the final state;
+only the host withholds that result pending ACK, so simultaneous finalization is
+not guaranteed. A duplicate command resends an already-acknowledged state with the
+same `stateSeq`; while pending it produces no additional response. The implementation
+passed 40 tests, typechecking, and builds, and is installed on both physical devices.
+The L3 LAN game and a mid-game state-ACK timeout have been verified on the two devices.
+Physical trials that drop the initial or final state/ACK are still outstanding. With no heartbeat,
+silent loss during idle time is not immediately detectable: the bound starts when
+the next state is sent. Record idle behavior separately from the next-action timeout.
 
 The code is sent in plaintext and is **only a wrong-peer check**, not cryptographic
 authentication, encryption, or MITM protection. Do not send secrets or real personal data.
@@ -125,8 +150,35 @@ Record device model, exact OS/build, app commit, direction/roles, permission sta
 radio/network conditions, trial counts, failures and latency in the work log. This PoC
 supports only one peer. Two-device success does not establish support for four players.
 
+On Pixel 9 Pro / iPhone 11, the recorded BLE trials completed two games with the game
+host swapped; two ordinary Wi-Fi LAN trials completed one game in each direction.
+Each game matched all 121 recorded public DOM boards across both devices. The first
+LAN trial also confirmed session termination when iOS entered the background and no
+automatic restart on return. WAN was not disconnected for these trials: offline LAN
+acceptance, iOS background behavior over BLE, and the remaining matrix are still open.
+
+The reverse LAN direction initially failed Android's resolved-peer validation.
+Android commit `9b007638` fixes normalization of the leading-dot service type returned
+by NSD. With that APK on Android and runtime `1131072b` still on iOS, a new trial
+connected, confirmed both peers, and exchanged a ping in each direction. That game
+completed all 24 turns with 121 matching boards. The initial failed trial remains in
+the work log. Its raw resolved service type was not captured, so the exact failing
+input is unverified.
+
+Those games used wire v1. Its subsequent LAN failure trial exposed a missing state
+acknowledgement: disabling Android's Wi-Fi ended the guest session while the iOS host
+remained Confirmed with Roll enabled for over 60 seconds. The wire v2 L3 trial then
+completed a new game with 121 matching boards and a successful rematch start. After
+Android Wi-Fi was disabled, the next iOS Roll waited for ACK, blocked Roll/Ready,
+and ended the host session after 15,009 ms on the same device clock. Both devices
+stayed ended after Wi-Fi restoration. This verifies that next-action timeout in
+one LAN trial; it does not establish immediate idle detection or all failure cases.
+
 Android's **+500 KB remains an unmeasured target**. Before product integration is accepted,
 compare release AABs of the actual app with identical build settings and bundletool
-device specs, including device install sizes. A PoC APK, a debug APK, or Web gzip cannot
+device specs, including device install sizes. Matching test signing keys are sufficient
+for a preliminary comparison; a production release key is not a prerequisite.
+`bundletool get-size total` estimates download size, not installed size, which needs
+its own measurement. A PoC APK, a debug APK, or Web gzip cannot
 substitute for that comparison. Keep Phase 1 and the Epic open until their required
 physical evidence exists; production integration and expansion follow that decision.

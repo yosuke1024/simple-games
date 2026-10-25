@@ -99,8 +99,16 @@ Pixel 9 Pro / iPhone 11 では機内モード ON・Bluetooth ON・Wi-Fi OFF で 
 両端末の session 終了と Android の前面復帰時の自動再開なしも確認した。
 Android advertise / iPhone browse でも双方向通信と手番をまたぐ部分進行、iPhone の
 明示 End による両者終了を確認した。この向きの一局完走は未実施。
+通常 Wi-Fi では LAN の通信 role / game host を交替して各 1 局完走し、それぞれ全 121 公開 DOM
+盤面が一致した。iOS advertise の向きは Android の NSD 正規化修正後の結果である。
+L1 の接続で iOS を background に移すと両者が終了し、復帰時の自動再開もなかった。
+以上は wire v1 の結果。state ACK を加えた v2 の L3 でも 1 局・全 121 盤面一致を確認した。
+Android Wi-Fi OFF 後、次の iOS host 操作から 15,009 ms で ACK timeout となり終了し、Wi-Fi 復元後も
+両者の自動再開はなかった。周期 heartbeat は追加せず、無操作中の即時切断検知を保証しない。
+初期 / 最終 ACK 欠落の実機試験など、残る異常系をこの結果で合格扱いにしない。
+ただし WAN 遮断操作は行っておらず、WAN なし LAN 動作の実証にはしない。
 条件と観測範囲は作業記録を参照する。インターネット向け通信の
-計測、LAN、他の組み合わせ、電池負担は未検証である。
+計測、WAN なし LAN、他の組み合わせ、電池負担は未検証である。
 
 ## ネットワーク権限の用途(これ以外に使わない)
 
