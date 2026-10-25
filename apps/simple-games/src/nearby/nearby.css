@@ -21,10 +21,10 @@
 .nearby-stack h3,
 .nearby-stack p {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 .nearby-stack h2 {
   font-size: 22px;
-  overflow-wrap: anywhere;
 }
 .nearby-stack h3 {
   font-size: 18px;
