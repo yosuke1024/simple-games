@@ -190,6 +190,8 @@ export const en = {
   levelsCleared: 'Levels cleared',
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'Advanced',
+  nearbyEntryBody: 'Games and chat with people nearby.',
+  localDataResetFailed: 'Could not delete local data. Please try again.',
   clubEntry: 'Club House',
   // The home's second line under the joined Clubs: the ways in to another one.
   clubJoinNew: 'Join a new Club House',

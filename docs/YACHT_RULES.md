@@ -358,7 +358,14 @@ Ones で 0 点を取ることは 2.1 点の損、Sixes で 0 点を取ること�
 - CPU に負けた局も自分の合計で順位が付く。`outcome` は常に `completed`
 - それ以外は変わらない。統計・自己ベスト・保存データ・広告・共有の挙動に触れない。
 
-## 13. Nearby の 2 人用デモ — 製品導入前
+## 13. Nearby Play の2人用 Yacht
+
+2026-10-25、製品の `src/nearby/` に統合する。採点は既存の純粋なengineを再利用し、
+通常のYachtの記録・統計・Club送信には混ぜない。hostのゲーム提案→双方Readyで開始し、
+終局後は集まりへ戻ってチャットを続けられる。対局結果／中断はNearby専用の端末内履歴に残す。
+承認・暗号化・受信確認・保存の正本は `architecture/nearby-multiplayer.md` の製品契約。
+
+### 以下は旧PoCの検証記録
 
 issue #268、2026-10-25。各自の Android / iOS を使う任意のオフライン対戦を検証する。
 原則は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Nearby Multiplayer」、通信と

@@ -284,6 +284,12 @@ function gamesReachOffenders(imports: Import[]): Import[] {
       entry.kind === 'glob' ? globMayReachGames(entry.resolved) : gameOf(entry.resolved) !== null;
     if (!reaches) return false;
     if (gameOf(entry.file) !== null || entry.file === registryFile) return false;
+    if (
+      entry.file === join(SRC, 'nearby', 'yacht.ts') &&
+      entry.kind === 'static' &&
+      ['engine', 'types'].some((name) => entry.resolved === join(gamesDir, 'yacht', 'game', name))
+    )
+      return false;
     // issue #38: the i18n tests glob every game's catalog to test it as a
     // whole. Exempt only this exact resolved target, and only from
     // recognised test files — a shell file (or any other glob shape,
@@ -374,7 +380,99 @@ function clubOffenders(imports: Import[]): Import[] {
   });
 }
 
+function nearbyOffenders(imports: Import[]): Import[] {
+  const root = join(SRC, 'nearby');
+  const directory = root + sep;
+  return imports.filter((entry) => {
+    if (entry.resolved === null || entry.file.startsWith(directory)) return false;
+    const head = entry.kind === 'glob' ? globHead(entry.resolved) : entry.resolved;
+    const reaches =
+      head === root ||
+      head.startsWith(directory) ||
+      (entry.kind === 'glob' && directory.startsWith(head));
+    if (!reaches) return false;
+    return !(
+      entry.file === join(SRC, 'app', 'nearbyGate.ts') &&
+      entry.kind === 'import()' &&
+      ['NearbyRoot', 'history'].some((name) => entry.resolved === join(root, name))
+    );
+  });
+}
+
 describe('import boundaries (docs/ARCHITECTURE.md)', () => {
+  it('loads Nearby Play only through its native entry or explicit reset gate', () => {
+    expect(listed(nearbyOffenders(allImports))).toEqual([]);
+    const probes: Probe[] = [
+      {
+        file: 'app/nearbyGate.ts',
+        specifier: '../nearby/NearbyRoot',
+        kind: 'import()',
+        verdict: 'ok',
+      },
+      {
+        file: 'app/nearbyGate.ts',
+        specifier: '../nearby/history',
+        kind: 'import()',
+        verdict: 'ok',
+      },
+      {
+        file: 'app/nearbyGate.ts',
+        specifier: '../nearby/NearbyRoot',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'app/boot.ts',
+        specifier: '../nearby/history',
+        kind: 'import()',
+        verdict: 'offender',
+      },
+      {
+        file: 'club/bridge.ts',
+        specifier: '../nearby/history',
+        kind: 'import()',
+        verdict: 'offender',
+      },
+      { file: 'ui/example.ts', specifier: '../**/native.ts', kind: 'glob', verdict: 'offender' },
+      { file: 'nearby/controller.ts', specifier: './native', kind: 'static', verdict: 'ok' },
+    ];
+    expect(listed(nearbyOffenders(probeImports(probes)))).toEqual(expectedOffenders(probes));
+  });
+  it('limits the Nearby Yacht adapter to pure scoring and types', () => {
+    const probes: Probe[] = [
+      {
+        file: 'nearby/yacht.ts',
+        specifier: '../games/yacht/game/engine',
+        kind: 'static',
+        verdict: 'ok',
+      },
+      {
+        file: 'nearby/yacht.ts',
+        specifier: '../games/yacht/game/types',
+        kind: 'static',
+        verdict: 'ok',
+      },
+      {
+        file: 'nearby/yacht.ts',
+        specifier: '../games/yacht/storage/gamePersistence',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'nearby/NearbyRoot.tsx',
+        specifier: '../games/yacht/game/engine',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'nearby/yacht.ts',
+        specifier: '../games/*/game/*',
+        kind: 'glob',
+        verdict: 'offender',
+      },
+    ];
+    expect(listed(gamesReachOffenders(probeImports(probes)))).toEqual(expectedOffenders(probes));
+  });
   it('found a believable amount of code to check', () => {
     // A refactor that breaks the scanner must fail loudly, not pass emptily.
     expect(files.length).toBeGreaterThan(100);

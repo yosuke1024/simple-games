@@ -150,6 +150,8 @@ export const th: Messages = {
   levelsCleared: 'ด่านที่ผ่านแล้ว',
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'ขั้นสูง',
+  nearbyEntryBody: 'เล่นเกมและแชตกับคนใกล้ตัว',
+  localDataResetFailed: 'ลบข้อมูลในเครื่องไม่ได้ โปรดลองอีกครั้ง',
   clubEntry: 'Club House',
   clubJoinNew: 'เข้าร่วม Club House ใหม่',
   playTogetherTitle: 'เล่นด้วยกัน',

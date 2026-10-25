@@ -8,6 +8,69 @@ Updated: 2026-10-25 / issue #268
 [YACHT_RULES.md](../YACHT_RULES.md) §13。進捗と実測結果は
 [作業記録](../plans/2026-10-25-nearby-multiplayer-poc.md)へ記入する。
 
+## 製品 Nearby Play の契約（2026-10-25 採用）
+
+オーナーの実装指示により、以下を製品コードへ追加する。下の旧PoC記録の「製品へ導入しない」
+「保存しない」はPoCを記述した当時の状態であり、製品の現在の採用範囲ではない。
+製品をストア公開済み・実機検証済みとは扱わない。
+
+- `src/app/nearbyGate.ts` からだけ動的に `src/nearby/` を読み込む。入口は Club House と
+  別の Nearby Play。Web buildでは入口もchunkも除く。未利用時の探索・権限要求・履歴読取は無い。
+- 初期範囲2人、Bluetooth優先／同一LANを明示選択。host=advertise/listen、参加者=browse。
+  集まりを作る／参加する／履歴を見る → 表示名で申請 → host承認 → チャット ⇄ Yacht。
+  参加前自由コメント無し。チャットだけでも使える。提案後に両者Ready、再戦も同じ。
+- 仲間／公開の発見labelは `F-` / `P-` + ランダム6桁hex。個人名を広告に含めない。
+  どちらもhost承認必須。labelは公開される番号で、招待秘密や本人証明ではない。
+- native plugin名 `NearbyPlay`。BLE UUIDは `9b5d2000/2001/2002-7a4c-4e13-a280-75d53c01a268`、
+  Bonjourは `_sgnearplay._tcp`。PoCと混在させない。native最大4096 UTF-8 bytes + LF、20byte BLE。
+- アプリ間の鍵交換は WebCrypto P-256 ECDH、HKDF-SHA-256、方向別AES-256-GCM。
+  接続ごとに新しい鍵を作り保存しない。ciphertextの通番を単調増加で照合し、再送／改変を拒否。
+  暗号化前JSONは最大2800 bytes。交換した公開鍵の順序付きhashから6桁の比較コードを表示する。
+  比較コードは誤接続確認の補助。公開鍵の commitment 段階がない短縮hashなので、
+  **コードが一致しても本人認証・能動的な中間者攻撃への耐性は保証しない**。
+  仲間同士はコードも見比べるが、認証済み／安全な相手などとは表示しない。
+- room wire v3。helloに表示名・host/guest・sessionnonce・ローカルブロック用install ID。
+  hostのadmissionとguestのadmission-ack完了前はチャット・Ready・対局操作を認めない。
+  install IDは端末内に作るランダム値で、OS識別子を使わずサーバーへ蓄積しない。
+  ブロックはそのIDだけを対象とし、再インストール／改造で回避できる。
+- チャットはUnicode160文字、制御文字／双方向制御／不正surrogate拒否。各方向1件だけ
+  未ACKで送信できる。独立したchat seq/ACKで受信済みを示し、既読とは呼ばない。
+  送受合計1000件で接続終了。チャットACKでstateのpendingを解除しない。
+- Yachtの合法手・乱数・採点はhostが確定。初期／各操作／最終stateのACKを待つ旧v2の
+  契約を継承する。host終局はACK待ち、guestは検証済み終局受信で確定。host改造耐性は無い。
+- 探索60秒、接続／鍵交換15秒、承認待ち60秒、state/chat/admission ACK各15秒。
+  別メッセージで期限を延ばさない。background・切断・退出で終え、自動再接続しない。
+- `nearby/yacht.ts` だけが既存 `games/yacht/game/{engine,types}` の純粋な採点と型へ到達する。
+  その他のNearby／シェルはゲーム内部を参照しない。通常のYacht state/storage/Club bridgeは使わない。
+
+### 端末内の履歴
+
+`nearby/history.ts` がversion=1の専用ファイルを検証・直列更新する。Androidは
+`getNoBackupFilesDir()/nearby-play-history.json`、iOSはApplication Supportの専用directory/fileへ
+backup除外属性を設定しatomicに保存。Preferences、通常backupのkey一覧、Clubのoutboxには入れない。
+各参加者が自分の送受信チャットと参加した対局（日時・表示名・点数・完了／中断）だけを保存する。
+session鍵・native接続先は保存しない。参加前申請は履歴化しない。
+履歴IDは各端末で新規生成し、相手から届くsession IDの再使用で過去の履歴を置換させない。
+同じ集まりの未実行保存は最新1件へまとめる。読み込み・削除・ブロックの順序を越えて
+まとめず、削除済みの記録を古い保存待ちから復活させない。復号前のJSイベント待ちも64件で制限する。
+
+退出・切断で消さず、読むだけで通信しない。履歴1件削除、Nearby全削除、設定のローカルデータ削除を
+用意する。相手側のコピーには影響しない。上限1MiB/100集まり、native境界2MiB。
+容量不足・破損・未知versionでは保存失敗を表示し、保存済みデータを初期値で上書きしない。
+上限で古い履歴を自動削除しない。保存に失敗した新しい内容は永続化を保証しない。
+
+### 公開前に残る確認
+
+新しい暗号化・承認・chat・履歴の実機相互接続、OSバックアップ除外、旧OS／同OS／他機種、
+新製品全体の容量・電池、UGCポリシーに応じた規約／通報対応・公開プライバシー文面、
+高リスク翻訳の意味確認は、コードのbuild成功から推定しない。
+画面には行動ルールへの同意、受信chat非表示、install IDブロック、退出、既存supportへの
+メール起動（履歴自動添付なし）を設けるが、これだけでストア審査適合を保証しない。
+
+---
+
+## 以下は隔離 PoC の契約と実測記録
+
 ## 1. 採用範囲と現在の状態
 
 Android / iOS の近くにいる人が各自の端末で遊ぶ **Core の任意のオフラインモード**を

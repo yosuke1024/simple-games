@@ -156,9 +156,10 @@ export interface SettingsScreenProps {
   onBack: () => void;
   /** Settings › Advanced › Club House: the shell loads the Club layer and opens it (club.md §2-1). */
   onOpenClub: () => void;
+  onResetNearby?: () => Promise<void>;
 }
 
-export function SettingsScreen({ onBack, onOpenClub }: SettingsScreenProps) {
+export function SettingsScreen({ onBack, onOpenClub, onResetNearby }: SettingsScreenProps) {
   const { settings, updateSettings, replaceSettings, locale, t } = useSettings();
   const purchased = useAdRemovalPurchased();
   const purchasable = usePurchaseAvailable() && !purchased;
@@ -229,6 +230,8 @@ export function SettingsScreen({ onBack, onOpenClub }: SettingsScreenProps) {
     setBusy(true);
     try {
       await runReset();
+    } catch {
+      setBackupNotice('localDataResetFailed');
     } finally {
       setBusy(false);
     }
@@ -248,6 +251,7 @@ export function SettingsScreen({ onBack, onOpenClub }: SettingsScreenProps) {
   };
 
   const runReset = async () => {
+    await onResetNearby?.();
     const keys = [...Object.values(STORAGE_KEYS), ...GAMES.flatMap((game) => game.storageKeys)];
     await clearLocalData(keys);
     await reloadSharedRecords();

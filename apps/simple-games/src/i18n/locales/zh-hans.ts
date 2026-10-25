@@ -147,6 +147,8 @@ export const zhHans: Messages = {
   levelsCleared: '已通过关卡',
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: '高级',
+  nearbyEntryBody: '与附近的人对战、聊天。',
+  localDataResetFailed: '无法删除本机数据。请重试。',
   clubEntry: 'Club House',
   clubJoinNew: '加入新的 Club House',
   playTogetherTitle: '一起玩',

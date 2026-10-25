@@ -13,7 +13,7 @@
 **Nearby Multiplayer**(issue #268、2026-10-25)の「オフライン」はインターネット不要を
 意味する。本人が開始した近隣端末との対戦には Bluetooth、または端末間通信が可能な
 同一 LAN が必要で、無線がすべて OFF の状態で対戦できる約束ではない。通常のソロ / CPU
-戦はそのまま利用できる。現在は製品に導入していない隔離 PoC だけである(下)。
+戦はそのまま利用できる。Nearby Play として製品実装する(下)。
 
 ## 初回起動
 
@@ -79,29 +79,21 @@ Reset では特典を外す。`sg.iap` の購入状態を変更せず、資格�
   セッション中だけ近隣端末との接続を保ち、切断・退出・background で閉じる
   (PRODUCT_PRINCIPLES.md「低消費電力の原則」「Nearby Multiplayer」)。
 
-## Nearby の近隣通信 — 製品導入前の例外
+## Nearby Play の近隣通信
 
-Core の任意のオフライン対戦として、本人が開始した探索・接続・両者の確認と、その局の
-進行を相手へ渡す通信だけを許容する。起動時に探索せず、OS 権限は利用時だけ要求する。
-拒否、非対応端末、Bluetooth OFF、接続不可でも既存ゲームへ戻れる。
-インターネットへの接続、オンライン認証、ゲーム資産の初回取得、Club House への参加を
-条件にしない。機内利用は航空会社・乗務員の指示に従い、Bluetooth を明示的に有効にした
-条件で検証する。Wi-Fi 方式は WAN のない同一 LAN で検証する。
+本人が開始した探索・参加申請・host承認と、前面の集まりでの短いテキスト・ゲームの
+操作／状態／結果を相手へ渡す通信を許容する。Bluetooth または同一 Wi-Fi が必要だが、
+インターネットやアカウントは不要。無線は利用時だけ開始し、background・退出・切断で止める。
+探索60秒、接続／鍵交換15秒、承認待ち60秒、操作／メッセージ受信確認15秒で待ちを終える。
+無操作中の即時切断検知は保証しない。自動再接続・自動 transport 切替・周期 heartbeat は無い。
 
-例外の境界は [PRODUCT_PRINCIPLES.md](PRODUCT_PRINCIPLES.md)「Nearby Multiplayer」、
-技術上の契約は [architecture/nearby-multiplayer.md](architecture/nearby-multiplayer.md)。
-現在は `apps/simple-games/prototypes/nearby/` の別アプリ(`com.pixapps.nearbypoc`)だけで、
-製品のネットワーク権限・実行経路は変更しない。PoC は盤面・手番・点数を一時的に交換し、
-保存・統計・バックアップ・Club 送信を行わない。Web へ通信コード・権限・案内を加えない。
-Pixel 9 Pro / iPhone 11 の現行 wire v2 では、機内モード ON・Bluetooth ON・Wi-Fi OFF の
-BLE を両方向で各 1 局（B8 / B9）、通常 Wi-Fi の LAN を 1 局（L3）完走し、各 121 公開 DOM
-盤面が一致した。B8 の iOS background、B9 の Android Bluetooth OFF で両者が終了し、
-復帰 / 無線復元後の自動再開なしも確認。切断通知の即時性や OS 資源の全解放の証明ではない。
-L3 は Wi-Fi OFF 後の次の host 操作から 15,009 ms で state ACK timeout により終了した。
-周期 heartbeat は追加せず、無操作中の即時切断検知を保証しない。wire v1 の履歴は作業記録に保持する。
-LAN は WAN 遮断操作を行っておらず、WAN なし動作の実証にはしない。追加端末と WAN を切れる
-router は用意できていない。インターネット向け通信の計測、他の組み合わせ、電池、初期 / 最終
-ACK 欠落など残る異常系は未検証。条件と観測範囲は作業記録を参照する。
+送受信したチャットと参加した対局の履歴は専用の端末内ファイルに保存する。退出では消さず、
+履歴を見るだけなら無線も権限も不要。通常のアプリバックアップと OS バックアップから除外する。
+保存失敗は表示し、同じ端末の履歴削除とローカルデータ削除で消せる。相手のコピーは消せない。
+既存のゲーム記録・Club への送信は増やさない。Web へ実行コード・権限・入口を加えない。
+
+技術と検証の境界は [architecture/nearby-multiplayer.md](architecture/nearby-multiplayer.md)。
+PoCでの実機成功を製品版の実機成功へ読み替えない。
 
 ## ネットワーク権限の用途(これ以外に使わない)
 
@@ -164,5 +156,5 @@ Analytics・Remote Config は存在しない。製品からネットワークに
 [GROWTH_MEASUREMENT.md](GROWTH_MEASUREMENT.md)。ゲームデータを送らない点は
 版をまたいで同じ。)
 
-Nearby の採用判断は上記のとおり別に記録する。製品化する場合は近隣の参加端末への
-一時的な進行送信が加わるが、現時点の製品の送信先や権限が増えたとは扱わない。
+Nearby Play の製品実装では、本人が始めた集まりの近隣参加端末への表示名・
+チャット・ゲーム進行の送信とnativeのBLE/LAN権限が加わる。インターネットへは送らない。

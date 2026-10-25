@@ -41,6 +41,7 @@ src/
 ├── app/                    # シェル: ルート App、ルーティング、ゲームレジストリ、起動手順
 ├── games/                  # 各ゲームは game/ state/ storage/ ui/ で自己完結
 │   └── <game-id>/          # 収録ゲームの一覧は app/registry.ts が正。ここには列挙しない
+├── nearby/                 # native限定の近隣接続・承認・chat・Yacht・端末内履歴（遅延読込）
 ├── monetization/           # 広告削除 IAP: アダプタ契約 + ローカルキャッシュ
 ├── services/               # 共有: ads(バナーのみ) / network / sound / haptics
 ├── state/                  # 共有: SettingsContext
@@ -55,6 +56,11 @@ src/
 唯一のソースとする。
 
 レイヤー規則:
+
+- Nearby Play は `app/nearbyGate.ts` からのdynamic importだけで開く。例外として
+  `nearby/yacht.ts` のみが `games/yacht/game/{engine,types}` の純粋な採点／型を参照できる。
+  その他のNearbyからのゲーム内部参照、ゲームからのNearby参照、Clubとの相互参照は許容しない。
+  製品nativeと隔離PoCは別所有・別service識別子とし、製品からPoCへimportしない。
 
 - `games/*/game/` は Pure TypeScript。他のどのレイヤーも import しない
   (テスト容易性と移植性のため)。

@@ -152,6 +152,8 @@ export const ptBR: Messages = {
   levelsCleared: 'Níveis concluídos',
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'Avançado',
+  nearbyEntryBody: 'Jogue e converse com pessoas próximas.',
+  localDataResetFailed: 'Não foi possível excluir os dados locais. Tente novamente.',
   clubEntry: 'Club House',
   clubJoinNew: 'Entrar em um novo Club House',
   playTogetherTitle: 'Jogar juntos',

@@ -154,6 +154,8 @@ export const fr: Messages = {
   levelsCleared: 'Niveaux terminés',
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'Avancé',
+  nearbyEntryBody: 'Jouez et discutez avec les personnes à proximité.',
+  localDataResetFailed: 'Impossible de supprimer les données locales. Réessayez.',
   clubEntry: 'Club House',
   clubJoinNew: 'Rejoindre un nouveau Club House',
   playTogetherTitle: 'Jouer ensemble',

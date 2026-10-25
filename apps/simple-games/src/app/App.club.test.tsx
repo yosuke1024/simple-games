@@ -193,13 +193,13 @@ afterEach(() => {
 });
 
 describe('a device that has not joined', () => {
-  it('loads nothing until "Play together" is pressed, then opens the discover entry', async () => {
+  it('loads nothing until the Club House entry is pressed, then opens the discover entry', async () => {
     renderShell();
     await settle();
     expect(loader).not.toHaveBeenCalled();
     expect(screen.queryByRole('heading', { name: 'Club House' })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Play together/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Club House/ }));
     await settle();
 
     expect(loader).toHaveBeenCalledTimes(1);
@@ -208,7 +208,7 @@ describe('a device that has not joined', () => {
     // Back to the collection, and in again: the layer is not loaded twice.
     fireEvent.click(screen.getByRole('button', { name: 'Leave club' }));
     expect(screen.getByRole('heading', { name: 'Simple Games' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Play together/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Club House/ }));
     await settle();
     expect(loader).toHaveBeenCalledTimes(1);
   });
@@ -244,12 +244,12 @@ describe('a device that has not joined', () => {
     loader.mockImplementation(() => Promise.reject(new Error('chunk missing')));
     renderShell();
 
-    fireEvent.click(screen.getByRole('button', { name: /Play together/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Club House/ }));
     await settle();
 
     expect(loader).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('heading', { name: 'Simple Games' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Play together/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Club House/ })).toBeInTheDocument();
     expect(screen.queryByTestId('club-entry')).not.toBeInTheDocument();
   });
 });
@@ -263,13 +263,13 @@ describe('a device that has joined', () => {
     );
   });
 
-  it('shows the club names instead of "Play together" and loads the layer once at boot', async () => {
+  it('shows the club names instead of the Club House entry and loads the layer once at boot', async () => {
     renderShell();
     await settle();
 
     expect(screen.getByRole('heading', { name: 'Club House' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Suzuki Family/ })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Play together/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Club House/ })).not.toBeInTheDocument();
     expect(loader).toHaveBeenCalledTimes(1);
 
     fireEvent.click(screen.getByRole('button', { name: /Suzuki Family/ }));

@@ -22,7 +22,7 @@ export default [
     // src/test/importBoundaries.test.ts, which also covers what globs cannot
     // (game-to-game imports across relative depths).
     files: ['src/**/*.{ts,tsx}'],
-    ignores: ['src/games/**', 'src/app/registry.ts'],
+    ignores: ['src/games/**', 'src/app/registry.ts', 'src/nearby/yacht.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -32,6 +32,22 @@ export default [
               group: ['**/games/**', '@/games/**'],
               message:
                 'Only app/registry.ts imports from src/games/ — the shell reaches no deeper (docs/ARCHITECTURE.md).',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/nearby/yacht.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: 'games/(?!yacht/game/(?:engine|types)$)',
+              message: 'Nearby adapter may only use pure Yacht scoring and types.',
             },
           ],
         },

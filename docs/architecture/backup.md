@@ -4,6 +4,13 @@ docs/ARCHITECTURE.md から参照される全文(2026-09-08 追加、issue #160)
 
 実装は `apps/simple-games/src/backup/`。UI は設定画面の `Backup & Restore` 節だけ。
 
+## Nearby Play の端末限定データ
+
+Nearby Play の履歴・ローカルブロック用識別子はこのバックアップへ含めない。
+専用native file（Android noBackupFilesDir／iOS backup除外Application Support）に保存するため、
+Preferencesのkey一覧を列挙しても流出しない。復元で消さず、履歴削除・Nearby全削除・
+設定のローカルデータ削除では削除する。相手端末のコピーは削除できない。
+
 ## なにを解決していて、なにを解決していないか
 
 Simple Games はアカウント・クラウドセーブ・バックエンドを持たない。持たないと決めた

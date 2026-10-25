@@ -153,6 +153,8 @@ export const vi: Messages = {
   levelsCleared: 'Màn đã qua',
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'Nâng cao',
+  nearbyEntryBody: 'Chơi và trò chuyện với người ở gần.',
+  localDataResetFailed: 'Không thể xóa dữ liệu trên máy. Vui lòng thử lại.',
   clubEntry: 'Club House',
   clubJoinNew: 'Tham gia Club House mới',
   playTogetherTitle: 'Chơi cùng nhau',

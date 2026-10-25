@@ -25,15 +25,12 @@ const files = [
 for (const path of files)
   if (forbidden.test(readFileSync(path, 'utf8')))
     throw new Error(`PoC leaked into production: ${relative(app, path)}`);
-const androidManifest = readFileSync(join(app, 'android/app/src/main/AndroidManifest.xml'), 'utf8');
-const iosPlist = readFileSync(join(app, 'ios/App/App/Info.plist'), 'utf8');
-if (
-  /android.permission.BLUETOOTH|android.hardware.bluetooth_le/.test(androidManifest) ||
-  /NSBluetoothAlwaysUsageDescription|NSLocalNetworkUsageDescription|NSBonjourServices/.test(
-    iosPlist,
-  )
-)
-  throw new Error('Unreleased Nearby permissions in production');
+// Product-owned Nearby Play uses distinct service identifiers. Permissions are
+// now intentional; importing the development application remains prohibited.
+const web = walk(join(app, 'dist-web'), /\.(js|html|css|json)$/);
+for (const path of web)
+  if (/NearbyPlay|_sgnearplay\._tcp|9b5d200[012]-7a4c/i.test(readFileSync(path, 'utf8')))
+    throw new Error(`Native Nearby Play leaked into Web: ${relative(app, path)}`);
 console.log(
-  `Nearby PoC isolation: ${files.length} production source/artifact files checked; no PoC entry, plugin or permissions.`,
+  `Nearby isolation: ${files.length} files checked; no development app in product and no native Nearby Play in Web.`,
 );

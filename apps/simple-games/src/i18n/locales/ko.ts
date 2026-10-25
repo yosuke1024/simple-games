@@ -150,6 +150,8 @@ export const ko: Messages = {
   levelsCleared: '클리어한 레벨',
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: '고급',
+  nearbyEntryBody: '가까운 사람들과 게임하고 대화해요.',
+  localDataResetFailed: '기기 데이터를 삭제할 수 없습니다. 다시 시도하세요.',
   clubEntry: 'Club House',
   clubJoinNew: '새 Club House에 참여',
   playTogetherTitle: '함께 플레이',

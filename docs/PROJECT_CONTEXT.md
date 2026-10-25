@@ -135,27 +135,18 @@ Design philosophy:
 - Web を意図的に不便にして app へ誘導しない。
 - platform 差分の正は `docs/WEB_VERSION.md` と platform code / config。
 
-### Nearby Multiplayer — 隔離 PoC
+### Nearby Play — 製品実装
 
-2026-10-25 に issue #268 の近隣端末間オフライン対戦を Core の任意モードとして許容する
-判断を canonical docs に反映した。Club House とは独立し、Android / iOS、Bluetooth +
-同一 Wi-Fi の 2 台を優先する。現在の実装対象は `apps/simple-games/prototypes/nearby/` の
-別アプリ(`com.pixapps.nearbypoc`)だけで、製品の UI・権限・依存には導入しない。
-Web は非対応。現行 wire v2（`418bda04`）では Pixel 9 Pro / iPhone 11 の BLE を両方向で
-各 1 局（B8 / B9）、通常 Wi-Fi の LAN を 1 局（L3）完走し、各 121 公開 DOM 盤面と結果が一致。
-B8 は iOS background / 復帰、B9 は双方向 1 KB ping と Android Bluetooth OFF / ON、
-それぞれ両者の終了・自動再開なしを確認した。background の切断通知は即時とは限らない。
-L3 では Wi-Fi OFF 後の次の host 操作から state ACK timeout まで 15,009 ms で終了した。
-wire v1 の完走・部分試験・不具合の履歴は作業記録へ分けて保持する。
-周期 heartbeat は追加せず、無操作中の即時切断検知を保証しない。初期 / 最終 ACK 欠落、
-画面ロック、OS 資源の全解放、電池は未確認。Android の隔離 staging の release 比較では
-配布推定 +32,983 bytes を確認した（条件・監査結果は作業記録）。
-製品 UX 未統合で、実 install size と正式な +500 KB gate は未検証。追加端末と WAN を切れる router は
-用意できておらず、同 OS / 旧 OS / advertising 非対応端末・3〜4 台・WAN なし LAN は未実施。
-Phase 0 は原則・資料調査と一部端末の確認まで、Phase 1 は上記 2 台の BLE / LAN 試験中、
-Phase 2 はデモ段階であり、Epic は未完了。
-正本: `PRODUCT_PRINCIPLES.md`「Nearby Multiplayer」、`architecture/nearby-multiplayer.md`。
-進捗と実測欄: `plans/2026-10-25-nearby-multiplayer-poc.md`。
+2026-10-25、オーナーが実装を指示。Club House と独立する native の入口を持ち、
+近くの人と2人で対戦・チャットする。その場限りの集まりを作る／参加する、host承認、
+チャットだけの利用、Yacht の提案→双方 Ready→対局→同じ集まり、退出／解散の流れ。
+自由な参加コメントは無し。チャットと対局履歴は各参加端末だけに残し、退出で消さない。
+履歴から再接続せず、Club・アプリバックアップ・OSバックアップへ運ばない。
+製品は `src/nearby/`、PoC は引き続き `prototypes/nearby/` に分離。Web は対象外。
+旧 wire v2 PoC では Pixel 9 Pro / iPhone 11 の BLE 両方向と通常 LAN の各1局を完走した。
+これは新 admission/chat/暗号化/永続化 UI の実機証拠ではない。3台以上・同OS・旧端末・
+WAN切断LAN・電池などは未検証で、Epic の全完了やストア公開承認を意味しない。
+正本: `PRODUCT_PRINCIPLES.md`「Nearby Play」、`architecture/nearby-multiplayer.md`。
 
 ## 4. Non-negotiable product constraints
 
@@ -356,7 +347,7 @@ Canonical: `docs/ARCHITECTURE.md`, 各 game rules, tests
 - game の変更: 対象 `*_RULES.md`
 - storage / migration: `ARCHITECTURE.md` + 対象 game rules
 - backup / restore: `architecture/backup.md`(保存領域の所有と復元の安全性)
-- nearby(`prototypes/nearby/`): `PRODUCT_PRINCIPLES.md`「Nearby Multiplayer」+ `OFFLINE_POLICY.md` + `architecture/nearby-multiplayer.md`。Yacht の変更は `YACHT_RULES.md` も読む。
+- nearby(`src/nearby/`、隔離実験の `prototypes/nearby/`): `PRODUCT_PRINCIPLES.md`「Nearby Play」+ `OFFLINE_POLICY.md` + `architecture/nearby-multiplayer.md`。Yacht の変更は `YACHT_RULES.md` も読む。
 - club house(`src/club/`、Public / Private、対応ゲームの `challenge/`): `PRODUCT_PRINCIPLES.md`「Club House」+ `architecture/club.md`
 - ads / purchase: `ADS_POLICY.md`
 - Android acquisition measurement (Meta, `android/app/src/metaOn` / `metaOff`, `.github/scripts/check-principles.sh` §8): `PRODUCT_PRINCIPLES.md`「Android の獲得計測(Meta)」+ `META_ANDROID_ACQUISITION.md`

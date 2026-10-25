@@ -171,6 +171,7 @@ function staticallyReachableOffenders(distDir, ids) {
     const id = gameOfChunk(basename(chunk.file), ids);
     if (id !== null) offenders.add(id);
     if (isClubChunk(basename(chunk.file))) offenders.add('club');
+    if (/^nearby-/.test(basename(chunk.file))) offenders.add('nearby');
     for (const dep of chunk.imports ?? []) queue.push(dep);
   }
   return [...offenders].sort();

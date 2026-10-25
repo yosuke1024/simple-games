@@ -282,21 +282,13 @@ else
 fi
 
 # 4. Android の権限 ------------------------------------------------------------
-# 広告(INTERNET)と課金(BILLING)以外の権限は要求しない。
-# 増やすときは、なぜ必要かを PR に書いた上でこの許可リストを意図的に更新する。
-allowed='android.permission.INTERNET|com.android.vending.BILLING|com.google.android.gms.permission.AD_ID'
-hits=""
-for m in "${manifests[@]}"; do
-  [ -f "$m" ] || continue
-  found="$(grep -oE 'uses-permission android:name="[^"]+"' "$m" \
-    | sed -E 's/.*name="([^"]+)".*/\1/' \
-    | grep -vE "^($allowed)$" || true)"
-  [ -n "$found" ] && hits="${hits}${m}: ${found}"$'\n'
-done
-if [ -n "$hits" ]; then
-  report "許可リスト外の Android 権限があります" "$hits"
+# Nearby の例外は Simple Games の製品 manifest だけ。旧 BT / 位置情報は maxSdk 30、
+# scan は neverForLocation、BLE hardware は optional。merged manifest と同じ関数で検査する。
+# XML として読み、改行・属性順・uses-permission-sdk-23 でも検査を省略しない。
+if hits="$(python3 .github/scripts/android_permission_policy.py "${manifests[@]}" 2>&1)"; then
+  ok "Android 権限は許可リスト内、Nearby の OS 範囲・非位置情報 scan・任意 hardware 制約も一致"
 else
-  ok "Android 権限は INTERNET / BILLING のみ"
+  report "Android 権限の許可リスト / Nearby 制約に違反しています" "$hits"
 fi
 
 # 4b. Meta の manifest overlay(issue #204)は権限を「足す」場所ではない。

@@ -25,6 +25,8 @@ on:
       - 'apps/simple-games/capacitor.config.ts'
       - 'pnpm-lock.yaml'
       - '.github/scripts/check-android-artifact.sh'
+      - '.github/scripts/android_permission_policy.py'
+      - '.github/scripts/check-android-artifact.test.py'
       - '.github/workflows/android-artifact.yml'
 
 permissions:
@@ -74,7 +76,7 @@ jobs:
 
       - name: Gradle release build (unsigned)
         working-directory: apps/simple-games/android
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease testDebugUnitTest
         env:
           SG_META_ANDROID_ENABLED: ${{ matrix.meta == 'on' && 'true' || '' }}
           # Placeholders in the shape build.gradle validates. Not a Meta app:

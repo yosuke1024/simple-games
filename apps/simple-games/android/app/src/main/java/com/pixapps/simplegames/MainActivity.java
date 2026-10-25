@@ -17,6 +17,8 @@ public class MainActivity extends BridgeActivity {
         // their own.
         registerPlugin(HomeShortcutPlugin.class);
         registerPlugin(MetaInstallPlugin.class);
+        // Registration is idle: Nearby Play starts radio work only on explicit UI action.
+        registerPlugin(com.pixapps.simplegames.nearby.NearbyPlayPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

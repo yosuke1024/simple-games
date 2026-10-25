@@ -152,6 +152,8 @@ export const tr: Messages = {
   levelsCleared: 'Tamamlanan seviye',
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'Gelişmiş',
+  nearbyEntryBody: 'Yakındaki kişilerle oyun oynayın ve sohbet edin.',
+  localDataResetFailed: 'Yerel veriler silinemedi. Lütfen tekrar deneyin.',
   clubEntry: 'Club House',
   clubJoinNew: "Yeni bir Club House'a katıl",
   playTogetherTitle: 'Birlikte oyna',
