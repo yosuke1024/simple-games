@@ -130,7 +130,8 @@ function NearbyGameRoot({
           gameId,
           host: true,
           name: '',
-          roomName: `${[...gameTitle].slice(0, 19).join('')} ${String(crypto.getRandomValues(new Uint32Array(1))[0]! % 10000).padStart(4, '0')}`,
+          // A public, editable title, not a connection secret or identity.
+          roomName: `${[...gameTitle].slice(0, 19).join('')} ${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
           transport: 'ble',
           chatEnabled: false,
         },
