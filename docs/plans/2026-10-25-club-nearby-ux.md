@@ -59,3 +59,33 @@ Club House は記録を持ち寄る入口、Nearby Play は近くの人と対戦
 新製品版の両実機での相互接続・OSバックアップ除外、同OS／旧端末／WANなしLAN／電池、
 規約・通報対応・公開プライバシー文面・翻訳の意味確認は残る。旧PoCの成功と混同せず、
 PRはdraftを維持する。Epic #268 の全完了やストア公開済みとはしない。
+
+### 最終製品bundleとAndroid容量
+
+製品実装commit `c2102b63` と同じ runtime/native/build source で計測。
+導入前baselineは `275c91f3f5b17e66a27110102abe84d63da86bf0`。
+両者を隔離したstagingに置き、release/R8/resource shrink、version 0.0.0 / 1、
+compile/target 36・min 24、Meta off・広告 off・同じGoogle test AdMob ID、同一の専用test署名、
+同じ解決済み依存で作成した。Gradle 8.14.3 / AGP 8.13.0 / Java 21.0.12 / Node 25.5.0、
+bundletool 1.18.1、保存済みPixel 9 Pro API 37のdevice spec（arm64-v8a、en/ja、xxhdpi）。
+
+| 値 | 導入前 | Nearby Play同梱後 | 増分 |
+| --- | ---: | ---: | ---: |
+| bundletool推定download bytes（MIN=MAX） | 5,099,388 | 5,161,636 | **62,248** |
+| release AABのファイルbytes | 7,646,894 | 7,729,100 | 82,206 |
+
+配布に入るWeb assetsのbyte一致、R8後のPlugin/BLE/LAN/HistoryStore保持、PoC不在、
+依存・署名の同一性、権限の意図した差分、release非debuggable、Meta不在を確認した。
+これは1つのdevice spec・test署名・広告無効条件の圧縮download推定であり、実install size、
+他端末、本番署名／広告条件、正式な+500KB gate全体の完了ではない。
+
+ローカルの詳細出力はignoredな `apps/simple-games/prototypes/nearby/build/product-size-study/result.json`。
+結果SHA256: `103da314d4df66837834aca366ff17640a1c53fca57e5677f4fb91102a33dc89`。
+候補source snapshotのhash一覧SHA256: `77ad47a0c6c14dca82fcf5a83e0d61facfa0b91c2538f5c93eaae77b4bb8ca53`。
+候補AAB SHA256: `0128e5272ed9a802864171792586fe33a1b4e1bd32e38c0c29c7f9ab1262090a`。
+
+iOSも最終distを `cap copy ios` 後に署名なしgeneric build成功。
+App.app内の全242 Webファイルがdistと一致し、同じ `nearby-BCKUmp82.js`
+（SHA256 `f38236643f7bf3d13ce270a304a18a1bf0f0aea40b18b35ef2585771c51c75c2`）と
+NearbyPlayPlugin／履歴store、14言語権限文言を同梱。署名・実機installはしていない。
+最終UIでは参加→chat→退出→閲覧専用履歴も模擬peerで確認した。
