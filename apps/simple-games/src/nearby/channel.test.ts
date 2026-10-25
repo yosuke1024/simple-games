@@ -94,3 +94,50 @@ describe('encrypted nearby channel', () => {
     expect(p.hostFrames).toHaveLength(1);
   });
 });
+
+describe('continuation authentication', () => {
+  it('binds proof to the original pair, fresh key exchange, and sender role', async () => {
+    const original = await pair();
+    const hostKey = original.host.reconnectKey!;
+    const guestKey = original.guest.reconnectKey!;
+    expect(hostKey.extractable).toBe(false);
+    original.host.close();
+    original.guest.close();
+    const resumed = await pair();
+    const proof = await resumed.host.resumeProof(hostKey);
+    expect(await resumed.guest.verifyResume(guestKey, proof)).toBe(true);
+    expect(await resumed.host.verifyResume(hostKey, proof)).toBe(false);
+    expect(await resumed.guest.verifyResume(resumed.guest.reconnectKey!, proof)).toBe(false);
+    const next = await pair();
+    expect(await next.guest.verifyResume(guestKey, proof)).toBe(false);
+  });
+});
+
+it('runs key derivation once when native send completion races with the peer key', async () => {
+  let release!: () => void;
+  const ready = vi.fn();
+  const a = await Channel.create(
+    true,
+    () =>
+      new Promise<void>((resolve) => {
+        release = resolve;
+      }),
+    ready,
+    () => {},
+  );
+  const frames: string[] = [];
+  const b = await Channel.create(
+    false,
+    async (raw) => {
+      frames.push(raw);
+    },
+    () => {},
+    () => {},
+  );
+  const starting = a.start();
+  await b.start();
+  const receiving = a.receive(frames.shift()!);
+  release();
+  await Promise.all([starting, receiving]);
+  expect(ready).toHaveBeenCalledTimes(1);
+});

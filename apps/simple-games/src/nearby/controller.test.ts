@@ -14,6 +14,9 @@ vi.mock('./channel', () => ({
       receive: (raw: string) => void,
     ) => ({
       code: '123456',
+      reconnectKey: {},
+      resumeProof: async () => 'proof',
+      verifyResume: async () => true,
       start: async () => {
         ready();
       },
@@ -23,6 +26,12 @@ vi.mock('./channel', () => ({
     }),
   },
 }));
+const controllers: NearbyController[] = [];
+function create(...args: ConstructorParameters<typeof NearbyController>) {
+  const controller = new NearbyController(...args);
+  controllers.push(controller);
+  return controller;
+}
 function native() {
   let listener: ((event: NativeEvent) => void) | null = null;
   let data: string | null = null;
@@ -58,12 +67,12 @@ async function settle() {
 async function setup() {
   const a = native(),
     b = native();
-  const host = new NearbyController(
+  const host = create(
     { host: true, name: 'A', public: true, transport: 'ble' },
     () => {},
     a.plugin,
   );
-  const guest = new NearbyController(
+  const guest = create(
     { host: false, name: 'B', public: false, transport: 'ble' },
     () => {},
     b.plugin,
@@ -82,15 +91,17 @@ async function setup() {
   await pump();
   return { a, b, host, guest, pump };
 }
-afterEach(() => vi.useRealTimers());
+afterEach(async () => {
+  if (!vi.isFakeTimers()) vi.useFakeTimers();
+  const closing = controllers.splice(0).map((value) => value.stop());
+  await vi.advanceTimersByTimeAsync(1751);
+  await Promise.all(closing);
+  vi.useRealTimers();
+});
 describe('nearby lifecycle and persistence', () => {
   it('does no radio work on construction; approves, chats, starts Yacht and retains history after disconnect', async () => {
     const p = native();
-    new NearbyController(
-      { host: true, name: 'A', public: false, transport: 'ble' },
-      () => {},
-      p.plugin,
-    );
+    create({ host: true, name: 'A', public: false, transport: 'ble' }, () => {}, p.plugin);
     expect(p.plugin.start).not.toHaveBeenCalled();
     const { a, b, host, guest, pump } = await setup();
     expect(host.session?.paired).toBe(false);
@@ -114,17 +125,17 @@ describe('nearby lifecycle and persistence', () => {
     a.event({ type: 'disconnected', reason: 'background' });
     b.event({ type: 'disconnected', reason: 'background' });
     await settle();
-    expect(host.state).toBe('ended');
-    expect(a.plugin.stop).toHaveBeenCalledTimes(1);
+    expect(host.state).toBe('reconnecting');
+    expect(a.plugin.stop).not.toHaveBeenCalled();
     const saved = (await loadHistory(a.plugin)).gatherings[0]!;
     expect(saved.messages[0]?.text).toBe('Hello');
     expect(saved.games[0]?.finished).toBe(false);
-    expect(saved.endedAt).toBeDefined();
+    expect(saved.endedAt).toBeUndefined();
     // Reading history cannot start or reconnect a transport.
     expect(a.plugin.start).toHaveBeenCalledTimes(1);
     expect(a.plugin.connect).not.toHaveBeenCalled();
   });
-  it('ends on lost chat ACK without marking it delivered, with no automatic restart', async () => {
+  it('pauses on lost chat ACK without marking it delivered or ending the gathering', async () => {
     const { host, guest, pump, a } = await setup();
     host.session!.approve();
     await pump();
@@ -132,10 +143,11 @@ describe('nearby lifecycle and persistence', () => {
     host.session!.sendChat('lost');
     await settle();
     await vi.advanceTimersByTimeAsync(15001);
-    expect(host.reason).toBe('timeout');
-    expect(host.session!.messages[0]?.status).toBe('failed');
+    expect(host.state).toBe('reconnecting');
+    expect(host.session!.closed).toBe('');
+    expect(host.session!.messages[0]?.status).toBe('sending');
     expect(a.plugin.start).toHaveBeenCalledTimes(1);
-    await guest.stop();
+    void guest.stop();
   });
   it('stops pending permission/start work when the view is left', async () => {
     const p = native();
@@ -146,7 +158,7 @@ describe('nearby lifecycle and persistence', () => {
           finish = resolve;
         }),
     );
-    const controller = new NearbyController(
+    const controller = create(
       { host: true, name: 'A', public: false, transport: 'ble' },
       () => {},
       p.plugin,
@@ -172,11 +184,11 @@ describe('nearby lifecycle and persistence', () => {
       )
       .mockResolvedValue(undefined);
     const options = { host: true, name: 'A', public: false, transport: 'ble' } as const;
-    const old = new NearbyController(options, () => {}, p.plugin);
+    const old = create(options, () => {}, p.plugin);
     const pending = old.start();
     await settle();
     await old.stop();
-    const next = new NearbyController(options, () => {}, p.plugin);
+    const next = create(options, () => {}, p.plugin);
     await next.start();
     const stops = vi.mocked(p.plugin.stop).mock.calls.length;
     finish();
@@ -190,7 +202,7 @@ describe('nearby lifecycle and persistence', () => {
     vi.useFakeTimers();
     host.session!.reject();
     await settle();
-    expect(a.frames.some((raw) => JSON.parse(raw).type === 'admission')).toBe(true);
+    expect(a.frames.some((raw) => JSON.parse(raw).message?.type === 'admission')).toBe(true);
     expect(a.plugin.stop).not.toHaveBeenCalled();
     while (a.frames.length) b.event({ type: 'data', data: a.frames.shift()! });
     await settle();
@@ -202,7 +214,7 @@ describe('nearby lifecycle and persistence', () => {
     'closes before retaining an unbounded native event backlog: %s',
     async (attack) => {
       const p = native();
-      const controller = new NearbyController(
+      const controller = create(
         { host: false, name: 'A', public: false, transport: 'ble' },
         () => {},
         p.plugin,

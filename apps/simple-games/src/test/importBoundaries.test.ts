@@ -290,6 +290,13 @@ function gamesReachOffenders(imports: Import[]): Import[] {
       ['engine', 'types'].some((name) => entry.resolved === join(gamesDir, 'yacht', 'game', name))
     )
       return false;
+    // Reuse the CPU game's pure visual surface, never its provider or persistence.
+    if (
+      entry.file === join(SRC, 'nearby', 'NearbyRoot.tsx') &&
+      entry.kind === 'static' &&
+      entry.resolved === join(gamesDir, 'yacht', 'ui', 'components', 'YachtPlaySurface')
+    )
+      return false;
     // issue #38: the i18n tests glob every game's catalog to test it as a
     // whole. Exempt only this exact resolved target, and only from
     // recognised test files — a shell file (or any other glob shape,
@@ -438,8 +445,26 @@ describe('import boundaries (docs/ARCHITECTURE.md)', () => {
     ];
     expect(listed(nearbyOffenders(probeImports(probes)))).toEqual(expectedOffenders(probes));
   });
-  it('limits the Nearby Yacht adapter to pure scoring and types', () => {
+  it('limits Nearby to pure Yacht rules and the shared visual surface', () => {
     const probes: Probe[] = [
+      {
+        file: 'nearby/NearbyRoot.tsx',
+        specifier: '../games/yacht/ui/components/YachtPlaySurface',
+        kind: 'static',
+        verdict: 'ok',
+      },
+      {
+        file: 'nearby/NearbyRoot.tsx',
+        specifier: '../games/yacht/ui/screens/GameScreen',
+        kind: 'static',
+        verdict: 'offender',
+      },
+      {
+        file: 'nearby/NearbyRoot.tsx',
+        specifier: '../games/yacht/state/GameContext',
+        kind: 'static',
+        verdict: 'offender',
+      },
       {
         file: 'nearby/yacht.ts',
         specifier: '../games/yacht/game/engine',

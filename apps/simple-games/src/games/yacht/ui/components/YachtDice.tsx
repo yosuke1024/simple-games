@@ -16,8 +16,12 @@
 import { memo } from 'react';
 import { useSettings } from '@/state/SettingsContext';
 import { useReducedMotion } from '@/ui/useReducedMotion';
-import type { Dice } from '../../game';
-import type { LastRoll } from '../../state/GameContext';
+import type { Dice } from '../../game/types';
+
+export interface DiceRoll {
+  readonly rollIndex: number;
+  readonly rolled: readonly boolean[];
+}
 
 /** Which of the nine pip positions each face lights, top-left to bottom-right. */
 const PIPS: readonly (readonly number[])[] = [
@@ -48,7 +52,7 @@ export interface YachtDiceProps {
   rolled: boolean;
   /** False when keeping means nothing right now, or a dialog is up. */
   canHold: boolean;
-  lastRoll: LastRoll | null;
+  lastRoll: DiceRoll | null;
   onToggle: (index: number) => void;
 }
 

@@ -12,7 +12,7 @@ import {
 } from './yacht';
 
 export const MAX_FRAME_BYTES = 4096;
-export const PROTOCOL_VERSION = 3;
+export const PROTOCOL_VERSION = 4;
 export const MAX_CHAT_CHARACTERS = 160;
 export const MAX_CHAT_MESSAGES = 1000;
 const token = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{32}$/.test(v);
@@ -46,7 +46,7 @@ export interface Options {
   changed: () => void;
 }
 
-/** One foreground, two-peer session; no timers, storage, HTTP or platform dependencies. */
+/** One resumable, two-peer session; no timers, storage, HTTP or platform dependencies. */
 export class Session {
   readonly host: boolean;
   readonly name: string;
@@ -62,6 +62,7 @@ export class Session {
   match: Match | null = null;
   pending = false;
   closed = '';
+  suspended = false;
   private peerNonce = '';
   private seq = 0;
   private receivedSeq = 0;
@@ -94,6 +95,7 @@ export class Session {
   get canAct() {
     return (
       this.paired &&
+      !this.suspended &&
       this.match !== null &&
       !finished(this.match) &&
       !this.pending &&
@@ -164,7 +166,7 @@ export class Session {
   }
   proposeGame() {
     if (
-      !this.host ||
+      this.suspended ||
       !this.paired ||
       this.pending ||
       this.gameProposed ||
@@ -184,6 +186,7 @@ export class Session {
   }
   ready() {
     if (
+      this.suspended ||
       !this.paired ||
       !this.gameProposed ||
       this.pending ||
@@ -245,7 +248,7 @@ export class Session {
     this.changed();
   }
   sendChat(text: string): boolean {
-    if (!this.paired || this.chatPending || !isChatText(text)) return false;
+    if (this.suspended || !this.paired || this.chatPending || !isChatText(text)) return false;
     if (this.messages.length >= MAX_CHAT_MESSAGES) {
       this.end('Chat limit');
       return false;
@@ -260,6 +263,19 @@ export class Session {
     this.send('chat', { seq: this.chatSeq, text });
     this.changed();
     return true;
+  }
+  checkConnection() {
+    if (this.paired && !this.suspended) this.send('presence');
+  }
+  suspend() {
+    if (this.closed || this.suspended) return;
+    this.suspended = true;
+    this.changed();
+  }
+  resume() {
+    if (this.closed || !this.suspended) return;
+    this.suspended = false;
+    this.changed();
   }
   private chatId(host: boolean, seq: number) {
     return `${this.sid}:${host ? 'h' : 'g'}:${seq}`;
@@ -349,18 +365,20 @@ export class Session {
     } else if (!this.paired) {
       this.end('Admission required');
       return;
-    } else if (v.type === 'game-proposal' && !this.host) {
+    } else if (v.type === 'game-proposal') {
       if (
         v.game !== 'yacht' ||
         !integer(v.round, 1, 10000) ||
         v.round !== (this.match?.round ?? 0) + 1 ||
-        this.gameProposed ||
         this.pending ||
         (this.match && !this.matchComplete)
       ) {
         this.end('Unexpected game proposal');
         return;
       }
+      // Both players may propose the same round at once. Do not reset a
+      // Ready choice already made for that proposal.
+      if (this.gameProposed && v.round === this.proposedRound) return;
       this.gameProposed = true;
       this.proposedRound = v.round;
       this.localReady = this.peerReady = false;
@@ -488,6 +506,10 @@ export class Session {
         round: incoming.round,
         revision: incoming.revision,
       });
+    } else if (v.type === 'presence') {
+      // A foreground-return probe uses the reliable envelope receipt.
+      // No heartbeat, no board mutation, and no UI or history entry.
+      return;
     } else if (v.type === 'chat') {
       if (!integer(v.seq, 1, MAX_CHAT_MESSAGES) || !isChatText(v.text)) {
         this.end('Invalid chat');

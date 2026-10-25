@@ -20,6 +20,7 @@
 		FAA48BFB1D76E286DAD4A543 /* NearbyPlayPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 809ED4DD1BB7B1AD1A18C07D /* NearbyPlayPlugin.swift */; };
 		703B956EA522951947FAF69D /* NearbyPlayHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43EE2CF18B018BD0DCE996D /* NearbyPlayHistoryStore.swift */; };
 		FE9DE530C3198023E65A9AAD /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = BEE39EA3568F1B4677DDA1AD /* InfoPlist.strings */; };
+		DB627EBF154C49CDA2A1F741 /* NearbyPlayRuntimeState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB627EBF154C49CDA2A1F742 /* NearbyPlayRuntimeState.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,6 +52,7 @@
 		289F9DD0EE0EB467DFEBC50F /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "fr"; path = "fr.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		0DE7FB27DBFEDAE9DE27A03F /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "de"; path = "de.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		25DA426248F19DDDCE694D18 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "tr"; path = "tr.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		DB627EBF154C49CDA2A1F742 /* NearbyPlayRuntimeState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyPlayRuntimeState.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +93,7 @@
 				7A1C0E00B4F2D3A500A1E114 /* QuickActionsPlugin.swift */,
 				B43EE2CF18B018BD0DCE996D /* NearbyPlayHistoryStore.swift */,
 				809ED4DD1BB7B1AD1A18C07D /* NearbyPlayPlugin.swift */,
+				DB627EBF154C49CDA2A1F742 /* NearbyPlayRuntimeState.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -202,6 +205,7 @@
 				7A1C0E01B4F2D3A500A1E114 /* QuickActionsPlugin.swift in Sources */,
 				703B956EA522951947FAF69D /* NearbyPlayHistoryStore.swift in Sources */,
 				FAA48BFB1D76E286DAD4A543 /* NearbyPlayPlugin.swift in Sources */,
+				DB627EBF154C49CDA2A1F741 /* NearbyPlayRuntimeState.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

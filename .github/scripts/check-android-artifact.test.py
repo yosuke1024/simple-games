@@ -10,7 +10,7 @@ import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 import zipfile
-from android_permission_policy import source_errors
+from android_permission_policy import source_errors, CONTINUITY
 
 A = "{http://schemas.android.com/apk/res/android}"
 SCRIPT = Path(__file__).with_name("check-android-artifact.sh")
@@ -28,7 +28,12 @@ def manifest():
         if name == "BLUETOOTH_SCAN":
             permission.set(A + "usesPermissionFlags", "neverForLocation")
     ET.SubElement(root, "uses-feature", {A + "name": "android.hardware.bluetooth_le", A + "required": "false"})
-    ET.SubElement(root, "application")
+    for name in CONTINUITY:
+        ET.SubElement(root, "uses-permission", {A + "name": name})
+    for name in ("android.hardware.bluetooth", "android.hardware.location"):
+        ET.SubElement(root, "uses-feature", {A + "name": name, A + "required": "false"})
+    app = ET.SubElement(root, "application")
+    ET.SubElement(app, "service", {A + "name": ".nearby.NearbyConnectionService", A + "exported": "false", A + "foregroundServiceType": "connectedDevice", A + "stopWithTask": "true"})
     return root
 
 
@@ -118,6 +123,18 @@ class AndroidArtifactTest(unittest.TestCase):
         ET.SubElement(root, "uses-feature", {A + "name": "android.hardware.bluetooth"})
         self.rejected(root, "必須条件")
 
+    def test_location_and_bluetooth_require_explicit_optional_features(self):
+        for name in ("android.hardware.bluetooth", "android.hardware.location"):
+            root = manifest()
+            root.remove(next(el for el in root.findall("uses-feature") if el.get(A + "name") == name))
+            self.rejected(root, "required=false")
+
+    def test_connected_service_is_narrow_and_stops_with_task(self):
+        for key, value in (("exported", "true"), ("foregroundServiceType", "location"), ("stopWithTask", "false")):
+            root = manifest()
+            root.find("application/service").set(A + key, value)
+            self.rejected(root, "NearbyConnectionService")
+
     def test_other_permissions_remain_denied(self):
         for name in ("ACCESS_BACKGROUND_LOCATION", "ACCESS_LOCAL_NETWORK", "NEARBY_WIFI_DEVICES"):
             root = manifest()
@@ -153,7 +170,7 @@ class AndroidSourcePermissionTest(unittest.TestCase):
         root = manifest()
         ET.SubElement(root, "uses-permission", {A + "name": "android.permission.ACCESS_NETWORK_STATE"})
         errors = source_errors(root, is_product=False)
-        self.assertEqual(len(errors), 7)
+        self.assertEqual(len(errors), 10)
         self.assertTrue(all("許可リスト外" in error for error in errors))
 
     def test_core_source_allowlist_is_preserved(self):

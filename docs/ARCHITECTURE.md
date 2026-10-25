@@ -59,7 +59,8 @@ src/
 
 - Nearby Play は `app/nearbyGate.ts` からのdynamic importだけで開く。例外として
   `nearby/yacht.ts` のみが `games/yacht/game/{engine,types}` の純粋な採点／型を参照できる。
-  その他のNearbyからのゲーム内部参照、ゲームからのNearby参照、Clubとの相互参照は許容しない。
+  `nearby/NearbyRoot.tsx` は `games/yacht/ui/components/YachtPlaySurface` の純粋なUIも共有する。
+  この2境界以外のゲーム内部参照、通常GameContext/storage/Clubへの到達、ゲームからNearbyへの参照は許容しない。
   製品nativeと隔離PoCは別所有・別service識別子とし、製品からPoCへimportしない。
 
 - `games/*/game/` は Pure TypeScript。他のどのレイヤーも import しない
@@ -234,7 +235,9 @@ gate を維持することを門にする。技術の正本と実機検証条件
 ## 電池(低消費電力)
 
 - プレイ中の定期ポーリングなし。バックグラウンド処理なし。常時接続なし。
-  Nearby は本人が開始した前面セッション中だけ接続を保ち、切断・退出・background で閉じる。
+  Nearby は本人が開始した集まりの間だけ接続を保つ。一時中断では保持し、前面で同じ相手に
+  再接続する。退出・解散で終了する。AndroidのconnectedDeviceサービスとiOSのBluetooth背景モードを
+  この用途に限って許容する。プロセス終了後の復元は未対応。
 - オフライン時は広告取得をリトライしない。
 - 画面外のゲームはアンマウントする(描画しない)。**アンマウントされたゲームは
   タイマー・RAF・リスナー・音声を一切残さない** — 契約とテストは

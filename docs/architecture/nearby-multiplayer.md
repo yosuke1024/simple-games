@@ -17,19 +17,22 @@ Updated: 2026-10-25 / issue #268
 - `src/app/nearbyGate.ts` からだけ動的に `src/nearby/` を読み込む。入口は Club House と
   別の Nearby Play。Web buildでは入口もchunkも除く。未利用時の探索・権限要求・履歴読取は無い。
 - 初期範囲2人、Bluetooth優先／同一LANを明示選択。host=advertise/listen、参加者=browse。
-  集まりを作る／参加する／履歴を見る → 表示名で申請 → host承認 → チャット ⇄ Yacht。
-  参加前自由コメント無し。チャットだけでも使える。提案後に両者Ready、再戦も同じ。
+  集まりを作る／参加する／履歴を見る → 表示名で申請 → host承認 → ゲーム準備 → Yacht。
+  ゲームが主で、チャットは任意の別タブ。双方が提案でき、両者Readyで開始、再戦も同じ。
+  同時に同じroundを提案した場合は1件へ合流し、既に選んだReadyを消さない。参加前自由コメント無し。
 - 仲間／公開の発見labelは `F-` / `P-` + ランダム6桁hex。個人名を広告に含めない。
   どちらもhost承認必須。labelは公開される番号で、招待秘密や本人証明ではない。
 - native plugin名 `NearbyPlay`。BLE UUIDは `9b5d2000/2001/2002-7a4c-4e13-a280-75d53c01a268`、
   Bonjourは `_sgnearplay._tcp`。PoCと混在させない。native最大4096 UTF-8 bytes + LF、20byte BLE。
 - アプリ間の鍵交換は WebCrypto P-256 ECDH、HKDF-SHA-256、方向別AES-256-GCM。
-  接続ごとに新しい鍵を作り保存しない。ciphertextの通番を単調増加で照合し、再送／改変を拒否。
+  物理接続ごとに新しい鍵を作り、ciphertextの通番を単調増加で照合し、暗号文の再送／改変を拒否。
+  初回鍵交換のHKDFから方向別暗号鍵とは別にHMAC-SHA-256継続鍵を導出し、
+  nonextractable CryptoKeyとしてその集まりのメモリ内だけに保持する。ディスクへは保存しない。
   暗号化前JSONは最大2800 bytes。交換した公開鍵の順序付きhashから6桁の比較コードを表示する。
   比較コードは誤接続確認の補助。公開鍵の commitment 段階がない短縮hashなので、
   **コードが一致しても本人認証・能動的な中間者攻撃への耐性は保証しない**。
   仲間同士はコードも見比べるが、認証済み／安全な相手などとは表示しない。
-- room wire v3。helloに表示名・host/guest・sessionnonce・ローカルブロック用install ID。
+- room wire v4（v3/1.5.1とは混在不可）。helloに表示名・host/guest・sessionnonce・ローカルブロック用install ID。
   hostのadmissionとguestのadmission-ack完了前はチャット・Ready・対局操作を認めない。
   install IDは端末内に作るランダム値で、OS識別子を使わずサーバーへ蓄積しない。
   ブロックはそのIDだけを対象とし、再インストール／改造で回避できる。
@@ -38,10 +41,40 @@ Updated: 2026-10-25 / issue #268
   送受合計1000件で接続終了。チャットACKでstateのpendingを解除しない。
 - Yachtの合法手・乱数・採点はhostが確定。初期／各操作／最終stateのACKを待つ旧v2の
   契約を継承する。host終局はACK待ち、guestは検証済み終局受信で確定。host改造耐性は無い。
-- 探索60秒、接続／鍵交換15秒、承認待ち60秒、state/chat/admission ACK各15秒。
-  別メッセージで期限を延ばさない。background・切断・退出で終え、自動再接続しない。
-- `nearby/yacht.ts` だけが既存 `games/yacht/game/{engine,types}` の純粋な採点と型へ到達する。
-  その他のNearby／シェルはゲーム内部を参照しない。通常のYacht state/storage/Club bridgeは使わない。
+- 探索60秒、接続／鍵交換15秒、承認待ち60秒。helloで相手が定まる前の失敗や承認待ちの期限超過は終了する。
+  承認後のstate/chat/admission ACK各15秒とdeliveryの最古未ACK15秒は、物理切断と同様に
+  継続待ちへ移る。無関係なメッセージで期限を延ばさない。backgroundではタイマーを止める。
+- `delivery.ts` は承認・提案・Ready・操作・state・chatの全メッセージをseq/累積ACKで包み、
+  最大64件の未確認outboxを保持する。新しい物理接続へ同じ論理メッセージを再送し、
+  適用済みseqは再適用せずACKだけ返す。出目・採点・チャットの重複を防ぎ、提案やReadyの
+  片方向欠落も15秒で検出する。暗号化は再接続ごとに新しい鍵・通番で行う。
+- 一時中断はSessionをendせずsuspendし、盤面・キープ・手番・pending・履歴IDを保持する。
+  前面で同じlabelを再発見し、初回の継続鍵で新しいECDH transcript hash＋送信者roleへ
+  HMACしたproofを双方確認してからdeliveryを再開する。label一致だけで再参加を認めない。
+  前のproofの再利用・別の鍵・role反射は拒否する。初回の本人認証限界は改善したと主張しない。
+- Androidは明示開始中だけprivateなconnectedDevice foreground serviceと静かな状態通知を使う。
+  iOSはbluetooth-central/peripheral背景モードを使う。非アクティブ時のnativeイベントは
+  64件/256KiBまでFIFO保持し、復帰時にFIFO→lifecycle trueで渡す。超過時は物理接続を閉じ、
+  復帰後に継続待ちへ渡す。JSデータbacklogは64件まで、lifecycleは未解決sendに塞がれない
+  制御経路で扱う。古い物理接続世代の処理は新しい世代の受信キューを塞がない。
+- 背景に移ったこと自体では明示切断しないが、OSの無制限実行は保証しない。特にiOS背景の
+  peripheral広告はAndroidから再発見できない場合があり、新しい再接続試行は前面で行う。
+  前面復帰時に1回だけ疎通確認を送る。周期heartbeatは行わず、無操作の片側だけが切断を
+  検知した場合の相手の即時検知は保証しない。実際のOS切断通知は実機で確認する。
+  LANの背景維持も保証しない。プロセス終了・強制終了・端末再起動からの復元は未対応。
+  退出・解散・ブロック・protocol違反は終了し、以後の自動再接続はしない。
+- `nearby/yacht.ts` が既存 `games/yacht/game/{engine,types}` の純粋な採点と型へ到達し、
+  `NearbyRoot.tsx` は `games/yacht/ui/components/YachtPlaySurface` をCPU戦と共有する。
+  それ以外のゲーム内部参照はしない。通常のYacht state/storage/Club bridgeは使わない。
+
+背景制約の一次資料:
+[Apple Core Bluetooth Background Processing](https://developer.apple.com/library/archive/documentation/NetworkingInternetWeb/Conceptual/CoreBluetooth_concepts/CoreBluetoothBackgroundProcessingForIOSApps/PerformingTasksWhileYourAppIsInTheBackground.html)、
+[Android connectedDevice foreground service](https://developer.android.com/develop/background-work/services/fgs/service-types#connected-device)。
+
+1.5.1 (10501) の内部テスト/TestFlightでは、iPhone host→Pixel guestのBluetooth接続・承認・
+双方向日本語/emojiチャットがユーザー報告で成功。その後、アプリ切替で終了、hostのみの提案、
+独自Yacht画面、チャット先行の動線が不適切と指摘された。上の継続・共通UI・ゲーム優先の
+契約はその指摘による改定で、修正版の実機確認済みを意味しない。
 
 ### 端末内の履歴
 

@@ -23,6 +23,9 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
+import android.content.BroadcastReceiver;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -48,6 +51,10 @@ final class BleTransport implements Transport {
     private final Context context;
     private final Events events;
     private final Handler main = new Handler(Looper.getMainLooper());
+    private final PausableDeadlines deadlines = new PausableDeadlines(new PausableDeadlines.Scheduler() {
+        public void post(Runnable callback, long delay) { main.postDelayed(callback, delay); }
+        public void remove(Runnable callback) { main.removeCallbacks(callback); }
+    });
     private final FrameCodec decoder = new FrameCodec();
     private final SubscriptionBuffer earlyNotifications = new SubscriptionBuffer();
     private final Map<String, BluetoothDevice> peers = new LinkedHashMap<>();
@@ -66,6 +73,7 @@ final class BleTransport implements Transport {
     private boolean ready;
     private boolean writing;
     private boolean indicate;
+    private boolean observingAdapter;
     private int offset;
     private int currentChunkLength;
     private String label;
@@ -73,6 +81,15 @@ final class BleTransport implements Transport {
     private final Runnable connectTimeout = () -> fail("connect-timeout", "BLE connection or subscription timed out");
     private final Runnable writeTimeout = () -> fail("write-timeout", "BLE send callback timed out");
     private final Runnable receiveTimeout = () -> fail("frame-timeout", "Incomplete BLE frame timed out");
+    private final BroadcastReceiver adapterState = new BroadcastReceiver() {
+        @Override public void onReceive(Context ignored, Intent intent) {
+            if (!BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())) return;
+            int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+            if (state == BluetoothAdapter.STATE_TURNING_OFF || state == BluetoothAdapter.STATE_OFF) {
+                run(() -> fail("bluetooth-disabled", "Bluetooth is switched off"));
+            }
+        }
+    };
 
     BleTransport(Context context, Events events) { this.context = context; this.events = events; }
 
@@ -83,7 +100,13 @@ final class BleTransport implements Transport {
         this.advertise = advertise;
         this.label = label;
         active = true;
-        main.postDelayed(sessionTimeout, 60_000);
+        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        // Bluetooth broadcasts originate from a privileged separate process. This action is
+        // system-protected; exported here permits the OS sender, not arbitrary app messages.
+        if (Build.VERSION.SDK_INT >= 33) context.registerReceiver(adapterState, filter, Context.RECEIVER_EXPORTED);
+        else context.registerReceiver(adapterState, filter);
+        observingAdapter = true;
+        deadlines.post(sessionTimeout, 60_000);
         if (advertise) {
             advertiser = adapter.getBluetoothLeAdvertiser();
             if (advertiser == null || !adapter.isMultipleAdvertisementSupported()) {
@@ -115,9 +138,9 @@ final class BleTransport implements Transport {
         BluetoothDevice device = peers.get(peerId);
         if (device == null) throw new IllegalArgumentException("Select a discovered BLE peer");
         stopScan();
-        main.removeCallbacks(sessionTimeout);
+        deadlines.remove(sessionTimeout);
         remote = device;
-        main.postDelayed(connectTimeout, 15_000);
+        deadlines.post(connectTimeout, 15_000);
         gatt = device.connectGatt(context, false, clientCallback, BluetoothDevice.TRANSPORT_LE);
         if (gatt == null) fail("connect-failed", "Could not create BLE connection");
     }
@@ -135,7 +158,7 @@ final class BleTransport implements Transport {
         currentChunkLength = Math.min(20, frame.length - offset);
         byte[] chunk = Arrays.copyOfRange(frame, offset, offset + currentChunkLength);
         writing = true;
-        main.postDelayed(writeTimeout, 5_000);
+        deadlines.post(writeTimeout, 5_000);
         try {
             boolean accepted;
             if (advertise) {
@@ -158,7 +181,7 @@ final class BleTransport implements Transport {
 
     private void wrote(int status) {
         if (!writing) return;
-        main.removeCallbacks(writeTimeout);
+        deadlines.remove(writeTimeout);
         if (status != BluetoothGatt.GATT_SUCCESS) { fail("write-failed", "BLE fragment callback failed: " + status); return; }
         writing = false;
         offset += currentChunkLength;
@@ -181,16 +204,16 @@ final class BleTransport implements Transport {
     private void consume(byte[] value) {
         try {
             decoder.accept(value, value.length, events::data);
-            main.removeCallbacks(receiveTimeout);
-            if (decoder.hasPartialFrame()) main.postDelayed(receiveTimeout, 5_000);
+            deadlines.remove(receiveTimeout);
+            if (decoder.hasPartialFrame()) deadlines.post(receiveTimeout, 5_000);
         } catch (Exception e) { fail("invalid-frame", "Malformed or oversized BLE frame"); }
     }
 
     private void connected() {
         if (ready) return;
         ready = true;
-        main.removeCallbacks(connectTimeout);
-        main.removeCallbacks(sessionTimeout);
+        deadlines.remove(connectTimeout);
+        deadlines.remove(sessionTimeout);
         stopAdvertising();
         stopScan();
         events.connected();
@@ -294,15 +317,15 @@ final class BleTransport implements Transport {
                 label.getBytes(StandardCharsets.US_ASCII)).build();
             advertiser.startAdvertising(new AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-                .setConnectable(true).setTimeout(60_000).build(), primary, response, advertiseCallback);
+                .setConnectable(true).setTimeout(0).build(), primary, response, advertiseCallback);
         }); }
         @Override public void onConnectionStateChange(BluetoothDevice device, int status, int state) { run(() -> {
             if (state == BluetoothProfile.STATE_CONNECTED) {
                 if (remote != null && !remote.equals(device)) { server.cancelConnection(device); return; }
                 if (status != BluetoothGatt.GATT_SUCCESS) { fail("connect-failed", "BLE peripheral connection failed"); return; }
                 remote = device;
-                main.removeCallbacks(sessionTimeout);
-                main.postDelayed(connectTimeout, 15_000);
+                deadlines.remove(sessionTimeout);
+                deadlines.post(connectTimeout, 15_000);
                 stopAdvertising();
             } else if (state == BluetoothProfile.STATE_DISCONNECTED && device.equals(remote)) {
                 fail("connection-lost", "BLE peer disconnected");
@@ -352,8 +375,15 @@ final class BleTransport implements Transport {
     private void stopAdvertising() {
         if (advertiser != null) { try { advertiser.stopAdvertising(advertiseCallback); } catch (Exception ignored) {} }
     }
+    public void setForeground(boolean active) { deadlines.setActive(active); }
+
     public void stop() {
         active = false; ready = false; writing = false;
+        if (observingAdapter) {
+            observingAdapter = false;
+            try { context.unregisterReceiver(adapterState); } catch (Exception ignored) {}
+        }
+        deadlines.clear();
         main.removeCallbacksAndMessages(null);
         stopScan(); stopAdvertising(); advertiser = null;
         if (gatt != null) { try { gatt.disconnect(); gatt.close(); } catch (Exception ignored) {} gatt = null; }

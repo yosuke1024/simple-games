@@ -34,7 +34,17 @@ vi.mock('@capacitor/core', () => ({
   registerPlugin: () => fixtures.radio,
 }));
 vi.mock('@capacitor/app', () => ({ App: { addListener: vi.fn() } }));
-vi.mock('../state/SettingsContext', () => ({ useSettings: () => ({ locale: 'en' }) }));
+vi.mock('../state/SettingsContext', async () => {
+  const { translate } = await import('../i18n');
+  return {
+    useSettings: () => ({
+      locale: 'en',
+      settings: { reducedMotion: true },
+      t: (key: Parameters<typeof translate>[1], vars?: Parameters<typeof translate>[2]) =>
+        translate('en', key, vars),
+    }),
+  };
+});
 vi.mock('./history', () => ({
   loadHistory: fixtures.load,
   deleteGathering: fixtures.remove,
@@ -71,7 +81,7 @@ vi.mock('./controller', async () => {
         send: (wire) => this.queue.push({ receiver: 'peer', wire }),
         changed: () => {
           if (this.session.paired) {
-            this.state = 'room';
+            this.state = this.session.suspended ? 'reconnecting' : 'room';
             this.gathering ??= {
               id: this.session.sid,
               at: 1000,
@@ -235,7 +245,7 @@ describe('Nearby Play user flows', () => {
     },
   );
 
-  it('waits for host approval receipt before chat, then allows chat without starting a game', () => {
+  it('opens game preparation after approval and keeps chat an optional panel', () => {
     render(<NearbyRoot onExit={() => {}} />);
     const controller = begin();
     act(() => controller.establish());
@@ -246,6 +256,10 @@ describe('Nearby Play user flows', () => {
     expect(screen.getByRole('button', { name: en.reject })).toBeDisabled();
     expect(screen.queryByRole('textbox', { name: en.message })).not.toBeInTheDocument();
     act(() => controller.flush());
+    expect(screen.getByRole('button', { name: en.game })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: en.propose })).toBeEnabled();
+    expect(screen.queryByRole('textbox', { name: en.message })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: en.chat }));
     fireEvent.change(screen.getByRole('textbox', { name: en.message }), {
       target: { value: 'Hello nearby' },
     });
@@ -271,19 +285,45 @@ describe('Nearby Play user flows', () => {
       controller.peer.approve();
       controller.flush();
     });
-    expect(screen.getByRole('textbox', { name: en.message })).toBeInTheDocument();
-    expect(screen.getByText(en.hostSelects)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: en.propose })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: en.message })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: en.propose }));
+    act(() => controller.flush());
+    expect(controller.peer.gameProposed).toBe(true);
+    expect(screen.getByRole('button', { name: en.ready })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: en.ready }));
+    act(() => {
+      controller.peer.ready();
+      controller.flush();
+      controller.peer.act({ kind: 'roll' });
+      controller.flush();
+      controller.peer.act({ kind: 'score', category: 'choice' });
+      controller.flush();
+    });
+    expect(screen.getByText('Player 0 · Host 30')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^Roll/ }));
+    act(() => controller.flush());
+    const choice = screen.getByRole('button', { name: /^Choice: 30 if taken now; Host: 30/ });
+    expect(choice.querySelector('.yt-box-points')).toHaveTextContent('30');
+    expect(choice.querySelector('.yt-box-cpu')).toHaveTextContent('30');
+    fireEvent.click(screen.getByRole('button', { name: /^Yacht: 50 if taken now; Host:/ }));
+    act(() => controller.flush());
+    expect(controller.session.match!.scores[1][11]).toBe(50);
+    expect(controller.session.match!.scores[0][11]).toBeNull();
+    expect(screen.getByText('Player 50 · Host 30')).toBeInTheDocument();
+    expect(screen.getAllByText(en.opponent)).toHaveLength(2);
+    expect(screen.queryByText('CPU')).not.toBeInTheDocument();
   });
 
   it('requires both Ready, preserves chat across panels and a full match, and returns to the same gathering', () => {
     render(<NearbyRoot onExit={() => {}} />);
     const controller = hostRoom();
+    fireEvent.click(screen.getByRole('button', { name: en.chat }));
     fireEvent.change(screen.getByRole('textbox', { name: en.message }), {
       target: { value: 'Before the game' },
     });
     fireEvent.click(screen.getByRole('button', { name: en.send }));
     act(() => controller.flush());
+    fireEvent.click(screen.getByRole('button', { name: en.game }));
     fireEvent.click(screen.getByRole('button', { name: en.propose }));
     act(() => controller.flush());
     fireEvent.click(screen.getByRole('button', { name: en.ready }));
@@ -293,9 +333,16 @@ describe('Nearby Play user flows', () => {
       controller.peer.ready();
       controller.flush();
     });
-    expect(screen.getByRole('button', { name: en.roll })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: en.roll }));
-    expect(screen.getByRole('button', { name: en.roll })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^Roll/ })).toBeEnabled();
+    expect(screen.getByRole('group', { name: 'Dice' }).querySelectorAll('.yt-pip')).toHaveLength(
+      45,
+    );
+    expect(
+      screen.getByRole('group', { name: 'Score sheet' }).querySelectorAll('.yt-box'),
+    ).toHaveLength(12);
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^Roll/ }));
+    expect(screen.getByRole('button', { name: en.pending })).toBeDisabled();
     act(() => controller.flush());
     const revision = controller.session.match!.revision;
     fireEvent.click(screen.getByRole('button', { name: en.chat }));
@@ -316,9 +363,10 @@ describe('Nearby Play user flows', () => {
     });
     expect(controller.session.matchComplete).toBe(true);
     expect(screen.getByText(en.draw)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: en.returnRoom }));
+    fireEvent.click(screen.getByRole('button', { name: en.chat }));
     expect(screen.getByText('Before the game')).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: en.message })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: en.game }));
     fireEvent.click(screen.getByRole('button', { name: en.rematch }));
     act(() => controller.flush());
     fireEvent.click(screen.getByRole('button', { name: en.ready }));
@@ -342,7 +390,7 @@ describe('Nearby Play user flows', () => {
     expect(within(dialog).getByText(en.leaveBody)).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: en.cancel }));
     expect(controller.stop).not.toHaveBeenCalled();
-    expect(screen.getByRole('textbox', { name: en.message })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: en.propose })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: en.dissolve }));
     fireEvent.click(
       within(screen.getByRole('alertdialog')).getByRole('button', { name: en.leave }),
@@ -357,6 +405,54 @@ describe('Nearby Play user flows', () => {
     expect(
       await screen.findByRole('button', { name: /Saved host · Saved guest/ }),
     ).toBeInTheDocument();
+  });
+
+  it('retains the shared Yacht board and chat during reconnection, then resumes the same turn', () => {
+    render(<NearbyRoot onExit={() => {}} />);
+    const controller = hostRoom();
+    act(() => {
+      controller.peer.sendChat('Still here');
+      controller.flush();
+      controller.session.proposeGame();
+      controller.flush();
+      controller.session.ready();
+      controller.peer.ready();
+      controller.flush();
+    });
+    fireEvent.click(screen.getByRole('button', { name: /^Roll/ }));
+    act(() => controller.flush());
+    const firstDie = screen.getByRole('button', { name: 'Die 1: 6' });
+    fireEvent.click(firstDie);
+    act(() => controller.flush());
+    expect(firstDie).toHaveAccessibleName('Die 1: 6, held');
+    const before = structuredClone(controller.session.match);
+    act(() => controller.session.suspend());
+    expect(screen.getAllByText(en.reconnecting).length).toBeGreaterThan(0);
+    for (const button of within(screen.getByRole('group', { name: 'Dice' })).getAllByRole('button'))
+      expect(button).toBeDisabled();
+    for (const button of within(screen.getByRole('group', { name: 'Score sheet' })).getAllByRole(
+      'button',
+    ))
+      expect(button).toBeDisabled();
+    fireEvent.keyDown(window, { key: 'r' });
+    fireEvent.click(firstDie);
+    expect(controller.session.match).toEqual(before);
+    fireEvent.click(screen.getByRole('button', { name: en.chat }));
+    expect(screen.getByText('Still here')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: en.message })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: en.game }));
+    expect(screen.getByRole('button', { name: 'Die 1: 6, held' })).toBeDisabled();
+    act(() => controller.session.resume());
+    expect(screen.queryByText(en.reconnecting)).not.toBeInTheDocument();
+    expect(controller.session.match).toEqual(before);
+    expect(screen.getByRole('button', { name: /^Roll/ })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: /^Choice: 30 if taken now; Guest:/ }));
+    act(() => controller.flush());
+    expect(controller.session.match!.scores[0][10]).toBe(30);
+    expect(controller.peer.match!.scores[0][10]).toBe(30);
+    expect(screen.getByRole('button', { name: /^Choice: scored 30; Guest:/ })).toBeDisabled();
+    expect(screen.queryByText('CPU')).not.toBeInTheDocument();
+    expect(controller.stop).not.toHaveBeenCalled();
   });
 
   it('deletes only the selected local history after warning that the peer copy remains', async () => {

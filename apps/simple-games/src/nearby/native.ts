@@ -4,6 +4,7 @@ export type Transport = 'ble' | 'lan';
 export type NativeEvent =
   | { type: 'peer'; id: string; name: string }
   | { type: 'connected' }
+  | { type: 'lifecycle'; active: boolean }
   | { type: 'data'; data: string }
   | { type: 'disconnected'; reason: string }
   | { type: 'error'; code: string; message: string }
@@ -14,6 +15,7 @@ export interface NearbyPlugin {
     transport: Transport;
     role: 'advertise' | 'browse';
     label: string;
+    resume?: boolean;
   }): Promise<void>;
   connect(options: { peerId: string }): Promise<void>;
   send(options: { data: string }): Promise<void>;

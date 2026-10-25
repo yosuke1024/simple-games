@@ -46,6 +46,14 @@
 	<array>
 		<string>_sgnearplay._tcp</string>
 	</array>
+	<!-- Only the person's active Nearby Play gathering uses these modes.
+	     iOS may wake Bluetooth delegates; WebKit/TCP and process survival are
+	     not guaranteed. No fetch, audio, location, or background polling. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+		<string>bluetooth-peripheral</string>
+	</array>
 	<!-- SKAdNetwork is Apple's install attribution WITHOUT user-level
 	     tracking: the device reports a signed, aggregated postback to the ad
 	     network and no identifier for the user leaves the device. That is why

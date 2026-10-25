@@ -332,7 +332,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     p.guest.ready();
     expect(p.host.match).toBeNull();
     p.guest.proposeGame();
-    expect(p.guest.gameProposed).toBe(false);
+    expect(p.guest.gameProposed).toBe(true);
     p.host.proposeGame();
     p.flush();
     p.guest.ready();

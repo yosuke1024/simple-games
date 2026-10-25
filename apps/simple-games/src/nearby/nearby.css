@@ -194,56 +194,52 @@
   display: block;
   padding: 12px;
 }
-.nearby-board {
-  display: grid;
-  gap: 16px;
-}
-.nearby-dice {
-  display: flex;
+.nearby-playing {
+  padding: 0 0 12px;
   gap: 8px;
-  justify-content: center;
+}
+.nearby-playing > .nearby-tabs,
+.nearby-playing > .nearby-safety,
+.nearby-playing > .nearby-warning,
+.nearby-playing > .nearby-card {
+  margin-inline: 12px;
+}
+.nearby-playing .nearby-tabs .btn {
+  min-height: 44px;
   padding-block: 8px;
 }
-.nearby-dice button {
-  width: min(16vw, 62px);
-  height: 54px;
-  border-radius: 10px;
-  border: 1px solid currentColor;
-  background: transparent;
-  color: inherit;
-  font-size: 25px;
-  font-weight: 700;
+.nearby-tabs button {
+  flex: 1;
 }
-.nearby-dice button[aria-pressed='true'] {
-  border-width: 3px;
-  transform: translateY(-5px);
+.nearby-board {
+  min-width: 0;
 }
-.nearby-dice button:disabled {
-  opacity: 0.6;
+.nearby-game-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 auto 6px;
+  padding-inline: 12px;
+  max-width: 420px;
+  font-size: 12px;
 }
-.nearby-scores {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
+.nearby-game-status strong {
+  flex-shrink: 0;
 }
-.nearby-scores th,
-.nearby-scores td {
-  padding: 10px 4px;
-  border-bottom: 1px solid var(--line);
-  text-align: center;
-  font-size: 13px;
+.nearby-game-status p {
+  text-align: end;
   overflow-wrap: anywhere;
 }
-.nearby-scores th:first-child {
-  text-align: start;
-  width: 44%;
+.nearby-board .yt-sheet-foot {
+  height: auto;
+  align-items: start;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
-.nearby-scores td button {
-  min-width: 44px;
-  min-height: 44px;
-  border: 1px solid currentColor;
-  border-radius: 8px;
-  color: inherit;
-  background: transparent;
-  font: inherit;
+.nearby-board .yt-sheet-foot > span:first-child {
+  flex-shrink: 0;
+}
+.nearby-board .yt-sheet-foot .game-score {
+  text-align: end;
 }

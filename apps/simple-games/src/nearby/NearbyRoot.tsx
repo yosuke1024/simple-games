@@ -5,30 +5,22 @@ import { useEffect, useRef, useState } from 'react';
 import { useSettings } from '../state/SettingsContext';
 import { ConfirmDialog } from '../ui/components/ConfirmDialog';
 import { IconBack } from '../ui/components/icons';
+import { useGameKeys } from '../ui/useGameKeys';
+import {
+  YachtPlaySurface,
+  type DiceRoll,
+  type SheetFlash,
+} from '../games/yacht/ui/components/YachtPlaySurface';
 import { NearbyController, type Setup } from './controller';
 import { clearHistory, deleteGathering, loadHistory, type Gathering } from './history';
 import { useNearbyText } from './i18n';
 import { isChatText, isPlayerName, type Session } from './session';
-import { CATEGORIES, finished, scoreFor, totals, turn } from './yacht';
+import { CATEGORIES, count, finished, totals, turn, type Match } from './yacht';
 import './nearby.css';
 
 type Screen = 'home' | 'setup' | 'active' | 'history' | 'detail';
 type Question = 'leave' | 'delete' | 'clear' | 'block' | null;
 type Text = ReturnType<typeof useNearbyText>;
-const categoryKeys = [
-  'ones',
-  'twos',
-  'threes',
-  'fours',
-  'fives',
-  'sixes',
-  'fullHouse',
-  'fourKind',
-  'littleStraight',
-  'bigStraight',
-  'choice',
-  'yacht',
-] as const;
 
 export function NearbyRoot({ onExit }: { onExit: () => void }) {
   const n = useNearbyText();
@@ -44,7 +36,7 @@ export function NearbyRoot({ onExit }: { onExit: () => void }) {
   const [controller, setController] = useState<NearbyController | null>(null);
   const controllerRef = useRef<NearbyController | null>(null);
   const [, render] = useState(0);
-  const [panel, setPanel] = useState<'chat' | 'game'>('chat');
+  const [panel, setPanel] = useState<'chat' | 'game'>('game');
   const [hidden, setHidden] = useState(false);
   const [draft, setDraft] = useState('');
   const [question, setQuestion] = useState<Question>(null);
@@ -97,6 +89,8 @@ export function NearbyRoot({ onExit }: { onExit: () => void }) {
   }, []);
 
   const session = controller?.session;
+  const showingBoard =
+    screen === 'active' && controller?.state !== 'ended' && !!session?.match && panel === 'game';
   const messageCount = session?.messages.length ?? 0;
   useEffect(() => {
     chatEnd.current?.scrollIntoView?.({ block: 'nearest' });
@@ -111,7 +105,7 @@ export function NearbyRoot({ onExit }: { onExit: () => void }) {
     setController(next);
     setHidden(false);
     setDraft('');
-    setPanel('chat');
+    setPanel('game');
     setScreen('active');
     void next.start();
   };
@@ -183,7 +177,7 @@ export function NearbyRoot({ onExit }: { onExit: () => void }) {
           <button className="icon-btn" aria-label={n('back')} onClick={back}>
             <IconBack />
           </button>
-          <h1 className="nearby-title">Nearby Play</h1>
+          <h1 className="nearby-title">{showingBoard ? 'Yacht' : 'Nearby Play'}</h1>
           <span className="icon-btn-placeholder" />
         </header>
         {screen === 'home' && (
@@ -310,7 +304,7 @@ export function NearbyRoot({ onExit }: { onExit: () => void }) {
           </form>
         )}
         {screen === 'active' && controller && (
-          <main className="nearby-stack">
+          <main className={`nearby-stack ${showingBoard ? 'nearby-playing' : ''}`}>
             {(controller.storageFailed || storageError) && (
               <p className="nearby-warning" role="alert">
                 {n('storageError')}
@@ -325,14 +319,27 @@ export function NearbyRoot({ onExit }: { onExit: () => void }) {
                   {n('retry')}
                 </button>
               </>
-            ) : session?.paired ? (
+            ) : session && (session.paired || controller.state === 'reconnecting') ? (
               <>
-                <div className="nearby-room-heading">
-                  <h2>{session.names.join(' · ')}</h2>
-                  <span>{controller.label}</span>
-                </div>
-                <p className="nearby-note">{n('roomHint')}</p>
+                {!showingBoard && (
+                  <div className="nearby-room-heading">
+                    <h2>{session.names.join(' · ')}</h2>
+                    <span>{controller.label}</span>
+                  </div>
+                )}
+                {(controller.state === 'reconnecting' || session.suspended) && (
+                  <p className="nearby-warning" role="status">
+                    {n('reconnecting')}
+                  </p>
+                )}
                 <div className="nearby-tabs" role="group" aria-label={n('room')}>
+                  <button
+                    className="btn btn-ghost"
+                    aria-pressed={panel === 'game'}
+                    onClick={() => setPanel('game')}
+                  >
+                    {n('game')}
+                  </button>
                   <button
                     className="btn btn-ghost"
                     aria-pressed={panel === 'chat'}
@@ -340,49 +347,57 @@ export function NearbyRoot({ onExit }: { onExit: () => void }) {
                   >
                     {n('chat')}
                   </button>
-                  {session.match && (
-                    <button
-                      className="btn btn-ghost"
-                      aria-pressed={panel === 'game'}
-                      onClick={() => setPanel('game')}
-                    >
-                      {n('game')}
-                    </button>
-                  )}
                 </div>
-                {(session.gameProposed || !session.match || session.matchComplete) && (
-                  <section className="nearby-card">
-                    {session.gameProposed ? (
-                      <>
-                        <h3>{n('proposed')}</h3>
-                        <button
-                          className="btn btn-primary"
-                          disabled={session.localReady || session.pending}
-                          onClick={() => {
-                            session.ready();
-                            setPanel('game');
-                          }}
-                        >
-                          {n(session.localReady ? 'waitingReady' : 'ready')}
-                        </button>
-                      </>
-                    ) : setup.host ? (
-                      <button
-                        className="btn btn-secondary"
-                        disabled={session.pending}
-                        onClick={() => session.proposeGame()}
-                      >
-                        {n(session.match ? 'rematch' : 'propose')}
-                      </button>
-                    ) : (
-                      <p>{n('hostSelects')}</p>
-                    )}
-                  </section>
+                {panel === 'game' &&
+                  (session.gameProposed || !session.match || session.matchComplete) && (
+                    <section className="nearby-card">
+                      {session.gameProposed ? (
+                        <>
+                          <h3>{n('proposed')}</h3>
+                          <button
+                            className="btn btn-primary"
+                            disabled={session.localReady || session.pending || session.suspended}
+                            onClick={() => {
+                              session.ready();
+                              setPanel('game');
+                            }}
+                          >
+                            {n(session.localReady ? 'waitingReady' : 'ready')}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {!session.match && (
+                            <>
+                              <h3>Yacht</h3>
+                              <p className="nearby-note">{n('roomHint')}</p>
+                            </>
+                          )}
+                          <button
+                            className="btn btn-secondary"
+                            disabled={session.pending || session.suspended}
+                            onClick={() => session.proposeGame()}
+                          >
+                            {n(session.match ? 'rematch' : 'propose')}
+                          </button>
+                        </>
+                      )}
+                    </section>
+                  )}
+                {panel === 'game' && session.match && (
+                  <YachtBoard
+                    session={session}
+                    n={n}
+                    interactive={question === null && !session.suspended}
+                  />
                 )}
-                {panel === 'game' && session.match ? (
-                  <YachtBoard session={session} n={n} onRoom={() => setPanel('chat')} />
-                ) : (
+                {panel === 'chat' && (
                   <>
+                    {session.gameProposed && (
+                      <button className="btn btn-secondary" onClick={() => setPanel('game')}>
+                        {n('proposed')} · {n('openGame')}
+                      </button>
+                    )}
                     <div
                       className="nearby-messages"
                       role="log"
@@ -416,6 +431,7 @@ export function NearbyRoot({ onExit }: { onExit: () => void }) {
                         {n('message')}
                         <input
                           value={draft}
+                          disabled={session.suspended}
                           maxLength={320}
                           autoComplete="off"
                           enterKeyHint="send"
@@ -425,7 +441,10 @@ export function NearbyRoot({ onExit }: { onExit: () => void }) {
                       <button
                         className="btn btn-primary"
                         disabled={
-                          session.chatPending || session.pending || !isChatText(draft.trim())
+                          session.suspended ||
+                          session.chatPending ||
+                          session.pending ||
+                          !isChatText(draft.trim())
                         }
                       >
                         {n('send')}
@@ -591,88 +610,99 @@ export function NearbyRoot({ onExit }: { onExit: () => void }) {
   );
 }
 
-function YachtBoard({ session: s, n, onRoom }: { session: Session; n: Text; onRoom: () => void }) {
+function YachtBoard({
+  session: s,
+  n,
+  interactive,
+}: {
+  session: Session;
+  n: Text;
+  interactive: boolean;
+}) {
+  const { t } = useSettings();
   const m = s.match!;
-  const points = totals(m);
   const seat = s.host ? 0 : 1;
+  const opponent = seat === 0 ? 1 : 0;
+  const points = totals(m);
+  const previous = useRef<Match>(m);
+  const [lastRoll, setLastRoll] = useState<DiceRoll | null>(null);
+  const [flash, setFlash] = useState<SheetFlash | null>(null);
+  useEffect(() => {
+    const before = previous.current;
+    previous.current = m;
+    if (m.round !== before.round) {
+      setLastRoll(null);
+      setFlash(null);
+      return;
+    }
+    if (m.rolls > before.rolls)
+      setLastRoll({ rollIndex: m.revision, rolled: before.held.map((held) => !held) });
+    for (const player of [seat, opponent]) {
+      const category = CATEGORIES.findIndex(
+        (_, i) => before.scores[player]![i] === null && m.scores[player]![i] !== null,
+      );
+      if (category !== -1) {
+        setFlash({
+          seat: player === seat ? 'player' : 'cpu',
+          category: CATEGORIES[category]!,
+          key: m.revision,
+        });
+        break;
+      }
+    }
+  }, [m, seat, opponent]);
+  const canAct = interactive && !s.suspended && s.canAct;
+  const canRoll = canAct && m.rolls < 3 && !m.held.every(Boolean);
+  const canHold = canAct && m.rolls > 0 && m.rolls < 3;
+  useGameKeys((event) => {
+    if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return false;
+    if ((event.key === 'r' || event.key === 'R') && canRoll) {
+      s.act({ kind: 'roll' });
+      return true;
+    }
+    const index = Number(event.key) - 1;
+    if (canHold && Number.isInteger(index) && index >= 0 && index < 5) {
+      s.act({ kind: 'hold', index });
+      return true;
+    }
+    return false;
+  }, canAct);
+  const status = s.suspended
+    ? n('reconnecting')
+    : s.pending
+      ? n('pending')
+      : s.matchComplete
+        ? points[0] === points[1]
+          ? n('draw')
+          : n('won', { name: s.names[points[0]! > points[1]! ? 0 : 1]! })
+        : n('turn', { name: s.names[turn(m)]!, rolls: m.rolls });
   return (
-    <section className="nearby-board">
-      <h3>Yacht</h3>
-      <p role="status">
-        {s.pending
-          ? n('pending')
-          : s.matchComplete
-            ? points[0] === points[1]
-              ? n('draw')
-              : n('won', { name: s.names[points[0]! > points[1]! ? 0 : 1]! })
-            : n('turn', { name: s.names[turn(m)]!, rolls: m.rolls })}
-      </p>
-      {!finished(m) && (
-        <>
-          <div className="nearby-dice">
-            {m.dice.map((face, index) => (
-              <button
-                key={index}
-                aria-label={`${n('die', { number: index + 1, face: m.rolls ? face : '—' })}${m.held[index] ? ` · ${n('held')}` : ''}`}
-                aria-pressed={m.held[index]}
-                disabled={!s.canAct || m.rolls === 0 || m.rolls === 3}
-                onClick={() => s.act({ kind: 'hold', index })}
-              >
-                {m.rolls ? face : '—'}
-              </button>
-            ))}
-          </div>
-          <button
-            className="btn btn-primary"
-            disabled={!s.canAct || m.rolls >= 3 || m.held.every(Boolean)}
-            onClick={() => s.act({ kind: 'roll' })}
-          >
-            {n('roll')}
-          </button>
-        </>
-      )}
-      <table className="nearby-scores">
-        <thead>
-          <tr>
-            <th>Yacht</th>
-            {s.names.map((name, i) => (
-              <th key={i} scope="col">
-                {name}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {CATEGORIES.map((category, index) => (
-            <tr key={category}>
-              <th scope="row">{n(categoryKeys[index]!)}</th>
-              {[0, 1].map((player) => (
-                <td key={player}>
-                  {m.scores[player]![index] ??
-                    (player === seat && s.canAct && m.rolls > 0 ? (
-                      <button
-                        onClick={() => s.act({ kind: 'score', category })}
-                        aria-label={`${n(categoryKeys[index]!)}: ${scoreFor(category, m.dice)}`}
-                      >
-                        {scoreFor(category, m.dice)}
-                      </button>
-                    ) : (
-                      '—'
-                    ))}
-                </td>
-              ))}
-            </tr>
-          ))}
-          <tr>
-            <th scope="row">{n('total')}</th>
-            <td>{points[0]}</td>
-            <td>{points[1]}</td>
-          </tr>
-        </tbody>
-      </table>
-      <button className="btn btn-ghost" onClick={onRoom}>
-        {n('returnRoom')}
-      </button>
+    <section className="nearby-board" aria-label="Yacht">
+      <div className="nearby-game-status">
+        <strong>{Math.min(count(m.scores[seat]) + 1, 12)}/12</strong>
+        <p role="status">{status}</p>
+      </div>
+      <YachtPlaySurface
+        dice={m.dice}
+        held={m.held}
+        rolled={m.rolls > 0}
+        rollsUsed={m.rolls}
+        canHold={canHold}
+        canRoll={canRoll}
+        playing={canAct}
+        lastRoll={lastRoll}
+        onRoll={() => s.act({ kind: 'roll' })}
+        onToggle={(index) => s.act({ kind: 'hold', index })}
+        onScore={(category) => s.act({ kind: 'score', category })}
+        scores={m.scores[seat]}
+        cpuScores={m.scores[opponent]}
+        total={points[seat]!}
+        cpuTotal={points[opponent]!}
+        names={[s.name, s.peerName]}
+        columnLabels={[t('yachtYou'), n('opponent')]}
+        flash={flash}
+        waitingLabel={finished(m) && !s.pending ? n('completed') : status}
+      />
     </section>
   );
 }

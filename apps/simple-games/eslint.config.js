@@ -46,8 +46,24 @@ export default [
         {
           patterns: [
             {
-              regex: 'games/(?!yacht/game/(?:engine|types)$)',
+              regex: '(?:^|/)games/(?!yacht/game/(?:engine|types)$)',
               message: 'Nearby adapter may only use pure Yacht scoring and types.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/nearby/NearbyRoot.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '(?:^|/)games/(?!yacht/ui/components/YachtPlaySurface$)',
+              message: 'Nearby UI may only reuse the pure Yacht play surface.',
             },
           ],
         },

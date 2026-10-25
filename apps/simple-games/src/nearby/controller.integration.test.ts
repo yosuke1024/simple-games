@@ -80,12 +80,26 @@ async function pair() {
   };
   const pump = (condition: () => boolean) => until(condition, deliver);
   await Promise.all([host.start(), guest.start()]);
+  b.emit({ type: 'peer', id: 'host', name: host.label });
+  await until(() => guest.peers.length === 1);
+  await guest.connect('host');
   a.emit({ type: 'connected' });
   b.emit({ type: 'connected' });
   await pump(() => !!host.session?.peerName && !!guest.session?.peerName);
   expect(host.code).toMatch(/^\d{6}$/);
   expect(guest.code).toBe(host.code);
-  return { a, b, host, guest, pump };
+  const drain = async () => {
+    await pump(
+      () =>
+        (host as unknown as { delivery: { pendingSequence: number } }).delivery.pendingSequence ===
+          0 &&
+        (guest as unknown as { delivery: { pendingSequence: number } }).delivery.pendingSequence ===
+          0,
+    );
+    deliver();
+    await nextTurn();
+  };
+  return { a, b, host, guest, pump, drain };
 }
 
 beforeEach(() => {
@@ -224,7 +238,10 @@ describe('nearby controller with the real encrypted channel', () => {
     host.session!.sendChat('First gathering');
     await pump(() => !host.session!.chatPending && guest.session!.messages.length === 1);
     const reusedNonce = host.session!.sid;
-    await Promise.all([host.stop(), guest.stop()]);
+    const closing = Promise.all([host.stop(), guest.stop()]);
+    await vi.advanceTimersByTimeAsync(1751);
+    await closing;
+    a.frames.length = b.frames.length = 0;
     const before = (await loadHistory(b.plugin)).gatherings;
     expect(before).toHaveLength(1);
     const original = before[0]!;
@@ -253,7 +270,9 @@ describe('nearby controller with the real encrypted channel', () => {
     await pump(() => nextHost.state === 'room' && nextGuest.state === 'room');
     nextHost.session!.sendChat('Second gathering');
     await pump(() => !nextHost.session!.chatPending && nextGuest.session!.messages.length === 1);
-    await Promise.all([nextHost.stop(), nextGuest.stop()]);
+    const nextClosing = Promise.all([nextHost.stop(), nextGuest.stop()]);
+    await vi.advanceTimersByTimeAsync(1751);
+    await nextClosing;
 
     const after = (await loadHistory(b.plugin)).gatherings;
     expect(after).toHaveLength(2);
@@ -263,4 +282,206 @@ describe('nearby controller with the real encrypted channel', () => {
       'Second gathering',
     );
   });
+});
+
+describe('approved gathering survives a physical interruption', () => {
+  it('retains the session across app switching without stopping the transport', async () => {
+    const { a, host, guest, pump, drain } = await pair();
+    host.session!.approve();
+    await pump(() => host.state === 'room' && guest.state === 'room');
+    await drain();
+    a.emit({ type: 'lifecycle', active: false });
+    await until(() => true);
+    await vi.advanceTimersByTimeAsync(60001);
+    expect(host.state).toBe('room');
+    expect(host.session!.closed).toBe('');
+    expect(a.plugin.stop).not.toHaveBeenCalled();
+    a.emit({ type: 'lifecycle', active: true });
+    guest.session!.sendChat('still here');
+    await pump(() => host.session!.messages[0]?.text === 'still here');
+  });
+
+  it.each(['state', 'state receipt', 'guest command'] as const)(
+    'reconnects the same approved peer after losing a %s, preserving the board and transcript',
+    async (loss) => {
+      const { a, b, host, guest, pump } = await pair();
+      host.session!.approve();
+      await pump(() => host.state === 'room' && guest.state === 'room');
+      host.session!.sendChat('before interruption');
+      await pump(() => guest.session!.messages.length === 1 && !host.session!.chatPending);
+      guest.session!.proposeGame();
+      await pump(() => host.session!.gameProposed);
+      host.session!.ready();
+      guest.session!.ready();
+      await pump(() => !!guest.session!.match && !host.session!.pending);
+      const oldHost = host.session,
+        oldGuest = guest.session;
+      const gatheringId = host.gathering!.id;
+      host.session!.act({ kind: 'roll' });
+      if (loss === 'state receipt') {
+        await pump(() => guest.session!.match!.revision === 1);
+        // Guest has applied it but its ACK has not necessarily reached host.
+      } else if (loss === 'guest command') {
+        await pump(() => !host.session!.pending);
+        host.session!.act({ kind: 'score', category: 'choice' });
+        await pump(() => guest.session!.canAct && !host.session!.pending);
+        guest.session!.act({ kind: 'roll' });
+      }
+      await until(() => a.frames.length + b.frames.length > 0);
+      a.frames.length = b.frames.length = 0;
+      a.emit({ type: 'disconnected', reason: 'radio off' });
+      b.emit({ type: 'disconnected', reason: 'radio off' });
+      await until(() => host.state === 'reconnecting' && guest.state === 'reconnecting');
+      expect(host.session).toBe(oldHost);
+      expect(guest.session).toBe(oldGuest);
+      expect(host.session!.closed).toBe('');
+      expect(host.session!.canAct).toBe(false);
+      expect(host.session!.sendChat('not yet')).toBe(false);
+      expect(host.gathering!.endedAt).toBeUndefined();
+      await vi.advanceTimersByTimeAsync(3001);
+      await until(
+        () =>
+          vi.mocked(a.plugin.start).mock.calls.length === 2 &&
+          vi.mocked(b.plugin.start).mock.calls.length === 2,
+      );
+      b.emit({ type: 'peer', id: 'new-address', name: host.label });
+      await until(() => vi.mocked(b.plugin.connect).mock.calls.length === 2);
+      a.emit({ type: 'connected' });
+      b.emit({ type: 'connected' });
+      await pump(
+        () =>
+          host.state === 'room' &&
+          guest.state === 'room' &&
+          !host.session!.pending &&
+          !guest.session!.pending,
+      );
+      expect(host.session!.match).toEqual(guest.session!.match);
+      expect(host.session!.match!.revision).toBe(loss === 'guest command' ? 3 : 1);
+      expect(host.session!.match!.rolls).toBe(1);
+      expect(host.gathering!.id).toBe(gatheringId);
+      expect(host.session!.messages).toHaveLength(1);
+      expect(guest.session!.messages).toHaveLength(1);
+      guest.session!.sendChat('after interruption');
+      await pump(() => host.session!.messages.length === 2 && !guest.session!.chatPending);
+    },
+  );
+});
+
+it.each(['proposal', 'ready'] as const)(
+  'detects a lost %s without a native disconnect callback',
+  async (kind) => {
+    const { a, b, host, guest, pump, drain } = await pair();
+    host.session!.approve();
+    await pump(() => host.state === 'room' && guest.state === 'room');
+    await drain();
+    if (kind === 'ready') {
+      host.session!.proposeGame();
+      await pump(() => guest.session!.gameProposed);
+      await drain();
+      host.session!.ready();
+    } else host.session!.proposeGame();
+    await until(() => a.frames.length > 0);
+    a.frames.length = 0;
+    await vi.advanceTimersByTimeAsync(15001);
+    expect(host.state).toBe('reconnecting');
+    expect(host.session!.closed).toBe('');
+    expect(guest.state).toBe('room');
+    // Closing/reopening the physical link on the retry notifies the other peer.
+    b.emit({ type: 'disconnected', reason: 'peer transport restarted' });
+    await until(() => guest.state === 'reconnecting');
+    await vi.advanceTimersByTimeAsync(3001);
+    await until(
+      () =>
+        vi.mocked(a.plugin.start).mock.calls.length === 2 &&
+        vi.mocked(b.plugin.start).mock.calls.length === 2,
+    );
+    a.frames.length = b.frames.length = 0;
+    a.emit({ type: 'connected' });
+    b.emit({ type: 'connected' });
+    await pump(
+      () =>
+        host.state === 'room' &&
+        guest.state === 'room' &&
+        guest.session!.gameProposed &&
+        guest.session!.peerReady === (kind === 'ready'),
+    );
+    expect(guest.session!.peerReady).toBe(kind === 'ready');
+    expect(host.session!.closed).toBe('');
+  },
+);
+
+it.each(['admission', 'admission receipt'] as const)(
+  'resumes without losing an explicit approval when its %s is lost',
+  async (loss) => {
+    const { a, b, host, guest, pump, drain } = await pair();
+    await drain();
+    host.session!.approve();
+    if (loss === 'admission receipt') await pump(() => guest.state === 'room');
+    else await until(() => a.frames.length > 0);
+    a.frames.length = b.frames.length = 0;
+    a.emit({ type: 'disconnected', reason: 'radio off' });
+    b.emit({ type: 'disconnected', reason: 'radio off' });
+    await until(() => host.state === 'reconnecting' && guest.state === 'reconnecting');
+    expect(host.session!.closed).toBe('');
+    expect(host.session!.approvalPending).toBe(true);
+    expect(host.session!.canAct).toBe(false);
+    await vi.advanceTimersByTimeAsync(3001);
+    await until(
+      () =>
+        vi.mocked(a.plugin.start).mock.calls.length === 2 &&
+        vi.mocked(b.plugin.start).mock.calls.length === 2,
+    );
+    a.frames.length = b.frames.length = 0;
+    a.emit({ type: 'connected' });
+    b.emit({ type: 'connected' });
+    await pump(() => host.state === 'room' && guest.state === 'room');
+    expect(host.session!.paired).toBe(true);
+    expect(guest.session!.paired).toBe(true);
+    expect(host.session!.sendChat('approved once')).toBe(true);
+    await pump(() => guest.session!.messages[0]?.text === 'approved once');
+  },
+);
+
+it('continues after a previous reconnect native send never settles', async () => {
+  const { a, b, host, guest, pump, drain } = await pair();
+  host.session!.approve();
+  await pump(() => host.state === 'room' && guest.state === 'room');
+  await drain();
+  const send = b.plugin.send;
+  let stalled = false;
+  b.plugin.send = vi.fn(async (options) => {
+    if (!stalled && JSON.parse(options.data).type === 'key') {
+      stalled = true;
+      await new Promise<void>(() => {});
+    } else await send(options);
+  });
+  a.emit({ type: 'disconnected', reason: 'first interruption' });
+  b.emit({ type: 'disconnected', reason: 'first interruption' });
+  await until(() => host.state === 'reconnecting' && guest.state === 'reconnecting');
+  await vi.advanceTimersByTimeAsync(3001);
+  await until(
+    () =>
+      vi.mocked(a.plugin.start).mock.calls.length === 2 &&
+      vi.mocked(b.plugin.start).mock.calls.length === 2,
+  );
+  b.emit({ type: 'peer', id: 'second', name: host.label });
+  await until(() => vi.mocked(b.plugin.connect).mock.calls.length === 2);
+  a.emit({ type: 'connected' });
+  b.emit({ type: 'connected' });
+  await until(() => stalled);
+  await vi.advanceTimersByTimeAsync(18001);
+  await until(
+    () =>
+      vi.mocked(a.plugin.start).mock.calls.length >= 3 &&
+      vi.mocked(b.plugin.start).mock.calls.length >= 3,
+  );
+  a.frames.length = b.frames.length = 0;
+  b.emit({ type: 'peer', id: 'third', name: host.label });
+  await until(() => vi.mocked(b.plugin.connect).mock.calls.length === 3);
+  a.emit({ type: 'connected' });
+  b.emit({ type: 'connected' });
+  await pump(() => host.state === 'room' && guest.state === 'room');
+  expect(host.session!.closed).toBe('');
+  expect(guest.session!.sendChat('continued')).toBe(true);
+  await pump(() => host.session!.messages[0]?.text === 'continued');
 });

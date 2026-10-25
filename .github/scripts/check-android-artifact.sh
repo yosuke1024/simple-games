@@ -68,14 +68,14 @@ allowed_common=(
 allowed_meta=(
   com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE
 )
-# Nearby Play: explicit foreground create/join only. The manifest constraints below
+# Nearby Play: user-started create/join, with connected-device continuity. The manifest constraints below
 # are part of this allow-list; merely declaring an unrestricted location/BT permission
 # is not sufficient. No background location or target-37 local-network permission.
 python3 - "$manifest" "$mode" "${allowed_common[*]}" "${allowed_meta[*]}" <<'PY'
 import sys
 import xml.etree.ElementTree as ET
 sys.path.insert(0, '.github/scripts')
-from android_permission_policy import NEARBY, nearby_errors, permissions
+from android_permission_policy import NEARBY, CONTINUITY, nearby_errors, permissions
 
 path, mode, common, meta = sys.argv[1], sys.argv[2], sys.argv[3].split(), sys.argv[4].split()
 A = '{http://schemas.android.com/apk/res/android}'
@@ -83,7 +83,7 @@ root = ET.parse(path).getroot()
 app = root.find('application')
 errors = []
 
-allowed = set(common) | set(NEARBY) | (set(meta) if mode == 'on' else set())
+allowed = set(common) | set(NEARBY + CONTINUITY) | (set(meta) if mode == 'on' else set())
 perms = sorted({p.get(A + 'name') or '(missing name)' for p in permissions(root)})
 for p in perms:
     if p not in allowed:

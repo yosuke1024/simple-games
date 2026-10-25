@@ -30,7 +30,6 @@ import {
   DICE_COUNT,
   filledCount,
   outcomeOf,
-  ROLLS_PER_TURN,
   statusOf,
   toMove,
   totalOf,
@@ -39,9 +38,9 @@ import {
   type Scores,
 } from '../../game';
 import { useYacht } from '../../state/GameContext';
-import { YachtDice } from '../components/YachtDice';
+import { YachtPlaySurface } from '../components/YachtPlaySurface';
 import { YachtResultOverlay } from '../components/YachtResultOverlay';
-import { YachtSheet, type SheetFlash } from '../components/YachtSheet';
+import type { SheetFlash } from '../components/YachtSheet';
 
 export function YachtGameScreen() {
   const {
@@ -189,46 +188,25 @@ export function YachtGameScreen() {
           </button>
         </header>
 
-        <div className="yt-body">
-          <YachtDice
-            dice={session.dice}
-            held={session.held}
-            rolled={rolled}
-            canHold={canHold(session, 'player')}
-            lastRoll={lastRoll}
-            onToggle={onToggle}
-          />
-
-          {isPlayersTurn ? (
-            <button
-              type="button"
-              className="btn btn-primary yt-roll"
-              onClick={onRoll}
-              disabled={!canRoll(session, 'player')}
-            >
-              {t('yachtRoll')}
-              <span className="btn-note">
-                {t('yachtRollsLeft', { n: ROLLS_PER_TURN - session.rollsUsed })}
-              </span>
-            </button>
-          ) : (
-            <button type="button" className="btn btn-primary yt-roll" disabled>
-              {t('yachtCpuTurn')}
-            </button>
-          )}
-
-          <YachtSheet
-            scores={session.scores}
-            cpuScores={session.cpuScores}
-            dice={session.dice}
-            rolled={rolled}
-            playing={isPlayersTurn && !confirmNewGame}
-            onScore={onScore}
-            flash={flash}
-            total={totalOf(session)}
-            cpuTotal={cpuTotalOf(session)}
-          />
-        </div>
+        <YachtPlaySurface
+          dice={session.dice}
+          held={session.held}
+          rolled={rolled}
+          canHold={canHold(session, 'player')}
+          lastRoll={lastRoll}
+          onToggle={onToggle}
+          onRoll={onRoll}
+          rollsUsed={session.rollsUsed}
+          canRoll={canRoll(session, 'player')}
+          showRoll={isPlayersTurn}
+          scores={session.scores}
+          cpuScores={session.cpuScores}
+          playing={isPlayersTurn && !confirmNewGame}
+          onScore={onScore}
+          flash={flash}
+          total={totalOf(session)}
+          cpuTotal={cpuTotalOf(session)}
+        />
 
         <BannerSlot />
       </div>
