@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /** Existing Wi-Fi + DNS-SD + TCP; no network request, Internet server, or arbitrary-address API. */
 @SuppressWarnings("deprecation") // resolveService and all-network discovery are needed on API 24–32.
 final class LanTransport implements Transport {
-    private static final String TYPE = "_sgnearby._tcp.";
+    private static final String TYPE = NsdServiceType.NEARBY;
     private final Context context;
     private final Events events;
     private final Handler main = new Handler(Looper.getMainLooper());
@@ -142,7 +142,7 @@ final class LanTransport implements Transport {
         public void onStartDiscoveryFailed(String type, int code) { run(() -> fail("discovery-failed", "LAN discovery failed: " + code)); }
         public void onStopDiscoveryFailed(String type, int code) { run(() -> fail("discovery-stop-failed", "LAN discovery could not stop: " + code)); }
         public void onServiceFound(NsdServiceInfo info) { run(() -> {
-            if (!discovering || !TYPE.equals(normalizeType(info.getServiceType())) || !info.getServiceName().startsWith("SG-") || peers.size() >= 16) return;
+            if (!discovering || !TYPE.equals(NsdServiceType.normalize(info.getServiceType())) || !info.getServiceName().startsWith("SG-") || peers.size() >= 16) return;
             for (NsdServiceInfo existing : peers.values()) if (existing.getServiceName().equals(info.getServiceName())) return;
             if (Build.VERSION.SDK_INT >= 33 && info.getNetwork() != null && !wifi.equals(info.getNetwork())) return;
             String id = "lan-" + (++nextPeerId);
@@ -171,15 +171,31 @@ final class LanTransport implements Transport {
         public void onResolveFailed(NsdServiceInfo info, int code) { run(() -> fail("resolve-failed", "LAN resolution failed: " + code)); }
         public void onServiceResolved(NsdServiceInfo info) { run(() -> {
             resolving = false;
+            if (!chosenName.equals(info.getServiceName())) {
+                fail("invalid-peer", "Resolved service name no longer matches the selected peer"); return;
+            }
+            if (!TYPE.equals(NsdServiceType.normalize(info.getServiceType()))) {
+                fail("invalid-peer", "Resolved service type does not match Nearby LAN"); return;
+            }
+            if (info.getPort() < 1 || info.getPort() > 65535) {
+                fail("invalid-peer", "Resolved peer has an invalid TCP port"); return;
+            }
+            if (Build.VERSION.SDK_INT >= 33 && info.getNetwork() != null && !wifi.equals(info.getNetwork())) {
+                fail("invalid-peer", "Resolved peer belongs to a different network"); return;
+            }
             InetAddress host = info.getHost();
             if (Build.VERSION.SDK_INT >= 34) {
                 for (InetAddress candidate : info.getHostAddresses()) {
                     if (candidate instanceof Inet4Address && sameSubnet(candidate)) { host = candidate; break; }
                 }
             }
-            if (!chosenName.equals(info.getServiceName()) || !TYPE.equals(normalizeType(info.getServiceType())) || host == null ||
-                !(host instanceof Inet4Address) || !sameSubnet(host) || info.getPort() < 1 || info.getPort() > 65535 ||
-                (Build.VERSION.SDK_INT >= 33 && info.getNetwork() != null && !wifi.equals(info.getNetwork()))) {
+            if (host == null) {
+                fail("invalid-peer", "Resolved peer has no host address"); return;
+            }
+            if (!(host instanceof Inet4Address)) {
+                fail("invalid-peer", "Resolved peer has no usable IPv4 address"); return;
+            }
+            if (!sameSubnet(host)) {
                 fail("invalid-peer", "Resolved peer is outside the selected Wi-Fi subnet"); return;
             }
             InetAddress resolvedHost = host;
@@ -198,12 +214,6 @@ final class LanTransport implements Transport {
             }, "nearby-lan-reader").start();
         }); }
     };
-
-    private static String normalizeType(String type) {
-        if (type == null) return "";
-        String result = type.endsWith(".") ? type : type + ".";
-        return result.endsWith(".local.") ? result.substring(0, result.length() - "local.".length()) : result;
-    }
 
     private boolean sameSubnet(InetAddress remote) {
         if (remote.isAnyLocalAddress() || remote.isLoopbackAddress() || remote.isMulticastAddress()) return false;

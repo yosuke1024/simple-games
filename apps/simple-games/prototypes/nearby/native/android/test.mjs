@@ -28,10 +28,17 @@ run(javaBin('javac'), [
   join(sourceRoot, 'FrameCodec.java'),
   join(sourceRoot, 'ForegroundStartGate.java'),
   join(sourceRoot, 'SubscriptionBuffer.java'),
+  join(sourceRoot, 'NsdServiceType.java'),
   join(androidRoot, 'tests/FrameCodecTest.java'),
   join(androidRoot, 'tests/ForegroundStartGateTest.java'),
   join(androidRoot, 'tests/SubscriptionBufferTest.java'),
+  join(androidRoot, 'tests/NsdServiceTypeTest.java'),
 ]);
-for (const name of ['FrameCodecTest', 'ForegroundStartGateTest', 'SubscriptionBufferTest']) {
+for (const name of [
+  'FrameCodecTest',
+  'ForegroundStartGateTest',
+  'SubscriptionBufferTest',
+  'NsdServiceTypeTest',
+]) {
   run(javaBin('java'), ['-cp', output, `com.pixapps.nearbypoc.${name}`]);
 }
