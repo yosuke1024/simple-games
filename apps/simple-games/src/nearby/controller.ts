@@ -109,7 +109,10 @@ export class NearbyController {
         // Lifecycle cannot wait behind a stalled native send/WebCrypto job.
         // Buffered data remains ordered; restored ACK timers get a fresh window.
         if (event.type === 'lifecycle') {
-          void this.event(event);
+          const generation = this.generation;
+          void this.event(event).catch(() => {
+            if (generation === this.generation) this.interrupted('connectionError');
+          });
           return;
         }
         // Native frame limits also need a bounded JS backlog while WebCrypto

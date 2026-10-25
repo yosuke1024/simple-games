@@ -149,6 +149,33 @@ describe('nearby lifecycle and persistence', () => {
     expect(a.plugin.start).toHaveBeenCalledTimes(1);
     void guest.stop();
   });
+  it('retains the match when repeated foreground probes fill the unacknowledged outbox', async () => {
+    const { host, guest, pump, a } = await setup();
+    host.session!.approve();
+    await pump();
+    guest.session!.proposeGame();
+    await pump();
+    host.session!.ready();
+    guest.session!.ready();
+    await pump();
+    const session = host.session!;
+    const match = structuredClone(session.match);
+    expect(match).not.toBeNull();
+    vi.useFakeTimers();
+    // No responses reach the host during these app switches. A full bounded
+    // outbox must enter recovery, without an unhandled lifecycle rejection.
+    for (let i = 0; i < 65; i++) {
+      a.event({ type: 'lifecycle', active: false });
+      a.event({ type: 'lifecycle', active: true });
+      await settle();
+    }
+    expect(host.state).toBe('reconnecting');
+    expect(host.session).toBe(session);
+    expect(session.suspended).toBe(true);
+    expect(session.closed).toBe('');
+    expect(session.match).toEqual(match);
+    expect(a.plugin.stop).not.toHaveBeenCalled();
+  });
   it('stops pending permission/start work when the view is left', async () => {
     const p = native();
     let finish!: () => void;
