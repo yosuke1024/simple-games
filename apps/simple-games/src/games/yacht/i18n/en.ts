@@ -10,6 +10,9 @@
  */
 export const en = {
   yachtName: 'Yacht',
+  yachtPlayTogether: 'Play with someone',
+  yachtReturnToTogether: 'Back to multiplayer',
+  yachtPlayTogetherNote: 'Connect with someone nearby for a match.',
   yachtResumeNote: 'Turn {turn} of {count} · You {total} · CPU {cpuTotal}',
   yachtRecordNote: 'Won {wins} · Lost {losses} · Best {best}',
   yachtBestNote: 'Best {score}',

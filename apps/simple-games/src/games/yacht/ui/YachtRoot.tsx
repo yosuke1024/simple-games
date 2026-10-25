@@ -23,7 +23,10 @@ import { YachtHomeScreen } from './screens/HomeScreen';
 import { YachtStatsScreen } from './screens/StatsScreen';
 import { YachtTutorialScreen } from './screens/TutorialScreen';
 
-export function YachtScreens() {
+export function YachtScreens({
+  onPlayTogether,
+  playTogetherActive,
+}: Pick<YachtRootProps, 'onPlayTogether' | 'playTogetherActive'> = {}) {
   const { screen } = useYacht();
   switch (screen) {
     case 'tutorial':
@@ -34,7 +37,9 @@ export function YachtScreens() {
       return <YachtStatsScreen />;
     case 'home':
     default:
-      return <YachtHomeScreen />;
+      return (
+        <YachtHomeScreen onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
+      );
   }
 }
 
@@ -53,6 +58,10 @@ export interface YachtRootProps {
    * provider's answer, taken against the one saved sheet loaded below (§8).
    */
   entry?: 'collection' | 'shortcut';
+  /** Available only when the shell supports nearby play for this game. */
+  onPlayTogether?: () => void;
+  /** Returns to the existing nearby flow, including discovery or reconnecting. */
+  playTogetherActive?: boolean;
   /** Test seam; production always uses the device store. */
   kv?: KVStore;
 }
@@ -70,7 +79,13 @@ async function loadRecords(kv: KVStore): Promise<LoadedData> {
   return { stats, flags, session };
 }
 
-export function YachtRoot({ onExit, entry, kv = preferencesKV }: YachtRootProps) {
+export function YachtRoot({
+  onExit,
+  entry,
+  onPlayTogether,
+  playTogetherActive,
+  kv = preferencesKV,
+}: YachtRootProps) {
   const data = useLoadedRecords(kv, loadRecords, defaultRecords);
   if (data === null) return null;
 
@@ -82,7 +97,7 @@ export function YachtRoot({ onExit, entry, kv = preferencesKV }: YachtRootProps)
       onExit={onExit}
       entry={entry}
     >
-      <YachtScreens />
+      <YachtScreens onPlayTogether={onPlayTogether} playTogetherActive={playTogetherActive} />
     </YachtProvider>
   );
 }

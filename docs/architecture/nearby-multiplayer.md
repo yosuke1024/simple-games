@@ -2,24 +2,39 @@
 
 Updated: 2026-10-25 / issue #268
 
-この文書は近隣端末間対戦の境界、通信 PoC、製品化前の検証条件の正本である。
-上位原則は [PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md)「Nearby Multiplayer」、
+この文書は近隣端末間対戦の製品契約と検証条件の正本であり、旧通信 PoC の記録も分けて保持する。
+上位原則は [PRODUCT_PRINCIPLES.md](../PRODUCT_PRINCIPLES.md)「Nearby Play」、
 オフラインの範囲は [OFFLINE_POLICY.md](../OFFLINE_POLICY.md)、Yacht の規則は
 [YACHT_RULES.md](../YACHT_RULES.md) §13。進捗と実測結果は
 [作業記録](../plans/2026-10-25-nearby-multiplayer-poc.md)へ記入する。
 
 ## 製品 Nearby Play の契約（2026-10-25 採用）
 
-オーナーの実装指示により、以下を製品コードへ追加する。下の旧PoC記録の「製品へ導入しない」
-「保存しない」はPoCを記述した当時の状態であり、製品の現在の採用範囲ではない。
-製品をストア公開済み・実機検証済みとは扱わない。
+オーナーの実装指示により製品へ導入し、1.5.1 の実機フィードバック後に継続動作と
+ゲームを起点とする導線を改定した。以下は採用した製品契約であり、この新設計を出荷済み・
+実機検証済みとは扱わない。1.5.1 で確認した範囲は下に記す。
+旧PoC記録の「製品へ導入しない」「保存しない」「前面限定」は当時の状態であり、現在の製品契約ではない。
 
-- `src/app/nearbyGate.ts` からだけ動的に `src/nearby/` を読み込む。入口は Club House と
-  別の Nearby Play。Web buildでは入口もchunkも除く。未利用時の探索・権限要求・履歴読取は無い。
+- native の対応ゲームtopに「誰かと遊ぶ」を置き、近くの相手とBluetooth／同一Wi-Fiで遊ぶことを
+  短く補足する。最初はYachtだけ。コレクションの独立Nearby入口を削除し、Club Houseからも
+  開始しない。未対応ゲームには未実装のボタンを出さない。
+  ゲームはシェルから渡されたcallbackを呼び、`src/app/nearbyGate.ts` からだけ動的に
+  `src/nearby/` を読み込む。ゲームからNearbyをimportしない。
+  Web buildでは入口もchunkも除く。未利用時の探索・権限要求・履歴読取は無い。
 - 初期範囲2人、Bluetooth優先／同一LANを明示選択。host=advertise/listen、参加者=browse。
-  集まりを作る／参加する／履歴を見る → 表示名で申請 → host承認 → ゲーム準備 → Yacht。
-  ゲームが主で、チャットは任意の別タブ。双方が提案でき、両者Readyで開始、再戦も同じ。
-  同時に同じroundを提案した場合は1件へ合流し、既に選んだReadyを消さない。参加前自由コメント無し。
+  ゲーム選択済み → 募集／参加 → 表示名で申請 → host承認 → 双方Ready → 既存と共通のゲーム画面。
+  初回に同じゲームを改めて提案する操作を求めない。内部protocolの提案・確認は維持でき、
+  同時に同じroundを提案した場合は1件へ合流して既存のReadyを消さない。参加前自由コメント無し。
+- シェルの `App` は接続を所有する `NearbyRoot` とcontrollerをマウントしたまま保持する。
+  ゲームtopへ戻ると `visible=false` で非表示にし、同じ入口から同じ対戦へ戻す。
+  通常ゲーム画面のアンマウントや会話を閉じる操作では切らず、新しい集まりを重複開始しない。
+  非表示中のNearby画面では入力・キーボード・戻る操作のリスナーやアニメーションを無効化し、
+  接続と論理状態を保持する。明示退出／解散で接続を終了するほか、`NearbyRoot` 自体の
+  最終アンマウントでは停止・資源解放する(エラー／reset／アプリ終了時のcleanup)。
+  一時切断や終了条件の詳細は下記に従う。
+- ゲームが主で、チャットは「会話」ボタンから任意に開く。ゲームと同格のタブにはしない。
+  受信で会話を自動表示しない。終局後は結果と再戦を主にし、接続を保持して双方Readyで再戦する。
+  将来は同じ相手と別ゲームへ続けられる構成とするが、今回はYachtのみで、ゲーム切替機能は含めない。
 - 仲間／公開の発見labelは `F-` / `P-` + ランダム6桁hex。個人名を広告に含めない。
   どちらもhost承認必須。labelは公開される番号で、招待秘密や本人証明ではない。
 - native plugin名 `NearbyPlay`。BLE UUIDは `9b5d2000/2001/2002-7a4c-4e13-a280-75d53c01a268`、
@@ -73,8 +88,9 @@ Updated: 2026-10-25 / issue #268
 
 1.5.1 (10501) の内部テスト/TestFlightでは、iPhone host→Pixel guestのBluetooth接続・承認・
 双方向日本語/emojiチャットがユーザー報告で成功。その後、アプリ切替で終了、hostのみの提案、
-独自Yacht画面、チャット先行の動線が不適切と指摘された。上の継続・共通UI・ゲーム優先の
-契約はその指摘による改定で、修正版の実機確認済みを意味しない。
+独自Yacht画面、チャット先行の動線が不適切と指摘された。PR #285 の継続・共通UI・ゲーム優先の
+変更に続き、ゲームtopからの開始、初回の重複提案の廃止、画面から独立した接続保持、
+会話ボタン、結果／再戦を主とする導線を採用した。いずれも修正版の実機確認済みを意味しない。
 
 ### 端末内の履歴
 
@@ -93,6 +109,16 @@ session鍵・native接続先は保存しない。参加前申請は履歴化し�
 上限で古い履歴を自動削除しない。保存に失敗した新しい内容は永続化を保証しない。
 
 ### 公開前に残る確認
+
+今回の導線は、両端末で次を確認する。記載しただけでは完了としない。
+
+- Yacht topの入口だけから募集／参加でき、初回の重複提案操作なしでhost承認・双方Readyを経て
+  共通画面へ進む。コレクション・Club・未対応ゲーム・Webに開始入口を残さない。
+- ゲームtopへ戻ってから同じ入口で同じ盤面へ戻れる。会話を閉じる・結果へ進む・再戦する操作で
+  接続を終了せず、明示退出／解散では接続資源を解放する。
+- 受信しても閉じている会話を自動表示せず、対局操作を妨げない。終局結果と再戦の導線を主にする。
+- アプリ切替と無線のOFF／ONから、PR #285の継続条件どおり同じ相手・盤面へ戻れる。
+  CPU戦の保存・統計とNearbyの端末内履歴を混ぜない。
 
 新しい暗号化・承認・chat・履歴の実機相互接続、OSバックアップ除外、旧OS／同OS／他機種、
 新製品全体の容量・電池、UGCポリシーに応じた規約／通報対応・公開プライバシー文面、
@@ -139,14 +165,14 @@ Epic #268 はこの PoC だけでは完了しない。
 
 ## 2. 構成と依存方向
 
-| 層 | 責務 |
-| --- | --- |
-| 開発用画面 | 利用者が transport、通信ロール、ゲーム host / guest を選ぶ。相手・確認コード・Ready・手番を表示する。 |
+| 層                      | 責務                                                                                                        |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 開発用画面              | 利用者が transport、通信ロール、ゲーム host / guest を選ぶ。相手・確認コード・Ready・手番を表示する。       |
 | 共通 TypeScript session | protocol version、session、両者の確認、command 順序、revision、host が確定した状態を扱う。OS に依存しない。 |
-| Yacht デモ | 既存の純粋な採点・型定義を利用する。操作の合法性、乱数、状態更新を host で確定する。 |
-| Capacitor Plugin | 明示開始・発見・接続・送受信・停止とエラーを渡す。ゲームルールを持たない。 |
-| Android | 標準 BLE scan / advertise / GATT、`NsdManager` + TCP socket。 |
-| iOS | `CoreBluetooth` central / peripheral、Bonjour + `Network.framework` TCP。 |
+| Yacht デモ              | 既存の純粋な採点・型定義を利用する。操作の合法性、乱数、状態更新を host で確定する。                        |
+| Capacitor Plugin        | 明示開始・発見・接続・送受信・停止とエラーを渡す。ゲームルールを持たない。                                  |
+| Android                 | 標準 BLE scan / advertise / GATT、`NsdManager` + TCP socket。                                               |
+| iOS                     | `CoreBluetooth` central / peripheral、Bonjour + `Network.framework` TCP。                                   |
 
 依存方向は PoC → 既存 Yacht の純粋な `game/` の関数・型に限る。製品のゲームから
 PoC や native transport を参照しない。BLE と LAN は同じ JSON message を運ぶ。
@@ -165,12 +191,12 @@ iOS の IPv4 socket 指定だけで Bonjour の返すアドレスまでは保証
 hello でゲーム host がちょうど 1 台であることを確認する。2 台とも host、または
 2 台とも guest なら開始しない。LAN の listen / browse とも独立させる。
 
-| 組み合わせ | PoC で試す通信ロール | 非対応時 |
-| --- | --- | --- |
-| Android ↔ iOS | iOS が peripheral / advertise、Android が central / browse を優先。ゲーム host はどちらでもよい。 | Pixel 9 Pro / iPhone 11 では発見・双方向通信を確認。他の組み合わせと advertising 非対応 Android は実機待ち。 |
-| Android ↔ Android | advertising が成功する側を peripheral、他方を central にする。 | 両方が advertising 非対応なら BLE は使えない。同一 LAN を案内する。 |
-| iOS ↔ iOS | 片方 peripheral、他方 central。 | 権限・無線状態・接続失敗を示して終了できる。 |
-| 同一 LAN | 片方 listen / advertise、他方 browse / connect。 | WAN は不要。AP isolation や multicast 制限で発見・接続できない場合がある。 |
+| 組み合わせ        | PoC で試す通信ロール                                                                              | 非対応時                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Android ↔ iOS     | iOS が peripheral / advertise、Android が central / browse を優先。ゲーム host はどちらでもよい。 | Pixel 9 Pro / iPhone 11 では発見・双方向通信を確認。他の組み合わせと advertising 非対応 Android は実機待ち。 |
+| Android ↔ Android | advertising が成功する側を peripheral、他方を central にする。                                    | 両方が advertising 非対応なら BLE は使えない。同一 LAN を案内する。                                          |
+| iOS ↔ iOS         | 片方 peripheral、他方 central。                                                                   | 権限・無線状態・接続失敗を示して終了できる。                                                                 |
+| 同一 LAN          | 片方 listen / advertise、他方 browse / connect。                                                  | WAN は不要。AP isolation や multicast 制限で発見・接続できない場合がある。                                   |
 
 Android では BLE feature、adapter の状態、advertiser の取得、実際の開始 callback を
 それぞれ扱う。`isMultipleAdvertisementSupported()` だけを成功の証拠にしない。
@@ -183,16 +209,16 @@ advertising 非対応、使用可能な advertising instance がない、Bluetoo
 
 ## 4. Wire protocol と session
 
-| 項目 | PoC 契約 |
-| --- | --- |
-| Encode | UTF-8 JSON 1 件 + LF。JSON 本文は最大 4096 bytes、LF は別の 1 byte。生の改行を本文に含めない。 |
-| Decode | TCP read / BLE packet の境界と message 境界を同一視しない。分割・連結を処理し、上限超過、不正 UTF-8、不正 JSON を拒否する。 |
-| BLE service | `9b5d1000-7a4c-4e13-a280-75d53c01a268` |
-| BLE central → peripheral | `9b5d1001-7a4c-4e13-a280-75d53c01a268`、write with response。 |
-| BLE peripheral → central | `9b5d1002-7a4c-4e13-a280-75d53c01a268`、notify / indicate と送信 queue の backpressure。 |
-| BLE chunk | 最大 20 bytes。書込み応答・通知の送信可能 callback を待って順に送る。大きな MTU を成立条件にしない。 |
-| DNS-SD | `_sgnearby._tcp.`。固定種別だけを許容し、Android の先頭 / 末尾ドットと `.local` の表記差を adapter 内で正規化する。port は OS が割り当てる。 |
-| Scope | 1 接続に 1 相手。session ごとに新しい識別子を作り、永続 ID や相手履歴を保存しない。 |
+| 項目                     | PoC 契約                                                                                                                                     |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Encode                   | UTF-8 JSON 1 件 + LF。JSON 本文は最大 4096 bytes、LF は別の 1 byte。生の改行を本文に含めない。                                               |
+| Decode                   | TCP read / BLE packet の境界と message 境界を同一視しない。分割・連結を処理し、上限超過、不正 UTF-8、不正 JSON を拒否する。                  |
+| BLE service              | `9b5d1000-7a4c-4e13-a280-75d53c01a268`                                                                                                       |
+| BLE central → peripheral | `9b5d1001-7a4c-4e13-a280-75d53c01a268`、write with response。                                                                                |
+| BLE peripheral → central | `9b5d1002-7a4c-4e13-a280-75d53c01a268`、notify / indicate と送信 queue の backpressure。                                                     |
+| BLE chunk                | 最大 20 bytes。書込み応答・通知の送信可能 callback を待って順に送る。大きな MTU を成立条件にしない。                                         |
+| DNS-SD                   | `_sgnearby._tcp.`。固定種別だけを許容し、Android の先頭 / 末尾ドットと `.local` の表記差を adapter 内で正規化する。port は OS が割り当てる。 |
+| Scope                    | 1 接続に 1 相手。session ごとに新しい識別子を作り、永続 ID や相手履歴を保存しない。                                                          |
 
 最初に `hello` で version、表示名、host / guest、nonce を交換する。両端末が確認コードを
 見比べ、両方が明示確認した後で `Ready` を受け付ける。双方向の試験 message は手動操作から
@@ -237,14 +263,14 @@ state を送った後の未達を期限付きで扱う。無操作中の状態�
 現在の製品 baseline は Android minSdk 24 / targetSdk・compileSdk 36、iOS 15.0。
 PoC の権限は生成する別アプリのみに付与し、製品 manifest / Info.plist を変更しない。
 
-| OS / 方式 | 利用時の扱い |
-| --- | --- |
-| Android API 31+ BLE | `BLUETOOTH_SCAN` / `CONNECT`、advertise 時は `ADVERTISE` を runtime request。位置推定をしないため scan に `neverForLocation`。 |
-| Android API 24–30 BLE | `BLUETOOTH` / `BLUETOOTH_ADMIN` と scan の位置情報権限。旧権限は maxSdk 30。位置情報設定が OFF の場合も実機で確認する。位置の推定・保存には使わない。 |
-| Android LAN、target 36 | 現在は `INTERNET` で利用可能。製品の権限が LAN 利用へ自動的に拡張されたことにはしない。 |
+| OS / 方式                  | 利用時の扱い                                                                                                                                                                     |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Android API 31+ BLE        | `BLUETOOTH_SCAN` / `CONNECT`、advertise 時は `ADVERTISE` を runtime request。位置推定をしないため scan に `neverForLocation`。                                                   |
+| Android API 24–30 BLE      | `BLUETOOTH` / `BLUETOOTH_ADMIN` と scan の位置情報権限。旧権限は maxSdk 30。位置情報設定が OFF の場合も実機で確認する。位置の推定・保存には使わない。                            |
+| Android LAN、target 36     | 現在は `INTERNET` で利用可能。製品の権限が LAN 利用へ自動的に拡張されたことにはしない。                                                                                          |
 | Android target 37 への移行 | Android 17 は `ACCESS_LOCAL_NETWORK` または適用可能な system NSD picker を要求する。target 36 の段階では新権限を宣言・要求しない。移行時に双方の listen / connect を再検証する。 |
-| iOS BLE | `NSBluetoothAlwaysUsageDescription`。利用前に manager を初期化しない。拒否・restricted・unsupported・poweredOff を扱う。 |
-| iOS LAN | `NSLocalNetworkUsageDescription` + `NSBonjourServices` に固定サービス種別。利用時に browser / listener を開始する。 |
+| iOS BLE                    | `NSBluetoothAlwaysUsageDescription`。利用前に manager を初期化しない。拒否・restricted・unsupported・poweredOff を扱う。                                                         |
+| iOS LAN                    | `NSLocalNetworkUsageDescription` + `NSBonjourServices` に固定サービス種別。利用時に browser / listener を開始する。                                                              |
 
 Android 12+ の `neverForLocation` は一部 beacon を除外するため、組み合わせごとの発見を
 確認する。BLE hardware feature は optional として、非対応端末でも通常製品を利用できる
@@ -320,6 +346,6 @@ host と guest の 2 人が 12 手番ずつ遊ぶ。既存の `scoreFor` と採�
 
 - [Android NSD](https://developer.android.com/develop/connectivity/wifi/use-nsd): DNS-SD 登録・発見と OS が選んだ TCP port。
 - [Apple Bonjour / Network.framework](https://developer.apple.com/news/?id=0oi77447): `NWBrowser` / `NWListener` / `NWConnection` による discovery と通信。
-- [Apple write length](https://developer.apple.com/documentation/corebluetooth/cbperipheral/maximumwritevaluelength(for:))、[notification length](https://developer.apple.com/documentation/corebluetooth/cbcentral/maximumupdatevaluelength): 相手ごとの上限。PoC の 20-byte chunk を緩和する際にも必要。
+- [Apple write length](<https://developer.apple.com/documentation/corebluetooth/cbperipheral/maximumwritevaluelength(for:)>)、[notification length](https://developer.apple.com/documentation/corebluetooth/cbcentral/maximumupdatevaluelength): 相手ごとの上限。PoC の 20-byte chunk を緩和する際にも必要。
 - [Android 14 MTU](https://developer.android.com/about/versions/14/behavior-changes-all): 最初の request は 517 を要求するが、相手と成立する payload を固定値とみなさない。
 - [Apple 機内モード](https://support.apple.com/en-la/108785)、[Google 機内モード](https://support.google.com/pixelphone/answer/12639358): 無線の再有効化・状態記憶があり、実際の設定を確認する。

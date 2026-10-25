@@ -2,8 +2,11 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const hi: NearbyMessages = {
+  playTogether: 'किसी के साथ खेलें',
+  closeChat: 'चैट बंद करें',
+  unreadChat: 'चैट, अपठित संदेश',
   tagline: 'आस-पास के लोगों के साथ खेलें और चैट करें।',
-  create: 'बैठक बनाएँ',
+  create: 'खेल बनाएँ',
   join: 'बैठक में शामिल हों',
   history: 'इतिहास',
   back: 'वापस',
@@ -23,7 +26,7 @@ export const hi: NearbyMessages = {
   hosting: 'शामिल होने के अनुरोध की प्रतीक्षा है…',
   noPeers: 'अभी कोई बैठक नहीं मिली।',
   label: 'बैठक संख्या',
-  twoPeople: '2 लोग · Yacht और चैट',
+  twoPeople: 'आस-पास के 2 लोग · Bluetooth या एक ही Wi-Fi',
   opponent: 'साथी',
   reconnecting: 'फिर से जुड़ रहे हैं… दोनों डिवाइस पर ऐप खोलें। खेल रुका हुआ है।',
   connecting: 'जोड़ा जा रहा है…',
@@ -68,7 +71,7 @@ export const hi: NearbyMessages = {
     'दोनों प्रतिभागियों के लिए बैठक समाप्त हो जाएगी। आपका स्थानीय इतिहास इस डिवाइस पर रहेगा।',
   cancel: 'रद्द करें',
   ended: 'कनेक्शन समाप्त हो गया।',
-  retry: 'Nearby Play पर वापस जाएँ',
+  retry: 'Yacht पर वापस जाएँ',
   timeout: 'समय पर जवाब नहीं मिला। दोनों डिवाइस तैयार होने पर फिर शुरू करें।',
   connectionError:
     'जुड़ नहीं सके। दोनों डिवाइस पर Bluetooth या Wi-Fi और ऐप की अनुमतियाँ जाँचें, फिर दोबारा कोशिश करें।',

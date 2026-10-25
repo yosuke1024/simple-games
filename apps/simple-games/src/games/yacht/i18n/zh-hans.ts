@@ -2,6 +2,9 @@ import type { YachtMessages } from './en';
 
 export const zhHans: YachtMessages = {
   yachtName: 'Yacht',
+  yachtPlayTogether: '和他人一起玩',
+  yachtReturnToTogether: '返回对战',
+  yachtPlayTogetherNote: '连接附近的人，一起对战。',
   yachtResumeNote: '第 {turn} / {count} 回合 · 你 {total} · CPU {cpuTotal}',
   yachtRecordNote: '{wins} 胜 · {losses} 负 · 最佳 {best}',
   yachtBestNote: '最佳 {score}',

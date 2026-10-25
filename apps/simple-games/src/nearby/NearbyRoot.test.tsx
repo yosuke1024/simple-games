@@ -26,14 +26,16 @@ const fixtures = vi.hoisted(() => ({
   load: vi.fn(),
   remove: vi.fn(),
   clear: vi.fn(),
+  native: false,
+  addListener: vi.fn(),
   radio: { start: vi.fn(), connect: vi.fn(), send: vi.fn(), stop: vi.fn() },
 }));
 
 vi.mock('@capacitor/core', () => ({
-  Capacitor: { isNativePlatform: () => false },
+  Capacitor: { isNativePlatform: () => fixtures.native },
   registerPlugin: () => fixtures.radio,
 }));
-vi.mock('@capacitor/app', () => ({ App: { addListener: vi.fn() } }));
+vi.mock('@capacitor/app', () => ({ App: { addListener: fixtures.addListener } }));
 vi.mock('../state/SettingsContext', async () => {
   const { translate } = await import('../i18n');
   return {
@@ -155,8 +157,10 @@ function savedGathering(): Gathering {
 
 beforeEach(() => {
   fixtures.controllers.length = 0;
+  fixtures.native = false;
   fixtures.saved = [];
   vi.clearAllMocks();
+  fixtures.addListener.mockResolvedValue({ remove: vi.fn(async () => {}) });
   fixtures.load.mockImplementation(async () => ({
     version: 1,
     identity: 'c'.repeat(32),
@@ -170,7 +174,10 @@ beforeEach(() => {
     fixtures.saved = [];
   });
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  Reflect.deleteProperty(document, 'visibilityState');
+});
 
 function begin(host = true) {
   fireEvent.click(screen.getByRole('button', { name: host ? en.create : en.join }));
@@ -186,6 +193,7 @@ function hostRoom() {
   act(() => controller.establish());
   fireEvent.click(screen.getByRole('button', { name: en.approve }));
   act(() => controller.flush());
+  act(() => controller.flush());
   return controller;
 }
 
@@ -193,7 +201,7 @@ describe('Nearby Play user flows', () => {
   it('opens home and local history without constructing a connection or starting radios', async () => {
     fixtures.saved = [savedGathering()];
     const exit = vi.fn();
-    render(<NearbyRoot onExit={exit} />);
+    render(<NearbyRoot gameId="yacht" onExit={exit} />);
     expect(fixtures.controllers).toHaveLength(0);
     expect(fixtures.load).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: en.history }));
@@ -214,7 +222,7 @@ describe('Nearby Play user flows', () => {
   it.each([true, false])(
     'requires a valid name and conduct consent before %s host setup starts',
     (host) => {
-      render(<NearbyRoot onExit={() => {}} />);
+      render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
       fireEvent.click(screen.getByRole('button', { name: host ? en.create : en.join }));
       const start = screen.getByRole('button', { name: host ? en.start : en.search });
       expect(start).toBeDisabled();
@@ -246,7 +254,7 @@ describe('Nearby Play user flows', () => {
   );
 
   it('opens game preparation after approval and keeps chat an optional panel', () => {
-    render(<NearbyRoot onExit={() => {}} />);
+    render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
     const controller = begin();
     act(() => controller.establish());
     expect(screen.getByRole('heading', { name: 'Guest wants to join' })).toBeInTheDocument();
@@ -256,8 +264,9 @@ describe('Nearby Play user flows', () => {
     expect(screen.getByRole('button', { name: en.reject })).toBeDisabled();
     expect(screen.queryByRole('textbox', { name: en.message })).not.toBeInTheDocument();
     act(() => controller.flush());
-    expect(screen.getByRole('button', { name: en.game })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: en.propose })).toBeEnabled();
+    expect(screen.getByRole('button', { name: en.ready })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: en.propose })).not.toBeInTheDocument();
+    expect(controller.session.localReady).toBe(false);
     expect(screen.queryByRole('textbox', { name: en.message })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: en.chat }));
     fireEvent.change(screen.getByRole('textbox', { name: en.message }), {
@@ -274,7 +283,7 @@ describe('Nearby Play user flows', () => {
   });
 
   it('lets a joining player choose a gathering and wait without an approval button or join comment', () => {
-    render(<NearbyRoot onExit={() => {}} />);
+    render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
     const controller = begin(false);
     fireEvent.click(screen.getByRole('button', { name: /F-ABC123/ }));
     expect(controller.connect).toHaveBeenCalledWith('peer-1');
@@ -286,7 +295,6 @@ describe('Nearby Play user flows', () => {
       controller.flush();
     });
     expect(screen.queryByRole('textbox', { name: en.message })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: en.propose }));
     act(() => controller.flush());
     expect(controller.peer.gameProposed).toBe(true);
     expect(screen.getByRole('button', { name: en.ready })).toBeEnabled();
@@ -315,7 +323,7 @@ describe('Nearby Play user flows', () => {
   });
 
   it('requires both Ready, preserves chat across panels and a full match, and returns to the same gathering', () => {
-    render(<NearbyRoot onExit={() => {}} />);
+    render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
     const controller = hostRoom();
     fireEvent.click(screen.getByRole('button', { name: en.chat }));
     fireEvent.change(screen.getByRole('textbox', { name: en.message }), {
@@ -323,8 +331,7 @@ describe('Nearby Play user flows', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: en.send }));
     act(() => controller.flush());
-    fireEvent.click(screen.getByRole('button', { name: en.game }));
-    fireEvent.click(screen.getByRole('button', { name: en.propose }));
+    fireEvent.click(screen.getByRole('button', { name: en.closeChat }));
     act(() => controller.flush());
     fireEvent.click(screen.getByRole('button', { name: en.ready }));
     expect(controller.session.match).toBeNull();
@@ -348,7 +355,7 @@ describe('Nearby Play user flows', () => {
     fireEvent.click(screen.getByRole('button', { name: en.chat }));
     expect(screen.getByText('Before the game')).toBeInTheDocument();
     expect(controller.session.match!.revision).toBe(revision);
-    fireEvent.click(screen.getByRole('button', { name: en.game }));
+    fireEvent.click(screen.getByRole('button', { name: en.closeChat }));
     act(() => {
       for (const category of CATEGORIES) {
         for (const actor of [controller.session, controller.peer]) {
@@ -366,7 +373,7 @@ describe('Nearby Play user flows', () => {
     fireEvent.click(screen.getByRole('button', { name: en.chat }));
     expect(screen.getByText('Before the game')).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: en.message })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: en.game }));
+    fireEvent.click(screen.getByRole('button', { name: en.closeChat }));
     fireEvent.click(screen.getByRole('button', { name: en.rematch }));
     act(() => controller.flush());
     fireEvent.click(screen.getByRole('button', { name: en.ready }));
@@ -383,14 +390,14 @@ describe('Nearby Play user flows', () => {
   it('confirms leaving, supports cancellation, and leaves local history intact', async () => {
     fixtures.saved = [savedGathering()];
     const before = structuredClone(fixtures.saved);
-    render(<NearbyRoot onExit={() => {}} />);
+    render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
     const controller = hostRoom();
     fireEvent.click(screen.getByRole('button', { name: en.dissolve }));
     const dialog = screen.getByRole('alertdialog', { name: en.leaveTitle });
     expect(within(dialog).getByText(en.leaveBody)).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: en.cancel }));
     expect(controller.stop).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: en.propose })).toBeEnabled();
+    expect(screen.getByRole('button', { name: en.ready })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: en.dissolve }));
     fireEvent.click(
       within(screen.getByRole('alertdialog')).getByRole('button', { name: en.leave }),
@@ -408,7 +415,7 @@ describe('Nearby Play user flows', () => {
   });
 
   it('retains the shared Yacht board and chat during reconnection, then resumes the same turn', () => {
-    render(<NearbyRoot onExit={() => {}} />);
+    render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
     const controller = hostRoom();
     act(() => {
       controller.peer.sendChat('Still here');
@@ -437,10 +444,10 @@ describe('Nearby Play user flows', () => {
     fireEvent.keyDown(window, { key: 'r' });
     fireEvent.click(firstDie);
     expect(controller.session.match).toEqual(before);
-    fireEvent.click(screen.getByRole('button', { name: en.chat }));
+    fireEvent.click(screen.getByRole('button', { name: en.unreadChat }));
     expect(screen.getByText('Still here')).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: en.message })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: en.game }));
+    fireEvent.click(screen.getByRole('button', { name: en.closeChat }));
     expect(screen.getByRole('button', { name: 'Die 1: 6, held' })).toBeDisabled();
     act(() => controller.session.resume());
     expect(screen.queryByText(en.reconnecting)).not.toBeInTheDocument();
@@ -455,12 +462,168 @@ describe('Nearby Play user flows', () => {
     expect(controller.stop).not.toHaveBeenCalled();
   });
 
+  it('keeps a live game when leaving its screen and ignores hidden keyboard and native back events', async () => {
+    fixtures.native = true;
+    const exit = vi.fn();
+    const activeChanged = vi.fn();
+    const registerStop = vi.fn<(stop: (() => Promise<void>) | null) => void>();
+    const view = render(
+      <NearbyRoot
+        gameId="yacht"
+        onExit={exit}
+        onActiveChange={activeChanged}
+        onRegisterStop={registerStop}
+      />,
+    );
+    const controller = hostRoom();
+    act(() => {
+      controller.session.ready();
+      controller.peer.ready();
+      controller.flush();
+    });
+    fireEvent.click(screen.getByRole('button', { name: /^Roll/ }));
+    act(() => controller.flush());
+    const before = structuredClone(controller.session.match);
+    const oldBack = fixtures.addListener.mock.calls[0]![1] as () => void;
+    fireEvent.click(screen.getByRole('button', { name: en.chat }));
+    act(oldBack);
+    expect(screen.queryByRole('log')).not.toBeInTheDocument();
+    expect(exit).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: en.chat }));
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('log')).not.toBeInTheDocument();
+    expect(exit).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: en.chat }));
+    fireEvent.click(screen.getByRole('button', { name: en.back }));
+    expect(screen.queryByRole('log')).not.toBeInTheDocument();
+    expect(exit).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: en.back }));
+    expect(exit).toHaveBeenCalledOnce();
+    expect(controller.stop).not.toHaveBeenCalled();
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    view.rerender(
+      <NearbyRoot
+        gameId="yacht"
+        onExit={exit}
+        visible={false}
+        onActiveChange={activeChanged}
+        onRegisterStop={registerStop}
+      />,
+    );
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.keyDown(window, { key: 'r' });
+    fireEvent.keyDown(window, { key: '1' });
+    act(oldBack);
+    expect(exit).toHaveBeenCalledOnce();
+    expect(controller.session.match).toEqual(before);
+    expect(controller.stop).not.toHaveBeenCalled();
+    expect(activeChanged.mock.calls.map(([active]) => active)).toEqual([false, true]);
+    expect(registerStop).toHaveBeenCalledTimes(1);
+    view.rerender(
+      <NearbyRoot
+        gameId="yacht"
+        onExit={exit}
+        visible
+        onActiveChange={activeChanged}
+        onRegisterStop={registerStop}
+      />,
+    );
+    expect(screen.getByRole('button', { name: /^Roll/ })).toBeEnabled();
+    expect(controller.session.match).toEqual(before);
+    expect(fixtures.controllers).toHaveLength(1);
+    // The app can await this before clearing local history, even while the view is retained.
+    const stop = registerStop.mock.calls[0]![0]!;
+    await act(async () => {
+      await stop();
+    });
+    expect(controller.stop).toHaveBeenCalledOnce();
+    expect(activeChanged.mock.calls.map(([active]) => active)).toEqual([false, true, false]);
+    view.unmount();
+    expect(registerStop).toHaveBeenLastCalledWith(null);
+    expect(activeChanged).toHaveBeenLastCalledWith(false);
+  });
+
+  it('shows a quiet unread mark without replacing the game and does not read chat while hidden', () => {
+    const view = render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
+    const controller = hostRoom();
+    act(() => {
+      controller.peer.sendChat('First message');
+      controller.flush();
+    });
+    expect(screen.getByRole('button', { name: en.ready })).toBeInTheDocument();
+    expect(screen.queryByRole('log')).not.toBeInTheDocument();
+    const chat = screen.getByRole('button', { name: en.unreadChat });
+    expect(chat).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(chat);
+    expect(screen.getByRole('heading', { name: en.chat })).toHaveFocus();
+    expect(screen.getByText('First message')).toBeInTheDocument();
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    act(() => {
+      controller.peer.sendChat('In background');
+      controller.flush();
+    });
+    expect(screen.getByRole('button', { name: en.closeChat })).toHaveAttribute(
+      'data-unread',
+      'true',
+    );
+    Reflect.deleteProperty(document, 'visibilityState');
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    expect(screen.getByRole('button', { name: en.closeChat })).toHaveAttribute(
+      'data-unread',
+      'false',
+    );
+    view.rerender(<NearbyRoot gameId="yacht" onExit={() => {}} visible={false} />);
+    act(() => {
+      controller.peer.sendChat('While away');
+      controller.flush();
+    });
+    // Hidden chat remains unread, even though its DOM is retained.
+    const hiddenToggle = view.container.querySelector('.nearby-chat-toggle')!;
+    expect(hiddenToggle).toHaveAttribute('data-unread', 'true');
+    expect(controller.stop).not.toHaveBeenCalled();
+    view.rerender(<NearbyRoot gameId="yacht" onExit={() => {}} visible />);
+    expect(screen.getByText('While away')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: en.closeChat })).toHaveAttribute(
+      'data-unread',
+      'false',
+    );
+    fireEvent.click(screen.getByRole('button', { name: en.closeChat }));
+    expect(screen.queryByRole('log')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: en.chat })).toHaveFocus();
+    expect(screen.getByRole('button', { name: en.ready })).toBeEnabled();
+    act(() => {
+      controller.peer.sendChat('Another message');
+      controller.flush();
+    });
+    expect(screen.getByRole('button', { name: en.unreadChat })).toBeInTheDocument();
+    expect(screen.queryByRole('log')).not.toBeInTheDocument();
+  });
+
+  it('reports discovery as active without repeated notifications when callbacks change, and clears on unmount', () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const view = render(<NearbyRoot gameId="yacht" onExit={() => {}} onActiveChange={first} />);
+    const controller = begin();
+    expect(first.mock.calls.map(([active]) => active)).toEqual([false, true]);
+    view.rerender(<NearbyRoot gameId="yacht" onExit={() => {}} onActiveChange={second} />);
+    expect(second).not.toHaveBeenCalled();
+    view.unmount();
+    expect(second).toHaveBeenCalledExactlyOnceWith(false);
+    expect(controller.stop).toHaveBeenCalledOnce();
+  });
+
   it('deletes only the selected local history after warning that the peer copy remains', async () => {
     fixtures.saved = [
       savedGathering(),
       { ...savedGathering(), id: 'f'.repeat(32), names: ['Other', 'Friend'] },
     ];
-    render(<NearbyRoot onExit={() => {}} />);
+    render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
     fireEvent.click(screen.getByRole('button', { name: en.history }));
     fireEvent.click(await screen.findByRole('button', { name: /Saved host · Saved guest/ }));
     fireEvent.click(screen.getByRole('button', { name: en.delete }));
@@ -487,7 +650,7 @@ describe('Nearby Play user flows', () => {
   it('shows a failed local deletion without hiding or claiming to delete the saved history', async () => {
     fixtures.saved = [savedGathering()];
     fixtures.remove.mockRejectedValueOnce(new Error('Device storage unavailable'));
-    render(<NearbyRoot onExit={() => {}} />);
+    render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
     fireEvent.click(screen.getByRole('button', { name: en.history }));
     fireEvent.click(await screen.findByRole('button', { name: /Saved host · Saved guest/ }));
     fireEvent.click(screen.getByRole('button', { name: en.delete }));

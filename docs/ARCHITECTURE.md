@@ -57,11 +57,25 @@ src/
 
 レイヤー規則:
 
-- Nearby Play は `app/nearbyGate.ts` からのdynamic importだけで開く。例外として
+- Nearby Play は対応ゲームtopの「誰かと遊ぶ」から、シェル所有のcallback経由で開く。
+  最初は native の Yacht だけにcallbackを渡す。ゲームからNearbyをimportせず、シェルの
+  `app/nearbyGate.ts` からのdynamic importだけで `nearby/` を読み込む。
+  コレクションの独立したNearby入口とClub Houseからの開始導線は持たない。例外として
   `nearby/yacht.ts` のみが `games/yacht/game/{engine,types}` の純粋な採点／型を参照できる。
   `nearby/NearbyRoot.tsx` は `games/yacht/ui/components/YachtPlaySurface` の純粋なUIも共有する。
   この2境界以外のゲーム内部参照、通常GameContext/storage/Clubへの到達、ゲームからNearbyへの参照は許容しない。
   製品nativeと隔離PoCは別所有・別service識別子とし、製品からPoCへimportしない。
+  選択済みゲームをシェルから渡し、初回の重複ゲーム提案操作を省く。host承認と双方Readyは省かない。
+
+- シェルの `App` は接続を所有する `NearbyRoot` とcontrollerをマウントしたまま保持し、
+  ゲームtopへ戻ると `visible=false` で非表示にする。通常ゲーム画面のアンマウントや会話を閉じる
+  操作では接続を停止せず、同じ入口から継続中の対戦へ戻す。別の接続を重複開始しない。
+  非表示中のNearby画面では入力・キーボード・戻る操作のリスナーやアニメーションを無効化する。
+  明示退出／解散で接続を終了し、`NearbyRoot` 自体の最終アンマウントでも停止・資源解放する
+  (エラー／reset／アプリ終了時のcleanup)。所有コンポーネントのアンマウント後まで接続を残す契約ではない。
+  通常のCPU戦や他ゲームは従来どおりアンマウント時にタイマー・購読を片付ける。
+  アプリ切替・一時切断からの継続条件は
+  [architecture/nearby-multiplayer.md](architecture/nearby-multiplayer.md) の製品契約に従う。
 
 - `games/*/game/` は Pure TypeScript。他のどのレイヤーも import しない
   (テスト容易性と移植性のため)。
@@ -151,7 +165,10 @@ src/
 
 ## Nearby Multiplayer の隔離 PoC
 
-issue #268 の近隣端末間対戦は Core の任意モードとして許容するが、2026-10-25 の実装は
+この節は製品採用前の検証用アプリの境界を記録する。現在の製品は上のレイヤー規則と
+`architecture/nearby-multiplayer.md` の製品契約に従い、PoC の前面限定・保存なしを継承しない。
+
+issue #268 の近隣端末間対戦を Core の任意モードとして検証した、2026-10-25 の PoC 実装は
 `apps/simple-games/prototypes/nearby/` の独立した検証用アプリに置く。生成する Capacitor
 プロジェクトの app ID は `com.pixapps.nearbypoc`。製品の registry、ホーム、ネイティブ
 権限、SDK 依存には加えず、製品ソースから PoC への import を禁止する。PoC のブラウザ
@@ -164,7 +181,7 @@ Yacht の操作を扱い、ゲーム host と BLE central / peripheral のロー
 共有状態を確定する host は 1 台、参加者は 2 人から始める。切断・background で終了し、
 保存、復帰、host 移譲、BLE / LAN 間移行、Club 送信は行わない。
 
-製品化前にはこの隔離を解除するための明示的な設計・検証が必要であり、既存の
+当時の製品化条件は明示的な設計・検証であり、既存の
 `check-principles.sh` の通信例外を広げるだけでは足りない。通常起動と Web で権限要求・
 探索・接続がないこと、明示セッション終了時に全資源を閉じること、既存 lazy-load / size
 gate を維持することを門にする。技術の正本と実機検証条件は
@@ -178,7 +195,7 @@ gate を維持することを門にする。技術の正本と実機検証条件
 
 ## ゲームレジストリの契約
 
-`app/registry.ts` のエントリは「タイトルカード + そのゲームが持つキー + ゲーム本体のローダー」だけのプラグイン機構ではない薄い契約で、ゲームの追加は keys の import 1 行と配列要素 1 つで済む。ゲーム本体は静的 import せず `codeSplitting` でゲーム単位のチャンクに分かれる——例外は同期参照される import ゼロの葉 `storage/keys.ts` だけで、ここに import を足すとホームの初期チャンクへ引き戻される。`storageKeys` は「ローカルデータ削除」とバックアップがゲームのチャンクを読まずに列挙するためのもので、released 済みキーの一覧は `gameKeys.test.ts` のゴールデンとして固定され、**テストを直して通すのは禁止**(プレイヤーのデータに対する削除行為になるため)。`loadStorageSchemas` は**必須**のローダーで、Backup & Restore がそのゲームのレコードを持ち主の `SchemaDef` で検証するための唯一の口 —— 任意にすると、書き出せるのに復元できないゲームが黙って増える(issue #160)。Root が受け取る props は `GameRootProps` = `onExit` と任意の `entry`(どの扉から入ったか、issue #113)。`SettingsSection` は任意で、ゲーム固有の設定はゲームが所有しシェルは場所だけ貸す。`channel` も任意で、`'web-beta'` なら Web 版だけの先行公開(いまは 2026-10-17 の計画の 5 本 — Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、Web 版で 2026-10-19 から公開中 — と、2026-10-20 の計画の 5 本 — Make the Target / Nested Tic-Tac-Toe / Tangram は 2026-10-21 に実装し、Web 版で 2026-10-22 から公開中、Overtake と Scopa は 2026-10-21 に実装し、製品オーナーの指示で 2026-10-22 に切り替え、Web 版で同日(UTC でも 2026-10-22 02:32)から公開中 — と、2026-10-19 の計画の 5 本 — Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads、2026-10-22 に実装して `'in-development'` から切り替え、Web 版で 2026-10-23(JST、UTC では 2026-10-22 17:33)から公開中 — がこのチャンネルにある。前の 11 本は 2026-10-02 に正式収録した)、`'in-development'`(2026-10-20 から)なら実装中でどのビルドにも出さない(スキャフォールドの段階の値で、遊べるようになる変更で `'web-beta'` にする。2026-10-22 の切り替えで、いまこの値のエントリは無い) —— 出し分けはビルドではなく `app/gameChannel.ts` の実行時ガードで、ホーム・検索・お気に入り・最近・`?game=` の住所・lazy root・Club のチャレンジの Play(`findAvailableGame`)がそこに問う([WEB_VERSION.md](WEB_VERSION.md)「先行公開」、issue #194)。
+`app/registry.ts` のエントリは「タイトルカード + そのゲームが持つキー + ゲーム本体のローダー」だけのプラグイン機構ではない薄い契約で、ゲームの追加は keys の import 1 行と配列要素 1 つで済む。ゲーム本体は静的 import せず `codeSplitting` でゲーム単位のチャンクに分かれる——例外は同期参照される import ゼロの葉 `storage/keys.ts` だけで、ここに import を足すとホームの初期チャンクへ引き戻される。`storageKeys` は「ローカルデータ削除」とバックアップがゲームのチャンクを読まずに列挙するためのもので、released 済みキーの一覧は `gameKeys.test.ts` のゴールデンとして固定され、**テストを直して通すのは禁止**(プレイヤーのデータに対する削除行為になるため)。`loadStorageSchemas` は**必須**のローダーで、Backup & Restore がそのゲームのレコードを持ち主の `SchemaDef` で検証するための唯一の口 —— 任意にすると、書き出せるのに復元できないゲームが黙って増える(issue #160)。Root が受け取る `GameRootProps` は `onExit` と任意の `entry`(どの扉から入ったか、issue #113)を持つ。Nearby 対応ゲームにはシェル所有の任意の開始／対戦へ戻るcallbackも渡す(最初はnativeのYachtだけ)。ゲームは接続実装を参照せず、そのcallbackを呼ぶだけとする。通常ゲーム画面の `onExit` やアンマウントをNearbyの明示退出と同一視しない。`SettingsSection` は任意で、ゲーム固有の設定はゲームが所有しシェルは場所だけ貸す。`channel` も任意で、`'web-beta'` なら Web 版だけの先行公開(いまは 2026-10-17 の計画の 5 本 — Unblock Puzzle / Snake / Loop Puzzle / Bridges / Peg Solitaire、Web 版で 2026-10-19 から公開中 — と、2026-10-20 の計画の 5 本 — Make the Target / Nested Tic-Tac-Toe / Tangram は 2026-10-21 に実装し、Web 版で 2026-10-22 から公開中、Overtake と Scopa は 2026-10-21 に実装し、製品オーナーの指示で 2026-10-22 に切り替え、Web 版で同日(UTC でも 2026-10-22 02:32)から公開中 — と、2026-10-19 の計画の 5 本 — Chess / Gem Swap / Pipe Link / Bounce Up / Echo Pads、2026-10-22 に実装して `'in-development'` から切り替え、Web 版で 2026-10-23(JST、UTC では 2026-10-22 17:33)から公開中 — がこのチャンネルにある。前の 11 本は 2026-10-02 に正式収録した)、`'in-development'`(2026-10-20 から)なら実装中でどのビルドにも出さない(スキャフォールドの段階の値で、遊べるようになる変更で `'web-beta'` にする。2026-10-22 の切り替えで、いまこの値のエントリは無い) —— 出し分けはビルドではなく `app/gameChannel.ts` の実行時ガードで、ホーム・検索・お気に入り・最近・`?game=` の住所・lazy root・Club のチャレンジの Play(`findAvailableGame`)がそこに問う([WEB_VERSION.md](WEB_VERSION.md)「先行公開」、issue #194)。
 
 小見出し: 「ゲーム単位の lazy チャンク(issue #26)」
 
@@ -234,20 +251,22 @@ gate を維持することを門にする。技術の正本と実機検証条件
 
 ## 電池(低消費電力)
 
-- プレイ中の定期ポーリングなし。バックグラウンド処理なし。常時接続なし。
-  Nearby は本人が開始した集まりの間だけ接続を保つ。一時中断では保持し、前面で同じ相手に
+- 通常のゲームに定期ポーリング・バックグラウンド処理・常時接続を持たない。
+  Nearby は本人が開始した集まりの間だけ接続を保ち、ゲームtopへ戻るだけでは切らない。一時中断では保持し、前面で同じ相手に
   再接続する。退出・解散で終了する。AndroidのconnectedDeviceサービスとiOSのBluetooth背景モードを
   この用途に限って許容する。プロセス終了後の復元は未対応。
 - オフライン時は広告取得をリトライしない。
 - 画面外のゲームはアンマウントする(描画しない)。**アンマウントされたゲームは
   タイマー・RAF・リスナー・音声を一切残さない** — 契約とテストは
   [GAME_LIFECYCLE.md](GAME_LIFECYCLE.md)。
+  Nearby接続・継続状態は、シェルが `NearbyRoot` をマウントしたまま非表示にして保持する。
+  `NearbyRoot` 自体の最終アンマウントでは接続も解放する。通常ゲームの描画処理を残す例外ではない。
 - 保存はイベント駆動(可視性変化 / pause / 状態遷移時)。
 - プレイ時計は ref 加算のみで、再レンダリングを起こさない。
 
 ## Web / Android / iOS
 
-Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS アプリ化する(SSR 不要のため Next.js は使用しない)。**プラットフォーム差分は 3 箇所に限定する**: 広告 ID・ストアの可用性判定・ホーム画面ショートカット(Android の Pinned Shortcut と iOS の Quick Actions は同じ `services/homeShortcut/` に住む)。いずれも実行時に `Capacitor.getPlatform()` で選び、ゲーム・保存・i18n のコードに `if (ios)` を書かない。**ハードウェア戻るボタン**: ゲーム内ホーム→コレクションへ、コレクション→アプリ最小化。持ち主は常に 1 つ——ゲームが載っている間はそのゲームの `GameContext`(自分の画面→ホーム→コレクション)、チャンクの読み込み中と読み込み失敗の画面は `ui/useHardwareBackExit`、設定画面はシェル(`App.tsx`)、それ以外はコレクションホーム(レビューの質問 → タイルシート → 検索 → 最小化の順に、上に載っているものから閉じる)。レビューの質問はシェルがコレクションの上に描くが、持ち主を 2 つにはできないので、シェルは「閉じ方」だけをコレクションへ渡す——渡さないと Back が質問を残したままアプリを最小化する(issue #173、[REVIEW_PROMPT_POLICY.md](REVIEW_PROMPT_POLICY.md))。Capacitor の `backButton` は登録された全リスナーに届くので、2 つ目の持ち主は「閉じた画面の下でアプリが最小化する」事故になる。ゲーム側の配線(native ガード付きで 1 回だけ登録し、ホームでは `exitToCollection`)は `src/test/gameBackButtonWiring.test.ts` が、シェル側の受け渡しは `src/app/App.load.test.tsx` が固定する(issue #120)。初回チュートリアル(Quick Rules)から Back で抜けたときは `completeTutorial()` を呼んで「見た」扱いにする——呼ばないと `tutorialCompleted` が偽のまま残り、閉じるボタンは完了後にしか出ないので、そのゲームは開くたびにチュートリアルから始まる。「初回体験の原則」(`PRODUCT_PRINCIPLES.md`)が求めるのは 3 ステップ以内で説明してすぐ始めることであり、毎回出すことではない。全ゲームの挙動は `src/test/tutorialBackWiring.test.tsx` が固定する(issue #142)。`android:enableOnBackInvokedCallback="false"` は削除しない——targetSdk 36 の予測型戻るが既定で有効になると `@capacitor/app` の `backButton` イベントが一切発火しなくなる実機バグを回避するためで、外すとハードウェア戻るがアプリ全体で無反応になる。
+Vite で静的 Web アプリとしてビルドし、Capacitor で Android / iOS アプリ化する(SSR 不要のため Next.js は使用しない)。**プラットフォーム差分はシェルと専用アダプタに閉じ込める**: 広告 ID・ストアの可用性判定・ホーム画面ショートカット(Android の Pinned Shortcut と iOS の Quick Actions は同じ `services/homeShortcut/` に住む)、およびnative限定のNearby入口とBLE/LAN接続。プラットフォーム選択をゲーム・保存・i18n のコードへ持ち込まない。Nearbyの入口もシェルが対応可否を決め、ゲームにはcallbackだけを渡す。**ハードウェア戻るボタン**: ゲーム内ホーム→コレクションへ、コレクション→アプリ最小化。持ち主は常に 1 つ——ゲームが載っている間はそのゲームの `GameContext`(自分の画面→ホーム→コレクション)、チャンクの読み込み中と読み込み失敗の画面は `ui/useHardwareBackExit`、設定画面はシェル(`App.tsx`)、それ以外はコレクションホーム(レビューの質問 → タイルシート → 検索 → 最小化の順に、上に載っているものから閉じる)。レビューの質問はシェルがコレクションの上に描くが、持ち主を 2 つにはできないので、シェルは「閉じ方」だけをコレクションへ渡す——渡さないと Back が質問を残したままアプリを最小化する(issue #173、[REVIEW_PROMPT_POLICY.md](REVIEW_PROMPT_POLICY.md))。Capacitor の `backButton` は登録された全リスナーに届くので、2 つ目の持ち主は「閉じた画面の下でアプリが最小化する」事故になる。ゲーム側の配線(native ガード付きで 1 回だけ登録し、ホームでは `exitToCollection`)は `src/test/gameBackButtonWiring.test.ts` が、シェル側の受け渡しは `src/app/App.load.test.tsx` が固定する(issue #120)。初回チュートリアル(Quick Rules)から Back で抜けたときは `completeTutorial()` を呼んで「見た」扱いにする——呼ばないと `tutorialCompleted` が偽のまま残り、閉じるボタンは完了後にしか出ないので、そのゲームは開くたびにチュートリアルから始まる。「初回体験の原則」(`PRODUCT_PRINCIPLES.md`)が求めるのは 3 ステップ以内で説明してすぐ始めることであり、毎回出すことではない。全ゲームの挙動は `src/test/tutorialBackWiring.test.tsx` が固定する(issue #142)。`android:enableOnBackInvokedCallback="false"` は削除しない——targetSdk 36 の予測型戻るが既定で有効になると `@capacitor/app` の `backButton` イベントが一切発火しなくなる実機バグを回避するためで、外すとハードウェア戻るがアプリ全体で無反応になる。
 
 → 全文: [architecture/platforms.md](architecture/platforms.md)
 

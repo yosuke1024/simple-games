@@ -2,6 +2,9 @@ import type { YachtMessages } from './en';
 
 export const th: YachtMessages = {
   yachtName: 'Yacht',
+  yachtPlayTogether: 'เล่นกับคนอื่น',
+  yachtReturnToTogether: 'กลับไปเล่นด้วยกัน',
+  yachtPlayTogetherNote: 'เชื่อมต่อกับคนที่อยู่ใกล้เพื่อแข่งขัน',
   yachtResumeNote: 'ตา {turn} / {count} · คุณ {total} · CPU {cpuTotal}',
   yachtRecordNote: 'ชนะ {wins} · แพ้ {losses} · ดีที่สุด {best}',
   yachtBestNote: 'ดีที่สุด {score}',

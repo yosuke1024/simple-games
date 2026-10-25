@@ -286,6 +286,10 @@ export interface GameRootProps {
   onExit: () => void;
   /** Which door this launch came through. Absent means the ordinary one. */
   entry?: GameEntry;
+  /** Optional native multiplayer door. Games never import the transport layer. */
+  onPlayTogether?: () => void;
+  /** The same peer session can be reopened without starting another connection. */
+  playTogetherActive?: boolean;
 }
 
 export interface GameDefinition {

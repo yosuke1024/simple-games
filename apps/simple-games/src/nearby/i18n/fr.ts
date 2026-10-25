@@ -2,8 +2,11 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const fr: NearbyMessages = {
+  playTogether: 'Jouer avec quelqu’un',
+  closeChat: 'Fermer le chat',
+  unreadChat: 'Chat, messages non lus',
   tagline: 'Jeux et discussions avec des personnes à proximité.',
-  create: 'Créer une rencontre',
+  create: 'Créer une partie',
   join: 'Rejoindre une rencontre',
   history: 'Historique',
   back: 'Retour',
@@ -22,7 +25,7 @@ export const fr: NearbyMessages = {
   hosting: 'En attente d’une demande…',
   noPeers: 'Aucune rencontre trouvée pour le moment.',
   label: 'Numéro de la rencontre',
-  twoPeople: '2 personnes · Yacht et discussion',
+  twoPeople: '2 personnes à proximité · Bluetooth ou même Wi-Fi',
   opponent: 'Adv.',
   reconnecting: 'Reconnexion… Remettez les deux apps au premier plan. La partie est en pause.',
   connecting: 'Connexion…',
@@ -67,7 +70,7 @@ export const fr: NearbyMessages = {
     'La rencontre se terminera pour les deux personnes. Votre historique local restera sur cet appareil.',
   cancel: 'Annuler',
   ended: 'La connexion est terminée.',
-  retry: 'Retour à Nearby Play',
+  retry: 'Revenir à Yacht',
   timeout: 'Aucune réponse à temps. Recommencez quand les deux appareils seront prêts.',
   connectionError:
     'Connexion impossible. Vérifiez Bluetooth ou le Wi-Fi et les autorisations de l’app sur les deux appareils, puis réessayez.',

@@ -2,8 +2,11 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const ptBR: NearbyMessages = {
+  playTogether: 'Jogar com alguém',
+  closeChat: 'Fechar chat',
+  unreadChat: 'Chat, mensagens não lidas',
   tagline: 'Jogos e conversas com pessoas por perto.',
-  create: 'Criar um encontro',
+  create: 'Criar partida',
   join: 'Entrar em um encontro',
   history: 'Histórico',
   back: 'Voltar',
@@ -22,7 +25,7 @@ export const ptBR: NearbyMessages = {
   hosting: 'Aguardando um pedido de entrada…',
   noPeers: 'Nenhum encontro encontrado ainda.',
   label: 'Número do encontro',
-  twoPeople: '2 pessoas · Yacht e conversa',
+  twoPeople: '2 pessoas próximas · Bluetooth ou o mesmo Wi-Fi',
   opponent: 'Rival',
   reconnecting: 'Reconectando… Abra o app nos dois dispositivos. A partida está pausada.',
   connecting: 'Conectando…',
@@ -67,7 +70,7 @@ export const ptBR: NearbyMessages = {
     'O encontro será encerrado para os dois participantes. Seu histórico local continuará neste dispositivo.',
   cancel: 'Cancelar',
   ended: 'A conexão foi encerrada.',
-  retry: 'Voltar ao Nearby Play',
+  retry: 'Voltar ao Yacht',
   timeout:
     'Não houve resposta a tempo. Comecem novamente quando os dois dispositivos estiverem prontos.',
   connectionError:

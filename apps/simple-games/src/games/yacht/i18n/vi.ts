@@ -2,6 +2,9 @@ import type { YachtMessages } from './en';
 
 export const vi: YachtMessages = {
   yachtName: 'Yacht',
+  yachtPlayTogether: 'Chơi cùng người khác',
+  yachtReturnToTogether: 'Trở lại chơi cùng nhau',
+  yachtPlayTogetherNote: 'Kết nối với người ở gần để thi đấu.',
   yachtResumeNote: 'Lượt {turn} / {count} · Bạn {total} · CPU {cpuTotal}',
   yachtRecordNote: 'Thắng {wins} · Thua {losses} · Cao nhất {best}',
   yachtBestNote: 'Cao nhất {score}',

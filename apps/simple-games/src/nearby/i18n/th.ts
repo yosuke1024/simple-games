@@ -2,8 +2,11 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const th: NearbyMessages = {
+  playTogether: 'เล่นกับคนอื่น',
+  closeChat: 'ปิดแชต',
+  unreadChat: 'แชต มีข้อความที่ยังไม่ได้อ่าน',
   tagline: 'เล่นเกมและแชทกับคนใกล้ตัว',
-  create: 'สร้างวงพบปะ',
+  create: 'เปิดเกม',
   join: 'เข้าร่วมวงพบปะ',
   history: 'ประวัติ',
   back: 'กลับ',
@@ -22,7 +25,7 @@ export const th: NearbyMessages = {
   hosting: 'กำลังรอคำขอเข้าร่วม…',
   noPeers: 'ยังไม่พบวงพบปะ',
   label: 'หมายเลขวงพบปะ',
-  twoPeople: '2 คน · Yacht และแชท',
+  twoPeople: '2 คนที่อยู่ใกล้กัน · Bluetooth หรือ Wi-Fi เดียวกัน',
   opponent: 'คู่แข่ง',
   reconnecting: 'กำลังเชื่อมต่อใหม่… เปิดแอปบนทั้งสองเครื่อง เกมหยุดชั่วคราวอยู่',
   connecting: 'กำลังเชื่อมต่อ…',
@@ -66,7 +69,7 @@ export const th: NearbyMessages = {
   leaveBody: 'วงพบปะจะจบลงสำหรับทั้งสองคน ประวัติของคุณจะยังอยู่ในเครื่องนี้',
   cancel: 'ยกเลิก',
   ended: 'การเชื่อมต่อสิ้นสุดแล้ว',
-  retry: 'กลับไป Nearby Play',
+  retry: 'กลับไปที่ Yacht',
   timeout: 'ไม่ได้รับคำตอบภายในเวลา เริ่มใหม่เมื่อทั้งสองเครื่องพร้อม',
   connectionError:
     'เชื่อมต่อไม่ได้ ตรวจสอบ Bluetooth หรือ Wi-Fi และสิทธิ์ของแอปทั้งสองเครื่อง แล้วลองอีกครั้ง',

@@ -2,8 +2,11 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const zhHant: NearbyMessages = {
+  playTogether: '與他人同玩',
+  closeChat: '關閉聊天',
+  unreadChat: '聊天，有未讀訊息',
   tagline: '與附近的人一起玩遊戲、聊天。',
-  create: '建立聚會',
+  create: '招募對手',
   join: '加入聚會',
   history: '歷史紀錄',
   back: '返回',
@@ -22,7 +25,7 @@ export const zhHant: NearbyMessages = {
   hosting: '正在等待加入申請…',
   noPeers: '尚未找到聚會。',
   label: '聚會編號',
-  twoPeople: '2人 · Yacht與聊天',
+  twoPeople: '附近2人 · Bluetooth 或同一 Wi-Fi',
   opponent: '對方',
   reconnecting: '正在重新連線… 請在兩台裝置上重新開啟應用程式。對局已暫停。',
   connecting: '正在連線…',
@@ -66,7 +69,7 @@ export const zhHant: NearbyMessages = {
   leaveBody: '聚會將在雙方裝置上結束。你的本機歷史紀錄會保留在此裝置上。',
   cancel: '取消',
   ended: '連線已結束。',
-  retry: '返回Nearby Play',
+  retry: '返回 Yacht',
   timeout: '未能及時收到回應。兩台裝置準備好後請重新開始。',
   connectionError: '無法連線。請檢查兩台裝置的Bluetooth或Wi-Fi和應用程式權限，然後重試。',
   declined: '加入申請已被拒絕。',

@@ -26,16 +26,6 @@
 .nearby-stack h3 {
   font-size: 18px;
 }
-.nearby-hero {
-  text-align: center;
-  padding: 24px 8px;
-  display: grid;
-  gap: 14px;
-}
-.nearby-hero > span {
-  font-size: 36px;
-  letter-spacing: 12px;
-}
 .nearby-note {
   font-size: 13px;
   line-height: 1.7;
@@ -89,14 +79,10 @@
   display: grid;
   gap: 12px;
 }
-.nearby-actions,
-.nearby-tabs {
+.nearby-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-}
-.nearby-tabs button[aria-pressed='true'] {
-  border: 1px solid currentColor;
 }
 .nearby-peer {
   display: flex;
@@ -198,18 +184,10 @@
   padding: 0 0 12px;
   gap: 8px;
 }
-.nearby-playing > .nearby-tabs,
 .nearby-playing > .nearby-safety,
 .nearby-playing > .nearby-warning,
 .nearby-playing > .nearby-card {
   margin-inline: 12px;
-}
-.nearby-playing .nearby-tabs .btn {
-  min-height: 44px;
-  padding-block: 8px;
-}
-.nearby-tabs button {
-  flex: 1;
 }
 .nearby-board {
   min-width: 0;
@@ -231,6 +209,9 @@
   text-align: end;
   overflow-wrap: anywhere;
 }
+.nearby-board .yt-sheet-head-col span {
+  white-space: nowrap;
+}
 .nearby-board .yt-sheet-foot {
   height: auto;
   align-items: start;
@@ -242,4 +223,26 @@
 }
 .nearby-board .yt-sheet-foot .game-score {
   text-align: end;
+}
+
+.nearby-screen[hidden] {
+  display: none;
+}
+.nearby-chat-toggle {
+  position: relative;
+}
+.nearby-unread {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+}
+.nearby-chat-panel {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
 }

@@ -2,8 +2,11 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const id: NearbyMessages = {
+  playTogether: 'Bermain dengan seseorang',
+  closeChat: 'Tutup chat',
+  unreadChat: 'Chat, pesan belum dibaca',
   tagline: 'Bermain dan mengobrol dengan orang di sekitar.',
-  create: 'Buat pertemuan',
+  create: 'Buat permainan',
   join: 'Gabung pertemuan',
   history: 'Riwayat',
   back: 'Kembali',
@@ -23,7 +26,7 @@ export const id: NearbyMessages = {
   hosting: 'Menunggu permintaan bergabung…',
   noPeers: 'Belum ada pertemuan yang ditemukan.',
   label: 'Nomor pertemuan',
-  twoPeople: '2 orang · Yacht dan obrolan',
+  twoPeople: '2 orang berdekatan · Bluetooth atau Wi-Fi yang sama',
   opponent: 'Rival',
   reconnecting: 'Menyambungkan lagi… Buka aplikasi di kedua perangkat. Permainan dijeda.',
   connecting: 'Menghubungkan…',
@@ -68,7 +71,7 @@ export const id: NearbyMessages = {
     'Pertemuan akan berakhir untuk kedua peserta. Riwayat lokal Anda tetap ada di perangkat ini.',
   cancel: 'Batal',
   ended: 'Koneksi telah berakhir.',
-  retry: 'Kembali ke Nearby Play',
+  retry: 'Kembali ke Yacht',
   timeout: 'Tidak ada balasan tepat waktu. Mulai lagi setelah kedua perangkat siap.',
   connectionError:
     'Tidak dapat terhubung. Periksa Bluetooth atau Wi-Fi dan izin aplikasi di kedua perangkat, lalu coba lagi.',

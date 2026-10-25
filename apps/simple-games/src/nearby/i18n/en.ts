@@ -1,6 +1,9 @@
 export const en = {
+  playTogether: 'Play with someone',
+  closeChat: 'Close chat',
+  unreadChat: 'Chat, unread messages',
   tagline: 'Games and chat with people nearby.',
-  create: 'Create a gathering',
+  create: 'Host a game',
   join: 'Join a gathering',
   history: 'History',
   back: 'Back',
@@ -19,7 +22,7 @@ export const en = {
   hosting: 'Waiting for a join request…',
   noPeers: 'No gatherings found yet.',
   label: 'Gathering number',
-  twoPeople: '2 people · Yacht and chat',
+  twoPeople: '2 people nearby · Bluetooth or the same Wi-Fi',
   opponent: 'Peer',
   reconnecting: 'Reconnecting… Bring both apps to the foreground. Your game is paused.',
   connecting: 'Connecting…',
@@ -64,7 +67,7 @@ export const en = {
     'The gathering will end for both participants. Your local history will stay on this device.',
   cancel: 'Cancel',
   ended: 'The connection has ended.',
-  retry: 'Back to Nearby Play',
+  retry: 'Back to Yacht',
   timeout: 'No response in time. Start again when both devices are ready.',
   connectionError:
     'Could not connect. Check Bluetooth or Wi-Fi and app permissions on both devices, then try again.',

@@ -2,8 +2,11 @@ import type { NearbyMessages } from './en';
 
 // Machine translation; human and independent semantic reviews are pending.
 export const ko: NearbyMessages = {
+  playTogether: '다른 사람과 플레이',
+  closeChat: '채팅 닫기',
+  unreadChat: '채팅, 읽지 않은 메시지 있음',
   tagline: '가까운 사람들과 게임과 채팅을 즐겨요.',
-  create: '모임 만들기',
+  create: '상대 모집',
   join: '모임 참가',
   history: '기록',
   back: '뒤로',
@@ -22,7 +25,7 @@ export const ko: NearbyMessages = {
   hosting: '참가 신청을 기다리는 중…',
   noPeers: '아직 찾은 모임이 없습니다.',
   label: '모임 번호',
-  twoPeople: '2명 · Yacht와 채팅',
+  twoPeople: '가까이 있는 2명 · Bluetooth 또는 같은 Wi-Fi',
   opponent: '상대',
   reconnecting: '다시 연결 중… 두 기기에서 앱을 다시 열어 주세요. 게임이 일시 정지되어 있습니다.',
   connecting: '연결 중…',
@@ -66,7 +69,7 @@ export const ko: NearbyMessages = {
   leaveBody: '두 참가자 모두의 모임이 종료됩니다. 내 기록은 이 기기에 남습니다.',
   cancel: '취소',
   ended: '연결이 종료되었습니다.',
-  retry: 'Nearby Play로 돌아가기',
+  retry: 'Yacht로 돌아가기',
   timeout: '시간 내에 응답이 없었습니다. 두 기기가 준비되면 다시 시작하세요.',
   connectionError:
     '연결할 수 없습니다. 두 기기의 Bluetooth 또는 Wi-Fi와 앱 권한을 확인한 후 다시 시도하세요.',

@@ -308,7 +308,6 @@ export interface CollectionHomeScreenProps {
    * The shell loads the Club layer on the press, never on the paint.
    */
   onOpenClub: (entry: 'home' | 'join' | 'discover') => void;
-  onOpenNearby?: () => void;
   /** The clubs this device has joined, as `sg.club` last cached them — names only. */
   clubConnections: readonly { clubName: string }[];
 }
@@ -318,7 +317,6 @@ export function CollectionHomeScreen({
   onOpenSettings,
   dismissReviewPrompt,
   onOpenClub,
-  onOpenNearby,
   clubConnections,
 }: CollectionHomeScreenProps) {
   const { t } = useSettings();
@@ -770,13 +768,6 @@ export function CollectionHomeScreen({
             >
               <span className="home-play-together-title">{t('clubEntry')}</span>
               <span className="home-play-together-body">{t('playTogetherBody')}</span>
-            </button>
-          )}
-
-          {import.meta.env.MODE !== 'web' && onOpenNearby && (
-            <button type="button" className="home-play-together" onClick={onOpenNearby}>
-              <span className="home-play-together-title">Nearby Play</span>
-              <span className="home-play-together-body">{t('nearbyEntryBody')}</span>
             </button>
           )}
 

@@ -2,6 +2,9 @@ import type { YachtMessages } from './en';
 
 export const ko: YachtMessages = {
   yachtName: 'Yacht',
+  yachtPlayTogether: '다른 사람과 플레이',
+  yachtReturnToTogether: '함께 플레이로 돌아가기',
+  yachtPlayTogetherNote: '가까운 사람과 연결해 대결하세요.',
   yachtResumeNote: '{turn} / {count} 라운드 · 나 {total} · CPU {cpuTotal}',
   yachtRecordNote: '{wins}승 · {losses}패 · 최고 {best}',
   yachtBestNote: '최고 {score}',

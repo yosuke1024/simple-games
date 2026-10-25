@@ -18,7 +18,13 @@ import { useHardwareBackExit } from '../useHardwareBackExit';
 /** Under this, a load is instant to the eye and deserves no indicator. */
 const SHOW_AFTER_MS = 200;
 
-export function GameLoadingFallback({ onExit }: { onExit: () => void }) {
+export function GameLoadingFallback({
+  onExit,
+  active = true,
+}: {
+  onExit: () => void;
+  active?: boolean;
+}) {
   const { t } = useSettings();
   const [visible, setVisible] = useState(false);
 
@@ -27,7 +33,7 @@ export function GameLoadingFallback({ onExit }: { onExit: () => void }) {
     return () => window.clearTimeout(id);
   }, []);
 
-  useHardwareBackExit(onExit);
+  useHardwareBackExit(onExit, active);
 
   return (
     <div className="screen game-load-screen" aria-live="polite">

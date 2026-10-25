@@ -11,12 +11,16 @@ import { useEffect } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 
-export function useHardwareBackExit(onExit: () => void): void {
+export function useHardwareBackExit(onExit: () => void, active = true): void {
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
-    const handle = CapacitorApp.addListener('backButton', onExit);
+    if (!active || !Capacitor.isNativePlatform()) return;
+    let listening = true;
+    const handle = CapacitorApp.addListener('backButton', () => {
+      if (listening) onExit();
+    });
     return () => {
+      listening = false;
       void handle.then((h) => h.remove()).catch(() => undefined);
     };
-  }, [onExit]);
+  }, [onExit, active]);
 }
