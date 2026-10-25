@@ -153,6 +153,8 @@ export const hi: Messages = {
   levelsCleared: 'पूरे किए स्तर',
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'उन्नत',
+  nearbyEntryBody: 'आस-पास के लोगों के साथ खेलें और चैट करें।',
+  localDataResetFailed: 'स्थानीय डेटा मिटाया नहीं जा सका। फिर से कोशिश करें।',
   clubEntry: 'Club House',
   clubJoinNew: 'नए Club House से जुड़ें',
   playTogetherTitle: 'साथ खेलें',

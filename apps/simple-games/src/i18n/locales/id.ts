@@ -153,6 +153,8 @@ export const id: Messages = {
   levelsCleared: 'Level selesai',
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: 'Lanjutan',
+  nearbyEntryBody: 'Bermain dan mengobrol dengan orang di sekitar.',
+  localDataResetFailed: 'Data lokal tidak dapat dihapus. Coba lagi.',
   clubEntry: 'Club House',
   clubJoinNew: 'Gabung ke Club House baru',
   playTogetherTitle: 'Main bersama',

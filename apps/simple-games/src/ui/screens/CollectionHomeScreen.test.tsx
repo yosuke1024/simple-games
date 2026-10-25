@@ -1569,6 +1569,6 @@ describe('the Club House slot', () => {
   it('keeps the one quiet Play together row on a device that has joined nothing', () => {
     renderWith([]);
     expect(screen.queryByRole('button', { name: 'Join a new Club House' })).toBeNull();
-    expect(screen.getByRole('button', { name: /Play together/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Club House/ })).toBeInTheDocument();
   });
 });

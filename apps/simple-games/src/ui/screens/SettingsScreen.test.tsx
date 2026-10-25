@@ -4,7 +4,7 @@
  * the web build (docs/WEB_VERSION.md) does neither. A claim that is true in
  * one of them is a false claim in the other, so it is gated, not translated.
  */
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -44,12 +44,15 @@ import { SettingsProvider } from '../../state/SettingsContext';
 import { createMemoryKV, type KVStore } from '../../storage/kv';
 import { settingsSchema, STORAGE_KEYS } from '../../storage/schemas';
 import { clearLocalData } from '../../storage/repo';
-import { SettingsScreen } from './SettingsScreen';
+import { SettingsScreen, type SettingsScreenProps } from './SettingsScreen';
 
-function renderSettings() {
+function renderSettings(
+  props: Partial<SettingsScreenProps> = {},
+  initialSettings = settingsSchema.defaultValue(),
+) {
   return render(
-    <SettingsProvider initialSettings={settingsSchema.defaultValue()}>
-      <SettingsScreen onBack={() => undefined} onOpenClub={() => undefined} />
+    <SettingsProvider initialSettings={initialSettings}>
+      <SettingsScreen onBack={() => undefined} onOpenClub={() => undefined} {...props} />
     </SettingsProvider>,
   );
 }
@@ -59,6 +62,7 @@ beforeEach(() => {
   resetRecentGamesForTesting();
   resetFavoriteGamesForTesting();
   openExternalMock.mockClear();
+  vi.mocked(clearLocalData).mockClear();
 });
 
 afterEach(() => {
@@ -191,6 +195,68 @@ describe('reset local data', () => {
     await user.click(screen.getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => expect(getRecentGames()).toEqual([]));
+  });
+
+  it('awaits Nearby reset before deleting the other local records', async () => {
+    await initRecentGames(createMemoryKV());
+    recordGameOpened('sudoku');
+    await initFavoriteGames(createMemoryKV());
+    toggleFavoriteGame('sudoku');
+    let finishNearby!: () => void;
+    const onResetNearby = vi.fn(() => new Promise<void>((resolve) => (finishNearby = resolve)));
+    renderSettings({ onResetNearby });
+    const favorite = within(screen.getByRole('region', { name: 'Favorites' })).getByRole('button', {
+      name: 'Sudoku',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Local Data' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    expect(onResetNearby).toHaveBeenCalledOnce();
+    expect(clearLocalData).not.toHaveBeenCalled();
+    expect(getRecentGames()).toEqual(['sudoku']);
+    expect(getFavoriteGames()).toEqual(['sudoku']);
+    expect(favorite).toBeDisabled();
+
+    await act(async () => finishNearby());
+
+    expect(clearLocalData).toHaveBeenCalledOnce();
+    await waitFor(() => expect(favorite).toBeEnabled());
+    expect(getRecentGames()).toEqual([]);
+    expect(getFavoriteGames()).toEqual([]);
+    expect(favorite).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('reports failed Nearby reset and preserves the other games and settings', async () => {
+    await initRecentGames(createMemoryKV());
+    recordGameOpened('sudoku');
+    await initFavoriteGames(createMemoryKV());
+    toggleFavoriteGame('sudoku');
+    const onResetNearby = vi.fn(async () => {
+      throw new Error('Nearby store could not be erased');
+    });
+    renderSettings(
+      { onResetNearby },
+      { ...settingsSchema.defaultValue(), theme: 'dark', sound: false },
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Local Data' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Could not delete local data. Please try again.',
+    );
+    expect(onResetNearby).toHaveBeenCalledOnce();
+    expect(clearLocalData).not.toHaveBeenCalled();
+    expect(getRecentGames()).toEqual(['sudoku']);
+    expect(getFavoriteGames()).toEqual(['sudoku']);
+    expect(screen.getByRole('radio', { name: 'Dark' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('switch', { name: 'Sound' })).toHaveAttribute('aria-checked', 'false');
+    const favorite = within(screen.getByRole('region', { name: 'Favorites' })).getByRole('button', {
+      name: 'Sudoku',
+    });
+    expect(favorite).toHaveAttribute('aria-pressed', 'true');
+    expect(favorite).toBeEnabled();
   });
 });
 

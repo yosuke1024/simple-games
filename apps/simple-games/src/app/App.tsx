@@ -66,6 +66,12 @@ import {
   takeInviteFromLocation,
 } from './clubGate';
 import { getLazyRoot, resetLazyRoot } from './lazyRoots';
+import {
+  clearNearbyLocalData,
+  getNearbyRoot,
+  nearbyAvailable,
+  resetNearbyRoot,
+} from './nearbyGate';
 import { recordGameOpened } from './recentGames';
 import { type GameEntry, type GameId } from './registry';
 import { gameIdFromShortcutUrl, shortcutLaunchGame, shortcutLaunchUrl } from './shortcutLaunch';
@@ -80,6 +86,7 @@ import {
 
 type View =
   | { kind: 'collection' }
+  | { kind: 'nearby' }
   | { kind: 'settings' }
   | {
       kind: 'game';
@@ -558,6 +565,24 @@ export function App() {
   return <ClubBridgeContext.Provider value={bridge}>{renderView()}</ClubBridgeContext.Provider>;
 
   function renderView() {
+    if (view.kind === 'nearby') {
+      const NearbyRoot = getNearbyRoot();
+      if (NearbyRoot)
+        return (
+          <GameErrorBoundary
+            key={gameNonce}
+            onExit={goCollection}
+            onRetry={() => {
+              resetNearbyRoot();
+              setGameNonce((n) => n + 1);
+            }}
+          >
+            <Suspense fallback={<GameLoadingFallback onExit={goCollection} />}>
+              <NearbyRoot onExit={goCollection} />
+            </Suspense>
+          </GameErrorBoundary>
+        );
+    }
     if (view.kind === 'game') {
       const gameId = view.gameId;
       const from = view.from;
@@ -587,7 +612,13 @@ export function App() {
       }
     }
     if (view.kind === 'settings') {
-      return <SettingsScreen onBack={backFromSettings} onOpenClub={openClubFromSettings} />;
+      return (
+        <SettingsScreen
+          onBack={backFromSettings}
+          onOpenClub={openClubFromSettings}
+          onResetNearby={clearNearbyLocalData}
+        />
+      );
     }
     // The Club view. Its hardware back is the Club screen's own (it registers
     // the listener while mounted), so the shell adds none here — compare the
@@ -615,6 +646,7 @@ export function App() {
           onOpenSettings={openSettings}
           dismissReviewPrompt={reviewPromptOpen ? closeReviewPrompt : null}
           onOpenClub={openClub}
+          onOpenNearby={nearbyAvailable() ? () => show({ kind: 'nearby' }) : undefined}
           clubConnections={connections}
         />
         {reviewPromptOpen && <ReviewPrompt onClose={closeReviewPrompt} />}

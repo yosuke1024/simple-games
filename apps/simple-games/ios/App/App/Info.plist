@@ -38,6 +38,14 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Connect with another nearby player to chat and play using Bluetooth.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Find and connect with another player on the same Wi-Fi network to chat and play.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_sgnearplay._tcp</string>
+	</array>
 	<!-- SKAdNetwork is Apple's install attribution WITHOUT user-level
 	     tracking: the device reports a signed, aggregated postback to the ad
 	     network and no identifier for the user leaves the device. That is why

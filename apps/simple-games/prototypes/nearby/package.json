@@ -1,0 +1,14 @@
+{
+  "name": "simple-games-nearby-poc",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Unreleased native-only two-device transport experiment for issue 268",
+  "dependencies": {
+    "@capacitor/core": "8.4.2"
+  },
+  "devDependencies": {
+    "@capacitor/android": "8.4.3",
+    "@capacitor/ios": "8.4.2"
+  }
+}

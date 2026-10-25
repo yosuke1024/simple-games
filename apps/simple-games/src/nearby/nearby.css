@@ -1,0 +1,249 @@
+.nearby-screen {
+  max-width: 620px;
+  margin-inline: auto;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+.nearby-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+.nearby-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 20px 24px;
+}
+.nearby-stack h2,
+.nearby-stack h3,
+.nearby-stack p {
+  margin: 0;
+}
+.nearby-stack h2 {
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+.nearby-stack h3 {
+  font-size: 18px;
+}
+.nearby-hero {
+  text-align: center;
+  padding: 24px 8px;
+  display: grid;
+  gap: 14px;
+}
+.nearby-hero > span {
+  font-size: 36px;
+  letter-spacing: 12px;
+}
+.nearby-note {
+  font-size: 13px;
+  line-height: 1.7;
+  opacity: 0.75;
+}
+.nearby-field {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+.nearby-field input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  color: inherit;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 10px;
+  padding: 12px;
+  font: inherit;
+  font-size: 16px;
+}
+.nearby-choices {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 12px;
+}
+.nearby-choices legend {
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 0 4px;
+}
+.nearby-choices label,
+.nearby-check {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  line-height: 1.6;
+}
+.nearby-choices input,
+.nearby-check input {
+  margin-top: 6px;
+  flex: 0 0 auto;
+}
+.nearby-card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: grid;
+  gap: 12px;
+}
+.nearby-actions,
+.nearby-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.nearby-tabs button[aria-pressed='true'] {
+  border: 1px solid currentColor;
+}
+.nearby-peer {
+  display: flex;
+  align-items: start;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  min-height: 64px;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.nearby-peer span {
+  font-size: 13px;
+  opacity: 0.75;
+}
+.nearby-code {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.07em;
+  overflow-wrap: anywhere;
+}
+.nearby-room-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+}
+.nearby-room-heading span {
+  font-size: 12px;
+  opacity: 0.65;
+}
+.nearby-messages {
+  max-height: 42vh;
+  min-height: 80px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px;
+}
+.nearby-message {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--surface-recessed);
+  overflow-wrap: anywhere;
+  max-width: 90%;
+}
+.nearby-message-self {
+  align-self: end;
+  border: 1px solid var(--line);
+}
+.nearby-message strong,
+.nearby-message small {
+  display: block;
+  font-size: 11px;
+  opacity: 0.75;
+}
+.nearby-message p {
+  margin-block: 5px;
+  font-size: 16px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.nearby-compose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+.nearby-warning {
+  border: 1px solid currentColor;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+}
+.nearby-leave {
+  margin-top: 16px;
+}
+.nearby-safety summary {
+  cursor: pointer;
+  padding: 12px 0;
+}
+.nearby-safety[open] {
+  display: grid;
+  gap: 10px;
+}
+.nearby-safety a {
+  color: inherit;
+  display: block;
+  padding: 12px;
+}
+.nearby-board {
+  display: grid;
+  gap: 16px;
+}
+.nearby-dice {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding-block: 8px;
+}
+.nearby-dice button {
+  width: min(16vw, 62px);
+  height: 54px;
+  border-radius: 10px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font-size: 25px;
+  font-weight: 700;
+}
+.nearby-dice button[aria-pressed='true'] {
+  border-width: 3px;
+  transform: translateY(-5px);
+}
+.nearby-dice button:disabled {
+  opacity: 0.6;
+}
+.nearby-scores {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.nearby-scores th,
+.nearby-scores td {
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.nearby-scores th:first-child {
+  text-align: start;
+  width: 44%;
+}
+.nearby-scores td button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+}

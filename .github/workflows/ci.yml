@@ -46,6 +46,17 @@ jobs:
       - run: pnpm --filter simple-games build:web
       - run: bash .github/scripts/check-dist-ads-separation.sh
 
+      # Keep the historical prototype separate from Nearby Play. Product protocol,
+      # UI and crypto tests run with the regular scoped suite below.
+      - run: pnpm nearby:check
+      - run: pnpm nearby:isolation
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: pnpm nearby:test-android
+      - run: python3 .github/scripts/check-android-artifact.test.py
+
       # The iOS version is the one version number this repository still keeps by
       # hand: the Android lane derives it from the tag, but the iOS archive is
       # made on a Mac and ships whatever the Xcode project says

@@ -1,0 +1,3 @@
+/* English source. */
+"NSBluetoothAlwaysUsageDescription" = "Connect with another nearby player to chat and play using Bluetooth.";
+"NSLocalNetworkUsageDescription" = "Find and connect with another player on the same Wi-Fi network to chat and play.";

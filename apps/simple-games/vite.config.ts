@@ -115,6 +115,7 @@ export default defineConfig(({ mode }) => ({
                 // club.md §3): loaded by src/app/clubGate.ts alone, and never
                 // part of the entry's static graph (scripts/bundle-size.mjs).
                 if (/[\\/]src[\\/]club[\\/]/.test(id)) return 'club';
+                if (/[\\/]src[\\/]nearby[\\/]/.test(id)) return 'nearby';
                 const match = id.match(/[\\/]src[\\/]games[\\/]([^\\/]+)[\\/]/);
                 if (!match) return null;
                 if (/[\\/]storage[\\/]keys\.ts$/.test(id)) return null;

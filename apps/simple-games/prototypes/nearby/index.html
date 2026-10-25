@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Nearby PoC — unreleased</title>
+  </head>
+  <body>
+    <main>
+      <header>
+        <small>ISSUE #268 · 検証用 / UNRELEASED</small>
+        <h1>Nearby Multiplayer</h1>
+        <p>2台の通信と Yacht を検証します。実機で検証中の試作です。</p>
+      </header>
+      <p id="unsupported" hidden>
+        Android / iOS の専用検証アプリで開いてください。Web の通信機能はありません。
+      </p>
+      <section id="setup">
+        <h2>接続の準備</h2>
+        <label
+          >表示名 / Name<input id="name" maxlength="24" value="Player" autocomplete="off"
+        /></label>
+        <label
+          >通信 / Transport<select id="transport">
+            <option value="ble">Bluetooth LE</option>
+            <option value="lan">同じ Wi-Fi (LAN)</option>
+          </select></label
+        >
+        <label
+          >通信の役割 / Radio role<select id="role">
+            <option value="advertise">待ち受け / Advertise</option>
+            <option value="browse">相手を探す / Browse</option>
+          </select></label
+        >
+        <label class="inline"
+          ><input id="host" type="checkbox" checked />ゲームのホストになる / Game host</label
+        >
+        <p class="hint">
+          一方を待ち受け、もう一方を探索にします。ゲームのホストはどちらか1台だけ。Android
+          が待ち受けできない場合は iPhone を待ち受けにします。
+        </p>
+        <button id="start">通信を開始 / Start</button
+        ><button id="capabilities" class="secondary">端末の対応状況 / Capabilities</button>
+        <output id="capabilityInfo"></output>
+      </section>
+      <section id="connection" hidden>
+        <h2>接続 / Connection</h2>
+        <p id="radioLabel"></p>
+        <p id="status" role="status" aria-live="polite"></p>
+        <div id="peers"></div>
+        <div id="pairing" hidden>
+          <p id="peerName"></p>
+          <p>相手の画面と同じ番号か確認 / Compare both screens</p>
+          <strong id="code"></strong>
+          <p class="hint">
+            番号は誤接続を減らすためのものです。この試作は暗号化や本人認証を保証しません。
+          </p>
+          <button id="confirm">同じ番号です / Confirm</button>
+        </div>
+        <button id="ready" hidden>準備できました / Ready</button
+        ><button id="ping" hidden class="secondary">1 KB の往復通信を試す / Ping</button>
+        <p id="pingResult"></p>
+        <button id="stop" class="secondary">接続を終了 / End</button>
+      </section>
+      <section id="game" hidden>
+        <h2>Yacht</h2>
+        <p id="turn" role="status" aria-live="polite"></p>
+        <div id="dice" class="dice"></div>
+        <button id="roll">振る / Roll</button>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>欄 / Category</th>
+                <th id="name0"></th>
+                <th id="name1"></th>
+                <th>選択 / Choose</th>
+              </tr>
+            </thead>
+            <tbody id="scores"></tbody>
+            <tfoot>
+              <tr>
+                <th>合計 / Total</th>
+                <td id="total0"></td>
+                <td id="total1"></td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <p id="result"></p>
+      </section>
+      <details>
+        <summary>検証ログ / Local diagnostics</summary>
+        <p class="hint">
+          メモリ内の直近100件のみ。保存・サーバー送信しません。名前・得点はログに含めません。
+        </p>
+        <pre id="log"></pre>
+      </details>
+      <footer>
+        バックグラウンドや切断で対局を終了します。続きからの再開・4人対戦・ソロ記録への反映は未対応です。機内では航空会社・乗務員の指示に従ってください。
+      </footer>
+    </main>
+    <script type="module" src="/web/main.ts"></script>
+  </body>
+</html>

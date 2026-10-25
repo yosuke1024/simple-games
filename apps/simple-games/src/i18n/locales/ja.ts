@@ -153,6 +153,8 @@ export const ja: Messages = {
   levelsCleared: 'クリアしたレベル',
   // ---- Club House: the Core's only words for it (docs/architecture/club.md §2, §11) ----
   advancedTitle: '詳細設定',
+  nearbyEntryBody: '近くの人と、対戦・チャット。',
+  localDataResetFailed: 'ローカルデータを削除できませんでした。もう一度お試しください。',
   clubEntry: 'Club House',
   clubJoinNew: '新しい Club House に参加',
   playTogetherTitle: 'みんなで遊ぶ',

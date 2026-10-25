@@ -12,6 +12,10 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "build": "turbo run build",
+    "nearby:check": "pnpm --dir apps/simple-games exec tsc -p prototypes/nearby/tsconfig.json && pnpm --dir apps/simple-games exec vitest run --config prototypes/nearby/vite.config.ts && pnpm --dir apps/simple-games exec vite build --config prototypes/nearby/vite.config.ts",
+    "nearby:prepare": "node apps/simple-games/prototypes/nearby/prepare.mjs",
+    "nearby:isolation": "node apps/simple-games/prototypes/nearby/check-isolation.mjs",
+    "nearby:test-android": "node apps/simple-games/prototypes/nearby/native/android/test.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

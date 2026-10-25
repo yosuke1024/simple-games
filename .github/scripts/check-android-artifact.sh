@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Android のリリース成果物を、ソースではなく**ビルドされたもの**で検査する(issue #204)。
 #
-# check-principles.sh はソースを grep する。だが Android の権限と ContentProvider の
+# check-principles.sh はソースを検査する。だが Android の権限と ContentProvider の
 # 多くは依存ライブラリの manifest から merge されて入り、ソースには 1 行も現れない
 # (AdMob が AD_ID を、Meta SDK が起動時初期化の provider を持ち込む)。そこで
 # `./gradlew assembleRelease` のあとに、merge 済みの manifest と APK の dex を見る:
@@ -21,8 +21,8 @@
 #      「無いこと」も落とす。intent の宣言(AdMob の https など)はここでは数えない。
 #
 # 使い方(apps/simple-games/android で assembleRelease したあと、リポジトリのルートで):
-#   bash .github/scripts/check-android-artifact.sh off
-#   bash .github/scripts/check-android-artifact.sh on
+#   bash .github/scripts/check-android-artifact.sh off [path/to/android/app]
+#   bash .github/scripts/check-android-artifact.sh on [path/to/android/app]
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
@@ -30,12 +30,12 @@ mode="${1:-}"
 case "$mode" in
   on | off) ;;
   *)
-    echo "usage: $0 on|off" >&2
+    echo "usage: $0 on|off [path/to/android/app]" >&2
     exit 2
     ;;
 esac
 
-app=apps/simple-games/android/app
+app="${2:-apps/simple-games/android/app}"
 # 署名済みなら app-release.apk、署名 secret の無いビルド(PR の検査・手動実行)では
 # app-release-unsigned.apk。中身の検査にはどちらでもよい。
 apk="$(find "$app/build/outputs/apk/release" -maxdepth 1 -name 'app-release*.apk' 2>/dev/null | head -n 1)"
@@ -68,10 +68,14 @@ allowed_common=(
 allowed_meta=(
   com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE
 )
-
+# Nearby Play: explicit foreground create/join only. The manifest constraints below
+# are part of this allow-list; merely declaring an unrestricted location/BT permission
+# is not sufficient. No background location or target-37 local-network permission.
 python3 - "$manifest" "$mode" "${allowed_common[*]}" "${allowed_meta[*]}" <<'PY'
 import sys
 import xml.etree.ElementTree as ET
+sys.path.insert(0, '.github/scripts')
+from android_permission_policy import NEARBY, nearby_errors, permissions
 
 path, mode, common, meta = sys.argv[1], sys.argv[2], sys.argv[3].split(), sys.argv[4].split()
 A = '{http://schemas.android.com/apk/res/android}'
@@ -79,13 +83,13 @@ root = ET.parse(path).getroot()
 app = root.find('application')
 errors = []
 
-allowed = set(common) | (set(meta) if mode == 'on' else set())
-perms = sorted(
-    {p.get(A + 'name') for tag in ('uses-permission', 'uses-permission-sdk-23') for p in root.findall(tag)}
-)
+allowed = set(common) | set(NEARBY) | (set(meta) if mode == 'on' else set())
+perms = sorted({p.get(A + 'name') or '(missing name)' for p in permissions(root)})
 for p in perms:
     if p not in allowed:
         errors.append(f'許可リスト外の権限: {p}')
+
+errors.extend(nearby_errors(root))
 
 names = [(el.tag, el.get(A + 'name') or '') for el in app]
 if any(n == 'com.facebook.internal.FacebookInitProvider' for _, n in names):
@@ -142,5 +146,20 @@ if [ "$mode" = on ] && [ "$meta_refs" -eq 0 ]; then
   exit 1
 fi
 echo "dex の com/facebook クラス記述子: $meta_refs 種類(mode=$mode)"
+# The registered product plugin must survive R8; the isolated prototype must not ship.
+native_descriptors="$(
+  while IFS= read -r dex; do
+    unzip -p "$apk" "$dex" | LC_ALL=C grep -a -o 'Lcom/pixapps/[A-Za-z0-9_/$]*;' || true
+  done < <(grep -E '^classes[0-9]*\.dex$' "$listing") | sort -u
+)"
+if ! grep -q '^Lcom/pixapps/simplegames/nearby/NearbyPlayPlugin;$' <<< "$native_descriptors"; then
+  echo "::error::製品 NearbyPlayPlugin が release dex にありません"
+  exit 1
+fi
+if grep -q '^Lcom/pixapps/nearbypoc/' <<< "$native_descriptors"; then
+  echo "::error::隔離 PoC の native クラスが製品 release dex に混入しています"
+  exit 1
+fi
+echo "Nearby product plugin: present; prototype native package: absent"
 echo "APK: $(wc -c < "$apk" | tr -d ' ') bytes"
 echo "Android 成果物の検査を通過しました(mode=$mode)。"
