@@ -40,6 +40,11 @@ export const de: NearbyMessages = {
     'Vergleicht unter Freunden diesen Code auf beiden Bildschirmen, bevor ihr zustimmt. Ein gleicher Code hilft, die Verbindung zu prüfen; ein Anzeigename bestätigt keine Identität.',
   room: 'Treffen',
   chat: 'Chat',
+  useChat: 'Chat verwenden',
+  chatSettingHint:
+    'Diese Einstellung gilt für beide Spieler und kann nach dem Start nicht geändert werden.',
+  chatOn: 'Chat aktiviert',
+  chatOff: 'Chat deaktiviert',
   game: 'Spiel',
   roomHint: 'Wählt Yacht, um zusammen zu spielen. Der Chat ist optional.',
   propose: 'Yacht vorschlagen',
@@ -99,7 +104,7 @@ export const de: NearbyMessages = {
   report: 'Support kontaktieren',
   reportHint: 'Öffnet deine E-Mail-App. Verlauf wird nicht automatisch angehängt.',
   conduct:
-    'Sei rücksichtsvoll. Sende keine Belästigungen, Drohungen, sexuellen Inhalte oder persönlichen Informationen. Du kannst Chat jederzeit ausblenden, blockieren oder gehen.',
+    'Sei rücksichtsvoll. Sende keine Belästigungen, Drohungen, sexuellen Inhalte oder persönlichen Informationen. Du kannst jederzeit blockieren oder gehen. Wenn der Chat aktiviert ist, kannst du eingehende Nachrichten ausblenden.',
   accept: 'Ich stimme zu und möchte fortfahren',
   historyReadOnly:
     'Verlauf kann nur angesehen werden. Beim Öffnen wird keine Verbindung hergestellt und keine Nachricht gesendet.',

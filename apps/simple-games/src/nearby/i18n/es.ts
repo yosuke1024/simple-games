@@ -39,6 +39,11 @@ export const es: NearbyMessages = {
     'Si son amigos, comparen este código en ambas pantallas antes de aprobar. Un código coincidente ayuda a verificar la conexión; el nombre visible no verifica la identidad.',
   room: 'Encuentro',
   chat: 'Chat',
+  useChat: 'Usar chat',
+  chatSettingHint:
+    'Esta opción se aplica a ambos jugadores y no se puede cambiar después de empezar.',
+  chatOn: 'Chat activado',
+  chatOff: 'Chat desactivado',
   game: 'Juego',
   roomHint: 'Elige Yacht para jugar juntos. El chat es opcional.',
   propose: 'Proponer Yacht',
@@ -98,7 +103,7 @@ export const es: NearbyMessages = {
   report: 'Contactar al soporte',
   reportHint: 'Abre tu app de correo. El historial no se adjunta automáticamente.',
   conduct:
-    'Trata a los demás con respeto. No envíes acoso, amenazas, contenido sexual ni información personal. Puedes ocultar el chat, bloquear o salir en cualquier momento.',
+    'Trata a los demás con respeto. No envíes acoso, amenazas, contenido sexual ni información personal. Puedes bloquear o salir en cualquier momento. Si el chat está activado, puedes ocultar los mensajes recibidos.',
   accept: 'Acepto y quiero continuar',
   historyReadOnly:
     'El historial es de solo lectura. Abrirlo no vuelve a conectar ni envía mensajes.',

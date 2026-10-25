@@ -10,7 +10,9 @@ import {
 } from './session';
 import { apply, CATEGORIES, finished, isMatch, newMatch, turn } from './yacht';
 
-function pair() {
+function pair(
+  options: { hostChatEnabled?: boolean; guestChatEnabled?: boolean } = { hostChatEnabled: true },
+) {
   const queue: Array<{ target: 'host' | 'guest'; wire: Wire }> = [];
   const sent: Array<{ target: 'host' | 'guest'; wire: Wire }> = [];
   const die = vi.fn(() => 6);
@@ -21,6 +23,7 @@ function pair() {
   const host = new Session({
     name: 'ホスト',
     host: true,
+    chatEnabled: options.hostChatEnabled,
     nonce: 'a'.repeat(32),
     identity: 'c'.repeat(32),
     die,
@@ -33,6 +36,7 @@ function pair() {
   const guest = new Session({
     name: 'Guest',
     host: false,
+    chatEnabled: options.guestChatEnabled,
     nonce: 'b'.repeat(32),
     identity: 'd'.repeat(32),
     die: guestDie,
@@ -74,6 +78,122 @@ function pair() {
 }
 
 describe('approved two-peer room and host-authoritative Yacht', () => {
+  it.each([
+    { hostChatEnabled: undefined, guestChatEnabled: undefined },
+    { hostChatEnabled: undefined, guestChatEnabled: true },
+    { hostChatEnabled: false, guestChatEnabled: true },
+    { hostChatEnabled: true, guestChatEnabled: false },
+  ])('shares the host-only chat policy before admission (%#)', (options) => {
+    const p = pair(options);
+    const enabled = options.hostChatEnabled === true;
+    expect(p.host.chatEnabled).toBe(enabled);
+    expect(p.guest.chatEnabled).toBe(false);
+    p.connect();
+    expect(p.sent.find(({ target }) => target === 'guest')!.wire.chatEnabled).toBe(enabled);
+    expect(p.sent.find(({ target }) => target === 'host')!.wire).not.toHaveProperty('chatEnabled');
+    for (const session of [p.host, p.guest]) {
+      expect(session.chatEnabled).toBe(enabled);
+      expect(session.paired).toBe(false);
+      expect(session.sendChat('not admitted')).toBe(false);
+    }
+    p.host.approve();
+    p.flush();
+    for (const session of [p.host, p.guest]) {
+      expect(session.sendChat('allowed only by host')).toBe(enabled);
+      p.flush();
+    }
+    expect(p.host.messages).toHaveLength(enabled ? 2 : 0);
+    expect(p.guest.messages).toHaveLength(enabled ? 2 : 0);
+    expect(p.host.closed || p.guest.closed).toBe('');
+  });
+  it.each([undefined, null, 'true', 1, {}])(
+    'rejects a missing or invalid host policy (%#)',
+    (value) => {
+      const p = pair();
+      p.host.start();
+      p.guest.start();
+      const hello = p.queue.shift()!.wire;
+      p.guest.receive(JSON.stringify({ ...hello, chatEnabled: value }));
+      expect(p.guest.closed).toBe('Invalid room policy');
+      expect(p.guest.chatEnabled).toBe(false);
+      expect(p.guest.peerName).toBe('');
+      expect(p.guest.sid).toBe('');
+    },
+  );
+  it.each([false, true])('rejects a guest claiming a room policy of %s', (chatEnabled) => {
+    const p = pair({ hostChatEnabled: false, guestChatEnabled: true });
+    p.guest.start();
+    p.host.start();
+    p.host.receive(JSON.stringify({ ...p.queue.shift()!.wire, chatEnabled }));
+    expect(p.host.closed).toBe('Invalid room policy');
+    expect(p.host.chatEnabled).toBe(false);
+    expect(p.host.messages).toEqual([]);
+  });
+  it.each(['admission', 'admission-ack'] as const)(
+    'rejects a changed or omitted policy in %s before the receiver is admitted',
+    (type) => {
+      for (const chatEnabled of [undefined, true]) {
+        const p = pair({ hostChatEnabled: false });
+        p.connect();
+        p.host.approve();
+        if (type === 'admission-ack') p.deliver();
+        const { target, wire } = p.queue.shift()!;
+        const receiver = p[target];
+        receiver.receive(JSON.stringify({ ...wire, chatEnabled }));
+        expect(receiver.closed).toBe('Room policy mismatch');
+        expect(receiver.paired).toBe(false);
+        expect(receiver.chatEnabled).toBe(false);
+        expect(receiver.messages).toEqual([]);
+      }
+    },
+  );
+  it.each(['pending', 'approved', 'resumed'] as const)(
+    'rejects repeated hello without changing the %s room policy',
+    (phase) => {
+      for (const target of ['host', 'guest'] as const) {
+        const p = pair({ hostChatEnabled: false });
+        if (phase === 'pending') p.connect();
+        else p.admit();
+        const receiver = p[target];
+        if (phase === 'resumed') {
+          receiver.suspend();
+          receiver.resume();
+        }
+        const hello = p.sent.find(
+          (frame) => frame.target === target && frame.wire.type === 'hello',
+        )!;
+        receiver.receive(JSON.stringify({ ...hello.wire, chatEnabled: true }));
+        expect(receiver.closed).not.toBe('');
+        expect(receiver.chatEnabled).toBe(false);
+        expect(receiver.messages).toEqual([]);
+      }
+    },
+  );
+  it.each(['chat', 'chat-ack'] as const)(
+    'rejects remote %s in an OFF room without saving text or changing the board',
+    (type) => {
+      for (const target of ['host', 'guest'] as const) {
+        const p = pair({ hostChatEnabled: false, guestChatEnabled: true });
+        p.begin();
+        const receiver = p[target];
+        const board = structuredClone(receiver.match);
+        receiver.receive(
+          JSON.stringify({
+            v: PROTOCOL_VERSION,
+            type,
+            sid: receiver.sid,
+            seq: 1,
+            text: 'must not be retained',
+          }),
+        );
+        expect(receiver.closed).toBe('Chat disabled');
+        expect(receiver.messages).toEqual([]);
+        expect(receiver.chatPending).toBe(false);
+        expect(receiver.match).toEqual(board);
+        expect(p.die).not.toHaveBeenCalled();
+      }
+    },
+  );
   it('supports an approved chat-only room and a later host game proposal', () => {
     const p = pair();
     p.admit();
@@ -267,7 +387,7 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     expect(p.host.closed).toBe('Round limit');
     expect(p.host.match.round).toBe(10000);
   });
-  it.each([1, 2])(
+  it.each([1, 2, 3, 4])(
     'rejects protocol version %s rather than mixing older peers into admission',
     (v) => {
       const p = pair();
@@ -473,39 +593,46 @@ describe('approved two-peer room and host-authoritative Yacht', () => {
     expect(p.guest.match).toEqual(p.host.match);
     expect(p.die).toHaveBeenCalledTimes(draws);
   });
-  it('keeps the final result and rematch unconfirmed until its ACK arrives', () => {
-    const p = pair();
-    p.begin();
-    for (const category of CATEGORIES)
-      for (const actor of [p.host, p.guest]) {
-        actor.act({ kind: 'roll' });
-        p.flush();
-        actor.act({ kind: 'score', category });
-        if (category !== 'yacht' || actor === p.host) p.flush();
-      }
-    p.deliver(); // last guest command
-    expect(finished(p.host.match!)).toBe(true);
-    expect(p.host.matchComplete).toBe(false);
-    expect(p.host.pending).toBe(true);
-    p.host.ready();
-    expect(p.host.localReady).toBe(false);
-    p.deliver(); // final state
-    p.guest.ready();
-    expect(p.queue.map(({ wire }) => wire.type)).toEqual(['state-ack']);
-    p.host.ready();
-    expect(p.host.match!.round).toBe(1);
-    expect(p.host.localReady).toBe(false);
-    p.deliver(); // ACK
-    expect(p.host.matchComplete).toBe(true);
-    p.host.proposeGame();
-    p.flush();
-    p.guest.ready();
-    p.host.ready();
-    p.flush();
-    expect(p.host.match).toEqual(newMatch(2));
-    expect(p.guest.match).toEqual(p.host.match);
-    expect(p.host.pending).toBe(false);
-  });
+  it.each([false, true])(
+    'keeps final result and rematch unconfirmed until ACK (chat: %s)',
+    (hostChatEnabled) => {
+      const p = pair({ hostChatEnabled });
+      p.begin();
+      for (const category of CATEGORIES)
+        for (const actor of [p.host, p.guest]) {
+          actor.act({ kind: 'roll' });
+          p.flush();
+          actor.act({ kind: 'score', category });
+          if (category !== 'yacht' || actor === p.host) p.flush();
+        }
+      p.deliver(); // last guest command
+      expect(finished(p.host.match!)).toBe(true);
+      expect(p.host.matchComplete).toBe(false);
+      expect(p.host.pending).toBe(true);
+      p.host.ready();
+      expect(p.host.localReady).toBe(false);
+      p.deliver(); // final state
+      p.guest.ready();
+      expect(p.queue.map(({ wire }) => wire.type)).toEqual(['state-ack']);
+      p.host.ready();
+      expect(p.host.match!.round).toBe(1);
+      expect(p.host.localReady).toBe(false);
+      p.deliver(); // ACK
+      expect(p.host.matchComplete).toBe(true);
+      p.host.proposeGame();
+      p.flush();
+      p.guest.ready();
+      p.host.ready();
+      p.flush();
+      expect(p.host.match).toEqual(newMatch(2));
+      expect(p.guest.match).toEqual(p.host.match);
+      expect(p.host.pending).toBe(false);
+      expect(p.host.chatEnabled).toBe(hostChatEnabled);
+      expect(p.guest.chatEnabled).toBe(hostChatEnabled);
+      expect(p.host.messages).toEqual([]);
+      expect(p.guest.messages).toEqual([]);
+    },
+  );
   it.each([
     { stateSeq: 0, round: 1, revision: 1 },
     { stateSeq: 3, round: 1, revision: 1 },

@@ -27,6 +27,7 @@ const fixtures = vi.hoisted(() => ({
   remove: vi.fn(),
   clear: vi.fn(),
   native: false,
+  peerChatEnabled: false,
   addListener: vi.fn(),
   radio: { start: vi.fn(), connect: vi.fn(), send: vi.fn(), stop: vi.fn() },
 }));
@@ -76,6 +77,7 @@ vi.mock('./controller', async () => {
     ) {
       this.session = new Session({
         host: setup.host,
+        chatEnabled: setup.chatEnabled,
         name: setup.name,
         nonce: 'a'.repeat(32),
         identity: 'c'.repeat(32),
@@ -100,6 +102,7 @@ vi.mock('./controller', async () => {
       });
       this.peer = new Session({
         host: !setup.host,
+        chatEnabled: fixtures.peerChatEnabled,
         name: setup.host ? 'Guest' : 'Host',
         nonce: 'b'.repeat(32),
         identity: 'd'.repeat(32),
@@ -158,6 +161,7 @@ function savedGathering(): Gathering {
 beforeEach(() => {
   fixtures.controllers.length = 0;
   fixtures.native = false;
+  fixtures.peerChatEnabled = false;
   fixtures.saved = [];
   vi.clearAllMocks();
   fixtures.addListener.mockResolvedValue({ remove: vi.fn(async () => {}) });
@@ -179,17 +183,18 @@ afterEach(() => {
   Reflect.deleteProperty(document, 'visibilityState');
 });
 
-function begin(host = true) {
+function begin(host = true, chatEnabled = false) {
   fireEvent.click(screen.getByRole('button', { name: host ? en.create : en.join }));
   fireEvent.change(screen.getByRole('textbox', { name: en.name }), {
     target: { value: '  Player  ' },
   });
+  if (host && chatEnabled) fireEvent.click(screen.getByRole('checkbox', { name: en.useChat }));
   fireEvent.click(screen.getByRole('checkbox', { name: en.accept }));
   fireEvent.click(screen.getByRole('button', { name: host ? en.start : en.search }));
   return fixtures.controllers.at(-1)!;
 }
-function hostRoom() {
-  const controller = begin();
+function hostRoom(chatEnabled = false) {
+  const controller = begin(true, chatEnabled);
   act(() => controller.establish());
   fireEvent.click(screen.getByRole('button', { name: en.approve }));
   act(() => controller.flush());
@@ -253,10 +258,94 @@ describe('Nearby Play user flows', () => {
     },
   );
 
+  it('defaults hosting to no chat, keeps that policy fixed, and still prepares and plays Yacht', () => {
+    render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: en.create }));
+    const toggle = screen.getByRole('checkbox', { name: en.useChat });
+    expect(toggle).not.toBeChecked();
+    expect(toggle).toHaveAccessibleDescription(en.chatSettingHint);
+    fireEvent.change(screen.getByRole('textbox', { name: en.name }), {
+      target: { value: 'Player' },
+    });
+    fireEvent.click(screen.getByRole('checkbox', { name: en.accept }));
+    fireEvent.click(screen.getByRole('button', { name: en.start }));
+    const controller = fixtures.controllers.at(-1)!;
+    expect(controller.setup.chatEnabled).toBe(false);
+    expect(screen.queryByRole('checkbox', { name: en.useChat })).not.toBeInTheDocument();
+
+    act(() => controller.establish());
+    expect(screen.getByText(en.chatOff)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: en.ready })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: en.approve }));
+    act(() => controller.flush());
+    act(() => controller.flush());
+    expect(screen.getByText(en.chatOff)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: en.ready })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: en.chat })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: en.unreadChat })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: en.message })).not.toBeInTheDocument();
+    expect(screen.queryByRole('log')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText(en.room));
+    expect(screen.queryByRole('button', { name: en.hideChat })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: en.showChat })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: en.block })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: en.dissolve })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: en.ready }));
+    act(() => {
+      controller.peer.ready();
+      controller.flush();
+    });
+    fireEvent.click(screen.getByRole('button', { name: /^Roll/ }));
+    act(() => controller.flush());
+    expect(controller.session.match!.revision).toBe(1);
+    expect(controller.peer.match).toEqual(controller.session.match);
+    expect(screen.queryByRole('button', { name: en.chat })).not.toBeInTheDocument();
+  });
+
+  it.each([false, true])(
+    'shows the host’s chat policy before guest Ready (chat=%s)',
+    (chatEnabled) => {
+      fixtures.peerChatEnabled = chatEnabled;
+      render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
+      fireEvent.click(screen.getByRole('button', { name: en.join }));
+      expect(screen.queryByRole('checkbox', { name: en.useChat })).not.toBeInTheDocument();
+      expect(screen.queryByText(en.chatSettingHint)).not.toBeInTheDocument();
+      fireEvent.change(screen.getByRole('textbox', { name: en.name }), {
+        target: { value: 'Guest' },
+      });
+      fireEvent.click(screen.getByRole('checkbox', { name: en.accept }));
+      fireEvent.click(screen.getByRole('button', { name: en.search }));
+      expect(screen.queryByText(en.chatOn)).not.toBeInTheDocument();
+      expect(screen.queryByText(en.chatOff)).not.toBeInTheDocument();
+      const controller = fixtures.controllers.at(-1)!;
+      fireEvent.click(screen.getByRole('button', { name: /F-ABC123/ }));
+      expect(screen.getByText(chatEnabled ? en.chatOn : en.chatOff)).toBeInTheDocument();
+      expect(screen.queryByRole('checkbox', { name: en.useChat })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: en.ready })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: en.chat })).not.toBeInTheDocument();
+
+      act(() => {
+        controller.peer.approve();
+        controller.flush();
+      });
+      act(() => controller.flush());
+      expect(controller.session.chatEnabled).toBe(chatEnabled);
+      expect(screen.getByText(chatEnabled ? en.chatOn : en.chatOff)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: en.ready })).toBeEnabled();
+      if (chatEnabled) expect(screen.getByRole('button', { name: en.chat })).toBeInTheDocument();
+      else expect(screen.queryByRole('button', { name: en.chat })).not.toBeInTheDocument();
+      expect(screen.queryByRole('textbox', { name: en.message })).not.toBeInTheDocument();
+    },
+  );
+
   it('opens game preparation after approval and keeps chat an optional panel', () => {
     render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
-    const controller = begin();
+    const controller = begin(true, true);
+    expect(controller.setup.chatEnabled).toBe(true);
     act(() => controller.establish());
+    expect(screen.getByText(en.chatOn)).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: en.useChat })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Guest wants to join' })).toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: en.message })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: en.approve }));
@@ -324,7 +413,7 @@ describe('Nearby Play user flows', () => {
 
   it('requires both Ready, preserves chat across panels and a full match, and returns to the same gathering', () => {
     render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
-    const controller = hostRoom();
+    const controller = hostRoom(true);
     fireEvent.click(screen.getByRole('button', { name: en.chat }));
     fireEvent.change(screen.getByRole('textbox', { name: en.message }), {
       target: { value: 'Before the game' },
@@ -416,7 +505,7 @@ describe('Nearby Play user flows', () => {
 
   it('retains the shared Yacht board and chat during reconnection, then resumes the same turn', () => {
     render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
-    const controller = hostRoom();
+    const controller = hostRoom(true);
     act(() => {
       controller.peer.sendChat('Still here');
       controller.flush();
@@ -475,7 +564,7 @@ describe('Nearby Play user flows', () => {
         onRegisterStop={registerStop}
       />,
     );
-    const controller = hostRoom();
+    const controller = hostRoom(true);
     act(() => {
       controller.session.ready();
       controller.peer.ready();
@@ -546,7 +635,7 @@ describe('Nearby Play user flows', () => {
 
   it('shows a quiet unread mark without replacing the game and does not read chat while hidden', () => {
     const view = render(<NearbyRoot gameId="yacht" onExit={() => {}} />);
-    const controller = hostRoom();
+    const controller = hostRoom(true);
     act(() => {
       controller.peer.sendChat('First message');
       controller.flush();

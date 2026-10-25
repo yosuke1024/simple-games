@@ -46,6 +46,7 @@ export function NearbyRoot({
     name: '',
     public: false,
     transport: 'ble',
+    chatEnabled: false,
   });
   const [accepted, setAccepted] = useState(false);
   const [controller, setController] = useState<NearbyController | null>(null);
@@ -77,7 +78,12 @@ export function NearbyRoot({
       setQuestion(null);
       return;
     }
-    if (screen === 'active' && controller?.session?.paired && panel === 'chat') {
+    if (
+      screen === 'active' &&
+      controller?.session?.paired &&
+      controller.session.chatEnabled &&
+      panel === 'chat'
+    ) {
       closeChat();
       return;
     }
@@ -143,7 +149,9 @@ export function NearbyRoot({
   const session = controller?.session;
   const active = controller !== null && controller.state !== 'ended';
   const inRoom = screen === 'active' && active && !!session?.paired;
-  const showingBoard = inRoom && !!session?.match && panel === 'game';
+  const chatEnabled = session?.chatEnabled === true;
+  const chatOpen = chatEnabled && panel === 'chat';
+  const showingBoard = inRoom && !!session?.match && !chatOpen;
   const needsInitialProposal =
     inRoom && !session?.match && !session?.gameProposed && !session?.suspended && !session?.pending;
   useEffect(() => {
@@ -159,17 +167,15 @@ export function NearbyRoot({
   const messageCount = session?.messages.length ?? 0;
   const receivedMessages =
     session?.messages.filter((message) => message.sender === 'peer').length ?? 0;
-  const unread = !hidden && receivedMessages > readMessages;
+  const unread = chatEnabled && !hidden && receivedMessages > readMessages;
   useEffect(() => {
-    if (!visible || !foreground || panel !== 'chat' || !inRoom || hidden || question !== null)
-      return;
+    if (!visible || !foreground || !chatOpen || !inRoom || hidden || question !== null) return;
     setReadMessages(receivedMessages);
     chatEnd.current?.scrollIntoView?.({ block: 'nearest' });
-  }, [visible, foreground, panel, inRoom, hidden, question, receivedMessages, messageCount]);
+  }, [visible, foreground, chatOpen, inRoom, hidden, question, receivedMessages, messageCount]);
   useEffect(() => {
-    if (visible && inRoom && panel === 'chat')
-      chatHeadingRef.current?.focus({ preventScroll: true });
-  }, [visible, inRoom, panel]);
+    if (visible && inRoom && chatOpen) chatHeadingRef.current?.focus({ preventScroll: true });
+  }, [visible, inRoom, chatOpen]);
   const closeChat = () => {
     setPanel('game');
     chatButtonRef.current?.focus();
@@ -264,7 +270,7 @@ export function NearbyRoot({
             <IconBack />
           </button>
           <h1 className="nearby-title">Yacht</h1>
-          {inRoom ? (
+          {inRoom && chatEnabled ? (
             <button
               ref={chatButtonRef}
               className="icon-btn nearby-chat-toggle"
@@ -288,7 +294,7 @@ export function NearbyRoot({
             <button
               className="btn btn-primary"
               onClick={() => {
-                setSetup({ ...setup, host: true });
+                setSetup({ ...setup, host: true, chatEnabled: false });
                 setScreen('setup');
               }}
             >
@@ -297,7 +303,7 @@ export function NearbyRoot({
             <button
               className="btn btn-secondary"
               onClick={() => {
-                setSetup({ ...setup, host: false });
+                setSetup({ ...setup, host: false, chatEnabled: false });
                 setScreen('setup');
               }}
             >
@@ -361,6 +367,18 @@ export function NearbyRoot({
                   </label>
                 </fieldset>
                 <p className="nearby-note">{n('audienceHint')}</p>
+                <label className="nearby-check">
+                  <input
+                    type="checkbox"
+                    checked={setup.chatEnabled}
+                    aria-describedby="nearby-chat-setting-hint"
+                    onChange={(e) => setSetup({ ...setup, chatEnabled: e.target.checked })}
+                  />
+                  {n('useChat')}
+                </label>
+                <p id="nearby-chat-setting-hint" className="nearby-note">
+                  {n('chatSettingHint')}
+                </p>
               </>
             )}
             <fieldset className="nearby-choices">
@@ -408,6 +426,9 @@ export function NearbyRoot({
                 {n('storageError')}
               </p>
             )}
+            {controller.state !== 'ended' && session?.peerName && !showingBoard && (
+              <p className="nearby-note">{n(chatEnabled ? 'chatOn' : 'chatOff')}</p>
+            )}
             {controller.state === 'ended' ? (
               <>
                 <h2>{n('ended')}</h2>
@@ -430,48 +451,47 @@ export function NearbyRoot({
                     {n('reconnecting')}
                   </p>
                 )}
-                {panel === 'game' &&
-                  (session.gameProposed || !session.match || session.matchComplete) && (
-                    <section className="nearby-card">
-                      {session.gameProposed || !session.match ? (
-                        <>
-                          <h3>{n('proposed')}</h3>
-                          <button
-                            className="btn btn-primary"
-                            disabled={
-                              !visible ||
-                              !session.gameProposed ||
-                              session.localReady ||
-                              session.pending ||
-                              session.suspended
-                            }
-                            onClick={() => {
-                              session.ready();
-                              setPanel('game');
-                            }}
-                          >
-                            {n(session.localReady ? 'waitingReady' : 'ready')}
-                          </button>
-                        </>
-                      ) : (
+                {!chatOpen && (session.gameProposed || !session.match || session.matchComplete) && (
+                  <section className="nearby-card">
+                    {session.gameProposed || !session.match ? (
+                      <>
+                        <h3>{n('proposed')}</h3>
                         <button
-                          className="btn btn-secondary"
-                          disabled={!visible || session.pending || session.suspended}
-                          onClick={() => session.proposeGame()}
+                          className="btn btn-primary"
+                          disabled={
+                            !visible ||
+                            !session.gameProposed ||
+                            session.localReady ||
+                            session.pending ||
+                            session.suspended
+                          }
+                          onClick={() => {
+                            session.ready();
+                            setPanel('game');
+                          }}
                         >
-                          {n('rematch')}
+                          {n(session.localReady ? 'waitingReady' : 'ready')}
                         </button>
-                      )}
-                    </section>
-                  )}
-                {panel === 'game' && session.match && (
+                      </>
+                    ) : (
+                      <button
+                        className="btn btn-secondary"
+                        disabled={!visible || session.pending || session.suspended}
+                        onClick={() => session.proposeGame()}
+                      >
+                        {n('rematch')}
+                      </button>
+                    )}
+                  </section>
+                )}
+                {!chatOpen && session.match && (
                   <YachtBoard
                     session={session}
                     n={n}
                     interactive={visible && question === null && !session.suspended}
                   />
                 )}
-                {panel === 'chat' && (
+                {chatOpen && (
                   <section
                     id="nearby-chat-panel"
                     className="nearby-chat-panel"
@@ -511,7 +531,7 @@ export function NearbyRoot({
                       className="nearby-compose"
                       onSubmit={(e) => {
                         e.preventDefault();
-                        if (visible && session.sendChat(draft.trim())) setDraft('');
+                        if (visible && chatEnabled && session.sendChat(draft.trim())) setDraft('');
                       }}
                     >
                       <label className="nearby-field">
@@ -543,9 +563,11 @@ export function NearbyRoot({
                 <details className="nearby-safety">
                   <summary>{n('room')}</summary>
                   <p>{n('confirmation', { code: controller.code })}</p>
-                  <button className="btn btn-ghost" onClick={() => setHidden(!hidden)}>
-                    {n(hidden ? 'showChat' : 'hideChat')}
-                  </button>
+                  {chatEnabled && (
+                    <button className="btn btn-ghost" onClick={() => setHidden(!hidden)}>
+                      {n(hidden ? 'showChat' : 'hideChat')}
+                    </button>
+                  )}
                   <button className="btn btn-ghost" onClick={() => setQuestion('block')}>
                     {n('block')}
                   </button>

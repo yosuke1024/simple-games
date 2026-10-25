@@ -68,12 +68,12 @@ async function setup() {
   const a = native(),
     b = native();
   const host = create(
-    { host: true, name: 'A', public: true, transport: 'ble' },
+    { host: true, name: 'A', public: true, chatEnabled: true, transport: 'ble' },
     () => {},
     a.plugin,
   );
   const guest = create(
-    { host: false, name: 'B', public: false, transport: 'ble' },
+    { host: false, name: 'B', public: false, chatEnabled: true, transport: 'ble' },
     () => {},
     b.plugin,
   );
@@ -101,7 +101,11 @@ afterEach(async () => {
 describe('nearby lifecycle and persistence', () => {
   it('does no radio work on construction; approves, chats, starts Yacht and retains history after disconnect', async () => {
     const p = native();
-    create({ host: true, name: 'A', public: false, transport: 'ble' }, () => {}, p.plugin);
+    create(
+      { host: true, name: 'A', public: false, chatEnabled: true, transport: 'ble' },
+      () => {},
+      p.plugin,
+    );
     expect(p.plugin.start).not.toHaveBeenCalled();
     const { a, b, host, guest, pump } = await setup();
     expect(host.session?.paired).toBe(false);
@@ -186,7 +190,7 @@ describe('nearby lifecycle and persistence', () => {
         }),
     );
     const controller = create(
-      { host: true, name: 'A', public: false, transport: 'ble' },
+      { host: true, name: 'A', public: false, chatEnabled: true, transport: 'ble' },
       () => {},
       p.plugin,
     );
@@ -210,7 +214,13 @@ describe('nearby lifecycle and persistence', () => {
           }),
       )
       .mockResolvedValue(undefined);
-    const options = { host: true, name: 'A', public: false, transport: 'ble' } as const;
+    const options = {
+      host: true,
+      name: 'A',
+      public: false,
+      chatEnabled: true,
+      transport: 'ble',
+    } as const;
     const old = create(options, () => {}, p.plugin);
     const pending = old.start();
     await settle();
@@ -242,7 +252,7 @@ describe('nearby lifecycle and persistence', () => {
     async (attack) => {
       const p = native();
       const controller = create(
-        { host: false, name: 'A', public: false, transport: 'ble' },
+        { host: false, name: 'A', public: false, chatEnabled: true, transport: 'ble' },
         () => {},
         p.plugin,
       );

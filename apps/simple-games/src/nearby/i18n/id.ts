@@ -39,6 +39,11 @@ export const id: NearbyMessages = {
     'Jika bersama teman, bandingkan kode ini di kedua layar sebelum menyetujui. Kode yang sama membantu memverifikasi koneksi; nama tampilan tidak memverifikasi identitas.',
   room: 'Pertemuan',
   chat: 'Obrolan',
+  useChat: 'Gunakan obrolan',
+  chatSettingHint:
+    'Pengaturan ini berlaku untuk kedua pemain dan tidak dapat diubah setelah dimulai.',
+  chatOn: 'Obrolan aktif',
+  chatOff: 'Obrolan nonaktif',
   game: 'Permainan',
   roomHint: 'Pilih Yacht untuk bermain bersama. Chat bersifat opsional.',
   propose: 'Usulkan Yacht',
@@ -98,7 +103,7 @@ export const id: NearbyMessages = {
   report: 'Hubungi dukungan',
   reportHint: 'Membuka aplikasi email Anda. Riwayat tidak dilampirkan secara otomatis.',
   conduct:
-    'Hormati orang lain. Jangan kirim pelecehan, ancaman, konten seksual, atau informasi pribadi. Anda dapat menyembunyikan obrolan, memblokir, atau keluar kapan saja.',
+    'Hormati orang lain. Jangan kirim pelecehan, ancaman, konten seksual, atau informasi pribadi. Anda dapat memblokir atau keluar kapan saja. Jika obrolan aktif, Anda dapat menyembunyikan pesan masuk.',
   accept: 'Saya setuju dan ingin melanjutkan',
   historyReadOnly:
     'Riwayat hanya dapat dilihat. Membukanya tidak menghubungkan ulang atau mengirim pesan.',

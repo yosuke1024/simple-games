@@ -21,6 +21,7 @@ import { totals } from './yacht';
 
 export interface Setup {
   host: boolean;
+  chatEnabled: boolean;
   name: string;
   transport: Transport;
   public: boolean;
@@ -97,6 +98,7 @@ export class NearbyController {
       if (!this.active) return;
       this.session = new Session({
         host: this.setup.host,
+        chatEnabled: this.setup.chatEnabled,
         name: this.setup.name,
         nonce: randomId(),
         identity: this.data.identity,

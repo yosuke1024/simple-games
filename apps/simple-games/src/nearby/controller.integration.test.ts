@@ -48,9 +48,9 @@ function native() {
   return { plugin, emit, frames, sent };
 }
 
-function controller(host: boolean, plugin: NearbyPlugin) {
+function controller(host: boolean, plugin: NearbyPlugin, chatEnabled = true) {
   const value = new NearbyController(
-    { host, name: host ? 'Host' : 'Guest', public: true, transport: 'ble' },
+    { host, name: host ? 'Host' : 'Guest', public: true, chatEnabled, transport: 'ble' },
     () => {},
     plugin,
   );
@@ -69,10 +69,10 @@ async function until(condition: () => boolean, deliver: () => void = () => {}) {
   }
 }
 
-async function pair() {
+async function pair(chatEnabled = true) {
   const a = native();
   const b = native();
-  const host = controller(true, a.plugin);
+  const host = controller(true, a.plugin, chatEnabled);
   const guest = controller(false, b.plugin);
   const deliver = () => {
     while (a.frames.length) b.emit({ type: 'data', data: a.frames.shift()! });
@@ -301,14 +301,25 @@ describe('approved gathering survives a physical interruption', () => {
     await pump(() => host.session!.messages[0]?.text === 'still here');
   });
 
-  it.each(['state', 'state receipt', 'guest command'] as const)(
-    'reconnects the same approved peer after losing a %s, preserving the board and transcript',
-    async (loss) => {
-      const { a, b, host, guest, pump } = await pair();
+  it.each([
+    { loss: 'state', chatEnabled: true },
+    { loss: 'state receipt', chatEnabled: true },
+    { loss: 'guest command', chatEnabled: true },
+    { loss: 'state', chatEnabled: false },
+  ])(
+    'reconnects after losing $loss, preserving board, transcript and policy (chat: $chatEnabled)',
+    async ({ loss, chatEnabled }) => {
+      const { a, b, host, guest, pump } = await pair(chatEnabled);
+      expect(host.session!.chatEnabled).toBe(chatEnabled);
+      expect(guest.session!.chatEnabled).toBe(chatEnabled);
+      // The joining setup defaults to ON in this fixture, but cannot override
+      // the host policy already shared before approval.
+      expect(guest.setup.chatEnabled).toBe(true);
       host.session!.approve();
       await pump(() => host.state === 'room' && guest.state === 'room');
-      host.session!.sendChat('before interruption');
-      await pump(() => guest.session!.messages.length === 1 && !host.session!.chatPending);
+      expect(host.session!.sendChat('before interruption')).toBe(chatEnabled);
+      if (chatEnabled)
+        await pump(() => guest.session!.messages.length === 1 && !host.session!.chatPending);
       guest.session!.proposeGame();
       await pump(() => host.session!.gameProposed);
       host.session!.ready();
@@ -338,6 +349,9 @@ describe('approved gathering survives a physical interruption', () => {
       expect(host.session!.canAct).toBe(false);
       expect(host.session!.sendChat('not yet')).toBe(false);
       expect(host.gathering!.endedAt).toBeUndefined();
+      // Recovery reuses the admitted session policy, never re-reads setup.
+      host.setup.chatEnabled = !chatEnabled;
+      guest.setup.chatEnabled = !chatEnabled;
       await vi.advanceTimersByTimeAsync(3001);
       await until(
         () =>
@@ -359,10 +373,25 @@ describe('approved gathering survives a physical interruption', () => {
       expect(host.session!.match!.revision).toBe(loss === 'guest command' ? 3 : 1);
       expect(host.session!.match!.rolls).toBe(1);
       expect(host.gathering!.id).toBe(gatheringId);
-      expect(host.session!.messages).toHaveLength(1);
-      expect(guest.session!.messages).toHaveLength(1);
-      guest.session!.sendChat('after interruption');
-      await pump(() => host.session!.messages.length === 2 && !guest.session!.chatPending);
+      expect(host.session!.chatEnabled).toBe(chatEnabled);
+      expect(guest.session!.chatEnabled).toBe(chatEnabled);
+      expect(host.session!.messages).toHaveLength(chatEnabled ? 1 : 0);
+      expect(guest.session!.messages).toHaveLength(chatEnabled ? 1 : 0);
+      expect(guest.session!.sendChat('after interruption')).toBe(chatEnabled);
+      if (chatEnabled)
+        await pump(() => host.session!.messages.length === 2 && !guest.session!.chatPending);
+      else {
+        expect(host.session!.sendChat('still disabled')).toBe(false);
+        host.session!.act({ kind: 'hold', index: 0 });
+        await pump(() => guest.session!.match!.held[0] === true && !host.session!.pending);
+        expect(host.session!.match).toEqual(guest.session!.match);
+        for (const device of [a, b]) {
+          const saved = await loadHistory(device.plugin);
+          expect(saved.gatherings).toHaveLength(1);
+          expect(saved.gatherings[0]!.messages).toEqual([]);
+          expect(saved.gatherings[0]!.games).toHaveLength(1);
+        }
+      }
     },
   );
 });
